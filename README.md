@@ -33,15 +33,40 @@ Tracking artifacts live in [`.planning/`](.planning/).
 
 ## Demo
 
+reposix ships a **demo suite**: four audience-specific 60-second Tier 1 demos + a full 9-step Tier 2 walkthrough. The [demo suite index](docs/demos/index.md) is the table of contents; each row below links to the runnable script and its recording.
+
+### Tier 1 — 60 seconds, pick your audience
+
+| Demo                                                                          | Audience  | What it proves                                                                                         | Recording                                                                                                                       |
+|-------------------------------------------------------------------------------|-----------|--------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| [`01-edit-and-push.sh`](scripts/demos/01-edit-and-push.sh)                    | developer | FUSE `cat`/`sed` edit + `git push` round-trips to server state                                         | [typescript](docs/demos/recordings/01-edit-and-push.typescript) · [transcript](docs/demos/recordings/01-edit-and-push.transcript.txt)                 |
+| [`02-guardrails.sh`](scripts/demos/02-guardrails.sh)                          | security  | SG-01 allowlist refusal + SG-02 bulk-delete cap + SG-03 sanitize-on-egress all fire on camera          | [typescript](docs/demos/recordings/02-guardrails.typescript) · [transcript](docs/demos/recordings/02-guardrails.transcript.txt)                     |
+| [`03-conflict-resolution.sh`](scripts/demos/03-conflict-resolution.sh)        | skeptic   | 409 `version_mismatch` is what git turns into a merge conflict on push (no bespoke protocol)           | [typescript](docs/demos/recordings/03-conflict-resolution.typescript) · [transcript](docs/demos/recordings/03-conflict-resolution.transcript.txt)    |
+| [`04-token-economy.sh`](scripts/demos/04-token-economy.sh)                    | buyer     | 92.3% fewer tokens vs MCP-mediated baseline for the same task                                          | [typescript](docs/demos/recordings/04-token-economy.typescript) · [transcript](docs/demos/recordings/04-token-economy.transcript.txt)               |
+
+### Tier 2 — the full walkthrough
+
 End-to-end recording: [`docs/demo.md`](docs/demo.md) (walkthrough),
 [`docs/demo.typescript`](docs/demo.typescript) (raw `script(1)`),
 [`docs/demo.transcript.txt`](docs/demo.transcript.txt) (ANSI-stripped).
+The walkthrough script lives at [`scripts/demos/full.sh`](scripts/demos/full.sh); `scripts/demo.sh` is a backwards-compat shim that execs `full.sh`, so `bash scripts/demo.sh` from older docs still works unchanged.
 
-The recording captures the full 9-step narrative — sim startup, FUSE mount, agent-style `ls`/`cat`/`grep`, FUSE write through, `git push` round-trip — and three guardrails firing **on camera**:
+The Tier 2 recording captures the full 9-step narrative — sim startup, FUSE mount, agent-style `ls`/`cat`/`grep`, FUSE write through, `git push` round-trip — and three guardrails firing **on camera**:
 
 1. **Outbound HTTP allowlist refusal (SG-01).** A second mount with `REPOSIX_ALLOWED_ORIGINS` mismatched against the configured backend; every fetch refuses, surfaces as `Permission denied` on `ls`.
 2. **Bulk-delete cap (SG-02).** `git rm` of 6 issues + push is refused; commit message tag `[allow-bulk-delete]` overrides.
 3. **Server-controlled-frontmatter strip (SG-03).** A client write whose body contains `version: 999` does not update the server's authoritative version — `Tainted<T> → sanitize()` strips server-controlled fields before egress.
+
+### Running the suite yourself
+
+```bash
+cargo build --release --workspace --bins
+export PATH="$PWD/target/release:$PATH"
+
+bash scripts/demos/01-edit-and-push.sh       # one Tier 1 demo
+bash scripts/demos/assert.sh scripts/demos/01-edit-and-push.sh  # with marker-assertion enforcement
+bash scripts/demos/smoke.sh                   # full Tier 1 smoke suite (what CI runs)
+```
 
 ## Quickstart
 
