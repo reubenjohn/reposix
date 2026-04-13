@@ -49,6 +49,19 @@ reposix ships a **demo suite**: four audience-specific 60-second Tier 1 demos + 
 
 A read-only [`GithubReadOnlyBackend`](crates/reposix-github/src/lib.rs) implementing the same [`IssueBackend`](crates/reposix-core/src/backend.rs) trait as the simulator now lives in `crates/reposix-github/`. The parity demo lists issues from both and diffs their normalized shape.
 
+**You can run reposix against real GitHub right now** — no FUSE, no git push, just the same `IssueBackend` trait the FUSE/remote layers consume:
+
+```bash
+REPOSIX_ALLOWED_ORIGINS='http://127.0.0.1:*,https://api.github.com' \
+    GITHUB_TOKEN="$(gh auth token)" \
+    reposix list --backend github --project octocat/Hello-World --format table
+# ID   STATUS   TITLE
+# 7514 open     Create example.txt
+# 7513 open     ...
+```
+
+Honors GitHub's `x-ratelimit-remaining` / `-reset` headers (parks the next call until reset, capped at 60s). Honors the SG-01 egress allowlist. Auth via `gh auth token` for 1000 req/hr.
+
 | Demo                                                                        | Audience | What it proves                                                                                                                     | Recording                                                                                                          |
 |-----------------------------------------------------------------------------|----------|------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
 | [`parity.sh`](scripts/demos/parity.sh)                                      | skeptic  | `reposix list` (sim) and `gh api` (`octocat/Hello-World`) produce the same `{id, title, status}` JSON shape. Diff = content only. | [typescript](docs/demos/recordings/parity.typescript) · [transcript](docs/demos/recordings/parity.transcript.txt) |
