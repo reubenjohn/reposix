@@ -62,10 +62,21 @@ use tracing::warn;
 use crate::fetch::{patch_issue, post_issue, FetchError};
 use crate::inode::InodeRegistry;
 
-/// 5-second wall-clock ceiling applied to every backend read-path call
-/// (SG-07). A dead backend MUST surface EIO to the kernel within this
-/// budget so callbacks never wedge the VFS.
-const READ_BACKEND_TIMEOUT: Duration = Duration::from_secs(5);
+/// SG-07 ceilings for read-path backend calls. A dead backend MUST
+/// surface EIO to the kernel within these budgets so callbacks never
+/// wedge the VFS.
+///
+/// `READ_GET_TIMEOUT` (5s) covers the per-issue `get_issue` fetch — one
+/// HTTP round-trip on every backend.
+///
+/// `READ_LIST_TIMEOUT` (15s) covers the directory `list_issues` fetch.
+/// The simulator returns the whole project in one round-trip so 5s is
+/// plenty there, but `GithubReadOnlyBackend::list_issues` paginates up
+/// to 5 pages × 100 issues/page sequentially; on a cold connection that
+/// can comfortably eat the old 5s budget. 15s keeps the kernel
+/// non-blocked while letting the cold path finish.
+const READ_GET_TIMEOUT: Duration = Duration::from_secs(5);
+const READ_LIST_TIMEOUT: Duration = Duration::from_secs(15);
 
 /// Map a `reposix_core::Error` from an `IssueBackend` call into a
 /// [`FetchError`]. The fuse layer already has a `fetch_errno` mapper for
@@ -84,25 +95,25 @@ fn backend_err_to_fetch(e: reposix_core::Error) -> FetchError {
     }
 }
 
-/// Wrap a `backend.list_issues` call in the 5-second SG-07 ceiling.
+/// Wrap a `backend.list_issues` call in the SG-07 ceiling.
 async fn list_issues_with_timeout(
     backend: &Arc<dyn IssueBackend>,
     project: &str,
 ) -> Result<Vec<Issue>, FetchError> {
-    match tokio::time::timeout(READ_BACKEND_TIMEOUT, backend.list_issues(project)).await {
+    match tokio::time::timeout(READ_LIST_TIMEOUT, backend.list_issues(project)).await {
         Ok(Ok(v)) => Ok(v),
         Ok(Err(e)) => Err(backend_err_to_fetch(e)),
         Err(_) => Err(FetchError::Timeout),
     }
 }
 
-/// Wrap a `backend.get_issue` call in the 5-second SG-07 ceiling.
+/// Wrap a `backend.get_issue` call in the SG-07 ceiling.
 async fn get_issue_with_timeout(
     backend: &Arc<dyn IssueBackend>,
     project: &str,
     id: IssueId,
 ) -> Result<Issue, FetchError> {
-    match tokio::time::timeout(READ_BACKEND_TIMEOUT, backend.get_issue(project, id)).await {
+    match tokio::time::timeout(READ_GET_TIMEOUT, backend.get_issue(project, id)).await {
         Ok(Ok(v)) => Ok(v),
         Ok(Err(e)) => Err(backend_err_to_fetch(e)),
         Err(_) => Err(FetchError::Timeout),

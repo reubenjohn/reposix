@@ -87,8 +87,11 @@ impl MountProcess {
     }
 
     /// Poll the mount point until `read_dir` returns Ok with ≥1 entry, or
-    /// 5s elapse. (Bumped from 3s for slower dev hosts / cold starts;
-    /// the demo's overall 30s budget still holds.)
+    /// 15s elapse. (Bumped from 5s for the Phase-10 `--backend github`
+    /// path: GitHub's first REST round-trip on a cold DNS/TLS cache can
+    /// comfortably eat the old 5s budget. The fuse daemon's own per-call
+    /// 5s SG-07 ceiling still applies per-request, so a genuinely dead
+    /// backend still surfaces EIO fast.)
     fn wait_ready(&self) -> Result<()> {
         let t0 = Instant::now();
         loop {
@@ -111,9 +114,9 @@ impl MountProcess {
                     tracing::debug!("wait_ready: read_dir err (retrying): {e}");
                 }
             }
-            if t0.elapsed() >= Duration::from_secs(5) {
+            if t0.elapsed() >= Duration::from_secs(15) {
                 anyhow::bail!(
-                    "reposix-fuse at {} did not become ready within 5s",
+                    "reposix-fuse at {} did not become ready within 15s",
                     self.mount.display()
                 );
             }
