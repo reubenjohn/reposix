@@ -1,0 +1,22 @@
+/target
+**/*.rs.bk
+*.swp
+.DS_Store
+
+# Local mounts and runtime data
+/runtime
+/mnt
+*.db
+*.db-shm
+*.db-wal
+
+# Editor
+.vscode/
+.idea/
+
+# Recordings
+*.cast
+demo/recording.gif
+
+# Local research scratch (committed manually)
+research/scratch/

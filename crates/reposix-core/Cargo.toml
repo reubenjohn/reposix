@@ -1,0 +1,15 @@
+[package]
+name = "reposix-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Shared types for reposix: issues, projects, remote specs, errors"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+uuid.workspace = true

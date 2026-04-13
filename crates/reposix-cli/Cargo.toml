@@ -1,0 +1,22 @@
+[package]
+name = "reposix-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Top-level reposix CLI: orchestrates simulator, FUSE mount, and demo flows"
+
+[[bin]]
+name = "reposix"
+path = "src/main.rs"
+
+[dependencies]
+reposix-core.workspace = true
+tokio.workspace = true
+reqwest.workspace = true
+clap.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true

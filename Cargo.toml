@@ -1,0 +1,83 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/reposix-core",
+    "crates/reposix-sim",
+    "crates/reposix-fuse",
+    "crates/reposix-remote",
+    "crates/reposix-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+authors = ["reposix contributors"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/reubenjohn/reposix"
+homepage = "https://github.com/reubenjohn/reposix"
+description = "Git-backed FUSE filesystem exposing REST APIs as POSIX files for autonomous agents"
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Web server / client
+axum = "0.7"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace", "limit"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+
+# CLI
+clap = { version = "4", features = ["derive", "env"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Errors
+anyhow = "1"
+thiserror = "2"
+
+# FUSE — default-features=false avoids requiring libfuse-dev/pkg-config at compile time;
+# uses runtime fusermount/fusermount3 binaries instead (already present on most Linux hosts).
+fuser = { version = "0.15", default-features = false }
+libc = "0.2"
+
+# Storage
+rusqlite = { version = "0.32", features = ["bundled"] }
+
+# Misc
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+once_cell = "1"
+parking_lot = "0.12"
+dashmap = "6"
+governor = "0.7"  # rate limiting
+
+# Internal
+reposix-core = { path = "crates/reposix-core" }
+
+[workspace.dependencies.dev]
+
+# Profile tuning
+[profile.dev]
+opt-level = 0
+debug = 1
+incremental = true
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+
+# Fast tests
+[profile.test]
+opt-level = 0
+debug = 1

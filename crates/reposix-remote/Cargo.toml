@@ -1,0 +1,24 @@
+[package]
+name = "reposix-remote"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "git-remote-reposix helper translating git pushes/pulls to REST calls"
+
+[[bin]]
+name = "git-remote-reposix"
+path = "src/main.rs"
+
+[dependencies]
+reposix-core.workspace = true
+tokio.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+clap.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
