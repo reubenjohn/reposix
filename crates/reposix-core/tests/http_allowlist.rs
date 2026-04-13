@@ -12,7 +12,7 @@ use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
 use reposix_core::http::ClientOpts;
-use reposix_core::http::{client, request, ALLOWLIST_ENV_VAR};
+use reposix_core::http::{client, ALLOWLIST_ENV_VAR};
 use reposix_core::Error;
 use wiremock::matchers::any;
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -67,7 +67,8 @@ async fn egress_to_non_allowlisted_host_is_rejected() {
     let _g = EnvGuard::unset();
     let c = client(ClientOpts::default()).expect("client builds");
     let t0 = Instant::now();
-    let err = request(&c, reqwest::Method::GET, "https://evil.example/")
+    let err = c
+        .request(reqwest::Method::GET, "https://evil.example/")
         .await
         .expect_err("non-allowlisted host must be rejected");
     let elapsed = t0.elapsed();
@@ -88,7 +89,8 @@ async fn allowlist_default_and_env() {
         let c = client(ClientOpts::default()).expect("client builds");
         // 127.0.0.1:0 — allowlisted, but no listener. Error should be a transport
         // error (Error::Http), NOT InvalidOrigin.
-        let err = request(&c, reqwest::Method::GET, "http://127.0.0.1:0/")
+        let err = c
+            .request(reqwest::Method::GET, "http://127.0.0.1:0/")
             .await
             .expect_err("no listener so connection must fail");
         assert!(
@@ -100,7 +102,8 @@ async fn allowlist_default_and_env() {
     {
         let _g = EnvGuard::set("http://other.example:8080");
         let c = client(ClientOpts::default()).expect("client builds");
-        let err = request(&c, reqwest::Method::GET, "http://127.0.0.1:7878/")
+        let err = c
+            .request(reqwest::Method::GET, "http://127.0.0.1:7878/")
             .await
             .expect_err("loopback must be rejected under narrow env allowlist");
         assert!(
@@ -120,7 +123,8 @@ async fn loopback_is_allowed_by_default() {
         .await;
 
     let c = client(ClientOpts::default()).expect("client builds");
-    let resp = request(&c, reqwest::Method::GET, &server.uri())
+    let resp = c
+        .request(reqwest::Method::GET, &server.uri())
         .await
         .expect("loopback under default allowlist must succeed");
     assert_eq!(resp.status().as_u16(), 200);
@@ -132,7 +136,8 @@ async fn non_loopback_is_denied_by_default() {
     let c = client(ClientOpts::default()).expect("client builds");
     // 93.184.216.34 is example.com's long-standing IP; using the literal
     // avoids DNS resolution entirely.
-    let err = request(&c, reqwest::Method::GET, "http://93.184.216.34/")
+    let err = c
+        .request(reqwest::Method::GET, "http://93.184.216.34/")
         .await
         .expect_err("non-loopback IP must be rejected by default");
     assert!(matches!(err, Error::InvalidOrigin(_)), "got {err:?}");
@@ -142,7 +147,8 @@ async fn non_loopback_is_denied_by_default() {
 async fn env_override_redefines_allowlist() {
     let _g = EnvGuard::set("http://other.example:8080");
     let c = client(ClientOpts::default()).expect("client builds");
-    let err = request(&c, reqwest::Method::GET, "http://127.0.0.1:7878/")
+    let err = c
+        .request(reqwest::Method::GET, "http://127.0.0.1:7878/")
         .await
         .expect_err("loopback must be rejected when env narrows the allowlist");
     assert!(matches!(err, Error::InvalidOrigin(_)), "got {err:?}");
@@ -160,7 +166,8 @@ async fn http_redirects_are_not_followed() {
         .await;
 
     let c = client(ClientOpts::default()).expect("client builds");
-    let resp = request(&c, reqwest::Method::GET, &server.uri())
+    let resp = c
+        .request(reqwest::Method::GET, &server.uri())
         .await
         .expect("302 must surface as-is, not cause a connect error");
     assert_eq!(resp.status().as_u16(), 302);
@@ -187,7 +194,8 @@ async fn redirect_target_is_rechecked_against_allowlist() {
     let c = client(ClientOpts::default()).expect("client builds");
 
     // Step 1: hit the allowlisted loopback fixture; observe the 302.
-    let resp = request(&c, reqwest::Method::GET, &server.uri())
+    let resp = c
+        .request(reqwest::Method::GET, &server.uri())
         .await
         .expect("loopback request succeeds");
     assert_eq!(resp.status().as_u16(), 302);
@@ -200,10 +208,12 @@ async fn redirect_target_is_rechecked_against_allowlist() {
         .to_owned();
     assert_eq!(location, "https://attacker.example/");
 
-    // Step 2: re-feed the redirect target through request(). The per-request
-    // recheck MUST reject it BEFORE any I/O to attacker.example.
+    // Step 2: re-feed the redirect target through HttpClient::request().
+    // The per-request recheck MUST reject it BEFORE any I/O to
+    // attacker.example.
     let t0 = Instant::now();
-    let err = request(&c, reqwest::Method::GET, &location)
+    let err = c
+        .request(reqwest::Method::GET, location.as_str())
         .await
         .expect_err("redirect target must be rejected by allowlist recheck");
     let elapsed = t0.elapsed();
@@ -229,7 +239,8 @@ async fn request_times_out_after_5_seconds() {
 
     let c = client(ClientOpts::default()).expect("client builds");
     let t0 = Instant::now();
-    let err = request(&c, reqwest::Method::GET, &server.uri())
+    let err = c
+        .request(reqwest::Method::GET, &server.uri())
         .await
         .expect_err("request must time out");
     let elapsed = t0.elapsed();

@@ -1466,6 +1466,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "trybuild",
+ "url",
  "uuid",
  "wiremock",
 ]

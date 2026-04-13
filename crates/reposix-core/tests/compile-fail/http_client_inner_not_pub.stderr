@@ -1,0 +1,5 @@
+error[E0616]: field `inner` of struct `HttpClient` is private
+  --> tests/compile-fail/http_client_inner_not_pub.rs:13:19
+   |
+13 |     let _raw = hc.inner;
+   |                   ^^^^^ private field
