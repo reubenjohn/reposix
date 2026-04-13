@@ -74,12 +74,17 @@ impl Mount {
         }
         let fs = ReposixFs::new(cfg.origin.clone(), cfg.project.clone())?;
 
-        let options = vec![
+        // Phase S: `MountOption::RO` is conditional. When `cfg.read_only` is
+        // true we mount RO (the kernel refuses writes at the VFS layer before
+        // they reach our callbacks); when false the write path is live.
+        let mut options = vec![
             MountOption::FSName("reposix".to_owned()),
             MountOption::Subtype("reposix".to_owned()),
             MountOption::DefaultPermissions,
-            MountOption::RO,
         ];
+        if cfg.read_only {
+            options.push(MountOption::RO);
+        }
         // `fuser::Config` is `#[non_exhaustive]`, so we can't use a
         // struct-literal update. Start from `default()` and mutate in
         // place.
