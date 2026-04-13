@@ -23,6 +23,7 @@ use clap::{Parser, Subcommand};
 
 mod binpath;
 mod demo;
+mod list;
 mod mount;
 mod sim;
 
@@ -79,6 +80,22 @@ enum Cmd {
         #[arg(long)]
         keep_running: bool,
     },
+    /// List issues for a project by calling the backend's `list_issues`
+    /// method and dumping the result as JSON (default) or a pretty table.
+    ///
+    /// v0.1.5 always uses the in-process simulator backend; v0.2 will add
+    /// `--backend {sim,github}` for the parity demo.
+    List {
+        /// Project slug (for sim) or `owner/repo` (for github, v0.2).
+        #[arg(long, default_value = "demo")]
+        project: String,
+        /// Backend origin. For the sim, this is the HTTP listen address.
+        #[arg(long, default_value = "http://127.0.0.1:7878")]
+        origin: String,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = list::ListFormat::Json)]
+        format: list::ListFormat,
+    },
     /// Print the version.
     Version,
 }
@@ -112,5 +129,10 @@ async fn main() -> Result<()> {
             read_only: _,
         } => mount::run(mount_point, backend, project),
         Cmd::Demo { keep_running } => demo::run(keep_running).await,
+        Cmd::List {
+            project,
+            origin,
+            format,
+        } => list::run(project, origin, format).await,
     }
 }

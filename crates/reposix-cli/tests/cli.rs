@@ -11,7 +11,7 @@ fn help_lists_all_subcommands() {
         .output()
         .unwrap();
     let s = String::from_utf8_lossy(&out.stdout);
-    for sub in ["sim", "mount", "demo", "version"] {
+    for sub in ["sim", "mount", "demo", "list", "version"] {
         assert!(s.contains(sub), "help missing {sub}: {s}");
     }
 }
@@ -19,7 +19,7 @@ fn help_lists_all_subcommands() {
 #[test]
 fn subcommand_help_renders() {
     use assert_cmd::Command;
-    for sub in ["sim", "mount", "demo"] {
+    for sub in ["sim", "mount", "demo", "list"] {
         let out = Command::cargo_bin("reposix")
             .unwrap()
             .arg(sub)
@@ -27,6 +27,32 @@ fn subcommand_help_renders() {
             .output()
             .unwrap();
         assert!(out.status.success(), "{sub} --help failed: {out:?}");
+    }
+}
+
+/// `reposix list --help` must succeed and mention the three flags the
+/// subcommand exposes. Ensures the subcommand is reachable from clap's
+/// dispatcher and its args are defined as expected.
+#[test]
+fn list_help_succeeds_and_documents_flags() {
+    use assert_cmd::Command;
+    let out = Command::cargo_bin("reposix")
+        .unwrap()
+        .args(["list", "--help"])
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "list --help failed: status={:?} stderr={:?}",
+        out.status,
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    for flag in ["--project", "--origin", "--format"] {
+        assert!(
+            stdout.contains(flag),
+            "list --help missing {flag}: {stdout}"
+        );
     }
 }
 
