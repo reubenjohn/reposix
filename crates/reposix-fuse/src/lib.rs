@@ -59,13 +59,14 @@ impl Mount {
     ///   missing `/dev/fuse` or a stale existing mount at the target).
     ///
     /// # Security
-    /// `MountOption::AllowOther` is NOT set (SG: keep the mount single-user).
-    /// `MountOption::AutoUnmount` is NOT set either: fuser 0.17 refuses
-    /// `AutoUnmount` when `SessionACL == Owner`, and broadening ACL would
-    /// violate the SG no-allow-other invariant. Unmounting is driven by
-    /// (a) dropping this `Mount` struct (fuser's `UmountOnDrop`) and
-    /// (b) the CLI's `MountProcess` watchdog (`fusermount3 -u <mount>`) as
-    /// belt-and-suspenders.
+    /// The `allow_other` mount option is intentionally OFF (SG: keep the
+    /// mount single-user). `MountOption::AutoUnmount` is also off: fuser
+    /// 0.17 refuses `AutoUnmount` when `SessionACL == Owner`, and
+    /// broadening ACL to satisfy `AutoUnmount` would violate the
+    /// no-allow-other invariant. Unmounting is driven by (a) dropping
+    /// this `Mount` struct (fuser's `UmountOnDrop`) and (b) the CLI's
+    /// `MountProcess` watchdog (`fusermount3 -u <mount>`) as belt-and-
+    /// suspenders.
     pub fn open(cfg: &MountConfig) -> Result<Self> {
         if !cfg.mount_point.exists() {
             std::fs::create_dir_all(&cfg.mount_point)

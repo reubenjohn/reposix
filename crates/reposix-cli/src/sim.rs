@@ -28,7 +28,11 @@ impl SimProcess {
         if let Some(s) = seed {
             cmd.arg("--seed-file").arg(s);
         }
-        cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
+        // Discard stdin (unused) and stdout (no structured output).
+        // Inherit stderr so axum errors surface in `reposix demo`.
+        cmd.stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::inherit());
         let child = cmd.spawn().context("spawn reposix-sim")?;
         Ok(Self { child })
     }
@@ -46,7 +50,9 @@ impl SimProcess {
         if let Some(s) = seed {
             cmd.arg("--seed-file").arg(s);
         }
-        cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
+        cmd.stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::inherit());
         let child = cmd.spawn().context("spawn reposix-sim --ephemeral")?;
         Ok(Self { child })
     }

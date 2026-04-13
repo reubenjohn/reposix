@@ -31,7 +31,14 @@ impl MountProcess {
             .arg(backend)
             .arg("--project")
             .arg(project);
-        cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
+        // Discard stdin (the child has no input). Inherit stderr so the
+        // child's tracing output surfaces during normal `reposix demo`
+        // / `reposix mount` runs. The integration test now uses
+        // `std::process::Command` with inherited stdio instead of
+        // `assert_cmd`, so pipe-buffer deadlock is not a concern.
+        cmd.stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::inherit());
         // `process_group(0)` on Unix means "new session leader" — ensures
         // a SIGTERM to this process doesn't propagate automatically to
         // the grandchild fuse process; we manage its lifecycle ourselves.
@@ -47,19 +54,33 @@ impl MountProcess {
     }
 
     /// Poll the mount point until `read_dir` returns Ok with ≥1 entry, or
-    /// 3s elapse.
+    /// 5s elapse. (Bumped from 3s for slower dev hosts / cold starts;
+    /// the demo's overall 30s budget still holds.)
     fn wait_ready(&self) -> Result<()> {
         let t0 = Instant::now();
         loop {
-            if std::fs::read_dir(&self.mount)
-                .map(|it| it.flatten().count() >= 1)
-                .unwrap_or(false)
-            {
-                return Ok(());
+            match std::fs::read_dir(&self.mount) {
+                Ok(it) => {
+                    // Counting entries triggers readdir on the FUSE FS,
+                    // which fetches from the backend and populates the
+                    // cache — any non-empty result proves the mount is
+                    // serving reads.
+                    if it.flatten().count() >= 1 {
+                        return Ok(());
+                    }
+                }
+                Err(e) => {
+                    // EIO from the kernel means FUSE is mounted but the
+                    // backend transiently failed; keep polling until
+                    // either the backend becomes reachable or we time
+                    // out. ENOTCONN / ENOENT would mean the mount
+                    // hasn't come up yet — also retry.
+                    tracing::debug!("wait_ready: read_dir err (retrying): {e}");
+                }
             }
-            if t0.elapsed() >= Duration::from_secs(3) {
+            if t0.elapsed() >= Duration::from_secs(5) {
                 anyhow::bail!(
-                    "reposix-fuse at {} did not become ready within 3s",
+                    "reposix-fuse at {} did not become ready within 5s",
                     self.mount.display()
                 );
             }

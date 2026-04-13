@@ -11,18 +11,32 @@
 //! This is slower on the first invocation but keeps the demo
 //! reproducible from a fresh clone.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 /// Build a [`Command`] that invokes `name` (one of `reposix-sim` or
 /// `reposix-fuse`). Prefers the sibling of `current_exe`; falls back to
 /// `cargo run -q -p <crate> --`.
 pub fn resolve_bin(name: &str) -> Command {
+    // Case 1: production binary next to `reposix` itself
+    //   (e.g. `target/debug/reposix` → `target/debug/<name>`).
+    // Case 2: test harness binary one level below
+    //   (e.g. `target/debug/deps/cli-<hash>` → `target/debug/<name>`).
+    // Case 3: `CARGO_TARGET_DIR` explicitly set.
     if let Ok(exe) = std::env::current_exe() {
         if let Some(parent) = exe.parent() {
-            let sibling: PathBuf = parent.join(name);
-            if sibling.exists() {
-                return Command::new(sibling);
+            for candidate in candidates(parent, name) {
+                if candidate.exists() {
+                    return Command::new(candidate);
+                }
+            }
+        }
+    }
+    if let Ok(dir) = std::env::var("CARGO_TARGET_DIR") {
+        for subdir in ["debug", "release"] {
+            let candidate = PathBuf::from(&dir).join(subdir).join(name);
+            if candidate.exists() {
+                return Command::new(candidate);
             }
         }
     }
@@ -32,4 +46,13 @@ pub fn resolve_bin(name: &str) -> Command {
     let mut cmd = Command::new("cargo");
     cmd.args(["run", "-q", "-p", name, "--"]);
     cmd
+}
+
+fn candidates(parent: &Path, name: &str) -> Vec<PathBuf> {
+    let mut out = vec![parent.join(name)];
+    // `target/debug/deps/` → `target/debug/<name>`.
+    if let Some(grandparent) = parent.parent() {
+        out.push(grandparent.join(name));
+    }
+    out
 }
