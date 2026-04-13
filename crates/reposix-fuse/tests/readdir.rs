@@ -2,16 +2,19 @@
 //! `0001.md 0002.md 0003.md`, `cat 0001.md` returns the rendered
 //! frontmatter+body.
 //!
-//! Backend is a wiremock `MockServer` seeded with 3 synthetic issues; the
-//! mount lives on a `tempfile::tempdir()`. Gated `target_os = "linux"`
+//! Backend is a wiremock `MockServer` seeded with 3 synthetic issues,
+//! wrapped in a `SimBackend` to drive the Phase-10 IssueBackend seam;
+//! the mount lives on a `tempfile::tempdir()`. Gated `target_os = "linux"`
 //! because fuser/FUSE3 mounts only exist on Linux.
 
 #![cfg(target_os = "linux")]
 
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use chrono::TimeZone;
-use reposix_core::{Issue, IssueId, IssueStatus};
+use reposix_core::backend::sim::SimBackend;
+use reposix_core::{Issue, IssueBackend, IssueId, IssueStatus};
 use reposix_fuse::{Mount, MountConfig};
 use wiremock::matchers::{method, path, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -85,15 +88,20 @@ async fn mount_lists_and_reads_issues() {
     // Spawn mount on a blocking task so fuser's BackgroundSession + its
     // kernel thread are allowed to sit on a native thread.
     let origin = server.uri();
+    let backend: Arc<dyn IssueBackend> =
+        Arc::new(SimBackend::new(origin.clone()).expect("sim backend"));
     let mount = tokio::task::spawn_blocking({
         let mount_path = mount_path.clone();
         move || {
-            Mount::open(&MountConfig {
-                mount_point: mount_path,
-                origin,
-                project: "demo".to_owned(),
-                read_only: true,
-            })
+            Mount::open(
+                &MountConfig {
+                    mount_point: mount_path,
+                    origin,
+                    project: "demo".to_owned(),
+                    read_only: true,
+                },
+                backend,
+            )
         }
     })
     .await

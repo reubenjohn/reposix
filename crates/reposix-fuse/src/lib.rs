@@ -2,17 +2,22 @@
 //!
 //! The read-only mount presents every issue in a reposix-compatible backend
 //! as a single Markdown file at the mount root, named `<zero-padded-id>.md`.
-//! All HTTP calls go through the sealed [`reposix_core::http::HttpClient`]
-//! (SG-01 allowlist applies), and every fetch is capped at 5 seconds
-//! (SG-07) so the kernel cannot hang on a dead backend.
+//! Read-path I/O now flows through the [`reposix_core::IssueBackend`] trait
+//! (Phase 10 rewire), so the same FUSE daemon can serve the simulator or a
+//! real GitHub repo. Every backend call is still wrapped in a 5-second
+//! [`tokio::time::timeout`] (SG-07) so the kernel cannot hang on a dead
+//! backend. Write-path callbacks still speak to the simulator's REST shape
+//! directly via [`fetch`] (v0.3 will lift these onto the trait).
 
 #![forbid(unsafe_code)]
 #![warn(clippy::pedantic)]
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use fuser::{BackgroundSession, MountOption};
+use reposix_core::IssueBackend;
 use serde::{Deserialize, Serialize};
 
 pub mod fetch;
@@ -23,17 +28,25 @@ pub use fs::ReposixFs;
 pub use inode::InodeRegistry;
 
 /// Runtime configuration for a FUSE mount.
+///
+/// The `origin` field is retained because the write-path callbacks
+/// (`release` → PATCH, `create` → POST) still speak the simulator's REST
+/// shape directly via [`fetch`]. Read-path callbacks (`readdir`, `read`,
+/// `lookup`) route through the [`IssueBackend`] passed to [`Mount::open`],
+/// which is how `--backend github` works end-to-end.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MountConfig {
     /// Where to mount.
     pub mount_point: PathBuf,
-    /// Origin of the reposix-compatible backend (e.g. `http://127.0.0.1:7878`).
+    /// Origin of the reposix-compatible REST backend used by the write path
+    /// (e.g. `http://127.0.0.1:7878`). Ignored by the read path.
     pub origin: String,
-    /// Project slug. Every issue under this project is presented as a file.
+    /// Project slug (sim) or `owner/repo` (github). Passed to every
+    /// `IssueBackend` call.
     #[serde(default = "default_project")]
     pub project: String,
-    /// Read-only mode. Accepted for forward-compat with Phase S; writes are
-    /// always refused in v0.1.
+    /// Read-only mode. When `true` the kernel refuses writes at the VFS
+    /// layer and the write-path callbacks never fire.
     pub read_only: bool,
 }
 
@@ -48,8 +61,8 @@ pub struct Mount {
 }
 
 impl Mount {
-    /// Spawn a read-only FUSE mount at `cfg.mount_point` backed by
-    /// `cfg.origin`. The mount lives until the returned [`Mount`] is dropped.
+    /// Spawn a FUSE mount at `cfg.mount_point` whose read path is served by
+    /// `backend`. The mount lives until the returned [`Mount`] is dropped.
     ///
     /// # Errors
     /// Returns an error if:
@@ -67,12 +80,12 @@ impl Mount {
     /// this `Mount` struct (fuser's `UmountOnDrop`) and (b) the CLI's
     /// `MountProcess` watchdog (`fusermount3 -u <mount>`) as belt-and-
     /// suspenders.
-    pub fn open(cfg: &MountConfig) -> Result<Self> {
+    pub fn open(cfg: &MountConfig, backend: Arc<dyn IssueBackend>) -> Result<Self> {
         if !cfg.mount_point.exists() {
             std::fs::create_dir_all(&cfg.mount_point)
                 .with_context(|| format!("create mount point {}", cfg.mount_point.display()))?;
         }
-        let fs = ReposixFs::new(cfg.origin.clone(), cfg.project.clone())?;
+        let fs = ReposixFs::new(backend, cfg.origin.clone(), cfg.project.clone())?;
 
         // Phase S: `MountOption::RO` is conditional. When `cfg.read_only` is
         // true we mount RO (the kernel refuses writes at the VFS layer before

@@ -1,4 +1,5 @@
-//! FUSE [`Filesystem`] implementation — read path (Phase 3) + write path (Phase S).
+//! FUSE [`Filesystem`] implementation — read path (Phase 3, Phase 10
+//! rewire) + write path (Phase S).
 //!
 //! Read-only callbacks: `init`, `getattr`, `lookup`, `readdir`, `read`.
 //! Write callbacks (Phase S): `setattr`, `write`, `flush`, `release`,
@@ -6,6 +7,14 @@
 //! (`ENOSYS`). When `MountConfig::read_only` is true (set at mount time),
 //! the filesystem is mounted with `MountOption::RO` so the kernel refuses
 //! writes at the VFS layer before they ever reach our callbacks.
+//!
+//! # Backend seam (Phase 10)
+//!
+//! The read path speaks to a `dyn IssueBackend` trait object rather than
+//! the simulator's REST shape directly, so the same daemon can mount the
+//! simulator (`SimBackend`) or real GitHub (`GithubReadOnlyBackend`). The
+//! write path still speaks the simulator REST shape via [`fetch`]; a v0.3
+//! cleanup will lift it onto the trait too.
 //!
 //! # Async bridging
 //!
@@ -17,9 +26,10 @@
 //!
 //! # Timeouts (SG-07)
 //!
-//! `fetch::*` enforce a 5-second wall clock inside the futures we block on,
-//! so no callback ever blocks the kernel longer than ~5s. On timeout we
-//! reply `libc::EIO`.
+//! Read-path backend calls are wrapped in a 5-second `tokio::time::timeout`
+//! inside `list_issues_with_timeout` / `get_issue_with_timeout`. Write-path
+//! `fetch::*` helpers carry their own 5s ceiling. On timeout we reply
+//! `libc::EIO` so the kernel never hangs on a dead backend.
 //!
 //! # Egress discipline (SG-03)
 //!
@@ -43,12 +53,61 @@ use fuser::{
 };
 use reposix_core::http::{client, ClientOpts, HttpClient};
 use reposix_core::path::validate_issue_filename;
-use reposix_core::{frontmatter, sanitize, Issue, IssueStatus, ServerMetadata, Tainted};
+use reposix_core::{
+    frontmatter, sanitize, Issue, IssueBackend, IssueId, IssueStatus, ServerMetadata, Tainted,
+};
 use tokio::runtime::Runtime;
 use tracing::warn;
 
-use crate::fetch::{fetch_issue, fetch_issues, patch_issue, post_issue, FetchError};
+use crate::fetch::{patch_issue, post_issue, FetchError};
 use crate::inode::InodeRegistry;
+
+/// 5-second wall-clock ceiling applied to every backend read-path call
+/// (SG-07). A dead backend MUST surface EIO to the kernel within this
+/// budget so callbacks never wedge the VFS.
+const READ_BACKEND_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Map a `reposix_core::Error` from an `IssueBackend` call into a
+/// [`FetchError`]. The fuse layer already has a `fetch_errno` mapper for
+/// [`FetchError`], so routing trait errors through that enum keeps the
+/// errno mapping in one place. `Error::Other("not found: ...")` — the
+/// trait's documented contract for 404 — becomes [`FetchError::NotFound`].
+/// `Error::InvalidOrigin` becomes [`FetchError::Origin`]. Everything else
+/// collapses to [`FetchError::Core`] (mapped to `EIO`).
+fn backend_err_to_fetch(e: reposix_core::Error) -> FetchError {
+    match e {
+        reposix_core::Error::InvalidOrigin(o) => FetchError::Origin(o),
+        reposix_core::Error::Http(t) => FetchError::Transport(t),
+        reposix_core::Error::Json(j) => FetchError::Parse(j),
+        reposix_core::Error::Other(msg) if msg.starts_with("not found") => FetchError::NotFound,
+        other => FetchError::Core(other.to_string()),
+    }
+}
+
+/// Wrap a `backend.list_issues` call in the 5-second SG-07 ceiling.
+async fn list_issues_with_timeout(
+    backend: &Arc<dyn IssueBackend>,
+    project: &str,
+) -> Result<Vec<Issue>, FetchError> {
+    match tokio::time::timeout(READ_BACKEND_TIMEOUT, backend.list_issues(project)).await {
+        Ok(Ok(v)) => Ok(v),
+        Ok(Err(e)) => Err(backend_err_to_fetch(e)),
+        Err(_) => Err(FetchError::Timeout),
+    }
+}
+
+/// Wrap a `backend.get_issue` call in the 5-second SG-07 ceiling.
+async fn get_issue_with_timeout(
+    backend: &Arc<dyn IssueBackend>,
+    project: &str,
+    id: IssueId,
+) -> Result<Issue, FetchError> {
+    match tokio::time::timeout(READ_BACKEND_TIMEOUT, backend.get_issue(project, id)).await {
+        Ok(Ok(v)) => Ok(v),
+        Ok(Err(e)) => Err(backend_err_to_fetch(e)),
+        Err(_) => Err(FetchError::Timeout),
+    }
+}
 
 /// TTLs applied to every reply.
 const ENTRY_TTL: Duration = Duration::from_secs(1);
@@ -64,21 +123,28 @@ struct CachedFile {
     rendered: String,
 }
 
-/// FUSE filesystem backed by a reposix-compatible HTTP API. Read-only or
-/// read-write depending on the mount option; all write callbacks are live
-/// when mounted RW (the simulator's 409 handling is what we rely on for
-/// optimistic concurrency — see `release`).
+/// FUSE filesystem backed by an [`IssueBackend`] trait object for the read
+/// path and by the simulator's REST shape (via [`fetch`]) for the write
+/// path. Read-only or read-write depending on the mount option; all write
+/// callbacks are live when mounted RW (the simulator's 409 handling is
+/// what we rely on for optimistic concurrency — see `release`).
 pub struct ReposixFs {
     /// Tokio runtime owned by the FS; used for `block_on` on callbacks.
     rt: Arc<Runtime>,
-    /// Sealed allowlisted HTTP client (SG-01).
+    /// Read-path backend (Phase 10). All `readdir`/`lookup`/`read` calls
+    /// route through this trait object. Clonable via `Arc` so `fetch::*`
+    /// write-path calls remain independent.
+    backend: Arc<dyn IssueBackend>,
+    /// Sealed allowlisted HTTP client (SG-01) used by the write path
+    /// (`release` PATCH + `create` POST). The read path uses `backend`.
     http: Arc<HttpClient>,
-    /// Backend origin (e.g. `http://127.0.0.1:7878`).
+    /// Simulator origin used by the write path (e.g. `http://127.0.0.1:7878`).
+    /// Ignored by the read path.
     origin: String,
-    /// Project slug (e.g. `demo`).
+    /// Project slug (sim) or `owner/repo` (github).
     project: String,
     /// `X-Reposix-Agent` header value, computed once at construction
-    /// (SG-05 audit attribution).
+    /// (SG-05 audit attribution). Attached to write-path PATCH/POST only.
     agent: String,
     /// Inode registry.
     registry: InodeRegistry,
@@ -104,6 +170,7 @@ impl std::fmt::Debug for ReposixFs {
         // Skip the Arc/DashMap fields (not meaningfully printable); show
         // the address-ish essentials.
         f.debug_struct("ReposixFs")
+            .field("backend", &self.backend.name())
             .field("origin", &self.origin)
             .field("project", &self.project)
             .field("agent", &self.agent)
@@ -112,12 +179,19 @@ impl std::fmt::Debug for ReposixFs {
 }
 
 impl ReposixFs {
-    /// Build a new FUSE filesystem.
+    /// Build a new FUSE filesystem whose read path is served by `backend`.
+    /// `origin` is the simulator REST origin used by the write path
+    /// (PATCH/POST from `release`/`create`); pass any non-empty value when
+    /// mounting a read-only backend like `GithubReadOnlyBackend`.
     ///
     /// # Errors
     /// Returns any error constructing the Tokio runtime or the sealed
     /// [`HttpClient`] (e.g. `REPOSIX_ALLOWED_ORIGINS` un-parseable).
-    pub fn new(origin: String, project: String) -> anyhow::Result<Self> {
+    pub fn new(
+        backend: Arc<dyn IssueBackend>,
+        origin: String,
+        project: String,
+    ) -> anyhow::Result<Self> {
         let rt = Arc::new(
             tokio::runtime::Builder::new_multi_thread()
                 .worker_threads(2)
@@ -149,6 +223,7 @@ impl ReposixFs {
         };
         Ok(Self {
             rt,
+            backend,
             http,
             origin,
             project,
@@ -186,7 +261,7 @@ impl ReposixFs {
     }
 
     /// Resolve a name in the root directory to an (inode, cache entry) pair.
-    /// Does the HTTP fetch + render on miss; populates cache.
+    /// Does the backend fetch + render on miss; populates cache.
     fn resolve_name(&self, name: &str) -> Result<(u64, Arc<CachedFile>), FetchError> {
         let id = validate_issue_filename(name).map_err(|e| FetchError::Core(e.to_string()))?;
         // If we have it, return.
@@ -196,13 +271,9 @@ impl ReposixFs {
             }
         }
         // Fetch + render + intern + cache.
-        let issue = self.rt.block_on(fetch_issue(
-            &self.http,
-            &self.origin,
-            &self.project,
-            id,
-            &self.agent,
-        ))?;
+        let issue = self
+            .rt
+            .block_on(get_issue_with_timeout(&self.backend, &self.project, id))?;
         let rendered = frontmatter::render(&issue).map_err(|e| FetchError::Core(e.to_string()))?;
         let ino = self.registry.intern(id);
         let entry = Arc::new(CachedFile {
@@ -220,13 +291,9 @@ impl ReposixFs {
         let Some(id) = self.registry.lookup_ino(ino) else {
             return Err(FetchError::NotFound);
         };
-        let issue = self.rt.block_on(fetch_issue(
-            &self.http,
-            &self.origin,
-            &self.project,
-            id,
-            &self.agent,
-        ))?;
+        let issue = self
+            .rt
+            .block_on(get_issue_with_timeout(&self.backend, &self.project, id))?;
         let rendered = frontmatter::render(&issue).map_err(|e| FetchError::Core(e.to_string()))?;
         let entry = Arc::new(CachedFile { issue, rendered });
         self.cache.insert(ino, entry.clone());
@@ -333,12 +400,10 @@ impl Filesystem for ReposixFs {
             return;
         }
         // Refresh issue list. On any failure, reply EIO — no kernel hang.
-        let issues = match self.rt.block_on(fetch_issues(
-            &self.http,
-            &self.origin,
-            &self.project,
-            &self.agent,
-        )) {
+        let issues = match self
+            .rt
+            .block_on(list_issues_with_timeout(&self.backend, &self.project))
+        {
             Ok(v) => v,
             Err(e) => {
                 warn!(error = %e, "readdir fetch failed");

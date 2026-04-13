@@ -21,10 +21,12 @@
 
 #![cfg(target_os = "linux")]
 
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use chrono::TimeZone;
-use reposix_core::{Issue, IssueId, IssueStatus};
+use reposix_core::backend::sim::SimBackend;
+use reposix_core::{Issue, IssueBackend, IssueId, IssueStatus};
 use reposix_fuse::{Mount, MountConfig};
 use wiremock::matchers::{method, path, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -101,12 +103,17 @@ fn stat_returns_within_7s_after_backend_dies() {
         .expect("tempdir");
     let mount_path = td.path().to_path_buf();
 
-    let mount = Mount::open(&MountConfig {
-        mount_point: mount_path.clone(),
-        origin: mock_uri,
-        project: "demo".to_owned(),
-        read_only: true,
-    })
+    let backend: Arc<dyn IssueBackend> =
+        Arc::new(SimBackend::new(mock_uri.clone()).expect("sim backend"));
+    let mount = Mount::open(
+        &MountConfig {
+            mount_point: mount_path.clone(),
+            origin: mock_uri,
+            project: "demo".to_owned(),
+            read_only: true,
+        },
+        backend,
+    )
     .expect("mount open");
 
     // Pre-cache: wait for readdir to expose 3 entries. This is what makes

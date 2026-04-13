@@ -15,6 +15,9 @@ path = "src/main.rs"
 
 [dependencies]
 reposix-core.workspace = true
+# Read-path backend selection: the binary constructs SimBackend (default) or
+# GithubReadOnlyBackend based on the --backend flag. Phase 10.
+reposix-github = { path = "../reposix-github" }
 fuser.workspace = true
 libc.workspace = true
 tokio.workspace = true
