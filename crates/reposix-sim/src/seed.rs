@@ -80,7 +80,7 @@ pub fn load_seed(conn: &Connection, path: &Path) -> Result<usize, ApiError> {
 ///
 /// Issue ids are bound into `SQLite` as `i64` (the only integer type rusqlite
 /// exposes). Seed ids come from developer-authored fixtures in a fixed small
-/// range (currently 1..=3), so the `u64 -> i64` cast never wraps — the cast
+/// range (currently 1..=6), so the `u64 -> i64` cast never wraps — the cast
 /// is lint-exempt rather than runtime-checked.
 ///
 /// # Errors
@@ -137,14 +137,14 @@ mod tests {
     }
 
     #[test]
-    fn load_seed_inserts_three_issues() {
+    fn load_seed_inserts_six_issues() {
         let conn = open_db(Path::new(":memory:"), true).expect("open");
         let inserted = load_seed(&conn, &seed_fixture_path()).expect("load");
-        assert_eq!(inserted, 3, "seed should insert exactly 3 rows");
+        assert_eq!(inserted, 6, "seed should insert exactly 6 rows");
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM issues", [], |r| r.get(0))
             .expect("count");
-        assert_eq!(count, 3);
+        assert_eq!(count, 6);
     }
 
     #[test]
@@ -192,7 +192,7 @@ mod tests {
         let conn = open_db(Path::new(":memory:"), true).expect("open");
         let first = load_seed(&conn, &seed_fixture_path()).expect("first");
         let second = load_seed(&conn, &seed_fixture_path()).expect("second");
-        assert_eq!(first, 3);
+        assert_eq!(first, 6);
         assert_eq!(second, 0, "INSERT OR IGNORE must no-op on rerun");
     }
 

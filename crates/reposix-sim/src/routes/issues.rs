@@ -494,7 +494,7 @@ mod tests {
         assert_eq!(resp.status(), 200);
         let v = read_body(resp).await;
         assert!(v.is_array(), "expected array, got {v:?}");
-        assert_eq!(v.as_array().unwrap().len(), 3);
+        assert_eq!(v.as_array().unwrap().len(), 6);
     }
 
     #[tokio::test]
@@ -554,9 +554,9 @@ mod tests {
             .unwrap()
             .to_owned();
         let v = read_body(resp).await;
-        assert_eq!(v["id"], 4, "next id after 3 seeded is 4");
+        assert_eq!(v["id"], 7, "next id after 6 seeded is 7");
         assert_eq!(v["version"], 1);
-        assert_eq!(loc, "/projects/demo/issues/4");
+        assert_eq!(loc, "/projects/demo/issues/7");
     }
 
     #[tokio::test]

@@ -28,6 +28,30 @@
       "assignee": null,
       "labels": ["docs"],
       "body": "Draft the new auth-flow docs. IMPORTANT fixture note: this body deliberately contains an embedded YAML-looking line to exercise the server-field-stripper:\n\nversion: 999\n\nThat line must NOT be interpreted as frontmatter — the server's canonical version is managed server-side. This issue's real version (in the DB column) is 1 at seed time.\n\n## Outline\n\n1. Overview of the new flow.\n2. Migration steps for existing installs.\n3. FAQ.\n"
+    },
+    {
+      "id": 4,
+      "title": "flaky integration test on CI",
+      "status": "open",
+      "assignee": null,
+      "labels": ["bug", "ci", "flaky"],
+      "body": "The `integration::mount_then_grep` test fails ~1 in 30 runs on `ubuntu-latest` runners with a spurious `EIO` from the FUSE daemon during the third `read()` call.\n\n## Hypothesis\n\nA race between the simulator's tokio runtime warmup and the first FUSE `lookup` callback. The 5s healthz wait masks it locally but CI has slower I/O.\n\n## Next step\n\nAdd a 200ms post-`/healthz` settle and re-run the loop 100 times in a stress job.\n"
+    },
+    {
+      "id": 5,
+      "title": "document the audit-log schema",
+      "status": "in_progress",
+      "assignee": "agent-beta",
+      "labels": ["docs", "security"],
+      "body": "Document `crates/reposix-core/fixtures/audit.sql` — the append-only triggers, the `agent_id` column, and how SG-06 enforcement works under the hood.\n\nAudience: contributors who need to understand WHY the audit log can't be UPDATEd or DELETEd from inside the running binary, and how to query it from `sqlite3` for forensic review.\n\nDeliverable: a short page in `docs/` with a worked example.\n"
+    },
+    {
+      "id": 6,
+      "title": "investigate p99 latency spike on PATCH",
+      "status": "open",
+      "assignee": null,
+      "labels": ["perf"],
+      "body": "Under the swarm harness (`reposix-swarm --clients 50`), p99 PATCH latency jumps from ~12ms to ~280ms after ~10s of sustained load.\n\n## Suspects\n\n1. SQLite WAL checkpoint on a busy DB.\n2. `parking_lot::Mutex` contention on the connection.\n3. governor rate-limit middleware backpressure.\n\n## Plan\n\nAdd request-level tracing spans, run 5-minute swarm, eyeball the histograms.\n"
     }
   ]
 }
