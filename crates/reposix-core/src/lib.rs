@@ -13,8 +13,10 @@ pub mod http;
 mod issue;
 mod project;
 mod remote;
+mod taint;
 
 pub use error::{Error, Result};
 pub use issue::{frontmatter, Issue, IssueId, IssueStatus};
 pub use project::{Project, ProjectSlug};
 pub use remote::{parse_remote_url, RemoteSpec};
+pub use taint::{sanitize, ServerMetadata, Tainted, Untainted};
