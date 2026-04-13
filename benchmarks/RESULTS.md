@@ -1,6 +1,6 @@
 # Benchmark results — token economy
 
-*Measured: 2026-04-13 12:21 UTC*
+*Measured: 2026-04-13 16:23 UTC*
 
 Task held constant across both scenarios: **read 3 issues, edit 1, push the
 change**. What differs is only the context the agent must ingest to get

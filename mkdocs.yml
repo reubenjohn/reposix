@@ -75,8 +75,12 @@ nav:
   - Home: index.md
   - Why reposix: why.md
   - Architecture: architecture.md
-  - Demo: demo.md
+  - Demos:
+      - Overview: demos/index.md
+      - Tier 2 walkthrough: demo.md
   - Security: security.md
+  - Decisions:
+      - ADR-001 GitHub state mapping: decisions/001-github-state-mapping.md
   - Reference:
       - Crates overview: reference/crates.md
       - CLI: reference/cli.md

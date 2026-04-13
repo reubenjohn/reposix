@@ -8,7 +8,7 @@ question:
   ten, start here.
 - **Tier 2** — the full 9-step walkthrough. The monolith demo that
   ships as `scripts/demo.sh` (which is now a shim to
-  [`scripts/demos/full.sh`](../../scripts/demos/full.sh)). Watch
+  [`scripts/demos/full.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/full.sh)). Watch
   this if Tier 1 convinced you to spend more than a minute.
 - **Tier 3** — sim-vs-real-backend parity demo. Tier 3 lands later
   in Phase 8 once the `reposix-github` read-only adapter is wired
@@ -16,18 +16,18 @@ question:
 
 All demos are `set -euo pipefail`, self-cleaning, and bounded by a
 90-second `timeout`. The smoke suite in
-[`scripts/demos/smoke.sh`](../../scripts/demos/smoke.sh) runs the
-four Tier 1 demos through [`scripts/demos/assert.sh`](../../scripts/demos/assert.sh)
+[`scripts/demos/smoke.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/smoke.sh) runs the
+four Tier 1 demos through [`scripts/demos/assert.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/assert.sh)
 and is what the `demos-smoke` CI job invokes on every push.
 
 ## Tier 1 — audience-specific 60s demos
 
 | # | Demo                                                                       | Audience    | Runtime | What it proves                                                                                      | Recording                                                                                                                                                                         |
 |---|----------------------------------------------------------------------------|-------------|--------:|-----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1 | [`01-edit-and-push.sh`](../../scripts/demos/01-edit-and-push.sh)           | developer   |    ~60s | FUSE mount + `cat`/`sed` edit + `git push` round-trip changes server state end-to-end.              | [typescript](recordings/01-edit-and-push.typescript) · [transcript](recordings/01-edit-and-push.transcript.txt)                                                                   |
-| 2 | [`02-guardrails.sh`](../../scripts/demos/02-guardrails.sh)                 | security    |    ~60s | SG-01 allowlist refusal + SG-02 bulk-delete cap + SG-03 sanitize-on-egress all fire on camera.      | [typescript](recordings/02-guardrails.typescript) · [transcript](recordings/02-guardrails.transcript.txt)                                                                         |
-| 3 | [`03-conflict-resolution.sh`](../../scripts/demos/03-conflict-resolution.sh) | skeptic     |    ~60s | `If-Match` + 409 `version_mismatch` is what git turns into a native merge conflict on push.         | [typescript](recordings/03-conflict-resolution.typescript) · [transcript](recordings/03-conflict-resolution.transcript.txt)                                                       |
-| 4 | [`04-token-economy.sh`](../../scripts/demos/04-token-economy.sh)           | buyer       |    ~10s | 92.3% fewer tokens vs MCP-mediated baseline for the same task.                                      | [typescript](recordings/04-token-economy.typescript) · [transcript](recordings/04-token-economy.transcript.txt)                                                                   |
+| 1 | [`01-edit-and-push.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/01-edit-and-push.sh)           | developer   |    ~60s | FUSE mount + `cat`/`sed` edit + `git push` round-trip changes server state end-to-end.              | [typescript](recordings/01-edit-and-push.typescript) · [transcript](recordings/01-edit-and-push.transcript.txt)                                                                   |
+| 2 | [`02-guardrails.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/02-guardrails.sh)                 | security    |    ~60s | SG-01 allowlist refusal + SG-02 bulk-delete cap + SG-03 sanitize-on-egress all fire on camera.      | [typescript](recordings/02-guardrails.typescript) · [transcript](recordings/02-guardrails.transcript.txt)                                                                         |
+| 3 | [`03-conflict-resolution.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/03-conflict-resolution.sh) | skeptic     |    ~60s | `If-Match` + 409 `version_mismatch` is what git turns into a native merge conflict on push.         | [typescript](recordings/03-conflict-resolution.typescript) · [transcript](recordings/03-conflict-resolution.transcript.txt)                                                       |
+| 4 | [`04-token-economy.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/04-token-economy.sh)           | buyer       |    ~10s | 92.3% fewer tokens vs MCP-mediated baseline for the same task.                                      | [typescript](recordings/04-token-economy.typescript) · [transcript](recordings/04-token-economy.transcript.txt)                                                                   |
 
 ### Audience guide
 
@@ -48,7 +48,7 @@ the suite but substantively unchanged):
 
 | Demo                                          | Runtime | Recording                                                                                                                |
 |-----------------------------------------------|--------:|--------------------------------------------------------------------------------------------------------------------------|
-| [`demos/full.sh`](../../scripts/demos/full.sh) | ~90s    | [docs/demo.typescript](../demo.typescript) · [docs/demo.transcript.txt](../demo.transcript.txt) · [walkthrough prose](../demo.md) |
+| [`demos/full.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/full.sh) | ~90s    | [docs/demo.typescript](../demo.typescript) · [docs/demo.transcript.txt](../demo.transcript.txt) · [walkthrough prose](../demo.md) |
 
 `scripts/demo.sh` remains as a backwards-compat shim that execs
 `scripts/demos/full.sh`, so existing users and docs that reference
