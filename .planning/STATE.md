@@ -6,24 +6,23 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** An LLM agent can `ls`, `cat`, `grep`, edit, and `git push`
 issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
-**Current focus:** Phase 2 COMPLETE; Phase 3 executing in parallel (separate
-agent). Next MVD gate: Phase 4 demo after Phase 3 completes.
+**Current focus:** **v0.1 SHIPPED.** All 4 MVD phases + STRETCH Phase S complete.
+Demo verified end-to-end on dev host 04:59 PDT. CI green.
 
 ## Current Position
 
-Phase: S of 4 (+S STRETCH) — Phase S (write path + git-remote-reposix): **DONE**
-Plan: 2/2 (both S-A and S-B shipped end-to-end — see
-`.planning/phases/S-stretch-write-path-and-remote-helper/S-DONE.md`).
-Cursor: Phase 4 (demo recording).
-Status: Phase S complete in 27 wall-clock minutes (well under 120-min
-budget). All 3 Phase S SCs green; ~133 workspace tests pass; `git push`
-through `git-remote-reposix` empirically verified against live sim;
-SG-02 bulk-delete cap fires on attempted 6-delete push and is
-overridable via `[allow-bulk-delete]`.
-Last activity: 2026-04-13 — Phase S complete. 3 feat commits
-(`dc09b4a`, `b12036e`, `4006f13`) plus DONE.md.
+Phase: 4 of 4 (+S STRETCH, also shipped) — **Phase 4 COMPLETE**.
+Plan: 2/2 (demo script+recording + README polish — see
+`.planning/phases/04-demo-recording-readme/04-DONE.md`).
+Cursor: **Project complete. v0.1 shipped.**
+Status: All 5 Phase 4 SCs verified empirically. `bash scripts/demo.sh` runs
+end-to-end in <120s on the dev host; the recording (`docs/demo.typescript`)
+captures three guardrails firing on camera (SG-01 allowlist refusal,
+SG-02 bulk-delete cap, SG-03 frontmatter strip). CI green on the final
+README commit. 133 workspace tests pass.
+Last activity: 2026-04-13 05:00 PDT — Phase 4 close-out.
 
-Progress: [███████░░░] ~70% (Phases 1, 2, 3, S all done; Phase 4 = demo)
+Progress: [██████████] 100% (Phases 1, 2, 3, S, 4 all done)
 
 ## Performance Metrics
 
