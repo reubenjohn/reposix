@@ -122,8 +122,13 @@ pub async fn run(keep_running: bool) -> Result<()> {
         info!("[step 3/6] mounting FUSE at {}", mount_path.display());
         guard.tempdir = Some(td);
         guard.mount = Some(
-            MountProcess::spawn(&mount_path, &format!("http://{SIM_BIND}"), "demo")
-                .context("spawn mount")?,
+            MountProcess::spawn(
+                &mount_path,
+                &format!("http://{SIM_BIND}"),
+                "demo",
+                crate::list::ListBackend::Sim,
+            )
+            .context("spawn mount")?,
         );
 
         // Step 4: scripted ls / cat / grep.

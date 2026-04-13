@@ -30,6 +30,40 @@ fn subcommand_help_renders() {
     }
 }
 
+/// `reposix mount --help` must succeed and mention the `--backend`
+/// flag. Proves the Phase-10 rewire surfaces the backend-selector in the
+/// top-level CLI (not just `reposix-fuse`).
+#[test]
+fn mount_help_documents_backend_flag() {
+    use assert_cmd::Command;
+    let out = Command::cargo_bin("reposix")
+        .unwrap()
+        .args(["mount", "--help"])
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "mount --help failed: status={:?} stderr={:?}",
+        out.status,
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    // --backend selects sim vs github; --origin is the sim REST origin;
+    // --project is owner/repo or sim slug.
+    for flag in ["--backend", "--origin", "--project"] {
+        assert!(
+            stdout.contains(flag),
+            "mount --help missing {flag}: {stdout}"
+        );
+    }
+    for value in ["sim", "github"] {
+        assert!(
+            stdout.contains(value),
+            "mount --help missing backend value '{value}': {stdout}"
+        );
+    }
+}
+
 /// `reposix list --help` must succeed and mention the three flags the
 /// subcommand exposes. Ensures the subcommand is reachable from clap's
 /// dispatcher and its args are defined as expected.

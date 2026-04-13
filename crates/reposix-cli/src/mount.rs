@@ -1,14 +1,19 @@
 //! Child-process wrapper around the `reposix-fuse` binary, with a 3-second
 //! unmount watchdog on Drop.
+//!
+//! The `--backend` flag chooses the read-path backend: `sim` (default)
+//! speaks the reposix simulator REST API at `--origin`; `github` mounts
+//! real `api.github.com` issues for `--project owner/repo`.
 
 use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Stdio};
 use std::time::{Duration, Instant};
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 
 use crate::binpath::resolve_bin;
+use crate::list::ListBackend;
 
 /// A running `reposix-fuse` child with its mount path bookkeept so Drop
 /// can try `fusermount3 -u` bounded by a 3-second watchdog.
@@ -21,14 +26,42 @@ pub struct MountProcess {
 impl MountProcess {
     /// Spawn the FUSE daemon in the foreground-of-its-own-process-group.
     ///
+    /// `backend` selects the read-path backend kind. `origin` is the
+    /// simulator REST origin when `backend == Sim`; ignored (but still
+    /// forwarded) for `Github`.
+    ///
     /// # Errors
-    /// Returns an error if the child fails to spawn, or if the mount does
-    /// not expose entries within 3s.
-    pub fn spawn(mount_point: &Path, backend: &str, project: &str) -> Result<Self> {
+    /// Returns an error if the child fails to spawn, if `backend ==
+    /// Github` and `REPOSIX_ALLOWED_ORIGINS` doesn't include
+    /// `https://api.github.com`, or if the mount does not expose entries
+    /// within 5s.
+    pub fn spawn(
+        mount_point: &Path,
+        origin: &str,
+        project: &str,
+        backend: ListBackend,
+    ) -> Result<Self> {
+        // Fail fast for `github` if the allowlist obviously isn't set —
+        // matches the reposix-fuse binary's own guard so the user gets a
+        // clean CLI error rather than a spawn-that-immediately-dies.
+        if backend == ListBackend::Github {
+            let raw = std::env::var("REPOSIX_ALLOWED_ORIGINS").unwrap_or_default();
+            if !raw.contains("api.github.com") {
+                bail!(
+                    "REPOSIX_ALLOWED_ORIGINS must include https://api.github.com for --backend github (got {raw:?})"
+                );
+            }
+        }
+        let backend_kind = match backend {
+            ListBackend::Sim => "sim",
+            ListBackend::Github => "github",
+        };
         let mut cmd = resolve_bin("reposix-fuse");
         cmd.arg(mount_point)
+            .arg("--backend-kind")
+            .arg(backend_kind)
             .arg("--backend")
-            .arg(backend)
+            .arg(origin)
             .arg("--project")
             .arg(project);
         // Discard stdin (the child has no input). Inherit stderr so the
@@ -153,8 +186,13 @@ impl Drop for MountProcess {
 ///
 /// # Errors
 /// Returns any spawn error or a non-zero exit from the child.
-pub fn run(mount_point: PathBuf, backend: String, project: String) -> Result<()> {
-    let mount = MountProcess::spawn(&mount_point, &backend, &project)?;
+pub fn run(
+    mount_point: PathBuf,
+    origin: String,
+    project: String,
+    backend: ListBackend,
+) -> Result<()> {
+    let mount = MountProcess::spawn(&mount_point, &origin, &project, backend)?;
     let status = mount.wait()?;
     if !status.success() {
         anyhow::bail!("reposix-fuse exited with {status}");

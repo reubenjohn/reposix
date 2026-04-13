@@ -59,16 +59,28 @@ enum Cmd {
         rate_limit: u32,
     },
     /// Mount the FUSE filesystem (delegates to `reposix-fuse`).
+    ///
+    /// `--backend sim` (default) speaks the reposix simulator's REST shape
+    /// at `--origin`. `--backend github` mounts real `api.github.com`
+    /// issues for `--project owner/repo`; requires
+    /// `REPOSIX_ALLOWED_ORIGINS` to include `https://api.github.com` and
+    /// optionally `GITHUB_TOKEN` for the 5000 req/hr ceiling.
     Mount {
         /// Mount point.
         mount_point: PathBuf,
-        /// Backend origin.
+        /// Simulator REST origin. Used when `--backend sim` (default);
+        /// ignored for `--backend github`.
         #[arg(long, default_value = "http://127.0.0.1:7878")]
-        backend: String,
-        /// Project slug.
+        origin: String,
+        /// Project slug (sim) or `owner/repo` (github).
         #[arg(long, default_value = "demo")]
         project: String,
-        /// Read-only flag (forward-compat; v0.1 is always read-only).
+        /// Which backend to speak. `sim` keeps v0.1 behaviour; `github`
+        /// mounts real GitHub Issues end-to-end.
+        #[arg(long, value_enum, default_value_t = list::ListBackend::Sim)]
+        backend: list::ListBackend,
+        /// Read-only flag (forward-compat; v0.1 sim mount is always
+        /// read-write, github is forced read-only).
         #[arg(long)]
         read_only: bool,
     },
@@ -130,10 +142,11 @@ async fn main() -> Result<()> {
         } => sim::run(&bind, db, seed_file, no_seed, ephemeral, rate_limit),
         Cmd::Mount {
             mount_point,
-            backend,
+            origin,
             project,
+            backend,
             read_only: _,
-        } => mount::run(mount_point, backend, project),
+        } => mount::run(mount_point, origin, project, backend),
         Cmd::Demo { keep_running } => demo::run(keep_running).await,
         Cmd::List {
             project,
