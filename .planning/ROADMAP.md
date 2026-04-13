@@ -346,4 +346,18 @@ Phases 2 and 3 run in parallel. Phase S is conditional.
 | 2. Simulator + audit log | 0/2 | Not started | - |
 | 3. Read-only FUSE mount + CLI | 0/2 | Not started | - |
 | 4. Demo + recording + README | 0/1 | Not started | - |
-| S. STRETCH: write + swarm + FUSE-in-CI | 0/3 | Conditional (T+3h gate) | - |
+| S. STRETCH: write + swarm + FUSE-in-CI | 2/3 | Complete (swarm+CI deferred) | 2026-04-13 |
+| 8. Demo suite + real-backend seam | 0/4 | Post-ship value add | - |
+
+## Phase 8: Demo suite + real-backend seam (post-ship)
+**Goal**: Split the demo monolith into a maintainable suite AND carve the IssueBackend seam so a real GitHub adapter can land without reshaping the FUSE/remote layers.
+**Added**: 2026-04-13 09:05 PDT (post-v0.1.0-ship; user-requested value add)
+**Deadline**: 12:15 PDT (~3h 10min)
+**Depends on**: Phase 4 demo, Phase 7 robustness
+**Requirements**: introduces maintainability + real-backend parity (v0.2 prep)
+
+**Plans**:
+- [ ] 08-A: Demo restructure (`scripts/demos/_lib.sh` + 4 Tier-1 one-liners + assert.sh + smoke.sh + full.sh rename + old demo.sh shim + docs/demos/index.md + CI smoke job).
+- [ ] 08-B: `IssueBackend` trait in `reposix-core` + `SimBackend` impl + `reposix list` CLI subcommand.
+- [ ] 08-C: `reposix-github` crate with `GithubReadOnlyBackend` + state-mapping ADR + `scripts/demos/parity.sh`.
+- [ ] 08-D: Contract test suite parameterized over both backends + Tier-1 demo recordings + docs updates.
