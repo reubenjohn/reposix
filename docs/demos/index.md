@@ -10,9 +10,10 @@ question:
   ships as `scripts/demo.sh` (which is now a shim to
   [`scripts/demos/full.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/full.sh)). Watch
   this if Tier 1 convinced you to spend more than a minute.
-- **Tier 3** — sim-vs-real-backend parity demo. Tier 3 lands later
-  in Phase 8 once the `reposix-github` read-only adapter is wired
-  up; until then this table lists it as `(coming)`.
+- **Tier 3** — sim-vs-real-backend parity demo. Lists issues
+  from the simulator and from real `octocat/Hello-World`, and diffs
+  their normalized `{id, title, status}` shape. The diff IS the
+  story: same schema, different content.
 
 All demos are `set -euo pipefail`, self-cleaning, and bounded by a
 90-second `timeout`. The smoke suite in
@@ -56,9 +57,15 @@ the suite but substantively unchanged):
 
 ## Tier 3 — sim vs real-backend parity
 
-| Demo                                       | Runtime | What it proves                                                                                              | Status                          |
-|--------------------------------------------|--------:|-------------------------------------------------------------------------------------------------------------|---------------------------------|
-| `demos/parity.sh` (coming in Phase 8-B/C)  |   ~30s  | Running `reposix list --backend sim --project demo` and `reposix list --backend github --project octocat/Hello-World` produces structurally identical JSON (modulo content). | shipping with `reposix-github` adapter |
+| Demo                                                                                                                  | Audience | Runtime | What it proves                                                                                                                                      | Recording                                                                                                                 |
+| --------------------------------------------------------------------------------------------------------------------- | -------- | ------: | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| [`parity.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/parity.sh)                                 | skeptic  |    ~30s | `reposix list` against the sim and `gh api` against `octocat/Hello-World` produce the same `{id, title, status}` JSON shape. Diff = content only.   | [typescript](recordings/parity.typescript) · [transcript](recordings/parity.transcript.txt)                               |
+
+The library-level proof of the same claim is
+[`crates/reposix-github/tests/contract.rs`](https://github.com/reubenjohn/reposix/blob/main/crates/reposix-github/tests/contract.rs):
+the five invariants in `assert_contract` hold for both `SimBackend`
+(in every CI run) and `GithubReadOnlyBackend` (opt-in via `cargo test
+-p reposix-github -- --ignored`).
 
 ## Running the suite yourself
 
