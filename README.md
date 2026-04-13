@@ -3,8 +3,11 @@
 > A git-backed FUSE filesystem that exposes REST APIs as POSIX directories so autonomous LLM agents can use `cat`, `grep`, `sed`, and `git` instead of MCP tool schemas.
 
 [![CI](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml/badge.svg)](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml)
+[![Docs](https://github.com/reubenjohn/reposix/actions/workflows/docs.yml/badge.svg)](https://reubenjohn.github.io/reposix/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE-MIT)
 [![Rust](https://img.shields.io/badge/rust-stable-orange.svg)](rust-toolchain.toml)
+
+:book: **Full docs with architecture diagrams:** <https://reubenjohn.github.io/reposix/>
 
 ## Why
 
