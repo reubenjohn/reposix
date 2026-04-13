@@ -217,6 +217,37 @@ impl HttpClient {
     /// `REPOSIX_ALLOWED_ORIGINS` is set but un-parseable. Returns
     /// [`Error::Http`] for transport-level failures from `reqwest`.
     pub async fn request<U: IntoUrl>(&self, method: Method, url: U) -> Result<reqwest::Response> {
+        // Delegate to `request_with_headers` with an empty header slice. Keeping
+        // the single-method hot path lets the allowlist gate live in one place.
+        self.request_with_headers(method, url, &[]).await
+    }
+
+    /// Send a `method` request to `url` with extra headers attached in order,
+    /// re-checking `url` against the allowlist before any I/O.
+    ///
+    /// The allowlist gate fires BEFORE any header is attached and BEFORE any
+    /// socket work; a non-allowlisted origin returns [`Error::InvalidOrigin`]
+    /// without leaking header data to the network layer. Headers are attached
+    /// in order; duplicates are allowed and preserved (reqwest does not
+    /// dedupe).
+    ///
+    /// This is the hook callers MUST use after observing a 3xx: re-feed the
+    /// `Location` URL through [`HttpClient::request_with_headers`] (or the
+    /// zero-header [`HttpClient::request`] wrapper) so the allowlist recheck
+    /// rejects redirect targets that escape the allowlist (SG-01 defence in
+    /// depth).
+    ///
+    /// # Errors
+    /// Returns [`Error::InvalidOrigin`] if `url` fails to parse or its origin
+    /// does not match any allowlist entry. Returns [`Error::Other`] if
+    /// `REPOSIX_ALLOWED_ORIGINS` is set but un-parseable. Returns
+    /// [`Error::Http`] for transport-level failures from `reqwest`.
+    pub async fn request_with_headers<U: IntoUrl>(
+        &self,
+        method: Method,
+        url: U,
+        headers: &[(&str, &str)],
+    ) -> Result<reqwest::Response> {
         // `IntoUrl::into_url` parses the input into a `url::Url`. We feed
         // that through the allowlist gate before handing it to reqwest.
         let parsed = url
@@ -226,7 +257,11 @@ impl HttpClient {
         if !allowlist.iter().any(|g| g.matches(&parsed)) {
             return Err(Error::InvalidOrigin(parsed.to_string()));
         }
-        let resp = self.inner.request(method, parsed).send().await?;
+        let mut builder = self.inner.request(method, parsed);
+        for (k, v) in headers {
+            builder = builder.header(*k, *v);
+        }
+        let resp = builder.send().await?;
         Ok(resp)
     }
 

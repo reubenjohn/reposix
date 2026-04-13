@@ -1,0 +1,33 @@
+{
+  "project": {
+    "slug": "demo",
+    "name": "Demo Project",
+    "description": "Reposix walkthrough fixtures"
+  },
+  "issues": [
+    {
+      "id": 1,
+      "title": "database connection drops under load",
+      "status": "open",
+      "assignee": null,
+      "labels": ["bug", "p1"],
+      "body": "The <script>alert(1)</script> test harness drops connections after ~500 concurrent requests.\n\n## Steps to reproduce\n\n1. Start a fresh postgres container.\n2. Run `cargo bench -p load-gen -- --clients 500 --duration 30s`.\n3. Observe EOF errors in the client log after ~18s.\n\n## Expected\n\nConnections are pooled and recycled cleanly; no EOFs under sustained load within the configured pool size.\n\n## Actual\n\nPool exhaustion + socket leak. The `<script>` tag above is part of the adversarial-fixture body that proves frontmatter stripping survives untrusted content.\n"
+    },
+    {
+      "id": 2,
+      "title": "add `--no-color` flag to CLI",
+      "status": "in_progress",
+      "assignee": "agent-alpha",
+      "labels": ["enhancement"],
+      "body": "Users running the CLI under CI or inside editors that don't render ANSI want a `--no-color` flag (and `NO_COLOR` env var per https://no-color.org).\n\nImplementation notes:\n- Honor `NO_COLOR` if set (even empty).\n- `--no-color` flag overrides terminal detection.\n- Default stays auto-detect via `std::io::IsTerminal`.\n\nAcceptance: `NO_COLOR=1 reposix demo | cat` emits no ANSI escapes.\n"
+    },
+    {
+      "id": 3,
+      "title": "document the new auth flow",
+      "status": "in_review",
+      "assignee": null,
+      "labels": ["docs"],
+      "body": "Draft the new auth-flow docs. IMPORTANT fixture note: this body deliberately contains an embedded YAML-looking line to exercise the server-field-stripper:\n\nversion: 999\n\nThat line must NOT be interpreted as frontmatter — the server's canonical version is managed server-side. This issue's real version (in the DB column) is 1 at seed time.\n\n## Outline\n\n1. Overview of the new flow.\n2. Migration steps for existing installs.\n3. FAQ.\n"
+    }
+  ]
+}

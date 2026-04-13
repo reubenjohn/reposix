@@ -228,6 +228,58 @@ async fn redirect_target_is_rechecked_against_allowlist() {
 }
 
 #[tokio::test]
+async fn request_with_headers_rechecks_allowlist() {
+    // Same fast-reject invariant as `egress_to_non_allowlisted_host_is_rejected`,
+    // but exercised through the header-carrying variant. Must short-circuit
+    // BEFORE any header is attached and BEFORE any I/O.
+    let _g = EnvGuard::unset();
+    let c = client(ClientOpts::default()).expect("client builds");
+    let t0 = Instant::now();
+    let err = c
+        .request_with_headers(
+            reqwest::Method::GET,
+            "https://evil.example/",
+            &[("X-Reposix-Agent", "reposix-fuse-1")],
+        )
+        .await
+        .expect_err("non-allowlisted host must be rejected");
+    let elapsed = t0.elapsed();
+    assert!(matches!(err, Error::InvalidOrigin(_)), "got: {err:?}");
+    assert!(
+        elapsed < Duration::from_millis(500),
+        "recheck must short-circuit; took {elapsed:?}"
+    );
+}
+
+#[tokio::test]
+async fn request_with_headers_attaches_header() {
+    // When the origin IS allowlisted, the provided header pair must land on
+    // the outgoing request. wiremock's header() matcher enforces this: absent
+    // the expected header, the mock returns its default 404.
+    let _g = EnvGuard::unset();
+    let server = MockServer::start().await;
+    Mock::given(any())
+        .and(wiremock::matchers::header(
+            "X-Reposix-Agent",
+            "reposix-fuse-123",
+        ))
+        .respond_with(ResponseTemplate::new(200))
+        .mount(&server)
+        .await;
+
+    let c = client(ClientOpts::default()).expect("client builds");
+    let resp = c
+        .request_with_headers(
+            reqwest::Method::GET,
+            server.uri(),
+            &[("X-Reposix-Agent", "reposix-fuse-123")],
+        )
+        .await
+        .expect("allowlisted request with matching header succeeds");
+    assert_eq!(resp.status().as_u16(), 200);
+}
+
+#[tokio::test]
 #[ignore = "sleeps ~5s to exercise the timeout; run with --ignored in CI"]
 async fn request_times_out_after_5_seconds() {
     let _g = EnvGuard::unset();

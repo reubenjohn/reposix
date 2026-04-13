@@ -10,17 +10,29 @@ use reposix_sim::{run, SimConfig};
 #[derive(Debug, Parser)]
 #[command(version, about)]
 struct Args {
-    /// Bind address (default 127.0.0.1:7777).
-    #[arg(long, default_value = "127.0.0.1:7777")]
+    /// Bind address.
+    #[arg(long, default_value = "127.0.0.1:7878")]
     bind: std::net::SocketAddr,
 
-    /// SQLite audit log path. Use `:memory:` for ephemeral.
+    /// SQLite DB path. Ignored when `--ephemeral` is set.
     #[arg(long, default_value = "runtime/sim.db")]
     db: PathBuf,
 
-    /// Skip seeding demo data.
+    /// Optional seed JSON file (e.g. `crates/reposix-sim/fixtures/seed.json`).
+    #[arg(long)]
+    seed_file: Option<PathBuf>,
+
+    /// Skip seeding demo data even if `--seed-file` is given.
     #[arg(long)]
     no_seed: bool,
+
+    /// Use an in-memory DB, ignoring `--db`.
+    #[arg(long)]
+    ephemeral: bool,
+
+    /// Per-agent rate limit (requests per second). Default 100.
+    #[arg(long, default_value_t = 100)]
+    rate_limit: u32,
 }
 
 #[tokio::main]
@@ -32,15 +44,20 @@ async fn main() -> Result<()> {
         )
         .init();
     let args = Args::parse();
-    if let Some(parent) = args.db.parent() {
-        if !parent.as_os_str().is_empty() && parent != std::path::Path::new(":memory:") {
-            std::fs::create_dir_all(parent).ok();
+    if !args.ephemeral {
+        if let Some(parent) = args.db.parent() {
+            if !parent.as_os_str().is_empty() {
+                std::fs::create_dir_all(parent).ok();
+            }
         }
     }
     run(SimConfig {
         bind: args.bind,
         db_path: args.db,
         seed: !args.no_seed,
+        seed_file: args.seed_file,
+        ephemeral: args.ephemeral,
+        rate_limit_rps: args.rate_limit,
     })
     .await
 }
