@@ -101,10 +101,10 @@ async fn main() -> Result<()> {
             bind,
             db,
             seed_file,
-            no_seed: _,
+            no_seed,
             ephemeral,
-            rate_limit: _,
-        } => sim::run(&bind, db, seed_file, ephemeral),
+            rate_limit,
+        } => sim::run(&bind, db, seed_file, no_seed, ephemeral, rate_limit),
         Cmd::Mount {
             mount_point,
             backend,

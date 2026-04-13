@@ -30,6 +30,46 @@ fn subcommand_help_renders() {
     }
 }
 
+/// Regression for H-02 (review 2026-04-13): `reposix sim --no-seed` and
+/// `--rate-limit` were silently dropped in the `Cmd::Sim` match arm
+/// (`no_seed: _, rate_limit: _`). Clap accepted them and `--help`
+/// listed them, but `sim::run` never received the values.
+///
+/// We can't easily prove rate-limit semantics without spinning up the
+/// sim end-to-end (see `crates/reposix-sim/tests/api.rs` for that),
+/// but we can prove that clap parses both flags together with `--help`
+/// without erroring out — i.e. that they are still defined on the
+/// subcommand. A regression that re-`_`s the destructure would still
+/// pass *this* check (it's a clap-level test), but combined with the
+/// `Cmd::Sim` match-arm now naming both fields, the compiler will
+/// reject the `_` reintroduction (unused-variable warning under
+/// `-D warnings`). Together: defense in depth against the same regression.
+#[test]
+fn sim_accepts_no_seed_and_rate_limit_flags() {
+    use assert_cmd::Command;
+    let out = Command::cargo_bin("reposix")
+        .unwrap()
+        .args(["sim", "--rate-limit", "7", "--no-seed", "--help"])
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "sim --rate-limit 7 --no-seed --help failed: status={:?} stderr={:?}",
+        out.status,
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    // Spot-check both flags are documented.
+    assert!(
+        stdout.contains("--rate-limit"),
+        "sim --help missing --rate-limit: {stdout}"
+    );
+    assert!(
+        stdout.contains("--no-seed"),
+        "sim --help missing --no-seed: {stdout}"
+    );
+}
+
 /// Full end-to-end: spawn sim → mount → ls/cat/grep → audit tail → exit 0.
 /// Gated `#[ignore]` so default `cargo test` stays fast and doesn't require
 /// fusermount3 on dev machines that lack it. CI's integration job runs it.

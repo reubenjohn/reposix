@@ -13,7 +13,7 @@ use rusqlite::OpenFlags;
 use tracing::info;
 
 use crate::mount::MountProcess;
-use crate::sim::SimProcess;
+use crate::sim::{SimOptions, SimProcess};
 
 const SIM_BIND: &str = "127.0.0.1:7878";
 
@@ -58,6 +58,7 @@ pub async fn run(keep_running: bool) -> Result<()> {
                 SIM_BIND,
                 &db_path,
                 seed_arg.map(std::convert::AsRef::as_ref),
+                SimOptions::default(),
             )
             .context("spawn sim")?,
         );
