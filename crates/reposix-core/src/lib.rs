@@ -8,6 +8,7 @@
 #![warn(missing_docs, clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
 
+pub mod audit;
 mod error;
 pub mod http;
 mod issue;
