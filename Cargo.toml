@@ -46,7 +46,7 @@ thiserror = "2"
 
 # FUSE — default-features=false avoids requiring libfuse-dev/pkg-config at compile time;
 # uses runtime fusermount/fusermount3 binaries instead (already present on most Linux hosts).
-fuser = { version = "0.15", default-features = false }
+fuser = { version = "0.17", default-features = false }
 libc = "0.2"
 
 # Storage
