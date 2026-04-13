@@ -54,14 +54,21 @@
 #![allow(clippy::module_name_repetitions)]
 
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
+use parking_lot::Mutex;
 use reqwest::{Method, StatusCode};
 use serde::Deserialize;
 
 use reposix_core::backend::{BackendFeature, DeleteReason, IssueBackend};
 use reposix_core::http::{client, ClientOpts, HttpClient};
 use reposix_core::{Error, Issue, IssueId, IssueStatus, Result, Untainted};
+
+/// Maximum time we'll wait for a rate-limit reset before surfacing the
+/// exhaustion as an error. Caps the worst-case call latency; a well-behaved
+/// GitHub token should never hit this.
+const MAX_RATE_LIMIT_SLEEP: Duration = Duration::from_secs(60);
 
 /// Default GitHub REST API base. Override via
 /// [`GithubReadOnlyBackend::new_with_base_url`] for tests that point at a
@@ -101,6 +108,12 @@ pub struct GithubReadOnlyBackend {
     http: Arc<HttpClient>,
     token: Option<String>,
     base_url: String,
+    /// When `Some(t)`, the next outbound request must sleep until `t` to
+    /// respect GitHub's rate limit. Set after a response where
+    /// `x-ratelimit-remaining` hits zero; cleared when the reset elapses.
+    /// Shared across clones so a single depleted token can't starve the
+    /// backend just because two tasks happen to hold separate handles.
+    rate_limit_gate: Arc<Mutex<Option<Instant>>>,
 }
 
 /// Minimal GitHub issue shape we actually consume. `deny_unknown_fields` is
@@ -166,6 +179,7 @@ impl GithubReadOnlyBackend {
             http: Arc::new(http),
             token,
             base_url,
+            rate_limit_gate: Arc::new(Mutex::new(None)),
         })
     }
 
@@ -190,17 +204,68 @@ impl GithubReadOnlyBackend {
         h
     }
 
-    /// Log a WARN if the response is close to the per-hour rate-limit
-    /// ceiling. We don't back off or retry — that's the caller's policy.
-    fn log_rate_limit(resp: &reqwest::Response) {
-        if let Some(v) = resp.headers().get("x-ratelimit-remaining") {
-            if let Ok(s) = v.to_str() {
-                if let Ok(n) = s.parse::<u64>() {
-                    if n < 10 {
-                        tracing::warn!(remaining = n, "GitHub rate limit approaching exhaustion");
-                    }
+    /// Inspect `x-ratelimit-remaining` + `x-ratelimit-reset` and:
+    ///  - WARN at `remaining < 10` so operators see the ceiling approaching.
+    ///  - When `remaining == 0`, set the shared [`rate_limit_gate`] so the
+    ///    next outbound call sleeps until the reset (capped at
+    ///    [`MAX_RATE_LIMIT_SLEEP`]).
+    ///
+    /// Returning the gate state to the caller would also be reasonable, but
+    /// keeping it inside the struct means `await_rate_limit_gate` is the
+    /// single choke-point that enforces it.
+    ///
+    /// [`rate_limit_gate`]: Self::rate_limit_gate
+    fn ingest_rate_limit(&self, resp: &reqwest::Response) {
+        let headers = resp.headers();
+        let remaining = headers
+            .get("x-ratelimit-remaining")
+            .and_then(|v| v.to_str().ok())
+            .and_then(|s| s.parse::<u64>().ok());
+        let reset = headers
+            .get("x-ratelimit-reset")
+            .and_then(|v| v.to_str().ok())
+            .and_then(|s| s.parse::<u64>().ok());
+        match remaining {
+            Some(0) => {
+                let now_unix = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs();
+                let wait = reset
+                    .map_or(0, |r| r.saturating_sub(now_unix))
+                    .min(MAX_RATE_LIMIT_SLEEP.as_secs());
+                if wait > 0 {
+                    let gate = Instant::now() + Duration::from_secs(wait);
+                    *self.rate_limit_gate.lock() = Some(gate);
+                    tracing::warn!(
+                        wait_secs = wait,
+                        "GitHub rate limit exhausted — backing off until reset"
+                    );
                 }
             }
+            Some(n) if n < 10 => {
+                tracing::warn!(remaining = n, "GitHub rate limit approaching exhaustion");
+            }
+            _ => {}
+        }
+    }
+
+    /// If a previous response parked us behind a rate-limit gate, sleep
+    /// until the gate elapses (or the cap expires). Called before every
+    /// outbound request. Cheap when the gate is `None` — just a
+    /// parking-lot read.
+    async fn await_rate_limit_gate(&self) {
+        let maybe_gate = *self.rate_limit_gate.lock();
+        if let Some(deadline) = maybe_gate {
+            let now = Instant::now();
+            if deadline > now {
+                let wait = deadline - now;
+                tokio::time::sleep(wait).await;
+            }
+            // Clear the gate unconditionally — either we slept through it
+            // or it had already elapsed. If GitHub's still exhausted, the
+            // next response will re-arm it.
+            *self.rate_limit_gate.lock() = None;
         }
     }
 }
@@ -310,11 +375,12 @@ impl IssueBackend for GithubReadOnlyBackend {
                 );
                 break;
             }
+            self.await_rate_limit_gate().await;
             let resp = self
                 .http
                 .request_with_headers(Method::GET, url.as_str(), &header_refs)
                 .await?;
-            Self::log_rate_limit(&resp);
+            self.ingest_rate_limit(&resp);
             let status = resp.status();
             let link_hdr = resp
                 .headers()
@@ -345,11 +411,12 @@ impl IssueBackend for GithubReadOnlyBackend {
         let header_owned = self.standard_headers();
         let header_refs: Vec<(&str, &str)> =
             header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        self.await_rate_limit_gate().await;
         let resp = self
             .http
             .request_with_headers(Method::GET, url.as_str(), &header_refs)
             .await?;
-        Self::log_rate_limit(&resp);
+        self.ingest_rate_limit(&resp);
         let status = resp.status();
         let bytes = resp.bytes().await?;
         if status == StatusCode::NOT_FOUND {
@@ -629,6 +696,51 @@ mod tests {
         match err {
             Error::Other(m) => assert!(m.starts_with("not found:"), "got {m}"),
             other => panic!("expected Error::Other(not found:..), got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn rate_limit_zero_remaining_arms_the_gate() {
+        // A response with `x-ratelimit-remaining: 0` and a reset in the near
+        // future should park the gate on an Instant roughly that far out.
+        let server = MockServer::start().await;
+        let reset_secs = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("unix time")
+            .as_secs()
+            + 2;
+        Mock::given(method("GET"))
+            .and(path("/repos/octocat/Hello-World/issues/42"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .append_header("x-ratelimit-remaining", "0")
+                    .append_header("x-ratelimit-reset", reset_secs.to_string().as_str())
+                    .set_body_json(gh_issue_json(42, "open", None, &[])),
+            )
+            .mount(&server)
+            .await;
+        let backend = GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
+        let _ = backend
+            .get_issue("octocat/Hello-World", IssueId(42))
+            .await
+            .expect("get");
+        // Now the gate must be set to within ~2s of now. A follow-up call
+        // would sleep until the reset; we assert the armed state directly.
+        let gate = backend.rate_limit_gate.lock().to_owned();
+        let now = std::time::Instant::now();
+        match gate {
+            Some(deadline) => {
+                assert!(
+                    deadline > now,
+                    "gate must be in the future, got {:?}",
+                    deadline.saturating_duration_since(now)
+                );
+                assert!(
+                    deadline - now <= std::time::Duration::from_secs(MAX_RATE_LIMIT_SLEEP.as_secs() + 1),
+                    "gate must be capped at MAX_RATE_LIMIT_SLEEP"
+                );
+            }
+            None => panic!("gate should be armed after remaining=0 response"),
         }
     }
 

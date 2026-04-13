@@ -10,7 +10,7 @@
 
 | Check | Result |
 |-------|--------|
-| `cargo test --workspace` | 163 pass / 0 fail / 4 `#[ignore]`-gated (Phase 8 added 24 tests + 1 live-GitHub contract test) |
+| `cargo test --workspace` | **167** pass / 0 fail / 4 `#[ignore]`-gated (Phase 8 added 24; Phase 9 added 4) |
 | `cargo clippy --workspace --all-targets -- -D warnings` | clean |
 | `cargo fmt --all --check` | clean |
 | `bash scripts/demo.sh` (release binaries) | exits 0 in ~120s; 3 guardrails fire on camera |
