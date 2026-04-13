@@ -1,19 +1,25 @@
-//! FUSE daemon library.
+//! FUSE daemon library — see [`Mount`] for the public entry point.
 //!
-//! Task 1 scope: inode registry + fetch helpers. The [`ReposixFs`]
-//! implementation and [`Mount`] public entry point land in Task 2.
+//! The read-only mount presents every issue in a reposix-compatible backend
+//! as a single Markdown file at the mount root, named `<zero-padded-id>.md`.
+//! All HTTP calls go through the sealed [`reposix_core::http::HttpClient`]
+//! (SG-01 allowlist applies), and every fetch is capped at 5 seconds
+//! (SG-07) so the kernel cannot hang on a dead backend.
 
 #![forbid(unsafe_code)]
 #![warn(clippy::pedantic)]
 
 use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
+use fuser::{BackgroundSession, MountOption};
 use serde::{Deserialize, Serialize};
 
 pub mod fetch;
+pub mod fs;
 pub mod inode;
 
+pub use fs::ReposixFs;
 pub use inode::InodeRegistry;
 
 /// Runtime configuration for a FUSE mount.
@@ -35,22 +41,51 @@ fn default_project() -> String {
     "demo".to_owned()
 }
 
-/// Placeholder mount handle. Filled in by Task 2.
+/// A running FUSE mount. Dropping unmounts via fuser's `UmountOnDrop`.
 #[derive(Debug)]
 pub struct Mount {
-    _cfg: MountConfig,
+    _session: BackgroundSession,
 }
 
 impl Mount {
-    /// Open a mount. Task 1 keeps the old skeleton signature; Task 2 wires
-    /// the real fuser `BackgroundSession`.
+    /// Spawn a read-only FUSE mount at `cfg.mount_point` backed by
+    /// `cfg.origin`. The mount lives until the returned [`Mount`] is dropped.
     ///
     /// # Errors
-    /// Returns any I/O error from validating the mount point.
-    pub fn open(cfg: MountConfig) -> Result<Self> {
+    /// Returns an error if:
+    /// - the mount point cannot be created,
+    /// - the [`ReposixFs`] fails to construct (HTTP client init, runtime),
+    /// - `fuser::spawn_mount2` fails (kernel refused the mount, e.g. a
+    ///   missing `/dev/fuse` or a stale existing mount at the target).
+    ///
+    /// # Security
+    /// `MountOption::AllowOther` is NOT set (SG: keep the mount single-user).
+    /// `MountOption::AutoUnmount` is NOT set either: fuser 0.17 refuses
+    /// `AutoUnmount` when `SessionACL == Owner`, and broadening ACL would
+    /// violate the SG no-allow-other invariant. Unmounting is driven by
+    /// (a) dropping this `Mount` struct (fuser's `UmountOnDrop`) and
+    /// (b) the CLI's `MountProcess` watchdog (`fusermount3 -u <mount>`) as
+    /// belt-and-suspenders.
+    pub fn open(cfg: &MountConfig) -> Result<Self> {
         if !cfg.mount_point.exists() {
-            std::fs::create_dir_all(&cfg.mount_point)?;
+            std::fs::create_dir_all(&cfg.mount_point)
+                .with_context(|| format!("create mount point {}", cfg.mount_point.display()))?;
         }
-        Ok(Self { _cfg: cfg })
+        let fs = ReposixFs::new(cfg.origin.clone(), cfg.project.clone())?;
+
+        let options = vec![
+            MountOption::FSName("reposix".to_owned()),
+            MountOption::Subtype("reposix".to_owned()),
+            MountOption::DefaultPermissions,
+            MountOption::RO,
+        ];
+        // `fuser::Config` is `#[non_exhaustive]`, so we can't use a
+        // struct-literal update. Start from `default()` and mutate in
+        // place.
+        let mut config = fuser::Config::default();
+        config.mount_options = options;
+        let session = fuser::spawn_mount2(fs, &cfg.mount_point, &config)
+            .with_context(|| format!("spawn_mount2 at {}", cfg.mount_point.display()))?;
+        Ok(Self { _session: session })
     }
 }

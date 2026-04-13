@@ -30,6 +30,10 @@ thiserror.workspace = true
 chrono.workspace = true
 parking_lot.workspace = true
 dashmap.workspace = true
+# Safe wrappers for POSIX syscalls we'd otherwise need `unsafe` for
+# (`libc::getuid`/`getgid` are `unsafe fn` in libc 0.2.x). Keeps
+# `#![forbid(unsafe_code)]` intact at the crate root.
+rustix = { version = "0.38", features = ["process"] }
 
 [dev-dependencies]
 wiremock = "0.6"

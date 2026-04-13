@@ -1,4 +1,7 @@
 //! `reposix-fuse` binary entry point.
+//!
+//! Usage: `reposix-fuse <mount_point> --backend <origin> [--project <slug>]`.
+//! The mount is foreground-blocking — Ctrl-C unmounts.
 
 use std::path::PathBuf;
 
@@ -10,14 +13,24 @@ use reposix_fuse::{Mount, MountConfig};
 #[derive(Debug, Parser)]
 #[command(version, about)]
 struct Args {
-    /// Mount point (must be empty directory or non-existent).
+    /// Mount point (must be an empty directory or non-existent).
     mount_point: PathBuf,
 
-    /// Backend origin (e.g. http://localhost:7777).
-    #[arg(long, env = "REPOSIX_ORIGIN", default_value = "http://localhost:7777")]
-    origin: String,
+    /// Backend origin (e.g. `http://127.0.0.1:7878`). `--origin` kept as an
+    /// alias for backward compatibility.
+    #[arg(
+        long,
+        alias = "origin",
+        env = "REPOSIX_BACKEND",
+        default_value = "http://127.0.0.1:7878"
+    )]
+    backend: String,
 
-    /// Read-only mount.
+    /// Project slug. Every issue under this project is presented as a file.
+    #[arg(long, default_value = "demo")]
+    project: String,
+
+    /// Read-only mount (forward-compat flag; v0.1 is always read-only).
     #[arg(long)]
     read_only: bool,
 }
@@ -30,12 +43,20 @@ fn main() -> Result<()> {
         )
         .init();
     let args = Args::parse();
-    let _mount = Mount::open(MountConfig {
+    let _mount = Mount::open(&MountConfig {
         mount_point: args.mount_point,
-        origin: args.origin,
-        project: "demo".to_owned(),
+        origin: args.backend,
+        project: args.project,
         read_only: args.read_only,
     })?;
-    tracing::warn!("FUSE mount skeleton — phase 3 wires the real fuser session");
+    // Block until SIGINT — drop on signal cleans up via fuser's UmountOnDrop.
+    tracing::info!("reposix-fuse mounted; press Ctrl-C to unmount");
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?;
+    rt.block_on(async {
+        let _ = tokio::signal::ctrl_c().await;
+    });
+    tracing::info!("unmounting");
     Ok(())
 }
