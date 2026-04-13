@@ -133,10 +133,12 @@ async fn main() -> Result<()> {
 /// # Errors
 /// Propagates `rusqlite` errors.
 fn audit_row_count(path: &std::path::Path) -> rusqlite::Result<i64> {
-    let conn = rusqlite::Connection::open_with_flags(
-        path,
-        rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY | rusqlite::OpenFlags::SQLITE_OPEN_URI,
-    )?;
+    // Open read-write (not read-only) because the sim is still running in
+    // WAL mode and a bare read-only handle can't see the WAL-resident rows.
+    // We only SELECT; no writes are issued. Alternative would be
+    // `?mode=ro` URI with `wal_checkpoint` first, but that forces a sync on
+    // the sim. A read-write handle is the simplest correct path.
+    let conn = rusqlite::Connection::open(path)?;
     let count: i64 = conn.query_row("SELECT COUNT(*) FROM audit_events", [], |row| row.get(0))?;
     Ok(count)
 }
