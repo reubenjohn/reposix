@@ -34,7 +34,11 @@ fn audit_schema_has_expected_columns() {
         .expect("prepare pragma_table_info");
     let rows: Vec<(String, String, i64)> = stmt
         .query_map([], |r| {
-            Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?, r.get::<_, i64>(2)?))
+            Ok((
+                r.get::<_, String>(0)?,
+                r.get::<_, String>(1)?,
+                r.get::<_, i64>(2)?,
+            ))
         })
         .expect("query")
         .map(std::result::Result::unwrap)
@@ -54,7 +58,11 @@ fn audit_schema_has_expected_columns() {
         rows.iter().zip(expected.iter())
     {
         assert_eq!(got_name, exp_name, "column name mismatch");
-        assert_eq!(got_type.to_ascii_uppercase(), *exp_type, "type mismatch for {got_name}");
+        assert_eq!(
+            got_type.to_ascii_uppercase(),
+            *exp_type,
+            "type mismatch for {got_name}"
+        );
         assert_eq!(got_notnull, exp_notnull, "notnull mismatch for {got_name}");
     }
 }

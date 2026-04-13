@@ -107,16 +107,7 @@ mod tests {
     #[test]
     fn validate_issue_filename_rejects_junk() {
         for bad in [
-            "",
-            ".md",
-            "..md",
-            "123",
-            "123.txt",
-            "123.md/",
-            "/123.md",
-            "\0.md",
-            "123.md\n",
-            ".",
+            "", ".md", "..md", "123", "123.txt", "123.md/", "/123.md", "\0.md", "123.md\n", ".",
             "..",
         ] {
             let err = validate_issue_filename(bad).unwrap_err();

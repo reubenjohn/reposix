@@ -11,8 +11,8 @@
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
+use reposix_core::http::ClientOpts;
 use reposix_core::http::{client, request, ALLOWLIST_ENV_VAR};
-use reposix_core::http::{ClientOpts};
 use reposix_core::Error;
 use wiremock::matchers::any;
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -28,7 +28,9 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(value: &str) -> Self {
-        let guard = ENV_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let guard = ENV_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let prev = std::env::var(ALLOWLIST_ENV_VAR).ok();
         // SAFETY: we are holding the mutex, so no other test mutates the env concurrently.
         std::env::set_var(ALLOWLIST_ENV_VAR, value);
@@ -39,7 +41,9 @@ impl EnvGuard {
     }
 
     fn unset() -> Self {
-        let guard = ENV_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let guard = ENV_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let prev = std::env::var(ALLOWLIST_ENV_VAR).ok();
         std::env::remove_var(ALLOWLIST_ENV_VAR);
         Self {
