@@ -30,3 +30,8 @@ thiserror.workspace = true
 chrono.workspace = true
 parking_lot.workspace = true
 dashmap.workspace = true
+
+[dev-dependencies]
+wiremock = "0.6"
+tempfile = "3"
+tokio = { workspace = true }

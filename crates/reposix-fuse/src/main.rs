@@ -33,6 +33,7 @@ fn main() -> Result<()> {
     let _mount = Mount::open(MountConfig {
         mount_point: args.mount_point,
         origin: args.origin,
+        project: "demo".to_owned(),
         read_only: args.read_only,
     })?;
     tracing::warn!("FUSE mount skeleton — phase 3 wires the real fuser session");
