@@ -87,6 +87,26 @@ the `sim-direct` / `fuse` mode split. `fuse` mode performs real
 want end-to-end kernel-path coverage under load, not just the sim's
 HTTP surface.
 
+## Tier 5 — FUSE mount real GitHub end-to-end
+
+The Phase-10 wire-up: the FUSE daemon now speaks the
+`reposix_core::IssueBackend` trait directly, so `reposix mount
+--backend github --project owner/repo` mounts a real GitHub repo as a
+POSIX directory. No simulator involved.
+
+| Demo                                                                                                       | Audience  | Runtime | What it proves                                                                                                                                                                                                       | Recording |
+| ---------------------------------------------------------------------------------------------------------- | --------- | ------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| [`05-mount-real-github.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/05-mount-real-github.sh) | developer |    ~30s | `reposix mount --backend github` exposes `octocat/Hello-World` issues as `<padded-id>.md` files; `cat 0001.md` renders the real issue's frontmatter+body. Honors `REPOSIX_ALLOWED_ORIGINS` and `GITHUB_TOKEN`. | —         |
+
+**Not in smoke.** Requires `gh auth token` to be present. Skips
+cleanly with `SKIP:` if not. Run it locally after `gh auth login`:
+
+```bash
+cargo build --release --workspace --bins
+export PATH="$PWD/target/release:$PATH"
+bash scripts/demos/05-mount-real-github.sh
+```
+
 ## Running the suite yourself
 
 ```bash

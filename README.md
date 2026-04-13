@@ -78,6 +78,31 @@ The [`reposix-swarm`](crates/reposix-swarm) binary spawns N concurrent simulated
 
 **Not in smoke.** Excluded from `scripts/demos/smoke.sh` and the `demos-smoke` CI job because a 30s load run per push is too expensive. `SWARM_CLIENTS` and `SWARM_DURATION` env vars tune it without editing the script.
 
+### Tier 5 — mount real GitHub via FUSE
+
+Phase 10 lifted the `IssueBackend` trait into the FUSE daemon — `reposix mount --backend github --project owner/repo` now mounts a real GitHub repo as a POSIX directory of `<padded-id>.md` files. No simulator, no shim — same kernel path the `sim` backend uses, same SG-01 allowlist, same SG-07 5s/15s read-path ceilings.
+
+```bash
+cargo build --release --workspace --bins
+export PATH="$PWD/target/release:$PATH"
+
+mkdir -p /tmp/reposix-gh-mnt
+REPOSIX_ALLOWED_ORIGINS='http://127.0.0.1:*,https://api.github.com' \
+    GITHUB_TOKEN="$(gh auth token)" \
+    reposix mount /tmp/reposix-gh-mnt \
+        --backend github --project octocat/Hello-World &
+sleep 3
+ls /tmp/reposix-gh-mnt | head -5    # 7010.md  7011.md  7012.md ...
+cat /tmp/reposix-gh-mnt/0001.md     # rendered frontmatter+body for issue #1
+fusermount3 -u /tmp/reposix-gh-mnt
+```
+
+| Demo                                                                                | Audience  | What it proves                                                                                                                              | Recording |
+|-------------------------------------------------------------------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| [`05-mount-real-github.sh`](scripts/demos/05-mount-real-github.sh)                  | developer | `reposix mount --backend github` exposes `octocat/Hello-World` issues as Markdown files end-to-end; `cat 0001.md` renders real GitHub data. | —         |
+
+**Not in smoke.** Requires `gh auth token`; skips cleanly with `SKIP:` if absent.
+
 ### Tier 2 — the full walkthrough
 
 End-to-end recording: [`docs/demo.md`](docs/demo.md) (walkthrough),
