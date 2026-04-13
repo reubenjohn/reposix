@@ -234,7 +234,9 @@ fn fetch_errno(e: &FetchError) -> i32 {
         | FetchError::Transport(_)
         | FetchError::Status(_)
         | FetchError::Parse(_)
-        | FetchError::Core(_) => libc::EIO,
+        | FetchError::Core(_)
+        | FetchError::Conflict { .. }
+        | FetchError::BadRequest(_) => libc::EIO,
     }
 }
 

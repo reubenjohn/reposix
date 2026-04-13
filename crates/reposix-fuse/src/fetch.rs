@@ -17,8 +17,9 @@
 use std::time::Duration;
 
 use reposix_core::http::HttpClient;
-use reposix_core::{Issue, IssueId};
+use reposix_core::{Issue, IssueId, Untainted};
 use reqwest::Method;
+use serde::Serialize;
 use thiserror::Error;
 
 /// The 5-second wall-clock ceiling enforced by `fetch_*` independent of
@@ -54,6 +55,54 @@ pub enum FetchError {
     /// Other core errors (e.g. allowlist env var un-parseable).
     #[error("core: {0}")]
     Core(String),
+    /// Backend returned 409 on a PATCH — the `If-Match` version did not
+    /// match the current server version. The FUSE callback maps this to
+    /// `libc::EIO`; the user must `git pull --rebase` to reconcile.
+    #[error("version mismatch: current={current}")]
+    Conflict {
+        /// Current server version, parsed from the 409 response body.
+        current: u64,
+    },
+    /// Backend returned a 4xx on POST (e.g. validation failure). The body
+    /// message, if any, is captured verbatim.
+    #[error("bad request: {0}")]
+    BadRequest(String),
+}
+
+/// JSON payload shape for outbound PATCH / POST — the subset of [`Issue`]
+/// fields the sim's `PatchIssueBody` / `CreateIssueBody` allow. Using a
+/// dedicated struct means `id`/`version`/`created_at`/`updated_at` cannot
+/// accidentally appear in the wire format even if a future `Issue` field is
+/// added (SG-03 defence in depth on top of [`reposix_core::sanitize`]).
+#[derive(Debug, Serialize)]
+struct EgressPayload<'a> {
+    title: &'a str,
+    status: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    assignee: Option<&'a str>,
+    labels: &'a [String],
+    body: &'a str,
+}
+
+impl<'a> EgressPayload<'a> {
+    fn from_untainted(u: &'a Untainted<Issue>) -> Self {
+        let issue = u.inner_ref();
+        Self {
+            title: issue.title.as_str(),
+            status: issue.status.as_str(),
+            assignee: issue.assignee.as_deref(),
+            labels: &issue.labels,
+            body: issue.body.as_str(),
+        }
+    }
+}
+
+/// Body shape for 409 Conflict responses from the sim's PATCH handler.
+/// Matches `{"error":"version_mismatch","current":N,"sent":"..."}` — we only
+/// need `current` to surface back into [`FetchError::Conflict`].
+#[derive(serde::Deserialize)]
+struct ConflictBody {
+    current: u64,
 }
 
 fn from_core(e: reposix_core::Error) -> FetchError {
@@ -132,6 +181,130 @@ pub async fn fetch_issue(
     let status = resp.status();
     if status == reqwest::StatusCode::NOT_FOUND {
         return Err(FetchError::NotFound);
+    }
+    if !status.is_success() {
+        return Err(FetchError::Status(status));
+    }
+    let bytes = tokio::time::timeout(FETCH_TIMEOUT, resp.bytes())
+        .await
+        .map_err(|_| FetchError::Timeout)?
+        .map_err(FetchError::Transport)?;
+    let issue: Issue = serde_json::from_slice(&bytes)?;
+    Ok(issue)
+}
+
+/// PATCH an issue with optimistic concurrency. Body is the sanitized issue
+/// re-serialized as an [`EgressPayload`] (server-controlled fields physically
+/// cannot appear in the wire shape).
+///
+/// Wire: `PATCH {origin}/projects/{project}/issues/{id}` with
+/// `If-Match: {version}` → 200 + Issue, 409 + `{"current": N}`, or 4xx/5xx.
+///
+/// # Errors
+/// - [`FetchError::Conflict`] on HTTP 409 (parses `current` from body).
+/// - [`FetchError::Timeout`] on 5s elapsed.
+/// - [`FetchError::Status`] on other non-success responses.
+/// - See [`FetchError`] for the full variant set.
+pub async fn patch_issue(
+    http: &HttpClient,
+    origin: &str,
+    project: &str,
+    id: IssueId,
+    version: u64,
+    sanitized: Untainted<Issue>,
+    agent: &str,
+) -> Result<Issue, FetchError> {
+    let url = format!(
+        "{}/projects/{}/issues/{}",
+        origin.trim_end_matches('/'),
+        project,
+        id.0
+    );
+    let payload = EgressPayload::from_untainted(&sanitized);
+    let body = serde_json::to_vec(&payload)?;
+    let version_str = version.to_string();
+    let headers = [
+        ("If-Match", version_str.as_str()),
+        ("Content-Type", "application/json"),
+        ("X-Reposix-Agent", agent),
+    ];
+    let resp = tokio::time::timeout(
+        FETCH_TIMEOUT,
+        http.request_with_headers_and_body(Method::PATCH, &url, &headers, Some(body)),
+    )
+    .await
+    .map_err(|_| FetchError::Timeout)?
+    .map_err(from_core)?;
+
+    let status = resp.status();
+    if status == reqwest::StatusCode::CONFLICT {
+        let bytes = tokio::time::timeout(FETCH_TIMEOUT, resp.bytes())
+            .await
+            .map_err(|_| FetchError::Timeout)?
+            .map_err(FetchError::Transport)?;
+        let parsed: ConflictBody =
+            serde_json::from_slice(&bytes).unwrap_or(ConflictBody { current: 0 });
+        return Err(FetchError::Conflict {
+            current: parsed.current,
+        });
+    }
+    if status == reqwest::StatusCode::NOT_FOUND {
+        return Err(FetchError::NotFound);
+    }
+    if !status.is_success() {
+        return Err(FetchError::Status(status));
+    }
+    let bytes = tokio::time::timeout(FETCH_TIMEOUT, resp.bytes())
+        .await
+        .map_err(|_| FetchError::Timeout)?
+        .map_err(FetchError::Transport)?;
+    let issue: Issue = serde_json::from_slice(&bytes)?;
+    Ok(issue)
+}
+
+/// POST a new issue. Body is the sanitized issue re-serialized as an
+/// [`EgressPayload`]. Returns the authoritative Issue from the 201 response.
+///
+/// Wire: `POST {origin}/projects/{project}/issues` → 201 + Issue, or 4xx/5xx.
+///
+/// # Errors
+/// - [`FetchError::BadRequest`] on 4xx (with the response body as message).
+/// - [`FetchError::Timeout`] on 5s elapsed.
+/// - See [`FetchError`] for the full variant set.
+pub async fn post_issue(
+    http: &HttpClient,
+    origin: &str,
+    project: &str,
+    sanitized: Untainted<Issue>,
+    agent: &str,
+) -> Result<Issue, FetchError> {
+    let url = format!(
+        "{}/projects/{}/issues",
+        origin.trim_end_matches('/'),
+        project
+    );
+    let payload = EgressPayload::from_untainted(&sanitized);
+    let body = serde_json::to_vec(&payload)?;
+    let headers = [
+        ("Content-Type", "application/json"),
+        ("X-Reposix-Agent", agent),
+    ];
+    let resp = tokio::time::timeout(
+        FETCH_TIMEOUT,
+        http.request_with_headers_and_body(Method::POST, &url, &headers, Some(body)),
+    )
+    .await
+    .map_err(|_| FetchError::Timeout)?
+    .map_err(from_core)?;
+
+    let status = resp.status();
+    if status.is_client_error() {
+        let bytes = tokio::time::timeout(FETCH_TIMEOUT, resp.bytes())
+            .await
+            .map_err(|_| FetchError::Timeout)?
+            .map_err(FetchError::Transport)?;
+        let msg = String::from_utf8_lossy(&bytes).into_owned();
+        return Err(FetchError::BadRequest(msg));
     }
     if !status.is_success() {
         return Err(FetchError::Status(status));
@@ -254,6 +427,144 @@ mod tests {
             .await
             .unwrap_err();
         assert!(matches!(err, FetchError::Origin(_)), "got {err:?}");
+    }
+
+    #[tokio::test]
+    async fn patch_issue_sends_if_match_header() {
+        use reposix_core::{sanitize, ServerMetadata, Tainted};
+        let server = MockServer::start().await;
+        Mock::given(method("PATCH"))
+            .and(path("/projects/demo/issues/1"))
+            .and(header("If-Match", "3"))
+            .and(header("X-Reposix-Agent", "reposix-fuse-42"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(sample_issue(1)))
+            .mount(&server)
+            .await;
+        let http = client(ClientOpts::default()).unwrap();
+        let t = chrono::Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
+        let meta = ServerMetadata {
+            id: IssueId(1),
+            created_at: t,
+            updated_at: t,
+            version: 3,
+        };
+        let untainted = sanitize(Tainted::new(sample_issue(1)), meta);
+        let got = patch_issue(
+            &http,
+            &server.uri(),
+            "demo",
+            IssueId(1),
+            3,
+            untainted,
+            "reposix-fuse-42",
+        )
+        .await
+        .unwrap();
+        assert_eq!(got.id, IssueId(1));
+    }
+
+    #[tokio::test]
+    async fn patch_issue_409_returns_conflict() {
+        use reposix_core::{sanitize, ServerMetadata, Tainted};
+        let server = MockServer::start().await;
+        Mock::given(method("PATCH"))
+            .and(path("/projects/demo/issues/1"))
+            .respond_with(ResponseTemplate::new(409).set_body_json(serde_json::json!({
+                "error": "version_mismatch",
+                "current": 7,
+                "sent": "1"
+            })))
+            .mount(&server)
+            .await;
+        let http = client(ClientOpts::default()).unwrap();
+        let t = chrono::Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
+        let meta = ServerMetadata {
+            id: IssueId(1),
+            created_at: t,
+            updated_at: t,
+            version: 1,
+        };
+        let untainted = sanitize(Tainted::new(sample_issue(1)), meta);
+        let err = patch_issue(
+            &http,
+            &server.uri(),
+            "demo",
+            IssueId(1),
+            1,
+            untainted,
+            "agent",
+        )
+        .await
+        .unwrap_err();
+        assert!(
+            matches!(err, FetchError::Conflict { current: 7 }),
+            "got {err:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn patch_issue_times_out_within_budget() {
+        use reposix_core::{sanitize, ServerMetadata, Tainted};
+        let server = MockServer::start().await;
+        Mock::given(any())
+            .respond_with(ResponseTemplate::new(200).set_delay(Duration::from_secs(10)))
+            .mount(&server)
+            .await;
+        let http = client(ClientOpts::default()).unwrap();
+        let t = chrono::Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
+        let meta = ServerMetadata {
+            id: IssueId(1),
+            created_at: t,
+            updated_at: t,
+            version: 1,
+        };
+        let untainted = sanitize(Tainted::new(sample_issue(1)), meta);
+        let t0 = Instant::now();
+        let err = patch_issue(
+            &http,
+            &server.uri(),
+            "demo",
+            IssueId(1),
+            1,
+            untainted,
+            "agent",
+        )
+        .await
+        .unwrap_err();
+        let elapsed = t0.elapsed();
+        let ok = matches!(err, FetchError::Timeout)
+            || matches!(&err, FetchError::Transport(e) if e.is_timeout());
+        assert!(ok, "expected timeout-flavored error, got {err:?}");
+        assert!(
+            elapsed < Duration::from_millis(5_800),
+            "should return within 5.5s; took {elapsed:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn post_issue_sends_egress_shape_only() {
+        use reposix_core::{sanitize, ServerMetadata, Tainted};
+        use wiremock::matchers::body_string_contains;
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/projects/demo/issues"))
+            .and(body_string_contains("\"title\""))
+            .respond_with(ResponseTemplate::new(201).set_body_json(sample_issue(4)))
+            .mount(&server)
+            .await;
+        let http = client(ClientOpts::default()).unwrap();
+        let t = chrono::Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
+        let meta = ServerMetadata {
+            id: IssueId(0),
+            created_at: t,
+            updated_at: t,
+            version: 0,
+        };
+        let untainted = sanitize(Tainted::new(sample_issue(99)), meta);
+        let got = post_issue(&http, &server.uri(), "demo", untainted, "agent")
+            .await
+            .unwrap();
+        assert_eq!(got.id, IssueId(4));
     }
 
     #[tokio::test]
