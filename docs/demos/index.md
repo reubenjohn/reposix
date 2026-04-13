@@ -67,6 +67,26 @@ the five invariants in `assert_contract` hold for both `SimBackend`
 (in every CI run) and `GithubReadOnlyBackend` (opt-in via `cargo test
 -p reposix-github -- --ignored`).
 
+## Tier 4 — adversarial swarm harness
+
+| Demo                                                                                       | Audience         | Runtime | What it proves                                                                                                                                                                                 | Recording                                                                                 |
+| ------------------------------------------------------------------------------------------ | ---------------- | ------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [`swarm.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/swarm.sh)       | developer, ops   |    ~40s | 50 concurrent simulated agents hammer the simulator for 30s (≈130k ops). Emits p50/p95/p99 per op type + an audit-row invariant check that proves SG-06 (append-only) holds under real load.   | [typescript](recordings/swarm.typescript) · [transcript](recordings/swarm.transcript.txt) |
+
+**Not in smoke.** The swarm demo is deliberately excluded from
+`scripts/demos/smoke.sh` (and therefore from the `demos-smoke` CI
+job) because a 30s-per-run load test is too long for per-push CI. Run
+it locally or as part of a release-gate pipeline. `SWARM_CLIENTS` and
+`SWARM_DURATION` env vars tune it without editing the script.
+
+The binary itself is in the new `reposix-swarm` crate; see
+[`crates/reposix-swarm`](https://github.com/reubenjohn/reposix/tree/main/crates/reposix-swarm)
+for the HDR-histogram bookkeeping, per-client agent-id plumbing, and
+the `sim-direct` / `fuse` mode split. `fuse` mode performs real
+`std::fs` syscalls against a pre-mounted FUSE tree — use it when you
+want end-to-end kernel-path coverage under load, not just the sim's
+HTTP surface.
+
 ## Running the suite yourself
 
 ```bash

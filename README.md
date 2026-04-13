@@ -55,6 +55,16 @@ A read-only [`GithubReadOnlyBackend`](crates/reposix-github/src/lib.rs) implemen
 
 The library-level proof of the same claim is [`crates/reposix-github/tests/contract.rs`](crates/reposix-github/tests/contract.rs) — the same 5-assertion contract runs against `SimBackend` in every CI invocation and against real GitHub via `cargo test -p reposix-github -- --ignored` (requires `REPOSIX_ALLOWED_ORIGINS=http://127.0.0.1:*,https://api.github.com`). See [`docs/decisions/001-github-state-mapping.md`](docs/decisions/001-github-state-mapping.md) for the state-mapping ADR.
 
+### Tier 4 — adversarial swarm (load + invariant)
+
+The [`reposix-swarm`](crates/reposix-swarm) binary spawns N concurrent simulated agents that hammer either the simulator (`sim-direct` mode, HTTP) or a mounted FUSE tree (`fuse` mode, real `std::fs` syscalls). Each agent runs a realistic `list + 3×read + 1×patch` workload loop; the harness records per-op HDR histograms and asserts the SG-06 append-only audit invariant still holds under load.
+
+| Demo                                                                  | Audience         | What it proves                                                                                                                                       | Recording                                                                                                    |
+|-----------------------------------------------------------------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| [`swarm.sh`](scripts/demos/swarm.sh)                                  | developer, ops   | 50 clients × 30s ≈ 130k ops, 0% error rate; p50/p95/p99 per op type + audit rows = total ops; append-only trigger still blocks UPDATE post-run. | [typescript](docs/demos/recordings/swarm.typescript) · [transcript](docs/demos/recordings/swarm.transcript.txt) |
+
+**Not in smoke.** Excluded from `scripts/demos/smoke.sh` and the `demos-smoke` CI job because a 30s load run per push is too expensive. `SWARM_CLIENTS` and `SWARM_DURATION` env vars tune it without editing the script.
+
 ### Tier 2 — the full walkthrough
 
 End-to-end recording: [`docs/demo.md`](docs/demo.md) (walkthrough),
