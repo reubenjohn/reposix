@@ -16,6 +16,8 @@ The "real GitHub" cut. v0.1.0 was simulator-only on purpose; this release lets r
 
 - **`crates/reposix-github`** — read-only GitHub Issues adapter implementing `IssueBackend`. Honors the `x-ratelimit-remaining` / `x-ratelimit-reset` headers via a `Mutex<Option<Instant>>` rate-limit gate (next call sleeps until reset, capped at 60s). Allowlist-aware: callers must set `REPOSIX_ALLOWED_ORIGINS=...,https://api.github.com`. Auth via optional `Bearer` token; `None` falls back to anonymous (60/hr).
 - **`reposix list --backend github`** — `reposix list --backend github --project owner/repo` reads real GitHub issues end-to-end via the CLI. The IssueBackend trait, abstract since v0.1, is now reachable from the shipped binary.
+- **`reposix mount --backend github`** (Phase 10) — the FUSE daemon now speaks `IssueBackend` directly: `reposix mount /tmp/mnt --backend github --project owner/repo` exposes a real GitHub repo's issues as `<padded-id>.md` files via the same kernel path the simulator uses. Read-path SG-07 ceiling split into `READ_GET_TIMEOUT = 5s` (per-issue) and `READ_LIST_TIMEOUT = 15s` (paginated list) to absorb GitHub's cold-cache pagination without giving up the kernel-non-blocked invariant. `Mount::open` now takes an `Arc<dyn IssueBackend>`; `MountConfig` keeps the simulator REST origin for the write path (cleanup deferred to v0.3).
+- **`scripts/demos/05-mount-real-github.sh`** (Tier 5 demo) — mounts `octocat/Hello-World` via `reposix mount --backend github`, lists the files, `cat`s issue #1's frontmatter, and unmounts. Skips cleanly if `gh auth token` is empty. Documented in `docs/demos/index.md` and the README's Tier-5 subsection.
 - **`scripts/demos/parity.sh`** (Tier 3 demo) — `reposix list` against the simulator and `gh api` against `octocat/Hello-World`, normalized via `jq`, diffed line-by-line. The diff IS the proof: structure identical, only content differs.
 - **`crates/reposix-github/tests/contract.rs`** — same five invariants run against `SimBackend` (always) and `GithubReadOnlyBackend` (`#[ignore]`-gated, opt-in via `cargo test -- --ignored`). The simulator lying becomes a CI failure.
 - **`docs/decisions/001-github-state-mapping.md`** — ADR for how reposix's 5-valued `IssueStatus` round-trips through GitHub's `state + state_reason + label` model. Documents label-precedence tiebreak (review wins over progress).
@@ -49,7 +51,8 @@ The "real GitHub" cut. v0.1.0 was simulator-only on purpose; this release lets r
 ### Deferred to v0.3 / future
 
 - Write path on `GithubReadOnlyBackend` — currently `create_issue` / `update_issue` / `delete_or_close` return `NotSupported`. v0.3.
-- FUSE daemon and `git-remote-reposix` still hardcode the simulator. The `IssueBackend` trait makes the rewire mechanical; v0.3 lands "FUSE-mount real GitHub".
+- FUSE write-path callbacks (`release` PATCH, `create` POST) still speak the simulator's REST shape directly via `crates/reposix-fuse/src/fetch.rs`. The Phase-10 read-path rewire onto `IssueBackend` is shipped; lifting the write path is a v0.3 cleanup once `IssueBackend::create_issue`/`update_issue` exist on every adapter we want to support writing to.
+- `git-remote-reposix` still hardcodes the simulator. The `IssueBackend` trait makes the rewire mechanical; tracked for v0.3.
 - Adversarial swarm in CI (small-scope) — currently `swarm.sh` is excluded from `demos-smoke` because 30s per push is expensive.
 - Jira and Linear adapters.
 
