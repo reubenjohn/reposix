@@ -6,6 +6,7 @@ members = [
     "crates/reposix-fuse",
     "crates/reposix-remote",
     "crates/reposix-cli",
+    "crates/reposix-github",
 ]
 
 [workspace.package]

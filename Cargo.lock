@@ -1653,6 +1653,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "reposix-github"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "reposix-core",
+ "reposix-sim",
+ "reqwest",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "wiremock",
+]
+
+[[package]]
 name = "reposix-remote"
 version = "0.1.0"
 dependencies = [
