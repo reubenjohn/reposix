@@ -134,6 +134,28 @@ fn real_main() -> Result<bool> {
     Ok(!state.push_failed)
 }
 
+/// Emit a clean protocol error line on stdout + a diagnostic on stderr,
+/// set the deferred-exit flag, and return `Ok(())` so the dispatch loop
+/// can exit with a well-defined non-zero status instead of torn-piping git.
+///
+/// Used in import/export paths where a backend failure (`list_issues`
+/// 5xx, timeout, allowlist rejection) would otherwise bubble up via `?`
+/// and close stdout mid-protocol — leaving git to see a confusing
+/// "fast-import failed" error with no actionable context.
+fn fail_push<R: std::io::Read, W: std::io::Write>(
+    proto: &mut Protocol<R, W>,
+    state: &mut State,
+    kind: &str,
+    detail: &str,
+) -> std::io::Result<()> {
+    diag(&format!("error: {detail}"));
+    proto.send_line(&format!("error refs/heads/main {kind}"))?;
+    proto.send_blank()?;
+    proto.flush()?;
+    state.push_failed = true;
+    Ok(())
+}
+
 fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
     state: &mut State,
     proto: &mut Protocol<R, W>,
@@ -156,15 +178,23 @@ fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
             }
         }
     }
-    let issues = state
-        .rt
-        .block_on(api::list_issues(
-            &state.http,
-            &state.origin,
-            &state.project,
-            &state.agent,
-        ))
-        .context("list issues for import")?;
+    let issues = match state.rt.block_on(api::list_issues(
+        &state.http,
+        &state.origin,
+        &state.project,
+        &state.agent,
+    )) {
+        Ok(v) => v,
+        Err(e) => {
+            return fail_push(
+                proto,
+                state,
+                "backend-unreachable",
+                &format!("cannot list issues for import: {e:#}"),
+            )
+            .map_err(Into::into);
+        }
+    };
     // Emit fast-import stream over stdout via the protocol writer.
     let mut sink: Vec<u8> = Vec::with_capacity(1024 + issues.len() * 256);
     emit_import_stream(&mut sink, &issues)?;
@@ -180,18 +210,38 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
     // The export verb has no arguments — the next thing on stdin is the
     // fast-export stream from git, terminated by `done`.
     let mut buffered = BufReader::new(ProtoReader::new(proto));
-    let parsed = parse_export_stream(&mut buffered).context("parse export stream")?;
+    let parse_result = parse_export_stream(&mut buffered);
     drop(buffered);
+    let parsed = match parse_result {
+        Ok(v) => v,
+        Err(e) => {
+            return fail_push(
+                proto,
+                state,
+                "parse-error",
+                &format!("parse export stream: {e:#}"),
+            )
+            .map_err(Into::into);
+        }
+    };
 
-    let prior = state
-        .rt
-        .block_on(api::list_issues(
-            &state.http,
-            &state.origin,
-            &state.project,
-            &state.agent,
-        ))
-        .context("list prior issues for export")?;
+    let prior = match state.rt.block_on(api::list_issues(
+        &state.http,
+        &state.origin,
+        &state.project,
+        &state.agent,
+    )) {
+        Ok(v) => v,
+        Err(e) => {
+            return fail_push(
+                proto,
+                state,
+                "backend-unreachable",
+                &format!("cannot list prior issues: {e:#}"),
+            )
+            .map_err(Into::into);
+        }
+    };
     let actions = match plan(&prior, &parsed) {
         Ok(a) => a,
         Err(PlanError::BulkDeleteRefused {

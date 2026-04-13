@@ -171,6 +171,111 @@ line-one\r\nline-two\r\n";
     );
 }
 
+/// H-03: Backend 500 on `list_issues` during export must emit a clean
+/// `error refs/heads/main ...` protocol line (NOT a torn pipe), log a
+/// readable error to stderr, and exit non-zero.
+#[tokio::test]
+async fn backend_500_on_export_list_emits_protocol_error_not_torn_pipe() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/projects/demo/issues$"))
+        .respond_with(ResponseTemplate::new(500).set_body_string("kaboom"))
+        .mount(&server)
+        .await;
+
+    let url = format!("reposix::{}/projects/demo", server.uri());
+    let stdin_data = {
+        let mut buf = Vec::new();
+        writeln!(&mut buf, "export").unwrap();
+        // Minimal well-formed fast-export stream: empty tree + empty commit.
+        writeln!(&mut buf, "feature done").unwrap();
+        writeln!(&mut buf, "commit refs/heads/main").unwrap();
+        writeln!(&mut buf, "mark :1").unwrap();
+        writeln!(&mut buf, "committer test <t@t> 0 +0000").unwrap();
+        let msg = b"noop\n";
+        writeln!(&mut buf, "data {}", msg.len()).unwrap();
+        buf.extend_from_slice(msg);
+        buf.push(b'\n');
+        writeln!(&mut buf, "done").unwrap();
+        buf
+    };
+    let assert = tokio::task::spawn_blocking(move || {
+        Command::cargo_bin("git-remote-reposix")
+            .expect("binary built")
+            .args(["origin", &url])
+            .write_stdin(stdin_data)
+            .timeout(std::time::Duration::from_secs(15))
+            .assert()
+    })
+    .await
+    .unwrap();
+    let out = assert.get_output();
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    // (a) stderr contains a readable error.
+    assert!(
+        stderr.contains("cannot list prior issues") || stderr.contains("backend"),
+        "stderr missing readable error; stderr={stderr}"
+    );
+    // (b) stdout contains a proper `error refs/heads/main ...` line —
+    // NOT a torn pipe (early close with no protocol line).
+    assert!(
+        stdout.contains("error refs/heads/main"),
+        "stdout missing protocol error line; stdout={stdout}"
+    );
+    // (c) the process exits non-zero (code 1 per real_main's Ok(false)).
+    assert!(
+        !out.status.success(),
+        "process must exit non-zero on backend failure; stderr={stderr}"
+    );
+    assert_eq!(
+        out.status.code(),
+        Some(1),
+        "deferred-exit path must return code 1 (bulk-delete + H-03 shared semantics)"
+    );
+}
+
+/// H-03: Backend 500 on `list_issues` during an import batch also emits a
+/// clean protocol error rather than closing stdout mid-fast-import (which
+/// git would surface as "fast-import failed" with no context).
+#[tokio::test]
+async fn backend_500_on_import_emits_protocol_error_not_torn_pipe() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/projects/demo/issues$"))
+        .respond_with(ResponseTemplate::new(500).set_body_string("kaboom"))
+        .mount(&server)
+        .await;
+
+    let url = format!("reposix::{}/projects/demo", server.uri());
+    let stdin_data = "import refs/heads/main\n\n".to_owned();
+    let assert = tokio::task::spawn_blocking(move || {
+        Command::cargo_bin("git-remote-reposix")
+            .expect("binary built")
+            .args(["origin", &url])
+            .write_stdin(stdin_data)
+            .timeout(std::time::Duration::from_secs(15))
+            .assert()
+    })
+    .await
+    .unwrap();
+    let out = assert.get_output();
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("cannot list issues for import") || stderr.contains("backend"),
+        "stderr missing readable error; stderr={stderr}"
+    );
+    assert!(
+        stdout.contains("error refs/heads/main"),
+        "stdout missing protocol error line; stdout={stdout}"
+    );
+    assert!(
+        !out.status.success(),
+        "process must exit non-zero on backend failure; stderr={stderr}"
+    );
+}
+
 /// H-02: Non-UTF-8 bytes in a blob must NOT cause the helper to fail
 /// with a "stream did not contain valid UTF-8" torn-pipe error. The
 /// raw-bytes `ProtoReader` path accepts any bytes; downstream processing
