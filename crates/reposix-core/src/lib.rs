@@ -9,6 +9,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 pub mod audit;
+pub mod backend;
 mod error;
 pub mod http;
 mod issue;
@@ -17,6 +18,7 @@ mod project;
 mod remote;
 mod taint;
 
+pub use backend::{BackendFeature, DeleteReason, IssueBackend};
 pub use error::{Error, Result};
 pub use issue::{frontmatter, Issue, IssueId, IssueStatus};
 pub use project::{Project, ProjectSlug};
