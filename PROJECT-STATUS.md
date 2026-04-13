@@ -51,8 +51,16 @@ Read [`MORNING-BRIEF.md`](MORNING-BRIEF.md) — single-page summary of what ship
 | 09:30 | Wave A done. Wave B (GitHub adapter + contract test + parity demo) launched. |
 | 09:45 | Phase 8 complete. 163 tests. Contract test proves shape parity between SimBackend and real GitHub. |
 | 10:15 | Final polish: integration-contract CI flipped strict; codecov badge; docs updated. |
+| 10:42 | User: "plenty of time, do as much as you can, deadline 12:15." Added Phases 9 + 10. |
+| 10:42 | Phase 9 executor launched (adversarial swarm harness). |
+| 11:00 | Phase 9 complete — **132,895 ops / 0% errors / SG-06 upheld under load**. |
+| 11:00 | Rate-limit backoff + `reposix list --backend github` + v0.2.0-alpha tag pushed. |
+| 11:15 | Real GitHub issues listed from CLI against `octocat/Hello-World`. |
+| 11:20 | CHANGELOG.md + GitHub Releases (v0.1.0, v0.2.0-alpha) published. |
+| 10:57 | Phase 10 executor launched (FUSE through IssueBackend). |
+| 11:40 | Phase 10 complete — **`reposix mount --backend github` mounts real GitHub as POSIX files**. |
 
-Total (both sessions): ~6h 45min active work across two sittings. **~2h under the 12:15 extended deadline.**
+Total (both sessions): ~7h 45min active work. **~30min under the 12:15 extended deadline.**
 
 ## What I did not do
 

@@ -23,8 +23,9 @@ You went to bed at ~12:42 AM with a goal: ship the reposix project (git-backed F
 | 7 — Phase S robustness fixes (CRLF, error frames, deterministic blobs) | shipped |
 | 8 — Demo suite + real-backend seam (post-ship, per your 09:05 direction) | shipped |
 | 9 — Adversarial swarm harness (the dark-factory piece twice deferred) | shipped |
+| 10 — **FUSE-mount real GitHub** (the dark-factory thesis fully realized) | shipped |
 
-**167 workspace tests pass** (up from 139 at initial ship; 163 after Phase 8; +4 from swarm). `cargo clippy --workspace --all-targets -- -D warnings` is clean. `#![forbid(unsafe_code)]` at every crate root. All 8 SG guardrails enforced and demo-visible.
+**168 workspace tests pass** (up from 139 at initial ship; 167 after swarm; +1 CLI test for mount backend flag). `cargo clippy --workspace --all-targets -- -D warnings` is clean. `#![forbid(unsafe_code)]` at every crate root. All 8 SG guardrails enforced and demo-visible.
 
 ### Phase 8 highlights (added after the initial 8am demo)
 
@@ -45,11 +46,19 @@ You went to bed at ~12:42 AM with a goal: ship the reposix project (git-backed F
 - **Both modes shipped** — `sim-direct` (HTTP to simulator) and `fuse` (real `std::fs` through a mounted FUSE tree via `spawn_blocking`). The original scope deferred fuse-mode; the executor delivered it anyway because `spawn_blocking` made it straightforward.
 - **Not in smoke CI** — a 30s load run per push would burn minutes. The `scripts/demos/swarm.sh` recording captures the representative output; `SWARM_CLIENTS` and `SWARM_DURATION` env vars tune it.
 
-## What did NOT make v0.1 (still deferred)
+### Phase 10 highlights — FUSE-mount real GitHub (the "unlock" moment)
 
-- **FUSE/git-remote-reposix rewire through `IssueBackend`** — the trait seam is in place and tested (SimBackend + GithubReadOnlyBackend pass the same contract), but the FUSE daemon and remote helper still hardcode the sim. Plugging GitHub in for real is v0.2.
-- **GithubReadOnlyBackend write support** — `create`/`update`/`delete_or_close` return `NotSupported`. v0.2.
-- **Rate-limit backoff in GithubReadOnlyBackend** — currently logs a WARN below 10 remaining; doesn't actually pause. v0.2.
+- **`reposix mount --backend github --project owner/repo`** mounts a real public GitHub repo as a POSIX directory of `<padded-id>.md` files. Same kernel path as the sim, same SG-01 allowlist, same `IssueBackend` trait.
+- Empirically validated on the dev host against `octocat/Hello-World`: `ls /tmp/reposix-gh-mnt` returned 500 real issue files; `cat 0001.md` rendered real issue #1 frontmatter+body; `fusermount3 -u` clean.
+- **Tier 5 demo** `scripts/demos/05-mount-real-github.sh` wraps the mount→ls→cat→unmount sequence. Gated behind `gh auth token` availability.
+- **Split SG-07 ceiling** — `READ_GET_TIMEOUT = 5s` (per-issue) + `READ_LIST_TIMEOUT = 15s` (paginated list). GitHub's cold-cache pagination legitimately needs more than 5s on the first request; the invariant ("FUSE never blocks the kernel forever") still holds.
+- **Sim path unchanged** — `scripts/demos/smoke.sh` still 4/4 green. The trait-ification was additive: `Mount::open` now takes `Arc<dyn IssueBackend>` but the CLI default path still constructs `SimBackend` so nothing breaks.
+
+## What did NOT make v0.2 (still deferred)
+
+- **`reposix-github` write support** — `create` / `update` / `delete_or_close` still return `NotSupported`. v0.3.
+- **`git-remote-reposix` rewire through `IssueBackend`** — Phase 10 wired FUSE; the remote helper still hardcodes the simulator. The pattern is the same; ~1 hour of work. v0.3.
+- **FUSE write path against real GitHub** — even though the mount works, writes route through the sim-specific REST shape in `crates/reposix-fuse/src/fetch.rs`. Wiring writes through `IssueBackend::update_issue` is a v0.3 task.
 - FUSE-in-CI mount integration job (CI runs cargo tests + clippy + coverage; the "literal mount inside the runner" job was cut).
 - Various MEDIUM/LOW review findings cataloged in `.planning/phases/*/REVIEW.md` and tracked in `docs/development/roadmap.md`.
 
