@@ -16,5 +16,8 @@
 #![warn(clippy::pedantic, missing_docs)]
 #![allow(clippy::module_name_repetitions)]
 
+pub mod driver;
+pub mod fuse_mode;
 pub mod metrics;
+pub mod sim_direct;
 pub mod workload;

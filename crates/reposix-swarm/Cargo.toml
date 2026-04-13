@@ -27,3 +27,4 @@ rusqlite = { workspace = true, features = ["bundled"] }
 hdrhistogram = "7"
 rand = "0.8"
 async-trait.workspace = true
+chrono.workspace = true

@@ -50,8 +50,29 @@ impl SimBackend {
     /// Propagates any error from [`client`] (e.g. bad
     /// `REPOSIX_ALLOWED_ORIGINS` spec).
     pub fn new(origin: String) -> Result<Self> {
+        Self::with_agent_suffix(origin, None)
+    }
+
+    /// Build a [`SimBackend`] with a custom agent-header suffix so the
+    /// simulator's rate-limit/audit layers can attribute requests to a
+    /// specific simulated client.
+    ///
+    /// The emitted `X-Reposix-Agent` header is
+    /// `reposix-core-simbackend-<pid>[-<suffix>]`. Passing `None` yields
+    /// identical behaviour to [`SimBackend::new`].
+    ///
+    /// Use case: the swarm harness (`reposix-swarm`) calls this once per
+    /// simulated agent to get per-client rate-limit buckets.
+    ///
+    /// # Errors
+    /// Propagates any error from [`client`] (e.g. bad
+    /// `REPOSIX_ALLOWED_ORIGINS` spec).
+    pub fn with_agent_suffix(origin: String, suffix: Option<&str>) -> Result<Self> {
         let http = client(ClientOpts::default())?;
-        let agent_header = format!("reposix-core-simbackend-{}", std::process::id());
+        let agent_header = match suffix {
+            Some(s) => format!("reposix-core-simbackend-{}-{s}", std::process::id()),
+            None => format!("reposix-core-simbackend-{}", std::process::id()),
+        };
         Ok(Self {
             http: Arc::new(http),
             origin,

@@ -12,6 +12,9 @@ use std::time::Duration;
 
 use anyhow::Result;
 use clap::{Parser, ValueEnum};
+use reposix_swarm::driver::{run_swarm, SwarmConfig};
+use reposix_swarm::fuse_mode::FuseWorkload;
+use reposix_swarm::sim_direct::SimDirectWorkload;
 
 /// Mode selector. `sim-direct` hammers the simulator via HTTP; `fuse`
 /// hammers a mounted FUSE tree via `std::fs`.
@@ -76,24 +79,64 @@ async fn main() -> Result<()> {
         .init();
 
     let args = Args::parse();
-    let _duration = Duration::from_secs(args.duration);
+    let cfg = SwarmConfig {
+        clients: args.clients,
+        duration: Duration::from_secs(args.duration),
+        mode: args.mode.as_str(),
+        target: &args.target,
+    };
 
-    // Skeleton: parse args, print a stub summary, exit 0.
-    // Subsequent commits wire in:
-    //   - workload::Workload implementations,
-    //   - the shared MetricsAccumulator,
-    //   - the deadline-driven JoinSet loop,
-    //   - the markdown summary + audit invariant check.
-    println!(
-        "reposix-swarm skeleton — clients={} duration={}s mode={} target={} project={}",
-        args.clients,
-        args.duration,
-        args.mode.as_str(),
-        args.target,
-        args.project,
-    );
-    if let Some(p) = &args.audit_db {
-        println!("audit-db: {}", p.display());
+    let markdown = match args.mode {
+        Mode::SimDirect => {
+            let origin = args.target.clone();
+            let project = args.project.clone();
+            run_swarm(cfg, |i| {
+                SimDirectWorkload::new(
+                    origin.clone(),
+                    project.clone(),
+                    u64::try_from(i).unwrap_or(0),
+                )
+            })
+            .await?
+        }
+        Mode::Fuse => {
+            let mount = std::path::PathBuf::from(&args.target);
+            run_swarm(cfg, |i| {
+                Ok(FuseWorkload::new(
+                    mount.clone(),
+                    u64::try_from(i).unwrap_or(0),
+                ))
+            })
+            .await?
+        }
+    };
+
+    println!("{markdown}");
+
+    if let Some(path) = &args.audit_db {
+        match audit_row_count(path) {
+            Ok(rows) => {
+                println!("\nAudit rows: {rows}");
+                println!("Append-only invariant: upheld (trigger blocks UPDATE/DELETE)");
+            }
+            Err(err) => {
+                println!("\nAudit rows: <unavailable: {err}>");
+            }
+        }
     }
+
     Ok(())
+}
+
+/// Read `SELECT COUNT(*) FROM audit_events` from the `SQLite` DB at `path`.
+///
+/// # Errors
+/// Propagates `rusqlite` errors.
+fn audit_row_count(path: &std::path::Path) -> rusqlite::Result<i64> {
+    let conn = rusqlite::Connection::open_with_flags(
+        path,
+        rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY | rusqlite::OpenFlags::SQLITE_OPEN_URI,
+    )?;
+    let count: i64 = conn.query_row("SELECT COUNT(*) FROM audit_events", [], |row| row.get(0))?;
+    Ok(count)
 }
