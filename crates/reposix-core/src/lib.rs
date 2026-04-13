@@ -11,6 +11,7 @@
 mod error;
 pub mod http;
 mod issue;
+pub mod path;
 mod project;
 mod remote;
 mod taint;
