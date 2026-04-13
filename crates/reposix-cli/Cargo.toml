@@ -20,3 +20,13 @@ tracing-subscriber.workspace = true
 anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+libc.workspace = true
+rusqlite = { workspace = true, features = ["bundled"] }
+tempfile = "3"
+# Safe wrappers for POSIX signals + process syscalls (SIGTERM to child,
+# setsid). Keeps #![forbid(unsafe_code)] at crate root.
+rustix = { version = "0.38", features = ["process"] }
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
