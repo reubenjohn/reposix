@@ -69,8 +69,9 @@ jobs:
       - name: Build release binaries
         run: cargo build --release --workspace --bins
       - name: Run integration tests (requires FUSE)
+        # Load-bearing as of Phase 8 — sim_death_no_hang and the demo
+        # integration test have been green for every CI run since Phase 3.
         run: cargo test --workspace --release -- --ignored --test-threads=1
-        continue-on-error: true  # phase 3 will flip this off
 
   demos-smoke:
     name: demos smoke
