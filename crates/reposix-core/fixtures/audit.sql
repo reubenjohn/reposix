@@ -2,6 +2,15 @@
 -- Loaded at simulator startup via reposix_core::audit::load_schema.
 -- SG-06 (audit log append-only) is enforced by the BEFORE UPDATE / DELETE
 -- triggers below; integration tests assert both fire on real SQLite.
+--
+-- M-04 (phase-1 review): load_schema runs DROP TRIGGER IF EXISTS before
+-- CREATE TRIGGER so repeat calls stay idempotent. To eliminate the race
+-- window between DROP and CREATE, the whole batch is wrapped in a single
+-- transaction — SQLite serialises DDL inside a tx, so no concurrent
+-- reader/writer on this connection can observe the table without its
+-- triggers.
+
+BEGIN;
 
 CREATE TABLE IF NOT EXISTS audit_events (
     id               INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,3 +34,5 @@ CREATE TRIGGER audit_no_delete BEFORE DELETE ON audit_events
     BEGIN
         SELECT RAISE(ABORT, 'audit_events is append-only');
     END;
+
+COMMIT;
