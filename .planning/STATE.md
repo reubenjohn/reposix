@@ -11,18 +11,19 @@ agent). Next MVD gate: Phase 4 demo after Phase 3 completes.
 
 ## Current Position
 
-Phase: 2 of 4 (+1 conditional STRETCH) — Simulator + audit log: **DONE**
-Plan: 2/2 (both plans shipped — see
-`.planning/phases/02-simulator-audit-log/02-DONE.md`)
-Status: Phase 2 complete. All 5 ROADMAP SCs green; 29 phase-2 tests green
-(26 sim lib unit + 3 sim integration); `scripts/phase2_goal_backward.sh`
-prints ALL FIVE SUCCESS CRITERIA PASS.
-Last activity: 2026-04-13 — Phase 2 (simulator + audit log) complete.
-4 commits (02-01 × 2 tasks, 02-02 × 2 tasks) plus DONE.md + 2 summaries.
+Phase: S of 4 (+S STRETCH) — Phase S (write path + git-remote-reposix): **DONE**
+Plan: 2/2 (both S-A and S-B shipped end-to-end — see
+`.planning/phases/S-stretch-write-path-and-remote-helper/S-DONE.md`).
+Cursor: Phase 4 (demo recording).
+Status: Phase S complete in 27 wall-clock minutes (well under 120-min
+budget). All 3 Phase S SCs green; ~133 workspace tests pass; `git push`
+through `git-remote-reposix` empirically verified against live sim;
+SG-02 bulk-delete cap fires on attempted 6-delete push and is
+overridable via `[allow-bulk-delete]`.
+Last activity: 2026-04-13 — Phase S complete. 3 feat commits
+(`dc09b4a`, `b12036e`, `4006f13`) plus DONE.md.
 
-Progress: [███░░░░░░░] ~27% (3 / 11 MVD plans completed: 01-01, 02-01,
-02-02; STRETCH plans excluded until T+3h gate decision; Phase 3 running
-in parallel)
+Progress: [███████░░░] ~70% (Phases 1, 2, 3, S all done; Phase 4 = demo)
 
 ## Performance Metrics
 
@@ -76,10 +77,15 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-13 — Phase 2 executed end-to-end.
-Stopped at: Phase 2 complete (4 commits shipped: 3c004f6, d29e47c, 0eb6eb4,
-171c775; plus docs commit e861e1e; 29 phase-2 tests green; clippy clean on
-workspace; `scripts/phase2_goal_backward.sh` prints ALL FIVE SUCCESS
-CRITERIA PASS). Phase 3 started in parallel (another agent) — commits
-032e979 + 2acd9e4 for plan 03-01 tasks 1+2 landed interleaved with Phase 2.
-Resume file: `.planning/phases/02-simulator-audit-log/02-DONE.md`
+Last session: 2026-04-13 03:18-03:45 PDT — Phase S executed end-to-end in 27
+wall-clock minutes (60+60-min budget; finished with ~93 min in hand on
+the 06:00 PDT hard cut).
+Stopped at: Phase S complete. 3 feat commits shipped: `dc09b4a` (S-A-1
+patch/post helpers + If-Match + 5s timeout + sanitize-on-egress),
+`b12036e` (S-A-2 write/flush/release + create/unlink + conditional
+MountOption::RO), `4006f13` (S-B-1+2+3 protocol/import/export/SG-02 cap
++ PATCH/POST/DELETE execution). 21 new tests pass (4 fetch + 5 write +
+6 lib + 3 protocol + 3 bulk_delete_cap). All three Phase S SCs verified
+empirically against a live sim+FUSE+git push on the dev host.
+Resume file: `.planning/phases/S-stretch-write-path-and-remote-helper/S-DONE.md`
+Cursor next: Phase 4 (demo recording).
