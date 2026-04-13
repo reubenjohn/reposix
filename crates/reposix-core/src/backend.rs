@@ -187,12 +187,8 @@ pub trait IssueBackend: Send + Sync {
     /// - Transport errors propagate.
     /// - Unknown id returns `Err(Error::Other("not found: ..."))`.
     /// - Read-only backends return `Err(Error::Other("not supported: ..."))`.
-    async fn delete_or_close(
-        &self,
-        project: &str,
-        id: IssueId,
-        reason: DeleteReason,
-    ) -> Result<()>;
+    async fn delete_or_close(&self, project: &str, id: IssueId, reason: DeleteReason)
+        -> Result<()>;
 }
 
 #[cfg(test)]
