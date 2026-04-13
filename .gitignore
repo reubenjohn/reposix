@@ -17,6 +17,13 @@
 # Playwright MCP scratch output
 .playwright-mcp/
 
+# MkDocs build output
+/site
+
+# Python cache (from scripts/*.py)
+__pycache__/
+*.pyc
+
 # Recordings
 *.cast
 demo/recording.gif

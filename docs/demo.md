@@ -262,11 +262,11 @@ This is v0.1 alpha, built autonomously overnight on 2026-04-13. What's
 **not** in the demo:
 
 - **No real backend.** Simulator-only. Real Jira/GitHub/Confluence
-  integration is v0.2. See [PROJECT.md → Out of Scope](../.planning/PROJECT.md).
+  integration is v0.2. See [PROJECT.md → Out of Scope](https://github.com/reubenjohn/reposix/blob/main/.planning/PROJECT.md).
 - **No man page, .deb, or brew formula.** Clone-and-`cargo build`.
 - **Linux only.** FUSE3/FUSE2. macOS-via-macFUSE is a follow-up.
 - **Threat model is taken seriously but not exhaustively mitigated.**
-  See [`threat-model-and-critique.md`](../.planning/research/threat-model-and-critique.md)
+  See [`threat-model-and-critique.md`](https://github.com/reubenjohn/reposix/blob/main/.planning/research/threat-model-and-critique.md)
   — the SG-01/02/03 cuts demonstrated here close the most lethal-trifecta
   paths but do not cover every M-* finding in the red-team report. Those
   are deferred to v0.2.

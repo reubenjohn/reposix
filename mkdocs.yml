@@ -1,0 +1,87 @@
+site_name: reposix
+site_description: Git-backed FUSE filesystem exposing REST APIs as POSIX files for autonomous agents
+site_url: https://reubenjohn.github.io/reposix/
+repo_name: reubenjohn/reposix
+repo_url: https://github.com/reubenjohn/reposix
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.snippets
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.details
+  - admonition
+  - attr_list
+  - md_in_html
+  - footnotes
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/reubenjohn/reposix
+
+nav:
+  - Home: index.md
+  - Why reposix: why.md
+  - Architecture: architecture.md
+  - Demo: demo.md
+  - Security: security.md
+  - Reference:
+      - Crates overview: reference/crates.md
+      - CLI: reference/cli.md
+      - HTTP API (simulator): reference/http-api.md
+      - git remote helper: reference/git-remote.md
+  - Development:
+      - Contributing: development/contributing.md
+      - Roadmap (v0.2+): development/roadmap.md
