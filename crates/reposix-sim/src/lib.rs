@@ -25,6 +25,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod db;
 pub mod error;
+pub mod middleware;
 pub mod routes;
 pub mod seed;
 pub mod state;
@@ -75,15 +76,15 @@ impl SimConfig {
     }
 }
 
-/// Build the axum router.
+/// Build the axum router with the audit middleware attached (outermost).
 ///
-/// Task 2 of plan 02-01 wires the issue/transitions routes through the shared
-/// [`AppState`]. Middleware (audit + rate-limit) is attached on top by plan
-/// 02-02.
+/// Layer ordering (outermost first): audit → rate-limit → handlers. Plan
+/// 02-02 task 2 adds the rate-limit layer between audit and handlers.
 pub fn build_router(state: AppState) -> Router {
-    Router::new()
+    let handlers = Router::new()
         .route("/healthz", axum::routing::get(healthz))
-        .merge(routes::router(state))
+        .merge(routes::router(state.clone()));
+    middleware::audit::attach(handlers, state)
 }
 
 #[allow(clippy::unused_async)]
