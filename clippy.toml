@@ -1,0 +1,5 @@
+disallowed-methods = [
+    { path = "reqwest::Client::new",        reason = "use reposix_core::http::client()" },
+    { path = "reqwest::Client::builder",    reason = "use reposix_core::http::client()" },
+    { path = "reqwest::ClientBuilder::new", reason = "use reposix_core::http::client()" },
+]
