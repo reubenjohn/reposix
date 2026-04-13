@@ -49,6 +49,8 @@ as the distinguishing signal for the two "open-but-active" variants.
    - If the issue carries label `status/in-review` → `InReview`.
    - Else if it carries label `status/in-progress` → `InProgress`.
    - Else → `Open`.
+
+**Label precedence when BOTH `status/in-review` AND `status/in-progress` are present:** `InReview` wins (review is downstream of in-progress in a typical workflow; treating a PR with both labels as "in review" errs toward the more-recent state). The write path, when called with `IssueStatus::InReview`, always removes `status/in-progress` to keep the two labels mutually exclusive on round-trip. `GithubReadOnlyBackend::translate` encodes this precedence in its `else if` chain at `crates/reposix-github/src/lib.rs` (review check precedes progress check).
 2. If `state == closed`:
    - If `state_reason == "not_planned"` → `WontFix`.
    - If `state_reason == "completed"` → `Done`.

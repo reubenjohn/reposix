@@ -1,13 +1,18 @@
-"""Combine hero.png + workflow.png into a single media item.
+"""Combine hero.png + workflow.png + benchmark.png into a single media item.
 
 Produces two outputs:
 
-  combined.gif   - 2-slide loop, 4.5s each. Both platforms autoplay.
+  combined.gif   - 3-slide loop, 4.5s each. Both platforms autoplay.
                    Use this when you can only attach one item.
-  combined.png   - tall stacked PNG (hero over workflow). Use this if
-                   you prefer a single static image.
+  combined.png   - tall stacked PNG (hero, workflow, benchmark). Use this
+                   if you prefer a single static image.
 
-Both reuse the existing 1200x675 slides — no re-rendering needed.
+Slide order tells a story:
+  1. hero      - "what it looks like" (file browser)
+  2. workflow  - "what the agent does" (annotated shell session)
+  3. benchmark - "why it matters" (92.3% fewer tokens, in simulation)
+
+All three inputs are already 1200x675 — no re-rendering needed.
 """
 
 from __future__ import annotations
@@ -19,34 +24,38 @@ from PIL import Image, ImageDraw, ImageFont
 ASSETS = Path("/home/reuben/workspace/reposix/social/assets")
 HERO = ASSETS / "hero.png"
 WORK = ASSETS / "workflow.png"
+BENCH = ASSETS / "benchmark.png"
 OUT_GIF = ASSETS / "combined.gif"
 OUT_PNG = ASSETS / "combined.png"
 
-# LinkedIn/Twitter dwell: ~4.5s per slide. GIFs loop, so ~9s round-trip.
 HOLD_MS = 4500
 
 F_DIR = Path("/usr/share/fonts/truetype/dejavu")
-F_SANS = F_DIR / "DejaVuSans.ttf"
 F_SANS_B = F_DIR / "DejaVuSans-Bold.ttf"
 DIM = (139, 148, 158)
 BG = (13, 17, 23)
+DIV_BORDER = (48, 54, 61)
+
+
+def _sources() -> list[Image.Image]:
+    imgs = [Image.open(p).convert("RGB") for p in (HERO, WORK, BENCH)]
+    w, h = imgs[0].size
+    for im, p in zip(imgs, (HERO, WORK, BENCH)):
+        assert im.size == (w, h), f"size mismatch: {p.name}={im.size} vs {(w, h)}"
+    return imgs
 
 
 def build_gif() -> None:
-    a = Image.open(HERO).convert("RGB")
-    b = Image.open(WORK).convert("RGB")
-    assert a.size == b.size, f"size mismatch: {a.size} vs {b.size}"
-
-    # Quantize each frame with its own adaptive palette so the blues, oranges,
-    # and YAML cyan don't get crushed by a shared 256-colour palette.
-    frames = [f.quantize(colors=255, method=Image.Quantize.FASTOCTREE)
-              for f in (a, b)]
+    frames = [
+        im.quantize(colors=255, method=Image.Quantize.FASTOCTREE)
+        for im in _sources()
+    ]
 
     frames[0].save(
         OUT_GIF,
         save_all=True,
         append_images=frames[1:],
-        duration=[HOLD_MS, HOLD_MS],
+        duration=[HOLD_MS] * len(frames),
         loop=0,
         optimize=True,
         disposal=2,
@@ -60,34 +69,35 @@ def build_gif() -> None:
         )
 
 
-def build_stacked_png() -> None:
-    """Hero on top, workflow below. Preserve each slide's full height
-    (675 each). Add a slim divider band with label text."""
-    a = Image.open(HERO).convert("RGB")
-    b = Image.open(WORK).convert("RGB")
-    W = a.width
-    DIV_H = 68
-    H = a.height + DIV_H + b.height
-    canvas = Image.new("RGB", (W, H), BG)
-    canvas.paste(a, (0, 0))
-    canvas.paste(b, (0, a.height + DIV_H))
-
-    # Divider band
-    d = ImageDraw.Draw(canvas)
-    band_y0 = a.height
-    band_y1 = a.height + DIV_H
-    d.rectangle((0, band_y0, W, band_y1), fill=BG)
-    # Hairline dividers
-    d.line((40, band_y0 + 1, W - 40, band_y0 + 1), fill=(48, 54, 61), width=1)
-    d.line((40, band_y1 - 1, W - 40, band_y1 - 1), fill=(48, 54, 61), width=1)
-
-    # Arrow between the two panels: "above: what it looks like — below: what the agent does"
-    label = "above: what it looks like     \u2193     below: what the agent does"
+def _draw_divider(d: ImageDraw.ImageDraw, y0: int, y1: int, W: int, label: str) -> None:
+    d.rectangle((0, y0, W, y1), fill=BG)
+    d.line((40, y0 + 1, W - 40, y0 + 1), fill=DIV_BORDER, width=1)
+    d.line((40, y1 - 1, W - 40, y1 - 1), fill=DIV_BORDER, width=1)
     f = ImageFont.truetype(str(F_SANS_B), 18)
     bb = d.textbbox((0, 0), label, font=f)
     lw = bb[2] - bb[0]
-    d.text(((W - lw) / 2, band_y0 + (DIV_H - (bb[3] - bb[1])) / 2 - 2),
+    th = bb[3] - bb[1]
+    d.text(((W - lw) / 2, y0 + (y1 - y0 - th) / 2 - 2),
            label, font=f, fill=DIM)
+
+
+def build_stacked_png() -> None:
+    a, b, c = _sources()
+    W = a.width
+    DIV_H = 68
+    H = a.height + DIV_H + b.height + DIV_H + c.height
+    canvas = Image.new("RGB", (W, H), BG)
+    canvas.paste(a, (0, 0))
+    canvas.paste(b, (0, a.height + DIV_H))
+    canvas.paste(c, (0, a.height + DIV_H + b.height + DIV_H))
+
+    d = ImageDraw.Draw(canvas)
+    y = a.height
+    _draw_divider(d, y, y + DIV_H, W,
+                  "above: what it looks like     \u2193     below: what the agent does")
+    y += DIV_H + b.height
+    _draw_divider(d, y, y + DIV_H, W,
+                  "above: what the agent does     \u2193     below: why it matters (in simulation)")
 
     canvas.save(OUT_PNG, format="PNG", optimize=True)
     with Image.open(OUT_PNG) as v:
@@ -95,10 +105,9 @@ def build_stacked_png() -> None:
 
 
 def main() -> None:
-    if not HERO.exists():
-        raise SystemExit(f"missing {HERO}")
-    if not WORK.exists():
-        raise SystemExit(f"missing {WORK}")
+    for p in (HERO, WORK, BENCH):
+        if not p.exists():
+            raise SystemExit(f"missing {p}")
     build_gif()
     build_stacked_png()
 
