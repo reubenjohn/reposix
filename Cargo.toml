@@ -21,6 +21,7 @@ description = "Git-backed FUSE filesystem exposing REST APIs as POSIX files for 
 [workspace.dependencies]
 # Async runtime
 tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
 
 # Web server / client
 axum = "0.7"
