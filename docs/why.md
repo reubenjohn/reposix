@@ -65,6 +65,18 @@ python3 scripts/bench_token_economy.py
 
 The paper's 98.7% number assumes a larger MCP corpus (40+ tools with fully-expanded schemas); our 92.3% assumes a conservatively-sized one. Both conclusions match: **between one and two orders of magnitude less context burned**.
 
+### This now works against real GitHub, not just the simulator
+
+As of v0.2.0-alpha (post-noon 2026-04-13), `reposix list --backend github --project owner/repo` reads any public GitHub repo's issues end-to-end. Same `IssueBackend` trait, same normalized output:
+
+```bash
+REPOSIX_ALLOWED_ORIGINS='http://127.0.0.1:*,https://api.github.com' \
+    GITHUB_TOKEN="$(gh auth token)" \
+    reposix list --backend github --project octocat/Hello-World --format table
+```
+
+Pagination, rate-limit backoff (honors `x-ratelimit-reset`), and the SG-01 egress allowlist all hold. The `tests/contract.rs` parameterized test asserts the same five behavioral invariants on both `SimBackend` and `GithubReadOnlyBackend` — a CI-enforced "the simulator is not lying" guarantee.
+
 ## What the measurement does NOT capture
 
 - Real-world tokenizer quirks (our estimate is `len / 4`; Claude's tokenizer is within ~10% on English+code).
