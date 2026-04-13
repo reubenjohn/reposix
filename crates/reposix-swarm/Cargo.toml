@@ -1,0 +1,29 @@
+[package]
+name = "reposix-swarm"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Adversarial swarm harness: N concurrent simulated agents hammering the simulator or FUSE mount with realistic workload."
+
+[[bin]]
+name = "reposix-swarm"
+path = "src/main.rs"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+reposix-core.workspace = true
+tokio.workspace = true
+clap.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+parking_lot.workspace = true
+rusqlite = { workspace = true, features = ["bundled"] }
+hdrhistogram = "7"
+rand = "0.8"
+async-trait.workspace = true
