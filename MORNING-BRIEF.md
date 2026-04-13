@@ -22,8 +22,9 @@ You went to bed at ~12:42 AM with a goal: ship the reposix project (git-backed F
 | 6 — Token-economy benchmark with measured 92.3% reduction | shipped |
 | 7 — Phase S robustness fixes (CRLF, error frames, deterministic blobs) | shipped |
 | 8 — Demo suite + real-backend seam (post-ship, per your 09:05 direction) | shipped |
+| 9 — Adversarial swarm harness (the dark-factory piece twice deferred) | shipped |
 
-**163 workspace tests pass** (up from 139 at initial ship). `cargo clippy --workspace --all-targets -- -D warnings` is clean. `#![forbid(unsafe_code)]` at every crate root. All 8 SG guardrails enforced and demo-visible.
+**167 workspace tests pass** (up from 139 at initial ship; 163 after Phase 8; +4 from swarm). `cargo clippy --workspace --all-targets -- -D warnings` is clean. `#![forbid(unsafe_code)]` at every crate root. All 8 SG guardrails enforced and demo-visible.
 
 ### Phase 8 highlights (added after the initial 8am demo)
 
@@ -36,10 +37,19 @@ You went to bed at ~12:42 AM with a goal: ship the reposix project (git-backed F
 - **Real-GitHub CI job** — `integration-contract` runs the ignored contract test against real GitHub on every push, authenticated via `${{ secrets.GITHUB_TOKEN }}` (1000 req/hr budget).
 - **Codecov** — coverage badge now renders (CODECOV_TOKEN secret landed during Phase 8).
 
-## What did NOT make v0.1
+### Phase 9 highlights (adversarial swarm — the dark-factory piece)
 
-- Real-backend integration (Jira/GitHub/Confluence). v0.2.
-- Adversarial swarm harness. v0.2 — explicitly cut from scope to keep the budget honest.
+- **`reposix-swarm` crate + binary** — `reposix-swarm --clients 50 --duration 30 --mode sim-direct`. Each client loops `list + 3×read + 1×patch` concurrently. HDR-histogram per op type.
+- **Load-measured result, on my dev host:** 50 clients × 30s = **132,895 ops**, **0% error rate**, p99 ≈ 30ms per op type. The simulator and the audit trigger both held under real concurrent pressure.
+- **Append-only invariant upheld under load** — swarm counts total ops, queries `audit_events` count, and the numbers match. SG-06 (triggers) still refuses UPDATE post-run.
+- **Both modes shipped** — `sim-direct` (HTTP to simulator) and `fuse` (real `std::fs` through a mounted FUSE tree via `spawn_blocking`). The original scope deferred fuse-mode; the executor delivered it anyway because `spawn_blocking` made it straightforward.
+- **Not in smoke CI** — a 30s load run per push would burn minutes. The `scripts/demos/swarm.sh` recording captures the representative output; `SWARM_CLIENTS` and `SWARM_DURATION` env vars tune it.
+
+## What did NOT make v0.1 (still deferred)
+
+- **FUSE/git-remote-reposix rewire through `IssueBackend`** — the trait seam is in place and tested (SimBackend + GithubReadOnlyBackend pass the same contract), but the FUSE daemon and remote helper still hardcode the sim. Plugging GitHub in for real is v0.2.
+- **GithubReadOnlyBackend write support** — `create`/`update`/`delete_or_close` return `NotSupported`. v0.2.
+- **Rate-limit backoff in GithubReadOnlyBackend** — currently logs a WARN below 10 remaining; doesn't actually pause. v0.2.
 - FUSE-in-CI mount integration job (CI runs cargo tests + clippy + coverage; the "literal mount inside the runner" job was cut).
 - Various MEDIUM/LOW review findings cataloged in `.planning/phases/*/REVIEW.md` and tracked in `docs/development/roadmap.md`.
 
