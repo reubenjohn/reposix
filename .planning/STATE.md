@@ -6,21 +6,23 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** An LLM agent can `ls`, `cat`, `grep`, edit, and `git push`
 issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
-**Current focus:** Phase 1 — Core contracts + security guardrails
+**Current focus:** Phase 2 COMPLETE; Phase 3 executing in parallel (separate
+agent). Next MVD gate: Phase 4 demo after Phase 3 completes.
 
 ## Current Position
 
-Phase: 2 of 4 (+1 conditional STRETCH) — Simulator + audit insert path
-Plan: 0 of Phase 2 (Phase 1 shipped; see
-`.planning/phases/01-core-contracts-security-guardrails/01-DONE.md`)
-Status: Ready to plan Phase 2
-Last activity: 2026-04-13 — Phase 1 (core contracts + security guardrails)
-complete: 4 plans landed (01-00 error stub, 01-01 http client + clippy lint,
-01-02 Tainted/Untainted + sanitize + path validator + compile-fail locks,
-01-03 audit schema fixture). 50 tests passing.
+Phase: 2 of 4 (+1 conditional STRETCH) — Simulator + audit log: **DONE**
+Plan: 2/2 (both plans shipped — see
+`.planning/phases/02-simulator-audit-log/02-DONE.md`)
+Status: Phase 2 complete. All 5 ROADMAP SCs green; 29 phase-2 tests green
+(26 sim lib unit + 3 sim integration); `scripts/phase2_goal_backward.sh`
+prints ALL FIVE SUCCESS CRITERIA PASS.
+Last activity: 2026-04-13 — Phase 2 (simulator + audit log) complete.
+4 commits (02-01 × 2 tasks, 02-02 × 2 tasks) plus DONE.md + 2 summaries.
 
-Progress: [█░░░░░░░░░] ~9% (1 / 11 MVD plans completed; STRETCH plans
-excluded until T+3h gate decision)
+Progress: [███░░░░░░░] ~27% (3 / 11 MVD plans completed: 01-01, 02-01,
+02-02; STRETCH plans excluded until T+3h gate decision; Phase 3 running
+in parallel)
 
 ## Performance Metrics
 
@@ -74,8 +76,10 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-13 — Phase 1 executed end-to-end.
-Stopped at: Phase 1 complete (10 commits shipped, pushed to origin/main,
-50 tests green, clippy clean, clippy.toml load-proof script green). Cursor
-advanced to Phase 2. Ready to enter `/gsd-plan-phase 2`.
-Resume file: `.planning/phases/01-core-contracts-security-guardrails/01-DONE.md`
+Last session: 2026-04-13 — Phase 2 executed end-to-end.
+Stopped at: Phase 2 complete (4 commits shipped: 3c004f6, d29e47c, 0eb6eb4,
+171c775; plus docs commit e861e1e; 29 phase-2 tests green; clippy clean on
+workspace; `scripts/phase2_goal_backward.sh` prints ALL FIVE SUCCESS
+CRITERIA PASS). Phase 3 started in parallel (another agent) — commits
+032e979 + 2acd9e4 for plan 03-01 tasks 1+2 landed interleaved with Phase 2.
+Resume file: `.planning/phases/02-simulator-audit-log/02-DONE.md`
