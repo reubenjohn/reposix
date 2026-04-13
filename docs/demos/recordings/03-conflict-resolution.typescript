@@ -1,0 +1,49 @@
+Script started on 2026-04-13 09:20:56-07:00 [<not executed on terminal>]
+
+================================================================
+  [1/5] start simulator
+================================================================
+sim ready at http://127.0.0.1:7803
+
+================================================================
+  [2/5] read issue 1 and record its current version V1
+================================================================
+V1 = 1
+
+================================================================
+  [3/5] agent A PATCHes with If-Match: "1" — expects success, version bumps to V2
+================================================================
+agent A HTTP code: 200
+agent A response:
+[1;39m{
+  [0m[34;1m"id"[0m[1;39m: [0m[0;39m1[0m[1;39m,
+  [0m[34;1m"status"[0m[1;39m: [0m[0;32m"in_progress"[0m[1;39m,
+  [0m[34;1m"version"[0m[1;39m: [0m[0;39m2[0m[1;39m
+[1;39m}[0m
+V2 = 2
+
+================================================================
+  [4/5] agent B PATCHes with STALE If-Match: "1" — expects 409 version_mismatch
+================================================================
+agent B HTTP code: 409
+agent B body (pretty-printed):
+[1;39m{
+  [0m[34;1m"current"[0m[1;39m: [0m[0;39m2[0m[1;39m,
+  [0m[34;1m"error"[0m[1;39m: [0m[0;32m"version_mismatch"[0m[1;39m,
+  [0m[34;1m"sent"[0m[1;39m: [0m[0;32m"1"[0m[1;39m
+[1;39m}[0m
+
+================================================================
+  [5/5] what git sees on the same path
+================================================================
+In the git-push path, this same 409 is what git turns into a merge
+conflict in the real push path: the helper reads the current server
+version before mutating, sends an If-Match with that version, and
+surfaces the 409 as a "remote rejected" so the agent can `git pull
+--rebase` to resolve. No special UI, no bespoke reconciliation
+protocol — optimistic concurrency on HTTP etags, rendered back
+through git.
+
+== DEMO COMPLETE ==
+
+Script done on 2026-04-13 09:20:57-07:00 [COMMAND_EXIT_CODE="0"]

@@ -1,0 +1,55 @@
+Script started on 2026-04-13 09:20:49-07:00 [<not executed on terminal>]
+
+================================================================
+  [1/4] start simulator + primary mount + bootstrap repo
+================================================================
+    fatal: could not read ref refs/reposix/main
+primary mount + repo ready
+
+================================================================
+  [2/4] SG-01 — outbound HTTP allowlist refusal
+================================================================
+spawning a second mount with REPOSIX_ALLOWED_ORIGINS=http://127.0.0.1:9999 (mismatch)
+ls on allowlist-constrained mount (expect Permission denied):
+ls: reading directory '/tmp/reposix-demo-02-allow-mnt': Permission denied
+(stderr tail from the constrained mount)
+    [2m2026-04-13T16:20:50.023041Z[0m [32m INFO[0m [2mfuser::session[0m[2m:[0m Mounting /tmp/reposix-demo-02-allow-mnt
+    [2m2026-04-13T16:20:50.025595Z[0m [32m INFO[0m [2mreposix_fuse[0m[2m:[0m reposix-fuse mounted; press Ctrl-C to unmount
+    [2m2026-04-13T16:20:51.526024Z[0m [33m WARN[0m [2mreposix_fuse::fs[0m[2m:[0m readdir fetch failed [3merror[0m[2m=[0morigin not allowlisted: http://127.0.0.1:7802/projects/demo/issues
+
+================================================================
+  [3/4] SG-02 — bulk-delete cap (cap=5; deleting 6 is refused)
+================================================================
+first push exit code: 1 (expect non-zero)
+stderr:
+    error: refusing to push (would delete 6 issues; cap is 5; commit message tag '[allow-bulk-delete]' overrides)
+    To reposix::http://127.0.0.1:7802/projects/demo
+     ! [remote rejected] main -> main (bulk-delete)
+    error: failed to push some refs to 'reposix::http://127.0.0.1:7802/projects/demo'
+SG-02 fired: server (or helper) refused the bulk delete
+second push (with override tag):
+    To reposix::http://127.0.0.1:7802/projects/demo
+     * [new branch]      main -> main
+server issue count after override push:
+[0;39m0[0m
+
+================================================================
+  [4/4] SG-03 — sanitize-on-egress: client-supplied version is stripped
+================================================================
+created probe issue id=1:
+[1;39m{
+  [0m[34;1m"id"[0m[1;39m: [0m[0;39m1[0m[1;39m,
+  [0m[34;1m"version"[0m[1;39m: [0m[0;39m1[0m[1;39m
+[1;39m}[0m
+PATCHing with body that contains "version: 999999" in-frontmatter:
+[1;39m{
+  [0m[34;1m"id"[0m[1;39m: [0m[0;39m1[0m[1;39m,
+  [0m[34;1m"version"[0m[1;39m: [0m[0;39m2[0m[1;39m
+[1;39m}[0m
+server authoritative state (version MUST NOT be 999999):
+server.version = 2
+SG-03 held: attacker-supplied version was stripped.
+
+== DEMO COMPLETE ==
+
+Script done on 2026-04-13 09:20:52-07:00 [COMMAND_EXIT_CODE="0"]

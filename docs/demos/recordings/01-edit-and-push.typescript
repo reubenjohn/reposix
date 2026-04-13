@@ -1,0 +1,67 @@
+Script started on 2026-04-13 09:20:43-07:00 [<not executed on terminal>]
+
+================================================================
+  [1/6] start simulator + mount FUSE
+================================================================
+sim ready at http://127.0.0.1:7801; mount ready at /tmp/reposix-demo-01-mnt
+
+================================================================
+  [2/6] agent-style read path: ls + cat
+================================================================
+0001.md
+0002.md
+0003.md
+0004.md
+0005.md
+0006.md
+--- head of 0001.md ---
+---
+id: 1
+title: database connection drops under load
+status: open
+labels:
+- bug
+- p1
+created_at: 2026-04-13T00:00:00Z
+
+================================================================
+  [3/6] edit through FUSE (sed-style in-memory write)
+================================================================
+before: status = open
+after FUSE write, frontmatter head:
+---
+id: 1
+title: database connection drops under load
+status: in_progress
+labels:
+- bug
+server confirms:
+[1;39m{
+  [0m[34;1m"id"[0m[1;39m: [0m[0;39m1[0m[1;39m,
+  [0m[34;1m"status"[0m[1;39m: [0m[0;32m"in_progress"[0m[1;39m,
+  [0m[34;1m"version"[0m[1;39m: [0m[0;39m2[0m[1;39m
+[1;39m}[0m
+
+================================================================
+  [4/6] git clone via reposix:: remote
+================================================================
+    fatal: could not read ref refs/reposix/main
+working tree after fetch:
+0001.md  0002.md  0003.md  0004.md  0005.md  0006.md
+
+================================================================
+  [5/6] edit + commit + push
+================================================================
+pushing...
+    To reposix::http://127.0.0.1:7801/projects/demo
+     * [new branch]      main -> main
+
+================================================================
+  [6/6] verify server state reflects the push
+================================================================
+issue 1 status after push (expect in_review):
+in_review
+
+== DEMO COMPLETE ==
+
+Script done on 2026-04-13 09:20:46-07:00 [COMMAND_EXIT_CODE="0"]
