@@ -148,12 +148,12 @@ exercised end-to-end.
      `curl -sf http://127.0.0.1:7878/projects/demo/issues | jq 'length'`
      prints an integer ≥ 3.
   2. `curl -s -o /dev/null -w '%{http_code}'
-     http://127.0.0.1:7878/projects/demo/issues/DEMO-1` prints `200`, and
-     `curl -s http://127.0.0.1:7878/projects/demo/issues/DEMO-1 | jq
+     http://127.0.0.1:7878/projects/demo/issues/0001` prints `200`, and
+     `curl -s http://127.0.0.1:7878/projects/demo/issues/0001 | jq
      '.frontmatter.id, .frontmatter.version'` returns the issue's id and a
      non-null version integer.
   3. `curl -s -X PATCH -H 'If-Match: "bogus"' -d '{"status":"done"}'
-     http://127.0.0.1:7878/projects/demo/issues/DEMO-1` returns HTTP 409 (the
+     http://127.0.0.1:7878/projects/demo/issues/0001` returns HTTP 409 (the
      staleness path the remote helper will one day turn into a git merge
      conflict).
   4. `sqlite3 runtime/sim-audit.db 'SELECT COUNT(*) FROM audit_events WHERE
@@ -186,13 +186,13 @@ FC-05, SG-04 (filename enforcement at FUSE boundary), SG-07
 **Success Criteria** (each is a Bash assertion):
   1. `cargo run -p reposix-sim & sleep 1; cargo run -p reposix-cli -- mount
      /tmp/reposix-mnt --backend http://127.0.0.1:7878 & sleep 2;
-     ls /tmp/reposix-mnt | sort` prints at least `DEMO-1.md DEMO-2.md
-     DEMO-3.md`.
-  2. `cat /tmp/reposix-mnt/DEMO-1.md | head -1` prints `---` (frontmatter
-     fence) and `grep -q '^id: DEMO-1$' /tmp/reposix-mnt/DEMO-1.md` exits 0.
+     ls /tmp/reposix-mnt | sort` prints at least `0001.md 0002.md
+     0003.md`.
+  2. `cat /tmp/reposix-mnt/0001.md | head -1` prints `---` (frontmatter
+     fence) and `grep -q '^id: 1$' /tmp/reposix-mnt/0001.md` exits 0.
   3. `grep -rIl database /tmp/reposix-mnt | wc -l` returns ≥ 1 (agent-style
      grep works end-to-end).
-  4. Kill the sim, then `timeout 7 stat /tmp/reposix-mnt/DEMO-1.md; echo $?`
+  4. Kill the sim, then `timeout 7 stat /tmp/reposix-mnt/0001.md; echo $?`
      returns in <7 s and exits non-zero (no kernel hang); `fusermount -u
      /tmp/reposix-mnt` then completes within 3 s.
   5. `cargo run -p reposix-cli -- --help` lists subcommands `sim`, `mount`,
@@ -266,9 +266,9 @@ decision at T+3h
 requirement; the `cargo test`/clippy/coverage half ships with MVD), SG-02
 **Success Criteria** (each is a Bash assertion; phase is considered skipped
 rather than failed if orchestrator picks the read-only fallback at T+3h):
-  1. `echo "---\nstatus: done\n---\nbody" > /tmp/reposix-mnt/DEMO-1.md;
-     cat /tmp/reposix-mnt/DEMO-1.md | grep '^status: done$'` succeeds AND
-     `curl -s http://127.0.0.1:7878/projects/demo/issues/DEMO-1 | jq -r
+  1. `echo "---\nstatus: done\n---\nbody" > /tmp/reposix-mnt/0001.md;
+     cat /tmp/reposix-mnt/0001.md | grep '^status: done$'` succeeds AND
+     `curl -s http://127.0.0.1:7878/projects/demo/issues/0001 | jq -r
      .frontmatter.status` returns `done` (write round-trips through the sim).
   2. `cd /tmp/reposix-mnt && git init && git add . && git commit -m init &&
      git remote add origin reposix::http://127.0.0.1:7878/projects/demo &&
