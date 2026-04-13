@@ -10,16 +10,17 @@ issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
 
 ## Current Position
 
-Phase: 1 of 4 (+1 conditional STRETCH) — Core contracts + security guardrails
-Plan: 0 of 3 in current phase (plans: 01-01 http client factory, 01-02
-Tainted/Untainted + sanitize + filename validator, 01-03 audit-log DDL fixture)
-Status: Ready to plan
-Last activity: 2026-04-13 00:50 — Roadmap created; baseline workspace (5
-crates, `reposix-core` types + 7 unit tests, CI workflow, first push) already
-in tree
+Phase: 2 of 4 (+1 conditional STRETCH) — Simulator + audit insert path
+Plan: 0 of Phase 2 (Phase 1 shipped; see
+`.planning/phases/01-core-contracts-security-guardrails/01-DONE.md`)
+Status: Ready to plan Phase 2
+Last activity: 2026-04-13 — Phase 1 (core contracts + security guardrails)
+complete: 4 plans landed (01-00 error stub, 01-01 http client + clippy lint,
+01-02 Tainted/Untainted + sanitize + path validator + compile-fail locks,
+01-03 audit schema fixture). 50 tests passing.
 
-Progress: [░░░░░░░░░░] 0% (0 / 11 MVD plans; STRETCH plans excluded until T+3h
-gate decision)
+Progress: [█░░░░░░░░░] ~9% (1 / 11 MVD plans completed; STRETCH plans
+excluded until T+3h gate decision)
 
 ## Performance Metrics
 
@@ -73,8 +74,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-13 00:50 PDT
-Stopped at: ROADMAP.md + STATE.md written; baseline workspace already
-committed and first-pushed to `reubenjohn/reposix`. Ready to enter
-`/gsd-plan-phase 1`.
-Resume file: None
+Last session: 2026-04-13 — Phase 1 executed end-to-end.
+Stopped at: Phase 1 complete (10 commits shipped, pushed to origin/main,
+50 tests green, clippy clean, clippy.toml load-proof script green). Cursor
+advanced to Phase 2. Ready to enter `/gsd-plan-phase 2`.
+Resume file: `.planning/phases/01-core-contracts-security-guardrails/01-DONE.md`
