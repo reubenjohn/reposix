@@ -76,6 +76,15 @@ fn issue_id_from_path(path: &str) -> Option<u64> {
     stem.parse::<u64>().ok()
 }
 
+/// Canonicalize a rendered blob for semantic-equivalence comparison
+/// (M-03). Normalizes `\r\n` → `\n` (CRLF from git's normalization) and
+/// trims trailing whitespace on the final byte sequence (absorbs
+/// blob-ends-with-or-without-LF variation). Intra-body whitespace is
+/// preserved — we only want to canonicalize envelope noise, not content.
+fn normalize_for_compare(s: &str) -> String {
+    s.replace("\r\n", "\n").trim_end().to_owned()
+}
+
 /// Compute the per-issue actions for the new tree. Enforces the SG-02
 /// bulk-delete cap unless the commit message contains
 /// [`ALLOW_BULK_DELETE_TAG`].
@@ -112,17 +121,34 @@ pub fn plan(prior: &[Issue], parsed: &ParsedExport) -> Result<Vec<PlannedAction>
         match prior_by_path.get(path).copied() {
             Some(id) => {
                 let prior_issue = prior_by_id.get(&id).copied();
-                let bytes_match = prior_issue
-                    .map(|p| {
-                        frontmatter::render(p).map(|s: String| s.as_bytes() == bytes.as_slice())
-                    })
-                    .transpose()
-                    .map_err(|e| PlanError::InvalidBlob {
-                        path: path.clone(),
-                        source: e,
-                    })?
-                    .unwrap_or(false);
-                if !bytes_match {
+                // Normalized-compare (M-03): render BOTH sides through
+                // `frontmatter::render`, normalize line endings to LF and
+                // trim trailing whitespace, then compare. Byte-for-byte
+                // compare against the raw new blob emitted a spurious
+                // PATCH on every push for unchanged content, because git's
+                // trailing-newline + CRLF handling (and any future YAML-
+                // serializer quirks) can diverge from `render`'s output
+                // even when the Issue is semantically identical. Rendering
+                // both sides + stripping line-ending noise funnels them
+                // through the same canonicalization, so "no edits" pushes
+                // emit zero Update actions — matching the user's mental
+                // model.
+                let equivalent = if let Some(p) = prior_issue {
+                    let prior_rendered =
+                        frontmatter::render(p).map_err(|e| PlanError::InvalidBlob {
+                            path: path.clone(),
+                            source: e,
+                        })?;
+                    let new_rendered =
+                        frontmatter::render(&new_issue).map_err(|e| PlanError::InvalidBlob {
+                            path: path.clone(),
+                            source: e,
+                        })?;
+                    normalize_for_compare(&prior_rendered) == normalize_for_compare(&new_rendered)
+                } else {
+                    false
+                };
+                if !equivalent {
                     let prior_version = prior_issue.map_or(0, |p| p.version);
                     updates.push(PlannedAction::Update {
                         id,
@@ -230,5 +256,64 @@ mod tests {
         };
         let actions = plan(&prior, &parsed).expect("override tag must bypass cap");
         assert_eq!(actions.len(), 6);
+    }
+
+    /// M-03: An unchanged push (user pulled, made no edits, pushed back)
+    /// must emit zero Update actions. This exercises the normalized-compare
+    /// path in `plan()` — rendering both sides via `frontmatter::render`
+    /// canonicalizes away trailing-newline and YAML-serializer quirks that
+    /// a raw byte-compare would flag as spurious Updates.
+    #[test]
+    fn unchanged_push_emits_no_patches() {
+        let prior: Vec<Issue> = (1..=3).map(sample).collect();
+        // Simulate `git pull` → no edits → `git push`:
+        // each new-tree blob is the exact render output of the prior issue.
+        // The planner must recognize these as equivalent and skip PATCH.
+        let mut blobs: HashMap<u64, Vec<u8>> = HashMap::new();
+        let mut tree: BTreeMap<String, u64> = BTreeMap::new();
+        for (i, issue) in prior.iter().enumerate() {
+            let mark = u64::try_from(i).unwrap() + 1;
+            let rendered = frontmatter::render(issue).expect("render sample");
+            blobs.insert(mark, rendered.into_bytes());
+            tree.insert(format!("{:04}.md", issue.id.0), mark);
+        }
+        let parsed = ParsedExport {
+            commit_message: "no-op push\n".to_owned(),
+            blobs,
+            tree,
+            deletes: vec![],
+        };
+        let actions = plan(&prior, &parsed).expect("unchanged push must plan clean");
+        assert_eq!(
+            actions.len(),
+            0,
+            "unchanged push should emit ZERO actions; got: {actions:?}"
+        );
+    }
+
+    /// M-03: Even when the new blob has an EXTRA trailing `\n` (as git's
+    /// normalization sometimes produces after a round-trip through the
+    /// working tree), the normalized-compare must treat it as a no-op.
+    #[test]
+    fn extra_trailing_newline_is_a_noop() {
+        let prior: Vec<Issue> = vec![sample(1)];
+        let mut rendered = frontmatter::render(&prior[0]).expect("render");
+        rendered.push('\n'); // the exact edge case M-03 calls out
+        let mut blobs = HashMap::new();
+        blobs.insert(1, rendered.into_bytes());
+        let mut tree = BTreeMap::new();
+        tree.insert("0001.md".to_owned(), 1);
+        let parsed = ParsedExport {
+            commit_message: "noop\n".to_owned(),
+            blobs,
+            tree,
+            deletes: vec![],
+        };
+        let actions = plan(&prior, &parsed).expect("plan");
+        assert_eq!(
+            actions.len(),
+            0,
+            "trailing-newline variation must be a no-op; got: {actions:?}"
+        );
     }
 }
