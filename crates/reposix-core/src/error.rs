@@ -35,4 +35,16 @@ pub enum Error {
     /// Untyped error escape hatch — only for cases where typing the error adds no value.
     #[error("{0}")]
     Other(String),
+
+    /// URL rejected by the egress allowlist (SG-01).
+    #[error("blocked origin: {0}")]
+    InvalidOrigin(String),
+
+    /// Path/filename rejected by the path validator (SG-04).
+    #[error("invalid path: {0}")]
+    InvalidPath(String),
+
+    /// Underlying HTTP/transport error from reqwest.
+    #[error(transparent)]
+    Http(#[from] reqwest::Error),
 }
