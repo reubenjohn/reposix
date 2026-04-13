@@ -83,15 +83,21 @@ enum Cmd {
     /// List issues for a project by calling the backend's `list_issues`
     /// method and dumping the result as JSON (default) or a pretty table.
     ///
-    /// v0.1.5 always uses the in-process simulator backend; v0.2 will add
-    /// `--backend {sim,github}` for the parity demo.
+    /// `--backend sim` (default) hits the in-process simulator at `--origin`.
+    /// `--backend github` hits real `https://api.github.com` for the public
+    /// repo named by `--project` (e.g. `octocat/Hello-World`); requires
+    /// `REPOSIX_ALLOWED_ORIGINS` to include `https://api.github.com` and
+    /// optionally `GITHUB_TOKEN` for the 1000 req/hr ceiling.
     List {
-        /// Project slug (for sim) or `owner/repo` (for github, v0.2).
+        /// Project slug (sim) or `owner/repo` (github).
         #[arg(long, default_value = "demo")]
         project: String,
-        /// Backend origin. For the sim, this is the HTTP listen address.
+        /// Sim backend origin. Ignored for `--backend github`.
         #[arg(long, default_value = "http://127.0.0.1:7878")]
         origin: String,
+        /// Which backend to query.
+        #[arg(long, value_enum, default_value_t = list::ListBackend::Sim)]
+        backend: list::ListBackend,
         /// Output format.
         #[arg(long, value_enum, default_value_t = list::ListFormat::Json)]
         format: list::ListFormat,
@@ -132,7 +138,8 @@ async fn main() -> Result<()> {
         Cmd::List {
             project,
             origin,
+            backend,
             format,
-        } => list::run(project, origin, format).await,
+        } => list::run(project, origin, backend, format).await,
     }
 }

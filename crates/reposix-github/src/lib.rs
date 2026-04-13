@@ -719,7 +719,8 @@ mod tests {
             )
             .mount(&server)
             .await;
-        let backend = GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
+        let backend =
+            GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
         let _ = backend
             .get_issue("octocat/Hello-World", IssueId(42))
             .await
@@ -736,7 +737,8 @@ mod tests {
                     deadline.saturating_duration_since(now)
                 );
                 assert!(
-                    deadline - now <= std::time::Duration::from_secs(MAX_RATE_LIMIT_SLEEP.as_secs() + 1),
+                    deadline - now
+                        <= std::time::Duration::from_secs(MAX_RATE_LIMIT_SLEEP.as_secs() + 1),
                     "gate must be capped at MAX_RATE_LIMIT_SLEEP"
                 );
             }

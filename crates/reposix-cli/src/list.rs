@@ -1,9 +1,11 @@
 //! `reposix list` — dump issues for a project as JSON or a pretty table.
 //!
-//! v0.1.5 hard-codes the simulator backend (the only implementor of
-//! [`IssueBackend`](reposix_core::IssueBackend) that ships in this version).
-//! Once `crates/reposix-github` lands in v0.2, this subcommand will grow a
-//! `--backend {sim,github}` flag and `run` will dispatch accordingly.
+//! Dispatches over `--backend`:
+//! - `sim` (default): in-process simulator at `--origin`.
+//! - `github`: real GitHub Issues at `https://api.github.com` for the public
+//!   repo named by `--project` (e.g. `octocat/Hello-World`).
+//!   Requires `REPOSIX_ALLOWED_ORIGINS` to include `https://api.github.com`
+//!   and optionally `GITHUB_TOKEN` for the 1000 req/hr ceiling.
 //!
 //! Output formats:
 //! - `json` (default): `serde_json::to_string_pretty(&issues)` — machine-readable,
@@ -14,6 +16,16 @@ use anyhow::{Context, Result};
 use clap::ValueEnum;
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::{Issue, IssueBackend};
+use reposix_github::GithubReadOnlyBackend;
+
+/// Backend choice for `reposix list --backend`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum ListBackend {
+    /// In-process simulator at the configured `--origin`.
+    Sim,
+    /// Real GitHub Issues at `api.github.com`. `--project` is `owner/repo`.
+    Github,
+}
 
 /// Output formats accepted by `reposix list --format`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
@@ -24,19 +36,34 @@ pub enum ListFormat {
     Table,
 }
 
-/// Execute `reposix list`. Builds a [`SimBackend`] pointed at `origin`,
-/// fetches issues for `project`, and writes formatted output to stdout.
+/// Execute `reposix list`. Builds the requested backend, fetches issues
+/// for `project`, and writes formatted output to stdout.
 ///
 /// # Errors
 /// Returns a wrapped error if the backend cannot be constructed (e.g. a bad
-/// `REPOSIX_ALLOWED_ORIGINS` env var), if the HTTP call fails (sim not
-/// running, non-allowlisted origin), or if JSON serialization fails.
-pub async fn run(project: String, origin: String, format: ListFormat) -> Result<()> {
-    let backend = SimBackend::new(origin).context("build SimBackend")?;
-    let issues = backend
-        .list_issues(&project)
-        .await
-        .with_context(|| format!("list_issues project={project}"))?;
+/// `REPOSIX_ALLOWED_ORIGINS` env var), if the HTTP call fails, or if JSON
+/// serialization fails.
+pub async fn run(
+    project: String,
+    origin: String,
+    backend: ListBackend,
+    format: ListFormat,
+) -> Result<()> {
+    let issues = match backend {
+        ListBackend::Sim => {
+            let b = SimBackend::new(origin).context("build SimBackend")?;
+            b.list_issues(&project)
+                .await
+                .with_context(|| format!("sim list_issues project={project}"))?
+        }
+        ListBackend::Github => {
+            let token = std::env::var("GITHUB_TOKEN").ok();
+            let b = GithubReadOnlyBackend::new(token).context("build GithubReadOnlyBackend")?;
+            b.list_issues(&project).await.with_context(|| {
+                format!("github list_issues repo={project} (REPOSIX_ALLOWED_ORIGINS must include https://api.github.com)")
+            })?
+        }
+    };
     match format {
         ListFormat::Json => {
             let pretty = serde_json::to_string_pretty(&issues).context("serialize json")?;
