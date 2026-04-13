@@ -62,11 +62,14 @@ pub async fn run(keep_running: bool) -> Result<()> {
             .context("spawn sim")?,
         );
 
-        // Step 2: healthz wait.
+        // Step 2: healthz wait. 15s budget covers the `cargo run -q -p
+        // reposix-sim --` cold-start fallback used when the sibling
+        // binary isn't built — common in CI's integration job before
+        // `cargo build --release` has landed all binaries.
         info!("[step 2/6] waiting for /healthz");
         wait_for_healthz(
             &format!("http://{SIM_BIND}/healthz"),
-            Duration::from_secs(5),
+            Duration::from_secs(15),
         )
         .await
         .context("healthz wait")?;

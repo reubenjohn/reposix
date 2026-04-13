@@ -14,6 +14,9 @@ cargo clippy -p reposix-core -p reposix-fuse -p reposix-cli --all-targets -- -D 
 echo "==> cargo test -p reposix-core -p reposix-fuse -p reposix-cli"
 cargo test -p reposix-core -p reposix-fuse -p reposix-cli
 
+echo "==> pre-build release binaries the demo test shells out to"
+cargo build --release -p reposix-sim -p reposix-fuse -p reposix-cli
+
 echo "==> cargo test --release -- --ignored --test-threads=1 (sim_death + demo)"
 cargo test -p reposix-fuse -p reposix-cli --release -- --ignored --test-threads=1
 
