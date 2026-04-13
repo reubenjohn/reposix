@@ -1,0 +1,10 @@
+error[E0624]: associated function `new` is private
+  --> tests/compile-fail/untainted_new_is_not_pub.rs:21:25
+   |
+21 |     let _u = Untainted::new(some_issue);
+   |                         ^^^ private associated function
+   |
+  ::: src/taint.rs
+   |
+   |     pub(crate) fn new(value: T) -> Self {
+   |     ----------------------------------- private associated function defined here
