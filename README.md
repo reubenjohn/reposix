@@ -44,6 +44,16 @@ reposix ships a **demo suite**: four audience-specific 60-second Tier 1 demos + 
 | [`03-conflict-resolution.sh`](scripts/demos/03-conflict-resolution.sh)        | skeptic   | 409 `version_mismatch` is what git turns into a merge conflict on push (no bespoke protocol)           | [typescript](docs/demos/recordings/03-conflict-resolution.typescript) · [transcript](docs/demos/recordings/03-conflict-resolution.transcript.txt)    |
 | [`04-token-economy.sh`](scripts/demos/04-token-economy.sh)                    | buyer     | 92.3% fewer tokens vs MCP-mediated baseline for the same task                                          | [typescript](docs/demos/recordings/04-token-economy.typescript) · [transcript](docs/demos/recordings/04-token-economy.transcript.txt)               |
 
+### Tier 3 — sim vs real backend (parity)
+
+A read-only [`GithubReadOnlyBackend`](crates/reposix-github/src/lib.rs) implementing the same [`IssueBackend`](crates/reposix-core/src/backend.rs) trait as the simulator now lives in `crates/reposix-github/`. The parity demo lists issues from both and diffs their normalized shape.
+
+| Demo                                                                        | Audience | What it proves                                                                                                                     | Recording                                                                                                          |
+|-----------------------------------------------------------------------------|----------|------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| [`parity.sh`](scripts/demos/parity.sh)                                      | skeptic  | `reposix list` (sim) and `gh api` (`octocat/Hello-World`) produce the same `{id, title, status}` JSON shape. Diff = content only. | [typescript](docs/demos/recordings/parity.typescript) · [transcript](docs/demos/recordings/parity.transcript.txt) |
+
+The library-level proof of the same claim is [`crates/reposix-github/tests/contract.rs`](crates/reposix-github/tests/contract.rs) — the same 5-assertion contract runs against `SimBackend` in every CI invocation and against real GitHub via `cargo test -p reposix-github -- --ignored` (requires `REPOSIX_ALLOWED_ORIGINS=http://127.0.0.1:*,https://api.github.com`). See [`docs/decisions/001-github-state-mapping.md`](docs/decisions/001-github-state-mapping.md) for the state-mapping ADR.
+
 ### Tier 2 — the full walkthrough
 
 End-to-end recording: [`docs/demo.md`](docs/demo.md) (walkthrough),
