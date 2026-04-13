@@ -25,6 +25,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod db;
 pub mod error;
+pub mod routes;
 pub mod seed;
 pub mod state;
 
@@ -76,10 +77,13 @@ impl SimConfig {
 
 /// Build the axum router.
 ///
-/// Task 1 of plan 02-01 keeps this as a single `/healthz` route — routes are
-/// wired by task 2, layers (audit + rate-limit) by plan 02-02.
-pub fn build_router(_state: AppState) -> Router {
-    Router::new().route("/healthz", axum::routing::get(healthz))
+/// Task 2 of plan 02-01 wires the issue/transitions routes through the shared
+/// [`AppState`]. Middleware (audit + rate-limit) is attached on top by plan
+/// 02-02.
+pub fn build_router(state: AppState) -> Router {
+    Router::new()
+        .route("/healthz", axum::routing::get(healthz))
+        .merge(routes::router(state))
 }
 
 #[allow(clippy::unused_async)]
