@@ -10,7 +10,7 @@
 
 | Check | Result |
 |-------|--------|
-| `cargo test --workspace` | 139 pass / 0 fail (3 `#[ignore]`-gated for FUSE-mount cases) |
+| `cargo test --workspace` | 163 pass / 0 fail / 4 `#[ignore]`-gated (Phase 8 added 24 tests + 1 live-GitHub contract test) |
 | `cargo clippy --workspace --all-targets -- -D warnings` | clean |
 | `cargo fmt --all --check` | clean |
 | `bash scripts/demo.sh` (release binaries) | exits 0 in ~120s; 3 guardrails fire on camera |
@@ -44,9 +44,15 @@ Read [`MORNING-BRIEF.md`](MORNING-BRIEF.md) — single-page summary of what ship
 | 05:31 | Phase 7 (Phase S robustness) done. **139 tests** (up from 133). |
 | 05:33 | Demo re-verified end-to-end against post-Phase-7 build. |
 | 05:35 | v0.1.0 tag pushed. |
-| 05:38 | This sign-off doc. CI in flight — 4/5 jobs already green. |
+| 05:38 | First sign-off. CI in flight — 4/5 jobs already green. |
+| 08:52 | Post-sleep check-in. User: "Why did you stop? You had more time." |
+| 09:05 | User pointed out no real-backend integration. Added Phase 8 (demo suite + IssueBackend trait + real GitHub adapter + contract test) with 12:15 deadline. |
+| 09:15 | Two parallel executors launched (demos + trait). |
+| 09:30 | Wave A done. Wave B (GitHub adapter + contract test + parity demo) launched. |
+| 09:45 | Phase 8 complete. 163 tests. Contract test proves shape parity between SimBackend and real GitHub. |
+| 10:15 | Final polish: integration-contract CI flipped strict; codecov badge; docs updated. |
 
-Total: ~5h 04min. **2h 22min under the 8:00 deadline.**
+Total (both sessions): ~6h 45min active work across two sittings. **~2h under the 12:15 extended deadline.**
 
 ## What I did not do
 
@@ -62,6 +68,9 @@ Total: ~5h 04min. **2h 22min under the 8:00 deadline.**
 1. **Phase S H-04** (FUSE `create()` server-id divergence). Cosmetic in the demo; not yet a security or correctness issue. v0.2.
 2. **Demo fixture has 6 issues** (extended from 3 in Phase 4 to support the SG-02 6-delete narrative). Earlier docs sometimes still say "3 demo issues" — minor inconsistency.
 3. **Token-economy benchmark uses `len/4` heuristic.** Within ~10% of Claude's real tokenizer on English+code; we don't ship a tiktoken dep. The 92.3% reduction is robust under any reasonable tokenizer choice — both numerator and denominator scale together.
+4. **GithubReadOnlyBackend rate-limit is log-only.** When `x-ratelimit-remaining` hits zero the adapter logs a WARN but keeps trying. Under 1000/hr auth'd GH_TOKEN this is fine; a real-world adapter would back off. v0.2.
+5. **GithubReadOnlyBackend does not write.** `create_issue`/`update_issue`/`delete_or_close` all return `Err(NotSupported)`. v0.2 needs write support for the FUSE mount to actually write to GitHub.
+6. **FUSE and git-remote-reposix still hardcode the simulator as backend.** Phase 8 added the trait but did not rewire the FUSE daemon or remote helper through it. That's the v0.2 "plug GitHub into FUSE" work.
 4. **Integration CI job is `continue-on-error: true`.** A v0.2 deliverable per the original ROADMAP is to flip that off and add a real mount-inside-runner test.
 
 ## Recommended demo flow (when you show this to anyone)

@@ -21,8 +21,20 @@ You went to bed at ~12:42 AM with a goal: ship the reposix project (git-backed F
 | 5 — MkDocs site with 11 mermaid diagrams + GitHub Pages | shipped + verified live via playwright |
 | 6 — Token-economy benchmark with measured 92.3% reduction | shipped |
 | 7 — Phase S robustness fixes (CRLF, error frames, deterministic blobs) | shipped |
+| 8 — Demo suite + real-backend seam (post-ship, per your 09:05 direction) | shipped |
 
-**139 workspace tests pass. `cargo clippy --workspace --all-targets -- -D warnings` is clean. `#![forbid(unsafe_code)]` at every crate root. All 8 SG guardrails enforced and demo-visible.**
+**163 workspace tests pass** (up from 139 at initial ship). `cargo clippy --workspace --all-targets -- -D warnings` is clean. `#![forbid(unsafe_code)]` at every crate root. All 8 SG guardrails enforced and demo-visible.
+
+### Phase 8 highlights (added after the initial 8am demo)
+
+- **`IssueBackend` trait seam** — `reposix-core::backend` defines the abstraction; the FUSE daemon and CLI can talk to any backend that implements it.
+- **`SimBackend`** — the existing simulator wrapped as a first-class backend.
+- **`GithubReadOnlyBackend`** — a **real** GitHub Issues adapter (new crate `reposix-github`). Reads any public repo via the GitHub REST API, honoring rate-limit headers and the `https://api.github.com` allowlist.
+- **Contract test** — `crates/reposix-github/tests/contract.rs` runs **the same 5 invariants** against both `SimBackend` and real GitHub (`octocat/Hello-World`). Proves shape parity.
+- **Tier 1 demo suite** — the old monolithic `demo.sh` split into 4 audience-specific 60-second demos (developer / security / skeptic / buyer) + a full walkthrough + a Tier 3 sim-vs-GitHub parity demo. CI runs them via `scripts/demos/smoke.sh` (load-bearing, no `continue-on-error`).
+- **ADR-001 — GitHub state mapping** — `docs/decisions/001-github-state-mapping.md` is the source of truth for how reposix's 5 Jira-flavored statuses round-trip through GitHub's `open/closed + state_reason + labels`.
+- **Real-GitHub CI job** — `integration-contract` runs the ignored contract test against real GitHub on every push, authenticated via `${{ secrets.GITHUB_TOKEN }}` (1000 req/hr budget).
+- **Codecov** — coverage badge now renders (CODECOV_TOKEN secret landed during Phase 8).
 
 ## What did NOT make v0.1
 
