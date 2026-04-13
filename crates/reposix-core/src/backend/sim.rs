@@ -461,19 +461,26 @@ mod tests {
 
     #[tokio::test]
     async fn update_without_expected_version_is_wildcard() {
+        // Strict negative proof: mount ONE matcher that explicitly requires
+        // If-Match to be absent (via a closure matcher), with `.expect(1)` —
+        // wiremock's `MockServer::drop` then panics if the mock wasn't hit
+        // exactly once. Any leak of `If-Match` onto the wire turns this into
+        // a verification failure rather than a false pass.
+        use wiremock::Match;
+        struct NoIfMatch;
+        impl Match for NoIfMatch {
+            fn matches(&self, request: &wiremock::Request) -> bool {
+                !request.headers.contains_key("if-match")
+            }
+        }
+
         let server = MockServer::start().await;
-        // Strict: mount a matcher that accepts ONLY requests WITHOUT If-Match.
-        // wiremock doesn't have a built-in `header_absent`; we approximate by
-        // mounting a catch-all that accepts everything and a stricter rule that
-        // only matches when If-Match is present — the absence of the strict
-        // rule's matcher proves the header wasn't sent.
-        // Simpler: assert a 200 response and the request landed on the right
-        // URL; rely on `update_with_expected_version_attaches_if_match` to
-        // cover the with-etag path.
         Mock::given(method("PATCH"))
             .and(path("/projects/demo/issues/42"))
             .and(header("Content-Type", "application/json"))
+            .and(NoIfMatch)
             .respond_with(ResponseTemplate::new(200).set_body_json(sample_issue_json(42)))
+            .expect(1)
             .mount(&server)
             .await;
 
@@ -484,6 +491,8 @@ mod tests {
             .await
             .expect("update");
         assert_eq!(out.id, IssueId(42));
+        // server drops here; .expect(1) panics if the no-If-Match matcher
+        // didn't fire exactly once.
     }
 
     #[tokio::test]
