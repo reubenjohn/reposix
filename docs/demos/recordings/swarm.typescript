@@ -1,0 +1,40 @@
+Script started on 2026-04-13 10:32:00-07:00 [<captured via tee; not a TTY recording>]
+
+================================================================
+  [1/4] start simulator (rate-limit 1000 rps/agent)
+================================================================
+sim ready at http://127.0.0.1:7804
+
+================================================================
+  [2/4] seed snapshot (pre-swarm)
+================================================================
+seed issue count:
+6
+audit rows pre-swarm:
+2
+
+================================================================
+  [3/4] run swarm (50 clients × 30s, sim-direct)
+================================================================
+## Swarm summary
+Clients: 50    Duration: 30s    Mode: sim-direct    Target: http://127.0.0.1:7804
+Total ops: 132895    Error rate: 0.00% (0/132895)
+
+| Op     | Count     | p50     | p95     | p99     | Max     |
+|--------|-----------|---------|---------|---------|---------|
+| list   |     26579 |    10ms |    23ms |    29ms |   136ms |
+| get    |     79737 |    10ms |    23ms |    29ms |   144ms |
+| patch  |     26579 |    11ms |    24ms |    30ms |   137ms |
+
+
+Audit rows: 132897
+Append-only invariant: upheld (trigger blocks UPDATE/DELETE)
+
+================================================================
+  [4/4] invariant check (SG-06: audit table is append-only)
+================================================================
+UPDATE blocked (rc=19): Error: audit_events is append-only
+
+== DEMO COMPLETE ==
+
+Script done on 2026-04-13 10:32:34-07:00 [<captured via tee; not a TTY recording>]

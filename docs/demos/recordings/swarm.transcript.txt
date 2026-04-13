@@ -1,0 +1,33 @@
+$ # Tier 4: scripts/demos/swarm.sh — adversarial-swarm demo
+$ # 50 concurrent simulated agents × 30s hammering the simulator + audit invariant check
+
+$ # ---- step 1: start simulator ----
+$ reposix-sim --bind 127.0.0.1:7804 --db /tmp/reposix-demo-swarm-sim.db --seed-file crates/reposix-sim/fixtures/seed.json --rate-limit 1000 &
+sim ready at http://127.0.0.1:7804
+
+$ # ---- step 2: seed snapshot (pre-swarm) ----
+$ curl -s http://127.0.0.1:7804/projects/demo/issues | jq length
+6
+
+$ # ---- step 3: run swarm ----
+$ REPOSIX_ALLOWED_ORIGINS='http://127.0.0.1:*' reposix-swarm --clients 50 --duration 30 --mode sim-direct --target http://127.0.0.1:7804 --audit-db /tmp/reposix-demo-swarm-sim.db
+## Swarm summary
+Clients: 50    Duration: 30s    Mode: sim-direct    Target: http://127.0.0.1:7804
+Total ops: 132895    Error rate: 0.00% (0/132895)
+
+| Op     | Count     | p50     | p95     | p99     | Max     |
+|--------|-----------|---------|---------|---------|---------|
+| list   |     26579 |    10ms |    23ms |    29ms |   136ms |
+| get    |     79737 |    10ms |    23ms |    29ms |   144ms |
+| patch  |     26579 |    11ms |    24ms |    30ms |   137ms |
+
+
+Audit rows: 132897
+Append-only invariant: upheld (trigger blocks UPDATE/DELETE)
+
+$ # ---- step 4: SG-06 invariant: audit_events append-only ----
+$ sqlite3 /tmp/reposix-demo-swarm-sim.db 'UPDATE audit_events SET path="/hacked" WHERE id=1;'
+Error: audit_events is append-only
+rc=19
+
+== DEMO COMPLETE ==
