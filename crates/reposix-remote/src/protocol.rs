@@ -28,6 +28,15 @@ impl<R: Read, W: Write> Protocol<R, W> {
     /// Read one line from the protocol stream. Returns `Ok(None)` at EOF.
     /// The trailing `\n` is stripped; internal whitespace is preserved.
     ///
+    /// This path is the UTF-8-decoding command-line reader used for the
+    /// remote-helper control protocol (`capabilities`, `list`, `import`,
+    /// `export`, etc.) — all of which are pure ASCII. Blob payloads must
+    /// use [`read_raw_line`] or [`read_bytes_exact`] instead to preserve
+    /// byte-fidelity (CRLF, non-UTF-8).
+    ///
+    /// [`read_raw_line`]: Self::read_raw_line
+    /// [`read_bytes_exact`]: Self::read_bytes_exact
+    ///
     /// # Errors
     /// Returns any [`io::Error`] from the underlying reader.
     pub fn read_line(&mut self) -> io::Result<Option<String>> {
@@ -43,6 +52,50 @@ impl<R: Read, W: Write> Protocol<R, W> {
             }
         }
         Ok(Some(buf))
+    }
+
+    /// Read one line as raw bytes. Returns `Ok(None)` at EOF.
+    /// The trailing `\n` is stripped if present; any preceding `\r` is
+    /// **preserved** (unlike [`read_line`]). No UTF-8 validation is
+    /// performed — non-UTF-8 bytes flow through unchanged.
+    ///
+    /// Used by [`super`]'s `ProtoReader` for blob-body plumbing where
+    /// `\r\n` line terminators and non-UTF-8 payloads must round-trip
+    /// byte-for-byte.
+    ///
+    /// [`read_line`]: Self::read_line
+    ///
+    /// # Errors
+    /// Returns any [`io::Error`] from the underlying reader.
+    pub fn read_raw_line(&mut self) -> io::Result<Option<Vec<u8>>> {
+        let mut buf: Vec<u8> = Vec::new();
+        let n = self.reader.read_until(b'\n', &mut buf)?;
+        if n == 0 {
+            return Ok(None);
+        }
+        if buf.last() == Some(&b'\n') {
+            buf.pop();
+        }
+        Ok(Some(buf))
+    }
+
+    /// Read exactly `buf.len()` raw bytes from the stream. No newline or
+    /// UTF-8 processing.
+    ///
+    /// Used for pulling fast-export blob payloads announced via `data N`
+    /// lines. Companion to [`read_raw_line`] (which handles the headers).
+    ///
+    /// [`read_raw_line`]: Self::read_raw_line
+    ///
+    /// # Errors
+    /// Returns any [`io::Error`] from the underlying reader, including
+    /// [`io::ErrorKind::UnexpectedEof`] on short reads.
+    #[allow(dead_code)] // public API surface; today's parser routes blob bytes
+                        // through `BufReader<ProtoReader>` which calls
+                        // `read_raw_line` per line. Kept for future callers
+                        // that want explicit N-byte reads.
+    pub fn read_bytes_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
+        self.reader.read_exact(buf)
     }
 
     /// Write a line to stdout (appending `\n`).

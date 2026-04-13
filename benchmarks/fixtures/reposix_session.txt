@@ -1,0 +1,46 @@
+$ ls /mnt/reposix/
+0001.md  0002.md  0003.md  0004.md  0005.md  0006.md
+
+$ cat /mnt/reposix/0001.md
+---
+id: 1
+title: database connection drops under load
+status: open
+labels:
+- bug
+- p1
+created_at: 2026-04-13T00:00:00Z
+updated_at: 2026-04-13T00:00:00Z
+version: 1
+---
+Under sustained load (>500 concurrent writes/sec) the connection pool
+exhausts and subsequent requests hang until the 30s timeout.
+
+Steps to reproduce:
+1. Run `scripts/loadtest.sh --concurrency 500 --duration 60s`
+2. Observe tail latency spike after ~45s
+3. p99 exceeds 30s during the spike
+
+Expected: graceful 503 with Retry-After header.
+
+$ grep -rIl "database" /mnt/reposix/
+/mnt/reposix/0001.md
+
+$ sed -i 's/^status: open$/status: in_progress/' /mnt/reposix/0001.md
+$ cat /mnt/reposix/0001.md | grep '^status:'
+status: in_progress
+
+$ cd /tmp/demo-repo
+$ git pull origin main
+From reposix::http://127.0.0.1:7878/projects/demo
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+
+$ sed -i 's/^status: in_progress$/status: in_review/' 0001.md
+$ git commit -am "request review for 0001"
+[main 94f25c6] request review for 0001
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+$ git push origin main
+To reposix::http://127.0.0.1:7878/projects/demo
+   278680c..94f25c6  main -> main

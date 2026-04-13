@@ -15,7 +15,7 @@ Modern coding agents have ingested vast amounts of Unix shell scripting and `git
 
 reposix takes the second problem and reduces it to the first. A Jira board, a GitHub Issues repo, or a Confluence space becomes a directory of Markdown files with YAML frontmatter, with native `git push` synchronization and merge-conflict-as-API-conflict semantics.
 
-See [`InitialReport.md`](InitialReport.md) for the full architectural argument.
+See [`InitialReport.md`](InitialReport.md) for the full architectural argument and [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md) for the measured **92.3% reduction** in input-context tokens (reposix vs MCP for the same task).
 
 ## Status
 

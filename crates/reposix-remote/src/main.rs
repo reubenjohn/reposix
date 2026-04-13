@@ -329,13 +329,15 @@ impl<'a, R: std::io::Read, W: std::io::Write> ProtoReader<'a, R, W> {
 impl<R: std::io::Read, W: std::io::Write> std::io::Read for ProtoReader<'_, R, W> {
     fn read(&mut self, out: &mut [u8]) -> std::io::Result<usize> {
         if self.pos >= self.buf.len() {
-            // Pull one line at a time. read_line strips the trailing \n,
-            // so we re-add it for the downstream parser.
+            // Pull one line at a time as RAW BYTES. read_raw_line strips the
+            // trailing `\n` but preserves any `\r` and never UTF-8-decodes,
+            // so blob bodies containing CRLF or non-UTF-8 bytes round-trip
+            // byte-for-byte. We re-add the `\n` for the downstream parser.
             self.buf.clear();
             self.pos = 0;
-            match self.proto.read_line()? {
+            match self.proto.read_raw_line()? {
                 Some(line) => {
-                    self.buf.extend_from_slice(line.as_bytes());
+                    self.buf.extend_from_slice(&line);
                     self.buf.push(b'\n');
                 }
                 None => return Ok(0),
