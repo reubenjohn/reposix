@@ -14,3 +14,7 @@ thiserror.workspace = true
 chrono.workspace = true
 uuid.workspace = true
 reqwest = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+wiremock = "0.6"

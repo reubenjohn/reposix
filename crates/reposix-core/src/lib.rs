@@ -9,6 +9,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 mod error;
+pub mod http;
 mod issue;
 mod project;
 mod remote;
