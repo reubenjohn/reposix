@@ -21,11 +21,23 @@ const SIM_BIND: &str = "127.0.0.1:7878";
 /// order + Rust drop semantics): mount first (so `fusermount3 -u` runs
 /// before the sim dies and the kernel sees backend disappear), then
 /// sim, then the tempdir.
+///
+/// `sim_db` is the on-disk path used by step 5 (audit tail). H-01 fix
+/// (review 2026-04-13): the demo previously spawned the sim with
+/// `--ephemeral` (in-memory DB) but step 5 tried to open
+/// `runtime/demo-sim-<pid>.db`, which never existed — the audit tail
+/// always early-returned with a misleading "not yet flushed" message.
+/// Now the sim runs against a persistent DB so the audit query has rows
+/// to read. Drop sweeps the file plus its WAL siblings (`*-wal`,
+/// `*-shm`) — `SQLite` WAL mode creates them and `tempfile::TempDir`
+/// can't sweep them because we deliberately keep the DB under
+/// `runtime/` (not the tempdir) for post-demo inspectability.
 #[derive(Default)]
 struct Guard {
     mount: Option<MountProcess>,
     sim: Option<SimProcess>,
     tempdir: Option<tempfile::TempDir>,
+    sim_db: Option<PathBuf>,
 }
 
 impl Drop for Guard {
@@ -35,6 +47,22 @@ impl Drop for Guard {
         self.mount.take();
         self.sim.take();
         self.tempdir.take();
+        // Best-effort cleanup of the persistent sim DB + WAL siblings.
+        // Errors are swallowed: the demo has already exited by the time
+        // Drop runs, and a leftover `*-wal` in `runtime/` is a UX wart,
+        // not a correctness bug — the next demo run uses a different
+        // PID-suffixed path.
+        if let Some(db) = self.sim_db.take() {
+            let _ = std::fs::remove_file(&db);
+            // SQLite WAL siblings are exactly `<db>-wal` / `<db>-shm`,
+            // not `<stem>-wal.<ext>`. Append-on-string is correct.
+            let mut wal = db.clone().into_os_string();
+            wal.push("-wal");
+            let _ = std::fs::remove_file(PathBuf::from(wal));
+            let mut shm = db.clone().into_os_string();
+            shm.push("-shm");
+            let _ = std::fs::remove_file(PathBuf::from(shm));
+        }
     }
 }
 
@@ -47,14 +75,24 @@ pub async fn run(keep_running: bool) -> Result<()> {
     let mut guard = Guard::default();
     let body = async {
         // Step 1: sim.
-        info!("[step 1/6] starting reposix-sim on {SIM_BIND} (ephemeral)");
+        // H-01 fix (review 2026-04-13): use a persistent on-disk DB so
+        // step 5's audit tail can actually read rows. The path is
+        // PID-suffixed so concurrent demo runs (e.g. `cargo test
+        // --ignored` parallelism) don't collide. `Guard::drop` sweeps
+        // the file + WAL siblings on exit.
+        info!("[step 1/6] starting reposix-sim on {SIM_BIND}");
         let db_path =
             PathBuf::from("runtime").join(format!("demo-sim-{pid}.db", pid = std::process::id()));
         std::fs::create_dir_all("runtime").ok();
+        // Defensive: a leftover DB from a prior crashed run with the
+        // same PID would carry stale audit rows that confuse step 5.
+        // Best-effort remove; ignore NotFound.
+        let _ = std::fs::remove_file(&db_path);
         let seed = PathBuf::from("crates/reposix-sim/fixtures/seed.json");
         let seed_arg = if seed.exists() { Some(&seed) } else { None };
+        guard.sim_db = Some(db_path.clone());
         guard.sim = Some(
-            SimProcess::spawn_ephemeral(
+            SimProcess::spawn(
                 SIM_BIND,
                 &db_path,
                 seed_arg.map(std::convert::AsRef::as_ref),
@@ -179,18 +217,27 @@ fn grep_ril(dir: &Path, needle: &str) -> Result<Vec<PathBuf>> {
 }
 
 fn print_audit_tail(db: &Path, limit: u32) -> Result<()> {
+    // H-01 fix (review 2026-04-13): with the sim now running on-disk,
+    // the DB file should always exist by the time step 5 runs. If it
+    // doesn't, that's a real failure — surface it instead of silently
+    // returning Ok(()) with a misleading "not yet flushed" message.
     if !db.exists() {
-        info!("  (audit DB not yet flushed to disk)");
-        return Ok(());
+        bail!(
+            "audit DB missing at {} — sim failed to create it?",
+            db.display()
+        );
     }
     let conn = rusqlite::Connection::open_with_flags(db, OpenFlags::SQLITE_OPEN_READ_ONLY)
         .with_context(|| format!("open audit DB {}", db.display()))?;
-    // The Phase-1 fixture + Phase-2 writer stores these columns. Try the
-    // canonical column set; if the simulator schema names differ we
-    // fall back to a wildcard SELECT that still tails the last N rows.
+    // H-01 fix: schema column is `agent_id` (see
+    // crates/reposix-core/fixtures/audit.sql:18 and the writer at
+    // crates/reposix-sim/src/middleware/audit.rs:119). The previous
+    // SELECT used `agent`, which would have hard-failed
+    // `prepare` with `no such column: agent` even if the DB existed.
     let mut stmt = conn
         .prepare(
-            "SELECT ts, agent, method, path, status FROM audit_events ORDER BY id DESC LIMIT ?1",
+            "SELECT ts, agent_id, method, path, status \
+             FROM audit_events ORDER BY id DESC LIMIT ?1",
         )
         .context("prepare audit query")?;
     let rows = stmt
@@ -204,9 +251,14 @@ fn print_audit_tail(db: &Path, limit: u32) -> Result<()> {
             ))
         })
         .context("query audit_events")?;
+    let mut count = 0_usize;
     for row in rows.flatten() {
         let (ts, agent, method, path, status) = row;
         info!("  audit: {ts} {agent} {method} {path} -> {status}");
+        count += 1;
+    }
+    if count == 0 {
+        info!("  (no audit rows yet — sim may not have served any requests)");
     }
     Ok(())
 }
