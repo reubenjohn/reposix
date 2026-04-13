@@ -248,8 +248,32 @@ impl HttpClient {
         url: U,
         headers: &[(&str, &str)],
     ) -> Result<reqwest::Response> {
-        // `IntoUrl::into_url` parses the input into a `url::Url`. We feed
-        // that through the allowlist gate before handing it to reqwest.
+        self.request_with_headers_and_body(method, url, headers, None::<&[u8]>)
+            .await
+    }
+
+    /// Send a `method` request with both headers AND an optional request
+    /// body, re-checking `url` against the allowlist before any I/O.
+    ///
+    /// Callers pass `None` (inferred via `None::<&[u8]>` or `None::<Vec<u8>>`)
+    /// for verbs that never carry bodies (`GET`, `DELETE`). `Some(body)`
+    /// attaches the bytes and `Content-Length` automatically via reqwest.
+    /// The allowlist gate fires BEFORE body serialization, so a non-
+    /// allowlisted origin never leaks body bytes to the network layer.
+    ///
+    /// # Errors
+    /// Same conditions as [`HttpClient::request_with_headers`].
+    pub async fn request_with_headers_and_body<U, B>(
+        &self,
+        method: Method,
+        url: U,
+        headers: &[(&str, &str)],
+        body: Option<B>,
+    ) -> Result<reqwest::Response>
+    where
+        U: IntoUrl,
+        B: Into<reqwest::Body>,
+    {
         let parsed = url
             .into_url()
             .map_err(|e| Error::InvalidOrigin(format!("{e}")))?;
@@ -260,6 +284,9 @@ impl HttpClient {
         let mut builder = self.inner.request(method, parsed);
         for (k, v) in headers {
             builder = builder.header(*k, *v);
+        }
+        if let Some(body) = body {
+            builder = builder.body(body);
         }
         let resp = builder.send().await?;
         Ok(resp)

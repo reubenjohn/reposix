@@ -76,15 +76,19 @@ impl SimConfig {
     }
 }
 
-/// Build the axum router with the audit middleware attached (outermost).
+/// Build the axum router with both middleware layers attached.
 ///
-/// Layer ordering (outermost first): audit → rate-limit → handlers. Plan
-/// 02-02 task 2 adds the rate-limit layer between audit and handlers.
-pub fn build_router(state: AppState) -> Router {
+/// Layer ordering (outermost first): **audit → rate-limit → handlers**. Axum
+/// `.layer()` wraps inside-out, so the last `.layer()` call is the
+/// outermost. That means audit sees every request (including 429s), and
+/// rate-limit sees every request that survives the audit recording.
+pub fn build_router(state: AppState, rate_limit_rps: u32) -> Router {
     let handlers = Router::new()
         .route("/healthz", axum::routing::get(healthz))
         .merge(routes::router(state.clone()));
-    middleware::audit::attach(handlers, state)
+    // Attach INNER first (rate-limit), then OUTER (audit).
+    let with_rate_limit = middleware::rate_limit::attach(handlers, rate_limit_rps);
+    middleware::audit::attach(with_rate_limit, state)
 }
 
 #[allow(clippy::unused_async)]
@@ -92,15 +96,11 @@ async fn healthz() -> &'static str {
     "ok"
 }
 
-/// Run the simulator until its listener is closed (currently: forever).
-///
-/// Task 1 of plan 02-01 only wires up DB open + seed; HTTP serve still binds
-/// `build_router` without real handlers. Task 2 replaces this body.
+/// Open the DB, seed if configured, and return an [`AppState`].
 ///
 /// # Errors
-/// Returns any I/O error from binding the listener, opening the DB, or
-/// driving the server.
-pub async fn run(cfg: SimConfig) -> Result<()> {
+/// Propagates any error from [`db::open_db`] or [`seed::load_seed`].
+pub fn prepare_state(cfg: &SimConfig) -> Result<AppState> {
     let conn =
         db::open_db(&cfg.db_path, cfg.ephemeral).map_err(|e| anyhow::anyhow!("open_db: {e}"))?;
 
@@ -112,10 +112,28 @@ pub async fn run(cfg: SimConfig) -> Result<()> {
         }
     }
 
-    let state = AppState::new(conn, cfg.clone());
+    Ok(AppState::new(conn, cfg.clone()))
+}
 
-    let listener = tokio::net::TcpListener::bind(cfg.bind).await?;
+/// Run the sim on an already-bound listener. Integration tests use this to
+/// bind `127.0.0.1:0`, read the ephemeral port, and drive the sim without
+/// racing a separate binary.
+///
+/// # Errors
+/// Returns any error from `axum::serve` or state preparation.
+pub async fn run_with_listener(listener: tokio::net::TcpListener, cfg: SimConfig) -> Result<()> {
+    let state = prepare_state(&cfg)?;
     tracing::info!(addr = %listener.local_addr()?, "reposix-sim listening");
-    axum::serve(listener, build_router(state)).await?;
+    axum::serve(listener, build_router(state, cfg.rate_limit_rps)).await?;
     Ok(())
+}
+
+/// Bind the configured address and serve until the listener dies.
+///
+/// # Errors
+/// Returns any I/O error from binding the listener, opening the DB, or
+/// driving the server.
+pub async fn run(cfg: SimConfig) -> Result<()> {
+    let listener = tokio::net::TcpListener::bind(cfg.bind).await?;
+    run_with_listener(listener, cfg).await
 }

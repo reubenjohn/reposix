@@ -10,4 +10,4 @@
 //! ```
 
 pub mod audit;
-// pub mod rate_limit; — added in plan 02-02 task 2
+pub mod rate_limit;
