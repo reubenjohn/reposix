@@ -57,6 +57,8 @@ Two fixtures in `benchmarks/fixtures/`:
 | MCP-mediated (tool catalog + schemas) | ~7 700 |
 | **reposix** (shell session transcript) | **~595** |
 
+![benchmark chart](https://raw.githubusercontent.com/reubenjohn/reposix/main/social/assets/benchmark.svg){ .no-lightbox width="100%" }
+
 Reproduce:
 
 ```bash

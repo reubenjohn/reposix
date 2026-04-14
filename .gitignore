@@ -14,6 +14,12 @@
 .vscode/
 .idea/
 
+# Secrets — .env holds API tokens (Teamwork Graph, etc.). NEVER commit.
+# The committed reference is .env.example; it lists variable NAMES only.
+.env
+.env.*
+!.env.example
+
 # Playwright MCP scratch output
 .playwright-mcp/
 

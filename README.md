@@ -7,8 +7,19 @@
 [![codecov](https://codecov.io/gh/reubenjohn/reposix/branch/main/graph/badge.svg)](https://codecov.io/gh/reubenjohn/reposix)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE-MIT)
 [![Rust](https://img.shields.io/badge/rust-stable-orange.svg)](rust-toolchain.toml)
+[![Release](https://img.shields.io/github/v/release/reubenjohn/reposix?include_prereleases)](https://github.com/reubenjohn/reposix/releases)
+
+<p align="center">
+  <img src="social/assets/hero.png" alt="reposix — git-backed FUSE filesystem for autonomous agents" width="100%">
+</p>
+
+<p align="center"><em>"Agents already know <code>cat</code> and <code>git</code>. They don't know your JSON schema."</em></p>
 
 :book: **Full docs with architecture diagrams:** <https://reubenjohn.github.io/reposix/>
+:clapper: **60-second demo:** see [`social/assets/demo.gif`](social/assets/demo.gif) or the 9-step [`docs/demo.md`](docs/demo.md) walkthrough.
+:bar_chart: **Token-economy benchmark:** [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md) — measured **92.3% reduction** vs MCP for the same task.
+
+![demo](social/assets/demo.gif)
 
 ## Why
 
