@@ -111,9 +111,21 @@ MCP-mediated baseline for the same task. Equivalently, MCP costs
 Reproduce: `python3 scripts/bench_token_economy.py`
 """
 
-    RESULTS.write_text(md)
-    print(md)
-    print(f"(written to {RESULTS.relative_to(BENCH_DIR.parent)})")
+    # Only rewrite the file if content (ignoring the timestamp header) would
+    # change. Otherwise every smoke run dirties the tree with a noise commit.
+    def _normalize(text: str) -> str:
+        return "\n".join(
+            line for line in text.splitlines() if not line.startswith("*Measured:")
+        )
+
+    existing = RESULTS.read_text() if RESULTS.exists() else ""
+    if _normalize(existing) == _normalize(md):
+        print(md)
+        print(f"(unchanged — {RESULTS.relative_to(BENCH_DIR.parent)} already current)")
+    else:
+        RESULTS.write_text(md)
+        print(md)
+        print(f"(written to {RESULTS.relative_to(BENCH_DIR.parent)})")
     return 0
 
 
