@@ -573,7 +573,12 @@ cd /home/reuben/workspace/reposix
 
 # Verify nothing drifted since phase close-out.
 git status --short       # expect: empty
-git log --oneline -1     # expect: 160c236 docs(13-REVIEW): …
+git log --oneline -1     # expect: fb960a3 feat(scripts): add green-gauntlet.sh …
+
+# Belt-and-suspenders: run the full pre-release gauntlet (fmt, clippy,
+# test, smoke, mkdocs --strict, FUSE --ignored integration tests).
+# ~3m20s total; the FUSE portion is the slow one.
+bash scripts/green-gauntlet.sh --full
 
 # Run the tag script — it enforces 6 guards (branch=main, clean tree,
 # tag not already existing locally or on origin, CHANGELOG has [v0.4.0],
@@ -582,7 +587,7 @@ git log --oneline -1     # expect: 160c236 docs(13-REVIEW): …
 bash scripts/tag-v0.4.0.sh
 ```
 
-The script IS the push. No other step. After the push succeeds, the CI `release.yml` workflow (added in v0.3 session 3) will automatically build and attach prebuilt tarballs to the GitHub release; optionally paste the CHANGELOG `[v0.4.0]` block into the release body at <https://github.com/reubenjohn/reposix/releases/new?tag=v0.4.0>.
+The tag script IS the push. No other step. After the push succeeds, the CI `release.yml` workflow (added in v0.3 session 3) will automatically build and attach prebuilt tarballs to the GitHub release; optionally paste the CHANGELOG `[v0.4.0]` block into the release body at <https://github.com/reubenjohn/reposix/releases/new?tag=v0.4.0>.
 
 ### Drive-by fixes landed tonight (outside Phase 13 scope)
 
