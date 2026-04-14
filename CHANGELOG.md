@@ -8,6 +8,98 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 — Nothing yet.
 
+## [v0.4.0] — 2026-04-14
+
+The "nested mount layout" cut. OP-1 from the v0.3 HANDOFF.md (the
+"folder structure inside the mount" ask) ships, and Confluence's native
+`parentId` hierarchy becomes a navigable directory tree backed by FUSE
+symlinks. The v0.3 flat `<padded-id>.md` layout is retained under a
+per-backend bucket (`pages/` or `issues/`), and a synthesized
+read-only `tree/` overlay appears alongside when the backend exposes
+hierarchy.
+
+### BREAKING
+
+- **FUSE mount layout reshuffled.** Previously, issues/pages rendered as
+  `<padded-id>.md` at the mount root. They now render under a per-backend
+  collection bucket: `issues/<padded-id>.md` for sim + GitHub,
+  `pages/<padded-id>.md` for Confluence. Callers that `cat mount/0001.md`
+  must switch to `cat mount/issues/0001.md` (or `mount/pages/...`). Run
+  `ls mount/` to discover the bucket. Every doc, demo, test, and example
+  in this release has been migrated; see [ADR-003](docs/decisions/003-nested-mount-layout.md)
+  for the full design.
+- **On-disk filename padding widened from 4 digits to 11.** Files in the
+  bucket are now `{:011}.md` (e.g., `00000131192.md`) to accommodate
+  astronomical Confluence page IDs and match the symlink-target
+  construction in `TreeSnapshot` byte-for-byte. Anything pinning the old
+  `{:04}.md` shape (custom scripts, `git-remote-reposix` fast-import
+  blobs) must migrate.
+
+### Added
+
+- **`tree/` overlay exposes Confluence's native parentId hierarchy.** When
+  mounting a Confluence space, a synthesized, read-only `tree/`
+  subdirectory appears alongside `pages/`, containing symlinks at
+  human-readable slug paths. Navigate the wiki with `cd`. (OP-1 from v0.3
+  HANDOFF.md — the "hero.png" promise.) GitHub and sim mounts don't emit
+  `tree/` — those backends don't expose parent metadata.
+- **`Issue::parent_id: Option<IssueId>`** field on the core type;
+  Confluence backend populates from REST v2 `parentId`. `#[serde(default)]`
+  so legacy frontmatter files on disk parse unchanged.
+- **`IssueBackend::root_collection_name`** trait method — default
+  `"issues"`, Confluence returns `"pages"`.
+- **`BackendFeature::Hierarchy`** capability variant — Confluence overrides
+  to `true`, everyone else defaults to `false`.
+- **Mount-level `.gitignore`** auto-emitted containing `/tree/` so the
+  derived overlay never enters `git add` / `git push`. Compile-time const
+  bytes, 0o444 perm, write-gated by inode-kind classifier.
+- **`reposix_core::path::slugify_title`** + `slug_or_fallback` helpers —
+  Unicode-lowercase → non-alphanumeric collapse → 60-byte truncate →
+  fallback to `page-<11-digit-padded-id>` on empty/all-dash results.
+  Sibling slug collisions resolved deterministically (ascending `IssueId`
+  keeps bare slug, rest get `-N` suffix).
+- **`_self.md` convention** — a page with ≥1 child becomes a directory
+  named by the parent's slug; the parent's own body is exposed as a
+  symlink `_self.md` inside that directory. POSIX-correct; `_self` is
+  reserved by construction since `slugify_title` strips leading `_`.
+- **ADR-003** documents the `pages/` + `tree/` symlink design and
+  supersedes ADR-002's flat-layout decision.
+- **Release script `scripts/tag-v0.4.0.sh`** + Confluence-tree demo
+  `scripts/demos/07-mount-real-confluence-tree.sh`.
+- **Prebuilt Linux binaries attached to GitHub releases.** The
+  `.github/workflows/release.yml` workflow (landed alongside v0.3 but
+  unannounced in the CHANGELOG until now — correcting the OP-12 gap):
+  x86_64 and aarch64 tarballs plus `SHA256SUMS` are attached to every
+  tag push matching `v*.*.*`. Users no longer need a Rust toolchain for
+  the read-only workflow.
+
+### Changed
+
+- **CLAUDE.md tech-stack section** — corrected `fuser` version from 0.15
+  to 0.17 (the actual workspace-resolved version; 0.15 was stale from an
+  earlier phase). Reason-comment (no `libfuse-dev` needed on the dev host)
+  unchanged.
+- **CLAUDE.md Operating Principle #1** — refreshed wording. The old "v0.2
+  gate" language is stale (v0.2, v0.3, v0.4 have all shipped real
+  backends). New language clarifies that the simulator is the default/test
+  backend, and that real-backend calls are gated by `REPOSIX_ALLOWED_ORIGINS`
+  + explicit credential env vars.
+- **README Quickstart** — leads with the prebuilt-binary path (curl + tar)
+  with from-source kept as a contributor secondary option. Adds a new
+  "Folder-structure mount (v0.4+)" section linking to ADR-003.
+
+### Migration
+
+```bash
+# v0.3 and earlier:
+cat /tmp/mnt/0001.md
+
+# v0.4+:
+ls /tmp/mnt                       # discover the bucket
+cat /tmp/mnt/issues/00000000001.md    # sim / GitHub
+cat /tmp/mnt/pages/00000131192.md     # Confluence
+```
+
 ## [v0.3.0] — 2026-04-14
 
 The "real Confluence" cut. v0.2.0-alpha landed the real-GitHub read path; this
@@ -201,7 +293,8 @@ See [PROJECT-STATUS.md](PROJECT-STATUS.md) for the timeline + outstanding items,
 
 ---
 
-[Unreleased]: https://github.com/reubenjohn/reposix/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/reubenjohn/reposix/compare/v0.4.0...HEAD
+[v0.4.0]: https://github.com/reubenjohn/reposix/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/reubenjohn/reposix/compare/v0.2.0-alpha...v0.3.0
 [v0.2.0-alpha]: https://github.com/reubenjohn/reposix/compare/v0.1.0...v0.2.0-alpha
 [v0.1.0]: https://github.com/reubenjohn/reposix/releases/tag/v0.1.0
