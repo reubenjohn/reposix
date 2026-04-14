@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: target)
 status: executing
-stopped_at: Completed 16-B-write-methods-PLAN.md
-last_updated: "2026-04-14T20:52:03.262Z"
+stopped_at: Completed 16-C-audit-and-integration-PLAN.md
+last_updated: "2026-04-14T21:04:41.736Z"
 last_activity: 2026-04-14
 progress:
   total_phases: 11
@@ -41,7 +41,7 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 ## Current Position
 
 Phase: 16 (Confluence write path) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Cursor: **v0.5.0 shipped (tag pushed). Milestones v0.6.0 + v0.7.0 established. Phases 16–25
 created with CONTEXT.md stubs. Design context migrated from HANDOFF.md into phase CONTEXT.md
 files. Phase 16 (Confluence write path) is the recommended first execution target.**
@@ -83,6 +83,7 @@ Progress: [----------] 0% (milestone v0.6.0 not started; 10 phases queued across
 | Phase 13 PD3 | 3m | 3 tasks | 2 files |
 | Phase 16 PA | 35 | 3 tasks | 5 files |
 | Phase 16 PB | 60 | 7 tasks | 6 files |
+| Phase 16 PC | 60 | 6 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,8 @@ additions (2026-04-13):
 - [Phase 16]: ConfluenceReadOnlyBackend renamed to ConfluenceBackend with no backward-compat alias (pre-1.0)
 - [Phase 16]: write path uses request_with_headers_and_body (existing HttpClient method) with serde_json::to_vec, no new HttpClient method needed
 - [Phase 16]: fetch_current_version delegates to get_issue; acceptable extra round-trip for expected_version=None case
+- [Phase 16]: audit_write stores title (max 256 chars) only — never body content (T-16-C-04)
+- [Phase 16]: get_issue requests atlas_doc_format first; falls back to storage for pre-ADF pages
 
 ### Pending Todos
 
@@ -139,8 +142,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-14T20:52:03.258Z
-Stopped at: Completed 16-B-write-methods-PLAN.md
+Last session: 2026-04-14T21:04:36.640Z
+Stopped at: Completed 16-C-audit-and-integration-PLAN.md
 15 SHIPPED; v0.5.0 ready to tag at user gate.
 Wave-level commit trail on `main` (Phase 15):
 `6a2e256` (15-A inode.rs: reserve BUCKET_INDEX_INO=5 + doc + test
