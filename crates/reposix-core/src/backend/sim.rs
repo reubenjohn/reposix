@@ -462,6 +462,92 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn update_issue_409_prefix_is_version_mismatch() {
+        // R13 mitigation: pin the sim's 409 VersionMismatch body shape before
+        // Wave B1's `fs.rs::backend_err_to_fetch` string-matches the
+        // `"version mismatch: "` prefix and JSON-parses the tail to recover
+        // `current` into `FetchError::Conflict { current }`. See
+        // 14-RESEARCH.md#Q1 and 14-PLAN.md risk R13. If the sim ever changes
+        // the `{"error":"version_mismatch","current":N,"sent":"..."}` body
+        // shape, this fires in the core crate rather than silently degrading
+        // the FUSE write path's conflict-current log line.
+        let server = MockServer::start().await;
+        Mock::given(method("PATCH"))
+            .and(path("/projects/demo/issues/42"))
+            .and(header("If-Match", "\"1\""))
+            .respond_with(ResponseTemplate::new(409).set_body_json(serde_json::json!({
+                "error": "version_mismatch",
+                "current": 7,
+                "sent": "1",
+            })))
+            .mount(&server)
+            .await;
+
+        let backend = SimBackend::new(server.uri()).expect("backend");
+        let u = sample_untainted();
+        let err = backend
+            .update_issue("demo", IssueId(42), u, Some(1))
+            .await
+            .expect_err("409");
+        match err {
+            Error::Other(msg) => {
+                assert!(
+                    msg.starts_with("version mismatch:"),
+                    "expected prefix 'version mismatch:', got {msg}"
+                );
+                assert!(
+                    msg.contains("\"current\":7"),
+                    "expected body to contain '\"current\":7', got {msg}"
+                );
+            }
+            other => panic!("expected Error::Other(version mismatch), got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn update_issue_409_current_field_present_as_json() {
+        // R13 mitigation: companion to update_issue_409_prefix_is_version_mismatch.
+        // Asserts the tail of `Error::Other("version mismatch: {body}")` parses
+        // as JSON with a top-level `"current"` key whose value is a positive
+        // u64. This is the exact re-parse `backend_err_to_fetch` will perform
+        // in Wave B1; see 14-RESEARCH.md#Q1.
+        let server = MockServer::start().await;
+        Mock::given(method("PATCH"))
+            .and(path("/projects/demo/issues/42"))
+            .and(header("If-Match", "\"1\""))
+            .respond_with(ResponseTemplate::new(409).set_body_json(serde_json::json!({
+                "error": "version_mismatch",
+                "current": 7,
+                "sent": "1",
+            })))
+            .mount(&server)
+            .await;
+
+        let backend = SimBackend::new(server.uri()).expect("backend");
+        let u = sample_untainted();
+        let err = backend
+            .update_issue("demo", IssueId(42), u, Some(1))
+            .await
+            .expect_err("409");
+        let Error::Other(msg) = err else {
+            panic!("expected Error::Other, got {err:?}");
+        };
+        // Strip the `"version mismatch: "` prefix (note the trailing space)
+        // and parse the tail as JSON — mirroring the shape Wave B1's
+        // `backend_err_to_fetch` will re-parse.
+        let tail = msg
+            .strip_prefix("version mismatch: ")
+            .expect("prefix 'version mismatch: ' present");
+        let body: serde_json::Value = serde_json::from_str(tail).expect("tail parses as JSON");
+        let current = body
+            .get("current")
+            .expect("'current' key present")
+            .as_u64()
+            .expect("'current' is a u64");
+        assert_eq!(current, 7, "expected current=7, got {current}");
+    }
+
+    #[tokio::test]
     async fn update_without_expected_version_is_wildcard() {
         // Strict negative proof: mount ONE matcher that explicitly requires
         // If-Match to be absent (via a closure matcher), with `.expect(1)` —
