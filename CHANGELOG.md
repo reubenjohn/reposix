@@ -6,7 +6,81 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
-— Nothing yet.
+The "one place for the sim REST shape" cut. Phase 14 (Session-5 Cluster B,
+scope-tag `v0.4.1`) lifts the FUSE daemon and the `git-remote-reposix` helper
+off the simulator's hardcoded REST shape and onto `IssueBackend` trait
+dispatch. Closes v0.3-era HANDOFF "Known open gaps" items 7 and 8. No new
+features; no CHANGELOG `### Added`. External CLI syntax, FUSE mount semantics,
+and remote-helper URL syntax are all unchanged.
+
+### Changed
+
+- **FUSE write path + `git-remote-reposix` route every write through the
+  `IssueBackend` trait.** Previously `crates/reposix-fuse/src/fs.rs`
+  `release` and `create` callbacks called `fetch::patch_issue` /
+  `fetch::post_issue` — sim-specific HTTP helpers hardcoded to
+  `PATCH /projects/{p}/issues/{id}` and `POST /projects/{p}/issues`.
+  `crates/reposix-remote/src/main.rs` dispatched to a parallel
+  `api::{list_issues, patch_issue, post_issue, delete_issue}` set backed by
+  `client.rs`. Both now go through `IssueBackend::{list_issues, create_issue,
+  update_issue, delete_or_close}` on a concrete `SimBackend` instance
+  constructed from the existing origin + project URL. The simulator's REST
+  shape is now spoken by exactly one crate
+  (`reposix-core::backend::sim::SimBackend`); all other callers dispatch
+  through the trait. End-user behavior unchanged.
+- **Audit attribution (`X-Reposix-Agent` header) suffix-normalized.** FUSE
+  writes now attribute to `reposix-core-simbackend-<pid>-fuse` (was
+  `reposix-fuse-<pid>`); `git-remote-reposix` writes attribute to
+  `reposix-core-simbackend-<pid>-remote` (was `git-remote-reposix-<pid>`).
+  The sim's `audit_events` table still records a row for every write; the
+  `<pid>` suffix is per-process (captured at `SimBackend::new` time), so
+  `git fetch` and `git push` show up as distinct PIDs (each spawns its own
+  `git-remote-reposix` helper process). Downstream log/audit-query tooling
+  grouping on the old prefixes must either widen the match to
+  `reposix-core-simbackend-%-fuse` / `reposix-core-simbackend-%-remote`
+  (sqlite LIKE), or query the new full-string forms. The role suffix
+  (`-fuse` / `-remote`) preserves caller-identity fidelity for operators
+  who relied on it.
+- **PATCH with empty frontmatter `assignee:` line now clears the assignee.**
+  Previously the FUSE `release` callback's sim-REST PATCH skipped the
+  `assignee` field when `None`, leaving the server value untouched. The new
+  `IssueBackend::update_issue` path emits an explicit `"assignee": null` in
+  the JSON patch body — which the sim treats as "clear" per its
+  three-valued `FieldUpdate<>` semantics (absent = Unchanged, null = Clear,
+  value = Set). To preserve an assignee across a FUSE edit, keep the
+  `assignee: <username>` line in the file's frontmatter. This aligns with
+  the FUSE design philosophy that "the file is the source of truth":
+  omitting the line in the file now means "clear it," consistent with how
+  every other field behaves. Only affects the FUSE write path; CLI-issued
+  PATCHes (which build the patch from explicit flags) are unchanged.
+
+### Removed
+
+- `crates/reposix-fuse/src/fetch.rs` (596 lines): sim-specific HTTP
+  `PATCH` / `POST` helpers plus the `EgressPayload` / `ConflictBody` types
+  they serialized. Superseded by `IssueBackend` trait routing. `pub mod
+  fetch;` removed from `crates/reposix-fuse/src/lib.rs`.
+- `crates/reposix-fuse/tests/write.rs` (236 lines): the sim-REST-shape
+  write-path integration suite. One SG-03 egress-sanitize proof
+  (`sanitize_strips_server_fields_on_egress`) was re-homed to
+  `crates/reposix-core/src/backend/sim.rs` tests; the other four were
+  redundant with the same assertions running against `SimBackend` directly.
+- `crates/reposix-remote/src/client.rs` (236 lines): sim-specific HTTP
+  client for the git-remote helper. `mod client;` removed from
+  `crates/reposix-remote/src/main.rs`.
+- `reqwest` dev-dep on `crates/reposix-remote/Cargo.toml`: unused after
+  tests moved to `SimBackend`. `thiserror` retained (required by
+  `diff.rs`).
+
+### Hardening
+
+- **Simulator 409-body shape is now contract-pinned.** Two new tests in
+  `crates/reposix-sim` assert the exact JSON body emitted on
+  `PATCH /projects/{p}/issues/{id}` version mismatch: `{"error": "version
+  mismatch", "current": <u64>}`. These pin the contract the
+  `SimBackend::update_issue` trait impl (and everything downstream of it)
+  relies on to recover `current` on 409, so a future sim-side refactor
+  cannot silently drop the field without failing a test.
 
 ## [v0.4.0] — 2026-04-14
 

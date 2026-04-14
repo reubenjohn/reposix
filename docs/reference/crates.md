@@ -101,8 +101,8 @@ The FUSE struct owns an `Arc<tokio::runtime::Runtime>`. Callbacks do `rt.block_o
 ### Modules
 
 - `protocol.rs` — stdin/stdout framing. `#![deny(clippy::print_stdout)]` is set; stdout is protocol-reserved and no code outside `protocol::send_line` / `send_raw` writes to it.
-- `client.rs` — thin wrappers over `HttpClient` for `list_issues`, `get_issue`, `patch_issue`, `post_issue`, `delete_issue`.
-- `fast_import.rs` — `emit_import_stream` (sim → git) and `parse_export_stream` (git → sim). Uses `frontmatter::render` for deterministic blob bytes.
+- `main.rs` — helper entry point. Constructs an `Arc<SimBackend>` from the parsed `RemoteSpec` and dispatches every list / create / update / delete through the `IssueBackend` trait (Phase 14 rewire; the former `client.rs` sim-REST wrapper is deleted).
+- `fast_import.rs` — `emit_import_stream` (backend → git) and `parse_export_stream` (git → backend). Uses `frontmatter::render` for deterministic blob bytes.
 - `diff.rs` — `plan(prior, parsed)` computes per-issue `PATCH` / `POST` / `DELETE` actions. Returns `BulkDeleteRefused` on > 5 deletes (SG-02), unless commit message contains `[allow-bulk-delete]`.
 
 ## reposix-cli

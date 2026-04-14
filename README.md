@@ -262,8 +262,7 @@ reposix is a textbook **lethal trifecta** (Simon Willison's framing): private re
 ### Deferred to v0.4 / future
 
 - **M-* findings from the red-team report.** Several medium-severity findings in the threat-model document remain open — for example, fully sandboxed `git-remote-reposix` execution (currently runs as the invoking user with full FS access), and TTY-confirmation on `git remote add reposix::...`.
-- **Write path on real backends.** `reposix-github` + `reposix-confluence` are **read-only** today. `create_issue` / `update_issue` / `delete_or_close` return `Err(NotSupported)`. FUSE writes still route through the simulator's REST shape via `reposix-fuse/src/fetch.rs`; rewiring those through `IssueBackend` is a v0.4 cleanup.
-- **`git-remote-reposix` rewire through `IssueBackend`.** Still hardcodes the simulator. Mechanical but not done.
+- **Write path on real backends.** `reposix-github` + `reposix-confluence` are **read-only** today. `create_issue` / `update_issue` / `delete_or_close` return `Err(NotSupported)`. The FUSE mount and `git-remote-reposix` both dispatch writes through the `IssueBackend` trait (Phase 14 / v0.4.1), so adding real-backend write support is now a per-adapter change — not a plumbing change.
 - **Signed recording attestation.** `script(1)` timestamps are trusted-by-invocation. We do not claim cryptographic provenance on `docs/demo.typescript`.
 - **Workflow rule enforcement.** Today's sim reports all 5 statuses as legal from any state. Real workflow constraints ("must pass through `in_progress` before `done`") are a v0.4 extension to the sim, not a backend feature.
 - **Folder structure inside the mount** (see [`HANDOFF.md`](HANDOFF.md) OP-1) — today every backend renders a flat `<id>.md` list; the [hero image](docs/social/assets/hero.png) advertises `issues/`/`labels/`/`milestones/` subdirs and Confluence's native page hierarchy rendered as `cd`-able directories.

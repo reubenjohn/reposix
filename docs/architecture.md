@@ -92,8 +92,8 @@ sequenceDiagram
   A->>K: read("/mnt/reposix/issues/00000000001.md")
   K->>F: FUSE_READ(ino)
   Note over F: validate_issue_filename("00000000001.md") — SG-04
-  F->>F: HttpClient::request_with_headers<br/>5s timeout (SG-07)
-  F->>S: GET /projects/demo/issues/1<br/>X-Reposix-Agent: reposix-fuse-{pid}
+  F->>F: IssueBackend::get_issue (SimBackend impl)<br/>5s timeout (SG-07)
+  F->>S: GET /projects/demo/issues/1<br/>X-Reposix-Agent: reposix-core-simbackend-{pid}-fuse
   S->>D: INSERT audit_events (ts,agent,method,path,...)
   S->>D: SELECT * FROM issues WHERE id=1
   S-->>F: 200 {frontmatter, body}
@@ -198,21 +198,26 @@ FUSE callbacks are synchronous by kernel contract. `git-remote-reposix` speaks a
 ```rust
 pub struct ReposixFs {
     rt: Arc<tokio::runtime::Runtime>,
-    http: Arc<HttpClient>,
+    backend: Arc<dyn IssueBackend>,
     // ...
 }
 
 impl fuser::Filesystem for ReposixFs {
     fn read(&mut self, _req: &Request, ino: u64, /* ... */) {
-        let bytes = self.rt.block_on(async {
-            self.http.request_with_headers(
-                Method::GET, &url, &[("X-Reposix-Agent", &agent_id)],
-            ).await
+        let issue = self.rt.block_on(async {
+            self.backend.get_issue(&self.project, issue_id).await
         });
         // ... respond to kernel
     }
 }
 ```
+
+Both the FUSE daemon and `git-remote-reposix` dispatch every read and every
+write through the `IssueBackend` trait (Phase 10 rewired reads; Phase 14
+rewired writes). The simulator's REST shape lives in exactly one crate
+(`reposix-core::backend::sim::SimBackend`) — every other caller sees only
+the trait surface (`list_issues` / `get_issue` / `create_issue` /
+`update_issue` / `delete_or_close`).
 
 The FUSE thread is not a tokio worker, so `block_on` from inside the callback is deadlock-safe. The same pattern applies in `git-remote-reposix` for its dispatch loop.
 
