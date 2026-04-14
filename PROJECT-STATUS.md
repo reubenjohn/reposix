@@ -1,4 +1,4 @@
-> **Note (2026-04-14):** This document covers v0.1 / v0.2 timeline. For v0.3.0 status, see [`MORNING-BRIEF-v0.3.md`](MORNING-BRIEF-v0.3.md).
+> **Note (2026-04-14):** This document covers v0.1 / v0.2 timeline. For v0.3.0 status and later, see [`HANDOFF.md`](HANDOFF.md) — the former `MORNING-BRIEF-v0.3.md` was renamed into that file on 2026-04-14.
 
 # Project status — 2026-04-13 05:38 PDT
 
