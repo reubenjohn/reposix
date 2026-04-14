@@ -700,7 +700,7 @@ impl IssueBackend for ConfluenceReadOnlyBackend {
 
     async fn create_issue(&self, _project: &str, _issue: Untainted<Issue>) -> Result<Issue> {
         Err(Error::Other(
-            "not supported: create_issue — reposix-confluence is read-only in v0.3".into(),
+            "not supported: create_issue — reposix-confluence is read-only".into(),
         ))
     }
 
@@ -712,7 +712,7 @@ impl IssueBackend for ConfluenceReadOnlyBackend {
         _expected_version: Option<u64>,
     ) -> Result<Issue> {
         Err(Error::Other(
-            "not supported: update_issue — reposix-confluence is read-only in v0.3".into(),
+            "not supported: update_issue — reposix-confluence is read-only".into(),
         ))
     }
 
@@ -723,7 +723,7 @@ impl IssueBackend for ConfluenceReadOnlyBackend {
         _reason: DeleteReason,
     ) -> Result<()> {
         Err(Error::Other(
-            "not supported: delete_or_close — reposix-confluence is read-only in v0.3".into(),
+            "not supported: delete_or_close — reposix-confluence is read-only".into(),
         ))
     }
 }

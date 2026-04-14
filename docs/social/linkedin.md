@@ -33,9 +33,9 @@
 
 🎯 The takeaway isn't just "Claude built a thing overnight." It's that with the right grounding — a clear architectural north star, a disciplined planning framework, and guardrails that are themselves committed artifacts — an agent can run an entire SDLC loop (research → plan → execute → review → verify → ship) without a human in the chair.
 
-🧪 Plenty of kinks left: macOS support, a real GitHub Issues adapter, an adversarial swarm harness for v0.2. But the central thesis — "APIs as filesystems" is a real unlock for autonomous agents — has simulated evidence behind it now, and a clear path to real-world validation.
+🧪 Plenty of kinks left: macOS support, OP-2 dynamic INDEX.md per dir, OP-3 `git pull` cache refresh, OP-9 Confluence comments. The central thesis — "APIs as filesystems" is a real unlock for autonomous agents — has real-backend evidence behind it now (v0.2 real-GitHub, v0.3 real-Confluence, v0.4 nested `pages/`+`tree/` mount layout — all autonomously built).
 
-🔗 Morning brief Claude wrote for me: https://github.com/reubenjohn/reposix/blob/main/MORNING-BRIEF.md
+🔗 Latest handoff Claude wrote for me: https://github.com/reubenjohn/reposix/blob/main/HANDOFF.md
 🔗 Repo: https://github.com/reubenjohn/reposix
 
 #AIAgents #ClaudeCode #DeveloperTools #Rust #AgenticEngineering
