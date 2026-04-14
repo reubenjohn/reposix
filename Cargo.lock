@@ -1675,7 +1675,7 @@ checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 
 [[package]]
 name = "reposix-cli"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -1699,7 +1699,7 @@ dependencies = [
 
 [[package]]
 name = "reposix-confluence"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -1719,7 +1719,7 @@ dependencies = [
 
 [[package]]
 name = "reposix-core"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1738,7 +1738,7 @@ dependencies = [
 
 [[package]]
 name = "reposix-fuse"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1765,7 +1765,7 @@ dependencies = [
 
 [[package]]
 name = "reposix-github"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1785,7 +1785,7 @@ dependencies = [
 
 [[package]]
 name = "reposix-remote"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -1806,7 +1806,7 @@ dependencies = [
 
 [[package]]
 name = "reposix-sim"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -1834,7 +1834,7 @@ dependencies = [
 
 [[package]]
 name = "reposix-swarm"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "async-trait",
