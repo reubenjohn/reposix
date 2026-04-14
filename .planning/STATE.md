@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: target)
 status: verifying
-stopped_at: Completed 11-A-confluence-crate-core.md
-last_updated: "2026-04-14T04:41:21.458Z"
+stopped_at: Completed 11-B-cli-dispatch.md
+last_updated: "2026-04-14T04:53:32.912Z"
 last_activity: "2026-04-13 05:00 PDT — Phase 4 close-out."
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 0
-  completed_plans: 7
+  completed_plans: 8
   percent: 100
 ---
 
@@ -62,6 +62,7 @@ Progress: [██████████] 100% (Phases 1, 2, 3, S, 4 all done)
 *Updated after each plan completion*
 | Phase 11 PD | 15m | 3 tasks | 3 files |
 | Phase 11 PA | 20m | 3 tasks | 3 files |
+| Phase 11 PB | 8m | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,7 @@ additions (2026-04-13):
 
 - [Phase 11]: Tier 3B parity-confluence.sh uses sim port 7805 (parity.sh uses 7804) so both demos can run concurrently
 - [Phase 11]: Tier 5 06-mount-real-confluence.sh cats the FIRST listed file (not hardcoded 0001.md) — Confluence page IDs are per-space numerics, not 1-based issue numbers
+- [Phase 11]: 11-B: reposix list/mount --backend confluence + CI job integration-contract-confluence (gated on 4 Atlassian secrets); live-verified against reuben-john.atlassian.net (4 pages returned)
 
 ### Pending Todos
 
@@ -107,10 +109,10 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-14T04:41:21.455Z
+Last session: 2026-04-14T04:53:28.491Z
 wall-clock minutes (60+60-min budget; finished with ~93 min in hand on
 the 06:00 PDT hard cut).
-Stopped at: Completed 11-A-confluence-crate-core.md
+Stopped at: Completed 11-B-cli-dispatch.md
 patch/post helpers + If-Match + 5s timeout + sanitize-on-egress),
 `b12036e` (S-A-2 write/flush/release + create/unlink + conditional
 MountOption::RO), `4006f13` (S-B-1+2+3 protocol/import/export/SG-02 cap
