@@ -428,4 +428,4 @@ Plans:
 - [x] 13-D1-breaking-migration-sweep
 - [x] 13-D2-docs-and-adr
 - [x] 13-D3-release-scripts-and-demo
-- [ ] 13-E-green-gauntlet
+- [x] 13-E-green-gauntlet
