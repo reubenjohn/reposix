@@ -91,7 +91,8 @@ fi
 git reset -q --hard HEAD^  # pop the fake commit
 
 # --- TEST 3: commit with Bearer ATATT3 header is rejected. ------------
-echo 'Authorization: Bearer ATATT3fake_token' > .test-pre-push-fixture.txt
+# Fixture must have 20+ chars after ATATT3 to match the stricter pattern.
+echo 'Authorization: Bearer ATATT3fake_token_abcdefghijklmnopqr' > .test-pre-push-fixture.txt
 git add .test-pre-push-fixture.txt
 git -c user.email=test@test -c user.name=test commit -q -m "test: inject fake Bearer ATATT3"
 if ! run_and_check "Bearer ATATT3 rejected" 1; then
