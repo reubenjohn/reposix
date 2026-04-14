@@ -62,13 +62,15 @@ pub struct Mount {
 }
 
 impl Mount {
-    /// Spawn a FUSE mount at `cfg.mount_point` whose read path is served by
-    /// `backend`. The mount lives until the returned [`Mount`] is dropped.
+    /// Spawn a FUSE mount at `cfg.mount_point` whose read and write paths
+    /// are served by `backend` via the [`IssueBackend`] trait. The mount
+    /// lives until the returned [`Mount`] is dropped.
     ///
     /// # Errors
     /// Returns an error if:
     /// - the mount point cannot be created,
-    /// - the [`ReposixFs`] fails to construct (HTTP client init, runtime),
+    /// - the [`ReposixFs`] fails to construct (Tokio runtime build, inode
+    ///   registry setup),
     /// - `fuser::spawn_mount2` fails (kernel refused the mount, e.g. a
     ///   missing `/dev/fuse` or a stale existing mount at the target).
     ///

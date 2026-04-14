@@ -380,11 +380,14 @@ impl std::fmt::Debug for ReposixFs {
 }
 
 impl ReposixFs {
-    /// Build a new FUSE filesystem whose read path is served by `backend`.
+    /// Build a new FUSE filesystem whose read and write paths are served
+    /// by `backend` via the [`IssueBackend`] trait.
     ///
     /// # Errors
-    /// Returns any error constructing the Tokio runtime or the sealed
-    /// [`HttpClient`] (e.g. `REPOSIX_ALLOWED_ORIGINS` un-parseable).
+    /// Returns any error constructing the Tokio runtime. Allowlist / HTTP
+    /// client construction happens inside `backend` itself (e.g. at
+    /// `SimBackend::new`); any resulting [`anyhow::Error`] from runtime
+    /// build or inode registry setup propagates here.
     pub fn new(
         backend: Arc<dyn IssueBackend>,
         origin: String,
