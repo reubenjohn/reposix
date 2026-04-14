@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.4
-milestone_name: target)
-status: complete
-stopped_at: Completed 15-B-docs-changelog-summary-state-tag.md — Phase 15 SHIPPED; v0.5.0 ready to tag at user gate.
-last_updated: "2026-04-14T18:30:00.000Z"
-last_activity: "2026-04-14 11:30 PDT — Phase 15 Wave B docs + CHANGELOG [v0.5.0] + SUMMARY + STATE cursor + tag script complete."
+milestone: v0.6.0
+milestone_name: Write Path + Full Sitemap
+status: planning
+stopped_at: Milestone v0.6.0 started — Phases 16–25 being planned (session 6).
+last_updated: "2026-04-14T20:00:00.000Z"
+last_activity: "2026-04-14 (session 6) — Milestone v0.6.0 + v0.7.0 infrastructure created; Phases 16–25 added with CONTEXT.md stubs."
 progress:
-  total_phases: 9
+  total_phases: 10
   completed_phases: 0
   total_plans: 0
-  completed_plans: 19
-  percent: 100
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,6 +25,9 @@ progress:
 - Phase 14 SHIPPED (2026-04-14, session 5, ~09:45 PDT): 4 waves landed on `main` (A=`7510ed1` sim 409-body contract pins · B1=`bdad951`+`cd50ec5` FUSE write through IssueBackend + SG-03 re-home · B2=`938b8de` git-remote helper through IssueBackend · C=`4301d0d` verification). Wave D (docs sweep + CHANGELOG + SUMMARY) complete. HANDOFF.md "Known open gaps" items 7 and 8 closed. `crates/reposix-fuse/src/fetch.rs` + `crates/reposix-fuse/tests/write.rs` + `crates/reposix-remote/src/client.rs` deleted (~830 lines). R1 (assignee-clear-on-null) and R2 (`reposix-core-simbackend-<pid>-{fuse,remote}` attribution) documented as accepted behaviour changes in CHANGELOG `[Unreleased]` `### Changed`. 274 workspace tests green (+2 over LD-14-08 floor), clippy `-D warnings` clean, green-gauntlet `--full` 6/6, smoke 4/4, live demo 01 round-trip green. **Next post-phase gate: user-driven v0.4.1 tag push** via a future `scripts/tag-v0.4.1.sh` (not written yet — deliberate, pending CHANGELOG review).
 - Phase 15 added (2026-04-14, session 5, ~10:20 PDT): Dynamic `_INDEX.md` synthesized in FUSE bucket directory (OP-2 partial). Ships `mount/<bucket>/_INDEX.md` as a YAML-frontmatter + pipe-table markdown sitemap, read-only, lazily rendered from the existing issue-list cache. Scope v0.5.0 (feature — adds a new user-visible file). Partial scope: bucket-dir level only; recursive `tree/_INDEX.md`, mount-root `_INDEX.md`, and OP-3 cache-refresh integration deferred. Rationale: `.planning/phases/15-.../15-CONTEXT.md` (10 LDs).
 - Phase 15 SHIPPED (2026-04-14, session 5, ~11:30 PDT): 2 waves landed on `main`. **Wave A** = `6a2e256` (reserve `BUCKET_INDEX_INO=5` + inode-layout doc + `reserved_range_is_unmapped` test narrow) · `a94e970` (`feat(15-A): synthesize _INDEX.md in FUSE bucket dir (OP-2 partial)` — `render_bucket_index` pure function, `InodeKind::BucketIndex`, lookup/readdir/getattr/read/write/setattr/release/create/unlink dispatch, `bucket_index_bytes: RwLock<Option<Arc<Vec<u8>>>>` cache on `ReposixFs`, 4 new unit tests in `fs.rs`) · `3309d4c` (`scripts/dev/test-bucket-index.sh` live proof script — starts sim, mounts FUSE, cats `_INDEX.md`, asserts `touch`/`rm`/`echo >` all error, unmounts). **Wave B** = docs + ship prep (CHANGELOG `[v0.5.0] — 2026-04-14`, workspace version bump `0.4.1 → 0.5.0`, Cargo.lock regen, README Folder-structure section mentions `_INDEX.md`, `15-SUMMARY.md`, STATE cursor, `scripts/tag-v0.5.0.sh` clone from v0.4.1). 278 workspace tests green (+4 over Phase 14's 274), clippy `-D warnings` clean, `cargo fmt --all --check` clean. HANDOFF.md OP-2 closed at bucket-dir level. **Next post-phase gate: user-driven v0.5.0 tag push** via `scripts/tag-v0.5.0.sh` (orchestrator runs `green-gauntlet --full` then invokes the script — Wave B executor does NOT invoke it).
+- **Milestone v0.6.0 started (2026-04-14, session 6):** Planning infrastructure created. MILESTONES.md, REQUIREMENTS.md (v0.6.0), milestone section in ROADMAP.md. Phases 16–20 added under v0.6.0 (Confluence writes, swarm confluence-direct, OP-2 remainder, OP-1 remainder, OP-3).
+- **Milestone v0.7.0 started (2026-04-14, session 6):** Planning infrastructure created. Phases 21–25 added under v0.7.0 (OP-7 hardening, OP-8 benchmarks, OP-9a comments, OP-9b whiteboards/attachments, OP-11 docs reorg).
+- **HANDOFF.md trimmed (2026-04-14, session 6):** OP-1 through OP-9, OP-11 design prose migrated to per-phase CONTEXT.md files. HANDOFF.md now references phases instead of embedding design content.
 
 ## Project Reference
 
@@ -32,35 +35,24 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** An LLM agent can `ls`, `cat`, `grep`, edit, and `git push`
 issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
-**Current focus:** **v0.1 SHIPPED.** All 4 MVD phases + STRETCH Phase S complete.
-Demo verified end-to-end on dev host 04:59 PDT. CI green.
+**Current focus:** **v0.5.0 SHIPPED.** Milestones v0.6.0 + v0.7.0 queued (Phases 16–25).
+Next: /gsd-plan-phase 16 (Confluence write path).
 
 ## Current Position
 
-Phase: **15 SHIPPED** (latest on the v0.4/v0.5 track; session 5 OP-2 partial).
-Plan: 2 waves complete (A = fs impl + tests, B = docs + ship prep — see
-`.planning/phases/15-dynamic-index-md-synthesized-in-fuse-bucket-directory-op-2-p/15-SUMMARY.md`).
-Cursor: **Phase 15 complete; v0.5.0 ready to tag at user gate.** Next
-post-phase step is orchestrator-driven: run `bash
-scripts/green-gauntlet.sh --full` (6/6 gates), then `bash
-scripts/tag-v0.5.0.sh` (7 safety guards). The Wave B executor has NOT
-run the tag script per orchestrator brief. Historical cursor: Phase 14
-close-out at 2026-04-14 09:45 PDT — v0.4.1 ready-to-tag —
-`.planning/phases/14-.../14-SUMMARY.md`.
-Status: SC-15-01 through SC-15-08, SC-15-10 all PASS in Wave A+B; SC-15-09
-(green-gauntlet --full) gated on orchestrator. 278 workspace tests pass
-(+4 over Phase 14's 274), clippy `-D warnings` clean, `cargo fmt --all
---check` clean, `cargo check --workspace --offline` clean after version
-bump, live transcript from `scripts/dev/test-bucket-index.sh` shows 6
-seeded issues rendering as YAML frontmatter + pipe-table with valid
-columns and `touch`/`rm`/`echo >` all surfacing EROFS/EACCES. HANDOFF.md
-OP-2 closed at bucket-dir level.
-Last activity: 2026-04-14 11:30 PDT — Phase 15 Wave B close-out.
-Historical note — previous `Current Position` entries (Phase 4
-close-out at 2026-04-13 05:00 PDT, v0.1 ship) are preserved in
-`.planning/phases/04-demo-recording-readme/04-DONE.md`.
+Phase: **Not started** — Milestone v0.6.0 planning infrastructure created; Phase 16 is next up.
+Plan: —
+Cursor: **v0.5.0 shipped (tag pushed). Milestones v0.6.0 + v0.7.0 established. Phases 16–25
+created with CONTEXT.md stubs. Design context migrated from HANDOFF.md into phase CONTEXT.md
+files. Phase 16 (Confluence write path) is the recommended first execution target.**
+Status: Planning complete — phases ready for /gsd-plan-phase 16 when execution begins.
+Last activity: 2026-04-14 (session 6) — Milestone v0.6.0 + v0.7.0 infrastructure, Phases 16–25
+added, CONTEXT.md stubs written, HANDOFF.md trimmed.
 
-Progress: [██████████] 100% (Phases 1, 2, 3, S, 4 all done)
+Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
+278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
+
+Progress: [----------] 0% (milestone v0.6.0 not started; 10 phases queued across v0.6.0 + v0.7.0)
 
 ## Performance Metrics
 

@@ -82,5 +82,33 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 | Skip GSD discuss step | User instruction (~12:55 AM): "do all the gsd planning, exec, review, etc, just without the discuss steps" | — Pending |
 | Lethal-trifecta cuts are first-class requirements, not afterthoughts | Threat-model subagent flagged egress + bulk-delete + tainted typing as ship-blockers; safer to bake in than retrofit | — Pending |
 
+## Current Milestone: v0.6.0 — Write Path + Full Sitemap
+
+**Goal:** Turn the mount from a read-only navigator into a writable agent workspace.
+
+**Target features:**
+- Confluence write path (`create_issue` / `update_issue` / `delete_or_close` on `ConfluenceBackend`) + `atlas_doc_format` ↔ Markdown round-trip
+- Swarm `--mode confluence-direct` mode using `SimDirectWorkload` as implementation template
+- OP-2 remainder: tree-recursive `tree/<subdir>/_INDEX.md` synthesis + mount-root `_INDEX.md`
+- OP-1 remainder: `labels/` and `spaces/` directory views as read-only symlink overlays (GitHub + Confluence)
+- OP-3: `reposix refresh` subcommand + git-diff cache for mount-as-time-machine semantics
+
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd-transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd-complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
 ---
-*Last updated: 2026-04-13 after auto-mode bootstrap*
+*Last updated: 2026-04-14 — Milestone v0.6.0 started (session 6)*

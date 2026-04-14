@@ -449,3 +449,12 @@ Plans:
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 15 to break down)
+
+---
+
+## Milestone v0.6.0 — Write Path + Full Sitemap
+
+**Goal:** Turn the mount from a read-only navigator into a writable agent workspace.
+
+**Phases:** 16–20
+**Requirements:** REQUIREMENTS.md (v0.6.0 scoped)
