@@ -455,9 +455,41 @@ fn effective_parent_of(
 /// children of `tree/`, 1 for grandchildren, etc. The returned string has
 /// `depth + 1` leading `../` components — the `+1` hops out of `tree/`
 /// itself.
+/// Linux `PATH_MAX` minus one byte for the trailing `\0` the kernel
+/// may append. A symlink target longer than this surfaces to
+/// `readlink(2)` callers as `ENAMETOOLONG`.
+///
+/// The current 500-page-per-list cap in `reposix-confluence` combined
+/// with `SLUG_MAX_BYTES = 60` produces targets on the order of a few
+/// hundred bytes even for pathological trees, so this check is purely
+/// defensive — any hit would indicate a future change bumped a limit
+/// without considering the symlink-depth arithmetic. Debug-assert is
+/// sufficient; release builds log a warning and continue (the kernel
+/// will reject the too-long path at `readlink` time).
+const MAX_SYMLINK_TARGET_BYTES: usize = 4095;
+
 fn symlink_target(bucket: &str, id: IssueId, depth: usize) -> String {
     let up = "../".repeat(depth + 1);
-    format!("{up}{bucket}/{:011}.md", id.0)
+    let target = format!("{up}{bucket}/{:011}.md", id.0);
+    debug_assert!(
+        target.len() <= MAX_SYMLINK_TARGET_BYTES,
+        "symlink target {} bytes exceeds PATH_MAX ({}); depth={} bucket={} id={}",
+        target.len(),
+        MAX_SYMLINK_TARGET_BYTES,
+        depth,
+        bucket,
+        id.0,
+    );
+    if target.len() > MAX_SYMLINK_TARGET_BYTES {
+        tracing::warn!(
+            page = id.0,
+            depth,
+            len = target.len(),
+            limit = MAX_SYMLINK_TARGET_BYTES,
+            "tree symlink target exceeds PATH_MAX; readlink(2) will fail ENAMETOOLONG"
+        );
+    }
+    target
 }
 
 #[cfg(test)]

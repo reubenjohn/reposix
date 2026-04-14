@@ -328,18 +328,24 @@ fn translate(page: ConfPage) -> Result<Issue> {
             if let Ok(n) = pid_str.parse::<u64>() {
                 Some(IssueId(n))
             } else {
+                // IN-01: cap attacker-controlled string in tracing output to
+                // bound log storage + log-injection blast radius. 64 bytes is
+                // ample diagnostic detail without amplifying.
+                let pid_preview = pid_str.get(..pid_str.len().min(64)).unwrap_or("");
                 tracing::warn!(
                     page_id = %page.id,
-                    bad_parent = %pid_str,
+                    bad_parent = %pid_preview,
                     "confluence parentId not parseable as u64, treating as orphan"
                 );
                 None
             }
         }
         (_, Some(other)) => {
+            // IN-01: same cap for parentType field.
+            let other_preview = other.get(..other.len().min(64)).unwrap_or("");
             tracing::debug!(
                 page_id = %page.id,
-                parent_type = %other,
+                parent_type = %other_preview,
                 "confluence non-page parentType, treating as orphan"
             );
             None

@@ -244,6 +244,10 @@ pub struct ReposixFs {
     tree_attr: FileAttr,
     /// `.gitignore` file attributes (size is compile-time constant).
     gitignore_attr: FileAttr,
+    /// Stable timestamp captured once at mount construction. Used for
+    /// symlink and tree-dir `FileAttr` so repeated `stat` calls don't
+    /// report drifting `st_mtim` (IN-03 from 13-REVIEW.md).
+    mount_time: SystemTime,
 }
 
 impl std::fmt::Debug for ReposixFs {
@@ -342,6 +346,7 @@ impl ReposixFs {
             bucket_attr,
             tree_attr,
             gitignore_attr,
+            mount_time: now,
         })
     }
 
@@ -388,17 +393,20 @@ impl ReposixFs {
     /// Synthesize a `FileAttr` for a tree symlink. Size MUST equal the
     /// target byte length — a 0-size symlink surfaces as a 0-byte file
     /// in `ls -l` (restic bug, see `13-RESEARCH.md` §Pitfall 1).
-    #[allow(clippy::unused_self)]
+    ///
+    /// Timestamps use the stable `mount_time` so repeated `stat` calls
+    /// return consistent `st_mtim` (IN-03 from 13-REVIEW.md). Tree
+    /// symlinks are immutable per snapshot; drifting mtime would confuse
+    /// rsync, make, backup tools.
     fn symlink_attr(&self, ino: u64, target: &str) -> FileAttr {
-        let now = SystemTime::now();
         FileAttr {
             ino: INodeNo(ino),
             size: target.len() as u64,
             blocks: 0,
-            atime: now,
-            mtime: now,
-            ctime: now,
-            crtime: now,
+            atime: self.mount_time,
+            mtime: self.mount_time,
+            ctime: self.mount_time,
+            crtime: self.mount_time,
             kind: FileType::Symlink,
             // Symlink perm bits are ignored by the kernel but 0o777 is the
             // POSIX convention.
@@ -704,6 +712,19 @@ impl Filesystem for ReposixFs {
                 out
             }
             InodeKind::TreeRoot => {
+                // WR-01: ensure the tree snapshot is populated on first touch.
+                // Without this, a user whose first command is `ls mount/tree/`
+                // (before any `ls mount/` or `ls mount/pages/`) sees an empty
+                // directory silently — a wrong-data regression. Matches the
+                // Root / Bucket readdir refresh pattern. Error is non-fatal:
+                // fall through to the (possibly empty) cached snapshot so the
+                // user sees stale data rather than EIO.
+                if let Err(e) = self.refresh_issues() {
+                    tracing::warn!(
+                        error = %e,
+                        "tree readdir refresh failed (non-fatal); serving cached snapshot"
+                    );
+                }
                 let Ok(snap) = self.tree.read() else {
                     reply.error(fuser::Errno::from_i32(libc::EIO));
                     return;

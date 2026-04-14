@@ -95,8 +95,14 @@ pub fn validate_issue_filename(name: &str) -> Result<IssueId> {
 /// `slug_is_ascii_alnum_dash_only_over_adversarial_inputs` test.
 #[must_use]
 pub fn slugify_title(title: &str) -> String {
-    let lower = title.to_lowercase();
-    let mut out = String::with_capacity(lower.len());
+    // IN-02: pre-cap intermediate allocation. Any input beyond ~240 chars
+    // is guaranteed to be sliced off before it reaches the output (which
+    // is capped at SLUG_MAX_BYTES = 60). 4x headroom covers worst-case
+    // lowercase expansion (some codepoints lowercase into multi-byte
+    // sequences). Defense against pathological 10MB titles.
+    let trimmed_input: String = title.chars().take(SLUG_MAX_BYTES * 4).collect();
+    let lower = trimmed_input.to_lowercase();
+    let mut out = String::with_capacity(lower.len().min(SLUG_MAX_BYTES * 2));
     // `last_was_dash` starts true so leading non-alnum runs are elided.
     let mut last_was_dash = true;
     for ch in lower.chars() {
