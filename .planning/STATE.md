@@ -147,8 +147,10 @@ Wave-level commit trail on `main` (Phase 15):
 `6a2e256` (15-A inode.rs: reserve BUCKET_INDEX_INO=5 + doc + test
 narrow), `a94e970` (15-A fs.rs: render_bucket_index + BucketIndex inode
 dispatch + 4 new unit tests), `3309d4c` (15-A
-scripts/dev/test-bucket-index.sh live proof), plus Wave B hashes
-recorded below at commit time.
+scripts/dev/test-bucket-index.sh live proof), `c3d2901` (15-B
+CHANGELOG [v0.5.0] + workspace version bump 0.4.1 -> 0.5.0 + README
+mention), `f43f0e5` (15-B 15-SUMMARY.md + STATE.md cursor), `ceec233`
+(15-B scripts/tag-v0.5.0.sh).
 278 workspace tests pass (+4 vs Phase 14 baseline of 274). Clippy
 `-D warnings` clean, `cargo fmt --all --check` clean. Cargo.toml
 workspace version bumped `0.4.1 → 0.5.0`; Cargo.lock regenerated via
