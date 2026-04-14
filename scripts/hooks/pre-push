@@ -46,6 +46,13 @@ readonly EXCLUDE_DIRS=(
   'target'
   'node_modules'
   '.planning/archive'
+  # The hook file itself defines the patterns it scans for; excluding
+  # the hooks directory prevents self-sabotage on push of the hook.
+  'scripts/hooks'
+  # CHANGELOG and docs are documentation of the prefixes; we accept
+  # that they'll mention the literal strings in reference form.
+  'CHANGELOG.md'
+  'docs/security.md'
 )
 
 # Resolve the list of commits being pushed.  stdin receives lines of
@@ -116,7 +123,7 @@ done
 if [[ "$hit" -gt 0 ]]; then
   printf '%b\n' "${RED}✖ pre-push rejected:${NC} ${hit} credential-prefix hit(s) above." >&2
   printf '%b\n' "${YELLOW}→${NC} If this is a false positive (sample token in a test fixture), move it to" >&2
-  printf '%b\n' "  a variable-substituted form (e.g., ATATT3-${} instead of ATATT3-abc...) and re-push." >&2
+  printf '%b\n' '  a variable-substituted form (e.g., "$TOKEN" instead of a literal prefix) and re-push.' >&2
   printf '%b\n' "${YELLOW}→${NC} If this is a real token, ROTATE IT NOW at https://id.atlassian.com/" >&2
   printf '%b\n' "  manage-profile/security/api-tokens or https://github.com/settings/tokens before" >&2
   printf '%b\n' "  attempting anything else." >&2
