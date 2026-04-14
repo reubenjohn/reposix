@@ -586,12 +586,36 @@ The script IS the push. No other step. After the push succeeds, the CI `release.
 
 ### Drive-by fixes landed tonight (outside Phase 13 scope)
 
-While Wave B agents were running in parallel, the orchestrator shipped two OP-6 HIGH / MEDIUM items on disjoint files to make the morning review cleaner:
+While Wave B agents were running in parallel (and, later, after Wave E closed the phase), the orchestrator shipped additional OP-6, OP-7, and review-polish items on disjoint files to make the morning review cleaner and v0.4.0 release-ready. All are independent `chore(drive-by)` / `docs(drive-by)` / `fix(13-review)` / `feat(hooks)` commits — not tagged as Phase 13 commits:
 
-- **OP-6 HIGH-1 (commit `8931a75`)** — `MORNING-BRIEF.md` and `PROJECT-STATUS.md` both pointed at the now-renamed-away `MORNING-BRIEF-v0.3.md`. Redirected to `HANDOFF.md` with a one-line note explaining the rename.
-- **OP-6 MEDIUM-10/11 (commit `c88e3f4`)** — renamed stale `TODO(phase-3)` → `TODO(v0.4+)` in `crates/reposix-sim/src/{routes/issues.rs, middleware/audit.rs}` and softened `crates/reposix-sim/src/routes/transitions.rs` "deferred to v0.2" to version-neutral.
+**OP-6 doc sweeps**
+- **HIGH-1 (`8931a75`)** — `MORNING-BRIEF.md` and `PROJECT-STATUS.md` redirect pointers from the now-deleted `MORNING-BRIEF-v0.3.md` to `HANDOFF.md`.
+- **HIGH-2 (`c5ea596`)** — `docs/security.md` rewritten for v0.4 truth: three real backends behind one allowlist; `tree/` overlay security properties; swarm harness shipped; `X-Reposix-Agent` spoofing framed honestly.
+- **HIGH-3 (`de1735e`)** — `docs/demo.md` "No real backend. Simulator-only." callout replaced with an accurate v0.4 framing + pointer at the Tier-5 real-backend demos.
+- **MEDIUM-6/7/8 (`45febb9`)** — `docs/development/roadmap.md` rewritten as v0.4+ (the old priority-1-through-17 list is replaced with a "what shipped" table and a pointer at HANDOFF for current open problems); `docs/index.md` homepage admonition now says "v0.4 — four autonomous overnight sessions"; `docs/why.md` line 127 no longer claims swarm harness is v0.2 work.
+- **MEDIUM-10/11 (`c88e3f4`)** — `crates/reposix-sim/src/{routes/issues.rs, middleware/audit.rs}` stale `TODO(phase-3)` → `TODO(v0.4+)`; `routes/transitions.rs` "deferred to v0.2" → version-neutral.
+- **MEDIUM-12/17 (`7792418`)** — `crates/reposix-confluence/src/lib.rs` write-path `Err` messages no longer say "in v0.3"; `docs/social/linkedin.md` stale v0.2 marketing line rewritten for v0.4.
 
-These are NOT tagged as Phase 13 commits; they're independent `chore(drive-by)` / `docs(drive-by)` commits.
+**OP-7 hardening probes**
+- **SSRF regression test (`ea5e548`)** — three new tests in `crates/reposix-confluence/tests/contract.rs` prove the adapter ignores attacker-controlled `_links.base`, `webui_link`, `_links.webui`, `_links.tinyui`, `_links.self`, and `_links.edit` fields. Uses wiremock `.expect(0)` + drop-panic enforcement plus inline `received_requests()` assertions for pinpoint regression diagnosis. Insurance against a future "follow the webui_link for screenshots" feature accidentally enabling SSRF.
+- **Credential-hygiene pre-push hook (`f357c92` + `5361fd5`)** — `scripts/hooks/pre-push` rejects pushes containing literal `ATATT3…` (Atlassian API tokens), `Bearer ATATT3…` headers, `ghp_…` (classic GitHub PAT), or `github_pat_…` (fine-grained PAT) in outgoing ref ranges. Installed via `bash scripts/install-hooks.sh` (symlinks so hook updates land on next pull without re-install). Commit `5361fd5` fixed a self-match bug (the hook was flagging its own PATTERNS literal) and a `${}`-bad-substitution in the help text.
+- **Pre-push hook unit test (`1df7bab` + `976540c`)** — `scripts/hooks/test-pre-push.sh` exercises 6 cases (clean pass, ATATT3 rejected, Bearer ATATT3 rejected, ghp_ rejected, github_pat_ rejected, self-scan exclusion honored). Run via `bash scripts/hooks/test-pre-push.sh` — 6/6 green. Cleanup restores the original branch (was leaving detached HEAD in the first iteration).
+
+**Phase 13 code-review polish (bfdb846)**
+Applied 5 of 6 items from `13-REVIEW.md`:
+- `WR-01` — `tree/` readdir first-touch refresh (was returning empty listing silently).
+- `WR-02` — `PATH_MAX` guard on symlink target (debug_assert + release warn).
+- `IN-01` — cap attacker-controlled tracing strings in Confluence adapter (`parentId` / `parentType` truncated to 64 bytes).
+- `IN-02` — `slugify_title` pre-caps the intermediate `to_lowercase()` allocation at ~240 chars so pathological 10MB titles don't balloon memory.
+- `IN-03` — stable `mount_time` timestamp on symlink `FileAttr` (was drifting on every `getattr`, confusing rsync/make/backups).
+- Skipped: `IN-04` — `TreeDir` `..` entry always uses `TREE_ROOT_INO`. Cosmetic only; kernel doesn't trust `..` inodes from FUSE. Adds a struct field for no runtime benefit.
+
+**CHANGELOG extension (`f09aba5`)** — `[v0.4.0]` block extended with `### Hardening` and `### Security` subsections documenting the review polish, SSRF regression tests, pre-push hook, and security.md refresh. Also fixed a stale anchor (`security.md#whats-deferred-to-v02`) in `docs/reference/http-api.md` to point at the renamed heading.
+
+**Gitignore housekeeping (`667cde0`)** — `.claude/` session-state dir now gitignored so the tag-v0.4.0.sh clean-tree guard doesn't trip on it in the morning.
+
+**Test count delta** — 261 → **264** (+3 from SSRF regression tests).
+**Commit count** — 32 Phase-13 commits + 13 post-Phase-13 bonus commits = 45 total on `main` since v0.3.0 baseline `d43f1d9`.
 
 ### What I deliberately did NOT do (explicit non-scope)
 
