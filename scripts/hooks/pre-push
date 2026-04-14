@@ -31,34 +31,29 @@ log() {
   fi
 }
 
-# Patterns to scan for.  Tight enough that unrelated text ("AT-AT") does
-# not match, but loose enough to catch common prefixes.
+# Patterns require the credential prefix PLUS 20+ chars of token-
+# alphabet entropy. This distinguishes REAL tokens (Atlassian = ~192
+# chars, GitHub PATs ~40 chars) from format documentation like
+# "tokens start with ATATT3…" or a prose reference "ATATT3xF" —
+# neither has 20 entropy chars after the prefix, so neither trips
+# the scanner. Defense vs whitelist: a real token accidentally pasted
+# into any tracked file (including .md docs) still gets caught.
 readonly PATTERNS=(
-  'ATATT3'              # Atlassian API token prefix.
-  'Bearer ATATT3'       # Same token inside an Authorization header.
-  'ghp_[A-Za-z0-9]{20,}' # GitHub classic personal access token.
-  'github_pat_[A-Za-z0-9_]{20,}' # GitHub fine-grained PAT.
+  'ATATT3[A-Za-z0-9_+/=-]{20,}'                     # Atlassian API token.
+  'Bearer[[:space:]]+ATATT3[A-Za-z0-9_+/=-]{20,}'   # Atlassian in Bearer header.
+  'ghp_[A-Za-z0-9]{20,}'                            # GitHub classic PAT.
+  'github_pat_[A-Za-z0-9_]{20,}'                    # GitHub fine-grained PAT.
 )
 
-# Directories we never scan regardless of file type.
+# Minimal excludes. Format-documentation strings in docs/CHANGELOG etc.
+# no longer need a whitelist because the stricter patterns above only
+# match real-entropy tokens.
 readonly EXCLUDE_DIRS=(
   '.git'
   'target'
   'node_modules'
-  # The hook file itself defines the patterns it scans for; excluding
-  # the hooks directory prevents self-sabotage on push of the hook.
+  # The hook files themselves contain the pattern literals by design.
   'scripts/hooks'
-  # Documentation + planning files legitimately reference these prefixes
-  # as format examples (e.g. "Atlassian tokens start with ATATT3…").
-  # Real secrets never live here — they live in .env (gitignored) or
-  # production source code (which we still scan).
-  '.planning'
-  'docs'
-  'CHANGELOG.md'
-  'HANDOFF.md'
-  'MORNING-BRIEF.md'
-  'PROJECT-STATUS.md'
-  'README.md'
 )
 
 # Resolve the list of commits being pushed.  stdin receives lines of
