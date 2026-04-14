@@ -264,11 +264,18 @@ Three lines in the recording are the "guardrails on camera" proof:
 
 ## Limitations / honest scope
 
-This is v0.1 alpha, built autonomously overnight on 2026-04-13. What's
-**not** in the demo:
+This demo page was captured at v0.1 alpha (2026-04-13) and shows the simulator-only narrative
+that framed the initial release. Since then the project shipped real GitHub Issues support
+(v0.2), Confluence Cloud support (v0.3 — ship date 2026-04-14, live against
+`reuben-john.atlassian.net`), and the nested `pages/` + `tree/` mount layout (v0.4). What's
+still **not** in THIS specific demo recording:
 
-- **No real backend.** Simulator-only. Real Jira/GitHub/Confluence
-  integration is v0.2. See [PROJECT.md → Out of Scope](https://github.com/reubenjohn/reposix/blob/main/.planning/PROJECT.md).
+- **The demo script itself still targets the simulator** — it's the fastest, cred-free path
+  to demonstrate the FUSE + audit + guardrails primitives. For a real-backend walk-through,
+  see the Tier-5 demos at `scripts/demos/05-mount-real-github.sh`,
+  `scripts/demos/06-mount-real-confluence.sh`, and
+  `scripts/demos/07-mount-real-confluence-tree.sh` (this last one showcases the v0.4 tree/
+  overlay and needs Atlassian creds in `.env`).
 - **No man page, .deb, or brew formula.** Clone-and-`cargo build`.
 - **Linux only.** FUSE3/FUSE2. macOS-via-macFUSE is a follow-up.
 - **Threat model is taken seriously but not exhaustively mitigated.**
