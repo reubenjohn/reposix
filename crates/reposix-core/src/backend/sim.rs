@@ -597,4 +597,347 @@ mod tests {
         }
         assert_eq!(backend.name(), "simulator");
     }
+
+    // ----- Phase 14 Wave B1 re-homes -----
+    //
+    // The tests below were formerly in `crates/reposix-fuse/src/fetch.rs::tests`
+    // and `crates/reposix-fuse/tests/write.rs`. They exercised
+    // `patch_issue`/`post_issue` directly; after Wave B1 those helpers are
+    // deleted and the FUSE write path routes through `IssueBackend`, so the
+    // same wire assertions move here and pin the same contract at the trait
+    // impl layer. See `.planning/phases/14-.../14-RESEARCH.md` §Q10.
+
+    #[tokio::test]
+    async fn update_issue_sends_quoted_if_match() {
+        // Re-home of fetch.rs::patch_issue_sends_if_match_header. Variant of
+        // the existing `update_with_expected_version_attaches_if_match` at
+        // version=3 (previous test pins version=5); both prove the quoted-etag
+        // form matches the sim's handler invariant.
+        let server = MockServer::start().await;
+        Mock::given(method("PATCH"))
+            .and(path("/projects/demo/issues/1"))
+            .and(header("If-Match", "\"3\""))
+            .respond_with(ResponseTemplate::new(200).set_body_json(sample_issue_json(1)))
+            .mount(&server)
+            .await;
+
+        let backend = SimBackend::new(server.uri()).expect("backend");
+        let t = Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
+        let u = sanitize(
+            Tainted::new(Issue {
+                id: IssueId(0),
+                title: "hello".into(),
+                status: IssueStatus::Open,
+                assignee: None,
+                labels: vec![],
+                created_at: t,
+                updated_at: t,
+                version: 0,
+                body: String::new(),
+                parent_id: None,
+            }),
+            ServerMetadata {
+                id: IssueId(1),
+                created_at: t,
+                updated_at: t,
+                version: 3,
+            },
+        );
+        let out = backend
+            .update_issue("demo", IssueId(1), u, Some(3))
+            .await
+            .expect("update");
+        assert_eq!(out.id, IssueId(1));
+    }
+
+    #[tokio::test]
+    async fn update_issue_attaches_agent_header() {
+        // Re-home of fetch.rs::fetch_issues_attaches_agent_header (SG-05 audit
+        // attribution proof). Value is process-specific
+        // (`reposix-core-simbackend-<pid>`), so we assert "header present,
+        // any value" via a closure matcher — the same pattern
+        // `update_without_expected_version_is_wildcard` (line 550) uses to
+        // assert absence.
+        use wiremock::Match;
+        struct HasAgentHeader;
+        impl Match for HasAgentHeader {
+            fn matches(&self, request: &wiremock::Request) -> bool {
+                request.headers.contains_key("x-reposix-agent")
+            }
+        }
+
+        let server = MockServer::start().await;
+        Mock::given(method("PATCH"))
+            .and(path("/projects/demo/issues/1"))
+            .and(HasAgentHeader)
+            .respond_with(ResponseTemplate::new(200).set_body_json(sample_issue_json(1)))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let backend = SimBackend::new(server.uri()).expect("backend");
+        let u = sample_untainted();
+        let _ = backend
+            .update_issue("demo", IssueId(1), u, Some(1))
+            .await
+            .expect("update");
+        // Dropping `server` verifies the .expect(1) — panics if the
+        // HasAgentHeader matcher didn't fire exactly once.
+    }
+
+    #[tokio::test]
+    async fn create_issue_omits_server_fields() {
+        // Re-home of fetch.rs::post_issue_sends_egress_shape_only. Prove the
+        // POST body contains the mutable-field subset and lacks the server-
+        // owned fields `version`, `id`, `created_at`, `updated_at`.
+        // `render_create_body` (sim.rs:173) mechanically guarantees this; the
+        // test is a regression guard against future field drift.
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/projects/demo/issues"))
+            .respond_with(ResponseTemplate::new(201).set_body_json(sample_issue_json(4)))
+            .mount(&server)
+            .await;
+
+        let backend = SimBackend::new(server.uri()).expect("backend");
+        let u = sample_untainted();
+        let got = backend.create_issue("demo", u).await.expect("create");
+        assert_eq!(got.id, IssueId(4));
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests.len(), 1);
+        let body = String::from_utf8_lossy(&requests[0].body);
+        assert!(
+            body.contains("\"title\""),
+            "egress body lacks title: {body}"
+        );
+        assert!(
+            body.contains("\"labels\""),
+            "egress body lacks labels: {body}"
+        );
+        assert!(
+            !body.contains("\"version\""),
+            "egress body leaked version: {body}"
+        );
+        assert!(!body.contains("\"id\""), "egress body leaked id: {body}");
+        assert!(
+            !body.contains("\"created_at\""),
+            "egress body leaked created_at: {body}"
+        );
+        assert!(
+            !body.contains("\"updated_at\""),
+            "egress body leaked updated_at: {body}"
+        );
+    }
+
+    #[tokio::test]
+    async fn update_issue_respects_untainted_sanitization() {
+        // **SG-03 proof.** Re-home of tests/write.rs::
+        // sanitize_strips_server_fields_on_egress (flagged critical in
+        // 14-RESEARCH.md#Q10). A hostile tainted issue carrying an inflated
+        // `version=999_999` flows through `sanitize()` and into
+        // `SimBackend::update_issue`; the wire body must contain the
+        // mutable-field subset only. This proves the Untainted<Issue>
+        // discipline holds at the trait-impl layer too, not just in the old
+        // `EgressPayload` struct.
+        let server = MockServer::start().await;
+        Mock::given(method("PATCH"))
+            .and(path("/projects/demo/issues/1"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(sample_issue_json(1)))
+            .mount(&server)
+            .await;
+
+        let backend = SimBackend::new(server.uri()).expect("backend");
+        let t = Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
+        let meta = ServerMetadata {
+            id: IssueId(1),
+            created_at: t,
+            updated_at: t,
+            version: 1,
+        };
+        let hostile = Issue {
+            id: IssueId(1),
+            title: "hello".into(),
+            status: IssueStatus::Open,
+            assignee: None,
+            labels: vec![],
+            // The attacker-influenced input tries to forge a version.
+            // sanitize() strips it and replaces with the server-authoritative
+            // value from `meta` — but even the server's version must NOT
+            // appear in the wire body (only in the If-Match header).
+            created_at: t,
+            updated_at: t,
+            version: 999_999,
+            body: String::new(),
+            parent_id: None,
+        };
+        let u = sanitize(Tainted::new(hostile), meta);
+        backend
+            .update_issue("demo", IssueId(1), u, Some(1))
+            .await
+            .expect("update");
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests.len(), 1);
+        let body = String::from_utf8_lossy(&requests[0].body);
+        assert!(
+            !body.contains("\"version\""),
+            "egress body leaked version: {body}"
+        );
+        // id is allowed in the URL path; NOT in the body.
+        assert!(!body.contains("\"id\""), "egress body leaked id: {body}");
+        assert!(
+            !body.contains("\"created_at\""),
+            "egress body leaked created_at: {body}"
+        );
+        assert!(
+            !body.contains("\"updated_at\""),
+            "egress body leaked updated_at: {body}"
+        );
+        assert!(body.contains("\"title\""));
+        assert!(body.contains("\"status\""));
+    }
+
+    #[tokio::test]
+    async fn create_issue_400_preserves_body_in_error() {
+        // Per 14-RESEARCH.md#Q2: the old `FetchError::BadRequest(String)`
+        // variant is dropped; 4xx responses now surface as `Error::Other(msg)`
+        // where `msg` contains the body bytes via `decode_issue`'s format
+        // string. Pin this as a regression guard — the content-preservation
+        // property is what kept information lossless across the refactor.
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/projects/demo/issues"))
+            .respond_with(ResponseTemplate::new(400).set_body_string("invalid title"))
+            .mount(&server)
+            .await;
+
+        let backend = SimBackend::new(server.uri()).expect("backend");
+        let u = sample_untainted();
+        let err = backend.create_issue("demo", u).await.expect_err("400");
+        match err {
+            Error::Other(msg) => {
+                assert!(
+                    msg.contains("invalid title"),
+                    "expected body substring 'invalid title', got {msg}"
+                );
+                assert!(
+                    msg.contains("400"),
+                    "expected status substring '400', got {msg}"
+                );
+            }
+            other => panic!("expected Error::Other, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn sim_backend_rejects_non_allowlisted_origin() {
+        // Re-home of fetch.rs::fetch_issue_origin_rejected (SG-01 allowlist
+        // gate proof). The allowlist check lives in `http.rs` and fires at
+        // request time (NOT construction time); a non-allowlisted origin
+        // surfaces as `Error::InvalidOrigin(_)` on the first method call.
+        // Default allowlist (empty env var) is 127.0.0.1/localhost, so
+        // `http://evil.example` is rejected.
+        let backend = SimBackend::new("http://evil.example".into()).expect("backend");
+        let err = backend.list_issues("demo").await.expect_err("evil origin");
+        assert!(
+            matches!(err, Error::InvalidOrigin(_)),
+            "expected InvalidOrigin, got {err:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn get_issue_500_surfaces_error_other() {
+        // Re-home of fetch.rs::fetch_issue_500_is_status. The old FetchError
+        // had a dedicated Status variant; the trait surfaces all non-success
+        // non-404s as Error::Other with the status substring preserved.
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/projects/demo/issues/1"))
+            .respond_with(ResponseTemplate::new(500).set_body_string("boom"))
+            .mount(&server)
+            .await;
+
+        let backend = SimBackend::new(server.uri()).expect("backend");
+        let err = backend
+            .get_issue("demo", IssueId(1))
+            .await
+            .expect_err("500");
+        match err {
+            Error::Other(msg) => {
+                assert!(
+                    msg.contains("sim returned 500"),
+                    "expected 'sim returned 500' substring, got {msg}"
+                );
+            }
+            other => panic!("expected Error::Other(500), got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn create_issue_returns_authoritative_issue() {
+        // Positive companion to `create_issue_omits_server_fields`: after a
+        // 201, the returned `Issue` carries the server-assigned id/version/
+        // created_at from the response body — this is what the FUSE `create`
+        // callback relies on to populate its inode cache.
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/projects/demo/issues"))
+            .respond_with(ResponseTemplate::new(201).set_body_json(sample_issue_json(42)))
+            .mount(&server)
+            .await;
+
+        let backend = SimBackend::new(server.uri()).expect("backend");
+        let u = sample_untainted();
+        let got = backend.create_issue("demo", u).await.expect("create");
+        assert_eq!(got.id, IssueId(42));
+        assert_eq!(got.version, 1);
+    }
+
+    #[tokio::test]
+    async fn delete_or_close_succeeds_on_200() {
+        // No prior sim.rs test covered the delete happy path; add coverage
+        // to partially offset the net test-count reduction from deleting
+        // `fetch.rs::tests` + `tests/write.rs`.
+        let server = MockServer::start().await;
+        Mock::given(method("DELETE"))
+            .and(path("/projects/demo/issues/1"))
+            .respond_with(ResponseTemplate::new(200))
+            .mount(&server)
+            .await;
+
+        let backend = SimBackend::new(server.uri()).expect("backend");
+        backend
+            .delete_or_close("demo", IssueId(1), DeleteReason::Completed)
+            .await
+            .expect("delete");
+    }
+
+    #[tokio::test]
+    async fn delete_or_close_404_maps_to_not_found() {
+        // Companion to get_maps_404_to_not_found but for DELETE — the sim's
+        // DELETE handler returns 404 for unknown ids and SimBackend renders
+        // that as `Error::Other("not found: <url>")`. Covered separately
+        // because the code path in `delete_or_close` (sim.rs:283) is distinct
+        // from the shared `decode_issue` helper.
+        let server = MockServer::start().await;
+        Mock::given(method("DELETE"))
+            .and(path("/projects/demo/issues/9999"))
+            .respond_with(ResponseTemplate::new(404))
+            .mount(&server)
+            .await;
+
+        let backend = SimBackend::new(server.uri()).expect("backend");
+        let err = backend
+            .delete_or_close("demo", IssueId(9999), DeleteReason::Completed)
+            .await
+            .expect_err("404");
+        match err {
+            Error::Other(msg) => assert!(
+                msg.starts_with("not found:"),
+                "expected 'not found:' prefix, got {msg}"
+            ),
+            other => panic!("expected Error::Other(not found), got {other:?}"),
+        }
+    }
 }
