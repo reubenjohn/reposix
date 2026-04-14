@@ -36,3 +36,6 @@ demo/recording.gif
 
 # Local research scratch (committed manually)
 research/scratch/
+
+# Claude Code session artifacts (ephemeral; re-created on each run)
+.claude/
