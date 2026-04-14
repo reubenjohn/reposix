@@ -920,7 +920,13 @@ impl IssueBackend for ConfluenceBackend {
         let status_u16 = status.as_u16();
         // T-16-C-04: audit title only (first 256 chars), never body content.
         let req_summary: String = issue.inner_ref().title.chars().take(256).collect();
-        self.audit_write("POST", "/wiki/api/v2/pages", status_u16, &req_summary, &bytes);
+        self.audit_write(
+            "POST",
+            "/wiki/api/v2/pages",
+            status_u16,
+            &req_summary,
+            &bytes,
+        );
         if !status.is_success() {
             return Err(Error::Other(format!(
                 "confluence returned {status} for POST {url}: {}",
@@ -1088,7 +1094,12 @@ mod tests {
     /// `adf_doc` should be a `{"type":"doc",...}` value that
     /// `adf_to_markdown` can parse. Used by tests that exercise the
     /// ADF read path (C4).
-    fn page_json_adf(id: &str, status: &str, title: &str, adf_doc: &serde_json::Value) -> serde_json::Value {
+    fn page_json_adf(
+        id: &str,
+        status: &str,
+        title: &str,
+        adf_doc: &serde_json::Value,
+    ) -> serde_json::Value {
         let adf_doc = adf_doc.clone();
         json!({
             "id": id,
@@ -1208,12 +1219,10 @@ mod tests {
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/pages/98765"))
             .and(query_param("body-format", "atlas_doc_format"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_adf(
-                "98765",
-                "current",
-                "hello",
-                &adf_doc,
-            )))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_json(page_json_adf("98765", "current", "hello", &adf_doc)),
+            )
             .mount(&server)
             .await;
 
