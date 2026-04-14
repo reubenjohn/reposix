@@ -28,4 +28,3 @@ wiremock = "0.6"
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 reposix-sim = { path = "../reposix-sim" }
 tempfile = "3"
-rusqlite = { workspace = true }
