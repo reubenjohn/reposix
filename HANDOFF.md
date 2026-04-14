@@ -670,3 +670,304 @@ Unchanged from session 3's handoff unless noted:
 The same norms still apply: simulator before real backend, tainted by default, audit log non-optional, no hidden state, mount = git repo, REPOSIX_ALLOWED_ORIGINS guards every egress. Session 4 did not touch any of these.
 
 — Claude Opus 4.6 1M context, 2026-04-14 (overnight session 4).
+
+---
+
+## Session 5 augmentation — 2026-04-14 daytime (v0.4.1 + v0.5.0 ready-to-ship)
+
+> Author: Claude Opus 4.6 1M context, session 5 (wall-clock ~08:00-11:30 PDT).
+> Built on top of session 4's v0.4.0 ship. Two tags pushed this session:
+> **v0.4.1** (Phase 14 — Cluster B refactor) and **v0.5.0** (Phase 15 — OP-2
+> partial bucket-level `_INDEX.md`). Both had CI release workflows fire on
+> tag push; prebuilt Linux binaries (x86_64 + aarch64) attached to both
+> GitHub releases.
+
+### tl;dr
+
+Two phases shipped back-to-back.
+
+**Phase 14 (v0.4.1, bugfix/refactor scope).** Closes v0.3-era HANDOFF "Known
+open gaps" items 7 and 8 — FUSE write path and `git-remote-reposix` now both
+route through `IssueBackend::{create_issue, update_issue, delete_or_close}`
+instead of hardcoded sim-REST `fetch.rs` / `client.rs`. Net deletion:
+`crates/reposix-fuse/src/fetch.rs` (596 LoC), `crates/reposix-fuse/tests/write.rs`
+(236 LoC), `crates/reposix-remote/src/client.rs` (236 LoC) — ~1,068 LoC
+removed, ~400 LoC net added between `fs.rs` rewire + sim.rs re-homed tests.
+Also swept v0.3-era deferral prose out of `docs/security.md`,
+`docs/reference/crates.md`, `README.md`, and `docs/architecture.md`. Wave
+structure A(serial) → B1‖B2(parallel) → C(serial, verify) → D(serial, docs).
+
+**Phase 15 (v0.5.0, feature scope).** OP-2 partial — `mount/<bucket>/_INDEX.md`
+now renders a YAML-frontmatter + markdown-table sitemap on read. Visible in
+`ls <bucket>/`, hidden from `*.md` globs (leading underscore), read-only
+(EROFS/EACCES on write/create/unlink), rendered from the same issue-list
+cache that backs readdir, sorted ascending by id. Not in `tree/`, not at
+mount root — those are deferred to follow-up phases. Ships with
+`scripts/dev/test-bucket-index.sh` as the live proof.
+
+**Workspace is 277/277 tests passing** (up from 272 at v0.4.0, +5 from Phase
+14's re-homing + Phase 15's render tests; no net regression from Phase 14
+deletions). Clippy clean, fmt clean, `bash scripts/green-gauntlet.sh --full`
+6/6 gates green (fmt/clippy/test/smoke/mkdocs-strict/fuse-ignored). Live
+demos `01-edit-and-push.sh` + `06-mount-real-confluence.sh` + the new
+`scripts/dev/test-bucket-index.sh` all exit 0 on the dev host.
+
+19 atomic commits since `3b3f867` (session-4 CI fix, session-5 baseline).
+Tag `v0.4.1` → commit `9ee8a1a`. Tag `v0.5.0` → commit `82f73d1`. Both
+pushed; both release workflows ran green; prebuilt binaries on GitHub.
+
+### Live proof captured tonight
+
+**Phase 14 — audit-attribution spot-check (proof of R2 behavior-change):**
+
+```
+$ sqlite3 /tmp/reposix-demo-01-sim.db \
+    "SELECT agent_id, COUNT(*) FROM audit_events GROUP BY agent_id ORDER BY agent_id;"
+reposix-core-simbackend-<pid>-fuse|12
+reposix-core-simbackend-<pid>-remote|8
+```
+
+Zero rows tagged `reposix-fuse-<pid>` or `git-remote-reposix-<pid>` in a
+fresh DB. The refactor's new suffix-based attribution is live-confirmed.
+
+**Phase 15 — bucket index live proof (`scripts/dev/test-bucket-index.sh`):**
+
+```
+$ ls /tmp/reposix-15-bucket-index-mnt/issues/
+00000000001.md  00000000002.md  00000000003.md  00000000004.md
+00000000005.md  00000000006.md  _INDEX.md
+
+$ cat /tmp/reposix-15-bucket-index-mnt/issues/_INDEX.md
+---
+backend: simulator
+project: demo
+issue_count: 6
+generated_at: 2026-04-14T18:21:44Z
+---
+
+# Index of issues/ — demo (6 issues)
+
+| id | status | title | updated |
+| --- | --- | --- | --- |
+| 1 | open | database connection drops under load | 2026-04-13 |
+| 2 | in_progress | add `--no-color` flag to CLI | 2026-04-13 |
+...
+
+$ touch /tmp/reposix-15-bucket-index-mnt/issues/_INDEX.md
+touch: cannot touch '...': Permission denied
+
+== BUCKET INDEX PROOF OK ==
+```
+
+### What shipped (Phase 14 — v0.4.1)
+
+| Commit | Role |
+|---|---|
+| `7510ed1` | test(14-A): pin sim 409 body shape (R13 mitigation) |
+| `cd50ec5` | test(14-B1): re-home SG-03 egress-sanitize proof onto `SimBackend` |
+| `bdad951` | refactor(14-B1): `fs.rs` write path through `IssueBackend` |
+| `938b8de` | refactor(14-B2): `reposix-remote` through `IssueBackend` |
+| `4301d0d` | docs(14-C): verification doc — all SCs PASS |
+| `547d9e0` | docs(14-D): CHANGELOG `[Unreleased]` + v0.3-era deferral-prose sweep |
+| `142f761` | docs(14-D): 14-SUMMARY.md + STATE.md cursor |
+| `2393d85` | docs(14-review): code review of Phase 14 commits |
+| `1ffe47b` | docs(14-review-fix): LOW-01/02 doc-comment refresh |
+| `9ee8a1a` | chore(release): version bump to 0.4.1 + CHANGELOG promotion + `tag-v0.4.1.sh` |
+
+### What shipped (Phase 15 — v0.5.0)
+
+| Commit | Role |
+|---|---|
+| `7eec57d` | chore(15-planning): CONTEXT + Wave A plan |
+| `6a2e256` | feat(15-A): reserve `BUCKET_INDEX_INO = 5` inode |
+| `a94e970` | feat(15-A): synthesize `_INDEX.md` in FUSE bucket dir |
+| `3309d4c` | chore(15-A): `scripts/dev/test-bucket-index.sh` live proof |
+| `c3d2901` | docs(15-B): CHANGELOG `[v0.5.0]` + version bump to 0.5.0 |
+| `f43f0e5` | docs(15-B): 15-SUMMARY.md + STATE.md cursor |
+| `ceec233` | chore(15-B): `scripts/tag-v0.5.0.sh` |
+| `82f73d1` | docs(15-B): backfill Wave B commit hashes in STATE.md |
+
+### Accepted behavior changes (documented in CHANGELOG)
+
+- **R1 — Assignee-clear on untouched PATCH.** The old `fetch::patch_issue`
+  skipped the `assignee` field when `None`; the new
+  `SimBackend::update_issue` path emits `"assignee": null`, which the sim
+  treats as *clear*. FUSE mount semantics: the file is the source of truth
+  — if the user removes `assignee:` from the frontmatter, the assignee is
+  cleared on next release. Consistent with how every other field behaves.
+- **R2 — Audit attribution suffix-normalized.**
+  - FUSE writes: `reposix-fuse-<pid>` → `reposix-core-simbackend-<pid>-fuse`.
+  - `git-remote-reposix`: `git-remote-reposix-<pid>` → `reposix-core-simbackend-<pid>-remote`.
+  - Downstream log/audit-query tooling grouping on the old prefixes needs
+    to widen the match to `reposix-core-simbackend-%-{fuse,remote}` or
+    query the new full-string forms.
+
+### Non-behavioral sweeps (in the same session, independent commits)
+
+None. The session was narrowly scoped to Phase 14 + Phase 15.
+
+### Stats
+
+| Metric | v0.4.0 | v0.5.0 |
+|---|---|---|
+| Workspace tests | 272 | **277** (+5; +2 Phase-14 `sim.rs` re-home + 3 Phase-15 render-function unit tests; -4 redundant tests from the write.rs re-home) |
+| Commits since prior tag (`v0.4.0`) | — | 19 atomic commits |
+| LoC deleted (Phase 14) | — | ~1,068 (`fetch.rs` + `write.rs` + `client.rs`) |
+| LoC added | — | ~400 net (fs.rs rewire + sim.rs tests + `_INDEX.md` renderer) |
+| `cargo clippy --all-targets -- -D warnings` | clean | clean |
+| `cargo fmt --all --check` | clean | clean |
+| `mkdocs build --strict` | green | green |
+| `scripts/demos/smoke.sh` | 4/4 | 4/4 |
+| `green-gauntlet.sh --full` | (not yet shipped in session 4) | **6/6** |
+| Backends | sim, github, confluence | sim, github, confluence (unchanged) |
+
+### What I deliberately did NOT do (explicit non-scope)
+
+Per the session-5 brief:
+- Did NOT start OP-10 (eject 3rd-party adapter crates) — user-gated.
+- Did NOT start OP-11 (repo-root reorg — `InitialReport.md` / `AgenticEngineeringReference.md` → `docs/research/`) — user-gated.
+- Did NOT start Phase 12 (subprocess/JSON-RPC connector ABI) — user-gated, design question open.
+- Did NOT start Cluster A (Confluence writes) — deliberate punt; Phase 14 unblocks it, but the atlas_doc_format round-trip is multi-session scope.
+
+### Session-5 open problems rollup (what's still outstanding)
+
+Unchanged from session 4 unless noted:
+
+- **OP-1 — nested mount layout.** Confluence parentId tree is live (v0.4.0).
+  Labels/, recent/, spaces/, multi-space mount are still deferred. OP-2 bucket-level
+  index shipped this session (v0.5.0); tree-level + mount-root index are follow-ups.
+- **OP-2 — dynamic `_INDEX.md`.** **Bucket level SHIPPED this session (v0.5.0).**
+  Remaining: `tree/<subdir>/_INDEX.md` (recursive synthesis, cycle-safe) and
+  `mount/_INDEX.md` (whole-mount overview). Tree recursion is the next most
+  compelling follow-up — the pattern is proven, the code is a straightforward
+  extension of `TreeSnapshot::dfs`.
+- **OP-3 — cache refresh via `git pull` semantics.** Not started. Now that
+  `_INDEX.md` is the obvious sync anchor (`git diff _INDEX.md` across pulls
+  shows what changed), the ROI is higher — `mount-as-time-machine` gets
+  concrete.
+- **OP-4 — prebuilt binaries.** DONE (session 3; OP-12 install-docs fold-in
+  session 4). v0.4.1 and v0.5.0 both have prebuilt x86_64 + aarch64 Linux
+  binaries.
+- **OP-5, OP-12 — docs/social/ relocation + install docs.** DONE (sessions 3-4).
+- **OP-6 — sweep findings.** Mostly done through Phase 14 Wave D. Remaining
+  items are mostly LOW (dead script cleanup, marketing doc staleness) —
+  none are HIGH/MEDIUM.
+- **OP-7 — hardening probes.** Not started this session. Specifically
+  outstanding: concurrent-write contention swarm, FUSE under real-backend
+  load, 500-page truncation probe, chaos audit-log restart, macFUSE parity.
+- **OP-8 — honest-tokenizer benchmarks.** Not started.
+- **OP-9 — Confluence beyond pages (whiteboards, comments, attachments, live
+  docs, folders, multi-space).** Not started. Comments
+  (`pages/<id>.comments/<cid>.md`) is still the next-most-compelling use case
+  — now extra compelling because (a) tree/ is live and (b) bucket-level
+  `_INDEX.md` proves the synthetic-file pattern.
+- **OP-10 — eject 3rd-party adapter crates.** Not started (user-gated).
+- **OP-11 — repo-root reorg.** Not started (user-gated).
+- **Phase 12 — subprocess/JSON-RPC ABI.** Not started (user-gated).
+- **Cluster A — Confluence writes.** Not started. Phase 14 unblocks the FUSE
+  write path to dispatch through any backend's `create_issue`/`update_issue`/
+  `delete_or_close` — so implementing these on `ConfluenceBackend` now
+  immediately gives you `vi mount/pages/<id>.md` round-tripping to real
+  Confluence.
+- **Cluster C — Swarm `--mode confluence-direct`.** Not started. Small
+  warm-up; the existing `SimDirectWorkload` is the template.
+
+### New discoveries / known infra gaps (from this session)
+
+- **C-1 — `scripts/green-gauntlet.sh` does not rebuild release binaries.**
+  Phase 14 Wave C caught this during audit-attribution spot-check: smoke
+  demos will silently run against stale `target/release/*` binaries if
+  they exist, masking whatever's in the current working tree. The gauntlet
+  passes visually but isn't actually testing the latest code. Fix: either
+  build-first (add a `cargo build --release --workspace --bins --locked`
+  gate before smoke) or assert binary mtime is post-HEAD. Queued as a
+  `/gsd-quick` candidate.
+- **C-2 — `audit_events` schema.** The column is `agent_id` (not `agent`).
+  Verification-doc snippets floating around mention `SELECT agent FROM
+  audit`; those are wrong. Correct column name captured in this session's
+  14-VERIFICATION.md and CHANGELOG.
+- **`LICENSE-APACHE` exists** per session-4's OP-6-HIGH-5 fix; no change
+  this session.
+
+### Post-review cleanup candidates (all LOW, none blocking)
+
+From `14-REVIEW.md`:
+- **INFO-01..04** — near-duplicate R13 pin tests (defensible), `_reason`
+  param discarded in `delete_or_close` (pre-existing, correct for sim),
+  version-mismatch prefix-match string contract codified in backend.rs
+  doc (note for future typed-variant refactor), `FetchError` visibility
+  tightened from pub to private (positive side-effect).
+
+From `15-SUMMARY.md` follow-ups:
+- Tree-level recursive `_INDEX.md` (biggest remaining OP-2 piece).
+- Mount-root `_INDEX.md` (smallest remaining OP-2 piece).
+- User-configurable column set in the index.
+- `_INDEX.md`-in-`git diff` round-trip semantics (ties into OP-3).
+
+### Mission recommendation for session 6
+
+**Pick one of (ordered by ROI):**
+
+1. **Cluster A (Confluence writes)** — Phase 14 unblocked this. `create_issue`,
+   `update_issue`, `delete_or_close` on `ConfluenceBackend` + `atlas_doc_format`
+   ↔ Markdown converter. Highest user-visible ROI left. Realistically multi-session;
+   session-6 could scope-tight to just `update_issue` (the most common op) + a
+   minimal storage-format↔markdown renderer. Ships v0.6.0.
+
+2. **Cluster C (swarm `--mode confluence-direct`)** — Small warm-up (~300 LoC).
+   Exercises Phase 14's refactor against Confluence + proves the trait truly
+   generalizes. Even cheaper now that rate-limiting is well-understood from
+   Phase 9. Ships v0.5.1 (bugfix-size but feature-flavored) or folds into a
+   bigger release.
+
+3. **OP-2 tree-recursive `_INDEX.md`** — Phase 15's follow-up. Pattern proven
+   this session. Cycle-safe recursive synthesis is ~200 LoC extension of
+   `TreeSnapshot::dfs`. Ships v0.5.1 or v0.6.0.
+
+4. **OP-7 hardening bundle** — Concurrent-write contention swarm, 500-page
+   truncation probe, chaos audit-log restart, macFUSE parity CI matrix. All
+   are additive tests + small flag additions; low blast-radius. Ships v0.5.1.
+
+5. **OP-3 `reposix refresh` + git-diff cache** — Mount-as-time-machine.
+   Biggest conceptual win but biggest scope. Needs a new `reposix-cache`
+   crate with sqlite WAL. Multi-session. Ships v0.6.0+.
+
+**Do NOT** start OP-10 / OP-11 / Phase 12 without explicit user check-in.
+
+### The norms still apply
+
+Simulator before real backend · tainted by default · audit log non-optional ·
+no hidden state · mount = git repo · `REPOSIX_ALLOWED_ORIGINS` guards every
+egress · Untainted<Issue> discipline holds through the trait boundary.
+
+This session touched none of these rails. Phase 14's refactor concentrated
+the sim-REST shape into exactly one crate (`reposix-core::backend::sim`);
+Phase 15 added one synthesized file behind a new reserved inode slot with
+EROFS-by-default on writes. The trust model is narrower after this session,
+not wider.
+
+### Install the pre-push hook first thing next session
+
+Per session-4's instruction pattern:
+
+```bash
+bash scripts/install-hooks.sh
+```
+
+This session ran it at start and caught zero violations on both tag pushes.
+
+### Cutting future tags
+
+`scripts/tag-v0.5.0.sh` is now the template. Clone and version-bump for the
+next release. The seven safety guards (branch/clean/no-local-tag/no-remote-
+tag/CHANGELOG/Cargo.toml/tests+smoke) are battle-tested.
+
+**Pre-tag PATH setup:** the tag script's guard 7 runs `smoke.sh`, which
+requires `reposix-sim`/`reposix-fuse`/`git-remote-reposix` on PATH. Add
+`export PATH="$PWD/target/debug:$PATH"` before running the tag script, OR
+the smoke check will fail with "required command not found." (Green-gauntlet
+handles this automatically; the tag script does not.) See C-1 above.
+
+### Sign-off
+
+— Claude Opus 4.6 1M context, 2026-04-14 (session 5 daytime).
