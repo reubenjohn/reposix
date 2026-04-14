@@ -361,3 +361,23 @@ Phases 2 and 3 run in parallel. Phase S is conditional.
 - [ ] 08-B: `IssueBackend` trait in `reposix-core` + `SimBackend` impl + `reposix list` CLI subcommand.
 - [ ] 08-C: `reposix-github` crate with `GithubReadOnlyBackend` + state-mapping ADR + `scripts/demos/parity.sh`.
 - [ ] 08-D: Contract test suite parameterized over both backends + Tier-1 demo recordings + docs updates.
+
+### Phase 11: Confluence Cloud read-only adapter (v0.3)
+**Goal**: Ship a `reposix-confluence` crate implementing `IssueBackend` against Atlassian Confluence Cloud REST v2 (`https://<tenant>.atlassian.net/wiki/api/v2/`). Adopt **Option A** from HANDOFF §3 — flatten page hierarchy; encode `parent_id` + `space_key` in frontmatter — so existing FUSE + CLI machinery works unchanged. Basic auth (`email:ATLASSIAN_API_KEY`). CLI dispatch for `list --backend confluence` and `mount --backend confluence --project <SPACE_KEY>`. Wiremock unit tests ≥5. Contract test parameterized like GitHub's. Tier 3B parity demo + Tier 5 live-mount demo. ADR-002 for page→issue mapping. Docs update. Rename `TEAMWORK_GRAPH_API` → `ATLASSIAN_API_KEY` in `.env.example`. CHANGELOG + `v0.3.0` tag.
+
+(Note: gsd-tools auto-allocated "Phase 9" above, but Phases 9-swarm and 10-FUSE-GitHub already shipped from the previous session as committed git history without formal ROADMAP.md entries. Skipping numerically to Phase 11 keeps the numbering honest.)
+
+**Added**: 2026-04-13 ~20:55 PDT (overnight session 3)
+**Depends on**: Phase 10 (FUSE mount via `IssueBackend` trait already shipped)
+**Deadline**: 08:00 PDT 2026-04-14
+
+**Success Criteria** (each is a Bash assertion):
+  1. `cargo test --workspace --locked` returns ≥180 pass / 0 fail.
+  2. `cargo clippy --workspace --all-targets -- -D warnings` exits 0.
+  3. `bash scripts/demos/smoke.sh` still 4/4 green — Tier 1 demos untouched.
+  4. `reposix list --backend confluence --project <SPACE_KEY>` (with `ATLASSIAN_API_KEY` + `REPOSIX_ALLOWED_ORIGINS=...,https://<tenant>.atlassian.net` set) against real Atlassian prints ≥1 issue row.
+  5. `reposix mount /tmp/reposix-conf-mnt --backend confluence --project <SPACE_KEY>` + `ls` + `cat *.md` returns real page frontmatter + body; `fusermount3 -u` succeeds; subsequent mount works again (re-entrant).
+  6. `bash scripts/demos/06-mount-real-confluence.sh` exits 0 when `ATLASSIAN_API_KEY` is set; skips cleanly (exit 0) when unset.
+  7. `docs/decisions/002-confluence-page-mapping.md` exists and documents the field mapping; `.env.example` reflects the renamed var.
+
+**Plans**: TBD (run `/gsd-plan-phase 11` to break down)

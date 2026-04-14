@@ -45,6 +45,10 @@ Progress: [██████████] 100% (Phases 1, 2, 3, S, 4 all done)
 
 ## Accumulated Context
 
+### Roadmap Evolution
+
+- 2026-04-13 (overnight session 3, ~20:55 PDT): **Phase 11 added** — Confluence Cloud read-only adapter (`reposix-confluence` crate). Targets v0.3.0. Depends on Phase 10's IssueBackend FUSE wiring. gsd-tools auto-allocated "Phase 9" due to ROADMAP.md missing formal entries for the previously-shipped 9-swarm and 10-FUSE-GitHub phases; manually renumbered to Phase 11 to keep numbering honest. Phase dir: `.planning/phases/11-confluence-adapter/`.
+
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table. Roadmap-level
