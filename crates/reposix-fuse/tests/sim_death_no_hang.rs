@@ -9,9 +9,9 @@
 //! 2. `Mount::open` the daemon against the mock's URI on a tempdir.
 //! 3. Wait until `read_dir(mount)` exposes the 3 entries (≤3s). This
 //!    pre-populates the inode registry AND the in-memory rendered-file
-//!    cache for `0001.md`.
+//!    cache for `issues/00000000001.md`.
 //! 4. Drop the `MockServer`, so the backend is dead.
-//! 5. Shell out `timeout 7 stat <mount>/0001.md`. The `timeout(1)` command
+//! 5. Shell out `timeout 7 stat <mount>/issues/00000000001.md`. The `timeout(1)` command
 //!    is kernel-enforced wall clock — a Rust thread with elapsed-checking
 //!    would not actually cut a kernel-blocking syscall short. Assert:
 //!    - elapsed <7s (proves no hang),
@@ -117,11 +117,13 @@ fn stat_returns_within_7s_after_backend_dies() {
     )
     .expect("mount open");
 
-    // Pre-cache: wait for readdir to expose 3 entries. This is what makes
-    // `0001.md` available for the post-death stat call.
+    // Pre-cache: wait for the bucket dir (`issues/`) to expose 3 entries.
+    // This is what makes `00000000001.md` available for the post-death
+    // stat call. Phase 13 moved issue files from `mount/<id>.md` to
+    // `mount/issues/<padded-id>.md`.
     let ready = wait_for(
         || {
-            std::fs::read_dir(&mount_path)
+            std::fs::read_dir(mount_path.join("issues"))
                 .map(|it| it.flatten().count() >= 3)
                 .unwrap_or(false)
         },
@@ -136,17 +138,17 @@ fn stat_returns_within_7s_after_backend_dies() {
     // binding in `let (mock_uri, _) = ...` dropped the server when
     // block_on returned. The backend is dead from this point on.
     //
-    // Independently bust the daemon's cached rendered body for 0001.md
-    // by re-reading it via a fresh process — we just need to prove stat
-    // survives once the TTL expires or an invalidation path fires.
-    // Sleep past the 1-second ATTR_TTL so the kernel will re-ask the
-    // daemon on the next stat.
+    // Independently bust the daemon's cached rendered body for
+    // `issues/00000000001.md` by re-reading it via a fresh process — we
+    // just need to prove stat survives once the TTL expires or an
+    // invalidation path fires. Sleep past the 1-second ATTR_TTL so the
+    // kernel will re-ask the daemon on the next stat.
     std::thread::sleep(Duration::from_millis(1_200));
 
     // Target a pre-cached file; the fuser dispatch may hit cache and
     // return fast, OR fall through to lookup/fetch which times out.
     // Either path must return in <7s.
-    let target = mount_path.join("0001.md");
+    let target = mount_path.join("issues/00000000001.md");
     let t0 = Instant::now();
     let output = std::process::Command::new("timeout")
         .arg("7")

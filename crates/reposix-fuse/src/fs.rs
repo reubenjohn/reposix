@@ -1,12 +1,38 @@
 //! FUSE [`Filesystem`] implementation — read path (Phase 3, Phase 10
-//! rewire) + write path (Phase S).
+//! rewire) + write path (Phase S) + Phase 13 nested layout (Wave C).
 //!
-//! Read-only callbacks: `init`, `getattr`, `lookup`, `readdir`, `read`.
-//! Write callbacks (Phase S): `setattr`, `write`, `flush`, `release`,
-//! `create`, `unlink`. Every other callback uses fuser's default
+//! Read-only callbacks: `init`, `getattr`, `lookup`, `readdir`, `read`,
+//! `readlink`. Write callbacks (Phase S): `setattr`, `write`, `flush`,
+//! `release`, `create`, `unlink`. Every other callback uses fuser's default
 //! (`ENOSYS`). When `MountConfig::read_only` is true (set at mount time),
 //! the filesystem is mounted with `MountOption::RO` so the kernel refuses
 //! writes at the VFS layer before they ever reach our callbacks.
+//!
+//! # Phase 13 layout (Wave C)
+//!
+//! The mount root now exposes three synthesized entries (`ls mount/`):
+//!
+//! - `.gitignore` — read-only file with the 7-byte content `/tree/\n`.
+//!   Inode [`GITIGNORE_INO`].
+//! - `<bucket>/` — the per-backend root collection directory, keyed from
+//!   `IssueBackend::root_collection_name()` (`"issues"` for sim + GitHub,
+//!   `"pages"` for Confluence). Inode [`BUCKET_DIR_INO`]. Contains the
+//!   real `<padded-id>.md` files (11-digit zero-padded).
+//! - `tree/` — synthesized read-only symlink overlay. Inode
+//!   [`TREE_ROOT_INO`]. Only emitted when
+//!   `backend.supports(BackendFeature::Hierarchy)` is `true` OR when
+//!   any loaded issue has `parent_id.is_some()`. Populated from
+//!   [`TreeSnapshot`] (Wave B2).
+//!
+//! The old flat root (`mount/<padded-id>.md`) is removed.
+//!
+//! # Inode-kind dispatch
+//!
+//! Each callback starts with an [`InodeKind::classify`] call that partitions
+//! the u64 inode space into fixed synthetic slots, dynamic real-file inodes,
+//! tree-dir inodes, and tree-symlink inodes — no map lookups needed to know
+//! which branch to take. See `crates/reposix-fuse/src/inode.rs` for the
+//! numeric layout.
 //!
 //! # Backend seam (Phase 10)
 //!
@@ -43,7 +69,7 @@
 use std::ffi::OsStr;
 use std::io;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 use std::time::{Duration, SystemTime};
 
 use dashmap::DashMap;
@@ -54,37 +80,31 @@ use fuser::{
 use reposix_core::http::{client, ClientOpts, HttpClient};
 use reposix_core::path::validate_issue_filename;
 use reposix_core::{
-    frontmatter, sanitize, Issue, IssueBackend, IssueId, IssueStatus, ServerMetadata, Tainted,
+    backend::BackendFeature, frontmatter, sanitize, Issue, IssueBackend, IssueId, IssueStatus,
+    ServerMetadata, Tainted,
 };
 use tokio::runtime::Runtime;
 use tracing::warn;
 
 use crate::fetch::{patch_issue, post_issue, FetchError};
-use crate::inode::InodeRegistry;
+use crate::inode::{
+    InodeRegistry, BUCKET_DIR_INO, FIRST_ISSUE_INODE, GITIGNORE_INO, ROOT_INO, TREE_ROOT_INO,
+};
+use crate::tree::{TreeSnapshot, TREE_DIR_INO_BASE, TREE_SYMLINK_INO_BASE};
+
+/// Exact bytes served for `mount/.gitignore`. Const; no runtime input.
+/// The trailing newline is mandatory per POSIX text-file convention and
+/// matches what tools like `git check-ignore` expect.
+const GITIGNORE_BYTES: &[u8] = b"/tree/\n";
 
 /// SG-07 ceilings for read-path backend calls. A dead backend MUST
 /// surface EIO to the kernel within these budgets so callbacks never
 /// wedge the VFS.
-///
-/// `READ_GET_TIMEOUT` (5s) covers the per-issue `get_issue` fetch — one
-/// HTTP round-trip on every backend.
-///
-/// `READ_LIST_TIMEOUT` (15s) covers the directory `list_issues` fetch.
-/// The simulator returns the whole project in one round-trip so 5s is
-/// plenty there, but `GithubReadOnlyBackend::list_issues` paginates up
-/// to 5 pages × 100 issues/page sequentially; on a cold connection that
-/// can comfortably eat the old 5s budget. 15s keeps the kernel
-/// non-blocked while letting the cold path finish.
 const READ_GET_TIMEOUT: Duration = Duration::from_secs(5);
 const READ_LIST_TIMEOUT: Duration = Duration::from_secs(15);
 
 /// Map a `reposix_core::Error` from an `IssueBackend` call into a
-/// [`FetchError`]. The fuse layer already has a `fetch_errno` mapper for
-/// [`FetchError`], so routing trait errors through that enum keeps the
-/// errno mapping in one place. `Error::Other("not found: ...")` — the
-/// trait's documented contract for 404 — becomes [`FetchError::NotFound`].
-/// `Error::InvalidOrigin` becomes [`FetchError::Origin`]. Everything else
-/// collapses to [`FetchError::Core`] (mapped to `EIO`).
+/// [`FetchError`].
 fn backend_err_to_fetch(e: reposix_core::Error) -> FetchError {
     match e {
         reposix_core::Error::InvalidOrigin(o) => FetchError::Origin(o),
@@ -95,7 +115,6 @@ fn backend_err_to_fetch(e: reposix_core::Error) -> FetchError {
     }
 }
 
-/// Wrap a `backend.list_issues` call in the SG-07 ceiling.
 async fn list_issues_with_timeout(
     backend: &Arc<dyn IssueBackend>,
     project: &str,
@@ -107,7 +126,6 @@ async fn list_issues_with_timeout(
     }
 }
 
-/// Wrap a `backend.get_issue` call in the SG-07 ceiling.
 async fn get_issue_with_timeout(
     backend: &Arc<dyn IssueBackend>,
     project: &str,
@@ -124,8 +142,50 @@ async fn get_issue_with_timeout(
 const ENTRY_TTL: Duration = Duration::from_secs(1);
 const ATTR_TTL: Duration = Duration::from_secs(1);
 
-/// Root inode ID.
-const ROOT_INO: u64 = 1;
+/// Render the canonical on-disk filename for an issue: 11-digit
+/// zero-padded decimal + `.md`. Matches the padding codified by Wave B2
+/// in `tree::symlink_target` so every symlink target finds the real file.
+fn issue_filename(id: IssueId) -> String {
+    format!("{:011}.md", id.0)
+}
+
+/// Partition of the u64 inode space. Every callback entry point runs
+/// [`InodeKind::classify`] first and branches on the result before any
+/// map lookup.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum InodeKind {
+    /// Mount root (inode 1).
+    Root,
+    /// The `<bucket>/` directory (inode 2).
+    Bucket,
+    /// The `tree/` overlay root (inode 3).
+    TreeRoot,
+    /// The synthesized `.gitignore` file (inode 4).
+    Gitignore,
+    /// A real issue file in the bucket — `FIRST_ISSUE_INODE..TREE_DIR_INO_BASE`.
+    RealFile,
+    /// An interior tree directory — `TREE_DIR_INO_BASE..TREE_SYMLINK_INO_BASE`.
+    TreeDir,
+    /// A tree leaf symlink or `_self.md` — `TREE_SYMLINK_INO_BASE..`.
+    TreeSymlink,
+    /// Unassigned — surface as ENOENT.
+    Unknown,
+}
+
+impl InodeKind {
+    fn classify(ino: u64) -> Self {
+        match ino {
+            ROOT_INO => Self::Root,
+            BUCKET_DIR_INO => Self::Bucket,
+            TREE_ROOT_INO => Self::TreeRoot,
+            GITIGNORE_INO => Self::Gitignore,
+            n if n >= TREE_SYMLINK_INO_BASE => Self::TreeSymlink,
+            n if n >= TREE_DIR_INO_BASE => Self::TreeDir,
+            n if n >= FIRST_ISSUE_INODE => Self::RealFile,
+            _ => Self::Unknown,
+        }
+    }
+}
 
 /// Rendered-and-cached file bytes keyed by inode.
 #[derive(Debug)]
@@ -135,74 +195,72 @@ struct CachedFile {
     /// `true` if this entry was populated by a backend `get_issue` call
     /// (full body guaranteed present). `false` if populated by `list_issues`
     /// — some backends (Confluence v2) return body-less stubs on the list
-    /// endpoint, so a cached-from-list entry must trigger a per-issue
-    /// `get_issue` on first read to fill in the body. GitHub's list endpoint
-    /// DOES return bodies, so `body_fetched: false` entries from its list
-    /// path still render correctly — the post-lookup re-fetch is redundant
-    /// there but cheap (one HTTP round-trip on first `cat`).
+    /// endpoint.
     body_fetched: bool,
 }
 
 /// FUSE filesystem backed by an [`IssueBackend`] trait object for the read
 /// path and by the simulator's REST shape (via [`fetch`]) for the write
-/// path. Read-only or read-write depending on the mount option; all write
-/// callbacks are live when mounted RW (the simulator's 409 handling is
-/// what we rely on for optimistic concurrency — see `release`).
+/// path.
 pub struct ReposixFs {
     /// Tokio runtime owned by the FS; used for `block_on` on callbacks.
     rt: Arc<Runtime>,
-    /// Read-path backend (Phase 10). All `readdir`/`lookup`/`read` calls
-    /// route through this trait object. Clonable via `Arc` so `fetch::*`
-    /// write-path calls remain independent.
+    /// Read-path backend (Phase 10).
     backend: Arc<dyn IssueBackend>,
-    /// Sealed allowlisted HTTP client (SG-01) used by the write path
-    /// (`release` PATCH + `create` POST). The read path uses `backend`.
+    /// Sealed allowlisted HTTP client (SG-01) used by the write path.
     http: Arc<HttpClient>,
-    /// Simulator origin used by the write path (e.g. `http://127.0.0.1:7878`).
-    /// Ignored by the read path.
+    /// Simulator origin used by the write path.
     origin: String,
     /// Project slug (sim) or `owner/repo` (github).
     project: String,
-    /// `X-Reposix-Agent` header value, computed once at construction
-    /// (SG-05 audit attribution). Attached to write-path PATCH/POST only.
+    /// `X-Reposix-Agent` header value (SG-05 audit attribution).
     agent: String,
-    /// Inode registry.
+    /// Inode registry (real issue files under the bucket).
     registry: InodeRegistry,
+    /// Per-backend bucket name (`"issues"` or `"pages"`). Set once at
+    /// construction from `backend.root_collection_name()`.
+    bucket: &'static str,
+    /// Whether the backend natively advertises hierarchy support
+    /// (`BackendFeature::Hierarchy`). Set once at construction. Even if
+    /// this is `false`, `tree/` may still emit when at least one issue
+    /// reports a `parent_id` — see `should_emit_tree`.
+    hierarchy_feature: bool,
+    /// Tree overlay snapshot. Rebuilt on each `readdir` refresh whenever
+    /// the issue list is re-fetched. Empty at mount open; filled in on
+    /// first `readdir` that hits either the root or the bucket.
+    tree: Arc<RwLock<TreeSnapshot>>,
     /// Rendered-file cache. Invalidated wholesale on the next `readdir`
     /// refresh (entries overwritten).
     cache: DashMap<u64, Arc<CachedFile>>,
-    /// Per-inode write buffers. `write` appends/overwrites bytes here and
-    /// `release` drains them and `PATCH`es upstream. For v0.1 we key by
-    /// inode rather than file handle — the kernel always supplies both but
-    /// keying by ino simplifies reopens in the typical agent flow (one
-    /// writer per file at a time).
+    /// Per-inode write buffers. See `release` for the drain/PATCH path.
     write_buffers: DashMap<u64, Vec<u8>>,
-    /// Monotonic file-handle allocator for `create`. Starts at 1; 0 is a
-    /// sentinel meaning "no fh assigned".
+    /// Monotonic file-handle allocator for `create`.
     next_fh: AtomicU64,
-    /// Root directory attributes — cached once at construction so `getattr`
-    /// and `readdir` don't recompute every time.
+    /// Root directory attributes — cached once at construction.
     root_attr: FileAttr,
+    /// Bucket directory attributes — same shape as `root_attr`, different inode.
+    bucket_attr: FileAttr,
+    /// `tree/` directory attributes.
+    tree_attr: FileAttr,
+    /// `.gitignore` file attributes (size is compile-time constant).
+    gitignore_attr: FileAttr,
 }
 
 impl std::fmt::Debug for ReposixFs {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // Skip the Arc/DashMap fields (not meaningfully printable); show
-        // the address-ish essentials.
         f.debug_struct("ReposixFs")
             .field("backend", &self.backend.name())
             .field("origin", &self.origin)
             .field("project", &self.project)
             .field("agent", &self.agent)
+            .field("bucket", &self.bucket)
+            .field("hierarchy_feature", &self.hierarchy_feature)
             .finish_non_exhaustive()
     }
 }
 
 impl ReposixFs {
     /// Build a new FUSE filesystem whose read path is served by `backend`.
-    /// `origin` is the simulator REST origin used by the write path
-    /// (PATCH/POST from `release`/`create`); pass any non-empty value when
-    /// mounting a read-only backend like `GithubReadOnlyBackend`.
     ///
     /// # Errors
     /// Returns any error constructing the Tokio runtime or the sealed
@@ -221,11 +279,13 @@ impl ReposixFs {
         );
         let http = Arc::new(client(ClientOpts::default())?);
         let agent = format!("reposix-fuse-{}", std::process::id());
+        let bucket = backend.root_collection_name();
+        let hierarchy_feature = backend.supports(BackendFeature::Hierarchy);
         let now = SystemTime::now();
         let uid = uid_safe();
         let gid = gid_safe();
-        let root_attr = FileAttr {
-            ino: INodeNo(ROOT_INO),
+        let dir_attr = |ino: u64, perm: u16| FileAttr {
+            ino: INodeNo(ino),
             size: 0,
             blocks: 0,
             atime: now,
@@ -233,8 +293,31 @@ impl ReposixFs {
             ctime: now,
             crtime: now,
             kind: FileType::Directory,
-            perm: 0o755,
+            perm,
             nlink: 2,
+            uid,
+            gid,
+            rdev: 0,
+            blksize: 4096,
+            flags: 0,
+        };
+        let root_attr = dir_attr(ROOT_INO, 0o755);
+        let bucket_attr = dir_attr(BUCKET_DIR_INO, 0o755);
+        // tree/ is read-only (0o555): symlinks inside are immutable derived
+        // views, and the kernel should refuse `mkdir`/`touch` at the VFS
+        // layer without reaching our (un-implemented) write callbacks.
+        let tree_attr = dir_attr(TREE_ROOT_INO, 0o555);
+        let gitignore_attr = FileAttr {
+            ino: INodeNo(GITIGNORE_INO),
+            size: GITIGNORE_BYTES.len() as u64,
+            blocks: 1,
+            atime: now,
+            mtime: now,
+            ctime: now,
+            crtime: now,
+            kind: FileType::RegularFile,
+            perm: 0o444,
+            nlink: 1,
             uid,
             gid,
             rdev: 0,
@@ -249,14 +332,36 @@ impl ReposixFs {
             project,
             agent,
             registry: InodeRegistry::new(),
+            bucket,
+            hierarchy_feature,
+            tree: Arc::new(RwLock::new(TreeSnapshot::default())),
             cache: DashMap::new(),
             write_buffers: DashMap::new(),
             next_fh: AtomicU64::new(1),
             root_attr,
+            bucket_attr,
+            tree_attr,
+            gitignore_attr,
         })
     }
 
-    #[allow(clippy::unused_self)] // kept as a method for symmetry with root_attr + future per-fs overrides
+    /// `true` if `tree/` should be surfaced at the mount root. Gated by
+    /// either the backend-feature bit or a non-empty tree snapshot.
+    fn should_emit_tree(&self) -> bool {
+        if self.hierarchy_feature {
+            return true;
+        }
+        // Non-hierarchy backends (sim/github) still get a `tree/` overlay
+        // if at least one loaded issue carries a `parent_id` — useful for
+        // future shims but harmless when absent.
+        self.tree
+            .read()
+            .map(|snap| !snap.is_empty())
+            .unwrap_or(false)
+    }
+
+    /// Return a `FileAttr` for a real issue file.
+    #[allow(clippy::unused_self)]
     fn file_attr(&self, ino: u64, issue: &Issue, size: u64) -> FileAttr {
         let atime: SystemTime = issue.updated_at.into();
         let mtime = atime;
@@ -280,11 +385,45 @@ impl ReposixFs {
         }
     }
 
-    /// Resolve a name in the root directory to an (inode, cache entry) pair.
-    /// Does the backend fetch + render on miss; populates cache.
+    /// Synthesize a `FileAttr` for a tree symlink. Size MUST equal the
+    /// target byte length — a 0-size symlink surfaces as a 0-byte file
+    /// in `ls -l` (restic bug, see `13-RESEARCH.md` §Pitfall 1).
+    #[allow(clippy::unused_self)]
+    fn symlink_attr(&self, ino: u64, target: &str) -> FileAttr {
+        let now = SystemTime::now();
+        FileAttr {
+            ino: INodeNo(ino),
+            size: target.len() as u64,
+            blocks: 0,
+            atime: now,
+            mtime: now,
+            ctime: now,
+            crtime: now,
+            kind: FileType::Symlink,
+            // Symlink perm bits are ignored by the kernel but 0o777 is the
+            // POSIX convention.
+            perm: 0o777,
+            nlink: 1,
+            uid: uid_safe(),
+            gid: gid_safe(),
+            rdev: 0,
+            blksize: 512,
+            flags: 0,
+        }
+    }
+
+    /// `FileAttr` for an interior tree dir. Depth doesn't matter for
+    /// attr purposes.
+    fn tree_dir_attr(&self, ino: u64) -> FileAttr {
+        let mut a = self.tree_attr;
+        a.ino = INodeNo(ino);
+        a
+    }
+
+    /// Resolve a name in the `<bucket>/` directory to an (inode, cache entry)
+    /// pair. Does the backend fetch + render on miss; populates cache.
     fn resolve_name(&self, name: &str) -> Result<(u64, Arc<CachedFile>), FetchError> {
         let id = validate_issue_filename(name).map_err(|e| FetchError::Core(e.to_string()))?;
-        // Cache hit AND body already fetched → return directly.
         if let Some(ino) = self.registry.lookup_id(id) {
             if let Some(c) = self.cache.get(&ino) {
                 if c.body_fetched {
@@ -292,7 +431,6 @@ impl ReposixFs {
                 }
             }
         }
-        // Miss, or list-populated stub needing body → fetch + render + cache.
         let issue = self
             .rt
             .block_on(get_issue_with_timeout(&self.backend, &self.project, id))?;
@@ -328,12 +466,50 @@ impl ReposixFs {
         self.cache.insert(ino, entry.clone());
         Ok(entry)
     }
+
+    /// Refresh the issue list from the backend, re-populate the inode
+    /// registry + rendered-body cache, and rebuild the tree snapshot.
+    fn refresh_issues(&self) -> Result<Vec<Issue>, FetchError> {
+        let issues = self
+            .rt
+            .block_on(list_issues_with_timeout(&self.backend, &self.project))?;
+
+        for issue in &issues {
+            let ino = self.registry.intern(issue.id);
+            let rendered = match frontmatter::render(issue) {
+                Ok(s) => s,
+                Err(e) => {
+                    warn!(error = %e, id = %issue.id, "frontmatter render failed");
+                    continue;
+                }
+            };
+            self.cache.insert(
+                ino,
+                Arc::new(CachedFile {
+                    issue: issue.clone(),
+                    rendered,
+                    body_fetched: false,
+                }),
+            );
+        }
+
+        // Rebuild tree snapshot. Always recompute; it's a pure transform
+        // over the list and the cost is O(n) where n = issue count.
+        let has_any_parent = issues.iter().any(|i| i.parent_id.is_some());
+        if self.hierarchy_feature || has_any_parent {
+            let snap = TreeSnapshot::build(self.bucket, &issues);
+            if let Ok(mut guard) = self.tree.write() {
+                *guard = snap;
+            }
+        } else if let Ok(mut guard) = self.tree.write() {
+            *guard = TreeSnapshot::default();
+        }
+
+        Ok(issues)
+    }
 }
 
 fn uid_safe() -> u32 {
-    // `libc::getuid` is `unsafe fn` in libc 0.2.x, so we route through
-    // rustix's safe wrapper instead. Keeps `#![forbid(unsafe_code)]`
-    // intact at the crate root.
     rustix::process::getuid().as_raw()
 }
 
@@ -341,11 +517,7 @@ fn gid_safe() -> u32 {
     rustix::process::getgid().as_raw()
 }
 
-/// Map a [`FetchError`] to a kernel errno. Timeouts and transport errors
-/// collapse to `EIO` so the kernel unblocks; `NotFound` is `ENOENT`;
-/// `Origin` is `EACCES` (allowlist rejection is permission-denied
-/// semantics for FS consumers). `Parse`/`Core`/`Conflict`/`BadRequest`
-/// are all `EIO`.
+/// Map a [`FetchError`] to a kernel errno.
 fn fetch_errno(e: &FetchError) -> i32 {
     match e {
         FetchError::NotFound => libc::ENOENT,
@@ -367,52 +539,113 @@ impl Filesystem for ReposixFs {
 
     fn getattr(&self, _req: &Request, ino: INodeNo, _fh: Option<FileHandle>, reply: ReplyAttr) {
         let ino_u = ino.0;
-        if ino_u == ROOT_INO {
-            reply.attr(&ATTR_TTL, &self.root_attr);
-            return;
-        }
-        // Cache-only path for getattr — never fetch here (research §6.7).
-        // If not cached, surface ENOENT; the kernel will re-lookup first.
-        if let Some(c) = self.cache.get(&ino_u) {
-            // Size reflects the write buffer if one is pending; otherwise
-            // the rendered cached bytes.
-            let size = if let Some(buf) = self.write_buffers.get(&ino_u) {
-                buf.len() as u64
-            } else {
-                c.rendered.len() as u64
-            };
-            let attr = self.file_attr(ino_u, &c.issue, size);
-            reply.attr(&ATTR_TTL, &attr);
-        } else {
-            reply.error(fuser::Errno::from_i32(libc::ENOENT));
+        match InodeKind::classify(ino_u) {
+            InodeKind::Root => reply.attr(&ATTR_TTL, &self.root_attr),
+            InodeKind::Bucket => reply.attr(&ATTR_TTL, &self.bucket_attr),
+            InodeKind::TreeRoot => reply.attr(&ATTR_TTL, &self.tree_attr),
+            InodeKind::Gitignore => reply.attr(&ATTR_TTL, &self.gitignore_attr),
+            InodeKind::RealFile => {
+                if let Some(c) = self.cache.get(&ino_u) {
+                    let size = if let Some(buf) = self.write_buffers.get(&ino_u) {
+                        buf.len() as u64
+                    } else {
+                        c.rendered.len() as u64
+                    };
+                    let attr = self.file_attr(ino_u, &c.issue, size);
+                    reply.attr(&ATTR_TTL, &attr);
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                }
+            }
+            InodeKind::TreeDir => {
+                let Ok(snap) = self.tree.read() else {
+                    reply.error(fuser::Errno::from_i32(libc::EIO));
+                    return;
+                };
+                if snap.resolve_dir(ino_u).is_some() {
+                    let attr = self.tree_dir_attr(ino_u);
+                    reply.attr(&ATTR_TTL, &attr);
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                }
+            }
+            InodeKind::TreeSymlink => {
+                let Ok(snap) = self.tree.read() else {
+                    reply.error(fuser::Errno::from_i32(libc::EIO));
+                    return;
+                };
+                if let Some(target) = snap.resolve_symlink(ino_u) {
+                    let attr = self.symlink_attr(ino_u, target);
+                    reply.attr(&ATTR_TTL, &attr);
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                }
+            }
+            InodeKind::Unknown => reply.error(fuser::Errno::from_i32(libc::ENOENT)),
         }
     }
 
     fn lookup(&self, _req: &Request, parent: INodeNo, name: &OsStr, reply: ReplyEntry) {
-        if parent.0 != ROOT_INO {
-            reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
-            return;
-        }
+        let parent_u = parent.0;
         let Some(name_str) = name.to_str() else {
             reply.error(fuser::Errno::from_i32(libc::EINVAL));
             return;
         };
-        // `validate_issue_filename` runs inside `resolve_name` but do an
-        // early reject so we don't waste an HTTP call on junk names.
-        if validate_issue_filename(name_str).is_err() {
-            reply.error(fuser::Errno::from_i32(libc::EINVAL));
-            return;
-        }
-        match self.resolve_name(name_str) {
-            Ok((ino, cached)) => {
-                let size = cached.rendered.len() as u64;
-                let attr = self.file_attr(ino, &cached.issue, size);
-                reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
+        match InodeKind::classify(parent_u) {
+            InodeKind::Root => {
+                if name_str == ".gitignore" {
+                    reply.entry(&ENTRY_TTL, &self.gitignore_attr, fuser::Generation(0));
+                    return;
+                }
+                if name_str == self.bucket {
+                    reply.entry(&ENTRY_TTL, &self.bucket_attr, fuser::Generation(0));
+                    return;
+                }
+                if name_str == "tree" && self.should_emit_tree() {
+                    reply.entry(&ENTRY_TTL, &self.tree_attr, fuser::Generation(0));
+                    return;
+                }
+                reply.error(fuser::Errno::from_i32(libc::ENOENT));
             }
-            Err(e) => {
-                warn!(error = %e, name = %name_str, "lookup failed");
-                reply.error(fuser::Errno::from_i32(fetch_errno(&e)));
+            InodeKind::Bucket => {
+                if validate_issue_filename(name_str).is_err() {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    return;
+                }
+                match self.resolve_name(name_str) {
+                    Ok((ino, cached)) => {
+                        let size = cached.rendered.len() as u64;
+                        let attr = self.file_attr(ino, &cached.issue, size);
+                        reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
+                    }
+                    Err(e) => {
+                        warn!(error = %e, name = %name_str, "lookup failed");
+                        reply.error(fuser::Errno::from_i32(fetch_errno(&e)));
+                    }
+                }
             }
+            InodeKind::TreeRoot => {
+                let Ok(snap) = self.tree.read() else {
+                    reply.error(fuser::Errno::from_i32(libc::EIO));
+                    return;
+                };
+                self.reply_tree_entry(&snap, snap.root_entries(), name_str, reply);
+            }
+            InodeKind::TreeDir => {
+                let Ok(snap) = self.tree.read() else {
+                    reply.error(fuser::Errno::from_i32(libc::EIO));
+                    return;
+                };
+                let Some(dir) = snap.resolve_dir(parent_u) else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    return;
+                };
+                self.reply_tree_entry(&snap, &dir.children, name_str, reply);
+            }
+            InodeKind::Gitignore | InodeKind::RealFile | InodeKind::TreeSymlink => {
+                reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
+            }
+            InodeKind::Unknown => reply.error(fuser::Errno::from_i32(libc::ENOENT)),
         }
     }
 
@@ -424,61 +657,92 @@ impl Filesystem for ReposixFs {
         offset: u64,
         mut reply: ReplyDirectory,
     ) {
-        if ino.0 != ROOT_INO {
-            reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
-            return;
-        }
-        // Refresh issue list. On any failure, reply EIO — no kernel hang.
-        let issues = match self
-            .rt
-            .block_on(list_issues_with_timeout(&self.backend, &self.project))
-        {
-            Ok(v) => v,
-            Err(e) => {
-                warn!(error = %e, "readdir fetch failed");
-                reply.error(fuser::Errno::from_i32(fetch_errno(&e)));
+        let ino_u = ino.0;
+        let entries: Vec<(u64, FileType, String)> = match InodeKind::classify(ino_u) {
+            InodeKind::Root => {
+                // Ensure at least one refresh has populated the tree before
+                // deciding whether to emit `tree/`. When the backend
+                // advertises Hierarchy the answer is already "yes" — but we
+                // still prime the cache so `lookup("tree")` resolves.
+                // Non-hierarchy backends without any parent_id return a
+                // no-op empty snapshot here.
+                if let Err(e) = self.refresh_issues() {
+                    warn!(error = %e, "root readdir refresh failed (non-fatal)");
+                }
+                let mut out: Vec<(u64, FileType, String)> = Vec::with_capacity(5);
+                out.push((ROOT_INO, FileType::Directory, ".".to_owned()));
+                out.push((ROOT_INO, FileType::Directory, "..".to_owned()));
+                out.push((
+                    GITIGNORE_INO,
+                    FileType::RegularFile,
+                    ".gitignore".to_owned(),
+                ));
+                out.push((BUCKET_DIR_INO, FileType::Directory, self.bucket.to_owned()));
+                if self.should_emit_tree() {
+                    out.push((TREE_ROOT_INO, FileType::Directory, "tree".to_owned()));
+                }
+                out
+            }
+            InodeKind::Bucket => {
+                let issues = match self.refresh_issues() {
+                    Ok(v) => v,
+                    Err(e) => {
+                        warn!(error = %e, "bucket readdir fetch failed");
+                        reply.error(fuser::Errno::from_i32(fetch_errno(&e)));
+                        return;
+                    }
+                };
+                let mut sorted = issues;
+                sorted.sort_by_key(|i| i.id.0);
+                let mut out: Vec<(u64, FileType, String)> = Vec::with_capacity(sorted.len() + 2);
+                out.push((BUCKET_DIR_INO, FileType::Directory, ".".to_owned()));
+                out.push((ROOT_INO, FileType::Directory, "..".to_owned()));
+                for issue in &sorted {
+                    let ino = self.registry.intern(issue.id);
+                    out.push((ino, FileType::RegularFile, issue_filename(issue.id)));
+                }
+                out
+            }
+            InodeKind::TreeRoot => {
+                let Ok(snap) = self.tree.read() else {
+                    reply.error(fuser::Errno::from_i32(libc::EIO));
+                    return;
+                };
+                let mut out: Vec<(u64, FileType, String)> =
+                    Vec::with_capacity(snap.root_entries().len() + 2);
+                out.push((TREE_ROOT_INO, FileType::Directory, ".".to_owned()));
+                out.push((ROOT_INO, FileType::Directory, "..".to_owned()));
+                collect_tree_entries(&snap, snap.root_entries(), &mut out);
+                out
+            }
+            InodeKind::TreeDir => {
+                let Ok(snap) = self.tree.read() else {
+                    reply.error(fuser::Errno::from_i32(libc::EIO));
+                    return;
+                };
+                let Some(dir) = snap.resolve_dir(ino_u) else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    return;
+                };
+                let mut out: Vec<(u64, FileType, String)> = Vec::with_capacity(dir.children.len() + 2);
+                out.push((dir.ino, FileType::Directory, ".".to_owned()));
+                // Parent inode — we don't track the reverse relation in the
+                // snapshot, so use `TREE_ROOT_INO` as a conservative default.
+                // The kernel follows explicit paths, not `..` entries, so
+                // this is cosmetic only (matters for `ls -la` display).
+                out.push((TREE_ROOT_INO, FileType::Directory, "..".to_owned()));
+                collect_tree_entries(&snap, &dir.children, &mut out);
+                out
+            }
+            InodeKind::Gitignore | InodeKind::RealFile | InodeKind::TreeSymlink => {
+                reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
+                return;
+            }
+            InodeKind::Unknown => {
+                reply.error(fuser::Errno::from_i32(libc::ENOENT));
                 return;
             }
         };
-
-        // Populate cache with rendered frontmatter for fast `stat` +
-        // `sim_death_no_hang`. `body_fetched: false` flags these entries as
-        // needing a per-issue `get_issue` on first `read`, because some
-        // backends (Confluence v2) return body-less stubs on the list
-        // endpoint — reading directly from this cache would yield empty
-        // bodies. The GitHub list endpoint DOES carry bodies so the re-fetch
-        // there is redundant but harmless (one round-trip on first `cat`).
-        for issue in &issues {
-            let ino = self.registry.intern(issue.id);
-            let rendered = match frontmatter::render(issue) {
-                Ok(s) => s,
-                Err(e) => {
-                    warn!(error = %e, id = %issue.id, "frontmatter render failed");
-                    continue;
-                }
-            };
-            self.cache.insert(
-                ino,
-                Arc::new(CachedFile {
-                    issue: issue.clone(),
-                    rendered,
-                    body_fetched: false,
-                }),
-            );
-        }
-
-        // Build the directory listing: `.`, `..`, then one entry per issue.
-        let mut entries: Vec<(u64, FileType, String)> = Vec::with_capacity(issues.len() + 2);
-        entries.push((ROOT_INO, FileType::Directory, ".".to_owned()));
-        entries.push((ROOT_INO, FileType::Directory, "..".to_owned()));
-        let mut sorted = issues;
-        sorted.sort_by_key(|i| i.id.0);
-        for issue in &sorted {
-            let ino = self.registry.intern(issue.id);
-            let name = format!("{:04}.md", issue.id.0);
-            entries.push((ino, FileType::RegularFile, name));
-        }
-
         let start = usize::try_from(offset).unwrap_or(usize::MAX);
         for (i, (ino, kind, name)) in entries.into_iter().enumerate().skip(start) {
             let next = (i + 1) as u64;
@@ -500,42 +764,78 @@ impl Filesystem for ReposixFs {
         _lock_owner: Option<fuser::LockOwner>,
         reply: ReplyData,
     ) {
-        if ino.0 == ROOT_INO {
-            reply.error(fuser::Errno::from_i32(libc::EISDIR));
-            return;
-        }
-        // Serve unflushed writes from the buffer if present (so the agent
-        // can `cat` its own in-progress edits).
-        if let Some(buf) = self.write_buffers.get(&ino.0) {
-            let bytes = buf.as_slice();
-            let start = usize::try_from(offset)
-                .unwrap_or(usize::MAX)
-                .min(bytes.len());
-            let end = start.saturating_add(size as usize).min(bytes.len());
-            reply.data(&bytes[start..end]);
-            return;
-        }
-        let cached = match self.resolve_ino(ino.0) {
-            Ok(c) => c,
-            Err(e) => {
-                warn!(error = %e, ino = ino.0, "read failed");
-                reply.error(fuser::Errno::from_i32(fetch_errno(&e)));
-                return;
+        let ino_u = ino.0;
+        match InodeKind::classify(ino_u) {
+            InodeKind::Root | InodeKind::Bucket | InodeKind::TreeRoot | InodeKind::TreeDir => {
+                reply.error(fuser::Errno::from_i32(libc::EISDIR));
             }
-        };
-        let bytes = cached.rendered.as_bytes();
-        let start = usize::try_from(offset)
-            .unwrap_or(usize::MAX)
-            .min(bytes.len());
-        let end = start.saturating_add(size as usize).min(bytes.len());
-        reply.data(&bytes[start..end]);
+            InodeKind::Gitignore => {
+                let start = usize::try_from(offset)
+                    .unwrap_or(usize::MAX)
+                    .min(GITIGNORE_BYTES.len());
+                let end = start
+                    .saturating_add(size as usize)
+                    .min(GITIGNORE_BYTES.len());
+                reply.data(&GITIGNORE_BYTES[start..end]);
+            }
+            InodeKind::TreeSymlink => {
+                // Symlinks are read via `readlink(2)`, not `read(2)`. If the
+                // kernel ever hands us a read() on one, it's almost
+                // certainly a misrouted lookup — surface EINVAL.
+                reply.error(fuser::Errno::from_i32(libc::EINVAL));
+            }
+            InodeKind::RealFile => {
+                if let Some(buf) = self.write_buffers.get(&ino_u) {
+                    let bytes = buf.as_slice();
+                    let start = usize::try_from(offset)
+                        .unwrap_or(usize::MAX)
+                        .min(bytes.len());
+                    let end = start.saturating_add(size as usize).min(bytes.len());
+                    reply.data(&bytes[start..end]);
+                    return;
+                }
+                let cached = match self.resolve_ino(ino_u) {
+                    Ok(c) => c,
+                    Err(e) => {
+                        warn!(error = %e, ino = ino_u, "read failed");
+                        reply.error(fuser::Errno::from_i32(fetch_errno(&e)));
+                        return;
+                    }
+                };
+                let bytes = cached.rendered.as_bytes();
+                let start = usize::try_from(offset)
+                    .unwrap_or(usize::MAX)
+                    .min(bytes.len());
+                let end = start.saturating_add(size as usize).min(bytes.len());
+                reply.data(&bytes[start..end]);
+            }
+            InodeKind::Unknown => reply.error(fuser::Errno::from_i32(libc::ENOENT)),
+        }
+    }
+
+    fn readlink(&self, _req: &Request, ino: INodeNo, reply: ReplyData) {
+        let ino_u = ino.0;
+        match InodeKind::classify(ino_u) {
+            InodeKind::TreeSymlink => {
+                let Ok(snap) = self.tree.read() else {
+                    reply.error(fuser::Errno::from_i32(libc::EIO));
+                    return;
+                };
+                match snap.resolve_symlink(ino_u) {
+                    Some(target) => reply.data(target.as_bytes()),
+                    None => reply.error(fuser::Errno::from_i32(libc::ENOENT)),
+                }
+            }
+            _ => reply.error(fuser::Errno::from_i32(libc::EINVAL)),
+        }
     }
 
     // ------------------------------------------------------------------ //
-    // Write path (Phase S).                                              //
+    // Write path (Phase S). Bucket-scoped — only real-file inodes accept  //
+    // writes; everything else rejects with EROFS or EISDIR/EINVAL.         //
     // ------------------------------------------------------------------ //
 
-    #[allow(clippy::too_many_arguments)] // fuser trait signature
+    #[allow(clippy::too_many_arguments)]
     fn setattr(
         &self,
         _req: &Request,
@@ -555,41 +855,49 @@ impl Filesystem for ReposixFs {
         reply: ReplyAttr,
     ) {
         let ino_u = ino.0;
-        if ino_u == ROOT_INO {
-            reply.attr(&ATTR_TTL, &self.root_attr);
-            return;
-        }
-        // `echo >` / `open(O_TRUNC)` calls setattr(size=0) before write.
-        // We honor that by clearing the buffer so subsequent writes start
-        // clean.
-        if let Some(0) = size {
-            self.write_buffers.insert(ino_u, Vec::new());
-        } else if let Some(new_size) = size {
-            // Non-zero truncate: resize the buffer (seed from cache if needed).
-            let mut entry = self.write_buffers.entry(ino_u).or_insert_with(|| {
-                self.cache
-                    .get(&ino_u)
-                    .map(|c| c.rendered.as_bytes().to_vec())
-                    .unwrap_or_default()
-            });
-            let target = usize::try_from(new_size).unwrap_or(usize::MAX);
-            entry.resize(target, 0);
-        }
-        // Reply with the current attr. Size comes from the buffer when it
-        // exists (post-truncate) so the kernel's expectation matches.
-        if let Some(c) = self.cache.get(&ino_u) {
-            let cur_size = self
-                .write_buffers
-                .get(&ino_u)
-                .map_or(c.rendered.len() as u64, |b| b.len() as u64);
-            let attr = self.file_attr(ino_u, &c.issue, cur_size);
-            reply.attr(&ATTR_TTL, &attr);
-        } else {
-            reply.error(fuser::Errno::from_i32(libc::ENOENT));
+        match InodeKind::classify(ino_u) {
+            InodeKind::Root => reply.attr(&ATTR_TTL, &self.root_attr),
+            InodeKind::Bucket => reply.attr(&ATTR_TTL, &self.bucket_attr),
+            InodeKind::TreeRoot => reply.attr(&ATTR_TTL, &self.tree_attr),
+            InodeKind::Gitignore => reply.attr(&ATTR_TTL, &self.gitignore_attr),
+            InodeKind::TreeDir => {
+                let attr = self.tree_dir_attr(ino_u);
+                reply.attr(&ATTR_TTL, &attr);
+            }
+            InodeKind::TreeSymlink => {
+                // Symlinks don't support setattr. Per POSIX kernel also
+                // rarely routes here (lchmod etc.), but reject defensively.
+                reply.error(fuser::Errno::from_i32(libc::EPERM));
+            }
+            InodeKind::RealFile => {
+                if let Some(0) = size {
+                    self.write_buffers.insert(ino_u, Vec::new());
+                } else if let Some(new_size) = size {
+                    let mut entry = self.write_buffers.entry(ino_u).or_insert_with(|| {
+                        self.cache
+                            .get(&ino_u)
+                            .map(|c| c.rendered.as_bytes().to_vec())
+                            .unwrap_or_default()
+                    });
+                    let target = usize::try_from(new_size).unwrap_or(usize::MAX);
+                    entry.resize(target, 0);
+                }
+                if let Some(c) = self.cache.get(&ino_u) {
+                    let cur_size = self
+                        .write_buffers
+                        .get(&ino_u)
+                        .map_or(c.rendered.len() as u64, |b| b.len() as u64);
+                    let attr = self.file_attr(ino_u, &c.issue, cur_size);
+                    reply.attr(&ATTR_TTL, &attr);
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                }
+            }
+            InodeKind::Unknown => reply.error(fuser::Errno::from_i32(libc::ENOENT)),
         }
     }
 
-    #[allow(clippy::too_many_arguments)] // fuser trait signature
+    #[allow(clippy::too_many_arguments)]
     fn write(
         &self,
         _req: &Request,
@@ -603,26 +911,31 @@ impl Filesystem for ReposixFs {
         reply: ReplyWrite,
     ) {
         let ino_u = ino.0;
-        if ino_u == ROOT_INO {
-            reply.error(fuser::Errno::from_i32(libc::EISDIR));
-            return;
+        match InodeKind::classify(ino_u) {
+            InodeKind::Root | InodeKind::Bucket | InodeKind::TreeRoot | InodeKind::TreeDir => {
+                reply.error(fuser::Errno::from_i32(libc::EISDIR));
+            }
+            InodeKind::Gitignore | InodeKind::TreeSymlink => {
+                reply.error(fuser::Errno::from_i32(libc::EROFS));
+            }
+            InodeKind::RealFile => {
+                let offset_usize = usize::try_from(offset).unwrap_or(usize::MAX);
+                let end = offset_usize.saturating_add(data.len());
+                let mut entry = self.write_buffers.entry(ino_u).or_insert_with(|| {
+                    self.cache
+                        .get(&ino_u)
+                        .map(|c| c.rendered.as_bytes().to_vec())
+                        .unwrap_or_default()
+                });
+                if entry.len() < end {
+                    entry.resize(end, 0);
+                }
+                entry[offset_usize..end].copy_from_slice(data);
+                let written = u32::try_from(data.len()).unwrap_or(u32::MAX);
+                reply.written(written);
+            }
+            InodeKind::Unknown => reply.error(fuser::Errno::from_i32(libc::ENOENT)),
         }
-        let offset_usize = usize::try_from(offset).unwrap_or(usize::MAX);
-        let end = offset_usize.saturating_add(data.len());
-        let mut entry = self.write_buffers.entry(ino_u).or_insert_with(|| {
-            // Seed from cached rendered bytes so `echo >>` (append) or
-            // sed-style partial edits see the right prefix.
-            self.cache
-                .get(&ino_u)
-                .map(|c| c.rendered.as_bytes().to_vec())
-                .unwrap_or_default()
-        });
-        if entry.len() < end {
-            entry.resize(end, 0);
-        }
-        entry[offset_usize..end].copy_from_slice(data);
-        let written = u32::try_from(data.len()).unwrap_or(u32::MAX);
-        reply.written(written);
     }
 
     fn flush(
@@ -633,8 +946,6 @@ impl Filesystem for ReposixFs {
         _lock_owner: fuser::LockOwner,
         reply: ReplyEmpty,
     ) {
-        // We push on release, not flush. flush can fire multiple times
-        // (e.g. on dup/dup2) and we'd PATCH repeatedly if we flushed here.
         reply.ok();
     }
 
@@ -649,7 +960,12 @@ impl Filesystem for ReposixFs {
         reply: ReplyEmpty,
     ) {
         let ino_u = ino.0;
-        // Atomically take the buffer if one exists.
+        // Only real files have a write buffer worth draining; everything
+        // else is either a dir, a synthetic file, or a symlink.
+        if !matches!(InodeKind::classify(ino_u), InodeKind::RealFile) {
+            reply.ok();
+            return;
+        }
         let Some((_, bytes)) = self.write_buffers.remove(&ino_u) else {
             reply.ok();
             return;
@@ -666,15 +982,11 @@ impl Filesystem for ReposixFs {
                 return;
             }
         };
-        // Look up cached Issue (current version).
         let Some(cached) = self.cache.get(&ino_u).map(|c| c.clone()) else {
-            // New file (create() path) not yet in cache — Task 3 handles
-            // this via POST; for the MIN-VIABLE we EIO out.
             warn!(ino = ino_u, "release: no cached issue; cannot PATCH");
             reply.error(fuser::Errno::from_i32(libc::EIO));
             return;
         };
-        // Parse the new bytes as frontmatter+body.
         let parsed = match frontmatter::parse(&text) {
             Ok(i) => i,
             Err(e) => {
@@ -683,7 +995,6 @@ impl Filesystem for ReposixFs {
                 return;
             }
         };
-        // Sanitize with server metadata from the cached issue.
         let meta = ServerMetadata {
             id: cached.issue.id,
             created_at: cached.issue.created_at,
@@ -704,8 +1015,6 @@ impl Filesystem for ReposixFs {
         ));
         match result {
             Ok(updated) => {
-                // Update cache with new rendered bytes. Write-path responses
-                // carry full body, so `body_fetched: true`.
                 if let Ok(rendered) = frontmatter::render(&updated) {
                     self.cache.insert(
                         ino_u,
@@ -742,8 +1051,10 @@ impl Filesystem for ReposixFs {
         _flags: i32,
         reply: ReplyCreate,
     ) {
-        if parent.0 != ROOT_INO {
-            reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
+        // Only the bucket directory accepts new files. Root, tree/, tree
+        // dirs are synthesized and read-only.
+        if !matches!(InodeKind::classify(parent.0), InodeKind::Bucket) {
+            reply.error(fuser::Errno::from_i32(libc::EROFS));
             return;
         }
         let Some(name_str) = name.to_str() else {
@@ -754,9 +1065,6 @@ impl Filesystem for ReposixFs {
             reply.error(fuser::Errno::from_i32(libc::EINVAL));
             return;
         };
-        // Minimal issue for POST — title derived from the requested id,
-        // empty body. The user will `write` real content next (which
-        // releases → PATCH).
         let now = chrono::Utc::now();
         let placeholder = Issue {
             id,
@@ -822,8 +1130,8 @@ impl Filesystem for ReposixFs {
     }
 
     fn unlink(&self, _req: &Request, parent: INodeNo, name: &OsStr, reply: ReplyEmpty) {
-        if parent.0 != ROOT_INO {
-            reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
+        if !matches!(InodeKind::classify(parent.0), InodeKind::Bucket) {
+            reply.error(fuser::Errno::from_i32(libc::EROFS));
             return;
         }
         let Some(name_str) = name.to_str() else {
@@ -834,16 +1142,69 @@ impl Filesystem for ReposixFs {
             reply.error(fuser::Errno::from_i32(libc::EINVAL));
             return;
         };
-        // Per CONTEXT.md: unlink does NOT call DELETE. The git-remote
-        // helper is responsible for materializing deletes on `git push`,
-        // so the bulk-delete cap (SG-02) can fire there. Locally we only
-        // evict from the rendered cache (keeping the registry mapping
-        // stable so a subsequent `create` with the same id stays
-        // consistent).
         if let Some(ino) = self.registry.lookup_id(id) {
             self.cache.remove(&ino);
             self.write_buffers.remove(&ino);
         }
         reply.ok();
+    }
+}
+
+/// Shared helper used by `lookup` for `TreeRoot` and `TreeDir` parents:
+/// search `entries` for `name`, build the appropriate `FileAttr`, reply.
+impl ReposixFs {
+    fn reply_tree_entry(
+        &self,
+        snap: &TreeSnapshot,
+        entries: &[crate::tree::TreeEntry],
+        name: &str,
+        reply: ReplyEntry,
+    ) {
+        for entry in entries {
+            match entry {
+                crate::tree::TreeEntry::Dir(dir_ino) => {
+                    if let Some(dir) = snap.resolve_dir(*dir_ino) {
+                        if dir.name == name {
+                            let attr = self.tree_dir_attr(*dir_ino);
+                            reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
+                            return;
+                        }
+                    }
+                }
+                crate::tree::TreeEntry::Symlink {
+                    ino,
+                    name: n,
+                    target,
+                } => {
+                    if n == name {
+                        let attr = self.symlink_attr(*ino, target);
+                        reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
+                        return;
+                    }
+                }
+            }
+        }
+        reply.error(fuser::Errno::from_i32(libc::ENOENT));
+    }
+}
+
+/// Flatten a slice of `TreeEntry` into the `(ino, FileType, name)` triples
+/// that `ReplyDirectory::add` consumes. Used by `readdir`.
+fn collect_tree_entries(
+    snap: &TreeSnapshot,
+    entries: &[crate::tree::TreeEntry],
+    out: &mut Vec<(u64, FileType, String)>,
+) {
+    for entry in entries {
+        match entry {
+            crate::tree::TreeEntry::Dir(dir_ino) => {
+                if let Some(dir) = snap.resolve_dir(*dir_ino) {
+                    out.push((dir.ino, FileType::Directory, dir.name.clone()));
+                }
+            }
+            crate::tree::TreeEntry::Symlink { ino, name, .. } => {
+                out.push((*ino, FileType::Symlink, name.clone()));
+            }
+        }
     }
 }

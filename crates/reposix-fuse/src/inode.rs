@@ -206,6 +206,17 @@ mod tests {
     }
 
     #[test]
+    #[allow(
+        clippy::assertions_on_constants,
+        reason = "every assertion below is a CONSTANT relationship between named \
+                  u64 consts defined across two sibling modules (inode::* and \
+                  tree::*). The whole point of the test is to fail the build if \
+                  a future refactor ever drifts one of them — a const_eval_select \
+                  inside a test body is the simplest, most readable form of that \
+                  check, and the lint's suggested `const { assert!(..) }` block \
+                  would require hoisting all six comparisons out of the test \
+                  discovery path."
+    )]
     fn fixed_inodes_are_disjoint_from_dynamic_ranges() {
         // Fixed synthetic inodes at the mount root live below the
         // dynamic issue range, which in turn lives below the tree-dir and

@@ -1,6 +1,10 @@
-//! Integration test for the read-only FUSE mount: `ls` lists issues as
-//! `0001.md 0002.md 0003.md`, `cat 0001.md` returns the rendered
-//! frontmatter+body.
+//! Integration test for the read-only FUSE mount under the Phase-13
+//! nested layout: `ls mount/` shows `.gitignore` + `issues/` (no `tree/`
+//! because `SimBackend` doesn't advertise `BackendFeature::Hierarchy`
+//! and the fixture issues have no `parent_id`), `ls mount/issues/`
+//! lists the 3 seeded issues as `00000000001.md` / 002 / 003 (11-digit
+//! padding), and `cat mount/issues/00000000001.md` returns the rendered
+//! frontmatter + body. `mount/.gitignore` returns exactly `/tree/\n`.
 //!
 //! Backend is a wiremock `MockServer` seeded with 3 synthetic issues,
 //! wrapped in a `SimBackend` to drive the Phase-10 IssueBackend seam;
@@ -109,40 +113,74 @@ async fn mount_lists_and_reads_issues() {
     .expect("join spawn_blocking")
     .expect("mount opened");
 
-    // Wait for readdir to see 3 entries (kernel may need a beat to route
-    // the first stat — up to 3s is generous).
+    // Wait for readdir to see the new root layout (.gitignore + issues/).
+    // The mount is usable as soon as `.gitignore` is visible; that's a
+    // synthesized entry served without any backend round-trip.
     let ready = {
         let mp = mount_path.clone();
         wait_for_ready(
             move || {
                 std::fs::read_dir(&mp)
-                    .map(|it| it.flatten().count() >= 3)
+                    .map(|it| {
+                        let names: Vec<_> = it
+                            .flatten()
+                            .map(|e| e.file_name().to_string_lossy().into_owned())
+                            .collect();
+                        names.iter().any(|n| n == "issues")
+                            && names.iter().any(|n| n == ".gitignore")
+                    })
                     .unwrap_or(false)
             },
             Duration::from_secs(3),
         )
     };
-    assert!(ready, "mount did not expose 3 entries within 3s");
+    assert!(ready, "mount did not expose new root layout within 3s");
 
-    // Assertion 1: ls shows 0001.md, 0002.md, 0003.md.
-    let mut names: Vec<String> = std::fs::read_dir(&mount_path)
-        .expect("read_dir")
+    // Assertion 1: `ls mount/` shows `.gitignore` + `issues/` — and NOT
+    // `tree/` (SimBackend doesn't advertise Hierarchy, fixture issues
+    // have no parent_id).
+    let mut root_names: Vec<String> = std::fs::read_dir(&mount_path)
+        .expect("read_dir mount")
         .flatten()
         .map(|e| e.file_name().to_string_lossy().into_owned())
         .collect();
-    names.sort();
+    root_names.sort();
     assert_eq!(
-        names,
-        vec![
-            "0001.md".to_owned(),
-            "0002.md".to_owned(),
-            "0003.md".to_owned()
-        ],
-        "mount listing mismatch"
+        root_names,
+        vec![".gitignore".to_owned(), "issues".to_owned()],
+        "mount root listing mismatch; expected no `tree/` under sim backend"
     );
 
-    // Assertion 2: cat 0001.md starts with "---\n" and contains "id: 1".
-    let one = std::fs::read_to_string(mount_path.join("0001.md")).expect("read 0001.md");
+    // Assertion 2: `cat mount/.gitignore` returns exactly `/tree/\n` (7 bytes).
+    let gi = std::fs::read(mount_path.join(".gitignore")).expect("read .gitignore");
+    assert_eq!(
+        gi,
+        b"/tree/\n",
+        "gitignore should be exactly /tree/\\n (7 bytes); got {gi:?}"
+    );
+
+    // Assertion 3: `ls mount/issues/` shows the 3 seeded issues as
+    // 11-digit-padded `<padded-id>.md` entries.
+    let mut issue_names: Vec<String> = std::fs::read_dir(mount_path.join("issues"))
+        .expect("read_dir issues/")
+        .flatten()
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .collect();
+    issue_names.sort();
+    assert_eq!(
+        issue_names,
+        vec![
+            "00000000001.md".to_owned(),
+            "00000000002.md".to_owned(),
+            "00000000003.md".to_owned(),
+        ],
+        "issues/ listing mismatch"
+    );
+
+    // Assertion 4: `cat mount/issues/00000000001.md` starts with "---\n"
+    // and carries frontmatter + body.
+    let one = std::fs::read_to_string(mount_path.join("issues/00000000001.md"))
+        .expect("read issues/00000000001.md");
     assert!(
         one.starts_with("---\n"),
         "missing frontmatter fence: {one:?}"
