@@ -6,12 +6,14 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
-The "one place for the sim REST shape" cut. Phase 14 (Session-5 Cluster B,
-scope-tag `v0.4.1`) lifts the FUSE daemon and the `git-remote-reposix` helper
-off the simulator's hardcoded REST shape and onto `IssueBackend` trait
-dispatch. Closes v0.3-era HANDOFF "Known open gaps" items 7 and 8. No new
-features; no CHANGELOG `### Added`. External CLI syntax, FUSE mount semantics,
-and remote-helper URL syntax are all unchanged.
+## [v0.4.1] — 2026-04-14
+
+The "one place for the sim REST shape" cut. Phase 14 (Session-5 Cluster B)
+lifts the FUSE daemon and the `git-remote-reposix` helper off the simulator's
+hardcoded REST shape and onto `IssueBackend` trait dispatch. Closes v0.3-era
+HANDOFF "Known open gaps" items 7 and 8. No new features; no CHANGELOG
+`### Added`. External CLI syntax, FUSE mount semantics, and remote-helper URL
+syntax are all unchanged.
 
 ### Changed
 
