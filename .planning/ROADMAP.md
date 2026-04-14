@@ -389,3 +389,25 @@ Plans:
 - [ ] 11-D-demos.md — Tier 3B `parity-confluence.sh` + Tier 5 `06-mount-real-confluence.sh`; both skip cleanly with no env. Wave 1.
 - [ ] 11-E-docs-and-env.md — ADR-002, `docs/reference/confluence.md`, README + architecture + demos-index + CHANGELOG `[Unreleased]` + `.env.example` rename. Wave 2.
 - [ ] 11-F-release.md — `MORNING-BRIEF-v0.3.md`, CHANGELOG promotion to `[v0.3.0]`, `scripts/tag-v0.3.0.sh` (gated by human-verify checkpoint). Wave 3.
+
+## Phase 12: Connector protocol — 3rd-party plugin ABI (v0.4 target)
+**Goal**: Make new backends addable **without changes to the reposix repo**. Three models ranked by ROI:
+
+1. **Short-term, already unlocked (no new code):** the `IssueBackend` trait in `reposix-core` is a published public trait. A 3rd party publishes `reposix-adapter-<name>` on crates.io; users add it to their own fork's `Cargo.toml` + a one-line `ListBackend::Custom` dispatch. Phase 11-E ships `docs/connectors/guide.md` explaining this path with GitHub + Confluence as worked examples.
+2. **Medium-term (this phase):** subprocess / JSON-RPC plugin ABI. Connectors are standalone binaries on `PATH` named `reposix-connector-<name>` (convention mirrors git-remote-helpers, which reposix already uses for `git-remote-reposix`). reposix daemon spawns and speaks a documented JSON-RPC protocol over stdio. Gives: polyglot (Python, Go, Rust), no-recompile add/remove, stable ABI, easy sandboxing per plugin, and natural SG-01 re-enforcement (the daemon proxies outbound HTTP on the plugin's behalf). **This phase ships the protocol spec + reference impl + migration of `reposix-github` behind it as a canary.**
+3. **Long-term deferred (v0.5+):** WASM plugin model — wasmtime-based, strong sandbox, but needs HTTP-in-WASM plumbing that does not exist yet.
+
+Phase 12 scope: model (2) above. Explicit non-goals: (1) already shipped via docs; (3) deferred.
+
+**Added**: 2026-04-13 ~21:35 PDT (session 3, user-requested forward-look while closing Phase 11 plans)
+**Depends on**: Phase 11 (proves the second adapter is on-pattern with the first)
+**Status**: Skeleton only. Not executed tonight. Full /gsd-plan-phase 12 + discussion required before execution.
+
+**Success Criteria** (draft — to be finalized in /gsd-plan-phase 12):
+  1. A `docs/decisions/003-connector-protocol.md` ADR documents the JSON-RPC protocol (methods, message framing, error shape, security model including SG-01 delegation).
+  2. A reference connector binary `reposix-connector-github` (moved from the current in-tree `reposix-github` crate, or a new standalone binary that wraps it) authenticates + lists + reads via the protocol.
+  3. `reposix list --backend $PROTOCOL/name` dispatches to `reposix-connector-<name>` on PATH, matches the `IssueBackend` shape the in-tree adapters produce (contract test parameterized over protocol-backed adapter too).
+  4. A 30-minute "write your own connector" tutorial under `docs/connectors/` walks a Python user through building `reposix-connector-example` with just `stdin`/`stdout`.
+  5. The existing `reposix list --backend github` (compiled-in path) still works — this is additive, not a replacement.
+
+**Plans**: TBD (run `/gsd-plan-phase 12` next milestone)
