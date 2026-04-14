@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: target)
 status: complete
-stopped_at: Completed 13-E-green-gauntlet.md — Phase 13 green; ready for v0.4.0 tag push.
-last_updated: "2026-04-14T11:05:00.000Z"
-last_activity: "2026-04-14 04:00 PDT — Phase 13 Wave E green gauntlet + live Confluence verify complete."
+stopped_at: Completed 14-D-docs-changelog.md — Phase 14 SHIPPED; v0.4.1 ready to tag at user gate.
+last_updated: "2026-04-14T16:45:00.000Z"
+last_activity: "2026-04-14 09:45 PDT — Phase 14 Wave D docs sweep + CHANGELOG [Unreleased] + SUMMARY + STATE cursor complete."
 progress:
   total_phases: 9
   completed_phases: 0
   total_plans: 0
-  completed_plans: 17
+  completed_plans: 18
   percent: 100
 ---
 
@@ -22,6 +22,7 @@ progress:
 
 - Phase 13 added (2026-04-14, session 4): Nested mount layout — pages/ + tree/ symlinks for Confluence parentId hierarchy. Implements OP-1 from HANDOFF.md. BREAKING: flat `<id>.md` at mount root moves to per-backend collection bucket (`pages/` for Confluence, `issues/` for sim+GitHub).
 - Phase 14 added (2026-04-14, session 5): Decouple sim REST shape from FUSE write path and git-remote helper — route through `IssueBackend` trait. Closes v0.3-era HANDOFF items 7+8. Cluster B per session-5 brief. Scope v0.4.1 (bugfix/refactor). Rationale: `.planning/SESSION-5-RATIONALE.md`.
+- Phase 14 SHIPPED (2026-04-14, session 5, ~09:45 PDT): 4 waves landed on `main` (A=`7510ed1` sim 409-body contract pins · B1=`bdad951`+`cd50ec5` FUSE write through IssueBackend + SG-03 re-home · B2=`938b8de` git-remote helper through IssueBackend · C=`4301d0d` verification). Wave D (docs sweep + CHANGELOG + SUMMARY) complete. HANDOFF.md "Known open gaps" items 7 and 8 closed. `crates/reposix-fuse/src/fetch.rs` + `crates/reposix-fuse/tests/write.rs` + `crates/reposix-remote/src/client.rs` deleted (~830 lines). R1 (assignee-clear-on-null) and R2 (`reposix-core-simbackend-<pid>-{fuse,remote}` attribution) documented as accepted behaviour changes in CHANGELOG `[Unreleased]` `### Changed`. 274 workspace tests green (+2 over LD-14-08 floor), clippy `-D warnings` clean, green-gauntlet `--full` 6/6, smoke 4/4, live demo 01 round-trip green. **Next post-phase gate: user-driven v0.4.1 tag push** via a future `scripts/tag-v0.4.1.sh` (not written yet — deliberate, pending CHANGELOG review).
 
 ## Project Reference
 
@@ -34,16 +35,26 @@ Demo verified end-to-end on dev host 04:59 PDT. CI green.
 
 ## Current Position
 
-Phase: 4 of 4 (+S STRETCH, also shipped) — **Phase 4 COMPLETE**.
-Plan: 2/2 (demo script+recording + README polish — see
-`.planning/phases/04-demo-recording-readme/04-DONE.md`).
-Cursor: **Project complete. v0.1 shipped.**
-Status: All 5 Phase 4 SCs verified empirically. `bash scripts/demo.sh` runs
-end-to-end in <120s on the dev host; the recording (`docs/demo.typescript`)
-captures three guardrails firing on camera (SG-01 allowlist refusal,
-SG-02 bulk-delete cap, SG-03 frontmatter strip). CI green on the final
-README commit. 133 workspace tests pass.
-Last activity: 2026-04-13 05:00 PDT — Phase 4 close-out.
+Phase: **14 SHIPPED** (latest on the v0.4 track; session 5 Cluster B).
+Plan: 4 waves complete (A/B1/B2/C/D — see
+`.planning/phases/14-decouple-sim-rest-shape-from-fuse-write-path-and-git-remote-/14-SUMMARY.md`).
+Cursor: **Phase 14 complete; v0.4.1 ready to tag at user gate.** Next
+post-phase human step is to review CHANGELOG `[Unreleased]`, promote it
+to `[v0.4.1] — 2026-04-14`, clone `scripts/tag-v0.4.0.sh` to
+`scripts/tag-v0.4.1.sh`, and run it. Deliberately deferred out of this
+phase per session-5 brief.
+Status: SC-14-01 through SC-14-10 all PASS (SC-14-10 completed in Wave D).
+274 workspace tests pass (+2 over LD-14-08 floor of 272), clippy
+`-D warnings` clean, `cargo fmt --all --check` clean, `mkdocs build --strict`
+clean, green-gauntlet `--full` 6/6 gates green, smoke demos 4/4, live
+demo 01 (FUSE edit → PATCH → git clone → commit → push → PATCH) exits 0
+with expected sim-side state. Audit attribution spot-check confirms R2
+`reposix-core-simbackend-<pid>-{fuse,remote}` lands on both FUSE and
+remote-helper writes. HANDOFF.md "Known open gaps" items 7 and 8 closed.
+Last activity: 2026-04-14 09:45 PDT — Phase 14 Wave D close-out.
+Historical note — previous `Current Position` entries (Phase 4
+close-out at 2026-04-13 05:00 PDT, v0.1 ship) are preserved in
+`.planning/phases/04-demo-recording-readme/04-DONE.md`.
 
 Progress: [██████████] 100% (Phases 1, 2, 3, S, 4 all done)
 
@@ -125,17 +136,31 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-14T10:34:07.984Z
-wall-clock minutes (60+60-min budget; finished with ~93 min in hand on
-the 06:00 PDT hard cut).
-Stopped at: Completed 13-D3-release-scripts-and-demo.md
-patch/post helpers + If-Match + 5s timeout + sanitize-on-egress),
-`b12036e` (S-A-2 write/flush/release + create/unlink + conditional
-MountOption::RO), `4006f13` (S-B-1+2+3 protocol/import/export/SG-02 cap
+Last session: 2026-04-14T16:45:00.000Z
+Stopped at: Completed 14-D-docs-changelog.md — Phase 14 SHIPPED; v0.4.1
+ready to tag at user gate.
+Wave-level commit trail on `main`:
+`7510ed1` (14-A sim 409-body contract pins), `bdad951` + `cd50ec5` (14-B1
+fs.rs write through IssueBackend + SG-03 re-home), `938b8de` (14-B2
+git-remote helper through IssueBackend), `4301d0d` (14-C verification).
+274 workspace tests pass (LD-14-08 floor 272 met +2). `fetch.rs`,
+`tests/write.rs`, and `client.rs` deleted (~830 lines). R1 + R2 accepted
+behaviour changes documented in CHANGELOG `[Unreleased]` `### Changed`.
+Resume file: None (phase self-contained).
+Cursor next: **v0.4.1 tag push** (user gate — clone
+`scripts/tag-v0.4.0.sh` → `scripts/tag-v0.4.1.sh`, bump CHANGELOG
+`[Unreleased]` → `[v0.4.1] — 2026-04-14`, run the script). Then pick a
+session-5 stretch goal: Cluster C (swarm confluence-direct), OP-2
+partial (`pages/INDEX.md`), OP-7 SSRF + contention probes, or Cluster A
+(Confluence writes — now unblocked by Phase 14).
 
-+ PATCH/POST/DELETE execution). 21 new tests pass (4 fetch + 5 write +
+### Previous session (for reference)
 
-6 lib + 3 protocol + 3 bulk_delete_cap). All three Phase S SCs verified
-empirically against a live sim+FUSE+git push on the dev host.
-Resume file: None
-Cursor next: Phase 4 (demo recording).
+2026-04-14T10:34:07.984Z. Stopped at: Completed 13-D3-release-scripts-and-demo.md.
+Wave-level commit trail for Phase S (historical): patch/post helpers +
+If-Match + 5s timeout + sanitize-on-egress; `b12036e` (S-A-2 write/flush/
+release + create/unlink + conditional MountOption::RO); `4006f13`
+(S-B-1+2+3 protocol/import/export/SG-02 cap + PATCH/POST/DELETE
+execution). 21 new tests pass (4 fetch + 5 write + 6 lib + 3 protocol +
+3 bulk_delete_cap). All three Phase S SCs verified empirically against a
+live sim+FUSE+git push on the dev host.
