@@ -90,7 +90,7 @@ hierarchy.
 
 ### Hardening
 
-The Phase 13 code review surfaced six polish items, all addressed pre-tag:
+The Phase 13 code review surfaced six polish items; five addressed pre-tag (IN-04 deferred as cosmetic — kernel doesn't trust FUSE `..` inode numbers):
 - **Symlink `mtime` stability** — `symlink_attr` now uses a cached `mount_time`
   instead of `SystemTime::now()` on every `getattr`. Fixes drifting `st_mtim`
   that confuses rsync/make/backup tools. (`IN-03`)
@@ -127,6 +127,33 @@ The Phase 13 code review surfaced six polish items, all addressed pre-tag:
   backend, no real victims" framing is replaced with the current model
   (three real backends behind one allowlist; `tree/` overlay security
   properties tested; swarm harness shipped).
+
+### Test coverage expanded
+
+- **`reposix-github` wiremock contract tests** (OP-6 MEDIUM-13). 7 new
+  always-run tests mirror the Confluence pattern: full contract
+  sequence, Link-header pagination, 429 rate-limit regression guard,
+  `state_reason` mapping matrix (pins ADR-001), SSRF tripwire on
+  `html_url` / `url` / `avatar_url`, malformed `assignee` objects,
+  `User-Agent` header presence. Offline, no credentials required.
+- **`reposix-swarm` mini E2E integration test** (OP-6 MEDIUM-14). New
+  `swarm_mini_e2e_sim_5_clients_1_5s` spins `reposix-sim` on an
+  ephemeral port via `run_with_listener`, runs 5 `SimDirectWorkload`
+  clients for 1.5s, asserts metrics + audit-log invariants. 1.52s
+  run-time. Closes the "zero integration tests" gap previously flagged
+  in the swarm crate.
+- **Pre-push hook unit test** (`scripts/hooks/test-pre-push.sh`) —
+  6-case regression suite verifying the credential hygiene hook
+  rejects `ATATT3…`, `Bearer ATATT3…`, `ghp_…`, `github_pat_…` and
+  passes clean commits + honors self-scan exclusion.
+
+### Test count
+
+v0.3.0 baseline: 193 workspace tests. v0.4.0: **272 workspace tests
+(+79)**. Plus 6 `--ignored` FUSE integration tests under real
+`fusermount3`, 2 `--ignored` Confluence live-contract tests, and
+1 `--ignored` GitHub live-contract test. Full workspace
+`cargo test --locked` run-time: <10s.
 
 ### Migration
 
