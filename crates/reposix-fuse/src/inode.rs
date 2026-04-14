@@ -2,12 +2,22 @@
 //!
 //! # Layout
 //!
-//! - Inode `1` is the root directory (handled by the Filesystem impl, not the
-//!   registry — reserved).
-//! - Inodes `2..=0xFFFF` are reserved for future synthetic files
-//!   (`/.reposix/audit`, etc.). The registry never allocates in this range.
-//! - Issues are allocated inodes starting at `0x1_0000` (`65_536`), increasing
-//!   monotonically as they are first seen.
+//! Full mount-level inode layout (Phase 13 Wave C):
+//!
+//! | Range | Purpose |
+//! |-------|---------|
+//! | `1` | Mount root (FUSE convention; fixed in [`ROOT_INO`]). |
+//! | `2` | [`BUCKET_DIR_INO`] — the per-backend collection directory (`pages/` or `issues/`). |
+//! | `3` | [`TREE_ROOT_INO`] — the synthesized `tree/` overlay root (only populated when the backend supports `BackendFeature::Hierarchy`). Mirrored from [`crate::tree::TREE_ROOT_INO`]. |
+//! | `4` | [`GITIGNORE_INO`] — the synthesized `/tree/\n` `.gitignore` file. Always present. |
+//! | `5..=0xFFFF` | Reserved for future synthetic files (`/.reposix/audit`, per-space roots, etc.). The [`InodeRegistry`] never allocates in this range. |
+//! | `0x1_0000..` | Real issue/page files under `<bucket>/<padded-id>.md`. Allocated monotonically by [`InodeRegistry`]. |
+//! | `0x8_0000_0000..0xC_0000_0000` | `tree/` interior directories (allocated by [`crate::tree::TreeSnapshot`]). |
+//! | `0xC_0000_0000..u64::MAX` | `tree/` leaf symlinks AND `_self.md` entries (allocated by [`crate::tree::TreeSnapshot`]). |
+//!
+//! The ranges are intentionally disjoint so every callback in `fs.rs` can
+//! classify an inode by numeric range **before** doing any map lookup; the
+//! compile-time assertions in `tree.rs` pin the ordering.
 //!
 //! # Lifetime
 //!
@@ -24,7 +34,25 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use dashmap::DashMap;
 use reposix_core::IssueId;
 
-/// First dynamic inode. Values `2..=0xFFFF` are reserved for future synthetic
+/// The mount root. Always inode 1 per FUSE convention.
+pub const ROOT_INO: u64 = 1;
+
+/// The root-collection bucket directory (`pages/` for Confluence,
+/// `issues/` for sim + GitHub).
+pub const BUCKET_DIR_INO: u64 = 2;
+
+/// The synthesized `tree/` overlay root directory. Mirrors
+/// [`crate::tree::TREE_ROOT_INO`]. Emitted iff the backend supports
+/// `BackendFeature::Hierarchy` or any loaded issue has a non-`None`
+/// `parent_id`.
+pub const TREE_ROOT_INO: u64 = 3;
+
+/// The synthesized `.gitignore` file at the mount root. Always present
+/// and always returns the bytes `b"/tree/\n"` (7 bytes). Read-only
+/// (`perm: 0o444`).
+pub const GITIGNORE_INO: u64 = 4;
+
+/// First dynamic inode. Values `5..=0xFFFF` are reserved for future synthetic
 /// files; issues start here.
 pub const FIRST_ISSUE_INODE: u64 = 0x1_0000;
 
@@ -165,11 +193,44 @@ mod tests {
     #[test]
     fn reserved_range_is_unmapped() {
         let r = InodeRegistry::new();
-        for ino in 2..=0xFFFF {
+        // Inodes 5..=0xFFFF are reserved-for-future-synthetics; the
+        // registry never allocates here. (1..=4 are fixed synthetic slots
+        // — root/bucket/tree-root/gitignore — also not allocated by the
+        // dynamic registry.)
+        for ino in 5..=0xFFFF {
             assert!(
                 r.lookup_ino(ino).is_none(),
                 "ino {ino:#x} should be unmapped"
             );
         }
+    }
+
+    #[test]
+    fn fixed_inodes_are_disjoint_from_dynamic_ranges() {
+        // Fixed synthetic inodes at the mount root live below the
+        // dynamic issue range, which in turn lives below the tree-dir and
+        // tree-symlink ranges. This matches the layout doc at the top of
+        // the module and the compile-time assertion in `tree.rs`.
+        assert!(ROOT_INO < FIRST_ISSUE_INODE);
+        assert!(BUCKET_DIR_INO < FIRST_ISSUE_INODE);
+        assert!(TREE_ROOT_INO < FIRST_ISSUE_INODE);
+        assert!(GITIGNORE_INO < FIRST_ISSUE_INODE);
+        // The tree dir / symlink bases live strictly above the dynamic
+        // issue range (see tree.rs compile-time assertion for the
+        // full cross-module invariant).
+        assert!(FIRST_ISSUE_INODE < crate::tree::TREE_DIR_INO_BASE);
+        assert!(crate::tree::TREE_DIR_INO_BASE < crate::tree::TREE_SYMLINK_INO_BASE);
+        // The four fixed slots must be distinct from each other.
+        let fixed = [ROOT_INO, BUCKET_DIR_INO, TREE_ROOT_INO, GITIGNORE_INO];
+        for (i, a) in fixed.iter().enumerate() {
+            for b in fixed.iter().skip(i + 1) {
+                assert_ne!(a, b, "fixed inodes must be pairwise distinct");
+            }
+        }
+        // TREE_ROOT_INO here must equal the tree module's declared const
+        // (both represent the same directory; Wave C dispatch uses the
+        // inode:: re-export, but tree.rs still owns the canonical
+        // definition).
+        assert_eq!(TREE_ROOT_INO, crate::tree::TREE_ROOT_INO);
     }
 }
