@@ -1,8 +1,17 @@
 """Render the file-browser-style hero image for reposix social posts.
 
-A dark, macOS-ish file browser window: sidebar on the left with a tree of
-/tmp/reposix-mnt/0001.md ... 0006.md, and a preview pane on the right
-showing the markdown contents of 0001.md. Caption at the bottom.
+A dark, macOS-ish file browser window: sidebar on the left showing the
+Phase-13 FUSE layout — `reposix-github-issues/issues/*.md` — and a
+preview pane on the right showing the markdown contents of the selected
+issue. Caption at the bottom.
+
+The canonical mount path under the current layout is
+`/tmp/reposix-mnt/issues/<11-digit>.md` (e.g.
+`/tmp/reposix-mnt/issues/00000000001.md`). The hero image uses the
+short 4-digit form in the sidebar visual because the fixed ~310 px
+sidebar width cannot fit 11-digit filenames legibly at the current
+font size; the sidebar's `issues/` folder structure remains the true
+visual anchor.
 
 The point, for semi-technical viewers: "it's a folder. that's it."
 """

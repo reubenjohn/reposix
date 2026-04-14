@@ -82,13 +82,14 @@ FRAMES: list[dict] = [
     # -- Frame 2: ls --
     {
         "title": TITLE,
-        "caption": "ls — issues show up as markdown files",
+        "caption": "ls — issues show up as markdown files under issues/",
         "lines": [
-            P("ls /tmp/reposix-mnt/"),
-            O("0001.md  0002.md  0003.md  0004.md  0005.md  0006.md", FG),
+            P("ls /tmp/reposix-mnt/issues/"),
+            O("00000000001.md  00000000002.md  00000000003.md", FG),
+            O("00000000004.md  00000000005.md  00000000006.md", FG),
             O(""),
-            P("file 0001.md"),
-            O("0001.md: ASCII text, with very long lines (YAML frontmatter)", DIM),
+            P("file /tmp/reposix-mnt/issues/00000000001.md"),
+            O("00000000001.md: ASCII text (YAML frontmatter)", DIM),
         ],
         "duration": 1800,
     },
@@ -97,7 +98,7 @@ FRAMES: list[dict] = [
         "title": TITLE,
         "caption": "cat — frontmatter + markdown body",
         "lines": [
-            P("head -8 /tmp/reposix-mnt/0001.md"),
+            P("head -8 /tmp/reposix-mnt/issues/00000000001.md"),
             O("---", DIM),
             {"kind": "kv", "key": "id", "val": "1"},
             {"kind": "kv", "key": "title", "val": "database connection drops under load"},
@@ -113,9 +114,9 @@ FRAMES: list[dict] = [
         "title": TITLE,
         "caption": "sed — in-place edit, no API client needed",
         "lines": [
-            P("sed -i 's/status: open/status: in_progress/' 0001.md"),
+            P("sed -i 's/status: open/status: in_progress/' 00000000001.md"),
             O(""),
-            P("grep ^status: 0001.md"),
+            P("grep ^status: 00000000001.md"),
             {"kind": "kv", "key": "status", "val": "in_progress", "val_color": ORANGE},
             O(""),
             O("# FUSE already pushed the PATCH. server version bumped.", DIM),
