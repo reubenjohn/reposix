@@ -64,6 +64,8 @@
 #![warn(clippy::pedantic, missing_docs)]
 #![allow(clippy::module_name_repetitions)]
 
+pub mod adf;
+
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
