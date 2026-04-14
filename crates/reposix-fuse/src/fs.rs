@@ -132,6 +132,15 @@ const ROOT_INO: u64 = 1;
 struct CachedFile {
     issue: Issue,
     rendered: String,
+    /// `true` if this entry was populated by a backend `get_issue` call
+    /// (full body guaranteed present). `false` if populated by `list_issues`
+    /// — some backends (Confluence v2) return body-less stubs on the list
+    /// endpoint, so a cached-from-list entry must trigger a per-issue
+    /// `get_issue` on first read to fill in the body. GitHub's list endpoint
+    /// DOES return bodies, so `body_fetched: false` entries from its list
+    /// path still render correctly — the post-lookup re-fetch is redundant
+    /// there but cheap (one HTTP round-trip on first `cat`).
+    body_fetched: bool,
 }
 
 /// FUSE filesystem backed by an [`IssueBackend`] trait object for the read
@@ -275,13 +284,15 @@ impl ReposixFs {
     /// Does the backend fetch + render on miss; populates cache.
     fn resolve_name(&self, name: &str) -> Result<(u64, Arc<CachedFile>), FetchError> {
         let id = validate_issue_filename(name).map_err(|e| FetchError::Core(e.to_string()))?;
-        // If we have it, return.
+        // Cache hit AND body already fetched → return directly.
         if let Some(ino) = self.registry.lookup_id(id) {
             if let Some(c) = self.cache.get(&ino) {
-                return Ok((ino, c.clone()));
+                if c.body_fetched {
+                    return Ok((ino, c.clone()));
+                }
             }
         }
-        // Fetch + render + intern + cache.
+        // Miss, or list-populated stub needing body → fetch + render + cache.
         let issue = self
             .rt
             .block_on(get_issue_with_timeout(&self.backend, &self.project, id))?;
@@ -290,6 +301,7 @@ impl ReposixFs {
         let entry = Arc::new(CachedFile {
             issue: issue.clone(),
             rendered,
+            body_fetched: true,
         });
         self.cache.insert(ino, entry.clone());
         Ok((ino, entry))
@@ -297,7 +309,9 @@ impl ReposixFs {
 
     fn resolve_ino(&self, ino: u64) -> Result<Arc<CachedFile>, FetchError> {
         if let Some(c) = self.cache.get(&ino) {
-            return Ok(c.clone());
+            if c.body_fetched {
+                return Ok(c.clone());
+            }
         }
         let Some(id) = self.registry.lookup_ino(ino) else {
             return Err(FetchError::NotFound);
@@ -306,7 +320,11 @@ impl ReposixFs {
             .rt
             .block_on(get_issue_with_timeout(&self.backend, &self.project, id))?;
         let rendered = frontmatter::render(&issue).map_err(|e| FetchError::Core(e.to_string()))?;
-        let entry = Arc::new(CachedFile { issue, rendered });
+        let entry = Arc::new(CachedFile {
+            issue,
+            rendered,
+            body_fetched: true,
+        });
         self.cache.insert(ino, entry.clone());
         Ok(entry)
     }
@@ -423,8 +441,13 @@ impl Filesystem for ReposixFs {
             }
         };
 
-        // Populate cache with rendered bodies so subsequent `read` is fast
-        // and `sim_death_no_hang` has a pre-warmed entry to stat.
+        // Populate cache with rendered frontmatter for fast `stat` +
+        // `sim_death_no_hang`. `body_fetched: false` flags these entries as
+        // needing a per-issue `get_issue` on first `read`, because some
+        // backends (Confluence v2) return body-less stubs on the list
+        // endpoint — reading directly from this cache would yield empty
+        // bodies. The GitHub list endpoint DOES carry bodies so the re-fetch
+        // there is redundant but harmless (one round-trip on first `cat`).
         for issue in &issues {
             let ino = self.registry.intern(issue.id);
             let rendered = match frontmatter::render(issue) {
@@ -439,6 +462,7 @@ impl Filesystem for ReposixFs {
                 Arc::new(CachedFile {
                     issue: issue.clone(),
                     rendered,
+                    body_fetched: false,
                 }),
             );
         }
@@ -680,13 +704,15 @@ impl Filesystem for ReposixFs {
         ));
         match result {
             Ok(updated) => {
-                // Update cache with new rendered bytes.
+                // Update cache with new rendered bytes. Write-path responses
+                // carry full body, so `body_fetched: true`.
                 if let Ok(rendered) = frontmatter::render(&updated) {
                     self.cache.insert(
                         ino_u,
                         Arc::new(CachedFile {
                             issue: updated,
                             rendered,
+                            body_fetched: true,
                         }),
                     );
                 }
@@ -775,6 +801,7 @@ impl Filesystem for ReposixFs {
                     Arc::new(CachedFile {
                         issue: new_issue,
                         rendered,
+                        body_fetched: true,
                     }),
                 );
                 let fh = self.next_fh.fetch_add(1, Ordering::Relaxed);
