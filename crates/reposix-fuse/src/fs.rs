@@ -90,7 +90,8 @@ use tokio::runtime::Runtime;
 use tracing::warn;
 
 use crate::inode::{
-    InodeRegistry, BUCKET_DIR_INO, FIRST_ISSUE_INODE, GITIGNORE_INO, ROOT_INO, TREE_ROOT_INO,
+    InodeRegistry, BUCKET_DIR_INO, BUCKET_INDEX_INO, FIRST_ISSUE_INODE, GITIGNORE_INO, ROOT_INO,
+    TREE_ROOT_INO,
 };
 use crate::tree::{TreeSnapshot, TREE_DIR_INO_BASE, TREE_SYMLINK_INO_BASE};
 
@@ -98,6 +99,12 @@ use crate::tree::{TreeSnapshot, TREE_DIR_INO_BASE, TREE_SYMLINK_INO_BASE};
 /// The trailing newline is mandatory per POSIX text-file convention and
 /// matches what tools like `git check-ignore` expect.
 const GITIGNORE_BYTES: &[u8] = b"/tree/\n";
+
+/// Filename of the synthesized bucket index (Phase 15). Leading `_`
+/// keeps the file out of naive `*.md` globs while still being visible
+/// to `ls`. The `INDEX` spelling matches the `README.md`/`LICENSE`
+/// convention for "meta" files at a directory root.
+const BUCKET_INDEX_FILENAME: &str = "_INDEX.md";
 
 /// SG-07 ceilings for backend calls. A dead backend MUST surface EIO to
 /// the kernel within these budgets so callbacks never wedge the VFS.
@@ -267,6 +274,96 @@ fn issue_filename(id: IssueId) -> String {
     format!("{:011}.md", id.0)
 }
 
+/// Escape a single pipe table cell so a `|` inside the value cannot
+/// close the cell prematurely. Also folds any embedded newlines to
+/// spaces — pipe-tables are single-line per row. Other characters
+/// pass through untouched; no HTML entity escaping (agents read this
+/// via `cat`, not a browser).
+fn escape_index_cell(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for ch in s.chars() {
+        match ch {
+            '|' => out.push_str(r"\|"),
+            '\r' | '\n' => out.push(' '),
+            other => out.push(other),
+        }
+    }
+    out
+}
+
+/// Pure render of the bucket `_INDEX.md` body (Phase 15, OP-2 partial).
+///
+/// Produces a YAML-frontmatter + markdown-pipe-table document listing
+/// every issue/page in `issues`, sorted ascending by `id`. The shape is
+/// LD-15-02 (frontmatter keys) + LD-15-10 (deterministic order):
+///
+/// ```markdown
+/// ---
+/// backend: sim
+/// project: demo
+/// issue_count: 2
+/// generated_at: 2026-04-14T17:15:00Z
+/// ---
+///
+/// # Index of issues/ — demo (2 issues)
+///
+/// | id | status | title | updated |
+/// | --- | --- | --- | --- |
+/// | 1 | open | Hello | 2026-04-14 |
+/// | 2 | open | World | 2026-04-14 |
+/// ```
+///
+/// `bucket` is the directory name ("issues" or "pages") and drives the
+/// pluralised header noun (`"pages"` vs `"issues"`). `generated_at` is
+/// injected rather than read from the wall clock so callers (and tests)
+/// control determinism. Empty `issues` renders a valid document with
+/// `issue_count: 0` and a body-less (header-only) table.
+///
+/// Pipe characters in titles are escaped to `\|`; embedded newlines fold
+/// to spaces. No truncation.
+fn render_bucket_index(
+    issues: &[Issue],
+    backend_name: &str,
+    project: &str,
+    bucket: &str,
+    generated_at: chrono::DateTime<chrono::Utc>,
+) -> Vec<u8> {
+    use std::fmt::Write as _;
+
+    let mut sorted: Vec<&Issue> = issues.iter().collect();
+    sorted.sort_by_key(|i| i.id.0);
+
+    let ts = generated_at.to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+    let count = sorted.len();
+    // Frontmatter key ordering is stable so agents parsing this can
+    // rely on field layout without a YAML library if they really want
+    // to. serde_yaml would reorder fields alphabetically.
+    let mut out = String::with_capacity(256 + count * 96);
+    out.push_str("---\n");
+    // `write!` into a `String` is infallible; the `.ok()` suppresses the
+    // never-fires `fmt::Error` without unwrap noise.
+    let _ = writeln!(out, "backend: {backend_name}");
+    let _ = writeln!(out, "project: {project}");
+    let _ = writeln!(out, "issue_count: {count}");
+    let _ = writeln!(out, "generated_at: {ts}");
+    out.push_str("---\n\n");
+    let _ = writeln!(out, "# Index of {bucket}/ — {project} ({count} {bucket})");
+    out.push('\n');
+    out.push_str("| id | status | title | updated |\n");
+    out.push_str("| --- | --- | --- | --- |\n");
+    for issue in &sorted {
+        let day = issue.updated_at.format("%Y-%m-%d");
+        let title = escape_index_cell(&issue.title);
+        let _ = writeln!(
+            out,
+            "| {id} | {status} | {title} | {day} |",
+            id = issue.id.0,
+            status = issue.status.as_str(),
+        );
+    }
+    out.into_bytes()
+}
+
 /// Partition of the u64 inode space. Every callback entry point runs
 /// [`InodeKind::classify`] first and branches on the result before any
 /// map lookup.
@@ -280,6 +377,8 @@ enum InodeKind {
     TreeRoot,
     /// The synthesized `.gitignore` file (inode 4).
     Gitignore,
+    /// The synthesized `_INDEX.md` file inside the bucket (inode 5).
+    BucketIndex,
     /// A real issue file in the bucket — `FIRST_ISSUE_INODE..TREE_DIR_INO_BASE`.
     RealFile,
     /// An interior tree directory — `TREE_DIR_INO_BASE..TREE_SYMLINK_INO_BASE`.
@@ -297,6 +396,7 @@ impl InodeKind {
             BUCKET_DIR_INO => Self::Bucket,
             TREE_ROOT_INO => Self::TreeRoot,
             GITIGNORE_INO => Self::Gitignore,
+            BUCKET_INDEX_INO => Self::BucketIndex,
             n if n >= TREE_SYMLINK_INO_BASE => Self::TreeSymlink,
             n if n >= TREE_DIR_INO_BASE => Self::TreeDir,
             n if n >= FIRST_ISSUE_INODE => Self::RealFile,
@@ -365,6 +465,14 @@ pub struct ReposixFs {
     /// symlink and tree-dir `FileAttr` so repeated `stat` calls don't
     /// report drifting `st_mtim` (IN-03 from 13-REVIEW.md).
     mount_time: SystemTime,
+    /// Cached rendered bytes for the synthesized bucket `_INDEX.md`
+    /// (Phase 15). Computed lazily on first `read` / `getattr` /
+    /// `lookup` that references the bucket index, then reused for
+    /// subsequent calls until the next [`refresh_issues`] drops it.
+    /// `None` means "render on next access"; `Some(arc)` means "serve
+    /// these bytes". Wrapped in `Arc` so callbacks can clone cheaply
+    /// without holding the lock across the FUSE reply.
+    bucket_index_bytes: RwLock<Option<Arc<Vec<u8>>>>,
 }
 
 impl std::fmt::Debug for ReposixFs {
@@ -462,6 +570,7 @@ impl ReposixFs {
             tree_attr,
             gitignore_attr,
             mount_time: now,
+            bucket_index_bytes: RwLock::new(None),
         })
     }
 
@@ -628,7 +737,72 @@ impl ReposixFs {
             *guard = TreeSnapshot::default();
         }
 
+        // Drop the `_INDEX.md` render cache — the underlying issue list
+        // just changed, so any cached bytes are stale. The next
+        // `read(BUCKET_INDEX_INO)` re-renders against the fresh cache.
+        if let Ok(mut guard) = self.bucket_index_bytes.write() {
+            guard.take();
+        }
+
         Ok(issues)
+    }
+
+    /// Return the cached rendered bytes for the bucket `_INDEX.md`,
+    /// rendering on demand if the cache is empty. Uses the already-
+    /// populated rendered-file cache as the snapshot — we iterate the
+    /// `CachedFile` entries rather than calling the backend again, so
+    /// a caller that invoked `refresh_issues` immediately beforehand
+    /// gets a coherent view. If the cache is empty (cold mount, no
+    /// prior `readdir`), this still renders correctly against the
+    /// empty slice.
+    fn bucket_index_bytes_or_render(&self) -> Arc<Vec<u8>> {
+        // Fast path: hit.
+        if let Ok(guard) = self.bucket_index_bytes.read() {
+            if let Some(bytes) = guard.as_ref() {
+                return bytes.clone();
+            }
+        }
+        // Miss: materialise the issue snapshot from the cache.
+        // Collecting + sorting happens inside `render_bucket_index`.
+        let issues: Vec<Issue> = self
+            .cache
+            .iter()
+            .map(|entry| entry.value().issue.clone())
+            .collect();
+        let rendered = Arc::new(render_bucket_index(
+            &issues,
+            self.backend.name(),
+            &self.project,
+            self.bucket,
+            chrono::Utc::now(),
+        ));
+        if let Ok(mut guard) = self.bucket_index_bytes.write() {
+            *guard = Some(rendered.clone());
+        }
+        rendered
+    }
+
+    /// Synthesize a `FileAttr` for the bucket `_INDEX.md`. Size reflects
+    /// the current rendered byte length (LD-15-08 — size is truthful,
+    /// not a placeholder); `perm` is `0o444` to match `.gitignore`.
+    fn bucket_index_attr(&self, size: u64) -> FileAttr {
+        FileAttr {
+            ino: INodeNo(BUCKET_INDEX_INO),
+            size,
+            blocks: size.div_ceil(512).max(1),
+            atime: self.mount_time,
+            mtime: self.mount_time,
+            ctime: self.mount_time,
+            crtime: self.mount_time,
+            kind: FileType::RegularFile,
+            perm: 0o444,
+            nlink: 1,
+            uid: uid_safe(),
+            gid: gid_safe(),
+            rdev: 0,
+            blksize: 4096,
+            flags: 0,
+        }
     }
 }
 
@@ -665,6 +839,11 @@ impl Filesystem for ReposixFs {
             InodeKind::Bucket => reply.attr(&ATTR_TTL, &self.bucket_attr),
             InodeKind::TreeRoot => reply.attr(&ATTR_TTL, &self.tree_attr),
             InodeKind::Gitignore => reply.attr(&ATTR_TTL, &self.gitignore_attr),
+            InodeKind::BucketIndex => {
+                let bytes = self.bucket_index_bytes_or_render();
+                let attr = self.bucket_index_attr(bytes.len() as u64);
+                reply.attr(&ATTR_TTL, &attr);
+            }
             InodeKind::RealFile => {
                 if let Some(c) = self.cache.get(&ino_u) {
                     let size = if let Some(buf) = self.write_buffers.get(&ino_u) {
@@ -729,6 +908,12 @@ impl Filesystem for ReposixFs {
                 reply.error(fuser::Errno::from_i32(libc::ENOENT));
             }
             InodeKind::Bucket => {
+                if name_str == BUCKET_INDEX_FILENAME {
+                    let bytes = self.bucket_index_bytes_or_render();
+                    let attr = self.bucket_index_attr(bytes.len() as u64);
+                    reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
+                    return;
+                }
                 if validate_issue_filename(name_str).is_err() {
                     reply.error(fuser::Errno::from_i32(libc::ENOENT));
                     return;
@@ -763,7 +948,10 @@ impl Filesystem for ReposixFs {
                 };
                 self.reply_tree_entry(&snap, &dir.children, name_str, reply);
             }
-            InodeKind::Gitignore | InodeKind::RealFile | InodeKind::TreeSymlink => {
+            InodeKind::Gitignore
+            | InodeKind::BucketIndex
+            | InodeKind::RealFile
+            | InodeKind::TreeSymlink => {
                 reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
             }
             InodeKind::Unknown => reply.error(fuser::Errno::from_i32(libc::ENOENT)),
@@ -815,9 +1003,17 @@ impl Filesystem for ReposixFs {
                 };
                 let mut sorted = issues;
                 sorted.sort_by_key(|i| i.id.0);
-                let mut out: Vec<(u64, FileType, String)> = Vec::with_capacity(sorted.len() + 2);
+                let mut out: Vec<(u64, FileType, String)> = Vec::with_capacity(sorted.len() + 3);
                 out.push((BUCKET_DIR_INO, FileType::Directory, ".".to_owned()));
                 out.push((ROOT_INO, FileType::Directory, "..".to_owned()));
+                // `_INDEX.md` is emitted before the real `<padded-id>.md`
+                // entries so agents doing `head -1 <(ls <bucket>/)` see
+                // the index first. Plan 15-A, LD-15-01.
+                out.push((
+                    BUCKET_INDEX_INO,
+                    FileType::RegularFile,
+                    BUCKET_INDEX_FILENAME.to_owned(),
+                ));
                 for issue in &sorted {
                     let ino = self.registry.intern(issue.id);
                     out.push((ino, FileType::RegularFile, issue_filename(issue.id)));
@@ -869,7 +1065,10 @@ impl Filesystem for ReposixFs {
                 collect_tree_entries(&snap, &dir.children, &mut out);
                 out
             }
-            InodeKind::Gitignore | InodeKind::RealFile | InodeKind::TreeSymlink => {
+            InodeKind::Gitignore
+            | InodeKind::BucketIndex
+            | InodeKind::RealFile
+            | InodeKind::TreeSymlink => {
                 reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
                 return;
             }
@@ -912,6 +1111,14 @@ impl Filesystem for ReposixFs {
                     .saturating_add(size as usize)
                     .min(GITIGNORE_BYTES.len());
                 reply.data(&GITIGNORE_BYTES[start..end]);
+            }
+            InodeKind::BucketIndex => {
+                let bytes = self.bucket_index_bytes_or_render();
+                let start = usize::try_from(offset)
+                    .unwrap_or(usize::MAX)
+                    .min(bytes.len());
+                let end = start.saturating_add(size as usize).min(bytes.len());
+                reply.data(&bytes[start..end]);
             }
             InodeKind::TreeSymlink => {
                 // Symlinks are read via `readlink(2)`, not `read(2)`. If the
@@ -995,6 +1202,12 @@ impl Filesystem for ReposixFs {
             InodeKind::Bucket => reply.attr(&ATTR_TTL, &self.bucket_attr),
             InodeKind::TreeRoot => reply.attr(&ATTR_TTL, &self.tree_attr),
             InodeKind::Gitignore => reply.attr(&ATTR_TTL, &self.gitignore_attr),
+            InodeKind::BucketIndex => {
+                // `_INDEX.md` is synthesized read-only (Phase 15, LD-15-05).
+                // Deny truncate / chmod / chown / utimensat by returning
+                // EROFS, matching the gitignore / tree-symlink discipline.
+                reply.error(fuser::Errno::from_i32(libc::EROFS));
+            }
             InodeKind::TreeDir => {
                 let attr = self.tree_dir_attr(ino_u);
                 reply.attr(&ATTR_TTL, &attr);
@@ -1050,7 +1263,7 @@ impl Filesystem for ReposixFs {
             InodeKind::Root | InodeKind::Bucket | InodeKind::TreeRoot | InodeKind::TreeDir => {
                 reply.error(fuser::Errno::from_i32(libc::EISDIR));
             }
-            InodeKind::Gitignore | InodeKind::TreeSymlink => {
+            InodeKind::Gitignore | InodeKind::BucketIndex | InodeKind::TreeSymlink => {
                 reply.error(fuser::Errno::from_i32(libc::EROFS));
             }
             InodeKind::RealFile => {
@@ -1194,6 +1407,13 @@ impl Filesystem for ReposixFs {
             reply.error(fuser::Errno::from_i32(libc::EINVAL));
             return;
         };
+        // Refuse to let the user shadow the synthesized `_INDEX.md`
+        // with a real issue file — LD-15-05. EACCES distinguishes this
+        // from the generic "not an issue filename" EINVAL below.
+        if name_str == BUCKET_INDEX_FILENAME {
+            reply.error(fuser::Errno::from_i32(libc::EACCES));
+            return;
+        }
         let Ok(id) = validate_issue_filename(name_str) else {
             reply.error(fuser::Errno::from_i32(libc::EINVAL));
             return;
@@ -1269,6 +1489,13 @@ impl Filesystem for ReposixFs {
             reply.error(fuser::Errno::from_i32(libc::EINVAL));
             return;
         };
+        // Refuse `rm <bucket>/_INDEX.md` — the synthesized index is
+        // read-only (LD-15-05). Returning EACCES (rather than EROFS)
+        // matches the `create` error for symmetry.
+        if name_str == BUCKET_INDEX_FILENAME {
+            reply.error(fuser::Errno::from_i32(libc::EACCES));
+            return;
+        }
         let Ok(id) = validate_issue_filename(name_str) else {
             reply.error(fuser::Errno::from_i32(libc::EINVAL));
             return;
@@ -1470,6 +1697,171 @@ mod tests {
         assert!(
             elapsed < Duration::from_millis(5_800),
             "should return within 5.5s; took {elapsed:?}"
+        );
+    }
+
+    // ------------------------------------------------------------------ //
+    // Phase 15-A: bucket `_INDEX.md` render pure-function tests.          //
+    // ------------------------------------------------------------------ //
+
+    fn mk_issue(id: u64, title: &str, day: (i32, u32, u32)) -> Issue {
+        let (y, m, d) = day;
+        let t = chrono::Utc.with_ymd_and_hms(y, m, d, 12, 0, 0).unwrap();
+        Issue {
+            id: IssueId(id),
+            title: title.into(),
+            status: IssueStatus::Open,
+            assignee: None,
+            labels: vec![],
+            created_at: t,
+            updated_at: t,
+            version: 1,
+            body: String::new(),
+            parent_id: None,
+        }
+    }
+
+    #[test]
+    fn bucket_index_renders_frontmatter_and_table() {
+        // Two sample issues; verify frontmatter keys, header line, table
+        // header row, separator row, and both data rows.
+        let issues = vec![
+            mk_issue(65_916, "Architecture notes", (2026, 4, 14)),
+            mk_issue(131_192, "Welcome to reposix", (2026, 4, 14)),
+        ];
+        let generated = chrono::Utc
+            .with_ymd_and_hms(2026, 4, 14, 17, 15, 0)
+            .unwrap();
+        let bytes = render_bucket_index(&issues, "simulator", "demo", "issues", generated);
+        let text = std::str::from_utf8(&bytes).expect("utf-8");
+
+        // Frontmatter — fence + four named keys + count.
+        assert!(text.starts_with("---\n"), "missing open fence: {text}");
+        assert!(
+            text.contains("backend: simulator\n"),
+            "missing backend key: {text}"
+        );
+        assert!(
+            text.contains("project: demo\n"),
+            "missing project key: {text}"
+        );
+        assert!(
+            text.contains("issue_count: 2\n"),
+            "missing issue_count key: {text}"
+        );
+        assert!(
+            text.contains("generated_at: 2026-04-14T17:15:00Z\n"),
+            "missing generated_at key: {text}"
+        );
+        assert!(text.contains("\n---\n\n"), "missing close fence: {text}");
+
+        // Header line.
+        assert!(
+            text.contains("# Index of issues/ — demo (2 issues)\n"),
+            "missing markdown header: {text}"
+        );
+
+        // Table header + separator + both data rows.
+        assert!(
+            text.contains("| id | status | title | updated |\n"),
+            "missing table header: {text}"
+        );
+        assert!(
+            text.contains("| --- | --- | --- | --- |\n"),
+            "missing table separator: {text}"
+        );
+        assert!(
+            text.contains("| 65916 | open | Architecture notes | 2026-04-14 |\n"),
+            "missing row for 65916: {text}"
+        );
+        assert!(
+            text.contains("| 131192 | open | Welcome to reposix | 2026-04-14 |\n"),
+            "missing row for 131192: {text}"
+        );
+    }
+
+    #[test]
+    fn bucket_index_row_order_is_ascending_by_id() {
+        // Feed three issues in reverse id order; the rendered table must
+        // still list them ascending. Matches LD-15-10 (deterministic order).
+        let issues = vec![
+            mk_issue(425_985, "Demo plan", (2026, 4, 14)),
+            mk_issue(65_916, "Architecture notes", (2026, 4, 14)),
+            mk_issue(131_192, "Welcome to reposix", (2026, 4, 14)),
+        ];
+        let generated = chrono::Utc
+            .with_ymd_and_hms(2026, 4, 14, 17, 15, 0)
+            .unwrap();
+        let bytes = render_bucket_index(&issues, "confluence", "REPOSIX", "pages", generated);
+        let text = std::str::from_utf8(&bytes).expect("utf-8");
+
+        let pos_65916 = text.find("| 65916 ").expect("65916 row missing");
+        let pos_131192 = text.find("| 131192 ").expect("131192 row missing");
+        let pos_425985 = text.find("| 425985 ").expect("425985 row missing");
+        assert!(
+            pos_65916 < pos_131192 && pos_131192 < pos_425985,
+            "rows out of order: 65916@{pos_65916} < 131192@{pos_131192} < 425985@{pos_425985}\n{text}"
+        );
+        // Also pin the pluralised bucket noun to "pages" for Confluence.
+        assert!(
+            text.contains("# Index of pages/ — REPOSIX (3 pages)\n"),
+            "missing pages-flavoured header: {text}"
+        );
+    }
+
+    #[test]
+    fn bucket_index_empty_list_is_valid_markdown() {
+        // Zero issues must still render a valid document — frontmatter
+        // with issue_count: 0, markdown header, table header, table
+        // separator, and NO data rows. Agents reading an empty bucket
+        // should not see a parse error.
+        let generated = chrono::Utc.with_ymd_and_hms(2026, 4, 14, 0, 0, 0).unwrap();
+        let bytes = render_bucket_index(&[], "simulator", "demo", "issues", generated);
+        let text = std::str::from_utf8(&bytes).expect("utf-8");
+
+        assert!(
+            text.contains("issue_count: 0\n"),
+            "missing zero count: {text}"
+        );
+        assert!(
+            text.contains("# Index of issues/ — demo (0 issues)\n"),
+            "missing zero-count header: {text}"
+        );
+        assert!(
+            text.contains("| id | status | title | updated |\n"),
+            "missing table header: {text}"
+        );
+        assert!(
+            text.contains("| --- | --- | --- | --- |\n"),
+            "missing table separator: {text}"
+        );
+        // No data rows — the only table-pipe lines are the header and
+        // separator, so the trailing-newline byte count should be
+        // bounded: header+sep occupies 2 lines, plus the usual pre-table
+        // content. Assert "no row-shaped line with a decimal id".
+        for line in text.lines() {
+            // Body rows start with `| <digit> ...`. The header row
+            // starts with `| id ...`, separator with `| --- ...`.
+            assert!(
+                !(line.starts_with("| ")
+                    && !line.starts_with("| id ")
+                    && !line.starts_with("| --- ")),
+                "unexpected table data row in empty-list index: {line}\n{text}"
+            );
+        }
+    }
+
+    #[test]
+    fn bucket_index_escapes_pipe_in_title() {
+        // A `|` inside a title must be escaped to `\|` so the row's
+        // column count survives. Also verifies newlines fold to spaces.
+        let issues = vec![mk_issue(7, "foo | bar\nbaz", (2026, 4, 14))];
+        let generated = chrono::Utc.with_ymd_and_hms(2026, 4, 14, 0, 0, 0).unwrap();
+        let bytes = render_bucket_index(&issues, "simulator", "demo", "issues", generated);
+        let text = std::str::from_utf8(&bytes).expect("utf-8");
+        assert!(
+            text.contains(r"foo \| bar baz"),
+            "pipe not escaped / newline not folded: {text}"
         );
     }
 

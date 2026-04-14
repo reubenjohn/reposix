@@ -235,7 +235,8 @@ async fn nested_layout_three_level_hierarchy() {
         "root listing"
     );
 
-    // (2) pages/ contains 4 padded-id entries.
+    // (2) pages/ contains 4 padded-id entries plus the synthesized
+    // `_INDEX.md` summary (Phase 15 Wave A, LD-15-01).
     let mut pages: Vec<String> = std::fs::read_dir(mount_path.join("pages"))
         .expect("read_dir pages")
         .flatten()
@@ -249,6 +250,7 @@ async fn nested_layout_three_level_hierarchy() {
             "00000131192.md".to_owned(),
             "00000360556.md".to_owned(),
             "00000425985.md".to_owned(),
+            "_INDEX.md".to_owned(),
         ],
         "pages/ listing"
     );
@@ -422,7 +424,8 @@ async fn nested_layout_cycle_does_not_hang() {
         t0.elapsed()
     );
 
-    // Both pages appear under pages/ (bucket is not affected by cycle).
+    // Both pages appear under pages/ (bucket is not affected by cycle),
+    // alongside the synthesized `_INDEX.md` summary (Phase 15, LD-15-01).
     let mut pages_names: Vec<String> = std::fs::read_dir(mount_path.join("pages"))
         .expect("read_dir pages")
         .flatten()
@@ -431,7 +434,11 @@ async fn nested_layout_cycle_does_not_hang() {
     pages_names.sort();
     assert_eq!(
         pages_names,
-        vec!["00000000001.md".to_owned(), "00000000002.md".to_owned()],
+        vec![
+            "00000000001.md".to_owned(),
+            "00000000002.md".to_owned(),
+            "_INDEX.md".to_owned(),
+        ],
         "pages/ should list both cycle members"
     );
 

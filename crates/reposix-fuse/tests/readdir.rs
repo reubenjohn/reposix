@@ -159,7 +159,8 @@ async fn mount_lists_and_reads_issues() {
     );
 
     // Assertion 3: `ls mount/issues/` shows the 3 seeded issues as
-    // 11-digit-padded `<padded-id>.md` entries.
+    // 11-digit-padded `<padded-id>.md` entries, plus the synthesized
+    // `_INDEX.md` summary (Phase 15 Wave A, LD-15-01).
     let mut issue_names: Vec<String> = std::fs::read_dir(mount_path.join("issues"))
         .expect("read_dir issues/")
         .flatten()
@@ -172,6 +173,7 @@ async fn mount_lists_and_reads_issues() {
             "00000000001.md".to_owned(),
             "00000000002.md".to_owned(),
             "00000000003.md".to_owned(),
+            "_INDEX.md".to_owned(),
         ],
         "issues/ listing mismatch"
     );
