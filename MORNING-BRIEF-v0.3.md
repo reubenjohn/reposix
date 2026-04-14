@@ -115,7 +115,37 @@ Tonight's artifacts for you to eyeball before running the script:
 Once you've reviewed those and want to ship:
 
 ```bash
-# Verify the workspace is still green (the tag script also runs these, but do them once yourself).
+# FIRST: deal with the pre-existing uncommitted drift in the working tree.
+# At handoff, `git status --short` showed the following modifications carried
+# over from prior phases (NOT from Phase 11-F — Phase 11-F only added
+# MORNING-BRIEF-v0.3.md, scripts/tag-v0.3.0.sh, and edits to CHANGELOG.md,
+# MORNING-BRIEF.md, PROJECT-STATUS.md):
+#
+#    D .claude/scheduled_tasks.lock                          (ephemeral lock — safe to delete)
+#    M benchmarks/RESULTS.md                                 (timestamp-only diff)
+#    M crates/reposix-confluence/Cargo.toml                  (adds `url` workspace dep)
+#    M crates/reposix-confluence/src/lib.rs                  (WR-01 + WR-02 hardening
+#                                                             from 11-REVIEW.md —
+#                                                             percent-encode space_key +
+#                                                             numeric-only space_id taint check)
+#    ?? .planning/phases/11-confluence-adapter/11-REVIEW.md  (code-review artifact)
+#
+# Three options:
+#   (a) Review the diffs and COMMIT them as a pre-release hardening bundle, e.g.
+#         git add crates/reposix-confluence benchmarks/RESULTS.md \
+#                 .planning/phases/11-confluence-adapter/11-REVIEW.md
+#         git commit -m "chore(pre-release): WR-01/WR-02 hardening + review artifacts"
+#         git rm .claude/scheduled_tasks.lock
+#         git commit -m "chore: drop ephemeral scheduled_tasks.lock"
+#       Then cargo test + clippy to confirm the hardening didn't regress anything.
+#   (b) git stash the drift, cut the tag, pop and land the hardening as v0.3.1.
+#   (c) git checkout the drift + delete the untracked files (destructive — only if
+#       you're sure the hardening is unwanted).
+#
+# RECOMMENDED: (a). The WR-01/WR-02 diffs are security hardening and belong in v0.3.
+
+# After the working tree is clean, verify the workspace is still green
+# (the tag script also runs these, but do them once yourself).
 cargo fmt --all --check
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked
