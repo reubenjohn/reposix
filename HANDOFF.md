@@ -1,14 +1,18 @@
-# HANDOFF — v0.3.0 (post-ship) + open problems for the next agent
+# HANDOFF — v0.5.0 (post-ship) + open problems for the next agent
 
-> Date: 2026-04-14 (overnight session 3 wrapped up).
+> **Current state (2026-04-14, session 5):** v0.4.1 and v0.5.0 are already tagged and pushed. Nothing left to tag.
+> **The next agent is YOU.** Skip to [§Session 5 augmentation](#session-5-augmentation--2026-04-14-daytime-v041--v050-ready-to-ship) for the current open-problems rollup and mission recommendation.
+>
+> ---
+>
+> *Historical context:* Date: 2026-04-14 (overnight session 3 wrapped up).
 > Previous briefs: [`MORNING-BRIEF.md`](MORNING-BRIEF.md) (v0.1 / v0.2), [`PROJECT-STATUS.md`](PROJECT-STATUS.md) (timeline through v0.2.0-alpha). This doc subsumes the old session-2 `HANDOFF.md` (deleted) and the session-3 `MORNING-BRIEF-v0.3.md` (renamed into this file).
-> **The next agent is YOU.** Read [§Open problems](#open-problems-for-the-next-agent) before picking a task — several v0.4 directions are already scoped.
 
 ## tl;dr
 
 Phase 11 shipped read-only **Atlassian Confluence Cloud** support end-to-end: adapter crate, CLI dispatch, contract test (parameterized over sim + wiremock + live), Tier 3B + Tier 5 demos, ADR-002, reference docs, a "build-your-own-connector" guide, and a CHANGELOG v0.3.0 block. Workspace is **193/193 passing**, clippy clean, fmt clean, `scripts/demos/smoke.sh` 4/4, `mkdocs build --strict` green. Live-wire verification **ran successfully** tonight against `reuben-john.atlassian.net` space `REPOSIX` (4 seeded pages round-tripped through CLI `list`, and through the **Tier 5 FUSE mount with full `cat` body output** — see §"Live proof captured" below). 2 MEDIUM code-review findings + 3 LOW all fixed. **One late-stage FUSE cache bug** found during live Tier 5 verification and fixed in commit `6cd6e43` — the fix is in this release (see CHANGELOG `[v0.3.0] — Fixed` section).
 
-**The one thing left for you to do:** run `bash scripts/tag-v0.3.0.sh` to cut + push the `v0.3.0` annotated tag. The autonomous session deliberately stopped short of pushing the tag — see §"Cutting the tag" below.
+~~**The one thing left for you to do:** run `bash scripts/tag-v0.3.0.sh` to cut + push the `v0.3.0` annotated tag.~~ **DONE — v0.3.0, v0.4.0, v0.4.1, and v0.5.0 are all tagged and pushed.** See §Session 5 augmentation for current state.
 
 ## Live proof captured tonight
 
@@ -137,69 +141,11 @@ gh secret set REPOSIX_CONFLUENCE_SPACE --body "$REPOSIX_CONFLUENCE_SPACE"
 
 Without them the `if:` clause in the workflow skips the job cleanly (no failure, no proof). With them, every push runs the live contract against your tenant.
 
-## Cutting the tag — the single human-gate step
+## Cutting the tag — DONE
 
-The autonomous session deliberately did **not** push the tag. Per the plan's `autonomous: false` frontmatter and the T-11F-06 mitigation in the threat register, `git push origin v0.3.0` is a permanent and widely-visible action that must pass a human-verify gate.
-
-Tonight's artifacts for you to eyeball before running the script:
-
-1. `CHANGELOG.md` — read the `[v0.3.0] — 2026-04-14` section. Sanity-check the BREAKING callout about the `TEAMWORK_GRAPH_API → ATLASSIAN_API_KEY` env-var rename.
-2. `.planning/phases/11-confluence-adapter/11-F-SUMMARY.md` — tonight's execution summary.
-3. `docs/decisions/002-confluence-page-mapping.md` — ADR-002 (Option-A flatten decision).
-4. `docs/connectors/guide.md` — the 462-line connector guide (user asked for this directly).
-
-Once you've reviewed those and want to ship:
-
-```bash
-# FIRST: deal with the pre-existing uncommitted drift in the working tree.
-# At handoff, `git status --short` showed the following modifications carried
-# over from prior phases (NOT from Phase 11-F — Phase 11-F only added
-# MORNING-BRIEF-v0.3.md, scripts/tag-v0.3.0.sh, and edits to CHANGELOG.md,
-# MORNING-BRIEF.md, PROJECT-STATUS.md):
-#
-#    D .claude/scheduled_tasks.lock                          (ephemeral lock — safe to delete)
-#    M benchmarks/RESULTS.md                                 (timestamp-only diff)
-#    M crates/reposix-confluence/Cargo.toml                  (adds `url` workspace dep)
-#    M crates/reposix-confluence/src/lib.rs                  (WR-01 + WR-02 hardening
-#                                                             from 11-REVIEW.md —
-#                                                             percent-encode space_key +
-#                                                             numeric-only space_id taint check)
-#    ?? .planning/phases/11-confluence-adapter/11-REVIEW.md  (code-review artifact)
-#
-# Three options:
-#   (a) Review the diffs and COMMIT them as a pre-release hardening bundle, e.g.
-#         git add crates/reposix-confluence benchmarks/RESULTS.md \
-#                 .planning/phases/11-confluence-adapter/11-REVIEW.md
-#         git commit -m "chore(pre-release): WR-01/WR-02 hardening + review artifacts"
-#         git rm .claude/scheduled_tasks.lock
-#         git commit -m "chore: drop ephemeral scheduled_tasks.lock"
-#       Then cargo test + clippy to confirm the hardening didn't regress anything.
-#   (b) git stash the drift, cut the tag, pop and land the hardening as v0.3.1.
-#   (c) git checkout the drift + delete the untracked files (destructive — only if
-#       you're sure the hardening is unwanted).
-#
-# RECOMMENDED: (a). The WR-01/WR-02 diffs are security hardening and belong in v0.3.
-
-# After the working tree is clean, verify the workspace is still green
-# (the tag script also runs these, but do them once yourself).
-cargo fmt --all --check
-cargo clippy --workspace --all-targets --locked -- -D warnings
-cargo test --workspace --locked
-bash scripts/demos/smoke.sh
-
-# THEN cut the tag. The script enforces six safety guards (branch=main, clean tree, tag doesn't already
-# exist locally OR on origin, CHANGELOG has [v0.3.0] section, cargo test green, smoke.sh green) and
-# will exit non-zero WITHOUT tagging if any guard fails. No override flag — fix the root cause.
-bash scripts/tag-v0.3.0.sh
-```
-
-**The single command that this session stopped short of running:**
-
-```bash
-git push origin v0.3.0
-```
-
-The `tag-v0.3.0.sh` script wraps that command. Running the script IS the push. There is no other step. After the push succeeds, optionally create a GitHub Release at <https://github.com/reubenjohn/reposix/releases/new?tag=v0.3.0> and paste the CHANGELOG `[v0.3.0]` section as the body.
+> **All tags pushed.** v0.3.0, v0.4.0, v0.4.1, and v0.5.0 are all tagged and on the remote. CI `release.yml` ran green for each; prebuilt x86_64 + aarch64 Linux binaries are attached to every release. Nothing to do here.
+>
+> *The original session-3 instructions (tag-v0.3.0.sh, working-tree cleanup steps) are preserved in git history at the commit that first added this section.*
 
 ## Known open gaps
 
@@ -301,23 +247,6 @@ The user's insight: **the mount point is already a git repo.** The natural refre
 
 **Primary tech spike:** SQLite with WAL mode + a tiny commit-into-mount helper. A working prototype would be ~300 LoC in a new `crates/reposix-cache` crate.
 
-### OP-4 — GitHub Releases carry prebuilt binaries
-
-Today, `v0.3.0` (when tagged) is a bare git tag. Users must `cargo build --release`. Asks: **can the GitHub Release page carry prebuilt binaries** (`reposix`, `reposix-sim`, `reposix-fuse`, `git-remote-reposix`) for common targets (`x86_64-unknown-linux-gnu`, `x86_64-apple-darwin`, `aarch64-apple-darwin`, `x86_64-pc-windows-msvc`)?
-
-**Primary tech spike:** `.github/workflows/release.yml` triggered on `push: tags: v*.*.*`. Matrix builds per target. Artifacts uploaded via `softprops/action-gh-release@v2`. Checksums (`shasum -a 256`) committed as release assets too.
-
-**Caveats:**
-- macOS / Windows runners are slow and may need target-specific FUSE handling (macFUSE on mac, no FUSE at all on Windows — `reposix` CLI still works, only `reposix-fuse` is FUSE-bound). Package conditionally per target.
-- `x86_64-apple-darwin` needs `cargo build --target` with cross-compilation OR a native runner. GitHub-hosted `macos-latest` suffices at a per-minute cost.
-- Tag-signing (`git tag -s`) is a separate question — today we don't sign.
-
-**This was started tonight** — see `.github/workflows/release.yml` if it exists. If not, it's a ~200 LoC workflow away. Either way, capture it as OP-4 resolved.
-
-### OP-5 — Move `social/` into `docs/` (DONE)
-
-Captured for the audit trail: the v0.2 layout had a top-level `social/` dir for marketing assets (`hero.png`, `demo.gif`, etc.). Session 3 moved it to `docs/social/` so the `mkdocs` site can embed them relatively and the repo root stays clean. References in `README.md`, `docs/index.md`, `docs/why.md`, `docs/architecture.md`, and the `docs/social/assets/_build_*.py` generator scripts were updated at the same time. See the `chore: move social/ → docs/social/` commit.
-
 ---
 
 ## Handoff
@@ -326,77 +255,9 @@ If there's a next overnight agent: your starting points in order are this file (
 
 ---
 
-## OP-6 Backlog from full-repo sweep (2026-04-14 audit)
+## OP-6 Backlog from full-repo sweep
 
-> Sweep date: 2026-04-14. Auditor: file-search subagent (Claude Sonnet 4.6).
-> Does NOT duplicate OP-1..OP-5. All file paths are repo-root-relative. **Capture-only — do not execute without confirming scope with the user.** The user explicitly said "I don't want you to do it right now" about the full reorg.
-
-### HIGH (factually wrong / broken for users)
-
-1. **Fix broken `MORNING-BRIEF-v0.3.md` links in `MORNING-BRIEF.md` and `PROJECT-STATUS.md`** — both files have a header note pointing readers to `MORNING-BRIEF-v0.3.md`, which no longer exists (renamed into `HANDOFF.md`). Update to point at `HANDOFF.md`.
-2. **`docs/security.md` is v0.1-era factually wrong** — four statements false at v0.3: "v0.1 authenticates to no real backend … v0.2 scope", `X-Reposix-Agent` spoofing framed as "no real victims", swarm harness still marked deferred, etc. Rewrite the "Out of scope / deferred" section.
-3. **`docs/demo.md` advertises "No real backend. Simulator-only."** (line 264) — wrong at v0.3.
-4. **`CLAUDE.md` Operating Principle 1 is still the v0.1 sim-only gate** — "Until v0.2 explicitly opens this gate, no code authenticates to real GitHub/Jira/Confluence." Misleads every future agent session. Update to reflect v0.3 auth model (allowlist env var, creds from `.env`, Tainted ingress).
-5. **`LICENSE-APACHE` was missing** — Cargo.toml claimed `MIT OR Apache-2.0` but only `LICENSE-MIT` was committed. **FIXED in commit `f342dc3` tonight** after the release workflow tried to `cp` the missing file and aborted.
-
-### MEDIUM (cleanup, good hygiene)
-
-6. **`docs/development/roadmap.md` entirely v0.2-framed.** Title "Roadmap (v0.2+)", 11 numbered items all shipped. Rewrite as v0.3+.
-7. **`docs/index.md` leads with "What shipped in v0.1" grid + a v0.2 admonition box at line 9.** Stale homepage.
-8. **`docs/why.md` line 127** still says "swarm harness is the v0.2 work, but the substrate is ready today." Shipped in Phase 9.
-9. **Assorted "v0.2." labels in `docs/security.md` and `docs/development/roadmap.md`** should now read "v0.4.": `X-Reposix-Agent` HMAC signing, DashMap LRU cap, FUSE SIGTERM handler, audit-log PII redaction.
-10. **Three `TODO(phase-3)` comments in sim source** (`crates/reposix-sim/src/routes/issues.rs:213`, `:328`; `crates/reposix-sim/src/middleware/audit.rs:135`). Rename to `TODO(v0.4)` or implement — `Tainted<T>` inbound wrapping is straightforward because the type is already in scope.
-11. **`crates/reposix-sim/src/routes/transitions.rs:6`** says "deferred to v0.2". One-line rename.
-12. **`crates/reposix-confluence/src/lib.rs` write-path errors say "in v0.3"** (lines 637, 649, 660). Change to version-neutral `"not supported: reposix-confluence is read-only"`.
-13. **`reposix-github` under-tested offline.** 3 inline unit tests + 1 `#[ignore]`-gated live contract test. Add wiremock tests mirroring the Confluence pattern for pagination, rate-limit, `state_reason` mapping.
-14. **`reposix-swarm` has zero integration tests** — only 3 metrics unit tests. Short E2E spinning up the sim + 5 clients × 2s would add meaningful coverage cheap.
-15. **`crates/reposix-fuse/src/fs.rs` is 848 lines.** Consider splitting into `fs/ops.rs` (read) + `fs/write.rs` + `fs.rs` (struct + `impl Filesystem`).
-16. **`crates/reposix-confluence/src/lib.rs` is 1200 lines.** Split into `confluence/auth.rs` + `pagination.rs` + `backend.rs` mirroring how reposix-github would grow.
-17. **`docs/social/linkedin.md`** says "real GitHub Issues adapter … for v0.2". Marketing doc two versions stale.
-
-### LOW (polish, would be nice)
-
-18. **`scripts/phase2_goal_backward.sh`, `scripts/phase2_smoke.sh`, `scripts/phase3_exit_check.sh`** are build-era scripts superseded by `scripts/demos/smoke.sh`. Archive to `.planning/archive/scripts/` or delete.
-19. **`scripts/probe-confluence.sh`** — useful during Phase 11, not referenced elsewhere. Move to `scripts/dev/`.
-20. **`scripts/mermaid_divs_to_fences.py`, `scripts/fix_demos_index_links.py`** — one-off migrations already run. Archive or delete.
-21. **`MORNING-BRIEF.md`, `PROJECT-STATUS.md`** are historical v0.1/v0.2 session briefs at repo root. Move to `docs/archive/` per reorg below.
-
-### Reorg proposal (capture-only — user said NOT tonight)
-
-```bash
-# 1. Narrative prose research → docs/research/.
-git mv InitialReport.md docs/research/InitialReport.md
-git mv AgenticEngineeringReference.md docs/research/AgenticEngineeringReference.md
-
-# 2. Historical session briefs → docs/archive/.
-git mv MORNING-BRIEF.md docs/archive/MORNING-BRIEF-v0.2.md
-git mv PROJECT-STATUS.md docs/archive/PROJECT-STATUS-v0.2.md
-
-# 3. Phase-era scripts → .planning/archive/scripts/.
-git mv scripts/phase2_goal_backward.sh .planning/archive/scripts/
-git mv scripts/phase2_smoke.sh .planning/archive/scripts/
-git mv scripts/phase3_exit_check.sh .planning/archive/scripts/
-
-# 4. One-off migrations → scripts/migrations/.
-git mv scripts/mermaid_divs_to_fences.py scripts/migrations/
-git mv scripts/fix_demos_index_links.py scripts/migrations/
-
-# 5. Dev-only probe → scripts/dev/.
-git mv scripts/probe-confluence.sh scripts/dev/probe-confluence.sh
-```
-
-After the moves, update `CLAUDE.md` §Quick links for the two prose docs.
-
-### Suggested execution order (30-minute triage)
-
-1. HIGH-5 (LICENSE-APACHE — **DONE tonight**).
-2. HIGH-1 (broken links in old briefs — 2-line fix, do first next session).
-3. HIGH-4 (`CLAUDE.md` OP-1 sim-only gate — wrong rule guides every future agent).
-4. HIGH-2 (`docs/security.md` rewrite).
-5. HIGH-3 (`docs/demo.md` "Simulator-only" callout fix).
-6. MEDIUM-10 + MEDIUM-11 (rename `TODO(phase-3)` → `TODO(v0.4)`).
-7. Reorg-1 (`InitialReport.md` + `AgenticEngineeringReference.md` → `docs/research/`) — user explicitly asked.
-8. MEDIUM-6 (`docs/development/roadmap.md` → v0.3+ framing).
+OP-6 sweep items HIGH-1 through HIGH-5 and MEDIUM-6 through MEDIUM-17 resolved in sessions 3–4 (see session-4 drive-by block below). Remaining LOW items (obsolete scripts, marketing doc staleness) are low-priority; no blocking work remains.
 
 ## OP-7 — Hardening: poke holes in v0.3
 
@@ -471,52 +332,6 @@ Plan the move as one commit per logical group, each with a redirect-note committ
 
 ---
 
-## The mission for the next session (read this if you are that agent)
-
-You are the 4th overnight agent on this codebase. v0.3 shipped tonight; binaries are on the v0.3.0 GitHub release. Read the v0.3 `CHANGELOG.md`, this entire file, and `docs/connectors/guide.md`. Then:
-
-1. Pick **ONE** open problem from OP-1..OP-11 to tackle end-to-end. Do not half-start three — one full phase is worth more than three half-phases. OP-1 (folder structure) + OP-9 (Confluence comments) have the highest user-visible ROI; OP-7 (hardening) has the highest "no one else will do this" ROI.
-2. Use GSD: `/gsd-add-phase` → `/gsd-plan-phase` → `/gsd-execute-phase` → `/gsd-code-review` → `/gsd-verify-work`. Skip only discuss per `.planning/config.json`.
-3. Close the feedback loop: for any user-visible feature, run the demo against a real tenant. `cat` the file. Check CI is green. Take the screenshot. The simulator is safe; trust the SG-01 allowlist for real calls.
-4. Tag v0.3.1 or v0.4.0 depending on whether your phase is a bugfix vs a feature. Push via `bash scripts/tag-v0.X.Y.sh` after cloning-adjusting the existing v0.3.0 script.
-5. Dogfood the connector-guide (OP-5-done doc): if your new phase writes a new adapter, verify the guide is correct in practice not just in prose.
-6. Write tomorrow's `HANDOFF.md` augmentation. Atomic commits. Every phase has CONTEXT + PLAN + SUMMARY + REVIEW files under `.planning/phases/`. Return the favor for whoever comes after you.
-
-The dark-factory norms still apply: simulator before real backend, tainted by default, audit log non-optional, no hidden state, mount = git repo. If any of those slip, the design has regressed and the morning review will catch it.
-
----
-
-## OP-12 — Docs update for prebuilt binaries (do this FIRST next session)
-
-The v0.3.0 release now carries prebuilt Linux binaries on the GitHub Releases page (see OP-4). **The install docs don't reflect this yet** — everywhere new users land still tells them to `git clone && cargo build --release --workspace --bins`, which assumes a Rust toolchain they may not have. The "wget + untar" path is dramatically easier and is the canonical one we should lead with.
-
-**Surfaces to update** (pin this down in one GSD "quick" phase — no subagents needed):
-
-1. **`README.md` Quickstart section.** Today starts with `git clone … && bash scripts/demo.sh`. Add a **Prebuilt binaries (recommended)** subsection above the from-source subsection:
-   ```bash
-   curl -fsSLo - https://github.com/reubenjohn/reposix/releases/latest/download/reposix-v0.3.0-x86_64-unknown-linux-gnu.tar.gz | tar -xz
-   export PATH="$PWD/reposix-v0.3.0-x86_64-unknown-linux-gnu:$PATH"
-   reposix --help
-   ```
-   Keep the from-source path as a secondary option for contributors. Use `releases/latest/download/` pattern so the link survives minor bumps; add a note for verifying `SHA256SUMS` against the release page.
-2. **`docs/index.md`.** First interaction above the fold should be "install a binary"; current homepage jumps straight to architecture.
-3. **`docs/demo.md`.** Today says "install from source"; add the prebuilt path.
-4. **Tier-5 demo intro notes** (`docs/demos/index.md` + the individual `scripts/demos/05-mount-real-github.sh` / `06-mount-real-confluence.sh` headers) — the assumption that `reposix` is on `PATH` is already there, but the *how* is source-only. Link to the release tarball instead as the fast path.
-5. **`docs/reference/confluence.md`** + any reference doc that has "prereqs." Drop the Rust-toolchain prereq from the binary path.
-6. **`docs/connectors/guide.md`** — the "build your own connector" guide still assumes readers `cargo add reposix-core` to their fork. That flow STILL requires Rust; leave it as-is, but add a note saying the released binary of the host-reposix works against any connector on PATH once Phase 12 ships (forward-reference only).
-7. **`HANDOFF.md`** (this file) — once these landed, drop the OP-12 entry here and leave a one-line "install = download tarball from releases" note in the next session's handoff.
-
-**Success criteria:**
-- A first-time user on stock Ubuntu 22.04 can `curl`, `tar -xz`, `export PATH`, and run `reposix list --backend github --project octocat/Hello-World` with no Rust installed. Test this by spinning up a clean container (the user can do this in the morning as a one-off), or by reading the install snippet cold and verifying every command works from `$HOME`.
-- README's "Quickstart" shows the binary path as the default and a dimmer "from source" subsection.
-- No docs page leads with `cargo build` as the only option.
-- `mkdocs build --strict` still green.
-
-**Size:** genuinely a `/gsd-quick` — maybe 150-200 lines of doc edits total, no code, no tests. Should be the first thing the next session does because every other task is harder if the docs lie about the install.
-
-**A more honest version of the CHANGELOG `[v0.3.0]` Added block** would list prebuilt binaries as a user-facing addition, which it currently doesn't. One line under `### Added`:
-> - **Prebuilt x86_64 + aarch64 Linux binaries** attached to each GitHub release (new `.github/workflows/release.yml`, tag-push triggered). Users no longer need a Rust toolchain for the read-only workflow. SHA256SUMS and licenses bundled in each tarball.
-
 ## Sign-off
 
 — Claude Opus 4.6 1M context, 2026-04-13 / 2026-04-14 (overnight session 3).
@@ -564,30 +379,6 @@ $ fusermount3 -u /tmp/reposix-v04-verify    # clean
 ```
 
 Full transcript is in `.planning/phases/13-nested-mount-layout-pages-tree-symlinks-for-confluence-paren/13-SUMMARY.md`.
-
-### Cutting the v0.4.0 tag (single human-gate step)
-
-```bash
-# From the repo root.
-cd /home/reuben/workspace/reposix
-
-# Verify nothing drifted since phase close-out.
-git status --short       # expect: empty
-git log --oneline -1     # expect: fb960a3 feat(scripts): add green-gauntlet.sh …
-
-# Belt-and-suspenders: run the full pre-release gauntlet (fmt, clippy,
-# test, smoke, mkdocs --strict, FUSE --ignored integration tests).
-# ~3m20s total; the FUSE portion is the slow one.
-bash scripts/green-gauntlet.sh --full
-
-# Run the tag script — it enforces 6 guards (branch=main, clean tree,
-# tag not already existing locally or on origin, CHANGELOG has [v0.4.0],
-# cargo test green, smoke.sh 4/4).  The script ends with
-# `git push origin v0.4.0`.
-bash scripts/tag-v0.4.0.sh
-```
-
-The tag script IS the push. No other step. After the push succeeds, the CI `release.yml` workflow (added in v0.3 session 3) will automatically build and attach prebuilt tarballs to the GitHub release; optionally paste the CHANGELOG `[v0.4.0]` block into the release body at <https://github.com/reubenjohn/reposix/releases/new?tag=v0.4.0>.
 
 ### Drive-by fixes landed tonight (outside Phase 13 scope)
 
@@ -660,14 +451,6 @@ Unchanged from session 3's handoff unless noted:
 - **INFO-02:** `slugify_title` allocates the full title String before capping at 60 bytes. Pathological 10MB titles already proven not to panic but briefly balloon memory. Easy fix: pre-cap at input byte-slice.
 - **INFO-03:** Symlink `mtime` drifts on each getattr (currently returns `SystemTime::now()` for synthesized nodes).
 - **INFO-04:** `TreeDir` `..` entry always uses `TREE_ROOT_INO` regardless of depth — benign (kernel doesn't trust `..` inodes from FUSE anyway) but technically inaccurate.
-
-### Mission recommendation for session 5
-
-**Pick one of:** OP-2 (INDEX.md — composes beautifully with tree/ that just shipped; easy win) · OP-3 (git-pull cache refresh — substrate for the whole "mount as time machine" vision) · OP-9-comments (`pages/<id>.comments/<cid>.md`, also composes with tree/) · OP-7 (hardening — SSRF fuzz + credential-hygiene pre-push hook are both <100 LoC each and have no blast-radius risk).
-
-**Do NOT** start OP-10 or OP-11 without an explicit user check-in — they're both gated.
-
-The same norms still apply: simulator before real backend, tainted by default, audit log non-optional, no hidden state, mount = git repo, REPOSIX_ALLOWED_ORIGINS guards every egress. Session 4 did not touch any of these.
 
 — Claude Opus 4.6 1M context, 2026-04-14 (overnight session 4).
 
@@ -831,46 +614,29 @@ Per the session-5 brief:
 
 ### Session-5 open problems rollup (what's still outstanding)
 
-Unchanged from session 4 unless noted:
-
-- **OP-1 — nested mount layout.** Confluence parentId tree is live (v0.4.0).
-  Labels/, recent/, spaces/, multi-space mount are still deferred. OP-2 bucket-level
-  index shipped this session (v0.5.0); tree-level + mount-root index are follow-ups.
-- **OP-2 — dynamic `_INDEX.md`.** **Bucket level SHIPPED this session (v0.5.0).**
-  Remaining: `tree/<subdir>/_INDEX.md` (recursive synthesis, cycle-safe) and
-  `mount/_INDEX.md` (whole-mount overview). Tree recursion is the next most
-  compelling follow-up — the pattern is proven, the code is a straightforward
-  extension of `TreeSnapshot::dfs`.
+- **OP-1 — nested mount layout.** Confluence `tree/` (parentId hierarchy) is live
+  (v0.4.0). Remaining: `labels/`, `recent/`, `spaces/`, multi-space mounts.
+- **OP-2 — dynamic `_INDEX.md`.** Bucket level shipped (v0.5.0). Remaining:
+  `tree/<subdir>/_INDEX.md` (recursive synthesis, cycle-safe — straightforward
+  extension of `TreeSnapshot::dfs`) and `mount/_INDEX.md` (whole-mount overview).
 - **OP-3 — cache refresh via `git pull` semantics.** Not started. Now that
   `_INDEX.md` is the obvious sync anchor (`git diff _INDEX.md` across pulls
-  shows what changed), the ROI is higher — `mount-as-time-machine` gets
-  concrete.
-- **OP-4 — prebuilt binaries.** DONE (session 3; OP-12 install-docs fold-in
-  session 4). v0.4.1 and v0.5.0 both have prebuilt x86_64 + aarch64 Linux
-  binaries.
-- **OP-5, OP-12 — docs/social/ relocation + install docs.** DONE (sessions 3-4).
-- **OP-6 — sweep findings.** Mostly done through Phase 14 Wave D. Remaining
-  items are mostly LOW (dead script cleanup, marketing doc staleness) —
-  none are HIGH/MEDIUM.
-- **OP-7 — hardening probes.** Not started this session. Specifically
-  outstanding: concurrent-write contention swarm, FUSE under real-backend
-  load, 500-page truncation probe, chaos audit-log restart, macFUSE parity.
+  shows what changed), the ROI is higher — `mount-as-time-machine` gets concrete.
+- **OP-7 — hardening probes.** Not started. Outstanding: concurrent-write
+  contention swarm, FUSE under real-backend load, 500-page truncation probe,
+  chaos audit-log restart, macFUSE parity.
 - **OP-8 — honest-tokenizer benchmarks.** Not started.
-- **OP-9 — Confluence beyond pages (whiteboards, comments, attachments, live
-  docs, folders, multi-space).** Not started. Comments
-  (`pages/<id>.comments/<cid>.md`) is still the next-most-compelling use case
-  — now extra compelling because (a) tree/ is live and (b) bucket-level
-  `_INDEX.md` proves the synthetic-file pattern.
+- **OP-9 — Confluence beyond pages (comments, whiteboards, attachments,
+  multi-space).** Not started. `pages/<id>.comments/<cid>.md` is the next most
+  compelling use case — tree/ and `_INDEX.md` compose naturally with it.
 - **OP-10 — eject 3rd-party adapter crates.** Not started (user-gated).
 - **OP-11 — repo-root reorg.** Not started (user-gated).
 - **Phase 12 — subprocess/JSON-RPC ABI.** Not started (user-gated).
-- **Cluster A — Confluence writes.** Not started. Phase 14 unblocks the FUSE
-  write path to dispatch through any backend's `create_issue`/`update_issue`/
-  `delete_or_close` — so implementing these on `ConfluenceBackend` now
-  immediately gives you `vi mount/pages/<id>.md` round-tripping to real
-  Confluence.
-- **Cluster C — Swarm `--mode confluence-direct`.** Not started. Small
-  warm-up; the existing `SimDirectWorkload` is the template.
+- **Cluster A — Confluence writes.** Not started. Phase 14 unblocked the FUSE
+  write path; `ConfluenceBackend` now just needs `create_issue`/`update_issue`/
+  `delete_or_close` + an `atlas_doc_format` ↔ Markdown converter.
+- **Cluster C — Swarm `--mode confluence-direct`.** Not started (~300 LoC warm-up;
+  `SimDirectWorkload` is the template).
 
 ### New discoveries / known infra gaps (from this session)
 
