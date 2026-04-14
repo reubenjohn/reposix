@@ -132,7 +132,7 @@ pub async fn audit_middleware(State(state): State<AppState>, req: Request, next:
         }
     }
 
-    // TODO(phase-3): wrap captured request_body in Tainted<String> before
+    // TODO(v0.4+): wrap captured request_body in Tainted<String> before
     // any future egress use.
 
     response

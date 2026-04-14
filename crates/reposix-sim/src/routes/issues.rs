@@ -212,7 +212,7 @@ async fn create_issue(
     Path(slug): Path<String>,
     Json(body): Json<CreateIssueBody>,
 ) -> Result<Response, ApiError> {
-    // TODO(phase-3): wrap inbound body in Tainted<T> before frontmatter stripping.
+    // TODO(v0.4+): wrap inbound body in Tainted<T> before frontmatter stripping.
     if body.title.trim().is_empty() {
         return Err(ApiError::BadRequest("title must be non-empty".into()));
     }
@@ -327,7 +327,7 @@ async fn patch_issue(
     headers: HeaderMap,
     body: Option<Json<Value>>,
 ) -> Result<Json<Issue>, ApiError> {
-    // TODO(phase-3): wrap inbound body in Tainted<T> before frontmatter stripping.
+    // TODO(v0.4+): wrap inbound body in Tainted<T> before frontmatter stripping.
     let raw = body.map_or(Value::Object(serde_json::Map::new()), |Json(v)| v);
     // Deserialize via strict deny_unknown_fields.
     let patch: PatchIssueBody = serde_json::from_value(raw).map_err(ApiError::Json)?;

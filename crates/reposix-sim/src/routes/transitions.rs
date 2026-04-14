@@ -3,7 +3,8 @@
 //! `GET /projects/:slug/issues/:id/transitions` returns the current issue
 //! status and the list of other legal statuses. v0.1 best-effort: *all*
 //! other statuses are reported as legal; the real workflow rule set
-//! ("must pass through `in_progress`" etc.) is deferred to v0.2.
+//! ("must pass through `in_progress`" etc.) is deferred to a future
+//! version (not on the current roadmap).
 
 use axum::{
     extract::{Path, State},
