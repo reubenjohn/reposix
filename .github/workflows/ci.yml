@@ -112,18 +112,22 @@ jobs:
 
   integration-contract-confluence:
     # Hits real Atlassian Confluence via reposix-confluence's contract test.
-    # Gated on ALL FOUR secrets being present so fork PRs don't fail and
-    # so an incomplete config surfaces a SKIP rather than a false failure.
+    # Skips cleanly (exit 0) when any of the four secrets is missing so fork
+    # PRs don't fail and incomplete configs surface a SKIP rather than a
+    # false failure. We deliberately do NOT use a job-level `if:` on
+    # `secrets.*`: GitHub Actions rejects that with "workflow file issue"
+    # because the `secrets` context is not available at job-definition time.
+    # Instead, the single step below materialises the secret into a local
+    # shell var and exits 0 early if absent.
     # The secrets MUST be set by the repo owner via:
     #   gh secret set ATLASSIAN_API_KEY
     #   gh secret set ATLASSIAN_EMAIL
     #   gh secret set REPOSIX_CONFLUENCE_TENANT
     #   gh secret set REPOSIX_CONFLUENCE_SPACE      # space key for the contract test
-    # (see MORNING-BRIEF-v0.3.md for the one-shot command).
+    # (see HANDOFF.md for the one-shot command).
     name: integration (contract, real confluence)
     runs-on: ubuntu-latest
     needs: [test]
-    if: ${{ secrets.ATLASSIAN_API_KEY != '' && secrets.ATLASSIAN_EMAIL != '' && secrets.REPOSIX_CONFLUENCE_TENANT != '' && secrets.REPOSIX_CONFLUENCE_SPACE != '' }}
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
@@ -131,12 +135,19 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Run reposix-confluence contract test against real Atlassian
         env:
-          REPOSIX_ALLOWED_ORIGINS: http://127.0.0.1:*,https://${{ secrets.REPOSIX_CONFLUENCE_TENANT }}.atlassian.net
           ATLASSIAN_API_KEY: ${{ secrets.ATLASSIAN_API_KEY }}
           ATLASSIAN_EMAIL: ${{ secrets.ATLASSIAN_EMAIL }}
           REPOSIX_CONFLUENCE_TENANT: ${{ secrets.REPOSIX_CONFLUENCE_TENANT }}
           REPOSIX_CONFLUENCE_SPACE: ${{ secrets.REPOSIX_CONFLUENCE_SPACE }}
-        run: cargo test -p reposix-confluence -- --ignored
+        run: |
+          if [ -z "$ATLASSIAN_API_KEY" ] || [ -z "$ATLASSIAN_EMAIL" ] \
+             || [ -z "$REPOSIX_CONFLUENCE_TENANT" ] || [ -z "$REPOSIX_CONFLUENCE_SPACE" ]; then
+            echo "SKIP: one or more Atlassian secrets unset on this repo (fork or bootstrap)."
+            echo "Set them via: gh secret set ATLASSIAN_API_KEY (and the other 3)"
+            exit 0
+          fi
+          export REPOSIX_ALLOWED_ORIGINS="http://127.0.0.1:*,https://${REPOSIX_CONFLUENCE_TENANT}.atlassian.net"
+          cargo test -p reposix-confluence -- --ignored
 
   coverage:
     name: coverage
