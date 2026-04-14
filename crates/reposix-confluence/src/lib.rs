@@ -468,7 +468,13 @@ impl ConfluenceReadOnlyBackend {
     /// - Empty `results` array (space not found) surfaces as
     ///   `Err(Error::Other("not found: space key …"))`.
     async fn resolve_space_id(&self, space_key: &str) -> Result<String> {
-        let url = format!("{}/wiki/api/v2/spaces?keys={}", self.base(), space_key);
+        // WR-01: build the URL via `url::Url::query_pairs_mut` so that any
+        // metacharacters in `space_key` (`&`, `=`, `#`, space, non-ASCII) are
+        // percent-encoded instead of smuggling extra query parameters.
+        let mut url = url::Url::parse(&format!("{}/wiki/api/v2/spaces", self.base()))
+            .map_err(|e| Error::Other(format!("bad base url: {e}")))?;
+        url.query_pairs_mut().append_pair("keys", space_key);
+        let url = url.to_string();
         let header_owned = self.standard_headers();
         let header_refs: Vec<(&str, &str)> =
             header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
@@ -1103,4 +1109,48 @@ mod tests {
             assert!(r.is_ok(), "tenant {t:?} should be accepted, got {r:?}");
         }
     }
+
+    // -------- WR-01: space_key is percent-encoded, not splat into URL --------
+
+    /// A `space_key` containing `&`, `=`, `#`, space, and non-ASCII must be
+    /// percent-encoded into the query string rather than smuggling extra
+    /// query parameters or breaking out of the `keys=` value.
+    #[tokio::test]
+    async fn space_key_is_percent_encoded_in_query_string() {
+        use wiremock::matchers::query_param;
+        let server = MockServer::start().await;
+        // The adversarial key we want to send as a literal value of `keys=`.
+        let adversarial = "A&limit=1#frag ZZ";
+        // Wiremock's `query_param` matcher checks the decoded value — so if
+        // the adapter percent-encodes properly, wiremock will see the raw
+        // literal string back. If the adapter splices it raw, the query
+        // string would parse as multiple params and this match would fail.
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/spaces"))
+            .and(query_param("keys", adversarial))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [{"id": "12345", "key": adversarial}]
+            })))
+            .mount(&server)
+            .await;
+        // Also mount the pages endpoint so list_issues can complete — this
+        // proves the round-trip end-to-end.
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/spaces/12345/pages"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [],
+                "_links": {}
+            })))
+            .mount(&server)
+            .await;
+
+        let backend =
+            ConfluenceReadOnlyBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let issues = backend
+            .list_issues(adversarial)
+            .await
+            .expect("list should succeed with adversarial space_key");
+        assert_eq!(issues.len(), 0);
+    }
+
 }
