@@ -50,17 +50,32 @@ Every HTTP arrow above is mediated by a single `reposix_core::http::HttpClient` 
 flowchart LR
   CORE["reposix-core<br/>types + contracts"]
   SIM["reposix-sim<br/>axum REST sim"]
+  GH["reposix-github<br/>GitHub REST v3 adapter"]
+  CONF["reposix-confluence<br/>Confluence REST v2 adapter"]
   FUSE["reposix-fuse<br/>FUSE daemon"]
   REM["reposix-remote<br/>git-remote-reposix"]
   CLI["reposix-cli<br/>orchestrator"]
   CORE --> SIM
+  CORE --> GH
+  CORE --> CONF
   CORE --> FUSE
   CORE --> REM
   CORE --> CLI
   FUSE -.spawns via.-> CLI
   SIM -.spawns via.-> CLI
   style CORE fill:#6a1b9a,stroke:#fff,color:#fff
+  style GH fill:#00897b,stroke:#fff,color:#fff
+  style CONF fill:#00897b,stroke:#fff,color:#fff
 ```
+
+`reposix-github` and `reposix-confluence` are sibling `IssueBackend`
+implementations. Both follow the same pattern — `HttpClient` for SG-01
+allowlist enforcement, `Tainted<T>` ingress wrapping for SG-05, a shared
+`rate_limit_gate: Arc<Mutex<Option<Instant>>>` for per-token throttling,
+manual-redact `Debug` on credential structs. `reposix-confluence` follows
+the same SG-01 allowlist / SG-05 tainted-ingress discipline as
+`reposix-github`; adding a third backend is mechanical (see
+[`docs/connectors/guide.md`](connectors/guide.md)).
 
 `reposix-core` is the seam. Every other crate depends on it; it depends on nothing internal. Ships: `Issue`, `IssueId`, `IssueStatus`, `ProjectSlug`, `Project`, `RemoteSpec`, `Tainted<T>`, `Untainted<T>`, `HttpClient`, `validate_issue_filename`, `frontmatter::{render, parse}`, the audit-log schema fixture, the `sanitize` function.
 

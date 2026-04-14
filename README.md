@@ -111,8 +111,21 @@ fusermount3 -u /tmp/reposix-gh-mnt
 | Demo                                                                                | Audience  | What it proves                                                                                                                              | Recording |
 |-------------------------------------------------------------------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------|-----------|
 | [`05-mount-real-github.sh`](scripts/demos/05-mount-real-github.sh)                  | developer | `reposix mount --backend github` exposes `octocat/Hello-World` issues as Markdown files end-to-end; `cat 0001.md` renders real GitHub data. | —         |
+| [`06-mount-real-confluence.sh`](scripts/demos/06-mount-real-confluence.sh)          | developer | `reposix mount --backend confluence` exposes a real Atlassian space; `cat` on the first page renders the real XHTML body + frontmatter. Requires Atlassian creds (see [`.env.example`](.env.example) and [`docs/reference/confluence.md`](docs/reference/confluence.md)). | —         |
 
-**Not in smoke.** Requires `gh auth token`; skips cleanly with `SKIP:` if absent.
+**Not in smoke.** `05-mount-real-github.sh` requires `gh auth token`; `06-mount-real-confluence.sh` requires `ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT`, and `REPOSIX_CONFLUENCE_SPACE`. Both skip cleanly with `SKIP:` if their env is absent.
+
+Confluence quickstart (read-only, v0.3):
+
+```bash
+# Paste your values (from https://id.atlassian.com/manage-profile/security/api-tokens)
+export ATLASSIAN_API_KEY=... ATLASSIAN_EMAIL=you@example.com REPOSIX_CONFLUENCE_TENANT=yourtenant
+export REPOSIX_ALLOWED_ORIGINS="http://127.0.0.1:*,https://${REPOSIX_CONFLUENCE_TENANT}.atlassian.net"
+reposix list --backend confluence --project YOUR_SPACE_KEY --format table
+```
+
+Architecture + mapping rationale: [`docs/decisions/002-confluence-page-mapping.md`](docs/decisions/002-confluence-page-mapping.md).
+Writing your own backend: [`docs/connectors/guide.md`](docs/connectors/guide.md).
 
 ### Tier 2 — the full walkthrough
 

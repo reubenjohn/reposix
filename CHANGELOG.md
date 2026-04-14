@@ -6,7 +6,84 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
-— Nothing yet.
+The "real Confluence" cut. v0.2.0-alpha landed the real-GitHub read path; this
+Unreleased bucket extends the same `IssueBackend` seam to Atlassian Confluence
+Cloud REST v2. Same kernel path, same CLI surface, same SG-01 allowlist — just
+a different backend plugged into the trait.
+
+### Added
+
+- **`crates/reposix-confluence`** — read-only Atlassian Confluence Cloud REST v2
+  adapter implementing `IssueBackend`. Basic auth via
+  `Authorization: Basic base64(email:api_token)` (no Bearer path — Atlassian
+  user tokens cannot be used as OAuth Bearer). Cursor-in-body pagination via
+  `_links.next` (capped at 500 pages per `list_issues`; server-supplied
+  `_links.base` is deliberately ignored to prevent SSRF). Shared rate-limit
+  gate armed by 429 `Retry-After` or `x-ratelimit-remaining: 0`. Tenant
+  subdomain validated against DNS-label rules (`[a-z0-9-]`, 1..=63 chars)
+  before any request is made. `ConfluenceCreds` has a manual `Debug` impl
+  that redacts `api_token` — `#[derive(Debug)]` would leak the token into
+  every tracing span.
+- **`reposix list --backend confluence`** — `reposix list --backend confluence
+  --project <SPACE_KEY>` reads a real Confluence space end-to-end. `--project`
+  takes the human-readable space key (e.g. `REPOSIX`); the adapter resolves it
+  to Confluence's numeric `spaceId` internally via
+  `GET /wiki/api/v2/spaces?keys=...`.
+- **`reposix mount --backend confluence`** — the FUSE daemon now mounts a
+  Confluence space as a POSIX directory of `<padded-id>.md` files. Same
+  `Mount::open(Arc<dyn IssueBackend>)` path as the `github` and `sim`
+  backends; SG-07 read-path ceiling (5s get / 15s list) applies unchanged.
+- **Env vars: `ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`,
+  `REPOSIX_CONFLUENCE_TENANT`** — three new required env vars for the
+  Confluence backend. The CLI fails fast with a single error listing every
+  missing variable.
+- **`scripts/demos/parity-confluence.sh`** (Tier 3B demo) — `reposix list`
+  against the simulator and `reposix list --backend confluence` against a
+  real tenant, normalized via `jq`, key-set asserted equal. Structure
+  identical, content differs. Skips cleanly if any Atlassian env var is
+  unset.
+- **`scripts/demos/06-mount-real-confluence.sh`** (Tier 5 demo) —
+  FUSE-mounts a real Confluence space, `cat`s the first listed page, and
+  unmounts. Token and email are never echoed — only tenant host + space key
+  + allowlist appear on stdout. Skips cleanly with `SKIP:` if any
+  Atlassian env var is unset.
+- **`crates/reposix-confluence/tests/contract.rs`** — same contract
+  assertions run against `SimBackend` (always), a wiremock-backed
+  `ConfluenceReadOnlyBackend` (always), and a live
+  `ConfluenceReadOnlyBackend` (`#[ignore]`-gated, opt-in via
+  `cargo test -p reposix-confluence -- --ignored`).
+- **`docs/decisions/002-confluence-page-mapping.md`** — ADR for the Option-A
+  flatten decision. Documents the per-field page→issue mapping, the lost
+  metadata (parentId, spaceKey, `_links.webui`, `atlas_doc_format`, labels),
+  the Basic-auth-only rationale, and the cursor + rate-limit decisions.
+- **`docs/reference/confluence.md`** — user-facing guide for the backend:
+  CLI surface, env var table with dashboard sources, step-by-step credential
+  setup, failure-modes table (`FAILURE_CLIENT_AUTH_MISMATCH` is the
+  common one).
+- **`docs/connectors/guide.md`** — "Building your own connector" guide. The
+  short-term (v0.3) published-crate model: publish
+  `reposix-adapter-<name>` on crates.io, fork reposix, add a few lines of
+  dispatch. Worked examples: `reposix-github` and `reposix-confluence`.
+  Five non-negotiable security rules for adapter authors (HttpClient,
+  `Tainted<T>`, redacted `Debug`, tenant validation, rate-limit gate).
+  Previews the Phase 12 subprocess/JSON-RPC connector ABI as the scalable
+  replacement.
+- **CI job `integration-contract-confluence`** — runs the contract test
+  against a real Atlassian tenant on every push when the four Atlassian
+  secrets (`ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`,
+  `REPOSIX_CONFLUENCE_TENANT`, `REPOSIX_CONFLUENCE_SPACE`) are configured.
+  Skips cleanly when they're not.
+
+### Changed
+
+- **`.env.example`** — renamed `TEAMWORK_GRAPH_API` → `ATLASSIAN_API_KEY`.
+  Added `ATLASSIAN_EMAIL` and `REPOSIX_CONFLUENCE_TENANT`. Inline comments
+  now describe the account-scoped-token failure mode so contributors hit
+  it and fix it without needing to read ADR-002 cold. **Breaking change for
+  anyone with `TEAMWORK_GRAPH_API` in their shell** — it is no longer read
+  by any reposix binary.
+- **Workspace manifest** — adds the `reposix-confluence` crate and
+  `base64 = "0.22"` as a workspace dep.
 
 ## [v0.2.0-alpha] — 2026-04-13 (post-noon)
 
