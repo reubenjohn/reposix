@@ -1,12 +1,14 @@
-//! [`ConfluenceReadOnlyBackend`] — read-only [`IssueBackend`] adapter for
+//! [`ConfluenceBackend`] — read/write [`IssueBackend`] adapter for
 //! Atlassian Confluence Cloud REST v2.
 //!
 //! # Scope
 //!
-//! v0.3 ships read-only: `list_issues` + `get_issue` work against a real
-//! Atlassian tenant (once credentials are configured); `create_issue` /
-//! `update_issue` / `delete_or_close` return `Error::Other("not supported: …")`
-//! without emitting any HTTP. v0.4 may flip on the write path (separate ADR).
+//! v0.6 ships the full read+write path: `list_issues` + `get_issue` work
+//! against a real Atlassian tenant (once credentials are configured);
+//! `create_issue`, `update_issue`, and `delete_or_close` are implemented
+//! against `POST /wiki/api/v2/pages`, `PUT /wiki/api/v2/pages/{id}`, and
+//! `DELETE /wiki/api/v2/pages/{id}` respectively. Audit log rows are added in
+//! Wave C (v0.6 Phase 16).
 //!
 //! # Page → Issue mapping (Option A flattening, per ADR-002)
 //!
@@ -42,7 +44,7 @@
 //! `Retry-After` header (seconds). The next outbound call parks until the
 //! gate elapses, capped at [`MAX_RATE_LIMIT_SLEEP`].
 //!
-//! [`rate_limit_gate`]: ConfluenceReadOnlyBackend
+//! [`rate_limit_gate`]: ConfluenceBackend
 //!
 //! # Security
 //!
@@ -56,7 +58,7 @@
 //! - **T-11-01 (creds leak):** [`ConfluenceCreds`] has a manual `Debug` impl
 //!   that prints `api_token: "<redacted>"`. Same redaction on the backend
 //!   struct.
-//! - **T-11-02 (SSRF via tenant injection):** [`ConfluenceReadOnlyBackend::new`]
+//! - **T-11-02 (SSRF via tenant injection):** [`ConfluenceBackend::new`]
 //!   validates `tenant` against DNS-label rules (`^[a-z0-9][a-z0-9-]{0,62}$`)
 //!   before URL construction.
 
@@ -94,7 +96,7 @@ const PAGE_SIZE: usize = 100;
 
 /// Format string for the default production base URL. Callers supply the
 /// tenant subdomain (validated against DNS-label rules in
-/// [`ConfluenceReadOnlyBackend::new`]).
+/// [`ConfluenceBackend::new`]).
 pub const DEFAULT_BASE_URL_FORMAT: &str = "https://{tenant}.atlassian.net";
 
 /// Basic-auth credentials for Confluence Cloud.
@@ -128,9 +130,13 @@ impl std::fmt::Debug for ConfluenceCreds {
 
 /// Read-only `IssueBackend` for Atlassian Confluence Cloud REST v2.
 ///
-/// Construct via [`ConfluenceReadOnlyBackend::new`] (public production API)
-/// or [`ConfluenceReadOnlyBackend::new_with_base_url`] (custom base; used by
+/// Construct via [`ConfluenceBackend::new`] (public production API)
+/// or [`ConfluenceBackend::new_with_base_url`] (custom base; used by
 /// wiremock unit tests and the contract test).
+///
+/// Write methods (`create_issue`, `update_issue`, `delete_or_close`) are
+/// fully implemented as of v0.6. Audit log rows are added in Phase 16
+/// Wave C.
 ///
 /// # Thread-safety
 ///
@@ -139,7 +145,7 @@ impl std::fmt::Debug for ConfluenceCreds {
 /// is shared across clones so a single throttled instance can't be bypassed
 /// by cloning.
 #[derive(Clone)]
-pub struct ConfluenceReadOnlyBackend {
+pub struct ConfluenceBackend {
     http: Arc<HttpClient>,
     creds: ConfluenceCreds,
     /// Tenant base URL with no trailing slash, e.g.
@@ -155,11 +161,11 @@ pub struct ConfluenceReadOnlyBackend {
 // Manual Debug on the backend struct too — the derived Debug would print
 // `creds` which has its own redaction, but being explicit documents the
 // intent and ensures `cargo expand` can never accidentally flip back.
-impl std::fmt::Debug for ConfluenceReadOnlyBackend {
+impl std::fmt::Debug for ConfluenceBackend {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // `http` is deliberately omitted; it has no meaningful Debug state
         // worth showing and including it obscures the redaction intent.
-        f.debug_struct("ConfluenceReadOnlyBackend")
+        f.debug_struct("ConfluenceBackend")
             .field("base_url", &self.base_url)
             .field("creds", &self.creds)
             .field("rate_limit_gate", &"<gate>")
@@ -368,7 +374,7 @@ fn translate(page: ConfPage) -> Result<Issue> {
     })
 }
 
-impl ConfluenceReadOnlyBackend {
+impl ConfluenceBackend {
     /// Build a new backend against `https://{tenant}.atlassian.net`.
     ///
     /// `tenant` is the Atlassian tenant subdomain (e.g. `"reuben-john"` for
@@ -445,7 +451,7 @@ impl ConfluenceReadOnlyBackend {
     fn standard_headers(&self) -> Vec<(&'static str, String)> {
         vec![
             ("Accept", "application/json".to_owned()),
-            ("User-Agent", "reposix-confluence-readonly/0.3".to_owned()),
+            ("User-Agent", "reposix-confluence/0.6".to_owned()),
             (
                 "Authorization",
                 basic_auth_header(&self.creds.email, &self.creds.api_token),
@@ -573,9 +579,9 @@ impl ConfluenceReadOnlyBackend {
 }
 
 #[async_trait]
-impl IssueBackend for ConfluenceReadOnlyBackend {
+impl IssueBackend for ConfluenceBackend {
     fn name(&self) -> &'static str {
-        "confluence-readonly"
+        "confluence"
     }
 
     fn supports(&self, feature: BackendFeature) -> bool {
@@ -802,7 +808,7 @@ mod tests {
             .await;
 
         let backend =
-            ConfluenceReadOnlyBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issues = backend.list_issues("REPOSIX").await.expect("list");
         assert_eq!(issues.len(), 2);
         assert_eq!(issues[0].id, IssueId(98765));
@@ -846,7 +852,7 @@ mod tests {
             .await;
 
         let backend =
-            ConfluenceReadOnlyBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issues = backend.list_issues("REPOSIX").await.expect("list");
         assert_eq!(issues.len(), 3);
         assert_eq!(issues[0].id, IssueId(1));
@@ -871,7 +877,7 @@ mod tests {
             .await;
 
         let backend =
-            ConfluenceReadOnlyBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issue = backend
             .get_issue("REPOSIX", IssueId(98765))
             .await
@@ -891,7 +897,7 @@ mod tests {
             .mount(&server)
             .await;
         let backend =
-            ConfluenceReadOnlyBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let err = backend
             .get_issue("REPOSIX", IssueId(9999))
             .await
@@ -918,7 +924,7 @@ mod tests {
             .mount(&server)
             .await;
         let backend =
-            ConfluenceReadOnlyBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issue = backend.get_issue("REPOSIX", IssueId(1)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::Open);
     }
@@ -939,7 +945,7 @@ mod tests {
             .mount(&server)
             .await;
         let backend =
-            ConfluenceReadOnlyBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issue = backend.get_issue("REPOSIX", IssueId(2)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::Done);
     }
@@ -979,7 +985,7 @@ mod tests {
             .mount(&server)
             .await;
         let backend =
-            ConfluenceReadOnlyBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         // If the header is wrong, wiremock returns no-match 404 and this fails.
         backend
             .get_issue("REPOSIX", IssueId(42))
@@ -1002,7 +1008,7 @@ mod tests {
             .mount(&server)
             .await;
         let backend =
-            ConfluenceReadOnlyBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let _ = backend.get_issue("REPOSIX", IssueId(42)).await; // expect Err, don't care which
         let gate = backend.rate_limit_gate.lock().to_owned();
         let now = Instant::now();
@@ -1028,7 +1034,7 @@ mod tests {
     async fn write_methods_return_not_supported() {
         // Unreachable base URL — must not matter because writes short-circuit.
         let backend =
-            ConfluenceReadOnlyBackend::new_with_base_url(creds(), "http://127.0.0.1:1".to_owned())
+            ConfluenceBackend::new_with_base_url(creds(), "http://127.0.0.1:1".to_owned())
                 .expect("backend");
         let t = chrono::Utc::now();
         let u = sanitize(
@@ -1077,7 +1083,7 @@ mod tests {
     #[test]
     fn supports_reports_only_hierarchy() {
         let backend =
-            ConfluenceReadOnlyBackend::new_with_base_url(creds(), "http://127.0.0.1:1".to_owned())
+            ConfluenceBackend::new_with_base_url(creds(), "http://127.0.0.1:1".to_owned())
                 .expect("backend");
         assert!(!backend.supports(BackendFeature::Workflows));
         assert!(!backend.supports(BackendFeature::Delete));
@@ -1085,7 +1091,7 @@ mod tests {
         assert!(!backend.supports(BackendFeature::StrongVersioning));
         assert!(!backend.supports(BackendFeature::BulkEdit));
         assert!(backend.supports(BackendFeature::Hierarchy));
-        assert_eq!(backend.name(), "confluence-readonly");
+        assert_eq!(backend.name(), "confluence");
     }
 
     // -------- Phase 13 Wave B1: parent_id derivation + Hierarchy capability --------
@@ -1170,7 +1176,7 @@ mod tests {
     #[test]
     fn root_collection_name_returns_pages() {
         let backend =
-            ConfluenceReadOnlyBackend::new_with_base_url(creds(), "http://127.0.0.1:1".to_owned())
+            ConfluenceBackend::new_with_base_url(creds(), "http://127.0.0.1:1".to_owned())
                 .expect("backend");
         assert_eq!(backend.root_collection_name(), "pages");
     }
@@ -1239,7 +1245,7 @@ mod tests {
             .await;
 
         let backend =
-            ConfluenceReadOnlyBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issues = backend.list_issues("REPOSIX").await.expect("list");
         assert_eq!(issues.len(), 3);
 
@@ -1329,7 +1335,7 @@ mod tests {
 
     #[test]
     fn backend_debug_redacts_creds() {
-        let backend = ConfluenceReadOnlyBackend::new_with_base_url(
+        let backend = ConfluenceBackend::new_with_base_url(
             ConfluenceCreds {
                 email: "u@example.com".into(),
                 api_token: "SUPER_SECRET_TOKEN_VALUE".into(),
@@ -1359,7 +1365,7 @@ mod tests {
             too_long.as_str(),
         ];
         for t in &bad {
-            let r = ConfluenceReadOnlyBackend::new(creds(), t);
+            let r = ConfluenceBackend::new(creds(), t);
             let is_expected_err = matches!(
                 &r,
                 Err(Error::Other(m)) if m.contains("invalid confluence tenant")
@@ -1374,7 +1380,7 @@ mod tests {
     #[test]
     fn new_accepts_valid_tenants() {
         for t in ["a", "reuben-john", "tenant1", "1tenant", "a0-b1-c2"] {
-            let r = ConfluenceReadOnlyBackend::new(creds(), t);
+            let r = ConfluenceBackend::new(creds(), t);
             assert!(r.is_ok(), "tenant {t:?} should be accepted, got {r:?}");
         }
     }
@@ -1414,7 +1420,7 @@ mod tests {
             .await;
 
         let backend =
-            ConfluenceReadOnlyBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issues = backend
             .list_issues(adversarial)
             .await
@@ -1441,7 +1447,7 @@ mod tests {
             .mount(&server)
             .await;
         let backend =
-            ConfluenceReadOnlyBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let err = backend
             .list_issues("REPOSIX")
             .await

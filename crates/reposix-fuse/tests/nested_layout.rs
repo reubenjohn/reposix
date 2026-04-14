@@ -33,7 +33,7 @@
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use reposix_confluence::{ConfluenceCreds, ConfluenceReadOnlyBackend};
+use reposix_confluence::{ConfluenceCreds, ConfluenceBackend};
 use reposix_core::IssueBackend;
 use reposix_fuse::{Mount, MountConfig};
 use serde_json::{json, Value};
@@ -112,7 +112,7 @@ async fn install_confluence_fixtures(server: &MockServer, pages: &[Value]) {
     }
 }
 
-/// Boot a `ConfluenceReadOnlyBackend` + FUSE mount against the wiremock
+/// Boot a `ConfluenceBackend` + FUSE mount against the wiremock
 /// `server`. Returns `(mount, mount_path, tempdir)`. Drop `tempdir` last.
 fn boot_mount(server_uri: String) -> (reposix_fuse::Mount, std::path::PathBuf, tempfile::TempDir) {
     let td = tempfile::Builder::new()
@@ -126,7 +126,7 @@ fn boot_mount(server_uri: String) -> (reposix_fuse::Mount, std::path::PathBuf, t
         api_token: "dummy".into(),
     };
     let backend: Arc<dyn IssueBackend> = Arc::new(
-        ConfluenceReadOnlyBackend::new_with_base_url(creds, server_uri.clone())
+        ConfluenceBackend::new_with_base_url(creds, server_uri.clone())
             .expect("confluence backend"),
     );
     let mount = Mount::open(

@@ -1,11 +1,11 @@
 //! Contract test — the same 5 invariants hold for SimBackend,
-//! a wiremock-backed [`ConfluenceReadOnlyBackend`], and (when
+//! a wiremock-backed [`ConfluenceBackend`], and (when
 //! `#[ignore]`-unlocked + env configured) a live Atlassian tenant.
 //!
 //! **Why this file exists.** The whole point of the [`IssueBackend`] seam
 //! (Phase 8 spec) is that the FUSE daemon and CLI orchestrator don't care
 //! which concrete backend they're talking to. Plan 11-A shipped 17 wiremock
-//! unit tests for `ConfluenceReadOnlyBackend`, but those exercise *private*
+//! unit tests for `ConfluenceBackend`, but those exercise *private*
 //! helpers through module-internal access; they never drive the adapter
 //! through the [`IssueBackend`] trait seam the rest of the codebase
 //! actually consumes. This file is that proof.
@@ -30,7 +30,7 @@
 //! - `contract_confluence_wiremock` — mounts the three Confluence v2
 //!   endpoints the contract hits (spaces-by-key resolver, list pages, get
 //!   page) on a [`MockServer`], drives assert_contract through
-//!   [`ConfluenceReadOnlyBackend`]. Always runs.
+//!   [`ConfluenceBackend`]. Always runs.
 //! - `contract_confluence_live` — hits a real Atlassian tenant. `#[ignore]`-
 //!   gated + `skip_if_no_env!`-guarded so a fresh clone's CI stays green
 //!   without any secrets. Opt-in via
@@ -38,7 +38,7 @@
 
 use std::path::PathBuf;
 
-use reposix_confluence::{ConfluenceCreds, ConfluenceReadOnlyBackend};
+use reposix_confluence::{ConfluenceCreds, ConfluenceBackend};
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::backend::IssueBackend;
 use reposix_core::{IssueId, IssueStatus};
@@ -209,7 +209,7 @@ async fn contract_sim() {
 /// Always runs. Mounts the three Confluence v2 endpoints the contract
 /// sequence hits (space-key resolver → list pages → get single page)
 /// plus a 404 for `IssueId(u64::MAX)` and drives `assert_contract`
-/// through [`ConfluenceReadOnlyBackend`].
+/// through [`ConfluenceBackend`].
 ///
 /// Stronger than the unit tests in `lib.rs` because it exercises the
 /// full `list_issues → get_issue → get_issue(u64::MAX)` sequence
@@ -304,7 +304,7 @@ async fn contract_confluence_wiremock() {
         api_token: "dummy".into(),
     };
     let backend =
-        ConfluenceReadOnlyBackend::new_with_base_url(creds, server.uri()).expect("backend");
+        ConfluenceBackend::new_with_base_url(creds, server.uri()).expect("backend");
 
     assert_contract(&backend, "REPOSIX", IssueId(1)).await;
 }
@@ -391,7 +391,7 @@ async fn adversarial_links_base_does_not_trigger_outbound_call() {
         api_token: "dummy".into(),
     };
     let backend =
-        ConfluenceReadOnlyBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
+        ConfluenceBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
 
     let issues = backend
         .list_issues("REPOSIX")
@@ -491,7 +491,7 @@ async fn adversarial_webui_link_does_not_trigger_outbound_call() {
         api_token: "dummy".into(),
     };
     let backend =
-        ConfluenceReadOnlyBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
+        ConfluenceBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
 
     let issues = backend
         .list_issues("REPOSIX")
@@ -600,7 +600,7 @@ async fn adversarial_host_in_arbitrary_string_field_is_ignored() {
         api_token: "dummy".into(),
     };
     let backend =
-        ConfluenceReadOnlyBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
+        ConfluenceBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
 
     let issues = backend
         .list_issues("REPOSIX")
@@ -685,7 +685,7 @@ async fn contract_confluence_live() {
         api_token: std::env::var("ATLASSIAN_API_KEY").unwrap(),
     };
     let space = std::env::var("REPOSIX_CONFLUENCE_SPACE").unwrap();
-    let backend = ConfluenceReadOnlyBackend::new(creds, &tenant).expect("backend");
+    let backend = ConfluenceBackend::new(creds, &tenant).expect("backend");
 
     // Pick a known id by listing first — real spaces don't have a
     // canonical "issue 1" the way octocat/Hello-World does.
@@ -735,7 +735,7 @@ async fn contract_confluence_live_hierarchy() {
         api_token: std::env::var("ATLASSIAN_API_KEY").unwrap(),
     };
     let space = std::env::var("REPOSIX_CONFLUENCE_SPACE").unwrap();
-    let backend = ConfluenceReadOnlyBackend::new(creds, &tenant).expect("backend");
+    let backend = ConfluenceBackend::new(creds, &tenant).expect("backend");
 
     let issues = backend
         .list_issues(&space)

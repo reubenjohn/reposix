@@ -19,7 +19,7 @@
 
 use anyhow::{Context, Result};
 use clap::ValueEnum;
-use reposix_confluence::{ConfluenceCreds, ConfluenceReadOnlyBackend};
+use reposix_confluence::{ConfluenceCreds, ConfluenceBackend};
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::{Issue, IssueBackend};
 use reposix_github::GithubReadOnlyBackend;
@@ -81,8 +81,8 @@ pub async fn run(
                 email,
                 api_token: token,
             };
-            let b = ConfluenceReadOnlyBackend::new(creds, &tenant)
-                .context("build ConfluenceReadOnlyBackend")?;
+            let b = ConfluenceBackend::new(creds, &tenant)
+                .context("build ConfluenceBackend")?;
             b.list_issues(&project).await.with_context(|| {
                 format!(
                     "confluence list_issues space_key={project} (REPOSIX_ALLOWED_ORIGINS must include https://{tenant}.atlassian.net)"

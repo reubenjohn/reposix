@@ -21,7 +21,7 @@ use std::sync::Arc;
 
 use anyhow::{bail, Result};
 use clap::{Parser, ValueEnum};
-use reposix_confluence::{ConfluenceCreds, ConfluenceReadOnlyBackend};
+use reposix_confluence::{ConfluenceCreds, ConfluenceBackend};
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::IssueBackend;
 use reposix_fuse::{Mount, MountConfig};
@@ -132,7 +132,7 @@ fn build_backend(kind: BackendKind, origin: &str) -> Result<Arc<dyn IssueBackend
                 email,
                 api_token: token,
             };
-            let b = ConfluenceReadOnlyBackend::new(creds, &tenant)?;
+            let b = ConfluenceBackend::new(creds, &tenant)?;
             Ok(Arc::new(b))
         }
     }
