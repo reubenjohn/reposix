@@ -118,32 +118,38 @@ banner "4/9" "mount FUSE at $MNT (backend = http://$SIM_BIND)"
 "$FUSE_BINARY" "$MNT" --backend "http://$SIM_BIND" --project demo \
     >/tmp/demo-fuse.log 2>&1 &
 FUSE_PID=$!
-# Wait for the mount to become readable.
+# Wait for the mount to become readable. Phase-13 layout: real files live
+# under `issues/` (sim bucket), not at the mount root directly.
 for _ in $(seq 1 50); do
-    if ls "$MNT" 2>/dev/null | grep -q '\.md$'; then break; fi
+    if ls "$MNT/issues" 2>/dev/null | grep -q '\.md$'; then break; fi
     sleep 0.1
 done
-echo "mount PID=$FUSE_PID; listing:"
+echo "mount PID=$FUSE_PID; root listing (expect .gitignore + issues/):"
 ls "$MNT" | sort
+echo "issues/ listing:"
+ls "$MNT/issues" | sort
 
 # ============================================================== [5/9]
 banner "5/9" "browse with shell tools (cat, grep)"
-echo "--- head of 0001.md ---"
-head -8 "$MNT/0001.md"
+# Phase-13 FUSE layout: real files live under `issues/` (sim bucket) at
+# 11-digit zero-padded filenames. Root listing also shows the synthesized
+# `.gitignore` (keeps `tree/` out of git when present on Confluence mounts).
+echo "--- head of 00000000001.md ---"
+head -8 "$MNT/issues/00000000001.md"
 echo "--- grep -ril database ---"
-grep -ril database "$MNT" || true
+grep -ril database "$MNT/issues" || true
 
 # ============================================================== [6/9]
 banner "6/9" "edit issue 1 through FUSE and confirm server state"
 echo "before: status = $(curl -s "http://$SIM_BIND/projects/demo/issues/1" | jq -r '.status')"
-# Note: the FUSE FS only accepts filenames matching `<id>.md`; `sed -i`
+# Note: the FUSE FS only accepts filenames matching `<padded-id>.md`; `sed -i`
 # creates a temp file like `sed.XYZ` which gets EINVAL. We instead read,
 # transform in memory, and write back via a single open(O_TRUNC)+write.
-NEW_BODY="$(sed 's/^status: open$/status: in_progress/' "$MNT/0001.md")"
-printf '%s\n' "$NEW_BODY" > "$MNT/0001.md"
+NEW_BODY="$(sed 's/^status: open$/status: in_progress/' "$MNT/issues/00000000001.md")"
+printf '%s\n' "$NEW_BODY" > "$MNT/issues/00000000001.md"
 sleep 0.3
 echo "after FUSE write:"
-head -6 "$MNT/0001.md"
+head -6 "$MNT/issues/00000000001.md"
 echo "server state (id, status, version, body length):"
 curl -s "http://$SIM_BIND/projects/demo/issues/1" \
     | jq '{id, status, version, body_len: (.body | length)}'

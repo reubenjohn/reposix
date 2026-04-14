@@ -92,28 +92,35 @@ fi
 
 # ------------------------------------------------------------ 2/4 ls
 section "[2/4] ls the mount — every page is a Markdown file"
-# Snapshot the listing so we don't trigger multiple readdir-driven
-# Confluence round-trips (each `ls` re-fetches).
-LISTING="$(ls "$MOUNT_PATH")"
+# Phase-13 FUSE layout: Confluence mounts now expose `.gitignore` +
+# `pages/` (real files) + `tree/` (read-only symlink overlay mirroring
+# the Confluence parentId hierarchy). Real files live under `pages/` at
+# 11-digit zero-padded filenames. We snapshot the `pages/` listing to
+# avoid multiple readdir-driven Confluence round-trips (each `ls`
+# re-fetches).
+echo "root listing (expect .gitignore + pages/ + tree/):"
+ls "$MOUNT_PATH" | sort
+LISTING="$(ls "$MOUNT_PATH/pages")"
 COUNT=$(echo "$LISTING" | wc -l)
 echo "page count: $COUNT"
 echo "$LISTING" | head -5
 
 if [[ "$COUNT" -lt 1 ]]; then
-    echo "FAIL: mount exposed 0 files"
+    echo "FAIL: mount exposed 0 files under pages/"
     exit 1
 fi
 
 # ------------------------------------------------------------ 3/4 cat
 section "[3/4] cat the first page — frontmatter renders from real Confluence"
-# Unlike GitHub's `0001.md` (1-based issue numbers), Confluence page IDs
-# are per-space numeric IDs assigned by the server. We cat whatever the
-# listing produced first — still proves the mount → inode → read path
-# works end-to-end.
+# Unlike GitHub's `00000000001.md` (1-based issue numbers padded to 11
+# digits), Confluence page IDs are per-space numeric IDs assigned by the
+# server (also zero-padded to 11 digits in the mount). We cat whatever
+# the `pages/` listing produced first — still proves the mount → inode
+# → read path works end-to-end.
 FIRST_PAGE="$(echo "$LISTING" | head -1)"
-echo "+ cat ${MOUNT_PATH}/${FIRST_PAGE}"
-if ! cat "${MOUNT_PATH}/${FIRST_PAGE}"; then
-    echo "FAIL: cat ${FIRST_PAGE} did not succeed"
+echo "+ cat ${MOUNT_PATH}/pages/${FIRST_PAGE}"
+if ! cat "${MOUNT_PATH}/pages/${FIRST_PAGE}"; then
+    echo "FAIL: cat pages/${FIRST_PAGE} did not succeed"
     exit 1
 fi
 

@@ -75,10 +75,18 @@ wait_for_url() {
 }
 
 wait_for_mount() {
+    # Phase-13 FUSE layout: real files live under the per-backend bucket
+    # (`issues/` for sim + GitHub; `pages/` for Confluence). The mount
+    # root contains `.gitignore` + the bucket dir + (conditionally)
+    # `tree/` — but no `.md` files directly. Probe each bucket in turn
+    # so the helper works across all three backends.
     local path="$1" timeout="${2:-10}"
     local deadline=$((SECONDS + timeout))
     while ((SECONDS < deadline)); do
-        if ls "$path" 2>/dev/null | grep -q '\.md$'; then
+        if ls "$path/issues" 2>/dev/null | grep -q '\.md$'; then
+            return 0
+        fi
+        if ls "$path/pages" 2>/dev/null | grep -q '\.md$'; then
             return 0
         fi
         sleep 0.1

@@ -4,7 +4,7 @@
 # AUDIENCE: developer
 # RUNTIME_SEC: 30
 # REQUIRES: cargo, fusermount3, gh, jq
-# ASSERTS: "DEMO COMPLETE" "0001.md"
+# ASSERTS: "DEMO COMPLETE" "00000000001.md"
 #
 # Narrative: the entire point of the IssueBackend trait, shipped in v0.2,
 # was that the FUSE daemon could be re-pointed at a real backend with no
@@ -89,10 +89,13 @@ fi
 
 # ------------------------------------------------------------ 2/4 ls
 section "[2/4] ls the mount — every issue is a Markdown file"
-# Snapshot the listing into a variable so we don't trigger multiple
-# readdir-driven GitHub round-trips (each `ls` re-fetches; the inode
-# cache is per-issue, not per-listing).
-LISTING="$(ls "$MOUNT_PATH")"
+# Phase-13 FUSE layout: root now contains `.gitignore` + the per-backend
+# collection bucket (`issues/` for GitHub). Real files live under the
+# bucket at 11-digit zero-padded filenames (e.g. `00000000001.md` for
+# issue #1). We snapshot the bucket listing to avoid multiple readdir-
+# driven GitHub round-trips (each `ls` re-fetches; the inode cache is
+# per-issue, not per-listing).
+LISTING="$(ls "$MOUNT_PATH/issues")"
 COUNT=$(echo "$LISTING" | wc -l)
 echo "issue count: $COUNT"
 echo "$LISTING" | head -5
@@ -106,13 +109,14 @@ fi
 
 # ------------------------------------------------------------ 3/4 cat
 section "[3/4] cat issue #1 — frontmatter renders from real GitHub"
-# `0001.md` is the zero-padded name for GitHub issue number 1. The
-# listing in step 2 shows the 500 most recent issues; issue #1 is
+# `00000000001.md` is the 11-digit zero-padded name for GitHub issue
+# number 1 (Phase-13 nested layout; previously `0001.md` at mount root).
+# The listing in step 2 shows the 500 most recent issues; issue #1 is
 # addressable by `lookup` even though it's below the pagination window,
 # thanks to the IssueBackend.get_issue seam.
-echo "+ cat ${MOUNT_PATH}/0001.md"
-if ! cat "$MOUNT_PATH/0001.md"; then
-    echo "FAIL: cat 0001.md did not succeed"
+echo "+ cat ${MOUNT_PATH}/issues/00000000001.md"
+if ! cat "$MOUNT_PATH/issues/00000000001.md"; then
+    echo "FAIL: cat 00000000001.md did not succeed"
     exit 1
 fi
 

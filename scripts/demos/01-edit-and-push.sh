@@ -54,17 +54,21 @@ wait_for_mount "$MNT" 10
 echo "sim ready at $SIM_URL; mount ready at $MNT"
 
 section "[2/6] agent-style read path: ls + cat"
+# Phase-13 FUSE layout: mount root contains `.gitignore` + the per-backend
+# collection bucket (`issues/` for sim). Real files live in the bucket at
+# 11-digit zero-padded filenames (e.g. `00000000001.md` for issue id 1).
 ls "$MNT" | sort
-echo "--- head of 0001.md ---"
-head -8 "$MNT/0001.md"
+ls "$MNT/issues" | sort
+echo "--- head of 00000000001.md ---"
+head -8 "$MNT/issues/00000000001.md"
 
 section "[3/6] edit through FUSE (sed-style in-memory write)"
 echo "before: status = $(curl -s "${SIM_URL}/projects/demo/issues/1" | jq -r .status)"
-NEW="$(sed 's/^status: open$/status: in_progress/' "$MNT/0001.md")"
-printf '%s\n' "$NEW" > "$MNT/0001.md"
+NEW="$(sed 's/^status: open$/status: in_progress/' "$MNT/issues/00000000001.md")"
+printf '%s\n' "$NEW" > "$MNT/issues/00000000001.md"
 sleep 0.3
 echo "after FUSE write, frontmatter head:"
-head -6 "$MNT/0001.md"
+head -6 "$MNT/issues/00000000001.md"
 echo "server confirms:"
 curl -s "${SIM_URL}/projects/demo/issues/1" | jq '{id, status, version}'
 
