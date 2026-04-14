@@ -293,4 +293,97 @@ mod tests {
             "parent_id should be omitted from YAML when None, got: {rendered}"
         );
     }
+
+    #[test]
+    fn frontmatter_renders_parent_id_when_some() {
+        // Plan 13-B3 SC-required test: the rendered YAML contains the exact line
+        // `parent_id: 42` (serde_yaml emits numeric scalars unquoted).
+        let mut iss = sample();
+        iss.parent_id = Some(IssueId(42));
+        let rendered = frontmatter::render(&iss).expect("render");
+        assert!(
+            rendered.contains("parent_id: 42\n"),
+            "expected exact line `parent_id: 42` in YAML, got: {rendered}"
+        );
+    }
+
+    #[test]
+    fn frontmatter_parses_parent_id_when_present() {
+        // A frontmatter block authored by a hierarchy-aware backend (e.g. Confluence)
+        // round-trips through parse with the numeric id preserved.
+        let text = "---\n\
+id: 1\n\
+title: child page\n\
+status: open\n\
+created_at: 2026-04-14T00:00:00Z\n\
+updated_at: 2026-04-14T00:00:00Z\n\
+version: 1\n\
+parent_id: 42\n\
+---\n\
+body here.\n";
+        let iss = frontmatter::parse(text).expect("parse");
+        assert_eq!(iss.parent_id, Some(IssueId(42)));
+        assert_eq!(iss.id, IssueId(1));
+        assert_eq!(iss.title, "child page");
+    }
+
+    #[test]
+    fn frontmatter_parses_legacy_without_parent_id() {
+        // Fixture shape matches a pre-Phase-13 on-disk file: no `parent_id:` key at
+        // all. The `#[serde(default)]` attribute must fill it in with `None` rather
+        // than erroring. This is the load-bearing backward-compat test.
+        let text = "---\n\
+id: 1\n\
+title: Legacy issue\n\
+status: open\n\
+created_at: 2025-01-01T00:00:00Z\n\
+updated_at: 2025-01-01T00:00:00Z\n\
+version: 1\n\
+---\n\
+Body goes here.\n";
+        let iss = frontmatter::parse(text).expect("legacy frontmatter must parse");
+        assert_eq!(iss.parent_id, None);
+        assert_eq!(iss.title, "Legacy issue");
+    }
+
+    #[test]
+    fn frontmatter_roundtrip_with_parent() {
+        // Deep-equality roundtrip: parse(render(issue)) yields the same Issue.
+        // Catches any drift between the public `Issue` struct and the private
+        // `Frontmatter` DTO.
+        let mut original = sample();
+        original.parent_id = Some(IssueId(131_192));
+        let rendered = frontmatter::render(&original).expect("render");
+        let parsed = frontmatter::parse(&rendered).expect("parse");
+        assert_eq!(parsed.id, original.id);
+        assert_eq!(parsed.title, original.title);
+        assert_eq!(parsed.status as u8, original.status as u8);
+        assert_eq!(parsed.assignee, original.assignee);
+        assert_eq!(parsed.labels, original.labels);
+        assert_eq!(parsed.created_at, original.created_at);
+        assert_eq!(parsed.updated_at, original.updated_at);
+        assert_eq!(parsed.version, original.version);
+        assert_eq!(parsed.body, original.body);
+        assert_eq!(parsed.parent_id, Some(IssueId(131_192)));
+    }
+
+    #[test]
+    fn frontmatter_roundtrip_without_parent() {
+        // Deep-equality roundtrip for the None branch — verifies `skip_serializing_if`
+        // doesn't accidentally drop other fields and that the deserialize default
+        // kicks in on the return trip.
+        let original = sample(); // parent_id: None
+        let rendered = frontmatter::render(&original).expect("render");
+        let parsed = frontmatter::parse(&rendered).expect("parse");
+        assert_eq!(parsed.id, original.id);
+        assert_eq!(parsed.title, original.title);
+        assert_eq!(parsed.status as u8, original.status as u8);
+        assert_eq!(parsed.assignee, original.assignee);
+        assert_eq!(parsed.labels, original.labels);
+        assert_eq!(parsed.created_at, original.created_at);
+        assert_eq!(parsed.updated_at, original.updated_at);
+        assert_eq!(parsed.version, original.version);
+        assert_eq!(parsed.body, original.body);
+        assert_eq!(parsed.parent_id, None);
+    }
 }
