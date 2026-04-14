@@ -10,7 +10,8 @@
 //! | `2` | [`BUCKET_DIR_INO`] — the per-backend collection directory (`pages/` or `issues/`). |
 //! | `3` | [`TREE_ROOT_INO`] — the synthesized `tree/` overlay root (only populated when the backend supports `BackendFeature::Hierarchy`). Mirrored from [`crate::tree::TREE_ROOT_INO`]. |
 //! | `4` | [`GITIGNORE_INO`] — the synthesized `/tree/\n` `.gitignore` file. Always present. |
-//! | `5..=0xFFFF` | Reserved for future synthetic files (`/.reposix/audit`, per-space roots, etc.). The [`InodeRegistry`] never allocates in this range. |
+//! | `5` | [`BUCKET_INDEX_INO`] — the synthesized `_INDEX.md` file inside the bucket directory. Always present. |
+//! | `6..=0xFFFF` | Reserved for future synthetic files (`/.reposix/audit`, per-space roots, etc.). The [`InodeRegistry`] never allocates in this range. |
 //! | `0x1_0000..` | Real issue/page files under `<bucket>/<padded-id>.md`. Allocated monotonically by [`InodeRegistry`]. |
 //! | `0x8_0000_0000..0xC_0000_0000` | `tree/` interior directories (allocated by [`crate::tree::TreeSnapshot`]). |
 //! | `0xC_0000_0000..u64::MAX` | `tree/` leaf symlinks AND `_self.md` entries (allocated by [`crate::tree::TreeSnapshot`]). |
@@ -52,7 +53,13 @@ pub const TREE_ROOT_INO: u64 = 3;
 /// (`perm: 0o444`).
 pub const GITIGNORE_INO: u64 = 4;
 
-/// First dynamic inode. Values `5..=0xFFFF` are reserved for future synthetic
+/// The synthesized `_INDEX.md` file inside the bucket directory
+/// (`mount/issues/_INDEX.md` or `mount/pages/_INDEX.md`). Always
+/// present. Rendered on demand from the cached issue list; read-only
+/// (`perm: 0o444`). See Phase 15 for the rendering contract.
+pub const BUCKET_INDEX_INO: u64 = 5;
+
+/// First dynamic inode. Values `6..=0xFFFF` are reserved for future synthetic
 /// files; issues start here.
 pub const FIRST_ISSUE_INODE: u64 = 0x1_0000;
 
@@ -193,11 +200,11 @@ mod tests {
     #[test]
     fn reserved_range_is_unmapped() {
         let r = InodeRegistry::new();
-        // Inodes 5..=0xFFFF are reserved-for-future-synthetics; the
-        // registry never allocates here. (1..=4 are fixed synthetic slots
-        // — root/bucket/tree-root/gitignore — also not allocated by the
-        // dynamic registry.)
-        for ino in 5..=0xFFFF {
+        // Inodes 6..=0xFFFF are reserved-for-future-synthetics; the
+        // registry never allocates here. (1..=5 are fixed synthetic slots
+        // — root/bucket/tree-root/gitignore/bucket-index — also not
+        // allocated by the dynamic registry.)
+        for ino in 6..=0xFFFF {
             assert!(
                 r.lookup_ino(ino).is_none(),
                 "ino {ino:#x} should be unmapped"
@@ -226,13 +233,20 @@ mod tests {
         assert!(BUCKET_DIR_INO < FIRST_ISSUE_INODE);
         assert!(TREE_ROOT_INO < FIRST_ISSUE_INODE);
         assert!(GITIGNORE_INO < FIRST_ISSUE_INODE);
+        assert!(BUCKET_INDEX_INO < FIRST_ISSUE_INODE);
         // The tree dir / symlink bases live strictly above the dynamic
         // issue range (see tree.rs compile-time assertion for the
         // full cross-module invariant).
         assert!(FIRST_ISSUE_INODE < crate::tree::TREE_DIR_INO_BASE);
         assert!(crate::tree::TREE_DIR_INO_BASE < crate::tree::TREE_SYMLINK_INO_BASE);
-        // The four fixed slots must be distinct from each other.
-        let fixed = [ROOT_INO, BUCKET_DIR_INO, TREE_ROOT_INO, GITIGNORE_INO];
+        // The five fixed slots must be distinct from each other.
+        let fixed = [
+            ROOT_INO,
+            BUCKET_DIR_INO,
+            TREE_ROOT_INO,
+            GITIGNORE_INO,
+            BUCKET_INDEX_INO,
+        ];
         for (i, a) in fixed.iter().enumerate() {
             for b in fixed.iter().skip(i + 1) {
                 assert_ne!(a, b, "fixed inodes must be pairwise distinct");
