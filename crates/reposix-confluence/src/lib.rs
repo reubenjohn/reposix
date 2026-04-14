@@ -499,7 +499,19 @@ impl ConfluenceReadOnlyBackend {
         if list.results.is_empty() {
             return Err(Error::Other(format!("not found: space key {space_key}")));
         }
-        Ok(list.results.into_iter().next().unwrap().id)
+        let id = list.results.into_iter().next().unwrap().id;
+        // WR-02: the space_id is about to be interpolated into a URL path
+        // component. Every byte from the network is tainted; refuse anything
+        // that isn't strictly numeric (which is all Confluence documents as
+        // legitimate). This blocks a malicious tenant from returning
+        // `"12345/../admin"` or similar path-smuggling payloads — SG-01 only
+        // gates origins, not paths, so this validation is the relevant cut.
+        if id.is_empty() || !id.chars().all(|c| c.is_ascii_digit()) {
+            return Err(Error::Other(format!(
+                "malformed space id from server: {id:?}"
+            )));
+        }
+        Ok(id)
     }
 }
 
@@ -1153,4 +1165,36 @@ mod tests {
         assert_eq!(issues.len(), 0);
     }
 
+    // -------- WR-02: space_id from server is validated before URL interpolation --------
+
+    /// A malicious tenant (or MITM) that returns a non-numeric `id` — e.g.
+    /// `"12345/../admin"` — must be rejected before any second-round HTTP
+    /// call, because the `space_id` is about to be interpolated into a URL
+    /// path and SG-01 only gates origins, not paths.
+    #[tokio::test]
+    async fn list_rejects_non_numeric_space_id() {
+        use wiremock::matchers::query_param;
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/spaces"))
+            .and(query_param("keys", "REPOSIX"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [{"id": "12345/../admin", "key": "REPOSIX"}]
+            })))
+            .mount(&server)
+            .await;
+        let backend =
+            ConfluenceReadOnlyBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let err = backend
+            .list_issues("REPOSIX")
+            .await
+            .expect_err("non-numeric space_id must be rejected");
+        match err {
+            Error::Other(m) => assert!(
+                m.contains("malformed space id from server"),
+                "expected malformed-space-id message, got {m}"
+            ),
+            other => panic!("expected Error::Other, got {other:?}"),
+        }
+    }
 }
