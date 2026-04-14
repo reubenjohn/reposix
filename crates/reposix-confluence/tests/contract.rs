@@ -241,7 +241,7 @@ async fn contract_confluence_wiremock() {
 
     // 2. list pages (single-page response, no _links.next). Two pages
     //    with different statuses to exercise invariant 5 on both a
-    //    `current`→Open and an `archived`→InProgress mapping.
+    //    `current`→Open and an `archived`→Done mapping.
     Mock::given(method("GET"))
         .and(path("/wiki/api/v2/spaces/12345/pages"))
         .and(query_param("limit", "100"))
