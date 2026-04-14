@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.6.0
-milestone_name: Write Path + Full Sitemap
-status: planning
-stopped_at: Milestone v0.6.0 started — Phases 16–25 being planned (session 6).
-last_updated: "2026-04-14T20:00:00.000Z"
-last_activity: "2026-04-14 (session 6) — Milestone v0.6.0 + v0.7.0 infrastructure created; Phases 16–25 added with CONTEXT.md stubs."
+milestone: v0.4
+milestone_name: target)
+status: executing
+stopped_at: Completed 16-A-adf-converter-PLAN.md
+last_updated: "2026-04-14T20:43:11.382Z"
+last_activity: 2026-04-14
 progress:
-  total_phases: 10
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 11
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 22
+  percent: 100
 ---
 
 # Project State
@@ -35,18 +35,18 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** An LLM agent can `ls`, `cat`, `grep`, edit, and `git push`
 issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
-**Current focus:** **v0.5.0 SHIPPED.** Milestones v0.6.0 + v0.7.0 queued (Phases 16–25).
+**Current focus:** Phase 16 — Confluence write path
 Next: /gsd-plan-phase 16 (Confluence write path).
 
 ## Current Position
 
-Phase: **Not started** — Milestone v0.6.0 planning infrastructure created; Phase 16 is next up.
-Plan: —
+Phase: 16 (Confluence write path) — EXECUTING
+Plan: 2 of 4
 Cursor: **v0.5.0 shipped (tag pushed). Milestones v0.6.0 + v0.7.0 established. Phases 16–25
 created with CONTEXT.md stubs. Design context migrated from HANDOFF.md into phase CONTEXT.md
 files. Phase 16 (Confluence write path) is the recommended first execution target.**
-Status: Planning complete — phases ready for /gsd-plan-phase 16 when execution begins.
-Last activity: 2026-04-14 (session 6) — Milestone v0.6.0 + v0.7.0 infrastructure, Phases 16–25
+Status: Ready to execute
+Last activity: 2026-04-14
 added, CONTEXT.md stubs written, HANDOFF.md trimmed.
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
@@ -81,6 +81,7 @@ Progress: [----------] 0% (milestone v0.6.0 not started; 10 phases queued across
 | Phase 11 PE | 10m | 4 tasks | 8 files |
 | Phase 11 PF | 5m | 3 tasks | 6 files |
 | Phase 13 PD3 | 3m | 3 tasks | 2 files |
+| Phase 16 PA | 35 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -112,6 +113,8 @@ additions (2026-04-13):
 - [Phase 11]: [Phase 11-E]: ADR-002 cites crates/reposix-confluence/src/lib.rs as the source-of-truth with explicit 'code wins if they disagree' clause to prevent doc drift.
 - [Phase 11]: Phase 11-F: v0.3.0 release artifacts shipped (MORNING-BRIEF-v0.3.md, CHANGELOG promotion, scripts/tag-v0.3.0.sh with 6 safety guards). Tag push deferred to human — single command 'bash scripts/tag-v0.3.0.sh' is the morning handoff.
 - [Phase 13]: D3: tag-v0.4.0.sh adds 7th guard (Cargo.toml version preflight); demo 07 six-step hero flow for tree/ overlay; smoke.sh not-added (stays sim-only-4/4)
+- [Phase 16]: Wave A: Use pulldown-cmark html::push_html for Markdown->storage (option a, RESEARCH A4) — acceptable fidelity, minimal complexity
+- [Phase 16]: Wave A: ADF->Markdown uses recursive serde_json::Value traversal (no typed struct) — unknown fields ignored gracefully, fallback markers for unknown node types
 
 ### Pending Todos
 
@@ -132,8 +135,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-14T18:30:00.000Z
-Stopped at: Completed 15-B-docs-changelog-summary-state-tag.md — Phase
+Last session: 2026-04-14T20:43:11.378Z
+Stopped at: Completed 16-A-adf-converter-PLAN.md
 15 SHIPPED; v0.5.0 ready to tag at user gate.
 Wave-level commit trail on `main` (Phase 15):
 `6a2e256` (15-A inode.rs: reserve BUCKET_INDEX_INO=5 + doc + test
@@ -147,7 +150,7 @@ mention), `f43f0e5` (15-B 15-SUMMARY.md + STATE.md cursor), `ceec233`
 `-D warnings` clean, `cargo fmt --all --check` clean. Cargo.toml
 workspace version bumped `0.4.1 → 0.5.0`; Cargo.lock regenerated via
 `cargo check --workspace --offline`.
-Resume file: None (phase self-contained).
+Resume file: None
 Cursor next: **v0.5.0 tag push** (orchestrator gate — run `bash
 scripts/green-gauntlet.sh --full`, then `bash scripts/tag-v0.5.0.sh`).
 After tag: pick the next session-5 stretch goal — Cluster C (swarm
