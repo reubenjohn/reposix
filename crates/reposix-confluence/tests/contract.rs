@@ -283,10 +283,10 @@ async fn contract_confluence_wiremock() {
         .mount(&server)
         .await;
 
-    // 4. get_issue(IssueId(1)) — single page with storage body.
+    // 4. get_issue(IssueId(1)) — single page with ADF body (C4: atlas_doc_format path).
     Mock::given(method("GET"))
         .and(path("/wiki/api/v2/pages/1"))
-        .and(query_param("body-format", "storage"))
+        .and(query_param("body-format", "atlas_doc_format"))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({
             "id": "1",
             "status": "current",
@@ -294,7 +294,21 @@ async fn contract_confluence_wiremock() {
             "createdAt": "2024-01-15T10:30:00.000Z",
             "version": {"number": 1, "createdAt": "2024-01-15T10:30:00.000Z"},
             "ownerId": null,
-            "body": {"storage": {"value": "<p>home</p>", "representation": "storage"}}
+            "body": {
+                "atlas_doc_format": {
+                    "value": {
+                        "type": "doc",
+                        "version": 1,
+                        "content": [
+                            {
+                                "type": "paragraph",
+                                "content": [{"type": "text", "text": "home"}]
+                            }
+                        ]
+                    },
+                    "representation": "atlas_doc_format"
+                }
+            }
         })))
         .mount(&server)
         .await;
@@ -463,10 +477,11 @@ async fn adversarial_webui_link_does_not_trigger_outbound_call() {
         .mount(&legit_server)
         .await;
 
-    // Also arm get_issue(1) — so a contract-style round trip works.
+    // Also arm get_issue(1) with ADF body — so a contract-style round trip works.
+    // C4: get_issue now requests atlas_doc_format first.
     Mock::given(method("GET"))
         .and(path("/wiki/api/v2/pages/1"))
-        .and(query_param("body-format", "storage"))
+        .and(query_param("body-format", "atlas_doc_format"))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({
             "id": "1",
             "status": "current",
@@ -474,7 +489,18 @@ async fn adversarial_webui_link_does_not_trigger_outbound_call() {
             "createdAt": "2024-01-15T10:30:00.000Z",
             "version": {"number": 1, "createdAt": "2024-01-15T10:30:00.000Z"},
             "ownerId": null,
-            "body": {"storage": {"value": "<p>home</p>", "representation": "storage"}},
+            "body": {
+                "atlas_doc_format": {
+                    "value": {
+                        "type": "doc",
+                        "version": 1,
+                        "content": [
+                            {"type": "paragraph", "content": [{"type": "text", "text": "home"}]}
+                        ]
+                    },
+                    "representation": "atlas_doc_format"
+                }
+            },
             "webui_link": format!("{decoy}/exfil/page1/webui"),
             "_links": {
                 "webui": format!("{decoy}/exfil/page1/_links.webui"),
@@ -568,9 +594,12 @@ async fn adversarial_host_in_arbitrary_string_field_is_ignored() {
         .mount(&legit_server)
         .await;
 
+    // C4: get_issue now requests atlas_doc_format first. Return ADF body that
+    // contains the adversarial URL as plain text so the body-exfil assertion
+    // still passes (adapter must not resolve the URL, just pass it through).
     Mock::given(method("GET"))
         .and(path("/wiki/api/v2/pages/1"))
-        .and(query_param("body-format", "storage"))
+        .and(query_param("body-format", "atlas_doc_format"))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({
             "id": "1",
             "status": "current",
@@ -578,16 +607,24 @@ async fn adversarial_host_in_arbitrary_string_field_is_ignored() {
             "createdAt": "2024-01-15T10:30:00.000Z",
             "version": {"number": 1, "createdAt": "2024-01-15T10:30:00.000Z"},
             "ownerId": format!("{decoy}/owner-exfil"),
-            "body": {"storage": {
-                // Body text contains raw URLs and an `<a href>` — the
-                // adapter must pass these through as opaque bytes, not
-                // parse or dereference them.
-                "value": format!(
-                    "<p>visit <a href=\"{decoy}/body-exfil\">link</a> or \
-                     {decoy}/body-exfil-bare for details</p>"
-                ),
-                "representation": "storage"
-            }}
+            "body": {
+                "atlas_doc_format": {
+                    "value": {
+                        "type": "doc",
+                        "version": 1,
+                        "content": [{
+                            "type": "paragraph",
+                            "content": [{
+                                "type": "text",
+                                // Body text contains the adversarial URL as a plain text node.
+                                // adf_to_markdown will pass it through verbatim — no fetching.
+                                "text": format!("visit {decoy}/body-exfil for details")
+                            }]
+                        }]
+                    },
+                    "representation": "atlas_doc_format"
+                }
+            }
         })))
         .mount(&legit_server)
         .await;

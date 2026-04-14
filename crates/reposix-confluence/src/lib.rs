@@ -265,11 +265,22 @@ struct ConfVersion {
 struct ConfPageBody {
     #[serde(default)]
     storage: Option<ConfBodyStorage>,
+    /// ADF body returned when `?body-format=atlas_doc_format` is requested.
+    /// The value is a JSON object (not a string) — we keep it as `Value` so
+    /// that [`adf::adf_to_markdown`] can walk it without a second parse step.
+    #[serde(default, rename = "atlas_doc_format")]
+    adf: Option<ConfBodyAdf>,
 }
 
 #[derive(Debug, Deserialize)]
 struct ConfBodyStorage {
     value: String,
+}
+
+/// ADF body wrapper. The `value` field holds the full ADF JSON document.
+#[derive(Debug, Deserialize)]
+struct ConfBodyAdf {
+    value: serde_json::Value,
 }
 
 /// Build the Basic-auth header value for a given email + token.
@@ -333,11 +344,25 @@ fn translate(page: ConfPage) -> Result<Issue> {
         .id
         .parse::<u64>()
         .map_err(|_| Error::Other(format!("confluence page id not a u64: {:?}", page.id)))?;
-    let body = page
-        .body
-        .and_then(|b| b.storage)
-        .map(|s| s.value)
-        .unwrap_or_default();
+    // Body extraction: prefer ADF → Markdown conversion; fall back to raw
+    // storage HTML if ADF is absent (pre-ADF pages or storage-format re-fetch).
+    let body = if let Some(adf_body) = page.body.as_ref().and_then(|b| b.adf.as_ref()) {
+        // adf_to_markdown returns Err only if root is not type "doc"; in that
+        // case gracefully degrade to empty string rather than failing the whole
+        // page read (T-16-C-05 — attacker-influenced ADF must not wedge reads).
+        match crate::adf::adf_to_markdown(&adf_body.value) {
+            Ok(md) => md,
+            Err(e) => {
+                tracing::warn!(error = %e, "adf_to_markdown failed; using empty body");
+                String::new()
+            }
+        }
+    } else {
+        page.body
+            .and_then(|b| b.storage)
+            .map(|s| s.value)
+            .unwrap_or_default()
+    };
     // Phase 13 Wave B1: derive `Issue::parent_id` from Confluence REST v2
     // `parentId`/`parentType`. Only `parent_type == "page"` propagates — the
     // reposix tree is homogeneous (pages only), so `folder` / `whiteboard` /
@@ -792,8 +817,9 @@ impl IssueBackend for ConfluenceBackend {
     }
 
     async fn get_issue(&self, _project: &str, id: IssueId) -> Result<Issue> {
-        let url = format!(
-            "{}/wiki/api/v2/pages/{}?body-format=storage",
+        // First attempt: request ADF body format for lossless Markdown conversion.
+        let url_adf = format!(
+            "{}/wiki/api/v2/pages/{}?body-format=atlas_doc_format",
             self.base(),
             id.0
         );
@@ -803,23 +829,59 @@ impl IssueBackend for ConfluenceBackend {
         self.await_rate_limit_gate().await;
         let resp = self
             .http
-            .request_with_headers(Method::GET, url.as_str(), &header_refs)
+            .request_with_headers(Method::GET, url_adf.as_str(), &header_refs)
             .await?;
         self.ingest_rate_limit(&resp);
         let status = resp.status();
         let bytes = resp.bytes().await?;
         if status == StatusCode::NOT_FOUND {
-            return Err(Error::Other(format!("not found: {url}")));
+            return Err(Error::Other(format!("not found: {url_adf}")));
         }
         if !status.is_success() {
             return Err(Error::Other(format!(
-                "confluence returned {status} for GET {url}: {}",
+                "confluence returned {status} for GET {url_adf}: {}",
                 String::from_utf8_lossy(&bytes)
             )));
         }
         let page: ConfPage = serde_json::from_slice(&bytes)?;
+        // Check if the ADF body is non-empty (null ADF means pre-ADF page).
+        let adf_present = page
+            .body
+            .as_ref()
+            .and_then(|b| b.adf.as_ref())
+            .is_some_and(|a| !a.value.is_null());
+        if adf_present {
+            // SG-05: Tainted::new wraps ingress before translation.
+            let tainted = Tainted::new(page);
+            return translate(tainted.into_inner());
+        }
+        // Fallback: ADF body was absent/null (pre-ADF page) — re-fetch with
+        // storage format so callers still get the raw storage HTML.
+        let url_storage = format!(
+            "{}/wiki/api/v2/pages/{}?body-format=storage",
+            self.base(),
+            id.0
+        );
+        self.await_rate_limit_gate().await;
+        let resp2 = self
+            .http
+            .request_with_headers(Method::GET, url_storage.as_str(), &header_refs)
+            .await?;
+        self.ingest_rate_limit(&resp2);
+        let status2 = resp2.status();
+        let bytes2 = resp2.bytes().await?;
+        if status2 == StatusCode::NOT_FOUND {
+            return Err(Error::Other(format!("not found: {url_storage}")));
+        }
+        if !status2.is_success() {
+            return Err(Error::Other(format!(
+                "confluence returned {status2} for GET {url_storage}: {}",
+                String::from_utf8_lossy(&bytes2)
+            )));
+        }
+        let page2: ConfPage = serde_json::from_slice(&bytes2)?;
         // SG-05: Tainted::new wraps ingress before translation.
-        let tainted = Tainted::new(page);
+        let tainted = Tainted::new(page2);
         translate(tainted.into_inner())
     }
 
@@ -1022,6 +1084,31 @@ mod tests {
         })
     }
 
+    /// Build a page JSON response with an `atlas_doc_format` body.
+    /// `adf_doc` should be a `{"type":"doc",...}` value that
+    /// `adf_to_markdown` can parse. Used by tests that exercise the
+    /// ADF read path (C4).
+    fn page_json_adf(id: &str, status: &str, title: &str, adf_doc: &serde_json::Value) -> serde_json::Value {
+        let adf_doc = adf_doc.clone();
+        json!({
+            "id": id,
+            "status": status,
+            "title": title,
+            "createdAt": "2026-04-13T00:00:00Z",
+            "ownerId": null,
+            "version": {
+                "number": 1,
+                "createdAt": "2026-04-13T00:00:00Z",
+            },
+            "body": {
+                "atlas_doc_format": {
+                    "value": adf_doc,
+                    "representation": "atlas_doc_format",
+                }
+            },
+        })
+    }
+
     async fn mount_space_lookup(server: &MockServer, key: &str, id: &str) {
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/spaces"))
@@ -1103,19 +1190,29 @@ mod tests {
         assert_eq!(issues[2].id, IssueId(3));
     }
 
-    // -------- 3: get_issue returns body storage value --------
+    // -------- 3: get_issue returns ADF body converted to Markdown --------
 
     #[tokio::test]
-    async fn get_issue_returns_body_storage_value() {
+    async fn get_issue_returns_body_adf_as_markdown() {
         let server = MockServer::start().await;
+        let adf_doc = json!({
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [{"type": "text", "text": "Hello"}]
+                }
+            ]
+        });
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/pages/98765"))
-            .and(query_param("body-format", "storage"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(page_json(
+            .and(query_param("body-format", "atlas_doc_format"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_adf(
                 "98765",
                 "current",
                 "hello",
-                Some("<p>Hello</p>"),
+                &adf_doc,
             )))
             .mount(&server)
             .await;
@@ -1125,7 +1222,11 @@ mod tests {
             .get_issue("REPOSIX", IssueId(98765))
             .await
             .expect("get");
-        assert_eq!(issue.body, "<p>Hello</p>");
+        assert!(
+            issue.body.contains("Hello"),
+            "expected body to contain 'Hello', got: {:?}",
+            issue.body
+        );
         assert_eq!(issue.id, IssueId(98765));
     }
 
@@ -1150,18 +1251,66 @@ mod tests {
         }
     }
 
+    // -------- 4b: ADF absent → storage fallback (C4) --------
+
+    /// When the ADF response contains no `atlas_doc_format` body (pre-ADF page),
+    /// `get_issue` must fall back to a second GET with `?body-format=storage`
+    /// and return the raw storage HTML as the body.
+    #[tokio::test]
+    async fn get_issue_falls_back_to_storage_when_adf_empty() {
+        let server = MockServer::start().await;
+        // ADF request returns a page with no atlas_doc_format body (pre-ADF page).
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/pages/55555"))
+            .and(query_param("body-format", "atlas_doc_format"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json(
+                "55555",
+                "current",
+                "legacy page",
+                None, // no ADF body — triggers fallback
+            )))
+            .up_to_n_times(1)
+            .mount(&server)
+            .await;
+        // Storage fallback request returns the raw storage HTML.
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/pages/55555"))
+            .and(query_param("body-format", "storage"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json(
+                "55555",
+                "current",
+                "legacy page",
+                Some("<p>legacy content</p>"),
+            )))
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let issue = backend
+            .get_issue("REPOSIX", IssueId(55555))
+            .await
+            .expect("get with fallback");
+        assert_eq!(issue.id, IssueId(55555));
+        assert_eq!(
+            issue.body, "<p>legacy content</p>",
+            "storage fallback must return raw HTML body"
+        );
+    }
+
     // -------- 5: status "current" → Open (via get_issue, since list omits body) --------
 
     #[tokio::test]
     async fn status_current_maps_to_open() {
         let server = MockServer::start().await;
+        // Respond to ADF request with a minimal ADF body so no storage fallback occurs.
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/pages/1"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(page_json(
+            .and(query_param("body-format", "atlas_doc_format"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_adf(
                 "1",
                 "current",
                 "c",
-                Some(""),
+                &json!({"type": "doc", "version": 1, "content": []}),
             )))
             .mount(&server)
             .await;
@@ -1175,13 +1324,15 @@ mod tests {
     #[tokio::test]
     async fn status_trashed_maps_to_done() {
         let server = MockServer::start().await;
+        // Respond to ADF request with a minimal ADF body so no storage fallback occurs.
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/pages/2"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(page_json(
+            .and(query_param("body-format", "atlas_doc_format"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_adf(
                 "2",
                 "trashed",
                 "t",
-                Some(""),
+                &json!({"type": "doc", "version": 1, "content": []}),
             )))
             .mount(&server)
             .await;
@@ -1216,11 +1367,11 @@ mod tests {
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/pages/42"))
             .and(BasicAuthMatches)
-            .respond_with(ResponseTemplate::new(200).set_body_json(page_json(
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_adf(
                 "42",
                 "current",
                 "x",
-                Some(""),
+                &json!({"type": "doc", "version": 1, "content": []}),
             )))
             .mount(&server)
             .await;
