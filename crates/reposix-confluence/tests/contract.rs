@@ -309,6 +309,329 @@ async fn contract_confluence_wiremock() {
     assert_contract(&backend, "REPOSIX", IssueId(1)).await;
 }
 
+// ----------------------------------------------- SSRF regression tests
+//
+// These are regression guards for OP-7 bullet 5 (HANDOFF.md lines 401–412).
+// WR-02 already validates that `space_id` is server-resolved rather than
+// client-trusted. The uncovered surface was attacker-controlled URL fields
+// in Confluence v2 response JSON — specifically `_links.base`, `webui_link`,
+// and free-form string fields (title, body, ownerId, parentId) that a
+// future feature like "follow the webui_link for a page screenshot" would
+// reopen as an SSRF vector.
+//
+// Strategy: for each adversarial field, mount two `MockServer`s:
+//   * `legit_server` — the Confluence-shaped backend the adapter talks to.
+//     Returns valid responses but EMBEDS adversarial URL fields pointing
+//     at `decoy_server`.
+//   * `decoy_server`  — a catch-all mock on 127.0.0.1 (so it's reachable
+//     through the default SG-01 allowlist) that `.expect(0)`s. Wiremock
+//     panics on `MockServer::drop` if the expectation isn't met, so any
+//     accidental follow by the adapter surfaces as a test failure.
+//
+// This is a defense-in-depth test — today the `ConfPage`/`ConfLinks` structs
+// don't even deserialize `_links.base` or `webui_link`, so the adapter
+// literally cannot follow them. If a future PR adds those fields to the
+// deserialized shape without also adding explicit allowlist checks, these
+// tests fire.
+
+/// Wiremock: page list response whose `_links.base` points at the decoy
+/// server. If the adapter ever starts trusting `_links.base` for
+/// subsequent requests, the decoy's `.expect(0)` will fail.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn adversarial_links_base_does_not_trigger_outbound_call() {
+    let legit_server = MockServer::start().await;
+    let decoy_server = MockServer::start().await;
+
+    // Decoy: any request whatsoever means the adapter followed an
+    // attacker-controlled URL. `.expect(0)` panics on drop if hit.
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(200).set_body_string("exfiltrated"))
+        .expect(0)
+        .mount(&decoy_server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/wiki/api/v2/spaces"))
+        .and(query_param("keys", "REPOSIX"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "results": [{"id": "12345", "key": "REPOSIX"}],
+            // Adversarial: `_links.base` at the top level of the space
+            // list response. Real Confluence puts a `base` here; the
+            // adapter must ignore it.
+            "_links": {"base": decoy_server.uri()}
+        })))
+        .mount(&legit_server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/wiki/api/v2/spaces/12345/pages"))
+        .and(query_param("limit", "100"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "results": [{
+                "id": "1",
+                "status": "current",
+                "title": "Home",
+                "createdAt": "2024-01-15T10:30:00.000Z",
+                "version": {"number": 1, "createdAt": "2024-01-15T10:30:00.000Z"},
+                "ownerId": null,
+                "body": {}
+            }],
+            // Adversarial: both the global `base` and a per-page
+            // `_links.base` shape Confluence sometimes emits.
+            "_links": {
+                "base": decoy_server.uri(),
+                "self": format!("{}/self", decoy_server.uri())
+            }
+        })))
+        .mount(&legit_server)
+        .await;
+
+    let creds = ConfluenceCreds {
+        email: "ci@example.com".into(),
+        api_token: "dummy".into(),
+    };
+    let backend =
+        ConfluenceReadOnlyBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
+
+    let issues = backend
+        .list_issues("REPOSIX")
+        .await
+        .expect("list_issues succeeded");
+    assert_eq!(issues.len(), 1, "one page in fixture");
+    assert_eq!(issues[0].id, IssueId(1));
+
+    // Explicit sanity check — wiremock also verifies on drop, but an
+    // inline assertion produces a clearer failure message if the decoy
+    // was somehow touched.
+    let hits = decoy_server.received_requests().await.unwrap_or_default();
+    assert!(
+        hits.is_empty(),
+        "adapter made {} request(s) to adversarial _links.base host: {:?}",
+        hits.len(),
+        hits.iter().map(|r| r.url.to_string()).collect::<Vec<_>>()
+    );
+}
+
+/// Wiremock: page list response whose per-page `webui_link` / `_links.webui`
+/// fields point at the decoy server. A future "follow webui_link for a
+/// thumbnail" feature would reopen SSRF; this test is the tripwire.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn adversarial_webui_link_does_not_trigger_outbound_call() {
+    let legit_server = MockServer::start().await;
+    let decoy_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(200).set_body_string("exfiltrated"))
+        .expect(0)
+        .mount(&decoy_server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/wiki/api/v2/spaces"))
+        .and(query_param("keys", "REPOSIX"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "results": [{"id": "12345", "key": "REPOSIX"}]
+        })))
+        .mount(&legit_server)
+        .await;
+
+    let decoy = decoy_server.uri();
+
+    Mock::given(method("GET"))
+        .and(path("/wiki/api/v2/spaces/12345/pages"))
+        .and(query_param("limit", "100"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "results": [{
+                "id": "1",
+                "status": "current",
+                "title": "Home",
+                "createdAt": "2024-01-15T10:30:00.000Z",
+                "version": {"number": 1, "createdAt": "2024-01-15T10:30:00.000Z"},
+                "ownerId": null,
+                "body": {},
+                // Adversarial URL fields that Confluence v2 / v1 have
+                // emitted at various times. None of these should trigger
+                // an outbound call today; the test locks that in.
+                "webui_link": format!("{decoy}/exfil/webui"),
+                "_links": {
+                    "webui": format!("{decoy}/exfil/_links.webui"),
+                    "tinyui": format!("{decoy}/exfil/tinyui"),
+                    "self": format!("{decoy}/exfil/self"),
+                    "edit": format!("{decoy}/exfil/edit")
+                }
+            }],
+            "_links": {}
+        })))
+        .mount(&legit_server)
+        .await;
+
+    // Also arm get_issue(1) — so a contract-style round trip works.
+    Mock::given(method("GET"))
+        .and(path("/wiki/api/v2/pages/1"))
+        .and(query_param("body-format", "storage"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "id": "1",
+            "status": "current",
+            "title": "Home",
+            "createdAt": "2024-01-15T10:30:00.000Z",
+            "version": {"number": 1, "createdAt": "2024-01-15T10:30:00.000Z"},
+            "ownerId": null,
+            "body": {"storage": {"value": "<p>home</p>", "representation": "storage"}},
+            "webui_link": format!("{decoy}/exfil/page1/webui"),
+            "_links": {
+                "webui": format!("{decoy}/exfil/page1/_links.webui"),
+                "self": format!("{decoy}/exfil/page1/self")
+            }
+        })))
+        .mount(&legit_server)
+        .await;
+
+    let creds = ConfluenceCreds {
+        email: "ci@example.com".into(),
+        api_token: "dummy".into(),
+    };
+    let backend =
+        ConfluenceReadOnlyBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
+
+    let issues = backend
+        .list_issues("REPOSIX")
+        .await
+        .expect("list_issues succeeded");
+    assert_eq!(issues.len(), 1);
+
+    // Round-trip the single page via get_issue too, so the adversarial
+    // `webui_link` on the single-page shape gets the same regression
+    // coverage as the list shape.
+    let single = backend
+        .get_issue("REPOSIX", IssueId(1))
+        .await
+        .expect("get_issue succeeded");
+    assert_eq!(single.id, IssueId(1));
+
+    let hits = decoy_server.received_requests().await.unwrap_or_default();
+    assert!(
+        hits.is_empty(),
+        "adapter made {} request(s) to adversarial webui_link host: {:?}",
+        hits.len(),
+        hits.iter().map(|r| r.url.to_string()).collect::<Vec<_>>()
+    );
+}
+
+/// Broader regression: the adapter treats arbitrary string fields —
+/// `title`, `body.storage.value`, `ownerId`, `parentId` — as opaque bytes.
+/// Feeding fully-qualified URLs into any of them must not provoke an
+/// outbound call. Catches a class of bug where a future "auto-resolve
+/// mentions" or "linkify body text" feature silently adds URL-following.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn adversarial_host_in_arbitrary_string_field_is_ignored() {
+    let legit_server = MockServer::start().await;
+    let decoy_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(200).set_body_string("exfiltrated"))
+        .expect(0)
+        .mount(&decoy_server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/wiki/api/v2/spaces"))
+        .and(query_param("keys", "REPOSIX"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "results": [{"id": "12345", "key": "REPOSIX"}]
+        })))
+        .mount(&legit_server)
+        .await;
+
+    let decoy = decoy_server.uri();
+
+    Mock::given(method("GET"))
+        .and(path("/wiki/api/v2/spaces/12345/pages"))
+        .and(query_param("limit", "100"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "results": [{
+                "id": "1",
+                "status": "current",
+                // URL in title — agents rendering issue trees might be
+                // tempted to pre-fetch linked resources. Regression guard.
+                "title": format!("Home (see {decoy}/title-exfil)"),
+                "createdAt": "2024-01-15T10:30:00.000Z",
+                "version": {"number": 1, "createdAt": "2024-01-15T10:30:00.000Z"},
+                // URL-shaped ownerId; adapter stores it as an opaque
+                // string and must not resolve it to a profile URL.
+                "ownerId": format!("{decoy}/owner-exfil"),
+                // parentId is supposed to be a numeric string. Feed a
+                // URL to prove the adapter's numeric parse fails
+                // gracefully without attempting to fetch the string.
+                "parentId": format!("{decoy}/parent-exfil"),
+                "parentType": "page",
+                "body": {}
+            }],
+            "_links": {}
+        })))
+        .mount(&legit_server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/wiki/api/v2/pages/1"))
+        .and(query_param("body-format", "storage"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "id": "1",
+            "status": "current",
+            "title": format!("Home (see {decoy}/title-exfil)"),
+            "createdAt": "2024-01-15T10:30:00.000Z",
+            "version": {"number": 1, "createdAt": "2024-01-15T10:30:00.000Z"},
+            "ownerId": format!("{decoy}/owner-exfil"),
+            "body": {"storage": {
+                // Body text contains raw URLs and an `<a href>` — the
+                // adapter must pass these through as opaque bytes, not
+                // parse or dereference them.
+                "value": format!(
+                    "<p>visit <a href=\"{decoy}/body-exfil\">link</a> or \
+                     {decoy}/body-exfil-bare for details</p>"
+                ),
+                "representation": "storage"
+            }}
+        })))
+        .mount(&legit_server)
+        .await;
+
+    let creds = ConfluenceCreds {
+        email: "ci@example.com".into(),
+        api_token: "dummy".into(),
+    };
+    let backend =
+        ConfluenceReadOnlyBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
+
+    let issues = backend
+        .list_issues("REPOSIX")
+        .await
+        .expect("list_issues succeeded");
+    assert_eq!(issues.len(), 1);
+    // parentId was a URL, not a numeric string → degrades to orphan
+    // (see lib.rs `translate` comment on T-13-PB1 graceful degradation).
+    assert_eq!(
+        issues[0].parent_id, None,
+        "non-numeric parentId must degrade to None, not propagate the URL"
+    );
+    // title and body round-trip as opaque strings — URL-shaped content
+    // is preserved verbatim (no linkification, no pre-fetch).
+    assert!(issues[0].title.contains("title-exfil"));
+
+    let single = backend
+        .get_issue("REPOSIX", IssueId(1))
+        .await
+        .expect("get_issue succeeded");
+    assert!(single.body.contains("body-exfil"));
+
+    let hits = decoy_server.received_requests().await.unwrap_or_default();
+    assert!(
+        hits.is_empty(),
+        "adapter made {} request(s) to adversarial string-field host: {:?}",
+        hits.len(),
+        hits.iter().map(|r| r.url.to_string()).collect::<Vec<_>>()
+    );
+}
+
 // ----------------------------------------------- live-Atlassian test
 
 /// Hits a real Atlassian tenant. `#[ignore]`-gated + `skip_if_no_env!`-
