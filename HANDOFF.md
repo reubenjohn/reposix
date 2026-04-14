@@ -520,3 +520,118 @@ The v0.3.0 release now carries prebuilt Linux binaries on the GitHub Releases pa
 ## Sign-off
 
 — Claude Opus 4.6 1M context, 2026-04-13 / 2026-04-14 (overnight session 3).
+
+---
+
+## Session 4 augmentation — 2026-04-14 overnight (v0.4.0 ready-to-tag)
+
+> Author: Claude Opus 4.6 1M context, overnight session 4. Built on top of session 3's v0.3.0 ship.
+
+### tl;dr
+
+Phase 13 shipped: **OP-1 from session 3's open-problems list — the "hero.png" folder-structure promise.** The FUSE mount now exposes Confluence pages as both (a) a flat `pages/<padded-id>.md` bucket for writes and git-tracking, and (b) a synthesized read-only `tree/` overlay of FUSE-emitted symlinks rendering Confluence's native parentId hierarchy at human-readable slug paths. Symlinks (not duplicate files) dissolve the concurrent-edit merge-conflict problem — the canonical file stays on a single stable path regardless of title/reparent churn.
+
+**Workspace is 261/261 tests passing** (up from 193 at v0.3.0, +68), clippy clean, fmt clean, `scripts/demos/smoke.sh` 4/4, `scripts/demos/full.sh` end-to-end green, `mkdocs build --strict` green. **Live verify against `reuben-john.atlassian.net` space `REPOSIX` captured tonight** — `ls mount/` shows `pages/` + `tree/`, `readlink` returns correct `../../pages/00000131192.md`-style relative targets, `diff` between `cat tree/…/welcome.md` and `cat pages/00000131192.md` confirms kernel symlink resolution routes the read through FUSE correctly. Full transcript in `.planning/phases/13-.../13-SUMMARY.md §"Live-verify transcript"`.
+
+Workspace `Cargo.toml` bumped to `0.4.0`. Code review PASSED (0 HIGH, 2 WARNING polish, 4 INFO — see `13-REVIEW.md`).
+
+**The one thing left for you to do:** run `bash scripts/tag-v0.4.0.sh` to cut + push the v0.4.0 annotated tag. The autonomous session deliberately stopped short of pushing the tag (session 3 set the precedent; the plan's `autonomous: false` frontmatter on Wave E is a human-gate).
+
+### What shipped in Phase 13 (one paragraph summary)
+
+Nine atomic plans across five waves (A serial → B1/B2/B3 parallel → C serial → D1/D2/D3 parallel → E serial). Wave A added the foundational primitives to `reposix-core`: `Issue::parent_id: Option<IssueId>`, `BackendFeature::Hierarchy`, `IssueBackend::root_collection_name()` default, and the `path::{slugify_title, slug_or_fallback, dedupe_siblings}` pure-function helpers with 26 new unit tests covering T-13-01/02 adversarial slug inputs. Wave B1 extended `reposix-confluence` to deserialize `parentId`+`parentType`, filter to `parentType == "page"`, override `root_collection_name` to `"pages"`, and return `true` for `supports(Hierarchy)`; added 10 unit tests + a live-contract test against REPOSIX. Wave B2 added a new pure `reposix-fuse::tree` module — `TreeSnapshot` with cycle-safe DFS builder (T-13-03), sibling-slug dedupe (T-13-04), and depth-aware relative symlink target construction that provably cannot escape the mount (T-13-05) — 21 unit tests. Wave B3 filled the frontmatter-parent-id test gap (5 new tests). Wave C did the heavy integration: `ReposixFs` now dispatches `lookup`/`getattr`/`readdir`/`readlink` on disjoint inode ranges (ROOT / BUCKET_DIR / GITIGNORE / real issues / tree dirs / tree symlinks), synthesizes the mount-root `.gitignore` containing exactly `/tree/\n`, normalizes the real-file padding to 11 digits to match B2's symlink-target format, and landed `tests/nested_layout.rs` — 5 wiremock-Confluence + FUSE-mount integration tests proving the end-to-end flow (all passing under real `fusermount3 3.9.0`). Wave D1 swept 19 files for the BREAKING path change (`mount/<id>.md` → `mount/<bucket>/<id>.md` + 4-digit → 11-digit padding). Wave D2 wrote ADR-003 (supersedes ADR-002's layout decision), appended CHANGELOG `[v0.4.0]`, corrected CLAUDE.md fuser version (0.15 → 0.17), refreshed the operating-principle #1 wording (the v0.1 sim-only gate is no longer accurate at v0.4), added README "Folder structure" and prebuilt-binaries Quickstart sections (OP-12 fold-in from session 3's handoff). Wave D3 cloned `scripts/tag-v0.3.0.sh` → `scripts/tag-v0.4.0.sh` (6 safety guards intact) and wrote `scripts/demos/07-mount-real-confluence-tree.sh` demonstrating the hero `cd`-through-wiki flow. Wave E ran the full gauntlet + live verify. 32 atomic commits on `main` since baseline `d43f1d9`.
+
+### Live proof captured tonight
+
+```
+$ reposix mount /tmp/reposix-v04-verify --backend confluence --project REPOSIX &
+$ sleep 5
+$ ls /tmp/reposix-v04-verify
+pages  tree
+$ cat /tmp/reposix-v04-verify/.gitignore
+/tree/
+$ ls /tmp/reposix-v04-verify/pages
+00000065916.md  00000131192.md  00000360556.md  00000425985.md
+$ ls /tmp/reposix-v04-verify/tree
+reposix-demo-space-home
+$ ls /tmp/reposix-v04-verify/tree/reposix-demo-space-home
+_self.md  architecture-notes.md  demo-plan.md  welcome-to-reposix.md
+$ readlink /tmp/reposix-v04-verify/tree/reposix-demo-space-home/welcome-to-reposix.md
+../../pages/00000131192.md
+$ diff <(cat .../tree/.../welcome-to-reposix.md) <(cat .../pages/00000131192.md) && echo OK
+OK
+$ fusermount3 -u /tmp/reposix-v04-verify    # clean
+```
+
+Full transcript is in `.planning/phases/13-nested-mount-layout-pages-tree-symlinks-for-confluence-paren/13-SUMMARY.md`.
+
+### Cutting the v0.4.0 tag (single human-gate step)
+
+```bash
+# From the repo root.
+cd /home/reuben/workspace/reposix
+
+# Verify nothing drifted since phase close-out.
+git status --short       # expect: empty
+git log --oneline -1     # expect: 160c236 docs(13-REVIEW): …
+
+# Run the tag script — it enforces 6 guards (branch=main, clean tree,
+# tag not already existing locally or on origin, CHANGELOG has [v0.4.0],
+# cargo test green, smoke.sh 4/4).  The script ends with
+# `git push origin v0.4.0`.
+bash scripts/tag-v0.4.0.sh
+```
+
+The script IS the push. No other step. After the push succeeds, the CI `release.yml` workflow (added in v0.3 session 3) will automatically build and attach prebuilt tarballs to the GitHub release; optionally paste the CHANGELOG `[v0.4.0]` block into the release body at <https://github.com/reubenjohn/reposix/releases/new?tag=v0.4.0>.
+
+### Drive-by fixes landed tonight (outside Phase 13 scope)
+
+While Wave B agents were running in parallel, the orchestrator shipped two OP-6 HIGH / MEDIUM items on disjoint files to make the morning review cleaner:
+
+- **OP-6 HIGH-1 (commit `8931a75`)** — `MORNING-BRIEF.md` and `PROJECT-STATUS.md` both pointed at the now-renamed-away `MORNING-BRIEF-v0.3.md`. Redirected to `HANDOFF.md` with a one-line note explaining the rename.
+- **OP-6 MEDIUM-10/11 (commit `c88e3f4`)** — renamed stale `TODO(phase-3)` → `TODO(v0.4+)` in `crates/reposix-sim/src/{routes/issues.rs, middleware/audit.rs}` and softened `crates/reposix-sim/src/routes/transitions.rs` "deferred to v0.2" to version-neutral.
+
+These are NOT tagged as Phase 13 commits; they're independent `chore(drive-by)` / `docs(drive-by)` commits.
+
+### What I deliberately did NOT do (explicit non-scope)
+
+Per the user's pre-sleep instructions, I did NOT:
+- Start OP-10 (eject 3rd-party adapter crates) — user said "not tonight."
+- Start OP-11 (repo-root reorg — `InitialReport.md` / `AgenticEngineeringReference.md` → `docs/research/`) — user said "not tonight."
+- Push the v0.4.0 tag — autonomous session deliberately stops at the tag-script gate.
+
+### Open problems rollup for next session (still outstanding)
+
+Unchanged from session 3's handoff unless noted:
+
+- **OP-1 (this session — SHIPPED).** Confluence parentId tree is live. The remaining pieces of OP-1's original scope (labels/, recent/, spaces/, multi-space mount, symlink into `labels/bug/0001.md` from `issues/0001.md`) are explicitly out of scope for v0.4 and deferred to v0.5+.
+- **OP-2 — dynamically generated `INDEX.md` per directory.** Not started. Highest ROI next-session item IMO — tree/ now exists, so `tree/INDEX.md` producing a one-shot sitemap would be a killer agent-UX multiplier.
+- **OP-3 — cache refresh via `git pull` semantics.** Not started. Tree/ is still live-on-every-mount; no snapshotting to git yet.
+- **OP-4 — prebuilt binaries.** DONE (session 3; OP-12 install-docs fold-in landed in D2 tonight).
+- **OP-5 — `social/` → `docs/social/`.** DONE (session 3).
+- **OP-6 — sweep findings.** HIGH-1 + MEDIUM-10/11 done this session. Remaining: HIGH-2 (`docs/security.md` v0.3 rewrite — D2 noted this as scope-boundary deferred; ready for a `/gsd-quick`), HIGH-3 (`docs/demo.md` "Simulator-only" callout — same), HIGH-4 (CLAUDE.md OP-1 wording — DONE tonight in D2), plus all MEDIUM and LOW items.
+- **OP-7 — hardening probes.** Not started. Specifically: concurrent-write contention swarm, FUSE under real-backend load, 500-page limit probe, credential-hygiene grep, SSRF on `webui_link`/`_links.base`, chaos audit-log restart test.
+- **OP-8 — honest-tokenizer benchmarks.** Not started.
+- **OP-9 — Confluence beyond pages (whiteboards, comments, attachments, live docs, folders, multi-space).** Not started. Comments (`pages/<id>.comments/<cid>.md`) is the next-most-compelling use case after the tree/ overlay that just shipped — they compose naturally now that folder structure exists in the mount.
+- **OP-10 — eject 3rd-party adapter crates.** Not started (user-gated).
+- **OP-11 — repo-root reorg.** Not started (user-gated).
+- **OP-12 — install docs for prebuilt binaries.** DONE (folded into Phase 13-D2 tonight).
+
+### Post-review cleanup candidates (from `13-REVIEW.md`, NONE blocking v0.4.0)
+
+- **WARN-01:** `tree/` readdir doesn't refresh on cold first-touch (small UX paper cut — user has to re-mount to see new Confluence pages). Queue for OP-3 cache-refresh phase.
+- **WARN-02:** Symlink target byte-length uncapped vs `PATH_MAX` (4096 on Linux). With 60-byte slug cap and max realistic depth ~6, the worst-case target is ~400 bytes — theoretically safe but no explicit assertion. Queue for OP-7 hardening.
+- **INFO-01:** Unbounded `tracing::warn!` of attacker-controlled `parentId` / `parentType` in the Confluence adapter. Byte caps would be trivial to add. Queue for OP-7.
+- **INFO-02:** `slugify_title` allocates the full title String before capping at 60 bytes. Pathological 10MB titles already proven not to panic but briefly balloon memory. Easy fix: pre-cap at input byte-slice.
+- **INFO-03:** Symlink `mtime` drifts on each getattr (currently returns `SystemTime::now()` for synthesized nodes).
+- **INFO-04:** `TreeDir` `..` entry always uses `TREE_ROOT_INO` regardless of depth — benign (kernel doesn't trust `..` inodes from FUSE anyway) but technically inaccurate.
+
+### Mission recommendation for session 5
+
+**Pick one of:** OP-2 (INDEX.md — composes beautifully with tree/ that just shipped; easy win) · OP-3 (git-pull cache refresh — substrate for the whole "mount as time machine" vision) · OP-9-comments (`pages/<id>.comments/<cid>.md`, also composes with tree/) · OP-7 (hardening — SSRF fuzz + credential-hygiene pre-push hook are both <100 LoC each and have no blast-radius risk).
+
+**Do NOT** start OP-10 or OP-11 without an explicit user check-in — they're both gated.
+
+The same norms still apply: simulator before real backend, tainted by default, audit log non-optional, no hidden state, mount = git repo, REPOSIX_ALLOWED_ORIGINS guards every egress. Session 4 did not touch any of these.
+
+— Claude Opus 4.6 1M context, 2026-04-14 (overnight session 4).
