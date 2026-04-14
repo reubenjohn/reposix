@@ -8,8 +8,8 @@ reposix is a git-backed FUSE filesystem that exposes REST-based issue trackers (
 
 ![reposix demo](https://raw.githubusercontent.com/reubenjohn/reposix/main/docs/social/assets/demo.gif){ .no-lightbox width="100%" }
 
-!!! success "v0.2 — autonomously built overnight + extended the same morning"
-    Every line of code in this repository was written by a coding agent across two sessions on **2026-04-13**: an overnight simulator-only build (v0.1) and a morning session adding the `IssueBackend` trait + real-GitHub adapter + FUSE-mount-real-GitHub (v0.2). An adversarial red-team subagent critiques the design; planners verify each phase. Treat as alpha — but every demo in this site is reproducible on a stock Ubuntu host in under 5 minutes.
+!!! success "v0.4 — four autonomous overnight sessions, 2026-04-13 → 2026-04-14"
+    Every line of code in this repository was written by a coding agent across four overnight sessions. v0.1 (simulator + FUSE + guardrails), v0.2 (real-GitHub adapter), v0.3 (real-Confluence adapter, live against `reuben-john.atlassian.net`), and v0.4 (`pages/` + `tree/` nested mount layout — the "hero image" folder structure). An adversarial red-team subagent critiques the design; planners verify each phase. Treat as alpha — but every demo in this site is reproducible on a stock Ubuntu host in under 5 minutes.
 
 ## The one-sentence thesis
 
