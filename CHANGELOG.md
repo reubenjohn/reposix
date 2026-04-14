@@ -88,6 +88,46 @@ hierarchy.
   with from-source kept as a contributor secondary option. Adds a new
   "Folder-structure mount (v0.4+)" section linking to ADR-003.
 
+### Hardening
+
+The Phase 13 code review surfaced six polish items, all addressed pre-tag:
+- **Symlink `mtime` stability** — `symlink_attr` now uses a cached `mount_time`
+  instead of `SystemTime::now()` on every `getattr`. Fixes drifting `st_mtim`
+  that confuses rsync/make/backup tools. (`IN-03`)
+- **Tree overlay refresh on first touch** — `readdir(tree/)` now triggers the
+  same backend refresh the root/bucket readdirs do, eliminating an empty-tree
+  trap when a user's first command is `ls mount/tree/`. (`WR-01`)
+- **Symlink target `PATH_MAX` guard** — debug-assert + release-mode warn if a
+  depth-correct symlink target ever exceeds 4095 bytes. Unreachable under the
+  current 500-page Confluence cap, defensive against future bumps. (`WR-02`)
+- **Confluence tracing cap** — attacker-controlled `parentId` / `parentType`
+  strings are now truncated to 64 bytes before being emitted in a tracing
+  span. Defense against log-injection and storage amplification. (`IN-01`)
+- **Slugify input pre-cap** — `slugify_title` now bounds the intermediate
+  `to_lowercase()` allocation at ~240 chars so pathological 10 MB titles no
+  longer briefly balloon memory. Output is unchanged (still 60-byte cap).
+  (`IN-02`)
+
+### Security
+
+- **Credential-hygiene pre-push hook** — `scripts/hooks/pre-push` rejects any
+  push containing a literal `ATATT3…` (Atlassian API token prefix),
+  `Bearer ATATT3…`, `ghp_…` (GitHub classic PAT), or `github_pat_…`
+  (fine-grained PAT) in the outgoing ref range. Install via
+  `bash scripts/install-hooks.sh`. Guides operators to rotate the token
+  rather than bypass the check. (OP-7 from v0.3 HANDOFF.md.)
+- **SSRF regression tests** — three new tests in `reposix-confluence`
+  prove the adapter ignores attacker-controlled `_links.base`,
+  `webui_link`, `_links.webui`, `_links.tinyui`, `_links.self`, and
+  `_links.edit` fields even when the adversarial URL resolves. Each test
+  uses a decoy `MockServer` with `.expect(0)` so a future "follow the
+  link for screenshots" feature regression panics at drop with a
+  specific URL list. (OP-7.)
+- **`docs/security.md` refreshed for v0.4.** The v0.1-era "no real
+  backend, no real victims" framing is replaced with the current model
+  (three real backends behind one allowlist; `tree/` overlay security
+  properties tested; swarm harness shipped).
+
 ### Migration
 
 ```bash
@@ -98,6 +138,9 @@ cat /tmp/mnt/0001.md
 ls /tmp/mnt                       # discover the bucket
 cat /tmp/mnt/issues/00000000001.md    # sim / GitHub
 cat /tmp/mnt/pages/00000131192.md     # Confluence
+
+# Recommended: install the credential-hygiene pre-push hook
+bash scripts/install-hooks.sh
 ```
 
 ## [v0.3.0] — 2026-04-14

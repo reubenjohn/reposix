@@ -77,7 +77,7 @@ Jira-style: list currently-legal status transitions. In v0.1 all 5 `IssueStatus`
 
 | Header | Purpose |
 |--------|---------|
-| `X-Reposix-Agent` | Logical agent identity. Required for audit attribution. Both `reposix-fuse` and `git-remote-reposix` set this to `<binary-name>-{pid}`. The simulator uses it as the rate-limit bucket key (see [SG-* deferred to v0.2](../security.md#whats-deferred-to-v02) — spoofing is a known gap). |
+| `X-Reposix-Agent` | Logical agent identity. Required for audit attribution. Both `reposix-fuse` and `git-remote-reposix` set this to `<binary-name>-{pid}`. The simulator uses it as the rate-limit bucket key (see [SG-* still deferred](../security.md#whats-still-deferred-v04) — spoofing is a known gap). |
 | `If-Match` | RFC 7232 quoted ETag. Used on `PATCH` for optimistic concurrency. |
 | `Content-Type: application/json` | Required on PATCH/POST. |
 
