@@ -1792,7 +1792,6 @@ dependencies = [
  "chrono",
  "clap",
  "reposix-core",
- "reqwest",
  "serde",
  "serde_json",
  "serde_yaml",

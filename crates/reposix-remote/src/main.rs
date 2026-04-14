@@ -13,18 +13,17 @@
 
 use std::io::{stdin, stdout, BufReader};
 use std::process::ExitCode;
+use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use reposix_core::http::{client, ClientOpts, HttpClient};
+use reposix_core::backend::{sim::SimBackend, DeleteReason, IssueBackend};
 use reposix_core::{parse_remote_url, sanitize, ServerMetadata, Tainted};
 use tokio::runtime::Runtime;
 
-mod client;
 mod diff;
 mod fast_import;
 mod protocol;
 
-use crate::client as api;
 use crate::diff::{plan, PlanError, PlannedAction};
 use crate::fast_import::{emit_import_stream, parse_export_stream};
 use crate::protocol::Protocol;
@@ -34,10 +33,8 @@ use crate::protocol::Protocol;
 /// after the dispatch loop returns.
 struct State {
     rt: Runtime,
-    http: HttpClient,
-    origin: String,
+    backend: Arc<dyn IssueBackend>,
     project: String,
-    agent: String,
     push_failed: bool,
 }
 
@@ -77,15 +74,13 @@ fn real_main() -> Result<bool> {
         .enable_all()
         .build()
         .context("build tokio runtime")?;
-    let http = client(ClientOpts::default()).context("build http client")?;
 
-    let agent = format!("git-remote-reposix-{}", std::process::id());
+    let backend: Arc<dyn IssueBackend> =
+        Arc::new(SimBackend::with_agent_suffix(spec.origin, Some("remote"))?);
     let mut state = State {
         rt,
-        http,
-        origin: spec.origin.clone(),
+        backend,
         project: spec.project.as_str().to_owned(),
-        agent,
         push_failed: false,
     };
 
@@ -178,12 +173,7 @@ fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
             }
         }
     }
-    let issues = match state.rt.block_on(api::list_issues(
-        &state.http,
-        &state.origin,
-        &state.project,
-        &state.agent,
-    )) {
+    let issues = match state.rt.block_on(state.backend.list_issues(&state.project)) {
         Ok(v) => v,
         Err(e) => {
             return fail_push(
@@ -225,12 +215,7 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
         }
     };
 
-    let prior = match state.rt.block_on(api::list_issues(
-        &state.http,
-        &state.origin,
-        &state.project,
-        &state.agent,
-    )) {
+    let prior = match state.rt.block_on(state.backend.list_issues(&state.project)) {
         Ok(v) => v,
         Err(e) => {
             return fail_push(
@@ -305,14 +290,8 @@ fn execute_action(state: &mut State, action: PlannedAction) -> Result<()> {
             let untainted = sanitize(Tainted::new(issue), meta);
             let _new = state
                 .rt
-                .block_on(api::post_issue(
-                    &state.http,
-                    &state.origin,
-                    &state.project,
-                    untainted,
-                    &state.agent,
-                ))
-                .context("post issue")?;
+                .block_on(state.backend.create_issue(&state.project, untainted))
+                .context("create issue")?;
             Ok(())
         }
         PlannedAction::Update {
@@ -329,14 +308,11 @@ fn execute_action(state: &mut State, action: PlannedAction) -> Result<()> {
             let untainted = sanitize(Tainted::new(new), meta);
             state
                 .rt
-                .block_on(api::patch_issue(
-                    &state.http,
-                    &state.origin,
+                .block_on(state.backend.update_issue(
                     &state.project,
                     id,
-                    prior_version,
                     untainted,
-                    &state.agent,
+                    Some(prior_version),
                 ))
                 .with_context(|| format!("patch issue {}", id.0))?;
             Ok(())
@@ -344,12 +320,10 @@ fn execute_action(state: &mut State, action: PlannedAction) -> Result<()> {
         PlannedAction::Delete { id, .. } => {
             state
                 .rt
-                .block_on(api::delete_issue(
-                    &state.http,
-                    &state.origin,
+                .block_on(state.backend.delete_or_close(
                     &state.project,
                     id,
-                    &state.agent,
+                    DeleteReason::Abandoned,
                 ))
                 .with_context(|| format!("delete issue {}", id.0))?;
             Ok(())
