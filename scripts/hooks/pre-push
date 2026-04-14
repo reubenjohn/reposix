@@ -45,14 +45,20 @@ readonly EXCLUDE_DIRS=(
   '.git'
   'target'
   'node_modules'
-  '.planning/archive'
   # The hook file itself defines the patterns it scans for; excluding
   # the hooks directory prevents self-sabotage on push of the hook.
   'scripts/hooks'
-  # CHANGELOG and docs are documentation of the prefixes; we accept
-  # that they'll mention the literal strings in reference form.
+  # Documentation + planning files legitimately reference these prefixes
+  # as format examples (e.g. "Atlassian tokens start with ATATT3…").
+  # Real secrets never live here — they live in .env (gitignored) or
+  # production source code (which we still scan).
+  '.planning'
+  'docs'
   'CHANGELOG.md'
-  'docs/security.md'
+  'HANDOFF.md'
+  'MORNING-BRIEF.md'
+  'PROJECT-STATUS.md'
+  'README.md'
 )
 
 # Resolve the list of commits being pushed.  stdin receives lines of
