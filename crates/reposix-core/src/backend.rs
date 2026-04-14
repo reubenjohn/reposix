@@ -268,12 +268,7 @@ mod tests {
             ) -> Result<Issue> {
                 unimplemented!()
             }
-            async fn delete_or_close(
-                &self,
-                _: &str,
-                _: IssueId,
-                _: DeleteReason,
-            ) -> Result<()> {
+            async fn delete_or_close(&self, _: &str, _: IssueId, _: DeleteReason) -> Result<()> {
                 Ok(())
             }
         }

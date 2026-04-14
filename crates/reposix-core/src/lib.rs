@@ -21,6 +21,7 @@ mod taint;
 pub use backend::{BackendFeature, DeleteReason, IssueBackend};
 pub use error::{Error, Result};
 pub use issue::{frontmatter, Issue, IssueId, IssueStatus};
+pub use path::{dedupe_siblings, slug_or_fallback, slugify_title, SLUG_MAX_BYTES};
 pub use project::{Project, ProjectSlug};
 pub use remote::{parse_remote_url, RemoteSpec};
 pub use taint::{sanitize, ServerMetadata, Tainted, Untainted};
