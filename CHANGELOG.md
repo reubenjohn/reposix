@@ -6,10 +6,22 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+— Nothing yet.
+
+## [v0.3.0] — 2026-04-14
+
 The "real Confluence" cut. v0.2.0-alpha landed the real-GitHub read path; this
-Unreleased bucket extends the same `IssueBackend` seam to Atlassian Confluence
-Cloud REST v2. Same kernel path, same CLI surface, same SG-01 allowlist — just
+release extends the same `IssueBackend` seam to Atlassian Confluence Cloud
+REST v2. Same kernel path, same CLI surface, same SG-01 allowlist — just
 a different backend plugged into the trait.
+
+### BREAKING
+
+- `.env` variable `TEAMWORK_GRAPH_API` renamed to `ATLASSIAN_API_KEY`. Users
+  with an existing `.env` must rename the variable (or re-source after
+  updating from `.env.example`). No reposix binary reads `TEAMWORK_GRAPH_API`
+  anymore. The rename reflects that the adapter talks to the generic
+  Confluence Cloud REST API, not the more specific Teamwork Graph product.
 
 ### Added
 
@@ -161,6 +173,7 @@ See [PROJECT-STATUS.md](PROJECT-STATUS.md) for the timeline + outstanding items,
 
 ---
 
-[Unreleased]: https://github.com/reubenjohn/reposix/compare/v0.2.0-alpha...HEAD
+[Unreleased]: https://github.com/reubenjohn/reposix/compare/v0.3.0...HEAD
+[v0.3.0]: https://github.com/reubenjohn/reposix/compare/v0.2.0-alpha...v0.3.0
 [v0.2.0-alpha]: https://github.com/reubenjohn/reposix/compare/v0.1.0...v0.2.0-alpha
 [v0.1.0]: https://github.com/reubenjohn/reposix/releases/tag/v0.1.0
