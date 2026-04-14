@@ -1,3 +1,17 @@
+---
+phase: 16
+wave: 3
+slug: audit-and-integration
+serial: true
+depends_on_waves:
+  - B
+blocks_waves:
+  - D
+estimated_wall_clock: 60m
+executor_role: gsd-executor
+autonomous: true
+---
+
 # Plan: Wave C — Audit log on `ConfluenceBackend` + read-path ADF switch + round-trip integration test
 
 ## Goal

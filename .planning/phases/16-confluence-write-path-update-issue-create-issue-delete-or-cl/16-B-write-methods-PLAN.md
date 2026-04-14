@@ -1,3 +1,18 @@
+---
+phase: 16
+wave: 2
+slug: write-methods
+serial: true
+depends_on_waves:
+  - A
+blocks_waves:
+  - C
+  - D
+estimated_wall_clock: 90m
+executor_role: gsd-executor
+autonomous: true
+---
+
 # Plan: Wave B — Confluence write methods (`create_issue` / `update_issue` / `delete_or_close`) + struct rename
 
 ## Goal

@@ -1,3 +1,18 @@
+---
+phase: 16
+wave: 4
+slug: docs-and-release
+serial: true
+depends_on_waves:
+  - A
+  - B
+  - C
+blocks_waves: []
+estimated_wall_clock: 30m
+executor_role: gsd-executor
+autonomous: true
+---
+
 # Plan: Wave D — Docs, version bump to v0.6.0, Phase 16 SUMMARY.md, STATE.md cursor update
 
 ## Goal

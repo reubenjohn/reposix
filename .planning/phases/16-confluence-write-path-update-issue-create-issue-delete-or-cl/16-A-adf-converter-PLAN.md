@@ -1,3 +1,17 @@
+---
+phase: 16
+wave: 1
+slug: adf-converter
+serial: true
+depends_on_waves: []
+blocks_waves:
+  - B
+  - D
+estimated_wall_clock: 45m
+executor_role: gsd-executor
+autonomous: true
+---
+
 # Plan: Wave A — ADF ↔ Markdown converter module (`crates/reposix-confluence/src/adf.rs`)
 
 ## Goal
