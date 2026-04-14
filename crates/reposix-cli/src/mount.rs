@@ -55,6 +55,9 @@ impl MountProcess {
         let backend_kind = match backend {
             ListBackend::Sim => "sim",
             ListBackend::Github => "github",
+            // Full allowlist + env-var guard lands in 11-B-2; for now the
+            // match is exhaustive so `cargo build` is green after 11-B-1.
+            ListBackend::Confluence => "confluence",
         };
         let mut cmd = resolve_bin("reposix-fuse");
         cmd.arg(mount_point)

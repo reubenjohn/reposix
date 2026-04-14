@@ -13,6 +13,7 @@ path = "src/main.rs"
 [dependencies]
 reposix-core.workspace = true
 reposix-sim = { path = "../reposix-sim" }
+reposix-confluence = { path = "../reposix-confluence" }
 reposix-github = { path = "../reposix-github" }
 tokio.workspace = true
 reqwest.workspace = true
