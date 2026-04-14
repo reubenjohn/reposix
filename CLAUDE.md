@@ -10,7 +10,7 @@ reposix exposes REST-based issue trackers (and similar SaaS systems) as a POSIX 
 
 The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The following are project-specific reinforcements, not replacements:
 
-1. **Simulator before real backend.** Until v0.2 explicitly opens this gate, no code in this repo authenticates to a real GitHub/Jira/Confluence instance. The simulator at `crates/reposix-sim/` is the only backend. This is both a security constraint (no creds in autonomous mode) and the StrongDM dark-factory pattern.
+1. **Simulator is the default / testing backend.** The simulator at `crates/reposix-sim/` is the default backend for every demo, unit test, and autonomous agent loop. Real backends (GitHub via `reposix-github`, Confluence via `reposix-confluence`) are guarded by the `REPOSIX_ALLOWED_ORIGINS` egress allowlist and require explicit credential env vars (`GITHUB_TOKEN`, `ATLASSIAN_API_KEY` + `ATLASSIAN_EMAIL` + `REPOSIX_CONFLUENCE_TENANT`). Autonomous mode never hits a real backend unless the user has put real creds in `.env` AND set a non-default allowlist. This is both a security constraint (fail-closed by default) and the StrongDM dark-factory pattern.
 2. **Tainted by default.** Any byte that came from a remote (simulator counts) is tainted. Tainted content must not be routed into actions with side effects on other systems (e.g. don't echo issue bodies into `git push` to remotes outside an explicit allowlist). The lethal-trifecta mitigation matters even against the simulator, because the simulator is *seeded* by an agent and seed data is itself attacker-influenced.
 3. **Audit log is non-optional.** Every network-touching action gets a row in the simulator's SQLite audit table. If a feature can't write to the audit log, it's not done.
 4. **No hidden state.** Mount state, simulator state, and git remote helper state all live in committed-or-fixture artifacts. No "it works in my session" bugs.
@@ -37,7 +37,7 @@ runtime/             # gitignored — local sim DB, mount points.
 - Rust stable (1.82+ via `rust-toolchain.toml`).
 - Async: `tokio` 1.
 - Web: `axum` 0.7 + `reqwest` 0.12 (rustls only, never openssl-sys).
-- FUSE: `fuser` 0.15 with `default-features = false`. **Reason:** the dev host lacks `pkg-config` and `libfuse-dev`, and we have no passwordless sudo to install them. Runtime mounting uses `fusermount`/`fusermount3` binaries (already present on Ubuntu and on `ubuntu-latest` GitHub runners after `apt install fuse3`).
+- FUSE: `fuser` 0.17 with `default-features = false`. **Reason:** the dev host lacks `pkg-config` and `libfuse-dev`, and we have no passwordless sudo to install them. Runtime mounting uses `fusermount`/`fusermount3` binaries (already present on Ubuntu and on `ubuntu-latest` GitHub runners after `apt install fuse3`).
 - Storage: `rusqlite` 0.32 with `bundled` feature (no system libsqlite3).
 - Errors: `thiserror` for typed crate errors, `anyhow` only at binary boundaries.
 
