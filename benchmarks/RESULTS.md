@@ -1,6 +1,6 @@
 # Benchmark results — token economy
 
-*Measured: 2026-04-14 05:31 UTC*
+*Measured: 2026-04-14 10:44 UTC*
 
 Task held constant across both scenarios: **read 3 issues, edit 1, push the
 change**. What differs is only the context the agent must ingest to get
@@ -9,11 +9,11 @@ started.
 | Scenario | Characters | Estimated tokens (`chars / 4`) |
 |----------|-----------:|-------------------------------:|
 | MCP-mediated (tool catalog + schemas) |     16,274 |      4,068 |
-| **reposix** (shell session transcript) |      1,260 | **       315** |
+| **reposix** (shell session transcript) |      1,372 | **       343** |
 
-**Reduction:** `reposix` uses **92.3%** fewer tokens than the
+**Reduction:** `reposix` uses **91.6%** fewer tokens than the
 MCP-mediated baseline for the same task. Equivalently, MCP costs
-**~12.9×** more context.
+**~11.9×** more context.
 
 ## What this does NOT measure
 
