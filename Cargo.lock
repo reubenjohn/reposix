@@ -1697,6 +1697,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "reposix-confluence"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64 0.22.1",
+ "chrono",
+ "parking_lot",
+ "reposix-core",
+ "reposix-sim",
+ "reqwest",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "wiremock",
+]
+
+[[package]]
 name = "reposix-core"
 version = "0.1.0"
 dependencies = [
