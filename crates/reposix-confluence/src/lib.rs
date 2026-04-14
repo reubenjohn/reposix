@@ -2285,4 +2285,248 @@ mod tests {
             "Workflows must NOT be supported"
         );
     }
+
+    // ======================================================================
+    // C5: Audit log unit tests (in-memory SQLite)
+    // ======================================================================
+
+    /// Open an in-memory `SQLite` DB with the audit schema loaded.
+    /// Wrapped in `Arc<Mutex<_>>` ready for `.with_audit(…)`.
+    fn open_in_memory_audit() -> std::sync::Arc<Mutex<rusqlite::Connection>> {
+        let conn = rusqlite::Connection::open_in_memory().expect("in-memory db");
+        reposix_core::audit::load_schema(&conn).expect("load_schema");
+        Arc::new(Mutex::new(conn))
+    }
+
+    /// Count rows in `audit_events` matching a given method.
+    fn count_audit_rows(audit: &Arc<Mutex<rusqlite::Connection>>, method: &str) -> i64 {
+        audit
+            .lock()
+            .query_row(
+                "SELECT COUNT(*) FROM audit_events WHERE method = ?1",
+                [method],
+                |r| r.get(0),
+            )
+            .unwrap_or(0)
+    }
+
+    #[tokio::test]
+    async fn update_issue_writes_audit_row() {
+        let server = MockServer::start().await;
+        Mock::given(method("PUT"))
+            .and(path("/wiki/api/v2/pages/99"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_v("99", "t", 2)))
+            .mount(&server)
+            .await;
+
+        let audit = open_in_memory_audit();
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri())
+            .expect("backend")
+            .with_audit(Arc::clone(&audit));
+
+        let patch = make_untainted("updated title", "body", None);
+        backend
+            .update_issue("REPOSIX", IssueId(99), patch, Some(1))
+            .await
+            .expect("update_issue should succeed");
+
+        assert_eq!(
+            count_audit_rows(&audit, "PUT"),
+            1,
+            "exactly one PUT audit row expected"
+        );
+    }
+
+    #[tokio::test]
+    async fn create_issue_writes_audit_row() {
+        let server = MockServer::start().await;
+        mount_space_lookup(&server, "REPOSIX", "12345").await;
+        Mock::given(method("POST"))
+            .and(path("/wiki/api/v2/pages"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_v("77", "new", 1)))
+            .mount(&server)
+            .await;
+
+        let audit = open_in_memory_audit();
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri())
+            .expect("backend")
+            .with_audit(Arc::clone(&audit));
+
+        let issue = make_untainted("new page", "body", None);
+        backend
+            .create_issue("REPOSIX", issue)
+            .await
+            .expect("create_issue should succeed");
+
+        assert_eq!(
+            count_audit_rows(&audit, "POST"),
+            1,
+            "exactly one POST audit row expected"
+        );
+        // Check path column.
+        let path_val: String = audit
+            .lock()
+            .query_row(
+                "SELECT path FROM audit_events WHERE method = 'POST'",
+                [],
+                |r| r.get(0),
+            )
+            .expect("row exists");
+        assert_eq!(path_val, "/wiki/api/v2/pages");
+    }
+
+    #[tokio::test]
+    async fn delete_or_close_writes_audit_row() {
+        let server = MockServer::start().await;
+        Mock::given(method("DELETE"))
+            .and(path("/wiki/api/v2/pages/55"))
+            .respond_with(ResponseTemplate::new(204))
+            .mount(&server)
+            .await;
+
+        let audit = open_in_memory_audit();
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri())
+            .expect("backend")
+            .with_audit(Arc::clone(&audit));
+
+        backend
+            .delete_or_close("REPOSIX", IssueId(55), DeleteReason::Completed)
+            .await
+            .expect("delete_or_close should succeed");
+
+        let row: (String, i64) = audit
+            .lock()
+            .query_row(
+                "SELECT method, status FROM audit_events WHERE method = 'DELETE'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .expect("DELETE audit row must exist");
+        assert_eq!(row.0, "DELETE");
+        assert_eq!(row.1, 204);
+    }
+
+    #[tokio::test]
+    async fn audit_row_has_correct_method_and_path() {
+        let server = MockServer::start().await;
+        Mock::given(method("PUT"))
+            .and(path("/wiki/api/v2/pages/99"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_v("99", "t", 2)))
+            .mount(&server)
+            .await;
+
+        let audit = open_in_memory_audit();
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri())
+            .expect("backend")
+            .with_audit(Arc::clone(&audit));
+
+        let patch = make_untainted("title check", "body", None);
+        backend
+            .update_issue("REPOSIX", IssueId(99), patch, Some(1))
+            .await
+            .expect("update_issue should succeed");
+
+        let (method_val, path_val, status_val, agent_id, response_summary): (
+            String,
+            String,
+            i64,
+            String,
+            String,
+        ) = audit
+            .lock()
+            .query_row(
+                "SELECT method, path, status, agent_id, response_summary \
+                 FROM audit_events ORDER BY id DESC LIMIT 1",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)),
+            )
+            .expect("audit row must exist");
+
+        assert_eq!(method_val, "PUT");
+        assert_eq!(path_val, "/wiki/api/v2/pages/99");
+        assert_eq!(status_val, 200);
+        assert!(
+            agent_id.starts_with("reposix-confluence-"),
+            "agent_id must start with 'reposix-confluence-', got {agent_id:?}"
+        );
+        // response_summary format: "{status}:{16_hex_chars}"
+        let re_ok = response_summary.starts_with("200:")
+            && response_summary.len() == 4 + 16 // "200:" + 16 hex chars
+            && response_summary[4..].chars().all(|c| c.is_ascii_hexdigit());
+        assert!(
+            re_ok,
+            "response_summary must match '^200:[0-9a-f]{{16}}$', got {response_summary:?}"
+        );
+    }
+
+    /// T-16-C-06: if the audit connection's table is dropped, the write result
+    /// must still be `Ok`. The audit insert failure is log-and-swallow.
+    #[tokio::test]
+    async fn audit_insert_failure_does_not_mask_write_result() {
+        let server = MockServer::start().await;
+        Mock::given(method("PUT"))
+            .and(path("/wiki/api/v2/pages/99"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_v("99", "t", 2)))
+            .mount(&server)
+            .await;
+
+        // Open an audit DB whose table is then dropped — INSERT will fail.
+        let conn = rusqlite::Connection::open_in_memory().expect("in-memory db");
+        reposix_core::audit::load_schema(&conn).expect("load_schema");
+        conn.execute("DROP TABLE audit_events", [])
+            .expect("drop table for test setup");
+        let audit = Arc::new(Mutex::new(conn));
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri())
+            .expect("backend")
+            .with_audit(Arc::clone(&audit));
+
+        let patch = make_untainted("resilience test", "body", None);
+        // Must NOT return Err — audit failure is swallowed.
+        backend
+            .update_issue("REPOSIX", IssueId(99), patch, Some(1))
+            .await
+            .expect("write must succeed even when audit INSERT fails");
+    }
+
+    /// T-16-C-01 extension: a failed write (409 Conflict) must still produce
+    /// an audit row so that post-hoc attack analysis can see the attempt.
+    #[tokio::test]
+    async fn audit_records_failed_writes() {
+        let server = MockServer::start().await;
+        Mock::given(method("PUT"))
+            .and(path("/wiki/api/v2/pages/99"))
+            .respond_with(
+                ResponseTemplate::new(409)
+                    .set_body_json(json!({"statusCode": 409, "message": "version conflict"})),
+            )
+            .mount(&server)
+            .await;
+
+        let audit = open_in_memory_audit();
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri())
+            .expect("backend")
+            .with_audit(Arc::clone(&audit));
+
+        let patch = make_untainted("conflict test", "body", None);
+        // The write itself returns Err (409 is a version mismatch error).
+        let result = backend
+            .update_issue("REPOSIX", IssueId(99), patch, Some(1))
+            .await;
+        assert!(result.is_err(), "409 must return Err");
+
+        // But the audit row must still be written with status 409.
+        let status_val: i64 = audit
+            .lock()
+            .query_row(
+                "SELECT status FROM audit_events WHERE method = 'PUT'",
+                [],
+                |r| r.get(0),
+            )
+            .expect("audit row must exist even for failed writes");
+        assert_eq!(
+            status_val, 409,
+            "audit row status must be 409 for failed write"
+        );
+    }
 }
