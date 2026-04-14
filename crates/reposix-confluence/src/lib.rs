@@ -74,6 +74,7 @@ use std::time::{Duration, Instant};
 use async_trait::async_trait;
 use parking_lot::Mutex;
 use reqwest::{Method, StatusCode};
+use rusqlite::Connection;
 use serde::Deserialize;
 
 use reposix_core::backend::{BackendFeature, DeleteReason, IssueBackend};
@@ -156,6 +157,14 @@ pub struct ConfluenceBackend {
     /// Set after a response where `x-ratelimit-remaining` hits zero or a
     /// 429 is returned with a `Retry-After` header. Shared across clones.
     rate_limit_gate: Arc<Mutex<Option<Instant>>>,
+    /// Optional audit log connection. When `Some`, every write call
+    /// (`create_issue`, `update_issue`, `delete_or_close`) inserts one row
+    /// into the `audit_events` table. The caller is responsible for opening
+    /// the connection via [`reposix_core::audit::open_audit_db`] so the
+    /// schema and append-only triggers are loaded before the first insert.
+    ///
+    /// `None` by default — attach via [`Self::with_audit`].
+    audit: Option<Arc<Mutex<Connection>>>,
 }
 
 // Manual Debug on the backend struct too — the derived Debug would print
@@ -169,6 +178,14 @@ impl std::fmt::Debug for ConfluenceBackend {
             .field("base_url", &self.base_url)
             .field("creds", &self.creds)
             .field("rate_limit_gate", &"<gate>")
+            .field(
+                "audit",
+                if self.audit.is_some() {
+                    &"<present>"
+                } else {
+                    &"<none>"
+                },
+            )
             .finish_non_exhaustive()
     }
 }
@@ -436,7 +453,23 @@ impl ConfluenceBackend {
             creds,
             base_url,
             rate_limit_gate: Arc::new(Mutex::new(None)),
+            audit: None,
         })
+    }
+
+    /// Attach an audit log connection. Every write call (`create_issue`,
+    /// `update_issue`, `delete_or_close`) inserts one row into
+    /// `audit_events` when an audit connection is present; writes succeed
+    /// even if the audit insert fails (best-effort, log-and-swallow — the
+    /// Confluence round-trip has already committed).
+    ///
+    /// The caller is responsible for opening the connection via
+    /// [`reposix_core::audit::open_audit_db`] so the schema and triggers
+    /// are loaded before the first insert.
+    #[must_use]
+    pub fn with_audit(mut self, conn: Arc<Mutex<Connection>>) -> Self {
+        self.audit = Some(conn);
+        self
     }
 
     fn base(&self) -> &str {
@@ -609,6 +642,52 @@ impl ConfluenceBackend {
         let issue = self.get_issue("", id).await?;
         Ok(issue.version)
     }
+
+    /// Insert one audit row for a completed write call. Best-effort —
+    /// any failure is logged via [`tracing::error!`] and swallowed so the
+    /// Confluence write result is never masked.
+    ///
+    /// `method` must be `"POST"`, `"PUT"`, or `"DELETE"`.
+    /// `request_summary` should be the page title truncated to 256 chars —
+    /// **never** body content (T-16-C-04).
+    /// `response_bytes` is the raw server response body; only its SHA-256
+    /// prefix is stored, never the content itself.
+    fn audit_write(
+        &self,
+        method: &'static str,
+        path: &str,
+        status: u16,
+        request_summary: &str,
+        response_bytes: &[u8],
+    ) {
+        let Some(ref audit) = self.audit else {
+            return;
+        };
+        let ts = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+        let sha_hex = {
+            use sha2::{Digest, Sha256};
+            let digest = Sha256::digest(response_bytes);
+            format!("{digest:x}")
+        };
+        let response_summary = format!("{status}:{}", &sha_hex[..16]);
+        let conn = audit.lock();
+        if let Err(e) = conn.execute(
+            "INSERT INTO audit_events \
+             (ts, agent_id, method, path, status, request_body, response_summary) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            rusqlite::params![
+                ts,
+                format!("reposix-confluence-{}", std::process::id()),
+                method,
+                path,
+                i64::from(status),
+                request_summary,
+                response_summary,
+            ],
+        ) {
+            tracing::error!(error = %e, "confluence audit insert failed");
+        }
+    }
 }
 
 #[async_trait]
@@ -776,6 +855,10 @@ impl IssueBackend for ConfluenceBackend {
         self.ingest_rate_limit(&resp);
         let status = resp.status();
         let bytes = resp.bytes().await?;
+        let status_u16 = status.as_u16();
+        // T-16-C-04: audit title only (first 256 chars), never body content.
+        let req_summary: String = issue.inner_ref().title.chars().take(256).collect();
+        self.audit_write("POST", "/wiki/api/v2/pages", status_u16, &req_summary, &bytes);
         if !status.is_success() {
             return Err(Error::Other(format!(
                 "confluence returned {status} for POST {url}: {}",
@@ -831,6 +914,11 @@ impl IssueBackend for ConfluenceBackend {
         self.ingest_rate_limit(&resp);
         let status = resp.status();
         let bytes = resp.bytes().await?;
+        let status_u16 = status.as_u16();
+        // T-16-C-04: audit title only (first 256 chars), never body content.
+        let req_summary: String = patch.inner_ref().title.chars().take(256).collect();
+        let audit_path = format!("/wiki/api/v2/pages/{}", id.0);
+        self.audit_write("PUT", &audit_path, status_u16, &req_summary, &bytes);
         if status == StatusCode::NOT_FOUND {
             return Err(Error::Other(format!("not found: {url}")));
         }
@@ -874,10 +962,16 @@ impl IssueBackend for ConfluenceBackend {
             .await?;
         self.ingest_rate_limit(&resp);
         let status = resp.status();
+        let status_u16 = status.as_u16();
+        let audit_path = format!("/wiki/api/v2/pages/{}", id.0);
         if status == StatusCode::NO_CONTENT {
+            // 204: no body — audit with empty bytes, empty request summary.
+            self.audit_write("DELETE", &audit_path, status_u16, "", &[]);
             return Ok(());
         }
         let bytes = resp.bytes().await?;
+        // Audit on all non-204 paths (failures).
+        self.audit_write("DELETE", &audit_path, status_u16, "", &bytes);
         if status == StatusCode::NOT_FOUND {
             return Err(Error::Other(format!("not found: {url}")));
         }
