@@ -424,7 +424,7 @@ Plans:
 - [x] 13-B1-confluence-parent-id
 - [x] 13-B2-fuse-tree-module
 - [x] 13-B3-frontmatter-parent-id
-- [ ] 13-C-fuse-wiring
+- [x] 13-C-fuse-wiring
 - [ ] 13-D1-breaking-migration-sweep
 - [ ] 13-D2-docs-and-adr
 - [ ] 13-D3-release-scripts-and-demo
