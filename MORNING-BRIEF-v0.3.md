@@ -6,9 +6,45 @@
 
 ## tl;dr
 
-Phase 11 shipped read-only **Atlassian Confluence Cloud** support end-to-end: adapter crate, CLI dispatch, contract test (parameterized over sim + wiremock + live), Tier 3B + Tier 5 demos, ADR-002, reference docs, a "build-your-own-connector" guide, and a CHANGELOG v0.3.0 block. Workspace is **191/191 passing**, clippy clean, fmt clean, `scripts/demos/smoke.sh` 4/4, `mkdocs build --strict` green. Live-wire verification **did** run successfully tonight against `reuben-john.atlassian.net` space `REPOSIX` (3 seeded pages round-tripped through the adapter and the FUSE mount).
+Phase 11 shipped read-only **Atlassian Confluence Cloud** support end-to-end: adapter crate, CLI dispatch, contract test (parameterized over sim + wiremock + live), Tier 3B + Tier 5 demos, ADR-002, reference docs, a "build-your-own-connector" guide, and a CHANGELOG v0.3.0 block. Workspace is **193/193 passing**, clippy clean, fmt clean, `scripts/demos/smoke.sh` 4/4, `mkdocs build --strict` green. Live-wire verification **ran successfully** tonight against `reuben-john.atlassian.net` space `REPOSIX` (4 seeded pages round-tripped through CLI `list`, and through the **Tier 5 FUSE mount with full `cat` body output** — see §"Live proof captured" below). 2 MEDIUM code-review findings + 3 LOW all fixed. **One late-stage FUSE cache bug** found during live Tier 5 verification and fixed in commit `6cd6e43` — the fix is in this release (see CHANGELOG `[v0.3.0] — Fixed` section).
 
 **The one thing left for you to do:** run `bash scripts/tag-v0.3.0.sh` to cut + push the `v0.3.0` annotated tag. The autonomous session deliberately stopped short of pushing the tag — see §"Cutting the tag" below.
+
+## Live proof captured tonight
+
+Not a plan, not a promise — actual output, captured from the dev host:
+
+```
+$ reposix list --backend confluence --project REPOSIX --format table
+ID         STATUS       TITLE
+---------- ------------ ----------------------------------------
+65916      open         Architecture notes
+131192     open         Welcome to reposix
+360556     open         reposix demo space Home
+425985     open         Demo plan
+
+$ reposix mount /tmp/reposix-conf-mnt --backend confluence --project REPOSIX &
+$ ls /tmp/reposix-conf-mnt
+131192.md  360556.md  425985.md  65916.md
+$ cat /tmp/reposix-conf-mnt/131192.md
+---
+id: 131192
+title: Welcome to reposix
+status: open
+assignee: 557058:dd5e2f19-5bf6-4c0a-be0b-258ab69f6976
+created_at: 2026-04-14T04:16:31.091Z
+updated_at: 2026-04-14T04:16:31.091Z
+version: 1
+---
+<p>This Confluence space is mounted as a POSIX directory tree by <strong>reposix</strong>.
+Each page is a file; <code>cat</code> prints this HTML body; <code>ls</code> lists every page.</p>
+<p>This page was seeded during Phase 11 of reposix v0.3.</p>
+$ fusermount3 -u /tmp/reposix-conf-mnt   # clean
+$ bash scripts/demos/06-mount-real-confluence.sh
+… == DEMO COMPLETE ==
+```
+
+That's the HANDOFF §9 proof command finishing green against a real Atlassian tenant, using the REPOSIX space I created + seeded for you during the session (plus the space-homepage that Confluence auto-provisions on space creation). Your personal `~TokenWorld` space is untouched and still fetchable via `--project ~TokenWorld` if you want to try it.
 
 ## What shipped
 

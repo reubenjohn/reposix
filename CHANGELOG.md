@@ -97,6 +97,34 @@ a different backend plugged into the trait.
 - **Workspace manifest** — adds the `reposix-confluence` crate and
   `base64 = "0.22"` as a workspace dep.
 
+### Fixed
+
+- **FUSE read-path empty-body on list-only backends.** `readdir`
+  pre-populated the in-memory cache with issues from `backend.list_issues()`
+  so that subsequent `cat` served from cache. For GitHub that was fine —
+  its REST list endpoint returns issue bodies — but Confluence REST v2's
+  `/spaces/{id}/pages` returns `body: {}` on every item by design, which
+  meant `cat <mount>/<page-id>.md` showed frontmatter only. Added
+  `CachedFile.body_fetched: bool`; list-populated entries set it false and
+  `resolve_name`/`resolve_ino` fall through to a fresh `get_issue` on first
+  read. GitHub's fast-cache behaviour is preserved. Surfaced during live
+  Tier 5 verification against a real Confluence tenant; fix verified by
+  re-running `bash scripts/demos/06-mount-real-confluence.sh` end-to-end
+  against `reuben-john.atlassian.net` space `REPOSIX` and seeing full
+  HTML bodies render in `cat` output. File size proof: 198 → 447 bytes
+  for the Welcome page.
+- **Phase 11 code-review WR-01 — space-key query-string injection.** The
+  `--project` value was interpolated into `?keys=…` via `format!` without
+  percent-encoding; a space key containing `&`, `=`, `#`, space or non-ASCII
+  could have smuggled extra query params. Now built via
+  `url::Url::query_pairs_mut().append_pair()`.
+- **Phase 11 code-review WR-02 — server-controlled `space_id` in URL
+  path.** The numeric-looking `space_id` returned by `?keys=` lookup was
+  spliced verbatim into a URL path. A malicious (or compromised) Confluence
+  server could have returned `"12345/../../admin"` to pivot onto unintended
+  endpoints. Now validated as `^[0-9]{1,20}$` before URL construction; an
+  adversarial `id` returns `Error::Other("malformed space id from server")`.
+
 ## [v0.2.0-alpha] — 2026-04-13 (post-noon)
 
 The "real GitHub" cut. v0.1.0 was simulator-only on purpose; this release lets reposix talk to a real backend.
