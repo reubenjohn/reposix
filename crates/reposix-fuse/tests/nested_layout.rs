@@ -114,13 +114,7 @@ async fn install_confluence_fixtures(server: &MockServer, pages: &[Value]) {
 
 /// Boot a `ConfluenceReadOnlyBackend` + FUSE mount against the wiremock
 /// `server`. Returns `(mount, mount_path, tempdir)`. Drop `tempdir` last.
-fn boot_mount(
-    server_uri: String,
-) -> (
-    reposix_fuse::Mount,
-    std::path::PathBuf,
-    tempfile::TempDir,
-) {
+fn boot_mount(server_uri: String) -> (reposix_fuse::Mount, std::path::PathBuf, tempfile::TempDir) {
     let td = tempfile::Builder::new()
         .prefix("reposix-nested-")
         .tempdir()
@@ -164,7 +158,10 @@ fn boot_mount(
         },
         Duration::from_secs(5),
     );
-    assert!(ok, "mount did not expose .gitignore + pages + tree within 5s");
+    assert!(
+        ok,
+        "mount did not expose .gitignore + pages + tree within 5s"
+    );
     (mount, mount_path, td)
 }
 
@@ -196,12 +193,7 @@ fn unmount_and_wait(mount: reposix_fuse::Mount, mount_path: &std::path::Path) {
 /// ```
 fn demo_space_fixture() -> Vec<Value> {
     vec![
-        conf_page(
-            360_556,
-            "reposix demo space Home",
-            None,
-            "<p>home body</p>",
-        ),
+        conf_page(360_556, "reposix demo space Home", None, "<p>home body</p>"),
         conf_page(
             131_192,
             "Welcome to reposix",
@@ -214,12 +206,7 @@ fn demo_space_fixture() -> Vec<Value> {
             Some(360_556),
             "<p>arch body</p>",
         ),
-        conf_page(
-            425_985,
-            "Demo plan",
-            Some(360_556),
-            "<p>plan body</p>",
-        ),
+        conf_page(425_985, "Demo plan", Some(360_556), "<p>plan body</p>"),
     ]
 }
 
@@ -299,20 +286,17 @@ async fn nested_layout_three_level_hierarchy() {
     );
 
     // (5) readlink returns exact depth-correct targets.
-    let self_target = std::fs::read_link(
-        mount_path.join("tree/reposix-demo-space-home/_self.md"),
-    )
-    .expect("readlink _self.md");
+    let self_target = std::fs::read_link(mount_path.join("tree/reposix-demo-space-home/_self.md"))
+        .expect("readlink _self.md");
     assert_eq!(
         self_target.to_string_lossy(),
         "../../pages/00000360556.md",
         "_self.md target"
     );
 
-    let welcome_target = std::fs::read_link(
-        mount_path.join("tree/reposix-demo-space-home/welcome-to-reposix.md"),
-    )
-    .expect("readlink welcome");
+    let welcome_target =
+        std::fs::read_link(mount_path.join("tree/reposix-demo-space-home/welcome-to-reposix.md"))
+            .expect("readlink welcome");
     assert_eq!(
         welcome_target.to_string_lossy(),
         "../../pages/00000131192.md",
@@ -489,8 +473,7 @@ async fn nested_layout_gitignore_content_exact() {
 
     let gi = std::fs::read(mount_path.join(".gitignore")).expect("read .gitignore");
     assert_eq!(
-        gi,
-        b"/tree/\n",
+        gi, b"/tree/\n",
         "gitignore bytes must be exactly /tree/\\n; got {gi:?}"
     );
     assert_eq!(gi.len(), 7, ".gitignore must be 7 bytes");
@@ -582,10 +565,8 @@ async fn nested_layout_readlink_target_depth_is_correct() {
 
     // End-to-end symlink traversal proof: `cat tree/gp/parent/child.md`
     // must return the rendered bytes of pages/00000000003.md.
-    let via_symlink = std::fs::read_to_string(
-        mount_path.join("tree/grandparent/parent/child.md"),
-    )
-    .expect("read via deep symlink");
+    let via_symlink = std::fs::read_to_string(mount_path.join("tree/grandparent/parent/child.md"))
+        .expect("read via deep symlink");
     let direct =
         std::fs::read_to_string(mount_path.join("pages/00000000003.md")).expect("read direct");
     assert_eq!(

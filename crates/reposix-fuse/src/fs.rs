@@ -724,7 +724,8 @@ impl Filesystem for ReposixFs {
                     reply.error(fuser::Errno::from_i32(libc::ENOENT));
                     return;
                 };
-                let mut out: Vec<(u64, FileType, String)> = Vec::with_capacity(dir.children.len() + 2);
+                let mut out: Vec<(u64, FileType, String)> =
+                    Vec::with_capacity(dir.children.len() + 2);
                 out.push((dir.ino, FileType::Directory, ".".to_owned()));
                 // Parent inode — we don't track the reverse relation in the
                 // snapshot, so use `TREE_ROOT_INO` as a conservative default.

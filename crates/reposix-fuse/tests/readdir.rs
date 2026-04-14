@@ -154,8 +154,7 @@ async fn mount_lists_and_reads_issues() {
     // Assertion 2: `cat mount/.gitignore` returns exactly `/tree/\n` (7 bytes).
     let gi = std::fs::read(mount_path.join(".gitignore")).expect("read .gitignore");
     assert_eq!(
-        gi,
-        b"/tree/\n",
+        gi, b"/tree/\n",
         "gitignore should be exactly /tree/\\n (7 bytes); got {gi:?}"
     );
 
