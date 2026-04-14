@@ -174,78 +174,16 @@ Per `~/.claude/CLAUDE.md` OP #6 ("ground truth obsession"), being loud about wha
 
 ## Open problems for the next agent
 
-> These are **open-ended design questions** the user surfaced right before sign-off. Every one of them is intentionally sketchy — the user said "I haven't thought of this much, I'm hoping you capture them in the handoff." Treat each as a thesis to pressure-test, not a spec to implement. Before picking one up: read the research note in parentheses, then `/gsd-discuss-phase N` to gather the missing decisions, THEN plan.
+Open problems are tracked as GSD phases 16–25 across milestones v0.6.0 and v0.7.0. See .planning/ROADMAP.md for the full list. Design context is in each phase's CONTEXT.md.
 
-### OP-1 — Folder structure inside the mount (the "hero.png" vision)
+### OP-1 (labels + spaces directory views)
+→ Queued as Phase 19 — see .planning/phases/19-op-1-remainder-labels-and-spaces-directory-views-as-read-onl/CONTEXT.md
 
-Right now every backend renders a flat `<id>.md` file list. The **hero image** ([`docs/social/assets/hero.png`](docs/social/assets/hero.png)) already advertises a richer UX: a sidebar tree with `issues/`, `labels/`, `milestones/` subfolders. That's the target.
+### OP-2 (tree-recursive + mount-root _INDEX.md)
+→ Queued as Phase 18 — see .planning/phases/18-op-2-remainder-tree-recursive-and-mount-root-index-md-synthe/CONTEXT.md
 
-For **GitHub**:
-- `issues/NNNN.md` — today's behaviour
-- `labels/<label>/NNNN.md` — every issue carrying that label
-- `milestones/<milestone>/NNNN.md` — every issue in the milestone
-- `pulls/` — separate namespace for pull requests (currently not surfaced)
-
-For **Confluence** (the user explicitly flagged this is the same problem):
-- `pages/NNNN.md` — flat (today's behaviour)
-- `tree/<parent-slug>/<child-slug>/<grandchild-slug>.md` — the **native page hierarchy** Confluence already stores via `parentId`. This is the killer feature: `cd` through a wiki. Our RESEARCH.md already documents the parent-child link shape.
-- `spaces/<space-key>/...` — multi-space mounts in one tree (today: one space per `--project`).
-- `labels/<label>/NNNN.md` — analogous to GitHub, via Confluence's separate label endpoint.
-- `recent/<yyyy-mm-dd>/NNNN.md` — pages modified on that day (time-bucketed view).
-
-**Design questions to resolve first:**
-
-1. **Symlinks or hardlinks?** A single issue lives in `issues/0001.md` but also appears at `labels/bug/0001.md`. Duplicate file content is a disaster for `sed -i` edits. FUSE can lie about hardlink / symlink relationships — should we use symlinks pointing back to `issues/`?
-2. **Read-only vs writable subtrees?** `labels/` is an index view — can the agent `mv labels/bug/0001.md labels/p1/0001.md` to change a label? If yes, write semantics become exotic. If no, the UX is misleading.
-3. **How does `readdir` perf survive?** A Confluence space with 5000 pages would generate 5000 paths under `tree/…` — that's fine for `ls` but `find .` becomes glacial without proper dir caching.
-4. **Namespace collisions.** Two pages titled "Architecture notes" under different parents — slugs must disambiguate without leaking the numeric id into the human-visible path.
-5. **ADR-002** currently picks "Option A" (flat hierarchy). This work is the **Option B** or **Option C** from `HANDOFF.md` §3 (the original v0.2 handoff, preserved in `git log`). Write **ADR-003** to document the chosen shape before coding.
-
-**Primary test case:** Confluence. The REPOSIX demo space (id `360450`) has a parent/child chain (homepage `360556` → 3 children). The fixture is already there.
-
-### OP-2 — Dynamically generated `INDEX.md` per directory
-
-Every directory should contain a **synthesized** `INDEX.md` (or `_INDEX.md` — leading underscore to keep it out of naive `*.md` globs) that FUSE generates on read. The file doesn't exist on disk; its contents are computed at read time:
-
-```markdown
-# Index of pages/ (Confluence space REPOSIX, 4 pages)
-
-| id | title | status | updated |
-|----|-------|--------|---------|
-| 131192 | [Welcome to reposix](131192.md) | open | 2026-04-14 |
-| 65916  | [Architecture notes](65916.md)  | open | 2026-04-14 |
-| ...    |                              |      |         |
-```
-
-Why this matters for agents: `cat pages/INDEX.md` in 200 tokens gives an LLM the same directory-overview information that would otherwise require a separate `readdir` + N `stat`s. Combined with OP-1, `cat tree/INDEX.md` becomes a **one-shot sitemap**.
-
-**Design questions:**
-- Markdown table, YAML frontmatter block, or both?
-- Included in `ls` output (could confuse naive users) or hidden from `readdir` and only accessible by explicit path?
-- Cached or regenerated on every read? (Same cache-invalidation problem as OP-3.)
-- Does it include nested subdirectories? For `tree/parent-a/INDEX.md`, is the index for just that dir, or recursive?
-
-### OP-3 — Cache refresh via `git pull` semantics
-
-Today's mount is **live-on-every-read** — each `cat` may fire an HTTP call (first read populates the cache; re-reads hit the cache until the mount exits). That's fine for accuracy but wrong for the user's mental model.
-
-The user's insight: **the mount point is already a git repo.** The natural refresh semantic is `git pull`. Proposal:
-
-- `mount/.reposix/cache.db` (sqlite) — persistent content cache.
-- `mount/.reposix/fetched_at.txt` — timestamp of the last backend round-trip.
-- `git pull` in the mount triggers a hook that calls a new `reposix refresh` subcommand → it re-fetches all pages + writes a git commit into the mount's own working tree.
-- `git log` in the mount shows the history of backend sync points. The mount becomes a **time machine** over the backend.
-- `git diff HEAD~1` shows "what changed at the backend since the last pull." That is an insanely good agent UX.
-
-**Design questions:**
-- **Where does the cache live?** `.reposix/` (hidden inside the mount) vs a sibling `runtime/<tenant>-<space>.db` (out-of-tree).
-- **Is the cache a git-tracked artifact?** If yes, `git log` works without a helper; if no, we need a custom `reposix log` viewer.
-- **Commit author** — `reposix <backend>@<tenant>` so human vs agent commits are distinguishable.
-- **Concurrent mount safety** — two `reposix mount` processes on the same path, or two `git pull`s racing — need a file lock on `.reposix/cache.db`.
-- **Offline mode** — if the backend is down, cache is authoritative; add a `--offline` CLI flag to guarantee zero egress.
-- **Invalidation vs extend** — `git pull --force` vs `git pull --rebase` have different reposix equivalents. Probably one day.
-
-**Primary tech spike:** SQLite with WAL mode + a tiny commit-into-mount helper. A working prototype would be ~300 LoC in a new `crates/reposix-cache` crate.
+### OP-3 (reposix refresh + git-diff cache)
+→ Queued as Phase 20 — see .planning/phases/20-op-3-reposix-refresh-subcommand-and-git-diff-cache-for-mount/CONTEXT.md
 
 ---
 
@@ -259,76 +197,22 @@ If there's a next overnight agent: your starting points in order are this file (
 
 OP-6 sweep items HIGH-1 through HIGH-5 and MEDIUM-6 through MEDIUM-17 resolved in sessions 3–4 (see session-4 drive-by block below). Remaining LOW items (obsolete scripts, marketing doc staleness) are low-priority; no blocking work remains.
 
-## OP-7 — Hardening: poke holes in v0.3
+## OP-7 (hardening bundle)
+→ Queued as Phase 21 — see .planning/phases/21-op-7-hardening-bundle-contention-swarm-500-page-truncation-p/CONTEXT.md
 
-The v0.3 read path is green against real GitHub and real Confluence, but it's not pressure-tested. These are the load + edge-case probes the next agent should run before declaring the adapter pattern "production-shaped."
+## OP-8 (honest-tokenizer benchmarks)
+→ Queued as Phase 22 — see .planning/phases/22-op-8-honest-tokenizer-benchmarks-replace-len-div-4-with-coun/CONTEXT.md
 
-- **Concurrent writes against the sim.** Repeat Phase 9's swarm harness but with contention: N agents editing the same `0001.md`. Target: prove `If-Match: "<version>"` returns 409 deterministically; every winning write appears exactly once in `audit_events`; no torn writes. Extend `reposix-swarm` with a `--contention` mode (50 clients, same issue, 30s loop).
-- **FUSE under real-backend load.** Phase 9 measured sim-direct + fuse-over-sim. Repeat over `--backend github` and `--backend confluence` against a 500-issue repo / 500-page space. Expected finding: rate-limit gate works, but p99 blows past SG-07's 15s list ceiling on cold cache — may need to split `list_issues` into a paginated-returns-progressively iterator instead of a fat single call.
-- **Long-path / large-space limits.** `reposix-confluence` caps `list_issues` at 500 pages. Verify: what happens page 501 through ∞? A silent truncation is an SG-05 taint escape (the agent thinks it has the whole space when it doesn't). Ship a WARN log + a `--no-truncate` CLI flag that errors instead of silently capping.
-- **Credential hygiene fuzz.** Grep every committed file + `tracing::` span + panic message for the characters `ATATT3` (the canonical Atlassian token prefix). Add a pre-push hook that rejects a commit if any `.rs` file contains a literal `Bearer ATATT3` or similar. One-day work; very cheap insurance.
-- **SSRF regression.** WR-02 validated space_id server-side. What about `webui_link` or `_links.base` returned by Confluence? Malicious server could put `https://attacker.com` there — our adapter ignores those fields today, but a future "follow the webui_link for screenshots" feature would reopen the door. Write a wiremock test now that feeds adversarial `_links.base` + asserts no outbound call.
-- **Tenant-name leakage.** `tracing::warn!` on 429 includes the full URL — which contains the tenant. If tracing is shipped to a third-party observability backend, tenant inference is possible. Consider: redact tenant in log URLs, or make the HttpClient wrapper do it.
-- **Audit log under restart.** The sim's audit DB uses WAL mode. If the sim crashes mid-PATCH, is there a consistency path? Kill -9 the sim during a swarm run and check for dangling rows. Swarm harness could add a `--chaos` mode that kill-9s the sim every 10s.
-- **macOS + macFUSE parity.** Today Linux-only. macFUSE support is a ~2-day CI matrix + conditional `fusermount3` → `umount -f` swap. Worth a Phase 14.
+## OP-9 (Confluence beyond pages)
+→ OP-9a (comments): Phase 23 — see .planning/phases/23-op-9a-confluence-comments-exposed-as-pages-id-comments-comme/CONTEXT.md
+→ OP-9b (whiteboards/attachments/folders): Phase 24 — see .planning/phases/24-op-9b-confluence-whiteboards-attachments-and-folders/CONTEXT.md
 
-## OP-8 — Better benchmarks (honest token economy, not estimates)
+## OP-10 — Eject 3rd-party adapter crates
 
-The current `scripts/bench_token_economy.py` fakes token counts via `len(text)/4`. It's within ±10% of real Claude tokenisation for English+code, but the 92.3 % headline is robust under any reasonable tokenizer. Still — the next agent should upgrade the rigor:
+User-gated hard stop — do not start without explicit check-in.
 
-- **Use Claude's `count_tokens` API.** Anthropic SDK exposes `client.messages.count_tokens()`. Replace the `len/4` in `bench_token_economy.py` with a real call. Cache results in `benchmarks/fixtures/*.tokens.json` so the bench is still offline-reproducible.
-- **Per-backend comparison tables.** Three runs against the same agent task:
-  - (a) `gh api /repos/X/Y/issues` JSON payload ingested by an MCP agent vs `reposix list --backend github` → `cat` pipeline.
-  - (b) `curl /wiki/api/v2/spaces/X/pages` JSON vs `reposix mount --backend confluence` + `cat`.
-  - (c) Jira REST v3 `/issues/search` JSON vs `reposix mount --backend jira` (once that adapter exists).
-  Headline number per backend. Likely range: 85 %–98 % reduction, depending on JSON verbosity.
-- **Cold-mount time-to-first-ls.** Matrix: 4 backends × [10, 100, 500] issues. For each cell: measure wall-clock from `reposix mount` spawn to first non-empty `ls`. Expected: sim ~50 ms; github ~800 ms; confluence ~1.5 s (2 round-trips for space-resolve + page-list).
-- **Git-push round-trip latency.** `echo "---\nstatus: done\n---" > 0001.md; git push` — time from `git push` to audit-row visible. Baseline for future optimisations (transaction batching, persistent HTTP).
-- **Honest-framing section in `docs/why.md`.** Today's benchmark claims 92.3%; when we upgrade to real tokenisation, re-state the number. If it's lower, say so. Dishonest-but-flattering beats honest only if you don't care about the project.
-
-## OP-9 — Confluence beyond pages
-
-Confluence Cloud has more than pages. Each of these maps naturally onto a POSIX filesystem view — and each is a real agent-workflow unlock:
-
-- **Whiteboards.** `GET /wiki/api/v2/whiteboards` returns board metadata; the body is a custom JSON graph format. Expose as `whiteboards/<id>.json` initially (raw), later as `whiteboards/<id>.svg` once we render the graph. Most Atlassian-using agents need this more than pages; whiteboards are where the current-state architecture lives.
-- **Live docs.** Confluence's newer real-time collab doc format. v2 API coverage is partial; some endpoints live under `/wiki/api/v2/custom-content/` with a type discriminator. Expose as `livedocs/<id>.md` using the same storage-format path as pages, with a "last-synced-at" frontmatter field since live docs are by nature a moving target.
-- **Comments.** `GET /wiki/api/v2/pages/{id}/inline-comments` + `footer-comments`. Expose as `pages/<id>.comments/<comment-id>.md` — ties into OP-1 folder-structure. Agent workflow: `cat pages/0001.comments/*.md | grep "blocker"` is infinitely cleaner than walking the JSON.
-- **Attachments.** `GET /wiki/api/v2/pages/{id}/attachments`. Expose as `pages/<id>.attachments/<filename>` — binary passthrough. `grep -l "passw" pages/**/attachments/*` becomes a real security-audit tool.
-- **Folders** (Confluence's new-ish org concept, distinct from page parents). These already render via page hierarchy if we do OP-1, but there's a dedicated `/folders` endpoint the user may want as a separate tree.
-- **Spaces index.** `GET /wiki/api/v2/spaces` to enumerate. Today `--project` requires the user to know the space key up front. A `reposix spaces --backend confluence` subcommand would list them; a `--project all` or multi-space mount (`reposix mount --backend confluence --project '*'`) could mount every readable space under `spaces/<key>/...`.
-
-Each of these is its own Phase (12.1, 12.2, …). Order by user pain: whiteboards first (most underserved), then comments (agent workflow multiplier), then attachments (security-audit use-case), then live docs (UI churn risk), then folders + multi-space (polish).
-
-## OP-10 — Eject 3rd-party adapters (LONG-TERM, NOT TONIGHT)
-
-The user's eventual ask (captured verbatim): "I want to move those 3rd party implementations out of this project, and keep this project on the core functionality but not tonight."
-
-What that means concretely:
-
-- **`crates/reposix-github/` → new repo `github.com/reubenjohn/reposix-adapter-github`.** Publish as `reposix-adapter-github` on crates.io. Keep the `IssueBackend` trait import from `reposix-core` as a version-pinned dep.
-- **`crates/reposix-confluence/` → new repo `github.com/reubenjohn/reposix-adapter-confluence`.** Same pattern.
-- **This repo** becomes the core: `reposix-core`, `reposix-sim`, `reposix-fuse`, `reposix-remote`, `reposix-cli`, `reposix-swarm`, the demo suite, the docs, the spec. The CLI dispatch loses hard-coded `ListBackend::Github | Confluence` arms; instead, Phase 12's subprocess ABI loads them at runtime.
-- **Order of operations** (so nothing breaks on the way):
-  1. Phase 12 lands (subprocess ABI + spec + reference connector-github).
-  2. New repos created with extracted crates + published to crates.io.
-  3. This repo's compile-in adapters are deprecated behind a `--legacy-builtin-adapters` feature flag for one minor version.
-  4. Feature flag removed in the release after that.
-- **Semver implication.** The crate-extraction itself is not a breaking API change for CLI users (the `--backend github|confluence` flag keeps working via subprocess). It IS a breaking change for anyone `use`-ing `reposix_github::GithubReadOnlyBackend` directly in Rust. Call that out in the changelog of the release that ejects them.
-
-Do not start this tonight. It's listed here so the next agent doesn't pick a Phase-12 approach that makes it harder.
-
-## OP-11 — Docs reorg: get the repo root honest
-
-User flagged: the repo root has narrative prose docs (`InitialReport.md`, `AgenticEngineeringReference.md`) that don't belong at the top level. Along with other root-level clutter the sweep in OP-6 catalogs. Proposed moves (**captured, not executed tonight** — user explicitly said so):
-
-- `InitialReport.md` → `docs/research/initial-report.md` (this is the original architectural argument; move near the rest of docs)
-- `AgenticEngineeringReference.md` → `docs/research/agentic-engineering-reference.md`
-- Update cross-refs: `CLAUDE.md`, `README.md`, any planning doc that links these two.
-- Any other root-level cruft the sweep catalogs.
-
-Kept at root: `README.md`, `CHANGELOG.md`, `HANDOFF.md`, `LICENSE-MIT`, `LICENSE-APACHE`, `Cargo.toml`, `Cargo.lock`, `mkdocs.yml`, `rust-toolchain.toml`, `.env.example`, `.gitignore`. Everything else either belongs in `docs/` or `.planning/` or under a crate.
-
-Plan the move as one commit per logical group, each with a redirect-note committed in the old location if any external-to-repo links might break (github.com has some readers who bookmark these).
+## OP-11 (docs reorg)
+→ Queued as Phase 25 — see .planning/phases/25-op-11-docs-reorg-initialreport-md-and-agenticengineeringrefe/CONTEXT.md
 
 ---
 
@@ -614,29 +498,7 @@ Per the session-5 brief:
 
 ### Session-5 open problems rollup (what's still outstanding)
 
-- **OP-1 — nested mount layout.** Confluence `tree/` (parentId hierarchy) is live
-  (v0.4.0). Remaining: `labels/`, `recent/`, `spaces/`, multi-space mounts.
-- **OP-2 — dynamic `_INDEX.md`.** Bucket level shipped (v0.5.0). Remaining:
-  `tree/<subdir>/_INDEX.md` (recursive synthesis, cycle-safe — straightforward
-  extension of `TreeSnapshot::dfs`) and `mount/_INDEX.md` (whole-mount overview).
-- **OP-3 — cache refresh via `git pull` semantics.** Not started. Now that
-  `_INDEX.md` is the obvious sync anchor (`git diff _INDEX.md` across pulls
-  shows what changed), the ROI is higher — `mount-as-time-machine` gets concrete.
-- **OP-7 — hardening probes.** Not started. Outstanding: concurrent-write
-  contention swarm, FUSE under real-backend load, 500-page truncation probe,
-  chaos audit-log restart, macFUSE parity.
-- **OP-8 — honest-tokenizer benchmarks.** Not started.
-- **OP-9 — Confluence beyond pages (comments, whiteboards, attachments,
-  multi-space).** Not started. `pages/<id>.comments/<cid>.md` is the next most
-  compelling use case — tree/ and `_INDEX.md` compose naturally with it.
-- **OP-10 — eject 3rd-party adapter crates.** Not started (user-gated).
-- **OP-11 — repo-root reorg.** Not started (user-gated).
-- **Phase 12 — subprocess/JSON-RPC ABI.** Not started (user-gated).
-- **Cluster A — Confluence writes.** Not started. Phase 14 unblocked the FUSE
-  write path; `ConfluenceBackend` now just needs `create_issue`/`update_issue`/
-  `delete_or_close` + an `atlas_doc_format` ↔ Markdown converter.
-- **Cluster C — Swarm `--mode confluence-direct`.** Not started (~300 LoC warm-up;
-  `SimDirectWorkload` is the template).
+Open problems queued as Phases 16–25 (milestones v0.6.0 and v0.7.0). See ROADMAP.md.
 
 ### New discoveries / known infra gaps (from this session)
 
