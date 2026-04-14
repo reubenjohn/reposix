@@ -66,6 +66,7 @@ parking_lot = "0.12"
 dashmap = "6"
 governor = "0.7"  # rate limiting
 pulldown-cmark = "0.13"
+sha2 = "0.10"
 
 # Internal
 reposix-core = { path = "crates/reposix-core" }
