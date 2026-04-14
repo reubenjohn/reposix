@@ -378,3 +378,61 @@ async fn contract_confluence_live() {
     let known_id = issues[0].id;
     assert_contract(&backend, &space, known_id).await;
 }
+
+// ----------------------------------------------- live-Atlassian hierarchy test
+
+/// Phase 13 Wave B1 extension: prove the adapter populates `Issue::parent_id`
+/// from real REST v2 `parentId`/`parentType` bytes, not just wiremock fixtures.
+/// The REPOSIX demo space in the reuben-john tenant has homepage `360556`
+/// with three children — so at least one listed page MUST have
+/// `parent_id == Some(_)` if hierarchy plumbing is live.
+///
+/// Same `#[ignore]` + `skip_if_no_env!` gating as `contract_confluence_live`.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+#[ignore]
+async fn contract_confluence_live_hierarchy() {
+    skip_if_no_env!(
+        "ATLASSIAN_API_KEY",
+        "ATLASSIAN_EMAIL",
+        "REPOSIX_CONFLUENCE_TENANT",
+        "REPOSIX_CONFLUENCE_SPACE",
+    );
+
+    let origins = std::env::var("REPOSIX_ALLOWED_ORIGINS").unwrap_or_default();
+    let tenant = std::env::var("REPOSIX_CONFLUENCE_TENANT").unwrap();
+    let expected = format!("{tenant}.atlassian.net");
+    assert!(
+        origins.contains(&expected),
+        "contract_confluence_live_hierarchy requires REPOSIX_ALLOWED_ORIGINS to include \
+         https://{expected}; got {origins:?}"
+    );
+
+    let creds = ConfluenceCreds {
+        email: std::env::var("ATLASSIAN_EMAIL").unwrap(),
+        api_token: std::env::var("ATLASSIAN_API_KEY").unwrap(),
+    };
+    let space = std::env::var("REPOSIX_CONFLUENCE_SPACE").unwrap();
+    let backend = ConfluenceReadOnlyBackend::new(creds, &tenant).expect("backend");
+
+    let issues = backend
+        .list_issues(&space)
+        .await
+        .unwrap_or_else(|e| panic!("list_issues({space}) failed: {e:?}"));
+    assert!(
+        !issues.is_empty(),
+        "live Confluence space {space} has zero pages"
+    );
+
+    // The REPOSIX demo space is seeded with homepage 360556 + 3 direct
+    // children; any well-configured Confluence space exercised through this
+    // test should have at least one non-root page. If this assertion fails,
+    // either (a) the space truly is flat, or (b) `parentId` plumbing
+    // regressed — both cases warrant loud failure.
+    let with_parent = issues.iter().filter(|i| i.parent_id.is_some()).count();
+    assert!(
+        with_parent >= 1,
+        "live Confluence space {space} must have ≥1 page with parent_id populated \
+         (hierarchy plumbing check); found {with_parent} of {} pages with a parent",
+        issues.len()
+    );
+}

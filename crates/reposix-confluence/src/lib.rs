@@ -212,6 +212,21 @@ struct ConfPage {
     owner_id: Option<String>,
     #[serde(default)]
     body: Option<ConfPageBody>,
+    /// Confluence REST v2 `parentId` — numeric string referring to another
+    /// entity in the content hierarchy. Only meaningful when `parent_type ==
+    /// Some("page")`; for folders/whiteboards/databases we deliberately drop
+    /// it in [`translate`] so the tree-builder treats those as orphans.
+    /// `#[serde(default)]` keeps Phase-11 fixtures (no parent fields) decoding
+    /// unchanged.
+    #[serde(default, rename = "parentId")]
+    parent_id: Option<String>,
+    /// Confluence REST v2 `parentType` — one of `"page"`, `"folder"`,
+    /// `"whiteboard"`, `"database"`, etc. Only the `"page"` case propagates
+    /// into [`Issue::parent_id`]; every other value is treated as a tree root
+    /// (with a `tracing::debug!` trail) because reposix's hierarchy model is
+    /// homogeneous (pages only).
+    #[serde(default, rename = "parentType")]
+    parent_type: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -298,6 +313,39 @@ fn translate(page: ConfPage) -> Result<Issue> {
         .and_then(|b| b.storage)
         .map(|s| s.value)
         .unwrap_or_default();
+    // Phase 13 Wave B1: derive `Issue::parent_id` from Confluence REST v2
+    // `parentId`/`parentType`. Only `parent_type == "page"` propagates — the
+    // reposix tree is homogeneous (pages only), so `folder` / `whiteboard` /
+    // `database` parents become tree roots with a debug-log breadcrumb.
+    //
+    // A malformed `parentId` (e.g. `"abc"`) is degraded to `None` rather
+    // than propagated as `Err`. T-13-PB1: failing the whole list because
+    // one page's parent is garbage would be a DoS amplifier against an
+    // adversarial tenant. Surfacing the page as a tree root is the
+    // graceful-degradation alternative the threat register mandates.
+    let parent_id = match (page.parent_id.as_deref(), page.parent_type.as_deref()) {
+        (Some(pid_str), Some("page")) => {
+            if let Ok(n) = pid_str.parse::<u64>() {
+                Some(IssueId(n))
+            } else {
+                tracing::warn!(
+                    page_id = %page.id,
+                    bad_parent = %pid_str,
+                    "confluence parentId not parseable as u64, treating as orphan"
+                );
+                None
+            }
+        }
+        (_, Some(other)) => {
+            tracing::debug!(
+                page_id = %page.id,
+                parent_type = %other,
+                "confluence non-page parentType, treating as orphan"
+            );
+            None
+        }
+        _ => None,
+    };
     Ok(Issue {
         id: IssueId(id),
         title: page.title,
@@ -308,10 +356,7 @@ fn translate(page: ConfPage) -> Result<Issue> {
         updated_at: page.version.created_at,
         version: page.version.number,
         body,
-        // Populated in Phase 13 Wave B1 from Confluence v2 `parentId` +
-        // `parentType == "page"`. For now always `None` — keeps the
-        // backend additive-only for Wave A.
-        parent_id: None,
+        parent_id,
     })
 }
 
@@ -525,11 +570,22 @@ impl IssueBackend for ConfluenceReadOnlyBackend {
         "confluence-readonly"
     }
 
-    fn supports(&self, _feature: BackendFeature) -> bool {
+    fn supports(&self, feature: BackendFeature) -> bool {
         // Read-only v0.3: no write-path features. Even Workflows is false
         // because Confluence has no in-flight state labels analogous to
-        // GitHub's status/*.
-        false
+        // GitHub's status/*. Phase 13 Wave B1 adds `Hierarchy` — Confluence
+        // is the ONLY backend (of the current three) that exposes a parent
+        // tree, so the FUSE layer can key `tree/` overlay emission off this
+        // one bit instead of per-backend `match`ing.
+        matches!(feature, BackendFeature::Hierarchy)
+    }
+
+    fn root_collection_name(&self) -> &'static str {
+        // Confluence-native vocabulary: pages, not issues. The default
+        // `"issues"` stays correct for sim + GitHub; Confluence overrides
+        // here so mounts surface as `pages/<padded-id>.md` — the layout
+        // locked in Phase 13 CONTEXT.md and ADR-003.
+        "pages"
     }
 
     async fn list_issues(&self, project: &str) -> Result<Vec<Issue>> {
@@ -1007,8 +1063,11 @@ mod tests {
 
     // -------- 10: capability matrix --------
 
+    /// Phase 13 Wave B1 flipped `Hierarchy` to `true`; every other feature
+    /// stays `false` because Confluence is still read-only in v0.4. Renamed
+    /// from `supports_reports_no_features` to match the new reality.
     #[test]
-    fn supports_reports_no_features() {
+    fn supports_reports_only_hierarchy() {
         let backend =
             ConfluenceReadOnlyBackend::new_with_base_url(creds(), "http://127.0.0.1:1".to_owned())
                 .expect("backend");
@@ -1017,7 +1076,192 @@ mod tests {
         assert!(!backend.supports(BackendFeature::Transitions));
         assert!(!backend.supports(BackendFeature::StrongVersioning));
         assert!(!backend.supports(BackendFeature::BulkEdit));
+        assert!(backend.supports(BackendFeature::Hierarchy));
         assert_eq!(backend.name(), "confluence-readonly");
+    }
+
+    // -------- Phase 13 Wave B1: parent_id derivation + Hierarchy capability --------
+
+    /// Helper: synthesize a `ConfPage` directly (no JSON round-trip) for
+    /// exercising `translate` branches without a wiremock server. Mirrors
+    /// `page_json` but at the Rust struct level.
+    fn synth_page(id: &str, parent_id: Option<&str>, parent_type: Option<&str>) -> ConfPage {
+        let ts = chrono::DateTime::parse_from_rfc3339("2026-04-13T00:00:00Z")
+            .unwrap()
+            .with_timezone(&chrono::Utc);
+        ConfPage {
+            id: id.to_owned(),
+            status: "current".to_owned(),
+            title: "t".to_owned(),
+            created_at: ts,
+            version: ConfVersion {
+                number: 1,
+                created_at: ts,
+            },
+            owner_id: None,
+            body: None,
+            parent_id: parent_id.map(str::to_owned),
+            parent_type: parent_type.map(str::to_owned),
+        }
+    }
+
+    #[test]
+    fn translate_populates_parent_id_for_page_parent() {
+        let page = synth_page("99", Some("42"), Some("page"));
+        let issue = translate(page).expect("translate");
+        assert_eq!(issue.parent_id, Some(IssueId(42)));
+    }
+
+    #[test]
+    fn translate_treats_folder_parent_as_orphan() {
+        let page = synth_page("99", Some("99999"), Some("folder"));
+        let issue = translate(page).expect("translate");
+        assert_eq!(issue.parent_id, None);
+    }
+
+    #[test]
+    fn translate_treats_whiteboard_parent_as_orphan() {
+        let page = synth_page("99", Some("99999"), Some("whiteboard"));
+        let issue = translate(page).expect("translate");
+        assert_eq!(issue.parent_id, None);
+    }
+
+    #[test]
+    fn translate_treats_database_parent_as_orphan() {
+        let page = synth_page("99", Some("99999"), Some("database"));
+        let issue = translate(page).expect("translate");
+        assert_eq!(issue.parent_id, None);
+    }
+
+    #[test]
+    fn translate_treats_missing_parent_as_orphan() {
+        // Both fields absent (top-level / space-root page) → None.
+        let page = synth_page("99", None, None);
+        let issue = translate(page).expect("translate");
+        assert_eq!(issue.parent_id, None);
+    }
+
+    #[test]
+    fn translate_treats_parent_id_without_type_as_orphan() {
+        // Defensive: Atlassian could theoretically return parentId without
+        // parentType. Without a type we can't know it's a page; orphan it.
+        let page = synth_page("99", Some("42"), None);
+        let issue = translate(page).expect("translate");
+        assert_eq!(issue.parent_id, None);
+    }
+
+    #[test]
+    fn translate_handles_unparseable_parent_id() {
+        // T-13-PB1: a malformed parentId must NOT wedge the page (or the
+        // whole list). It degrades to None with a warn-level trace.
+        let page = synth_page("99", Some("not-a-number"), Some("page"));
+        let issue = translate(page).expect("translate must not error");
+        assert_eq!(issue.parent_id, None);
+    }
+
+    #[test]
+    fn root_collection_name_returns_pages() {
+        let backend =
+            ConfluenceReadOnlyBackend::new_with_base_url(creds(), "http://127.0.0.1:1".to_owned())
+                .expect("backend");
+        assert_eq!(backend.root_collection_name(), "pages");
+    }
+
+    /// End-to-end proof that `parentId` + `parentType` survive the JSON
+    /// decode → `ConfPage` → `translate` → `Issue` pipeline through the
+    /// `IssueBackend::list_issues` seam (not just the `translate` helper in
+    /// isolation). Mixes three shapes in one list so we assert all branches
+    /// with a single wiremock round-trip.
+    #[tokio::test]
+    async fn list_populates_parent_id_end_to_end() {
+        let server = MockServer::start().await;
+        mount_space_lookup(&server, "REPOSIX", "12345").await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/spaces/12345/pages"))
+            .and(query_param("limit", "100"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [
+                    // (a) child page: parentType="page" → parent_id populated
+                    {
+                        "id": "98765",
+                        "status": "current",
+                        "title": "child",
+                        "parentId": "360556",
+                        "parentType": "page",
+                        "createdAt": "2026-04-13T00:00:00Z",
+                        "ownerId": null,
+                        "version": {
+                            "number": 1,
+                            "createdAt": "2026-04-13T00:00:00Z",
+                        },
+                        "body": {},
+                    },
+                    // (b) space-root page: no parent fields → None
+                    {
+                        "id": "360556",
+                        "status": "current",
+                        "title": "home",
+                        "createdAt": "2026-04-13T00:00:00Z",
+                        "ownerId": null,
+                        "version": {
+                            "number": 1,
+                            "createdAt": "2026-04-13T00:00:00Z",
+                        },
+                        "body": {},
+                    },
+                    // (c) folder-parented page: parentType="folder" → None
+                    {
+                        "id": "12321",
+                        "status": "current",
+                        "title": "in-folder",
+                        "parentId": "999",
+                        "parentType": "folder",
+                        "createdAt": "2026-04-13T00:00:00Z",
+                        "ownerId": null,
+                        "version": {
+                            "number": 1,
+                            "createdAt": "2026-04-13T00:00:00Z",
+                        },
+                        "body": {},
+                    },
+                ],
+                "_links": {}
+            })))
+            .mount(&server)
+            .await;
+
+        let backend =
+            ConfluenceReadOnlyBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let issues = backend.list_issues("REPOSIX").await.expect("list");
+        assert_eq!(issues.len(), 3);
+
+        let child = issues
+            .iter()
+            .find(|i| i.id == IssueId(98765))
+            .expect("child page present");
+        assert_eq!(
+            child.parent_id,
+            Some(IssueId(360_556)),
+            "page-parented child must propagate parent_id"
+        );
+
+        let root = issues
+            .iter()
+            .find(|i| i.id == IssueId(360_556))
+            .expect("root page present");
+        assert_eq!(
+            root.parent_id, None,
+            "page with no parent fields must deserialize as orphan"
+        );
+
+        let foldered = issues
+            .iter()
+            .find(|i| i.id == IssueId(12321))
+            .expect("folder-parented page present");
+        assert_eq!(
+            foldered.parent_id, None,
+            "non-page parentType must degrade to orphan"
+        );
     }
 
     // -------- 11 / 12: parse_next_cursor pure-fn --------
