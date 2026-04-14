@@ -614,8 +614,14 @@ Applied 5 of 6 items from `13-REVIEW.md`:
 
 **Gitignore housekeeping (`667cde0`)** — `.claude/` session-state dir now gitignored so the tag-v0.4.0.sh clean-tree guard doesn't trip on it in the morning.
 
-**Test count delta** — 261 → **264** (+3 from SSRF regression tests).
-**Commit count** — 32 Phase-13 commits + 13 post-Phase-13 bonus commits = 45 total on `main` since v0.3.0 baseline `d43f1d9`.
+**Script-dir reorg (`3b22365`)** — OP-6 LOW-18/19/20 done: `scripts/phase2_goal_backward.sh`, `scripts/phase2_smoke.sh`, `scripts/phase3_exit_check.sh` → `.planning/archive/scripts/`; `scripts/probe-confluence.sh` → `scripts/dev/`; `scripts/mermaid_divs_to_fences.py`, `scripts/fix_demos_index_links.py` → `scripts/migrations/`. No external references broken.
+
+**reposix-github wiremock test coverage (`1769062`)** — OP-6 MEDIUM-13 done: 7 new always-run wiremock tests at `crates/reposix-github/tests/contract.rs` (+438 lines). Coverage: `contract_github_wiremock` (full `assert_contract` sequence), `pagination_follows_link_header`, `rate_limit_429_surfaces_clean_error` (regression guard — documents current NO-retry behavior), `state_reason_maps_to_status` (6-row matrix pinning ADR-001), `adversarial_html_url_does_not_trigger_outbound_call` (SSRF tripwire), `malformed_assignee_object_degrades_to_none`, `user_agent_header_is_set`. Mirrors the Confluence contract pattern.
+
+**reposix-swarm mini E2E (`8b6f889`)** — OP-6 MEDIUM-14 done: `crates/reposix-swarm/tests/mini_e2e.rs::swarm_mini_e2e_sim_5_clients_1_5s` — spins `reposix-sim` on an ephemeral port via `run_with_listener`, runs `SimDirectWorkload` × 5 clients for 1.5s, asserts summary metrics + audit-log ≥5 rows + clean exit. 1.52s run-time. Closes the "zero integration tests" gap in reposix-swarm.
+
+**Test count delta** — 261 → **272** (+11 since Wave E — 3 SSRF, 7 github wiremock, 1 swarm E2E).
+**Commit count** — 50 total on `main` since v0.3.0 baseline `d43f1d9` (32 Phase-13 + 18 post-Phase-13 bonus).
 
 ### What I deliberately did NOT do (explicit non-scope)
 
