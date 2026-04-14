@@ -1,6 +1,16 @@
-# Phase 11 — credential status at phase start
+# Phase 11 — credential status
 
-**Run date:** 2026-04-13 ~21:00 PDT (session 3, overnight agent)
+**STATUS: ✅ RESOLVED** at 2026-04-13 ~21:17 PDT. Live-mount demo is BACK IN SCOPE.
+
+**Resolution summary:**
+- User manually created a Confluence tenant at `reuben-john.atlassian.net` during the session.
+- Basic auth works with the git email `reubenvjohn@gmail.com` against the tenant's `/wiki/api/v2/*` endpoints — the initial probe's "auth mismatch" conclusion was wrong because it checked `api.atlassian.com/me` which has different semantics (requires OAuth) than `<tenant>.atlassian.net/wiki/...` (accepts Basic).
+- Fresh demo space `REPOSIX` created (`id=360450`) with 3 seeded pages (`131192`, `65916`, `425985`).
+- `scripts/probe-confluence.sh` updated to use Confluence-scoped probe instead of `/rest/api/3/myself` (Jira) which 404s on Confluence-only sites.
+- `.env` now carries the 3 required env vars: `ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT`.
+
+**Original run date:** 2026-04-13 ~21:00 PDT (session 3, overnight agent)
+**Original conclusion (stale below, kept for audit):**
 
 ## What we tried
 

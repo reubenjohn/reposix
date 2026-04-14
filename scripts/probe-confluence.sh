@@ -37,35 +37,22 @@ echo "== probe: ${ATLASSIAN_EMAIL} @ ${BASE} =="
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
-# 1. /rest/api/3/myself — fastest identity check. 200 means auth works.
-HTTP=$(curl -sS -o "$TMP/myself.json" -w '%{http_code}' \
-  -u "${ATLASSIAN_EMAIL}:${ATLASSIAN_API_KEY}" \
-  -H 'Accept: application/json' \
-  "${BASE}/rest/api/3/myself")
-echo "  /rest/api/3/myself → HTTP ${HTTP}"
-
-if [[ "$HTTP" != "200" ]]; then
-  echo "  FAIL: auth rejected. Double-check ATLASSIAN_EMAIL matches the account that issued the token."
-  if [[ -s "$TMP/myself.json" ]]; then
-    head -c 400 "$TMP/myself.json"
-    echo
-  fi
-  exit 1
-fi
-
-ACCOUNT_ID=$(grep -o '"accountId":"[^"]*"' "$TMP/myself.json" | head -1 | cut -d'"' -f4)
-DISPLAY_NAME=$(grep -o '"displayName":"[^"]*"' "$TMP/myself.json" | head -1 | cut -d'"' -f4)
-echo "  identity: ${DISPLAY_NAME} (accountId=${ACCOUNT_ID})"
-
-# 2. Confluence REST v2 spaces list — confirms Confluence is reachable and we can read spaces.
+# Auth + reachability in one shot: Confluence REST v2 spaces list.
+# Note: do NOT use /rest/api/3/myself (Jira) — it returns 404 on a
+# Confluence-only site, which looks like an auth failure but isn't.
+# id.atlassian.com API tokens authenticate tenant-specifically under Basic;
+# /wiki/api/v2/spaces is the canonical tenant-scoped probe.
 HTTP=$(curl -sS -o "$TMP/spaces.json" -w '%{http_code}' \
   -u "${ATLASSIAN_EMAIL}:${ATLASSIAN_API_KEY}" \
   -H 'Accept: application/json' \
   "${BASE}/wiki/api/v2/spaces?limit=5")
-echo "  /wiki/api/v2/spaces → HTTP ${HTTP}"
+echo "  GET /wiki/api/v2/spaces → HTTP ${HTTP}"
 
 if [[ "$HTTP" != "200" ]]; then
-  echo "  FAIL: Confluence API not reachable. Possible causes: Confluence not provisioned on this site, or token lacks Confluence scope."
+  echo "  FAIL: auth rejected or Confluence unreachable. Verify:"
+  echo "    - ATLASSIAN_EMAIL matches the account that issued the token"
+  echo "    - REPOSIX_CONFLUENCE_TENANT is the subdomain (no .atlassian.net suffix)"
+  echo "    - the token has not been revoked at id.atlassian.com"
   head -c 400 "$TMP/spaces.json" 2>/dev/null || true
   echo
   exit 1
