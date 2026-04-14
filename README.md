@@ -46,8 +46,9 @@ Treat as alpha per Simon Willison's "proof of usage, not proof of concept" rule 
 | Phase 9 — Adversarial swarm harness       | shipped: 132 895 ops / 0 % errors / SG-06 upheld under load                                               |
 | Phase 10 — FUSE-mount-real-GitHub         | shipped: `reposix mount --backend github` + Tier 5 demo                                                   |
 | Phase 11 — Confluence Cloud adapter (v0.3) | shipped: `reposix-confluence` crate + `--backend confluence` CLI + contract test + Tier 5 demo + ADR-002   |
+| Phase 13 — Nested mount layout (v0.4)     | shipped: `pages/` + `tree/` symlink overlay for Confluence hierarchy, `Issue::parent_id`, `_self.md` convention, ADR-003 |
 
-Tracking artifacts live in [`.planning/`](.planning/). See [`HANDOFF.md`](HANDOFF.md) for v0.4 direction (folder structure inside the mount, `INDEX.md` generation, git-pull-as-cache-refresh, subprocess connector ABI).
+Tracking artifacts live in [`.planning/`](.planning/). See [`HANDOFF.md`](HANDOFF.md) for v0.5+ direction (`INDEX.md` generation, git-pull-as-cache-refresh, subprocess connector ABI).
 
 ## Demo
 
@@ -109,8 +110,9 @@ REPOSIX_ALLOWED_ORIGINS='http://127.0.0.1:*,https://api.github.com' \
     reposix mount /tmp/reposix-gh-mnt \
         --backend github --project octocat/Hello-World &
 sleep 3
-ls /tmp/reposix-gh-mnt | head -5    # 7010.md  7011.md  7012.md ...
-cat /tmp/reposix-gh-mnt/0001.md     # rendered frontmatter+body for issue #1
+ls /tmp/reposix-gh-mnt                        # .gitignore  issues/
+ls /tmp/reposix-gh-mnt/issues | head -5       # 00000007010.md  00000007011.md ...
+cat /tmp/reposix-gh-mnt/issues/00000000001.md # rendered frontmatter+body for issue #1
 fusermount3 -u /tmp/reposix-gh-mnt
 ```
 
@@ -159,13 +161,28 @@ bash scripts/demos/smoke.sh                   # full Tier 1 smoke suite (what CI
 
 ## Quickstart
 
-Prereqs (Linux only through v0.3; macOS / macFUSE tracked under HANDOFF OP-4):
+Linux only through v0.4; macOS / macFUSE tracked under HANDOFF OP-4. Runtime prereqs (both paths below):
 
-- Rust stable 1.82+ (tested with 1.94.1).
 - `fusermount3` (Ubuntu: `sudo apt install fuse3`).
 - `jq`, `sqlite3`, `curl`, `git` (>= 2.20) on `$PATH`.
 
-Then:
+### Install prebuilt binaries (recommended)
+
+No Rust toolchain needed. Prebuilt Linux binaries ship with every release on the [GitHub Releases page](https://github.com/reubenjohn/reposix/releases/latest):
+
+```bash
+# x86_64 Linux (glibc). For aarch64 swap the target triple.
+curl -fsSLO https://github.com/reubenjohn/reposix/releases/latest/download/reposix-v0.4.0-x86_64-unknown-linux-gnu.tar.gz
+tar -xzf reposix-v0.4.0-x86_64-unknown-linux-gnu.tar.gz
+export PATH="$PWD/reposix-v0.4.0-x86_64-unknown-linux-gnu:$PATH"
+reposix --help
+```
+
+Verify the tarball against `SHA256SUMS` attached to the same release page. Tarballs bundle `reposix`, `reposix-sim`, `reposix-fuse`, `git-remote-reposix`, plus `README.md`, `CHANGELOG.md`, and both licenses.
+
+### Build from source (contributors)
+
+Requires Rust stable 1.82+ (tested with 1.94.1).
 
 ```bash
 git clone https://github.com/reubenjohn/reposix
@@ -174,6 +191,33 @@ bash scripts/demo.sh
 ```
 
 For the per-step explanation see [`docs/demo.md#walkthrough`](docs/demo.md#walkthrough).
+
+## Folder-structure mount (v0.4+)
+
+Mounting a Confluence space exposes the page hierarchy as a navigable directory tree:
+
+```bash
+reposix mount /tmp/mnt --backend confluence --project REPOSIX &
+ls /tmp/mnt
+# .gitignore  pages/  tree/
+
+# Flat view — every page keyed by its stable numeric id (11-digit padded)
+ls /tmp/mnt/pages
+# 00000065916.md  00000131192.md  00000360556.md  00000425985.md
+
+# Hierarchy view — symlinks at human-readable slug paths
+cd /tmp/mnt/tree/reposix-demo-space-home
+ls
+# _self.md  architecture-notes.md  demo-plan.md  welcome-to-reposix.md
+
+cat welcome-to-reposix.md    # follows symlink into pages/00000131192.md
+readlink welcome-to-reposix.md
+# ../../pages/00000131192.md
+```
+
+`tree/` is synthesized at mount time. It is read-only, `git`-ignored (via the auto-emitted `.gitignore` at the mount root), and backed entirely by FUSE symlinks — there is no duplicate content and no dual-write path. Writes to `tree/foo.md` transparently follow the symlink to the canonical `pages/<id>.md` file.
+
+For sim and GitHub backends, the mount shows `issues/` instead of `pages/` and does not emit `tree/` (those backends don't expose a parent-child hierarchy). See [ADR-003](docs/decisions/003-nested-mount-layout.md) for the full design, including the slug algorithm, sibling-collision resolution, cycle handling, and known limitations.
 
 ## Architecture
 
