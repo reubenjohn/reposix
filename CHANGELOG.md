@@ -6,6 +6,48 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+## [v0.5.0] — 2026-04-14
+
+The "folder structure sitemap" cut. Phase 15 adds a synthesized read-only
+`_INDEX.md` file to the FUSE mount's bucket directory
+(`mount/issues/_INDEX.md` for sim + GitHub, `mount/pages/_INDEX.md` for
+Confluence). Agents — and humans — running `cat mount/<bucket>/_INDEX.md`
+get a single-shot markdown sitemap of every tracked issue/page without
+spawning a separate `ls` + N `stat`s or a REST query. Addresses OP-2 from
+the v0.3-era HANDOFF.md (partial — bucket-level only; recursive
+`tree/_INDEX.md` is deferred). No breaking changes: the flat
+`<padded-id>.md` files, the `tree/` symlink overlay, every backend, and
+the `git-remote-reposix` helper all behave identically to v0.4.1.
+
+### Added
+
+- **`mount/<bucket>/_INDEX.md` — synthesized read-only sitemap of the
+  bucket directory.** A new virtual file appears in the bucket dir (the
+  per-backend collection: `issues/` for sim + GitHub, `pages/` for
+  Confluence) alongside the real `<padded-id>.md` files. Content is YAML
+  frontmatter (`backend`, `project`, `issue_count`, `generated_at`)
+  followed by a pipe-table with columns `id | status | title | updated`,
+  sorted ascending by `id`. Generated at read time from the same
+  in-memory issue-list cache that backs `readdir` — no separate fetch,
+  no stale cache relative to the rest of the mount. Renders lazily on
+  first read and is invalidated whenever the issue cache is refreshed.
+  Read-only by construction: `touch`, `echo >`, `rm`, `setattr`, and
+  `create` with target name `_INDEX.md` all surface `EROFS` / `EACCES`.
+  The leading underscore keeps `_INDEX.md` out of naive `*.md` glob
+  patterns (`ls mount/<bucket>/*.md`, `grep -l foo mount/<bucket>/*.md`)
+  while remaining plainly visible in `ls mount/<bucket>/`. Only synthesized
+  in the bucket directory — **not** at the mount root, and **not** inside
+  `tree/` or its subdirectories. Titles containing `|` are escaped to
+  `\|` and embedded newlines are folded to spaces so the pipe-table
+  column count is preserved.
+
+  This is OP-2-partial from the v0.3-era HANDOFF.md. Tree-level
+  (`tree/_INDEX.md` recursive synthesis), mount-root
+  (`mount/_INDEX.md`), and OP-3 cache-refresh integration remain open
+  for a follow-up phase — see
+  `.planning/phases/15-dynamic-index-md-synthesized-in-fuse-bucket-directory-op-2-p/15-SUMMARY.md`
+  for the full scope list.
+
 ## [v0.4.1] — 2026-04-14
 
 The "one place for the sim REST shape" cut. Phase 14 (Session-5 Cluster B)
@@ -439,7 +481,9 @@ See [PROJECT-STATUS.md](PROJECT-STATUS.md) for the timeline + outstanding items,
 
 ---
 
-[Unreleased]: https://github.com/reubenjohn/reposix/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/reubenjohn/reposix/compare/v0.5.0...HEAD
+[v0.5.0]: https://github.com/reubenjohn/reposix/compare/v0.4.1...v0.5.0
+[v0.4.1]: https://github.com/reubenjohn/reposix/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/reubenjohn/reposix/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/reubenjohn/reposix/compare/v0.2.0-alpha...v0.3.0
 [v0.2.0-alpha]: https://github.com/reubenjohn/reposix/compare/v0.1.0...v0.2.0-alpha

@@ -192,7 +192,7 @@ bash scripts/demo.sh
 
 For the per-step explanation see [`docs/demo.md#walkthrough`](docs/demo.md#walkthrough).
 
-## Folder-structure mount (v0.4+)
+## Folder-structure mount (v0.4+, sitemap in v0.5)
 
 Mounting a Confluence space exposes the page hierarchy as a navigable directory tree:
 
@@ -201,9 +201,20 @@ reposix mount /tmp/mnt --backend confluence --project REPOSIX &
 ls /tmp/mnt
 # .gitignore  pages/  tree/
 
-# Flat view — every page keyed by its stable numeric id (11-digit padded)
+# Flat view — every page keyed by its stable numeric id (11-digit padded),
+# plus a synthesized read-only `_INDEX.md` sitemap (v0.5+).
 ls /tmp/mnt/pages
-# 00000065916.md  00000131192.md  00000360556.md  00000425985.md
+# _INDEX.md  00000065916.md  00000131192.md  00000360556.md  00000425985.md
+
+# Single-shot sitemap — YAML frontmatter + `| id | status | title | updated |` table
+cat /tmp/mnt/pages/_INDEX.md
+# ---
+# backend: confluence
+# project: REPOSIX
+# issue_count: 4
+# generated_at: 2026-04-14T17:15:00Z
+# ---
+# ...
 
 # Hierarchy view — symlinks at human-readable slug paths
 cd /tmp/mnt/tree/reposix-demo-space-home
@@ -216,6 +227,8 @@ readlink welcome-to-reposix.md
 ```
 
 `tree/` is synthesized at mount time. It is read-only, `git`-ignored (via the auto-emitted `.gitignore` at the mount root), and backed entirely by FUSE symlinks — there is no duplicate content and no dual-write path. Writes to `tree/foo.md` transparently follow the symlink to the canonical `pages/<id>.md` file.
+
+`_INDEX.md` is a v0.5 synthesized read-only file: a single-shot markdown sitemap of the bucket generated lazily at read time from the same cache that backs `readdir`. Leading underscore keeps it out of `*.md` globs (`ls pages/*.md` skips it) while remaining visible in `ls`. `touch`/`rm`/`echo >` on `_INDEX.md` all surface `EROFS`/`EACCES`. Only synthesized in the bucket dir — not at the mount root, not inside `tree/`. Tree-level recursive synthesis is a follow-up.
 
 For sim and GitHub backends, the mount shows `issues/` instead of `pages/` and does not emit `tree/` (those backends don't expose a parent-child hierarchy). See [ADR-003](docs/decisions/003-nested-mount-layout.md) for the full design, including the slug algorithm, sibling-collision resolution, cycle handling, and known limitations.
 
