@@ -426,6 +426,6 @@ Plans:
 - [x] 13-B3-frontmatter-parent-id
 - [x] 13-C-fuse-wiring
 - [ ] 13-D1-breaking-migration-sweep
-- [ ] 13-D2-docs-and-adr
-- [ ] 13-D3-release-scripts-and-demo
+- [x] 13-D2-docs-and-adr
+- [x] 13-D3-release-scripts-and-demo
 - [ ] 13-E-green-gauntlet

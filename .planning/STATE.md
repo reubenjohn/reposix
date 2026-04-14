@@ -3,18 +3,24 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: target)
 status: verifying
-stopped_at: Completed 11-F-release.md — v0.3.0 ready for human-gated tag push
-last_updated: "2026-04-14T05:15:41.946Z"
+stopped_at: Completed 13-D3-release-scripts-and-demo.md
+last_updated: "2026-04-14T10:34:17.049Z"
 last_activity: "2026-04-13 05:00 PDT — Phase 4 close-out."
 progress:
-  total_phases: 8
+  total_phases: 9
   completed_phases: 0
   total_plans: 0
-  completed_plans: 11
+  completed_plans: 17
   percent: 100
 ---
 
 # Project State
+
+## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 13 added (2026-04-14, session 4): Nested mount layout — pages/ + tree/ symlinks for Confluence parentId hierarchy. Implements OP-1 from HANDOFF.md. BREAKING: flat `<id>.md` at mount root moves to per-backend collection bucket (`pages/` for Confluence, `issues/` for sim+GitHub).
 
 ## Project Reference
 
@@ -66,6 +72,7 @@ Progress: [██████████] 100% (Phases 1, 2, 3, S, 4 all done)
 | Phase 11 PC | 10m | 2 tasks | 1 files |
 | Phase 11 PE | 10m | 4 tasks | 8 files |
 | Phase 11 PF | 5m | 3 tasks | 6 files |
+| Phase 13 PD3 | 3m | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -96,6 +103,7 @@ additions (2026-04-13):
 - [Phase 11]: [Phase 11-E]: Connector guide (docs/connectors/guide.md) ships the v0.3 short-term published-crate story; Phase 12 subprocess ABI is the scalable successor (ROADMAP.md §Phase 12).
 - [Phase 11]: [Phase 11-E]: ADR-002 cites crates/reposix-confluence/src/lib.rs as the source-of-truth with explicit 'code wins if they disagree' clause to prevent doc drift.
 - [Phase 11]: Phase 11-F: v0.3.0 release artifacts shipped (MORNING-BRIEF-v0.3.md, CHANGELOG promotion, scripts/tag-v0.3.0.sh with 6 safety guards). Tag push deferred to human — single command 'bash scripts/tag-v0.3.0.sh' is the morning handoff.
+- [Phase 13]: D3: tag-v0.4.0.sh adds 7th guard (Cargo.toml version preflight); demo 07 six-step hero flow for tree/ overlay; smoke.sh not-added (stays sim-only-4/4)
 
 ### Pending Todos
 
@@ -116,10 +124,10 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-14T05:15:41.942Z
+Last session: 2026-04-14T10:34:07.984Z
 wall-clock minutes (60+60-min budget; finished with ~93 min in hand on
 the 06:00 PDT hard cut).
-Stopped at: Completed 11-F-release.md — v0.3.0 ready for human-gated tag push
+Stopped at: Completed 13-D3-release-scripts-and-demo.md
 patch/post helpers + If-Match + 5s timeout + sanitize-on-egress),
 `b12036e` (S-A-2 write/flush/release + create/unlink + conditional
 MountOption::RO), `4006f13` (S-B-1+2+3 protocol/import/export/SG-02 cap
