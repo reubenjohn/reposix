@@ -82,7 +82,7 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 | Skip GSD discuss step | User instruction (~12:55 AM): "do all the gsd planning, exec, review, etc, just without the discuss steps" | — Pending |
 | Lethal-trifecta cuts are first-class requirements, not afterthoughts | Threat-model subagent flagged egress + bulk-delete + tainted typing as ship-blockers; safer to bake in than retrofit | — Pending |
 
-## Current Milestone: v0.6.0 — Write Path + Full Sitemap
+## Upcoming Milestone: v0.6.0 — Write Path + Full Sitemap
 
 **Goal:** Turn the mount from a read-only navigator into a writable agent workspace.
 
@@ -92,6 +92,17 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 - OP-2 remainder: tree-recursive `tree/<subdir>/_INDEX.md` synthesis + mount-root `_INDEX.md`
 - OP-1 remainder: `labels/` and `spaces/` directory views as read-only symlink overlays (GitHub + Confluence)
 - OP-3: `reposix refresh` subcommand + git-diff cache for mount-as-time-machine semantics
+
+## Current Milestone: v0.7.0 — Hardening + Confluence Expansion
+
+**Goal:** Harden the platform under real-world load conditions and expand Confluence support beyond pages.
+
+**Target features:**
+- OP-7 hardening bundle: contention swarm (`--contention` mode), 500-page truncation probe + `WARN` + `--no-truncate`, chaos audit-log (kill-9 sim mid-swarm), macFUSE parity CI matrix
+- OP-8 honest-tokenizer benchmarks: replace `len/4` with `count_tokens` API, per-backend comparison tables, cold-mount timing, git-push round-trip latency
+- OP-9a: Confluence comments exposed as `pages/<id>.comments/<comment-id>.md`
+- OP-9b: Confluence whiteboards, attachments, and folders
+- OP-11: Docs reorg — `InitialReport.md` + `AgenticEngineeringReference.md` → `docs/research/` + root cleanup
 
 ## Evolution
 

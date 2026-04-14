@@ -1,6 +1,7 @@
-# Requirements — reposix v0.6.0 Write Path + Full Sitemap
+# Requirements — reposix v0.6.0 + v0.7.0
 
-<!-- Scoped requirements for milestone v0.6.0. -->
+<!-- v0.6.0: Write Path + Full Sitemap -->
+<!-- v0.7.0: Hardening + Confluence Expansion -->
 <!-- REQ-ID format: [CATEGORY]-[NUMBER] -->
 
 ## Active
@@ -54,3 +55,60 @@
 | INDEX-01..02 | Phase 18: OP-2 remainder |
 | NAV-01..02   | Phase 19: OP-1 remainder |
 | CACHE-01..03 | Phase 20: OP-3 |
+
+---
+
+# Milestone v0.7.0 — Hardening + Confluence Expansion
+
+## Active
+
+### Hardening (OP-7)
+- [ ] **HARD-01**: `reposix-swarm --contention` mode proves `If-Match` 409 is deterministic under N-client contention on same issue
+- [ ] **HARD-02**: 500-page space truncation emits `WARN` log and `--no-truncate` flag errors instead of silently capping (SG-05 compliance)
+- [ ] **HARD-03**: Chaos audit-log test: kill -9 sim mid-swarm shows no dangling/torn rows in WAL-mode DB
+- [ ] **HARD-04**: macFUSE parity: CI matrix entry for macOS with macFUSE, `fusermount3 → umount -f` conditional swap
+
+### Benchmarks (OP-8)
+- [ ] **BENCH-01**: `bench_token_economy.py` uses `client.messages.count_tokens()` instead of `len(text)/4`; results cached in `benchmarks/fixtures/*.tokens.json`
+- [ ] **BENCH-02**: Per-backend comparison table (sim, github, confluence) for token reduction vs raw JSON API
+- [ ] **BENCH-03**: Cold-mount time-to-first-ls matrix: 4 backends × [10, 100, 500] issues
+- [ ] **BENCH-04**: `docs/why.md` honest-framing section updated with real tokenization numbers
+
+### Confluence Comments (OP-9a)
+- [ ] **CONF-01**: `cat mount/pages/<id>.comments/<comment-id>.md` returns comment body in Markdown frontmatter format
+- [ ] **CONF-02**: `ls mount/pages/<id>.comments/` lists all inline + footer comments for that page
+- [ ] **CONF-03**: Comments are read-only (no write path in this phase)
+
+### Confluence Whiteboards / Attachments / Folders (OP-9b)
+- [ ] **CONF-04**: `ls mount/whiteboards/` lists Confluence whiteboards; each exposed as `<id>.json` (raw)
+- [ ] **CONF-05**: `ls mount/pages/<id>.attachments/` lists page attachments; binary passthrough
+- [ ] **CONF-06**: Folders (`/folders` endpoint) exposed as a separate tree alongside page hierarchy
+
+### Docs Reorg (OP-11)
+- [ ] **DOCS-01**: `InitialReport.md` moved to `docs/research/initial-report.md` with redirect note at old path
+- [ ] **DOCS-02**: `AgenticEngineeringReference.md` moved to `docs/research/agentic-engineering-reference.md` with redirect note
+- [ ] **DOCS-03**: All cross-refs in `CLAUDE.md`, `README.md`, and planning docs updated to new paths
+
+## Future Requirements
+
+- Confluence live docs (`/custom-content/` type discriminator) exposed as `livedocs/<id>.md`
+- `reposix spaces --backend confluence` subcommand to list all readable spaces
+- Multi-space mount: `--project '*'` mounts every readable space under `spaces/<key>/...`
+- Windows VFS layer (very long-term)
+
+## Out of Scope (v0.7.0)
+
+- **OP-10 — Eject 3rd-party adapters**: User-gated hard stop.
+- **Phase 12 — Subprocess/JSON-RPC connector ABI**: Design question still open.
+- **Confluence write path for comments/attachments**: Read-only in this milestone.
+- **Real Jira adapter**: Not started; no connector ABI yet.
+
+## Traceability
+
+| REQ-ID | Phase |
+|--------|-------|
+| HARD-01..04  | Phase 21: OP-7 hardening bundle |
+| BENCH-01..04 | Phase 22: OP-8 honest-tokenizer benchmarks |
+| CONF-01..03  | Phase 23: OP-9a Confluence comments |
+| CONF-04..06  | Phase 24: OP-9b whiteboards/attachments/folders |
+| DOCS-01..03  | Phase 25: OP-11 docs reorg |

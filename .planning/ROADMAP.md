@@ -432,23 +432,31 @@ Plans:
 
 ### Phase 14: Decouple sim REST shape from FUSE write path and git-remote helper — route through IssueBackend trait
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** The FUSE daemon and git-remote helper route all read/write operations through `IssueBackend::{create_issue, update_issue, delete_or_close}` instead of the old hardcoded sim-specific REST shape (`fetch.rs` / `client.rs`). Deletes ~1,068 LoC. Closes HANDOFF.md open-gap items 7 and 8. Ships v0.4.1.
+**Requirements**: HANDOFF.md known-open-gaps items 7 + 8
 **Depends on:** Phase 13
-**Plans:** 0 plans
+**Plans:** 4 waves (A: sim 409 contract pins · B1: fs.rs write through IssueBackend · B2: git-remote through IssueBackend · C: verification · D: docs + CHANGELOG) — SHIPPED
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 14 to break down)
 
 ### Phase 15: Dynamic _INDEX.md synthesized in FUSE bucket directory (OP-2 partial)
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Ships `mount/<bucket>/_INDEX.md` — a synthesized, read-only YAML-frontmatter + markdown-table sitemap of every tracked issue/page in the bucket directory, computed at read time from the `IssueBackend::list_issues` cache. Agents can `cat pages/_INDEX.md` for a one-shot directory overview. Partial OP-2 scope (bucket level only; tree-level and mount-root deferred to Phase 18). Ships v0.5.0.
+**Requirements**: OP-2 (partial) from HANDOFF.md
 **Depends on:** Phase 14
-**Plans:** 0 plans
+**Plans:** 2 waves (A: inode reservation + render_bucket_index + BucketIndex dispatch + 4 tests + live proof script · B: CHANGELOG [v0.5.0] + version bump + README + SUMMARY + tag script) — SHIPPED
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 15 to break down)
+
+
+---
+
+## Milestone v0.6.0 — Write Path + Full Sitemap
+
+**Goal:** Turn the mount from a read-only navigator into a writable agent workspace.
+**Phases:** 16–20 | **Requirements:** REQUIREMENTS.md §v0.6.0
 
 ### Phase 16: Confluence write path — update_issue create_issue delete_or_close on ConfluenceBackend plus atlas_doc_format to Markdown round-trip
 
@@ -500,11 +508,60 @@ Plans:
 Plans:
 - [ ] TBD (run /gsd-plan-phase 20 to break down)
 
+
 ---
 
-## Milestone v0.6.0 — Write Path + Full Sitemap
+## Milestone v0.7.0 — Hardening + Confluence Expansion
 
-**Goal:** Turn the mount from a read-only navigator into a writable agent workspace.
+**Goal:** Harden the platform under real-world load conditions and expand Confluence support beyond pages.
+**Phases:** 21–25 | **Requirements:** REQUIREMENTS.md §v0.7.0
 
-**Phases:** 16–20
-**Requirements:** REQUIREMENTS.md (v0.6.0 scoped)
+### Phase 21: OP-7 hardening bundle — contention swarm, 500-page truncation probe, chaos audit-log restart, macFUSE parity CI matrix
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 20
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 21 to break down)
+
+### Phase 22: OP-8 honest-tokenizer benchmarks — replace len-div-4 with count_tokens API, per-backend comparison tables
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 21
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 22 to break down)
+
+### Phase 23: OP-9a — Confluence comments exposed as pages/id.comments/comment-id.md
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 22
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 23 to break down)
+
+### Phase 24: OP-9b — Confluence whiteboards attachments and folders
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 23
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 24 to break down)
+
+### Phase 25: OP-11 — docs reorg: InitialReport.md and AgenticEngineeringReference.md to docs/research/ plus root cleanup
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 24
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 25 to break down)
