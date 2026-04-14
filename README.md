@@ -31,17 +31,23 @@ See [`InitialReport.md`](InitialReport.md) for the full architectural argument a
 
 ## Status
 
-**v0.1 alpha.** Built autonomously overnight on 2026-04-13 as an experiment in whether a single coding agent can ship a complete Rust substrate in ~7 hours. Treat as alpha per Simon Willison's "proof of usage, not proof of concept" rule. ~133 workspace tests pass; `cargo clippy --workspace --all-targets -- -D warnings` is clean.
+**v0.3.0 alpha.** Built across three autonomous coding-agent sessions on 2026-04-13 / 2026-04-14 — single agent, GSD planning workflow, no human in the loop after kickoff. **193 workspace tests pass**, `cargo clippy --workspace --all-targets -- -D warnings` is clean, `mkdocs build --strict` green, `bash scripts/demos/smoke.sh` 4/4. `#![forbid(unsafe_code)]` at every crate root.
 
-| Phase                                   | Outcome                                                                                                  |
-|-----------------------------------------|----------------------------------------------------------------------------------------------------------|
-| Phase 1 — Core contracts + guardrails   | shipped: `http::client()` factory + allowlist, `Tainted<T>`/`sanitize`, audit-log triggers, path validator |
-| Phase 2 — Simulator + audit log         | shipped: axum sim with rate limit + 409 + RBAC, append-only SQLite audit                                |
-| Phase 3 — FUSE read path + CLI          | shipped: getattr/readdir/read/write/create/unlink, 5s timeout watchdog, `reposix sim/mount/demo`         |
-| Phase S — Write path + git-remote-reposix | shipped: full FUSE write, `git-remote-reposix` PATCH/POST/DELETE, SG-02 bulk-delete cap                 |
-| Phase 4 — Demo + docs                   | shipped: `scripts/demo.sh` + recorded `script(1)` typescript + walkthrough + README polish               |
+Treat as alpha per Simon Willison's "proof of usage, not proof of concept" rule — but every demo in this README is reproducible on a stock Ubuntu host in under 5 minutes, including two that hit real backends (GitHub + Atlassian Confluence).
 
-Tracking artifacts live in [`.planning/`](.planning/).
+| Phase                                     | Outcome                                                                                                   |
+|-------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| Phase 1 — Core contracts + guardrails     | shipped: `http::client()` factory + allowlist, `Tainted<T>`/`sanitize`, audit-log triggers, path validator |
+| Phase 2 — Simulator + audit log           | shipped: axum sim with rate limit + 409 + RBAC, append-only SQLite audit                                  |
+| Phase 3 — FUSE read path + CLI            | shipped: getattr/readdir/read/write/create/unlink, 5s timeout watchdog, `reposix sim/mount/demo`          |
+| Phase S — Write path + git-remote-reposix | shipped: full FUSE write, `git-remote-reposix` PATCH/POST/DELETE, SG-02 bulk-delete cap                   |
+| Phase 4 — Demo + docs                     | shipped: `scripts/demo.sh` + recorded `script(1)` typescript + walkthrough + README polish                |
+| Phase 8 — IssueBackend trait + real GitHub | shipped: `IssueBackend` seam + `GithubReadOnlyBackend` + contract test + Tier 3 parity demo               |
+| Phase 9 — Adversarial swarm harness       | shipped: 132 895 ops / 0 % errors / SG-06 upheld under load                                               |
+| Phase 10 — FUSE-mount-real-GitHub         | shipped: `reposix mount --backend github` + Tier 5 demo                                                   |
+| Phase 11 — Confluence Cloud adapter (v0.3) | shipped: `reposix-confluence` crate + `--backend confluence` CLI + contract test + Tier 5 demo + ADR-002   |
+
+Tracking artifacts live in [`.planning/`](.planning/). See [`HANDOFF.md`](HANDOFF.md) for v0.4 direction (folder structure inside the mount, `INDEX.md` generation, git-pull-as-cache-refresh, subprocess connector ABI).
 
 ## Demo
 
@@ -153,7 +159,7 @@ bash scripts/demos/smoke.sh                   # full Tier 1 smoke suite (what CI
 
 ## Quickstart
 
-Prereqs (Linux only for v0.1):
+Prereqs (Linux only through v0.3; macOS / macFUSE tracked under HANDOFF OP-4):
 
 - Rust stable 1.82+ (tested with 1.94.1).
 - `fusermount3` (Ubuntu: `sudo apt install fuse3`).
@@ -194,9 +200,9 @@ For the per-step explanation see [`docs/demo.md#walkthrough`](docs/demo.md#walkt
 
 ## Security
 
-reposix is a textbook **lethal trifecta** (Simon Willison's framing): private remote data + untrusted ticket text + `git push` exfiltration. The full red-team gap analysis is in [`.planning/research/threat-model-and-critique.md`](.planning/research/threat-model-and-critique.md). The mitigations below are the v0.1 commitments — every one has a test or a clippy lint that asserts it.
+reposix is a textbook **lethal trifecta** (Simon Willison's framing): private remote data + untrusted ticket text + `git push` exfiltration. The full red-team gap analysis is in [`.planning/research/threat-model-and-critique.md`](.planning/research/threat-model-and-critique.md). The mitigations below are the v0.1 commitments — every one has a test or a clippy lint that asserts it. v0.3 adds two Confluence-specific mitigations (credential redaction in `Debug`, DNS-label tenant validation) on top.
 
-### Threat model — what's enforced in v0.1
+### Threat model — what's enforced today (v0.3)
 
 | ID    | Mitigation                                                       | Enforcement                                                                                              |
 |-------|------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
@@ -209,19 +215,20 @@ reposix is a textbook **lethal trifecta** (Simon Willison's framing): private re
 | SG-07 | FUSE never blocks the kernel forever                             | All upstream HTTP via `with_timeout(5s)` wrapper; on timeout returns EIO                                 |
 | SG-08 | Demo recording shows guardrails firing                           | `docs/demo.typescript` contains SG-02 refusal + allowlist refusal markers; verified by grep              |
 
-### Deferred to v0.2
+### Deferred to v0.4 / future
 
-- **M-* findings from the red-team report.** Several medium-severity findings in the threat-model document are deferred — for example, fully sandboxed `git-remote-reposix` execution (currently runs as the invoking user with full FS access), and TTY-confirmation on `git remote add reposix::...`.
-- **Real-backend credentials.** v0.1 does **not** authenticate to any real backend. Simulator-only. Real Jira/GitHub/Confluence integration ships with explicit user opt-in, allowlist scoping per origin, and credential isolation in v0.2.
+- **M-* findings from the red-team report.** Several medium-severity findings in the threat-model document remain open — for example, fully sandboxed `git-remote-reposix` execution (currently runs as the invoking user with full FS access), and TTY-confirmation on `git remote add reposix::...`.
+- **Write path on real backends.** `reposix-github` + `reposix-confluence` are **read-only** today. `create_issue` / `update_issue` / `delete_or_close` return `Err(NotSupported)`. FUSE writes still route through the simulator's REST shape via `reposix-fuse/src/fetch.rs`; rewiring those through `IssueBackend` is a v0.4 cleanup.
+- **`git-remote-reposix` rewire through `IssueBackend`.** Still hardcodes the simulator. Mechanical but not done.
 - **Signed recording attestation.** `script(1)` timestamps are trusted-by-invocation. We do not claim cryptographic provenance on `docs/demo.typescript`.
-- **Workflow rule enforcement.** v0.1's transitions endpoint reports all 5 statuses as legal from any state. v0.2 will model real workflow constraints (e.g. "must pass through `in_progress` before `done`").
-- **Swarm harness + FUSE-in-CI.** Stretch items listed in PROJECT.md but cut from v0.1 to keep the build window honest.
-
-v0.1 does **not** authenticate to any real backend. Simulator-only. Treat this codebase as alpha.
+- **Workflow rule enforcement.** Today's sim reports all 5 statuses as legal from any state. Real workflow constraints ("must pass through `in_progress` before `done`") are a v0.4 extension to the sim, not a backend feature.
+- **Folder structure inside the mount** (see [`HANDOFF.md`](HANDOFF.md) OP-1) — today every backend renders a flat `<id>.md` list; the [hero image](docs/social/assets/hero.png) advertises `issues/`/`labels/`/`milestones/` subdirs and Confluence's native page hierarchy rendered as `cd`-able directories.
+- **Subprocess/JSON-RPC connector ABI.** Phase 12 scope. Short-term 3rd-party-connector path (crates.io `reposix-adapter-<name>`) is documented in [`docs/connectors/guide.md`](docs/connectors/guide.md).
+- **macOS / macFUSE.** Linux only through v0.3.
 
 ## Honest scope
 
-This project is the output of ~7 hours of autonomous coding-agent work on the night of 2026-04-13 — single agent, GSD planning workflow, no human in the loop after kickoff. SG-01 through SG-08 are mechanically enforced by tests + lints, but it's still alpha — only run it against the in-process simulator, don't hand it credentials to anything you care about, and read [`threat-model-and-critique.md`](.planning/research/threat-model-and-critique.md) end-to-end before considering v0.2.
+This project is the output of three autonomous coding-agent sessions on 2026-04-13 → 2026-04-14 — single agent, GSD planning workflow, no human in the loop after session kickoff. Every phase has CONTEXT + PLAN + SUMMARY + REVIEW + VERIFICATION files under `.planning/phases/`; every commit is atomic with a phase-prefix message (`feat(11-A-N):`, etc.). SG-01 through SG-08 are mechanically enforced by tests + lints, but it's still alpha — simulator runs are safe, real-backend runs are safe under the SG-01 allowlist but assume the backend token has the scope you gave it. Read [`threat-model-and-critique.md`](.planning/research/threat-model-and-critique.md) end-to-end before running against any production tenant.
 
 Proof of usage, not proof of concept.
 

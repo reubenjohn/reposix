@@ -1,0 +1,162 @@
+# release.yml — builds reposix release binaries and attaches them to the
+# GitHub Release created by pushing an annotated tag `vX.Y.Z`.
+#
+# Triggered on: tag push matching `v*.*.*`.
+#
+# Outputs (attached to the Release page):
+#   - reposix-x86_64-unknown-linux-gnu.tar.gz
+#   - reposix-aarch64-unknown-linux-gnu.tar.gz  (cross-compiled, best-effort)
+#   - SHA256SUMS
+#
+# Intentionally simple scope for v0.3.0:
+#   - Linux-only targets; macOS/Windows deferred (macFUSE + lack of FUSE on
+#     Windows would need per-target binary subsets; the tier-5 demo can't run
+#     on Windows anyway).
+#   - No tag-signing (GPG key management is separate from this workflow).
+#   - Release is created with `gh release create` if it doesn't exist yet;
+#     binaries are uploaded via `gh release upload`. Both idempotent enough
+#     for re-runs.
+#
+# Documented in HANDOFF.md OP-4.
+
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write  # needed to create the release + upload assets
+
+jobs:
+  build-and-upload:
+    name: build (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross-compile linker for aarch64
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+          mkdir -p .cargo
+          cat > .cargo/config.toml <<'EOF'
+          [target.aarch64-unknown-linux-gnu]
+          linker = "aarch64-linux-gnu-gcc"
+          EOF
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Build release binaries
+        run: |
+          cargo build --release --workspace --bins --locked --target ${{ matrix.target }}
+
+      - name: Stage tarball
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          STAGE="reposix-${TAG}-${{ matrix.target }}"
+          mkdir -p "$STAGE"
+          for bin in reposix reposix-sim reposix-fuse git-remote-reposix; do
+            cp "target/${{ matrix.target }}/release/${bin}" "$STAGE/"
+          done
+          cp README.md CHANGELOG.md LICENSE-MIT LICENSE-APACHE "$STAGE/"
+          tar -czf "${STAGE}.tar.gz" "$STAGE"
+          sha256sum "${STAGE}.tar.gz" > "${STAGE}.tar.gz.sha256"
+          ls -lh "${STAGE}.tar.gz" "${STAGE}.tar.gz.sha256"
+
+      - name: Upload tarball as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: reposix-${{ matrix.target }}
+          path: |
+            reposix-*-${{ matrix.target }}.tar.gz
+            reposix-*-${{ matrix.target }}.tar.gz.sha256
+          retention-days: 7
+
+  publish-release:
+    name: publish github release
+    runs-on: ubuntu-latest
+    needs: build-and-upload
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Combine SHA256SUMS
+        run: |
+          set -euo pipefail
+          cd dist
+          cat *.tar.gz.sha256 > SHA256SUMS
+          rm -f *.tar.gz.sha256
+          ls -lh
+
+      - name: Extract CHANGELOG body for this tag
+        id: changelog
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          # Grab the section between `## [vX.Y.Z]` and the next `## [` header.
+          awk -v tag="## [${TAG}]" '
+            $0 ~ /^## \[/ {
+              if (in_section) exit
+              if (index($0, tag) == 1) { in_section = 1; next }
+            }
+            in_section { print }
+          ' CHANGELOG.md > body.md
+          if [ ! -s body.md ]; then
+            echo "No CHANGELOG section found for ${TAG}; falling back to default body"
+            printf "reposix %s — see CHANGELOG.md for the full notes.\n" "${TAG}" > body.md
+          fi
+          {
+            echo ""
+            echo "---"
+            echo ""
+            echo "### Prebuilt binaries"
+            echo ""
+            echo "- \`reposix-${TAG}-x86_64-unknown-linux-gnu.tar.gz\` — x86_64 Linux (glibc)"
+            echo "- \`reposix-${TAG}-aarch64-unknown-linux-gnu.tar.gz\` — aarch64 Linux (cross-compiled; best-effort)"
+            echo "- \`SHA256SUMS\` — SHA-256 checksums of every asset above"
+            echo ""
+            echo "Extract and put on PATH:"
+            echo ""
+            echo "\`\`\`bash"
+            echo "curl -fsSLo - https://github.com/reubenjohn/reposix/releases/download/${TAG}/reposix-${TAG}-x86_64-unknown-linux-gnu.tar.gz | tar -xz"
+            echo "export PATH=\"\$PWD/reposix-${TAG}-x86_64-unknown-linux-gnu:\$PATH\""
+            echo "reposix --help"
+            echo "\`\`\`"
+          } >> body.md
+
+      - name: Create / update release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG exists — editing body + uploading assets."
+            gh release edit "$TAG" --notes-file body.md
+          else
+            gh release create "$TAG" --title "reposix ${TAG}" --notes-file body.md
+          fi
+          gh release upload "$TAG" dist/*.tar.gz dist/SHA256SUMS --clobber
