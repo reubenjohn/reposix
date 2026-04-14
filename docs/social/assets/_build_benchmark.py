@@ -10,7 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
-OUT = Path("/home/reuben/workspace/reposix/social/assets/benchmark.png")
+OUT = Path("/home/reuben/workspace/reposix/docs/social/assets/benchmark.png")
 
 W, H = 1200, 675
 BG = "#0d1117"

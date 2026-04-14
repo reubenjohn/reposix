@@ -11,7 +11,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-OUT = Path("/home/reuben/workspace/reposix/social/assets/workflow.png")
+OUT = Path("/home/reuben/workspace/reposix/docs/social/assets/workflow.png")
 W, H = 1200, 675
 
 # Palette (matches hero.png / benchmark.png for consistency)

@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 # ---- config ----------------------------------------------------------------
 
-OUT = Path("/home/reuben/workspace/reposix/social/assets/hero.png")
+OUT = Path("/home/reuben/workspace/reposix/docs/social/assets/hero.png")
 W, H = 1200, 675
 
 # Palette (GitHub dark + Finder-ish accents)

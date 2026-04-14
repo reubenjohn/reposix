@@ -2,11 +2,11 @@
 
 > **Agents already know `cat` and `git`. They don't know your JSON schema.**
 
-![reposix hero](https://raw.githubusercontent.com/reubenjohn/reposix/main/social/assets/hero.png){ .no-lightbox width="100%" }
+![reposix hero](https://raw.githubusercontent.com/reubenjohn/reposix/main/docs/social/assets/hero.png){ .no-lightbox width="100%" }
 
 reposix is a git-backed FUSE filesystem that exposes REST-based issue trackers (Jira, GitHub Issues, Confluence) as a POSIX directory tree. An autonomous LLM agent can `ls`, `cat`, `grep`, edit, and `git push` tickets without ever loading a single Model Context Protocol (MCP) tool schema.
 
-![reposix demo](https://raw.githubusercontent.com/reubenjohn/reposix/main/social/assets/demo.gif){ .no-lightbox width="100%" }
+![reposix demo](https://raw.githubusercontent.com/reubenjohn/reposix/main/docs/social/assets/demo.gif){ .no-lightbox width="100%" }
 
 !!! success "v0.2 — autonomously built overnight + extended the same morning"
     Every line of code in this repository was written by a coding agent across two sessions on **2026-04-13**: an overnight simulator-only build (v0.1) and a morning session adding the `IssueBackend` trait + real-GitHub adapter + FUSE-mount-real-GitHub (v0.2). An adversarial red-team subagent critiques the design; planners verify each phase. Treat as alpha — but every demo in this site is reproducible on a stock Ubuntu host in under 5 minutes.

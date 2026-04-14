@@ -14,7 +14,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 # ---- config ----------------------------------------------------------------
 
-OUT_DIR = Path("/home/reuben/workspace/reposix/social/assets")
+OUT_DIR = Path("/home/reuben/workspace/reposix/docs/social/assets")
 GIF_PATH = OUT_DIR / "demo.gif"
 FRAME0_PNG = OUT_DIR / "demo-frame0.png"
 

@@ -20,7 +20,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-ASSETS = Path("/home/reuben/workspace/reposix/social/assets")
+ASSETS = Path("/home/reuben/workspace/reposix/docs/social/assets")
 HERO = ASSETS / "hero.png"
 WORK = ASSETS / "workflow.png"
 BENCH = ASSETS / "benchmark.png"

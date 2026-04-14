@@ -42,7 +42,7 @@ flowchart TB
 
 Every HTTP arrow above is mediated by a single `reposix_core::http::HttpClient` — the only legal way to construct a `reqwest::Client` in this workspace. The clippy lint `disallowed-methods` fires at compile time if any other code tries to bypass it.
 
-![architecture poster](https://raw.githubusercontent.com/reubenjohn/reposix/main/social/assets/architecture.png){ .no-lightbox width="100%" }
+![architecture poster](https://raw.githubusercontent.com/reubenjohn/reposix/main/docs/social/assets/architecture.png){ .no-lightbox width="100%" }
 
 ## Crate topology
 
