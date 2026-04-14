@@ -484,6 +484,39 @@ You are the 4th overnight agent on this codebase. v0.3 shipped tonight; binaries
 
 The dark-factory norms still apply: simulator before real backend, tainted by default, audit log non-optional, no hidden state, mount = git repo. If any of those slip, the design has regressed and the morning review will catch it.
 
+---
+
+## OP-12 — Docs update for prebuilt binaries (do this FIRST next session)
+
+The v0.3.0 release now carries prebuilt Linux binaries on the GitHub Releases page (see OP-4). **The install docs don't reflect this yet** — everywhere new users land still tells them to `git clone && cargo build --release --workspace --bins`, which assumes a Rust toolchain they may not have. The "wget + untar" path is dramatically easier and is the canonical one we should lead with.
+
+**Surfaces to update** (pin this down in one GSD "quick" phase — no subagents needed):
+
+1. **`README.md` Quickstart section.** Today starts with `git clone … && bash scripts/demo.sh`. Add a **Prebuilt binaries (recommended)** subsection above the from-source subsection:
+   ```bash
+   curl -fsSLo - https://github.com/reubenjohn/reposix/releases/latest/download/reposix-v0.3.0-x86_64-unknown-linux-gnu.tar.gz | tar -xz
+   export PATH="$PWD/reposix-v0.3.0-x86_64-unknown-linux-gnu:$PATH"
+   reposix --help
+   ```
+   Keep the from-source path as a secondary option for contributors. Use `releases/latest/download/` pattern so the link survives minor bumps; add a note for verifying `SHA256SUMS` against the release page.
+2. **`docs/index.md`.** First interaction above the fold should be "install a binary"; current homepage jumps straight to architecture.
+3. **`docs/demo.md`.** Today says "install from source"; add the prebuilt path.
+4. **Tier-5 demo intro notes** (`docs/demos/index.md` + the individual `scripts/demos/05-mount-real-github.sh` / `06-mount-real-confluence.sh` headers) — the assumption that `reposix` is on `PATH` is already there, but the *how* is source-only. Link to the release tarball instead as the fast path.
+5. **`docs/reference/confluence.md`** + any reference doc that has "prereqs." Drop the Rust-toolchain prereq from the binary path.
+6. **`docs/connectors/guide.md`** — the "build your own connector" guide still assumes readers `cargo add reposix-core` to their fork. That flow STILL requires Rust; leave it as-is, but add a note saying the released binary of the host-reposix works against any connector on PATH once Phase 12 ships (forward-reference only).
+7. **`HANDOFF.md`** (this file) — once these landed, drop the OP-12 entry here and leave a one-line "install = download tarball from releases" note in the next session's handoff.
+
+**Success criteria:**
+- A first-time user on stock Ubuntu 22.04 can `curl`, `tar -xz`, `export PATH`, and run `reposix list --backend github --project octocat/Hello-World` with no Rust installed. Test this by spinning up a clean container (the user can do this in the morning as a one-off), or by reading the install snippet cold and verifying every command works from `$HOME`.
+- README's "Quickstart" shows the binary path as the default and a dimmer "from source" subsection.
+- No docs page leads with `cargo build` as the only option.
+- `mkdocs build --strict` still green.
+
+**Size:** genuinely a `/gsd-quick` — maybe 150-200 lines of doc edits total, no code, no tests. Should be the first thing the next session does because every other task is harder if the docs lie about the install.
+
+**A more honest version of the CHANGELOG `[v0.3.0]` Added block** would list prebuilt binaries as a user-facing addition, which it currently doesn't. One line under `### Added`:
+> - **Prebuilt x86_64 + aarch64 Linux binaries** attached to each GitHub release (new `.github/workflows/release.yml`, tag-push triggered). Users no longer need a Rust toolchain for the read-only workflow. SHA256SUMS and licenses bundled in each tarball.
+
 ## Sign-off
 
 — Claude Opus 4.6 1M context, 2026-04-13 / 2026-04-14 (overnight session 3).
