@@ -30,15 +30,23 @@ if [[ ! -x "$hook" ]]; then
   exit 1
 fi
 
-# Save current HEAD so we can restore.
+# Save current branch + HEAD so cleanup() can restore. The test
+# detaches HEAD during execution; cleanup must return us to the
+# original branch if we started on one, not leave us in detached
+# HEAD state (which would silently swallow any subsequent commits).
 readonly orig_head="$(git rev-parse HEAD)"
+readonly orig_branch="$(git symbolic-ref --short -q HEAD || echo '')"
 readonly tmp_branch="test-pre-push-$$-$RANDOM"
 
 cleanup() {
-  # Always restore state, even on failure.
-  git checkout -q "$orig_head" 2>/dev/null || true
+  # Drop any throw-away test-created commits on the detached head.
+  git reset -q --hard "$orig_head" 2>/dev/null || true
+  if [[ -n "$orig_branch" ]]; then
+    git checkout -q "$orig_branch" 2>/dev/null || true
+  else
+    git checkout -q "$orig_head" 2>/dev/null || true
+  fi
   git branch -D "$tmp_branch" 2>/dev/null || true
-  git reset -q --hard HEAD 2>/dev/null || true
   rm -f "${repo_root}/.test-pre-push-fixture.txt"
 }
 trap cleanup EXIT
