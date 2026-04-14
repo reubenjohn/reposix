@@ -34,13 +34,14 @@
 //! which branch to take. See `crates/reposix-fuse/src/inode.rs` for the
 //! numeric layout.
 //!
-//! # Backend seam (Phase 10)
+//! # Backend seam (Phase 10 + Phase 14)
 //!
-//! The read path speaks to a `dyn IssueBackend` trait object rather than
-//! the simulator's REST shape directly, so the same daemon can mount the
-//! simulator (`SimBackend`) or real GitHub (`GithubReadOnlyBackend`). The
-//! write path still speaks the simulator REST shape via [`fetch`]; a v0.3
-//! cleanup will lift it onto the trait too.
+//! Both read and write paths speak to a `dyn IssueBackend` trait object
+//! rather than any backend's REST shape directly. Reads use
+//! `list_issues` / `get_issue`; writes (`release`, `create`) use
+//! `update_issue` / `create_issue`. A Phase 14 refactor lifted the write
+//! path onto the trait — the simulator's wire shape now lives only in
+//! `SimBackend` (in `reposix-core`).
 //!
 //! # Async bridging
 //!
@@ -52,17 +53,18 @@
 //!
 //! # Timeouts (SG-07)
 //!
-//! Read-path backend calls are wrapped in a 5-second `tokio::time::timeout`
-//! inside `list_issues_with_timeout` / `get_issue_with_timeout`. Write-path
-//! `fetch::*` helpers carry their own 5s ceiling. On timeout we reply
-//! `libc::EIO` so the kernel never hangs on a dead backend.
+//! Every backend call is wrapped in a 5-second `tokio::time::timeout`
+//! inside `list_issues_with_timeout` / `get_issue_with_timeout` /
+//! `update_issue_with_timeout` / `create_issue_with_timeout`. On timeout
+//! we reply `libc::EIO` so the kernel never hangs on a dead backend.
 //!
 //! # Egress discipline (SG-03)
 //!
 //! Every PATCH / POST body goes through
-//! `Tainted::new(parsed_issue).then(sanitize(...))` before serialization;
-//! the sanitized `Untainted<Issue>` is then serialized via the
-//! `EgressPayload` shape inside `fetch.rs`, so server-controlled fields
+//! `Tainted::new(parsed_issue).then(sanitize(...))` before it reaches the
+//! backend. The `Untainted<Issue>` type, combined with `SimBackend`'s
+//! `render_patch_body` / `render_create_body` emitting only the mutable-
+//! field subset, guarantees server-controlled fields
 //! (`id`/`version`/`created_at`/`updated_at`) physically cannot appear in
 //! the wire bytes.
 
@@ -77,16 +79,16 @@ use fuser::{
     FileAttr, FileHandle, FileType, Filesystem, INodeNo, ReplyAttr, ReplyCreate, ReplyData,
     ReplyDirectory, ReplyEmpty, ReplyEntry, ReplyWrite, Request,
 };
-use reposix_core::http::{client, ClientOpts, HttpClient};
 use reposix_core::path::validate_issue_filename;
 use reposix_core::{
     backend::BackendFeature, frontmatter, sanitize, Issue, IssueBackend, IssueId, IssueStatus,
-    ServerMetadata, Tainted,
+    ServerMetadata, Tainted, Untainted,
 };
+use serde::Deserialize;
+use thiserror::Error;
 use tokio::runtime::Runtime;
 use tracing::warn;
 
-use crate::fetch::{patch_issue, post_issue, FetchError};
 use crate::inode::{
     InodeRegistry, BUCKET_DIR_INO, FIRST_ISSUE_INODE, GITIGNORE_INO, ROOT_INO, TREE_ROOT_INO,
 };
@@ -97,20 +99,96 @@ use crate::tree::{TreeSnapshot, TREE_DIR_INO_BASE, TREE_SYMLINK_INO_BASE};
 /// matches what tools like `git check-ignore` expect.
 const GITIGNORE_BYTES: &[u8] = b"/tree/\n";
 
-/// SG-07 ceilings for read-path backend calls. A dead backend MUST
-/// surface EIO to the kernel within these budgets so callbacks never
-/// wedge the VFS.
+/// SG-07 ceilings for backend calls. A dead backend MUST surface EIO to
+/// the kernel within these budgets so callbacks never wedge the VFS.
 const READ_GET_TIMEOUT: Duration = Duration::from_secs(5);
 const READ_LIST_TIMEOUT: Duration = Duration::from_secs(15);
 
+/// Errors reachable from the FUSE backend helpers. Formerly lived in
+/// `crate::fetch`; moved here in Phase 14 when the write path was lifted
+/// onto [`IssueBackend`]. Name retained (not renamed to `FsError`) to
+/// minimize diff; a future cleanup phase may rename.
+///
+/// Intentionally opaque to callers — the FUSE callback path ultimately
+/// collapses all of these to `EIO` or `ENOENT`, but keeping the variants
+/// distinct aids tests and logs.
+#[derive(Debug, Error)]
+enum FetchError {
+    /// Wall-clock timeout elapsed before the backend responded. The FUSE
+    /// callback MUST map this to `libc::EIO`.
+    #[error("backend did not respond within timeout")]
+    Timeout,
+    /// Backend reported the issue does not exist.
+    #[error("issue not found")]
+    NotFound,
+    /// Transport-level failure (TCP refused, TLS handshake failure, etc).
+    /// Surfaces from `reposix_core::Error::Http`.
+    #[error("transport: {0}")]
+    Transport(#[from] reqwest::Error),
+    /// The target origin is not allowlisted. Bubbles up from the sealed
+    /// `HttpClient` inside the trait impl.
+    #[error("origin not allowlisted: {0}")]
+    Origin(String),
+    /// Backend returned a 200 but the JSON body did not match our schema.
+    /// Surfaces from `reposix_core::Error::Json`.
+    #[error("parse: {0}")]
+    Parse(#[from] serde_json::Error),
+    /// Other core errors (e.g. allowlist env var un-parseable, non-success
+    /// HTTP status the backend collapsed into `Error::Other`, or any
+    /// `reposix_core::Error::Other` that didn't match a more specific
+    /// arm).
+    #[error("core: {0}")]
+    Core(String),
+    /// Backend returned 409 on a PATCH — the `If-Match` version did not
+    /// match the current server version. The FUSE callback maps this to
+    /// `libc::EIO`; the user must `git pull --rebase` to reconcile.
+    #[error("version mismatch: current={current}")]
+    Conflict {
+        /// Current server version, parsed from the 409 response body.
+        current: u64,
+    },
+}
+
+/// Body shape for 409 Conflict responses from the sim's PATCH handler.
+/// Matches `{"error":"version_mismatch","current":N,"sent":"..."}` — we
+/// only need `current` to surface back into [`FetchError::Conflict`]. The
+/// `#[serde(default)]` container implicit in omitting other fields means
+/// extra keys are ignored (forward-compatible).
+#[derive(Deserialize)]
+struct ConflictBody {
+    current: u64,
+}
+
 /// Map a `reposix_core::Error` from an `IssueBackend` call into a
 /// [`FetchError`].
+///
+/// The `"version mismatch:"` arm (Phase 14 Wave B1) strips the prefix and
+/// JSON-parses the tail to recover the `current` integer into
+/// [`FetchError::Conflict`], preserving the diagnostic log line the
+/// `release` callback emits on 409. A malformed body degrades to
+/// `current: 0` so we never fail to surface a conflict.
 fn backend_err_to_fetch(e: reposix_core::Error) -> FetchError {
     match e {
         reposix_core::Error::InvalidOrigin(o) => FetchError::Origin(o),
         reposix_core::Error::Http(t) => FetchError::Transport(t),
         reposix_core::Error::Json(j) => FetchError::Parse(j),
         reposix_core::Error::Other(msg) if msg.starts_with("not found") => FetchError::NotFound,
+        reposix_core::Error::Other(msg) if msg.starts_with("version mismatch:") => {
+            // Strip "version mismatch: " (with or without trailing space)
+            // and parse the JSON tail. The sim always emits a JSON body;
+            // non-sim backends that surface a version mismatch via this
+            // prefix would be expected to do the same — but if the tail
+            // is unparseable we still surface the conflict (current=0)
+            // rather than demoting it to a generic Core error.
+            let tail = msg
+                .strip_prefix("version mismatch:")
+                .unwrap_or(&msg)
+                .trim_start();
+            let current = serde_json::from_str::<ConflictBody>(tail)
+                .map(|b| b.current)
+                .unwrap_or(0);
+            FetchError::Conflict { current }
+        }
         other => FetchError::Core(other.to_string()),
     }
 }
@@ -132,6 +210,46 @@ async fn get_issue_with_timeout(
     id: IssueId,
 ) -> Result<Issue, FetchError> {
     match tokio::time::timeout(READ_GET_TIMEOUT, backend.get_issue(project, id)).await {
+        Ok(Ok(v)) => Ok(v),
+        Ok(Err(e)) => Err(backend_err_to_fetch(e)),
+        Err(_) => Err(FetchError::Timeout),
+    }
+}
+
+/// PATCH wrapper — routes through [`IssueBackend::update_issue`] with the
+/// same 5-second wall-clock ceiling the read path enforces. The outer
+/// [`tokio::time::timeout`] is the belt-and-suspenders guard against a
+/// backend that returns headers and then stalls on the body (reqwest's
+/// inner `total_timeout` covers up through header-read only; see
+/// `14-RESEARCH.md#Q3`).
+async fn update_issue_with_timeout(
+    backend: &Arc<dyn IssueBackend>,
+    project: &str,
+    id: IssueId,
+    patch: Untainted<Issue>,
+    expected_version: Option<u64>,
+) -> Result<Issue, FetchError> {
+    match tokio::time::timeout(
+        READ_GET_TIMEOUT,
+        backend.update_issue(project, id, patch, expected_version),
+    )
+    .await
+    {
+        Ok(Ok(v)) => Ok(v),
+        Ok(Err(e)) => Err(backend_err_to_fetch(e)),
+        Err(_) => Err(FetchError::Timeout),
+    }
+}
+
+/// POST wrapper — routes through [`IssueBackend::create_issue`] with the
+/// same 5-second wall-clock ceiling. Symmetric to
+/// [`update_issue_with_timeout`].
+async fn create_issue_with_timeout(
+    backend: &Arc<dyn IssueBackend>,
+    project: &str,
+    issue: Untainted<Issue>,
+) -> Result<Issue, FetchError> {
+    match tokio::time::timeout(READ_GET_TIMEOUT, backend.create_issue(project, issue)).await {
         Ok(Ok(v)) => Ok(v),
         Ok(Err(e)) => Err(backend_err_to_fetch(e)),
         Err(_) => Err(FetchError::Timeout),
@@ -199,22 +317,21 @@ struct CachedFile {
     body_fetched: bool,
 }
 
-/// FUSE filesystem backed by an [`IssueBackend`] trait object for the read
-/// path and by the simulator's REST shape (via [`fetch`]) for the write
-/// path.
+/// FUSE filesystem backed by an [`IssueBackend`] trait object for both
+/// read and write paths (Phase 10 + Phase 14).
 pub struct ReposixFs {
     /// Tokio runtime owned by the FS; used for `block_on` on callbacks.
     rt: Arc<Runtime>,
-    /// Read-path backend (Phase 10).
+    /// Backend for all I/O — reads (`list_issues`/`get_issue`) and writes
+    /// (`create_issue`/`update_issue`). SG-05 audit attribution lives on
+    /// the backend's internal `X-Reposix-Agent` header (set at
+    /// construction via `SimBackend::with_agent_suffix`).
     backend: Arc<dyn IssueBackend>,
-    /// Sealed allowlisted HTTP client (SG-01) used by the write path.
-    http: Arc<HttpClient>,
-    /// Simulator origin used by the write path.
+    /// Backend origin retained for diagnostic rendering (Debug, tracing).
+    /// Not plumbed through any I/O path — the backend owns its own origin.
     origin: String,
     /// Project slug (sim) or `owner/repo` (github).
     project: String,
-    /// `X-Reposix-Agent` header value (SG-05 audit attribution).
-    agent: String,
     /// Inode registry (real issue files under the bucket).
     registry: InodeRegistry,
     /// Per-backend bucket name (`"issues"` or `"pages"`). Set once at
@@ -256,7 +373,6 @@ impl std::fmt::Debug for ReposixFs {
             .field("backend", &self.backend.name())
             .field("origin", &self.origin)
             .field("project", &self.project)
-            .field("agent", &self.agent)
             .field("bucket", &self.bucket)
             .field("hierarchy_feature", &self.hierarchy_feature)
             .finish_non_exhaustive()
@@ -281,8 +397,6 @@ impl ReposixFs {
                 .thread_name("reposix-fuse-rt")
                 .build()?,
         );
-        let http = Arc::new(client(ClientOpts::default())?);
-        let agent = format!("reposix-fuse-{}", std::process::id());
         let bucket = backend.root_collection_name();
         let hierarchy_feature = backend.supports(BackendFeature::Hierarchy);
         let now = SystemTime::now();
@@ -331,10 +445,8 @@ impl ReposixFs {
         Ok(Self {
             rt,
             backend,
-            http,
             origin,
             project,
-            agent,
             registry: InodeRegistry::new(),
             bucket,
             hierarchy_feature,
@@ -532,11 +644,9 @@ fn fetch_errno(e: &FetchError) -> i32 {
         FetchError::Origin(_) => libc::EACCES,
         FetchError::Timeout
         | FetchError::Transport(_)
-        | FetchError::Status(_)
         | FetchError::Parse(_)
         | FetchError::Core(_)
-        | FetchError::Conflict { .. }
-        | FetchError::BadRequest(_) => libc::EIO,
+        | FetchError::Conflict { .. } => libc::EIO,
     }
 }
 
@@ -1026,14 +1136,12 @@ impl Filesystem for ReposixFs {
         let untainted = sanitize(Tainted::new(parsed), meta);
         let version = cached.issue.version;
         let id = cached.issue.id;
-        let result = self.rt.block_on(patch_issue(
-            &self.http,
-            &self.origin,
+        let result = self.rt.block_on(update_issue_with_timeout(
+            &self.backend,
             &self.project,
             id,
-            version,
             untainted,
-            &self.agent,
+            Some(version),
         ));
         match result {
             Ok(updated) => {
@@ -1107,12 +1215,10 @@ impl Filesystem for ReposixFs {
             version: 0,
         };
         let untainted = sanitize(Tainted::new(placeholder), meta);
-        let result = self.rt.block_on(post_issue(
-            &self.http,
-            &self.origin,
+        let result = self.rt.block_on(create_issue_with_timeout(
+            &self.backend,
             &self.project,
             untainted,
-            &self.agent,
         ));
         match result {
             Ok(new_issue) => {
@@ -1228,5 +1334,170 @@ fn collect_tree_entries(
                 out.push((*ino, FileType::Symlink, name.clone()));
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    //! Tests for the Phase 14 Wave B1 helpers: `backend_err_to_fetch`'s
+    //! version-mismatch arm (Q1/Task B1.2) and the new
+    //! `update_issue_with_timeout` / `create_issue_with_timeout` wrappers
+    //! (Q3/Task B1.3).
+
+    use super::*;
+    use chrono::TimeZone;
+    use reposix_core::backend::sim::SimBackend;
+    use std::time::Instant;
+    use wiremock::matchers::{any, method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    fn sample_untainted() -> Untainted<Issue> {
+        let t = chrono::Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
+        sanitize(
+            Tainted::new(Issue {
+                id: IssueId(0),
+                title: "x".into(),
+                status: IssueStatus::Open,
+                assignee: None,
+                labels: vec![],
+                created_at: t,
+                updated_at: t,
+                version: 0,
+                body: String::new(),
+                parent_id: None,
+            }),
+            ServerMetadata {
+                id: IssueId(1),
+                created_at: t,
+                updated_at: t,
+                version: 1,
+            },
+        )
+    }
+
+    #[test]
+    fn backend_err_to_fetch_maps_version_mismatch_with_current() {
+        // Task B1.2 proof: a `reposix_core::Error::Other("version mismatch:
+        // <json>")` surfaces as `FetchError::Conflict { current: N }`
+        // with N extracted from the JSON tail. Mirrors the sim's
+        // `{"error":"version_mismatch","current":7,"sent":"1"}` body shape.
+        let input = reposix_core::Error::Other(
+            "version mismatch: {\"error\":\"version_mismatch\",\"current\":7,\"sent\":\"1\"}"
+                .into(),
+        );
+        let out = backend_err_to_fetch(input);
+        match out {
+            FetchError::Conflict { current } => assert_eq!(current, 7),
+            other => panic!("expected Conflict {{ current: 7 }}, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn backend_err_to_fetch_maps_malformed_version_mismatch_to_current_zero() {
+        // Graceful-degradation fallback: if the body JSON is unparseable we
+        // still surface a Conflict (current=0) rather than demoting to
+        // FetchError::Core, so the release diagnostic path always fires on
+        // the 409 signal. Mirrors the old fetch.rs:246 unwrap_or.
+        let input = reposix_core::Error::Other("version mismatch: not json at all".into());
+        let out = backend_err_to_fetch(input);
+        match out {
+            FetchError::Conflict { current } => assert_eq!(current, 0),
+            other => panic!("expected Conflict {{ current: 0 }}, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn backend_err_to_fetch_maps_not_found() {
+        // Regression guard: the "not found" arm was there before Phase 14
+        // and must keep mapping cleanly.
+        let input = reposix_core::Error::Other("not found: http://127.0.0.1/x".into());
+        assert!(matches!(backend_err_to_fetch(input), FetchError::NotFound));
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn update_issue_with_timeout_times_out_within_budget() {
+        // Re-home of fetch.rs::patch_issue_times_out_within_budget onto the
+        // new wrapper. A 10-second backend delay + 5s outer timeout must
+        // surface Err(FetchError::Timeout) within ~5.5s wall clock. This
+        // proves the outer `tokio::time::timeout` wrapper restores the
+        // defence-in-depth the old `fetch::patch_issue` provided on top of
+        // reqwest's 5s total_timeout (see 14-RESEARCH.md#Q3).
+        let server = MockServer::start().await;
+        Mock::given(any())
+            .respond_with(ResponseTemplate::new(200).set_delay(Duration::from_secs(10)))
+            .mount(&server)
+            .await;
+        let backend: Arc<dyn IssueBackend> = Arc::new(SimBackend::new(server.uri()).unwrap());
+        let t0 = Instant::now();
+        let err =
+            update_issue_with_timeout(&backend, "demo", IssueId(1), sample_untainted(), Some(1))
+                .await
+                .unwrap_err();
+        let elapsed = t0.elapsed();
+        // Either our outer timeout fired (FetchError::Timeout) or reqwest's
+        // inner 5s total_timeout fired first (FetchError::Transport with
+        // is_timeout()); both prove the 5s ceiling holds.
+        let ok = matches!(err, FetchError::Timeout)
+            || matches!(&err, FetchError::Transport(e) if e.is_timeout());
+        assert!(ok, "expected timeout-flavored error, got {err:?}");
+        assert!(
+            elapsed < Duration::from_millis(5_800),
+            "should return within 5.5s; took {elapsed:?}"
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn create_issue_with_timeout_times_out_within_budget() {
+        // Symmetric POST timeout guard; ensures the new create wrapper has
+        // the same 5s ceiling as update.
+        let server = MockServer::start().await;
+        Mock::given(any())
+            .respond_with(ResponseTemplate::new(201).set_delay(Duration::from_secs(10)))
+            .mount(&server)
+            .await;
+        let backend: Arc<dyn IssueBackend> = Arc::new(SimBackend::new(server.uri()).unwrap());
+        let t0 = Instant::now();
+        let err = create_issue_with_timeout(&backend, "demo", sample_untainted())
+            .await
+            .unwrap_err();
+        let elapsed = t0.elapsed();
+        let ok = matches!(err, FetchError::Timeout)
+            || matches!(&err, FetchError::Transport(e) if e.is_timeout());
+        assert!(ok, "expected timeout-flavored error, got {err:?}");
+        assert!(
+            elapsed < Duration::from_millis(5_800),
+            "should return within 5.5s; took {elapsed:?}"
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn update_issue_with_timeout_happy_path_returns_issue() {
+        // Positive-path coverage: a fast 200 from the backend lands as
+        // `Ok(Issue)` through the wrapper. Cheap companion to the timeout
+        // tests — together they pin both limbs of the `tokio::time::timeout`
+        // match.
+        let server = MockServer::start().await;
+        let body = serde_json::json!({
+            "id": 1,
+            "title": "hello",
+            "status": "open",
+            "labels": [],
+            "created_at": "2026-04-13T00:00:00Z",
+            "updated_at": "2026-04-13T00:00:00Z",
+            "version": 2,
+            "body": ""
+        });
+        Mock::given(method("PATCH"))
+            .and(path("/projects/demo/issues/1"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(body))
+            .mount(&server)
+            .await;
+        let backend: Arc<dyn IssueBackend> = Arc::new(SimBackend::new(server.uri()).unwrap());
+        let got =
+            update_issue_with_timeout(&backend, "demo", IssueId(1), sample_untainted(), Some(1))
+                .await
+                .expect("update");
+        assert_eq!(got.id, IssueId(1));
+        assert_eq!(got.version, 2);
     }
 }

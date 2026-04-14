@@ -1,13 +1,14 @@
 //! FUSE daemon library — see [`Mount`] for the public entry point.
 //!
-//! The read-only mount presents every issue in a reposix-compatible backend
-//! as a single Markdown file at the mount root, named `<zero-padded-id>.md`.
-//! Read-path I/O now flows through the [`reposix_core::IssueBackend`] trait
-//! (Phase 10 rewire), so the same FUSE daemon can serve the simulator or a
-//! real GitHub repo. Every backend call is still wrapped in a 5-second
-//! [`tokio::time::timeout`] (SG-07) so the kernel cannot hang on a dead
-//! backend. Write-path callbacks still speak to the simulator's REST shape
-//! directly via [`fetch`] (v0.3 will lift these onto the trait).
+//! The mount presents every issue in a reposix-compatible backend as a
+//! Markdown file under the per-backend bucket directory (`issues/` or
+//! `pages/`). Both read and write I/O flow through the
+//! [`reposix_core::IssueBackend`] trait: reads use `list_issues` /
+//! `get_issue`, writes (`release`, `create`) use
+//! `update_issue` / `create_issue`, so the same FUSE daemon can drive the
+//! simulator or any other backend implementation. Every backend call is
+//! wrapped in a 5-second [`tokio::time::timeout`] (SG-07) so the kernel
+//! cannot hang on a dead backend.
 
 #![forbid(unsafe_code)]
 #![warn(clippy::pedantic)]
@@ -20,7 +21,6 @@ use fuser::{BackgroundSession, MountOption};
 use reposix_core::IssueBackend;
 use serde::{Deserialize, Serialize};
 
-pub mod fetch;
 pub mod fs;
 pub mod inode;
 pub mod tree;
@@ -31,11 +31,10 @@ pub use tree::{TreeSnapshot, TREE_DIR_INO_BASE, TREE_ROOT_INO, TREE_SYMLINK_INO_
 
 /// Runtime configuration for a FUSE mount.
 ///
-/// The `origin` field is retained because the write-path callbacks
-/// (`release` → PATCH, `create` → POST) still speak the simulator's REST
-/// shape directly via [`fetch`]. Read-path callbacks (`readdir`, `read`,
-/// `lookup`) route through the [`IssueBackend`] passed to [`Mount::open`],
-/// which is how `--backend github` works end-to-end.
+/// The `origin` field is retained for diagnostic rendering (Debug output,
+/// tracing spans) even though all read and write I/O now flows through the
+/// [`IssueBackend`] passed to [`Mount::open`]. The trait object owns its
+/// own origin internally.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MountConfig {
     /// Where to mount.

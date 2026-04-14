@@ -82,7 +82,11 @@ struct Args {
 fn build_backend(kind: BackendKind, origin: &str) -> Result<Arc<dyn IssueBackend>> {
     match kind {
         BackendKind::Sim => {
-            let b = SimBackend::new(origin.to_owned())?;
+            // Agent-header suffix "fuse" so the simulator's audit log can
+            // distinguish FUSE-driven writes from other SimBackend callers
+            // (swarm harness, CLI, remote helper). The emitted header is
+            // `reposix-core-simbackend-<pid>-fuse` — see Phase 14 Wave B1.
+            let b = SimBackend::with_agent_suffix(origin.to_owned(), Some("fuse"))?;
             Ok(Arc::new(b))
         }
         BackendKind::Github => {
