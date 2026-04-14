@@ -1,3 +1,5 @@
+> **Note (2026-04-14):** This brief covers the v0.1 / v0.2 era. For v0.3.0 (Phase 11 — Confluence adapter), see [`MORNING-BRIEF-v0.3.md`](MORNING-BRIEF-v0.3.md).
+
 # Morning brief — 2026-04-13
 
 You went to bed at ~12:42 AM with a goal: ship the reposix project (git-backed FUSE filesystem for autonomous agents, dark-factory pattern) by 8:00 AM. You said "make the demo hit bigger" and "focus less on media for the demo and more on the value of the deliverable."
