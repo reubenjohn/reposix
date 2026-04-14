@@ -423,7 +423,7 @@ Plans:
 - [x] 13-A-core-foundations
 - [ ] 13-B1-confluence-parent-id
 - [ ] 13-B2-fuse-tree-module
-- [ ] 13-B3-frontmatter-parent-id
+- [x] 13-B3-frontmatter-parent-id
 - [ ] 13-C-fuse-wiring
 - [ ] 13-D1-breaking-migration-sweep
 - [ ] 13-D2-docs-and-adr
