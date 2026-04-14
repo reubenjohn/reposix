@@ -380,4 +380,12 @@ Phases 2 and 3 run in parallel. Phase S is conditional.
   6. `bash scripts/demos/06-mount-real-confluence.sh` exits 0 when `ATLASSIAN_API_KEY` is set; skips cleanly (exit 0) when unset.
   7. `docs/decisions/002-confluence-page-mapping.md` exists and documents the field mapping; `.env.example` reflects the renamed var.
 
-**Plans**: TBD (run `/gsd-plan-phase 11` to break down)
+**Plans**: 6 plans (6 waves collapsed into 3 execution waves)
+
+Plans:
+- [ ] 11-A-confluence-crate-core.md — `reposix-confluence` crate core (`ConfluenceReadOnlyBackend` + wiremock unit tests ≥10). Wave 1.
+- [ ] 11-B-cli-dispatch.md — CLI `--backend confluence` dispatch (`reposix list` / `reposix mount` / `reposix-fuse`) + `integration-contract-confluence` CI job. Wave 1.
+- [ ] 11-C-contract-test.md — Contract test parameterized over sim + wiremock-confluence + live-confluence (`#[ignore]`-gated). Wave 2.
+- [ ] 11-D-demos.md — Tier 3B `parity-confluence.sh` + Tier 5 `06-mount-real-confluence.sh`; both skip cleanly with no env. Wave 1.
+- [ ] 11-E-docs-and-env.md — ADR-002, `docs/reference/confluence.md`, README + architecture + demos-index + CHANGELOG `[Unreleased]` + `.env.example` rename. Wave 2.
+- [ ] 11-F-release.md — `MORNING-BRIEF-v0.3.md`, CHANGELOG promotion to `[v0.3.0]`, `scripts/tag-v0.3.0.sh` (gated by human-verify checkpoint). Wave 3.
