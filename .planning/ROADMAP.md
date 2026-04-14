@@ -411,3 +411,21 @@ Phase 12 scope: model (2) above. Explicit non-goals: (1) already shipped via doc
   5. The existing `reposix list --backend github` (compiled-in path) still works — this is additive, not a replacement.
 
 **Plans**: TBD (run `/gsd-plan-phase 12` next milestone)
+
+### Phase 13: Nested mount layout: pages/ + tree/ symlinks for Confluence parentId hierarchy (BREAKING: flat <id>.md moves to pages/<id>.md)
+
+**Goal:** Convert the FUSE mount from a flat `<padded-id>.md` root into a two-view layout — (a) a per-backend writable collection (`pages/` for Confluence, `issues/` for sim+GitHub) containing the canonical real files keyed by stable numeric id, and (b) a synthesized read-only `tree/` overlay of FUSE-emitted symlinks exposing Confluence's native parentId hierarchy at human-readable slug paths. The tree/ overlay dissolves concurrent-edit merge hell because the writable substrate stays on a single stable path regardless of title/reparent churn. Ships OP-1 from HANDOFF.md (the "hero.png" promise) scoped to Confluence-only; GitHub and sim remain flat under their per-backend collection bucket. BREAKING change: callers that read `mount/<id>.md` must now read `mount/pages/<id>.md` (Confluence) or `mount/issues/<id>.md` (sim + GitHub).
+**Requirements**: OP-1 from HANDOFF.md — flat-layout-to-folder-structure promise. Addresses design Q#1 (symlinks not duplicate content), Q#2 (tree is read-only — writes go through the target), Q#4 (sibling-suffix collision resolution, no numeric id leakage into the human-visible slug path).
+**Depends on:** Phase 11 (Confluence adapter). Independent of Phase 12 (connector ABI) — does not block or unblock it.
+**Plans:** 9 plans across 5 waves
+
+Plans:
+- [x] 13-A-core-foundations
+- [ ] 13-B1-confluence-parent-id
+- [ ] 13-B2-fuse-tree-module
+- [ ] 13-B3-frontmatter-parent-id
+- [ ] 13-C-fuse-wiring
+- [ ] 13-D1-breaking-migration-sweep
+- [ ] 13-D2-docs-and-adr
+- [ ] 13-D3-release-scripts-and-demo
+- [ ] 13-E-green-gauntlet
