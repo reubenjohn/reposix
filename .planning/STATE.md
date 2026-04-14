@@ -1,3 +1,19 @@
+---
+gsd_state_version: 1.0
+milestone: v0.4
+milestone_name: target)
+status: verifying
+stopped_at: Completed 11-D-PLAN.md (parity-confluence + 06-mount-real-confluence demos)
+last_updated: "2026-04-14T04:39:21.954Z"
+last_activity: "2026-04-13 05:00 PDT — Phase 4 close-out."
+progress:
+  total_phases: 8
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 6
+  percent: 100
+---
+
 # Project State
 
 ## Project Reference
@@ -27,6 +43,7 @@ Progress: [██████████] 100% (Phases 1, 2, 3, S, 4 all done)
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 0
 - Average duration: —
 - Total execution time: 0.0 hours (of ~7h total budget, ~4.5h budgeted for MVD)
@@ -38,10 +55,12 @@ Progress: [██████████] 100% (Phases 1, 2, 3, S, 4 all done)
 | — | — | — | — |
 
 **Recent Trend:**
+
 - Last 5 plans: none yet
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 11 PD | 15m | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -57,11 +76,16 @@ additions (2026-04-13):
 - Roadmap: MVD = Phases 1–3 read-only + Phase 4 demo; STRETCH (Phase S =
   write path, swarm, FUSE-in-CI) conditional on T+3h gate — per
   threat-model-and-critique §C2.
+
 - Roadmap: Phases 2 and 3 execute in parallel once Phase 1 publishes the core
   contracts; Phase 1 is serial and load-bearing.
+
 - Roadmap: Security guardrails (SG-01, SG-03, SG-04, SG-05, SG-06, SG-07) are
   bundled into Phase 1 rather than retrofit, per the threat-model agent's
   "cheap early, expensive later" finding.
+
+- [Phase 11]: Tier 3B parity-confluence.sh uses sim port 7805 (parity.sh uses 7804) so both demos can run concurrently
+- [Phase 11]: Tier 5 06-mount-real-confluence.sh cats the FIRST listed file (not hardcoded 0001.md) — Confluence page IDs are per-space numerics, not 1-based issue numbers
 
 ### Pending Todos
 
@@ -72,23 +96,27 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 - **T+3h decision gate (03:30 PDT)** — the orchestrator MUST decide STRETCH
   vs read-only at this point. Do not let Phase 1/2/3 slip past 03:30 on the
   theory that Phase S is still possible.
+
 - **FUSE-in-CI is known-yak-shavy** — lives in Phase S for a reason. MVD's
   CI (FC-08) covers fmt/clippy/test/coverage only; the "mounts FUSE in the
   runner" half of FC-08 is STRETCH.
+
 - **Demo recording must fire guardrails on camera (SG-08)** — Phase 4 is
   not complete if the recording is happy-path only.
 
 ## Session Continuity
 
-Last session: 2026-04-13 03:18-03:45 PDT — Phase S executed end-to-end in 27
+Last session: 2026-04-14T04:39:12.797Z
 wall-clock minutes (60+60-min budget; finished with ~93 min in hand on
 the 06:00 PDT hard cut).
-Stopped at: Phase S complete. 3 feat commits shipped: `dc09b4a` (S-A-1
+Stopped at: Completed 11-D-PLAN.md (parity-confluence + 06-mount-real-confluence demos)
 patch/post helpers + If-Match + 5s timeout + sanitize-on-egress),
 `b12036e` (S-A-2 write/flush/release + create/unlink + conditional
 MountOption::RO), `4006f13` (S-B-1+2+3 protocol/import/export/SG-02 cap
+
 + PATCH/POST/DELETE execution). 21 new tests pass (4 fetch + 5 write +
+
 6 lib + 3 protocol + 3 bulk_delete_cap). All three Phase S SCs verified
 empirically against a live sim+FUSE+git push on the dev host.
-Resume file: `.planning/phases/S-stretch-write-path-and-remote-helper/S-DONE.md`
+Resume file: None
 Cursor next: Phase 4 (demo recording).
