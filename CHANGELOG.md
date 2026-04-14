@@ -6,6 +6,56 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+## [v0.6.0] — 2026-04-14
+
+The "Confluence write path" cut. Phase 16 implements `create_issue`, `update_issue`,
+and `delete_or_close` on `ConfluenceBackend` against the Confluence Cloud REST v2 API,
+adds an ADF ↔ Markdown round-trip converter, wires client-side audit logging via the
+existing SG-06 schema, and switches the read path to `atlas_doc_format` with a
+`storage` fallback for pre-ADF pages. FUSE and `git-remote-reposix` agents
+automatically inherit all three write methods via the `IssueBackend` trait dispatch
+introduced in Phase 14. Milestone: v0.6.0 "Write Path + Full Sitemap" (start tag).
+
+### Added
+
+- Confluence write path: `ConfluenceBackend::create_issue`,
+  `update_issue`, and `delete_or_close` now emit real HTTP calls against
+  the Confluence Cloud REST v2 API (POST/PUT/DELETE `/wiki/api/v2/pages`).
+  Covers REQ WRITE-01, WRITE-02, WRITE-03. (Phase 16 Waves B+C.)
+- ADF ↔ Markdown converter (`crates/reposix-confluence/src/adf.rs`) —
+  hand-rolled, no external ADF crate. Supports H1–H6, paragraphs,
+  fenced code blocks with language attribute, inline code, bullet
+  and ordered lists. Unknown node types emit a `[unsupported ADF node
+  type=X]` fallback marker so agents can detect lossy reads with `grep`.
+  Covers REQ WRITE-04. (Phase 16 Wave A.)
+- Client-side audit log on `ConfluenceBackend` via
+  `with_audit(conn)` builder — every write call inserts one row into
+  the `audit_events` table (reuses the SG-06 append-only schema from
+  Phase 1). Best-effort: audit failure never masks a successful write.
+  Locked decision LD-16-03. (Phase 16 Wave C.)
+- `ConfluenceBackend::supports()` now returns `true` for
+  `BackendFeature::Delete` and `BackendFeature::StrongVersioning`
+  (previously only `Hierarchy`).
+
+### Changed
+
+- **BREAKING (pre-1.0):** `reposix_confluence::ConfluenceReadOnlyBackend`
+  renamed to `ConfluenceBackend`. No compatibility alias — callers in
+  `reposix-cli`, `reposix-fuse`, and integration tests were updated in
+  the same commit. User-Agent header updated to `reposix-confluence/0.6`.
+- Confluence read path now requests `?body-format=atlas_doc_format`
+  (was `?body-format=storage`) and runs the ADF→Markdown converter on
+  the result; falls back to `?body-format=storage` when the ADF body
+  is empty (covers Confluence pages that predate ADF).
+
+### Security
+
+- SG-06 now covers the Confluence write path: every write is auditable,
+  audit rows are append-only (triggers from
+  `reposix-core/fixtures/audit.sql`), audit failures log-and-swallow.
+- LD-16-02: all write methods take `Untainted<Issue>` — the trait
+  signature enforces that `sanitize()` was called upstream.
+
 ## [v0.5.0] — 2026-04-14
 
 The "folder structure sitemap" cut. Phase 15 adds a synthesized read-only

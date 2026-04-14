@@ -458,15 +458,18 @@ Plans:
 **Goal:** Turn the mount from a read-only navigator into a writable agent workspace.
 **Phases:** 16–20 | **Requirements:** REQUIREMENTS.md §v0.6.0
 
-### Phase 16: Confluence write path — update_issue create_issue delete_or_close on ConfluenceBackend plus atlas_doc_format to Markdown round-trip
+### Phase 16: Confluence write path — update_issue create_issue delete_or_close on ConfluenceBackend plus atlas_doc_format to Markdown round-trip — SHIPPED 2026-04-14
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Implement `create_issue`, `update_issue`, `delete_or_close` on `ConfluenceBackend`; ADF↔Markdown converter; client-side audit log via SG-06; ADF read path with storage fallback. Closes REQ WRITE-01..04.
+**Requirements**: WRITE-01, WRITE-02, WRITE-03, WRITE-04
 **Depends on:** Phase 15
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans executed
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 16 to break down)
+- [x] 16-A-adf-converter.md
+- [x] 16-B-write-methods.md
+- [x] 16-C-audit-and-integration.md
+- [x] 16-D-docs-and-release.md
 
 ### Phase 17: Swarm confluence-direct mode — add --mode confluence-direct to reposix-swarm using SimDirectWorkload as template
 

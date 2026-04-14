@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.4
-milestone_name: target)
+milestone: v0.6.0
+milestone_name: Write Path + Full Sitemap
 status: executing
-stopped_at: Completed 16-C-audit-and-integration-PLAN.md
-last_updated: "2026-04-14T21:04:41.736Z"
+stopped_at: Completed 16-D-docs-and-release-PLAN.md
+last_updated: "2026-04-14T22:00:00.000Z"
 last_activity: 2026-04-14
 progress:
   total_phases: 11
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 1
-  completed_plans: 22
+  completed_plans: 26
   percent: 100
 ---
 
@@ -28,6 +28,13 @@ progress:
 - **Milestone v0.6.0 started (2026-04-14, session 6):** Planning infrastructure created. MILESTONES.md, REQUIREMENTS.md (v0.6.0), milestone section in ROADMAP.md. Phases 16–20 added under v0.6.0 (Confluence writes, swarm confluence-direct, OP-2 remainder, OP-1 remainder, OP-3).
 - **Milestone v0.7.0 started (2026-04-14, session 6):** Planning infrastructure created. Phases 21–25 added under v0.7.0 (OP-7 hardening, OP-8 benchmarks, OP-9a comments, OP-9b whiteboards/attachments, OP-11 docs reorg).
 - **HANDOFF.md trimmed (2026-04-14, session 6):** OP-1 through OP-9, OP-11 design prose migrated to per-phase CONTEXT.md files. HANDOFF.md now references phases instead of embedding design content.
+- **Phase 16 SHIPPED (2026-04-14, session 7):** 4 waves landed on `main`
+  — Wave A (`48aec91` + `5c3c273` ADF converter module: `markdown_to_storage` + `adf_to_markdown` + 18 unit tests)
+  · Wave B (`59217ba` + `b905cb0` + `51caac6` write methods + struct rename `ConfluenceReadOnlyBackend→ConfluenceBackend` + 13 wiremock tests)
+  · Wave C (`b4f538a` + `34a704c` + `6504713` + `c4614a0` + `3918452` audit log + ADF read path + roundtrip integration test)
+  · Wave D (this commit — CHANGELOG `[v0.6.0]` + version bump `0.5.0→0.6.0` + `scripts/tag-v0.6.0.sh` + `16-SUMMARY.md`).
+  Closes REQ WRITE-01..04 for the Confluence backend. Workspace test count 317 (baseline 278 + 39 new). Clippy `-D warnings` clean. v0.6.0 milestone tag pending user `scripts/tag-v0.6.0.sh` execution.
+  Details: `.planning/phases/16-confluence-write-path-update-issue-create-issue-delete-or-cl/16-SUMMARY.md`.
 
 ## Project Reference
 
@@ -40,19 +47,18 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 
 ## Current Position
 
-Phase: 16 (Confluence write path) — EXECUTING
-Plan: 4 of 4
-Cursor: **v0.5.0 shipped (tag pushed). Milestones v0.6.0 + v0.7.0 established. Phases 16–25
-created with CONTEXT.md stubs. Design context migrated from HANDOFF.md into phase CONTEXT.md
-files. Phase 16 (Confluence write path) is the recommended first execution target.**
-Status: Ready to execute
-Last activity: 2026-04-14
-added, CONTEXT.md stubs written, HANDOFF.md trimmed.
+Phase: 16 — SHIPPED. Phase 17 (swarm confluence-direct) is next.
+Plan: 4 of 4 (all waves complete)
+Cursor: **v0.6.0 in-flight (tag pending user gate). Phase 16 Confluence write path closed.
+Phase 17 (swarm confluence-direct — add `--mode confluence-direct` to `reposix-swarm`) is the
+recommended next execution target.**
+Status: executing
+Last activity: 2026-04-14 — Phase 16 Confluence write path shipped
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
 
-Progress: [----------] 0% (milestone v0.6.0 not started; 10 phases queued across v0.6.0 + v0.7.0)
+Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20 queued)
 
 ## Performance Metrics
 
@@ -142,29 +148,18 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-14T21:04:36.640Z
-Stopped at: Completed 16-C-audit-and-integration-PLAN.md
-15 SHIPPED; v0.5.0 ready to tag at user gate.
-Wave-level commit trail on `main` (Phase 15):
-`6a2e256` (15-A inode.rs: reserve BUCKET_INDEX_INO=5 + doc + test
-narrow), `a94e970` (15-A fs.rs: render_bucket_index + BucketIndex inode
-dispatch + 4 new unit tests), `3309d4c` (15-A
-scripts/dev/test-bucket-index.sh live proof), `c3d2901` (15-B
-CHANGELOG [v0.5.0] + workspace version bump 0.4.1 -> 0.5.0 + README
-mention), `f43f0e5` (15-B 15-SUMMARY.md + STATE.md cursor), `ceec233`
-(15-B scripts/tag-v0.5.0.sh).
-278 workspace tests pass (+4 vs Phase 14 baseline of 274). Clippy
-`-D warnings` clean, `cargo fmt --all --check` clean. Cargo.toml
-workspace version bumped `0.4.1 → 0.5.0`; Cargo.lock regenerated via
-`cargo check --workspace --offline`.
+Last session: 2026-04-14T22:00:00.000Z
+Stopped at: Completed 16-D-docs-and-release-PLAN.md — Phase 16 SHIPPED; v0.6.0 ready to tag at user gate.
+Wave-level commit trail on `main` (Phase 16):
+Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
+Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).
+Wave C: `b4f538a` (rusqlite+sha2 deps), `34a704c` (audit field + with_audit + wire), `6504713` (ADF read path + fallback), `c4614a0` (6 audit unit tests), `3918452` (roundtrip.rs integration test).
+Wave D: (this commit — CHANGELOG [v0.6.0] + version bump 0.5.0→0.6.0 + scripts/tag-v0.6.0.sh + 16-SUMMARY.md).
+317 workspace tests pass (+39 vs Phase 15 baseline of 278). Clippy `-D warnings` clean, `cargo fmt --all --check` clean.
+Cargo.toml workspace version bumped `0.5.0 → 0.6.0`; Cargo.lock regenerated via `cargo check --workspace`.
 Resume file: None
-Cursor next: **v0.5.0 tag push** (orchestrator gate — run `bash
-scripts/green-gauntlet.sh --full`, then `bash scripts/tag-v0.5.0.sh`).
-After tag: pick the next session-5 stretch goal — Cluster C (swarm
-confluence-direct), tree-level `_INDEX.md` recursive synthesis
-(remaining half of OP-2), OP-3 (`reposix refresh` cache-refresh
-subcommand), OP-7 SSRF + contention probes, or Cluster A (Confluence
-writes — unblocked by Phase 14).
+Cursor next: **v0.6.0 tag push** (orchestrator gate — run `bash scripts/green-gauntlet.sh --full`, then `bash scripts/tag-v0.6.0.sh`).
+After tag: Phase 17 (swarm confluence-direct — add `--mode confluence-direct` to `reposix-swarm`) is the recommended next execution target.
 
 ### Previous session (Phase 14, for reference)
 
