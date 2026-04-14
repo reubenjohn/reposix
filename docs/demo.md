@@ -77,18 +77,23 @@ mkdir /tmp/demo-mnt
 target/release/reposix-fuse /tmp/demo-mnt \
     --backend http://127.0.0.1:7878 --project demo &
 ls /tmp/demo-mnt | sort
-# 0001.md  0002.md  0003.md  0004.md  0005.md  0006.md
+# .gitignore  issues/
+ls /tmp/demo-mnt/issues | sort
+# 00000000001.md  00000000002.md  00000000003.md  00000000004.md  00000000005.md  00000000006.md
 ```
 
-The kernel sees a new VFS at `/tmp/demo-mnt`. Filenames are `<id>.md`
-zero-padded to 4 digits per SG-04. The FUSE daemon enforces this on every
-path-bearing op — `ls`, `cat`, `read`, `write`, `create`, `unlink`.
+The kernel sees a new VFS at `/tmp/demo-mnt`. Phase-13 layout: the root
+contains a synthesized `.gitignore` (content `/tree/\n`) and a per-backend
+collection bucket (`issues/` for sim + GitHub; `pages/` for Confluence).
+Real files live under the bucket at 11-digit zero-padded filenames
+(`<padded-id>.md`), enforced per SG-04. The FUSE daemon applies this on
+every path-bearing op — `ls`, `cat`, `read`, `write`, `create`, `unlink`.
 
 ### 5/9 — Browse with shell tools
 
 ```bash
-cat /tmp/demo-mnt/0001.md
-grep -ril database /tmp/demo-mnt
+cat /tmp/demo-mnt/issues/00000000001.md
+grep -ril database /tmp/demo-mnt/issues
 ```
 
 Each file is YAML-frontmatter Markdown:
@@ -111,22 +116,23 @@ concurrent requests.
 ...
 ```
 
-`grep -ril database /tmp/demo-mnt` returns `/tmp/demo-mnt/0001.md`.
-Agent-style read paths work end-to-end.
+`grep -ril database /tmp/demo-mnt/issues` returns
+`/tmp/demo-mnt/issues/00000000001.md`. Agent-style read paths work
+end-to-end.
 
 ### 6/9 — Edit through FUSE
 
 ```bash
-NEW="$(sed 's/^status: open$/status: in_progress/' /tmp/demo-mnt/0001.md)"
-printf '%s\n' "$NEW" > /tmp/demo-mnt/0001.md
+NEW="$(sed 's/^status: open$/status: in_progress/' /tmp/demo-mnt/issues/00000000001.md)"
+printf '%s\n' "$NEW" > /tmp/demo-mnt/issues/00000000001.md
 curl -s http://127.0.0.1:7878/projects/demo/issues/1 \
     | jq '{id, status, version, body_len: (.body | length)}'
 # {"id": 1, "status": "in_progress", "version": 2, "body_len": 563}
 ```
 
 Note we do NOT use `sed -i`: the FUSE FS only accepts filenames matching
-`<id>.md`, and `sed -i` creates a temp file like `sed.XYZ`, which gets
-`EINVAL`. We instead read, transform in memory, and write back via a
+`<padded-id>.md`, and `sed -i` creates a temp file like `sed.XYZ`, which
+gets `EINVAL`. We instead read, transform in memory, and write back via a
 single `open(O_TRUNC) + write`.
 
 The server's `version` bumped from 1 → 2. Crucially, the `version: 999`
@@ -251,7 +257,7 @@ Three lines in the recording are the "guardrails on camera" proof:
 - `SG-02 fired as expected` (bulk-delete cap)
 - `WARN reposix_fuse::fs: readdir fetch failed error=origin not allowlisted: ...`
   (allowlist refusal)
-- The step-6 `printf > 0001.md` + `curl ... | jq` pair, which proves the
+- The step-6 `printf > issues/00000000001.md` + `curl ... | jq` pair, which proves the
   server's authoritative `version: 2` survives a client write whose body
   contained `version: 999` — the `Tainted<T> → sanitize()` egress filter
   strips server-controlled fields before PATCH.

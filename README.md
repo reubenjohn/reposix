@@ -118,7 +118,7 @@ fusermount3 -u /tmp/reposix-gh-mnt
 
 | Demo                                                                                | Audience  | What it proves                                                                                                                              | Recording |
 |-------------------------------------------------------------------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------|-----------|
-| [`05-mount-real-github.sh`](scripts/demos/05-mount-real-github.sh)                  | developer | `reposix mount --backend github` exposes `octocat/Hello-World` issues as Markdown files end-to-end; `cat 0001.md` renders real GitHub data. | —         |
+| [`05-mount-real-github.sh`](scripts/demos/05-mount-real-github.sh)                  | developer | `reposix mount --backend github` exposes `octocat/Hello-World` issues as Markdown files end-to-end; `cat issues/00000000001.md` renders real GitHub data. | —         |
 | [`06-mount-real-confluence.sh`](scripts/demos/06-mount-real-confluence.sh)          | developer | `reposix mount --backend confluence` exposes a real Atlassian space; `cat` on the first page renders the real XHTML body + frontmatter. Requires Atlassian creds (see [`.env.example`](.env.example) and [`docs/reference/confluence.md`](docs/reference/confluence.md)). | —         |
 
 **Not in smoke.** `05-mount-real-github.sh` requires `gh auth token`; `06-mount-real-confluence.sh` requires `ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT`, and `REPOSIX_CONFLUENCE_SPACE`. Both skip cleanly with `SKIP:` if their env is absent.

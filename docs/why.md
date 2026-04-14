@@ -30,7 +30,7 @@ Every turn costs context window. Every turn the agent learns the schema of a too
 ## reposix turns the same workflow into two sentences of shell
 
 ```bash
-sed -i 's/^status: open$/status: in_progress/' /mnt/reposix/0001.md
+sed -i 's/^status: open$/status: in_progress/' /mnt/reposix/issues/00000000001.md
 git commit -am "claim issue 1" && git push
 ```
 
@@ -95,7 +95,7 @@ Every modern foundation model has been trained on:
 - Countless Stack Overflow answers that use `sed`, `awk`, `jq`, `find`.
 - Every commit message in every public Git repo of any size.
 
-When you hand an agent a `/mnt/reposix/0001.md` file, you are not asking it to learn anything new — you are asking it to use a verb it already knows. The dividend compounds: smaller context, faster inference, cheaper tokens, fewer hallucinations, and every Unix tool the agent already has mastery over becomes a legitimate weapon in its toolbox (including the ones you haven't thought of yet).
+When you hand an agent a `/mnt/reposix/issues/00000000001.md` file, you are not asking it to learn anything new — you are asking it to use a verb it already knows. The dividend compounds: smaller context, faster inference, cheaper tokens, fewer hallucinations, and every Unix tool the agent already has mastery over becomes a legitimate weapon in its toolbox (including the ones you haven't thought of yet).
 
 ## The Git dividend
 
@@ -103,18 +103,18 @@ On top of POSIX, reposix gets **conflict resolution for free** via Git:
 
 ```mermaid
 flowchart LR
-  A[Agent edits<br/>issue 0001.md] -->|git commit + push| B[git-remote-reposix]
+  A[Agent edits<br/>issue 00000000001.md] -->|git commit + push| B[git-remote-reposix]
   B -->|PATCH If-Match| C{API}
   C -->|409 stale| B
   B -->|fetch remote state| D[Local merge]
-  D -->|conflict markers<br/>in 0001.md| A
+  D -->|conflict markers<br/>in 00000000001.md| A
   A -->|resolves via sed| A
   style A fill:#6a1b9a,stroke:#fff,color:#fff
   style B fill:#00897b,stroke:#fff,color:#fff
   style D fill:#ef6c00,stroke:#fff,color:#fff
 ```
 
-When two agents race on the same issue, the losing push doesn't get a JSON `{"error":"version_mismatch"}` it has to interpret. It gets a real `<<<<<<< HEAD` marker inside `0001.md`, and the resolution is — again — something it has seen tens of thousands of times in its training data.
+When two agents race on the same issue, the losing push doesn't get a JSON `{"error":"version_mismatch"}` it has to interpret. It gets a real `<<<<<<< HEAD` marker inside `00000000001.md`, and the resolution is — again — something it has seen tens of thousands of times in its training data.
 
 See the [architecture page](architecture.md#optimistic-concurrency-as-git-merge) for the implementation detail.
 

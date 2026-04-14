@@ -79,7 +79,7 @@ the same SG-01 allowlist / SG-05 tainted-ingress discipline as
 
 `reposix-core` is the seam. Every other crate depends on it; it depends on nothing internal. Ships: `Issue`, `IssueId`, `IssueStatus`, `ProjectSlug`, `Project`, `RemoteSpec`, `Tainted<T>`, `Untainted<T>`, `HttpClient`, `validate_issue_filename`, `frontmatter::{render, parse}`, the audit-log schema fixture, the `sanitize` function.
 
-## Read path: cat /mnt/reposix/0001.md
+## Read path: cat /mnt/reposix/issues/00000000001.md
 
 ```mermaid
 sequenceDiagram
@@ -89,9 +89,9 @@ sequenceDiagram
   participant F as reposix-fuse
   participant S as reposix-sim
   participant D as SQLite WAL
-  A->>K: read("/mnt/reposix/0001.md")
+  A->>K: read("/mnt/reposix/issues/00000000001.md")
   K->>F: FUSE_READ(ino)
-  Note over F: validate_issue_filename("0001.md") — SG-04
+  Note over F: validate_issue_filename("00000000001.md") — SG-04
   F->>F: HttpClient::request_with_headers<br/>5s timeout (SG-07)
   F->>S: GET /projects/demo/issues/1<br/>X-Reposix-Agent: reposix-fuse-{pid}
   S->>D: INSERT audit_events (ts,agent,method,path,...)
@@ -109,7 +109,7 @@ Key points:
 - The audit insert is an outermost axum middleware layer — every request is recorded, including rate-limited ones.
 - `frontmatter::render` is the same function the `git-remote-reposix` helper uses for fast-import blobs, guaranteeing deterministic SHAs across read/push.
 
-## Write path: sed -i 's/status: open/status: done/' /mnt/reposix/0001.md
+## Write path: sed -i 's/status: open/status: done/' /mnt/reposix/issues/00000000001.md
 
 ```mermaid
 sequenceDiagram
@@ -118,7 +118,7 @@ sequenceDiagram
   participant K as Kernel
   participant F as reposix-fuse
   participant S as reposix-sim
-  A->>K: open(0001.md, O_WRONLY)
+  A->>K: open(issues/00000000001.md, O_WRONLY)
   K->>F: OPEN, GETATTR
   A->>K: write(...)
   K->>F: WRITE(ino, offset, bytes)
@@ -172,15 +172,15 @@ This is the most load-bearing design choice in reposix — and it falls out of t
 
 ```mermaid
 flowchart TB
-  A1["Agent A edits 0001.md<br/>status: open → in_progress"]
+  A1["Agent A edits 00000000001.md<br/>status: open → in_progress"]
   A2["Agent A: git commit + push"]
   A3["Server version 1 → 2"]
-  B1["Agent B edits 0001.md<br/>status: open → done"]
+  B1["Agent B edits 00000000001.md<br/>status: open → done"]
   B2["Agent B: git commit + push"]
   B3["git-remote-reposix: PATCH If-Match: \"1\""]
   B4["sim returns 409<br/>current version: 2"]
   B5["git-remote-reposix: git pull"]
-  B6["Local merge produces &lt;&lt;&lt;&lt;&lt;&lt;&lt; markers<br/>inside 0001.md"]
+  B6["Local merge produces &lt;&lt;&lt;&lt;&lt;&lt;&lt; markers<br/>inside 00000000001.md"]
   B7["Agent B resolves via sed<br/>git commit + push"]
   A1 --> A2 --> A3
   B1 --> B2 --> B3 --> B4 --> B5 --> B6 --> B7

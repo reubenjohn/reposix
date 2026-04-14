@@ -144,4 +144,4 @@ curl -s -X PATCH http://127.0.0.1:7878/projects/demo/issues/1 \
 # → 409 {"error":"version_mismatch","current":3,"sent":2}
 ```
 
-At the git layer, this 409 becomes a real merge conflict inside `0001.md` with `<<<<<<< HEAD` markers — the agent resolves it via `sed` and retries the push.
+At the git layer, this 409 becomes a real merge conflict inside `0001.md` (the flat filename in the `git-remote-reposix` fast-import tree — still 4-digit padded, distinct from the FUSE mount's 11-digit `issues/<padded>.md` form) with `<<<<<<< HEAD` markers — the agent resolves it via `sed` and retries the push.
