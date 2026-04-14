@@ -21,7 +21,7 @@ use std::sync::Arc;
 
 use anyhow::{bail, Result};
 use clap::{Parser, ValueEnum};
-use reposix_confluence::{ConfluenceCreds, ConfluenceBackend};
+use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::IssueBackend;
 use reposix_fuse::{Mount, MountConfig};

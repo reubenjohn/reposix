@@ -33,7 +33,7 @@
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use reposix_confluence::{ConfluenceCreds, ConfluenceBackend};
+use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::IssueBackend;
 use reposix_fuse::{Mount, MountConfig};
 use serde_json::{json, Value};

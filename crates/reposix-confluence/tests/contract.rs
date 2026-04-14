@@ -38,7 +38,7 @@
 
 use std::path::PathBuf;
 
-use reposix_confluence::{ConfluenceCreds, ConfluenceBackend};
+use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::backend::IssueBackend;
 use reposix_core::{IssueId, IssueStatus};
@@ -303,8 +303,7 @@ async fn contract_confluence_wiremock() {
         email: "ci@example.com".into(),
         api_token: "dummy".into(),
     };
-    let backend =
-        ConfluenceBackend::new_with_base_url(creds, server.uri()).expect("backend");
+    let backend = ConfluenceBackend::new_with_base_url(creds, server.uri()).expect("backend");
 
     assert_contract(&backend, "REPOSIX", IssueId(1)).await;
 }
@@ -390,8 +389,7 @@ async fn adversarial_links_base_does_not_trigger_outbound_call() {
         email: "ci@example.com".into(),
         api_token: "dummy".into(),
     };
-    let backend =
-        ConfluenceBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
+    let backend = ConfluenceBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
 
     let issues = backend
         .list_issues("REPOSIX")
@@ -490,8 +488,7 @@ async fn adversarial_webui_link_does_not_trigger_outbound_call() {
         email: "ci@example.com".into(),
         api_token: "dummy".into(),
     };
-    let backend =
-        ConfluenceBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
+    let backend = ConfluenceBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
 
     let issues = backend
         .list_issues("REPOSIX")
@@ -599,8 +596,7 @@ async fn adversarial_host_in_arbitrary_string_field_is_ignored() {
         email: "ci@example.com".into(),
         api_token: "dummy".into(),
     };
-    let backend =
-        ConfluenceBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
+    let backend = ConfluenceBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
 
     let issues = backend
         .list_issues("REPOSIX")

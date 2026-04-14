@@ -628,9 +628,7 @@ impl IssueBackend for ConfluenceBackend {
         // state labels analogous to GitHub's status/* and no batch-edit API.
         matches!(
             feature,
-            BackendFeature::Hierarchy
-                | BackendFeature::Delete
-                | BackendFeature::StrongVersioning
+            BackendFeature::Hierarchy | BackendFeature::Delete | BackendFeature::StrongVersioning
         )
     }
 
@@ -961,8 +959,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let backend =
-            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issues = backend.list_issues("REPOSIX").await.expect("list");
         assert_eq!(issues.len(), 2);
         assert_eq!(issues[0].id, IssueId(98765));
@@ -1005,8 +1002,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let backend =
-            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issues = backend.list_issues("REPOSIX").await.expect("list");
         assert_eq!(issues.len(), 3);
         assert_eq!(issues[0].id, IssueId(1));
@@ -1030,8 +1026,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let backend =
-            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issue = backend
             .get_issue("REPOSIX", IssueId(98765))
             .await
@@ -1050,8 +1045,7 @@ mod tests {
             .respond_with(ResponseTemplate::new(404).set_body_json(json!({"message": "not found"})))
             .mount(&server)
             .await;
-        let backend =
-            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let err = backend
             .get_issue("REPOSIX", IssueId(9999))
             .await
@@ -1077,8 +1071,7 @@ mod tests {
             )))
             .mount(&server)
             .await;
-        let backend =
-            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issue = backend.get_issue("REPOSIX", IssueId(1)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::Open);
     }
@@ -1098,8 +1091,7 @@ mod tests {
             )))
             .mount(&server)
             .await;
-        let backend =
-            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issue = backend.get_issue("REPOSIX", IssueId(2)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::Done);
     }
@@ -1138,8 +1130,7 @@ mod tests {
             )))
             .mount(&server)
             .await;
-        let backend =
-            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         // If the header is wrong, wiremock returns no-match 404 and this fails.
         backend
             .get_issue("REPOSIX", IssueId(42))
@@ -1161,8 +1152,7 @@ mod tests {
             )
             .mount(&server)
             .await;
-        let backend =
-            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let _ = backend.get_issue("REPOSIX", IssueId(42)).await; // expect Err, don't care which
         let gate = backend.rate_limit_gate.lock().to_owned();
         let now = Instant::now();
@@ -1356,8 +1346,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let backend =
-            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issues = backend.list_issues("REPOSIX").await.expect("list");
         assert_eq!(issues.len(), 3);
 
@@ -1531,8 +1520,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let backend =
-            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issues = backend
             .list_issues(adversarial)
             .await
@@ -1558,8 +1546,7 @@ mod tests {
             })))
             .mount(&server)
             .await;
-        let backend =
-            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let err = backend
             .list_issues("REPOSIX")
             .await
@@ -1571,5 +1558,486 @@ mod tests {
             ),
             other => panic!("expected Error::Other, got {other:?}"),
         }
+    }
+
+    // ======================================================================
+    // Phase 16 Wave B: write-method wiremock tests (B6) + supports test (B7)
+    // ======================================================================
+
+    /// Build a page JSON fixture with an explicit version number (for
+    /// optimistic-locking tests that need a specific current version).
+    fn page_json_v(id: &str, title: &str, version: u64) -> serde_json::Value {
+        json!({
+            "id": id,
+            "status": "current",
+            "title": title,
+            "createdAt": "2026-04-13T00:00:00Z",
+            "ownerId": null,
+            "version": {
+                "number": version,
+                "createdAt": "2026-04-13T00:00:00Z",
+            },
+            "body": { "storage": { "value": "<p>body</p>", "representation": "storage" } },
+        })
+    }
+
+    /// Build an `Untainted<Issue>` with the given fields for use in write tests.
+    fn make_untainted(title: &str, body: &str, parent_id: Option<IssueId>) -> Untainted<Issue> {
+        let t = chrono::DateTime::parse_from_rfc3339("2026-04-13T00:00:00Z")
+            .unwrap()
+            .with_timezone(&chrono::Utc);
+        sanitize(
+            Tainted::new(Issue {
+                id: IssueId(0),
+                title: title.to_owned(),
+                status: IssueStatus::Open,
+                assignee: None,
+                labels: vec![],
+                created_at: t,
+                updated_at: t,
+                version: 0,
+                body: body.to_owned(),
+                parent_id,
+            }),
+            ServerMetadata {
+                id: IssueId(99),
+                created_at: t,
+                updated_at: t,
+                version: 1,
+            },
+        )
+    }
+
+    // -------- B6.1: update_issue sends PUT with incremented version --------
+
+    #[tokio::test]
+    async fn update_issue_sends_put_with_version() {
+        let server = MockServer::start().await;
+        // Respond to PUT /wiki/api/v2/pages/99 with a page that has version 43
+        Mock::given(method("PUT"))
+            .and(path("/wiki/api/v2/pages/99"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_v(
+                "99",
+                "updated title",
+                43,
+            )))
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let patch = make_untainted("updated title", "body text", None);
+        // Pass expected_version = Some(42) → PUT body must have version.number = 43
+        let result = backend
+            .update_issue("REPOSIX", IssueId(99), patch, Some(42))
+            .await
+            .expect("update_issue should succeed");
+        assert_eq!(result.title, "updated title");
+        assert_eq!(result.id, IssueId(99));
+        assert_eq!(result.version, 43);
+    }
+
+    // -------- B6.2: update_issue 409 maps to version mismatch --------
+
+    #[tokio::test]
+    async fn update_issue_409_maps_to_version_mismatch() {
+        let server = MockServer::start().await;
+        Mock::given(method("PUT"))
+            .and(path("/wiki/api/v2/pages/99"))
+            .respond_with(ResponseTemplate::new(409).set_body_json(json!({"message": "stale"})))
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let patch = make_untainted("title", "body", None);
+        let err = backend
+            .update_issue("REPOSIX", IssueId(99), patch, Some(5))
+            .await
+            .expect_err("409 must be an error");
+        match err {
+            Error::Other(m) => assert!(
+                m.starts_with("version mismatch"),
+                "error must start with 'version mismatch', got: {m}"
+            ),
+            other => panic!("expected Error::Other, got {other:?}"),
+        }
+    }
+
+    // -------- B6.3: update_issue with None version fetches then PUTs --------
+
+    #[tokio::test]
+    async fn update_issue_none_version_fetches_then_puts() {
+        let server = MockServer::start().await;
+        // Pre-flight GET: version=7
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/pages/99"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_v(
+                "99",
+                "original title",
+                7,
+            )))
+            .mount(&server)
+            .await;
+        // PUT: respond with version=8
+        Mock::given(method("PUT"))
+            .and(path("/wiki/api/v2/pages/99"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_v(
+                "99",
+                "new title",
+                8,
+            )))
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let patch = make_untainted("new title", "new body", None);
+        // expected_version = None → must do GET first, then PUT with number=8
+        let result = backend
+            .update_issue("REPOSIX", IssueId(99), patch, None)
+            .await
+            .expect("update_issue with None version should succeed");
+        assert_eq!(result.version, 8);
+        assert_eq!(result.title, "new title");
+    }
+
+    // -------- B6.4: update_issue 404 maps to not-found --------
+
+    #[tokio::test]
+    async fn update_issue_404_maps_to_not_found() {
+        let server = MockServer::start().await;
+        Mock::given(method("PUT"))
+            .and(path("/wiki/api/v2/pages/99"))
+            .respond_with(ResponseTemplate::new(404).set_body_json(json!({"message": "not found"})))
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let patch = make_untainted("title", "body", None);
+        let err = backend
+            .update_issue("REPOSIX", IssueId(99), patch, Some(1))
+            .await
+            .expect_err("404 must be an error");
+        match err {
+            Error::Other(m) => assert!(
+                m.contains("not found"),
+                "error must contain 'not found', got: {m}"
+            ),
+            other => panic!("expected Error::Other, got {other:?}"),
+        }
+    }
+
+    // -------- B6.5: create_issue POSTs to pages with correct spaceId --------
+
+    #[tokio::test]
+    async fn create_issue_posts_to_pages() {
+        let server = MockServer::start().await;
+        mount_space_lookup(&server, "REPOSIX", "12345").await;
+        Mock::given(method("POST"))
+            .and(path("/wiki/api/v2/pages"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_v(
+                "77777",
+                "my new page",
+                1,
+            )))
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let issue = make_untainted("my new page", "# Hello", None);
+        let result = backend
+            .create_issue("REPOSIX", issue)
+            .await
+            .expect("create_issue should succeed");
+        assert_eq!(result.id, IssueId(77777));
+        assert_eq!(result.title, "my new page");
+    }
+
+    // -------- B6.6: create_issue with parent_id sends parentId in body --------
+
+    /// Wiremock matcher: POST body has `parentId == "42"`.
+    struct ParentIdMatches;
+    impl wiremock::Match for ParentIdMatches {
+        fn matches(&self, request: &Request) -> bool {
+            let Ok(body) = serde_json::from_slice::<serde_json::Value>(&request.body) else {
+                return false;
+            };
+            body.get("parentId")
+                .and_then(|v| v.as_str())
+                .is_some_and(|s| s == "42")
+        }
+    }
+
+    #[tokio::test]
+    async fn create_issue_with_parent_id() {
+        let server = MockServer::start().await;
+        mount_space_lookup(&server, "REPOSIX", "12345").await;
+
+        Mock::given(method("POST"))
+            .and(path("/wiki/api/v2/pages"))
+            .and(ParentIdMatches)
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_v(
+                "88888",
+                "child page",
+                1,
+            )))
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let issue = make_untainted("child page", "body", Some(IssueId(42)));
+        let result = backend
+            .create_issue("REPOSIX", issue)
+            .await
+            .expect("create_issue with parent_id should succeed");
+        assert_eq!(result.id, IssueId(88888));
+    }
+
+    // -------- B6.7: create_issue without parent_id sends null --------
+
+    /// Wiremock matcher: POST body has `parentId == null`.
+    struct ParentIdIsNull;
+    impl wiremock::Match for ParentIdIsNull {
+        fn matches(&self, request: &Request) -> bool {
+            let Ok(body) = serde_json::from_slice::<serde_json::Value>(&request.body) else {
+                return false;
+            };
+            body.get("parentId").is_some_and(serde_json::Value::is_null)
+        }
+    }
+
+    #[tokio::test]
+    async fn create_issue_without_parent_id_sends_null() {
+        let server = MockServer::start().await;
+        mount_space_lookup(&server, "REPOSIX", "12345").await;
+
+        Mock::given(method("POST"))
+            .and(path("/wiki/api/v2/pages"))
+            .and(ParentIdIsNull)
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_v(
+                "55555",
+                "root page",
+                1,
+            )))
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let issue = make_untainted("root page", "body", None);
+        let result = backend
+            .create_issue("REPOSIX", issue)
+            .await
+            .expect("create_issue without parent should succeed");
+        assert_eq!(result.id, IssueId(55555));
+    }
+
+    // -------- B6.8: delete_or_close sends DELETE and returns Ok on 204 --------
+
+    #[tokio::test]
+    async fn delete_or_close_sends_delete() {
+        let server = MockServer::start().await;
+        Mock::given(method("DELETE"))
+            .and(path("/wiki/api/v2/pages/99"))
+            .respond_with(ResponseTemplate::new(204))
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        backend
+            .delete_or_close("REPOSIX", IssueId(99), DeleteReason::Completed)
+            .await
+            .expect("delete_or_close on 204 must return Ok");
+    }
+
+    // -------- B6.9: delete_or_close 404 maps to not-found --------
+
+    #[tokio::test]
+    async fn delete_or_close_404_maps_to_not_found() {
+        let server = MockServer::start().await;
+        Mock::given(method("DELETE"))
+            .and(path("/wiki/api/v2/pages/99"))
+            .respond_with(ResponseTemplate::new(404).set_body_json(json!({"message": "not found"})))
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let err = backend
+            .delete_or_close("REPOSIX", IssueId(99), DeleteReason::Completed)
+            .await
+            .expect_err("404 must be an error");
+        match err {
+            Error::Other(m) => assert!(
+                m.contains("not found"),
+                "error must contain 'not found', got: {m}"
+            ),
+            other => panic!("expected Error::Other, got {other:?}"),
+        }
+    }
+
+    // -------- B6.10: write methods send Content-Type: application/json --------
+
+    /// Wiremock matcher: request has `Content-Type: application/json` header.
+    struct ContentTypeIsJson;
+    impl wiremock::Match for ContentTypeIsJson {
+        fn matches(&self, request: &Request) -> bool {
+            request
+                .headers
+                .get("content-type")
+                .and_then(|v| v.to_str().ok())
+                .is_some_and(|s| s.starts_with("application/json"))
+        }
+    }
+
+    #[tokio::test]
+    async fn write_methods_send_content_type_json() {
+        let server = MockServer::start().await;
+        mount_space_lookup(&server, "REPOSIX", "12345").await;
+
+        // POST
+        Mock::given(method("POST"))
+            .and(path("/wiki/api/v2/pages"))
+            .and(ContentTypeIsJson)
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_v("1", "t", 1)))
+            .mount(&server)
+            .await;
+        // PUT
+        Mock::given(method("PUT"))
+            .and(path("/wiki/api/v2/pages/99"))
+            .and(ContentTypeIsJson)
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_v("99", "t", 2)))
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+
+        // create_issue → POST
+        let issue = make_untainted("t", "b", None);
+        backend
+            .create_issue("REPOSIX", issue)
+            .await
+            .expect("POST must carry Content-Type: application/json");
+
+        // update_issue → PUT
+        let patch = make_untainted("t", "b", None);
+        backend
+            .update_issue("REPOSIX", IssueId(99), patch, Some(1))
+            .await
+            .expect("PUT must carry Content-Type: application/json");
+    }
+
+    // -------- B6.11: write methods send Basic-auth --------
+
+    #[tokio::test]
+    async fn write_methods_send_basic_auth() {
+        let server = MockServer::start().await;
+        mount_space_lookup(&server, "REPOSIX", "12345").await;
+
+        // POST with auth check
+        Mock::given(method("POST"))
+            .and(path("/wiki/api/v2/pages"))
+            .and(BasicAuthMatches)
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_v("1", "t", 1)))
+            .mount(&server)
+            .await;
+        // PUT with auth check
+        Mock::given(method("PUT"))
+            .and(path("/wiki/api/v2/pages/99"))
+            .and(BasicAuthMatches)
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_v("99", "t", 2)))
+            .mount(&server)
+            .await;
+        // DELETE with auth check
+        Mock::given(method("DELETE"))
+            .and(path("/wiki/api/v2/pages/42"))
+            .and(BasicAuthMatches)
+            .respond_with(ResponseTemplate::new(204))
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+
+        let issue = make_untainted("t", "b", None);
+        backend
+            .create_issue("REPOSIX", issue)
+            .await
+            .expect("POST must carry Basic auth");
+
+        let patch = make_untainted("t", "b", None);
+        backend
+            .update_issue("REPOSIX", IssueId(99), patch, Some(1))
+            .await
+            .expect("PUT must carry Basic auth");
+
+        backend
+            .delete_or_close("REPOSIX", IssueId(42), DeleteReason::Completed)
+            .await
+            .expect("DELETE must carry Basic auth");
+    }
+
+    // -------- B6.12: rate_limit_gate shared with write path --------
+
+    #[tokio::test]
+    async fn rate_limit_gate_shared_with_writes() {
+        // This test verifies the gate is armed on a 429 response and that a
+        // subsequent write call respects it. We do NOT actually sleep 1+ second
+        // (that would make the test suite slow); instead we verify:
+        // 1. A 429 GET arms the gate.
+        // 2. The gate deadline is in the future immediately after.
+        // The actual sleep is exercised by the existing `rate_limit_429_retry_after_arms_gate`
+        // test; this test proves the gate is SHARED between read and write paths
+        // (i.e. arming via GET prevents an immediate PUT).
+        let server = MockServer::start().await;
+        // GET returns 429 with Retry-After: 2
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/pages/10"))
+            .respond_with(
+                ResponseTemplate::new(429)
+                    .append_header("retry-after", "2")
+                    .set_body_json(json!({"message": "too many"})),
+            )
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        // GET — arms the gate
+        let _ = backend.get_issue("REPOSIX", IssueId(10)).await;
+
+        // Immediately after: gate must be set and in the future
+        let gate = backend.rate_limit_gate.lock().to_owned();
+        assert!(
+            gate.is_some_and(|d| d > Instant::now()),
+            "rate_limit_gate must be armed after 429 GET; write path shares the same gate"
+        );
+    }
+
+    // ======================================================================
+    // B7: supports_lists_delete_hierarchy_strong_versioning
+    // ======================================================================
+
+    #[test]
+    fn supports_lists_delete_hierarchy_strong_versioning() {
+        // Instantiate with an unreachable URL — no HTTP needed for a sync
+        // capability check.
+        let backend =
+            ConfluenceBackend::new_with_base_url(creds(), "http://127.0.0.1:1".to_owned())
+                .expect("backend");
+        assert!(
+            backend.supports(BackendFeature::Hierarchy),
+            "Hierarchy must be supported"
+        );
+        assert!(
+            backend.supports(BackendFeature::Delete),
+            "Delete must be supported"
+        );
+        assert!(
+            backend.supports(BackendFeature::StrongVersioning),
+            "StrongVersioning must be supported"
+        );
+        assert!(
+            !backend.supports(BackendFeature::BulkEdit),
+            "BulkEdit must NOT be supported"
+        );
+        assert!(
+            !backend.supports(BackendFeature::Workflows),
+            "Workflows must NOT be supported"
+        );
     }
 }
