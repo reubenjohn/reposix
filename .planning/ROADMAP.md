@@ -429,3 +429,13 @@ Plans:
 - [x] 13-D2-docs-and-adr
 - [x] 13-D3-release-scripts-and-demo
 - [x] 13-E-green-gauntlet
+
+### Phase 14: Decouple sim REST shape from FUSE write path and git-remote helper — route through IssueBackend trait
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 13
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 14 to break down)
