@@ -28,3 +28,9 @@ hdrhistogram = "7"
 rand = "0.8"
 async-trait.workspace = true
 chrono.workspace = true
+
+[dev-dependencies]
+reposix-sim = { path = "../reposix-sim" }
+reposix-core.workspace = true
+reqwest.workspace = true
+tempfile = "3"
