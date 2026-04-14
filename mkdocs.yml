@@ -81,11 +81,15 @@ nav:
   - Security: security.md
   - Decisions:
       - ADR-001 GitHub state mapping: decisions/001-github-state-mapping.md
+      - ADR-002 Confluence page mapping: decisions/002-confluence-page-mapping.md
   - Reference:
       - Crates overview: reference/crates.md
       - CLI: reference/cli.md
       - HTTP API (simulator): reference/http-api.md
       - git remote helper: reference/git-remote.md
+      - Confluence backend: reference/confluence.md
+  - Connectors:
+      - Building your own: connectors/guide.md
   - Development:
       - Contributing: development/contributing.md
       - Roadmap (v0.2+): development/roadmap.md
