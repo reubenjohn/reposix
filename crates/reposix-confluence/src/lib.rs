@@ -459,6 +459,20 @@ impl ConfluenceBackend {
         ]
     }
 
+    /// Assemble headers for write requests (POST / PUT). Clones
+    /// [`standard_headers`](Self::standard_headers) and appends
+    /// `Content-Type: application/json`.
+    ///
+    /// Kept separate from `standard_headers` because GET and DELETE paths
+    /// **must not** send `Content-Type` — some proxies reject or log unexpected
+    /// content headers on body-less requests. The split makes the intent
+    /// explicit and avoids accidentally adding a body header to every request.
+    fn write_headers(&self) -> Vec<(&'static str, String)> {
+        let mut h = self.standard_headers();
+        h.push(("Content-Type", "application/json".to_owned()));
+        h
+    }
+
     /// Inspect rate-limit headers from `resp` and arm the shared gate if the
     /// response says we're throttled.
     ///
@@ -576,6 +590,25 @@ impl ConfluenceBackend {
         }
         Ok(id)
     }
+
+    /// Fetch the current `version.number` for `id` without returning the full
+    /// issue. Used by `update_issue` when the caller passes
+    /// `expected_version = None` and we need a pre-flight GET to discover the
+    /// current version before constructing the PUT body.
+    ///
+    /// # Errors
+    ///
+    /// Propagates transport errors and `Err(Error::Other("not found: …"))` on
+    /// 404.
+    async fn fetch_current_version(&self, id: IssueId) -> Result<u64> {
+        // Re-uses get_issue which already handles rate-limit gate, SG-05
+        // taint wrapping, and error mapping. The only "waste" is translating
+        // the full page — that's acceptable for the `expected_version = None`
+        // code path (one extra round-trip already implies we don't have cached
+        // version data).
+        let issue = self.get_issue("", id).await?;
+        Ok(issue.version)
+    }
 }
 
 #[async_trait]
@@ -585,13 +618,20 @@ impl IssueBackend for ConfluenceBackend {
     }
 
     fn supports(&self, feature: BackendFeature) -> bool {
-        // Read-only v0.3: no write-path features. Even Workflows is false
-        // because Confluence has no in-flight state labels analogous to
-        // GitHub's status/*. Phase 13 Wave B1 adds `Hierarchy` — Confluence
-        // is the ONLY backend (of the current three) that exposes a parent
-        // tree, so the FUSE layer can key `tree/` overlay emission off this
-        // one bit instead of per-backend `match`ing.
-        matches!(feature, BackendFeature::Hierarchy)
+        // v0.6: write path is now implemented.
+        // - `Hierarchy`: Confluence is the only current backend that exposes a
+        //   parent/child tree, used by FUSE for the `tree/` overlay.
+        // - `Delete`: `DELETE /wiki/api/v2/pages/{id}` moves pages to trash.
+        // - `StrongVersioning`: PUT body carries `version.number = current + 1`;
+        //   Confluence returns 409 on concurrent edits (optimistic locking).
+        // `Workflows` and `BulkEdit` remain false: Confluence has no in-flight
+        // state labels analogous to GitHub's status/* and no batch-edit API.
+        matches!(
+            feature,
+            BackendFeature::Hierarchy
+                | BackendFeature::Delete
+                | BackendFeature::StrongVersioning
+        )
     }
 
     fn root_collection_name(&self) -> &'static str {
@@ -706,33 +746,147 @@ impl IssueBackend for ConfluenceBackend {
         translate(tainted.into_inner())
     }
 
-    async fn create_issue(&self, _project: &str, _issue: Untainted<Issue>) -> Result<Issue> {
-        Err(Error::Other(
-            "not supported: create_issue — reposix-confluence is read-only".into(),
-        ))
+    async fn create_issue(&self, project: &str, issue: Untainted<Issue>) -> Result<Issue> {
+        let space_id = self.resolve_space_id(project).await?;
+        // Convert the Markdown body to Confluence storage XHTML.
+        let storage_xhtml = crate::adf::markdown_to_storage(&issue.inner_ref().body)?;
+        let post_body = serde_json::json!({
+            "spaceId": space_id,
+            "status": "current",
+            "title": issue.inner_ref().title,
+            "parentId": issue.inner_ref().parent_id.map(|id| id.0.to_string()),
+            "body": {
+                "representation": "storage",
+                "value": storage_xhtml,
+            },
+        });
+        let post_body_bytes = serde_json::to_vec(&post_body)?;
+        let url = format!("{}/wiki/api/v2/pages", self.base());
+        let header_owned = self.write_headers();
+        let header_refs: Vec<(&str, &str)> =
+            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        self.await_rate_limit_gate().await;
+        let resp = self
+            .http
+            .request_with_headers_and_body(
+                Method::POST,
+                url.as_str(),
+                &header_refs,
+                Some(post_body_bytes),
+            )
+            .await?;
+        self.ingest_rate_limit(&resp);
+        let status = resp.status();
+        let bytes = resp.bytes().await?;
+        if !status.is_success() {
+            return Err(Error::Other(format!(
+                "confluence returned {status} for POST {url}: {}",
+                String::from_utf8_lossy(&bytes)
+            )));
+        }
+        let page: ConfPage = serde_json::from_slice(&bytes)?;
+        // SG-05: wrap ingress bytes as Tainted before translating.
+        let tainted = Tainted::new(page);
+        translate(tainted.into_inner())
     }
 
     async fn update_issue(
         &self,
         _project: &str,
-        _id: IssueId,
-        _patch: Untainted<Issue>,
-        _expected_version: Option<u64>,
+        id: IssueId,
+        patch: Untainted<Issue>,
+        expected_version: Option<u64>,
     ) -> Result<Issue> {
-        Err(Error::Other(
-            "not supported: update_issue — reposix-confluence is read-only".into(),
-        ))
+        // Pre-flight version resolution: if caller supplied an expected version
+        // trust it; otherwise do a GET to discover the current version number.
+        let current_version = match expected_version {
+            Some(v) => v,
+            None => self.fetch_current_version(id).await?,
+        };
+        // Convert the Markdown body to Confluence storage XHTML.
+        let storage_xhtml = crate::adf::markdown_to_storage(&patch.inner_ref().body)?;
+        let put_body = serde_json::json!({
+            "id": id.0.to_string(),
+            "status": "current",
+            "title": patch.inner_ref().title,
+            "version": { "number": current_version + 1 },
+            "body": {
+                "representation": "storage",
+                "value": storage_xhtml,
+            },
+        });
+        let put_body_bytes = serde_json::to_vec(&put_body)?;
+        let url = format!("{}/wiki/api/v2/pages/{}", self.base(), id.0);
+        let header_owned = self.write_headers();
+        let header_refs: Vec<(&str, &str)> =
+            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        self.await_rate_limit_gate().await;
+        let resp = self
+            .http
+            .request_with_headers_and_body(
+                Method::PUT,
+                url.as_str(),
+                &header_refs,
+                Some(put_body_bytes),
+            )
+            .await?;
+        self.ingest_rate_limit(&resp);
+        let status = resp.status();
+        let bytes = resp.bytes().await?;
+        if status == StatusCode::NOT_FOUND {
+            return Err(Error::Other(format!("not found: {url}")));
+        }
+        if status == StatusCode::CONFLICT {
+            return Err(Error::Other(format!(
+                "version mismatch: {}",
+                String::from_utf8_lossy(&bytes)
+            )));
+        }
+        if !status.is_success() {
+            return Err(Error::Other(format!(
+                "confluence returned {status} for PUT {url}: {}",
+                String::from_utf8_lossy(&bytes)
+            )));
+        }
+        let page: ConfPage = serde_json::from_slice(&bytes)?;
+        // SG-05: wrap ingress bytes as Tainted before translating.
+        let tainted = Tainted::new(page);
+        translate(tainted.into_inner())
     }
 
     async fn delete_or_close(
         &self,
         _project: &str,
-        _id: IssueId,
+        id: IssueId,
         _reason: DeleteReason,
     ) -> Result<()> {
-        Err(Error::Other(
-            "not supported: delete_or_close — reposix-confluence is read-only".into(),
-        ))
+        // Note: `reason` is intentionally ignored — Confluence has no reason
+        // field on DELETE. The DELETE moves the page to trash (status becomes
+        // "trashed"), which the read path already maps to `IssueStatus::Done`.
+        // A future "purge" would require `?purge=true`; that is out of scope
+        // for v0.6.
+        let url = format!("{}/wiki/api/v2/pages/{}", self.base(), id.0);
+        let header_owned = self.standard_headers();
+        let header_refs: Vec<(&str, &str)> =
+            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        self.await_rate_limit_gate().await;
+        let resp = self
+            .http
+            .request_with_headers(Method::DELETE, url.as_str(), &header_refs)
+            .await?;
+        self.ingest_rate_limit(&resp);
+        let status = resp.status();
+        if status == StatusCode::NO_CONTENT {
+            return Ok(());
+        }
+        let bytes = resp.bytes().await?;
+        if status == StatusCode::NOT_FOUND {
+            return Err(Error::Other(format!("not found: {url}")));
+        }
+        Err(Error::Other(format!(
+            "confluence returned {status} for DELETE {url}: {}",
+            String::from_utf8_lossy(&bytes)
+        )))
     }
 }
 
@@ -1028,69 +1182,27 @@ mod tests {
         }
     }
 
-    // -------- 9: write methods short-circuit to not-supported --------
-
-    #[tokio::test]
-    async fn write_methods_return_not_supported() {
-        // Unreachable base URL — must not matter because writes short-circuit.
-        let backend =
-            ConfluenceBackend::new_with_base_url(creds(), "http://127.0.0.1:1".to_owned())
-                .expect("backend");
-        let t = chrono::Utc::now();
-        let u = sanitize(
-            Tainted::new(Issue {
-                id: IssueId(0),
-                title: "x".into(),
-                status: IssueStatus::Open,
-                assignee: None,
-                labels: vec![],
-                created_at: t,
-                updated_at: t,
-                version: 0,
-                body: String::new(),
-                parent_id: None,
-            }),
-            ServerMetadata {
-                id: IssueId(1),
-                created_at: t,
-                updated_at: t,
-                version: 1,
-            },
-        );
-        assert!(matches!(
-            backend.create_issue("REPOSIX", u.clone()).await,
-            Err(Error::Other(m)) if m.starts_with("not supported:")
-        ));
-        assert!(matches!(
-            backend
-                .update_issue("REPOSIX", IssueId(1), u, None)
-                .await,
-            Err(Error::Other(m)) if m.starts_with("not supported:")
-        ));
-        assert!(matches!(
-            backend
-                .delete_or_close("REPOSIX", IssueId(1), DeleteReason::Completed)
-                .await,
-            Err(Error::Other(m)) if m.starts_with("not supported:")
-        ));
-    }
+    // -------- 9: (removed) write_methods_return_not_supported --------
+    // Removed in Phase 16 Wave B: write methods are now implemented, so the
+    // old "short-circuits to not-supported" assertion is no longer valid.
+    // Coverage for write paths is in B6 (wiremock tests) and B7 (supports test).
 
     // -------- 10: capability matrix --------
 
-    /// Phase 13 Wave B1 flipped `Hierarchy` to `true`; every other feature
-    /// stays `false` because Confluence is still read-only in v0.4. Renamed
-    /// from `supports_reports_no_features` to match the new reality.
+    /// Phase 16 Wave B flipped `Delete` and `StrongVersioning` to `true`.
+    /// `Hierarchy` was already `true` since Phase 13 Wave B1.
+    /// Renamed from `supports_reports_only_hierarchy` to match the new reality.
     #[test]
-    fn supports_reports_only_hierarchy() {
+    fn supports_reports_hierarchy_delete_strong_versioning() {
         let backend =
             ConfluenceBackend::new_with_base_url(creds(), "http://127.0.0.1:1".to_owned())
                 .expect("backend");
         assert!(!backend.supports(BackendFeature::Workflows));
-        assert!(!backend.supports(BackendFeature::Delete));
         assert!(!backend.supports(BackendFeature::Transitions));
-        assert!(!backend.supports(BackendFeature::StrongVersioning));
         assert!(!backend.supports(BackendFeature::BulkEdit));
         assert!(backend.supports(BackendFeature::Hierarchy));
+        assert!(backend.supports(BackendFeature::Delete));
+        assert!(backend.supports(BackendFeature::StrongVersioning));
         assert_eq!(backend.name(), "confluence");
     }
 
