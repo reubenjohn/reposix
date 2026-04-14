@@ -421,7 +421,7 @@ Phase 12 scope: model (2) above. Explicit non-goals: (1) already shipped via doc
 
 Plans:
 - [x] 13-A-core-foundations
-- [ ] 13-B1-confluence-parent-id
+- [x] 13-B1-confluence-parent-id
 - [ ] 13-B2-fuse-tree-module
 - [x] 13-B3-frontmatter-parent-id
 - [ ] 13-C-fuse-wiring
