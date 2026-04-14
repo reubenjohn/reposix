@@ -112,6 +112,7 @@ pub fn sanitize(tainted: Tainted<Issue>, server: ServerMetadata) -> Untainted<Is
         updated_at: _,
         version: _,
         body,
+        parent_id,
     } = issue;
     let ServerMetadata {
         id,
@@ -129,6 +130,7 @@ pub fn sanitize(tainted: Tainted<Issue>, server: ServerMetadata) -> Untainted<Is
         updated_at,
         version,
         body,
+        parent_id,
     })
 }
 
@@ -179,6 +181,7 @@ mod tests {
             updated_at: t,
             version: 999_999,
             body: "agent-authored body".into(),
+            parent_id: None,
         })
     }
 

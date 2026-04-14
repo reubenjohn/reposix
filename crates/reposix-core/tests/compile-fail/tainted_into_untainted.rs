@@ -19,6 +19,7 @@ fn main() {
         updated_at: Utc::now(),
         version: 0,
         body: String::new(),
+        parent_id: None,
     });
     takes_untainted(tainted);
 }

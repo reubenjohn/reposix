@@ -27,6 +27,7 @@ fn sample_issue(id: u64) -> Value {
         updated_at: t,
         version: 1,
         body: "body".to_owned(),
+        parent_id: None,
     };
     serde_json::to_value(i).unwrap()
 }

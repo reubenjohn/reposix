@@ -122,6 +122,7 @@ impl Workload for SimDirectWorkload {
                 updated_at: now,
                 version: 0,
                 body: "patched by swarm".to_string(),
+                parent_id: None,
             };
             let untainted = sanitize(
                 Tainted::new(issue),

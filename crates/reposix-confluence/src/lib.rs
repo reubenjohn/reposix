@@ -308,6 +308,10 @@ fn translate(page: ConfPage) -> Result<Issue> {
         updated_at: page.version.created_at,
         version: page.version.number,
         body,
+        // Populated in Phase 13 Wave B1 from Confluence v2 `parentId` +
+        // `parentType == "page"`. For now always `None` — keeps the
+        // backend additive-only for Wave A.
+        parent_id: None,
     })
 }
 
@@ -974,6 +978,7 @@ mod tests {
                 updated_at: t,
                 version: 0,
                 body: String::new(),
+                parent_id: None,
             }),
             ServerMetadata {
                 id: IssueId(1),

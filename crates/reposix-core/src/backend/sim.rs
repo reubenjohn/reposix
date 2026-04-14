@@ -343,6 +343,7 @@ mod tests {
             updated_at: t,
             version: 0,
             body: "body here".into(),
+            parent_id: None,
         })
     }
 
@@ -444,6 +445,7 @@ mod tests {
                 updated_at: t,
                 version: 0,
                 body: String::new(),
+                parent_id: None,
             }),
             ServerMetadata {
                 id: IssueId(42),

@@ -768,6 +768,7 @@ impl Filesystem for ReposixFs {
             updated_at: now,
             version: 0,
             body: String::new(),
+            parent_id: None,
         };
         let meta = ServerMetadata {
             id,

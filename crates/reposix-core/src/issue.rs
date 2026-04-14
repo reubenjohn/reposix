@@ -73,6 +73,13 @@ pub struct Issue {
     /// Free-form Markdown body.
     #[serde(default)]
     pub body: String,
+    /// Parent in a hierarchy-supporting backend (currently Confluence only).
+    ///
+    /// Always `None` for sim and GitHub. When `Some`, is the parent page/issue
+    /// id as reported by the backend. Used by `reposix-fuse` to synthesize the
+    /// `tree/` overlay (Phase 13).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent_id: Option<IssueId>,
 }
 
 /// Frontmatter helpers — round-trip an [`Issue`] through `---\n<yaml>\n---\n<body>` form.
@@ -94,6 +101,8 @@ pub mod frontmatter {
         updated_at: DateTime<Utc>,
         #[serde(default)]
         version: u64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        parent_id: Option<super::IssueId>,
     }
 
     /// Render an [`Issue`] to its on-disk form.
@@ -111,6 +120,7 @@ pub mod frontmatter {
             created_at: issue.created_at,
             updated_at: issue.updated_at,
             version: issue.version,
+            parent_id: issue.parent_id,
         };
         let yaml = serde_yaml::to_string(&fm)?;
         let mut out = String::with_capacity(yaml.len() + issue.body.len() + 16);
@@ -165,6 +175,7 @@ pub mod frontmatter {
             updated_at: fm.updated_at,
             version: fm.version,
             body,
+            parent_id: fm.parent_id,
         })
     }
 
@@ -203,6 +214,7 @@ mod tests {
             updated_at: t,
             version: 3,
             body: "Steps to reproduce:\n1. do the thing\n2. observe brokenness\n".into(),
+            parent_id: None,
         }
     }
 
@@ -226,5 +238,59 @@ mod tests {
             frontmatter::parse(bad),
             Err(Error::InvalidIssue(_))
         ));
+    }
+
+    #[test]
+    fn parent_id_roundtrips_through_json_when_some() {
+        let mut iss = sample();
+        iss.parent_id = Some(IssueId(42));
+        let json = serde_json::to_string(&iss).unwrap();
+        assert!(
+            json.contains("\"parent_id\":42"),
+            "expected `\"parent_id\":42` in JSON, got: {json}"
+        );
+        let back: Issue = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.parent_id, Some(IssueId(42)));
+    }
+
+    #[test]
+    fn parent_id_omitted_when_none() {
+        let iss = sample(); // parent_id: None
+        let json = serde_json::to_string(&iss).unwrap();
+        assert!(
+            !json.contains("parent_id"),
+            "parent_id should be omitted when None, got: {json}"
+        );
+    }
+
+    #[test]
+    fn parent_id_default_on_missing_field() {
+        // Old JSON payload, no parent_id field at all — must deserialize with None.
+        let json = r#"{"id":1,"title":"t","status":"open","created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}"#;
+        let iss: Issue = serde_json::from_str(json).unwrap();
+        assert_eq!(iss.parent_id, None);
+    }
+
+    #[test]
+    fn parent_id_roundtrips_through_frontmatter_when_some() {
+        let mut iss = sample();
+        iss.parent_id = Some(IssueId(777));
+        let rendered = frontmatter::render(&iss).expect("render");
+        assert!(
+            rendered.contains("parent_id: 777"),
+            "expected `parent_id: 777` in YAML, got: {rendered}"
+        );
+        let parsed = frontmatter::parse(&rendered).expect("parse");
+        assert_eq!(parsed.parent_id, Some(IssueId(777)));
+    }
+
+    #[test]
+    fn parent_id_omitted_from_frontmatter_when_none() {
+        let iss = sample(); // parent_id: None
+        let rendered = frontmatter::render(&iss).expect("render");
+        assert!(
+            !rendered.contains("parent_id"),
+            "parent_id should be omitted from YAML when None, got: {rendered}"
+        );
     }
 }

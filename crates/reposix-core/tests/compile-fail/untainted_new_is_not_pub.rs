@@ -17,6 +17,7 @@ fn main() {
         updated_at: Utc::now(),
         version: 0,
         body: String::new(),
+        parent_id: None,
     };
     let _u = Untainted::new(some_issue);
 }

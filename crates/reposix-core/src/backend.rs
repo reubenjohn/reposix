@@ -68,6 +68,9 @@ pub enum BackendFeature {
     /// Backend supports named workflow transitions beyond the 5-valued
     /// [`IssueStatus`](crate::IssueStatus) enum. Reserved for Jira.
     Workflows,
+    /// Backend exposes a parent/child hierarchy via [`Issue::parent_id`].
+    /// Used by FUSE to synthesize the `tree/` overlay (Phase 13).
+    Hierarchy,
 }
 
 /// Reason a `delete_or_close` call was issued. Backends that support real
@@ -189,6 +192,16 @@ pub trait IssueBackend: Send + Sync {
     /// - Read-only backends return `Err(Error::Other("not supported: ..."))`.
     async fn delete_or_close(&self, project: &str, id: IssueId, reason: DeleteReason)
         -> Result<()>;
+
+    /// The top-level directory name under which this backend's canonical
+    /// `<padded-id>.md` files are mounted. Default `"issues"`. Backends with
+    /// a domain-specific vocabulary (e.g. Confluence → `"pages"`) override.
+    ///
+    /// The return value MUST be a valid single POSIX pathname component:
+    /// no `/`, no `..`, non-empty, ASCII.
+    fn root_collection_name(&self) -> &'static str {
+        "issues"
+    }
 }
 
 #[cfg(test)]
@@ -215,5 +228,59 @@ mod tests {
         let r = DeleteReason::Completed;
         assert_eq!(r, DeleteReason::Completed);
         assert_eq!(r, DeleteReason::Completed);
+    }
+
+    #[test]
+    fn backend_feature_hierarchy_is_a_variant() {
+        // Trivially compiles iff the `Hierarchy` variant exists on the enum.
+        let f = BackendFeature::Hierarchy;
+        assert_eq!(f, BackendFeature::Hierarchy);
+    }
+
+    #[test]
+    fn default_root_collection_name_is_issues() {
+        use crate::taint::Untainted;
+
+        struct Stub;
+        #[async_trait]
+        impl IssueBackend for Stub {
+            fn name(&self) -> &'static str {
+                "stub"
+            }
+            fn supports(&self, _: BackendFeature) -> bool {
+                false
+            }
+            async fn list_issues(&self, _: &str) -> Result<Vec<Issue>> {
+                Ok(vec![])
+            }
+            async fn get_issue(&self, _: &str, _: IssueId) -> Result<Issue> {
+                unimplemented!()
+            }
+            async fn create_issue(&self, _: &str, _: Untainted<Issue>) -> Result<Issue> {
+                unimplemented!()
+            }
+            async fn update_issue(
+                &self,
+                _: &str,
+                _: IssueId,
+                _: Untainted<Issue>,
+                _: Option<u64>,
+            ) -> Result<Issue> {
+                unimplemented!()
+            }
+            async fn delete_or_close(
+                &self,
+                _: &str,
+                _: IssueId,
+                _: DeleteReason,
+            ) -> Result<()> {
+                Ok(())
+            }
+        }
+
+        // Default method returns "issues" with no override.
+        assert_eq!(Stub.root_collection_name(), "issues");
+        // Default `supports` returns false for Hierarchy.
+        assert!(!Stub.supports(BackendFeature::Hierarchy));
     }
 }

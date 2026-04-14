@@ -114,6 +114,8 @@ impl RawIssueRow {
             updated_at: parse_ts(&self.updated_at)?,
             version,
             body: self.body,
+            // Sim backend has no hierarchy — always None.
+            parent_id: None,
         })
     }
 }

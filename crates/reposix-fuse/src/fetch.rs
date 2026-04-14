@@ -339,6 +339,7 @@ mod tests {
             updated_at: t,
             version: 1,
             body: "body".to_owned(),
+            parent_id: None,
         }
     }
 

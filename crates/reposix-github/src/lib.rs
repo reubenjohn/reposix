@@ -315,6 +315,8 @@ fn translate(gh: GhIssue) -> Issue {
         // "first revision" which matches our round-trip expectation.
         version: 1,
         body: gh.body.unwrap_or_default(),
+        // GitHub Issues doesn't expose a parent hierarchy; always None.
+        parent_id: None,
     }
 }
 
@@ -763,6 +765,7 @@ mod tests {
                 updated_at: t,
                 version: 0,
                 body: String::new(),
+                parent_id: None,
             }),
             ServerMetadata {
                 id: IssueId(1),
@@ -797,6 +800,7 @@ mod tests {
                 updated_at: t,
                 version: 0,
                 body: String::new(),
+                parent_id: None,
             }),
             ServerMetadata {
                 id: IssueId(1),

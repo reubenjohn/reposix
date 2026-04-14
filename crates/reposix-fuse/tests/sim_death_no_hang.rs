@@ -43,6 +43,7 @@ fn sample(id: u64) -> Issue {
         updated_at: t,
         version: 1,
         body: format!("body {id}\n"),
+        parent_id: None,
     }
 }
 
