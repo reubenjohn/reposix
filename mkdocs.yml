@@ -82,6 +82,7 @@ nav:
   - Decisions:
       - ADR-001 GitHub state mapping: decisions/001-github-state-mapping.md
       - ADR-002 Confluence page mapping: decisions/002-confluence-page-mapping.md
+      - ADR-003 Nested mount layout: decisions/003-nested-mount-layout.md
   - Reference:
       - Crates overview: reference/crates.md
       - CLI: reference/cli.md

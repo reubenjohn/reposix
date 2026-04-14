@@ -1,10 +1,16 @@
 # ADR-002: Confluence page to issue mapping
 
-- **Status:** Accepted
+> **Superseded in part (2026-04-14).** The flat-layout decision in this
+> ADR's §"Options" table (row A, chosen in v0.3) was replaced by
+> [ADR-003](003-nested-mount-layout.md) (`pages/` bucket + `tree/` symlink
+> overlay). The field-mapping, status-mapping, auth, pagination, and
+> rate-limit decision sections below remain authoritative.
+
+- **Status:** Accepted (layout section superseded by ADR-003)
 - **Date:** 2026-04-13
 - **Deciders:** reposix core team (overnight session 3)
 - **Supersedes:** none
-- **Superseded by:** none
+- **Superseded by:** [ADR-003](003-nested-mount-layout.md) (layout decision only; 2026-04-14)
 - **Scope:** `crates/reposix-confluence` (v0.3, `ConfluenceReadOnlyBackend`) and
   any future read-only adapter that consumes Atlassian Confluence Cloud REST v2
   pages under the v0.3 flat-issue data model.
