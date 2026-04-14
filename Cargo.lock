@@ -1748,6 +1748,7 @@ dependencies = [
  "fuser",
  "libc",
  "parking_lot",
+ "reposix-confluence",
  "reposix-core",
  "reposix-github",
  "reqwest",

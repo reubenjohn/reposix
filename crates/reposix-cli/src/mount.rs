@@ -3,7 +3,11 @@
 //!
 //! The `--backend` flag chooses the read-path backend: `sim` (default)
 //! speaks the reposix simulator REST API at `--origin`; `github` mounts
-//! real `api.github.com` issues for `--project owner/repo`.
+//! real `api.github.com` issues for `--project owner/repo`; `confluence`
+//! mounts real Atlassian Confluence Cloud pages for
+//! `--project <SPACE_KEY>`, requiring `ATLASSIAN_API_KEY`,
+//! `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT` env vars plus an
+//! allowlist entry for `https://<tenant>.atlassian.net`.
 
 use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
@@ -41,22 +45,54 @@ impl MountProcess {
         project: &str,
         backend: ListBackend,
     ) -> Result<Self> {
-        // Fail fast for `github` if the allowlist obviously isn't set —
-        // matches the reposix-fuse binary's own guard so the user gets a
-        // clean CLI error rather than a spawn-that-immediately-dies.
-        if backend == ListBackend::Github {
-            let raw = std::env::var("REPOSIX_ALLOWED_ORIGINS").unwrap_or_default();
-            if !raw.contains("api.github.com") {
-                bail!(
-                    "REPOSIX_ALLOWED_ORIGINS must include https://api.github.com for --backend github (got {raw:?})"
-                );
+        // Fail fast for `github` / `confluence` if the allowlist or env
+        // vars aren't set — matches the reposix-fuse binary's own guards so
+        // the user gets a clean CLI error rather than a
+        // spawn-that-immediately-dies.
+        match backend {
+            ListBackend::Sim => {}
+            ListBackend::Github => {
+                let raw = std::env::var("REPOSIX_ALLOWED_ORIGINS").unwrap_or_default();
+                if !raw.contains("api.github.com") {
+                    bail!(
+                        "REPOSIX_ALLOWED_ORIGINS must include https://api.github.com for --backend github (got {raw:?})"
+                    );
+                }
+            }
+            ListBackend::Confluence => {
+                let tenant = std::env::var("REPOSIX_CONFLUENCE_TENANT").unwrap_or_default();
+                if tenant.is_empty() {
+                    bail!(
+                        "REPOSIX_CONFLUENCE_TENANT must be set for --backend confluence (subdomain of your Atlassian Cloud tenant, e.g. `mycompany`)"
+                    );
+                }
+                let raw = std::env::var("REPOSIX_ALLOWED_ORIGINS").unwrap_or_default();
+                let expected = format!("{tenant}.atlassian.net");
+                if !raw.contains(&expected) {
+                    bail!(
+                        "REPOSIX_ALLOWED_ORIGINS must include https://{expected} for --backend confluence (got {raw:?})"
+                    );
+                }
+                // Fail before spawning the child so the user sees the
+                // missing-env error at the reposix CLI layer instead of an
+                // opaque fuse-daemon exit. NOTE: error message names the
+                // env vars but never their values (T-11B-01).
+                if std::env::var("ATLASSIAN_EMAIL")
+                    .unwrap_or_default()
+                    .is_empty()
+                    || std::env::var("ATLASSIAN_API_KEY")
+                        .unwrap_or_default()
+                        .is_empty()
+                {
+                    bail!(
+                        "confluence backend requires ATLASSIAN_EMAIL and ATLASSIAN_API_KEY env vars"
+                    );
+                }
             }
         }
         let backend_kind = match backend {
             ListBackend::Sim => "sim",
             ListBackend::Github => "github",
-            // Full allowlist + env-var guard lands in 11-B-2; for now the
-            // match is exhaustive so `cargo build` is green after 11-B-1.
             ListBackend::Confluence => "confluence",
         };
         let mut cmd = resolve_bin("reposix-fuse");
