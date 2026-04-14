@@ -21,6 +21,7 @@ tracing = { workspace = true }
 chrono = { workspace = true }
 parking_lot = { workspace = true }
 url = { workspace = true }
+pulldown-cmark = { workspace = true }
 
 [dev-dependencies]
 wiremock = "0.6"
