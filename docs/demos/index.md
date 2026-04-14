@@ -57,9 +57,16 @@ the suite but substantively unchanged):
 
 ## Tier 3 — sim vs real-backend parity
 
-| Demo                                                                                                                  | Audience | Runtime | What it proves                                                                                                                                      | Recording                                                                                                                 |
-| --------------------------------------------------------------------------------------------------------------------- | -------- | ------: | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [`parity.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/parity.sh)                                 | skeptic  |    ~30s | `reposix list` against the sim and `gh api` against `octocat/Hello-World` produce the same `{id, title, status}` JSON shape. Diff = content only.   | [typescript](recordings/parity.typescript) · [transcript](recordings/parity.transcript.txt)                               |
+| Demo                                                                                                                  | Audience | Runtime | What it proves                                                                                                                                                                                                 | Recording                                                                                                                 |
+| --------------------------------------------------------------------------------------------------------------------- | -------- | ------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| [`parity.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/parity.sh)                                 | skeptic  |    ~30s | `reposix list` against the sim and `gh api` against `octocat/Hello-World` produce the same `{id, title, status}` JSON shape. Diff = content only.                                                              | [typescript](recordings/parity.typescript) · [transcript](recordings/parity.transcript.txt)                               |
+| [`parity-confluence.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/parity-confluence.sh)           | skeptic  |    ~45s | Same claim for Confluence: `reposix list --backend sim` and `reposix list --backend confluence` produce the same `{id, title, status}` JSON shape. Key-set parity asserted via jq; content differs by design.  | —                                                                                                                         |
+
+**Skip behavior** for `parity-confluence.sh`: requires
+`ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT`,
+and `REPOSIX_CONFLUENCE_SPACE`. Exits 0 with a `SKIP:` banner if any
+are unset, so CI runners and dev hosts without Atlassian credentials
+still complete cleanly.
 
 The library-level proof of the same claim is
 [`crates/reposix-github/tests/contract.rs`](https://github.com/reubenjohn/reposix/blob/main/crates/reposix-github/tests/contract.rs):
@@ -87,24 +94,40 @@ the `sim-direct` / `fuse` mode split. `fuse` mode performs real
 want end-to-end kernel-path coverage under load, not just the sim's
 HTTP surface.
 
-## Tier 5 — FUSE mount real GitHub end-to-end
+## Tier 5 — FUSE mount real backend end-to-end
 
-The Phase-10 wire-up: the FUSE daemon now speaks the
-`reposix_core::IssueBackend` trait directly, so `reposix mount
---backend github --project owner/repo` mounts a real GitHub repo as a
-POSIX directory. No simulator involved.
+The Phase-10 wire-up generalized in Phase-11: the FUSE daemon speaks
+the `reposix_core::IssueBackend` trait directly, so `reposix mount
+--backend <backend> --project <target>` mounts a real remote tracker
+as a POSIX directory. No simulator involved.
 
-| Demo                                                                                                       | Audience  | Runtime | What it proves                                                                                                                                                                                                       | Recording |
-| ---------------------------------------------------------------------------------------------------------- | --------- | ------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| [`05-mount-real-github.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/05-mount-real-github.sh) | developer |    ~30s | `reposix mount --backend github` exposes `octocat/Hello-World` issues as `<padded-id>.md` files; `cat 0001.md` renders the real issue's frontmatter+body. Honors `REPOSIX_ALLOWED_ORIGINS` and `GITHUB_TOKEN`. | —         |
+| Demo                                                                                                                        | Audience  | Runtime | What it proves                                                                                                                                                                                                                                           | Recording |
+| --------------------------------------------------------------------------------------------------------------------------- | --------- | ------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| [`05-mount-real-github.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/05-mount-real-github.sh)           | developer |    ~30s | `reposix mount --backend github` exposes `octocat/Hello-World` issues as `<padded-id>.md` files; `cat 0001.md` renders the real issue's frontmatter+body. Honors `REPOSIX_ALLOWED_ORIGINS` and `GITHUB_TOKEN`.                                           | —         |
+| [`06-mount-real-confluence.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/06-mount-real-confluence.sh)   | developer |    ~45s | `reposix mount --backend confluence` exposes an Atlassian Confluence space as a tree of Markdown files; `cat` on the first page renders the real frontmatter+body. Honors `REPOSIX_ALLOWED_ORIGINS` + the tenant-hostname allowlist entry.                | —         |
 
-**Not in smoke.** Requires `gh auth token` to be present. Skips
-cleanly with `SKIP:` if not. Run it locally after `gh auth login`:
+**Not in smoke.** `05-mount-real-github.sh` requires `gh auth token`
+to be present and skips cleanly with `SKIP:` if not. Run it locally
+after `gh auth login`:
 
 ```bash
 cargo build --release --workspace --bins
 export PATH="$PWD/target/release:$PATH"
 bash scripts/demos/05-mount-real-github.sh
+```
+
+`06-mount-real-confluence.sh` requires `ATLASSIAN_API_KEY`,
+`ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT`, and
+`REPOSIX_CONFLUENCE_SPACE`. Exits 0 with a `SKIP:` banner if any are
+unset. Token and email are never echoed — only the tenant host +
+space key + allowlist appear on stdout. Run it locally with:
+
+```bash
+cargo build --release --workspace --bins
+export PATH="$PWD/target/release:$PATH"
+# Populate the four env vars from your Atlassian tenant, e.g. via
+# `source .env` after copying `.env.example` and filling it in.
+bash scripts/demos/06-mount-real-confluence.sh
 ```
 
 ## Running the suite yourself
