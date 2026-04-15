@@ -381,21 +381,28 @@ fn render_tree_index(
 ) -> Vec<u8> {
     use std::fmt::Write as _;
 
-    // DFS: each stack entry is (children_slice, depth_relative_to_root_dir).
-    // Push children in reverse order so left-to-right children pop correctly.
+    // DFS: each stack entry is (&TreeEntry, depth_relative_to_root_dir).
+    // Push siblings in reverse order so the first sibling pops (and is
+    // appended to `rows`) first, producing correct pre-order left-to-right
+    // traversal.
     let mut rows: Vec<(usize, String, String)> = Vec::new();
-    let mut stack: Vec<(&[crate::tree::TreeEntry], usize)> =
-        vec![(root_dir.children.as_slice(), 0)];
-    while let Some((entries, depth)) = stack.pop() {
-        for entry in entries.iter().rev() {
-            match entry {
-                crate::tree::TreeEntry::Symlink { name, target, .. } => {
-                    rows.push((depth, name.clone(), target.clone()));
-                }
-                crate::tree::TreeEntry::Dir(ino) => {
-                    if let Some(dir) = snapshot.resolve_dir(*ino) {
-                        rows.push((depth, format!("{}/", dir.name), String::new()));
-                        stack.push((dir.children.as_slice(), depth + 1));
+    let mut stack: Vec<(&crate::tree::TreeEntry, usize)> = root_dir
+        .children
+        .iter()
+        .rev()
+        .map(|e| (e, 0_usize))
+        .collect();
+    while let Some((entry, depth)) = stack.pop() {
+        match entry {
+            crate::tree::TreeEntry::Symlink { name, target, .. } => {
+                rows.push((depth, name.clone(), target.clone()));
+            }
+            crate::tree::TreeEntry::Dir(ino) => {
+                if let Some(dir) = snapshot.resolve_dir(*ino) {
+                    rows.push((depth, format!("{}/", dir.name), String::new()));
+                    // Push children in reverse so first child pops first.
+                    for child in dir.children.iter().rev() {
+                        stack.push((child, depth + 1));
                     }
                 }
             }
@@ -965,6 +972,14 @@ impl ReposixFs {
     /// `TREE_INDEX_ALLOC_END` if the space is exhausted.
     fn alloc_tree_index_ino(&self) -> u64 {
         let ino = self.tree_index_alloc.fetch_add(1, Ordering::SeqCst);
+        if ino > TREE_INDEX_ALLOC_END {
+            tracing::warn!(
+                ino,
+                max = TREE_INDEX_ALLOC_END,
+                "tree-dir _INDEX.md inode space exhausted; new dirs will share inode {}",
+                TREE_INDEX_ALLOC_END
+            );
+        }
         ino.min(TREE_INDEX_ALLOC_END)
     }
 
@@ -2347,10 +2362,29 @@ mod tests {
             "expected >= 3 DFS rows, got {}: {text}",
             data_rows.len()
         );
-        // The output must mention child/ as a directory entry.
+        // _self.md for parent must be at depth 0 and appear before child/.
+        let self_md_pos = data_rows
+            .iter()
+            .position(|l| l.contains("_self.md") && l.contains("| 0 |"));
+        let child_dir_pos = data_rows
+            .iter()
+            .position(|l| l.contains("child/") && l.contains("| 0 |"));
         assert!(
-            text.contains("child/") || text.contains("_self.md"),
-            "missing child dir or _self.md: {text}"
+            self_md_pos.is_some(),
+            "_self.md row at depth 0 must be present: {text}"
+        );
+        assert!(
+            child_dir_pos.is_some(),
+            "child/ row at depth 0 must be present: {text}"
+        );
+        assert!(
+            self_md_pos.unwrap() < child_dir_pos.unwrap(),
+            "_self.md must appear before child/ in pre-order DFS: {text}"
+        );
+        // Grandchild entries must have depth 1.
+        assert!(
+            data_rows.iter().any(|l| l.contains("| 1 |")),
+            "grandchild must have depth 1: {text}"
         );
     }
 
