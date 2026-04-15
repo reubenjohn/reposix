@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: target)
 status: verifying
-stopped_at: Completed 19-A-labels-fuse-impl.md
-last_updated: "2026-04-15T08:06:35.211Z"
+stopped_at: Completed 20-op-3-reposix-refresh-subcommand-and-git-diff-cache-for-mount/20-A-refresh-cmd.md
+last_updated: "2026-04-15T08:38:37.545Z"
 last_activity: 2026-04-15
 progress:
   total_phases: 11
@@ -98,6 +98,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 | Phase 16 PC | 60 | 6 tasks | 5 files |
 | Phase 18 P01 | 5 | 2 tasks | 3 files |
 | Phase 19 P19-A | 25 | 2 tasks | 5 files |
+| Phase 20-op-3-reposix-refresh-subcommand-and-git-diff-cache-for-mount P20-A | 35 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -140,6 +141,8 @@ additions (2026-04-13):
 - [Phase 18]: synthetic_file_attr generalises bucket_index_attr with ino parameter for RootIndex and TreeDirIndex
 - [Phase 19]: Sequential inode allocation for label dirs (LABELS_DIR_INO_BASE + offset) over hash-based allocation — deterministic, no collision risk
 - [Phase 19]: Label snapshot rebuilt unconditionally on every refresh_issues call (mirrors tree snapshot pattern, prevents stale data after relabel)
+- [Phase 20-op-3]: Parse fuse.pid as i32 (not u32) to satisfy cast_possible_wrap lint; Linux PID_MAX fits in i32
+- [Phase 20-op-3]: Use rustix::process::test_kill_process (signal-0) for PID liveness check in is_fuse_active
 
 ### Pending Todos
 
@@ -160,8 +163,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-15T08:06:35.207Z
-Stopped at: Completed 19-A-labels-fuse-impl.md
+Last session: 2026-04-15T08:38:37.541Z
+Stopped at: Completed 20-op-3-reposix-refresh-subcommand-and-git-diff-cache-for-mount/20-A-refresh-cmd.md
 Wave-level commit trail on `main` (Phase 16):
 Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
 Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).

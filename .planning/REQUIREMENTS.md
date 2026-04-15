@@ -25,9 +25,9 @@
 - [ ] **NAV-02**: `ls mount/spaces/<key>/` lists all pages in that Confluence space (multi-space mount support)
 
 ### Cache Refresh (OP-3)
-- [ ] **CACHE-01**: `reposix refresh` subcommand re-fetches all pages from the backend and writes a git commit into the mount's working tree
+- [x] **CACHE-01**: `reposix refresh` subcommand re-fetches all pages from the backend and writes a git commit into the mount's working tree
 - [ ] **CACHE-02**: `git diff HEAD~1` in the mount shows what changed at the backend since the last refresh (mount-as-time-machine)
-- [ ] **CACHE-03**: `mount/.reposix/fetched_at.txt` records the timestamp of the last backend round-trip
+- [x] **CACHE-03**: `mount/.reposix/fetched_at.txt` records the timestamp of the last backend round-trip
 
 ## Future Requirements
 
