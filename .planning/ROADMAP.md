@@ -511,9 +511,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 20-A-refresh-cmd.md — refresh.rs + cache_db.rs + main.rs wiring
-- [ ] 20-B-tests-and-polish.md — integration tests + workspace gate
-- [ ] 20-C-docs-and-release.md — CHANGELOG v0.6.0 + version bump + STATE update
+- [x] 20-A-refresh-cmd.md — refresh.rs + cache_db.rs + main.rs wiring
+- [x] 20-B-tests-and-polish.md — integration tests + workspace gate
+- [x] 20-C-docs-and-release.md — CHANGELOG + STATE update (SHIPPED)
 
 
 ---

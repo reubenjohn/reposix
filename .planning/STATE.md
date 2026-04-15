@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: target)
 status: verifying
-stopped_at: Completed 20-op-3-reposix-refresh-subcommand-and-git-diff-cache-for-mount/20-B-tests-and-polish.md
+stopped_at: "Phase 20 SHIPPED. Milestone v0.6.0 complete (Phases 16-20). Phases 21+ are v0.7.0 scope."
 last_updated: "2026-04-15T08:45:43.120Z"
 last_activity: 2026-04-15
 progress:
@@ -53,11 +53,10 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 
 ## Current Position
 
-Phase: 19 — SHIPPED. Phase 20 (OP-3 reposix refresh) is next.
-Plan: 2 of 2 (all waves complete)
-Cursor: **Phase 19 SHIPPED. `labels/` read-only symlink overlay complete; LABEL-01..05 closed.
-spaces/ deferred (requires IssueBackend::list_spaces — API-breaking, Confluence-only).
-Phase 20 (OP-3 reposix refresh subcommand) is the recommended next execution target.**
+Phase: 20 — SHIPPED. Phase 21 (OP-7 hardening bundle) is next.
+Plan: 3 of 3 (all waves complete)
+Cursor: **Phase 20 SHIPPED. `reposix refresh` subcommand + git-diff cache complete; REFRESH-01..05 closed.
+Milestone v0.6.0 complete (Phases 16-20). Phases 21+ are v0.7.0 scope.**
 Status: Phase complete — ready for verification
 Last activity: 2026-04-15
 
