@@ -6,6 +6,17 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+### Changed — Phase 22: OP-8 — Honest tokenizer benchmarks
+
+- `bench_token_economy.py`: token counts now produced by Anthropic's `count_tokens` API instead of the `len(text) // 4` heuristic. Cached in `benchmarks/fixtures/*.tokens.json` for offline reproducibility. Closes BENCH-01.
+
+### Added — Phase 22: OP-8 — Honest tokenizer benchmarks
+
+- `benchmarks/fixtures/github_issues.json` + `confluence_pages.json` + `benchmarks/fixtures/README.md` — per-backend token-economy comparison fixtures. Closes BENCH-02.
+- `docs/why.md` headline number recalibrated from `len/4` estimate (91.6%) to real tokenization (89.1%). Prior estimate historicized in prose. Closes BENCH-04.
+- `requirements-bench.txt` pinning `anthropic==0.72.0` (dev-script dependency; not in the Rust workspace).
+- Per-backend comparison table in `benchmarks/RESULTS.md` with rows for Jira (MCP), GitHub, Confluence, and Jira real adapter (`N/A (adapter not yet implemented)`).
+
 ### Added — Phase 20: OP-3 — `reposix refresh` subcommand + git-diff cache
 
 - **OP-3 (Phase 20):** `reposix refresh` subcommand — fetches all issues/pages from the

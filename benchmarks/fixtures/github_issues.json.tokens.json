@@ -1,0 +1,7 @@
+{
+  "content_hash": "fc28ac83f25991cd68eedc8733202a556acfbdb0080aab52b678e2b6c5c4d002",
+  "input_tokens": 3661,
+  "source": "github_issues.json",
+  "model": "claude-3-haiku-20240307",
+  "counted_at": "2026-04-15T19:36:45Z"
+}

@@ -1,0 +1,7 @@
+{
+  "content_hash": "45dfea5e4e9d1ea632cfe1df89aa9e064d603a3abd853bf3e6b9ff44e4d3e7b5",
+  "input_tokens": 4883,
+  "source": "mcp_jira_catalog.json",
+  "model": "claude-3-haiku-20240307",
+  "counted_at": "2026-04-15T19:36:44Z"
+}

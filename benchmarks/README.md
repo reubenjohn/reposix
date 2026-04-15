@@ -18,14 +18,18 @@ Both fixtures describe the same task: "read 3 issues, edit 1, push the change".
 ## Running the benchmark
 
 ```bash
-python3 scripts/bench_token_economy.py
+# One-shot (requires ANTHROPIC_API_KEY; populates cache):
+ANTHROPIC_API_KEY=<key> python3 scripts/bench_token_economy.py
+
+# Offline (reads committed cache; zero network):
+python3 scripts/bench_token_economy.py --offline
 ```
 
-Output: a Markdown table with character counts, token estimates (`len / 4`), and the reduction ratio.
+Output: a Markdown table with character counts, real token counts, and the reduction ratio.
 
 ## Honest caveats
 
-- **Token estimate uses `len(text) / 4`** — the same heuristic [`theact`](https://github.com/reubenjohn/theact) and [`llm`](https://github.com/simonw/llm) use. It's within ~10% of what Claude's real tokenizer produces on English + code. We do NOT ship a `tiktoken` dependency.
+- **Token counts come from Anthropic's `count_tokens` API**, cached in `benchmarks/fixtures/*.tokens.json` (committed). Offline CI runs via `python3 scripts/bench_token_economy.py --offline`.
 - **The MCP fixture is representative, not authoritative.** It is a synthesized manifest of the ~35 tools an agent doing Jira work would encounter — modeled on the public Atlassian Forge tool surface and the actual schemas produced by `mcp-atlassian`. Real deployments often have MORE tools.
 - **The reposix session is the literal output of `scripts/demo.sh`** — the bytes the agent's shell would actually place in context. ANSI escapes are stripped.
 - **These are the agent's INPUT tokens.** The agent's own reasoning + tool-call tokens are separate (and comparable between scenarios). We measure the one thing that changes architecturally: what the agent must ingest to get started.

@@ -39,7 +39,7 @@ That's it. The agent issues two commands it has seen thousands of times in its p
 ## Token-economy benchmark
 
 !!! success "Measured, not claimed"
-    The architecture paper[^1] projected a ~98% reduction. We measured it against a representative fixture corpus. Result: **92.3% reduction** — reposix ingests **~12.9× less context** than an MCP-mediated baseline for the same task. Full breakdown in [`benchmarks/RESULTS.md`](https://github.com/reubenjohn/reposix/blob/main/benchmarks/RESULTS.md).
+    The architecture paper[^1] projected a ~98% reduction. We measured it against a representative fixture corpus using Anthropic's `count_tokens` API (no more `len/4` heuristic). Result: **89.1% reduction** — reposix ingests **~9.2× less context** than an MCP-mediated baseline for the same task. Full breakdown in [`benchmarks/RESULTS.md`](https://github.com/reubenjohn/reposix/blob/main/benchmarks/RESULTS.md).
 
     [^1]: [`InitialReport.md`](https://github.com/reubenjohn/reposix/blob/main/InitialReport.md) §"Token Economics of Filesystem Interaction" in the repo.
 
@@ -50,12 +50,12 @@ Two fixtures in `benchmarks/fixtures/`:
 - `mcp_jira_catalog.json` — a representative 35-tool Jira MCP manifest modeled on the public Atlassian Forge surface and the schemas produced by `mcp-atlassian`.
 - `reposix_session.txt` — the ANSI-stripped excerpt of a real shell session performing the same task (read 3 issues, edit 1, push).
 
-`scripts/bench_token_economy.py` computes character counts and token estimates (via `len/4` — the standard heuristic that tracks Claude's real tokenizer within ~10%) and emits a Markdown table.
+`scripts/bench_token_economy.py` computes character counts and real token counts (via Anthropic's `client.messages.count_tokens()` API; results cached in `benchmarks/fixtures/*.tokens.json` for offline reproducibility) and emits a Markdown table.
 
-| Scenario | Estimated tokens |
+| Scenario | Real tokens (`count_tokens`) |
 |----------|-----------------:|
-| MCP-mediated (tool catalog + schemas) | ~7 700 |
-| **reposix** (shell session transcript) | **~595** |
+| MCP-mediated (tool catalog + schemas) | ~4,883 |
+| **reposix** (shell session transcript) | **~531** |
 
 ![benchmark chart](https://raw.githubusercontent.com/reubenjohn/reposix/main/docs/social/assets/benchmark.svg){ .no-lightbox width="100%" }
 
@@ -65,7 +65,7 @@ Reproduce:
 python3 scripts/bench_token_economy.py
 ```
 
-The paper's 98.7% number assumes a larger MCP corpus (40+ tools with fully-expanded schemas); our 92.3% assumes a conservatively-sized one. Both conclusions match: **between one and two orders of magnitude less context burned**.
+The paper's 98.7% number assumes a larger MCP corpus (40+ tools with fully-expanded schemas). Prior to Phase 22 we published 91.6% based on a `len/4` heuristic; with real tokenization via Anthropic's `count_tokens` API the number is 89.1%. We keep both on file in `benchmarks/RESULTS.md` git history. Both conclusions match: **between one and two orders of magnitude less context burned**.
 
 ### This now works against real GitHub, not just the simulator
 
@@ -81,10 +81,10 @@ Pagination, rate-limit backoff (honors `x-ratelimit-reset`), and the SG-01 egres
 
 ## What the measurement does NOT capture
 
-- Real-world tokenizer quirks (our estimate is `len / 4`; Claude's tokenizer is within ~10% on English+code).
 - The agent's own reasoning tokens — identical across scenarios, so they cancel out.
 - Re-fetches if context is compacted mid-session — reposix is less affected here since its "context" is persistent on disk.
 - Actual dollar cost — that's a model-price question, not an architecture question.
+- Fixture representativeness — our GitHub and Confluence fixtures are synthetic (see `benchmarks/fixtures/README.md`); real production payloads can be larger, which would push the reduction higher.
 
 ## POSIX is the agent's native tongue
 
