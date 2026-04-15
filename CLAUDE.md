@@ -4,7 +4,7 @@ This file is read by every agent (Claude Code, Codex, Cursor, etc.) that opens t
 
 ## Project elevator pitch
 
-reposix exposes REST-based issue trackers (and similar SaaS systems) as a POSIX directory tree via FUSE, with a git remote helper for synchronization. Built so autonomous LLM agents can use `cat`, `grep`, `sed`, and `git` on real workflows instead of MCP tool schemas — see `InitialReport.md` for the architectural argument and `AgenticEngineeringReference.md` for the dark-factory pattern that motivates the simulator-first approach.
+reposix exposes REST-based issue trackers (and similar SaaS systems) as a POSIX directory tree via FUSE, with a git remote helper for synchronization. Built so autonomous LLM agents can use `cat`, `grep`, `sed`, and `git` on real workflows instead of MCP tool schemas — see `docs/research/initial-report.md` for the architectural argument and `docs/research/agentic-engineering-reference.md` for the dark-factory pattern that motivates the simulator-first approach.
 
 ## Operating Principles (project-specific)
 
@@ -126,7 +126,7 @@ If you (the agent) notice this CLAUDE.md getting hard to keep in working memory:
 
 ## Quick links
 
-- `InitialReport.md` — full architectural argument for FUSE + git-remote-helper.
-- `AgenticEngineeringReference.md` — dark-factory pattern, lethal trifecta, simulator-first.
+- `docs/research/initial-report.md` — full architectural argument for FUSE + git-remote-helper.
+- `docs/research/agentic-engineering-reference.md` — dark-factory pattern, lethal trifecta, simulator-first.
 - `.planning/PROJECT.md` — current scope.
 - `.planning/STATE.md` — current cursor.
