@@ -17,6 +17,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 pub mod confluence_direct;
+pub mod contention;
 pub mod driver;
 pub mod fuse_mode;
 pub mod metrics;
