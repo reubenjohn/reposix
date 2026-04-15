@@ -240,6 +240,12 @@ async fn confluence_direct_3_clients_5s() {
         .await;
 
     // Page get — path_regex so any of the 3 ids match.
+    // NOTE: this stub always responds with sample_page("10001", "Page 1")
+    // regardless of which page id was requested. This is intentional for
+    // load-testing purposes but means id-routing bugs in
+    // `ConfluenceBackend::get_issue` (e.g., always requesting id 0) would
+    // go undetected. A more precise per-id stub set could be added if
+    // id-routing correctness becomes a concern.
     Mock::given(method("GET"))
         .and(path_regex(r"^/wiki/api/v2/pages/\d+$"))
         .and(query_param("body-format", "atlas_doc_format"))
@@ -280,6 +286,10 @@ async fn confluence_direct_3_clients_5s() {
     assert!(
         markdown.contains("| list "),
         "summary missing list row:\n{markdown}"
+    );
+    assert!(
+        markdown.contains("| get "),
+        "summary missing get row — get_issue calls not being recorded:\n{markdown}"
     );
     let total_ops = parse_total_ops(&markdown);
     assert!(
