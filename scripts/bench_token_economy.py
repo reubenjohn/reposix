@@ -219,8 +219,10 @@ def verify_fixture_cache_integrity(fixture_paths: list) -> list:
             continue
         try:
             cached = json.loads(cache_path.read_text())
-            fixture_bytes = fixture_path.read_bytes()
-            actual_hash = _sha256(fixture_bytes.decode("utf-8"))
+            # Hash must be computed from the processed text (after JSON round-trip),
+            # matching what get_or_count stores — NOT the raw bytes on disk.
+            processed_text, _ = load_raw_text(fixture_path)
+            actual_hash = _sha256(processed_text)
             if cached.get("content_hash") != actual_hash:
                 warnings.append(
                     f"{fixture_path.name}: cache hash mismatch "
