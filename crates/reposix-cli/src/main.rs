@@ -22,12 +22,13 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 mod binpath;
-mod cache_db;
 mod demo;
-mod list;
 mod mount;
-mod refresh;
 mod sim;
+
+// Modules shared with the lib target — imported via the library crate path.
+use reposix_cli::list;
+use reposix_cli::refresh;
 
 /// reposix — git-backed FUSE filesystem for autonomous agents.
 #[derive(Debug, Parser)]

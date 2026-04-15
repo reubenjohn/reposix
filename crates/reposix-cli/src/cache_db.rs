@@ -56,8 +56,7 @@ impl CacheDb {
 ///   failure (e.g. schema application).
 pub fn open_cache_db(mount: &Path) -> Result<CacheDb> {
     let dir = mount.join(".reposix");
-    std::fs::create_dir_all(&dir)
-        .with_context(|| format!("create_dir_all {}", dir.display()))?;
+    std::fs::create_dir_all(&dir).with_context(|| format!("create_dir_all {}", dir.display()))?;
 
     let path = dir.join("cache.db");
 
@@ -153,8 +152,14 @@ mod tests {
         let dir = tempdir().unwrap();
         let db = open_cache_db(dir.path()).expect("open");
 
-        update_metadata(&db, "simulator", "demo", "2026-04-15T00:00:00Z", Some("abc123"))
-            .expect("update");
+        update_metadata(
+            &db,
+            "simulator",
+            "demo",
+            "2026-04-15T00:00:00Z",
+            Some("abc123"),
+        )
+        .expect("update");
 
         let (backend, project, fetched_at, sha): (String, String, String, Option<String>) = db
             .conn()
@@ -186,7 +191,7 @@ mod tests {
     /// EXCLUSIVE WAL lock should return an error whose message mentions
     /// "another refresh is in progress".
     ///
-    /// NOTE: SQLite WAL EXCLUSIVE lock acquisition only contends after a
+    /// NOTE: `SQLite` WAL EXCLUSIVE lock acquisition only contends after a
     /// write; the second connection succeeds in read-only mode until a write
     /// is attempted.  This test verifies that the error surfacing path is
     /// correct by attempting a write on the second connection.

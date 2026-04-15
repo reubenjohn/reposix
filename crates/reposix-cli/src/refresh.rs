@@ -13,7 +13,7 @@ use std::process::Command;
 use anyhow::{bail, Context as _, Result};
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::{IssueBackend as _};
+use reposix_core::IssueBackend as _;
 use reposix_github::GithubReadOnlyBackend;
 
 use crate::cache_db;
@@ -53,12 +53,7 @@ impl RefreshConfig {
 /// 1. Guard against `--offline` (not yet implemented) and active FUSE mounts.
 /// 2. Open (or create) `.reposix/cache.db`.
 /// 3. Fetch all issues from the configured backend.
-/// 4. Write `<mount>/<bucket>/<padded-id>.md` for each issue.
-/// 5. Write `.reposix/fetched_at.txt`.
-/// 6. Write `.reposix/.gitignore`.
-/// 7. Create a git commit (`git init` is idempotent).
-/// 8. Update `cache.db` metadata.
-/// 9. Print a summary line.
+/// 4. Delegate the rest to [`run_refresh_inner`].
 ///
 /// # Errors
 ///
@@ -66,10 +61,7 @@ impl RefreshConfig {
 /// - FUSE is active (live `.reposix/fuse.pid`): returns an error telling the
 ///   user to unmount first.
 /// - Backend network call fails: propagated from the backend.
-/// - `frontmatter::render` fails: propagated.
-/// - Any git subprocess exits non-zero: propagated.
-/// - `cache.db` already locked by another refresh: propagated with a clear
-///   "another refresh is in progress" message.
+/// - Propagates any error from [`run_refresh_inner`].
 pub async fn run_refresh(cfg: RefreshConfig) -> Result<()> {
     if cfg.offline {
         bail!(
@@ -90,6 +82,25 @@ pub async fn run_refresh(cfg: RefreshConfig) -> Result<()> {
 
     // Fetch issues from the configured backend.
     let issues = fetch_issues(&cfg).await?;
+
+    run_refresh_inner(&cfg, issues, Some(&db))
+}
+
+/// Inner refresh logic: write `.md` files, update timestamps, commit.
+///
+/// Separated from [`run_refresh`] so integration tests can supply a
+/// pre-built `Vec<Issue>` without needing a live network backend.
+///
+/// # Errors
+///
+/// - `frontmatter::render` fails: propagated.
+/// - Any git subprocess exits non-zero: propagated.
+/// - `cache.db` update fails: propagated.
+pub fn run_refresh_inner(
+    cfg: &RefreshConfig,
+    issues: Vec<reposix_core::Issue>,
+    db: Option<&crate::cache_db::CacheDb>,
+) -> Result<()> {
     let n = issues.len();
 
     // Determine the bucket directory name.
@@ -98,7 +109,11 @@ pub async fn run_refresh(cfg: RefreshConfig) -> Result<()> {
         ListBackend::Sim | ListBackend::Github => "issues",
     };
 
-    // Ensure the bucket directory exists.
+    // Ensure the .reposix and bucket directories exist.
+    let reposix_dir = cfg.mount_point.join(".reposix");
+    std::fs::create_dir_all(&reposix_dir)
+        .with_context(|| format!("create .reposix dir {}", reposix_dir.display()))?;
+
     let bucket_dir = cfg.mount_point.join(bucket);
     std::fs::create_dir_all(&bucket_dir)
         .with_context(|| format!("create bucket dir {}", bucket_dir.display()))?;
@@ -115,14 +130,17 @@ pub async fn run_refresh(cfg: RefreshConfig) -> Result<()> {
 
     // Write the fetched_at sentinel.
     let ts = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
-    let fetched_at_path = cfg.mount_point.join(".reposix").join("fetched_at.txt");
+    let fetched_at_path = reposix_dir.join("fetched_at.txt");
     std::fs::write(&fetched_at_path, &ts)
         .with_context(|| format!("write {}", fetched_at_path.display()))?;
 
     // Write .reposix/.gitignore (commit alongside fetched_at.txt).
-    let reposix_gitignore = cfg.mount_point.join(".reposix").join(".gitignore");
-    std::fs::write(&reposix_gitignore, "cache.db\ncache.db-wal\ncache.db-shm\nfuse.pid\n")
-        .with_context(|| format!("write {}", reposix_gitignore.display()))?;
+    let reposix_gitignore = reposix_dir.join(".gitignore");
+    std::fs::write(
+        &reposix_gitignore,
+        "cache.db\ncache.db-wal\ncache.db-shm\nfuse.pid\n",
+    )
+    .with_context(|| format!("write {}", reposix_gitignore.display()))?;
 
     // Build the commit message and author.
     let label = cfg.backend_label();
@@ -134,8 +152,10 @@ pub async fn run_refresh(cfg: RefreshConfig) -> Result<()> {
 
     git_refresh_commit(&cfg.mount_point, bucket, &author, &message)?;
 
-    // Update the metadata DB with the refresh result.
-    cache_db::update_metadata(&db, label, &cfg.project, &ts, None)?;
+    // Update the metadata DB with the refresh result if one is provided.
+    if let Some(db) = db {
+        cache_db::update_metadata(db, label, &cfg.project, &ts, None)?;
+    }
 
     println!("refreshed {n} issues into {}", cfg.mount_point.display());
     Ok(())
@@ -179,8 +199,7 @@ async fn fetch_issues(cfg: &RefreshConfig) -> Result<Vec<reposix_core::Issue>> {
                 email,
                 api_token: token,
             };
-            let b =
-                ConfluenceBackend::new(creds, &tenant).context("build ConfluenceBackend")?;
+            let b = ConfluenceBackend::new(creds, &tenant).context("build ConfluenceBackend")?;
             b.list_issues(&cfg.project).await.with_context(|| {
                 format!(
                     "confluence list_issues space_key={} \
@@ -237,12 +256,7 @@ pub fn is_fuse_active(mount: &Path) -> Result<bool> {
 /// # Errors
 ///
 /// Returns an error if any git subprocess exits with a non-zero status.
-pub fn git_refresh_commit(
-    mount: &Path,
-    bucket: &str,
-    author: &str,
-    message: &str,
-) -> Result<()> {
+pub fn git_refresh_commit(mount: &Path, bucket: &str, author: &str, message: &str) -> Result<()> {
     // Helper: run a git command in the mount directory.
     let g = |args: &[&str]| -> Result<()> {
         let status = Command::new("git")
@@ -275,7 +289,13 @@ pub fn git_refresh_commit(
         }
     }
 
-    g(&["add", "--", bucket, ".reposix/fetched_at.txt", ".reposix/.gitignore"])?;
+    g(&[
+        "add",
+        "--",
+        bucket,
+        ".reposix/fetched_at.txt",
+        ".reposix/.gitignore",
+    ])?;
 
     // Commit with explicit author env vars so the commit works in bare CI
     // environments without a global git user.email configured.
@@ -346,13 +366,11 @@ mod tests {
         std::fs::write(reposix_dir.join("fuse.pid"), "99999999").unwrap();
         let result = is_fuse_active(dir.path());
         // Accept either Ok(false) (ESRCH — process not found) or an error if
-        // the kernel rejects the PID. The important thing is it's NOT
-        // Ok(true).
-        match result {
-            Ok(false) => {}
-            Ok(true) => panic!("PID 99999999 must not be alive"),
-            Err(_) => {} // acceptable — some kernels may reject out-of-range PIDs
-        }
+        // the kernel rejects the PID. The important thing is it's NOT Ok(true).
+        assert!(
+            !matches!(result, Ok(true)),
+            "PID 99999999 must not be alive"
+        );
     }
 
     /// `git_refresh_commit` creates a git commit in a fresh temp directory.
@@ -390,7 +408,10 @@ mod tests {
             .output()
             .expect("git log");
         let log_str = String::from_utf8_lossy(&log.stdout);
-        assert!(!log_str.trim().is_empty(), "git log must show at least one commit");
+        assert!(
+            !log_str.trim().is_empty(),
+            "git log must show at least one commit"
+        );
         assert!(
             log.status.success(),
             "git log must exit 0 inside a valid repo"
