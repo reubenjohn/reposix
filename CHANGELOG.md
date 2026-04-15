@@ -6,6 +6,16 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+### Added — Phase 17: Swarm confluence-direct mode
+- `reposix-swarm --mode confluence-direct` spawns N read-only clients
+  against `ConfluenceBackend` (list + 3×get per cycle). Closes the
+  session-4 open gap; SWARM-01 + SWARM-02.
+- New wiremock CI test `confluence_direct_3_clients_5s` in
+  `reposix-swarm/tests/mini_e2e.rs`.
+- New real-tenant smoke `live_confluence_direct_smoke` under
+  `#[ignore]` + env-var gate (`ATLASSIAN_EMAIL`,
+  `ATLASSIAN_API_KEY`, `REPOSIX_CONFLUENCE_TENANT`).
+
 ## [v0.6.0] — 2026-04-14
 
 The "Confluence write path" cut. Phase 16 implements `create_issue`, `update_issue`,

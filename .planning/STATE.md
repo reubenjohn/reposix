@@ -35,6 +35,11 @@ progress:
   · Wave D (this commit — CHANGELOG `[v0.6.0]` + version bump `0.5.0→0.6.0` + `scripts/tag-v0.6.0.sh` + `16-SUMMARY.md`).
   Closes REQ WRITE-01..04 for the Confluence backend. Workspace test count 317 (baseline 278 + 39 new). Clippy `-D warnings` clean. v0.6.0 milestone tag pending user `scripts/tag-v0.6.0.sh` execution.
   Details: `.planning/phases/16-confluence-write-path-update-issue-create-issue-delete-or-cl/16-SUMMARY.md`.
+- **Phase 17 SHIPPED (2026-04-14, session 8):** 2 waves landed.
+  — Wave A (`5ecec37` + `0ebc58d` `ConfluenceDirectWorkload` + `Mode::ConfluenceDirect` CLI dispatch)
+  · Wave B (`52fb4e9` wiremock CI test `confluence_direct_3_clients_5s` + `confluence_real_tenant.rs` `#[ignore]` smoke).
+  Closes SWARM-01 + SWARM-02. Workspace test count 318 (+1 new wiremock integration test). Clippy `-D warnings` clean.
+  Details: `.planning/phases/17-swarm-confluence-direct-mode-add-mode-confluence-direct-to-r/17-SUMMARY.md`.
 
 ## Project Reference
 
@@ -47,13 +52,13 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 
 ## Current Position
 
-Phase: 16 — SHIPPED. Phase 17 (swarm confluence-direct) is next.
-Plan: 4 of 4 (all waves complete)
-Cursor: **v0.6.0 in-flight (tag pending user gate). Phase 16 Confluence write path closed.
-Phase 17 (swarm confluence-direct — add `--mode confluence-direct` to `reposix-swarm`) is the
+Phase: 17 — SHIPPED. Phase 18 (OP-2 remainder) is next.
+Plan: 2 of 2 (all waves complete)
+Cursor: **v0.6.0 in-flight (tag pending user gate). Phase 17 swarm confluence-direct closed.
+Phase 18 (OP-2 remainder — recursive tree/_INDEX.md, mount-root _INDEX.md) is the
 recommended next execution target.**
 Status: executing
-Last activity: 2026-04-14 — Phase 16 Confluence write path shipped
+Last activity: 2026-04-14 — Phase 17 swarm confluence-direct shipped
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
