@@ -1061,9 +1061,10 @@ impl IssueBackend for ConfluenceBackend {
             return Err(Error::Other(format!("not found: {}", redact_url(&url))));
         }
         if status == StatusCode::CONFLICT {
+            let body_preview: String = String::from_utf8_lossy(&bytes).chars().take(256).collect();
             return Err(Error::Other(format!(
-                "version mismatch: {}",
-                String::from_utf8_lossy(&bytes)
+                "confluence version conflict for PUT {}: {body_preview}",
+                redact_url(&url),
             )));
         }
         if !status.is_success() {
