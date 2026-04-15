@@ -51,21 +51,37 @@ jobs:
       - name: Install runtime FUSE binaries
         run: sudo apt-get update && sudo apt-get install -y fuse3
       - run: cargo test --workspace --locked
+      - name: Test pre-push credential hook
+        run: bash scripts/hooks/test-pre-push.sh
 
   integration:
     name: integration (mounted FS)
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-14]
+    runs-on: ${{ matrix.os }}
     needs: [test]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: Install runtime FUSE binaries
+      - name: Install FUSE (Linux)
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y fuse3
-      - name: Verify FUSE available
-        run: |
-          ls -l /dev/fuse
-          which fusermount3
+      - name: Install macFUSE (macOS)
+        # NOTE(E3): gythialy/macfuse action was not found on GitHub as of
+        # 2026-04-15. This step will fail on macos-14 runners until the
+        # correct action reference is confirmed at the E3 checkpoint.
+        # See .planning/phases/21-.../21-E-macos-PLAN.md Task E3.
+        if: runner.os == 'macOS'
+        uses: gythialy/macfuse@v1
+      - name: Verify FUSE available (Linux)
+        if: runner.os == 'Linux'
+        run: ls -l /dev/fuse && which fusermount3
+      - name: Verify FUSE available (macOS)
+        if: runner.os == 'macOS'
+        run: which mount_macfuse || which mount_osxfuse || true
       - name: Build release binaries
         run: cargo build --release --workspace --bins
       - name: Run integration tests (requires FUSE)
@@ -75,6 +91,8 @@ jobs:
         # — those need real credentials and have their own dedicated
         # jobs (`integration (contract, real github)`,
         # `integration (contract, real confluence)`).
+        env:
+          REPOSIX_UNMOUNT_CMD: ${{ runner.os == 'macOS' && 'umount -f' || 'fusermount3 -u' }}
         run: cargo test -p reposix-fuse --release --locked -- --ignored --test-threads=1
 
   demos-smoke:
