@@ -136,9 +136,9 @@ async fn mount_lists_and_reads_issues() {
     };
     assert!(ready, "mount did not expose new root layout within 3s");
 
-    // Assertion 1: `ls mount/` shows `.gitignore` + `issues/` — and NOT
-    // `tree/` (SimBackend doesn't advertise Hierarchy, fixture issues
-    // have no parent_id).
+    // Assertion 1: `ls mount/` shows `.gitignore`, `_INDEX.md`, and `issues/`
+    // — and NOT `tree/` (SimBackend doesn't advertise Hierarchy, fixture
+    // issues have no parent_id). Phase 18 adds `_INDEX.md` at the root.
     let mut root_names: Vec<String> = std::fs::read_dir(&mount_path)
         .expect("read_dir mount")
         .flatten()
@@ -147,8 +147,12 @@ async fn mount_lists_and_reads_issues() {
     root_names.sort();
     assert_eq!(
         root_names,
-        vec![".gitignore".to_owned(), "issues".to_owned()],
-        "mount root listing mismatch; expected no `tree/` under sim backend"
+        vec![
+            ".gitignore".to_owned(),
+            "_INDEX.md".to_owned(),
+            "issues".to_owned(),
+        ],
+        "mount root listing mismatch; expected .gitignore + _INDEX.md + issues (no tree/)"
     );
 
     // Assertion 2: `cat mount/.gitignore` returns exactly `/tree/\n` (7 bytes).

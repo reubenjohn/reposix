@@ -364,6 +364,108 @@ fn render_bucket_index(
     out.into_bytes()
 }
 
+/// Pure render of a tree-directory `_INDEX.md` body (Phase 18, OP-2 INDEX-01).
+///
+/// Performs a DFS from `root_dir` using the `snapshot` for resolution.
+/// The `snapshot` is cycle-free by construction (see [`crate::tree::TreeSnapshot::build`]),
+/// so no visited-set is needed. Produces YAML frontmatter + a pipe-table
+/// with columns `depth | name | target`; rows in DFS traversal order.
+///
+/// `escape_index_cell` is applied to all `name` and `target` values
+/// (T-18-01 mitigation).
+fn render_tree_index(
+    root_dir: &crate::tree::TreeDir,
+    snapshot: &crate::tree::TreeSnapshot,
+    project: &str,
+    generated_at: chrono::DateTime<chrono::Utc>,
+) -> Vec<u8> {
+    use std::fmt::Write as _;
+
+    // DFS: each stack entry is (children_slice, depth_relative_to_root_dir).
+    // Push children in reverse order so left-to-right children pop correctly.
+    let mut rows: Vec<(usize, String, String)> = Vec::new();
+    let mut stack: Vec<(&[crate::tree::TreeEntry], usize)> =
+        vec![(root_dir.children.as_slice(), 0)];
+    while let Some((entries, depth)) = stack.pop() {
+        for entry in entries.iter().rev() {
+            match entry {
+                crate::tree::TreeEntry::Symlink { name, target, .. } => {
+                    rows.push((depth, name.clone(), target.clone()));
+                }
+                crate::tree::TreeEntry::Dir(ino) => {
+                    if let Some(dir) = snapshot.resolve_dir(*ino) {
+                        rows.push((depth, format!("{}/", dir.name), String::new()));
+                        stack.push((dir.children.as_slice(), depth + 1));
+                    }
+                }
+            }
+        }
+    }
+    let ts = generated_at.to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+    let count = rows.len();
+    let mut out = String::with_capacity(256 + count * 80);
+    out.push_str("---\n");
+    let _ = writeln!(out, "kind: tree-index");
+    let _ = writeln!(out, "project: {project}");
+    let _ = writeln!(out, "subtree: {}", escape_index_cell(&root_dir.name));
+    let _ = writeln!(out, "entry_count: {count}");
+    let _ = writeln!(out, "generated_at: {ts}");
+    out.push_str("---\n\n");
+    let _ = writeln!(
+        out,
+        "# Subtree index: tree/{}/",
+        escape_index_cell(&root_dir.name)
+    );
+    out.push('\n');
+    out.push_str("| depth | name | target |\n");
+    out.push_str("| --- | --- | --- |\n");
+    for (depth, name, target) in &rows {
+        let _ = writeln!(
+            out,
+            "| {depth} | {name} | {target} |",
+            name = escape_index_cell(name),
+            target = escape_index_cell(target),
+        );
+    }
+    out.into_bytes()
+}
+
+/// Pure render of the mount-root `_INDEX.md` body (Phase 18, OP-2 INDEX-02).
+///
+/// Produces YAML frontmatter + a pipe-table with columns `entry | kind | count`.
+/// The `tree/` row is only emitted when `tree_present` is `true`.
+fn render_mount_root_index(
+    backend_name: &str,
+    project: &str,
+    bucket: &str,
+    issue_count: usize,
+    tree_present: bool,
+    generated_at: chrono::DateTime<chrono::Utc>,
+) -> Vec<u8> {
+    use std::fmt::Write as _;
+
+    let ts = generated_at.to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+    let mut out = String::with_capacity(512);
+    out.push_str("---\n");
+    let _ = writeln!(out, "kind: mount-index");
+    let _ = writeln!(out, "backend: {backend_name}");
+    let _ = writeln!(out, "project: {project}");
+    let _ = writeln!(out, "bucket: {bucket}");
+    let _ = writeln!(out, "issue_count: {issue_count}");
+    let _ = writeln!(out, "generated_at: {ts}");
+    out.push_str("---\n\n");
+    let _ = writeln!(out, "# Mount index — {project}");
+    out.push('\n');
+    out.push_str("| entry | kind | count |\n");
+    out.push_str("| --- | --- | --- |\n");
+    let _ = writeln!(out, "| .gitignore | file | — |");
+    let _ = writeln!(out, "| {bucket}/ | directory | {issue_count} |");
+    if tree_present {
+        let _ = writeln!(out, "| tree/ | directory | — |");
+    }
+    out.into_bytes()
+}
+
 /// Partition of the u64 inode space. Every callback entry point runs
 /// [`InodeKind::classify`] first and branches on the result before any
 /// map lookup.
@@ -481,6 +583,20 @@ pub struct ReposixFs {
     /// these bytes". Wrapped in `Arc` so callbacks can clone cheaply
     /// without holding the lock across the FUSE reply.
     bucket_index_bytes: RwLock<Option<Arc<Vec<u8>>>>,
+    /// Cached rendered bytes for the mount-root `_INDEX.md` (Phase 18).
+    /// Same lazily-invalidated pattern as `bucket_index_bytes`.
+    mount_root_index_bytes: RwLock<Option<Arc<Vec<u8>>>>,
+    /// Per-tree-dir `_INDEX.md` render cache, keyed by tree-dir inode.
+    /// Cleared on each `refresh_issues`.
+    tree_dir_index_cache: DashMap<u64, Arc<Vec<u8>>>,
+    /// Forward map: tree-dir inode → its `_INDEX.md` inode (lazily allocated).
+    tree_index_inodes: DashMap<u64, u64>,
+    /// Reverse map: `_INDEX.md` inode → tree-dir inode. Needed for `getattr`
+    /// when the kernel calls with the index inode before any `lookup`.
+    tree_index_ino_reverse: DashMap<u64, u64>,
+    /// Monotonic inode allocator for tree-dir `_INDEX.md` files.
+    /// Starts at `TREE_INDEX_ALLOC_START` (7); capped at `TREE_INDEX_ALLOC_END`.
+    tree_index_alloc: AtomicU64,
 }
 
 impl std::fmt::Debug for ReposixFs {
@@ -579,6 +695,11 @@ impl ReposixFs {
             gitignore_attr,
             mount_time: now,
             bucket_index_bytes: RwLock::new(None),
+            mount_root_index_bytes: RwLock::new(None),
+            tree_dir_index_cache: DashMap::new(),
+            tree_index_inodes: DashMap::new(),
+            tree_index_ino_reverse: DashMap::new(),
+            tree_index_alloc: AtomicU64::new(TREE_INDEX_ALLOC_START),
         })
     }
 
@@ -751,6 +872,12 @@ impl ReposixFs {
         if let Ok(mut guard) = self.bucket_index_bytes.write() {
             guard.take();
         }
+        // Also invalidate the mount-root index and all tree-dir index caches
+        // (Phase 18 — issue count and tree shape may have changed).
+        if let Ok(mut guard) = self.mount_root_index_bytes.write() {
+            guard.take();
+        }
+        self.tree_dir_index_cache.clear();
 
         Ok(issues)
     }
@@ -811,6 +938,93 @@ impl ReposixFs {
             blksize: 4096,
             flags: 0,
         }
+    }
+
+    /// Generalised `FileAttr` for any read-only synthetic file.
+    /// Parameterised on inode so both `RootIndex` (inode 6) and
+    /// `TreeDirIndex` (inodes 7..=0xFFFF) can share the same shape.
+    fn synthetic_file_attr(&self, ino: u64, size: u64) -> FileAttr {
+        FileAttr {
+            ino: INodeNo(ino),
+            size,
+            blocks: size.div_ceil(512).max(1),
+            atime: self.mount_time,
+            mtime: self.mount_time,
+            ctime: self.mount_time,
+            crtime: self.mount_time,
+            kind: FileType::RegularFile,
+            perm: 0o444,
+            nlink: 1,
+            uid: uid_safe(),
+            gid: gid_safe(),
+            rdev: 0,
+            blksize: 4096,
+            flags: 0,
+        }
+    }
+
+    /// Allocate a fresh inode for a tree-dir `_INDEX.md`, saturating at
+    /// `TREE_INDEX_ALLOC_END` if the space is exhausted.
+    fn alloc_tree_index_ino(&self) -> u64 {
+        let ino = self.tree_index_alloc.fetch_add(1, Ordering::SeqCst);
+        ino.min(TREE_INDEX_ALLOC_END)
+    }
+
+    /// Return the stable `_INDEX.md` inode for `dir_ino`, allocating one on
+    /// first call. Subsequent calls for the same `dir_ino` are idempotent.
+    fn tree_dir_index_ino(&self, dir_ino: u64) -> u64 {
+        use dashmap::Entry;
+        match self.tree_index_inodes.entry(dir_ino) {
+            Entry::Occupied(e) => *e.get(),
+            Entry::Vacant(e) => {
+                let ino = self.alloc_tree_index_ino();
+                e.insert(ino);
+                self.tree_index_ino_reverse.insert(ino, dir_ino);
+                ino
+            }
+        }
+    }
+
+    /// Return cached (or freshly rendered) bytes for the tree-dir `_INDEX.md`
+    /// corresponding to `dir_ino`. Returns an empty vec if `dir_ino` is not
+    /// in the snapshot (should not happen in normal operation).
+    fn tree_dir_index_bytes_or_render(
+        &self,
+        dir_ino: u64,
+        snap: &crate::tree::TreeSnapshot,
+    ) -> Arc<Vec<u8>> {
+        if let Some(cached) = self.tree_dir_index_cache.get(&dir_ino) {
+            return cached.clone();
+        }
+        let Some(dir) = snap.resolve_dir(dir_ino) else {
+            return Arc::new(Vec::new());
+        };
+        let rendered = Arc::new(render_tree_index(dir, snap, &self.project, chrono::Utc::now()));
+        self.tree_dir_index_cache.insert(dir_ino, rendered.clone());
+        rendered
+    }
+
+    /// Return cached (or freshly rendered) bytes for the mount-root `_INDEX.md`.
+    fn mount_root_index_bytes_or_render(&self) -> Arc<Vec<u8>> {
+        if let Ok(guard) = self.mount_root_index_bytes.read() {
+            if let Some(bytes) = guard.as_ref() {
+                return bytes.clone();
+            }
+        }
+        let issue_count = self.cache.len();
+        let tree_present = self.should_emit_tree();
+        let rendered = Arc::new(render_mount_root_index(
+            self.backend.name(),
+            &self.project,
+            self.bucket,
+            issue_count,
+            tree_present,
+            chrono::Utc::now(),
+        ));
+        if let Ok(mut guard) = self.mount_root_index_bytes.write() {
+            *guard = Some(rendered.clone());
+        }
+        rendered
     }
 }
 
@@ -889,9 +1103,25 @@ impl Filesystem for ReposixFs {
                     reply.error(fuser::Errno::from_i32(libc::ENOENT));
                 }
             }
-            // Task 1 stubs — replaced with real implementation in Task 2.
-            InodeKind::RootIndex | InodeKind::TreeDirIndex => {
-                reply.error(fuser::Errno::from_i32(libc::ENOENT));
+            InodeKind::RootIndex => {
+                let bytes = self.mount_root_index_bytes_or_render();
+                let attr = self.synthetic_file_attr(ROOT_INDEX_INO, bytes.len() as u64);
+                reply.attr(&ATTR_TTL, &attr);
+            }
+            InodeKind::TreeDirIndex => {
+                // Pitfall 2: kernel may call getattr before lookup (e.g. after
+                // remount). Reverse-look up the dir_ino from tree_index_ino_reverse.
+                let Some(dir_ino) = self.tree_index_ino_reverse.get(&ino_u).map(|v| *v) else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    return;
+                };
+                let Ok(snap) = self.tree.read() else {
+                    reply.error(fuser::Errno::from_i32(libc::EIO));
+                    return;
+                };
+                let bytes = self.tree_dir_index_bytes_or_render(dir_ino, &snap);
+                let attr = self.synthetic_file_attr(ino_u, bytes.len() as u64);
+                reply.attr(&ATTR_TTL, &attr);
             }
             InodeKind::Unknown => reply.error(fuser::Errno::from_i32(libc::ENOENT)),
         }
@@ -915,6 +1145,12 @@ impl Filesystem for ReposixFs {
                 }
                 if name_str == "tree" && self.should_emit_tree() {
                     reply.entry(&ENTRY_TTL, &self.tree_attr, fuser::Generation(0));
+                    return;
+                }
+                if name_str == "_INDEX.md" {
+                    let bytes = self.mount_root_index_bytes_or_render();
+                    let attr = self.synthetic_file_attr(ROOT_INDEX_INO, bytes.len() as u64);
+                    reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
                     return;
                 }
                 reply.error(fuser::Errno::from_i32(libc::ENOENT));
@@ -958,6 +1194,13 @@ impl Filesystem for ReposixFs {
                     reply.error(fuser::Errno::from_i32(libc::ENOENT));
                     return;
                 };
+                if name_str == "_INDEX.md" {
+                    let index_ino = self.tree_dir_index_ino(parent_u);
+                    let bytes = self.tree_dir_index_bytes_or_render(parent_u, &snap);
+                    let attr = self.synthetic_file_attr(index_ino, bytes.len() as u64);
+                    reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
+                    return;
+                }
                 self.reply_tree_entry(&snap, &dir.children, name_str, reply);
             }
             InodeKind::Gitignore
@@ -1010,6 +1253,7 @@ impl Filesystem for ReposixFs {
                 if self.should_emit_tree() {
                     out.push((TREE_ROOT_INO, FileType::Directory, "tree".to_owned()));
                 }
+                out.push((ROOT_INDEX_INO, FileType::RegularFile, "_INDEX.md".to_owned()));
                 out
             }
             InodeKind::Bucket => {
@@ -1082,6 +1326,8 @@ impl Filesystem for ReposixFs {
                 // The kernel follows explicit paths, not `..` entries, so
                 // this is cosmetic only (matters for `ls -la` display).
                 out.push((TREE_ROOT_INO, FileType::Directory, "..".to_owned()));
+                let index_ino = self.tree_dir_index_ino(ino_u);
+                out.push((index_ino, FileType::RegularFile, "_INDEX.md".to_owned()));
                 collect_tree_entries(&snap, &dir.children, &mut out);
                 out
             }
@@ -1173,9 +1419,25 @@ impl Filesystem for ReposixFs {
                 let end = start.saturating_add(size as usize).min(bytes.len());
                 reply.data(&bytes[start..end]);
             }
-            // Task 1 stubs — replaced with real implementation in Task 2.
-            InodeKind::RootIndex | InodeKind::TreeDirIndex => {
-                reply.error(fuser::Errno::from_i32(libc::ENOENT));
+            InodeKind::RootIndex => {
+                let bytes = self.mount_root_index_bytes_or_render();
+                let start = usize::try_from(offset).unwrap_or(usize::MAX).min(bytes.len());
+                let end = start.saturating_add(size as usize).min(bytes.len());
+                reply.data(&bytes[start..end]);
+            }
+            InodeKind::TreeDirIndex => {
+                let Some(dir_ino) = self.tree_index_ino_reverse.get(&ino_u).map(|v| *v) else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    return;
+                };
+                let Ok(snap) = self.tree.read() else {
+                    reply.error(fuser::Errno::from_i32(libc::EIO));
+                    return;
+                };
+                let bytes = self.tree_dir_index_bytes_or_render(dir_ino, &snap);
+                let start = usize::try_from(offset).unwrap_or(usize::MAX).min(bytes.len());
+                let end = start.saturating_add(size as usize).min(bytes.len());
+                reply.data(&bytes[start..end]);
             }
             InodeKind::Unknown => reply.error(fuser::Errno::from_i32(libc::ENOENT)),
         }
@@ -1234,8 +1496,9 @@ impl Filesystem for ReposixFs {
                 // EROFS, matching the gitignore / tree-symlink discipline.
                 reply.error(fuser::Errno::from_i32(libc::EROFS));
             }
-            // Task 1 stubs — replaced with real implementation in Task 2.
             InodeKind::RootIndex | InodeKind::TreeDirIndex => {
+                // Synthesized read-only files — deny all metadata mutations
+                // (T-18-02, T-18-03).
                 reply.error(fuser::Errno::from_i32(libc::EROFS));
             }
             InodeKind::TreeDir => {
@@ -1928,5 +2191,294 @@ mod tests {
                 .expect("update");
         assert_eq!(got.id, IssueId(1));
         assert_eq!(got.version, 2);
+    }
+
+    // ------------------------------------------------------------------ //
+    // Phase 18-A: tree-index + mount-root index render pure-function tests. //
+    // ------------------------------------------------------------------ //
+
+    #[test]
+    fn render_tree_index_frontmatter_and_table() {
+        // One dir with 2 symlink children → 2 data rows.
+        use crate::tree::{TreeEntry, TreeDir, TREE_DIR_INO_BASE, TREE_SYMLINK_INO_BASE};
+        let children = vec![
+            TreeEntry::Symlink {
+                ino: TREE_SYMLINK_INO_BASE + 1,
+                name: "welcome.md".to_owned(),
+                target: "../pages/00000000001.md".to_owned(),
+            },
+            TreeEntry::Symlink {
+                ino: TREE_SYMLINK_INO_BASE + 2,
+                name: "arch-notes.md".to_owned(),
+                target: "../pages/00000000002.md".to_owned(),
+            },
+        ];
+        let root_dir = TreeDir {
+            ino: TREE_DIR_INO_BASE + 1,
+            name: "demo-space".to_owned(),
+            children,
+            depth: 0,
+        };
+        let snap = crate::tree::TreeSnapshot::default();
+        let generated = chrono::Utc
+            .with_ymd_and_hms(2026, 4, 15, 10, 0, 0)
+            .unwrap();
+        let bytes = render_tree_index(&root_dir, &snap, "demo", generated);
+        let text = std::str::from_utf8(&bytes).expect("utf-8");
+
+        // Frontmatter
+        assert!(text.starts_with("---\n"), "missing open fence: {text}");
+        assert!(text.contains("kind: tree-index\n"), "missing kind: {text}");
+        assert!(text.contains("project: demo\n"), "missing project: {text}");
+        assert!(
+            text.contains("subtree: demo-space\n"),
+            "missing subtree: {text}"
+        );
+        assert!(
+            text.contains("entry_count: 2\n"),
+            "missing entry_count: {text}"
+        );
+        assert!(
+            text.contains("generated_at: 2026-04-15T10:00:00Z\n"),
+            "missing generated_at: {text}"
+        );
+        assert!(text.contains("\n---\n\n"), "missing close fence: {text}");
+
+        // Table header + separator + both data rows
+        assert!(
+            text.contains("| depth | name | target |\n"),
+            "missing table header: {text}"
+        );
+        assert!(
+            text.contains("| --- | --- | --- |\n"),
+            "missing table separator: {text}"
+        );
+        assert!(
+            text.contains("| 0 | welcome.md | ../pages/00000000001.md |"),
+            "missing welcome row: {text}"
+        );
+        assert!(
+            text.contains("| 0 | arch-notes.md | ../pages/00000000002.md |"),
+            "missing arch-notes row: {text}"
+        );
+    }
+
+    #[test]
+    fn tree_index_full_dfs() {
+        // 3-level nested snapshot: root_dir → child_dir → grandchild symlink
+        // + root_dir direct symlink.  DFS must visit all 3 entries.
+        use crate::tree::{TreeEntry, TreeSnapshot};
+
+        // Build from real issues so resolve_dir works.
+        // parent(id=1) → child(id=2); child(id=2) → grandchild(id=3).
+        let t = chrono::Utc.with_ymd_and_hms(2026, 4, 15, 0, 0, 0).unwrap();
+        let issues = vec![
+            Issue {
+                id: IssueId(1),
+                title: "parent".to_owned(),
+                status: IssueStatus::Open,
+                assignee: None,
+                labels: vec![],
+                created_at: t,
+                updated_at: t,
+                version: 1,
+                body: String::new(),
+                parent_id: None,
+            },
+            Issue {
+                id: IssueId(2),
+                title: "child".to_owned(),
+                status: IssueStatus::Open,
+                assignee: None,
+                labels: vec![],
+                created_at: t,
+                updated_at: t,
+                version: 1,
+                body: String::new(),
+                parent_id: Some(IssueId(1)),
+            },
+            Issue {
+                id: IssueId(3),
+                title: "grandchild".to_owned(),
+                status: IssueStatus::Open,
+                assignee: None,
+                labels: vec![],
+                created_at: t,
+                updated_at: t,
+                version: 1,
+                body: String::new(),
+                parent_id: Some(IssueId(2)),
+            },
+        ];
+        let snap = TreeSnapshot::build("pages", &issues);
+        // The root_entries should contain one Dir entry (the "parent" dir).
+        let root_entries = snap.root_entries();
+        assert_eq!(root_entries.len(), 1, "expected 1 root entry");
+        let parent_ino = match &root_entries[0] {
+            TreeEntry::Dir(ino) => *ino,
+            other @ TreeEntry::Symlink { .. } => panic!("expected Dir, got {other:?}"),
+        };
+        let parent_dir = snap.resolve_dir(parent_ino).expect("parent dir");
+
+        let generated = chrono::Utc.with_ymd_and_hms(2026, 4, 15, 0, 0, 0).unwrap();
+        let bytes = render_tree_index(parent_dir, &snap, "demo", generated);
+        let text = std::str::from_utf8(&bytes).expect("utf-8");
+
+        // DFS should find: _self.md (parent itself), child/ dir, _self.md
+        // (child itself), grandchild symlink — at minimum 3+ entries.
+        // The exact count depends on TreeSnapshot internals but must be >= 3.
+        let data_rows: Vec<&str> = text
+            .lines()
+            .filter(|l| l.starts_with("| ") && !l.starts_with("| depth ") && !l.starts_with("| --- "))
+            .collect();
+        assert!(
+            data_rows.len() >= 3,
+            "expected >= 3 DFS rows, got {}: {text}",
+            data_rows.len()
+        );
+        // The output must mention child/ as a directory entry.
+        assert!(
+            text.contains("child/") || text.contains("_self.md"),
+            "missing child dir or _self.md: {text}"
+        );
+    }
+
+    #[test]
+    fn tree_index_empty() {
+        // Empty children → entry_count: 0 and no data rows.
+        use crate::tree::{TreeDir, TREE_DIR_INO_BASE};
+        let root_dir = TreeDir {
+            ino: TREE_DIR_INO_BASE + 1,
+            name: "empty-space".to_owned(),
+            children: vec![],
+            depth: 0,
+        };
+        let snap = crate::tree::TreeSnapshot::default();
+        let generated = chrono::Utc.with_ymd_and_hms(2026, 4, 15, 0, 0, 0).unwrap();
+        let bytes = render_tree_index(&root_dir, &snap, "demo", generated);
+        let text = std::str::from_utf8(&bytes).expect("utf-8");
+
+        assert!(
+            text.contains("entry_count: 0\n"),
+            "missing zero count: {text}"
+        );
+        // Table header and separator present, no data rows.
+        assert!(
+            text.contains("| depth | name | target |\n"),
+            "missing table header: {text}"
+        );
+        assert!(
+            text.contains("| --- | --- | --- |\n"),
+            "missing separator: {text}"
+        );
+        // No data rows: no line starting with `| ` that isn't the header or separator.
+        for line in text.lines() {
+            assert!(
+                !(line.starts_with("| ")
+                    && !line.starts_with("| depth ")
+                    && !line.starts_with("| --- ")),
+                "unexpected data row in empty index: {line}\n{text}"
+            );
+        }
+    }
+
+    #[test]
+    fn render_mount_root_index_frontmatter_and_table() {
+        // tree_present=true, 3 issues → all frontmatter keys + 3 table rows.
+        let generated = chrono::Utc.with_ymd_and_hms(2026, 4, 15, 12, 0, 0).unwrap();
+        let bytes =
+            render_mount_root_index("simulator", "demo", "issues", 3, true, generated);
+        let text = std::str::from_utf8(&bytes).expect("utf-8");
+
+        assert!(text.starts_with("---\n"), "missing open fence: {text}");
+        assert!(text.contains("kind: mount-index\n"), "missing kind: {text}");
+        assert!(
+            text.contains("backend: simulator\n"),
+            "missing backend: {text}"
+        );
+        assert!(text.contains("project: demo\n"), "missing project: {text}");
+        assert!(text.contains("bucket: issues\n"), "missing bucket: {text}");
+        assert!(
+            text.contains("issue_count: 3\n"),
+            "missing issue_count: {text}"
+        );
+        assert!(
+            text.contains("generated_at: 2026-04-15T12:00:00Z\n"),
+            "missing generated_at: {text}"
+        );
+        assert!(text.contains("\n---\n\n"), "missing close fence: {text}");
+
+        // Table rows
+        assert!(
+            text.contains("| entry | kind | count |\n"),
+            "missing table header: {text}"
+        );
+        assert!(
+            text.contains("| .gitignore | file | — |"),
+            "missing gitignore row: {text}"
+        );
+        assert!(
+            text.contains("| issues/ | directory | 3 |"),
+            "missing issues row: {text}"
+        );
+        assert!(
+            text.contains("| tree/ | directory | — |"),
+            "missing tree row: {text}"
+        );
+    }
+
+    #[test]
+    fn mount_root_index_no_tree_row() {
+        // tree_present=false → no `tree/` row.
+        let generated = chrono::Utc.with_ymd_and_hms(2026, 4, 15, 0, 0, 0).unwrap();
+        let bytes =
+            render_mount_root_index("simulator", "demo", "issues", 0, false, generated);
+        let text = std::str::from_utf8(&bytes).expect("utf-8");
+
+        assert!(
+            !text.contains("| tree/ |"),
+            "`tree/` row must be absent when tree_present=false: {text}"
+        );
+        // Other rows still present
+        assert!(
+            text.contains("| .gitignore | file | — |"),
+            "missing gitignore row: {text}"
+        );
+        assert!(
+            text.contains("| issues/ | directory | 0 |"),
+            "missing issues row: {text}"
+        );
+    }
+
+    #[test]
+    fn tree_dir_index_ino_is_stable() {
+        // Call tree_dir_index_ino(42) twice on the same ReposixFs; both
+        // calls must return the same inode (idempotent per-dir allocation).
+        use reposix_core::backend::sim::SimBackend;
+        let server = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async { wiremock::MockServer::start().await });
+        let backend: Arc<dyn IssueBackend> =
+            Arc::new(SimBackend::new(server.uri()).unwrap());
+        let fs =
+            ReposixFs::new(backend, server.uri(), "demo".to_owned()).expect("ReposixFs::new");
+
+        let first = fs.tree_dir_index_ino(42);
+        let second = fs.tree_dir_index_ino(42);
+        assert_eq!(
+            first, second,
+            "tree_dir_index_ino must be idempotent for same dir_ino"
+        );
+        // Different dir_inos must get different index inodes.
+        let other = fs.tree_dir_index_ino(99);
+        assert_ne!(first, other, "distinct dir_inos must get distinct index inodes");
+        // Reverse map must be populated.
+        assert_eq!(
+            fs.tree_index_ino_reverse.get(&first).map(|v| *v),
+            Some(42u64),
+            "reverse map must resolve first inode back to dir_ino 42"
+        );
     }
 }
