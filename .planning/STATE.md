@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: target)
 status: verifying
-stopped_at: Completed 21-E-macos-PLAN.md (macos-blocked path)
-last_updated: "2026-04-15T18:29:42.891Z"
+stopped_at: Completed 22-C-wire-docs-ship-PLAN.md
+last_updated: "2026-04-15T19:40:51.284Z"
 last_activity: 2026-04-15
 progress:
   total_phases: 11
@@ -104,6 +104,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 | Phase 21 PC | 25 | 2 tasks | 5 files |
 | Phase 21 PD | 12 | 1 tasks | 1 files |
 | Phase 21 PE | 25m | 3 tasks | 3 files |
+| Phase 22 PC | 30 | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -159,6 +160,9 @@ additions (2026-04-13):
 - [Phase 21]: gythialy/macfuse action 404 on GitHub; E3 checkpoint required to resolve action reference before push
 - [Phase 21]: macOS FUSE matrix deferred: gythialy/macfuse 404 + kext approval unavailable on GitHub-hosted runners; HARD-04 partial, requires self-hosted runner
 - [Phase 21]: HARD-00 closed: bash scripts/hooks/test-pre-push.sh now runs in CI test job
+- [Phase 22]: GITHUB_FIXTURE/CONFLUENCE_FIXTURE resolved dynamically in main() from FIXTURES so monkeypatching works in tests
+- [Phase 22]: Auto-approved checkpoint C2 (dark-factory): 89.1% reduction confirmed via Anthropic count_tokens API
+- [Phase 22]: BENCH-03 cold-mount matrix deferred — not in plan scope; stretch goal per 22-RESEARCH.md
 
 ### Pending Todos
 
@@ -179,8 +183,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-15T18:18:13.680Z
-Stopped at: Completed 21-E-macos-PLAN.md (macos-blocked path)
+Last session: 2026-04-15T19:40:51.279Z
+Stopped at: Completed 22-C-wire-docs-ship-PLAN.md
 Wave-level commit trail on `main` (Phase 16):
 Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
 Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).
