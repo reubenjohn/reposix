@@ -39,3 +39,6 @@ research/scratch/
 
 # Claude Code session artifacts (ephemeral; re-created on each run)
 .claude/
+
+# Byproducts of scripts/bench_token_economy.py not involving fixtures:
+runtime/bench-*.log
