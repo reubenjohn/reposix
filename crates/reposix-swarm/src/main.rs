@@ -62,8 +62,9 @@ struct Args {
     #[arg(long, default_value = "demo")]
     project: String,
 
-    /// Atlassian account email (required for `confluence-direct`).
-    #[arg(long)]
+    /// Atlassian account email (required for `confluence-direct`). Falls back
+    /// to the `ATLASSIAN_EMAIL` env var.
+    #[arg(long, env = "ATLASSIAN_EMAIL")]
     email: Option<String>,
 
     /// Atlassian API token (required for `confluence-direct`). Falls back
