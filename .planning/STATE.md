@@ -53,12 +53,12 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 
 ## Current Position
 
-Phase: 17 — SHIPPED. Phase 18 (OP-2 remainder) is next.
+Phase: 18 — SHIPPED. Phase 19 (OP-1 remainder) is next.
 Plan: 2 of 2 (all waves complete)
-Cursor: **v0.6.0 in-flight (tag pending user gate). Phase 17 swarm confluence-direct closed.
-Phase 18 (OP-2 remainder — recursive tree/_INDEX.md, mount-root _INDEX.md) is the
+Cursor: **Phase 18 SHIPPED. OP-2 fully closed at all three mount levels (bucket Phase 15,
+tree-subdir + mount-root Phase 18). Phase 19 (OP-1 remainder) is the
 recommended next execution target.**
-Status: Phase complete — ready for verification
+Status: Phase complete — ready for next phase
 Last activity: 2026-04-15
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
