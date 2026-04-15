@@ -4,7 +4,7 @@ milestone: v0.4
 milestone_name: target)
 status: verifying
 stopped_at: Completed 22-C-wire-docs-ship-PLAN.md
-last_updated: "2026-04-15T19:40:51.284Z"
+last_updated: "2026-04-15T19:46:19.723Z"
 last_activity: 2026-04-15
 progress:
   total_phases: 11
@@ -53,8 +53,8 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 
 ## Current Position
 
-Phase: 20 — SHIPPED. Phase 21 (OP-7 hardening bundle) is next.
-Plan: 3 of 3 (all waves complete)
+Phase: 22
+Plan: Not started
 Cursor: **Phase 20 SHIPPED. `reposix refresh` subcommand + git-diff cache complete; REFRESH-01..05 closed.
 Milestone v0.6.0 complete (Phases 16-20). Phases 21+ are v0.7.0 scope.**
 Status: Phase complete — ready for verification
@@ -69,7 +69,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 
 **Velocity:**
 
-- Total plans completed: 0
+- Total plans completed: 3
 - Average duration: —
 - Total execution time: 0.0 hours (of ~7h total budget, ~4.5h budgeted for MVD)
 
@@ -78,6 +78,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | — | — | — | — |
+| 22 | 3 | - | - |
 
 **Recent Trend:**
 
