@@ -1,15 +1,15 @@
 //! FUSE integration tests for the Phase-13 nested mount layout.
 //!
 //! Every test here is `#[ignore]`-gated because it mounts FUSE in a
-//! tempdir, which requires `/dev/fuse` + `fusermount3` on the host.
-//! Run with:
+//! tempdir, which requires `/dev/fuse` (Linux) or macFUSE (macOS) on the
+//! host. Run with:
 //!
 //! ```bash
 //! cargo test -p reposix-fuse --release -- --ignored --test-threads=1 nested_layout
 //! ```
 //!
 //! Why `--test-threads=1`: each test mounts FUSE in a tempdir; concurrent
-//! mounts race on `fusermount3 -u` and leave the kernel mount table in an
+//! mounts race on unmount and leave the kernel mount table in an
 //! inconsistent state. Matches the existing `readdir.rs` + `sim_death_no_hang.rs`
 //! convention.
 //!
@@ -28,7 +28,7 @@
 //! the default allowlist in `reposix_core::http` (which already includes
 //! `127.0.0.1:*`). Nothing to configure externally.
 
-#![cfg(target_os = "linux")]
+#![cfg(any(target_os = "linux", target_os = "macos"))]
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -41,6 +41,21 @@ use wiremock::matchers::{method, path, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 // ------------------------------------------------------------------ helpers
+
+/// Run the appropriate unmount command for the current runner.
+/// On Linux this defaults to `fusermount3 -u <mnt>`; on macOS CI sets
+/// `REPOSIX_UNMOUNT_CMD=umount -f` so the same test binary works.
+fn unmount(mnt: &std::path::Path) -> std::io::Result<std::process::ExitStatus> {
+    let cmd_str = std::env::var("REPOSIX_UNMOUNT_CMD")
+        .unwrap_or_else(|_| "fusermount3 -u".to_string());
+    let mut parts = cmd_str.split_whitespace();
+    let prog = parts.next().expect("REPOSIX_UNMOUNT_CMD is empty");
+    let args: Vec<&str> = parts.collect();
+    std::process::Command::new(prog)
+        .args(&args)
+        .arg(mnt)
+        .status()
+}
 
 fn wait_for<F: FnMut() -> bool>(mut pred: F, budget: Duration) -> bool {
     let t0 = Instant::now();
@@ -165,9 +180,17 @@ fn boot_mount(server_uri: String) -> (reposix_fuse::Mount, std::path::PathBuf, t
     (mount, mount_path, td)
 }
 
-/// Unmount `mount` (via Drop) and wait up to 3s for `mount_path` to
-/// either be empty (tempdir view) or non-existent. Asserts cleanly.
+/// Unmount `mount` and wait up to 3s for `mount_path` to either be empty
+/// (tempdir view) or non-existent. Asserts cleanly.
+///
+/// Uses the `$REPOSIX_UNMOUNT_CMD` helper first (belt-and-suspenders for
+/// macOS CI where `umount -f` is more reliable than fuser's `UmountOnDrop`),
+/// then drops the mount handle.
 fn unmount_and_wait(mount: reposix_fuse::Mount, mount_path: &std::path::Path) {
+    // Belt-and-suspenders: explicit unmount command before relying on Drop.
+    // On Linux the default is `fusermount3 -u`; on macOS CI the env var is
+    // set to `umount -f`. Ignore errors here — Drop will also attempt cleanup.
+    let _ = unmount(mount_path);
     drop(mount);
     let mp = mount_path.to_path_buf();
     let unmounted = wait_for(

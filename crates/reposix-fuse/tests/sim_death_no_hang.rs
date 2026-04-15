@@ -19,7 +19,7 @@
 //!      itself killed `stat`; both prove we didn't hang silently).
 //! 6. Drop the mount, assert unmount within 3s.
 
-#![cfg(target_os = "linux")]
+#![cfg(any(target_os = "linux", target_os = "macos"))]
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -30,6 +30,21 @@ use reposix_core::{Issue, IssueBackend, IssueId, IssueStatus};
 use reposix_fuse::{Mount, MountConfig};
 use wiremock::matchers::{method, path, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};
+
+/// Run the appropriate unmount command for the current runner.
+/// On Linux this defaults to `fusermount3 -u <mnt>`; on macOS CI sets
+/// `REPOSIX_UNMOUNT_CMD=umount -f` so the same test binary works.
+fn unmount(mnt: &std::path::Path) -> std::io::Result<std::process::ExitStatus> {
+    let cmd_str = std::env::var("REPOSIX_UNMOUNT_CMD")
+        .unwrap_or_else(|_| "fusermount3 -u".to_string());
+    let mut parts = cmd_str.split_whitespace();
+    let prog = parts.next().expect("REPOSIX_UNMOUNT_CMD is empty");
+    let args: Vec<&str> = parts.collect();
+    std::process::Command::new(prog)
+        .args(&args)
+        .arg(mnt)
+        .status()
+}
 
 fn sample(id: u64) -> Issue {
     let t = chrono::Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
@@ -158,6 +173,10 @@ fn stat_returns_within_7s_after_backend_dies() {
         .expect("spawn timeout+stat");
     let elapsed = t0.elapsed();
 
+    // Belt-and-suspenders: explicit unmount command before relying on Drop.
+    // On Linux the default is `fusermount3 -u`; on macOS CI the env var is
+    // set to `umount -f`. Ignore errors — Drop will also attempt cleanup.
+    let _ = unmount(&mount_path);
     // Drop the mount before any panic fires so we always unmount cleanly.
     drop(mount);
 
