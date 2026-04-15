@@ -186,3 +186,113 @@ fn parse_total_ops(md: &str) -> u64 {
         .and_then(|n| n.parse::<u64>().ok())
         .unwrap_or(0)
 }
+
+// ── Confluence-direct wiremock test ──────────────────────────────────────────
+
+use reposix_confluence::ConfluenceCreds;
+use reposix_swarm::confluence_direct::ConfluenceDirectWorkload;
+use serde_json::json;
+use wiremock::matchers::{method, path, path_regex, query_param};
+use wiremock::{Mock, MockServer, ResponseTemplate};
+
+fn sample_page(id: &str, title: &str) -> serde_json::Value {
+    json!({
+        "id": id,
+        "status": "current",
+        "title": title,
+        "createdAt": "2026-01-01T00:00:00Z",
+        "version": {"number": 1, "createdAt": "2026-01-01T00:00:00Z"},
+        "body": {
+            "atlas_doc_format": {
+                "value": {"type":"doc","version":1,"content":[]}
+            }
+        }
+    })
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn confluence_direct_3_clients_5s() {
+    let server = MockServer::start().await;
+
+    // Space resolver — called repeatedly (RESEARCH.md Risk 4); no .expect(N).
+    Mock::given(method("GET"))
+        .and(path("/wiki/api/v2/spaces"))
+        .and(query_param("keys", "TESTSPACE"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "results": [{"id": "9001", "key": "TESTSPACE"}]
+        })))
+        .mount(&server)
+        .await;
+
+    // Page list — single page (empty _links) so `list_issues` exits
+    // the pagination loop cleanly (RESEARCH.md Risk 3).
+    Mock::given(method("GET"))
+        .and(path("/wiki/api/v2/spaces/9001/pages"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "results": [
+                sample_page("10001", "Page 1"),
+                sample_page("10002", "Page 2"),
+                sample_page("10003", "Page 3"),
+            ],
+            "_links": {}
+        })))
+        .mount(&server)
+        .await;
+
+    // Page get — path_regex so any of the 3 ids match.
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/wiki/api/v2/pages/\d+$"))
+        .and(query_param("body-format", "atlas_doc_format"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(sample_page("10001", "Page 1")),
+        )
+        .mount(&server)
+        .await;
+
+    let base = server.uri();
+    let creds = ConfluenceCreds {
+        email: "swarm@test".to_string(),
+        api_token: "tok".to_string(),
+    };
+    let space = "TESTSPACE".to_string();
+
+    let cfg = SwarmConfig {
+        clients: 3,
+        duration: Duration::from_secs(5),
+        mode: "confluence-direct",
+        target: &base,
+    };
+    let markdown = run_swarm(cfg, |i| {
+        ConfluenceDirectWorkload::new(
+            base.clone(),
+            creds.clone(),
+            space.clone(),
+            u64::try_from(i).unwrap_or(0),
+        )
+    })
+    .await
+    .expect("run_swarm returned cleanly");
+
+    assert!(
+        markdown.contains("Clients: 3"),
+        "summary missing client count:\n{markdown}"
+    );
+    assert!(
+        markdown.contains("| list "),
+        "summary missing list row:\n{markdown}"
+    );
+    let total_ops = parse_total_ops(&markdown);
+    assert!(
+        total_ops >= 3,
+        "expected >=3 total ops, got {total_ops}:\n{markdown}"
+    );
+    if let Some(err_section) = markdown.split("### Errors by class").nth(1) {
+        assert!(
+            !err_section.contains("| Other"),
+            "confluence-direct produced Other-class errors under wiremock, \
+             which indicates transport/deser breakage:\n{markdown}"
+        );
+    }
+    // NOTE: deliberately NO audit-row assertion. Read-only workload
+    // writes 0 audit rows; see RESEARCH.md §"Summary" audit caveat.
+}

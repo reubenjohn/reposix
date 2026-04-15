@@ -32,6 +32,8 @@ chrono.workspace = true
 
 [dev-dependencies]
 reposix-sim = { path = "../reposix-sim" }
+reposix-confluence = { path = "../reposix-confluence" }
 reposix-core.workspace = true
 reqwest.workspace = true
 tempfile = "3"
+wiremock = "0.6"
