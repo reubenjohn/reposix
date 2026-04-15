@@ -1963,10 +1963,10 @@ mod tests {
         assert_eq!(result.version, 43);
     }
 
-    // -------- B6.2: update_issue 409 maps to version mismatch --------
+    // -------- B6.2: update_issue 409 maps to conflict error --------
 
     #[tokio::test]
-    async fn update_issue_409_maps_to_version_mismatch() {
+    async fn update_issue_409_maps_to_conflict_error() {
         let server = MockServer::start().await;
         Mock::given(method("PUT"))
             .and(path("/wiki/api/v2/pages/99"))
@@ -1982,8 +1982,8 @@ mod tests {
             .expect_err("409 must be an error");
         match err {
             Error::Other(m) => assert!(
-                m.starts_with("version mismatch"),
-                "error must start with 'version mismatch', got: {m}"
+                m.starts_with("confluence version conflict"),
+                "error must start with 'confluence version conflict', got: {m}"
             ),
             other => panic!("expected Error::Other, got {other:?}"),
         }
