@@ -11,7 +11,8 @@
 //! | `3` | [`TREE_ROOT_INO`] — the synthesized `tree/` overlay root (only populated when the backend supports `BackendFeature::Hierarchy`). Mirrored from [`crate::tree::TREE_ROOT_INO`]. |
 //! | `4` | [`GITIGNORE_INO`] — the synthesized `/tree/\n` `.gitignore` file. Always present. |
 //! | `5` | [`BUCKET_INDEX_INO`] — the synthesized `_INDEX.md` file inside the bucket directory. Always present. |
-//! | `6..=0xFFFF` | Reserved for future synthetic files (`/.reposix/audit`, per-space roots, etc.). The [`InodeRegistry`] never allocates in this range. |
+//! | `6` | [`ROOT_INDEX_INO`] — the synthesized `_INDEX.md` at the mount root. Always present. |
+//! | `7..=0xFFFF` | Per-tree-dir `_INDEX.md` inodes, dynamically allocated by `ReposixFs::tree_dir_index_ino` (an `AtomicU64`, separate from [`InodeRegistry`]). |
 //! | `0x1_0000..` | Real issue/page files under `<bucket>/<padded-id>.md`. Allocated monotonically by [`InodeRegistry`]. |
 //! | `0x8_0000_0000..0xC_0000_0000` | `tree/` interior directories (allocated by [`crate::tree::TreeSnapshot`]). |
 //! | `0xC_0000_0000..u64::MAX` | `tree/` leaf symlinks AND `_self.md` entries (allocated by [`crate::tree::TreeSnapshot`]). |
@@ -59,8 +60,25 @@ pub const GITIGNORE_INO: u64 = 4;
 /// (`perm: 0o444`). See Phase 15 for the rendering contract.
 pub const BUCKET_INDEX_INO: u64 = 5;
 
-/// First dynamic inode. Values `6..=0xFFFF` are reserved for future synthetic
-/// files; issues start here.
+/// The synthesized `_INDEX.md` at the mount root (`mount/_INDEX.md`).
+/// Whole-mount overview listing all backends, buckets, and entry counts.
+/// Read-only (`perm: 0o444`). See Phase 18 for the rendering contract.
+pub const ROOT_INDEX_INO: u64 = 6;
+
+/// First inode allocated dynamically for per-tree-dir `_INDEX.md` files.
+/// Each `tree/<subdir>/` gets its own inode, lazily allocated by
+/// `ReposixFs::tree_dir_index_ino`. Allocation is separate from
+/// [`InodeRegistry`] and uses an `AtomicU64` starting at this value,
+/// capped at [`TREE_INDEX_ALLOC_END`].
+pub const TREE_INDEX_ALLOC_START: u64 = 7;
+
+/// Inclusive upper bound for tree-dir `_INDEX.md` inode allocation.
+/// Supports up to 65 528 distinct tree-dir indexes (more than enough
+/// for any real Confluence space).
+pub const TREE_INDEX_ALLOC_END: u64 = 0xFFFF;
+
+/// First dynamic inode. Values `6..=0xFFFF` are reserved for synthetic
+/// files (mount-root index + per-tree-dir indexes); issues start here.
 pub const FIRST_ISSUE_INODE: u64 = 0x1_0000;
 
 /// Bidirectional inode ↔ issue-id map.
@@ -200,11 +218,11 @@ mod tests {
     #[test]
     fn reserved_range_is_unmapped() {
         let r = InodeRegistry::new();
-        // Inodes 6..=0xFFFF are reserved-for-future-synthetics; the
-        // registry never allocates here. (1..=5 are fixed synthetic slots
-        // — root/bucket/tree-root/gitignore/bucket-index — also not
-        // allocated by the dynamic registry.)
-        for ino in 6..=0xFFFF {
+        // Inodes TREE_INDEX_ALLOC_START..=TREE_INDEX_ALLOC_END (7..=0xFFFF)
+        // are allocated by a separate AtomicU64 on ReposixFs, not by
+        // InodeRegistry. Assert that InodeRegistry never populates this range.
+        // (1..=6 are fixed synthetic slots; also not allocated by InodeRegistry.)
+        for ino in TREE_INDEX_ALLOC_START..=TREE_INDEX_ALLOC_END {
             assert!(
                 r.lookup_ino(ino).is_none(),
                 "ino {ino:#x} should be unmapped"
@@ -234,18 +252,20 @@ mod tests {
         assert!(TREE_ROOT_INO < FIRST_ISSUE_INODE);
         assert!(GITIGNORE_INO < FIRST_ISSUE_INODE);
         assert!(BUCKET_INDEX_INO < FIRST_ISSUE_INODE);
+        assert!(ROOT_INDEX_INO < FIRST_ISSUE_INODE);
         // The tree dir / symlink bases live strictly above the dynamic
         // issue range (see tree.rs compile-time assertion for the
         // full cross-module invariant).
         assert!(FIRST_ISSUE_INODE < crate::tree::TREE_DIR_INO_BASE);
         assert!(crate::tree::TREE_DIR_INO_BASE < crate::tree::TREE_SYMLINK_INO_BASE);
-        // The five fixed slots must be distinct from each other.
+        // The six fixed slots must be distinct from each other.
         let fixed = [
             ROOT_INO,
             BUCKET_DIR_INO,
             TREE_ROOT_INO,
             GITIGNORE_INO,
             BUCKET_INDEX_INO,
+            ROOT_INDEX_INO,
         ];
         for (i, a) in fixed.iter().enumerate() {
             for b in fixed.iter().skip(i + 1) {

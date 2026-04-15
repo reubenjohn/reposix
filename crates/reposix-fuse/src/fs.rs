@@ -91,7 +91,7 @@ use tracing::warn;
 
 use crate::inode::{
     InodeRegistry, BUCKET_DIR_INO, BUCKET_INDEX_INO, FIRST_ISSUE_INODE, GITIGNORE_INO, ROOT_INO,
-    TREE_ROOT_INO,
+    ROOT_INDEX_INO, TREE_INDEX_ALLOC_END, TREE_INDEX_ALLOC_START, TREE_ROOT_INO,
 };
 use crate::tree::{TreeSnapshot, TREE_DIR_INO_BASE, TREE_SYMLINK_INO_BASE};
 
@@ -385,6 +385,10 @@ enum InodeKind {
     TreeDir,
     /// A tree leaf symlink or `_self.md` — `TREE_SYMLINK_INO_BASE..`.
     TreeSymlink,
+    /// The synthesized `_INDEX.md` at the mount root (inode 6).
+    RootIndex,
+    /// A per-tree-dir synthesized `_INDEX.md` (inodes 7..=0xFFFF).
+    TreeDirIndex,
     /// Unassigned — surface as ENOENT.
     Unknown,
 }
@@ -397,6 +401,10 @@ impl InodeKind {
             TREE_ROOT_INO => Self::TreeRoot,
             GITIGNORE_INO => Self::Gitignore,
             BUCKET_INDEX_INO => Self::BucketIndex,
+            ROOT_INDEX_INO => Self::RootIndex,
+            n if (TREE_INDEX_ALLOC_START..=TREE_INDEX_ALLOC_END).contains(&n) => {
+                Self::TreeDirIndex
+            }
             n if n >= TREE_SYMLINK_INO_BASE => Self::TreeSymlink,
             n if n >= TREE_DIR_INO_BASE => Self::TreeDir,
             n if n >= FIRST_ISSUE_INODE => Self::RealFile,
@@ -881,6 +889,10 @@ impl Filesystem for ReposixFs {
                     reply.error(fuser::Errno::from_i32(libc::ENOENT));
                 }
             }
+            // Task 1 stubs — replaced with real implementation in Task 2.
+            InodeKind::RootIndex | InodeKind::TreeDirIndex => {
+                reply.error(fuser::Errno::from_i32(libc::ENOENT));
+            }
             InodeKind::Unknown => reply.error(fuser::Errno::from_i32(libc::ENOENT)),
         }
     }
@@ -951,13 +963,21 @@ impl Filesystem for ReposixFs {
             InodeKind::Gitignore
             | InodeKind::BucketIndex
             | InodeKind::RealFile
-            | InodeKind::TreeSymlink => {
+            | InodeKind::TreeSymlink
+            | InodeKind::RootIndex
+            | InodeKind::TreeDirIndex => {
                 reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
             }
             InodeKind::Unknown => reply.error(fuser::Errno::from_i32(libc::ENOENT)),
         }
     }
 
+    #[allow(
+        clippy::too_many_lines,
+        reason = "readdir dispatches over all InodeKind variants; splitting would obscure the \
+                  exhaustive-match structure. Task 2 will add more arms; a refactor phase can \
+                  extract helpers after the full dispatch is in place."
+    )]
     fn readdir(
         &self,
         _req: &Request,
@@ -1068,7 +1088,9 @@ impl Filesystem for ReposixFs {
             InodeKind::Gitignore
             | InodeKind::BucketIndex
             | InodeKind::RealFile
-            | InodeKind::TreeSymlink => {
+            | InodeKind::TreeSymlink
+            | InodeKind::RootIndex
+            | InodeKind::TreeDirIndex => {
                 reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
                 return;
             }
@@ -1151,6 +1173,10 @@ impl Filesystem for ReposixFs {
                 let end = start.saturating_add(size as usize).min(bytes.len());
                 reply.data(&bytes[start..end]);
             }
+            // Task 1 stubs — replaced with real implementation in Task 2.
+            InodeKind::RootIndex | InodeKind::TreeDirIndex => {
+                reply.error(fuser::Errno::from_i32(libc::ENOENT));
+            }
             InodeKind::Unknown => reply.error(fuser::Errno::from_i32(libc::ENOENT)),
         }
     }
@@ -1208,6 +1234,10 @@ impl Filesystem for ReposixFs {
                 // EROFS, matching the gitignore / tree-symlink discipline.
                 reply.error(fuser::Errno::from_i32(libc::EROFS));
             }
+            // Task 1 stubs — replaced with real implementation in Task 2.
+            InodeKind::RootIndex | InodeKind::TreeDirIndex => {
+                reply.error(fuser::Errno::from_i32(libc::EROFS));
+            }
             InodeKind::TreeDir => {
                 let attr = self.tree_dir_attr(ino_u);
                 reply.attr(&ATTR_TTL, &attr);
@@ -1263,7 +1293,11 @@ impl Filesystem for ReposixFs {
             InodeKind::Root | InodeKind::Bucket | InodeKind::TreeRoot | InodeKind::TreeDir => {
                 reply.error(fuser::Errno::from_i32(libc::EISDIR));
             }
-            InodeKind::Gitignore | InodeKind::BucketIndex | InodeKind::TreeSymlink => {
+            InodeKind::Gitignore
+            | InodeKind::BucketIndex
+            | InodeKind::TreeSymlink
+            | InodeKind::RootIndex
+            | InodeKind::TreeDirIndex => {
                 reply.error(fuser::Errno::from_i32(libc::EROFS));
             }
             InodeKind::RealFile => {
