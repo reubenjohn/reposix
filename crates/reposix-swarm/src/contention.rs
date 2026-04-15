@@ -36,7 +36,7 @@ pub struct ContentionWorkload {
     backend: SimBackend,
     project: String,
     target_id: IssueId,
-    /// Reserved for future jitter between GET and PATCH; not used in step() today.
+    /// Reserved for future jitter between GET and PATCH; not used in `step()` today.
     #[allow(dead_code)]
     rng: Mutex<StdRng>,
 }

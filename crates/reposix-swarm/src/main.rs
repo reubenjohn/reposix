@@ -14,6 +14,7 @@ use anyhow::Result;
 use clap::{Parser, ValueEnum};
 use reposix_confluence::ConfluenceCreds;
 use reposix_swarm::confluence_direct::ConfluenceDirectWorkload;
+use reposix_swarm::contention::ContentionWorkload;
 use reposix_swarm::driver::{run_swarm, SwarmConfig};
 use reposix_swarm::fuse_mode::FuseWorkload;
 use reposix_swarm::sim_direct::SimDirectWorkload;
@@ -27,6 +28,8 @@ enum Mode {
     SimDirect,
     /// HTTP to `ConfluenceBackend` directly (read-only in v0.6).
     ConfluenceDirect,
+    /// N clients patching the same issue via If-Match — proves 409 determinism.
+    Contention,
     /// Real syscalls against a FUSE mount point.
     Fuse,
 }
@@ -36,6 +39,7 @@ impl Mode {
         match self {
             Self::SimDirect => "sim-direct",
             Self::ConfluenceDirect => "confluence-direct",
+            Self::Contention => "contention",
             Self::Fuse => "fuse",
         }
     }
@@ -75,6 +79,11 @@ struct Args {
     /// Mode — `sim-direct`, `confluence-direct`, or `fuse`.
     #[arg(long, value_enum, default_value_t = Mode::SimDirect)]
     mode: Mode,
+
+    /// Target issue id (required for `--mode contention`). The issue that all
+    /// clients will hammer with explicit `If-Match` versions.
+    #[arg(long)]
+    target_issue: Option<u64>,
 
     /// Optional path to the simulator's audit `SQLite` DB. If provided (and
     /// readable at run end), the summary prints the post-run audit row count
@@ -135,6 +144,23 @@ async fn main() -> Result<()> {
                     base.clone(),
                     creds.clone(),
                     space.clone(),
+                    u64::try_from(i).unwrap_or(0),
+                )
+            })
+            .await?
+        }
+        Mode::Contention => {
+            let origin = args.target.clone();
+            let project = args.project.clone();
+            let target_id_raw = args.target_issue.ok_or_else(|| {
+                anyhow::anyhow!("--target-issue is required for --mode contention")
+            })?;
+            let target_id = reposix_core::IssueId(target_id_raw);
+            run_swarm(cfg, move |i| {
+                ContentionWorkload::new(
+                    origin.clone(),
+                    project.clone(),
+                    target_id,
                     u64::try_from(i).unwrap_or(0),
                 )
             })

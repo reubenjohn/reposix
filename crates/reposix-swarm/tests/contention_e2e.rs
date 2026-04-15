@@ -126,7 +126,7 @@ async fn contention_50_clients_5s_deterministic_409() {
     let has_conflict = markdown
         .split("### Errors by class")
         .nth(1)
-        .map_or(false, |s| s.contains("| Conflict"));
+        .is_some_and(|s| s.contains("| Conflict"));
     assert!(
         has_conflict,
         "expected Conflict errors — clients should race on If-Match:\n{markdown}"
