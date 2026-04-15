@@ -9,6 +9,11 @@ task under two scenarios:
 2. reposix: the agent reads the bytes of its own shell session. Fixture:
    benchmarks/fixtures/reposix_session.txt
 
+Also compares raw-JSON token costs across backends (BENCH-02):
+- GitHub: benchmarks/fixtures/github_issues.json
+- Confluence: benchmarks/fixtures/confluence_pages.json
+- Jira (real adapter): not yet implemented
+
 Emits a Markdown table to benchmarks/RESULTS.md. Prints the same table to
 stdout.
 
@@ -46,6 +51,10 @@ COUNT_MODEL = "claude-3-haiku-20240307"
 BENCH_DIR = pathlib.Path(__file__).resolve().parent.parent / "benchmarks"
 FIXTURES = BENCH_DIR / "fixtures"
 RESULTS = BENCH_DIR / "RESULTS.md"
+
+GITHUB_FIXTURE = FIXTURES / "github_issues.json"
+CONFLUENCE_FIXTURE = FIXTURES / "confluence_pages.json"
+JIRA_REAL_PLACEHOLDER = "N/A (adapter not yet implemented)"
 
 # Lazy-initialised Anthropic client (avoids import at module scope so the test
 # suite and --offline path can run without the package installed).
@@ -249,6 +258,87 @@ def load_reposix_bytes() -> tuple:
     return text, path
 
 
+def load_raw_text(path: pathlib.Path) -> tuple:
+    """Return ``(serialized_text, path)`` for a raw fixture file.
+
+    For JSON files: parse, drop ``_note`` key if present, reserialize with
+    compact-with-spaces format (``json.dumps(data, separators=(", ", ": "))``).
+    This matches the compact shape ``load_mcp_bytes`` uses, making GitHub/
+    Confluence rows directly comparable to MCP.
+
+    For text files: return the raw text unchanged.
+
+    Parameters
+    ----------
+    path:
+        Fixture file path. Must exist.
+
+    Returns
+    -------
+    tuple[str, pathlib.Path]
+        ``(serialized_text, path)``
+    """
+    if path.suffix == ".json":
+        with path.open() as f:
+            data = json.load(f)
+        # Drop _note only if data is a dict (MCP catalog shape); GitHub fixture is a list.
+        if isinstance(data, dict):
+            data.pop("_note", None)
+        serialized = json.dumps(data, separators=(", ", ": "))
+        return serialized, path
+    # Plain text (e.g. .txt)
+    return path.read_text(), path
+
+
+# ---------------------------------------------------------------------------
+# Table renderers
+# ---------------------------------------------------------------------------
+
+
+def render_per_backend_table(rows: list) -> str:
+    """Render the BENCH-02 per-backend comparison pipe table.
+
+    Parameters
+    ----------
+    rows:
+        List of dicts, each with keys:
+        ``backend``, ``fixture``, ``chars``, ``raw_tokens``,
+        ``reposix_tokens``, ``reduction_pct``.
+
+        For the Jira-real placeholder row, pass ``raw_tokens=None``,
+        ``chars=None``, ``reduction_pct=None`` — those cells will render
+        as ``N/A (adapter not yet implemented)``.
+
+    Returns
+    -------
+    str
+        A Markdown pipe table string (no trailing newline).
+    """
+    header = (
+        "| Backend | Raw-API fixture | Characters | Real tokens | reposix tokens | Reduction |\n"
+        "|---------|-----------------|-----------:|------------:|---------------:|----------:|"
+    )
+    table_rows = []
+    for row in rows:
+        backend = row["backend"]
+        fixture = row["fixture"]
+        if row.get("raw_tokens") is None:
+            # Placeholder row (Jira real adapter not yet implemented)
+            chars_cell = "—"
+            raw_tokens_cell = "—"
+            reposix_tokens_cell = "—"
+            reduction_cell = JIRA_REAL_PLACEHOLDER
+        else:
+            chars_cell = f"{row['chars']:,}"
+            raw_tokens_cell = f"{row['raw_tokens']:,}"
+            reposix_tokens_cell = f"{row['reposix_tokens']:,}"
+            reduction_cell = f"{row['reduction_pct']:.1f}%"
+        table_rows.append(
+            f"| {backend} | {fixture} | {chars_cell} | {raw_tokens_cell} | {reposix_tokens_cell} | {reduction_cell} |"
+        )
+    return header + "\n" + "\n".join(table_rows)
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -289,18 +379,49 @@ def main(argv: Optional[list] = None) -> int:
     mcp_text, mcp_path = load_mcp_bytes()
     reposix_text, reposix_path = load_reposix_bytes()
 
-    fixture_paths = [mcp_path, reposix_path]
+    # Per-backend fixtures (optional — skip gracefully if absent).
+    # Resolve dynamically from FIXTURES so monkeypatching FIXTURES in tests works.
+    gh_path = FIXTURES / "github_issues.json"
+    conf_path = FIXTURES / "confluence_pages.json"
+    gh_available = gh_path.exists()
+    conf_available = conf_path.exists()
+
+    gh_text: Optional[str] = None
+    conf_text: Optional[str] = None
+    if gh_available:
+        gh_text, _ = load_raw_text(gh_path)
+    if conf_available:
+        conf_text, _ = load_raw_text(conf_path)
+
+    # Baseline fixture list (always required)
+    baseline_fixture_paths = [mcp_path, reposix_path]
+    # Per-backend fixtures (include only if present)
+    per_backend_fixture_paths = []
+    if gh_available:
+        per_backend_fixture_paths.append(gh_path)
+    if conf_available:
+        per_backend_fixture_paths.append(conf_path)
+
+    all_fixture_paths = baseline_fixture_paths + per_backend_fixture_paths
 
     # Stale-cache integrity check (warn, do not exit)
-    integrity_warnings = verify_fixture_cache_integrity(fixture_paths)
+    integrity_warnings = verify_fixture_cache_integrity(all_fixture_paths)
     for w in integrity_warnings:
         print(f"WARN: {w}", file=sys.stderr)
 
     if not args.offline:
-        require_api_key_or_cached(fixture_paths)
+        require_api_key_or_cached(all_fixture_paths)
 
+    # Count tokens for all fixtures
     mcp_tokens = get_or_count(mcp_text, mcp_path, offline=args.offline)
     reposix_tokens = get_or_count(reposix_text, reposix_path, offline=args.offline)
+
+    gh_tokens: Optional[int] = None
+    conf_tokens: Optional[int] = None
+    if gh_available and gh_text is not None:
+        gh_tokens = get_or_count(gh_text, gh_path, offline=args.offline)
+    if conf_available and conf_text is not None:
+        conf_tokens = get_or_count(conf_text, conf_path, offline=args.offline)
 
     mcp_chars = len(mcp_text)
     reposix_chars = len(reposix_text)
@@ -310,22 +431,80 @@ def main(argv: Optional[list] = None) -> int:
 
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
+    # Build per-backend table rows
+    per_backend_rows = [
+        {
+            "backend": "Jira (MCP)",
+            "fixture": "mcp_jira_catalog.json",
+            "chars": mcp_chars,
+            "raw_tokens": mcp_tokens,
+            "reposix_tokens": reposix_tokens,
+            "reduction_pct": reduction_pct,
+        },
+    ]
+    if gh_available and gh_tokens is not None and gh_text is not None:
+        gh_chars = len(gh_text)
+        gh_reduction = 100 * (1 - reposix_tokens / gh_tokens) if gh_tokens else 0.0
+        per_backend_rows.append(
+            {
+                "backend": "GitHub",
+                "fixture": "github_issues.json",
+                "chars": gh_chars,
+                "raw_tokens": gh_tokens,
+                "reposix_tokens": reposix_tokens,
+                "reduction_pct": gh_reduction,
+            }
+        )
+    if conf_available and conf_tokens is not None and conf_text is not None:
+        conf_chars = len(conf_text)
+        conf_reduction = 100 * (1 - reposix_tokens / conf_tokens) if conf_tokens else 0.0
+        per_backend_rows.append(
+            {
+                "backend": "Confluence",
+                "fixture": "confluence_pages.json",
+                "chars": conf_chars,
+                "raw_tokens": conf_tokens,
+                "reposix_tokens": reposix_tokens,
+                "reduction_pct": conf_reduction,
+            }
+        )
+    # Jira real adapter placeholder (always present)
+    per_backend_rows.append(
+        {
+            "backend": "Jira (real adapter)",
+            "fixture": "—",
+            "chars": None,
+            "raw_tokens": None,
+            "reposix_tokens": None,
+            "reduction_pct": None,
+        }
+    )
+
+    per_backend_table = render_per_backend_table(per_backend_rows)
+
     md = f"""# Benchmark results -- token economy
 
 *Measured: {now}*
+*Tokenizer: Anthropic count_tokens API (requirements-bench.txt pins anthropic==0.72.0)*
 
 Task held constant across both scenarios: **read 3 issues, edit 1, push the
 change**. What differs is only the context the agent must ingest to get
 started.
 
-| Scenario | Characters | Real tokens (Anthropic `count_tokens`) |
-|----------|-----------:|---------------------------------------:|
+## Baseline comparison (MCP-mediated vs reposix)
+
+| Scenario | Characters | Real tokens (`count_tokens`) |
+|----------|-----------:|-----------------------------:|
 | MCP-mediated (tool catalog + schemas) | {mcp_chars:>10,} | {mcp_tokens:>10,} |
 | **reposix** (shell session transcript) | {reposix_chars:>10,} | **{reposix_tokens:>10,}** |
 
 **Reduction:** `reposix` uses **{reduction_pct:.1f}%** fewer tokens than the
 MCP-mediated baseline for the same task. Equivalently, MCP costs
 **~{ratio:.1f}x** more context.
+
+## Per-backend raw-JSON comparison (BENCH-02)
+
+{per_backend_table}
 
 ## What this does NOT measure
 
@@ -339,7 +518,7 @@ MCP-mediated baseline for the same task. Equivalently, MCP costs
 - The raw bytes the agent's context window has to hold in order to be
   productive at minute 0.
 - The cost of "learning the tool" vs "using what you already know".
-- Token counts are produced by Anthropic's count_tokens endpoint (see requirements-bench.txt for the SDK pin).
+- Token counts are produced by Anthropic's `count_tokens` endpoint (SDK pinned in `requirements-bench.txt`).
 
 ## Fixture provenance
 
@@ -350,6 +529,10 @@ MCP-mediated baseline for the same task. Equivalently, MCP costs
 - `benchmarks/fixtures/reposix_session.txt` -- the ANSI-stripped excerpt of
   what an agent's shell actually contains after running the equivalent
   workflow through `scripts/demo.sh`.
+- `benchmarks/fixtures/github_issues.json` -- a synthetic GitHub REST v3
+  `/repos/{{owner}}/{{repo}}/issues` payload with 3 representative issues.
+- `benchmarks/fixtures/confluence_pages.json` -- a synthetic Confluence v2
+  `/wiki/api/v2/pages` payload with 3 pages including full ADF body content.
 
 Reproduce: `python3 scripts/bench_token_economy.py --offline` (cache must be populated first)
 """
