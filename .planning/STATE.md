@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: target)
 status: verifying
-stopped_at: Completed 22-C-wire-docs-ship-PLAN.md
-last_updated: "2026-04-15T19:46:19.723Z"
+stopped_at: context exhaustion at 90% (2026-04-15)
+last_updated: "2026-04-15T19:48:51.249Z"
 last_activity: 2026-04-15
 progress:
   total_phases: 11
@@ -53,7 +53,7 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 
 ## Current Position
 
-Phase: 22
+Phase: 25
 Plan: Not started
 Cursor: **Phase 20 SHIPPED. `reposix refresh` subcommand + git-diff cache complete; REFRESH-01..05 closed.
 Milestone v0.6.0 complete (Phases 16-20). Phases 21+ are v0.7.0 scope.**
@@ -79,6 +79,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 |-------|-------|-------|----------|
 | — | — | — | — |
 | 22 | 3 | - | - |
+| 25 | 0 | - | - |
 
 **Recent Trend:**
 
@@ -184,8 +185,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-15T19:40:51.279Z
-Stopped at: Completed 22-C-wire-docs-ship-PLAN.md
+Last session: 2026-04-15T19:48:40.237Z
+Stopped at: context exhaustion at 90% (2026-04-15)
 Wave-level commit trail on `main` (Phase 16):
 Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
 Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).

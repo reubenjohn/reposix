@@ -576,7 +576,7 @@ Plans:
 **Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
 **Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
 **Depends on:** Phase 24
-**Plans:** 2 plans
+**Plans:** 0/0 plans complete
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 25 to break down)
+- [x] TBD (run /gsd-plan-phase 25 to break down) (completed 2026-04-15)
