@@ -95,6 +95,8 @@ const _: () = {
     assert!(TREE_ROOT_INO < crate::inode::FIRST_ISSUE_INODE);
     assert!(TREE_DIR_INO_BASE > crate::inode::FIRST_ISSUE_INODE);
     assert!(TREE_DIR_INO_BASE < TREE_SYMLINK_INO_BASE);
+    // Phase 19: label ranges live above tree-symlink space.
+    assert!(TREE_SYMLINK_INO_BASE < crate::inode::LABELS_DIR_INO_BASE);
 };
 
 /// A single entry inside a [`TreeDir`] (or at the tree root).

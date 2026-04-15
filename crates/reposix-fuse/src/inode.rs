@@ -15,7 +15,10 @@
 //! | `7..=0xFFFF` | Per-tree-dir `_INDEX.md` inodes, dynamically allocated by `ReposixFs::tree_dir_index_ino` (an `AtomicU64`, separate from [`InodeRegistry`]). |
 //! | `0x1_0000..` | Real issue/page files under `<bucket>/<padded-id>.md`. Allocated monotonically by [`InodeRegistry`]. |
 //! | `0x8_0000_0000..0xC_0000_0000` | `tree/` interior directories (allocated by [`crate::tree::TreeSnapshot`]). |
-//! | `0xC_0000_0000..u64::MAX` | `tree/` leaf symlinks AND `_self.md` entries (allocated by [`crate::tree::TreeSnapshot`]). |
+//! | `0xC_0000_0000..0x10_0000_0000` | `tree/` leaf symlinks and `_self.md` entries (allocated by [`crate::tree::TreeSnapshot`]). |
+//! | `0x7_FFFF_FFFF` (fixed) | `labels/` overlay root directory ([`LABELS_ROOT_INO`]). |
+//! | `0x10_0000_0000..0x14_0000_0000` | `labels/` per-label interior directories (allocated by [`crate::labels::LabelSnapshot`]). |
+//! | `0x14_0000_0000..u64::MAX` | `labels/` leaf symlinks — one per (label × issue) pair (allocated by [`crate::labels::LabelSnapshot`]). |
 //!
 //! The ranges are intentionally disjoint so every callback in `fs.rs` can
 //! classify an inode by numeric range **before** doing any map lookup; the
@@ -50,7 +53,7 @@ pub const BUCKET_DIR_INO: u64 = 2;
 pub const TREE_ROOT_INO: u64 = 3;
 
 /// The synthesized `.gitignore` file at the mount root. Always present
-/// and always returns the bytes `b"/tree/\n"` (7 bytes). Read-only
+/// and always returns the bytes `b"/tree/\nlabels/\n"` (15 bytes). Read-only
 /// (`perm: 0o444`).
 pub const GITIGNORE_INO: u64 = 4;
 
