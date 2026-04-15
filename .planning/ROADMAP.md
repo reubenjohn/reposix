@@ -473,8 +473,8 @@ Plans:
 
 ### Phase 17: Swarm confluence-direct mode — add --mode confluence-direct to reposix-swarm using SimDirectWorkload as template
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
+**Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
 **Depends on:** Phase 16
 **Plans:** 2/2 plans complete
 
@@ -494,13 +494,14 @@ Plans:
 
 ### Phase 19: OP-1 remainder — labels and spaces directory views as read-only symlink overlays for GitHub and Confluence
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
+**Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
 **Depends on:** Phase 18
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 19 to break down)
+- [ ] 19-A-labels-fuse-impl.md — inode constants, labels.rs module, FUSE dispatch, >= 5 tests
+- [ ] 19-B-docs-and-release.md — green workspace gauntlet, CHANGELOG, STATE update
 
 ### Phase 20: OP-3 — reposix refresh subcommand and git-diff cache for mount-as-time-machine semantics
 
@@ -522,50 +523,50 @@ Plans:
 
 ### Phase 21: OP-7 hardening bundle — contention swarm, 500-page truncation probe, chaos audit-log restart, macFUSE parity CI matrix
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
+**Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
 **Depends on:** Phase 20
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 21 to break down)
 
 ### Phase 22: OP-8 honest-tokenizer benchmarks — replace len-div-4 with count_tokens API, per-backend comparison tables
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
+**Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
 **Depends on:** Phase 21
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 22 to break down)
 
 ### Phase 23: OP-9a — Confluence comments exposed as pages/id.comments/comment-id.md
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
+**Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
 **Depends on:** Phase 22
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 23 to break down)
 
 ### Phase 24: OP-9b — Confluence whiteboards attachments and folders
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
+**Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
 **Depends on:** Phase 23
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 24 to break down)
 
 ### Phase 25: OP-11 — docs reorg: InitialReport.md and AgenticEngineeringReference.md to docs/research/ plus root cleanup
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
+**Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
 **Depends on:** Phase 24
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 25 to break down)
