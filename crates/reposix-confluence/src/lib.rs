@@ -757,7 +757,8 @@ impl ConfluenceBackend {
         }
         if !status.is_success() {
             return Err(Error::Other(format!(
-                "confluence returned {status} for GET {url}: {}",
+                "confluence returned {status} for GET {}: {}",
+                redact_url(&url),
                 String::from_utf8_lossy(&bytes)
             )));
         }
@@ -898,11 +899,12 @@ impl IssueBackend for ConfluenceBackend {
         let status = resp.status();
         let bytes = resp.bytes().await?;
         if status == StatusCode::NOT_FOUND {
-            return Err(Error::Other(format!("not found: {url_adf}")));
+            return Err(Error::Other(format!("not found: {}", redact_url(&url_adf))));
         }
         if !status.is_success() {
             return Err(Error::Other(format!(
-                "confluence returned {status} for GET {url_adf}: {}",
+                "confluence returned {status} for GET {}: {}",
+                redact_url(&url_adf),
                 String::from_utf8_lossy(&bytes)
             )));
         }
@@ -934,11 +936,15 @@ impl IssueBackend for ConfluenceBackend {
         let status2 = resp2.status();
         let bytes2 = resp2.bytes().await?;
         if status2 == StatusCode::NOT_FOUND {
-            return Err(Error::Other(format!("not found: {url_storage}")));
+            return Err(Error::Other(format!(
+                "not found: {}",
+                redact_url(&url_storage)
+            )));
         }
         if !status2.is_success() {
             return Err(Error::Other(format!(
-                "confluence returned {status2} for GET {url_storage}: {}",
+                "confluence returned {status2} for GET {}: {}",
+                redact_url(&url_storage),
                 String::from_utf8_lossy(&bytes2)
             )));
         }
@@ -992,7 +998,8 @@ impl IssueBackend for ConfluenceBackend {
         );
         if !status.is_success() {
             return Err(Error::Other(format!(
-                "confluence returned {status} for POST {url}: {}",
+                "confluence returned {status} for POST {}: {}",
+                redact_url(&url),
                 String::from_utf8_lossy(&bytes)
             )));
         }
@@ -1051,7 +1058,7 @@ impl IssueBackend for ConfluenceBackend {
         let audit_path = format!("/wiki/api/v2/pages/{}", id.0);
         self.audit_write("PUT", &audit_path, status_u16, &req_summary, &bytes);
         if status == StatusCode::NOT_FOUND {
-            return Err(Error::Other(format!("not found: {url}")));
+            return Err(Error::Other(format!("not found: {}", redact_url(&url))));
         }
         if status == StatusCode::CONFLICT {
             return Err(Error::Other(format!(
@@ -1061,7 +1068,8 @@ impl IssueBackend for ConfluenceBackend {
         }
         if !status.is_success() {
             return Err(Error::Other(format!(
-                "confluence returned {status} for PUT {url}: {}",
+                "confluence returned {status} for PUT {}: {}",
+                redact_url(&url),
                 String::from_utf8_lossy(&bytes)
             )));
         }
@@ -1104,10 +1112,11 @@ impl IssueBackend for ConfluenceBackend {
         // Audit on all non-204 paths (failures).
         self.audit_write("DELETE", &audit_path, status_u16, "", &bytes);
         if status == StatusCode::NOT_FOUND {
-            return Err(Error::Other(format!("not found: {url}")));
+            return Err(Error::Other(format!("not found: {}", redact_url(&url))));
         }
         Err(Error::Other(format!(
-            "confluence returned {status} for DELETE {url}: {}",
+            "confluence returned {status} for DELETE {}: {}",
+            redact_url(&url),
             String::from_utf8_lossy(&bytes)
         )))
     }
@@ -2627,7 +2636,12 @@ mod tests {
             let cursor_param = format!("C{i}");
             let next_cursor = format!("/wiki/api/v2/spaces/9999/pages?cursor=C{i}&limit=100");
             let matcher_path = path("/wiki/api/v2/spaces/9999/pages");
-            let page_result = json!([page_json(&i.to_string(), "current", &format!("page {i}"), None)]);
+            let page_result = json!([page_json(
+                &i.to_string(),
+                "current",
+                &format!("page {i}"),
+                None
+            )]);
             if i == 1 {
                 // First page: no cursor param, just the base path + limit
                 Mock::given(method("GET"))
@@ -2669,8 +2683,7 @@ mod tests {
             .mount(&server)
             .await;
 
-        let backend =
-            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let result = backend.list_issues("TRUNCTEST").await;
         // Must succeed (warn mode, not strict).
         let issues = result.expect("list_issues must succeed in warn mode even at cap");
@@ -2690,10 +2703,13 @@ mod tests {
         // cap check on pages > 5. In strict mode the check fires before the
         // 6th request, returning Err immediately.
         for i in 1..=5u32 {
-            let next_cursor =
-                format!("/wiki/api/v2/spaces/9999/pages?cursor=C{i}&limit=100");
-            let page_result =
-                json!([page_json(&i.to_string(), "current", &format!("page {i}"), None)]);
+            let next_cursor = format!("/wiki/api/v2/spaces/9999/pages?cursor=C{i}&limit=100");
+            let page_result = json!([page_json(
+                &i.to_string(),
+                "current",
+                &format!("page {i}"),
+                None
+            )]);
             if i == 1 {
                 Mock::given(method("GET"))
                     .and(path("/wiki/api/v2/spaces/9999/pages"))
@@ -2720,8 +2736,7 @@ mod tests {
             }
         }
 
-        let backend =
-            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let result = backend.list_issues_strict("TRUNCTEST").await;
         assert!(result.is_err(), "list_issues_strict must return Err at cap");
         let msg = format!("{}", result.unwrap_err());
@@ -2751,15 +2766,11 @@ mod tests {
         // Return HTTP 500 for the first pages GET.
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/spaces/7777/pages"))
-            .respond_with(
-                ResponseTemplate::new(500)
-                    .set_body_string("internal server error"),
-            )
+            .respond_with(ResponseTemplate::new(500).set_body_string("internal server error"))
             .mount(&server)
             .await;
 
-        let backend =
-            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let result = backend.list_issues("LEAKTEST").await;
         assert!(result.is_err(), "500 must return Err");
         let msg = format!("{}", result.unwrap_err());
@@ -2767,7 +2778,7 @@ mod tests {
         // The mock server is on 127.0.0.1:<port>. The error must NOT contain
         // the port number (which stands in for the tenant host in production).
         let host_port = server.uri(); // e.g. "http://127.0.0.1:54321"
-        // Strip the scheme to get "127.0.0.1:54321"
+                                      // Strip the scheme to get "127.0.0.1:54321"
         let host_port_bare = host_port.trim_start_matches("http://");
         assert!(
             !msg.contains(host_port_bare),
