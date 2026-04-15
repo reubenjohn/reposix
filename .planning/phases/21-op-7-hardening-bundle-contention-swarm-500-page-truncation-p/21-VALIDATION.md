@@ -39,13 +39,13 @@ created: 2026-04-15
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
 | 21-audit-01 | A | 1 | HARD-00 | — | Credential hook 6/6 tests pass | unit | `bash scripts/hooks/test-pre-push.sh` | ✅ | ⬜ pending |
-| 21-audit-02 | A | 1 | HARD-00 | SG-06 | SSRF tests pass in contract.rs | unit | `cargo test --test contract ssrf` | ✅ | ⬜ pending |
+| 21-audit-02 | A | 1 | HARD-00 | SG-06 | SSRF tests pass in contract.rs | unit | `cargo test -p reposix-confluence --test contract adversarial_ --locked` | ✅ | ⬜ pending |
 | 21-contention-01 | B | 2 | HARD-01 | — | 409 deterministic from If-Match | integration | `cargo test --test contention` | ❌ W0 | ⬜ pending |
 | 21-truncation-01 | C | 3 | HARD-02 | SG-05 | WARN emitted at 500-page cap | unit | `cargo test confluence truncation_warn` | ✅ | ⬜ pending |
 | 21-truncation-02 | C | 3 | HARD-02 | SG-05 | --no-truncate errors on cap | unit | `cargo test confluence no_truncate_errors` | ❌ W0 | ⬜ pending |
 | 21-chaos-01 | D | 4 | HARD-03 | — | WAL consistent after kill-9 | integration | `cargo test --test chaos_audit` | ❌ W0 | ⬜ pending |
-| 21-tenant-01 | E | 5 | HARD-05 | — | Log URLs contain path only | unit | `cargo test confluence tenant_url_redact` | ❌ W0 | ⬜ pending |
-| 21-macos-01 | F | 6 | HARD-04 | — | macOS CI job defined in .github/workflows | manual | Check .github/workflows/ for macos-14 runner | ❌ W0 | ⬜ pending |
+| 21-tenant-01 | C | 3 | HARD-05 | — | Log URLs contain path only | unit | `cargo test confluence tenant_url_redact` | ❌ W0 | ⬜ pending |
+| 21-macos-01 | E | 5 | HARD-04 | — | macOS CI job defined in .github/workflows | manual | Check .github/workflows/ for macos-14 runner | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
