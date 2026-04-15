@@ -17,8 +17,8 @@
 - [ ] **SWARM-02**: Swarm run against confluence-direct produces summary metrics + audit-log rows, matching the sim-direct output format
 
 ### Index Synthesis (OP-2 remainder)
-- [ ] **INDEX-01**: `cat mount/tree/<subdir>/_INDEX.md` returns a recursive markdown sitemap of that subtree, computed via cycle-safe DFS from `TreeSnapshot`
-- [ ] **INDEX-02**: `cat mount/_INDEX.md` returns a whole-mount overview listing all backends, buckets, and top-level entry counts
+- [x] **INDEX-01**: `cat mount/tree/<subdir>/_INDEX.md` returns a recursive markdown sitemap of that subtree, computed via cycle-safe DFS from `TreeSnapshot`
+- [x] **INDEX-02**: `cat mount/_INDEX.md` returns a whole-mount overview listing all backends, buckets, and top-level entry counts
 
 ### Directory Views (OP-1 remainder)
 - [ ] **NAV-01**: `ls mount/labels/<label>/` lists all issues/pages carrying that label as read-only symlinks pointing to the canonical file in the bucket

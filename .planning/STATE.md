@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.6.0
-milestone_name: Write Path + Full Sitemap
-status: executing
-stopped_at: Completed 16-D-docs-and-release-PLAN.md
-last_updated: "2026-04-14T22:00:00.000Z"
-last_activity: 2026-04-14
+milestone: v0.4
+milestone_name: target)
+status: verifying
+stopped_at: Completed 18-01-PLAN.md
+last_updated: "2026-04-15T07:25:41.210Z"
+last_activity: 2026-04-15
 progress:
   total_phases: 11
-  completed_phases: 2
+  completed_phases: 1
   total_plans: 1
-  completed_plans: 26
+  completed_plans: 22
   percent: 100
 ---
 
@@ -35,6 +35,7 @@ progress:
   · Wave D (this commit — CHANGELOG `[v0.6.0]` + version bump `0.5.0→0.6.0` + `scripts/tag-v0.6.0.sh` + `16-SUMMARY.md`).
   Closes REQ WRITE-01..04 for the Confluence backend. Workspace test count 317 (baseline 278 + 39 new). Clippy `-D warnings` clean. v0.6.0 milestone tag pending user `scripts/tag-v0.6.0.sh` execution.
   Details: `.planning/phases/16-confluence-write-path-update-issue-create-issue-delete-or-cl/16-SUMMARY.md`.
+
 - **Phase 17 SHIPPED (2026-04-14, session 8):** 2 waves landed.
   — Wave A (`5ecec37` + `0ebc58d` `ConfluenceDirectWorkload` + `Mode::ConfluenceDirect` CLI dispatch)
   · Wave B (`52fb4e9` wiremock CI test `confluence_direct_3_clients_5s` + `confluence_real_tenant.rs` `#[ignore]` smoke).
@@ -57,8 +58,8 @@ Plan: 2 of 2 (all waves complete)
 Cursor: **v0.6.0 in-flight (tag pending user gate). Phase 17 swarm confluence-direct closed.
 Phase 18 (OP-2 remainder — recursive tree/_INDEX.md, mount-root _INDEX.md) is the
 recommended next execution target.**
-Status: executing
-Last activity: 2026-04-14 — Phase 17 swarm confluence-direct shipped
+Status: Phase complete — ready for verification
+Last activity: 2026-04-15
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
@@ -95,6 +96,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 | Phase 16 PA | 35 | 3 tasks | 5 files |
 | Phase 16 PB | 60 | 7 tasks | 6 files |
 | Phase 16 PC | 60 | 6 tasks | 5 files |
+| Phase 18 P01 | 5 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -133,6 +135,8 @@ additions (2026-04-13):
 - [Phase 16]: fetch_current_version delegates to get_issue; acceptable extra round-trip for expected_version=None case
 - [Phase 16]: audit_write stores title (max 256 chars) only — never body content (T-16-C-04)
 - [Phase 16]: get_issue requests atlas_doc_format first; falls back to storage for pre-ADF pages
+- [Phase 18]: Stack-based DFS for render_tree_index (no visited set needed; TreeSnapshot is cycle-free)
+- [Phase 18]: synthetic_file_attr generalises bucket_index_attr with ino parameter for RootIndex and TreeDirIndex
 
 ### Pending Todos
 
@@ -153,8 +157,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-14T22:00:00.000Z
-Stopped at: Completed 16-D-docs-and-release-PLAN.md — Phase 16 SHIPPED; v0.6.0 ready to tag at user gate.
+Last session: 2026-04-15T07:25:41.206Z
+Stopped at: Completed 18-01-PLAN.md
 Wave-level commit trail on `main` (Phase 16):
 Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
 Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).
