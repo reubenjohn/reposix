@@ -53,8 +53,7 @@ async fn live_confluence_direct_smoke() {
     // Space key for the smoke test. REPOSIX_CONFLUENCE_SPACE overrides
     // if the caller wants a different space; default "REPOSIX" matches
     // the project's seed space.
-    let space = std::env::var("REPOSIX_CONFLUENCE_SPACE")
-        .unwrap_or_else(|_| "REPOSIX".to_string());
+    let space = std::env::var("REPOSIX_CONFLUENCE_SPACE").unwrap_or_else(|_| "REPOSIX".to_string());
 
     let cfg = SwarmConfig {
         clients: 3,

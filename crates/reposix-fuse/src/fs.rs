@@ -90,8 +90,8 @@ use tokio::runtime::Runtime;
 use tracing::warn;
 
 use crate::inode::{
-    InodeRegistry, BUCKET_DIR_INO, BUCKET_INDEX_INO, FIRST_ISSUE_INODE, GITIGNORE_INO, ROOT_INO,
-    ROOT_INDEX_INO, TREE_INDEX_ALLOC_END, TREE_INDEX_ALLOC_START, TREE_ROOT_INO,
+    InodeRegistry, BUCKET_DIR_INO, BUCKET_INDEX_INO, FIRST_ISSUE_INODE, GITIGNORE_INO,
+    ROOT_INDEX_INO, ROOT_INO, TREE_INDEX_ALLOC_END, TREE_INDEX_ALLOC_START, TREE_ROOT_INO,
 };
 use crate::tree::{TreeSnapshot, TREE_DIR_INO_BASE, TREE_SYMLINK_INO_BASE};
 
@@ -504,9 +504,7 @@ impl InodeKind {
             GITIGNORE_INO => Self::Gitignore,
             BUCKET_INDEX_INO => Self::BucketIndex,
             ROOT_INDEX_INO => Self::RootIndex,
-            n if (TREE_INDEX_ALLOC_START..=TREE_INDEX_ALLOC_END).contains(&n) => {
-                Self::TreeDirIndex
-            }
+            n if (TREE_INDEX_ALLOC_START..=TREE_INDEX_ALLOC_END).contains(&n) => Self::TreeDirIndex,
             n if n >= TREE_SYMLINK_INO_BASE => Self::TreeSymlink,
             n if n >= TREE_DIR_INO_BASE => Self::TreeDir,
             n if n >= FIRST_ISSUE_INODE => Self::RealFile,
@@ -999,7 +997,12 @@ impl ReposixFs {
         let Some(dir) = snap.resolve_dir(dir_ino) else {
             return Arc::new(Vec::new());
         };
-        let rendered = Arc::new(render_tree_index(dir, snap, &self.project, chrono::Utc::now()));
+        let rendered = Arc::new(render_tree_index(
+            dir,
+            snap,
+            &self.project,
+            chrono::Utc::now(),
+        ));
         self.tree_dir_index_cache.insert(dir_ino, rendered.clone());
         rendered
     }
@@ -1253,7 +1256,11 @@ impl Filesystem for ReposixFs {
                 if self.should_emit_tree() {
                     out.push((TREE_ROOT_INO, FileType::Directory, "tree".to_owned()));
                 }
-                out.push((ROOT_INDEX_INO, FileType::RegularFile, "_INDEX.md".to_owned()));
+                out.push((
+                    ROOT_INDEX_INO,
+                    FileType::RegularFile,
+                    "_INDEX.md".to_owned(),
+                ));
                 out
             }
             InodeKind::Bucket => {
@@ -1421,7 +1428,9 @@ impl Filesystem for ReposixFs {
             }
             InodeKind::RootIndex => {
                 let bytes = self.mount_root_index_bytes_or_render();
-                let start = usize::try_from(offset).unwrap_or(usize::MAX).min(bytes.len());
+                let start = usize::try_from(offset)
+                    .unwrap_or(usize::MAX)
+                    .min(bytes.len());
                 let end = start.saturating_add(size as usize).min(bytes.len());
                 reply.data(&bytes[start..end]);
             }
@@ -1435,7 +1444,9 @@ impl Filesystem for ReposixFs {
                     return;
                 };
                 let bytes = self.tree_dir_index_bytes_or_render(dir_ino, &snap);
-                let start = usize::try_from(offset).unwrap_or(usize::MAX).min(bytes.len());
+                let start = usize::try_from(offset)
+                    .unwrap_or(usize::MAX)
+                    .min(bytes.len());
                 let end = start.saturating_add(size as usize).min(bytes.len());
                 reply.data(&bytes[start..end]);
             }
@@ -2200,7 +2211,7 @@ mod tests {
     #[test]
     fn render_tree_index_frontmatter_and_table() {
         // One dir with 2 symlink children → 2 data rows.
-        use crate::tree::{TreeEntry, TreeDir, TREE_DIR_INO_BASE, TREE_SYMLINK_INO_BASE};
+        use crate::tree::{TreeDir, TreeEntry, TREE_DIR_INO_BASE, TREE_SYMLINK_INO_BASE};
         let children = vec![
             TreeEntry::Symlink {
                 ino: TREE_SYMLINK_INO_BASE + 1,
@@ -2220,9 +2231,7 @@ mod tests {
             depth: 0,
         };
         let snap = crate::tree::TreeSnapshot::default();
-        let generated = chrono::Utc
-            .with_ymd_and_hms(2026, 4, 15, 10, 0, 0)
-            .unwrap();
+        let generated = chrono::Utc.with_ymd_and_hms(2026, 4, 15, 10, 0, 0).unwrap();
         let bytes = render_tree_index(&root_dir, &snap, "demo", generated);
         let text = std::str::from_utf8(&bytes).expect("utf-8");
 
@@ -2329,7 +2338,9 @@ mod tests {
         // The exact count depends on TreeSnapshot internals but must be >= 3.
         let data_rows: Vec<&str> = text
             .lines()
-            .filter(|l| l.starts_with("| ") && !l.starts_with("| depth ") && !l.starts_with("| --- "))
+            .filter(|l| {
+                l.starts_with("| ") && !l.starts_with("| depth ") && !l.starts_with("| --- ")
+            })
             .collect();
         assert!(
             data_rows.len() >= 3,
@@ -2386,8 +2397,7 @@ mod tests {
     fn render_mount_root_index_frontmatter_and_table() {
         // tree_present=true, 3 issues → all frontmatter keys + 3 table rows.
         let generated = chrono::Utc.with_ymd_and_hms(2026, 4, 15, 12, 0, 0).unwrap();
-        let bytes =
-            render_mount_root_index("simulator", "demo", "issues", 3, true, generated);
+        let bytes = render_mount_root_index("simulator", "demo", "issues", 3, true, generated);
         let text = std::str::from_utf8(&bytes).expect("utf-8");
 
         assert!(text.starts_with("---\n"), "missing open fence: {text}");
@@ -2431,8 +2441,7 @@ mod tests {
     fn mount_root_index_no_tree_row() {
         // tree_present=false → no `tree/` row.
         let generated = chrono::Utc.with_ymd_and_hms(2026, 4, 15, 0, 0, 0).unwrap();
-        let bytes =
-            render_mount_root_index("simulator", "demo", "issues", 0, false, generated);
+        let bytes = render_mount_root_index("simulator", "demo", "issues", 0, false, generated);
         let text = std::str::from_utf8(&bytes).expect("utf-8");
 
         assert!(
@@ -2460,10 +2469,8 @@ mod tests {
             .build()
             .unwrap()
             .block_on(async { wiremock::MockServer::start().await });
-        let backend: Arc<dyn IssueBackend> =
-            Arc::new(SimBackend::new(server.uri()).unwrap());
-        let fs =
-            ReposixFs::new(backend, server.uri(), "demo".to_owned()).expect("ReposixFs::new");
+        let backend: Arc<dyn IssueBackend> = Arc::new(SimBackend::new(server.uri()).unwrap());
+        let fs = ReposixFs::new(backend, server.uri(), "demo".to_owned()).expect("ReposixFs::new");
 
         let first = fs.tree_dir_index_ino(42);
         let second = fs.tree_dir_index_ino(42);
@@ -2473,7 +2480,10 @@ mod tests {
         );
         // Different dir_inos must get different index inodes.
         let other = fs.tree_dir_index_ino(99);
-        assert_ne!(first, other, "distinct dir_inos must get distinct index inodes");
+        assert_ne!(
+            first, other,
+            "distinct dir_inos must get distinct index inodes"
+        );
         // Reverse map must be populated.
         assert_eq!(
             fs.tree_index_ino_reverse.get(&first).map(|v| *v),

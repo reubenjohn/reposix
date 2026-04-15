@@ -119,12 +119,11 @@ async fn main() -> Result<()> {
                 .email
                 .clone()
                 .ok_or_else(|| anyhow::anyhow!("--email required for confluence-direct"))?;
-            let token = args
-                .api_token
-                .clone()
-                .ok_or_else(|| anyhow::anyhow!(
+            let token = args.api_token.clone().ok_or_else(|| {
+                anyhow::anyhow!(
                     "--api-token or ATLASSIAN_API_KEY env var required for confluence-direct"
-                ))?;
+                )
+            })?;
             let creds = ConfluenceCreds {
                 email,
                 api_token: token,

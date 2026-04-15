@@ -6,6 +6,15 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+### Added — Phase 18: OP-2 remainder — tree-recursive and mount-root `_INDEX.md`
+- **OP-2 remainder (Phase 18):** `mount/tree/<subdir>/_INDEX.md` — recursive subtree sitemap
+  synthesized via DFS from `TreeSnapshot`; YAML frontmatter + pipe-table with `depth | name | target`
+  columns; all descendants listed (full DFS, not just direct children). Inode allocated dynamically
+  from `AtomicU64` in the reserved `7..=0xFFFF` range, one per tree directory.
+- **OP-2 remainder (Phase 18):** `mount/_INDEX.md` — whole-mount overview listing `.gitignore`,
+  `<bucket>/` (with issue count), and `tree/` (when hierarchy is active). `ROOT_INDEX_INO = 6`.
+  Completes OP-2 started in Phase 15; agents can now `cat` any level of the mount hierarchy.
+
 ### Added — Phase 17: Swarm confluence-direct mode
 - `reposix-swarm --mode confluence-direct` spawns N read-only clients
   against `ConfluenceBackend` (list + 3×get per cycle). Closes the

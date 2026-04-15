@@ -249,9 +249,7 @@ async fn confluence_direct_3_clients_5s() {
     Mock::given(method("GET"))
         .and(path_regex(r"^/wiki/api/v2/pages/\d+$"))
         .and(query_param("body-format", "atlas_doc_format"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(sample_page("10001", "Page 1")),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(sample_page("10001", "Page 1")))
         .mount(&server)
         .await;
 
