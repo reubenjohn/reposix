@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: target)
 status: verifying
-stopped_at: Completed 18-02-PLAN.md
-last_updated: "2026-04-15T07:33:20.188Z"
+stopped_at: Completed 19-A-labels-fuse-impl.md
+last_updated: "2026-04-15T08:06:35.211Z"
 last_activity: 2026-04-15
 progress:
   total_phases: 11
@@ -97,6 +97,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 | Phase 16 PB | 60 | 7 tasks | 6 files |
 | Phase 16 PC | 60 | 6 tasks | 5 files |
 | Phase 18 P01 | 5 | 2 tasks | 3 files |
+| Phase 19 P19-A | 25 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -137,6 +138,8 @@ additions (2026-04-13):
 - [Phase 16]: get_issue requests atlas_doc_format first; falls back to storage for pre-ADF pages
 - [Phase 18]: Stack-based DFS for render_tree_index (no visited set needed; TreeSnapshot is cycle-free)
 - [Phase 18]: synthetic_file_attr generalises bucket_index_attr with ino parameter for RootIndex and TreeDirIndex
+- [Phase 19]: Sequential inode allocation for label dirs (LABELS_DIR_INO_BASE + offset) over hash-based allocation — deterministic, no collision risk
+- [Phase 19]: Label snapshot rebuilt unconditionally on every refresh_issues call (mirrors tree snapshot pattern, prevents stale data after relabel)
 
 ### Pending Todos
 
@@ -157,8 +160,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-15T07:33:20.183Z
-Stopped at: Completed 18-02-PLAN.md
+Last session: 2026-04-15T08:06:35.207Z
+Stopped at: Completed 19-A-labels-fuse-impl.md
 Wave-level commit trail on `main` (Phase 16):
 Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
 Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).
