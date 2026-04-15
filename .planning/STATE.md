@@ -4,7 +4,7 @@ milestone: v0.4
 milestone_name: target)
 status: verifying
 stopped_at: Completed 21-E-macos-PLAN.md (macos-blocked path)
-last_updated: "2026-04-15T18:18:13.684Z"
+last_updated: "2026-04-15T18:29:42.891Z"
 last_activity: 2026-04-15
 progress:
   total_phases: 11
