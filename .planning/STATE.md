@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: target)
 status: verifying
-stopped_at: Completed 21-C-truncation-PLAN.md
-last_updated: "2026-04-15T17:54:30.281Z"
+stopped_at: Completed 21-D-chaos-PLAN.md
+last_updated: "2026-04-15T18:07:44.761Z"
 last_activity: 2026-04-15
 progress:
   total_phases: 11
@@ -102,6 +102,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 | Phase 21 PA | 5 | 3 tasks | 1 files |
 | Phase 21 PB | 8 | 2 tasks | 4 files |
 | Phase 21 PC | 25 | 2 tasks | 5 files |
+| Phase 21 PD | 12 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -152,6 +153,8 @@ additions (2026-04-13):
 - [Phase 21]: ContentionWorkload uses GET-then-PATCH-with-Some(version) pattern with no cross-client sync — ensures intentional races that provoke 409s
 - [Phase 21]: list_issues_strict is concrete method on ConfluenceBackend only — avoids IssueBackend trait churn
 - [Phase 21]: redact_url() applied to all error paths in lib.rs (not just list_issues) — full HARD-05 closure
+- [Phase 21]: CARGO_BIN_EXE_reposix-sim unavailable cross-crate on stable Rust; use CARGO_MANIFEST_DIR path resolution with REPOSIX_SIM_BIN override
+- [Phase 21]: Chaos torn-row query uses actual NOT NULL columns ts/method/path (not op/entity_id from plan description)
 
 ### Pending Todos
 
@@ -172,8 +175,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-15T17:54:25.250Z
-Stopped at: Completed 21-C-truncation-PLAN.md
+Last session: 2026-04-15T18:07:44.757Z
+Stopped at: Completed 21-D-chaos-PLAN.md
 Wave-level commit trail on `main` (Phase 16):
 Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
 Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).
