@@ -116,6 +116,10 @@ enum Cmd {
         /// Output format.
         #[arg(long, value_enum, default_value_t = list::ListFormat::Json)]
         format: list::ListFormat,
+        /// Error instead of silently capping at 500 pages (Confluence only).
+        /// No-op for --backend sim and --backend github.
+        #[arg(long)]
+        no_truncate: bool,
     },
     /// Re-fetch all issues/pages from the backend, write `.md` files into the
     /// mount directory, and create a git commit so `git diff HEAD~1` shows
@@ -179,7 +183,8 @@ async fn main() -> Result<()> {
             origin,
             backend,
             format,
-        } => list::run(project, origin, backend, format).await,
+            no_truncate,
+        } => list::run(project, origin, backend, format, no_truncate).await,
         Cmd::Refresh {
             mount_point,
             origin,
