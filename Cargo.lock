@@ -1873,6 +1873,7 @@ dependencies = [
  "hdrhistogram",
  "parking_lot",
  "rand 0.8.5",
+ "reposix-confluence",
  "reposix-core",
  "reposix-sim",
  "reqwest",
@@ -1883,6 +1884,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "wiremock",
 ]
 
 [[package]]
