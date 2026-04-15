@@ -15,6 +15,7 @@ path = "src/lib.rs"
 
 [dependencies]
 reposix-core.workspace = true
+reposix-confluence = { path = "../reposix-confluence" }
 tokio.workspace = true
 clap.workspace = true
 anyhow.workspace = true
