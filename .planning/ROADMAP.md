@@ -476,20 +476,21 @@ Plans:
 **Goal:** [To be planned]
 **Requirements**: TBD
 **Depends on:** Phase 16
-**Plans:** 0 plans
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 17 to break down)
+- [x] TBD (run /gsd-plan-phase 17 to break down) (completed 2026-04-15)
 
 ### Phase 18: OP-2 remainder — tree-recursive and mount-root _INDEX.md synthesis extending TreeSnapshot dfs
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Complete OP-2 by synthesizing `_INDEX.md` at two additional levels: `mount/tree/<subdir>/_INDEX.md` (recursive subtree sitemap via cycle-safe DFS from `TreeSnapshot`) and `mount/_INDEX.md` (whole-mount overview listing all backends, buckets, and entry counts). Combined with Phase 15 bucket-level `_INDEX.md`, agents can `cat` any level of the mount hierarchy.
+**Requirements**: INDEX-01, INDEX-02
 **Depends on:** Phase 17
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 18 to break down)
+- [ ] 18-01-PLAN.md — inode constants, InodeKind variants, render functions, FUSE dispatch, 6 unit tests
+- [ ] 18-02-PLAN.md — workspace green-gauntlet, CHANGELOG, dev smoke script, SUMMARY
 
 ### Phase 19: OP-1 remainder — labels and spaces directory views as read-only symlink overlays for GitHub and Confluence
 
