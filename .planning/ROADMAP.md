@@ -525,13 +525,17 @@ Plans:
 
 ### Phase 21: OP-7 hardening bundle — contention swarm, 500-page truncation probe, chaos audit-log restart, macFUSE parity CI matrix
 
-**Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
-**Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
+**Goal:** Audit the two OP-7 items already shipped in session-4 drive-bys (credential pre-push hook, SSRF regression tests) and close the five remaining hardening items: contention swarm mode proving If-Match 409 determinism (HARD-01); Confluence 500-page truncation probe with WARN + `--no-truncate` flag (HARD-02, SG-05 compliance); kill-9 chaos test against the sim's WAL-mode audit log (HARD-03); macOS + macFUSE CI parity matrix (HARD-04); and tenant-URL redaction in list_issues error messages (HARD-05).
+**Requirements**: HARD-00, HARD-01, HARD-02, HARD-03, HARD-04, HARD-05
 **Depends on:** Phase 20
-**Plans:** 2 plans
+**Plans:** 5 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 21 to break down)
+- [ ] 21-A-audit.md — HARD-00 audit of pre-push hook + SSRF tests (Wave 1)
+- [ ] 21-B-contention.md — HARD-01 ContentionWorkload + Mode::Contention (Wave 2, depends on A)
+- [ ] 21-C-truncation.md — HARD-02 list_issues_strict + --no-truncate + HARD-05 tenant-URL redaction (Wave 3, depends on A)
+- [ ] 21-D-chaos.md — HARD-03 kill-9 chaos audit-log integrity test (Wave 4, depends on B)
+- [ ] 21-E-macos.md — HARD-04 macos-14 CI matrix + hooks CI step (Wave 5, depends on A, autonomous=false)
 
 ### Phase 22: OP-8 honest-tokenizer benchmarks — replace len-div-4 with count_tokens API, per-backend comparison tables
 
