@@ -93,10 +93,11 @@ async fn mount_over_cap_pages(server: &MockServer) {
         .await;
 }
 
-/// `reposix list --backend confluence --no-truncate` must exit non-zero and
-/// emit a message containing "strict mode" when the space exceeds the cap.
+/// Smoke test: `--no-truncate` is accepted by the CLI argument parser and
+/// causes non-zero exit (for any reason — wiremock redirect is not wired here).
+/// For cap-logic coverage see unit tests in `reposix-confluence::tests` (`list_strict_errors_at_cap`).
 #[tokio::test]
-async fn no_truncate_errors_when_space_exceeds_cap() {
+async fn no_truncate_flag_exits_nonzero_when_backend_unreachable() {
     let server = MockServer::start().await;
     mount_space(&server, "CAPSPACE", "9999").await;
     mount_over_cap_pages(&server).await;
@@ -144,7 +145,7 @@ async fn no_truncate_errors_when_space_exceeds_cap() {
     // mode error). The important thing: the flag is parsed and accepted.
     assert!(
         !output.status.success(),
-        "reposix list --no-truncate must exit non-zero when confluence is unreachable or cap exceeded"
+        "reposix list --no-truncate must exit non-zero (connection refused to test-tenant.atlassian.net)"
     );
 }
 
