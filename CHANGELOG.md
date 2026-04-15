@@ -6,6 +6,21 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+### Added — Phase 20: OP-3 — `reposix refresh` subcommand + git-diff cache
+
+- **OP-3 (Phase 20):** `reposix refresh` subcommand — fetches all issues/pages from the
+  backend, writes deterministic `.md` files into the mount directory, and creates a git
+  commit with `author = "reposix <backend@tenant>"`. Enables `git diff HEAD~1` to show
+  what changed at the backend since the last sync. `.reposix/fetched_at.txt` updated with
+  ISO-8601 UTC timestamp on each refresh. Detects active FUSE mount (via `.reposix/fuse.pid`)
+  and exits with an error before modifying any files. `--offline` flag declared (offline
+  FUSE read path deferred to Phase 21).
+- **`cache_db` module** (`crates/reposix-cli/src/cache_db.rs`): minimal SQLite metadata
+  store at `<mount>/.reposix/cache.db` (mode 0600) recording last fetch time, backend name,
+  and project. SQLite WAL + EXCLUSIVE locking prevents concurrent refresh races. The DB is
+  gitignored — only `.md` files and `fetched_at.txt` are committed.
+  Requirements: REFRESH-01, REFRESH-02, REFRESH-03, REFRESH-04, REFRESH-05.
+
 ### Added — Phase 19: OP-1 remainder — `labels/` symlink overlay
 
 - **`labels/` read-only overlay (Phase 19):** `mount/labels/<label>/` lists all
