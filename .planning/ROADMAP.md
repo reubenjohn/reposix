@@ -505,13 +505,15 @@ Plans:
 
 ### Phase 20: OP-3 — reposix refresh subcommand and git-diff cache for mount-as-time-machine semantics
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Add `reposix refresh` CLI subcommand that re-fetches all issues/pages from the backend, writes deterministic `.md` files into the mount's git working tree, and commits them so `git diff HEAD~1` shows what changed at the backend since the last pull. Ships v0.6.0.
+**Requirements**: REFRESH-01, REFRESH-02, REFRESH-03, REFRESH-04, REFRESH-05
 **Depends on:** Phase 19
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 20 to break down)
+- [ ] 20-A-refresh-cmd.md — refresh.rs + cache_db.rs + main.rs wiring
+- [ ] 20-B-tests-and-polish.md — integration tests + workspace gate
+- [ ] 20-C-docs-and-release.md — CHANGELOG v0.6.0 + version bump + STATE update
 
 
 ---
