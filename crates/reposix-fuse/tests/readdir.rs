@@ -151,15 +151,16 @@ async fn mount_lists_and_reads_issues() {
             ".gitignore".to_owned(),
             "_INDEX.md".to_owned(),
             "issues".to_owned(),
+            "labels".to_owned(),
         ],
-        "mount root listing mismatch; expected .gitignore + _INDEX.md + issues (no tree/)"
+        "mount root listing mismatch; expected .gitignore + _INDEX.md + issues + labels (no tree/)"
     );
 
-    // Assertion 2: `cat mount/.gitignore` returns exactly `/tree/\n` (7 bytes).
+    // Assertion 2: `cat mount/.gitignore` returns exactly `/tree/\nlabels/\n` (15 bytes).
     let gi = std::fs::read(mount_path.join(".gitignore")).expect("read .gitignore");
     assert_eq!(
-        gi, b"/tree/\n",
-        "gitignore should be exactly /tree/\\n (7 bytes); got {gi:?}"
+        gi, b"/tree/\nlabels/\n",
+        "gitignore should be exactly /tree/\\nlabels/\\n (15 bytes); got {gi:?}"
     );
 
     // Assertion 3: `ls mount/issues/` shows the 3 seeded issues as

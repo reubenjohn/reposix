@@ -91,14 +91,16 @@ use tracing::warn;
 
 use crate::inode::{
     InodeRegistry, BUCKET_DIR_INO, BUCKET_INDEX_INO, FIRST_ISSUE_INODE, GITIGNORE_INO,
-    ROOT_INDEX_INO, ROOT_INO, TREE_INDEX_ALLOC_END, TREE_INDEX_ALLOC_START, TREE_ROOT_INO,
+    LABELS_ROOT_INO, ROOT_INDEX_INO, ROOT_INO, TREE_INDEX_ALLOC_END, TREE_INDEX_ALLOC_START,
+    TREE_ROOT_INO,
 };
+use crate::labels::{LabelSnapshot, LABELS_DIR_INO_BASE, LABELS_SYMLINK_INO_BASE};
 use crate::tree::{TreeSnapshot, TREE_DIR_INO_BASE, TREE_SYMLINK_INO_BASE};
 
 /// Exact bytes served for `mount/.gitignore`. Const; no runtime input.
 /// The trailing newline is mandatory per POSIX text-file convention and
 /// matches what tools like `git check-ignore` expect.
-const GITIGNORE_BYTES: &[u8] = b"/tree/\n";
+const GITIGNORE_BYTES: &[u8] = b"/tree/\nlabels/\n";
 
 /// Filename of the synthesized bucket index (Phase 15). Leading `_`
 /// keeps the file out of naive `*.md` globs while still being visible
@@ -441,12 +443,15 @@ fn render_tree_index(
 ///
 /// Produces YAML frontmatter + a pipe-table with columns `entry | kind | count`.
 /// The `tree/` row is only emitted when `tree_present` is `true`.
+/// The `labels/` row is always emitted (even when `label_count == 0`) per
+/// Phase 19 requirement: the directory always exists at the mount root.
 fn render_mount_root_index(
     backend_name: &str,
     project: &str,
     bucket: &str,
     issue_count: usize,
     tree_present: bool,
+    label_count: usize,
     generated_at: chrono::DateTime<chrono::Utc>,
 ) -> Vec<u8> {
     use std::fmt::Write as _;
@@ -470,6 +475,7 @@ fn render_mount_root_index(
     if tree_present {
         let _ = writeln!(out, "| tree/ | directory | — |");
     }
+    let _ = writeln!(out, "| labels/ | directory | {label_count} |");
     out.into_bytes()
 }
 
@@ -498,6 +504,12 @@ enum InodeKind {
     RootIndex,
     /// A per-tree-dir synthesized `_INDEX.md` (inodes 7..=0xFFFF).
     TreeDirIndex,
+    /// The `labels/` overlay root directory (`LABELS_ROOT_INO` = `0x7_FFFF_FFFF`).
+    LabelsRoot,
+    /// An interior per-label directory (`LABELS_DIR_INO_BASE..LABELS_SYMLINK_INO_BASE`).
+    LabelDir,
+    /// A label leaf symlink (`LABELS_SYMLINK_INO_BASE..`).
+    LabelSymlink,
     /// Unassigned — surface as ENOENT.
     Unknown,
 }
@@ -511,7 +523,15 @@ impl InodeKind {
             GITIGNORE_INO => Self::Gitignore,
             BUCKET_INDEX_INO => Self::BucketIndex,
             ROOT_INDEX_INO => Self::RootIndex,
+            LABELS_ROOT_INO => Self::LabelsRoot,
             n if (TREE_INDEX_ALLOC_START..=TREE_INDEX_ALLOC_END).contains(&n) => Self::TreeDirIndex,
+            // Label ranges MUST appear before the TreeSymlink catch-all because
+            // LABELS_DIR_INO_BASE (0x10_0000_0000) and LABELS_SYMLINK_INO_BASE
+            // (0x14_0000_0000) are numerically above TREE_SYMLINK_INO_BASE
+            // (0xC_0000_0000). Without these arms first, all label inodes would
+            // be misclassified as TreeSymlink.
+            n if n >= LABELS_SYMLINK_INO_BASE => Self::LabelSymlink,
+            n if n >= LABELS_DIR_INO_BASE => Self::LabelDir,
             n if n >= TREE_SYMLINK_INO_BASE => Self::TreeSymlink,
             n if n >= TREE_DIR_INO_BASE => Self::TreeDir,
             n if n >= FIRST_ISSUE_INODE => Self::RealFile,
@@ -561,6 +581,10 @@ pub struct ReposixFs {
     /// the issue list is re-fetched. Empty at mount open; filled in on
     /// first `readdir` that hits either the root or the bucket.
     tree: Arc<RwLock<TreeSnapshot>>,
+    /// Label overlay snapshot. Rebuilt unconditionally on each
+    /// `refresh_issues` call alongside the tree snapshot. Always present
+    /// even when no issues carry labels (snapshot is empty by default).
+    label_snapshot: Arc<RwLock<LabelSnapshot>>,
     /// Rendered-file cache. Invalidated wholesale on the next `readdir`
     /// refresh (entries overwritten).
     cache: DashMap<u64, Arc<CachedFile>>,
@@ -574,6 +598,8 @@ pub struct ReposixFs {
     bucket_attr: FileAttr,
     /// `tree/` directory attributes.
     tree_attr: FileAttr,
+    /// `labels/` overlay root directory attributes (read-only `0o555`).
+    labels_attr: FileAttr,
     /// `.gitignore` file attributes (size is compile-time constant).
     gitignore_attr: FileAttr,
     /// Stable timestamp captured once at mount construction. Used for
@@ -665,6 +691,8 @@ impl ReposixFs {
         // views, and the kernel should refuse `mkdir`/`touch` at the VFS
         // layer without reaching our (un-implemented) write callbacks.
         let tree_attr = dir_attr(TREE_ROOT_INO, 0o555);
+        // labels/ is also strictly read-only (T-19-04).
+        let labels_attr = dir_attr(LABELS_ROOT_INO, 0o555);
         let gitignore_attr = FileAttr {
             ino: INodeNo(GITIGNORE_INO),
             size: GITIGNORE_BYTES.len() as u64,
@@ -691,12 +719,14 @@ impl ReposixFs {
             bucket,
             hierarchy_feature,
             tree: Arc::new(RwLock::new(TreeSnapshot::default())),
+            label_snapshot: Arc::new(RwLock::new(LabelSnapshot::default())),
             cache: DashMap::new(),
             write_buffers: DashMap::new(),
             next_fh: AtomicU64::new(1),
             root_attr,
             bucket_attr,
             tree_attr,
+            labels_attr,
             gitignore_attr,
             mount_time: now,
             bucket_index_bytes: RwLock::new(None),
@@ -871,6 +901,13 @@ impl ReposixFs {
             *guard = TreeSnapshot::default();
         }
 
+        // Rebuild label snapshot unconditionally — labels are independent
+        // of hierarchy (T-19-05: no stale data after a relabel).
+        let label_snap = LabelSnapshot::build(self.bucket, &issues);
+        if let Ok(mut guard) = self.label_snapshot.write() {
+            *guard = label_snap;
+        }
+
         // Drop the `_INDEX.md` render cache — the underlying issue list
         // just changed, so any cached bytes are stale. The next
         // `read(BUCKET_INDEX_INO)` re-renders against the fresh cache.
@@ -1031,12 +1068,18 @@ impl ReposixFs {
         }
         let issue_count = self.cache.len();
         let tree_present = self.should_emit_tree();
+        let label_count = self
+            .label_snapshot
+            .read()
+            .map(|g| g.label_count)
+            .unwrap_or(0);
         let rendered = Arc::new(render_mount_root_index(
             self.backend.name(),
             &self.project,
             self.bucket,
             issue_count,
             tree_present,
+            label_count,
             chrono::Utc::now(),
         ));
         if let Ok(mut guard) = self.mount_root_index_bytes.write() {
@@ -1121,6 +1164,32 @@ impl Filesystem for ReposixFs {
                     reply.error(fuser::Errno::from_i32(libc::ENOENT));
                 }
             }
+            InodeKind::LabelsRoot => reply.attr(&ATTR_TTL, &self.labels_attr),
+            InodeKind::LabelDir => {
+                if let Ok(snap) = self.label_snapshot.read() {
+                    if snap.label_dirs.contains_key(&ino_u) {
+                        let mut attr = self.labels_attr;
+                        attr.ino = INodeNo(ino_u);
+                        reply.attr(&ATTR_TTL, &attr);
+                    } else {
+                        reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    }
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::EIO));
+                }
+            }
+            InodeKind::LabelSymlink => {
+                if let Ok(snap) = self.label_snapshot.read() {
+                    if let Some(target) = snap.symlink_targets.get(&ino_u) {
+                        let attr = self.symlink_attr(ino_u, target);
+                        reply.attr(&ATTR_TTL, &attr);
+                    } else {
+                        reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    }
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::EIO));
+                }
+            }
             InodeKind::RootIndex => {
                 let bytes = self.mount_root_index_bytes_or_render();
                 let attr = self.synthetic_file_attr(ROOT_INDEX_INO, bytes.len() as u64);
@@ -1145,6 +1214,11 @@ impl Filesystem for ReposixFs {
         }
     }
 
+    #[allow(
+        clippy::too_many_lines,
+        reason = "lookup dispatches over all InodeKind variants; splitting would obscure the \
+                  exhaustive-match structure. Labels arms added in Phase 19."
+    )]
     fn lookup(&self, _req: &Request, parent: INodeNo, name: &OsStr, reply: ReplyEntry) {
         let parent_u = parent.0;
         let Some(name_str) = name.to_str() else {
@@ -1163,6 +1237,10 @@ impl Filesystem for ReposixFs {
                 }
                 if name_str == "tree" && self.should_emit_tree() {
                     reply.entry(&ENTRY_TTL, &self.tree_attr, fuser::Generation(0));
+                    return;
+                }
+                if name_str == "labels" {
+                    reply.entry(&ENTRY_TTL, &self.labels_attr, fuser::Generation(0));
                     return;
                 }
                 if name_str == "_INDEX.md" {
@@ -1221,10 +1299,50 @@ impl Filesystem for ReposixFs {
                 }
                 self.reply_tree_entry(&snap, &dir.children, name_str, reply);
             }
+            InodeKind::LabelsRoot => {
+                let name_str = name.to_string_lossy();
+                if let Ok(snap) = self.label_snapshot.read() {
+                    // Find the dir inode whose slug matches name_str.
+                    let hit = snap
+                        .label_dirs
+                        .iter()
+                        .find(|(_, (slug, _))| slug.as_str() == name_str.as_ref());
+                    if let Some((&dir_ino, _)) = hit {
+                        let mut attr = self.labels_attr;
+                        attr.ino = INodeNo(dir_ino);
+                        reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
+                    } else {
+                        reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    }
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::EIO));
+                }
+            }
+            InodeKind::LabelDir => {
+                let name_str = name.to_string_lossy();
+                if let Ok(snap) = self.label_snapshot.read() {
+                    if let Some((_, entries)) = snap.label_dirs.get(&parent_u) {
+                        let hit = entries
+                            .iter()
+                            .find(|e| e.slug.as_str() == name_str.as_ref());
+                        if let Some(entry) = hit {
+                            let attr = self.symlink_attr(entry.symlink_ino, &entry.target);
+                            reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
+                        } else {
+                            reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                        }
+                    } else {
+                        reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    }
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::EIO));
+                }
+            }
             InodeKind::Gitignore
             | InodeKind::BucketIndex
             | InodeKind::RealFile
             | InodeKind::TreeSymlink
+            | InodeKind::LabelSymlink
             | InodeKind::RootIndex
             | InodeKind::TreeDirIndex => {
                 reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
@@ -1271,6 +1389,7 @@ impl Filesystem for ReposixFs {
                 if self.should_emit_tree() {
                     out.push((TREE_ROOT_INO, FileType::Directory, "tree".to_owned()));
                 }
+                out.push((LABELS_ROOT_INO, FileType::Directory, "labels".to_owned()));
                 out.push((
                     ROOT_INDEX_INO,
                     FileType::RegularFile,
@@ -1353,10 +1472,45 @@ impl Filesystem for ReposixFs {
                 collect_tree_entries(&snap, &dir.children, &mut out);
                 out
             }
+            InodeKind::LabelsRoot => {
+                // Refresh so the label snapshot is current (T-19-05).
+                if let Err(e) = self.refresh_issues() {
+                    warn!(error = %e, "refresh_issues failed on labels readdir");
+                }
+                let mut entries: Vec<(u64, FileType, String)> = vec![
+                    (LABELS_ROOT_INO, FileType::Directory, ".".to_owned()),
+                    (ROOT_INO, FileType::Directory, "..".to_owned()),
+                ];
+                if let Ok(snap) = self.label_snapshot.read() {
+                    for (&dir_ino, (slug, _)) in &snap.label_dirs {
+                        entries.push((dir_ino, FileType::Directory, slug.clone()));
+                    }
+                }
+                entries
+            }
+            InodeKind::LabelDir => {
+                let mut entries: Vec<(u64, FileType, String)> = vec![
+                    (ino_u, FileType::Directory, ".".to_owned()),
+                    (LABELS_ROOT_INO, FileType::Directory, "..".to_owned()),
+                ];
+                if let Ok(snap) = self.label_snapshot.read() {
+                    if let Some((_, label_entries)) = snap.label_dirs.get(&ino_u) {
+                        for entry in label_entries {
+                            entries.push((
+                                entry.symlink_ino,
+                                FileType::Symlink,
+                                entry.slug.clone(),
+                            ));
+                        }
+                    }
+                }
+                entries
+            }
             InodeKind::Gitignore
             | InodeKind::BucketIndex
             | InodeKind::RealFile
             | InodeKind::TreeSymlink
+            | InodeKind::LabelSymlink
             | InodeKind::RootIndex
             | InodeKind::TreeDirIndex => {
                 reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
@@ -1390,7 +1544,12 @@ impl Filesystem for ReposixFs {
     ) {
         let ino_u = ino.0;
         match InodeKind::classify(ino_u) {
-            InodeKind::Root | InodeKind::Bucket | InodeKind::TreeRoot | InodeKind::TreeDir => {
+            InodeKind::Root
+            | InodeKind::Bucket
+            | InodeKind::TreeRoot
+            | InodeKind::TreeDir
+            | InodeKind::LabelsRoot
+            | InodeKind::LabelDir => {
                 reply.error(fuser::Errno::from_i32(libc::EISDIR));
             }
             InodeKind::Gitignore => {
@@ -1410,7 +1569,7 @@ impl Filesystem for ReposixFs {
                 let end = start.saturating_add(size as usize).min(bytes.len());
                 reply.data(&bytes[start..end]);
             }
-            InodeKind::TreeSymlink => {
+            InodeKind::TreeSymlink | InodeKind::LabelSymlink => {
                 // Symlinks are read via `readlink(2)`, not `read(2)`. If the
                 // kernel ever hands us a read() on one, it's almost
                 // certainly a misrouted lookup — surface EINVAL.
@@ -1482,6 +1641,17 @@ impl Filesystem for ReposixFs {
                     None => reply.error(fuser::Errno::from_i32(libc::ENOENT)),
                 }
             }
+            InodeKind::LabelSymlink => {
+                if let Ok(snap) = self.label_snapshot.read() {
+                    if let Some(target) = snap.symlink_targets.get(&ino_u) {
+                        reply.data(target.as_bytes());
+                    } else {
+                        reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    }
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::EIO));
+                }
+            }
             _ => reply.error(fuser::Errno::from_i32(libc::EINVAL)),
         }
     }
@@ -1536,6 +1706,10 @@ impl Filesystem for ReposixFs {
                 // rarely routes here (lchmod etc.), but reject defensively.
                 reply.error(fuser::Errno::from_i32(libc::EPERM));
             }
+            // Labels overlay is strictly read-only (T-19-04).
+            InodeKind::LabelsRoot | InodeKind::LabelDir | InodeKind::LabelSymlink => {
+                reply.error(fuser::Errno::from_i32(libc::EROFS));
+            }
             InodeKind::RealFile => {
                 if let Some(0) = size {
                     self.write_buffers.insert(ino_u, Vec::new());
@@ -1579,12 +1753,18 @@ impl Filesystem for ReposixFs {
     ) {
         let ino_u = ino.0;
         match InodeKind::classify(ino_u) {
-            InodeKind::Root | InodeKind::Bucket | InodeKind::TreeRoot | InodeKind::TreeDir => {
+            InodeKind::Root
+            | InodeKind::Bucket
+            | InodeKind::TreeRoot
+            | InodeKind::TreeDir
+            | InodeKind::LabelsRoot
+            | InodeKind::LabelDir => {
                 reply.error(fuser::Errno::from_i32(libc::EISDIR));
             }
             InodeKind::Gitignore
             | InodeKind::BucketIndex
             | InodeKind::TreeSymlink
+            | InodeKind::LabelSymlink
             | InodeKind::RootIndex
             | InodeKind::TreeDirIndex => {
                 reply.error(fuser::Errno::from_i32(libc::EROFS));
@@ -2431,7 +2611,7 @@ mod tests {
     fn render_mount_root_index_frontmatter_and_table() {
         // tree_present=true, 3 issues → all frontmatter keys + 3 table rows.
         let generated = chrono::Utc.with_ymd_and_hms(2026, 4, 15, 12, 0, 0).unwrap();
-        let bytes = render_mount_root_index("simulator", "demo", "issues", 3, true, generated);
+        let bytes = render_mount_root_index("simulator", "demo", "issues", 3, true, 2, generated);
         let text = std::str::from_utf8(&bytes).expect("utf-8");
 
         assert!(text.starts_with("---\n"), "missing open fence: {text}");
@@ -2475,7 +2655,7 @@ mod tests {
     fn mount_root_index_no_tree_row() {
         // tree_present=false → no `tree/` row.
         let generated = chrono::Utc.with_ymd_and_hms(2026, 4, 15, 0, 0, 0).unwrap();
-        let bytes = render_mount_root_index("simulator", "demo", "issues", 0, false, generated);
+        let bytes = render_mount_root_index("simulator", "demo", "issues", 0, false, 0, generated);
         let text = std::str::from_utf8(&bytes).expect("utf-8");
 
         assert!(
@@ -2523,6 +2703,103 @@ mod tests {
             fs.tree_index_ino_reverse.get(&first).map(|v| *v),
             Some(42u64),
             "reverse map must resolve first inode back to dir_ino 42"
+        );
+    }
+
+    // ------------------------------------------------------------------ //
+    // Phase 19-A: labels/ FUSE dispatch — behavior-block tests (Task A-2) //
+    // ------------------------------------------------------------------ //
+
+    #[test]
+    fn render_mount_root_index_labels_row_with_count() {
+        // Behavior test 1: label_count=3 → row "| labels/ | directory | 3 |"
+        let generated = chrono::Utc.with_ymd_and_hms(2026, 4, 15, 0, 0, 0).unwrap();
+        let bytes = render_mount_root_index("simulator", "demo", "issues", 0, false, 3, generated);
+        let text = std::str::from_utf8(&bytes).expect("utf-8");
+        assert!(
+            text.contains("| labels/ | directory | 3 |"),
+            "missing labels row with count 3: {text}"
+        );
+    }
+
+    #[test]
+    fn render_mount_root_index_labels_row_zero_count() {
+        // Behavior test 2: label_count=0 → row still present (unconditional)
+        let generated = chrono::Utc.with_ymd_and_hms(2026, 4, 15, 0, 0, 0).unwrap();
+        let bytes = render_mount_root_index("simulator", "demo", "issues", 0, false, 0, generated);
+        let text = std::str::from_utf8(&bytes).expect("utf-8");
+        assert!(
+            text.contains("| labels/ | directory | 0 |"),
+            "labels row must be present even with label_count=0: {text}"
+        );
+    }
+
+    #[test]
+    fn gitignore_bytes_is_correct() {
+        // Behavior test 3: GITIGNORE_BYTES = "/tree/\nlabels/\n" (15 bytes)
+        // Count: '/','t','r','e','e','/','\\n' = 7, 'l','a','b','e','l','s','/','\\n' = 8 → 15
+        assert_eq!(
+            GITIGNORE_BYTES, b"/tree/\nlabels/\n",
+            "GITIGNORE_BYTES must be /tree/\\nlabels/\\n"
+        );
+        assert_eq!(
+            GITIGNORE_BYTES.len(),
+            15,
+            "GITIGNORE_BYTES must be 15 bytes"
+        );
+    }
+
+    #[test]
+    fn classify_labels_root_ino() {
+        // Behavior test 4: LABELS_ROOT_INO → LabelsRoot
+        assert_eq!(
+            InodeKind::classify(crate::inode::LABELS_ROOT_INO),
+            InodeKind::LabelsRoot
+        );
+    }
+
+    #[test]
+    fn classify_labels_dir_ino_base() {
+        // Behavior test 5: LABELS_DIR_INO_BASE → LabelDir
+        assert_eq!(
+            InodeKind::classify(LABELS_DIR_INO_BASE),
+            InodeKind::LabelDir
+        );
+    }
+
+    #[test]
+    fn classify_labels_symlink_ino_base() {
+        // Behavior test 6: LABELS_SYMLINK_INO_BASE → LabelSymlink
+        assert_eq!(
+            InodeKind::classify(LABELS_SYMLINK_INO_BASE),
+            InodeKind::LabelSymlink
+        );
+    }
+
+    #[test]
+    fn classify_labels_symlink_ino_base_minus_one_is_label_dir() {
+        // Behavior test 7: LABELS_SYMLINK_INO_BASE - 1 → NOT LabelSymlink
+        // (it falls in the LabelDir range)
+        assert_ne!(
+            InodeKind::classify(LABELS_SYMLINK_INO_BASE - 1),
+            InodeKind::LabelSymlink,
+            "LABELS_SYMLINK_INO_BASE - 1 must not be LabelSymlink"
+        );
+        assert_eq!(
+            InodeKind::classify(LABELS_SYMLINK_INO_BASE - 1),
+            InodeKind::LabelDir,
+            "LABELS_SYMLINK_INO_BASE - 1 must be LabelDir"
+        );
+    }
+
+    #[test]
+    fn classify_tree_symlink_range_unchanged() {
+        // Behavior test 8: 0xC_0000_0001 still returns TreeSymlink
+        // (label arms must not steal tree-symlink inodes)
+        assert_eq!(
+            InodeKind::classify(0xC_0000_0001),
+            InodeKind::TreeSymlink,
+            "tree-symlink inode 0xC_0000_0001 must still classify as TreeSymlink"
         );
     }
 }

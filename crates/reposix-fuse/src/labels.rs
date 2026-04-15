@@ -86,8 +86,7 @@ impl LabelSnapshot {
         }
 
         // Step 2: collect labels in sorted order for stable output.
-        let mut label_vec: Vec<(String, Vec<(IssueId, String)>)> =
-            by_label.into_iter().collect();
+        let mut label_vec: Vec<(String, Vec<(IssueId, String)>)> = by_label.into_iter().collect();
         label_vec.sort_by(|(a, _), (b, _)| a.cmp(b));
 
         // Dedupe the label dir slugs across all distinct labels.
@@ -98,7 +97,10 @@ impl LabelSnapshot {
             .map(|(i, (label, _))| {
                 // Use the label string as the "title" for slugification;
                 // IssueId(i as u64) is only used as a fallback for empty slugs.
-                (IssueId(i as u64), slug_or_fallback(label, IssueId(i as u64)))
+                (
+                    IssueId(i as u64),
+                    slug_or_fallback(label, IssueId(i as u64)),
+                )
             })
             .collect();
         let deduped_label_slugs = dedupe_siblings(label_slug_inputs);
@@ -148,7 +150,7 @@ impl LabelSnapshot {
 mod tests {
     use super::*;
     use chrono::TimeZone;
-    use reposix_core::{IssueStatus};
+    use reposix_core::IssueStatus;
 
     fn make_issue(id: u64, title: &str, labels: Vec<&str>) -> Issue {
         let t = chrono::Utc.with_ymd_and_hms(2026, 1, 1, 0, 0, 0).unwrap();
@@ -290,9 +292,7 @@ mod tests {
     // Test 9: label dirs are sorted by label slug for stable ls output
     #[test]
     fn label_dirs_sorted_by_slug() {
-        let issues = vec![
-            make_issue(1, "Issue one", vec!["zebra", "apple", "mango"]),
-        ];
+        let issues = vec![make_issue(1, "Issue one", vec!["zebra", "apple", "mango"])];
         let snap = LabelSnapshot::build("issues", &issues);
         assert_eq!(snap.label_count, 3);
         // Collect (dir_ino, slug) pairs sorted by dir_ino (allocation order = sorted label order)
