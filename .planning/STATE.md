@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: target)
 status: verifying
-stopped_at: Stopped at checkpoint E3 (21-E-macos-PLAN.md) — awaiting human verification of macFUSE action
-last_updated: "2026-04-15T18:14:26.907Z"
+stopped_at: Completed 21-E-macos-PLAN.md (macos-blocked path)
+last_updated: "2026-04-15T18:18:13.684Z"
 last_activity: 2026-04-15
 progress:
   total_phases: 11
@@ -103,6 +103,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 | Phase 21 PB | 8 | 2 tasks | 4 files |
 | Phase 21 PC | 25 | 2 tasks | 5 files |
 | Phase 21 PD | 12 | 1 tasks | 1 files |
+| Phase 21 PE | 25m | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -156,6 +157,8 @@ additions (2026-04-13):
 - [Phase 21]: CARGO_BIN_EXE_reposix-sim unavailable cross-crate on stable Rust; use CARGO_MANIFEST_DIR path resolution with REPOSIX_SIM_BIN override
 - [Phase 21]: Chaos torn-row query uses actual NOT NULL columns ts/method/path (not op/entity_id from plan description)
 - [Phase 21]: gythialy/macfuse action 404 on GitHub; E3 checkpoint required to resolve action reference before push
+- [Phase 21]: macOS FUSE matrix deferred: gythialy/macfuse 404 + kext approval unavailable on GitHub-hosted runners; HARD-04 partial, requires self-hosted runner
+- [Phase 21]: HARD-00 closed: bash scripts/hooks/test-pre-push.sh now runs in CI test job
 
 ### Pending Todos
 
@@ -176,8 +179,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-15T18:14:23.689Z
-Stopped at: Stopped at checkpoint E3 (21-E-macos-PLAN.md) — awaiting human verification of macFUSE action
+Last session: 2026-04-15T18:18:13.680Z
+Stopped at: Completed 21-E-macos-PLAN.md (macos-blocked path)
 Wave-level commit trail on `main` (Phase 16):
 Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
 Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).

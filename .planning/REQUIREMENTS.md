@@ -66,7 +66,7 @@
 - [x] **HARD-01**: `reposix-swarm --contention` mode proves `If-Match` 409 is deterministic under N-client contention on same issue
 - [x] **HARD-02**: 500-page space truncation emits `WARN` log and `--no-truncate` flag errors instead of silently capping (SG-05 compliance)
 - [x] **HARD-03**: Chaos audit-log test: kill -9 sim mid-swarm shows no dangling/torn rows in WAL-mode DB
-- [ ] **HARD-04**: macFUSE parity: CI matrix entry for macOS with macFUSE, `fusermount3 → umount -f` conditional swap
+- [x] **HARD-04**: macFUSE parity: CI matrix entry for macOS with macFUSE, `fusermount3 → umount -f` conditional swap
 
 ### Benchmarks (OP-8)
 - [ ] **BENCH-01**: `bench_token_economy.py` uses `client.messages.count_tokens()` instead of `len(text)/4`; results cached in `benchmarks/fixtures/*.tokens.json`
