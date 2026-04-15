@@ -26,6 +26,7 @@ mod cache_db;
 mod demo;
 mod list;
 mod mount;
+mod refresh;
 mod sim;
 
 /// reposix — git-backed FUSE filesystem for autonomous agents.
@@ -115,6 +116,29 @@ enum Cmd {
         #[arg(long, value_enum, default_value_t = list::ListFormat::Json)]
         format: list::ListFormat,
     },
+    /// Re-fetch all issues/pages from the backend, write `.md` files into the
+    /// mount directory, and create a git commit so `git diff HEAD~1` shows
+    /// backend changes.
+    ///
+    /// The mount must NOT be actively FUSE-mounted (unmount first).
+    Refresh {
+        /// Mount point (a plain directory that is also a git working tree).
+        mount_point: PathBuf,
+        /// Backend origin (simulator URL).
+        #[arg(long, default_value = "http://127.0.0.1:7878")]
+        origin: String,
+        /// Project slug (sim) or `owner/repo` (github) or space KEY (confluence).
+        #[arg(long, default_value = "demo")]
+        project: String,
+        /// Which backend to speak.
+        #[arg(long, value_enum, default_value_t = list::ListBackend::Sim)]
+        backend: list::ListBackend,
+        /// Serve from cached `.md` files; no network egress.
+        /// NOTE: offline read path is Phase 21; this flag is accepted but
+        /// currently returns an error.
+        #[arg(long)]
+        offline: bool,
+    },
     /// Print the version.
     Version,
 }
@@ -155,5 +179,21 @@ async fn main() -> Result<()> {
             backend,
             format,
         } => list::run(project, origin, backend, format).await,
+        Cmd::Refresh {
+            mount_point,
+            origin,
+            project,
+            backend,
+            offline,
+        } => {
+            refresh::run_refresh(refresh::RefreshConfig {
+                mount_point,
+                origin,
+                project,
+                backend,
+                offline,
+            })
+            .await
+        }
     }
 }

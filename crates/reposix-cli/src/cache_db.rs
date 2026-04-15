@@ -1,4 +1,4 @@
-//! SQLite metadata store for `reposix refresh`.
+//! `SQLite` metadata store for `reposix refresh`.
 //!
 //! `cache.db` lives at `<mount>/.reposix/cache.db` and holds a single-row
 //! `refresh_meta` table recording when the last refresh ran and which backend
@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS refresh_meta (
 pub struct CacheDb(rusqlite::Connection);
 
 impl CacheDb {
-    /// Borrow the underlying connection for ad-hoc queries.
+    /// Borrow the underlying connection for ad-hoc queries (test use only).
+    #[cfg(test)]
     #[must_use]
     pub fn conn(&self) -> &rusqlite::Connection {
         &self.0
@@ -51,7 +52,7 @@ impl CacheDb {
 /// - A human-readable error containing `"another refresh is in progress"` if
 ///   a second process has the EXCLUSIVE WAL lock on the same DB file
 ///   (`SQLITE_BUSY`).
-/// - An `anyhow::Error` wrapping a `rusqlite::Error` for any other SQLite
+/// - An `anyhow::Error` wrapping a [`rusqlite::Error`] for any other `SQLite`
 ///   failure (e.g. schema application).
 pub fn open_cache_db(mount: &Path) -> Result<CacheDb> {
     let dir = mount.join(".reposix");
@@ -61,11 +62,12 @@ pub fn open_cache_db(mount: &Path) -> Result<CacheDb> {
     let path = dir.join("cache.db");
 
     // Pre-create the file with 0o600 permissions before rusqlite opens it.
-    // `OpenOptions::create(true)` is a no-op if the file already exists,
-    // which is fine — permissions are already set.
+    // `.truncate(false)` is explicit: we never want to wipe an existing DB —
+    // only rusqlite's connection lifecycle manages the file contents.
     std::fs::OpenOptions::new()
         .write(true)
         .create(true)
+        .truncate(false)
         .mode(0o600)
         .open(&path)
         .with_context(|| format!("create cache.db at {}", path.display()))?;
@@ -105,7 +107,7 @@ fn map_busy(e: rusqlite::Error, path: &Path) -> anyhow::Error {
 ///
 /// # Errors
 ///
-/// Propagates any `rusqlite` error (e.g. disk full, corrupt DB).
+/// Propagates any [`rusqlite::Error`] (e.g. disk full, corrupt DB).
 pub fn update_metadata(
     db: &CacheDb,
     backend_name: &str,
@@ -210,13 +212,8 @@ mod tests {
             Ok(db2) => {
                 // The open succeeded (WAL allows concurrent readers), but a
                 // write must fail with SQLITE_BUSY.
-                let write_result = update_metadata(
-                    &db2,
-                    "test",
-                    "proj",
-                    "2026-04-15T00:00:00Z",
-                    None,
-                );
+                let write_result =
+                    update_metadata(&db2, "test", "proj", "2026-04-15T00:00:00Z", None);
                 assert!(
                     write_result.is_err(),
                     "write on second connection should fail when first holds EXCLUSIVE lock"

@@ -24,6 +24,7 @@ anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 libc.workspace = true
+chrono.workspace = true
 rusqlite = { workspace = true, features = ["bundled"] }
 tempfile = "3"
 # Safe wrappers for POSIX signals + process syscalls (SIGTERM to child,
