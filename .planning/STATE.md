@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: target)
 status: verifying
-stopped_at: Completed 21-A-audit-PLAN.md
-last_updated: "2026-04-15T17:44:03.342Z"
+stopped_at: Completed 21-B-contention-PLAN.md
+last_updated: "2026-04-15T17:50:12.815Z"
 last_activity: 2026-04-15
 progress:
   total_phases: 11
@@ -100,6 +100,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 | Phase 20-op-3-reposix-refresh-subcommand-and-git-diff-cache-for-mount P20-A | 35 | 2 tasks | 4 files |
 | Phase 20-op-3-reposix-refresh-subcommand-and-git-diff-cache-for-mount P20-B | 7 | 2 tasks | 5 files |
 | Phase 21 PA | 5 | 3 tasks | 1 files |
+| Phase 21 PB | 8 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -147,6 +148,7 @@ additions (2026-04-13):
 - [Phase 20-op-3]: lib.rs dual-target pattern: binary crate needs lib.rs for integration tests to import pub modules
 - [Phase 20-op-3]: run_refresh_inner pub with Option<&CacheDb>: allows network-free integration testing without stubs
 - [Phase 21]: HARD-00 closes: credential pre-push hook 6/6 and SSRF tests 3/3 confirmed still passing in Phase 21 Wave A audit
+- [Phase 21]: ContentionWorkload uses GET-then-PATCH-with-Some(version) pattern with no cross-client sync — ensures intentional races that provoke 409s
 
 ### Pending Todos
 
@@ -167,8 +169,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-15T17:44:03.337Z
-Stopped at: Completed 21-A-audit-PLAN.md
+Last session: 2026-04-15T17:50:12.810Z
+Stopped at: Completed 21-B-contention-PLAN.md
 Wave-level commit trail on `main` (Phase 16):
 Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
 Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).
