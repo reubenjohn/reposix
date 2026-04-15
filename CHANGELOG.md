@@ -6,6 +6,25 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+### Added — Phase 19: OP-1 remainder — `labels/` symlink overlay
+
+- **`labels/` read-only overlay (Phase 19):** `mount/labels/<label>/` lists all
+  issues/pages carrying that label as symlinks pointing to the canonical bucket
+  file (`../../<bucket>/<padded-id>.md`). Labels populated from `Issue::labels`
+  (already present for sim and GitHub adapter; Confluence adapter defers labels
+  to a later phase). Each `labels/<label>/` directory uses `slug_or_fallback` +
+  `dedupe_siblings` for filesystem-safe, collision-free directory names.
+  Requirements: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05.
+- **Inode constants:** `LABELS_ROOT_INO = 0x7_FFFF_FFFF`,
+  `LABELS_DIR_INO_BASE = 0x10_0000_0000`, `LABELS_SYMLINK_INO_BASE = 0x14_0000_0000` —
+  disjoint from all existing ranges; const-assertions pin the ordering.
+- **`.gitignore` update:** synthesized `.gitignore` now contains `/tree/\nlabels/\n`
+  (was `/tree/\n`) so `git status` inside the mount stays clean.
+- **`_INDEX.md` update:** `mount/_INDEX.md` now includes a `labels/` row with
+  distinct label count.
+- **`spaces/` deferred to Phase 20** — requires new `IssueBackend` trait surface
+  (`list_spaces`) and Confluence-only API calls. See `19-RESEARCH.md §Scope Recommendation`.
+
 ### Added — Phase 18: OP-2 remainder — tree-recursive and mount-root `_INDEX.md`
 - **OP-2 remainder (Phase 18):** `mount/tree/<subdir>/_INDEX.md` — recursive subtree sitemap
   synthesized via DFS from `TreeSnapshot`; YAML frontmatter + pipe-table with `depth | name | target`
