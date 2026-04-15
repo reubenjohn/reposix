@@ -22,6 +22,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 mod binpath;
+mod cache_db;
 mod demo;
 mod list;
 mod mount;
