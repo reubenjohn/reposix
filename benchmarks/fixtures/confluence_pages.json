@@ -1,0 +1,94 @@
+{
+  "results": [
+    {
+      "id": "393219",
+      "status": "current",
+      "title": "Engineering Runbook",
+      "spaceId": "98306",
+      "parentId": null,
+      "parentType": null,
+      "position": 1,
+      "authorId": "5b10a2844c20165700ede21g",
+      "ownerId": "5b10a2844c20165700ede21g",
+      "createdAt": "2026-01-10T09:00:00.000Z",
+      "version": {
+        "number": 7,
+        "message": "Update sim startup steps",
+        "minorEdit": false,
+        "authorId": "5b10a2844c20165700ede21g",
+        "createdAt": "2026-03-05T14:22:00.000Z"
+      },
+      "body": {
+        "atlas_doc_format": {
+          "value": "{\"type\":\"doc\",\"version\":1,\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Simulator Startup\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"The reposix simulator runs as a local HTTP service on port 7777. It uses an in-process axum server backed by a bundled SQLite database. No external dependencies are required beyond a Rust toolchain.\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Start the simulator before mounting the FUSE filesystem or running integration tests. The simulator initialises the SQLite schema on first boot; subsequent starts are idempotent.\"}]},{\"type\":\"codeBlock\",\"attrs\":{\"language\":\"bash\"},\"content\":[{\"type\":\"text\",\"text\":\"# Start the simulator\\ncargo run -p reposix-sim\\n\\n# Verify it is accepting connections\\ncurl -s http://127.0.0.1:7777/api/v1/issues | jq length\"}]}]}",
+          "representation": "atlas_doc_format"
+        }
+      },
+      "_links": {
+        "webui": "/spaces/ENG/pages/393219",
+        "edittext": "/pages/resumedraft.action?draftId=393219"
+      }
+    },
+    {
+      "id": "393220",
+      "status": "current",
+      "title": "Security Review — 2026-Q2",
+      "spaceId": "98306",
+      "parentId": "393219",
+      "parentType": "page",
+      "position": 2,
+      "authorId": "6c21b3955d31276811fe32h",
+      "ownerId": "6c21b3955d31276811fe32h",
+      "createdAt": "2026-03-01T11:30:00.000Z",
+      "version": {
+        "number": 2,
+        "message": "Add SSRF finding from red-team report",
+        "minorEdit": false,
+        "authorId": "5b10a2844c20165700ede21g",
+        "createdAt": "2026-03-15T16:45:00.000Z"
+      },
+      "body": {
+        "atlas_doc_format": {
+          "value": "{\"type\":\"doc\",\"version\":1,\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":1},\"content\":[{\"type\":\"text\",\"text\":\"Q2 2026 Security Review\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"This review covers the lethal-trifecta analysis for the reposix FUSE+git-remote architecture. Findings are categorised by STRIDE category and mapped to the mitigations in CLAUDE.md.\"}]},{\"type\":\"bulletList\",\"content\":[{\"type\":\"listItem\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"SG-01: Outbound HTTP allowlist defaults to 127.0.0.1 only. Non-default origins require explicit REPOSIX_ALLOWED_ORIGINS env var.\"}]}]},{\"type\":\"listItem\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"SG-03: Server-controlled frontmatter fields (id, created_at, version) are stripped on the inbound write path before serialisation.\"}]}]},{\"type\":\"listItem\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"SG-05: Credential pre-push hook rejects commits that add files matching .env or *_TOKEN patterns.\"}]}]},{\"type\":\"listItem\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"SSRF (T-11-C-03): redact_url() applied to all error paths in confluence backend. URL never leaked in log output.\"}]}]}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Next review scheduled for 2026-Q3. Open item: macOS FUSE matrix blocked on self-hosted runner (HARD-04 partial).\"}]}]}",
+          "representation": "atlas_doc_format"
+        }
+      },
+      "_links": {
+        "webui": "/spaces/ENG/pages/393220",
+        "edittext": "/pages/resumedraft.action?draftId=393220"
+      }
+    },
+    {
+      "id": "393221",
+      "status": "current",
+      "title": "Onboarding Guide (draft)",
+      "spaceId": "98306",
+      "parentId": null,
+      "parentType": null,
+      "position": 3,
+      "authorId": "7d32c4066e42387922gf43i",
+      "ownerId": "7d32c4066e42387922gf43i",
+      "createdAt": "2026-02-20T08:00:00.000Z",
+      "version": {
+        "number": 4,
+        "message": "Add FUSE prerequisites section",
+        "minorEdit": false,
+        "authorId": "7d32c4066e42387922gf43i",
+        "createdAt": "2026-03-18T10:00:00.000Z"
+      },
+      "body": {
+        "atlas_doc_format": {
+          "value": "{\"type\":\"doc\",\"version\":1,\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Getting Started\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Welcome to the reposix onboarding guide. reposix exposes remote issue trackers as a POSIX directory tree, allowing agents and humans alike to use cat, grep, sed, and git on live issue data without learning JSON schemas or REST endpoint signatures.\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Before you begin, ensure your development environment meets the prerequisites listed in the table below. The Rust toolchain version is pinned in rust-toolchain.toml at the repository root; cargo will download and activate the correct version automatically on first build.\"}]},{\"type\":\"table\",\"attrs\":{\"isNumberColumnEnabled\":false,\"layout\":\"default\"},\"content\":[{\"type\":\"tableRow\",\"content\":[{\"type\":\"tableHeader\",\"attrs\":{},\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Prerequisite\",\"marks\":[{\"type\":\"strong\"}]}]}]},{\"type\":\"tableHeader\",\"attrs\":{},\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Minimum Version\",\"marks\":[{\"type\":\"strong\"}]}]}]},{\"type\":\"tableHeader\",\"attrs\":{},\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Notes\",\"marks\":[{\"type\":\"strong\"}]}]}]}]},{\"type\":\"tableRow\",\"content\":[{\"type\":\"tableCell\",\"attrs\":{},\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Rust toolchain\"}]}]},{\"type\":\"tableCell\",\"attrs\":{},\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"1.82 (stable)\"}]}]},{\"type\":\"tableCell\",\"attrs\":{},\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Managed by rust-toolchain.toml\"}]}]}]}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Clone the repository and run cargo check --workspace to verify the toolchain is correctly installed. The first build downloads all dependencies; subsequent builds are incremental.\"}]}]}",
+          "representation": "atlas_doc_format"
+        }
+      },
+      "_links": {
+        "webui": "/spaces/ENG/pages/393221",
+        "edittext": "/pages/resumedraft.action?draftId=393221"
+      }
+    }
+  ],
+  "_links": {
+    "base": "https://example.atlassian.net/wiki"
+  }
+}
