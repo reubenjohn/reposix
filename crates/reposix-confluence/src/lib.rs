@@ -416,6 +416,27 @@ fn translate(page: ConfPage) -> Result<Issue> {
     })
 }
 
+/// Extract only the path and query from an HTTP URL so that tenant
+/// hostnames never appear in error messages or tracing spans (OP-7 HARD-05).
+///
+/// `https://reuben-john.atlassian.net/wiki/api/v2/spaces/123/pages?cursor=X`
+/// → `/wiki/api/v2/spaces/123/pages?cursor=X`
+///
+/// Returns `"<url parse error>"` if `raw` is not a valid URL so callers
+/// never have to handle `None`/fallback themselves.
+fn redact_url(raw: &str) -> String {
+    url::Url::parse(raw).map_or_else(
+        |_| "<url parse error>".to_string(),
+        |u| {
+            let path = u.path();
+            match u.query() {
+                Some(q) => format!("{path}?{q}"),
+                None => path.to_string(),
+            }
+        },
+    )
+}
+
 impl ConfluenceBackend {
     /// Build a new backend against `https://{tenant}.atlassian.net`.
     ///
@@ -495,6 +516,116 @@ impl ConfluenceBackend {
     pub fn with_audit(mut self, conn: Arc<Mutex<Connection>>) -> Self {
         self.audit = Some(conn);
         self
+    }
+
+    /// Strict variant of [`IssueBackend::list_issues`]: returns
+    /// `Err(Error::Other(...))` instead of silently capping at
+    /// [`MAX_ISSUES_PER_LIST`] pages, closing the SG-05 taint-escape
+    /// risk (the agent thinking it has the whole space when it doesn't).
+    ///
+    /// Use this when a caller **must** see every page in the space or fail
+    /// loudly. The default [`list_issues`](IssueBackend::list_issues) still
+    /// returns `Ok(capped)` with a `tracing::warn!` for backwards compatibility.
+    ///
+    /// # Errors
+    ///
+    /// - Returns `Error::Other` if pagination would exceed `MAX_ISSUES_PER_LIST`.
+    /// - All errors that `list_issues` would raise also apply here.
+    pub async fn list_issues_strict(&self, project: &str) -> Result<Vec<Issue>> {
+        self.list_issues_impl(project, true).await
+    }
+
+    /// Shared pagination loop for both [`list_issues`](IssueBackend::list_issues)
+    /// and [`list_issues_strict`]. When `strict == true` the cap site returns
+    /// `Err`; when `false` it emits a `tracing::warn!` and returns `Ok(capped)`.
+    ///
+    /// # Errors
+    ///
+    /// - Transport or HTTP errors from the Confluence REST API.
+    /// - In strict mode: `Error::Other` when the page cap is exceeded.
+    async fn list_issues_impl(&self, project: &str, strict: bool) -> Result<Vec<Issue>> {
+        let space_id = self.resolve_space_id(project).await?;
+        let first = format!(
+            "{}/wiki/api/v2/spaces/{}/pages?limit={}",
+            self.base(),
+            space_id,
+            PAGE_SIZE
+        );
+        let mut next_url: Option<String> = Some(first);
+        let mut out: Vec<Issue> = Vec::new();
+        let mut pages: usize = 0;
+
+        let header_owned = self.standard_headers();
+        let header_refs: Vec<(&str, &str)> =
+            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+
+        while let Some(url) = next_url.take() {
+            pages += 1;
+            if pages > (MAX_ISSUES_PER_LIST / PAGE_SIZE) {
+                if strict {
+                    return Err(Error::Other(format!(
+                        "Confluence space '{project}' exceeds {MAX_ISSUES_PER_LIST}-page cap; \
+                         refusing to truncate (strict mode)"
+                    )));
+                }
+                tracing::warn!(
+                    pages,
+                    "reached MAX_ISSUES_PER_LIST cap; stopping pagination"
+                );
+                break;
+            }
+            self.await_rate_limit_gate().await;
+            let resp = self
+                .http
+                .request_with_headers(Method::GET, url.as_str(), &header_refs)
+                .await?;
+            self.ingest_rate_limit(&resp);
+            let status = resp.status();
+            let bytes = resp.bytes().await?;
+            if !status.is_success() {
+                return Err(Error::Other(format!(
+                    "confluence returned {status} for GET {}: {}",
+                    redact_url(&url),
+                    String::from_utf8_lossy(&bytes)
+                )));
+            }
+            // Parse as Value first so we can extract `_links.next` via the
+            // pure helper, then deserialize the strongly-typed list shape.
+            let body_json: serde_json::Value = serde_json::from_slice(&bytes)?;
+            let next_cursor = parse_next_cursor(&body_json);
+            let list: ConfPageList = serde_json::from_value(body_json)?;
+            for page in list.results {
+                // SG-05: wrap ingress bytes as Tainted before translating.
+                let tainted = Tainted::new(page);
+                let issue = translate(tainted.into_inner())?;
+                out.push(issue);
+                if out.len() >= MAX_ISSUES_PER_LIST {
+                    if strict {
+                        return Err(Error::Other(format!(
+                            "Confluence space '{project}' exceeds {MAX_ISSUES_PER_LIST}-page cap; \
+                             refusing to truncate (strict mode)"
+                        )));
+                    }
+                    return Ok(out);
+                }
+            }
+            // Drop the typed list's own `links` field in favor of the pure
+            // helper's output — they come from the same JSON but the helper
+            // keeps the test surface narrower.
+            let _ = list.links;
+            next_url = next_cursor.map(|relative| {
+                // Relative path (e.g. "/wiki/api/v2/spaces/12345/pages?cursor=ABC")
+                // — prepend tenant base. Absolute URLs would be caught by
+                // the SG-01 allowlist gate anyway, but relative-only by
+                // construction defeats SSRF by design.
+                if relative.starts_with("http://") || relative.starts_with("https://") {
+                    relative
+                } else {
+                    format!("{}{}", self.base(), relative)
+                }
+            });
+        }
+        Ok(out)
     }
 
     fn base(&self) -> &str {
@@ -745,75 +876,7 @@ impl IssueBackend for ConfluenceBackend {
     }
 
     async fn list_issues(&self, project: &str) -> Result<Vec<Issue>> {
-        let space_id = self.resolve_space_id(project).await?;
-        let first = format!(
-            "{}/wiki/api/v2/spaces/{}/pages?limit={}",
-            self.base(),
-            space_id,
-            PAGE_SIZE
-        );
-        let mut next_url: Option<String> = Some(first);
-        let mut out: Vec<Issue> = Vec::new();
-        let mut pages: usize = 0;
-
-        let header_owned = self.standard_headers();
-        let header_refs: Vec<(&str, &str)> =
-            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
-
-        while let Some(url) = next_url.take() {
-            pages += 1;
-            if pages > (MAX_ISSUES_PER_LIST / PAGE_SIZE) {
-                tracing::warn!(
-                    pages,
-                    "reached MAX_ISSUES_PER_LIST cap; stopping pagination"
-                );
-                break;
-            }
-            self.await_rate_limit_gate().await;
-            let resp = self
-                .http
-                .request_with_headers(Method::GET, url.as_str(), &header_refs)
-                .await?;
-            self.ingest_rate_limit(&resp);
-            let status = resp.status();
-            let bytes = resp.bytes().await?;
-            if !status.is_success() {
-                return Err(Error::Other(format!(
-                    "confluence returned {status} for GET {url}: {}",
-                    String::from_utf8_lossy(&bytes)
-                )));
-            }
-            // Parse as Value first so we can extract `_links.next` via the
-            // pure helper, then deserialize the strongly-typed list shape.
-            let body_json: serde_json::Value = serde_json::from_slice(&bytes)?;
-            let next_cursor = parse_next_cursor(&body_json);
-            let list: ConfPageList = serde_json::from_value(body_json)?;
-            for page in list.results {
-                // SG-05: wrap ingress bytes as Tainted before translating.
-                let tainted = Tainted::new(page);
-                let issue = translate(tainted.into_inner())?;
-                out.push(issue);
-                if out.len() >= MAX_ISSUES_PER_LIST {
-                    return Ok(out);
-                }
-            }
-            // Drop the typed list's own `links` field in favor of the pure
-            // helper's output — they come from the same JSON but the helper
-            // keeps the test surface narrower.
-            let _ = list.links;
-            next_url = next_cursor.map(|relative| {
-                // Relative path (e.g. "/wiki/api/v2/spaces/12345/pages?cursor=ABC")
-                // — prepend tenant base. Absolute URLs would be caught by
-                // the SG-01 allowlist gate anyway, but relative-only by
-                // construction defeats SSRF by design.
-                if relative.starts_with("http://") || relative.starts_with("https://") {
-                    relative
-                } else {
-                    format!("{}{}", self.base(), relative)
-                }
-            });
-        }
-        Ok(out)
+        self.list_issues_impl(project, false).await
     }
 
     async fn get_issue(&self, _project: &str, id: IssueId) -> Result<Issue> {
@@ -2536,6 +2599,185 @@ mod tests {
         assert_eq!(
             status_val, 409,
             "audit row status must be 409 for failed write"
+        );
+    }
+
+    // -------- truncation: warn mode (list_issues, default) --------
+
+    /// Verify that `list_issues` (non-strict) emits a warn and returns
+    /// `Ok(capped)` when the space exceeds `MAX_ISSUES_PER_LIST / PAGE_SIZE`
+    /// pages. We mock exactly `MAX_ISSUES_PER_LIST / PAGE_SIZE + 1` page
+    /// responses so the pagination loop triggers the cap on the next fetch.
+    ///
+    /// Because we're relying on the tracing warn being emitted (rather than
+    /// asserting on a captured subscriber) we just confirm the Ok result shape
+    /// here; the strict-mode test below covers the Err path.
+    #[tokio::test]
+    async fn truncation_warn_on_default_list() {
+        // Number of pages that will exceed the cap: PAGE_SIZE=100, cap=500 →
+        // more than 500/100 = 5 page-fetches. We set up 6 pages in the mock
+        // so the 6th fetch triggers the cap branch.
+        let server = MockServer::start().await;
+        mount_space_lookup(&server, "TRUNCTEST", "9999").await;
+
+        // Pages 1..=5: each returns PAGE_SIZE (1) result with a next cursor.
+        // We use 1 item per page to keep the mock small; the cap check fires
+        // on pages > 5, not on out.len() >= 500.
+        for i in 1..=5u32 {
+            let cursor_param = format!("C{i}");
+            let next_cursor = format!("/wiki/api/v2/spaces/9999/pages?cursor=C{i}&limit=100");
+            let matcher_path = path("/wiki/api/v2/spaces/9999/pages");
+            let page_result = json!([page_json(&i.to_string(), "current", &format!("page {i}"), None)]);
+            if i == 1 {
+                // First page: no cursor param, just the base path + limit
+                Mock::given(method("GET"))
+                    .and(matcher_path)
+                    .and(query_param("limit", "100"))
+                    .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                        "results": page_result,
+                        "_links": { "next": next_cursor }
+                    })))
+                    .up_to_n_times(1)
+                    .mount(&server)
+                    .await;
+            } else {
+                let prev_cursor = format!("C{}", i - 1);
+                Mock::given(method("GET"))
+                    .and(matcher_path)
+                    .and(query_param("cursor", prev_cursor.as_str()))
+                    .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                        "results": page_result,
+                        "_links": { "next": next_cursor }
+                    })))
+                    .up_to_n_times(1)
+                    .mount(&server)
+                    .await;
+                drop(cursor_param);
+            }
+        }
+        // Page 6: would be fetched if cap doesn't fire — but the cap fires at
+        // pages > 5, so this mock should NOT be called. We register it with
+        // up_to_n_times(0) to assert it is never reached.
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/spaces/9999/pages"))
+            .and(query_param("cursor", "C5"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [],
+                "_links": {}
+            })))
+            .expect(0)
+            .mount(&server)
+            .await;
+
+        let backend =
+            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let result = backend.list_issues("TRUNCTEST").await;
+        // Must succeed (warn mode, not strict).
+        let issues = result.expect("list_issues must succeed in warn mode even at cap");
+        // 5 pages × 1 item = 5 issues.
+        assert_eq!(issues.len(), 5, "expected 5 issues (one per mocked page)");
+    }
+
+    /// Verify that `list_issues_strict` returns `Err` containing
+    /// `"strict mode"` and `"500-page cap"` when the space exceeds the
+    /// pagination cap, and that no `Ok(partial)` result escapes.
+    #[tokio::test]
+    async fn truncation_errors_in_strict_mode() {
+        let server = MockServer::start().await;
+        mount_space_lookup(&server, "TRUNCTEST", "9999").await;
+
+        // Same 5-page setup as above — the 6th page-fetch would trigger the
+        // cap check on pages > 5. In strict mode the check fires before the
+        // 6th request, returning Err immediately.
+        for i in 1..=5u32 {
+            let next_cursor =
+                format!("/wiki/api/v2/spaces/9999/pages?cursor=C{i}&limit=100");
+            let page_result =
+                json!([page_json(&i.to_string(), "current", &format!("page {i}"), None)]);
+            if i == 1 {
+                Mock::given(method("GET"))
+                    .and(path("/wiki/api/v2/spaces/9999/pages"))
+                    .and(query_param("limit", "100"))
+                    .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                        "results": page_result,
+                        "_links": { "next": next_cursor }
+                    })))
+                    .up_to_n_times(1)
+                    .mount(&server)
+                    .await;
+            } else {
+                let prev_cursor = format!("C{}", i - 1);
+                Mock::given(method("GET"))
+                    .and(path("/wiki/api/v2/spaces/9999/pages"))
+                    .and(query_param("cursor", prev_cursor.as_str()))
+                    .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                        "results": page_result,
+                        "_links": { "next": next_cursor }
+                    })))
+                    .up_to_n_times(1)
+                    .mount(&server)
+                    .await;
+            }
+        }
+
+        let backend =
+            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let result = backend.list_issues_strict("TRUNCTEST").await;
+        assert!(result.is_err(), "list_issues_strict must return Err at cap");
+        let msg = format!("{}", result.unwrap_err());
+        assert!(
+            msg.contains("strict mode"),
+            "error must mention 'strict mode': {msg}"
+        );
+        assert!(
+            msg.contains("500-page cap"),
+            "error must mention '500-page cap': {msg}"
+        );
+        // Also verify the space name is in the error for debuggability.
+        assert!(
+            msg.contains("TRUNCTEST"),
+            "error must mention the space key: {msg}"
+        );
+    }
+
+    /// Verify that error messages from `list_issues` on HTTP failure do NOT
+    /// contain the host:port (which in production would be the tenant name),
+    /// but DO contain the path portion of the URL (for debuggability).
+    #[tokio::test]
+    async fn list_error_message_omits_tenant() {
+        let server = MockServer::start().await;
+        mount_space_lookup(&server, "LEAKTEST", "7777").await;
+
+        // Return HTTP 500 for the first pages GET.
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/spaces/7777/pages"))
+            .respond_with(
+                ResponseTemplate::new(500)
+                    .set_body_string("internal server error"),
+            )
+            .mount(&server)
+            .await;
+
+        let backend =
+            ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let result = backend.list_issues("LEAKTEST").await;
+        assert!(result.is_err(), "500 must return Err");
+        let msg = format!("{}", result.unwrap_err());
+
+        // The mock server is on 127.0.0.1:<port>. The error must NOT contain
+        // the port number (which stands in for the tenant host in production).
+        let host_port = server.uri(); // e.g. "http://127.0.0.1:54321"
+        // Strip the scheme to get "127.0.0.1:54321"
+        let host_port_bare = host_port.trim_start_matches("http://");
+        assert!(
+            !msg.contains(host_port_bare),
+            "error must not contain host:port '{host_port_bare}': {msg}"
+        );
+
+        // The path portion must survive so callers can debug the request.
+        assert!(
+            msg.contains("/wiki/api/v2/spaces/7777/pages"),
+            "error must contain the API path for debuggability: {msg}"
         );
     }
 }
