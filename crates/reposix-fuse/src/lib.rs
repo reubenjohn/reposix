@@ -23,10 +23,12 @@ use serde::{Deserialize, Serialize};
 
 pub mod fs;
 pub mod inode;
+pub mod labels;
 pub mod tree;
 
 pub use fs::ReposixFs;
 pub use inode::InodeRegistry;
+pub use labels::{LabelSnapshot, LABELS_DIR_INO_BASE, LABELS_ROOT_INO, LABELS_SYMLINK_INO_BASE};
 pub use tree::{TreeSnapshot, TREE_DIR_INO_BASE, TREE_ROOT_INO, TREE_SYMLINK_INO_BASE};
 
 /// Runtime configuration for a FUSE mount.

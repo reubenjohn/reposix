@@ -81,6 +81,25 @@ pub const TREE_INDEX_ALLOC_END: u64 = 0xFFFF;
 /// files (mount-root index + per-tree-dir indexes); issues start here.
 pub const FIRST_ISSUE_INODE: u64 = 0x1_0000;
 
+/// Fixed inode for the `labels/` overlay root directory.
+///
+/// Lives just below `TREE_DIR_INO_BASE` (`0x8_0000_0000`); above the
+/// issue inode range (`0x1_0000`..) and the tree-index allocator range
+/// (`TREE_INDEX_ALLOC_START..=TREE_INDEX_ALLOC_END` = 7..=0xFFFF).
+pub const LABELS_ROOT_INO: u64 = 0x7_FFFF_FFFF;
+
+/// Start of the per-label interior directory inode range.
+///
+/// One inode allocated per distinct label slug. Range:
+/// `LABELS_DIR_INO_BASE .. LABELS_SYMLINK_INO_BASE`.
+pub const LABELS_DIR_INO_BASE: u64 = 0x10_0000_0000;
+
+/// Start of the label-symlink inode range.
+///
+/// One inode allocated per (label, issue) pair. Range:
+/// `LABELS_SYMLINK_INO_BASE .. u64::MAX` (in practice much less).
+pub const LABELS_SYMLINK_INO_BASE: u64 = 0x14_0000_0000;
+
 /// Bidirectional inode ↔ issue-id map.
 #[derive(Debug)]
 pub struct InodeRegistry {
@@ -277,5 +296,10 @@ mod tests {
         // inode:: re-export, but tree.rs still owns the canonical
         // definition).
         assert_eq!(TREE_ROOT_INO, crate::tree::TREE_ROOT_INO);
+        // Labels overlay inode ranges are disjoint from all prior ranges.
+        assert!(LABELS_ROOT_INO < crate::tree::TREE_DIR_INO_BASE);
+        assert!(LABELS_ROOT_INO > FIRST_ISSUE_INODE);
+        assert!(LABELS_DIR_INO_BASE > crate::tree::TREE_SYMLINK_INO_BASE);
+        assert!(LABELS_DIR_INO_BASE < LABELS_SYMLINK_INO_BASE);
     }
 }
