@@ -148,12 +148,20 @@ pub fn run_refresh_inner(
         "reposix refresh: {label}/{project} — {n} issues at {ts}",
         project = cfg.project
     );
-    let author = format!("reposix <{label}@{project}>", project = cfg.project);
+    // Sanitize project so that only alphanumeric, `-`, `_`, and `/` appear in
+    // the git author email field.  Any other character (including newlines or
+    // `<`/`>` which are structurally significant in git) is replaced with `-`
+    // to prevent a malformed `--author=` argument.
+    let safe_project = cfg
+        .project
+        .replace(|c: char| !c.is_alphanumeric() && c != '-' && c != '_' && c != '/', "-");
+    let author = format!("reposix <{label}@{safe_project}>");
 
     git_refresh_commit(&cfg.mount_point, bucket, &author, &message)?;
 
     // Update the metadata DB with the refresh result if one is provided.
     if let Some(db) = db {
+        // TODO(Phase-21): populate commit_sha after git_refresh_commit returns
         cache_db::update_metadata(db, label, &cfg.project, &ts, None)?;
     }
 
@@ -244,6 +252,8 @@ pub fn is_fuse_active(mount: &Path) -> Result<bool> {
     match rustix::process::test_kill_process(pid) {
         Ok(()) => Ok(true),
         Err(e) if e == rustix::io::Errno::SRCH => Ok(false),
+        // EPERM: process exists but is owned by a different user — treat as alive.
+        Err(e) if e == rustix::io::Errno::PERM => Ok(true),
         Err(e) => Err(anyhow::anyhow!(e)).context("test_kill_process"),
     }
 }
