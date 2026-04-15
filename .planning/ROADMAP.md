@@ -543,11 +543,11 @@ Plans:
 **Goal:** Replace the `len(text) // 4` token approximation in `scripts/bench_token_economy.py` with real Anthropic `client.messages.count_tokens()` calls, cache results in `benchmarks/fixtures/*.tokens.json` with SHA-256 content-hash keys for offline CI reproducibility, add per-backend (MCP, GitHub, Confluence, Jira-placeholder) comparison tables, and re-state the headline token-reduction number in `docs/why.md` with the real measurement — honest regardless of whether it's higher or lower than the prior 91.6% estimate. Python + Markdown only; no Rust changes.
 **Requirements**: BENCH-01, BENCH-02, BENCH-03, BENCH-04
 **Depends on:** Phase 21
-**Plans:** 3 plans (2 waves — A+B parallel in Wave 1, C sequential in Wave 2)
+**Plans:** 2/3 plans executed
 
 Plans:
-- [ ] 22-A-bench-upgrade-PLAN.md — scripts/bench_token_economy.py + requirements-bench.txt: count_tokens API, SHA-256 cache, --offline flag, 6 pytest cases (Wave 1, autonomous, BENCH-01)
-- [ ] 22-B-fixtures-and-table-PLAN.md — benchmarks/fixtures/{github_issues.json, confluence_pages.json, README.md}: synthetic REST payloads + fixture provenance doc (Wave 1, autonomous, BENCH-02 prerequisites)
+- [x] 22-A-bench-upgrade-PLAN.md — scripts/bench_token_economy.py + requirements-bench.txt: count_tokens API, SHA-256 cache, --offline flag, 6 pytest cases (Wave 1, autonomous, BENCH-01)
+- [x] 22-B-fixtures-and-table-PLAN.md — benchmarks/fixtures/{github_issues.json, confluence_pages.json, README.md}: synthetic REST payloads + fixture provenance doc (Wave 1, autonomous, BENCH-02 prerequisites)
 - [ ] 22-C-wire-docs-ship-PLAN.md — per-backend table wiring + one-shot cache population (checkpoint) + docs/why.md headline update + CHANGELOG + SUMMARY (Wave 2, autonomous=false, BENCH-02/03/04)
 
 
