@@ -497,11 +497,11 @@ Plans:
 **Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
 **Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
 **Depends on:** Phase 18
-**Plans:** 2 plans
+**Plans:** 2/2 plans executed
 
 Plans:
-- [ ] 19-A-labels-fuse-impl.md — inode constants, labels.rs module, FUSE dispatch, >= 5 tests
-- [ ] 19-B-docs-and-release.md — green workspace gauntlet, CHANGELOG, STATE update
+- [x] 19-A-labels-fuse-impl.md — inode constants, labels.rs module, FUSE dispatch, >= 5 tests
+- [x] 19-B-docs-and-release.md — green workspace gauntlet, CHANGELOG, STATE update
 
 ### Phase 20: OP-3 — reposix refresh subcommand and git-diff cache for mount-as-time-machine semantics
 

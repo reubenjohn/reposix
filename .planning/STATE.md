@@ -53,11 +53,11 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 
 ## Current Position
 
-Phase: 18 — SHIPPED. Phase 19 (OP-1 remainder) is next.
+Phase: 19 — SHIPPED. Phase 20 (OP-3 reposix refresh) is next.
 Plan: 2 of 2 (all waves complete)
-Cursor: **Phase 18 SHIPPED. OP-2 fully closed at all three mount levels (bucket Phase 15,
-tree-subdir + mount-root Phase 18). Phase 19 (OP-1 remainder) is the
-recommended next execution target.**
+Cursor: **Phase 19 SHIPPED. `labels/` read-only symlink overlay complete; LABEL-01..05 closed.
+spaces/ deferred (requires IssueBackend::list_spaces — API-breaking, Confluence-only).
+Phase 20 (OP-3 reposix refresh subcommand) is the recommended next execution target.**
 Status: Phase complete — ready for verification
 Last activity: 2026-04-15
 
