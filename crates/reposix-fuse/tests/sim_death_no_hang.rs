@@ -131,6 +131,7 @@ fn stat_returns_within_7s_after_backend_dies() {
             read_only: true,
         },
         backend,
+        None,
     )
     .expect("mount open");
 

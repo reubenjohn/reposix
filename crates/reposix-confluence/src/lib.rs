@@ -3119,8 +3119,12 @@ mod tests {
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let comments = backend.list_comments(98765).await.expect("list_comments");
         assert_eq!(comments.len(), 2, "expected 1 inline + 1 footer");
-        assert!(comments.iter().any(|c| c.id == "111" && c.kind == CommentKind::Inline));
-        assert!(comments.iter().any(|c| c.id == "222" && c.kind == CommentKind::Footer));
+        assert!(comments
+            .iter()
+            .any(|c| c.id == "111" && c.kind == CommentKind::Inline));
+        assert!(comments
+            .iter()
+            .any(|c| c.id == "222" && c.kind == CommentKind::Footer));
     }
 
     #[tokio::test]
@@ -3155,8 +3159,11 @@ mod tests {
         // Empty footer
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/pages/42/footer-comments"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(json!({"results": [], "_links": {}})))
-            .mount(&server).await;
+            .respond_with(
+                ResponseTemplate::new(200).set_body_json(json!({"results": [], "_links": {}})),
+            )
+            .mount(&server)
+            .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let comments = backend.list_comments(42).await.expect("list_comments");
         assert_eq!(comments.len(), 2);
@@ -3174,11 +3181,15 @@ mod tests {
                 }],
                 "_links": {}
             })))
-            .mount(&server).await;
+            .mount(&server)
+            .await;
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/pages/7/footer-comments"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(json!({"results": [], "_links": {}})))
-            .mount(&server).await;
+            .respond_with(
+                ResponseTemplate::new(200).set_body_json(json!({"results": [], "_links": {}})),
+            )
+            .mount(&server)
+            .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let comments = backend.list_comments(7).await.expect("list_comments");
         assert_eq!(comments.len(), 1);
@@ -3192,7 +3203,8 @@ mod tests {
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/pages/99/inline-comments"))
             .respond_with(ResponseTemplate::new(404).set_body_string("not found"))
-            .mount(&server).await;
+            .mount(&server)
+            .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let err = backend.list_comments(99).await.expect_err("must fail");
         let msg = format!("{err}");
@@ -3201,7 +3213,10 @@ mod tests {
         // a 127.0.0.1:<port> wiremock URL; the redaction turns it into a path.
         // Assert the wiremock port is NOT in the error message.
         let host = server.uri();
-        assert!(!msg.contains(&host), "error must not leak full URL (host={host}): {msg}");
+        assert!(
+            !msg.contains(&host),
+            "error must not leak full URL (host={host}): {msg}"
+        );
     }
 
     // -------- Task 2: list_spaces tests --------
@@ -3220,14 +3235,19 @@ mod tests {
                 ],
                 "_links": {}
             })))
-            .mount(&server).await;
+            .mount(&server)
+            .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let spaces = backend.list_spaces().await.expect("list_spaces");
         assert_eq!(spaces.len(), 2);
         assert_eq!(spaces[0].key, "REPOSIX");
         assert_eq!(spaces[0].name, "Reposix Project");
         // webui_url must be absolute (prefixed with wiremock base URI)
-        assert!(spaces[0].webui_url.starts_with(&server.uri()), "webui_url must be absolute: {}", spaces[0].webui_url);
+        assert!(
+            spaces[0].webui_url.starts_with(&server.uri()),
+            "webui_url must be absolute: {}",
+            spaces[0].webui_url
+        );
         assert!(spaces[0].webui_url.ends_with("/wiki/spaces/REPOSIX"));
     }
 
@@ -3245,7 +3265,8 @@ mod tests {
                 "_links": {"next":"/wiki/api/v2/spaces?cursor=NEXT&limit=250"}
             })))
             .up_to_n_times(1)
-            .mount(&server).await;
+            .mount(&server)
+            .await;
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/spaces"))
             .and(query_param("cursor", "NEXT"))
@@ -3253,7 +3274,8 @@ mod tests {
                 "results": [{"id":"2","key":"B","name":"B","_links":{"webui":"/wiki/spaces/B"}}],
                 "_links": {}
             })))
-            .mount(&server).await;
+            .mount(&server)
+            .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let spaces = backend.list_spaces().await.expect("list_spaces");
         assert_eq!(spaces.len(), 2);
@@ -3267,12 +3289,16 @@ mod tests {
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/spaces"))
             .respond_with(ResponseTemplate::new(500).set_body_string("oops"))
-            .mount(&server).await;
+            .mount(&server)
+            .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let err = backend.list_spaces().await.expect_err("must fail");
         let msg = format!("{err}");
         assert!(msg.contains("500"));
         let host = server.uri();
-        assert!(!msg.contains(&host), "error must redact host ({host}): {msg}");
+        assert!(
+            !msg.contains(&host),
+            "error must redact host ({host}): {msg}"
+        );
     }
 }

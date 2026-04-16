@@ -138,6 +138,32 @@ fn build_backend(kind: BackendKind, origin: &str) -> Result<Arc<dyn IssueBackend
     }
 }
 
+/// Build the optional `ConfluenceBackend` comment-fetcher.
+///
+/// Returns `Some(Arc<ConfluenceBackend>)` only when `kind` is
+/// `BackendKind::Confluence` so that sim and github mounts never allocate
+/// the comment-fetcher slot. The same credentials validated in
+/// `build_backend` are reused here — if `build_backend` already succeeded
+/// the env vars are present.
+///
+/// # Errors
+/// Returns an error if `ConfluenceBackend::new` fails (e.g. bad credentials
+/// or tenant string).
+fn build_comment_fetcher(kind: BackendKind) -> Result<Option<Arc<ConfluenceBackend>>> {
+    if kind != BackendKind::Confluence {
+        return Ok(None);
+    }
+    let tenant = std::env::var("REPOSIX_CONFLUENCE_TENANT").unwrap_or_default();
+    let email = std::env::var("ATLASSIAN_EMAIL").unwrap_or_default();
+    let token = std::env::var("ATLASSIAN_API_KEY").unwrap_or_default();
+    let creds = ConfluenceCreds {
+        email,
+        api_token: token,
+    };
+    let b = ConfluenceBackend::new(creds, &tenant)?;
+    Ok(Some(Arc::new(b)))
+}
+
 fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -147,6 +173,7 @@ fn main() -> Result<()> {
         .init();
     let args = Args::parse();
     let backend = build_backend(args.backend_kind, &args.backend)?;
+    let comment_fetcher = build_comment_fetcher(args.backend_kind)?;
     tracing::info!(
         backend = backend.name(),
         project = %args.project,
@@ -160,6 +187,7 @@ fn main() -> Result<()> {
             read_only: args.read_only,
         },
         backend,
+        comment_fetcher,
     )?;
     // Block until SIGINT — drop on signal cleans up via fuser's UmountOnDrop.
     tracing::info!("reposix-fuse mounted; press Ctrl-C to unmount");
