@@ -643,3 +643,55 @@ Plans:
 
 Plans:
 - [x] TBD (run /gsd-plan-phase 25 to break down) (completed 2026-04-15)
+
+---
+
+## Milestone v0.8.0 — JIRA Cloud Integration
+
+**Goal:** Add JIRA Cloud as a first-class backend. Two prerequisite foundation changes land first: rename the misnamed `IssueBackend` trait to `BackendConnector` (Confluence pages are not "issues"; the trait name should be neutral), and add an `extensions` field to `Issue` for backend-specific metadata that doesn't fit the canonical 5-field schema (JIRA needs `jira_key`, `issue_type`, `priority`). Then ship the `reposix-jira` crate with read-only Cloud REST v3 support, JQL pagination, status-category mapping, and subtask hierarchy. Write path lands as a stretch phase.
+
+**Target features:**
+- Rename `IssueBackend` → `BackendConnector` across all crates + ADR-004 documenting rationale
+- Add `extensions: BTreeMap<String, String>` to `Issue` for opaque backend metadata in frontmatter
+- `reposix-jira` crate: `BackendConnector` impl against JIRA Cloud REST v3 (`https://{instance}.atlassian.net/rest/api/3`)
+- JQL-based listing with offset pagination (`startAt`/`maxResults`/`total`, max 100/page)
+- Status-category-key mapping → 5-valued `IssueStatus` (with heuristic for `InReview`)
+- Subtask hierarchy: `fields.parent.id` → `Issue.parent_id`
+- JIRA extensions in frontmatter: `jira_key` ("PROJ-42"), `issue_type` ("Story"), `priority` ("Medium"), `status_name` (raw pre-mapping)
+- Env vars: `JIRA_EMAIL`, `JIRA_API_TOKEN`, `REPOSIX_JIRA_INSTANCE`
+- Wiremock unit tests ≥5 + contract test (always-on wiremock + `#[ignore]`-gated live)
+- CLI: `list --backend jira`, `mount --backend jira --project <PROJECT_KEY>`
+- `docs/reference/jira.md` + `docs/decisions/004-jira-issue-mapping.md`
+- (Stretch) Write path: `create_issue`, `update_issue`, `delete_or_close` via Transitions API
+
+**Requirements:** RENAME-01, EXT-01, JIRA-01 … JIRA-06
+
+### Phase 27: Foundation — `IssueBackend` → `BackendConnector` rename + `Issue.extensions` field
+
+**Goal:** Rename the `IssueBackend` trait to `BackendConnector` in `reposix-core`, update all impls (`SimBackend`, `GithubReadOnlyBackend`, `ConfluenceBackend`) and all call-sites in `reposix-fuse`, `reposix-cli`, `reposix-remote`, and `reposix-swarm`. Simultaneously add `extensions: BTreeMap<String, String>` to the `Issue` struct (defaults to empty, serialized only when non-empty via `#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]`), propagating through frontmatter render/parse and all tests. Write ADR-004 capturing the rename rationale.
+**Requirements:** RENAME-01, EXT-01
+**Depends on:** Phase 26 (docs) — safe to run in parallel
+**Plans:** TBD
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 27 to break down)
+
+### Phase 28: JIRA Cloud read-only adapter (`reposix-jira`)
+
+**Goal:** Ship a `reposix-jira` crate implementing `BackendConnector` against JIRA Cloud REST v3 (`https://{instance}.atlassian.net/rest/api/3`). Basic auth (`email:JIRA_API_TOKEN`, same pattern as `reposix-confluence`). `list_issues(project)` → JQL `project = {KEY} ORDER BY updated DESC` with offset-based pagination (max 100/page, loop until `startAt + len >= total`). `get_issue(project, id)` → `GET /rest/api/3/issue/{id}` (numeric id, not key). Status mapping via `fields.status.statusCategory.key`: `"new"` → `Open`, `"indeterminate"` → `InProgress` (or `InReview` if status name contains "review"), `"done"` → `Done` (or `WontFix` if name contains "won't"/"wont"/"reject"), unknown → `Open`. Subtask hierarchy: `fields.parent.id` → `Issue.parent_id`. `Issue.extensions`: `jira_key` ("PROJ-42"), `issue_type` ("Story"), `priority` ("Medium"), `status_name` (raw string). `root_collection_name()` → `"issues"`. `create_issue`/`update_issue`/`delete_or_close` return `Err("not supported")`. Rate limit: `x-ratelimit-remaining-request-count` + `Retry-After` (seconds). Tenant validation (DNS-label rules, blocks SSRF like Confluence does). Env vars: `JIRA_EMAIL`, `JIRA_API_TOKEN`, `REPOSIX_JIRA_INSTANCE`. CLI: `list --backend jira`, `mount --backend jira --project <KEY>`. Wiremock unit tests ≥5. Contract test (wiremock always-on + live `#[ignore]`). `docs/reference/jira.md`. `docs/decisions/004-jira-issue-mapping.md` (ADR-004). CHANGELOG + CI green.
+**Requirements:** JIRA-01, JIRA-02, JIRA-03, JIRA-04, JIRA-05
+**Depends on:** Phase 27 (BackendConnector rename + extensions field)
+**Plans:** TBD
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 28 to break down)
+
+### Phase 29: JIRA write path — `create_issue`, `update_issue`, `delete_or_close` via Transitions API (stretch)
+
+**Goal:** Complete the JIRA write path on `JiraBackend`. `create_issue` → `POST /rest/api/3/issue` (requires `fields.project.key`, `fields.summary`, `fields.issuetype.name`). `update_issue` → `PUT /rest/api/3/issue/{idOrKey}` with `fields`-based body (JIRA has no ETag; use `version` field from `fields.version.id` if present, accept conflict risk otherwise). `delete_or_close` → fetch available transitions (`GET /rest/api/3/issue/{id}/transitions`), select best match for `DeleteReason` (Done → "Done"/"Close" transition, WontFix → "Won't Fix"/"Reject"/"Won't Do" transition, fallback to lowest-id terminal transition), then `POST /rest/api/3/issue/{id}/transitions`. Enable `supports(BackendFeature::Delete)` and `supports(BackendFeature::Transitions)`. Add `StrongVersioning: false` (JIRA's version field is a global counter on the project, not per-issue ETag). Audit log rows for all mutations. Wiremock write-path tests ≥3. Contract test write extension.
+**Requirements:** JIRA-06
+**Depends on:** Phase 28 (JIRA read-only adapter)
+**Plans:** TBD
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 29 to break down)

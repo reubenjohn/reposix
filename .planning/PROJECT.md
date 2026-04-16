@@ -39,9 +39,19 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 - [ ] **FUSE never blocks the kernel forever.** All upstream HTTP calls have a 5-second timeout; on timeout the daemon returns `EIO` (per InitialReport.md §"Graceful Degradation via POSIX Errors"), never hangs.
 - [ ] **Demo recording must show guardrails firing.** The asciinema/script recording includes at least one allowlist refusal and one 409-conflict-as-merge-conflict resolution. A demo that only shows happy-path is dishonest about what reposix is.
 
+**JIRA integration (v0.8.0 target)**
+- [ ] **RENAME-01: `IssueBackend` → `BackendConnector` trait rename.** The current name is accurate for GitHub Issues but misleading for Confluence pages (and anything non-issue). Rename across all crates; update docs and ADR-004.
+- [ ] **EXT-01: `Issue.extensions` field.** Add `extensions: BTreeMap<String, String>` to `Issue` for backend-specific metadata that doesn't map to canonical fields (e.g. JIRA key, issue type, priority). Serialized as a flat YAML map in frontmatter; empty map omitted.
+- [ ] **JIRA-01: `reposix-jira` crate — read-only `BackendConnector` impl.** JIRA Cloud REST v3 (`https://{instance}.atlassian.net/rest/api/3`). Basic auth with `email:JIRA_API_TOKEN`.
+- [ ] **JIRA-02: JQL pagination + status-category mapping + subtask hierarchy.** `project = {KEY} ORDER BY updated DESC`, offset-based (max 100/page). Status mapping via `statusCategory.key`. Subtask `parent` → `Issue.parent_id`.
+- [ ] **JIRA-03: JIRA-specific `extensions` in frontmatter.** `jira_key` ("PROJ-42"), `issue_type` ("Story"), `priority` ("Medium"), `status_name` (raw pre-mapping string).
+- [ ] **JIRA-04: CLI dispatch.** `list --backend jira`, `mount --backend jira --project <PROJECT_KEY>`. Env vars: `JIRA_EMAIL`, `JIRA_API_TOKEN`, `REPOSIX_JIRA_INSTANCE`.
+- [ ] **JIRA-05: Tests + docs + ADR.** Wiremock unit tests ≥5. Contract test (always-on wiremock + `#[ignore]`-gated live). `docs/reference/jira.md`. `docs/decisions/004-jira-issue-mapping.md`.
+- [ ] **JIRA-06 (stretch): JIRA write path.** `create_issue` → POST, `update_issue` → PUT, `delete_or_close` → Transitions API. Audit log for all mutations.
+
 ### Out of Scope
 
-- **Real Jira/GitHub/Confluence credentials in v0.1** — Simulator first. Real backends bolt on once the substrate is proven. Avoids credential exposure during overnight autonomous build.
+- **Real Jira/GitHub/Confluence credentials in v0.1** — Simulator first. Real backends bolt on once the substrate is proven. Avoids credential exposure during overnight autonomous build. *(JIRA credentials now planned for v0.8.0 — see JIRA-01…JIRA-06 above.)*
 - **Windows / macOS support in v0.1** — FUSE on Linux only. macOS via macFUSE is a follow-up; Windows needs a different VFS layer entirely.
 - **Web UI** — agents don't need it; humans use the CLI + the underlying git repo.
 - **Multi-tenant hosted service** — local-first only. The whole point is the agent talks to the local FS.
@@ -92,6 +102,17 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 - OP-2 remainder: tree-recursive `tree/<subdir>/_INDEX.md` synthesis + mount-root `_INDEX.md`
 - OP-1 remainder: `labels/` and `spaces/` directory views as read-only symlink overlays (GitHub + Confluence)
 - OP-3: `reposix refresh` subcommand + git-diff cache for mount-as-time-machine semantics
+
+## Upcoming Milestone: v0.8.0 — JIRA Cloud Integration
+
+**Goal:** First-class JIRA Cloud backend with trait rename, extensions field, and full read-only adapter. Write path as stretch.
+
+**Target features:**
+- `IssueBackend` → `BackendConnector` rename + `Issue.extensions: BTreeMap<String, String>`
+- `reposix-jira` crate: JQL pagination, status-category mapping, subtask hierarchy, JIRA-specific extensions
+- CLI: `list --backend jira`, `mount --backend jira --project <KEY>`
+- ADR-004 (mapping rationale), `docs/reference/jira.md`
+- (Stretch) Write path via Transitions API
 
 ## Current Milestone: v0.7.0 — Hardening + Confluence Expansion
 
