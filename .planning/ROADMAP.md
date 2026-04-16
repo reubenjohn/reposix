@@ -625,10 +625,10 @@ Plans:
 **Goal:** Expose Confluence page inline and footer comments as synthesized `.comments/` subdirectories under each page in the FUSE mount: `pages/<padded-id>.comments/<comment-id>.md`. Each comment file has YAML frontmatter (id, author, created_at, resolved, parent_comment_id, kind) and a Markdown body. Also adds a `reposix spaces --backend confluence` subcommand for listing Confluence spaces (CONTEXT.md locked decision).
 **Requirements**: CONF-01, CONF-02, CONF-03
 **Depends on:** Phase 22
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
-- [ ] 23-01-PLAN.md — `ConfluenceBackend::list_comments` + `list_spaces` + `ConfComment`/`ConfSpaceSummary` public types (Wave 1, autonomous)
+- [x] 23-01-PLAN.md — `ConfluenceBackend::list_comments` + `list_spaces` + `ConfComment`/`ConfSpaceSummary` public types (Wave 1, autonomous)
 - [ ] 23-02-PLAN.md — `reposix spaces` CLI subcommand + table renderer (Wave 2, autonomous, depends on 23-01)
 - [ ] 23-03-PLAN.md — FUSE `.comments/` synthesis: inode constants, CommentsSnapshot, fs.rs dispatch, MountConfig wire-through (Wave 2, autonomous, depends on 23-01)
 

@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.7.0
-milestone_name: Hardening + Confluence Expansion
+milestone: v0.6.0
+milestone_name: — Write Path + Full Sitemap
 status: executing
-stopped_at: context exhaustion at 90% (2026-04-15)
-last_updated: "2026-04-16T18:59:39.483Z"
+stopped_at: context exhaustion at 90% (2026-04-16)
+last_updated: "2026-04-16T19:10:35.904Z"
 last_activity: 2026-04-16 -- Phase 23 execution started
 progress:
   total_phases: 11
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 22
+  completed_phases: 5
+  total_plans: 19
+  completed_plans: 21
   percent: 100
 ---
 
@@ -186,8 +186,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-15T19:48:40.237Z
-Stopped at: context exhaustion at 90% (2026-04-15)
+Last session: 2026-04-16T19:10:35.892Z
+Stopped at: context exhaustion at 90% (2026-04-16)
 Wave-level commit trail on `main` (Phase 16):
 Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
 Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).
