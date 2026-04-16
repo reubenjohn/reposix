@@ -18,8 +18,8 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
-use reposix_core::IssueId;
 use reposix_core::http::{client, ClientOpts};
+use reposix_core::IssueId;
 use reposix_sim::{run_with_listener, SimConfig};
 use reposix_swarm::contention::ContentionWorkload;
 use reposix_swarm::driver::{run_swarm, SwarmConfig};

@@ -219,8 +219,9 @@ mod tests {
                 // write must fail with SQLITE_BUSY and mention the lock error.
                 let write_result =
                     update_metadata(&db2, "test", "proj", "2026-04-15T00:00:00Z", None);
-                let err = write_result
-                    .expect_err("write on second connection should fail when first holds EXCLUSIVE lock");
+                let err = write_result.expect_err(
+                    "write on second connection should fail when first holds EXCLUSIVE lock",
+                );
                 assert!(
                     err.to_string().contains("another refresh is in progress"),
                     "expected 'another refresh is in progress', got: {err}"

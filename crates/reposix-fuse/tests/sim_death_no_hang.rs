@@ -19,7 +19,10 @@
 //!      itself killed `stat`; both prove we didn't hang silently).
 //! 6. Drop the mount, assert unmount within 3s.
 
-#![cfg(all(any(target_os = "linux", target_os = "macos"), feature = "fuse-mount-tests"))]
+#![cfg(all(
+    any(target_os = "linux", target_os = "macos"),
+    feature = "fuse-mount-tests"
+))]
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -35,8 +38,8 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 /// On Linux this defaults to `fusermount3 -u <mnt>`; on macOS CI sets
 /// `REPOSIX_UNMOUNT_CMD=umount -f` so the same test binary works.
 fn unmount(mnt: &std::path::Path) -> std::io::Result<std::process::ExitStatus> {
-    let cmd_str = std::env::var("REPOSIX_UNMOUNT_CMD")
-        .unwrap_or_else(|_| "fusermount3 -u".to_string());
+    let cmd_str =
+        std::env::var("REPOSIX_UNMOUNT_CMD").unwrap_or_else(|_| "fusermount3 -u".to_string());
     let mut parts = cmd_str.split_whitespace();
     let prog = parts.next().expect("REPOSIX_UNMOUNT_CMD is empty");
     let args: Vec<&str> = parts.collect();

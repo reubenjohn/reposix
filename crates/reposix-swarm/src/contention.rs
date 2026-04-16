@@ -21,8 +21,8 @@ use std::time::Instant;
 use async_trait::async_trait;
 use chrono::Utc;
 use parking_lot::Mutex;
-use rand::SeedableRng;
 use rand::rngs::StdRng;
+use rand::SeedableRng;
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::{sanitize, IssueBackend, IssueId, ServerMetadata, Tainted};
 

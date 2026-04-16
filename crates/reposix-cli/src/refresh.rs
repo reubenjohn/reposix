@@ -152,9 +152,10 @@ pub fn run_refresh_inner(
     // the git author email field.  Any other character (including newlines or
     // `<`/`>` which are structurally significant in git) is replaced with `-`
     // to prevent a malformed `--author=` argument.
-    let safe_project = cfg
-        .project
-        .replace(|c: char| !c.is_alphanumeric() && c != '-' && c != '_' && c != '/', "-");
+    let safe_project = cfg.project.replace(
+        |c: char| !c.is_alphanumeric() && c != '-' && c != '_' && c != '/',
+        "-",
+    );
     let author = format!("reposix <{label}@{safe_project}>");
 
     git_refresh_commit(&cfg.mount_point, bucket, &author, &message)?;
