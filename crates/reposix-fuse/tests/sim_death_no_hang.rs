@@ -200,11 +200,7 @@ fn stat_returns_within_7s_after_backend_dies() {
 
     // Assert the mount unmounts within 3s.
     let unmounted = wait_for(
-        || {
-            std::fs::read_dir(&mount_path)
-                .map(|it| it.flatten().count() == 0)
-                .unwrap_or(true)
-        },
+        || std::fs::read_dir(&mount_path).map_or(true, |it| it.flatten().count() == 0),
         Duration::from_secs(3),
     );
     assert!(unmounted, "mount did not unmount within 3s");

@@ -195,11 +195,7 @@ fn unmount_and_wait(mount: reposix_fuse::Mount, mount_path: &std::path::Path) {
     drop(mount);
     let mp = mount_path.to_path_buf();
     let unmounted = wait_for(
-        move || {
-            std::fs::read_dir(&mp)
-                .map(|it| it.flatten().count() == 0)
-                .unwrap_or(true)
-        },
+        move || std::fs::read_dir(&mp).map_or(true, |it| it.flatten().count() == 0),
         Duration::from_secs(3),
     );
     assert!(unmounted, "mount did not unmount within 3s");

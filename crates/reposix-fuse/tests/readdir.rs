@@ -202,11 +202,7 @@ async fn mount_lists_and_reads_issues() {
     // tempdir is actually empty).
     drop(mount);
     let unmounted = wait_for_ready(
-        || {
-            std::fs::read_dir(&mount_path)
-                .map(|it| it.flatten().count() == 0)
-                .unwrap_or(true)
-        },
+        || std::fs::read_dir(&mount_path).map_or(true, |it| it.flatten().count() == 0),
         Duration::from_secs(3),
     );
     assert!(unmounted, "mount did not unmount within 3s");
