@@ -146,7 +146,7 @@ fn render_table(issues: &[Issue]) {
 /// Returns an error whose message lists ALL three env-var names and indicates
 /// which were empty — so the user fixes them in one round-trip instead of N
 /// error/edit/re-run cycles.
-fn read_confluence_env() -> anyhow::Result<(String, String, String)> {
+pub(crate) fn read_confluence_env() -> anyhow::Result<(String, String, String)> {
     read_confluence_env_from(|name| std::env::var(name).unwrap_or_default())
 }
 
@@ -160,7 +160,7 @@ fn read_confluence_env() -> anyhow::Result<(String, String, String)> {
 ///
 /// Bails with a single message listing ALL three env-var names and the subset
 /// currently empty.
-fn read_confluence_env_from(
+pub(crate) fn read_confluence_env_from(
     get: impl Fn(&str) -> String,
 ) -> anyhow::Result<(String, String, String)> {
     let email = get("ATLASSIAN_EMAIL");
