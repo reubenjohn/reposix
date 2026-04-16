@@ -70,9 +70,9 @@
 
 ### Benchmarks (OP-8)
 - [ ] **BENCH-01**: `bench_token_economy.py` uses `client.messages.count_tokens()` instead of `len(text)/4`; results cached in `benchmarks/fixtures/*.tokens.json`
-- [ ] **BENCH-02**: Per-backend comparison table (sim, github, confluence) for token reduction vs raw JSON API
-- [ ] **BENCH-03**: Cold-mount time-to-first-ls matrix: 4 backends × [10, 100, 500] issues
-- [ ] **BENCH-04**: `docs/why.md` honest-framing section updated with real tokenization numbers
+- [x] **BENCH-02**: Per-backend comparison table (sim, github, confluence) for token reduction vs raw JSON API
+- [x] **BENCH-03**: Cold-mount time-to-first-ls matrix: 4 backends × [10, 100, 500] issues
+- [x] **BENCH-04**: `docs/why.md` honest-framing section updated with real tokenization numbers
 
 ### Confluence Comments (OP-9a)
 - [ ] **CONF-01**: `cat mount/pages/<id>.comments/<comment-id>.md` returns comment body in Markdown frontmatter format
