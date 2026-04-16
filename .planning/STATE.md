@@ -4,8 +4,8 @@ milestone: v0.4
 milestone_name: target)
 status: executing
 stopped_at: context exhaustion at 90% (2026-04-15)
-last_updated: "2026-04-16T17:07:52.275Z"
-last_activity: 2026-04-16 -- Phase 23 planning complete
+last_updated: "2026-04-16T17:19:35.296Z"
+last_activity: 2026-04-16 -- Phase 23 execution started
 progress:
   total_phases: 11
   completed_phases: 1
@@ -20,6 +20,7 @@ progress:
 
 ### Roadmap Evolution
 
+- Phase 26 added (2026-04-16): Docs clarity overhaul — unbiased subagent review of all user-facing Markdown docs using the new `doc-clarity-review` skill. Covers README.md, all docs/ pages, and root-level orphan cleanup (delete AgenticEngineeringReference.md stub, InitialReport.md stub, archive MORNING-BRIEF.md + PROJECT-STATUS.md). Version numbers synced across all pages. Each doc reviewed in isolation (no repo context) before and after edits; success = zero critical friction points remaining.
 - Phase 13 added (2026-04-14, session 4): Nested mount layout — pages/ + tree/ symlinks for Confluence parentId hierarchy. Implements OP-1 from HANDOFF.md. BREAKING: flat `<id>.md` at mount root moves to per-backend collection bucket (`pages/` for Confluence, `issues/` for sim+GitHub).
 - Phase 14 added (2026-04-14, session 5): Decouple sim REST shape from FUSE write path and git-remote helper — route through `IssueBackend` trait. Closes v0.3-era HANDOFF items 7+8. Cluster B per session-5 brief. Scope v0.4.1 (bugfix/refactor). Rationale: `.planning/SESSION-5-RATIONALE.md`.
 - Phase 14 SHIPPED (2026-04-14, session 5, ~09:45 PDT): 4 waves landed on `main` (A=`7510ed1` sim 409-body contract pins · B1=`bdad951`+`cd50ec5` FUSE write through IssueBackend + SG-03 re-home · B2=`938b8de` git-remote helper through IssueBackend · C=`4301d0d` verification). Wave D (docs sweep + CHANGELOG + SUMMARY) complete. HANDOFF.md "Known open gaps" items 7 and 8 closed. `crates/reposix-fuse/src/fetch.rs` + `crates/reposix-fuse/tests/write.rs` + `crates/reposix-remote/src/client.rs` deleted (~830 lines). R1 (assignee-clear-on-null) and R2 (`reposix-core-simbackend-<pid>-{fuse,remote}` attribution) documented as accepted behaviour changes in CHANGELOG `[Unreleased]` `### Changed`. 274 workspace tests green (+2 over LD-14-08 floor), clippy `-D warnings` clean, green-gauntlet `--full` 6/6, smoke 4/4, live demo 01 round-trip green. **Next post-phase gate: user-driven v0.4.1 tag push** via a future `scripts/tag-v0.4.1.sh` (not written yet — deliberate, pending CHANGELOG review).
@@ -48,17 +49,17 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** An LLM agent can `ls`, `cat`, `grep`, edit, and `git push`
 issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
-**Current focus:** Phase 16 — Confluence write path
+**Current focus:** Phase 23 — OP-9a: Confluence comments + spaces
 Next: /gsd-plan-phase 16 (Confluence write path).
 
 ## Current Position
 
-Phase: 25
-Plan: Not started
+Phase: 23 (OP-9a: Confluence comments + spaces) — EXECUTING
+Plan: 1 of 3
 Cursor: **Phase 20 SHIPPED. `reposix refresh` subcommand + git-diff cache complete; REFRESH-01..05 closed.
 Milestone v0.6.0 complete (Phases 16-20). Phases 21+ are v0.7.0 scope.**
-Status: Ready to execute
-Last activity: 2026-04-16 -- Phase 23 planning complete
+Status: Executing Phase 23
+Last activity: 2026-04-16 -- Phase 23 execution started
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.

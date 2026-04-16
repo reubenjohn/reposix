@@ -516,6 +516,67 @@ Plans:
 - [x] 20-C-docs-and-release.md — CHANGELOG + STATE update (SHIPPED)
 
 
+### Phase 26: Docs clarity overhaul
+
+**Goal:** Every user-facing Markdown document can be understood in isolation by an LLM agent or human contributor arriving cold — no other files read, no links followed. Uses the `doc-clarity-review` skill to run an isolated subagent review on each doc, collects friction points / unanswered questions / over/under-explained sections, fixes them, then re-reviews to confirm zero critical friction points remain. Also removes stale root-level orphan docs and aligns version numbers across all pages.
+
+**Depends on:** Phase 25
+**Requirements**: TBD
+**Plans:** 0 plans
+
+#### Doc inventory (pre-phase assessment)
+
+**Root-level — action required:**
+
+| File | Status | Action |
+|------|--------|--------|
+| `README.md` | Stale (says v0.3.0, now v0.7+; outdated phase table) | Update + clarity review |
+| `MORNING-BRIEF.md` | Obsolete (explicitly covers v0.1/v0.2 era) | Archive to `docs/archive/` or delete |
+| `PROJECT-STATUS.md` | Obsolete (v0.1/v0.2 timeline, superseded by HANDOFF) | Archive to `docs/archive/` or delete |
+| `HANDOFF.md` | Partially stale (v0.5 era, OP items partially closed) | Update to reflect v0.7 state |
+| `AgenticEngineeringReference.md` | Obsolete (redirect stub — canonical copy at `docs/research/`) | Delete |
+| `InitialReport.md` | Obsolete (redirect stub — canonical copy at `docs/research/`) | Delete |
+| `CHANGELOG.md` | Current | Keep; check accuracy |
+
+**docs/ pages — clarity review + update where stale:**
+
+| File | Status | Notes |
+|------|--------|-------|
+| `docs/index.md` | Needs update (says v0.4; now v0.7) | Clarity review + version bump |
+| `docs/architecture.md` | Current | Clarity review |
+| `docs/why.md` | Current (Phase 22 updated headline) | Clarity review |
+| `docs/security.md` | Current | Clarity review |
+| `docs/demo.md` | Current | Clarity review |
+| `docs/demos/index.md` | Current | Clarity review |
+| `docs/development/contributing.md` | Current | Clarity review |
+| `docs/development/roadmap.md` | Stale (stops at v0.5; OP items not updated) | Update + clarity review |
+| `docs/reference/cli.md` | Current | Clarity review |
+| `docs/reference/confluence.md` | Current | Clarity review |
+| `docs/reference/git-remote.md` | Current | Clarity review |
+| `docs/reference/http-api.md` | Current | Clarity review |
+| `docs/reference/crates.md` | Current | Clarity review |
+| `docs/connectors/guide.md` | Current | Clarity review |
+| `docs/decisions/001-github-state-mapping.md` | Current | Clarity review |
+| `docs/decisions/002-confluence-page-mapping.md` | Partially stale (part superseded by ADR-003) | Clarify scope + clarity review |
+| `docs/decisions/003-nested-mount-layout.md` | Current | Clarity review |
+| `docs/research/initial-report.md` | Current | Clarity review |
+| `docs/research/agentic-engineering-reference.md` | Current | Clarity review |
+| `docs/social/twitter.md` | Archive/social — not a doc page | Skip clarity review |
+| `docs/social/linkedin.md` | Archive/social — not a doc page | Skip clarity review |
+
+#### Review methodology
+
+Each doc is reviewed using the `doc-clarity-review` skill:
+1. Copy file(s) to a fresh `/tmp/doc-clarity-review-*/` directory.
+2. Run `claude -p '<review prompt>' <file>` — a subprocess Claude with zero repo context.
+3. The reviewer is instructed: do not follow links, do not gather more context, be unbiased.
+4. Collect: friction points, unanswered questions, over-explained sections, under-explained sections, missing references.
+5. Having questions about things that are linked elsewhere is *usually* acceptable — the fix is normalizing with links, not repeating content.
+6. Fix each doc, then re-run the review to confirm CLEAR verdict.
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 26 to break down)
+
 ---
 
 ## Milestone v0.7.0 — Hardening + Confluence Expansion
