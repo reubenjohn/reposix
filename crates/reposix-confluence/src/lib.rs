@@ -393,6 +393,110 @@ struct ConfCommentList {
     links: Option<ConfLinks>,
 }
 
+/// A Confluence v2 attachment on a page.
+///
+/// Deserialized from `GET /wiki/api/v2/pages/{id}/attachments`.
+/// The `download_link` field is a relative path that must be prepended with
+/// `self.base()` to form the full download URL (requires Basic-auth headers).
+#[derive(Debug, Clone, Deserialize)]
+pub struct ConfAttachment {
+    /// Confluence attachment id (numeric string).
+    pub id: String,
+    /// Attachment status (e.g. `"current"`).
+    pub status: String,
+    /// Filename / display title (e.g. `"diagram.png"`).
+    pub title: String,
+    /// When the attachment was uploaded.
+    #[serde(rename = "createdAt")]
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    /// Parent page id (numeric string).
+    #[serde(rename = "pageId")]
+    pub page_id: String,
+    /// MIME type (e.g. `"image/png"`).
+    #[serde(rename = "mediaType")]
+    pub media_type: String,
+    /// File size in bytes (`0` if absent in response).
+    #[serde(rename = "fileSize", default)]
+    pub file_size: u64,
+    /// Relative download path e.g. `/wiki/download/attachments/{pageId}/{filename}`.
+    /// Prepend `self.base()` and send `Authorization` header before fetching.
+    #[serde(rename = "downloadLink", default)]
+    pub download_link: String,
+}
+
+/// A Confluence v2 whiteboard.
+///
+/// Deserialized from the `direct-children` endpoint filtered by
+/// `type == "whiteboard"`. `Serialize` is derived so that the FUSE
+/// `read()` callback can return `serde_json::to_vec(&whiteboard)`.
+#[derive(Debug, Clone, Deserialize, serde::Serialize)]
+pub struct ConfWhiteboard {
+    /// Confluence whiteboard id (numeric string).
+    pub id: String,
+    /// Status (e.g. `"current"`).
+    pub status: String,
+    /// Human-readable board title.
+    pub title: String,
+    /// Space id (numeric string) that contains this whiteboard.
+    #[serde(rename = "spaceId")]
+    pub space_id: String,
+    /// Atlassian accountId of the author. `None` if not returned.
+    #[serde(rename = "authorId", default)]
+    pub author_id: Option<String>,
+    /// When the whiteboard was created.
+    #[serde(rename = "createdAt")]
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    /// Parent content id (numeric string) if the whiteboard is nested.
+    #[serde(rename = "parentId", default)]
+    pub parent_id: Option<String>,
+    /// Parent content type (e.g. `"page"`, `"folder"`). Present when
+    /// `parent_id` is set.
+    #[serde(rename = "parentType", default)]
+    pub parent_type: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ConfAttachmentList {
+    results: Vec<ConfAttachment>,
+    #[serde(default, rename = "_links")]
+    #[allow(dead_code)]
+    links: Option<ConfLinks>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ConfDirectChildrenList {
+    results: Vec<ConfDirectChild>,
+    #[serde(default, rename = "_links")]
+    #[allow(dead_code)]
+    links: Option<ConfLinks>,
+}
+
+/// A single item from `GET /wiki/api/v2/spaces/{id}/direct-children`.
+///
+/// We capture only the fields needed to identify and reconstruct a
+/// [`ConfWhiteboard`]. Fields irrelevant for non-whiteboard items are
+/// `#[serde(default)]` so they decode gracefully from partial responses.
+#[derive(Debug, Deserialize)]
+struct ConfDirectChild {
+    id: String,
+    #[serde(rename = "type", default)]
+    content_type: String,
+    #[serde(default)]
+    title: String,
+    #[serde(rename = "spaceId", default)]
+    space_id: String,
+    #[serde(rename = "authorId", default)]
+    author_id: Option<String>,
+    #[serde(rename = "createdAt", default)]
+    created_at: Option<chrono::DateTime<chrono::Utc>>,
+    #[serde(rename = "parentId", default)]
+    parent_id: Option<String>,
+    #[serde(rename = "parentType", default)]
+    parent_type: Option<String>,
+    #[serde(default)]
+    status: String,
+}
+
 /// Summary of a readable Confluence space, as returned by
 /// [`ConfluenceBackend::list_spaces`]. The `webui_url` is already joined
 /// with the tenant base URL (absolute URL ready to paste into a browser).
@@ -531,6 +635,22 @@ fn translate(page: ConfPage) -> Result<Issue> {
                     page_id = %page.id,
                     bad_parent = %pid_preview,
                     "confluence parentId not parseable as u64, treating as orphan"
+                );
+                None
+            }
+        }
+        (Some(pid_str), Some("folder")) => {
+            // CONF-06: folder parents are valid hierarchy nodes; propagate
+            // to Issue::parent_id so the tree/ overlay shows folder structure.
+            if let Ok(n) = pid_str.parse::<u64>() {
+                Some(IssueId(n))
+            } else {
+                // IN-01: cap attacker-controlled string in tracing output.
+                let pid_preview = pid_str.get(..pid_str.len().min(64)).unwrap_or("");
+                tracing::warn!(
+                    page_id = %page.id,
+                    bad_parent = %pid_preview,
+                    "confluence folder parentId not parseable as u64, treating as orphan"
                 );
                 None
             }
@@ -1132,6 +1252,223 @@ impl ConfluenceBackend {
             });
         }
         Ok(out)
+    }
+
+    /// List all attachments for a Confluence page.
+    ///
+    /// Calls `GET /wiki/api/v2/pages/{page_id}/attachments` and returns
+    /// metadata for all attachments. Does **not** download binary bodies —
+    /// the caller fetches binaries via [`Self::download_attachment`] using
+    /// `att.download_link`.
+    ///
+    /// Paginates using the same cursor scheme as [`Self::list_issues_impl`].
+    /// Caps at `MAX_ISSUES_PER_LIST` with a `tracing::warn!` (same as
+    /// comments).
+    ///
+    /// # Errors
+    ///
+    /// Transport + non-2xx from Confluence REST API.
+    pub async fn list_attachments(&self, page_id: u64) -> Result<Vec<ConfAttachment>> {
+        let first = format!(
+            "{}/wiki/api/v2/pages/{}/attachments?limit={}",
+            self.base(),
+            page_id,
+            PAGE_SIZE
+        );
+        let mut next_url: Option<String> = Some(first);
+        let mut out: Vec<ConfAttachment> = Vec::new();
+        let mut pages: usize = 0;
+        let header_owned = self.standard_headers();
+        let header_refs: Vec<(&str, &str)> =
+            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        while let Some(url) = next_url.take() {
+            pages += 1;
+            if pages > (MAX_ISSUES_PER_LIST / PAGE_SIZE) {
+                tracing::warn!(
+                    page_id,
+                    pages,
+                    "reached MAX_ISSUES_PER_LIST cap on attachments; stopping pagination"
+                );
+                break;
+            }
+            self.await_rate_limit_gate().await;
+            let resp = self
+                .http
+                .request_with_headers(Method::GET, url.as_str(), &header_refs)
+                .await?;
+            self.ingest_rate_limit(&resp);
+            let status = resp.status();
+            let bytes = resp.bytes().await?;
+            if !status.is_success() {
+                return Err(Error::Other(format!(
+                    "confluence returned {status} for GET {}: {}",
+                    redact_url(&url),
+                    String::from_utf8_lossy(&bytes)
+                )));
+            }
+            let body_json: serde_json::Value = serde_json::from_slice(&bytes)?;
+            let next_cursor = parse_next_cursor(&body_json);
+            let list: ConfAttachmentList = serde_json::from_value(body_json)?;
+            for att in list.results {
+                out.push(att);
+                if out.len() >= MAX_ISSUES_PER_LIST {
+                    tracing::warn!(
+                        page_id,
+                        total = out.len(),
+                        "reached MAX_ISSUES_PER_LIST absolute cap on attachments"
+                    );
+                    return Ok(out);
+                }
+            }
+            next_url = next_cursor.map(|relative| {
+                if relative.starts_with("http://") || relative.starts_with("https://") {
+                    relative
+                } else {
+                    format!("{}{}", self.base(), relative)
+                }
+            });
+        }
+        Ok(out)
+    }
+
+    /// List all whiteboards in a Confluence space (by numeric space id string).
+    ///
+    /// Calls `GET /wiki/api/v2/spaces/{space_id}/direct-children` and filters
+    /// results where `type == "whiteboard"`. Returns `Ok(vec![])` gracefully
+    /// if the endpoint returns 404 (endpoint has MEDIUM confidence per
+    /// RESEARCH.md — not all tenants expose it).
+    ///
+    /// Paginates via `_links.next` cursor. Caps at `MAX_ISSUES_PER_LIST` with
+    /// a `tracing::warn!`.
+    ///
+    /// # Errors
+    ///
+    /// Transport + non-2xx (except 404) from Confluence REST API.
+    pub async fn list_whiteboards(&self, space_id: &str) -> Result<Vec<ConfWhiteboard>> {
+        let first = format!(
+            "{}/wiki/api/v2/spaces/{}/direct-children?limit={}",
+            self.base(),
+            space_id,
+            PAGE_SIZE
+        );
+        let mut next_url: Option<String> = Some(first);
+        let mut out: Vec<ConfWhiteboard> = Vec::new();
+        let mut pages: usize = 0;
+        let header_owned = self.standard_headers();
+        let header_refs: Vec<(&str, &str)> =
+            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        while let Some(url) = next_url.take() {
+            pages += 1;
+            if pages > (MAX_ISSUES_PER_LIST / PAGE_SIZE) {
+                tracing::warn!(
+                    space_id,
+                    pages,
+                    "reached MAX_ISSUES_PER_LIST cap on whiteboard listing; stopping pagination"
+                );
+                break;
+            }
+            self.await_rate_limit_gate().await;
+            let resp = self
+                .http
+                .request_with_headers(Method::GET, url.as_str(), &header_refs)
+                .await?;
+            self.ingest_rate_limit(&resp);
+            let status = resp.status();
+            // 404 means the endpoint doesn't exist for this tenant — return
+            // empty gracefully (MEDIUM-confidence endpoint per RESEARCH.md).
+            if status == reqwest::StatusCode::NOT_FOUND {
+                tracing::warn!(
+                    space_id,
+                    "direct-children endpoint returned 404; whiteboard listing not available"
+                );
+                return Ok(vec![]);
+            }
+            let bytes = resp.bytes().await?;
+            if !status.is_success() {
+                return Err(Error::Other(format!(
+                    "confluence returned {status} for GET {}: {}",
+                    redact_url(&url),
+                    String::from_utf8_lossy(&bytes)
+                )));
+            }
+            let body_json: serde_json::Value = serde_json::from_slice(&bytes)?;
+            let next_cursor = parse_next_cursor(&body_json);
+            let list: ConfDirectChildrenList = serde_json::from_value(body_json)?;
+            for child in list.results {
+                if child.content_type != "whiteboard" {
+                    continue;
+                }
+                let wb = ConfWhiteboard {
+                    id: child.id,
+                    status: child.status,
+                    title: child.title,
+                    space_id: child.space_id,
+                    author_id: child.author_id,
+                    created_at: child.created_at.unwrap_or_else(chrono::Utc::now),
+                    parent_id: child.parent_id,
+                    parent_type: child.parent_type,
+                };
+                out.push(wb);
+                if out.len() >= MAX_ISSUES_PER_LIST {
+                    tracing::warn!(
+                        space_id,
+                        total = out.len(),
+                        "reached MAX_ISSUES_PER_LIST absolute cap on whiteboards"
+                    );
+                    return Ok(out);
+                }
+            }
+            next_url = next_cursor.map(|relative| {
+                if relative.starts_with("http://") || relative.starts_with("https://") {
+                    relative
+                } else {
+                    format!("{}{}", self.base(), relative)
+                }
+            });
+        }
+        Ok(out)
+    }
+
+    /// Download the binary body of an attachment.
+    ///
+    /// `download_url` is the relative path from
+    /// [`ConfAttachment::download_link`]
+    /// (e.g. `"/wiki/download/attachments/12345/image.png"`). Prepends
+    /// `self.base()` and sends `standard_headers()` (Basic auth required —
+    /// `reqwest::get` without auth returns 401).
+    ///
+    /// The caller **MUST** check `att.file_size` and refuse to call this for
+    /// files exceeding `52_428_800` bytes (50 MiB) to prevent OOM (see
+    /// RESEARCH.md §Pattern 4).
+    ///
+    /// # Errors
+    ///
+    /// Transport + non-2xx from the Confluence download endpoint.
+    pub async fn download_attachment(&self, download_url: &str) -> Result<Vec<u8>> {
+        let full_url =
+            if download_url.starts_with("http://") || download_url.starts_with("https://") {
+                download_url.to_owned()
+            } else {
+                format!("{}{}", self.base(), download_url)
+            };
+        let header_owned = self.standard_headers();
+        let header_refs: Vec<(&str, &str)> =
+            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        self.await_rate_limit_gate().await;
+        let resp = self
+            .http
+            .request_with_headers(Method::GET, full_url.as_str(), &header_refs)
+            .await?;
+        self.ingest_rate_limit(&resp);
+        let status = resp.status();
+        let bytes = resp.bytes().await?;
+        if !status.is_success() {
+            return Err(Error::Other(format!(
+                "confluence attachment download returned {status} for GET {}",
+                redact_url(&full_url)
+            )));
+        }
+        Ok(bytes.to_vec())
     }
 }
 
@@ -1843,11 +2180,14 @@ mod tests {
         assert_eq!(issue.parent_id, Some(IssueId(42)));
     }
 
+    // CONF-06: folder parents now propagate to Issue::parent_id (changed in
+    // Phase 24 Plan 01). Updated from "orphan" to "propagates".
     #[test]
     fn translate_treats_folder_parent_as_orphan() {
         let page = synth_page("99", Some("99999"), Some("folder"));
         let issue = translate(page).expect("translate");
-        assert_eq!(issue.parent_id, None);
+        // CONF-06 fix: folder parentType now propagates (same as "page").
+        assert_eq!(issue.parent_id, Some(IssueId(99999)));
     }
 
     #[test]
@@ -1988,9 +2328,12 @@ mod tests {
             .iter()
             .find(|i| i.id == IssueId(12321))
             .expect("folder-parented page present");
+        // CONF-06 fix (Phase 24 Plan 01): folder parentType now propagates to
+        // Issue::parent_id (same as "page"). Updated from None to Some(999).
         assert_eq!(
-            foldered.parent_id, None,
-            "non-page parentType must degrade to orphan"
+            foldered.parent_id,
+            Some(IssueId(999)),
+            "folder parentType must propagate to Issue::parent_id (CONF-06)"
         );
     }
 
@@ -3330,7 +3673,10 @@ mod tests {
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let atts = backend.list_attachments(12345).await.expect("list_attachments");
+        let atts = backend
+            .list_attachments(12345)
+            .await
+            .expect("list_attachments");
         assert_eq!(atts.len(), 1);
         assert_eq!(atts[0].title, "diagram.png");
         assert_eq!(atts[0].file_size, 1024);
@@ -3354,8 +3700,14 @@ mod tests {
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let atts = backend.list_attachments(99999).await.expect("list_attachments");
-        assert!(atts.is_empty(), "expected empty vec for page with no attachments");
+        let atts = backend
+            .list_attachments(99999)
+            .await
+            .expect("list_attachments");
+        assert!(
+            atts.is_empty(),
+            "expected empty vec for page with no attachments"
+        );
     }
 
     // -------- Test 3: list_attachments non-2xx returns Err --------
@@ -3369,12 +3721,12 @@ mod tests {
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let err = backend.list_attachments(12345).await.expect_err("403 must be an error");
+        let err = backend
+            .list_attachments(12345)
+            .await
+            .expect_err("403 must be an error");
         let msg = format!("{err}");
-        assert!(
-            msg.contains("403"),
-            "error must mention status 403: {msg}"
-        );
+        assert!(msg.contains("403"), "error must mention status 403: {msg}");
     }
 
     // -------- Test 4: list_whiteboards filters by type --------
@@ -3412,7 +3764,11 @@ mod tests {
             .list_whiteboards("space-999")
             .await
             .expect("list_whiteboards");
-        assert_eq!(wbs.len(), 1, "only the whiteboard should be returned, not the page");
+        assert_eq!(
+            wbs.len(),
+            1,
+            "only the whiteboard should be returned, not the page"
+        );
         assert_eq!(wbs[0].id, "wb-1");
     }
 
@@ -3445,9 +3801,7 @@ mod tests {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
             .and(path("/wiki/download/attachments/12345/file.pdf"))
-            .respond_with(
-                ResponseTemplate::new(200).set_body_bytes(b"PDF_CONTENT".to_vec()),
-            )
+            .respond_with(ResponseTemplate::new(200).set_body_bytes(b"PDF_CONTENT".to_vec()))
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
