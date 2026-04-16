@@ -149,9 +149,7 @@ fn build_backend(kind: BackendKind, origin: &str) -> Result<Arc<dyn IssueBackend
 /// # Errors
 /// Returns an error if `ConfluenceBackend::new` fails (e.g. bad credentials
 /// or tenant string).
-fn build_comment_fetcher(
-    kind: BackendKind,
-) -> Result<Option<Arc<ConfluenceBackend>>> {
+fn build_comment_fetcher(kind: BackendKind) -> Result<Option<Arc<ConfluenceBackend>>> {
     if kind != BackendKind::Confluence {
         return Ok(None);
     }

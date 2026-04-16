@@ -91,9 +91,9 @@ use tracing::warn;
 
 use crate::comments::{render_comment_file, CommentsSnapshot};
 use crate::inode::{
-    InodeRegistry, BUCKET_DIR_INO, BUCKET_INDEX_INO, COMMENTS_DIR_INO_BASE,
-    COMMENTS_FILE_INO_BASE, FIRST_ISSUE_INODE, GITIGNORE_INO, LABELS_ROOT_INO, ROOT_INDEX_INO,
-    ROOT_INO, TREE_INDEX_ALLOC_END, TREE_INDEX_ALLOC_START, TREE_ROOT_INO,
+    InodeRegistry, BUCKET_DIR_INO, BUCKET_INDEX_INO, COMMENTS_DIR_INO_BASE, COMMENTS_FILE_INO_BASE,
+    FIRST_ISSUE_INODE, GITIGNORE_INO, LABELS_ROOT_INO, ROOT_INDEX_INO, ROOT_INO,
+    TREE_INDEX_ALLOC_END, TREE_INDEX_ALLOC_START, TREE_ROOT_INO,
 };
 use crate::labels::{LabelSnapshot, LABELS_DIR_INO_BASE, LABELS_SYMLINK_INO_BASE};
 use crate::tree::{TreeSnapshot, TREE_DIR_INO_BASE, TREE_SYMLINK_INO_BASE};
@@ -1474,7 +1474,8 @@ impl Filesystem for ReposixFs {
                     return;
                 };
                 if let Some(entry) = entries.iter().find(|e| e.filename == name_str) {
-                    let attr = self.synthetic_file_attr(entry.file_ino, entry.rendered.len() as u64);
+                    let attr =
+                        self.synthetic_file_attr(entry.file_ino, entry.rendered.len() as u64);
                     reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
                 } else {
                     reply.error(fuser::Errno::from_i32(libc::ENOENT));
@@ -1774,7 +1775,9 @@ impl Filesystem for ReposixFs {
                     return;
                 };
                 let bytes = entry.rendered.as_slice();
-                let start = usize::try_from(offset).unwrap_or(usize::MAX).min(bytes.len());
+                let start = usize::try_from(offset)
+                    .unwrap_or(usize::MAX)
+                    .min(bytes.len());
                 let end = start.saturating_add(size as usize).min(bytes.len());
                 reply.data(&bytes[start..end]);
             }
@@ -2868,7 +2871,8 @@ mod tests {
             .unwrap()
             .block_on(async { wiremock::MockServer::start().await });
         let backend: Arc<dyn IssueBackend> = Arc::new(SimBackend::new(server.uri()).unwrap());
-        let fs = ReposixFs::new(backend, server.uri(), "demo".to_owned(), None).expect("ReposixFs::new");
+        let fs =
+            ReposixFs::new(backend, server.uri(), "demo".to_owned(), None).expect("ReposixFs::new");
 
         let first = fs.tree_dir_index_ino(42);
         let second = fs.tree_dir_index_ino(42);
@@ -2995,17 +2999,38 @@ mod comments_dispatch_tests {
 
     #[test]
     fn classify_returns_commentsdir_in_range() {
-        assert_eq!(InodeKind::classify(COMMENTS_DIR_INO_BASE), InodeKind::CommentsDir);
-        assert_eq!(InodeKind::classify(COMMENTS_DIR_INO_BASE + 100), InodeKind::CommentsDir);
-        assert_eq!(InodeKind::classify(COMMENTS_FILE_INO_BASE - 1), InodeKind::CommentsDir);
-        assert_eq!(InodeKind::classify(COMMENTS_FILE_INO_BASE), InodeKind::CommentFile);
-        assert_eq!(InodeKind::classify(COMMENTS_FILE_INO_BASE + 1_000_000), InodeKind::CommentFile);
+        assert_eq!(
+            InodeKind::classify(COMMENTS_DIR_INO_BASE),
+            InodeKind::CommentsDir
+        );
+        assert_eq!(
+            InodeKind::classify(COMMENTS_DIR_INO_BASE + 100),
+            InodeKind::CommentsDir
+        );
+        assert_eq!(
+            InodeKind::classify(COMMENTS_FILE_INO_BASE - 1),
+            InodeKind::CommentsDir
+        );
+        assert_eq!(
+            InodeKind::classify(COMMENTS_FILE_INO_BASE),
+            InodeKind::CommentFile
+        );
+        assert_eq!(
+            InodeKind::classify(COMMENTS_FILE_INO_BASE + 1_000_000),
+            InodeKind::CommentFile
+        );
     }
 
     #[test]
     fn classify_labels_still_work_after_comments_arms() {
-        assert_eq!(InodeKind::classify(LABELS_SYMLINK_INO_BASE + 1), InodeKind::LabelSymlink);
-        assert_eq!(InodeKind::classify(LABELS_DIR_INO_BASE + 1), InodeKind::LabelDir);
+        assert_eq!(
+            InodeKind::classify(LABELS_SYMLINK_INO_BASE + 1),
+            InodeKind::LabelSymlink
+        );
+        assert_eq!(
+            InodeKind::classify(LABELS_DIR_INO_BASE + 1),
+            InodeKind::LabelDir
+        );
     }
 
     #[test]

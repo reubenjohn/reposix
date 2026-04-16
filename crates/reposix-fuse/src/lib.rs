@@ -101,7 +101,12 @@ impl Mount {
             std::fs::create_dir_all(&cfg.mount_point)
                 .with_context(|| format!("create mount point {}", cfg.mount_point.display()))?;
         }
-        let fs = ReposixFs::new(backend, cfg.origin.clone(), cfg.project.clone(), comment_fetcher)?;
+        let fs = ReposixFs::new(
+            backend,
+            cfg.origin.clone(),
+            cfg.project.clone(),
+            comment_fetcher,
+        )?;
 
         // Phase S: `MountOption::RO` is conditional. When `cfg.read_only` is
         // true we mount RO (the kernel refuses writes at the VFS layer before

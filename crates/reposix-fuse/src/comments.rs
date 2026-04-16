@@ -152,9 +152,9 @@ impl CommentsSnapshot {
     /// page exists but its entries have not been fetched yet.
     #[must_use]
     pub fn entries_if_fetched(&self, page_ino: u64) -> Option<Vec<CommentEntry>> {
-        self.by_page.get(&page_ino).and_then(|e| {
-            if e.0 { Some(e.1.clone()) } else { None }
-        })
+        self.by_page
+            .get(&page_ino)
+            .and_then(|e| if e.0 { Some(e.1.clone()) } else { None })
     }
 
     /// Look up a single comment entry by file inode.
@@ -219,10 +219,22 @@ pub fn render_comment_file(comment: &reposix_confluence::ConfComment) -> Option<
     let _ = writeln!(out, "page_id: \"{}\"", comment.page_id);
     // author_id is an opaque accountId string. Escape double-quotes + backslashes
     // to prevent YAML string injection.
-    let author_escaped = comment.version.author_id.replace('\\', "\\\\").replace('"', "\\\"");
+    let author_escaped = comment
+        .version
+        .author_id
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"");
     let _ = writeln!(out, "author: \"{author_escaped}\"");
-    let _ = writeln!(out, "created_at: {}", comment.version.created_at.to_rfc3339());
-    let _ = writeln!(out, "updated_at: {}", comment.version.created_at.to_rfc3339());
+    let _ = writeln!(
+        out,
+        "created_at: {}",
+        comment.version.created_at.to_rfc3339()
+    );
+    let _ = writeln!(
+        out,
+        "updated_at: {}",
+        comment.version.created_at.to_rfc3339()
+    );
     let _ = writeln!(out, "resolved: {resolved}");
     match &comment.parent_comment_id {
         Some(pid) => {
@@ -244,12 +256,19 @@ mod tests {
     use chrono::TimeZone;
     use reposix_confluence::{CommentKind, ConfComment, ConfCommentVersion};
 
-    fn make_comment(id: &str, kind: CommentKind, resolved: Option<&str>, parent: Option<&str>) -> ConfComment {
+    fn make_comment(
+        id: &str,
+        kind: CommentKind,
+        resolved: Option<&str>,
+        parent: Option<&str>,
+    ) -> ConfComment {
         ConfComment {
             id: id.to_owned(),
             page_id: "98765".to_owned(),
             version: ConfCommentVersion {
-                created_at: chrono::Utc.with_ymd_and_hms(2026, 1, 15, 10, 30, 0).unwrap(),
+                created_at: chrono::Utc
+                    .with_ymd_and_hms(2026, 1, 15, 10, 30, 0)
+                    .unwrap(),
                 author_id: "user-a".to_owned(),
                 number: 1,
             },
@@ -265,10 +284,16 @@ mod tests {
         let c = make_comment("123", CommentKind::Inline, Some("open"), None);
         let bytes = render_comment_file(&c).expect("valid id → Some");
         let s = String::from_utf8(bytes).unwrap();
-        assert!(s.starts_with("---\n"), "must begin with frontmatter fence: {s}");
+        assert!(
+            s.starts_with("---\n"),
+            "must begin with frontmatter fence: {s}"
+        );
         assert!(s.contains("kind: inline"), "missing kind: {s}");
         assert!(s.contains("resolved: false"), "open → false: {s}");
-        assert!(s.contains("parent_comment_id: null"), "null for top-level: {s}");
+        assert!(
+            s.contains("parent_comment_id: null"),
+            "null for top-level: {s}"
+        );
         assert!(s.contains("id: \"123\""));
         assert!(s.contains("page_id: \"98765\""));
     }
@@ -311,13 +336,19 @@ mod tests {
     #[test]
     fn render_comment_file_rejects_non_numeric_id() {
         let c = make_comment("../../etc/passwd", CommentKind::Inline, Some("open"), None);
-        assert!(render_comment_file(&c).is_none(), "non-numeric id must be rejected");
+        assert!(
+            render_comment_file(&c).is_none(),
+            "non-numeric id must be rejected"
+        );
     }
 
     #[test]
     fn render_comment_file_rejects_non_numeric_parent_id() {
         let c = make_comment("1", CommentKind::Inline, Some("open"), Some("../sibling"));
-        assert!(render_comment_file(&c).is_none(), "non-numeric parent_id must be rejected");
+        assert!(
+            render_comment_file(&c).is_none(),
+            "non-numeric parent_id must be rejected"
+        );
     }
 
     #[test]
@@ -331,10 +362,13 @@ mod tests {
         assert!((COMMENTS_DIR_INO_BASE..COMMENTS_FILE_INO_BASE).contains(&d1));
         assert!((COMMENTS_DIR_INO_BASE..COMMENTS_FILE_INO_BASE).contains(&d2));
 
-        snap.install_entries(100, vec![
-            ("111.md".to_owned(), b"body1".to_vec()),
-            ("112.md".to_owned(), b"body2".to_vec()),
-        ]);
+        snap.install_entries(
+            100,
+            vec![
+                ("111.md".to_owned(), b"body1".to_vec()),
+                ("112.md".to_owned(), b"body2".to_vec()),
+            ],
+        );
         let entries = snap.entries_if_fetched(100).expect("fetched");
         assert_eq!(entries.len(), 2);
         for e in &entries {
@@ -351,7 +385,10 @@ mod tests {
     fn ensure_dir_does_not_mark_fetched() {
         let snap = CommentsSnapshot::new();
         let _ = snap.ensure_dir(42);
-        assert!(!snap.is_fetched(42), "ensure_dir alone must not mark fetched");
+        assert!(
+            !snap.is_fetched(42),
+            "ensure_dir alone must not mark fetched"
+        );
         assert!(snap.entries_if_fetched(42).is_none());
     }
 
@@ -360,7 +397,10 @@ mod tests {
         let snap = CommentsSnapshot::new();
         let _ = snap.ensure_dir(42);
         snap.install_entries(42, vec![]);
-        assert!(snap.is_fetched(42), "install_entries marks fetched even when empty");
+        assert!(
+            snap.is_fetched(42),
+            "install_entries marks fetched even when empty"
+        );
         let entries = snap.entries_if_fetched(42).expect("fetched");
         assert!(entries.is_empty());
     }
