@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v0.4
 milestone_name: target)
-status: verifying
+status: executing
 stopped_at: context exhaustion at 90% (2026-04-15)
-last_updated: "2026-04-15T19:48:51.249Z"
-last_activity: 2026-04-15
+last_updated: "2026-04-16T17:07:52.275Z"
+last_activity: 2026-04-16 -- Phase 23 planning complete
 progress:
   total_phases: 11
   completed_phases: 1
@@ -57,8 +57,8 @@ Phase: 25
 Plan: Not started
 Cursor: **Phase 20 SHIPPED. `reposix refresh` subcommand + git-diff cache complete; REFRESH-01..05 closed.
 Milestone v0.6.0 complete (Phases 16-20). Phases 21+ are v0.7.0 scope.**
-Status: Phase complete — ready for verification
-Last activity: 2026-04-15
+Status: Ready to execute
+Last activity: 2026-04-16 -- Phase 23 planning complete
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.

@@ -78,6 +78,7 @@
 - [ ] **CONF-01**: `cat mount/pages/<id>.comments/<comment-id>.md` returns comment body in Markdown frontmatter format
 - [ ] **CONF-02**: `ls mount/pages/<id>.comments/` lists all inline + footer comments for that page
 - [ ] **CONF-03**: Comments are read-only (no write path in this phase)
+- [ ] **SPACES-01**: `reposix spaces --backend confluence` subcommand lists all readable Confluence spaces in a table (KEY / NAME / URL)
 
 ### Confluence Whiteboards / Attachments / Folders (OP-9b)
 - [ ] **CONF-04**: `ls mount/whiteboards/` lists Confluence whiteboards; each exposed as `<id>.json` (raw)
@@ -92,7 +93,6 @@
 ## Future Requirements
 
 - Confluence live docs (`/custom-content/` type discriminator) exposed as `livedocs/<id>.md`
-- `reposix spaces --backend confluence` subcommand to list all readable spaces
 - Multi-space mount: `--project '*'` mounts every readable space under `spaces/<key>/...`
 - Windows VFS layer (very long-term)
 
@@ -110,5 +110,6 @@
 | HARD-01..04  | Phase 21: OP-7 hardening bundle |
 | BENCH-01..04 | Phase 22: OP-8 honest-tokenizer benchmarks |
 | CONF-01..03  | Phase 23: OP-9a Confluence comments |
+| SPACES-01    | Phase 23: OP-9a Confluence comments (spaces subcommand) |
 | CONF-04..06  | Phase 24: OP-9b whiteboards/attachments/folders |
 | DOCS-01..03  | Phase 25: OP-11 docs reorg |
