@@ -2792,4 +2792,191 @@ mod tests {
             "error must contain the API path for debuggability: {msg}"
         );
     }
+
+    // ======================================================================
+    // Phase 23 Plan 01: list_comments() + list_spaces() tests
+    // ======================================================================
+
+    // -------- Task 1: list_comments tests --------
+
+    #[tokio::test]
+    async fn list_comments_returns_inline_and_footer() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/pages/98765/inline-comments"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [{
+                    "id": "111",
+                    "pageId": "98765",
+                    "parentCommentId": null,
+                    "resolutionStatus": "open",
+                    "version": {"createdAt": "2026-01-15T10:30:00Z", "number": 1, "authorId": "user-a"},
+                    "body": {"atlas_doc_format": {"value": {"type":"doc","version":1,"content":[]}}}
+                }],
+                "_links": {}
+            })))
+            .mount(&server).await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/pages/98765/footer-comments"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [{
+                    "id": "222",
+                    "pageId": "98765",
+                    "version": {"createdAt": "2026-02-01T09:00:00Z", "number": 1, "authorId": "user-b"},
+                    "body": {"atlas_doc_format": {"value": {"type":"doc","version":1,"content":[]}}}
+                }],
+                "_links": {}
+            })))
+            .mount(&server).await;
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let comments = backend.list_comments(98765).await.expect("list_comments");
+        assert_eq!(comments.len(), 2, "expected 1 inline + 1 footer");
+        assert!(comments.iter().any(|c| c.id == "111" && c.kind == CommentKind::Inline));
+        assert!(comments.iter().any(|c| c.id == "222" && c.kind == CommentKind::Footer));
+    }
+
+    #[tokio::test]
+    async fn list_comments_paginates_inline_via_links_next() {
+        let server = MockServer::start().await;
+        // Page 1 — returns _links.next pointing to cursor=SECOND
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/pages/42/inline-comments"))
+            .and(query_param("limit", "100"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [{
+                    "id": "1", "pageId": "42", "version": {"createdAt": "2026-01-01T00:00:00Z", "number": 1, "authorId": "a"}
+                }],
+                "_links": { "next": "/wiki/api/v2/pages/42/inline-comments?cursor=SECOND&limit=100" }
+            })))
+            .mount(&server).await;
+        // Page 2 — same path, different cursor
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/pages/42/inline-comments"))
+            .and(query_param("cursor", "SECOND"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [{
+                    "id": "2", "pageId": "42", "version": {"createdAt": "2026-01-01T00:00:00Z", "number": 1, "authorId": "a"}
+                }],
+                "_links": {}
+            })))
+            .mount(&server).await;
+        // Empty footer
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/pages/42/footer-comments"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({"results": [], "_links": {}})))
+            .mount(&server).await;
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let comments = backend.list_comments(42).await.expect("list_comments");
+        assert_eq!(comments.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn list_comments_handles_absent_body() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/pages/7/inline-comments"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [{
+                    "id": "10", "pageId": "7",
+                    "version": {"createdAt": "2026-01-01T00:00:00Z", "number": 1, "authorId": "a"}
+                }],
+                "_links": {}
+            })))
+            .mount(&server).await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/pages/7/footer-comments"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({"results": [], "_links": {}})))
+            .mount(&server).await;
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let comments = backend.list_comments(7).await.expect("list_comments");
+        assert_eq!(comments.len(), 1);
+        assert!(comments[0].body.is_none());
+        assert_eq!(comments[0].body_markdown(), "");
+    }
+
+    #[tokio::test]
+    async fn list_comments_rejects_non_success_status() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/pages/99/inline-comments"))
+            .respond_with(ResponseTemplate::new(404).set_body_string("not found"))
+            .mount(&server).await;
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let err = backend.list_comments(99).await.expect_err("must fail");
+        let msg = format!("{err}");
+        assert!(msg.contains("404"), "error must mention status: {msg}");
+        // HARD-05 precedent: redact_url strips tenant hostname — server.uri() is
+        // a 127.0.0.1:<port> wiremock URL; the redaction turns it into a path.
+        // Assert the wiremock port is NOT in the error message.
+        let host = server.uri();
+        assert!(!msg.contains(&host), "error must not leak full URL (host={host}): {msg}");
+    }
+
+    // -------- Task 2: list_spaces tests --------
+
+    #[tokio::test]
+    async fn list_spaces_returns_key_name_url() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/spaces"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [
+                    { "id": "1", "key": "REPOSIX", "name": "Reposix Project",
+                      "_links": { "webui": "/wiki/spaces/REPOSIX" } },
+                    { "id": "2", "key": "TEAM", "name": "Team Space",
+                      "_links": { "webui": "/wiki/spaces/TEAM" } }
+                ],
+                "_links": {}
+            })))
+            .mount(&server).await;
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let spaces = backend.list_spaces().await.expect("list_spaces");
+        assert_eq!(spaces.len(), 2);
+        assert_eq!(spaces[0].key, "REPOSIX");
+        assert_eq!(spaces[0].name, "Reposix Project");
+        // webui_url must be absolute (prefixed with wiremock base URI)
+        assert!(spaces[0].webui_url.starts_with(&server.uri()), "webui_url must be absolute: {}", spaces[0].webui_url);
+        assert!(spaces[0].webui_url.ends_with("/wiki/spaces/REPOSIX"));
+    }
+
+    #[tokio::test]
+    async fn list_spaces_paginates_via_links_next() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/spaces"))
+            .and(query_param("limit", "250"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [{"id":"1","key":"A","name":"A","_links":{"webui":"/wiki/spaces/A"}}],
+                "_links": {"next":"/wiki/api/v2/spaces?cursor=NEXT&limit=250"}
+            })))
+            .mount(&server).await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/spaces"))
+            .and(query_param("cursor", "NEXT"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [{"id":"2","key":"B","name":"B","_links":{"webui":"/wiki/spaces/B"}}],
+                "_links": {}
+            })))
+            .mount(&server).await;
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let spaces = backend.list_spaces().await.expect("list_spaces");
+        assert_eq!(spaces.len(), 2);
+        assert_eq!(spaces[0].key, "A");
+        assert_eq!(spaces[1].key, "B");
+    }
+
+    #[tokio::test]
+    async fn list_spaces_rejects_non_success_with_redacted_url() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/spaces"))
+            .respond_with(ResponseTemplate::new(500).set_body_string("oops"))
+            .mount(&server).await;
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let err = backend.list_spaces().await.expect_err("must fail");
+        let msg = format!("{err}");
+        assert!(msg.contains("500"));
+        let host = server.uri();
+        assert!(!msg.contains(&host), "error must redact host ({host}): {msg}");
+    }
 }
