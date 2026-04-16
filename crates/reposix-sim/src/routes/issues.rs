@@ -370,8 +370,7 @@ async fn patch_issue(
         if let Some(ref raw_etag) = if_match {
             let sent_ok = raw_etag
                 .parse::<u64>()
-                .map(|n| n == current_version)
-                .unwrap_or(false);
+                .is_ok_and(|n| n == current_version);
             if !sent_ok {
                 return Err(ApiError::VersionMismatch {
                     current: current_version,
