@@ -3301,4 +3301,185 @@ mod tests {
             "error must redact host ({host}): {msg}"
         );
     }
+
+    // ======================================================================
+    // Phase 24 Plan 01: list_attachments + list_whiteboards + download_attachment
+    // + translate folder-parent fix (CONF-04, CONF-05, CONF-06)
+    // ======================================================================
+
+    // -------- Test 1: list_attachments returns Vec<ConfAttachment> --------
+
+    #[tokio::test]
+    async fn list_attachments_returns_vec() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/pages/12345/attachments"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [{
+                    "id": "att-1",
+                    "status": "current",
+                    "title": "diagram.png",
+                    "createdAt": "2024-01-01T00:00:00Z",
+                    "pageId": "12345",
+                    "mediaType": "image/png",
+                    "fileSize": 1024,
+                    "downloadLink": "/wiki/download/attachments/12345/diagram.png"
+                }],
+                "_links": {}
+            })))
+            .mount(&server)
+            .await;
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let atts = backend.list_attachments(12345).await.expect("list_attachments");
+        assert_eq!(atts.len(), 1);
+        assert_eq!(atts[0].title, "diagram.png");
+        assert_eq!(atts[0].file_size, 1024);
+        assert_eq!(
+            atts[0].download_link,
+            "/wiki/download/attachments/12345/diagram.png"
+        );
+    }
+
+    // -------- Test 2: list_attachments empty page --------
+
+    #[tokio::test]
+    async fn list_attachments_empty_page() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/pages/99999/attachments"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [],
+                "_links": {}
+            })))
+            .mount(&server)
+            .await;
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let atts = backend.list_attachments(99999).await.expect("list_attachments");
+        assert!(atts.is_empty(), "expected empty vec for page with no attachments");
+    }
+
+    // -------- Test 3: list_attachments non-2xx returns Err --------
+
+    #[tokio::test]
+    async fn list_attachments_non2xx_returns_err() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/pages/12345/attachments"))
+            .respond_with(ResponseTemplate::new(403).set_body_string("forbidden"))
+            .mount(&server)
+            .await;
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let err = backend.list_attachments(12345).await.expect_err("403 must be an error");
+        let msg = format!("{err}");
+        assert!(
+            msg.contains("403"),
+            "error must mention status 403: {msg}"
+        );
+    }
+
+    // -------- Test 4: list_whiteboards filters by type --------
+
+    #[tokio::test]
+    async fn list_whiteboards_filters_by_type() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/spaces/space-999/direct-children"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [
+                    {
+                        "id": "wb-1",
+                        "type": "whiteboard",
+                        "title": "Arch Board",
+                        "spaceId": "space-999",
+                        "createdAt": "2024-01-01T00:00:00Z",
+                        "status": "current"
+                    },
+                    {
+                        "id": "pg-1",
+                        "type": "page",
+                        "title": "Some Page",
+                        "spaceId": "space-999",
+                        "createdAt": "2024-01-01T00:00:00Z",
+                        "status": "current"
+                    }
+                ],
+                "_links": {}
+            })))
+            .mount(&server)
+            .await;
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let wbs = backend
+            .list_whiteboards("space-999")
+            .await
+            .expect("list_whiteboards");
+        assert_eq!(wbs.len(), 1, "only the whiteboard should be returned, not the page");
+        assert_eq!(wbs[0].id, "wb-1");
+    }
+
+    // -------- Test 5: list_whiteboards 404 returns Ok(vec![]) --------
+
+    #[tokio::test]
+    async fn list_whiteboards_404_returns_empty() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/spaces/no-such-space/direct-children"))
+            .respond_with(ResponseTemplate::new(404).set_body_string("not found"))
+            .mount(&server)
+            .await;
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let wbs = backend
+            .list_whiteboards("no-such-space")
+            .await
+            .expect("404 must return Ok(vec![])");
+        assert!(
+            wbs.is_empty(),
+            "expected empty vec on 404, got {} items",
+            wbs.len()
+        );
+    }
+
+    // -------- Test 6: download_attachment returns bytes --------
+
+    #[tokio::test]
+    async fn download_attachment_returns_bytes() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/download/attachments/12345/file.pdf"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_bytes(b"PDF_CONTENT".to_vec()),
+            )
+            .mount(&server)
+            .await;
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let bytes = backend
+            .download_attachment("/wiki/download/attachments/12345/file.pdf")
+            .await
+            .expect("download_attachment should succeed");
+        assert_eq!(bytes, b"PDF_CONTENT");
+    }
+
+    // -------- Test 7: translate folder parent propagates to parent_id --------
+
+    #[test]
+    fn translate_folder_parent_propagates() {
+        let page = synth_page("99", Some("99999"), Some("folder"));
+        let issue = translate(page).expect("translate");
+        assert_eq!(
+            issue.parent_id,
+            Some(IssueId(99999)),
+            "folder parentType must propagate to Issue::parent_id (CONF-06)"
+        );
+    }
+
+    // -------- Test 8: translate folder parent bad id → orphan --------
+
+    #[test]
+    fn translate_folder_parent_bad_id_is_orphan() {
+        let page = synth_page("99", Some("not-a-number"), Some("folder"));
+        let issue = translate(page).expect("translate must not error on bad folder parent id");
+        assert_eq!(
+            issue.parent_id, None,
+            "un-parseable folder parentId must degrade to None (orphan)"
+        );
+    }
 }
