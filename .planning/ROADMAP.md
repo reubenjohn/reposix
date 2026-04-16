@@ -62,6 +62,9 @@ Phase 1 (serial, load-bearing)
                     └──► [T+3h gate] ──► Phase S (STRETCH: push + swarm)
 ```
 
+<details>
+<summary>Shipped: Phases 1–15 (v0.1–v0.5)</summary>
+
 ## Phases
 
 - [ ] **Phase 1: Core contracts + security guardrails** — Shared types,
@@ -84,7 +87,7 @@ Phase 1 (serial, load-bearing)
 
 ## Phase Details
 
-### Phase 1: Core contracts + security guardrails
+### Phase 1: Core contracts + security guardrails (v0.1)
 **Goal**: Every downstream crate imports a single, locked-down contract layer
 that makes the easy path the safe path. `reposix_core::http::client()` is the
 only legal way to build an HTTP client; `Tainted<T>` wraps every byte that
@@ -133,7 +136,7 @@ Plans:
   with append-only triggers + schema-loader helper + `examples/show_audit_schema.rs`
   + test that `pragma table_info(audit_events)` matches the fixture.
 
-### Phase 2: Simulator + audit log
+### Phase 2: Simulator + audit log (v0.1)
 **Goal**: A standalone `reposix-sim` binary that serves a REST issue tracker
 on `127.0.0.1:7878` with real HTTP semantics — list/get/create/update/delete
 issues as JSON, rate-limit middleware, ETag-based 409 on stale updates,
@@ -173,7 +176,7 @@ Plans:
   per request with the Phase-1 schema + ETag/`If-Match` → 409 path + a
   rate-limit tower layer using `governor`.
 
-### Phase 3: Read-only FUSE mount + CLI orchestrator
+### Phase 3: Read-only FUSE mount + CLI orchestrator (v0.1)
 **Goal**: `reposix mount /tmp/mnt --backend http://127.0.0.1:7878` presents a
 directory containing `<id>.md` files for every issue in the simulator; `ls`,
 `cat`, and `grep -r` work; the FUSE daemon never blocks the kernel longer than
@@ -213,7 +216,7 @@ Plans:
   sequence + tails the audit log; shared HTTP client built via
   `reposix_core::http::client()` only.
 
-### Phase 4: Demo + recording + README polish
+### Phase 4: Demo + recording + README polish (v0.1)
 **Goal**: A third party can `git clone reubenjohn/reposix`, follow README,
 and reproduce the demo in <5 minutes. The recorded asciinema (or `script(1)`
 typescript) shows the central thesis working AND shows the guardrails firing
@@ -251,7 +254,7 @@ Plans:
   `evil.example`, attempt a frontmatter `version: 999999` override). README
   scope/security section update citing threat-model.
 
-### Phase S: STRETCH — write path + swarm + FUSE-in-CI (INSERTED, conditional)
+### Phase S: STRETCH — write path + swarm + FUSE-in-CI (INSERTED, conditional) (v0.1)
 **Goal**: If and only if Phases 2 + 3 are green before the T+3h (03:30 PDT)
 decision gate, extend reposix from read-only to full round-trip: FUSE `write`,
 `create`, `unlink`, `setattr`; `git-remote-reposix` helper that translates
@@ -349,7 +352,7 @@ Phases 2 and 3 run in parallel. Phase S is conditional.
 | S. STRETCH: write + swarm + FUSE-in-CI | 2/3 | Complete (swarm+CI deferred) | 2026-04-13 |
 | 8. Demo suite + real-backend seam | 0/4 | Post-ship value add | - |
 
-## Phase 8: Demo suite + real-backend seam (post-ship)
+### Phase 8: Demo suite + real-backend seam (post-ship) (v0.2)
 **Goal**: Split the demo monolith into a maintainable suite AND carve the IssueBackend seam so a real GitHub adapter can land without reshaping the FUSE/remote layers.
 **Added**: 2026-04-13 09:05 PDT (post-v0.1.0-ship; user-requested value add)
 **Deadline**: 12:15 PDT (~3h 10min)
@@ -390,7 +393,7 @@ Plans:
 - [ ] 11-E-docs-and-env.md — ADR-002, `docs/reference/confluence.md`, README + architecture + demos-index + CHANGELOG `[Unreleased]` + `.env.example` rename. Wave 2.
 - [ ] 11-F-release.md — `MORNING-BRIEF-v0.3.md`, CHANGELOG promotion to `[v0.3.0]`, `scripts/tag-v0.3.0.sh` (gated by human-verify checkpoint). Wave 3.
 
-## Phase 12: Connector protocol — 3rd-party plugin ABI (v0.4 target)
+### Phase 12: Connector protocol — 3rd-party plugin ABI (v0.4 target)
 **Goal**: Make new backends addable **without changes to the reposix repo**. Three models ranked by ROI:
 
 1. **Short-term, already unlocked (no new code):** the `IssueBackend` trait in `reposix-core` is a published public trait. A 3rd party publishes `reposix-adapter-<name>` on crates.io; users add it to their own fork's `Cargo.toml` + a one-line `ListBackend::Custom` dispatch. Phase 11-E ships `docs/connectors/guide.md` explaining this path with GitHub + Confluence as worked examples.
@@ -412,7 +415,7 @@ Phase 12 scope: model (2) above. Explicit non-goals: (1) already shipped via doc
 
 **Plans**: TBD (run `/gsd-plan-phase 12` next milestone)
 
-### Phase 13: Nested mount layout: pages/ + tree/ symlinks for Confluence parentId hierarchy (BREAKING: flat <id>.md moves to pages/<id>.md)
+### Phase 13: Nested mount layout: pages/ + tree/ symlinks for Confluence parentId hierarchy (BREAKING: flat <id>.md moves to pages/<id>.md) (v0.4)
 
 **Goal:** Convert the FUSE mount from a flat `<padded-id>.md` root into a two-view layout — (a) a per-backend writable collection (`pages/` for Confluence, `issues/` for sim+GitHub) containing the canonical real files keyed by stable numeric id, and (b) a synthesized read-only `tree/` overlay of FUSE-emitted symlinks exposing Confluence's native parentId hierarchy at human-readable slug paths. The tree/ overlay dissolves concurrent-edit merge hell because the writable substrate stays on a single stable path regardless of title/reparent churn. Ships OP-1 from HANDOFF.md (the "hero.png" promise) scoped to Confluence-only; GitHub and sim remain flat under their per-backend collection bucket. BREAKING change: callers that read `mount/<id>.md` must now read `mount/pages/<id>.md` (Confluence) or `mount/issues/<id>.md` (sim + GitHub).
 **Requirements**: OP-1 from HANDOFF.md — flat-layout-to-folder-structure promise. Addresses design Q#1 (symlinks not duplicate content), Q#2 (tree is read-only — writes go through the target), Q#4 (sibling-suffix collision resolution, no numeric id leakage into the human-visible slug path).
@@ -430,7 +433,7 @@ Plans:
 - [x] 13-D3-release-scripts-and-demo
 - [x] 13-E-green-gauntlet
 
-### Phase 14: Decouple sim REST shape from FUSE write path and git-remote helper — route through IssueBackend trait
+### Phase 14: Decouple sim REST shape from FUSE write path and git-remote helper — route through IssueBackend trait (v0.4.1)
 
 **Goal:** The FUSE daemon and git-remote helper route all read/write operations through `IssueBackend::{create_issue, update_issue, delete_or_close}` instead of the old hardcoded sim-specific REST shape (`fetch.rs` / `client.rs`). Deletes ~1,068 LoC. Closes HANDOFF.md open-gap items 7 and 8. Ships v0.4.1.
 **Requirements**: HANDOFF.md known-open-gaps items 7 + 8
@@ -440,7 +443,7 @@ Plans:
 Plans:
 - [ ] TBD (run /gsd-plan-phase 14 to break down)
 
-### Phase 15: Dynamic _INDEX.md synthesized in FUSE bucket directory (OP-2 partial)
+### Phase 15: Dynamic _INDEX.md synthesized in FUSE bucket directory (OP-2 partial) (v0.5.0)
 
 **Goal:** Ships `mount/<bucket>/_INDEX.md` — a synthesized, read-only YAML-frontmatter + markdown-table sitemap of every tracked issue/page in the bucket directory, computed at read time from the `IssueBackend::list_issues` cache. Agents can `cat pages/_INDEX.md` for a one-shot directory overview. Partial OP-2 scope (bucket level only; tree-level and mount-root deferred to Phase 18). Ships v0.5.0.
 **Requirements**: OP-2 (partial) from HANDOFF.md
@@ -453,12 +456,14 @@ Plans:
 
 ---
 
+</details>
+
 ## Milestone v0.6.0 — Write Path + Full Sitemap
 
 **Goal:** Turn the mount from a read-only navigator into a writable agent workspace.
 **Phases:** 16–20 | **Requirements:** REQUIREMENTS.md §v0.6.0
 
-### Phase 16: Confluence write path — update_issue create_issue delete_or_close on ConfluenceBackend plus atlas_doc_format to Markdown round-trip — SHIPPED 2026-04-14
+### Phase 16: Confluence write path — update_issue create_issue delete_or_close on ConfluenceBackend plus atlas_doc_format to Markdown round-trip — SHIPPED 2026-04-14 (v0.6.0)
 
 **Goal:** Implement `create_issue`, `update_issue`, `delete_or_close` on `ConfluenceBackend`; ADF↔Markdown converter; client-side audit log via SG-06; ADF read path with storage fallback. Closes REQ WRITE-01..04.
 **Requirements**: WRITE-01, WRITE-02, WRITE-03, WRITE-04
@@ -471,7 +476,7 @@ Plans:
 - [x] 16-C-audit-and-integration.md
 - [x] 16-D-docs-and-release.md
 
-### Phase 17: Swarm confluence-direct mode — add --mode confluence-direct to reposix-swarm using SimDirectWorkload as template
+### Phase 17: Swarm confluence-direct mode — add --mode confluence-direct to reposix-swarm using SimDirectWorkload as template (v0.6.0)
 
 **Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
 **Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
@@ -481,7 +486,7 @@ Plans:
 Plans:
 - [x] TBD (run /gsd-plan-phase 17 to break down) (completed 2026-04-15)
 
-### Phase 18: OP-2 remainder — tree-recursive and mount-root _INDEX.md synthesis extending TreeSnapshot dfs
+### Phase 18: OP-2 remainder — tree-recursive and mount-root _INDEX.md synthesis extending TreeSnapshot dfs (v0.6.0)
 
 **Goal:** Complete OP-2 by synthesizing `_INDEX.md` at two additional levels: `mount/tree/<subdir>/_INDEX.md` (recursive subtree sitemap via cycle-safe DFS from `TreeSnapshot`) and `mount/_INDEX.md` (whole-mount overview listing all backends, buckets, and top-level entry counts). Combined with Phase 15 bucket-level `_INDEX.md`, agents can `cat` any level of the mount hierarchy.
 **Requirements**: INDEX-01, INDEX-02
@@ -490,9 +495,10 @@ Plans:
 
 Plans:
 - [x] 18-01-PLAN.md — inode constants, InodeKind variants, render functions, FUSE dispatch, 6 unit tests
-- [ ] 18-02-PLAN.md — workspace green-gauntlet, CHANGELOG, dev smoke script, SUMMARY
+- [x] 18-02-PLAN.md — workspace green-gauntlet, CHANGELOG, dev smoke script, SUMMARY
+- [x] Phase 18: SHIPPED (see 18-01-SUMMARY.md, 18-SUMMARY.md, VERIFICATION.md)
 
-### Phase 19: OP-1 remainder — labels and spaces directory views as read-only symlink overlays for GitHub and Confluence
+### Phase 19: OP-1 remainder — labels and spaces directory views as read-only symlink overlays for GitHub and Confluence (v0.6.0)
 
 **Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
 **Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
@@ -502,8 +508,9 @@ Plans:
 Plans:
 - [x] 19-A-labels-fuse-impl.md — inode constants, labels.rs module, FUSE dispatch, >= 5 tests
 - [x] 19-B-docs-and-release.md — green workspace gauntlet, CHANGELOG, STATE update
+- [x] Phase 19: SHIPPED (see 19-A-SUMMARY.md, 19-SUMMARY.md, VERIFICATION.md)
 
-### Phase 20: OP-3 — reposix refresh subcommand and git-diff cache for mount-as-time-machine semantics
+### Phase 20: OP-3 — reposix refresh subcommand and git-diff cache for mount-as-time-machine semantics (v0.6.0)
 
 **Goal:** Add `reposix refresh` CLI subcommand that re-fetches all issues/pages from the backend, writes deterministic `.md` files into the mount's git working tree, and commits them so `git diff HEAD~1` shows what changed at the backend since the last pull. Ships v0.6.0.
 **Requirements**: REFRESH-01, REFRESH-02, REFRESH-03, REFRESH-04, REFRESH-05
@@ -514,9 +521,10 @@ Plans:
 - [x] 20-A-refresh-cmd.md — refresh.rs + cache_db.rs + main.rs wiring
 - [x] 20-B-tests-and-polish.md — integration tests + workspace gate
 - [x] 20-C-docs-and-release.md — CHANGELOG + STATE update (SHIPPED)
+- [x] Phase 20: SHIPPED (see 20-A-SUMMARY.md, 20-B-SUMMARY.md, 20-C-SUMMARY.md, VERIFICATION.md)
 
 
-### Phase 26: Docs clarity overhaul
+### Phase 26: Docs clarity overhaul (v0.6.0)
 
 **Goal:** Every user-facing Markdown document can be understood in isolation by an LLM agent or human contributor arriving cold — no other files read, no links followed. Uses the `doc-clarity-review` skill to run an isolated subagent review on each doc, collects friction points / unanswered questions / over/under-explained sections, fixes them, then re-reviews to confirm zero critical friction points remain. Also removes stale root-level orphan docs and aligns version numbers across all pages.
 
@@ -584,7 +592,7 @@ Plans:
 **Goal:** Harden the platform under real-world load conditions and expand Confluence support beyond pages.
 **Phases:** 21–25 | **Requirements:** REQUIREMENTS.md §v0.7.0
 
-### Phase 21: OP-7 hardening bundle — contention swarm, 500-page truncation probe, chaos audit-log restart, macFUSE parity CI matrix
+### Phase 21: OP-7 hardening bundle — contention swarm, 500-page truncation probe, chaos audit-log restart, macFUSE parity CI matrix (v0.7.0)
 
 **Goal:** Audit the two OP-7 items already shipped in session-4 drive-bys (credential pre-push hook, SSRF regression tests) and close the five remaining hardening items: contention swarm mode proving If-Match 409 determinism (HARD-01); Confluence 500-page truncation probe with WARN + `--no-truncate` flag (HARD-02, SG-05 compliance); kill-9 chaos test against the sim's WAL-mode audit log (HARD-03); macOS + macFUSE CI parity matrix (HARD-04); and tenant-URL redaction in list_issues error messages (HARD-05).
 **Requirements**: HARD-00, HARD-01, HARD-02, HARD-03, HARD-04, HARD-05
@@ -598,7 +606,7 @@ Plans:
 - [x] 21-D-chaos.md — HARD-03 kill-9 chaos audit-log integrity test (Wave 4, depends on B)
 - [x] 21-E-macos.md — HARD-04 macos-14 CI matrix + hooks CI step (Wave 5, depends on A, autonomous=false)
 
-### Phase 22: OP-8 honest-tokenizer benchmarks — replace len-div-4 with count_tokens API, per-backend comparison tables
+### Phase 22: OP-8 honest-tokenizer benchmarks — replace len-div-4 with count_tokens API, per-backend comparison tables (v0.7.0)
 
 
 **Goal:** Replace the `len(text) // 4` token approximation in `scripts/bench_token_economy.py` with real Anthropic `client.messages.count_tokens()` calls, cache results in `benchmarks/fixtures/*.tokens.json` with SHA-256 content-hash keys for offline CI reproducibility, add per-backend (MCP, GitHub, Confluence, Jira-placeholder) comparison tables, and re-state the headline token-reduction number in `docs/why.md` with the real measurement — honest regardless of whether it's higher or lower than the prior 91.6% estimate. Python + Markdown only; no Rust changes.
@@ -612,7 +620,7 @@ Plans:
 - [x] 22-C-wire-docs-ship-PLAN.md — per-backend table wiring + one-shot cache population (checkpoint) + docs/why.md headline update + CHANGELOG + SUMMARY (Wave 2, autonomous=false, BENCH-02/03/04)
 
 
-### Phase 23: OP-9a — Confluence comments exposed as pages/id.comments/comment-id.md
+### Phase 23: OP-9a — Confluence comments exposed as pages/id.comments/comment-id.md (v0.7.0)
 
 **Goal:** Expose Confluence page inline and footer comments as synthesized `.comments/` subdirectories under each page in the FUSE mount: `pages/<padded-id>.comments/<comment-id>.md`. Each comment file has YAML frontmatter (id, author, created_at, resolved, parent_comment_id, kind) and a Markdown body. Also adds a `reposix spaces --backend confluence` subcommand for listing Confluence spaces (CONTEXT.md locked decision).
 **Requirements**: CONF-01, CONF-02, CONF-03
@@ -624,7 +632,7 @@ Plans:
 - [ ] 23-02-PLAN.md — `reposix spaces` CLI subcommand + table renderer (Wave 2, autonomous, depends on 23-01)
 - [ ] 23-03-PLAN.md — FUSE `.comments/` synthesis: inode constants, CommentsSnapshot, fs.rs dispatch, MountConfig wire-through (Wave 2, autonomous, depends on 23-01)
 
-### Phase 24: OP-9b — Confluence whiteboards attachments and folders
+### Phase 24: OP-9b — Confluence whiteboards attachments and folders (v0.7.0)
 
 **Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
 **Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
@@ -634,7 +642,7 @@ Plans:
 Plans:
 - [ ] TBD (run /gsd-plan-phase 24 to break down)
 
-### Phase 25: OP-11 — docs reorg: InitialReport.md and AgenticEngineeringReference.md to docs/research/ plus root cleanup
+### Phase 25: OP-11 — docs reorg: InitialReport.md and AgenticEngineeringReference.md to docs/research/ plus root cleanup (v0.7.0)
 
 **Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
 **Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
@@ -648,35 +656,45 @@ Plans:
 
 ## Milestone v0.8.0 — JIRA Cloud Integration
 
-**Goal:** Add JIRA Cloud as a first-class backend. Two prerequisite foundation changes land first: rename the misnamed `IssueBackend` trait to `BackendConnector` (Confluence pages are not "issues"; the trait name should be neutral), and add an `extensions` field to `Issue` for backend-specific metadata that doesn't fit the canonical 5-field schema (JIRA needs `jira_key`, `issue_type`, `priority`). Then ship the `reposix-jira` crate with read-only Cloud REST v3 support, JQL pagination, status-category mapping, and subtask hierarchy. Write path lands as a stretch phase.
+**Goal:** Add JIRA Cloud as a first-class backend. Two prerequisite foundation changes land first: rename the misnamed `IssueBackend` trait to `BackendConnector` (Confluence pages are not "issues"; the trait name should be neutral), and add an `extensions` field to `Issue` for backend-specific metadata that doesn't fit the canonical 5-field schema (JIRA needs `jira_key`, `issue_type`, `priority`, plus structured data like `hierarchyLevel: 0`). Then ship the `reposix-jira` crate with read-only Cloud REST v3 support, cursor-based JQL pagination, status-category mapping, and subtask/epic hierarchy. Write path lands as a stretch phase.
+
+**Breaking release.** This milestone bumps the workspace from `0.7.x` → `0.8.0` (SemVer breaking: trait rename + new `Issue.extensions` field in the public `reposix-core` API).
 
 **Target features:**
-- Rename `IssueBackend` → `BackendConnector` across all crates + ADR-004 documenting rationale
-- Add `extensions: BTreeMap<String, String>` to `Issue` for opaque backend metadata in frontmatter
+- Rename `IssueBackend` → `BackendConnector` across all crates + ADR-004 documenting naming alternatives considered
+- Add `extensions: BTreeMap<String, serde_yaml::Value>` to `Issue` for typed backend metadata (preserves JSON-ish structure: strings, ints, booleans, nested maps) in frontmatter
 - `reposix-jira` crate: `BackendConnector` impl against JIRA Cloud REST v3 (`https://{instance}.atlassian.net/rest/api/3`)
-- JQL-based listing with offset pagination (`startAt`/`maxResults`/`total`, max 100/page)
-- Status-category-key mapping → 5-valued `IssueStatus` (with heuristic for `InReview`)
-- Subtask hierarchy: `fields.parent.id` → `Issue.parent_id`
-- JIRA extensions in frontmatter: `jira_key` ("PROJ-42"), `issue_type` ("Story"), `priority` ("Medium"), `status_name` (raw pre-mapping)
-- Env vars: `JIRA_EMAIL`, `JIRA_API_TOKEN`, `REPOSIX_JIRA_INSTANCE`
-- Wiremock unit tests ≥5 + contract test (always-on wiremock + `#[ignore]`-gated live)
+- JQL listing via `POST /rest/api/3/search/jql` with **cursor pagination** (`nextPageToken` + `isLast`; the old `GET /search` + `startAt` was retired Aug 2025)
+- Status-category-key mapping → 5-valued `IssueStatus` (with `InReview` heuristic on status `name` and `WontFix` heuristic on `resolution.name`)
+- Subtask + epic hierarchy: `fields.parent.id` → `Issue.parent_id`
+- JIRA extensions in frontmatter: `jira_key` ("PROJ-42"), `issue_type` ("Story"), `priority` ("Medium" or null), `status_name` (raw pre-mapping), `hierarchy_level` (i64)
+- Env vars: `JIRA_EMAIL`, `JIRA_API_TOKEN`, `REPOSIX_JIRA_INSTANCE` — fail-closed if any missing
+- HTTP egress routed through `reposix_core::http::client()` (enforces `REPOSIX_ALLOWED_ORIGINS`); all JIRA responses wrapped in `Tainted<T>` at the seam
+- Audit log rows for **both reads and writes** (parity with ConfluenceBackend audit policy)
+- Wiremock unit tests (enumerated per phase) + contract test (always-on wiremock + `#[ignore]`-gated live)
 - CLI: `list --backend jira`, `mount --backend jira --project <PROJECT_KEY>`
-- `docs/reference/jira.md` + `docs/decisions/004-jira-issue-mapping.md`
+- `docs/reference/jira.md` + **two ADRs**: `docs/decisions/004-backend-connector-rename.md` (rename rationale + alternatives: `RemoteBackend`, `TrackerBackend`, `WorkItemBackend`) and `docs/decisions/005-jira-issue-mapping.md` (ID vs key, status mapping table, ADF stripping, version synthesis, attachments/comments deferred)
 - (Stretch) Write path: `create_issue`, `update_issue`, `delete_or_close` via Transitions API
+
+**Deferred to follow-up phases (explicitly out of v0.8.0 scope):**
+- **JIRA attachments** as `issues/<id>.attachments/<name>` (parity with planned Confluence attachments, Phase 24)
+- **JIRA comments** as `issues/<id>.comments/<comment-id>.md` (parity with Phase 23's Confluence comments)
+- **Custom fields** (`customfield_10014`, story points, sprint, etc.) — route through `extensions` when a concrete need appears
+- **JIRA Data Center** — different auth + v2 API; separate adapter if ever needed
 
 **Requirements:** RENAME-01, EXT-01, JIRA-01 … JIRA-06
 
-### Phase 27: Foundation — `IssueBackend` → `BackendConnector` rename + `Issue.extensions` field
+### Phase 27: Foundation — `IssueBackend` → `BackendConnector` rename + `Issue.extensions` field (v0.8.0)
 
-**Goal:** Rename the `IssueBackend` trait to `BackendConnector` in `reposix-core`, update all impls (`SimBackend`, `GithubReadOnlyBackend`, `ConfluenceBackend`) and all call-sites in `reposix-fuse`, `reposix-cli`, `reposix-remote`, and `reposix-swarm`. Simultaneously add `extensions: BTreeMap<String, String>` to the `Issue` struct (defaults to empty, serialized only when non-empty via `#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]`), propagating through frontmatter render/parse and all tests. Write ADR-004 capturing the rename rationale.
+**Goal:** Rename the `IssueBackend` trait to `BackendConnector` in `reposix-core` and update all impls (`SimBackend`, `GithubReadOnlyBackend`, `ConfluenceBackend`) plus every call-site (`reposix-fuse` ≈20 sites in `fs.rs`, `reposix-cli` dispatch in `list.rs`/`mount.rs`/`refresh.rs`, `reposix-remote`, `reposix-swarm`). Simultaneously add `extensions: BTreeMap<String, serde_yaml::Value>` to the `Issue` struct (defaults to empty via `#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]`; flows through `frontmatter::render`/`frontmatter::parse` without schema churn). Bump workspace Cargo.toml `[workspace.package] version = "0.8.0"`. Write ADR-004 (`docs/decisions/004-backend-connector-rename.md`) capturing the rename rationale with alternatives considered (`RemoteBackend`, `TrackerBackend`, `WorkItemBackend`, `Connector`) and why `BackendConnector` won (neutral across issue/page/content domains; aligns with Phase 12's "Connector protocol" vocabulary). Grep-verify zero remaining `IssueBackend` references in source or docs after the rename. Roundtrip test: serialize `Issue { extensions: {"foo": Value::Int(42), "bar": Value::String("x")} }` → parse → assert equality.
 **Requirements:** RENAME-01, EXT-01
-**Depends on:** Phase 26 (docs) — safe to run in parallel
+**Depends on:** none (Phase 26 docs work is orthogonal; if Phase 26 lands first, this phase refreshes any doc lines mentioning `IssueBackend` during the rename sweep)
 **Plans:** TBD
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 27 to break down)
 
-### Phase 28: JIRA Cloud read-only adapter (`reposix-jira`)
+### Phase 28: JIRA Cloud read-only adapter (`reposix-jira`) (v0.8.0)
 
 **Goal:** Ship a `reposix-jira` crate implementing `BackendConnector` against JIRA Cloud REST v3 (`https://{instance}.atlassian.net/rest/api/3`). Basic auth (`email:JIRA_API_TOKEN`, same pattern as `reposix-confluence`). `list_issues(project)` → `POST /rest/api/3/search/jql` (the old `GET /search` was retired Aug 2025) with JQL `project = {KEY} ORDER BY id ASC`, cursor-based pagination (`nextPageToken` + `isLast: true` as terminator — `total` is absent in the new endpoint, max 100 issues/page). `get_issue(project, id)` → `GET /rest/api/3/issue/{id}` (numeric id accepted directly). Two-field status mapping: primary on `fields.status.statusCategory.key` (`"new"` → `Open`, `"indeterminate"` → `InProgress` unless status `name` contains "review" → `InReview`, `"done"` → `Done`), with `WontFix` override when `fields.resolution.name` contains "won't"/"wont"/"not a bug"/"duplicate"/"cannot reproduce". `Issue.version` synthesized from `fields.updated` as Unix-millis `u64` (JIRA has no ETag/optimistic-lock; `StrongVersioning: false`). ADF description (`fields.description` is nested JSON) stripped to plain text by walking the `content[]` tree. Subtask/epic hierarchy: `fields.parent.id` (numeric) → `Issue.parent_id`. `Issue.extensions`: `jira_key` ("PROJ-42"), `issue_type` ("Story"), `priority` ("Medium"), `status_name` (raw status name before mapping). `root_collection_name()` → `"issues"`. Tenant validation: alphanumeric+hyphen only, no leading/trailing hyphen (blocks SSRF injection). `create_issue`/`update_issue`/`delete_or_close` return `Err("not supported")` in the read-only phase. Rate limit: `Retry-After` (seconds) on 429. Env vars: `JIRA_EMAIL`, `JIRA_API_TOKEN`, `REPOSIX_JIRA_INSTANCE`. CLI: `list --backend jira`, `mount --backend jira --project <KEY>`. Wiremock unit tests ≥5 (list, get, pagination, 404, status-category mapping). Contract test (wiremock always-on + live `#[ignore]`). `docs/reference/jira.md`. `docs/decisions/004-jira-issue-mapping.md` (ADR-004). CHANGELOG + CI green.
 **Requirements:** JIRA-01, JIRA-02, JIRA-03, JIRA-04, JIRA-05
@@ -686,7 +704,7 @@ Plans:
 Plans:
 - [ ] TBD (run /gsd-plan-phase 28 to break down)
 
-### Phase 29: JIRA write path — `create_issue`, `update_issue`, `delete_or_close` via Transitions API (stretch)
+### Phase 29: JIRA write path — `create_issue`, `update_issue`, `delete_or_close` via Transitions API (stretch) (v0.8.0)
 
 **Goal:** Complete the JIRA write path on `JiraBackend`. `create_issue` → `POST /rest/api/3/issue` (`fields.project.key`, `fields.summary`, `fields.issuetype.name` — discover valid types via `GET /rest/api/3/issuetype`, cache per session; body encoded as ADF `{"type":"doc","version":1,"content":[{"type":"paragraph","content":[{"type":"text","text":"..."}]}]}`). `update_issue` → `PUT /rest/api/3/issue/{id}` with `{fields:{summary,description(ADF),labels,assignee}}` — status changes are NOT allowed via PUT, only via transitions; `expected_version` silently ignored (no ETag). `delete_or_close` → two-step: (1) `GET /rest/api/3/issue/{id}/transitions` to discover available transitions, (2) `POST /rest/api/3/issue/{id}/transitions` with `{transition:{id}}` — select transition by matching `DeleteReason` to target `statusCategory.key == "done"`, prefer a transition name containing "won't"/"reject"/"not planned" for `WontFix`; if `fields.resolution` is required by the screen, include `{fields:{resolution:{name:"Done"}}}` and catch 400 to retry without it. Fallback to `DELETE /rest/api/3/issue/{id}` if transitions unavailable and DELETE returns 204 (requires admin permission). Enable `supports(BackendFeature::Delete)` and `supports(BackendFeature::Transitions)`. Audit log rows for all mutations. Wiremock write-path tests ≥3. Contract test write extension.
 **Requirements:** JIRA-06

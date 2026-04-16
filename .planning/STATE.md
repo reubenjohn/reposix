@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.4
-milestone_name: target)
+milestone: v0.7.0
+milestone_name: Hardening + Confluence Expansion
 status: executing
 stopped_at: context exhaustion at 90% (2026-04-15)
-last_updated: "2026-04-16T17:19:35.296Z"
+last_updated: "2026-04-16T18:59:39.483Z"
 last_activity: 2026-04-16 -- Phase 23 execution started
 progress:
   total_phases: 11
@@ -49,12 +49,12 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** An LLM agent can `ls`, `cat`, `grep`, edit, and `git push`
 issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
-**Current focus:** Phase 23 — OP-9a: Confluence comments + spaces
+**Current focus:** Phase 23 — op-9a-confluence-comments-exposed-as-pages-id-comments-comme
 Next: /gsd-plan-phase 16 (Confluence write path).
 
 ## Current Position
 
-Phase: 23 (OP-9a: Confluence comments + spaces) — EXECUTING
+Phase: 23 (op-9a-confluence-comments-exposed-as-pages-id-comments-comme) — EXECUTING
 Plan: 1 of 3
 Cursor: **Phase 20 SHIPPED. `reposix refresh` subcommand + git-diff cache complete; REFRESH-01..05 closed.
 Milestone v0.6.0 complete (Phases 16-20). Phases 21+ are v0.7.0 scope.**
