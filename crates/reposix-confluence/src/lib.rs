@@ -261,26 +261,171 @@ struct ConfVersion {
     created_at: chrono::DateTime<chrono::Utc>,
 }
 
-#[derive(Debug, Deserialize)]
-struct ConfPageBody {
+/// Body wrapper for Confluence pages and comments. Returned by both the page
+/// list endpoint and the comment endpoints when `?body-format=atlas_doc_format`
+/// is requested.
+#[derive(Debug, Clone, Deserialize)]
+pub struct ConfPageBody {
+    /// Raw storage XHTML body (Confluence `storage` representation).
     #[serde(default)]
-    storage: Option<ConfBodyStorage>,
+    pub storage: Option<ConfBodyStorage>,
     /// ADF body returned when `?body-format=atlas_doc_format` is requested.
     /// The value is a JSON object (not a string) — we keep it as `Value` so
     /// that [`adf::adf_to_markdown`] can walk it without a second parse step.
     #[serde(default, rename = "atlas_doc_format")]
-    adf: Option<ConfBodyAdf>,
+    pub adf: Option<ConfBodyAdf>,
 }
 
-#[derive(Debug, Deserialize)]
-struct ConfBodyStorage {
-    value: String,
+/// Raw storage XHTML body wrapper.
+#[derive(Debug, Clone, Deserialize)]
+pub struct ConfBodyStorage {
+    /// Raw storage HTML value.
+    pub value: String,
 }
 
 /// ADF body wrapper. The `value` field holds the full ADF JSON document.
+#[derive(Debug, Clone, Deserialize)]
+pub struct ConfBodyAdf {
+    /// Full ADF JSON document (e.g. `{"type":"doc","version":1,"content":[…]}`).
+    pub value: serde_json::Value,
+}
+
+/// A Confluence v2 comment — either inline or footer.
+///
+/// Deserialized from `GET /wiki/api/v2/pages/{id}/inline-comments` and
+/// `GET /wiki/api/v2/pages/{id}/footer-comments`. The two endpoints return
+/// slightly different shapes — `resolution_status` and `parent_comment_id`
+/// are inline-only; both are `Option` here.
+#[derive(Debug, Clone, Deserialize)]
+pub struct ConfComment {
+    /// Confluence numeric id (as string; always parseable as u64).
+    pub id: String,
+    /// Parent page id (numeric string).
+    #[serde(rename = "pageId")]
+    pub page_id: String,
+    /// Version metadata: contains `createdAt` and `authorId`.
+    pub version: ConfCommentVersion,
+    /// `Some(...)` for inline comment replies; `None` for top-level and footer.
+    #[serde(default, rename = "parentCommentId")]
+    pub parent_comment_id: Option<String>,
+    /// `Some("open" | "resolved" | "reopened" | ...)` for inline comments;
+    /// `None` for footer comments (no resolution concept).
+    #[serde(default, rename = "resolutionStatus")]
+    pub resolution_status: Option<String>,
+    /// ADF / storage-format body. Reuses the existing `ConfPageBody` wrapper.
+    #[serde(default)]
+    pub body: Option<ConfPageBody>,
+    /// `"inline"` or `"footer"`. NOT set by serde — populated by
+    /// `list_comments` after deserialization based on which endpoint returned it.
+    #[serde(skip, default)]
+    pub kind: CommentKind,
+}
+
+impl ConfComment {
+    /// Convert the ADF body (if present) to Markdown. Empty string if no body or conversion fails.
+    /// Mirrors the `translate()` function's degradation pattern for page bodies.
+    #[must_use]
+    pub fn body_markdown(&self) -> String {
+        let Some(body) = self.body.as_ref() else {
+            return String::new();
+        };
+        if let Some(adf) = body.adf.as_ref() {
+            match crate::adf::adf_to_markdown(&adf.value) {
+                Ok(md) => md,
+                Err(e) => {
+                    tracing::warn!(
+                        error = %e,
+                        comment_id = %self.id,
+                        "adf_to_markdown failed on comment; using empty body"
+                    );
+                    String::new()
+                }
+            }
+        } else if let Some(storage) = body.storage.as_ref() {
+            storage.value.clone()
+        } else {
+            String::new()
+        }
+    }
+}
+
+/// Which Confluence endpoint produced this comment.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum CommentKind {
+    /// Inline comment (attached to a text range in the page body).
+    #[default]
+    Inline,
+    /// Footer comment (page-level discussion, not anchored to specific text).
+    Footer,
+}
+
+impl CommentKind {
+    /// String form used in `kind:` frontmatter and URL path segment.
+    #[must_use]
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Inline => "inline",
+            Self::Footer => "footer",
+        }
+    }
+}
+
+/// Version metadata on a Confluence comment. `authorId` is the Atlassian
+/// accountId string.
+#[derive(Debug, Clone, Deserialize)]
+pub struct ConfCommentVersion {
+    /// When the comment was created (ISO 8601).
+    #[serde(rename = "createdAt")]
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    /// Atlassian accountId of the comment author.
+    #[serde(rename = "authorId")]
+    pub author_id: String,
+    /// Version number (increments on edits).
+    #[serde(default)]
+    pub number: u64,
+}
+
 #[derive(Debug, Deserialize)]
-struct ConfBodyAdf {
-    value: serde_json::Value,
+struct ConfCommentList {
+    results: Vec<ConfComment>,
+    #[serde(default, rename = "_links")]
+    #[allow(dead_code)]
+    links: Option<ConfLinks>,
+}
+
+/// Summary of a readable Confluence space, as returned by
+/// [`ConfluenceBackend::list_spaces`]. The `webui_url` is already joined
+/// with the tenant base URL (absolute URL ready to paste into a browser).
+#[derive(Debug, Clone)]
+pub struct ConfSpaceSummary {
+    /// Space key (e.g. `"REPOSIX"`) — also usable as `--project` for mount/list.
+    pub key: String,
+    /// Human-readable name (e.g. `"Reposix Project"`).
+    pub name: String,
+    /// Absolute URL to the space's web UI (e.g. `https://tenant.atlassian.net/wiki/spaces/REPOSIX`).
+    pub webui_url: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct ConfSpaceSummaryList {
+    results: Vec<ConfSpaceRaw>,
+    #[serde(default, rename = "_links")]
+    #[allow(dead_code)]
+    links: Option<ConfLinks>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ConfSpaceRaw {
+    key: String,
+    name: String,
+    #[serde(default, rename = "_links")]
+    links: Option<ConfSpaceRawLinks>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ConfSpaceRawLinks {
+    #[serde(default)]
+    webui: Option<String>,
 }
 
 /// Build the Basic-auth header value for a given email + token.
@@ -844,6 +989,149 @@ impl ConfluenceBackend {
         ) {
             tracing::error!(error = %e, "confluence audit insert failed");
         }
+    }
+
+    /// Fetch all inline + footer comments for a Confluence page.
+    ///
+    /// Issues two GETs (one per endpoint) and paginates each via `_links.next`.
+    /// Returns a `Vec<ConfComment>` with `kind` populated to distinguish source.
+    ///
+    /// # Security
+    /// - SSRF-safe: pagination cursors are prepended to `self.base()` (relative path).
+    /// - Caps at [`MAX_ISSUES_PER_LIST`] with `tracing::warn!` (HARD-02 compliance).
+    /// - Error messages pass the URL through `redact_url` so tenant hostnames
+    ///   never leak (HARD-05 precedent).
+    ///
+    /// # Errors
+    /// Returns `Error::Other` on non-2xx response. Transport errors propagate.
+    pub async fn list_comments(&self, page_id: u64) -> Result<Vec<ConfComment>> {
+        let mut out: Vec<ConfComment> = Vec::new();
+        for (kind_str, kind_enum) in &[
+            ("inline-comments", CommentKind::Inline),
+            ("footer-comments", CommentKind::Footer),
+        ] {
+            let first = format!(
+                "{}/wiki/api/v2/pages/{}/{}?limit={}&body-format=atlas_doc_format",
+                self.base(),
+                page_id,
+                kind_str,
+                PAGE_SIZE
+            );
+            let mut next_url: Option<String> = Some(first);
+            let mut pages: usize = 0;
+            let header_owned = self.standard_headers();
+            let header_refs: Vec<(&str, &str)> =
+                header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+            while let Some(url) = next_url.take() {
+                pages += 1;
+                if pages > (MAX_ISSUES_PER_LIST / PAGE_SIZE) {
+                    tracing::warn!(
+                        page_id,
+                        kind = %kind_str,
+                        pages,
+                        "reached MAX_ISSUES_PER_LIST cap on comments; stopping pagination"
+                    );
+                    break;
+                }
+                self.await_rate_limit_gate().await;
+                let resp = self
+                    .http
+                    .request_with_headers(Method::GET, url.as_str(), &header_refs)
+                    .await?;
+                self.ingest_rate_limit(&resp);
+                let status = resp.status();
+                let bytes = resp.bytes().await?;
+                if !status.is_success() {
+                    return Err(Error::Other(format!(
+                        "confluence returned {status} for GET {}: {}",
+                        redact_url(&url),
+                        String::from_utf8_lossy(&bytes)
+                    )));
+                }
+                let body_json: serde_json::Value = serde_json::from_slice(&bytes)?;
+                let next_cursor = parse_next_cursor(&body_json);
+                let list: ConfCommentList = serde_json::from_value(body_json)?;
+                for mut comment in list.results {
+                    comment.kind = *kind_enum;
+                    out.push(comment);
+                    if out.len() >= MAX_ISSUES_PER_LIST {
+                        tracing::warn!(
+                            page_id,
+                            total = out.len(),
+                            "reached MAX_ISSUES_PER_LIST absolute cap; returning truncated list"
+                        );
+                        return Ok(out);
+                    }
+                }
+                next_url = next_cursor.map(|relative| {
+                    if relative.starts_with("http://") || relative.starts_with("https://") {
+                        relative
+                    } else {
+                        format!("{}{}", self.base(), relative)
+                    }
+                });
+            }
+        }
+        Ok(out)
+    }
+
+    /// Enumerate all readable Confluence spaces.
+    ///
+    /// Paginates via `_links.next` (same cursor scheme as `list_issues`).
+    /// Returns `Vec<ConfSpaceSummary>` with absolute `webui_url` fields.
+    ///
+    /// # Errors
+    /// Transport errors + non-2xx responses (message passes through `redact_url`).
+    pub async fn list_spaces(&self) -> Result<Vec<ConfSpaceSummary>> {
+        let first = format!("{}/wiki/api/v2/spaces?limit=250", self.base());
+        let mut next_url: Option<String> = Some(first);
+        let mut out: Vec<ConfSpaceSummary> = Vec::new();
+        let header_owned = self.standard_headers();
+        let header_refs: Vec<(&str, &str)> =
+            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        while let Some(url) = next_url.take() {
+            self.await_rate_limit_gate().await;
+            let resp = self
+                .http
+                .request_with_headers(Method::GET, url.as_str(), &header_refs)
+                .await?;
+            self.ingest_rate_limit(&resp);
+            let status = resp.status();
+            let bytes = resp.bytes().await?;
+            if !status.is_success() {
+                return Err(Error::Other(format!(
+                    "confluence returned {status} for GET {}: {}",
+                    redact_url(&url),
+                    String::from_utf8_lossy(&bytes)
+                )));
+            }
+            let body_json: serde_json::Value = serde_json::from_slice(&bytes)?;
+            let next_cursor = parse_next_cursor(&body_json);
+            let list: ConfSpaceSummaryList = serde_json::from_value(body_json)?;
+            for s in list.results {
+                let rel = s.links.and_then(|l| l.webui).unwrap_or_default();
+                let webui_url = if rel.is_empty() {
+                    String::new()
+                } else if rel.starts_with("http://") || rel.starts_with("https://") {
+                    rel
+                } else {
+                    format!("{}{}", self.base(), rel)
+                };
+                out.push(ConfSpaceSummary {
+                    key: s.key,
+                    name: s.name,
+                    webui_url,
+                });
+            }
+            next_url = next_cursor.map(|relative| {
+                if relative.starts_with("http://") || relative.starts_with("https://") {
+                    relative
+                } else {
+                    format!("{}{}", self.base(), relative)
+                }
+            });
+        }
+        Ok(out)
     }
 }
 
@@ -2839,6 +3127,9 @@ mod tests {
     async fn list_comments_paginates_inline_via_links_next() {
         let server = MockServer::start().await;
         // Page 1 — returns _links.next pointing to cursor=SECOND
+        // .up_to_n_times(1) ensures the first-page mock is exhausted before
+        // the cursor request arrives, preventing wiremock from re-matching it
+        // (wiremock uses first-registered-wins when multiple mocks match).
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/pages/42/inline-comments"))
             .and(query_param("limit", "100"))
@@ -2848,6 +3139,7 @@ mod tests {
                 }],
                 "_links": { "next": "/wiki/api/v2/pages/42/inline-comments?cursor=SECOND&limit=100" }
             })))
+            .up_to_n_times(1)
             .mount(&server).await;
         // Page 2 — same path, different cursor
         Mock::given(method("GET"))
@@ -2942,6 +3234,9 @@ mod tests {
     #[tokio::test]
     async fn list_spaces_paginates_via_links_next() {
         let server = MockServer::start().await;
+        // .up_to_n_times(1) prevents the first-page mock from matching the cursor
+        // request (which also has limit=250). Wiremock uses first-registered-wins,
+        // so without the limit both mocks match and the infinite-loop response wins.
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/spaces"))
             .and(query_param("limit", "250"))
@@ -2949,6 +3244,7 @@ mod tests {
                 "results": [{"id":"1","key":"A","name":"A","_links":{"webui":"/wiki/spaces/A"}}],
                 "_links": {"next":"/wiki/api/v2/spaces?cursor=NEXT&limit=250"}
             })))
+            .up_to_n_times(1)
             .mount(&server).await;
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/spaces"))
