@@ -21,11 +21,13 @@ use fuser::{BackgroundSession, MountOption};
 use reposix_core::IssueBackend;
 use serde::{Deserialize, Serialize};
 
+pub mod comments;
 pub mod fs;
 pub mod inode;
 pub mod labels;
 pub mod tree;
 
+pub use comments::{CommentsSnapshot, COMMENTS_DIR_INO_BASE, COMMENTS_FILE_INO_BASE};
 pub use fs::ReposixFs;
 pub use inode::InodeRegistry;
 pub use labels::{LabelSnapshot, LABELS_DIR_INO_BASE, LABELS_ROOT_INO, LABELS_SYMLINK_INO_BASE};

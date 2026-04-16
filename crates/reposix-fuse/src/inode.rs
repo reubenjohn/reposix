@@ -18,7 +18,9 @@
 //! | `0xC_0000_0000..0x10_0000_0000` | `tree/` leaf symlinks and `_self.md` entries (allocated by [`crate::tree::TreeSnapshot`]). |
 //! | `0x7_FFFF_FFFF` (fixed) | `labels/` overlay root directory ([`LABELS_ROOT_INO`]). |
 //! | `0x10_0000_0000..0x14_0000_0000` | `labels/` per-label interior directories (allocated by [`crate::labels::LabelSnapshot`]). |
-//! | `0x14_0000_0000..u64::MAX` | `labels/` leaf symlinks — one per (label × issue) pair (allocated by [`crate::labels::LabelSnapshot`]). |
+//! | `0x14_0000_0000..0x18_0000_0000` | `labels/` leaf symlinks — one per (label × issue) pair (allocated by [`crate::labels::LabelSnapshot`]). |
+//! | `0x18_0000_0000..0x1C_0000_0000` | Per-page `.comments/` directories (allocated by [`crate::comments::CommentsSnapshot`]). |
+//! | `0x1C_0000_0000..u64::MAX`       | Individual comment files under `.comments/` (allocated by [`crate::comments::CommentsSnapshot`]). |
 //!
 //! The ranges are intentionally disjoint so every callback in `fs.rs` can
 //! classify an inode by numeric range **before** doing any map lookup; the
@@ -100,8 +102,23 @@ pub const LABELS_DIR_INO_BASE: u64 = 0x10_0000_0000;
 /// Start of the label-symlink inode range.
 ///
 /// One inode allocated per (label, issue) pair. Range:
-/// `LABELS_SYMLINK_INO_BASE .. u64::MAX` (in practice much less).
+/// `LABELS_SYMLINK_INO_BASE .. COMMENTS_DIR_INO_BASE` (in practice much less).
 pub const LABELS_SYMLINK_INO_BASE: u64 = 0x14_0000_0000;
+
+/// Start of the per-page `.comments/` directory inode range (Phase 23).
+///
+/// One `CommentsDir` inode allocated per page on first access. Range:
+/// `COMMENTS_DIR_INO_BASE .. COMMENTS_FILE_INO_BASE`
+/// = `0x18_0000_0000 .. 0x1C_0000_0000` = 4 294 967 296 (4 billion) slots.
+/// Vastly exceeds the 500-page Confluence truncation cap (HARD-02).
+pub const COMMENTS_DIR_INO_BASE: u64 = 0x18_0000_0000;
+
+/// Start of the per-comment file inode range (Phase 23).
+///
+/// One `CommentFile` inode allocated per individual comment file. Range:
+/// `COMMENTS_FILE_INO_BASE .. u64::MAX` (in practice: 500 pages × ~50
+/// comments = ~25k used).
+pub const COMMENTS_FILE_INO_BASE: u64 = 0x1C_0000_0000;
 
 /// Bidirectional inode ↔ issue-id map.
 #[derive(Debug)]
@@ -304,5 +321,14 @@ mod tests {
         assert!(LABELS_ROOT_INO > FIRST_ISSUE_INODE);
         assert!(LABELS_DIR_INO_BASE > crate::tree::TREE_SYMLINK_INO_BASE);
         assert!(LABELS_DIR_INO_BASE < LABELS_SYMLINK_INO_BASE);
+        // Phase 23: comments inode ranges are disjoint from all prior ranges.
+        assert!(
+            COMMENTS_DIR_INO_BASE > LABELS_SYMLINK_INO_BASE,
+            "COMMENTS_DIR_INO_BASE ({COMMENTS_DIR_INO_BASE:#x}) must be above LABELS_SYMLINK_INO_BASE ({LABELS_SYMLINK_INO_BASE:#x})"
+        );
+        assert!(
+            COMMENTS_DIR_INO_BASE < COMMENTS_FILE_INO_BASE,
+            "COMMENTS_DIR_INO_BASE must be strictly below COMMENTS_FILE_INO_BASE"
+        );
     }
 }
