@@ -139,8 +139,7 @@ async fn spawn_sim() -> (String, tempfile::NamedTempFile, tokio::task::JoinHandl
         if http
             .get(format!("{origin}/healthz"))
             .await
-            .map(|r| r.status().is_success())
-            .unwrap_or(false)
+            .is_ok_and(|r| r.status().is_success())
         {
             return (origin, db, handle);
         }

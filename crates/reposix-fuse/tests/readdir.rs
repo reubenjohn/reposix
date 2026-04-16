@@ -120,16 +120,13 @@ async fn mount_lists_and_reads_issues() {
         let mp = mount_path.clone();
         wait_for_ready(
             move || {
-                std::fs::read_dir(&mp)
-                    .map(|it| {
-                        let names: Vec<_> = it
-                            .flatten()
-                            .map(|e| e.file_name().to_string_lossy().into_owned())
-                            .collect();
-                        names.iter().any(|n| n == "issues")
-                            && names.iter().any(|n| n == ".gitignore")
-                    })
-                    .unwrap_or(false)
+                std::fs::read_dir(&mp).is_ok_and(|it| {
+                    let names: Vec<_> = it
+                        .flatten()
+                        .map(|e| e.file_name().to_string_lossy().into_owned())
+                        .collect();
+                    names.iter().any(|n| n == "issues") && names.iter().any(|n| n == ".gitignore")
+                })
             },
             Duration::from_secs(3),
         )

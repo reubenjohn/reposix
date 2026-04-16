@@ -94,8 +94,7 @@ async fn poll_healthz_async(timeout: Duration) -> bool {
         if http
             .get(HEALTHZ_URL)
             .await
-            .map(|r| r.status().is_success())
-            .unwrap_or(false)
+            .is_ok_and(|r| r.status().is_success())
         {
             return true;
         }

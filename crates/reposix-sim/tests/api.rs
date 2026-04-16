@@ -56,8 +56,7 @@ async fn spawn_sim(rate_limit_rps: u32) -> (String, NamedTempFile, tokio::task::
         if http
             .get(format!("{base_url}/healthz"))
             .await
-            .map(|r| r.status().is_success())
-            .unwrap_or(false)
+            .is_ok_and(|r| r.status().is_success())
         {
             return (base_url, db, handle);
         }

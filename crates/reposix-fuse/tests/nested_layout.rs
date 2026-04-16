@@ -162,17 +162,15 @@ fn boot_mount(server_uri: String) -> (reposix_fuse::Mount, std::path::PathBuf, t
     let mp = mount_path.clone();
     let ok = wait_for(
         move || {
-            std::fs::read_dir(&mp)
-                .map(|it| {
-                    let names: Vec<_> = it
-                        .flatten()
-                        .map(|e| e.file_name().to_string_lossy().into_owned())
-                        .collect();
-                    names.iter().any(|n| n == ".gitignore")
-                        && names.iter().any(|n| n == "pages")
-                        && names.iter().any(|n| n == "tree")
-                })
-                .unwrap_or(false)
+            std::fs::read_dir(&mp).is_ok_and(|it| {
+                let names: Vec<_> = it
+                    .flatten()
+                    .map(|e| e.file_name().to_string_lossy().into_owned())
+                    .collect();
+                names.iter().any(|n| n == ".gitignore")
+                    && names.iter().any(|n| n == "pages")
+                    && names.iter().any(|n| n == "tree")
+            })
         },
         Duration::from_secs(5),
     );

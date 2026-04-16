@@ -139,11 +139,7 @@ fn stat_returns_within_7s_after_backend_dies() {
     // stat call. Phase 13 moved issue files from `mount/<id>.md` to
     // `mount/issues/<padded-id>.md`.
     let ready = wait_for(
-        || {
-            std::fs::read_dir(mount_path.join("issues"))
-                .map(|it| it.flatten().count() >= 3)
-                .unwrap_or(false)
-        },
+        || std::fs::read_dir(mount_path.join("issues")).is_ok_and(|it| it.flatten().count() >= 3),
         Duration::from_secs(3),
     );
     assert!(ready, "mount did not expose 3 entries within 3s");
