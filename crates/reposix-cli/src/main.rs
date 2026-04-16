@@ -29,6 +29,7 @@ mod sim;
 // Modules shared with the lib target — imported via the library crate path.
 use reposix_cli::list;
 use reposix_cli::refresh;
+use reposix_cli::spaces;
 
 /// reposix — git-backed FUSE filesystem for autonomous agents.
 #[derive(Debug, Parser)]
@@ -144,6 +145,17 @@ enum Cmd {
         #[arg(long)]
         offline: bool,
     },
+    /// List all readable Confluence spaces as a table of KEY / NAME / URL.
+    ///
+    /// Only `--backend confluence` is supported (sim + github have no space
+    /// concept). Requires `ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`,
+    /// `REPOSIX_CONFLUENCE_TENANT` env vars plus `REPOSIX_ALLOWED_ORIGINS`
+    /// including the tenant origin. Output is pipe-friendly fixed-width text.
+    Spaces {
+        /// Which backend to query. Only `confluence` is currently supported.
+        #[arg(long, value_enum, default_value_t = list::ListBackend::Confluence)]
+        backend: list::ListBackend,
+    },
     /// Print the version.
     Version,
 }
@@ -201,5 +213,6 @@ async fn main() -> Result<()> {
             })
             .await
         }
+        Cmd::Spaces { backend } => spaces::run(backend).await,
     }
 }
