@@ -6,7 +6,7 @@
 //! `REPOSIX_ALLOWED_ORIGINS` containing the tenant origin.
 
 use anyhow::{bail, Context, Result};
-use reposix_confluence::{ConfluenceBackend, ConfluenceCreds, ConfSpaceSummary};
+use reposix_confluence::{ConfSpaceSummary, ConfluenceBackend, ConfluenceCreds};
 
 use crate::list::{read_confluence_env, ListBackend};
 
@@ -95,12 +95,17 @@ mod tests {
     async fn sim_backend_returns_clear_error() {
         let err = run(ListBackend::Sim).await.expect_err("sim must fail");
         let msg = format!("{err}");
-        assert!(msg.contains("confluence"), "error must point user to confluence: {msg}");
+        assert!(
+            msg.contains("confluence"),
+            "error must point user to confluence: {msg}"
+        );
     }
 
     #[tokio::test]
     async fn github_backend_returns_clear_error() {
-        let err = run(ListBackend::Github).await.expect_err("github must fail");
+        let err = run(ListBackend::Github)
+            .await
+            .expect_err("github must fail");
         let msg = format!("{err}");
         assert!(msg.contains("github"), "error must mention github: {msg}");
     }
