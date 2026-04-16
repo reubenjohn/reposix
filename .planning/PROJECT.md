@@ -41,12 +41,12 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 
 **JIRA integration (v0.8.0 target)**
 - [ ] **RENAME-01: `IssueBackend` → `BackendConnector` trait rename.** The current name is accurate for GitHub Issues but misleading for Confluence pages (and anything non-issue). Rename across all crates; update docs and ADR-004.
-- [ ] **EXT-01: `Issue.extensions` field.** Add `extensions: BTreeMap<String, String>` to `Issue` for backend-specific metadata that doesn't map to canonical fields (e.g. JIRA key, issue type, priority). Serialized as a flat YAML map in frontmatter; empty map omitted.
+- [ ] **EXT-01: `Issue.extensions` field.** Add `extensions: BTreeMap<String, serde_yaml::Value>` to `Issue` for typed backend metadata (strings, ints, booleans, nested maps) that doesn't map to canonical fields (e.g. JIRA key, issue type, priority, hierarchy_level). Serialized as a YAML map in frontmatter; empty map omitted.
 - [ ] **JIRA-01: `reposix-jira` crate — read-only `BackendConnector` impl.** JIRA Cloud REST v3 (`https://{instance}.atlassian.net/rest/api/3`). Basic auth with `email:JIRA_API_TOKEN`.
 - [ ] **JIRA-02: JQL pagination + status-category mapping + subtask hierarchy.** `project = {KEY} ORDER BY updated DESC`, offset-based (max 100/page). Status mapping via `statusCategory.key`. Subtask `parent` → `Issue.parent_id`.
 - [ ] **JIRA-03: JIRA-specific `extensions` in frontmatter.** `jira_key` ("PROJ-42"), `issue_type` ("Story"), `priority` ("Medium"), `status_name` (raw pre-mapping string).
 - [ ] **JIRA-04: CLI dispatch.** `list --backend jira`, `mount --backend jira --project <PROJECT_KEY>`. Env vars: `JIRA_EMAIL`, `JIRA_API_TOKEN`, `REPOSIX_JIRA_INSTANCE`.
-- [ ] **JIRA-05: Tests + docs + ADR.** Wiremock unit tests ≥5. Contract test (always-on wiremock + `#[ignore]`-gated live). `docs/reference/jira.md`. `docs/decisions/004-jira-issue-mapping.md`.
+- [ ] **JIRA-05: Tests + docs + ADRs.** 12 enumerated wiremock tests (see Phase 28 roadmap §Test matrix). Contract test (always-on wiremock + `#[ignore]`-gated live). `docs/reference/jira.md`. Two ADRs: `docs/decisions/004-backend-connector-rename.md` (naming rationale + alternatives) and `docs/decisions/005-jira-issue-mapping.md` (ID vs key, status+resolution mapping, ADF stripping, version synthesis).
 - [ ] **JIRA-06 (stretch): JIRA write path.** `create_issue` → POST, `update_issue` → PUT, `delete_or_close` → Transitions API. Audit log for all mutations.
 
 ### Out of Scope
