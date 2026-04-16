@@ -75,9 +75,9 @@
 - [x] **BENCH-04**: `docs/why.md` honest-framing section updated with real tokenization numbers
 
 ### Confluence Comments (OP-9a)
-- [ ] **CONF-01**: `cat mount/pages/<id>.comments/<comment-id>.md` returns comment body in Markdown frontmatter format
-- [ ] **CONF-02**: `ls mount/pages/<id>.comments/` lists all inline + footer comments for that page
-- [ ] **CONF-03**: Comments are read-only (no write path in this phase)
+- [x] **CONF-01**: `cat mount/pages/<id>.comments/<comment-id>.md` returns comment body in Markdown frontmatter format
+- [x] **CONF-02**: `ls mount/pages/<id>.comments/` lists all inline + footer comments for that page
+- [x] **CONF-03**: Comments are read-only (no write path in this phase)
 - [ ] **SPACES-01**: `reposix spaces --backend confluence` subcommand lists all readable Confluence spaces in a table (KEY / NAME / URL)
 
 ### Confluence Whiteboards / Attachments / Folders (OP-9b)

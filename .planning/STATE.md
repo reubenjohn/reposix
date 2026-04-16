@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.6.0
 milestone_name: — Write Path + Full Sitemap
 status: executing
-stopped_at: context exhaustion at 90% (2026-04-16)
-last_updated: "2026-04-16T19:10:35.904Z"
-last_activity: 2026-04-16 -- Phase 23 execution started
+stopped_at: Completed 23-03-PLAN.md
+last_updated: "2026-04-16T19:47:57.432Z"
+last_activity: 2026-04-16
 progress:
-  total_phases: 11
-  completed_phases: 5
-  total_plans: 19
-  completed_plans: 21
+  total_phases: 6
+  completed_phases: 3
+  total_plans: 8
+  completed_plans: 13
   percent: 100
 ---
 
@@ -55,11 +55,11 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 ## Current Position
 
 Phase: 23 (op-9a-confluence-comments-exposed-as-pages-id-comments-comme) — EXECUTING
-Plan: 1 of 3
+Plan: 2 of 3
 Cursor: **Phase 20 SHIPPED. `reposix refresh` subcommand + git-diff cache complete; REFRESH-01..05 closed.
 Milestone v0.6.0 complete (Phases 16-20). Phases 21+ are v0.7.0 scope.**
-Status: Executing Phase 23
-Last activity: 2026-04-16 -- Phase 23 execution started
+Status: Ready to execute
+Last activity: 2026-04-16
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
@@ -108,6 +108,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 | Phase 21 PD | 12 | 1 tasks | 1 files |
 | Phase 21 PE | 25m | 3 tasks | 3 files |
 | Phase 22 PC | 30 | 3 tasks | 9 files |
+| Phase 23 P03 | 90 | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -166,6 +167,9 @@ additions (2026-04-13):
 - [Phase 22]: GITHUB_FIXTURE/CONFLUENCE_FIXTURE resolved dynamically in main() from FIXTURES so monkeypatching works in tests
 - [Phase 22]: Auto-approved checkpoint C2 (dark-factory): 89.1% reduction confirmed via Anthropic count_tokens API
 - [Phase 22]: BENCH-03 cold-mount matrix deferred — not in plan scope; stretch goal per 22-RESEARCH.md
+- [Phase 23]: comment_fetcher as separate Mount::open param (not in MountConfig) because MountConfig is Serde-serializable and Arc<ConfluenceBackend> is not
+- [Phase 23]: CommentsDir inode allocated only after registry confirms page exists — prevents DoS inode growth from garbage .comments lookups
+- [Phase 23]: readdir(Bucket) does NOT emit .comments entries — only explicit lookup materializes CommentsDir to avoid list_comments DoS amplifier
 
 ### Pending Todos
 
@@ -186,8 +190,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-16T19:10:35.892Z
-Stopped at: context exhaustion at 90% (2026-04-16)
+Last session: 2026-04-16T19:47:57.428Z
+Stopped at: Completed 23-03-PLAN.md
 Wave-level commit trail on `main` (Phase 16):
 Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
 Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).
