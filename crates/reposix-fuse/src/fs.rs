@@ -193,9 +193,7 @@ fn backend_err_to_fetch(e: reposix_core::Error) -> FetchError {
                 .strip_prefix("version mismatch:")
                 .unwrap_or(&msg)
                 .trim_start();
-            let current = serde_json::from_str::<ConflictBody>(tail)
-                .map(|b| b.current)
-                .unwrap_or(0);
+            let current = serde_json::from_str::<ConflictBody>(tail).map_or(0, |b| b.current);
             FetchError::Conflict { current }
         }
         other => FetchError::Core(other.to_string()),
@@ -747,10 +745,7 @@ impl ReposixFs {
         // Non-hierarchy backends (sim/github) still get a `tree/` overlay
         // if at least one loaded issue carries a `parent_id` — useful for
         // future shims but harmless when absent.
-        self.tree
-            .read()
-            .map(|snap| !snap.is_empty())
-            .unwrap_or(false)
+        self.tree.read().is_ok_and(|snap| !snap.is_empty())
     }
 
     /// Return a `FileAttr` for a real issue file.
@@ -1068,11 +1063,7 @@ impl ReposixFs {
         }
         let issue_count = self.cache.len();
         let tree_present = self.should_emit_tree();
-        let label_count = self
-            .label_snapshot
-            .read()
-            .map(|g| g.label_count)
-            .unwrap_or(0);
+        let label_count = self.label_snapshot.read().map_or(0, |g| g.label_count);
         let rendered = Arc::new(render_mount_root_index(
             self.backend.name(),
             &self.project,

@@ -111,10 +111,8 @@ impl LabelSnapshot {
         let mut symlink_targets: HashMap<u64, String> = HashMap::new();
         let mut sym_counter: u64 = 0;
 
-        for (dir_offset, ((_, issues_in_label), (_, dir_slug))) in label_vec
-            .into_iter()
-            .zip(deduped_label_slugs.into_iter())
-            .enumerate()
+        for (dir_offset, ((_, issues_in_label), (_, dir_slug))) in
+            label_vec.into_iter().zip(deduped_label_slugs).enumerate()
         {
             let dir_ino = LABELS_DIR_INO_BASE + dir_offset as u64;
 
