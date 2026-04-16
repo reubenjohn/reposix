@@ -19,7 +19,7 @@
 //!      itself killed `stat`; both prove we didn't hang silently).
 //! 6. Drop the mount, assert unmount within 3s.
 
-#![cfg(any(target_os = "linux", target_os = "macos"))]
+#![cfg(all(any(target_os = "linux", target_os = "macos"), feature = "fuse-mount-tests"))]
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -76,7 +76,6 @@ fn wait_for<F: FnMut() -> bool>(mut pred: F, budget: Duration) -> bool {
 }
 
 #[test]
-#[ignore = "requires FUSE + fusermount3 + coreutils timeout; CI runs under --ignored"]
 fn stat_returns_within_7s_after_backend_dies() {
     // Drive wiremock on a current-thread runtime so setup and teardown
     // happen on this test's thread.

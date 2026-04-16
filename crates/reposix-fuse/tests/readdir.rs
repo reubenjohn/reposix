@@ -11,7 +11,7 @@
 //! the mount lives on a `tempfile::tempdir()`. Gated `target_os = "linux"`
 //! because fuser/FUSE3 mounts only exist on Linux.
 
-#![cfg(target_os = "linux")]
+#![cfg(all(target_os = "linux", feature = "fuse-mount-tests"))]
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};

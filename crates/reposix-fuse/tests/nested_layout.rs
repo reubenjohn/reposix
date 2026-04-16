@@ -5,7 +5,7 @@
 //! host. Run with:
 //!
 //! ```bash
-//! cargo test -p reposix-fuse --release -- --ignored --test-threads=1 nested_layout
+//! cargo test -p reposix-fuse --release --features fuse-mount-tests -- --test-threads=1 nested_layout
 //! ```
 //!
 //! Why `--test-threads=1`: each test mounts FUSE in a tempdir; concurrent
@@ -28,7 +28,7 @@
 //! the default allowlist in `reposix_core::http` (which already includes
 //! `127.0.0.1:*`). Nothing to configure externally.
 
-#![cfg(any(target_os = "linux", target_os = "macos"))]
+#![cfg(all(any(target_os = "linux", target_os = "macos"), feature = "fuse-mount-tests"))]
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -234,7 +234,6 @@ fn demo_space_fixture() -> Vec<Value> {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-#[ignore = "requires FUSE + fusermount3; run with --ignored --test-threads=1"]
 async fn nested_layout_three_level_hierarchy() {
     let server = MockServer::start().await;
     install_confluence_fixtures(&server, &demo_space_fixture()).await;
@@ -364,7 +363,6 @@ async fn nested_layout_three_level_hierarchy() {
 // ------------------------------------------------------------------ collision
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-#[ignore = "requires FUSE + fusermount3; run with --ignored --test-threads=1"]
 async fn nested_layout_collision_gets_suffixed() {
     // Parent with 3 children of identical title. Wave-A's `dedupe_siblings`
     // contract: ascending-IssueId keeps the bare slug; the next two get
@@ -427,7 +425,6 @@ async fn nested_layout_collision_gets_suffixed() {
 // ------------------------------------------------------------------ cycle
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-#[ignore = "requires FUSE + fusermount3; run with --ignored --test-threads=1"]
 async fn nested_layout_cycle_does_not_hang() {
     // Two-page cycle: A.parent=B, B.parent=A. Wave-B2's cycle detector
     // must break the cycle and expose both pages as tree roots; the mount
@@ -490,7 +487,6 @@ async fn nested_layout_cycle_does_not_hang() {
 // ------------------------------------------------------------------ gitignore content
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-#[ignore = "requires FUSE + fusermount3; run with --ignored --test-threads=1"]
 async fn nested_layout_gitignore_content_exact() {
     // Minimal fixture: 1 root page (no children needed). We only care
     // about `.gitignore` here, but the mount still needs the backend to
@@ -521,7 +517,6 @@ async fn nested_layout_gitignore_content_exact() {
 // ------------------------------------------------------------------ depth
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-#[ignore = "requires FUSE + fusermount3; run with --ignored --test-threads=1"]
 async fn nested_layout_readlink_target_depth_is_correct() {
     // 3-level chain: 1 → 2 → 3. Each non-leaf becomes a dir; the leaf
     // is a symlink at depth 2.

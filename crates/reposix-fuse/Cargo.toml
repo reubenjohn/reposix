@@ -40,6 +40,13 @@ dashmap.workspace = true
 # `#![forbid(unsafe_code)]` intact at the crate root.
 rustix = { version = "0.38", features = ["process"] }
 
+[features]
+# Enable the FUSE-mounting integration tests. Off by default so `cargo test
+# --workspace` never mounts FUSE (unsafe in WSL2; requires fusermount3).
+# CI enables this in the dedicated `integration (mounted FS)` job.
+# Green-gauntlet --full enables it locally when fusermount3 is on PATH.
+fuse-mount-tests = []
+
 [dev-dependencies]
 wiremock = "0.6"
 tempfile = "3"

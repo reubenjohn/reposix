@@ -99,11 +99,11 @@ run_gauntlet() {
         "${YELLOW}⊘${NC}" "${YELLOW}skipped${NC}"
     fi
     if command -v fusermount3 >/dev/null 2>&1; then
-      run_gate fuse-ignored \
-        'cargo test --release -p reposix-fuse --locked -- --ignored --test-threads=1' \
+      run_gate fuse-mount-tests \
+        'cargo test --release -p reposix-fuse --locked --features fuse-mount-tests -- --test-threads=1' \
         || failed=$((failed + 1))
     else
-      printf '%b fuse-ignored %b — fusermount3 not on PATH\n' \
+      printf '%b fuse-mount-tests %b — fusermount3 not on PATH\n' \
         "${YELLOW}⊘${NC}" "${YELLOW}skipped${NC}"
     fi
   fi

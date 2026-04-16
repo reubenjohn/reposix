@@ -79,7 +79,7 @@ jobs:
         # — those need real credentials and have their own dedicated
         # jobs (`integration (contract, real github)`,
         # `integration (contract, real confluence)`).
-        run: cargo test -p reposix-fuse --release --locked -- --ignored --test-threads=1
+        run: cargo test -p reposix-fuse --release --locked --features fuse-mount-tests -- --test-threads=1
 
   demos-smoke:
     name: demos smoke

@@ -55,8 +55,10 @@ cargo run -p reposix-sim                                  # start simulator on :
 cargo run -p reposix-fuse -- /tmp/reposix-mnt             # mount (when phase 3 lands)
 cargo run -p reposix-cli -- demo                          # canonical end-to-end demo
 
-# Integration tests (require FUSE — gated behind --ignored)
-cargo test --workspace --release -- --ignored --test-threads=1
+# FUSE integration tests — require fusermount3; NEVER run without the feature flag.
+# `cargo test --workspace` intentionally excludes these (unsafe in WSL2, requires /dev/fuse).
+# The feature gate is compile-time: without it, FUSE test code is not in the binary at all.
+cargo test -p reposix-fuse --release --features fuse-mount-tests -- --test-threads=1
 ```
 
 ## GSD workflow
