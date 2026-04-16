@@ -132,4 +132,23 @@ if [[ "$hit" -gt 0 ]]; then
 fi
 
 log "${GREEN}✓${NC} no credential prefixes detected."
+
+# --- Rust quality gates ---------------------------------------------------
+# Run fmt + clippy before anything reaches CI. Fast checks only; FUSE
+# integration tests require fusermount3 and are gated behind --features.
+log "${YELLOW}→${NC} running cargo fmt check..."
+if ! cargo fmt --all -- --check 2>&1; then
+  printf '%b\n' "${RED}✖ pre-push rejected:${NC} cargo fmt --all -- --check failed." >&2
+  printf '%b\n' "${YELLOW}→${NC} Run: cargo fmt --all" >&2
+  exit 1
+fi
+log "${GREEN}✓${NC} fmt clean."
+
+log "${YELLOW}→${NC} running cargo clippy..."
+if ! cargo clippy --workspace --all-targets -- -D warnings 2>&1; then
+  printf '%b\n' "${RED}✖ pre-push rejected:${NC} cargo clippy reported errors." >&2
+  exit 1
+fi
+log "${GREEN}✓${NC} clippy clean."
+
 exit 0
