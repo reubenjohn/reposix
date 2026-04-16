@@ -634,13 +634,15 @@ Plans:
 
 ### Phase 24: OP-9b — Confluence whiteboards attachments and folders (v0.7.0)
 
-**Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
-**Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
+**Goal:** Surface Confluence whiteboards (`whiteboards/<id>.json`), page attachments (`pages/<id>.attachments/<filename>`), and folder-parented page hierarchy (`tree/` overlay) in the FUSE mount. Expands the multi-content-type overlay from Phase 23.
+**Requirements**: CONF-04, CONF-05, CONF-06
 **Depends on:** Phase 23
-**Plans:** 2 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 24 to break down)
+- [ ] 24-01-PLAN.md — `list_attachments` + `list_whiteboards` + `download_attachment` methods; `ConfAttachment`/`ConfWhiteboard` structs; `translate()` folder fix (Wave 1)
+- [ ] 24-02-PLAN.md — FUSE overlay: `AttachmentsSnapshot`, 4 new `InodeKind` variants + dispatch (Wave 2)
+- [ ] 24-03-PLAN.md — Green gauntlet + CHANGELOG + STATE.md + SUMMARY (Wave 3)
 
 ### Phase 25: OP-11 — docs reorg: InitialReport.md and AgenticEngineeringReference.md to docs/research/ plus root cleanup (v0.7.0)
 
