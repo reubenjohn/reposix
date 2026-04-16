@@ -155,6 +155,7 @@ fn boot_mount(server_uri: String) -> (reposix_fuse::Mount, std::path::PathBuf, t
             read_only: true,
         },
         backend,
+        None,
     )
     .expect("mount opened");
 

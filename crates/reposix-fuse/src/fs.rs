@@ -89,10 +89,11 @@ use thiserror::Error;
 use tokio::runtime::Runtime;
 use tracing::warn;
 
+use crate::comments::{render_comment_file, CommentsSnapshot};
 use crate::inode::{
-    InodeRegistry, BUCKET_DIR_INO, BUCKET_INDEX_INO, FIRST_ISSUE_INODE, GITIGNORE_INO,
-    LABELS_ROOT_INO, ROOT_INDEX_INO, ROOT_INO, TREE_INDEX_ALLOC_END, TREE_INDEX_ALLOC_START,
-    TREE_ROOT_INO,
+    InodeRegistry, BUCKET_DIR_INO, BUCKET_INDEX_INO, COMMENTS_DIR_INO_BASE,
+    COMMENTS_FILE_INO_BASE, FIRST_ISSUE_INODE, GITIGNORE_INO, LABELS_ROOT_INO, ROOT_INDEX_INO,
+    ROOT_INO, TREE_INDEX_ALLOC_END, TREE_INDEX_ALLOC_START, TREE_ROOT_INO,
 };
 use crate::labels::{LabelSnapshot, LABELS_DIR_INO_BASE, LABELS_SYMLINK_INO_BASE};
 use crate::tree::{TreeSnapshot, TREE_DIR_INO_BASE, TREE_SYMLINK_INO_BASE};
@@ -506,8 +507,14 @@ enum InodeKind {
     LabelsRoot,
     /// An interior per-label directory (`LABELS_DIR_INO_BASE..LABELS_SYMLINK_INO_BASE`).
     LabelDir,
-    /// A label leaf symlink (`LABELS_SYMLINK_INO_BASE..`).
+    /// A label leaf symlink (`LABELS_SYMLINK_INO_BASE..COMMENTS_DIR_INO_BASE`).
     LabelSymlink,
+    /// A synthesized `.comments/` directory for a specific page
+    /// (`COMMENTS_DIR_INO_BASE..COMMENTS_FILE_INO_BASE`).
+    CommentsDir,
+    /// A read-only comment file inside a `.comments/` directory
+    /// (`COMMENTS_FILE_INO_BASE..`).
+    CommentFile,
     /// Unassigned — surface as ENOENT.
     Unknown,
 }
@@ -523,6 +530,12 @@ impl InodeKind {
             ROOT_INDEX_INO => Self::RootIndex,
             LABELS_ROOT_INO => Self::LabelsRoot,
             n if (TREE_INDEX_ALLOC_START..=TREE_INDEX_ALLOC_END).contains(&n) => Self::TreeDirIndex,
+            // Comments ranges MUST come before the Label/TreeSymlink catch-alls
+            // because COMMENTS_DIR_INO_BASE (0x18_0000_0000) and
+            // COMMENTS_FILE_INO_BASE (0x1C_0000_0000) are numerically above
+            // LABELS_SYMLINK_INO_BASE (0x14_0000_0000).
+            n if n >= COMMENTS_FILE_INO_BASE => Self::CommentFile,
+            n if n >= COMMENTS_DIR_INO_BASE => Self::CommentsDir,
             // Label ranges MUST appear before the TreeSymlink catch-all because
             // LABELS_DIR_INO_BASE (0x10_0000_0000) and LABELS_SYMLINK_INO_BASE
             // (0x14_0000_0000) are numerically above TREE_SYMLINK_INO_BASE
@@ -626,6 +639,20 @@ pub struct ReposixFs {
     /// Monotonic inode allocator for tree-dir `_INDEX.md` files.
     /// Starts at `TREE_INDEX_ALLOC_START` (7); capped at `TREE_INDEX_ALLOC_END`.
     tree_index_alloc: AtomicU64,
+    /// Lazy per-page comments overlay (Phase 23). Always present; populated
+    /// on-demand when a `CommentsDir` is first `readdir`d or `lookup`d.
+    ///
+    /// NOTE: this cache is NOT invalidated on `refresh_issues`. Comments
+    /// fetched during the mount's lifetime remain cached until unmount.
+    /// A future phase can add TTL-based invalidation; for v0.7.0 the
+    /// lazy-once-per-page semantics match `LabelSnapshot`'s granularity and
+    /// keep the cost model explicit for agent workloads.
+    comment_snapshot: Arc<CommentsSnapshot>,
+    /// Optional Confluence backend used only for `list_comments` calls. Stored
+    /// alongside `backend: Arc<dyn IssueBackend>` because `list_comments` is
+    /// NOT on the `IssueBackend` trait (open question #1 → option a).
+    /// `None` for sim/github.
+    comment_fetcher: Option<Arc<reposix_confluence::ConfluenceBackend>>,
 }
 
 impl std::fmt::Debug for ReposixFs {
@@ -653,6 +680,7 @@ impl ReposixFs {
         backend: Arc<dyn IssueBackend>,
         origin: String,
         project: String,
+        comment_fetcher: Option<Arc<reposix_confluence::ConfluenceBackend>>,
     ) -> anyhow::Result<Self> {
         let rt = Arc::new(
             tokio::runtime::Builder::new_multi_thread()
@@ -733,6 +761,8 @@ impl ReposixFs {
             tree_index_inodes: DashMap::new(),
             tree_index_ino_reverse: DashMap::new(),
             tree_index_alloc: AtomicU64::new(TREE_INDEX_ALLOC_START),
+            comment_snapshot: Arc::new(CommentsSnapshot::new()),
+            comment_fetcher,
         })
     }
 
@@ -1078,6 +1108,56 @@ impl ReposixFs {
         }
         rendered
     }
+
+    /// Blocking call that fetches comments for `page_ino`, renders each,
+    /// and installs them in `comment_snapshot`. Called on first access of a
+    /// `CommentsDir` — `readdir` or `lookup`.
+    ///
+    /// Wraps `list_comments` in a 5-second timeout (SG-07). On timeout or
+    /// transport error, returns `FetchError::Timeout` / `Other`. Callers
+    /// translate to `EIO`.
+    ///
+    /// # Errors
+    /// Returns `FetchError::Other` if `comment_fetcher` is `None` (sim/github
+    /// mount) or if the page inode is unknown. Returns `FetchError::Timeout`
+    /// if the backend does not respond within 5 seconds.
+    fn fetch_comments_for_page(&self, page_ino: u64) -> Result<(), FetchError> {
+        let Some(fetcher) = self.comment_fetcher.clone() else {
+            // Sim/github mount: CommentsDir should never have been
+            // materialized for these, but defend anyway.
+            return Err(FetchError::Core(
+                "comment_fetcher is None; mount backend does not support comments".to_owned(),
+            ));
+        };
+        let Some(page_id) = self.registry.lookup_ino(page_ino) else {
+            return Err(FetchError::Core(format!(
+                "page_ino {page_ino} does not map to an IssueId"
+            )));
+        };
+        let res = self.rt.block_on(async {
+            tokio::time::timeout(
+                std::time::Duration::from_secs(5),
+                fetcher.list_comments(page_id.0),
+            )
+            .await
+        });
+        let comments = match res {
+            Ok(Ok(v)) => v,
+            Ok(Err(e)) => return Err(backend_err_to_fetch(e)),
+            Err(_) => return Err(FetchError::Timeout),
+        };
+        let mut entries: Vec<(String, Vec<u8>)> = Vec::with_capacity(comments.len());
+        for c in &comments {
+            let Some(rendered) = render_comment_file(c) else {
+                // Non-numeric id / parent_id → skipped (tracing::warn! inside render_comment_file)
+                continue;
+            };
+            let filename = format!("{}.md", c.id);
+            entries.push((filename, rendered));
+        }
+        self.comment_snapshot.install_entries(page_ino, entries);
+        Ok(())
+    }
 }
 
 fn uid_safe() -> u32 {
@@ -1106,6 +1186,9 @@ impl Filesystem for ReposixFs {
         Ok(())
     }
 
+    // `getattr` covers every inode kind in a single match — splitting it would
+    // require forwarding state and obscure the dispatch table. Allow the lint.
+    #[allow(clippy::too_many_lines)]
     fn getattr(&self, _req: &Request, ino: INodeNo, _fh: Option<FileHandle>, reply: ReplyAttr) {
         let ino_u = ino.0;
         match InodeKind::classify(ino_u) {
@@ -1181,6 +1264,23 @@ impl Filesystem for ReposixFs {
                     reply.error(fuser::Errno::from_i32(libc::EIO));
                 }
             }
+            InodeKind::CommentsDir => {
+                if self.comment_snapshot.page_of_dir(ino_u).is_some() {
+                    let mut attr = self.labels_attr;
+                    attr.ino = INodeNo(ino_u);
+                    reply.attr(&ATTR_TTL, &attr);
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                }
+            }
+            InodeKind::CommentFile => {
+                if let Some(entry) = self.comment_snapshot.entry_by_file_ino(ino_u) {
+                    let attr = self.synthetic_file_attr(ino_u, entry.rendered.len() as u64);
+                    reply.attr(&ATTR_TTL, &attr);
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                }
+            }
             InodeKind::RootIndex => {
                 let bytes = self.mount_root_index_bytes_or_render();
                 let attr = self.synthetic_file_attr(ROOT_INDEX_INO, bytes.len() as u64);
@@ -1246,6 +1346,33 @@ impl Filesystem for ReposixFs {
                 if name_str == BUCKET_INDEX_FILENAME {
                     let bytes = self.bucket_index_bytes_or_render();
                     let attr = self.bucket_index_attr(bytes.len() as u64);
+                    reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
+                    return;
+                }
+                // Phase 23: `.comments` suffix materializes a CommentsDir inode.
+                // Only when the mount has a comment_fetcher (Confluence only).
+                if let Some(page_id_str) = name_str.strip_suffix(".comments") {
+                    if self.comment_fetcher.is_none() {
+                        reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                        return;
+                    }
+                    // page_id_str must be a numeric padded id (matches padded-id rules).
+                    let Ok(page_id_num) = page_id_str.trim_start_matches('0').parse::<u64>() else {
+                        reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                        return;
+                    };
+                    // Must correspond to a page we've seen. Refresh first so
+                    // newly-added pages are visible.
+                    if let Err(e) = self.refresh_issues() {
+                        warn!(error = %e, "refresh_issues failed on .comments lookup");
+                    }
+                    let Some(page_ino) = self.registry.lookup_id(IssueId(page_id_num)) else {
+                        reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                        return;
+                    };
+                    let dir_ino = self.comment_snapshot.ensure_dir(page_ino);
+                    let mut attr = self.labels_attr; // reuse read-only dir FileAttr shape (0o555)
+                    attr.ino = INodeNo(dir_ino);
                     reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
                     return;
                 }
@@ -1329,11 +1456,36 @@ impl Filesystem for ReposixFs {
                     reply.error(fuser::Errno::from_i32(libc::EIO));
                 }
             }
+            InodeKind::CommentsDir => {
+                // Ensure entries are fetched for this page.
+                let Some(page_ino) = self.comment_snapshot.page_of_dir(parent_u) else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    return;
+                };
+                if !self.comment_snapshot.is_fetched(page_ino) {
+                    if let Err(e) = self.fetch_comments_for_page(page_ino) {
+                        warn!(error = %e, page_ino, "lookup: fetch_comments_for_page failed");
+                        reply.error(fuser::Errno::from_i32(libc::EIO));
+                        return;
+                    }
+                }
+                let Some(entries) = self.comment_snapshot.entries_if_fetched(page_ino) else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    return;
+                };
+                if let Some(entry) = entries.iter().find(|e| e.filename == name_str) {
+                    let attr = self.synthetic_file_attr(entry.file_ino, entry.rendered.len() as u64);
+                    reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                }
+            }
             InodeKind::Gitignore
             | InodeKind::BucketIndex
             | InodeKind::RealFile
             | InodeKind::TreeSymlink
             | InodeKind::LabelSymlink
+            | InodeKind::CommentFile
             | InodeKind::RootIndex
             | InodeKind::TreeDirIndex => {
                 reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
@@ -1497,11 +1649,35 @@ impl Filesystem for ReposixFs {
                 }
                 entries
             }
+            InodeKind::CommentsDir => {
+                let Some(page_ino) = self.comment_snapshot.page_of_dir(ino_u) else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    return;
+                };
+                if !self.comment_snapshot.is_fetched(page_ino) {
+                    if let Err(e) = self.fetch_comments_for_page(page_ino) {
+                        warn!(error = %e, page_ino, "readdir: fetch_comments_for_page failed");
+                        reply.error(fuser::Errno::from_i32(libc::EIO));
+                        return;
+                    }
+                }
+                let mut entries: Vec<(u64, FileType, String)> = vec![
+                    (ino_u, FileType::Directory, ".".to_owned()),
+                    (BUCKET_DIR_INO, FileType::Directory, "..".to_owned()),
+                ];
+                if let Some(fetched) = self.comment_snapshot.entries_if_fetched(page_ino) {
+                    for e in fetched {
+                        entries.push((e.file_ino, FileType::RegularFile, e.filename));
+                    }
+                }
+                entries
+            }
             InodeKind::Gitignore
             | InodeKind::BucketIndex
             | InodeKind::RealFile
             | InodeKind::TreeSymlink
             | InodeKind::LabelSymlink
+            | InodeKind::CommentFile
             | InodeKind::RootIndex
             | InodeKind::TreeDirIndex => {
                 reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
@@ -1540,7 +1716,8 @@ impl Filesystem for ReposixFs {
             | InodeKind::TreeRoot
             | InodeKind::TreeDir
             | InodeKind::LabelsRoot
-            | InodeKind::LabelDir => {
+            | InodeKind::LabelDir
+            | InodeKind::CommentsDir => {
                 reply.error(fuser::Errno::from_i32(libc::EISDIR));
             }
             InodeKind::Gitignore => {
@@ -1588,6 +1765,16 @@ impl Filesystem for ReposixFs {
                 let start = usize::try_from(offset)
                     .unwrap_or(usize::MAX)
                     .min(bytes.len());
+                let end = start.saturating_add(size as usize).min(bytes.len());
+                reply.data(&bytes[start..end]);
+            }
+            InodeKind::CommentFile => {
+                let Some(entry) = self.comment_snapshot.entry_by_file_ino(ino_u) else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    return;
+                };
+                let bytes = entry.rendered.as_slice();
+                let start = usize::try_from(offset).unwrap_or(usize::MAX).min(bytes.len());
                 let end = start.saturating_add(size as usize).min(bytes.len());
                 reply.data(&bytes[start..end]);
             }
@@ -1697,8 +1884,12 @@ impl Filesystem for ReposixFs {
                 // rarely routes here (lchmod etc.), but reject defensively.
                 reply.error(fuser::Errno::from_i32(libc::EPERM));
             }
-            // Labels overlay is strictly read-only (T-19-04).
-            InodeKind::LabelsRoot | InodeKind::LabelDir | InodeKind::LabelSymlink => {
+            // Labels and comments overlays are strictly read-only (T-19-04, CONF-03 / T-23-03-08).
+            InodeKind::LabelsRoot
+            | InodeKind::LabelDir
+            | InodeKind::LabelSymlink
+            | InodeKind::CommentsDir
+            | InodeKind::CommentFile => {
                 reply.error(fuser::Errno::from_i32(libc::EROFS));
             }
             InodeKind::RealFile => {
@@ -1756,6 +1947,8 @@ impl Filesystem for ReposixFs {
             | InodeKind::BucketIndex
             | InodeKind::TreeSymlink
             | InodeKind::LabelSymlink
+            | InodeKind::CommentsDir
+            | InodeKind::CommentFile
             | InodeKind::RootIndex
             | InodeKind::TreeDirIndex => {
                 reply.error(fuser::Errno::from_i32(libc::EROFS));
@@ -2675,7 +2868,7 @@ mod tests {
             .unwrap()
             .block_on(async { wiremock::MockServer::start().await });
         let backend: Arc<dyn IssueBackend> = Arc::new(SimBackend::new(server.uri()).unwrap());
-        let fs = ReposixFs::new(backend, server.uri(), "demo".to_owned()).expect("ReposixFs::new");
+        let fs = ReposixFs::new(backend, server.uri(), "demo".to_owned(), None).expect("ReposixFs::new");
 
         let first = fs.tree_dir_index_ino(42);
         let second = fs.tree_dir_index_ino(42);
@@ -2792,5 +2985,34 @@ mod tests {
             InodeKind::TreeSymlink,
             "tree-symlink inode 0xC_0000_0001 must still classify as TreeSymlink"
         );
+    }
+}
+
+#[cfg(test)]
+mod comments_dispatch_tests {
+    use super::*;
+    use crate::comments::CommentsSnapshot;
+
+    #[test]
+    fn classify_returns_commentsdir_in_range() {
+        assert_eq!(InodeKind::classify(COMMENTS_DIR_INO_BASE), InodeKind::CommentsDir);
+        assert_eq!(InodeKind::classify(COMMENTS_DIR_INO_BASE + 100), InodeKind::CommentsDir);
+        assert_eq!(InodeKind::classify(COMMENTS_FILE_INO_BASE - 1), InodeKind::CommentsDir);
+        assert_eq!(InodeKind::classify(COMMENTS_FILE_INO_BASE), InodeKind::CommentFile);
+        assert_eq!(InodeKind::classify(COMMENTS_FILE_INO_BASE + 1_000_000), InodeKind::CommentFile);
+    }
+
+    #[test]
+    fn classify_labels_still_work_after_comments_arms() {
+        assert_eq!(InodeKind::classify(LABELS_SYMLINK_INO_BASE + 1), InodeKind::LabelSymlink);
+        assert_eq!(InodeKind::classify(LABELS_DIR_INO_BASE + 1), InodeKind::LabelDir);
+    }
+
+    #[test]
+    fn comments_snapshot_integrates_with_classify() {
+        // Allocate a dir inode via the snapshot; classify must round-trip.
+        let snap = CommentsSnapshot::new();
+        let dir_ino = snap.ensure_dir(42);
+        assert_eq!(InodeKind::classify(dir_ino), InodeKind::CommentsDir);
     }
 }

@@ -70,6 +70,11 @@ impl Mount {
     /// are served by `backend` via the [`IssueBackend`] trait. The mount
     /// lives until the returned [`Mount`] is dropped.
     ///
+    /// When `comment_fetcher` is `Some(...)` (Confluence backend only), the
+    /// FUSE dispatch exposes a synthesized `<bucket>/<id>.comments/` directory
+    /// per page. When `None` (sim / github), comment dispatch is compiled in
+    /// but never materializes a `CommentsDir` inode.
+    ///
     /// # Errors
     /// Returns an error if:
     /// - the mount point cannot be created,
@@ -87,12 +92,16 @@ impl Mount {
     /// this `Mount` struct (fuser's `UmountOnDrop`) and (b) the CLI's
     /// `MountProcess` watchdog (`fusermount3 -u <mount>`) as belt-and-
     /// suspenders.
-    pub fn open(cfg: &MountConfig, backend: Arc<dyn IssueBackend>) -> Result<Self> {
+    pub fn open(
+        cfg: &MountConfig,
+        backend: Arc<dyn IssueBackend>,
+        comment_fetcher: Option<Arc<reposix_confluence::ConfluenceBackend>>,
+    ) -> Result<Self> {
         if !cfg.mount_point.exists() {
             std::fs::create_dir_all(&cfg.mount_point)
                 .with_context(|| format!("create mount point {}", cfg.mount_point.display()))?;
         }
-        let fs = ReposixFs::new(backend, cfg.origin.clone(), cfg.project.clone())?;
+        let fs = ReposixFs::new(backend, cfg.origin.clone(), cfg.project.clone(), comment_fetcher)?;
 
         // Phase S: `MountOption::RO` is conditional. When `cfg.read_only` is
         // true we mount RO (the kernel refuses writes at the VFS layer before
