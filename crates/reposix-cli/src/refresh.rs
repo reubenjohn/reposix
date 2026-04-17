@@ -15,6 +15,7 @@ use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::BackendConnector as _;
 use reposix_github::GithubReadOnlyBackend;
+use reposix_jira::{JiraBackend, JiraCreds};
 
 use crate::cache_db;
 use crate::list::ListBackend;
@@ -44,6 +45,7 @@ impl RefreshConfig {
             ListBackend::Sim => "simulator",
             ListBackend::Github => "github",
             ListBackend::Confluence => "confluence",
+            ListBackend::Jira => "jira",
         }
     }
 }
@@ -106,7 +108,7 @@ pub fn run_refresh_inner(
     // Determine the bucket directory name.
     let bucket = match cfg.backend {
         ListBackend::Confluence => "pages",
-        ListBackend::Sim | ListBackend::Github => "issues",
+        ListBackend::Sim | ListBackend::Github | ListBackend::Jira => "issues",
     };
 
     // Ensure the .reposix and bucket directories exist.
@@ -213,6 +215,26 @@ async fn fetch_issues(cfg: &RefreshConfig) -> Result<Vec<reposix_core::Issue>> {
                 format!(
                     "confluence list_issues space_key={} \
                      (REPOSIX_ALLOWED_ORIGINS must include https://{tenant}.atlassian.net)",
+                    cfg.project
+                )
+            })
+        }
+        ListBackend::Jira => {
+            let email = std::env::var("JIRA_EMAIL").unwrap_or_default();
+            let token = std::env::var("JIRA_API_TOKEN").unwrap_or_default();
+            let instance = std::env::var("REPOSIX_JIRA_INSTANCE").unwrap_or_default();
+            if email.is_empty() || token.is_empty() || instance.is_empty() {
+                bail!(
+                    "jira backend requires JIRA_EMAIL, JIRA_API_TOKEN, \
+                     and REPOSIX_JIRA_INSTANCE env vars"
+                );
+            }
+            let creds = JiraCreds { email, api_token: token };
+            let b = JiraBackend::new(creds, &instance).context("build JiraBackend")?;
+            b.list_issues(&cfg.project).await.with_context(|| {
+                format!(
+                    "jira list_issues project_key={} \
+                     (REPOSIX_ALLOWED_ORIGINS must include https://{instance}.atlassian.net)",
                     cfg.project
                 )
             })

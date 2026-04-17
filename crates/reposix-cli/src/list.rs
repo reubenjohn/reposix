@@ -21,8 +21,9 @@ use anyhow::{Context, Result};
 use clap::ValueEnum;
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::{Issue, BackendConnector};
+use reposix_core::{BackendConnector, Issue};
 use reposix_github::GithubReadOnlyBackend;
+use reposix_jira::{JiraBackend, JiraCreds};
 
 /// Backend choice for `reposix list --backend`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
@@ -36,6 +37,11 @@ pub enum ListBackend {
     /// `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT` env vars plus
     /// `REPOSIX_ALLOWED_ORIGINS` that includes the tenant origin.
     Confluence,
+    /// Real Atlassian JIRA Cloud REST v3. `--project` is the JIRA project
+    /// key (e.g. `PROJ`). Requires `JIRA_EMAIL`, `JIRA_API_TOKEN`,
+    /// `REPOSIX_JIRA_INSTANCE` env vars plus `REPOSIX_ALLOWED_ORIGINS`
+    /// that includes `https://{instance}.atlassian.net`.
+    Jira,
 }
 
 /// Output formats accepted by `reposix list --format`.
@@ -99,6 +105,21 @@ pub async fn run(
                     format!(
                         "confluence list_issues space_key={project} (REPOSIX_ALLOWED_ORIGINS must include https://{tenant}.atlassian.net)"
                     )
+                })?
+            }
+        }
+        ListBackend::Jira => {
+            let (email, token, instance) = read_jira_env()
+                .context("jira backend requires JIRA_EMAIL, JIRA_API_TOKEN, and REPOSIX_JIRA_INSTANCE env vars")?;
+            let creds = JiraCreds { email, api_token: token };
+            let b = JiraBackend::new(creds, &instance).context("build JiraBackend")?;
+            if no_truncate {
+                b.list_issues_strict(&project).await.with_context(|| {
+                    format!("jira list_issues_strict project_key={project} (REPOSIX_ALLOWED_ORIGINS must include https://{instance}.atlassian.net)")
+                })?
+            } else {
+                b.list_issues(&project).await.with_context(|| {
+                    format!("jira list_issues project_key={project} (REPOSIX_ALLOWED_ORIGINS must include https://{instance}.atlassian.net)")
                 })?
             }
         }
@@ -188,9 +209,59 @@ pub(crate) fn read_confluence_env_from(
     Ok((email, token, tenant))
 }
 
+/// Read the three JIRA env vars in one shot from the live process environment.
+///
+/// Thin production adapter over the pure-fn [`read_jira_env_from`].
+///
+/// # Errors
+///
+/// Returns an error listing ALL missing env-var names if any are unset.
+pub(crate) fn read_jira_env() -> anyhow::Result<(String, String, String)> {
+    read_jira_env_from(|name| std::env::var(name).unwrap_or_default())
+}
+
+/// Pure-fn variant of [`read_jira_env`] for testability.
+///
+/// `lookup` is called once per var name. Empty-string return is treated as missing.
+/// All missing vars are collected into ONE error message — never partial.
+/// Values are NEVER included in error messages.
+///
+/// # Errors
+///
+/// Returns a descriptive error listing all missing env var names if any are unset.
+pub(crate) fn read_jira_env_from(
+    lookup: impl Fn(&str) -> String,
+) -> anyhow::Result<(String, String, String)> {
+    let email = lookup("JIRA_EMAIL");
+    let token = lookup("JIRA_API_TOKEN");
+    let instance = lookup("REPOSIX_JIRA_INSTANCE");
+
+    let mut missing: Vec<&'static str> = Vec::new();
+    if email.is_empty() {
+        missing.push("JIRA_EMAIL");
+    }
+    if token.is_empty() {
+        missing.push("JIRA_API_TOKEN");
+    }
+    if instance.is_empty() {
+        missing.push("REPOSIX_JIRA_INSTANCE");
+    }
+
+    if !missing.is_empty() {
+        anyhow::bail!(
+            "jira backend requires these env vars; currently unset: {}. \
+             Required: JIRA_EMAIL (your Atlassian account email), \
+             JIRA_API_TOKEN (token from id.atlassian.com/manage-profile/security/api-tokens), \
+             REPOSIX_JIRA_INSTANCE (your `<tenant>.atlassian.net` subdomain, e.g. `mycompany`).",
+            missing.join(", ")
+        );
+    }
+    Ok((email, token, instance))
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{read_confluence_env_from, ListBackend};
+    use super::{read_confluence_env_from, read_jira_env_from, ListBackend};
 
     #[test]
     fn confluence_is_a_value_enum_variant() {
@@ -252,5 +323,50 @@ mod tests {
         assert_eq!(email, "a@b.c");
         assert_eq!(token, "TOKEN");
         assert_eq!(tenant, "tenant");
+    }
+
+    #[test]
+    fn read_jira_env_from_all_empty_fails() {
+        let err = read_jira_env_from(|_| String::new()).expect_err("all-empty must fail");
+        let msg = err.to_string();
+        assert!(msg.contains("JIRA_EMAIL"), "must list JIRA_EMAIL, got: {msg}");
+        assert!(
+            msg.contains("JIRA_API_TOKEN"),
+            "must list JIRA_API_TOKEN, got: {msg}"
+        );
+        assert!(
+            msg.contains("REPOSIX_JIRA_INSTANCE"),
+            "must list REPOSIX_JIRA_INSTANCE, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn read_jira_env_from_partial_missing_lists_all() {
+        let err = read_jira_env_from(|name| match name {
+            "JIRA_EMAIL" => "user@example.com".to_owned(),
+            _ => String::new(),
+        })
+        .expect_err("partial must fail");
+        let msg = err.to_string();
+        assert!(msg.contains("JIRA_API_TOKEN"), "msg: {msg}");
+        assert!(msg.contains("REPOSIX_JIRA_INSTANCE"), "msg: {msg}");
+        assert!(
+            !msg.contains("user@example.com"),
+            "error must not echo email value: {msg}"
+        );
+    }
+
+    #[test]
+    fn read_jira_env_from_all_set_succeeds() {
+        let (email, token, instance) = read_jira_env_from(|name| match name {
+            "JIRA_EMAIL" => "user@example.com".to_owned(),
+            "JIRA_API_TOKEN" => "secret".to_owned(),
+            "REPOSIX_JIRA_INSTANCE" => "mycompany".to_owned(),
+            _ => String::new(),
+        })
+        .expect("all set must succeed");
+        assert_eq!(email, "user@example.com");
+        assert_eq!(token, "secret");
+        assert_eq!(instance, "mycompany");
     }
 }

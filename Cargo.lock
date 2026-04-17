@@ -1714,6 +1714,7 @@ dependencies = [
  "reposix-confluence",
  "reposix-core",
  "reposix-github",
+ "reposix-jira",
  "reposix-sim",
  "reqwest",
  "rusqlite",

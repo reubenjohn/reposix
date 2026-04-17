@@ -15,6 +15,7 @@ reposix-core.workspace = true
 reposix-sim = { path = "../reposix-sim" }
 reposix-confluence = { path = "../reposix-confluence" }
 reposix-github = { path = "../reposix-github" }
+reposix-jira = { path = "../reposix-jira" }
 tokio.workspace = true
 reqwest.workspace = true
 clap.workspace = true

@@ -28,6 +28,9 @@ pub async fn run(backend: ListBackend) -> Result<()> {
         ListBackend::Github => {
             bail!("spaces is only supported for --backend confluence (github has no space concept; use `gh api` or GitHub's UI)")
         }
+        ListBackend::Jira => {
+            bail!("spaces is only supported for --backend confluence (jira has no space concept; use `reposix list --backend jira` to list issues by project key)")
+        }
         ListBackend::Confluence => {
             let (email, token, tenant) = read_confluence_env()
                 .context("spaces --backend confluence requires ATLASSIAN_API_KEY, ATLASSIAN_EMAIL, and REPOSIX_CONFLUENCE_TENANT env vars")?;

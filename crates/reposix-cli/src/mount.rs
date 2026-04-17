@@ -89,11 +89,33 @@ impl MountProcess {
                     );
                 }
             }
+            ListBackend::Jira => {
+                let instance = std::env::var("REPOSIX_JIRA_INSTANCE").unwrap_or_default();
+                if instance.is_empty() {
+                    bail!(
+                        "REPOSIX_JIRA_INSTANCE must be set for --backend jira (subdomain of your Atlassian Cloud tenant, e.g. `mycompany`)"
+                    );
+                }
+                let raw = std::env::var("REPOSIX_ALLOWED_ORIGINS").unwrap_or_default();
+                let expected = format!("{instance}.atlassian.net");
+                if !raw.contains(&expected) {
+                    bail!(
+                        "REPOSIX_ALLOWED_ORIGINS must include https://{expected} for --backend jira (got {raw:?})"
+                    );
+                }
+                // Fail before spawning the child — names env vars, never their values (T-28-02-01).
+                if std::env::var("JIRA_EMAIL").unwrap_or_default().is_empty()
+                    || std::env::var("JIRA_API_TOKEN").unwrap_or_default().is_empty()
+                {
+                    bail!("jira backend requires JIRA_EMAIL and JIRA_API_TOKEN env vars");
+                }
+            }
         }
         let backend_kind = match backend {
             ListBackend::Sim => "sim",
             ListBackend::Github => "github",
             ListBackend::Confluence => "confluence",
+            ListBackend::Jira => "jira",
         };
         let mut cmd = resolve_bin("reposix-fuse");
         cmd.arg(mount_point)
