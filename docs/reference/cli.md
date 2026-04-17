@@ -10,10 +10,39 @@ Usage: reposix <COMMAND>
 Commands:
   sim      Run the Phase-2 REST simulator (delegates to reposix-sim)
   mount    Mount the FUSE filesystem (delegates to reposix-fuse)
+  list     List issues/pages in a project (prints JSON or table)
+  spaces   List all readable Confluence spaces (Confluence backend only)
   demo     Run the canonical end-to-end demo
   version  Print the version
   help     Print this message or the help of the given subcommand(s)
 ```
+
+## `reposix list`
+
+List issues or pages in a project. Prints JSON by default; use `--format table` for human-readable output.
+
+```bash
+reposix list --project demo
+reposix list --backend confluence --project <SPACE_KEY> --format table
+reposix list --backend confluence --project <SPACE_KEY> --no-truncate
+```
+
+| Flag | Default | Purpose |
+|------|---------|---------|
+| `--backend` | `sim` | Backend to query (`sim`, `github`, `confluence`). |
+| `--project` | `demo` | Project slug (sim/GitHub) or Confluence space key. |
+| `--format` | `json` | Output format: `json` or `table`. |
+| `--no-truncate` | off | (Confluence only) Fail with a non-zero exit if the backend would have returned a truncated list (>500 pages). Uses `list_issues_strict` internally. |
+
+## `reposix spaces`
+
+List all Confluence spaces readable by the configured credentials. Confluence backend only.
+
+```bash
+reposix spaces --backend confluence
+```
+
+Prints a table of space key, space name, and Confluence web URL. Requires all four Confluence env vars (`ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT`, `REPOSIX_ALLOWED_ORIGINS`). See [Confluence backend reference](../reference/confluence.md) for credential setup.
 
 ## `reposix sim`
 

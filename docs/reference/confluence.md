@@ -11,8 +11,14 @@ against a real Confluence space. Ships in **v0.3.0**.
 ## CLI surface
 
 ```bash
+# List all readable Confluence spaces (key + name + URL)
+reposix spaces --backend confluence
+
 # List pages in a Confluence space (SPACE_KEY = e.g. REPOSIX, not a numeric id)
 reposix list --backend confluence --project <SPACE_KEY>
+
+# List pages and fail if the backend would truncate at the 500-page cap
+reposix list --backend confluence --project <SPACE_KEY> --no-truncate
 
 # Mount the space as a POSIX directory of Markdown files
 reposix mount <dir> --backend confluence --project <SPACE_KEY>
@@ -23,6 +29,11 @@ every Confluence URL, e.g. `REPOSIX` in
 `https://<tenant>.atlassian.net/wiki/spaces/REPOSIX/overview`). The adapter
 internally resolves the key to Confluence's numeric `spaceId` via
 `GET /wiki/api/v2/spaces?keys=<SPACE_KEY>`.
+
+`--no-truncate` causes `reposix list` to fail with a non-zero exit code when
+the space has more than 500 pages (the per-invocation cap). Without this flag,
+`list` silently returns the first 500 pages and logs a `WARN`. Use
+`--no-truncate` in scripts where a truncated result would be incorrect.
 
 ## Required env vars
 
@@ -96,15 +107,40 @@ This differs from the GitHub backend, which uses `x-ratelimit-reset` (unix
 epoch); the two patterns are documented side-by-side in
 [ADR-002 §Rate-limit decision](../decisions/002-confluence-page-mapping.md).
 
-## What's NOT supported in v0.3
+## FUSE mount layout (v0.4+)
 
-The v0.3 read-only adapter deliberately loses the following Confluence
-concepts on the round-trip; see
+After Phase 13 (v0.4), pages live under a `pages/` bucket rather than at the
+mount root:
+
+```
+mount/
+├── pages/
+│   ├── 00000131192.md           # page body — writable target
+│   ├── 00000131192.comments/    # read-only comment overlay (Phase 23)
+│   │   ├── 00000012345.md       # inline/footer comment as frontmatter+body
+│   │   └── 00000012346.md
+│   └── 00000065916.md
+├── tree/                        # read-only symlink hierarchy (Confluence only)
+│   └── reposix-demo-space-home/
+│       ├── _self.md             -> ../../pages/00000360556.md
+│       └── architecture-notes.md -> ../../pages/00000065916.md
+└── .gitignore                   # synthesized; contains /tree/
+```
+
+`pages/<id>.comments/` directories are lazy-fetched — the backend round-trip
+for a page's comments only occurs when that directory is first accessed.
+Comment files are read-only; writes return `EROFS`.
+
+See [ADR-003](../decisions/003-nested-mount-layout.md) for the full layout
+specification, including slug algorithm and collision resolution.
+
+## What's NOT supported
+
+The adapter deliberately loses the following Confluence concepts on the
+round-trip; see
 [ADR-002 §Lost metadata (deliberate)](../decisions/002-confluence-page-mapping.md)
 for the full list:
 
-- **Page hierarchy.** `parentId` / `parentType` / position-in-parent are
-  discarded. Every page is a flat sibling at the FUSE mount root.
 - **Space metadata.** `spaceId` / `spaceKey` are discarded after the
   key-to-id resolver runs at the start of `list_issues`.
 - **Browser links.** `_links.webui` / `_links.editui` / `_links.tinyui` are

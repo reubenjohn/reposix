@@ -1,6 +1,6 @@
 # Crates overview
 
-reposix is a Cargo workspace of five crates. `reposix-core` is the seam: every other crate depends on it; it depends on nothing internal.
+reposix is a Cargo workspace of eight crates. `reposix-core` is the seam: every other crate depends on it; it depends on nothing internal.
 
 ## reposix-core
 
@@ -121,3 +121,40 @@ Top-level `reposix` binary. `clap`-derive CLI.
 ### Guard struct
 
 `demo` uses a top-level `Guard` owning sim child + mount child + tempdir. `Drop` tears them down in reverse order. A `tokio::signal::ctrl_c()` handler races the step sequence via `tokio::select!`, ensuring Ctrl-C runs the same cleanup. `fusermount3 -u` is wrapped in a 3-second watchdog to prevent hang on lazy unmount.
+
+## reposix-github
+
+Read-only `IssueBackend` adapter for the GitHub REST v3 Issues API. Ships in v0.2.
+
+Maps GitHub's 2-valued `state` + `state_reason` + `status/*` label convention onto reposix's 5-valued `IssueStatus`. See [ADR-001](../decisions/001-github-state-mapping.md) for the full mapping table. Write path (`create_issue`, `update_issue`, `delete_or_close`) deferred to v0.2.
+
+Requires `GITHUB_TOKEN` env var. Uses `reposix_core::http::HttpClient` (SG-01 allowlist enforced).
+
+## reposix-confluence
+
+Read-only `IssueBackend` adapter for Atlassian Confluence Cloud REST v2. Ships in v0.3. Comments overlay (Phase 23) ships in v0.5.
+
+### Capabilities by version
+
+| Version | Capability |
+|---------|-----------|
+| v0.3 | `list_issues`, `get_issue` — reads Confluence pages as flat `Issue` records |
+| v0.4 | `pages/` + `tree/` mount layout (ADR-003 nested layout) |
+| v0.5 | `pages/<id>.comments/` overlay — inline and footer comments as read-only Markdown files |
+
+Maps Confluence pages to `Issue` via `translate_page`; see [ADR-002](../decisions/002-confluence-page-mapping.md) for field assignments and lost-metadata list.
+
+Requires `ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT` env vars plus `REPOSIX_ALLOWED_ORIGINS` containing the tenant origin. See [Confluence backend reference](confluence.md) for credential setup.
+
+Key methods beyond the `IssueBackend` trait:
+- `list_issues_strict` — like `list_issues` but errors instead of truncating at the 500-page cap (used by `--no-truncate`).
+- `list_spaces` — lists all readable Confluence spaces; used by `reposix spaces`.
+- `list_comments(page_id)` — fetches inline + footer comments for a page; used by the FUSE `.comments/` overlay.
+
+## reposix-swarm
+
+Adversarial swarm harness for load testing and concurrency validation. Not a user-facing binary; used in CI and by `cargo test -p reposix-swarm`.
+
+Runs N concurrent simulated agents against either the simulator (via HTTP) or a mounted FUSE tree. Each agent runs a realistic workload loop (list + reads + patch) and records per-operation latencies. Emits a Markdown summary with P50/P95/P99 per op type, total requests, error rate, and an audit-row invariant check (SG-06 append-only).
+
+Motivation: the "10k agent QA team" pattern from the StrongDM dark-factory playbook. See `docs/research/agentic-engineering-reference.md` §1.
