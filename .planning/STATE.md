@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v0.6.0
 milestone_name: — Write Path + Full Sitemap
 status: executing
-stopped_at: Phase 29 context gathered
-last_updated: "2026-04-17T08:36:22.431Z"
-last_activity: 2026-04-17 -- Phase 29 planning complete
+stopped_at: Phase 29 complete — all 3 plans shipped
+last_updated: "2026-04-16T00:00:00.000Z"
+last_activity: 2026-04-16 -- Phase 29 shipped (commits 10d24ba, 7318588, 8eca6a0)
 progress:
   total_phases: 6
   completed_phases: 4
@@ -51,16 +51,16 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** An LLM agent can `ls`, `cat`, `grep`, edit, and `git push`
 issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
-**Current focus:** Phase 28 — jira-cloud-read-only-adapter-reposix-jira-v0-8-0
-Next: /gsd-plan-phase 16 (Confluence write path).
+**Current focus:** Phase 29 SHIPPED — JIRA write path complete.
+Next: /gsd-next to route to Phase 30 or v0.8.0 tag.
 
 ## Current Position
 
-Phase: 28 (jira-cloud-read-only-adapter-reposix-jira-v0-8-0) — COMPLETE
-Plan: 28-03 complete
-Cursor: **Phase 28 SHIPPED. reposix-jira read-only adapter complete (JIRA-01..05), 12 wiremock tests, contract test, ADR-005, docs/reference/jira.md, v0.8.0. Next: Phase 29 (JIRA write path) or /gsd-next for routing.**
-Status: Ready to execute
-Last activity: 2026-04-17 -- Phase 29 planning complete
+Phase: 29 (jira-write-path-create-update-delete-or-close-via-transitions-api) — COMPLETE
+Plan: 3 of 3
+Cursor: **Phase 29 SHIPPED. JIRA write path complete (JIRA-06): create_issue, update_issue, delete_or_close via transitions API with DELETE fallback. 31 unit tests + 5-arm contract test. CHANGELOG updated. v0.8.0 tag script ready — user-gated.**
+Status: Phase 29 complete; v0.8.0 tag pending user gate
+Last activity: 2026-04-16 -- Phase 29 shipped (commits 10d24ba, 7318588, 8eca6a0)
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
