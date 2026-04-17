@@ -741,4 +741,28 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 29 to break down)
+- [x] 29-01-PLAN.md — ADF helpers + create_issue (SHIPPED)
+- [x] 29-02-PLAN.md — update_issue + audit rows (SHIPPED)
+- [x] 29-03-PLAN.md — delete_or_close transitions + contract test (SHIPPED)
+
+## Backlog
+
+### Phase 999.1: Follow-up — missing SUMMARY.md files from prior phases (BACKLOG)
+
+**Goal:** Resolve plans that ran without producing summaries during earlier phase executions
+**Deferred at:** 2026-04-16 during /gsd-next advancement to /gsd-verify-work (Phase 29 → milestone completion)
+**Plans:**
+- [ ] Phase 16: 16-D-docs-and-release (ran, no SUMMARY.md)
+- [ ] Phase 17: 17-A-workload-and-cli (ran, no SUMMARY.md)
+- [ ] Phase 17: 17-B-tests-and-docs (ran, no SUMMARY.md)
+- [ ] Phase 18: 18-02 (ran, no SUMMARY.md)
+- [ ] Phase 21: 21-A-audit (ran, no SUMMARY.md)
+- [ ] Phase 21: 21-B-contention (ran, no SUMMARY.md)
+- [ ] Phase 21: 21-C-truncation (ran, no SUMMARY.md)
+- [ ] Phase 21: 21-D-chaos (ran, no SUMMARY.md)
+- [ ] Phase 21: 21-E-macos (ran, no SUMMARY.md)
+- [ ] Phase 22: 22-A-bench-upgrade (ran, no SUMMARY.md)
+- [ ] Phase 22: 22-B-fixtures-and-table (ran, no SUMMARY.md)
+- [ ] Phase 22: 22-C-wire-docs-ship (ran, no SUMMARY.md)
+- [ ] Phase 25: 25-02 (ran, no SUMMARY.md)
+- [ ] Phase 27: 27-02 (ran, no SUMMARY.md)
