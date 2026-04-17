@@ -56,7 +56,7 @@
 pub mod adf;
 
 use std::collections::BTreeMap;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
@@ -123,7 +123,7 @@ impl std::fmt::Debug for JiraCreds {
 
 // ─── Backend ─────────────────────────────────────────────────────────────────
 
-/// Read-only JIRA Cloud adapter.
+/// JIRA Cloud read/write adapter.
 ///
 /// Build via [`JiraBackend::new`] (production) or
 /// [`JiraBackend::new_with_base_url`] (tests / wiremock).
@@ -136,6 +136,9 @@ pub struct JiraBackend {
     base_url: String,
     rate_limit_gate: Arc<Mutex<Option<Instant>>>,
     audit: Option<Arc<Mutex<Connection>>>,
+    /// Per-session cache for valid issue type names (populated on first `create_issue`).
+    #[allow(dead_code)] // wired in Plan 29-02 (create_issue)
+    issue_type_cache: Arc<OnceLock<Vec<String>>>,
 }
 
 impl std::fmt::Debug for JiraBackend {
@@ -188,6 +191,7 @@ impl JiraBackend {
             base_url,
             rate_limit_gate: Arc::new(Mutex::new(None)),
             audit: None,
+            issue_type_cache: Arc::new(OnceLock::new()),
         })
     }
 
@@ -613,7 +617,14 @@ fn translate(raw: JiraIssue) -> Result<Issue> {
     );
     let title = raw.fields.summary.unwrap_or_default();
     let status = map_status(&raw.fields.status, raw.fields.resolution.as_ref());
-    let body = adf::adf_to_plain_text(&raw.fields.description.unwrap_or(serde_json::Value::Null));
+    let description_json = raw.fields.description.unwrap_or(serde_json::Value::Null);
+    // Use adf_to_markdown for rich read path; fall back to plain text on error.
+    let body = if description_json.is_null() {
+        String::new()
+    } else {
+        adf::adf_to_markdown(&description_json)
+            .unwrap_or_else(|_| adf::adf_to_plain_text(&description_json))
+    };
     let created_at = raw.fields.created.with_timezone(&chrono::Utc);
     let updated_at = raw.fields.updated.with_timezone(&chrono::Utc);
     #[allow(clippy::cast_sign_loss)]
