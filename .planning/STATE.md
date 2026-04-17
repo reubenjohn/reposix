@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.7.0
-milestone_name: — Docs Reorg + Hardening
-status: Phase complete — ready for Phase 26
-stopped_at: Completed 25-02-PLAN.md
-last_updated: "2026-04-16T00:00:00.000Z"
-last_activity: 2026-04-16
+milestone: v0.6.0
+milestone_name: — Write Path + Full Sitemap
+status: executing
+stopped_at: Completed 26-01-PLAN.md
+last_updated: "2026-04-17T02:30:51.067Z"
+last_activity: 2026-04-17 -- Phase 26 planning complete
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 8
+  total_plans: 13
   completed_plans: 14
   percent: 100
 ---
@@ -56,10 +56,10 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 ## Current Position
 
 Phase: 26
-Plan: Not started
-Cursor: **Phase 25 SHIPPED. OP-11 docs reorg complete — InitialReport.md and AgenticEngineeringReference.md moved to docs/research/; cross-refs updated; mkdocs.yml nav includes Research section; v0.7.0 workspace version bumped. Next: Phase 26 (docs clarity overhaul).**
-Status: Phase complete — ready for Phase 26
-Last activity: 2026-04-17
+Plan: 26-01 complete
+Cursor: **Phase 26 Plan 01 SHIPPED. Root housekeeping: deleted AgenticEngineeringReference.md and InitialReport.md stubs; archived MORNING-BRIEF.md + PROJECT-STATUS.md to docs/archive/ with archive notices; mkdocs.yml not_in_nav for archive/*; README.md version references updated from v0.3.0 to v0.7.0, phase table replaced with release table v0.1–v0.7, binary URLs updated, deferred section updated. Next: Phase 26 Plan 02 (clarity review).**
+Status: Executing
+Last activity: 2026-04-17 -- Phase 26 Plan 01 complete
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
