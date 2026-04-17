@@ -1,5 +1,8 @@
 # Agentic Filesystem Abstractions: Architecting Git-Backed FUSE Interfaces for Autonomous Agents
 
+> **Document status — initial design research (pre-v0.1, 2026-04-13).**
+> This report was written before the reposix implementation began. It establishes the architectural argument for the FUSE + git-remote-helper approach and surveys prior art (SSHFS, gkeep-fuse, git-bug, AgentFS, jirafs). Features discussed here (Jira workflow validation, Confluence draft-branching, AgentFS auditing, Lamport timestamps) are prospective designs, not a description of the current implementation. For the current implementation status, see `docs/index.md` and `HANDOFF.md`.
+
 ## Introduction to the Agentic Context Bottleneck
 
 The proliferation of autonomous artificial intelligence agents has precipitated a paradigm shift in how computational systems interact with external services. Traditionally, agents have relied heavily on explicit tool-calling frameworks, with the Model Context Protocol (MCP) emerging as a dominant standard for exposing application programming interfaces (APIs) to large language models. While MCP provides a structured, standardized mechanism for connecting agents to diverse data sources—such as Slack, PostgreSQL databases, and enterprise project management tools—it introduces substantial architectural inefficiencies.
