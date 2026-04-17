@@ -1,14 +1,25 @@
-# HANDOFF — v0.5.0 (post-ship) + open problems for the next agent
+# HANDOFF — v0.7.0 (post-ship) + open problems for the next agent
 
-> **Current state (2026-04-14, session 5):** v0.4.1 and v0.5.0 are already tagged and pushed. Nothing left to tag.
-> **The next agent is YOU.** Skip to [§Session 5 augmentation](#session-5-augmentation--2026-04-14-daytime-v041--v050-ready-to-ship) for the current open-problems rollup and mission recommendation.
+> **Current state (2026-04-16, session 6+):** v0.7.0 is tagged and pushed. 317+ workspace tests pass.
+> **The next agent is YOU.** See [§Open problems for the next agent](#open-problems-for-the-next-agent) — OP-1 through OP-11 are all CLOSED (Phases 13–25). Phase 27+ (JIRA Cloud) is the current direction.
 >
 > ---
 >
-> *Historical context:* Date: 2026-04-14 (overnight session 3 wrapped up).
-> Previous briefs: [`MORNING-BRIEF.md`](MORNING-BRIEF.md) (v0.1 / v0.2), [`PROJECT-STATUS.md`](PROJECT-STATUS.md) (timeline through v0.2.0-alpha). This doc subsumes the old session-2 `HANDOFF.md` (deleted) and the session-3 `MORNING-BRIEF-v0.3.md` (renamed into this file).
+> *Historical context:* This doc was started after session 3 (v0.3.0) and augmented through session 6+ (v0.7.0). Previous v0.1/v0.2-era briefs are archived at [`docs/archive/MORNING-BRIEF.md`](docs/archive/MORNING-BRIEF.md) and [`docs/archive/PROJECT-STATUS.md`](docs/archive/PROJECT-STATUS.md). This doc subsumes the old session-2 `HANDOFF.md` (deleted) and the session-3 `MORNING-BRIEF-v0.3.md` (renamed into this file).
 
-## tl;dr
+## v0.7.0 current state (2026-04-16)
+
+**317+ workspace tests pass.** `cargo clippy --workspace --all-targets -- -D warnings` clean. `mkdocs build --strict` green. `bash scripts/demos/smoke.sh` 4/4.
+
+Backends live: `sim` (default), `github` (read-only), `confluence` (read + write). FUSE mount exposes `issues/` or `pages/` bucket + `tree/` hierarchy overlay (Confluence) + `labels/` read-only overlay + `whiteboards/` and `.attachments/` directories. `reposix refresh` snapshots backend state to git-tracked `.md` files.
+
+**Next direction (Phase 27+):** JIRA Cloud read-only adapter, `BackendConnector` rename, `Issue.extensions` field. See [HANDOFF §Open problems](#open-problems-for-the-next-agent) and `.planning/ROADMAP.md`.
+
+---
+
+## Historical tl;dr (v0.3.0 — Phase 11)
+
+> *The sections below are the original session-by-session augmentation records, preserved for audit/history. Start with [§v0.7.0 current state](#v070-current-state-2026-04-16) above for the actionable summary.*
 
 Phase 11 shipped read-only **Atlassian Confluence Cloud** support end-to-end: adapter crate, CLI dispatch, contract test (parameterized over sim + wiremock + live), Tier 3B + Tier 5 demos, ADR-002, reference docs, a "build-your-own-connector" guide, and a CHANGELOG v0.3.0 block. Workspace is **193/193 passing**, clippy clean, fmt clean, `scripts/demos/smoke.sh` 4/4, `mkdocs build --strict` green. Live-wire verification **ran successfully** tonight against `reuben-john.atlassian.net` space `REPOSIX` (4 seeded pages round-tripped through CLI `list`, and through the **Tier 5 FUSE mount with full `cat` body output** — see §"Live proof captured" below). 2 MEDIUM code-review findings + 3 LOW all fixed. **One late-stage FUSE cache bug** found during live Tier 5 verification and fixed in commit `6cd6e43` — the fix is in this release (see CHANGELOG `[v0.3.0] — Fixed` section).
 
@@ -174,22 +185,27 @@ Per `~/.claude/CLAUDE.md` OP #6 ("ground truth obsession"), being loud about wha
 
 ## Open problems for the next agent
 
-Open problems are tracked as GSD phases 16–25 across milestones v0.6.0 and v0.7.0. See .planning/ROADMAP.md for the full list. Design context is in each phase's CONTEXT.md.
+> **All OP-1 through OP-11 items are CLOSED as of v0.7.0.** The next mission is Phase 27+ (JIRA Cloud adapter, `BackendConnector` rename, `Issue.extensions` field). See `.planning/ROADMAP.md` for the current plan.
 
-### OP-1 (labels + spaces directory views)
-→ Queued as Phase 19 — see .planning/phases/19-op-1-remainder-labels-and-spaces-directory-views-as-read-onl/CONTEXT.md
-
-### OP-2 (tree-recursive + mount-root _INDEX.md)
-→ Queued as Phase 18 — see .planning/phases/18-op-2-remainder-tree-recursive-and-mount-root-index-md-synthe/CONTEXT.md
-
-### OP-3 (reposix refresh + git-diff cache)
-→ Queued as Phase 20 — see .planning/phases/20-op-3-reposix-refresh-subcommand-and-git-diff-cache-for-mount/CONTEXT.md
+| OP | Description | Status |
+|----|-------------|--------|
+| OP-1 | labels + spaces directory views | **CLOSED** — Phase 19 (v0.6) |
+| OP-2 | tree-recursive + mount-root `_INDEX.md` | **CLOSED** — Phase 18 (v0.6) |
+| OP-3 | `reposix refresh` + git-diff cache | **CLOSED** — Phase 20 (v0.6) |
+| OP-4 | prebuilt release binaries | **CLOSED** — Phase 13 (v0.4) |
+| OP-5 | `social/` → `docs/social/` | **CLOSED** — Phase 13 (v0.4) |
+| OP-6 | full-repo code sweep findings | **CLOSED** — Phases 13–14 |
+| OP-7 | hardening bundle (contention, truncation, chaos) | **CLOSED** — Phase 21 (v0.7) |
+| OP-8 | honest-tokenizer benchmarks | **CLOSED** — Phase 22 (v0.7) |
+| OP-9 | Confluence beyond pages (comments/attachments/whiteboards) | **CLOSED** — Phases 23–24 (v0.7) |
+| OP-10 | eject 3rd-party adapter crates | **DEFERRED** — user-gated; not started |
+| OP-11 | docs reorg (`InitialReport.md` → `docs/research/`) | **CLOSED** — Phase 25 (v0.7) |
 
 ---
 
 ## Handoff
 
-If there's a next overnight agent: your starting points in order are this file (especially [§Open problems](#open-problems-for-the-next-agent) — now OP-1 through OP-11), then [`.planning/phases/11-confluence-adapter/`](.planning/phases/11-confluence-adapter/) for Phase 11's internal artifacts, then the `[v0.3.0]` block in `CHANGELOG.md`, then `.planning/ROADMAP.md` Phase 12 skeleton. The folder-structure + dynamic-index work (OP-1 + OP-2) is the highest-leverage next mission because it converts flat backends into the "mount an entire wiki as a tree" UX the hero image promises.
+If there's a next overnight agent: your starting point is `.planning/STATE.md` (current cursor), then `.planning/ROADMAP.md` for Phase 27+ scope (JIRA Cloud adapter, `BackendConnector` rename, `Issue.extensions` field). The `[v0.7.0]` block in `CHANGELOG.md` has the full release notes. Historical phase artifacts are under `.planning/phases/`.
 
 ---
 
@@ -197,22 +213,22 @@ If there's a next overnight agent: your starting points in order are this file (
 
 OP-6 sweep items HIGH-1 through HIGH-5 and MEDIUM-6 through MEDIUM-17 resolved in sessions 3–4 (see session-4 drive-by block below). Remaining LOW items (obsolete scripts, marketing doc staleness) are low-priority; no blocking work remains.
 
-## OP-7 (hardening bundle)
-→ Queued as Phase 21 — see .planning/phases/21-op-7-hardening-bundle-contention-swarm-500-page-truncation-p/CONTEXT.md
+## OP-7 (hardening bundle) — CLOSED Phase 21 (v0.7)
+Contention/truncation/chaos hardening shipped. See `.planning/phases/21-op-7-hardening-bundle-contention-swarm-500-page-truncation-p/21-SUMMARY.md`.
 
-## OP-8 (honest-tokenizer benchmarks)
-→ Queued as Phase 22 — see .planning/phases/22-op-8-honest-tokenizer-benchmarks-replace-len-div-4-with-coun/CONTEXT.md
+## OP-8 (honest-tokenizer benchmarks) — CLOSED Phase 22 (v0.7)
+Real `count_tokens` API replaces `len/4` heuristic. 89.1% reduction confirmed. See `.planning/phases/22-op-8-honest-tokenizer-benchmarks-replace-len-div-4-with-coun/22-SUMMARY.md`.
 
-## OP-9 (Confluence beyond pages)
-→ OP-9a (comments): Phase 23 — see .planning/phases/23-op-9a-confluence-comments-exposed-as-pages-id-comments-comme/CONTEXT.md
-→ OP-9b (whiteboards/attachments/folders): Phase 24 — see .planning/phases/24-op-9b-confluence-whiteboards-attachments-and-folders/CONTEXT.md
+## OP-9 (Confluence beyond pages) — CLOSED Phases 23–24 (v0.7)
+- OP-9a (comments): Phase 23 — `pages/<id>.comments/` FUSE directory with per-comment `.md` files.
+- OP-9b (whiteboards/attachments/folders): Phase 24 — `whiteboards/`, `.attachments/` per-page, folder-parented pages in `tree/`.
 
-## OP-10 — Eject 3rd-party adapter crates
+## OP-10 — Eject 3rd-party adapter crates — DEFERRED
 
 User-gated hard stop — do not start without explicit check-in.
 
-## OP-11 (docs reorg)
-→ Queued as Phase 25 — see .planning/phases/25-op-11-docs-reorg-initialreport-md-and-agenticengineeringrefe/CONTEXT.md
+## OP-11 (docs reorg) — CLOSED Phase 25 (v0.7)
+`InitialReport.md` and `AgenticEngineeringReference.md` moved to `docs/research/`. Root stubs deleted in Phase 26-01. See `.planning/phases/25-op-11-docs-reorg-initialreport-md-and-agenticengineeringrefe/25-SUMMARY.md`.
 
 ---
 

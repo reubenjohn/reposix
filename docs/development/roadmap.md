@@ -1,4 +1,4 @@
-# Roadmap (v0.4+)
+# Roadmap (v0.7+)
 
 ## What shipped
 
@@ -7,23 +7,24 @@
 | **v0.1** | Simulator + `IssueBackend` trait + FUSE read-only mount + `git-remote-reposix` + 8 security guardrails. 17 Active Requirements delivered; 133 tests green. |
 | **v0.2** | Real GitHub Issues adapter behind the same trait. |
 | **v0.3** | Real Confluence Cloud adapter (live against `reuben-john.atlassian.net`); swarm harness; prebuilt release binaries. |
-| **v0.4** | `pages/` + `tree/` nested mount layout with symlink overlay exposing Confluence's `parentId` hierarchy — the "hero image" folder structure. 264 tests green. |
+| **v0.4** | `pages/` + `tree/` nested mount layout with symlink overlay exposing Confluence's `parentId` hierarchy — the "hero image" folder structure. 272 tests green. |
+| **v0.5** | Synthesized read-only `_INDEX.md` sitemap in each FUSE bucket directory (`mount/<bucket>/_INDEX.md`). 277 tests green. |
+| **v0.6** | Confluence write path (`create_issue`/`update_issue`/`delete_or_close`); ADF↔Markdown converter; `labels/` read-only overlay; tree-recursive + mount-root `_INDEX.md`; `reposix refresh` subcommand. 317 tests green. |
+| **v0.7** | Contention/truncation/chaos hardening; honest token benchmarks (89.1% reduction, real tokenizer); Confluence comments (`pages/<id>.comments/`), attachments (`.attachments/`), and whiteboards (`whiteboards/`); docs reorg (`docs/research/`). 317+ tests green. |
 
 ## Current open problems
 
-The canonical list of next-session work lives in [`HANDOFF.md`](https://github.com/reubenjohn/reposix/blob/main/HANDOFF.md) as "OP-1 … OP-N" open problems. Highlights still outstanding after v0.4:
+> **All OP-1 through OP-11 items are CLOSED as of v0.7.0.** See [`HANDOFF.md`](https://github.com/reubenjohn/reposix/blob/main/HANDOFF.md) for the closed-item table and history.
 
-- **OP-2** — dynamically generated `INDEX.md` per directory (composes with `tree/`).
-- **OP-3** — cache refresh via `git pull` semantics; the mount becomes a time machine over the backend.
-- **OP-7** — hardening probes (concurrent-write contention swarm, FUSE under real-backend load, 500-page pagination cap, tenant-name leakage in tracing, chaos audit-log restart).
-- **OP-8** — honest-tokenizer benchmarks using Anthropic's `count_tokens` API.
-- **OP-9** — Confluence beyond pages (whiteboards, comments at `pages/<id>.comments/`, attachments, live docs, folders, multi-space).
-- **OP-10** — eject 3rd-party adapter crates out of the core repo (user-gated).
-- **OP-11** — repo-root reorg (user-gated).
+The current next direction is v0.8:
+
+- **JIRA Cloud read-only adapter** — same `IssueBackend` trait seam as GitHub and Confluence. JIRA's REST API uses OAuth 2.0 (not Basic auth); adapter named `reposix-jira`.
+- **`BackendConnector` rename** — `IssueBackend` renamed to `BackendConnector` for accuracy (it connects any content store, not just issue trackers).
+- **`Issue.extensions` field** — `serde_json::Value` map for backend-specific metadata not covered by the core schema (JIRA priority, Confluence space key, etc.).
 
 ### What shipped from the original v0.2 priority list
 
-The v0.1-retrospective priority list that used to occupy this section has substantially shipped:
+The v0.1-retrospective priority list has fully shipped:
 
 - ✅ **Real-backend adapter for GitHub Issues** — v0.2.
 - ✅ **Adversarial swarm harness** — Phase 9 (`reposix-swarm`).
@@ -32,8 +33,10 @@ The v0.1-retrospective priority list that used to occupy this section has substa
 - ✅ **IPv6 allowlist parser** — covered in v0.1 follow-ups.
 - ✅ **Real Confluence adapter** — v0.3.
 - ✅ **Nested mount layout with `tree/` overlay** — v0.4.
+- ✅ **Hardening probes (OP-7)** — contention/truncation/chaos harness shipped in v0.7.
+- ✅ **Honest-tokenizer benchmarks (OP-8)** — `count_tokens` API integration shipped in v0.7.
 
-Items still outstanding (and now rolled into `OP-7` hardening unless otherwise noted): `X-Reposix-Agent` HMAC signing, `DashMap` LRU cap, FUSE SIGTERM handler, audit-log PII redaction, deterministic blob bytes, FUSE `create()` id divergence, marks-based incremental import, FUSE attribute cache invalidation, conflict-aware git merging (north-star UX), simulator `/_audit` dashboard, per-phase CI timing + coverage trend, token-economy benchmark with the real `count_tokens` API (OP-8).
+Items deferred to v0.8+: `X-Reposix-Agent` HMAC signing, `DashMap` LRU cap, FUSE SIGTERM handler, audit-log PII redaction, conflict-aware git merging (north-star UX), simulator `/_audit` dashboard.
 
 ## Long-term north stars
 
