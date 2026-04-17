@@ -646,13 +646,14 @@ Plans:
 
 ### Phase 25: OP-11 — docs reorg: InitialReport.md and AgenticEngineeringReference.md to docs/research/ plus root cleanup (v0.7.0)
 
-**Goal:** Add a read-only `labels/` symlink overlay to the FUSE mount. Each `labels/<label>/` directory lists all issues carrying that label as symlinks to the canonical bucket file. `spaces/` deferred to Phase 20.
-**Requirements**: LABEL-01, LABEL-02, LABEL-03, LABEL-04, LABEL-05
+**Goal:** Move `InitialReport.md` and `AgenticEngineeringReference.md` to `docs/research/`, update all cross-references in `CLAUDE.md`, `README.md`, and `.planning/research/`, add a Research section to mkdocs.yml nav, and bump workspace to v0.7.0.
+**Requirements**: none (docs-only phase)
 **Depends on:** Phase 24
-**Plans:** 1/2 plans executed
+**Plans:** 2 plans complete
 
 Plans:
-- [x] TBD (run /gsd-plan-phase 25 to break down) (completed 2026-04-15)
+- [x] 25-01-PLAN.md — cross-ref audit, root clutter cleanup, mkdocs.yml nav
+- [x] 25-02-PLAN.md — v0.7.0 version bump, CHANGELOG promotion, STATE.md, SUMMARY
 
 ---
 

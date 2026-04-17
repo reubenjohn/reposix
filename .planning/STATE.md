@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.6.0
-milestone_name: — Write Path + Full Sitemap
-status: verifying
-stopped_at: Completed 25-01-PLAN.md
-last_updated: "2026-04-17T02:03:41.187Z"
-last_activity: 2026-04-17
+milestone: v0.7.0
+milestone_name: — Docs Reorg + Hardening
+status: Phase complete — ready for Phase 26
+stopped_at: Completed 25-02-PLAN.md
+last_updated: "2026-04-16T00:00:00.000Z"
+last_activity: 2026-04-16
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 8
-  completed_plans: 13
+  completed_plans: 14
   percent: 100
 ---
 
@@ -20,6 +20,7 @@ progress:
 
 ### Roadmap Evolution
 
+- **Phase 25 SHIPPED (2026-04-16):** OP-11 docs reorg — InitialReport.md → docs/research/initial-report.md, AgenticEngineeringReference.md → docs/research/agentic-engineering-reference.md; root stubs have visible markdown blockquote redirect notes; CLAUDE.md, README.md, threat-model-and-critique.md cross-refs updated; mkdocs.yml Research nav section added; v0.7.0 workspace version bump + CHANGELOG promotion.
 - Phase 26 added (2026-04-16): Docs clarity overhaul — unbiased subagent review of all user-facing Markdown docs using the new `doc-clarity-review` skill. Covers README.md, all docs/ pages, and root-level orphan cleanup (delete AgenticEngineeringReference.md stub, InitialReport.md stub, archive MORNING-BRIEF.md + PROJECT-STATUS.md). Version numbers synced across all pages. Each doc reviewed in isolation (no repo context) before and after edits; success = zero critical friction points remaining.
 - Phase 13 added (2026-04-14, session 4): Nested mount layout — pages/ + tree/ symlinks for Confluence parentId hierarchy. Implements OP-1 from HANDOFF.md. BREAKING: flat `<id>.md` at mount root moves to per-backend collection bucket (`pages/` for Confluence, `issues/` for sim+GitHub).
 - Phase 14 added (2026-04-14, session 5): Decouple sim REST shape from FUSE write path and git-remote helper — route through `IssueBackend` trait. Closes v0.3-era HANDOFF items 7+8. Cluster B per session-5 brief. Scope v0.4.1 (bugfix/refactor). Rationale: `.planning/SESSION-5-RATIONALE.md`.
@@ -56,8 +57,8 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 
 Phase: 26
 Plan: Not started
-Cursor: **Phase 24 SHIPPED. Confluence whiteboards + attachments + folder hierarchy complete; CONF-04, CONF-05, CONF-06 closed. 397 workspace tests green. Next: Phase 25 (docs reorg + v0.7.0 version bump).**
-Status: Phase complete — ready for verification
+Cursor: **Phase 25 SHIPPED. OP-11 docs reorg complete — InitialReport.md and AgenticEngineeringReference.md moved to docs/research/; cross-refs updated; mkdocs.yml nav includes Research section; v0.7.0 workspace version bumped. Next: Phase 26 (docs clarity overhaul).**
+Status: Phase complete — ready for Phase 26
 Last activity: 2026-04-17
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
