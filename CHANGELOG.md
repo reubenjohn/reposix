@@ -6,6 +6,24 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+### Added — Phase 24: OP-9b — Confluence whiteboards, attachments, and folder hierarchy
+
+- (Phase 24, CONF-04) `ConfluenceBackend::list_whiteboards(space_id)` method — fetches all whiteboards in a Confluence space via `GET /wiki/api/v2/spaces/{id}/direct-children` (filtered by `type == "whiteboard"`); returns `Vec<ConfWhiteboard>`. Gracefully returns `Ok(vec![])` on 404 (endpoint MEDIUM confidence).
+- (Phase 24, CONF-04) `ConfWhiteboard` public struct with `id`, `title`, `space_id`, `author_id`, `created_at`, `parent_id`, `parent_type` fields; implements `Serialize` so FUSE `read()` can return raw JSON.
+- (Phase 24, CONF-04) `whiteboards/` FUSE top-level directory — `ls mount/whiteboards/` lists all Confluence whiteboards; `cat mount/whiteboards/<id>.json` returns serialized whiteboard metadata. Only emitted when backend is Confluence (`comment_fetcher` is `Some`).
+- (Phase 24, CONF-05) `ConfluenceBackend::list_attachments(page_id)` method — fetches attachment metadata for a page via `GET /wiki/api/v2/pages/{id}/attachments`; returns `Vec<ConfAttachment>`.
+- (Phase 24, CONF-05) `ConfluenceBackend::download_attachment(download_url)` method — downloads binary body for an attachment using Basic-auth headers (required by Confluence; bare `reqwest::get` returns 401).
+- (Phase 24, CONF-05) `ConfAttachment` public struct with `id`, `title`, `media_type`, `file_size`, `download_link` and other fields.
+- (Phase 24, CONF-05) `.attachments/` per-page FUSE subdirectory — `ls mount/pages/<id>.attachments/` lists all page attachments; `cat mount/pages/<id>.attachments/file.png` returns binary passthrough. Attachment filenames sanitized to `[a-zA-Z0-9._-]` (path-traversal defense). Files > 50 MiB return `EFBIG` with a `tracing::warn!`.
+- (Phase 24, CONF-05) `AttachmentsSnapshot` in `reposix-fuse` — lazy per-page binary cache mirroring `CommentsSnapshot` pattern; `sanitize_attachment_filename()` utility with unit tests.
+- (Phase 24, CONF-06) `translate()` in `reposix-confluence` now passes `parentType == "folder"` pages through to `Issue::parent_id` — folder-parented pages appear correctly in the `tree/` overlay without a separate `folders/` FUSE tree.
+
+### Security — Phase 24: OP-9b
+
+- (Phase 24, T-24-02-01) `sanitize_attachment_filename()` allowlist `[a-zA-Z0-9._-]` prevents path traversal via adversarial attachment titles.
+- (Phase 24, T-24-02-02) 50 MiB attachment size cap enforced in `fetch_attachments_for_page` and `read()` callback; oversized files return `EFBIG` and are never loaded into heap.
+- (Phase 24, T-24-02-04) `download_attachment` uses `self.base()` prepend for relative download URLs; all HTTP calls pass through `HttpClient` SG-01 allowlist gate.
+
 ### Changed — Phase 22: OP-8 — Honest tokenizer benchmarks
 
 - `bench_token_economy.py`: token counts now produced by Anthropic's `count_tokens` API instead of the `len(text) // 4` heuristic. Cached in `benchmarks/fixtures/*.tokens.json` for offline reproducibility. Closes BENCH-01.
