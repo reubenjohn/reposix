@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v0.7.0
 milestone_name: — Hardening + Confluence Expansion
-status: Phase complete — ready for Phase 27
-stopped_at: Completed 26-05-PLAN.md
-last_updated: "2026-04-16T00:00:00.000Z"
-last_activity: 2026-04-16 -- Phase 26 complete
+status: executing
+stopped_at: Completed 27-02-PLAN.md
+last_updated: "2026-04-17T02:58:54.287Z"
+last_activity: 2026-04-17 -- Phase 27 waves 1+2 complete (rename propagated workspace-wide)
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 13
-  completed_plans: 22
+  completed_plans: 24
   percent: 100
 ---
 
@@ -59,8 +59,8 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 Phase: 27
 Plan: (not started)
 Cursor: **Phase 26 SHIPPED. Docs clarity overhaul complete — root stubs deleted, obsolete files archived, all user-facing docs reviewed and cleared, version numbers aligned to v0.7.0. Next: Phase 27 (BackendConnector rename + Issue.extensions).**
-Status: Phase complete — ready for Phase 27
-Last activity: 2026-04-16 -- Phase 26 complete
+Status: In progress — waves 1+2 complete; wave 3 (extensions + v0.8.0) pending
+Last activity: 2026-04-17 -- Phase 27 waves 1+2 complete (rename propagated workspace-wide, cargo check clean)
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
@@ -114,6 +114,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 | Phase 26 P26-02 | 20 | 2 tasks | 7 files |
 | Phase 26 P03 | 25 | 2 tasks | 5 files |
 | Phase 26 P04 | 20 | 2 tasks | 5 files |
+| Phase 27 P01 | 5 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -183,6 +184,7 @@ additions (2026-04-13):
 - [Phase 26]: Token-economy reconciliation: 92.3% (chars/4 heuristic, demo assets) vs 89.1% (count_tokens API) both documented in why.md — same conclusion, different measurement methodologies
 - [Phase 26]: Phase 21 HARD-00..05 hardening items added to security.md shipped section; 500-page truncation moved from deferred to shipped
 - [Phase 26]: ADR-002 scope note uses 'Active — with scope note' wording; existing superseded blockquote replaced
+- [Phase 27]: Hard rename IssueBackend to BackendConnector in reposix-core with no backward-compat alias
 
 ### Pending Todos
 
@@ -203,8 +205,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-17T02:43:26.538Z
-Stopped at: Completed 26-04-PLAN.md
+Last session: 2026-04-17T02:58:54.283Z
+Stopped at: Completed 27-02-PLAN.md (after recovery from prior session crash)
 Wave-level commit trail on `main` (Phase 16):
 Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
 Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).

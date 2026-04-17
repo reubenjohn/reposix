@@ -696,11 +696,11 @@ Plans:
 **Goal:** Rename the `IssueBackend` trait to `BackendConnector` in `reposix-core` and update all impls (`SimBackend`, `GithubReadOnlyBackend`, `ConfluenceBackend`) plus every call-site (`reposix-fuse` ≈20 sites in `fs.rs`, `reposix-cli` dispatch in `list.rs`/`mount.rs`/`refresh.rs`, `reposix-remote`, `reposix-swarm`). Simultaneously add `extensions: BTreeMap<String, serde_yaml::Value>` to the `Issue` struct (defaults to empty via `#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]`; flows through `frontmatter::render`/`frontmatter::parse` without schema churn). Bump workspace Cargo.toml `[workspace.package] version = "0.8.0"`. Write ADR-004 (`docs/decisions/004-backend-connector-rename.md`) capturing the rename rationale with alternatives considered (`RemoteBackend`, `TrackerBackend`, `WorkItemBackend`, `Connector`) and why `BackendConnector` won (neutral across issue/page/content domains; aligns with Phase 12's "Connector protocol" vocabulary). Grep-verify zero remaining `IssueBackend` references in source or docs after the rename. Roundtrip test: serialize `Issue { extensions: {"foo": Value::Int(42), "bar": Value::String("x")} }` → parse → assert equality.
 **Requirements:** RENAME-01, EXT-01
 **Depends on:** none (Phase 26 docs work is orthogonal; if Phase 26 lands first, this phase refreshes any doc lines mentioning `IssueBackend` during the rename sweep)
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
-- [ ] 27-01-PLAN.md — Rename IssueBackend → BackendConnector in reposix-core
-- [ ] 27-02-PLAN.md — Update all external impls and call-sites; workspace tests green
+- [x] 27-01-PLAN.md — Rename IssueBackend → BackendConnector in reposix-core
+- [x] 27-02-PLAN.md — Update all external impls and call-sites; workspace tests green
 - [ ] 27-03-PLAN.md — Issue.extensions field + ADR-004 + v0.8.0 + CHANGELOG
 
 ### Phase 28: JIRA Cloud read-only adapter (`reposix-jira`) (v0.8.0)
