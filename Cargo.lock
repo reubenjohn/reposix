@@ -1817,6 +1817,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "reposix-jira"
+version = "0.8.0"
+dependencies = [
+ "async-trait",
+ "base64 0.22.1",
+ "chrono",
+ "parking_lot",
+ "reposix-core",
+ "reposix-sim",
+ "reqwest",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "sha2",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "url",
+ "wiremock",
+]
+
+[[package]]
 name = "reposix-remote"
 version = "0.8.0"
 dependencies = [
