@@ -530,7 +530,7 @@ Plans:
 
 **Depends on:** Phase 25
 **Requirements**: TBD
-**Plans:** 3/5 plans executed
+**Plans:** 4/5 plans executed
 
 #### Doc inventory (pre-phase assessment)
 
