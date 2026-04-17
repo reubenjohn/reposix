@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.6.0
 milestone_name: — Write Path + Full Sitemap
 status: verifying
-stopped_at: Completed 24-03-PLAN.md — Phase 24 SHIPPED
-last_updated: "2026-04-17T01:35:46.221Z"
+stopped_at: Completed 25-01-PLAN.md
+last_updated: "2026-04-17T02:03:41.187Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 6
@@ -172,6 +172,7 @@ additions (2026-04-13):
 - [Phase 24]: v0.7.0 version bump deferred to Phase 25 (docs reorg)
 - [Phase 24]: Phase 24: CONF-06 resolved via translate() folder arm — no separate folders/ FUSE tree needed
 - [Phase 24]: Phase 24: v0.7.0 version bump deferred to Phase 25 (docs reorg) per ROADMAP.md
+- [Phase 25]: Historical planning records (SESSION files, HANDOFF, CHANGELOG, REQUIREMENTS) retain old filenames when describing the file move itself — changing them would be historically misleading
 
 ### Pending Todos
 
@@ -192,8 +193,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-17T01:26:39.738Z
-Stopped at: Completed 24-03-PLAN.md — Phase 24 SHIPPED
+Last session: 2026-04-17T02:03:36.906Z
+Stopped at: Completed 25-01-PLAN.md
 Wave-level commit trail on `main` (Phase 16):
 Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
 Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).
