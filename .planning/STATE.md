@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v0.6.0
 milestone_name: — Write Path + Full Sitemap
-status: executing
-stopped_at: Phase 29 complete — all 3 plans shipped
-last_updated: "2026-04-16T00:00:00.000Z"
-last_activity: 2026-04-16 -- Phase 29 shipped (commits 10d24ba, 7318588, 8eca6a0)
+status: completed
+stopped_at: Phase 29 context gathered
+last_updated: "2026-04-17T08:57:27.088Z"
+last_activity: 2026-04-17
 progress:
   total_phases: 6
   completed_phases: 4
@@ -47,31 +47,30 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-13)
+See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** An LLM agent can `ls`, `cat`, `grep`, edit, and `git push`
 issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
-**Current focus:** Phase 29 SHIPPED — JIRA write path complete.
-Next: /gsd-next to route to Phase 30 or v0.8.0 tag.
+**Current focus:** Milestone v0.8.0 complete — all phases done. Run `bash scripts/tag-v0.8.0.sh` to tag and push.
 
 ## Current Position
 
-Phase: 29 (jira-write-path-create-update-delete-or-close-via-transitions-api) — COMPLETE
-Plan: 3 of 3
-Cursor: **Phase 29 SHIPPED. JIRA write path complete (JIRA-06): create_issue, update_issue, delete_or_close via transitions API with DELETE fallback. 31 unit tests + 5-arm contract test. CHANGELOG updated. v0.8.0 tag script ready — user-gated.**
-Status: Phase 29 complete; v0.8.0 tag pending user gate
-Last activity: 2026-04-16 -- Phase 29 shipped (commits 10d24ba, 7318588, 8eca6a0)
+Phase: 29 (COMPLETE — last phase in v0.8.0 milestone)
+Plan: 3/3 complete
+Cursor: **v0.8.0 milestone complete. All JIRA requirements (RENAME-01, EXT-01, JIRA-01..06) validated. UAT passed (9/9). Awaiting user tag push via `bash scripts/tag-v0.8.0.sh`.**
+Status: Milestone v0.8.0 complete; tag push user-gated
+Last activity: 2026-04-16
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
 
-Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20 queued)
+Progress: [##########] v0.8.0 complete (Phase 29 of 29 closed)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 7
+- Total plans completed: 10
 - Average duration: —
 - Total execution time: 0.0 hours (of ~7h total budget, ~4.5h budgeted for MVD)
 
@@ -83,6 +82,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 | 22 | 3 | - | - |
 | 25 | 0 | - | - |
 | 24 | 4 | - | - |
+| 29 | 3 | - | - |
 
 **Recent Trend:**
 
@@ -205,18 +205,13 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-17T08:28:44.206Z
-Stopped at: Phase 29 context gathered
-Wave-level commit trail on `main` (Phase 16):
-Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
-Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).
-Wave C: `b4f538a` (rusqlite+sha2 deps), `34a704c` (audit field + with_audit + wire), `6504713` (ADF read path + fallback), `c4614a0` (6 audit unit tests), `3918452` (roundtrip.rs integration test).
-Wave D: (this commit — CHANGELOG [v0.6.0] + version bump 0.5.0→0.6.0 + scripts/tag-v0.6.0.sh + 16-SUMMARY.md).
-317 workspace tests pass (+39 vs Phase 15 baseline of 278). Clippy `-D warnings` clean, `cargo fmt --all --check` clean.
-Cargo.toml workspace version bumped `0.5.0 → 0.6.0`; Cargo.lock regenerated via `cargo check --workspace`.
-Resume file: .planning/phases/29-jira-write-path-create-update-delete-or-close-via-transitions-api/29-CONTEXT.md
-Cursor next: **v0.6.0 tag push** (orchestrator gate — run `bash scripts/green-gauntlet.sh --full`, then `bash scripts/tag-v0.6.0.sh`).
-After tag: Phase 17 (swarm confluence-direct — add `--mode confluence-direct` to `reposix-swarm`) is the recommended next execution target.
+Last session: 2026-04-16T00:00:00.000Z
+Stopped at: Phase 29 complete — milestone v0.8.0 complete, all phases done, UAT 9/9 passed
+Resume file: None
+Cursor next: **v0.8.0 tag push — user gate. Run `bash scripts/tag-v0.8.0.sh`.** After tag: start new milestone or declare v0.8.0 released.
+
+Wave-level commit trail on `main` (Phase 29):
+`10d24ba` (29-01: ADF write encoder + issuetype cache), `7318588` (29-02: create_issue + update_issue write path), `8eca6a0` (29-03: delete_or_close transitions + contract + CHANGELOG).
 
 ### Previous session (Phase 14, for reference)
 

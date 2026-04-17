@@ -14,7 +14,14 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 
 <!-- Shipped and confirmed valuable. -->
 
-(None yet — ship to validate)
+- ✓ **RENAME-01: `IssueBackend` → `BackendConnector` trait rename** — Phase 27
+- ✓ **EXT-01: `Issue.extensions` field** — Phase 27
+- ✓ **JIRA-01: `reposix-jira` crate — read-only `BackendConnector` impl** — Phase 28
+- ✓ **JIRA-02: JQL pagination + status-category mapping + subtask hierarchy** — Phase 28
+- ✓ **JIRA-03: JIRA-specific `extensions` in frontmatter** — Phase 28
+- ✓ **JIRA-04: CLI dispatch** — Phase 28
+- ✓ **JIRA-05: Tests + docs + ADRs** — Phase 28
+- ✓ **JIRA-06 (stretch): JIRA write path** — Phase 29. `create_issue` (POST), `update_issue` (PUT), `delete_or_close` (Transitions API + DELETE fallback). 31 unit tests + 5-arm contract test. Audit log for all mutations.
 
 ### Active
 
@@ -39,15 +46,7 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 - [ ] **FUSE never blocks the kernel forever.** All upstream HTTP calls have a 5-second timeout; on timeout the daemon returns `EIO` (per `docs/research/initial-report.md` §"Graceful Degradation via POSIX Errors"), never hangs.
 - [ ] **Demo recording must show guardrails firing.** The asciinema/script recording includes at least one allowlist refusal and one 409-conflict-as-merge-conflict resolution. A demo that only shows happy-path is dishonest about what reposix is.
 
-**JIRA integration (v0.8.0 target)**
-- [ ] **RENAME-01: `IssueBackend` → `BackendConnector` trait rename.** The current name is accurate for GitHub Issues but misleading for Confluence pages (and anything non-issue). Rename across all crates; update docs and ADR-004.
-- [ ] **EXT-01: `Issue.extensions` field.** Add `extensions: BTreeMap<String, serde_yaml::Value>` to `Issue` for typed backend metadata (strings, ints, booleans, nested maps) that doesn't map to canonical fields (e.g. JIRA key, issue type, priority, hierarchy_level). Serialized as a YAML map in frontmatter; empty map omitted.
-- [ ] **JIRA-01: `reposix-jira` crate — read-only `BackendConnector` impl.** JIRA Cloud REST v3 (`https://{instance}.atlassian.net/rest/api/3`). Basic auth with `email:JIRA_API_TOKEN`.
-- [ ] **JIRA-02: JQL pagination + status-category mapping + subtask hierarchy.** `project = {KEY} ORDER BY updated DESC`, offset-based (max 100/page). Status mapping via `statusCategory.key`. Subtask `parent` → `Issue.parent_id`.
-- [ ] **JIRA-03: JIRA-specific `extensions` in frontmatter.** `jira_key` ("PROJ-42"), `issue_type` ("Story"), `priority` ("Medium"), `status_name` (raw pre-mapping string).
-- [ ] **JIRA-04: CLI dispatch.** `list --backend jira`, `mount --backend jira --project <PROJECT_KEY>`. Env vars: `JIRA_EMAIL`, `JIRA_API_TOKEN`, `REPOSIX_JIRA_INSTANCE`.
-- [ ] **JIRA-05: Tests + docs + ADRs.** 12 enumerated wiremock tests (see Phase 28 roadmap §Test matrix). Contract test (always-on wiremock + `#[ignore]`-gated live). `docs/reference/jira.md`. Two ADRs: `docs/decisions/004-backend-connector-rename.md` (naming rationale + alternatives) and `docs/decisions/005-jira-issue-mapping.md` (ID vs key, status+resolution mapping, ADF stripping, version synthesis).
-- [ ] **JIRA-06 (stretch): JIRA write path.** `create_issue` → POST, `update_issue` → PUT, `delete_or_close` → Transitions API. Audit log for all mutations.
+*(JIRA integration v0.8.0 — all requirements shipped; see Validated above)*
 
 ### Out of Scope
 
@@ -143,4 +142,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-14 — Milestone v0.6.0 started (session 6)*
+*Last updated: 2026-04-16 — Milestone v0.8.0 complete (Phase 29 shipped, all JIRA requirements validated)*

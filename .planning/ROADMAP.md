@@ -738,7 +738,7 @@ Plans:
 **Goal:** Complete the JIRA write path on `JiraBackend`. `create_issue` → `POST /rest/api/3/issue` (`fields.project.key`, `fields.summary`, `fields.issuetype.name` — discover valid types via `GET /rest/api/3/issuetype`, cache per session; body encoded as ADF `{"type":"doc","version":1,"content":[{"type":"paragraph","content":[{"type":"text","text":"..."}]}]}`). `update_issue` → `PUT /rest/api/3/issue/{id}` with `{fields:{summary,description(ADF),labels,assignee}}` — status changes are NOT allowed via PUT, only via transitions; `expected_version` silently ignored (no ETag). `delete_or_close` → two-step: (1) `GET /rest/api/3/issue/{id}/transitions` to discover available transitions, (2) `POST /rest/api/3/issue/{id}/transitions` with `{transition:{id}}` — select transition by matching `DeleteReason` to target `statusCategory.key == "done"`, prefer a transition name containing "won't"/"reject"/"not planned" for `WontFix`; if `fields.resolution` is required by the screen, include `{fields:{resolution:{name:"Done"}}}` and catch 400 to retry without it. Fallback to `DELETE /rest/api/3/issue/{id}` if transitions unavailable and DELETE returns 204 (requires admin permission). Enable `supports(BackendFeature::Delete)` and `supports(BackendFeature::Transitions)`. Audit log rows for all mutations. Wiremock write-path tests ≥3. Contract test write extension.
 **Requirements:** JIRA-06
 **Depends on:** Phase 28 (JIRA read-only adapter)
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 29-01-PLAN.md — ADF helpers + create_issue (SHIPPED)
