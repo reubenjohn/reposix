@@ -1,10 +1,6 @@
 # ADR-002: Confluence page to issue mapping
 
-> **Superseded in part (2026-04-14).** The flat-layout decision in this
-> ADR's §"Options" table (row A, chosen in v0.3) was replaced by
-> [ADR-003](003-nested-mount-layout.md) (`pages/` bucket + `tree/` symlink
-> overlay). The field-mapping, status-mapping, auth, pagination, and
-> rate-limit decision sections below remain authoritative.
+> **Status:** Active — with scope note. The flat-layout field mapping in this ADR applies to `pages/<id>.md` files. The `tree/` hierarchy overlay (parent-child symlinks) is specified separately in [ADR-003](003-nested-mount-layout.md) which supersedes the hierarchy discussion here. The field-mapping, status-mapping, auth, pagination, and rate-limit decision sections below remain authoritative.
 
 - **Status:** Accepted (layout section superseded by ADR-003)
 - **Date:** 2026-04-13
@@ -215,3 +211,7 @@ the same way `Tainted::sanitize` strips sim/GitHub server fields today.
 - [Confluence: spaces endpoint](https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-space/)
 - [Confluence: Basic auth for REST APIs](https://developer.atlassian.com/cloud/confluence/basic-auth-for-rest-apis/)
 - [Confluence: rate limiting](https://developer.atlassian.com/cloud/confluence/rate-limiting/)
+
+## See Also
+
+- [ADR-003: Nested mount layout](003-nested-mount-layout.md) — `tree/` symlink hierarchy built on top of the flat-layout fields defined here

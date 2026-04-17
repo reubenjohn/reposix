@@ -392,9 +392,11 @@ Phase 12 is tracked in
 [ROADMAP.md §Phase 12](https://github.com/reubenjohn/reposix/blob/main/.planning/ROADMAP.md).
 It is **not** shipping tonight — the skeleton exists, full planning and
 execution are queued for the next milestone. Until then, this guide's
-crates-model is the supported path; when Phase 12 lands, a new ADR-003
+crates-model is the supported path; when Phase 12 lands, a future ADR
 will document the migration path and both models will coexist for at
-least one release cycle.
+least one release cycle. (Note: ADR-003 is already taken by the
+[nested mount layout decision](../decisions/003-nested-mount-layout.md);
+the subprocess ABI ADR will carry a different number.)
 
 ## FAQ
 
