@@ -137,7 +137,6 @@ pub struct JiraBackend {
     rate_limit_gate: Arc<Mutex<Option<Instant>>>,
     audit: Option<Arc<Mutex<Connection>>>,
     /// Per-session cache for valid issue type names (populated on first `create_issue`).
-    #[allow(dead_code)] // wired in Plan 29-02 (create_issue)
     issue_type_cache: Arc<OnceLock<Vec<String>>>,
 }
 
@@ -469,6 +468,51 @@ impl JiraBackend {
         let gate = Instant::now() + Duration::from_secs(secs);
         *self.rate_limit_gate.lock() = Some(gate);
     }
+
+    /// Fetch valid issue type names for `project` from the JIRA API.
+    ///
+    /// Called at most once per backend instance (results are cached in
+    /// `issue_type_cache`). Prefers `"Task"` when selecting a type for
+    /// `create_issue`.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if the HTTP call fails or the response cannot be parsed.
+    async fn fetch_issue_types(&self, project: &str) -> Result<Vec<String>> {
+        let url = format!(
+            "{}/rest/api/3/issuetype?projectKeys={}",
+            self.base(),
+            project
+        );
+        let header_owned = self.standard_headers();
+        let header_refs: Vec<(&str, &str)> =
+            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        self.await_rate_limit_gate().await;
+        let resp = self
+            .http
+            .request_with_headers(Method::GET, url.as_str(), &header_refs)
+            .await?;
+        self.ingest_rate_limit(&resp);
+        let status = resp.status();
+        let bytes = resp.bytes().await?;
+        if !status.is_success() {
+            return Err(Error::Other(format!(
+                "jira issuetype fetch returned {status}"
+            )));
+        }
+        // Response: array of issue type objects with at least a "name" field.
+        let types: Vec<serde_json::Value> = serde_json::from_slice(&bytes)?;
+        let names: Vec<String> = types
+            .iter()
+            .filter_map(|t| t.get("name").and_then(|n| n.as_str()).map(str::to_owned))
+            .collect();
+        if names.is_empty() {
+            return Err(Error::Other(
+                "jira issuetype endpoint returned no types for project".into(),
+            ));
+        }
+        Ok(names)
+    }
 }
 
 // ─── BackendConnector impl ────────────────────────────────────────────────────
@@ -492,22 +536,141 @@ impl BackendConnector for JiraBackend {
         self.get_issue_inner(id).await
     }
 
-    async fn create_issue(&self, _project: &str, _issue: Untainted<Issue>) -> Result<Issue> {
-        Err(Error::Other(
-            "not supported: read-only backend — see Phase 29".into(),
-        ))
+    async fn create_issue(&self, project: &str, issue: Untainted<Issue>) -> Result<Issue> {
+        // Response struct declared before statements to satisfy clippy::items_after_statements.
+        #[derive(serde::Deserialize)]
+        struct CreateResp {
+            id: String,
+        }
+
+        // Get or initialize issue type cache.
+        let issue_types = if let Some(cached) = self.issue_type_cache.get() {
+            cached
+        } else {
+            let fetched = self.fetch_issue_types(project).await?;
+            // Ignore error if another concurrent call beat us to it.
+            let _ = self.issue_type_cache.set(fetched);
+            self.issue_type_cache.get().expect("just set")
+        };
+        let chosen_type = issue_types
+            .iter()
+            .find(|t| t.eq_ignore_ascii_case("Task"))
+            .or_else(|| issue_types.first())
+            .cloned()
+            .unwrap_or_else(|| "Task".to_owned());
+
+        let issue_ref = issue.inner_ref();
+        let post_body = serde_json::json!({
+            "fields": {
+                "project": {"key": project},
+                "summary": issue_ref.title,
+                "issuetype": {"name": chosen_type},
+                "description": crate::adf::adf_paragraph_wrap(&issue_ref.body),
+                "labels": issue_ref.labels,
+            }
+        });
+        let post_body_bytes = serde_json::to_vec(&post_body)?;
+        let url = format!("{}/rest/api/3/issue", self.base());
+        let header_owned = self.write_headers();
+        let header_refs: Vec<(&str, &str)> =
+            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        self.await_rate_limit_gate().await;
+        let resp = self
+            .http
+            .request_with_headers_and_body(
+                Method::POST,
+                url.as_str(),
+                &header_refs,
+                Some(post_body_bytes),
+            )
+            .await?;
+        self.ingest_rate_limit(&resp);
+        let status = resp.status();
+        let bytes = resp.bytes().await?;
+        let status_u16 = status.as_u16();
+        // T-16-C-04 pattern: audit title only (max 256 chars), never body.
+        let req_summary: String = issue_ref.title.chars().take(256).collect();
+        self.audit_event(
+            "POST",
+            "/rest/api/3/issue",
+            status_u16,
+            &req_summary,
+            &bytes,
+        );
+        if !status.is_success() {
+            return Err(Error::Other(format!(
+                "jira returned {status} for POST /rest/api/3/issue: {}",
+                String::from_utf8_lossy(&bytes)
+                    .chars()
+                    .take(200)
+                    .collect::<String>()
+            )));
+        }
+        // Response: {"id": "10001", "key": "PROJ-1", "self": "..."}
+        let created: CreateResp = serde_json::from_slice(&bytes)?;
+        let new_id: u64 = created.id.parse().map_err(|_| {
+            Error::Other(format!(
+                "jira create returned non-numeric id: {}",
+                created.id
+            ))
+        })?;
+        // Hydrate full Issue via GET.
+        self.get_issue_inner(IssueId(new_id)).await
     }
 
     async fn update_issue(
         &self,
         _project: &str,
-        _id: IssueId,
-        _patch: Untainted<Issue>,
+        id: IssueId,
+        patch: Untainted<Issue>,
         _expected_version: Option<u64>,
     ) -> Result<Issue> {
-        Err(Error::Other(
-            "not supported: read-only backend — see Phase 29".into(),
-        ))
+        // JIRA has no ETag — expected_version is silently ignored.
+        // Status changes are NOT allowed via PUT (require transitions).
+        let patch_ref = patch.inner_ref();
+        let put_body = serde_json::json!({
+            "fields": {
+                "summary": patch_ref.title,
+                "description": crate::adf::adf_paragraph_wrap(&patch_ref.body),
+                "labels": patch_ref.labels,
+            }
+        });
+        let put_body_bytes = serde_json::to_vec(&put_body)?;
+        let issue_path = format!("/rest/api/3/issue/{}", id.0);
+        let url = format!("{}{}", self.base(), issue_path);
+        let header_owned = self.write_headers();
+        let header_refs: Vec<(&str, &str)> =
+            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        self.await_rate_limit_gate().await;
+        let resp = self
+            .http
+            .request_with_headers_and_body(
+                Method::PUT,
+                url.as_str(),
+                &header_refs,
+                Some(put_body_bytes),
+            )
+            .await?;
+        self.ingest_rate_limit(&resp);
+        let status = resp.status();
+        let bytes = resp.bytes().await?;
+        let status_u16 = status.as_u16();
+        let req_summary: String = patch_ref.title.chars().take(256).collect();
+        self.audit_event("PUT", &issue_path, status_u16, &req_summary, &bytes);
+        // JIRA PUT returns 204 No Content on success.
+        if status == StatusCode::NO_CONTENT {
+            return self.get_issue_inner(id).await;
+        }
+        if status == StatusCode::NOT_FOUND {
+            return Err(Error::Other(format!("not found: {}", id.0)));
+        }
+        Err(Error::Other(format!(
+            "jira returned {status} for PUT {issue_path}: {}",
+            String::from_utf8_lossy(&bytes)
+                .chars()
+                .take(200)
+                .collect::<String>()
+        )))
     }
 
     async fn delete_or_close(
@@ -1217,65 +1380,141 @@ mod tests {
         );
     }
 
-    // ─── Test 12: write_ops_return_not_supported ─────────────────────────
+    // ─── Helper: make_untainted ──────────────────────────────────────────
 
-    #[tokio::test]
-    async fn write_ops_return_not_supported() {
-        use chrono::TimeZone;
+    fn make_untainted(title: &str, body: &str) -> reposix_core::Untainted<Issue> {
         use reposix_core::{sanitize, ServerMetadata};
-
-        let creds = JiraCreds {
-            email: "a@b.com".into(),
-            api_token: "tok".into(),
-        };
-        let backend = JiraBackend::new_with_base_url(creds, "http://localhost".into()).unwrap();
-        let now = chrono::Utc.with_ymd_and_hms(2025, 6, 1, 0, 0, 0).unwrap();
-        let dummy_issue = Issue {
-            id: IssueId(1),
-            title: "dummy".into(),
+        let now = chrono::Utc::now();
+        let raw = Issue {
+            id: IssueId(0),
+            title: title.to_owned(),
+            body: body.to_owned(),
             status: IssueStatus::Open,
-            assignee: None,
-            labels: vec![],
             created_at: now,
             updated_at: now,
-            version: 1,
-            body: String::new(),
+            version: 0,
+            assignee: None,
+            labels: vec![],
             parent_id: None,
             extensions: BTreeMap::new(),
         };
-        let server_meta = ServerMetadata {
-            id: IssueId(1),
-            created_at: now,
-            updated_at: now,
-            version: 1,
-        };
-        let untainted = sanitize(Tainted::new(dummy_issue.clone()), server_meta);
+        sanitize(
+            Tainted::new(raw),
+            ServerMetadata {
+                id: IssueId(0),
+                created_at: now,
+                updated_at: now,
+                version: 0,
+            },
+        )
+    }
 
-        let create_err = backend
-            .create_issue("P", untainted.clone())
-            .await
-            .unwrap_err();
-        assert!(
-            create_err.to_string().contains("not supported"),
-            "create_issue must return not supported, got: {create_err}"
-        );
+    // ─── Test 12: create_issue_posts_to_rest_api ─────────────────────────
 
-        let update_err = backend
-            .update_issue("P", IssueId(1), untainted.clone(), None)
-            .await
-            .unwrap_err();
-        assert!(
-            update_err.to_string().contains("not supported"),
-            "update_issue must return not supported, got: {update_err}"
-        );
+    #[tokio::test]
+    async fn create_issue_posts_to_rest_api() {
+        let server = MockServer::start().await;
+        // Mock: GET /rest/api/3/issuetype?projectKeys=P
+        Mock::given(method("GET"))
+            .and(path("/rest/api/3/issuetype"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+                {"id": "10001", "name": "Task"},
+                {"id": "10002", "name": "Bug"},
+            ])))
+            .mount(&server)
+            .await;
+        // Mock: POST /rest/api/3/issue → 201
+        Mock::given(method("POST"))
+            .and(path("/rest/api/3/issue"))
+            .respond_with(ResponseTemplate::new(201).set_body_json(serde_json::json!({
+                "id": "10042",
+                "key": "P-42",
+                "self": format!("{}/rest/api/3/issue/10042", server.uri()),
+            })))
+            .mount(&server)
+            .await;
+        // Mock: GET /rest/api/3/issue/10042 → full fixture
+        let issue_fixture = issue_json(10042, "P-42", "test create", "new", "To Do", None);
+        Mock::given(method("GET"))
+            .and(path("/rest/api/3/issue/10042"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(issue_fixture))
+            .mount(&server)
+            .await;
 
-        let delete_err = backend
-            .delete_or_close("P", IssueId(1), DeleteReason::Completed)
+        let backend = make_backend(&server.uri());
+        let issue = make_untainted("test create", "body text");
+        let created = backend.create_issue("P", issue).await.expect("create");
+        assert_eq!(created.title, "test create");
+        assert_eq!(created.id, IssueId(10042));
+    }
+
+    // ─── Test 13: update_issue_puts_fields ──────────────────────────────
+
+    #[tokio::test]
+    async fn update_issue_puts_fields() {
+        let server = MockServer::start().await;
+        // Mock: PUT /rest/api/3/issue/99 → 204
+        Mock::given(method("PUT"))
+            .and(path("/rest/api/3/issue/99"))
+            .respond_with(ResponseTemplate::new(204))
+            .mount(&server)
+            .await;
+        // Mock: GET /rest/api/3/issue/99 → updated fixture
+        let updated_fixture = issue_json(99, "P-99", "updated title", "new", "To Do", None);
+        Mock::given(method("GET"))
+            .and(path("/rest/api/3/issue/99"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(updated_fixture))
+            .mount(&server)
+            .await;
+
+        let backend = make_backend(&server.uri());
+        let patch = make_untainted("updated title", "new body");
+        let updated = backend
+            .update_issue("P", IssueId(99), patch, None)
             .await
-            .unwrap_err();
-        assert!(
-            delete_err.to_string().contains("not supported"),
-            "delete_or_close must return not supported, got: {delete_err}"
-        );
+            .expect("update");
+        assert_eq!(updated.title, "updated title");
+    }
+
+    // ─── Test 14: create_issue_discovers_issuetype ───────────────────────
+
+    #[tokio::test]
+    async fn create_issue_discovers_issuetype() {
+        let server = MockServer::start().await;
+        // Only Story and Bug — no Task — should pick Story (first).
+        Mock::given(method("GET"))
+            .and(path("/rest/api/3/issuetype"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+                {"id": "10001", "name": "Story"},
+                {"id": "10002", "name": "Bug"},
+            ])))
+            .expect(1) // cache means this fires exactly once
+            .mount(&server)
+            .await;
+        Mock::given(method("POST"))
+            .and(path("/rest/api/3/issue"))
+            .respond_with(ResponseTemplate::new(201).set_body_json(serde_json::json!({
+                "id": "10001", "key": "P-1",
+            })))
+            .mount(&server)
+            .await;
+        let get_fixture = issue_json(10001, "P-1", "s", "new", "To Do", None);
+        Mock::given(method("GET"))
+            .and(path("/rest/api/3/issue/10001"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(get_fixture))
+            .mount(&server)
+            .await;
+
+        let backend = make_backend(&server.uri());
+        // Two creates — issuetype GET should only fire once (cached).
+        let _ = backend
+            .create_issue("P", make_untainted("s", "b"))
+            .await
+            .expect("create 1");
+        // Second create reuses cache — Mock with expect(1) will verify at drop.
+        let _ = backend
+            .create_issue("P", make_untainted("s", "b"))
+            .await
+            .expect("create 2");
     }
 }
