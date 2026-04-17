@@ -8,8 +8,8 @@ reposix is a git-backed FUSE filesystem that exposes REST-based issue trackers (
 
 ![reposix demo](https://raw.githubusercontent.com/reubenjohn/reposix/main/docs/social/assets/demo.gif){ .no-lightbox width="100%" }
 
-!!! success "v0.4 — four autonomous overnight sessions, 2026-04-13 → 2026-04-14"
-    Every line of code in this repository was written by a coding agent across four overnight sessions. v0.1 (simulator + FUSE + guardrails), v0.2 (real-GitHub adapter), v0.3 (real-Confluence adapter, live against `reuben-john.atlassian.net`), and v0.4 (`pages/` + `tree/` nested mount layout — the "hero image" folder structure). An adversarial red-team subagent critiques the design; planners verify each phase. Treat as alpha — but every demo in this site is reproducible on a stock Ubuntu host in under 5 minutes.
+!!! success "v0.7 — six autonomous overnight sessions, 2026-04-13 → 2026-04-16"
+    Every line of code in this repository was written by a coding agent across six overnight sessions. v0.1 (simulator + FUSE + guardrails), v0.2 (real-GitHub adapter), v0.3 (real-Confluence adapter, live against `reuben-john.atlassian.net`), v0.4 (`pages/` + `tree/` nested mount layout), v0.5 (`_INDEX.md` sitemaps), v0.6 (Confluence write path + labels + refresh), and v0.7 (hardening + benchmarks + comments/attachments/whiteboards + docs reorg). An adversarial red-team subagent critiques the design; planners verify each phase. Treat as alpha — but every demo in this site is reproducible on a stock Ubuntu host in under 5 minutes.
 
 ## The one-sentence thesis
 
@@ -39,13 +39,13 @@ bash scripts/demo.sh
 
 Runs the full nine-step demo against an in-process simulator. No credentials. No network. Exits zero in under 2 minutes.
 
-## What shipped in v0.1
+## What's in the box (v0.7)
 
 <div class="grid cards" markdown>
 
 -   :material-file-document: **[Five-crate workspace](reference/crates.md)**
 
-    `-core`, `-sim`, `-fuse`, `-remote`, `-cli`. 133 tests. All crates `#![forbid(unsafe_code)]`. `cargo clippy --workspace -- -D warnings` is clean.
+    `-core`, `-sim`, `-fuse`, `-remote`, `-cli`. 317+ tests. All crates `#![forbid(unsafe_code)]`. `cargo clippy --workspace -- -D warnings` is clean.
 
 -   :material-shield-lock: **[Eight security guardrails](security.md)**
 
@@ -53,7 +53,7 @@ Runs the full nine-step demo against an in-process simulator. No credentials. No
 
 -   :material-folder-multiple: **[Working POSIX mount](reference/cli.md#reposix-mount)**
 
-    `reposix mount /tmp/mnt --backend http://127.0.0.1:7878` — issues as `<id>.md` with YAML frontmatter. `ls`, `cat`, `grep -r` all work.
+    `reposix mount /tmp/mnt --backend sim` — issues/pages as `<id>.md` with YAML frontmatter. `ls`, `cat`, `grep -r` all work. Backends: simulator, GitHub Issues, Confluence Cloud.
 
 -   :material-source-branch: **[git-remote-reposix helper](reference/git-remote.md)**
 
@@ -79,6 +79,6 @@ This project is an experiment in the pattern from Simon Willison's April 2026 in
 -   :material-lightbulb-on: **[Why reposix exists](why.md)** — the token economics, the POSIX-pretraining argument, and the benchmark.
 -   :material-graph: **[Architecture](architecture.md)** — component diagrams, data flow, the async bridge from FUSE to HTTP.
 -   :material-play-circle: **[Demo walkthrough](demo.md)** — step-by-step explanation of what the recording shows.
--   :material-shield-lock: **[Security](security.md)** — lethal trifecta analysis, the full guardrails table, what's deferred to v0.2.
+-   :material-shield-lock: **[Security](security.md)** — lethal trifecta analysis, the full guardrails table, what's deferred to v0.8.
 
 </div>

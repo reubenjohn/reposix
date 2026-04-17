@@ -282,7 +282,7 @@ reposix is a textbook **lethal trifecta** (Simon Willison's framing): private re
 
 ## Honest scope
 
-This project is the output of three autonomous coding-agent sessions on 2026-04-13 → 2026-04-14 — single agent, GSD planning workflow, no human in the loop after session kickoff. Every phase has CONTEXT + PLAN + SUMMARY + REVIEW + VERIFICATION files under `.planning/phases/`; every commit is atomic with a phase-prefix message (`feat(11-A-N):`, etc.). SG-01 through SG-08 are mechanically enforced by tests + lints, but it's still alpha — simulator runs are safe, real-backend runs are safe under the SG-01 allowlist but assume the backend token has the scope you gave it. Read [`threat-model-and-critique.md`](.planning/research/threat-model-and-critique.md) end-to-end before running against any production tenant.
+This project is the output of six autonomous coding-agent sessions on 2026-04-13 → 2026-04-16 — single agent, GSD planning workflow, no human in the loop after session kickoff. Every phase has CONTEXT + PLAN + SUMMARY + REVIEW + VERIFICATION files under `.planning/phases/`; every commit is atomic with a phase-prefix message (`feat(11-A-N):`, etc.). SG-01 through SG-08 are mechanically enforced by tests + lints, but it's still alpha — simulator runs are safe, real-backend runs are safe under the SG-01 allowlist but assume the backend token has the scope you gave it. Read [`threat-model-and-critique.md`](.planning/research/threat-model-and-critique.md) end-to-end before running against any production tenant.
 
 Proof of usage, not proof of concept.
 

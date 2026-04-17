@@ -615,12 +615,13 @@ Initial autonomous overnight build. Tagged at `v0.1.0`.
 - Rust over Python for the production substrate; FUSE perf matters under swarm load.
 - `fuser` with `default-features = false` to avoid the `libfuse-dev` apt dep on hosts without sudo.
 
-See [PROJECT-STATUS.md](PROJECT-STATUS.md) for the timeline + outstanding items, and [MORNING-BRIEF.md](MORNING-BRIEF.md) for the executive summary.
+See [PROJECT-STATUS.md](docs/archive/PROJECT-STATUS.md) for the v0.1/v0.2-era timeline and [MORNING-BRIEF.md](docs/archive/MORNING-BRIEF.md) for the v0.1-era executive summary (both archived; current state in [`HANDOFF.md`](HANDOFF.md)).
 
 ---
 
 [Unreleased]: https://github.com/reubenjohn/reposix/compare/v0.7.0...HEAD
 [v0.7.0]: https://github.com/reubenjohn/reposix/compare/v0.6.0...v0.7.0
+[v0.6.0]: https://github.com/reubenjohn/reposix/compare/v0.5.0...v0.6.0
 [v0.5.0]: https://github.com/reubenjohn/reposix/compare/v0.4.1...v0.5.0
 [v0.4.1]: https://github.com/reubenjohn/reposix/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/reubenjohn/reposix/compare/v0.3.0...v0.4.0
