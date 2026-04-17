@@ -18,10 +18,31 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ### Added
 
+- **JIRA write path** — `JiraBackend` now implements full read/write:
+  - `create_issue`: POST `/rest/api/3/issue` with ADF body + per-session
+    issuetype discovery cache (`Arc<OnceLock<Vec<String>>>`). (Phase 29.)
+  - `update_issue`: PUT `/rest/api/3/issue/{id}` with ADF + labels; silently
+    ignores `expected_version` (JIRA has no ETag). (Phase 29.)
+  - `delete_or_close`: two-step transitions API — GET available transitions,
+    prefer "done" category, POST selected transition (with WontFix preference
+    for `NotPlanned`/`Duplicate` reasons); 400 retry with resolution field;
+    DELETE fallback when no transitions available (logged at WARN). (Phase 29.)
+  - All three write ops emit audit rows (method, path, status, title-only). (Phase 29.)
+- **`BackendFeature::Delete` and `BackendFeature::Transitions`** now reported
+  as supported by `JiraBackend`. (Phase 29.)
+- **ADF Markdown read path** — JIRA issue bodies now render as Markdown via
+  `adf_to_markdown` (same recursive visitor as Confluence); falls back to
+  plain-text on parse error. (Phase 29.)
+- **`adf_paragraph_wrap`** — wraps plain text in minimal ADF document structure
+  for JIRA REST v3 write requests. (Phase 29.)
+- **Write contract test** — `assert_write_contract` (create → update → delete →
+  assert-gone) added to `tests/contract.rs` with wiremock arm
+  (`contract_jira_wiremock_write`) and live arm (`contract_jira_live_write`,
+  `#[ignore]`-gated). (Phase 29.)
 - **`reposix-jira` crate** — `JiraBackend` implementing `BackendConnector`
   against JIRA Cloud REST v3 (`POST /rest/api/3/search/jql`, cursor pagination).
-  12 wiremock tests + 3-arm contract test (sim + wiremock + live-`#[ignore]`).
-  Covers requirements JIRA-01..JIRA-05. (Phase 28.)
+  31 unit tests + 5-arm contract test (sim + wiremock + wiremock-write + 2 live-`#[ignore]`).
+  Covers requirements JIRA-01..JIRA-06. (Phases 28–29.)
 - **`list --backend jira` and `mount --backend jira`** CLI commands.
   `read_jira_env_from` collects all missing vars in one error, never echoes
   values (T-28-02-01). (Phase 28.)
@@ -45,10 +66,8 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 ### Notes
 
 - `BackendFeature::StrongVersioning` is `false` for JIRA — version synthesized
-  from `fields.updated` timestamp (no server-side ETag). JIRA write path with
-  Transitions API planned for Phase 29.
-- JIRA write stubs (`create_issue`, `update_issue`, `delete_or_close`) return
-  "not supported: read-only backend — see Phase 29".
+  from `fields.updated` timestamp (no server-side ETag).
+- JIRA write path ships in Phase 29; all three write operations are live.
 
 ## [v0.7.0] — 2026-04-16
 

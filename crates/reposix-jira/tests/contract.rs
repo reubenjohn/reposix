@@ -20,7 +20,7 @@
 use std::path::PathBuf;
 
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::backend::BackendConnector;
+use reposix_core::backend::{BackendConnector, DeleteReason};
 use reposix_core::{IssueId, IssueStatus};
 use reposix_jira::{JiraBackend, JiraCreds};
 use wiremock::matchers::{method, path};
@@ -226,6 +226,206 @@ async fn contract_jira_wiremock() {
     assert_contract(&backend, "PROJ", IssueId(10001)).await;
 }
 
+// ─── Write contract helpers ───────────────────────────────────────────────────
+
+fn make_untainted_for_contract(
+    title: &str,
+    body: &str,
+) -> reposix_core::Untainted<reposix_core::Issue> {
+    use reposix_core::{sanitize, ServerMetadata};
+    let now = chrono::Utc::now();
+    let raw = reposix_core::Issue {
+        id: reposix_core::IssueId(0),
+        title: title.to_owned(),
+        body: body.to_owned(),
+        status: reposix_core::IssueStatus::Open,
+        created_at: now,
+        updated_at: now,
+        version: 0,
+        assignee: None,
+        labels: vec![],
+        parent_id: None,
+        extensions: Default::default(),
+    };
+    sanitize(
+        reposix_core::Tainted::new(raw),
+        ServerMetadata {
+            id: reposix_core::IssueId(0),
+            created_at: now,
+            updated_at: now,
+            version: 0,
+        },
+    )
+}
+
+/// Write contract: create → update → delete → assert-gone.
+async fn assert_write_contract<B: BackendConnector>(backend: &B, project: &str) {
+    // Create
+    let issue = make_untainted_for_contract("contract-write-test", "initial body");
+    let created = backend
+        .create_issue(project, issue)
+        .await
+        .unwrap_or_else(|e| panic!("[{}] create_issue failed: {e:?}", backend.name()));
+    assert_eq!(
+        created.title,
+        "contract-write-test",
+        "[{}] created title mismatch",
+        backend.name()
+    );
+
+    // Update
+    let patch = make_untainted_for_contract("contract-write-updated", "updated body");
+    let updated = backend
+        .update_issue(project, created.id, patch, None)
+        .await
+        .unwrap_or_else(|e| panic!("[{}] update_issue failed: {e:?}", backend.name()));
+    assert_eq!(
+        updated.title,
+        "contract-write-updated",
+        "[{}] updated title mismatch",
+        backend.name()
+    );
+
+    // Delete
+    backend
+        .delete_or_close(project, created.id, DeleteReason::Completed)
+        .await
+        .unwrap_or_else(|e| panic!("[{}] delete_or_close failed: {e:?}", backend.name()));
+
+    // Verify deleted
+    let gone = backend.get_issue(project, created.id).await;
+    assert!(
+        gone.is_err(),
+        "[{}] get_issue after delete should be Err, got {:?}",
+        backend.name(),
+        gone
+    );
+}
+
+/// Build a wiremock server that handles the full write contract sequence.
+async fn build_jira_wiremock_write_server() -> (String, MockServer) {
+    let server = MockServer::start().await;
+
+    // GET /rest/api/3/issuetype → ["Task"]
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issuetype"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            {"id": "10001", "name": "Task"}
+        ])))
+        .mount(&server)
+        .await;
+
+    // POST /rest/api/3/issue → 201 {"id":"1001","key":"P-1"}
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue"))
+        .respond_with(ResponseTemplate::new(201).set_body_json(serde_json::json!({
+            "id": "1001", "key": "P-1"
+        })))
+        .mount(&server)
+        .await;
+
+    // PUT /rest/api/3/issue/1001 → 204
+    Mock::given(method("PUT"))
+        .and(path("/rest/api/3/issue/1001"))
+        .respond_with(ResponseTemplate::new(204))
+        .mount(&server)
+        .await;
+
+    // GET /rest/api/3/issue/1001/transitions → done transition
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/1001/transitions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "transitions": [
+                {"id": "31", "name": "Done", "to": {"statusCategory": {"key": "done"}}}
+            ]
+        })))
+        .mount(&server)
+        .await;
+
+    // POST /rest/api/3/issue/1001/transitions → 204
+    Mock::given(method("POST"))
+        .and(path("/rest/api/3/issue/1001/transitions"))
+        .respond_with(ResponseTemplate::new(204))
+        .mount(&server)
+        .await;
+
+    // GET /rest/api/3/issue/1001 — FIFO: first registered fires first.
+    // Call order: (1) create hydrate → "contract-write-test",
+    //             (2) update hydrate → "contract-write-updated",
+    //             (3) assert-gone    → 404.
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/1001"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(jira_issue_json_with_summary(
+                1001,
+                "P-1",
+                "contract-write-test",
+            )),
+        )
+        .up_to_n_times(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/1001"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_json(jira_issue_json_with_summary(
+                1001,
+                "P-1",
+                "contract-write-updated",
+            )),
+        )
+        .up_to_n_times(1)
+        .mount(&server)
+        .await;
+
+    Mock::given(method("GET"))
+        .and(path("/rest/api/3/issue/1001"))
+        .respond_with(ResponseTemplate::new(404).set_body_json(serde_json::json!({
+            "errorMessages": ["Issue Does Not Exist"], "errors": {}
+        })))
+        .mount(&server)
+        .await;
+
+    (server.uri(), server)
+}
+
+fn jira_issue_json_with_summary(id: u64, key: &str, summary: &str) -> serde_json::Value {
+    serde_json::json!({
+        "id": id.to_string(),
+        "key": key,
+        "fields": {
+            "summary": summary,
+            "description": serde_json::Value::Null,
+            "status": {"name": "Done", "statusCategory": {"key": "done"}},
+            "resolution": serde_json::Value::Null,
+            "assignee": serde_json::Value::Null,
+            "labels": [],
+            "created": "2026-04-16T10:00:00.000+0000",
+            "updated": "2026-04-16T10:01:00.000+0000",
+            "parent": serde_json::Value::Null,
+            "issuetype": {"name": "Task", "hierarchyLevel": 0},
+            "priority": {"name": "Medium"}
+        }
+    })
+}
+
+// ─── Test: contract_jira_wiremock_write ───────────────────────────────────────
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn contract_jira_wiremock_write() {
+    let (base_url, _mock_server) = build_jira_wiremock_write_server().await;
+    let backend = JiraBackend::new_with_base_url(
+        JiraCreds {
+            email: "e@t.com".into(),
+            api_token: "tok".into(),
+        },
+        base_url,
+    )
+    .expect("backend");
+    assert_write_contract(&backend, "P").await;
+}
+
 // ─── Test: contract_jira_live ─────────────────────────────────────────────────
 
 /// Hits a real JIRA tenant. `#[ignore]`-gated + `skip_if_no_env!`-guarded.
@@ -236,7 +436,7 @@ async fn contract_jira_wiremock() {
 /// `REPOSIX_ALLOWED_ORIGINS` must include `https://{instance}.atlassian.net`.
 /// Optional: `JIRA_TEST_PROJECT` (project key, defaults to `TEST`).
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-#[ignore]
+#[ignore = "requires JIRA_EMAIL, JIRA_API_TOKEN, REPOSIX_JIRA_INSTANCE env vars"]
 async fn contract_jira_live() {
     skip_if_no_env!("JIRA_EMAIL", "JIRA_API_TOKEN", "REPOSIX_JIRA_INSTANCE");
 
@@ -262,4 +462,29 @@ async fn contract_jira_live() {
     );
     let known_id = issues[0].id;
     assert_contract(&backend, &project, known_id).await;
+}
+
+// ─── Test: contract_jira_live_write ──────────────────────────────────────────
+
+/// Hits a real JIRA tenant with write operations. `#[ignore]`-gated.
+/// Opt-in via: `cargo test -p reposix-jira -- --ignored`
+///
+/// Required env vars: same as `contract_jira_live` plus a project with
+/// write permissions. Creates, updates, and deletes a real issue.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+#[ignore = "requires JIRA_EMAIL, JIRA_API_TOKEN, REPOSIX_JIRA_INSTANCE env vars"]
+async fn contract_jira_live_write() {
+    skip_if_no_env!("JIRA_EMAIL", "JIRA_API_TOKEN", "REPOSIX_JIRA_INSTANCE");
+
+    let email = std::env::var("JIRA_EMAIL").unwrap();
+    let token = std::env::var("JIRA_API_TOKEN").unwrap();
+    let instance = std::env::var("REPOSIX_JIRA_INSTANCE").unwrap();
+    let project = std::env::var("REPOSIX_JIRA_PROJECT").unwrap_or_else(|_| "TEST".to_string());
+
+    let creds = JiraCreds {
+        email,
+        api_token: token,
+    };
+    let backend = JiraBackend::new(creds, &instance).expect("build JiraBackend");
+    assert_write_contract(&backend, &project).await;
 }
