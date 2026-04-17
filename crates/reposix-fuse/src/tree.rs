@@ -515,6 +515,7 @@ mod tests {
             version: 1,
             body: String::new(),
             parent_id: parent.map(IssueId),
+            extensions: std::collections::BTreeMap::new(),
         }
     }
 

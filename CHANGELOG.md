@@ -6,6 +6,23 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+## [v0.8.0] — 2026-04-16
+
+### Breaking
+
+- **Rename `IssueBackend` → `BackendConnector`** across all crates
+  (`reposix-core`, `reposix-confluence`, `reposix-github`, `reposix-fuse`,
+  `reposix-cli`, `reposix-remote`, `reposix-swarm`). No backward-compat
+  alias. Callers must update the import and any `impl`/`dyn`/bound sites.
+  Rationale in `docs/decisions/004-backend-connector-rename.md`.
+
+### Added
+
+- **`Issue.extensions: BTreeMap<String, serde_yaml::Value>`** — backend-specific
+  metadata field. Omitted from YAML when empty; defaults to empty on parse.
+  Prerequisite for Phase 28 JIRA adapter (`jira_key`, `issue_type`, etc.).
+  ADR: `docs/decisions/004-backend-connector-rename.md`.
+
 ## [v0.7.0] — 2026-04-16
 
 ### Changed
@@ -619,7 +636,8 @@ See [PROJECT-STATUS.md](docs/archive/PROJECT-STATUS.md) for the v0.1/v0.2-era ti
 
 ---
 
-[Unreleased]: https://github.com/reubenjohn/reposix/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/reubenjohn/reposix/compare/v0.8.0...HEAD
+[v0.8.0]: https://github.com/reubenjohn/reposix/compare/v0.7.0...v0.8.0
 [v0.7.0]: https://github.com/reubenjohn/reposix/compare/v0.6.0...v0.7.0
 [v0.6.0]: https://github.com/reubenjohn/reposix/compare/v0.5.0...v0.6.0
 [v0.5.0]: https://github.com/reubenjohn/reposix/compare/v0.4.1...v0.5.0

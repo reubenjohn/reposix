@@ -113,6 +113,7 @@ pub fn sanitize(tainted: Tainted<Issue>, server: ServerMetadata) -> Untainted<Is
         version: _,
         body,
         parent_id,
+        extensions,
     } = issue;
     let ServerMetadata {
         id,
@@ -131,6 +132,7 @@ pub fn sanitize(tainted: Tainted<Issue>, server: ServerMetadata) -> Untainted<Is
         version,
         body,
         parent_id,
+        extensions,
     })
 }
 
@@ -182,6 +184,7 @@ mod tests {
             version: 999_999,
             body: "agent-authored body".into(),
             parent_id: None,
+            extensions: std::collections::BTreeMap::new(),
         })
     }
 

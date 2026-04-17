@@ -20,6 +20,7 @@ fn main() {
         version: 0,
         body: String::new(),
         parent_id: None,
+        extensions: std::collections::BTreeMap::new(),
     });
     takes_untainted(tainted);
 }

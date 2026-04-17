@@ -222,6 +222,7 @@ mod tests {
             version: 1,
             body: "body".to_owned(),
             parent_id: None,
+            extensions: std::collections::BTreeMap::new(),
         }
     }
 

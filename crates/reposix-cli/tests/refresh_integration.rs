@@ -27,6 +27,7 @@ fn make_test_issue(id: u64, title: &str) -> Issue {
         version: 1,
         body: String::new(),
         parent_id: None,
+        extensions: std::collections::BTreeMap::new(),
     }
 }
 

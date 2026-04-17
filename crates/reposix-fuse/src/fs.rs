@@ -2541,6 +2541,7 @@ impl Filesystem for ReposixFs {
             version: 0,
             body: String::new(),
             parent_id: None,
+            extensions: std::collections::BTreeMap::new(),
         };
         let meta = ServerMetadata {
             id,
@@ -2706,6 +2707,7 @@ mod tests {
                 version: 0,
                 body: String::new(),
                 parent_id: None,
+                extensions: std::collections::BTreeMap::new(),
             }),
             ServerMetadata {
                 id: IssueId(1),
@@ -2829,6 +2831,7 @@ mod tests {
             version: 1,
             body: String::new(),
             parent_id: None,
+            extensions: std::collections::BTreeMap::new(),
         }
     }
 
@@ -3096,6 +3099,7 @@ mod tests {
                 version: 1,
                 body: String::new(),
                 parent_id: None,
+                extensions: std::collections::BTreeMap::new(),
             },
             Issue {
                 id: IssueId(2),
@@ -3108,6 +3112,7 @@ mod tests {
                 version: 1,
                 body: String::new(),
                 parent_id: Some(IssueId(1)),
+                extensions: std::collections::BTreeMap::new(),
             },
             Issue {
                 id: IssueId(3),
@@ -3120,6 +3125,7 @@ mod tests {
                 version: 1,
                 body: String::new(),
                 parent_id: Some(IssueId(2)),
+                extensions: std::collections::BTreeMap::new(),
             },
         ];
         let snap = TreeSnapshot::build("pages", &issues);

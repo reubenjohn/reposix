@@ -679,6 +679,7 @@ fn translate(page: ConfPage) -> Result<Issue> {
         version: page.version.number,
         body,
         parent_id,
+        extensions: std::collections::BTreeMap::new(),
     })
 }
 
@@ -2558,6 +2559,7 @@ mod tests {
                 version: 0,
                 body: body.to_owned(),
                 parent_id,
+                extensions: std::collections::BTreeMap::new(),
             }),
             ServerMetadata {
                 id: IssueId(99),

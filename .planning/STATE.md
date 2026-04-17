@@ -57,10 +57,10 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 ## Current Position
 
 Phase: 27
-Plan: (not started)
-Cursor: **Phase 26 SHIPPED. Docs clarity overhaul complete — root stubs deleted, obsolete files archived, all user-facing docs reviewed and cleared, version numbers aligned to v0.7.0. Next: Phase 27 (BackendConnector rename + Issue.extensions).**
-Status: In progress — waves 1+2 complete; wave 3 (extensions + v0.8.0) pending
-Last activity: 2026-04-17 -- Phase 27 waves 1+2 complete (rename propagated workspace-wide, cargo check clean)
+Plan: 27-03 complete
+Cursor: **Phase 27 SHIPPED. BackendConnector rename complete (RENAME-01), Issue.extensions field added (EXT-01), ADR-004 written, workspace bumped to v0.8.0. Next: Phase 28 (reposix-jira read-only adapter).**
+Status: Phase complete — ready for Phase 28
+Last activity: 2026-04-16 -- Phase 27 wave 3 complete (Issue.extensions + ADR-004 + v0.8.0 + CHANGELOG)
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.

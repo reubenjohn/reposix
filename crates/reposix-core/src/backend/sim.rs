@@ -344,6 +344,7 @@ mod tests {
             version: 0,
             body: "body here".into(),
             parent_id: None,
+            extensions: std::collections::BTreeMap::new(),
         })
     }
 
@@ -446,6 +447,7 @@ mod tests {
                 version: 0,
                 body: String::new(),
                 parent_id: None,
+                extensions: std::collections::BTreeMap::new(),
             }),
             ServerMetadata {
                 id: IssueId(42),
@@ -635,6 +637,7 @@ mod tests {
                 version: 0,
                 body: String::new(),
                 parent_id: None,
+                extensions: std::collections::BTreeMap::new(),
             }),
             ServerMetadata {
                 id: IssueId(1),
@@ -770,6 +773,7 @@ mod tests {
             version: 999_999,
             body: String::new(),
             parent_id: None,
+            extensions: std::collections::BTreeMap::new(),
         };
         let u = sanitize(Tainted::new(hostile), meta);
         backend

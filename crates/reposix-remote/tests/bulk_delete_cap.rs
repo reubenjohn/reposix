@@ -28,6 +28,7 @@ fn sample_issue(id: u64) -> Value {
         version: 1,
         body: "body".to_owned(),
         parent_id: None,
+        extensions: std::collections::BTreeMap::new(),
     };
     serde_json::to_value(i).unwrap()
 }

@@ -116,6 +116,7 @@ impl RawIssueRow {
             body: self.body,
             // Sim backend has no hierarchy — always None.
             parent_id: None,
+            extensions: std::collections::BTreeMap::new(),
         })
     }
 }

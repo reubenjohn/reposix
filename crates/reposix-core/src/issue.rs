@@ -1,5 +1,7 @@
 //! Issue (the unit a FUSE file represents) types.
 
+use std::collections::BTreeMap;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -80,10 +82,19 @@ pub struct Issue {
     /// `tree/` overlay (Phase 13).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parent_id: Option<IssueId>,
+    /// Backend-specific metadata that does not fit the canonical 5-field schema.
+    ///
+    /// Keys are backend-defined strings (e.g. `"jira_key"`, `"issue_type"`).
+    /// Values are arbitrary YAML-compatible scalars or nested structures.
+    /// Empty map is omitted from serialized frontmatter (does not appear in `.md` files).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub extensions: BTreeMap<String, serde_yaml::Value>,
 }
 
 /// Frontmatter helpers — round-trip an [`Issue`] through `---\n<yaml>\n---\n<body>` form.
 pub mod frontmatter {
+    use std::collections::BTreeMap;
+
     use super::{DateTime, Error, Issue, Result, Utc};
     use serde::{Deserialize, Serialize};
 
@@ -103,6 +114,8 @@ pub mod frontmatter {
         version: u64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         parent_id: Option<super::IssueId>,
+        #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+        extensions: BTreeMap<String, serde_yaml::Value>,
     }
 
     /// Render an [`Issue`] to its on-disk form.
@@ -121,6 +134,7 @@ pub mod frontmatter {
             updated_at: issue.updated_at,
             version: issue.version,
             parent_id: issue.parent_id,
+            extensions: issue.extensions.clone(),
         };
         let yaml = serde_yaml::to_string(&fm)?;
         let mut out = String::with_capacity(yaml.len() + issue.body.len() + 16);
@@ -176,6 +190,7 @@ pub mod frontmatter {
             version: fm.version,
             body,
             parent_id: fm.parent_id,
+            extensions: fm.extensions,
         })
     }
 
@@ -215,6 +230,7 @@ mod tests {
             version: 3,
             body: "Steps to reproduce:\n1. do the thing\n2. observe brokenness\n".into(),
             parent_id: None,
+            extensions: std::collections::BTreeMap::new(),
         }
     }
 
@@ -385,5 +401,54 @@ Body goes here.\n";
         assert_eq!(parsed.version, original.version);
         assert_eq!(parsed.body, original.body);
         assert_eq!(parsed.parent_id, None);
+    }
+
+    #[test]
+    fn extensions_empty_omitted_from_yaml() {
+        // An Issue with no extensions must not emit the word "extensions" in YAML.
+        let iss = sample(); // extensions: BTreeMap::new()
+        let rendered = frontmatter::render(&iss).expect("render");
+        assert!(
+            !rendered.contains("extensions"),
+            "empty extensions must be omitted from YAML, got: {rendered}"
+        );
+    }
+
+    #[test]
+    fn extensions_roundtrip() {
+        // Non-empty extensions survive a render→parse cycle with value equality.
+        let mut iss = sample();
+        iss.extensions.insert("foo".into(), serde_yaml::Value::from(42_i64));
+        iss.extensions.insert("bar".into(), serde_yaml::Value::from("x"));
+        let rendered = frontmatter::render(&iss).expect("render");
+        assert!(
+            rendered.contains("extensions"),
+            "non-empty extensions must appear in YAML, got: {rendered}"
+        );
+        let parsed = frontmatter::parse(&rendered).expect("parse");
+        assert_eq!(
+            parsed.extensions, iss.extensions,
+            "extensions must round-trip through render/parse"
+        );
+    }
+
+    #[test]
+    fn extensions_defaults_to_empty_on_parse() {
+        // A legacy frontmatter without an `extensions:` key must parse to an empty map.
+        let text = "---\n\
+id: 1\n\
+title: Legacy issue\n\
+status: open\n\
+created_at: 2025-01-01T00:00:00Z\n\
+updated_at: 2025-01-01T00:00:00Z\n\
+version: 1\n\
+---\n\
+Body goes here.\n";
+        let iss = frontmatter::parse(text).expect("legacy frontmatter must parse");
+        assert!(
+            iss.extensions.is_empty(),
+            "extensions must default to empty on legacy parse, got: {:?}",
+            iss.extensions
+        );
     }
 }

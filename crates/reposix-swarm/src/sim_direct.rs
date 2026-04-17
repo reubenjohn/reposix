@@ -123,6 +123,7 @@ impl Workload for SimDirectWorkload {
                 version: 0,
                 body: "patched by swarm".to_string(),
                 parent_id: None,
+                extensions: std::collections::BTreeMap::new(),
             };
             let untainted = sanitize(
                 Tainted::new(issue),

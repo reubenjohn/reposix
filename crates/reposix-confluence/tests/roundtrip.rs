@@ -55,6 +55,7 @@ fn make_issue(title: &str, body: &str) -> Untainted<Issue> {
             version: 0,
             body: body.to_owned(),
             parent_id: None,
+            extensions: std::collections::BTreeMap::new(),
         }),
         ServerMetadata {
             id: IssueId(0),
