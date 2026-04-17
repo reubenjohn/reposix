@@ -89,11 +89,13 @@ use thiserror::Error;
 use tokio::runtime::Runtime;
 use tracing::warn;
 
+use crate::attachments::{sanitize_attachment_filename, AttachmentEntry, AttachmentsSnapshot};
 use crate::comments::{render_comment_file, CommentsSnapshot};
 use crate::inode::{
-    InodeRegistry, BUCKET_DIR_INO, BUCKET_INDEX_INO, COMMENTS_DIR_INO_BASE, COMMENTS_FILE_INO_BASE,
-    FIRST_ISSUE_INODE, GITIGNORE_INO, LABELS_ROOT_INO, ROOT_INDEX_INO, ROOT_INO,
-    TREE_INDEX_ALLOC_END, TREE_INDEX_ALLOC_START, TREE_ROOT_INO,
+    InodeRegistry, ATTACHMENTS_DIR_INO_BASE, ATTACHMENTS_FILE_INO_BASE, BUCKET_DIR_INO,
+    BUCKET_INDEX_INO, COMMENTS_DIR_INO_BASE, COMMENTS_FILE_INO_BASE, FIRST_ISSUE_INODE,
+    GITIGNORE_INO, LABELS_ROOT_INO, ROOT_INDEX_INO, ROOT_INO, TREE_INDEX_ALLOC_END,
+    TREE_INDEX_ALLOC_START, TREE_ROOT_INO, WHITEBOARDS_ROOT_INO, WHITEBOARD_FILE_INO_BASE,
 };
 use crate::labels::{LabelSnapshot, LABELS_DIR_INO_BASE, LABELS_SYMLINK_INO_BASE};
 use crate::tree::{TreeSnapshot, TREE_DIR_INO_BASE, TREE_SYMLINK_INO_BASE};
@@ -101,7 +103,7 @@ use crate::tree::{TreeSnapshot, TREE_DIR_INO_BASE, TREE_SYMLINK_INO_BASE};
 /// Exact bytes served for `mount/.gitignore`. Const; no runtime input.
 /// The trailing newline is mandatory per POSIX text-file convention and
 /// matches what tools like `git check-ignore` expect.
-const GITIGNORE_BYTES: &[u8] = b"/tree/\nlabels/\n";
+const GITIGNORE_BYTES: &[u8] = b"/tree/\nlabels/\nwhiteboards/\n";
 
 /// Filename of the synthesized bucket index (Phase 15). Leading `_`
 /// keeps the file out of naive `*.md` globs while still being visible
@@ -513,8 +515,16 @@ enum InodeKind {
     /// (`COMMENTS_DIR_INO_BASE..COMMENTS_FILE_INO_BASE`).
     CommentsDir,
     /// A read-only comment file inside a `.comments/` directory
-    /// (`COMMENTS_FILE_INO_BASE..`).
+    /// (`COMMENTS_FILE_INO_BASE..WHITEBOARDS_ROOT_INO`).
     CommentFile,
+    /// The `whiteboards/` overlay root directory (`WHITEBOARDS_ROOT_INO` = `0x20_0000_0000`).
+    WhiteboardsRoot,
+    /// A whiteboard file `<id>.json` under `whiteboards/` (`WHITEBOARD_FILE_INO_BASE..ATTACHMENTS_DIR_INO_BASE`).
+    WhiteboardFile,
+    /// A synthesized `.attachments/` directory for a specific page (`ATTACHMENTS_DIR_INO_BASE..ATTACHMENTS_FILE_INO_BASE`).
+    AttachmentsDir,
+    /// A binary attachment file inside `.attachments/` (`ATTACHMENTS_FILE_INO_BASE..`).
+    AttachmentFile,
     /// Unassigned — surface as ENOENT.
     Unknown,
 }
@@ -529,7 +539,14 @@ impl InodeKind {
             BUCKET_INDEX_INO => Self::BucketIndex,
             ROOT_INDEX_INO => Self::RootIndex,
             LABELS_ROOT_INO => Self::LabelsRoot,
+            WHITEBOARDS_ROOT_INO => Self::WhiteboardsRoot,
             n if (TREE_INDEX_ALLOC_START..=TREE_INDEX_ALLOC_END).contains(&n) => Self::TreeDirIndex,
+            // Phase 24: attachment + whiteboard ranges MUST come before comments
+            // because ATTACHMENTS_FILE_INO_BASE (0x28) > ATTACHMENTS_DIR_INO_BASE (0x24)
+            // > WHITEBOARD_FILE_INO_BASE (0x20) > COMMENTS_FILE_INO_BASE (0x1C).
+            n if n >= ATTACHMENTS_FILE_INO_BASE => Self::AttachmentFile,
+            n if n >= ATTACHMENTS_DIR_INO_BASE => Self::AttachmentsDir,
+            n if n >= WHITEBOARD_FILE_INO_BASE => Self::WhiteboardFile,
             // Comments ranges MUST come before the Label/TreeSymlink catch-alls
             // because COMMENTS_DIR_INO_BASE (0x18_0000_0000) and
             // COMMENTS_FILE_INO_BASE (0x1C_0000_0000) are numerically above
@@ -653,6 +670,14 @@ pub struct ReposixFs {
     /// NOT on the `IssueBackend` trait (open question #1 → option a).
     /// `None` for sim/github.
     comment_fetcher: Option<Arc<reposix_confluence::ConfluenceBackend>>,
+    /// Lazy per-page attachment cache (Phase 24). Always present; populated
+    /// on-demand when an `AttachmentsDir` is first `readdir`d or `lookup`d.
+    attachment_snapshot: Arc<AttachmentsSnapshot>,
+    /// Whiteboard metadata cache — keyed by whiteboard id string.
+    /// Value: `(file_ino, ConfWhiteboard)`. Populated once on first `readdir(WhiteboardsRoot)`.
+    whiteboard_snapshot: Arc<DashMap<String, (u64, reposix_confluence::ConfWhiteboard)>>,
+    /// Sequential allocator for whiteboard file inodes.
+    next_whiteboard_ino: AtomicU64,
 }
 
 impl std::fmt::Debug for ReposixFs {
@@ -763,6 +788,9 @@ impl ReposixFs {
             tree_index_alloc: AtomicU64::new(TREE_INDEX_ALLOC_START),
             comment_snapshot: Arc::new(CommentsSnapshot::new()),
             comment_fetcher,
+            attachment_snapshot: Arc::new(AttachmentsSnapshot::new()),
+            whiteboard_snapshot: Arc::new(DashMap::new()),
+            next_whiteboard_ino: AtomicU64::new(WHITEBOARD_FILE_INO_BASE),
         })
     }
 
@@ -1158,6 +1186,185 @@ impl ReposixFs {
         self.comment_snapshot.install_entries(page_ino, entries);
         Ok(())
     }
+
+    /// Return a `FileAttr` for the `whiteboards/` overlay root directory.
+    fn whiteboards_attr(&self) -> fuser::FileAttr {
+        let mut attr = self.labels_attr;
+        attr.ino = fuser::INodeNo(WHITEBOARDS_ROOT_INO);
+        attr
+    }
+
+    /// Look up a whiteboard entry by file inode. Linear scan — typical space
+    /// has < 100 whiteboards so this is acceptable.
+    fn whiteboard_entry_by_ino(
+        &self,
+        file_ino: u64,
+    ) -> Option<(String, reposix_confluence::ConfWhiteboard)> {
+        for entry in self.whiteboard_snapshot.iter() {
+            let (ino, wb) = entry.value();
+            if *ino == file_ino {
+                return Some((entry.key().clone(), wb.clone()));
+            }
+        }
+        None
+    }
+
+    /// Populate `whiteboard_snapshot` once on first access to `whiteboards/`.
+    ///
+    /// Uses `self.project` as the space key (space ID resolution is private
+    /// to the confluence crate; the `list_whiteboards` endpoint accepts a key
+    /// and returns `Ok(vec![])` on 404 if the key is not numeric — acceptable
+    /// graceful degradation).
+    ///
+    /// # Errors
+    /// Returns `FetchError::Core` if `comment_fetcher` is `None` (sim/github).
+    /// Returns `FetchError::Timeout` on 15s wall-clock timeout.
+    fn fetch_whiteboards(&self) -> Result<(), FetchError> {
+        let Some(fetcher) = self.comment_fetcher.clone() else {
+            return Err(FetchError::Core(
+                "no confluence fetcher for whiteboards".to_owned(),
+            ));
+        };
+        let project = self.project.clone();
+        match self.rt.block_on(async move {
+            tokio::time::timeout(Duration::from_secs(15), fetcher.list_whiteboards(&project)).await
+        }) {
+            Ok(Ok(whiteboards)) => {
+                for wb in whiteboards {
+                    let ino = self.next_whiteboard_ino.fetch_add(1, Ordering::SeqCst);
+                    self.whiteboard_snapshot.insert(wb.id.clone(), (ino, wb));
+                }
+                Ok(())
+            }
+            Ok(Err(e)) => Err(backend_err_to_fetch(e)),
+            Err(_) => Err(FetchError::Timeout),
+        }
+    }
+
+    /// Fetch all attachments for `page_ino`, download bodies (up to 50 MiB cap),
+    /// and install them in `attachment_snapshot`.
+    ///
+    /// # Errors
+    /// Returns `FetchError::Core` if `comment_fetcher` is `None` or `page_ino`
+    /// is unknown. Returns `FetchError::Timeout` on timeout.
+    fn fetch_attachments_for_page(&self, page_ino: u64) -> Result<(), FetchError> {
+        const MAX_ATTACHMENT_BYTES: u64 = 52_428_800; // 50 MiB
+        let Some(fetcher) = self.comment_fetcher.clone() else {
+            return Err(FetchError::Core(
+                "no confluence fetcher for attachments".to_owned(),
+            ));
+        };
+        let page_id = match self.registry.lookup_ino(page_ino) {
+            Some(id) => id.0,
+            None => {
+                return Err(FetchError::Core(format!(
+                    "page_ino {page_ino} not found in inode registry"
+                )));
+            }
+        };
+        let fetcher2 = fetcher.clone();
+        let att_list = match self.rt.block_on(async move {
+            tokio::time::timeout(Duration::from_secs(15), fetcher2.list_attachments(page_id)).await
+        }) {
+            Ok(Ok(v)) => v,
+            Ok(Err(e)) => return Err(backend_err_to_fetch(e)),
+            Err(_) => return Err(FetchError::Timeout),
+        };
+
+        let snap = self.attachment_snapshot.clone();
+        let mut entries: Vec<AttachmentEntry> = Vec::new();
+        for att in att_list {
+            let Some(filename) = sanitize_attachment_filename(&att.title) else {
+                tracing::warn!(
+                    title_prefix = %att.title.chars().take(32).collect::<String>(),
+                    "attachment filename sanitized to empty; skipping"
+                );
+                continue;
+            };
+            let file_ino = snap.alloc_file_ino();
+            let mut entry = AttachmentEntry {
+                file_ino,
+                filename,
+                rendered: Vec::new(),
+                file_size: att.file_size,
+                download_url: att.download_link.clone(),
+                media_type: att.media_type,
+            };
+            // Eagerly fetch body if under the 50 MiB cap (T-24-02-02).
+            if att.file_size > 0
+                && att.file_size <= MAX_ATTACHMENT_BYTES
+                && !att.download_link.is_empty()
+            {
+                let f3 = fetcher.clone();
+                let url = att.download_link.clone();
+                match self.rt.block_on(async move {
+                    tokio::time::timeout(Duration::from_secs(30), f3.download_attachment(&url))
+                        .await
+                }) {
+                    Ok(Ok(bytes)) => {
+                        entry.rendered = bytes;
+                    }
+                    Ok(Err(e)) => {
+                        // T-24-02-03: log only id/size, never body content.
+                        tracing::warn!(
+                            error = %e,
+                            attachment_id = %att.id,
+                            "attachment download failed; entry rendered will be empty"
+                        );
+                    }
+                    Err(_) => {
+                        tracing::warn!(
+                            attachment_id = %att.id,
+                            "attachment download timed out"
+                        );
+                    }
+                }
+            } else if att.file_size > MAX_ATTACHMENT_BYTES {
+                tracing::warn!(
+                    attachment_id = %att.id,
+                    file_size = att.file_size,
+                    max = MAX_ATTACHMENT_BYTES,
+                    "attachment exceeds 50 MiB; skipping eager fetch"
+                );
+            }
+            entries.push(entry);
+        }
+        snap.mark_fetched(page_ino, entries);
+        Ok(())
+    }
+
+    /// Fetch a single attachment body by `download_url` and cache it.
+    ///
+    /// Called lazily from `read(AttachmentFile)` when `entry.rendered` is empty
+    /// (i.e. the eager fetch in `fetch_attachments_for_page` was skipped for
+    /// some reason other than the size cap).
+    ///
+    /// # Errors
+    /// Returns `FetchError::Core` if `comment_fetcher` is `None`.
+    /// Returns `FetchError::Timeout` on 30s wall-clock timeout.
+    fn fetch_attachment_body(
+        &self,
+        file_ino: u64,
+        download_url: &str,
+    ) -> Result<Vec<u8>, FetchError> {
+        let Some(fetcher) = self.comment_fetcher.clone() else {
+            return Err(FetchError::Core(
+                "no confluence fetcher for attachment body".to_owned(),
+            ));
+        };
+        let url = download_url.to_owned();
+        match self.rt.block_on(async move {
+            tokio::time::timeout(Duration::from_secs(30), fetcher.download_attachment(&url)).await
+        }) {
+            Ok(Ok(bytes)) => {
+                self.attachment_snapshot
+                    .update_entry_rendered(file_ino, bytes.clone());
+                Ok(bytes)
+            }
+            Ok(Err(e)) => Err(backend_err_to_fetch(e)),
+            Err(_) => Err(FetchError::Timeout),
+        }
+    }
 }
 
 fn uid_safe() -> u32 {
@@ -1281,6 +1488,35 @@ impl Filesystem for ReposixFs {
                     reply.error(fuser::Errno::from_i32(libc::ENOENT));
                 }
             }
+            InodeKind::WhiteboardsRoot => reply.attr(&ATTR_TTL, &self.whiteboards_attr()),
+            InodeKind::WhiteboardFile => {
+                if let Some((_, wb)) = self.whiteboard_entry_by_ino(ino_u) {
+                    let bytes = serde_json::to_vec(&wb).unwrap_or_default();
+                    reply.attr(
+                        &ATTR_TTL,
+                        &self.synthetic_file_attr(ino_u, bytes.len() as u64),
+                    );
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                }
+            }
+            InodeKind::AttachmentsDir => {
+                if self.attachment_snapshot.page_of_dir(ino_u).is_some() {
+                    let mut attr = self.labels_attr;
+                    attr.ino = fuser::INodeNo(ino_u);
+                    reply.attr(&ATTR_TTL, &attr);
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                }
+            }
+            InodeKind::AttachmentFile => {
+                if let Some(entry) = self.attachment_snapshot.entry_by_file_ino(ino_u) {
+                    // Use file_size from metadata (not rendered.len()) so getattr works before body fetch.
+                    reply.attr(&ATTR_TTL, &self.synthetic_file_attr(ino_u, entry.file_size));
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                }
+            }
             InodeKind::RootIndex => {
                 let bytes = self.mount_root_index_bytes_or_render();
                 let attr = self.synthetic_file_attr(ROOT_INDEX_INO, bytes.len() as u64);
@@ -1334,6 +1570,14 @@ impl Filesystem for ReposixFs {
                     reply.entry(&ENTRY_TTL, &self.labels_attr, fuser::Generation(0));
                     return;
                 }
+                if name_str == "whiteboards" {
+                    if self.comment_fetcher.is_none() {
+                        reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                        return;
+                    }
+                    reply.entry(&ENTRY_TTL, &self.whiteboards_attr(), fuser::Generation(0));
+                    return;
+                }
                 if name_str == "_INDEX.md" {
                     let bytes = self.mount_root_index_bytes_or_render();
                     let attr = self.synthetic_file_attr(ROOT_INDEX_INO, bytes.len() as u64);
@@ -1373,6 +1617,28 @@ impl Filesystem for ReposixFs {
                     let dir_ino = self.comment_snapshot.ensure_dir(page_ino);
                     let mut attr = self.labels_attr; // reuse read-only dir FileAttr shape (0o555)
                     attr.ino = INodeNo(dir_ino);
+                    reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
+                    return;
+                }
+                // Phase 24: `.attachments` suffix materializes an AttachmentsDir inode.
+                // Only when the mount has a comment_fetcher (Confluence only).
+                if let Some(page_id_str) = name_str.strip_suffix(".attachments") {
+                    if self.comment_fetcher.is_none() {
+                        reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                        return;
+                    }
+                    let Ok(page_id_num) = page_id_str.trim_start_matches('0').parse::<u64>() else {
+                        reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                        return;
+                    };
+                    let Some(page_ino) = self.registry.lookup_id(IssueId(page_id_num)) else {
+                        reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                        return;
+                    };
+                    let dir_ino = self.attachment_snapshot.ensure_dir(page_ino);
+                    let mut attr = self.labels_attr;
+                    attr.ino = fuser::INodeNo(dir_ino);
+                    attr.nlink = 2;
                     reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
                     return;
                 }
@@ -1481,12 +1747,48 @@ impl Filesystem for ReposixFs {
                     reply.error(fuser::Errno::from_i32(libc::ENOENT));
                 }
             }
+            InodeKind::WhiteboardsRoot => {
+                let id = name_str.strip_suffix(".json").unwrap_or(name_str);
+                if let Some(entry) = self.whiteboard_snapshot.get(id) {
+                    let (file_ino, wb) = entry.value();
+                    let bytes = serde_json::to_vec(wb).unwrap_or_default();
+                    let attr = self.synthetic_file_attr(*file_ino, bytes.len() as u64);
+                    reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                }
+            }
+            InodeKind::AttachmentsDir => {
+                let Some(page_ino) = self.attachment_snapshot.page_of_dir(parent_u) else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    return;
+                };
+                if !self.attachment_snapshot.is_fetched(page_ino) {
+                    if let Err(e) = self.fetch_attachments_for_page(page_ino) {
+                        tracing::warn!(error = %e, "fetch_attachments_for_page failed in lookup");
+                        reply.error(fuser::Errno::from_i32(libc::EIO));
+                        return;
+                    }
+                }
+                let entries = self
+                    .attachment_snapshot
+                    .entries_for_page(page_ino)
+                    .unwrap_or_default();
+                if let Some(entry) = entries.iter().find(|e| e.filename == name_str) {
+                    let attr = self.synthetic_file_attr(entry.file_ino, entry.file_size);
+                    reply.entry(&ENTRY_TTL, &attr, fuser::Generation(0));
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                }
+            }
             InodeKind::Gitignore
             | InodeKind::BucketIndex
             | InodeKind::RealFile
             | InodeKind::TreeSymlink
             | InodeKind::LabelSymlink
             | InodeKind::CommentFile
+            | InodeKind::WhiteboardFile
+            | InodeKind::AttachmentFile
             | InodeKind::RootIndex
             | InodeKind::TreeDirIndex => {
                 reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
@@ -1534,6 +1836,14 @@ impl Filesystem for ReposixFs {
                     out.push((TREE_ROOT_INO, FileType::Directory, "tree".to_owned()));
                 }
                 out.push((LABELS_ROOT_INO, FileType::Directory, "labels".to_owned()));
+                // Phase 24: whiteboards/ is Confluence-only.
+                if self.comment_fetcher.is_some() {
+                    out.push((
+                        WHITEBOARDS_ROOT_INO,
+                        FileType::Directory,
+                        "whiteboards".to_owned(),
+                    ));
+                }
                 out.push((
                     ROOT_INDEX_INO,
                     FileType::RegularFile,
@@ -1673,12 +1983,59 @@ impl Filesystem for ReposixFs {
                 }
                 entries
             }
+            InodeKind::WhiteboardsRoot => {
+                // Populate whiteboard_snapshot on first access.
+                if self.whiteboard_snapshot.is_empty() {
+                    if let Err(e) = self.fetch_whiteboards() {
+                        tracing::warn!(
+                            error = %e,
+                            "fetch_whiteboards failed in readdir; returning empty dir"
+                        );
+                    }
+                }
+                let mut out: Vec<(u64, FileType, String)> = vec![
+                    (WHITEBOARDS_ROOT_INO, FileType::Directory, ".".to_owned()),
+                    (ROOT_INO, FileType::Directory, "..".to_owned()),
+                ];
+                for entry in self.whiteboard_snapshot.iter() {
+                    let (file_ino, wb) = entry.value();
+                    out.push((*file_ino, FileType::RegularFile, format!("{}.json", wb.id)));
+                }
+                out
+            }
+            InodeKind::AttachmentsDir => {
+                let Some(page_ino) = self.attachment_snapshot.page_of_dir(ino_u) else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    return;
+                };
+                if !self.attachment_snapshot.is_fetched(page_ino) {
+                    if let Err(e) = self.fetch_attachments_for_page(page_ino) {
+                        tracing::warn!(
+                            error = %e,
+                            page_ino,
+                            "fetch_attachments_for_page failed in readdir; returning partial dir"
+                        );
+                    }
+                }
+                let mut out: Vec<(u64, FileType, String)> = vec![
+                    (ino_u, FileType::Directory, ".".to_owned()),
+                    (BUCKET_DIR_INO, FileType::Directory, "..".to_owned()),
+                ];
+                if let Some(entries) = self.attachment_snapshot.entries_for_page(page_ino) {
+                    for entry in entries {
+                        out.push((entry.file_ino, FileType::RegularFile, entry.filename));
+                    }
+                }
+                out
+            }
             InodeKind::Gitignore
             | InodeKind::BucketIndex
             | InodeKind::RealFile
             | InodeKind::TreeSymlink
             | InodeKind::LabelSymlink
             | InodeKind::CommentFile
+            | InodeKind::WhiteboardFile
+            | InodeKind::AttachmentFile
             | InodeKind::RootIndex
             | InodeKind::TreeDirIndex => {
                 reply.error(fuser::Errno::from_i32(libc::ENOTDIR));
@@ -1699,6 +2056,11 @@ impl Filesystem for ReposixFs {
         reply.ok();
     }
 
+    #[allow(
+        clippy::too_many_lines,
+        reason = "read dispatches over all InodeKind variants; splitting would obscure the \
+                  exhaustive-match structure. Phase 24 added WhiteboardFile + AttachmentFile arms."
+    )]
     fn read(
         &self,
         _req: &Request,
@@ -1710,6 +2072,7 @@ impl Filesystem for ReposixFs {
         _lock_owner: Option<fuser::LockOwner>,
         reply: ReplyData,
     ) {
+        const MAX_ATTACHMENT_BYTES: u64 = 52_428_800; // 50 MiB
         let ino_u = ino.0;
         match InodeKind::classify(ino_u) {
             InodeKind::Root
@@ -1718,7 +2081,9 @@ impl Filesystem for ReposixFs {
             | InodeKind::TreeDir
             | InodeKind::LabelsRoot
             | InodeKind::LabelDir
-            | InodeKind::CommentsDir => {
+            | InodeKind::CommentsDir
+            | InodeKind::WhiteboardsRoot
+            | InodeKind::AttachmentsDir => {
                 reply.error(fuser::Errno::from_i32(libc::EISDIR));
             }
             InodeKind::Gitignore => {
@@ -1780,6 +2145,53 @@ impl Filesystem for ReposixFs {
                     .min(bytes.len());
                 let end = start.saturating_add(size as usize).min(bytes.len());
                 reply.data(&bytes[start..end]);
+            }
+            InodeKind::WhiteboardFile => {
+                if let Some((_, wb)) = self.whiteboard_entry_by_ino(ino_u) {
+                    let bytes = serde_json::to_vec(&wb).unwrap_or_default();
+                    let start = usize::try_from(offset)
+                        .unwrap_or(usize::MAX)
+                        .min(bytes.len());
+                    let end = start.saturating_add(size as usize).min(bytes.len());
+                    reply.data(&bytes[start..end]);
+                } else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                }
+            }
+            InodeKind::AttachmentFile => {
+                let Some(entry) = self.attachment_snapshot.entry_by_file_ino(ino_u) else {
+                    reply.error(fuser::Errno::from_i32(libc::ENOENT));
+                    return;
+                };
+                // Enforce 50 MiB cap before download (T-24-02-02).
+                if entry.file_size > MAX_ATTACHMENT_BYTES {
+                    tracing::warn!(
+                        file_ino = ino_u,
+                        file_size = entry.file_size,
+                        max = MAX_ATTACHMENT_BYTES,
+                        "attachment exceeds 50 MiB cap; returning EFBIG"
+                    );
+                    reply.error(fuser::Errno::from_i32(libc::EFBIG));
+                    return;
+                }
+                // Fetch body on first read if not cached (lazy fallback).
+                let rendered = if entry.rendered.is_empty() {
+                    match self.fetch_attachment_body(ino_u, &entry.download_url) {
+                        Ok(bytes) => bytes,
+                        Err(e) => {
+                            tracing::warn!(error = %e, file_ino = ino_u, "fetch_attachment_body failed");
+                            reply.error(fuser::Errno::from_i32(libc::EIO));
+                            return;
+                        }
+                    }
+                } else {
+                    entry.rendered.clone()
+                };
+                let start = usize::try_from(offset)
+                    .unwrap_or(usize::MAX)
+                    .min(rendered.len());
+                let end = start.saturating_add(size as usize).min(rendered.len());
+                reply.data(&rendered[start..end]);
             }
             InodeKind::RootIndex => {
                 let bytes = self.mount_root_index_bytes_or_render();
@@ -1887,12 +2299,17 @@ impl Filesystem for ReposixFs {
                 // rarely routes here (lchmod etc.), but reject defensively.
                 reply.error(fuser::Errno::from_i32(libc::EPERM));
             }
-            // Labels and comments overlays are strictly read-only (T-19-04, CONF-03 / T-23-03-08).
+            // Labels, comments, whiteboards and attachments overlays are strictly read-only
+            // (T-19-04, CONF-03 / T-23-03-08, T-24-02-01).
             InodeKind::LabelsRoot
             | InodeKind::LabelDir
             | InodeKind::LabelSymlink
             | InodeKind::CommentsDir
-            | InodeKind::CommentFile => {
+            | InodeKind::CommentFile
+            | InodeKind::WhiteboardsRoot
+            | InodeKind::WhiteboardFile
+            | InodeKind::AttachmentsDir
+            | InodeKind::AttachmentFile => {
                 reply.error(fuser::Errno::from_i32(libc::EROFS));
             }
             InodeKind::RealFile => {
@@ -1952,6 +2369,10 @@ impl Filesystem for ReposixFs {
             | InodeKind::LabelSymlink
             | InodeKind::CommentsDir
             | InodeKind::CommentFile
+            | InodeKind::WhiteboardsRoot
+            | InodeKind::WhiteboardFile
+            | InodeKind::AttachmentsDir
+            | InodeKind::AttachmentFile
             | InodeKind::RootIndex
             | InodeKind::TreeDirIndex => {
                 reply.error(fuser::Errno::from_i32(libc::EROFS));
@@ -2924,16 +3345,16 @@ mod tests {
 
     #[test]
     fn gitignore_bytes_is_correct() {
-        // Behavior test 3: GITIGNORE_BYTES = "/tree/\nlabels/\n" (15 bytes)
-        // Count: '/','t','r','e','e','/','\\n' = 7, 'l','a','b','e','l','s','/','\\n' = 8 → 15
+        // Behavior test 3: GITIGNORE_BYTES = "/tree/\nlabels/\nwhiteboards/\n" (Phase 24 update)
         assert_eq!(
-            GITIGNORE_BYTES, b"/tree/\nlabels/\n",
-            "GITIGNORE_BYTES must be /tree/\\nlabels/\\n"
+            GITIGNORE_BYTES, b"/tree/\nlabels/\nwhiteboards/\n",
+            "GITIGNORE_BYTES must include /tree/, labels/, and whiteboards/"
         );
+        // /tree/\n = 7, labels/\n = 8, whiteboards/\n = 13 → 28
         assert_eq!(
             GITIGNORE_BYTES.len(),
-            15,
-            "GITIGNORE_BYTES must be 15 bytes"
+            28,
+            "GITIGNORE_BYTES must be 28 bytes"
         );
     }
 

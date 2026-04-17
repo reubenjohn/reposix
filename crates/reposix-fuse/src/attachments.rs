@@ -258,10 +258,7 @@ mod tests {
     #[test]
     fn sanitize_attachment_filename_all_special_returns_some() {
         // "!!!" → "___" — non-empty after replacement, so Some
-        assert_eq!(
-            sanitize_attachment_filename("!!!"),
-            Some("___".to_owned())
-        );
+        assert_eq!(sanitize_attachment_filename("!!!"), Some("___".to_owned()));
     }
 
     #[test]

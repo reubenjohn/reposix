@@ -1444,13 +1444,12 @@ impl ConfluenceBackend {
     ///
     /// Transport + non-2xx from the Confluence download endpoint.
     pub async fn download_attachment(&self, download_url: &str) -> Result<Vec<u8>> {
-        let full_url = if download_url.starts_with("http://")
-            || download_url.starts_with("https://")
-        {
-            download_url.to_owned()
-        } else {
-            format!("{}{}", self.base(), download_url)
-        };
+        let full_url =
+            if download_url.starts_with("http://") || download_url.starts_with("https://") {
+                download_url.to_owned()
+            } else {
+                format!("{}{}", self.base(), download_url)
+            };
         let header_owned = self.standard_headers();
         let header_refs: Vec<(&str, &str)> =
             header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
@@ -2182,9 +2181,12 @@ mod tests {
 
     #[test]
     fn translate_treats_folder_parent_as_orphan() {
+        // CONF-06 (Phase 24 Plan 01): folder parents now propagate so the tree/
+        // overlay can represent folder hierarchy. This test was originally written
+        // when folder → orphan; updated to match the new behavior.
         let page = synth_page("99", Some("99999"), Some("folder"));
         let issue = translate(page).expect("translate");
-        assert_eq!(issue.parent_id, None);
+        assert_eq!(issue.parent_id, Some(IssueId(99999)));
     }
 
     #[test]
@@ -2277,7 +2279,7 @@ mod tests {
                         },
                         "body": {},
                     },
-                    // (c) folder-parented page: parentType="folder" → None
+                    // (c) folder-parented page: parentType="folder" → Some(999) (CONF-06)
                     {
                         "id": "12321",
                         "status": "current",
@@ -2326,8 +2328,9 @@ mod tests {
             .find(|i| i.id == IssueId(12321))
             .expect("folder-parented page present");
         assert_eq!(
-            foldered.parent_id, None,
-            "non-page parentType must degrade to orphan"
+            foldered.parent_id,
+            Some(IssueId(999)),
+            "folder parentType propagates parent_id (CONF-06)"
         );
     }
 
@@ -3667,7 +3670,10 @@ mod tests {
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let atts = backend.list_attachments(12345).await.expect("list_attachments");
+        let atts = backend
+            .list_attachments(12345)
+            .await
+            .expect("list_attachments");
         assert_eq!(atts.len(), 1);
         assert_eq!(atts[0].title, "diagram.png");
         assert_eq!(atts[0].file_size, 1024);
@@ -3686,7 +3692,10 @@ mod tests {
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let atts = backend.list_attachments(99).await.expect("list_attachments empty");
+        let atts = backend
+            .list_attachments(99)
+            .await
+            .expect("list_attachments empty");
         assert!(atts.is_empty());
     }
 
@@ -3699,7 +3708,10 @@ mod tests {
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let err = backend.list_attachments(12345).await.expect_err("403 must be Err");
+        let err = backend
+            .list_attachments(12345)
+            .await
+            .expect_err("403 must be Err");
         let msg = format!("{err}");
         assert!(msg.contains("403"), "error must mention status: {msg}");
     }
@@ -3735,8 +3747,15 @@ mod tests {
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let wbs = backend.list_whiteboards("space-999").await.expect("list_whiteboards");
-        assert_eq!(wbs.len(), 1, "page must be filtered out; only whiteboard remains");
+        let wbs = backend
+            .list_whiteboards("space-999")
+            .await
+            .expect("list_whiteboards");
+        assert_eq!(
+            wbs.len(),
+            1,
+            "page must be filtered out; only whiteboard remains"
+        );
         assert_eq!(wbs[0].id, "wb-1");
         assert_eq!(wbs[0].title, "Arch Board");
     }
@@ -3764,10 +3783,7 @@ mod tests {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
             .and(path("/wiki/download/attachments/12345/file.pdf"))
-            .respond_with(
-                ResponseTemplate::new(200)
-                    .set_body_bytes(b"PDF_CONTENT".to_vec()),
-            )
+            .respond_with(ResponseTemplate::new(200).set_body_bytes(b"PDF_CONTENT".to_vec()))
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
@@ -3798,8 +3814,7 @@ mod tests {
         let page = synth_page("77", Some("not-a-number"), Some("folder"));
         let issue = translate(page).expect("translate must not error on bad folder parentId");
         assert_eq!(
-            issue.parent_id,
-            None,
+            issue.parent_id, None,
             "folder parentType with non-numeric id must degrade to orphan"
         );
     }
