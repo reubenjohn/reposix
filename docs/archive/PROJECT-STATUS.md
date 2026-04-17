@@ -1,8 +1,8 @@
-> **Archived** — This document covers the v0.1/v0.2 era (2026-04-13). It is preserved for historical context only. For current status see [`HANDOFF.md`](../HANDOFF.md) and [`.planning/STATE.md`](../.planning/STATE.md).
+> **Archived** — This document covers the v0.1/v0.2 era (2026-04-13). It is preserved for historical context only. For current status see [`HANDOFF.md`](https://github.com/reubenjohn/reposix/blob/main/HANDOFF.md).
 
 ---
 
-> **Note (2026-04-14):** This document covers v0.1 / v0.2 timeline. For v0.3.0 status and later, see [`HANDOFF.md`](HANDOFF.md) — the former `MORNING-BRIEF-v0.3.md` was renamed into that file on 2026-04-14.
+> **Note (2026-04-14):** This document covers v0.1 / v0.2 timeline. For v0.3.0 status and later, see [`HANDOFF.md`](https://github.com/reubenjohn/reposix/blob/main/HANDOFF.md) — the former `MORNING-BRIEF-v0.3.md` was renamed into that file on 2026-04-14.
 
 # Project status — 2026-04-13 05:38 PDT
 
