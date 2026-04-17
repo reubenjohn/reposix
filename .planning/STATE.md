@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.6.0
 milestone_name: — Write Path + Full Sitemap
 status: completed
-stopped_at: Phase 29 context gathered
-last_updated: "2026-04-17T08:57:27.088Z"
+stopped_at: Phase 29 complete — milestone v0.8.0 complete, all phases done, UAT 9/9 passed
+last_updated: "2026-04-17T08:59:28.539Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 6
@@ -59,7 +59,7 @@ Phase: 29 (COMPLETE — last phase in v0.8.0 milestone)
 Plan: 3/3 complete
 Cursor: **v0.8.0 milestone complete. All JIRA requirements (RENAME-01, EXT-01, JIRA-01..06) validated. UAT passed (9/9). Awaiting user tag push via `bash scripts/tag-v0.8.0.sh`.**
 Status: Milestone v0.8.0 complete; tag push user-gated
-Last activity: 2026-04-16
+Last activity: 2026-04-17
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
