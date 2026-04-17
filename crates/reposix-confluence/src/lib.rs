@@ -2180,11 +2180,14 @@ mod tests {
         assert_eq!(issue.parent_id, Some(IssueId(42)));
     }
 
+    // CONF-06: folder parents now propagate to Issue::parent_id (changed in
+    // Phase 24 Plan 01). Updated from "orphan" to "propagates".
     #[test]
     fn translate_treats_folder_parent_as_orphan() {
         let page = synth_page("99", Some("99999"), Some("folder"));
         let issue = translate(page).expect("translate");
-        assert_eq!(issue.parent_id, None);
+        // CONF-06 fix: folder parentType now propagates (same as "page").
+        assert_eq!(issue.parent_id, Some(IssueId(99999)));
     }
 
     #[test]
@@ -2325,9 +2328,12 @@ mod tests {
             .iter()
             .find(|i| i.id == IssueId(12321))
             .expect("folder-parented page present");
+        // CONF-06 fix (Phase 24 Plan 01): folder parentType now propagates to
+        // Issue::parent_id (same as "page"). Updated from None to Some(999).
         assert_eq!(
-            foldered.parent_id, None,
-            "non-page parentType must degrade to orphan"
+            foldered.parent_id,
+            Some(IssueId(999)),
+            "folder parentType must propagate to Issue::parent_id (CONF-06)"
         );
     }
 
