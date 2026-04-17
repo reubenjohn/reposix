@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v0.6.0
 milestone_name: — Write Path + Full Sitemap
-status: executing
-stopped_at: Phase 28 context gathered
-last_updated: "2026-04-17T08:05:07.525Z"
-last_activity: 2026-04-17 -- Phase 28 execution started
+status: completed
+stopped_at: Phase 29 context gathered
+last_updated: "2026-04-17T08:28:44.212Z"
+last_activity: 2026-04-16 -- Phase 28 all 3 waves shipped
 progress:
   total_phases: 6
   completed_phases: 4
@@ -205,8 +205,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-17T05:14:51.353Z
-Stopped at: Phase 28 context gathered
+Last session: 2026-04-17T08:28:44.206Z
+Stopped at: Phase 29 context gathered
 Wave-level commit trail on `main` (Phase 16):
 Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
 Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).
@@ -214,7 +214,7 @@ Wave C: `b4f538a` (rusqlite+sha2 deps), `34a704c` (audit field + with_audit + wi
 Wave D: (this commit — CHANGELOG [v0.6.0] + version bump 0.5.0→0.6.0 + scripts/tag-v0.6.0.sh + 16-SUMMARY.md).
 317 workspace tests pass (+39 vs Phase 15 baseline of 278). Clippy `-D warnings` clean, `cargo fmt --all --check` clean.
 Cargo.toml workspace version bumped `0.5.0 → 0.6.0`; Cargo.lock regenerated via `cargo check --workspace`.
-Resume file: .planning/phases/28-jira-cloud-read-only-adapter-reposix-jira-v0-8-0/28-CONTEXT.md
+Resume file: .planning/phases/29-jira-write-path-create-update-delete-or-close-via-transitions-api/29-CONTEXT.md
 Cursor next: **v0.6.0 tag push** (orchestrator gate — run `bash scripts/green-gauntlet.sh --full`, then `bash scripts/tag-v0.6.0.sh`).
 After tag: Phase 17 (swarm confluence-direct — add `--mode confluence-direct` to `reposix-swarm`) is the recommended next execution target.
 
