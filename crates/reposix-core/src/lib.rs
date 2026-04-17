@@ -18,7 +18,7 @@ mod project;
 mod remote;
 mod taint;
 
-pub use backend::{BackendFeature, DeleteReason, IssueBackend};
+pub use backend::{BackendConnector, BackendFeature, DeleteReason};
 pub use error::{Error, Result};
 pub use issue::{frontmatter, Issue, IssueId, IssueStatus};
 pub use path::{dedupe_siblings, slug_or_fallback, slugify_title, SLUG_MAX_BYTES};

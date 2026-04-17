@@ -1,4 +1,4 @@
-//! [`SimBackend`] — concrete [`IssueBackend`] implementation that speaks to
+//! [`SimBackend`] — concrete [`BackendConnector`] implementation that speaks to
 //! the in-process `reposix-sim` HTTP routes.
 //!
 //! Every method is a thin shim:
@@ -21,13 +21,13 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use reqwest::{Method, StatusCode};
 
-use crate::backend::{BackendFeature, DeleteReason, IssueBackend};
+use crate::backend::{BackendConnector, BackendFeature, DeleteReason};
 use crate::http::{client, ClientOpts, HttpClient};
 use crate::issue::{Issue, IssueId, IssueStatus};
 use crate::taint::Untainted;
 use crate::{Error, Result};
 
-/// `IssueBackend` implementation for the in-process simulator.
+/// `BackendConnector` implementation for the in-process simulator.
 ///
 /// Construct via [`SimBackend::new`] with the sim's origin (typically
 /// `"http://127.0.0.1:7878"`). All methods reuse a single shared
@@ -202,7 +202,7 @@ fn status_to_str(s: IssueStatus) -> &'static str {
 }
 
 #[async_trait]
-impl IssueBackend for SimBackend {
+impl BackendConnector for SimBackend {
     fn name(&self) -> &'static str {
         "simulator"
     }
@@ -603,7 +603,7 @@ mod tests {
     // The tests below were formerly in `crates/reposix-fuse/src/fetch.rs::tests`
     // and `crates/reposix-fuse/tests/write.rs`. They exercised
     // `patch_issue`/`post_issue` directly; after Wave B1 those helpers are
-    // deleted and the FUSE write path routes through `IssueBackend`, so the
+    // deleted and the FUSE write path routes through `BackendConnector`, so the
     // same wire assertions move here and pin the same contract at the trait
     // impl layer. See `.planning/phases/14-.../14-RESEARCH.md` §Q10.
 

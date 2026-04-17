@@ -1,4 +1,4 @@
-//! Backend seam: [`IssueBackend`] is the trait every concrete issue-tracker
+//! Backend seam: [`BackendConnector`] is the trait every concrete issue-tracker
 //! adapter implements. v0.1.5 ships [`sim::SimBackend`] only; v0.2 will add a
 //! `GithubReadOnlyBackend` in `crates/reposix-github`.
 //!
@@ -29,7 +29,7 @@
 //!
 //! Not every backend supports every operation. Callers that want to branch on
 //! capability — "does this backend do strong versioning? if not, skip the
-//! If-Match dance" — call [`IssueBackend::supports`]. See
+//! If-Match dance" — call [`BackendConnector::supports`]. See
 //! [`BackendFeature`] for the set of capability flags.
 
 #![allow(clippy::module_name_repetitions)]
@@ -42,7 +42,7 @@ use crate::Result;
 
 pub mod sim;
 
-/// Capability flags a caller can query via [`IssueBackend::supports`].
+/// Capability flags a caller can query via [`BackendConnector::supports`].
 ///
 /// This is a closed enum: new variants are API-breaking changes and must land
 /// with a version bump. Each variant is orthogonal — a backend may support
@@ -101,8 +101,8 @@ pub enum DeleteReason {
 /// - `GithubReadOnlyBackend` (v0.2, new crate `reposix-github`).
 ///
 /// All methods are `async` via `#[async_trait::async_trait]`. This is
-/// dyn-compatible; callers can hold `Box<dyn IssueBackend>` or `Arc<dyn
-/// IssueBackend>` freely. The trait object is used by the CLI's `reposix list`
+/// dyn-compatible; callers can hold `Box<dyn BackendConnector>` or `Arc<dyn
+/// BackendConnector>` freely. The trait object is used by the CLI's `reposix list`
 /// command (v0.1.5) and will be used by the FUSE daemon once v0.2 lands
 /// multi-backend support.
 ///
@@ -120,7 +120,7 @@ pub enum DeleteReason {
 /// - Transport / backend errors propagate as [`Error::Http`](crate::Error::Http) /
 ///   [`Error::Json`](crate::Error::Json) / etc.
 #[async_trait]
-pub trait IssueBackend: Send + Sync {
+pub trait BackendConnector: Send + Sync {
     /// Stable, human-readable backend name. Used in log lines and the parity
     /// demo's output header. Examples: `"simulator"`, `"github"`.
     fn name(&self) -> &'static str;
@@ -208,11 +208,11 @@ pub trait IssueBackend: Send + Sync {
 mod tests {
     use super::*;
 
-    /// Compile-time proof that `IssueBackend` is dyn-compatible. If any
+    /// Compile-time proof that `BackendConnector` is dyn-compatible. If any
     /// future method breaks object-safety (e.g. a generic `fn foo<T>`) the
     /// compiler will reject this function.
     #[allow(dead_code)]
-    fn _assert_dyn_compatible(_: &dyn IssueBackend) {}
+    fn _assert_dyn_compatible(_: &dyn BackendConnector) {}
 
     #[test]
     fn backend_feature_is_copy() {
@@ -243,7 +243,7 @@ mod tests {
 
         struct Stub;
         #[async_trait]
-        impl IssueBackend for Stub {
+        impl BackendConnector for Stub {
             fn name(&self) -> &'static str {
                 "stub"
             }
