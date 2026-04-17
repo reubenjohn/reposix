@@ -1,3 +1,7 @@
+> **Archived** — This document covers the v0.1/v0.2 era (2026-04-13). It is preserved for historical context only. For the current project state see [`HANDOFF.md`](../HANDOFF.md) and [`.planning/STATE.md`](../.planning/STATE.md).
+
+---
+
 > **Note (2026-04-14):** This brief covers the v0.1 / v0.2 era. For v0.3.0 (Phase 11 — Confluence adapter) and later, see [`HANDOFF.md`](HANDOFF.md) — the former `MORNING-BRIEF-v0.3.md` was renamed into that file on 2026-04-14.
 
 # Morning brief — 2026-04-13
