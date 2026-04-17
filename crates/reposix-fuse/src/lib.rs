@@ -21,6 +21,7 @@ use fuser::{BackgroundSession, MountOption};
 use reposix_core::IssueBackend;
 use serde::{Deserialize, Serialize};
 
+pub mod attachments;
 pub mod comments;
 pub mod fs;
 pub mod inode;

@@ -1437,7 +1437,7 @@ impl ConfluenceBackend {
     /// `reqwest::get` without auth returns 401).
     ///
     /// The caller MUST check `att.file_size` and refuse to call this for files
-    /// exceeding 52_428_800 bytes (50 MiB) to prevent OOM. The method itself
+    /// exceeding `52_428_800` bytes (50 MiB) to prevent OOM. The method itself
     /// is unbounded by design to keep the API simple (see threat model T-24-01-04).
     ///
     /// # Errors
