@@ -2,7 +2,7 @@
 //!
 //! # Layout
 //!
-//! Full mount-level inode layout (Phase 13 Wave C):
+//! Full mount-level inode layout (Phase 13 Wave C, extended in Phase 24):
 //!
 //! | Range | Purpose |
 //! |-------|---------|
@@ -20,7 +20,11 @@
 //! | `0x10_0000_0000..0x14_0000_0000` | `labels/` per-label interior directories (allocated by [`crate::labels::LabelSnapshot`]). |
 //! | `0x14_0000_0000..0x18_0000_0000` | `labels/` leaf symlinks — one per (label × issue) pair (allocated by [`crate::labels::LabelSnapshot`]). |
 //! | `0x18_0000_0000..0x1C_0000_0000` | Per-page `.comments/` directories (allocated by [`crate::comments::CommentsSnapshot`]). |
-//! | `0x1C_0000_0000..u64::MAX`       | Individual comment files under `.comments/` (allocated by [`crate::comments::CommentsSnapshot`]). |
+//! | `0x1C_0000_0000..0x20_0000_0000` | Individual comment files under `.comments/` (allocated by [`crate::comments::CommentsSnapshot`]). |
+//! | `0x20_0000_0000` (fixed)          | [`WHITEBOARDS_ROOT_INO`] — the synthesized `whiteboards/` overlay root directory (Phase 24). |
+//! | `0x20_0000_0001..0x24_0000_0000` | Whiteboard file inodes (allocated by `ReposixFs::next_whiteboard_ino`). |
+//! | `0x24_0000_0000..0x28_0000_0000` | Per-page `.attachments/` directory inodes ([`ATTACHMENTS_DIR_INO_BASE`]). |
+//! | `0x28_0000_0000..u64::MAX`        | Attachment file inodes ([`ATTACHMENTS_FILE_INO_BASE`]). |
 //!
 //! The ranges are intentionally disjoint so every callback in `fs.rs` can
 //! classify an inode by numeric range **before** doing any map lookup; the
@@ -116,9 +120,28 @@ pub const COMMENTS_DIR_INO_BASE: u64 = 0x18_0000_0000;
 /// Start of the per-comment file inode range (Phase 23).
 ///
 /// One `CommentFile` inode allocated per individual comment file. Range:
-/// `COMMENTS_FILE_INO_BASE .. u64::MAX` (in practice: 500 pages × ~50
+/// `COMMENTS_FILE_INO_BASE .. WHITEBOARDS_ROOT_INO` (in practice: 500 pages × ~50
 /// comments = ~25k used).
 pub const COMMENTS_FILE_INO_BASE: u64 = 0x1C_0000_0000;
+
+/// Fixed inode for the `whiteboards/` overlay root directory (Phase 24).
+/// Lives just above `COMMENTS_FILE_INO_BASE` (`0x1C_0000_0000`).
+pub const WHITEBOARDS_ROOT_INO: u64 = 0x20_0000_0000;
+
+/// Start of the whiteboard file inode range (Phase 24).
+/// One file inode per whiteboard (typically < 100 per space).
+/// Range: `WHITEBOARD_FILE_INO_BASE .. ATTACHMENTS_DIR_INO_BASE`
+pub const WHITEBOARD_FILE_INO_BASE: u64 = 0x20_0000_0001;
+
+/// Start of the per-page `.attachments/` directory inode range (Phase 24).
+/// One dir inode per page on first access.
+/// Range: `ATTACHMENTS_DIR_INO_BASE .. ATTACHMENTS_FILE_INO_BASE`
+pub const ATTACHMENTS_DIR_INO_BASE: u64 = 0x24_0000_0000;
+
+/// Start of the attachment file inode range (Phase 24).
+/// One inode per individual attachment file.
+/// Range: `ATTACHMENTS_FILE_INO_BASE .. u64::MAX` (in practice: 500 pages × N attachments)
+pub const ATTACHMENTS_FILE_INO_BASE: u64 = 0x28_0000_0000;
 
 /// Bidirectional inode ↔ issue-id map.
 #[derive(Debug)]
@@ -330,5 +353,10 @@ mod tests {
             COMMENTS_DIR_INO_BASE < COMMENTS_FILE_INO_BASE,
             "COMMENTS_DIR_INO_BASE must be strictly below COMMENTS_FILE_INO_BASE"
         );
+        // Phase 24: whiteboard + attachments inode ranges are disjoint from all prior ranges.
+        assert!(WHITEBOARDS_ROOT_INO > COMMENTS_FILE_INO_BASE);
+        assert!(WHITEBOARD_FILE_INO_BASE > WHITEBOARDS_ROOT_INO);
+        assert!(ATTACHMENTS_DIR_INO_BASE > WHITEBOARD_FILE_INO_BASE);
+        assert!(ATTACHMENTS_FILE_INO_BASE > ATTACHMENTS_DIR_INO_BASE);
     }
 }
