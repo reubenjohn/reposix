@@ -2,12 +2,12 @@
 //! a wiremock-backed [`ConfluenceBackend`], and (when
 //! `#[ignore]`-unlocked + env configured) a live Atlassian tenant.
 //!
-//! **Why this file exists.** The whole point of the [`IssueBackend`] seam
+//! **Why this file exists.** The whole point of the [`BackendConnector`] seam
 //! (Phase 8 spec) is that the FUSE daemon and CLI orchestrator don't care
 //! which concrete backend they're talking to. Plan 11-A shipped 17 wiremock
 //! unit tests for `ConfluenceBackend`, but those exercise *private*
 //! helpers through module-internal access; they never drive the adapter
-//! through the [`IssueBackend`] trait seam the rest of the codebase
+//! through the [`BackendConnector`] trait seam the rest of the codebase
 //! actually consumes. This file is that proof.
 //!
 //! Mirrors `crates/reposix-github/tests/contract.rs` exactly in spirit —
@@ -40,7 +40,7 @@ use std::path::PathBuf;
 
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::backend::IssueBackend;
+use reposix_core::backend::BackendConnector;
 use reposix_core::{IssueId, IssueStatus};
 use serde_json::json;
 use wiremock::matchers::{method, path, query_param};
@@ -73,13 +73,13 @@ macro_rules! skip_if_no_env {
     }};
 }
 
-/// The 5 invariants that hold for any well-behaved [`IssueBackend`].
+/// The 5 invariants that hold for any well-behaved [`BackendConnector`].
 ///
 /// Every assertion writes its expectation inline so a failing run points
 /// directly at the rule that broke, not a distant line of driver code.
 /// Shared verbatim with `reposix-github/tests/contract.rs` by intent —
 /// the trait's value *is* this shared contract.
-async fn assert_contract<B: IssueBackend>(backend: &B, project: &str, known_issue_id: IssueId) {
+async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_issue_id: IssueId) {
     // (1) list_issues returns Ok(vec).
     let issues = backend.list_issues(project).await.unwrap_or_else(|e| {
         panic!(
@@ -189,7 +189,7 @@ async fn spawn_sim() -> (String, tempfile::NamedTempFile, tokio::task::JoinHandl
 /// (127.0.0.1 is allowed by default). Included in THIS crate's test
 /// suite (not only reposix-github's) because it proves the shared
 /// `assert_contract` helper is reusable and asserts the sim half of
-/// "both sides of the IssueBackend seam are contract-testable" within
+/// "both sides of the BackendConnector seam are contract-testable" within
 /// the confluence crate's own CI footprint.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn contract_sim() {
@@ -212,7 +212,7 @@ async fn contract_sim() {
 ///
 /// Stronger than the unit tests in `lib.rs` because it exercises the
 /// full `list_issues → get_issue → get_issue(u64::MAX)` sequence
-/// through the [`IssueBackend`] trait seam, not through private
+/// through the [`BackendConnector`] trait seam, not through private
 /// helpers — the same seam the FUSE daemon and CLI consume.
 ///
 /// ## Mock-ordering note

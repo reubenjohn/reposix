@@ -21,7 +21,7 @@ use anyhow::{Context, Result};
 use clap::ValueEnum;
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::{Issue, IssueBackend};
+use reposix_core::{Issue, BackendConnector};
 use reposix_github::GithubReadOnlyBackend;
 
 /// Backend choice for `reposix list --backend`.

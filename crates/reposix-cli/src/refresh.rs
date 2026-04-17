@@ -13,7 +13,7 @@ use std::process::Command;
 use anyhow::{bail, Context as _, Result};
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::IssueBackend as _;
+use reposix_core::BackendConnector as _;
 use reposix_github::GithubReadOnlyBackend;
 
 use crate::cache_db;

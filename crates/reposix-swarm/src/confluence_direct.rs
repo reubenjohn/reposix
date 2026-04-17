@@ -14,7 +14,7 @@ use parking_lot::Mutex;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
-use reposix_core::{IssueBackend, IssueId};
+use reposix_core::{BackendConnector, IssueId};
 
 use crate::metrics::{ErrorKind, MetricsAccumulator, OpKind};
 use crate::workload::Workload;
@@ -36,7 +36,7 @@ impl ConfluenceDirectWorkload {
     /// `base_url` is the Confluence tenant base (e.g.
     /// `https://tenant.atlassian.net`) or a wiremock URI for tests.
     /// `space` is the Confluence space key used as the `project`
-    /// argument to [`IssueBackend::list_issues`].
+    /// argument to [`BackendConnector::list_issues`].
     ///
     /// # Errors
     /// Propagates [`ConfluenceBackend::new_with_base_url`] failures

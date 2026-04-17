@@ -16,7 +16,7 @@ use std::process::ExitCode;
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use reposix_core::backend::{sim::SimBackend, DeleteReason, IssueBackend};
+use reposix_core::backend::{sim::SimBackend, DeleteReason, BackendConnector};
 use reposix_core::{parse_remote_url, sanitize, ServerMetadata, Tainted};
 use tokio::runtime::Runtime;
 
@@ -33,7 +33,7 @@ use crate::protocol::Protocol;
 /// after the dispatch loop returns.
 struct State {
     rt: Runtime,
-    backend: Arc<dyn IssueBackend>,
+    backend: Arc<dyn BackendConnector>,
     project: String,
     push_failed: bool,
 }
@@ -75,7 +75,7 @@ fn real_main() -> Result<bool> {
         .build()
         .context("build tokio runtime")?;
 
-    let backend: Arc<dyn IssueBackend> =
+    let backend: Arc<dyn BackendConnector> =
         Arc::new(SimBackend::with_agent_suffix(spec.origin, Some("remote"))?);
     let mut state = State {
         rt,

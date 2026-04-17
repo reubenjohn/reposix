@@ -1,4 +1,4 @@
-//! [`GithubReadOnlyBackend`] — a read-only [`IssueBackend`] that adapts
+//! [`GithubReadOnlyBackend`] — a read-only [`BackendConnector`] that adapts
 //! GitHub's REST v3 Issues API onto reposix's normalized `Issue` /
 //! `IssueStatus` shape.
 //!
@@ -61,7 +61,7 @@ use parking_lot::Mutex;
 use reqwest::{Method, StatusCode};
 use serde::Deserialize;
 
-use reposix_core::backend::{BackendFeature, DeleteReason, IssueBackend};
+use reposix_core::backend::{BackendFeature, DeleteReason, BackendConnector};
 use reposix_core::http::{client, ClientOpts, HttpClient};
 use reposix_core::{Error, Issue, IssueId, IssueStatus, Result, Untainted};
 
@@ -93,7 +93,7 @@ const MAX_ISSUES_PER_LIST: usize = 500;
 /// round-trips within the 5-page cap above.
 const PAGE_SIZE: usize = 100;
 
-/// `IssueBackend` implementation for GitHub's REST v3 Issues API.
+/// `BackendConnector` implementation for GitHub's REST v3 Issues API.
 ///
 /// Construct via [`GithubReadOnlyBackend::new`] (uses the public production
 /// API) or [`GithubReadOnlyBackend::new_with_base_url`] (accepts a custom
@@ -340,7 +340,7 @@ fn parse_next_link(link_header: &str) -> Option<String> {
 }
 
 #[async_trait]
-impl IssueBackend for GithubReadOnlyBackend {
+impl BackendConnector for GithubReadOnlyBackend {
     fn name(&self) -> &'static str {
         "github-readonly"
     }

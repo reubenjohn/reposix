@@ -1,7 +1,7 @@
 //! Contract test — the same 5 invariants hold for any well-behaved
-//! [`IssueBackend`] implementation.
+//! [`BackendConnector`] implementation.
 //!
-//! **Why this file exists.** The whole point of the `IssueBackend` seam
+//! **Why this file exists.** The whole point of the `BackendConnector` seam
 //! (Phase 8 spec) is that the FUSE daemon and CLI orchestrator don't care
 //! which concrete backend they're talking to. But that promise is vacuous
 //! unless we can *demonstrate* two implementations pass the same test. This
@@ -33,18 +33,18 @@
 use std::path::PathBuf;
 
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::backend::IssueBackend;
+use reposix_core::backend::BackendConnector;
 use reposix_core::{IssueId, IssueStatus};
 use reposix_github::GithubReadOnlyBackend;
 use serde_json::json;
 use wiremock::matchers::{any, header_exists, method, path, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
-/// The 5 invariants that hold for any well-behaved [`IssueBackend`].
+/// The 5 invariants that hold for any well-behaved [`BackendConnector`].
 ///
 /// Every assertion writes its expectation inline so a failing run points
 /// directly at the rule that broke, not a distant line of driver code.
-async fn assert_contract<B: IssueBackend>(backend: &B, project: &str, known_issue_id: IssueId) {
+async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_issue_id: IssueId) {
     // (1) list_issues returns Ok(vec).
     let issues = backend.list_issues(project).await.unwrap_or_else(|e| {
         panic!(
@@ -218,7 +218,7 @@ fn gh_issue(
 ///
 /// Stronger than the unit tests in `lib.rs` because it exercises the
 /// full `list_issues → get_issue → get_issue(u64::MAX)` sequence
-/// through the [`IssueBackend`] trait seam, not through private
+/// through the [`BackendConnector`] trait seam, not through private
 /// helpers — the same seam the FUSE daemon and CLI consume.
 ///
 /// Closes OP-6 MEDIUM-13 (HANDOFF.md) — gives `reposix-github`
@@ -267,7 +267,7 @@ async fn contract_github_wiremock() {
 
 /// `list_issues` follows the `Link: <url>; rel="next"` header through
 /// multiple pages and concatenates results. Mirrors the inline unit test
-/// in `lib.rs` but exercises the full `IssueBackend::list_issues` seam,
+/// in `lib.rs` but exercises the full `BackendConnector::list_issues` seam,
 /// confirming the contract holds at the trait boundary too.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn pagination_follows_link_header() {

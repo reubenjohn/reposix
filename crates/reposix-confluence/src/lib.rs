@@ -1,4 +1,4 @@
-//! [`ConfluenceBackend`] — read/write [`IssueBackend`] adapter for
+//! [`ConfluenceBackend`] — read/write [`BackendConnector`] adapter for
 //! Atlassian Confluence Cloud REST v2.
 //!
 //! # Scope
@@ -77,7 +77,7 @@ use reqwest::{Method, StatusCode};
 use rusqlite::Connection;
 use serde::Deserialize;
 
-use reposix_core::backend::{BackendFeature, DeleteReason, IssueBackend};
+use reposix_core::backend::{BackendFeature, DeleteReason, BackendConnector};
 use reposix_core::http::{client, ClientOpts, HttpClient};
 use reposix_core::{Error, Issue, IssueId, IssueStatus, Result, Tainted, Untainted};
 
@@ -129,7 +129,7 @@ impl std::fmt::Debug for ConfluenceCreds {
     }
 }
 
-/// Read-only `IssueBackend` for Atlassian Confluence Cloud REST v2.
+/// Read-only `BackendConnector` for Atlassian Confluence Cloud REST v2.
 ///
 /// Construct via [`ConfluenceBackend::new`] (public production API)
 /// or [`ConfluenceBackend::new_with_base_url`] (custom base; used by
@@ -784,13 +784,13 @@ impl ConfluenceBackend {
         self
     }
 
-    /// Strict variant of [`IssueBackend::list_issues`]: returns
+    /// Strict variant of [`BackendConnector::list_issues`]: returns
     /// `Err(Error::Other(...))` instead of silently capping at
     /// [`MAX_ISSUES_PER_LIST`] pages, closing the SG-05 taint-escape
     /// risk (the agent thinking it has the whole space when it doesn't).
     ///
     /// Use this when a caller **must** see every page in the space or fail
-    /// loudly. The default [`list_issues`](IssueBackend::list_issues) still
+    /// loudly. The default [`list_issues`](BackendConnector::list_issues) still
     /// returns `Ok(capped)` with a `tracing::warn!` for backwards compatibility.
     ///
     /// # Errors
@@ -801,7 +801,7 @@ impl ConfluenceBackend {
         self.list_issues_impl(project, true).await
     }
 
-    /// Shared pagination loop for both [`list_issues`](IssueBackend::list_issues)
+    /// Shared pagination loop for both [`list_issues`](BackendConnector::list_issues)
     /// and [`list_issues_strict`]. When `strict == true` the cap site returns
     /// `Err`; when `false` it emits a `tracing::warn!` and returns `Ok(capped)`.
     ///
@@ -1472,7 +1472,7 @@ impl ConfluenceBackend {
 }
 
 #[async_trait]
-impl IssueBackend for ConfluenceBackend {
+impl BackendConnector for ConfluenceBackend {
     fn name(&self) -> &'static str {
         "confluence"
     }
@@ -2242,7 +2242,7 @@ mod tests {
 
     /// End-to-end proof that `parentId` + `parentType` survive the JSON
     /// decode → `ConfPage` → `translate` → `Issue` pipeline through the
-    /// `IssueBackend::list_issues` seam (not just the `translate` helper in
+    /// `BackendConnector::list_issues` seam (not just the `translate` helper in
     /// isolation). Mixes three shapes in one list so we assert all branches
     /// with a single wiremock round-trip.
     #[tokio::test]

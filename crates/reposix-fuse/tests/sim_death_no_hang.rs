@@ -29,7 +29,7 @@ use std::time::{Duration, Instant};
 
 use chrono::TimeZone;
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::{Issue, IssueBackend, IssueId, IssueStatus};
+use reposix_core::{Issue, BackendConnector, IssueId, IssueStatus};
 use reposix_fuse::{Mount, MountConfig};
 use wiremock::matchers::{method, path, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -121,7 +121,7 @@ fn stat_returns_within_7s_after_backend_dies() {
         .expect("tempdir");
     let mount_path = td.path().to_path_buf();
 
-    let backend: Arc<dyn IssueBackend> =
+    let backend: Arc<dyn BackendConnector> =
         Arc::new(SimBackend::new(mock_uri.clone()).expect("sim backend"));
     let mount = Mount::open(
         &MountConfig {

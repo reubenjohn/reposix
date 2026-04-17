@@ -7,7 +7,7 @@
 //! frontmatter + body. `mount/.gitignore` returns exactly `/tree/\n`.
 //!
 //! Backend is a wiremock `MockServer` seeded with 3 synthetic issues,
-//! wrapped in a `SimBackend` to drive the Phase-10 IssueBackend seam;
+//! wrapped in a `SimBackend` to drive the Phase-10 BackendConnector seam;
 //! the mount lives on a `tempfile::tempdir()`. Gated `target_os = "linux"`
 //! because fuser/FUSE3 mounts only exist on Linux.
 
@@ -18,7 +18,7 @@ use std::time::{Duration, Instant};
 
 use chrono::TimeZone;
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::{Issue, IssueBackend, IssueId, IssueStatus};
+use reposix_core::{Issue, BackendConnector, IssueId, IssueStatus};
 use reposix_fuse::{Mount, MountConfig};
 use wiremock::matchers::{method, path, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -93,7 +93,7 @@ async fn mount_lists_and_reads_issues() {
     // Spawn mount on a blocking task so fuser's BackgroundSession + its
     // kernel thread are allowed to sit on a native thread.
     let origin = server.uri();
-    let backend: Arc<dyn IssueBackend> =
+    let backend: Arc<dyn BackendConnector> =
         Arc::new(SimBackend::new(origin.clone()).expect("sim backend"));
     let mount = tokio::task::spawn_blocking({
         let mount_path = mount_path.clone();

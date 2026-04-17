@@ -3,7 +3,7 @@
 //! The mount presents every issue in a reposix-compatible backend as a
 //! Markdown file under the per-backend bucket directory (`issues/` or
 //! `pages/`). Both read and write I/O flow through the
-//! [`reposix_core::IssueBackend`] trait: reads use `list_issues` /
+//! [`reposix_core::BackendConnector`] trait: reads use `list_issues` /
 //! `get_issue`, writes (`release`, `create`) use
 //! `update_issue` / `create_issue`, so the same FUSE daemon can drive the
 //! simulator or any other backend implementation. Every backend call is
@@ -18,7 +18,7 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use fuser::{BackgroundSession, MountOption};
-use reposix_core::IssueBackend;
+use reposix_core::BackendConnector;
 use serde::{Deserialize, Serialize};
 
 pub mod attachments;
@@ -38,7 +38,7 @@ pub use tree::{TreeSnapshot, TREE_DIR_INO_BASE, TREE_ROOT_INO, TREE_SYMLINK_INO_
 ///
 /// The `origin` field is retained for diagnostic rendering (Debug output,
 /// tracing spans) even though all read and write I/O now flows through the
-/// [`IssueBackend`] passed to [`Mount::open`]. The trait object owns its
+/// [`BackendConnector`] passed to [`Mount::open`]. The trait object owns its
 /// own origin internally.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MountConfig {
@@ -48,7 +48,7 @@ pub struct MountConfig {
     /// (e.g. `http://127.0.0.1:7878`). Ignored by the read path.
     pub origin: String,
     /// Project slug (sim) or `owner/repo` (github). Passed to every
-    /// `IssueBackend` call.
+    /// `BackendConnector` call.
     #[serde(default = "default_project")]
     pub project: String,
     /// Read-only mode. When `true` the kernel refuses writes at the VFS
@@ -68,7 +68,7 @@ pub struct Mount {
 
 impl Mount {
     /// Spawn a FUSE mount at `cfg.mount_point` whose read and write paths
-    /// are served by `backend` via the [`IssueBackend`] trait. The mount
+    /// are served by `backend` via the [`BackendConnector`] trait. The mount
     /// lives until the returned [`Mount`] is dropped.
     ///
     /// When `comment_fetcher` is `Some(...)` (Confluence backend only), the
@@ -95,7 +95,7 @@ impl Mount {
     /// suspenders.
     pub fn open(
         cfg: &MountConfig,
-        backend: Arc<dyn IssueBackend>,
+        backend: Arc<dyn BackendConnector>,
         comment_fetcher: Option<Arc<reposix_confluence::ConfluenceBackend>>,
     ) -> Result<Self> {
         if !cfg.mount_point.exists() {

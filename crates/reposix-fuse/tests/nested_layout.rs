@@ -37,7 +37,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
-use reposix_core::IssueBackend;
+use reposix_core::BackendConnector;
 use reposix_fuse::{Mount, MountConfig};
 use serde_json::{json, Value};
 use wiremock::matchers::{method, path, query_param};
@@ -143,7 +143,7 @@ fn boot_mount(server_uri: String) -> (reposix_fuse::Mount, std::path::PathBuf, t
         email: "ci@example.com".into(),
         api_token: "dummy".into(),
     };
-    let backend: Arc<dyn IssueBackend> = Arc::new(
+    let backend: Arc<dyn BackendConnector> = Arc::new(
         ConfluenceBackend::new_with_base_url(creds, server_uri.clone())
             .expect("confluence backend"),
     );

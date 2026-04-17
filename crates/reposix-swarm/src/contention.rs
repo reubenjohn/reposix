@@ -24,7 +24,7 @@ use parking_lot::Mutex;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::{sanitize, IssueBackend, IssueId, ServerMetadata, Tainted};
+use reposix_core::{sanitize, BackendConnector, IssueId, ServerMetadata, Tainted};
 
 use crate::metrics::{ErrorKind, MetricsAccumulator, OpKind};
 use crate::workload::Workload;

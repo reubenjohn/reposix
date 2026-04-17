@@ -23,7 +23,7 @@ use anyhow::{bail, Result};
 use clap::{Parser, ValueEnum};
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::IssueBackend;
+use reposix_core::BackendConnector;
 use reposix_fuse::{Mount, MountConfig};
 use reposix_github::GithubReadOnlyBackend;
 
@@ -79,7 +79,7 @@ struct Args {
     read_only: bool,
 }
 
-fn build_backend(kind: BackendKind, origin: &str) -> Result<Arc<dyn IssueBackend>> {
+fn build_backend(kind: BackendKind, origin: &str) -> Result<Arc<dyn BackendConnector>> {
     match kind {
         BackendKind::Sim => {
             // Agent-header suffix "fuse" so the simulator's audit log can

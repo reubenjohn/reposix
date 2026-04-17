@@ -15,7 +15,7 @@
 //! - `.gitignore` — read-only file with the 7-byte content `/tree/\n`.
 //!   Inode [`GITIGNORE_INO`].
 //! - `<bucket>/` — the per-backend root collection directory, keyed from
-//!   `IssueBackend::root_collection_name()` (`"issues"` for sim + GitHub,
+//!   `BackendConnector::root_collection_name()` (`"issues"` for sim + GitHub,
 //!   `"pages"` for Confluence). Inode [`BUCKET_DIR_INO`]. Contains the
 //!   real `<padded-id>.md` files (11-digit zero-padded).
 //! - `tree/` — synthesized read-only symlink overlay. Inode
@@ -36,7 +36,7 @@
 //!
 //! # Backend seam (Phase 10 + Phase 14)
 //!
-//! Both read and write paths speak to a `dyn IssueBackend` trait object
+//! Both read and write paths speak to a `dyn BackendConnector` trait object
 //! rather than any backend's REST shape directly. Reads use
 //! `list_issues` / `get_issue`; writes (`release`, `create`) use
 //! `update_issue` / `create_issue`. A Phase 14 refactor lifted the write
@@ -81,7 +81,7 @@ use fuser::{
 };
 use reposix_core::path::validate_issue_filename;
 use reposix_core::{
-    backend::BackendFeature, frontmatter, sanitize, Issue, IssueBackend, IssueId, IssueStatus,
+    backend::BackendFeature, frontmatter, sanitize, Issue, BackendConnector, IssueId, IssueStatus,
     ServerMetadata, Tainted, Untainted,
 };
 use serde::Deserialize;
@@ -118,7 +118,7 @@ const READ_LIST_TIMEOUT: Duration = Duration::from_secs(15);
 
 /// Errors reachable from the FUSE backend helpers. Formerly lived in
 /// `crate::fetch`; moved here in Phase 14 when the write path was lifted
-/// onto [`IssueBackend`]. Name retained (not renamed to `FsError`) to
+/// onto [`BackendConnector`]. Name retained (not renamed to `FsError`) to
 /// minimize diff; a future cleanup phase may rename.
 ///
 /// Intentionally opaque to callers — the FUSE callback path ultimately
@@ -171,7 +171,7 @@ struct ConflictBody {
     current: u64,
 }
 
-/// Map a `reposix_core::Error` from an `IssueBackend` call into a
+/// Map a `reposix_core::Error` from an `BackendConnector` call into a
 /// [`FetchError`].
 ///
 /// The `"version mismatch:"` arm (Phase 14 Wave B1) strips the prefix and
@@ -204,7 +204,7 @@ fn backend_err_to_fetch(e: reposix_core::Error) -> FetchError {
 }
 
 async fn list_issues_with_timeout(
-    backend: &Arc<dyn IssueBackend>,
+    backend: &Arc<dyn BackendConnector>,
     project: &str,
 ) -> Result<Vec<Issue>, FetchError> {
     match tokio::time::timeout(READ_LIST_TIMEOUT, backend.list_issues(project)).await {
@@ -215,7 +215,7 @@ async fn list_issues_with_timeout(
 }
 
 async fn get_issue_with_timeout(
-    backend: &Arc<dyn IssueBackend>,
+    backend: &Arc<dyn BackendConnector>,
     project: &str,
     id: IssueId,
 ) -> Result<Issue, FetchError> {
@@ -226,14 +226,14 @@ async fn get_issue_with_timeout(
     }
 }
 
-/// PATCH wrapper — routes through [`IssueBackend::update_issue`] with the
+/// PATCH wrapper — routes through [`BackendConnector::update_issue`] with the
 /// same 5-second wall-clock ceiling the read path enforces. The outer
 /// [`tokio::time::timeout`] is the belt-and-suspenders guard against a
 /// backend that returns headers and then stalls on the body (reqwest's
 /// inner `total_timeout` covers up through header-read only; see
 /// `14-RESEARCH.md#Q3`).
 async fn update_issue_with_timeout(
-    backend: &Arc<dyn IssueBackend>,
+    backend: &Arc<dyn BackendConnector>,
     project: &str,
     id: IssueId,
     patch: Untainted<Issue>,
@@ -251,11 +251,11 @@ async fn update_issue_with_timeout(
     }
 }
 
-/// POST wrapper — routes through [`IssueBackend::create_issue`] with the
+/// POST wrapper — routes through [`BackendConnector::create_issue`] with the
 /// same 5-second wall-clock ceiling. Symmetric to
 /// [`update_issue_with_timeout`].
 async fn create_issue_with_timeout(
-    backend: &Arc<dyn IssueBackend>,
+    backend: &Arc<dyn BackendConnector>,
     project: &str,
     issue: Untainted<Issue>,
 ) -> Result<Issue, FetchError> {
@@ -580,7 +580,7 @@ struct CachedFile {
     body_fetched: bool,
 }
 
-/// FUSE filesystem backed by an [`IssueBackend`] trait object for both
+/// FUSE filesystem backed by an [`BackendConnector`] trait object for both
 /// read and write paths (Phase 10 + Phase 14).
 pub struct ReposixFs {
     /// Tokio runtime owned by the FS; used for `block_on` on callbacks.
@@ -589,7 +589,7 @@ pub struct ReposixFs {
     /// (`create_issue`/`update_issue`). SG-05 audit attribution lives on
     /// the backend's internal `X-Reposix-Agent` header (set at
     /// construction via `SimBackend::with_agent_suffix`).
-    backend: Arc<dyn IssueBackend>,
+    backend: Arc<dyn BackendConnector>,
     /// Backend origin retained for diagnostic rendering (Debug, tracing).
     /// Not plumbed through any I/O path — the backend owns its own origin.
     origin: String,
@@ -666,8 +666,8 @@ pub struct ReposixFs {
     /// keep the cost model explicit for agent workloads.
     comment_snapshot: Arc<CommentsSnapshot>,
     /// Optional Confluence backend used only for `list_comments` calls. Stored
-    /// alongside `backend: Arc<dyn IssueBackend>` because `list_comments` is
-    /// NOT on the `IssueBackend` trait (open question #1 → option a).
+    /// alongside `backend: Arc<dyn BackendConnector>` because `list_comments` is
+    /// NOT on the `BackendConnector` trait (open question #1 → option a).
     /// `None` for sim/github.
     comment_fetcher: Option<Arc<reposix_confluence::ConfluenceBackend>>,
     /// Lazy per-page attachment cache (Phase 24). Always present; populated
@@ -694,7 +694,7 @@ impl std::fmt::Debug for ReposixFs {
 
 impl ReposixFs {
     /// Build a new FUSE filesystem whose read and write paths are served
-    /// by `backend` via the [`IssueBackend`] trait.
+    /// by `backend` via the [`BackendConnector`] trait.
     ///
     /// # Errors
     /// Returns any error constructing the Tokio runtime. Allowlist / HTTP
@@ -702,7 +702,7 @@ impl ReposixFs {
     /// `SimBackend::new`); any resulting [`anyhow::Error`] from runtime
     /// build or inode registry setup propagates here.
     pub fn new(
-        backend: Arc<dyn IssueBackend>,
+        backend: Arc<dyn BackendConnector>,
         origin: String,
         project: String,
         comment_fetcher: Option<Arc<reposix_confluence::ConfluenceBackend>>,
@@ -2768,7 +2768,7 @@ mod tests {
             .respond_with(ResponseTemplate::new(200).set_delay(Duration::from_secs(10)))
             .mount(&server)
             .await;
-        let backend: Arc<dyn IssueBackend> = Arc::new(SimBackend::new(server.uri()).unwrap());
+        let backend: Arc<dyn BackendConnector> = Arc::new(SimBackend::new(server.uri()).unwrap());
         let t0 = Instant::now();
         let err =
             update_issue_with_timeout(&backend, "demo", IssueId(1), sample_untainted(), Some(1))
@@ -2796,7 +2796,7 @@ mod tests {
             .respond_with(ResponseTemplate::new(201).set_delay(Duration::from_secs(10)))
             .mount(&server)
             .await;
-        let backend: Arc<dyn IssueBackend> = Arc::new(SimBackend::new(server.uri()).unwrap());
+        let backend: Arc<dyn BackendConnector> = Arc::new(SimBackend::new(server.uri()).unwrap());
         let t0 = Instant::now();
         let err = create_issue_with_timeout(&backend, "demo", sample_untainted())
             .await
@@ -2998,7 +2998,7 @@ mod tests {
             .respond_with(ResponseTemplate::new(200).set_body_json(body))
             .mount(&server)
             .await;
-        let backend: Arc<dyn IssueBackend> = Arc::new(SimBackend::new(server.uri()).unwrap());
+        let backend: Arc<dyn BackendConnector> = Arc::new(SimBackend::new(server.uri()).unwrap());
         let got =
             update_issue_with_timeout(&backend, "demo", IssueId(1), sample_untainted(), Some(1))
                 .await
@@ -3291,7 +3291,7 @@ mod tests {
             .build()
             .unwrap()
             .block_on(async { wiremock::MockServer::start().await });
-        let backend: Arc<dyn IssueBackend> = Arc::new(SimBackend::new(server.uri()).unwrap());
+        let backend: Arc<dyn BackendConnector> = Arc::new(SimBackend::new(server.uri()).unwrap());
         let fs =
             ReposixFs::new(backend, server.uri(), "demo".to_owned(), None).expect("ReposixFs::new");
 
