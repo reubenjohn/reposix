@@ -696,10 +696,12 @@ Plans:
 **Goal:** Rename the `IssueBackend` trait to `BackendConnector` in `reposix-core` and update all impls (`SimBackend`, `GithubReadOnlyBackend`, `ConfluenceBackend`) plus every call-site (`reposix-fuse` ≈20 sites in `fs.rs`, `reposix-cli` dispatch in `list.rs`/`mount.rs`/`refresh.rs`, `reposix-remote`, `reposix-swarm`). Simultaneously add `extensions: BTreeMap<String, serde_yaml::Value>` to the `Issue` struct (defaults to empty via `#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]`; flows through `frontmatter::render`/`frontmatter::parse` without schema churn). Bump workspace Cargo.toml `[workspace.package] version = "0.8.0"`. Write ADR-004 (`docs/decisions/004-backend-connector-rename.md`) capturing the rename rationale with alternatives considered (`RemoteBackend`, `TrackerBackend`, `WorkItemBackend`, `Connector`) and why `BackendConnector` won (neutral across issue/page/content domains; aligns with Phase 12's "Connector protocol" vocabulary). Grep-verify zero remaining `IssueBackend` references in source or docs after the rename. Roundtrip test: serialize `Issue { extensions: {"foo": Value::Int(42), "bar": Value::String("x")} }` → parse → assert equality.
 **Requirements:** RENAME-01, EXT-01
 **Depends on:** none (Phase 26 docs work is orthogonal; if Phase 26 lands first, this phase refreshes any doc lines mentioning `IssueBackend` during the rename sweep)
-**Plans:** TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 27 to break down)
+- [ ] 27-01-PLAN.md — Rename IssueBackend → BackendConnector in reposix-core
+- [ ] 27-02-PLAN.md — Update all external impls and call-sites; workspace tests green
+- [ ] 27-03-PLAN.md — Issue.extensions field + ADR-004 + v0.8.0 + CHANGELOG
 
 ### Phase 28: JIRA Cloud read-only adapter (`reposix-jira`) (v0.8.0)
 
@@ -726,7 +728,7 @@ Plans:
 Contract test (`tests/contract.rs`) parameterized identically to GitHub/Confluence: `contract_sim` (always) + `contract_jira_wiremock` (always) + `contract_jira_live` (`#[ignore]`, opt-in). `docs/reference/jira.md` (user guide + env vars + `--no-truncate` semantics). `docs/decisions/005-jira-issue-mapping.md` (ADR-005 — ID vs key, status+resolution mapping table, version synthesis, ADF stripping, attachments/comments deferred). CHANGELOG + CI green on `ubuntu-latest`.
 **Requirements:** JIRA-01, JIRA-02, JIRA-03, JIRA-04, JIRA-05
 **Depends on:** Phase 27 (BackendConnector rename + extensions field)
-**Plans:** TBD
+**Plans:** 3 plans
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 28 to break down)
@@ -736,7 +738,7 @@ Plans:
 **Goal:** Complete the JIRA write path on `JiraBackend`. `create_issue` → `POST /rest/api/3/issue` (`fields.project.key`, `fields.summary`, `fields.issuetype.name` — discover valid types via `GET /rest/api/3/issuetype`, cache per session; body encoded as ADF `{"type":"doc","version":1,"content":[{"type":"paragraph","content":[{"type":"text","text":"..."}]}]}`). `update_issue` → `PUT /rest/api/3/issue/{id}` with `{fields:{summary,description(ADF),labels,assignee}}` — status changes are NOT allowed via PUT, only via transitions; `expected_version` silently ignored (no ETag). `delete_or_close` → two-step: (1) `GET /rest/api/3/issue/{id}/transitions` to discover available transitions, (2) `POST /rest/api/3/issue/{id}/transitions` with `{transition:{id}}` — select transition by matching `DeleteReason` to target `statusCategory.key == "done"`, prefer a transition name containing "won't"/"reject"/"not planned" for `WontFix`; if `fields.resolution` is required by the screen, include `{fields:{resolution:{name:"Done"}}}` and catch 400 to retry without it. Fallback to `DELETE /rest/api/3/issue/{id}` if transitions unavailable and DELETE returns 204 (requires admin permission). Enable `supports(BackendFeature::Delete)` and `supports(BackendFeature::Transitions)`. Audit log rows for all mutations. Wiremock write-path tests ≥3. Contract test write extension.
 **Requirements:** JIRA-06
 **Depends on:** Phase 28 (JIRA read-only adapter)
-**Plans:** TBD
+**Plans:** 3 plans
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 29 to break down)
