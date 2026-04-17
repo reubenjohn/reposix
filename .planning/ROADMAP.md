@@ -583,7 +583,11 @@ Each doc is reviewed using the `doc-clarity-review` skill:
 6. Fix each doc, then re-run the review to confirm CLEAR verdict.
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 26 to break down)
+- [x] 26-01-PLAN.md — Root-level housekeeping (delete stubs, archive obsolete, fix README version)
+- [x] 26-02-PLAN.md — Clarity review + fix: README.md, HANDOFF.md, docs/index.md, docs/development/roadmap.md
+- [x] 26-03-PLAN.md — Clarity review: docs/ core pages (architecture, why, security, demo, contributing)
+- [x] 26-04-PLAN.md — Clarity review: reference/, connectors/, decisions/ docs
+- [x] 26-05-PLAN.md — Clarity review: research/ docs + final verification + STATE + SUMMARY
 
 ---
 

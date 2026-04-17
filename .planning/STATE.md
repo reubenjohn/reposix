@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.6.0
-milestone_name: — Write Path + Full Sitemap
-status: executing
-stopped_at: Completed 26-04-PLAN.md
-last_updated: "2026-04-17T02:43:26.543Z"
-last_activity: 2026-04-17 -- Phase 26 Plan 01 complete
+milestone: v0.7.0
+milestone_name: — Hardening + Confluence Expansion
+status: Phase complete — ready for Phase 27
+stopped_at: Completed 26-05-PLAN.md
+last_updated: "2026-04-16T00:00:00.000Z"
+last_activity: 2026-04-16 -- Phase 26 complete
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 13
-  completed_plans: 17
+  completed_plans: 22
   percent: 100
 ---
 
@@ -20,6 +20,7 @@ progress:
 
 ### Roadmap Evolution
 
+- **Phase 26 SHIPPED (2026-04-16):** Docs clarity overhaul — deleted AgenticEngineeringReference.md + InitialReport.md root stubs; archived MORNING-BRIEF.md + PROJECT-STATUS.md to docs/archive/; README.md version updated v0.3.0→v0.7.0 with complete release table; docs/index.md version updated v0.4→v0.7; docs/development/roadmap.md extended through v0.7 + v0.8 preview; HANDOFF.md OP items updated to v0.7 state; all 19 user-facing docs reviewed with doc-clarity-review skill (isolated subagent, zero repo context); zero critical friction points remaining; initial-report.md orientation abstract added.
 - **Phase 25 SHIPPED (2026-04-16):** OP-11 docs reorg — InitialReport.md → docs/research/initial-report.md, AgenticEngineeringReference.md → docs/research/agentic-engineering-reference.md; root stubs have visible markdown blockquote redirect notes; CLAUDE.md, README.md, threat-model-and-critique.md cross-refs updated; mkdocs.yml Research nav section added; v0.7.0 workspace version bump + CHANGELOG promotion.
 - Phase 26 added (2026-04-16): Docs clarity overhaul — unbiased subagent review of all user-facing Markdown docs using the new `doc-clarity-review` skill. Covers README.md, all docs/ pages, and root-level orphan cleanup (delete AgenticEngineeringReference.md stub, InitialReport.md stub, archive MORNING-BRIEF.md + PROJECT-STATUS.md). Version numbers synced across all pages. Each doc reviewed in isolation (no repo context) before and after edits; success = zero critical friction points remaining.
 - Phase 13 added (2026-04-14, session 4): Nested mount layout — pages/ + tree/ symlinks for Confluence parentId hierarchy. Implements OP-1 from HANDOFF.md. BREAKING: flat `<id>.md` at mount root moves to per-backend collection bucket (`pages/` for Confluence, `issues/` for sim+GitHub).
@@ -55,11 +56,11 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 
 ## Current Position
 
-Phase: 26
-Plan: 26-01 complete
-Cursor: **Phase 26 Plan 01 SHIPPED. Root housekeeping: deleted AgenticEngineeringReference.md and InitialReport.md stubs; archived MORNING-BRIEF.md + PROJECT-STATUS.md to docs/archive/ with archive notices; mkdocs.yml not_in_nav for archive/*; README.md version references updated from v0.3.0 to v0.7.0, phase table replaced with release table v0.1–v0.7, binary URLs updated, deferred section updated. Next: Phase 26 Plan 02 (clarity review).**
-Status: Executing
-Last activity: 2026-04-17 -- Phase 26 Plan 01 complete
+Phase: 27
+Plan: (not started)
+Cursor: **Phase 26 SHIPPED. Docs clarity overhaul complete — root stubs deleted, obsolete files archived, all user-facing docs reviewed and cleared, version numbers aligned to v0.7.0. Next: Phase 27 (BackendConnector rename + Issue.extensions).**
+Status: Phase complete — ready for Phase 27
+Last activity: 2026-04-16 -- Phase 26 complete
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
