@@ -6,6 +6,12 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+## [v0.7.0] — 2026-04-16
+
+### Changed
+- Moved `InitialReport.md` and `AgenticEngineeringReference.md` to `docs/research/` (OP-11); root stubs contain visible redirect notes. Updated all cross-references in `CLAUDE.md`, `README.md`, and `.planning/research/threat-model-and-critique.md`. Added `Research` section to mkdocs.yml nav.
+- Workspace version bumped `0.6.0 → 0.7.0`.
+
 ### Added — Phase 24: OP-9b — Confluence whiteboards, attachments, and folder hierarchy
 
 - (Phase 24, CONF-04) `ConfluenceBackend::list_whiteboards(space_id)` method — fetches all whiteboards in a Confluence space via `GET /wiki/api/v2/spaces/{id}/direct-children` (filtered by `type == "whiteboard"`); returns `Vec<ConfWhiteboard>`. Gracefully returns `Ok(vec![])` on 404 (endpoint MEDIUM confidence).
@@ -613,7 +619,8 @@ See [PROJECT-STATUS.md](PROJECT-STATUS.md) for the timeline + outstanding items,
 
 ---
 
-[Unreleased]: https://github.com/reubenjohn/reposix/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/reubenjohn/reposix/compare/v0.7.0...HEAD
+[v0.7.0]: https://github.com/reubenjohn/reposix/compare/v0.6.0...v0.7.0
 [v0.5.0]: https://github.com/reubenjohn/reposix/compare/v0.4.1...v0.5.0
 [v0.4.1]: https://github.com/reubenjohn/reposix/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/reubenjohn/reposix/compare/v0.3.0...v0.4.0
