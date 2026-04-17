@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v0.6.0
 milestone_name: — Write Path + Full Sitemap
-status: completed
+status: executing
 stopped_at: Phase 28 context gathered
-last_updated: "2026-04-17T05:14:51.365Z"
-last_activity: 2026-04-16 -- Phase 27 wave 3 complete (Issue.extensions + ADR-004 + v0.8.0 + CHANGELOG)
+last_updated: "2026-04-17T05:37:29.986Z"
+last_activity: 2026-04-17 -- Phase 28 planning complete
 progress:
-  total_phases: 11
-  completed_phases: 9
-  total_plans: 29
-  completed_plans: 36
+  total_phases: 6
+  completed_phases: 4
+  total_plans: 13
+  completed_plans: 19
   percent: 100
 ---
 
@@ -59,8 +59,8 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 Phase: 27
 Plan: 27-03 complete
 Cursor: **Phase 27 SHIPPED. BackendConnector rename complete (RENAME-01), Issue.extensions field added (EXT-01), ADR-004 written, workspace bumped to v0.8.0. Next: Phase 28 (reposix-jira read-only adapter).**
-Status: Phase complete — ready for Phase 28
-Last activity: 2026-04-16 -- Phase 27 wave 3 complete (Issue.extensions + ADR-004 + v0.8.0 + CHANGELOG)
+Status: Ready to execute
+Last activity: 2026-04-17 -- Phase 28 planning complete
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
