@@ -4,7 +4,7 @@ milestone: v0.6.0
 milestone_name: — Write Path + Full Sitemap
 status: verifying
 stopped_at: Completed 24-03-PLAN.md — Phase 24 SHIPPED
-last_updated: "2026-04-17T01:26:43.868Z"
+last_updated: "2026-04-17T01:35:46.221Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 6
@@ -54,8 +54,8 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 
 ## Current Position
 
-Phase: 24 (op-9b-confluence-whiteboards-attachments-and-folders) — SHIPPED
-Plan: 3 of 3 (complete)
+Phase: 26
+Plan: Not started
 Cursor: **Phase 24 SHIPPED. Confluence whiteboards + attachments + folder hierarchy complete; CONF-04, CONF-05, CONF-06 closed. 397 workspace tests green. Next: Phase 25 (docs reorg + v0.7.0 version bump).**
 Status: Phase complete — ready for verification
 Last activity: 2026-04-17
@@ -69,7 +69,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 
 **Velocity:**
 
-- Total plans completed: 3
+- Total plans completed: 7
 - Average duration: —
 - Total execution time: 0.0 hours (of ~7h total budget, ~4.5h budgeted for MVD)
 
@@ -80,6 +80,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 | — | — | — | — |
 | 22 | 3 | - | - |
 | 25 | 0 | - | - |
+| 24 | 4 | - | - |
 
 **Recent Trend:**
 
