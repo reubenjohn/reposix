@@ -31,24 +31,22 @@ See [`docs/research/initial-report.md`](docs/research/initial-report.md) for the
 
 ## Status
 
-**v0.3.0 alpha.** Built across three autonomous coding-agent sessions on 2026-04-13 / 2026-04-14 — single agent, GSD planning workflow, no human in the loop after kickoff. **193 workspace tests pass**, `cargo clippy --workspace --all-targets -- -D warnings` is clean, `mkdocs build --strict` green, `bash scripts/demos/smoke.sh` 4/4. `#![forbid(unsafe_code)]` at every crate root.
+**v0.7.0.** Built across autonomous coding-agent sessions on 2026-04-13 → 2026-04-16 — single agent, GSD planning workflow, no human in the loop after kickoff. **317+ workspace tests pass**, `cargo clippy --workspace --all-targets -- -D warnings` is clean, `mkdocs build --strict` green, `bash scripts/demos/smoke.sh` 4/4. `#![forbid(unsafe_code)]` at every crate root.
 
 Treat as alpha per Simon Willison's "proof of usage, not proof of concept" rule — but every demo in this README is reproducible on a stock Ubuntu host in under 5 minutes, including two that hit real backends (GitHub + Atlassian Confluence).
 
-| Phase                                     | Outcome                                                                                                   |
-|-------------------------------------------|-----------------------------------------------------------------------------------------------------------|
-| Phase 1 — Core contracts + guardrails     | shipped: `http::client()` factory + allowlist, `Tainted<T>`/`sanitize`, audit-log triggers, path validator |
-| Phase 2 — Simulator + audit log           | shipped: axum sim with rate limit + 409 + RBAC, append-only SQLite audit                                  |
-| Phase 3 — FUSE read path + CLI            | shipped: getattr/readdir/read/write/create/unlink, 5s timeout watchdog, `reposix sim/mount/demo`          |
-| Phase S — Write path + git-remote-reposix | shipped: full FUSE write, `git-remote-reposix` PATCH/POST/DELETE, SG-02 bulk-delete cap                   |
-| Phase 4 — Demo + docs                     | shipped: `scripts/demo.sh` + recorded `script(1)` typescript + walkthrough + README polish                |
-| Phase 8 — IssueBackend trait + real GitHub | shipped: `IssueBackend` seam + `GithubReadOnlyBackend` + contract test + Tier 3 parity demo               |
-| Phase 9 — Adversarial swarm harness       | shipped: 132 895 ops / 0 % errors / SG-06 upheld under load                                               |
-| Phase 10 — FUSE-mount-real-GitHub         | shipped: `reposix mount --backend github` + Tier 5 demo                                                   |
-| Phase 11 — Confluence Cloud adapter (v0.3) | shipped: `reposix-confluence` crate + `--backend confluence` CLI + contract test + Tier 5 demo + ADR-002   |
-| Phase 13 — Nested mount layout (v0.4)     | shipped: `pages/` + `tree/` symlink overlay for Confluence hierarchy, `Issue::parent_id`, `_self.md` convention, ADR-003 |
+| Release | Highlights |
+|---------|------------|
+| **v0.1** | Simulator + `IssueBackend` trait + FUSE read-only mount + `git-remote-reposix` + 8 security guardrails |
+| **v0.2** | Real GitHub Issues adapter (`reposix-github`) behind the same trait |
+| **v0.3** | Confluence Cloud adapter (live against `reuben-john.atlassian.net`); ADR-002 page mapping |
+| **v0.4** | `pages/` + `tree/` nested mount layout with symlink overlay for Confluence `parentId` hierarchy |
+| **v0.4.1** | FUSE + remote helper routed through `IssueBackend` trait; deleted ~830 lines of sim-specific glue |
+| **v0.5** | Synthesized `_INDEX.md` sitemap in each FUSE bucket directory |
+| **v0.6** | Confluence write path (ADF↔Markdown, `create_issue`/`update_issue`/`delete_or_close`); labels overlay; `_INDEX.md` at tree + root level; `reposix refresh` subcommand |
+| **v0.7** | Contention/truncation/chaos hardening; honest token benchmarks (92.3% reduction); Confluence comments + attachments + whiteboards; docs reorg |
 
-Tracking artifacts live in [`.planning/`](.planning/). See [`HANDOFF.md`](HANDOFF.md) for v0.5+ direction (`INDEX.md` generation, git-pull-as-cache-refresh, subprocess connector ABI).
+Tracking artifacts live in [`.planning/`](.planning/). See [`HANDOFF.md`](HANDOFF.md) for v0.8+ direction (JIRA Cloud integration, `BackendConnector` rename, `Issue.extensions` field).
 
 ## Demo
 
@@ -123,7 +121,7 @@ fusermount3 -u /tmp/reposix-gh-mnt
 
 **Not in smoke.** `05-mount-real-github.sh` requires `gh auth token`; `06-mount-real-confluence.sh` requires `ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT`, and `REPOSIX_CONFLUENCE_SPACE`. Both skip cleanly with `SKIP:` if their env is absent.
 
-Confluence quickstart (read-only, v0.3):
+Confluence quickstart:
 
 ```bash
 # Paste your values (from https://id.atlassian.com/manage-profile/security/api-tokens)
@@ -172,9 +170,9 @@ No Rust toolchain needed. Prebuilt Linux binaries ship with every release on the
 
 ```bash
 # x86_64 Linux (glibc). For aarch64 swap the target triple.
-curl -fsSLO https://github.com/reubenjohn/reposix/releases/latest/download/reposix-v0.4.0-x86_64-unknown-linux-gnu.tar.gz
-tar -xzf reposix-v0.4.0-x86_64-unknown-linux-gnu.tar.gz
-export PATH="$PWD/reposix-v0.4.0-x86_64-unknown-linux-gnu:$PATH"
+curl -fsSLO https://github.com/reubenjohn/reposix/releases/latest/download/reposix-v0.7.0-x86_64-unknown-linux-gnu.tar.gz
+tar -xzf reposix-v0.7.0-x86_64-unknown-linux-gnu.tar.gz
+export PATH="$PWD/reposix-v0.7.0-x86_64-unknown-linux-gnu:$PATH"
 reposix --help
 ```
 
@@ -257,9 +255,9 @@ For sim and GitHub backends, the mount shows `issues/` instead of `pages/` and d
 
 ## Security
 
-reposix is a textbook **lethal trifecta** (Simon Willison's framing): private remote data + untrusted ticket text + `git push` exfiltration. The full red-team gap analysis is in [`.planning/research/threat-model-and-critique.md`](.planning/research/threat-model-and-critique.md). The mitigations below are the v0.1 commitments — every one has a test or a clippy lint that asserts it. v0.3 adds two Confluence-specific mitigations (credential redaction in `Debug`, DNS-label tenant validation) on top.
+reposix is a textbook **lethal trifecta** (Simon Willison's framing): private remote data + untrusted ticket text + `git push` exfiltration. The full red-team gap analysis is in [`.planning/research/threat-model-and-critique.md`](.planning/research/threat-model-and-critique.md). The mitigations below are the v0.1 commitments — every one has a test or a clippy lint that asserts it. v0.3 added two Confluence-specific mitigations (credential redaction in `Debug`, DNS-label tenant validation); v0.6–v0.7 added write-path and hardening guardrails on top.
 
-### Threat model — what's enforced today (v0.3)
+### Threat model — what's enforced today (v0.7)
 
 | ID    | Mitigation                                                       | Enforcement                                                                                              |
 |-------|------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
@@ -272,15 +270,15 @@ reposix is a textbook **lethal trifecta** (Simon Willison's framing): private re
 | SG-07 | FUSE never blocks the kernel forever                             | All upstream HTTP via `with_timeout(5s)` wrapper; on timeout returns EIO                                 |
 | SG-08 | Demo recording shows guardrails firing                           | `docs/demo.typescript` contains SG-02 refusal + allowlist refusal markers; verified by grep              |
 
-### Deferred to v0.4 / future
+### Deferred to v0.8 / future
 
 - **M-* findings from the red-team report.** Several medium-severity findings in the threat-model document remain open — for example, fully sandboxed `git-remote-reposix` execution (currently runs as the invoking user with full FS access), and TTY-confirmation on `git remote add reposix::...`.
-- **Write path on real backends.** `reposix-github` + `reposix-confluence` are **read-only** today. `create_issue` / `update_issue` / `delete_or_close` return `Err(NotSupported)`. The FUSE mount and `git-remote-reposix` both dispatch writes through the `IssueBackend` trait (Phase 14 / v0.4.1), so adding real-backend write support is now a per-adapter change — not a plumbing change.
+- **Write path on real backends — GitHub.** `reposix-github` is **read-only**. `create_issue` / `update_issue` / `delete_or_close` return `Err(NotSupported)`. Confluence write path shipped in v0.6.
+- **JIRA Cloud integration.** See [`HANDOFF.md`](HANDOFF.md) for v0.8+ direction (`BackendConnector` rename, `Issue.extensions` field).
 - **Signed recording attestation.** `script(1)` timestamps are trusted-by-invocation. We do not claim cryptographic provenance on `docs/demo.typescript`.
-- **Workflow rule enforcement.** Today's sim reports all 5 statuses as legal from any state. Real workflow constraints ("must pass through `in_progress` before `done`") are a v0.4 extension to the sim, not a backend feature.
-- **Folder structure inside the mount** (see [`HANDOFF.md`](HANDOFF.md) OP-1) — today every backend renders a flat `<id>.md` list; the [hero image](docs/social/assets/hero.png) advertises `issues/`/`labels/`/`milestones/` subdirs and Confluence's native page hierarchy rendered as `cd`-able directories.
-- **Subprocess/JSON-RPC connector ABI.** Phase 12 scope. Short-term 3rd-party-connector path (crates.io `reposix-adapter-<name>`) is documented in [`docs/connectors/guide.md`](docs/connectors/guide.md).
-- **macOS / macFUSE.** Linux only through v0.3.
+- **Workflow rule enforcement.** Today's sim reports all 5 statuses as legal from any state. Real workflow constraints ("must pass through `in_progress` before `done`") are a future sim extension.
+- **Subprocess/JSON-RPC connector ABI.** Short-term 3rd-party-connector path (crates.io `reposix-adapter-<name>`) is documented in [`docs/connectors/guide.md`](docs/connectors/guide.md).
+- **macOS / macFUSE.** Linux only through v0.7; macOS self-hosted runner needed for HARD-04 (partially addressed in v0.7).
 
 ## Honest scope
 
