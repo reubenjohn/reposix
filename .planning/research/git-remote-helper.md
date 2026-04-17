@@ -280,7 +280,7 @@ If we naively did `PUT /issues/PROJ-123` with the entire new YAML+body, we'd:
 - Trigger workflow validators on every field even if unchanged.
 - Hit issue tracker rate-limit per-field-write metering harder.
 
-The whole REST-to-POSIX pitch (per `InitialReport.md` §"Differentiating HTTP Verbs") collapses if we PUT-everything. Field-level PATCH is what makes git semantics actually map to API semantics.
+The whole REST-to-POSIX pitch (per `docs/research/initial-report.md` §"Differentiating HTTP Verbs") collapses if we PUT-everything. Field-level PATCH is what makes git semantics actually map to API semantics.
 
 ---
 
@@ -403,7 +403,7 @@ def do_option(parser):
 **Lang:** Go. **License:** GPL-3.0.
 **URL:** https://github.com/git-bug/git-bug
 
-git-bug is the most-cited prior art for "issues in git" and the very project our `InitialReport.md` references for Lamport timestamps. **Crucially, git-bug does NOT implement git-remote-helper.** It uses custom subcommands:
+git-bug is the most-cited prior art for "issues in git" and the very project our `docs/research/initial-report.md` references for Lamport timestamps. **Crucially, git-bug does NOT implement git-remote-helper.** It uses custom subcommands:
 ```
 git bug bridge new          # interactive wizard for token + URL
 git bug bridge push <name>  # push to GitHub/GitLab/Jira
@@ -990,4 +990,4 @@ The threat model in `PROJECT.md` flags the lethal trifecta: private remote data 
 
 ### Project context (read directly, HIGH confidence)
 - `/home/reuben/workspace/reposix/.planning/PROJECT.md`
-- `/home/reuben/workspace/reposix/InitialReport.md` §"Distributed Synchronization: The Git Remote Helper Protocol"
+- `/home/reuben/workspace/reposix/docs/research/initial-report.md` §"Distributed Synchronization: The Git Remote Helper Protocol"

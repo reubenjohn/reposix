@@ -41,7 +41,7 @@ That's it. The agent issues two commands it has seen thousands of times in its p
 !!! success "Measured, not claimed"
     The architecture paper[^1] projected a ~98% reduction. We measured it against a representative fixture corpus using Anthropic's `count_tokens` API (no more `len/4` heuristic). Result: **89.1% reduction** — reposix ingests **~9.2× less context** than an MCP-mediated baseline for the same task. Full breakdown in [`benchmarks/RESULTS.md`](https://github.com/reubenjohn/reposix/blob/main/benchmarks/RESULTS.md).
 
-    [^1]: [`InitialReport.md`](https://github.com/reubenjohn/reposix/blob/main/InitialReport.md) §"Token Economics of Filesystem Interaction" in the repo.
+    [^1]: [`docs/research/initial-report.md`](https://github.com/reubenjohn/reposix/blob/main/docs/research/initial-report.md) §"Token Economics of Filesystem Interaction" in the repo.
 
 ### How we measure it
 

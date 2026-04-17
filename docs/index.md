@@ -70,7 +70,7 @@ This project is an experiment in the pattern from Simon Willison's April 2026 in
 3. **Goal-backward verification.** Every phase has Bash-assertion success criteria. The final [`VERIFICATION.md`](https://github.com/reubenjohn/reposix/blob/main/.planning/VERIFICATION.md) walks each of the 17 original requirements → evidence → test name.
 4. **Empirical closing of the loop.** Before declaring the demo done, the agent literally ran `bash scripts/demo.sh` end-to-end, verified server state updates via `curl`, and confirmed the allowlist refusal and SG-02 cap fire on the recorded transcript.
 
-[^1]: The "dark factory" framing — [`AgenticEngineeringReference.md`](https://github.com/reubenjohn/reposix/blob/main/AgenticEngineeringReference.md) §1 in the repo.
+[^1]: The "dark factory" framing — [`docs/research/agentic-engineering-reference.md`](https://github.com/reubenjohn/reposix/blob/main/docs/research/agentic-engineering-reference.md) §1 in the repo.
 
 ## Where to go next
 

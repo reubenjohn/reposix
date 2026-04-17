@@ -2,7 +2,7 @@
 
 **Audience:** the agent(s) who will implement `crates/reposix-sim` tonight.
 **Mode:** ecosystem + feasibility, code-heavy. Confidence: HIGH for axum / governor / rusqlite shapes, MEDIUM for Jira workflow semantics (modeled conservatively from public docs), HIGH for GitHub Issues semantics (validated against `docs.github.com/en/rest/issues/issues`, API version `2026-03-10`).
-**North star:** the StrongDM dark-factory pattern from `AgenticEngineeringReference.md` §1. A swarm of agent-shaped clients hammers `/projects/{slug}/issues/...` overnight; the simulator must be **fast, free, deterministic, and faithful enough that bugs caught here would also occur in production.**
+**North star:** the StrongDM dark-factory pattern from `docs/research/agentic-engineering-reference.md` §1. A swarm of agent-shaped clients hammers `/projects/{slug}/issues/...` overnight; the simulator must be **fast, free, deterministic, and faithful enough that bugs caught here would also occur in production.**
 
 The defining tension is *fidelity vs. velocity*. Every behavior in §2 is non-negotiable because each one corresponds to a class of bug that would otherwise only surface against a real backend (where we have no credentials, no quota, no time). Everything else — pagination edge cases, custom field types, rich text rendering — is explicitly out of v0.1.
 
@@ -546,7 +546,7 @@ Capturing the response body cleanly requires consuming and rebuilding it (simila
 
 ## 4. Observability dashboard — vibe-coded, working
 
-Following Simon Willison's "tiny Go binary with vibe-coded UI" pattern (`AgenticEngineeringReference.md` §1). Goals:
+Following Simon Willison's "tiny Go binary with vibe-coded UI" pattern (`docs/research/agentic-engineering-reference.md` §1). Goals:
 
 - Single embedded HTML file, no build step, no node_modules.
 - Polls `/_audit?since={cursor}` every 2s.

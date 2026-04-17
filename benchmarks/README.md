@@ -1,6 +1,6 @@
 # reposix token-economy benchmark
 
-The single biggest claim in the reposix architecture paper ([`InitialReport.md`](../InitialReport.md) §"Token Economics of Filesystem Interaction") is:
+The single biggest claim in the reposix architecture paper ([`docs/research/initial-report.md`](../docs/research/initial-report.md) §"Token Economics of Filesystem Interaction") is:
 
 > Exposing cloud services as a POSIX filesystem reduces required token volume from roughly **150 000** (MCP-mediated) to **~2 000** (filesystem exploration). A **98.7%** efficiency improvement.
 

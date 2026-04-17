@@ -36,7 +36,7 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 - [ ] **Filename derivation never uses titles.** Files are named `<id>.md` (zero-padded to 4 digits for v0.1). Titles are body-only. FUSE rejects path components containing `/`, `\0`, `.`, `..` with `EINVAL`.
 - [ ] **Tainted-content typing.** Bytes that came from a remote (network or simulator) are wrapped in `reposix_core::Tainted<T>`. Functions that perform side-effects on other systems (egress HTTP, file write outside the mount) accept only `Untainted<T>`. Conversion goes through an explicit `sanitize` step that strips the immutable fields above. The type system enforces what the prose promises.
 - [ ] **Audit log is append-only.** SQLite `audit` table has no UPDATE or DELETE triggers permitted; CI test asserts `pragma table_info` and a `BEFORE UPDATE/DELETE RAISE` trigger exists.
-- [ ] **FUSE never blocks the kernel forever.** All upstream HTTP calls have a 5-second timeout; on timeout the daemon returns `EIO` (per InitialReport.md §"Graceful Degradation via POSIX Errors"), never hangs.
+- [ ] **FUSE never blocks the kernel forever.** All upstream HTTP calls have a 5-second timeout; on timeout the daemon returns `EIO` (per `docs/research/initial-report.md` §"Graceful Degradation via POSIX Errors"), never hangs.
 - [ ] **Demo recording must show guardrails firing.** The asciinema/script recording includes at least one allowlist refusal and one 409-conflict-as-merge-conflict resolution. A demo that only shows happy-path is dishonest about what reposix is.
 
 **JIRA integration (v0.8.0 target)**
@@ -56,12 +56,12 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 - **Web UI** — agents don't need it; humans use the CLI + the underlying git repo.
 - **Multi-tenant hosted service** — local-first only. The whole point is the agent talks to the local FS.
 - **Pickle/binary serialization** — JSON + YAML only. Per simon-willison-style auditability.
-- **Eager full sync of remote state** — lazy, on-demand fetches with caching. A naïve `grep -r` must not melt API quotas (per InitialReport.md §rate-limiting).
+- **Eager full sync of remote state** — lazy, on-demand fetches with caching. A naïve `grep -r` must not melt API quotas (per `docs/research/initial-report.md` §rate-limiting).
 
 ## Context
 
-- **Why this exists.** From `AgenticEngineeringReference.md`: MCP burns 100k+ tokens on schema discovery before the first useful operation. POSIX is in the model's pre-training. A `cat /mnt/jira/PROJ-123.md` operation is ~2k tokens of context vs ~150k for the equivalent MCP-mediated read.
-- **Reference materials.** `InitialReport.md` (architecture deep-dive on FUSE + git-remote-helper for agentic tooling) and `AgenticEngineeringReference.md` (Simon Willison interview distillation: dark factory pattern, lethal trifecta, simulator-first).
+- **Why this exists.** From `docs/research/agentic-engineering-reference.md`: MCP burns 100k+ tokens on schema discovery before the first useful operation. POSIX is in the model's pre-training. A `cat /mnt/jira/PROJ-123.md` operation is ~2k tokens of context vs ~150k for the equivalent MCP-mediated read.
+- **Reference materials.** `docs/research/initial-report.md` (architecture deep-dive on FUSE + git-remote-helper for agentic tooling) and `docs/research/agentic-engineering-reference.md` (Simon Willison interview distillation: dark factory pattern, lethal trifecta, simulator-first).
 - **Inspiration projects.** `~/workspace/token_world` (Python, knowledge-graph as ground truth, CI discipline). `~/workspace/theact` (small-model RPG engine, observability tooling). `~/workspace/reeve_bot` (production Telegram bot stack).
 - **Threat model.** This project is a textbook lethal trifecta: private remote data + untrusted ticket text + git-push exfiltration. Mitigations are first-class: tainted-content marking, audit log, no auto-push to unauthorized remotes, RBAC → POSIX permission translation.
 
@@ -85,7 +85,7 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 | `fuser` crate, `default-features = false` | No libfuse-dev / pkg-config available; runtime uses fusermount binary which is present | — Pending |
 | `rusqlite` with `bundled` | Avoids needing libsqlite3-dev | — Pending |
 | Workspace with 5 crates (`-core`, `-sim`, `-fuse`, `-remote`, `-cli`) | Clear separation of concerns; each crate independently testable; `-core` isolates types from binaries | — Pending |
-| Issues as `.md` + YAML frontmatter | Matches InitialReport.md §"Modeling Hierarchical Directory Structures"; agents already understand the format | — Pending |
+| Issues as `.md` + YAML frontmatter | Matches `docs/research/initial-report.md` §"Modeling Hierarchical Directory Structures"; agents already understand the format | — Pending |
 | `git-remote-helper` protocol over custom sync | Leverages git's conflict resolution (OP: ground truth, simon willison §5.2 lethal trifecta argues git semantics > JSON conflict synthesis) | — Pending |
 | Public GitHub repo `reubenjohn/reposix` | User authorized; CI must run; demo must be shareable | — Pending |
 | Auto/YOLO mode, coarse granularity, all workflow gates on | User asked for max autonomy + GSD discipline; coarse phases fit 7-hour window | — Pending |

@@ -883,7 +883,7 @@ fn write(&self, ...) {
 }
 ```
 
-**This matches the InitialReport.md architecture** — writes do not go directly to the upstream. In the real design, writes go to local state and are pushed via `git-remote-reposix`. The spawned PUT above is only a hot-cache write-through; the durable write path is git.
+**This matches the `docs/research/initial-report.md` architecture** — writes do not go directly to the upstream. In the real design, writes go to local state and are pushed via `git-remote-reposix`. The spawned PUT above is only a hot-cache write-through; the durable write path is git.
 
 ### 5.5 When oneshot channels help
 
@@ -970,7 +970,7 @@ Cause: your `lookup` and `create` report different inodes, or `getattr` returns 
 With `MountOption::DefaultPermissions`, the kernel checks `mode`+`uid`+`gid` before calling us. That means:
 - A `0o644` file owned by uid=1000 is not writable by uid=1001 — we never see the `write()` call.
 - Without `DefaultPermissions`, we'd need to implement `access()` ourselves.
-- **Use `DefaultPermissions`.** Mode bits stored on our Nodes become real. That maps directly to the RBAC-to-POSIX pattern in InitialReport.md §Governance.
+- **Use `DefaultPermissions`.** Mode bits stored on our Nodes become real. That maps directly to the RBAC-to-POSIX pattern in `docs/research/initial-report.md` §Governance.
 
 ---
 

@@ -53,7 +53,7 @@ Full design — slug algorithm, collision resolution, `_self.md` convention, kno
 
 ## Normalization of deviance
 
-From the [`AgenticEngineeringReference.md`](https://github.com/reubenjohn/reposix/blob/main/AgenticEngineeringReference.md) §5.5 distillation of Simon's interview:
+From the [`docs/research/agentic-engineering-reference.md`](https://github.com/reubenjohn/reposix/blob/main/docs/research/agentic-engineering-reference.md) §5.5 distillation of Simon's interview:
 
 > Every deployment of an unsafe agent that doesn't get exploited increases institutional confidence in it. This is the Challenger O-ring dynamic. The field has been getting away with unsafe patterns because no headline-grabbing exploit has landed yet. One will. Don't rely on "it hasn't happened" as evidence of safety.
 
