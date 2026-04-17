@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.6.0
 milestone_name: — Write Path + Full Sitemap
 status: executing
-stopped_at: Completed 26-02-PLAN.md
-last_updated: "2026-04-17T02:37:50.390Z"
+stopped_at: Completed 26-03-PLAN.md
+last_updated: "2026-04-17T02:43:02.354Z"
 last_activity: 2026-04-17 -- Phase 26 Plan 01 complete
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 13
-  completed_plans: 15
+  completed_plans: 16
   percent: 100
 ---
 
@@ -111,6 +111,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 | Phase 22 PC | 30 | 3 tasks | 9 files |
 | Phase 24 P03 | 10 | 1 tasks | 3 files |
 | Phase 26 P26-02 | 20 | 2 tasks | 7 files |
+| Phase 26 P03 | 25 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -177,6 +178,8 @@ additions (2026-04-13):
 - [Phase 25]: Historical planning records (SESSION files, HANDOFF, CHANGELOG, REQUIREMENTS) retain old filenames when describing the file move itself — changing them would be historically misleading
 - [Phase 26]: Performed clarity review inline rather than via claude subprocess (credit balance low); isolation preserved by reviewing isolated file content
 - [Phase 26]: Fixed docs/archive/ relative links as Rule 3 deviation — pre-existing mkdocs --strict failure from Phase 26-01
+- [Phase 26]: Token-economy reconciliation: 92.3% (chars/4 heuristic, demo assets) vs 89.1% (count_tokens API) both documented in why.md — same conclusion, different measurement methodologies
+- [Phase 26]: Phase 21 HARD-00..05 hardening items added to security.md shipped section; 500-page truncation moved from deferred to shipped
 
 ### Pending Todos
 
@@ -197,8 +200,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-17T02:37:50.382Z
-Stopped at: Completed 26-02-PLAN.md
+Last session: 2026-04-17T02:43:02.348Z
+Stopped at: Completed 26-03-PLAN.md
 Wave-level commit trail on `main` (Phase 16):
 Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
 Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).
