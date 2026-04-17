@@ -81,9 +81,9 @@
 - [ ] **SPACES-01**: `reposix spaces --backend confluence` subcommand lists all readable Confluence spaces in a table (KEY / NAME / URL)
 
 ### Confluence Whiteboards / Attachments / Folders (OP-9b)
-- [ ] **CONF-04**: `ls mount/whiteboards/` lists Confluence whiteboards; each exposed as `<id>.json` (raw)
-- [ ] **CONF-05**: `ls mount/pages/<id>.attachments/` lists page attachments; binary passthrough
-- [ ] **CONF-06**: Folders (`/folders` endpoint) exposed as a separate tree alongside page hierarchy
+- [x] **CONF-04**: `ls mount/whiteboards/` lists Confluence whiteboards; each exposed as `<id>.json` (raw)
+- [x] **CONF-05**: `ls mount/pages/<id>.attachments/` lists page attachments; binary passthrough
+- [x] **CONF-06**: Folders (`/folders` endpoint) exposed as a separate tree alongside page hierarchy
 
 ### Docs Reorg (OP-11)
 - [ ] **DOCS-01**: `InitialReport.md` moved to `docs/research/initial-report.md` with redirect note at old path

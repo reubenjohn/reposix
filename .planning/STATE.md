@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v0.6.0
 milestone_name: — Write Path + Full Sitemap
-status: phase_complete
-stopped_at: Phase 24 SHIPPED (2026-04-16)
-last_updated: "2026-04-16T00:00:00.000Z"
-last_activity: 2026-04-16 -- Phase 24 complete: whiteboards + attachments + folder hierarchy SHIPPED
+status: verifying
+stopped_at: Completed 24-03-PLAN.md — Phase 24 SHIPPED
+last_updated: "2026-04-17T01:26:43.868Z"
+last_activity: 2026-04-17
 progress:
   total_phases: 6
   completed_phases: 3
@@ -57,8 +57,8 @@ Next: /gsd-plan-phase 16 (Confluence write path).
 Phase: 24 (op-9b-confluence-whiteboards-attachments-and-folders) — SHIPPED
 Plan: 3 of 3 (complete)
 Cursor: **Phase 24 SHIPPED. Confluence whiteboards + attachments + folder hierarchy complete; CONF-04, CONF-05, CONF-06 closed. 397 workspace tests green. Next: Phase 25 (docs reorg + v0.7.0 version bump).**
-Status: Phase 24 complete
-Last activity: 2026-04-16 -- Phase 24 SHIPPED
+Status: Phase complete — ready for verification
+Last activity: 2026-04-17
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
@@ -107,6 +107,7 @@ Progress: [#---------] v0.6.0 in progress (Phase 16 of 20 closed; Phases 17–20
 | Phase 21 PD | 12 | 1 tasks | 1 files |
 | Phase 21 PE | 25m | 3 tasks | 3 files |
 | Phase 22 PC | 30 | 3 tasks | 9 files |
+| Phase 24 P03 | 10 | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -168,6 +169,8 @@ additions (2026-04-13):
 - [Phase 24]: CONF-06 resolved via translate() folder arm (no separate folders/ FUSE tree needed)
 - [Phase 24]: AttachmentsSnapshot mirrors CommentsSnapshot pattern — established reusable pattern for per-page lazy caches
 - [Phase 24]: v0.7.0 version bump deferred to Phase 25 (docs reorg)
+- [Phase 24]: Phase 24: CONF-06 resolved via translate() folder arm — no separate folders/ FUSE tree needed
+- [Phase 24]: Phase 24: v0.7.0 version bump deferred to Phase 25 (docs reorg) per ROADMAP.md
 
 ### Pending Todos
 
@@ -188,8 +191,8 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-16T20:37:11.088Z
-Stopped at: context exhaustion at 90% (2026-04-16)
+Last session: 2026-04-17T01:26:39.738Z
+Stopped at: Completed 24-03-PLAN.md — Phase 24 SHIPPED
 Wave-level commit trail on `main` (Phase 16):
 Wave A: `48aec91` (pulldown-cmark dep), `5c3c273` (adf.rs + 18 unit tests).
 Wave B: `59217ba` (rename ConfluenceReadOnlyBackend→ConfluenceBackend), `b905cb0` (write methods + supports), `51caac6` (13 wiremock tests).

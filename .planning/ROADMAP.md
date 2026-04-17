@@ -637,12 +637,12 @@ Plans:
 **Goal:** Surface Confluence whiteboards (`whiteboards/<id>.json`), page attachments (`pages/<id>.attachments/<filename>`), and folder-parented page hierarchy (`tree/` overlay) in the FUSE mount. Expands the multi-content-type overlay from Phase 23.
 **Requirements**: CONF-04, CONF-05, CONF-06
 **Depends on:** Phase 23
-**Plans:** 3 plans
+**Plans:** 4/3 plans complete
 
 Plans:
-- [ ] 24-01-PLAN.md — `list_attachments` + `list_whiteboards` + `download_attachment` methods; `ConfAttachment`/`ConfWhiteboard` structs; `translate()` folder fix (Wave 1)
-- [ ] 24-02-PLAN.md — FUSE overlay: `AttachmentsSnapshot`, 4 new `InodeKind` variants + dispatch (Wave 2)
-- [ ] 24-03-PLAN.md — Green gauntlet + CHANGELOG + STATE.md + SUMMARY (Wave 3)
+- [x] 24-01-PLAN.md — `list_attachments` + `list_whiteboards` + `download_attachment` methods; `ConfAttachment`/`ConfWhiteboard` structs; `translate()` folder fix (Wave 1)
+- [x] 24-02-PLAN.md — FUSE overlay: `AttachmentsSnapshot`, 4 new `InodeKind` variants + dispatch (Wave 2)
+- [x] 24-03-PLAN.md — Green gauntlet + CHANGELOG + STATE.md + SUMMARY (Wave 3)
 
 ### Phase 25: OP-11 — docs reorg: InitialReport.md and AgenticEngineeringReference.md to docs/research/ plus root cleanup (v0.7.0)
 
