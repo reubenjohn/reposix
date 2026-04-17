@@ -71,6 +71,13 @@ The list below tracks items that were deferred from v0.1 and have since landed. 
 - **Real-backend CI contract.** Shipped. `integration-contract` (GitHub) and `integration-contract-confluence` (Atlassian) both run against live APIs on every push when the relevant secrets are configured, and skip cleanly otherwise.
 - **FUSE write-path rewire onto `IssueBackend`.** Shipped in Phase 14 (v0.4.1). The FUSE `release` / `create` callbacks now dispatch through `IssueBackend::update_issue` / `create_issue` instead of the deleted `crates/reposix-fuse/src/fetch.rs` sim-REST helpers. The simulator's REST shape now lives in exactly one crate (`reposix-core::backend::sim::SimBackend`). Closes HANDOFF.md "Known open gaps" item 7.
 - **`git-remote-reposix` backend-abstraction.** Shipped in Phase 14 (v0.4.1). The remote helper now constructs a `SimBackend` internally from the parsed `RemoteSpec` and dispatches all pushes through the `IssueBackend` trait; `crates/reposix-remote/src/client.rs` is deleted. URL syntax (`reposix::http://host:port/projects/slug`) is unchanged — a future phase can extend to `reposix::confluence://…` once real-backend writes land. Closes HANDOFF.md "Known open gaps" item 8.
+- **OP-7 hardening bundle (Phase 21, HARD-00..05).** Five hardening items shipped:
+  - **HARD-00** — Credential pre-push hook (`scripts/hooks/pre-push`) runs in CI, blocking accidental credential commits.
+  - **HARD-01** — `reposix-swarm --contention` mode proves `If-Match` 409 is deterministic under N-client contention on the same issue.
+  - **HARD-02** — Confluence 500-page truncation now emits a `WARN` log and the `--no-truncate` CLI flag errors instead of silently capping (SG-05 compliance). The deferred item in the section below is now closed.
+  - **HARD-03** — Kill-9 chaos test (`chaos_audit.rs`) proves WAL-mode atomicity: no dangling or torn rows under abrupt simulator termination.
+  - **HARD-05** — Tenant URL redaction: `redact_url()` applied to all error paths in `reposix-confluence/src/lib.rs`, preventing Atlassian subdomain leakage in error logs.
+  - **HARD-04** (partial) — macOS CI hooks step shipped; FUSE matrix deferred to self-hosted runner (macFUSE kext approval unavailable on GitHub-hosted runners).
 
 ## What's still deferred (v0.4+)
 
@@ -81,7 +88,7 @@ These are *known gaps*, not oversights. Each is tracked in [HANDOFF.md](https://
 - **FUSE SIGTERM cleanup.** Phase 2 review M-04 — if the FUSE daemon is killed via SIGTERM (no Drop runs), the kernel mount leaks until `fusermount3 -u` runs. The CLI's `MountProcess` watchdog wraps this — belt-and-braces — but the daemon itself should handle SIGTERM. v0.4+.
 - **Workflow-rule enforcement at the simulator.** The simulator accepts any `IssueStatus` transition. A production backend would reject "open → done" in favor of "open → in_progress → done". v0.4+.
 - **Write path on `GithubReadOnlyBackend` and `ConfluenceReadOnlyBackend`.** Both adapters currently return `NotSupported` from `create_issue` / `update_issue` / `delete_or_close`. Real-backend writes are intentionally gated until per-origin write-side allowlists, confirm-on-destructive-op UX, and a revocation story are in place. Tracked in HANDOFF.md.
-- **500-page truncation in `reposix-confluence`.** `list_issues` silently caps at 500 pages per invocation. Silent truncation is an SG-05 taint escape surface (the agent thinks it has the whole space when it doesn't). OP-7 queues a WARN log + `--no-truncate` CLI flag that errors instead of silently capping.
+- **500-page truncation in `reposix-confluence`.** Shipped in Phase 21 (HARD-02) — `list_issues` now emits a `WARN` log and the `--no-truncate` CLI flag errors instead of silently capping. Silent-truncation as SG-05 escape path is closed.
 - **Audit-log PII redaction.** The simulator's audit rows record the full request path + agent id; issue titles that happen to contain secrets leak into the log. v0.4+ redaction pass.
 - **Mount-pre-existing-`.gitignore` collision.** The v0.4 layout assumes the mount root is a virgin working tree. A user-authored `.gitignore` at mount time is not handled. See [ADR-003 §.gitignore emission](decisions/003-nested-mount-layout.md).
 

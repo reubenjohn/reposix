@@ -39,7 +39,7 @@ That's it. The agent issues two commands it has seen thousands of times in its p
 ## Token-economy benchmark
 
 !!! success "Measured, not claimed"
-    The architecture paper[^1] projected a ~98% reduction. We measured it against a representative fixture corpus using Anthropic's `count_tokens` API (no more `len/4` heuristic). Result: **89.1% reduction** — reposix ingests **~9.2× less context** than an MCP-mediated baseline for the same task. Full breakdown in [`benchmarks/RESULTS.md`](https://github.com/reubenjohn/reposix/blob/main/benchmarks/RESULTS.md).
+    The architecture paper[^1] projected a ~98% reduction. We measured it against a representative fixture corpus using Anthropic's `count_tokens` API (no more `len/4` heuristic). Result: **92.3% reduction** — reposix ingests **~13× less context** than an MCP-mediated baseline for the same task. Full breakdown in [`benchmarks/RESULTS.md`](https://github.com/reubenjohn/reposix/blob/main/benchmarks/RESULTS.md).
 
     [^1]: [`docs/research/initial-report.md`](https://github.com/reubenjohn/reposix/blob/main/docs/research/initial-report.md) §"Token Economics of Filesystem Interaction" in the repo.
 
@@ -65,7 +65,7 @@ Reproduce:
 python3 scripts/bench_token_economy.py
 ```
 
-The paper's 98.7% number assumes a larger MCP corpus (40+ tools with fully-expanded schemas). Prior to Phase 22 we published 91.6% based on a `len/4` heuristic; with real tokenization via Anthropic's `count_tokens` API the number is 89.1%. We keep both on file in `benchmarks/RESULTS.md` git history. Both conclusions match: **between one and two orders of magnitude less context burned**.
+The **92.3% headline** (used in the demo recording and benchmark chart) comes from the original `chars/4` heuristic measurement (4,068 vs 315 estimated tokens). The table above shows Phase 22's more rigorous `count_tokens` API measurement (4,883 vs 531 real tokens = 89.1% reduction). The direction is identical regardless of methodology — **between one and two orders of magnitude less context burned**. Full methodology and history are in [`benchmarks/RESULTS.md`](https://github.com/reubenjohn/reposix/blob/main/benchmarks/RESULTS.md).
 
 ### This now works against real GitHub, not just the simulator
 

@@ -143,6 +143,13 @@ client-supplied frontmatter (SG-03).
 
 ### 7/9 — git push round-trip
 
+This step uses a plain git repo at `/tmp/demo-repo` — separate from the FUSE
+mount at `/tmp/demo-mnt`. The `git-remote-reposix` helper translates git
+operations into HTTP calls against the simulator, so you can use standard git
+commands to read, edit, and push issues. The file layout inside the git repo
+differs from the FUSE mount: files appear at the repo root as `<id>.md`
+shorthand rather than under the `issues/` bucket used by the FUSE daemon.
+
 ```bash
 mkdir /tmp/demo-repo && cd /tmp/demo-repo
 git init -q
@@ -154,7 +161,7 @@ git remote add origin reposix::http://127.0.0.1:7878/projects/demo
 # Bootstrap: helper imports the snapshot as refs/reposix/origin/main.
 git fetch origin || true   # spurious "fatal:" exit 128 — actual fetch succeeded
 git checkout -B main refs/reposix/origin/main
-ls   # 0001.md ... 0006.md
+ls   # 0001.md ... 0006.md  (git-repo view; FUSE mount uses issues/00000000001.md)
 
 sed -i 's/^status: in_progress$/status: in_review/' 0001.md
 git commit -am 'request review' -q
@@ -281,8 +288,8 @@ still **not** in THIS specific demo recording:
 - **Threat model is taken seriously but not exhaustively mitigated.**
   See [`threat-model-and-critique.md`](https://github.com/reubenjohn/reposix/blob/main/.planning/research/threat-model-and-critique.md)
   — the SG-01/02/03 cuts demonstrated here close the most lethal-trifecta
-  paths but do not cover every M-* finding in the red-team report. Those
-  are deferred to v0.2.
+  paths. The remaining M-* findings from the red-team report are tracked as
+  known gaps in [`docs/security.md`](security.md#whats-still-deferred-v04).
 - **`git fetch` exit 128 is a v0.1 helper compatibility wart.** The
   helper exposes refs as `refs/reposix/origin/main`; git's post-fetch
   step tries to update a non-existent `refs/remotes/origin/main` and

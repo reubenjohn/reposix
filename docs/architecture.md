@@ -213,11 +213,12 @@ impl fuser::Filesystem for ReposixFs {
 ```
 
 Both the FUSE daemon and `git-remote-reposix` dispatch every read and every
-write through the `IssueBackend` trait (Phase 10 rewired reads; Phase 14
-rewired writes). The simulator's REST shape lives in exactly one crate
-(`reposix-core::backend::sim::SimBackend`) — every other caller sees only
-the trait surface (`list_issues` / `get_issue` / `create_issue` /
-`update_issue` / `delete_or_close`).
+write through the `IssueBackend` trait. The simulator's REST shape lives in
+exactly one crate (`reposix-core::backend::sim::SimBackend`) — every other
+caller sees only the trait surface (`list_issues` / `get_issue` /
+`create_issue` / `update_issue` / `delete_or_close`). Adding a real backend
+(GitHub, Confluence, or a custom tracker) means implementing this trait; the
+FUSE daemon and remote helper pick it up automatically.
 
 The FUSE thread is not a tokio worker, so `block_on` from inside the callback is deadlock-safe. The same pattern applies in `git-remote-reposix` for its dispatch loop.
 
@@ -250,4 +251,4 @@ flowchart LR
   style Trust fill:#00897b,stroke:#fff,color:#fff
 ```
 
-See the [security page](security.md) for the full guardrails table, threat model, and what's deferred to v0.2.
+SG-* codes (SG-01 through SG-08) refer to the eight security guardrails documented on the [security page](security.md). That page has the full guardrails table, threat model, implementation evidence, and what is still deferred.

@@ -11,6 +11,9 @@
 git clone https://github.com/reubenjohn/reposix
 cd reposix
 
+# Fast type-check (no codegen — use this during development)
+cargo check --workspace
+
 # Build everything
 cargo build --workspace
 
