@@ -530,7 +530,7 @@ Plans:
 
 **Depends on:** Phase 25
 **Requirements**: TBD
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans executed
 
 #### Doc inventory (pre-phase assessment)
 
@@ -641,7 +641,7 @@ Plans:
 **Goal:** Surface Confluence whiteboards (`whiteboards/<id>.json`), page attachments (`pages/<id>.attachments/<filename>`), and folder-parented page hierarchy (`tree/` overlay) in the FUSE mount. Expands the multi-content-type overlay from Phase 23.
 **Requirements**: CONF-04, CONF-05, CONF-06
 **Depends on:** Phase 23
-**Plans:** 4/3 plans complete
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 24-01-PLAN.md — `list_attachments` + `list_whiteboards` + `download_attachment` methods; `ConfAttachment`/`ConfWhiteboard` structs; `translate()` folder fix (Wave 1)
