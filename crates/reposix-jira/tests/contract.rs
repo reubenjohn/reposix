@@ -192,33 +192,27 @@ async fn contract_jira_wiremock() {
     // POST /rest/api/3/search/jql → 1 issue, isLast: true
     Mock::given(method("POST"))
         .and(path("/rest/api/3/search/jql"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "issues": [jira_issue_json(10001, "PROJ-1")],
-                "isLast": true
-            })),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "issues": [jira_issue_json(10001, "PROJ-1")],
+            "isLast": true
+        })))
         .mount(&server)
         .await;
 
     // GET /rest/api/3/issue/10001 → 200 known issue
     Mock::given(method("GET"))
         .and(path("/rest/api/3/issue/10001"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(jira_issue_json(10001, "PROJ-1")),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(jira_issue_json(10001, "PROJ-1")))
         .mount(&server)
         .await;
 
     // GET /rest/api/3/issue/18446744073709551615 (u64::MAX) → 404
     Mock::given(method("GET"))
         .and(path("/rest/api/3/issue/18446744073709551615"))
-        .respond_with(
-            ResponseTemplate::new(404).set_body_json(serde_json::json!({
-                "errorMessages": ["Issue Does Not Exist"],
-                "errors": {}
-            })),
-        )
+        .respond_with(ResponseTemplate::new(404).set_body_json(serde_json::json!({
+            "errorMessages": ["Issue Does Not Exist"],
+            "errors": {}
+        })))
         .mount(&server)
         .await;
 
@@ -251,7 +245,10 @@ async fn contract_jira_live() {
     let instance = std::env::var("REPOSIX_JIRA_INSTANCE").unwrap();
     let project = std::env::var("JIRA_TEST_PROJECT").unwrap_or_else(|_| "TEST".to_string());
 
-    let creds = JiraCreds { email, api_token: token };
+    let creds = JiraCreds {
+        email,
+        api_token: token,
+    };
     let backend = JiraBackend::new(creds, &instance).expect("build JiraBackend");
 
     // list first to get a real issue id

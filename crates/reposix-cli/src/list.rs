@@ -111,7 +111,10 @@ pub async fn run(
         ListBackend::Jira => {
             let (email, token, instance) = read_jira_env()
                 .context("jira backend requires JIRA_EMAIL, JIRA_API_TOKEN, and REPOSIX_JIRA_INSTANCE env vars")?;
-            let creds = JiraCreds { email, api_token: token };
+            let creds = JiraCreds {
+                email,
+                api_token: token,
+            };
             let b = JiraBackend::new(creds, &instance).context("build JiraBackend")?;
             if no_truncate {
                 b.list_issues_strict(&project).await.with_context(|| {
@@ -329,7 +332,10 @@ mod tests {
     fn read_jira_env_from_all_empty_fails() {
         let err = read_jira_env_from(|_| String::new()).expect_err("all-empty must fail");
         let msg = err.to_string();
-        assert!(msg.contains("JIRA_EMAIL"), "must list JIRA_EMAIL, got: {msg}");
+        assert!(
+            msg.contains("JIRA_EMAIL"),
+            "must list JIRA_EMAIL, got: {msg}"
+        );
         assert!(
             msg.contains("JIRA_API_TOKEN"),
             "must list JIRA_API_TOKEN, got: {msg}"

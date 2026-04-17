@@ -105,7 +105,9 @@ impl MountProcess {
                 }
                 // Fail before spawning the child — names env vars, never their values (T-28-02-01).
                 if std::env::var("JIRA_EMAIL").unwrap_or_default().is_empty()
-                    || std::env::var("JIRA_API_TOKEN").unwrap_or_default().is_empty()
+                    || std::env::var("JIRA_API_TOKEN")
+                        .unwrap_or_default()
+                        .is_empty()
                 {
                     bail!("jira backend requires JIRA_EMAIL and JIRA_API_TOKEN env vars");
                 }

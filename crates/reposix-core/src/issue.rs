@@ -418,8 +418,10 @@ Body goes here.\n";
     fn extensions_roundtrip() {
         // Non-empty extensions survive a render→parse cycle with value equality.
         let mut iss = sample();
-        iss.extensions.insert("foo".into(), serde_yaml::Value::from(42_i64));
-        iss.extensions.insert("bar".into(), serde_yaml::Value::from("x"));
+        iss.extensions
+            .insert("foo".into(), serde_yaml::Value::from(42_i64));
+        iss.extensions
+            .insert("bar".into(), serde_yaml::Value::from("x"));
         let rendered = frontmatter::render(&iss).expect("render");
         assert!(
             rendered.contains("extensions"),

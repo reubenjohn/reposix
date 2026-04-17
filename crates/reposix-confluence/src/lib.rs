@@ -77,7 +77,7 @@ use reqwest::{Method, StatusCode};
 use rusqlite::Connection;
 use serde::Deserialize;
 
-use reposix_core::backend::{BackendFeature, DeleteReason, BackendConnector};
+use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason};
 use reposix_core::http::{client, ClientOpts, HttpClient};
 use reposix_core::{Error, Issue, IssueId, IssueStatus, Result, Tainted, Untainted};
 

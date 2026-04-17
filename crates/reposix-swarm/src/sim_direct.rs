@@ -18,7 +18,9 @@ use parking_lot::Mutex;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::{sanitize, Issue, BackendConnector, IssueId, IssueStatus, ServerMetadata, Tainted};
+use reposix_core::{
+    sanitize, BackendConnector, Issue, IssueId, IssueStatus, ServerMetadata, Tainted,
+};
 
 // chrono is a transitive dep via reposix-core (Issue.created_at uses it).
 use chrono::Utc;

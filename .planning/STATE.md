@@ -4,8 +4,8 @@ milestone: v0.6.0
 milestone_name: — Write Path + Full Sitemap
 status: executing
 stopped_at: Phase 28 context gathered
-last_updated: "2026-04-17T05:37:29.986Z"
-last_activity: 2026-04-17 -- Phase 28 planning complete
+last_updated: "2026-04-17T08:05:07.525Z"
+last_activity: 2026-04-17 -- Phase 28 execution started
 progress:
   total_phases: 6
   completed_phases: 4
@@ -51,16 +51,16 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** An LLM agent can `ls`, `cat`, `grep`, edit, and `git push`
 issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
-**Current focus:** Phase 24 — op-9b-confluence-whiteboards-attachments-and-folders
+**Current focus:** Phase 28 — jira-cloud-read-only-adapter-reposix-jira-v0-8-0
 Next: /gsd-plan-phase 16 (Confluence write path).
 
 ## Current Position
 
-Phase: 27
-Plan: 27-03 complete
-Cursor: **Phase 27 SHIPPED. BackendConnector rename complete (RENAME-01), Issue.extensions field added (EXT-01), ADR-004 written, workspace bumped to v0.8.0. Next: Phase 28 (reposix-jira read-only adapter).**
-Status: Ready to execute
-Last activity: 2026-04-17 -- Phase 28 planning complete
+Phase: 28 (jira-cloud-read-only-adapter-reposix-jira-v0-8-0) — COMPLETE
+Plan: 28-03 complete
+Cursor: **Phase 28 SHIPPED. reposix-jira read-only adapter complete (JIRA-01..05), 12 wiremock tests, contract test, ADR-005, docs/reference/jira.md, v0.8.0. Next: Phase 29 (JIRA write path) or /gsd-next for routing.**
+Status: Phase complete — ready for Phase 29
+Last activity: 2026-04-16 -- Phase 28 all 3 waves shipped
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.

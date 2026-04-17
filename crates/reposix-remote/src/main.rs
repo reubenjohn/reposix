@@ -16,7 +16,7 @@ use std::process::ExitCode;
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use reposix_core::backend::{sim::SimBackend, DeleteReason, BackendConnector};
+use reposix_core::backend::{sim::SimBackend, BackendConnector, DeleteReason};
 use reposix_core::{parse_remote_url, sanitize, ServerMetadata, Tainted};
 use tokio::runtime::Runtime;
 

@@ -18,10 +18,37 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ### Added
 
+- **`reposix-jira` crate** — `JiraBackend` implementing `BackendConnector`
+  against JIRA Cloud REST v3 (`POST /rest/api/3/search/jql`, cursor pagination).
+  12 wiremock tests + 3-arm contract test (sim + wiremock + live-`#[ignore]`).
+  Covers requirements JIRA-01..JIRA-05. (Phase 28.)
+- **`list --backend jira` and `mount --backend jira`** CLI commands.
+  `read_jira_env_from` collects all missing vars in one error, never echoes
+  values (T-28-02-01). (Phase 28.)
+- **ADR-005** (`docs/decisions/005-jira-issue-mapping.md`) — JIRA issue
+  mapping decisions: ID vs key, status+resolution mapping table, version
+  synthesis from `updated` timestamp, ADF plain-text stripping, and
+  attachments/comments deferral to a future phase. (Phase 28.)
+- **`docs/reference/jira.md`** — user guide covering env vars, egress
+  allowlist setup, usage, `--no-truncate` semantics, frontmatter example,
+  and Phase 28 limitations. (Phase 28.)
 - **`Issue.extensions: BTreeMap<String, serde_yaml::Value>`** — backend-specific
   metadata field. Omitted from YAML when empty; defaults to empty on parse.
-  Prerequisite for Phase 28 JIRA adapter (`jira_key`, `issue_type`, etc.).
-  ADR: `docs/decisions/004-backend-connector-rename.md`.
+  JIRA populates `jira_key`, `issue_type`, `priority`, `status_name`,
+  `hierarchy_level`. ADR: `docs/decisions/004-backend-connector-rename.md`.
+
+### Changed
+
+- JIRA 429 rate limit honored via `Retry-After` header or exponential backoff
+  (max 4 attempts, base 1 s). (Phase 28.)
+
+### Notes
+
+- `BackendFeature::StrongVersioning` is `false` for JIRA — version synthesized
+  from `fields.updated` timestamp (no server-side ETag). JIRA write path with
+  Transitions API planned for Phase 29.
+- JIRA write stubs (`create_issue`, `update_issue`, `delete_or_close`) return
+  "not supported: read-only backend — see Phase 29".
 
 ## [v0.7.0] — 2026-04-16
 

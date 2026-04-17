@@ -18,7 +18,7 @@ use std::time::{Duration, Instant};
 
 use chrono::TimeZone;
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::{Issue, BackendConnector, IssueId, IssueStatus};
+use reposix_core::{BackendConnector, Issue, IssueId, IssueStatus};
 use reposix_fuse::{Mount, MountConfig};
 use wiremock::matchers::{method, path, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};

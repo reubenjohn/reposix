@@ -15,7 +15,7 @@ use std::sync::Arc;
 
 use parking_lot::Mutex;
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
-use reposix_core::backend::{DeleteReason, BackendConnector};
+use reposix_core::backend::{BackendConnector, DeleteReason};
 use reposix_core::{Issue, IssueId, IssueStatus, Tainted, Untainted};
 use rusqlite::Connection;
 use serde_json::json;

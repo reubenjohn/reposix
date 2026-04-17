@@ -229,7 +229,10 @@ async fn fetch_issues(cfg: &RefreshConfig) -> Result<Vec<reposix_core::Issue>> {
                      and REPOSIX_JIRA_INSTANCE env vars"
                 );
             }
-            let creds = JiraCreds { email, api_token: token };
+            let creds = JiraCreds {
+                email,
+                api_token: token,
+            };
             let b = JiraBackend::new(creds, &instance).context("build JiraBackend")?;
             b.list_issues(&cfg.project).await.with_context(|| {
                 format!(

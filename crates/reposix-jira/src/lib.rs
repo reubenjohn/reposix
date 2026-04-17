@@ -266,7 +266,10 @@ impl JiraBackend {
                          refusing to truncate (strict mode)"
                     )));
                 }
-                tracing::warn!(pages, "reached MAX_ISSUES_PER_LIST cap; stopping pagination");
+                tracing::warn!(
+                    pages,
+                    "reached MAX_ISSUES_PER_LIST cap; stopping pagination"
+                );
                 break;
             }
 
@@ -356,13 +359,7 @@ impl JiraBackend {
         let status = resp.status();
         let bytes = resp.bytes().await?;
         let status_u16 = status.as_u16();
-        self.audit_event(
-            "GET",
-            &path,
-            status_u16,
-            &format!("get:{id}"),
-            &bytes,
-        );
+        self.audit_event("GET", &path, status_u16, &format!("get:{id}"), &bytes);
 
         if status == StatusCode::NOT_FOUND {
             let err_resp: JiraErrorResponse =
@@ -556,11 +553,13 @@ pub fn validate_tenant(tenant: &str) -> Result<()> {
     }
     // Must contain only lowercase alphanumeric and internal hyphens.
     // No dots (which would escape the subdomain), no leading/trailing hyphen.
-    let all_valid = tenant.chars().all(|c| {
-        c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-'
-    });
-    let no_leading_hyphen = tenant.starts_with(|c: char| c.is_ascii_lowercase() || c.is_ascii_digit());
-    let no_trailing_hyphen = tenant.ends_with(|c: char| c.is_ascii_lowercase() || c.is_ascii_digit());
+    let all_valid = tenant
+        .chars()
+        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-');
+    let no_leading_hyphen =
+        tenant.starts_with(|c: char| c.is_ascii_lowercase() || c.is_ascii_digit());
+    let no_trailing_hyphen =
+        tenant.ends_with(|c: char| c.is_ascii_lowercase() || c.is_ascii_digit());
     let no_dots = !tenant.contains('.');
     if !all_valid || !no_leading_hyphen || !no_trailing_hyphen || !no_dots {
         return Err(Error::Other(format!(
@@ -607,16 +606,14 @@ fn map_status(status: &JiraStatus, resolution: Option<&JiraResolution>) -> Issue
 ///
 /// Returns `Err` if the JIRA numeric issue ID cannot be parsed as `u64`.
 fn translate(raw: JiraIssue) -> Result<Issue> {
-    let id = IssueId(raw.id.parse::<u64>().map_err(|e| {
-        Error::Other(format!("invalid jira id {:?}: {e}", raw.id))
-    })?);
+    let id = IssueId(
+        raw.id
+            .parse::<u64>()
+            .map_err(|e| Error::Other(format!("invalid jira id {:?}: {e}", raw.id)))?,
+    );
     let title = raw.fields.summary.unwrap_or_default();
     let status = map_status(&raw.fields.status, raw.fields.resolution.as_ref());
-    let body = adf::adf_to_plain_text(
-        &raw.fields
-            .description
-            .unwrap_or(serde_json::Value::Null),
-    );
+    let body = adf::adf_to_plain_text(&raw.fields.description.unwrap_or(serde_json::Value::Null));
     let created_at = raw.fields.created.with_timezone(&chrono::Utc);
     let updated_at = raw.fields.updated.with_timezone(&chrono::Utc);
     #[allow(clippy::cast_sign_loss)]
@@ -804,21 +801,31 @@ mod tests {
     async fn list_single_page() {
         let server = MockServer::start().await;
         let issues: Vec<serde_json::Value> = (1..=10)
-            .map(|i| issue_json(i, &format!("PROJ-{i}"), &format!("Issue {i}"), "new", "Open", None))
+            .map(|i| {
+                issue_json(
+                    i,
+                    &format!("PROJ-{i}"),
+                    &format!("Issue {i}"),
+                    "new",
+                    "Open",
+                    None,
+                )
+            })
             .collect();
         Mock::given(method("POST"))
             .and(path("/rest/api/3/search/jql"))
-            .respond_with(
-                ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                    "issues": issues,
-                    "isLast": true
-                })),
-            )
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "issues": issues,
+                "isLast": true
+            })))
             .mount(&server)
             .await;
 
         let backend = make_backend(&server.uri());
-        let result = backend.list_issues("PROJ").await.expect("list must succeed");
+        let result = backend
+            .list_issues("PROJ")
+            .await
+            .expect("list must succeed");
         assert_eq!(result.len(), 10, "expected 10 issues from single page");
         assert_eq!(result[0].id, IssueId(1));
     }
@@ -829,22 +836,38 @@ mod tests {
     async fn list_pagination_cursor() {
         let server = MockServer::start().await;
         let page1_issues: Vec<serde_json::Value> = (1..=3)
-            .map(|i| issue_json(i, &format!("PROJ-{i}"), &format!("Issue {i}"), "new", "Open", None))
+            .map(|i| {
+                issue_json(
+                    i,
+                    &format!("PROJ-{i}"),
+                    &format!("Issue {i}"),
+                    "new",
+                    "Open",
+                    None,
+                )
+            })
             .collect();
         let page2_issues: Vec<serde_json::Value> = (4..=6)
-            .map(|i| issue_json(i, &format!("PROJ-{i}"), &format!("Issue {i}"), "new", "Open", None))
+            .map(|i| {
+                issue_json(
+                    i,
+                    &format!("PROJ-{i}"),
+                    &format!("Issue {i}"),
+                    "new",
+                    "Open",
+                    None,
+                )
+            })
             .collect();
 
         // First request — no nextPageToken in body
         Mock::given(method("POST"))
             .and(path("/rest/api/3/search/jql"))
-            .respond_with(
-                ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                    "issues": page1_issues,
-                    "isLast": false,
-                    "nextPageToken": "tok1"
-                })),
-            )
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "issues": page1_issues,
+                "isLast": false,
+                "nextPageToken": "tok1"
+            })))
             .up_to_n_times(1)
             .mount(&server)
             .await;
@@ -852,18 +875,19 @@ mod tests {
         // Second request — cursor tok1 should appear
         Mock::given(method("POST"))
             .and(path("/rest/api/3/search/jql"))
-            .respond_with(
-                ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                    "issues": page2_issues,
-                    "isLast": true
-                })),
-            )
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "issues": page2_issues,
+                "isLast": true
+            })))
             .up_to_n_times(1)
             .mount(&server)
             .await;
 
         let backend = make_backend(&server.uri());
-        let result = backend.list_issues("PROJ").await.expect("list must succeed");
+        let result = backend
+            .list_issues("PROJ")
+            .await
+            .expect("list must succeed");
         assert_eq!(result.len(), 6, "expected 6 issues across 2 pages");
     }
 
@@ -872,7 +896,14 @@ mod tests {
     #[tokio::test]
     async fn get_by_numeric_id() {
         let server = MockServer::start().await;
-        let issue = issue_json(10001, "MYPROJ-42", "A real issue", "indeterminate", "In Progress", None);
+        let issue = issue_json(
+            10001,
+            "MYPROJ-42",
+            "A real issue",
+            "indeterminate",
+            "In Progress",
+            None,
+        );
         Mock::given(method("GET"))
             .and(path("/rest/api/3/issue/10001"))
             .respond_with(ResponseTemplate::new(200).set_body_json(issue))
@@ -888,7 +919,13 @@ mod tests {
         assert_eq!(result.title, "A real issue");
         assert_eq!(result.status, IssueStatus::InProgress);
         assert_eq!(
-            result.extensions.get("jira_key").and_then(|v| if let serde_yaml::Value::String(s) = v { Some(s.as_str()) } else { None }),
+            result.extensions.get("jira_key").and_then(|v| {
+                if let serde_yaml::Value::String(s) = v {
+                    Some(s.as_str())
+                } else {
+                    None
+                }
+            }),
             Some("MYPROJ-42")
         );
     }
@@ -900,12 +937,10 @@ mod tests {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
             .and(path("/rest/api/3/issue/99999"))
-            .respond_with(
-                ResponseTemplate::new(404).set_body_json(serde_json::json!({
-                    "errorMessages": ["Issue Does Not Exist"],
-                    "errors": {}
-                })),
-            )
+            .respond_with(ResponseTemplate::new(404).set_body_json(serde_json::json!({
+                "errorMessages": ["Issue Does Not Exist"],
+                "errors": {}
+            })))
             .mount(&server)
             .await;
 
@@ -927,7 +962,12 @@ mod tests {
     fn status_mapping_matrix() {
         let cases: &[(&str, &str, Option<&str>, IssueStatus)] = &[
             ("new", "Open", None, IssueStatus::Open),
-            ("indeterminate", "In Progress", None, IssueStatus::InProgress),
+            (
+                "indeterminate",
+                "In Progress",
+                None,
+                IssueStatus::InProgress,
+            ),
             ("indeterminate", "In Review", None, IssueStatus::InReview),
             ("done", "Done", None, IssueStatus::Done),
             ("done", "Done", Some("Won't Fix"), IssueStatus::WontFix),
@@ -942,7 +982,9 @@ mod tests {
                     key: (*cat).to_string(),
                 },
             };
-            let resolution = res_name.map(|n| JiraResolution { name: n.to_string() });
+            let resolution = res_name.map(|n| JiraResolution {
+                name: n.to_string(),
+            });
             let got = map_status(&status, resolution.as_ref());
             assert_eq!(
                 got, *expected,
@@ -972,7 +1014,10 @@ mod tests {
 
         // null description
         let null_result = adf::adf_to_plain_text(&serde_json::Value::Null);
-        assert_eq!(null_result, "", "null description must produce empty string");
+        assert_eq!(
+            null_result, "",
+            "null description must produce empty string"
+        );
     }
 
     // ─── Test 7: parent_hierarchy ────────────────────────────────────────
@@ -1165,15 +1210,14 @@ mod tests {
 
     #[tokio::test]
     async fn write_ops_return_not_supported() {
-        use reposix_core::{sanitize, ServerMetadata};
         use chrono::TimeZone;
+        use reposix_core::{sanitize, ServerMetadata};
 
         let creds = JiraCreds {
             email: "a@b.com".into(),
             api_token: "tok".into(),
         };
-        let backend =
-            JiraBackend::new_with_base_url(creds, "http://localhost".into()).unwrap();
+        let backend = JiraBackend::new_with_base_url(creds, "http://localhost".into()).unwrap();
         let now = chrono::Utc.with_ymd_and_hms(2025, 6, 1, 0, 0, 0).unwrap();
         let dummy_issue = Issue {
             id: IssueId(1),
@@ -1196,7 +1240,10 @@ mod tests {
         };
         let untainted = sanitize(Tainted::new(dummy_issue.clone()), server_meta);
 
-        let create_err = backend.create_issue("P", untainted.clone()).await.unwrap_err();
+        let create_err = backend
+            .create_issue("P", untainted.clone())
+            .await
+            .unwrap_err();
         assert!(
             create_err.to_string().contains("not supported"),
             "create_issue must return not supported, got: {create_err}"

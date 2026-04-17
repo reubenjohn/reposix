@@ -81,7 +81,7 @@ use fuser::{
 };
 use reposix_core::path::validate_issue_filename;
 use reposix_core::{
-    backend::BackendFeature, frontmatter, sanitize, Issue, BackendConnector, IssueId, IssueStatus,
+    backend::BackendFeature, frontmatter, sanitize, BackendConnector, Issue, IssueId, IssueStatus,
     ServerMetadata, Tainted, Untainted,
 };
 use serde::Deserialize;
