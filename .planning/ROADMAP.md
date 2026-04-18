@@ -93,3 +93,13 @@ Summary:
 - [ ] Phase 22: 22-C-wire-docs-ship (ran, no SUMMARY.md)
 - [ ] Phase 25: 25-02 (ran, no SUMMARY.md)
 - [ ] Phase 27: 27-02 (ran, no SUMMARY.md)
+
+### Phase 30: Docs IA and narrative overhaul — landing page aha moment and progressive-disclosure architecture reveal
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 29
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 30 to break down)

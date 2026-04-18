@@ -1,24 +1,27 @@
 ---
-title: "Phase 27 narrative vignettes — landing-page aha moment"
+title: "Phase 30 narrative vignettes — landing-page aha moment"
 date: 2026-04-17
 context: |
-  Drafted during /gsd-explore after Phase 26 (docs clarity overhaul) shipped.
-  Phase 26 fixed textual clarity — versions, missing subcommands, orientation.
-  The mkdocs site is correct but doesn't sell the value on first click.
-  This note anchors Phase 27 "Docs IA + narrative overhaul": it captures the
-  hero vignette, the two supporting vignettes, the framing principles the
-  user explicitly called for, and a first-cut IA sketch for the planner to
-  refine.
-status: ready-for-phase-27-planning
+  Drafted during /gsd-explore after v0.8.0 (JIRA Cloud Integration, Phases 27–29)
+  shipped. Phase 26 (under v0.7.0) fixed textual clarity of docs — versions,
+  missing subcommands, orientation. The mkdocs site is correct but doesn't
+  sell the value on first click. This note anchors Phase 30 "Docs IA +
+  narrative overhaul": it captures the hero vignette, the two supporting
+  vignettes, the framing principles the user explicitly called for, and a
+  first-cut IA sketch for the planner to refine.
+
+  Note on numbering: drafted originally as "Phase 27" during exploration;
+  bumped to Phase 30 because v0.8.0 consumed phases 27–29 for JIRA Cloud.
+status: ready-for-phase-30-planning
 ---
 
-# Phase 27 narrative — hero vignette, framing, and IA seed
+# Phase 30 narrative — hero vignette, framing, and IA seed
 
-## Framing principles (non-negotiable for Phase 27)
+## Framing principles (non-negotiable for Phase 30)
 
 Two principles came out of the explore conversation. They are more important
 than any specific copy, diagram, or nav structure. Every downstream decision
-in Phase 27 should be checked against them.
+in Phase 30 should be checked against them.
 
 ### P1. Complement, not replace
 
@@ -284,7 +287,7 @@ V2 and V3 earn their keep for the skeptic who scrolls.
 
 ---
 
-## IA sketch (seed for Phase 27 planner, not the final nav)
+## IA sketch (seed for Phase 30 planner, not the final nav)
 
 ### Diátaxis mapping of current docs
 - **Tutorial** (missing/weak): demo.md is closest but reads as a checklist.
@@ -292,10 +295,10 @@ V2 and V3 earn their keep for the skeptic who scrolls.
 - **Explanation** (strong): why.md, architecture.md, research/*.
 - **Reference** (strong): cli.md, http-api.md, git-remote.md, ADRs.
 
-Phase 27 should not rewrite reference or explanation. They're correct. The
+Phase 30 should not rewrite reference or explanation. They're correct. The
 gap is a real tutorial and a real landing page.
 
-### Proposed nav (high-level, Phase 27 to refine)
+### Proposed nav (high-level, Phase 30 to refine)
 
 ```
 Home                         [hero vignette + three-up value props]
@@ -344,7 +347,7 @@ Key structural moves:
 
 ---
 
-## Phase 27 scope (seed, not the plan)
+## Phase 30 scope (seed, not the plan)
 
 ### In scope
 - Hero rewrite — landing page, above-fold copy, one before/after code block
@@ -365,7 +368,7 @@ Key structural moves:
 - Changing the reference/ or decisions/ trees. Phase 26 already made those
   correct.
 
-### Suggested subagent fan-out (for Phase 27 planner to finalize)
+### Suggested subagent fan-out (for Phase 30 planner to finalize)
 - **Explore (competitor narrative scan)** — Linear, Turso, Fly.io, Tailscale,
   Warp, Val Town, Raycast, Stripe docs. Extract one pattern per site that
   fits our hero vignette style.
@@ -410,13 +413,13 @@ the copy agent should feel free to try alternatives.
 
 ## Handoff
 
-This note is the single source of truth for Phase 27's narrative intent.
-The Phase 27 planner should consume it as context, then produce a
+This note is the single source of truth for Phase 30's narrative intent.
+The Phase 30 planner should consume it as context, then produce a
 task-level PLAN.md that:
 1. Honors both framing principles (P1, P2) in every task it creates.
 2. Uses the hero vignette and IA sketch as starting points, not final copy.
 3. Fans out to subagents for copy, IA, diagrams, tutorial as outlined above.
 4. Ships with playwright screenshot verification before declaring done.
 
-Next step from here: `/gsd-add-phase` to add Phase 27 "Docs IA + narrative
+Next step from here: `/gsd-add-phase` to add Phase 30 "Docs IA + narrative
 overhaul" to the roadmap with this note as its CONTEXT.md input.
