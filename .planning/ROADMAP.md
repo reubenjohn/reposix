@@ -10,8 +10,30 @@
 - ✅ **v0.6.0** — Phases 16-20: Write path + full sitemap (shipped 2026-04-14)
 - ✅ **v0.7.0** — Phases 21-26: Hardening + Confluence expansion + docs (shipped 2026-04-16)
 - ✅ **v0.8.0 JIRA Cloud Integration** — Phases 27-29 (shipped 2026-04-16)
+- ⏳ **v0.9.0 Docs & Narrative** — Phase 30 (in progress, started 2026-04-17)
 
 ## Phases
+
+## v0.9.0 Docs & Narrative (IN PROGRESS)
+
+### Phase 30: Docs IA and narrative overhaul — landing page aha moment and progressive-disclosure architecture reveal (v0.9.0)
+
+**Goal:** Rewrite the landing page and restructure the MkDocs nav so reposix's value proposition lands hard within 10 seconds of a cold reader arriving, with technical architecture progressively revealed in a "How it works" section rather than leaked above the fold. Expand the site from a correct reference tree into a substrate story that explains *why*, *how*, and *how to extend*.
+
+**Requirements:** DOCS-01, DOCS-02, DOCS-03, DOCS-04, DOCS-05, DOCS-06, DOCS-07, DOCS-08, DOCS-09
+
+**Depends on:** Phase 29
+
+**Success criteria:**
+1. A cold reader arriving at the MkDocs site can state reposix's value proposition within 10 seconds (validated via user-proxy review).
+2. P2 banned terms (FUSE, inode, daemon, helper, kernel, mount, syscall) do not appear above the "How it works" layer in any page (banned-word linter PASS).
+3. `mkdocs build --strict` returns green.
+4. Playwright screenshots of landing + how-it-works + tutorial pages at desktop (1280px) and mobile (375px) widths are committed to the phase SUMMARY.
+5. `gh run view` shows green CI on the milestone commit.
+
+**Context anchor:** `.planning/notes/phase-30-narrative-vignettes.md` (source of truth for narrative intent, framing principles P1/P2, hero vignette, IA sketch). `.planning/phases/30-.../CONTEXT.md` summarizes for the planner.
+
+**Plans:** 0 plans — run `/gsd-plan-phase 30` to break down.
 
 <details>
 <summary>✅ v0.1.0–v0.7.0 (Phases 1–26) — SHIPPED 2026-04-13 through 2026-04-16</summary>
@@ -93,13 +115,3 @@ Summary:
 - [ ] Phase 22: 22-C-wire-docs-ship (ran, no SUMMARY.md)
 - [ ] Phase 25: 25-02 (ran, no SUMMARY.md)
 - [ ] Phase 27: 27-02 (ran, no SUMMARY.md)
-
-### Phase 30: Docs IA and narrative overhaul — landing page aha moment and progressive-disclosure architecture reveal
-
-**Goal:** [To be planned]
-**Requirements**: TBD
-**Depends on:** Phase 29
-**Plans:** 0 plans
-
-Plans:
-- [ ] TBD (run /gsd-plan-phase 30 to break down)
