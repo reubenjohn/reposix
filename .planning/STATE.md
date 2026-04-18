@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v0.9.0
 milestone_name: Docs & Narrative
-status: in_progress
-stopped_at: Milestone v0.9.0 started — Phase 30 promoted from Backlog, awaiting /gsd-plan-phase 30
-last_updated: "2026-04-17T12:00:00.000Z"
-last_activity: 2026-04-17
+status: ready_to_execute
+stopped_at: Phase 30 planned — 9 plans across 5 waves, awaiting /gsd-execute-phase 30
+last_updated: "2026-04-18T04:32:41.413Z"
+last_activity: 2026-04-18 — Phase 30 planning complete
 progress:
   total_phases: 1
   completed_phases: 0
-  total_plans: 0
+  total_plans: 9
   completed_plans: 0
   percent: 0
 ---
@@ -60,8 +60,8 @@ issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
 Phase: 30 (not started — awaiting plan)
 Plan: —
 Cursor: **Milestone v0.9.0 Docs & Narrative started. Run `/gsd-plan-phase 30` to break down the narrative overhaul.**
-Status: Defining phase plan
-Last activity: 2026-04-17 — Milestone v0.9.0 started
+Status: Ready to execute
+Last activity: 2026-04-18 — Phase 30 planning complete
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
