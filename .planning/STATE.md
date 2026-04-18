@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.6.0
-milestone_name: — Write Path + Full Sitemap
-status: completed
-stopped_at: Phase 29 complete — milestone v0.8.0 complete, all phases done, UAT 9/9 passed
-last_updated: "2026-04-17T08:59:28.539Z"
+milestone: v0.9.0
+milestone_name: Docs & Narrative
+status: in_progress
+stopped_at: Milestone v0.9.0 started — Phase 30 promoted from Backlog, awaiting /gsd-plan-phase 30
+last_updated: "2026-04-17T12:00:00.000Z"
 last_activity: 2026-04-17
 progress:
-  total_phases: 6
-  completed_phases: 4
-  total_plans: 13
-  completed_plans: 19
-  percent: 100
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -52,15 +52,15 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** An LLM agent can `ls`, `cat`, `grep`, edit, and `git push`
 issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
-**Current focus:** Milestone v0.8.0 complete — all phases done. Run `bash scripts/tag-v0.8.0.sh` to tag and push.
+**Current focus:** Milestone v0.9.0 "Docs & Narrative" — rewrite landing page + IA so reposix's value proposition lands hard within 10 seconds, with architecture progressively revealed.
 
 ## Current Position
 
-Phase: 29 (COMPLETE — last phase in v0.8.0 milestone)
-Plan: 3/3 complete
-Cursor: **v0.8.0 milestone complete. All JIRA requirements (RENAME-01, EXT-01, JIRA-01..06) validated. UAT passed (9/9). Awaiting user tag push via `bash scripts/tag-v0.8.0.sh`.**
-Status: Milestone v0.8.0 complete; tag push user-gated
-Last activity: 2026-04-17
+Phase: 30 (not started — awaiting plan)
+Plan: —
+Cursor: **Milestone v0.9.0 Docs & Narrative started. Run `/gsd-plan-phase 30` to break down the narrative overhaul.**
+Status: Defining phase plan
+Last activity: 2026-04-17 — Milestone v0.9.0 started
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.

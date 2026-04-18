@@ -91,38 +91,26 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 | Skip GSD discuss step | User instruction (~12:55 AM): "do all the gsd planning, exec, review, etc, just without the discuss steps" | — Pending |
 | Lethal-trifecta cuts are first-class requirements, not afterthoughts | Threat-model subagent flagged egress + bulk-delete + tainted typing as ship-blockers; safer to bake in than retrofit | — Pending |
 
-## Upcoming Milestone: v0.6.0 — Write Path + Full Sitemap
+## Current Milestone: v0.9.0 — Docs & Narrative
 
-**Goal:** Turn the mount from a read-only navigator into a writable agent workspace.
-
-**Target features:**
-- Confluence write path (`create_issue` / `update_issue` / `delete_or_close` on `ConfluenceBackend`) + `atlas_doc_format` ↔ Markdown round-trip
-- Swarm `--mode confluence-direct` mode using `SimDirectWorkload` as implementation template
-- OP-2 remainder: tree-recursive `tree/<subdir>/_INDEX.md` synthesis + mount-root `_INDEX.md`
-- OP-1 remainder: `labels/` and `spaces/` directory views as read-only symlink overlays (GitHub + Confluence)
-- OP-3: `reposix refresh` subcommand + git-diff cache for mount-as-time-machine semantics
-
-## Upcoming Milestone: v0.8.0 — JIRA Cloud Integration
-
-**Goal:** First-class JIRA Cloud backend with trait rename, extensions field, and full read-only adapter. Write path as stretch.
+**Goal:** Make reposix's value proposition land hard within 10 seconds of a cold reader arriving at the MkDocs site, with technical architecture progressively revealed in a "How it works" section rather than leaked above the fold. Expand the site from a correct reference tree into a substrate story that explains *why*, *how*, and *how to extend*.
 
 **Target features:**
-- `IssueBackend` → `BackendConnector` rename + `Issue.extensions: BTreeMap<String, String>`
-- `reposix-jira` crate: JQL pagination, status-category mapping, subtask hierarchy, JIRA-specific extensions
-- CLI: `list --backend jira`, `mount --backend jira --project <KEY>`
-- ADR-004 (mapping rationale), `docs/reference/jira.md`
-- (Stretch) Write path via Transitions API
+- Landing page hero with Vignette 1 before/after code block + three-up value props
+- "How it works" section — three pages (filesystem layer, git layer, trust model) each with one mcp-mermaid diagram (playwright-screenshot verified)
+- Home-adjacent concept pages: "Mental model in 60 seconds" and "reposix vs MCP / SDKs"
+- New Guides: "Write your own connector" (BackendConnector walkthrough), "Integrate with your agent" (Claude Code / Cursor / SDK patterns), "Troubleshooting"
+- Simulator page relocated from How it works to Reference
+- 5-minute first-run tutorial against the simulator
+- MkDocs navigation restructure per Diátaxis + layered progressive disclosure
+- mkdocs-material theme tuning (palette, hero features, social cards)
+- Banned-word linter enforcing progressive-disclosure layer rules
 
-## Current Milestone: v0.7.0 — Hardening + Confluence Expansion
+**Non-negotiable framing principles** (from `.planning/notes/phase-30-narrative-vignettes.md`):
+- **P1 — Complement, not replace.** reposix absorbs the ceremony of the 80% of common tracker operations; REST remains for the other 20%. The word "replace" is banned from hero and value-prop copy.
+- **P2 — Progressive disclosure, phenomenology before implementation.** Landing describes the user experience. FUSE / daemon / remote-helper / inode / kernel / mount / syscall only appear at layer 3 (How it works) and below.
 
-**Goal:** Harden the platform under real-world load conditions and expand Confluence support beyond pages.
-
-**Target features:**
-- OP-7 hardening bundle: contention swarm (`--contention` mode), 500-page truncation probe + `WARN` + `--no-truncate`, chaos audit-log (kill-9 sim mid-swarm), macFUSE parity CI matrix
-- OP-8 honest-tokenizer benchmarks: replace `len/4` with `count_tokens` API, per-backend comparison tables, cold-mount timing, git-push round-trip latency
-- OP-9a: Confluence comments exposed as `pages/<id>.comments/<comment-id>.md`
-- OP-9b: Confluence whiteboards, attachments, and folders
-- OP-11: Docs reorg — `InitialReport.md` + `AgenticEngineeringReference.md` → `docs/research/` + root cleanup
+**Source of truth:** `.planning/notes/phase-30-narrative-vignettes.md` (committed at `1ba0479`, updated at `7000ad1`).
 
 ## Evolution
 
@@ -142,4 +130,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 — Milestone v0.8.0 complete (Phase 29 shipped, all JIRA requirements validated)*
+*Last updated: 2026-04-17 — Milestone v0.9.0 "Docs & Narrative" started (Phase 30 in planning)*
