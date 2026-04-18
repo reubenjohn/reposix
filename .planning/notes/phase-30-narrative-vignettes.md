@@ -301,32 +301,43 @@ gap is a real tutorial and a real landing page.
 ### Proposed nav (high-level, Phase 30 to refine)
 
 ```
-Home                         [hero vignette + three-up value props]
-  ├─ Why reposix             [the problem, framed as 80/20 with REST]
-  └─ Try it in 5 minutes     [real tutorial against the simulator]
+Home                                  [hero vignette + three-up value props]
+  ├─ Why reposix                      [the problem, framed as 80/20 with REST]
+  ├─ Mental model in 60 seconds       [three conceptual keys — NEW]
+  ├─ reposix vs MCP / SDKs            [comparison for skeptics — NEW]
+  └─ Try it in 5 minutes              [real tutorial against the simulator]
 
-How it works                 [Layer 2 reveal — "mounts a directory,
-                              translates commits"]
-  ├─ The filesystem layer    [Layer 3 — FUSE reveal, first diagram]
-  ├─ The git layer           [Layer 3 — remote helper reveal]
-  └─ The simulator           [Layer 3 — offline testing story]
+How it works                          [Layer 2 reveal — "mounts a directory,
+                                       translates commits"]
+  ├─ The filesystem layer             [Layer 3 — FUSE reveal, first diagram]
+  ├─ The git layer                    [Layer 3 — remote helper reveal + diagram]
+  └─ The trust model                  [Layer 3 — NEW: taint, outbound allowlist,
+                                       append-only audit, lethal-trifecta
+                                       mitigations + diagram]
 
 Guides (how-to)
   ├─ Connect to GitHub
-  ├─ Connect to Jira (Confluence today; Jira Cloud via v0.8)
+  ├─ Connect to Jira
+  ├─ Connect to Confluence
+  ├─ Write your own connector         [NEW — BackendConnector walkthrough]
+  ├─ Integrate with your agent        [NEW — Claude Code / Cursor / custom SDK]
   ├─ Running two agents safely
-  └─ Custom fields and frontmatter
+  ├─ Custom fields and frontmatter
+  └─ Troubleshooting                  [NEW — stub that grows post-launch]
 
 Reference
   ├─ CLI
   ├─ HTTP API
+  ├─ The simulator                    [MOVED from How it works — dev tooling]
   ├─ git-remote-reposix
   └─ Frontmatter schema
 
 Decisions (ADRs)
   ├─ 001 — GitHub state mapping
   ├─ 002 — Confluence page mapping
-  └─ 003 — Nested mount layout
+  ├─ 003 — Nested mount layout
+  ├─ 004 — BackendConnector trait rename
+  └─ 005 — JIRA issue mapping
 
 Research
   ├─ Initial report (pre-v0.1 design argument)
@@ -336,31 +347,54 @@ Research
 Key structural moves:
 - **"Home"** is new and narrative-led. Current docs/index.md is an overview
   table of contents, which is a reference-style opener. It goes away.
+- **"Mental model in 60 seconds"** (NEW) lives under Home. Three conceptual
+  keys: *mount = git working tree · frontmatter = schema · `git push` =
+  sync verb.* Highest-ROI page on the site — short, readable in one sitting,
+  cements the mental model before anyone opens the architecture section.
+- **"reposix vs MCP / SDKs"** (NEW) lives under Home. Grounds positioning
+  for skeptics; supports P1 (complement, not replace) with a concrete
+  comparison table. Short — not marketing copy, just honest framing.
 - **"How it works"** is a new section that handles the Layer 2 → Layer 3
   reveal. Current architecture.md is one long page; split it into three
   focused pages so each technical reveal lands with its own diagram.
-- **"Guides"** gets promoted to a top-level section. Today how-to content
-  is sprinkled across reference/ and connectors/, which makes it hard to
-  find and hard to navigate.
+- **"The trust model"** (NEW) replaces "The simulator" in How it works.
+  Reposix is a textbook lethal-trifecta scenario (private data + untrusted
+  input + egress). Current security.md enumerates shipped items; this slot
+  tells the story — taint typing, outbound allowlist, append-only audit,
+  bulk-delete cap — as a differentiator, not a checklist.
+- **The simulator moves to Reference.** It's dev tooling, not core
+  architecture. Practical lookup material, not narrative material.
+- **"Guides"** gets promoted to a top-level section and gains three new
+  pages: "Write your own connector" (BackendConnector extensibility —
+  what makes reposix a substrate, not three integrations), "Integrate
+  with your agent" (the project's raison d'être per PROJECT.md core
+  value — prompt patterns, token-savings, Claude Code / Cursor / SDK
+  integration), and "Troubleshooting" (stub that grows post-launch).
 - **Reference, Decisions, Research** stay roughly as-is — Phase 26 already
-  made them correct.
+  made those correct.
 
 ---
 
 ## Phase 30 scope (seed, not the plan)
 
 ### In scope
-- Hero rewrite — landing page, above-fold copy, one before/after code block
-  (V1), three-up value props.
-- "How it works" section — three new pages carved out of architecture.md,
-  each with one diagram rendered via mcp-mermaid and playwright-screenshot
-  verified.
-- Nav restructure — mkdocs.yml changes to implement the IA sketch above.
-- Tutorial page — first-run experience against the simulator (5-minute
-  path from install to "I edited a thing and pushed it").
-- mkdocs-material theme tuning — palette, hero features, social cards.
-- Progressive-disclosure enforcement — a linter or checklist ensuring the
-  banned technical terms don't appear above their assigned layer.
+- **Hero rewrite** — landing page, above-fold copy, one before/after code
+  block (V1), three-up value props.
+- **"How it works"** — three new pages (filesystem layer, git layer, trust
+  model), each with one mcp-mermaid diagram (playwright-screenshot verified).
+  Content carved from `docs/architecture.md` + `docs/security.md`.
+- **Home-adjacent pages** — "Mental model in 60 seconds" (three conceptual
+  keys); "reposix vs MCP / SDKs" (comparison grounding P1).
+- **New Guides** — "Write your own connector" (BackendConnector
+  walkthrough); "Integrate with your agent" (Claude Code / Cursor / SDK
+  patterns); "Troubleshooting" (stub that grows post-launch).
+- **Simulator page relocated** — from How it works to Reference.
+- **Tutorial** — first-run experience against the simulator (5-minute path
+  from install to "I edited a thing and pushed it").
+- **Nav restructure** — `mkdocs.yml` changes to implement the IA sketch above.
+- **mkdocs-material theme tuning** — palette, hero features, social cards.
+- **Progressive-disclosure enforcement** — a linter or checklist ensuring
+  the banned technical terms don't appear above their assigned layer.
 
 ### Out of scope
 - New features, new CLI surface, new backend connectors.
@@ -377,7 +411,7 @@ Key structural moves:
 - **IA agent** — two competing nav structures against the sketch above,
   scored against Diátaxis + the three personas.
 - **Diagram agent (mcp-mermaid)** — three architecture diagrams (filesystem
-  layer, git layer, simulator), rendered and playwright-screenshotted for
+  layer, git layer, trust model), rendered and playwright-screenshotted for
   visual review before merge.
 - **Tutorial agent** — authors the 5-minute getting-started path, actually
   runs it end-to-end against the simulator, screenshots each step.

@@ -40,14 +40,22 @@ Full layer model, tonal rules, and rationale: see source-of-truth note
 
 ## In scope (from source-of-truth note)
 
-- Hero rewrite (landing page, one before/after code block from Vignette 1, three-up value props).
-- New "How it works" section split from `docs/architecture.md` into three
-  pages, each with one mcp-mermaid diagram (playwright-screenshot verified).
-- MkDocs nav restructure per the IA sketch (new Home + new "How it works" +
-  promoted "Guides").
-- Real 5-minute tutorial against the simulator (first-run narrative).
-- mkdocs-material theme tuning (palette, hero features, social cards).
-- Banned-word linter enforcing progressive-disclosure layer rules.
+- **Hero rewrite** — landing page, above-fold copy, one before/after code
+  block (V1), three-up value props.
+- **"How it works" section** — three new pages (filesystem layer, git layer,
+  trust model), each with one mcp-mermaid diagram (playwright-screenshot
+  verified). Content carved from `docs/architecture.md` + `docs/security.md`.
+- **Home-adjacent pages** — "Mental model in 60 seconds" (three conceptual
+  keys: mount = git working tree, frontmatter = schema, `git push` = sync
+  verb); "reposix vs MCP / SDKs" (comparison grounding P1).
+- **New Guides** — "Write your own connector" (BackendConnector
+  walkthrough); "Integrate with your agent" (Claude Code / Cursor / SDK
+  patterns); "Troubleshooting" (stub that grows post-launch).
+- **Simulator page relocated** — from How it works to Reference.
+- **Tutorial** — 5-minute first-run experience against the simulator.
+- **Nav restructure** — `mkdocs.yml` changes implementing the IA sketch.
+- **mkdocs-material theme tuning** — palette, hero features, social cards.
+- **Banned-word linter** enforcing progressive-disclosure layer rules.
 
 ## Out of scope
 
@@ -73,7 +81,7 @@ Full layer model, tonal rules, and rationale: see source-of-truth note
 3. **IA** — two competing nav structures against the sketch, scored against
    Diátaxis + the three personas in the note.
 4. **Diagrams** (mcp-mermaid) — three architecture diagrams (filesystem layer,
-   git layer, simulator), rendered and playwright-screenshotted.
+   git layer, trust model), rendered and playwright-screenshotted.
 5. **Tutorial** — authors the 5-minute getting-started path, runs it end-to-end
    against the simulator, screenshots each step.
 
