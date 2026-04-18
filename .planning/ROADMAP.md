@@ -33,7 +33,17 @@
 
 **Context anchor:** `.planning/notes/phase-30-narrative-vignettes.md` (source of truth for narrative intent, framing principles P1/P2, hero vignette, IA sketch). `.planning/phases/30-.../CONTEXT.md` summarizes for the planner.
 
-**Plans:** 0 plans — run `/gsd-plan-phase 30` to break down.
+**Plans:** 9 plans across 5 waves
+
+- [ ] 30-01-PLAN.md — Wave 0: Vale + tooling install + CI integration + pre-commit hook + structure/screenshot/mermaid scripts (DOCS-09)
+- [ ] 30-02-PLAN.md — Wave 0: Page skeletons (14 new pages + 2 .gitkeep) so Wave 1 nav doesn't dangle (DOCS-02, DOCS-03, DOCS-04, DOCS-05, DOCS-06)
+- [ ] 30-03-PLAN.md — Wave 1: Hero rewrite of docs/index.md + mental-model + vs-mcp-sdks filled (DOCS-01, DOCS-03)
+- [ ] 30-04-PLAN.md — Wave 1: mkdocs.yml nav restructure + theme tuning + social plugin (DOCS-07, DOCS-08)
+- [ ] 30-05-PLAN.md — Wave 2: How-it-works carver (filesystem + git + trust-model) from architecture.md + security.md (DOCS-02)
+- [ ] 30-06-PLAN.md — Wave 1: Tutorial author + end-to-end runner against simulator (DOCS-06)
+- [ ] 30-07-PLAN.md — Wave 2: Guides (write-your-own-connector move + integrate-with-your-agent + troubleshooting) + reference/simulator fill (DOCS-04, DOCS-05)
+- [ ] 30-08-PLAN.md — Wave 3: Grep-audit + delete architecture.md/security.md/demo.md/connectors/ + update README + clean mkdocs.yml not_in_nav (DOCS-07)
+- [ ] 30-09-PLAN.md — Wave 4: Verification (mkdocs/vale/tutorial/structure) + 14 playwright screenshots + doc-clarity-review cold-reader + CHANGELOG v0.9.0 + SUMMARY (DOCS-01..09)
 
 <details>
 <summary>✅ v0.1.0–v0.7.0 (Phases 1–26) — SHIPPED 2026-04-13 through 2026-04-16</summary>
