@@ -208,7 +208,7 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 ## Session Continuity
 
 Last session: 2026-04-16T00:00:00.000Z
-Stopped at: Phase 29 complete — milestone v0.8.0 complete, all phases done, UAT 9/9 passed
+Checkpoint: Phase 29 complete — milestone v0.8.0 complete, all phases done, UAT 9/9 passed
 Resume file: None
 Cursor next: **v0.8.0 tag push — user gate. Run `bash scripts/tag-v0.8.0.sh`.** After tag: start new milestone or declare v0.8.0 released.
 
@@ -217,7 +217,7 @@ Wave-level commit trail on `main` (Phase 29):
 
 ### Previous session (Phase 14, for reference)
 
-2026-04-14T16:45:00.000Z. Stopped at: Completed 14-D-docs-changelog.md
+2026-04-14T16:45:00.000Z. Checkpoint: Completed 14-D-docs-changelog.md
 — Phase 14 SHIPPED; v0.4.1 ready to tag at user gate.
 Wave-level commit trail on `main`:
 `7510ed1` (14-A sim 409-body contract pins), `bdad951` + `cd50ec5` (14-B1
