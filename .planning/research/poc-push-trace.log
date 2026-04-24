@@ -1,0 +1,114 @@
+=== git version ===
+git version 2.52.0
+
+=== Step 1: build a fresh bare repo ===
+bare.git head: ce471b40e523bba09c906f3ce58b80e380d5aaa9
+
+=== Step 2: partial clone via reposix:: helper (expect stateless-connect in trace) ===
+clone RC=0
+HEAD after clone: ce471b40e523bba09c906f3ce58b80e380d5aaa9
+remote URL: poc::/work/bare.git
+
+=== Step 3: create a new commit locally ===
+client HEAD: c1500caeacd2755d5fa6d6574d405650b4814af0
+
+=== Step 4: push via reposix:: helper (expect export path in trace) ===
+push RC=0
+
+---- client-facing push output (push.log) ----
+[helper pid=58] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git']
+[helper pid=58] repo=/work/bare.git
+[helper pid=58] <- 'capabilities'
+[helper pid=58] <- 'list'
+[helper pid=58] list-for-push response (80 bytes): b'ce471b40e523bba09c906f3ce58b80e380d5aaa9 refs/heads/main\n@refs/heads/main HEAD\n\n'
+[helper pid=58] <- 'export'
+[helper pid=58] export: accepting — spawning git fast-import
+[helper pid=58] export: forwarded 505 bytes to fast-import; tail=b' 21\ncommit 2 from client\nfrom :3\nM 100644 :4 b.txt\nM 100644 :5 docs/d1.md\n\ndone\n'
+[helper pid=58] fast-import rc=0, stdout=b'', stderr=b''
+[helper pid=58] post-fast-import show-ref: 'c1500caeacd2755d5fa6d6574d405650b4814af0 refs/heads/main\n' (rc=0)
+To poc::/work/bare.git
+   ce471b4..c1500ca  main -> main
+[helper pid=58] <- ''
+
+---- bare.git HEAD after push ----
+c1500caeacd2755d5fa6d6574d405650b4814af0
+bare.git log --oneline:
+c1500ca commit 2 from client
+ce471b4 commit 1
+
+=== Step 5: demonstrate rejection — create another commit, force helper into reject mode ===
+pushing with REPOSIX_POC_REJECT_PUSH set...
+push RC=1 (expect non-zero)
+
+---- push rejection output surfaced to user ----
+[helper pid=74] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git']
+[helper pid=74] repo=/work/bare.git
+[helper pid=74] <- 'capabilities'
+[helper pid=74] <- 'list'
+[helper pid=74] list-for-push response (80 bytes): b'c1500caeacd2755d5fa6d6574d405650b4814af0 refs/heads/main\n@refs/heads/main HEAD\n\n'
+[helper pid=74] <- 'export'
+[helper pid=74] export: REJECTING per REPOSIX_POC_REJECT_PUSH='reposix: issue was modified on backend since last fetch'
+[helper pid=74] export: drained 323 bytes without applying
+To poc::/work/bare.git
+ ! [remote rejected] main -> main (reposix: issue was modified on backend since last fetch)
+error: failed to push some refs to 'poc::/work/bare.git'
+[helper pid=74] <- ''
+
+bare.git HEAD after rejected push (should be unchanged from step 4):
+c1500caeacd2755d5fa6d6574d405650b4814af0
+
+=== Step 6: capability-dispatch evidence — summarise trace ===
+
+Distinct helper invocations (pid + first verb):
+ -> export (push payload)
+[helper pid=29] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git'] -> stateless-connect (fetch)
+[helper pid=39] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git'] -> stateless-connect (fetch)
+[helper pid=58] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git'] -> list (fetch setup)
+[helper pid=74] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git'] -> list (fetch setup)
+
+Capability usage counts:
+  stateless-connect invocations: 2
+  export invocations: 2
+  list for-push invocations: 0
+  rejected pushes: 1
+  accepted pushes: 1
+
+=== Step 7: RAW helper trace ===
+[helper pid=29] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git']
+[helper pid=29] repo=/work/bare.git
+[helper pid=29] <- 'capabilities'
+[helper pid=29] <- 'stateless-connect git-upload-pack'
+[helper pid=29] -> '' (ready), tunneling git-upload-pack for /work/bare.git
+[helper pid=29] advertisement: 144 bytes; head=b'000eversion 2\n001bagent=git/2.52.0-Linux\n0013ls-refs=unborn\n0027fetch=shallow wa'
+[helper pid=29] v2 request (181 bytes); head=b'0014command=ls-refs\n001aagent=git/2.52.0-Linux0016object-format=sha100010009peel\n000csymrefs\n000bunborn\n001bref-prefix refs/heads/\n001aref-prefix refs/tags/\n001'
+[helper pid=29]   response 145 bytes; stderr=b''; head=b'0050ce471b40e523bba09c906f3ce58b80e380d5aaa9 HEAD symref-target:refs/heads/main\n003dce471b40e523bba09c906f3ce58b80e380d5aaa9 refs/heads/main\n0000'
+[helper pid=29] v2 request (243 bytes); head=b'0011command=fetch001aagent=git/2.52.0-Linux0016object-format=sha10001000dthin-pack000fno-progress000dofs-delta0014filter blob:none0032want ce471b40e523bba09c906'
+[helper pid=29]   response 273 bytes; stderr=b''; head=b'000dpackfile\n00fa\x01PACK\x00\x00\x00\x02\x00\x00\x00\x03\x9b\x07x\x9c}\xca=\x0e\x80 \x0c@\xe1\x9dStw\xa1\xf2SI\x8c\xf1*JKt $\xa4\xde_\x06g\xdf\xfa>\xed"\xc0\x11]ad\xce\xae\x84\xe2-\xcdA2S\x8a\x92"z\'\xe3\x9e$^\xcc\xf1\xe8\xd5:(\xac\xba\xeb\x06HD\x96\\\\<Lvdr\xab\xf5V\x95\x1f\xf2\x19@\xf3\x02\x8d\\!\xc8\xa0\x04x\x9c340031QH\xd4+\xa9(a\x88;\xdavIc\xeb\x7f\xb9\x9e\x96\x18\xbf\x1b\x87.\xc8[\x89\xceV11\x00\x02\x85\x94\xfc\xe4b\x06\x8f\xcc\xba\r\xc1+\xaf~H\xdf\xf7\xd2\xcdce\x8b\xe7\x8c72\xab\x00\x12\x89\x1a\xbe'
+[helper pid=39] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git']
+[helper pid=39] repo=/work/bare.git
+[helper pid=39] <- 'capabilities'
+[helper pid=39] <- 'stateless-connect git-upload-pack'
+[helper pid=39] -> '' (ready), tunneling git-upload-pack for /work/bare.git
+[helper pid=39] advertisement: 144 bytes; head=b'000eversion 2\n001bagent=git/2.52.0-Linux\n0013ls-refs=unborn\n0027fetch=shallow wa'
+[helper pid=39] v2 request (243 bytes); head=b'0011command=fetch001aagent=git/2.52.0-Linux0016object-format=sha10001000dthin-pack000fno-progress000dofs-delta0014filter blob:none0032want 5ec586d228b5ff1e8c845'
+[helper pid=39]   response 97 bytes; stderr=b''; head=b'000dpackfile\n004a\x01PACK\x00\x00\x00\x02\x00\x00\x00\x02=x\x9cK\xcb,*.QH\xce\xcf\xcd\xcd,\xe1\x02\x00#\xf0\x04\xdc7x\x9cK\xc9OV(3\xe4\x02\x00\t\x9a\x02\x08\x18\xfd\xceM\x0eE\xf1\xb3\x8e\t\x9a\xb5\x1b\xcd\xe8p-\x86;0006\x01\xbe0000'
+[helper pid=58] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git']
+[helper pid=58] repo=/work/bare.git
+[helper pid=58] <- 'capabilities'
+[helper pid=58] <- 'list'
+[helper pid=58] list-for-push response (80 bytes): b'ce471b40e523bba09c906f3ce58b80e380d5aaa9 refs/heads/main\n@refs/heads/main HEAD\n\n'
+[helper pid=58] <- 'export'
+[helper pid=58] export: accepting — spawning git fast-import
+[helper pid=58] export: forwarded 505 bytes to fast-import; tail=b' 21\ncommit 2 from client\nfrom :3\nM 100644 :4 b.txt\nM 100644 :5 docs/d1.md\n\ndone\n'
+[helper pid=58] fast-import rc=0, stdout=b'', stderr=b''
+[helper pid=58] post-fast-import show-ref: 'c1500caeacd2755d5fa6d6574d405650b4814af0 refs/heads/main\n' (rc=0)
+[helper pid=58] <- ''
+[helper pid=74] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git']
+[helper pid=74] repo=/work/bare.git
+[helper pid=74] <- 'capabilities'
+[helper pid=74] <- 'list'
+[helper pid=74] list-for-push response (80 bytes): b'c1500caeacd2755d5fa6d6574d405650b4814af0 refs/heads/main\n@refs/heads/main HEAD\n\n'
+[helper pid=74] <- 'export'
+[helper pid=74] export: REJECTING per REPOSIX_POC_REJECT_PUSH='reposix: issue was modified on backend since last fetch'
+[helper pid=74] export: drained 323 bytes without applying
+[helper pid=74] <- ''

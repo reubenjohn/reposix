@@ -1,0 +1,65 @@
+[helper pid=34] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git']
+[helper pid=34] repo=/work/bare.git
+[helper pid=34] <- 'capabilities'
+[helper pid=34] <- 'stateless-connect git-upload-pack'
+[helper pid=34] -> '' (ready), tunneling git-upload-pack for /work/bare.git
+[helper pid=34] advertisement: 144 bytes; head=b'000eversion 2\n001bagent=git/2.52.0-Linux\n0013ls-refs=unborn\n0027fetch=shallow wa'
+[helper pid=34] v2 request (181 bytes); head=b'0014command=ls-refs\n001aagent=git/2.52.0-Linux0016object-format=sha100010009peel\n000csymrefs\n000bunborn\n001bref-prefix refs/heads/\n001aref-prefix refs/tags/\n001'
+[helper pid=34]   response 145 bytes; stderr=b''; head=b'00505775c89854a994eae669b6c74640335346f34f76 HEAD symref-target:refs/heads/main\n003d5775c89854a994eae669b6c74640335346f34f76 refs/heads/main\n0000'
+[helper pid=34] v2 request (243 bytes); head=b'0011command=fetch001aagent=git/2.52.0-Linux0016object-format=sha10001000dthin-pack000fno-progress000dofs-delta0014filter blob:none0032want 5775c89854a994eae669b'
+[helper pid=34]   response 385 bytes; stderr=b''; head=b"000dpackfile\n016a\x01PACK\x00\x00\x00\x02\x00\x00\x00\x03\x97\x07x\x9c}\xca1\x0e\x80 \x0c\x00\xc0\x9dWtw)\x10\x85&\xc6\xf8\x95\x02md@\x13S\xff\xaf/\xf0\xe6\xb3[\x04<\x16\xad1\xe4\xc8-HD\xc1&H%\xb7\x88\x95tQj\xaa\xcc\xc8\xe4\xf8\xb1\xe3\xba\xc1`\xb5\xdd6\xf0)%L\x9e\xe6\x00\x13~\\\xbd\xc6\xe8f\xf2S\\?\xbb\xb9\x17'\xf8!\x12\xa0\x0bx\x9c340031QH\xcaL7\xd4+\xa9(a(\x0f\x8e\xb6\xf6m\xba]4\xdd$-]>:\xb1#\xd3\xe5\xe8ZC\xb8\x1a#\xb0\x9a\xa0\xaf&o\xaf\xcah\xebf\xad\xbegb$*\xbe-\x81Y\xd3\x15\xa1\xc6\x18\xacfz\xc8"
+[helper pid=54] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git']
+[helper pid=54] repo=/work/bare.git
+[helper pid=54] <- 'capabilities'
+[helper pid=54] <- 'stateless-connect git-upload-pack'
+[helper pid=54] -> '' (ready), tunneling git-upload-pack for /work/bare.git
+[helper pid=54] advertisement: 144 bytes; head=b'000eversion 2\n001bagent=git/2.52.0-Linux\n0013ls-refs=unborn\n0027fetch=shallow wa'
+[helper pid=54] v2 request (193 bytes); head=b'0011command=fetch001aagent=git/2.52.0-Linux0016object-format=sha10001000dthin-pack000fno-progress000dofs-delta0014filter blob:none0032want 77535b3b4d82db7297346'
+[helper pid=54]   response 205647 bytes; stderr=b''; head=b'000dpackfile\n6004\x01PACK\x00\x00\x00\x02\x00\x00\x00\x01\xb1\xf6\x83\x01x\x9c\x14\x99\xb5b\xacP\x14E\xfb\xfc\n\x05n%\xee0\xc0\xa0\x1d\xae\x83\xfb\xd7?^\x97"\xc9\\\xb8\xe7\xec\xbdV\xa2=@\xed\x97\x86<\x81\xf5w\xba:\xbd\xc4-\xce\xfbvc\xa3\xe8\x9e\x14\x95\x8f\xa8\xd22B\xb4d!g\xe5JC\xaa.\x7f\x941\x86~\x9fV\x9c\xaf\tu\xf2b\xfdb\xb3\xa3\xd0d?\xff\x1d\xaam,\x1a1\xa7\xdd\xa4lr\xc2$\x99tZJ\xc3W\xe3f\xf6\x87R\xca.\xc2Gf\xec\xd7\xcc\x9c\x17\xfbR\x7f=4\x97\x00\xb3\xa5\x126T\xef\xa9\\L\xa3#\xfd\x1c6\xc5\xcf\xf8\x87\x97~\x85c\ni0X\x90\xdd\x88\x10'
+[helper pid=71] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git']
+[helper pid=71] repo=/work/bare.git
+[helper pid=71] <- 'capabilities'
+[helper pid=71] <- 'stateless-connect git-upload-pack'
+[helper pid=71] -> '' (ready), tunneling git-upload-pack for /work/bare.git
+[helper pid=71] advertisement: 144 bytes; head=b'000eversion 2\n001bagent=git/2.52.0-Linux\n0013ls-refs=unborn\n0027fetch=shallow wa'
+[helper pid=71] v2 request (193 bytes); head=b'0011command=fetch001aagent=git/2.52.0-Linux0016object-format=sha10001000dthin-pack000fno-progress000dofs-delta0014filter blob:none0032want 0be4da742bc818db0c722'
+[helper pid=71]   response 76 bytes; stderr=b''; head=b'000dpackfile\n0035\x01PACK\x00\x00\x00\x02\x00\x00\x00\x018x\x9cK\xc9O\xd6\xcd\xcfK\xe5\x02\x00\r>\x02\xb0hOg\xbd\x1f\x84\xbc\xd8\x1f\x87m4\xb9\x99\xe5\xb4\xe6\xe1?0006\x0120000'
+[helper pid=85] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git']
+[helper pid=85] repo=/work/bare.git
+[helper pid=85] <- 'capabilities'
+[helper pid=85] <- 'stateless-connect git-upload-pack'
+[helper pid=85] -> '' (ready), tunneling git-upload-pack for /work/bare.git
+[helper pid=85] advertisement: 144 bytes; head=b'000eversion 2\n001bagent=git/2.52.0-Linux\n0013ls-refs=unborn\n0027fetch=shallow wa'
+[helper pid=85] v2 request (181 bytes); head=b'0014command=ls-refs\n001aagent=git/2.52.0-Linux0016object-format=sha100010009peel\n000csymrefs\n000bunborn\n001bref-prefix refs/heads/\n001aref-prefix refs/tags/\n001'
+[helper pid=85]   response 145 bytes; stderr=b''; head=b'00505775c89854a994eae669b6c74640335346f34f76 HEAD symref-target:refs/heads/main\n003d5775c89854a994eae669b6c74640335346f34f76 refs/heads/main\n0000'
+[helper pid=85] v2 request (243 bytes); head=b'0011command=fetch001aagent=git/2.52.0-Linux0016object-format=sha10001000dthin-pack000fno-progress000dofs-delta0014filter blob:none0032want 5775c89854a994eae669b'
+[helper pid=85]   response 385 bytes; stderr=b''; head=b"000dpackfile\n016a\x01PACK\x00\x00\x00\x02\x00\x00\x00\x03\x97\x07x\x9c}\xca1\x0e\x80 \x0c\x00\xc0\x9dWtw)\x10\x85&\xc6\xf8\x95\x02md@\x13S\xff\xaf/\xf0\xe6\xb3[\x04<\x16\xad1\xe4\xc8-HD\xc1&H%\xb7\x88\x95tQj\xaa\xcc\xc8\xe4\xf8\xb1\xe3\xba\xc1`\xb5\xdd6\xf0)%L\x9e\xe6\x00\x13~\\\xbd\xc6\xe8f\xf2S\\?\xbb\xb9\x17'\xf8!\x12\xa0\x0bx\x9c340031QH\xcaL7\xd4+\xa9(a(\x0f\x8e\xb6\xf6m\xba]4\xdd$-]>:\xb1#\xd3\xe5\xe8ZC\xb8\x1a#\xb0\x9a\xa0\xaf&o\xaf\xcah\xebf\xad\xbegb$*\xbe-\x81Y\xd3\x15\xa1\xc6\x18\xacfz\xc8"
+[helper pid=101] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git']
+[helper pid=101] repo=/work/bare.git
+[helper pid=101] <- 'capabilities'
+[helper pid=101] <- 'stateless-connect git-upload-pack'
+[helper pid=101] -> '' (ready), tunneling git-upload-pack for /work/bare.git
+[helper pid=101] advertisement: 144 bytes; head=b'000eversion 2\n001bagent=git/2.52.0-Linux\n0013ls-refs=unborn\n0027fetch=shallow wa'
+[helper pid=101] v2 request (443 bytes); head=b'0011command=fetch001aagent=git/2.52.0-Linux0016object-format=sha10001000dthin-pack000fno-progress000dofs-delta0014filter blob:none0032want 0be4da742bc818db0c722'
+[helper pid=101]   response 616947 bytes; stderr=b''; head=b'000dpackfile\n2004\x01PACK\x00\x00\x00\x02\x00\x00\x00\x068x\x9cK\xc9O\xd6\xcd\xcfK\xe5\x02\x00\r>\x02\xb0\xb1\xf6\x83\x01x\x9c\x14\x9bE\x82\xe3@\x10\x04\xef\xf3\x15\x1d\xc4t\x14\xa3\xc5|\x13\x93-\xe6\xd7\xaf\xf6\x03\x96\xbb]\x95\x19\xe1\x19\xd3F\xe2y\xe1\xa0#nU\x11\xfe\x85[\x80ia-\xd2\xeet\x90\xf5\xb7NLDs\x95\xbfrT\x9eQ\xb8\xbe\x9d\xbd\xd1\xa7\xb5%\xea\x0cza_\xb7\xe5ePk\x15_\xb4w\x18\xc3\xf6G"\xb3\xecee\x85\xf9D\xc0\x1c\x82\xbf=\x83\x8cd\x15\xe75\xeb/\xc9\xb0k\xd5\xc2\xb2W\xb3&\xe0\x04{HDl\xb7Q\x1c\xdc-\xf2q\x16\x96\x89G\x9d\xe0\x80\xa2\xc7\x81\xa6\xb7'
+[helper pid=117] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git']
+[helper pid=117] repo=/work/bare.git
+[helper pid=117] <- 'capabilities'
+[helper pid=117] <- 'stateless-connect git-upload-pack'
+[helper pid=117] -> '' (ready), tunneling git-upload-pack for /work/bare.git
+[helper pid=117] advertisement: 144 bytes; head=b'000eversion 2\n001bagent=git/2.52.0-Linux\n0013ls-refs=unborn\n0027fetch=shallow wa'
+[helper pid=117] v2 request (181 bytes); head=b'0014command=ls-refs\n001aagent=git/2.52.0-Linux0016object-format=sha100010009peel\n000csymrefs\n000bunborn\n001bref-prefix refs/heads/\n001aref-prefix refs/tags/\n001'
+[helper pid=117]   response 145 bytes; stderr=b''; head=b'00505775c89854a994eae669b6c74640335346f34f76 HEAD symref-target:refs/heads/main\n003d5775c89854a994eae669b6c74640335346f34f76 refs/heads/main\n0000'
+[helper pid=117] v2 request (243 bytes); head=b'0011command=fetch001aagent=git/2.52.0-Linux0016object-format=sha10001000dthin-pack000fno-progress000dofs-delta0014filter blob:none0032want 5775c89854a994eae669b'
+[helper pid=117]   response 385 bytes; stderr=b''; head=b"000dpackfile\n016a\x01PACK\x00\x00\x00\x02\x00\x00\x00\x03\x97\x07x\x9c}\xca1\x0e\x80 \x0c\x00\xc0\x9dWtw)\x10\x85&\xc6\xf8\x95\x02md@\x13S\xff\xaf/\xf0\xe6\xb3[\x04<\x16\xad1\xe4\xc8-HD\xc1&H%\xb7\x88\x95tQj\xaa\xcc\xc8\xe4\xf8\xb1\xe3\xba\xc1`\xb5\xdd6\xf0)%L\x9e\xe6\x00\x13~\\\xbd\xc6\xe8f\xf2S\\?\xbb\xb9\x17'\xf8!\x12\xa0\x0bx\x9c340031QH\xcaL7\xd4+\xa9(a(\x0f\x8e\xb6\xf6m\xba]4\xdd$-]>:\xb1#\xd3\xe5\xe8ZC\xb8\x1a#\xb0\x9a\xa0\xaf&o\xaf\xcah\xebf\xad\xbegb$*\xbe-\x81Y\xd3\x15\xa1\xc6\x18\xacfz\xc8"
+[helper pid=142] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git']
+[helper pid=142] repo=/work/bare.git
+[helper pid=142] <- 'capabilities'
+[helper pid=142] <- 'stateless-connect git-upload-pack'
+[helper pid=142] -> '' (ready), tunneling git-upload-pack for /work/bare.git
+[helper pid=142] advertisement: 144 bytes; head=b'000eversion 2\n001bagent=git/2.52.0-Linux\n0013ls-refs=unborn\n0027fetch=shallow wa'
+[helper pid=142] v2 request (193 bytes); head=b'0011command=fetch001aagent=git/2.52.0-Linux0016object-format=sha10001000dthin-pack000fno-progress000dofs-delta0014filter blob:none0032want 77535b3b4d82db7297346'
+[helper pid=142]   response 205627 bytes; stderr=b''; head=b'000dpackfile\n4004\x01PACK\x00\x00\x00\x02\x00\x00\x00\x01\xb1\xf6\x83\x01x\x9c\x14\x99\xb5b\xacP\x14E\xfb\xfc\n\x05n%\xee0\xc0\xa0\x1d\xae\x83\xfb\xd7?^\x97"\xc9\\\xb8\xe7\xec\xbdV\xa2=@\xed\x97\x86<\x81\xf5w\xba:\xbd\xc4-\xce\xfbvc\xa3\xe8\x9e\x14\x95\x8f\xa8\xd22B\xb4d!g\xe5JC\xaa.\x7f\x941\x86~\x9fV\x9c\xaf\tu\xf2b\xfdb\xb3\xa3\xd0d?\xff\x1d\xaam,\x1a1\xa7\xdd\xa4lr\xc2$\x99tZJ\xc3W\xe3f\xf6\x87R\xca.\xc2Gf\xec\xd7\xcc\x9c\x17\xfbR\x7f=4\x97\x00\xb3\xa5\x126T\xef\xa9\\L\xa3#\xfd\x1c6\xc5\xcf\xf8\x87\x97~\x85c\ni0X\x90\xdd\x88\x10'
+[helper pid=152] invoked: ['/work/git-remote-poc', 'origin', '/work/bare.git']
+[helper pid=152] repo=/work/bare.git
+[helper pid=152] <- 'capabilities'

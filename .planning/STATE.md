@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v0.9.0
-milestone_name: Docs & Narrative
-status: ready_to_execute
-stopped_at: Phase 30 planned — 9 plans across 5 waves, awaiting /gsd-execute-phase 30
-last_updated: "2026-04-18T04:32:41.413Z"
-last_activity: 2026-04-18 — Phase 30 planning complete
+milestone_name: Architecture Pivot — Git-Native Partial Clone
+status: research_complete
+stopped_at: Architecture pivot research complete — FUSE deletion confirmed viable, design docs written, Phase 30 deferred to v0.10.0. Next - plan v0.9.0 phases via /gsd-plan-phase.
+last_updated: "2026-04-24T00:00:00.000Z"
+last_activity: 2026-04-24 — Architecture pivot research complete, ROADMAP restructured
 progress:
-  total_phases: 1
+  total_phases: 0
   completed_phases: 0
-  total_plans: 9
+  total_plans: 0
   completed_plans: 0
   percent: 0
 ---
@@ -20,7 +20,8 @@ progress:
 
 ### Roadmap Evolution
 
-- **Milestone v0.9.0 "Docs & Narrative" started (2026-04-17):** Dedicated docs-only milestone to rewrite landing + restructure MkDocs IA. Phase 30 promoted from Backlog into v0.9.0 as the founding (and likely sole) phase. Scope expanded during IA discussion — trust-model page replaces simulator in How it works; simulator relocated to Reference; three new Guides added (Write your own connector, Integrate with your agent, Troubleshooting); two new Home-adjacent pages (Mental model in 60 seconds, reposix vs MCP / SDKs). 9 requirements (DOCS-01..09) mapped to Phase 30. Research skipped — source-of-truth note is the research. Commits: `1ba0479` (note), `a2cfa7c` (phase scaffold + rename), `7000ad1` (IA revisions), `deaeb50` (milestone kickoff).
+- **v0.9.0 pivoted to Architecture Pivot — Git-Native Partial Clone (2026-04-24):** FUSE-based design confirmed too slow (every read = live API call, 10k pages = 10k calls). Research spike confirmed git's partial clone + `stateless-connect` remote helper can replace FUSE entirely. Key findings: (1) helper CAN be a promisor remote via `stateless-connect`, (2) hybrid works — `stateless-connect` for reads + `export` for push, (3) helper can count/refuse blob requests with stderr errors, (4) sparse-checkout batches blob fetches. Design decisions: push-time conflict detection (no refresh needed), tree sync always full (cheap metadata), blob limit as only guardrail, agent uses pure git (zero CLI awareness). Phase 30 (docs) deferred to v0.10.0 — must describe new architecture. Research docs: `architecture-pivot-summary.md`, `partial-clone-remote-helper-findings.md`, `push-path-stateless-connect-findings.md`, `sync-conflict-design.md`. POC artifacts: `git-remote-poc.py`, `run-poc.sh`, `run-poc-push.sh`.
+- **Milestone v0.9.0 "Docs & Narrative" originally started (2026-04-17):** Dedicated docs-only milestone to rewrite landing + restructure MkDocs IA. Phase 30 promoted from Backlog into v0.9.0 as the founding (and likely sole) phase. Scope expanded during IA discussion — trust-model page replaces simulator in How it works; simulator relocated to Reference; three new Guides added (Write your own connector, Integrate with your agent, Troubleshooting); two new Home-adjacent pages (Mental model in 60 seconds, reposix vs MCP / SDKs). 9 requirements (DOCS-01..09) mapped to Phase 30. Research skipped — source-of-truth note is the research. Commits: `1ba0479` (note), `a2cfa7c` (phase scaffold + rename), `7000ad1` (IA revisions), `deaeb50` (milestone kickoff).
 - **Phase 30 added to Backlog (2026-04-17):** Docs IA and narrative overhaul — landing page aha moment and progressive-disclosure architecture reveal. Anchored by `.planning/notes/phase-30-narrative-vignettes.md` (committed 1ba0479). Two non-negotiable framing principles: (P1) complement-not-replace REST, (P2) progressive disclosure (FUSE/daemon/helper banned above layer 3). Parked in Backlog because v0.8.0 archived and no active milestone — subsequently promoted into v0.9.0 milestone (see entry above).
 - **Phase 26 SHIPPED (2026-04-16):** Docs clarity overhaul — deleted AgenticEngineeringReference.md + InitialReport.md root stubs; archived MORNING-BRIEF.md + PROJECT-STATUS.md to docs/archive/; README.md version updated v0.3.0→v0.7.0 with complete release table; docs/index.md version updated v0.4→v0.7; docs/development/roadmap.md extended through v0.7 + v0.8 preview; HANDOFF.md OP items updated to v0.7 state; all 19 user-facing docs reviewed with doc-clarity-review skill (isolated subagent, zero repo context); zero critical friction points remaining; initial-report.md orientation abstract added.
 - **Phase 25 SHIPPED (2026-04-16):** OP-11 docs reorg — InitialReport.md → docs/research/initial-report.md, AgenticEngineeringReference.md → docs/research/agentic-engineering-reference.md; root stubs have visible markdown blockquote redirect notes; CLAUDE.md, README.md, threat-model-and-critique.md cross-refs updated; mkdocs.yml Research nav section added; v0.7.0 workspace version bump + CHANGELOG promotion.
