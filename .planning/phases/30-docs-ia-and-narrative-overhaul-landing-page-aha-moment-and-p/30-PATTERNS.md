@@ -876,7 +876,7 @@ run_and_check() {
 
 ```bash
 git checkout -q --detach HEAD
-echo 'ATATT3xFfWELr_FakeTokenForHookTest' > .test-pre-push-fixture.txt
+echo "${FAKE_ATATT3_TOKEN}" > .test-pre-push-fixture.txt   # var holds a fake ATATT3… test token
 git add .test-pre-push-fixture.txt
 git -c user.email=test@test -c user.name=test commit -q -m "test: inject fake ATATT3 token"
 if ! run_and_check "ATATT3 token rejected" 1; then
