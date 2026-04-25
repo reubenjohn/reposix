@@ -10,6 +10,7 @@ members = [
     "crates/reposix-jira",
     "crates/reposix-swarm",
     "crates/reposix-confluence",
+    "crates/reposix-cache",
 ]
 
 [workspace.package]
@@ -58,6 +59,14 @@ libc = "0.2"
 
 # Storage
 rusqlite = { version = "0.32", features = ["bundled"] }
+
+# gix 0.82 — pure-Rust git object writer for the reposix-cache crate.
+# Pinned with `=` because gix is pre-1.0 (issue GitoxideLabs/gitoxide#470)
+# and minor versions have broken method signatures in the past.
+# See .planning/phases/31-.../31-RESEARCH.md §Pitfall 4.
+gix = "=0.82.0"
+# XDG cache dir resolution for the reposix-cache default path.
+dirs = "6"
 
 # Misc
 uuid = { version = "1", features = ["v4", "serde"] }

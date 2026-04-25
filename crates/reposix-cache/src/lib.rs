@@ -1,0 +1,29 @@
+//! `reposix-cache` — backing bare-repo cache built from REST responses.
+//!
+//! This crate is the substrate for the git-native architecture pivot
+//! (v0.9.0). It materializes `BackendConnector` responses into a real
+//! on-disk bare git repo:
+//!
+//! - **Tree sync = full.** Every `Cache::build_from` call lists all
+//!   issues and writes a tree object with one entry per issue. Tree
+//!   metadata is cheap.
+//! - **Blob materialization = lazy.** Blobs are NOT written during
+//!   `build_from`; only `Cache::read_blob(oid)` persists a blob to
+//!   `.git/objects`. This is the whole point — the cache is a partial-
+//!   clone promisor, and writing all blobs upfront would defeat the
+//!   lazy invariant.
+//!
+//! Audit log, tainted-byte discipline, and egress allowlist enforcement
+//! land in Plan 02 and Plan 03 of Phase 31.
+//!
+//! ## Environment variables
+//! - `REPOSIX_CACHE_DIR` — overrides the default cache directory
+//!   (`$XDG_CACHE_HOME/reposix/`).
+//! - `REPOSIX_ALLOWED_ORIGINS` — egress allowlist, honored transitively
+//!   via `reposix_core::http::client()` which backend adapters use.
+
+#![forbid(unsafe_code)]
+#![warn(clippy::pedantic)]
+#![allow(clippy::module_name_repetitions)]
+
+// Re-exports land in Task 2; lib.rs is empty-ish for Task 1.

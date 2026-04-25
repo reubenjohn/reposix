@@ -1,0 +1,29 @@
+[package]
+name = "reposix-cache"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Backing bare-repo cache built from REST responses via BackendConnector — substrate for the git-native architecture."
+
+[dependencies]
+reposix-core = { path = "../reposix-core" }
+tokio = { workspace = true }
+async-trait = { workspace = true }
+chrono = { workspace = true }
+rusqlite = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+serde_yaml = { workspace = true }
+gix = { workspace = true, features = ["tree-editor"] }
+dirs = { workspace = true }
+
+[dev-dependencies]
+reposix-sim = { path = "../reposix-sim" }
+tempfile = "3"
+trybuild = "1"
+tokio = { workspace = true, features = ["full", "test-util", "macros", "rt-multi-thread"] }
+anyhow = { workspace = true }
+rusqlite = { workspace = true }
+wiremock = "0.6"
+serde_json = { workspace = true }
