@@ -223,7 +223,7 @@ the explicit boundary.
   (`reposix-core`, `reposix-confluence`, `reposix-github`, `reposix-fuse`,
   `reposix-cli`, `reposix-remote`, `reposix-swarm`). No backward-compat
   alias. Callers must update the import and any `impl`/`dyn`/bound sites.
-  Rationale in `docs/decisions/004-backend-connector-rename.md`.
+  (Pre-1.0 rename; pre-1.0 renames are not tracked as ADRs.)
 
 ### Added
 
@@ -265,7 +265,7 @@ the explicit boundary.
 - **`Issue.extensions: BTreeMap<String, serde_yaml::Value>`** — backend-specific
   metadata field. Omitted from YAML when empty; defaults to empty on parse.
   JIRA populates `jira_key`, `issue_type`, `priority`, `status_name`,
-  `hierarchy_level`. ADR: `docs/decisions/004-backend-connector-rename.md`.
+  `hierarchy_level`. (Pre-1.0 rename context; pre-1.0 renames are not tracked as ADRs.)
 
 ### Changed
 

@@ -54,6 +54,7 @@ not_in_nav: |
   demo.md
   connectors/guide.md
   demos/index.md
+  demos/asciinema-script.md
   reference/cli.md
   reference/http-api.md
   reference/git-remote.md
@@ -131,10 +132,9 @@ nav:
       - ADR-001 GitHub state mapping: decisions/001-github-state-mapping.md
       - ADR-002 Confluence page mapping: decisions/002-confluence-page-mapping.md
       - ADR-003 Nested mount layout: decisions/003-nested-mount-layout.md
-      - ADR-004 Backend connector rename: decisions/004-backend-connector-rename.md
       - ADR-005 JIRA issue mapping: decisions/005-jira-issue-mapping.md
-      - ADR-006 IssueId to RecordId rename: decisions/006-issueid-to-recordid-rename.md
       - ADR-007 Time-travel via git tags: decisions/007-time-travel-via-git-tags.md
+      - ADR-008 Helper backend dispatch: decisions/008-helper-backend-dispatch.md
   - Research:
       - Initial report: research/initial-report.md
       - Agentic engineering reference: research/agentic-engineering-reference.md

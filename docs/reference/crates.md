@@ -30,7 +30,7 @@ Backing bare-repo cache built from `BackendConnector` responses. The substrate o
 
 - `Cache::open(backend, backend_name, project)` — open or create the cache at a deterministic path under `$XDG_CACHE_HOME/reposix/`.
 - `Cache::build_from(...)` → `SyncReport` — list all issues, write a tree object with one entry per record. Tree metadata is eager; blobs are not.
-- `Cache::read_blob(oid)` — materialize a single blob on demand (the lazy-blob invariant — see [ARCH-01](../decisions/004-backend-connector-rename.md) and Phase 31 plans).
+- `Cache::read_blob(oid)` — materialize a single blob on demand (the lazy-blob invariant — see Phase 31 plans).
 - `audit::*` — append-only audit table inside `cache.db`; vocabulary includes `helper_push_*` and `blob_limit_exceeded` per Phase 32 / 34.
 
 ### Used by
