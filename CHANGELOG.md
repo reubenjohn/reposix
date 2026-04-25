@@ -31,6 +31,32 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
   reposix CLI awareness required beyond `reposix init`.
 - **Rationale:** see `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md`. Headline numbers: every read no longer requires a live API call (cache-backed bare repo + lazy blob fetch); FUSE removes ~3.5 MiB of binary surface and the `fusermount3` runtime dependency.
 
+### Added
+
+- **v0.9.0 latency envelope** captured at `docs/benchmarks/v0.9.0-latency.md`
+  (regenerator: `bash scripts/v0.9.0-latency.sh`). Markdown table with
+  per-step wall-clock latencies for sim and (when creds present) the
+  three real-backend targets. Soft thresholds: sim cold init < 500ms,
+  real-backend step < 3s — both regression-flagged via `WARN:` lines,
+  not CI-blocking. (Phase 35-04.)
+- **`docs/reference/testing-targets.md`** — canonical doc enumerating
+  the three sanctioned real-backend test targets: Confluence space
+  `TokenWorld` (owner-sanctioned scratchpad), GitHub `reubenjohn/reposix`
+  issues, and JIRA project `TEST` (overridable via `JIRA_TEST_PROJECT`
+  or `REPOSIX_JIRA_PROJECT`). Owner permission statement
+  ("TokenWorld is for testing — go crazy, it's safe.") quoted verbatim
+  per CLAUDE.md OP-6. (Phase 35-04.)
+- **`scripts/dark-factory-test.sh`** + `crates/reposix-cli/tests/agent_flow.rs`
+  — dark-factory regression test that proves the architecture's
+  "pure git, zero in-context learning" thesis. Three scenarios: working
+  tree shape (live), conflict-rebase teaching string presence
+  (regression), blob-limit teaching string presence (regression).
+  (Phase 35-02.)
+- **`crates/reposix-cli/tests/agent_flow_real.rs`** — three real-backend
+  init smoke tests gated on env-var presence via `skip_if_no_env!`.
+  Per T-11B-01, the macro logs only env-var names, never values.
+  (Phase 35-03.)
+
 ## [v0.8.0] — 2026-04-16
 
 ### Breaking
