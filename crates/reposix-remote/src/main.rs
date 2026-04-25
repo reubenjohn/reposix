@@ -265,10 +265,23 @@ fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
 fn handle_export<R: std::io::Read, W: std::io::Write>(
     state: &mut State,
     proto: &mut Protocol<R, W>,
 ) -> Result<()> {
+    // Lazy-open the cache for audit-row writes. Best-effort: if the cache
+    // can't be opened (misconfigured cache root, permission error), log
+    // a WARN and continue — the push path still works, only audit rows
+    // are dropped. Phase 35 will tighten this once the cache is part of
+    // the steady-state CLI install flow.
+    if let Err(e) = ensure_cache(state) {
+        tracing::warn!("cache unavailable for push audit: {e:#}");
+    }
+    if let Some(cache) = state.cache.as_ref() {
+        cache.log_helper_push_started("refs/heads/main");
+    }
+
     // The export verb has no arguments — the next thing on stdin is the
     // fast-export stream from git, terminated by `done`.
     let mut buffered = BufReader::new(ProtoReader::new(proto));
@@ -299,6 +312,70 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
             .map_err(Into::into);
         }
     };
+
+    // ARCH-08: conflict detection. Build prior_by_id index, then walk
+    // the new tree. For each existing issue, parse the new blob's
+    // frontmatter and compare its `version` against the prior's
+    // `version`. Mismatch => conflict. New issues (Create path) skip
+    // the check — no base to conflict with.
+    let prior_by_id: std::collections::HashMap<reposix_core::IssueId, &reposix_core::Issue> =
+        prior.iter().map(|i| (i.id, i)).collect();
+    // Tuple shape: (id, local_version, backend_version, backend_updated_at_iso8601)
+    let mut conflicts: Vec<(reposix_core::IssueId, u64, u64, String)> = Vec::new();
+    for (path, mark) in &parsed.tree {
+        let Some(id_num) = issue_id_from_path(path) else {
+            continue; // non-issue paths (e.g. README) are not conflict-checked
+        };
+        let id = reposix_core::IssueId(id_num);
+        let Some(prior_issue) = prior_by_id.get(&id) else {
+            continue; // new issue (Create path) — no base to conflict with
+        };
+        let Some(blob_bytes) = parsed.blobs.get(mark) else {
+            continue; // unresolved mark — defer to plan() error path
+        };
+        let text = String::from_utf8_lossy(blob_bytes);
+        let Ok(parsed_issue) = reposix_core::frontmatter::parse(&text) else {
+            continue; // bad frontmatter handled by plan()
+        };
+        if parsed_issue.version != prior_issue.version {
+            conflicts.push((
+                id,
+                parsed_issue.version,
+                prior_issue.version,
+                prior_issue.updated_at.to_rfc3339(),
+            ));
+        }
+    }
+
+    if !conflicts.is_empty() {
+        conflicts.sort_by_key(|c| c.0 .0);
+        let (first_id, local_v, backend_v, backend_ts) = &conflicts[0];
+        // Stderr diagnostic — free-form context line per CONTEXT.md
+        // §Specifics (no `reposix:` prefix; mirrors git helper convention).
+        diag(&format!(
+            "issue {} modified on backend at {} since last fetch (local base version: {}, backend version: {}). Run: git pull --rebase",
+            first_id.0,
+            backend_ts,
+            local_v,
+            backend_v,
+        ));
+        if let Some(cache) = state.cache.as_ref() {
+            cache.log_helper_push_rejected_conflict(
+                &first_id.0.to_string(),
+                *local_v,
+                *backend_v,
+            );
+        }
+        // Canned status string per CONTEXT.md §Push-reject status string.
+        // git renders the standard "perhaps a `git pull --rebase` would
+        // help" hint when it sees this exact format.
+        proto.send_line("error refs/heads/main fetch first")?;
+        proto.send_blank()?;
+        proto.flush()?;
+        state.push_failed = true;
+        return Ok(());
+    }
+
     let actions = match plan(&prior, &parsed) {
         Ok(a) => a,
         Err(PlanError::BulkDeleteRefused {
@@ -325,6 +402,24 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
         }
     };
 
+    // Capture summary for the audit row before consuming `actions`.
+    let mut touched_ids: Vec<u64> = Vec::new();
+    for action in &actions {
+        match action {
+            PlannedAction::Create(issue) => touched_ids.push(issue.id.0),
+            PlannedAction::Update { id, .. } | PlannedAction::Delete { id, .. } => {
+                touched_ids.push(id.0);
+            }
+        }
+    }
+    touched_ids.sort_unstable();
+    let summary = touched_ids
+        .iter()
+        .map(u64::to_string)
+        .collect::<Vec<_>>()
+        .join(",");
+    let files_touched = u32::try_from(touched_ids.len()).unwrap_or(u32::MAX);
+
     // Execute. Order = creates → updates → deletes (per diff::plan).
     let mut any_failure = false;
     for action in actions {
@@ -342,11 +437,21 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
         proto.flush()?;
         state.push_failed = true;
     } else {
+        if let Some(cache) = state.cache.as_ref() {
+            cache.log_helper_push_accepted(files_touched, &summary);
+        }
         proto.send_line("ok refs/heads/main")?;
         proto.send_blank()?;
         proto.flush()?;
     }
     Ok(())
+}
+
+/// `0001.md` -> `1`. Returns `None` for non-issue paths (e.g. `README.md`,
+/// or anything whose stem is not a base-10 unsigned integer).
+fn issue_id_from_path(path: &str) -> Option<u64> {
+    let stem = path.strip_suffix(".md")?;
+    stem.parse::<u64>().ok()
 }
 
 fn execute_action(state: &mut State, action: PlannedAction) -> Result<()> {
@@ -371,6 +476,15 @@ fn execute_action(state: &mut State, action: PlannedAction) -> Result<()> {
             prior_version,
             new,
         } => {
+            // ARCH-10: every Update implicitly sanitizes server-controlled
+            // frontmatter fields (id/created_at/updated_at/version). Emit a
+            // best-effort audit row so an operator can see the sanitize
+            // boundary without re-deriving it from the diff. `version` is
+            // the dominant server-controlled field; the row is per-issue
+            // (not per-field).
+            if let Some(cache) = state.cache.as_ref() {
+                cache.log_helper_push_sanitized_field(&id.0.to_string(), "version");
+            }
             let meta = ServerMetadata {
                 id,
                 created_at: new.created_at,
