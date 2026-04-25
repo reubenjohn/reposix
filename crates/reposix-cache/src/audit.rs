@@ -170,3 +170,118 @@ pub fn log_tree_sync(conn: &Connection, backend: &str, project: &str, items: usi
               "log_tree_sync failed: {e}");
     }
 }
+
+/// Insert `op='delta_sync'` row INSIDE a SQLite transaction. Used by
+/// [`crate::Cache::sync`] so the audit row commits atomically with the
+/// `meta.last_fetched_at` update and the changed-issue `oid_map` rows.
+///
+/// Unlike the other audit helpers in this module, this one returns
+/// `rusqlite::Result<()>` (not best-effort): a failed audit insert
+/// MUST roll the whole transaction back, otherwise we'd risk a torn
+/// state where the cursor advanced but no audit row was written.
+///
+/// `since_iso` is the RFC3339 string of the `last_fetched_at` that was
+/// passed to the backend (or `None` for a seed-equivalent sync — but
+/// the seed path uses `tree_sync` instead, so in practice this is
+/// always `Some` from the `Cache::sync` caller).
+///
+/// `items_returned` is the count of IDs the backend declared changed —
+/// stored in the `bytes` column to mirror the `tree_sync` convention
+/// (`bytes` records item count, not literal byte length).
+///
+/// # Errors
+/// Returns the underlying `rusqlite::Error` from `Transaction::execute`.
+pub fn log_delta_sync_tx(
+    tx: &rusqlite::Transaction<'_>,
+    backend: &str,
+    project: &str,
+    since_iso: Option<&str>,
+    items_returned: usize,
+) -> rusqlite::Result<()> {
+    let reason = match since_iso {
+        Some(s) => format!("since={s}"),
+        None => "since=NULL".to_owned(),
+    };
+    tx.execute(
+        "INSERT INTO audit_events_cache (ts, op, backend, project, bytes, reason) \
+         VALUES (?1, 'delta_sync', ?2, ?3, ?4, ?5)",
+        params![
+            Utc::now().to_rfc3339(),
+            backend,
+            project,
+            i64::try_from(items_returned).unwrap_or(i64::MAX),
+            reason,
+        ],
+    )?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::db::open_cache_db;
+    use tempfile::tempdir;
+
+    #[test]
+    fn log_delta_sync_tx_inserts_row() {
+        let tmp = tempdir().unwrap();
+        let mut conn = open_cache_db(tmp.path()).unwrap();
+        let tx = conn.transaction().unwrap();
+        log_delta_sync_tx(&tx, "sim", "demo", Some("2026-04-24T00:00:00Z"), 3).unwrap();
+        tx.commit().unwrap();
+        let n: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM audit_events_cache WHERE op = 'delta_sync'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(n, 1);
+        let (bytes, reason): (i64, String) = conn
+            .query_row(
+                "SELECT bytes, reason FROM audit_events_cache WHERE op = 'delta_sync'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(bytes, 3);
+        assert_eq!(reason, "since=2026-04-24T00:00:00Z");
+    }
+
+    #[test]
+    fn log_delta_sync_tx_roll_back_does_not_leak_row() {
+        // Atomicity proof at the unit level: dropping the tx without
+        // commit must roll back the audit insert.
+        let tmp = tempdir().unwrap();
+        let mut conn = open_cache_db(tmp.path()).unwrap();
+        let tx = conn.transaction().unwrap();
+        log_delta_sync_tx(&tx, "sim", "demo", Some("2026-04-24T00:00:00Z"), 1).unwrap();
+        // Intentionally drop without commit.
+        drop(tx);
+        let n: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM audit_events_cache WHERE op = 'delta_sync'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(n, 0, "rollback must not leave the delta_sync row");
+    }
+
+    #[test]
+    fn log_delta_sync_tx_handles_null_since() {
+        let tmp = tempdir().unwrap();
+        let mut conn = open_cache_db(tmp.path()).unwrap();
+        let tx = conn.transaction().unwrap();
+        log_delta_sync_tx(&tx, "sim", "demo", None, 0).unwrap();
+        tx.commit().unwrap();
+        let reason: String = conn
+            .query_row(
+                "SELECT reason FROM audit_events_cache WHERE op = 'delta_sync'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(reason, "since=NULL");
+    }
+}
