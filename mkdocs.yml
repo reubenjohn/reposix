@@ -1,5 +1,5 @@
 site_name: reposix
-site_description: Git-backed FUSE filesystem exposing REST APIs as POSIX files for autonomous agents
+site_description: Edit issues as files. git push to sync. Zero MCP schema tokens.
 site_url: https://reubenjohn.github.io/reposix/
 repo_name: reubenjohn/reposix
 repo_url: https://github.com/reubenjohn/reposix
@@ -8,15 +8,17 @@ edit_uri: edit/main/docs/
 theme:
   name: material
   palette:
-    - scheme: default
-      primary: deep purple
-      accent: amber
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: teal
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    - scheme: slate
-      primary: deep purple
-      accent: amber
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: teal
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -24,18 +26,40 @@ theme:
     - navigation.instant
     - navigation.tracking
     - navigation.sections
-    - navigation.expand
     - navigation.top
+    - navigation.indexes
     - search.suggest
     - search.highlight
     - content.code.copy
     - content.code.annotate
     - content.tabs.link
+    - toc.follow
   icon:
     repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+  font:
+    text: Inter
+    code: JetBrains Mono
 
+# Files intentionally excluded from the nav. Anything else missing from the nav
+# is a bug — `mkdocs build --strict` will fail.
 not_in_nav: |
   archive/*
+  social/*
+  screenshots/*
+  architecture.md
+  security.md
+  why.md
+  demo.md
+  connectors/guide.md
+  demos/index.md
+  reference/cli.md
+  reference/http-api.md
+  reference/git-remote.md
+  reference/crates.md
+  development/contributing.md
+  development/roadmap.md
 
 plugins:
   - search
@@ -69,6 +93,9 @@ markdown_extensions:
   - toc:
       permalink: true
 
+extra_css:
+  - stylesheets/extra.css
+
 extra:
   social:
     - icon: fontawesome/brands/github
@@ -76,27 +103,32 @@ extra:
 
 nav:
   - Home: index.md
-  - Why reposix: why.md
-  - Architecture: architecture.md
-  - Demos:
-      - Overview: demos/index.md
-      - Tier 2 walkthrough: demo.md
-  - Security: security.md
+  - Concepts:
+      - Mental model in 60 seconds: concepts/mental-model-in-60-seconds.md
+      - reposix vs MCP and SDKs: concepts/reposix-vs-mcp-and-sdks.md
+  - Tutorials:
+      - First run (5 min): tutorials/first-run.md
+  - How it works:
+      - The filesystem layer: how-it-works/filesystem-layer.md
+      - The git layer: how-it-works/git-layer.md
+      - The trust model: how-it-works/trust-model.md
+  - Guides:
+      - Write your own connector: guides/write-your-own-connector.md
+      - Integrate with your agent: guides/integrate-with-your-agent.md
+      - Troubleshooting: guides/troubleshooting.md
+  - Reference:
+      - Simulator: reference/simulator.md
+      - Testing targets: reference/testing-targets.md
+      - JIRA backend: reference/jira.md
+      - Confluence backend: reference/confluence.md
+  - Benchmarks:
+      - v0.9.0 latency: benchmarks/v0.9.0-latency.md
   - Decisions:
       - ADR-001 GitHub state mapping: decisions/001-github-state-mapping.md
       - ADR-002 Confluence page mapping: decisions/002-confluence-page-mapping.md
       - ADR-003 Nested mount layout: decisions/003-nested-mount-layout.md
+      - ADR-004 Backend connector rename: decisions/004-backend-connector-rename.md
+      - ADR-005 JIRA issue mapping: decisions/005-jira-issue-mapping.md
   - Research:
-      - Architectural argument: research/initial-report.md
+      - Initial report: research/initial-report.md
       - Agentic engineering reference: research/agentic-engineering-reference.md
-  - Reference:
-      - Crates overview: reference/crates.md
-      - CLI: reference/cli.md
-      - HTTP API (simulator): reference/http-api.md
-      - git remote helper: reference/git-remote.md
-      - Confluence backend: reference/confluence.md
-  - Connectors:
-      - Building your own: connectors/guide.md
-  - Development:
-      - Contributing: development/contributing.md
-      - Roadmap (v0.2+): development/roadmap.md
