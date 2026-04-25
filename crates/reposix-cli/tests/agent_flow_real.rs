@@ -142,9 +142,12 @@ fn dark_factory_real_confluence() {
     let tenant = std::env::var("REPOSIX_CONFLUENCE_TENANT").expect("env-presence checked above");
     let expected_prefix = format!("reposix::https://{tenant}.atlassian.net/");
     let url = run_init_and_assert("confluence::TokenWorld", &expected_prefix);
+    // Phase 36-followup: the `/confluence/` path marker is required so
+    // the helper's URL-scheme dispatcher (crates/reposix-remote/src/
+    // backend_dispatch.rs) picks the Confluence backend instead of JIRA.
     assert!(
-        url.ends_with("/projects/TokenWorld"),
-        "url should target TokenWorld project, got {url}"
+        url.ends_with("/confluence/projects/TokenWorld"),
+        "url should encode the /confluence/ marker + TokenWorld project, got {url}"
     );
 }
 
@@ -158,10 +161,12 @@ fn dark_factory_real_jira() {
     let expected_prefix = format!("reposix::https://{instance}.atlassian.net/");
     let spec = format!("jira::{project}");
     let url = run_init_and_assert(&spec, &expected_prefix);
-    let expected_suffix = format!("/projects/{project}");
+    // Phase 36-followup: the `/jira/` path marker disambiguates the
+    // JIRA URL from Confluence at the helper's backend-dispatch layer.
+    let expected_suffix = format!("/jira/projects/{project}");
     assert!(
         url.ends_with(&expected_suffix),
-        "url should target jira project {project}, got {url}"
+        "url should encode the /jira/ marker + project {project}, got {url}"
     );
 }
 
