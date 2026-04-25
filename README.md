@@ -1,6 +1,8 @@
 # reposix
 
-> A git-backed FUSE filesystem that exposes REST APIs as POSIX directories so autonomous LLM agents can use `cat`, `grep`, `sed`, and `git` instead of MCP tool schemas.
+> A git-native partial-clone bridge that exposes REST APIs as a real git working tree so autonomous LLM agents can use `cat`, `grep`, `sed`, and `git` instead of MCP tool schemas.
+
+> **v0.9.0 in progress — breaking change.** `reposix mount` (FUSE) is replaced by `reposix init <backend>::<project> <path>`, which bootstraps a partial-clone working tree backed by a `git-remote-reposix` promisor remote. See the [Quickstart (v0.9.0+)](#quickstart-v090) below and [`CHANGELOG.md`](CHANGELOG.md) for the migration note.
 
 [![CI](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml/badge.svg)](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml)
 [![Docs](https://github.com/reubenjohn/reposix/actions/workflows/docs.yml/badge.svg)](https://reubenjohn.github.io/reposix/)
@@ -45,6 +47,7 @@ Treat as alpha per Simon Willison's "proof of usage, not proof of concept" rule 
 | **v0.5** | Synthesized `_INDEX.md` sitemap in each FUSE bucket directory |
 | **v0.6** | Confluence write path (ADF↔Markdown, `create_issue`/`update_issue`/`delete_or_close`); labels overlay; `_INDEX.md` at tree + root level; `reposix refresh` subcommand |
 | **v0.7** | Contention/truncation/chaos hardening; honest token benchmarks (92.3% reduction); Confluence comments + attachments + whiteboards; docs reorg |
+| **v0.9** *(in progress)* | Architecture pivot — FUSE replaced by git-native partial clone via `git-remote-reposix` promisor remote. `reposix init <backend>::<project> <path>` bootstraps a real git working tree; agents `cat`/`grep`/`git push` with zero in-context CLI training. |
 
 Tracking artifacts live in [`.planning/`](.planning/). See [`HANDOFF.md`](HANDOFF.md) for v0.8+ direction (JIRA Cloud integration, `BackendConnector` rename, `Issue.extensions` field).
 
@@ -157,7 +160,36 @@ bash scripts/demos/assert.sh scripts/demos/01-edit-and-push.sh  # with marker-as
 bash scripts/demos/smoke.sh                   # full Tier 1 smoke suite (what CI runs)
 ```
 
-## Quickstart
+## Quickstart (v0.9.0)
+
+The v0.9.0 architecture replaces FUSE with a partial-clone working tree backed by a `git-remote-reposix` promisor remote — pure git, no kernel mount.
+
+```bash
+# Build the workspace.
+cargo build --release --workspace --bins
+export PATH="$PWD/target/release:$PATH"
+
+# Start the simulator (or point at a real backend — see below).
+reposix sim --bind 127.0.0.1:7878 &
+
+# Bootstrap a partial-clone working tree.
+reposix init sim::demo /tmp/reposix-demo
+
+# Agent UX is pure git from here.
+cd /tmp/reposix-demo
+git checkout origin/main          # lazy-fetches blobs as needed
+ls issues/                         # 0001.md  0002.md  ...
+cat issues/0001.md                 # YAML frontmatter + Markdown body
+sed -i 's/TODO/DONE/' issues/0001.md
+git commit -am 'mark issue 1 done'
+git push                           # round-trips through the helper to the backend
+```
+
+Migrating from `reposix mount`? Old: `reposix mount /tmp/m --backend sim --project demo` becomes new: `reposix init sim::demo /tmp/m`. The old form now exits with a one-line migration error.
+
+Real backends (when v0.9.0 ships): `reposix init github::reubenjohn/reposix /tmp/gh`, `reposix init confluence::TokenWorld /tmp/space`, `reposix init jira::TEST /tmp/jira`. See [`docs/reference/testing-targets.md`](docs/reference/testing-targets.md) for env-var setup.
+
+## Quickstart (v0.7.x — pre-FUSE-deletion)
 
 Linux only through v0.4; macOS / macFUSE tracked under HANDOFF OP-4. Runtime prereqs (both paths below):
 

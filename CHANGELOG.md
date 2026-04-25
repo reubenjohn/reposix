@@ -6,6 +6,31 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+### Breaking — v0.9.0 architecture pivot (FUSE → git-native partial clone)
+
+- **`reposix mount` is removed in v0.9.0.** The clap variant is retained
+  as a stub that emits a one-line migration error and exits non-zero, so
+  stale CI scripts surface the change loudly rather than continuing
+  silently. Phase 36 will delete the FUSE crate and the stub.
+- **New: `reposix init <backend>::<project> <path>`** — bootstraps a
+  partial-clone working tree backed by the `git-remote-reposix` promisor
+  remote. Runs `git init`, sets `extensions.partialClone=origin`,
+  configures `remote.origin.url=reposix::<scheme>://<host>/projects/<project>`,
+  and runs `git fetch --filter=blob:none origin` (best-effort).
+  Accepted backends: `sim`, `github`, `confluence`, `jira`. Confluence
+  and JIRA require `REPOSIX_CONFLUENCE_TENANT` / `REPOSIX_JIRA_INSTANCE`
+  env vars to construct the Atlassian Cloud host.
+- **Migration:**
+  ```bash
+  # Old (v0.8 and earlier — FUSE mount):
+  reposix mount /tmp/m --backend sim --project demo
+  # New (v0.9.0+ — partial-clone working tree):
+  reposix init sim::demo /tmp/m
+  ```
+  Subsequent agent UX is pure git: `cd /tmp/m && git checkout origin/main && cat issues/0001.md && git commit -am … && git push`. Zero
+  reposix CLI awareness required beyond `reposix init`.
+- **Rationale:** see `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md`. Headline numbers: every read no longer requires a live API call (cache-backed bare repo + lazy blob fetch); FUSE removes ~3.5 MiB of binary surface and the `fusermount3` runtime dependency.
+
 ## [v0.8.0] — 2026-04-16
 
 ### Breaking
