@@ -46,7 +46,7 @@ The layer has two pieces:
 - **`crates/reposix-cache/`** — a real on-disk bare git repo (built with [`gix`](https://github.com/Byron/gitoxide)) plus `cache.db` (SQLite, WAL mode). The bare repo holds the tree and any materialized blobs; `cache.db` holds the audit log and the `last_fetched_at` timestamp used for delta sync.
 - **The working tree** — created by `reposix init`, which runs `git init`, sets `extensions.partialClone=origin`, points `remote.origin.url` at the helper, and runs `git fetch --filter=blob:none`. After that command, the working tree is yours; reposix does not touch it again unless you `git fetch` or `git push`.
 
-Wire-level details (cache schema, audit columns, helper invocation flags) live in [Reference](../reference/cli.md). This page intentionally stays at user-experience altitude.
+Wire-level details (cache schema, audit columns, helper invocation flags) live in [the simulator reference](../reference/simulator.md) and [testing targets](../reference/testing-targets.md). This page intentionally stays at user-experience altitude.
 
 ## Failure modes
 
