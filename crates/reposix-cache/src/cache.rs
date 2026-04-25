@@ -274,6 +274,28 @@ impl Cache {
         );
     }
 
+    /// Write an `op='token_cost'` audit row — one per helper RPC turn.
+    /// `chars_in` is the request-bytes received from the agent; `chars_out`
+    /// is the response-bytes sent back. `kind` is `"fetch"` or `"push"`.
+    /// Token estimate is `chars / 4` (conservative English-text heuristic).
+    /// Best-effort: SQL errors WARN-log.
+    ///
+    /// See `.planning/research/v0.11.0-vision-and-innovations.md` §3c.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn log_token_cost(&self, chars_in: u64, chars_out: u64, kind: &str) {
+        let db = self.db.lock().expect("cache.db mutex poisoned");
+        crate::audit::log_token_cost(
+            &db,
+            &self.backend_name,
+            &self.project,
+            chars_in,
+            chars_out,
+            kind,
+        );
+    }
+
     /// Write an `op='helper_backend_instantiated'` audit row.
     /// Best-effort. Emitted by the git remote helper after the
     /// URL-scheme dispatcher resolves a `(backend_kind, project)`

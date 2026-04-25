@@ -338,6 +338,87 @@ pub fn log_sync_tag_written(
     }
 }
 
+/// Insert `op='cache_gc'` row — one per blob evicted by [`crate::Cache::gc`].
+///
+/// `oid` is the evicted blob's hex OID, `bytes` records the bytes
+/// reclaimed (size of the loose-object file on disk), and `reason`
+/// encodes the strategy + selection rule:
+///   - `evicted:strategy=lru` — least-recently-accessed blob
+///   - `evicted:strategy=ttl;age_days=N` — TTL strategy
+///   - `evicted:strategy=all` — wholesale eviction
+///   - `dry_run:strategy=...` — `--dry-run` flag set, nothing on disk changed
+///
+/// Best-effort: SQL errors WARN-log. Per CLAUDE.md threat model (v0.11.0 §3j)
+/// gc only ever evicts loose blob objects; tree/commit objects, refs, and
+/// sync tags are never touched.
+pub fn log_cache_gc(
+    conn: &Connection,
+    backend: &str,
+    project: &str,
+    oid_hex: &str,
+    bytes_reclaimed: u64,
+    reason: &str,
+) {
+    let res = conn.execute(
+        "INSERT INTO audit_events_cache (ts, op, backend, project, oid, bytes, reason) \
+         VALUES (?1, 'cache_gc', ?2, ?3, ?4, ?5, ?6)",
+        params![
+            Utc::now().to_rfc3339(),
+            backend,
+            project,
+            oid_hex,
+            i64::try_from(bytes_reclaimed).unwrap_or(i64::MAX),
+            reason,
+        ],
+    );
+    if let Err(e) = res {
+        warn!(target: "reposix_cache::audit_failure",
+              backend, project, oid = oid_hex, bytes_reclaimed, reason,
+              "log_cache_gc failed: {e}");
+    }
+}
+
+/// Insert `op='token_cost'` row — one per helper RPC turn (`fetch` or
+/// `push`). The `bytes` column carries the total chars (in+out) for
+/// quick aggregation; the `reason` column carries a small JSON blob
+/// `{"in":N,"out":M,"kind":"fetch|push"}` for full granular replay.
+///
+/// The token estimate is `chars / 4` — a conservative English-text
+/// heuristic. See `.planning/research/v0.11.0-vision-and-innovations.md` §3c.
+///
+/// Best-effort: SQL errors WARN-log.
+pub fn log_token_cost(
+    conn: &Connection,
+    backend: &str,
+    project: &str,
+    chars_in: u64,
+    chars_out: u64,
+    kind: &str,
+) {
+    // JSON-in-reason avoids adding a new column to the schema. The four
+    // numeric fields callers care about (chars_in, chars_out, est_in,
+    // est_out) all derive from `chars_in` and `chars_out` via `/ 4`, so
+    // we only persist the inputs and let the consumer derive estimates.
+    let reason = format!(r#"{{"in":{chars_in},"out":{chars_out},"kind":"{kind}"}}"#);
+    let total = chars_in.saturating_add(chars_out);
+    let res = conn.execute(
+        "INSERT INTO audit_events_cache (ts, op, backend, project, bytes, reason) \
+         VALUES (?1, 'token_cost', ?2, ?3, ?4, ?5)",
+        params![
+            Utc::now().to_rfc3339(),
+            backend,
+            project,
+            i64::try_from(total).unwrap_or(i64::MAX),
+            reason,
+        ],
+    );
+    if let Err(e) = res {
+        warn!(target: "reposix_cache::audit_failure",
+              backend, project, chars_in, chars_out, kind,
+              "log_token_cost failed: {e}");
+    }
+}
+
 /// Insert `op='tree_sync'` row. Best-effort: on SQL error, WARN and return.
 pub fn log_tree_sync(conn: &Connection, backend: &str, project: &str, items: usize) {
     let res = conn.execute(

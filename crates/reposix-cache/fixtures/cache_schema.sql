@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS audit_events_cache (
     -- 'helper_push_*' ops (ARCH-08, ARCH-10). On stale cache.db files
     -- the new ops will fail the CHECK and fall through the audit
     -- best-effort path (warn-logged); fresh caches see the full list.
+    -- v0.11.0 §3j adds 'cache_gc' (LRU/TTL/all eviction). v0.11.0 §3c
+    -- adds 'token_cost' (per-RPC token-economy ledger).
     op            TEXT    NOT NULL CHECK (op IN (
         'materialize',
         'egress_denied',
@@ -33,7 +35,9 @@ CREATE TABLE IF NOT EXISTS audit_events_cache (
         'helper_push_rejected_conflict',
         'helper_push_sanitized_field',
         'helper_backend_instantiated',
-        'sync_tag_written'
+        'sync_tag_written',
+        'cache_gc',
+        'token_cost'
     )),
     backend       TEXT    NOT NULL,
     project       TEXT    NOT NULL,

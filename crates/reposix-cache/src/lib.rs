@@ -32,6 +32,7 @@ pub mod cache;
 pub mod cli_compat;
 pub mod db;
 pub mod error;
+pub mod gc;
 pub mod meta;
 pub mod path;
 pub mod sync_tag;
@@ -45,6 +46,7 @@ pub mod sink;
 pub use builder::SyncReport;
 pub use cache::Cache;
 pub use error::{Error, Result};
+pub use gc::{gc_at, EvictedBlob, GcReport, GcStrategy, DEFAULT_MAX_AGE_DAYS, DEFAULT_MAX_SIZE_MB};
 pub use path::{resolve_cache_path, CACHE_DIR_ENV};
 pub use sync_tag::{
     format_sync_tag_slug, list_sync_tags_at, parse_sync_tag_timestamp, SyncTag, SYNC_TAG_PREFIX,
