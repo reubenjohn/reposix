@@ -13,7 +13,11 @@ CREATE TABLE IF NOT EXISTS audit_events_cache (
     -- cache.db files keep the older CHECK list. That's acceptable for
     -- v0.9.0 (pre-1.0, cache is local ephemeral state). Phase 33 adds
     -- 'delta_sync' alongside the helper_* ops the audit module already
-    -- inserts in best-effort mode (failures are warn-logged).
+    -- inserts in best-effort mode (failures are warn-logged). Phase 34
+    -- extends the list with 'blob_limit_exceeded' (ARCH-09) and the four
+    -- 'helper_push_*' ops (ARCH-08, ARCH-10). On stale cache.db files
+    -- the new ops will fail the CHECK and fall through the audit
+    -- best-effort path (warn-logged); fresh caches see the full list.
     op            TEXT    NOT NULL CHECK (op IN (
         'materialize',
         'egress_denied',
@@ -22,7 +26,12 @@ CREATE TABLE IF NOT EXISTS audit_events_cache (
         'helper_advertise',
         'helper_fetch',
         'helper_fetch_error',
-        'delta_sync'
+        'delta_sync',
+        'blob_limit_exceeded',
+        'helper_push_started',
+        'helper_push_accepted',
+        'helper_push_rejected_conflict',
+        'helper_push_sanitized_field'
     )),
     backend       TEXT    NOT NULL,
     project       TEXT    NOT NULL,

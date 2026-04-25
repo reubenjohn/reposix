@@ -161,6 +161,81 @@ impl Cache {
             stderr_tail,
         );
     }
+
+    /// Write an `op='blob_limit_exceeded'` audit row. Best-effort.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn log_blob_limit_exceeded(&self, want_count: u32, limit: u32) {
+        let db = self.db.lock().expect("cache.db mutex poisoned");
+        crate::audit::log_blob_limit_exceeded(
+            &db,
+            &self.backend_name,
+            &self.project,
+            want_count,
+            limit,
+        );
+    }
+
+    /// Write an `op='helper_push_started'` audit row. Best-effort.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn log_helper_push_started(&self, ref_name: &str) {
+        let db = self.db.lock().expect("cache.db mutex poisoned");
+        crate::audit::log_helper_push_started(&db, &self.backend_name, &self.project, ref_name);
+    }
+
+    /// Write an `op='helper_push_accepted'` audit row. Best-effort.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn log_helper_push_accepted(&self, files_touched: u32, summary: &str) {
+        let db = self.db.lock().expect("cache.db mutex poisoned");
+        crate::audit::log_helper_push_accepted(
+            &db,
+            &self.backend_name,
+            &self.project,
+            files_touched,
+            summary,
+        );
+    }
+
+    /// Write an `op='helper_push_rejected_conflict'` audit row. Best-effort.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn log_helper_push_rejected_conflict(
+        &self,
+        issue_id: &str,
+        local_version: u64,
+        backend_version: u64,
+    ) {
+        let db = self.db.lock().expect("cache.db mutex poisoned");
+        crate::audit::log_helper_push_rejected_conflict(
+            &db,
+            &self.backend_name,
+            &self.project,
+            issue_id,
+            local_version,
+            backend_version,
+        );
+    }
+
+    /// Write an `op='helper_push_sanitized_field'` audit row. Best-effort.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn log_helper_push_sanitized_field(&self, issue_id: &str, field: &str) {
+        let db = self.db.lock().expect("cache.db mutex poisoned");
+        crate::audit::log_helper_push_sanitized_field(
+            &db,
+            &self.backend_name,
+            &self.project,
+            issue_id,
+            field,
+        );
+    }
 }
 
 /// Structural accessor for a helper-fetch RPC-turn record. Implemented
