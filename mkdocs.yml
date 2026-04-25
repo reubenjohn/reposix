@@ -122,6 +122,7 @@ nav:
       - Integrate with your agent: guides/integrate-with-your-agent.md
       - Troubleshooting: guides/troubleshooting.md
   - Reference:
+      - Glossary: reference/glossary.md
       - Simulator: reference/simulator.md
       - Testing targets: reference/testing-targets.md
       - JIRA backend: reference/jira.md
