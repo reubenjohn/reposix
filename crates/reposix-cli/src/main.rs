@@ -170,6 +170,25 @@ enum Cmd {
         #[arg(long, default_value_t = 10)]
         limit: usize,
     },
+    /// Time-travel log of cache sync points (alias for `reposix history`
+    /// with the `--time-travel` framing from v0.11.0 §3b).
+    ///
+    /// `reposix log --time-travel` enumerates the `refs/reposix/sync/<ts>`
+    /// tags in the cache's bare repo, most-recent first. Default 10 entries
+    /// (cap with `--limit N`). Without `--time-travel` the subcommand is
+    /// reserved for future commit-graph-style log views.
+    Log {
+        /// List sync tags in reverse chronological order. Required today —
+        /// the bare `reposix log` form is reserved for future commit log
+        /// views.
+        #[arg(long)]
+        time_travel: bool,
+        /// Working-tree directory (a `reposix init`'d repo). Defaults to cwd.
+        path: Option<PathBuf>,
+        /// Cap on the number of entries printed (most-recent first).
+        #[arg(long, default_value_t = 10)]
+        limit: usize,
+    },
     /// Print the closest sync tag at-or-before a given RFC-3339 timestamp.
     ///
     /// Useful for "what did reposix think the world looked like at <ts>?".
@@ -272,6 +291,22 @@ async fn main() -> Result<()> {
         }
         Cmd::Spaces { backend } => spaces::run(backend).await,
         Cmd::History { path, limit } => {
+            let p = match path {
+                Some(p) => p,
+                None => std::env::current_dir()?,
+            };
+            history::run_history(p, Some(limit))
+        }
+        Cmd::Log {
+            time_travel,
+            path,
+            limit,
+        } => {
+            if !time_travel {
+                anyhow::bail!(
+                    "`reposix log` currently requires `--time-travel`; use `reposix history` for the same listing or wait for a future commit-graph view"
+                );
+            }
             let p = match path {
                 Some(p) => p,
                 None => std::env::current_dir()?,
