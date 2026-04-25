@@ -88,6 +88,19 @@ impl Cache {
             snap.commit().map_err(|e| Error::Git(e.to_string()))?;
         }
 
+        // Hide the private sync-tag namespace from `git upload-pack
+        // --advertise-refs`. Without this, every `refs/reposix/sync/<ts>`
+        // would leak into the helper's protocol-v2 advertisement and the
+        // agent's working tree would see (and try to fetch from) tags it
+        // has no business with. `transfer.hideRefs` is the only
+        // server-side knob that affects upload-pack's advertised set.
+        //
+        // Set unconditionally — the underlying `git config` write is
+        // idempotent (same value, no diff). We use raw `git config` here
+        // because gix's `set_value` writes to the in-memory snapshot only
+        // (the snapshot is dropped once we're done with `Cache::open`).
+        ensure_hide_sync_refs(&path)?;
+
         // cache.db lives inside the bare repo dir so a single path
         // scheme covers both git state and cache state.
         let db = open_cache_db(&path)?;
@@ -260,6 +273,40 @@ impl Cache {
             field,
         );
     }
+}
+
+/// Ensure `transfer.hideRefs` includes our private sync-tag namespace.
+/// Idempotent — `git config --add` skipping duplicate values would simplify
+/// this, but git treats `transfer.hideRefs` as a multi-valued key without
+/// dedup, so we read first and only add if absent.
+fn ensure_hide_sync_refs(repo_path: &std::path::Path) -> Result<()> {
+    let want = "refs/reposix/sync/";
+    // Read all current values; skip if already present.
+    let out = std::process::Command::new("git")
+        .arg("-C")
+        .arg(repo_path)
+        .args(["config", "--get-all", "transfer.hideRefs"])
+        .output()
+        .map_err(|e| Error::Git(format!("spawn `git config --get-all transfer.hideRefs`: {e}")))?;
+    // Exit code 1 with empty stdout means "key not set" — that's fine.
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    if stdout.lines().any(|l| l.trim() == want) {
+        return Ok(());
+    }
+    // Add the value.
+    let add = std::process::Command::new("git")
+        .arg("-C")
+        .arg(repo_path)
+        .args(["config", "--add", "transfer.hideRefs", want])
+        .output()
+        .map_err(|e| Error::Git(format!("spawn `git config --add transfer.hideRefs`: {e}")))?;
+    if !add.status.success() {
+        return Err(Error::Git(format!(
+            "git config --add transfer.hideRefs failed: {}",
+            String::from_utf8_lossy(&add.stderr).trim()
+        )));
+    }
+    Ok(())
 }
 
 /// Structural accessor for a helper-fetch RPC-turn record. Implemented

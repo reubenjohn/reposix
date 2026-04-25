@@ -34,6 +34,7 @@ pub mod db;
 pub mod error;
 pub mod meta;
 pub mod path;
+pub mod sync_tag;
 
 /// Privileged-sink stubs used to lock the Tainted-vs-Untainted
 /// discipline at compile time (see `tests/compile-fail/`). The module
@@ -45,3 +46,6 @@ pub use builder::SyncReport;
 pub use cache::Cache;
 pub use error::{Error, Result};
 pub use path::{resolve_cache_path, CACHE_DIR_ENV};
+pub use sync_tag::{
+    format_sync_tag_slug, list_sync_tags_at, parse_sync_tag_timestamp, SyncTag, SYNC_TAG_PREFIX,
+};

@@ -166,7 +166,18 @@ impl Cache {
         let head_path = self.path.join("HEAD");
         std::fs::write(&head_path, "ref: refs/heads/main\n")?;
 
-        Ok(commit_oid.detach())
+        // Time-travel: tag this seed-path commit as a sync point. Best-effort
+        // — a failed tag write should not poison the seed sync (which already
+        // committed `meta.last_fetched_at`).
+        let new_oid = commit_oid.detach();
+        if let Err(e) = self.tag_sync(new_oid, Utc::now()) {
+            tracing::warn!(target: "reposix_cache::sync_tag",
+                           backend = self.backend_name.as_str(),
+                           project = self.project.as_str(),
+                           "tag_sync (seed) failed: {e}");
+        }
+
+        Ok(new_oid)
     }
 
     /// Delta-sync the cache against the backend.
@@ -378,6 +389,16 @@ impl Cache {
                 items_returned,
             )?;
             tx.commit()?;
+        }
+
+        // Time-travel: tag the delta commit. Best-effort — the SQL
+        // transaction has already committed cursor + audit row, so a tag
+        // write failure here doesn't risk torn state, only loses the tag.
+        if let Err(e) = self.tag_sync(new_commit, Utc::now()) {
+            tracing::warn!(target: "reposix_cache::sync_tag",
+                           backend = self.backend_name.as_str(),
+                           project = self.project.as_str(),
+                           "tag_sync (delta) failed: {e}");
         }
 
         Ok(SyncReport {

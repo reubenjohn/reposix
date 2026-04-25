@@ -278,6 +278,35 @@ pub fn log_helper_push_sanitized_field(
     }
 }
 
+/// Insert `op='sync_tag_written'` row — one per `Cache::tag_sync` call.
+/// `ref_name` is the full ref written (`refs/reposix/sync/<ISO8601-no-colons>`);
+/// `commit_oid` is the synthesis-commit OID the tag points at.
+/// Best-effort: SQL errors WARN-log.
+pub fn log_sync_tag_written(
+    conn: &Connection,
+    backend: &str,
+    project: &str,
+    ref_name: &str,
+    commit_oid: &str,
+) {
+    let res = conn.execute(
+        "INSERT INTO audit_events_cache (ts, op, backend, project, oid, reason) \
+         VALUES (?1, 'sync_tag_written', ?2, ?3, ?4, ?5)",
+        params![
+            Utc::now().to_rfc3339(),
+            backend,
+            project,
+            commit_oid,
+            ref_name,
+        ],
+    );
+    if let Err(e) = res {
+        warn!(target: "reposix_cache::audit_failure",
+              backend, project, ref_name, oid = commit_oid,
+              "log_sync_tag_written failed: {e}");
+    }
+}
+
 /// Insert `op='tree_sync'` row. Best-effort: on SQL error, WARN and return.
 pub fn log_tree_sync(conn: &Connection, backend: &str, project: &str, items: usize) {
     let res = conn.execute(

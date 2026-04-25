@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS audit_events_cache (
         'helper_push_started',
         'helper_push_accepted',
         'helper_push_rejected_conflict',
-        'helper_push_sanitized_field'
+        'helper_push_sanitized_field',
+        'sync_tag_written'
     )),
     backend       TEXT    NOT NULL,
     project       TEXT    NOT NULL,
