@@ -4,7 +4,13 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Top-level reposix CLI: orchestrates simulator, partial-clone init, and refresh flows"
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "reposix CLI orchestrator: init, sim, list, refresh, spaces."
+readme = "../../README.md"
+keywords = ["cli", "agent", "git", "rest", "issue-tracker"]
+categories = ["command-line-utilities", "development-tools"]
 
 [[bin]]
 name = "reposix"

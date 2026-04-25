@@ -6,6 +6,55 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+## [v0.10.0] — 2026-04-25
+
+**Docs & Narrative Shine.** A docs-only milestone that ports the v0.9.0
+architecture pivot into a story a cold reader can absorb in 10 seconds.
+Diátaxis-structured site, 5-minute first-run tutorial that runs against
+the simulator end-to-end, "How it works" trio with mermaid diagrams,
+and a banned-words linter that mechanically enforces the
+progressive-disclosure framing rules. README rewritten — every adjective
+replaced with a measured number from
+`docs/benchmarks/v0.9.0-latency.md`.
+
+### Added
+
+- Diátaxis-structured docs site: Concepts / Tutorials / How it works / Guides / Reference / Benchmarks. (Phase 43.)
+- "Mental model in 60 seconds" + "reposix vs MCP and SDKs" concept pages (`docs/concepts/`). (Phase 40; DOCS-03.)
+- 5-minute first-run tutorial against the simulator (`docs/tutorials/first-run.md`). (Phase 42; DOCS-06.)
+- "How it works" trio: `docs/how-it-works/{filesystem-layer,git-layer,trust-model}.md` — each with one mermaid diagram. (Phase 41; DOCS-02.)
+- Three guides: `docs/guides/{write-your-own-connector,integrate-with-your-agent,troubleshooting}.md`. (Phase 42; DOCS-04.)
+- `docs/reference/simulator.md` — simulator relocated from "How it works" to Reference. (Phase 42; DOCS-05.)
+- `scripts/banned-words-lint.sh` + `docs/.banned-words.toml` — banned-words linter enforcing P1/P2 progressive-disclosure rules; pre-commit hook + CI integration. (Phase 43; DOCS-09.)
+- `.claude/skills/reposix-banned-words/SKILL.md` — project skill for self-checking before commit. (Phase 43; DOCS-09.)
+- `scripts/check_doc_links.py` — promoted from ad-hoc heredoc to committed cross-link integrity checker. (Phase 44; OP-4.)
+- mkdocs-material theme tuning (indigo + teal palette, navigation features, `content.code.copy`). (Phase 43; DOCS-08.)
+- `.planning/CATALOG.md` — file catalogue for ongoing repo hygiene.
+- `.planning/notes/v0.11.0-doc-polish-backlog.md` — major + minor findings from Phase 44 deferred to v0.11.0.
+
+### Changed
+
+- **README.md hero rewritten** — Tier 1–5 demo blocks (advertising removed `reposix mount` / `reposix demo` subcommands) replaced with a 102-line v0.9.0-aligned structure: hero with measured numbers, "What it is", 5-min Quick start, "How it works" one-paragraph linking to the trio, connectors table, project status, security cuts, contributing, license. Every adjective on the hero dereferences a number sourced from `docs/benchmarks/v0.9.0-latency.md` or v0.9.0 audit/threat-model artifacts. (Phase 45; DOCS-08, DOCS-11.)
+- Reference pages updated for v0.9.0 surface (`docs/reference/cli.md`, `docs/reference/crates.md`, `docs/reference/jira.md`, `docs/reference/confluence.md`).
+- `mkdocs.yml` nav restructured per Diátaxis; redirect stubs for carved-out pages (`architecture.md`, `security.md`, `connectors/guide.md`, `why.md`, `demo.md`).
+
+### Removed
+
+- `HANDOFF.md` — `STATE.md` is canonical.
+- 6 FUSE-era demo + dev scripts (`scripts/demos/{full,05-mount-real-github,06-mount-real-confluence,07-mount-real-confluence-tree}.sh`, `scripts/dev/test-{bucket,tree}-index.sh`).
+- `Mode::Fuse` + `FuseWorkload` from `reposix-swarm` (residue from v0.9.0 FUSE deletion).
+- `reposix-fuse` from `release.yml` tarball staging.
+
+### Documentation polish
+
+- 16 user-facing pages clarity-audited (Phase 44, DOCS-10); 2 critical findings fixed in `docs/reference/jira.md` and `docs/reference/confluence.md` (replaced `reposix mount` blocks with `reposix init`); 1 critical finding (README) escalated to Phase 45 and closed there.
+- 9 major + 17 minor doc-clarity findings deferred to v0.11.0 backlog.
+
+### Deferred
+
+- Playwright screenshots for landing + how-it-works + tutorial pages — `mkdocs-material[imaging]` social-card generation requires cairo system libs that are not installed on the dev host. Tracked in v0.11.0 doc-polish backlog. `scripts/take-screenshots.sh` stub committed for future contributors.
+- Helper hardcodes `SimBackend` in the `stateless-connect` handler — carry-forward tech debt from v0.9.0; resolution scheduled before v0.11.0 benchmark commits, NOT in v0.10.0 (out-of-scope per `.planning/REQUIREMENTS.md`).
+
 ## [v0.9.0] — 2026-04-24
 
 **Architecture Pivot — Git-Native Partial Clone.** reposix replaces the FUSE
@@ -824,7 +873,9 @@ See [PROJECT-STATUS.md](docs/archive/PROJECT-STATUS.md) for the v0.1/v0.2-era ti
 
 ---
 
-[Unreleased]: https://github.com/reubenjohn/reposix/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/reubenjohn/reposix/compare/v0.10.0...HEAD
+[v0.10.0]: https://github.com/reubenjohn/reposix/compare/v0.9.0...v0.10.0
+[v0.9.0]: https://github.com/reubenjohn/reposix/compare/v0.8.0...v0.9.0
 [v0.8.0]: https://github.com/reubenjohn/reposix/compare/v0.7.0...v0.8.0
 [v0.7.0]: https://github.com/reubenjohn/reposix/compare/v0.6.0...v0.7.0
 [v0.6.0]: https://github.com/reubenjohn/reposix/compare/v0.5.0...v0.6.0

@@ -4,7 +4,13 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Shared types for reposix: issues, projects, remote specs, errors"
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Shared types for reposix: BackendConnector trait, Issue/Project/RemoteSpec, Tainted<T>."
+readme = "../../README.md"
+keywords = ["agent", "git", "issue-tracker", "rest", "backend"]
+categories = ["development-tools", "api-bindings"]
 
 [dependencies]
 serde.workspace = true

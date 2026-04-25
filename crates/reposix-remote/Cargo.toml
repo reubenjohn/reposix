@@ -4,7 +4,13 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "git-remote-reposix helper translating git pushes/pulls to REST calls"
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "git-remote-reposix binary: stateless-connect + export protocol helper for reposix backends."
+readme = "../../README.md"
+keywords = ["git", "remote-helper", "agent", "rest", "partial-clone"]
+categories = ["development-tools", "command-line-utilities"]
 
 [[bin]]
 name = "git-remote-reposix"

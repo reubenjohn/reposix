@@ -4,7 +4,13 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Backing bare-repo cache built from REST responses via BackendConnector — substrate for the git-native architecture."
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "On-disk bare-repo cache built from REST responses; lazy blob materialization for git partial-clone."
+readme = "../../README.md"
+keywords = ["git", "cache", "agent", "rest", "partial-clone"]
+categories = ["development-tools", "caching"]
 
 [dependencies]
 reposix-core = { path = "../reposix-core" }

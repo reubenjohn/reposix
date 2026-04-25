@@ -51,9 +51,9 @@ The audit trail is `git log`. No SDK to vendor; no schemas to load.
 
 reposix's `8 ms` cache read is measured against the in-process simulator, but the architecture is exercised end-to-end against three real backends sanctioned by the project owner for aggressive testing:
 
-- **Confluence — [TokenWorld space](reference/testing-targets.md#confluence--tokenworld-space)** (Atlassian Cloud).
-- **GitHub — [`reubenjohn/reposix` issues](reference/testing-targets.md#github--reubenjohnreposix-issues)** (this project's own tracker).
-- **JIRA — [project `TEST`](reference/testing-targets.md#jira--project-test-overridable)** (overridable via `JIRA_TEST_PROJECT`).
+- **Confluence — [TokenWorld space](reference/testing-targets.md#confluence-tokenworld-space)** (Atlassian Cloud).
+- **GitHub — [`reubenjohn/reposix` issues](reference/testing-targets.md#github-reubenjohnreposix-issues)** (this project's own tracker).
+- **JIRA — [project `TEST`](reference/testing-targets.md#jira-project-test-overridable)** (overridable via `JIRA_TEST_PROJECT`).
 
 Latency for each backend is captured in [`docs/benchmarks/v0.9.0-latency.md`](benchmarks/v0.9.0-latency.md). Sim cold init is `24 ms` (soft threshold `500 ms`); list-issues `9 ms`; capabilities probe `5 ms`. Real-backend cells fill in once CI secret packs are wired (Phase 36).
 

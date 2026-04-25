@@ -4,7 +4,13 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Adversarial swarm harness: N concurrent simulated agents hammering the simulator or a real backend with realistic workload."
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Multi-agent contention/swarm test harness for reposix."
+readme = "../../README.md"
+keywords = ["swarm", "agent", "testing", "load-test", "reposix"]
+categories = ["development-tools::testing", "simulation"]
 
 [[bin]]
 name = "reposix-swarm"

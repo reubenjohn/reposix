@@ -135,7 +135,7 @@ use reposix_core::http::{client, ClientOpts};
 let http = client(ClientOpts::default())?;     // honors REPOSIX_ALLOWED_ORIGINS
 ```
 
-Do **NOT** call `reqwest::Client::new()` or `Client::builder()`. The workspace has a clippy `disallowed-methods` rule that rejects both at compile time. The reason: the egress allowlist is the single choke-point that prevents an attacker-influenced URL from smuggling private data to a non-allowlisted origin (see [trust model](../how-it-works/trust-model.md#concentric-rings--taint-in-audited-bytes-out)). A direct `reqwest::Client` bypasses the check.
+Do **NOT** call `reqwest::Client::new()` or `Client::builder()`. The workspace has a clippy `disallowed-methods` rule that rejects both at compile time. The reason: the egress allowlist is the single choke-point that prevents an attacker-influenced URL from smuggling private data to a non-allowlisted origin (see [trust model](../how-it-works/trust-model.md#concentric-rings-taint-in-audited-bytes-out)). A direct `reqwest::Client` bypasses the check.
 
 If your backend needs a custom timeout, retry, or connection pool, pass options through `ClientOpts` rather than constructing a client by hand. `crates/reposix-confluence/src/rate_limit.rs` is the canonical example of layering rate-limit logic on top of the standard client.
 

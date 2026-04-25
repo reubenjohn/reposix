@@ -4,7 +4,13 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Read-only Atlassian Confluence Cloud REST v2 adapter implementing the reposix-core BackendConnector trait"
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Confluence Cloud BackendConnector implementation for reposix."
+readme = "../../README.md"
+keywords = ["confluence", "atlassian", "agent", "git", "rest"]
+categories = ["api-bindings", "development-tools"]
 
 [lib]
 path = "src/lib.rs"

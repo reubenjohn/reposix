@@ -4,7 +4,13 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "In-process REST API simulator with rate limits, conflicts, and workflow rules"
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "In-process axum-based simulator of an issue-tracker REST API for reposix testing."
+readme = "../../README.md"
+keywords = ["simulator", "rest", "axum", "agent", "testing"]
+categories = ["development-tools::testing", "simulation"]
 
 [lib]
 path = "src/lib.rs"
