@@ -6,6 +6,10 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+### Added
+
+- **`reposix doctor`** — diagnostic CLI subcommand that audits a reposix-init'd working tree and prints copy-pastable fix commands. Checks 14 common setup pitfalls: git repo layout, `extensions.partialClone`, `remote.origin.url` scheme, `git-remote-reposix` on PATH, git version, cache DB integrity + readability, `audit_events_cache` table + append-only triggers (security guardrail), cache freshness via `meta.last_fetched_at`, `REPOSIX_ALLOWED_ORIGINS` and `REPOSIX_BLOB_LIMIT` sanity, sparse-checkout patterns, and `rustc` version. Severity-tiered output (OK / INFO / WARN / ERROR) ends in a tally summary. Exit code is 1 if any ERROR is reported. `--fix` applies the small allowlist of deterministic, non-destructive fixes inline (today: `git config extensions.partialClone origin`); never mutates cache, audit log, or backend. New module `crates/reposix-cli/src/doctor.rs` + integration tests `crates/reposix-cli/tests/doctor.rs`. See `.planning/research/v0.11.0-vision-and-innovations.md` §3a for the design intent. [§3a #1 month-2 ship.]
+
 ### Changed
 
 - **BREAKING: hard-renamed core types `IssueId` → `RecordId`, `Issue` → `Record`, `IssueStatus` → `RecordStatus`.** The original `Issue` vocabulary was too narrow — Records can be issues (sim, GitHub, JIRA), pages (Confluence), or any other backend-specific unit. Trait methods on `BackendConnector` follow: `list_issues`/`get_issue`/`create_issue`/`update_issue`/`delete_issue` → `*_record`. Free function `path::validate_issue_filename` → `validate_record_filename`. Error variant `Error::InvalidIssue` → `InvalidRecord`. Module `reposix-core/src/issue.rs` moved to `record.rs`. **YAML wire format unchanged** — the on-disk frontmatter still serializes `id`, `title`, `status`, etc. as before. **Migration:** in your own connector crate, search-and-replace the type names; trait method names follow the same `*_issue` → `*_record` rule. No compatibility aliases (precedent: ADR-004 `IssueBackend` → `BackendConnector`).
