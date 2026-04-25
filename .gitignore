@@ -37,8 +37,18 @@ demo/recording.gif
 # Local research scratch (committed manually)
 research/scratch/
 
-# Claude Code session artifacts (ephemeral; re-created on each run)
-.claude/
+# Claude Code session artifacts (ephemeral; re-created on each run).
+# We list specific subpaths instead of ignoring `.claude/` wholesale so
+# that project-level skills under `.claude/skills/` remain committed —
+# OP-4 (self-improving infrastructure) requires them to ship in lockstep
+# with the code they regression-test.
+.claude/settings.local.json
+.claude/worktrees/
+.claude/agents/
+.claude/conversations/
+.claude/sessions/
+.claude/cache/
+.claude/logs/
 
 # Byproducts of scripts/bench_token_economy.py not involving fixtures:
 runtime/bench-*.log

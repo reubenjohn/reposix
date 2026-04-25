@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo fmt:*)",
+      "Bash(cargo clippy:*)",
+      "Skill(gsd-health)",
+      "Skill(gsd-health:*)"
+    ]
+  }
+}

@@ -4,48 +4,54 @@ This file is read by every agent (Claude Code, Codex, Cursor, etc.) that opens t
 
 ## Project elevator pitch
 
-reposix exposes REST-based issue trackers (and similar SaaS systems) as a standard git repo via a git remote helper and partial clone. Agents use `cat`, `grep`, `sed`, and `git` on real workflows — no MCP tool schemas, no custom CLI. See `docs/research/initial-report.md` for the architectural argument and `docs/research/agentic-engineering-reference.md` for the dark-factory pattern that motivates the simulator-first approach.
+reposix exposes REST-based issue trackers (and similar SaaS systems) as a git-native partial clone, served by `git-remote-reposix` from a local bare-repo cache built from REST responses. Agents use `cat`, `grep`, `sed`, and `git` on real workflows — no MCP tool schemas, no custom CLI, no FUSE mount. See `docs/research/initial-report.md` for the architectural argument and `docs/research/agentic-engineering-reference.md` for the dark-factory pattern that motivates the simulator-first approach.
 
-## Architecture transition (v0.9.0 — in progress)
+## Architecture (git-native partial clone)
 
-> **Read `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` for the full design.**
+> **Source of truth:** `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` (ratified 2026-04-24).
 
-reposix is migrating from a FUSE virtual filesystem to git-native partial clone. Key changes:
+The reposix runtime has three pieces:
 
-- **DELETE `crates/reposix-fuse`** — no more FUSE daemon, fusermount3, or /dev/fuse dependency.
-- **`git-remote-reposix` becomes a promisor remote** via `stateless-connect` capability — blobs are lazy-fetched on demand.
-- **Push uses the existing `export` capability** — hybrid confirmed working in POC.
-- **Agent UX is pure git** — `git clone`, `cat`, `git push`. Zero reposix CLI awareness.
-- **Push-time conflict detection** — helper checks backend state at push time, rejects with standard git errors.
-- **Blob limit guardrail** — helper refuses to serve >N blobs, error message teaches agent to narrow scope via sparse-checkout.
+- **`reposix-cache`** — a real on-disk bare git repo built from REST responses via the `BackendConnector` trait. The cache produces a fully populated tree (filenames, directory structure, blob OIDs) but materializes blobs lazily — only when the helper requests one on git's behalf. Every materialization writes a row to the SQLite audit table; bytes return wrapped in `reposix_core::Tainted<Vec<u8>>`.
+- **`git-remote-reposix`** — a hybrid git remote helper. It advertises `stateless-connect` (read path: tunnels protocol-v2 fetch traffic to the cache's bare repo with `--filter=blob:none`) and `export` (push path: parses the fast-import stream, runs push-time conflict detection against the backend, applies REST writes on success). Refspec namespace is `refs/heads/*:refs/reposix/*`.
+- **`reposix init <backend>::<project> <path>`** — bootstraps a partial-clone working tree: `git init`, `extensions.partialClone=origin`, `remote.origin.url=reposix::<scheme>://<host>/projects/<project>`, then `git fetch --filter=blob:none origin`.
 
-References below marked "(pre-v0.9.0)" describe the FUSE architecture being replaced. Code references to `reposix-fuse` will be deleted during v0.9.0 phases.
+After `init`, agent UX is pure git: `cd <path> && git checkout origin/main && cat issues/<id>.md && grep -r TODO . && <edit> && git add . && git commit && git push`. Zero reposix CLI awareness required beyond `init`.
+
+Two guardrails are load-bearing for the dark-factory pattern:
+
+- **Push-time conflict detection.** The helper checks backend state when `git push` runs and rejects with the standard git "fetch first" error if the remote drifted. The agent recovers via `git pull --rebase && git push` — no custom protocol.
+- **Blob limit.** The helper refuses `command=fetch` requests that would materialize more than `REPOSIX_BLOB_LIMIT` blobs (default 200), with a stderr error that names `git sparse-checkout` as the recovery move. An agent unfamiliar with reposix observes the error and recovers without prompt engineering.
 
 ## Operating Principles (project-specific)
 
 The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The following are project-specific reinforcements, not replacements:
 
-1. **Simulator is the default / testing backend.** The simulator at `crates/reposix-sim/` is the default backend for every demo, unit test, and autonomous agent loop. Real backends (GitHub via `reposix-github`, Confluence via `reposix-confluence`) are guarded by the `REPOSIX_ALLOWED_ORIGINS` egress allowlist and require explicit credential env vars (`GITHUB_TOKEN`, `ATLASSIAN_API_KEY` + `ATLASSIAN_EMAIL` + `REPOSIX_CONFLUENCE_TENANT`). Autonomous mode never hits a real backend unless the user has put real creds in `.env` AND set a non-default allowlist. This is both a security constraint (fail-closed by default) and the StrongDM dark-factory pattern.
+1. **Simulator is the default / testing backend.** The simulator at `crates/reposix-sim/` is the default backend for every demo, unit test, and autonomous agent loop. Real backends (GitHub via `reposix-github`, Confluence via `reposix-confluence`, JIRA via `reposix-jira`) are guarded by the `REPOSIX_ALLOWED_ORIGINS` egress allowlist and require explicit credential env vars (`GITHUB_TOKEN`, `ATLASSIAN_API_KEY` + `ATLASSIAN_EMAIL` + `REPOSIX_CONFLUENCE_TENANT`, `JIRA_EMAIL` + `JIRA_API_TOKEN` + `REPOSIX_JIRA_INSTANCE`). Autonomous mode never hits a real backend unless the user has put real creds in `.env` AND set a non-default allowlist. This is both a security constraint (fail-closed by default) and the StrongDM dark-factory pattern.
 2. **Tainted by default.** Any byte that came from a remote (simulator counts) is tainted. Tainted content must not be routed into actions with side effects on other systems (e.g. don't echo issue bodies into `git push` to remotes outside an explicit allowlist). The lethal-trifecta mitigation matters even against the simulator, because the simulator is *seeded* by an agent and seed data is itself attacker-influenced.
-3. **Audit log is non-optional.** Every network-touching action gets a row in the simulator's SQLite audit table. If a feature can't write to the audit log, it's not done.
-4. **No hidden state.** Mount state, simulator state, and git remote helper state all live in committed-or-fixture artifacts. No "it works in my session" bugs.
-5. **Working tree = git repo.** The working tree must always be a real git checkout. The whole point of the design is `git diff` is the change set. (Pre-v0.9.0 this was a FUSE mount; post-v0.9.0 it's a partial-clone git repo.)
-6. **Real backends are first-class test targets.** Three canonical targets are sanctioned for aggressive testing: **Confluence space "TokenWorld"** (owned by the user; safe to mutate freely), **GitHub repo `reubenjohn/reposix` issues** (ours; safe to create/close issues during tests), and **JIRA project `TEST`** (default key; overridable via `JIRA_TEST_PROJECT` or `REPOSIX_JIRA_PROJECT`). See `docs/reference/testing-targets.md` (created in Phase 36) for env-var setup. Simulator remains the default (OP-1), but "simulator-only coverage" does NOT satisfy acceptance for transport-layer or performance claims.
+3. **Audit log is non-optional.** Every network-touching action — every blob materialization, every `command=fetch`, every `export` push (accept and reject) — gets a row in the simulator's SQLite audit table. If a feature can't write to the audit log, it's not done.
+4. **No hidden state.** Cache state, simulator state, and git remote helper state all live in committed-or-fixture artifacts. No "it works in my session" bugs.
+5. **Working tree IS a real git checkout.** The whole point of v0.9.0 is that `.git/` is real, not synthetic; `git diff` is the change set by construction, not by emulation. The partial clone (`extensions.partialClone=origin`) makes blobs lazy, but everything else is upstream git.
+6. **Real backends are first-class test targets.** Three canonical targets are sanctioned for aggressive testing: **Confluence space "TokenWorld"** (owned by the user; safe to mutate freely), **GitHub repo `reubenjohn/reposix` issues** (ours; safe to create/close issues during tests), and **JIRA project `TEST`** (default key; overridable via `JIRA_TEST_PROJECT` or `REPOSIX_JIRA_PROJECT`). See `docs/reference/testing-targets.md` for env-var setup, owner permission statement, and cleanup procedure. Simulator remains the default (OP-1), but "simulator-only coverage" does NOT satisfy acceptance for transport-layer or performance claims.
 
 ## Workspace layout
 
 ```
 crates/
-├── reposix-core/    # Shared types: Issue, Project, RemoteSpec, Error.
-├── reposix-sim/     # In-process axum HTTP simulator.
-├── reposix-fuse/    # FUSE daemon (BEING DELETED in v0.9.0 — see architecture transition above).
-├── reposix-remote/  # git-remote-reposix binary.
-└── reposix-cli/     # Top-level `reposix` CLI (orchestrator).
+├── reposix-core/        # Shared types: Issue, Project, RemoteSpec, Error, Tainted<T>.
+├── reposix-sim/         # In-process axum HTTP simulator.
+├── reposix-cache/       # On-disk bare-repo cache backed by gix; lazy blob materialization.
+├── reposix-remote/      # git-remote-reposix binary (stateless-connect + export).
+├── reposix-cli/         # Top-level `reposix` CLI (`init`, `sim`, `list`, `refresh`, `spaces`).
+├── reposix-github/      # GitHub Issues BackendConnector.
+├── reposix-confluence/  # Confluence Cloud BackendConnector.
+├── reposix-jira/        # JIRA Cloud BackendConnector.
+└── reposix-swarm/       # Multi-agent contention/swarm test harness.
 
-.planning/           # GSD project state. Do not hand-edit; use /gsd-* commands.
-research/            # Long-form research notes + red-team reports.
-docs/                # User-facing docs.
-runtime/             # gitignored — local sim DB, mount points.
+.planning/               # GSD project state. Do not hand-edit; use /gsd-* commands.
+docs/                    # User-facing docs (reference, benchmarks, demos, testing-targets).
+research/                # Long-form research notes + red-team reports.
+runtime/                 # gitignored — local sim DB, scratch working trees.
 ```
 
 ## Tech stack
@@ -53,7 +59,7 @@ runtime/             # gitignored — local sim DB, mount points.
 - Rust stable (1.82+ via `rust-toolchain.toml`).
 - Async: `tokio` 1.
 - Web: `axum` 0.7 + `reqwest` 0.12 (rustls only, never openssl-sys).
-- FUSE: `fuser` 0.17 with `default-features = false`. **(Pre-v0.9.0 — being deleted. See architecture transition above.)**
+- Git: `gix` 0.82 (pinned with `=` because gix is pre-1.0). **Runtime requirement: `git >= 2.34`** for `extensions.partialClone` + `stateless-connect`.
 - Storage: `rusqlite` 0.32 with `bundled` feature (no system libsqlite3).
 - Errors: `thiserror` for typed crate errors, `anyhow` only at binary boundaries.
 
@@ -62,36 +68,34 @@ runtime/             # gitignored — local sim DB, mount points.
 ```bash
 # Local dev loop
 cargo check --workspace                                   # fast type check
-cargo test --workspace                                    # unit tests
+cargo test --workspace                                    # unit + integration tests
 cargo clippy --workspace --all-targets -- -D warnings     # CI lint
 cargo fmt --all                                           # CI fmt
 
 # Run the stack
-cargo run -p reposix-sim                                  # start simulator on :7777
-cargo run -p reposix-fuse -- /tmp/reposix-mnt             # mount (when phase 3 lands)
-cargo run -p reposix-cli -- demo                          # canonical end-to-end demo
+cargo run -p reposix-sim                                  # start simulator on :7878
+cargo run -p reposix-cli -- init sim::demo /tmp/repo      # bootstrap a partial-clone working tree
+cd /tmp/repo && git checkout origin/main                  # agent UX from here is pure git
+cat issues/0001.md && grep -ril TODO . && git push        # cat, grep, edit, push
 
-# FUSE integration tests — require fusermount3; NEVER run without the feature flag.
-# `cargo test --workspace` intentionally excludes these (unsafe in WSL2, requires /dev/fuse).
-# The feature gate is compile-time: without it, FUSE test code is not in the binary at all.
-# NOTE: This entire block is removed in v0.9.0 Phase 36 — `crates/reposix-fuse/` is deleted there.
-cargo test -p reposix-fuse --release --features fuse-mount-tests -- --test-threads=1
+# Dark-factory regression (proves agent UX is pure git, zero in-context learning)
+bash scripts/dark-factory-test.sh sim                     # local + CI
 
-# Testing against real backends (v0.9.0+)
+# Testing against real backends — see docs/reference/testing-targets.md for env-var setup.
 # Confluence — TokenWorld space (safe to mutate)
 export ATLASSIAN_API_KEY=… ATLASSIAN_EMAIL=… REPOSIX_CONFLUENCE_TENANT=reuben-john
 export REPOSIX_ALLOWED_ORIGINS='https://reuben-john.atlassian.net'
-cargo test -p reposix-confluence --features live -- --ignored
+cargo test -p reposix-cli --test agent_flow_real -- --ignored dark_factory_real_confluence
 
 # GitHub — reubenjohn/reposix issues (safe to mutate)
 export GITHUB_TOKEN=…
 export REPOSIX_ALLOWED_ORIGINS='https://api.github.com'
-cargo test -p reposix-github --features live -- --ignored
+cargo test -p reposix-cli --test agent_flow_real -- --ignored dark_factory_real_github
 
-# JIRA — default project key TEST (overridable)
+# JIRA — default project key TEST (overridable via JIRA_TEST_PROJECT or REPOSIX_JIRA_PROJECT)
 export JIRA_EMAIL=… JIRA_API_TOKEN=… REPOSIX_JIRA_INSTANCE=…
-export JIRA_TEST_PROJECT=TEST        # or set REPOSIX_JIRA_PROJECT
-cargo test -p reposix-jira --features live -- --ignored
+export JIRA_TEST_PROJECT=TEST
+cargo test -p reposix-cli --test agent_flow_real -- --ignored dark_factory_real_jira
 ```
 
 ## GSD workflow
@@ -111,7 +115,7 @@ The auto-mode bootstrap from 2026-04-13 set `mode: yolo`, `granularity: coarse`,
 
 ## Coding conventions
 
-- `#![forbid(unsafe_code)]` in every crate. The `fuser` callbacks themselves are safe Rust.
+- `#![forbid(unsafe_code)]` in every crate.
 - `#![warn(clippy::pedantic)]` in every crate. Allow-list specific lints with rationale; never blanket-allow `pedantic`.
 - All public items documented; missing-doc lint is on for `reposix-core`.
 - All `Result`-returning functions have a `# Errors` doc section.
@@ -137,16 +141,16 @@ This project is a textbook lethal-trifecta machine:
 
 | Leg of trifecta | Where it shows up here |
 | --- | --- |
-| Private data | Mounted FUSE exposes issue bodies, internal field values, attachments. |
+| Private data | The partial-clone working tree exposes issue bodies, internal field values, attachments. |
 | Untrusted input | Every issue body / comment / title is attacker-influenced text. |
-| Exfiltration | `git push` can target arbitrary remotes; the FUSE daemon makes outbound HTTP. |
+| Exfiltration | `git push` can target arbitrary remotes; the helper + cache make outbound HTTP. |
 
 Cuts that are mandatory and tested:
 
-- **Outbound HTTP allowlist.** The FUSE daemon and remote helper refuse to talk to any origin not in `REPOSIX_ALLOWED_ORIGINS` (env var, defaults to `http://127.0.0.1:*` only).
-- **No shell escape from FUSE writes.** Writes are bytes-in-bytes-out; no rendering, no template expansion.
-- **Frontmatter field allowlist.** Server-controlled fields (`id`, `created_at`, `version`) cannot be overridden by client writes; they are stripped on the inbound path before serialization.
-- **Audit log is append-only.** SQLite WAL, no UPDATE/DELETE on the audit table.
+- **Outbound HTTP allowlist.** The remote helper (`git-remote-reposix`) and the cache materializer (`reposix-cache`) refuse to talk to any origin not in `REPOSIX_ALLOWED_ORIGINS` (env var, defaults to `http://127.0.0.1:*` only). All HTTP construction goes through the single `reposix_core::http::client()` factory; clippy's `disallowed_methods` catches direct `reqwest::Client::new()` call sites.
+- **No shell escape from `export` / cache writes.** Bytes-in-bytes-out; no rendering, no template expansion. The `Tainted<T>` → `Untainted<T>` conversion is the explicit `sanitize` step where escaping happens.
+- **Frontmatter field allowlist.** Server-controlled fields (`id`, `created_at`, `version`, `updated_at`) cannot be overridden by client writes; they are stripped on the inbound `export` path before the REST call.
+- **Audit log is append-only.** SQLite WAL, no UPDATE/DELETE on the audit table. Every blob materialization, every fetch, every push (accept and reject) writes a row.
 
 See `research/threat-model-and-critique.md` (produced by red-team subagent) for the full analysis.
 
@@ -161,7 +165,10 @@ If you (the agent) notice this CLAUDE.md getting hard to keep in working memory:
 
 ## Quick links
 
-- `docs/research/initial-report.md` — full architectural argument for FUSE + git-remote-helper.
+- `docs/research/initial-report.md` — full architectural argument for git-remote-helper + partial clone.
 - `docs/research/agentic-engineering-reference.md` — dark-factory pattern, lethal trifecta, simulator-first.
+- `docs/reference/testing-targets.md` — sanctioned real-backend test targets (TokenWorld, `reubenjohn/reposix`, JIRA `TEST`).
+- `docs/benchmarks/v0.9.0-latency.md` — golden-path latency envelope per backend.
+- `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` — ratified design doc for the v0.9.0 pivot.
 - `.planning/PROJECT.md` — current scope.
 - `.planning/STATE.md` — current cursor.

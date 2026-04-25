@@ -6,20 +6,28 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
-### Breaking — v0.9.0 architecture pivot (FUSE → git-native partial clone)
+## [v0.9.0] — 2026-04-24
 
-- **`reposix mount` is removed in v0.9.0.** The clap variant is retained
-  as a stub that emits a one-line migration error and exits non-zero, so
-  stale CI scripts surface the change loudly rather than continuing
-  silently. Phase 36 will delete the FUSE crate and the stub.
-- **New: `reposix init <backend>::<project> <path>`** — bootstraps a
-  partial-clone working tree backed by the `git-remote-reposix` promisor
-  remote. Runs `git init`, sets `extensions.partialClone=origin`,
-  configures `remote.origin.url=reposix::<scheme>://<host>/projects/<project>`,
-  and runs `git fetch --filter=blob:none origin` (best-effort).
-  Accepted backends: `sim`, `github`, `confluence`, `jira`. Confluence
-  and JIRA require `REPOSIX_CONFLUENCE_TENANT` / `REPOSIX_JIRA_INSTANCE`
-  env vars to construct the Atlassian Cloud host.
+**Architecture Pivot — Git-Native Partial Clone.** reposix replaces the FUSE
+virtual filesystem with git's built-in partial clone mechanism. The
+`git-remote-reposix` helper is now a hybrid promisor remote (advertises both
+`stateless-connect` for reads and `export` for push) tunnelling protocol-v2
+traffic to a local bare-repo cache built from REST responses. Agents interact
+with the project using only standard git commands (`clone`, `fetch`, `cat`,
+`grep`, `commit`, `push`) — zero reposix-specific CLI awareness required.
+
+### Breaking
+
+- **`reposix mount` is REMOVED.** The subcommand is gone; running it exits
+  non-zero with clap's "unrecognized subcommand" error. Stale CI scripts will
+  surface the change loudly rather than continuing silently.
+- **`reposix demo` is REMOVED.** The FUSE-backed scripted demo is replaced by
+  `scripts/dark-factory-test.sh sim` plus the cargo `agent_flow` test suite.
+- **`crates/reposix-fuse/` is DELETED.** The FUSE crate, the `fuser`
+  workspace dependency, the `fuse-mount-tests` feature gate, and all CI
+  references to `apt install fuse3` / `/dev/fuse` / `fusermount3` have been
+  removed. The `integration (mounted FS)` and `demos-smoke` CI jobs are
+  replaced by the `dark-factory` job.
 - **Migration:**
   ```bash
   # Old (v0.8 and earlier — FUSE mount):
@@ -29,33 +37,116 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
   ```
   Subsequent agent UX is pure git: `cd /tmp/m && git checkout origin/main && cat issues/0001.md && git commit -am … && git push`. Zero
   reposix CLI awareness required beyond `reposix init`.
-- **Rationale:** see `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md`. Headline numbers: every read no longer requires a live API call (cache-backed bare repo + lazy blob fetch); FUSE removes ~3.5 MiB of binary surface and the `fusermount3` runtime dependency.
+- **Runtime requirement:** `git >= 2.34` (for `extensions.partialClone` +
+  `stateless-connect`).
 
 ### Added
 
+- **`reposix init <backend>::<project> <path>`** — bootstraps a partial-clone
+  working tree backed by the `git-remote-reposix` promisor remote. Runs
+  `git init`, sets `extensions.partialClone=origin`, configures
+  `remote.origin.url=reposix::<scheme>://<host>/projects/<project>`, and runs
+  `git fetch --filter=blob:none origin` (best-effort). Accepted backends:
+  `sim`, `github`, `confluence`, `jira`. Confluence and JIRA require
+  `REPOSIX_CONFLUENCE_TENANT` / `REPOSIX_JIRA_INSTANCE` env vars to construct
+  the Atlassian Cloud host. (Phase 35; ARCH-11.)
+- **`crates/reposix-cache/`** — new crate. On-disk bare git repo built from
+  REST responses via the `BackendConnector` trait. Lazy blob materialization,
+  per-blob audit row, `Tainted<Vec<u8>>` returns, `REPOSIX_ALLOWED_ORIGINS`
+  enforcement via the single `reposix_core::http::client()` factory. (Phase
+  31; ARCH-01..03.)
+- **`stateless-connect` capability** in `git-remote-reposix`. The helper
+  advertises and tunnels protocol-v2 fetch traffic (handshake, ls-refs,
+  fetch with filter) to the cache's bare repo. Co-exists with the existing
+  `export` capability for push. Refspec namespace `refs/heads/*:refs/reposix/*`.
+  (Phase 32; ARCH-04..05.)
+- **Delta sync** via `BackendConnector::list_changed_since(timestamp)`.
+  All backends implement the trait method using their native incremental
+  query (`?since=`, JQL `updated >= …`, CQL `lastModified > …`, sim
+  filtered list). One audit row per delta-sync. (Phase 33; ARCH-06..07.)
+- **Push-time conflict detection** in the `export` handler. Helper fetches
+  the current backend version per changed file; on drift, emits the standard
+  `error refs/heads/main fetch first` line — git renders the canonical
+  "perhaps a `git pull` would help" hint. Audit row for every push (accept
+  and reject). (Phase 34; ARCH-08.)
+- **Blob limit guardrail.** Helper counts `want <oid>` lines per
+  `command=fetch` and refuses if the count exceeds `REPOSIX_BLOB_LIMIT`
+  (default 200). Refusal stderr names `git sparse-checkout` as the recovery
+  move — self-teaching. (Phase 34; ARCH-09.)
+- **Frontmatter field allowlist on push.** Server-controlled fields (`id`,
+  `created_at`, `version`, `updated_at`) are stripped from inbound writes
+  before the REST call. (Phase 34; ARCH-10.)
+- **`scripts/dark-factory-test.sh`** + `crates/reposix-cli/tests/agent_flow.rs`
+  — dark-factory regression test that proves the architecture's
+  "pure git, zero in-context learning" thesis. Three scenarios: working
+  tree shape (live), conflict-rebase teaching string presence
+  (regression), blob-limit teaching string presence (regression).
+  (Phase 35-02; ARCH-12.)
+- **`crates/reposix-cli/tests/agent_flow_real.rs`** — three real-backend
+  init smoke tests gated on env-var presence via `skip_if_no_env!`.
+  Per T-11B-01, the macro logs only env-var names, never values.
+  (Phase 35-03; ARCH-16.)
 - **v0.9.0 latency envelope** captured at `docs/benchmarks/v0.9.0-latency.md`
   (regenerator: `bash scripts/v0.9.0-latency.sh`). Markdown table with
   per-step wall-clock latencies for sim and (when creds present) the
   three real-backend targets. Soft thresholds: sim cold init < 500ms,
   real-backend step < 3s — both regression-flagged via `WARN:` lines,
-  not CI-blocking. (Phase 35-04.)
+  not CI-blocking. (Phase 35-04; ARCH-17.)
 - **`docs/reference/testing-targets.md`** — canonical doc enumerating
   the three sanctioned real-backend test targets: Confluence space
   `TokenWorld` (owner-sanctioned scratchpad), GitHub `reubenjohn/reposix`
   issues, and JIRA project `TEST` (overridable via `JIRA_TEST_PROJECT`
   or `REPOSIX_JIRA_PROJECT`). Owner permission statement
   ("TokenWorld is for testing — go crazy, it's safe.") quoted verbatim
-  per CLAUDE.md OP-6. (Phase 35-04.)
-- **`scripts/dark-factory-test.sh`** + `crates/reposix-cli/tests/agent_flow.rs`
-  — dark-factory regression test that proves the architecture's
-  "pure git, zero in-context learning" thesis. Three scenarios: working
-  tree shape (live), conflict-rebase teaching string presence
-  (regression), blob-limit teaching string presence (regression).
-  (Phase 35-02.)
-- **`crates/reposix-cli/tests/agent_flow_real.rs`** — three real-backend
-  init smoke tests gated on env-var presence via `skip_if_no_env!`.
-  Per T-11B-01, the macro logs only env-var names, never values.
-  (Phase 35-03.)
+  per CLAUDE.md OP-6. (Phase 35-04; ARCH-18.)
+- **`.claude/skills/reposix-agent-flow/SKILL.md`** — Claude Code skill
+  that encodes the dark-factory regression as a discoverable, agent-
+  invokable harness. Names the canonical real-backend targets; default
+  invocation is sim. Wired into CI's `dark-factory` job and the three
+  `integration-contract-*-v09` jobs. (Phase 36; ARCH-15.)
+- **CI: `dark-factory` job** (sim regression) replacing the FUSE
+  `integration (mounted FS)` job, plus three new
+  `integration-contract-{confluence,github,jira}-v09` jobs that run the
+  ARCH-16 smoke suite when secrets are present (skip cleanly with
+  `pending-secrets` when absent). (Phase 36; ARCH-19.)
+- **`scripts/tag-v0.9.0.sh`** — eight-guard release tag script (mirrors
+  v0.8.0's seven; adds an ARCH-18 guard that
+  `docs/reference/testing-targets.md` exists).
+
+### Changed
+
+- **CLAUDE.md rewritten** for the steady-state v0.9.0 architecture:
+  new `## Architecture (git-native partial clone)` section replacing the
+  v0.9.0-in-progress banner; threat model updated (helper + cache are now
+  the egress surfaces, governed by `REPOSIX_ALLOWED_ORIGINS`); FUSE
+  references purged from elevator pitch, Workspace layout, Tech stack,
+  Commands, and Operating Principles. (Phase 36; ARCH-14.)
+- **Workspace + crate descriptions** updated to "git-native partial clone"
+  (was "git-backed FUSE filesystem"). Workspace version bumped to 0.9.0.
+
+### Removed
+
+- `crates/reposix-fuse/` (entire crate — ARCH-13).
+- `crates/reposix-cli/src/mount.rs` — child-process wrapper around the
+  FUSE binary.
+- `crates/reposix-cli/src/demo.rs` — FUSE-backed scripted demo.
+- `Cmd::Mount` and `Cmd::Demo` clap variants from the CLI dispatcher.
+- `fuse-mount-tests` feature gate and the `demo_exits_zero_within_30s`
+  test case.
+- CI: `integration (mounted FS)` job, `demos-smoke` job, all `apt-get
+  install fuse3` references.
+
+### Threat model
+
+The lethal trifecta shrinks: deleting the FUSE daemon (a privileged kernel-
+interface process holding `/dev/fuse`) eliminates one egress surface. The
+remote helper (`git-remote-reposix`) and the cache materializer (`reposix-
+cache`) are now the sole egress surfaces, governed by the same
+`REPOSIX_ALLOWED_ORIGINS` allowlist via the single
+`reposix_core::http::client()` factory. The frontmatter field allowlist
+(stripping `id`/`created_at`/`version`/`updated_at` on push) is now
+enforced on the `export` path; the `Tainted<T>` → sanitized conversion is
+the explicit boundary.
 
 ## [v0.8.0] — 2026-04-16
 

@@ -2,7 +2,7 @@
 
 > A git-native partial-clone bridge that exposes REST APIs as a real git working tree so autonomous LLM agents can use `cat`, `grep`, `sed`, and `git` instead of MCP tool schemas.
 
-> **v0.9.0 in progress — breaking change.** `reposix mount` (FUSE) is replaced by `reposix init <backend>::<project> <path>`, which bootstraps a partial-clone working tree backed by a `git-remote-reposix` promisor remote. See the [Quickstart (v0.9.0+)](#quickstart-v090) below and [`CHANGELOG.md`](CHANGELOG.md) for the migration note.
+> **v0.9.0 — breaking change shipped.** `reposix mount` (FUSE) has been removed; use `reposix init <backend>::<project> <path>`, which bootstraps a partial-clone working tree backed by a `git-remote-reposix` promisor remote. See the [Quickstart (v0.9.0+)](#quickstart-v090) below and [`CHANGELOG.md`](CHANGELOG.md) for the migration note. Full v0.7.x quickstart preserved below for archival reference.
 
 [![CI](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml/badge.svg)](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml)
 [![Docs](https://github.com/reubenjohn/reposix/actions/workflows/docs.yml/badge.svg)](https://reubenjohn.github.io/reposix/)
@@ -12,7 +12,7 @@
 [![Release](https://img.shields.io/github/v/release/reubenjohn/reposix?include_prereleases)](https://github.com/reubenjohn/reposix/releases)
 
 <p align="center">
-  <img src="docs/social/assets/hero.png" alt="reposix — git-backed FUSE filesystem for autonomous agents" width="100%">
+  <img src="docs/social/assets/hero.png" alt="reposix — git-native partial clone for autonomous agents" width="100%">
 </p>
 
 <p align="center"><em>"Agents already know <code>cat</code> and <code>git</code>. They don't know your JSON schema."</em></p>
@@ -47,7 +47,7 @@ Treat as alpha per Simon Willison's "proof of usage, not proof of concept" rule 
 | **v0.5** | Synthesized `_INDEX.md` sitemap in each FUSE bucket directory |
 | **v0.6** | Confluence write path (ADF↔Markdown, `create_issue`/`update_issue`/`delete_or_close`); labels overlay; `_INDEX.md` at tree + root level; `reposix refresh` subcommand |
 | **v0.7** | Contention/truncation/chaos hardening; honest token benchmarks (92.3% reduction); Confluence comments + attachments + whiteboards; docs reorg |
-| **v0.9** *(in progress)* | Architecture pivot — FUSE replaced by git-native partial clone via `git-remote-reposix` promisor remote. `reposix init <backend>::<project> <path>` bootstraps a real git working tree; agents `cat`/`grep`/`git push` with zero in-context CLI training. |
+| **v0.9** | Architecture pivot — FUSE replaced by git-native partial clone via `git-remote-reposix` promisor remote (`stateless-connect` + `export`). `reposix init <backend>::<project> <path>` bootstraps a real git working tree; agents `cat`/`grep`/`git push` with zero in-context CLI training. `crates/reposix-fuse/` deleted; `dark-factory` regression replaces FUSE integration tests. |
 
 Tracking artifacts live in [`.planning/`](.planning/). See [`HANDOFF.md`](HANDOFF.md) for v0.8+ direction (JIRA Cloud integration, `BackendConnector` rename, `Issue.extensions` field).
 
