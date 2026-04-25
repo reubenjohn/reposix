@@ -17,12 +17,25 @@ Commands:
   spaces   List readable Confluence spaces (Confluence backend only)
   doctor   Diagnose a reposix working tree and print fix commands
   history  List sync tags (time-travel snapshots) for a working tree
+  log      Time-travel log alias (--time-travel) for sync history
   at       Find the closest sync tag at-or-before a timestamp
-  gc       Evict materialized blobs from a reposix cache
+  gc       Evict materialized blobs (or detect orphan caches) from reposix state
   tokens   Print a token-economy ledger from the audit log
+  cost     Per-op cost table over the token-cost ledger (Markdown)
   version  Print the version
   help     Print this message or the help of the given subcommand(s)
 ```
+
+## Common workflows
+
+After every `reposix init`, run `reposix doctor` to verify your setup. If anything fails, copy the `Fix:` line from the finding and run it. The doctor output is the single answer to "is reposix wired correctly here?".
+
+For long-running deployments:
+
+- `reposix history` (or `reposix log --time-travel`) shows the cache's sync points; pair with [`reposix at <ts>`](#reposix-at) to find the snapshot for a specific time.
+- `reposix init --since=<ts>` bootstraps a fresh working tree pinned to a historical snapshot — useful for "show me what this issue looked like when the bug was filed".
+- `reposix cost --since 7d` aggregates the last week of token spend by op kind for billing or cost-monitoring dashboards.
+- `reposix gc --orphans` enumerates caches whose owning working trees have been deleted; pair with `--purge` to actually reclaim disk space.
 
 ## `reposix init`
 
@@ -39,8 +52,13 @@ reposix init jira::TEST /tmp/jira
 |---|---|---|
 | `<spec>` | `<backend>::<project>` | `sim`, `github`, `confluence`, or `jira` plus a project / repo / space / key. |
 | `<path>` | filesystem path | Working-tree location (parents created as needed). |
+| `--since=<RFC3339>` | optional flag | Rewind the working tree to the closest cache sync tag at-or-before `<ts>` (time-travel init). Errors clearly when no such tag exists. |
 
 `init` runs `git init`, four `git config` lines wiring the partial-clone promisor remote, and a best-effort `git fetch --filter=blob:none origin`. The working tree is plain git afterwards. Tree metadata is fetched eagerly; blobs are fetched on demand on first read.
+
+After `init` succeeds, the absolute working-tree path is recorded in `cache.db::meta.worktrees` so [`reposix gc --orphans`](#reposix-gc) can later detect caches whose owning working tree has been deleted.
+
+With `--since=<RFC3339>`, `init` reads sync tags from the cache's bare repo, picks the closest one at-or-before the timestamp, runs `git fetch --filter=blob:none <cache-path> <commit-oid>` from the working tree to bring the historical commit's tree into the local object store, and rewinds `refs/heads/main` + `refs/remotes/origin/main` to that commit. `git checkout main` then puts the agent at the historical snapshot. Errors with a clear message when no tag exists at-or-before the target.
 
 `confluence::` and `jira::` specs require `REPOSIX_CONFLUENCE_TENANT` or `REPOSIX_JIRA_INSTANCE`. See [Confluence](confluence.md) and [JIRA](jira.md) for credential setup.
 
@@ -105,21 +123,26 @@ reposix doctor --fix /tmp/repo  # also apply safe fixes inline
 | `<path>` | cwd | Working tree to audit. |
 | `--fix` | off | Apply deterministic, non-destructive fixes (today: `git config extensions.partialClone origin`). Never mutates cache, audit log, or backend. |
 
-Checks performed (each finding is OK / INFO / WARN / ERROR):
+Checks performed (each finding is OK / INFO / WARN / ERROR; copy-pastable `Fix:` line below the message when applicable):
 
-- Working tree is a git repo.
-- `extensions.partialClone=origin` set.
-- `remote.origin.url` uses `reposix::` scheme + parses cleanly.
-- `git-remote-reposix` helper binary on PATH.
-- `git --version >= 2.34` (>=2.27 minimum).
-- Cache DB exists and opens cleanly.
-- `audit_events_cache` table present + non-empty.
-- `audit_cache_no_update` / `audit_cache_no_delete` append-only triggers present (security guardrail).
-- `meta.last_fetched_at` not older than 24h.
-- `REPOSIX_ALLOWED_ORIGINS` sane for the configured remote.
-- `REPOSIX_BLOB_LIMIT` not set to `0` on a non-sim backend.
-- Sparse-checkout pattern count.
-- `rustc --version` (informational, contributors only).
+- `git.repo` — working tree is a git repo.
+- `git.extensions.partialClone` — `extensions.partialClone=origin` set. **Auto-fixable** with `--fix`.
+- `git.remote.origin.url` — uses `reposix::` scheme + parses cleanly.
+- `helper.binary` — `git-remote-reposix` is on PATH.
+- `git.version` — `git --version >= 2.34` (>=2.27 minimum).
+- `backend.registered` — the backend named by the URL scheme (sim/github/confluence/jira) is registered in this build.
+- `cache.db` — cache DB exists at the expected path.
+- `cache.db.readable` — cache DB opens cleanly.
+- `cache.integrity` — `PRAGMA integrity_check = ok` (detects on-disk corruption that opens cleanly through).
+- `cache.audit.table` — `audit_events_cache` table present + non-empty.
+- `cache.audit.triggers` — `audit_cache_no_update` / `audit_cache_no_delete` append-only triggers present (security guardrail).
+- `cache.freshness` — `meta.last_fetched_at` not older than 24h.
+- `cache.refs.main` — cache's bare repo has at least one commit on `refs/heads/main`.
+- `worktree.head.drift` — working-tree HEAD matches the cache's `refs/heads/main`. WARN with ahead/behind counts when they diverge.
+- `env.REPOSIX_ALLOWED_ORIGINS` — env-var allowlist actually covers the configured remote (port-glob `:*` honoured for loopback). WARN when it doesn't.
+- `env.REPOSIX_BLOB_LIMIT` — not set to `0` on a non-sim backend.
+- `git.sparse-checkout` — pattern count (informational).
+- `rustc` — Rust toolchain version (informational, contributors only).
 
 ## `reposix history`
 
@@ -136,6 +159,21 @@ reposix history /tmp/repo --limit 25
 | `--limit` | `10` | Cap on entries printed (most-recent first). |
 
 Output format: `<slug>   commit <short>   <op> (<n> record(s) in this sync)` per line, plus a trailer summarising the total tag count and a copy-pastable `git -C <cache> checkout` invocation.
+
+## `reposix log --time-travel`
+
+Alias for [`reposix history`](#reposix-history) using the `reposix log --time-travel` framing from v0.11.0 §3b. Prints the cache's sync tags in reverse chronological order. Without `--time-travel`, the subcommand errors — the bare `reposix log` form is reserved for a future commit-graph view.
+
+```bash
+reposix log --time-travel /tmp/repo
+reposix log --time-travel /tmp/repo --limit 25
+```
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `--time-travel` | required today | Switch to the sync-tag listing. |
+| `<path>` | cwd | Working-tree directory. |
+| `--limit` | `10` | Cap on entries printed. |
 
 ## `reposix at`
 
@@ -169,8 +207,57 @@ reposix gc --strategy all --dry-run /tmp/repo    # plan, don't execute
 | `--max-size-mb` | `500` | Cap for `--strategy=lru`. |
 | `--max-age-days` | `30` | Cutoff for `--strategy=ttl`. |
 | `--dry-run` | off | Print what would be evicted; don't touch disk. |
+| `--orphans` | off | Cross-cache orphan mode (see below). Ignores `--strategy` / `--max-*-*` flags. |
+| `--purge` | off | With `--orphans`: actually delete the orphan cache directories (default is dry-run/list-only). |
+| `--include-sim` | off | With `--orphans --purge`: also remove sim-prefixed caches (`sim-*.git`); off by default to preserve simulator state. |
+| `--include-untracked` | off | With `--orphans --purge`: also remove caches with no recorded owning worktree (pre-v0.11.0 caches and helper-only opens). |
 
 Each eviction (real or dry-run) appends an `op='cache_gc'` row to `audit_events_cache` in the cache DB.
+
+### `reposix gc --orphans`
+
+Walks `<XDG_CACHE_HOME>/reposix/*.git/`, opens each `cache.db`, reads `meta.worktrees`, and reports caches whose recorded owning working trees no longer exist on disk. Two reasons surface:
+
+- `all_worktrees_missing` — every recorded path is absent. Safe to purge with `--purge`.
+- `no_worktrees_recorded` — meta row was never written (pre-v0.11.0 caches, simulator caches opened by `cargo run -p reposix-sim`, or helper-only opens). Preserved by default; pass `--include-untracked` to purge.
+
+```bash
+reposix gc --orphans                                  # list orphans (default)
+reposix gc --orphans --purge                          # actually remove them
+reposix gc --orphans --purge --include-sim            # also remove sim-*.git
+reposix gc --orphans --purge --include-untracked      # remove untracked caches too
+```
+
+Each orphan line shows `<path>  <size>  reason=<reason>  <status>` plus, when applicable, each recorded-but-missing worktree path indented underneath for forensics.
+
+## `reposix cost`
+
+Per-op cost table over the `op='token_cost'` audit log, rendered as a pipe-friendly Markdown table. Pairs with [`reposix tokens`](#reposix-tokens) (which surfaces a back-of-envelope MCP comparison); `cost` is the raw aggregate suitable for piping into a spreadsheet or `awk`. See [v0.11.0 §3c](https://github.com/reubenjohn/reposix/blob/main/.planning/research/v0.11.0-vision-and-innovations.md#3c-token-cost-ledger--built-in-cost-telemetry).
+
+```bash
+reposix cost                                            # all-time
+reposix cost --since 7d                                 # last 7 days
+reposix cost --since 1m --chars-per-token 4             # last ~30 days, 4 chars/token
+reposix cost --since 2026-04-25T01:00:00Z /tmp/repo     # explicit RFC-3339 cutoff
+```
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `<path>` | cwd | Working tree whose cache to read. |
+| `--since` | all-time | Filter to rows newer than the cutoff. Duration shortcuts `7d` / `30d` / `1m` / `1y` / `12h` / `30min` / `2w`, or full RFC-3339 timestamp. |
+| `--chars-per-token` | `3.5` | Heuristic divisor for the token-estimate columns. Lower values inflate the estimate; reasonable values are 2.5–4. |
+
+Output:
+
+```text
+| op       | bytes_in | bytes_out | est_input_tokens | est_output_tokens |
+| -------- | -------- | --------- | ---------------- | ----------------- |
+| fetch    |   12,345 |    67,890 |            3,527 |            19,397 |
+| push     |      512 |       128 |              146 |                36 |
+| TOTAL    |   12,857 |    68,018 |            3,673 |            19,433 |
+```
+
+Both estimates are heuristic; the chars/token divisor over-estimates for binary protocol-v2 packfile frames and under-estimates for English-text-heavy issue bodies.
 
 ## `reposix tokens`
 
