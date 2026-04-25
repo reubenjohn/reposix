@@ -4,6 +4,16 @@ title: Filesystem layer — the cache and the working tree
 
 # Filesystem layer
 
+**Plain-English summary.** When you `cat` an issue file in a reposix
+working tree, you're reading a real file on disk — but the *first*
+read might secretly trigger a network call to the issue tracker
+behind the scenes. After that, the file is local and reads are free.
+This page explains how that lazy-fetch trick works, why it's a real
+git checkout (so `git diff` and `git stash` Just Work), and where the
+bytes actually live on your machine.
+
+---
+
 The first key from [Mental model in 60 seconds](../concepts/mental-model-in-60-seconds.md) is *clone IS a git working tree*. This page explains why that statement is literally true: there is no virtual filesystem, no daemon between you and the bytes — just a real `.git/` directory backed by a local cache that pulls blobs from the backend on demand.
 
 ## How a `cat` becomes a REST call (or doesn't)

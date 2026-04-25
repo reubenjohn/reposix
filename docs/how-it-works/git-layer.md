@@ -4,6 +4,16 @@ title: Git layer — the helper protocol and the push round-trip
 
 # Git layer
 
+**Plain-English summary.** When you run `git push` against a reposix
+working tree, your edits become REST writes against the issue tracker
+behind the scenes. This page walks the round-trip step by step — what
+the agent says to git, what git says to the helper, what the helper
+says to the backend, and what comes back when someone else got there
+first. If you've ever had a `git push` rejected with "fetch first" on
+GitHub, the recovery is exactly the same here, by design.
+
+---
+
 The third key from [Mental model in 60 seconds](../concepts/mental-model-in-60-seconds.md) is *`git push` IS the sync verb*. This page shows how — what the helper advertises to git, what happens when you push, and why a stale-base push gets rejected with the same error message you'd see on any other remote.
 
 ## The push round-trip (happy path and conflict)

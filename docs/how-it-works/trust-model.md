@@ -4,6 +4,17 @@ title: Trust model — the lethal trifecta and the cuts that defang it
 
 # Trust model
 
+**Plain-English summary.** reposix mixes private data, attacker-influenced
+text, and a way to send things over the network — exactly the recipe for
+the kind of agent attack that exfiltrates your secrets through a
+poisoned issue body. This page lays out the threat (yes, it's real),
+the cuts the design uses to defang it (the type system, an outbound
+allowlist, an append-only audit table, a frontmatter sanitiser), and
+the specific things that are intentionally **not** mitigated so you
+don't expect a sandbox you don't have.
+
+---
+
 reposix is, by construction, a textbook **[lethal trifecta](../reference/glossary.md#lethal-trifecta)** machine — [Simon Willison's name](https://simonwillison.net/2024/Dec/19/prompt-injection/) for the three legs an exfiltration attack against an LLM agent needs at the same time. From [`agentic-engineering-reference.md`](../research/agentic-engineering-reference.md), the legs are:
 
 1. **Private data** — the agent sees issue bodies, custom fields, attachments, internal comments. Anything an authenticated REST call can return.

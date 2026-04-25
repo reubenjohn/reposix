@@ -4,6 +4,16 @@ title: Write your own connector
 
 # Write your own connector
 
+**Plain-English summary.** A "connector" is the Rust adapter that
+translates between reposix's internal record vocabulary and an issue
+tracker's REST API. Want to add Linear, Asana, Trello, or your own
+in-house tracker? Implement one trait (about 8 methods), drop the
+crate into the workspace, write five `wiremock` tests, and you're
+done. This guide walks the trait method-by-method and sketches a
+Linear connector end-to-end.
+
+---
+
 reposix talks to four backends out of the box: the in-process [simulator](../reference/simulator.md), GitHub, Confluence, and JIRA. They all share one trait — [`BackendConnector`](../reference/glossary.md#backendconnector) (the Rust trait every adapter implements; see `crates/reposix-core/src/backend.rs`) — and adding a fifth backend is a matter of implementing that trait and dropping a crate into the workspace. This guide walks the trait method-by-method, then sketches a Linear connector as a worked example.
 
 The three reference implementations live in `crates/reposix-{github,confluence,jira}/`. Cite them by file path, not by copy-paste — they are the source of truth for every pattern below.

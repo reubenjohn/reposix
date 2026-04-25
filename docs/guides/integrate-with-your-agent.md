@@ -4,6 +4,31 @@ title: Integrate reposix with your agent
 
 # Integrate with your agent
 
+!!! info "What this guide assumes"
+    - You already have an agent harness (Claude Code, Cursor, an
+      SDK loop, or anything that can spawn a subprocess and read its
+      stdout/stderr).
+    - You can run `reposix init` once to bootstrap a working tree.
+    - Your agent can call shell commands — `cat`, `grep`, `sed`,
+      `git`, etc. — and surface their stderr back to the model.
+    - You're **not** trying to register reposix as a tool with the
+      model. The whole point is that the model already knows git and
+      POSIX; you don't have to teach it anything new.
+
+    If any of those isn't true, start with the [first-run
+    tutorial](../tutorials/first-run.md) and the [mental model in 60
+    seconds](../concepts/mental-model-in-60-seconds.md) instead.
+
+**Plain-English summary.** Your agent doesn't need to learn anything
+new about reposix. Run `reposix init` once to make a directory; then
+hand the directory to the agent and let it work the way it works any
+git repo — `cat`, `grep`, `sed`, `git commit`, `git push`. This page
+sketches three integration patterns (Claude Code, Cursor, a custom
+SDK loop) and the gotchas you'll hit when the agent tries to be
+clever and bypass the substrate.
+
+---
+
 reposix's product thesis is that an agent that already knows git and POSIX needs **zero new tools** to work an issue tracker. This page sketches three integration patterns — Claude Code, Cursor, and a custom SDK loop — at the level of "what to do" rather than "here is a 200-line recipe." Full vetted recipes (Claude Code, Cursor, Aider, Continue, Devin, SWE-agent CI fixtures) ship in v0.12.0; this is the pointer page.
 
 The substrate beneath every pattern is the same: run [`reposix init`](../tutorials/first-run.md#3-bootstrap-the-working-tree) once to produce a working tree, then hand the agent that directory and let it work through `cat`, `grep`, `sed`, `git add`, `git commit`, `git push`. No MCP tool registration, no custom CLI bindings.
