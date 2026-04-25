@@ -90,12 +90,32 @@ impl<R: Read, W: Write> Protocol<R, W> {
     /// # Errors
     /// Returns any [`io::Error`] from the underlying reader, including
     /// [`io::ErrorKind::UnexpectedEof`] on short reads.
-    #[allow(dead_code)] // public API surface; today's parser routes blob bytes
-                        // through `BufReader<ProtoReader>` which calls
-                        // `read_raw_line` per line. Kept for future callers
+    #[allow(dead_code)] // public API surface; exposed for future callers
                         // that want explicit N-byte reads.
     pub fn read_bytes_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
         self.reader.read_exact(buf)
+    }
+
+    /// Return a mutable reference to the internal `BufReader`. Used by
+    /// the pkt-line parser in the `stateless-connect` handler so it can
+    /// consume bytes from the SAME buffer as [`read_line`] — crucial
+    /// for gotcha #3 (binary stdin throughout; mixing two `BufReader`
+    /// instances on the same underlying stream corrupts the pkt-line
+    /// stream).
+    ///
+    /// [`read_line`]: Self::read_line
+    pub fn reader_mut(&mut self) -> &mut BufReader<R> {
+        &mut self.reader
+    }
+
+    /// Return a mutable reference to the internal `BufWriter` so callers
+    /// can stream large response payloads (e.g. `upload-pack` output)
+    /// without copying through [`send_raw`].
+    ///
+    /// [`send_raw`]: Self::send_raw
+    #[allow(dead_code)] // public surface; today's callers use send_raw.
+    pub fn writer_mut(&mut self) -> &mut BufWriter<W> {
+        &mut self.writer
     }
 
     /// Write a line to stdout (appending `\n`).

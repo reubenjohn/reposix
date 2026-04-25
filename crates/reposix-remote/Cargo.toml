@@ -10,8 +10,16 @@ description = "git-remote-reposix helper translating git pushes/pulls to REST ca
 name = "git-remote-reposix"
 path = "src/main.rs"
 
+[features]
+# Gated integration tests that shell out to a real `git` binary.
+# Requires git >= 2.27 (for protocol-v2 filter support). Off by default
+# because the dev host's git is 2.25.1 and the tests assert behaviour
+# under git clone --filter=blob:none.
+integration-git = []
+
 [dependencies]
 reposix-core.workspace = true
+reposix-cache = { path = "../reposix-cache" }
 tokio.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -21,6 +29,7 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 anyhow.workspace = true
 thiserror.workspace = true
+gix = { workspace = true }
 
 [dev-dependencies]
 wiremock = "0.6"

@@ -3084,6 +3084,8 @@ dependencies = [
  "assert_cmd",
  "chrono",
  "clap",
+ "gix",
+ "reposix-cache",
  "reposix-core",
  "serde",
  "serde_json",

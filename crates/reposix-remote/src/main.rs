@@ -16,17 +16,21 @@ use std::process::ExitCode;
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
+use reposix_cache::Cache;
 use reposix_core::backend::{sim::SimBackend, BackendConnector, DeleteReason};
 use reposix_core::{parse_remote_url, sanitize, ServerMetadata, Tainted};
 use tokio::runtime::Runtime;
 
 mod diff;
 mod fast_import;
+mod pktline;
 mod protocol;
+mod stateless_connect;
 
 use crate::diff::{plan, PlanError, PlannedAction};
 use crate::fast_import::{emit_import_stream, parse_export_stream};
 use crate::protocol::Protocol;
+use crate::stateless_connect::handle_stateless_connect;
 
 /// Deferred-exit flag — set by the export path on push refusal. We finish
 /// the protocol exchange cleanly (so git doesn't see a torn pipe) and bail
@@ -34,8 +38,23 @@ use crate::protocol::Protocol;
 struct State {
     rt: Runtime,
     backend: Arc<dyn BackendConnector>,
+    /// Short slug used as the cache-key prefix in
+    /// `<cache-root>/reposix/<backend_name>-<project>.git`. For the
+    /// v0.9.0 sim-only phase this is hardcoded to `"sim"`; Phase 35
+    /// will derive it from the parsed remote URL for real backends.
+    backend_name: String,
     project: String,
     push_failed: bool,
+    /// Monotonic counter: total `want ` lines observed across every
+    /// RPC turn handled by the `stateless-connect` tunnel. Wired in
+    /// Phase 32 for instrumentation; Phase 34 will enforce a limit.
+    #[allow(dead_code)]
+    last_fetch_want_count: u32,
+    /// Backing bare-repo cache. Lazily initialised inside
+    /// `handle_stateless_connect` (the capabilities/list/import/export
+    /// verbs don't need it), then cached for the remainder of the
+    /// helper's lifetime.
+    cache: Option<Cache>,
 }
 
 #[allow(clippy::print_stderr)]
@@ -77,11 +96,18 @@ fn real_main() -> Result<bool> {
 
     let backend: Arc<dyn BackendConnector> =
         Arc::new(SimBackend::with_agent_suffix(spec.origin, Some("remote"))?);
+    // v0.9.0 sim-only: hardcode "sim" as the cache backend slug.
+    // Phase 35 will derive this from the parsed URL scheme/host for
+    // real backends (github, confluence, jira).
+    let backend_name = "sim".to_owned();
     let mut state = State {
         rt,
         backend,
+        backend_name,
         project: spec.project.as_str().to_owned(),
         push_failed: false,
+        last_fetch_want_count: 0,
+        cache: None,
     };
 
     let stdin_handle = stdin();
@@ -97,9 +123,25 @@ fn real_main() -> Result<bool> {
         let cmd = parts.next().unwrap_or("");
         match cmd {
             "capabilities" => {
+                // Hybrid advertisement for v0.9.0 architecture pivot:
+                //   - `import`/`export` preserved for the push path and
+                //     the v0.8 `import` capability (deprecated — one
+                //     release cycle; Phase 36 removes).
+                //   - `stateless-connect` is the v0.9 read path,
+                //     tunnelling protocol-v2 fetch traffic to the
+                //     Phase 31 cache via `git upload-pack --stateless-rpc`.
+                //   - `object-format=sha1` is required by protocol-v2;
+                //     without it, git 2.34+ warns and falls back.
+                // Per `transport-helper.c::process_connect_service`,
+                // `stateless-connect` is only dispatched for
+                // `git-upload-pack` and `git-upload-archive` — push
+                // (`git-receive-pack`) falls through to `export`, so
+                // both capabilities coexist.
                 proto.send_line("import")?;
                 proto.send_line("export")?;
                 proto.send_line("refspec refs/heads/*:refs/reposix/*")?;
+                proto.send_line("stateless-connect")?;
+                proto.send_line("object-format=sha1")?;
                 proto.send_blank()?;
                 proto.flush()?;
             }
@@ -119,6 +161,21 @@ fn real_main() -> Result<bool> {
             "export" => {
                 handle_export(&mut state, &mut proto)?;
             }
+            "stateless-connect" => {
+                // Service name is the second whitespace-separated
+                // field. An unknown or empty service becomes a clean
+                // error inside the handler.
+                let service = parts.next().unwrap_or("").trim();
+                let service_owned = service.to_owned();
+                ensure_cache(&mut state)?;
+                let cache_ref = state.cache.as_ref().expect("cache initialised");
+                handle_stateless_connect(&mut proto, &state.rt, cache_ref, &service_owned)?;
+                // Per the helper-protocol spec, stateless-connect is
+                // always the last verb of a helper invocation: git
+                // takes over stdin/stdout for the duration of the
+                // protocol-v2 session and closes the stream on EOF.
+                return Ok(!state.push_failed);
+            }
             other => {
                 diag(&format!("git-remote-reposix: unknown command: {other}"));
                 break;
@@ -127,6 +184,21 @@ fn real_main() -> Result<bool> {
     }
     proto.flush()?;
     Ok(!state.push_failed)
+}
+
+/// Lazily open the backing `reposix_cache::Cache` for the helper's
+/// `(backend, project)` tuple. Called once on first need (currently
+/// only from the `stateless-connect` dispatch arm; the import/export
+/// paths do not require the bare repo). The cache is then kept on
+/// `State` for the remainder of the helper's lifetime.
+fn ensure_cache(state: &mut State) -> Result<()> {
+    if state.cache.is_some() {
+        return Ok(());
+    }
+    let cache = Cache::open(state.backend.clone(), &state.backend_name, &state.project)
+        .context("open reposix-cache")?;
+    state.cache = Some(cache);
+    Ok(())
 }
 
 /// Emit a clean protocol error line on stdout + a diagnostic on stderr,
