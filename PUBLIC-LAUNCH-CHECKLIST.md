@@ -22,7 +22,7 @@ The pre-flight, day-of, and post-launch list the owner runs through before pulli
 ## Day-of-launch checklist
 
 - [ ] Final smoke test: `cargo run -p reposix-sim &` + `reposix init sim::demo /tmp/launch-smoke && cd /tmp/launch-smoke && git checkout origin/main && cat issues/0001.md` works end-to-end in under 30 s
-- [ ] Pull `docs/blog/2026-04-25-reposix-launch.md` into the announcement medium (mkdocs blog plugin, Substack, Medium, or personal blog)
+- [ ] Author a launch announcement at announcement-time (the Phase 50 archival sweep removed the early-draft blog post per POLISH-11; v0.11.0 launch material gets re-authored when launch is imminent)
 - [ ] HN submission: title `≤ 80` chars; URL points to the mkdocs site; first comment from owner with the 5-line bootstrap snippet
 - [ ] Twitter / Mastodon thread — 5–7 posts; lead with the cost differential, not the architecture
 - [ ] Discord / Slack: post to relevant communities (Rust users, agent-builders, Claude Code / Cursor channels)

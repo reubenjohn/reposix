@@ -887,7 +887,7 @@ Initial autonomous overnight build. Tagged at `v0.1.0`.
 - Rust over Python for the production substrate; FUSE perf matters under swarm load.
 - `fuser` with `default-features = false` to avoid the `libfuse-dev` apt dep on hosts without sudo.
 
-See [PROJECT-STATUS.md](docs/archive/PROJECT-STATUS.md) for the v0.1/v0.2-era timeline and [MORNING-BRIEF.md](docs/archive/MORNING-BRIEF.md) for the v0.1-era executive summary (both archived; current state in [`HANDOFF.md`](HANDOFF.md)).
+v0.1/v0.2-era timeline and executive-summary archives have been pruned (POLISH-11, Phase 50). Current state lives in `.planning/STATE.md`.
 
 ---
 
