@@ -48,7 +48,7 @@ Edits become REST writes when — and only when — you `git push`. The helper p
 sed -i 's/^status: .*/status: done/' issues/0001.md
 git commit -am 'close 1' && git push
 
-sqlite3 ~/.reposix/cache.db \
+sqlite3 ~/.cache/reposix/sim-demo.git/cache.db \
   "SELECT ts, op, decision FROM audit ORDER BY ts DESC LIMIT 5"
 ```
 
