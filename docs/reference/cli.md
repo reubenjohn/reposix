@@ -15,6 +15,7 @@ Commands:
   list     List issues/pages in a project (prints JSON or table)
   refresh  Re-fetch all issues and write a commit (force delta sync)
   spaces   List readable Confluence spaces (Confluence backend only)
+  doctor   Diagnose a reposix working tree and print fix commands
   version  Print the version
   help     Print this message or the help of the given subcommand(s)
 ```
@@ -84,6 +85,37 @@ reposix refresh /tmp/repo --backend sim --project demo
 | `--project` | `demo` | Project slug / space key. |
 | `--backend` | `sim` | Backend to query. |
 | `--offline` | off | Reserved for the offline cache path; currently errors. |
+
+## `reposix doctor`
+
+Audit a reposix working tree and print copy-pastable fix commands for every issue found. Inspired by `flutter doctor` / `brew doctor`. Exits 0 if no ERROR-severity finding, 1 otherwise — wire into CI as a gate.
+
+```bash
+reposix doctor                  # diagnose current dir
+reposix doctor /tmp/repo
+reposix doctor --fix /tmp/repo  # also apply safe fixes inline
+```
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `<path>` | cwd | Working tree to audit. |
+| `--fix` | off | Apply deterministic, non-destructive fixes (today: `git config extensions.partialClone origin`). Never mutates cache, audit log, or backend. |
+
+Checks performed (each finding is OK / INFO / WARN / ERROR):
+
+- Working tree is a git repo.
+- `extensions.partialClone=origin` set.
+- `remote.origin.url` uses `reposix::` scheme + parses cleanly.
+- `git-remote-reposix` helper binary on PATH.
+- `git --version >= 2.34` (>=2.27 minimum).
+- Cache DB exists and opens cleanly.
+- `audit_events_cache` table present + non-empty.
+- `audit_cache_no_update` / `audit_cache_no_delete` append-only triggers present (security guardrail).
+- `meta.last_fetched_at` not older than 24h.
+- `REPOSIX_ALLOWED_ORIGINS` sane for the configured remote.
+- `REPOSIX_BLOB_LIMIT` not set to `0` on a non-sim backend.
+- Sparse-checkout pattern count.
+- `rustc --version` (informational, contributors only).
 
 ## `reposix spaces`
 

@@ -6,6 +6,18 @@ title: Troubleshooting
 
 When reposix's substrate property holds, an agent recovers from every error reposix can produce by reading the stderr message and following its instructions verbatim. This page is for the cases where you (or your agent) need a slightly bigger hint than the stderr alone provides — and for the diagnostic queries you'd run when nothing is broken but you want to know what reposix did.
 
+## Quick triage with `reposix doctor`
+
+When something feels off, run `reposix doctor` from inside (or against) your reposix working tree. It checks the most common setup pitfalls — git repo layout, partial-clone config, remote URL scheme, helper binary on PATH, cache DB integrity, audit-table append-only triggers, env vars, sparse-checkout patterns, git version, and cache freshness — and prints a copy-pastable fix command for each finding.
+
+```bash
+reposix doctor                    # diagnose current dir
+reposix doctor /tmp/repo          # diagnose another dir
+reposix doctor --fix /tmp/repo    # also apply safe fixes
+```
+
+`--fix` only applies deterministic, non-destructive fixes (e.g. `git config extensions.partialClone origin`). It will never mutate the cache, the audit log, or the backend. Exit code is 1 if any ERROR-severity finding is reported, 0 otherwise — so you can wire `reposix doctor` into CI as a gate.
+
 ## `git push` rejected with "fetch first"
 
 Symptom:
