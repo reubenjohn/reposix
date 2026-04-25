@@ -230,6 +230,30 @@ impl BackendConnector for SimBackend {
         decode_issues(resp, &url).await
     }
 
+    async fn list_changed_since(
+        &self,
+        project: &str,
+        since: chrono::DateTime<chrono::Utc>,
+    ) -> Result<Vec<IssueId>> {
+        // RFC3339-with-Z form contains only digits, `T`, `-`, `:`, `Z`;
+        // none require percent-encoding in a query value, so format!()
+        // is safe. If callers ever pass non-UTC or fractional seconds
+        // that widen the charset, switch to `url::form_urlencoded`.
+        let since_iso = since.to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+        let url = format!(
+            "{}/projects/{}/issues?since={}",
+            self.base(),
+            project,
+            since_iso
+        );
+        let resp = self
+            .http
+            .request_with_headers(Method::GET, &url, &self.agent_only())
+            .await?;
+        let issues = decode_issues(resp, &url).await?;
+        Ok(issues.into_iter().map(|i| i.id).collect())
+    }
+
     async fn get_issue(&self, project: &str, id: IssueId) -> Result<Issue> {
         let url = format!("{}/projects/{}/issues/{}", self.base(), project, id.0);
         let resp = self
@@ -315,7 +339,7 @@ mod tests {
     use super::*;
     use crate::taint::{sanitize, ServerMetadata, Tainted};
     use chrono::{TimeZone, Utc};
-    use wiremock::matchers::{body_partial_json, header, method, path};
+    use wiremock::matchers::{body_partial_json, header, method, path, query_param};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     fn sample_issue_json(id: u64) -> serde_json::Value {
@@ -915,6 +939,55 @@ mod tests {
             .delete_or_close("demo", IssueId(1), DeleteReason::Completed)
             .await
             .expect("delete");
+    }
+
+    #[tokio::test]
+    async fn list_changed_since_sends_since_query_param() {
+        // Phase 33: prove the SimBackend override emits `?since=<RFC3339>` on
+        // the wire. The mock fails-loud (.expect(1)) if the param is missing.
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/projects/demo/issues"))
+            .and(query_param("since", "2026-04-24T00:00:00Z"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_json(serde_json::json!([sample_issue_json(42)])),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let backend = SimBackend::new(server.uri()).expect("backend");
+        let t = Utc.with_ymd_and_hms(2026, 4, 24, 0, 0, 0).unwrap();
+        let ids = backend
+            .list_changed_since("demo", t)
+            .await
+            .expect("list_changed");
+        assert_eq!(ids, vec![IssueId(42)]);
+    }
+
+    #[tokio::test]
+    async fn list_changed_since_returns_ids_only() {
+        // The override returns only IDs (not full Issues) — symmetric with
+        // the Phase 31 lazy-blob design. Confirm by feeding 3 issue JSON
+        // bodies and asserting the returned Vec is exactly their IDs.
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/projects/demo/issues"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+                sample_issue_json(1),
+                sample_issue_json(2),
+                sample_issue_json(3),
+            ])))
+            .mount(&server)
+            .await;
+
+        let backend = SimBackend::new(server.uri()).expect("backend");
+        let t = chrono::Utc::now();
+        let ids = backend
+            .list_changed_since("demo", t)
+            .await
+            .expect("list_changed");
+        assert_eq!(ids, vec![IssueId(1), IssueId(2), IssueId(3)]);
     }
 
     #[tokio::test]
