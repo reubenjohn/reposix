@@ -17,16 +17,20 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use reposix_cache::Cache;
-use reposix_core::backend::{sim::SimBackend, BackendConnector, DeleteReason};
-use reposix_core::{parse_remote_url, sanitize, ServerMetadata, Tainted};
+use reposix_core::backend::{BackendConnector, DeleteReason};
+use reposix_core::{sanitize, ServerMetadata, Tainted};
 use tokio::runtime::Runtime;
 
+mod backend_dispatch;
 mod diff;
 mod fast_import;
 mod pktline;
 mod protocol;
 mod stateless_connect;
 
+use crate::backend_dispatch::{
+    instantiate, parse_remote_url as parse_dispatch_url, sanitize_project_for_cache,
+};
 use crate::diff::{plan, PlanError, PlannedAction};
 use crate::fast_import::{emit_import_stream, parse_export_stream};
 use crate::protocol::Protocol;
@@ -39,11 +43,20 @@ struct State {
     rt: Runtime,
     backend: Arc<dyn BackendConnector>,
     /// Short slug used as the cache-key prefix in
-    /// `<cache-root>/reposix/<backend_name>-<project>.git`. For the
-    /// v0.9.0 sim-only phase this is hardcoded to `"sim"`; Phase 35
-    /// will derive it from the parsed remote URL for real backends.
+    /// `<cache-root>/reposix/<backend_name>-<project>.git`. Set from
+    /// [`BackendKind::slug`] by the URL-scheme dispatcher in
+    /// [`backend_dispatch`] (closes the v0.9.0 Phase 32 carry-forward
+    /// where every backend wedged onto the `"sim"` cache prefix).
     backend_name: String,
+    /// Project identifier passed to [`BackendConnector`] methods —
+    /// `demo` for sim, `owner/repo` for GitHub, `TokenWorld` for
+    /// Confluence, `TEST` for JIRA.
     project: String,
+    /// Filesystem-safe variant of `project` used as the cache
+    /// directory component (`<root>/reposix/<backend>-<cache_project>.git`).
+    /// Differs from `project` only for GitHub where `owner/repo` is
+    /// rewritten to `owner-repo`.
+    cache_project: String,
     push_failed: bool,
     /// Monotonic counter: total `want ` lines observed across every
     /// RPC turn handled by the `stateless-connect` tunnel. Wired in
@@ -87,24 +100,30 @@ fn real_main() -> Result<bool> {
         anyhow::bail!("usage: git-remote-reposix <alias> <url>");
     }
     let url = &argv[2];
-    let spec = parse_remote_url(url).context("parse remote url")?;
+    // URL-scheme dispatch (Phase 36-followup, closes Phase 32 carry-forward):
+    // identify which backend to instantiate from the remote URL, then
+    // build the matching BackendConnector. Credential errors surface
+    // here with a doc link to docs/reference/testing-targets.md.
+    let parsed = parse_dispatch_url(url).context("parse remote url")?;
+    let backend = instantiate(&parsed).context("instantiate backend")?;
+    let backend_name = parsed.kind.slug().to_owned();
+    // GitHub `owner/repo` collapses to `owner-repo` for the cache
+    // directory but stays `owner/repo` everywhere it reaches the
+    // BackendConnector trait.
+    let project_for_cache = sanitize_project_for_cache(&parsed.project);
+    let project_for_backend = parsed.project;
 
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
         .context("build tokio runtime")?;
 
-    let backend: Arc<dyn BackendConnector> =
-        Arc::new(SimBackend::with_agent_suffix(spec.origin, Some("remote"))?);
-    // v0.9.0 sim-only: hardcode "sim" as the cache backend slug.
-    // Phase 35 will derive this from the parsed URL scheme/host for
-    // real backends (github, confluence, jira).
-    let backend_name = "sim".to_owned();
     let mut state = State {
         rt,
         backend,
         backend_name,
-        project: spec.project.as_str().to_owned(),
+        project: project_for_backend,
+        cache_project: project_for_cache,
         push_failed: false,
         last_fetch_want_count: 0,
         cache: None,
@@ -195,8 +214,17 @@ fn ensure_cache(state: &mut State) -> Result<()> {
     if state.cache.is_some() {
         return Ok(());
     }
-    let cache = Cache::open(state.backend.clone(), &state.backend_name, &state.project)
-        .context("open reposix-cache")?;
+    let cache = Cache::open(
+        state.backend.clone(),
+        &state.backend_name,
+        &state.cache_project,
+    )
+    .context("open reposix-cache")?;
+    // Phase 36-followup: best-effort audit row recording which backend
+    // served this session. Useful forensics signal — pre-dispatch the
+    // helper hardcoded `"sim"` and there was no way to trace which
+    // backend a given fetch hit.
+    cache.log_helper_backend_instantiated(&state.project);
     state.cache = Some(cache);
     Ok(())
 }

@@ -26,6 +26,13 @@ integration-git = []
 [dependencies]
 reposix-core.workspace = true
 reposix-cache = { path = "../reposix-cache" }
+# Phase 36-followup (helper backend dispatch): the helper instantiates
+# concrete backend connectors based on the remote URL's scheme, so it
+# pulls every backend adapter crate. Pre-Phase-36 the helper hardcoded
+# `SimBackend` and these deps were CLI-only.
+reposix-github = { path = "../reposix-github" }
+reposix-confluence = { path = "../reposix-confluence" }
+reposix-jira = { path = "../reposix-jira" }
 tokio.workspace = true
 serde.workspace = true
 serde_json.workspace = true

@@ -65,8 +65,12 @@ pub fn translate_spec_to_url(spec: &str) -> Result<String> {
                         "REPOSIX_CONFLUENCE_TENANT must be set for `confluence::<space>` (subdomain of your Atlassian Cloud tenant)"
                     )
                 })?;
+            // Phase 36-followup: the `/confluence/` path marker
+            // disambiguates the URL from JIRA at the helper's
+            // backend-dispatch layer (both share the same
+            // *.atlassian.net origin).
             Ok(format!(
-                "reposix::https://{tenant}.atlassian.net/projects/{project}"
+                "reposix::https://{tenant}.atlassian.net/confluence/projects/{project}"
             ))
         }
         "jira" => {
@@ -78,8 +82,11 @@ pub fn translate_spec_to_url(spec: &str) -> Result<String> {
                         "REPOSIX_JIRA_INSTANCE must be set for `jira::<key>` (subdomain of your Atlassian Cloud tenant)"
                     )
                 })?;
+            // Phase 36-followup: the `/jira/` path marker
+            // disambiguates the URL from Confluence at the helper's
+            // backend-dispatch layer.
             Ok(format!(
-                "reposix::https://{instance}.atlassian.net/projects/{project}"
+                "reposix::https://{instance}.atlassian.net/jira/projects/{project}"
             ))
         }
         other => bail!(
@@ -207,6 +214,40 @@ mod tests {
             url,
             "reposix::https://api.github.com/projects/reubenjohn/reposix"
         );
+    }
+
+    #[test]
+    fn translate_confluence_emits_path_marker() {
+        // Phase 36-followup: the `/confluence/` path marker is what
+        // the helper's URL-scheme dispatcher uses to disambiguate
+        // between Confluence and JIRA on the shared *.atlassian.net
+        // origin. Pin it here so init/helper stay in sync.
+        let saved = std::env::var("REPOSIX_CONFLUENCE_TENANT").ok();
+        std::env::set_var("REPOSIX_CONFLUENCE_TENANT", "reuben-john");
+        let url = translate_spec_to_url("confluence::TokenWorld").unwrap();
+        assert_eq!(
+            url,
+            "reposix::https://reuben-john.atlassian.net/confluence/projects/TokenWorld"
+        );
+        match saved {
+            Some(v) => std::env::set_var("REPOSIX_CONFLUENCE_TENANT", v),
+            None => std::env::remove_var("REPOSIX_CONFLUENCE_TENANT"),
+        }
+    }
+
+    #[test]
+    fn translate_jira_emits_path_marker() {
+        let saved = std::env::var("REPOSIX_JIRA_INSTANCE").ok();
+        std::env::set_var("REPOSIX_JIRA_INSTANCE", "reuben-john");
+        let url = translate_spec_to_url("jira::TEST").unwrap();
+        assert_eq!(
+            url,
+            "reposix::https://reuben-john.atlassian.net/jira/projects/TEST"
+        );
+        match saved {
+            Some(v) => std::env::set_var("REPOSIX_JIRA_INSTANCE", v),
+            None => std::env::remove_var("REPOSIX_JIRA_INSTANCE"),
+        }
     }
 
     #[test]
