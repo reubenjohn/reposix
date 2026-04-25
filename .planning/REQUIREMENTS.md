@@ -1,59 +1,94 @@
-# Requirements — Active milestone: v0.10.0 Docs & Narrative Shine
+# Requirements — Active milestone: v0.11.0 Polish & Reproducibility
 
-**Active milestone:** v0.10.0 Docs & Narrative Shine (planning_started 2026-04-24).
-**Previous validated milestone:** v0.9.0 Architecture Pivot — Git-Native Partial Clone (SHIPPED 2026-04-24, see "v0.9.0 Requirements (Validated)" section below).
+**Active milestone:** v0.11.0 Polish & Reproducibility (planning_started 2026-04-25).
+**Previous validated milestones:**
+- v0.10.0 Docs & Narrative Shine (SHIPPED 2026-04-25, see "Archived (v0.10.0)" section below).
+- v0.9.0 Architecture Pivot — Git-Native Partial Clone (SHIPPED 2026-04-24, see "v0.9.0 Requirements (Validated)" section below).
 
 ---
 
-## v0.10.0 Requirements — Docs & Narrative Shine
+## v0.11.0 Requirements — Polish & Reproducibility
 
-**Milestone goal:** Make the reposix value proposition land in 10 seconds for a cold reader, with progressive disclosure of architecture and a tested 5-minute first-run tutorial. Sales-ready docs with hard numbers, agent-SDK guidance, and a banned-word linter that enforces P1/P2 framing rules.
+**Milestone goal:** Close the long tail that v0.10.0 surfaced. Polish the docs site (jargon glosses + glossary + mermaid render hygiene + ADR cleanup), kill four codebase duplicates flagged by `simplify` (worktree helpers, `parse_remote_url`, `cli_compat.rs`, FUSE residue in `refresh.rs`), and ship reproducibility infrastructure: a fresh-clone tutorial runner, pre-built binaries via `dist`, `cargo binstall` metadata, `reposix doctor` / `reposix log --time-travel` / `reposix gc --orphans` / `reposix cost` surfaces, and a real-backend latency table for sim + GitHub + Confluence + JIRA.
 
-**Source of truth:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` (forward-plan draft, ratified 2026-04-24). Framing principles inherited from `.planning/notes/phase-30-narrative-vignettes.md` (P1 complement-not-replace; P2 progressive disclosure — banned-word list **revised for git-native**: `FUSE`, `inode`, `daemon`, `mount`, `fusermount` removed because they no longer apply; new banned-above-Layer-3 list is `partial-clone`, `promisor`, `stateless-connect`, `fast-import`, `protocol-v2`).
+**Source of truth:** `.planning/research/v0.11.0-vision-and-innovations.md` (vision spec) plus the v0.11.0 audit family: `v0.11.0-gsd-hygiene-report.md`, `v0.11.0-mkdocs-site-audit.md`, `v0.11.0-jargon-inventory.md`, `v0.11.0-latency-benchmark-plan.md`, `v0.11.0-release-binaries-plan.md`, `v0.11.0-cache-location-study.md`, `v0.11.0-CATALOG-v2.md`. Framing principles inherited from `.planning/notes/phase-30-narrative-vignettes.md` (P1 complement-not-replace; P2 progressive disclosure — banned-above-Layer-3 list extended with v0.11.0 jargon glosses owned by the new `docs/reference/glossary.md`).
 
 **Operating-principle hooks (non-negotiable, per project CLAUDE.md):**
 
-- **Self-improving infrastructure (OP-4).** Every doc claim is grounded in a committed artifact (`docs/benchmarks/v0.9.0-latency.md`, `docs/reference/testing-targets.md`, source files). No marketing copy that the codebase can't back up.
-- **Close the feedback loop (OP-1).** Every mermaid diagram is rendered via mcp-mermaid and screenshot-verified via playwright before merge. The 5-minute tutorial is run end-to-end by a test fixture — the doc IS the test.
-- **Numbers, not adjectives.** Every adjective on the README hero and `docs/index.md` hero is replaced with a measured number sourced from `docs/benchmarks/v0.9.0-latency.md` or v0.9.0 audit/threat-model artifacts.
-- **Ground truth obsession (OP-6).** Banned-word linter is committed in `scripts/banned-words-lint.sh`, runs in pre-commit + CI; the layer-banned-word list lives in a checked-in config (`docs/.banned-words.toml` or equivalent). Ad-hoc grep is not a linter.
+- **Self-improving infrastructure (OP-4).** `scripts/repro-quickstart.sh`, `scripts/check-docs-site.sh`, and the dist release pipeline are committed-and-CI-wired, not session memory. Per project CLAUDE.md: ad-hoc bash that asserts cross-file invariants is a missing-tool signal.
+- **Close the feedback loop (OP-1).** Mermaid diagrams render via mcp-mermaid AND playwright-screenshot the live site for every page touched. `mkdocs build --strict` is green by definition; pre-push hook runs `check-docs-site.sh` so a broken site never reaches `main`.
+- **Numbers, not adjectives.** Latency table populated for sim + github + confluence + jira with record counts and 3-sample medians; doctor output has copy-pastable fix strings, not narrative.
+- **Ground truth obsession (OP-6).** Tutorial reproducibility is asserted by a script that runs against a fresh `/tmp/clone`, not by reading a doc.
 
 ### Active
 
-- [ ] **DOCS-01**: Reader can understand reposix's value proposition within 10 seconds of landing on `docs/index.md` (hero with V1 before/after code block + three-up value props citing actual latency numbers from `docs/benchmarks/v0.9.0-latency.md` — `8 ms` `get-issue`, `24 ms` `reposix init`, `9 ms` `list issues`, `5 ms` helper capabilities probe). P1 "complement, not replace" framing — the word "replace" is banned from hero copy.
-- [ ] **DOCS-02**: Three-page "How it works" section — `docs/how-it-works/{filesystem-layer,git-layer,trust-model}.md` — each with one mermaid diagram (rendered via mcp-mermaid + playwright-screenshot verified) carved from the existing architecture argument and the v0.9.0 architecture-pivot summary. **Filesystem-layer** is reframed for git-native (the cache + working tree, not FUSE).
-- [ ] **DOCS-03**: Two home-adjacent concept pages: `docs/concepts/mental-model-in-60-seconds.md` (clone = snapshot · frontmatter = schema · `git push` = sync verb) and `docs/concepts/reposix-vs-mcp-and-sdks.md` (positioning page grounding P1, with a numbers-table contrasting tokens-per-task, latency, and dependency footprint).
-- [ ] **DOCS-04**: Three guides: `docs/guides/write-your-own-connector.md` (BackendConnector walkthrough), `docs/guides/integrate-with-your-agent.md` (Claude Code / Cursor / SDK patterns), `docs/guides/troubleshooting.md` (push rejections, audit-log queries, blob-limit recovery).
-- [ ] **DOCS-05**: Simulator relocated from "How it works" to Reference (`docs/reference/simulator.md`).
-- [ ] **DOCS-06**: 5-minute first-run tutorial `docs/tutorials/first-run.md` against the simulator, ending with a real edit committed and pushed. Tutorial is end-to-end runnable; the runner script (`scripts/tutorial-runner.sh`) verifies each step.
-- [ ] **DOCS-07**: MkDocs nav restructured per Diátaxis (Home / How it works / Tutorials / Guides / Reference / Decisions / Research). P2 banned terms (FUSE, fusermount, kernel, syscall — plus the revised git-native list `partial-clone`, `promisor`, `stateless-connect`, `fast-import`, `protocol-v2`) do not appear above Layer 3 (How it works) in any user-facing page.
-- [ ] **DOCS-08**: mkdocs-material theme tuned (palette, hero features, social cards). README hero rewritten — every adjective replaced with a measured number sourced from v0.9.0 latency or v0.9.0 audit/threat-model.
-- [ ] **DOCS-09**: Banned-word linter `scripts/banned-words-lint.sh` runs on every doc commit (pre-commit hook + CI) and rejects violations of the P2 progressive-disclosure layer rules. The layer-banned-word list lives in a checked-in config (`docs/.banned-words.toml`) so adding a layer banned word is a reviewable diff.
-- [ ] **DOCS-10**: Per-page `doc-clarity-review` skill run as a release gate; zero critical friction points in any user-facing page. Findings logged per phase; the gate runs in Phase 44 over the full doc tree.
-- [ ] **DOCS-11**: README updated to point to mkdocs site as the source of truth for narrative; root-level docs (`README.md`, `CLAUDE.md`) are stubs/grounding-only and stop duplicating narrative copy. CHANGELOG `[v0.10.0]` block + playwright screenshots committed for landing + how-it-works + tutorial pages.
+- [ ] **POLISH-01**: All jargon terms have inline gloss + external link at first occurrence per page (drives Phase 52). Inventory in `.planning/research/v0.11.0-jargon-inventory.md`.
+- [ ] **POLISH-02**: `docs/reference/glossary.md` exists; every other page links to it on first jargon term (≥24 entries, drives Phase 52).
+- [ ] **POLISH-03**: All mermaid diagrams render without console errors on the live site. Drives Phase 52, F1+F2+F3 from `.planning/research/v0.11.0-mkdocs-site-audit.md`.
+- [ ] **POLISH-04**: `mkdocs build --strict` is green; ADR-008 in nav; blog post in `not_in_nav`; `pymdownx.emoji` configured.
+- [ ] **POLISH-05**: Tutorial reproducible from fresh clone — `bash scripts/repro-quickstart.sh` runs the 7-step tutorial and asserts each step passes (drives Phase 53).
+- [ ] **POLISH-06**: Pre-built binaries published to GitHub Releases for linux musl x86/arm64, macOS x86/arm64, windows msvc on every git tag (drives Phase 53).
+- [ ] **POLISH-07**: `cargo binstall reposix-cli` works (drives Phase 53). Cargo metadata for binstall configured.
+- [ ] **POLISH-08**: Latency table populated for sim + github + confluence + jira with record counts and 3-sample medians (drives Phase 54). Plan in `.planning/research/v0.11.0-latency-benchmark-plan.md`.
+- [ ] **POLISH-09**: `reposix doctor` runs the full v3a checklist with copy-pastable fix strings (drives Phase 55). Spec in `.planning/research/v0.11.0-vision-and-innovations.md`.
+- [ ] **POLISH-10**: `reposix log --time-travel`, `reposix init --since=<RFC3339>`, `reposix cost`, `reposix gc --orphans` all surfaced (drives Phase 55).
+- [ ] **POLISH-11**: ADR-004 + ADR-006 deleted; `agentic-engineering-reference.md` carries a disclaimer; archival doc sweep complete (`MORNING-WALKTHROUGH-*.md`, root `RELEASE-NOTES-*.md`, blog launch post, `docs/archive/MORNING-BRIEF.md`).
+- [ ] **POLISH-12**: `Cargo.toml` workspace version is `0.11.0-dev` until tag time, then bumped to `0.11.0` for ship.
+- [ ] **POLISH-13**: 4-way CLI worktree-helper duplication consolidated into `crates/reposix-cli/src/worktree_helpers.rs` (drives Phase 51).
+- [ ] **POLISH-14**: `parse_remote_url` exists once in `reposix-core`; `reposix-remote/backend_dispatch` calls into it (drives Phase 51).
+- [ ] **POLISH-15**: `crates/reposix-cache/src/cli_compat.rs` deleted; downstream consumers migrated to canonical opener (drives Phase 51).
+- [ ] **POLISH-16**: `crates/reposix-cli/src/refresh.rs` has zero FUSE residue (`is_fuse_active`, `mount_point` removed) (drives Phase 51).
+- [ ] **POLISH-17**: CLAUDE.md adds: any docs-site work MUST be playwright-validated; `scripts/check-docs-site.sh` exists and is wired into pre-push (drives Phase 53).
 
 ### Out of Scope
 
-- New backend connectors, new CLI commands, new transport features. v0.10.0 is docs-only.
-- Benchmark harness improvements beyond cross-linking — `cargo run -p reposix-bench` lands in v0.11.0.
-- Agent-SDK recipes (Claude Code / Cursor / Aider / Continue / Devin / SWE-agent CI fixtures) — those land in v0.12.0. v0.10.0 ships `docs/guides/integrate-with-your-agent.md` as a pointer page only.
-- Resolving the v0.9.0 carry-forward "helper hardcodes `SimBackend`" tech debt — scheduled before v0.11.0 benchmark commits, not v0.10.0.
+- New backend connectors. v0.11.0 stays on the existing 4 (sim, github, confluence, jira).
+- `cargo install reposix-cli` from crates.io publishing — kept as a Phase 53 stretch goal but not gated on it; `cargo binstall` is the ship requirement.
+- Full v0.12.0 agent-SDK recipes (Claude Code / Cursor / Aider). v0.11.0 keeps `docs/guides/integrate-with-your-agent.md` as a pointer page; recipes ship in v0.12.0.
 
 ### Traceability
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| DOCS-01 | 40 | planning |
-| DOCS-02 | 41 | planning |
-| DOCS-03 | 40 | planning |
-| DOCS-04 | 42 | planning |
-| DOCS-05 | 42 | planning |
-| DOCS-06 | 42 | planning |
-| DOCS-07 | 43 | planning |
-| DOCS-08 | 43 (linter wiring) + 45 (README hero rewrite) | planning |
-| DOCS-09 | 43 | planning |
-| DOCS-10 | 44 | planning |
-| DOCS-11 | 45 | planning |
+| POLISH-01 | 52 | planning |
+| POLISH-02 | 52 | planning |
+| POLISH-03 | 52 | planning |
+| POLISH-04 | 52 | planning |
+| POLISH-05 | 53 | planning |
+| POLISH-06 | 53 | planning |
+| POLISH-07 | 53 | planning |
+| POLISH-08 | 54 | planning |
+| POLISH-09 | 55 | planning |
+| POLISH-10 | 55 | planning |
+| POLISH-11 | 50, 52 | in-progress (Phase 50 wave landed) |
+| POLISH-12 | 50, then tag-time | in-progress (Phase 50 bump landed; final bump at tag time) |
+| POLISH-13 | 51 | planning |
+| POLISH-14 | 51 | planning |
+| POLISH-15 | 51 | planning |
+| POLISH-16 | 51 | planning |
+| POLISH-17 | 53 | planning |
+
+---
+
+## Archived (v0.10.0) — Docs & Narrative Shine (SHIPPED 2026-04-25)
+
+**Milestone goal:** Make the reposix value proposition land in 10 seconds for a cold reader, with progressive disclosure of architecture and a tested 5-minute first-run tutorial. Sales-ready docs with hard numbers, agent-SDK guidance, and a banned-word linter that enforces P1/P2 framing rules.
+
+**Source of truth:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md`. Framing principles inherited from `.planning/notes/phase-30-narrative-vignettes.md`.
+
+### Validated
+
+- ✓ **DOCS-01**: Reader can understand reposix's value proposition within 10 seconds of landing on `docs/index.md` — Phase 40
+- ✓ **DOCS-02**: Three-page "How it works" section (`filesystem-layer`, `git-layer`, `trust-model`) — Phase 41
+- ✓ **DOCS-03**: Two home-adjacent concept pages (`mental-model-in-60-seconds`, `reposix-vs-mcp-and-sdks`) — Phase 40
+- ✓ **DOCS-04**: Three guides (`write-your-own-connector`, `integrate-with-your-agent`, `troubleshooting`) — Phase 42
+- ✓ **DOCS-05**: Simulator relocated from "How it works" to Reference (`docs/reference/simulator.md`) — Phase 42
+- ✓ **DOCS-06**: 5-minute first-run tutorial verified by `scripts/tutorial-runner.sh` — Phase 42
+- ✓ **DOCS-07**: MkDocs nav restructured per Diátaxis — Phase 43
+- ✓ **DOCS-08**: mkdocs-material theme tuning + README hero rewrite — Phase 43 (linter wiring) + Phase 45 (README)
+- ✓ **DOCS-09**: Banned-word linter + skill — Phase 43
+- ✓ **DOCS-10**: 16-page cold-reader clarity audit; zero critical friction points — Phase 44
+- ✓ **DOCS-11**: README points at mkdocs site; CHANGELOG `[v0.10.0]` — Phase 45 (playwright screenshots deferred to v0.11.0 — cairo system libs unavailable on dev host; tracked under POLISH-11)
 
 ---
 
@@ -178,28 +213,28 @@
 
 ---
 
-## Traceability
+## Traceability (v0.9.0 — historical)
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| ARCH-01 | 31 | planning |
-| ARCH-02 | 31 | planning |
-| ARCH-03 | 31 | planning |
-| ARCH-04 | 32 | planning |
-| ARCH-05 | 32 | planning |
-| ARCH-06 | 33 | planning |
-| ARCH-07 | 33 | planning |
-| ARCH-08 | 34 | planning |
-| ARCH-09 | 34 | planning |
-| ARCH-10 | 34 | planning |
-| ARCH-11 | 35 | planning |
-| ARCH-12 | 35 | planning |
-| ARCH-13 | 36 | planning |
-| ARCH-14 | 36 | planning |
-| ARCH-15 | 36 | planning |
-| ARCH-16 | 35 | planning |
-| ARCH-17 | 35 (capture) + 36 (artifact) | planning |
-| ARCH-18 | 36 | planning |
-| ARCH-19 | 36 | shipped |
+| ARCH-01 | 31 | shipped |
+| ARCH-02 | 31 | shipped |
+| ARCH-03 | 31 | shipped |
+| ARCH-04 | 32 | shipped |
+| ARCH-05 | 32 | shipped |
+| ARCH-06 | 33 | shipped |
+| ARCH-07 | 33 | shipped |
+| ARCH-08 | 34 | shipped |
+| ARCH-09 | 34 | shipped |
+| ARCH-10 | 34 | shipped |
+| ARCH-11 | 35 | shipped |
+| ARCH-12 | 35 | shipped |
+| ARCH-13 | 36 | shipped |
+| ARCH-14 | 36 | shipped |
+| ARCH-15 | 36 | shipped |
+| ARCH-16 | 35 | shipped |
+| ARCH-17 | 35 (capture) + 36 (artifact) | shipped |
+| ARCH-18 | 36 | shipped |
+| ARCH-19 | 36 | shipped (pending-secrets until CI secrets decrypt) |
 
-*(v0.9.0 ARCH-01..19 all shipped 2026-04-24. DOCS-01..09 (originally deferred from v0.9.0) are owned by the active v0.10.0 section above. DOCS-10 and DOCS-11 are new in v0.10.0.)*
+*(v0.9.0 ARCH-01..19 all shipped 2026-04-24. v0.10.0 DOCS-01..11 all shipped 2026-04-25 — see "Archived (v0.10.0)" above. v0.11.0 active list is POLISH-01..17 above.)*
