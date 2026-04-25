@@ -4,7 +4,7 @@ milestone: v0.10.0
 milestone_name: Docs & Narrative Shine
 status: planning_started
 last_updated: "2026-04-24T22:48:00.000Z"
-last_activity: 2026-04-24 -- v0.9.0 milestone lifecycle complete (audit + complete-milestone). v0.10.0 planning kicks off.
+last_activity: 2026-04-24 -- v0.10.0 scaffolded — DOCS-01..11 + Phases 40-45 mapped (REQUIREMENTS.md + ROADMAP.md + PROJECT.md updates).
 progress:
   total_phases: 0
   completed_phases: 0
@@ -19,6 +19,7 @@ progress:
 
 ### Roadmap Evolution
 
+- **v0.10.0 scaffolded (2026-04-24, same session):** Promoted `.planning/research/v0.10.0-post-pivot/milestone-plan.md` draft into REQUIREMENTS.md (DOCS-01..11 active section + traceability), ROADMAP.md (Phases 40–45 with rich Goal/Requirements/Depends-on/Success-criteria/Context-anchor blocks), PROJECT.md (goal paragraph filled), and STATE.md (cursor + this entry). Phase mapping: 40 = hero + concepts (DOCS-01, 03, 08-partial), 41 = how-it-works trio (DOCS-02), 42 = tutorial + guides + simulator-relocate (DOCS-04, 05, 06), 43 = nav + theme + banned-words linter + reposix-banned-words skill (DOCS-07, 08-linter, 09), 44 = doc-clarity-review release gate (DOCS-10), 45 = README rewrite + CHANGELOG + screenshots + tag (DOCS-11). v0.9.0 latency numbers (8ms get-issue, 24ms init, 9ms list, 5ms caps) wired through DOCS-01 + Phase 40 Goal. Legacy Phase 30 entry retained in ROADMAP.md as `<details>` traceability block but not executed. Helper-hardcodes-SimBackend tech debt remains scheduled before v0.11.0 benchmark commits, NOT v0.10.0.
 - **v0.9.0 Architecture Pivot SHIPPED (2026-04-24):** Phases 31–36 — reposix-cache crate, stateless-connect read path, delta sync, push conflict + blob limit, CLI pivot + agent UX (real-backend pending-secrets), FUSE deletion + reposix-agent-flow skill + release. ~60 commits, +9 net workspace tests, all 6 phase verifications passed. Helper-hardcodes-SimBackend documented as v0.10.0 work.
 - **v0.9.0 scaffold amended (2026-04-24, same session):** ARCH-16..19 added for real-backend validation + latency benchmarks + canonical testing-targets doc. TokenWorld (Confluence), `reubenjohn/reposix` (GitHub), and JIRA `TEST` project added to CLAUDE.md as sanctioned test targets. Phases 35 + 36 gained real-backend success criteria. Simulator-only coverage no longer satisfies transport/perf acceptance.
 - **Phases 31–36 added to v0.9.0 (2026-04-24, this session):** Architecture-pivot phases scaffolded — 31 reposix-cache, 32 stateless-connect read path, 33 delta sync, 34 push conflict + blob limit, 35 CLI pivot + agent UX, 36 FUSE deletion + CLAUDE.md update + reposix-agent-flow skill + release. Authored autonomously based on `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md`.
@@ -62,9 +63,9 @@ issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
 
 Phase: — (v0.10.0 not yet planned)
 Plan: —
-Cursor: **Run /gsd-autonomous to drive v0.10.0 phases (Docs & Narrative Shine — see .planning/research/v0.10.0-post-pivot/milestone-plan.md).**
-Status: Planning (v0.10.0)
-Last activity: 2026-04-24 -- v0.9.0 milestone lifecycle complete (audit + complete-milestone)
+Cursor: **Run /gsd-autonomous to drive v0.10.0 phases 40–45.**
+Status: Planning (v0.10.0 scaffolded — DOCS-01..11 + Phases 40-45 mapped)
+Last activity: 2026-04-24 -- v0.10.0 scaffolded (REQUIREMENTS.md + ROADMAP.md + PROJECT.md updates)
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.

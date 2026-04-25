@@ -112,9 +112,27 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 
 ## Current Milestone: v0.10.0 — Docs & Narrative Shine (planning)
 
-**Goal:** Make the v0.9.0 architecture pivot legible. A cold visitor understands reposix's value proposition within 10 seconds, runs the 5-minute first-run tutorial against the simulator, and ends with a real edit committed and pushed via `reposix init` + standard git. The architecture pivot becomes a story (cache layer / git layer / trust model — three pages, each with one mermaid diagram and a playwright screenshot), not a code change. Forward plan in `.planning/research/v0.10.0-post-pivot/milestone-plan.md` proposes Phases 40–45.
+**Goal:** Make the v0.9.0 architecture pivot legible. A cold visitor understands reposix's value proposition within 10 seconds of landing on the docs site, runs the 5-minute first-run tutorial against the simulator, and ends with a real edit committed and pushed via `reposix init` + standard git. The architecture pivot becomes a *story* (cache layer / git layer / trust model — three pages, each with one mermaid diagram rendered via mcp-mermaid and a playwright screenshot), not a code change.
 
-**Carry-forward from v0.9.0 (tech debt):** Helper hardcodes `SimBackend` in the `stateless-connect` handler — documented in `.planning/v0.9.0-MILESTONE-AUDIT.md` §5 and the v0.9.0 ROADMAP archive. Resolution scheduled before any v0.11.0 ("Performance & Sales Assets") benchmark commits.
+**Target features (Phases 40–45 — see `.planning/ROADMAP.md` for the full breakdown, `.planning/research/v0.10.0-post-pivot/milestone-plan.md` for the design authority):**
+
+- **Phase 40** — Hero rewrite of `docs/index.md` + two home-adjacent concept pages (`mental-model-in-60-seconds`, `reposix-vs-mcp-and-sdks`). Hero numbers sourced from `docs/benchmarks/v0.9.0-latency.md` (`8 ms` get-issue, `24 ms` `reposix init` cold, `9 ms` list, `5 ms` capabilities probe).
+- **Phase 41** — How-it-works trio (`filesystem-layer`, `git-layer`, `trust-model`); each page one mermaid diagram + playwright screenshot, **reframed for git-native** (no FUSE / inode / daemon vocabulary above Layer 4).
+- **Phase 42** — 5-minute first-run tutorial verified by `scripts/tutorial-runner.sh` (the doc IS the test). Three guides: write-your-own-connector, integrate-with-your-agent (pointer page; v0.12.0 ships full recipes), troubleshooting. Simulator relocated to Reference.
+- **Phase 43** — MkDocs nav restructured per Diátaxis. mkdocs-material theme tuning. `scripts/banned-words-lint.sh` + `docs/.banned-words.toml` + `.claude/skills/reposix-banned-words/SKILL.md` ship together (institutional memory of P2 framing rules per OP-4, replacing ad-hoc grep).
+- **Phase 44** — `doc-clarity-review` skill run as a release gate over every user-facing page (cold-reader scenario in isolation, OP-6); zero critical friction points required to ship.
+- **Phase 45** — README hero rewrite (every adjective replaced with a measured number from `docs/benchmarks/v0.9.0-latency.md` or v0.9.0 audit/threat-model), CHANGELOG `[v0.10.0]`, social cards, playwright screenshots committed for landing + how-it-works + tutorial. `scripts/tag-v0.10.0.sh` mirrors v0.9.0 tag script (≥6 safety guards).
+
+**Non-negotiable framing principles** (carried over from `.planning/notes/phase-30-narrative-vignettes.md` — these constraints apply to every DOCS-NN requirement):
+
+- **P1 — complement, not replace.** reposix does not replace REST APIs. REST stays. reposix absorbs the ceremony around the 80% of tracker operations agents do constantly. The word "replace" is banned from hero and value-prop copy. Acceptable verbs: *complement, absorb, subsume, lift, erase the ceremony, no new vocabulary*.
+- **P2 — progressive disclosure: phenomenology before implementation.** Layer 1 (hero, first 10 seconds): what the user experiences — issues are files, edit them, `git push`. Layer 2 (just below the fold): minimum mechanism to make the experience make sense. Layer 3 (How it works): technical reveal earned. Layer 4 (Reference / ADRs / Research): full depth. Banned-above-Layer-3 list is **revised for git-native**: `FUSE`, `fusermount`, `kernel`, `syscall` (all retained), plus the new git-native jargon `partial-clone`, `promisor`, `stateless-connect`, `fast-import`, `protocol-v2` (new — these were introduced by v0.9.0 and would leak architecture above Layer 3 if unchecked).
+- **Numbers, not adjectives.** Every adjective on the README hero and `docs/index.md` hero is replaced with a measured number sourced from a committed artifact (`docs/benchmarks/v0.9.0-latency.md`, v0.9.0 audit, threat-model). Enforced by `scripts/banned-words-lint.sh` (Phase 43).
+- **Self-improving infrastructure (OP-4).** Banned-words linter, `reposix-banned-words` skill, and `tutorial-runner.sh` are committed code, not session memory. Per project CLAUDE.md: ad-hoc bash is a missing-tool signal — every grep that asserts a layer rule becomes a reviewable artifact.
+
+**Source of truth:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` (design authority, drafted 2026-04-24). Original narrative IA: `.planning/notes/phase-30-narrative-vignettes.md` (framing principles + hero vignette V1 — must be revised for git-native architecture by Phase 41 carving).
+
+**Carry-forward from v0.9.0 (tech debt):** Helper hardcodes `SimBackend` in the `stateless-connect` handler — documented in `.planning/v0.9.0-MILESTONE-AUDIT.md` §5 and the v0.9.0 ROADMAP archive. Resolution scheduled before any v0.11.0 ("Performance & Sales Assets") benchmark commits, NOT v0.10.0 (out-of-scope per active requirements section).
 
 ---
 

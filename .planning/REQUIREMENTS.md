@@ -1,4 +1,63 @@
-# Requirements — Milestone v0.9.0: Architecture Pivot — Git-Native Partial Clone
+# Requirements — Active milestone: v0.10.0 Docs & Narrative Shine
+
+**Active milestone:** v0.10.0 Docs & Narrative Shine (planning_started 2026-04-24).
+**Previous validated milestone:** v0.9.0 Architecture Pivot — Git-Native Partial Clone (SHIPPED 2026-04-24, see "v0.9.0 Requirements (Validated)" section below).
+
+---
+
+## v0.10.0 Requirements — Docs & Narrative Shine
+
+**Milestone goal:** Make the reposix value proposition land in 10 seconds for a cold reader, with progressive disclosure of architecture and a tested 5-minute first-run tutorial. Sales-ready docs with hard numbers, agent-SDK guidance, and a banned-word linter that enforces P1/P2 framing rules.
+
+**Source of truth:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` (forward-plan draft, ratified 2026-04-24). Framing principles inherited from `.planning/notes/phase-30-narrative-vignettes.md` (P1 complement-not-replace; P2 progressive disclosure — banned-word list **revised for git-native**: `FUSE`, `inode`, `daemon`, `mount`, `fusermount` removed because they no longer apply; new banned-above-Layer-3 list is `partial-clone`, `promisor`, `stateless-connect`, `fast-import`, `protocol-v2`).
+
+**Operating-principle hooks (non-negotiable, per project CLAUDE.md):**
+
+- **Self-improving infrastructure (OP-4).** Every doc claim is grounded in a committed artifact (`docs/benchmarks/v0.9.0-latency.md`, `docs/reference/testing-targets.md`, source files). No marketing copy that the codebase can't back up.
+- **Close the feedback loop (OP-1).** Every mermaid diagram is rendered via mcp-mermaid and screenshot-verified via playwright before merge. The 5-minute tutorial is run end-to-end by a test fixture — the doc IS the test.
+- **Numbers, not adjectives.** Every adjective on the README hero and `docs/index.md` hero is replaced with a measured number sourced from `docs/benchmarks/v0.9.0-latency.md` or v0.9.0 audit/threat-model artifacts.
+- **Ground truth obsession (OP-6).** Banned-word linter is committed in `scripts/banned-words-lint.sh`, runs in pre-commit + CI; the layer-banned-word list lives in a checked-in config (`docs/.banned-words.toml` or equivalent). Ad-hoc grep is not a linter.
+
+### Active
+
+- [ ] **DOCS-01**: Reader can understand reposix's value proposition within 10 seconds of landing on `docs/index.md` (hero with V1 before/after code block + three-up value props citing actual latency numbers from `docs/benchmarks/v0.9.0-latency.md` — `8 ms` `get-issue`, `24 ms` `reposix init`, `9 ms` `list issues`, `5 ms` helper capabilities probe). P1 "complement, not replace" framing — the word "replace" is banned from hero copy.
+- [ ] **DOCS-02**: Three-page "How it works" section — `docs/how-it-works/{filesystem-layer,git-layer,trust-model}.md` — each with one mermaid diagram (rendered via mcp-mermaid + playwright-screenshot verified) carved from the existing architecture argument and the v0.9.0 architecture-pivot summary. **Filesystem-layer** is reframed for git-native (the cache + working tree, not FUSE).
+- [ ] **DOCS-03**: Two home-adjacent concept pages: `docs/concepts/mental-model-in-60-seconds.md` (clone = snapshot · frontmatter = schema · `git push` = sync verb) and `docs/concepts/reposix-vs-mcp-and-sdks.md` (positioning page grounding P1, with a numbers-table contrasting tokens-per-task, latency, and dependency footprint).
+- [ ] **DOCS-04**: Three guides: `docs/guides/write-your-own-connector.md` (BackendConnector walkthrough), `docs/guides/integrate-with-your-agent.md` (Claude Code / Cursor / SDK patterns), `docs/guides/troubleshooting.md` (push rejections, audit-log queries, blob-limit recovery).
+- [ ] **DOCS-05**: Simulator relocated from "How it works" to Reference (`docs/reference/simulator.md`).
+- [ ] **DOCS-06**: 5-minute first-run tutorial `docs/tutorials/first-run.md` against the simulator, ending with a real edit committed and pushed. Tutorial is end-to-end runnable; the runner script (`scripts/tutorial-runner.sh`) verifies each step.
+- [ ] **DOCS-07**: MkDocs nav restructured per Diátaxis (Home / How it works / Tutorials / Guides / Reference / Decisions / Research). P2 banned terms (FUSE, fusermount, kernel, syscall — plus the revised git-native list `partial-clone`, `promisor`, `stateless-connect`, `fast-import`, `protocol-v2`) do not appear above Layer 3 (How it works) in any user-facing page.
+- [ ] **DOCS-08**: mkdocs-material theme tuned (palette, hero features, social cards). README hero rewritten — every adjective replaced with a measured number sourced from v0.9.0 latency or v0.9.0 audit/threat-model.
+- [ ] **DOCS-09**: Banned-word linter `scripts/banned-words-lint.sh` runs on every doc commit (pre-commit hook + CI) and rejects violations of the P2 progressive-disclosure layer rules. The layer-banned-word list lives in a checked-in config (`docs/.banned-words.toml`) so adding a layer banned word is a reviewable diff.
+- [ ] **DOCS-10**: Per-page `doc-clarity-review` skill run as a release gate; zero critical friction points in any user-facing page. Findings logged per phase; the gate runs in Phase 44 over the full doc tree.
+- [ ] **DOCS-11**: README updated to point to mkdocs site as the source of truth for narrative; root-level docs (`README.md`, `CLAUDE.md`) are stubs/grounding-only and stop duplicating narrative copy. CHANGELOG `[v0.10.0]` block + playwright screenshots committed for landing + how-it-works + tutorial pages.
+
+### Out of Scope
+
+- New backend connectors, new CLI commands, new transport features. v0.10.0 is docs-only.
+- Benchmark harness improvements beyond cross-linking — `cargo run -p reposix-bench` lands in v0.11.0.
+- Agent-SDK recipes (Claude Code / Cursor / Aider / Continue / Devin / SWE-agent CI fixtures) — those land in v0.12.0. v0.10.0 ships `docs/guides/integrate-with-your-agent.md` as a pointer page only.
+- Resolving the v0.9.0 carry-forward "helper hardcodes `SimBackend`" tech debt — scheduled before v0.11.0 benchmark commits, not v0.10.0.
+
+### Traceability
+
+| REQ-ID | Phase | Status |
+|--------|-------|--------|
+| DOCS-01 | 40 | planning |
+| DOCS-02 | 41 | planning |
+| DOCS-03 | 40 | planning |
+| DOCS-04 | 42 | planning |
+| DOCS-05 | 42 | planning |
+| DOCS-06 | 42 | planning |
+| DOCS-07 | 43 | planning |
+| DOCS-08 | 43 (linter wiring) + 45 (README hero rewrite) | planning |
+| DOCS-09 | 43 | planning |
+| DOCS-10 | 44 | planning |
+| DOCS-11 | 45 | planning |
+
+---
+
+## v0.9.0 Requirements (Validated) — Architecture Pivot — Git-Native Partial Clone
 
 **Milestone goal:** Replace the FUSE virtual filesystem with git's built-in partial clone mechanism. The `git-remote-reposix` helper becomes a promisor remote tunnelling protocol-v2 traffic to a local bare-repo cache built from REST responses. Agents interact with the project using only standard git commands (`clone`, `fetch`, `cat`, `grep`, `commit`, `push`) — zero reposix-specific CLI awareness required. FUSE is deleted entirely; `crates/reposix-fuse/` is removed and the `fuser` dependency is purged.
 
@@ -97,22 +156,6 @@
 
 ---
 
-## v0.10.0 Docs & Narrative (deferred)
-
-> **Why deferred:** v0.9.0 was originally planned as a docs-only milestone (DOCS-01..09). Architecture-pivot research showed that publishing those docs against the FUSE design would produce content that is immediately obsolete. Phase 30 is therefore deferred to v0.10.0, where it will be revised to describe the git-native partial-clone architecture instead. The DOCS requirements below are carried forward verbatim and will need revision against the new architecture.
-
-- [ ] **DOCS-01**: Reader can understand reposix's value proposition within 10 seconds of landing on the MkDocs home page (hero vignette with V1 before/after code block + three-up value props, obeying P1 "complement, not replace" tonal rule — the word "replace" banned from hero and value-prop copy). *To be revised against the new architecture.*
-- [ ] **DOCS-02**: Reader can understand how reposix works via a "How it works" section containing three pages — **The cache layer**, **The git layer**, **The trust model** — each with one mcp-mermaid diagram rendered and playwright-screenshot-verified. (Originally **The filesystem layer**; renamed because FUSE is gone.) *To be revised against the new architecture.*
-- [ ] **DOCS-03**: Reader can grasp reposix's mental model in 60 seconds (three conceptual keys: *clone = snapshot · frontmatter = schema · `git push` = sync verb*) and understand how reposix compares to MCP and traditional REST SDKs. *To be revised against the new architecture.*
-- [ ] **DOCS-04**: A developer can follow a guide to (a) implement a `BackendConnector` for any REST-addressable service, (b) integrate reposix with their LLM agent (Claude Code, Cursor, custom SDK patterns), and (c) troubleshoot common failure modes (push rejections, blob-limit refusals, audit-log queries). *To be revised — FUSE-mount troubleshooting replaced by partial-clone troubleshooting.*
-- [ ] **DOCS-05**: The simulator is documented as a dev-tooling reference page (moved out of "How it works" into Reference). *Carried forward.*
-- [ ] **DOCS-06**: A new reader can run a 5-minute first-run tutorial against the simulator and end with a real edit committed and pushed via `reposix init` + standard git. *To be revised — `reposix mount` replaced with `reposix init`.*
-- [ ] **DOCS-07**: MkDocs navigation is restructured per Diátaxis mapping (Home / How it works / Guides / Reference / Decisions / Research) with progressive-disclosure layer rules enforced — P2 banned terms (helper, kernel, syscall, partial-clone-internal jargon) do not appear above Layer 3. *Banned-term list revised: `FUSE`, `inode`, `daemon`, `mount` removed because they no longer apply.*
-- [ ] **DOCS-08**: mkdocs-material theme is tuned for the narrative (palette, hero features, social cards). *Carried forward.*
-- [ ] **DOCS-09**: A banned-word linter runs on every doc commit and rejects violations of the P2 progressive-disclosure layer rules. *Banned-word list revised per DOCS-07.*
-
----
-
 ## Future Requirements
 
 *(Deferred; emerge from open questions in architecture-pivot-summary §7.)*
@@ -157,5 +200,6 @@
 | ARCH-16 | 35 | planning |
 | ARCH-17 | 35 (capture) + 36 (artifact) | planning |
 | ARCH-18 | 36 | planning |
-| ARCH-19 | 36 | planning |
-| DOCS-01..09 | (v0.10.0) | deferred |
+| ARCH-19 | 36 | shipped |
+
+*(v0.9.0 ARCH-01..19 all shipped 2026-04-24. DOCS-01..09 (originally deferred from v0.9.0) are owned by the active v0.10.0 section above. DOCS-10 and DOCS-11 are new in v0.10.0.)*

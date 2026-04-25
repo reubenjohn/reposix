@@ -17,11 +17,130 @@
 
 ## v0.10.0 Docs & Narrative Shine (PLANNING)
 
-> **Status:** scoping. The architecture pivot shipped in v0.9.0 (2026-04-24); v0.10.0 ports the deferred Phase 30 docs work onto the git-native design and adds tutorial / how-it-works / mental-model pages around the new flow. See `.planning/research/v0.10.0-post-pivot/milestone-plan.md` for the proposed phase breakdown (Phases 40–45).
+> **Status:** scoping complete; phases 40–45 scaffolded. The architecture pivot shipped in v0.9.0 (2026-04-24); v0.10.0 ports the deferred Phase 30 docs work onto the git-native design and adds tutorial / how-it-works / mental-model pages around the new flow. Source-of-truth design in `.planning/research/v0.10.0-post-pivot/milestone-plan.md`. Original narrative IA in `.planning/notes/phase-30-narrative-vignettes.md` (framing principles P1/P2 inherited; banned-word list revised for git-native). v0.9.0 archive in `.planning/milestones/v0.9.0-ROADMAP.md`.
 
 **Thesis.** A cold visitor understands reposix in 10 seconds and runs the tutorial in 5 minutes. The architecture pivot becomes a story, not a code change.
 
 **Carry-forward from v0.9.0 (tech debt):** Helper hardcodes `SimBackend` in the `stateless-connect` handler — documented in `.planning/v0.9.0-MILESTONE-AUDIT.md` §5. Resolution scheduled before v0.11.0 benchmark commits (track as a hotfix or v0.11.0 prereq).
+
+### Phase 40: Hero + concepts — landing page lands the value prop in 10 seconds (v0.10.0)
+
+**Goal:** Rewrite `docs/index.md` and the README hero so a cold reader states reposix's value prop within 10 seconds. Hero opens with a V1 before/after code block (Jira-close vignette from `.planning/notes/phase-30-narrative-vignettes.md`) and a three-up value-prop grid that cites *measured* numbers from `docs/benchmarks/v0.9.0-latency.md` (`8 ms` get-issue, `24 ms` `reposix init` cold, `9 ms` list-issues, `5 ms` capabilities probe). Add the two home-adjacent concept pages: `docs/concepts/mental-model-in-60-seconds.md` (clone = snapshot · frontmatter = schema · `git push` = sync verb) and `docs/concepts/reposix-vs-mcp-and-sdks.md` (positioning page grounding P1, with a numbers-table contrasting tokens-per-task, latency, and dependency footprint). README hero adjective-rewrite is split: this phase replaces the `docs/index.md` hero copy; Phase 45 finishes the README. Operating-principle hooks: **OP-1 close the feedback loop** — render every diagram via mcp-mermaid + playwright screenshot before merge; **numbers, not adjectives** — banned-word linter (Phase 43) rejects any adjective in the hero that doesn't dereference a number in `docs/benchmarks/v0.9.0-latency.md`; **P1 complement-not-replace** — the word "replace" stays out of the hero copy.
+
+**Requirements:** DOCS-01, DOCS-03, DOCS-08 (partial — index.md hero only)
+
+**Depends on:** (nothing — v0.9.0 shipped; latency artifact already committed)
+
+**Success criteria:**
+1. `mkdocs build --strict` green for `docs/index.md`, `docs/concepts/mental-model-in-60-seconds.md`, `docs/concepts/reposix-vs-mcp-and-sdks.md`.
+2. Cold-reader test: a `doc-clarity-review` subagent given only `docs/index.md` (copied to `/tmp`, no repo context) states reposix's value proposition unprompted within 10s of reading.
+3. Every adjective in the `docs/index.md` hero block dereferences a number sourced from `docs/benchmarks/v0.9.0-latency.md` (assertable: `scripts/banned-words-lint.sh` Phase 43 acceptance test pre-flight).
+4. The word "replace" does NOT appear in the hero or three-up value props.
+5. `docs/concepts/mental-model-in-60-seconds.md` is one-page (≤ 60-second read; `wc -w` ≤ 250).
+6. `docs/concepts/reposix-vs-mcp-and-sdks.md` numbers-table cites `docs/benchmarks/v0.9.0-latency.md` by relative link and renders in MkDocs.
+7. Playwright screenshots committed for landing page at desktop (1280px) and mobile (375px) widths.
+
+**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §2 v0.10.0 Phase 41 entry, `.planning/notes/phase-30-narrative-vignettes.md` (hero vignette V1 + framing principles P1/P2), `docs/benchmarks/v0.9.0-latency.md` (numbers source), `.planning/milestones/v0.9.0-ROADMAP.md` (architecture context).
+
+### Phase 41: How-it-works trio — three pages, three diagrams, git-native architecture as a story (v0.10.0)
+
+**Goal:** Carve `docs/how-it-works/{filesystem-layer,git-layer,trust-model}.md` from the existing `docs/architecture.md` + `docs/security.md` + the v0.9.0 architecture-pivot summary. **Reframed for git-native** — `filesystem-layer.md` describes the cache + working tree + frontmatter (NOT FUSE / inode / daemon, all of which are Layer 4 jargon now); `git-layer.md` describes the promisor remote + push round-trip *as user-experience* (the words "stateless-connect", "fast-import", "protocol-v2" are Layer 4 only and stay in `docs/reference/git-remote.md`); `trust-model.md` covers taint typing, allowlist, append-only audit, and the blob-limit guardrail. Each page has exactly one mermaid diagram rendered via mcp-mermaid and screenshot-verified via playwright. Operating-principle hooks: **OP-1 close the feedback loop** — `mcp__mcp-mermaid__generate_mermaid_diagram` then `mcp__playwright__browser_take_screenshot` for every diagram, both committed; **OP-4 self-improving infrastructure** — old `docs/architecture.md` + `docs/security.md` either re-pointed (frontmatter redirect) or deleted in Phase 43 nav restructure, never left as zombie pages. P2 progressive disclosure must be honored — the new banned-above-Layer-3 list (`partial-clone`, `promisor`, `stateless-connect`, `fast-import`, `protocol-v2`) is permitted on these three pages but nowhere above them.
+
+**Requirements:** DOCS-02
+
+**Depends on:** Phase 40 (hero must land the value prop before architecture is leaked)
+
+**Success criteria:**
+1. `docs/how-it-works/filesystem-layer.md`, `docs/how-it-works/git-layer.md`, `docs/how-it-works/trust-model.md` all exist and render under `mkdocs build --strict`.
+2. Each page has exactly one mermaid diagram (assertable: `grep -c '```mermaid' <file>` returns `1`).
+3. Each diagram is rendered to PNG via mcp-mermaid; the PNG is committed under `docs/how-it-works/diagrams/` and visually reviewed for spaghetti edges, overlapping labels, unreadable node text per global OP-1.
+4. Playwright screenshots of each rendered page (desktop + mobile) committed under `docs/screenshots/how-it-works/`.
+5. The words `FUSE`, `fusermount`, `inode`, `daemon`, `mount`, `kernel`, `syscall` do NOT appear in any of the three pages (banned per P2 + git-native cleanup).
+6. `filesystem-layer.md` describes the cache layer + working tree + frontmatter (the v0.9.0 architecture), not the deleted FUSE design.
+7. `git-layer.md` describes push round-trip and conflict rebase as user experience; protocol-v2 jargon stays in Reference (`docs/reference/git-remote.md`).
+8. Cross-link from each page back to `docs/concepts/mental-model-in-60-seconds.md` (Phase 40 anchor).
+
+**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §2 v0.10.0 Phase 42 entry, `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` §2–4 (cache + transport + sync), `docs/architecture.md` + `docs/security.md` (source content to carve), `.planning/notes/phase-30-narrative-vignettes.md` (P2 layer rules), `.planning/milestones/v0.9.0-ROADMAP.md` Phases 31–34.
+
+### Phase 42: Tutorial + guides + simulator relocate to Reference (v0.10.0)
+
+**Goal:** Ship the 5-minute first-run tutorial (`docs/tutorials/first-run.md`) that takes a fresh user from `cargo install reposix` (or release tarball) through `reposix init sim::demo /tmp/repo`, `cat`, edit, `git commit`, `git push`, and ends with a real edit applied. The tutorial is end-to-end runnable; `scripts/tutorial-runner.sh` verifies each step (the doc IS the test, per OP-1). Add the three guides: `docs/guides/write-your-own-connector.md` (BackendConnector trait walkthrough — moved/rewritten from existing `docs/connectors/guide.md`), `docs/guides/integrate-with-your-agent.md` (Claude Code / Cursor / SDK patterns — pointer page; full recipes ship in v0.12.0), `docs/guides/troubleshooting.md` (push rejections, audit-log queries, blob-limit recovery — sourced from v0.9.0 Phase 34 + 35 verification artifacts). Move simulator docs out of "How it works" into Reference (`docs/reference/simulator.md`, deduplicating against existing `crates/reposix-sim` docs and `docs/reference/http-api.md`). Operating-principle hooks: **OP-1 close the feedback loop** — `scripts/tutorial-runner.sh` runs in CI; **OP-6 ground truth obsession** — the tutorial commits a real edit and asserts the simulator audit log row.
+
+**Requirements:** DOCS-04, DOCS-05, DOCS-06
+
+**Depends on:** Phase 41 (how-it-works trio shapes the vocabulary the tutorial inherits)
+
+**Success criteria:**
+1. `docs/tutorials/first-run.md` exists and renders under `mkdocs build --strict`.
+2. `scripts/tutorial-runner.sh` exists, is executable, and runs the tutorial end-to-end against `reposix-sim` in under 5 minutes wall clock on the dev host.
+3. CI workflow gains a `tutorial-runner` job that invokes `scripts/tutorial-runner.sh` and fails if any step diverges from the tutorial copy.
+4. `docs/guides/write-your-own-connector.md`, `docs/guides/integrate-with-your-agent.md`, `docs/guides/troubleshooting.md` all exist and render.
+5. `docs/guides/integrate-with-your-agent.md` is explicitly a pointer page — it links to `docs/tutorials/first-run.md` for setup, lists Claude Code / Cursor / SDK as v0.12.0-coming-soon, and does NOT inline recipe code (that's v0.12.0 scope).
+6. `docs/reference/simulator.md` exists; any prior simulator content under `docs/how-it-works/` is removed or redirected.
+7. `docs/connectors/guide.md` either redirects to `docs/guides/write-your-own-connector.md` or is deleted (Phase 43 nav restructure finalizes this).
+8. The tutorial ends with a successful `git push` and a one-line audit-log assertion the reader can run themselves.
+
+**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §2 v0.10.0 Phase 43 entry, `docs/reference/cli.md` (current CLI surface, post v0.9.0), `docs/connectors/guide.md` (existing content to migrate), `.planning/milestones/v0.9.0-ROADMAP.md` Phase 34 + 35 (push rejection + blob-limit recovery as troubleshooting source).
+
+### Phase 43: Nav restructure (Diátaxis) + theme tuning + banned-words linter (v0.10.0)
+
+**Goal:** Restructure `mkdocs.yml` per Diátaxis (Home / How it works / Tutorials / Guides / Reference / Decisions / Research). Tune mkdocs-material theme (palette, hero features, social cards). Ship the banned-words linter `scripts/banned-words-lint.sh` (the layer-banned-word list lives in a checked-in config, e.g. `docs/.banned-words.toml`) and wire it into pre-commit + CI. Per global OP-4: the linter replaces the ad-hoc Phase 40-style grep — it is committed, reviewable code, not a one-off bash pipeline. Add (or extend) a project Claude Code skill `reposix-banned-words` at `.claude/skills/reposix-banned-words/SKILL.md` so authoring agents can self-check before commit. Delete or redirect now-stale top-level docs (`docs/architecture.md` carved into Phase 41 trio; `docs/security.md` carved into Phase 41 trust-model; `docs/connectors/guide.md` redirected per Phase 42); `mkdocs.yml not_in_nav` cleaned. Operating-principle hooks: **OP-4 self-improving infrastructure** — banned-words linter is the institutional memory of P2 framing rules, not a checklist; **OP-1 close the feedback loop** — pre-commit hook + CI integration both verified green before this phase ships.
+
+**Requirements:** DOCS-07, DOCS-08 (linter wiring half), DOCS-09
+
+**Depends on:** Phase 40, Phase 41, Phase 42 (all new pages must exist before nav restructure)
+
+**Success criteria:**
+1. `mkdocs.yml` nav reads top-down: Home / How it works / Tutorials / Guides / Reference / Decisions / Research (Diátaxis-clean — no mixed types within a section).
+2. `mkdocs build --strict` green; no orphan pages in `not_in_nav`.
+3. mkdocs-material theme palette + hero features + social cards configured; social cards generated and committed.
+4. `scripts/banned-words-lint.sh` exists, is executable, exits non-zero on any P2 violation, and reads its layer list from `docs/.banned-words.toml` (or equivalent checked-in config).
+5. Linter is wired into `.pre-commit-config.yaml` (or equivalent local hook) AND `.github/workflows/<docs|ci>.yml`; both invocations verified green on a clean tree and red on a seeded violation.
+6. `.claude/skills/reposix-banned-words/SKILL.md` exists with frontmatter `name: reposix-banned-words` and `description: <one-line>`. Skill body documents the layer rules and points at `docs/.banned-words.toml`.
+7. `docs/architecture.md`, `docs/security.md`, `docs/connectors/guide.md` are either deleted or replaced with one-line redirect stubs pointing at the carved-out successor pages.
+8. P2 banned terms (`FUSE`, `fusermount`, `kernel`, `syscall`, `partial-clone`, `promisor`, `stateless-connect`, `fast-import`, `protocol-v2`) do not appear above Layer 3 (How it works) anywhere in `docs/`.
+
+**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §2 v0.10.0 Phase 44 entry + §3.5 (numbers-not-adjectives linter) + §5 (`reposix-banned-words` skill), `.planning/notes/phase-30-narrative-vignettes.md` §"P2 progressive disclosure" (layer rules — banned-word list revised), `mkdocs.yml` (current nav), global OP-4 (committed-artifact rule for ad-hoc bash).
+
+### Phase 44: doc-clarity-review release gate — zero critical friction points (v0.10.0)
+
+**Goal:** Run the `doc-clarity-review` skill as a release gate over every user-facing page in `docs/` — each page reviewed in isolation in a fresh `/tmp` context with no repo grounding (the cold-reader scenario, OP-6 ground truth). Findings are logged per page; zero critical friction points must remain in any user-facing page before v0.10.0 ships. Operating-principle hooks: **OP-1 close the feedback loop** — clarity review is run, not assumed; **OP-2 aggressive subagent delegation** — the orchestrator dispatches one `doc-clarity-review` subagent per page and integrates findings, never reads pages itself; **OP-6 ground truth obsession** — findings live in committed `.planning/phases/44-.../CLARITY-FINDINGS.md`, not session memory.
+
+**Requirements:** DOCS-10
+
+**Depends on:** Phase 40, Phase 41, Phase 42, Phase 43 (all docs must be in their final shape before clarity review)
+
+**Success criteria:**
+1. Every user-facing page in `docs/` (Home, How it works trio, Tutorials, Guides, concept pages) has a `doc-clarity-review` finding row in `.planning/phases/44-.../CLARITY-FINDINGS.md`.
+2. Each finding row has a status: `clean` (no critical friction), `fixed-this-phase` (fix landed), or `deferred-with-justification` (documented reason, owner-approved).
+3. Zero `critical` friction points remain across any page.
+4. Findings file committed; `mkdocs build --strict` green after any fix-this-phase landings.
+5. Subagent fan-out happened in parallel (one subagent per page) — verified via the `.planning/phases/44-.../EXECUTION-LOG.md`.
+
+**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §3.6 (`doc-clarity-review` on every doc page as release gate), `doc-clarity-review` skill at `.claude/skills/doc-clarity-review/SKILL.md` (or wherever it lives — discoverable via skill directory), Phase 26 doc-clarity-review precedent (`.planning/milestones/v0.8.0-ROADMAP.md` Phase 26 entry).
+
+### Phase 45: README rewrite + CHANGELOG + screenshots + final integration + tag (v0.10.0)
+
+**Goal:** Final integration phase. Rewrite the README hero — every adjective replaced with a measured number sourced from `docs/benchmarks/v0.9.0-latency.md` or v0.9.0 audit/threat-model artifacts. Point the README at the mkdocs site as the source of truth for narrative; root-level docs become stubs (`README.md` is grounding-only). Finalize CHANGELOG `[v0.10.0]` block. Commit playwright screenshots for landing + how-it-works trio + tutorial pages at desktop (1280px) and mobile (375px). Generate social cards. Cross-link `docs/benchmarks/v0.9.0-latency.md` from `docs/index.md`, the vs-MCP page, and the tutorial. Verify `mkdocs build --strict` green, banned-words linter green, all CI green. Author `scripts/tag-v0.10.0.sh` mirroring `scripts/tag-v0.9.0.sh` (6 safety guards minimum: clean tree, on `main`, version match, CHANGELOG `[v0.10.0]` exists, tests green, signed tag). Run `gsd-audit-milestone` + `gsd-complete-milestone` cleanup. Operating-principle hooks: **OP-1 close the feedback loop** — `gh run view` shows green CI before tag; **OP-6 ground truth obsession** — every README claim grounds in a committed artifact, no marketing copy.
+
+**Requirements:** DOCS-08 (README hero rewrite half), DOCS-11
+
+**Depends on:** Phase 44 (clarity gate must pass before release artifacts finalize)
+
+**Success criteria:**
+1. README.md hero rewritten — `scripts/banned-words-lint.sh --readme` (or equivalent guard) confirms zero adjectives lacking a number-source.
+2. README points at the mkdocs site (`https://reubenjohn.github.io/reposix` or wherever it deploys) as the narrative source of truth; root README contains grounding-only content (install, build, link out).
+3. CHANGELOG `[v0.10.0]` block finalized — summarizes phases 40–45 and lists DOCS-01..11 as shipped.
+4. Playwright screenshots committed under `docs/screenshots/`: landing page (desktop + mobile), each how-it-works page (desktop + mobile), tutorial walkthrough (desktop). At least 8 PNGs committed.
+5. Social cards generated and committed under `docs/social/assets/` (or theme-default location); MkDocs social plugin configured + green.
+6. `docs/index.md`, `docs/concepts/reposix-vs-mcp-and-sdks.md`, and `docs/tutorials/first-run.md` all relative-link to `docs/benchmarks/v0.9.0-latency.md`.
+7. `mkdocs build --strict` green; banned-words linter green; `gh run view` on the release commit shows all CI jobs green.
+8. `scripts/tag-v0.10.0.sh` exists with ≥ 6 safety guards (clone Phase 36's `scripts/tag-v0.9.0.sh`); `bash scripts/tag-v0.10.0.sh` is the user-gate handoff (orchestrator does NOT push the tag).
+9. `gsd-audit-milestone` run and `.planning/v0.10.0-MILESTONE-AUDIT.md` written (mirrors `.planning/v0.9.0-MILESTONE-AUDIT.md`).
+
+**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §2 v0.10.0 Phase 45 entry + §3.5 (numbers-not-adjectives), `.planning/milestones/v0.9.0-ROADMAP.md` Phase 36 (release-cycle precedent: tag-script + audit + complete-milestone), `docs/benchmarks/v0.9.0-latency.md` (numbers source), `scripts/tag-v0.9.0.sh` (template for v0.10.0 tag script).
+
+---
 
 <details>
 <summary>✅ v0.9.0 Architecture Pivot (Phases 31–36) — SHIPPED 2026-04-24</summary>
@@ -181,28 +300,18 @@
 
 ---
 
-## v0.10.0 Docs & Narrative (carries Phase 30 forward against the new architecture)
+<details>
+<summary>📋 Legacy Phase 30 — superseded by Phases 40–45 above (retained for traceability)</summary>
 
-> **Status:** Phase 30 was originally scoped against the FUSE design. Now that v0.9.0 has shipped the git-native architecture, Phase 30 (and the broader Docs & Narrative Shine milestone, Phases 40–45 per `.planning/research/v0.10.0-post-pivot/milestone-plan.md`) will execute against the new flow. Banned-word linter rules will be revised: `FUSE`, `inode`, `daemon`, `mount`, `fusermount` removed; new banned-above-Layer-3 list = `partial-clone`, `promisor`, `stateless-connect`, `fast-import`, `protocol-v2`.
+> **Why retained:** Phase 30 was originally scoped against the FUSE design. Now that v0.9.0 has shipped the git-native architecture, Phase 30's intent is delivered by the actively-tracked Phases 40–45 above. The plans below (`30-01-PLAN.md`..`30-09-PLAN.md`) are NOT executed; they are kept for traceability so anyone reading `git log` can trace v0.10.0's lineage back to the original narrative work.
 
-### Phase 30: Docs IA and narrative overhaul — landing page aha moment and progressive-disclosure architecture reveal (v0.10.0)
+### Phase 30: Docs IA and narrative overhaul — landing page aha moment and progressive-disclosure architecture reveal (v0.10.0) [SUPERSEDED]
 
 **Goal:** Rewrite the landing page and restructure the MkDocs nav so reposix's value proposition lands hard within 10 seconds of a cold reader arriving, with technical architecture progressively revealed in a "How it works" section rather than leaked above the fold. Expand the site from a correct reference tree into a substrate story that explains *why*, *how*, and *how to extend*.
 
-**Requirements:** DOCS-01, DOCS-02, DOCS-03, DOCS-04, DOCS-05, DOCS-06, DOCS-07, DOCS-08, DOCS-09
+**Requirements:** DOCS-01, DOCS-02, DOCS-03, DOCS-04, DOCS-05, DOCS-06, DOCS-07, DOCS-08, DOCS-09 (now owned by Phases 40–45)
 
-**Depends on:** v0.9.0 architecture pivot (Phase 30 plans need revision to describe git-native design, not FUSE)
-
-**Success criteria:**
-1. A cold reader arriving at the MkDocs site can state reposix's value proposition within 10 seconds (validated via user-proxy review).
-2. P2 banned terms (FUSE, inode, daemon, helper, kernel, mount, syscall) do not appear above the "How it works" layer in any page (banned-word linter PASS).
-3. `mkdocs build --strict` returns green.
-4. Playwright screenshots of landing + how-it-works + tutorial pages at desktop (1280px) and mobile (375px) widths are committed to the phase SUMMARY.
-5. `gh run view` shows green CI on the milestone commit.
-
-**Context anchor:** `.planning/notes/phase-30-narrative-vignettes.md` (source of truth for narrative intent, framing principles P1/P2, hero vignette, IA sketch). `.planning/phases/30-.../CONTEXT.md` summarizes for the planner.
-
-**Plans:** 9 plans across 5 waves (NEED REVISION — currently describe FUSE architecture)
+**Plans (NOT executed — superseded by Phases 40–45):**
 
 - [ ] 30-01-PLAN.md — Wave 0: Vale + tooling install + CI integration + pre-commit hook + structure/screenshot/mermaid scripts (DOCS-09)
 - [ ] 30-02-PLAN.md — Wave 0: Page skeletons (14 new pages + 2 .gitkeep) so Wave 1 nav doesn't dangle (DOCS-02, DOCS-03, DOCS-04, DOCS-05, DOCS-06)
@@ -213,6 +322,8 @@
 - [ ] 30-07-PLAN.md — Wave 2: Guides (write-your-own-connector move + integrate-with-your-agent + troubleshooting) + reference/simulator fill (DOCS-04, DOCS-05)
 - [ ] 30-08-PLAN.md — Wave 3: Grep-audit + delete architecture.md/security.md/demo.md/connectors/ + update README + clean mkdocs.yml not_in_nav (DOCS-07)
 - [ ] 30-09-PLAN.md — Wave 4: Verification (mkdocs/vale/tutorial/structure) + 14 playwright screenshots + doc-clarity-review cold-reader + CHANGELOG v0.9.0 + SUMMARY (DOCS-01..09)
+
+</details>
 
 <details>
 <summary>✅ v0.1.0–v0.7.0 (Phases 1–26) — SHIPPED 2026-04-13 through 2026-04-16</summary>
