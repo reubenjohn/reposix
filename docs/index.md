@@ -73,10 +73,10 @@ After `init`, agent UX is pure git: `cat`, `grep -r`, edit, `git commit`, `git p
 
 <div class="grid cards" markdown>
 
--   :material-lightbulb-on: **[Mental model in 60 seconds](concepts/mental-model-in-60-seconds.md)** — three keys to the design (clone = snapshot · frontmatter = schema · `git push` = sync verb).
--   :material-compare: **[reposix vs MCP and SDKs](concepts/reposix-vs-mcp-and-sdks.md)** — positioning, with measured numbers per row.
--   :material-graph: **How it works** — [the filesystem layer](how-it-works/filesystem-layer.md), [the git layer](how-it-works/git-layer.md), and [the trust model](how-it-works/trust-model.md). One diagram each.
--   :material-chart-line: **[Latency envelope](benchmarks/v0.9.0-latency.md)** — the v0.9.0 measured numbers.
+-   💡 **[Mental model in 60 seconds](concepts/mental-model-in-60-seconds.md)** — three keys to the design (clone = snapshot · frontmatter = schema · `git push` = sync verb).
+-   ⚖️ **[reposix vs MCP and SDKs](concepts/reposix-vs-mcp-and-sdks.md)** — positioning, with measured numbers per row.
+-   🔗 **How it works** — [the filesystem layer](how-it-works/filesystem-layer.md), [the git layer](how-it-works/git-layer.md), and [the trust model](how-it-works/trust-model.md). One diagram each.
+-   📊 **[Latency envelope](benchmarks/v0.9.0-latency.md)** — the v0.9.0 measured numbers.
 
 </div>
 
