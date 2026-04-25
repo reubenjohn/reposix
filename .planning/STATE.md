@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.9.0
-milestone_name: Architecture Pivot — Git-Native Partial Clone
-status: executing
-last_updated: "2026-04-24T00:00:00.000Z"
-last_activity: 2026-04-24 -- Phase 35-01 recovered + landed (init subcommand replaces mount)
+milestone: v0.10.0
+milestone_name: Docs & Narrative Shine
+status: planning_started
+last_updated: "2026-04-24T22:48:00.000Z"
+last_activity: 2026-04-24 -- v0.9.0 milestone lifecycle complete (audit + complete-milestone). v0.10.0 planning kicks off.
 progress:
-  total_phases: 6
-  completed_phases: 2
-  total_plans: 8
-  completed_plans: 7
-  percent: 88
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -19,6 +19,7 @@ progress:
 
 ### Roadmap Evolution
 
+- **v0.9.0 Architecture Pivot SHIPPED (2026-04-24):** Phases 31–36 — reposix-cache crate, stateless-connect read path, delta sync, push conflict + blob limit, CLI pivot + agent UX (real-backend pending-secrets), FUSE deletion + reposix-agent-flow skill + release. ~60 commits, +9 net workspace tests, all 6 phase verifications passed. Helper-hardcodes-SimBackend documented as v0.10.0 work.
 - **v0.9.0 scaffold amended (2026-04-24, same session):** ARCH-16..19 added for real-backend validation + latency benchmarks + canonical testing-targets doc. TokenWorld (Confluence), `reubenjohn/reposix` (GitHub), and JIRA `TEST` project added to CLAUDE.md as sanctioned test targets. Phases 35 + 36 gained real-backend success criteria. Simulator-only coverage no longer satisfies transport/perf acceptance.
 - **Phases 31–36 added to v0.9.0 (2026-04-24, this session):** Architecture-pivot phases scaffolded — 31 reposix-cache, 32 stateless-connect read path, 33 delta sync, 34 push conflict + blob limit, 35 CLI pivot + agent UX, 36 FUSE deletion + CLAUDE.md update + reposix-agent-flow skill + release. Authored autonomously based on `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md`.
 - **v0.9.0 pivoted to Architecture Pivot — Git-Native Partial Clone (2026-04-24):** FUSE-based design confirmed too slow (every read = live API call, 10k pages = 10k calls). Research spike confirmed git's partial clone + `stateless-connect` remote helper can replace FUSE entirely. Key findings: (1) helper CAN be a promisor remote via `stateless-connect`, (2) hybrid works — `stateless-connect` for reads + `export` for push, (3) helper can count/refuse blob requests with stderr errors, (4) sparse-checkout batches blob fetches. Design decisions: push-time conflict detection (no refresh needed), tree sync always full (cheap metadata), blob limit as only guardrail, agent uses pure git (zero CLI awareness). Phase 30 (docs) deferred to v0.10.0 — must describe new architecture. Research docs in `.planning/research/v0.9-fuse-to-git-native/`: `architecture-pivot-summary.md`, `partial-clone-remote-helper-findings.md`, `push-path-stateless-connect-findings.md`, `sync-conflict-design.md`. POC artifacts in `poc/` subdir: `git-remote-poc.py`, `run-poc.sh`, `run-poc-push.sh`.
@@ -59,11 +60,11 @@ issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
 
 ## Current Position
 
-Phase: 35 (in flight — recovery completion)
-Plan: 35-01 SHIPPED. 35-02/03/04 pending sequential execution.
-Cursor: **Phase 35 mid-flight after VM-crash recovery. 35-01 (`reposix init` subcommand + `mount` migration stub + CHANGELOG/README docs) committed atomically across `f32ed3c` (feat), `1d49e4d` (test), `9d04ab3` (docs). Next: dispatch `gsd-executor` against 35-02 (dark-factory regression test).**
-Status: Executing
-Last activity: 2026-04-24 -- Phase 35-01 recovered + landed
+Phase: — (v0.10.0 not yet planned)
+Plan: —
+Cursor: **Run /gsd-autonomous to drive v0.10.0 phases (Docs & Narrative Shine — see .planning/research/v0.10.0-post-pivot/milestone-plan.md).**
+Status: Planning (v0.10.0)
+Last activity: 2026-04-24 -- v0.9.0 milestone lifecycle complete (audit + complete-milestone)
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.

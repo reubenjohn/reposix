@@ -10,10 +10,21 @@
 - ✅ **v0.6.0** — Phases 16-20: Write path + full sitemap (shipped 2026-04-14)
 - ✅ **v0.7.0** — Phases 21-26: Hardening + Confluence expansion + docs (shipped 2026-04-16)
 - ✅ **v0.8.0 JIRA Cloud Integration** — Phases 27-29 (shipped 2026-04-16)
-- ⏳ **v0.9.0 Architecture Pivot — Git-Native Partial Clone** — Phases 31–TBD (in progress, started 2026-04-24)
-- 📋 **v0.10.0 Docs & Narrative** — Phase 30 (deferred from v0.9.0 — docs must describe the new architecture)
+- ✅ **v0.9.0 Architecture Pivot — Git-Native Partial Clone** — Phases 31–36 (shipped 2026-04-24) · [archive](milestones/v0.9.0-ROADMAP.md)
+- 📋 **v0.10.0 Docs & Narrative Shine** — planning (see `.planning/research/v0.10.0-post-pivot/milestone-plan.md`; revives Phase 30's docs scope against the new git-native architecture)
 
 ## Phases
+
+## v0.10.0 Docs & Narrative Shine (PLANNING)
+
+> **Status:** scoping. The architecture pivot shipped in v0.9.0 (2026-04-24); v0.10.0 ports the deferred Phase 30 docs work onto the git-native design and adds tutorial / how-it-works / mental-model pages around the new flow. See `.planning/research/v0.10.0-post-pivot/milestone-plan.md` for the proposed phase breakdown (Phases 40–45).
+
+**Thesis.** A cold visitor understands reposix in 10 seconds and runs the tutorial in 5 minutes. The architecture pivot becomes a story, not a code change.
+
+**Carry-forward from v0.9.0 (tech debt):** Helper hardcodes `SimBackend` in the `stateless-connect` handler — documented in `.planning/v0.9.0-MILESTONE-AUDIT.md` §5. Resolution scheduled before v0.11.0 benchmark commits (track as a hotfix or v0.11.0 prereq).
+
+<details>
+<summary>✅ v0.9.0 Architecture Pivot (Phases 31–36) — SHIPPED 2026-04-24</summary>
 
 ## v0.9.0 Architecture Pivot — Git-Native Partial Clone
 
@@ -166,11 +177,13 @@
 
 **Context anchor:** architecture-pivot-summary §5 (Delete — `crates/reposix-fuse`, `fuser` dependency), §9 (Milestone Impact). Project `CLAUDE.md` "Subagent delegation rules" section. User global `CLAUDE.md` OP-4 "Self-improving infrastructure".
 
+</details>
+
 ---
 
-## v0.10.0 Docs & Narrative (DEFERRED)
+## v0.10.0 Docs & Narrative (carries Phase 30 forward against the new architecture)
 
-> **Why deferred:** Phase 30 rewrites the hero, tutorial, how-it-works, and architecture pages. All content assumes FUSE. Executing Phase 30 before the architecture pivot would produce docs that are immediately obsolete. Phase 30's plans will need revision to describe the git-native design instead.
+> **Status:** Phase 30 was originally scoped against the FUSE design. Now that v0.9.0 has shipped the git-native architecture, Phase 30 (and the broader Docs & Narrative Shine milestone, Phases 40–45 per `.planning/research/v0.10.0-post-pivot/milestone-plan.md`) will execute against the new flow. Banned-word linter rules will be revised: `FUSE`, `inode`, `daemon`, `mount`, `fusermount` removed; new banned-above-Layer-3 list = `partial-clone`, `promisor`, `stateless-connect`, `fast-import`, `protocol-v2`.
 
 ### Phase 30: Docs IA and narrative overhaul — landing page aha moment and progressive-disclosure architecture reveal (v0.10.0)
 

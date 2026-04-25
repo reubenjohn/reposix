@@ -1,5 +1,34 @@
 # Milestones — reposix
 
+## v0.9.0 Architecture Pivot — Git-Native Partial Clone (Shipped: 2026-04-24)
+
+**Phases:** 31–36 (6 phases, 16 plans)
+**Commits:** `f17119c`..`058c297` (60 commits since milestone scaffold)
+**Timeline:** 2026-04-24 (single-day push; planning earlier same week)
+**Tests:** ~+49 net workspace tests; clean `cargo test --workspace` at Phase 36 close, zero failures
+**Audit:** `.planning/v0.9.0-MILESTONE-AUDIT.md` — `status: tech_debt`
+
+**Key accomplishments:**
+
+- New crate `crates/reposix-cache/` — bare-repo cache materialized from REST responses; lazy blobs; `Tainted<Vec<u8>>` return type; append-only audit table with `SQLITE_DBCONFIG_DEFENSIVE` (Phase 31)
+- `git-remote-reposix` gains `stateless-connect` capability; protocol-v2 tunnel with three POC-derived gotchas tested; refspec namespace `refs/heads/*:refs/reposix/*` defended; hybrid push-via-`export` preserved (Phase 32)
+- `BackendConnector::list_changed_since` on all 4 backends (sim `?since=`, GitHub `?since=`, JIRA JQL `updated >=`, Confluence CQL `lastModified >`); atomic delta-sync transaction in cache (Phase 33)
+- Push-time conflict detection (canned `error refs/heads/main fetch first` + diagnostic stderr; cache untouched on reject); blob-limit guardrail with verbatim `git sparse-checkout` teaching string; frontmatter field allowlist on push (`id`/`created_at`/`version`/`updated_at` stripped) (Phase 34)
+- CLI breaking change: `reposix mount` removed; `reposix init <backend>::<project> <path>` ships; dark-factory regression test (`scripts/dark-factory-test.sh` + `agent_flow.rs`); real-backend gated tests (`agent_flow_real.rs` with skip_if_no_env!); `docs/benchmarks/v0.9.0-latency.md` + `docs/reference/testing-targets.md` created (Phase 35)
+- `crates/reposix-fuse/` deleted entirely (12 files; `fuser` purged; `fuse-mount-tests` feature gate removed); CI no longer runs `apt install fuse3`; CLAUDE.md fully rewritten to steady-state git-native architecture; `.claude/skills/reposix-agent-flow/SKILL.md` shipped; `scripts/tag-v0.9.0.sh` ready (Phase 36)
+- Workspace size: 10 → 9 members; workspace version: 0.8.0 → 0.9.0
+- New CI jobs: `dark-factory` + three `integration-contract-{confluence,github,jira}-v09` (real-backend smokes; `pending-secrets` until secrets decrypt)
+
+**UAT:** sim path proven via dark-factory shell-script harness + cargo
+integration test. Real-backend UAT remains `pending-secrets` for all three
+sanctioned targets (TokenWorld, `reubenjohn/reposix`, JIRA TEST) per intentional
+owner gate. Carry-forward tech debt: helper-hardcodes-SimBackend in
+`stateless-connect` (tracked in audit §5; resolution before v0.11.0 benchmarks).
+
+**Tag gate:** `bash scripts/tag-v0.9.0.sh` — owner runs.
+
+---
+
 ## v0.8.0 JIRA Cloud Integration (Shipped: 2026-04-16)
 
 **Phases:** 27–29 (3 phases, 9 plans)

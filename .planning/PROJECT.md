@@ -22,6 +22,25 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 - ✓ **JIRA-04: CLI dispatch** — Phase 28
 - ✓ **JIRA-05: Tests + docs + ADRs** — Phase 28
 - ✓ **JIRA-06 (stretch): JIRA write path** — Phase 29. `create_issue` (POST), `update_issue` (PUT), `delete_or_close` (Transitions API + DELETE fallback). 31 unit tests + 5-arm contract test. Audit log for all mutations.
+- ✓ **ARCH-01: `crates/reposix-cache/` builds bare git repo from REST** — Phase 31
+- ✓ **ARCH-02: cache returns `Tainted<Vec<u8>>` + audit row per blob materialization + append-only triggers** — Phase 31
+- ✓ **ARCH-03: cache enforces `REPOSIX_ALLOWED_ORIGINS` via single `reposix_core::http::client()` factory** — Phase 31
+- ✓ **ARCH-04: `git-remote-reposix` advertises `stateless-connect` (hybrid with `export`)** — Phase 32
+- ✓ **ARCH-05: three protocol-v2 framing gotchas covered + refspec namespace `refs/heads/*:refs/reposix/*`** — Phase 32
+- ✓ **ARCH-06: `BackendConnector::list_changed_since` on all 4 backends + sim `?since=` REST param** — Phase 33
+- ✓ **ARCH-07: atomic delta-sync transaction (cache + last_fetched_at + audit row in one tx)** — Phase 33
+- ✓ **ARCH-08: push-time conflict detection (`error refs/heads/main fetch first`, cache untouched on reject)** — Phase 34
+- ✓ **ARCH-09: blob-limit guardrail with verbatim `git sparse-checkout` teaching string + audit row** — Phase 34
+- ✓ **ARCH-10: frontmatter field allowlist on push (`id`/`created_at`/`version`/`updated_at` stripped)** — Phase 34
+- ✓ **ARCH-11: `reposix init <backend>::<project> <path>` replaces `reposix mount`** — Phase 35
+- ✓ **ARCH-12: dark-factory pure-git agent UX validated against sim** — Phase 35 (real-backend exercise `pending-secrets`)
+- ✓ **ARCH-13: `crates/reposix-fuse/` + `fuser` dependency + `fuse-mount-tests` feature gate purged** — Phase 36
+- ✓ **ARCH-14: project `CLAUDE.md` rewritten to steady-state git-native architecture (no FUSE residue)** — Phase 36
+- ✓ **ARCH-15: `.claude/skills/reposix-agent-flow/SKILL.md` ships with dark-factory regression invocation** — Phase 36
+- ✓ **ARCH-16: real-backend smoke harness wired (TokenWorld, `reubenjohn/reposix`, JIRA `TEST`)** — Phase 35 (test infra; `pending-secrets`)
+- ✓ **ARCH-17: golden-path latency captured + `docs/benchmarks/v0.9.0-latency.md` artifact** — Phase 35 (capture) + Phase 36 (artifact); sim column populated
+- ✓ **ARCH-18: `docs/reference/testing-targets.md` documents the three sanctioned targets** — Phase 36
+- ✓ **ARCH-19: three CI integration-contract-*-v09 jobs defined** — Phase 36 (`pending-secrets` until secrets decrypt)
 
 ### Active
 
@@ -91,7 +110,15 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 | Skip GSD discuss step | User instruction (~12:55 AM): "do all the gsd planning, exec, review, etc, just without the discuss steps" | — Pending |
 | Lethal-trifecta cuts are first-class requirements, not afterthoughts | Threat-model subagent flagged egress + bulk-delete + tainted typing as ship-blockers; safer to bake in than retrofit | — Pending |
 
-## Current Milestone: v0.9.0 — Architecture Pivot — Git-Native Partial Clone
+## Current Milestone: v0.10.0 — Docs & Narrative Shine (planning)
+
+**Goal:** Make the v0.9.0 architecture pivot legible. A cold visitor understands reposix's value proposition within 10 seconds, runs the 5-minute first-run tutorial against the simulator, and ends with a real edit committed and pushed via `reposix init` + standard git. The architecture pivot becomes a story (cache layer / git layer / trust model — three pages, each with one mermaid diagram and a playwright screenshot), not a code change. Forward plan in `.planning/research/v0.10.0-post-pivot/milestone-plan.md` proposes Phases 40–45.
+
+**Carry-forward from v0.9.0 (tech debt):** Helper hardcodes `SimBackend` in the `stateless-connect` handler — documented in `.planning/v0.9.0-MILESTONE-AUDIT.md` §5 and the v0.9.0 ROADMAP archive. Resolution scheduled before any v0.11.0 ("Performance & Sales Assets") benchmark commits.
+
+---
+
+## Previously Validated Milestone: v0.9.0 — Architecture Pivot — Git-Native Partial Clone (SHIPPED 2026-04-24)
 
 **Goal:** Replace the FUSE virtual filesystem with git's built-in partial clone mechanism. The `git-remote-reposix` helper becomes a promisor remote tunnelling protocol-v2 traffic to a local bare-repo cache built from REST responses. Agents interact with the project using only standard git commands — no reposix-specific CLI awareness. FUSE is deleted entirely; `crates/reposix-fuse/` is removed and the `fuser` dependency is purged. The pivot is operationalized across six phases (31–36) covering cache foundation, read transport, delta sync, push path, CLI pivot, and the demolition+release cycle.
 
@@ -136,4 +163,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-24 — Milestone v0.9.0 retargeted to architecture pivot; phases 31–36 scaffolded*
+*Last updated: 2026-04-24 — Milestone v0.9.0 SHIPPED (architecture pivot complete, Phases 31–36); v0.10.0 Docs & Narrative Shine planning started*
