@@ -24,6 +24,7 @@ use clap::{Parser, Subcommand};
 
 mod binpath;
 mod doctor;
+mod history;
 mod init;
 mod sim;
 
@@ -160,6 +161,33 @@ enum Cmd {
         /// Working tree to audit. Defaults to the current directory.
         path: Option<PathBuf>,
     },
+    /// Print sync-tag history for a `reposix init`'d working tree.
+    ///
+    /// Every `Cache::sync` writes a private tag under `refs/reposix/sync/`
+    /// in the cache's bare repo, pointing at the synthesis commit for that
+    /// sync. Listing them gives a fully replayable view of what reposix
+    /// observed from the backend over time.
+    ///
+    /// Defaults to the most recent 10 entries (override with `--limit`).
+    /// See `.planning/research/v0.11.0-vision-and-innovations.md` §3b.
+    History {
+        /// Working-tree directory (a `reposix init`'d repo). Defaults to cwd.
+        path: Option<PathBuf>,
+        /// Cap on the number of entries printed (most-recent first).
+        #[arg(long, default_value_t = 10)]
+        limit: usize,
+    },
+    /// Print the closest sync tag at-or-before a given RFC-3339 timestamp.
+    ///
+    /// Useful for "what did reposix think the world looked like at <ts>?".
+    /// Prints the matching `refs/reposix/sync/<slug>` ref and a copy-pastable
+    /// `git -C <cache> checkout` invocation.
+    At {
+        /// Target timestamp (RFC-3339, e.g. `2026-04-25T01:00:00Z`).
+        timestamp: String,
+        /// Working-tree directory (a `reposix init`'d repo). Defaults to cwd.
+        path: Option<PathBuf>,
+    },
     /// Print the version.
     Version,
 }
@@ -211,6 +239,20 @@ async fn main() -> Result<()> {
             .await
         }
         Cmd::Spaces { backend } => spaces::run(backend).await,
+        Cmd::History { path, limit } => {
+            let p = match path {
+                Some(p) => p,
+                None => std::env::current_dir()?,
+            };
+            history::run_history(p, Some(limit))
+        }
+        Cmd::At { timestamp, path } => {
+            let p = match path {
+                Some(p) => p,
+                None => std::env::current_dir()?,
+            };
+            history::run_at(timestamp, p)
+        }
         Cmd::Doctor { fix, path } => {
             let report = doctor::run(path.as_deref(), fix)?;
             // Colour iff stdout is a TTY. Plain ASCII otherwise so logs and
