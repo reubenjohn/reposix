@@ -58,6 +58,12 @@
 
 **Context anchor:** `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` §2 (How it works), §5 (Add — `reposix-cache` crate), §6 (What stays the same — `BackendConnector` trait reused), and §7 open question 2 (atomicity of REST write + bare-repo cache update — implementation note for this phase).
 
+**Plans:** 3 plans across 3 waves
+
+- [ ] 31-01-PLAN.md — Wave 1: reposix-cache crate scaffold + gix 0.82 smoke + Cache::build_from with lazy tree (ARCH-01)
+- [ ] 31-02-PLAN.md — Wave 2: cache_schema.sql + audit/db/meta modules + Cache::read_blob (Tainted + egress-denial audit) + lift cache_db.rs from reposix-cli (ARCH-02, ARCH-03)
+- [ ] 31-03-PLAN.md — Wave 3: trybuild compile-fail fixtures — Tainted→Untainted + Untainted::new pub(crate) locks (ARCH-02)
+
 ### Phase 32: `stateless-connect` capability in `git-remote-reposix` (read path) (v0.9.0)
 
 **Goal:** Port the Python POC's `stateless-connect` handler to Rust inside `crates/reposix-remote/`. Tunnel protocol-v2 traffic to the Phase 31 cache so `git clone --filter=blob:none reposix::sim/proj-1 /tmp/clone` works end-to-end with lazy blob loading. The existing `export` capability for push must keep working in the same binary (hybrid). Operating-principle hooks: **subagent delegation per project CLAUDE.md** — use `gsd-phase-researcher` for the protocol-v2 stateless-connect Rust port (non-trivial; three protocol gotchas from POC must be encoded correctly or git misframes the next request); **ground truth obsession** — verify against a real `git clone` run, not against unit-test mocks; **close the feedback loop** — capture a fresh trace log analogous to POC `poc-helper-trace.log` and commit it under `.planning/research/v0.9-fuse-to-git-native/rust-port-trace.log`.
