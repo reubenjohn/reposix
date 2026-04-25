@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v0.11.0
-milestone_name: Polish & Reproducibility (planning_scaffolded)
-status: planning_scaffolded
-last_updated: "2026-04-25T16:00:00.000Z"
-last_activity: 2026-04-25 -- v0.11.0 milestone scaffolded (Phases 50–55, POLISH-01..17). Workspace version bumped 0.9.0 → 0.11.0-dev. GSD hygiene scrub: STATE/PROJECT/REQUIREMENTS/ROADMAP all consistent; v0.1.0 MVD ghosts and v0.8.0 session-continuity drift removed.
+milestone_name: Polish & Reproducibility
+status: implementation_complete_pending_release_secrets
+last_updated: "2026-04-25T19:30:00.000Z"
+last_activity: 2026-04-25 -- v0.11.0 implementation complete. Phases 50–55 all shipped (~41 commits since Phase 50 close). All 17 POLISH requirements satisfied. CI green at HEAD. Pending owner gates before tag push, ALL non-implementation: provision CARGO_REGISTRY_TOKEN secret (release-plz crates.io); bootstrap reubenjohn/homebrew-reposix tap repo + HOMEBREW_TAP_TOKEN secret (release.yml homebrew step). Tag-time bump 0.11.0-dev → 0.11.0 is the final commit.
 progress:
   total_phases: 6
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 6
+  total_plans: 6
+  completed_plans: 6
+  percent: 100
 ---
 
 # Project State
@@ -19,6 +19,7 @@ progress:
 
 ### Roadmap Evolution
 
+- **v0.11.0 implementation SHIPPED (2026-04-25 morning, same day):** Phases 50–55 closed in ~5 hours (with one mid-session VM-OOM crash recovered cleanly). ~41 commits since Phase 50 close. All 17 POLISH requirements landed: GSD hygiene scrub + workspace version 0.9.0→0.11.0-dev + chore PR #15 merged + archival doc sweep (Phase 50); 4-way CLI helper duplication consolidated into `worktree_helpers.rs` + `parse_remote_url` unified into `reposix-core` + `cli_compat.rs` deleted + FUSE residue stripped from `refresh.rs` + broken `demo.sh` removed + CLI module privacy normalised (Phase 51); mermaid root-cause F1+F2+F3 + `pymdownx.emoji` + 24-term glossary page + first-occurrence glosses on 6 jargon-dense pages + plain-English summaries on 5 how-it-works/guides pages + ADR-004/006 deletion + agentic-engineering-reference disclaimer (Phase 52); 5-install-path tutorial rewrite + `dist` 0.31.0 5-platform pipeline + release-plz crates.io workflow + `cargo binstall` metadata + CLAUDE.md docs-site validation rule + `scripts/check-docs-site.sh` + pre-push hook wiring + `repro-quickstart.sh` (Phase 53); real-backend latency table populated for sim+github with record counts + 3-sample medians + bench-latency-v09 CI job + weekly cron PR-creator (Phase 54); `reposix doctor` extended to 18 checks with copy-pastable fix strings + `reposix log --time-travel` + `reposix init --since=<RFC3339>` + `reposix cost --since 7d` + `reposix gc --orphans/--purge/--include-sim` (Phase 55). Discovered + fixed v0.9.0-pivot tutorial bug: `git checkout origin/main` was wrong — actual ref is `refs/reposix/origin/main` (helper namespaces fetched refs). CLAUDE.md gained two new load-bearing sections: "Build memory budget" (RAM guardrail after 2 OOM crashes) and "Docs-site validation" (mermaid-syntax-error pre-push gate). All audit research artifacts retained in `.planning/research/v0.11.0-*.md` (jargon-inventory, mkdocs-site-audit, gsd-hygiene-report, CATALOG-v2, latency-benchmark-plan, release-binaries-plan, cache-location-study, vision-and-innovations). PRE-TAG GATES (owner-only, NOT implementation work): (1) provision `CARGO_REGISTRY_TOKEN` repo secret; (2) bootstrap `reubenjohn/homebrew-reposix` tap repo + `HOMEBREW_TAP_TOKEN` secret; (3) bump 0.11.0-dev → 0.11.0 in workspace `Cargo.toml` + `git tag v0.11.0`. Pre-tag gates documented in CHANGELOG `[Unreleased]`.
 - **2026-04-25 (overnight): v0.9.0 helper-hardcodes-SimBackend tech debt CLOSED.** Helper now URL-dispatches to sim/github/confluence/jira (commit `cd1b0b6`, ADR-008). 18 tests added. Real-backend GitHub fetch verified end-to-end via the `dark_factory_real_github` CI job on `reubenjohn/reposix`. Confluence + JIRA still wait on CI secrets to flip from `pending-secrets` to actual. v0.9.0 audit verdict flipped `tech_debt` → `passed`; v0.10.0 audit's carry-forward of the same item also struck.
 - **v0.10.0 SHIPPED (2026-04-25):** Phases 40–45 closed. `.planning/v0.10.0-MILESTONE-AUDIT.md` verdict `tech_debt`. 11 DOCS requirements landed: hero rewrite + concept pages (Phase 40), how-it-works trio with mermaid diagrams (Phase 41), 5-min first-run tutorial + 3 guides + simulator-relocate (Phase 42), Diátaxis nav + theme + banned-words linter + reposix-banned-words skill (Phase 43), 16-page cold-reader clarity audit (Phase 44; 2 critical fixed, 1 escalated), README rewrite 332→102 lines + CHANGELOG `[v0.10.0]` + lifecycle close (Phase 45). Carry-forward: playwright screenshots deferred (cairo system libs unavailable; `scripts/take-screenshots.sh` stub names contract); helper-hardcodes-SimBackend remains from v0.9.0 (out-of-scope per docs-only milestone). 9 major + 17 minor doc-clarity findings logged in `.planning/notes/v0.11.0-doc-polish-backlog.md`. Phase dirs archived to `.planning/milestones/v0.10.0-phases/`. ROADMAP v0.10.0 entries collapsed into `<details>`. v0.11.0 "Performance & Sales Assets" tentative scope: helper-multi-backend-dispatch fix prereq + `cargo run -p reposix-bench` + IssueId→RecordId refactor (parallel runner) + community files (CONTRIBUTING / SECURITY / examples) currently in flight.
 - **v0.10.0 scaffolded (2026-04-24, same session):** Promoted `.planning/research/v0.10.0-post-pivot/milestone-plan.md` draft into REQUIREMENTS.md (DOCS-01..11 active section + traceability), ROADMAP.md (Phases 40–45 with rich Goal/Requirements/Depends-on/Success-criteria/Context-anchor blocks), PROJECT.md (goal paragraph filled), and STATE.md (cursor + this entry). Phase mapping: 40 = hero + concepts (DOCS-01, 03, 08-partial), 41 = how-it-works trio (DOCS-02), 42 = tutorial + guides + simulator-relocate (DOCS-04, 05, 06), 43 = nav + theme + banned-words linter + reposix-banned-words skill (DOCS-07, 08-linter, 09), 44 = doc-clarity-review release gate (DOCS-10), 45 = README rewrite + CHANGELOG + screenshots + tag (DOCS-11). v0.9.0 latency numbers (8ms get-issue, 24ms init, 9ms list, 5ms caps) wired through DOCS-01 + Phase 40 Goal. Legacy Phase 30 entry retained in ROADMAP.md as `<details>` traceability block but not executed. Helper-hardcodes-SimBackend tech debt remains scheduled before v0.11.0 benchmark commits, NOT v0.10.0.
@@ -63,11 +64,11 @@ issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
 
 ## Current Position
 
-Phase: — (v0.11.0 phases 50–55 scaffolded; not yet planned)
+Phase: — (Phases 50–55 all SHIPPED on `main`; CI green at HEAD `4d91da4`)
 Plan: —
-Cursor: **Run /gsd-plan-phase 50 to start the milestone.**
-Status: planning_scaffolded (v0.11.0 — Polish & Reproducibility; POLISH-01..17 + Phases 50–55 mapped)
-Last activity: 2026-04-25 -- v0.11.0 milestone scaffolded (REQUIREMENTS.md POLISH-01..17, ROADMAP.md Phases 50–55, PROJECT.md goal block); workspace version 0.9.0 → 0.11.0-dev; GSD hygiene scrub landed.
+Cursor: **Owner action required to tag v0.11.0:** (1) provision `CARGO_REGISTRY_TOKEN` repo secret; (2) bootstrap `reubenjohn/homebrew-reposix` tap + `HOMEBREW_TAP_TOKEN`; (3) bump workspace `Cargo.toml` 0.11.0-dev → 0.11.0; (4) run `git tag v0.11.0 && git push --tags`. After tag: dist + release-plz fire and ship binaries to GH Releases + crates. Until then nothing else needs doing — implementation is complete. After tag: run `/gsd-audit-milestone` then `/gsd-complete-milestone` then start v0.12.0 planning.
+Status: implementation_complete_pending_release_secrets
+Last activity: 2026-04-25 -- v0.11.0 implementation SHIPPED. ~41 commits since Phase 50 close. All 17 POLISH requirements satisfied. CI green. Awaiting owner-provisioned release secrets before tag push.
 
 Progress: [##########] v0.10.0 complete (Phases 40–45 closed; phase dirs archived to .planning/milestones/v0.10.0-phases/)
 
