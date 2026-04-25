@@ -1,8 +1,10 @@
 # reposix
 
-> A git-native partial-clone bridge that exposes REST APIs as a real git working tree so autonomous LLM agents can use `cat`, `grep`, `sed`, and `git` instead of MCP tool schemas.
+> reposix exposes REST-based issue trackers (and similar SaaS systems) as a git-native partial clone, served by `git-remote-reposix` from a local bare-repo cache built from REST responses. Agents use `cat`, `grep`, `sed`, and `git` on real workflows — no MCP tool schemas, no custom CLI.
 
-> **v0.9.0 — breaking change shipped.** `reposix mount` (FUSE) has been removed; use `reposix init <backend>::<project> <path>`, which bootstraps a partial-clone working tree backed by a `git-remote-reposix` promisor remote. See the [Quickstart (v0.9.0+)](#quickstart-v090) below and [`CHANGELOG.md`](CHANGELOG.md) for the migration note. Full v0.7.x quickstart preserved below for archival reference.
+**What it is.** A git remote helper plus an on-disk cache. After `reposix init <backend>::<project> <path>`, the working tree is a real partial-clone git checkout. Reading is `cat` / `grep -r`; writing is `sed` + `git commit`; syncing is `git push`. `git pull --rebase` recovers from conflicts the standard way. The full architecture is in [`CLAUDE.md`](CLAUDE.md#architecture-git-native-partial-clone) and [`.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md`](.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md). Narrative and tutorials live at <https://reubenjohn.github.io/reposix/>.
+
+> **v0.9.0 architecture pivot — shipped 2026-04-24.** The earlier virtual-filesystem path was removed; `reposix init` replaces `reposix mount`. See [`CHANGELOG.md`](CHANGELOG.md#v090--2026-04-24) for the breaking-change migration note and the [Quickstart (v0.9.0)](#quickstart-v090) section below.
 
 [![CI](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml/badge.svg)](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml)
 [![Docs](https://github.com/reubenjohn/reposix/actions/workflows/docs.yml/badge.svg)](https://reubenjohn.github.io/reposix/)
@@ -17,25 +19,31 @@
 
 <p align="center"><em>"Agents already know <code>cat</code> and <code>git</code>. They don't know your JSON schema."</em></p>
 
-:book: **Full docs with architecture diagrams:** <https://reubenjohn.github.io/reposix/>
-:clapper: **60-second demo:** see [`docs/social/assets/demo.gif`](docs/social/assets/demo.gif) or the 9-step [`docs/demo.md`](docs/demo.md) walkthrough.
-:bar_chart: **Token-economy benchmark:** [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md) — measured **92.3% reduction** vs MCP for the same task.
+## Three measured numbers
+
+- **`8 ms`** — read one issue from the local cache after first fetch ([`docs/benchmarks/v0.9.0-latency.md`](docs/benchmarks/v0.9.0-latency.md)).
+- **`24 ms`** — `reposix init` cold bootstrap against the simulator (soft threshold `500 ms`).
+- **`92.3%`** — input-context-token reduction vs MCP for the same task, measured in [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md) (v0.7 token-economy benchmark; the architectural argument is unchanged in v0.9.0).
+
+:book: **Full docs:** <https://reubenjohn.github.io/reposix/>
+:clapper: **Demo recording:** [`docs/social/assets/demo.gif`](docs/social/assets/demo.gif) (FUSE-era — Phase 45 will re-record against `reposix init`).
+:bar_chart: **Latency envelope per backend:** [`docs/benchmarks/v0.9.0-latency.md`](docs/benchmarks/v0.9.0-latency.md).
 
 ![demo](docs/social/assets/demo.gif)
 
 ## Why
 
-Modern coding agents have ingested vast amounts of Unix shell scripting and `git` workflows during pre-training. Asking them to use a `cat` + `git commit` workflow is asking them to do what they already know how to do. Asking them to use Model Context Protocol (MCP) is asking them to load 100k+ tokens of JSON schemas before doing anything useful.
+Modern coding agents have ingested vast amounts of Unix shell scripting and `git` workflows during pre-training. Asking them to use a `cat` + `git commit` workflow is asking them to do what they already know how to do. Asking them to use Model Context Protocol (MCP) is asking them to load `~100 000` tokens of JSON schemas before doing anything useful.
 
-reposix takes the second problem and reduces it to the first. A Jira board, a GitHub Issues repo, or a Confluence space becomes a directory of Markdown files with YAML frontmatter, with native `git push` synchronization and merge-conflict-as-API-conflict semantics.
+reposix takes the second problem and reduces it to the first. A Jira board, a GitHub Issues repo, or a Confluence space becomes a directory of Markdown files with YAML frontmatter, with native `git push` synchronization and merge-conflict-as-API-conflict semantics. It complements REST — complex JQL, bulk imports, and admin operations stay on the API.
 
-See [`docs/research/initial-report.md`](docs/research/initial-report.md) for the full architectural argument and [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md) for the measured **89.1% reduction** in input-context tokens (reposix vs MCP for the same task).
+See [`docs/research/initial-report.md`](docs/research/initial-report.md) for the architectural argument and [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md) for the measured `92.3%` reduction in input-context tokens vs MCP for the same task.
 
 ## Status
 
-**v0.7.0.** Built across autonomous coding-agent sessions on 2026-04-13 → 2026-04-16 — single agent, GSD planning workflow, no human in the loop after kickoff. **317+ workspace tests pass**, `cargo clippy --workspace --all-targets -- -D warnings` is clean, `mkdocs build --strict` green, `bash scripts/demos/smoke.sh` 4/4. `#![forbid(unsafe_code)]` at every crate root.
+**v0.9.0 — shipped 2026-04-24.** Built across autonomous coding-agent sessions; Phases 31–36 landed the architecture pivot to git-native partial clone. `cargo test --workspace` is green, `cargo clippy --workspace --all-targets -- -D warnings` is clean, `bash scripts/dark-factory-test.sh sim` passes the dark-factory regression. `#![forbid(unsafe_code)]` at every crate root.
 
-Treat as alpha per Simon Willison's "proof of usage, not proof of concept" rule — but every demo in this README is reproducible on a stock Ubuntu host in under 5 minutes, including two that hit real backends (GitHub + Atlassian Confluence).
+Treat as alpha per Simon Willison's "proof of usage, not proof of concept" rule — but the v0.9.0 quickstart below is reproducible on a stock Ubuntu host in under five minutes against the in-process simulator, with no system packages required beyond `git >= 2.34` and a Rust toolchain.
 
 | Release | Highlights |
 |---------|------------|
