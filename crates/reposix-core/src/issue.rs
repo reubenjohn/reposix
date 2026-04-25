@@ -52,7 +52,7 @@ impl IssueStatus {
 /// A single issue. Serialized to disk as a Markdown file with YAML frontmatter; the body of the
 /// markdown is `body`, everything else lives in the frontmatter.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Issue {
+pub struct Record {
     /// Project-scoped unique id.
     pub id: RecordId,
     /// Single-line summary.
@@ -92,14 +92,14 @@ pub struct Issue {
     pub extensions: BTreeMap<String, serde_yaml::Value>,
 }
 
-/// Frontmatter helpers — round-trip an [`Issue`] through `---\n<yaml>\n---\n<body>` form.
+/// Frontmatter helpers — round-trip an [`Record`] through `---\n<yaml>\n---\n<body>` form.
 pub mod frontmatter {
     use std::collections::BTreeMap;
 
-    use super::{DateTime, Error, Issue, Result, Utc};
+    use super::{DateTime, Error, Record, Result, Utc};
     use serde::{Deserialize, Serialize};
 
-    /// Subset of [`Issue`] that lives inside the frontmatter (everything except `body`).
+    /// Subset of [`Record`] that lives inside the frontmatter (everything except `body`).
     #[derive(Debug, Serialize, Deserialize)]
     struct Frontmatter {
         id: super::RecordId,
@@ -119,12 +119,12 @@ pub mod frontmatter {
         extensions: BTreeMap<String, serde_yaml::Value>,
     }
 
-    /// Render an [`Issue`] to its on-disk form.
+    /// Render an [`Record`] to its on-disk form.
     ///
     /// # Errors
     /// Returns [`Error::Yaml`] if the frontmatter cannot be serialized (e.g. a label contains
     /// a character no YAML representation can encode).
-    pub fn render(issue: &Issue) -> Result<String> {
+    pub fn render(issue: &Record) -> Result<String> {
         let fm = Frontmatter {
             id: issue.id,
             title: issue.title.clone(),
@@ -149,12 +149,12 @@ pub mod frontmatter {
         Ok(out)
     }
 
-    /// Parse on-disk Markdown+frontmatter into an [`Issue`].
+    /// Parse on-disk Markdown+frontmatter into an [`Record`].
     ///
     /// # Errors
     /// Returns [`Error::InvalidIssue`] if the file does not start with a `---` fence or the
     /// fence is malformed; [`Error::Yaml`] if the frontmatter YAML is invalid.
-    pub fn parse(text: &str) -> Result<Issue> {
+    pub fn parse(text: &str) -> Result<Record> {
         let body_start;
         let yaml = if let Some(rest) = text.strip_prefix("---\n") {
             // Find closing fence — accept either `---\n` or `---` at EOF.
@@ -180,7 +180,7 @@ pub mod frontmatter {
         };
         let fm: Frontmatter = serde_yaml::from_str(yaml)?;
         let body = rest_after(text, body_start).to_owned();
-        Ok(Issue {
+        Ok(Record {
             id: fm.id,
             title: fm.title,
             status: fm.status,
@@ -218,9 +218,9 @@ mod tests {
     use super::*;
     use chrono::TimeZone;
 
-    fn sample() -> Issue {
+    fn sample() -> Record {
         let t = Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
-        Issue {
+        Record {
             id: RecordId(123),
             title: "thing is broken".into(),
             status: IssueStatus::InProgress,
@@ -266,7 +266,7 @@ mod tests {
             json.contains("\"parent_id\":42"),
             "expected `\"parent_id\":42` in JSON, got: {json}"
         );
-        let back: Issue = serde_json::from_str(&json).unwrap();
+        let back: Record = serde_json::from_str(&json).unwrap();
         assert_eq!(back.parent_id, Some(RecordId(42)));
     }
 
@@ -284,7 +284,7 @@ mod tests {
     fn parent_id_default_on_missing_field() {
         // Old JSON payload, no parent_id field at all — must deserialize with None.
         let json = r#"{"id":1,"title":"t","status":"open","created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-01T00:00:00Z"}"#;
-        let iss: Issue = serde_json::from_str(json).unwrap();
+        let iss: Record = serde_json::from_str(json).unwrap();
         assert_eq!(iss.parent_id, None);
     }
 
@@ -366,7 +366,7 @@ Body goes here.\n";
     #[test]
     fn frontmatter_roundtrip_with_parent() {
         // Deep-equality roundtrip: parse(render(issue)) yields the same Issue.
-        // Catches any drift between the public `Issue` struct and the private
+        // Catches any drift between the public `Record` struct and the private
         // `Frontmatter` DTO.
         let mut original = sample();
         original.parent_id = Some(RecordId(131_192));

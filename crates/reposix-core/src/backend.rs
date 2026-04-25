@@ -9,7 +9,7 @@
 //! need a seam so the FUSE layer and CLI orchestrator don't have to learn each
 //! new backend's quirks. The trait is the normalization boundary: concrete
 //! adapters translate backend-specific wire shapes into
-//! [`Issue`](crate::Issue) / [`IssueStatus`](crate::IssueStatus) — and nothing
+//! [`Record`](crate::Record) / [`IssueStatus`](crate::IssueStatus) — and nothing
 //! more escapes.
 //!
 //! ## Error model
@@ -36,7 +36,7 @@
 
 use async_trait::async_trait;
 
-use crate::issue::{Issue, RecordId};
+use crate::issue::{Record, RecordId};
 use crate::taint::Untainted;
 use crate::Result;
 
@@ -68,7 +68,7 @@ pub enum BackendFeature {
     /// Backend supports named workflow transitions beyond the 5-valued
     /// [`IssueStatus`](crate::IssueStatus) enum. Reserved for Jira.
     Workflows,
-    /// Backend exposes a parent/child hierarchy via [`Issue::parent_id`].
+    /// Backend exposes a parent/child hierarchy via [`Record::parent_id`].
     /// Used by FUSE to synthesize the `tree/` overlay (Phase 13).
     Hierarchy,
 }
@@ -139,7 +139,7 @@ pub trait BackendConnector: Send + Sync {
     /// # Errors
     /// Propagates transport errors. Returns an empty vec (not an error) when
     /// the project exists but has no issues.
-    async fn list_issues(&self, project: &str) -> Result<Vec<Issue>>;
+    async fn list_issues(&self, project: &str) -> Result<Vec<Record>>;
 
     /// List issue IDs whose `updated_at` is strictly greater than `since`.
     ///
@@ -149,7 +149,7 @@ pub trait BackendConnector: Send + Sync {
     /// on JIRA, CQL `lastModified >` on Confluence, `?since=` on the sim)
     /// MUST override to send the filter over the wire.
     ///
-    /// Returns IDs only; callers materialize full `Issue` objects on
+    /// Returns IDs only; callers materialize full `Record` objects on
     /// demand via [`get_issue`](Self::get_issue). This mirrors the Phase 31
     /// lazy-blob design: metadata (IDs) is cheap to ship, bodies are not.
     ///
@@ -176,7 +176,7 @@ pub trait BackendConnector: Send + Sync {
     /// - Transport errors propagate.
     /// - Unknown `id` returns `Err(Error::Other("not found: ..."))`. See
     ///   module docs re: v0.2 typed `NotFound` variant.
-    async fn get_issue(&self, project: &str, id: RecordId) -> Result<Issue>;
+    async fn get_issue(&self, project: &str, id: RecordId) -> Result<Record>;
 
     /// Create a new issue. The `Untainted` wrapper enforces that server-
     /// controlled fields on `issue` (`id`, `created_at`, `version`) have been
@@ -188,7 +188,7 @@ pub trait BackendConnector: Send + Sync {
     /// # Errors
     /// - Transport errors propagate.
     /// - Read-only backends return `Err(Error::Other("not supported: ..."))`.
-    async fn create_issue(&self, project: &str, issue: Untainted<Issue>) -> Result<Issue>;
+    async fn create_issue(&self, project: &str, issue: Untainted<Record>) -> Result<Record>;
 
     /// Update an existing issue. `patch` carries the fields to overwrite;
     /// untouched fields retain their current server value (backend decides
@@ -207,9 +207,9 @@ pub trait BackendConnector: Send + Sync {
         &self,
         project: &str,
         id: RecordId,
-        patch: Untainted<Issue>,
+        patch: Untainted<Record>,
         expected_version: Option<u64>,
-    ) -> Result<Issue>;
+    ) -> Result<Record>;
 
     /// Delete or close an issue. Backends with [`BackendFeature::Delete`]
     /// may perform a real `DELETE`; backends without it (GitHub) translate
@@ -279,22 +279,22 @@ mod tests {
             fn supports(&self, _: BackendFeature) -> bool {
                 false
             }
-            async fn list_issues(&self, _: &str) -> Result<Vec<Issue>> {
+            async fn list_issues(&self, _: &str) -> Result<Vec<Record>> {
                 Ok(vec![])
             }
-            async fn get_issue(&self, _: &str, _: RecordId) -> Result<Issue> {
+            async fn get_issue(&self, _: &str, _: RecordId) -> Result<Record> {
                 unimplemented!()
             }
-            async fn create_issue(&self, _: &str, _: Untainted<Issue>) -> Result<Issue> {
+            async fn create_issue(&self, _: &str, _: Untainted<Record>) -> Result<Record> {
                 unimplemented!()
             }
             async fn update_issue(
                 &self,
                 _: &str,
                 _: RecordId,
-                _: Untainted<Issue>,
+                _: Untainted<Record>,
                 _: Option<u64>,
-            ) -> Result<Issue> {
+            ) -> Result<Record> {
                 unimplemented!()
             }
             async fn delete_or_close(&self, _: &str, _: RecordId, _: DeleteReason) -> Result<()> {
@@ -310,7 +310,7 @@ mod tests {
 
     #[tokio::test]
     async fn default_list_changed_since_filters_via_list_issues() {
-        use crate::issue::{Issue, IssueStatus};
+        use crate::issue::{Record, IssueStatus};
         use crate::taint::Untainted;
         use chrono::{TimeZone, Utc};
 
@@ -323,11 +323,11 @@ mod tests {
             fn supports(&self, _: BackendFeature) -> bool {
                 false
             }
-            async fn list_issues(&self, _: &str) -> Result<Vec<Issue>> {
+            async fn list_issues(&self, _: &str) -> Result<Vec<Record>> {
                 let t1 = Utc.with_ymd_and_hms(2026, 1, 1, 0, 0, 0).unwrap();
                 let t2 = Utc.with_ymd_and_hms(2026, 6, 1, 0, 0, 0).unwrap();
                 Ok(vec![
-                    Issue {
+                    Record {
                         id: RecordId(1),
                         title: "old".into(),
                         status: IssueStatus::Open,
@@ -340,7 +340,7 @@ mod tests {
                         parent_id: None,
                         extensions: std::collections::BTreeMap::new(),
                     },
-                    Issue {
+                    Record {
                         id: RecordId(2),
                         title: "new".into(),
                         status: IssueStatus::Open,
@@ -355,19 +355,19 @@ mod tests {
                     },
                 ])
             }
-            async fn get_issue(&self, _: &str, _: RecordId) -> Result<Issue> {
+            async fn get_issue(&self, _: &str, _: RecordId) -> Result<Record> {
                 unimplemented!()
             }
-            async fn create_issue(&self, _: &str, _: Untainted<Issue>) -> Result<Issue> {
+            async fn create_issue(&self, _: &str, _: Untainted<Record>) -> Result<Record> {
                 unimplemented!()
             }
             async fn update_issue(
                 &self,
                 _: &str,
                 _: RecordId,
-                _: Untainted<Issue>,
+                _: Untainted<Record>,
                 _: Option<u64>,
-            ) -> Result<Issue> {
+            ) -> Result<Record> {
                 unimplemented!()
             }
             async fn delete_or_close(&self, _: &str, _: RecordId, _: DeleteReason) -> Result<()> {

@@ -21,7 +21,7 @@ use anyhow::{Context, Result};
 use clap::ValueEnum;
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::{BackendConnector, Issue};
+use reposix_core::{BackendConnector, Record};
 use reposix_github::GithubReadOnlyBackend;
 use reposix_jira::{JiraBackend, JiraCreds};
 
@@ -139,7 +139,7 @@ pub async fn run(
     Ok(())
 }
 
-fn render_table(issues: &[Issue]) {
+fn render_table(issues: &[Record]) {
     // Column widths: ID is never more than 10 digits for any realistic sim
     // seed; STATUS fits in 12 chars (`in_progress` is the longest). Title
     // takes whatever's left. Literal header text is inlined to avoid the

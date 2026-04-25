@@ -1,7 +1,7 @@
 //! Integration tests for `reposix refresh`.
 //!
 //! These tests call `run_refresh_inner` directly with a pre-built
-//! `Vec<Issue>` so no network backend is needed. The `refresh_fuse_active_guard`
+//! `Vec<Record>` so no network backend is needed. The `refresh_fuse_active_guard`
 //! test calls `run_refresh` (the public fn) because the FUSE-active guard
 //! fires before backend construction.
 
@@ -9,14 +9,14 @@ use chrono::DurationRound as _;
 use chrono::TimeZone as _;
 use reposix_cli::list::ListBackend;
 use reposix_cli::refresh::{run_refresh, RefreshConfig};
-use reposix_core::{Issue, RecordId, IssueStatus};
+use reposix_core::{Record, RecordId, IssueStatus};
 use tempfile::tempdir;
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-fn make_test_issue(id: u64, title: &str) -> Issue {
+fn make_test_issue(id: u64, title: &str) -> Record {
     let t = chrono::Utc.with_ymd_and_hms(2026, 4, 15, 0, 0, 0).unwrap();
-    Issue {
+    Record {
         id: RecordId(id),
         title: title.to_owned(),
         status: IssueStatus::Open,

@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
 
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::BackendConnector;
-use reposix_core::{Issue, RecordId, IssueStatus};
+use reposix_core::{Record, RecordId, IssueStatus};
 use wiremock::matchers::{method, path, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -54,11 +54,11 @@ impl Drop for CacheDirGuard<'_> {
 
 /// Build `n` deterministic test issues with ids 1..=n.
 #[must_use]
-pub fn sample_issues(project: &str, n: usize) -> Vec<Issue> {
+pub fn sample_issues(project: &str, n: usize) -> Vec<Record> {
     use chrono::TimeZone;
     let t = chrono::Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
     (1..=n)
-        .map(|i| Issue {
+        .map(|i| Record {
             id: RecordId(i as u64),
             title: format!("issue {i} in {project}"),
             status: IssueStatus::Open,
@@ -78,7 +78,7 @@ pub fn sample_issues(project: &str, n: usize) -> Vec<Issue> {
 /// `GET /projects/<project>/issues` returns the provided list and
 /// `GET /projects/<project>/issues/<id>` returns the matching single
 /// issue (or 404).
-pub async fn seed_mock(server: &MockServer, project: &str, issues: &[Issue]) {
+pub async fn seed_mock(server: &MockServer, project: &str, issues: &[Record]) {
     // List route.
     let list_body: Vec<serde_json::Value> = issues.iter().map(issue_to_json).collect();
     Mock::given(method("GET"))
@@ -106,7 +106,7 @@ pub async fn seed_mock(server: &MockServer, project: &str, issues: &[Issue]) {
         .await;
 }
 
-fn issue_to_json(issue: &Issue) -> serde_json::Value {
+fn issue_to_json(issue: &Record) -> serde_json::Value {
     serde_json::json!({
         "id": issue.id.0,
         "title": issue.title,

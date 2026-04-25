@@ -67,7 +67,7 @@ use serde::Deserialize;
 
 use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason};
 use reposix_core::http::{client, ClientOpts, HttpClient};
-use reposix_core::{Error, Issue, RecordId, IssueStatus, Result, Tainted, Untainted};
+use reposix_core::{Error, Record, RecordId, IssueStatus, Result, Tainted, Untainted};
 
 /// Maximum time we'll wait for a rate-limit reset before surfacing the
 /// exhaustion as an error. Caps worst-case call latency.
@@ -216,7 +216,7 @@ impl JiraBackend {
     ///
     /// - Returns `Error::Other` if pagination would exceed `MAX_ISSUES_PER_LIST`.
     /// - All errors that `list_issues` would raise also apply here.
-    pub async fn list_issues_strict(&self, project: &str) -> Result<Vec<Issue>> {
+    pub async fn list_issues_strict(&self, project: &str) -> Result<Vec<Record>> {
         self.list_issues_impl(project, true).await
     }
 
@@ -243,7 +243,7 @@ impl JiraBackend {
         h
     }
 
-    async fn list_issues_impl(&self, project: &str, strict: bool) -> Result<Vec<Issue>> {
+    async fn list_issues_impl(&self, project: &str, strict: bool) -> Result<Vec<Record>> {
         let url = format!("{}/rest/api/3/search/jql", self.base());
 
         let fields: Vec<String> = JIRA_FIELDS.iter().map(|s| (*s).to_owned()).collect();
@@ -253,7 +253,7 @@ impl JiraBackend {
             "maxResults": PAGE_SIZE,
         });
 
-        let mut out: Vec<Issue> = Vec::new();
+        let mut out: Vec<Record> = Vec::new();
         let mut pages: usize = 0;
 
         let header_owned = self.write_headers();
@@ -345,7 +345,7 @@ impl JiraBackend {
         Ok(out)
     }
 
-    async fn get_issue_inner(&self, id: RecordId) -> Result<Issue> {
+    async fn get_issue_inner(&self, id: RecordId) -> Result<Record> {
         let path = format!("/rest/api/3/issue/{id}");
         let url = format!("{}{}", self.base(), path);
 
@@ -531,7 +531,7 @@ impl BackendConnector for JiraBackend {
         )
     }
 
-    async fn list_issues(&self, project: &str) -> Result<Vec<Issue>> {
+    async fn list_issues(&self, project: &str) -> Result<Vec<Record>> {
         self.list_issues_impl(project, false).await
     }
 
@@ -619,12 +619,12 @@ impl BackendConnector for JiraBackend {
         Ok(out)
     }
 
-    async fn get_issue(&self, _project: &str, id: RecordId) -> Result<Issue> {
+    async fn get_issue(&self, _project: &str, id: RecordId) -> Result<Record> {
         self.await_rate_limit_gate().await;
         self.get_issue_inner(id).await
     }
 
-    async fn create_issue(&self, project: &str, issue: Untainted<Issue>) -> Result<Issue> {
+    async fn create_issue(&self, project: &str, issue: Untainted<Record>) -> Result<Record> {
         // Response struct declared before statements to satisfy clippy::items_after_statements.
         #[derive(serde::Deserialize)]
         struct CreateResp {
@@ -710,9 +710,9 @@ impl BackendConnector for JiraBackend {
         &self,
         _project: &str,
         id: RecordId,
-        patch: Untainted<Issue>,
+        patch: Untainted<Record>,
         _expected_version: Option<u64>,
-    ) -> Result<Issue> {
+    ) -> Result<Record> {
         // JIRA has no ETag — expected_version is silently ignored.
         // Status changes are NOT allowed via PUT (require transitions).
         let patch_ref = patch.inner_ref();
@@ -1026,14 +1026,14 @@ fn map_status(status: &JiraStatus, resolution: Option<&JiraResolution>) -> Issue
     }
 }
 
-/// Translate a raw `JiraIssue` (from network) into a canonical [`Issue`].
+/// Translate a raw `JiraIssue` (from network) into a canonical [`Record`].
 ///
 /// Consumes the input — call this after `Tainted::into_inner()`.
 ///
 /// # Errors
 ///
 /// Returns `Err` if the JIRA numeric issue ID cannot be parsed as `u64`.
-fn translate(raw: JiraIssue) -> Result<Issue> {
+fn translate(raw: JiraIssue) -> Result<Record> {
     let id = RecordId(
         raw.id
             .parse::<u64>()
@@ -1086,7 +1086,7 @@ fn translate(raw: JiraIssue) -> Result<Issue> {
         serde_yaml::Value::from(raw.fields.issuetype.hierarchy_level),
     );
 
-    Ok(Issue {
+    Ok(Record {
         id,
         title,
         status,
@@ -1306,7 +1306,7 @@ mod tests {
                 issue_json(
                     i,
                     &format!("PROJ-{i}"),
-                    &format!("Issue {i}"),
+                    &format!("Record {i}"),
                     "new",
                     "Open",
                     None,
@@ -1341,7 +1341,7 @@ mod tests {
                 issue_json(
                     i,
                     &format!("PROJ-{i}"),
-                    &format!("Issue {i}"),
+                    &format!("Record {i}"),
                     "new",
                     "Open",
                     None,
@@ -1353,7 +1353,7 @@ mod tests {
                 issue_json(
                     i,
                     &format!("PROJ-{i}"),
-                    &format!("Issue {i}"),
+                    &format!("Record {i}"),
                     "new",
                     "Open",
                     None,
@@ -1689,7 +1689,7 @@ mod tests {
         // in its frontmatter YAML.
         use chrono::TimeZone;
         let now = chrono::Utc.with_ymd_and_hms(2025, 6, 1, 0, 0, 0).unwrap();
-        let issue = Issue {
+        let issue = Record {
             id: RecordId(1),
             title: "test".into(),
             status: IssueStatus::Open,
@@ -1711,10 +1711,10 @@ mod tests {
 
     // ─── Helper: make_untainted ──────────────────────────────────────────
 
-    fn make_untainted(title: &str, body: &str) -> reposix_core::Untainted<Issue> {
+    fn make_untainted(title: &str, body: &str) -> reposix_core::Untainted<Record> {
         use reposix_core::{sanitize, ServerMetadata};
         let now = chrono::Utc::now();
-        let raw = Issue {
+        let raw = Record {
             id: RecordId(0),
             title: title.to_owned(),
             body: body.to_owned(),

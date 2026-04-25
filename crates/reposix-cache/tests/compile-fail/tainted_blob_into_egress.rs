@@ -17,6 +17,6 @@ fn main() {
     // This line MUST NOT compile: sink_egress wants Untainted<Vec<u8>>,
     // and there is no From<Tainted<T>> for Untainted<T>, no Deref, no
     // AsRef. The only legal path is `reposix_core::sanitize`, which is
-    // only defined for `Issue`, not `Vec<u8>`.
+    // only defined for `Record`, not `Vec<u8>`.
     sink_egress(tainted);
 }

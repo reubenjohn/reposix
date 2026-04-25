@@ -736,7 +736,7 @@ async fn contract_confluence_live() {
 
 // ----------------------------------------------- live-Atlassian hierarchy test
 
-/// Phase 13 Wave B1 extension: prove the adapter populates `Issue::parent_id`
+/// Phase 13 Wave B1 extension: prove the adapter populates `Record::parent_id`
 /// from real REST v2 `parentId`/`parentType` bytes, not just wiremock fixtures.
 /// The REPOSIX demo space in the reuben-john tenant has homepage `360556`
 /// with three children — so at least one listed page MUST have

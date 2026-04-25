@@ -16,7 +16,7 @@ use std::sync::Arc;
 use parking_lot::Mutex;
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::{BackendConnector, DeleteReason};
-use reposix_core::{Issue, RecordId, IssueStatus, Tainted, Untainted};
+use reposix_core::{Record, RecordId, IssueStatus, Tainted, Untainted};
 use rusqlite::Connection;
 use serde_json::json;
 use wiremock::matchers::{method, path, query_param};
@@ -37,14 +37,14 @@ fn open_audit_db() -> Arc<Mutex<Connection>> {
     Arc::new(Mutex::new(conn))
 }
 
-/// Build an [`Untainted<Issue>`] for write-path tests.
-fn make_issue(title: &str, body: &str) -> Untainted<Issue> {
+/// Build an [`Untainted<Record>`] for write-path tests.
+fn make_issue(title: &str, body: &str) -> Untainted<Record> {
     use reposix_core::{sanitize, ServerMetadata};
     let t = chrono::DateTime::parse_from_rfc3339("2026-04-13T00:00:00Z")
         .unwrap()
         .with_timezone(&chrono::Utc);
     sanitize(
-        Tainted::new(Issue {
+        Tainted::new(Record {
             id: RecordId(0),
             title: title.to_owned(),
             status: IssueStatus::Open,

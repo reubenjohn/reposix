@@ -20,7 +20,7 @@ mod taint;
 
 pub use backend::{BackendConnector, BackendFeature, DeleteReason};
 pub use error::{Error, Result};
-pub use issue::{frontmatter, Issue, RecordId, IssueStatus};
+pub use issue::{frontmatter, Record, RecordId, IssueStatus};
 pub use path::{dedupe_siblings, slug_or_fallback, slugify_title, SLUG_MAX_BYTES};
 pub use project::{Project, ProjectSlug};
 pub use remote::{parse_remote_url, RemoteSpec};

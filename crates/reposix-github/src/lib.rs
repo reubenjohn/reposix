@@ -1,5 +1,5 @@
 //! [`GithubReadOnlyBackend`] — a read-only [`BackendConnector`] that adapts
-//! GitHub's REST v3 Issues API onto reposix's normalized `Issue` /
+//! GitHub's REST v3 Issues API onto reposix's normalized `Record` /
 //! `IssueStatus` shape.
 //!
 //! # Scope
@@ -63,7 +63,7 @@ use serde::Deserialize;
 
 use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason};
 use reposix_core::http::{client, ClientOpts, HttpClient};
-use reposix_core::{Error, Issue, RecordId, IssueStatus, Result, Untainted};
+use reposix_core::{Error, Record, RecordId, IssueStatus, Result, Untainted};
 
 /// Maximum time we'll wait for a rate-limit reset before surfacing the
 /// exhaustion as an error. Caps the worst-case call latency; a well-behaved
@@ -270,9 +270,9 @@ impl GithubReadOnlyBackend {
     }
 }
 
-/// Translate a GitHub issue payload into reposix's normalized [`Issue`],
+/// Translate a GitHub issue payload into reposix's normalized [`Record`],
 /// applying ADR-001's state mapping.
-fn translate(gh: GhIssue) -> Issue {
+fn translate(gh: GhIssue) -> Record {
     // Determine the status via ADR-001:
     // - closed + not_planned → WontFix.
     // - closed + (completed | null | other)  → Done.
@@ -303,7 +303,7 @@ fn translate(gh: GhIssue) -> Issue {
         .map(|l| l.name)
         .collect();
 
-    Issue {
+    Record {
         id: RecordId(gh.number),
         title: gh.title,
         status,
@@ -354,7 +354,7 @@ impl BackendConnector for GithubReadOnlyBackend {
         matches!(feature, BackendFeature::Workflows)
     }
 
-    async fn list_issues(&self, project: &str) -> Result<Vec<Issue>> {
+    async fn list_issues(&self, project: &str) -> Result<Vec<Record>> {
         let first = format!(
             "{}/repos/{}/issues?state=all&per_page={}",
             self.base(),
@@ -362,7 +362,7 @@ impl BackendConnector for GithubReadOnlyBackend {
             PAGE_SIZE
         );
         let mut next_url: Option<String> = Some(first);
-        let mut out: Vec<Issue> = Vec::new();
+        let mut out: Vec<Record> = Vec::new();
         let mut pages: usize = 0;
 
         let header_owned = self.standard_headers();
@@ -409,7 +409,7 @@ impl BackendConnector for GithubReadOnlyBackend {
         Ok(out)
     }
 
-    async fn get_issue(&self, project: &str, id: RecordId) -> Result<Issue> {
+    async fn get_issue(&self, project: &str, id: RecordId) -> Result<Record> {
         let url = format!("{}/repos/{}/issues/{}", self.base(), project, id.0);
         let header_owned = self.standard_headers();
         let header_refs: Vec<(&str, &str)> =
@@ -500,7 +500,7 @@ impl BackendConnector for GithubReadOnlyBackend {
         Ok(out)
     }
 
-    async fn create_issue(&self, _project: &str, _issue: Untainted<Issue>) -> Result<Issue> {
+    async fn create_issue(&self, _project: &str, _issue: Untainted<Record>) -> Result<Record> {
         Err(Error::Other(
             "not supported: create_issue — reposix-github is read-only in v0.1".into(),
         ))
@@ -510,9 +510,9 @@ impl BackendConnector for GithubReadOnlyBackend {
         &self,
         _project: &str,
         _id: RecordId,
-        _patch: Untainted<Issue>,
+        _patch: Untainted<Record>,
         _expected_version: Option<u64>,
-    ) -> Result<Issue> {
+    ) -> Result<Record> {
         Err(Error::Other(
             "not supported: update_issue — reposix-github is read-only in v0.1".into(),
         ))
@@ -821,7 +821,7 @@ mod tests {
             .expect("backend");
         let t = chrono::Utc::now();
         let u = sanitize(
-            Tainted::new(Issue {
+            Tainted::new(Record {
                 id: RecordId(0),
                 title: "x".into(),
                 status: IssueStatus::Open,
@@ -857,7 +857,7 @@ mod tests {
             .expect("backend");
         let t = chrono::Utc::now();
         let u = sanitize(
-            Tainted::new(Issue {
+            Tainted::new(Record {
                 id: RecordId(0),
                 title: "x".into(),
                 status: IssueStatus::Open,

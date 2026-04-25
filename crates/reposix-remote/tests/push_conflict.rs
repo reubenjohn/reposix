@@ -26,14 +26,14 @@ use std::sync::Arc;
 
 use assert_cmd::Command;
 use chrono::TimeZone;
-use reposix_core::{Issue, RecordId, IssueStatus};
+use reposix_core::{Record, RecordId, IssueStatus};
 use serde_json::Value;
 use wiremock::matchers::{any, method, path_regex};
 use wiremock::{Mock, MockServer, Request, ResponseTemplate};
 
 fn sample_issue(id: u64, version: u64) -> Value {
     let t = chrono::Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
-    let i = Issue {
+    let i = Record {
         id: RecordId(id),
         title: format!("issue {id}"),
         status: IssueStatus::Open,
@@ -49,7 +49,7 @@ fn sample_issue(id: u64, version: u64) -> Value {
     serde_json::to_value(i).unwrap()
 }
 
-/// Render `Issue` to its on-disk frontmatter+body form, then override
+/// Render `Record` to its on-disk frontmatter+body form, then override
 /// the `version` field in the YAML so we can simulate stale-base or
 /// hijacked-version pushes. `version_override` and `id_override` let
 /// the caller forge those server-controlled fields.

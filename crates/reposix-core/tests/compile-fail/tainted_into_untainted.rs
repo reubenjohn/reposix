@@ -1,15 +1,15 @@
 // Compile-fail fixture for SG-05 / ROADMAP phase-1 SC #1:
-// passing a `Tainted<Issue>` where `Untainted<Issue>` is required MUST NOT
+// passing a `Tainted<Record>` where `Untainted<Record>` is required MUST NOT
 // compile. There is no `From<Tainted<T>> for Untainted<T>`, no `Deref`, no
 // coercion — the only legal path is `sanitize(tainted, server_meta)`.
 
 use chrono::Utc;
-use reposix_core::{Issue, RecordId, IssueStatus, Tainted, Untainted};
+use reposix_core::{Record, RecordId, IssueStatus, Tainted, Untainted};
 
-fn takes_untainted(_: Untainted<Issue>) {}
+fn takes_untainted(_: Untainted<Record>) {}
 
 fn main() {
-    let tainted = Tainted::new(Issue {
+    let tainted = Tainted::new(Record {
         id: RecordId(1),
         title: String::new(),
         status: IssueStatus::Open,

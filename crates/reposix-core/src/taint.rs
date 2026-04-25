@@ -20,7 +20,7 @@
 
 use chrono::{DateTime, Utc};
 
-use crate::issue::{Issue, RecordId};
+use crate::issue::{Record, RecordId};
 
 /// Wrapper for values that originated from untrusted (network, agent) input.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -75,7 +75,7 @@ impl<T> Untainted<T> {
     }
 }
 
-/// Server-authoritative metadata for an [`Issue`]. `sanitize` overwrites
+/// Server-authoritative metadata for an [`Record`]. `sanitize` overwrites
 /// these fields on the tainted value before wrapping it as `Untainted`.
 #[derive(Debug, Clone)]
 pub struct ServerMetadata {
@@ -89,20 +89,20 @@ pub struct ServerMetadata {
     pub version: u64,
 }
 
-/// Strip server-controlled fields from a tainted `Issue` and replace them
+/// Strip server-controlled fields from a tainted `Record` and replace them
 /// with the authoritative `ServerMetadata`. Agent-controlled fields
 /// (`title`, `status`, `assignee`, `labels`, `body`) are preserved byte-for-byte.
 ///
-/// This is the only legal path from `Tainted<Issue>` to `Untainted<Issue>`.
+/// This is the only legal path from `Tainted<Record>` to `Untainted<Record>`.
 #[must_use]
 // `ServerMetadata` is all-Copy fields, so clippy cannot see it as "consumed"
 // even though we destructure it. We deliberately take ownership so future
 // non-Copy fields (e.g. an audit-trail ID) cannot accidentally be passed by
 // shared reference and shared across trust boundaries.
 #[allow(clippy::needless_pass_by_value)]
-pub fn sanitize(tainted: Tainted<Issue>, server: ServerMetadata) -> Untainted<Issue> {
+pub fn sanitize(tainted: Tainted<Record>, server: ServerMetadata) -> Untainted<Record> {
     let issue = tainted.into_inner();
-    let Issue {
+    let Record {
         id: _,
         title,
         status,
@@ -121,7 +121,7 @@ pub fn sanitize(tainted: Tainted<Issue>, server: ServerMetadata) -> Untainted<Is
         updated_at,
         version,
     } = server;
-    Untainted::new(Issue {
+    Untainted::new(Record {
         id,
         title,
         status,
@@ -171,9 +171,9 @@ mod tests {
         assert_eq!(u.into_inner(), 9_u32);
     }
 
-    fn tainted_issue_version_999999() -> Tainted<Issue> {
+    fn tainted_issue_version_999999() -> Tainted<Record> {
         let t = Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap();
-        Tainted::new(Issue {
+        Tainted::new(Record {
             id: RecordId(999_999),
             title: "agent-authored title".into(),
             status: IssueStatus::Open,

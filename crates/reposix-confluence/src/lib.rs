@@ -79,7 +79,7 @@ use serde::Deserialize;
 
 use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason};
 use reposix_core::http::{client, ClientOpts, HttpClient};
-use reposix_core::{Error, Issue, RecordId, IssueStatus, Result, Tainted, Untainted};
+use reposix_core::{Error, Record, RecordId, IssueStatus, Result, Tainted, Untainted};
 
 /// Maximum time we'll wait for a rate-limit reset before surfacing the
 /// exhaustion as an error. Caps worst-case call latency.
@@ -247,7 +247,7 @@ struct ConfPage {
     parent_id: Option<String>,
     /// Confluence REST v2 `parentType` — one of `"page"`, `"folder"`,
     /// `"whiteboard"`, `"database"`, etc. Only the `"page"` case propagates
-    /// into [`Issue::parent_id`]; every other value is treated as a tree root
+    /// into [`Record::parent_id`]; every other value is treated as a tree root
     /// (with a `tracing::debug!` trail) because reposix's hierarchy model is
     /// homogeneous (pages only).
     #[serde(default, rename = "parentType")]
@@ -581,14 +581,14 @@ pub fn status_from_confluence(s: &str) -> IssueStatus {
 }
 
 /// Translate a deserialized Confluence page into reposix's normalized
-/// [`Issue`].
+/// [`Record`].
 ///
 /// # Errors
 ///
 /// Returns `Err(Error::Other(…))` if `page.id` is not a valid `u64` (very
 /// rare — Atlassian consistently returns numeric strings, but system pages
 /// have historically had non-numeric ids).
-fn translate(page: ConfPage) -> Result<Issue> {
+fn translate(page: ConfPage) -> Result<Record> {
     let id = page
         .id
         .parse::<u64>()
@@ -612,7 +612,7 @@ fn translate(page: ConfPage) -> Result<Issue> {
             .map(|s| s.value)
             .unwrap_or_default()
     };
-    // Phase 13 Wave B1: derive `Issue::parent_id` from Confluence REST v2
+    // Phase 13 Wave B1: derive `Record::parent_id` from Confluence REST v2
     // `parentId`/`parentType`. Only `parent_type == "page"` propagates — the
     // reposix tree is homogeneous (pages only), so `folder` / `whiteboard` /
     // `database` parents become tree roots with a debug-log breadcrumb.
@@ -641,7 +641,7 @@ fn translate(page: ConfPage) -> Result<Issue> {
         }
         (Some(pid_str), Some("folder")) => {
             // CONF-06: folder parents are valid hierarchy nodes — propagate
-            // to Issue::parent_id so the tree/ overlay shows folder structure.
+            // to Record::parent_id so the tree/ overlay shows folder structure.
             if let Ok(n) = pid_str.parse::<u64>() {
                 Some(RecordId(n))
             } else {
@@ -668,7 +668,7 @@ fn translate(page: ConfPage) -> Result<Issue> {
         }
         _ => None,
     };
-    Ok(Issue {
+    Ok(Record {
         id: RecordId(id),
         title: page.title,
         status: status_from_confluence(&page.status),
@@ -798,7 +798,7 @@ impl ConfluenceBackend {
     ///
     /// - Returns `Error::Other` if pagination would exceed `MAX_ISSUES_PER_LIST`.
     /// - All errors that `list_issues` would raise also apply here.
-    pub async fn list_issues_strict(&self, project: &str) -> Result<Vec<Issue>> {
+    pub async fn list_issues_strict(&self, project: &str) -> Result<Vec<Record>> {
         self.list_issues_impl(project, true).await
     }
 
@@ -810,7 +810,7 @@ impl ConfluenceBackend {
     ///
     /// - Transport or HTTP errors from the Confluence REST API.
     /// - In strict mode: `Error::Other` when the page cap is exceeded.
-    async fn list_issues_impl(&self, project: &str, strict: bool) -> Result<Vec<Issue>> {
+    async fn list_issues_impl(&self, project: &str, strict: bool) -> Result<Vec<Record>> {
         let space_id = self.resolve_space_id(project).await?;
         let first = format!(
             "{}/wiki/api/v2/spaces/{}/pages?limit={}",
@@ -819,7 +819,7 @@ impl ConfluenceBackend {
             PAGE_SIZE
         );
         let mut next_url: Option<String> = Some(first);
-        let mut out: Vec<Issue> = Vec::new();
+        let mut out: Vec<Record> = Vec::new();
         let mut pages: usize = 0;
 
         let header_owned = self.standard_headers();
@@ -1501,7 +1501,7 @@ impl BackendConnector for ConfluenceBackend {
         "pages"
     }
 
-    async fn list_issues(&self, project: &str) -> Result<Vec<Issue>> {
+    async fn list_issues(&self, project: &str) -> Result<Vec<Record>> {
         self.list_issues_impl(project, false).await
     }
 
@@ -1570,7 +1570,7 @@ impl BackendConnector for ConfluenceBackend {
         Ok(out)
     }
 
-    async fn get_issue(&self, _project: &str, id: RecordId) -> Result<Issue> {
+    async fn get_issue(&self, _project: &str, id: RecordId) -> Result<Record> {
         // First attempt: request ADF body format for lossless Markdown conversion.
         let url_adf = format!(
             "{}/wiki/api/v2/pages/{}?body-format=atlas_doc_format",
@@ -1644,7 +1644,7 @@ impl BackendConnector for ConfluenceBackend {
         translate(tainted.into_inner())
     }
 
-    async fn create_issue(&self, project: &str, issue: Untainted<Issue>) -> Result<Issue> {
+    async fn create_issue(&self, project: &str, issue: Untainted<Record>) -> Result<Record> {
         let space_id = self.resolve_space_id(project).await?;
         // Convert the Markdown body to Confluence storage XHTML.
         let storage_xhtml = crate::adf::markdown_to_storage(&issue.inner_ref().body)?;
@@ -1703,9 +1703,9 @@ impl BackendConnector for ConfluenceBackend {
         &self,
         _project: &str,
         id: RecordId,
-        patch: Untainted<Issue>,
+        patch: Untainted<Record>,
         expected_version: Option<u64>,
-    ) -> Result<Issue> {
+    ) -> Result<Record> {
         // Pre-flight version resolution: if caller supplied an expected version
         // trust it; otherwise do a GET to discover the current version number.
         let current_version = match expected_version {
@@ -2316,7 +2316,7 @@ mod tests {
         assert_eq!(issue.parent_id, Some(RecordId(42)));
     }
 
-    // CONF-06: folder parents now propagate to Issue::parent_id (changed in
+    // CONF-06: folder parents now propagate to Record::parent_id (changed in
     // Phase 24 Plan 01). Updated from "orphan" to "propagates".
     #[test]
     fn translate_treats_folder_parent_as_orphan() {
@@ -2378,7 +2378,7 @@ mod tests {
     }
 
     /// End-to-end proof that `parentId` + `parentType` survive the JSON
-    /// decode → `ConfPage` → `translate` → `Issue` pipeline through the
+    /// decode → `ConfPage` → `translate` → `Record` pipeline through the
     /// `BackendConnector::list_issues` seam (not just the `translate` helper in
     /// isolation). Mixes three shapes in one list so we assert all branches
     /// with a single wiremock round-trip.
@@ -2468,11 +2468,11 @@ mod tests {
             .find(|i| i.id == RecordId(12321))
             .expect("folder-parented page present");
         // CONF-06 fix (Phase 24 Plan 01): folder parentType now propagates to
-        // Issue::parent_id (same as "page"). Updated from None to Some(999).
+        // Record::parent_id (same as "page"). Updated from None to Some(999).
         assert_eq!(
             foldered.parent_id,
             Some(RecordId(999)),
-            "folder parentType must propagate to Issue::parent_id (CONF-06)"
+            "folder parentType must propagate to Record::parent_id (CONF-06)"
         );
     }
 
@@ -2678,13 +2678,13 @@ mod tests {
         })
     }
 
-    /// Build an `Untainted<Issue>` with the given fields for use in write tests.
-    fn make_untainted(title: &str, body: &str, parent_id: Option<RecordId>) -> Untainted<Issue> {
+    /// Build an `Untainted<Record>` with the given fields for use in write tests.
+    fn make_untainted(title: &str, body: &str, parent_id: Option<RecordId>) -> Untainted<Record> {
         let t = chrono::DateTime::parse_from_rfc3339("2026-04-13T00:00:00Z")
             .unwrap()
             .with_timezone(&chrono::Utc);
         sanitize(
-            Tainted::new(Issue {
+            Tainted::new(Record {
                 id: RecordId(0),
                 title: title.to_owned(),
                 status: IssueStatus::Open,

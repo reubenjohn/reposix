@@ -231,10 +231,10 @@ async fn contract_jira_wiremock() {
 fn make_untainted_for_contract(
     title: &str,
     body: &str,
-) -> reposix_core::Untainted<reposix_core::Issue> {
+) -> reposix_core::Untainted<reposix_core::Record> {
     use reposix_core::{sanitize, ServerMetadata};
     let now = chrono::Utc::now();
-    let raw = reposix_core::Issue {
+    let raw = reposix_core::Record {
         id: reposix_core::RecordId(0),
         title: title.to_owned(),
         body: body.to_owned(),

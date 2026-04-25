@@ -19,10 +19,10 @@ use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::{
-    sanitize, BackendConnector, Issue, RecordId, IssueStatus, ServerMetadata, Tainted,
+    sanitize, BackendConnector, Record, RecordId, IssueStatus, ServerMetadata, Tainted,
 };
 
-// chrono is a transitive dep via reposix-core (Issue.created_at uses it).
+// chrono is a transitive dep via reposix-core (Record.created_at uses it).
 use chrono::Utc;
 
 use crate::metrics::{ErrorKind, MetricsAccumulator, OpKind};
@@ -114,7 +114,7 @@ impl Workload for SimDirectWorkload {
             // wildcard etag (expected_version = None) so we don't storm
             // 409s when two clients race on the same id.
             let now = Utc::now();
-            let issue = Issue {
+            let issue = Record {
                 id,
                 title: "swarm-patched".to_string(),
                 status: IssueStatus::InProgress,

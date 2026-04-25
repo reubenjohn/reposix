@@ -6,7 +6,7 @@
 //! - [`adf_to_markdown`]: converts ADF to Markdown (used on the read path).
 //! - [`adf_paragraph_wrap`]: wraps plain text in minimal ADF structure for writes.
 //!
-//! [`Issue::body`]: reposix_core::Issue
+//! [`Record::body`]: reposix_core::Record
 
 use reposix_core::Error;
 

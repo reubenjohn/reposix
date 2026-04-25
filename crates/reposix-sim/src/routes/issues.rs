@@ -8,7 +8,7 @@
 //!    are synchronous over rusqlite — but the pattern holds if the body is
 //!    ever refactored).
 //!
-//! Response bodies mirror [`reposix_core::Issue`]'s `Serialize` output.
+//! Response bodies mirror [`reposix_core::Record`]'s `Serialize` output.
 
 use axum::{
     extract::{Path, Query, State},
@@ -18,7 +18,7 @@ use axum::{
     Json, Router,
 };
 use chrono::{DateTime, SecondsFormat, Utc};
-use reposix_core::{Issue, RecordId, IssueStatus};
+use reposix_core::{Record, RecordId, IssueStatus};
 use rusqlite::{params, Connection, TransactionBehavior};
 use serde::Deserialize;
 use serde_json::Value;
@@ -71,7 +71,7 @@ fn parse_ts(raw: &str) -> Result<DateTime<Utc>, ApiError> {
         .map_err(|e| ApiError::Internal(format!("timestamp {raw:?}: {e}")))
 }
 
-/// Map one `SELECT *`-shaped `rusqlite::Row` onto an `Issue`.
+/// Map one `SELECT *`-shaped `rusqlite::Row` onto an `Record`.
 fn row_to_issue(row: &rusqlite::Row<'_>) -> rusqlite::Result<RawIssueRow> {
     Ok(RawIssueRow {
         id: row.get::<_, i64>("id")?,
@@ -99,12 +99,12 @@ struct RawIssueRow {
 }
 
 impl RawIssueRow {
-    fn into_issue(self) -> Result<Issue, ApiError> {
+    fn into_issue(self) -> Result<Record, ApiError> {
         #[allow(clippy::cast_sign_loss)] // `id`/`version` stored non-negative
         let id = self.id as u64;
         #[allow(clippy::cast_sign_loss)]
         let version = self.version as u64;
-        Ok(Issue {
+        Ok(Record {
             id: RecordId(id),
             title: self.title,
             status: parse_status(&self.status)?,
@@ -157,7 +157,7 @@ async fn list_issues(
     State(state): State<AppState>,
     Path(slug): Path<String>,
     Query(q): Query<ListIssuesQuery>,
-) -> Result<Json<Vec<Issue>>, ApiError> {
+) -> Result<Json<Vec<Record>>, ApiError> {
     // Parse the `since` bound once before touching the DB. Bad format → 400.
     let since_cutoff: Option<DateTime<Utc>> = match q.since.as_deref() {
         None | Some("") => None,
@@ -170,7 +170,7 @@ async fn list_issues(
         ),
     };
 
-    let issues: Vec<Issue> = {
+    let issues: Vec<Record> = {
         let conn = state.db.lock();
         // Stored `updated_at` uses RFC3339 with `Z` suffix and seconds
         // precision (`now_rfc3339` helper). Lexicographic comparison is
@@ -210,12 +210,12 @@ async fn list_issues(
 async fn get_issue(
     State(state): State<AppState>,
     Path((slug, id)): Path<(String, u64)>,
-) -> Result<Json<Issue>, ApiError> {
+) -> Result<Json<Record>, ApiError> {
     let issue = load_issue(&state.db.lock(), &slug, id)?;
     Ok(Json(issue))
 }
 
-fn load_issue(conn: &Connection, slug: &str, id: u64) -> Result<Issue, ApiError> {
+fn load_issue(conn: &Connection, slug: &str, id: u64) -> Result<Record, ApiError> {
     #[allow(clippy::cast_possible_wrap)]
     let id_signed = id as i64;
     let row = conn.query_row(
@@ -369,7 +369,7 @@ async fn patch_issue(
     Path((slug, id)): Path<(String, u64)>,
     headers: HeaderMap,
     body: Option<Json<Value>>,
-) -> Result<Json<Issue>, ApiError> {
+) -> Result<Json<Record>, ApiError> {
     // TODO(v0.4+): wrap inbound body in Tainted<T> before frontmatter stripping.
     let raw = body.map_or(Value::Object(serde_json::Map::new()), |Json(v)| v);
     // Deserialize via strict deny_unknown_fields.

@@ -10,7 +10,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use reposix_core::frontmatter;
-use reposix_core::{Issue, RecordId};
+use reposix_core::{Record, RecordId};
 use thiserror::Error;
 
 use crate::fast_import::ParsedExport;
@@ -26,7 +26,7 @@ pub const ALLOW_BULK_DELETE_TAG: &str = "[allow-bulk-delete]";
 #[allow(dead_code)] // `prior_version` is read by the executor only on Update path
 pub enum PlannedAction {
     /// Path appeared in new tree but not the prior list — POST.
-    Create(Issue),
+    Create(Record),
     /// Both prior and new bytes exist; bytes differ — PATCH with prior version.
     Update {
         /// Issue id (server-known).
@@ -34,7 +34,7 @@ pub enum PlannedAction {
         /// Prior version (for `If-Match`).
         prior_version: u64,
         /// New issue parsed from the new blob bytes.
-        new: Issue,
+        new: Record,
     },
     /// Path was in prior list but not in the new tree — DELETE candidate.
     Delete {
@@ -96,8 +96,8 @@ fn normalize_for_compare(s: &str) -> String {
 /// # Errors
 /// - [`PlanError::BulkDeleteRefused`] if the cap fires.
 /// - [`PlanError::InvalidBlob`] if a new-tree blob can't parse as an issue.
-pub fn plan(prior: &[Issue], parsed: &ParsedExport) -> Result<Vec<PlannedAction>, PlanError> {
-    let prior_by_id: HashMap<RecordId, &Issue> = prior.iter().map(|i| (i.id, i)).collect();
+pub fn plan(prior: &[Record], parsed: &ParsedExport) -> Result<Vec<PlannedAction>, PlanError> {
+    let prior_by_id: HashMap<RecordId, &Record> = prior.iter().map(|i| (i.id, i)).collect();
     let prior_by_path: BTreeMap<String, RecordId> = prior
         .iter()
         .map(|i| (format!("{:04}.md", i.id.0), i.id))
@@ -209,9 +209,9 @@ mod tests {
     use chrono::TimeZone;
     use reposix_core::IssueStatus;
 
-    fn sample(id: u64) -> Issue {
+    fn sample(id: u64) -> Record {
         let t = chrono::Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
-        Issue {
+        Record {
             id: RecordId(id),
             title: format!("issue {id}"),
             status: IssueStatus::Open,
@@ -228,7 +228,7 @@ mod tests {
 
     #[test]
     fn five_deletes_passes_cap() {
-        let prior: Vec<Issue> = (1..=5).map(sample).collect();
+        let prior: Vec<Record> = (1..=5).map(sample).collect();
         let parsed = ParsedExport::default(); // empty new tree
         let actions = plan(&prior, &parsed).expect("5 deletes is at the cap");
         assert_eq!(actions.len(), 5);
@@ -236,7 +236,7 @@ mod tests {
 
     #[test]
     fn six_deletes_fires_cap() {
-        let prior: Vec<Issue> = (1..=6).map(sample).collect();
+        let prior: Vec<Record> = (1..=6).map(sample).collect();
         let parsed = ParsedExport::default();
         let err = plan(&prior, &parsed).expect_err("6 deletes must be refused");
         assert!(matches!(
@@ -251,7 +251,7 @@ mod tests {
 
     #[test]
     fn six_deletes_with_allow_tag_passes() {
-        let prior: Vec<Issue> = (1..=6).map(sample).collect();
+        let prior: Vec<Record> = (1..=6).map(sample).collect();
         let parsed = ParsedExport {
             commit_message: "[allow-bulk-delete] cleanup\n".to_owned(),
             ..Default::default()
@@ -267,7 +267,7 @@ mod tests {
     /// a raw byte-compare would flag as spurious Updates.
     #[test]
     fn unchanged_push_emits_no_patches() {
-        let prior: Vec<Issue> = (1..=3).map(sample).collect();
+        let prior: Vec<Record> = (1..=3).map(sample).collect();
         // Simulate `git pull` → no edits → `git push`:
         // each new-tree blob is the exact render output of the prior issue.
         // The planner must recognize these as equivalent and skip PATCH.
@@ -298,7 +298,7 @@ mod tests {
     /// working tree), the normalized-compare must treat it as a no-op.
     #[test]
     fn extra_trailing_newline_is_a_noop() {
-        let prior: Vec<Issue> = vec![sample(1)];
+        let prior: Vec<Record> = vec![sample(1)];
         let mut rendered = frontmatter::render(&prior[0]).expect("render");
         rendered.push('\n'); // the exact edge case M-03 calls out
         let mut blobs = HashMap::new();

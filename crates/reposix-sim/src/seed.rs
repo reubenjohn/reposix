@@ -40,7 +40,7 @@ pub struct SeedProject {
     pub description: String,
 }
 
-/// Issue-level seed entry. Mirrors the writable subset of `Issue`; server
+/// Issue-level seed entry. Mirrors the writable subset of `Record`; server
 /// fields (`created_at`, `updated_at`, `version`) are set by `load_seed`.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SeedIssue {

@@ -91,7 +91,7 @@ pub async fn run_refresh(cfg: RefreshConfig) -> Result<()> {
 /// Inner refresh logic: write `.md` files, update timestamps, commit.
 ///
 /// Separated from [`run_refresh`] so integration tests can supply a
-/// pre-built `Vec<Issue>` without needing a live network backend.
+/// pre-built `Vec<Record>` without needing a live network backend.
 ///
 /// # Errors
 ///
@@ -100,7 +100,7 @@ pub async fn run_refresh(cfg: RefreshConfig) -> Result<()> {
 /// - `cache.db` update fails: propagated.
 pub fn run_refresh_inner(
     cfg: &RefreshConfig,
-    issues: Vec<reposix_core::Issue>,
+    issues: Vec<reposix_core::Record>,
     db: Option<&crate::cache_db::CacheDb>,
 ) -> Result<()> {
     let n = issues.len();
@@ -177,7 +177,7 @@ pub fn run_refresh_inner(
 /// # Errors
 ///
 /// Propagates backend construction or network errors.
-async fn fetch_issues(cfg: &RefreshConfig) -> Result<Vec<reposix_core::Issue>> {
+async fn fetch_issues(cfg: &RefreshConfig) -> Result<Vec<reposix_core::Record>> {
     match cfg.backend {
         ListBackend::Sim => {
             let b = SimBackend::new(cfg.origin.clone()).context("build SimBackend")?;

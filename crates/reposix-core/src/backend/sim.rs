@@ -5,7 +5,7 @@
 //! 1. Build `{origin}/projects/{project}/issues[/<id>]`.
 //! 2. Send via the shared [`HttpClient`] (re-routed through the egress
 //!    allowlist gate, SG-01).
-//! 3. Deserialize the response into [`Issue`] via `serde_json::from_slice`.
+//! 3. Deserialize the response into [`Record`] via `serde_json::from_slice`.
 //!
 //! The existing sim route handlers in `crates/reposix-sim/src/routes/issues.rs`
 //! define the wire shape; this module is the client-side dual.
@@ -23,7 +23,7 @@ use reqwest::{Method, StatusCode};
 
 use crate::backend::{BackendConnector, BackendFeature, DeleteReason};
 use crate::http::{client, ClientOpts, HttpClient};
-use crate::issue::{Issue, RecordId, IssueStatus};
+use crate::issue::{Record, RecordId, IssueStatus};
 use crate::taint::Untainted;
 use crate::{Error, Result};
 
@@ -101,9 +101,9 @@ impl SimBackend {
 }
 
 /// Shared helper: consume a `reqwest::Response` and deserialize its body as
-/// `Issue`, mapping HTTP errors to `Error::*`. 404 becomes
+/// `Record`, mapping HTTP errors to `Error::*`. 404 becomes
 /// `Error::Other("not found: ...")`.
-async fn decode_issue(resp: reqwest::Response, context: &str) -> Result<Issue> {
+async fn decode_issue(resp: reqwest::Response, context: &str) -> Result<Record> {
     let status = resp.status();
     let bytes = resp.bytes().await?;
     if status == StatusCode::NOT_FOUND {
@@ -115,11 +115,11 @@ async fn decode_issue(resp: reqwest::Response, context: &str) -> Result<Issue> {
             String::from_utf8_lossy(&bytes)
         )));
     }
-    let issue: Issue = serde_json::from_slice(&bytes)?;
+    let issue: Record = serde_json::from_slice(&bytes)?;
     Ok(issue)
 }
 
-async fn decode_issues(resp: reqwest::Response, context: &str) -> Result<Vec<Issue>> {
+async fn decode_issues(resp: reqwest::Response, context: &str) -> Result<Vec<Record>> {
     let status = resp.status();
     let bytes = resp.bytes().await?;
     if !status.is_success() {
@@ -128,16 +128,16 @@ async fn decode_issues(resp: reqwest::Response, context: &str) -> Result<Vec<Iss
             String::from_utf8_lossy(&bytes)
         )));
     }
-    let list: Vec<Issue> = serde_json::from_slice(&bytes)?;
+    let list: Vec<Record> = serde_json::from_slice(&bytes)?;
     Ok(list)
 }
 
-/// Render a `PatchIssueBody`-compatible JSON payload from an [`Issue`].
+/// Render a `PatchIssueBody`-compatible JSON payload from an [`Record`].
 ///
 /// The sim's `PatchIssueBody` has `deny_unknown_fields`, so this only emits
 /// the mutable-field subset: `title`, `body`, `status`, `assignee`, `labels`.
 /// `assignee = None` is emitted as JSON `null` (clear); `Some(_)` as set.
-fn render_patch_body(issue: &Issue) -> Result<Vec<u8>> {
+fn render_patch_body(issue: &Record) -> Result<Vec<u8>> {
     let mut map = serde_json::Map::new();
     map.insert(
         "title".into(),
@@ -170,7 +170,7 @@ fn render_patch_body(issue: &Issue) -> Result<Vec<u8>> {
 }
 
 /// Render a `CreateIssueBody`-compatible JSON payload.
-fn render_create_body(issue: &Issue) -> Result<Vec<u8>> {
+fn render_create_body(issue: &Record) -> Result<Vec<u8>> {
     let mut map = serde_json::Map::new();
     map.insert(
         "title".into(),
@@ -221,7 +221,7 @@ impl BackendConnector for SimBackend {
         )
     }
 
-    async fn list_issues(&self, project: &str) -> Result<Vec<Issue>> {
+    async fn list_issues(&self, project: &str) -> Result<Vec<Record>> {
         let url = format!("{}/projects/{}/issues", self.base(), project);
         let resp = self
             .http
@@ -254,7 +254,7 @@ impl BackendConnector for SimBackend {
         Ok(issues.into_iter().map(|i| i.id).collect())
     }
 
-    async fn get_issue(&self, project: &str, id: RecordId) -> Result<Issue> {
+    async fn get_issue(&self, project: &str, id: RecordId) -> Result<Record> {
         let url = format!("{}/projects/{}/issues/{}", self.base(), project, id.0);
         let resp = self
             .http
@@ -263,7 +263,7 @@ impl BackendConnector for SimBackend {
         decode_issue(resp, &url).await
     }
 
-    async fn create_issue(&self, project: &str, issue: Untainted<Issue>) -> Result<Issue> {
+    async fn create_issue(&self, project: &str, issue: Untainted<Record>) -> Result<Record> {
         let url = format!("{}/projects/{}/issues", self.base(), project);
         let body = render_create_body(issue.inner_ref())?;
         let resp = self
@@ -277,9 +277,9 @@ impl BackendConnector for SimBackend {
         &self,
         project: &str,
         id: RecordId,
-        patch: Untainted<Issue>,
+        patch: Untainted<Record>,
         expected_version: Option<u64>,
-    ) -> Result<Issue> {
+    ) -> Result<Record> {
         let url = format!("{}/projects/{}/issues/{}", self.base(), project, id.0);
         let body = render_patch_body(patch.inner_ref())?;
         // Build the If-Match header string in a local so the &str lifetime
@@ -355,9 +355,9 @@ mod tests {
         })
     }
 
-    fn sample_tainted() -> Tainted<Issue> {
+    fn sample_tainted() -> Tainted<Record> {
         let t = Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
-        Tainted::new(Issue {
+        Tainted::new(Record {
             id: RecordId(0),
             title: "agent authored".into(),
             status: IssueStatus::Open,
@@ -372,7 +372,7 @@ mod tests {
         })
     }
 
-    fn sample_untainted() -> Untainted<Issue> {
+    fn sample_untainted() -> Untainted<Record> {
         let t = Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
         sanitize(
             sample_tainted(),
@@ -457,10 +457,10 @@ mod tests {
             .await;
 
         let backend = SimBackend::new(server.uri()).expect("backend");
-        // Build an Untainted<Issue> with status=in_progress.
+        // Build an Untainted<Record> with status=in_progress.
         let t = Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
         let u = sanitize(
-            Tainted::new(Issue {
+            Tainted::new(Record {
                 id: RecordId(0),
                 title: "hello".into(),
                 status: IssueStatus::InProgress,
@@ -650,7 +650,7 @@ mod tests {
         let backend = SimBackend::new(server.uri()).expect("backend");
         let t = Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
         let u = sanitize(
-            Tainted::new(Issue {
+            Tainted::new(Record {
                 id: RecordId(0),
                 title: "hello".into(),
                 status: IssueStatus::Open,
@@ -764,7 +764,7 @@ mod tests {
         // 14-RESEARCH.md#Q10). A hostile tainted issue carrying an inflated
         // `version=999_999` flows through `sanitize()` and into
         // `SimBackend::update_issue`; the wire body must contain the
-        // mutable-field subset only. This proves the Untainted<Issue>
+        // mutable-field subset only. This proves the Untainted<Record>
         // discipline holds at the trait-impl layer too, not just in the old
         // `EgressPayload` struct.
         let server = MockServer::start().await;
@@ -782,7 +782,7 @@ mod tests {
             updated_at: t,
             version: 1,
         };
-        let hostile = Issue {
+        let hostile = Record {
             id: RecordId(1),
             title: "hello".into(),
             status: IssueStatus::Open,
@@ -905,7 +905,7 @@ mod tests {
     #[tokio::test]
     async fn create_issue_returns_authoritative_issue() {
         // Positive companion to `create_issue_omits_server_fields`: after a
-        // 201, the returned `Issue` carries the server-assigned id/version/
+        // 201, the returned `Record` carries the server-assigned id/version/
         // created_at from the response body — this is what the FUSE `create`
         // callback relies on to populate its inode cache.
         let server = MockServer::start().await;

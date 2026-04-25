@@ -11,15 +11,15 @@ use std::collections::{BTreeMap, HashMap};
 use std::io::{self, BufRead, Write};
 
 use reposix_core::frontmatter;
-use reposix_core::Issue;
+use reposix_core::Record;
 
-/// Render an [`Issue`] to the byte sequence we publish as a fast-import blob.
+/// Render an [`Record`] to the byte sequence we publish as a fast-import blob.
 /// Single-line wrapper around [`frontmatter::render`] so any future change to
 /// the renderer surfaces here as a compile-or-test signal.
 ///
 /// # Errors
 /// Propagates any error from [`frontmatter::render`] (YAML serialization).
-pub fn render_blob(issue: &Issue) -> Result<String, reposix_core::Error> {
+pub fn render_blob(issue: &Record) -> Result<String, reposix_core::Error> {
     frontmatter::render(issue)
 }
 
@@ -29,12 +29,12 @@ pub fn render_blob(issue: &Issue) -> Result<String, reposix_core::Error> {
 /// # Errors
 /// Returns any [`io::Error`] from the writer or any rendering failure
 /// translated into an `io::Error::Other`.
-pub fn emit_import_stream<W: Write>(w: &mut W, issues: &[Issue]) -> io::Result<()> {
+pub fn emit_import_stream<W: Write>(w: &mut W, issues: &[Record]) -> io::Result<()> {
     // First line of every import response: `feature done\n` per
     // gitremote-helpers(7); marks the stream as well-formed.
     writeln!(w, "feature done")?;
 
-    let mut sorted: Vec<&Issue> = issues.iter().collect();
+    let mut sorted: Vec<&Record> = issues.iter().collect();
     sorted.sort_by_key(|i| i.id.0);
 
     let mut mark: u64 = 0;

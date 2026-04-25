@@ -4,10 +4,10 @@
 // `pub(crate) fn new` to `pub fn new` would silently bypass `sanitize()`.
 
 use chrono::Utc;
-use reposix_core::{Issue, RecordId, IssueStatus, Untainted};
+use reposix_core::{Record, RecordId, IssueStatus, Untainted};
 
 fn main() {
-    let some_issue = Issue {
+    let some_issue = Record {
         id: RecordId(1),
         title: String::new(),
         status: IssueStatus::Open,
