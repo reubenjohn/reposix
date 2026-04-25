@@ -4,6 +4,7 @@
 
 mod common;
 
+use common::CacheDirGuard;
 use gix::prelude::FindExt as _;
 use reposix_cache::Cache;
 use tempfile::tempdir;
@@ -12,7 +13,7 @@ use wiremock::MockServer;
 #[tokio::test]
 async fn no_blob_objects_after_build_from() {
     let tmp = tempdir().unwrap();
-    let prev = common::set_cache_dir(tmp.path());
+    let _g = CacheDirGuard::new(tmp.path());
 
     let server = MockServer::start().await;
     let issues = common::sample_issues("proj-1", 5);
@@ -46,6 +47,4 @@ async fn no_blob_objects_after_build_from() {
     );
     assert!(tree_count >= 1, "expected at least one tree object");
     assert_eq!(commit_count, 1, "expected exactly one commit");
-
-    common::restore_cache_dir(prev);
 }

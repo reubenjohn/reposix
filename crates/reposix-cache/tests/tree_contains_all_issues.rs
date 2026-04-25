@@ -2,6 +2,7 @@
 
 mod common;
 
+use common::CacheDirGuard;
 use reposix_cache::Cache;
 use tempfile::tempdir;
 use wiremock::MockServer;
@@ -9,7 +10,7 @@ use wiremock::MockServer;
 #[tokio::test]
 async fn tree_contains_all_seeded_issues() {
     let tmp = tempdir().unwrap();
-    let prev = common::set_cache_dir(tmp.path());
+    let _g = CacheDirGuard::new(tmp.path());
 
     let server = MockServer::start().await;
     let issues = common::sample_issues("proj-1", 10);
@@ -20,10 +21,9 @@ async fn tree_contains_all_seeded_issues() {
 
     // Walk the tree at refs/heads/main and count blob entries under `issues/`.
     let repo = gix::open(cache.repo_path()).expect("open bare");
-    let reference = repo
+    let mut reference = repo
         .find_reference("refs/heads/main")
         .expect("refs/heads/main exists");
-    let mut reference = reference;
     let commit = reference.peel_to_id().expect("peel to id");
     let commit = commit.object().expect("commit object").into_commit();
     let tree = commit.tree().expect("commit tree");
@@ -49,14 +49,12 @@ async fn tree_contains_all_seeded_issues() {
     }
     assert_eq!(count, 10, "expected 10 blob entries in the tree");
     assert!(saw_expected_path, "expected issues/1.md to exist in tree");
-
-    common::restore_cache_dir(prev);
 }
 
 #[tokio::test]
 async fn tree_contains_single_issue() {
     let tmp = tempdir().unwrap();
-    let prev = common::set_cache_dir(tmp.path());
+    let _g = CacheDirGuard::new(tmp.path());
 
     let server = MockServer::start().await;
     let issues = common::sample_issues("proj-solo", 1);
@@ -86,6 +84,4 @@ async fn tree_contains_single_issue() {
         }
     }
     assert_eq!(count, 1);
-
-    common::restore_cache_dir(prev);
 }

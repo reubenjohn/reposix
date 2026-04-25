@@ -31,14 +31,39 @@ pub enum Error {
     Sqlite(String),
 
     /// Cache path already belongs to a different `(backend, project)`
-    /// than the one passed to [`crate::Cache::open`]. Full enforcement
-    /// in Plan 02 once the `meta` table is wired; scaffolded here.
+    /// than the one passed to [`crate::Cache::open`]. Plan 02 scaffolds
+    /// the identity check in [`crate::Cache::open`]; Phase 33 tightens.
     #[error("cache collision: expected {expected}, found {found}")]
     CacheCollision {
         /// The `(backend, project)` the caller asked for.
         expected: String,
         /// The `(backend, project)` currently recorded in `meta`.
         found: String,
+    },
+
+    /// Outbound HTTP origin not in `REPOSIX_ALLOWED_ORIGINS`. Distinct
+    /// from [`Error::Backend`] so callers (and the audit layer) can
+    /// branch on denial vs generic backend failure.
+    #[error("egress denied: {0}")]
+    Egress(String),
+
+    /// Blob OID requested by a consumer (e.g. Phase 32's helper) has
+    /// no entry in `oid_map` — the cache has never tracked this blob.
+    #[error("unknown blob oid: {0}")]
+    UnknownOid(String),
+
+    /// Backend returned bytes whose computed blob OID differs from the
+    /// OID recorded in `oid_map`. Indicates an eventual-consistency
+    /// race on the backend side (same issue id, different content
+    /// between `list_issues` and `get_issue`).
+    #[error("oid drift: requested {requested}, backend returned {actual} for issue {issue_id}")]
+    OidDrift {
+        /// OID recorded in `oid_map` at `build_from` time.
+        requested: String,
+        /// OID produced by hashing the bytes the backend just returned.
+        actual: String,
+        /// Issue id whose bytes drifted.
+        issue_id: String,
     },
 }
 

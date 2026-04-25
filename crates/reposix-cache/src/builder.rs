@@ -1,37 +1,57 @@
-//! Tree construction and (Plan 02) lazy blob materialization.
+//! Tree construction and lazy blob materialization.
 
 use chrono::Utc;
-use reposix_core::frontmatter;
+use reposix_core::{frontmatter, IssueId, Tainted};
 
 use crate::cache::Cache;
 use crate::error::{Error, Result};
+use crate::{audit, meta};
 
 impl Cache {
     /// Sync the tree from the backend and commit to `refs/heads/main`.
     ///
     /// Does NOT materialize blobs — the returned commit references blob
-    /// OIDs that are only persisted on demand (Plan 02 `read_blob`).
+    /// OIDs that are only persisted on demand (see [`Cache::read_blob`]).
+    ///
+    /// Side effects on `cache.db`:
+    /// - one `INSERT OR REPLACE` per issue into `oid_map` linking the
+    ///   computed blob OID to its `issue_id` and `(backend, project)`;
+    /// - one `op='tree_sync'` audit row (best-effort);
+    /// - `meta.last_fetched_at` upserted to the current UTC RFC-3339
+    ///   timestamp.
     ///
     /// Commit message format:
     /// `sync(<backend>:<project>): <N> issues at <ISO8601>`.
     ///
     /// # Errors
     /// - [`Error::Backend`] if `list_issues` fails.
+    /// - [`Error::Egress`] if `list_issues` fails with the allowlist
+    ///   variant (`reposix_core::Error::InvalidOrigin`); the
+    ///   `egress_denied` audit row is written first.
     /// - [`Error::Render`] if frontmatter rendering fails for any issue.
     /// - [`Error::Git`] if any gix operation fails.
     /// - [`Error::Io`] if the `HEAD` file cannot be written.
+    /// - [`Error::Sqlite`] if `oid_map` or `meta` updates fail.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned (another
+    /// thread panicked while holding it). A panic in this path means
+    /// the process state is corrupt; this method does not attempt to
+    /// recover.
     pub async fn build_from(&self) -> Result<gix::ObjectId> {
-        let issues = self
-            .backend
-            .list_issues(&self.project)
-            .await
-            .map_err(|e| Error::Backend(e.to_string()))?;
+        // List issues. If this fails with an egress-denial variant, fire
+        // the audit row BEFORE returning the typed error — same shape
+        // as `read_blob`'s egress path.
+        let issues = match self.backend.list_issues(&self.project).await {
+            Ok(v) => v,
+            Err(e) => return Err(self.classify_backend_error(&e, None)),
+        };
 
         // Render each issue, compute the blob OID WITHOUT writing the
         // blob object. The tree references each blob_oid; the blob
-        // itself is persisted only when `read_blob(oid)` is called
-        // (Plan 02). This is the lazy-blob invariant Phase 32's
-        // stateless-connect handler relies on.
+        // itself is persisted only when `read_blob(oid)` is called.
+        // This is the lazy-blob invariant Phase 32's stateless-connect
+        // handler relies on.
         //
         // NOTE: we deliberately bypass `Repository::edit_tree` because
         // its `write()` validates that every referenced object already
@@ -43,30 +63,49 @@ impl Cache {
         // such validation.
         let hash_kind = self.repo.object_hash();
 
-        // Build entries for the `issues/` subtree: `<id>.md -> blob_oid`.
-        // Entry order in `gix_object::Tree.entries` must be the sorted
-        // order git expects; gix validates this lazily when the tree is
-        // written. We pre-sort by filename to be safe.
-        let mut inner_entries: Vec<gix::objs::tree::Entry> = Vec::with_capacity(issues.len());
+        // Build entries for the `issues/` subtree: `<id>.md -> blob_oid`,
+        // keeping the `issue_id` alongside so we can populate oid_map
+        // with the same computed OIDs the tree references.
+        let mut records: Vec<(gix::objs::tree::Entry, String)> = Vec::with_capacity(issues.len());
         for issue in &issues {
             let rendered = frontmatter::render(issue)?;
             let bytes = rendered.into_bytes();
-            let oid =
-                gix::objs::compute_hash(hash_kind, gix::object::Kind::Blob, &bytes)
-                    .map_err(|e| Error::Git(e.to_string()))?;
+            let oid = gix::objs::compute_hash(hash_kind, gix::object::Kind::Blob, &bytes)
+                .map_err(|e| Error::Git(e.to_string()))?;
             let filename = format!("{}.md", issue.id.0);
-            inner_entries.push(gix::objs::tree::Entry {
-                mode: gix::object::tree::EntryKind::Blob.into(),
-                filename: filename.into(),
-                oid,
-            });
+            records.push((
+                gix::objs::tree::Entry {
+                    mode: gix::object::tree::EntryKind::Blob.into(),
+                    filename: filename.into(),
+                    oid,
+                },
+                issue.id.0.to_string(),
+            ));
         }
         // Sort by filename — git's tree-entry ordering for plain files
         // is lexicographic by raw bytes.
-        inner_entries.sort_by(|a, b| a.filename.cmp(&b.filename));
+        records.sort_by(|a, b| a.0.filename.cmp(&b.0.filename));
+
+        // Populate oid_map + fire tree_sync audit row + upsert
+        // last_fetched_at. We hold the lock only for these fast SQL
+        // calls; it's released before the git object writes.
+        {
+            let conn = self.db.lock().expect("cache db mutex poisoned");
+            for (entry, issue_id) in &records {
+                meta::put_oid_mapping(
+                    &conn,
+                    &self.backend_name,
+                    &self.project,
+                    &entry.oid.to_hex().to_string(),
+                    issue_id,
+                )?;
+            }
+            audit::log_tree_sync(&conn, &self.backend_name, &self.project, records.len());
+            meta::set_meta(&conn, "last_fetched_at", &Utc::now().to_rfc3339())?;
+        }
 
         let inner_tree = gix::objs::Tree {
-            entries: inner_entries,
+            entries: records.into_iter().map(|(e, _)| e).collect(),
         };
         let inner_tree_oid = self
             .repo
@@ -93,7 +132,7 @@ impl Cache {
             "sync({}:{}): {} issues at {}",
             self.backend_name,
             self.project,
-            issues.len(),
+            inner_tree.entries.len(),
             Utc::now().to_rfc3339()
         );
         let commit_oid = self
@@ -113,5 +152,130 @@ impl Cache {
         std::fs::write(&head_path, "ref: refs/heads/main\n")?;
 
         Ok(commit_oid.detach())
+    }
+
+    /// Materialize a blob by OID. Writes the blob object to
+    /// `.git/objects/` and returns its bytes wrapped in [`Tainted`].
+    ///
+    /// Side effects on `cache.db`:
+    /// - on success: one `op='materialize'` audit row;
+    /// - on egress denial: one `op='egress_denied'` audit row fired
+    ///   BEFORE returning [`Error::Egress`].
+    ///
+    /// Second calls with the same OID re-fire the audit row but do NOT
+    /// duplicate the blob (gix content-addresses objects; re-writing
+    /// the same bytes yields the same OID and is a no-op on disk).
+    ///
+    /// # Errors
+    /// - [`Error::UnknownOid`] — the OID has no entry in `oid_map`.
+    /// - [`Error::Egress`] — the backend's origin is not in the
+    ///   `REPOSIX_ALLOWED_ORIGINS` allowlist (audit row fired first).
+    /// - [`Error::Backend`] — any other backend failure.
+    /// - [`Error::OidDrift`] — backend returned bytes that hash to a
+    ///   different OID than requested (eventual-consistency race).
+    /// - [`Error::Render`] — frontmatter rendering failed.
+    /// - [`Error::Git`] — `gix::Repository::write_blob` failed.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned (another
+    /// thread panicked while holding it).
+    pub async fn read_blob(&self, oid: gix::ObjectId) -> Result<Tainted<Vec<u8>>> {
+        let oid_hex = oid.to_hex().to_string();
+
+        // Look up issue_id without holding the lock across the await.
+        let issue_id_str = {
+            let conn = self.db.lock().expect("cache db mutex poisoned");
+            meta::get_issue_for_oid(&conn, &oid_hex)?
+                .ok_or_else(|| Error::UnknownOid(oid_hex.clone()))?
+        };
+
+        // Parse back to IssueId.
+        let issue_num: u64 = issue_id_str.parse().map_err(|_| {
+            Error::Backend(format!("oid_map issue_id {issue_id_str} is not numeric"))
+        })?;
+
+        // Call backend. On InvalidOrigin, fire egress_denied audit row
+        // THEN return Egress.
+        let issue = match self
+            .backend
+            .get_issue(&self.project, IssueId(issue_num))
+            .await
+        {
+            Ok(i) => i,
+            Err(e) => {
+                return Err(self.classify_backend_error(&e, Some(&issue_id_str)));
+            }
+        };
+
+        // Render and write the blob.
+        let rendered = reposix_core::frontmatter::render(&issue)?;
+        let bytes = rendered.into_bytes();
+        let written_oid = self
+            .repo
+            .write_blob(&bytes)
+            .map_err(|e| Error::Git(e.to_string()))?
+            .detach();
+
+        // Consistency check: backend content might have drifted since
+        // build_from.
+        if written_oid != oid {
+            return Err(Error::OidDrift {
+                requested: oid_hex,
+                actual: written_oid.to_hex().to_string(),
+                issue_id: issue_id_str,
+            });
+        }
+
+        // Audit. Best-effort.
+        {
+            let conn = self.db.lock().expect("cache db mutex poisoned");
+            audit::log_materialize(
+                &conn,
+                &self.backend_name,
+                &self.project,
+                &issue_id_str,
+                &oid_hex,
+                bytes.len(),
+            );
+        }
+
+        Ok(Tainted::new(bytes))
+    }
+
+    /// Map a `reposix_core::Error` from a backend call into the cache's
+    /// typed error space. If it looks like an egress-allowlist denial,
+    /// fire the `egress_denied` audit row BEFORE returning
+    /// [`Error::Egress`]. Otherwise surface as [`Error::Backend`].
+    ///
+    /// Detection is both typed (`matches!(e,
+    /// reposix_core::Error::InvalidOrigin(_))`) and stringly (substring
+    /// match on the error message) to handle backend adapters that
+    /// wrap the core error in `Error::Other(String)` — the `Confluence`,
+    /// `Jira`, and `Github` adapters all do this for non-2xx responses.
+    /// Phase 33 will tighten to a proper typed error refactor.
+    fn classify_backend_error(
+        &self,
+        e: &reposix_core::Error,
+        issue_id: Option<&str>,
+    ) -> Error {
+        let emsg = e.to_string();
+        let is_egress = matches!(e, reposix_core::Error::InvalidOrigin(_))
+            || emsg.contains("blocked origin")
+            || emsg.contains("invalid origin")
+            || emsg.contains("allowlist");
+        if is_egress {
+            if let Ok(conn) = self.db.lock() {
+                audit::log_egress_denied(
+                    &conn,
+                    &self.backend_name,
+                    &self.project,
+                    issue_id,
+                    &emsg,
+                );
+            }
+            Error::Egress(emsg)
+        } else {
+            Error::Backend(emsg)
+        }
     }
 }

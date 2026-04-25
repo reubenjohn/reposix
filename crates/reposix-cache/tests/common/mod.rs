@@ -5,13 +5,52 @@
 
 #![allow(dead_code)]
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
 
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::BackendConnector;
 use reposix_core::{Issue, IssueId, IssueStatus};
 use wiremock::matchers::{method, path, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};
+
+/// Process-global lock serializing `REPOSIX_CACHE_DIR` mutation. Tests
+/// within the same binary run in parallel by default; without this,
+/// two tests racing on `set_var` drop each other's cache-dir settings
+/// and the Cache picks up a path that doesn't exist. Guard survives
+/// for the test's lifetime and restores the previous value on drop.
+fn env_lock() -> &'static Mutex<()> {
+    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| Mutex::new(()))
+}
+
+/// Test-scoped RAII guard for the `REPOSIX_CACHE_DIR` env var.
+/// Tests that do any `Cache::open` MUST hold one of these for the
+/// duration of the open / build_from / read_blob calls.
+pub struct CacheDirGuard<'a> {
+    _guard: MutexGuard<'a, ()>,
+    prev: Option<String>,
+}
+
+impl<'a> CacheDirGuard<'a> {
+    pub fn new(path: &std::path::Path) -> Self {
+        let guard = env_lock().lock().unwrap_or_else(|p| p.into_inner());
+        let prev = std::env::var(reposix_cache::CACHE_DIR_ENV).ok();
+        std::env::set_var(reposix_cache::CACHE_DIR_ENV, path);
+        Self {
+            _guard: guard,
+            prev,
+        }
+    }
+}
+
+impl Drop for CacheDirGuard<'_> {
+    fn drop(&mut self) {
+        match &self.prev {
+            Some(v) => std::env::set_var(reposix_cache::CACHE_DIR_ENV, v),
+            None => std::env::remove_var(reposix_cache::CACHE_DIR_ENV),
+        }
+    }
+}
 
 /// Build `n` deterministic test issues with ids 1..=n.
 #[must_use]
@@ -85,21 +124,4 @@ fn issue_to_json(issue: &Issue) -> serde_json::Value {
 #[must_use]
 pub fn sim_backend(server: &MockServer) -> Arc<dyn BackendConnector> {
     Arc::new(SimBackend::new(server.uri()).expect("SimBackend::new"))
-}
-
-/// Replace `$REPOSIX_CACHE_DIR` with a path inside the tempdir so the
-/// test never writes into the real user cache. Returns the previous
-/// value (if any) for restoration.
-#[must_use]
-pub fn set_cache_dir(path: &std::path::Path) -> Option<String> {
-    let prev = std::env::var(reposix_cache::CACHE_DIR_ENV).ok();
-    std::env::set_var(reposix_cache::CACHE_DIR_ENV, path);
-    prev
-}
-
-pub fn restore_cache_dir(prev: Option<String>) {
-    match prev {
-        Some(v) => std::env::set_var(reposix_cache::CACHE_DIR_ENV, v),
-        None => std::env::remove_var(reposix_cache::CACHE_DIR_ENV),
-    }
 }

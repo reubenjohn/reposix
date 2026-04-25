@@ -26,9 +26,12 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
 
+pub mod audit;
 pub mod builder;
 pub mod cache;
+pub mod db;
 pub mod error;
+pub mod meta;
 pub mod path;
 
 pub use cache::Cache;
