@@ -87,8 +87,59 @@ Full layer model, tonal rules, and rationale: see source-of-truth note
 
 ## Milestone status
 
-Phase 30 was added to Backlog because v0.8.0 was archived and no new milestone
-is active. Before planning, the roadmap keeper should either (a) open a new
-milestone (e.g. v0.9.0 "Docs & narrative") and promote Phase 30 into it, or
-(b) plan Phase 30 as a standalone docs release while deferring the milestone
-decision. Planner does not decide this — orchestrator does.
+Phase 30 is deferred to v0.10.0. The v0.9.0 milestone was repurposed as the
+"Architecture Pivot — Git-Native Partial Clone" milestone (2026-04-24), which
+deletes FUSE and replaces it with git partial clone. Phase 30 docs MUST describe
+the new architecture, not FUSE. The existing 9 plans (30-01 through 30-09) need
+revision before execution.
+
+## v0.9.0 architecture changes that affect Phase 30 narrative
+
+> **Added 2026-04-24.** These notes capture design decisions from the architecture
+> pivot that the Phase 30 planner MUST incorporate when revising plans. Read
+> `.planning/research/architecture-pivot-summary.md` for the full design.
+
+### What changed in the product
+
+- **FUSE is deleted.** There is no mount, no daemon, no fusermount3. The agent
+  works with a real git repo on disk. `reposix init` replaces `reposix mount`.
+- **Agent UX is pure git.** `git clone`, `cat`, `git push` — zero reposix CLI
+  awareness. Agents learn from git error messages, not documentation.
+- **Lazy loading via partial clone.** Files appear in the directory tree but
+  content is fetched on first access. Sparse-checkout controls what materializes.
+- **Push-time conflict detection.** No polling or refresh needed. At `git push`,
+  the helper checks backend state and rejects with standard git errors if
+  conflicts exist. Agent does normal `git pull --rebase` + `git push`.
+- **Blob limit as teaching mechanism.** If an agent tries to fetch too many files,
+  the helper refuses with an actionable error: "narrow your scope with
+  sparse-checkout." No prompt engineering or system prompt needed.
+- **Delta sync.** `git fetch` calls `?since=<timestamp>` on the backend — one
+  API call regardless of repo size. Tree always fully synced; blobs lazy.
+
+### Impact on Phase 30 plans
+
+- **P2 banned terms list needs revision.** "FUSE" and "mount" no longer appear
+  anywhere in the product. The progressive-disclosure layer model still applies
+  but the banned terms shift: git internals (partial clone, promisor remote,
+  sparse-checkout, stateless-connect) are the new Layer 3+ terms. Layer 1/2
+  should say "files and folders" and "git."
+- **Hero vignette V1 still works** but "mount" language in the after block must
+  change to "clone" or "init." The before/after structure (curl vs cat+git) is
+  even stronger now — it's literally just git.
+- **"How it works" pages** should describe: (1) the directory tree = a git repo,
+  (2) lazy-loading (files appear but content fetched on demand), (3) push =
+  sync back to the service, (4) error messages teach scope narrowing.
+- **Tutorial** runs against the simulator via `reposix init sim://demo /tmp/workspace`
+  instead of `reposix mount`. The 5-minute first-run flow is simpler.
+- **"reposix vs MCP / SDKs" page** gets a much stronger pitch: agents use
+  standard git commands they already know, not custom tool schemas.
+- **Architecture diagrams** show the helper binary, backing cache, and REST
+  backends — no FUSE layer. Reference: mermaid diagram in
+  `.planning/research/architecture-pivot-summary.md`.
+- **Interesting features to highlight in docs:**
+  - Error-as-teaching: "the helper teaches agents to use sparse-checkout via
+    error messages — no documentation needed"
+  - Push-time conflict detection: "like pushing to any git remote — no new
+    concepts"
+  - Delta sync: "one API call tells you what changed, regardless of repo size"
+  - Platform support: "works everywhere git works — no FUSE, no kernel modules"
