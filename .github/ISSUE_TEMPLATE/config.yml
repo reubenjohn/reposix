@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discussion
+    url: https://github.com/reubenjohn/reposix/discussions
+    about: Open-ended questions, proposals, agent integration patterns.
+  - name: 🛡️ Security disclosure
+    url: https://github.com/reubenjohn/reposix/security/advisories/new
+    about: Report a vulnerability privately.
