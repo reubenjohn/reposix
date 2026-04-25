@@ -31,7 +31,7 @@ sequenceDiagram
     Agent->>Helper: export refs/heads/main
     Helper->>Helper: parse fast-import stream — collect changed files
     loop for each changed issue
-        Helper->>API: "GET /issues/<id> (current version)"
+        Helper->>API: "GET /issues/{id} (current version)"
         API-->>Helper: backend version
     end
 
