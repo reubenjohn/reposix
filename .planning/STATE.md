@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.9.0
 milestone_name: Architecture Pivot — Git-Native Partial Clone
 status: executing
-last_updated: "2026-04-25T03:06:29.106Z"
-last_activity: 2026-04-25 -- Phase 33 planning complete
+last_updated: "2026-04-24T00:00:00.000Z"
+last_activity: 2026-04-24 -- Phase 35-01 recovered + landed (init subcommand replaces mount)
 progress:
   total_phases: 6
-  completed_phases: 1
-  total_plans: 5
-  completed_plans: 4
-  percent: 80
+  completed_phases: 2
+  total_plans: 8
+  completed_plans: 7
+  percent: 88
 ---
 
 # Project State
@@ -59,11 +59,11 @@ issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
 
 ## Current Position
 
-Phase: 31 (not started — awaiting plan)
-Plan: —
-Cursor: **Run /gsd-autonomous to execute Phases 31–36 end-to-end.**
-Status: Ready to execute
-Last activity: 2026-04-25 -- Phase 33 planning complete
+Phase: 35 (in flight — recovery completion)
+Plan: 35-01 SHIPPED. 35-02/03/04 pending sequential execution.
+Cursor: **Phase 35 mid-flight after VM-crash recovery. 35-01 (`reposix init` subcommand + `mount` migration stub + CHANGELOG/README docs) committed atomically across `f32ed3c` (feat), `1d49e4d` (test), `9d04ab3` (docs). Next: dispatch `gsd-executor` against 35-02 (dark-factory regression test).**
+Status: Executing
+Last activity: 2026-04-24 -- Phase 35-01 recovered + landed
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
