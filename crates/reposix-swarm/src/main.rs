@@ -1,9 +1,10 @@
 //! `reposix-swarm` binary entry point.
 //!
 //! Starts N concurrent client tasks on a Tokio runtime, each running a
-//! realistic workload loop against either the simulator (via
-//! [`SimBackend`](reposix_core::backend::sim::SimBackend)) or a mounted FUSE
-//! tree. Runs for `--duration` seconds, then prints a markdown summary.
+//! realistic workload loop against the simulator (via
+//! [`SimBackend`](reposix_core::backend::sim::SimBackend)) or a real
+//! Confluence tenant. Runs for `--duration` seconds, then prints a
+//! markdown summary.
 
 #![forbid(unsafe_code)]
 #![warn(clippy::pedantic)]
@@ -16,11 +17,11 @@ use reposix_confluence::ConfluenceCreds;
 use reposix_swarm::confluence_direct::ConfluenceDirectWorkload;
 use reposix_swarm::contention::ContentionWorkload;
 use reposix_swarm::driver::{run_swarm, SwarmConfig};
-use reposix_swarm::fuse_mode::FuseWorkload;
 use reposix_swarm::sim_direct::SimDirectWorkload;
 
-/// Mode selector. `sim-direct` hammers the simulator via HTTP; `fuse`
-/// hammers a mounted FUSE tree via `std::fs`.
+/// Mode selector. `sim-direct` hammers the simulator via HTTP;
+/// `confluence-direct` hammers a real Confluence tenant; `contention`
+/// drives an If-Match contention test against a single issue.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 #[clap(rename_all = "kebab_case")]
 enum Mode {
@@ -30,8 +31,6 @@ enum Mode {
     ConfluenceDirect,
     /// N clients patching the same issue via If-Match — proves 409 determinism.
     Contention,
-    /// Real syscalls against a FUSE mount point.
-    Fuse,
 }
 
 impl Mode {
@@ -40,7 +39,6 @@ impl Mode {
             Self::SimDirect => "sim-direct",
             Self::ConfluenceDirect => "confluence-direct",
             Self::Contention => "contention",
-            Self::Fuse => "fuse",
         }
     }
 }
@@ -57,8 +55,8 @@ struct Args {
     #[arg(long, default_value_t = 10)]
     duration: u64,
 
-    /// Target: simulator URL (for `sim-direct`) or FUSE mount path (for
-    /// `fuse`).
+    /// Target: simulator URL (for `sim-direct` / `contention`) or
+    /// Confluence base URL (for `confluence-direct`).
     #[arg(long, default_value = "http://127.0.0.1:7878")]
     target: String,
 
@@ -76,7 +74,7 @@ struct Args {
     #[arg(long, env = "ATLASSIAN_API_KEY")]
     api_token: Option<String>,
 
-    /// Mode — `sim-direct`, `confluence-direct`, or `fuse`.
+    /// Mode — `sim-direct`, `confluence-direct`, or `contention`.
     #[arg(long, value_enum, default_value_t = Mode::SimDirect)]
     mode: Mode,
 
@@ -163,16 +161,6 @@ async fn main() -> Result<()> {
                     target_id,
                     u64::try_from(i).unwrap_or(0),
                 )
-            })
-            .await?
-        }
-        Mode::Fuse => {
-            let mount = std::path::PathBuf::from(&args.target);
-            run_swarm(cfg, |i| {
-                Ok(FuseWorkload::new(
-                    mount.clone(),
-                    u64::try_from(i).unwrap_or(0),
-                ))
             })
             .await?
         }

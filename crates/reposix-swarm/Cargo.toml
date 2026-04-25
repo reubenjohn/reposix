@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Adversarial swarm harness: N concurrent simulated agents hammering the simulator or FUSE mount with realistic workload."
+description = "Adversarial swarm harness: N concurrent simulated agents hammering the simulator or a real backend with realistic workload."
 
 [[bin]]
 name = "reposix-swarm"

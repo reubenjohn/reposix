@@ -6,9 +6,8 @@
 //! per-operation latencies and error classes in the shared
 //! [`MetricsAccumulator`](crate::metrics::MetricsAccumulator).
 //!
-//! Concrete implementations live in [`crate::sim_direct`] and
-//! [`crate::fuse_mode`] (the latter behind a cargo-time compile guard if
-//! FUSE isn't available — v0.1 of the swarm only ships `sim-direct`).
+//! Concrete implementations live in [`crate::sim_direct`],
+//! [`crate::confluence_direct`], and [`crate::contention`].
 
 use std::sync::Arc;
 
