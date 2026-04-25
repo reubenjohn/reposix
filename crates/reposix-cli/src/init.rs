@@ -225,7 +225,81 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
         rewind_to_since(&spec, &path, &ts)?;
     }
 
+    // Record the working-tree path in the cache's meta table so
+    // `reposix gc --orphans` can detect caches whose owning working tree
+    // has since been deleted. Best-effort: if the cache doesn't exist yet
+    // (network-less init, fetch failed), this silently no-ops — the next
+    // successful fetch will trigger Cache::open and the same recording
+    // call from a subsequent `reposix init` will fix it up.
+    record_worktree_in_cache(&spec, &path);
+
     Ok(())
+}
+
+/// Append the absolute working-tree path to the cache's `meta.worktrees`
+/// row. Best-effort: a missing cache, an unparseable path, or a SQL error
+/// downgrades to a tracing warning. Used by `reposix gc --orphans` to
+/// detect caches whose owning working trees have been deleted.
+///
+/// `meta.worktrees` is stored as a newline-separated list of absolute
+/// paths. Duplicates are deduped on insert; ordering is insertion-order
+/// for forensics.
+fn record_worktree_in_cache(spec: &str, path: &Path) {
+    let Some((backend, project)) = spec.split_once("::") else {
+        return;
+    };
+    let cache_project = if backend == "github" {
+        project.replace('/', "-")
+    } else {
+        project.to_string()
+    };
+    let Ok(cache_path) = reposix_cache::resolve_cache_path(backend, &cache_project) else {
+        return;
+    };
+    let db = cache_path.join("cache.db");
+    if !db.exists() {
+        return;
+    }
+    let abs_path = match std::fs::canonicalize(path) {
+        Ok(p) => p,
+        Err(_) => path.to_path_buf(),
+    };
+    let abs_str = match abs_path.to_str() {
+        Some(s) => s.to_string(),
+        None => return,
+    };
+
+    let conn = match rusqlite::Connection::open(&db) {
+        Ok(c) => c,
+        Err(e) => {
+            tracing::warn!(
+                "could not open {db} to record worktree: {e}",
+                db = db.display()
+            );
+            return;
+        }
+    };
+    let existing: Option<String> = conn
+        .query_row("SELECT value FROM meta WHERE key = 'worktrees'", [], |r| {
+            r.get::<_, String>(0)
+        })
+        .ok();
+    let mut entries: Vec<String> = existing
+        .as_deref()
+        .map(|s| s.lines().map(str::to_string).collect())
+        .unwrap_or_default();
+    if !entries.iter().any(|e| e == &abs_str) {
+        entries.push(abs_str);
+    }
+    let value = entries.join("\n");
+    let now = chrono::Utc::now().to_rfc3339();
+    if let Err(e) = conn.execute(
+        "INSERT INTO meta (key, value, updated_at) VALUES (?1, ?2, ?3) \
+         ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at",
+        rusqlite::params!["worktrees", value, now],
+    ) {
+        tracing::warn!("could not write meta.worktrees in {}: {e}", db.display());
+    }
 }
 
 /// Resolve the cache path for `spec`, look up the closest sync tag at-or-before

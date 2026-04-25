@@ -234,6 +234,30 @@ enum Cmd {
         dry_run: bool,
         /// Working-tree directory (a `reposix init`'d repo). Defaults to cwd.
         path: Option<PathBuf>,
+        /// Operate on cross-cache orphans instead of one cache. Walks
+        /// `<XDG_CACHE_HOME>/reposix/*.git/`, finds caches whose recorded
+        /// owning working trees no longer exist, and lists or removes them.
+        /// Combine with `--purge` (force remove) and `--include-sim` /
+        /// `--include-untracked` (broaden the scope).
+        #[arg(long)]
+        orphans: bool,
+        /// With `--orphans`: actually delete the orphan cache directories.
+        /// Default behaviour is dry-run (list only). Logs each removal to
+        /// stderr.
+        #[arg(long)]
+        purge: bool,
+        /// With `--orphans --purge`: also purge the simulator's
+        /// `sim-*.git` caches when they're orphaned. Off by default
+        /// because the simulator is a development tool that opens its
+        /// cache without a working tree.
+        #[arg(long)]
+        include_sim: bool,
+        /// With `--orphans --purge`: also purge caches that have no
+        /// recorded owning worktree (pre-v0.11.0 caches, or caches
+        /// opened by the helper without a `reposix init` write). Off by
+        /// default to avoid surprising removals.
+        #[arg(long)]
+        include_untracked: bool,
     },
     /// Print a token-economy ledger from the cache audit log.
     ///
@@ -275,6 +299,9 @@ enum Cmd {
 }
 
 #[tokio::main]
+// Top-level dispatcher; line count grows linearly with subcommand count
+// and the match-on-clap-derive structure does not benefit from extraction.
+#[allow(clippy::too_many_lines)]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -369,7 +396,20 @@ async fn main() -> Result<()> {
             max_age_days,
             dry_run,
             path,
-        } => gc::run(path, strategy, max_size_mb, max_age_days, dry_run),
+            orphans,
+            purge,
+            include_sim,
+            include_untracked,
+        } => {
+            if orphans {
+                // --orphans is a separate mode; we ignore the strategy/cap
+                // flags. `--purge` flips dry-run off (orphans default to
+                // dry-run; the standard gc inverts via `--dry-run`).
+                gc::run_orphans(!purge, include_sim, include_untracked)
+            } else {
+                gc::run(path, strategy, max_size_mb, max_age_days, dry_run)
+            }
+        }
         Cmd::Tokens { path } => tokens::run(path),
         Cmd::Cost {
             path,
