@@ -76,6 +76,13 @@ enum Cmd {
         spec: String,
         /// Local path to initialize as the partial-clone working tree.
         path: PathBuf,
+        /// Optional RFC-3339 timestamp. After init, rewind the working
+        /// tree to the closest cache sync tag at-or-before this timestamp
+        /// (time-travel init; v0.11.0 §3b). Errors when no such tag exists.
+        ///
+        /// Example: `--since=2026-04-25T01:00:00Z`.
+        #[arg(long)]
+        since: Option<String>,
     },
     /// List issues for a project by calling the backend's `list_records`
     /// method and dumping the result as JSON (default) or a pretty table.
@@ -265,7 +272,7 @@ async fn main() -> Result<()> {
             ephemeral,
             rate_limit,
         } => sim::run(&bind, db, seed_file, no_seed, ephemeral, rate_limit),
-        Cmd::Init { spec, path } => init::run(spec, path),
+        Cmd::Init { spec, path, since } => init::run_with_since(spec, path, since),
         Cmd::List {
             project,
             origin,

@@ -130,13 +130,36 @@ fn run_git_in(path: &Path, args: &[&str]) -> std::io::Result<std::process::Outpu
 
 /// `reposix init` entry point.
 ///
+/// `since` is an optional RFC-3339 timestamp. When set, after the normal
+/// `git fetch` completes, the working tree's HEAD is rewound to the
+/// closest cache sync tag at-or-before the timestamp. Errors clearly
+/// when no sync tag exists at-or-before the target.
+///
 /// # Errors
 /// Returns an error if `spec` cannot be translated, if any of `git init`
 /// or the four `git config` invocations fail, or if `git` is not on PATH.
 /// The trailing `git fetch` is best-effort: a failure logs a warning but
 /// does not prevent `init` from succeeding (the user may bring credentials
-/// later).
+/// later). When `since` is set and no matching sync tag exists, `init`
+/// errors with a non-zero exit (after configuring the working tree).
 pub fn run(spec: String, path: PathBuf) -> Result<()> {
+    run_with_since(spec, path, None)
+}
+
+/// `reposix init --since=<RFC3339>` entry point.
+///
+/// Same as [`run`] except that, after the normal `git fetch` completes,
+/// `since` (if `Some`) selects the closest cache sync tag at-or-before
+/// the target and rewinds the working tree's HEAD + `refs/remotes/origin/main`
+/// to that historical commit.
+///
+/// # Errors
+/// Same as [`run`], plus:
+/// - `since` is not a valid RFC-3339 timestamp.
+/// - No sync tag exists at-or-before `since` in the cache.
+/// - The local `git fetch <cache-path> <oid>` to bring the historical
+///   commit into the working tree fails.
+pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Result<()> {
     let url = translate_spec_to_url(&spec)?;
 
     // Ensure parent dir exists for `git init`. `git init` creates the leaf
@@ -193,6 +216,115 @@ pub fn run(spec: String, path: PathBuf) -> Result<()> {
 
     println!(
         "reposix init: configured `{path_str}` with remote.origin.url = {url}\nNext: cd {path_str} && git checkout origin/main (or git sparse-checkout set <pathspec> first)"
+    );
+
+    // --since=<RFC3339> handling — rewind the working tree to a historical
+    // sync tag from the cache. Runs AFTER the normal fetch so the cache is
+    // populated and contains the tag refs.
+    if let Some(ts) = since {
+        rewind_to_since(&spec, &path, &ts)?;
+    }
+
+    Ok(())
+}
+
+/// Resolve the cache path for `spec`, look up the closest sync tag at-or-before
+/// `target_rfc3339`, and rewind the working tree's `refs/heads/main` +
+/// `refs/remotes/origin/main` to that commit. Errors clearly if no
+/// matching tag is found.
+fn rewind_to_since(spec: &str, path: &Path, target_rfc3339: &str) -> Result<()> {
+    use chrono::{DateTime, Utc};
+
+    let target: DateTime<Utc> = chrono::DateTime::parse_from_rfc3339(target_rfc3339)
+        .with_context(|| {
+            format!(
+                "invalid --since timestamp `{target_rfc3339}` — expected RFC-3339 (e.g. 2026-04-25T01:00:00Z)"
+            )
+        })?
+        .with_timezone(&Utc);
+
+    // Map spec → (backend, project) for the cache resolver. We re-derive
+    // here rather than calling translate_spec_to_url + parse_remote_url
+    // because the cache path keying uses the friendly slug directly.
+    let (backend, project) = spec
+        .split_once("::")
+        .ok_or_else(|| anyhow!("invalid spec `{spec}`: expected `<backend>::<project>` form"))?;
+    // GitHub uses `owner/repo` in the spec but `owner-repo` as the cache
+    // dir name (sanitize_project_for_cache); mirror that here.
+    let cache_project = if backend == "github" {
+        project.replace('/', "-")
+    } else {
+        project.to_string()
+    };
+    let cache_path = reposix_cache::resolve_cache_path(backend, &cache_project)
+        .with_context(|| format!("resolve cache path for {backend}::{cache_project}"))?;
+    if !cache_path.exists() {
+        bail!(
+            "no cache at {} — run `reposix init` without --since first to populate it",
+            cache_path.display()
+        );
+    }
+
+    let tags = reposix_cache::list_sync_tags_at(&cache_path)
+        .with_context(|| format!("list sync tags from {}", cache_path.display()))?;
+    let chosen = tags.into_iter().rev().find(|t| t.timestamp <= target);
+    let tag = chosen.ok_or_else(|| {
+        anyhow!(
+            "no sync tag at-or-before `{target_rfc3339}` in {} — try a later timestamp or omit --since",
+            cache_path.display()
+        )
+    })?;
+
+    let oid_hex = tag.commit.to_hex().to_string();
+
+    // Bring the historical commit into the working tree's object store.
+    // Local-path fetch by SHA works against the cache's bare repo regardless
+    // of `transfer.hideRefs` because we name the OID, not the hidden ref.
+    let cache_str = cache_path
+        .to_str()
+        .ok_or_else(|| anyhow!("cache path is not valid UTF-8: {}", cache_path.display()))?;
+    let path_str = path
+        .to_str()
+        .ok_or_else(|| anyhow!("working-tree path is not valid UTF-8: {}", path.display()))?;
+    let fetch_out = Command::new("git")
+        .arg("-C")
+        .arg(path_str)
+        .args(["fetch", "--filter=blob:none", cache_str, &oid_hex])
+        .output()
+        .with_context(|| {
+            format!("invoke `git fetch --filter=blob:none {cache_str} {oid_hex}` from {path_str}")
+        })?;
+    if !fetch_out.status.success() {
+        bail!(
+            "git fetch of historical commit {oid} from cache {cache} failed: {stderr}",
+            oid = oid_hex,
+            cache = cache_path.display(),
+            stderr = String::from_utf8_lossy(&fetch_out.stderr).trim()
+        );
+    }
+
+    // Update the working tree's main + origin/main refs to the historical
+    // commit so `git checkout main` puts the agent at the snapshot.
+    for refname in ["refs/heads/main", "refs/remotes/origin/main"] {
+        let out = Command::new("git")
+            .arg("-C")
+            .arg(path_str)
+            .args(["update-ref", refname, &oid_hex])
+            .output()
+            .with_context(|| format!("update-ref {refname} -> {oid_hex}"))?;
+        if !out.status.success() {
+            bail!(
+                "git update-ref {refname} {oid_hex} failed: {}",
+                String::from_utf8_lossy(&out.stderr).trim()
+            );
+        }
+    }
+
+    println!(
+        "reposix init --since={target_rfc3339}: rewound to sync tag {tag} (commit {oid_short})\n      cache: {cache}",
+        tag = tag.name,
+        oid_short = oid_hex.chars().take(12).collect::<String>(),
+        cache = cache_path.display()
     );
     Ok(())
 }
