@@ -118,7 +118,7 @@ enum Cmd {
     /// shows backend changes.
     Refresh {
         /// Working-tree directory (a plain directory that is also a git working tree).
-        mount_point: PathBuf,
+        working_tree: PathBuf,
         /// Backend origin (simulator URL).
         #[arg(long, default_value = "http://127.0.0.1:7878")]
         origin: String,
@@ -265,14 +265,14 @@ async fn main() -> Result<()> {
             no_truncate,
         } => list::run(project, origin, backend, format, no_truncate).await,
         Cmd::Refresh {
-            mount_point,
+            working_tree,
             origin,
             project,
             backend,
             offline,
         } => {
             refresh::run_refresh(refresh::RefreshConfig {
-                mount_point,
+                working_tree,
                 origin,
                 project,
                 backend,

@@ -1,14 +1,12 @@
 //! Integration tests for `reposix refresh`.
 //!
 //! These tests call `run_refresh_inner` directly with a pre-built
-//! `Vec<Record>` so no network backend is needed. The `refresh_fuse_active_guard`
-//! test calls `run_refresh` (the public fn) because the FUSE-active guard
-//! fires before backend construction.
+//! `Vec<Record>` so no network backend is needed.
 
 use chrono::DurationRound as _;
 use chrono::TimeZone as _;
 use reposix_cli::list::ListBackend;
-use reposix_cli::refresh::{run_refresh, RefreshConfig};
+use reposix_cli::refresh::RefreshConfig;
 use reposix_core::{Record, RecordId, RecordStatus};
 use tempfile::tempdir;
 
@@ -33,7 +31,7 @@ fn make_test_issue(id: u64, title: &str) -> Record {
 
 fn make_cfg(dir: &std::path::Path) -> RefreshConfig {
     RefreshConfig {
-        mount_point: dir.to_path_buf(),
+        working_tree: dir.to_path_buf(),
         origin: "http://127.0.0.1:17777".to_owned(),
         project: "test-project".to_owned(),
         backend: ListBackend::Sim,
@@ -132,40 +130,6 @@ async fn refresh_idempotent_no_diff() {
     assert!(
         diff_str.trim().is_empty(),
         "git diff HEAD~1 -- issues/ must be empty after identical re-refresh, got: {diff_str}"
-    );
-}
-
-/// `refresh_fuse_active_guard`:
-/// - writing current process PID to `.reposix/fuse.pid` makes `run_refresh`
-///   return an error whose message contains "FUSE mount is active"
-#[tokio::test]
-async fn refresh_fuse_active_guard() {
-    let dir = tempdir().unwrap();
-    std::fs::create_dir_all(dir.path().join(".reposix")).unwrap();
-
-    // Current process is definitely alive.
-    let pid = std::process::id();
-    std::fs::write(
-        dir.path().join(".reposix").join("fuse.pid"),
-        pid.to_string(),
-    )
-    .unwrap();
-
-    let cfg = RefreshConfig {
-        mount_point: dir.path().to_path_buf(),
-        origin: "http://127.0.0.1:17777".to_owned(),
-        project: "test-project".to_owned(),
-        backend: ListBackend::Sim,
-        offline: false,
-    };
-
-    let err = run_refresh(cfg)
-        .await
-        .expect_err("run_refresh must fail when FUSE is active");
-
-    assert!(
-        err.to_string().contains("FUSE mount is active"),
-        "unexpected error message: {err}"
     );
 }
 
