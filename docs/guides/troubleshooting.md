@@ -221,7 +221,8 @@ If you'd rather wipe everything (audit log included), `rm -rf ~/.cache/reposix/<
 reposix tokens /tmp/repo
 ```
 
-The estimate is `chars / 4` over the WIRE bytes (incl. protocol-v2 framing); the MCP baseline is a back-of-envelope. Actual savings vary by workload — blob-heavy reads favour reposix; metadata-only calls favour MCP. The output is honest about that.
+The estimate is `chars / 4` over the WIRE bytes (incl. protocol-v2 framing); the MCP baseline is a back-of-envelope. <!-- banned-words: ok --> (protocol-v2 is the literal git wire format name)
+Actual savings vary by workload — blob-heavy reads favour reposix; metadata-only calls favour MCP. The output is honest about that.
 
 ## See also
 

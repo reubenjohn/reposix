@@ -152,10 +152,7 @@ fn cache_path_from_worktree(work: &Path) -> Result<PathBuf> {
     })?;
     let spec = parse_remote_url(&url).with_context(|| format!("parse remote.origin.url={url}"))?;
     let backend = backend_slug_from_origin(&spec.origin);
-    if !resolve_cache_path(&backend, spec.project.as_str())
-        .map(|p| p.exists())
-        .unwrap_or(false)
-    {
+    if !resolve_cache_path(&backend, spec.project.as_str()).is_ok_and(|p| p.exists()) {
         // Path may not exist yet — still resolve it so the report can
         // print a sensible "no cache" message.
     }
