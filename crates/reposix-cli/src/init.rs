@@ -201,6 +201,10 @@ pub fn run(spec: String, path: PathBuf) -> Result<()> {
 mod tests {
     use super::*;
 
+    // Tests that mutate process-wide env vars must run serially; cargo test
+    // spawns one thread per test, so concurrent set_var/remove_var races.
+    static ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
     #[test]
     fn translate_sim_spec() {
         let url = translate_spec_to_url("sim::demo").unwrap();
@@ -218,6 +222,7 @@ mod tests {
 
     #[test]
     fn translate_confluence_emits_path_marker() {
+        let _guard = ENV_LOCK.lock().unwrap();
         // Phase 36-followup: the `/confluence/` path marker is what
         // the helper's URL-scheme dispatcher uses to disambiguate
         // between Confluence and JIRA on the shared *.atlassian.net
@@ -237,6 +242,7 @@ mod tests {
 
     #[test]
     fn translate_jira_emits_path_marker() {
+        let _guard = ENV_LOCK.lock().unwrap();
         let saved = std::env::var("REPOSIX_JIRA_INSTANCE").ok();
         std::env::set_var("REPOSIX_JIRA_INSTANCE", "reuben-john");
         let url = translate_spec_to_url("jira::TEST").unwrap();
@@ -252,6 +258,7 @@ mod tests {
 
     #[test]
     fn translate_confluence_requires_tenant() {
+        let _guard = ENV_LOCK.lock().unwrap();
         // Save and clear the env var to ensure this test is deterministic.
         let saved = std::env::var("REPOSIX_CONFLUENCE_TENANT").ok();
         std::env::remove_var("REPOSIX_CONFLUENCE_TENANT");
@@ -267,6 +274,7 @@ mod tests {
 
     #[test]
     fn translate_jira_requires_instance() {
+        let _guard = ENV_LOCK.lock().unwrap();
         let saved = std::env::var("REPOSIX_JIRA_INSTANCE").ok();
         std::env::remove_var("REPOSIX_JIRA_INSTANCE");
         let err = translate_spec_to_url("jira::TEST").unwrap_err();

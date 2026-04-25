@@ -68,7 +68,7 @@ impl SimDirectWorkload {
             return None;
         }
         let mut r = self.rng.lock();
-        let idx = r.gen_range(0..ids.len());
+        let idx = r.random_range(0..ids.len());
         Some(ids[idx])
     }
 }

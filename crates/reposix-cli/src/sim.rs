@@ -113,7 +113,7 @@ impl SimProcess {
         let pid_raw = self.child.id();
         if let Ok(pid_i32) = i32::try_from(pid_raw) {
             if let Some(pid) = rustix::process::Pid::from_raw(pid_i32) {
-                let _ = rustix::process::kill_process(pid, rustix::process::Signal::Term);
+                let _ = rustix::process::kill_process(pid, rustix::process::Signal::TERM);
             }
         }
         let t0 = Instant::now();
