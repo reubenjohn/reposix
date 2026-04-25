@@ -71,6 +71,8 @@ reposix init sim::demo /tmp/repo
 
 What that did: `git init /tmp/repo`, then `git config extensions.partialClone origin`, set `remote.origin.url`, and ran `git fetch --filter=blob:none origin`. `/tmp/repo` is now a real git working tree — `git status`, `git diff`, and `git log` all work the way they do on any other repo. Cold init runs in `24 ms` against the sim ([benchmark](../benchmarks/v0.9.0-latency.md)).
 
+> If `reposix init` fails or you see surprising output, run `reposix doctor` — it lists each diagnostic with a copy-pastable Fix command. See the [doctor reference](../reference/cli.md#reposix-doctor) for the full check catalog.
+
 ## 4. Check out the seeded branch
 
 ```bash
