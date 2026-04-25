@@ -105,6 +105,10 @@ extra_css:
   - stylesheets/extra.css
 
 extra_javascript:
+  # Load mermaid explicitly. Material's bundle only auto-loads it on
+  # `<pre class="mermaid">` (fence_code_format), not on `<div class="mermaid">`
+  # (fence_div_format). Pin to v11 minor so the workaround stays stable.
+  - https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js
   - javascripts/mermaid-render.js
 
 extra:
