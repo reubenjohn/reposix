@@ -307,7 +307,7 @@ Also available as rendered PNG: `architecture-pivot-diagram.png` in this directo
 
 ### Add
 
-- **`stateless-connect` capability in `git-remote-reposix`** -- approximately 200 lines of Rust, tunnelling protocol-v2 traffic to a backing bare-repo cache. Implementation follows the same pattern as the Python POC (`git-remote-poc.py`).
+- **`stateless-connect` capability in `git-remote-reposix`** -- approximately 200 lines of Rust, tunnelling protocol-v2 traffic to a backing bare-repo cache. Implementation follows the same pattern as the Python POC (`poc/git-remote-poc.py`).
 - **`reposix-cache` crate** -- a new crate that materializes REST API responses into a local bare git repo. This is where sync logic lives: tree construction from issue listings, blob creation from issue content, delta sync via `since` queries, and cache eviction.
 - **`list_changed_since()` on `BackendConnector` trait** -- enables delta sync by querying the backend for items modified after a given timestamp.
 - **Blob limit enforcement** -- the helper counts `want` lines per `command=fetch` request and refuses if the count exceeds `REPOSIX_BLOB_LIMIT`.
@@ -370,21 +370,21 @@ The pivot is a transport-layer change. The application layer is preserved:
 
 ## 8. POC Artifacts
 
-All artifacts are in `.planning/research/`:
+All artifacts are in `poc/` subdirectory of this research folder:
 
 | File | Purpose |
 |---|---|
-| `git-remote-poc.py` | Python implementation of a `stateless-connect` + `export` hybrid helper. Demonstrates partial clone, lazy blob fetching, push via fast-import, and push rejection with custom error messages. Extended from the read-path POC to cover the full hybrid. |
-| `run-poc.sh` | Runner script for the read-path POC. Runs inside `alpine:latest` Docker container (git 2.52). Demonstrates: partial clone with `--filter=blob:none`, lazy blob fetch via `cat-file`, sparse-checkout batching. |
-| `run-poc-push.sh` | Runner script for the push-path POC. Extends `run-poc.sh` with: commit + push via `export`, push rejection with custom error message, capability-usage counting. |
-| `poc-helper-trace.log` | Full protocol trace from the read-path POC. Shows three helper invocations (clone, lazy fetch #1, lazy fetch #2) with request/response byte counts and missing-blob counts. |
-| `poc-push-trace.log` | Full protocol trace from the push-path POC (114 lines). Shows 2 `stateless-connect` invocations + 2 `export` invocations (accept + reject). |
+| `poc/git-remote-poc.py` | Python implementation of a `stateless-connect` + `export` hybrid helper. Demonstrates partial clone, lazy blob fetching, push via fast-import, and push rejection with custom error messages. Extended from the read-path POC to cover the full hybrid. |
+| `poc/run-poc.sh` | Runner script for the read-path POC. Runs inside `alpine:latest` Docker container (git 2.52). Demonstrates: partial clone with `--filter=blob:none`, lazy blob fetch via `cat-file`, sparse-checkout batching. |
+| `poc/run-poc-push.sh` | Runner script for the push-path POC. Extends `run-poc.sh` with: commit + push via `export`, push rejection with custom error message, capability-usage counting. |
+| `poc/poc-helper-trace.log` | Full protocol trace from the read-path POC. Shows three helper invocations (clone, lazy fetch #1, lazy fetch #2) with request/response byte counts and missing-blob counts. |
+| `poc/poc-push-trace.log` | Full protocol trace from the push-path POC (114 lines). Shows 2 `stateless-connect` invocations + 2 `export` invocations (accept + reject). |
 
 ### Running the POCs
 
 Read-path POC:
 ```bash
-docker run --rm -v $(pwd)/.planning/research:/work alpine:latest \
+docker run --rm -v $(pwd)/.planning/research/v0.9-fuse-to-git-native/poc:/work alpine:latest \
   sh -c 'apk add --quiet --no-cache git python3 && \
          cp /work/git-remote-poc.py /work/git-remote-poc && \
          chmod +x /work/git-remote-poc && /work/run-poc.sh'
@@ -392,7 +392,7 @@ docker run --rm -v $(pwd)/.planning/research:/work alpine:latest \
 
 Push-path POC:
 ```bash
-docker run --rm -v $(pwd)/.planning/research:/work alpine:latest \
+docker run --rm -v $(pwd)/.planning/research/v0.9-fuse-to-git-native/poc:/work alpine:latest \
   sh -c 'apk add --quiet --no-cache git python3 && \
          cp /work/git-remote-poc.py /work/git-remote-poc && \
          chmod +x /work/git-remote-poc && /work/run-poc-push.sh'

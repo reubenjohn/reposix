@@ -97,7 +97,7 @@ revision before execution.
 
 > **Added 2026-04-24.** These notes capture design decisions from the architecture
 > pivot that the Phase 30 planner MUST incorporate when revising plans. Read
-> `.planning/research/architecture-pivot-summary.md` for the full design.
+> `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` for the full design.
 
 ### What changed in the product
 
