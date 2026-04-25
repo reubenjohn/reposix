@@ -44,7 +44,11 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 ///
 /// Every assertion writes its expectation inline so a failing run points
 /// directly at the rule that broke, not a distant line of driver code.
-async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_issue_id: RecordId) {
+async fn assert_contract<B: BackendConnector>(
+    backend: &B,
+    project: &str,
+    known_issue_id: RecordId,
+) {
     // (1) list_records returns Ok(vec).
     let issues = backend.list_records(project).await.unwrap_or_else(|e| {
         panic!(
@@ -393,7 +397,11 @@ async fn state_reason_maps_to_status() {
     let issues = backend.list_records("o/r").await.expect("list");
     assert_eq!(issues.len(), 6);
     assert_eq!(issues[0].status, RecordStatus::Done, "closed+completed");
-    assert_eq!(issues[1].status, RecordStatus::WontFix, "closed+not_planned");
+    assert_eq!(
+        issues[1].status,
+        RecordStatus::WontFix,
+        "closed+not_planned"
+    );
     assert_eq!(
         issues[2].status,
         RecordStatus::Done,

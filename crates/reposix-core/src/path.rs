@@ -411,7 +411,10 @@ mod tests {
 
     #[test]
     fn fallback_on_all_multibyte() {
-        assert_eq!(slug_or_fallback("日本語", RecordId(100)), "page-00000000100");
+        assert_eq!(
+            slug_or_fallback("日本語", RecordId(100)),
+            "page-00000000100"
+        );
     }
 
     #[test]

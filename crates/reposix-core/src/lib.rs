@@ -12,16 +12,16 @@ pub mod audit;
 pub mod backend;
 mod error;
 pub mod http;
-mod record;
 pub mod path;
 mod project;
+mod record;
 mod remote;
 mod taint;
 
 pub use backend::{BackendConnector, BackendFeature, DeleteReason};
 pub use error::{Error, Result};
-pub use record::{frontmatter, Record, RecordId, RecordStatus};
 pub use path::{dedupe_siblings, slug_or_fallback, slugify_title, SLUG_MAX_BYTES};
 pub use project::{Project, ProjectSlug};
+pub use record::{frontmatter, Record, RecordId, RecordStatus};
 pub use remote::{parse_remote_url, RemoteSpec};
 pub use taint::{sanitize, ServerMetadata, Tainted, Untainted};

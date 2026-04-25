@@ -2158,7 +2158,10 @@ mod tests {
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let issue = backend.get_record("REPOSIX", RecordId(1)).await.expect("get");
+        let issue = backend
+            .get_record("REPOSIX", RecordId(1))
+            .await
+            .expect("get");
         assert_eq!(issue.status, RecordStatus::Open);
     }
 
@@ -2180,7 +2183,10 @@ mod tests {
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let issue = backend.get_record("REPOSIX", RecordId(2)).await.expect("get");
+        let issue = backend
+            .get_record("REPOSIX", RecordId(2))
+            .await
+            .expect("get");
         assert_eq!(issue.status, RecordStatus::Done);
     }
 
@@ -3510,7 +3516,10 @@ mod tests {
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let result = backend.list_records_strict("TRUNCTEST").await;
-        assert!(result.is_err(), "list_records_strict must return Err at cap");
+        assert!(
+            result.is_err(),
+            "list_records_strict must return Err at cap"
+        );
         let msg = format!("{}", result.unwrap_err());
         assert!(
             msg.contains("strict mode"),

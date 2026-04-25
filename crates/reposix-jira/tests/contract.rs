@@ -46,7 +46,11 @@ macro_rules! skip_if_no_env {
 }
 
 /// The 5 invariants that hold for any well-behaved [`BackendConnector`].
-async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_issue_id: RecordId) {
+async fn assert_contract<B: BackendConnector>(
+    backend: &B,
+    project: &str,
+    known_issue_id: RecordId,
+) {
     // (1) list_records returns Ok(vec).
     let issues = backend.list_records(project).await.unwrap_or_else(|e| {
         panic!(

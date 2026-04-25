@@ -179,7 +179,9 @@ pub mod frontmatter {
                 ));
             }
         } else {
-            return Err(Error::InvalidRecord("missing frontmatter open fence".into()));
+            return Err(Error::InvalidRecord(
+                "missing frontmatter open fence".into(),
+            ));
         };
         let fm: Frontmatter = serde_yaml::from_str(yaml)?;
         let body = rest_after(text, body_start).to_owned();

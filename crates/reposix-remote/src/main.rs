@@ -245,7 +245,10 @@ fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
             }
         }
     }
-    let issues = match state.rt.block_on(state.backend.list_records(&state.project)) {
+    let issues = match state
+        .rt
+        .block_on(state.backend.list_records(&state.project))
+    {
         Ok(v) => v,
         Err(e) => {
             return fail_push(
@@ -300,7 +303,10 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
         }
     };
 
-    let prior = match state.rt.block_on(state.backend.list_records(&state.project)) {
+    let prior = match state
+        .rt
+        .block_on(state.backend.list_records(&state.project))
+    {
         Ok(v) => v,
         Err(e) => {
             return fail_push(

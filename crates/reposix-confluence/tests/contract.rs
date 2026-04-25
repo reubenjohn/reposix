@@ -79,7 +79,11 @@ macro_rules! skip_if_no_env {
 /// directly at the rule that broke, not a distant line of driver code.
 /// Shared verbatim with `reposix-github/tests/contract.rs` by intent —
 /// the trait's value *is* this shared contract.
-async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_issue_id: RecordId) {
+async fn assert_contract<B: BackendConnector>(
+    backend: &B,
+    project: &str,
+    known_issue_id: RecordId,
+) {
     // (1) list_records returns Ok(vec).
     let issues = backend.list_records(project).await.unwrap_or_else(|e| {
         panic!(

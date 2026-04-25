@@ -219,8 +219,12 @@ pub trait BackendConnector: Send + Sync {
     /// - Transport errors propagate.
     /// - Unknown id returns `Err(Error::Other("not found: ..."))`.
     /// - Read-only backends return `Err(Error::Other("not supported: ..."))`.
-    async fn delete_or_close(&self, project: &str, id: RecordId, reason: DeleteReason)
-        -> Result<()>;
+    async fn delete_or_close(
+        &self,
+        project: &str,
+        id: RecordId,
+        reason: DeleteReason,
+    ) -> Result<()>;
 
     /// The top-level directory name under which this backend's canonical
     /// `<padded-id>.md` files are mounted. Default `"issues"`. Backends with
