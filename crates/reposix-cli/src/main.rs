@@ -24,7 +24,7 @@ use clap::{Parser, Subcommand};
 
 // All subcommand modules live in `lib.rs` so integration tests can call
 // them directly. `main.rs` is intentionally thin: clap-derive dispatch only.
-use reposix_cli::{doctor, gc, history, init, list, refresh, sim, spaces, tokens};
+use reposix_cli::{cost, doctor, gc, history, init, list, refresh, sim, spaces, tokens};
 
 /// reposix — git-native partial clone for autonomous agents.
 #[derive(Debug, Parser)]
@@ -246,6 +246,30 @@ enum Cmd {
         /// Working-tree directory (a `reposix init`'d repo). Defaults to cwd.
         path: Option<PathBuf>,
     },
+    /// Print a per-op cost table over the token-cost audit log.
+    ///
+    /// Aggregates `op='token_cost'` rows since the (optional) `--since`
+    /// cutoff, grouped by op kind (`fetch` / `push`). Output is a
+    /// pipe-friendly Markdown table with bytes-in, bytes-out, estimated
+    /// input tokens, and estimated output tokens, plus a TOTAL row.
+    ///
+    /// `--since` accepts duration shortcuts (`7d`, `30d`, `1m`, `12h`)
+    /// or full RFC-3339 timestamps. Token estimate is `bytes /
+    /// chars-per-token`; configurable via `--chars-per-token` (default
+    /// 3.5).
+    ///
+    /// See `.planning/research/v0.11.0-vision-and-innovations.md` §3c.
+    Cost {
+        /// Working-tree directory (a `reposix init`'d repo). Defaults to cwd.
+        path: Option<PathBuf>,
+        /// Filter to rows newer than this. Duration (`7d`/`1m`/`12h`) or
+        /// RFC-3339 timestamp. Default: include all rows.
+        #[arg(long)]
+        since: Option<String>,
+        /// Heuristic divisor for the token estimate (default 3.5).
+        #[arg(long)]
+        chars_per_token: Option<f64>,
+    },
     /// Print the version.
     Version,
 }
@@ -347,5 +371,10 @@ async fn main() -> Result<()> {
             path,
         } => gc::run(path, strategy, max_size_mb, max_age_days, dry_run),
         Cmd::Tokens { path } => tokens::run(path),
+        Cmd::Cost {
+            path,
+            since,
+            chars_per_token,
+        } => cost::run(path, since, chars_per_token),
     }
 }

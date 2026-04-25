@@ -14,6 +14,7 @@
 
 pub mod binpath;
 pub mod cache_db;
+pub mod cost;
 pub mod doctor;
 pub mod gc;
 pub mod history;
