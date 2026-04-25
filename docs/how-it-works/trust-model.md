@@ -25,9 +25,9 @@ flowchart TB
 
     subgraph SANITIZE["Middle ring — SANITIZE BOUNDARY (the type system)"]
         direction LR
-        S1["Tainted&lt;Vec&lt;u8&gt;&gt;<br/>(cache hands these out)"]
+        S1["Tainted bytes from cache<br/>(Vec u8 wrapped at the boundary)"]
         S2["sanitize() — strip<br/>id / created_at / version / updated_at"]
-        S3["Untainted&lt;T&gt;<br/>(only path to a side-effecting call)"]
+        S3["Untainted record<br/>(only path to a side-effecting call)"]
     end
 
     subgraph AUDITED["Inner ring — AUDITED EGRESS"]
