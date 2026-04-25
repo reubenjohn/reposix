@@ -55,28 +55,35 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 
 ### Active
 
-**Functional core**
-- [ ] **Simulator-first architecture.** A standalone HTTP fake server that mimics issue-tracker semantics (rate limits, 409 conflicts, workflow rules, RBAC). Serves as the dev/test substrate so we never need real credentials to validate end-to-end behavior.
-- [ ] **Issues as Markdown + YAML frontmatter.** Each issue is a single `.md` file. Metadata (status, assignee, labels) lives in YAML frontmatter; body is free text.
-- [ ] **FUSE mount with full read+write.** `getattr`, `readdir`, `read`, `write`, `create`, `unlink`. Backed by an async client to the simulator (or any compatible backend).
-- [ ] **`git-remote-reposix` helper.** Standard git remote helper protocol. `git push` translates diffs to API calls. Conflicts surface as native git merge conflicts.
-- [ ] **Working CLI orchestrator.** `reposix sim`, `reposix mount`, `reposix demo` — single binary, ergonomic UX.
-- [ ] **Audit log of every network-touching action.** SQLite, queryable. Non-optional per OP #6 (ground truth).
-- [ ] **Adversarial swarm harness.** A small load generator that spawns N agent-shaped clients hammering the FUSE mount against the simulator. Channels the StrongDM "10k agent QA team" pattern at miniature scale.
-- [ ] **Working CI on GitHub Actions.** Lint, test, integration test that actually mounts the FUSE in the runner. Codecov coverage. Badges in README.
-- [ ] **Demo-ready by 2026-04-13 morning.** README + asciinema/script(1) recording + walkthrough doc that lets the user re-run end-to-end in <5 minutes.
+> See `.planning/REQUIREMENTS.md` `## v0.11.0 Requirements` for the active list (POLISH-01..17).
+>
+> v0.11.0 thesis: v0.10.0 made the value prop legible; v0.11.0 makes the project reproducible (fresh-clone tutorial runner, pre-built binaries via dist, `cargo binstall`), polished (jargon glosses + glossary, mermaid render hygiene, ADR cleanup), and operationally honest (latency table for every backend, copy-pastable doctor output, time-travel + gc + cost surfaces).
 
-**Security guardrails (from threat-model audit — non-negotiable)**
-- [ ] **Outbound HTTP allowlist.** All HTTP clients (FUSE daemon + remote helper) refuse origins not in `REPOSIX_ALLOWED_ORIGINS` (default `http://127.0.0.1:*`, `http://localhost:*`). Enforced in a single `reposix_core::http::client()` factory — no other code constructs `reqwest::Client`. Test: a write that attempts to `git push` to `https://attacker.example.com/projects/x` returns `EPERM` and is logged.
-- [ ] **Bulk-delete cap on push.** Any single `git push` that deletes >5 issues is rejected with a clear error. Defends against a `rm -rf` on the mount point cascading into a `DELETE` storm.
-- [ ] **Server-controlled frontmatter fields are immutable from clients.** `id`, `created_at`, `version`, and `updated_at` are stripped from inbound writes (FUSE write path + push diff path) before serialization. Test: an attacker-authored issue body with `version: 999999` does not update the server version.
-- [ ] **Filename derivation never uses titles.** Files are named `<id>.md` (zero-padded to 4 digits for v0.1). Titles are body-only. FUSE rejects path components containing `/`, `\0`, `.`, `..` with `EINVAL`.
-- [ ] **Tainted-content typing.** Bytes that came from a remote (network or simulator) are wrapped in `reposix_core::Tainted<T>`. Functions that perform side-effects on other systems (egress HTTP, file write outside the mount) accept only `Untainted<T>`. Conversion goes through an explicit `sanitize` step that strips the immutable fields above. The type system enforces what the prose promises.
-- [ ] **Audit log is append-only.** SQLite `audit` table has no UPDATE or DELETE triggers permitted; CI test asserts `pragma table_info` and a `BEFORE UPDATE/DELETE RAISE` trigger exists.
-- [ ] **FUSE never blocks the kernel forever.** All upstream HTTP calls have a 5-second timeout; on timeout the daemon returns `EIO` (per `docs/research/initial-report.md` §"Graceful Degradation via POSIX Errors"), never hangs.
-- [ ] **Demo recording must show guardrails firing.** The asciinema/script recording includes at least one allowlist refusal and one 409-conflict-as-merge-conflict resolution. A demo that only shows happy-path is dishonest about what reposix is.
+<details>
+<summary>Historical: v0.1.0 MVD Active list (shipped 2026-04-13; retained for traceability)</summary>
 
-*(JIRA integration v0.8.0 — all requirements shipped; see Validated above)*
+**Functional core (shipped v0.1.0)**
+- ✓ Simulator-first architecture
+- ✓ Issues as Markdown + YAML frontmatter
+- ✗ FUSE mount with full read+write — REVERSED in v0.9.0 architecture pivot (FUSE deleted entirely; replaced by partial-clone working tree)
+- ✓ `git-remote-reposix` helper (now hybrid `stateless-connect` + `export` per v0.9.0)
+- ✗ `reposix sim`, `reposix mount`, `reposix demo` CLI — `reposix mount` deleted in v0.9.0; replaced by `reposix init <backend>::<project> <path>`
+- ✓ Audit log of every network-touching action
+- ✓ Adversarial swarm harness
+- ✓ Working CI on GitHub Actions (FUSE-mount-in-runner removed v0.9.0)
+- ✓ Demo-ready by 2026-04-13 morning
+
+**Security guardrails (shipped v0.1.0 / v0.4.1 / v0.5.0; updated v0.9.0)**
+- ✓ Outbound HTTP allowlist (`reposix_core::http::client()` factory — clippy `disallowed_methods` enforces single construction site)
+- ✓ Bulk-delete cap on push
+- ✓ Server-controlled frontmatter fields immutable from clients (`id`, `created_at`, `version`, `updated_at` stripped before egress)
+- ✓ Filename derivation never uses titles
+- ✓ Tainted-content typing (`reposix_core::Tainted<T>` along the data path; explicit `sanitize` step)
+- ✓ Audit log append-only (SQLite WAL + `BEFORE UPDATE/DELETE RAISE` trigger)
+- ✗ "FUSE never blocks the kernel forever" — N/A post-v0.9.0 (FUSE deleted)
+- ✓ Demo recording shows guardrails firing
+
+</details>
 
 ### Out of Scope
 
@@ -96,42 +103,46 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 
 ## Constraints
 
-- **Tech stack**: Rust 1.82+, Cargo workspace. No libfuse-dev linking — `fuser` with `default-features = false` so we don't need apt packages we can't install. Async via Tokio, HTTP via axum/reqwest, FFI via libc.
-- **Timeline**: Demo by 2026-04-13 ~08:00 PDT. Hard limit. Project kicked off 2026-04-13 ~00:30 PDT. ~7 hours of autonomous build time.
-- **Compatibility**: Linux only for v0.1 (FUSE3 + FUSE2 both available on host). CI runs on `ubuntu-latest`.
-- **Security**: Cannot store real credentials. Cannot interact with private services. Simulator is the only backend until human review.
-- **Dependencies**: Only crates that compile without `pkg-config` or system dev headers (we lack passwordless sudo on dev host). `fuser` default-features=false. `rusqlite` with `bundled` feature. `reqwest` with `rustls-tls` (no openssl-sys).
-- **Ground truth**: All state in committed artifacts. Simulator audit DB committed to `runtime/` only as test fixtures, not source of truth.
-- **Egress safety**: The single `reposix_core::http::client()` factory is the only legal way to construct an HTTP client in this workspace. Direct `reqwest::Client::new()` calls are denied by clippy lint (`clippy::disallowed_methods` configured in `clippy.toml`). Every HTTP request honors `REPOSIX_ALLOWED_ORIGINS`.
-- **Decision deadline**: At local time 03:30 (T+3h from kickoff) the orchestrator MUST decide: shipping the full-write demo, or pivoting to read-only-mount + remote-helper for a credible minimum-viable demo. No sunk-cost grinding past 03:30 on a path that won't land by 07:30.
+- **Tech stack**: Rust 1.82+, Cargo workspace. Async via Tokio, HTTP via axum/reqwest (rustls-only — no openssl-sys), git via gix 0.82 (pinned `=` because pre-1.0). Runtime requires `git >= 2.34` for `extensions.partialClone` + `stateless-connect`.
+- **Compatibility**: Linux + macOS + Windows after v0.11.0 dist binaries land; CI runs on `ubuntu-latest`. Pre-v0.11.0: Linux-only releases.
+- **Security**: Autonomous mode never hits a real backend unless the user has put real creds in `.env` AND set a non-default `REPOSIX_ALLOWED_ORIGINS`. Simulator is the default for every demo / unit test / autonomous loop. Real-backend testing is sanctioned against three canonical targets: TokenWorld (Confluence), `reubenjohn/reposix` (GitHub), JIRA project `TEST` — see `docs/reference/testing-targets.md`.
+- **Dependencies**: Only crates that compile without `pkg-config` or system dev headers. `rusqlite` with `bundled`. `reqwest` with `rustls-tls`.
+- **Ground truth**: All state in committed artifacts. Cache state, simulator state, and helper state all live in committed-or-fixture artifacts. No "it works in my session" bugs.
+- **Egress safety**: The single `reposix_core::http::client()` factory is the only legal way to construct an HTTP client in this workspace. Direct `reqwest::Client::new()` calls are denied by clippy lint (`clippy::disallowed_methods`). Every HTTP request honors `REPOSIX_ALLOWED_ORIGINS`.
+- **Release gates**: Tag pushes are owner gates. Any docs-site work must be playwright-validated (POLISH-17 wires this into the pre-push hook).
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Rust over Python | Production substrate; FUSE perf matters under swarm load; user explicitly chose Rust | — Pending |
-| Simulator-first, not real backend | StrongDM pattern: real APIs rate-limit a swarm to death; simulator is free to hammer; also avoids credential risk in autonomous mode | — Pending |
-| `fuser` crate, `default-features = false` | No libfuse-dev / pkg-config available; runtime uses fusermount binary which is present | — Pending |
-| `rusqlite` with `bundled` | Avoids needing libsqlite3-dev | — Pending |
-| Workspace with 5 crates (`-core`, `-sim`, `-fuse`, `-remote`, `-cli`) | Clear separation of concerns; each crate independently testable; `-core` isolates types from binaries | — Pending |
-| Issues as `.md` + YAML frontmatter | Matches `docs/research/initial-report.md` §"Modeling Hierarchical Directory Structures"; agents already understand the format | — Pending |
-| `git-remote-helper` protocol over custom sync | Leverages git's conflict resolution (OP: ground truth, simon willison §5.2 lethal trifecta argues git semantics > JSON conflict synthesis) | — Pending |
-| Public GitHub repo `reubenjohn/reposix` | User authorized; CI must run; demo must be shareable | — Pending |
-| Auto/YOLO mode, coarse granularity, all workflow gates on | User asked for max autonomy + GSD discipline; coarse phases fit 7-hour window | — Pending |
-| Skip GSD discuss step | User instruction (~12:55 AM): "do all the gsd planning, exec, review, etc, just without the discuss steps" | — Pending |
-| Lethal-trifecta cuts are first-class requirements, not afterthoughts | Threat-model subagent flagged egress + bulk-delete + tainted typing as ship-blockers; safer to bake in than retrofit | — Pending |
+| Rust over Python | Production substrate; FUSE perf matters under swarm load; user explicitly chose Rust | Validated |
+| Simulator-first, not real backend | StrongDM pattern: real APIs rate-limit a swarm to death; simulator is free to hammer; also avoids credential risk in autonomous mode | Validated |
+| `fuser` crate, `default-features = false` | No libfuse-dev / pkg-config available; runtime uses fusermount binary which is present | Validated |
+| `rusqlite` with `bundled` | Avoids needing libsqlite3-dev | Validated |
+| Workspace with 5 crates (`-core`, `-sim`, `-fuse`, `-remote`, `-cli`) | Clear separation of concerns; each crate independently testable; `-core` isolates types from binaries | Validated |
+| Issues as `.md` + YAML frontmatter | Matches `docs/research/initial-report.md` §"Modeling Hierarchical Directory Structures"; agents already understand the format | Validated |
+| `git-remote-helper` protocol over custom sync | Leverages git's conflict resolution (OP: ground truth, simon willison §5.2 lethal trifecta argues git semantics > JSON conflict synthesis) | Validated |
+| Public GitHub repo `reubenjohn/reposix` | User authorized; CI must run; demo must be shareable | Validated |
+| Auto/YOLO mode, coarse granularity, all workflow gates on | User asked for max autonomy + GSD discipline; coarse phases fit 7-hour window | Validated |
+| Skip GSD discuss step | User instruction (~12:55 AM): "do all the gsd planning, exec, review, etc, just without the discuss steps" | Validated |
+| Lethal-trifecta cuts are first-class requirements, not afterthoughts | Threat-model subagent flagged egress + bulk-delete + tainted typing as ship-blockers; safer to bake in than retrofit | Validated |
 
-## Current Milestone: v0.11.0 — Performance & Sales Assets (planning)
+## Current Milestone: v0.11.0 — Polish & Reproducibility (planning)
 
-**Goal:** Land the helper-multi-backend-dispatch fix carried forward from v0.9.0 (so `stateless-connect` actually routes by URL host, not always to `SimBackend`); ship `cargo run -p reposix-bench` for honest per-backend latency numbers; close the 9 major + 17 minor doc-clarity findings logged in `.planning/notes/v0.11.0-doc-polish-backlog.md`; capture the playwright screenshots deferred from v0.10.0 once cairo libs are available; and complete the IssueId→RecordId refactor that's in flight on a parallel runner.
+**Goal:** Close the long tail v0.10.0 surfaced. Polish the docs site (jargon glosses + glossary + mermaid render hygiene + ADR cleanup), kill four codebase duplicates flagged by `simplify` (worktree helpers, `parse_remote_url`, `cli_compat.rs`, FUSE residue in `refresh.rs`), and ship reproducibility infrastructure: a fresh-clone tutorial runner, pre-built binaries via `dist`, `cargo binstall` metadata, `reposix doctor` / `reposix log --time-travel` / `reposix gc --orphans` / `reposix cost` surfaces, and a real-backend latency table for sim + GitHub + Confluence + JIRA. See `.planning/research/v0.11.0-vision-and-innovations.md` for the full surface and `.planning/REQUIREMENTS.md` `## v0.11.0 Requirements` for the active POLISH-01..17 list.
 
-**Carry-forward from v0.10.0 (tech debt):**
-- Playwright screenshots (DOCS-11 success criterion 4) — `scripts/take-screenshots.sh` stub names the contract.
-- 9 major + 17 minor doc-clarity findings — `.planning/notes/v0.11.0-doc-polish-backlog.md`.
-- `scripts/tag-v0.10.0.sh` — owner gate; not yet authored.
+**Phases (50–55):** see `.planning/ROADMAP.md` `## v0.11.0 Polish & Reproducibility`. Phase 50 = Hygiene & Cleanup; 51 = Codebase Refactor; 52 = Docs Polish; 53 = Reproducibility (fresh-clone runner + dist + binstall); 54 = Real-backend Latency; 55 = Vision Innovations (doctor + cost + time-travel + gc + init --since).
 
-**Carry-forward from v0.9.0 (still open):**
-- Helper hardcodes `SimBackend` in `stateless-connect` handler — must land before any v0.11.0 benchmark commits.
+**Carry-forward already closed (do not re-open):**
+- Helper backend URL dispatch — closed `cd1b0b6` (ADR-008).
+- IssueId/Issue → RecordId/Record rename — closed `2af5491..4ad8e2a` (ADR-006).
+- `reposix doctor` / `reposix gc` / `reposix history` / `reposix at` — overnight surprise round, all in `Unreleased` CHANGELOG block; v0.11.0 polishes them to spec.
+
+**Carry-forward still open:**
+- Playwright screenshots (DOCS-11 SC4) — `scripts/take-screenshots.sh` stub; rolled into POLISH-11 archival sweep (Phase 50) + Phase 53 reproducibility infra.
+- 9 major + 17 minor doc-clarity findings — `.planning/notes/v0.11.0-doc-polish-backlog.md`; rolled into Phase 52.
+- `scripts/tag-v0.10.0.sh` push — owner gate (script exists; push pending).
+- `scripts/tag-v0.9.0.sh` push — owner gate.
 
 ---
 
@@ -157,7 +168,7 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 
 **Source of truth:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` (design authority, drafted 2026-04-24). Original narrative IA: `.planning/notes/phase-30-narrative-vignettes.md` (framing principles + hero vignette V1 — must be revised for git-native architecture by Phase 41 carving).
 
-**Carry-forward from v0.9.0 (tech debt):** Helper hardcodes `SimBackend` in the `stateless-connect` handler — documented in `.planning/v0.9.0-MILESTONE-AUDIT.md` §5 and the v0.9.0 ROADMAP archive. Resolution scheduled before any v0.11.0 ("Performance & Sales Assets") benchmark commits, NOT v0.10.0 (out-of-scope per active requirements section).
+**Carry-forward from v0.9.0:** none (helper backend URL dispatch landed 2026-04-25 commit `cd1b0b6`; v0.9.0 audit verdict flipped `tech_debt` → `passed`).
 
 ---
 
@@ -206,4 +217,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-25 — Milestone v0.10.0 SHIPPED (Docs & Narrative Shine, Phases 40–45); v0.11.0 Performance & Sales Assets planning started*
+*Last updated: 2026-04-25 — Milestone v0.10.0 SHIPPED (Docs & Narrative Shine, Phases 40–45); v0.11.0 Polish & Reproducibility planning_scaffolded (Phases 50–55, POLISH-01..17)*

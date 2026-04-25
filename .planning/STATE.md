@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
 milestone: v0.11.0
-milestone_name: Performance & Sales Assets (planning)
-status: planning_started
-last_updated: "2026-04-25T07:30:00.000Z"
-last_activity: 2026-04-25 -- v0.10.0 SHIPPED (Phases 40-45 closed, audit tech_debt). Lifecycle Stage 3 complete — phase dirs archived to .planning/milestones/v0.10.0-phases/. v0.11.0 planning starts.
+milestone_name: Polish & Reproducibility (planning_scaffolded)
+status: planning_scaffolded
+last_updated: "2026-04-25T16:00:00.000Z"
+last_activity: 2026-04-25 -- v0.11.0 milestone scaffolded (Phases 50–55, POLISH-01..17). Workspace version bumped 0.9.0 → 0.11.0-dev. GSD hygiene scrub: STATE/PROJECT/REQUIREMENTS/ROADMAP all consistent; v0.1.0 MVD ghosts and v0.8.0 session-continuity drift removed.
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -59,20 +59,17 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** An LLM agent can `ls`, `cat`, `grep`, edit, and `git push`
 issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
-**Current focus:** Milestone v0.9.0 "Docs & Narrative" — rewrite landing page + IA so reposix's value proposition lands hard within 10 seconds, with architecture progressively revealed.
+**Current focus:** Milestone v0.11.0 "Polish & Reproducibility" — close the long tail v0.10.0 surfaced (jargon glosses + glossary, mermaid render hygiene, codebase duplicates, fresh-clone tutorial runner, pre-built binaries via dist, real-backend latency table, vision-innovations surface).
 
 ## Current Position
 
-Phase: — (v0.10.0 not yet planned)
+Phase: — (v0.11.0 phases 50–55 scaffolded; not yet planned)
 Plan: —
-Cursor: **Run /gsd-autonomous to drive v0.10.0 phases 40–45.**
-Status: Planning (v0.10.0 scaffolded — DOCS-01..11 + Phases 40-45 mapped)
-Last activity: 2026-04-24 -- v0.10.0 scaffolded (REQUIREMENTS.md + ROADMAP.md + PROJECT.md updates)
+Cursor: **Run /gsd-plan-phase 50 to start the milestone.**
+Status: planning_scaffolded (v0.11.0 — Polish & Reproducibility; POLISH-01..17 + Phases 50–55 mapped)
+Last activity: 2026-04-25 -- v0.11.0 milestone scaffolded (REQUIREMENTS.md POLISH-01..17, ROADMAP.md Phases 50–55, PROJECT.md goal block); workspace version 0.9.0 → 0.11.0-dev; GSD hygiene scrub landed.
 
-Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
-278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
-
-Progress: [##########] v0.8.0 complete (Phase 29 of 29 closed)
+Progress: [##########] v0.10.0 complete (Phases 40–45 closed; phase dirs archived to .planning/milestones/v0.10.0-phases/)
 
 ## Performance Metrics
 
@@ -200,46 +197,15 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ### Blockers/Concerns
 
-- **T+3h decision gate (03:30 PDT)** — the orchestrator MUST decide STRETCH
-  vs read-only at this point. Do not let Phase 1/2/3 slip past 03:30 on the
-  theory that Phase S is still possible.
-
-- **FUSE-in-CI is known-yak-shavy** — lives in Phase S for a reason. MVD's
-  CI (FC-08) covers fmt/clippy/test/coverage only; the "mounts FUSE in the
-  runner" half of FC-08 is STRETCH.
-
-- **Demo recording must fire guardrails on camera (SG-08)** — Phase 4 is
-  not complete if the recording is happy-path only.
+- **`scripts/tag-v0.10.0.sh` exists but tag is unpushed** — owner gate. Same for `scripts/tag-v0.9.0.sh`.
+- **Playwright screenshots deferred from v0.10.0** — cairo system libs unavailable on dev host; `scripts/take-screenshots.sh` stub names contract. Rolled into v0.11.0 Phase 53 (reproducibility infra).
+- **9 major + 17 minor doc-clarity findings** — `.planning/notes/v0.11.0-doc-polish-backlog.md`; rolled into v0.11.0 Phase 52 (Docs Polish Wave).
 
 ## Session Continuity
 
-Last session: 2026-04-16T00:00:00.000Z
-Checkpoint: Phase 29 complete — milestone v0.8.0 complete, all phases done, UAT 9/9 passed
+Last session: 2026-04-25T16:00:00.000Z
+Checkpoint: v0.11.0 milestone scaffolded (Phases 50–55, POLISH-01..17). Workspace version bumped 0.9.0 → 0.11.0-dev. GSD hygiene scrub landed. Phase 50 wave (this session) covers POLISH-11 archival sweep + POLISH-12 partial bump.
 Resume file: None
-Cursor next: **v0.8.0 tag push — user gate. Run `bash scripts/tag-v0.8.0.sh`.** After tag: start new milestone or declare v0.8.0 released.
+Cursor next: **Run /gsd-plan-phase 50 to plan the Hygiene & Cleanup wave (or proceed directly to Phase 51 if 50 is already shipped).**
 
-Wave-level commit trail on `main` (Phase 29):
-`10d24ba` (29-01: ADF write encoder + issuetype cache), `7318588` (29-02: create_issue + update_issue write path), `8eca6a0` (29-03: delete_or_close transitions + contract + CHANGELOG).
-
-### Previous session (Phase 14, for reference)
-
-2026-04-14T16:45:00.000Z. Checkpoint: Completed 14-D-docs-changelog.md
-— Phase 14 SHIPPED; v0.4.1 ready to tag at user gate.
-Wave-level commit trail on `main`:
-`7510ed1` (14-A sim 409-body contract pins), `bdad951` + `cd50ec5` (14-B1
-fs.rs write through IssueBackend + SG-03 re-home), `938b8de` (14-B2
-git-remote helper through IssueBackend), `4301d0d` (14-C verification).
-274 workspace tests pass (LD-14-08 floor 272 met +2). `fetch.rs`,
-`tests/write.rs`, and `client.rs` deleted (~830 lines). R1 + R2 accepted
-behaviour changes documented in CHANGELOG `[v0.4.1]` `### Changed`.
-
-### Earlier session (Phase 13, for reference)
-
-2026-04-14T10:34:07.984Z. Stopped at: Completed 13-D3-release-scripts-and-demo.md.
-Wave-level commit trail for Phase S (historical): patch/post helpers +
-If-Match + 5s timeout + sanitize-on-egress; `b12036e` (S-A-2 write/flush/
-release + create/unlink + conditional MountOption::RO); `4006f13`
-(S-B-1+2+3 protocol/import/export/SG-02 cap + PATCH/POST/DELETE
-execution). 21 new tests pass (4 fetch + 5 write + 6 lib + 3 protocol +
-3 bulk_delete_cap). All three Phase S SCs verified empirically against a
-live sim+FUSE+git push on the dev host.
+Recent commit trail on `main`: `cd1b0b6` (helper backend dispatch — closes Phase 32 tech debt) · `856b7b9..132c662` (time-travel via git tags + ADR-007) · `b276473..b862c71` (reposix doctor) · `37ae438..d3647ef` (Cache::gc + reposix gc + reposix tokens) · `2dd06a1..4ad8e2a` (Record rename completion) · `9151b86..6131921` (launch screencast script + quickstart fix).
