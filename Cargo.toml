@@ -3,7 +3,6 @@ resolver = "2"
 members = [
     "crates/reposix-core",
     "crates/reposix-sim",
-    "crates/reposix-fuse",
     "crates/reposix-remote",
     "crates/reposix-cli",
     "crates/reposix-github",
@@ -21,7 +20,7 @@ authors = ["reposix contributors"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/reubenjohn/reposix"
 homepage = "https://github.com/reubenjohn/reposix"
-description = "Git-backed FUSE filesystem exposing REST APIs as POSIX files for autonomous agents"
+description = "Git-native partial-clone exposing REST APIs as POSIX files for autonomous agents"
 
 [workspace.dependencies]
 # Async runtime
@@ -52,9 +51,6 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 anyhow = "1"
 thiserror = "2"
 
-# FUSE — default-features=false avoids requiring libfuse-dev/pkg-config at compile time;
-# uses runtime fusermount/fusermount3 binaries instead (already present on most Linux hosts).
-fuser = { version = "0.17", default-features = false }
 libc = "0.2"
 
 # Storage

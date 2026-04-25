@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Top-level reposix CLI: orchestrates simulator, FUSE mount, and demo flows"
+description = "Top-level reposix CLI: orchestrates simulator, partial-clone init, and refresh flows"
 
 [[bin]]
 name = "reposix"

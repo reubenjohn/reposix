@@ -15,9 +15,9 @@
 #
 # Modes:
 #   default  — fmt, clippy, test, smoke (fast, default).
-#   --full   — default + mkdocs --strict + FUSE `--ignored` tests.
-#              Requires `fusermount3` on PATH and a reasonable time
-#              budget (~60s extra).
+#   --full   — default + mkdocs --strict + dark-factory regression.
+#              Requires reposix-sim on PATH and a reasonable time
+#              budget (~30s extra).
 #   --quick  — fmt + clippy only. For tight inner-dev loops.
 #
 # Exit codes: 0 = all green, 1 = any gate red.
@@ -90,7 +90,7 @@ run_gauntlet() {
     printf '   (hint: cargo build --release --workspace --bins, then re-run)\n'
   fi
 
-  # Full-mode adds mkdocs + FUSE integration tests.
+  # Full-mode adds mkdocs + dark-factory regression test.
   if [[ "$full" == "full" ]]; then
     if command -v mkdocs >/dev/null 2>&1; then
       run_gate mkdocs-strict 'mkdocs build --strict' || failed=$((failed + 1))
@@ -98,14 +98,9 @@ run_gauntlet() {
       printf '%b mkdocs-strict %b — mkdocs not on PATH\n' \
         "${YELLOW}⊘${NC}" "${YELLOW}skipped${NC}"
     fi
-    if command -v fusermount3 >/dev/null 2>&1; then
-      run_gate fuse-mount-tests \
-        'cargo test --release -p reposix-fuse --locked --features fuse-mount-tests -- --test-threads=1' \
-        || failed=$((failed + 1))
-    else
-      printf '%b fuse-mount-tests %b — fusermount3 not on PATH\n' \
-        "${YELLOW}⊘${NC}" "${YELLOW}skipped${NC}"
-    fi
+    run_gate dark-factory \
+      'bash scripts/dark-factory-test.sh sim' \
+      || failed=$((failed + 1))
   fi
 }
 

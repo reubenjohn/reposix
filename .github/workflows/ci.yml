@@ -37,8 +37,6 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - name: Install runtime FUSE binaries
-        run: sudo apt-get update && sudo apt-get install -y fuse3
       - run: cargo clippy --workspace --all-targets -- -D warnings
 
   test:
@@ -48,41 +46,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: Install runtime FUSE binaries
-        run: sudo apt-get update && sudo apt-get install -y fuse3
       - run: cargo test --workspace --locked
       - name: Test pre-push credential hook
         run: bash scripts/hooks/test-pre-push.sh
 
-  integration:
-    name: integration (mounted FS)
-    # macOS CI matrix deferred: macFUSE requires interactive kext approval
-    # (unavailable on GitHub-hosted runners). Use a self-hosted macOS runner
-    # with macFUSE pre-approved to enable FUSE integration testing on macOS.
-    # HARD-04 partial: hooks step ships here; FUSE matrix requires self-hosted.
-    runs-on: ubuntu-latest
-    needs: [test]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - name: Install runtime FUSE binaries
-        run: sudo apt-get update && sudo apt-get install -y fuse3
-      - name: Verify FUSE available
-        run: ls -l /dev/fuse && which fusermount3
-      - name: Build release binaries
-        run: cargo build --release --workspace --bins
-      - name: Run integration tests (requires FUSE)
-        # Scoped to `-p reposix-fuse` so this job doesn't pick up
-        # `#[ignore]`-gated live-backend contract tests (reposix-github
-        # contract_github, reposix-confluence contract_confluence_live*)
-        # — those need real credentials and have their own dedicated
-        # jobs (`integration (contract, real github)`,
-        # `integration (contract, real confluence)`).
-        run: cargo test -p reposix-fuse --release --locked --features fuse-mount-tests -- --test-threads=1
-
-  demos-smoke:
-    name: demos smoke
+  dark-factory:
+    name: dark-factory regression (sim)
+    # v0.9.0 architecture pivot: the FUSE-backed `integration (mounted FS)`
+    # job is replaced by the dark-factory regression — proves the agent UX
+    # is "pure git, zero in-context learning" (architecture-pivot-summary §4).
     runs-on: ubuntu-latest
     needs: [test]
     timeout-minutes: 10
@@ -91,13 +63,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Install runtime tooling
-        run: sudo apt-get update && sudo apt-get install -y fuse3 jq sqlite3
-      - name: Build release binaries
-        run: cargo build --release --workspace --bins
-      - name: Run Tier 1 demo smoke suite
-        run: PATH="$PWD/target/release:$PATH" bash scripts/demos/smoke.sh
-        # Load-bearing: drift in any Tier 1 demo should break CI, not be
-        # silently tolerated. No continue-on-error.
+        run: sudo apt-get update && sudo apt-get install -y jq sqlite3
+      - name: Run dark-factory test (sim backend)
+        run: bash scripts/dark-factory-test.sh sim
 
   integration-contract:
     # Hits real GitHub (octocat/Hello-World) with the contract test helper.
@@ -157,6 +125,72 @@ jobs:
           export REPOSIX_ALLOWED_ORIGINS="http://127.0.0.1:*,https://${REPOSIX_CONFLUENCE_TENANT}.atlassian.net"
           cargo test -p reposix-confluence -- --ignored
 
+  integration-contract-confluence-v09:
+    # ARCH-19 v0.9.0 real-backend gate: Confluence TokenWorld via the
+    # gated agent_flow_real test. Skips cleanly when secrets are absent.
+    name: integration (contract, real confluence v09)
+    runs-on: ubuntu-latest
+    needs: [test]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Run reposix-cli agent_flow_real test against TokenWorld
+        env:
+          ATLASSIAN_API_KEY: ${{ secrets.ATLASSIAN_API_KEY }}
+          ATLASSIAN_EMAIL: ${{ secrets.ATLASSIAN_EMAIL }}
+          REPOSIX_CONFLUENCE_TENANT: ${{ secrets.REPOSIX_CONFLUENCE_TENANT }}
+        run: |
+          if [ -z "$ATLASSIAN_API_KEY" ] || [ -z "$ATLASSIAN_EMAIL" ] \
+             || [ -z "$REPOSIX_CONFLUENCE_TENANT" ]; then
+            echo "SKIP: pending-secrets — one or more Atlassian secrets unset."
+            exit 0
+          fi
+          export REPOSIX_ALLOWED_ORIGINS="http://127.0.0.1:*,https://${REPOSIX_CONFLUENCE_TENANT}.atlassian.net"
+          cargo test -p reposix-cli --test agent_flow_real -- --ignored dark_factory_real_confluence
+
+  integration-contract-github-v09:
+    # ARCH-19 v0.9.0 real-backend gate: reubenjohn/reposix issues.
+    name: integration (contract, real github v09)
+    runs-on: ubuntu-latest
+    needs: [test]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Run reposix-cli agent_flow_real test against reubenjohn/reposix
+        env:
+          REPOSIX_ALLOWED_ORIGINS: http://127.0.0.1:*,https://api.github.com
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: cargo test -p reposix-cli --test agent_flow_real -- --ignored dark_factory_real_github
+
+  integration-contract-jira-v09:
+    # ARCH-19 v0.9.0 real-backend gate: JIRA project TEST. Skips cleanly
+    # when secrets are absent (pending-secrets).
+    name: integration (contract, real jira v09)
+    runs-on: ubuntu-latest
+    needs: [test]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Run reposix-cli agent_flow_real test against JIRA TEST
+        env:
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          REPOSIX_JIRA_INSTANCE: ${{ secrets.REPOSIX_JIRA_INSTANCE }}
+        run: |
+          if [ -z "$JIRA_EMAIL" ] || [ -z "$JIRA_API_TOKEN" ] \
+             || [ -z "$REPOSIX_JIRA_INSTANCE" ]; then
+            echo "SKIP: pending-secrets — one or more JIRA secrets unset."
+            exit 0
+          fi
+          export REPOSIX_ALLOWED_ORIGINS="http://127.0.0.1:*,https://${REPOSIX_JIRA_INSTANCE}.atlassian.net"
+          cargo test -p reposix-cli --test agent_flow_real -- --ignored dark_factory_real_jira
+
   coverage:
     name: coverage
     runs-on: ubuntu-latest
@@ -169,8 +203,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
-      - name: Install runtime FUSE binaries
-        run: sudo apt-get update && sudo apt-get install -y fuse3
       - name: Generate coverage
         run: cargo llvm-cov --workspace --lcov --output-path lcov.info
       - name: Upload to Codecov

@@ -1,12 +1,13 @@
 //! Top-level `reposix` CLI: orchestrates the simulator, partial-clone
-//! init, and demo flows.
+//! init, and refresh flows.
 //!
 //! Subcommands (v0.9.0):
 //! - `reposix sim` — run the Phase-2 simulator as a child process.
 //! - `reposix init <backend>::<project> <path>` — initialize a partial-clone
 //!   working tree backed by reposix.
-//! - `reposix mount` — REMOVED in v0.9.0 (stub emits migration error).
-//! - `reposix demo` — end-to-end orchestration against the simulator.
+//! - `reposix list` — query the backend's `list_issues` and dump JSON/table.
+//! - `reposix refresh` — re-fetch all issues into a working tree + commit.
+//! - `reposix spaces` — list readable Confluence spaces.
 //! - `reposix version` — print the version.
 
 #![forbid(unsafe_code)]
@@ -22,9 +23,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 mod binpath;
-mod demo;
 mod init;
-mod mount;
 mod sim;
 
 // Modules shared with the lib target — imported via the library crate path.
@@ -32,7 +31,7 @@ use reposix_cli::list;
 use reposix_cli::refresh;
 use reposix_cli::spaces;
 
-/// reposix — git-backed FUSE filesystem for autonomous agents.
+/// reposix — git-native partial clone for autonomous agents.
 #[derive(Debug, Parser)]
 #[command(name = "reposix", version, about, subcommand_required = true)]
 struct Cli {
@@ -83,24 +82,6 @@ enum Cmd {
         /// Local path to initialize as the partial-clone working tree.
         path: PathBuf,
     },
-    /// REMOVED in v0.9.0 — kept as a stub that emits a migration error so
-    /// stale scripts get a clear message rather than "unknown subcommand".
-    /// The fuse spawn code remains in `mount.rs` until Phase 36 deletes
-    /// the FUSE crate entirely.
-    Mount {
-        /// Path argument retained for backward compat with stale scripts;
-        /// ignored — the command always errors out.
-        #[arg(value_name = "PATH")]
-        mount_point: Option<PathBuf>,
-    },
-    /// Run the canonical end-to-end demo: spawn sim → mount → run
-    /// scripted ls/cat/grep → tail audit log → clean up.
-    Demo {
-        /// Stay up after scripted steps until Ctrl-C — useful for
-        /// asciinema recording where the human narrates.
-        #[arg(long)]
-        keep_running: bool,
-    },
     /// List issues for a project by calling the backend's `list_issues`
     /// method and dumping the result as JSON (default) or a pretty table.
     ///
@@ -128,12 +109,10 @@ enum Cmd {
         no_truncate: bool,
     },
     /// Re-fetch all issues/pages from the backend, write `.md` files into the
-    /// mount directory, and create a git commit so `git diff HEAD~1` shows
-    /// backend changes.
-    ///
-    /// The mount must NOT be actively FUSE-mounted (unmount first).
+    /// working-tree directory, and create a git commit so `git diff HEAD~1`
+    /// shows backend changes.
     Refresh {
-        /// Mount point (a plain directory that is also a git working tree).
+        /// Working-tree directory (a plain directory that is also a git working tree).
         mount_point: PathBuf,
         /// Backend origin (simulator URL).
         #[arg(long, default_value = "http://127.0.0.1:7878")]
@@ -188,15 +167,6 @@ async fn main() -> Result<()> {
             rate_limit,
         } => sim::run(&bind, db, seed_file, no_seed, ephemeral, rate_limit),
         Cmd::Init { spec, path } => init::run(spec, path),
-        Cmd::Mount { mount_point: _ } => {
-            // v0.9.0 breaking: `reposix mount` is removed. The clap variant
-            // is kept only so stale scripts get a clear migration message
-            // rather than `error: unrecognized subcommand 'mount'`.
-            anyhow::bail!(
-                "reposix mount has been removed in v0.9.0. Use 'reposix init <backend>::<project> <path>' — see CHANGELOG and docs/reference/testing-targets.md."
-            );
-        }
-        Cmd::Demo { keep_running } => demo::run(keep_running).await,
         Cmd::List {
             project,
             origin,

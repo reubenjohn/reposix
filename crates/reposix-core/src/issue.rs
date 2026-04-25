@@ -1,4 +1,4 @@
-//! Issue (the unit a FUSE file represents) types.
+//! Issue (the unit a partial-clone working-tree file represents) types.
 
 use std::collections::BTreeMap;
 
@@ -78,8 +78,9 @@ pub struct Issue {
     /// Parent in a hierarchy-supporting backend (currently Confluence only).
     ///
     /// Always `None` for sim and GitHub. When `Some`, is the parent page/issue
-    /// id as reported by the backend. Used by `reposix-fuse` to synthesize the
-    /// `tree/` overlay (Phase 13).
+    /// id as reported by the backend. Historically used to synthesize a
+    /// `tree/` overlay (pre-v0.9.0); preserved as a metadata field on
+    /// the partial-clone working tree.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parent_id: Option<IssueId>,
     /// Backend-specific metadata that does not fit the canonical 5-field schema.
