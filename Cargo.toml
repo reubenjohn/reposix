@@ -12,6 +12,23 @@ members = [
     "crates/reposix-cache",
 ]
 
+[workspace.metadata.dist]
+# cargo-dist 0.31.0 — managed by axodotdev. See dist.json5 if you regenerate
+# the templates with `dist init` later.
+cargo-dist-version = "0.31.0"
+ci = ["github"]
+installers = ["shell", "powershell", "homebrew"]
+tap = "reubenjohn/homebrew-reposix"
+targets = [
+    "x86_64-unknown-linux-musl",
+    "aarch64-unknown-linux-musl",
+    "aarch64-apple-darwin",
+    "x86_64-apple-darwin",
+    "x86_64-pc-windows-msvc",
+]
+pr-run-mode = "plan"
+allow-dirty = ["ci"]
+
 [workspace.package]
 version = "0.11.0-dev"
 edition = "2021"
