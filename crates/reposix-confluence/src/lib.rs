@@ -1505,6 +1505,73 @@ impl BackendConnector for ConfluenceBackend {
         self.list_issues_impl(project, false).await
     }
 
+    async fn list_changed_since(
+        &self,
+        project: &str,
+        since: chrono::DateTime<chrono::Utc>,
+    ) -> Result<Vec<IssueId>> {
+        // Confluence CQL accepts `lastModified > "yyyy-MM-dd HH:mm"` —
+        // seconds-precision is not supported by CQL.
+        // Strip `"` from the project slug defensively to defeat CQL injection
+        // via a malicious space key (legitimate keys never contain quotes).
+        let cql_time = since.format("%Y-%m-%d %H:%M").to_string();
+        let safe_project = project.replace('"', "");
+        let cql = format!(
+            "space = \"{safe_project}\" AND lastModified > \"{cql_time}\""
+        );
+        // URL-encode via `url::Url::query_pairs_mut` — same pattern as
+        // `resolve_space_id` (avoids adding a new dep just for one call site).
+        let mut url = url::Url::parse(&format!("{}/wiki/rest/api/search", self.base()))
+            .map_err(|e| Error::Other(format!("bad base url: {e}")))?;
+        url.query_pairs_mut()
+            .append_pair("cql", &cql)
+            .append_pair("limit", &PAGE_SIZE.to_string());
+        let url = url.to_string();
+
+        let header_owned = self.standard_headers();
+        let header_refs: Vec<(&str, &str)> =
+            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        self.await_rate_limit_gate().await;
+        let resp = self
+            .http
+            .request_with_headers(Method::GET, url.as_str(), &header_refs)
+            .await?;
+        self.ingest_rate_limit(&resp);
+        let status = resp.status();
+        let bytes = resp.bytes().await?;
+        if !status.is_success() {
+            return Err(Error::Other(format!(
+                "confluence returned {status} for GET {}: {}",
+                redact_url(&url),
+                String::from_utf8_lossy(&bytes)
+            )));
+        }
+        // Search endpoint shape: `{ "results": [{ "content": { "id": "<numeric>" } }, ...] }`.
+        // Extract content.id, parse as u64. Single-page MVP for v0.9.0 — pagination
+        // adds complexity (CQL search uses `_links.next`); a delta exceeding
+        // PAGE_SIZE is rare enough that surfacing the cap loudly via a future
+        // strict mode is acceptable. (Tests in Phase 35 will validate against
+        // real backends.)
+        let body_json: serde_json::Value = serde_json::from_slice(&bytes)?;
+        let arr = body_json
+            .get("results")
+            .and_then(|v| v.as_array())
+            .cloned()
+            .unwrap_or_default();
+        let mut out: Vec<IssueId> = Vec::with_capacity(arr.len());
+        for res in arr {
+            if let Some(id_str) = res.pointer("/content/id").and_then(|v| v.as_str()) {
+                if let Ok(n) = id_str.parse::<u64>() {
+                    out.push(IssueId(n));
+                    if out.len() >= MAX_ISSUES_PER_LIST {
+                        break;
+                    }
+                }
+            }
+        }
+        Ok(out)
+    }
+
     async fn get_issue(&self, _project: &str, id: IssueId) -> Result<Issue> {
         // First attempt: request ADF body format for lossless Markdown conversion.
         let url_adf = format!(
@@ -1828,6 +1895,79 @@ mod tests {
             })))
             .mount(server)
             .await;
+    }
+
+    /// Wiremock matcher: assert the `cql` query value (URL-decoded) contains
+    /// the given substring. Used by Phase 33's `list_changed_since` test
+    /// because CQL strings are URL-encoded on the wire and `query_param`
+    /// only exact-matches.
+    struct CqlContains(&'static str);
+    impl wiremock::Match for CqlContains {
+        fn matches(&self, request: &wiremock::Request) -> bool {
+            let pairs: Vec<(String, String)> = request
+                .url
+                .query_pairs()
+                .map(|(k, v)| (k.into_owned(), v.into_owned()))
+                .collect();
+            pairs
+                .iter()
+                .any(|(k, v)| k == "cql" && v.contains(self.0))
+        }
+    }
+
+    #[tokio::test]
+    async fn confluence_list_changed_since_sends_cql_lastmodified() {
+        // Phase 33: prove the Confluence override emits a CQL search with
+        // `lastModified > "<datetime>"` filter on the wire.
+        use chrono::{TimeZone, Utc};
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/wiki/rest/api/search"))
+            .and(CqlContains("lastModified"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [
+                    { "content": { "id": "12345", "type": "page" } }
+                ]
+            })))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let t = Utc.with_ymd_and_hms(2026, 4, 24, 0, 0, 0).unwrap();
+        let ids = backend
+            .list_changed_since("REPOSIX", t)
+            .await
+            .expect("list_changed");
+        assert_eq!(ids, vec![IssueId(12345)]);
+    }
+
+    #[tokio::test]
+    async fn confluence_list_changed_since_strips_quotes_from_project() {
+        // Defense-in-depth: an attacker-controlled space slug containing `"`
+        // would otherwise break out of the CQL string literal. The override
+        // strips quotes before interpolation.
+        use chrono::{TimeZone, Utc};
+        let server = MockServer::start().await;
+        // Match: cql contains the safely-stripped slug, NOT the original.
+        Mock::given(method("GET"))
+            .and(path("/wiki/rest/api/search"))
+            .and(CqlContains("space = \"REPOSIX\""))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": []
+            })))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let t = Utc.with_ymd_and_hms(2026, 4, 24, 0, 0, 0).unwrap();
+        // `RE"PO"SIX` — quotes will be stripped to `REPOSIX`.
+        let ids = backend
+            .list_changed_since("RE\"PO\"SIX", t)
+            .await
+            .expect("list_changed");
+        assert_eq!(ids, Vec::<IssueId>::new());
     }
 
     // -------- 1: list resolves space key and fetches pages --------
