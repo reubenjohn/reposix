@@ -141,6 +141,27 @@ The auto-mode bootstrap from 2026-04-13 set `mode: yolo`, `granularity: coarse`,
 
 **If the VM crashes again:** suspect parallel cargo, suspect rust-analyzer, suspect leftover background processes (`ps aux | grep -E "cargo|rustc"`). Don't blame the linker; blame the orchestration that let two of them run at once.
 
+## Docs-site validation
+
+**Any change to `mkdocs.yml`, `docs/**`, or any markdown file inside the
+docs tree** MUST be validated before commit by running:
+
+```bash
+bash scripts/check-docs-site.sh
+```
+
+The script runs `mkdocs build --strict` and fails on any "Syntax error
+in text" string in the rendered HTML output (mermaid + admonition +
+cross-ref bugs). The pre-push hook enforces it.
+
+**For mermaid changes specifically:** additionally use playwright (via
+`mcp__playwright__browser_navigate` + `browser_take_screenshot`) to
+confirm the diagram renders before declaring the work complete. Two
+crashes ago, a single `&lt;id&gt;` HTML entity inside a `sequenceDiagram`
+block leaked an orphan error SVG to every page on the site via
+`navigation.instant`. Manual visual verification catches this where
+`mkdocs build` alone won't.
+
 ## Subagent delegation rules
 
 Per the user's global OP #2: "Aggressive subagent delegation." Specifics for this project:
