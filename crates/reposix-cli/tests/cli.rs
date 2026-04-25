@@ -11,7 +11,9 @@ fn help_lists_all_subcommands() {
         .output()
         .unwrap();
     let s = String::from_utf8_lossy(&out.stdout);
-    for sub in ["sim", "mount", "demo", "list", "version"] {
+    // `init` replaces `mount` as the canonical user command in v0.9.0;
+    // `mount` itself remains as a stub that emits a migration error.
+    for sub in ["sim", "init", "mount", "demo", "list", "version"] {
         assert!(s.contains(sub), "help missing {sub}: {s}");
     }
 }
@@ -19,7 +21,7 @@ fn help_lists_all_subcommands() {
 #[test]
 fn subcommand_help_renders() {
     use assert_cmd::Command;
-    for sub in ["sim", "mount", "demo", "list"] {
+    for sub in ["sim", "init", "mount", "demo", "list"] {
         let out = Command::cargo_bin("reposix")
             .unwrap()
             .arg(sub)
@@ -30,36 +32,64 @@ fn subcommand_help_renders() {
     }
 }
 
-/// `reposix mount --help` must succeed and mention the `--backend`
-/// flag. Proves the Phase-10 rewire surfaces the backend-selector in the
-/// top-level CLI (not just `reposix-fuse`).
+/// v0.9.0 breaking change: `reposix mount` was removed. The clap variant
+/// is retained as a stub that emits a migration message; running it must
+/// exit non-zero so stale CI scripts surface the change loudly rather than
+/// continuing silently.
 #[test]
-fn mount_help_documents_backend_flag() {
+fn mount_emits_migration_error() {
     use assert_cmd::Command;
     let out = Command::cargo_bin("reposix")
         .unwrap()
-        .args(["mount", "--help"])
+        .args(["mount", "/tmp/nowhere"])
+        .output()
+        .unwrap();
+    assert!(
+        !out.status.success(),
+        "mount should error out, got success: stdout={:?} stderr={:?}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("reposix init"),
+        "expected migration message naming `reposix init`, got: {stderr}"
+    );
+    assert!(
+        stderr.contains("removed in v0.9.0"),
+        "expected migration message to mention v0.9.0, got: {stderr}"
+    );
+}
+
+/// `reposix init --help` must document the `<backend>::<project>` spec
+/// argument so a fresh agent reading help text learns the form without
+/// in-context training.
+#[test]
+fn init_help_documents_spec_argument() {
+    use assert_cmd::Command;
+    let out = Command::cargo_bin("reposix")
+        .unwrap()
+        .args(["init", "--help"])
         .output()
         .unwrap();
     assert!(
         out.status.success(),
-        "mount --help failed: status={:?} stderr={:?}",
+        "init --help failed: status={:?} stderr={:?}",
         out.status,
         String::from_utf8_lossy(&out.stderr)
     );
     let stdout = String::from_utf8_lossy(&out.stdout);
-    // --backend selects sim vs github; --origin is the sim REST origin;
-    // --project is owner/repo or sim slug.
-    for flag in ["--backend", "--origin", "--project"] {
+    // The spec form must appear so a help-reading agent can copy the
+    // pattern without reading source.
+    assert!(
+        stdout.contains("BACKEND::PROJECT") || stdout.contains("backend>::<project"),
+        "init --help missing `<backend>::<project>` spec hint: {stdout}"
+    );
+    // Mention each supported backend so the agent learns the four options.
+    for backend in ["sim", "github", "confluence", "jira"] {
         assert!(
-            stdout.contains(flag),
-            "mount --help missing {flag}: {stdout}"
-        );
-    }
-    for value in ["sim", "github"] {
-        assert!(
-            stdout.contains(value),
-            "mount --help missing backend value '{value}': {stdout}"
+            stdout.contains(backend),
+            "init --help missing backend `{backend}`: {stdout}"
         );
     }
 }
