@@ -1,160 +1,147 @@
 # Crates overview
 
-reposix is a Cargo workspace of eight crates. `reposix-core` is the seam: every other crate depends on it; it depends on nothing internal.
+reposix is a Cargo workspace of nine crates. `reposix-core` is the seam: every other crate depends on it; it depends on no internal crate. All crates are currently path-only — none publish to crates.io yet (release readiness tracked under v0.11.0).
 
 ## reposix-core
 
-The contracts. Every type and function below is tested.
+The contracts. Shared types, traits, and security-critical primitives.
 
-### Types
+### Public API entry points
 
-| Type | Purpose |
-|------|---------|
-| `Issue` | Single issue. Serialized as Markdown+YAML frontmatter. |
-| `IssueId(u64)` | Project-scoped unique id. `IssueId(0)` is valid; sentinel reservation is a v0.2 concern. |
-| `IssueStatus` | `Open`, `InProgress`, `InReview`, `Done`, `WontFix`. |
-| `ProjectSlug` | URL- and path-safe identifier (`^[A-Za-z0-9._-]{1,64}$`, rejects `.` and `..`). |
-| `Project` | Container for issues. |
-| `RemoteSpec` | Parsed reposix remote URL (`origin + project`). |
-| `Tainted<T>` / `Untainted<T>` | Type-level taint tracking (SG-05). |
-| `HttpClient` | Sealed wrapper around `reqwest::Client`. The **only** legal way to make outbound HTTP in this workspace. |
-| `Error`, `Result<T>` | Shared error enum and alias. |
+- `BackendConnector` (trait, `backend.rs`) — the seam every adapter implements: `list_issues`, `get_issue`, `create_issue`, `update_issue`, `delete_or_close`, `list_changed_since`, plus `supports(BackendFeature)` for capability queries.
+- `Issue`, `IssueId`, `IssueStatus`, `Project`, `ProjectSlug`, `RemoteSpec`, `parse_remote_url` — the core record vocabulary.
+- `Tainted<T>` / `Untainted<T>` / `sanitize` — type-level taint tracking enforcing SG-05.
+- `HttpClient` (sealed) — the single legal way to make outbound HTTP. Honors `REPOSIX_ALLOWED_ORIGINS` per call.
+- `audit::SCHEMA_SQL`, `audit::open_audit_db` — append-only audit log with `BEFORE UPDATE/DELETE` triggers (SG-06).
+- `frontmatter::render` / `parse` — deterministic Markdown+YAML serialization for on-disk records.
+- `path::validate_issue_filename`, `slug_or_fallback`, `dedupe_siblings` — working-tree filename hygiene.
 
-### Functions
+A workspace-wide `clippy.toml` bans `reqwest::Client::new` outside `core/src/http.rs`; `scripts/check_clippy_lint_loaded.sh` proves the lint fires.
 
-| Function | Purpose |
-|----------|---------|
-| `http::client(opts)` | Construct an `HttpClient` honoring `REPOSIX_ALLOWED_ORIGINS`. |
-| `HttpClient::request(method, url)` | Per-call allowlist recheck + 5s timeout + no redirects. |
-| `HttpClient::request_with_headers(...)` | Same, with extra headers (used for `X-Reposix-Agent`). |
-| `HttpClient::request_with_headers_and_body(...)` | Same, with body — used for PATCH/POST. |
-| `parse_remote_url` | Parse `reposix::http://host/projects/slug` into a `RemoteSpec`. |
-| `frontmatter::render(&Issue)` | Serialize to on-disk `---\n<yaml>\n---\n<body>` form. |
-| `frontmatter::parse(&str)` | Inverse of `render`. |
-| `sanitize(Tainted<Issue>, ServerMetadata)` | Strip server-controlled fields, return `Untainted<Issue>`. |
-| `path::validate_issue_filename(&str)` | Return `IssueId` iff name matches `^[0-9]+\.md$`. |
-| `path::validate_path_component(&str)` | Reject `/`, `\0`, `.`, `..`, empty. |
-| `audit::SCHEMA_SQL`, `audit::load_schema(&conn)`, `audit::open_audit_db(path)` | SQLite audit-log setup with `BEFORE UPDATE/DELETE` triggers + defensive-mode open. |
+### Used by
 
-### Clippy lint
+Every other crate.
 
-`clippy.toml` at workspace root bans `reqwest::Client::new`, `reqwest::Client::builder`, and `reqwest::ClientBuilder::new` outside `crates/reposix-core/src/http.rs`. `scripts/check_clippy_lint_loaded.sh` verifies the lint actually fires.
+## reposix-cache
+
+Backing bare-repo cache built from `BackendConnector` responses. The substrate of the v0.9.0 git-native architecture.
+
+### Public API entry points
+
+- `Cache::open(backend, backend_name, project)` — open or create the cache at a deterministic path under `$XDG_CACHE_HOME/reposix/`.
+- `Cache::build_from(...)` → `SyncReport` — list all issues, write a tree object with one entry per record. Tree metadata is eager; blobs are not.
+- `Cache::read_blob(oid)` — materialize a single blob on demand (the lazy-blob invariant — see [ARCH-01](../decisions/004-backend-connector-rename.md) and Phase 31 plans).
+- `audit::*` — append-only audit table inside `cache.db`; vocabulary includes `helper_push_*` and `blob_limit_exceeded` per Phase 32 / 34.
+
+### Used by
+
+`reposix-remote` (the helper reads + writes through the cache), integration tests in `reposix-cli`.
 
 ## reposix-sim
 
-In-process axum REST simulator. Standalone binary (`reposix-sim`) or library callable from integration tests.
+In-process axum REST simulator. Standalone binary `reposix-sim` and a library callable from integration tests.
 
-### Routes
+### Public API entry points
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/healthz` | Liveness probe. |
-| GET | `/projects/:slug/issues` | List issues. |
-| GET | `/projects/:slug/issues/:id` | Fetch one. |
-| POST | `/projects/:slug/issues` | Create. |
-| PATCH | `/projects/:slug/issues/:id` | Update (optional `If-Match: "<version>"` for optimistic concurrency → 409 on stale). |
-| DELETE | `/projects/:slug/issues/:id` | Delete. |
-| GET | `/projects/:slug/issues/:id/transitions` | List legal status transitions. |
+- `reposix_sim::run(...)` — start an `axum` server on a configured `SocketAddr`.
+- Routes: `GET /healthz`, `GET/POST /projects/:slug/issues`, `GET/PATCH/DELETE /projects/:slug/issues/:id`, `GET /projects/:slug/issues/:id/transitions`. PATCH honors `If-Match: "<version>"` for optimistic concurrency.
+- Middleware order: `audit` → `rate-limit` → handlers. Audit captures rate-limited 429s.
 
-### Middleware
+### Used by
 
-Layer ordering (outermost first): `audit` → `rate-limit` → handlers. Audit captures every request including rate-limited 429s. See `crates/reposix-sim/src/middleware/`.
-
-### Storage
-
-`parking_lot::Mutex<rusqlite::Connection>` in `AppState`. WAL mode, `synchronous=NORMAL`, 5s `busy_timeout`. Seed data loaded from `crates/reposix-sim/fixtures/seed.json` (6 demo issues with adversarial bodies).
-
-## reposix-fuse
-
-FUSE daemon. `fuser` 0.17 with `default-features = false` (no `libfuse-dev` / `pkg-config` required). Runtime mounting uses `fusermount3`.
-
-### Filesystem operations
-
-| Op | Status | Notes |
-|----|--------|-------|
-| `init` | ✓ | Allocates inode registry, builds HTTP client. |
-| `getattr` | ✓ | Synthetic `st_mode = 0o100444` for issues; current `uid/gid`. |
-| `lookup` | ✓ | Validates filename via `path::validate_issue_filename`. |
-| `readdir` | ✓ | Lists issue files; refreshes inode map from `GET /issues`. |
-| `read` | ✓ | Fetches + renders frontmatter, caches rendered string by inode. |
-| `open` | ✓ | Accepts RW modes in v0.1 (mount conditionally-RO). |
-| `write` | ✓ | Per-inode DashMap buffer. |
-| `flush` | ✓ | Accepts and returns OK. |
-| `release` | ✓ | Parses buffer → `Tainted::new` → `sanitize` → PATCH with `If-Match`. |
-| `create` | ✓ | POST new issue. |
-| `unlink` | ✓ | Local-only (git push materializes DELETE). |
-| `setattr` | ✓ | Truncate supported (for `>` redirection). |
-| everything else | EROFS / ENOTSUP | Non-issue ops intentionally refused. |
-
-### Async bridge
-
-The FUSE struct owns an `Arc<tokio::runtime::Runtime>`. Callbacks do `rt.block_on(async { ... })`. FUSE threads are not tokio workers, so this is deadlock-safe.
+The default backend for tests, demos, the `dark-factory-test.sh` regression, and the `BackendConnector` parity contract tests in every adapter.
 
 ## reposix-remote
 
-`git-remote-reposix` binary. Speaks the [git remote helper protocol](https://git-scm.com/docs/gitremote-helpers) on stdin/stdout.
+`git-remote-reposix` binary. Speaks the [git remote helper protocol](https://git-scm.com/docs/gitremote-helpers) on stdin / stdout.
 
-### Capabilities
+### Public API entry points
 
-`import`, `export`, `refspec refs/heads/*:refs/reposix/*`.
+- `main.rs` advertises `import`, `export`, `refspec refs/heads/*:refs/reposix/*`, and `stateless-connect`. The helper dispatches RPC turns to:
+  - `stateless_connect.rs::handle_stateless_connect` — the v0.9 read path; tunnels protocol-v2 over the cache.
+  - `fast_import.rs::emit_import_stream` / `parse_export_stream` — backend ↔ git stream conversion using `frontmatter::render` for deterministic blob bytes.
+  - `diff.rs::plan(prior, parsed)` — per-issue PATCH / POST / DELETE planning. Refuses >5 deletes (SG-02) unless the commit message contains `[allow-bulk-delete]`.
 
-### Modules
+`#![deny(clippy::print_stdout)]` is set; only `protocol::send_line` and `send_raw` may write to stdout (it is protocol-reserved).
 
-- `protocol.rs` — stdin/stdout framing. `#![deny(clippy::print_stdout)]` is set; stdout is protocol-reserved and no code outside `protocol::send_line` / `send_raw` writes to it.
-- `main.rs` — helper entry point. Constructs an `Arc<SimBackend>` from the parsed `RemoteSpec` and dispatches every list / create / update / delete through the `IssueBackend` trait (Phase 14 rewire; the former `client.rs` sim-REST wrapper is deleted).
-- `fast_import.rs` — `emit_import_stream` (backend → git) and `parse_export_stream` (git → backend). Uses `frontmatter::render` for deterministic blob bytes.
-- `diff.rs` — `plan(prior, parsed)` computes per-issue `PATCH` / `POST` / `DELETE` actions. Returns `BulkDeleteRefused` on > 5 deletes (SG-02), unless commit message contains `[allow-bulk-delete]`.
+### Used by
+
+`git fetch` / `git push` against a `reposix::...` remote URL, end-to-end via `reposix init`.
 
 ## reposix-cli
 
-Top-level `reposix` binary. `clap`-derive CLI.
+Top-level `reposix` binary. `clap`-derive CLI; the orchestrator described in [reference/cli.md](cli.md).
 
-### Subcommands
+### Public API entry points
 
-| Command | Purpose |
-|---------|---------|
-| `reposix sim [flags]` | Spawn `reposix-sim` as a child process. All flags plumb through. |
-| `reposix mount <path> --backend <origin> --project <slug>` | Mount the FUSE daemon foreground. Ctrl-C unmounts. |
-| `reposix demo [--keep-running]` | End-to-end orchestration: spawn sim → mount → scripted ls/cat/grep → tail audit log → cleanup. |
-| `reposix version` | Print the version. |
+- Subcommands: `init`, `sim`, `list`, `refresh`, `spaces`, `version`.
+- `reposix_cli::list`, `reposix_cli::refresh`, `reposix_cli::spaces` re-exported as a library so integration tests can drive the same code paths the CLI does.
 
-### Guard struct
+### Used by
 
-`demo` uses a top-level `Guard` owning sim child + mount child + tempdir. `Drop` tears them down in reverse order. A `tokio::signal::ctrl_c()` handler races the step sequence via `tokio::select!`, ensuring Ctrl-C runs the same cleanup. `fusermount3 -u` is wrapped in a 3-second watchdog to prevent hang on lazy unmount.
+End users, CI workflows, and the `agent_flow` regression suite.
 
 ## reposix-github
 
-Read-only `IssueBackend` adapter for the GitHub REST v3 Issues API. Ships in v0.2.
+Read-only `BackendConnector` adapter for the GitHub REST v3 Issues API.
 
-Maps GitHub's 2-valued `state` + `state_reason` + `status/*` label convention onto reposix's 5-valued `IssueStatus`. See [ADR-001](../decisions/001-github-state-mapping.md) for the full mapping table. Write path (`create_issue`, `update_issue`, `delete_or_close`) deferred to v0.2.
+### Public API entry points
 
-Requires `GITHUB_TOKEN` env var. Uses `reposix_core::http::HttpClient` (SG-01 allowlist enforced).
+- `GithubReadOnlyBackend::new(token)` — constructs a backend whose `list_issues` / `get_issue` hit `https://api.github.com`.
+- Status mapping decided in [ADR-001](../decisions/001-github-state-mapping.md); the backend translates GitHub's two-valued `state` + `state_reason` + `status/*` labels into the five-valued `IssueStatus`.
+
+### Used by
+
+`reposix init github::<owner>/<repo>` and the `integration-contract-github-v09` CI job.
 
 ## reposix-confluence
 
-Read-only `IssueBackend` adapter for Atlassian Confluence Cloud REST v2. Ships in v0.3. Comments overlay (Phase 23) ships in v0.5.
+`BackendConnector` adapter for Atlassian Confluence Cloud REST v2. Read + write per Phase 22 / 24; comments overlay per Phase 23.
 
-### Capabilities by version
+### Public API entry points
 
-| Version | Capability |
-|---------|-----------|
-| v0.3 | `list_issues`, `get_issue` — reads Confluence pages as flat `Issue` records |
-| v0.4 | `pages/` + `tree/` mount layout (ADR-003 nested layout) |
-| v0.5 | `pages/<id>.comments/` overlay — inline and footer comments as read-only Markdown files |
+- `ConfluenceBackend::new(creds, tenant)` — backend bound to one Atlassian tenant.
+- `list_issues`, `get_issue`, `create_issue`, `update_issue`, `delete_or_close` — the `BackendConnector` surface, mapped page → record per [ADR-002](../decisions/002-confluence-page-mapping.md).
+- `list_issues_strict` — variant of `list_issues` that errors instead of capping at 500 pages (used by `reposix list --no-truncate`).
+- `list_spaces` — backs `reposix spaces`.
+- `list_comments(page_id)` — inline + footer comments.
+- `adf` module — Markdown ↔ Atlassian Document Format converter, shared with `reposix-jira`.
 
-Maps Confluence pages to `Issue` via `translate_page`; see [ADR-002](../decisions/002-confluence-page-mapping.md) for field assignments and lost-metadata list.
+Requires `ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT`, plus the tenant origin in `REPOSIX_ALLOWED_ORIGINS`. See [reference/confluence.md](confluence.md).
 
-Requires `ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT` env vars plus `REPOSIX_ALLOWED_ORIGINS` containing the tenant origin. See [Confluence backend reference](confluence.md) for credential setup.
+### Used by
 
-Key methods beyond the `IssueBackend` trait:
-- `list_issues_strict` — like `list_issues` but errors instead of truncating at the 500-page cap (used by `--no-truncate`).
-- `list_spaces` — lists all readable Confluence spaces; used by `reposix spaces`.
-- `list_comments(page_id)` — fetches inline + footer comments for a page; used by the FUSE `.comments/` overlay.
+`reposix init confluence::<space>`, the live tenant smoke against `TokenWorld`.
+
+## reposix-jira
+
+`BackendConnector` adapter for Atlassian JIRA Cloud REST v3. Read (Phase 28) + write (Phase 29).
+
+### Public API entry points
+
+- `JiraBackend::new(creds, instance)` — backend bound to one JIRA Cloud instance.
+- Read path: `POST /rest/api/3/search/jql` with cursor pagination via `nextPageToken`; `GET /rest/api/3/issue/{id}` for single fetch.
+- Write path: `create_issue` (POST `/rest/api/3/issue`), `update_issue` (PUT `/rest/api/3/issue/{id}`), `delete_or_close` (transitions API with DELETE fallback).
+- Issue → record mapping documented in [ADR-005](../decisions/005-jira-issue-mapping.md).
+- `adf` module — shared with `reposix-confluence`.
+
+Honors HTTP 429 `Retry-After`; falls back to exponential backoff with jitter (max 4 attempts).
+
+### Used by
+
+`reposix init jira::<key>`, the live JIRA smoke against the `TEST` project.
 
 ## reposix-swarm
 
-Adversarial swarm harness for load testing and concurrency validation. Not a user-facing binary; used in CI and by `cargo test -p reposix-swarm`.
+Adversarial swarm harness for load testing and concurrency validation. Not a user-facing binary; used in CI and `cargo test -p reposix-swarm`.
 
-Runs N concurrent simulated agents against either the simulator (via HTTP) or a mounted FUSE tree. Each agent runs a realistic workload loop (list + reads + patch) and records per-operation latencies. Emits a Markdown summary with P50/P95/P99 per op type, total requests, error rate, and an audit-row invariant check (SG-06 append-only).
+### Public API entry points
 
-Motivation: the "10k agent QA team" pattern from the StrongDM dark-factory playbook. See `docs/research/agentic-engineering-reference.md` §1.
+- Modes: `sim-direct` (HTTP to the simulator), `confluence-direct` (HTTP to a real Confluence tenant), `contention` (N clients patching the same record via `If-Match`, proving 409 determinism).
+- Emits a Markdown summary with P50 / P95 / P99 per op type, total requests, error rate, and an audit-row invariant check (SG-06 append-only).
+
+Motivation: the "10k agent QA team" pattern from the StrongDM dark-factory playbook (see `docs/research/agentic-engineering-reference.md` §1).
+
+### Used by
+
+The `chaos_audit` CI job and ad-hoc local soak tests.
