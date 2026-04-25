@@ -469,7 +469,7 @@ Each invocation has exactly 1 want, so the blob limit (which checks per-request)
 2. **Rate limit:** refuse if blob fetches-per-minute exceed a threshold. Simpler but blunter — may interfere with legitimate batched-by-git-but-serial-by-process patterns.
 3. **Accept:** sparse-checkout prevents the common case. Fan-out only hits object-layer commands, which are uncommon in typical agent workflows (agents use `cat` and `grep`, not `git grep HEAD`).
 
-**Decision:** option 3 (accept) for v1. Sparse-checkout is the intended scope guard and prevents fan-out for normal usage. Add the shared-counter mechanism (option 1) if real-world agents trigger the gap. Document the distinction in user-facing docs: "use `grep` (filesystem), not `git grep HEAD` (object layer) for searching."
+**Decision:** option 1 (shared counter in `cache.db`). Implementation: add a `blob_fetch_log` table to `cache.db` with `(timestamp, blob_oid)` rows. Each helper invocation inserts a row and checks `SELECT COUNT(*) FROM blob_fetch_log WHERE timestamp > datetime('now', '-5 minutes')`. If the count exceeds `REPOSIX_BLOB_LIMIT`, refuse with the same error message as the per-request guard. ~20 lines of SQL, uses existing SQLite infrastructure, catches both batched and fan-out patterns uniformly. Sparse-checkout remains the primary scope guard; the shared counter is the safety net for object-layer commands (`git grep HEAD`, `git log -p`, `git blame`) that bypass the working tree. This should be a task in one of the v0.9.0 implementation phases.
 
 ### Q8: Multi-Branch Workflows
 
