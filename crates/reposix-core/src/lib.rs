@@ -23,5 +23,5 @@ pub use error::{Error, Result};
 pub use path::{dedupe_siblings, slug_or_fallback, slugify_title, SLUG_MAX_BYTES};
 pub use project::{Project, ProjectSlug};
 pub use record::{frontmatter, Record, RecordId, RecordStatus};
-pub use remote::{parse_remote_url, RemoteSpec};
+pub use remote::{parse_remote_url, split_reposix_url, strip_reposix_prefix, RemoteSpec};
 pub use taint::{sanitize, ServerMetadata, Tainted, Untainted};

@@ -36,6 +36,7 @@ use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
 use reposix_core::backend::{sim::SimBackend, BackendConnector};
+use reposix_core::split_reposix_url;
 
 /// Which concrete backend the helper should instantiate for a given URL.
 ///
@@ -99,30 +100,17 @@ pub struct ParsedRemote {
 /// - The Atlassian URL is missing the `/confluence/` or `/jira/`
 ///   path-segment marker that disambiguates the two adapters.
 pub fn parse_remote_url(url: &str) -> Result<ParsedRemote> {
-    // Git strips a single `reposix::` before calling the helper, but the
-    // CLI tests pass the full URL. Accept either; also tolerate a
-    // double-strip edge case (`reposix::reposix::...`) defensively.
-    let mut stripped = url;
-    while let Some(rest) = stripped.strip_prefix("reposix::") {
-        stripped = rest;
-    }
-
-    let Some(idx) = stripped.find("/projects/") else {
-        return Err(anyhow!(
-            "remote url `{url}` is missing the required `/projects/<project>` segment"
-        ));
-    };
-    let pre = stripped[..idx].trim_end_matches('/');
-    let post = &stripped[idx + "/projects/".len()..];
-    let project = post.trim_end_matches('/');
-    if project.is_empty() || project == "." || project == ".." {
+    // Delegate the prefix-strip + `/projects/` split to `reposix-core`'s
+    // canonical splitter. We layer the Atlassian path-marker handling
+    // and `BackendKind` resolution on top — the splitter intentionally
+    // does not enforce a project-slug character set so this dispatcher
+    // can accept GitHub's `owner/repo` form.
+    let (pre, project) = split_reposix_url(url)
+        .map_err(|e| anyhow!("remote url `{url}` rejected by reposix-core splitter: {e}"))?;
+    if project == "." || project == ".." {
         return Err(anyhow!(
             "remote url `{url}` has empty or path-traversal project segment"
         ));
-    }
-
-    if pre.is_empty() {
-        return Err(anyhow!("remote url `{url}` has empty origin"));
     }
 
     // Pull off any trailing path-segment marker (the `/confluence` or
@@ -383,19 +371,15 @@ mod tests {
     #[test]
     fn parse_remote_url_rejects_missing_projects_segment() {
         let err = parse_remote_url("reposix::http://127.0.0.1/no-projects-here").unwrap_err();
-        assert!(
-            err.to_string().contains("missing the required `/projects/"),
-            "got: {err}"
-        );
+        let msg = format!("{err:#}");
+        assert!(msg.contains("expected `/projects/"), "got: {msg}");
     }
 
     #[test]
     fn parse_remote_url_rejects_empty_project() {
         let err = parse_remote_url("reposix::http://127.0.0.1/projects/").unwrap_err();
-        assert!(
-            err.to_string().contains("empty or path-traversal"),
-            "got: {err}"
-        );
+        let msg = format!("{err:#}");
+        assert!(msg.contains("empty project segment"), "got: {msg}");
     }
 
     #[test]
