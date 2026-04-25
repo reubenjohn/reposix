@@ -1,5 +1,13 @@
 # Agentic Engineering Reference
 
+!!! note "About this document"
+    This is **not a guide to using reposix.** It is a reference on the
+    *engineering pattern* (the dark factory) that reposix was built to
+    serve. Read this if you want to understand the architectural reasoning
+    behind reposix or are building similar agent infrastructure yourself.
+    If you just want to use reposix, start with the
+    [tutorial](../tutorials/first-run.md).
+
 Distilled from a Simon Willison interview (Lenny's Podcast, Apr 2026). Kept only the material relevant to running autonomous / semi-autonomous coding agents in production — patterns, anti-patterns, and security constraints. Not a summary of the whole conversation.
 
 ---
