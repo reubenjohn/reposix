@@ -41,6 +41,17 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 - ✓ **ARCH-17: golden-path latency captured + `docs/benchmarks/v0.9.0-latency.md` artifact** — Phase 35 (capture) + Phase 36 (artifact); sim column populated
 - ✓ **ARCH-18: `docs/reference/testing-targets.md` documents the three sanctioned targets** — Phase 36
 - ✓ **ARCH-19: three CI integration-contract-*-v09 jobs defined** — Phase 36 (`pending-secrets` until secrets decrypt)
+- ✓ **DOCS-01: `docs/index.md` hero — V1 vignette + 3 measured numbers; ≤ 250 above-fold words** — Phase 40
+- ✓ **DOCS-02: How-it-works trio (`filesystem-layer`, `git-layer`, `trust-model`); each one mermaid diagram** — Phase 41
+- ✓ **DOCS-03: Two concept pages (mental-model-in-60-seconds, reposix-vs-mcp-and-sdks)** — Phase 40
+- ✓ **DOCS-04: Three guides (write-your-own-connector, integrate-with-your-agent, troubleshooting)** — Phase 42
+- ✓ **DOCS-05: Simulator relocated to `docs/reference/simulator.md`** — Phase 42
+- ✓ **DOCS-06: 5-minute first-run tutorial verified by `scripts/tutorial-runner.sh`** — Phase 42
+- ✓ **DOCS-07: MkDocs nav restructured per Diátaxis** — Phase 43
+- ✓ **DOCS-08: mkdocs-material theme tuning + README hero rewritten** — Phase 43 (linter wiring) + Phase 45 (README)
+- ✓ **DOCS-09: Banned-words linter `scripts/banned-words-lint.sh` + `docs/.banned-words.toml` + pre-commit + CI + `reposix-banned-words` skill** — Phase 43
+- ✓ **DOCS-10: 16-page cold-reader clarity audit; zero critical friction points** — Phase 44 (2 critical fixed, 1 escalated to Phase 45 and closed there)
+- ✓ **DOCS-11: README points at mkdocs site; CHANGELOG `[v0.10.0]` finalized** — Phase 45 (playwright screenshots deferred to v0.11.0 — cairo system libs unavailable on dev host)
 
 ### Active
 
@@ -110,7 +121,21 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 | Skip GSD discuss step | User instruction (~12:55 AM): "do all the gsd planning, exec, review, etc, just without the discuss steps" | — Pending |
 | Lethal-trifecta cuts are first-class requirements, not afterthoughts | Threat-model subagent flagged egress + bulk-delete + tainted typing as ship-blockers; safer to bake in than retrofit | — Pending |
 
-## Current Milestone: v0.10.0 — Docs & Narrative Shine (planning)
+## Current Milestone: v0.11.0 — Performance & Sales Assets (planning)
+
+**Goal:** Land the helper-multi-backend-dispatch fix carried forward from v0.9.0 (so `stateless-connect` actually routes by URL host, not always to `SimBackend`); ship `cargo run -p reposix-bench` for honest per-backend latency numbers; close the 9 major + 17 minor doc-clarity findings logged in `.planning/notes/v0.11.0-doc-polish-backlog.md`; capture the playwright screenshots deferred from v0.10.0 once cairo libs are available; and complete the IssueId→RecordId refactor that's in flight on a parallel runner.
+
+**Carry-forward from v0.10.0 (tech debt):**
+- Playwright screenshots (DOCS-11 success criterion 4) — `scripts/take-screenshots.sh` stub names the contract.
+- 9 major + 17 minor doc-clarity findings — `.planning/notes/v0.11.0-doc-polish-backlog.md`.
+- `scripts/tag-v0.10.0.sh` — owner gate; not yet authored.
+
+**Carry-forward from v0.9.0 (still open):**
+- Helper hardcodes `SimBackend` in `stateless-connect` handler — must land before any v0.11.0 benchmark commits.
+
+---
+
+## Previously Validated Milestone: v0.10.0 — Docs & Narrative Shine (SHIPPED 2026-04-25)
 
 **Goal:** Make the v0.9.0 architecture pivot legible. A cold visitor understands reposix's value proposition within 10 seconds of landing on the docs site, runs the 5-minute first-run tutorial against the simulator, and ends with a real edit committed and pushed via `reposix init` + standard git. The architecture pivot becomes a *story* (cache layer / git layer / trust model — three pages, each with one mermaid diagram rendered via mcp-mermaid and a playwright screenshot), not a code change.
 
@@ -181,4 +206,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-24 — Milestone v0.9.0 SHIPPED (architecture pivot complete, Phases 31–36); v0.10.0 Docs & Narrative Shine planning started*
+*Last updated: 2026-04-25 — Milestone v0.10.0 SHIPPED (Docs & Narrative Shine, Phases 40–45); v0.11.0 Performance & Sales Assets planning started*

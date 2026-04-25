@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.10.0
-milestone_name: Docs & Narrative Shine
+milestone: v0.11.0
+milestone_name: Performance & Sales Assets (planning)
 status: planning_started
-last_updated: "2026-04-24T22:48:00.000Z"
-last_activity: 2026-04-24 -- v0.10.0 scaffolded — DOCS-01..11 + Phases 40-45 mapped (REQUIREMENTS.md + ROADMAP.md + PROJECT.md updates).
+last_updated: "2026-04-25T07:30:00.000Z"
+last_activity: 2026-04-25 -- v0.10.0 SHIPPED (Phases 40-45 closed, audit tech_debt). Lifecycle Stage 3 complete — phase dirs archived to .planning/milestones/v0.10.0-phases/. v0.11.0 planning starts.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -19,6 +19,7 @@ progress:
 
 ### Roadmap Evolution
 
+- **v0.10.0 SHIPPED (2026-04-25):** Phases 40–45 closed. `.planning/v0.10.0-MILESTONE-AUDIT.md` verdict `tech_debt`. 11 DOCS requirements landed: hero rewrite + concept pages (Phase 40), how-it-works trio with mermaid diagrams (Phase 41), 5-min first-run tutorial + 3 guides + simulator-relocate (Phase 42), Diátaxis nav + theme + banned-words linter + reposix-banned-words skill (Phase 43), 16-page cold-reader clarity audit (Phase 44; 2 critical fixed, 1 escalated), README rewrite 332→102 lines + CHANGELOG `[v0.10.0]` + lifecycle close (Phase 45). Carry-forward: playwright screenshots deferred (cairo system libs unavailable; `scripts/take-screenshots.sh` stub names contract); helper-hardcodes-SimBackend remains from v0.9.0 (out-of-scope per docs-only milestone). 9 major + 17 minor doc-clarity findings logged in `.planning/notes/v0.11.0-doc-polish-backlog.md`. Phase dirs archived to `.planning/milestones/v0.10.0-phases/`. ROADMAP v0.10.0 entries collapsed into `<details>`. v0.11.0 "Performance & Sales Assets" tentative scope: helper-multi-backend-dispatch fix prereq + `cargo run -p reposix-bench` + IssueId→RecordId refactor (parallel runner) + community files (CONTRIBUTING / SECURITY / examples) currently in flight.
 - **v0.10.0 scaffolded (2026-04-24, same session):** Promoted `.planning/research/v0.10.0-post-pivot/milestone-plan.md` draft into REQUIREMENTS.md (DOCS-01..11 active section + traceability), ROADMAP.md (Phases 40–45 with rich Goal/Requirements/Depends-on/Success-criteria/Context-anchor blocks), PROJECT.md (goal paragraph filled), and STATE.md (cursor + this entry). Phase mapping: 40 = hero + concepts (DOCS-01, 03, 08-partial), 41 = how-it-works trio (DOCS-02), 42 = tutorial + guides + simulator-relocate (DOCS-04, 05, 06), 43 = nav + theme + banned-words linter + reposix-banned-words skill (DOCS-07, 08-linter, 09), 44 = doc-clarity-review release gate (DOCS-10), 45 = README rewrite + CHANGELOG + screenshots + tag (DOCS-11). v0.9.0 latency numbers (8ms get-issue, 24ms init, 9ms list, 5ms caps) wired through DOCS-01 + Phase 40 Goal. Legacy Phase 30 entry retained in ROADMAP.md as `<details>` traceability block but not executed. Helper-hardcodes-SimBackend tech debt remains scheduled before v0.11.0 benchmark commits, NOT v0.10.0.
 - **v0.9.0 Architecture Pivot SHIPPED (2026-04-24):** Phases 31–36 — reposix-cache crate, stateless-connect read path, delta sync, push conflict + blob limit, CLI pivot + agent UX (real-backend pending-secrets), FUSE deletion + reposix-agent-flow skill + release. ~60 commits, +9 net workspace tests, all 6 phase verifications passed. Helper-hardcodes-SimBackend documented as v0.10.0 work.
 - **v0.9.0 scaffold amended (2026-04-24, same session):** ARCH-16..19 added for real-backend validation + latency benchmarks + canonical testing-targets doc. TokenWorld (Confluence), `reubenjohn/reposix` (GitHub), and JIRA `TEST` project added to CLAUDE.md as sanctioned test targets. Phases 35 + 36 gained real-backend success criteria. Simulator-only coverage no longer satisfies transport/perf acceptance.

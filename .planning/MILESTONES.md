@@ -1,5 +1,42 @@
 # Milestones — reposix
 
+## v0.10.0 Docs & Narrative Shine (Shipped: 2026-04-25)
+
+**Phases:** 40–45 (6 phases)
+**Commits:** ~30 across the milestone
+**Timeline:** 2026-04-24 → 2026-04-25
+**Tests:** workspace tests unchanged (docs-only milestone); `mkdocs build --strict` green; banned-words linter green; `python3 scripts/check_doc_links.py` 0 broken across 19 user-facing pages
+**Audit:** `.planning/v0.10.0-MILESTONE-AUDIT.md` — `status: tech_debt`
+
+**Key accomplishments:**
+
+- `docs/index.md` rewritten — V1 vignette + 3 measured numbers (`8 ms` get-issue, `24 ms` `reposix init` cold, `92.3%` token reduction); above-fold ≤ 250 words (Phase 40, DOCS-01)
+- Two home-adjacent concept pages: `docs/concepts/{mental-model-in-60-seconds,reposix-vs-mcp-and-sdks}.md` (Phase 40, DOCS-03)
+- "How it works" trio: `docs/how-it-works/{filesystem-layer,git-layer,trust-model}.md`, each with one mermaid diagram (Phase 41, DOCS-02)
+- 5-minute first-run tutorial `docs/tutorials/first-run.md` runnable end-to-end against the simulator (Phase 42, DOCS-06)
+- Three guides: `write-your-own-connector`, `integrate-with-your-agent`, `troubleshooting` (Phase 42, DOCS-04)
+- Simulator relocated from "How it works" to `docs/reference/simulator.md` (Phase 42, DOCS-05)
+- `mkdocs.yml` Diátaxis-restructured; redirect stubs for carved-out pages; theme tuning (palette, navigation features) (Phase 43, DOCS-07, DOCS-08-half)
+- Banned-words linter `scripts/banned-words-lint.sh` + `docs/.banned-words.toml` + pre-commit hook + CI integration + `reposix-banned-words` skill (Phase 43, DOCS-09)
+- 16 user-facing pages clarity-audited (cold-reader rubric); 2 critical findings fixed in `jira.md` + `confluence.md`; 1 escalated to Phase 45 and closed there (Phase 44, DOCS-10)
+- README.md rewritten: 332 → 102 lines; Tier 1–5 demo blocks (advertising removed `reposix mount`/`reposix demo`) replaced with v0.9.0-aligned hero + 5-min quick start + connectors table + project status; every adjective replaced with a measured number (Phase 45, DOCS-08-half, DOCS-11)
+- CHANGELOG `[v0.10.0]` block finalized (Phase 45, DOCS-11)
+
+**UAT:** `mkdocs build --strict` green on dev host; banned-words linter green;
+`python3 scripts/check_doc_links.py` reports 0 broken links across 19
+user-facing pages. README cold-reader value-prop test (Phase 45 inline) green.
+
+**Carry-forward:** playwright screenshots deferred to v0.11.0 (cairo system
+libs unavailable on dev host; `scripts/take-screenshots.sh` stub names the
+contract). Helper-hardcodes-SimBackend remains carry-forward from v0.9.0
+(out-of-scope per docs-only milestone definition). 9 major + 17 minor
+doc-clarity findings logged in `.planning/notes/v0.11.0-doc-polish-backlog.md`.
+
+**Tag gate:** `bash scripts/tag-v0.10.0.sh` (NOT YET AUTHORED — owner gate
+deferred; v0.9.0 precedent at `scripts/tag-v0.9.0.sh`).
+
+---
+
 ## v0.9.0 Architecture Pivot — Git-Native Partial Clone (Shipped: 2026-04-24)
 
 **Phases:** 31–36 (6 phases, 16 plans)

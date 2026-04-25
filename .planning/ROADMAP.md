@@ -11,9 +11,13 @@
 - ✅ **v0.7.0** — Phases 21-26: Hardening + Confluence expansion + docs (shipped 2026-04-16)
 - ✅ **v0.8.0 JIRA Cloud Integration** — Phases 27-29 (shipped 2026-04-16)
 - ✅ **v0.9.0 Architecture Pivot — Git-Native Partial Clone** — Phases 31–36 (shipped 2026-04-24) · [archive](milestones/v0.9.0-ROADMAP.md)
-- 📋 **v0.10.0 Docs & Narrative Shine** — planning (see `.planning/research/v0.10.0-post-pivot/milestone-plan.md`; revives Phase 30's docs scope against the new git-native architecture)
+- ✅ **v0.10.0 Docs & Narrative Shine** — Phases 40–45 (shipped 2026-04-25) · [archive](milestones/v0.10.0-ROADMAP.md)
+- 📋 **v0.11.0 Performance & Sales Assets** — planning (helper multi-backend dispatch fix prereq; doc-polish backlog at `.planning/notes/v0.11.0-doc-polish-backlog.md`)
 
 ## Phases
+
+<details>
+<summary>✅ v0.10.0 Docs & Narrative Shine (Phases 40–45) — SHIPPED 2026-04-25</summary>
 
 ## v0.10.0 Docs & Narrative Shine (PLANNING)
 
@@ -139,6 +143,8 @@
 9. `gsd-audit-milestone` run and `.planning/v0.10.0-MILESTONE-AUDIT.md` written (mirrors `.planning/v0.9.0-MILESTONE-AUDIT.md`).
 
 **Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §2 v0.10.0 Phase 45 entry + §3.5 (numbers-not-adjectives), `.planning/milestones/v0.9.0-ROADMAP.md` Phase 36 (release-cycle precedent: tag-script + audit + complete-milestone), `docs/benchmarks/v0.9.0-latency.md` (numbers source), `scripts/tag-v0.9.0.sh` (template for v0.10.0 tag script).
+
+</details>
 
 ---
 
