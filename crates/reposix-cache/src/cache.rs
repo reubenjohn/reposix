@@ -62,7 +62,31 @@ impl Cache {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        let repo = gix::init_bare(&path).map_err(|e| Error::Git(e.to_string()))?;
+        let mut repo = gix::init_bare(&path).map_err(|e| Error::Git(e.to_string()))?;
+
+        // Provide a default committer/author identity so `Cache::build_from`
+        // can produce a commit even when the host has no `user.name` /
+        // `user.email` configured (typical of CI runners). The
+        // `noreply.invalid` domain is RFC-2606 reserved and signals
+        // "not a real address" to anyone reading the log. User-level
+        // git config (e.g. `~/.gitconfig`) is loaded BEFORE this fallback
+        // is applied, but we only set values if the keys are absent —
+        // so a configured `user.name` / `user.email` still wins.
+        if repo.committer().is_none() {
+            let mut snap = repo.config_snapshot_mut();
+            if snap.string(gix::config::tree::User::NAME).is_none() {
+                snap.set_value(&gix::config::tree::User::NAME, "reposix-cache")
+                    .map_err(|e| Error::Git(format!("set user.name: {e}")))?;
+            }
+            if snap.string(gix::config::tree::User::EMAIL).is_none() {
+                snap.set_value(
+                    &gix::config::tree::User::EMAIL,
+                    "reposix-cache@noreply.invalid",
+                )
+                .map_err(|e| Error::Git(format!("set user.email: {e}")))?;
+            }
+            snap.commit().map_err(|e| Error::Git(e.to_string()))?;
+        }
 
         // cache.db lives inside the bare repo dir so a single path
         // scheme covers both git state and cache state.
