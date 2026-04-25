@@ -197,9 +197,7 @@ struct DoctorCtx {
 
 impl DoctorCtx {
     fn gather(path: &Path) -> Self {
-        let is_git_repo = git_in(path, &["rev-parse", "--git-dir"])
-            .map(|o| o.status.success())
-            .unwrap_or(false);
+        let is_git_repo = git_in(path, &["rev-parse", "--git-dir"]).is_ok_and(|o| o.status.success());
 
         let partial_clone_value = if is_git_repo {
             git_config_get(path, "extensions.partialClone")
@@ -734,8 +732,7 @@ fn which(bin: &str) -> bool {
         .arg("-c")
         .arg(format!("command -v {bin}"))
         .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
+        .is_ok_and(|o| o.status.success())
 }
 
 /// Map a remote origin to the cache `backend` slug. Mirrors the

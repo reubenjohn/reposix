@@ -8,7 +8,7 @@ When reposix's substrate property holds, an agent recovers from every error repo
 
 ## Quick triage with `reposix doctor`
 
-When something feels off, run `reposix doctor` from inside (or against) your reposix working tree. It checks the most common setup pitfalls — git repo layout, partial-clone config, remote URL scheme, helper binary on PATH, cache DB integrity, audit-table append-only triggers, env vars, sparse-checkout patterns, git version, and cache freshness — and prints a copy-pastable fix command for each finding.
+When something feels off, run `reposix doctor` from inside (or against) your reposix working tree. It checks the most common setup pitfalls — git repo layout, lazy-fetch config, remote URL scheme, helper binary on PATH, cache DB integrity, audit-table append-only triggers, env vars, sparse-checkout patterns, git version, and cache freshness — and prints a copy-pastable fix command for each finding.
 
 ```bash
 reposix doctor                    # diagnose current dir
