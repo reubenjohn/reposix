@@ -4,7 +4,22 @@ This file is read by every agent (Claude Code, Codex, Cursor, etc.) that opens t
 
 ## Project elevator pitch
 
-reposix exposes REST-based issue trackers (and similar SaaS systems) as a POSIX directory tree via FUSE, with a git remote helper for synchronization. Built so autonomous LLM agents can use `cat`, `grep`, `sed`, and `git` on real workflows instead of MCP tool schemas — see `docs/research/initial-report.md` for the architectural argument and `docs/research/agentic-engineering-reference.md` for the dark-factory pattern that motivates the simulator-first approach.
+reposix exposes REST-based issue trackers (and similar SaaS systems) as a standard git repo via a git remote helper and partial clone. Agents use `cat`, `grep`, `sed`, and `git` on real workflows — no MCP tool schemas, no custom CLI. See `docs/research/initial-report.md` for the architectural argument and `docs/research/agentic-engineering-reference.md` for the dark-factory pattern that motivates the simulator-first approach.
+
+## Architecture transition (v0.9.0 — in progress)
+
+> **Read `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` for the full design.**
+
+reposix is migrating from a FUSE virtual filesystem to git-native partial clone. Key changes:
+
+- **DELETE `crates/reposix-fuse`** — no more FUSE daemon, fusermount3, or /dev/fuse dependency.
+- **`git-remote-reposix` becomes a promisor remote** via `stateless-connect` capability — blobs are lazy-fetched on demand.
+- **Push uses the existing `export` capability** — hybrid confirmed working in POC.
+- **Agent UX is pure git** — `git clone`, `cat`, `git push`. Zero reposix CLI awareness.
+- **Push-time conflict detection** — helper checks backend state at push time, rejects with standard git errors.
+- **Blob limit guardrail** — helper refuses to serve >N blobs, error message teaches agent to narrow scope via sparse-checkout.
+
+References below marked "(pre-v0.9.0)" describe the FUSE architecture being replaced. Code references to `reposix-fuse` will be deleted during v0.9.0 phases.
 
 ## Operating Principles (project-specific)
 
@@ -14,7 +29,7 @@ The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The f
 2. **Tainted by default.** Any byte that came from a remote (simulator counts) is tainted. Tainted content must not be routed into actions with side effects on other systems (e.g. don't echo issue bodies into `git push` to remotes outside an explicit allowlist). The lethal-trifecta mitigation matters even against the simulator, because the simulator is *seeded* by an agent and seed data is itself attacker-influenced.
 3. **Audit log is non-optional.** Every network-touching action gets a row in the simulator's SQLite audit table. If a feature can't write to the audit log, it's not done.
 4. **No hidden state.** Mount state, simulator state, and git remote helper state all live in committed-or-fixture artifacts. No "it works in my session" bugs.
-5. **Mount point = git repo.** The FUSE mount must always also be a git working tree. The whole point of the design is `git diff` is the change set.
+5. **Working tree = git repo.** The working tree must always be a real git checkout. The whole point of the design is `git diff` is the change set. (Pre-v0.9.0 this was a FUSE mount; post-v0.9.0 it's a partial-clone git repo.)
 
 ## Workspace layout
 
@@ -22,7 +37,7 @@ The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The f
 crates/
 ├── reposix-core/    # Shared types: Issue, Project, RemoteSpec, Error.
 ├── reposix-sim/     # In-process axum HTTP simulator.
-├── reposix-fuse/    # FUSE daemon (fuser, default-features=false).
+├── reposix-fuse/    # FUSE daemon (BEING DELETED in v0.9.0 — see architecture transition above).
 ├── reposix-remote/  # git-remote-reposix binary.
 └── reposix-cli/     # Top-level `reposix` CLI (orchestrator).
 
@@ -37,7 +52,7 @@ runtime/             # gitignored — local sim DB, mount points.
 - Rust stable (1.82+ via `rust-toolchain.toml`).
 - Async: `tokio` 1.
 - Web: `axum` 0.7 + `reqwest` 0.12 (rustls only, never openssl-sys).
-- FUSE: `fuser` 0.17 with `default-features = false`. **Reason:** the dev host lacks `pkg-config` and `libfuse-dev`, and we have no passwordless sudo to install them. Runtime mounting uses `fusermount`/`fusermount3` binaries (already present on Ubuntu and on `ubuntu-latest` GitHub runners after `apt install fuse3`).
+- FUSE: `fuser` 0.17 with `default-features = false`. **(Pre-v0.9.0 — being deleted. See architecture transition above.)**
 - Storage: `rusqlite` 0.32 with `bundled` feature (no system libsqlite3).
 - Errors: `thiserror` for typed crate errors, `anyhow` only at binary boundaries.
 
