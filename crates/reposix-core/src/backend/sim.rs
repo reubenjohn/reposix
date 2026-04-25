@@ -23,7 +23,7 @@ use reqwest::{Method, StatusCode};
 
 use crate::backend::{BackendConnector, BackendFeature, DeleteReason};
 use crate::http::{client, ClientOpts, HttpClient};
-use crate::issue::{Issue, IssueId, IssueStatus};
+use crate::issue::{Issue, RecordId, IssueStatus};
 use crate::taint::Untainted;
 use crate::{Error, Result};
 
@@ -234,7 +234,7 @@ impl BackendConnector for SimBackend {
         &self,
         project: &str,
         since: chrono::DateTime<chrono::Utc>,
-    ) -> Result<Vec<IssueId>> {
+    ) -> Result<Vec<RecordId>> {
         // RFC3339-with-Z form contains only digits, `T`, `-`, `:`, `Z`;
         // none require percent-encoding in a query value, so format!()
         // is safe. If callers ever pass non-UTC or fractional seconds
@@ -254,7 +254,7 @@ impl BackendConnector for SimBackend {
         Ok(issues.into_iter().map(|i| i.id).collect())
     }
 
-    async fn get_issue(&self, project: &str, id: IssueId) -> Result<Issue> {
+    async fn get_issue(&self, project: &str, id: RecordId) -> Result<Issue> {
         let url = format!("{}/projects/{}/issues/{}", self.base(), project, id.0);
         let resp = self
             .http
@@ -276,7 +276,7 @@ impl BackendConnector for SimBackend {
     async fn update_issue(
         &self,
         project: &str,
-        id: IssueId,
+        id: RecordId,
         patch: Untainted<Issue>,
         expected_version: Option<u64>,
     ) -> Result<Issue> {
@@ -307,7 +307,7 @@ impl BackendConnector for SimBackend {
     async fn delete_or_close(
         &self,
         project: &str,
-        id: IssueId,
+        id: RecordId,
         _reason: DeleteReason,
     ) -> Result<()> {
         // The sim performs a real DELETE regardless of reason — the reason
@@ -358,7 +358,7 @@ mod tests {
     fn sample_tainted() -> Tainted<Issue> {
         let t = Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
         Tainted::new(Issue {
-            id: IssueId(0),
+            id: RecordId(0),
             title: "agent authored".into(),
             status: IssueStatus::Open,
             assignee: None,
@@ -377,7 +377,7 @@ mod tests {
         sanitize(
             sample_tainted(),
             ServerMetadata {
-                id: IssueId(42),
+                id: RecordId(42),
                 created_at: t,
                 updated_at: t,
                 version: 3,
@@ -402,8 +402,8 @@ mod tests {
         let backend = SimBackend::new(server.uri()).expect("backend");
         let issues = backend.list_issues("demo").await.expect("list");
         assert_eq!(issues.len(), 2);
-        assert_eq!(issues[0].id, IssueId(1));
-        assert_eq!(issues[1].id, IssueId(2));
+        assert_eq!(issues[0].id, RecordId(1));
+        assert_eq!(issues[1].id, RecordId(2));
     }
 
     #[tokio::test]
@@ -416,8 +416,8 @@ mod tests {
             .await;
 
         let backend = SimBackend::new(server.uri()).expect("backend");
-        let issue = backend.get_issue("demo", IssueId(7)).await.expect("get");
-        assert_eq!(issue.id, IssueId(7));
+        let issue = backend.get_issue("demo", RecordId(7)).await.expect("get");
+        assert_eq!(issue.id, RecordId(7));
         assert_eq!(issue.title, "hello");
     }
 
@@ -432,7 +432,7 @@ mod tests {
 
         let backend = SimBackend::new(server.uri()).expect("backend");
         let err = backend
-            .get_issue("demo", IssueId(9999))
+            .get_issue("demo", RecordId(9999))
             .await
             .expect_err("404");
         match err {
@@ -461,7 +461,7 @@ mod tests {
         let t = Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
         let u = sanitize(
             Tainted::new(Issue {
-                id: IssueId(0),
+                id: RecordId(0),
                 title: "hello".into(),
                 status: IssueStatus::InProgress,
                 assignee: None,
@@ -474,17 +474,17 @@ mod tests {
                 extensions: std::collections::BTreeMap::new(),
             }),
             ServerMetadata {
-                id: IssueId(42),
+                id: RecordId(42),
                 created_at: t,
                 updated_at: t,
                 version: 5,
             },
         );
         let out = backend
-            .update_issue("demo", IssueId(42), u, Some(5))
+            .update_issue("demo", RecordId(42), u, Some(5))
             .await
             .expect("update");
-        assert_eq!(out.id, IssueId(42));
+        assert_eq!(out.id, RecordId(42));
     }
 
     #[tokio::test]
@@ -512,7 +512,7 @@ mod tests {
         let backend = SimBackend::new(server.uri()).expect("backend");
         let u = sample_untainted();
         let err = backend
-            .update_issue("demo", IssueId(42), u, Some(1))
+            .update_issue("demo", RecordId(42), u, Some(1))
             .await
             .expect_err("409");
         match err {
@@ -552,7 +552,7 @@ mod tests {
         let backend = SimBackend::new(server.uri()).expect("backend");
         let u = sample_untainted();
         let err = backend
-            .update_issue("demo", IssueId(42), u, Some(1))
+            .update_issue("demo", RecordId(42), u, Some(1))
             .await
             .expect_err("409");
         let Error::Other(msg) = err else {
@@ -601,10 +601,10 @@ mod tests {
         let backend = SimBackend::new(server.uri()).expect("backend");
         let u = sample_untainted();
         let out = backend
-            .update_issue("demo", IssueId(42), u, None)
+            .update_issue("demo", RecordId(42), u, None)
             .await
             .expect("update");
-        assert_eq!(out.id, IssueId(42));
+        assert_eq!(out.id, RecordId(42));
         // server drops here; .expect(1) panics if the no-If-Match matcher
         // didn't fire exactly once.
     }
@@ -651,7 +651,7 @@ mod tests {
         let t = Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
         let u = sanitize(
             Tainted::new(Issue {
-                id: IssueId(0),
+                id: RecordId(0),
                 title: "hello".into(),
                 status: IssueStatus::Open,
                 assignee: None,
@@ -664,17 +664,17 @@ mod tests {
                 extensions: std::collections::BTreeMap::new(),
             }),
             ServerMetadata {
-                id: IssueId(1),
+                id: RecordId(1),
                 created_at: t,
                 updated_at: t,
                 version: 3,
             },
         );
         let out = backend
-            .update_issue("demo", IssueId(1), u, Some(3))
+            .update_issue("demo", RecordId(1), u, Some(3))
             .await
             .expect("update");
-        assert_eq!(out.id, IssueId(1));
+        assert_eq!(out.id, RecordId(1));
     }
 
     #[tokio::test]
@@ -705,7 +705,7 @@ mod tests {
         let backend = SimBackend::new(server.uri()).expect("backend");
         let u = sample_untainted();
         let _ = backend
-            .update_issue("demo", IssueId(1), u, Some(1))
+            .update_issue("demo", RecordId(1), u, Some(1))
             .await
             .expect("update");
         // Dropping `server` verifies the .expect(1) — panics if the
@@ -729,7 +729,7 @@ mod tests {
         let backend = SimBackend::new(server.uri()).expect("backend");
         let u = sample_untainted();
         let got = backend.create_issue("demo", u).await.expect("create");
-        assert_eq!(got.id, IssueId(4));
+        assert_eq!(got.id, RecordId(4));
 
         let requests = server.received_requests().await.unwrap();
         assert_eq!(requests.len(), 1);
@@ -777,13 +777,13 @@ mod tests {
         let backend = SimBackend::new(server.uri()).expect("backend");
         let t = Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
         let meta = ServerMetadata {
-            id: IssueId(1),
+            id: RecordId(1),
             created_at: t,
             updated_at: t,
             version: 1,
         };
         let hostile = Issue {
-            id: IssueId(1),
+            id: RecordId(1),
             title: "hello".into(),
             status: IssueStatus::Open,
             assignee: None,
@@ -801,7 +801,7 @@ mod tests {
         };
         let u = sanitize(Tainted::new(hostile), meta);
         backend
-            .update_issue("demo", IssueId(1), u, Some(1))
+            .update_issue("demo", RecordId(1), u, Some(1))
             .await
             .expect("update");
 
@@ -888,7 +888,7 @@ mod tests {
 
         let backend = SimBackend::new(server.uri()).expect("backend");
         let err = backend
-            .get_issue("demo", IssueId(1))
+            .get_issue("demo", RecordId(1))
             .await
             .expect_err("500");
         match err {
@@ -918,7 +918,7 @@ mod tests {
         let backend = SimBackend::new(server.uri()).expect("backend");
         let u = sample_untainted();
         let got = backend.create_issue("demo", u).await.expect("create");
-        assert_eq!(got.id, IssueId(42));
+        assert_eq!(got.id, RecordId(42));
         assert_eq!(got.version, 1);
     }
 
@@ -936,7 +936,7 @@ mod tests {
 
         let backend = SimBackend::new(server.uri()).expect("backend");
         backend
-            .delete_or_close("demo", IssueId(1), DeleteReason::Completed)
+            .delete_or_close("demo", RecordId(1), DeleteReason::Completed)
             .await
             .expect("delete");
     }
@@ -963,7 +963,7 @@ mod tests {
             .list_changed_since("demo", t)
             .await
             .expect("list_changed");
-        assert_eq!(ids, vec![IssueId(42)]);
+        assert_eq!(ids, vec![RecordId(42)]);
     }
 
     #[tokio::test]
@@ -988,7 +988,7 @@ mod tests {
             .list_changed_since("demo", t)
             .await
             .expect("list_changed");
-        assert_eq!(ids, vec![IssueId(1), IssueId(2), IssueId(3)]);
+        assert_eq!(ids, vec![RecordId(1), RecordId(2), RecordId(3)]);
     }
 
     #[tokio::test]
@@ -1007,7 +1007,7 @@ mod tests {
 
         let backend = SimBackend::new(server.uri()).expect("backend");
         let err = backend
-            .delete_or_close("demo", IssueId(9999), DeleteReason::Completed)
+            .delete_or_close("demo", RecordId(9999), DeleteReason::Completed)
             .await
             .expect_err("404");
         match err {

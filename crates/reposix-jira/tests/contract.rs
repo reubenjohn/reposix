@@ -7,7 +7,7 @@
 //! 1. `list_issues(project)` returns `Ok(vec)` for a known-good project.
 //! 2. The list is non-empty (≥1 issue).
 //! 3. `get_issue(project, known_issue_id)` returns `Ok(issue)` with matching id.
-//! 4. `get_issue(project, IssueId(u64::MAX))` returns `Err` (404 path).
+//! 4. `get_issue(project, RecordId(u64::MAX))` returns `Err` (404 path).
 //! 5. Every listed issue's status is a valid `IssueStatus` variant.
 //!
 //! ## Test arms
@@ -21,7 +21,7 @@ use std::path::PathBuf;
 
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::backend::{BackendConnector, DeleteReason};
-use reposix_core::{IssueId, IssueStatus};
+use reposix_core::{RecordId, IssueStatus};
 use reposix_jira::{JiraBackend, JiraCreds};
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -46,7 +46,7 @@ macro_rules! skip_if_no_env {
 }
 
 /// The 5 invariants that hold for any well-behaved [`BackendConnector`].
-async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_issue_id: IssueId) {
+async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_issue_id: RecordId) {
     // (1) list_issues returns Ok(vec).
     let issues = backend.list_issues(project).await.unwrap_or_else(|e| {
         panic!(
@@ -80,7 +80,7 @@ async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_
     );
 
     // (4) u64::MAX is expected to be absent — this is the 404 path.
-    let missing = backend.get_issue(project, IssueId(u64::MAX)).await;
+    let missing = backend.get_issue(project, RecordId(u64::MAX)).await;
     assert!(
         missing.is_err(),
         "[{}] get_issue({project}, u64::MAX) should be Err, got {missing:?}",
@@ -177,7 +177,7 @@ fn jira_issue_json(id: u64, key: &str) -> serde_json::Value {
 async fn contract_sim() {
     let (origin, _db, handle) = spawn_sim().await;
     let backend = SimBackend::new(origin).expect("SimBackend::new");
-    assert_contract(&backend, "demo", IssueId(1)).await;
+    assert_contract(&backend, "demo", RecordId(1)).await;
     handle.abort();
 }
 
@@ -223,7 +223,7 @@ async fn contract_jira_wiremock() {
     let backend = JiraBackend::new_with_base_url(creds, server.uri())
         .expect("JiraBackend::new_with_base_url");
 
-    assert_contract(&backend, "PROJ", IssueId(10001)).await;
+    assert_contract(&backend, "PROJ", RecordId(10001)).await;
 }
 
 // ─── Write contract helpers ───────────────────────────────────────────────────
@@ -235,7 +235,7 @@ fn make_untainted_for_contract(
     use reposix_core::{sanitize, ServerMetadata};
     let now = chrono::Utc::now();
     let raw = reposix_core::Issue {
-        id: reposix_core::IssueId(0),
+        id: reposix_core::RecordId(0),
         title: title.to_owned(),
         body: body.to_owned(),
         status: reposix_core::IssueStatus::Open,
@@ -250,7 +250,7 @@ fn make_untainted_for_contract(
     sanitize(
         reposix_core::Tainted::new(raw),
         ServerMetadata {
-            id: reposix_core::IssueId(0),
+            id: reposix_core::RecordId(0),
             created_at: now,
             updated_at: now,
             version: 0,

@@ -24,7 +24,7 @@ use parking_lot::Mutex;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::{sanitize, BackendConnector, IssueId, ServerMetadata, Tainted};
+use reposix_core::{sanitize, BackendConnector, RecordId, ServerMetadata, Tainted};
 
 use crate::metrics::{ErrorKind, MetricsAccumulator, OpKind};
 use crate::workload::Workload;
@@ -35,7 +35,7 @@ use crate::workload::Workload;
 pub struct ContentionWorkload {
     backend: SimBackend,
     project: String,
-    target_id: IssueId,
+    target_id: RecordId,
     /// Reserved for future jitter between GET and PATCH; not used in `step()` today.
     #[allow(dead_code)]
     rng: Mutex<StdRng>,
@@ -52,7 +52,7 @@ impl ContentionWorkload {
     pub fn new(
         origin: String,
         project: String,
-        target_id: IssueId,
+        target_id: RecordId,
         seed: u64,
     ) -> anyhow::Result<Self> {
         let suffix = format!("contention-{seed}");

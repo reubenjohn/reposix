@@ -14,7 +14,7 @@ use parking_lot::Mutex;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
-use reposix_core::{BackendConnector, IssueId};
+use reposix_core::{BackendConnector, RecordId};
 
 use crate::metrics::{ErrorKind, MetricsAccumulator, OpKind};
 use crate::workload::Workload;
@@ -27,7 +27,7 @@ pub struct ConfluenceDirectWorkload {
     space: String,
     rng: Mutex<StdRng>,
     /// Cached ids from the most recent `list_issues` call.
-    ids: Mutex<Vec<IssueId>>,
+    ids: Mutex<Vec<RecordId>>,
 }
 
 impl ConfluenceDirectWorkload {
@@ -57,7 +57,7 @@ impl ConfluenceDirectWorkload {
         })
     }
 
-    fn random_id(&self) -> Option<IssueId> {
+    fn random_id(&self) -> Option<RecordId> {
         let ids = self.ids.lock();
         if ids.is_empty() {
             return None;

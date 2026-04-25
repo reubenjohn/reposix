@@ -10,7 +10,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use reposix_core::frontmatter;
-use reposix_core::{Issue, IssueId};
+use reposix_core::{Issue, RecordId};
 use thiserror::Error;
 
 use crate::fast_import::ParsedExport;
@@ -30,7 +30,7 @@ pub enum PlannedAction {
     /// Both prior and new bytes exist; bytes differ — PATCH with prior version.
     Update {
         /// Issue id (server-known).
-        id: IssueId,
+        id: RecordId,
         /// Prior version (for `If-Match`).
         prior_version: u64,
         /// New issue parsed from the new blob bytes.
@@ -39,7 +39,7 @@ pub enum PlannedAction {
     /// Path was in prior list but not in the new tree — DELETE candidate.
     Delete {
         /// Issue id (server-known).
-        id: IssueId,
+        id: RecordId,
         /// Prior version (informational; DELETE is unconditional).
         prior_version: u64,
     },
@@ -97,8 +97,8 @@ fn normalize_for_compare(s: &str) -> String {
 /// - [`PlanError::BulkDeleteRefused`] if the cap fires.
 /// - [`PlanError::InvalidBlob`] if a new-tree blob can't parse as an issue.
 pub fn plan(prior: &[Issue], parsed: &ParsedExport) -> Result<Vec<PlannedAction>, PlanError> {
-    let prior_by_id: HashMap<IssueId, &Issue> = prior.iter().map(|i| (i.id, i)).collect();
-    let prior_by_path: BTreeMap<String, IssueId> = prior
+    let prior_by_id: HashMap<RecordId, &Issue> = prior.iter().map(|i| (i.id, i)).collect();
+    let prior_by_path: BTreeMap<String, RecordId> = prior
         .iter()
         .map(|i| (format!("{:04}.md", i.id.0), i.id))
         .collect();
@@ -174,7 +174,7 @@ pub fn plan(prior: &[Issue], parsed: &ParsedExport) -> Result<Vec<PlannedAction>
     // Also honor explicit `D <path>` lines (in case the new tree omitted
     // doesn't cover them — git fast-export typically uses one or the other).
     for path in &parsed.deletes {
-        if let Some(id) = issue_id_from_path(path).map(IssueId) {
+        if let Some(id) = issue_id_from_path(path).map(RecordId) {
             // Only add if not already counted.
             if !deletes
                 .iter()
@@ -212,7 +212,7 @@ mod tests {
     fn sample(id: u64) -> Issue {
         let t = chrono::Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
         Issue {
-            id: IssueId(id),
+            id: RecordId(id),
             title: format!("issue {id}"),
             status: IssueStatus::Open,
             assignee: None,

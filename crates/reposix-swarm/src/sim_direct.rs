@@ -19,7 +19,7 @@ use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::{
-    sanitize, BackendConnector, Issue, IssueId, IssueStatus, ServerMetadata, Tainted,
+    sanitize, BackendConnector, Issue, RecordId, IssueStatus, ServerMetadata, Tainted,
 };
 
 // chrono is a transitive dep via reposix-core (Issue.created_at uses it).
@@ -37,7 +37,7 @@ pub struct SimDirectWorkload {
     /// Cached ids from the first `list_issues` call; workload reads/patches
     /// from this set to keep requests warm. Refreshed on every step's
     /// list call.
-    ids: Mutex<Vec<IssueId>>,
+    ids: Mutex<Vec<RecordId>>,
 }
 
 impl SimDirectWorkload {
@@ -62,7 +62,7 @@ impl SimDirectWorkload {
 
     /// Pick a random id from the cached set. Returns `None` if the set is
     /// empty (e.g. first iteration before any list succeeded).
-    fn random_id(&self) -> Option<IssueId> {
+    fn random_id(&self) -> Option<RecordId> {
         let ids = self.ids.lock();
         if ids.is_empty() {
             return None;

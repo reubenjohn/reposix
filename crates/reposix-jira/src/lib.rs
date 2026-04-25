@@ -67,7 +67,7 @@ use serde::Deserialize;
 
 use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason};
 use reposix_core::http::{client, ClientOpts, HttpClient};
-use reposix_core::{Error, Issue, IssueId, IssueStatus, Result, Tainted, Untainted};
+use reposix_core::{Error, Issue, RecordId, IssueStatus, Result, Tainted, Untainted};
 
 /// Maximum time we'll wait for a rate-limit reset before surfacing the
 /// exhaustion as an error. Caps worst-case call latency.
@@ -345,7 +345,7 @@ impl JiraBackend {
         Ok(out)
     }
 
-    async fn get_issue_inner(&self, id: IssueId) -> Result<Issue> {
+    async fn get_issue_inner(&self, id: RecordId) -> Result<Issue> {
         let path = format!("/rest/api/3/issue/{id}");
         let url = format!("{}{}", self.base(), path);
 
@@ -539,7 +539,7 @@ impl BackendConnector for JiraBackend {
         &self,
         project: &str,
         since: chrono::DateTime<chrono::Utc>,
-    ) -> Result<Vec<IssueId>> {
+    ) -> Result<Vec<RecordId>> {
         // JQL: `updated >= "yyyy-MM-dd HH:mm"`. JQL does not accept full
         // ISO8601 with timezone — use the canonical two-field form.
         let jql_time = since.format("%Y-%m-%d %H:%M").to_string();
@@ -553,7 +553,7 @@ impl BackendConnector for JiraBackend {
             "maxResults": PAGE_SIZE,
         });
 
-        let mut out: Vec<IssueId> = Vec::new();
+        let mut out: Vec<RecordId> = Vec::new();
         let mut pages: usize = 0;
 
         let header_owned = self.write_headers();
@@ -596,7 +596,7 @@ impl BackendConnector for JiraBackend {
 
             for issue in search_resp.issues {
                 // SG-05: wrap as Tainted before translating, then keep only
-                // the IssueId. Full-Issue translation is needed because
+                // the RecordId. Full-Issue translation is needed because
                 // JIRA's payload encodes the id deep in the fields tree.
                 let tainted = Tainted::new(issue);
                 let translated = translate(tainted.into_inner())?;
@@ -619,7 +619,7 @@ impl BackendConnector for JiraBackend {
         Ok(out)
     }
 
-    async fn get_issue(&self, _project: &str, id: IssueId) -> Result<Issue> {
+    async fn get_issue(&self, _project: &str, id: RecordId) -> Result<Issue> {
         self.await_rate_limit_gate().await;
         self.get_issue_inner(id).await
     }
@@ -703,13 +703,13 @@ impl BackendConnector for JiraBackend {
             ))
         })?;
         // Hydrate full Issue via GET.
-        self.get_issue_inner(IssueId(new_id)).await
+        self.get_issue_inner(RecordId(new_id)).await
     }
 
     async fn update_issue(
         &self,
         _project: &str,
-        id: IssueId,
+        id: RecordId,
         patch: Untainted<Issue>,
         _expected_version: Option<u64>,
     ) -> Result<Issue> {
@@ -764,7 +764,7 @@ impl BackendConnector for JiraBackend {
     async fn delete_or_close(
         &self,
         _project: &str,
-        id: IssueId,
+        id: RecordId,
         reason: DeleteReason,
     ) -> Result<()> {
         // Struct declarations hoisted before statements (clippy::items_after_statements).
@@ -1034,7 +1034,7 @@ fn map_status(status: &JiraStatus, resolution: Option<&JiraResolution>) -> Issue
 ///
 /// Returns `Err` if the JIRA numeric issue ID cannot be parsed as `u64`.
 fn translate(raw: JiraIssue) -> Result<Issue> {
-    let id = IssueId(
+    let id = RecordId(
         raw.id
             .parse::<u64>()
             .map_err(|e| Error::Other(format!("invalid jira id {:?}: {e}", raw.id)))?,
@@ -1060,7 +1060,7 @@ fn translate(raw: JiraIssue) -> Result<Issue> {
         .parent
         .as_ref()
         .and_then(|p| p.id.parse::<u64>().ok())
-        .map(IssueId);
+        .map(RecordId);
 
     let mut extensions: BTreeMap<String, serde_yaml::Value> = BTreeMap::new();
     extensions.insert(
@@ -1266,7 +1266,7 @@ mod tests {
             .await
             .expect("list_changed");
         assert_eq!(ids.len(), 1);
-        assert_eq!(ids[0], IssueId(10042));
+        assert_eq!(ids[0], RecordId(10042));
     }
 
     #[tokio::test]
@@ -1293,7 +1293,7 @@ mod tests {
             .list_changed_since("TE\"S\"T", t)
             .await
             .expect("list_changed");
-        assert_eq!(ids, Vec::<IssueId>::new());
+        assert_eq!(ids, Vec::<RecordId>::new());
     }
 
     // ─── Test 1: list_single_page ────────────────────────────────────────
@@ -1328,7 +1328,7 @@ mod tests {
             .await
             .expect("list must succeed");
         assert_eq!(result.len(), 10, "expected 10 issues from single page");
-        assert_eq!(result[0].id, IssueId(1));
+        assert_eq!(result[0].id, RecordId(1));
     }
 
     // ─── Test 2: list_pagination_cursor ─────────────────────────────────
@@ -1413,10 +1413,10 @@ mod tests {
 
         let backend = make_backend(&server.uri());
         let result = backend
-            .get_issue("MYPROJ", IssueId(10001))
+            .get_issue("MYPROJ", RecordId(10001))
             .await
             .expect("get must succeed");
-        assert_eq!(result.id, IssueId(10001));
+        assert_eq!(result.id, RecordId(10001));
         assert_eq!(result.title, "A real issue");
         assert_eq!(result.status, IssueStatus::InProgress);
         assert_eq!(
@@ -1447,7 +1447,7 @@ mod tests {
 
         let backend = make_backend(&server.uri());
         let err = backend
-            .get_issue("PROJ", IssueId(99999))
+            .get_issue("PROJ", RecordId(99999))
             .await
             .expect_err("must return error for 404");
         let msg = err.to_string();
@@ -1550,7 +1550,7 @@ mod tests {
             },
         };
         let issue = translate(subtask).expect("translate must succeed");
-        assert_eq!(issue.parent_id, Some(IssueId(10000)));
+        assert_eq!(issue.parent_id, Some(RecordId(10000)));
         assert_eq!(
             issue.extensions.get("hierarchy_level"),
             Some(&serde_yaml::Value::from(-1_i64))
@@ -1690,7 +1690,7 @@ mod tests {
         use chrono::TimeZone;
         let now = chrono::Utc.with_ymd_and_hms(2025, 6, 1, 0, 0, 0).unwrap();
         let issue = Issue {
-            id: IssueId(1),
+            id: RecordId(1),
             title: "test".into(),
             status: IssueStatus::Open,
             assignee: None,
@@ -1715,7 +1715,7 @@ mod tests {
         use reposix_core::{sanitize, ServerMetadata};
         let now = chrono::Utc::now();
         let raw = Issue {
-            id: IssueId(0),
+            id: RecordId(0),
             title: title.to_owned(),
             body: body.to_owned(),
             status: IssueStatus::Open,
@@ -1730,7 +1730,7 @@ mod tests {
         sanitize(
             Tainted::new(raw),
             ServerMetadata {
-                id: IssueId(0),
+                id: RecordId(0),
                 created_at: now,
                 updated_at: now,
                 version: 0,
@@ -1774,7 +1774,7 @@ mod tests {
         let issue = make_untainted("test create", "body text");
         let created = backend.create_issue("P", issue).await.expect("create");
         assert_eq!(created.title, "test create");
-        assert_eq!(created.id, IssueId(10042));
+        assert_eq!(created.id, RecordId(10042));
     }
 
     // ─── Test 13: update_issue_puts_fields ──────────────────────────────
@@ -1799,7 +1799,7 @@ mod tests {
         let backend = make_backend(&server.uri());
         let patch = make_untainted("updated title", "new body");
         let updated = backend
-            .update_issue("P", IssueId(99), patch, None)
+            .update_issue("P", RecordId(99), patch, None)
             .await
             .expect("update");
         assert_eq!(updated.title, "updated title");
@@ -1828,7 +1828,7 @@ mod tests {
 
         let backend = make_backend(&server.uri());
         backend
-            .delete_or_close("P", IssueId(55), DeleteReason::Completed)
+            .delete_or_close("P", RecordId(55), DeleteReason::Completed)
             .await
             .expect("delete_or_close via transitions");
     }
@@ -1860,7 +1860,7 @@ mod tests {
 
         let backend = make_backend(&server.uri());
         backend
-            .delete_or_close("P", IssueId(56), DeleteReason::NotPlanned)
+            .delete_or_close("P", RecordId(56), DeleteReason::NotPlanned)
             .await
             .expect("delete_or_close wontfix");
         // Mock drop verifies expect(1) was satisfied.
@@ -1891,7 +1891,7 @@ mod tests {
 
         let backend = make_backend(&server.uri());
         backend
-            .delete_or_close("P", IssueId(57), DeleteReason::Completed)
+            .delete_or_close("P", RecordId(57), DeleteReason::Completed)
             .await
             .expect("delete_or_close fallback delete");
     }

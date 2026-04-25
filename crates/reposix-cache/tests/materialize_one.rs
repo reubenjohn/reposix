@@ -7,7 +7,7 @@ use common::CacheDirGuard;
 use gix::prelude::FindExt as _;
 use reposix_cache::Cache;
 use reposix_core::frontmatter;
-use reposix_core::IssueId;
+use reposix_core::RecordId;
 use tempfile::tempdir;
 use wiremock::MockServer;
 
@@ -62,7 +62,7 @@ async fn read_blob_materializes_exactly_one_and_audits() {
     // the bytes match `frontmatter::render` of issue 1.
     let inner = tainted.into_inner();
     let issue_1 = common::sim_backend(&server)
-        .get_issue("proj-1", IssueId(1))
+        .get_issue("proj-1", RecordId(1))
         .await
         .unwrap();
     let expected = frontmatter::render(&issue_1).unwrap();

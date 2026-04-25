@@ -10,7 +10,7 @@ use std::io::Write;
 
 use assert_cmd::Command;
 use chrono::TimeZone;
-use reposix_core::{Issue, IssueId, IssueStatus};
+use reposix_core::{Issue, RecordId, IssueStatus};
 use serde_json::Value;
 use wiremock::matchers::{any, method, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -18,7 +18,7 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 fn sample_issue(id: u64) -> Value {
     let t = chrono::Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
     let i = Issue {
-        id: IssueId(id),
+        id: RecordId(id),
         title: format!("issue {id}"),
         status: IssueStatus::Open,
         assignee: None,

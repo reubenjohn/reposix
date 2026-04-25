@@ -19,7 +19,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use reposix_core::http::{client, ClientOpts};
-use reposix_core::IssueId;
+use reposix_core::RecordId;
 use reposix_sim::{run_with_listener, SimConfig};
 use reposix_swarm::contention::ContentionWorkload;
 use reposix_swarm::driver::{run_swarm, SwarmConfig};
@@ -92,7 +92,7 @@ async fn contention_50_clients_5s_deterministic_409() {
     let db_path = db.path().to_owned();
 
     // Issue id 1 is always seeded by reposix-sim/fixtures/seed.json.
-    let target_id = IssueId(1);
+    let target_id = RecordId(1);
 
     let cfg = SwarmConfig {
         clients: 50,

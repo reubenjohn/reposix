@@ -14,7 +14,7 @@ use async_trait::async_trait;
 use common::CacheDirGuard;
 use reposix_cache::Cache;
 use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason};
-use reposix_core::{Error as CoreError, Issue, IssueId, Result as CoreResult, Untainted};
+use reposix_core::{Error as CoreError, Issue, RecordId, Result as CoreResult, Untainted};
 use tempfile::tempdir;
 use wiremock::MockServer;
 
@@ -36,7 +36,7 @@ impl BackendConnector for EgressRejectingBackend {
     async fn list_issues(&self, project: &str) -> CoreResult<Vec<Issue>> {
         self.inner.list_issues(project).await
     }
-    async fn get_issue(&self, _project: &str, _id: IssueId) -> CoreResult<Issue> {
+    async fn get_issue(&self, _project: &str, _id: RecordId) -> CoreResult<Issue> {
         Err(CoreError::InvalidOrigin("https://evil.example:443/".into()))
     }
     async fn create_issue(&self, _: &str, _: Untainted<Issue>) -> CoreResult<Issue> {
@@ -45,13 +45,13 @@ impl BackendConnector for EgressRejectingBackend {
     async fn update_issue(
         &self,
         _project: &str,
-        _id: IssueId,
+        _id: RecordId,
         _issue: Untainted<Issue>,
         _expected_version: Option<u64>,
     ) -> CoreResult<Issue> {
         Err(CoreError::Other("unsupported in stub".into()))
     }
-    async fn delete_or_close(&self, _: &str, _: IssueId, _: DeleteReason) -> CoreResult<()> {
+    async fn delete_or_close(&self, _: &str, _: RecordId, _: DeleteReason) -> CoreResult<()> {
         Err(CoreError::Other("unsupported in stub".into()))
     }
 }

@@ -79,7 +79,7 @@ use serde::Deserialize;
 
 use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason};
 use reposix_core::http::{client, ClientOpts, HttpClient};
-use reposix_core::{Error, Issue, IssueId, IssueStatus, Result, Tainted, Untainted};
+use reposix_core::{Error, Issue, RecordId, IssueStatus, Result, Tainted, Untainted};
 
 /// Maximum time we'll wait for a rate-limit reset before surfacing the
 /// exhaustion as an error. Caps worst-case call latency.
@@ -625,7 +625,7 @@ fn translate(page: ConfPage) -> Result<Issue> {
     let parent_id = match (page.parent_id.as_deref(), page.parent_type.as_deref()) {
         (Some(pid_str), Some("page")) => {
             if let Ok(n) = pid_str.parse::<u64>() {
-                Some(IssueId(n))
+                Some(RecordId(n))
             } else {
                 // IN-01: cap attacker-controlled string in tracing output to
                 // bound log storage + log-injection blast radius. 64 bytes is
@@ -643,7 +643,7 @@ fn translate(page: ConfPage) -> Result<Issue> {
             // CONF-06: folder parents are valid hierarchy nodes — propagate
             // to Issue::parent_id so the tree/ overlay shows folder structure.
             if let Ok(n) = pid_str.parse::<u64>() {
-                Some(IssueId(n))
+                Some(RecordId(n))
             } else {
                 // IN-01: cap attacker-controlled string in tracing output to
                 // bound log storage + log-injection blast radius.
@@ -669,7 +669,7 @@ fn translate(page: ConfPage) -> Result<Issue> {
         _ => None,
     };
     Ok(Issue {
-        id: IssueId(id),
+        id: RecordId(id),
         title: page.title,
         status: status_from_confluence(&page.status),
         assignee: page.owner_id,
@@ -1057,7 +1057,7 @@ impl ConfluenceBackend {
     ///
     /// Propagates transport errors and `Err(Error::Other("not found: …"))` on
     /// 404.
-    async fn fetch_current_version(&self, id: IssueId) -> Result<u64> {
+    async fn fetch_current_version(&self, id: RecordId) -> Result<u64> {
         // Re-uses get_issue which already handles rate-limit gate, SG-05
         // taint wrapping, and error mapping. The only "waste" is translating
         // the full page — that's acceptable for the `expected_version = None`
@@ -1509,7 +1509,7 @@ impl BackendConnector for ConfluenceBackend {
         &self,
         project: &str,
         since: chrono::DateTime<chrono::Utc>,
-    ) -> Result<Vec<IssueId>> {
+    ) -> Result<Vec<RecordId>> {
         // Confluence CQL accepts `lastModified > "yyyy-MM-dd HH:mm"` —
         // seconds-precision is not supported by CQL.
         // Strip `"` from the project slug defensively to defeat CQL injection
@@ -1556,11 +1556,11 @@ impl BackendConnector for ConfluenceBackend {
             .and_then(|v| v.as_array())
             .cloned()
             .unwrap_or_default();
-        let mut out: Vec<IssueId> = Vec::with_capacity(arr.len());
+        let mut out: Vec<RecordId> = Vec::with_capacity(arr.len());
         for res in arr {
             if let Some(id_str) = res.pointer("/content/id").and_then(|v| v.as_str()) {
                 if let Ok(n) = id_str.parse::<u64>() {
-                    out.push(IssueId(n));
+                    out.push(RecordId(n));
                     if out.len() >= MAX_ISSUES_PER_LIST {
                         break;
                     }
@@ -1570,7 +1570,7 @@ impl BackendConnector for ConfluenceBackend {
         Ok(out)
     }
 
-    async fn get_issue(&self, _project: &str, id: IssueId) -> Result<Issue> {
+    async fn get_issue(&self, _project: &str, id: RecordId) -> Result<Issue> {
         // First attempt: request ADF body format for lossless Markdown conversion.
         let url_adf = format!(
             "{}/wiki/api/v2/pages/{}?body-format=atlas_doc_format",
@@ -1702,7 +1702,7 @@ impl BackendConnector for ConfluenceBackend {
     async fn update_issue(
         &self,
         _project: &str,
-        id: IssueId,
+        id: RecordId,
         patch: Untainted<Issue>,
         expected_version: Option<u64>,
     ) -> Result<Issue> {
@@ -1773,7 +1773,7 @@ impl BackendConnector for ConfluenceBackend {
     async fn delete_or_close(
         &self,
         _project: &str,
-        id: IssueId,
+        id: RecordId,
         _reason: DeleteReason,
     ) -> Result<()> {
         // Note: `reason` is intentionally ignored — Confluence has no reason
@@ -1935,7 +1935,7 @@ mod tests {
             .list_changed_since("REPOSIX", t)
             .await
             .expect("list_changed");
-        assert_eq!(ids, vec![IssueId(12345)]);
+        assert_eq!(ids, vec![RecordId(12345)]);
     }
 
     #[tokio::test]
@@ -1963,7 +1963,7 @@ mod tests {
             .list_changed_since("RE\"PO\"SIX", t)
             .await
             .expect("list_changed");
-        assert_eq!(ids, Vec::<IssueId>::new());
+        assert_eq!(ids, Vec::<RecordId>::new());
     }
 
     // -------- 1: list resolves space key and fetches pages --------
@@ -1988,9 +1988,9 @@ mod tests {
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issues = backend.list_issues("REPOSIX").await.expect("list");
         assert_eq!(issues.len(), 2);
-        assert_eq!(issues[0].id, IssueId(98765));
+        assert_eq!(issues[0].id, RecordId(98765));
         assert_eq!(issues[0].status, IssueStatus::Open);
-        assert_eq!(issues[1].id, IssueId(98766));
+        assert_eq!(issues[1].id, RecordId(98766));
     }
 
     // -------- 2: pagination via _links.next --------
@@ -2031,8 +2031,8 @@ mod tests {
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issues = backend.list_issues("REPOSIX").await.expect("list");
         assert_eq!(issues.len(), 3);
-        assert_eq!(issues[0].id, IssueId(1));
-        assert_eq!(issues[2].id, IssueId(3));
+        assert_eq!(issues[0].id, RecordId(1));
+        assert_eq!(issues[2].id, RecordId(3));
     }
 
     // -------- 3: get_issue returns ADF body converted to Markdown --------
@@ -2062,7 +2062,7 @@ mod tests {
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issue = backend
-            .get_issue("REPOSIX", IssueId(98765))
+            .get_issue("REPOSIX", RecordId(98765))
             .await
             .expect("get");
         assert!(
@@ -2070,7 +2070,7 @@ mod tests {
             "expected body to contain 'Hello', got: {:?}",
             issue.body
         );
-        assert_eq!(issue.id, IssueId(98765));
+        assert_eq!(issue.id, RecordId(98765));
     }
 
     // -------- 4: 404 maps to not-found --------
@@ -2085,7 +2085,7 @@ mod tests {
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let err = backend
-            .get_issue("REPOSIX", IssueId(9999))
+            .get_issue("REPOSIX", RecordId(9999))
             .await
             .expect_err("404");
         match err {
@@ -2130,10 +2130,10 @@ mod tests {
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issue = backend
-            .get_issue("REPOSIX", IssueId(55555))
+            .get_issue("REPOSIX", RecordId(55555))
             .await
             .expect("get with fallback");
-        assert_eq!(issue.id, IssueId(55555));
+        assert_eq!(issue.id, RecordId(55555));
         assert_eq!(
             issue.body, "<p>legacy content</p>",
             "storage fallback must return raw HTML body"
@@ -2158,7 +2158,7 @@ mod tests {
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let issue = backend.get_issue("REPOSIX", IssueId(1)).await.expect("get");
+        let issue = backend.get_issue("REPOSIX", RecordId(1)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::Open);
     }
 
@@ -2180,7 +2180,7 @@ mod tests {
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let issue = backend.get_issue("REPOSIX", IssueId(2)).await.expect("get");
+        let issue = backend.get_issue("REPOSIX", RecordId(2)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::Done);
     }
 
@@ -2221,7 +2221,7 @@ mod tests {
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         // If the header is wrong, wiremock returns no-match 404 and this fails.
         backend
-            .get_issue("REPOSIX", IssueId(42))
+            .get_issue("REPOSIX", RecordId(42))
             .await
             .expect("auth header must match");
     }
@@ -2241,7 +2241,7 @@ mod tests {
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let _ = backend.get_issue("REPOSIX", IssueId(42)).await; // expect Err, don't care which
+        let _ = backend.get_issue("REPOSIX", RecordId(42)).await; // expect Err, don't care which
         let gate = backend.rate_limit_gate.lock().to_owned();
         let now = Instant::now();
         match gate {
@@ -2313,7 +2313,7 @@ mod tests {
     fn translate_populates_parent_id_for_page_parent() {
         let page = synth_page("99", Some("42"), Some("page"));
         let issue = translate(page).expect("translate");
-        assert_eq!(issue.parent_id, Some(IssueId(42)));
+        assert_eq!(issue.parent_id, Some(RecordId(42)));
     }
 
     // CONF-06: folder parents now propagate to Issue::parent_id (changed in
@@ -2326,7 +2326,7 @@ mod tests {
         let page = synth_page("99", Some("99999"), Some("folder"));
         let issue = translate(page).expect("translate");
         // CONF-06 fix: folder parentType now propagates (same as "page").
-        assert_eq!(issue.parent_id, Some(IssueId(99999)));
+        assert_eq!(issue.parent_id, Some(RecordId(99999)));
     }
 
     #[test]
@@ -2446,17 +2446,17 @@ mod tests {
 
         let child = issues
             .iter()
-            .find(|i| i.id == IssueId(98765))
+            .find(|i| i.id == RecordId(98765))
             .expect("child page present");
         assert_eq!(
             child.parent_id,
-            Some(IssueId(360_556)),
+            Some(RecordId(360_556)),
             "page-parented child must propagate parent_id"
         );
 
         let root = issues
             .iter()
-            .find(|i| i.id == IssueId(360_556))
+            .find(|i| i.id == RecordId(360_556))
             .expect("root page present");
         assert_eq!(
             root.parent_id, None,
@@ -2465,13 +2465,13 @@ mod tests {
 
         let foldered = issues
             .iter()
-            .find(|i| i.id == IssueId(12321))
+            .find(|i| i.id == RecordId(12321))
             .expect("folder-parented page present");
         // CONF-06 fix (Phase 24 Plan 01): folder parentType now propagates to
         // Issue::parent_id (same as "page"). Updated from None to Some(999).
         assert_eq!(
             foldered.parent_id,
-            Some(IssueId(999)),
+            Some(RecordId(999)),
             "folder parentType must propagate to Issue::parent_id (CONF-06)"
         );
     }
@@ -2679,13 +2679,13 @@ mod tests {
     }
 
     /// Build an `Untainted<Issue>` with the given fields for use in write tests.
-    fn make_untainted(title: &str, body: &str, parent_id: Option<IssueId>) -> Untainted<Issue> {
+    fn make_untainted(title: &str, body: &str, parent_id: Option<RecordId>) -> Untainted<Issue> {
         let t = chrono::DateTime::parse_from_rfc3339("2026-04-13T00:00:00Z")
             .unwrap()
             .with_timezone(&chrono::Utc);
         sanitize(
             Tainted::new(Issue {
-                id: IssueId(0),
+                id: RecordId(0),
                 title: title.to_owned(),
                 status: IssueStatus::Open,
                 assignee: None,
@@ -2698,7 +2698,7 @@ mod tests {
                 extensions: std::collections::BTreeMap::new(),
             }),
             ServerMetadata {
-                id: IssueId(99),
+                id: RecordId(99),
                 created_at: t,
                 updated_at: t,
                 version: 1,
@@ -2726,11 +2726,11 @@ mod tests {
         let patch = make_untainted("updated title", "body text", None);
         // Pass expected_version = Some(42) → PUT body must have version.number = 43
         let result = backend
-            .update_issue("REPOSIX", IssueId(99), patch, Some(42))
+            .update_issue("REPOSIX", RecordId(99), patch, Some(42))
             .await
             .expect("update_issue should succeed");
         assert_eq!(result.title, "updated title");
-        assert_eq!(result.id, IssueId(99));
+        assert_eq!(result.id, RecordId(99));
         assert_eq!(result.version, 43);
     }
 
@@ -2748,7 +2748,7 @@ mod tests {
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let patch = make_untainted("title", "body", None);
         let err = backend
-            .update_issue("REPOSIX", IssueId(99), patch, Some(5))
+            .update_issue("REPOSIX", RecordId(99), patch, Some(5))
             .await
             .expect_err("409 must be an error");
         match err {
@@ -2790,7 +2790,7 @@ mod tests {
         let patch = make_untainted("new title", "new body", None);
         // expected_version = None → must do GET first, then PUT with number=8
         let result = backend
-            .update_issue("REPOSIX", IssueId(99), patch, None)
+            .update_issue("REPOSIX", RecordId(99), patch, None)
             .await
             .expect("update_issue with None version should succeed");
         assert_eq!(result.version, 8);
@@ -2811,7 +2811,7 @@ mod tests {
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let patch = make_untainted("title", "body", None);
         let err = backend
-            .update_issue("REPOSIX", IssueId(99), patch, Some(1))
+            .update_issue("REPOSIX", RecordId(99), patch, Some(1))
             .await
             .expect_err("404 must be an error");
         match err {
@@ -2845,7 +2845,7 @@ mod tests {
             .create_issue("REPOSIX", issue)
             .await
             .expect("create_issue should succeed");
-        assert_eq!(result.id, IssueId(77777));
+        assert_eq!(result.id, RecordId(77777));
         assert_eq!(result.title, "my new page");
     }
 
@@ -2881,12 +2881,12 @@ mod tests {
             .await;
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let issue = make_untainted("child page", "body", Some(IssueId(42)));
+        let issue = make_untainted("child page", "body", Some(RecordId(42)));
         let result = backend
             .create_issue("REPOSIX", issue)
             .await
             .expect("create_issue with parent_id should succeed");
-        assert_eq!(result.id, IssueId(88888));
+        assert_eq!(result.id, RecordId(88888));
     }
 
     // -------- B6.7: create_issue without parent_id sends null --------
@@ -2924,7 +2924,7 @@ mod tests {
             .create_issue("REPOSIX", issue)
             .await
             .expect("create_issue without parent should succeed");
-        assert_eq!(result.id, IssueId(55555));
+        assert_eq!(result.id, RecordId(55555));
     }
 
     // -------- B6.8: delete_or_close sends DELETE and returns Ok on 204 --------
@@ -2940,7 +2940,7 @@ mod tests {
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         backend
-            .delete_or_close("REPOSIX", IssueId(99), DeleteReason::Completed)
+            .delete_or_close("REPOSIX", RecordId(99), DeleteReason::Completed)
             .await
             .expect("delete_or_close on 204 must return Ok");
     }
@@ -2958,7 +2958,7 @@ mod tests {
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let err = backend
-            .delete_or_close("REPOSIX", IssueId(99), DeleteReason::Completed)
+            .delete_or_close("REPOSIX", RecordId(99), DeleteReason::Completed)
             .await
             .expect_err("404 must be an error");
         match err {
@@ -3016,7 +3016,7 @@ mod tests {
         // update_issue → PUT
         let patch = make_untainted("t", "b", None);
         backend
-            .update_issue("REPOSIX", IssueId(99), patch, Some(1))
+            .update_issue("REPOSIX", RecordId(99), patch, Some(1))
             .await
             .expect("PUT must carry Content-Type: application/json");
     }
@@ -3060,12 +3060,12 @@ mod tests {
 
         let patch = make_untainted("t", "b", None);
         backend
-            .update_issue("REPOSIX", IssueId(99), patch, Some(1))
+            .update_issue("REPOSIX", RecordId(99), patch, Some(1))
             .await
             .expect("PUT must carry Basic auth");
 
         backend
-            .delete_or_close("REPOSIX", IssueId(42), DeleteReason::Completed)
+            .delete_or_close("REPOSIX", RecordId(42), DeleteReason::Completed)
             .await
             .expect("DELETE must carry Basic auth");
     }
@@ -3096,7 +3096,7 @@ mod tests {
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         // GET — arms the gate
-        let _ = backend.get_issue("REPOSIX", IssueId(10)).await;
+        let _ = backend.get_issue("REPOSIX", RecordId(10)).await;
 
         // Immediately after: gate must be set and in the future
         let gate = backend.rate_limit_gate.lock().to_owned();
@@ -3179,7 +3179,7 @@ mod tests {
 
         let patch = make_untainted("updated title", "body", None);
         backend
-            .update_issue("REPOSIX", IssueId(99), patch, Some(1))
+            .update_issue("REPOSIX", RecordId(99), patch, Some(1))
             .await
             .expect("update_issue should succeed");
 
@@ -3243,7 +3243,7 @@ mod tests {
             .with_audit(Arc::clone(&audit));
 
         backend
-            .delete_or_close("REPOSIX", IssueId(55), DeleteReason::Completed)
+            .delete_or_close("REPOSIX", RecordId(55), DeleteReason::Completed)
             .await
             .expect("delete_or_close should succeed");
 
@@ -3275,7 +3275,7 @@ mod tests {
 
         let patch = make_untainted("title check", "body", None);
         backend
-            .update_issue("REPOSIX", IssueId(99), patch, Some(1))
+            .update_issue("REPOSIX", RecordId(99), patch, Some(1))
             .await
             .expect("update_issue should succeed");
 
@@ -3337,7 +3337,7 @@ mod tests {
         let patch = make_untainted("resilience test", "body", None);
         // Must NOT return Err — audit failure is swallowed.
         backend
-            .update_issue("REPOSIX", IssueId(99), patch, Some(1))
+            .update_issue("REPOSIX", RecordId(99), patch, Some(1))
             .await
             .expect("write must succeed even when audit INSERT fails");
     }
@@ -3364,7 +3364,7 @@ mod tests {
         let patch = make_untainted("conflict test", "body", None);
         // The write itself returns Err (409 is a version mismatch error).
         let result = backend
-            .update_issue("REPOSIX", IssueId(99), patch, Some(1))
+            .update_issue("REPOSIX", RecordId(99), patch, Some(1))
             .await;
         assert!(result.is_err(), "409 must return Err");
 
@@ -3941,12 +3941,12 @@ mod tests {
 
     #[test]
     fn translate_folder_parent_propagates() {
-        // CONF-06: folder parentType + valid parentId → parent_id Some(IssueId)
+        // CONF-06: folder parentType + valid parentId → parent_id Some(RecordId)
         let page = synth_page("77", Some("99999"), Some("folder"));
         let issue = translate(page).expect("translate must succeed");
         assert_eq!(
             issue.parent_id,
-            Some(IssueId(99999)),
+            Some(RecordId(99999)),
             "folder parentType with valid id must propagate to parent_id"
         );
     }

@@ -16,7 +16,7 @@
 use std::collections::HashMap;
 
 use crate::error::{Error, Result};
-use crate::issue::IssueId;
+use crate::issue::RecordId;
 
 /// Maximum slug length in bytes.
 ///
@@ -46,15 +46,15 @@ pub fn validate_path_component(name: &str) -> Result<&str> {
 }
 
 /// Validate a filename of the form `<digits>.md` and return the parsed
-/// [`IssueId`].
+/// [`RecordId`].
 ///
 /// Rejects everything else, including paths with a directory separator,
 /// hidden files, files without the `.md` extension, and trailing whitespace.
-/// Leading zeros are accepted (`"00042.md"` → `IssueId(42)`).
+/// Leading zeros are accepted (`"00042.md"` → `RecordId(42)`).
 ///
 /// # Errors
 /// Returns [`Error::InvalidPath`] if the name is not strictly `[0-9]+\.md`.
-pub fn validate_issue_filename(name: &str) -> Result<IssueId> {
+pub fn validate_issue_filename(name: &str) -> Result<RecordId> {
     validate_path_component(name)?;
     let prefix = name
         .strip_suffix(".md")
@@ -68,7 +68,7 @@ pub fn validate_issue_filename(name: &str) -> Result<IssueId> {
     let n = prefix
         .parse::<u64>()
         .map_err(|_| Error::InvalidPath(name.to_owned()))?;
-    Ok(IssueId(n))
+    Ok(RecordId(n))
 }
 
 /// Convert a free-form title to a filesystem-safe slug.
@@ -139,7 +139,7 @@ pub fn slugify_title(title: &str) -> String {
 /// all dashes, `.`, or `..`. The 11-digit padding matches the existing
 /// `<padded-id>.md` convention in `pages/` and `issues/`.
 #[must_use]
-pub fn slug_or_fallback(title: &str, id: IssueId) -> String {
+pub fn slug_or_fallback(title: &str, id: RecordId) -> String {
     let s = slugify_title(title);
     if s.is_empty() || s == "." || s == ".." || s.chars().all(|c| c == '-') {
         format!("page-{:011}", id.0)
@@ -150,18 +150,18 @@ pub fn slug_or_fallback(title: &str, id: IssueId) -> String {
 
 /// Group siblings under one parent by slug, then assign unique suffixes.
 ///
-/// - Input: vec of `(IssueId, slug)` pairs. Input order is not assumed.
+/// - Input: vec of `(RecordId, slug)` pairs. Input order is not assumed.
 /// - Output: same length as input. For each group of colliding slugs,
-///   entries are sorted ascending by [`IssueId`]; the first keeps the bare
+///   entries are sorted ascending by [`RecordId`]; the first keeps the bare
 ///   slug, the `N`th (`N >= 2`) gets suffix `-N`.
 /// - Deterministic: same input always produces same output across mounts.
 /// - Preserves all input entries (no silent drops).
 ///
-/// The returned vec is in ascending [`IssueId`] order so callers who want
+/// The returned vec is in ascending [`RecordId`] order so callers who want
 /// a stable render order get it for free.
 #[must_use]
-pub fn dedupe_siblings(mut siblings: Vec<(IssueId, String)>) -> Vec<(IssueId, String)> {
-    // Ascending IssueId is the tie-break: smaller ids keep the bare slug.
+pub fn dedupe_siblings(mut siblings: Vec<(RecordId, String)>) -> Vec<(RecordId, String)> {
+    // Ascending RecordId is the tie-break: smaller ids keep the bare slug.
     siblings.sort_by_key(|(id, _)| *id);
     let mut seen: HashMap<String, u32> = HashMap::new();
     let mut out = Vec::with_capacity(siblings.len());
@@ -396,27 +396,27 @@ mod tests {
 
     #[test]
     fn fallback_on_empty_input() {
-        assert_eq!(slug_or_fallback("", IssueId(42)), "page-00000000042");
+        assert_eq!(slug_or_fallback("", RecordId(42)), "page-00000000042");
     }
 
     #[test]
     fn fallback_on_all_dashes() {
-        assert_eq!(slug_or_fallback("---", IssueId(7)), "page-00000000007");
+        assert_eq!(slug_or_fallback("---", RecordId(7)), "page-00000000007");
     }
 
     #[test]
     fn fallback_on_double_dot() {
-        assert_eq!(slug_or_fallback("..", IssueId(3)), "page-00000000003");
+        assert_eq!(slug_or_fallback("..", RecordId(3)), "page-00000000003");
     }
 
     #[test]
     fn fallback_on_all_multibyte() {
-        assert_eq!(slug_or_fallback("日本語", IssueId(100)), "page-00000000100");
+        assert_eq!(slug_or_fallback("日本語", RecordId(100)), "page-00000000100");
     }
 
     #[test]
     fn fallback_passthrough_for_nonempty_slug() {
-        assert_eq!(slug_or_fallback("Welcome", IssueId(1)), "welcome");
+        assert_eq!(slug_or_fallback("Welcome", RecordId(1)), "welcome");
     }
 
     // --- Phase 13: dedupe_siblings -----------------------------------------
@@ -424,17 +424,17 @@ mod tests {
     #[test]
     fn dedupe_assigns_suffix_to_lower_id_first() {
         let input = vec![
-            (IssueId(5), "foo".to_owned()),
-            (IssueId(3), "foo".to_owned()),
-            (IssueId(4), "bar".to_owned()),
+            (RecordId(5), "foo".to_owned()),
+            (RecordId(3), "foo".to_owned()),
+            (RecordId(4), "bar".to_owned()),
         ];
         let got = dedupe_siblings(input);
         assert_eq!(
             got,
             vec![
-                (IssueId(3), "foo".to_owned()),
-                (IssueId(4), "bar".to_owned()),
-                (IssueId(5), "foo-2".to_owned()),
+                (RecordId(3), "foo".to_owned()),
+                (RecordId(4), "bar".to_owned()),
+                (RecordId(5), "foo-2".to_owned()),
             ]
         );
     }
@@ -442,17 +442,17 @@ mod tests {
     #[test]
     fn dedupe_three_colliders_get_ascending_suffixes() {
         let input = vec![
-            (IssueId(30), "same".to_owned()),
-            (IssueId(10), "same".to_owned()),
-            (IssueId(20), "same".to_owned()),
+            (RecordId(30), "same".to_owned()),
+            (RecordId(10), "same".to_owned()),
+            (RecordId(20), "same".to_owned()),
         ];
         let got = dedupe_siblings(input);
         assert_eq!(
             got,
             vec![
-                (IssueId(10), "same".to_owned()),
-                (IssueId(20), "same-2".to_owned()),
-                (IssueId(30), "same-3".to_owned()),
+                (RecordId(10), "same".to_owned()),
+                (RecordId(20), "same-2".to_owned()),
+                (RecordId(30), "same-3".to_owned()),
             ]
         );
     }
@@ -465,8 +465,8 @@ mod tests {
 
     #[test]
     fn dedupe_preserves_all_entries() {
-        let input: Vec<(IssueId, String)> = (1..=10)
-            .map(|i| (IssueId(i), format!("slug-{}", i % 3)))
+        let input: Vec<(RecordId, String)> = (1..=10)
+            .map(|i| (RecordId(i), format!("slug-{}", i % 3)))
             .collect();
         let got = dedupe_siblings(input.clone());
         assert_eq!(got.len(), input.len(), "no entries may be dropped");
@@ -479,10 +479,10 @@ mod tests {
     #[test]
     fn dedupe_is_deterministic() {
         let input = vec![
-            (IssueId(2), "foo".to_owned()),
-            (IssueId(1), "foo".to_owned()),
-            (IssueId(4), "bar".to_owned()),
-            (IssueId(3), "foo".to_owned()),
+            (RecordId(2), "foo".to_owned()),
+            (RecordId(1), "foo".to_owned()),
+            (RecordId(4), "bar".to_owned()),
+            (RecordId(3), "foo".to_owned()),
         ];
         let a = dedupe_siblings(input.clone());
         let b = dedupe_siblings(input);

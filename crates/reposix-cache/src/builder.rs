@@ -1,7 +1,7 @@
 //! Tree construction and lazy blob materialization.
 
 use chrono::Utc;
-use reposix_core::{frontmatter, IssueId, Tainted};
+use reposix_core::{frontmatter, RecordId, Tainted};
 
 use crate::cache::Cache;
 use crate::error::{Error, Result};
@@ -12,7 +12,7 @@ use crate::{audit, meta};
 pub struct SyncReport {
     /// Issue IDs the backend reported as changed since `since`.
     /// Empty on the seed path (no prior cursor).
-    pub changed_ids: Vec<IssueId>,
+    pub changed_ids: Vec<RecordId>,
     /// The timestamp passed to the backend, or `None` on the seed
     /// path (no prior `last_fetched_at`).
     pub since: Option<chrono::DateTime<chrono::Utc>>,
@@ -243,7 +243,7 @@ impl Cache {
 
         // Step 3: materialize each changed issue's blob eagerly.
         let hash_kind = self.repo.object_hash();
-        let mut changed_blob_oids: Vec<(IssueId, gix::ObjectId)> =
+        let mut changed_blob_oids: Vec<(RecordId, gix::ObjectId)> =
             Vec::with_capacity(changed_ids.len());
         for id in &changed_ids {
             let issue = match self.backend.get_issue(&self.project, *id).await {
@@ -422,7 +422,7 @@ impl Cache {
                 .ok_or_else(|| Error::UnknownOid(oid_hex.clone()))?
         };
 
-        // Parse back to IssueId.
+        // Parse back to RecordId.
         let issue_num: u64 = issue_id_str.parse().map_err(|_| {
             Error::Backend(format!("oid_map issue_id {issue_id_str} is not numeric"))
         })?;
@@ -431,7 +431,7 @@ impl Cache {
         // THEN return Egress.
         let issue = match self
             .backend
-            .get_issue(&self.project, IssueId(issue_num))
+            .get_issue(&self.project, RecordId(issue_num))
             .await
         {
             Ok(i) => i,

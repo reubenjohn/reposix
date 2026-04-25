@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
 
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::BackendConnector;
-use reposix_core::{Issue, IssueId, IssueStatus};
+use reposix_core::{Issue, RecordId, IssueStatus};
 use wiremock::matchers::{method, path, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -59,7 +59,7 @@ pub fn sample_issues(project: &str, n: usize) -> Vec<Issue> {
     let t = chrono::Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
     (1..=n)
         .map(|i| Issue {
-            id: IssueId(i as u64),
+            id: RecordId(i as u64),
             title: format!("issue {i} in {project}"),
             status: IssueStatus::Open,
             assignee: None,

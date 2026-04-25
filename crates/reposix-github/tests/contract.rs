@@ -13,7 +13,7 @@
 //! 2. The list is non-empty (≥1 issue).
 //! 3. `get_issue(project, known_issue_id)` returns `Ok(issue)` with matching
 //!    id.
-//! 4. `get_issue(project, IssueId(u64::MAX))` returns `Err` (the 404 path).
+//! 4. `get_issue(project, RecordId(u64::MAX))` returns `Err` (the 404 path).
 //! 5. Every listed issue's status is a valid [`IssueStatus`] variant — the
 //!    adapter didn't leave a raw backend-specific string dangling.
 //!
@@ -34,7 +34,7 @@ use std::path::PathBuf;
 
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::backend::BackendConnector;
-use reposix_core::{IssueId, IssueStatus};
+use reposix_core::{RecordId, IssueStatus};
 use reposix_github::GithubReadOnlyBackend;
 use serde_json::json;
 use wiremock::matchers::{any, header_exists, method, path, query_param};
@@ -44,7 +44,7 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 ///
 /// Every assertion writes its expectation inline so a failing run points
 /// directly at the rule that broke, not a distant line of driver code.
-async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_issue_id: IssueId) {
+async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_issue_id: RecordId) {
     // (1) list_issues returns Ok(vec).
     let issues = backend.list_issues(project).await.unwrap_or_else(|e| {
         panic!(
@@ -78,7 +78,7 @@ async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_
     );
 
     // (4) u64::MAX is expected to be absent — this is the 404 path.
-    let missing = backend.get_issue(project, IssueId(u64::MAX)).await;
+    let missing = backend.get_issue(project, RecordId(u64::MAX)).await;
     assert!(
         missing.is_err(),
         "[{}] get_issue({project}, u64::MAX) should be Err, got {missing:?}",
@@ -159,7 +159,7 @@ async fn contract_sim() {
 
     // The seed fixture at crates/reposix-sim/fixtures/seed.json guarantees
     // id=1 exists in the "demo" project.
-    assert_contract(&backend, "demo", IssueId(1)).await;
+    assert_contract(&backend, "demo", RecordId(1)).await;
 
     handle.abort();
 }
@@ -260,7 +260,7 @@ async fn contract_github_wiremock() {
         .await;
 
     let backend = GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
-    assert_contract(&backend, "o/r", IssueId(1)).await;
+    assert_contract(&backend, "o/r", RecordId(1)).await;
 }
 
 // --------------------------------------------------- pagination
@@ -311,8 +311,8 @@ async fn pagination_follows_link_header() {
     let backend = GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
     let issues = backend.list_issues("o/r").await.expect("list");
     assert_eq!(issues.len(), 3, "expected page1 (2) + page2 (1) = 3 issues");
-    assert_eq!(issues[0].id, IssueId(1));
-    assert_eq!(issues[2].id, IssueId(3));
+    assert_eq!(issues[0].id, RecordId(1));
+    assert_eq!(issues[2].id, RecordId(3));
 }
 
 // --------------------------------------------------- rate-limit 429
@@ -345,7 +345,7 @@ async fn rate_limit_429_surfaces_clean_error() {
 
     let backend = GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
     let err = backend
-        .get_issue("o/r", IssueId(42))
+        .get_issue("o/r", RecordId(42))
         .await
         .expect_err("429 must surface as Err with current adapter");
     let msg = format!("{err:?}");
@@ -484,11 +484,11 @@ async fn adversarial_html_url_does_not_trigger_outbound_call() {
 
     let issues = backend.list_issues("o/r").await.expect("list");
     assert_eq!(issues.len(), 1);
-    assert_eq!(issues[0].id, IssueId(1));
+    assert_eq!(issues[0].id, RecordId(1));
     assert_eq!(issues[0].assignee.as_deref(), Some("octocat"));
 
-    let single = backend.get_issue("o/r", IssueId(1)).await.expect("get");
-    assert_eq!(single.id, IssueId(1));
+    let single = backend.get_issue("o/r", RecordId(1)).await.expect("get");
+    assert_eq!(single.id, RecordId(1));
 
     // Inline assertion on top of `.expect(0)`'s drop-panic so failures
     // surface with a useful diagnostic.
@@ -574,7 +574,7 @@ async fn user_agent_header_is_set() {
 
     let backend = GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
     backend
-        .get_issue("o/r", IssueId(1))
+        .get_issue("o/r", RecordId(1))
         .await
         .expect("get_issue should succeed (User-Agent present)");
 
@@ -624,5 +624,5 @@ async fn contract_github() {
 
     // octocat/Hello-World is GitHub's canonical stable fixture repo. Issue
     // #1 has existed since 2011 and is unlikely to disappear.
-    assert_contract(&backend, "octocat/Hello-World", IssueId(1)).await;
+    assert_contract(&backend, "octocat/Hello-World", RecordId(1)).await;
 }

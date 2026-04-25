@@ -318,15 +318,15 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
     // frontmatter and compare its `version` against the prior's
     // `version`. Mismatch => conflict. New issues (Create path) skip
     // the check — no base to conflict with.
-    let prior_by_id: std::collections::HashMap<reposix_core::IssueId, &reposix_core::Issue> =
+    let prior_by_id: std::collections::HashMap<reposix_core::RecordId, &reposix_core::Issue> =
         prior.iter().map(|i| (i.id, i)).collect();
     // Tuple shape: (id, local_version, backend_version, backend_updated_at_iso8601)
-    let mut conflicts: Vec<(reposix_core::IssueId, u64, u64, String)> = Vec::new();
+    let mut conflicts: Vec<(reposix_core::RecordId, u64, u64, String)> = Vec::new();
     for (path, mark) in &parsed.tree {
         let Some(id_num) = issue_id_from_path(path) else {
             continue; // non-issue paths (e.g. README) are not conflict-checked
         };
-        let id = reposix_core::IssueId(id_num);
+        let id = reposix_core::RecordId(id_num);
         let Some(prior_issue) = prior_by_id.get(&id) else {
             continue; // new issue (Create path) — no base to conflict with
         };

@@ -18,7 +18,7 @@ use axum::{
     Json, Router,
 };
 use chrono::{DateTime, SecondsFormat, Utc};
-use reposix_core::{Issue, IssueId, IssueStatus};
+use reposix_core::{Issue, RecordId, IssueStatus};
 use rusqlite::{params, Connection, TransactionBehavior};
 use serde::Deserialize;
 use serde_json::Value;
@@ -105,7 +105,7 @@ impl RawIssueRow {
         #[allow(clippy::cast_sign_loss)]
         let version = self.version as u64;
         Ok(Issue {
-            id: IssueId(id),
+            id: RecordId(id),
             title: self.title,
             status: parse_status(&self.status)?,
             assignee: self.assignee,

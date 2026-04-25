@@ -11,9 +11,9 @@ use crate::error::{Error, Result};
 /// type signals that the simulator may use a much larger ID space without API breakage.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct IssueId(pub u64);
+pub struct RecordId(pub u64);
 
-impl std::fmt::Display for IssueId {
+impl std::fmt::Display for RecordId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
@@ -54,7 +54,7 @@ impl IssueStatus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Issue {
     /// Project-scoped unique id.
-    pub id: IssueId,
+    pub id: RecordId,
     /// Single-line summary.
     pub title: String,
     /// Workflow state.
@@ -82,7 +82,7 @@ pub struct Issue {
     /// `tree/` overlay (pre-v0.9.0); preserved as a metadata field on
     /// the partial-clone working tree.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub parent_id: Option<IssueId>,
+    pub parent_id: Option<RecordId>,
     /// Backend-specific metadata that does not fit the canonical 5-field schema.
     ///
     /// Keys are backend-defined strings (e.g. `"jira_key"`, `"issue_type"`).
@@ -102,7 +102,7 @@ pub mod frontmatter {
     /// Subset of [`Issue`] that lives inside the frontmatter (everything except `body`).
     #[derive(Debug, Serialize, Deserialize)]
     struct Frontmatter {
-        id: super::IssueId,
+        id: super::RecordId,
         title: String,
         status: super::IssueStatus,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -114,7 +114,7 @@ pub mod frontmatter {
         #[serde(default)]
         version: u64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        parent_id: Option<super::IssueId>,
+        parent_id: Option<super::RecordId>,
         #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
         extensions: BTreeMap<String, serde_yaml::Value>,
     }
@@ -221,7 +221,7 @@ mod tests {
     fn sample() -> Issue {
         let t = Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
         Issue {
-            id: IssueId(123),
+            id: RecordId(123),
             title: "thing is broken".into(),
             status: IssueStatus::InProgress,
             assignee: Some("agent-alpha".into()),
@@ -260,14 +260,14 @@ mod tests {
     #[test]
     fn parent_id_roundtrips_through_json_when_some() {
         let mut iss = sample();
-        iss.parent_id = Some(IssueId(42));
+        iss.parent_id = Some(RecordId(42));
         let json = serde_json::to_string(&iss).unwrap();
         assert!(
             json.contains("\"parent_id\":42"),
             "expected `\"parent_id\":42` in JSON, got: {json}"
         );
         let back: Issue = serde_json::from_str(&json).unwrap();
-        assert_eq!(back.parent_id, Some(IssueId(42)));
+        assert_eq!(back.parent_id, Some(RecordId(42)));
     }
 
     #[test]
@@ -291,14 +291,14 @@ mod tests {
     #[test]
     fn parent_id_roundtrips_through_frontmatter_when_some() {
         let mut iss = sample();
-        iss.parent_id = Some(IssueId(777));
+        iss.parent_id = Some(RecordId(777));
         let rendered = frontmatter::render(&iss).expect("render");
         assert!(
             rendered.contains("parent_id: 777"),
             "expected `parent_id: 777` in YAML, got: {rendered}"
         );
         let parsed = frontmatter::parse(&rendered).expect("parse");
-        assert_eq!(parsed.parent_id, Some(IssueId(777)));
+        assert_eq!(parsed.parent_id, Some(RecordId(777)));
     }
 
     #[test]
@@ -316,7 +316,7 @@ mod tests {
         // Plan 13-B3 SC-required test: the rendered YAML contains the exact line
         // `parent_id: 42` (serde_yaml emits numeric scalars unquoted).
         let mut iss = sample();
-        iss.parent_id = Some(IssueId(42));
+        iss.parent_id = Some(RecordId(42));
         let rendered = frontmatter::render(&iss).expect("render");
         assert!(
             rendered.contains("parent_id: 42\n"),
@@ -339,8 +339,8 @@ parent_id: 42\n\
 ---\n\
 body here.\n";
         let iss = frontmatter::parse(text).expect("parse");
-        assert_eq!(iss.parent_id, Some(IssueId(42)));
-        assert_eq!(iss.id, IssueId(1));
+        assert_eq!(iss.parent_id, Some(RecordId(42)));
+        assert_eq!(iss.id, RecordId(1));
         assert_eq!(iss.title, "child page");
     }
 
@@ -369,7 +369,7 @@ Body goes here.\n";
         // Catches any drift between the public `Issue` struct and the private
         // `Frontmatter` DTO.
         let mut original = sample();
-        original.parent_id = Some(IssueId(131_192));
+        original.parent_id = Some(RecordId(131_192));
         let rendered = frontmatter::render(&original).expect("render");
         let parsed = frontmatter::parse(&rendered).expect("parse");
         assert_eq!(parsed.id, original.id);
@@ -381,7 +381,7 @@ Body goes here.\n";
         assert_eq!(parsed.updated_at, original.updated_at);
         assert_eq!(parsed.version, original.version);
         assert_eq!(parsed.body, original.body);
-        assert_eq!(parsed.parent_id, Some(IssueId(131_192)));
+        assert_eq!(parsed.parent_id, Some(RecordId(131_192)));
     }
 
     #[test]

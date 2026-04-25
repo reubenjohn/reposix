@@ -16,7 +16,7 @@ use std::sync::Arc;
 use parking_lot::Mutex;
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::{BackendConnector, DeleteReason};
-use reposix_core::{Issue, IssueId, IssueStatus, Tainted, Untainted};
+use reposix_core::{Issue, RecordId, IssueStatus, Tainted, Untainted};
 use rusqlite::Connection;
 use serde_json::json;
 use wiremock::matchers::{method, path, query_param};
@@ -45,7 +45,7 @@ fn make_issue(title: &str, body: &str) -> Untainted<Issue> {
         .with_timezone(&chrono::Utc);
     sanitize(
         Tainted::new(Issue {
-            id: IssueId(0),
+            id: RecordId(0),
             title: title.to_owned(),
             status: IssueStatus::Open,
             assignee: None,
@@ -58,7 +58,7 @@ fn make_issue(title: &str, body: &str) -> Untainted<Issue> {
             extensions: std::collections::BTreeMap::new(),
         }),
         ServerMetadata {
-            id: IssueId(0),
+            id: RecordId(0),
             created_at: t,
             updated_at: t,
             version: 1,
@@ -140,20 +140,20 @@ async fn create_then_get_roundtrip_with_audit() {
         .expect("backend")
         .with_audit(Arc::clone(&audit));
 
-    // 4. create_issue: POST the page, get back IssueId(777).
+    // 4. create_issue: POST the page, get back RecordId(777).
     let issue_to_create = make_issue("Title", "# Title\nhello world\n");
     let created = backend
         .create_issue("REPOSIX", issue_to_create)
         .await
         .expect("create_issue must succeed");
-    assert_eq!(created.id, IssueId(777), "created page id must be 777");
+    assert_eq!(created.id, RecordId(777), "created page id must be 777");
 
     // 5. get_issue: GET the page by id, receive ADF, convert to Markdown.
     let fetched = backend
-        .get_issue("REPOSIX", IssueId(777))
+        .get_issue("REPOSIX", RecordId(777))
         .await
         .expect("get_issue must succeed");
-    assert_eq!(fetched.id, IssueId(777));
+    assert_eq!(fetched.id, RecordId(777));
 
     // 6. Body must contain the heading and paragraph text from the ADF.
     assert!(
@@ -201,7 +201,7 @@ async fn delete_or_close_is_audited_in_integration_context() {
         .with_audit(Arc::clone(&audit));
 
     backend
-        .delete_or_close("REPOSIX", IssueId(42), DeleteReason::Completed)
+        .delete_or_close("REPOSIX", RecordId(42), DeleteReason::Completed)
         .await
         .expect("delete_or_close must succeed");
 

@@ -19,7 +19,7 @@
 //! 1. `list_issues(project)` returns `Ok(vec)` for a known-good project.
 //! 2. The list is non-empty (≥1 issue).
 //! 3. `get_issue(project, known_issue_id)` returns `Ok(issue)` with matching id.
-//! 4. `get_issue(project, IssueId(u64::MAX))` returns `Err` (the 404 path).
+//! 4. `get_issue(project, RecordId(u64::MAX))` returns `Err` (the 404 path).
 //! 5. Every listed issue's status is a valid [`IssueStatus`] variant — the
 //!    adapter didn't leave a raw backend-specific string dangling.
 //!
@@ -41,7 +41,7 @@ use std::path::PathBuf;
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::backend::BackendConnector;
-use reposix_core::{IssueId, IssueStatus};
+use reposix_core::{RecordId, IssueStatus};
 use serde_json::json;
 use wiremock::matchers::{method, path, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -79,7 +79,7 @@ macro_rules! skip_if_no_env {
 /// directly at the rule that broke, not a distant line of driver code.
 /// Shared verbatim with `reposix-github/tests/contract.rs` by intent —
 /// the trait's value *is* this shared contract.
-async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_issue_id: IssueId) {
+async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_issue_id: RecordId) {
     // (1) list_issues returns Ok(vec).
     let issues = backend.list_issues(project).await.unwrap_or_else(|e| {
         panic!(
@@ -113,7 +113,7 @@ async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_
     );
 
     // (4) u64::MAX is expected to be absent — this is the 404 path.
-    let missing = backend.get_issue(project, IssueId(u64::MAX)).await;
+    let missing = backend.get_issue(project, RecordId(u64::MAX)).await;
     assert!(
         missing.is_err(),
         "[{}] get_issue({project}, u64::MAX) should be Err, got {missing:?}",
@@ -198,7 +198,7 @@ async fn contract_sim() {
 
     // The seed fixture at crates/reposix-sim/fixtures/seed.json guarantees
     // id=1 exists in the "demo" project.
-    assert_contract(&backend, "demo", IssueId(1)).await;
+    assert_contract(&backend, "demo", RecordId(1)).await;
 
     handle.abort();
 }
@@ -207,7 +207,7 @@ async fn contract_sim() {
 
 /// Always runs. Mounts the three Confluence v2 endpoints the contract
 /// sequence hits (space-key resolver → list pages → get single page)
-/// plus a 404 for `IssueId(u64::MAX)` and drives `assert_contract`
+/// plus a 404 for `RecordId(u64::MAX)` and drives `assert_contract`
 /// through [`ConfluenceBackend`].
 ///
 /// Stronger than the unit tests in `lib.rs` because it exercises the
@@ -270,7 +270,7 @@ async fn contract_confluence_wiremock() {
         .mount(&server)
         .await;
 
-    // 3. IssueId(u64::MAX) → 404. MOUNTED BEFORE the id=1 success mount
+    // 3. RecordId(u64::MAX) → 404. MOUNTED BEFORE the id=1 success mount
     //    below so wiremock's most-recently-mounted-first matching
     //    doesn't let the broader path matcher swallow `pages/1`.
     Mock::given(method("GET"))
@@ -282,7 +282,7 @@ async fn contract_confluence_wiremock() {
         .mount(&server)
         .await;
 
-    // 4. get_issue(IssueId(1)) — single page with ADF body (C4: atlas_doc_format path).
+    // 4. get_issue(RecordId(1)) — single page with ADF body (C4: atlas_doc_format path).
     Mock::given(method("GET"))
         .and(path("/wiki/api/v2/pages/1"))
         .and(query_param("body-format", "atlas_doc_format"))
@@ -318,7 +318,7 @@ async fn contract_confluence_wiremock() {
     };
     let backend = ConfluenceBackend::new_with_base_url(creds, server.uri()).expect("backend");
 
-    assert_contract(&backend, "REPOSIX", IssueId(1)).await;
+    assert_contract(&backend, "REPOSIX", RecordId(1)).await;
 }
 
 // ----------------------------------------------- SSRF regression tests
@@ -409,7 +409,7 @@ async fn adversarial_links_base_does_not_trigger_outbound_call() {
         .await
         .expect("list_issues succeeded");
     assert_eq!(issues.len(), 1, "one page in fixture");
-    assert_eq!(issues[0].id, IssueId(1));
+    assert_eq!(issues[0].id, RecordId(1));
 
     // Explicit sanity check — wiremock also verifies on drop, but an
     // inline assertion produces a clearer failure message if the decoy
@@ -525,10 +525,10 @@ async fn adversarial_webui_link_does_not_trigger_outbound_call() {
     // `webui_link` on the single-page shape gets the same regression
     // coverage as the list shape.
     let single = backend
-        .get_issue("REPOSIX", IssueId(1))
+        .get_issue("REPOSIX", RecordId(1))
         .await
         .expect("get_issue succeeded");
-    assert_eq!(single.id, IssueId(1));
+    assert_eq!(single.id, RecordId(1));
 
     let hits = decoy_server.received_requests().await.unwrap_or_default();
     assert!(
@@ -650,7 +650,7 @@ async fn adversarial_host_in_arbitrary_string_field_is_ignored() {
     assert!(issues[0].title.contains("title-exfil"));
 
     let single = backend
-        .get_issue("REPOSIX", IssueId(1))
+        .get_issue("REPOSIX", RecordId(1))
         .await
         .expect("get_issue succeeded");
     assert!(single.body.contains("body-exfil"));

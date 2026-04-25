@@ -20,7 +20,7 @@
 
 use chrono::{DateTime, Utc};
 
-use crate::issue::{Issue, IssueId};
+use crate::issue::{Issue, RecordId};
 
 /// Wrapper for values that originated from untrusted (network, agent) input.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -80,7 +80,7 @@ impl<T> Untainted<T> {
 #[derive(Debug, Clone)]
 pub struct ServerMetadata {
     /// Server-assigned id.
-    pub id: IssueId,
+    pub id: RecordId,
     /// Server-assigned creation timestamp.
     pub created_at: DateTime<Utc>,
     /// Server-assigned last-update timestamp.
@@ -174,7 +174,7 @@ mod tests {
     fn tainted_issue_version_999999() -> Tainted<Issue> {
         let t = Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap();
         Tainted::new(Issue {
-            id: IssueId(999_999),
+            id: RecordId(999_999),
             title: "agent-authored title".into(),
             status: IssueStatus::Open,
             assignee: Some("agent-alpha".into()),
@@ -191,7 +191,7 @@ mod tests {
     fn server_meta() -> ServerMetadata {
         let t = Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
         ServerMetadata {
-            id: IssueId(42),
+            id: RecordId(42),
             created_at: t,
             updated_at: t,
             version: 5,

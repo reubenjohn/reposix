@@ -9,7 +9,7 @@ use chrono::DurationRound as _;
 use chrono::TimeZone as _;
 use reposix_cli::list::ListBackend;
 use reposix_cli::refresh::{run_refresh, RefreshConfig};
-use reposix_core::{Issue, IssueId, IssueStatus};
+use reposix_core::{Issue, RecordId, IssueStatus};
 use tempfile::tempdir;
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -17,7 +17,7 @@ use tempfile::tempdir;
 fn make_test_issue(id: u64, title: &str) -> Issue {
     let t = chrono::Utc.with_ymd_and_hms(2026, 4, 15, 0, 0, 0).unwrap();
     Issue {
-        id: IssueId(id),
+        id: RecordId(id),
         title: title.to_owned(),
         status: IssueStatus::Open,
         assignee: None,

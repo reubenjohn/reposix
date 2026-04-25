@@ -63,7 +63,7 @@ use serde::Deserialize;
 
 use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason};
 use reposix_core::http::{client, ClientOpts, HttpClient};
-use reposix_core::{Error, Issue, IssueId, IssueStatus, Result, Untainted};
+use reposix_core::{Error, Issue, RecordId, IssueStatus, Result, Untainted};
 
 /// Maximum time we'll wait for a rate-limit reset before surfacing the
 /// exhaustion as an error. Caps the worst-case call latency; a well-behaved
@@ -304,7 +304,7 @@ fn translate(gh: GhIssue) -> Issue {
         .collect();
 
     Issue {
-        id: IssueId(gh.number),
+        id: RecordId(gh.number),
         title: gh.title,
         status,
         assignee: gh.assignee.map(|u| u.login),
@@ -409,7 +409,7 @@ impl BackendConnector for GithubReadOnlyBackend {
         Ok(out)
     }
 
-    async fn get_issue(&self, project: &str, id: IssueId) -> Result<Issue> {
+    async fn get_issue(&self, project: &str, id: RecordId) -> Result<Issue> {
         let url = format!("{}/repos/{}/issues/{}", self.base(), project, id.0);
         let header_owned = self.standard_headers();
         let header_refs: Vec<(&str, &str)> =
@@ -439,7 +439,7 @@ impl BackendConnector for GithubReadOnlyBackend {
         &self,
         project: &str,
         since: chrono::DateTime<chrono::Utc>,
-    ) -> Result<Vec<IssueId>> {
+    ) -> Result<Vec<RecordId>> {
         // GitHub's `GET /repos/{owner}/{repo}/issues` natively accepts
         // `?since=<ISO8601>`; reuse the same pagination loop as `list_issues`
         // but emit IDs only.
@@ -452,7 +452,7 @@ impl BackendConnector for GithubReadOnlyBackend {
             since_iso
         );
         let mut next_url: Option<String> = Some(first);
-        let mut out: Vec<IssueId> = Vec::new();
+        let mut out: Vec<RecordId> = Vec::new();
         let mut pages: usize = 0;
 
         let header_owned = self.standard_headers();
@@ -509,7 +509,7 @@ impl BackendConnector for GithubReadOnlyBackend {
     async fn update_issue(
         &self,
         _project: &str,
-        _id: IssueId,
+        _id: RecordId,
         _patch: Untainted<Issue>,
         _expected_version: Option<u64>,
     ) -> Result<Issue> {
@@ -521,7 +521,7 @@ impl BackendConnector for GithubReadOnlyBackend {
     async fn delete_or_close(
         &self,
         _project: &str,
-        _id: IssueId,
+        _id: RecordId,
         _reason: DeleteReason,
     ) -> Result<()> {
         Err(Error::Other(
@@ -579,9 +579,9 @@ mod tests {
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
         let issues = backend.list_issues("octocat/hello").await.expect("list");
         assert_eq!(issues.len(), 2);
-        assert_eq!(issues[0].id, IssueId(1));
+        assert_eq!(issues[0].id, RecordId(1));
         assert_eq!(issues[0].status, IssueStatus::Open);
-        assert_eq!(issues[1].id, IssueId(2));
+        assert_eq!(issues[1].id, RecordId(2));
         assert_eq!(issues[1].status, IssueStatus::Done);
     }
 
@@ -602,10 +602,10 @@ mod tests {
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
         let issue = backend
-            .get_issue("foo/bar", IssueId(42))
+            .get_issue("foo/bar", RecordId(42))
             .await
             .expect("get");
-        assert_eq!(issue.id, IssueId(42));
+        assert_eq!(issue.id, RecordId(42));
         assert_eq!(issue.title, "issue 42");
     }
 
@@ -660,8 +660,8 @@ mod tests {
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
         let issues = backend.list_issues("o/r").await.expect("list");
         assert_eq!(issues.len(), 3, "expected all 3 pages combined");
-        assert_eq!(issues[0].id, IssueId(1));
-        assert_eq!(issues[2].id, IssueId(3));
+        assert_eq!(issues[0].id, RecordId(1));
+        assert_eq!(issues[2].id, RecordId(3));
     }
 
     #[tokio::test]
@@ -680,7 +680,7 @@ mod tests {
 
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
-        let issue = backend.get_issue("x/y", IssueId(99)).await.expect("get");
+        let issue = backend.get_issue("x/y", RecordId(99)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::Done);
     }
 
@@ -700,7 +700,7 @@ mod tests {
 
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
-        let issue = backend.get_issue("x/y", IssueId(100)).await.expect("get");
+        let issue = backend.get_issue("x/y", RecordId(100)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::WontFix);
     }
 
@@ -720,7 +720,7 @@ mod tests {
 
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
-        let issue = backend.get_issue("x/y", IssueId(7)).await.expect("get");
+        let issue = backend.get_issue("x/y", RecordId(7)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::InProgress);
         // Status label is stripped from the user-visible labels.
         assert_eq!(issue.labels, vec!["bug".to_string()]);
@@ -742,7 +742,7 @@ mod tests {
 
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
-        let issue = backend.get_issue("x/y", IssueId(8)).await.expect("get");
+        let issue = backend.get_issue("x/y", RecordId(8)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::InReview);
     }
 
@@ -758,7 +758,7 @@ mod tests {
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
         let err = backend
-            .get_issue("x/y", IssueId(9999))
+            .get_issue("x/y", RecordId(9999))
             .await
             .expect_err("404 should surface as error");
         match err {
@@ -790,7 +790,7 @@ mod tests {
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
         let _ = backend
-            .get_issue("octocat/Hello-World", IssueId(42))
+            .get_issue("octocat/Hello-World", RecordId(42))
             .await
             .expect("get");
         // Now the gate must be set to within ~2s of now. A follow-up call
@@ -822,7 +822,7 @@ mod tests {
         let t = chrono::Utc::now();
         let u = sanitize(
             Tainted::new(Issue {
-                id: IssueId(0),
+                id: RecordId(0),
                 title: "x".into(),
                 status: IssueStatus::Open,
                 assignee: None,
@@ -835,7 +835,7 @@ mod tests {
                 extensions: std::collections::BTreeMap::new(),
             }),
             ServerMetadata {
-                id: IssueId(1),
+                id: RecordId(1),
                 created_at: t,
                 updated_at: t,
                 version: 1,
@@ -858,7 +858,7 @@ mod tests {
         let t = chrono::Utc::now();
         let u = sanitize(
             Tainted::new(Issue {
-                id: IssueId(0),
+                id: RecordId(0),
                 title: "x".into(),
                 status: IssueStatus::Open,
                 assignee: None,
@@ -871,14 +871,14 @@ mod tests {
                 extensions: std::collections::BTreeMap::new(),
             }),
             ServerMetadata {
-                id: IssueId(1),
+                id: RecordId(1),
                 created_at: t,
                 updated_at: t,
                 version: 1,
             },
         );
         assert!(matches!(
-            backend.update_issue("x/y", IssueId(1), u, None).await,
+            backend.update_issue("x/y", RecordId(1), u, None).await,
             Err(Error::Other(m)) if m.starts_with("not supported:")
         ));
     }
@@ -889,7 +889,7 @@ mod tests {
             .expect("backend");
         assert!(matches!(
             backend
-                .delete_or_close("x/y", IssueId(1), DeleteReason::Completed)
+                .delete_or_close("x/y", RecordId(1), DeleteReason::Completed)
                 .await,
             Err(Error::Other(m)) if m.starts_with("not supported:")
         ));
@@ -937,7 +937,7 @@ mod tests {
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
         let t = Utc.with_ymd_and_hms(2026, 4, 24, 0, 0, 0).unwrap();
         let ids = backend.list_changed_since("octo/r", t).await.expect("list");
-        assert_eq!(ids, vec![IssueId(7)]);
+        assert_eq!(ids, vec![RecordId(7)]);
     }
 
     #[test]

@@ -36,7 +36,7 @@
 
 use async_trait::async_trait;
 
-use crate::issue::{Issue, IssueId};
+use crate::issue::{Issue, RecordId};
 use crate::taint::Untainted;
 use crate::Result;
 
@@ -161,7 +161,7 @@ pub trait BackendConnector: Send + Sync {
         &self,
         project: &str,
         since: chrono::DateTime<chrono::Utc>,
-    ) -> Result<Vec<IssueId>> {
+    ) -> Result<Vec<RecordId>> {
         let all = self.list_issues(project).await?;
         Ok(all
             .into_iter()
@@ -176,7 +176,7 @@ pub trait BackendConnector: Send + Sync {
     /// - Transport errors propagate.
     /// - Unknown `id` returns `Err(Error::Other("not found: ..."))`. See
     ///   module docs re: v0.2 typed `NotFound` variant.
-    async fn get_issue(&self, project: &str, id: IssueId) -> Result<Issue>;
+    async fn get_issue(&self, project: &str, id: RecordId) -> Result<Issue>;
 
     /// Create a new issue. The `Untainted` wrapper enforces that server-
     /// controlled fields on `issue` (`id`, `created_at`, `version`) have been
@@ -206,7 +206,7 @@ pub trait BackendConnector: Send + Sync {
     async fn update_issue(
         &self,
         project: &str,
-        id: IssueId,
+        id: RecordId,
         patch: Untainted<Issue>,
         expected_version: Option<u64>,
     ) -> Result<Issue>;
@@ -219,7 +219,7 @@ pub trait BackendConnector: Send + Sync {
     /// - Transport errors propagate.
     /// - Unknown id returns `Err(Error::Other("not found: ..."))`.
     /// - Read-only backends return `Err(Error::Other("not supported: ..."))`.
-    async fn delete_or_close(&self, project: &str, id: IssueId, reason: DeleteReason)
+    async fn delete_or_close(&self, project: &str, id: RecordId, reason: DeleteReason)
         -> Result<()>;
 
     /// The top-level directory name under which this backend's canonical
@@ -282,7 +282,7 @@ mod tests {
             async fn list_issues(&self, _: &str) -> Result<Vec<Issue>> {
                 Ok(vec![])
             }
-            async fn get_issue(&self, _: &str, _: IssueId) -> Result<Issue> {
+            async fn get_issue(&self, _: &str, _: RecordId) -> Result<Issue> {
                 unimplemented!()
             }
             async fn create_issue(&self, _: &str, _: Untainted<Issue>) -> Result<Issue> {
@@ -291,13 +291,13 @@ mod tests {
             async fn update_issue(
                 &self,
                 _: &str,
-                _: IssueId,
+                _: RecordId,
                 _: Untainted<Issue>,
                 _: Option<u64>,
             ) -> Result<Issue> {
                 unimplemented!()
             }
-            async fn delete_or_close(&self, _: &str, _: IssueId, _: DeleteReason) -> Result<()> {
+            async fn delete_or_close(&self, _: &str, _: RecordId, _: DeleteReason) -> Result<()> {
                 Ok(())
             }
         }
@@ -328,7 +328,7 @@ mod tests {
                 let t2 = Utc.with_ymd_and_hms(2026, 6, 1, 0, 0, 0).unwrap();
                 Ok(vec![
                     Issue {
-                        id: IssueId(1),
+                        id: RecordId(1),
                         title: "old".into(),
                         status: IssueStatus::Open,
                         assignee: None,
@@ -341,7 +341,7 @@ mod tests {
                         extensions: std::collections::BTreeMap::new(),
                     },
                     Issue {
-                        id: IssueId(2),
+                        id: RecordId(2),
                         title: "new".into(),
                         status: IssueStatus::Open,
                         assignee: None,
@@ -355,7 +355,7 @@ mod tests {
                     },
                 ])
             }
-            async fn get_issue(&self, _: &str, _: IssueId) -> Result<Issue> {
+            async fn get_issue(&self, _: &str, _: RecordId) -> Result<Issue> {
                 unimplemented!()
             }
             async fn create_issue(&self, _: &str, _: Untainted<Issue>) -> Result<Issue> {
@@ -364,13 +364,13 @@ mod tests {
             async fn update_issue(
                 &self,
                 _: &str,
-                _: IssueId,
+                _: RecordId,
                 _: Untainted<Issue>,
                 _: Option<u64>,
             ) -> Result<Issue> {
                 unimplemented!()
             }
-            async fn delete_or_close(&self, _: &str, _: IssueId, _: DeleteReason) -> Result<()> {
+            async fn delete_or_close(&self, _: &str, _: RecordId, _: DeleteReason) -> Result<()> {
                 Ok(())
             }
         }
@@ -378,6 +378,6 @@ mod tests {
         let backend = TwoIssues;
         let cutoff = Utc.with_ymd_and_hms(2026, 3, 1, 0, 0, 0).unwrap();
         let got = backend.list_changed_since("demo", cutoff).await.unwrap();
-        assert_eq!(got, vec![IssueId(2)]);
+        assert_eq!(got, vec![RecordId(2)]);
     }
 }

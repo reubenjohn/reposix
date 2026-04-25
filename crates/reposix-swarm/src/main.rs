@@ -153,7 +153,7 @@ async fn main() -> Result<()> {
             let target_id_raw = args.target_issue.ok_or_else(|| {
                 anyhow::anyhow!("--target-issue is required for --mode contention")
             })?;
-            let target_id = reposix_core::IssueId(target_id_raw);
+            let target_id = reposix_core::RecordId(target_id_raw);
             run_swarm(cfg, move |i| {
                 ContentionWorkload::new(
                     origin.clone(),
