@@ -29,28 +29,28 @@ You cannot build reposix without all three legs being present. So instead of pre
 flowchart TB
     subgraph TAINTED["Outer ring — TAINTED (anything from the network)"]
         direction LR
-        T1["Backend REST<br/>response bytes"]
-        T2["Simulator<br/>seed data"]
-        T3["Issue body / comment /<br/>frontmatter from another agent"]
+        T1["Backend REST — response bytes"]
+        T2["Simulator — seed data"]
+        T3["Issue body / comment / — frontmatter from another agent"]
     end
 
     subgraph SANITIZE["Middle ring — SANITIZE BOUNDARY (the type system)"]
         direction LR
-        S1["Tainted bytes from cache<br/>(Vec u8 wrapped at the boundary)"]
-        S2["sanitize() — strip<br/>id / created_at / version / updated_at"]
-        S3["Untainted record<br/>(only path to a side-effecting call)"]
+        S1["Tainted bytes from cache — (Vec u8 wrapped at the boundary)"]
+        S2["sanitize() — strip — id / created_at / version / updated_at"]
+        S3["Untainted record — (only path to a side-effecting call)"]
     end
 
     subgraph AUDITED["Inner ring — AUDITED EGRESS"]
         direction LR
-        E1["REPOSIX_ALLOWED_ORIGINS<br/>egress allowlist"]
-        E2["REPOSIX_BLOB_LIMIT<br/>blob-fetch cap"]
-        E3["audit_events_cache<br/>(SQLite WAL, append-only)"]
+        E1["REPOSIX_ALLOWED_ORIGINS — egress allowlist"]
+        E2["REPOSIX_BLOB_LIMIT — blob-fetch cap"]
+        E3["audit_events_cache — (SQLite WAL, append-only)"]
     end
 
-    TAINTED -->|"materialize<br/>(cache.read_blob)"| SANITIZE
-    SANITIZE -->|"sanitize step<br/>(explicit, type-checked)"| AUDITED
-    AUDITED -->|"REST writes,<br/>protocol responses"| TAINTED
+    TAINTED -->|"materialize — (cache.read_blob)"| SANITIZE
+    SANITIZE -->|"sanitize step — (explicit, type-checked)"| AUDITED
+    AUDITED -->|"REST writes, — protocol responses"| TAINTED
 ```
 
 Three rings, three cuts. A byte from the network does not reach a side-effecting call without crossing a boundary that the type system or the runtime can audit.

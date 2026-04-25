@@ -29,7 +29,7 @@ sequenceDiagram
     Agent->>Helper: capabilities?
     Helper-->>Agent: stateless-connect, export, option
     Agent->>Helper: export refs/heads/main
-    Helper->>Helper: parse fast-import stream<br/>collect changed files
+    Helper->>Helper: parse fast-import stream — collect changed files
     loop for each changed issue
         Helper->>API: "GET /issues/<id> (current version)"
         API-->>Helper: backend version
@@ -38,13 +38,13 @@ sequenceDiagram
     alt all bases match
         Helper->>API: PATCH/POST writes (sanitized)
         API-->>Helper: 200 OK
-        Helper->>Cache: update bare repo<br/>+ audit row helper_push_accepted
+        Helper->>Cache: update bare repo — + audit row helper_push_accepted
         Helper-->>Agent: ok refs/heads/main
         Agent-->>Agent: push succeeded
     else any base differs
         Helper->>Cache: audit row helper_push_rejected_conflict
         Helper-->>Agent: error refs/heads/main fetch first
-        Agent-->>Agent: ! [remote rejected] (fetch first)<br/>git pull --rebase && git push
+        Agent-->>Agent: ! [remote rejected] (fetch first) — git pull --rebase && git push
     end
 ```
 

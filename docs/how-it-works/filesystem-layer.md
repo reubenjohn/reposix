@@ -21,11 +21,11 @@ The first key from [Mental model in 60 seconds](../concepts/mental-model-in-60-s
 ```mermaid
 flowchart TD
     A["agent: cat issues/PROJ-42.md"]
-    G["Working tree<br/>(real files on disk)"]
-    O[".git/objects<br/>partial-clone — blobs lazy"]
-    H["git-remote-reposix<br/>(helper binary)"]
-    C["reposix-cache<br/>(bare git repo + cache.db)"]
-    R["Backend REST API<br/>GitHub · Confluence · JIRA · sim"]
+    G["Working tree — (real files on disk)"]
+    O[".git/objects — partial-clone — blobs lazy"]
+    H["git-remote-reposix — (helper binary)"]
+    C["reposix-cache — (bare git repo + cache.db)"]
+    R["Backend REST API — GitHub · Confluence · JIRA · sim"]
 
     A -->|read| G
     G ---|backed by| O
