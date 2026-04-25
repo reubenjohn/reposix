@@ -34,13 +34,17 @@ reposix list --backend jira --project MYPROJECT
 
 `--project` is the JIRA project key (e.g. `MYPROJECT`, not the numeric space id).
 
-### Mount as FUSE Filesystem
+### Bootstrap as a partial-clone working tree
 
 ```bash
-reposix mount --backend jira --project MYPROJECT /tmp/jira-mount
+reposix init jira::MYPROJECT /tmp/jira-mount
 ```
 
-Issues are exposed as `issues/<id>.md` with YAML frontmatter and a plain-text body.
+The working tree is a real partial-clone git checkout; issues are exposed as
+`issues/<id>.md` with YAML frontmatter and a plain-text body. Read access is
+`cat` / `grep -r`; writes round-trip through `git push`. See the
+[first-run tutorial](../tutorials/first-run.md) for the full flow against the
+simulator (the only argument that changes for JIRA is the `init` spec).
 
 ## The `--no-truncate` Flag
 

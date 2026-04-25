@@ -20,8 +20,8 @@ reposix list --backend confluence --project <SPACE_KEY>
 # List pages and fail if the backend would truncate at the 500-page cap
 reposix list --backend confluence --project <SPACE_KEY> --no-truncate
 
-# Mount the space as a POSIX directory of Markdown files
-reposix mount <dir> --backend confluence --project <SPACE_KEY>
+# Bootstrap the space as a partial-clone working tree (v0.9.0+)
+reposix init confluence::<SPACE_KEY> <dir>
 ```
 
 `--project` takes the **space key** (the short uppercase identifier visible in
@@ -38,7 +38,7 @@ the space has more than 500 pages (the per-invocation cap). Without this flag,
 ## Required env vars
 
 All four must be set before `reposix list --backend confluence` or
-`reposix mount --backend confluence` will run. Any missing variable causes
+`reposix init confluence::<SPACE_KEY>` will run. Any missing variable causes
 the CLI to fail fast with a single error message listing every missing name.
 
 | Var                         | What                                                              | Where to get it                                                                                           |
