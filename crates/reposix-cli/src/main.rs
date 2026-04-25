@@ -24,9 +24,11 @@ use clap::{Parser, Subcommand};
 
 mod binpath;
 mod doctor;
+mod gc;
 mod history;
 mod init;
 mod sim;
+mod tokens;
 
 // Modules shared with the lib target — imported via the library crate path.
 use reposix_cli::list;
@@ -188,6 +190,45 @@ enum Cmd {
         /// Working-tree directory (a `reposix init`'d repo). Defaults to cwd.
         path: Option<PathBuf>,
     },
+    /// Evict materialized blobs from a reposix cache.
+    ///
+    /// Tree/commit objects, refs, and sync tags are NEVER touched —
+    /// only loose blob objects under `.git/objects/<2>/<38>` are
+    /// eligible. Blobs re-fetch transparently on next read.
+    ///
+    /// See `.planning/research/v0.11.0-vision-and-innovations.md` §3j.
+    ///
+    /// Examples:
+    ///   reposix gc                                     # LRU evict to 500 MB cap, current dir
+    ///   reposix gc --strategy ttl --max-age-days 7     # evict blobs not touched in a week
+    ///   reposix gc --strategy all --dry-run /tmp/repo  # plan, don't execute
+    Gc {
+        /// Eviction strategy.
+        #[arg(long, value_enum, default_value_t = gc::GcStrategyArg::Lru)]
+        strategy: gc::GcStrategyArg,
+        /// Cap for `--strategy lru` (default 500 MB).
+        #[arg(long, default_value_t = 500)]
+        max_size_mb: u64,
+        /// Cutoff for `--strategy ttl` (default 30 days).
+        #[arg(long, default_value_t = 30)]
+        max_age_days: i64,
+        /// Plan-only: print what would be evicted, don't touch disk.
+        #[arg(long)]
+        dry_run: bool,
+        /// Working-tree directory (a `reposix init`'d repo). Defaults to cwd.
+        path: Option<PathBuf>,
+    },
+    /// Print a token-economy ledger from the cache audit log.
+    ///
+    /// Aggregates `op='token_cost'` rows (one per helper RPC) and
+    /// estimates total token spend. Prints an honest comparison against
+    /// a back-of-envelope MCP-equivalent estimate.
+    ///
+    /// See `.planning/research/v0.11.0-vision-and-innovations.md` §3c.
+    Tokens {
+        /// Working-tree directory (a `reposix init`'d repo). Defaults to cwd.
+        path: Option<PathBuf>,
+    },
     /// Print the version.
     Version,
 }
@@ -265,5 +306,13 @@ async fn main() -> Result<()> {
             }
             Ok(())
         }
+        Cmd::Gc {
+            strategy,
+            max_size_mb,
+            max_age_days,
+            dry_run,
+            path,
+        } => gc::run(path, strategy, max_size_mb, max_age_days, dry_run),
+        Cmd::Tokens { path } => tokens::run(path),
     }
 }
