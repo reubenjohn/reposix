@@ -26,4 +26,11 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
 
-// Re-exports land in Task 2; lib.rs is empty-ish for Task 1.
+pub mod builder;
+pub mod cache;
+pub mod error;
+pub mod path;
+
+pub use cache::Cache;
+pub use error::{Error, Result};
+pub use path::{resolve_cache_path, CACHE_DIR_ENV};

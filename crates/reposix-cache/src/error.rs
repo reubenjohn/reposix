@@ -1,0 +1,58 @@
+//! Typed error for the reposix-cache crate.
+
+use thiserror::Error;
+
+/// Errors produced by the reposix-cache crate.
+#[derive(Debug, Error)]
+pub enum Error {
+    /// I/O failure (directory creation, file open).
+    #[error("io: {0}")]
+    Io(#[from] std::io::Error),
+
+    /// Backend (`BackendConnector`) returned an error. In Plan 02 the
+    /// egress-allowlist sub-case is split out as [`Error::Egress`] so the
+    /// audit layer can distinguish egress denial from other failures.
+    #[error("backend: {0}")]
+    Backend(String),
+
+    /// gix operation failed (init, `write_object`, `edit_tree`, commit,
+    /// `edit_reference`). Stringified to keep the variant small — the
+    /// underlying gix error types form a large, version-unstable taxonomy.
+    #[error("git: {0}")]
+    Git(String),
+
+    /// Rendering issue to canonical on-disk bytes failed.
+    #[error("render: {0}")]
+    Render(#[from] reposix_core::Error),
+
+    /// `SQLite` failure. Plan 01 does not yet open a DB; Plan 02 wires
+    /// this variant to the actual audit + meta store.
+    #[error("sqlite: {0}")]
+    Sqlite(String),
+
+    /// Cache path already belongs to a different `(backend, project)`
+    /// than the one passed to [`crate::Cache::open`]. Full enforcement
+    /// in Plan 02 once the `meta` table is wired; scaffolded here.
+    #[error("cache collision: expected {expected}, found {found}")]
+    CacheCollision {
+        /// The `(backend, project)` the caller asked for.
+        expected: String,
+        /// The `(backend, project)` currently recorded in `meta`.
+        found: String,
+    },
+}
+
+/// Alias for this crate's `Result`.
+pub type Result<T> = std::result::Result<T, Error>;
+
+impl From<gix::init::Error> for Error {
+    fn from(e: gix::init::Error) -> Self {
+        Self::Git(e.to_string())
+    }
+}
+
+impl From<rusqlite::Error> for Error {
+    fn from(e: rusqlite::Error) -> Self {
+        Self::Sqlite(e.to_string())
+    }
+}
