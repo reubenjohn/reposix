@@ -37,7 +37,7 @@ rusqlite = { workspace = true, features = ["bundled"] }
 tempfile = "3"
 # Safe wrappers for POSIX signals + process syscalls (SIGTERM to child,
 # setsid). Keeps #![forbid(unsafe_code)] at crate root.
-rustix = { version = "0.38", features = ["process"] }
+rustix = { version = "1.1", features = ["process"] }
 
 [dev-dependencies]
 assert_cmd = "2"
