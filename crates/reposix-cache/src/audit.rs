@@ -171,7 +171,7 @@ pub fn log_tree_sync(conn: &Connection, backend: &str, project: &str, items: usi
     }
 }
 
-/// Insert `op='delta_sync'` row INSIDE a SQLite transaction. Used by
+/// Insert `op='delta_sync'` row INSIDE a `SQLite` transaction. Used by
 /// [`crate::Cache::sync`] so the audit row commits atomically with the
 /// `meta.last_fetched_at` update and the changed-issue `oid_map` rows.
 ///

@@ -7,6 +7,21 @@ use crate::cache::Cache;
 use crate::error::{Error, Result};
 use crate::{audit, meta};
 
+/// Result of a single [`Cache::sync`] invocation.
+#[derive(Debug, Clone)]
+pub struct SyncReport {
+    /// Issue IDs the backend reported as changed since `since`.
+    /// Empty on the seed path (no prior cursor).
+    pub changed_ids: Vec<IssueId>,
+    /// The timestamp passed to the backend, or `None` on the seed
+    /// path (no prior `last_fetched_at`).
+    pub since: Option<chrono::DateTime<chrono::Utc>>,
+    /// New HEAD commit, or `None` on the seed path if `build_from`
+    /// returned no commit (it always does in practice; this stays
+    /// `Option` for forward-compat).
+    pub new_commit: Option<gix::ObjectId>,
+}
+
 impl Cache {
     /// Sync the tree from the backend and commit to `refs/heads/main`.
     ///
@@ -152,6 +167,224 @@ impl Cache {
         std::fs::write(&head_path, "ref: refs/heads/main\n")?;
 
         Ok(commit_oid.detach())
+    }
+
+    /// Delta-sync the cache against the backend.
+    ///
+    /// Flow:
+    /// 1. Read `meta.last_fetched_at`. If absent → fall through to
+    ///    [`Cache::build_from`] (seed path) and return.
+    /// 2. Call [`reposix_core::BackendConnector::list_changed_since`] with
+    ///    the cursor. Returns the IDs the backend reports changed.
+    /// 3. For each changed ID, GET the full issue, render to canonical
+    ///    bytes, write the blob into the bare repo (eager materialization
+    ///    on the delta path — changed items are almost certainly what
+    ///    the agent is about to read).
+    /// 4. Re-list the full issue set via `list_issues` (cheap metadata)
+    ///    and rebuild the tree with current blob OIDs. Tree sync is
+    ///    unconditional full per CONTEXT.md §"Tree sync vs. blob
+    ///    materialization (locked)".
+    /// 5. In ONE [`rusqlite::Transaction`]: upsert `oid_map` rows for
+    ///    changed items, update `meta.last_fetched_at`, insert the
+    ///    `op='delta_sync'` audit row.
+    ///
+    /// An empty-delta sync still bumps `last_fetched_at` and writes an
+    /// audit row with `bytes=0` — intentional so audit history has one
+    /// row per fetch invocation.
+    ///
+    /// # Errors
+    /// Mirrors [`Cache::build_from`] plus the seed-path errors. The
+    /// transaction boundary guarantees no torn state: if any post-fetch
+    /// step fails, `last_fetched_at` is unchanged and the next sync
+    /// retries the same window.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    // 5-step orchestration (read cursor → list_changed_since → materialize
+    // changed blobs → rebuild full tree → atomic SQL transaction) is
+    // intrinsic to the spec; splitting would obscure the audit ordering
+    // documented above.
+    #[allow(clippy::too_many_lines)]
+    pub async fn sync(&self) -> Result<SyncReport> {
+        // Step 1: read last_fetched_at. Absent → seed path.
+        let since_raw: Option<String> = {
+            let conn = self.db.lock().expect("cache db mutex poisoned");
+            meta::get_meta(&conn, "last_fetched_at")?
+        };
+        let since = match since_raw {
+            Some(ref s) => Some(
+                chrono::DateTime::parse_from_rfc3339(s)
+                    .map_err(|e| Error::Sqlite(format!("bad last_fetched_at {s}: {e}")))?
+                    .with_timezone(&Utc),
+            ),
+            None => None,
+        };
+        let Some(since_dt) = since else {
+            // Seed path: forward to build_from. build_from already writes
+            // last_fetched_at and the tree_sync audit row. We do NOT also
+            // write a delta_sync audit row — the seed is a distinct event.
+            let commit = self.build_from().await?;
+            return Ok(SyncReport {
+                changed_ids: Vec::new(),
+                since: None,
+                new_commit: Some(commit),
+            });
+        };
+
+        // Step 2: incremental query.
+        let changed_ids = match self
+            .backend
+            .list_changed_since(&self.project, since_dt)
+            .await
+        {
+            Ok(v) => v,
+            Err(e) => return Err(self.classify_backend_error(&e, None)),
+        };
+
+        // Step 3: materialize each changed issue's blob eagerly.
+        let hash_kind = self.repo.object_hash();
+        let mut changed_blob_oids: Vec<(IssueId, gix::ObjectId)> =
+            Vec::with_capacity(changed_ids.len());
+        for id in &changed_ids {
+            let issue = match self.backend.get_issue(&self.project, *id).await {
+                Ok(i) => i,
+                Err(e) => return Err(self.classify_backend_error(&e, Some(&id.0.to_string()))),
+            };
+            let rendered = frontmatter::render(&issue)?;
+            let bytes = rendered.into_bytes();
+            let blob_oid = self
+                .repo
+                .write_blob(&bytes)
+                .map_err(|e| Error::Git(e.to_string()))?
+                .detach();
+            // Sanity: recompute expected hash and compare.
+            let expected = gix::objs::compute_hash(hash_kind, gix::object::Kind::Blob, &bytes)
+                .map_err(|e| Error::Git(e.to_string()))?;
+            if expected != blob_oid {
+                return Err(Error::Git(format!(
+                    "hash mismatch for issue {}: expected {expected} got {blob_oid}",
+                    id.0
+                )));
+            }
+            changed_blob_oids.push((*id, blob_oid));
+        }
+
+        // Step 4: re-list the full current set for unconditional full
+        // tree sync (per CONTEXT.md §Tree sync vs. blob materialization).
+        let all_issues = match self.backend.list_issues(&self.project).await {
+            Ok(v) => v,
+            Err(e) => return Err(self.classify_backend_error(&e, None)),
+        };
+        let mut records: Vec<(gix::objs::tree::Entry, String)> =
+            Vec::with_capacity(all_issues.len());
+        for issue in &all_issues {
+            // Prefer the freshly-written blob oid for changed items.
+            // For unchanged items, recompute the OID without writing the
+            // blob (lazy-blob invariant — only the changed delta is
+            // materialized).
+            let oid = if let Some((_, freshly_written)) =
+                changed_blob_oids.iter().find(|(id, _)| *id == issue.id)
+            {
+                *freshly_written
+            } else {
+                let rendered = frontmatter::render(issue)?;
+                let bytes = rendered.into_bytes();
+                gix::objs::compute_hash(hash_kind, gix::object::Kind::Blob, &bytes)
+                    .map_err(|e| Error::Git(e.to_string()))?
+            };
+            let filename = format!("{}.md", issue.id.0);
+            records.push((
+                gix::objs::tree::Entry {
+                    mode: gix::object::tree::EntryKind::Blob.into(),
+                    filename: filename.into(),
+                    oid,
+                },
+                issue.id.0.to_string(),
+            ));
+        }
+        records.sort_by(|a, b| a.0.filename.cmp(&b.0.filename));
+
+        let inner_tree = gix::objs::Tree {
+            entries: records.iter().map(|(e, _)| e.clone()).collect(),
+        };
+        let inner_tree_oid = self
+            .repo
+            .write_object(&inner_tree)
+            .map_err(|e| Error::Git(e.to_string()))?
+            .detach();
+        let outer_tree = gix::objs::Tree {
+            entries: vec![gix::objs::tree::Entry {
+                mode: gix::object::tree::EntryKind::Tree.into(),
+                filename: b"issues".as_slice().into(),
+                oid: inner_tree_oid,
+            }],
+        };
+        let tree_oid = self
+            .repo
+            .write_object(&outer_tree)
+            .map_err(|e| Error::Git(e.to_string()))?
+            .detach();
+
+        // Parent = current HEAD commit (for chained history).
+        let parent_commit: Option<gix::ObjectId> = self
+            .repo
+            .find_reference("refs/heads/main")
+            .ok()
+            .and_then(|mut r| r.peel_to_id().ok().map(gix::Id::detach));
+        let msg = format!(
+            "delta-sync({}:{}): {} changed (of {}) at {}",
+            self.backend_name,
+            self.project,
+            changed_ids.len(),
+            all_issues.len(),
+            Utc::now().to_rfc3339()
+        );
+        let new_commit = self
+            .repo
+            .commit("refs/heads/main", msg, tree_oid, parent_commit)
+            .map_err(|e| Error::Git(e.to_string()))?
+            .detach();
+
+        // Step 5: ATOMIC transaction — oid_map upserts + last_fetched_at
+        // + delta_sync audit row.
+        let since_iso = since_dt.to_rfc3339();
+        let now_iso = Utc::now().to_rfc3339();
+        let items_returned = changed_ids.len();
+        {
+            let mut conn = self.db.lock().expect("cache db mutex poisoned");
+            let tx = conn.transaction()?;
+            for (id, oid) in &changed_blob_oids {
+                tx.execute(
+                    "INSERT OR REPLACE INTO oid_map (oid, issue_id, backend, project) \
+                     VALUES (?1, ?2, ?3, ?4)",
+                    rusqlite::params![
+                        oid.to_hex().to_string(),
+                        id.0.to_string(),
+                        &self.backend_name,
+                        &self.project,
+                    ],
+                )?;
+            }
+            tx.execute(
+                "INSERT INTO meta (key, value, updated_at) VALUES ('last_fetched_at', ?1, ?2) \
+                 ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",
+                rusqlite::params![&now_iso, &now_iso],
+            )?;
+            audit::log_delta_sync_tx(
+                &tx,
+                &self.backend_name,
+                &self.project,
+                Some(&since_iso),
+                items_returned,
+            )?;
+            tx.commit()?;
+        }
+
+        Ok(SyncReport {
+            changed_ids,
+            since: Some(since_dt),
+            new_commit: Some(new_commit),
+        })
     }
 
     /// Materialize a blob by OID. Writes the blob object to

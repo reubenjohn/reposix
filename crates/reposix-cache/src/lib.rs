@@ -41,6 +41,7 @@ pub mod path;
 #[doc(hidden)]
 pub mod sink;
 
+pub use builder::SyncReport;
 pub use cache::Cache;
 pub use error::{Error, Result};
 pub use path::{resolve_cache_path, CACHE_DIR_ENV};
