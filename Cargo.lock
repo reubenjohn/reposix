@@ -2946,6 +2946,7 @@ dependencies = [
  "clap",
  "libc",
  "predicates",
+ "reposix-cache",
  "reposix-confluence",
  "reposix-core",
  "reposix-github",

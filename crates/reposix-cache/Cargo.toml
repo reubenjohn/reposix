@@ -17,6 +17,11 @@ tracing = { workspace = true }
 serde_yaml = { workspace = true }
 gix = { workspace = true, features = ["tree-editor"] }
 dirs = { workspace = true }
+# anyhow is used ONLY by cli_compat.rs — the module is a verbatim lift of
+# the pre-v0.9.0 reposix-cli::cache_db and preserves its anyhow surface
+# so existing CLI callers do not need to rewrite imports. The rest of
+# this crate uses `thiserror` exclusively.
+anyhow = { workspace = true }
 
 [dev-dependencies]
 reposix-sim = { path = "../reposix-sim" }

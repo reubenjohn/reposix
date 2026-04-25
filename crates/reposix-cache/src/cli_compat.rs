@@ -1,10 +1,17 @@
-//! `SQLite` metadata store for `reposix refresh`.
+//! CLI-compat shim: the `reposix refresh` subcommand's metadata DB.
 //!
-//! `cache.db` lives at `<mount>/.reposix/cache.db` and holds a single-row
-//! `refresh_meta` table recording when the last refresh ran and which backend
-//! was used.  The file is opened in WAL + EXCLUSIVE locking mode so a second
-//! concurrent `reposix refresh` on the same mount immediately gets an error
-//! instead of silently racing.
+//! This module was lifted from `crates/reposix-cli/src/cache_db.rs` in
+//! Phase 31 Plan 02 (RESEARCH §Open Question 1) so the single v0.8.0
+//! `refresh_meta` schema has one home instead of drifting across two
+//! crates during v0.9.0. The public surface is unchanged — callers that
+//! previously did `use crate::cache_db::{CacheDb, open_cache_db,
+//! update_metadata}` now do `use reposix_cache::cli_compat::{...}`
+//! (or `use reposix_cli::cache_db::{...}` via the re-export shim).
+//!
+//! Note: this is intentionally SEPARATE from the new `reposix_cache::db`
+//! module which owns the v0.9.0 `cache_schema.sql`. The CLI's refresh
+//! subcommand will migrate to the new schema in Phase 35 (CLI pivot);
+//! until then, the two coexist.
 
 use std::os::unix::fs::OpenOptionsExt as _;
 use std::path::Path;
@@ -24,10 +31,10 @@ CREATE TABLE IF NOT EXISTS refresh_meta (
 
 /// Newtype wrapping a `rusqlite::Connection`.
 ///
-/// Holds an EXCLUSIVE WAL lock for its lifetime — dropping `CacheDb` releases
-/// the lock and closes the file.  Concurrent callers that try
-/// [`open_cache_db`] on the same path while this is alive will receive an
-/// error whose message contains "another refresh is in progress".
+/// Holds an EXCLUSIVE WAL lock for its lifetime — dropping `CacheDb`
+/// releases the lock and closes the file.  Concurrent callers that try
+/// [`open_cache_db`] on the same path while this is alive will receive
+/// an error whose message contains "another refresh is in progress".
 pub struct CacheDb(rusqlite::Connection);
 
 impl CacheDb {
@@ -39,21 +46,22 @@ impl CacheDb {
     }
 }
 
-/// Open (or create) `<mount>/.reposix/cache.db` with WAL + EXCLUSIVE locking.
+/// Open (or create) `<mount>/.reposix/cache.db` with WAL + EXCLUSIVE
+/// locking.
 ///
-/// The `.reposix/` directory is created if it does not already exist.  The
-/// database file is created with permission `0o600` so only the mount owner
-/// can read it (mitigates T-20A-02).
+/// The `.reposix/` directory is created if it does not already exist.
+/// The database file is created with permission `0o600` so only the
+/// mount owner can read it (mitigates T-20A-02).
 ///
 /// # Errors
 ///
-/// - `anyhow::Error` wrapping an IO error if the directory cannot be created
-///   or the file cannot be opened.
-/// - A human-readable error containing `"another refresh is in progress"` if
-///   a second process has the EXCLUSIVE WAL lock on the same DB file
-///   (`SQLITE_BUSY`).
-/// - An `anyhow::Error` wrapping a [`rusqlite::Error`] for any other `SQLite`
-///   failure (e.g. schema application).
+/// - `anyhow::Error` wrapping an IO error if the directory cannot be
+///   created or the file cannot be opened.
+/// - A human-readable error containing `"another refresh is in progress"`
+///   if a second process has the EXCLUSIVE WAL lock on the same DB
+///   file (`SQLITE_BUSY`).
+/// - An `anyhow::Error` wrapping a [`rusqlite::Error`] for any other
+///   `SQLite` failure (e.g. schema application).
 pub fn open_cache_db(mount: &Path) -> Result<CacheDb> {
     let dir = mount.join(".reposix");
     std::fs::create_dir_all(&dir).with_context(|| format!("create_dir_all {}", dir.display()))?;
@@ -84,8 +92,8 @@ pub fn open_cache_db(mount: &Path) -> Result<CacheDb> {
     Ok(CacheDb(conn))
 }
 
-/// Map a rusqlite error to a friendly "busy" message when the extended error
-/// code is `SQLITE_BUSY`, and to a plain `anyhow` error otherwise.
+/// Map a rusqlite error to a friendly "busy" message when the extended
+/// error code is `SQLITE_BUSY`, and to a plain `anyhow` error otherwise.
 fn map_busy(e: rusqlite::Error, path: &Path) -> anyhow::Error {
     if let rusqlite::Error::SqliteFailure(ref ffi_err, _) = e {
         if ffi_err.extended_code == rusqlite::ffi::SQLITE_BUSY {
@@ -101,8 +109,8 @@ fn map_busy(e: rusqlite::Error, path: &Path) -> anyhow::Error {
 
 /// Write (or overwrite) the single-row metadata record in `refresh_meta`.
 ///
-/// Uses `INSERT OR REPLACE` so a subsequent refresh is a clean overwrite, not
-/// an accumulation of rows.
+/// Uses `INSERT OR REPLACE` so a subsequent refresh is a clean
+/// overwrite, not an accumulation of rows.
 ///
 /// # Errors
 ///
@@ -126,7 +134,7 @@ pub fn update_metadata(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{open_cache_db, update_metadata};
     use tempfile::tempdir;
 
     #[test]
@@ -187,14 +195,15 @@ mod tests {
         assert_eq!(count, 1, "INSERT OR REPLACE must leave exactly one row");
     }
 
-    /// Opening a second `CacheDb` on the same path while the first holds the
-    /// EXCLUSIVE WAL lock should return an error whose message mentions
-    /// "another refresh is in progress".
+    /// Opening a second `CacheDb` on the same path while the first holds
+    /// the EXCLUSIVE WAL lock should return an error whose message
+    /// mentions "another refresh is in progress".
     ///
-    /// NOTE: `SQLite` WAL EXCLUSIVE lock acquisition only contends after a
-    /// write; the second connection succeeds in read-only mode until a write
-    /// is attempted.  This test verifies that the error surfacing path is
-    /// correct by attempting a write on the second connection.
+    /// NOTE: `SQLite` WAL EXCLUSIVE lock acquisition only contends after
+    /// a write; the second connection succeeds in read-only mode until
+    /// a write is attempted.  This test verifies that the error
+    /// surfacing path is correct by attempting a write on the second
+    /// connection.
     #[test]
     fn lock_conflict_returns_error() {
         let dir = tempdir().unwrap();
@@ -202,11 +211,11 @@ mod tests {
         let _db1 = open_cache_db(dir.path()).expect("first open");
 
         // Second connection on the same path — WAL EXCLUSIVE lock means
-        // SQLITE_BUSY is returned when the second connection tries to acquire
-        // the write lock.
+        // SQLITE_BUSY is returned when the second connection tries to
+        // acquire the write lock.
         let result = open_cache_db(dir.path());
-        // Either the second open itself fails, or a subsequent write fails.
-        // Check both:
+        // Either the second open itself fails, or a subsequent write
+        // fails.  Check both:
         match result {
             Err(e) => {
                 assert!(
@@ -215,8 +224,9 @@ mod tests {
                 );
             }
             Ok(db2) => {
-                // The open succeeded (WAL allows concurrent readers), but a
-                // write must fail with SQLITE_BUSY and mention the lock error.
+                // The open succeeded (WAL allows concurrent readers),
+                // but a write must fail with SQLITE_BUSY and mention the
+                // lock error.
                 let write_result =
                     update_metadata(&db2, "test", "proj", "2026-04-15T00:00:00Z", None);
                 let err = write_result.expect_err(
@@ -235,8 +245,8 @@ mod tests {
         let dir = tempdir().unwrap();
         // First open creates the DB.
         drop(open_cache_db(dir.path()).expect("first open"));
-        // After first CacheDb is dropped (EXCLUSIVE lock released), second
-        // open should succeed cleanly.
+        // After first CacheDb is dropped (EXCLUSIVE lock released),
+        // second open should succeed cleanly.
         let _db2 = open_cache_db(dir.path()).expect("second open after first dropped");
     }
 }

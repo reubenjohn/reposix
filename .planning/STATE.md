@@ -2,14 +2,13 @@
 gsd_state_version: 1.0
 milestone: v0.9.0
 milestone_name: Architecture Pivot — Git-Native Partial Clone
-status: planning
-stopped_at: "Phases 31–36 scaffolded for v0.9.0 architecture pivot. Autonomous execution next."
-last_updated: "2026-04-24T12:00:00.000Z"
-last_activity: 2026-04-24 — v0.9.0 phases 31–36 scaffolded
+status: executing
+last_updated: "2026-04-25T02:14:44.050Z"
+last_activity: 2026-04-25 -- Phase 31 planning complete
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 0
+  total_plans: 3
   completed_plans: 0
   percent: 0
 ---
@@ -64,7 +63,7 @@ Phase: 31 (not started — awaiting plan)
 Plan: —
 Cursor: **Run /gsd-autonomous to execute Phases 31–36 end-to-end.**
 Status: Ready to execute
-Last activity: 2026-04-24 — v0.9.0 phases 31–36 scaffolded (ARCH-01..ARCH-15)
+Last activity: 2026-04-25 -- Phase 31 planning complete
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.
