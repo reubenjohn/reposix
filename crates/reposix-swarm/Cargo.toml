@@ -11,6 +11,10 @@ description = "Multi-agent contention/swarm test harness for reposix."
 readme = "../../README.md"
 keywords = ["swarm", "agent", "testing", "load-test", "reposix"]
 categories = ["development-tools::testing", "simulation"]
+# Internal test harness — do not publish to crates.io. The release-binaries
+# plan and dist workspace metadata exclude this crate from the 5-platform
+# pipeline; release-plz will skip it on automated publishes.
+publish = false
 
 [[bin]]
 name = "reposix-swarm"
