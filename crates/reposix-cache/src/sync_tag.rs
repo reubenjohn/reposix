@@ -120,7 +120,13 @@ pub fn parse_sync_tag_timestamp(slug: &str) -> Option<DateTime<Utc>> {
     let restored: String = slug
         .chars()
         .enumerate()
-        .map(|(i, c)| if (i == 13 || i == 16) && c == '-' { ':' } else { c })
+        .map(|(i, c)| {
+            if (i == 13 || i == 16) && c == '-' {
+                ':'
+            } else {
+                c
+            }
+        })
         .collect();
     DateTime::parse_from_rfc3339(&restored)
         .ok()

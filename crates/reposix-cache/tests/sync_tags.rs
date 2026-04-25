@@ -33,7 +33,11 @@ async fn tag_sync_creates_ref() {
 
     // The seed sync must have written one tag pointing at the synthesis commit.
     let tags = cache.list_sync_tags().expect("list_sync_tags");
-    assert_eq!(tags.len(), 1, "seed sync writes exactly one tag, got {tags:?}");
+    assert_eq!(
+        tags.len(),
+        1,
+        "seed sync writes exactly one tag, got {tags:?}"
+    );
     assert!(
         tags[0].name.starts_with("refs/reposix/sync/"),
         "unexpected tag name: {}",
@@ -137,7 +141,10 @@ async fn sync_tag_at_finds_closest_not_after() {
     // which is also after t1. So a target before t1 must yield None.
     let way_back: chrono::DateTime<chrono::Utc> = "2024-01-01T00:00:00Z".parse().unwrap();
     let none = cache.sync_tag_at(way_back).expect("sync_tag_at way back");
-    assert!(none.is_none(), "target predates all tags, expected None, got {none:?}");
+    assert!(
+        none.is_none(),
+        "target predates all tags, expected None, got {none:?}"
+    );
 
     // Target exactly at t3 — must return t3 (≤ rule).
     let exact = cache
@@ -191,7 +198,11 @@ async fn sync_tags_audit_row_written() {
             |r| r.get(0),
         )
         .unwrap();
-    assert_eq!(oid.len(), 40, "oid column should hold a 40-char SHA1, got {oid}");
+    assert_eq!(
+        oid.len(),
+        40,
+        "oid column should hold a 40-char SHA1, got {oid}"
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]

@@ -29,11 +29,14 @@ fn cache_path_from_worktree(work: &Path) -> Result<PathBuf> {
             work.display()
         )
     })?;
-    let spec = parse_remote_url(&url)
-        .with_context(|| format!("parse remote.origin.url={url}"))?;
+    let spec = parse_remote_url(&url).with_context(|| format!("parse remote.origin.url={url}"))?;
     let backend = backend_slug_from_origin(&spec.origin);
-    resolve_cache_path(&backend, spec.project.as_str())
-        .with_context(|| format!("resolve cache path for ({backend}, {project})", project = spec.project))
+    resolve_cache_path(&backend, spec.project.as_str()).with_context(|| {
+        format!(
+            "resolve cache path for ({backend}, {project})",
+            project = spec.project
+        )
+    })
 }
 
 /// Map a remote origin to the cache `backend` slug. Mirrors `doctor.rs`.
@@ -106,7 +109,9 @@ fn synthesis_op_for_tag(cache_path: &Path, tag: &SyncTag) -> Option<(String, i64
         )
         .ok()?;
     let row: Option<(String, i64)> = stmt
-        .query_row([&upper], |r| Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?)))
+        .query_row([&upper], |r| {
+            Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?))
+        })
         .ok();
     row
 }
@@ -181,14 +186,13 @@ pub fn run_history(path: PathBuf, limit: Option<usize>) -> Result<()> {
 /// `remote.origin.url`, or the cache cannot be opened.
 pub fn run_at(target: String, path: PathBuf) -> Result<()> {
     let target_dt: DateTime<Utc> = chrono::DateTime::parse_from_rfc3339(&target)
-        .with_context(|| format!("invalid timestamp {target} — expected RFC-3339, e.g. 2026-04-25T01:00:00Z"))?
+        .with_context(|| {
+            format!("invalid timestamp {target} — expected RFC-3339, e.g. 2026-04-25T01:00:00Z")
+        })?
         .with_timezone(&Utc);
     let cache_path = cache_path_from_worktree(&path)?;
     let tags = read_sync_tags(&cache_path)?;
-    let chosen = tags
-        .into_iter()
-        .rev()
-        .find(|t| t.timestamp <= target_dt);
+    let chosen = tags.into_iter().rev().find(|t| t.timestamp <= target_dt);
     if let Some(tag) = chosen {
         let short = tag.commit.to_hex_with_len(7).to_string();
         println!("{name}   commit {short}", name = tag.name);

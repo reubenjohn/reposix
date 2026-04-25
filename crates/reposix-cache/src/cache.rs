@@ -287,7 +287,11 @@ fn ensure_hide_sync_refs(repo_path: &std::path::Path) -> Result<()> {
         .arg(repo_path)
         .args(["config", "--get-all", "transfer.hideRefs"])
         .output()
-        .map_err(|e| Error::Git(format!("spawn `git config --get-all transfer.hideRefs`: {e}")))?;
+        .map_err(|e| {
+            Error::Git(format!(
+                "spawn `git config --get-all transfer.hideRefs`: {e}"
+            ))
+        })?;
     // Exit code 1 with empty stdout means "key not set" — that's fine.
     let stdout = String::from_utf8_lossy(&out.stdout);
     if stdout.lines().any(|l| l.trim() == want) {
