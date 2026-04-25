@@ -84,5 +84,5 @@ Honesty about the threat model is a feature, not a footnote.
 
 - [Filesystem layer ←](filesystem-layer.md) — where tainted bytes enter the system.
 - [Git layer ←](git-layer.md) — where the conflict and blob-limit cuts are wired.
-- [`docs/security.md`](../security.md) — historical, longer-form security notes; carved into this page during v0.10.0 nav restructure.
+- `.planning/research/v0.1-fuse-era/threat-model-and-critique.md` — full historical threat model, kept in the planning tree (not user-facing nav).
 - [`docs/research/agentic-engineering-reference.md`](../research/agentic-engineering-reference.md) — the lethal-trifecta framing.

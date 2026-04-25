@@ -75,16 +75,16 @@ After `init`, agent UX is pure git: `cat`, `grep -r`, edit, `git commit`, `git p
 
 -   :material-lightbulb-on: **[Mental model in 60 seconds](concepts/mental-model-in-60-seconds.md)** — three keys to the design (clone = snapshot · frontmatter = schema · `git push` = sync verb).
 -   :material-compare: **[reposix vs MCP and SDKs](concepts/reposix-vs-mcp-and-sdks.md)** — positioning, with measured numbers per row.
--   :material-graph: **How it works** — the cache layer, the git layer, and the trust model. *(Phase 41 — coming soon; in the meantime see [the v0.9.0 architecture pivot summary on GitHub](https://github.com/reubenjohn/reposix/tree/main/.planning/research#architecture-pivot).)*
+-   :material-graph: **How it works** — [the filesystem layer](how-it-works/filesystem-layer.md), [the git layer](how-it-works/git-layer.md), and [the trust model](how-it-works/trust-model.md). One diagram each.
 -   :material-chart-line: **[Latency envelope](benchmarks/v0.9.0-latency.md)** — the v0.9.0 measured numbers.
 
 </div>
 
 ## What it looks like underneath
 
-reposix has three pieces — `reposix-cache` (a real bare git repo built from REST responses, with lazy blob materialization), `git-remote-reposix` (a hybrid promisor remote that handles both reads and pushes), and `reposix init` (a one-shot bootstrap that wires the working tree to the helper). Two guardrails are load-bearing for autonomous agents: **push-time conflict detection** rejects stale-base pushes with the standard git "fetch first" error so an agent recovers via `git pull --rebase`; the **blob limit** caps `git fetch` size and emits a stderr message that names `git sparse-checkout` as the recovery move. An agent unfamiliar with reposix observes the error, runs `sparse-checkout`, and recovers with no human prompt engineering.
+reposix has three pieces — a local bare git repository built from REST responses (with file content fetched lazily), a `git` remote that handles both reads and pushes by translating to API calls, and `reposix init` (a one-shot bootstrap). Two guardrails are load-bearing for autonomous agents: **push-time conflict detection** rejects stale-base pushes with the standard git "fetch first" error so an agent recovers via `git pull --rebase`; the **fetch size limit** caps `git fetch` and emits a stderr message that names `git sparse-checkout` as the recovery move. An agent unfamiliar with reposix observes the error, runs `sparse-checkout`, and recovers with no human prompt engineering.
 
-The detail of how each piece works is in the *How it works* section (Phase 41). The reference material — CLI surface, helper protocol, frontmatter schema — is in [Reference](reference/cli.md).
+The detail of how each piece works lives in [How it works](how-it-works/filesystem-layer.md). The reference material — frontmatter schema, simulator HTTP surface, testing targets — is in [Reference](reference/simulator.md).
 
 ---
 

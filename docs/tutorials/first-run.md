@@ -89,7 +89,7 @@ git push
 #  * [new branch]      main -> main
 ```
 
-What just happened: `git push` fed a fast-import stream to the helper, which parsed the changed file, sanitized the frontmatter (server-controlled fields like `id` and `version` are stripped — see [trust model](../how-it-works/trust-model.md)), checked the backend version was still `1`, and applied the write via REST. The mechanics live in [git layer §push round-trip](../how-it-works/git-layer.md).
+What just happened: `git push` handed your commit to the reposix git remote, which parsed the changed file, sanitized the frontmatter (server-controlled fields like `id` and `version` are stripped — see [trust model](../how-it-works/trust-model.md)), checked the backend version was still `1`, and applied the write via REST. The mechanics live in [git layer §push round-trip](../how-it-works/git-layer.md).
 
 If a second writer had mutated issue 1 between your `init` and your `push`, the helper would have rejected the push with `! [remote rejected] main -> main (fetch first)` and you would have run `git pull --rebase && git push` to recover. That conflict-rebase loop is the dark-factory teaching mechanism — try it as an exercise.
 

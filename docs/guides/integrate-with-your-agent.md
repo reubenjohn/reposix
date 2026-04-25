@@ -6,7 +6,7 @@ title: Integrate reposix with your agent
 
 reposix's product thesis is that an agent that already knows git and POSIX needs **zero new tools** to work an issue tracker. This page sketches three integration patterns — Claude Code, Cursor, and a custom SDK loop — at the level of "what to do" rather than "here is a 200-line recipe." Full vetted recipes (Claude Code, Cursor, Aider, Continue, Devin, SWE-agent CI fixtures) ship in v0.12.0; this is the pointer page.
 
-The substrate beneath every pattern is the same: run [`reposix init`](../tutorials/first-run.md#3-bootstrap-the-working-tree) once to produce a partial-clone working tree, then hand the agent that directory and let it work through `cat`, `grep`, `sed`, `git add`, `git commit`, `git push`. No MCP tool registration, no custom CLI bindings.
+The substrate beneath every pattern is the same: run [`reposix init`](../tutorials/first-run.md#3-bootstrap-the-working-tree) once to produce a working tree, then hand the agent that directory and let it work through `cat`, `grep`, `sed`, `git add`, `git commit`, `git push`. No MCP tool registration, no custom CLI bindings.
 
 ## Pattern 1 — Claude Code (skill)
 

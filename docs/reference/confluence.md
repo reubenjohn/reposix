@@ -186,6 +186,6 @@ broader Tier 1–5 story.
 - [ADR-002 — Confluence page to issue mapping](../decisions/002-confluence-page-mapping.md)
 - [ADR-001 — GitHub state mapping](../decisions/001-github-state-mapping.md)
   (structural sibling)
-- [Building your own connector](../connectors/guide.md) — how to write a
+- [Write your own connector](../guides/write-your-own-connector.md) — how to write a
   third adapter following the same pattern as `reposix-github` and
   `reposix-confluence`.

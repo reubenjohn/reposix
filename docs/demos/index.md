@@ -49,7 +49,7 @@ the suite but substantively unchanged):
 
 | Demo                                          | Runtime | Recording                                                                                                                |
 |-----------------------------------------------|--------:|--------------------------------------------------------------------------------------------------------------------------|
-| [`demos/full.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/full.sh) | ~90s    | [docs/demo.typescript](../demo.typescript) · [docs/demo.transcript.txt](../demo.transcript.txt) · [walkthrough prose](../demo.md) |
+| [`demos/full.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/full.sh) | ~90s    | [docs/demo.typescript](../demo.typescript) · [docs/demo.transcript.txt](../demo.transcript.txt) · [first-run tutorial](../tutorials/first-run.md) |
 
 `scripts/demo.sh` remains as a backwards-compat shim that execs
 `scripts/demos/full.sh`, so existing users and docs that reference

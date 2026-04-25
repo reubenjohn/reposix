@@ -184,7 +184,7 @@ the same way `Tainted::sanitize` strips sim/GitHub server fields today.
   connector ABI tracked in
   [ROADMAP.md §Phase 12](https://github.com/reubenjohn/reposix/blob/main/.planning/ROADMAP.md).
   Until that ships, the crates.io + fork path documented in
-  [`docs/connectors/guide.md`](../connectors/guide.md) is the supported
+  [`docs/guides/write-your-own-connector.md`](../guides/write-your-own-connector.md) is the supported
   route — with `reposix-github` and `reposix-confluence` as twin worked
   examples. The subprocess model supersedes this ADR's flatten-via-core-trait
   approach the moment it lands; ADR-003 will capture the transition.
