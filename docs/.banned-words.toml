@@ -1,0 +1,69 @@
+# reposix progressive-disclosure layer rules.
+#
+# This config drives `scripts/banned-words-lint.sh`. The linter is the
+# institutional memory of the P2 framing rules from
+# `.planning/notes/phase-30-narrative-vignettes.md` (DOCS-09).
+#
+# How it works:
+#  - Each `[layer.<name>]` table maps a glob of doc paths to a banned-words list.
+#  - A doc-path glob matches against `docs/<path>` (relative to the repo root).
+#  - "P1" words are banned everywhere in `docs/` regardless of layer.
+#  - Default mode of the linter scans Layer 1 + Layer 2 only (hero + below-fold).
+#  - `--all` mode also scans Layer 3+ for QA — Layer 3 is allowed to use the
+#    git-native plumbing vocabulary (partial-clone, promisor, stateless-connect,
+#    fast-import, protocol-v2) and the historical FUSE-era vocabulary
+#    (FUSE, fusermount, inode, daemon, kernel, syscall) for the duration of
+#    the v0.10.0 transition window. Reference + Research (Layer 4) is unrestricted.
+#
+# Adding a banned word is a reviewable diff. That is the point.
+
+[p1]
+# Banned everywhere — the P1 framing rule (complement, never "replace").
+words = ["replace"]
+
+[layer.hero]
+# Layer 1 — the first 10 seconds, above the fold.
+paths = ["index.md"]
+banned = [
+  "FUSE",
+  "fusermount",
+  "kernel",
+  "syscall",
+  "daemon",
+  "inode",
+  "partial-clone",
+  "promisor",
+  "stateless-connect",
+  "fast-import",
+  "protocol-v2",
+]
+
+[layer.below_fold]
+# Layer 2 — concepts, tutorials, guides. Same vocabulary discipline as Layer 1.
+paths = ["concepts/*.md", "tutorials/*.md", "guides/*.md"]
+banned = [
+  "FUSE",
+  "fusermount",
+  "kernel",
+  "syscall",
+  "daemon",
+  "inode",
+  "partial-clone",
+  "promisor",
+  "stateless-connect",
+  "fast-import",
+  "protocol-v2",
+]
+
+[layer.how_it_works]
+# Layer 3 — How it works. Plumbing-level diagrams + first technical reveal.
+# Banned: nothing. Historical FUSE-era + git-native plumbing words ARE permitted
+# here during the v0.10.0 transition. The default-mode scan skips this layer.
+paths = ["how-it-works/*.md"]
+banned = []
+
+[allowlist]
+# Lines containing this marker are skipped by the linter. Use sparingly — every
+# usage is a deliberate exception and should be paired with a one-line comment
+# explaining why. Place the marker on the same line as the otherwise-banned word.
+marker = "<!-- banned-words: ok -->"

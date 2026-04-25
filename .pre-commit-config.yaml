@@ -1,0 +1,23 @@
+# Pre-commit configuration for reposix.
+#
+# Install once with `pre-commit install` (after `pip install pre-commit`).
+# Run on demand with `pre-commit run --all-files`.
+#
+# This file is the single source of truth for the doc-linting hook. CI
+# (.github/workflows/docs.yml) invokes the same script directly so a
+# contributor without pre-commit installed can't bypass the rule.
+
+repos:
+  - repo: local
+    hooks:
+      - id: banned-words-lint
+        name: reposix banned-words lint (DOCS-09)
+        entry: scripts/banned-words-lint.sh
+        language: system
+        # The script reads the docs tree itself; we only need to fire it once
+        # per commit, not per-file. `pass_filenames: false` + `always_run: true`
+        # achieves that.
+        pass_filenames: false
+        always_run: true
+        # Only run when something under docs/ or the linter itself changes.
+        files: '^(docs/|scripts/banned-words-lint\.sh|docs/\.banned-words\.toml)'

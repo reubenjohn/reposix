@@ -33,6 +33,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install mkdocs-material mkdocs-minify-plugin
 
+      - name: Lint docs (banned-words, DOCS-09)
+        run: scripts/banned-words-lint.sh
+
       - name: Build strict (fail on broken links)
         run: mkdocs build --strict
 
