@@ -130,6 +130,8 @@ Ops vocabulary you might see:
 | `helper_connect`, `helper_advertise`, `helper_fetch`, `helper_fetch_error` | Read-side helper protocol events. |
 | `helper_push_started`, `helper_push_accepted`, `helper_push_rejected_conflict`, `helper_push_sanitized_field` | Write-side helper protocol events. |
 | `blob_limit_exceeded` | A `command=fetch` carried more `want` lines than `REPOSIX_BLOB_LIMIT`. |
+| `cache_gc` | A blob was evicted by `reposix gc`. |
+| `token_cost` | One helper RPC turn — `chars_in` / `chars_out` packed in `reason` JSON. |
 
 The full vocabulary and what each row means lives in [trust model §audit log](../how-it-works/trust-model.md#audit-log).
 
@@ -185,15 +187,41 @@ Common causes:
 
 The full env-var matrix per backend is at [Testing targets](../reference/testing-targets.md), and the helper's missing-creds error message links there directly.
 
-## Cache eviction (`reposix gc`)
+## Cache disk usage (`reposix gc`)
 
-Coming in v0.13.0. The cache currently grows monotonically — there is no LRU, no TTL, no manual `reposix gc`. If your cache directory is using uncomfortable disk:
+`reposix gc` evicts materialized blobs from a reposix cache so you can keep disk usage bounded. Tree/commit objects, refs, and sync tags are NEVER touched — only loose blob objects are eligible. Evicted blobs are transparently re-fetched on the next read.
 
 ```bash
-rm -rf ~/.cache/reposix/<backend>-<project>.git
+reposix gc                                       # LRU evict to 500 MB cap, current dir
+reposix gc --strategy ttl --max-age-days 7       # evict blobs not touched in a week
+reposix gc --strategy all --dry-run /tmp/repo    # plan, don't execute
 ```
 
-The next `reposix init` (or `git fetch`) re-creates it. You lose the helper-side audit log when you do this — if that history matters, copy `cache.db` somewhere first.
+Strategies:
+
+- `--strategy lru` (default) — evict least-recently-accessed blobs first until total size drops below `--max-size-mb` (default 500).
+- `--strategy ttl` — evict blobs older than `--max-age-days` (default 30) by file mtime.
+- `--strategy all` — evict every loose blob; useful for "rebuild from scratch".
+
+Each eviction (real or dry-run) appends an `op='cache_gc'` audit row carrying the evicted OID, bytes reclaimed, and the strategy slug. To inspect:
+
+```bash
+sqlite3 ~/.cache/reposix/sim-demo.git/cache.db \
+    "SELECT ts, oid, bytes, reason FROM audit_events_cache \
+     WHERE op = 'cache_gc' ORDER BY ts DESC LIMIT 10"
+```
+
+If you'd rather wipe everything (audit log included), `rm -rf ~/.cache/reposix/<backend>-<project>.git` and the next `reposix init` (or `git fetch`) re-creates it.
+
+## Token-economy ledger (`reposix tokens`)
+
+`reposix tokens` reads `op='token_cost'` audit rows — one per helper RPC turn — and prints a running token-spend summary plus an honest comparison against a conservative MCP-equivalent estimate (100k schema discovery + 5k per tool call):
+
+```bash
+reposix tokens /tmp/repo
+```
+
+The estimate is `chars / 4` over the WIRE bytes (incl. protocol-v2 framing); the MCP baseline is a back-of-envelope. Actual savings vary by workload — blob-heavy reads favour reposix; metadata-only calls favour MCP. The output is honest about that.
 
 ## See also
 

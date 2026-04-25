@@ -18,6 +18,8 @@ Commands:
   doctor   Diagnose a reposix working tree and print fix commands
   history  List sync tags (time-travel snapshots) for a working tree
   at       Find the closest sync tag at-or-before a timestamp
+  gc       Evict materialized blobs from a reposix cache
+  tokens   Print a token-economy ledger from the audit log
   version  Print the version
   help     Print this message or the help of the given subcommand(s)
 ```
@@ -149,6 +151,40 @@ reposix at 2026-04-25T01:00:00Z /tmp/repo
 | `<path>` | cwd | Working-tree directory. |
 
 Prints the matching `refs/reposix/sync/<slug>` ref name, the synthesis commit short OID, and a copy-pastable `git -C <cache> checkout` invocation. If the target predates every sync tag, prints a not-found line and exits 0.
+
+## `reposix gc`
+
+Evict materialized blobs from a reposix cache. Tree/commit objects, refs, and sync tags are NEVER touched — only loose blob objects under `.git/objects/<2>/<38>` are eligible. Blobs re-fetch transparently on next read. See [v0.11.0 §3j](../../.planning/research/v0.11.0-vision-and-innovations.md#3j-reposix-archive--reposix-gc--bounded-disk-usage).
+
+```bash
+reposix gc                                       # LRU evict to 500 MB cap, current dir
+reposix gc --strategy ttl --max-age-days 7       # evict blobs not touched in a week
+reposix gc --strategy all --dry-run /tmp/repo    # plan, don't execute
+```
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `<path>` | cwd | Working tree to gc. |
+| `--strategy` | `lru` | `lru`, `ttl`, or `all`. |
+| `--max-size-mb` | `500` | Cap for `--strategy=lru`. |
+| `--max-age-days` | `30` | Cutoff for `--strategy=ttl`. |
+| `--dry-run` | off | Print what would be evicted; don't touch disk. |
+
+Each eviction (real or dry-run) appends an `op='cache_gc'` row to `audit_events_cache` in the cache DB.
+
+## `reposix tokens`
+
+Print a token-economy ledger derived from the cache's audit log. Reads `op='token_cost'` rows (one per helper RPC turn — `fetch` or `push`), sums them, prints totals plus an honest comparison against a back-of-envelope MCP-equivalent estimate. See [v0.11.0 §3c](../../.planning/research/v0.11.0-vision-and-innovations.md#3c-token-cost-ledger--built-in-cost-telemetry).
+
+```bash
+reposix tokens /tmp/repo
+```
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `<path>` | cwd | Working tree whose cache to read. |
+
+The token estimate is `chars / 4` over the WIRE bytes (incl. protocol-v2 framing). The MCP baseline is a conservative 100k schema discovery + 5k per tool call. Both are heuristic — actual savings vary by workload (blob-heavy reads favour reposix; metadata-only calls favour MCP).
 
 ## `reposix spaces`
 
