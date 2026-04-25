@@ -49,7 +49,10 @@ async fn read_blob_materializes_exactly_one_and_audits() {
             d.kind == gix::object::Kind::Blob
         })
         .count();
-    assert_eq!(blob_before, 0, "Plan 01 invariant: no blobs before read_blob");
+    assert_eq!(
+        blob_before, 0,
+        "Plan 01 invariant: no blobs before read_blob"
+    );
     drop(repo);
 
     // Materialize.
@@ -130,8 +133,7 @@ async fn unknown_oid_returns_error() {
     cache.build_from().await.unwrap();
 
     // Random oid not in oid_map.
-    let bogus =
-        gix::ObjectId::from_hex(b"0123456789abcdef0123456789abcdef01234567").unwrap();
+    let bogus = gix::ObjectId::from_hex(b"0123456789abcdef0123456789abcdef01234567").unwrap();
     let err = cache
         .read_blob(bogus)
         .await

@@ -253,11 +253,7 @@ impl Cache {
     /// wrap the core error in `Error::Other(String)` — the `Confluence`,
     /// `Jira`, and `Github` adapters all do this for non-2xx responses.
     /// Phase 33 will tighten to a proper typed error refactor.
-    fn classify_backend_error(
-        &self,
-        e: &reposix_core::Error,
-        issue_id: Option<&str>,
-    ) -> Error {
+    fn classify_backend_error(&self, e: &reposix_core::Error, issue_id: Option<&str>) -> Error {
         let emsg = e.to_string();
         let is_egress = matches!(e, reposix_core::Error::InvalidOrigin(_))
             || emsg.contains("blocked origin")
@@ -265,13 +261,7 @@ impl Cache {
             || emsg.contains("allowlist");
         if is_egress {
             if let Ok(conn) = self.db.lock() {
-                audit::log_egress_denied(
-                    &conn,
-                    &self.backend_name,
-                    &self.project,
-                    issue_id,
-                    &emsg,
-                );
+                audit::log_egress_denied(&conn, &self.backend_name, &self.project, issue_id, &emsg);
             }
             Error::Egress(emsg)
         } else {

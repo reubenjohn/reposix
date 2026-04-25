@@ -32,7 +32,9 @@ pub fn resolve_cache_path(backend: &str, project: &str) -> Result<PathBuf> {
             ))
         })?;
     // Safe filename: callers pass already-validated slugs; we do NOT re-validate here.
-    Ok(root.join("reposix").join(format!("{backend}-{project}.git")))
+    Ok(root
+        .join("reposix")
+        .join(format!("{backend}-{project}.git")))
 }
 
 #[cfg(test)]

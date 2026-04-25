@@ -253,7 +253,14 @@ fn proxy_one_rpc<R: Read, W: Write>(
         let stderr_str = String::from_utf8_lossy(&out.stderr);
         cache.log_helper_fetch_error(
             out.status.code().unwrap_or(-1),
-            stderr_str.lines().last().unwrap_or("").chars().take(200).collect::<String>().as_str(),
+            stderr_str
+                .lines()
+                .last()
+                .unwrap_or("")
+                .chars()
+                .take(200)
+                .collect::<String>()
+                .as_str(),
         );
         anyhow::bail!(
             "git upload-pack --stateless-rpc exited {}: {}",
@@ -390,14 +397,8 @@ mod tests {
     #[test]
     fn stdin_is_binary_throughout() {
         let mut wire = Vec::new();
-        pktline::encode_frame(
-            &Frame::Data(b"command=fetch\n".to_vec()),
-            &mut wire,
-        );
-        pktline::encode_frame(
-            &Frame::Data(b"want abc\x00\xffdef\n".to_vec()),
-            &mut wire,
-        );
+        pktline::encode_frame(&Frame::Data(b"command=fetch\n".to_vec()), &mut wire);
+        pktline::encode_frame(&Frame::Data(b"want abc\x00\xffdef\n".to_vec()), &mut wire);
         pktline::encode_frame(&Frame::Flush, &mut wire);
 
         let mut cursor: &[u8] = &wire;

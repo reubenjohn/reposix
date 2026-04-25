@@ -37,9 +37,7 @@ impl BackendConnector for EgressRejectingBackend {
         self.inner.list_issues(project).await
     }
     async fn get_issue(&self, _project: &str, _id: IssueId) -> CoreResult<Issue> {
-        Err(CoreError::InvalidOrigin(
-            "https://evil.example:443/".into(),
-        ))
+        Err(CoreError::InvalidOrigin("https://evil.example:443/".into()))
     }
     async fn create_issue(&self, _: &str, _: Untainted<Issue>) -> CoreResult<Issue> {
         Err(CoreError::Other("unsupported in stub".into()))
@@ -53,12 +51,7 @@ impl BackendConnector for EgressRejectingBackend {
     ) -> CoreResult<Issue> {
         Err(CoreError::Other("unsupported in stub".into()))
     }
-    async fn delete_or_close(
-        &self,
-        _: &str,
-        _: IssueId,
-        _: DeleteReason,
-    ) -> CoreResult<()> {
+    async fn delete_or_close(&self, _: &str, _: IssueId, _: DeleteReason) -> CoreResult<()> {
         Err(CoreError::Other("unsupported in stub".into()))
     }
 }

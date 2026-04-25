@@ -24,9 +24,11 @@ pub fn set_meta(conn: &Connection, key: &str, value: &str) -> Result<()> {
 /// # Errors
 /// Returns [`Error::Sqlite`] for any rusqlite failure other than no-rows.
 pub fn get_meta(conn: &Connection, key: &str) -> Result<Option<String>> {
-    conn.query_row("SELECT value FROM meta WHERE key = ?1", params![key], |row| {
-        row.get::<_, String>(0)
-    })
+    conn.query_row(
+        "SELECT value FROM meta WHERE key = ?1",
+        params![key],
+        |row| row.get::<_, String>(0),
+    )
     .optional()
     .map_err(Error::from)
 }
