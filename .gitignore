@@ -52,3 +52,4 @@ research/scratch/
 
 # Byproducts of scripts/bench_token_economy.py not involving fixtures:
 runtime/bench-*.log
+.claude/scheduled_tasks.lock
