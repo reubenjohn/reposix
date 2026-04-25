@@ -467,8 +467,10 @@ match.
     local-only (no network), so it's identical across columns and serves
     as a runner-variance control.
 
-Real-backend cells are populated by the \`bench-latency-v09\` CI job;
-see [its workflow](../../.github/workflows/ci.yml) for cadence.
+Real-backend cells are populated by the \`bench-latency-v09\` CI job
+(see [\`.github/workflows/ci.yml\`](https://github.com/reubenjohn/reposix/blob/main/.github/workflows/ci.yml)
+for cadence; the weekly cron variant lives in
+[\`.github/workflows/bench-latency-cron.yml\`](https://github.com/reubenjohn/reposix/blob/main/.github/workflows/bench-latency-cron.yml)).
 
 ## Soft thresholds
 
