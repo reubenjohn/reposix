@@ -9,7 +9,21 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS audit_events_cache (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     ts            TEXT    NOT NULL,
-    op            TEXT    NOT NULL CHECK (op IN ('materialize','egress_denied','tree_sync')),
+    -- NOTE: this CHECK is on `CREATE TABLE IF NOT EXISTS`, so existing
+    -- cache.db files keep the older CHECK list. That's acceptable for
+    -- v0.9.0 (pre-1.0, cache is local ephemeral state). Phase 33 adds
+    -- 'delta_sync' alongside the helper_* ops the audit module already
+    -- inserts in best-effort mode (failures are warn-logged).
+    op            TEXT    NOT NULL CHECK (op IN (
+        'materialize',
+        'egress_denied',
+        'tree_sync',
+        'helper_connect',
+        'helper_advertise',
+        'helper_fetch',
+        'helper_fetch_error',
+        'delta_sync'
+    )),
     backend       TEXT    NOT NULL,
     project       TEXT    NOT NULL,
     issue_id      TEXT,
