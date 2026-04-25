@@ -10,7 +10,18 @@ fn gix_082_exposes_expected_surface() {
     let repo_path = tmp.path().join("smoke.git");
 
     // init_bare: crate-level fn, returns Repository.
-    let repo: gix::Repository = gix::init_bare(&repo_path).expect("init_bare");
+    let mut repo: gix::Repository = gix::init_bare(&repo_path).expect("init_bare");
+
+    // Set a default user.name/email so `repo.commit(...)` below works on
+    // hosts that have no global git identity configured (CI runners).
+    {
+        let mut snap = repo.config_snapshot_mut();
+        snap.set_value(&gix::config::tree::User::NAME, "smoke-test")
+            .expect("set user.name");
+        snap.set_value(&gix::config::tree::User::EMAIL, "smoke@noreply.invalid")
+            .expect("set user.email");
+        snap.commit().expect("commit config");
+    }
 
     // object_hash: Repository::object_hash(&self) — needed for empty tree lookup.
     let _kind: gix::hash::Kind = repo.object_hash();
