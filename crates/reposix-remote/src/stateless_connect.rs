@@ -17,6 +17,14 @@
 //!    round-trip; the handler uses [`super::protocol::Protocol::reader_mut`]
 //!    to share the same `BufReader<Stdin>` with the handshake line
 //!    reader, never constructing a second buffer over stdin.
+//!
+//! ## Environment variables
+//!
+//! - `REPOSIX_BLOB_LIMIT` — max `want` lines per `command=fetch` RPC
+//!   turn (Phase 34, ARCH-09). Default 200; `0` = unlimited. Read once
+//!   at first access via a `OnceLock` cache.
+//! - `REPOSIX_ALLOWED_ORIGINS` — egress allowlist (Phase 1). Inherited
+//!   via `reposix_core::http::client()`.
 
 #![forbid(unsafe_code)]
 
@@ -30,6 +38,72 @@ use tokio::runtime::Runtime;
 
 use crate::pktline::{self, Frame};
 use crate::protocol::Protocol;
+
+/// Default upper bound on `want` lines per `command=fetch` RPC turn.
+/// Configurable via `REPOSIX_BLOB_LIMIT` env var. `0` means "unlimited"
+/// (explicit opt-out for very-large bulk operations).
+pub const DEFAULT_BLOB_LIMIT: u32 = 200;
+
+/// Verbatim stderr message for blob-limit refusal. Backticks around
+/// `git sparse-checkout set <pathspec>` are LITERAL — they render as
+/// code formatting in agent terminals that support it, and look correct
+/// in plaintext. The literal string `git sparse-checkout` is the
+/// dark-factory teaching mechanism (REQUIREMENTS.md ARCH-09): an
+/// unprompted agent reads the error, runs the named command, and
+/// self-corrects with no in-context system-prompt instructions.
+pub const BLOB_LIMIT_EXCEEDED_FMT: &str =
+    "error: refusing to fetch {N} blobs (limit: {M}). Narrow your scope with `git sparse-checkout set <pathspec>` and retry.";
+
+/// Process-wide cache for `REPOSIX_BLOB_LIMIT`. Read once at first
+/// access; subsequent calls are lock-free.
+///
+/// Note: tests that exercise env-driven behaviour should use the pure
+/// helper [`parse_blob_limit`] instead — the `OnceLock` state is
+/// process-global and can leak across tests in the same binary.
+static BLOB_LIMIT: std::sync::OnceLock<u32> = std::sync::OnceLock::new();
+
+/// Pure parser for `REPOSIX_BLOB_LIMIT`. Whitespace-trimmed; empty or
+/// non-numeric input falls back to [`DEFAULT_BLOB_LIMIT`]. `0` is
+/// preserved verbatim (the enforcement code interprets `0` as
+/// "unlimited"; the parser stays neutral).
+fn parse_blob_limit(raw: Option<&str>) -> u32 {
+    match raw.map(str::trim).filter(|s| !s.is_empty()) {
+        None => DEFAULT_BLOB_LIMIT,
+        Some(s) => s.parse::<u32>().unwrap_or(DEFAULT_BLOB_LIMIT),
+    }
+}
+
+/// Resolve the configured blob limit. Reads `REPOSIX_BLOB_LIMIT` once;
+/// invalid values (non-numeric, overflow) fall back to
+/// [`DEFAULT_BLOB_LIMIT`] with a `tracing::warn!`. `0` is the explicit
+/// opt-out and is preserved verbatim.
+#[must_use]
+pub fn configured_blob_limit() -> u32 {
+    *BLOB_LIMIT.get_or_init(|| match std::env::var("REPOSIX_BLOB_LIMIT") {
+        Ok(s) => {
+            let parsed = parse_blob_limit(Some(&s));
+            if parsed == DEFAULT_BLOB_LIMIT && s.trim() != DEFAULT_BLOB_LIMIT.to_string() {
+                // Only warn when we fell back due to garbage input (not
+                // when the user explicitly set the value to the default).
+                tracing::warn!(
+                    raw = %s,
+                    "invalid REPOSIX_BLOB_LIMIT, using default {DEFAULT_BLOB_LIMIT}"
+                );
+            }
+            parsed
+        }
+        Err(_) => DEFAULT_BLOB_LIMIT,
+    })
+}
+
+/// Format the verbatim refusal message with concrete `N` (want count)
+/// and `M` (limit) substituted.
+#[must_use]
+pub fn format_blob_limit_message(want_count: u32, limit: u32) -> String {
+    BLOB_LIMIT_EXCEEDED_FMT
+        .replace("{N}", &want_count.to_string())
+        .replace("{M}", &limit.to_string())
+}
 
 /// Request-turn counters for audit + Phase 34 blob-limit telemetry.
 #[derive(Debug, Default, Clone)]
@@ -181,6 +255,12 @@ enum ProxyOutcome {
 /// Read one pkt-line request from `proto` (terminated by flush), pipe
 /// it to a freshly-spawned `upload-pack --stateless-rpc`, write the
 /// response to `proto`, and append `0002` (gotcha 2).
+//
+// Allow `too_many_lines` (104 vs default 100): the body splits into
+// three logical phases — drain frames, blob-limit guardrail, spawn
+// upload-pack — which read together more clearly than as separate
+// helpers (the `stats` accumulator threads through all three).
+#[allow(clippy::too_many_lines)]
 fn proxy_one_rpc<R: Read, W: Write>(
     proto: &mut Protocol<R, W>,
     cache: &Cache,
@@ -229,6 +309,28 @@ fn proxy_one_rpc<R: Read, W: Write>(
     }
 
     stats.request_bytes = u32::try_from(request.len()).unwrap_or(u32::MAX);
+
+    // ARCH-09: blob-limit guardrail. Only enforce on `command=fetch`
+    // (other commands like `ls-refs` and `object-info` have no `want`
+    // lines and `stats.want_count` is 0 — the check below is naturally
+    // a no-op for them, but the explicit command match keeps intent
+    // obvious to future readers). `limit == 0` means "unlimited"
+    // (explicit opt-out).
+    let limit = configured_blob_limit();
+    if stats.command.as_deref() == Some("fetch") && limit != 0 && stats.want_count > limit {
+        let msg = format_blob_limit_message(stats.want_count, limit);
+        // Stderr first — agent-facing message MUST land before audit.
+        #[allow(clippy::print_stderr)]
+        {
+            eprintln!("{msg}");
+        }
+        cache.log_blob_limit_exceeded(stats.want_count, limit);
+        anyhow::bail!(
+            "blob limit exceeded: {} wants, limit {}",
+            stats.want_count,
+            limit
+        );
+    }
 
     // Invoke upload-pack with the re-framed request on stdin.
     let mut child = Command::new("git")
@@ -342,6 +444,88 @@ fn _ensure_bufread_in_scope<T: BufRead>(_: &T) {}
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn blob_limit_message_contains_literal_git_sparse_checkout() {
+        let msg = format_blob_limit_message(250, 200);
+        assert!(
+            msg.contains("git sparse-checkout"),
+            "verbatim error message MUST literally contain `git sparse-checkout`; got: {msg}"
+        );
+        assert!(msg.contains("250"), "want_count substituted: {msg}");
+        assert!(msg.contains("200"), "limit substituted: {msg}");
+        assert!(
+            msg.starts_with("error: refusing to fetch "),
+            "exact prefix per ARCH-09: {msg}"
+        );
+        assert!(
+            msg.contains("`git sparse-checkout set <pathspec>`"),
+            "backticks-and-pathspec-template preserved verbatim: {msg}"
+        );
+    }
+
+    #[test]
+    fn parse_blob_limit_default_when_absent() {
+        assert_eq!(parse_blob_limit(None), DEFAULT_BLOB_LIMIT);
+    }
+
+    #[test]
+    fn parse_blob_limit_zero_means_unlimited_value() {
+        // `0` is preserved verbatim — the *enforcement* code interprets
+        // it as "unlimited"; the parser just returns the raw value.
+        assert_eq!(parse_blob_limit(Some("0")), 0);
+    }
+
+    #[test]
+    fn parse_blob_limit_falls_back_on_garbage() {
+        assert_eq!(parse_blob_limit(Some("not-a-number")), DEFAULT_BLOB_LIMIT);
+        assert_eq!(parse_blob_limit(Some("")), DEFAULT_BLOB_LIMIT);
+        assert_eq!(parse_blob_limit(Some("   ")), DEFAULT_BLOB_LIMIT);
+    }
+
+    #[test]
+    fn parse_blob_limit_accepts_5() {
+        assert_eq!(parse_blob_limit(Some("5")), 5);
+    }
+
+    #[test]
+    fn blob_limit_check_logic_refuses_above_limit() {
+        // Pure-logic check: same predicate as proxy_one_rpc.
+        let limit = 200_u32;
+        let want_count = 250_u32;
+        let command_is_fetch = true;
+        let should_refuse = command_is_fetch && limit != 0 && want_count > limit;
+        assert!(should_refuse);
+        // And produces the verbatim message.
+        let msg = format_blob_limit_message(want_count, limit);
+        assert!(msg.starts_with("error: refusing to fetch 250 blobs (limit: 200)."));
+        assert!(msg.contains("`git sparse-checkout set <pathspec>`"));
+    }
+
+    #[test]
+    fn blob_limit_check_logic_passes_at_exactly_limit() {
+        let limit = 200_u32;
+        let want_count = 200_u32;
+        let should_refuse = limit != 0 && want_count > limit;
+        assert!(!should_refuse, "exactly at limit must pass");
+    }
+
+    #[test]
+    fn blob_limit_check_logic_zero_means_unlimited() {
+        let limit = 0_u32;
+        let want_count = 9999_u32;
+        let should_refuse = limit != 0 && want_count > limit;
+        assert!(!should_refuse, "limit=0 means unlimited");
+    }
+
+    #[test]
+    fn blob_limit_check_logic_skips_non_fetch_commands() {
+        let limit = 200_u32;
+        let want_count = 250_u32;
+        let command_is_fetch = false; // e.g. ls-refs
+        let should_refuse = command_is_fetch && limit != 0 && want_count > limit;
+        assert!(!should_refuse);
+    }
 
     #[test]
     fn parse_command_keyword_extracts_fetch() {

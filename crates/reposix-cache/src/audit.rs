@@ -256,8 +256,9 @@ pub fn log_helper_push_rejected_conflict(
 
 /// Insert `op='helper_push_sanitized_field'` row — one per Update action
 /// where `sanitize()` would have overwritten a server-controlled field
-/// (id/created_at/updated_at/version). Best-effort signal for Phase 35
-/// introspection. `field` names the overwritten frontmatter field.
+/// (`id`/`created_at`/`updated_at`/`version`). Best-effort signal for
+/// Phase 35 introspection. `field` names the overwritten frontmatter
+/// field.
 pub fn log_helper_push_sanitized_field(
     conn: &Connection,
     backend: &str,
