@@ -7,66 +7,16 @@
 //! Design intent: `.planning/research/v0.11.0-vision-and-innovations.md` §3b.
 
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
 use chrono::{DateTime, Utc};
-use reposix_cache::path::resolve_cache_path;
 use reposix_cache::{list_sync_tags_at, SyncTag};
-use reposix_core::parse_remote_url;
 use rusqlite::Connection;
+
+use crate::worktree_helpers::cache_path_from_worktree;
 
 /// Default count for `reposix history` pagination.
 const DEFAULT_HISTORY_LIMIT: usize = 10;
-
-/// Resolve the cache's bare-repo path from a working-tree dir. Mirrors the
-/// inference doctor uses: parse `remote.origin.url`, map host → backend slug,
-/// look up `<cache_root>/<backend>-<project>.git`.
-fn cache_path_from_worktree(work: &Path) -> Result<PathBuf> {
-    let url = git_config_get(work, "remote.origin.url").ok_or_else(|| {
-        anyhow!(
-            "no remote.origin.url in {} (run `reposix init` first)",
-            work.display()
-        )
-    })?;
-    let spec = parse_remote_url(&url).with_context(|| format!("parse remote.origin.url={url}"))?;
-    let backend = backend_slug_from_origin(&spec.origin);
-    resolve_cache_path(&backend, spec.project.as_str()).with_context(|| {
-        format!(
-            "resolve cache path for ({backend}, {project})",
-            project = spec.project
-        )
-    })
-}
-
-/// Map a remote origin to the cache `backend` slug. Mirrors `doctor.rs`.
-fn backend_slug_from_origin(origin: &str) -> String {
-    if origin.contains("api.github.com") {
-        "github".to_string()
-    } else if origin.contains("atlassian.net") {
-        "confluence".to_string()
-    } else {
-        "sim".to_string()
-    }
-}
-
-fn git_config_get(path: &Path, key: &str) -> Option<String> {
-    let out = Command::new("git")
-        .arg("-C")
-        .arg(path)
-        .args(["config", "--get", key])
-        .output()
-        .ok()?;
-    if !out.status.success() {
-        return None;
-    }
-    let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
-    if s.is_empty() {
-        None
-    } else {
-        Some(s)
-    }
-}
 
 /// Open the cache's bare repo (read-only) and list sync tags. Wraps the
 /// reposix-cache helper to surface a clean error when the cache directory
@@ -212,17 +162,5 @@ pub fn run_at(target: String, path: PathBuf) -> Result<()> {
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn backend_slug_mapping() {
-        assert_eq!(backend_slug_from_origin("http://127.0.0.1:7878"), "sim");
-        assert_eq!(backend_slug_from_origin("https://api.github.com"), "github");
-        assert_eq!(
-            backend_slug_from_origin("https://reuben-john.atlassian.net"),
-            "confluence"
-        );
-    }
-}
+// Note: `backend_slug_from_origin` now lives in `crate::worktree_helpers`
+// and is unit-tested there.

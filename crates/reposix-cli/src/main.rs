@@ -29,6 +29,7 @@ mod history;
 mod init;
 mod sim;
 mod tokens;
+mod worktree_helpers;
 
 // Modules shared with the lib target — imported via the library crate path.
 use reposix_cli::list;

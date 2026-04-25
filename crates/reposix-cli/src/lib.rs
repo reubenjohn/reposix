@@ -17,3 +17,4 @@ pub use reposix_cache::cli_compat as cache_db;
 pub mod list;
 pub mod refresh;
 pub mod spaces;
+pub mod worktree_helpers;

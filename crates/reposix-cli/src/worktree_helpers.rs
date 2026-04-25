@@ -1,0 +1,122 @@
+//! Worktree-context helpers shared by the `reposix doctor`, `reposix history`,
+//! `reposix gc`, and `reposix tokens` subcommands.
+//!
+//! All four subcommands need to (1) read the working tree's `remote.origin.url`,
+//! (2) parse it into a `RemoteSpec`, (3) map the origin to a backend slug, and
+//! (4) resolve the corresponding cache directory. Before this module they each
+//! defined verbatim copies of the trio (`cache_path_from_worktree`,
+//! `backend_slug_from_origin`, `git_config_get`); see POLISH-13 (v0.11.0
+//! CATALOG-v2 Refactor cluster A) for the consolidation rationale.
+
+use std::path::{Path, PathBuf};
+use std::process::Command;
+
+use anyhow::{anyhow, Context, Result};
+use reposix_cache::path::resolve_cache_path;
+use reposix_core::parse_remote_url;
+
+/// Read a single git config value via `git -C <path> config --get <key>`.
+///
+/// Returns `None` if the key is unset, the value is empty, or the git
+/// invocation itself fails (e.g. not a git repo). This function is
+/// deliberately tolerant — callers escalate to errors at the level
+/// where the missing value matters.
+#[must_use]
+pub fn git_config_get(path: &Path, key: &str) -> Option<String> {
+    let out = Command::new("git")
+        .arg("-C")
+        .arg(path)
+        .args(["config", "--get", key])
+        .output()
+        .ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
+    if s.is_empty() {
+        None
+    } else {
+        Some(s)
+    }
+}
+
+/// Map a remote origin to the cache `backend` slug.
+///
+/// Mirrors the runtime mapping in `git-remote-reposix`: GitHub is identified
+/// by `api.github.com`; Atlassian (`atlassian.net`) is best-effort tagged as
+/// `confluence` because the worktree-side helpers don't see the
+/// `/jira/` vs `/confluence/` URL marker (it's discarded before
+/// `remote.origin.url` is stored). All other origins fall back to `sim`.
+#[must_use]
+pub fn backend_slug_from_origin(origin: &str) -> String {
+    if origin.contains("api.github.com") {
+        "github".to_string()
+    } else if origin.contains("atlassian.net") {
+        // sim and confluence/jira can share atlassian.net; we pick "confluence"
+        // as a default and the user fixes if wrong. Best-effort.
+        "confluence".to_string()
+    } else {
+        "sim".to_string()
+    }
+}
+
+/// Resolve the cache's bare-repo path from a working-tree directory.
+///
+/// Reads `remote.origin.url`, parses it via [`parse_remote_url`], maps the
+/// host to a backend slug via [`backend_slug_from_origin`], and resolves the
+/// `<cache_root>/<backend>-<project>.git` path via
+/// [`reposix_cache::path::resolve_cache_path`]. Does NOT verify the cache
+/// directory exists — callers that need that check should add it themselves.
+///
+/// # Errors
+///
+/// - The working tree has no `remote.origin.url` configured.
+/// - The URL fails to parse (no `/projects/<slug>` segment, etc.).
+/// - The cache path cannot be resolved (no `$XDG_CACHE_HOME`/`$HOME`).
+pub fn cache_path_from_worktree(work: &Path) -> Result<PathBuf> {
+    let url = git_config_get(work, "remote.origin.url").ok_or_else(|| {
+        anyhow!(
+            "no remote.origin.url in {} (run `reposix init` first)",
+            work.display()
+        )
+    })?;
+    let spec = parse_remote_url(&url).with_context(|| format!("parse remote.origin.url={url}"))?;
+    let backend = backend_slug_from_origin(&spec.origin);
+    resolve_cache_path(&backend, spec.project.as_str()).with_context(|| {
+        format!(
+            "resolve cache path for ({backend}, {project})",
+            project = spec.project
+        )
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn backend_slug_mapping() {
+        assert_eq!(backend_slug_from_origin("http://127.0.0.1:7878"), "sim");
+        assert_eq!(backend_slug_from_origin("https://api.github.com"), "github");
+        assert_eq!(
+            backend_slug_from_origin("https://reuben-john.atlassian.net"),
+            "confluence"
+        );
+    }
+
+    #[test]
+    fn git_config_get_returns_none_for_non_repo() {
+        let tmp = tempfile::tempdir().unwrap();
+        assert!(git_config_get(tmp.path(), "remote.origin.url").is_none());
+    }
+
+    #[test]
+    fn cache_path_from_worktree_errors_without_remote() {
+        let tmp = tempfile::tempdir().unwrap();
+        let err = cache_path_from_worktree(tmp.path()).unwrap_err();
+        assert!(
+            err.to_string().contains("no remote.origin.url"),
+            "got: {err}"
+        );
+    }
+}

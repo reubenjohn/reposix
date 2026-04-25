@@ -19,6 +19,8 @@ use reposix_cache::path::resolve_cache_path;
 use reposix_core::parse_remote_url;
 use rusqlite::Connection;
 
+use crate::worktree_helpers::{backend_slug_from_origin, git_config_get};
+
 /// Severity tier for a single check finding.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Severity {
@@ -701,20 +703,6 @@ fn git_in(path: &Path, args: &[&str]) -> std::io::Result<std::process::Output> {
     Command::new("git").arg("-C").arg(path).args(args).output()
 }
 
-/// Read a single git config value. Returns `None` if unset or git errors.
-fn git_config_get(path: &Path, key: &str) -> Option<String> {
-    let out = git_in(path, &["config", "--get", key]).ok()?;
-    if !out.status.success() {
-        return None;
-    }
-    let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
-    if s.is_empty() {
-        None
-    } else {
-        Some(s)
-    }
-}
-
 /// Set a git config value (local repo scope).
 fn git_config_set(path: &Path, key: &str, value: &str) -> std::io::Result<()> {
     let out = git_in(path, &["config", key, value])?;
@@ -734,20 +722,6 @@ fn which(bin: &str) -> bool {
         .arg(format!("command -v {bin}"))
         .output()
         .is_ok_and(|o| o.status.success())
-}
-
-/// Map a remote origin to the cache `backend` slug. Mirrors the
-/// `reposix-remote::main` runtime mapping (sim/github/confluence/jira).
-fn backend_slug_from_origin(origin: &str) -> String {
-    if origin.contains("api.github.com") {
-        "github".to_string()
-    } else if origin.contains("atlassian.net") {
-        // sim and confluence/jira can share atlassian.net; we pick "confluence"
-        // as a default and the user fixes if wrong. This is doctor — best-effort.
-        "confluence".to_string()
-    } else {
-        "sim".to_string()
-    }
 }
 
 #[cfg(test)]
@@ -796,13 +770,6 @@ mod tests {
         assert_eq!(report.exit_code(), 1);
     }
 
-    #[test]
-    fn backend_slug_mapping() {
-        assert_eq!(backend_slug_from_origin("http://127.0.0.1:7878"), "sim");
-        assert_eq!(backend_slug_from_origin("https://api.github.com"), "github");
-        assert_eq!(
-            backend_slug_from_origin("https://reuben-john.atlassian.net"),
-            "confluence"
-        );
-    }
+    // Note: `backend_slug_from_origin` now lives in `crate::worktree_helpers`
+    // and is unit-tested there.
 }

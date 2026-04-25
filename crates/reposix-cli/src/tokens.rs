@@ -7,12 +7,11 @@
 //! Design intent: `.planning/research/v0.11.0-vision-and-innovations.md` §3c.
 
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
-use anyhow::{anyhow, bail, Context, Result};
-use reposix_cache::path::resolve_cache_path;
-use reposix_core::parse_remote_url;
+use anyhow::{bail, Context, Result};
 use rusqlite::Connection;
+
+use crate::worktree_helpers::cache_path_from_worktree as resolve_cache_dir;
 
 /// Aggregate stats over the token-cost rows.
 #[derive(Debug, Default, Clone)]
@@ -63,6 +62,19 @@ pub fn run(path: Option<PathBuf>) -> Result<()> {
     let summary = aggregate_at(&cache_path)?;
     print_summary(&cache_path, &summary);
     Ok(())
+}
+
+/// Resolve the cache path from a working tree, additionally requiring that
+/// `cache.db` exists (no token-cost rows otherwise).
+fn cache_path_from_worktree(work: &Path) -> Result<PathBuf> {
+    let cache_path = resolve_cache_dir(work)?;
+    if !cache_path.exists() {
+        bail!(
+            "no cache at {} (run `git fetch` to populate token_cost audit rows)",
+            cache_path.display()
+        );
+    }
+    Ok(cache_path)
 }
 
 /// Aggregate `token_cost` rows from `<cache>/cache.db`. Public for tests.
@@ -268,58 +280,6 @@ fn with_commas(mut n: u64) -> String {
     }
     parts.reverse();
     parts.join(",")
-}
-
-fn cache_path_from_worktree(work: &Path) -> Result<PathBuf> {
-    let url = git_config_get(work, "remote.origin.url").ok_or_else(|| {
-        anyhow!(
-            "no remote.origin.url in {} (run `reposix init` first)",
-            work.display()
-        )
-    })?;
-    let spec = parse_remote_url(&url).with_context(|| format!("parse remote.origin.url={url}"))?;
-    let backend = backend_slug_from_origin(&spec.origin);
-    let cache_path = resolve_cache_path(&backend, spec.project.as_str()).with_context(|| {
-        format!(
-            "resolve cache path for ({backend}, {project})",
-            project = spec.project
-        )
-    })?;
-    if !cache_path.exists() {
-        bail!(
-            "no cache at {} (run `git fetch` to populate token_cost audit rows)",
-            cache_path.display()
-        );
-    }
-    Ok(cache_path)
-}
-
-fn backend_slug_from_origin(origin: &str) -> String {
-    if origin.contains("api.github.com") {
-        "github".to_string()
-    } else if origin.contains("atlassian.net") {
-        "confluence".to_string()
-    } else {
-        "sim".to_string()
-    }
-}
-
-fn git_config_get(path: &Path, key: &str) -> Option<String> {
-    let out = Command::new("git")
-        .arg("-C")
-        .arg(path)
-        .args(["config", "--get", key])
-        .output()
-        .ok()?;
-    if !out.status.success() {
-        return None;
-    }
-    let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
-    if s.is_empty() {
-        None
-    } else {
-        Some(s)
-    }
 }
 
 #[cfg(test)]
