@@ -23,6 +23,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 mod binpath;
+mod doctor;
 mod init;
 mod sim;
 
@@ -140,6 +141,25 @@ enum Cmd {
         #[arg(long, value_enum, default_value_t = list::ListBackend::Confluence)]
         backend: list::ListBackend,
     },
+    /// Diagnose a reposix-init'd working tree and print copy-pastable fix
+    /// commands for each issue found. Exit code is 1 if any ERROR-severity
+    /// findings are reported, 0 otherwise.
+    ///
+    /// With `--fix`, applies the small allowlist of safe fixes inline (today:
+    /// `git config extensions.partialClone origin`). Never mutates cache,
+    /// audit log, or backend state.
+    ///
+    /// Examples:
+    ///   reposix doctor                    # diagnose current dir
+    ///   reposix doctor /tmp/repo
+    ///   reposix doctor --fix /tmp/repo    # also apply safe fixes
+    Doctor {
+        /// Apply deterministic, non-destructive fixes inline.
+        #[arg(long)]
+        fix: bool,
+        /// Working tree to audit. Defaults to the current directory.
+        path: Option<PathBuf>,
+    },
     /// Print the version.
     Version,
 }
@@ -191,5 +211,17 @@ async fn main() -> Result<()> {
             .await
         }
         Cmd::Spaces { backend } => spaces::run(backend).await,
+        Cmd::Doctor { fix, path } => {
+            let report = doctor::run(path.as_deref(), fix)?;
+            // Colour iff stdout is a TTY. Plain ASCII otherwise so logs and
+            // CI artifacts stay clean.
+            let colour = std::io::IsTerminal::is_terminal(&std::io::stdout());
+            report.print(colour);
+            let code = report.exit_code();
+            if code != 0 {
+                std::process::exit(code);
+            }
+            Ok(())
+        }
     }
 }
