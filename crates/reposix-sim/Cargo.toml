@@ -38,8 +38,8 @@ parking_lot.workspace = true
 dashmap.workspace = true
 governor.workspace = true
 rusqlite.workspace = true
-sha2 = "0.10"
-hex = "0.4"
+sha2 = "0.11"
+hex = { workspace = true }
 
 [dev-dependencies]
 reqwest.workspace = true

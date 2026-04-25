@@ -406,7 +406,7 @@ impl JiraBackend {
         let sha_hex = {
             use sha2::{Digest, Sha256};
             let digest = Sha256::digest(response_bytes);
-            format!("{digest:x}")
+            hex::encode(digest)
         };
         let response_summary = format!("{status}:{}", &sha_hex[..16]);
         let conn = audit.lock();
