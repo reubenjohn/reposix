@@ -535,6 +535,90 @@ impl BackendConnector for JiraBackend {
         self.list_issues_impl(project, false).await
     }
 
+    async fn list_changed_since(
+        &self,
+        project: &str,
+        since: chrono::DateTime<chrono::Utc>,
+    ) -> Result<Vec<IssueId>> {
+        // JQL: `updated >= "yyyy-MM-dd HH:mm"`. JQL does not accept full
+        // ISO8601 with timezone — use the canonical two-field form.
+        let jql_time = since.format("%Y-%m-%d %H:%M").to_string();
+        // Strip quotes from project slug defensively before interpolation.
+        let safe_project = project.replace('"', "");
+        let url = format!("{}/rest/api/3/search/jql", self.base());
+        let fields: Vec<String> = JIRA_FIELDS.iter().map(|s| (*s).to_owned()).collect();
+        let mut request_body = serde_json::json!({
+            "jql": format!("project = \"{safe_project}\" AND updated >= \"{jql_time}\" ORDER BY id ASC"),
+            "fields": fields,
+            "maxResults": PAGE_SIZE,
+        });
+
+        let mut out: Vec<IssueId> = Vec::new();
+        let mut pages: usize = 0;
+
+        let header_owned = self.write_headers();
+        let header_refs: Vec<(&str, &str)> =
+            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+
+        loop {
+            pages += 1;
+            if pages > (MAX_ISSUES_PER_LIST / PAGE_SIZE) + 1 {
+                tracing::warn!(
+                    pages,
+                    "reached MAX_ISSUES_PER_LIST cap; stopping pagination"
+                );
+                break;
+            }
+
+            self.await_rate_limit_gate().await;
+            let body_bytes = serde_json::to_vec(&request_body)?;
+            let resp = self
+                .http
+                .request_with_headers_and_body(
+                    Method::POST,
+                    url.as_str(),
+                    &header_refs,
+                    Some(body_bytes),
+                )
+                .await?;
+            self.ingest_rate_limit(&resp);
+            let status = resp.status();
+            let bytes = resp.bytes().await?;
+            if !status.is_success() {
+                return Err(Error::Other(format!(
+                    "JIRA returned {status} for POST /rest/api/3/search/jql: {}",
+                    String::from_utf8_lossy(&bytes)
+                )));
+            }
+            let search_resp: JiraSearchResponse = serde_json::from_slice(&bytes)?;
+            let is_last = search_resp.is_last.unwrap_or(true);
+            let next_token = search_resp.next_page_token.clone();
+
+            for issue in search_resp.issues {
+                // SG-05: wrap as Tainted before translating, then keep only
+                // the IssueId. Full-Issue translation is needed because
+                // JIRA's payload encodes the id deep in the fields tree.
+                let tainted = Tainted::new(issue);
+                let translated = translate(tainted.into_inner())?;
+                out.push(translated.id);
+                if out.len() >= MAX_ISSUES_PER_LIST {
+                    return Ok(out);
+                }
+            }
+
+            if is_last {
+                break;
+            }
+            if let Some(token) = next_token {
+                request_body["nextPageToken"] = serde_json::Value::String(token);
+            } else {
+                break;
+            }
+        }
+
+        Ok(out)
+    }
+
     async fn get_issue(&self, _project: &str, id: IssueId) -> Result<Issue> {
         self.await_rate_limit_gate().await;
         self.get_issue_inner(id).await
@@ -1144,6 +1228,74 @@ mod tests {
         };
         JiraBackend::new_with_base_url(creds, server_uri.to_string())
             .expect("backend construction must succeed")
+    }
+
+    /// Wiremock matcher: assert the POST body bytes contain a substring.
+    /// Wiremock 0.6 has no out-of-the-box `body_string_contains` matcher;
+    /// this is the minimal stand-in (used for asserting JQL substrings).
+    struct BodyContains(&'static str);
+    impl wiremock::Match for BodyContains {
+        fn matches(&self, request: &wiremock::Request) -> bool {
+            std::str::from_utf8(&request.body)
+                .map(|s| s.contains(self.0))
+                .unwrap_or(false)
+        }
+    }
+
+    #[tokio::test]
+    async fn jira_list_changed_since_sends_updated_jql() {
+        // Phase 33: prove the JIRA override emits a POST body containing the
+        // JQL `updated >=` clause — the native incremental query.
+        use chrono::{TimeZone, Utc};
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/rest/api/3/search/jql"))
+            .and(BodyContains("updated >="))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "issues": [
+                    issue_json(10042, "TEST-42", "x", "indeterminate", "In Progress", None)
+                ],
+                "isLast": true
+            })))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let backend = make_backend(&server.uri());
+        let t = Utc.with_ymd_and_hms(2026, 4, 24, 0, 0, 0).unwrap();
+        let ids = backend
+            .list_changed_since("TEST", t)
+            .await
+            .expect("list_changed");
+        assert_eq!(ids.len(), 1);
+        assert_eq!(ids[0], IssueId(10042));
+    }
+
+    #[tokio::test]
+    async fn jira_list_changed_since_strips_quotes_from_project() {
+        // Defense: a malicious project key with embedded `"` cannot break out
+        // of the JQL string literal — the override strips quotes pre-interpolation.
+        use chrono::{TimeZone, Utc};
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/rest/api/3/search/jql"))
+            .and(BodyContains("project = \\\"TEST\\\""))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "issues": [],
+                "isLast": true
+            })))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let backend = make_backend(&server.uri());
+        let t = Utc.with_ymd_and_hms(2026, 4, 24, 0, 0, 0).unwrap();
+        // `TE"S"T` — quotes will be stripped to `TEST`.
+        let ids = backend
+            .list_changed_since("TE\"S\"T", t)
+            .await
+            .expect("list_changed");
+        assert_eq!(ids, Vec::<IssueId>::new());
     }
 
     // ─── Test 1: list_single_page ────────────────────────────────────────
