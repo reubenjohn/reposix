@@ -1,17 +1,18 @@
-//! CLI-compat shim: the `reposix refresh` subcommand's metadata DB.
+//! `cache.db` — refresh-meta `SQLite` store for the `reposix refresh` subcommand.
 //!
-//! This module was lifted from `crates/reposix-cli/src/cache_db.rs` in
-//! Phase 31 Plan 02 (RESEARCH §Open Question 1) so the single v0.8.0
-//! `refresh_meta` schema has one home instead of drifting across two
-//! crates during v0.9.0. The public surface is unchanged — callers that
-//! previously did `use crate::cache_db::{CacheDb, open_cache_db,
-//! update_metadata}` now do `use reposix_cache::cli_compat::{...}`
-//! (or `use reposix_cli::cache_db::{...}` via the re-export shim).
+//! This module owns the v0.8-era `refresh_meta` schema used by the CLI's
+//! `reposix refresh` subcommand. It is deliberately separate from
+//! `reposix_cache::db`, which owns the v0.9.0 `audit_events_cache` /
+//! `meta` / `oid_map` schemas backing the bare-repo cache. The two
+//! schemas have different layouts and live at different on-disk paths
+//! (`<working-tree>/.reposix/cache.db` for refresh, `<cache-dir>/cache.db`
+//! for the bare-repo cache), so they coexist as separate modules in
+//! separate crates.
 //!
-//! Note: this is intentionally SEPARATE from the new `reposix_cache::db`
-//! module which owns the v0.9.0 `cache_schema.sql`. The CLI's refresh
-//! subcommand will migrate to the new schema in Phase 35 (CLI pivot);
-//! until then, the two coexist.
+//! Lifted back into `reposix-cli` from `reposix_cache::cli_compat` in
+//! Phase 51 Plan 51-C — the cache crate is no longer the right home for
+//! a CLI-layer schema, and keeping it there forced `anyhow` into the
+//! cache crate's dependency tree.
 
 use std::os::unix::fs::OpenOptionsExt as _;
 use std::path::Path;

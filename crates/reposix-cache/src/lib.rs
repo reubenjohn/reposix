@@ -29,7 +29,6 @@
 pub mod audit;
 pub mod builder;
 pub mod cache;
-pub mod cli_compat;
 pub mod db;
 pub mod error;
 pub mod gc;
