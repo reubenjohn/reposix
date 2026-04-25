@@ -197,7 +197,8 @@ struct DoctorCtx {
 
 impl DoctorCtx {
     fn gather(path: &Path) -> Self {
-        let is_git_repo = git_in(path, &["rev-parse", "--git-dir"]).is_ok_and(|o| o.status.success());
+        let is_git_repo =
+            git_in(path, &["rev-parse", "--git-dir"]).is_ok_and(|o| o.status.success());
 
         let partial_clone_value = if is_git_repo {
             git_config_get(path, "extensions.partialClone")
