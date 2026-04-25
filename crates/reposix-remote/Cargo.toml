@@ -16,6 +16,13 @@ categories = ["development-tools", "command-line-utilities"]
 name = "git-remote-reposix"
 path = "src/main.rs"
 
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }.{ archive-format }"
+pkg-fmt = "tgz"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-fmt = "zip"
+
 [features]
 # Gated integration tests that shell out to a real `git` binary.
 # Requires git >= 2.27 (for protocol-v2 filter support). Off by default

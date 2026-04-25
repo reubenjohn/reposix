@@ -16,6 +16,13 @@ categories = ["command-line-utilities", "development-tools"]
 name = "reposix"
 path = "src/main.rs"
 
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }.{ archive-format }"
+pkg-fmt = "tgz"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-fmt = "zip"
+
 [dependencies]
 reposix-core.workspace = true
 reposix-cache = { path = "../reposix-cache" }
