@@ -262,6 +262,11 @@ pub fn run(path: Option<&Path>, fix: bool) -> Result<DoctorReport> {
         .as_deref()
         .and_then(|u| parse_remote_url(u).ok());
 
+    // Check 3 from POLISH-09 spec: backend connector registered for the
+    // scheme parsed out of `remote.origin.url`. Runs whether or not the
+    // cache path resolves.
+    findings.push(check_backend_registered(parsed.as_ref()));
+
     if let Some(spec) = parsed.as_ref() {
         let backend = backend_slug_from_origin(&spec.origin);
         let project = spec.project.as_str();
@@ -272,11 +277,14 @@ pub fn run(path: Option<&Path>, fix: bool) -> Result<DoctorReport> {
                     let conn_res = open_cache_db(&cache_path);
                     findings.push(check_cache_db_readable(&conn_res));
                     if let Ok(conn) = &conn_res {
+                        findings.push(check_cache_integrity(conn));
                         findings.push(check_audit_table(conn));
                         findings.push(check_audit_triggers(conn));
                         findings.push(check_outdated_cache(conn));
                     }
                 }
+                findings.push(check_cache_has_main_commit(&cache_path));
+                findings.push(check_worktree_head_drift(&ctx, &cache_path));
             }
             Err(e) => {
                 findings.push(DoctorFinding::warn(
@@ -623,7 +631,45 @@ fn check_allowed_origins(parsed: Option<&reposix_core::RemoteSpec>) -> DoctorFin
                 )
             }
         }
-        (Some(v), _) => DoctorFinding::info(
+        (Some(v), Some(spec)) => {
+            // Set + we have a parsed origin: verify the allowlist actually
+            // covers the parsed origin. The `reposix_core` allowlist matcher
+            // does port globbing on loopback; we mirror only the common
+            // exact-host check here (good-enough for a doctor finding).
+            let origin = &spec.origin;
+            let allowed: Vec<&str> = v
+                .split(',')
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .collect();
+            let host_covered = allowed.iter().any(|entry| {
+                // Exact match wins.
+                if origin == entry {
+                    return true;
+                }
+                // Loopback + port glob: `http://127.0.0.1:*` covers any port.
+                if let Some(prefix) = entry.strip_suffix(":*") {
+                    return origin.starts_with(prefix);
+                }
+                // Origin starts with entry (handles trailing-slash quirks).
+                origin.starts_with(entry)
+            });
+            if host_covered {
+                DoctorFinding::ok(
+                    "env.REPOSIX_ALLOWED_ORIGINS",
+                    format!("REPOSIX_ALLOWED_ORIGINS={v} (covers {origin})"),
+                )
+            } else {
+                DoctorFinding::warn(
+                    "env.REPOSIX_ALLOWED_ORIGINS",
+                    format!(
+                        "REPOSIX_ALLOWED_ORIGINS={v} does not cover remote origin {origin} — fetch will be rejected by the egress allowlist"
+                    ),
+                    Some(format!("export REPOSIX_ALLOWED_ORIGINS='{origin}'")),
+                )
+            }
+        }
+        (Some(v), None) => DoctorFinding::info(
             "env.REPOSIX_ALLOWED_ORIGINS",
             format!("REPOSIX_ALLOWED_ORIGINS={v}"),
         ),
@@ -632,6 +678,178 @@ fn check_allowed_origins(parsed: Option<&reposix_core::RemoteSpec>) -> DoctorFin
             "unset — using default loopback allowlist".to_string(),
         ),
     }
+}
+
+/// Backends statically linked into this build. Used by `check_backend_registered`.
+const KNOWN_BACKENDS: &[&str] = &["sim", "github", "confluence", "jira"];
+
+/// Check #3: the backend referenced by `remote.origin.url` is one of the
+/// schemes this build registers (sim/github/confluence/jira). The doctor
+/// is statically linked against all four today, but the finding remains
+/// valid against future feature-flagged builds.
+fn check_backend_registered(parsed: Option<&reposix_core::RemoteSpec>) -> DoctorFinding {
+    let Some(spec) = parsed else {
+        return DoctorFinding::info(
+            "backend.registered",
+            "skipped — no parseable reposix remote URL",
+        );
+    };
+    let backend = backend_slug_from_origin(&spec.origin);
+    if KNOWN_BACKENDS.contains(&backend.as_str()) {
+        DoctorFinding::ok(
+            "backend.registered",
+            format!("backend `{backend}` is registered in this build"),
+        )
+    } else {
+        DoctorFinding::error(
+            "backend.registered",
+            format!(
+                "backend `{backend}` (from origin {origin}) is NOT registered in this build",
+                origin = spec.origin
+            ),
+            Some(
+                "rebuild with the missing backend feature, or run `reposix list --backend <X>` to confirm support".into(),
+            ),
+        )
+    }
+}
+
+/// Check #5: `PRAGMA integrity_check` returns `ok`. Detects on-disk
+/// corruption that `cache.db` opens cleanly through.
+fn check_cache_integrity(conn: &Connection) -> DoctorFinding {
+    let row: rusqlite::Result<String> = conn.query_row("PRAGMA integrity_check", [], |r| r.get(0));
+    match row {
+        Ok(s) if s == "ok" => DoctorFinding::ok("cache.integrity", "PRAGMA integrity_check = ok"),
+        Ok(other) => DoctorFinding::error(
+            "cache.integrity",
+            format!("PRAGMA integrity_check returned `{other}` — cache.db is corrupted"),
+            Some("rm -rf <cache-dir> && git fetch origin (no in-place rebuild path today)".into()),
+        ),
+        Err(e) => DoctorFinding::warn(
+            "cache.integrity",
+            format!("could not run PRAGMA integrity_check: {e}"),
+            None,
+        ),
+    }
+}
+
+/// Check #9: the cache's bare repo has at least one commit on
+/// `refs/heads/main` (sanity that init+fetch wrote something).
+fn check_cache_has_main_commit(cache_path: &Path) -> DoctorFinding {
+    if !cache_path.exists() {
+        return DoctorFinding::info("cache.refs.main", "skipped — cache dir does not exist yet");
+    }
+    let out = Command::new("git")
+        .arg("-C")
+        .arg(cache_path)
+        .args(["rev-parse", "--verify", "refs/heads/main"])
+        .output();
+    match out {
+        Ok(o) if o.status.success() => {
+            let oid = String::from_utf8_lossy(&o.stdout).trim().to_string();
+            let short = oid.chars().take(12).collect::<String>();
+            DoctorFinding::ok(
+                "cache.refs.main",
+                format!("refs/heads/main present in cache ({short})"),
+            )
+        }
+        Ok(_) => DoctorFinding::warn(
+            "cache.refs.main",
+            "refs/heads/main is missing in the cache — nothing has been fetched yet",
+            Some("git fetch --filter=blob:none origin (from the working tree)".into()),
+        ),
+        Err(e) => DoctorFinding::warn(
+            "cache.refs.main",
+            format!("could not invoke `git rev-parse refs/heads/main` against cache: {e}"),
+            None,
+        ),
+    }
+}
+
+/// Check #10: working-tree HEAD vs cache main tip — warn when they
+/// drift by more than a small commit window. Best-effort: if either
+/// rev-parse fails the finding is INFO.
+fn check_worktree_head_drift(ctx: &DoctorCtx, cache_path: &Path) -> DoctorFinding {
+    if !ctx.is_git_repo {
+        return DoctorFinding::info("worktree.head.drift", "skipped — not a git repo");
+    }
+    let head = git_in(&ctx.path, &["rev-parse", "HEAD"]);
+    let head_oid = match head {
+        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout).trim().to_string(),
+        _ => {
+            return DoctorFinding::info(
+                "worktree.head.drift",
+                "skipped — working tree has no HEAD yet (no commits checked out)",
+            );
+        }
+    };
+    if !cache_path.exists() {
+        return DoctorFinding::info(
+            "worktree.head.drift",
+            "skipped — cache dir does not exist yet",
+        );
+    }
+    let main = Command::new("git")
+        .arg("-C")
+        .arg(cache_path)
+        .args(["rev-parse", "--verify", "refs/heads/main"])
+        .output();
+    let main_oid = match main {
+        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout).trim().to_string(),
+        _ => {
+            return DoctorFinding::info(
+                "worktree.head.drift",
+                "skipped — cache has no refs/heads/main yet",
+            );
+        }
+    };
+    if head_oid == main_oid {
+        return DoctorFinding::ok(
+            "worktree.head.drift",
+            format!(
+                "working tree HEAD matches cache main ({})",
+                short_oid(&head_oid)
+            ),
+        );
+    }
+    // Try to count commits between them in either direction. Walk the
+    // cache repo's object graph (it contains both sides if the working
+    // tree was fetched from the same cache).
+    let count_cmd = Command::new("git")
+        .arg("-C")
+        .arg(cache_path)
+        .args(["rev-list", "--count", &format!("{main_oid}..{head_oid}")])
+        .output();
+    let ahead = count_cmd
+        .ok()
+        .filter(|o| o.status.success())
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string());
+    let behind_cmd = Command::new("git")
+        .arg("-C")
+        .arg(cache_path)
+        .args(["rev-list", "--count", &format!("{head_oid}..{main_oid}")])
+        .output();
+    let behind = behind_cmd
+        .ok()
+        .filter(|o| o.status.success())
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string());
+    let detail = match (ahead.as_deref(), behind.as_deref()) {
+        (Some(a), Some(b)) => format!("ahead {a} / behind {b}"),
+        _ => "drift count unavailable (commits may not be in cache)".to_string(),
+    };
+    DoctorFinding::warn(
+        "worktree.head.drift",
+        format!(
+            "working tree HEAD ({head}) differs from cache main ({main}) — {detail}",
+            head = short_oid(&head_oid),
+            main = short_oid(&main_oid)
+        ),
+        Some("git pull --rebase origin main".into()),
+    )
+}
+
+fn short_oid(oid: &str) -> String {
+    oid.chars().take(7).collect()
 }
 
 fn check_blob_limit(parsed: Option<&reposix_core::RemoteSpec>) -> DoctorFinding {
@@ -772,4 +990,59 @@ mod tests {
 
     // Note: `backend_slug_from_origin` now lives in `crate::worktree_helpers`
     // and is unit-tested there.
+
+    #[test]
+    fn check_backend_registered_recognises_sim() {
+        let spec =
+            reposix_core::parse_remote_url("reposix::http://127.0.0.1:7878/projects/demo").unwrap();
+        let finding = check_backend_registered(Some(&spec));
+        assert_eq!(finding.severity, Severity::Ok);
+    }
+
+    #[test]
+    fn check_backend_registered_skips_when_unparsed() {
+        let finding = check_backend_registered(None);
+        assert_eq!(finding.severity, Severity::Info);
+    }
+
+    #[test]
+    fn check_allowed_origins_ok_when_loopback_glob_covers_sim() {
+        let prev = std::env::var("REPOSIX_ALLOWED_ORIGINS").ok();
+        // SAFETY: restored at end of test.
+        std::env::set_var("REPOSIX_ALLOWED_ORIGINS", "http://127.0.0.1:*");
+        let spec =
+            reposix_core::parse_remote_url("reposix::http://127.0.0.1:7878/projects/demo").unwrap();
+        let finding = check_allowed_origins(Some(&spec));
+        assert_eq!(finding.severity, Severity::Ok, "got {finding:?}");
+        match prev {
+            Some(v) => std::env::set_var("REPOSIX_ALLOWED_ORIGINS", v),
+            None => std::env::remove_var("REPOSIX_ALLOWED_ORIGINS"),
+        }
+    }
+
+    #[test]
+    fn check_allowed_origins_warns_when_host_not_covered() {
+        let prev = std::env::var("REPOSIX_ALLOWED_ORIGINS").ok();
+        std::env::set_var("REPOSIX_ALLOWED_ORIGINS", "https://api.example.com");
+        let spec =
+            reposix_core::parse_remote_url("reposix::https://api.github.com/projects/o/r").unwrap();
+        let finding = check_allowed_origins(Some(&spec));
+        assert_eq!(finding.severity, Severity::Warn, "got {finding:?}");
+        assert!(finding
+            .fix
+            .as_deref()
+            .is_some_and(|f| f.contains("api.github.com")));
+        match prev {
+            Some(v) => std::env::set_var("REPOSIX_ALLOWED_ORIGINS", v),
+            None => std::env::remove_var("REPOSIX_ALLOWED_ORIGINS"),
+        }
+    }
+
+    #[test]
+    fn check_cache_has_main_commit_skips_missing_dir() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("does-not-exist");
+        let finding = check_cache_has_main_commit(&path);
+        assert_eq!(finding.severity, Severity::Info);
+    }
 }
