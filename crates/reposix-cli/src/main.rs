@@ -22,19 +22,9 @@ use std::path::PathBuf;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-mod binpath;
-mod doctor;
-mod gc;
-mod history;
-mod init;
-mod sim;
-mod tokens;
-mod worktree_helpers;
-
-// Modules shared with the lib target — imported via the library crate path.
-use reposix_cli::list;
-use reposix_cli::refresh;
-use reposix_cli::spaces;
+// All subcommand modules live in `lib.rs` so integration tests can call
+// them directly. `main.rs` is intentionally thin: clap-derive dispatch only.
+use reposix_cli::{doctor, gc, history, init, list, refresh, sim, spaces, tokens};
 
 /// reposix — git-native partial clone for autonomous agents.
 #[derive(Debug, Parser)]

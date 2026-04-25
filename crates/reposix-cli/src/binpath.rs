@@ -16,6 +16,7 @@ use std::process::Command;
 /// Build a [`Command`] that invokes `name` (e.g. `reposix-sim`).
 /// Prefers the sibling of `current_exe`; falls back to
 /// `cargo run -q -p <crate> --`.
+#[must_use]
 pub fn resolve_bin(name: &str) -> Command {
     // Case 1: production binary next to `reposix` itself
     //   (e.g. `target/debug/reposix` → `target/debug/<name>`).
