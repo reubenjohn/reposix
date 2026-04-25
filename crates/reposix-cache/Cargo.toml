@@ -32,3 +32,5 @@ anyhow = { workspace = true }
 rusqlite = { workspace = true }
 wiremock = "0.6"
 serde_json = { workspace = true }
+# Phase 33 delta_sync integration test seeds the sim via real HTTP.
+reqwest = { workspace = true }
