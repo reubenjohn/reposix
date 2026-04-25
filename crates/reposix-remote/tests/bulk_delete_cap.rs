@@ -10,7 +10,7 @@ use std::io::Write;
 
 use assert_cmd::Command;
 use chrono::TimeZone;
-use reposix_core::{Record, RecordId, IssueStatus};
+use reposix_core::{Record, RecordId, RecordStatus};
 use serde_json::Value;
 use wiremock::matchers::{any, method, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -20,7 +20,7 @@ fn sample_issue(id: u64) -> Value {
     let i = Record {
         id: RecordId(id),
         title: format!("issue {id}"),
-        status: IssueStatus::Open,
+        status: RecordStatus::Open,
         assignee: None,
         labels: vec![],
         created_at: t,

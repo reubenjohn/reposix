@@ -207,14 +207,14 @@ pub fn plan(prior: &[Record], parsed: &ParsedExport) -> Result<Vec<PlannedAction
 mod tests {
     use super::*;
     use chrono::TimeZone;
-    use reposix_core::IssueStatus;
+    use reposix_core::RecordStatus;
 
     fn sample(id: u64) -> Record {
         let t = chrono::Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
         Record {
             id: RecordId(id),
             title: format!("issue {id}"),
-            status: IssueStatus::Open,
+            status: RecordStatus::Open,
             assignee: None,
             labels: vec![],
             created_at: t,

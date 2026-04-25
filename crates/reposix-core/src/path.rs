@@ -16,7 +16,7 @@
 use std::collections::HashMap;
 
 use crate::error::{Error, Result};
-use crate::issue::RecordId;
+use crate::record::RecordId;
 
 /// Maximum slug length in bytes.
 ///
@@ -54,7 +54,7 @@ pub fn validate_path_component(name: &str) -> Result<&str> {
 ///
 /// # Errors
 /// Returns [`Error::InvalidPath`] if the name is not strictly `[0-9]+\.md`.
-pub fn validate_issue_filename(name: &str) -> Result<RecordId> {
+pub fn validate_record_filename(name: &str) -> Result<RecordId> {
     validate_path_component(name)?;
     let prefix = name
         .strip_suffix(".md")
@@ -180,9 +180,9 @@ mod tests {
 
     #[test]
     fn validate_issue_filename_accepts_digits_md() {
-        assert_eq!(validate_issue_filename("0.md").unwrap().0, 0);
-        assert_eq!(validate_issue_filename("123.md").unwrap().0, 123);
-        assert_eq!(validate_issue_filename("00042.md").unwrap().0, 42);
+        assert_eq!(validate_record_filename("0.md").unwrap().0, 0);
+        assert_eq!(validate_record_filename("123.md").unwrap().0, 123);
+        assert_eq!(validate_record_filename("00042.md").unwrap().0, 42);
     }
 
     #[test]
@@ -196,7 +196,7 @@ mod tests {
             "abc.md",
             "12a.md",
         ] {
-            let err = validate_issue_filename(bad).unwrap_err();
+            let err = validate_record_filename(bad).unwrap_err();
             assert!(
                 matches!(err, Error::InvalidPath(_)),
                 "{bad:?} must be rejected; got {err:?}"
@@ -211,7 +211,7 @@ mod tests {
             "..", ".", "", "a/b", "a\0b", "/", "\0", "/123.md", "123.md/", "\0.md",
         ] {
             let err = validate_path_component(bad);
-            let err2 = validate_issue_filename(bad);
+            let err2 = validate_record_filename(bad);
             assert!(
                 err.is_err() || err2.is_err(),
                 "{bad:?} must be rejected by at least one validator"
@@ -219,7 +219,7 @@ mod tests {
         }
         // Specifically, `..` must fail both.
         assert!(validate_path_component("..").is_err());
-        assert!(validate_issue_filename("../123.md").is_err());
+        assert!(validate_record_filename("../123.md").is_err());
     }
 
     #[test]
@@ -228,7 +228,7 @@ mod tests {
             "", ".md", "..md", "123", "123.txt", "123.md/", "/123.md", "\0.md", "123.md\n", ".",
             "..",
         ] {
-            let err = validate_issue_filename(bad).unwrap_err();
+            let err = validate_record_filename(bad).unwrap_err();
             assert!(
                 matches!(err, Error::InvalidPath(_)),
                 "{bad:?} must be rejected"
@@ -241,7 +241,7 @@ mod tests {
         // Digit string larger than u64::MAX must fail cleanly with InvalidPath,
         // not panic.
         let too_big = "999999999999999999999999999999.md";
-        let err = validate_issue_filename(too_big).unwrap_err();
+        let err = validate_record_filename(too_big).unwrap_err();
         assert!(matches!(err, Error::InvalidPath(_)));
     }
 

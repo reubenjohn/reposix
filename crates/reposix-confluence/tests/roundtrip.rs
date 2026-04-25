@@ -16,7 +16,7 @@ use std::sync::Arc;
 use parking_lot::Mutex;
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::{BackendConnector, DeleteReason};
-use reposix_core::{Record, RecordId, IssueStatus, Tainted, Untainted};
+use reposix_core::{Record, RecordId, RecordStatus, Tainted, Untainted};
 use rusqlite::Connection;
 use serde_json::json;
 use wiremock::matchers::{method, path, query_param};
@@ -47,7 +47,7 @@ fn make_issue(title: &str, body: &str) -> Untainted<Record> {
         Tainted::new(Record {
             id: RecordId(0),
             title: title.to_owned(),
-            status: IssueStatus::Open,
+            status: RecordStatus::Open,
             assignee: None,
             labels: vec![],
             created_at: t,

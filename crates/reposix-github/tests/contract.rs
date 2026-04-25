@@ -14,7 +14,7 @@
 //! 3. `get_record(project, known_issue_id)` returns `Ok(issue)` with matching
 //!    id.
 //! 4. `get_record(project, RecordId(u64::MAX))` returns `Err` (the 404 path).
-//! 5. Every listed issue's status is a valid [`IssueStatus`] variant — the
+//! 5. Every listed issue's status is a valid [`RecordStatus`] variant — the
 //!    adapter didn't leave a raw backend-specific string dangling.
 //!
 //! Two concrete tests run the helper:
@@ -34,7 +34,7 @@ use std::path::PathBuf;
 
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::backend::BackendConnector;
-use reposix_core::{RecordId, IssueStatus};
+use reposix_core::{RecordId, RecordStatus};
 use reposix_github::GithubReadOnlyBackend;
 use serde_json::json;
 use wiremock::matchers::{any, header_exists, method, path, query_param};
@@ -85,17 +85,17 @@ async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_
         backend.name()
     );
 
-    // (5) Every listed issue has a valid IssueStatus variant. `match` on
+    // (5) Every listed issue has a valid RecordStatus variant. `match` on
     // the enum proves exhaustiveness at compile time; the explicit arms
     // guard against a future `non_exhaustive` attribute that might weaken
     // the check.
     for i in &issues {
         match i.status {
-            IssueStatus::Open
-            | IssueStatus::InProgress
-            | IssueStatus::InReview
-            | IssueStatus::Done
-            | IssueStatus::WontFix => {}
+            RecordStatus::Open
+            | RecordStatus::InProgress
+            | RecordStatus::InReview
+            | RecordStatus::Done
+            | RecordStatus::WontFix => {}
         }
     }
 }
@@ -359,7 +359,7 @@ async fn rate_limit_429_surfaces_clean_error() {
 
 /// `state_reason` mapping per ADR-001 (`docs/decisions/001-github-state-mapping.md`):
 ///
-/// | `state`  | `state_reason` | reposix `IssueStatus` |
+/// | `state`  | `state_reason` | reposix `RecordStatus` |
 /// |----------|----------------|-----------------------|
 /// | `closed` | `completed`    | `Done`                |
 /// | `closed` | `not_planned`  | `WontFix`             |
@@ -392,20 +392,20 @@ async fn state_reason_maps_to_status() {
     let backend = GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
     let issues = backend.list_records("o/r").await.expect("list");
     assert_eq!(issues.len(), 6);
-    assert_eq!(issues[0].status, IssueStatus::Done, "closed+completed");
-    assert_eq!(issues[1].status, IssueStatus::WontFix, "closed+not_planned");
+    assert_eq!(issues[0].status, RecordStatus::Done, "closed+completed");
+    assert_eq!(issues[1].status, RecordStatus::WontFix, "closed+not_planned");
     assert_eq!(
         issues[2].status,
-        IssueStatus::Done,
+        RecordStatus::Done,
         "closed+reopened (fallback to Done)"
     );
-    assert_eq!(issues[3].status, IssueStatus::Done, "closed+null reason");
+    assert_eq!(issues[3].status, RecordStatus::Done, "closed+null reason");
     assert_eq!(
         issues[4].status,
-        IssueStatus::Open,
+        RecordStatus::Open,
         "open + state_reason (any) → Open per ADR-001"
     );
-    assert_eq!(issues[5].status, IssueStatus::Open, "open+null");
+    assert_eq!(issues[5].status, RecordStatus::Open, "open+null");
 }
 
 // --------------------------------------------------- SSRF regression

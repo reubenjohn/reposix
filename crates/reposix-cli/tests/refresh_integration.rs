@@ -9,7 +9,7 @@ use chrono::DurationRound as _;
 use chrono::TimeZone as _;
 use reposix_cli::list::ListBackend;
 use reposix_cli::refresh::{run_refresh, RefreshConfig};
-use reposix_core::{Record, RecordId, IssueStatus};
+use reposix_core::{Record, RecordId, RecordStatus};
 use tempfile::tempdir;
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -19,7 +19,7 @@ fn make_test_issue(id: u64, title: &str) -> Record {
     Record {
         id: RecordId(id),
         title: title.to_owned(),
-        status: IssueStatus::Open,
+        status: RecordStatus::Open,
         assignee: None,
         labels: vec![],
         created_at: t,

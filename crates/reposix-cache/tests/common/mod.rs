@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
 
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::BackendConnector;
-use reposix_core::{Record, RecordId, IssueStatus};
+use reposix_core::{Record, RecordId, RecordStatus};
 use wiremock::matchers::{method, path, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -61,7 +61,7 @@ pub fn sample_issues(project: &str, n: usize) -> Vec<Record> {
         .map(|i| Record {
             id: RecordId(i as u64),
             title: format!("issue {i} in {project}"),
-            status: IssueStatus::Open,
+            status: RecordStatus::Open,
             assignee: None,
             labels: vec![],
             created_at: t,

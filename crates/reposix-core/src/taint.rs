@@ -20,7 +20,7 @@
 
 use chrono::{DateTime, Utc};
 
-use crate::issue::{Record, RecordId};
+use crate::record::{Record, RecordId};
 
 /// Wrapper for values that originated from untrusted (network, agent) input.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -139,7 +139,7 @@ pub fn sanitize(tainted: Tainted<Record>, server: ServerMetadata) -> Untainted<R
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::issue::IssueStatus;
+    use crate::record::RecordStatus;
     use chrono::TimeZone;
 
     #[test]
@@ -176,7 +176,7 @@ mod tests {
         Tainted::new(Record {
             id: RecordId(999_999),
             title: "agent-authored title".into(),
-            status: IssueStatus::Open,
+            status: RecordStatus::Open,
             assignee: Some("agent-alpha".into()),
             labels: vec!["bug".into()],
             created_at: t,
@@ -211,7 +211,7 @@ mod tests {
         assert_eq!(inner.updated_at, meta.updated_at);
         // Agent-controlled fields preserved byte-for-byte.
         assert_eq!(inner.title, "agent-authored title");
-        assert_eq!(inner.status as u8, IssueStatus::Open as u8);
+        assert_eq!(inner.status as u8, RecordStatus::Open as u8);
         assert_eq!(inner.assignee.as_deref(), Some("agent-alpha"));
         assert_eq!(inner.labels, vec!["bug".to_string()]);
         assert_eq!(inner.body, "agent-authored body");

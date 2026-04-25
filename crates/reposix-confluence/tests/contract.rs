@@ -20,7 +20,7 @@
 //! 2. The list is non-empty (≥1 issue).
 //! 3. `get_record(project, known_issue_id)` returns `Ok(issue)` with matching id.
 //! 4. `get_record(project, RecordId(u64::MAX))` returns `Err` (the 404 path).
-//! 5. Every listed issue's status is a valid [`IssueStatus`] variant — the
+//! 5. Every listed issue's status is a valid [`RecordStatus`] variant — the
 //!    adapter didn't leave a raw backend-specific string dangling.
 //!
 //! ## Test arms
@@ -41,7 +41,7 @@ use std::path::PathBuf;
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::backend::BackendConnector;
-use reposix_core::{RecordId, IssueStatus};
+use reposix_core::{RecordId, RecordStatus};
 use serde_json::json;
 use wiremock::matchers::{method, path, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -120,17 +120,17 @@ async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_
         backend.name()
     );
 
-    // (5) Every listed issue has a valid IssueStatus variant. `match` on
+    // (5) Every listed issue has a valid RecordStatus variant. `match` on
     // the enum proves exhaustiveness at compile time; the explicit arms
     // guard against a future `non_exhaustive` attribute that might weaken
     // the check.
     for i in &issues {
         match i.status {
-            IssueStatus::Open
-            | IssueStatus::InProgress
-            | IssueStatus::InReview
-            | IssueStatus::Done
-            | IssueStatus::WontFix => {}
+            RecordStatus::Open
+            | RecordStatus::InProgress
+            | RecordStatus::InReview
+            | RecordStatus::Done
+            | RecordStatus::WontFix => {}
         }
     }
 }

@@ -12,9 +12,9 @@ pub enum Error {
     #[error("frontmatter: {0}")]
     Frontmatter(String),
 
-    /// Issue body / file format violation.
-    #[error("invalid issue file: {0}")]
-    InvalidIssue(String),
+    /// Record body / file format violation.
+    #[error("invalid record file: {0}")]
+    InvalidRecord(String),
 
     /// Remote URL could not be parsed into a [`RemoteSpec`](crate::RemoteSpec).
     #[error("invalid remote url: {0}")]

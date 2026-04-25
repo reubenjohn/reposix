@@ -79,7 +79,7 @@ use serde::Deserialize;
 
 use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason};
 use reposix_core::http::{client, ClientOpts, HttpClient};
-use reposix_core::{Error, Record, RecordId, IssueStatus, Result, Tainted, Untainted};
+use reposix_core::{Error, Record, RecordId, RecordStatus, Result, Tainted, Untainted};
 
 /// Maximum time we'll wait for a rate-limit reset before surfacing the
 /// exhaustion as an error. Caps worst-case call latency.
@@ -563,10 +563,10 @@ pub fn parse_next_cursor(body: &serde_json::Value) -> Option<String> {
 }
 
 /// Map a Confluence v2 page `status` string onto reposix's normalized
-/// [`IssueStatus`]. Pessimistic forward-compat: unknown values fall through
+/// [`RecordStatus`]. Pessimistic forward-compat: unknown values fall through
 /// to `Open` (consistent with CONTEXT.md §status mapping).
 #[must_use]
-pub fn status_from_confluence(s: &str) -> IssueStatus {
+pub fn status_from_confluence(s: &str) -> RecordStatus {
     // Unknown values fall through to `Open` (pessimistic forward-compat):
     // an unseen Atlassian state should not silently mark pages as Done.
     // `match_same_arms` lint would prefer collapsing the current/draft/_
@@ -574,9 +574,9 @@ pub fn status_from_confluence(s: &str) -> IssueStatus {
     // documents the mapping contract — suppress the lint on purpose.
     #[allow(clippy::match_same_arms)]
     match s {
-        "current" | "draft" => IssueStatus::Open,
-        "archived" | "trashed" | "deleted" => IssueStatus::Done,
-        _ => IssueStatus::Open,
+        "current" | "draft" => RecordStatus::Open,
+        "archived" | "trashed" | "deleted" => RecordStatus::Done,
+        _ => RecordStatus::Open,
     }
 }
 
@@ -1778,7 +1778,7 @@ impl BackendConnector for ConfluenceBackend {
     ) -> Result<()> {
         // Note: `reason` is intentionally ignored — Confluence has no reason
         // field on DELETE. The DELETE moves the page to trash (status becomes
-        // "trashed"), which the read path already maps to `IssueStatus::Done`.
+        // "trashed"), which the read path already maps to `RecordStatus::Done`.
         // A future "purge" would require `?purge=true`; that is out of scope
         // for v0.6.
         let url = format!("{}/wiki/api/v2/pages/{}", self.base(), id.0);
@@ -1989,7 +1989,7 @@ mod tests {
         let issues = backend.list_records("REPOSIX").await.expect("list");
         assert_eq!(issues.len(), 2);
         assert_eq!(issues[0].id, RecordId(98765));
-        assert_eq!(issues[0].status, IssueStatus::Open);
+        assert_eq!(issues[0].status, RecordStatus::Open);
         assert_eq!(issues[1].id, RecordId(98766));
     }
 
@@ -2159,7 +2159,7 @@ mod tests {
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issue = backend.get_record("REPOSIX", RecordId(1)).await.expect("get");
-        assert_eq!(issue.status, IssueStatus::Open);
+        assert_eq!(issue.status, RecordStatus::Open);
     }
 
     // -------- 6: status "trashed" → Done --------
@@ -2181,7 +2181,7 @@ mod tests {
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issue = backend.get_record("REPOSIX", RecordId(2)).await.expect("get");
-        assert_eq!(issue.status, IssueStatus::Done);
+        assert_eq!(issue.status, RecordStatus::Done);
     }
 
     // -------- 7: Basic-auth header is byte-exact --------
@@ -2687,7 +2687,7 @@ mod tests {
             Tainted::new(Record {
                 id: RecordId(0),
                 title: title.to_owned(),
-                status: IssueStatus::Open,
+                status: RecordStatus::Open,
                 assignee: None,
                 labels: vec![],
                 created_at: t,

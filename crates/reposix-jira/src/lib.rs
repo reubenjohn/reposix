@@ -67,7 +67,7 @@ use serde::Deserialize;
 
 use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason};
 use reposix_core::http::{client, ClientOpts, HttpClient};
-use reposix_core::{Error, Record, RecordId, IssueStatus, Result, Tainted, Untainted};
+use reposix_core::{Error, Record, RecordId, RecordStatus, Result, Tainted, Untainted};
 
 /// Maximum time we'll wait for a rate-limit reset before surfacing the
 /// exhaustion as an error. Caps worst-case call latency.
@@ -998,8 +998,8 @@ pub fn validate_tenant(tenant: &str) -> Result<()> {
     Ok(())
 }
 
-/// Map a JIRA status + optional resolution to an [`IssueStatus`].
-fn map_status(status: &JiraStatus, resolution: Option<&JiraResolution>) -> IssueStatus {
+/// Map a JIRA status + optional resolution to an [`RecordStatus`].
+fn map_status(status: &JiraStatus, resolution: Option<&JiraResolution>) -> RecordStatus {
     // WontFix override: check resolution name first.
     if let Some(res) = resolution {
         let lower = res.name.to_lowercase();
@@ -1009,20 +1009,20 @@ fn map_status(status: &JiraStatus, resolution: Option<&JiraResolution>) -> Issue
             || lower.contains("duplicate")
             || lower.contains("cannot reproduce")
         {
-            return IssueStatus::WontFix;
+            return RecordStatus::WontFix;
         }
     }
     // Primary mapping on statusCategory.key.
     match status.status_category.key.as_str() {
         "indeterminate" => {
             if status.name.to_lowercase().contains("review") {
-                IssueStatus::InReview
+                RecordStatus::InReview
             } else {
-                IssueStatus::InProgress
+                RecordStatus::InProgress
             }
         }
-        "done" => IssueStatus::Done,
-        _ => IssueStatus::Open, // safe fallback for unknown categories
+        "done" => RecordStatus::Done,
+        _ => RecordStatus::Open, // safe fallback for unknown categories
     }
 }
 
@@ -1418,7 +1418,7 @@ mod tests {
             .expect("get must succeed");
         assert_eq!(result.id, RecordId(10001));
         assert_eq!(result.title, "A real issue");
-        assert_eq!(result.status, IssueStatus::InProgress);
+        assert_eq!(result.status, RecordStatus::InProgress);
         assert_eq!(
             result.extensions.get("jira_key").and_then(|v| {
                 if let serde_yaml::Value::String(s) = v {
@@ -1461,19 +1461,19 @@ mod tests {
 
     #[test]
     fn status_mapping_matrix() {
-        let cases: &[(&str, &str, Option<&str>, IssueStatus)] = &[
-            ("new", "Open", None, IssueStatus::Open),
+        let cases: &[(&str, &str, Option<&str>, RecordStatus)] = &[
+            ("new", "Open", None, RecordStatus::Open),
             (
                 "indeterminate",
                 "In Progress",
                 None,
-                IssueStatus::InProgress,
+                RecordStatus::InProgress,
             ),
-            ("indeterminate", "In Review", None, IssueStatus::InReview),
-            ("done", "Done", None, IssueStatus::Done),
-            ("done", "Done", Some("Won't Fix"), IssueStatus::WontFix),
-            ("done", "Done", Some("Duplicate"), IssueStatus::WontFix),
-            ("unknown-cat", "Something", None, IssueStatus::Open),
+            ("indeterminate", "In Review", None, RecordStatus::InReview),
+            ("done", "Done", None, RecordStatus::Done),
+            ("done", "Done", Some("Won't Fix"), RecordStatus::WontFix),
+            ("done", "Done", Some("Duplicate"), RecordStatus::WontFix),
+            ("unknown-cat", "Something", None, RecordStatus::Open),
         ];
 
         for (cat, name, res_name, expected) in cases {
@@ -1692,7 +1692,7 @@ mod tests {
         let issue = Record {
             id: RecordId(1),
             title: "test".into(),
-            status: IssueStatus::Open,
+            status: RecordStatus::Open,
             assignee: None,
             labels: vec![],
             created_at: now,
@@ -1718,7 +1718,7 @@ mod tests {
             id: RecordId(0),
             title: title.to_owned(),
             body: body.to_owned(),
-            status: IssueStatus::Open,
+            status: RecordStatus::Open,
             created_at: now,
             updated_at: now,
             version: 0,

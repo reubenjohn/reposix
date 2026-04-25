@@ -8,7 +8,7 @@
 //! 2. The list is non-empty (≥1 issue).
 //! 3. `get_record(project, known_issue_id)` returns `Ok(issue)` with matching id.
 //! 4. `get_record(project, RecordId(u64::MAX))` returns `Err` (404 path).
-//! 5. Every listed issue's status is a valid `IssueStatus` variant.
+//! 5. Every listed issue's status is a valid `RecordStatus` variant.
 //!
 //! ## Test arms
 //!
@@ -21,7 +21,7 @@ use std::path::PathBuf;
 
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::backend::{BackendConnector, DeleteReason};
-use reposix_core::{RecordId, IssueStatus};
+use reposix_core::{RecordId, RecordStatus};
 use reposix_jira::{JiraBackend, JiraCreds};
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -87,14 +87,14 @@ async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_
         backend.name()
     );
 
-    // (5) Every listed issue has a valid IssueStatus variant.
+    // (5) Every listed issue has a valid RecordStatus variant.
     for i in &issues {
         match i.status {
-            IssueStatus::Open
-            | IssueStatus::InProgress
-            | IssueStatus::InReview
-            | IssueStatus::Done
-            | IssueStatus::WontFix => {}
+            RecordStatus::Open
+            | RecordStatus::InProgress
+            | RecordStatus::InReview
+            | RecordStatus::Done
+            | RecordStatus::WontFix => {}
         }
     }
 }
@@ -238,7 +238,7 @@ fn make_untainted_for_contract(
         id: reposix_core::RecordId(0),
         title: title.to_owned(),
         body: body.to_owned(),
-        status: reposix_core::IssueStatus::Open,
+        status: reposix_core::RecordStatus::Open,
         created_at: now,
         updated_at: now,
         version: 0,

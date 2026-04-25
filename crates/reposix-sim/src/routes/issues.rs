@@ -18,7 +18,7 @@ use axum::{
     Json, Router,
 };
 use chrono::{DateTime, SecondsFormat, Utc};
-use reposix_core::{Record, RecordId, IssueStatus};
+use reposix_core::{Record, RecordId, RecordStatus};
 use rusqlite::{params, Connection, TransactionBehavior};
 use serde::Deserialize;
 use serde_json::Value;
@@ -47,21 +47,21 @@ fn parse_labels(raw: &str) -> Result<Vec<String>, ApiError> {
     serde_json::from_str(raw).map_err(ApiError::Json)
 }
 
-/// Parse the `status` column (canonical `snake_case` form) into `IssueStatus`.
-fn parse_status(raw: &str) -> Result<IssueStatus, ApiError> {
+/// Parse the `status` column (canonical `snake_case` form) into `RecordStatus`.
+fn parse_status(raw: &str) -> Result<RecordStatus, ApiError> {
     match raw {
-        "open" => Ok(IssueStatus::Open),
-        "in_progress" => Ok(IssueStatus::InProgress),
-        "in_review" => Ok(IssueStatus::InReview),
-        "done" => Ok(IssueStatus::Done),
-        "wont_fix" => Ok(IssueStatus::WontFix),
+        "open" => Ok(RecordStatus::Open),
+        "in_progress" => Ok(RecordStatus::InProgress),
+        "in_review" => Ok(RecordStatus::InReview),
+        "done" => Ok(RecordStatus::Done),
+        "wont_fix" => Ok(RecordStatus::WontFix),
         other => Err(ApiError::Internal(format!("unknown status: {other}"))),
     }
 }
 
 /// Public shim so sibling modules (e.g. `routes::transitions`) can reuse the
 /// same status-parsing table without each submodule hard-coding the set.
-pub(crate) fn parse_status_shared(raw: &str) -> Result<IssueStatus, ApiError> {
+pub(crate) fn parse_status_shared(raw: &str) -> Result<RecordStatus, ApiError> {
     parse_status(raw)
 }
 
@@ -423,7 +423,7 @@ async fn patch_issue(
         // Apply only the mutable-field allow-list. Everything else (id,
         // created_at, version, updated_at) is server-managed.
         let new_version_i64 = current_version_i64 + 1;
-        let status_str = new_status.map(IssueStatus::as_str);
+        let status_str = new_status.map(RecordStatus::as_str);
 
         // Unpack FieldUpdate into a "touch assignee?" bool + a value.
         let (assignee_touch, assignee_val): (i64, Option<String>) = match &patch.assignee {

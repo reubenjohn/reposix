@@ -1,4 +1,7 @@
-//! Issue (the unit a partial-clone working-tree file represents) types.
+//! Record (the unit a partial-clone working-tree file represents) types.
+//!
+//! A `Record` may be an issue (sim, GitHub), a JIRA issue, a Confluence page,
+//! or any other backend-specific unit that maps onto a single `.md` file.
 
 use std::collections::BTreeMap;
 
@@ -7,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::{Error, Result};
 
-/// A non-negative integer issue identifier within a project. We deliberately avoid u32 so the
+/// A non-negative integer record identifier within a project. We deliberately avoid u32 so the
 /// type signals that the simulator may use a much larger ID space without API breakage.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -22,7 +25,7 @@ impl std::fmt::Display for RecordId {
 /// Workflow state. Modeled after a Jira-flavored superset of GitHub Issues.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum IssueStatus {
+pub enum RecordStatus {
     /// Newly filed, not yet triaged.
     Open,
     /// Actively being worked on.
@@ -35,7 +38,7 @@ pub enum IssueStatus {
     WontFix,
 }
 
-impl IssueStatus {
+impl RecordStatus {
     /// Render to canonical YAML scalar form.
     #[must_use]
     pub fn as_str(self) -> &'static str {
@@ -58,7 +61,7 @@ pub struct Record {
     /// Single-line summary.
     pub title: String,
     /// Workflow state.
-    pub status: IssueStatus,
+    pub status: RecordStatus,
     /// Optional assignee (free-form string; e.g. `"agent-alpha"`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub assignee: Option<String>,
@@ -104,7 +107,7 @@ pub mod frontmatter {
     struct Frontmatter {
         id: super::RecordId,
         title: String,
-        status: super::IssueStatus,
+        status: super::RecordStatus,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         assignee: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -152,7 +155,7 @@ pub mod frontmatter {
     /// Parse on-disk Markdown+frontmatter into an [`Record`].
     ///
     /// # Errors
-    /// Returns [`Error::InvalidIssue`] if the file does not start with a `---` fence or the
+    /// Returns [`Error::InvalidRecord`] if the file does not start with a `---` fence or the
     /// fence is malformed; [`Error::Yaml`] if the frontmatter YAML is invalid.
     pub fn parse(text: &str) -> Result<Record> {
         let body_start;
@@ -166,17 +169,17 @@ pub mod frontmatter {
                     body_start = end + 4;
                     &rest[..end]
                 } else {
-                    return Err(Error::InvalidIssue(
+                    return Err(Error::InvalidRecord(
                         "frontmatter close fence not followed by newline".into(),
                     ));
                 }
             } else {
-                return Err(Error::InvalidIssue(
+                return Err(Error::InvalidRecord(
                     "frontmatter open without close fence".into(),
                 ));
             }
         } else {
-            return Err(Error::InvalidIssue("missing frontmatter open fence".into()));
+            return Err(Error::InvalidRecord("missing frontmatter open fence".into()));
         };
         let fm: Frontmatter = serde_yaml::from_str(yaml)?;
         let body = rest_after(text, body_start).to_owned();
@@ -223,7 +226,7 @@ mod tests {
         Record {
             id: RecordId(123),
             title: "thing is broken".into(),
-            status: IssueStatus::InProgress,
+            status: RecordStatus::InProgress,
             assignee: Some("agent-alpha".into()),
             labels: vec!["bug".into(), "p1".into()],
             created_at: t,
@@ -253,7 +256,7 @@ mod tests {
         let bad = "no frontmatter here\n";
         assert!(matches!(
             frontmatter::parse(bad),
-            Err(Error::InvalidIssue(_))
+            Err(Error::InvalidRecord(_))
         ));
     }
 

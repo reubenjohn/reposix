@@ -19,7 +19,7 @@ use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::{
-    sanitize, BackendConnector, Record, RecordId, IssueStatus, ServerMetadata, Tainted,
+    sanitize, BackendConnector, Record, RecordId, RecordStatus, ServerMetadata, Tainted,
 };
 
 // chrono is a transitive dep via reposix-core (Record.created_at uses it).
@@ -117,7 +117,7 @@ impl Workload for SimDirectWorkload {
             let issue = Record {
                 id,
                 title: "swarm-patched".to_string(),
-                status: IssueStatus::InProgress,
+                status: RecordStatus::InProgress,
                 assignee: None,
                 labels: vec!["swarm".to_string()],
                 created_at: now,

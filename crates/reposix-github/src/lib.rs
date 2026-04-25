@@ -1,6 +1,6 @@
 //! [`GithubReadOnlyBackend`] — a read-only [`BackendConnector`] that adapts
 //! GitHub's REST v3 Issues API onto reposix's normalized `Record` /
-//! `IssueStatus` shape.
+//! `RecordStatus` shape.
 //!
 //! # Scope
 //!
@@ -13,7 +13,7 @@
 //! # State mapping
 //!
 //! GitHub's 2-valued `state` + optional `state_reason` + label conventions
-//! collapse onto reposix's 5-valued `IssueStatus` via
+//! collapse onto reposix's 5-valued `RecordStatus` via
 //! [`docs/decisions/001-github-state-mapping.md`](../docs/decisions/001-github-state-mapping.md).
 //! Summary:
 //!
@@ -63,7 +63,7 @@ use serde::Deserialize;
 
 use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason};
 use reposix_core::http::{client, ClientOpts, HttpClient};
-use reposix_core::{Error, Record, RecordId, IssueStatus, Result, Untainted};
+use reposix_core::{Error, Record, RecordId, RecordStatus, Result, Untainted};
 
 /// Maximum time we'll wait for a rate-limit reset before surfacing the
 /// exhaustion as an error. Caps the worst-case call latency; a well-behaved
@@ -281,17 +281,17 @@ fn translate(gh: GhIssue) -> Record {
     // - open + no status/* label → Open.
     let status = if gh.state == "closed" {
         match gh.state_reason.as_deref() {
-            Some("not_planned") => IssueStatus::WontFix,
+            Some("not_planned") => RecordStatus::WontFix,
             // Completed, reopened, duplicate, null, unknown — pessimistic
             // fallback per ADR-001.
-            _ => IssueStatus::Done,
+            _ => RecordStatus::Done,
         }
     } else if gh.labels.iter().any(|l| l.name == STATUS_LABEL_IN_REVIEW) {
-        IssueStatus::InReview
+        RecordStatus::InReview
     } else if gh.labels.iter().any(|l| l.name == STATUS_LABEL_IN_PROGRESS) {
-        IssueStatus::InProgress
+        RecordStatus::InProgress
     } else {
-        IssueStatus::Open
+        RecordStatus::Open
     };
 
     // Strip the status/* markers from the user-visible label list — they're
@@ -580,9 +580,9 @@ mod tests {
         let issues = backend.list_records("octocat/hello").await.expect("list");
         assert_eq!(issues.len(), 2);
         assert_eq!(issues[0].id, RecordId(1));
-        assert_eq!(issues[0].status, IssueStatus::Open);
+        assert_eq!(issues[0].status, RecordStatus::Open);
         assert_eq!(issues[1].id, RecordId(2));
-        assert_eq!(issues[1].status, IssueStatus::Done);
+        assert_eq!(issues[1].status, RecordStatus::Done);
     }
 
     #[tokio::test]
@@ -681,7 +681,7 @@ mod tests {
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
         let issue = backend.get_record("x/y", RecordId(99)).await.expect("get");
-        assert_eq!(issue.status, IssueStatus::Done);
+        assert_eq!(issue.status, RecordStatus::Done);
     }
 
     #[tokio::test]
@@ -701,7 +701,7 @@ mod tests {
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
         let issue = backend.get_record("x/y", RecordId(100)).await.expect("get");
-        assert_eq!(issue.status, IssueStatus::WontFix);
+        assert_eq!(issue.status, RecordStatus::WontFix);
     }
 
     #[tokio::test]
@@ -721,7 +721,7 @@ mod tests {
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
         let issue = backend.get_record("x/y", RecordId(7)).await.expect("get");
-        assert_eq!(issue.status, IssueStatus::InProgress);
+        assert_eq!(issue.status, RecordStatus::InProgress);
         // Status label is stripped from the user-visible labels.
         assert_eq!(issue.labels, vec!["bug".to_string()]);
     }
@@ -743,7 +743,7 @@ mod tests {
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
         let issue = backend.get_record("x/y", RecordId(8)).await.expect("get");
-        assert_eq!(issue.status, IssueStatus::InReview);
+        assert_eq!(issue.status, RecordStatus::InReview);
     }
 
     #[tokio::test]
@@ -824,7 +824,7 @@ mod tests {
             Tainted::new(Record {
                 id: RecordId(0),
                 title: "x".into(),
-                status: IssueStatus::Open,
+                status: RecordStatus::Open,
                 assignee: None,
                 labels: vec![],
                 created_at: t,
@@ -860,7 +860,7 @@ mod tests {
             Tainted::new(Record {
                 id: RecordId(0),
                 title: "x".into(),
-                status: IssueStatus::Open,
+                status: RecordStatus::Open,
                 assignee: None,
                 labels: vec![],
                 created_at: t,

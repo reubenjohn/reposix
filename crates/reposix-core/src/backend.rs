@@ -9,7 +9,7 @@
 //! need a seam so the FUSE layer and CLI orchestrator don't have to learn each
 //! new backend's quirks. The trait is the normalization boundary: concrete
 //! adapters translate backend-specific wire shapes into
-//! [`Record`](crate::Record) / [`IssueStatus`](crate::IssueStatus) — and nothing
+//! [`Record`](crate::Record) / [`RecordStatus`](crate::RecordStatus) — and nothing
 //! more escapes.
 //!
 //! ## Error model
@@ -36,7 +36,7 @@
 
 use async_trait::async_trait;
 
-use crate::issue::{Record, RecordId};
+use crate::record::{Record, RecordId};
 use crate::taint::Untainted;
 use crate::Result;
 
@@ -66,7 +66,7 @@ pub enum BackendFeature {
     /// backend claims this yet; reserved for future Jira adapter.
     BulkEdit,
     /// Backend supports named workflow transitions beyond the 5-valued
-    /// [`IssueStatus`](crate::IssueStatus) enum. Reserved for Jira.
+    /// [`RecordStatus`](crate::RecordStatus) enum. Reserved for Jira.
     Workflows,
     /// Backend exposes a parent/child hierarchy via [`Record::parent_id`].
     /// Used by FUSE to synthesize the `tree/` overlay (Phase 13).
@@ -310,7 +310,7 @@ mod tests {
 
     #[tokio::test]
     async fn default_list_changed_since_filters_via_list_issues() {
-        use crate::issue::{Record, IssueStatus};
+        use crate::record::{Record, RecordStatus};
         use crate::taint::Untainted;
         use chrono::{TimeZone, Utc};
 
@@ -330,7 +330,7 @@ mod tests {
                     Record {
                         id: RecordId(1),
                         title: "old".into(),
-                        status: IssueStatus::Open,
+                        status: RecordStatus::Open,
                         assignee: None,
                         labels: vec![],
                         created_at: t1,
@@ -343,7 +343,7 @@ mod tests {
                     Record {
                         id: RecordId(2),
                         title: "new".into(),
-                        status: IssueStatus::Open,
+                        status: RecordStatus::Open,
                         assignee: None,
                         labels: vec![],
                         created_at: t1,

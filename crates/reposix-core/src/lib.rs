@@ -12,7 +12,7 @@ pub mod audit;
 pub mod backend;
 mod error;
 pub mod http;
-mod issue;
+mod record;
 pub mod path;
 mod project;
 mod remote;
@@ -20,7 +20,7 @@ mod taint;
 
 pub use backend::{BackendConnector, BackendFeature, DeleteReason};
 pub use error::{Error, Result};
-pub use issue::{frontmatter, Record, RecordId, IssueStatus};
+pub use record::{frontmatter, Record, RecordId, RecordStatus};
 pub use path::{dedupe_siblings, slug_or_fallback, slugify_title, SLUG_MAX_BYTES};
 pub use project::{Project, ProjectSlug};
 pub use remote::{parse_remote_url, RemoteSpec};

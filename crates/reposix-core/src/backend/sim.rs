@@ -23,7 +23,7 @@ use reqwest::{Method, StatusCode};
 
 use crate::backend::{BackendConnector, BackendFeature, DeleteReason};
 use crate::http::{client, ClientOpts, HttpClient};
-use crate::issue::{Record, RecordId, IssueStatus};
+use crate::record::{Record, RecordId, RecordStatus};
 use crate::taint::Untainted;
 use crate::{Error, Result};
 
@@ -197,7 +197,7 @@ fn render_create_body(issue: &Record) -> Result<Vec<u8>> {
     Ok(serde_json::to_vec(&serde_json::Value::Object(map))?)
 }
 
-fn status_to_str(s: IssueStatus) -> &'static str {
+fn status_to_str(s: RecordStatus) -> &'static str {
     s.as_str()
 }
 
@@ -360,7 +360,7 @@ mod tests {
         Tainted::new(Record {
             id: RecordId(0),
             title: "agent authored".into(),
-            status: IssueStatus::Open,
+            status: RecordStatus::Open,
             assignee: None,
             labels: vec!["bug".into()],
             created_at: t,
@@ -463,7 +463,7 @@ mod tests {
             Tainted::new(Record {
                 id: RecordId(0),
                 title: "hello".into(),
-                status: IssueStatus::InProgress,
+                status: RecordStatus::InProgress,
                 assignee: None,
                 labels: vec![],
                 created_at: t,
@@ -653,7 +653,7 @@ mod tests {
             Tainted::new(Record {
                 id: RecordId(0),
                 title: "hello".into(),
-                status: IssueStatus::Open,
+                status: RecordStatus::Open,
                 assignee: None,
                 labels: vec![],
                 created_at: t,
@@ -785,7 +785,7 @@ mod tests {
         let hostile = Record {
             id: RecordId(1),
             title: "hello".into(),
-            status: IssueStatus::Open,
+            status: RecordStatus::Open,
             assignee: None,
             labels: vec![],
             // The attacker-influenced input tries to forge a version.

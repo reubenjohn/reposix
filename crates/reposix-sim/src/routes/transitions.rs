@@ -11,18 +11,18 @@ use axum::{
     routing::get,
     Json, Router,
 };
-use reposix_core::IssueStatus;
+use reposix_core::RecordStatus;
 use rusqlite::params;
 use serde::Serialize;
 
 use crate::{error::ApiError, routes::issues, AppState};
 
-const ALL_STATUSES: [IssueStatus; 5] = [
-    IssueStatus::Open,
-    IssueStatus::InProgress,
-    IssueStatus::InReview,
-    IssueStatus::Done,
-    IssueStatus::WontFix,
+const ALL_STATUSES: [RecordStatus; 5] = [
+    RecordStatus::Open,
+    RecordStatus::InProgress,
+    RecordStatus::InReview,
+    RecordStatus::Done,
+    RecordStatus::WontFix,
 ];
 
 /// Build the transitions sub-router.

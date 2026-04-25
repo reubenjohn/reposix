@@ -4,7 +4,7 @@
 // coercion — the only legal path is `sanitize(tainted, server_meta)`.
 
 use chrono::Utc;
-use reposix_core::{Record, RecordId, IssueStatus, Tainted, Untainted};
+use reposix_core::{Record, RecordId, RecordStatus, Tainted, Untainted};
 
 fn takes_untainted(_: Untainted<Record>) {}
 
@@ -12,7 +12,7 @@ fn main() {
     let tainted = Tainted::new(Record {
         id: RecordId(1),
         title: String::new(),
-        status: IssueStatus::Open,
+        status: RecordStatus::Open,
         assignee: None,
         labels: vec![],
         created_at: Utc::now(),

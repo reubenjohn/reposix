@@ -48,7 +48,7 @@ pub struct SeedIssue {
     pub id: u64,
     /// Title (single-line).
     pub title: String,
-    /// One of the five `IssueStatus` values, snake-case: `open`,
+    /// One of the five `RecordStatus` values, snake-case: `open`,
     /// `in_progress`, `in_review`, `done`, `wont_fix`.
     pub status: String,
     /// Optional assignee.
