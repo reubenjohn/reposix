@@ -330,7 +330,7 @@ If any of this resonates:
 - **Star the repo** — [github.com/reubenjohn/reposix](https://github.com/reubenjohn/reposix).
   Visibility is the bottleneck.
 - **Try the simulator.** Five minutes, no credentials. The full
-  five-line bootstrap is at the top of
+  six-line bootstrap is at the top of
   [the docs landing](../index.md).
 - **Open a connector proposal** for your favourite tracker. Linear,
   Asana, Notion, GitLab Issues, ServiceNow — every REST tracker is

@@ -57,12 +57,13 @@ reposix's `8 ms` cache read is measured against the in-process simulator, but th
 
 Latency for each backend is captured in [`docs/benchmarks/v0.9.0-latency.md`](benchmarks/v0.9.0-latency.md). Sim cold init is `24 ms` (soft threshold `500 ms`); list-issues `9 ms`; capabilities probe `5 ms`. Real-backend cells fill in once CI secret packs are wired (Phase 36).
 
-## Five-line quickstart
+## Six-line quickstart
 
 ```bash
 git clone https://github.com/reubenjohn/reposix && cd reposix
 cargo build --release --workspace --bins
 export PATH="$PWD/target/release:$PATH"
+reposix sim &                                             # start the simulator on :7878
 reposix init sim::demo /tmp/reposix-demo
 cd /tmp/reposix-demo && git checkout origin/main && cat issues/0001.md
 ```
