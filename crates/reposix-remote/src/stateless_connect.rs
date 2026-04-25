@@ -90,13 +90,24 @@ pub fn handle_stateless_connect<R: Read, W: Write>(
         anyhow::bail!("unsupported stateless-connect service: {service}");
     }
 
-    // Ensure tree + refs are current in the bare repo. Best-effort on
-    // re-runs inside the same process; Phase 33 will add a skip cache.
+    // Delta-sync the cache before tunneling protocol-v2 to git.
     //
-    // Tree-sync errors surface to the caller with a diag on stderr and
-    // a non-zero exit — mirrors the POC behaviour.
-    rt.block_on(cache.build_from())
-        .context("cache.build_from before upload-pack tunnel")?;
+    // First invocation in a fresh cache → meta.last_fetched_at is absent →
+    // sync() falls through to build_from() internally (seed path,
+    // unconditional full tree). Subsequent invocations query the backend
+    // with the stored cursor and apply only the delta. Either way the
+    // tree + refs are up-to-date by the time we advertise to git.
+    //
+    // Sync errors surface to the caller with a diag on stderr and a
+    // non-zero exit — mirrors the POC / pre-Phase-33 behaviour.
+    let report = rt
+        .block_on(cache.sync())
+        .context("cache.sync before upload-pack tunnel")?;
+    tracing::debug!(
+        changed = report.changed_ids.len(),
+        since = ?report.since,
+        "delta sync complete"
+    );
 
     // Audit: connect (one row per helper invocation that reaches here).
     cache.log_helper_connect(service);
