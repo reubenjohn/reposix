@@ -114,9 +114,9 @@
 
 ### Phase 35: CLI pivot — `reposix init` replacing `reposix mount` + agent UX validation (v0.9.0)
 
-**Goal:** Replace the `reposix mount` command with `reposix init <backend>::<project> <path>` (which `git init`s, configures `extensions.partialClone`, sets the remote URL, and runs `git fetch --filter=blob:none origin`). Then run the dark-factory acceptance test: a fresh subprocess agent with no reposix CLI awareness completes a clone -> grep -> edit -> commit -> push -> conflict -> pull --rebase -> push cycle against the simulator without invoking any `reposix` subcommand other than `init`. Operating-principle hooks: **agent UX = pure git** (zero in-context learning required); **close the feedback loop** (acceptance test runs in CI and on local dev via the Phase 36 skill); **ground truth obsession** (the agent's transcript is captured as a test fixture so regressions are visible in `git diff`).
+**Goal:** Replace the `reposix mount` command with `reposix init <backend>::<project> <path>` (which `git init`s, configures `extensions.partialClone`, sets the remote URL, and runs `git fetch --filter=blob:none origin`). Then run the dark-factory acceptance test: a fresh subprocess agent with no reposix CLI awareness completes a clone -> grep -> edit -> commit -> push -> conflict -> pull --rebase -> push cycle against the simulator without invoking any `reposix` subcommand other than `init`. The dark-factory regression must run against BOTH the simulator AND at least one real backend: Confluence "TokenWorld" space, GitHub `reubenjohn/reposix` issues, or JIRA project `TEST` (credentials permitting). Latency for each step of the golden path (clone, first-blob, sparse-batched checkout, edit, push, conflict, pull-rebase, push-again) is captured and asserted against soft thresholds. Operating-principle hooks: **agent UX = pure git** (zero in-context learning required); **close the feedback loop** (acceptance test runs in CI and on local dev via the Phase 36 skill); **ground truth obsession** (the agent's transcript is captured as a test fixture so regressions are visible in `git diff`); **real backends are first-class test targets** (per project CLAUDE.md OP-6 — simulator-only coverage does NOT satisfy transport/perf acceptance).
 
-**Requirements:** ARCH-11, ARCH-12
+**Requirements:** ARCH-11, ARCH-12, ARCH-16, ARCH-17 (capture)
 
 **Depends on:** Phase 31, Phase 32, Phase 33, Phase 34
 
@@ -130,14 +130,17 @@
    - Conflict path: a second writer mutates one of the agent's target issues mid-flight; agent sees `! [remote rejected]`, runs `git pull --rebase`, retries `git push`, succeeds.
    - Blob-limit path: a naive `git grep` triggers the Phase 34 blob-limit error; agent reads the error message, runs `git sparse-checkout set issues/PROJ-24*`, retries, succeeds.
 6. The transcript above is committed as a test fixture so any regression that breaks the dark-factory flow shows up in `git diff`.
+7. Real-backend integration run passes against ≥1 of {Confluence TokenWorld, GitHub `reubenjohn/reposix`, JIRA `TEST`} when credentials present. Falls back to `#[ignore]` skip when absent, with a clear WARN that the v0.9.0 claim is unverified for that backend.
+8. Latency captured for each golden-path step (clone, first-blob, sparse-batched checkout, edit, push, conflict, pull-rebase, push-again); written to `docs/benchmarks/v0.9.0-latency.md`. Soft thresholds asserted (sim cold clone < 500ms, real backend < 3s); regressions flagged but not CI-blocking.
+9. `docs/reference/testing-targets.md` created documenting the three canonical targets (TokenWorld, `reubenjohn/reposix`, JIRA `TEST`) with env-var setup and the explicit "go crazy, it's safe" permission statement from the owner.
 
-**Context anchor:** architecture-pivot-summary §4 ("Agent UX: pure git, zero in-context learning", "Blob limit as teaching mechanism"), §5 (Change — CLI flow). The acceptance test is the operationalization of architecture-pivot-summary §4's "agent learns from any tool error" claim.
+**Context anchor:** architecture-pivot-summary §4 ("Agent UX: pure git, zero in-context learning", "Blob limit as teaching mechanism"), §5 (Change — CLI flow). The acceptance test is the operationalization of architecture-pivot-summary §4's "agent learns from any tool error" claim. Project CLAUDE.md OP-6 (real backends as first-class test targets) defines the canonical TokenWorld / `reubenjohn/reposix` / JIRA `TEST` targets exercised here.
 
 ### Phase 36: FUSE deletion + CLAUDE.md update + `reposix-agent-flow` skill + final integration tests + release (v0.9.0)
 
 **Goal:** Demolish FUSE entirely and ship v0.9.0. Per OP-4 self-improving infrastructure: **this phase updates project CLAUDE.md and adds the `reposix-agent-flow` skill — agent grounding must ship in lockstep with code**. There can be no window where CLAUDE.md describes deleted code, and no window where the project lacks the dark-factory regression skill that the v0.9.0 architecture is supposed to enable. Operating-principle hooks: **self-improving infrastructure (OP-4)** — CLAUDE.md + skill ship together with FUSE deletion; **close the feedback loop (OP-1)** — `gh run view` on the release tag must show green CI without the `apt install fuse3` step; **reversibility enables boldness (OP-5)** — execute via `gsd-pr-branch` or worktree so a botched FUSE deletion can be reverted in one move.
 
-**Requirements:** ARCH-13, ARCH-14, ARCH-15
+**Requirements:** ARCH-13, ARCH-14, ARCH-15, ARCH-17 (artifact), ARCH-18, ARCH-19
 
 **Depends on:** Phase 35
 
@@ -151,6 +154,9 @@
 7. `scripts/tag-v0.9.0.sh` created mirroring `scripts/tag-v0.8.0.sh` (6 safety guards minimum: clean tree, on `main`, version match in `Cargo.toml`, CHANGELOG `[v0.9.0]` exists, tests green, signed tag).
 8. CHANGELOG `[v0.9.0]` section is finalized with all six phases summarized + breaking-change migration note (`reposix mount` -> `reposix init`).
 9. Phase 35's dark-factory regression test (now invoked via the new skill) passes against the post-deletion codebase.
+10. CI jobs `integration-contract-{confluence,github,jira}-v09` green on main (or `pending-secrets` when creds unavailable). Each job runs the ARCH-16 smoke suite and uploads latency rows as a run artifact.
+11. Benchmark artifact `docs/benchmarks/v0.9.0-latency.md` includes a sim column AND at least one real-backend column (TokenWorld / `reubenjohn/reposix` / JIRA `TEST`). Soft thresholds documented; regressions flagged inline.
+12. CLAUDE.md "Commands you'll actually use" section gains a "Testing against real backends" block naming TokenWorld / `reubenjohn/reposix` / JIRA `TEST` with env-var setup. CLAUDE.md OP-6 cross-references `docs/reference/testing-targets.md`.
 
 **Context anchor:** architecture-pivot-summary §5 (Delete — `crates/reposix-fuse`, `fuser` dependency), §9 (Milestone Impact). Project `CLAUDE.md` "Subagent delegation rules" section. User global `CLAUDE.md` OP-4 "Self-improving infrastructure".
 

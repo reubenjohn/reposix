@@ -30,6 +30,7 @@ The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The f
 3. **Audit log is non-optional.** Every network-touching action gets a row in the simulator's SQLite audit table. If a feature can't write to the audit log, it's not done.
 4. **No hidden state.** Mount state, simulator state, and git remote helper state all live in committed-or-fixture artifacts. No "it works in my session" bugs.
 5. **Working tree = git repo.** The working tree must always be a real git checkout. The whole point of the design is `git diff` is the change set. (Pre-v0.9.0 this was a FUSE mount; post-v0.9.0 it's a partial-clone git repo.)
+6. **Real backends are first-class test targets.** Three canonical targets are sanctioned for aggressive testing: **Confluence space "TokenWorld"** (owned by the user; safe to mutate freely), **GitHub repo `reubenjohn/reposix` issues** (ours; safe to create/close issues during tests), and **JIRA project `TEST`** (default key; overridable via `JIRA_TEST_PROJECT` or `REPOSIX_JIRA_PROJECT`). See `docs/reference/testing-targets.md` (created in Phase 36) for env-var setup. Simulator remains the default (OP-1), but "simulator-only coverage" does NOT satisfy acceptance for transport-layer or performance claims.
 
 ## Workspace layout
 
@@ -73,7 +74,24 @@ cargo run -p reposix-cli -- demo                          # canonical end-to-end
 # FUSE integration tests — require fusermount3; NEVER run without the feature flag.
 # `cargo test --workspace` intentionally excludes these (unsafe in WSL2, requires /dev/fuse).
 # The feature gate is compile-time: without it, FUSE test code is not in the binary at all.
+# NOTE: This entire block is removed in v0.9.0 Phase 36 — `crates/reposix-fuse/` is deleted there.
 cargo test -p reposix-fuse --release --features fuse-mount-tests -- --test-threads=1
+
+# Testing against real backends (v0.9.0+)
+# Confluence — TokenWorld space (safe to mutate)
+export ATLASSIAN_API_KEY=… ATLASSIAN_EMAIL=… REPOSIX_CONFLUENCE_TENANT=reuben-john
+export REPOSIX_ALLOWED_ORIGINS='https://reuben-john.atlassian.net'
+cargo test -p reposix-confluence --features live -- --ignored
+
+# GitHub — reubenjohn/reposix issues (safe to mutate)
+export GITHUB_TOKEN=…
+export REPOSIX_ALLOWED_ORIGINS='https://api.github.com'
+cargo test -p reposix-github --features live -- --ignored
+
+# JIRA — default project key TEST (overridable)
+export JIRA_EMAIL=… JIRA_API_TOKEN=… REPOSIX_JIRA_INSTANCE=…
+export JIRA_TEST_PROJECT=TEST        # or set REPOSIX_JIRA_PROJECT
+cargo test -p reposix-jira --features live -- --ignored
 ```
 
 ## GSD workflow

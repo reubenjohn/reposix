@@ -85,6 +85,16 @@
 
 - [ ] **ARCH-15**: A project Claude Code skill `reposix-agent-flow` is created at `/home/reuben/workspace/reposix/.claude/skills/reposix-agent-flow/SKILL.md` (Claude Code skill convention — directory with `SKILL.md` and YAML frontmatter `name:` + `description:`). The skill encodes the dark-factory autonomous-agent regression test: spawn a fresh subprocess Claude (or scripted shell agent acting as one) inside an empty directory, hand it ONLY a `reposix init` command and a natural-language goal, and verify the agent completes the task using pure git/POSIX tools — including the conflict-rebase cycle and the blob-limit-induced sparse-checkout recovery from ARCH-09. The skill is invoked from CI (release gate) and from local dev (`/reposix-agent-flow`). The skill MUST mention that it is the StrongDM/dark-factory regression harness for the v0.9.0 architecture and reference architecture-pivot-summary §4 "Agent UX". Per OP-4: ships in the same phase as ARCH-13 and ARCH-14.
 
+### Real-backend validation, performance, and canonical test targets
+
+- [ ] **ARCH-16**: Real-backend smoke tests against the project's canonical test targets. The helper + cache must be validated end-to-end against real APIs, not just the simulator. Targets: Confluence "TokenWorld" space, reposix's own GitHub issues (`reubenjohn/reposix`), JIRA project `TEST` (overridable via `JIRA_TEST_PROJECT` or `REPOSIX_JIRA_PROJECT`). Gated by `REPOSIX_ALLOWED_ORIGINS` + credentials; skipped in CI when creds absent (`#[ignore]` or `skip_if_no_env!`). Must exercise: partial clone, lazy blob fetch, delta sync after upstream mutation, push round-trip, conflict rejection. Simulator-only coverage does NOT satisfy this requirement — at least one real backend must be exercised under the same suite for v0.9.0 to ship.
+
+- [ ] **ARCH-17**: Latency & performance envelope captured for each backend. A committed benchmark script runs the reposix golden path (`clone` → first blob read → batched checkout of 10 blobs → edit → push) against sim + each real backend, records wall-clock latency per step, and writes a Markdown artifact under `docs/benchmarks/v0.9.0-latency.md`. Targets are encoded as soft thresholds (e.g. sim cold clone < 500ms, real backend < 3s). Regressions are flagged but not CI-blocking. This is a **sales asset** — the artifact is the reposix-vs-MCP-vs-REST comparison table that ships in narrative docs (v0.10.0).
+
+- [ ] **ARCH-18**: Canonical test-target documentation. `docs/reference/testing-targets.md` enumerates TokenWorld (Confluence), `reubenjohn/reposix` issues (GitHub), and JIRA project `TEST` — with env-var setup, rate-limit notes, cleanup procedure ("do not leave junk issues"), and the explicit "go crazy, it's safe" permission statement from the owner. CLAUDE.md cross-references this file so any agent looking for sanctioned test targets is one hop away from the truth.
+
+- [ ] **ARCH-19**: CI integration-contract job for each real backend. Three CI jobs (`integration-contract-confluence-v09`, `integration-contract-github-v09`, `integration-contract-jira-v09`) run the ARCH-16 smoke suite when the corresponding secret block is present. Each job writes a run artifact (latency rows from ARCH-17). Pattern mirrors the existing `integration-contract-confluence` job from Phase 11 — `pending-secrets` status when creds unavailable, green when present.
+
 ---
 
 ## v0.10.0 Docs & Narrative (deferred)
@@ -144,4 +154,8 @@
 | ARCH-13 | 36 | planning |
 | ARCH-14 | 36 | planning |
 | ARCH-15 | 36 | planning |
+| ARCH-16 | 35 | planning |
+| ARCH-17 | 35 (capture) + 36 (artifact) | planning |
+| ARCH-18 | 36 | planning |
+| ARCH-19 | 36 | planning |
 | DOCS-01..09 | (v0.10.0) | deferred |
