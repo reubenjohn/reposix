@@ -1236,9 +1236,7 @@ mod tests {
     struct BodyContains(&'static str);
     impl wiremock::Match for BodyContains {
         fn matches(&self, request: &wiremock::Request) -> bool {
-            std::str::from_utf8(&request.body)
-                .map(|s| s.contains(self.0))
-                .unwrap_or(false)
+            std::str::from_utf8(&request.body).is_ok_and(|s| s.contains(self.0))
         }
     }
 
