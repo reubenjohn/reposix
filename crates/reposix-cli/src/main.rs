@@ -1,12 +1,12 @@
-//! Top-level `reposix` CLI: orchestrates the simulator, FUSE mount, and
-//! demo flows.
+//! Top-level `reposix` CLI: orchestrates the simulator, partial-clone
+//! init, and demo flows.
 //!
-//! Subcommands:
+//! Subcommands (v0.9.0):
 //! - `reposix sim` — run the Phase-2 simulator as a child process.
-//! - `reposix mount <dir> --backend <origin> --project <slug>` — mount
-//!   the FUSE daemon at `<dir>`.
-//! - `reposix demo` — end-to-end orchestration (sim → mount → ls/cat/grep
-//!   → audit tail → cleanup).
+//! - `reposix init <backend>::<project> <path>` — initialize a partial-clone
+//!   working tree backed by reposix.
+//! - `reposix mount` — REMOVED in v0.9.0 (stub emits migration error).
+//! - `reposix demo` — end-to-end orchestration against the simulator.
 //! - `reposix version` — print the version.
 
 #![forbid(unsafe_code)]
@@ -23,6 +23,7 @@ use clap::{Parser, Subcommand};
 
 mod binpath;
 mod demo;
+mod init;
 mod mount;
 mod sim;
 
@@ -62,31 +63,35 @@ enum Cmd {
         #[arg(long, default_value_t = 100)]
         rate_limit: u32,
     },
-    /// Mount the FUSE filesystem (delegates to `reposix-fuse`).
+    /// Initialize a partial-clone working tree backed by reposix.
     ///
-    /// `--backend sim` (default) speaks the reposix simulator's REST shape
-    /// at `--origin`. `--backend github` mounts real `api.github.com`
-    /// issues for `--project owner/repo`; requires
-    /// `REPOSIX_ALLOWED_ORIGINS` to include `https://api.github.com` and
-    /// optionally `GITHUB_TOKEN` for the 5000 req/hr ceiling.
+    /// Replaces the deleted `reposix mount` subcommand. Runs `git init`,
+    /// configures `extensions.partialClone=origin`, sets
+    /// `remote.origin.url=reposix::<scheme>://<host>/projects/<project>`,
+    /// and runs `git fetch --filter=blob:none origin` (best-effort).
+    ///
+    /// Spec form: `<backend>::<project>` where `<backend>` is one of
+    /// `sim`, `github`, `confluence`, `jira`. Examples:
+    ///   reposix init `sim::demo` /tmp/repo
+    ///   reposix init `github::reubenjohn/reposix` /tmp/issues
+    ///   reposix init `confluence::TokenWorld` /tmp/space
+    ///   reposix init `jira::TEST` /tmp/jira
+    Init {
+        /// Backend + project spec, e.g. `sim::demo`.
+        #[arg(value_name = "BACKEND::PROJECT")]
+        spec: String,
+        /// Local path to initialize as the partial-clone working tree.
+        path: PathBuf,
+    },
+    /// REMOVED in v0.9.0 — kept as a stub that emits a migration error so
+    /// stale scripts get a clear message rather than "unknown subcommand".
+    /// The fuse spawn code remains in `mount.rs` until Phase 36 deletes
+    /// the FUSE crate entirely.
     Mount {
-        /// Mount point.
-        mount_point: PathBuf,
-        /// Simulator REST origin. Used when `--backend sim` (default);
-        /// ignored for `--backend github`.
-        #[arg(long, default_value = "http://127.0.0.1:7878")]
-        origin: String,
-        /// Project slug (sim) or `owner/repo` (github).
-        #[arg(long, default_value = "demo")]
-        project: String,
-        /// Which backend to speak. `sim` keeps v0.1 behaviour; `github`
-        /// mounts real GitHub Issues end-to-end.
-        #[arg(long, value_enum, default_value_t = list::ListBackend::Sim)]
-        backend: list::ListBackend,
-        /// Read-only flag (forward-compat; v0.1 sim mount is always
-        /// read-write, github is forced read-only).
-        #[arg(long)]
-        read_only: bool,
+        /// Path argument retained for backward compat with stale scripts;
+        /// ignored — the command always errors out.
+        #[arg(value_name = "PATH")]
+        mount_point: Option<PathBuf>,
     },
     /// Run the canonical end-to-end demo: spawn sim → mount → run
     /// scripted ls/cat/grep → tail audit log → clean up.
@@ -182,13 +187,15 @@ async fn main() -> Result<()> {
             ephemeral,
             rate_limit,
         } => sim::run(&bind, db, seed_file, no_seed, ephemeral, rate_limit),
-        Cmd::Mount {
-            mount_point,
-            origin,
-            project,
-            backend,
-            read_only: _,
-        } => mount::run(mount_point, origin, project, backend),
+        Cmd::Init { spec, path } => init::run(spec, path),
+        Cmd::Mount { mount_point: _ } => {
+            // v0.9.0 breaking: `reposix mount` is removed. The clap variant
+            // is kept only so stale scripts get a clear migration message
+            // rather than `error: unrecognized subcommand 'mount'`.
+            anyhow::bail!(
+                "reposix mount has been removed in v0.9.0. Use 'reposix init <backend>::<project> <path>' — see CHANGELOG and docs/reference/testing-targets.md."
+            );
+        }
         Cmd::Demo { keep_running } => demo::run(keep_running).await,
         Cmd::List {
             project,

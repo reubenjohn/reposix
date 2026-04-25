@@ -1,13 +1,13 @@
 //! Child-process wrapper around the `reposix-fuse` binary, with a 3-second
 //! unmount watchdog on Drop.
 //!
-//! The `--backend` flag chooses the read-path backend: `sim` (default)
-//! speaks the reposix simulator REST API at `--origin`; `github` mounts
-//! real `api.github.com` issues for `--project owner/repo`; `confluence`
-//! mounts real Atlassian Confluence Cloud pages for
-//! `--project <SPACE_KEY>`, requiring `ATLASSIAN_API_KEY`,
-//! `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT` env vars plus an
-//! allowlist entry for `https://<tenant>.atlassian.net`.
+//! **DEPRECATED in v0.9.0** — `reposix mount` is removed; the dispatcher
+//! emits a migration error and never invokes `MountProcess::spawn`. This
+//! module is retained only so Phase 36 has a single point of deletion when
+//! it removes the FUSE crate entirely. All public items are `dead_code`
+//! until that phase lands.
+
+#![allow(dead_code)]
 
 use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
