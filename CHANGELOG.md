@@ -6,6 +6,10 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING: hard-renamed core types `IssueId` → `RecordId`, `Issue` → `Record`, `IssueStatus` → `RecordStatus`.** The original `Issue` vocabulary was too narrow — Records can be issues (sim, GitHub, JIRA), pages (Confluence), or any other backend-specific unit. Trait methods on `BackendConnector` follow: `list_issues`/`get_issue`/`create_issue`/`update_issue`/`delete_issue` → `*_record`. Free function `path::validate_issue_filename` → `validate_record_filename`. Error variant `Error::InvalidIssue` → `InvalidRecord`. Module `reposix-core/src/issue.rs` moved to `record.rs`. **YAML wire format unchanged** — the on-disk frontmatter still serializes `id`, `title`, `status`, etc. as before. **Migration:** in your own connector crate, search-and-replace the type names; trait method names follow the same `*_issue` → `*_record` rule. No compatibility aliases (precedent: ADR-004 `IssueBackend` → `BackendConnector`).
+
 ## [v0.10.0] — 2026-04-25
 
 **Docs & Narrative Shine.** A docs-only milestone that ports the v0.9.0

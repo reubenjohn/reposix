@@ -798,12 +798,12 @@ impl ConfluenceBackend {
     ///
     /// - Returns `Error::Other` if pagination would exceed `MAX_ISSUES_PER_LIST`.
     /// - All errors that `list_records` would raise also apply here.
-    pub async fn list_issues_strict(&self, project: &str) -> Result<Vec<Record>> {
+    pub async fn list_records_strict(&self, project: &str) -> Result<Vec<Record>> {
         self.list_issues_impl(project, true).await
     }
 
     /// Shared pagination loop for both [`list_records`](BackendConnector::list_records)
-    /// and [`list_issues_strict`]. When `strict == true` the cap site returns
+    /// and [`list_records_strict`]. When `strict == true` the cap site returns
     /// `Err`; when `false` it emits a `tracing::warn!` and returns `Ok(capped)`.
     ///
     /// # Errors
@@ -3463,7 +3463,7 @@ mod tests {
         assert_eq!(issues.len(), 5, "expected 5 issues (one per mocked page)");
     }
 
-    /// Verify that `list_issues_strict` returns `Err` containing
+    /// Verify that `list_records_strict` returns `Err` containing
     /// `"strict mode"` and `"500-page cap"` when the space exceeds the
     /// pagination cap, and that no `Ok(partial)` result escapes.
     #[tokio::test]
@@ -3509,8 +3509,8 @@ mod tests {
         }
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let result = backend.list_issues_strict("TRUNCTEST").await;
-        assert!(result.is_err(), "list_issues_strict must return Err at cap");
+        let result = backend.list_records_strict("TRUNCTEST").await;
+        assert!(result.is_err(), "list_records_strict must return Err at cap");
         let msg = format!("{}", result.unwrap_err());
         assert!(
             msg.contains("strict mode"),

@@ -8,13 +8,13 @@ The contracts. Shared types, traits, and security-critical primitives.
 
 ### Public API entry points
 
-- `BackendConnector` (trait, `backend.rs`) — the seam every adapter implements: `list_issues`, `get_issue`, `create_issue`, `update_issue`, `delete_or_close`, `list_changed_since`, plus `supports(BackendFeature)` for capability queries.
-- `Issue`, `IssueId`, `IssueStatus`, `Project`, `ProjectSlug`, `RemoteSpec`, `parse_remote_url` — the core record vocabulary.
+- `BackendConnector` (trait, `backend.rs`) — the seam every adapter implements: `list_records`, `get_record`, `create_record`, `update_record`, `delete_or_close`, `list_changed_since`, plus `supports(BackendFeature)` for capability queries.
+- `Record`, `RecordId`, `RecordStatus`, `Project`, `ProjectSlug`, `RemoteSpec`, `parse_remote_url` — the core record vocabulary.
 - `Tainted<T>` / `Untainted<T>` / `sanitize` — type-level taint tracking enforcing SG-05.
 - `HttpClient` (sealed) — the single legal way to make outbound HTTP. Honors `REPOSIX_ALLOWED_ORIGINS` per call.
 - `audit::SCHEMA_SQL`, `audit::open_audit_db` — append-only audit log with `BEFORE UPDATE/DELETE` triggers (SG-06).
 - `frontmatter::render` / `parse` — deterministic Markdown+YAML serialization for on-disk records.
-- `path::validate_issue_filename`, `slug_or_fallback`, `dedupe_siblings` — working-tree filename hygiene.
+- `path::validate_record_filename`, `slug_or_fallback`, `dedupe_siblings` — working-tree filename hygiene.
 
 A workspace-wide `clippy.toml` bans `reqwest::Client::new` outside `core/src/http.rs`; `scripts/check_clippy_lint_loaded.sh` proves the lint fires.
 
@@ -87,8 +87,8 @@ Read-only `BackendConnector` adapter for the GitHub REST v3 Issues API.
 
 ### Public API entry points
 
-- `GithubReadOnlyBackend::new(token)` — constructs a backend whose `list_issues` / `get_issue` hit `https://api.github.com`.
-- Status mapping decided in [ADR-001](../decisions/001-github-state-mapping.md); the backend translates GitHub's two-valued `state` + `state_reason` + `status/*` labels into the five-valued `IssueStatus`.
+- `GithubReadOnlyBackend::new(token)` — constructs a backend whose `list_records` / `get_record` hit `https://api.github.com`.
+- Status mapping decided in [ADR-001](../decisions/001-github-state-mapping.md); the backend translates GitHub's two-valued `state` + `state_reason` + `status/*` labels into the five-valued `RecordStatus`.
 
 ### Used by
 
@@ -101,8 +101,8 @@ Read-only `BackendConnector` adapter for the GitHub REST v3 Issues API.
 ### Public API entry points
 
 - `ConfluenceBackend::new(creds, tenant)` — backend bound to one Atlassian tenant.
-- `list_issues`, `get_issue`, `create_issue`, `update_issue`, `delete_or_close` — the `BackendConnector` surface, mapped page → record per [ADR-002](../decisions/002-confluence-page-mapping.md).
-- `list_issues_strict` — variant of `list_issues` that errors instead of capping at 500 pages (used by `reposix list --no-truncate`).
+- `list_records`, `get_record`, `create_record`, `update_record`, `delete_or_close` — the `BackendConnector` surface, mapped page → record per [ADR-002](../decisions/002-confluence-page-mapping.md).
+- `list_records_strict` — variant of `list_records` that errors instead of capping at 500 pages (used by `reposix list --no-truncate`).
 - `list_spaces` — backs `reposix spaces`.
 - `list_comments(page_id)` — inline + footer comments.
 - `adf` module — Markdown ↔ Atlassian Document Format converter, shared with `reposix-jira`.
@@ -121,7 +121,7 @@ Requires `ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT`, pl
 
 - `JiraBackend::new(creds, instance)` — backend bound to one JIRA Cloud instance.
 - Read path: `POST /rest/api/3/search/jql` with cursor pagination via `nextPageToken`; `GET /rest/api/3/issue/{id}` for single fetch.
-- Write path: `create_issue` (POST `/rest/api/3/issue`), `update_issue` (PUT `/rest/api/3/issue/{id}`), `delete_or_close` (transitions API with DELETE fallback).
+- Write path: `create_record` (POST `/rest/api/3/issue`), `update_record` (PUT `/rest/api/3/issue/{id}`), `delete_or_close` (transitions API with DELETE fallback).
 - Issue → record mapping documented in [ADR-005](../decisions/005-jira-issue-mapping.md).
 - `adf` module — shared with `reposix-confluence`.
 

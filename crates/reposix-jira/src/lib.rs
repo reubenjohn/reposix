@@ -216,7 +216,7 @@ impl JiraBackend {
     ///
     /// - Returns `Error::Other` if pagination would exceed `MAX_ISSUES_PER_LIST`.
     /// - All errors that `list_records` would raise also apply here.
-    pub async fn list_issues_strict(&self, project: &str) -> Result<Vec<Record>> {
+    pub async fn list_records_strict(&self, project: &str) -> Result<Vec<Record>> {
         self.list_issues_impl(project, true).await
     }
 

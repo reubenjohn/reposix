@@ -91,7 +91,7 @@ Cursor-in-body: the response body carries `_links.next` as a relative path
 (e.g. `/wiki/api/v2/spaces/360450/pages?cursor=...`). The adapter prepends
 the tenant base URL to turn it into a fully-qualified URL — it does NOT
 trust `_links.base` from the response (that would be an SSRF vector).
-Capped at 500 pages per `list_issues` call. See
+Capped at 500 pages per `list_records` call. See
 [ADR-002 §Pagination decision](../decisions/002-confluence-page-mapping.md).
 
 ## Rate limiting
@@ -142,14 +142,14 @@ round-trip; see
 for the full list:
 
 - **Space metadata.** `spaceId` / `spaceKey` are discarded after the
-  key-to-id resolver runs at the start of `list_issues`.
+  key-to-id resolver runs at the start of `list_records`.
 - **Browser links.** `_links.webui` / `_links.editui` / `_links.tinyui` are
   discarded.
 - **Atlassian rich-doc format.** `body.atlas_doc_format` is ignored — the
   body is raw XHTML from `body.storage.value`, not rendered Markdown.
 - **Labels.** Confluence labels live at a separate endpoint; v0.3 returns
   `labels: []` unconditionally.
-- **Write path.** `create_issue` / `update_issue` / `delete_or_close` all
+- **Write path.** `create_record` / `update_record` / `delete_or_close` all
   return `not supported`. v0.4 will add the write path (with
   server-field sanitization, mirroring SG-03).
 

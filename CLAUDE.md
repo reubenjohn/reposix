@@ -38,7 +38,7 @@ The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The f
 
 ```
 crates/
-├── reposix-core/        # Shared types: Issue, Project, RemoteSpec, Error, Tainted<T>.
+├── reposix-core/        # Shared types: Record, Project, RemoteSpec, Error, Tainted<T>.
 ├── reposix-sim/         # In-process axum HTTP simulator.
 ├── reposix-cache/       # On-disk bare-repo cache backed by gix; lazy blob materialization.
 ├── reposix-remote/      # git-remote-reposix binary (stateless-connect + export).

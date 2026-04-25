@@ -57,7 +57,7 @@ pub enum ListFormat {
 /// for `project`, and writes formatted output to stdout.
 ///
 /// When `no_truncate` is `true` and `backend` is [`ListBackend::Confluence`],
-/// calls [`ConfluenceBackend::list_issues_strict`] which returns an error
+/// calls [`ConfluenceBackend::list_records_strict`] which returns an error
 /// instead of silently capping at 500 pages. For other backends the flag is
 /// accepted but has no effect (documented in help text).
 ///
@@ -95,9 +95,9 @@ pub async fn run(
             };
             let b = ConfluenceBackend::new(creds, &tenant).context("build ConfluenceBackend")?;
             if no_truncate {
-                b.list_issues_strict(&project).await.with_context(|| {
+                b.list_records_strict(&project).await.with_context(|| {
                     format!(
-                        "confluence list_issues_strict space_key={project} (REPOSIX_ALLOWED_ORIGINS must include https://{tenant}.atlassian.net)"
+                        "confluence list_records_strict space_key={project} (REPOSIX_ALLOWED_ORIGINS must include https://{tenant}.atlassian.net)"
                     )
                 })?
             } else {
@@ -117,8 +117,8 @@ pub async fn run(
             };
             let b = JiraBackend::new(creds, &instance).context("build JiraBackend")?;
             if no_truncate {
-                b.list_issues_strict(&project).await.with_context(|| {
-                    format!("jira list_issues_strict project_key={project} (REPOSIX_ALLOWED_ORIGINS must include https://{instance}.atlassian.net)")
+                b.list_records_strict(&project).await.with_context(|| {
+                    format!("jira list_records_strict project_key={project} (REPOSIX_ALLOWED_ORIGINS must include https://{instance}.atlassian.net)")
                 })?
             } else {
                 b.list_records(&project).await.with_context(|| {

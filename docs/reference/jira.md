@@ -48,14 +48,14 @@ simulator (the only argument that changes for JIRA is the `init` spec).
 
 ## The `--no-truncate` Flag
 
-By default, `list_issues` returns at most 500 issues (5 paginated requests of 100 each).
+By default, `list_records` returns at most 500 issues (5 paginated requests of 100 each).
 For larger projects, pass `--no-truncate` to raise an error instead of silently capping:
 
 ```bash
 reposix list --backend jira --project BIGPROJECT --no-truncate
 ```
 
-This is equivalent to `ConfluenceBackend::list_issues_strict` — it returns an error if
+This is equivalent to `ConfluenceBackend::list_records_strict` — it returns an error if
 the project contains more than 500 issues, prompting you to filter with a more specific
 JQL query (planned feature, Phase 29+).
 
@@ -95,7 +95,7 @@ The `extensions` block contains JIRA-specific metadata not in the canonical sche
 
 ## Limitations (Phase 28)
 
-- **Read-only:** `create_issue`, `update_issue`, and `delete_or_close` return "not supported". Write path lands in Phase 29.
+- **Read-only:** `create_record`, `update_record`, and `delete_or_close` return "not supported". Write path lands in Phase 29.
 - **No strong versioning:** JIRA has no ETag; `version` is synthesized from `updated` timestamp.
 - **No attachments:** JIRA attachments are deferred to a future phase.
 - **No comments:** JIRA comments are deferred to a future phase.

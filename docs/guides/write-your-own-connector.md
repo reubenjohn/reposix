@@ -14,11 +14,11 @@ The trait lives in `crates/reposix-core/src/backend.rs`. Every method:
 
 - `fn name(&self) -> &'static str` — stable backend tag (`"github"`, `"sim"`). Used in audit rows and log lines.
 - `fn supports(&self, feature: BackendFeature) -> bool` — capability query. Cheap, synchronous, no network. Lets callers branch on `Delete`, `StrongVersioning`, `Hierarchy`, etc. without trying the operation.
-- `async fn list_issues(&self, project: &str) -> Result<Vec<Issue>>` — full project listing. Empty project returns an empty vec, NOT an error.
-- `async fn list_changed_since(&self, project: &str, since: DateTime<Utc>) -> Result<Vec<IssueId>>` — incremental query for delta sync. Default impl filters `list_issues` in memory; backends with native incremental queries (`?since=` for GitHub, JQL `updated >=` for JIRA, CQL `lastModified >` for Confluence, `?since=` for the sim) MUST override.
-- `async fn get_issue(&self, project, id) -> Result<Issue>` — single fetch. Unknown id returns `Err(Error::Other("not found: ..."))`.
-- `async fn create_issue(&self, project, issue: Untainted<Issue>) -> Result<Issue>` — POST. The `Untainted` wrapper proves you stripped server-controlled fields (`id`, `created_at`, `version`).
-- `async fn update_issue(&self, project, id, patch: Untainted<Issue>, expected_version) -> Result<Issue>` — PATCH/PUT with optional optimistic-concurrency token.
+- `async fn list_records(&self, project: &str) -> Result<Vec<Record>>` — full project listing. Empty project returns an empty vec, NOT an error.
+- `async fn list_changed_since(&self, project: &str, since: DateTime<Utc>) -> Result<Vec<RecordId>>` — incremental query for delta sync. Default impl filters `list_records` in memory; backends with native incremental queries (`?since=` for GitHub, JQL `updated >=` for JIRA, CQL `lastModified >` for Confluence, `?since=` for the sim) MUST override.
+- `async fn get_record(&self, project, id) -> Result<Record>` — single fetch. Unknown id returns `Err(Error::Other("not found: ..."))`.
+- `async fn create_record(&self, project, issue: Untainted<Record>) -> Result<Record>` — POST. The `Untainted` wrapper proves you stripped server-controlled fields (`id`, `created_at`, `version`).
+- `async fn update_record(&self, project, id, patch: Untainted<Record>, expected_version) -> Result<Record>` — PATCH/PUT with optional optimistic-concurrency token.
 - `async fn delete_or_close(&self, project, id, reason: DeleteReason) -> Result<()>` — real DELETE on backends with `BackendFeature::Delete`; close-with-reason on the rest.
 - `fn root_collection_name(&self) -> &'static str` — defaults to `"issues"`. Override for backends with a domain term (Confluence overrides to `"pages"`).
 
@@ -70,13 +70,13 @@ Both rules are non-negotiable per project conventions.
 
 ### Step 2 — Minimum viable `BackendConnector`
 
-You only need three methods to get past the read-side smoke test: `list_issues`, `get_issue`, `list_changed_since`. The four write methods can `Err(...)` "not supported" until you wire them.
+You only need three methods to get past the read-side smoke test: `list_records`, `get_record`, `list_changed_since`. The four write methods can `Err(...)` "not supported" until you wire them.
 
 ```rust
 use async_trait::async_trait;
 use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason};
 use reposix_core::http::{client, ClientOpts, HttpClient};
-use reposix_core::{Error, Issue, IssueId, Result, Tainted, Untainted};
+use reposix_core::{Error, Record, RecordId, Result, Tainted, Untainted};
 
 pub struct LinearBackend {
     http: std::sync::Arc<HttpClient>,
@@ -89,7 +89,7 @@ impl BackendConnector for LinearBackend {
     fn name(&self) -> &'static str { "linear" }
     fn supports(&self, _f: BackendFeature) -> bool { false }
 
-    async fn list_issues(&self, project: &str) -> Result<Vec<Issue>> {
+    async fn list_records(&self, project: &str) -> Result<Vec<Record>> {
         let url = format!("{}/issues?team={project}", self.base_url);
         let raw: Vec<LinearWireIssue> =
             self.http.get(&url, /* headers */).await?.json().await?;
@@ -97,20 +97,20 @@ impl BackendConnector for LinearBackend {
         Ok(translate(tainted))
     }
 
-    async fn get_issue(&self, project: &str, id: IssueId) -> Result<Issue> {
+    async fn get_record(&self, project: &str, id: RecordId) -> Result<Record> {
         // 404 → Err(Error::Other(format!("not found: {project}/{id}")))
         // ...
     }
 
-    async fn create_issue(&self, _: &str, _: Untainted<Issue>) -> Result<Issue> {
+    async fn create_record(&self, _: &str, _: Untainted<Record>) -> Result<Record> {
         Err(Error::Other("not supported: linear write path TODO".into()))
     }
-    async fn update_issue(
-        &self, _: &str, _: IssueId, _: Untainted<Issue>, _: Option<u64>,
-    ) -> Result<Issue> {
+    async fn update_record(
+        &self, _: &str, _: RecordId, _: Untainted<Record>, _: Option<u64>,
+    ) -> Result<Record> {
         Err(Error::Other("not supported: linear write path TODO".into()))
     }
-    async fn delete_or_close(&self, _: &str, _: IssueId, _: DeleteReason) -> Result<()> {
+    async fn delete_or_close(&self, _: &str, _: RecordId, _: DeleteReason) -> Result<()> {
         Err(Error::Other("not supported: linear write path TODO".into()))
     }
 }
@@ -143,8 +143,8 @@ If your backend needs a custom timeout, retry, or connection pool, pass options 
 
 Both reference connectors ship ≥ 5 tests against `wiremock::MockServer`. Minimum coverage for a new connector:
 
-1. `list_issues` returns ≥ 1 issue on a happy path. Seed the mock, assert length + first row.
-2. `get_issue` 404 → `Error::Other` whose message starts with `"not found: "`.
+1. `list_records` returns ≥ 1 issue on a happy path. Seed the mock, assert length + first row.
+2. `get_record` 404 → `Error::Other` whose message starts with `"not found: "`.
 3. The auth header is byte-exact (Bearer prefix, Basic + base64 — whatever the backend wants).
 4. Pagination cursor is followed correctly. Seed two pages, assert the second request URL is what the first response said.
 5. Rate-limit gate arms on 429 / `Retry-After`.

@@ -9,7 +9,7 @@
 | **v0.3** | Real Confluence Cloud adapter (live against `reuben-john.atlassian.net`); swarm harness; prebuilt release binaries. |
 | **v0.4** | `pages/` + `tree/` nested mount layout with symlink overlay exposing Confluence's `parentId` hierarchy — the "hero image" folder structure. 272 tests green. |
 | **v0.5** | Synthesized read-only `_INDEX.md` sitemap in each FUSE bucket directory (`mount/<bucket>/_INDEX.md`). 277 tests green. |
-| **v0.6** | Confluence write path (`create_issue`/`update_issue`/`delete_or_close`); ADF↔Markdown converter; `labels/` read-only overlay; tree-recursive + mount-root `_INDEX.md`; `reposix refresh` subcommand. 317 tests green. |
+| **v0.6** | Confluence write path (`create_record`/`update_record`/`delete_or_close`); ADF↔Markdown converter; `labels/` read-only overlay; tree-recursive + mount-root `_INDEX.md`; `reposix refresh` subcommand. 317 tests green. |
 | **v0.7** | Contention/truncation/chaos hardening; honest token benchmarks (89.1% reduction, real tokenizer); Confluence comments (`pages/<id>.comments/`), attachments (`.attachments/`), and whiteboards (`whiteboards/`); docs reorg (`docs/research/`). 317+ tests green. |
 
 ## Current open problems

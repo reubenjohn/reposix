@@ -71,7 +71,7 @@ Remove an issue. Returns `204 No Content`.
 
 ### `GET /projects/:slug/issues/:id/transitions`
 
-Jira-style: list currently-legal status transitions. In v0.1 all 5 `IssueStatus` values are always legal (the simulator does not enforce workflow rules); v0.2 will model real transitions.
+Jira-style: list currently-legal status transitions. In v0.1 all 5 `RecordStatus` values are always legal (the simulator does not enforce workflow rules); v0.2 will model real transitions.
 
 ## Headers
 

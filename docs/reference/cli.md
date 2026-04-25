@@ -54,7 +54,7 @@ Spawn the REST simulator as a child process. Default backend for tests and demos
 
 ## `reposix list`
 
-Query the backend's `list_issues` and dump JSON or a fixed-width table. Useful for quick inspection from the shell; the agent UX prefers `git ls-files` once `reposix init` has run.
+Query the backend's `list_records` and dump JSON or a fixed-width table. Useful for quick inspection from the shell; the agent UX prefers `git ls-files` once `reposix init` has run.
 
 ```bash
 reposix list --backend sim --project demo
