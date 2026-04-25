@@ -435,6 +435,71 @@ impl BackendConnector for GithubReadOnlyBackend {
         Ok(translate(gh))
     }
 
+    async fn list_changed_since(
+        &self,
+        project: &str,
+        since: chrono::DateTime<chrono::Utc>,
+    ) -> Result<Vec<IssueId>> {
+        // GitHub's `GET /repos/{owner}/{repo}/issues` natively accepts
+        // `?since=<ISO8601>`; reuse the same pagination loop as `list_issues`
+        // but emit IDs only.
+        let since_iso = since.to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+        let first = format!(
+            "{}/repos/{}/issues?state=all&per_page={}&since={}",
+            self.base(),
+            project,
+            PAGE_SIZE,
+            since_iso
+        );
+        let mut next_url: Option<String> = Some(first);
+        let mut out: Vec<IssueId> = Vec::new();
+        let mut pages: usize = 0;
+
+        let header_owned = self.standard_headers();
+        let header_refs: Vec<(&str, &str)> =
+            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+
+        while let Some(url) = next_url.take() {
+            pages += 1;
+            if pages > (MAX_ISSUES_PER_LIST / PAGE_SIZE) {
+                tracing::warn!(
+                    pages,
+                    "reached MAX_ISSUES_PER_LIST cap; stopping pagination"
+                );
+                break;
+            }
+            self.await_rate_limit_gate().await;
+            let resp = self
+                .http
+                .request_with_headers(Method::GET, url.as_str(), &header_refs)
+                .await?;
+            self.ingest_rate_limit(&resp);
+            let status = resp.status();
+            let link_hdr = resp
+                .headers()
+                .get("link")
+                .and_then(|v| v.to_str().ok())
+                .map(std::string::ToString::to_string);
+            let bytes = resp.bytes().await?;
+            if !status.is_success() {
+                return Err(Error::Other(format!(
+                    "github returned {status} for GET {url}: {}",
+                    String::from_utf8_lossy(&bytes)
+                )));
+            }
+            let page: Vec<GhIssue> = serde_json::from_slice(&bytes)?;
+            for gh in page {
+                let issue = translate(gh);
+                out.push(issue.id);
+                if out.len() >= MAX_ISSUES_PER_LIST {
+                    return Ok(out);
+                }
+            }
+            next_url = link_hdr.as_deref().and_then(parse_next_link);
+        }
+        Ok(out)
+    }
+
     async fn create_issue(&self, _project: &str, _issue: Untainted<Issue>) -> Result<Issue> {
         Err(Error::Other(
             "not supported: create_issue — reposix-github is read-only in v0.1".into(),
@@ -840,6 +905,42 @@ mod tests {
         assert!(!backend.supports(BackendFeature::StrongVersioning));
         assert!(!backend.supports(BackendFeature::BulkEdit));
         assert_eq!(backend.name(), "github-readonly");
+    }
+
+    #[tokio::test]
+    async fn github_list_changed_since_sends_since_param_and_returns_ids() {
+        // Phase 33: prove the GitHub override emits ?since=<RFC3339>
+        // alongside the existing state=all query param.
+        use chrono::{TimeZone, Utc};
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/repos/octo/r/issues"))
+            .and(query_param("since", "2026-04-24T00:00:00Z"))
+            .and(query_param("state", "all"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+                {
+                    "number": 7,
+                    "title": "x",
+                    "state": "open",
+                    "body": "",
+                    "labels": [],
+                    "assignee": null,
+                    "created_at": "2026-04-24T01:00:00Z",
+                    "updated_at": "2026-04-24T02:00:00Z",
+                }
+            ])))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let backend =
+            GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
+        let t = Utc.with_ymd_and_hms(2026, 4, 24, 0, 0, 0).unwrap();
+        let ids = backend
+            .list_changed_since("octo/r", t)
+            .await
+            .expect("list");
+        assert_eq!(ids, vec![IssueId(7)]);
     }
 
     #[test]
