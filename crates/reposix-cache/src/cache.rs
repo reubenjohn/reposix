@@ -107,4 +107,76 @@ impl Cache {
     pub fn project(&self) -> &str {
         &self.project
     }
+
+    /// Write an `op='helper_connect'` audit row. Best-effort.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn log_helper_connect(&self, service: &str) {
+        let db = self.db.lock().expect("cache.db mutex poisoned");
+        crate::audit::log_helper_connect(&db, &self.backend_name, &self.project, service);
+    }
+
+    /// Write an `op='helper_advertise'` audit row. Best-effort.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn log_helper_advertise(&self, bytes: u32) {
+        let db = self.db.lock().expect("cache.db mutex poisoned");
+        crate::audit::log_helper_advertise(&db, &self.backend_name, &self.project, bytes);
+    }
+
+    /// Write an `op='helper_fetch'` audit row. Best-effort. The `stats`
+    /// payload is produced by the `reposix-remote::stateless_connect`
+    /// handler; we accept a by-value wrapper (via a structural trait)
+    /// so the two crates don't need to share a type. See the
+    /// `HelperFetchRecord` trait below.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn log_helper_fetch<R: HelperFetchRecord>(&self, stats: &R) {
+        let db = self.db.lock().expect("cache.db mutex poisoned");
+        crate::audit::log_helper_fetch(
+            &db,
+            &self.backend_name,
+            &self.project,
+            stats.command(),
+            stats.want_count(),
+            stats.request_bytes(),
+            stats.response_bytes(),
+        );
+    }
+
+    /// Write an `op='helper_fetch_error'` audit row. Best-effort.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn log_helper_fetch_error(&self, exit_code: i32, stderr_tail: &str) {
+        let db = self.db.lock().expect("cache.db mutex poisoned");
+        crate::audit::log_helper_fetch_error(
+            &db,
+            &self.backend_name,
+            &self.project,
+            exit_code,
+            stderr_tail,
+        );
+    }
+}
+
+/// Structural accessor for a helper-fetch RPC-turn record. Implemented
+/// by `reposix-remote::stateless_connect::RpcStats` — we use a trait
+/// so that crate does not depend on a `reposix-cache`-defined struct
+/// and vice-versa, keeping the cache crate free of
+/// transport-layer concepts.
+pub trait HelperFetchRecord {
+    /// The `command=<word>` keyword if extracted from the first data
+    /// frame (`fetch`, `ls-refs`, etc.). `None` if not a recognizable
+    /// protocol-v2 command.
+    fn command(&self) -> Option<&str>;
+    /// Count of `want ` lines observed in the request.
+    fn want_count(&self) -> u32;
+    /// Total request bytes written to `upload-pack` stdin.
+    fn request_bytes(&self) -> u32;
+    /// Total response bytes read from `upload-pack` stdout.
+    fn response_bytes(&self) -> u32;
 }
