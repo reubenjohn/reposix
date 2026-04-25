@@ -991,6 +991,11 @@ mod tests {
     // Note: `backend_slug_from_origin` now lives in `crate::worktree_helpers`
     // and is unit-tested there.
 
+    // Tests that mutate the process-wide REPOSIX_ALLOWED_ORIGINS env var
+    // share this mutex. Without it, parallel cargo test execution races
+    // set_var across the two checks and adjacent assertions flake.
+    static ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
     #[test]
     fn check_backend_registered_recognises_sim() {
         let spec =
@@ -1007,35 +1012,41 @@ mod tests {
 
     #[test]
     fn check_allowed_origins_ok_when_loopback_glob_covers_sim() {
+        let _guard = ENV_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let prev = std::env::var("REPOSIX_ALLOWED_ORIGINS").ok();
-        // SAFETY: restored at end of test.
+        // SAFETY: restored at end of test, under the same lock.
         std::env::set_var("REPOSIX_ALLOWED_ORIGINS", "http://127.0.0.1:*");
         let spec =
             reposix_core::parse_remote_url("reposix::http://127.0.0.1:7878/projects/demo").unwrap();
         let finding = check_allowed_origins(Some(&spec));
-        assert_eq!(finding.severity, Severity::Ok, "got {finding:?}");
         match prev {
             Some(v) => std::env::set_var("REPOSIX_ALLOWED_ORIGINS", v),
             None => std::env::remove_var("REPOSIX_ALLOWED_ORIGINS"),
         }
+        assert_eq!(finding.severity, Severity::Ok, "got {finding:?}");
     }
 
     #[test]
     fn check_allowed_origins_warns_when_host_not_covered() {
+        let _guard = ENV_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let prev = std::env::var("REPOSIX_ALLOWED_ORIGINS").ok();
         std::env::set_var("REPOSIX_ALLOWED_ORIGINS", "https://api.example.com");
         let spec =
             reposix_core::parse_remote_url("reposix::https://api.github.com/projects/o/r").unwrap();
         let finding = check_allowed_origins(Some(&spec));
+        match prev {
+            Some(v) => std::env::set_var("REPOSIX_ALLOWED_ORIGINS", v),
+            None => std::env::remove_var("REPOSIX_ALLOWED_ORIGINS"),
+        }
         assert_eq!(finding.severity, Severity::Warn, "got {finding:?}");
         assert!(finding
             .fix
             .as_deref()
             .is_some_and(|f| f.contains("api.github.com")));
-        match prev {
-            Some(v) => std::env::set_var("REPOSIX_ALLOWED_ORIGINS", v),
-            None => std::env::remove_var("REPOSIX_ALLOWED_ORIGINS"),
-        }
     }
 
     #[test]
