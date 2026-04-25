@@ -469,6 +469,19 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
     } else {
         if let Some(cache) = state.cache.as_ref() {
             cache.log_helper_push_accepted(files_touched, &summary);
+            // §3c token-cost: estimate the push bytes-in by summing the
+            // parsed blob payloads (the bytes the agent actually emitted
+            // through fast-export). Bytes-out for push is small (a single
+            // `ok` line) so we approximate it as the line itself. Honest:
+            // chars/4 over-estimates for binary packfile content, but
+            // push payloads are markdown frontmatter — predominantly text.
+            let chars_in: u64 = parsed
+                .blobs
+                .values()
+                .map(|b| u64::try_from(b.len()).unwrap_or(u64::MAX))
+                .sum();
+            let chars_out: u64 = "ok refs/heads/main\n".len() as u64;
+            cache.log_token_cost(chars_in, chars_out, "push");
         }
         proto.send_line("ok refs/heads/main")?;
         proto.send_blank()?;

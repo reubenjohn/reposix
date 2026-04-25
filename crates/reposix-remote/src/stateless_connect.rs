@@ -395,6 +395,18 @@ fn proxy_one_rpc<R: Read, W: Write>(
     proto.flush().context("flush rpc response")?;
 
     cache.log_helper_fetch(&stats);
+    // §3c token-cost ledger — record bytes-in / bytes-out as token estimate.
+    // Honest math: this counts WIRE bytes (incl. the protocol-v2 framing
+    // overhead, the packfile size, etc.). For an English-prose blob it
+    // approximates the model's token count via chars/4. For a binary
+    // packfile this OVER-estimates relative to what an LLM would actually
+    // see if the bytes were textual; tokens here are a "what would these
+    // bytes cost if you sent them through a model" upper bound.
+    cache.log_token_cost(
+        u64::from(stats.request_bytes),
+        u64::from(stats.response_bytes),
+        "fetch",
+    );
 
     Ok(ProxyOutcome::Continued)
 }
