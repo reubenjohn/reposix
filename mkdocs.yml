@@ -111,6 +111,7 @@ nav:
   - How it works:
       - The filesystem layer: how-it-works/filesystem-layer.md
       - The git layer: how-it-works/git-layer.md
+      - Time travel: how-it-works/time-travel.md
       - The trust model: how-it-works/trust-model.md
   - Guides:
       - Write your own connector: guides/write-your-own-connector.md
@@ -129,6 +130,8 @@ nav:
       - ADR-003 Nested mount layout: decisions/003-nested-mount-layout.md
       - ADR-004 Backend connector rename: decisions/004-backend-connector-rename.md
       - ADR-005 JIRA issue mapping: decisions/005-jira-issue-mapping.md
+      - ADR-006 IssueId to RecordId rename: decisions/006-issueid-to-recordid-rename.md
+      - ADR-007 Time-travel via git tags: decisions/007-time-travel-via-git-tags.md
   - Research:
       - Initial report: research/initial-report.md
       - Agentic engineering reference: research/agentic-engineering-reference.md

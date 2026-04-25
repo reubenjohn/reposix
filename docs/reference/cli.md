@@ -16,6 +16,8 @@ Commands:
   refresh  Re-fetch all issues and write a commit (force delta sync)
   spaces   List readable Confluence spaces (Confluence backend only)
   doctor   Diagnose a reposix working tree and print fix commands
+  history  List sync tags (time-travel snapshots) for a working tree
+  at       Find the closest sync tag at-or-before a timestamp
   version  Print the version
   help     Print this message or the help of the given subcommand(s)
 ```
@@ -116,6 +118,37 @@ Checks performed (each finding is OK / INFO / WARN / ERROR):
 - `REPOSIX_BLOB_LIMIT` not set to `0` on a non-sim backend.
 - Sparse-checkout pattern count.
 - `rustc --version` (informational, contributors only).
+
+## `reposix history`
+
+List sync tags (time-travel snapshots) for a `reposix init`'d working tree. Every `Cache::sync` writes a private tag under `refs/reposix/sync/<ISO8601-no-colons>` in the cache's bare repo, pointing at the synthesis commit. `reposix history` prints them most-recent first. See [time travel](../how-it-works/time-travel.md) for the design.
+
+```bash
+reposix history /tmp/repo
+reposix history /tmp/repo --limit 25
+```
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `<path>` | cwd | Working-tree directory. |
+| `--limit` | `10` | Cap on entries printed (most-recent first). |
+
+Output format: `<slug>   commit <short>   <op> (<n> record(s) in this sync)` per line, plus a trailer summarising the total tag count and a copy-pastable `git -C <cache> checkout` invocation.
+
+## `reposix at`
+
+Print the closest sync tag at-or-before a given RFC-3339 timestamp. Useful for "what did reposix observe when this bug was filed?".
+
+```bash
+reposix at 2026-04-25T01:00:00Z /tmp/repo
+```
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `<timestamp>` | required | RFC-3339 (e.g. `2026-04-25T01:00:00Z`). |
+| `<path>` | cwd | Working-tree directory. |
+
+Prints the matching `refs/reposix/sync/<slug>` ref name, the synthesis commit short OID, and a copy-pastable `git -C <cache> checkout` invocation. If the target predates every sync tag, prints a not-found line and exits 0.
 
 ## `reposix spaces`
 

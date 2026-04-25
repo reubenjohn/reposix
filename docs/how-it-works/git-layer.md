@@ -90,4 +90,4 @@ Both are recoverable, both are auditable (one row each in `cache.db`), and both 
 
 The conflict-rejection and blob limit are not just UX — they are mitigations. The threat model that frames them, plus the tainted-by-default policy and the audit log, is in [the trust model →](trust-model.md).
 
-See also: [filesystem layer ←](filesystem-layer.md) for how the bytes got into the working tree before the push started.
+See also: [filesystem layer ←](filesystem-layer.md) for how the bytes got into the working tree before the push started, and [time travel](time-travel.md) for how every sync becomes a git ref you can `checkout`.

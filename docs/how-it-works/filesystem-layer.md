@@ -57,3 +57,5 @@ Wire-level details (cache schema, audit columns, helper invocation flags) live i
 ## Next
 
 The blobs got into the working tree somehow; the edits get back to the backend somehow. Both halves of that round-trip are git protocol, and they live in [the git layer →](git-layer.md).
+
+Every sync also writes a private tag (`refs/reposix/sync/<ts>`) in the cache's bare repo, so you can `git checkout` an earlier observation. See [time travel →](time-travel.md).
