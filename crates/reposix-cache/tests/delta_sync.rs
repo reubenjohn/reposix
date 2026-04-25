@@ -280,7 +280,10 @@ async fn delta_sync_updates_only_changed_issue() {
     // Audit: exactly ONE delta_sync row with bytes=1 and reason starting "since=".
     let audit = read_audit_rows(cache.repo_path(), "delta_sync");
     assert_eq!(audit.len(), 1, "exactly one delta_sync row, got {audit:?}");
-    assert_eq!(audit[0].bytes, 1, "delta_sync bytes must be the changed-id count");
+    assert_eq!(
+        audit[0].bytes, 1,
+        "delta_sync bytes must be the changed-id count"
+    );
     assert!(
         audit[0].reason.starts_with("since="),
         "delta_sync reason must start with 'since=', got {:?}",

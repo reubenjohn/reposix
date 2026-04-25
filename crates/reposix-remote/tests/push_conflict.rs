@@ -269,8 +269,8 @@ async fn frontmatter_strips_server_controlled_fields() {
         42,
         "issue 42",
         "edited body sanitize regression\n",
-        3,        // version: matches backend so conflict-check passes
-        999_999,  // id override — server must replace with 42
+        3,       // version: matches backend so conflict-check passes
+        999_999, // id override — server must replace with 42
     );
     let stream = one_file_export("0042.md", &blob, "sanitize regression\n");
 

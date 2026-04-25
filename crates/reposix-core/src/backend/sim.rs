@@ -950,7 +950,8 @@ mod tests {
             .and(path("/projects/demo/issues"))
             .and(query_param("since", "2026-04-24T00:00:00Z"))
             .respond_with(
-                ResponseTemplate::new(200).set_body_json(serde_json::json!([sample_issue_json(42)])),
+                ResponseTemplate::new(200)
+                    .set_body_json(serde_json::json!([sample_issue_json(42)])),
             )
             .expect(1)
             .mount(&server)

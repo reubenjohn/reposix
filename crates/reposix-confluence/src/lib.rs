@@ -1516,9 +1516,7 @@ impl BackendConnector for ConfluenceBackend {
         // via a malicious space key (legitimate keys never contain quotes).
         let cql_time = since.format("%Y-%m-%d %H:%M").to_string();
         let safe_project = project.replace('"', "");
-        let cql = format!(
-            "space = \"{safe_project}\" AND lastModified > \"{cql_time}\""
-        );
+        let cql = format!("space = \"{safe_project}\" AND lastModified > \"{cql_time}\"");
         // URL-encode via `url::Url::query_pairs_mut` — same pattern as
         // `resolve_space_id` (avoids adding a new dep just for one call site).
         let mut url = url::Url::parse(&format!("{}/wiki/rest/api/search", self.base()))
@@ -1909,9 +1907,7 @@ mod tests {
                 .query_pairs()
                 .map(|(k, v)| (k.into_owned(), v.into_owned()))
                 .collect();
-            pairs
-                .iter()
-                .any(|(k, v)| k == "cql" && v.contains(self.0))
+            pairs.iter().any(|(k, v)| k == "cql" && v.contains(self.0))
         }
     }
 

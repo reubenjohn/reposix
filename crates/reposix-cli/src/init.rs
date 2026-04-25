@@ -136,9 +136,8 @@ pub fn run(spec: String, path: PathBuf) -> Result<()> {
     // dir but not intermediate parents.
     if let Some(parent) = path.parent() {
         if !parent.as_os_str().is_empty() {
-            std::fs::create_dir_all(parent).with_context(|| {
-                format!("create parent dir for {path}", path = path.display())
-            })?;
+            std::fs::create_dir_all(parent)
+                .with_context(|| format!("create parent dir for {path}", path = path.display()))?;
         }
     }
 
@@ -149,7 +148,13 @@ pub fn run(spec: String, path: PathBuf) -> Result<()> {
     // 1. git init <path>
     run_git(&["init", path_str])?;
     // 2-5. configure partial clone + remote.
-    run_git(&["-C", path_str, "config", "extensions.partialClone", "origin"])?;
+    run_git(&[
+        "-C",
+        path_str,
+        "config",
+        "extensions.partialClone",
+        "origin",
+    ])?;
     run_git(&["-C", path_str, "config", "remote.origin.url", &url])?;
     run_git(&["-C", path_str, "config", "remote.origin.promisor", "true"])?;
     run_git(&[

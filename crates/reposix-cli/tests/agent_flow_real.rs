@@ -120,8 +120,10 @@ fn run_init_and_assert(spec: &str, expected_url_prefix: &str) -> String {
 #[ignore = "real-backend; requires GITHUB_TOKEN"]
 fn dark_factory_real_github() {
     skip_if_no_env!("GITHUB_TOKEN");
-    let url =
-        run_init_and_assert("github::reubenjohn/reposix", "reposix::https://api.github.com/");
+    let url = run_init_and_assert(
+        "github::reubenjohn/reposix",
+        "reposix::https://api.github.com/",
+    );
     assert!(
         url.contains("/projects/reubenjohn/reposix"),
         "url should encode project as `reubenjohn/reposix`, got {url}"

@@ -360,11 +360,7 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
             backend_v,
         ));
         if let Some(cache) = state.cache.as_ref() {
-            cache.log_helper_push_rejected_conflict(
-                &first_id.0.to_string(),
-                *local_v,
-                *backend_v,
-            );
+            cache.log_helper_push_rejected_conflict(&first_id.0.to_string(), *local_v, *backend_v);
         }
         // Canned status string per CONTEXT.md §Push-reject status string.
         // git renders the standard "perhaps a `git pull --rebase` would

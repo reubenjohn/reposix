@@ -936,10 +936,7 @@ mod tests {
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
         let t = Utc.with_ymd_and_hms(2026, 4, 24, 0, 0, 0).unwrap();
-        let ids = backend
-            .list_changed_since("octo/r", t)
-            .await
-            .expect("list");
+        let ids = backend.list_changed_since("octo/r", t).await.expect("list");
         assert_eq!(ids, vec![IssueId(7)]);
     }
 

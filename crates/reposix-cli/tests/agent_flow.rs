@@ -155,7 +155,10 @@ fn dark_factory_sim_happy_path() {
             .output()
             .expect("git config");
         let got = String::from_utf8_lossy(&v.stdout).trim().to_string();
-        assert_eq!(got, expected, "git config {key}: expected {expected}, got {got}");
+        assert_eq!(
+            got, expected,
+            "git config {key}: expected {expected}, got {got}"
+        );
     }
 
     kill_child(&mut sim);

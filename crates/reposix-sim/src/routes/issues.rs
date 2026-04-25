@@ -165,9 +165,7 @@ async fn list_issues(
             DateTime::parse_from_rfc3339(raw)
                 .map(|dt| dt.with_timezone(&Utc))
                 .map_err(|e| {
-                    ApiError::BadRequest(format!(
-                        "invalid `since` (expect RFC3339/ISO8601): {e}"
-                    ))
+                    ApiError::BadRequest(format!("invalid `since` (expect RFC3339/ISO8601): {e}"))
                 })?,
         ),
     };
@@ -777,7 +775,11 @@ mod tests {
         assert_eq!(resp.status(), 200);
         let v = read_body(resp).await;
         let arr = v.as_array().expect("array");
-        assert_eq!(arr.len(), 1, "expected exactly one filtered issue, got {arr:?}");
+        assert_eq!(
+            arr.len(),
+            1,
+            "expected exactly one filtered issue, got {arr:?}"
+        );
         assert_eq!(arr[0]["id"], 3);
 
         // And: with a far-future cutoff, we see zero issues.
