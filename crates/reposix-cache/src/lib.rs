@@ -35,6 +35,12 @@ pub mod error;
 pub mod meta;
 pub mod path;
 
+/// Privileged-sink stubs used to lock the Tainted-vs-Untainted
+/// discipline at compile time (see `tests/compile-fail/`). The module
+/// is `#[doc(hidden)]` so it does not appear in the rendered API.
+#[doc(hidden)]
+pub mod sink;
+
 pub use cache::Cache;
 pub use error::{Error, Result};
 pub use path::{resolve_cache_path, CACHE_DIR_ENV};
