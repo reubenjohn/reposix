@@ -11,7 +11,7 @@
 //! Response bodies mirror [`reposix_core::Issue`]'s `Serialize` output.
 
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::{HeaderMap, HeaderValue, StatusCode},
     response::{IntoResponse, Response},
     routing::get,
@@ -141,23 +141,67 @@ fn now_rfc3339() -> String {
 
 // ---------- GET /projects/:slug/issues ------------------------------------
 
+/// Optional query parameters for `GET /projects/:slug/issues`. Only `since`
+/// is recognized; unknown params are silently ignored (axum default).
+#[derive(Debug, Deserialize)]
+struct ListIssuesQuery {
+    /// ISO8601/RFC3339 cutoff. When present, the response is filtered to
+    /// issues with `updated_at > since`. Absent or empty → return all
+    /// (backwards-compatible with v0.8.0 callers).
+    #[serde(default)]
+    since: Option<String>,
+}
+
 #[allow(clippy::unused_async)]
 async fn list_issues(
     State(state): State<AppState>,
     Path(slug): Path<String>,
+    Query(q): Query<ListIssuesQuery>,
 ) -> Result<Json<Vec<Issue>>, ApiError> {
+    // Parse the `since` bound once before touching the DB. Bad format → 400.
+    let since_cutoff: Option<DateTime<Utc>> = match q.since.as_deref() {
+        None | Some("") => None,
+        Some(raw) => Some(
+            DateTime::parse_from_rfc3339(raw)
+                .map(|dt| dt.with_timezone(&Utc))
+                .map_err(|e| {
+                    ApiError::BadRequest(format!(
+                        "invalid `since` (expect RFC3339/ISO8601): {e}"
+                    ))
+                })?,
+        ),
+    };
+
     let issues: Vec<Issue> = {
         let conn = state.db.lock();
-        let mut stmt = conn.prepare(
-            "SELECT id, title, status, assignee, labels, created_at, updated_at, version, body \
-             FROM issues WHERE project = ?1 ORDER BY id ASC",
-        )?;
-        let raws: Vec<RawIssueRow> = stmt
-            .query_map(params![slug], row_to_issue)?
-            .collect::<rusqlite::Result<_>>()?;
-        raws.into_iter()
-            .map(RawIssueRow::into_issue)
-            .collect::<Result<Vec<_>, _>>()?
+        // Stored `updated_at` uses RFC3339 with `Z` suffix and seconds
+        // precision (`now_rfc3339` helper). Lexicographic comparison is
+        // monotonic over that canonical form, so a string `>` against a
+        // SecondsFormat::Secs/UseZ rendering of the cutoff is correct.
+        if let Some(t) = since_cutoff {
+            let cutoff_iso = t.to_rfc3339_opts(SecondsFormat::Secs, true);
+            let mut stmt = conn.prepare(
+                "SELECT id, title, status, assignee, labels, created_at, updated_at, version, body \
+                 FROM issues WHERE project = ?1 AND updated_at > ?2 ORDER BY id ASC",
+            )?;
+            let raws: Vec<RawIssueRow> = stmt
+                .query_map(params![slug, cutoff_iso], row_to_issue)?
+                .collect::<rusqlite::Result<_>>()?;
+            raws.into_iter()
+                .map(RawIssueRow::into_issue)
+                .collect::<Result<Vec<_>, _>>()?
+        } else {
+            let mut stmt = conn.prepare(
+                "SELECT id, title, status, assignee, labels, created_at, updated_at, version, body \
+                 FROM issues WHERE project = ?1 ORDER BY id ASC",
+            )?;
+            let raws: Vec<RawIssueRow> = stmt
+                .query_map(params![slug], row_to_issue)?
+                .collect::<rusqlite::Result<_>>()?;
+            raws.into_iter()
+                .map(RawIssueRow::into_issue)
+                .collect::<Result<Vec<_>, _>>()?
+        }
     };
     Ok(Json(issues))
 }
@@ -680,5 +724,124 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(resp.status(), 404);
+    }
+
+    #[tokio::test]
+    async fn list_issues_with_since_filters_correctly() {
+        // Seed 6 issues. PATCH issue 3 to bump its updated_at.
+        // Then request with `since` set to a moment between the seed time
+        // and the patch time. Expect issue 3 only.
+        let state = seeded_state();
+        let app = router(state);
+
+        // Capture a "before patch" cutoff. The seed timestamps are far in
+        // the past (fixture uses 2026-04-13T00:00:00Z, see fixtures/seed.json).
+        let cutoff = "2030-01-01T00:00:00Z";
+
+        // Patch issue 3 — its updated_at becomes "now" (post-2030 cutoff
+        // is impossible for `now`, so we cannot use that cutoff to test
+        // the filter). Use a cutoff that is BEFORE all seeds and assert
+        // the patched-issue's updated_at is now > all-seed-time.
+        let patch_resp = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("PATCH")
+                    .uri("/projects/demo/issues/3")
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{"title":"updated"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(patch_resp.status(), 200);
+
+        // Cutoff between seed time (2026-04-13) and patch time (now,
+        // post-2026-04-13). The patched issue's updated_at is `now`,
+        // which is > the cutoff. Use a cutoff one day after the seed
+        // time so unpatched seeds (updated_at == 2026-04-13) are excluded.
+        let cutoff_between = "2026-04-14T00:00:00Z";
+        let resp = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri(format!(
+                        "/projects/demo/issues?since={}",
+                        url_encode(cutoff_between)
+                    ))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), 200);
+        let v = read_body(resp).await;
+        let arr = v.as_array().expect("array");
+        assert_eq!(arr.len(), 1, "expected exactly one filtered issue, got {arr:?}");
+        assert_eq!(arr[0]["id"], 3);
+
+        // And: with a far-future cutoff, we see zero issues.
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri(format!(
+                        "/projects/demo/issues?since={}",
+                        url_encode("2099-01-01T00:00:00Z")
+                    ))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), 200);
+        let v = read_body(resp).await;
+        assert_eq!(v.as_array().unwrap().len(), 0);
+        // suppress unused warning for `cutoff` (kept as documentation).
+        let _ = cutoff;
+    }
+
+    #[tokio::test]
+    async fn list_issues_absent_since_returns_all() {
+        // Backwards-compatibility: v0.8.0 callers omit the `since` param
+        // and still receive the full set.
+        let state = seeded_state();
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/projects/demo/issues")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), 200);
+        let v = read_body(resp).await;
+        assert_eq!(v.as_array().unwrap().len(), 6);
+    }
+
+    #[tokio::test]
+    async fn list_issues_malformed_since_returns_400() {
+        let state = seeded_state();
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/projects/demo/issues?since=not-a-timestamp")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), 400);
+        let v = read_body(resp).await;
+        assert_eq!(v["error"], "bad_request");
+    }
+
+    /// Minimal URL-encoder for ASCII timestamps. Replaces `:` with `%3A`
+    /// — the only metacharacter in an ISO8601 string that needs escaping
+    /// in a query value.
+    fn url_encode(raw: &str) -> String {
+        raw.replace(':', "%3A")
     }
 }
