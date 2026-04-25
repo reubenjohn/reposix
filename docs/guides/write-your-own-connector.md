@@ -4,7 +4,7 @@ title: Write your own connector
 
 # Write your own connector
 
-reposix talks to four backends out of the box: the in-process [simulator](../reference/simulator.md), GitHub, Confluence, and JIRA. They all share one trait — `BackendConnector` — and adding a fifth backend is a matter of implementing that trait and dropping a crate into the workspace. This guide walks the trait method-by-method, then sketches a Linear connector as a worked example.
+reposix talks to four backends out of the box: the in-process [simulator](../reference/simulator.md), GitHub, Confluence, and JIRA. They all share one trait — [`BackendConnector`](../reference/glossary.md#backendconnector) (the Rust trait every adapter implements; see `crates/reposix-core/src/backend.rs`) — and adding a fifth backend is a matter of implementing that trait and dropping a crate into the workspace. This guide walks the trait method-by-method, then sketches a Linear connector as a worked example.
 
 The three reference implementations live in `crates/reposix-{github,confluence,jira}/`. Cite them by file path, not by copy-paste — they are the source of truth for every pattern below.
 
@@ -17,7 +17,7 @@ The trait lives in `crates/reposix-core/src/backend.rs`. Every method:
 - `async fn list_records(&self, project: &str) -> Result<Vec<Record>>` — full project listing. Empty project returns an empty vec, NOT an error.
 - `async fn list_changed_since(&self, project: &str, since: DateTime<Utc>) -> Result<Vec<RecordId>>` — incremental query for delta sync. Default impl filters `list_records` in memory; backends with native incremental queries (`?since=` for GitHub, JQL `updated >=` for JIRA, CQL `lastModified >` for Confluence, `?since=` for the sim) MUST override.
 - `async fn get_record(&self, project, id) -> Result<Record>` — single fetch. Unknown id returns `Err(Error::Other("not found: ..."))`.
-- `async fn create_record(&self, project, issue: Untainted<Record>) -> Result<Record>` — POST. The `Untainted` wrapper proves you stripped server-controlled fields (`id`, `created_at`, `version`).
+- `async fn create_record(&self, project, issue: Untainted<Record>) -> Result<Record>` — POST. The `Untainted` wrapper (the safe half of the [`Tainted<T>`](../reference/glossary.md#taintedt) newtype pair; see `crates/reposix-core/src/tainted.rs`) proves you stripped server-controlled fields (`id`, `created_at`, `version`).
 - `async fn update_record(&self, project, id, patch: Untainted<Record>, expected_version) -> Result<Record>` — PATCH/PUT with optional optimistic-concurrency token.
 - `async fn delete_or_close(&self, project, id, reason: DeleteReason) -> Result<()>` — real DELETE on backends with `BackendFeature::Delete`; close-with-reason on the rest.
 - `fn root_collection_name(&self) -> &'static str` — defaults to `"issues"`. Override for backends with a domain term (Confluence overrides to `"pages"`).

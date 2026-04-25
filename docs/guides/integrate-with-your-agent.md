@@ -34,7 +34,7 @@ Cursor agents are simpler: they `cd` into a directory and treat it as any other 
 
 No Cursor-specific configuration is required. The agent does not have to know reposix exists.
 
-> **Gotcha.** The agent will sometimes try to construct a REST request against the backend directly. If `REPOSIX_ALLOWED_ORIGINS` is configured (it should be), those calls will be denied at the egress allowlist and surface a clear error — see [trust model §mitigations table](../how-it-works/trust-model.md#mitigations-table). Treat the allowlist denial as the signal that the agent skipped the substrate; the recovery is to push it back toward `cat` and `git push`.
+> **Gotcha.** The agent will sometimes try to construct a REST request against the backend directly. If `REPOSIX_ALLOWED_ORIGINS` is configured (it should be), those calls will be denied at the [egress allowlist](../reference/glossary.md#egress-allowlist) (the single choke-point that gates outbound HTTP — see the [trust model](../how-it-works/trust-model.md) for why this is the load-bearing security cut) and surface a clear error — see [trust model §mitigations table](../how-it-works/trust-model.md#mitigations-table). Treat the allowlist denial as the signal that the agent skipped the substrate; the recovery is to push it back toward `cat` and `git push`.
 
 ## Pattern 3 — Custom SDK loop
 
@@ -55,7 +55,7 @@ Crucially, you do **not** register reposix tools with the model. The model's too
 
 > **Gotcha.** When `git push` rejects with `! [remote rejected] main -> main (fetch first)`, the recovery is `git pull --rebase && git push` — exactly what an experienced human would do. Make sure your harness surfaces the helper's stderr to the model verbatim. Truncating or suppressing stderr breaks the dark-factory teaching loop.
 
-> **Gotcha.** When `git fetch` returns `error: refusing to fetch <N> blobs (limit: <M>)`, the recovery is `git sparse-checkout set <pathspec> && git checkout origin/main`. Same rule: surface the stderr verbatim. The error message is self-teaching by design.
+> **Gotcha.** When `git fetch` returns `error: refusing to fetch <N> blobs (limit: <M>)`, the recovery is `git sparse-checkout set <pathspec> && git checkout origin/main`. ([`git sparse-checkout`](https://git-scm.com/docs/git-sparse-checkout) is a stock git mode that materializes only a subset of paths in the working tree.) Same rule: surface the stderr verbatim. The error message is self-teaching by design.
 
 ## What "integration" is NOT
 

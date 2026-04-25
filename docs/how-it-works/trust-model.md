@@ -4,7 +4,7 @@ title: Trust model — the lethal trifecta and the cuts that defang it
 
 # Trust model
 
-reposix is, by construction, a textbook **lethal trifecta** machine — Simon Willison's name for the three legs an exfiltration attack against an LLM agent needs at the same time. From [`agentic-engineering-reference.md`](../research/agentic-engineering-reference.md), the legs are:
+reposix is, by construction, a textbook **[lethal trifecta](../reference/glossary.md#lethal-trifecta)** machine — [Simon Willison's name](https://simonwillison.net/2024/Dec/19/prompt-injection/) for the three legs an exfiltration attack against an LLM agent needs at the same time. From [`agentic-engineering-reference.md`](../research/agentic-engineering-reference.md), the legs are:
 
 1. **Private data** — the agent sees issue bodies, custom fields, attachments, internal comments. Anything an authenticated REST call can return.
 2. **Untrusted input** — every issue body, comment, title, and label is attacker-influenced text. So is anything seeded into the simulator.
@@ -48,16 +48,16 @@ Three rings, three cuts. A byte from the network does not reach a side-effecting
 
 | Trifecta leg | Cut | Where it lives |
 |---|---|---|
-| Private data | Egress allowlist `REPOSIX_ALLOWED_ORIGINS` — every HTTP client built through `reposix_core::http::client()`, no direct `reqwest::Client::new()` (clippy `disallowed_methods` enforces). Default: `http://127.0.0.1:*`. | `crates/reposix-core/src/http.rs`, runtime check in `crates/reposix-cache` |
+| Private data | [Egress allowlist](../reference/glossary.md#egress-allowlist) `REPOSIX_ALLOWED_ORIGINS` — the single choke-point that decides which outbound origins are allowed. Every HTTP client built through `reposix_core::http::client()`, no direct `reqwest::Client::new()` (clippy `disallowed_methods` enforces). Default: `http://127.0.0.1:*`. | `crates/reposix-core/src/http.rs`, runtime check in `crates/reposix-cache` |
 | Private data | Blob limit `REPOSIX_BLOB_LIMIT` (default 200) — caps unbounded `git fetch` runs that would page in an entire backend. | helper, see [git layer §blob limit](git-layer.md#blob-limit-guardrail) |
 | Untrusted input | Frontmatter field allowlist — `id`, `created_at`, `version`, `updated_at` stripped from inbound writes before the REST call. An attacker-authored body with `version: 999999` cannot poison the server version. | helper push handler, audited as `helper_push_sanitized_field` |
-| Untrusted input | `Tainted<T>` ↔ `Untainted<T>` newtype pair — the cache returns `Tainted<Vec<u8>>`; `sanitize()` is the only safe conversion. A trybuild compile-fail test asserts you cannot send a `Tainted<T>` to an egress sink without `sanitize`. | `crates/reposix-core/src/tainted.rs` |
+| Untrusted input | [`Tainted<T>`](../reference/glossary.md#taintedt) ↔ `Untainted<T>` newtype pair (a Rust pattern that uses the type system to track which bytes came from a remote and refuses to let them reach an egress sink without an explicit conversion) — the cache returns `Tainted<Vec<u8>>`; `sanitize()` is the only safe conversion. A trybuild compile-fail test asserts you cannot send a `Tainted<T>` to an egress sink without `sanitize`. | `crates/reposix-core/src/tainted.rs` |
 | Exfiltration | Push-time conflict detection — rejects stale-base pushes with `error refs/heads/main fetch first`. Side effect: prevents a stale agent from blindly overwriting a backend write that landed between its `clone` and its `push`. | helper, see [git layer §push-time conflict detection](git-layer.md#push-time-conflict-detection) |
 | Exfiltration | Append-only audit log — `BEFORE UPDATE/DELETE RAISE` triggers on `audit_events_cache` so an attacker who reaches sqlite3 cannot tamper with history without the alarm row showing up. | `crates/reposix-cache/src/cache_schema.sql` |
 
 ## Audit log
 
-Every network-touching action writes one row to `audit_events_cache` in `cache.db` (SQLite WAL). The table is append-only at the SQL level: `BEFORE UPDATE` and `BEFORE DELETE` triggers raise `'audit_events_cache is append-only'`. The ops vocabulary is fixed:
+Every network-touching action writes one row to `audit_events_cache` in `cache.db` ([SQLite WAL](../reference/glossary.md#sqlite-wal) — [write-ahead logging](https://sqlite.org/wal.html), where writes go to a separate file and merge into the main DB on checkpoint, so readers don't block writers). The table is append-only at the SQL level: `BEFORE UPDATE` and `BEFORE DELETE` triggers raise `'audit_events_cache is append-only'`. The ops vocabulary is fixed:
 
 | `op` | Written when |
 |---|---|

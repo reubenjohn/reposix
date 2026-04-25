@@ -42,13 +42,13 @@ The conflict-reject path is the dark-factory teaching mechanism: an agent that h
 
 ## Capabilities advertised
 
-The helper advertises three capabilities on stdin/stdout the moment git invokes it:
+The helper advertises three [capabilities](../reference/glossary.md#capability-advertisement) (a [git remote-helper protocol](https://git-scm.com/docs/gitremote-helpers#_command_capabilities) handshake) on stdin/stdout the moment git invokes it:
 
-- **`stateless-connect`** — handles all read traffic (`git clone`, `git fetch`, lazy blob fetches). Git tunnels protocol-v2 through the helper to the local bare repo in `reposix-cache`. This is the path that lets partial clone work.
-- **`export`** — handles push. Git pipes a fast-import stream into the helper, which parses commits and turns them into REST writes.
+- **[`stateless-connect`](../reference/glossary.md#stateless-connect)** ([helper-protocol capability](https://git-scm.com/docs/gitremote-helpers#_invocation) that lets git tunnel its native wire protocol through the helper) — handles all read traffic (`git clone`, `git fetch`, lazy blob fetches). Git tunnels [protocol-v2](../reference/glossary.md#protocol-v2) (the [current git wire protocol](https://git-scm.com/docs/protocol-v2)) through the helper to the local [bare repo](../reference/glossary.md#bare-repo) (a [git repo without a working tree](https://git-scm.com/docs/git-init#Documentation/git-init.txt---bare)) in `reposix-cache`. This is the path that lets [partial clone](../reference/glossary.md#partial-clone) work.
+- **`export`** — handles push. Git pipes a [fast-import](../reference/glossary.md#fast-import) ([git's plumbing format](https://git-scm.com/docs/git-fast-import) for streaming commits, trees, and blobs) stream into the helper, which parses commits and turns them into REST writes.
 - **`option`** — lets git pass `verbosity` and similar flags through. Mostly cosmetic.
 
-The refspec namespace is `refs/heads/*:refs/reposix/*`. That non-default mapping matters: collapsing it to `refs/heads/*:refs/heads/*` makes fast-export emit an empty delta because the private OID equals the local HEAD. The bug is silent (the push appears to succeed but no commits are exported), so the namespace is load-bearing — see the [v0.9.0 architecture-pivot summary §3](https://github.com/reubenjohn/reposix/tree/main/.planning/research/v0.9-fuse-to-git-native) for the gory detail.
+The [refspec](../reference/glossary.md#refspec) (the `<src>:<dst>` mapping that tells [git which refs go where](https://git-scm.com/docs/git-fetch#Documentation/git-fetch.txt-ltrefspecgt)) namespace is `refs/heads/*:refs/reposix/*`. That non-default mapping matters: collapsing it to `refs/heads/*:refs/heads/*` makes [fast-export](../reference/glossary.md#fast-export) ([git's diff-as-stream emitter](https://git-scm.com/docs/git-fast-export)) emit an empty delta because the private OID equals the local HEAD. The bug is silent (the push appears to succeed but no commits are exported), so the namespace is load-bearing — see the [v0.9.0 architecture-pivot summary §3](https://github.com/reubenjohn/reposix/tree/main/.planning/research/v0.9-fuse-to-git-native) for the gory detail.
 
 ## Backend dispatch (URL scheme)
 
