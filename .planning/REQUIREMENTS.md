@@ -1,57 +1,127 @@
-# Requirements — Milestone v0.9.0: Docs & Narrative
+# Requirements — Milestone v0.9.0: Architecture Pivot — Git-Native Partial Clone
 
-**Milestone goal:** Make reposix's value proposition land hard within 10 seconds of a cold reader arriving at the MkDocs site, with technical architecture progressively revealed in a "How it works" section rather than leaked above the fold.
+**Milestone goal:** Replace the FUSE virtual filesystem with git's built-in partial clone mechanism. The `git-remote-reposix` helper becomes a promisor remote tunnelling protocol-v2 traffic to a local bare-repo cache built from REST responses. Agents interact with the project using only standard git commands (`clone`, `fetch`, `cat`, `grep`, `commit`, `push`) — zero reposix-specific CLI awareness required. FUSE is deleted entirely; `crates/reposix-fuse/` is removed and the `fuser` dependency is purged.
 
-**Source of truth for narrative intent and IA:** `.planning/notes/phase-30-narrative-vignettes.md` (committed at `1ba0479`, updated at `7000ad1`).
+**Source of truth:** `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` (canonical design doc, 440 lines, ratified 2026-04-24). Supporting POC artifacts in `.planning/research/v0.9-fuse-to-git-native/poc/`.
+
+**Operating-principle hooks (non-negotiable, per project CLAUDE.md):**
+
+- **Simulator-first.** All ARCH requirements ship and test against `reposix-sim` by default. Real backends (GitHub, Confluence, JIRA) are exercised only behind `REPOSIX_ALLOWED_ORIGINS` + explicit credentials.
+- **Tainted-by-default.** Every byte materialized into the bare-repo cache or returned to git originated from a remote (real or simulator). Tainted content must be wrapped in `reposix_core::Tainted<T>` along the data path; sanitization is explicit.
+- **Audit log non-optional.** Every blob materialization, every `command=fetch`, every `export` push (accept and reject) writes a row to the SQLite audit table.
+- **Egress allowlist.** All HTTP construction goes through the existing `reposix_core::http::client()` factory; no new direct `reqwest::Client::new()` call sites. `REPOSIX_ALLOWED_ORIGINS` is enforced before any outbound request.
+- **Working tree = real git repo.** The mount point is no longer synthetic — it is a true git working tree backed by `.git/objects` (partial clone, blobs lazy).
+- **Self-improving infrastructure (OP-4).** Project CLAUDE.md and Claude Code skills MUST ship in lockstep with the code that invalidates them. Phase 36 explicitly bundles agent-grounding updates with FUSE deletion.
 
 ---
 
 ## v1 Requirements
 
-### Landing & Narrative
+### Cache & data path
 
-- [ ] **DOCS-01**: Reader can understand reposix's value proposition within 10 seconds of landing on the MkDocs home page (hero vignette with V1 before/after code block + three-up value props, obeying P1 "complement, not replace" tonal rule — the word "replace" banned from hero and value-prop copy).
-- [ ] **DOCS-02**: Reader can understand how reposix works via a "How it works" section containing three pages — **The filesystem layer**, **The git layer**, **The trust model** — each with one mcp-mermaid diagram rendered and playwright-screenshot-verified. Content carved from `docs/architecture.md` + `docs/security.md`.
+- [ ] **ARCH-01**: New crate `crates/reposix-cache/` constructs a real on-disk bare git repo from REST responses via the existing `BackendConnector` trait. The cache produces a fully populated tree (filenames, directory structure, blob OIDs) but stores blobs lazily — a blob is only materialized when the helper requests it on behalf of git. The cache is the substrate that `git-remote-reposix` proxies protocol-v2 traffic to. Source: architecture-pivot-summary §2 (How it works), §5 (Add).
 
-### Concept pages (Home-adjacent)
+- [ ] **ARCH-02**: `reposix-cache` writes one audit row per blob materialization (per OP "audit non-optional"). Cache returns blob bytes wrapped in `reposix_core::Tainted<Vec<u8>>` (per OP "tainted-by-default") so downstream code cannot accidentally route tainted bytes into side-effecting actions on other systems without an explicit `sanitize` step. Audit schema: `(ts, backend, project, issue_id, blob_oid, byte_len, op="materialize")`. The cache table mirrors today's SQLite WAL append-only policy — no UPDATE or DELETE on audit rows.
 
-- [ ] **DOCS-03**: Reader can grasp reposix's mental model in 60 seconds (three conceptual keys: *mount = git working tree · frontmatter = schema · `git push` = sync verb*) and understand how reposix compares to MCP and traditional REST SDKs (positioning page grounding P1).
+- [ ] **ARCH-03**: `reposix-cache` enforces `REPOSIX_ALLOWED_ORIGINS` egress allowlist by reusing the single `reposix_core::http::client()` factory. No new `reqwest::Client` construction site is added; clippy `disallowed_methods` already catches direct calls. Tests assert that an attempt to materialize a blob from a backend whose origin is not in the allowlist returns `EPERM`-equivalent and is audited.
 
-### Guides
+### Transport (read path)
 
-- [ ] **DOCS-04**: A developer can follow a guide to (a) implement a `BackendConnector` for any REST-addressable service, (b) integrate reposix with their LLM agent (Claude Code, Cursor, custom SDK patterns — the project's raison d'être per PROJECT.md core value), and (c) troubleshoot common failure modes (FUSE mount misbehavior, push rejections, audit-log queries).
+- [ ] **ARCH-04**: `git-remote-reposix` advertises the `stateless-connect` capability and tunnels protocol-v2 fetch traffic (handshake, ls-refs, fetch with filter) to the cache's bare repo. The existing `export` capability for push remains alongside `stateless-connect` (hybrid helper, confirmed working in POC `poc/git-remote-poc.py`). Both capabilities live in the same binary; git dispatches based on direction. Source: architecture-pivot-summary §3 (Transport routing).
 
-### Structural
+- [ ] **ARCH-05**: The Rust `stateless-connect` implementation correctly handles all three protocol gotchas surfaced during POC iteration (architecture-pivot-summary §3 "Three protocol gotchas"):
+  1. **Initial advertisement does NOT terminate with `0002`** — only `0000` (flush). Rust port must send the bytes from `upload-pack --advertise-refs --stateless-rpc` verbatim, no trailing response-end.
+  2. **Subsequent RPC responses DO need trailing `0002`** — after each response pack, write the bytes from `upload-pack --stateless-rpc` followed by the response-end marker.
+  3. **Stdin reads in binary mode throughout** — the helper reads the protocol stream via a `BufReader<Stdin>` consistently; mixing text and binary reads corrupts the framing.
 
-- [ ] **DOCS-05**: The simulator is documented as a dev-tooling reference page (moved out of "How it works" into Reference).
-- [ ] **DOCS-06**: A new reader can run a 5-minute first-run tutorial against the simulator and end with a real edit committed and pushed.
-- [ ] **DOCS-07**: MkDocs navigation is restructured per Diátaxis mapping (Home / How it works / Guides / Reference / Decisions / Research) with progressive-disclosure layer rules enforced — P2 banned terms (FUSE, inode, daemon, helper, kernel, mount, syscall) do not appear above Layer 3.
-- [ ] **DOCS-08**: mkdocs-material theme is tuned for the narrative (palette, hero features, social cards). Site visually signals "careful, deliberate product" rather than "autogenerated reference tree."
+  Refspec namespace MUST be `refs/heads/*:refs/reposix/*` (NOT `refs/heads/*:refs/heads/*` — the empty-delta bug from POC). The current `crates/reposix-remote` already uses the correct namespace and must not regress.
 
-### Enforcement
+### Sync (delta path)
 
-- [ ] **DOCS-09**: A banned-word linter runs on every doc commit and rejects violations of the P2 progressive-disclosure layer rules (terms from the P2 ban list cannot appear above the "How it works" layer).
+- [ ] **ARCH-06**: `BackendConnector::list_changed_since(timestamp) -> Vec<IssueId>` is added as a trait method. All backends (`SimBackend`, `GithubBackend`, `ConfluenceBackend`, `JiraBackend`) implement it using their native incremental query mechanism: GitHub `?since=<ISO8601>`, Jira `JQL: updated >= "<datetime>"`, Confluence `CQL: lastModified > "<datetime>"`. The simulator implements it by filtering its in-memory issue set against the `since` query parameter exposed in its REST surface. Source: architecture-pivot-summary §4 (Delta sync).
+
+- [ ] **ARCH-07**: Delta sync flow: on `git fetch`, the helper reads `last_fetched_at` from the cache DB, calls `list_changed_since(last_fetched_at)` on the backend, materializes the changed items into the bare-repo cache, advertises the updated tree to git via protocol v2, then atomically writes the new `last_fetched_at` (per architecture-pivot-summary §4 "Fetch flow"). Tree sync is unconditional and not gated by the blob limit (tree metadata is small — full sync is cheap). Cache update and `last_fetched_at` write happen in one SQLite transaction so a crash mid-sync cannot leave divergent state. One audit row per delta-sync invocation: `(ts, backend, project, since_ts, items_returned, op="delta_sync")`.
+
+### Push path
+
+- [ ] **ARCH-08**: Push-time conflict detection lives inside the `export` handler. Flow (architecture-pivot-summary §3 "Conflict detection happens inside `handle_export`"):
+  1. Parse the fast-import stream in memory (or via state machine).
+  2. For each changed file, fetch the current backend version via REST.
+  3. If the backend version differs from the agent's commit base: emit `error refs/heads/main fetch first` (canned status — git renders the standard "perhaps a `git pull` would help" hint) AND a detailed diagnostic via stderr through the existing `diag()` channel.
+  4. Reject path drains the incoming stream and never touches the bare cache (no partial state).
+  5. On success: apply REST writes, update bare-repo cache, emit `ok refs/heads/main`.
+
+  Audit row for every push attempt (accept and reject): `(ts, backend, project, ref, files_touched, decision, reason)`.
+
+- [ ] **ARCH-09**: Blob limit guardrail. The helper counts `want <oid>` lines per `command=fetch` request and refuses if the count exceeds `REPOSIX_BLOB_LIMIT` (default 200, env-configurable). Refusal writes a stderr error message that *names* the remediation: `"error: refusing to fetch <N> blobs (limit: <M>). Narrow your scope with `git sparse-checkout set <pathspec>` and retry."`. The error message is deliberately self-teaching (dark-factory pattern from architecture-pivot-summary §4 "Blob limit as teaching mechanism" — an agent unfamiliar with reposix observes the error, runs `git sparse-checkout`, and recovers without human prompt engineering).
+
+- [ ] **ARCH-10**: Frontmatter field allowlist on the push path. Server-controlled fields (`id`, `created_at`, `version`, `updated_at`) are stripped from inbound writes BEFORE the REST call, mirroring the policy currently enforced on the FUSE write path. An attacker-authored issue body with `version: 999999` MUST NOT update the server version. The `Tainted<T>` -> `Untainted<T>` conversion is the explicit `sanitize` step where this stripping happens.
+
+### CLI & agent UX
+
+- [ ] **ARCH-11**: `reposix init <backend>::<project> <path>` replaces `reposix mount`. The new command:
+  1. Runs `git init <path>`.
+  2. Configures `extensions.partialClone=origin`.
+  3. Sets `remote.origin.url=reposix::<backend>/<project>`.
+  4. Runs `git fetch --filter=blob:none origin`.
+  5. Optionally runs `git checkout origin/main` (or leaves the working tree empty for sparse-first agents).
+
+  `reposix mount` is removed in the same release. CHANGELOG `[v0.9.0]` documents the breaking CLI change with a migration note. Source: architecture-pivot-summary §5 (Change).
+
+- [ ] **ARCH-12**: End-to-end agent UX validation. A fresh subprocess agent (no reposix CLI awareness, no in-context system-prompt instructions about reposix) is given ONLY a `reposix init` command and a goal (e.g., "find issues mentioning 'database' and add a TODO comment to each"). The agent succeeds using pure git/POSIX tools: `cd /tmp/repo && cat issues/<id>.md && grep -r TODO . && <edit> && git add . && git commit && git push`. The validation specifically exercises the conflict-rebase cycle (a second writer modifies a backend issue between the agent's `clone` and `push`; agent observes `! [remote rejected] main -> main (fetch first)`, runs `git pull --rebase`, retries `git push`, succeeds). This is the dark-factory acceptance test — see architecture-pivot-summary §4 "Agent UX: pure git, zero in-context learning".
+
+### Demolition & grounding
+
+- [ ] **ARCH-13**: `crates/reposix-fuse/` is deleted entirely. The `fuser` dependency is removed from the workspace `Cargo.toml`. All FUSE-only test feature gates (`fuse-mount-tests`) are removed. CI no longer runs `apt install fuse3` or mounts `/dev/fuse`. After this requirement lands, `cargo metadata --format-version 1 | grep fuser` returns nothing, and `cargo check --workspace && cargo clippy --workspace --all-targets -- -D warnings` is green without any FUSE-related package on the host. Source: architecture-pivot-summary §5 (Delete).
+
+- [ ] **ARCH-14**: Project `CLAUDE.md` is updated as part of the same phase that lands FUSE deletion (NOT a follow-up phase). Specifically:
+  - All FUSE references are purged from the elevator pitch, Operating Principles, Workspace layout, Tech stack, "Commands you'll actually use", and the Threat-model table.
+  - Any "Architecture transition" or "v0.9.0 in progress" banner is replaced with a steady-state **Architecture (git-native partial clone)** section describing the cache + helper + agent-UX flow.
+  - The Tech stack row for `fuser` is removed. The replacement row mentions `git >= 2.34` as a runtime requirement (per architecture-pivot-summary §7 risks).
+  - "Commands you'll actually use" no longer mentions `reposix mount` or `cargo test --features fuse-mount-tests`. New commands shown: `reposix init`, `git clone reposix::sim/proj-1 /tmp/repo`.
+  - Threat-model table updated: the helper (not the FUSE daemon) is the egress surface. Allowlist now applies to the helper + cache, not the FUSE daemon.
+
+  Per OP-4 self-improving infrastructure: agent grounding must match shipped reality — there can be no window where CLAUDE.md describes deleted code.
+
+- [ ] **ARCH-15**: A project Claude Code skill `reposix-agent-flow` is created at `/home/reuben/workspace/reposix/.claude/skills/reposix-agent-flow/SKILL.md` (Claude Code skill convention — directory with `SKILL.md` and YAML frontmatter `name:` + `description:`). The skill encodes the dark-factory autonomous-agent regression test: spawn a fresh subprocess Claude (or scripted shell agent acting as one) inside an empty directory, hand it ONLY a `reposix init` command and a natural-language goal, and verify the agent completes the task using pure git/POSIX tools — including the conflict-rebase cycle and the blob-limit-induced sparse-checkout recovery from ARCH-09. The skill is invoked from CI (release gate) and from local dev (`/reposix-agent-flow`). The skill MUST mention that it is the StrongDM/dark-factory regression harness for the v0.9.0 architecture and reference architecture-pivot-summary §4 "Agent UX". Per OP-4: ships in the same phase as ARCH-13 and ARCH-14.
+
+---
+
+## v0.10.0 Docs & Narrative (deferred)
+
+> **Why deferred:** v0.9.0 was originally planned as a docs-only milestone (DOCS-01..09). Architecture-pivot research showed that publishing those docs against the FUSE design would produce content that is immediately obsolete. Phase 30 is therefore deferred to v0.10.0, where it will be revised to describe the git-native partial-clone architecture instead. The DOCS requirements below are carried forward verbatim and will need revision against the new architecture.
+
+- [ ] **DOCS-01**: Reader can understand reposix's value proposition within 10 seconds of landing on the MkDocs home page (hero vignette with V1 before/after code block + three-up value props, obeying P1 "complement, not replace" tonal rule — the word "replace" banned from hero and value-prop copy). *To be revised against the new architecture.*
+- [ ] **DOCS-02**: Reader can understand how reposix works via a "How it works" section containing three pages — **The cache layer**, **The git layer**, **The trust model** — each with one mcp-mermaid diagram rendered and playwright-screenshot-verified. (Originally **The filesystem layer**; renamed because FUSE is gone.) *To be revised against the new architecture.*
+- [ ] **DOCS-03**: Reader can grasp reposix's mental model in 60 seconds (three conceptual keys: *clone = snapshot · frontmatter = schema · `git push` = sync verb*) and understand how reposix compares to MCP and traditional REST SDKs. *To be revised against the new architecture.*
+- [ ] **DOCS-04**: A developer can follow a guide to (a) implement a `BackendConnector` for any REST-addressable service, (b) integrate reposix with their LLM agent (Claude Code, Cursor, custom SDK patterns), and (c) troubleshoot common failure modes (push rejections, blob-limit refusals, audit-log queries). *To be revised — FUSE-mount troubleshooting replaced by partial-clone troubleshooting.*
+- [ ] **DOCS-05**: The simulator is documented as a dev-tooling reference page (moved out of "How it works" into Reference). *Carried forward.*
+- [ ] **DOCS-06**: A new reader can run a 5-minute first-run tutorial against the simulator and end with a real edit committed and pushed via `reposix init` + standard git. *To be revised — `reposix mount` replaced with `reposix init`.*
+- [ ] **DOCS-07**: MkDocs navigation is restructured per Diátaxis mapping (Home / How it works / Guides / Reference / Decisions / Research) with progressive-disclosure layer rules enforced — P2 banned terms (helper, kernel, syscall, partial-clone-internal jargon) do not appear above Layer 3. *Banned-term list revised: `FUSE`, `inode`, `daemon`, `mount` removed because they no longer apply.*
+- [ ] **DOCS-08**: mkdocs-material theme is tuned for the narrative (palette, hero features, social cards). *Carried forward.*
+- [ ] **DOCS-09**: A banned-word linter runs on every doc commit and rejects violations of the P2 progressive-disclosure layer rules. *Banned-word list revised per DOCS-07.*
 
 ---
 
 ## Future Requirements
 
-*(Deferred; the user indicated possible follow-up phases after exploring the v0.9.0 site.)*
+*(Deferred; emerge from open questions in architecture-pivot-summary §7.)*
 
-- Observability / audit-log deep-dive (how to query, provenance with git log).
-- "What reposix is not" sidebar — concrete anti-scope list.
-- Use-case gallery — case studies, agent workflows, token-savings measurements.
-- Expanded comparison page covering GraphQL wrappers and other filesystem-as-API projects.
+- Cache eviction policy for `reposix-cache` (LRU / TTL / per-project disk quota / manual `reposix gc`).
+- `import` capability deprecation (kept one release cycle past v0.9.0, removed in v0.10.0 or v0.11.0).
+- Stream-parsing performance for `export` — production state-machine parser with commit-or-rollback barrier at fast-import `done` terminator.
+- Threat-model update for push-through-export flow — `research/threat-model-and-critique.md` revision once the helper-as-egress-surface model is stable.
+- Non-issue file handling on push (e.g., changes to `.planning/` paths) — reject vs. silently commit-to-cache decision.
 
 ---
 
 ## Out of Scope
 
-- **New features, new CLI surface, new backend connectors.** This milestone does not ship code beyond docs tooling (e.g. banned-word linter). Any feature work emerging from doc gaps is captured as a future milestone.
-- **Rewrites of `docs/reference/` or `docs/decisions/` trees.** Phase 26 (v0.7.0) already made these correct. Phase 30 may relocate individual pages (e.g. simulator) but does not rewrite their content.
-- **Changes to the published binaries or crate versions.** Docs-only milestone; no workspace version bump except for the `v0.9.0` tag itself after milestone ships.
-- **Translation / i18n.** English only.
-- **Multi-site deployment (staging vs production).** Single MkDocs build, published to the existing GitHub Pages target.
+- **Bringing FUSE back.** The pivot is one-way; `crates/reposix-fuse/` is removed, not deprecated.
+- **Custom CLI for read operations.** Agents use `git clone`, `git fetch`, `cat`, `grep` — no `reposix list`, no `reposix get`. The whole point is zero in-context learning.
+- **Full real-backend exercise in autonomous mode.** Real backends require explicit credentials and a non-default `REPOSIX_ALLOWED_ORIGINS`. Autonomous execution validates against the simulator only.
+- **Cache eviction implementation in v0.9.0.** Decision deferred per architecture-pivot-summary §7 open question 1; the cache grows monotonically until then.
+- **`docs/` rewrite.** Carried forward to v0.10.0 (DOCS-01..09).
 
 ---
 
@@ -59,12 +129,19 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| DOCS-01 | 30 | planning |
-| DOCS-02 | 30 | planning |
-| DOCS-03 | 30 | planning |
-| DOCS-04 | 30 | planning |
-| DOCS-05 | 30 | planning |
-| DOCS-06 | 30 | planning |
-| DOCS-07 | 30 | planning |
-| DOCS-08 | 30 | planning |
-| DOCS-09 | 30 | planning |
+| ARCH-01 | 31 | planning |
+| ARCH-02 | 31 | planning |
+| ARCH-03 | 31 | planning |
+| ARCH-04 | 32 | planning |
+| ARCH-05 | 32 | planning |
+| ARCH-06 | 33 | planning |
+| ARCH-07 | 33 | planning |
+| ARCH-08 | 34 | planning |
+| ARCH-09 | 34 | planning |
+| ARCH-10 | 34 | planning |
+| ARCH-11 | 35 | planning |
+| ARCH-12 | 35 | planning |
+| ARCH-13 | 36 | planning |
+| ARCH-14 | 36 | planning |
+| ARCH-15 | 36 | planning |
+| DOCS-01..09 | (v0.10.0) | deferred |

@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v0.9.0
 milestone_name: Architecture Pivot — Git-Native Partial Clone
-status: research_complete
-stopped_at: Architecture pivot research complete — FUSE deletion confirmed viable, design docs written, Phase 30 deferred to v0.10.0. Next - plan v0.9.0 phases via /gsd-plan-phase.
-last_updated: "2026-04-24T00:00:00.000Z"
-last_activity: 2026-04-24 — Architecture pivot research complete, ROADMAP restructured
+status: planning
+stopped_at: "Phases 31–36 scaffolded for v0.9.0 architecture pivot. Autonomous execution next."
+last_updated: "2026-04-24T12:00:00.000Z"
+last_activity: 2026-04-24 — v0.9.0 phases 31–36 scaffolded
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,6 +20,7 @@ progress:
 
 ### Roadmap Evolution
 
+- **Phases 31–36 added to v0.9.0 (2026-04-24, this session):** Architecture-pivot phases scaffolded — 31 reposix-cache, 32 stateless-connect read path, 33 delta sync, 34 push conflict + blob limit, 35 CLI pivot + agent UX, 36 FUSE deletion + CLAUDE.md update + reposix-agent-flow skill + release. Authored autonomously based on `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md`.
 - **v0.9.0 pivoted to Architecture Pivot — Git-Native Partial Clone (2026-04-24):** FUSE-based design confirmed too slow (every read = live API call, 10k pages = 10k calls). Research spike confirmed git's partial clone + `stateless-connect` remote helper can replace FUSE entirely. Key findings: (1) helper CAN be a promisor remote via `stateless-connect`, (2) hybrid works — `stateless-connect` for reads + `export` for push, (3) helper can count/refuse blob requests with stderr errors, (4) sparse-checkout batches blob fetches. Design decisions: push-time conflict detection (no refresh needed), tree sync always full (cheap metadata), blob limit as only guardrail, agent uses pure git (zero CLI awareness). Phase 30 (docs) deferred to v0.10.0 — must describe new architecture. Research docs in `.planning/research/v0.9-fuse-to-git-native/`: `architecture-pivot-summary.md`, `partial-clone-remote-helper-findings.md`, `push-path-stateless-connect-findings.md`, `sync-conflict-design.md`. POC artifacts in `poc/` subdir: `git-remote-poc.py`, `run-poc.sh`, `run-poc-push.sh`.
 - **Milestone v0.9.0 "Docs & Narrative" originally started (2026-04-17):** Dedicated docs-only milestone to rewrite landing + restructure MkDocs IA. Phase 30 promoted from Backlog into v0.9.0 as the founding (and likely sole) phase. Scope expanded during IA discussion — trust-model page replaces simulator in How it works; simulator relocated to Reference; three new Guides added (Write your own connector, Integrate with your agent, Troubleshooting); two new Home-adjacent pages (Mental model in 60 seconds, reposix vs MCP / SDKs). 9 requirements (DOCS-01..09) mapped to Phase 30. Research skipped — source-of-truth note is the research. Commits: `1ba0479` (note), `a2cfa7c` (phase scaffold + rename), `7000ad1` (IA revisions), `deaeb50` (milestone kickoff).
 - **Phase 30 added to Backlog (2026-04-17):** Docs IA and narrative overhaul — landing page aha moment and progressive-disclosure architecture reveal. Anchored by `.planning/notes/phase-30-narrative-vignettes.md` (committed 1ba0479). Two non-negotiable framing principles: (P1) complement-not-replace REST, (P2) progressive disclosure (FUSE/daemon/helper banned above layer 3). Parked in Backlog because v0.8.0 archived and no active milestone — subsequently promoted into v0.9.0 milestone (see entry above).
@@ -58,11 +59,11 @@ issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
 
 ## Current Position
 
-Phase: 30 (not started — awaiting plan)
+Phase: 31 (not started — awaiting plan)
 Plan: —
-Cursor: **Milestone v0.9.0 Docs & Narrative started. Run `/gsd-plan-phase 30` to break down the narrative overhaul.**
+Cursor: **Run /gsd-autonomous to execute Phases 31–36 end-to-end.**
 Status: Ready to execute
-Last activity: 2026-04-18 — Phase 30 planning complete
+Last activity: 2026-04-24 — v0.9.0 phases 31–36 scaffolded (ARCH-01..ARCH-15)
 
 Historical note — Phase 15 close-out: Phase 15 complete; v0.5.0 tagged and pushed (session 5).
 278 workspace tests, clippy clean. Details in `.planning/phases/15-.../15-SUMMARY.md`.

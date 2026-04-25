@@ -15,11 +15,11 @@
 
 ## Phases
 
-## v0.9.0 Architecture Pivot — Git-Native Partial Clone (IN PROGRESS)
+## v0.9.0 Architecture Pivot — Git-Native Partial Clone
 
 **Motivation:** The FUSE-based design is fundamentally slow (every `cat`/`ls` triggers a live REST API call) and doesn't scale (10k Confluence pages = 10k API calls on directory listing). FUSE also has operational pain: fusermount3, /dev/fuse permissions, WSL2 quirks, pkg-config/libfuse-dev build dependencies. Research confirmed that git's built-in partial clone + the existing `git-remote-reposix` helper can replace FUSE entirely, giving agents a standard git workflow with zero custom CLI awareness required.
 
-**Research:** See `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` (canonical design document), `partial-clone-remote-helper-findings.md` (transport layer POC), `push-path-stateless-connect-findings.md` (write path POC), `sync-conflict-design.md` (sync model). POC code in `poc/` subdir.
+**Research:** See `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` (canonical design document), `partial-clone-remote-helper-findings.md` (transport layer POC), `push-path-stateless-connect-findings.md` (write path POC), `sync-conflict-design.md` (sync model). POC code in `poc/` subdir (`git-remote-poc.py`, `run-poc.sh`, `run-poc-push.sh`, trace logs).
 
 **Key design decisions:**
 - DELETE `crates/reposix-fuse` entirely; drop `fuser` dependency
@@ -32,12 +32,127 @@
 - Tree sync always full (cheap metadata); blob materialization is the only limited/lazy operation
 - Delta sync via `since` queries (all backends support this natively)
 
-**Phases:** TBD — to be planned via `/gsd-plan-phase` after research docs are reviewed. Estimated 3–5 phases:
-1. `stateless-connect` in `git-remote-reposix` + backing bare-repo cache
-2. Push-time conflict detection + delta sync
-3. CLI flow change (`reposix init` replacing `reposix mount`)
-4. Delete `reposix-fuse` + update all tests/docs/CI
-5. Integration testing + hardening
+**Phases (31–36):**
+1. Phase 31 — `reposix-cache` crate (bare-repo cache from REST responses, audit + tainted + allowlist)
+2. Phase 32 — `stateless-connect` capability in `git-remote-reposix` (read path; protocol-v2 tunnel)
+3. Phase 33 — Delta sync (`list_changed_since` on `BackendConnector` + cache integration)
+4. Phase 34 — Push path (conflict detection + blob limit + frontmatter allowlist)
+5. Phase 35 — CLI pivot (`reposix init`) + dark-factory agent UX validation
+6. Phase 36 — FUSE deletion + CLAUDE.md update + `reposix-agent-flow` skill + release
+
+### Phase 31: `reposix-cache` crate — backing bare-repo cache from REST responses (v0.9.0)
+
+**Goal:** Land the foundation crate that materializes REST API responses into a real on-disk bare git repo. The cache is the substrate every later phase builds on. Operating-principle hooks for this phase: **audit log non-optional** (one row per blob materialization); **tainted-by-default** (cache returns `Tainted<Vec<u8>>` — the type system encodes the trust boundary); **egress allowlist** (no new HTTP client construction outside `reposix_core::http::client()`); **simulator-first** (every test in this crate runs against `SimBackend`). Per project CLAUDE.md "Subagent delegation rules": use `gsd-phase-researcher` for any "how do I build a bare git repo from raw blobs in Rust" question — non-trivial, easy to over-research in the orchestrator.
+
+**Requirements:** ARCH-01, ARCH-02, ARCH-03
+
+**Depends on:** (nothing — foundation phase)
+
+**Success criteria:**
+1. `cargo build -p reposix-cache` and `cargo clippy -p reposix-cache --all-targets -- -D warnings` clean.
+2. Given a `SimBackend` seeded with N issues, `reposix_cache::Cache::build_from(backend)` produces a valid bare git repo on disk containing N blobs (lazy — only materialized on demand) and a tree object that lists every issue path.
+3. Audit table contains exactly one `op="materialize"` row per blob materialization (test seeds N issues, materializes M blobs, asserts `count(*) == M`).
+4. Cache returns blob bytes wrapped in `reposix_core::Tainted<Vec<u8>>`; a compile-fail test asserts that calling `egress::send(blob)` without `sanitize` is a type error.
+5. Egress allowlist test: pointing the cache at a backend whose origin is not in `REPOSIX_ALLOWED_ORIGINS` returns an error and writes an audit row with `op="egress_denied"`.
+6. SQLite audit table is append-only — `BEFORE UPDATE/DELETE RAISE` trigger asserted by integration test.
+
+**Context anchor:** `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` §2 (How it works), §5 (Add — `reposix-cache` crate), §6 (What stays the same — `BackendConnector` trait reused), and §7 open question 2 (atomicity of REST write + bare-repo cache update — implementation note for this phase).
+
+### Phase 32: `stateless-connect` capability in `git-remote-reposix` (read path) (v0.9.0)
+
+**Goal:** Port the Python POC's `stateless-connect` handler to Rust inside `crates/reposix-remote/`. Tunnel protocol-v2 traffic to the Phase 31 cache so `git clone --filter=blob:none reposix::sim/proj-1 /tmp/clone` works end-to-end with lazy blob loading. The existing `export` capability for push must keep working in the same binary (hybrid). Operating-principle hooks: **subagent delegation per project CLAUDE.md** — use `gsd-phase-researcher` for the protocol-v2 stateless-connect Rust port (non-trivial; three protocol gotchas from POC must be encoded correctly or git misframes the next request); **ground truth obsession** — verify against a real `git clone` run, not against unit-test mocks; **close the feedback loop** — capture a fresh trace log analogous to POC `poc-helper-trace.log` and commit it under `.planning/research/v0.9-fuse-to-git-native/rust-port-trace.log`.
+
+**Requirements:** ARCH-04, ARCH-05
+
+**Depends on:** Phase 31
+
+**Success criteria:**
+1. `git clone --filter=blob:none reposix::sim/proj-1 /tmp/clone` succeeds with all blobs missing (assertable via `git rev-list --objects --missing=print --all`).
+2. Lazy blob fetch on `git cat-file -p <oid>` hits the backend exactly once per OID (idempotent — second `cat-file` is local-only; assertable via audit-row count).
+3. `git checkout origin/main` after `git sparse-checkout set issues/PROJ-24*` batches blob fetches into a single `command=fetch` RPC (assertable: helper records exactly one `command=fetch` audit row with multiple `want` lines, not N rows with one `want` each).
+4. Refspec namespace is `refs/heads/*:refs/reposix/*` (regression test that `refs/heads/*:refs/heads/*` would cause empty-delta bug per POC).
+5. The same helper binary still services `git push` via `export` (hybrid POC parity). Existing v0.8.0 push tests pass unchanged.
+6. Three protocol gotchas (initial advert no `0002`; subsequent responses DO need `0002`; binary stdin throughout) are covered by named tests.
+
+**Context anchor:** architecture-pivot-summary §3 (Confirmed Technical Findings — `stateless-connect`, transport routing, three protocol gotchas, refspec namespace). POC artifacts: `.planning/research/v0.9-fuse-to-git-native/poc/git-remote-poc.py`, `poc-helper-trace.log`, `run-poc.sh`.
+
+### Phase 33: Delta sync — `list_changed_since` on `BackendConnector` + cache integration (v0.9.0)
+
+**Goal:** Add incremental backend queries so `git fetch` after a backend mutation transfers only the changed issue's tree+blob, not the whole project. Wire `last_fetched_at` (already present in `crates/reposix-cli/src/cache_db.rs`) into the new `reposix-cache` crate, and update it atomically with each delta sync. Operating-principle hooks: **simulator-first** (sim respects `since` query param; all delta-sync tests use sim); **audit log non-optional** (one audit row per delta-sync invocation); **ground truth obsession** (test asserts that after a single backend mutation, exactly one issue's blob OID changes — not all of them).
+
+**Requirements:** ARCH-06, ARCH-07
+
+**Depends on:** Phase 31, Phase 32
+
+**Success criteria:**
+1. `BackendConnector::list_changed_since(timestamp) -> Vec<IssueId>` defined on the trait and implemented for `SimBackend`, `GithubBackend`, `ConfluenceBackend`, `JiraBackend`. Each backend uses its native incremental query (`?since=`, JQL `updated >=`, CQL `lastModified >`).
+2. `SimBackend` REST surface respects a `since` query parameter (if absent, returns all — backwards compatible).
+3. After `agent_a` mutates issue `proj-1/42` on the simulator and `agent_b` runs `git fetch origin`, `git diff --name-only origin/main` returns exactly `issues/42.md`. Other blob OIDs are unchanged.
+4. Tree sync is unconditional (not gated by `REPOSIX_BLOB_LIMIT`); the limit only applies to blob materialization.
+5. Cache update + `last_fetched_at` write happen in one SQLite transaction (kill-9 chaos test asserts no divergent state — borrows the Phase 21 HARD-03 chaos pattern).
+6. One audit row per delta-sync invocation: `(ts, backend, project, since_ts, items_returned, op="delta_sync")`.
+
+**Context anchor:** architecture-pivot-summary §4 (Sync and Conflict Model — delta sync via `since` queries, fetch flow, agent-sees-changes-via-pure-git). Existing `cache_db.rs` `refresh_meta` row is the storage location for `last_fetched_at`.
+
+### Phase 34: Push path — conflict detection + blob limit guardrail (v0.9.0)
+
+**Goal:** Make the `export` handler conflict-aware and the `stateless-connect` handler scope-bounded. Push-time conflict detection rejects stale-base pushes with a canned `fetch first` git status so agents experience the standard "git pull --rebase, retry" cycle without learning anything new. Blob-limit guardrail caps `command=fetch` size so a runaway `git grep` cannot melt API quotas — and the stderr message names `git sparse-checkout` so an unprompted agent self-corrects (dark-factory pattern). Operating-principle hooks: **tainted-by-default** (frontmatter sanitize step is the explicit `Tainted -> Untainted` conversion); **audit log non-optional** (every push attempt — accept and reject — gets an audit row); **ROI awareness** (blob-limit error message is the cheapest possible regression net for "agent does naive `git grep`").
+
+**Requirements:** ARCH-08, ARCH-09, ARCH-10
+
+**Depends on:** Phase 32
+
+**Success criteria:**
+1. Stale-base push: agent pushes a commit whose base differs from the current backend version. Helper emits `error refs/heads/main fetch first` (canned status, git renders the standard "perhaps a `git pull` would help" hint) and a detailed diagnostic via stderr through `diag()`. Reject path drains the incoming stream and never touches the bare cache (no partial state — assertable: `git fsck` clean after reject).
+2. Successful push: REST writes apply, bare-repo cache updates, helper emits `ok refs/heads/main`. REST + cache update is atomic (kill-9 between REST and cache leaves state consistent — same chaos pattern as Phase 33).
+3. Frontmatter field allowlist: an issue body with `version: 999999` in frontmatter does not change the server version; `id`, `created_at`, `updated_at` are likewise stripped. Asserted by named test.
+4. Blob limit: a `command=fetch` request with > `REPOSIX_BLOB_LIMIT` `want` lines (default 200) is refused. Helper's stderr message is verbatim: `error: refusing to fetch <N> blobs (limit: <M>). Narrow your scope with \`git sparse-checkout set <pathspec>\` and retry.`
+5. `REPOSIX_BLOB_LIMIT` env var is read at helper startup; integration test asserts that setting it to `5` causes a 6-want fetch to fail and a 5-want fetch to succeed.
+6. Audit row for every push attempt, accept and reject: `(ts, backend, project, ref, files_touched, decision, reason)`.
+
+**Context anchor:** architecture-pivot-summary §3 ("Helper can count want lines and refuse", "Push rejection format", "Conflict detection happens inside `handle_export`"), §4 ("Blob limit as teaching mechanism"), §7 open question 2 (REST + cache atomicity). POC artifacts: `.planning/research/v0.9-fuse-to-git-native/poc/git-remote-poc.py` (push reject path), `poc-push-trace.log`.
+
+### Phase 35: CLI pivot — `reposix init` replacing `reposix mount` + agent UX validation (v0.9.0)
+
+**Goal:** Replace the `reposix mount` command with `reposix init <backend>::<project> <path>` (which `git init`s, configures `extensions.partialClone`, sets the remote URL, and runs `git fetch --filter=blob:none origin`). Then run the dark-factory acceptance test: a fresh subprocess agent with no reposix CLI awareness completes a clone -> grep -> edit -> commit -> push -> conflict -> pull --rebase -> push cycle against the simulator without invoking any `reposix` subcommand other than `init`. Operating-principle hooks: **agent UX = pure git** (zero in-context learning required); **close the feedback loop** (acceptance test runs in CI and on local dev via the Phase 36 skill); **ground truth obsession** (the agent's transcript is captured as a test fixture so regressions are visible in `git diff`).
+
+**Requirements:** ARCH-11, ARCH-12
+
+**Depends on:** Phase 31, Phase 32, Phase 33, Phase 34
+
+**Success criteria:**
+1. `reposix init sim::proj-1 /tmp/repo` produces a directory containing a valid partial-clone working tree (`git rev-parse --is-inside-work-tree` returns true; `git config remote.origin.url` returns `reposix::sim/proj-1`; `git config extensions.partialClone` is set; `.git/objects` has tree objects but no blob objects until `git checkout` runs).
+2. `reposix mount` is removed from the CLI; running it prints a helpful migration message pointing at `reposix init`.
+3. CHANGELOG `[v0.9.0]` section documents the breaking CLI change with a migration note (`reposix mount /path` -> `reposix init <backend>::<project> /path`).
+4. README.md updated to use `reposix init` everywhere.
+5. **Dark-factory regression test (the headline acceptance test):** a subprocess Claude (or scripted shell agent acting as one) given ONLY a `reposix init` command + a goal ("find issues mentioning 'database' and add a TODO comment to each") completes the task using pure git/POSIX tools. The transcript exercises:
+   - `cat`, `grep -r`, edit, `git add`, `git commit`, `git push` — happy path.
+   - Conflict path: a second writer mutates one of the agent's target issues mid-flight; agent sees `! [remote rejected]`, runs `git pull --rebase`, retries `git push`, succeeds.
+   - Blob-limit path: a naive `git grep` triggers the Phase 34 blob-limit error; agent reads the error message, runs `git sparse-checkout set issues/PROJ-24*`, retries, succeeds.
+6. The transcript above is committed as a test fixture so any regression that breaks the dark-factory flow shows up in `git diff`.
+
+**Context anchor:** architecture-pivot-summary §4 ("Agent UX: pure git, zero in-context learning", "Blob limit as teaching mechanism"), §5 (Change — CLI flow). The acceptance test is the operationalization of architecture-pivot-summary §4's "agent learns from any tool error" claim.
+
+### Phase 36: FUSE deletion + CLAUDE.md update + `reposix-agent-flow` skill + final integration tests + release (v0.9.0)
+
+**Goal:** Demolish FUSE entirely and ship v0.9.0. Per OP-4 self-improving infrastructure: **this phase updates project CLAUDE.md and adds the `reposix-agent-flow` skill — agent grounding must ship in lockstep with code**. There can be no window where CLAUDE.md describes deleted code, and no window where the project lacks the dark-factory regression skill that the v0.9.0 architecture is supposed to enable. Operating-principle hooks: **self-improving infrastructure (OP-4)** — CLAUDE.md + skill ship together with FUSE deletion; **close the feedback loop (OP-1)** — `gh run view` on the release tag must show green CI without the `apt install fuse3` step; **reversibility enables boldness (OP-5)** — execute via `gsd-pr-branch` or worktree so a botched FUSE deletion can be reverted in one move.
+
+**Requirements:** ARCH-13, ARCH-14, ARCH-15
+
+**Depends on:** Phase 35
+
+**Success criteria:**
+1. `crates/reposix-fuse/` is deleted (zero references in `cargo metadata --format-version 1` output).
+2. `fuser` is removed from every `Cargo.toml` in the workspace (assertable: `grep -r '\bfuser\b' Cargo.toml crates/*/Cargo.toml` returns empty).
+3. `cargo check --workspace && cargo clippy --workspace --all-targets -- -D warnings` clean.
+4. CI workflow updated: drops `cargo test --features fuse-mount-tests`, drops `apt install fuse3`, drops `/dev/fuse` requirement. `gh run view` on the resulting commit shows green.
+5. Project `CLAUDE.md` fully rewritten for git-native architecture per ARCH-14: no v0.9.0-in-progress banner — replaced with steady-state "Architecture (git-native partial clone)" section; FUSE references purged from elevator pitch, Operating Principles, Workspace layout, Tech stack, Commands, Threat model. `git grep -i 'fuser\|fusermount\|fuse-mount-tests\|reposix mount' CLAUDE.md` returns empty.
+6. Skill `reposix-agent-flow` created at `.claude/skills/reposix-agent-flow/SKILL.md` with frontmatter `name: reposix-agent-flow` and `description: <one-line description referencing the dark-factory regression test>`. Skill body documents the test pattern and references architecture-pivot-summary §4. Skill is invoked from CI (release-gate job) and from local dev (`/reposix-agent-flow`).
+7. `scripts/tag-v0.9.0.sh` created mirroring `scripts/tag-v0.8.0.sh` (6 safety guards minimum: clean tree, on `main`, version match in `Cargo.toml`, CHANGELOG `[v0.9.0]` exists, tests green, signed tag).
+8. CHANGELOG `[v0.9.0]` section is finalized with all six phases summarized + breaking-change migration note (`reposix mount` -> `reposix init`).
+9. Phase 35's dark-factory regression test (now invoked via the new skill) passes against the post-deletion codebase.
+
+**Context anchor:** architecture-pivot-summary §5 (Delete — `crates/reposix-fuse`, `fuser` dependency), §9 (Milestone Impact). Project `CLAUDE.md` "Subagent delegation rules" section. User global `CLAUDE.md` OP-4 "Self-improving infrastructure".
 
 ---
 

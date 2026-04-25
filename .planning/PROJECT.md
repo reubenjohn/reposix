@@ -91,26 +91,32 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 | Skip GSD discuss step | User instruction (~12:55 AM): "do all the gsd planning, exec, review, etc, just without the discuss steps" | — Pending |
 | Lethal-trifecta cuts are first-class requirements, not afterthoughts | Threat-model subagent flagged egress + bulk-delete + tainted typing as ship-blockers; safer to bake in than retrofit | — Pending |
 
-## Current Milestone: v0.9.0 — Docs & Narrative
+## Current Milestone: v0.9.0 — Architecture Pivot — Git-Native Partial Clone
 
-**Goal:** Make reposix's value proposition land hard within 10 seconds of a cold reader arriving at the MkDocs site, with technical architecture progressively revealed in a "How it works" section rather than leaked above the fold. Expand the site from a correct reference tree into a substrate story that explains *why*, *how*, and *how to extend*.
+**Goal:** Replace the FUSE virtual filesystem with git's built-in partial clone mechanism. The `git-remote-reposix` helper becomes a promisor remote tunnelling protocol-v2 traffic to a local bare-repo cache built from REST responses. Agents interact with the project using only standard git commands — no reposix-specific CLI awareness. FUSE is deleted entirely; `crates/reposix-fuse/` is removed and the `fuser` dependency is purged. The pivot is operationalized across six phases (31–36) covering cache foundation, read transport, delta sync, push path, CLI pivot, and the demolition+release cycle.
 
 **Target features:**
-- Landing page hero with Vignette 1 before/after code block + three-up value props
-- "How it works" section — three pages (filesystem layer, git layer, trust model) each with one mcp-mermaid diagram (playwright-screenshot verified)
-- Home-adjacent concept pages: "Mental model in 60 seconds" and "reposix vs MCP / SDKs"
-- New Guides: "Write your own connector" (BackendConnector walkthrough), "Integrate with your agent" (Claude Code / Cursor / SDK patterns), "Troubleshooting"
-- Simulator page relocated from How it works to Reference
-- 5-minute first-run tutorial against the simulator
-- MkDocs navigation restructure per Diátaxis + layered progressive disclosure
-- mkdocs-material theme tuning (palette, hero features, social cards)
-- Banned-word linter enforcing progressive-disclosure layer rules
+- DELETE `crates/reposix-fuse/` entirely; drop `fuser` dependency; remove `fuse-mount-tests` feature gate; CI no longer needs `apt install fuse3` or `/dev/fuse`.
+- ADD `crates/reposix-cache/` — a new crate that materializes REST API responses into a local bare git repo. Lazy blobs, full tree, audit row per blob materialization, `Tainted<Vec<u8>>` return type, egress allowlist enforced.
+- ADD `stateless-connect` capability to `git-remote-reposix` (alongside existing `export`) — protocol-v2 tunnel from git into the cache. Refspec namespace `refs/heads/*:refs/reposix/*`. Three protocol gotchas from POC encoded correctly in Rust.
+- ADD `BackendConnector::list_changed_since(timestamp)` trait method + per-backend implementations (sim `?since=`, GitHub `?since=`, JIRA JQL `updated >=`, Confluence CQL `lastModified >`). Delta sync transfers only changed issues.
+- ADD push-time conflict detection inside the `export` handler — emits canned `error refs/heads/main fetch first` so agents experience standard `git pull --rebase, retry` UX. Reject path drains the stream and never touches the bare cache.
+- ADD blob-limit guardrail — helper counts `want` lines per `command=fetch`, refuses if > `REPOSIX_BLOB_LIMIT` (default 200), with a stderr error message that names `git sparse-checkout` so unprompted agents self-correct (dark-factory pattern).
+- ADD frontmatter field allowlist on the push path — server-controlled fields (`id`, `created_at`, `version`, `updated_at`) stripped before REST.
+- CHANGE CLI: `reposix mount <path>` -> `reposix init <backend>::<project> <path>` (runs `git init`, configures `extensions.partialClone`, sets remote URL, runs `git fetch --filter=blob:none origin`). Breaking change documented in CHANGELOG.
+- ADD project Claude Code skill `reposix-agent-flow` at `.claude/skills/reposix-agent-flow/SKILL.md` — encodes the dark-factory autonomous-agent regression test (subprocess agent given only `reposix init` + a goal completes the work via pure git/POSIX). Invoked from CI and local dev.
+- UPDATE project `CLAUDE.md` in lockstep with FUSE deletion (Phase 36) — no window where grounding describes deleted code; FUSE references purged from elevator pitch, Operating Principles, Workspace layout, Tech stack, Commands, Threat model.
 
-**Non-negotiable framing principles** (from `.planning/notes/phase-30-narrative-vignettes.md`):
-- **P1 — Complement, not replace.** reposix absorbs the ceremony of the 80% of common tracker operations; REST remains for the other 20%. The word "replace" is banned from hero and value-prop copy.
-- **P2 — Progressive disclosure, phenomenology before implementation.** Landing describes the user experience. FUSE / daemon / remote-helper / inode / kernel / mount / syscall only appear at layer 3 (How it works) and below.
+**Non-negotiable framing principles** (carried over from CLAUDE.md project Operating Principles — these constraints apply to every ARCH-NN requirement):
 
-**Source of truth:** `.planning/notes/phase-30-narrative-vignettes.md` (committed at `1ba0479`, updated at `7000ad1`).
+- **Simulator-first.** Every demo, unit test, and autonomous agent loop runs against `reposix-sim` by default. Real backends (GitHub, Confluence, JIRA) require explicit credentials AND a non-default `REPOSIX_ALLOWED_ORIGINS`. Autonomous mode never hits a real backend.
+- **Tainted-by-default.** Every byte materialized into the bare-repo cache or returned to git originated from a remote (real or simulator). The cache returns `Tainted<Vec<u8>>`; conversion to `Untainted` is the explicit `sanitize` step where the frontmatter field allowlist is enforced.
+- **Audit log non-optional.** Every blob materialization, every `command=fetch`, every `export` push (accept and reject) writes a row to the SQLite audit table. SQLite WAL append-only — no UPDATE or DELETE on audit rows.
+- **No hidden state.** Cache state and helper state live in committed-or-fixture artifacts. No "it works in my session" bugs.
+- **Working tree = real git repo.** The mount point is no longer synthetic — it is a true git working tree backed by `.git/objects` (partial clone, blobs lazy). `git diff` is the canonical change set, by construction.
+- **Self-improving infrastructure (OP-4).** Project `CLAUDE.md` and Claude Code skills ship in lockstep with the code that invalidates them. Phase 36 explicitly bundles agent-grounding updates with FUSE deletion.
+
+**Source of truth:** `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` (canonical design doc, 440 lines, ratified 2026-04-24). Supporting POC artifacts in `.planning/research/v0.9-fuse-to-git-native/poc/`.
 
 ## Evolution
 
@@ -130,4 +136,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-17 — Milestone v0.9.0 "Docs & Narrative" started (Phase 30 in planning)*
+*Last updated: 2026-04-24 — Milestone v0.9.0 retargeted to architecture pivot; phases 31–36 scaffolded*
