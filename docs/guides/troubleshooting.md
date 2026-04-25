@@ -149,6 +149,42 @@ Most "real backend doesn't work" issues come down to one of two missing variable
 - `REPOSIX_ALLOWED_ORIGINS` not including the backend host. Symptom: `egress_denied` audit rows.
 - A credential env var unset (`GITHUB_TOKEN`, `ATLASSIAN_API_KEY`, etc). Symptom: 401/403 from the REST call surfaced as `helper_fetch_error`.
 
+## "I have credentials but `git fetch` says missing-env" {#missing-env-with-creds}
+
+Symptom: you set `GITHUB_TOKEN` (or the Atlassian variants) and `git fetch` still fails with a `git-remote-reposix: cannot instantiate ... backend — required env var(s) unset` message.
+
+Common causes:
+
+1. **`REPOSIX_ALLOWED_ORIGINS` excludes the backend host.** The default allowlist is loopback-only (sim). Real-backend `git fetch` against `https://api.github.com` or `https://<tenant>.atlassian.net` requires:
+
+   ```bash
+   export REPOSIX_ALLOWED_ORIGINS='https://api.github.com'                           # GitHub
+   export REPOSIX_ALLOWED_ORIGINS='https://reuben-john.atlassian.net'                # Confluence/JIRA
+   # Or both (comma-separated):
+   export REPOSIX_ALLOWED_ORIGINS='https://api.github.com,https://reuben-john.atlassian.net'
+   ```
+
+   Note: `REPOSIX_ALLOWED_ORIGINS` is read by `reposix_core::http::client()` at request time, not at helper startup, so the failure surfaces as an `Error::InvalidOrigin` on the first outbound call rather than as a missing-env error.
+
+2. **Helper started in a different shell than the one that set the env vars.** `git fetch` spawns `git-remote-reposix` as a subprocess that inherits the parent shell's env; if you set the vars in one terminal and ran `git fetch` in another, the helper sees the empty environment. Check with:
+
+   ```bash
+   env | grep -E 'GITHUB_TOKEN|ATLASSIAN_|JIRA_|REPOSIX_'
+   ```
+
+3. **`/confluence/` or `/jira/` path marker missing in `remote.origin.url`.** The helper's URL-scheme dispatcher needs the marker to disambiguate Confluence and JIRA on the shared `*.atlassian.net` origin. Pre-Phase-36 `reposix init` emitted a marker-less URL; if your repo was init'd before that change, fix it with:
+
+   ```bash
+   # Confluence:
+   git config remote.origin.url "reposix::https://${REPOSIX_CONFLUENCE_TENANT}.atlassian.net/confluence/projects/<space>"
+   # JIRA:
+   git config remote.origin.url "reposix::https://${REPOSIX_JIRA_INSTANCE}.atlassian.net/jira/projects/<key>"
+   ```
+
+   `reposix doctor` flags the marker-less form as a `WARN`.
+
+The full env-var matrix per backend is at [Testing targets](../reference/testing-targets.md), and the helper's missing-creds error message links there directly.
+
 ## Cache eviction (`reposix gc`)
 
 Coming in v0.13.0. The cache currently grows monotonically — there is no LRU, no TTL, no manual `reposix gc`. If your cache directory is using uncomfortable disk:

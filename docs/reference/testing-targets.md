@@ -138,6 +138,14 @@ Each backend's test surface is `#[ignore]`-gated and additionally
 `SKIP: env vars unset: …` to stderr. With env vars, tests exercise the
 real backend.
 
+> **As of v0.10.0 the helper actually dispatches by URL scheme** — `git
+> fetch` against a `reposix::https://api.github.com/...` remote hits
+> GitHub, not the local sim. Pre-v0.10.0 the helper hardcoded
+> `SimBackend` and only `reposix init` exercised the real adapter; see
+> [ADR-008](../decisions/008-helper-backend-dispatch.md) for details.
+> Note the Atlassian URL form picked up a `/confluence/` or `/jira/`
+> path-segment marker so the helper can tell the two adapters apart.
+
 ```bash
 # Default cargo test stays green without any secrets:
 cargo test --workspace

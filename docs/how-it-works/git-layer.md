@@ -50,6 +50,23 @@ The helper advertises three capabilities on stdin/stdout the moment git invokes 
 
 The refspec namespace is `refs/heads/*:refs/reposix/*`. That non-default mapping matters: collapsing it to `refs/heads/*:refs/heads/*` makes fast-export emit an empty delta because the private OID equals the local HEAD. The bug is silent (the push appears to succeed but no commits are exported), so the namespace is load-bearing — see the [v0.9.0 architecture-pivot summary §3](https://github.com/reubenjohn/reposix/tree/main/.planning/research/v0.9-fuse-to-git-native) for the gory detail.
 
+## Backend dispatch (URL scheme)
+
+Before the helper can fetch anything, it has to decide *which backend the URL is talking about*. `git-remote-reposix` reads `argv[2]` (the value of `remote.origin.url`) and dispatches:
+
+| URL form | Backend |
+|---|---|
+| `reposix::http://127.0.0.1:<port>/projects/<slug>` | sim (loopback) |
+| `reposix::https://api.github.com/projects/<owner>/<repo>` | GitHub Issues |
+| `reposix::https://<tenant>.atlassian.net/confluence/projects/<space>` | Confluence |
+| `reposix::https://<tenant>.atlassian.net/jira/projects/<key>` | JIRA |
+
+The two Atlassian backends share an origin, so the helper looks for a `/confluence/` or `/jira/` path-segment marker to disambiguate. `reposix init` emits the right form for you; `reposix doctor` flags marker-less Atlassian URLs as a warning.
+
+Each backend reads its credentials from environment variables documented in [Testing targets](../reference/testing-targets.md) — `GITHUB_TOKEN` for GitHub, the `ATLASSIAN_*` triple for Confluence, the `JIRA_*` triple for JIRA. Missing creds surface as a startup error from the helper that lists every absent variable on its own line and links to the doc, so an agent reading stderr knows exactly what to set.
+
+The dispatch logic lives in `crates/reposix-remote/src/backend_dispatch.rs`. See [ADR-008](../decisions/008-helper-backend-dispatch.md) for the rationale.
+
 ## Push-time conflict detection
 
 The helper never trusts that the agent's commit base is current. Inside the `export` handler, after parsing each changed file, it does a fresh `GET` against the backend and compares the version to whatever the agent's commit was based on. If they differ, the helper:
