@@ -31,11 +31,11 @@ pub fn router(state: AppState) -> Router {
     Router::new()
         .route(
             "/projects/:slug/issues",
-            get(list_issues).post(create_issue),
+            get(list_records).post(create_record),
         )
         .route(
             "/projects/:slug/issues/:id",
-            get(get_issue).patch(patch_issue).delete(delete_issue),
+            get(get_record).patch(patch_issue).delete(delete_record),
         )
         .with_state(state)
 }
@@ -153,7 +153,7 @@ struct ListIssuesQuery {
 }
 
 #[allow(clippy::unused_async)]
-async fn list_issues(
+async fn list_records(
     State(state): State<AppState>,
     Path(slug): Path<String>,
     Query(q): Query<ListIssuesQuery>,
@@ -207,7 +207,7 @@ async fn list_issues(
 // ---------- GET /projects/:slug/issues/:id --------------------------------
 
 #[allow(clippy::unused_async)]
-async fn get_issue(
+async fn get_record(
     State(state): State<AppState>,
     Path((slug, id)): Path<(String, u64)>,
 ) -> Result<Json<Record>, ApiError> {
@@ -250,7 +250,7 @@ struct CreateIssueBody {
 }
 
 #[allow(clippy::unused_async)]
-async fn create_issue(
+async fn create_record(
     State(state): State<AppState>,
     Path(slug): Path<String>,
     Json(body): Json<CreateIssueBody>,
@@ -470,7 +470,7 @@ async fn patch_issue(
 // ---------- DELETE /projects/:slug/issues/:id -----------------------------
 
 #[allow(clippy::unused_async)]
-async fn delete_issue(
+async fn delete_record(
     State(state): State<AppState>,
     Path((slug, id)): Path<(String, u64)>,
 ) -> Result<StatusCode, ApiError> {

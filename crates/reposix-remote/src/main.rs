@@ -205,7 +205,7 @@ fn ensure_cache(state: &mut State) -> Result<()> {
 /// set the deferred-exit flag, and return `Ok(())` so the dispatch loop
 /// can exit with a well-defined non-zero status instead of torn-piping git.
 ///
-/// Used in import/export paths where a backend failure (`list_issues`
+/// Used in import/export paths where a backend failure (`list_records`
 /// 5xx, timeout, allowlist rejection) would otherwise bubble up via `?`
 /// and close stdout mid-protocol — leaving git to see a confusing
 /// "fast-import failed" error with no actionable context.
@@ -245,7 +245,7 @@ fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
             }
         }
     }
-    let issues = match state.rt.block_on(state.backend.list_issues(&state.project)) {
+    let issues = match state.rt.block_on(state.backend.list_records(&state.project)) {
         Ok(v) => v,
         Err(e) => {
             return fail_push(
@@ -300,7 +300,7 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
         }
     };
 
-    let prior = match state.rt.block_on(state.backend.list_issues(&state.project)) {
+    let prior = match state.rt.block_on(state.backend.list_records(&state.project)) {
         Ok(v) => v,
         Err(e) => {
             return fail_push(
@@ -463,7 +463,7 @@ fn execute_action(state: &mut State, action: PlannedAction) -> Result<()> {
             let untainted = sanitize(Tainted::new(issue), meta);
             let _new = state
                 .rt
-                .block_on(state.backend.create_issue(&state.project, untainted))
+                .block_on(state.backend.create_record(&state.project, untainted))
                 .context("create issue")?;
             Ok(())
         }
@@ -490,7 +490,7 @@ fn execute_action(state: &mut State, action: PlannedAction) -> Result<()> {
             let untainted = sanitize(Tainted::new(new), meta);
             state
                 .rt
-                .block_on(state.backend.update_issue(
+                .block_on(state.backend.update_record(
                     &state.project,
                     id,
                     untainted,

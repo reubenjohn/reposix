@@ -26,7 +26,7 @@ pub struct ConfluenceDirectWorkload {
     backend: ConfluenceBackend,
     space: String,
     rng: Mutex<StdRng>,
-    /// Cached ids from the most recent `list_issues` call.
+    /// Cached ids from the most recent `list_records` call.
     ids: Mutex<Vec<RecordId>>,
 }
 
@@ -36,7 +36,7 @@ impl ConfluenceDirectWorkload {
     /// `base_url` is the Confluence tenant base (e.g.
     /// `https://tenant.atlassian.net`) or a wiremock URI for tests.
     /// `space` is the Confluence space key used as the `project`
-    /// argument to [`BackendConnector::list_issues`].
+    /// argument to [`BackendConnector::list_records`].
     ///
     /// # Errors
     /// Propagates [`ConfluenceBackend::new_with_base_url`] failures
@@ -73,7 +73,7 @@ impl Workload for ConfluenceDirectWorkload {
     async fn step(&self, metrics: &Arc<MetricsAccumulator>) -> anyhow::Result<()> {
         // 1. list
         let start = Instant::now();
-        match self.backend.list_issues(&self.space).await {
+        match self.backend.list_records(&self.space).await {
             Ok(issues) => {
                 metrics.record(OpKind::List, elapsed_us(start));
                 let mut g = self.ids.lock();
@@ -93,7 +93,7 @@ impl Workload for ConfluenceDirectWorkload {
                 break;
             };
             let start = Instant::now();
-            match self.backend.get_issue(&self.space, id).await {
+            match self.backend.get_record(&self.space, id).await {
                 Ok(_issue) => {
                     metrics.record(OpKind::Get, elapsed_us(start));
                 }

@@ -1,9 +1,9 @@
 //! ARCH-03: non-allowlisted backend origin -> `Error::Egress` +
 //! `op='egress_denied'` audit row.
 //!
-//! We use a stub [`BackendConnector`] whose `get_issue` always returns
+//! We use a stub [`BackendConnector`] whose `get_record` always returns
 //! `reposix_core::Error::InvalidOrigin`, simulating the allowlist gate
-//! firing. `list_issues` delegates to a real `SimBackend` so
+//! firing. `list_records` delegates to a real `SimBackend` so
 //! `build_from` can seed the `oid_map`.
 
 mod common;
@@ -18,8 +18,8 @@ use reposix_core::{Error as CoreError, Record, RecordId, Result as CoreResult, U
 use tempfile::tempdir;
 use wiremock::MockServer;
 
-/// Stub backend whose `get_issue` always returns
-/// `Error::InvalidOrigin`. `list_issues` delegates to the inner
+/// Stub backend whose `get_record` always returns
+/// `Error::InvalidOrigin`. `list_records` delegates to the inner
 /// simulator so [`Cache::build_from`] can still seed `oid_map`.
 struct EgressRejectingBackend {
     inner: Arc<dyn BackendConnector>,
@@ -33,16 +33,16 @@ impl BackendConnector for EgressRejectingBackend {
     fn supports(&self, _feature: BackendFeature) -> bool {
         false
     }
-    async fn list_issues(&self, project: &str) -> CoreResult<Vec<Record>> {
-        self.inner.list_issues(project).await
+    async fn list_records(&self, project: &str) -> CoreResult<Vec<Record>> {
+        self.inner.list_records(project).await
     }
-    async fn get_issue(&self, _project: &str, _id: RecordId) -> CoreResult<Record> {
+    async fn get_record(&self, _project: &str, _id: RecordId) -> CoreResult<Record> {
         Err(CoreError::InvalidOrigin("https://evil.example:443/".into()))
     }
-    async fn create_issue(&self, _: &str, _: Untainted<Record>) -> CoreResult<Record> {
+    async fn create_record(&self, _: &str, _: Untainted<Record>) -> CoreResult<Record> {
         Err(CoreError::Other("unsupported in stub".into()))
     }
-    async fn update_issue(
+    async fn update_record(
         &self,
         _project: &str,
         _id: RecordId,

@@ -55,7 +55,7 @@ pub enum Error {
     /// Backend returned bytes whose computed blob OID differs from the
     /// OID recorded in `oid_map`. Indicates an eventual-consistency
     /// race on the backend side (same issue id, different content
-    /// between `list_issues` and `get_issue`).
+    /// between `list_records` and `get_record`).
     #[error("oid drift: requested {requested}, backend returned {actual} for issue {issue_id}")]
     OidDrift {
         /// OID recorded in `oid_map` at `build_from` time.

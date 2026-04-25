@@ -15,7 +15,7 @@
 //! ## Error model
 //!
 //! Methods return [`Result<T>`](crate::Result). Backends that cannot satisfy a
-//! given method (e.g. a read-only GitHub backend asked to `create_issue`)
+//! given method (e.g. a read-only GitHub backend asked to `create_record`)
 //! return [`Error::Other`](crate::Error::Other) with a `"not supported: ..."`
 //! message. A typed `NotSupported` variant is a v0.2 cleanup tracked in the
 //! phase roadmap; for v0.1.5 we keep the error surface additive-only so
@@ -60,7 +60,7 @@ pub enum BackendFeature {
     /// Backend supports optimistic concurrency via a version/etag mechanism.
     /// Simulator: `If-Match: "<version>"`. GitHub v0.2:
     /// `If-Unmodified-Since`. Backends without this feature ignore the
-    /// `expected_version` argument to `update_issue`.
+    /// `expected_version` argument to `update_record`.
     StrongVersioning,
     /// Backend accepts bulk edits in a single request. Neither v0.1.5
     /// backend claims this yet; reserved for future Jira adapter.
@@ -114,7 +114,7 @@ pub enum DeleteReason {
 ///
 /// ## Error contract
 ///
-/// - Read-path "not found" on `get_issue` → `Err(Error::Other("not found: ..."))`.
+/// - Read-path "not found" on `get_record` → `Err(Error::Other("not found: ..."))`.
 ///   (Typed `NotFound` variant is a v0.2 cleanup — see module docs.)
 /// - Write-path "not supported" on read-only backends → `Err(Error::Other("not supported: ..."))`.
 /// - Transport / backend errors propagate as [`Error::Http`](crate::Error::Http) /
@@ -139,22 +139,22 @@ pub trait BackendConnector: Send + Sync {
     /// # Errors
     /// Propagates transport errors. Returns an empty vec (not an error) when
     /// the project exists but has no issues.
-    async fn list_issues(&self, project: &str) -> Result<Vec<Record>>;
+    async fn list_records(&self, project: &str) -> Result<Vec<Record>>;
 
     /// List issue IDs whose `updated_at` is strictly greater than `since`.
     ///
-    /// The default implementation calls [`list_issues`](Self::list_issues)
+    /// The default implementation calls [`list_records`](Self::list_records)
     /// and filters in memory — safe for any backend but inefficient. Backends
     /// with a native incremental query (`?since=` on GitHub, JQL `updated >=`
     /// on JIRA, CQL `lastModified >` on Confluence, `?since=` on the sim)
     /// MUST override to send the filter over the wire.
     ///
     /// Returns IDs only; callers materialize full `Record` objects on
-    /// demand via [`get_issue`](Self::get_issue). This mirrors the Phase 31
+    /// demand via [`get_record`](Self::get_record). This mirrors the Phase 31
     /// lazy-blob design: metadata (IDs) is cheap to ship, bodies are not.
     ///
     /// # Errors
-    /// Same as [`list_issues`](Self::list_issues) — transport errors,
+    /// Same as [`list_records`](Self::list_records) — transport errors,
     /// egress-allowlist denial (`Error::InvalidOrigin`), or backend-specific
     /// error shapes surfacing as `Error::Other`.
     async fn list_changed_since(
@@ -162,7 +162,7 @@ pub trait BackendConnector: Send + Sync {
         project: &str,
         since: chrono::DateTime<chrono::Utc>,
     ) -> Result<Vec<RecordId>> {
-        let all = self.list_issues(project).await?;
+        let all = self.list_records(project).await?;
         Ok(all
             .into_iter()
             .filter(|i| i.updated_at > since)
@@ -176,7 +176,7 @@ pub trait BackendConnector: Send + Sync {
     /// - Transport errors propagate.
     /// - Unknown `id` returns `Err(Error::Other("not found: ..."))`. See
     ///   module docs re: v0.2 typed `NotFound` variant.
-    async fn get_issue(&self, project: &str, id: RecordId) -> Result<Record>;
+    async fn get_record(&self, project: &str, id: RecordId) -> Result<Record>;
 
     /// Create a new issue. The `Untainted` wrapper enforces that server-
     /// controlled fields on `issue` (`id`, `created_at`, `version`) have been
@@ -188,7 +188,7 @@ pub trait BackendConnector: Send + Sync {
     /// # Errors
     /// - Transport errors propagate.
     /// - Read-only backends return `Err(Error::Other("not supported: ..."))`.
-    async fn create_issue(&self, project: &str, issue: Untainted<Record>) -> Result<Record>;
+    async fn create_record(&self, project: &str, issue: Untainted<Record>) -> Result<Record>;
 
     /// Update an existing issue. `patch` carries the fields to overwrite;
     /// untouched fields retain their current server value (backend decides
@@ -203,7 +203,7 @@ pub trait BackendConnector: Send + Sync {
     /// - Transport errors propagate.
     /// - Version mismatch returns `Err(Error::Other("version mismatch: ..."))`.
     /// - Read-only backends return `Err(Error::Other("not supported: ..."))`.
-    async fn update_issue(
+    async fn update_record(
         &self,
         project: &str,
         id: RecordId,
@@ -279,16 +279,16 @@ mod tests {
             fn supports(&self, _: BackendFeature) -> bool {
                 false
             }
-            async fn list_issues(&self, _: &str) -> Result<Vec<Record>> {
+            async fn list_records(&self, _: &str) -> Result<Vec<Record>> {
                 Ok(vec![])
             }
-            async fn get_issue(&self, _: &str, _: RecordId) -> Result<Record> {
+            async fn get_record(&self, _: &str, _: RecordId) -> Result<Record> {
                 unimplemented!()
             }
-            async fn create_issue(&self, _: &str, _: Untainted<Record>) -> Result<Record> {
+            async fn create_record(&self, _: &str, _: Untainted<Record>) -> Result<Record> {
                 unimplemented!()
             }
-            async fn update_issue(
+            async fn update_record(
                 &self,
                 _: &str,
                 _: RecordId,
@@ -323,7 +323,7 @@ mod tests {
             fn supports(&self, _: BackendFeature) -> bool {
                 false
             }
-            async fn list_issues(&self, _: &str) -> Result<Vec<Record>> {
+            async fn list_records(&self, _: &str) -> Result<Vec<Record>> {
                 let t1 = Utc.with_ymd_and_hms(2026, 1, 1, 0, 0, 0).unwrap();
                 let t2 = Utc.with_ymd_and_hms(2026, 6, 1, 0, 0, 0).unwrap();
                 Ok(vec![
@@ -355,13 +355,13 @@ mod tests {
                     },
                 ])
             }
-            async fn get_issue(&self, _: &str, _: RecordId) -> Result<Record> {
+            async fn get_record(&self, _: &str, _: RecordId) -> Result<Record> {
                 unimplemented!()
             }
-            async fn create_issue(&self, _: &str, _: Untainted<Record>) -> Result<Record> {
+            async fn create_record(&self, _: &str, _: Untainted<Record>) -> Result<Record> {
                 unimplemented!()
             }
-            async fn update_issue(
+            async fn update_record(
                 &self,
                 _: &str,
                 _: RecordId,

@@ -4,10 +4,10 @@
 //!
 //! ## The 5 invariants
 //!
-//! 1. `list_issues(project)` returns `Ok(vec)` for a known-good project.
+//! 1. `list_records(project)` returns `Ok(vec)` for a known-good project.
 //! 2. The list is non-empty (≥1 issue).
-//! 3. `get_issue(project, known_issue_id)` returns `Ok(issue)` with matching id.
-//! 4. `get_issue(project, RecordId(u64::MAX))` returns `Err` (404 path).
+//! 3. `get_record(project, known_issue_id)` returns `Ok(issue)` with matching id.
+//! 4. `get_record(project, RecordId(u64::MAX))` returns `Err` (404 path).
 //! 5. Every listed issue's status is a valid `IssueStatus` variant.
 //!
 //! ## Test arms
@@ -47,10 +47,10 @@ macro_rules! skip_if_no_env {
 
 /// The 5 invariants that hold for any well-behaved [`BackendConnector`].
 async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_issue_id: RecordId) {
-    // (1) list_issues returns Ok(vec).
-    let issues = backend.list_issues(project).await.unwrap_or_else(|e| {
+    // (1) list_records returns Ok(vec).
+    let issues = backend.list_records(project).await.unwrap_or_else(|e| {
         panic!(
-            "[{}] list_issues({project}) should be Ok, got {e:?}",
+            "[{}] list_records({project}) should be Ok, got {e:?}",
             backend.name()
         )
     });
@@ -58,17 +58,17 @@ async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_
     // (2) list is non-empty.
     assert!(
         !issues.is_empty(),
-        "[{}] list_issues({project}) returned empty — seed/fixture missing?",
+        "[{}] list_records({project}) returned empty — seed/fixture missing?",
         backend.name()
     );
 
-    // (3) get_issue for a known id returns matching id.
+    // (3) get_record for a known id returns matching id.
     let issue = backend
-        .get_issue(project, known_issue_id)
+        .get_record(project, known_issue_id)
         .await
         .unwrap_or_else(|e| {
             panic!(
-                "[{}] get_issue({project}, {known_issue_id}) should be Ok, got {e:?}",
+                "[{}] get_record({project}, {known_issue_id}) should be Ok, got {e:?}",
                 backend.name()
             )
         });
@@ -80,10 +80,10 @@ async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_
     );
 
     // (4) u64::MAX is expected to be absent — this is the 404 path.
-    let missing = backend.get_issue(project, RecordId(u64::MAX)).await;
+    let missing = backend.get_record(project, RecordId(u64::MAX)).await;
     assert!(
         missing.is_err(),
-        "[{}] get_issue({project}, u64::MAX) should be Err, got {missing:?}",
+        "[{}] get_record({project}, u64::MAX) should be Err, got {missing:?}",
         backend.name()
     );
 
@@ -183,8 +183,8 @@ async fn contract_sim() {
 
 // ─── Test: contract_jira_wiremock ─────────────────────────────────────────────
 
-/// Always runs. Exercises the full `list_issues → get_issue(10001) →
-/// get_issue(u64::MAX)` sequence through the [`BackendConnector`] trait seam.
+/// Always runs. Exercises the full `list_records → get_record(10001) →
+/// get_record(u64::MAX)` sequence through the [`BackendConnector`] trait seam.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn contract_jira_wiremock() {
     let server = MockServer::start().await;
@@ -263,9 +263,9 @@ async fn assert_write_contract<B: BackendConnector>(backend: &B, project: &str) 
     // Create
     let issue = make_untainted_for_contract("contract-write-test", "initial body");
     let created = backend
-        .create_issue(project, issue)
+        .create_record(project, issue)
         .await
-        .unwrap_or_else(|e| panic!("[{}] create_issue failed: {e:?}", backend.name()));
+        .unwrap_or_else(|e| panic!("[{}] create_record failed: {e:?}", backend.name()));
     assert_eq!(
         created.title,
         "contract-write-test",
@@ -276,9 +276,9 @@ async fn assert_write_contract<B: BackendConnector>(backend: &B, project: &str) 
     // Update
     let patch = make_untainted_for_contract("contract-write-updated", "updated body");
     let updated = backend
-        .update_issue(project, created.id, patch, None)
+        .update_record(project, created.id, patch, None)
         .await
-        .unwrap_or_else(|e| panic!("[{}] update_issue failed: {e:?}", backend.name()));
+        .unwrap_or_else(|e| panic!("[{}] update_record failed: {e:?}", backend.name()));
     assert_eq!(
         updated.title,
         "contract-write-updated",
@@ -293,10 +293,10 @@ async fn assert_write_contract<B: BackendConnector>(backend: &B, project: &str) 
         .unwrap_or_else(|e| panic!("[{}] delete_or_close failed: {e:?}", backend.name()));
 
     // Verify deleted
-    let gone = backend.get_issue(project, created.id).await;
+    let gone = backend.get_record(project, created.id).await;
     assert!(
         gone.is_err(),
-        "[{}] get_issue after delete should be Err, got {:?}",
+        "[{}] get_record after delete should be Err, got {:?}",
         backend.name(),
         gone
     );
@@ -453,9 +453,9 @@ async fn contract_jira_live() {
 
     // list first to get a real issue id
     let issues = backend
-        .list_issues(&project)
+        .list_records(&project)
         .await
-        .expect("live list_issues");
+        .expect("live list_records");
     assert!(
         !issues.is_empty(),
         "live JIRA project {project} has no issues — set JIRA_TEST_PROJECT to a project with data"

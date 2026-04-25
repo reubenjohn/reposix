@@ -3,9 +3,9 @@
 //!
 //! # Scope
 //!
-//! v0.6 ships the full read+write path: `list_issues` + `get_issue` work
+//! v0.6 ships the full read+write path: `list_records` + `get_record` work
 //! against a real Atlassian tenant (once credentials are configured);
-//! `create_issue`, `update_issue`, and `delete_or_close` are implemented
+//! `create_record`, `update_record`, and `delete_or_close` are implemented
 //! against `POST /wiki/api/v2/pages`, `PUT /wiki/api/v2/pages/{id}`, and
 //! `DELETE /wiki/api/v2/pages/{id}` respectively. Audit log rows are added in
 //! Wave C (v0.6 Phase 16).
@@ -85,7 +85,7 @@ use reposix_core::{Error, Record, RecordId, IssueStatus, Result, Tainted, Untain
 /// exhaustion as an error. Caps worst-case call latency.
 const MAX_RATE_LIMIT_SLEEP: Duration = Duration::from_secs(60);
 
-/// Max issues we'll page through in one `list_issues` call.
+/// Max issues we'll page through in one `list_records` call.
 ///
 /// At [`PAGE_SIZE`] 100 that's 5 requests — enough for the REPOSIX demo space
 /// and a bounded memory budget. Matches `reposix-github`'s cap.
@@ -135,7 +135,7 @@ impl std::fmt::Debug for ConfluenceCreds {
 /// or [`ConfluenceBackend::new_with_base_url`] (custom base; used by
 /// wiremock unit tests and the contract test).
 ///
-/// Write methods (`create_issue`, `update_issue`, `delete_or_close`) are
+/// Write methods (`create_record`, `update_record`, `delete_or_close`) are
 /// fully implemented as of v0.6. Audit log rows are added in Phase 16
 /// Wave C.
 ///
@@ -158,7 +158,7 @@ pub struct ConfluenceBackend {
     /// 429 is returned with a `Retry-After` header. Shared across clones.
     rate_limit_gate: Arc<Mutex<Option<Instant>>>,
     /// Optional audit log connection. When `Some`, every write call
-    /// (`create_issue`, `update_issue`, `delete_or_close`) inserts one row
+    /// (`create_record`, `update_record`, `delete_or_close`) inserts one row
     /// into the `audit_events` table. The caller is responsible for opening
     /// the connection via [`reposix_core::audit::open_audit_db`] so the
     /// schema and append-only triggers are loaded before the first insert.
@@ -770,8 +770,8 @@ impl ConfluenceBackend {
         })
     }
 
-    /// Attach an audit log connection. Every write call (`create_issue`,
-    /// `update_issue`, `delete_or_close`) inserts one row into
+    /// Attach an audit log connection. Every write call (`create_record`,
+    /// `update_record`, `delete_or_close`) inserts one row into
     /// `audit_events` when an audit connection is present; writes succeed
     /// even if the audit insert fails (best-effort, log-and-swallow — the
     /// Confluence round-trip has already committed).
@@ -785,24 +785,24 @@ impl ConfluenceBackend {
         self
     }
 
-    /// Strict variant of [`BackendConnector::list_issues`]: returns
+    /// Strict variant of [`BackendConnector::list_records`]: returns
     /// `Err(Error::Other(...))` instead of silently capping at
     /// [`MAX_ISSUES_PER_LIST`] pages, closing the SG-05 taint-escape
     /// risk (the agent thinking it has the whole space when it doesn't).
     ///
     /// Use this when a caller **must** see every page in the space or fail
-    /// loudly. The default [`list_issues`](BackendConnector::list_issues) still
+    /// loudly. The default [`list_records`](BackendConnector::list_records) still
     /// returns `Ok(capped)` with a `tracing::warn!` for backwards compatibility.
     ///
     /// # Errors
     ///
     /// - Returns `Error::Other` if pagination would exceed `MAX_ISSUES_PER_LIST`.
-    /// - All errors that `list_issues` would raise also apply here.
+    /// - All errors that `list_records` would raise also apply here.
     pub async fn list_issues_strict(&self, project: &str) -> Result<Vec<Record>> {
         self.list_issues_impl(project, true).await
     }
 
-    /// Shared pagination loop for both [`list_issues`](BackendConnector::list_issues)
+    /// Shared pagination loop for both [`list_records`](BackendConnector::list_records)
     /// and [`list_issues_strict`]. When `strict == true` the cap site returns
     /// `Err`; when `false` it emits a `tracing::warn!` and returns `Ok(capped)`.
     ///
@@ -992,7 +992,7 @@ impl ConfluenceBackend {
 
     /// Resolve a Confluence space key (e.g. `"REPOSIX"`) to its numeric
     /// space id (as a string, e.g. `"360450"`). One round-trip per
-    /// `list_issues` call.
+    /// `list_records` call.
     ///
     /// # Errors
     ///
@@ -1049,7 +1049,7 @@ impl ConfluenceBackend {
     }
 
     /// Fetch the current `version.number` for `id` without returning the full
-    /// issue. Used by `update_issue` when the caller passes
+    /// issue. Used by `update_record` when the caller passes
     /// `expected_version = None` and we need a pre-flight GET to discover the
     /// current version before constructing the PUT body.
     ///
@@ -1058,12 +1058,12 @@ impl ConfluenceBackend {
     /// Propagates transport errors and `Err(Error::Other("not found: …"))` on
     /// 404.
     async fn fetch_current_version(&self, id: RecordId) -> Result<u64> {
-        // Re-uses get_issue which already handles rate-limit gate, SG-05
+        // Re-uses get_record which already handles rate-limit gate, SG-05
         // taint wrapping, and error mapping. The only "waste" is translating
         // the full page — that's acceptable for the `expected_version = None`
         // code path (one extra round-trip already implies we don't have cached
         // version data).
-        let issue = self.get_issue("", id).await?;
+        let issue = self.get_record("", id).await?;
         Ok(issue.version)
     }
 
@@ -1199,7 +1199,7 @@ impl ConfluenceBackend {
 
     /// Enumerate all readable Confluence spaces.
     ///
-    /// Paginates via `_links.next` (same cursor scheme as `list_issues`).
+    /// Paginates via `_links.next` (same cursor scheme as `list_records`).
     /// Returns `Vec<ConfSpaceSummary>` with absolute `webui_url` fields.
     ///
     /// # Errors
@@ -1501,7 +1501,7 @@ impl BackendConnector for ConfluenceBackend {
         "pages"
     }
 
-    async fn list_issues(&self, project: &str) -> Result<Vec<Record>> {
+    async fn list_records(&self, project: &str) -> Result<Vec<Record>> {
         self.list_issues_impl(project, false).await
     }
 
@@ -1570,7 +1570,7 @@ impl BackendConnector for ConfluenceBackend {
         Ok(out)
     }
 
-    async fn get_issue(&self, _project: &str, id: RecordId) -> Result<Record> {
+    async fn get_record(&self, _project: &str, id: RecordId) -> Result<Record> {
         // First attempt: request ADF body format for lossless Markdown conversion.
         let url_adf = format!(
             "{}/wiki/api/v2/pages/{}?body-format=atlas_doc_format",
@@ -1644,7 +1644,7 @@ impl BackendConnector for ConfluenceBackend {
         translate(tainted.into_inner())
     }
 
-    async fn create_issue(&self, project: &str, issue: Untainted<Record>) -> Result<Record> {
+    async fn create_record(&self, project: &str, issue: Untainted<Record>) -> Result<Record> {
         let space_id = self.resolve_space_id(project).await?;
         // Convert the Markdown body to Confluence storage XHTML.
         let storage_xhtml = crate::adf::markdown_to_storage(&issue.inner_ref().body)?;
@@ -1699,7 +1699,7 @@ impl BackendConnector for ConfluenceBackend {
         translate(tainted.into_inner())
     }
 
-    async fn update_issue(
+    async fn update_record(
         &self,
         _project: &str,
         id: RecordId,
@@ -1986,7 +1986,7 @@ mod tests {
             .await;
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let issues = backend.list_issues("REPOSIX").await.expect("list");
+        let issues = backend.list_records("REPOSIX").await.expect("list");
         assert_eq!(issues.len(), 2);
         assert_eq!(issues[0].id, RecordId(98765));
         assert_eq!(issues[0].status, IssueStatus::Open);
@@ -2029,13 +2029,13 @@ mod tests {
             .await;
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let issues = backend.list_issues("REPOSIX").await.expect("list");
+        let issues = backend.list_records("REPOSIX").await.expect("list");
         assert_eq!(issues.len(), 3);
         assert_eq!(issues[0].id, RecordId(1));
         assert_eq!(issues[2].id, RecordId(3));
     }
 
-    // -------- 3: get_issue returns ADF body converted to Markdown --------
+    // -------- 3: get_record returns ADF body converted to Markdown --------
 
     #[tokio::test]
     async fn get_issue_returns_body_adf_as_markdown() {
@@ -2062,7 +2062,7 @@ mod tests {
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issue = backend
-            .get_issue("REPOSIX", RecordId(98765))
+            .get_record("REPOSIX", RecordId(98765))
             .await
             .expect("get");
         assert!(
@@ -2085,7 +2085,7 @@ mod tests {
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let err = backend
-            .get_issue("REPOSIX", RecordId(9999))
+            .get_record("REPOSIX", RecordId(9999))
             .await
             .expect_err("404");
         match err {
@@ -2097,7 +2097,7 @@ mod tests {
     // -------- 4b: ADF absent → storage fallback (C4) --------
 
     /// When the ADF response contains no `atlas_doc_format` body (pre-ADF page),
-    /// `get_issue` must fall back to a second GET with `?body-format=storage`
+    /// `get_record` must fall back to a second GET with `?body-format=storage`
     /// and return the raw storage HTML as the body.
     #[tokio::test]
     async fn get_issue_falls_back_to_storage_when_adf_empty() {
@@ -2130,7 +2130,7 @@ mod tests {
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issue = backend
-            .get_issue("REPOSIX", RecordId(55555))
+            .get_record("REPOSIX", RecordId(55555))
             .await
             .expect("get with fallback");
         assert_eq!(issue.id, RecordId(55555));
@@ -2140,7 +2140,7 @@ mod tests {
         );
     }
 
-    // -------- 5: status "current" → Open (via get_issue, since list omits body) --------
+    // -------- 5: status "current" → Open (via get_record, since list omits body) --------
 
     #[tokio::test]
     async fn status_current_maps_to_open() {
@@ -2158,7 +2158,7 @@ mod tests {
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let issue = backend.get_issue("REPOSIX", RecordId(1)).await.expect("get");
+        let issue = backend.get_record("REPOSIX", RecordId(1)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::Open);
     }
 
@@ -2180,7 +2180,7 @@ mod tests {
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let issue = backend.get_issue("REPOSIX", RecordId(2)).await.expect("get");
+        let issue = backend.get_record("REPOSIX", RecordId(2)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::Done);
     }
 
@@ -2221,7 +2221,7 @@ mod tests {
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         // If the header is wrong, wiremock returns no-match 404 and this fails.
         backend
-            .get_issue("REPOSIX", RecordId(42))
+            .get_record("REPOSIX", RecordId(42))
             .await
             .expect("auth header must match");
     }
@@ -2241,7 +2241,7 @@ mod tests {
             .mount(&server)
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let _ = backend.get_issue("REPOSIX", RecordId(42)).await; // expect Err, don't care which
+        let _ = backend.get_record("REPOSIX", RecordId(42)).await; // expect Err, don't care which
         let gate = backend.rate_limit_gate.lock().to_owned();
         let now = Instant::now();
         match gate {
@@ -2379,7 +2379,7 @@ mod tests {
 
     /// End-to-end proof that `parentId` + `parentType` survive the JSON
     /// decode → `ConfPage` → `translate` → `Record` pipeline through the
-    /// `BackendConnector::list_issues` seam (not just the `translate` helper in
+    /// `BackendConnector::list_records` seam (not just the `translate` helper in
     /// isolation). Mixes three shapes in one list so we assert all branches
     /// with a single wiremock round-trip.
     #[tokio::test]
@@ -2441,7 +2441,7 @@ mod tests {
             .await;
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let issues = backend.list_issues("REPOSIX").await.expect("list");
+        let issues = backend.list_records("REPOSIX").await.expect("list");
         assert_eq!(issues.len(), 3);
 
         let child = issues
@@ -2606,7 +2606,7 @@ mod tests {
             })))
             .mount(&server)
             .await;
-        // Also mount the pages endpoint so list_issues can complete — this
+        // Also mount the pages endpoint so list_records can complete — this
         // proves the round-trip end-to-end.
         Mock::given(method("GET"))
             .and(path("/wiki/api/v2/spaces/12345/pages"))
@@ -2619,7 +2619,7 @@ mod tests {
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issues = backend
-            .list_issues(adversarial)
+            .list_records(adversarial)
             .await
             .expect("list should succeed with adversarial space_key");
         assert_eq!(issues.len(), 0);
@@ -2645,7 +2645,7 @@ mod tests {
             .await;
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let err = backend
-            .list_issues("REPOSIX")
+            .list_records("REPOSIX")
             .await
             .expect_err("non-numeric space_id must be rejected");
         match err {
@@ -2706,7 +2706,7 @@ mod tests {
         )
     }
 
-    // -------- B6.1: update_issue sends PUT with incremented version --------
+    // -------- B6.1: update_record sends PUT with incremented version --------
 
     #[tokio::test]
     async fn update_issue_sends_put_with_version() {
@@ -2726,15 +2726,15 @@ mod tests {
         let patch = make_untainted("updated title", "body text", None);
         // Pass expected_version = Some(42) → PUT body must have version.number = 43
         let result = backend
-            .update_issue("REPOSIX", RecordId(99), patch, Some(42))
+            .update_record("REPOSIX", RecordId(99), patch, Some(42))
             .await
-            .expect("update_issue should succeed");
+            .expect("update_record should succeed");
         assert_eq!(result.title, "updated title");
         assert_eq!(result.id, RecordId(99));
         assert_eq!(result.version, 43);
     }
 
-    // -------- B6.2: update_issue 409 maps to conflict error --------
+    // -------- B6.2: update_record 409 maps to conflict error --------
 
     #[tokio::test]
     async fn update_issue_409_maps_to_conflict_error() {
@@ -2748,7 +2748,7 @@ mod tests {
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let patch = make_untainted("title", "body", None);
         let err = backend
-            .update_issue("REPOSIX", RecordId(99), patch, Some(5))
+            .update_record("REPOSIX", RecordId(99), patch, Some(5))
             .await
             .expect_err("409 must be an error");
         match err {
@@ -2760,7 +2760,7 @@ mod tests {
         }
     }
 
-    // -------- B6.3: update_issue with None version fetches then PUTs --------
+    // -------- B6.3: update_record with None version fetches then PUTs --------
 
     #[tokio::test]
     async fn update_issue_none_version_fetches_then_puts() {
@@ -2790,14 +2790,14 @@ mod tests {
         let patch = make_untainted("new title", "new body", None);
         // expected_version = None → must do GET first, then PUT with number=8
         let result = backend
-            .update_issue("REPOSIX", RecordId(99), patch, None)
+            .update_record("REPOSIX", RecordId(99), patch, None)
             .await
-            .expect("update_issue with None version should succeed");
+            .expect("update_record with None version should succeed");
         assert_eq!(result.version, 8);
         assert_eq!(result.title, "new title");
     }
 
-    // -------- B6.4: update_issue 404 maps to not-found --------
+    // -------- B6.4: update_record 404 maps to not-found --------
 
     #[tokio::test]
     async fn update_issue_404_maps_to_not_found() {
@@ -2811,7 +2811,7 @@ mod tests {
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let patch = make_untainted("title", "body", None);
         let err = backend
-            .update_issue("REPOSIX", RecordId(99), patch, Some(1))
+            .update_record("REPOSIX", RecordId(99), patch, Some(1))
             .await
             .expect_err("404 must be an error");
         match err {
@@ -2823,7 +2823,7 @@ mod tests {
         }
     }
 
-    // -------- B6.5: create_issue POSTs to pages with correct spaceId --------
+    // -------- B6.5: create_record POSTs to pages with correct spaceId --------
 
     #[tokio::test]
     async fn create_issue_posts_to_pages() {
@@ -2842,14 +2842,14 @@ mod tests {
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issue = make_untainted("my new page", "# Hello", None);
         let result = backend
-            .create_issue("REPOSIX", issue)
+            .create_record("REPOSIX", issue)
             .await
-            .expect("create_issue should succeed");
+            .expect("create_record should succeed");
         assert_eq!(result.id, RecordId(77777));
         assert_eq!(result.title, "my new page");
     }
 
-    // -------- B6.6: create_issue with parent_id sends parentId in body --------
+    // -------- B6.6: create_record with parent_id sends parentId in body --------
 
     /// Wiremock matcher: POST body has `parentId == "42"`.
     struct ParentIdMatches;
@@ -2883,13 +2883,13 @@ mod tests {
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issue = make_untainted("child page", "body", Some(RecordId(42)));
         let result = backend
-            .create_issue("REPOSIX", issue)
+            .create_record("REPOSIX", issue)
             .await
-            .expect("create_issue with parent_id should succeed");
+            .expect("create_record with parent_id should succeed");
         assert_eq!(result.id, RecordId(88888));
     }
 
-    // -------- B6.7: create_issue without parent_id sends null --------
+    // -------- B6.7: create_record without parent_id sends null --------
 
     /// Wiremock matcher: POST body has `parentId == null`.
     struct ParentIdIsNull;
@@ -2921,9 +2921,9 @@ mod tests {
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         let issue = make_untainted("root page", "body", None);
         let result = backend
-            .create_issue("REPOSIX", issue)
+            .create_record("REPOSIX", issue)
             .await
-            .expect("create_issue without parent should succeed");
+            .expect("create_record without parent should succeed");
         assert_eq!(result.id, RecordId(55555));
     }
 
@@ -3006,17 +3006,17 @@ mod tests {
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
 
-        // create_issue → POST
+        // create_record → POST
         let issue = make_untainted("t", "b", None);
         backend
-            .create_issue("REPOSIX", issue)
+            .create_record("REPOSIX", issue)
             .await
             .expect("POST must carry Content-Type: application/json");
 
-        // update_issue → PUT
+        // update_record → PUT
         let patch = make_untainted("t", "b", None);
         backend
-            .update_issue("REPOSIX", RecordId(99), patch, Some(1))
+            .update_record("REPOSIX", RecordId(99), patch, Some(1))
             .await
             .expect("PUT must carry Content-Type: application/json");
     }
@@ -3054,13 +3054,13 @@ mod tests {
 
         let issue = make_untainted("t", "b", None);
         backend
-            .create_issue("REPOSIX", issue)
+            .create_record("REPOSIX", issue)
             .await
             .expect("POST must carry Basic auth");
 
         let patch = make_untainted("t", "b", None);
         backend
-            .update_issue("REPOSIX", RecordId(99), patch, Some(1))
+            .update_record("REPOSIX", RecordId(99), patch, Some(1))
             .await
             .expect("PUT must carry Basic auth");
 
@@ -3096,7 +3096,7 @@ mod tests {
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
         // GET — arms the gate
-        let _ = backend.get_issue("REPOSIX", RecordId(10)).await;
+        let _ = backend.get_record("REPOSIX", RecordId(10)).await;
 
         // Immediately after: gate must be set and in the future
         let gate = backend.rate_limit_gate.lock().to_owned();
@@ -3179,9 +3179,9 @@ mod tests {
 
         let patch = make_untainted("updated title", "body", None);
         backend
-            .update_issue("REPOSIX", RecordId(99), patch, Some(1))
+            .update_record("REPOSIX", RecordId(99), patch, Some(1))
             .await
-            .expect("update_issue should succeed");
+            .expect("update_record should succeed");
 
         assert_eq!(
             count_audit_rows(&audit, "PUT"),
@@ -3207,9 +3207,9 @@ mod tests {
 
         let issue = make_untainted("new page", "body", None);
         backend
-            .create_issue("REPOSIX", issue)
+            .create_record("REPOSIX", issue)
             .await
-            .expect("create_issue should succeed");
+            .expect("create_record should succeed");
 
         assert_eq!(
             count_audit_rows(&audit, "POST"),
@@ -3275,9 +3275,9 @@ mod tests {
 
         let patch = make_untainted("title check", "body", None);
         backend
-            .update_issue("REPOSIX", RecordId(99), patch, Some(1))
+            .update_record("REPOSIX", RecordId(99), patch, Some(1))
             .await
-            .expect("update_issue should succeed");
+            .expect("update_record should succeed");
 
         let (method_val, path_val, status_val, agent_id, response_summary): (
             String,
@@ -3337,7 +3337,7 @@ mod tests {
         let patch = make_untainted("resilience test", "body", None);
         // Must NOT return Err — audit failure is swallowed.
         backend
-            .update_issue("REPOSIX", RecordId(99), patch, Some(1))
+            .update_record("REPOSIX", RecordId(99), patch, Some(1))
             .await
             .expect("write must succeed even when audit INSERT fails");
     }
@@ -3364,7 +3364,7 @@ mod tests {
         let patch = make_untainted("conflict test", "body", None);
         // The write itself returns Err (409 is a version mismatch error).
         let result = backend
-            .update_issue("REPOSIX", RecordId(99), patch, Some(1))
+            .update_record("REPOSIX", RecordId(99), patch, Some(1))
             .await;
         assert!(result.is_err(), "409 must return Err");
 
@@ -3383,9 +3383,9 @@ mod tests {
         );
     }
 
-    // -------- truncation: warn mode (list_issues, default) --------
+    // -------- truncation: warn mode (list_records, default) --------
 
-    /// Verify that `list_issues` (non-strict) emits a warn and returns
+    /// Verify that `list_records` (non-strict) emits a warn and returns
     /// `Ok(capped)` when the space exceeds `MAX_ISSUES_PER_LIST / PAGE_SIZE`
     /// pages. We mock exactly `MAX_ISSUES_PER_LIST / PAGE_SIZE + 1` page
     /// responses so the pagination loop triggers the cap on the next fetch.
@@ -3456,9 +3456,9 @@ mod tests {
             .await;
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let result = backend.list_issues("TRUNCTEST").await;
+        let result = backend.list_records("TRUNCTEST").await;
         // Must succeed (warn mode, not strict).
-        let issues = result.expect("list_issues must succeed in warn mode even at cap");
+        let issues = result.expect("list_records must succeed in warn mode even at cap");
         // 5 pages × 1 item = 5 issues.
         assert_eq!(issues.len(), 5, "expected 5 issues (one per mocked page)");
     }
@@ -3527,7 +3527,7 @@ mod tests {
         );
     }
 
-    /// Verify that error messages from `list_issues` on HTTP failure do NOT
+    /// Verify that error messages from `list_records` on HTTP failure do NOT
     /// contain the host:port (which in production would be the tenant name),
     /// but DO contain the path portion of the URL (for debuggability).
     #[tokio::test]
@@ -3543,7 +3543,7 @@ mod tests {
             .await;
 
         let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
-        let result = backend.list_issues("LEAKTEST").await;
+        let result = backend.list_records("LEAKTEST").await;
         assert!(result.is_err(), "500 must return Err");
         let msg = format!("{}", result.unwrap_err());
 

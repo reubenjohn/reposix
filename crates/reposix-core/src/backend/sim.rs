@@ -221,7 +221,7 @@ impl BackendConnector for SimBackend {
         )
     }
 
-    async fn list_issues(&self, project: &str) -> Result<Vec<Record>> {
+    async fn list_records(&self, project: &str) -> Result<Vec<Record>> {
         let url = format!("{}/projects/{}/issues", self.base(), project);
         let resp = self
             .http
@@ -254,7 +254,7 @@ impl BackendConnector for SimBackend {
         Ok(issues.into_iter().map(|i| i.id).collect())
     }
 
-    async fn get_issue(&self, project: &str, id: RecordId) -> Result<Record> {
+    async fn get_record(&self, project: &str, id: RecordId) -> Result<Record> {
         let url = format!("{}/projects/{}/issues/{}", self.base(), project, id.0);
         let resp = self
             .http
@@ -263,7 +263,7 @@ impl BackendConnector for SimBackend {
         decode_issue(resp, &url).await
     }
 
-    async fn create_issue(&self, project: &str, issue: Untainted<Record>) -> Result<Record> {
+    async fn create_record(&self, project: &str, issue: Untainted<Record>) -> Result<Record> {
         let url = format!("{}/projects/{}/issues", self.base(), project);
         let body = render_create_body(issue.inner_ref())?;
         let resp = self
@@ -273,7 +273,7 @@ impl BackendConnector for SimBackend {
         decode_issue(resp, &url).await
     }
 
-    async fn update_issue(
+    async fn update_record(
         &self,
         project: &str,
         id: RecordId,
@@ -400,7 +400,7 @@ mod tests {
             .await;
 
         let backend = SimBackend::new(server.uri()).expect("backend");
-        let issues = backend.list_issues("demo").await.expect("list");
+        let issues = backend.list_records("demo").await.expect("list");
         assert_eq!(issues.len(), 2);
         assert_eq!(issues[0].id, RecordId(1));
         assert_eq!(issues[1].id, RecordId(2));
@@ -416,7 +416,7 @@ mod tests {
             .await;
 
         let backend = SimBackend::new(server.uri()).expect("backend");
-        let issue = backend.get_issue("demo", RecordId(7)).await.expect("get");
+        let issue = backend.get_record("demo", RecordId(7)).await.expect("get");
         assert_eq!(issue.id, RecordId(7));
         assert_eq!(issue.title, "hello");
     }
@@ -432,7 +432,7 @@ mod tests {
 
         let backend = SimBackend::new(server.uri()).expect("backend");
         let err = backend
-            .get_issue("demo", RecordId(9999))
+            .get_record("demo", RecordId(9999))
             .await
             .expect_err("404");
         match err {
@@ -481,7 +481,7 @@ mod tests {
             },
         );
         let out = backend
-            .update_issue("demo", RecordId(42), u, Some(5))
+            .update_record("demo", RecordId(42), u, Some(5))
             .await
             .expect("update");
         assert_eq!(out.id, RecordId(42));
@@ -512,7 +512,7 @@ mod tests {
         let backend = SimBackend::new(server.uri()).expect("backend");
         let u = sample_untainted();
         let err = backend
-            .update_issue("demo", RecordId(42), u, Some(1))
+            .update_record("demo", RecordId(42), u, Some(1))
             .await
             .expect_err("409");
         match err {
@@ -552,7 +552,7 @@ mod tests {
         let backend = SimBackend::new(server.uri()).expect("backend");
         let u = sample_untainted();
         let err = backend
-            .update_issue("demo", RecordId(42), u, Some(1))
+            .update_record("demo", RecordId(42), u, Some(1))
             .await
             .expect_err("409");
         let Error::Other(msg) = err else {
@@ -601,7 +601,7 @@ mod tests {
         let backend = SimBackend::new(server.uri()).expect("backend");
         let u = sample_untainted();
         let out = backend
-            .update_issue("demo", RecordId(42), u, None)
+            .update_record("demo", RecordId(42), u, None)
             .await
             .expect("update");
         assert_eq!(out.id, RecordId(42));
@@ -671,7 +671,7 @@ mod tests {
             },
         );
         let out = backend
-            .update_issue("demo", RecordId(1), u, Some(3))
+            .update_record("demo", RecordId(1), u, Some(3))
             .await
             .expect("update");
         assert_eq!(out.id, RecordId(1));
@@ -705,7 +705,7 @@ mod tests {
         let backend = SimBackend::new(server.uri()).expect("backend");
         let u = sample_untainted();
         let _ = backend
-            .update_issue("demo", RecordId(1), u, Some(1))
+            .update_record("demo", RecordId(1), u, Some(1))
             .await
             .expect("update");
         // Dropping `server` verifies the .expect(1) — panics if the
@@ -728,7 +728,7 @@ mod tests {
 
         let backend = SimBackend::new(server.uri()).expect("backend");
         let u = sample_untainted();
-        let got = backend.create_issue("demo", u).await.expect("create");
+        let got = backend.create_record("demo", u).await.expect("create");
         assert_eq!(got.id, RecordId(4));
 
         let requests = server.received_requests().await.unwrap();
@@ -763,7 +763,7 @@ mod tests {
         // sanitize_strips_server_fields_on_egress (flagged critical in
         // 14-RESEARCH.md#Q10). A hostile tainted issue carrying an inflated
         // `version=999_999` flows through `sanitize()` and into
-        // `SimBackend::update_issue`; the wire body must contain the
+        // `SimBackend::update_record`; the wire body must contain the
         // mutable-field subset only. This proves the Untainted<Record>
         // discipline holds at the trait-impl layer too, not just in the old
         // `EgressPayload` struct.
@@ -801,7 +801,7 @@ mod tests {
         };
         let u = sanitize(Tainted::new(hostile), meta);
         backend
-            .update_issue("demo", RecordId(1), u, Some(1))
+            .update_record("demo", RecordId(1), u, Some(1))
             .await
             .expect("update");
 
@@ -842,7 +842,7 @@ mod tests {
 
         let backend = SimBackend::new(server.uri()).expect("backend");
         let u = sample_untainted();
-        let err = backend.create_issue("demo", u).await.expect_err("400");
+        let err = backend.create_record("demo", u).await.expect_err("400");
         match err {
             Error::Other(msg) => {
                 assert!(
@@ -867,7 +867,7 @@ mod tests {
         // Default allowlist (empty env var) is 127.0.0.1/localhost, so
         // `http://evil.example` is rejected.
         let backend = SimBackend::new("http://evil.example".into()).expect("backend");
-        let err = backend.list_issues("demo").await.expect_err("evil origin");
+        let err = backend.list_records("demo").await.expect_err("evil origin");
         assert!(
             matches!(err, Error::InvalidOrigin(_)),
             "expected InvalidOrigin, got {err:?}"
@@ -888,7 +888,7 @@ mod tests {
 
         let backend = SimBackend::new(server.uri()).expect("backend");
         let err = backend
-            .get_issue("demo", RecordId(1))
+            .get_record("demo", RecordId(1))
             .await
             .expect_err("500");
         match err {
@@ -917,7 +917,7 @@ mod tests {
 
         let backend = SimBackend::new(server.uri()).expect("backend");
         let u = sample_untainted();
-        let got = backend.create_issue("demo", u).await.expect("create");
+        let got = backend.create_record("demo", u).await.expect("create");
         assert_eq!(got.id, RecordId(42));
         assert_eq!(got.version, 1);
     }

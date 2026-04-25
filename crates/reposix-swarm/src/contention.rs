@@ -2,8 +2,8 @@
 //! `If-Match` versions, proving the simulator's 409 path is deterministic.
 //!
 //! Workload per cycle:
-//!   1 × `get_issue`    (read current version)
-//!   1 × `update_issue` (PATCH with `Some(version)` — races other clients)
+//!   1 × `get_record`    (read current version)
+//!   1 × `update_record` (PATCH with `Some(version)` — races other clients)
 //!
 //! Every client races to write to the same issue with an explicit expected
 //! version. One client wins per version slot; the rest receive 409 Conflict.
@@ -71,7 +71,7 @@ impl Workload for ContentionWorkload {
     async fn step(&self, metrics: &Arc<MetricsAccumulator>) -> anyhow::Result<()> {
         // 1. GET live version (unsynchronised across clients → intentionally racy).
         let get_start = Instant::now();
-        let issue = match self.backend.get_issue(&self.project, self.target_id).await {
+        let issue = match self.backend.get_record(&self.project, self.target_id).await {
             Ok(i) => {
                 metrics.record(OpKind::Get, elapsed_us(get_start));
                 i
@@ -106,7 +106,7 @@ impl Workload for ContentionWorkload {
         let patch_start = Instant::now();
         match self
             .backend
-            .update_issue(
+            .update_record(
                 &self.project,
                 self.target_id,
                 untainted,

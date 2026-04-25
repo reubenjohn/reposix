@@ -2,9 +2,9 @@
 //! ([`SimBackend`]) concurrently.
 //!
 //! Workload per cycle:
-//!   1 × `list_issues`  (warm up / discover ids)
-//!   3 × `get_issue`    (random ids from the discovered set)
-//!   1 × `update_issue` (random id, patch status to `in_progress` with
+//!   1 × `list_records`  (warm up / discover ids)
+//!   3 × `get_record`    (random ids from the discovered set)
+//!   1 × `update_record` (random id, patch status to `in_progress` with
 //!                       wildcard etag — stays idempotent even under races)
 //!
 //! This is deliberately the "cheapest realistic agent" — it matches what an
@@ -34,7 +34,7 @@ pub struct SimDirectWorkload {
     backend: SimBackend,
     project: String,
     rng: Mutex<StdRng>,
-    /// Cached ids from the first `list_issues` call; workload reads/patches
+    /// Cached ids from the first `list_records` call; workload reads/patches
     /// from this set to keep requests warm. Refreshed on every step's
     /// list call.
     ids: Mutex<Vec<RecordId>>,
@@ -78,7 +78,7 @@ impl Workload for SimDirectWorkload {
     async fn step(&self, metrics: &Arc<MetricsAccumulator>) -> anyhow::Result<()> {
         // 1. list
         let start = Instant::now();
-        match self.backend.list_issues(&self.project).await {
+        match self.backend.list_records(&self.project).await {
             Ok(issues) => {
                 metrics.record(OpKind::List, elapsed_us(start));
                 let mut g = self.ids.lock();
@@ -97,7 +97,7 @@ impl Workload for SimDirectWorkload {
                 break;
             };
             let start = Instant::now();
-            match self.backend.get_issue(&self.project, id).await {
+            match self.backend.get_record(&self.project, id).await {
                 Ok(_issue) => {
                     metrics.record(OpKind::Get, elapsed_us(start));
                 }
@@ -139,7 +139,7 @@ impl Workload for SimDirectWorkload {
             let start = Instant::now();
             match self
                 .backend
-                .update_issue(&self.project, id, untainted, None)
+                .update_record(&self.project, id, untainted, None)
                 .await
             {
                 Ok(_) => {

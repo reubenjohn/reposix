@@ -16,10 +16,10 @@
 //!
 //! ## The 5 invariants (shared with reposix-github)
 //!
-//! 1. `list_issues(project)` returns `Ok(vec)` for a known-good project.
+//! 1. `list_records(project)` returns `Ok(vec)` for a known-good project.
 //! 2. The list is non-empty (≥1 issue).
-//! 3. `get_issue(project, known_issue_id)` returns `Ok(issue)` with matching id.
-//! 4. `get_issue(project, RecordId(u64::MAX))` returns `Err` (the 404 path).
+//! 3. `get_record(project, known_issue_id)` returns `Ok(issue)` with matching id.
+//! 4. `get_record(project, RecordId(u64::MAX))` returns `Err` (the 404 path).
 //! 5. Every listed issue's status is a valid [`IssueStatus`] variant — the
 //!    adapter didn't leave a raw backend-specific string dangling.
 //!
@@ -80,10 +80,10 @@ macro_rules! skip_if_no_env {
 /// Shared verbatim with `reposix-github/tests/contract.rs` by intent —
 /// the trait's value *is* this shared contract.
 async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_issue_id: RecordId) {
-    // (1) list_issues returns Ok(vec).
-    let issues = backend.list_issues(project).await.unwrap_or_else(|e| {
+    // (1) list_records returns Ok(vec).
+    let issues = backend.list_records(project).await.unwrap_or_else(|e| {
         panic!(
-            "[{}] list_issues({project}) should be Ok, got {e:?}",
+            "[{}] list_records({project}) should be Ok, got {e:?}",
             backend.name()
         )
     });
@@ -91,17 +91,17 @@ async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_
     // (2) list is non-empty.
     assert!(
         !issues.is_empty(),
-        "[{}] list_issues({project}) returned empty — seed/fixture missing?",
+        "[{}] list_records({project}) returned empty — seed/fixture missing?",
         backend.name()
     );
 
-    // (3) get_issue for a known id returns matching id.
+    // (3) get_record for a known id returns matching id.
     let issue = backend
-        .get_issue(project, known_issue_id)
+        .get_record(project, known_issue_id)
         .await
         .unwrap_or_else(|e| {
             panic!(
-                "[{}] get_issue({project}, {known_issue_id}) should be Ok, got {e:?}",
+                "[{}] get_record({project}, {known_issue_id}) should be Ok, got {e:?}",
                 backend.name()
             )
         });
@@ -113,10 +113,10 @@ async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_
     );
 
     // (4) u64::MAX is expected to be absent — this is the 404 path.
-    let missing = backend.get_issue(project, RecordId(u64::MAX)).await;
+    let missing = backend.get_record(project, RecordId(u64::MAX)).await;
     assert!(
         missing.is_err(),
-        "[{}] get_issue({project}, u64::MAX) should be Err, got {missing:?}",
+        "[{}] get_record({project}, u64::MAX) should be Err, got {missing:?}",
         backend.name()
     );
 
@@ -211,7 +211,7 @@ async fn contract_sim() {
 /// through [`ConfluenceBackend`].
 ///
 /// Stronger than the unit tests in `lib.rs` because it exercises the
-/// full `list_issues → get_issue → get_issue(u64::MAX)` sequence
+/// full `list_records → get_record → get_record(u64::MAX)` sequence
 /// through the [`BackendConnector`] trait seam, not through private
 /// helpers — the same seam the FUSE daemon and CLI consume.
 ///
@@ -282,7 +282,7 @@ async fn contract_confluence_wiremock() {
         .mount(&server)
         .await;
 
-    // 4. get_issue(RecordId(1)) — single page with ADF body (C4: atlas_doc_format path).
+    // 4. get_record(RecordId(1)) — single page with ADF body (C4: atlas_doc_format path).
     Mock::given(method("GET"))
         .and(path("/wiki/api/v2/pages/1"))
         .and(query_param("body-format", "atlas_doc_format"))
@@ -405,9 +405,9 @@ async fn adversarial_links_base_does_not_trigger_outbound_call() {
     let backend = ConfluenceBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
 
     let issues = backend
-        .list_issues("REPOSIX")
+        .list_records("REPOSIX")
         .await
-        .expect("list_issues succeeded");
+        .expect("list_records succeeded");
     assert_eq!(issues.len(), 1, "one page in fixture");
     assert_eq!(issues[0].id, RecordId(1));
 
@@ -476,8 +476,8 @@ async fn adversarial_webui_link_does_not_trigger_outbound_call() {
         .mount(&legit_server)
         .await;
 
-    // Also arm get_issue(1) with ADF body — so a contract-style round trip works.
-    // C4: get_issue now requests atlas_doc_format first.
+    // Also arm get_record(1) with ADF body — so a contract-style round trip works.
+    // C4: get_record now requests atlas_doc_format first.
     Mock::given(method("GET"))
         .and(path("/wiki/api/v2/pages/1"))
         .and(query_param("body-format", "atlas_doc_format"))
@@ -516,18 +516,18 @@ async fn adversarial_webui_link_does_not_trigger_outbound_call() {
     let backend = ConfluenceBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
 
     let issues = backend
-        .list_issues("REPOSIX")
+        .list_records("REPOSIX")
         .await
-        .expect("list_issues succeeded");
+        .expect("list_records succeeded");
     assert_eq!(issues.len(), 1);
 
-    // Round-trip the single page via get_issue too, so the adversarial
+    // Round-trip the single page via get_record too, so the adversarial
     // `webui_link` on the single-page shape gets the same regression
     // coverage as the list shape.
     let single = backend
-        .get_issue("REPOSIX", RecordId(1))
+        .get_record("REPOSIX", RecordId(1))
         .await
-        .expect("get_issue succeeded");
+        .expect("get_record succeeded");
     assert_eq!(single.id, RecordId(1));
 
     let hits = decoy_server.received_requests().await.unwrap_or_default();
@@ -593,7 +593,7 @@ async fn adversarial_host_in_arbitrary_string_field_is_ignored() {
         .mount(&legit_server)
         .await;
 
-    // C4: get_issue now requests atlas_doc_format first. Return ADF body that
+    // C4: get_record now requests atlas_doc_format first. Return ADF body that
     // contains the adversarial URL as plain text so the body-exfil assertion
     // still passes (adapter must not resolve the URL, just pass it through).
     Mock::given(method("GET"))
@@ -635,9 +635,9 @@ async fn adversarial_host_in_arbitrary_string_field_is_ignored() {
     let backend = ConfluenceBackend::new_with_base_url(creds, legit_server.uri()).expect("backend");
 
     let issues = backend
-        .list_issues("REPOSIX")
+        .list_records("REPOSIX")
         .await
-        .expect("list_issues succeeded");
+        .expect("list_records succeeded");
     assert_eq!(issues.len(), 1);
     // parentId was a URL, not a numeric string → degrades to orphan
     // (see lib.rs `translate` comment on T-13-PB1 graceful degradation).
@@ -650,9 +650,9 @@ async fn adversarial_host_in_arbitrary_string_field_is_ignored() {
     assert!(issues[0].title.contains("title-exfil"));
 
     let single = backend
-        .get_issue("REPOSIX", RecordId(1))
+        .get_record("REPOSIX", RecordId(1))
         .await
-        .expect("get_issue succeeded");
+        .expect("get_record succeeded");
     assert!(single.body.contains("body-exfil"));
 
     let hits = decoy_server.received_requests().await.unwrap_or_default();
@@ -686,7 +686,7 @@ async fn adversarial_host_in_arbitrary_string_field_is_ignored() {
 /// ## Known-id strategy
 ///
 /// Unlike `octocat/Hello-World` on GitHub, real Confluence spaces
-/// don't have a canonical "page id 1". The test calls `list_issues`
+/// don't have a canonical "page id 1". The test calls `list_records`
 /// first, asserts the list is non-empty, and uses the first returned
 /// id as the `known_issue_id` argument to `assert_contract`. That
 /// double-lists the space (once as setup, once inside assert_contract),
@@ -722,9 +722,9 @@ async fn contract_confluence_live() {
     // Pick a known id by listing first — real spaces don't have a
     // canonical "issue 1" the way octocat/Hello-World does.
     let issues = backend
-        .list_issues(&space)
+        .list_records(&space)
         .await
-        .unwrap_or_else(|e| panic!("list_issues({space}) failed: {e:?}"));
+        .unwrap_or_else(|e| panic!("list_records({space}) failed: {e:?}"));
     assert!(
         !issues.is_empty(),
         "live Confluence space {space} has zero pages"
@@ -770,9 +770,9 @@ async fn contract_confluence_live_hierarchy() {
     let backend = ConfluenceBackend::new(creds, &tenant).expect("backend");
 
     let issues = backend
-        .list_issues(&space)
+        .list_records(&space)
         .await
-        .unwrap_or_else(|e| panic!("list_issues({space}) failed: {e:?}"));
+        .unwrap_or_else(|e| panic!("list_records({space}) failed: {e:?}"));
     assert!(
         !issues.is_empty(),
         "live Confluence space {space} has zero pages"

@@ -3,9 +3,9 @@
 //!
 //! # Scope
 //!
-//! Phase 28 ships the read path: `list_issues` (POST `/rest/api/3/search/jql`
-//! with cursor pagination) and `get_issue` (GET `/rest/api/3/issue/{id}`).
-//! Phase 29 ships the full write path: `create_issue`, `update_issue`,
+//! Phase 28 ships the read path: `list_records` (POST `/rest/api/3/search/jql`
+//! with cursor pagination) and `get_record` (GET `/rest/api/3/issue/{id}`).
+//! Phase 29 ships the full write path: `create_record`, `update_record`,
 //! and `delete_or_close` (via transitions API with DELETE fallback).
 //!
 //! # Issue → Issue mapping
@@ -73,7 +73,7 @@ use reposix_core::{Error, Record, RecordId, IssueStatus, Result, Tainted, Untain
 /// exhaustion as an error. Caps worst-case call latency.
 const MAX_RATE_LIMIT_SLEEP: Duration = Duration::from_secs(60);
 
-/// Max issues we'll page through in one `list_issues` call.
+/// Max issues we'll page through in one `list_records` call.
 const MAX_ISSUES_PER_LIST: usize = 500;
 
 /// Page size for the JIRA search endpoint (max 100 per request).
@@ -136,7 +136,7 @@ pub struct JiraBackend {
     base_url: String,
     rate_limit_gate: Arc<Mutex<Option<Instant>>>,
     audit: Option<Arc<Mutex<Connection>>>,
-    /// Per-session cache for valid issue type names (populated on first `create_issue`).
+    /// Per-session cache for valid issue type names (populated on first `create_record`).
     issue_type_cache: Arc<OnceLock<Vec<String>>>,
 }
 
@@ -196,7 +196,7 @@ impl JiraBackend {
 
     /// Attach an audit log connection.
     ///
-    /// Every read call (`list_issues`, `get_issue`) inserts one row into
+    /// Every read call (`list_records`, `get_record`) inserts one row into
     /// `audit_events` when an audit connection is present. Writes succeed
     /// even if the audit insert fails (best-effort, log-and-swallow).
     ///
@@ -209,13 +209,13 @@ impl JiraBackend {
         self
     }
 
-    /// Strict variant of [`BackendConnector::list_issues`]: returns `Err`
+    /// Strict variant of [`BackendConnector::list_records`]: returns `Err`
     /// instead of silently truncating at the [`MAX_ISSUES_PER_LIST`] cap.
     ///
     /// # Errors
     ///
     /// - Returns `Error::Other` if pagination would exceed `MAX_ISSUES_PER_LIST`.
-    /// - All errors that `list_issues` would raise also apply here.
+    /// - All errors that `list_records` would raise also apply here.
     pub async fn list_issues_strict(&self, project: &str) -> Result<Vec<Record>> {
         self.list_issues_impl(project, true).await
     }
@@ -473,7 +473,7 @@ impl JiraBackend {
     ///
     /// Called at most once per backend instance (results are cached in
     /// `issue_type_cache`). Prefers `"Task"` when selecting a type for
-    /// `create_issue`.
+    /// `create_record`.
     ///
     /// # Errors
     ///
@@ -518,7 +518,7 @@ impl JiraBackend {
 // ─── BackendConnector impl ────────────────────────────────────────────────────
 
 #[async_trait]
-#[allow(clippy::too_many_lines)] // write path: create_issue + update_issue + delete_or_close each need ~50 lines
+#[allow(clippy::too_many_lines)] // write path: create_record + update_record + delete_or_close each need ~50 lines
 impl BackendConnector for JiraBackend {
     fn name(&self) -> &'static str {
         "jira"
@@ -531,7 +531,7 @@ impl BackendConnector for JiraBackend {
         )
     }
 
-    async fn list_issues(&self, project: &str) -> Result<Vec<Record>> {
+    async fn list_records(&self, project: &str) -> Result<Vec<Record>> {
         self.list_issues_impl(project, false).await
     }
 
@@ -619,12 +619,12 @@ impl BackendConnector for JiraBackend {
         Ok(out)
     }
 
-    async fn get_issue(&self, _project: &str, id: RecordId) -> Result<Record> {
+    async fn get_record(&self, _project: &str, id: RecordId) -> Result<Record> {
         self.await_rate_limit_gate().await;
         self.get_issue_inner(id).await
     }
 
-    async fn create_issue(&self, project: &str, issue: Untainted<Record>) -> Result<Record> {
+    async fn create_record(&self, project: &str, issue: Untainted<Record>) -> Result<Record> {
         // Response struct declared before statements to satisfy clippy::items_after_statements.
         #[derive(serde::Deserialize)]
         struct CreateResp {
@@ -706,7 +706,7 @@ impl BackendConnector for JiraBackend {
         self.get_issue_inner(RecordId(new_id)).await
     }
 
-    async fn update_issue(
+    async fn update_record(
         &self,
         _project: &str,
         id: RecordId,
@@ -1324,7 +1324,7 @@ mod tests {
 
         let backend = make_backend(&server.uri());
         let result = backend
-            .list_issues("PROJ")
+            .list_records("PROJ")
             .await
             .expect("list must succeed");
         assert_eq!(result.len(), 10, "expected 10 issues from single page");
@@ -1386,7 +1386,7 @@ mod tests {
 
         let backend = make_backend(&server.uri());
         let result = backend
-            .list_issues("PROJ")
+            .list_records("PROJ")
             .await
             .expect("list must succeed");
         assert_eq!(result.len(), 6, "expected 6 issues across 2 pages");
@@ -1413,7 +1413,7 @@ mod tests {
 
         let backend = make_backend(&server.uri());
         let result = backend
-            .get_issue("MYPROJ", RecordId(10001))
+            .get_record("MYPROJ", RecordId(10001))
             .await
             .expect("get must succeed");
         assert_eq!(result.id, RecordId(10001));
@@ -1447,7 +1447,7 @@ mod tests {
 
         let backend = make_backend(&server.uri());
         let err = backend
-            .get_issue("PROJ", RecordId(99999))
+            .get_record("PROJ", RecordId(99999))
             .await
             .expect_err("must return error for 404");
         let msg = err.to_string();
@@ -1772,7 +1772,7 @@ mod tests {
 
         let backend = make_backend(&server.uri());
         let issue = make_untainted("test create", "body text");
-        let created = backend.create_issue("P", issue).await.expect("create");
+        let created = backend.create_record("P", issue).await.expect("create");
         assert_eq!(created.title, "test create");
         assert_eq!(created.id, RecordId(10042));
     }
@@ -1799,7 +1799,7 @@ mod tests {
         let backend = make_backend(&server.uri());
         let patch = make_untainted("updated title", "new body");
         let updated = backend
-            .update_issue("P", RecordId(99), patch, None)
+            .update_record("P", RecordId(99), patch, None)
             .await
             .expect("update");
         assert_eq!(updated.title, "updated title");
@@ -1928,12 +1928,12 @@ mod tests {
         let backend = make_backend(&server.uri());
         // Two creates — issuetype GET should only fire once (cached).
         let _ = backend
-            .create_issue("P", make_untainted("s", "b"))
+            .create_record("P", make_untainted("s", "b"))
             .await
             .expect("create 1");
         // Second create reuses cache — Mock with expect(1) will verify at drop.
         let _ = backend
-            .create_issue("P", make_untainted("s", "b"))
+            .create_record("P", make_untainted("s", "b"))
             .await
             .expect("create 2");
     }

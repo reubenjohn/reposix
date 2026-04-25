@@ -9,11 +9,11 @@
 //!
 //! The shared `assert_contract` helper codifies what "well-behaved" means:
 //!
-//! 1. `list_issues(project)` returns `Ok(vec)` for a known-good project.
+//! 1. `list_records(project)` returns `Ok(vec)` for a known-good project.
 //! 2. The list is non-empty (≥1 issue).
-//! 3. `get_issue(project, known_issue_id)` returns `Ok(issue)` with matching
+//! 3. `get_record(project, known_issue_id)` returns `Ok(issue)` with matching
 //!    id.
-//! 4. `get_issue(project, RecordId(u64::MAX))` returns `Err` (the 404 path).
+//! 4. `get_record(project, RecordId(u64::MAX))` returns `Err` (the 404 path).
 //! 5. Every listed issue's status is a valid [`IssueStatus`] variant — the
 //!    adapter didn't leave a raw backend-specific string dangling.
 //!
@@ -45,10 +45,10 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 /// Every assertion writes its expectation inline so a failing run points
 /// directly at the rule that broke, not a distant line of driver code.
 async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_issue_id: RecordId) {
-    // (1) list_issues returns Ok(vec).
-    let issues = backend.list_issues(project).await.unwrap_or_else(|e| {
+    // (1) list_records returns Ok(vec).
+    let issues = backend.list_records(project).await.unwrap_or_else(|e| {
         panic!(
-            "[{}] list_issues({project}) should be Ok, got {e:?}",
+            "[{}] list_records({project}) should be Ok, got {e:?}",
             backend.name()
         )
     });
@@ -56,17 +56,17 @@ async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_
     // (2) list is non-empty.
     assert!(
         !issues.is_empty(),
-        "[{}] list_issues({project}) returned empty — seed/fixture missing?",
+        "[{}] list_records({project}) returned empty — seed/fixture missing?",
         backend.name()
     );
 
-    // (3) get_issue for a known id returns matching id.
+    // (3) get_record for a known id returns matching id.
     let issue = backend
-        .get_issue(project, known_issue_id)
+        .get_record(project, known_issue_id)
         .await
         .unwrap_or_else(|e| {
             panic!(
-                "[{}] get_issue({project}, {known_issue_id}) should be Ok, got {e:?}",
+                "[{}] get_record({project}, {known_issue_id}) should be Ok, got {e:?}",
                 backend.name()
             )
         });
@@ -78,10 +78,10 @@ async fn assert_contract<B: BackendConnector>(backend: &B, project: &str, known_
     );
 
     // (4) u64::MAX is expected to be absent — this is the 404 path.
-    let missing = backend.get_issue(project, RecordId(u64::MAX)).await;
+    let missing = backend.get_record(project, RecordId(u64::MAX)).await;
     assert!(
         missing.is_err(),
-        "[{}] get_issue({project}, u64::MAX) should be Err, got {missing:?}",
+        "[{}] get_record({project}, u64::MAX) should be Err, got {missing:?}",
         backend.name()
     );
 
@@ -217,7 +217,7 @@ fn gh_issue(
 /// [`GithubReadOnlyBackend`].
 ///
 /// Stronger than the unit tests in `lib.rs` because it exercises the
-/// full `list_issues → get_issue → get_issue(u64::MAX)` sequence
+/// full `list_records → get_record → get_record(u64::MAX)` sequence
 /// through the [`BackendConnector`] trait seam, not through private
 /// helpers — the same seam the FUSE daemon and CLI consume.
 ///
@@ -265,9 +265,9 @@ async fn contract_github_wiremock() {
 
 // --------------------------------------------------- pagination
 
-/// `list_issues` follows the `Link: <url>; rel="next"` header through
+/// `list_records` follows the `Link: <url>; rel="next"` header through
 /// multiple pages and concatenates results. Mirrors the inline unit test
-/// in `lib.rs` but exercises the full `BackendConnector::list_issues` seam,
+/// in `lib.rs` but exercises the full `BackendConnector::list_records` seam,
 /// confirming the contract holds at the trait boundary too.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn pagination_follows_link_header() {
@@ -309,7 +309,7 @@ async fn pagination_follows_link_header() {
         .await;
 
     let backend = GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
-    let issues = backend.list_issues("o/r").await.expect("list");
+    let issues = backend.list_records("o/r").await.expect("list");
     assert_eq!(issues.len(), 3, "expected page1 (2) + page2 (1) = 3 issues");
     assert_eq!(issues[0].id, RecordId(1));
     assert_eq!(issues[2].id, RecordId(3));
@@ -345,7 +345,7 @@ async fn rate_limit_429_surfaces_clean_error() {
 
     let backend = GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
     let err = backend
-        .get_issue("o/r", RecordId(42))
+        .get_record("o/r", RecordId(42))
         .await
         .expect_err("429 must surface as Err with current adapter");
     let msg = format!("{err:?}");
@@ -369,7 +369,7 @@ async fn rate_limit_429_surfaces_clean_error() {
 ///
 /// This integration test pins each row through the trait seam — the
 /// inline unit tests in `lib.rs` cover individual rows, but this one
-/// proves the whole mapping holds end-to-end through `list_issues`.
+/// proves the whole mapping holds end-to-end through `list_records`.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn state_reason_maps_to_status() {
     let server = MockServer::start().await;
@@ -390,7 +390,7 @@ async fn state_reason_maps_to_status() {
         .await;
 
     let backend = GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
-    let issues = backend.list_issues("o/r").await.expect("list");
+    let issues = backend.list_records("o/r").await.expect("list");
     assert_eq!(issues.len(), 6);
     assert_eq!(issues[0].status, IssueStatus::Done, "closed+completed");
     assert_eq!(issues[1].status, IssueStatus::WontFix, "closed+not_planned");
@@ -482,12 +482,12 @@ async fn adversarial_html_url_does_not_trigger_outbound_call() {
     let backend =
         GithubReadOnlyBackend::new_with_base_url(None, legit_server.uri()).expect("backend");
 
-    let issues = backend.list_issues("o/r").await.expect("list");
+    let issues = backend.list_records("o/r").await.expect("list");
     assert_eq!(issues.len(), 1);
     assert_eq!(issues[0].id, RecordId(1));
     assert_eq!(issues[0].assignee.as_deref(), Some("octocat"));
 
-    let single = backend.get_issue("o/r", RecordId(1)).await.expect("get");
+    let single = backend.get_record("o/r", RecordId(1)).await.expect("get");
     assert_eq!(single.id, RecordId(1));
 
     // Inline assertion on top of `.expect(0)`'s drop-panic so failures
@@ -540,7 +540,7 @@ async fn malformed_assignee_object_degrades_to_none() {
         .await;
 
     let backend = GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
-    let issues = backend.list_issues("o/r").await.expect("list");
+    let issues = backend.list_records("o/r").await.expect("list");
     assert_eq!(issues.len(), 3);
     assert_eq!(issues[0].assignee, None, "explicit null → None");
     assert_eq!(
@@ -574,9 +574,9 @@ async fn user_agent_header_is_set() {
 
     let backend = GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
     backend
-        .get_issue("o/r", RecordId(1))
+        .get_record("o/r", RecordId(1))
         .await
-        .expect("get_issue should succeed (User-Agent present)");
+        .expect("get_record should succeed (User-Agent present)");
 
     // Re-check the captured request for a non-empty User-Agent value.
     let requests = server.received_requests().await.unwrap_or_default();

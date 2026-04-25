@@ -14,11 +14,11 @@ use parking_lot::Mutex;
 /// The kinds of operations the workload loop performs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum OpKind {
-    /// `list_issues` on a project.
+    /// `list_records` on a project.
     List,
-    /// `get_issue` by id.
+    /// `get_record` by id.
     Get,
-    /// `update_issue` (PATCH).
+    /// `update_record` (PATCH).
     Patch,
 }
 

@@ -171,7 +171,7 @@ line-one\r\nline-two\r\n";
     );
 }
 
-/// H-03: Backend 500 on `list_issues` during export must emit a clean
+/// H-03: Backend 500 on `list_records` during export must emit a clean
 /// `error refs/heads/main ...` protocol line (NOT a torn pipe), log a
 /// readable error to stderr, and exit non-zero.
 #[tokio::test]
@@ -235,7 +235,7 @@ async fn backend_500_on_export_list_emits_protocol_error_not_torn_pipe() {
     );
 }
 
-/// H-03: Backend 500 on `list_issues` during an import batch also emits a
+/// H-03: Backend 500 on `list_records` during an import batch also emits a
 /// clean protocol error rather than closing stdout mid-fast-import (which
 /// git would surface as "fast-import failed" with no context).
 #[tokio::test]

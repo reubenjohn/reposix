@@ -4,8 +4,8 @@
 //!
 //! # Scope
 //!
-//! v0.1 ships **read-only**: `list_issues` and `get_issue` work against real
-//! GitHub; `create_issue` / `update_issue` / `delete_or_close` return
+//! v0.1 ships **read-only**: `list_records` and `get_record` work against real
+//! GitHub; `create_record` / `update_record` / `delete_or_close` return
 //! `Error::Other("not supported: ...")`. The v0.2 cut will flip on the write
 //! path once credentials-handling UX lands (see ADR-001 for the write-side of
 //! the state mapping).
@@ -83,7 +83,7 @@ const STATUS_LABEL_PREFIX: &str = "status/";
 const STATUS_LABEL_IN_PROGRESS: &str = "status/in-progress";
 const STATUS_LABEL_IN_REVIEW: &str = "status/in-review";
 
-/// Max issues we'll page through in one `list_issues` call. GitHub allows
+/// Max issues we'll page through in one `list_records` call. GitHub allows
 /// 100/page; at 5 pages that's 500 issues — enough for the `octocat/Hello-World`
 /// fixture and a bounded memory budget for pathological repos. Adjustable in
 /// a future version if users hit the cap.
@@ -354,7 +354,7 @@ impl BackendConnector for GithubReadOnlyBackend {
         matches!(feature, BackendFeature::Workflows)
     }
 
-    async fn list_issues(&self, project: &str) -> Result<Vec<Record>> {
+    async fn list_records(&self, project: &str) -> Result<Vec<Record>> {
         let first = format!(
             "{}/repos/{}/issues?state=all&per_page={}",
             self.base(),
@@ -409,7 +409,7 @@ impl BackendConnector for GithubReadOnlyBackend {
         Ok(out)
     }
 
-    async fn get_issue(&self, project: &str, id: RecordId) -> Result<Record> {
+    async fn get_record(&self, project: &str, id: RecordId) -> Result<Record> {
         let url = format!("{}/repos/{}/issues/{}", self.base(), project, id.0);
         let header_owned = self.standard_headers();
         let header_refs: Vec<(&str, &str)> =
@@ -441,7 +441,7 @@ impl BackendConnector for GithubReadOnlyBackend {
         since: chrono::DateTime<chrono::Utc>,
     ) -> Result<Vec<RecordId>> {
         // GitHub's `GET /repos/{owner}/{repo}/issues` natively accepts
-        // `?since=<ISO8601>`; reuse the same pagination loop as `list_issues`
+        // `?since=<ISO8601>`; reuse the same pagination loop as `list_records`
         // but emit IDs only.
         let since_iso = since.to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
         let first = format!(
@@ -500,13 +500,13 @@ impl BackendConnector for GithubReadOnlyBackend {
         Ok(out)
     }
 
-    async fn create_issue(&self, _project: &str, _issue: Untainted<Record>) -> Result<Record> {
+    async fn create_record(&self, _project: &str, _issue: Untainted<Record>) -> Result<Record> {
         Err(Error::Other(
-            "not supported: create_issue — reposix-github is read-only in v0.1".into(),
+            "not supported: create_record — reposix-github is read-only in v0.1".into(),
         ))
     }
 
-    async fn update_issue(
+    async fn update_record(
         &self,
         _project: &str,
         _id: RecordId,
@@ -514,7 +514,7 @@ impl BackendConnector for GithubReadOnlyBackend {
         _expected_version: Option<u64>,
     ) -> Result<Record> {
         Err(Error::Other(
-            "not supported: update_issue — reposix-github is read-only in v0.1".into(),
+            "not supported: update_record — reposix-github is read-only in v0.1".into(),
         ))
     }
 
@@ -577,7 +577,7 @@ mod tests {
 
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
-        let issues = backend.list_issues("octocat/hello").await.expect("list");
+        let issues = backend.list_records("octocat/hello").await.expect("list");
         assert_eq!(issues.len(), 2);
         assert_eq!(issues[0].id, RecordId(1));
         assert_eq!(issues[0].status, IssueStatus::Open);
@@ -602,7 +602,7 @@ mod tests {
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
         let issue = backend
-            .get_issue("foo/bar", RecordId(42))
+            .get_record("foo/bar", RecordId(42))
             .await
             .expect("get");
         assert_eq!(issue.id, RecordId(42));
@@ -658,7 +658,7 @@ mod tests {
 
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
-        let issues = backend.list_issues("o/r").await.expect("list");
+        let issues = backend.list_records("o/r").await.expect("list");
         assert_eq!(issues.len(), 3, "expected all 3 pages combined");
         assert_eq!(issues[0].id, RecordId(1));
         assert_eq!(issues[2].id, RecordId(3));
@@ -680,7 +680,7 @@ mod tests {
 
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
-        let issue = backend.get_issue("x/y", RecordId(99)).await.expect("get");
+        let issue = backend.get_record("x/y", RecordId(99)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::Done);
     }
 
@@ -700,7 +700,7 @@ mod tests {
 
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
-        let issue = backend.get_issue("x/y", RecordId(100)).await.expect("get");
+        let issue = backend.get_record("x/y", RecordId(100)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::WontFix);
     }
 
@@ -720,7 +720,7 @@ mod tests {
 
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
-        let issue = backend.get_issue("x/y", RecordId(7)).await.expect("get");
+        let issue = backend.get_record("x/y", RecordId(7)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::InProgress);
         // Status label is stripped from the user-visible labels.
         assert_eq!(issue.labels, vec!["bug".to_string()]);
@@ -742,7 +742,7 @@ mod tests {
 
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
-        let issue = backend.get_issue("x/y", RecordId(8)).await.expect("get");
+        let issue = backend.get_record("x/y", RecordId(8)).await.expect("get");
         assert_eq!(issue.status, IssueStatus::InReview);
     }
 
@@ -758,7 +758,7 @@ mod tests {
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
         let err = backend
-            .get_issue("x/y", RecordId(9999))
+            .get_record("x/y", RecordId(9999))
             .await
             .expect_err("404 should surface as error");
         match err {
@@ -790,7 +790,7 @@ mod tests {
         let backend =
             GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
         let _ = backend
-            .get_issue("octocat/Hello-World", RecordId(42))
+            .get_record("octocat/Hello-World", RecordId(42))
             .await
             .expect("get");
         // Now the gate must be set to within ~2s of now. A follow-up call
@@ -842,7 +842,7 @@ mod tests {
             },
         );
         let err = backend
-            .create_issue("x/y", u)
+            .create_record("x/y", u)
             .await
             .expect_err("read-only should reject create");
         match err {
@@ -878,7 +878,7 @@ mod tests {
             },
         );
         assert!(matches!(
-            backend.update_issue("x/y", RecordId(1), u, None).await,
+            backend.update_record("x/y", RecordId(1), u, None).await,
             Err(Error::Other(m)) if m.starts_with("not supported:")
         ));
     }

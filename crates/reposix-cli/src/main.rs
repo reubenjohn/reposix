@@ -5,7 +5,7 @@
 //! - `reposix sim` — run the Phase-2 simulator as a child process.
 //! - `reposix init <backend>::<project> <path>` — initialize a partial-clone
 //!   working tree backed by reposix.
-//! - `reposix list` — query the backend's `list_issues` and dump JSON/table.
+//! - `reposix list` — query the backend's `list_records` and dump JSON/table.
 //! - `reposix refresh` — re-fetch all issues into a working tree + commit.
 //! - `reposix spaces` — list readable Confluence spaces.
 //! - `reposix version` — print the version.
@@ -82,7 +82,7 @@ enum Cmd {
         /// Local path to initialize as the partial-clone working tree.
         path: PathBuf,
     },
-    /// List issues for a project by calling the backend's `list_issues`
+    /// List issues for a project by calling the backend's `list_records`
     /// method and dumping the result as JSON (default) or a pretty table.
     ///
     /// `--backend sim` (default) hits the in-process simulator at `--origin`.

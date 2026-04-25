@@ -75,15 +75,15 @@ pub async fn run(
     let issues = match backend {
         ListBackend::Sim => {
             let b = SimBackend::new(origin).context("build SimBackend")?;
-            b.list_issues(&project)
+            b.list_records(&project)
                 .await
-                .with_context(|| format!("sim list_issues project={project}"))?
+                .with_context(|| format!("sim list_records project={project}"))?
         }
         ListBackend::Github => {
             let token = std::env::var("GITHUB_TOKEN").ok();
             let b = GithubReadOnlyBackend::new(token).context("build GithubReadOnlyBackend")?;
-            b.list_issues(&project).await.with_context(|| {
-                format!("github list_issues repo={project} (REPOSIX_ALLOWED_ORIGINS must include https://api.github.com)")
+            b.list_records(&project).await.with_context(|| {
+                format!("github list_records repo={project} (REPOSIX_ALLOWED_ORIGINS must include https://api.github.com)")
             })?
         }
         ListBackend::Confluence => {
@@ -101,9 +101,9 @@ pub async fn run(
                     )
                 })?
             } else {
-                b.list_issues(&project).await.with_context(|| {
+                b.list_records(&project).await.with_context(|| {
                     format!(
-                        "confluence list_issues space_key={project} (REPOSIX_ALLOWED_ORIGINS must include https://{tenant}.atlassian.net)"
+                        "confluence list_records space_key={project} (REPOSIX_ALLOWED_ORIGINS must include https://{tenant}.atlassian.net)"
                     )
                 })?
             }
@@ -121,8 +121,8 @@ pub async fn run(
                     format!("jira list_issues_strict project_key={project} (REPOSIX_ALLOWED_ORIGINS must include https://{instance}.atlassian.net)")
                 })?
             } else {
-                b.list_issues(&project).await.with_context(|| {
-                    format!("jira list_issues project_key={project} (REPOSIX_ALLOWED_ORIGINS must include https://{instance}.atlassian.net)")
+                b.list_records(&project).await.with_context(|| {
+                    format!("jira list_records project_key={project} (REPOSIX_ALLOWED_ORIGINS must include https://{instance}.atlassian.net)")
                 })?
             }
         }

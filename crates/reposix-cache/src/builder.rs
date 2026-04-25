@@ -39,8 +39,8 @@ impl Cache {
     /// `sync(<backend>:<project>): <N> issues at <ISO8601>`.
     ///
     /// # Errors
-    /// - [`Error::Backend`] if `list_issues` fails.
-    /// - [`Error::Egress`] if `list_issues` fails with the allowlist
+    /// - [`Error::Backend`] if `list_records` fails.
+    /// - [`Error::Egress`] if `list_records` fails with the allowlist
     ///   variant (`reposix_core::Error::InvalidOrigin`); the
     ///   `egress_denied` audit row is written first.
     /// - [`Error::Render`] if frontmatter rendering fails for any issue.
@@ -57,7 +57,7 @@ impl Cache {
         // List issues. If this fails with an egress-denial variant, fire
         // the audit row BEFORE returning the typed error — same shape
         // as `read_blob`'s egress path.
-        let issues = match self.backend.list_issues(&self.project).await {
+        let issues = match self.backend.list_records(&self.project).await {
             Ok(v) => v,
             Err(e) => return Err(self.classify_backend_error(&e, None)),
         };
@@ -180,7 +180,7 @@ impl Cache {
     ///    bytes, write the blob into the bare repo (eager materialization
     ///    on the delta path — changed items are almost certainly what
     ///    the agent is about to read).
-    /// 4. Re-list the full issue set via `list_issues` (cheap metadata)
+    /// 4. Re-list the full issue set via `list_records` (cheap metadata)
     ///    and rebuild the tree with current blob OIDs. Tree sync is
     ///    unconditional full per CONTEXT.md §"Tree sync vs. blob
     ///    materialization (locked)".
@@ -246,7 +246,7 @@ impl Cache {
         let mut changed_blob_oids: Vec<(RecordId, gix::ObjectId)> =
             Vec::with_capacity(changed_ids.len());
         for id in &changed_ids {
-            let issue = match self.backend.get_issue(&self.project, *id).await {
+            let issue = match self.backend.get_record(&self.project, *id).await {
                 Ok(i) => i,
                 Err(e) => return Err(self.classify_backend_error(&e, Some(&id.0.to_string()))),
             };
@@ -271,7 +271,7 @@ impl Cache {
 
         // Step 4: re-list the full current set for unconditional full
         // tree sync (per CONTEXT.md §Tree sync vs. blob materialization).
-        let all_issues = match self.backend.list_issues(&self.project).await {
+        let all_issues = match self.backend.list_records(&self.project).await {
             Ok(v) => v,
             Err(e) => return Err(self.classify_backend_error(&e, None)),
         };
@@ -431,7 +431,7 @@ impl Cache {
         // THEN return Egress.
         let issue = match self
             .backend
-            .get_issue(&self.project, RecordId(issue_num))
+            .get_record(&self.project, RecordId(issue_num))
             .await
         {
             Ok(i) => i,

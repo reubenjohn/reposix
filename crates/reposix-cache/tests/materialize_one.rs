@@ -62,7 +62,7 @@ async fn read_blob_materializes_exactly_one_and_audits() {
     // the bytes match `frontmatter::render` of issue 1.
     let inner = tainted.into_inner();
     let issue_1 = common::sim_backend(&server)
-        .get_issue("proj-1", RecordId(1))
+        .get_record("proj-1", RecordId(1))
         .await
         .unwrap();
     let expected = frontmatter::render(&issue_1).unwrap();

@@ -181,16 +181,16 @@ async fn fetch_issues(cfg: &RefreshConfig) -> Result<Vec<reposix_core::Record>> 
     match cfg.backend {
         ListBackend::Sim => {
             let b = SimBackend::new(cfg.origin.clone()).context("build SimBackend")?;
-            b.list_issues(&cfg.project)
+            b.list_records(&cfg.project)
                 .await
-                .with_context(|| format!("sim list_issues project={}", cfg.project))
+                .with_context(|| format!("sim list_records project={}", cfg.project))
         }
         ListBackend::Github => {
             let token = std::env::var("GITHUB_TOKEN").ok();
             let b = GithubReadOnlyBackend::new(token).context("build GithubReadOnlyBackend")?;
-            b.list_issues(&cfg.project).await.with_context(|| {
+            b.list_records(&cfg.project).await.with_context(|| {
                 format!(
-                    "github list_issues repo={} \
+                    "github list_records repo={} \
                      (REPOSIX_ALLOWED_ORIGINS must include https://api.github.com)",
                     cfg.project
                 )
@@ -211,9 +211,9 @@ async fn fetch_issues(cfg: &RefreshConfig) -> Result<Vec<reposix_core::Record>> 
                 api_token: token,
             };
             let b = ConfluenceBackend::new(creds, &tenant).context("build ConfluenceBackend")?;
-            b.list_issues(&cfg.project).await.with_context(|| {
+            b.list_records(&cfg.project).await.with_context(|| {
                 format!(
-                    "confluence list_issues space_key={} \
+                    "confluence list_records space_key={} \
                      (REPOSIX_ALLOWED_ORIGINS must include https://{tenant}.atlassian.net)",
                     cfg.project
                 )
@@ -234,9 +234,9 @@ async fn fetch_issues(cfg: &RefreshConfig) -> Result<Vec<reposix_core::Record>> 
                 api_token: token,
             };
             let b = JiraBackend::new(creds, &instance).context("build JiraBackend")?;
-            b.list_issues(&cfg.project).await.with_context(|| {
+            b.list_records(&cfg.project).await.with_context(|| {
                 format!(
-                    "jira list_issues project_key={} \
+                    "jira list_records project_key={} \
                      (REPOSIX_ALLOWED_ORIGINS must include https://{instance}.atlassian.net)",
                     cfg.project
                 )

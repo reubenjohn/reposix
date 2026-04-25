@@ -344,7 +344,7 @@ async fn delta_sync_atomic_on_backend_error_midsync() {
     // the next sync retries the same window.
     //
     // Setup: open a Cache with a SimBackend pointed at a dead port. The
-    // first sync attempts list_issues → 502/connection-refused → returns
+    // first sync attempts list_records → 502/connection-refused → returns
     // Err. We then poke the cache.db's meta.last_fetched_at to a known
     // value (simulating a previously-successful seed) and call sync()
     // again — this time list_changed_since fails and we assert the meta

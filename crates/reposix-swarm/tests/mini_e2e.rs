@@ -223,7 +223,7 @@ async fn confluence_direct_3_clients_5s() {
         .mount(&server)
         .await;
 
-    // Page list — single page (empty _links) so `list_issues` exits
+    // Page list — single page (empty _links) so `list_records` exits
     // the pagination loop cleanly (RESEARCH.md Risk 3).
     Mock::given(method("GET"))
         .and(path("/wiki/api/v2/spaces/9001/pages"))
@@ -242,7 +242,7 @@ async fn confluence_direct_3_clients_5s() {
     // NOTE: this stub always responds with sample_page("10001", "Page 1")
     // regardless of which page id was requested. This is intentional for
     // load-testing purposes but means id-routing bugs in
-    // `ConfluenceBackend::get_issue` (e.g., always requesting id 0) would
+    // `ConfluenceBackend::get_record` (e.g., always requesting id 0) would
     // go undetected. A more precise per-id stub set could be added if
     // id-routing correctness becomes a concern.
     Mock::given(method("GET"))
@@ -286,7 +286,7 @@ async fn confluence_direct_3_clients_5s() {
     );
     assert!(
         markdown.contains("| get "),
-        "summary missing get row — get_issue calls not being recorded:\n{markdown}"
+        "summary missing get row — get_record calls not being recorded:\n{markdown}"
     );
     let total_ops = parse_total_ops(&markdown);
     assert!(

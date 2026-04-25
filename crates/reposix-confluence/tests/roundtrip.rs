@@ -72,7 +72,7 @@ fn make_issue(title: &str, body: &str) -> Untainted<Record> {
 async fn create_then_get_roundtrip_with_audit() {
     let server = MockServer::start().await;
 
-    // 1. Space-key resolver — create_issue needs the space id.
+    // 1. Space-key resolver — create_record needs the space id.
     Mock::given(method("GET"))
         .and(path("/wiki/api/v2/spaces"))
         .and(query_param("keys", "REPOSIX"))
@@ -84,7 +84,7 @@ async fn create_then_get_roundtrip_with_audit() {
 
     // 2. POST /wiki/api/v2/pages → 200 with id "777". Body is the
     //    storage-XHTML created by markdown_to_storage; we echo a minimal
-    //    page shape back (the caller uses the returned id for get_issue).
+    //    page shape back (the caller uses the returned id for get_record).
     Mock::given(method("POST"))
         .and(path("/wiki/api/v2/pages"))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({
@@ -140,19 +140,19 @@ async fn create_then_get_roundtrip_with_audit() {
         .expect("backend")
         .with_audit(Arc::clone(&audit));
 
-    // 4. create_issue: POST the page, get back RecordId(777).
+    // 4. create_record: POST the page, get back RecordId(777).
     let issue_to_create = make_issue("Title", "# Title\nhello world\n");
     let created = backend
-        .create_issue("REPOSIX", issue_to_create)
+        .create_record("REPOSIX", issue_to_create)
         .await
-        .expect("create_issue must succeed");
+        .expect("create_record must succeed");
     assert_eq!(created.id, RecordId(777), "created page id must be 777");
 
-    // 5. get_issue: GET the page by id, receive ADF, convert to Markdown.
+    // 5. get_record: GET the page by id, receive ADF, convert to Markdown.
     let fetched = backend
-        .get_issue("REPOSIX", RecordId(777))
+        .get_record("REPOSIX", RecordId(777))
         .await
-        .expect("get_issue must succeed");
+        .expect("get_record must succeed");
     assert_eq!(fetched.id, RecordId(777));
 
     // 6. Body must contain the heading and paragraph text from the ADF.
@@ -167,7 +167,7 @@ async fn create_then_get_roundtrip_with_audit() {
         fetched.body
     );
 
-    // 7. Audit table must have exactly 1 POST row (create_issue only).
+    // 7. Audit table must have exactly 1 POST row (create_record only).
     let post_count: i64 = audit
         .lock()
         .query_row(
@@ -178,7 +178,7 @@ async fn create_then_get_roundtrip_with_audit() {
         .expect("audit query must succeed");
     assert_eq!(
         post_count, 1,
-        "exactly 1 POST audit row expected (create_issue), got {post_count}"
+        "exactly 1 POST audit row expected (create_record), got {post_count}"
     );
 }
 
