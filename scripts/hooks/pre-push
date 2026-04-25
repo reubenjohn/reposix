@@ -133,6 +133,26 @@ fi
 
 log "${GREEN}✓${NC} no credential prefixes detected."
 
+# --- Docs-site validation -------------------------------------------------
+# Only run mkdocs --strict when docs/ or mkdocs.yml are touched in any of
+# the outgoing ref ranges. mkdocs runs in <2s so this stays cheap.
+docs_touched=0
+for range in "${scan_refs[@]}"; do
+  if git diff --name-only "$range" 2>/dev/null | grep -qE '^(docs/|mkdocs\.yml$)'; then
+    docs_touched=1
+    break
+  fi
+done
+if [[ "$docs_touched" -eq 1 ]]; then
+  log "${YELLOW}→${NC} docs touched; running scripts/check-docs-site.sh..."
+  if ! bash scripts/check-docs-site.sh 2>&1; then
+    printf '%b\n' "${RED}✖ pre-push rejected:${NC} scripts/check-docs-site.sh failed." >&2
+    printf '%b\n' "${YELLOW}→${NC} Fix mkdocs --strict errors or any 'Syntax error in text' renders before re-pushing." >&2
+    exit 1
+  fi
+  log "${GREEN}✓${NC} docs-site clean."
+fi
+
 # --- Rust quality gates ---------------------------------------------------
 # Run fmt + clippy before anything reaches CI. Fast checks only; FUSE
 # integration tests require fusermount3 and are gated behind --features.
