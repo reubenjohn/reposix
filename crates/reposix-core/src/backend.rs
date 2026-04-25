@@ -141,6 +141,35 @@ pub trait BackendConnector: Send + Sync {
     /// the project exists but has no issues.
     async fn list_issues(&self, project: &str) -> Result<Vec<Issue>>;
 
+    /// List issue IDs whose `updated_at` is strictly greater than `since`.
+    ///
+    /// The default implementation calls [`list_issues`](Self::list_issues)
+    /// and filters in memory — safe for any backend but inefficient. Backends
+    /// with a native incremental query (`?since=` on GitHub, JQL `updated >=`
+    /// on JIRA, CQL `lastModified >` on Confluence, `?since=` on the sim)
+    /// MUST override to send the filter over the wire.
+    ///
+    /// Returns IDs only; callers materialize full `Issue` objects on
+    /// demand via [`get_issue`](Self::get_issue). This mirrors the Phase 31
+    /// lazy-blob design: metadata (IDs) is cheap to ship, bodies are not.
+    ///
+    /// # Errors
+    /// Same as [`list_issues`](Self::list_issues) — transport errors,
+    /// egress-allowlist denial (`Error::InvalidOrigin`), or backend-specific
+    /// error shapes surfacing as `Error::Other`.
+    async fn list_changed_since(
+        &self,
+        project: &str,
+        since: chrono::DateTime<chrono::Utc>,
+    ) -> Result<Vec<IssueId>> {
+        let all = self.list_issues(project).await?;
+        Ok(all
+            .into_iter()
+            .filter(|i| i.updated_at > since)
+            .map(|i| i.id)
+            .collect())
+    }
+
     /// Fetch a single issue by id.
     ///
     /// # Errors
@@ -277,5 +306,78 @@ mod tests {
         assert_eq!(Stub.root_collection_name(), "issues");
         // Default `supports` returns false for Hierarchy.
         assert!(!Stub.supports(BackendFeature::Hierarchy));
+    }
+
+    #[tokio::test]
+    async fn default_list_changed_since_filters_via_list_issues() {
+        use crate::issue::{Issue, IssueStatus};
+        use crate::taint::Untainted;
+        use chrono::{TimeZone, Utc};
+
+        struct TwoIssues;
+        #[async_trait]
+        impl BackendConnector for TwoIssues {
+            fn name(&self) -> &'static str {
+                "two"
+            }
+            fn supports(&self, _: BackendFeature) -> bool {
+                false
+            }
+            async fn list_issues(&self, _: &str) -> Result<Vec<Issue>> {
+                let t1 = Utc.with_ymd_and_hms(2026, 1, 1, 0, 0, 0).unwrap();
+                let t2 = Utc.with_ymd_and_hms(2026, 6, 1, 0, 0, 0).unwrap();
+                Ok(vec![
+                    Issue {
+                        id: IssueId(1),
+                        title: "old".into(),
+                        status: IssueStatus::Open,
+                        assignee: None,
+                        labels: vec![],
+                        created_at: t1,
+                        updated_at: t1,
+                        version: 1,
+                        body: String::new(),
+                        parent_id: None,
+                        extensions: std::collections::BTreeMap::new(),
+                    },
+                    Issue {
+                        id: IssueId(2),
+                        title: "new".into(),
+                        status: IssueStatus::Open,
+                        assignee: None,
+                        labels: vec![],
+                        created_at: t1,
+                        updated_at: t2,
+                        version: 1,
+                        body: String::new(),
+                        parent_id: None,
+                        extensions: std::collections::BTreeMap::new(),
+                    },
+                ])
+            }
+            async fn get_issue(&self, _: &str, _: IssueId) -> Result<Issue> {
+                unimplemented!()
+            }
+            async fn create_issue(&self, _: &str, _: Untainted<Issue>) -> Result<Issue> {
+                unimplemented!()
+            }
+            async fn update_issue(
+                &self,
+                _: &str,
+                _: IssueId,
+                _: Untainted<Issue>,
+                _: Option<u64>,
+            ) -> Result<Issue> {
+                unimplemented!()
+            }
+            async fn delete_or_close(&self, _: &str, _: IssueId, _: DeleteReason) -> Result<()> {
+                Ok(())
+            }
+        }
+
+        let backend = TwoIssues;
+        let cutoff = Utc.with_ymd_and_hms(2026, 3, 1, 0, 0, 0).unwrap();
+        let got = backend.list_changed_since("demo", cutoff).await.unwrap();
+        assert_eq!(got, vec![IssueId(2)]);
     }
 }
