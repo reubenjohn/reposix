@@ -20,6 +20,23 @@ reposix **complements** REST and MCP — it does not stand in their place. The 8
 
 The latency cells for reposix are measured ([`docs/benchmarks/v0.9.0-latency.md`](../benchmarks/v0.9.0-latency.md)). The MCP and SDK cells are characterized from public-API behaviour and the reposix project's own [agentic-engineering reference](../research/agentic-engineering-reference.md); they are not measured by reposix's harness.
 
+!!! note "About the MCP comparison"
+
+    The `4,883 tokens` baseline (and the headline `89.1%` / `9.2x`
+    reduction shown on the [home page](../index.md)) is measured against
+    a **synthesized** MCP fixture
+    (`benchmarks/fixtures/mcp_jira_catalog.json`) modelled on the public
+    Atlassian Forge surface and the schemas the `mcp-atlassian` server is
+    expected to emit — not against a live MCP server. Real-MCP numbers
+    will land once the upstream Atlassian MCP server is GA and stable
+    enough to bench against (tracked as a v0.12.0 follow-up).
+
+    The `531 tokens` reposix number is measured against a real shell
+    session transcript (`benchmarks/fixtures/reposix_session.txt`),
+    captured against the in-process simulator. Both numbers come from
+    Anthropic's `count_tokens` endpoint with `anthropic==0.72.0` (pinned
+    in `requirements-bench.txt`).
+
 ## When each one earns its keep
 
 ### Use reposix for…

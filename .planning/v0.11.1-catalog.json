@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T19:38:07Z",
+  "generated_at": "2026-04-26T19:40:40Z",
   "schema_version": 1,
   "files": [
     {
@@ -1985,11 +1985,11 @@
     },
     {
       "path": "docs/concepts/reposix-vs-mcp-and-sdks.md",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-05 \u2014 methodology callout",
+      "updated_at": "2026-04-26T19:40:40Z"
     },
     {
       "path": "docs/connectors/guide.md",
@@ -2470,13 +2470,13 @@
     },
     {
       "path": "docs/tutorials/first-run.md",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "catalog-v2:DELETE"
       ],
       "plan": "[catalog-v2] 5. **Delete `docs/demos/index.md`.** Tier 1/2/3 demo lineup explicitly references the deleted `scripts/demos/full.sh`. Already in `not_in_nav`. The new equivalent is `docs/tutorials/first-run.md` + the `examples/` directory. One stale pa...",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-07 \u2014 comments-shape callout",
+      "updated_at": "2026-04-26T19:40:40Z"
     },
     {
       "path": "docs/why.md",

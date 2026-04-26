@@ -125,6 +125,20 @@ git diff issues/0001.md
 
 Expected: a diff with two hunks — the status flip on the frontmatter line, and the comment appended at the bottom. No reposix-specific verbs were used to make the edit.
 
+!!! note "Comments are connector-specific"
+
+    The simulator and the GitHub backend round-trip a `## Comment`
+    section in the issue body verbatim. Other backends differ:
+
+    | Backend     | `## Comment` block treatment                          |
+    |-------------|-------------------------------------------------------|
+    | sim         | round-tripped verbatim                                |
+    | github      | round-tripped verbatim                                |
+    | confluence  | use the dedicated comments API (separate endpoint)    |
+    | jira        | not yet supported (tracked as v0.12.0 carry-forward)  |
+
+    See `docs/reference/<backend>.md` for the per-connector comment shape.
+
 ## 7. Commit and push
 
 ```bash
