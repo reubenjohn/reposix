@@ -25,7 +25,7 @@
 //! `helper_push_accepted` row lives here; the per-issue
 //! `update_record` rows live in `audit_events`. The split keeps this
 //! crate strictly cache-side and lets backend adapters fail closed
-//! without coupling to the cache's SQLite connection lifecycle.
+//! without coupling to the cache's `SQLite` connection lifecycle.
 //! Physical unification is deferred to v0.12.0+ (CC-3).
 
 use chrono::Utc;

@@ -25,7 +25,7 @@
 //!
 //! The split is intentional. It keeps `reposix-cache` strictly cache-side
 //! and lets backend adapters fail closed without coupling to the cache's
-//! SQLite connection lifecycle. A given operational query (e.g., "what
+//! `SQLite` connection lifecycle. A given operational query (e.g., "what
 //! did we write to JIRA in the last 24h?") may need to read **both**
 //! tables — the backend mutations live here in `audit_events`, while the
 //! helper-level `helper_push_accepted` row that committed them lives in
