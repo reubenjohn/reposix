@@ -114,7 +114,7 @@ impl BackendConnector for ConfluenceBackend {
     fn supports(&self, feature: BackendFeature) -> bool {
         // v0.6: write path is now implemented.
         // - `Hierarchy`: Confluence is the only current backend that exposes a
-        //   parent/child tree, used by FUSE for the `tree/` overlay.
+        //   parent/child tree, surfaced by the cache as nested directories.
         // - `Delete`: `DELETE /wiki/api/v2/pages/{id}` moves pages to trash.
         // - `StrongVersioning`: PUT body carries `version.number = current + 1`;
         //   Confluence returns 409 on concurrent edits (optimistic locking).

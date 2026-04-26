@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T21:38:59Z",
+  "generated_at": "2026-04-26T21:48:05Z",
   "schema_version": 1,
   "files": [
     {
@@ -900,16 +900,16 @@
       "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "POLISH2-22 \u2014 documented dual-schema design (option B)",
-      "updated_at": "2026-04-26T21:29:41Z"
+      "note": "P2-1+P2-2 doc-comment cleanup",
+      "updated_at": "2026-04-26T21:48:05Z"
     },
     {
       "path": "crates/reposix-cache/src/builder.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "P2-1+P2-2 doc-comment cleanup",
+      "updated_at": "2026-04-26T21:48:05Z"
     },
     {
       "path": "crates/reposix-cache/src/cache.rs",
@@ -929,11 +929,11 @@
     },
     {
       "path": "crates/reposix-cache/src/error.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "P2-1+P2-2 doc-comment cleanup",
+      "updated_at": "2026-04-26T21:48:04Z"
     },
     {
       "path": "crates/reposix-cache/src/gc.rs",
@@ -945,11 +945,11 @@
     },
     {
       "path": "crates/reposix-cache/src/lib.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "P2-1+P2-2 doc-comment cleanup",
+      "updated_at": "2026-04-26T21:48:04Z"
     },
     {
       "path": "crates/reposix-cache/src/meta.rs",
@@ -1152,8 +1152,8 @@
       "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "POLISH2-08 \u2014 check_backend_capabilities + tests",
-      "updated_at": "2026-04-26T19:50:55Z"
+      "note": "P2-1+P2-2 doc-comment cleanup",
+      "updated_at": "2026-04-26T21:48:05Z"
     },
     {
       "path": "crates/reposix-cli/src/gc.rs",
@@ -1199,22 +1199,22 @@
     },
     {
       "path": "crates/reposix-cli/src/main.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "P2-1+P2-2 doc-comment cleanup",
+      "updated_at": "2026-04-26T21:48:05Z"
     },
     {
       "path": "crates/reposix-cli/src/refresh.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [
         "catalog-v2:DELETE",
         "code-quality-gaps:DELETE"
       ],
       "plan": "[catalog-v2] `/home/reuben/workspace/reposix/crates/reposix-cli/src/refresh.rs` | `RefreshConfig.mount_point: PathBuf`; `pub fn is_fuse_active(mount: &Path) -> Result<bool>` (lines 248-275); `if is_fuse_active(...)` guard (line 75); error message \"FU...",
-      "note": "verified: no FUSE/mount_point/is_fuse_active code remains in refresh.rs; audit cited a now-fixed plan; file uses sim/github/jira/confluence backends correctly",
-      "updated_at": "2026-04-26T20:12:57Z"
+      "note": "P2-1+P2-2 doc-comment cleanup",
+      "updated_at": "2026-04-26T21:48:05Z"
     },
     {
       "path": "crates/reposix-cli/src/sim.rs",
@@ -1244,11 +1244,11 @@
     },
     {
       "path": "crates/reposix-cli/src/worktree_helpers.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "P2-1+P2-2 doc-comment cleanup",
+      "updated_at": "2026-04-26T21:48:05Z"
     },
     {
       "path": "crates/reposix-cli/tests/agent_flow.rs",
@@ -1351,8 +1351,8 @@
       "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "POLISH2-10 \u2014 split into types/translate/client/lib",
-      "updated_at": "2026-04-26T21:16:51Z"
+      "note": "P2-1+P2-2 doc-comment cleanup",
+      "updated_at": "2026-04-26T21:48:04Z"
     },
     {
       "path": "crates/reposix-confluence/tests/contract.rs",
@@ -1411,16 +1411,16 @@
       "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "POLISH2-08 \u2014 added BackendCapabilities/CommentSupport/VersioningModel",
-      "updated_at": "2026-04-26T19:50:55Z"
+      "note": "P2-1+P2-2 doc-comment cleanup",
+      "updated_at": "2026-04-26T21:48:04Z"
     },
     {
       "path": "crates/reposix-core/src/backend/sim.rs",
       "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "POLISH2-09 partial \u2014 sim.rs 5 sites typed",
-      "updated_at": "2026-04-26T20:16:19Z"
+      "note": "P2-1+P2-2 doc-comment cleanup",
+      "updated_at": "2026-04-26T21:48:04Z"
     },
     {
       "path": "crates/reposix-core/src/error.rs",
@@ -1440,27 +1440,27 @@
     },
     {
       "path": "crates/reposix-core/src/lib.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "P2-1+P2-2 doc-comment cleanup",
+      "updated_at": "2026-04-26T21:47:58Z"
     },
     {
       "path": "crates/reposix-core/src/path.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "P2-1+P2-2 doc-comment cleanup",
+      "updated_at": "2026-04-26T21:48:04Z"
     },
     {
       "path": "crates/reposix-core/src/project.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "P2-1+P2-2 doc-comment cleanup",
+      "updated_at": "2026-04-26T21:48:04Z"
     },
     {
       "path": "crates/reposix-core/src/record.rs",
@@ -1648,8 +1648,8 @@
       "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "POLISH2-13 \u2014 pub demoted",
-      "updated_at": "2026-04-26T19:37:02Z"
+      "note": "P2-1+P2-2 doc-comment cleanup",
+      "updated_at": "2026-04-26T21:48:04Z"
     },
     {
       "path": "crates/reposix-remote/src/main.rs",

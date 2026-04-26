@@ -14,7 +14,8 @@
 //!   lazy invariant.
 //!
 //! Audit log, tainted-byte discipline, and egress allowlist enforcement
-//! land in Plan 02 and Plan 03 of Phase 31.
+//! are wired in via the `audit` module and the shared
+//! `reposix_core::http::client()` factory.
 //!
 //! ## Environment variables
 //! - `REPOSIX_CACHE_DIR` — overrides the default cache directory

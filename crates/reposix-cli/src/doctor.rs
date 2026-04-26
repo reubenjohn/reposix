@@ -262,12 +262,12 @@ pub fn run(path: Option<&Path>, fix: bool) -> Result<DoctorReport> {
         .as_deref()
         .and_then(|u| parse_remote_url(u).ok());
 
-    // Check 3 from POLISH-09 spec: backend connector registered for the
-    // scheme parsed out of `remote.origin.url`. Runs whether or not the
-    // cache path resolves. Pass the FULL URL so the `/jira/` vs
-    // `/confluence/` marker is visible — `spec.origin` alone (just the
-    // host) loses the disambiguator and routes JIRA worktrees through
-    // the confluence cache. v0.11.1 audit-finding fix (mirrors gc.rs).
+    // Check 3: backend connector registered for the scheme parsed out of
+    // `remote.origin.url`. Runs whether or not the cache path resolves.
+    // Pass the FULL URL so the `/jira/` vs `/confluence/` marker is
+    // visible — `spec.origin` alone (just the host) loses the
+    // disambiguator and would route JIRA worktrees through the confluence
+    // cache (mirrors gc.rs).
     findings.push(check_backend_registered(
         parsed.as_ref(),
         ctx.remote_origin_url.as_deref(),

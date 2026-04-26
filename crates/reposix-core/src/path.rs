@@ -1,17 +1,17 @@
-//! Filename + path component validators (SG-04) and slug helpers (Phase 13).
+//! Filename + path component validators (SG-04) and slug helpers.
 //!
-//! We centralise these checks in `reposix-core` so the FUSE boundary (Phase 3)
-//! plugs into the exact same grammar the simulator and remote helper assume.
+//! We centralise these checks in `reposix-core` so the cache materializer and
+//! remote helper plug into the exact same grammar the simulator assumes.
 //! `std::path::Path::file_name` is NOT sufficient: it normalises `..` on some
 //! platforms and does not reject embedded `\0`. Hand-rolled validators are
 //! 10 lines and centrally tested.
 //!
-//! ## Slug helpers (Phase 13)
+//! ## Slug helpers
 //!
-//! Phase 13 adds [`slugify_title`], [`slug_or_fallback`], and
-//! [`dedupe_siblings`] for synthesizing human-readable directory/file names
-//! in the FUSE `tree/` overlay from free-form issue/page titles. These are
-//! deterministic pure functions; no dependency on backend state.
+//! [`slugify_title`], [`slug_or_fallback`], and [`dedupe_siblings`] synthesize
+//! human-readable directory/file names from free-form issue/page titles for
+//! the cache-materialized tree. These are deterministic pure functions; no
+//! dependency on backend state.
 
 use std::collections::HashMap;
 

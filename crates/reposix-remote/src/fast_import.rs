@@ -2,8 +2,8 @@
 //! one-file-per-issue tree shape this helper uses.
 //!
 //! Shared invariant: blobs are produced via `reposix_core::issue::frontmatter::render`
-//! — the SAME function the FUSE read path uses — so SHAs are stable across
-//! `git push` and `cat /mnt/0001.md` for unchanged content.
+//! — the SAME function the cache materializer uses — so SHAs are stable across
+//! `git push` and `git cat-file blob <oid>` for unchanged content.
 
 #![forbid(unsafe_code)]
 

@@ -558,7 +558,7 @@ mod tests {
         // 14-RESEARCH.md#Q1 and 14-PLAN.md risk R13. If the sim ever changes
         // the `{"error":"version_mismatch","current":N,"sent":"..."}` body
         // shape, this fires in the core crate rather than silently degrading
-        // the FUSE write path's conflict-current log line.
+        // the remote helper's push-time conflict-current log line.
         let server = MockServer::start().await;
         Mock::given(method("PATCH"))
             .and(path("/projects/demo/issues/42"))
@@ -761,14 +761,13 @@ mod tests {
         assert_eq!(backend.name(), "simulator");
     }
 
-    // ----- Phase 14 Wave B1 re-homes -----
+    // ----- Re-homed wire-shape tests -----
     //
-    // The tests below were formerly in `crates/reposix-fuse/src/fetch.rs::tests`
-    // and `crates/reposix-fuse/tests/write.rs`. They exercised
-    // `patch_issue`/`post_issue` directly; after Wave B1 those helpers are
-    // deleted and the FUSE write path routes through `BackendConnector`, so the
-    // same wire assertions move here and pin the same contract at the trait
-    // impl layer. See `.planning/phases/14-.../14-RESEARCH.md` §Q10.
+    // The tests below were originally in the deleted `reposix-fuse` crate and
+    // exercised `patch_issue`/`post_issue` directly. After the v0.9.0 pivot to
+    // the git-native architecture those helpers are gone and the write path
+    // routes through `BackendConnector`, so the same wire assertions live here
+    // and pin the same contract at the trait impl layer.
 
     #[tokio::test]
     async fn update_issue_sends_quoted_if_match() {
@@ -1043,8 +1042,8 @@ mod tests {
     async fn create_issue_returns_authoritative_issue() {
         // Positive companion to `create_issue_omits_server_fields`: after a
         // 201, the returned `Record` carries the server-assigned id/version/
-        // created_at from the response body — this is what the FUSE `create`
-        // callback relies on to populate its inode cache.
+        // created_at from the response body — the remote helper's export path
+        // relies on this to compute the post-create blob OID.
         let server = MockServer::start().await;
         Mock::given(method("POST"))
             .and(path("/projects/demo/issues"))

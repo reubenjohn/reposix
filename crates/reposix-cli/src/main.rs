@@ -2,7 +2,7 @@
 //! init, and refresh flows.
 //!
 //! Subcommands (v0.9.0):
-//! - `reposix sim` — run the Phase-2 simulator as a child process.
+//! - `reposix sim` — run the in-process REST simulator as a child process.
 //! - `reposix init <backend>::<project> <path>` — initialize a partial-clone
 //!   working tree backed by reposix.
 //! - `reposix list` — query the backend's `list_records` and dump JSON/table.
@@ -36,7 +36,7 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Cmd {
-    /// Run the Phase-2 REST simulator (delegates to `reposix-sim`).
+    /// Run the in-process REST simulator (delegates to `reposix-sim`).
     Sim {
         /// Bind address.
         #[arg(long, default_value = "127.0.0.1:7878")]
@@ -126,8 +126,8 @@ enum Cmd {
         #[arg(long, value_enum, default_value_t = list::ListBackend::Sim)]
         backend: list::ListBackend,
         /// Serve from cached `.md` files; no network egress.
-        /// NOTE: offline read path is Phase 21; this flag is accepted but
-        /// currently returns an error.
+        /// NOTE: the offline read path is not yet implemented; this flag is
+        /// accepted but currently returns an error.
         #[arg(long)]
         offline: bool,
     },

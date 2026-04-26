@@ -33,7 +33,9 @@ pub struct RefreshConfig {
     /// Which backend to speak.
     pub backend: ListBackend,
     /// When `true`, skip network egress and serve from cached `.md` files.
-    /// Currently returns an error (offline read path is Phase 21).
+    /// Currently returns an error — the offline read path is not yet
+    /// implemented; consumers should `cat` existing `.md` files in the
+    /// working tree directly.
     pub offline: bool,
 }
 
@@ -66,7 +68,7 @@ pub async fn run_refresh(cfg: RefreshConfig) -> Result<()> {
     if cfg.offline {
         bail!(
             "--offline mode is not yet implemented for refresh; \
-             serve existing .md files from the working tree directly (Phase 21)"
+             cat existing .md files from the working tree directly"
         );
     }
 
@@ -152,7 +154,11 @@ pub fn run_refresh_inner(
 
     // Update the metadata DB with the refresh result if one is provided.
     if let Some(db) = db {
-        // TODO(Phase-21): populate commit_sha after git_refresh_commit returns
+        // commit_sha intentionally left None: `git_refresh_commit` does not
+        // return the SHA today, and querying `git rev-parse HEAD` afterwards
+        // would race with concurrent commits. The metadata row is keyed on
+        // (backend, project, ts) which is sufficient for the cache freshness
+        // check; SHA capture would be a separate signature change.
         cache_db::update_metadata(db, label, &cfg.project, &ts, None)?;
     }
 

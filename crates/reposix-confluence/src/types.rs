@@ -314,8 +314,8 @@ pub struct ConfAttachment {
 /// (`GET /wiki/api/v2/spaces/{id}/direct-children`) after filtering for
 /// `type == "whiteboard"`.
 ///
-/// `Serialize` is derived so the FUSE `read()` callback can return
-/// `serde_json::to_vec(&whiteboard)` as the file content.
+/// `Serialize` is derived so the cache materializer can render
+/// `serde_json::to_vec(&whiteboard)` into the corresponding tree blob.
 #[derive(Debug, Clone, Deserialize, serde::Serialize)]
 pub struct ConfWhiteboard {
     /// Confluence whiteboard id (numeric string).

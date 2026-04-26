@@ -1,8 +1,8 @@
 //! Shared types for the reposix workspace.
 //!
-//! This crate is the seam between the simulator (in-process REST API), the FUSE daemon, the git
-//! remote helper, and the CLI orchestrator. Every other crate depends on it; it depends on no
-//! other internal crate. Keep it small and stable.
+//! This crate is the seam between the simulator (in-process REST API), the bare-repo cache
+//! materializer, the git remote helper, and the CLI orchestrator. Every other crate depends on
+//! it; it depends on no other internal crate. Keep it small and stable.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs, clippy::pedantic)]

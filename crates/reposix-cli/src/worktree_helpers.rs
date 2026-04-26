@@ -5,8 +5,8 @@
 //! (2) parse it into a `RemoteSpec`, (3) map the origin to a backend slug, and
 //! (4) resolve the corresponding cache directory. Before this module they each
 //! defined verbatim copies of the trio (`cache_path_from_worktree`,
-//! `backend_slug_from_origin`, `git_config_get`); see POLISH-13 (v0.11.0
-//! CATALOG-v2 Refactor cluster A) for the consolidation rationale.
+//! `backend_slug_from_origin`, `git_config_get`); this module is the shared
+//! home that consolidates them.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;

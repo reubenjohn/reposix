@@ -1,29 +1,30 @@
 //! Backend seam: [`BackendConnector`] is the trait every concrete issue-tracker
-//! adapter implements. v0.1.5 ships [`sim::SimBackend`] only; v0.2 will add a
-//! `GithubReadOnlyBackend` in `crates/reposix-github`.
+//! adapter implements. Implementors include [`sim::SimBackend`],
+//! `GithubReadOnlyBackend` (`reposix-github`), `ConfluenceBackend`
+//! (`reposix-confluence`), and `JiraBackend` (`reposix-jira`).
 //!
 //! ## Why this trait exists
 //!
-//! The simulator and the FUSE daemon historically spoke the sim's REST shape
-//! directly. Once real backends (GitHub, Jira, Linear) enter the picture, we
-//! need a seam so the FUSE layer and CLI orchestrator don't have to learn each
-//! new backend's quirks. The trait is the normalization boundary: concrete
-//! adapters translate backend-specific wire shapes into
-//! [`Record`](crate::Record) / [`RecordStatus`](crate::RecordStatus) — and nothing
-//! more escapes.
+//! The simulator originally spoke its REST shape directly to the rest of the
+//! workspace. Once real backends (GitHub, Confluence, JIRA) entered the picture,
+//! a seam was needed so the cache materializer, remote helper, and CLI
+//! orchestrator don't have to learn each new backend's quirks. The trait is the
+//! normalization boundary: concrete adapters translate backend-specific wire
+//! shapes into [`Record`](crate::Record) / [`RecordStatus`](crate::RecordStatus)
+//! — and nothing more escapes.
 //!
 //! ## Error model
 //!
 //! Methods return [`Result<T>`](crate::Result). Backends that cannot satisfy a
 //! given method (e.g. a read-only GitHub backend asked to `create_record`)
 //! return [`Error::Other`](crate::Error::Other) with a `"not supported: ..."`
-//! message. A typed `NotSupported` variant is a v0.2 cleanup tracked in the
-//! phase roadmap; for v0.1.5 we keep the error surface additive-only so
-//! existing callers (fuse, remote) aren't forced to branch on a new enum arm.
+//! message. A typed `NotSupported` variant remains a possible future cleanup;
+//! for now we keep the error surface additive-only so existing callers
+//! (cache, remote helper) aren't forced to branch on a new enum arm.
 //!
 //! Read-path `not found` conditions (e.g. `GET /issues/{id}` returns 404) are
-//! also surfaced as [`Error::Other`] for v0.1.5. Callers who need to discriminate
-//! should `match err { Error::Other(msg) if msg.starts_with("not found") => ... }`.
+//! also surfaced as [`Error::Other`]. Callers who need to discriminate should
+//! `match err { Error::Other(msg) if msg.starts_with("not found") => ... }`.
 //!
 //! ## Feature matrix
 //!
@@ -69,7 +70,8 @@ pub enum BackendFeature {
     /// [`RecordStatus`](crate::RecordStatus) enum. Reserved for Jira.
     Workflows,
     /// Backend exposes a parent/child hierarchy via [`Record::parent_id`].
-    /// Used by FUSE to synthesize the `tree/` overlay (Phase 13).
+    /// Surfaced via the cache-materialized tree so consumers can walk the
+    /// parent/child structure with ordinary `git ls-tree`.
     Hierarchy,
 }
 
@@ -192,9 +194,10 @@ pub enum DeleteReason {
 ///
 /// All methods are `async` via `#[async_trait::async_trait]`. This is
 /// dyn-compatible; callers can hold `Box<dyn BackendConnector>` or `Arc<dyn
-/// BackendConnector>` freely. The trait object is used by the CLI's `reposix list`
-/// command (v0.1.5) and will be used by the FUSE daemon once v0.2 lands
-/// multi-backend support.
+/// BackendConnector>` freely. The trait object is used by the CLI
+/// (`reposix list`, `reposix refresh`) and by the cache materializer
+/// (`reposix-cache`) when it builds tree objects from `list_records` /
+/// `get_record` responses.
 ///
 /// ## Thread-safety
 ///
@@ -240,7 +243,7 @@ pub trait BackendConnector: Send + Sync {
     /// MUST override to send the filter over the wire.
     ///
     /// Returns IDs only; callers materialize full `Record` objects on
-    /// demand via [`get_record`](Self::get_record). This mirrors the Phase 31
+    /// demand via [`get_record`](Self::get_record). This mirrors the cache's
     /// lazy-blob design: metadata (IDs) is cheap to ship, bodies are not.
     ///
     /// # Errors

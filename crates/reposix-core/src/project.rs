@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// A URL- and path-safe project identifier (e.g. `"demo"`, `"PROJ-A"`).
 ///
 /// Validated to contain only `[A-Za-z0-9._-]` and to be 1-64 chars long. This guarantees we can
-/// safely render it as a directory name in the FUSE mount without path-traversal risk.
+/// safely render it as a directory name in the cache-materialized tree without path-traversal risk.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct ProjectSlug(String);

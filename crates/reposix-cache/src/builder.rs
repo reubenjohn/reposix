@@ -65,8 +65,8 @@ impl Cache {
         // Render each issue, compute the blob OID WITHOUT writing the
         // blob object. The tree references each blob_oid; the blob
         // itself is persisted only when `read_blob(oid)` is called.
-        // This is the lazy-blob invariant Phase 32's stateless-connect
-        // handler relies on.
+        // This is the lazy-blob invariant the `git-remote-reposix`
+        // stateless-connect handler relies on.
         //
         // NOTE: we deliberately bypass `Repository::edit_tree` because
         // its `write()` validates that every referenced object already
@@ -506,7 +506,7 @@ impl Cache {
     /// match on the error message) to handle backend adapters that
     /// wrap the core error in `Error::Other(String)` — the `Confluence`,
     /// `Jira`, and `Github` adapters all do this for non-2xx responses.
-    /// Phase 33 will tighten to a proper typed error refactor.
+    /// A future cleanup may tighten this to a proper typed error refactor.
     fn classify_backend_error(&self, e: &reposix_core::Error, issue_id: Option<&str>) -> Error {
         let emsg = e.to_string();
         let is_egress = matches!(e, reposix_core::Error::InvalidOrigin(_))
