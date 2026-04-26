@@ -2,7 +2,7 @@
 #
 # This config drives `scripts/banned-words-lint.sh`. The linter is the
 # institutional memory of the P2 framing rules from
-# `.planning/notes/phase-30-narrative-vignettes.md` (DOCS-09).
+# `.planning/archive/notes/phase-30-narrative-vignettes.md` (DOCS-09).
 #
 # How it works:
 #  - Each `[layer.<name>]` table maps a glob of doc paths to a banned-words list.

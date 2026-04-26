@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T19:01:53Z",
+  "generated_at": "2026-04-26T19:03:23Z",
   "schema_version": 1,
   "files": [
     {
@@ -194,22 +194,22 @@
     },
     {
       "path": ".planning/SESSION-5-RATIONALE.md",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "catalog-v2:DELETE",
         "repo-org-gaps:DELETE"
       ],
       "plan": "[catalog-v2] `/home/reuben/workspace/reposix/.planning/SESSION-5-RATIONALE.md`, `SESSION-7-BRIEF.md` | Owner-flagged in CATALOG-v1 as \"keep, historical.\" On second look these are session-anchored and zero outbound links. Move to `.planning/archive/se...",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "moved to .planning/archive/sessions/ \u00a77-F1",
+      "updated_at": "2026-04-26T19:03:22Z"
     },
     {
       "path": ".planning/SESSION-7-BRIEF.md",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "moved to .planning/archive/sessions/ \u00a77-F1",
+      "updated_at": "2026-04-26T19:03:23Z"
     },
     {
       "path": ".planning/STATE.md",
@@ -327,14 +327,14 @@
     },
     {
       "path": ".planning/notes/phase-30-narrative-vignettes.md",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "catalog-v2:DELETE",
         "repo-org-gaps:DELETE"
       ],
       "plan": "[catalog-v2] `/home/reuben/workspace/reposix/.planning/notes/phase-30-narrative-vignettes.md` | Status `ready-for-phase-30-planning` is stale; banned-word list inside is FUSE-era. CATALOG-v1 says \"keep (annotate)\" but the document is inert. **Either ...",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "moved to .planning/archive/notes/ \u00a77-F1",
+      "updated_at": "2026-04-26T19:03:23Z"
     },
     {
       "path": ".planning/notes/v0.11.0-doc-polish-backlog.md",
@@ -2924,19 +2924,19 @@
     },
     {
       "path": "scripts/migrations/fix_demos_index_links.py",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "moved to .planning/archive/scripts/ \u00a77-F1",
+      "updated_at": "2026-04-26T19:03:22Z"
     },
     {
       "path": "scripts/migrations/mermaid_divs_to_fences.py",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "moved to .planning/archive/scripts/ \u00a77-F1",
+      "updated_at": "2026-04-26T19:03:22Z"
     },
     {
       "path": "scripts/repro-quickstart.sh",
@@ -2958,14 +2958,14 @@
     },
     {
       "path": "scripts/tag-v0.3.0.sh",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "catalog-v2:DELETE",
         "repo-org-gaps:DELETE"
       ],
       "plan": "[catalog-v2] `/home/reuben/workspace/reposix/scripts/tag-v0.3.0.sh`, `tag-v0.4.0.sh`, `tag-v0.4.1.sh`, `tag-v0.5.0.sh`, `tag-v0.6.0.sh`, `tag-v0.8.0.sh`, `tag-v0.9.0.sh`, `tag-v0.10.0.sh` | 8 near-identical scripts, each ~120 lines, each enforcing \"c...",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "moved to .planning/archive/scripts/ \u00a77-F1",
+      "updated_at": "2026-04-26T19:03:22Z"
     },
     {
       "path": "scripts/tag-v0.4.0.sh",
@@ -2977,37 +2977,37 @@
     },
     {
       "path": "scripts/tag-v0.4.1.sh",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "moved to .planning/archive/scripts/ \u00a77-F1",
+      "updated_at": "2026-04-26T19:03:22Z"
     },
     {
       "path": "scripts/tag-v0.5.0.sh",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "moved to .planning/archive/scripts/ \u00a77-F1",
+      "updated_at": "2026-04-26T19:03:22Z"
     },
     {
       "path": "scripts/tag-v0.6.0.sh",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "moved to .planning/archive/scripts/ \u00a77-F1",
+      "updated_at": "2026-04-26T19:03:22Z"
     },
     {
       "path": "scripts/tag-v0.8.0.sh",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "repo-org-gaps:DELETE"
       ],
       "plan": "[repo-org-gaps] `scripts/tag-v0.8.0.sh` | **ARCHIVE** | Same. |",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "moved to .planning/archive/scripts/ \u00a77-F1",
+      "updated_at": "2026-04-26T19:03:22Z"
     },
     {
       "path": "scripts/tag-v0.9.0.sh",

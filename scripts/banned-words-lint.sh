@@ -33,7 +33,7 @@ readonly DOCS_ROOT="${REPO_ROOT}/docs"
 readonly CONFIG_PATH="${DOCS_ROOT}/.banned-words.toml"
 
 # --- P1: banned everywhere in docs/ -----------------------------------------
-# The "complement-not-replace" rule from phase-30-narrative-vignettes.md.
+# The "complement-not-replace" rule from .planning/archive/notes/phase-30-narrative-vignettes.md.
 P1_WORDS=(
   "replace"
 )
