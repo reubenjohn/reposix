@@ -264,11 +264,19 @@ pub fn run(path: Option<&Path>, fix: bool) -> Result<DoctorReport> {
 
     // Check 3 from POLISH-09 spec: backend connector registered for the
     // scheme parsed out of `remote.origin.url`. Runs whether or not the
-    // cache path resolves.
-    findings.push(check_backend_registered(parsed.as_ref()));
+    // cache path resolves. Pass the FULL URL so the `/jira/` vs
+    // `/confluence/` marker is visible — `spec.origin` alone (just the
+    // host) loses the disambiguator and routes JIRA worktrees through
+    // the confluence cache. v0.11.1 audit-finding fix (mirrors gc.rs).
+    findings.push(check_backend_registered(
+        parsed.as_ref(),
+        ctx.remote_origin_url.as_deref(),
+    ));
 
     if let Some(spec) = parsed.as_ref() {
-        let backend = backend_slug_from_origin(&spec.origin);
+        // Same URL-aware mapping as check_backend_registered above.
+        let url_for_slug = ctx.remote_origin_url.as_deref().unwrap_or(&spec.origin);
+        let backend = backend_slug_from_origin(url_for_slug);
         let project = spec.project.as_str();
         match resolve_cache_path(&backend, project) {
             Ok(cache_path) => {
@@ -687,14 +695,20 @@ const KNOWN_BACKENDS: &[&str] = &["sim", "github", "confluence", "jira"];
 /// schemes this build registers (sim/github/confluence/jira). The doctor
 /// is statically linked against all four today, but the finding remains
 /// valid against future feature-flagged builds.
-fn check_backend_registered(parsed: Option<&reposix_core::RemoteSpec>) -> DoctorFinding {
+fn check_backend_registered(
+    parsed: Option<&reposix_core::RemoteSpec>,
+    raw_url: Option<&str>,
+) -> DoctorFinding {
     let Some(spec) = parsed else {
         return DoctorFinding::info(
             "backend.registered",
             "skipped — no parseable reposix remote URL",
         );
     };
-    let backend = backend_slug_from_origin(&spec.origin);
+    // Use the full URL (with `/jira/` vs `/confluence/` marker) when
+    // available; fall back to `spec.origin` if the caller didn't carry
+    // it through. v0.11.1 audit-finding fix.
+    let backend = backend_slug_from_origin(raw_url.unwrap_or(&spec.origin));
     if KNOWN_BACKENDS.contains(&backend.as_str()) {
         DoctorFinding::ok(
             "backend.registered",
@@ -998,16 +1012,32 @@ mod tests {
 
     #[test]
     fn check_backend_registered_recognises_sim() {
-        let spec =
-            reposix_core::parse_remote_url("reposix::http://127.0.0.1:7878/projects/demo").unwrap();
-        let finding = check_backend_registered(Some(&spec));
+        let url = "reposix::http://127.0.0.1:7878/projects/demo";
+        let spec = reposix_core::parse_remote_url(url).unwrap();
+        let finding = check_backend_registered(Some(&spec), Some(url));
         assert_eq!(finding.severity, Severity::Ok);
     }
 
     #[test]
     fn check_backend_registered_skips_when_unparsed() {
-        let finding = check_backend_registered(None);
+        let finding = check_backend_registered(None, None);
         assert_eq!(finding.severity, Severity::Info);
+    }
+
+    #[test]
+    fn check_backend_registered_routes_jira_via_url_marker() {
+        // Regression: pre-v0.11.1, JIRA worktrees were mis-routed to
+        // confluence because backend_slug_from_origin only saw the
+        // host. Passing the raw URL surfaces the `/jira/` marker.
+        let url = "reposix::https://reuben-john.atlassian.net/jira/projects/TEST";
+        let spec = reposix_core::parse_remote_url(url).unwrap();
+        let finding = check_backend_registered(Some(&spec), Some(url));
+        assert_eq!(finding.severity, Severity::Ok);
+        assert!(
+            finding.message.contains("jira"),
+            "expected jira backend, got: {}",
+            finding.message
+        );
     }
 
     #[test]

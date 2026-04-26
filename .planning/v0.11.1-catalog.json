@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T19:14:36Z",
+  "generated_at": "2026-04-26T19:16:49Z",
   "schema_version": 1,
   "files": [
     {
@@ -1091,11 +1091,11 @@
     },
     {
       "path": "crates/reposix-cli/src/doctor.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "ref \u00a77-E fix-2: backend_slug_from_origin uses URL marker (jira/confluence disambiguation)",
+      "updated_at": "2026-04-26T19:16:49Z"
     },
     {
       "path": "crates/reposix-cli/src/gc.rs",
