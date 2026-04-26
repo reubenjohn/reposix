@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T20:16:19Z",
+  "generated_at": "2026-04-26T20:24:12Z",
   "schema_version": 1,
   "files": [
     {
@@ -692,13 +692,13 @@
     },
     {
       "path": "CHANGELOG.md",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [
         "catalog-v2:DELETE"
       ],
       "plan": "[catalog-v2] 9. **Delete `MORNING-WALKTHROUGH-2026-04-25.md`, `RELEASE-NOTES-v0.10.0.md`, `RELEASE-NOTES-v0.11.0-PREVIEW.md`, `PUBLIC-LAUNCH-CHECKLIST.md` from the repo root.** They were cathartic to write but they are session journals and one-off la...",
-      "note": "false-positive in audit prose; explicit KEEP",
-      "updated_at": "2026-04-26T18:54:13Z"
+      "note": "v0.11.0 release notes finalized + v0.11.1 [Unreleased] populated",
+      "updated_at": "2026-04-26T20:24:12Z"
     },
     {
       "path": "CLAUDE.md",

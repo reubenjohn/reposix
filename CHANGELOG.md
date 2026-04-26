@@ -6,6 +6,142 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [Unreleased]
 
+The post-v0.11.0 polish wave, shipped autonomously on 2026-04-26 against
+the [v0.11.1 milestone](.planning/REQUIREMENTS.md). Carry-forward owner
+actions remain (crates.io email verification + JIRA secrets + skill ref
+update) — see `.planning/REQUIREMENTS.md` POLISH2-01, POLISH2-04,
+POLISH2-19.
+
+### Added
+
+- **`reposix doctor` capability matrix row (POLISH2-08)** — per
+  persona-coding-agent fix #3, `reposix doctor` now prints the
+  configured backend's capability matrix at runtime (read / create /
+  update / comments / delete / versioning columns). Static matrix also
+  added to `docs/index.md` (POLISH2-06). New types in
+  `reposix-core::backend`: `BackendCapabilities`, `CommentSupport`,
+  `VersioningModel`. Each backend crate exposes
+  `pub const CAPABILITIES: BackendCapabilities`. Closes the persona's
+  "I have to hit the error to learn the verb" feedback. (Commits
+  `b5fbcc6`, `98d581a`, `5d6275c`.)
+- **`docs/reference/exit-codes.md` (POLISH2-18)** — first-class
+  per-subcommand exit-code reference for harness authors. CLI
+  subcommands collapse to `0`/`1` via anyhow; `git-remote-reposix` has
+  three distinct codes (`0` success, `1` push-rejected, `2` anyhow
+  chain). Documents the stderr `error:` prefix convention for machine
+  parsing. Structured `--json` / `--format=json` queued for v0.12.0.
+  (Commit `47aabf0`.)
+- **ADR-009 v1.0 stability commitment (POLISH2-17)** — locks the
+  `reposix init` URL shape, CLI subcommand surface, exit codes,
+  `git-remote-reposix` protocol, frontmatter field allowlist, and
+  `BackendConnector` trait under semver after v1.0. Hidden from the
+  stability commitment: `reposix-cli` lib internal modules, on-disk
+  cache schema, simulator wire format. Closes friction matrix Row 13 +
+  persona-harness-author "no v1.0 commitment" gap. (Commit `48859ae`.)
+- **Typed `Error::NotFound` / `NotSupported` / `VersionMismatch`
+  variants (POLISH2-09 partial)** — `reposix-core::Error` gains 3 typed
+  variants carrying structured payload (project / id / current /
+  requested / body). `crates/reposix-core/src/backend/sim.rs` migrated
+  5 sites; the attacker-influenced-string parser at sim.rs:566-572 now
+  pattern-matches on `Error::VersionMismatch { body, .. }` instead of
+  `.contains(...)`. ~150 backend `Error::Other` sites in
+  jira/github/confluence still pending v0.12.0. (Commits `a56965d`,
+  `8232748`.)
+- **Methodology callout on `docs/concepts/reposix-vs-mcp-and-sdks.md`
+  (POLISH2-05)** — discloses that the 4,883-token MCP baseline is
+  measured against a synthesized `mcp_jira_catalog.json` fixture (not
+  a live MCP server). Closes friction matrix Row 1 partial. (Commit
+  `c1f3614`.)
+- **Comments-shape callout in `docs/tutorials/first-run.md`
+  (POLISH2-07)** — per-backend `## Comment` table making it explicit
+  that sim/github round-trip in-body, confluence uses a separate API,
+  jira is not yet supported. Closes persona-coding-agent F-2. (Commit
+  `c1f3614`.)
+- **`scripts/catalog.py` JSON-first per-file tracker** — single-file
+  stdlib CLI alongside `.planning/v0.11.1-catalog.json` source-of-truth
+  and auto-rendered `.planning/research/v0.11.1-CATALOG-v3.md`.
+  Subcommands: `init`, `set`, `coverage`, `render`, `query`, `stats`.
+  Pre-push hook warns on unplanned TODO rows. Closes the
+  spot-check-misses-things audit gap surfaced by the owner mid-handover.
+  (Commits `029ef07`, `564674f`.)
+
+### Changed
+
+- **Hero homepage rewrite to** hard-numbers strip (89.1% / 8 ms / 24 ms /
+  5-line install) + sequenceDiagram comparing reposix vs MCP loops +
+  30-second install band + sim-style `0001.md` example. Closes friction
+  matrix Row 7 (PROJ-42 was DOA on JIRA), Row 22 (Shipped-in-v0.7.1
+  string), Row 8 partial (mental-model.md stale checkout form). (Commit
+  `96d255a`.)
+- **Latency table refreshed** — github cells fully populated (697 ms
+  list, 323 ms get, 246 ms PATCH); confluence init+caps live (31 ms,
+  5 ms). JIRA cells still empty pending owner secret provisioning
+  (POLISH2-04). (Commit `a69e5f1`.)
+- **`docs/development/roadmap.md` rewritten to** a 1-screen stub
+  pointing at `.planning/ROADMAP.md` (the GSD source of truth).
+  Previously v0.8 + FUSE-era misleading roadmap (POLISH2-15, friction
+  matrix Row 21). (Commit `c088cd1`.)
+- **ADR-003 marked `superseded`** —
+  `docs/decisions/003-nested-mount-layout.md` now opens with a
+  Superseded banner pointing at ADR-008 + the v0.9.0 pivot. (Commit
+  `220bfbd`.)
+- **Roadmap flipped to SHIPPED for v0.11.0** —
+  `docs/development/roadmap.md` now reflects binaries + Homebrew tap
+  shipped (`reubenjohn/homebrew-reposix` carries `Formula/reposix.rb`
+  for v0.11.0; `brew install reubenjohn/reposix/reposix` works for the
+  3 platforms aarch64-apple-darwin, x86_64-apple-darwin,
+  x86_64-unknown-linux-musl). crates.io publish still pending owner
+  email verification (POLISH2-01). (Commit `cbc6992`.)
+
+### Fixed
+
+- **Code-quality P0-1**: 3x duplicated `cache_path_from_worktree`
+  thin-wrappers in `gc.rs` / `tokens.rs` / `cost.rs` deleted; callers
+  inline existence-check on the canonical helper. Closes friction
+  matrix Row 10. (Commit `3e3dba5`.)
+- **Code-quality P0-2**: `doctor.rs` URL-aware backend slug (mirrors
+  the `cli.rs` fix from commit `9dc4311` — JIRA worktrees no longer
+  mis-route to confluence cache). Added regression test
+  `check_backend_registered_routes_jira_via_url_marker`. Closes
+  friction matrix Row 2 partial. (Commit `6c0ce9d`.)
+- **`reposix-remote` typed errors**: `SimError` newtype in
+  `crates/reposix-sim/src/error.rs`; `pub fn run` no longer leaks
+  `anyhow::Error` (POLISH2-14, code-quality P1-4). (Commits `fc459d0`,
+  `649da8c`.)
+- **`reposix-remote` dropped 3 unused deps**: serde, serde_yaml, clap
+  (POLISH2-12, code-quality P1-6). Kept serde_json (used in 3
+  integration tests). (Commit `48fcd4c`.)
+- **`reposix-remote` `pub` → `pub(crate)` demotion**: 49 sites across
+  6 modules. Binary-only crate; `pub` was a no-op (POLISH2-13,
+  code-quality P1-7). (Commit `dba89c5`.)
+- **`metrics.rs:238-240` FUSE doc-comment residue** scrubbed
+  (code-quality P2-1). (Commit `564674f`.)
+- **`bench-latency-cron.yml` duplicate Authorization header**
+  (POLISH2-03) — `actions/checkout@v6` now uses
+  `persist-credentials: false` so `peter-evans/create-pull-request`
+  doesn't double-auth. (Commit `b5fbcc6`.)
+
+### Removed
+
+- **`scripts/demos/` (FUSE-era demo set) + `docs/demos/recordings/`
+  typescripts** — entire FUSE-era demo set (closes friction matrix
+  Row 16, repo-org audit rec #1). Also dropped FUSE smoke from the
+  green-gauntlet and repointed parity refs (commit `ca34b57`). (Main
+  delete in commit `2963d24`.)
+- **Pre-pivot tag scripts archived to `.planning/archive/scripts/`**
+  alongside session-mission docs (repo-org #4, #7, #10). (Commit
+  `bead2c6`.)
+- **`HANDOVER.md`** — autonomous-mode operational handoff doc; deleted
+  per its own closing instructions once §7 was complete. (Commit
+  `310ca66`.)
+- **v0.11.1 milestone scaffolded**: `.planning/REQUIREMENTS.md` carries
+  the canonical 22 carry-forward requirements (POLISH2-01..22).
+  (Commit `0375ffc`.)
+
+(End of v0.11.1 [Unreleased] block.)
+
+## [v0.11.0] — 2026-04-26
+
 ### Added
 
 - **Phase 55 vision-innovations surface wave (POLISH-09 + POLISH-10)** —
