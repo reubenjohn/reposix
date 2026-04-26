@@ -33,7 +33,7 @@
 - [shipped] **POLISH2-08**: `reposix doctor` prints a configured-backend capability-matrix row. Source: persona-coding-agent fix #3. Shipped via `feat(doctor): print backend capability matrix row (POLISH2-08, persona-coding-agent fix #3)` — `BackendCapabilities` / `CommentSupport` / `VersioningModel` in `reposix-core`, `pub const CAPABILITIES` in each backend crate, `check_backend_capabilities` Info finding in `crates/reposix-cli/src/doctor.rs`.
 - [partial-shipped] **POLISH2-09**: Code-quality P1 — `Error::Other(String)` rewritten to typed `Error::NotFound` / `Error::NotSupported` / `Error::VersionMismatch` variants in `reposix-core`; closes the stringly-typed protocol in `crates/reposix-core/src/backend/sim.rs:566-572`. Source: code-quality P1-1 + P1-5. shipped: 3 typed variants + sim.rs migrated. 150+ Error::Other sites in backend adapters still pending v0.12.0.
 - [ ] **POLISH2-10**: Code-quality P1 — `crates/reposix-confluence/src/lib.rs` (3 973 LOC) split into `types.rs` + `translate.rs` + `client.rs`. Source: code-quality P1-2.
-- [ ] **POLISH2-11**: Code-quality P1 — `crates/reposix-jira/src/lib.rs` (1 940 LOC) split into matching modules (mirror of POLISH2-10). Source: code-quality P1-2.
+- [shipped] **POLISH2-11**: Code-quality P1 — `crates/reposix-jira/src/lib.rs` (1 957 LOC) split into matching modules (mirror of POLISH2-10). Source: code-quality P1-2. Shipped via `refactor(jira): split lib.rs into types/translate/client modules (POLISH2-11, code-quality P1-2)` — new `types.rs` (159 LOC), `translate.rs` (355 LOC), `client.rs` (1001 LOC), trimmed `lib.rs` (517 LOC, holds only `BackendConnector` impl + module declarations + `pub use` re-exports).
 - [shipped] **POLISH2-12**: Code-quality P1 — drop 3 unused Cargo deps from `reposix-remote` (`serde`, `serde_yaml`, `clap`). Source: code-quality P1-6. Shipped via 48fcd4c. Note: `serde_json` KEPT — used in 3 integration tests; audit was off by one.
 - [shipped] **POLISH2-13**: Code-quality P1 — demote `pub` → `pub(crate)` on 49 `reposix-remote` symbols (binary-only crate; `pub` is a no-op + future-confusing). Source: code-quality P1-7. Shipped via dba89c5.
 - [shipped] **POLISH2-14**: Code-quality P1 — typed `SimError` introduced in `reposix-sim`; dropped `anyhow` from the library API. Source: code-quality P1-4. Shipped via fc459d0+649da8c.
@@ -66,7 +66,7 @@
 | POLISH2-08 | inline (no GSD phase) | shipped |
 | POLISH2-09 | inline (no GSD phase) | partial-shipped (typed variants + sim.rs migrated; 150+ Error::Other in backends pending v0.12.0) |
 | POLISH2-10 | TBD | planning |
-| POLISH2-11 | TBD | planning |
+| POLISH2-11 | inline (no GSD phase) | shipped |
 | POLISH2-12 | inline (no GSD phase) | shipped |
 | POLISH2-13 | inline (no GSD phase) | shipped |
 | POLISH2-14 | inline (no GSD phase) | shipped |
