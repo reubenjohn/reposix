@@ -257,52 +257,47 @@ The previous coordinator already populated §4 of THIS doc with a 20-row P0/P1/P
 
 If the audits surface NEW frictions you think the matrix missed, append rows. Don't rewrite existing rows.
 
-### 7-C2. Generate `CATALOG-v3.md` — the LIVING per-file tracker (90 min initial; ongoing thereafter)
+### 7-C2. Build the LIVING per-file tracker — JSON source of truth + `catalog.py` (90 min initial; ongoing thereafter)
 
 **Owner verbatim ask** (with critical clarification): *"The catalogue is to ensure the agent can keep track of every file and what needs to be done so it doesn't miss anything. Because that's what I've noticed — many things slip through the cracks when I spot check."*
 
-This is **not a one-shot audit** — it's a working dashboard the autonomous agent uses to verify EVERY file got considered. Critical for an 8-hour run where small omissions slip past.
+This is **not a one-shot audit** — it's a working dashboard. With 50+ updates expected over the 8-hour session, **JSON is the source of truth** (Markdown-table edits via the `Edit` tool are too fragile at this update rate — column drift, malformed pipes, lost rows on race). Spot-checks happen via `jq` one-liners or an auto-rendered Markdown view.
 
-**Format** — write to `.planning/research/v0.11.1-CATALOG-v3.md`:
+**Three artifacts to ship in this step**:
 
-```markdown
-# CATALOG-v3 — living per-file tracker
+1. **`scripts/catalog.py`** (~100 LOC) — small Python CLI, single file, stdlib only. Subcommands:
+   - `init` — runs `git ls-files`, scans prior audits (`v0.11.0-CATALOG-v2.md`, `v0.11.1-repo-organization-gaps.md`, `v0.11.1-code-quality-gaps.md`, `v0.11.1-persona-*.md`), assigns initial status per file. Writes the JSON.
+   - `set <path> <status> [--note "<text>"]` — atomic update. Statuses: `KEEP` / `TODO` / `DONE` / `REVIEW` / `DELETE` / `REFACTOR`.
+   - `coverage` — exits 1 if any `TODO` row has no `plan` field. The §7-H gate.
+   - `render` — regenerates the Markdown view from JSON.
+   - `query <jq-expression>` — convenience passthrough to `jq` for spot-checks.
 
-Updated: <datetime>  ·  Files tracked: N  ·  TODO: N  ·  DONE-this-session: N  ·  KEEP: N
+2. **`.planning/v0.11.1-catalog.json`** — single source of truth. Schema (one record per file):
+   ```json
+   {
+     "generated_at": "2026-04-26T...",
+     "schema_version": 1,
+     "files": [
+       {"path": "crates/reposix-core/src/lib.rs", "status": "KEEP", "prior": ["catalog-v2:KEEP"], "plan": null, "note": "well-maintained pub API", "updated_at": "..."},
+       {"path": "crates/reposix-cli/src/cache_db.rs", "status": "TODO", "prior": ["catalog-v2:DELETE"], "plan": "v0.12.0 — option-b kept in Phase 51-C; reconsider", "note": "", "updated_at": "..."}
+     ]
+   }
+   ```
 
-## How to use this file
-
-After every §7 step, find the rows for files you touched and flip status to DONE
-with a one-line note. Before stopping the session, verify:
-1. No row has status TODO that the §7 queue claimed was done.
-2. Every file in DELETE has been git-rm'd.
-3. Every file in REFACTOR has a follow-up task either complete or surfaced
-   in the §4 friction matrix or §7 queue.
-
-## Per-directory dashboard
-
-| Dir | Files | KEEP | TODO | DONE | REVIEW | DELETE | Notes |
-|---|---|---|---|---|---|---|---|
-
-## Tracker (every file with status)
-
-| Path | Status | Owner-prior-audit | Action | Notes |
-|---|---|---|---|---|
-| crates/reposix-core/src/lib.rs | KEEP | catalog-v2:KEEP | — | well-maintained pub API |
-| crates/reposix-cli/src/cache_db.rs | TODO | catalog-v2:DELETE | DELETE-DEFERRED | Phase 51-C kept as option-b; revisit in v0.12.0 |
-| ... | ... | ... | ... | ... |
-```
+3. **`.planning/research/v0.11.1-CATALOG-v3.md`** — auto-rendered from JSON. Read-only for the agent (regenerate, never hand-edit). Section structure: headline counts → per-directory summary → exhaustive DELETE / REFACTOR / REVIEW tables → cross-cutting notes.
 
 **Generation strategy**:
-1. Dispatch a `general-purpose` subagent (read-only, no cargo) with a ≤200-word brief that:
-   - runs `git ls-files` for the canonical list (~600 files)
-   - reads each file's head + cross-refs prior audits (`v0.11.0-CATALOG-v2.md`, `v0.11.1-repo-organization-gaps.md`, `v0.11.1-code-quality-gaps.md`)
-   - assigns initial status: KEEP / TODO / DONE / REVIEW / DELETE
-   - structures the output as above
-2. After the subagent returns, scan the TODO rows. Many will map to existing §7 steps; map them explicitly in the row's Notes column.
-3. **From this point onward, every §7 step ends with "update CATALOG-v3 rows for the files I touched"**. This is the audit trail.
 
-**Coverage discipline**: at §7-H (final state), the catalog table must have ZERO rows with `Status: TODO` that aren't also in the open queue or §4 friction matrix. If a TODO row has no plan, surface it in HANDOVER §7 or delete the file.
+1. Dispatch a `general-purpose` subagent with a ≤200-word brief: write `scripts/catalog.py` (single file, stdlib + `subprocess` for `git ls-files` + `jq`-via-subprocess optional), commit it, then run `python scripts/catalog.py init` to bootstrap the JSON, run `render` to bootstrap the MD, commit both. Push.
+2. **Wire `catalog.py coverage` into `scripts/hooks/pre-push`** as a non-fatal warning (until the JSON is fully populated; flip to fatal at §7-H). The hook should NOT block on missing-plan rows during normal §7 work, but at the end of session you want the gate.
+3. **From this point on, every §7 step ends with one or more `python scripts/catalog.py set <path> done --note "ref §7-X"` calls**. One shell call per file touched. No Edit-tool fragility on the catalog itself.
+
+**Coverage discipline at §7-H**: run `python scripts/catalog.py coverage` — must exit 0 (zero TODO rows without a plan). If it exits 1, surface the offenders in §4 friction matrix or §7 queue and re-run, OR `set <path> done` with the actual fix you applied. Don't hand-wave past a non-zero exit.
+
+**Spot-check ergonomics for owner** (when they next check in):
+- `jq '.files | group_by(.status) | map({status: .[0].status, count: length})' .planning/v0.11.1-catalog.json` — total by status.
+- `jq '.files[] | select(.status == "TODO")' .planning/v0.11.1-catalog.json` — every open item.
+- Or open the auto-rendered Markdown view at `.planning/research/v0.11.1-CATALOG-v3.md`.
 
 ### 7-D. Hero rewrite — implement §5 (60 min)
 Write the new hero in `docs/index.md`. The mermaid timing diagram must:
