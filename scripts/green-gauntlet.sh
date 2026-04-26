@@ -4,8 +4,8 @@
 #
 # This is the pre-tag check any agent or human should run before
 # `scripts/tag-vX.Y.Z.sh`. The tag script already re-runs a subset of
-# these (cargo test + smoke), but fmt/clippy/mkdocs need to be green
-# too, and a single named command beats typing five pipelines.
+# these (cargo test), but fmt/clippy/mkdocs need to be green too,
+# and a single named command beats typing five pipelines.
 #
 # Each gate exits non-zero on the first red check. Timings are
 # printed so regressions stand out.
@@ -14,7 +14,7 @@
 #   bash scripts/green-gauntlet.sh [--quick|--full]
 #
 # Modes:
-#   default  — fmt, clippy, test, smoke (fast, default).
+#   default  — fmt, clippy, test (fast, default).
 #   --full   — default + mkdocs --strict + dark-factory regression.
 #              Requires reposix-sim on PATH and a reasonable time
 #              budget (~30s extra).
@@ -75,20 +75,8 @@ run_gauntlet() {
   # Default gates.
   run_gate test 'cargo test --workspace --locked' || failed=$((failed + 1))
 
-  if command -v reposix-sim >/dev/null 2>&1 \
-      || [[ -x target/release/reposix-sim ]] \
-      || [[ -x target/debug/reposix-sim ]]; then
-    if [[ -x target/release/reposix-sim ]]; then
-      export PATH="${repo_root}/target/release:$PATH"
-    elif [[ -x target/debug/reposix-sim ]]; then
-      export PATH="${repo_root}/target/debug:$PATH"
-    fi
-    run_gate smoke 'bash scripts/demos/smoke.sh' || failed=$((failed + 1))
-  else
-    printf '%b smoke %b — no reposix-sim binary on PATH\n' \
-      "${YELLOW}⊘${NC}" "${YELLOW}skipped${NC}"
-    printf '   (hint: cargo build --release --workspace --bins, then re-run)\n'
-  fi
+  # v0.11.1: dropped FUSE smoke gate (scripts/demos/smoke.sh deleted in §7-F2).
+  # The sim path is exercised by --full's dark-factory regression.
 
   # Full-mode adds mkdocs + dark-factory regression test.
   if [[ "$full" == "full" ]]; then

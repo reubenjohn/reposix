@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T19:03:23Z",
+  "generated_at": "2026-04-26T19:11:30Z",
   "schema_version": 1,
   "files": [
     {
@@ -1943,11 +1943,11 @@
     },
     {
       "path": "docs/decisions/001-github-state-mapping.md",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "repointed parity.sh ref \u00a77-F2",
+      "updated_at": "2026-04-26T19:11:30Z"
     },
     {
       "path": "docs/decisions/002-confluence-page-mapping.md",
@@ -2252,11 +2252,11 @@
     },
     {
       "path": "docs/reference/confluence.md",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "repointed parity-confluence.sh ref \u00a77-F2",
+      "updated_at": "2026-04-26T19:11:30Z"
     },
     {
       "path": "docs/reference/crates.md",
@@ -2838,27 +2838,27 @@
     },
     {
       "path": "scripts/demos/parity-confluence.sh",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F2 (FUSE-era)",
+      "updated_at": "2026-04-26T19:11:30Z"
     },
     {
       "path": "scripts/demos/parity.sh",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F2 (FUSE-era)",
+      "updated_at": "2026-04-26T19:11:30Z"
     },
     {
       "path": "scripts/demos/smoke.sh",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F2 (FUSE-era)",
+      "updated_at": "2026-04-26T19:11:30Z"
     },
     {
       "path": "scripts/demos/swarm.sh",
@@ -2892,11 +2892,11 @@
     },
     {
       "path": "scripts/green-gauntlet.sh",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "dropped FUSE smoke.sh dep \u00a77-F2",
+      "updated_at": "2026-04-26T19:11:30Z"
     },
     {
       "path": "scripts/hooks/pre-push",

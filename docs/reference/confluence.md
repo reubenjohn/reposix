@@ -163,17 +163,19 @@ for the full list:
 | `Error::Other("origin not allowlisted: ...")`                            | `REPOSIX_ALLOWED_ORIGINS` does not include `https://<tenant>.atlassian.net`.                       | Export `REPOSIX_ALLOWED_ORIGINS="http://127.0.0.1:*,https://${REPOSIX_CONFLUENCE_TENANT}.atlassian.net"` before invoking `reposix`. |
 | `429` repeatedly                                                         | Rate-limit gate keeps re-arming; the tenant has a very tight quota or you're on a hot loop.        | Let the adapter back off (it will sleep until `Retry-After` elapses). Consider increasing the delay between bulk invocations.      |
 
-## Demos
+## Regression coverage
 
-- **Tier 3B parity demo** —
-  [`scripts/demos/parity-confluence.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/parity-confluence.sh)
-  runs `reposix list` against the simulator and `reposix list --backend
-  confluence` against your tenant, then `jq`-diffs the normalized
-  `{id, title, status}` shape. Skips cleanly if any Atlassian env var is
-  unset.
+The Confluence backend's end-to-end regression is the
+`dark_factory_real_confluence` ignored test in
+[`crates/reposix-cli/tests/agent_flow_real.rs`](https://github.com/reubenjohn/reposix/blob/main/crates/reposix-cli/tests/agent_flow_real.rs).
+It drives a clone+grep+edit+push cycle against the TokenWorld space (see
+[testing-targets.md](./testing-targets.md)) and skips cleanly if any
+Atlassian env var is unset.
 
-(The pre-pivot FUSE live-mount demo and demo-suite index page were
-removed alongside the v0.9.0 architecture pivot.)
+(The historical `scripts/demos/parity-confluence.sh` parity demo, the
+pre-pivot FUSE live-mount demo, and the demo-suite index page were
+all removed alongside the v0.9.0 architecture pivot — most recently
+in v0.11.1 §7-F2.)
 
 ## See also
 
