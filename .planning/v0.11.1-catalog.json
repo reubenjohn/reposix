@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T19:27:01Z",
+  "generated_at": "2026-04-26T19:30:06Z",
   "schema_version": 1,
   "files": [
     {
@@ -2149,14 +2149,14 @@
     },
     {
       "path": "docs/development/roadmap.md",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "catalog-v2:DELETE",
         "repo-org-gaps:DELETE"
       ],
       "plan": "[catalog-v2] `/home/reuben/workspace/reposix/docs/development/roadmap.md` | Stops at v0.7. Mentions macFUSE / ProjFS / WinFsp. Already in `not_in_nav`. | **Delete.** `.planning/ROADMAP.md` is the live roadmap. The `docs/development/` sub-tree should ...",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-15 \u2014 rewrote as Option A (1-screen stub pointing at .planning/ROADMAP.md)",
+      "updated_at": "2026-04-26T19:30:06Z"
     },
     {
       "path": "docs/github-readme-top.png",
