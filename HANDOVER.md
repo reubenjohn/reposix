@@ -76,13 +76,30 @@ Running `cargo tree --duplicates` will likely surface 5–10 duplicates from the
 | `.planning/research/v0.11.1-persona-skeptical-oss-maintainer.md` | dtolnay-tier OSS maintainer | 15-minute critical review |
 | `.planning/research/v0.11.1-persona-coding-agent.md` | LLM agent in dark-factory loop | actual end-user |
 
-**Read all 5 first. Then prioritize fixes from this synthesized matrix:**
+**Read all 5 first.** Synthesized friction matrix (P0 = block-the-pilot, P1 = block-the-recommend, P2 = polish):
 
-> *(This section will be filled in once the audit subagents complete. Last update: <handoff timestamp>. If the table below is still empty when you read this, run: `for f in .planning/research/v0.11.1-persona-*.md; do echo "=== $f ==="; head -40 "$f"; done` and synthesize manually.)*
-
-| Friction | Personas affected | Severity | Fix scope |
-|---|---|---|---|
-| (TBD — pending audit returns) | | | |
+| # | Friction | Personas | P | Fix |
+|---|---|---|---|---|
+| 1 | **Headline `92.3%` was wrong; corrected to `89.1%`** across README, docs/index.md, demos/index.md, social/_build_*.py, social/benchmark.svg in this handoff (commit `f6345dd`). MCP comparison fixture is synthesized — not measured against a real MCP server. Add a clearer methodology callout to the vs-MCP page. | mcp-user, skeptical-oss | P0 | mostly done, methodology callout pending |
+| 2 | **JIRA cache routing bug**: `backend_slug_from_origin(spec.origin)` returned "confluence" for any atlassian.net host. JIRA worktrees pointed at the confluence cache. Fixed in commit (this handoff): now takes the full URL and reads `/jira/` vs `/confluence/` markers. Doctor.rs:271/697 still pass `spec.origin` (display-only impact, not data-corrupting). | code-quality | P0 | partially done; doctor.rs needs the same fix |
+| 3 | **GitHub repo description still says FUSE** (until commit `f6345dd` of this handoff which `gh repo edit`'d it). Verify on hover. | harness-author, skeptical-oss | P0 | done, verify |
+| 4 | **`/benchmarks/RESULTS/` 404** on the live site. README + index.md hero now point at the absolute github URL. Verify on next deploy. | mcp-user | P0 | done, verify |
+| 5 | **Latency table real-backend cells empty**. Atlassian secrets provisioned in this handoff (commit `ce2f577` time). Re-trigger `bench-latency-v09` to populate confluence column. JIRA still has no creds. | mcp-user, harness-author, skeptical-oss | P0 | secrets in; bench rerun pending |
+| 6 | **Site footer chip says `v0.8.0`** while page text references v0.9.0/v0.11.0. Probably hardcoded in `mkdocs.yml extra` or a theme override. Find and bump. | mcp-user, harness-author | P0 | not started |
+| 7 | **Hero example uses JIRA-style `PROJ-42`** but JIRA backend is read-only; tutorial says `sed + git push` — the example is DOA on JIRA. Either change the headline ID to a generic `0001` (sim-style) or add a connector capability matrix to make capabilities visible. | coding-agent | P0 | not started |
+| 8 | **`git checkout origin/main` vs `git checkout -B main refs/reposix/origin/main` inconsistency**. Fixed in README + docs/index.md in this handoff. Mental-model + concept pages may still have stale form — grep and fix. | coding-agent, harness-author | P0 | partially done |
+| 9 | **GITHUB_TOKEN auto-derived `Debug` leak**. Fixed in commit `ce2f577`. | security-lead | P0 | done |
+| 10 | **Phase-51 worktree_helpers re-duplicated** by Phase 55 work — `cache_path_from_worktree` thin-wrappers in gc.rs:166, tokens.rs:69, cost.rs:282 each delegate to canonical but defeat the de-dup intent. Consider inlining or accepting them as thin existence-check wrappers. | code-quality | P1 | not started |
+| 11 | **`Error::Other(String)` 153 occurrences** dominates internal error vocabulary; round-trips JSON through error messages in sim.rs. Replace with typed variants. | code-quality | P1 | not started |
+| 12 | **Two parallel audit-log schemas** (`audit_events_cache` in cache crate, `audit_events` in sim/confluence/jira) means `reposix doctor` only checks the cache schema. Unify or document. | code-quality, security-lead | P1 | not started |
+| 13 | **No v1.0 stability commitment** anywhere on `/decisions/`. ADR-008 itself documents a breaking URL-shape change in v0.10.0 — bad signal. | harness-author | P1 | doc-only ADR write |
+| 14 | **No documented exit codes / `--json`/`--format=json` output / canonical env-var page / concurrency contract / already-init'd-directory behavior**. Six concrete machine-readability gaps the harness persona surfaced. | harness-author | P1 | doc + small CLI flags |
+| 15 | **Internal ADRs (002, 003 — deprecated FUSE) still in nav**. `docs/decisions/002-confluence-page-mapping.md` is current (kept ADR); `003-nested-mount-layout.md` references the FUSE-era nested-mount that's gone — mark superseded or delete. | mcp-user, skeptical-oss | P1 | nav cleanup |
+| 16 | **`scripts/demos/` (11 files) + `docs/demos/recordings/` (12 typescripts) entirely FUSE-era**. Repo-org audit recommends deletion. ~280 files. | repo-org | P1 | bulk delete |
+| 17 | **`.planning/milestones/v0.{1..8}.0-phases/` is 273 files** (74% of `.planning/` markdown). Condense each into a single `ARCHIVE.md`. | repo-org | P2 | bulk condense |
+| 18 | **`scripts/__pycache__/*.pyc` is committed**. .gitignore miss. | repo-org | P2 | gitignore + git rm |
+| 19 | **Supply chain: no signing, no SBOM, no SLSA, no cosign, no Apple notarization, no Authenticode**. v0.11.0 ships `curl | sh`. | security-lead | P2 | release.yml extension |
+| 20 | **`research/threat-model-and-critique.md` referenced by CLAUDE.md but missing or unpublished**. | security-lead | P2 | write or delete the ref |
 
 ---
 

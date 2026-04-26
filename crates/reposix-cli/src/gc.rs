@@ -176,8 +176,12 @@ fn cache_path_from_worktree(work: &Path) -> Result<PathBuf> {
 
 fn backend_slug_from_worktree(work: &Path) -> Option<String> {
     let url = git_config_get(work, "remote.origin.url")?;
-    let spec = parse_remote_url(&url).ok()?;
-    Some(backend_slug_from_origin(&spec.origin))
+    // Validate the URL parses but pass the FULL url (not just origin) to
+    // backend_slug_from_origin so JIRA's `/jira/` marker is visible. The
+    // earlier `&spec.origin` form silently routed JIRA worktrees to the
+    // confluence cache. v0.11.1 audit-finding fix.
+    let _spec = parse_remote_url(&url).ok()?;
+    Some(backend_slug_from_origin(&url))
 }
 
 fn project_slug_from_worktree(work: &Path) -> Option<String> {

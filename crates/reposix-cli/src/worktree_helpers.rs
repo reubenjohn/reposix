@@ -40,20 +40,28 @@ pub fn git_config_get(path: &Path, key: &str) -> Option<String> {
     }
 }
 
-/// Map a remote origin to the cache `backend` slug.
+/// Map a remote `url` to the cache `backend` slug.
 ///
-/// Mirrors the runtime mapping in `git-remote-reposix`: GitHub is identified
-/// by `api.github.com`; Atlassian (`atlassian.net`) is best-effort tagged as
-/// `confluence` because the worktree-side helpers don't see the
-/// `/jira/` vs `/confluence/` URL marker (it's discarded before
-/// `remote.origin.url` is stored). All other origins fall back to `sim`.
+/// Mirrors the runtime mapping in `git-remote-reposix`. The order matters:
+/// Atlassian URLs carry a `/jira/` or `/confluence/` path marker (see
+/// `init.rs` lines 73 / 89) — check the markers FIRST so JIRA worktrees
+/// route to the right cache. GitHub is identified by `api.github.com`.
+/// Everything else falls through to `sim`.
+///
+/// Audit-finding: pre-v0.11.1 this took only the origin host and silently
+/// returned "confluence" for every JIRA worktree, sending `reposix
+/// {gc,tokens,cost,history,doctor}` at the wrong cache directory.
 #[must_use]
-pub fn backend_slug_from_origin(origin: &str) -> String {
-    if origin.contains("api.github.com") {
+pub fn backend_slug_from_origin(url: &str) -> String {
+    if url.contains("/jira/") {
+        "jira".to_string()
+    } else if url.contains("/confluence/") {
+        "confluence".to_string()
+    } else if url.contains("api.github.com") {
         "github".to_string()
-    } else if origin.contains("atlassian.net") {
-        // sim and confluence/jira can share atlassian.net; we pick "confluence"
-        // as a default and the user fixes if wrong. Best-effort.
+    } else if url.contains("atlassian.net") {
+        // Bare atlassian.net with no marker — unusual but possible if a
+        // user hand-wrote the URL. Best-effort default.
         "confluence".to_string()
     } else {
         "sim".to_string()
@@ -81,7 +89,9 @@ pub fn cache_path_from_worktree(work: &Path) -> Result<PathBuf> {
         )
     })?;
     let spec = parse_remote_url(&url).with_context(|| format!("parse remote.origin.url={url}"))?;
-    let backend = backend_slug_from_origin(&spec.origin);
+    // Pass the full URL so JIRA's `/jira/` marker is visible — origin
+    // alone (just the host) loses the disambiguator.
+    let backend = backend_slug_from_origin(&url);
     resolve_cache_path(&backend, spec.project.as_str()).with_context(|| {
         format!(
             "resolve cache path for ({backend}, {project})",
@@ -96,8 +106,29 @@ mod tests {
 
     #[test]
     fn backend_slug_mapping() {
+        // Sim — local origin.
         assert_eq!(backend_slug_from_origin("http://127.0.0.1:7878"), "sim");
-        assert_eq!(backend_slug_from_origin("https://api.github.com"), "github");
+        // GitHub — api.github.com.
+        assert_eq!(
+            backend_slug_from_origin("reposix::https://api.github.com/projects/foo/bar"),
+            "github"
+        );
+        // Confluence — `/confluence/` marker.
+        assert_eq!(
+            backend_slug_from_origin(
+                "reposix::https://reuben-john.atlassian.net/confluence/projects/TokenWorld"
+            ),
+            "confluence"
+        );
+        // JIRA — `/jira/` marker (the v0.11.1 fix; previously silently
+        // returned "confluence" and routed the wrong cache).
+        assert_eq!(
+            backend_slug_from_origin(
+                "reposix::https://reuben-john.atlassian.net/jira/projects/TEST"
+            ),
+            "jira"
+        );
+        // Bare atlassian.net (no marker) — best-effort default.
         assert_eq!(
             backend_slug_from_origin("https://reuben-john.atlassian.net"),
             "confluence"
