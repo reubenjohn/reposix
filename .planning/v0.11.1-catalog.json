@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T20:53:02Z",
+  "generated_at": "2026-04-26T21:16:51Z",
   "schema_version": 1,
   "files": [
     {
@@ -1351,8 +1351,8 @@
       "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "POLISH2-08 \u2014 CAPABILITIES const",
-      "updated_at": "2026-04-26T19:50:55Z"
+      "note": "POLISH2-10 \u2014 split into types/translate/client/lib",
+      "updated_at": "2026-04-26T21:16:51Z"
     },
     {
       "path": "crates/reposix-confluence/tests/contract.rs",
