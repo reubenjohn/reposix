@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T19:23:40Z",
+  "generated_at": "2026-04-26T19:27:01Z",
   "schema_version": 1,
   "files": [
     {
@@ -675,11 +675,11 @@
     },
     {
       "path": "HANDOVER.md",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-H \u2014 \u00a77 fully shipped; carry-forwards in v0.11.1 REQUIREMENTS POLISH2-*",
+      "updated_at": "2026-04-26T19:27:01Z"
     },
     {
       "path": "LICENSE-APACHE",
