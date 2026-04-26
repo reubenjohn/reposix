@@ -132,6 +132,7 @@ nav:
       - Integrate with your agent: guides/integrate-with-your-agent.md
       - Troubleshooting: guides/troubleshooting.md
   - Reference:
+      - Exit codes: reference/exit-codes.md
       - Glossary: reference/glossary.md
       - Simulator: reference/simulator.md
       - Testing targets: reference/testing-targets.md
