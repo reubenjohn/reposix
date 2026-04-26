@@ -43,7 +43,7 @@
 - [shipped] **POLISH2-18**: `docs/reference/exit-codes.md` authored (186 lines documenting 0/1 for CLI subcommands and 0/1/2 for git-remote-reposix). Source: friction row 14 + persona-harness-author. Shipped via 47aabf0. `--json`/`--format=json` flag deferred to v0.12.0.
 - [ ] **POLISH2-19**: `.claude/skills/reposix-banned-words/SKILL.md` path refs at L9+L64 updated from `.planning/notes/` → `.planning/archive/notes/`. Owner-approval gated. Source: §7-F2 deferred item 4.
 - [shipped] **POLISH2-20**: Upstream issue filed at https://github.com/squidfunk/mkdocs-material/issues/8584 ("Bug: superfences `<pre class="mermaid">` content is stripped when minify_html is enabled"). Audit doc footer updated. Source: HANDOVER §7-G last bullet. Shipped via 0375ffc.
-- [ ] **POLISH2-21**: `.planning/` tree condensed per repo-org rec #5: 8 `v0.X.0-phases` dirs collapsed into 8 `ARCHIVE.md` files (273 → ~16 files net). Source: repo-org rec #5 (P2).
+- [shipped] **POLISH2-21**: `.planning/` tree condensed per repo-org rec #5: 8 `v0.X.0-phases` dirs (v0.1.0–v0.8.0) folded into 8 `ARCHIVE.md` stubs. Net file delta: 263 deleted + 8 added = 255 fewer files; `.planning/milestones/` dropped from 334 → 79 files (76% reduction). v0.9.0-phases/ + v0.10.0-phases/ kept intact per audit. Source: repo-org rec #5 (P2).
 - [ ] **POLISH2-22**: Two parallel audit-log schemas unified per code-quality CC-3 (or document the dual-schema design intentionally). Source: code-quality P0-4 / friction row 12.
 
 ### Out of Scope
@@ -76,7 +76,7 @@
 | POLISH2-18 | inline (no GSD phase) | shipped (exit-codes.md only; --json deferred v0.12.0) |
 | POLISH2-19 | TBD | planning (owner-approval gate) |
 | POLISH2-20 | inline (no GSD phase) | shipped (issue #8584) |
-| POLISH2-21 | TBD | planning |
+| POLISH2-21 | inline (no GSD phase) | shipped |
 | POLISH2-22 | TBD | planning |
 
 ---
