@@ -23,6 +23,7 @@ You have ~8 hours from this message landing. Pace yourself against the §7 list.
 
 - **Owner is driving. Do not ask questions. Decide and proceed.**
 - **You are the coordinator. You do not type code.** Coordinator's job: decide, route, verify. Subagents (`general-purpose`, `Explore`, `Plan`) do the file reads, the edits, the cargo runs, the playwright walks, the doc rewrites. **If you find yourself about to type a >20-line edit, STOP and dispatch a subagent instead.** Context-fill is the failure mode that kills these sessions; aggressive delegation is how you avoid it. Owner's global OP #2 is "Aggressive subagent delegation"; CLAUDE.md repeats it ("Coordinating agents must delegate research, implementation, and validation to subagents to prevent context fill"). This is load-bearing for an 8-hour autonomous run — your context budget will not survive doing the work yourself.
+- **CATALOG-v3 is your bookkeeping.** §7-C2 generates it. **After every §7 step**, dispatch a small subagent (or do it inline if trivial) to update the rows for files you touched: flip TODO → DONE, add a one-line note. Before §7-H, verify zero TODO rows lack a queued plan. This is the audit trail that prevents owner's "things slip through the cracks when I spot check" — the previous session let scope creep happen because nothing was tracking what hadn't been touched yet.
 - **No skill changes.** `.claude/skills/` is owner-approval-gated.
 - **One cargo invocation at a time, ever.** `cargo check -p <crate>`, never `--workspace`. CLAUDE.md "Build memory budget" explains why. If a subagent does cargo work, it has the lock — don't dispatch a second cargo subagent in parallel.
 - **Push frequently** (every commit). Pre-push hook runs fmt + clippy + `scripts/check-docs-site.sh` — let it gate. Don't `--no-verify`.
@@ -256,18 +257,52 @@ The previous coordinator already populated §4 of THIS doc with a 20-row P0/P1/P
 
 If the audits surface NEW frictions you think the matrix missed, append rows. Don't rewrite existing rows.
 
-### 7-C2. Generate CATALOG-v3 — the per-file status catalog the owner asked for (60 min)
-**Owner verbatim ask**: *"Is it truly exhaustive and organized with a catalogue of every file with a status column or some better way you can think of?"*
+### 7-C2. Generate `CATALOG-v3.md` — the LIVING per-file tracker (90 min initial; ongoing thereafter)
 
-Dispatch a `general-purpose` subagent (read-only, no cargo) with a brief along these lines (this is NOT the full prompt — write your own from the bullets, ≤200 words):
+**Owner verbatim ask** (with critical clarification): *"The catalogue is to ensure the agent can keep track of every file and what needs to be done so it doesn't miss anything. Because that's what I've noticed — many things slip through the cracks when I spot check."*
 
-- Walk every git-tracked file (`git ls-files`).
-- Output to `.planning/research/v0.11.1-CATALOG-v3.md` (≤6000 words, structured: headline counts → per-directory summary table → exhaustive DELETE / REFACTOR / REVIEW lists with rationale → KEEP totals only by dir → cross-cutting refactor opportunities → stale-archives recommendation).
-- Cross-reference prior audits (`v0.11.0-CATALOG-v2.md`, `v0.11.1-repo-organization-gaps.md`, `v0.11.1-code-quality-gaps.md`) — escalate any item a prior audit said DELETE that's still on disk.
-- Flag P0 escalations: missing-but-referenced files, on-disk-but-orphan files, FUSE-era residue, hardcoded `/home/reuben/...` paths, committed `.pyc`/`.DS_Store`, naming inconsistencies, contradicting docs.
-- 200-word return summary: total file count, breakdown by status, 5 highest-leverage moves, P0 escalations.
+This is **not a one-shot audit** — it's a working dashboard the autonomous agent uses to verify EVERY file got considered. Critical for an 8-hour run where small omissions slip past.
 
-After it lands, integrate the catalog's recommendations into 7-F's repo cleanup batch — don't apply each delete individually, batch by directory.
+**Format** — write to `.planning/research/v0.11.1-CATALOG-v3.md`:
+
+```markdown
+# CATALOG-v3 — living per-file tracker
+
+Updated: <datetime>  ·  Files tracked: N  ·  TODO: N  ·  DONE-this-session: N  ·  KEEP: N
+
+## How to use this file
+
+After every §7 step, find the rows for files you touched and flip status to DONE
+with a one-line note. Before stopping the session, verify:
+1. No row has status TODO that the §7 queue claimed was done.
+2. Every file in DELETE has been git-rm'd.
+3. Every file in REFACTOR has a follow-up task either complete or surfaced
+   in the §4 friction matrix or §7 queue.
+
+## Per-directory dashboard
+
+| Dir | Files | KEEP | TODO | DONE | REVIEW | DELETE | Notes |
+|---|---|---|---|---|---|---|---|
+
+## Tracker (every file with status)
+
+| Path | Status | Owner-prior-audit | Action | Notes |
+|---|---|---|---|---|
+| crates/reposix-core/src/lib.rs | KEEP | catalog-v2:KEEP | — | well-maintained pub API |
+| crates/reposix-cli/src/cache_db.rs | TODO | catalog-v2:DELETE | DELETE-DEFERRED | Phase 51-C kept as option-b; revisit in v0.12.0 |
+| ... | ... | ... | ... | ... |
+```
+
+**Generation strategy**:
+1. Dispatch a `general-purpose` subagent (read-only, no cargo) with a ≤200-word brief that:
+   - runs `git ls-files` for the canonical list (~600 files)
+   - reads each file's head + cross-refs prior audits (`v0.11.0-CATALOG-v2.md`, `v0.11.1-repo-organization-gaps.md`, `v0.11.1-code-quality-gaps.md`)
+   - assigns initial status: KEEP / TODO / DONE / REVIEW / DELETE
+   - structures the output as above
+2. After the subagent returns, scan the TODO rows. Many will map to existing §7 steps; map them explicitly in the row's Notes column.
+3. **From this point onward, every §7 step ends with "update CATALOG-v3 rows for the files I touched"**. This is the audit trail.
+
+**Coverage discipline**: at §7-H (final state), the catalog table must have ZERO rows with `Status: TODO` that aren't also in the open queue or §4 friction matrix. If a TODO row has no plan, surface it in HANDOVER §7 or delete the file.
 
 ### 7-D. Hero rewrite — implement §5 (60 min)
 Write the new hero in `docs/index.md`. The mermaid timing diagram must:
