@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T20:24:12Z",
+  "generated_at": "2026-04-26T20:28:19Z",
   "schema_version": 1,
   "files": [
     {
@@ -124,11 +124,11 @@
     },
     {
       "path": ".github/workflows/release.yml",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-02 \u2014 arm64-musl via cargo-zigbuild",
+      "updated_at": "2026-04-26T20:28:19Z"
     },
     {
       "path": ".gitignore",

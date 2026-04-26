@@ -24,7 +24,7 @@
 ### Active
 
 - [ ] **POLISH2-01**: crates.io email verification + first publish of all 9 reposix-* crates. Owner action: verify email at https://crates.io/settings/profile then `gh workflow run release-plz.yml`. Source: HANDOVER.md §3a.
-- [ ] **POLISH2-02**: linux-aarch64-musl binary added to `release.yml` dist matrix. Source: HANDOVER.md §3b.
+- [shipped] **POLISH2-02**: linux-aarch64-musl binary added to `release.yml` dist matrix. Source: HANDOVER.md §3b. shipped via `feat(release): aarch64-unknown-linux-musl via cargo-zigbuild (POLISH2-02, closes §3b)` — added matrix entry with `zig: true`, conditional `cargo-zigbuild` install step, and branched build step in `.github/workflows/release.yml`.
 - [ ] **POLISH2-03**: `bench-latency-cron` Authorization-header duplicate fixed by setting `persist-credentials: false` on the `actions/checkout` step in `.github/workflows/bench-latency-cron.yml`. Source: bench-cron run 24965024010 failure.
 - [ ] **POLISH2-04**: JIRA real-backend latency cells populated. Owner-action prereq: provision `JIRA_EMAIL` + `JIRA_API_TOKEN` + `REPOSIX_JIRA_INSTANCE` secrets, then re-dispatch `bench-latency-v09`. Source: HANDOVER.md §4 row 5 partial.
 - [ ] **POLISH2-05**: Methodology callout added to `docs/concepts/reposix-vs-mcp-and-sdks.md` naming the synthesized MCP fixture (per HANDOVER §4 row 1). Source: friction row 1 partial.
@@ -57,7 +57,7 @@
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
 | POLISH2-01 | TBD (Phase 56+) | planning (owner-action gate) |
-| POLISH2-02 | TBD | planning |
+| POLISH2-02 | inline (no GSD phase) | shipped |
 | POLISH2-03 | TBD | planning |
 | POLISH2-04 | TBD | planning (owner-action gate) |
 | POLISH2-05 | TBD | planning |

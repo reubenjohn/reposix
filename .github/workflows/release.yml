@@ -75,9 +75,15 @@ jobs:
             os: ubuntu-latest
             archive: tgz
             cross: true
-          # aarch64-unknown-linux-musl held back to v0.11.1: github runners
-          # default to aarch64-linux-gnu cross-toolchain, musl arm64 needs
-          # aarch64-linux-musl-gcc set up explicitly. Track in HANDOVER.md §3b.
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+            archive: tgz
+            cross: true
+            zig: true                   # use cargo-zigbuild (ships a working musl arm64 linker)
+          # TODO(POLISH2-02 follow-up): once an arm64-musl tarball lands in a
+          # tagged release, re-introduce the arm64 branch in `on_linux do` of
+          # the homebrew formula generator below (currently x86_64-musl-only
+          # since fe50b75).
           - target: x86_64-apple-darwin
             os: macos-latest
             archive: tgz
@@ -108,21 +114,27 @@ jobs:
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y musl-tools
-          if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-musl" ]]; then
-            sudo apt-get install -y gcc-aarch64-linux-gnu
-            mkdir -p .cargo
-            cat > .cargo/config.toml <<'EOF'
-          [target.aarch64-unknown-linux-musl]
-          linker = "aarch64-linux-gnu-gcc"
-          EOF
-          fi
+
+      - name: Install zigbuild (arm64-musl)
+        if: matrix.zig == true
+        run: |
+          set -euo pipefail
+          # Pinned versions for reproducibility — bump knowingly.
+          pip3 install --user "ziglang==0.13.0"
+          cargo install --locked cargo-zigbuild@0.20.0
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Build release binaries
         shell: bash
         run: |
           set -euo pipefail
-          cargo build --release --locked --target ${{ matrix.target }} \
-            -p reposix-cli -p reposix-remote
+          if [[ "${{ matrix.zig }}" == "true" ]]; then
+            cargo zigbuild --release --locked --target ${{ matrix.target }} \
+              -p reposix-cli -p reposix-remote
+          else
+            cargo build --release --locked --target ${{ matrix.target }} \
+              -p reposix-cli -p reposix-remote
+          fi
 
       - name: Stage archive
         id: stage
