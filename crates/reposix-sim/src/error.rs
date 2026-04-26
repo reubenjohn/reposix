@@ -202,7 +202,9 @@ mod sim_error_tests {
     fn from_io_error_preserves_kind() {
         let io = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "nope");
         let sim: SimError = io.into();
-        assert!(matches!(sim, SimError::Io(ref e) if e.kind() == std::io::ErrorKind::PermissionDenied));
+        assert!(
+            matches!(sim, SimError::Io(ref e) if e.kind() == std::io::ErrorKind::PermissionDenied)
+        );
     }
 
     #[test]
