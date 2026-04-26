@@ -1,8 +1,60 @@
+# AUTONOMOUS MODE — READ THIS FIRST
+
+You are taking over an autonomous engineering session for the reposix project (`https://github.com/reubenjohn/reposix`). The owner (`reubenjohn` / `reubenvjohn@gmail.com`) is unreachable — driving for several hours. **Do not block on user input. Decide, ship, push.**
+
+## Start here — do these in order before anything else
+
+1. `cd /home/reuben/workspace/reposix`
+2. Read this whole file (the HANDOVER below). It is your work queue.
+3. Read `CLAUDE.md` — the **"Build memory budget"** and **"Docs-site validation"** sections in particular. The RAM rule is load-bearing (the VM has crashed twice this week from parallel cargo).
+4. `ls .planning/research/v0.11.1-*.md` — 7 audit reports synthesized into §4. Read them when you need depth on a row.
+5. `gh run list --workflow release --limit 1` — the v0.11.0 tag's release pipeline (HEAD `9dc4311`) was firing at handoff. Verify it succeeded: binaries on `https://github.com/reubenjohn/reposix/releases/tag/v0.11.0` and crates on `https://crates.io/crates/reposix-cli`. If either failed, diagnose + fix per §3 + §7-A.
+
+Then execute §7 of THIS file in order (steps 7-A through 7-H). Each is 30–90 min of focused work. ~5 hours total.
+
+## Non-negotiable rules
+
+- **Owner is driving. Do not ask questions. Decide and proceed.**
+- **No skill changes.** `.claude/skills/` is owner-approval-gated.
+- **One cargo invocation at a time, ever.** `cargo check -p <crate>`, never `--workspace`. CLAUDE.md "Build memory budget" explains why.
+- **Push frequently** (every commit). Pre-push hook runs fmt + clippy + `scripts/check-docs-site.sh` — let it gate. Don't `--no-verify`.
+- **For docs-site work**, additionally validate via playwright per CLAUDE.md "Docs-site validation". The mermaid render bug from v0.11.0 is the reason this rule exists.
+- **Aggressive subagent delegation.** You are the coordinator. Subagents (general-purpose / Explore / etc.) do the typing. Read `.planning/` for the project's get-shit-done convention.
+- **No retrospective / walkthrough / morning-brief docs.** This file is operational; delete it once §7 is done. Owner explicitly does not want session-recap files.
+- **Banned word: "replace".** Use "complement", "alongside", "for the 80%". See `.planning/research/v0.11.0-vision-and-innovations.md` §8.
+
+## When you finish §7-H
+
+- Update this file: either delete it (if §7 is genuinely done) or shrink it to ONLY the items still pending. Don't append a "I did X" log — just update the queue.
+- Update `.planning/STATE.md` with the new cursor.
+- Commit + push.
+- Stop. The owner will check back when they're back online.
+
+## If something goes wrong
+
+- **VM crash**: see CLAUDE.md "If the VM crashes again" — suspect parallel cargo, check `ps aux` for orphans, fewer subagents in flight.
+- **CI red**: `gh run view <id> --log-failed | head -30`. Don't bypass; fix.
+- **Release pipeline red**: most likely a Windows or cross-compile issue beyond what's already gated. See §3b.
+- **crates.io 403**: token-scope issue. The owner regenerated the token with `publish-new` + `publish-update` + `yank` scopes (restricted to `reposix-*`) and we re-provisioned the gh secret at handoff. If `release-plz` STILL 403's, the scopes weren't right — flag in this file, skip §7-A's crates.io step.
+- **Owner returns asking "what did you do?"**: point at `git log origin/main..HEAD` and this file's queue updates.
+
+Branch: `main`. No feature branches. The pre-push hook is your safety net. Trust it. The previous agent (Claude Opus 4.7 1M, this same session-flavor) shipped 50+ commits in the last 24h without breaking main. You can do the same.
+
+**Go.**
+
+---
+
 # HANDOVER — for the next agent picking up after v0.11.0
 
-**Created**: 2026-04-26 by Claude Opus 4.7 (1M context). Owner is on a 6-hour drive and asked for "enough work for 6 hours" plus an honest catalog of gaps. **This document is operational, not retrospective. Delete it once the work is done.**
+**Created**: 2026-04-26 by Claude Opus 4.7 (1M context). Updated 2026-04-26 (later that day): owner returned briefly mid-handover, paired down the friction list, then handed back to autonomous mode for the rest of a multi-hour drive. **Operational — delete once §7 is done. Do not append "what I did" entries; just update the queue.**
 
-The previous milestone (v0.11.0 — Polish & Reproducibility) shipped 49 commits and closed all 17 POLISH-* requirements (see `.planning/REQUIREMENTS.md`), but the post-tag release pipeline + several persona / code-quality audits surfaced gaps the milestone didn't cover.
+The previous milestone (v0.11.0 — Polish & Reproducibility) shipped 50+ commits and closed all 17 POLISH-* requirements (see `.planning/REQUIREMENTS.md`). Release-pipeline retag (round 3) is in flight at HEAD `9dc4311`; release.yml binaries + release-plz crates.io publish + homebrew formula push all expected to succeed this round. Several persona / code-quality audits surfaced gaps the milestone didn't cover — synthesized into §4 and queued in §7.
+
+**Latest in-session updates** (post-original-handoff, before the autonomous handback):
+- v0.11.0 tag force-updated to `9dc4311` (windows compile fix round-2 + JIRA cache routing fix).
+- `CARGO_REGISTRY_TOKEN` re-provisioned 2026-04-26 — owner regenerated with `publish-new` + `publish-update` + `yank` scopes, restricted to `reposix-*`. release-plz should now ship.
+- `ATLASSIAN_API_KEY` + `ATLASSIAN_EMAIL` + `REPOSIX_CONFLUENCE_TENANT` + `HOMEBREW_TAP_TOKEN` all provisioned. Confluence latency cell + homebrew formula push both unblocked.
+- 89.1% / 92.3% inconsistency scrubbed across 7 surfaces. GitHub repo description updated. `git checkout origin/main` → `refs/reposix/origin/main` corrected in README + index. JIRA cache slug bug fixed. GitHub token Debug-leak fixed.
 
 ---
 
