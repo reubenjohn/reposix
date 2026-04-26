@@ -820,8 +820,7 @@ fn check_backend_capabilities(
             "backend.capabilities",
             format!(
                 "backend capabilities ({backend})\n     {row}",
-                row = render_capability_row(&backend, caps)
-                    .replace('\n', "\n     ")
+                row = render_capability_row(&backend, caps).replace('\n', "\n     ")
             ),
         ),
         None => DoctorFinding::warn(

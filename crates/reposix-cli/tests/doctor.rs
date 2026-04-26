@@ -303,14 +303,8 @@ fn doctor_prints_backend_capability_row_for_sim() {
         stdout.contains("backend capabilities"),
         "capability header missing: {stdout}"
     );
-    assert!(
-        stdout.contains("sim"),
-        "sim slug missing: {stdout}"
-    );
-    assert!(
-        stdout.contains("yes"),
-        "yes column missing: {stdout}"
-    );
+    assert!(stdout.contains("sim"), "sim slug missing: {stdout}");
+    assert!(stdout.contains("yes"), "yes column missing: {stdout}");
     assert!(
         stdout.contains("strong"),
         "strong versioning label missing: {stdout}"
