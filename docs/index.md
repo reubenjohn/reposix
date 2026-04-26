@@ -6,41 +6,72 @@ title: reposix
 
 > **Agents already know `cat` and `git`. They don't know your JSON schema.**
 
-reposix exposes REST-based issue trackers (Jira, GitHub Issues, Confluence) as a **real git working tree**. An autonomous LLM agent can `git clone`, `cat`, `grep`, edit, and `git push` tickets without learning a single Model Context Protocol (MCP) tool schema or REST SDK surface. It complements REST — the other 20% of operations (complex JQL, bulk imports, admin) keep using the API directly.
+reposix exposes REST-based issue trackers (Jira, GitHub Issues, Confluence) as a **real git working tree**. An autonomous LLM agent can `git clone`, `cat`, `grep`, edit, and `git push` tickets without learning a single Model Context Protocol (MCP) tool schema or REST SDK surface. It runs alongside REST — the other 20% of operations (complex JQL, bulk imports, admin) keep using the API directly. reposix handles the 80% where an agent just needs to read, edit, and push.
 
-## Before — five round trips through the REST API
+<div class="grid cards" markdown>
 
-```bash
-# Transition PROJ-42 to Done, reassign, comment.
-curl -s -u "$E:$T" /rest/api/3/issue/PROJ-42/transitions \
-  | jq -r '.transitions[] | select(.name=="Done") | .id'           # 1. lookup id
-curl -s -u "$E:$T" -X POST .../transitions -d '{"transition":...}' # 2. transition
-curl -s -u "$E:$T" /rest/api/3/user/search?query=alice@acme.com    # 3. resolve user
-curl -s -u "$E:$T" -X PUT .../PROJ-42 -d '{"fields":{"assignee":...}}'  # 4. assign
-curl -s -u "$E:$T" -X POST .../comment -d '{"body":{"type":"doc",...}}' # 5. ADF comment
+-   **`89.1%`** fewer tokens vs MCP for the same 3-issue read+edit+push workflow ([benchmarks/RESULTS.md](https://github.com/reubenjohn/reposix/blob/main/benchmarks/RESULTS.md))
+-   **`8 ms`** cached read · **`24 ms`** cold init ([latency](benchmarks/v0.9.0-latency.md))
+-   **`5-line install`** — `curl`, `brew`, `cargo binstall`, or `irm` ([first-run.md](tutorials/first-run.md))
+
+</div>
+
+## reposix loop vs MCP loop
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Agent
+    participant reposix as reposix loop
+    participant MCP as MCP loop
+    Note over Agent,reposix: ~3 REST calls, 531 tokens
+    Agent->>reposix: cat issues/0001.md
+    Agent->>reposix: sed -i ... && git add
+    Agent->>reposix: git push
+    Note over Agent,MCP: ~6 round-trips, 4,883 tokens
+    Agent->>MCP: list_tools()
+    Agent->>MCP: call_tool(get_issue, {id:1})
+    Agent->>MCP: call_tool(update_issue, ...)
+    Agent->>MCP: call_tool(post_comment, ...)
 ```
+
+Same workflow, two loops. The reposix loop reuses `cat`/`sed`/`git` — vocabulary the agent already has — and pushes one commit. The MCP loop discovers tools, then issues one call per field mutation. The token gap is measured: see [`benchmarks/RESULTS.md`](https://github.com/reubenjohn/reposix/blob/main/benchmarks/RESULTS.md).
+
+## 30-second install
+
+=== "curl (Linux/macOS)"
+    ```bash
+    curl --proto '=https' --tlsv1.2 -LsSf \
+        https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.sh | sh
+    ```
+
+=== "PowerShell (Windows)"
+    ```powershell
+    powershell -ExecutionPolicy Bypass -c "irm https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.ps1 | iex"
+    ```
+
+=== "Homebrew"
+    ```bash
+    brew install reubenjohn/reposix/reposix
+    ```
+
+=== "cargo binstall"
+    ```bash
+    cargo binstall reposix-cli reposix-remote
+    ```
+
+Full step-by-step in [first-run](tutorials/first-run.md).
 
 ## After — one commit
 
 ```bash
-cd ~/work/acme-jira
-sed -i -e 's/^status: .*/status: Done/' \
-       -e 's/^assignee: .*/assignee: alice@acme.com/' issues/PROJ-42.md
-echo $'\n## Comment\nShipped in v0.7.1' >> issues/PROJ-42.md
-git commit -am "close PROJ-42" && git push
+cd /tmp/reposix-demo
+sed -i 's/^status: .*/status: in_progress/' issues/0001.md
+echo $'\n## Comment\nReproduced — investigating root cause.' >> issues/0001.md
+git commit -am "0001: in progress" && git push
 ```
 
 The audit trail is `git log`. No SDK to vendor; no schemas to load.
-
-## Three measured numbers
-
-<div class="grid cards" markdown>
-
--   **`8 ms`** — read one issue from the local cache after first fetch ([`v0.9.0-latency.md`](benchmarks/v0.9.0-latency.md)).
--   **`0`** — MCP schema tokens an agent loads before the first useful op.
--   **`1`** — command to bootstrap (`reposix init sim::demo /tmp/repo`).
-
-</div>
 
 [Mental model in 60 seconds →](concepts/mental-model-in-60-seconds.md){ .md-button .md-button--primary }
 [How it complements MCP and SDKs →](concepts/reposix-vs-mcp-and-sdks.md){ .md-button }

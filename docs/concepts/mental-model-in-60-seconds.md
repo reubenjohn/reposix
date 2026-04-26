@@ -59,7 +59,7 @@ Every push, accept or reject, writes one append-only audit row. `git log` is the
 ```bash
 cargo run -p reposix-cli -- init sim::demo /tmp/repo \
   && cd /tmp/repo \
-  && git checkout origin/main \
+  && git checkout -B main refs/reposix/origin/main \
   && cat issues/0001.md
 ```
 
