@@ -25,24 +25,24 @@
 
 - [ ] **POLISH2-01**: crates.io email verification + first publish of all 9 reposix-* crates. Owner action: verify email at https://crates.io/settings/profile then `gh workflow run release-plz.yml`. Source: HANDOVER.md §3a.
 - [shipped] **POLISH2-02**: linux-aarch64-musl binary added to `release.yml` dist matrix. Source: HANDOVER.md §3b. shipped via `feat(release): aarch64-unknown-linux-musl via cargo-zigbuild (POLISH2-02, closes §3b)` — added matrix entry with `zig: true`, conditional `cargo-zigbuild` install step, and branched build step in `.github/workflows/release.yml`.
-- [ ] **POLISH2-03**: `bench-latency-cron` Authorization-header duplicate fixed by setting `persist-credentials: false` on the `actions/checkout` step in `.github/workflows/bench-latency-cron.yml`. Source: bench-cron run 24965024010 failure.
+- [shipped] **POLISH2-03**: `bench-latency-cron` Authorization-header duplicate fixed by setting `persist-credentials: false` on the `actions/checkout` step in `.github/workflows/bench-latency-cron.yml`. Source: bench-cron run 24965024010 failure. Shipped via b5fbcc6.
 - [ ] **POLISH2-04**: JIRA real-backend latency cells populated. Owner-action prereq: provision `JIRA_EMAIL` + `JIRA_API_TOKEN` + `REPOSIX_JIRA_INSTANCE` secrets, then re-dispatch `bench-latency-v09`. Source: HANDOVER.md §4 row 5 partial.
-- [ ] **POLISH2-05**: Methodology callout added to `docs/concepts/reposix-vs-mcp-and-sdks.md` naming the synthesized MCP fixture (per HANDOVER §4 row 1). Source: friction row 1 partial.
-- [ ] **POLISH2-06**: Connector capability matrix added to landing page (per friction row 7 follow-up + persona-coding-agent F-1). Source: friction row 7 follow-up.
-- [ ] **POLISH2-07**: Comments-shape callout added to `docs/tutorials/first-run.md` ("sim round-trips; jira/github/confluence connector-specific"). Source: persona-coding-agent F-2.
+- [shipped] **POLISH2-05**: Methodology callout added to `docs/concepts/reposix-vs-mcp-and-sdks.md` naming the synthesized MCP fixture (per HANDOVER §4 row 1). Source: friction row 1 partial. Shipped via c1f3614.
+- [shipped] **POLISH2-06**: Connector capability matrix added to landing page (per friction row 7 follow-up + persona-coding-agent F-1). Source: friction row 7 follow-up. Shipped via b5fbcc6.
+- [shipped] **POLISH2-07**: Comments-shape callout added to `docs/tutorials/first-run.md` ("sim round-trips; jira/github/confluence connector-specific"). Source: persona-coding-agent F-2. Shipped via c1f3614.
 - [shipped] **POLISH2-08**: `reposix doctor` prints a configured-backend capability-matrix row. Source: persona-coding-agent fix #3. Shipped via `feat(doctor): print backend capability matrix row (POLISH2-08, persona-coding-agent fix #3)` — `BackendCapabilities` / `CommentSupport` / `VersioningModel` in `reposix-core`, `pub const CAPABILITIES` in each backend crate, `check_backend_capabilities` Info finding in `crates/reposix-cli/src/doctor.rs`.
 - [partial-shipped] **POLISH2-09**: Code-quality P1 — `Error::Other(String)` rewritten to typed `Error::NotFound` / `Error::NotSupported` / `Error::VersionMismatch` variants in `reposix-core`; closes the stringly-typed protocol in `crates/reposix-core/src/backend/sim.rs:566-572`. Source: code-quality P1-1 + P1-5. shipped: 3 typed variants + sim.rs migrated. 150+ Error::Other sites in backend adapters still pending v0.12.0.
 - [ ] **POLISH2-10**: Code-quality P1 — `crates/reposix-confluence/src/lib.rs` (3 973 LOC) split into `types.rs` + `translate.rs` + `client.rs`. Source: code-quality P1-2.
 - [ ] **POLISH2-11**: Code-quality P1 — `crates/reposix-jira/src/lib.rs` (1 940 LOC) split into matching modules (mirror of POLISH2-10). Source: code-quality P1-2.
-- [ ] **POLISH2-12**: Code-quality P1 — drop 4 unused Cargo deps from `reposix-remote` (`serde`, `serde_json`, `serde_yaml`, `clap`). Source: code-quality P1-6.
-- [ ] **POLISH2-13**: Code-quality P1 — demote `pub` → `pub(crate)` on 26 `reposix-remote` module symbols (binary-only crate; `pub` is a no-op + future-confusing). Source: code-quality P1-7.
-- [ ] **POLISH2-14**: Code-quality P1 — typed `SimError` introduced in `reposix-sim`; drop `anyhow` from the library API. Source: code-quality P1-4.
-- [ ] **POLISH2-15**: `docs/development/roadmap.md` rewritten — current file still references v0.8 + FUSE work; either rewrite to a 1-screen "we use GSD; see `.planning/ROADMAP.md`" stub, or delete entirely. Source: friction row 21 NEW + repo-org docs/ orphans.
-- [ ] **POLISH2-16**: Internal ADR-002 + ADR-003 nav cleanup (ADR-003 already marked superseded; verify ADR-002 status + nav order). Source: friction row 15 partial.
-- [ ] **POLISH2-17**: v1.0 stability commitment ADR (new ADR-009 or update ADR-008 with explicit "no breaking changes after v1.0" policy). Source: friction row 13 + persona-harness-author.
-- [ ] **POLISH2-18**: `docs/reference/exit-codes.md` authored + `--json`/`--format=json` output flag added to CLI subcommands (machine-readability gaps). Source: friction row 14 + persona-harness-author.
+- [shipped] **POLISH2-12**: Code-quality P1 — drop 3 unused Cargo deps from `reposix-remote` (`serde`, `serde_yaml`, `clap`). Source: code-quality P1-6. Shipped via 48fcd4c. Note: `serde_json` KEPT — used in 3 integration tests; audit was off by one.
+- [shipped] **POLISH2-13**: Code-quality P1 — demote `pub` → `pub(crate)` on 49 `reposix-remote` symbols (binary-only crate; `pub` is a no-op + future-confusing). Source: code-quality P1-7. Shipped via dba89c5.
+- [shipped] **POLISH2-14**: Code-quality P1 — typed `SimError` introduced in `reposix-sim`; dropped `anyhow` from the library API. Source: code-quality P1-4. Shipped via fc459d0+649da8c.
+- [shipped] **POLISH2-15**: `docs/development/roadmap.md` rewritten as 1-screen stub pointing at `.planning/ROADMAP.md` (the GSD source of truth). Source: friction row 21 NEW + repo-org docs/ orphans. Shipped via c088cd1.
+- [shipped] **POLISH2-16**: Internal ADR-002 + ADR-003 nav cleanup (ADR-003 marked superseded earlier in 220bfbd; ADR-002 verified current — `Accepted (layout section superseded by ADR-003)`). Source: friction row 15 partial. Shipped via 48859ae.
+- [shipped] **POLISH2-17**: ADR-009 v1.0 stability commitment authored (137 lines locking URL shape + CLI surface + exit codes + helper protocol + frontmatter allowlist + BackendConnector trait). Source: friction row 13 + persona-harness-author. Shipped via 48859ae.
+- [shipped] **POLISH2-18**: `docs/reference/exit-codes.md` authored (186 lines documenting 0/1 for CLI subcommands and 0/1/2 for git-remote-reposix). Source: friction row 14 + persona-harness-author. Shipped via 47aabf0. `--json`/`--format=json` flag deferred to v0.12.0.
 - [ ] **POLISH2-19**: `.claude/skills/reposix-banned-words/SKILL.md` path refs at L9+L64 updated from `.planning/notes/` → `.planning/archive/notes/`. Owner-approval gated. Source: §7-F2 deferred item 4.
-- [ ] **POLISH2-20**: Upstream issue filed against `squidfunk/mkdocs-material` for the `<pre.mermaid>` content-strip bug; link added to `.planning/research/v0.11.0-mkdocs-site-audit.md`. Source: HANDOVER §7-G last bullet.
+- [shipped] **POLISH2-20**: Upstream issue filed at https://github.com/squidfunk/mkdocs-material/issues/8584 ("Bug: superfences `<pre class="mermaid">` content is stripped when minify_html is enabled"). Audit doc footer updated. Source: HANDOVER §7-G last bullet. Shipped via 0375ffc.
 - [ ] **POLISH2-21**: `.planning/` tree condensed per repo-org rec #5: 8 `v0.X.0-phases` dirs collapsed into 8 `ARCHIVE.md` files (273 → ~16 files net). Source: repo-org rec #5 (P2).
 - [ ] **POLISH2-22**: Two parallel audit-log schemas unified per code-quality CC-3 (or document the dual-schema design intentionally). Source: code-quality P0-4 / friction row 12.
 
@@ -58,24 +58,24 @@
 |--------|-------|--------|
 | POLISH2-01 | TBD (Phase 56+) | planning (owner-action gate) |
 | POLISH2-02 | inline (no GSD phase) | shipped |
-| POLISH2-03 | TBD | planning |
+| POLISH2-03 | inline (no GSD phase) | shipped |
 | POLISH2-04 | TBD | planning (owner-action gate) |
-| POLISH2-05 | TBD | planning |
-| POLISH2-06 | TBD | planning |
-| POLISH2-07 | TBD | planning |
+| POLISH2-05 | inline (no GSD phase) | shipped |
+| POLISH2-06 | inline (no GSD phase) | shipped |
+| POLISH2-07 | inline (no GSD phase) | shipped |
 | POLISH2-08 | inline (no GSD phase) | shipped |
-| POLISH2-09 | TBD | planning |
+| POLISH2-09 | inline (no GSD phase) | partial-shipped (typed variants + sim.rs migrated; 150+ Error::Other in backends pending v0.12.0) |
 | POLISH2-10 | TBD | planning |
 | POLISH2-11 | TBD | planning |
-| POLISH2-12 | TBD | planning |
-| POLISH2-13 | TBD | planning |
-| POLISH2-14 | TBD | planning |
-| POLISH2-15 | TBD | planning |
-| POLISH2-16 | TBD | planning |
-| POLISH2-17 | TBD | planning |
-| POLISH2-18 | TBD | planning |
+| POLISH2-12 | inline (no GSD phase) | shipped |
+| POLISH2-13 | inline (no GSD phase) | shipped |
+| POLISH2-14 | inline (no GSD phase) | shipped |
+| POLISH2-15 | inline (no GSD phase) | shipped |
+| POLISH2-16 | inline (no GSD phase) | shipped |
+| POLISH2-17 | inline (no GSD phase) | shipped |
+| POLISH2-18 | inline (no GSD phase) | shipped (exit-codes.md only; --json deferred v0.12.0) |
 | POLISH2-19 | TBD | planning (owner-approval gate) |
-| POLISH2-20 | TBD | planning |
+| POLISH2-20 | inline (no GSD phase) | shipped (issue #8584) |
 | POLISH2-21 | TBD | planning |
 | POLISH2-22 | TBD | planning |
 
