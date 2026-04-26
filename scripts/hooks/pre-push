@@ -133,6 +133,17 @@ fi
 
 log "${GREEN}✓${NC} no credential prefixes detected."
 
+# --- Catalog coverage (non-fatal until §7-H) ------------------------------
+# Warns if any TODO row in the v0.11.1 living catalog lacks a plan. Flips
+# to fatal at §7-H per HANDOVER.md.
+if [ -f scripts/catalog.py ] && [ -f .planning/v0.11.1-catalog.json ]; then
+  if ! python3 scripts/catalog.py coverage >/dev/null 2>&1; then
+    printf '%b\n' "${YELLOW}!${NC} catalog has unplanned TODO rows (non-fatal until §7-H)" >&2
+  else
+    log "${GREEN}✓${NC} catalog coverage clean."
+  fi
+fi
+
 # --- Docs-site validation -------------------------------------------------
 # Only run mkdocs --strict when docs/ or mkdocs.yml are touched in any of
 # the outgoing ref ranges. mkdocs runs in <2s so this stays cheap.

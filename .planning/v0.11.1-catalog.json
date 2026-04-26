@@ -1,0 +1,3050 @@
+{
+  "generated_at": "2026-04-26T18:51:42Z",
+  "schema_version": 1,
+  "files": [
+    {
+      "path": ".claude/settings.json",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".claude/skills/reposix-agent-flow/SKILL.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".claude/skills/reposix-banned-words/SKILL.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".env.example",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/config.yml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/connector_proposal.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/feature_request.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".github/PULL_REQUEST_TEMPLATE.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".github/workflows/audit.yml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".github/workflows/bench-latency-cron.yml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".github/workflows/docs.yml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".github/workflows/release-plz.yml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".gitignore",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/scripts/__pycache__/*.pyc` (2 files) | `__pycache__/` should be `.gitignore`d, not tracked. Delete and add to `.gitignore`. |",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/CATALOG.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/MILESTONES.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/PROJECT.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/REQUIREMENTS.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/RETROSPECTIVE.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/ROADMAP.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/docs/development/roadmap.md` | Stops at v0.7. Mentions macFUSE / ProjFS / WinFsp. Already in `not_in_nav`. | **Delete.** `.planning/ROADMAP.md` is the live roadmap. The `docs/development/` sub-tree should ...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/SESSION-5-RATIONALE.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/.planning/SESSION-5-RATIONALE.md`, `SESSION-7-BRIEF.md` | Owner-flagged in CATALOG-v1 as \"keep, historical.\" On second look these are session-anchored and zero outbound links. Move to `.planning/archive/se...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/SESSION-7-BRIEF.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/STATE.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/archive/scripts/phase2_goal_backward.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/archive/scripts/phase2_smoke.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/archive/scripts/phase3_exit_check.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/config.json",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/milestones/v0.10.0-ROADMAP.md",
+      "status": "TODO",
+      "prior": [
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[repo-org-gaps] `.planning/milestones/v0.10.0-ROADMAP.md` (4.5 KB) and `v0.9.0-ROADMAP.md` + `v0.8.0-ROADMAP.md` + `v0.8.0-REQUIREMENTS.md` are loose milestone docs. **CONDENSE into the per-milestone ARCHIVE.md** above (or move to `.planning/archive/mil...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/milestones/v0.2.0-alpha-phases/08-demos-and-real-backend/08-CONTEXT.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/milestones/v0.2.0-alpha-phases/08-demos-and-real-backend/REVIEW.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/milestones/v0.2.0-alpha-phases/08-demos-and-real-backend/VERIFICATION.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/milestones/v0.2.0-alpha-phases/09-swarm-harness/09-DONE.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/milestones/v0.8.0-REQUIREMENTS.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/milestones/v0.8.0-ROADMAP.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/milestones/v0.9.0-ROADMAP.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/notes/gsd-feedback.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/notes/phase-30-narrative-vignettes.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/.planning/notes/phase-30-narrative-vignettes.md` | Status `ready-for-phase-30-planning` is stale; banned-word list inside is FUSE-era. CATALOG-v1 says \"keep (annotate)\" but the document is inert. **Either ...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/notes/v0.11.0-doc-polish-backlog.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.1-fuse-era/fuse-rust-patterns.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.1-fuse-era/git-remote-helper.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.1-fuse-era/simulator-design.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.1-fuse-era/threat-model-and-critique.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.10.0-post-pivot/milestone-plan.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.11.0-CATALOG-v2.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.11.0-cache-location-study.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.11.0-gsd-hygiene-report.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.11.0-jargon-inventory.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.11.0-latency-benchmark-plan.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.11.0-mkdocs-site-audit.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.11.0-release-binaries-plan.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.11.0-vision-and-innovations.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.11.1-code-quality-gaps.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.11.1-persona-coding-agent.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.11.1-persona-harness-author.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.11.1-persona-mcp-user.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.11.1-persona-security-lead.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.11.1-persona-skeptical-oss-maintainer.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.11.1-repo-organization-gaps.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.9-fuse-to-git-native/architecture-pivot-diagram.png",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.9-fuse-to-git-native/partial-clone-remote-helper-findings.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.9-fuse-to-git-native/partial-clone-remote-helper.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.9-fuse-to-git-native/poc/git-remote-poc.py",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.9-fuse-to-git-native/poc/poc-helper-trace.log",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.9-fuse-to-git-native/poc/poc-push-trace.log",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.9-fuse-to-git-native/poc/run-poc-push.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.9-fuse-to-git-native/poc/run-poc.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.9-fuse-to-git-native/push-path-stateless-connect-findings.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.9-fuse-to-git-native/push-path-stateless-connect.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/research/v0.9-fuse-to-git-native/sync-conflict-design.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/v0.10.0-MILESTONE-AUDIT.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".planning/v0.9.0-MILESTONE-AUDIT.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": ".pre-commit-config.yaml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE"
+      ],
+      "plan": "[catalog-v2] 9. **Delete `MORNING-WALKTHROUGH-2026-04-25.md`, `RELEASE-NOTES-v0.10.0.md`, `RELEASE-NOTES-v0.11.0-PREVIEW.md`, `PUBLIC-LAUNCH-CHECKLIST.md` from the repo root.** They were cathartic to write but they are session journals and one-off la...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "CLAUDE.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/scripts/tag-v0.3.0.sh`, `tag-v0.4.0.sh`, `tag-v0.4.1.sh`, `tag-v0.5.0.sh`, `tag-v0.6.0.sh`, `tag-v0.8.0.sh`, `tag-v0.9.0.sh`, `tag-v0.10.0.sh` | 8 near-identical scripts, each ~120 lines, each enforcing \"c...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "CODE_OF_CONDUCT.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/docs/development/contributing.md` | Workspace tree includes `reposix-fuse/`; lists `fusermount3 --version` as a prereq. Already in `not_in_nav`. | Either rewrite for v0.9.0 or **delete entirely**. The repo...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "Cargo.toml",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/scripts/tag-v0.3.0.sh`, `tag-v0.4.0.sh`, `tag-v0.4.1.sh`, `tag-v0.5.0.sh`, `tag-v0.6.0.sh`, `tag-v0.8.0.sh`, `tag-v0.9.0.sh`, `tag-v0.10.0.sh` | 8 near-identical scripts, each ~120 lines, each enforcing \"c...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "HANDOVER.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "LICENSE-APACHE",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "LICENSE-MIT",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "PUBLIC-LAUNCH-CHECKLIST.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE"
+      ],
+      "plan": "[catalog-v2] 9. **Delete `MORNING-WALKTHROUGH-2026-04-25.md`, `RELEASE-NOTES-v0.10.0.md`, `RELEASE-NOTES-v0.11.0-PREVIEW.md`, `PUBLIC-LAUNCH-CHECKLIST.md` from the repo root.** They were cathartic to write but they are session journals and one-off la...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "README.md",
+      "status": "TODO",
+      "prior": [
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[repo-org-gaps] - `docs/github-readme-top.png` (144 KB) \u2014 pre-pivot screenshot of the README hero. **DELETE** \u2014 README.md no longer references it (it was last referenced from a v0.4-era top section).",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "SECURITY.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "benchmarks/README.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "benchmarks/RESULTS.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "benchmarks/fixtures/README.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "benchmarks/fixtures/confluence_pages.json",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "benchmarks/fixtures/confluence_pages.json.tokens.json",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "benchmarks/fixtures/github_issues.json",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "benchmarks/fixtures/github_issues.json.tokens.json",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "benchmarks/fixtures/mcp_jira_catalog.json",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "benchmarks/fixtures/mcp_jira_catalog.json.tokens.json",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "benchmarks/fixtures/reposix_session.txt",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "benchmarks/fixtures/reposix_session.txt.tokens.json",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "clippy.toml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/Cargo.toml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/fixtures/cache_schema.sql",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/src/audit.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/src/builder.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/src/cache.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/src/db.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/src/error.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/src/gc.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/src/lib.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/src/meta.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/src/path.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/src/sink.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/src/sync_tag.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/audit_is_append_only.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/blobs_are_lazy.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/common/mod.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/compile-fail/tainted_blob_into_egress.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/compile-fail/tainted_blob_into_egress.stderr",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/compile-fail/untainted_new_is_pub_crate.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/compile-fail/untainted_new_is_pub_crate.stderr",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/compile_fail.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/delta_sync.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/egress_denied_logs.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/gc.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/gix_api_smoke.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/materialize_one.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/sync_tags.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/token_cost.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cache/tests/tree_contains_all_issues.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/Cargo.toml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/src/binpath.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/src/cache_db.rs",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/crates/reposix-cache/src/cli_compat.rs` | 252-line module providing the v0.8 `refresh_meta` SQLite schema for the `reposix refresh` subcommand. Self-doc says \"this is intentionally SEPARATE from the new `r...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/src/cost.rs",
+      "status": "TODO",
+      "prior": [
+        "code-quality-gaps:DELETE"
+      ],
+      "plan": "[code-quality-gaps] `crates/reposix-cli/src/cost.rs:282` | Same shape | DELETE |",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/src/doctor.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/src/gc.rs",
+      "status": "TODO",
+      "prior": [
+        "code-quality-gaps:DELETE"
+      ],
+      "plan": "[code-quality-gaps] `crates/reposix-cli/src/gc.rs:166` | `fn cache_path_from_worktree` (shadowed in module) \u2014 shells to `resolve_cache_dir` then bails if dir missing | DELETE \u2014 fold the existence check into a single wrapper or just inline at call site |",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/src/history.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/src/init.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/src/lib.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/src/list.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/src/main.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/src/refresh.rs",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "code-quality-gaps:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/crates/reposix-cli/src/refresh.rs` | `RefreshConfig.mount_point: PathBuf`; `pub fn is_fuse_active(mount: &Path) -> Result<bool>` (lines 248-275); `if is_fuse_active(...)` guard (line 75); error message \"FU...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/src/sim.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/src/spaces.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/src/tokens.rs",
+      "status": "TODO",
+      "prior": [
+        "code-quality-gaps:DELETE"
+      ],
+      "plan": "[code-quality-gaps] `crates/reposix-cli/src/tokens.rs:69` | Same shape | DELETE |",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/src/worktree_helpers.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/tests/agent_flow.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/tests/agent_flow_real.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/tests/cli.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/tests/cost.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/tests/doctor.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/tests/gc.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/tests/history.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/tests/no_truncate.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/tests/refresh_integration.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-cli/tests/tokens.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-confluence/Cargo.toml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-confluence/src/adf.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-confluence/src/lib.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-confluence/tests/contract.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-confluence/tests/roundtrip.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/Cargo.toml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/examples/show_audit_schema.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/fixtures/audit.sql",
+      "status": "TODO",
+      "prior": [
+        "code-quality-gaps:DELETE"
+      ],
+      "plan": "[code-quality-gaps] 4. **Audit append-only trigger** (`crates/reposix-core/src/audit.rs:35`, schema in `crates/reposix-core/fixtures/audit.sql`). Schema-level `BEFORE UPDATE/DELETE` triggers raise `RAISE(ABORT, \u2026)`. Tested at `crates/reposix-core/tests/audi...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/src/audit.rs",
+      "status": "TODO",
+      "prior": [
+        "code-quality-gaps:DELETE"
+      ],
+      "plan": "[code-quality-gaps] 4. **Audit append-only trigger** (`crates/reposix-core/src/audit.rs:35`, schema in `crates/reposix-core/fixtures/audit.sql`). Schema-level `BEFORE UPDATE/DELETE` triggers raise `RAISE(ABORT, \u2026)`. Tested at `crates/reposix-core/tests/audi...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/src/backend.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/src/backend/sim.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/src/error.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/src/http.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/src/lib.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/src/path.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/src/project.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/src/record.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/src/remote.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/src/taint.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/tests/audit_schema.rs",
+      "status": "TODO",
+      "prior": [
+        "code-quality-gaps:DELETE"
+      ],
+      "plan": "[code-quality-gaps] 4. **Audit append-only trigger** (`crates/reposix-core/src/audit.rs:35`, schema in `crates/reposix-core/fixtures/audit.sql`). Schema-level `BEFORE UPDATE/DELETE` triggers raise `RAISE(ABORT, \u2026)`. Tested at `crates/reposix-core/tests/audi...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/tests/compile-fail/http_client_inner_not_pub.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/tests/compile-fail/http_client_inner_not_pub.stderr",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/tests/compile-fail/tainted_into_untainted.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/tests/compile-fail/tainted_into_untainted.stderr",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/tests/compile-fail/untainted_new_is_not_pub.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/tests/compile-fail/untainted_new_is_not_pub.stderr",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/tests/compile_fail.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-core/tests/http_allowlist.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-github/Cargo.toml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-github/src/lib.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-github/tests/contract.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-jira/Cargo.toml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-jira/src/adf.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-jira/src/lib.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-jira/tests/contract.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-remote/Cargo.toml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-remote/src/backend_dispatch.rs",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:REFACTOR",
+        "code-quality-gaps:REFACTOR"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/crates/reposix-remote/src/backend_dispatch.rs` | `pub fn parse_remote_url(url) -> Result<ParsedRemote>` returning `{kind, origin, project}` with extra Confluence/JIRA `/jira/`,`/confluence/` segment marker...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-remote/src/diff.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-remote/src/fast_import.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-remote/src/main.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-remote/src/pktline.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-remote/src/protocol.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-remote/src/stateless_connect.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-remote/tests/bulk_delete_cap.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-remote/tests/protocol.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-remote/tests/push_conflict.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-remote/tests/stateless_connect.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-sim/Cargo.toml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-sim/fixtures/seed.json",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-sim/src/db.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-sim/src/error.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-sim/src/lib.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-sim/src/main.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-sim/src/middleware/audit.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-sim/src/middleware/mod.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-sim/src/middleware/rate_limit.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-sim/src/routes/issues.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-sim/src/routes/mod.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-sim/src/routes/transitions.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-sim/src/seed.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-sim/src/state.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-sim/tests/api.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-swarm/Cargo.toml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-swarm/src/confluence_direct.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-swarm/src/contention.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-swarm/src/driver.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-swarm/src/lib.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-swarm/src/main.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-swarm/src/metrics.rs",
+      "status": "TODO",
+      "prior": [
+        "repo-org-gaps:REFACTOR"
+      ],
+      "plan": "[repo-org-gaps] `crates/reposix-swarm/src/metrics.rs` lines 238 and 240 still mention `fuse` mode in *doc comments* (e.g. `/// Mode name (\\`sim-direct\\` or \\`fuse\\`).`). CATALOG-v2 caught this as `FuseWorkload` residue but a follow-up commit deleted the...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-swarm/src/sim_direct.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-swarm/src/workload.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-swarm/tests/chaos_audit.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-swarm/tests/confluence_real_tenant.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-swarm/tests/contention_e2e.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "crates/reposix-swarm/tests/mini_e2e.rs",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "deny.toml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/.banned-words.toml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/architecture.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/benchmarks/v0.9.0-latency.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/scripts/v0.9.0-latency.sh` | One-shot latency-table regenerator for `docs/benchmarks/v0.9.0-latency.md`. As of v0.10.0, the table has `pending-secrets` cells; will it be re-run for v0.11.0 with real-backen...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/concepts/mental-model-in-60-seconds.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/concepts/reposix-vs-mcp-and-sdks.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/connectors/guide.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/decisions/001-github-state-mapping.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/decisions/002-confluence-page-mapping.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/decisions/003-nested-mount-layout.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/decisions/005-jira-issue-mapping.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/decisions/007-time-travel-via-git-tags.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/decisions/008-helper-backend-dispatch.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demo.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demo.transcript.txt",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[catalog-v2] 4. **Delete the FUSE-era recordings under `docs/demos/recordings/`** plus the orphaned `docs/demo.transcript.txt` + `docs/demo.typescript` at root. Each recording lists `reposix-fuse` as a workspace crate. They have ZERO inbound links fr...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demo.typescript",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[catalog-v2] 4. **Delete the FUSE-era recordings under `docs/demos/recordings/`** plus the orphaned `docs/demo.transcript.txt` + `docs/demo.typescript` at root. Each recording lists `reposix-fuse` as a workspace crate. They have ZERO inbound links fr...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demos/asciinema-script.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/docs/demos/asciinema-script.md` | A 200-line shell-paste-ready screenplay for recording the launch screencast. It's a one-shot script masquerading as docs. Once the screencast is recorded and uploaded, thi...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demos/index.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[catalog-v2] 5. **Delete `docs/demos/index.md`.** Tier 1/2/3 demo lineup explicitly references the deleted `scripts/demos/full.sh`. Already in `not_in_nav`. The new equivalent is `docs/tutorials/first-run.md` + the `examples/` directory. One stale pa...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demos/recordings/01-edit-and-push.transcript.txt",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demos/recordings/01-edit-and-push.typescript",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demos/recordings/02-guardrails.transcript.txt",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demos/recordings/02-guardrails.typescript",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demos/recordings/03-conflict-resolution.transcript.txt",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demos/recordings/03-conflict-resolution.typescript",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demos/recordings/04-token-economy.transcript.txt",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demos/recordings/04-token-economy.typescript",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demos/recordings/parity.transcript.txt",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demos/recordings/parity.typescript",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demos/recordings/swarm.transcript.txt",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/demos/recordings/swarm.typescript",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/development/contributing.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/docs/development/contributing.md` | Workspace tree includes `reposix-fuse/`; lists `fusermount3 --version` as a prereq. Already in `not_in_nav`. | Either rewrite for v0.9.0 or **delete entirely**. The repo...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/development/roadmap.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/docs/development/roadmap.md` | Stops at v0.7. Mentions macFUSE / ProjFS / WinFsp. Already in `not_in_nav`. | **Delete.** `.planning/ROADMAP.md` is the live roadmap. The `docs/development/` sub-tree should ...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/github-readme-top.png",
+      "status": "TODO",
+      "prior": [
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[repo-org-gaps] - `docs/github-readme-top.png` (144 KB) \u2014 pre-pivot screenshot of the README hero. **DELETE** \u2014 README.md no longer references it (it was last referenced from a v0.4-era top section).",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/guides/integrate-with-your-agent.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/guides/troubleshooting.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/guides/write-your-own-connector.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/how-it-works/filesystem-layer.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/how-it-works/git-layer.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/how-it-works/time-travel.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/how-it-works/trust-model.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/index.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/javascripts/mermaid-render.js",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/reference/cli.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/docs/reference/cli.md` | Lists deleted `mount` and `demo` subcommands. Already in `not_in_nav`. | **Delete or rewrite.** A new contributor opens reference/ and the live pages link to `simulator.md`, `testi...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/reference/confluence.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/reference/crates.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "repo-org-gaps:REFACTOR"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/docs/reference/crates.md` | Lists `reposix-fuse`. Missing `reposix-cache`, `reposix-jira`. Already in `not_in_nav`. | **Rewrite or delete.** With 9 workspace crates, a one-line-each crates index is genuine...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/reference/git-remote.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:REFACTOR"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/docs/reference/git-remote.md` | Capabilities listed are `import`/`export`/`refspec`; missing `stateless-connect`. References \"the FUSE daemon\". Already in `not_in_nav`. | **Rewrite for v0.9.0.** The git re...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/reference/glossary.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/reference/http-api.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/reference/jira.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/reference/simulator.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/reference/testing-targets.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/research/agentic-engineering-reference.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/research/initial-report.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/screenshots/gh-pages-home-v0.2.png",
+      "status": "TODO",
+      "prior": [
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[repo-org-gaps] - `docs/screenshots/gh-pages-home-v0.2.png` + `gh-pages-why-real-github.png` \u2014 v0.2-era screenshots, FUSE-shaped UI. **ARCHIVE** to `docs/screenshots/archive/v0.2/` or **DELETE**. `gh-pages-home.png`, `site-architecture.png`, `site-home....",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/screenshots/gh-pages-home.png",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/screenshots/gh-pages-why-real-github.png",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/screenshots/site-architecture.png",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/screenshots/site-home.png",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/docs/screenshots/site-home.png` and `site-security.png` | Catalog-v1 says \"keep\" (refresh in Phase 44/45). I find no inbound link from any live page. If they're not promoted into README/index.md by v0.11.0...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/screenshots/site-security.png",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/security.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/assets/_build_benchmark.py",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/assets/_build_combined.py",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/assets/_build_demo_gif.py",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/assets/_build_hero_filebrowser.py",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/assets/_build_workflow.py",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/assets/architecture.mmd",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/assets/architecture.png",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/assets/benchmark.png",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/assets/benchmark.svg",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/assets/combined.gif",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/assets/combined.png",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/assets/demo-frame0.png",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/assets/demo.gif",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/assets/hero.png",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/assets/workflow.png",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/linkedin.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/social/twitter.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/docs/social/twitter.md`, `linkedin.md` | Promo copy. Useful for launch only. After launch, **either move to `.planning/archive/social-2026-04-25/` or delete**. |",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/stylesheets/extra.css",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/tutorials/first-run.md",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE"
+      ],
+      "plan": "[catalog-v2] 5. **Delete `docs/demos/index.md`.** Tier 1/2/3 demo lineup explicitly references the deleted `scripts/demos/full.sh`. Already in `not_in_nav`. The new equivalent is `docs/tutorials/first-run.md` + the `examples/` directory. One stale pa...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "docs/why.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "examples/01-shell-loop/RUN.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "examples/01-shell-loop/expected-output.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "examples/01-shell-loop/run.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "examples/02-python-agent/RUN.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "examples/02-python-agent/expected-output.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "examples/02-python-agent/run.py",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "examples/03-claude-code-skill/RUN.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "examples/03-claude-code-skill/agent-prompt.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "examples/04-conflict-resolve/RUN.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "examples/04-conflict-resolve/expected-output.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "examples/04-conflict-resolve/run.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "examples/05-blob-limit-recovery/RUN.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "examples/05-blob-limit-recovery/expected-output.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "examples/05-blob-limit-recovery/run.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "examples/README.md",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "mkdocs.yml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "requirements-bench.txt",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "rust-toolchain.toml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "rustfmt.toml",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/banned-words-lint.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/bench_token_economy.py",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/check-docs-site.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/check_clippy_lint_loaded.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/check_doc_links.py",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/check_fixtures.py",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/dark-factory-test.sh",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[catalog-v2] 3. **Delete the entire FUSE-era demo set under `scripts/demos/`** (`01-edit-and-push.sh`, `02-guardrails.sh`, `03-conflict-resolution.sh`, `08-full-backend-showcase.sh`, `_lib.sh`, `_record.sh`, `assert.sh`, `parity.sh`, `parity-confluen...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/demos/01-edit-and-push.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/demos/02-guardrails.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/demos/03-conflict-resolution.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/demos/04-token-economy.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/demos/08-full-backend-showcase.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/demos/_lib.sh",
+      "status": "TODO",
+      "prior": [
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[repo-org-gaps] 1. **`scripts/demos/_lib.sh` + `01-edit-and-push.sh` + `02-guardrails.sh` + `03-conflict-resolution.sh` + `08-full-backend-showcase.sh` + `parity.sh` + `parity-confluence.sh` + `smoke.sh` + `swarm.sh` + `assert.sh` + `_record.sh`** \u2014 11 ...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/demos/_record.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/demos/assert.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/demos/parity-confluence.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/demos/parity.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/demos/smoke.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/demos/swarm.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/dev/list-confluence-spaces.sh",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/scripts/dev/list-confluence-spaces.sh` | Still functional, but is it ever run in practice? Could be replaced by a `reposix spaces` invocation. If `reposix spaces` covers it, **delete**. |",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/dev/probe-confluence.sh",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:REFACTOR",
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[repo-org-gaps] 2. **`scripts/dev/list-confluence-spaces.sh` + `scripts/dev/probe-confluence.sh`** \u2014 both pre-pivot dev probes; `probe-confluence.sh` literally says \"before running `reposix mount --backend confluence`\". The same probe is now `reposix do...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/green-gauntlet.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/hooks/pre-push",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/hooks/test-pre-push.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/install-hooks.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/migrations/fix_demos_index_links.py",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/migrations/mermaid_divs_to_fences.py",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/repro-quickstart.sh",
+      "status": "TODO",
+      "prior": [
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[repo-org-gaps] 1. **`scripts/demos/_lib.sh` + `01-edit-and-push.sh` + `02-guardrails.sh` + `03-conflict-resolution.sh` + `08-full-backend-showcase.sh` + `parity.sh` + `parity-confluence.sh` + `smoke.sh` + `swarm.sh` + `assert.sh` + `_record.sh`** \u2014 11 ...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/tag-v0.10.0.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/tag-v0.3.0.sh",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/scripts/tag-v0.3.0.sh`, `tag-v0.4.0.sh`, `tag-v0.4.1.sh`, `tag-v0.5.0.sh`, `tag-v0.6.0.sh`, `tag-v0.8.0.sh`, `tag-v0.9.0.sh`, `tag-v0.10.0.sh` | 8 near-identical scripts, each ~120 lines, each enforcing \"c...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/tag-v0.4.0.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/tag-v0.4.1.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/tag-v0.5.0.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/tag-v0.6.0.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/tag-v0.8.0.sh",
+      "status": "TODO",
+      "prior": [
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[repo-org-gaps] `scripts/tag-v0.8.0.sh` | **ARCHIVE** | Same. |",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/tag-v0.9.0.sh",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/take-screenshots.sh",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE",
+        "repo-org-gaps:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/scripts/take-screenshots.sh` | Stub that names a contract for screenshots that \"deferred (cairo system libs unavailable)\" per STATE.md. If never executed, **delete**; otherwise document the cairo prereq in...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/test_bench_token_economy.py",
+      "status": "KEEP",
+      "prior": [],
+      "plan": null,
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    },
+    {
+      "path": "scripts/v0.9.0-latency.sh",
+      "status": "TODO",
+      "prior": [
+        "catalog-v2:DELETE"
+      ],
+      "plan": "[catalog-v2] `/home/reuben/workspace/reposix/scripts/v0.9.0-latency.sh` | One-shot latency-table regenerator for `docs/benchmarks/v0.9.0-latency.md`. As of v0.10.0, the table has `pending-secrets` cells; will it be re-run for v0.11.0 with real-backen...",
+      "note": "",
+      "updated_at": "2026-04-26T18:51:42Z"
+    }
+  ]
+}
