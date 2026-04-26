@@ -41,10 +41,7 @@ reposix-github = { path = "../reposix-github" }
 reposix-confluence = { path = "../reposix-confluence" }
 reposix-jira = { path = "../reposix-jira" }
 tokio.workspace = true
-serde.workspace = true
 serde_json.workspace = true
-serde_yaml.workspace = true
-clap.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
 anyhow.workspace = true

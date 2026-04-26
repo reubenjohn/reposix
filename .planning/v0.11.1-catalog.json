@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T19:30:06Z",
+  "generated_at": "2026-04-26T19:30:42Z",
   "schema_version": 1,
   "files": [
     {
@@ -1560,11 +1560,11 @@
     },
     {
       "path": "crates/reposix-remote/Cargo.toml",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-12 \u2014 dropped 3 unused deps (serde, serde_yaml, clap); kept serde_json \u2014 used in integration tests",
+      "updated_at": "2026-04-26T19:30:42Z"
     },
     {
       "path": "crates/reposix-remote/src/backend_dispatch.rs",
