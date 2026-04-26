@@ -51,6 +51,8 @@ async fn main() -> Result<()> {
             }
         }
     }
+    // `run` returns `reposix_sim::SimError`; the `?` adapts it into
+    // `anyhow::Error` via `From<E: std::error::Error + Send + Sync + 'static>`.
     run(SimConfig {
         bind: args.bind,
         db_path: args.db,
@@ -59,5 +61,6 @@ async fn main() -> Result<()> {
         ephemeral: args.ephemeral,
         rate_limit_rps: args.rate_limit,
     })
-    .await
+    .await?;
+    Ok(())
 }

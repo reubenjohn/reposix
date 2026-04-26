@@ -19,7 +19,6 @@
 use std::net::SocketAddr;
 use std::path::PathBuf;
 
-use anyhow::Result;
 use axum::Router;
 use serde::{Deserialize, Serialize};
 
@@ -30,6 +29,7 @@ pub mod routes;
 pub mod seed;
 pub mod state;
 
+pub use error::{Result, SimError};
 pub use state::AppState;
 
 /// Capability matrix row published by this backend for `reposix doctor`.
@@ -114,15 +114,13 @@ async fn healthz() -> &'static str {
 /// Open the DB, seed if configured, and return an [`AppState`].
 ///
 /// # Errors
-/// Propagates any error from [`db::open_db`] or [`seed::load_seed`].
+/// Returns [`SimError::Api`] if [`db::open_db`] or [`seed::load_seed`] fails.
 pub fn prepare_state(cfg: &SimConfig) -> Result<AppState> {
-    let conn =
-        db::open_db(&cfg.db_path, cfg.ephemeral).map_err(|e| anyhow::anyhow!("open_db: {e}"))?;
+    let conn = db::open_db(&cfg.db_path, cfg.ephemeral)?;
 
     if cfg.seed {
         if let Some(ref path) = cfg.seed_file {
-            let inserted =
-                seed::load_seed(&conn, path).map_err(|e| anyhow::anyhow!("load_seed: {e}"))?;
+            let inserted = seed::load_seed(&conn, path)?;
             tracing::info!(inserted, path = %path.display(), "seed loaded");
         }
     }
@@ -135,7 +133,9 @@ pub fn prepare_state(cfg: &SimConfig) -> Result<AppState> {
 /// racing a separate binary.
 ///
 /// # Errors
-/// Returns any error from `axum::serve` or state preparation.
+/// Returns [`SimError::Io`] for any I/O error surfaced by `axum::serve` or
+/// `TcpListener::local_addr`; [`SimError::Api`] for state-preparation
+/// failures from [`prepare_state`].
 pub async fn run_with_listener(listener: tokio::net::TcpListener, cfg: SimConfig) -> Result<()> {
     let state = prepare_state(&cfg)?;
     tracing::info!(addr = %listener.local_addr()?, "reposix-sim listening");
@@ -146,9 +146,15 @@ pub async fn run_with_listener(listener: tokio::net::TcpListener, cfg: SimConfig
 /// Bind the configured address and serve until the listener dies.
 ///
 /// # Errors
-/// Returns any I/O error from binding the listener, opening the DB, or
-/// driving the server.
+/// Returns [`SimError::Bind`] if binding the listener fails (so operators
+/// see the failed address in the error message); otherwise the same error
+/// set as [`run_with_listener`].
 pub async fn run(cfg: SimConfig) -> Result<()> {
-    let listener = tokio::net::TcpListener::bind(cfg.bind).await?;
+    let listener = tokio::net::TcpListener::bind(cfg.bind)
+        .await
+        .map_err(|source| SimError::Bind {
+            addr: cfg.bind.to_string(),
+            source,
+        })?;
     run_with_listener(listener, cfg).await
 }

@@ -1,8 +1,17 @@
-//! `ApiError` — the uniform error type for every axum handler in the sim.
+//! Typed error types for the sim crate.
 //!
-//! Each variant carries the minimum information the caller needs; the full
-//! error chain is logged via `tracing::error!` and does NOT leak into the
-//! response body (T-02-04: no rusqlite internals to clients).
+//! Two distinct error types live here, by design:
+//!
+//! - [`ApiError`] — uniform error type for every axum handler. Implements
+//!   [`IntoResponse`] so handlers can `?` into HTTP responses. Each variant
+//!   carries the minimum information the caller needs; the full error chain
+//!   is logged via `tracing::error!` and does NOT leak into the response body
+//!   (T-02-04: no rusqlite internals to clients).
+//! - [`SimError`] — the error type returned by the crate's library surface
+//!   (`run`, `run_with_listener`, `prepare_state`). Composed of a small set
+//!   of typed variants plus `#[from]` on [`ApiError`] so internal `?` works.
+//!   The library boundary returns this; the `reposix-sim` binary adapts it
+//!   to `anyhow::Error` automatically because `SimError: std::error::Error`.
 
 use axum::{
     http::StatusCode,
@@ -141,5 +150,88 @@ mod tests {
         let err = conn.prepare("SELECT * FROM does_not_exist").unwrap_err();
         let resp = ApiError::Db(err).into_response();
         assert_eq!(resp.status().as_u16(), 500);
+    }
+}
+
+// --------------------------------------------------------------------------
+// SimError — library-surface error type for `run`, `run_with_listener`, etc.
+// --------------------------------------------------------------------------
+
+/// The error type returned by the simulator crate's public library API.
+///
+/// Distinct from [`ApiError`] (which is the per-request HTTP error type that
+/// implements [`IntoResponse`]). `SimError` is what `run`, `run_with_listener`,
+/// and `prepare_state` return; it composes the underlying typed variants
+/// (I/O, bind failures, [`ApiError`]) so callers can pattern-match if they
+/// need to and so the `reposix-sim` binary can adapt to `anyhow::Error` for
+/// free via the blanket `From<E: std::error::Error + Send + Sync + 'static>`
+/// impl on `anyhow::Error`.
+#[derive(Debug, Error)]
+#[non_exhaustive]
+pub enum SimError {
+    /// Generic I/O failure — covers `axum::serve` (which returns `io::Error`),
+    /// `TcpListener::local_addr`, and any unspecified I/O during startup.
+    #[error("io: {0}")]
+    Io(#[from] std::io::Error),
+
+    /// Failed to bind the configured listener address.
+    #[error("bind {addr}: {source}")]
+    Bind {
+        /// Address that failed to bind, for operator diagnostics.
+        addr: String,
+        /// Underlying I/O error from `TcpListener::bind`.
+        #[source]
+        source: std::io::Error,
+    },
+
+    /// An [`ApiError`] surfaced from internal helpers (`db::open_db`,
+    /// `seed::load_seed`). Wrapped instead of flattened so future
+    /// pattern-matching can recover the original variant.
+    #[error("api: {0}")]
+    Api(#[from] ApiError),
+}
+
+/// Convenience alias used inside `lib.rs`.
+pub type Result<T> = std::result::Result<T, SimError>;
+
+#[cfg(test)]
+mod sim_error_tests {
+    use super::{ApiError, SimError};
+
+    #[test]
+    fn from_io_error_preserves_kind() {
+        let io = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "nope");
+        let sim: SimError = io.into();
+        assert!(matches!(sim, SimError::Io(ref e) if e.kind() == std::io::ErrorKind::PermissionDenied));
+    }
+
+    #[test]
+    fn from_api_error_routes_to_api_variant() {
+        let sim: SimError = ApiError::NotFound.into();
+        assert!(matches!(sim, SimError::Api(ApiError::NotFound)));
+    }
+
+    #[test]
+    fn bind_variant_renders_address() {
+        let sim = SimError::Bind {
+            addr: "127.0.0.1:7878".into(),
+            source: std::io::Error::new(std::io::ErrorKind::AddrInUse, "in use"),
+        };
+        let rendered = sim.to_string();
+        assert!(rendered.contains("127.0.0.1:7878"), "got: {rendered}");
+    }
+
+    #[test]
+    fn anyhow_can_absorb_sim_error_via_std_error() {
+        // The binary boundary depends on this conversion working without an
+        // explicit `From<SimError> for anyhow::Error` impl.
+        fn returns_sim_err() -> Result<(), SimError> {
+            Err(SimError::Io(std::io::Error::other("boom")))
+        }
+        fn returns_anyhow() -> anyhow::Result<()> {
+            returns_sim_err()?;
+            Ok(())
+        }
+        assert!(returns_anyhow().is_err());
     }
 }

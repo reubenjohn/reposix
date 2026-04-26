@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T19:58:50Z",
+  "generated_at": "2026-04-26T20:02:43Z",
   "schema_version": 1,
   "files": [
     {
@@ -1222,7 +1222,7 @@
       "prior": [],
       "plan": null,
       "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "updated_at": "2026-04-26T20:02:43Z"
     },
     {
       "path": "crates/reposix-cli/src/spaces.rs",
@@ -1752,8 +1752,8 @@
       "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "POLISH2-08 \u2014 CAPABILITIES const",
-      "updated_at": "2026-04-26T19:50:55Z"
+      "note": "POLISH2-14 \u2014 typed SimError, dropped anyhow from library API",
+      "updated_at": "2026-04-26T20:02:02Z"
     },
     {
       "path": "crates/reposix-sim/src/main.rs",
