@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T19:50:55Z",
+  "generated_at": "2026-04-26T19:58:50Z",
   "schema_version": 1,
   "files": [
     {
@@ -2009,11 +2009,11 @@
     },
     {
       "path": "docs/decisions/002-confluence-page-mapping.md",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-16 \u2014 verified current",
+      "updated_at": "2026-04-26T19:58:50Z"
     },
     {
       "path": "docs/decisions/003-nested-mount-layout.md",
@@ -2611,8 +2611,8 @@
       "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "POLISH2-18 \u2014 added exit-codes.md to nav",
-      "updated_at": "2026-04-26T19:38:07Z"
+      "note": "POLISH2-17 \u2014 added ADR-009 to nav",
+      "updated_at": "2026-04-26T19:58:50Z"
     },
     {
       "path": "requirements-bench.txt",

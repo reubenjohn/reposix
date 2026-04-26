@@ -147,6 +147,7 @@ nav:
       - ADR-005 JIRA issue mapping: decisions/005-jira-issue-mapping.md
       - ADR-007 Time-travel via git tags: decisions/007-time-travel-via-git-tags.md
       - ADR-008 Helper backend dispatch: decisions/008-helper-backend-dispatch.md
+      - ADR-009 Stability commitment (v1.0): decisions/009-stability-commitment.md
   - Research:
       - Initial report: research/initial-report.md
       - Agentic engineering reference: research/agentic-engineering-reference.md
