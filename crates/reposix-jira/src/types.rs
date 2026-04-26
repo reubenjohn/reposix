@@ -26,10 +26,12 @@ pub const DEFAULT_BASE_URL_FORMAT: &str = "https://{tenant}.atlassian.net";
 ///
 /// JIRA Cloud is read-only in v0.11.x: the connector lists, gets, and
 /// surfaces issues, but `create_record` / `update_record` / `delete_or_close`
-/// still return `Error::Other("not supported: ...")`. Comments are not
-/// round-tripped (JIRA exposes them through a separate comments API rather
-/// than a body field), and concurrency is timestamp-based — write-after-read
-/// would race against concurrent edits if the write path were enabled.
+/// still return `Error::NotSupported { operation }` (display string preserved
+/// as `"not supported: …"` for back-compat with stderr greps). Comments are
+/// not round-tripped (JIRA exposes them through a separate comments API
+/// rather than a body field), and concurrency is timestamp-based —
+/// write-after-read would race against concurrent edits if the write path
+/// were enabled.
 pub const CAPABILITIES: reposix_core::BackendCapabilities = reposix_core::BackendCapabilities::new(
     true,
     false,

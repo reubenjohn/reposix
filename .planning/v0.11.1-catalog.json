@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T21:29:43Z",
+  "generated_at": "2026-04-26T21:38:59Z",
   "schema_version": 1,
   "files": [
     {
@@ -1573,8 +1573,8 @@
       "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "POLISH2-08 \u2014 CAPABILITIES const",
-      "updated_at": "2026-04-26T19:50:55Z"
+      "note": "POLISH2-09 ext \u2014 typed Error::NotSupported migration",
+      "updated_at": "2026-04-26T21:38:59Z"
     },
     {
       "path": "crates/reposix-github/tests/contract.rs",

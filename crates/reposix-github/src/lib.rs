@@ -6,9 +6,11 @@
 //!
 //! v0.1 ships **read-only**: `list_records` and `get_record` work against real
 //! GitHub; `create_record` / `update_record` / `delete_or_close` return
-//! `Error::Other("not supported: ...")`. The v0.2 cut will flip on the write
-//! path once credentials-handling UX lands (see ADR-001 for the write-side of
-//! the state mapping).
+//! `Error::NotSupported { operation }` (display string preserved as
+//! `"not supported: …"` for back-compat with stderr greps and the legacy
+//! `Error::Other("not supported: …")` shape from v0.11.x). The v0.2 cut will
+//! flip on the write path once credentials-handling UX lands (see ADR-001 for
+//! the write-side of the state mapping).
 //!
 //! # State mapping
 //!
@@ -533,9 +535,9 @@ impl BackendConnector for GithubReadOnlyBackend {
     }
 
     async fn create_record(&self, _project: &str, _issue: Untainted<Record>) -> Result<Record> {
-        Err(Error::Other(
-            "not supported: create_record — reposix-github is read-only in v0.1".into(),
-        ))
+        Err(Error::NotSupported {
+            operation: "create_record — reposix-github is read-only in v0.1".into(),
+        })
     }
 
     async fn update_record(
@@ -545,9 +547,9 @@ impl BackendConnector for GithubReadOnlyBackend {
         _patch: Untainted<Record>,
         _expected_version: Option<u64>,
     ) -> Result<Record> {
-        Err(Error::Other(
-            "not supported: update_record — reposix-github is read-only in v0.1".into(),
-        ))
+        Err(Error::NotSupported {
+            operation: "update_record — reposix-github is read-only in v0.1".into(),
+        })
     }
 
     async fn delete_or_close(
@@ -556,9 +558,9 @@ impl BackendConnector for GithubReadOnlyBackend {
         _id: RecordId,
         _reason: DeleteReason,
     ) -> Result<()> {
-        Err(Error::Other(
-            "not supported: delete_or_close — reposix-github is read-only in v0.1".into(),
-        ))
+        Err(Error::NotSupported {
+            operation: "delete_or_close — reposix-github is read-only in v0.1".into(),
+        })
     }
 }
 
@@ -878,8 +880,26 @@ mod tests {
             .await
             .expect_err("read-only should reject create");
         match err {
-            Error::Other(m) => assert!(m.starts_with("not supported:"), "got {m}"),
-            other => panic!("expected Error::Other(not supported:..), got {other:?}"),
+            Error::NotSupported { operation } => {
+                assert!(
+                    operation.starts_with("create_record"),
+                    "operation should name create_record, got {operation}"
+                );
+                // Display-string back-compat with the legacy
+                // `Error::Other("not supported: …")` shape: stderr greps for
+                // "not supported:" still match.
+                let displayed = Error::NotSupported {
+                    operation: operation.clone(),
+                }
+                .to_string();
+                assert!(
+                    displayed.starts_with("not supported:"),
+                    "display string back-compat broken: got {displayed}"
+                );
+            }
+            other => panic!(
+                "expected Error::NotSupported {{ operation: create_record … }}, got {other:?}"
+            ),
         }
     }
 
@@ -911,7 +931,7 @@ mod tests {
         );
         assert!(matches!(
             backend.update_record("x/y", RecordId(1), u, None).await,
-            Err(Error::Other(m)) if m.starts_with("not supported:")
+            Err(Error::NotSupported { operation }) if operation.starts_with("update_record")
         ));
     }
 
@@ -923,8 +943,40 @@ mod tests {
             backend
                 .delete_or_close("x/y", RecordId(1), DeleteReason::Completed)
                 .await,
-            Err(Error::Other(m)) if m.starts_with("not supported:")
+            Err(Error::NotSupported { operation }) if operation.starts_with("delete_or_close")
         ));
+    }
+
+    /// POLISH2-09 ext — typed `Error::NotSupported` happy path: pattern-match
+    /// surfaces the operation name AND the legacy display-string contract
+    /// (`"not supported: …"`) is preserved for stderr-grep back-compat with
+    /// the v0.11.x `Error::Other("not supported: …")` shape.
+    #[tokio::test]
+    async fn delete_returns_typed_not_supported_with_display_back_compat() {
+        let backend = GithubReadOnlyBackend::new_with_base_url(None, DEFAULT_BASE_URL.to_owned())
+            .expect("backend");
+        let err = backend
+            .delete_or_close("x/y", RecordId(1), DeleteReason::Completed)
+            .await
+            .expect_err("read-only should reject delete_or_close");
+        let Error::NotSupported { operation } = &err else {
+            panic!("expected typed Error::NotSupported, got {err:?}");
+        };
+        assert!(
+            operation.starts_with("delete_or_close"),
+            "operation should name delete_or_close, got {operation}"
+        );
+        // Display-string back-compat: matches the legacy
+        // `Error::Other("not supported: …")` stderr greps.
+        let displayed = err.to_string();
+        assert!(
+            displayed.starts_with("not supported:"),
+            "display string back-compat broken: got {displayed}"
+        );
+        assert!(
+            displayed.contains("delete_or_close"),
+            "display string should embed operation name, got {displayed}"
+        );
     }
 
     #[test]
