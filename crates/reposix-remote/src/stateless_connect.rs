@@ -42,7 +42,7 @@ use crate::protocol::Protocol;
 /// Default upper bound on `want` lines per `command=fetch` RPC turn.
 /// Configurable via `REPOSIX_BLOB_LIMIT` env var. `0` means "unlimited"
 /// (explicit opt-out for very-large bulk operations).
-pub const DEFAULT_BLOB_LIMIT: u32 = 200;
+pub(crate) const DEFAULT_BLOB_LIMIT: u32 = 200;
 
 /// Verbatim stderr message for blob-limit refusal. Backticks around
 /// `git sparse-checkout set <pathspec>` are LITERAL — they render as
@@ -51,7 +51,7 @@ pub const DEFAULT_BLOB_LIMIT: u32 = 200;
 /// dark-factory teaching mechanism (REQUIREMENTS.md ARCH-09): an
 /// unprompted agent reads the error, runs the named command, and
 /// self-corrects with no in-context system-prompt instructions.
-pub const BLOB_LIMIT_EXCEEDED_FMT: &str =
+pub(crate) const BLOB_LIMIT_EXCEEDED_FMT: &str =
     "error: refusing to fetch {N} blobs (limit: {M}). Narrow your scope with `git sparse-checkout set <pathspec>` and retry.";
 
 /// Process-wide cache for `REPOSIX_BLOB_LIMIT`. Read once at first
@@ -78,7 +78,7 @@ fn parse_blob_limit(raw: Option<&str>) -> u32 {
 /// [`DEFAULT_BLOB_LIMIT`] with a `tracing::warn!`. `0` is the explicit
 /// opt-out and is preserved verbatim.
 #[must_use]
-pub fn configured_blob_limit() -> u32 {
+pub(crate) fn configured_blob_limit() -> u32 {
     *BLOB_LIMIT.get_or_init(|| match std::env::var("REPOSIX_BLOB_LIMIT") {
         Ok(s) => {
             let parsed = parse_blob_limit(Some(&s));
@@ -99,7 +99,7 @@ pub fn configured_blob_limit() -> u32 {
 /// Format the verbatim refusal message with concrete `N` (want count)
 /// and `M` (limit) substituted.
 #[must_use]
-pub fn format_blob_limit_message(want_count: u32, limit: u32) -> String {
+pub(crate) fn format_blob_limit_message(want_count: u32, limit: u32) -> String {
     BLOB_LIMIT_EXCEEDED_FMT
         .replace("{N}", &want_count.to_string())
         .replace("{M}", &limit.to_string())
@@ -107,16 +107,16 @@ pub fn format_blob_limit_message(want_count: u32, limit: u32) -> String {
 
 /// Request-turn counters for audit + Phase 34 blob-limit telemetry.
 #[derive(Debug, Default, Clone)]
-pub struct RpcStats {
+pub(crate) struct RpcStats {
     /// Count of `want ` lines seen in the request payload.
-    pub want_count: u32,
+    pub(crate) want_count: u32,
     /// Total bytes written to `upload-pack` stdin (re-encoded request).
-    pub request_bytes: u32,
+    pub(crate) request_bytes: u32,
     /// Total bytes read from `upload-pack` stdout (response body).
-    pub response_bytes: u32,
+    pub(crate) response_bytes: u32,
     /// First keyword after `command=` in the first data frame, if any.
     /// Common values: `fetch`, `ls-refs`, `object-info`.
-    pub command: Option<String>,
+    pub(crate) command: Option<String>,
 }
 
 impl HelperFetchRecord for RpcStats {
@@ -144,7 +144,7 @@ impl HelperFetchRecord for RpcStats {
 /// Any I/O error from stdin/stdout, any `upload-pack` spawn failure,
 /// any cache error propagated from [`Cache::open`] or
 /// [`Cache::build_from`].
-pub fn handle_stateless_connect<R: Read, W: Write>(
+pub(crate) fn handle_stateless_connect<R: Read, W: Write>(
     proto: &mut Protocol<R, W>,
     rt: &Runtime,
     cache: &Cache,

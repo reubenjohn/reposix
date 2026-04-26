@@ -26,7 +26,7 @@ use std::io::{self, Read, Write};
 
 /// A single pkt-line frame.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Frame {
+pub(crate) enum Frame {
     /// 4-byte `0000` — flush.
     Flush,
     /// 4-byte `0001` — v2 delimiter between section header and body.
@@ -44,7 +44,7 @@ pub enum Frame {
 /// - [`io::ErrorKind::InvalidData`] if the length header is not ASCII hex
 ///   or declares a length smaller than 4 and not one of the special
 ///   shorts (`0000`/`0001`/`0002`).
-pub fn read_frame<R: Read>(r: &mut R) -> io::Result<Frame> {
+pub(crate) fn read_frame<R: Read>(r: &mut R) -> io::Result<Frame> {
     let mut hdr = [0u8; 4];
     r.read_exact(&mut hdr)?;
     let hex = std::str::from_utf8(&hdr)
@@ -75,7 +75,7 @@ pub fn read_frame<R: Read>(r: &mut R) -> io::Result<Frame> {
 ///
 /// Round-trips with [`read_frame`]: `read_frame(&mut &buf[..])` after
 /// `encode_frame` returns the same variant.
-pub fn encode_frame(frame: &Frame, out: &mut Vec<u8>) {
+pub(crate) fn encode_frame(frame: &Frame, out: &mut Vec<u8>) {
     match frame {
         Frame::Flush => out.extend_from_slice(b"0000"),
         Frame::Delim => out.extend_from_slice(b"0001"),
@@ -102,7 +102,7 @@ pub fn encode_frame(frame: &Frame, out: &mut Vec<u8>) {
 /// # Errors
 /// Any `io::Error` propagated from the writer.
 #[allow(dead_code)]
-pub fn write_frame<W: Write>(frame: &Frame, w: &mut W) -> io::Result<()> {
+pub(crate) fn write_frame<W: Write>(frame: &Frame, w: &mut W) -> io::Result<()> {
     let mut buf = Vec::with_capacity(match frame {
         Frame::Data(p) => p.len() + 4,
         _ => 4,
@@ -114,7 +114,7 @@ pub fn write_frame<W: Write>(frame: &Frame, w: &mut W) -> io::Result<()> {
 /// True if `payload` begins with `b"want "` — used by the RPC proxy to
 /// count want-lines per fetch for audit + Phase 34 enforcement.
 #[must_use]
-pub fn is_want_line(payload: &[u8]) -> bool {
+pub(crate) fn is_want_line(payload: &[u8]) -> bool {
     payload.starts_with(b"want ")
 }
 

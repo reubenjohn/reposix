@@ -19,7 +19,7 @@ use reposix_core::Record;
 ///
 /// # Errors
 /// Propagates any error from [`frontmatter::render`] (YAML serialization).
-pub fn render_blob(issue: &Record) -> Result<String, reposix_core::Error> {
+pub(crate) fn render_blob(issue: &Record) -> Result<String, reposix_core::Error> {
     frontmatter::render(issue)
 }
 
@@ -29,7 +29,7 @@ pub fn render_blob(issue: &Record) -> Result<String, reposix_core::Error> {
 /// # Errors
 /// Returns any [`io::Error`] from the writer or any rendering failure
 /// translated into an `io::Error::Other`.
-pub fn emit_import_stream<W: Write>(w: &mut W, issues: &[Record]) -> io::Result<()> {
+pub(crate) fn emit_import_stream<W: Write>(w: &mut W, issues: &[Record]) -> io::Result<()> {
     // First line of every import response: `feature done\n` per
     // gitremote-helpers(7); marks the stream as well-formed.
     writeln!(w, "feature done")?;
@@ -69,15 +69,15 @@ pub fn emit_import_stream<W: Write>(w: &mut W, issues: &[Record]) -> io::Result<
 
 /// Parsed shape of the fast-export stream git pipes us during `export`.
 #[derive(Debug, Default)]
-pub struct ParsedExport {
+pub(crate) struct ParsedExport {
     /// The commit message body (between `data N` and the next directive).
-    pub commit_message: String,
+    pub(crate) commit_message: String,
     /// Mark → blob bytes.
-    pub blobs: HashMap<u64, Vec<u8>>,
+    pub(crate) blobs: HashMap<u64, Vec<u8>>,
     /// Path → mark for `M 100644 :MARK <path>` entries in the new tree.
-    pub tree: BTreeMap<String, u64>,
+    pub(crate) tree: BTreeMap<String, u64>,
     /// Paths explicitly removed via `D <path>` lines.
-    pub deletes: Vec<String>,
+    pub(crate) deletes: Vec<String>,
 }
 
 /// Parse a git fast-export stream from `r`, narrowed to the one-file-per-issue
@@ -87,7 +87,7 @@ pub struct ParsedExport {
 /// Returns any [`io::Error`] from the reader or any malformed stream
 /// translated into `io::Error::Other`.
 #[allow(clippy::too_many_lines)] // narrow parser; readability beats split fns here
-pub fn parse_export_stream<R: BufRead>(r: &mut R) -> io::Result<ParsedExport> {
+pub(crate) fn parse_export_stream<R: BufRead>(r: &mut R) -> io::Result<ParsedExport> {
     let mut out = ParsedExport::default();
     let mut current_blob_mark: Option<u64> = None;
     // True after a `commit ...` directive — the next `data N` is the commit

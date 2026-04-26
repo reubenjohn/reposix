@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T19:30:42Z",
+  "generated_at": "2026-04-26T19:37:02Z",
   "schema_version": 1,
   "files": [
     {
@@ -1568,30 +1568,30 @@
     },
     {
       "path": "crates/reposix-remote/src/backend_dispatch.rs",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "catalog-v2:REFACTOR",
         "code-quality-gaps:REFACTOR"
       ],
       "plan": "[catalog-v2] `/home/reuben/workspace/reposix/crates/reposix-remote/src/backend_dispatch.rs` | `pub fn parse_remote_url(url) -> Result<ParsedRemote>` returning `{kind, origin, project}` with extra Confluence/JIRA `/jira/`,`/confluence/` segment marker...",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-13 \u2014 pub demoted",
+      "updated_at": "2026-04-26T19:37:02Z"
     },
     {
       "path": "crates/reposix-remote/src/diff.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-13 \u2014 pub demoted",
+      "updated_at": "2026-04-26T19:37:02Z"
     },
     {
       "path": "crates/reposix-remote/src/fast_import.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-13 \u2014 pub demoted",
+      "updated_at": "2026-04-26T19:37:02Z"
     },
     {
       "path": "crates/reposix-remote/src/main.rs",
@@ -1603,27 +1603,27 @@
     },
     {
       "path": "crates/reposix-remote/src/pktline.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-13 \u2014 pub demoted",
+      "updated_at": "2026-04-26T19:36:55Z"
     },
     {
       "path": "crates/reposix-remote/src/protocol.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-13 \u2014 pub demoted",
+      "updated_at": "2026-04-26T19:37:02Z"
     },
     {
       "path": "crates/reposix-remote/src/stateless_connect.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-13 \u2014 pub demoted",
+      "updated_at": "2026-04-26T19:37:02Z"
     },
     {
       "path": "crates/reposix-remote/tests/bulk_delete_cap.rs",

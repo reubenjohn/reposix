@@ -43,7 +43,7 @@ use reposix_core::split_reposix_url;
 /// Closed enum — a new backend addition is an API change and lands with
 /// a workspace version bump.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum BackendKind {
+pub(crate) enum BackendKind {
     /// Loopback simulator (default for tests / autonomous mode).
     Sim,
     /// GitHub Issues REST v3 (read-only at v0.9.0).
@@ -59,7 +59,7 @@ impl BackendKind {
     /// `backend` column. Matches the `<backend_name>-<project>.git`
     /// convention in `reposix-cache`.
     #[must_use]
-    pub fn slug(self) -> &'static str {
+    pub(crate) fn slug(self) -> &'static str {
         match self {
             Self::Sim => "sim",
             Self::GitHub => "github",
@@ -72,15 +72,15 @@ impl BackendKind {
 /// Parsed remote URL: which backend to dispatch, the origin to talk to,
 /// and the backend-specific project identifier.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ParsedRemote {
+pub(crate) struct ParsedRemote {
     /// Which backend to instantiate.
-    pub kind: BackendKind,
+    pub(crate) kind: BackendKind,
     /// Scheme + host + optional port, e.g. `https://api.github.com` or
     /// `http://127.0.0.1:7878`. No trailing slash.
-    pub origin: String,
+    pub(crate) origin: String,
     /// Backend-specific project identifier — `demo` for sim, `owner/repo`
     /// for GitHub, `TokenWorld` for Confluence, `TEST` for JIRA.
-    pub project: String,
+    pub(crate) project: String,
 }
 
 /// Parse a `reposix::<...>` remote URL into the dispatch tuple.
@@ -99,7 +99,7 @@ pub struct ParsedRemote {
 /// - The project segment is empty or path-traversal-unsafe (`.`, `..`).
 /// - The Atlassian URL is missing the `/confluence/` or `/jira/`
 ///   path-segment marker that disambiguates the two adapters.
-pub fn parse_remote_url(url: &str) -> Result<ParsedRemote> {
+pub(crate) fn parse_remote_url(url: &str) -> Result<ParsedRemote> {
     // Delegate the prefix-strip + `/projects/` split to `reposix-core`'s
     // canonical splitter. We layer the Atlassian path-marker handling
     // and `BackendKind` resolution on top — the splitter intentionally
@@ -181,7 +181,7 @@ fn classify_origin(origin: &str, marker: Option<&str>) -> Result<BackendKind> {
 /// GitHub's `owner/repo` becomes `owner-repo`. Other characters that
 /// would create directory ambiguity (`\`, `:`, `..`) are also replaced.
 #[must_use]
-pub fn sanitize_project_for_cache(project: &str) -> String {
+pub(crate) fn sanitize_project_for_cache(project: &str) -> String {
     project
         .chars()
         .map(|c| match c {
@@ -216,7 +216,7 @@ pub fn sanitize_project_for_cache(project: &str) -> String {
 /// All credential errors include a pointer to
 /// `docs/reference/testing-targets.md` so the agent has a single place
 /// to look for the expected env-var matrix.
-pub fn instantiate(parsed: &ParsedRemote) -> Result<Arc<dyn BackendConnector>> {
+pub(crate) fn instantiate(parsed: &ParsedRemote) -> Result<Arc<dyn BackendConnector>> {
     match parsed.kind {
         BackendKind::Sim => instantiate_sim(&parsed.origin),
         BackendKind::GitHub => instantiate_github(&parsed.origin),

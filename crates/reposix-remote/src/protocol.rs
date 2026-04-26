@@ -11,14 +11,14 @@ use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
 /// Wraps a paired Read+Write (typically stdin+stdout) for the git
 /// remote-helper line protocol.
 #[allow(clippy::print_stdout, clippy::print_stderr)] // this struct OWNS the protocol
-pub struct Protocol<R: Read, W: Write> {
+pub(crate) struct Protocol<R: Read, W: Write> {
     reader: BufReader<R>,
     writer: BufWriter<W>,
 }
 
 impl<R: Read, W: Write> Protocol<R, W> {
     /// Build a new protocol I/O wrapper.
-    pub fn new(r: R, w: W) -> Self {
+    pub(crate) fn new(r: R, w: W) -> Self {
         Self {
             reader: BufReader::new(r),
             writer: BufWriter::new(w),
@@ -39,7 +39,7 @@ impl<R: Read, W: Write> Protocol<R, W> {
     ///
     /// # Errors
     /// Returns any [`io::Error`] from the underlying reader.
-    pub fn read_line(&mut self) -> io::Result<Option<String>> {
+    pub(crate) fn read_line(&mut self) -> io::Result<Option<String>> {
         let mut buf = String::new();
         let n = self.reader.read_line(&mut buf)?;
         if n == 0 {
@@ -67,7 +67,7 @@ impl<R: Read, W: Write> Protocol<R, W> {
     ///
     /// # Errors
     /// Returns any [`io::Error`] from the underlying reader.
-    pub fn read_raw_line(&mut self) -> io::Result<Option<Vec<u8>>> {
+    pub(crate) fn read_raw_line(&mut self) -> io::Result<Option<Vec<u8>>> {
         let mut buf: Vec<u8> = Vec::new();
         let n = self.reader.read_until(b'\n', &mut buf)?;
         if n == 0 {
@@ -92,7 +92,7 @@ impl<R: Read, W: Write> Protocol<R, W> {
     /// [`io::ErrorKind::UnexpectedEof`] on short reads.
     #[allow(dead_code)] // public API surface; exposed for future callers
                         // that want explicit N-byte reads.
-    pub fn read_bytes_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
+    pub(crate) fn read_bytes_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
         self.reader.read_exact(buf)
     }
 
@@ -104,7 +104,7 @@ impl<R: Read, W: Write> Protocol<R, W> {
     /// stream).
     ///
     /// [`read_line`]: Self::read_line
-    pub fn reader_mut(&mut self) -> &mut BufReader<R> {
+    pub(crate) fn reader_mut(&mut self) -> &mut BufReader<R> {
         &mut self.reader
     }
 
@@ -114,7 +114,7 @@ impl<R: Read, W: Write> Protocol<R, W> {
     ///
     /// [`send_raw`]: Self::send_raw
     #[allow(dead_code)] // public surface; today's callers use send_raw.
-    pub fn writer_mut(&mut self) -> &mut BufWriter<W> {
+    pub(crate) fn writer_mut(&mut self) -> &mut BufWriter<W> {
         &mut self.writer
     }
 
@@ -122,7 +122,7 @@ impl<R: Read, W: Write> Protocol<R, W> {
     ///
     /// # Errors
     /// Returns any [`io::Error`] from the underlying writer.
-    pub fn send_line(&mut self, s: &str) -> io::Result<()> {
+    pub(crate) fn send_line(&mut self, s: &str) -> io::Result<()> {
         self.writer.write_all(s.as_bytes())?;
         self.writer.write_all(b"\n")?;
         Ok(())
@@ -132,7 +132,7 @@ impl<R: Read, W: Write> Protocol<R, W> {
     ///
     /// # Errors
     /// Returns any [`io::Error`] from the underlying writer.
-    pub fn send_blank(&mut self) -> io::Result<()> {
+    pub(crate) fn send_blank(&mut self) -> io::Result<()> {
         self.writer.write_all(b"\n")?;
         Ok(())
     }
@@ -142,7 +142,7 @@ impl<R: Read, W: Write> Protocol<R, W> {
     ///
     /// # Errors
     /// Returns any [`io::Error`] from the underlying writer.
-    pub fn send_raw(&mut self, bytes: &[u8]) -> io::Result<()> {
+    pub(crate) fn send_raw(&mut self, bytes: &[u8]) -> io::Result<()> {
         self.writer.write_all(bytes)
     }
 
@@ -150,7 +150,7 @@ impl<R: Read, W: Write> Protocol<R, W> {
     ///
     /// # Errors
     /// Returns any [`io::Error`] from the underlying writer.
-    pub fn flush(&mut self) -> io::Result<()> {
+    pub(crate) fn flush(&mut self) -> io::Result<()> {
         self.writer.flush()
     }
 
@@ -159,7 +159,7 @@ impl<R: Read, W: Write> Protocol<R, W> {
     /// `eprintln!` here is the documented, mechanical lock against
     /// accidental stdout pollution.
     #[allow(dead_code)] // public lock; main.rs uses a top-level diag() wrapper today
-    pub fn diag(msg: &str) {
+    pub(crate) fn diag(msg: &str) {
         eprintln!("{msg}");
     }
 }

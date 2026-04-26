@@ -16,15 +16,15 @@ use thiserror::Error;
 use crate::fast_import::ParsedExport;
 
 /// SG-02 cap.
-pub const BULK_DELETE_LIMIT: usize = 5;
+pub(crate) const BULK_DELETE_LIMIT: usize = 5;
 
 /// SG-02 override tag accepted in the fast-import commit message.
-pub const ALLOW_BULK_DELETE_TAG: &str = "[allow-bulk-delete]";
+pub(crate) const ALLOW_BULK_DELETE_TAG: &str = "[allow-bulk-delete]";
 
 /// Per-issue intent computed from the diff.
 #[derive(Debug)]
 #[allow(dead_code)] // `prior_version` is read by the executor only on Update path
-pub enum PlannedAction {
+pub(crate) enum PlannedAction {
     /// Path appeared in new tree but not the prior list — POST.
     Create(Record),
     /// Both prior and new bytes exist; bytes differ — PATCH with prior version.
@@ -47,7 +47,7 @@ pub enum PlannedAction {
 
 /// Bulk-delete cap rejection.
 #[derive(Debug, Error)]
-pub enum PlanError {
+pub(crate) enum PlanError {
     /// More than [`BULK_DELETE_LIMIT`] deletes without the override tag.
     #[error(
         "refusing to push (would delete {count} issues; cap is {limit}; commit message tag '{tag}' overrides)"
@@ -96,7 +96,10 @@ fn normalize_for_compare(s: &str) -> String {
 /// # Errors
 /// - [`PlanError::BulkDeleteRefused`] if the cap fires.
 /// - [`PlanError::InvalidBlob`] if a new-tree blob can't parse as an issue.
-pub fn plan(prior: &[Record], parsed: &ParsedExport) -> Result<Vec<PlannedAction>, PlanError> {
+pub(crate) fn plan(
+    prior: &[Record],
+    parsed: &ParsedExport,
+) -> Result<Vec<PlannedAction>, PlanError> {
     let prior_by_id: HashMap<RecordId, &Record> = prior.iter().map(|i| (i.id, i)).collect();
     let prior_by_path: BTreeMap<String, RecordId> = prior
         .iter()
