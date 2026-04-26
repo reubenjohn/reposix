@@ -88,6 +88,26 @@ reposix's `8 ms` cache read is measured against the in-process simulator, but th
 
 Latency for each backend is captured in [`docs/benchmarks/v0.9.0-latency.md`](benchmarks/v0.9.0-latency.md). Sim cold init is `24 ms` (soft threshold `500 ms`); list-issues `9 ms`; capabilities probe `5 ms`. Real-backend cells fill in once CI secret packs are wired (Phase 36).
 
+## What each backend can do
+
+The four built-in backends differ in capabilities. `reposix doctor` prints
+your configured backend's row at runtime (see [exit codes](reference/exit-codes.md)
+for harness integration); the static matrix is also here for at-a-glance
+reading:
+
+| Backend     | Read | Create | Update | Comments         | Delete | Versioning |
+|-------------|------|--------|--------|------------------|--------|------------|
+| sim         | yes  | yes    | yes    | in-body          | yes    | strong     |
+| github      | yes  | yes    | yes    | in-body          | yes    | ETag       |
+| confluence  | yes  | yes    | yes    | separate API     | yes    | strong     |
+| jira        | yes  | no     | no     | no               | no     | timestamp  |
+
+
+JIRA is currently read-only — write paths are tracked in
+[`v0.11.1` POLISH2-08+](https://github.com/reubenjohn/reposix/blob/main/.planning/REQUIREMENTS.md).
+For the canonical struct + per-backend constant, see
+`crates/reposix-core/src/backend.rs` (`BackendCapabilities`).
+
 ## Six-line quickstart
 
 ```bash

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T20:02:43Z",
+  "generated_at": "2026-04-26T20:06:37Z",
   "schema_version": 1,
   "files": [
     {
@@ -92,11 +92,11 @@
     },
     {
       "path": ".github/workflows/bench-latency-cron.yml",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-03 \u2014 persist-credentials false to fix duplicate Auth header",
+      "updated_at": "2026-04-26T20:06:36Z"
     },
     {
       "path": ".github/workflows/ci.yml",
@@ -2148,8 +2148,8 @@
       "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "hero rewrite per \u00a77-D \u2014 89.1%/timing diagram/30s install",
-      "updated_at": "2026-04-26T19:01:43Z"
+      "note": "POLISH2-06 \u2014 added connector capability matrix subsection",
+      "updated_at": "2026-04-26T20:06:37Z"
     },
     {
       "path": "docs/javascripts/mermaid-render.js",
