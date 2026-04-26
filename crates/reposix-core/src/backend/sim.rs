@@ -631,8 +631,7 @@ mod tests {
         };
         // The body field carries the raw 409 response — parse it directly,
         // no string slicing required.
-        let parsed: serde_json::Value =
-            serde_json::from_str(&body).expect("body parses as JSON");
+        let parsed: serde_json::Value = serde_json::from_str(&body).expect("body parses as JSON");
         let current = parsed
             .get("current")
             .expect("'current' key present")
