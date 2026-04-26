@@ -13,6 +13,7 @@
 //! `oid_map` while `build_from` writes). Concurrency safety is
 //! Phase 33's job.
 
+#[cfg(unix)]
 use std::os::unix::fs::OpenOptionsExt as _;
 use std::path::Path;
 
@@ -23,8 +24,10 @@ use crate::error::{Error, Result};
 /// Embedded schema DDL used by [`open_cache_db`].
 const CACHE_SCHEMA_SQL: &str = include_str!("../fixtures/cache_schema.sql");
 
-/// Open `<cache_dir>/cache.db` with `0o600` permissions, DEFENSIVE flag,
-/// WAL, and the cache schema loaded.
+/// Open `<cache_dir>/cache.db` with `0o600` permissions (Unix only),
+/// DEFENSIVE flag, WAL, and the cache schema loaded. On Windows the
+/// 0o600 step is a no-op — file permissions are governed by ACLs and
+/// the per-user default is already the right thing.
 ///
 /// # Errors
 /// - [`Error::Io`] for directory/file creation failure.
@@ -33,13 +36,12 @@ pub fn open_cache_db(cache_dir: &Path) -> Result<Connection> {
     std::fs::create_dir_all(cache_dir)?;
     let path = cache_dir.join("cache.db");
 
-    // Pre-create the file with 0o600 (mirrors crates/reposix-cli/src/cache_db.rs).
-    std::fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(false)
-        .mode(0o600)
-        .open(&path)?;
+    // Pre-create the file with 0o600 on Unix; default ACLs on Windows.
+    let mut opts = std::fs::OpenOptions::new();
+    opts.write(true).create(true).truncate(false);
+    #[cfg(unix)]
+    opts.mode(0o600);
+    opts.open(&path)?;
 
     let conn = Connection::open(&path)
         .map_err(|e| Error::Sqlite(format!("open {}: {e}", path.display())))?;

@@ -20,8 +20,11 @@ ci = ["github"]
 installers = ["shell", "powershell", "homebrew"]
 tap = "reubenjohn/homebrew-reposix"
 targets = [
+    # Linux x86_64 musl ships first because it's the broadest single binary;
+    # aarch64-unknown-linux-musl is held back to v0.11.1 — github runners
+    # default to gnu cross-toolchain, the musl-aarch64 cross-link needs
+    # `aarch64-linux-musl-gcc` set up explicitly. Track separately.
     "x86_64-unknown-linux-musl",
-    "aarch64-unknown-linux-musl",
     "aarch64-apple-darwin",
     "x86_64-apple-darwin",
     "x86_64-pc-windows-msvc",
