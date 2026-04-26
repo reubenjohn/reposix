@@ -53,7 +53,6 @@ not_in_nav: |
   why.md
   demo.md
   connectors/guide.md
-  demos/index.md
   demos/asciinema-script.md
   reference/cli.md
   reference/http-api.md

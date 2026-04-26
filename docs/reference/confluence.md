@@ -171,15 +171,9 @@ for the full list:
   confluence` against your tenant, then `jq`-diffs the normalized
   `{id, title, status}` shape. Skips cleanly if any Atlassian env var is
   unset.
-- **Tier 5 live-mount demo** —
-  [`scripts/demos/06-mount-real-confluence.sh`](https://github.com/reubenjohn/reposix/blob/main/scripts/demos/06-mount-real-confluence.sh)
-  mounts your Confluence space as a POSIX directory via FUSE, `cat`s the
-  first page's Markdown, and unmounts. Skips cleanly with `SKIP:` if any
-  Atlassian env var is unset. The token and email are never echoed — only
-  the tenant host, space key, and allowlist appear on stdout.
 
-See the [demo suite index](../demos/index.md) for how these fit into the
-broader Tier 1–5 story.
+(The pre-pivot FUSE live-mount demo and demo-suite index page were
+removed alongside the v0.9.0 architecture pivot.)
 
 ## See also
 

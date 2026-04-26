@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T18:54:13Z",
+  "generated_at": "2026-04-26T19:01:53Z",
   "schema_version": 1,
   "files": [
     {
@@ -1919,11 +1919,11 @@
     },
     {
       "path": "docs/concepts/mental-model-in-60-seconds.md",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "fixed stale checkout form per Row 8",
+      "updated_at": "2026-04-26T19:01:53Z"
     },
     {
       "path": "docs/concepts/reposix-vs-mcp-and-sdks.md",
@@ -1999,25 +1999,25 @@
     },
     {
       "path": "docs/demo.transcript.txt",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "catalog-v2:DELETE",
         "repo-org-gaps:DELETE"
       ],
       "plan": "[catalog-v2] 4. **Delete the FUSE-era recordings under `docs/demos/recordings/`** plus the orphaned `docs/demo.transcript.txt` + `docs/demo.typescript` at root. Each recording lists `reposix-fuse` as a workspace crate. They have ZERO inbound links fr...",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 pre-v0.4 single-demo recording",
+      "updated_at": "2026-04-26T19:01:40Z"
     },
     {
       "path": "docs/demo.typescript",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "catalog-v2:DELETE",
         "repo-org-gaps:DELETE"
       ],
       "plan": "[catalog-v2] 4. **Delete the FUSE-era recordings under `docs/demos/recordings/`** plus the orphaned `docs/demo.transcript.txt` + `docs/demo.typescript` at root. Each recording lists `reposix-fuse` as a workspace crate. They have ZERO inbound links fr...",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 pre-v0.4 single-demo recording",
+      "updated_at": "2026-04-26T19:01:40Z"
     },
     {
       "path": "docs/demos/asciinema-script.md",
@@ -2031,110 +2031,110 @@
     },
     {
       "path": "docs/demos/index.md",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "catalog-v2:DELETE",
         "repo-org-gaps:DELETE"
       ],
       "plan": "[catalog-v2] 5. **Delete `docs/demos/index.md`.** Tier 1/2/3 demo lineup explicitly references the deleted `scripts/demos/full.sh`. Already in `not_in_nav`. The new equivalent is `docs/tutorials/first-run.md` + the `examples/` directory. One stale pa...",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 described removed FUSE demos",
+      "updated_at": "2026-04-26T19:01:40Z"
     },
     {
       "path": "docs/demos/recordings/01-edit-and-push.transcript.txt",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era recording, embeds stale 92.3% string",
+      "updated_at": "2026-04-26T19:01:35Z"
     },
     {
       "path": "docs/demos/recordings/01-edit-and-push.typescript",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era recording, embeds stale 92.3% string",
+      "updated_at": "2026-04-26T19:01:35Z"
     },
     {
       "path": "docs/demos/recordings/02-guardrails.transcript.txt",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era recording, embeds stale 92.3% string",
+      "updated_at": "2026-04-26T19:01:35Z"
     },
     {
       "path": "docs/demos/recordings/02-guardrails.typescript",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era recording, embeds stale 92.3% string",
+      "updated_at": "2026-04-26T19:01:35Z"
     },
     {
       "path": "docs/demos/recordings/03-conflict-resolution.transcript.txt",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era recording, embeds stale 92.3% string",
+      "updated_at": "2026-04-26T19:01:35Z"
     },
     {
       "path": "docs/demos/recordings/03-conflict-resolution.typescript",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era recording, embeds stale 92.3% string",
+      "updated_at": "2026-04-26T19:01:35Z"
     },
     {
       "path": "docs/demos/recordings/04-token-economy.transcript.txt",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era recording, embeds stale 92.3% string",
+      "updated_at": "2026-04-26T19:01:35Z"
     },
     {
       "path": "docs/demos/recordings/04-token-economy.typescript",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era recording, embeds stale 92.3% string",
+      "updated_at": "2026-04-26T19:01:35Z"
     },
     {
       "path": "docs/demos/recordings/parity.transcript.txt",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era recording, embeds stale 92.3% string",
+      "updated_at": "2026-04-26T19:01:35Z"
     },
     {
       "path": "docs/demos/recordings/parity.typescript",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era recording, embeds stale 92.3% string",
+      "updated_at": "2026-04-26T19:01:35Z"
     },
     {
       "path": "docs/demos/recordings/swarm.transcript.txt",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era recording, embeds stale 92.3% string",
+      "updated_at": "2026-04-26T19:01:35Z"
     },
     {
       "path": "docs/demos/recordings/swarm.typescript",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era recording, embeds stale 92.3% string",
+      "updated_at": "2026-04-26T19:01:35Z"
     },
     {
       "path": "docs/development/contributing.md",
@@ -2160,13 +2160,13 @@
     },
     {
       "path": "docs/github-readme-top.png",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "repo-org-gaps:DELETE"
       ],
       "plan": "[repo-org-gaps] - `docs/github-readme-top.png` (144 KB) \u2014 pre-pivot screenshot of the README hero. **DELETE** \u2014 README.md no longer references it (it was last referenced from a v0.4-era top section).",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 pre-pivot README hero, no live refs",
+      "updated_at": "2026-04-26T19:01:40Z"
     },
     {
       "path": "docs/guides/integrate-with-your-agent.md",
@@ -2226,11 +2226,11 @@
     },
     {
       "path": "docs/index.md",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "hero rewrite per \u00a77-D \u2014 89.1%/timing diagram/30s install",
+      "updated_at": "2026-04-26T19:01:43Z"
     },
     {
       "path": "docs/javascripts/mermaid-render.js",
@@ -2772,69 +2772,69 @@
     },
     {
       "path": "scripts/demos/01-edit-and-push.sh",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era demo, references removed reposix mount",
+      "updated_at": "2026-04-26T19:01:32Z"
     },
     {
       "path": "scripts/demos/02-guardrails.sh",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era demo",
+      "updated_at": "2026-04-26T19:01:32Z"
     },
     {
       "path": "scripts/demos/03-conflict-resolution.sh",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era demo",
+      "updated_at": "2026-04-26T19:01:32Z"
     },
     {
       "path": "scripts/demos/04-token-economy.sh",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era demo",
+      "updated_at": "2026-04-26T19:01:32Z"
     },
     {
       "path": "scripts/demos/08-full-backend-showcase.sh",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era demo",
+      "updated_at": "2026-04-26T19:01:32Z"
     },
     {
       "path": "scripts/demos/_lib.sh",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "repo-org-gaps:DELETE"
       ],
       "plan": "[repo-org-gaps] 1. **`scripts/demos/_lib.sh` + `01-edit-and-push.sh` + `02-guardrails.sh` + `03-conflict-resolution.sh` + `08-full-backend-showcase.sh` + `parity.sh` + `parity-confluence.sh` + `smoke.sh` + `swarm.sh` + `assert.sh` + `_record.sh`** \u2014 11 ...",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era demo helper",
+      "updated_at": "2026-04-26T19:01:32Z"
     },
     {
       "path": "scripts/demos/_record.sh",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era demo helper",
+      "updated_at": "2026-04-26T19:01:32Z"
     },
     {
       "path": "scripts/demos/assert.sh",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era demo helper",
+      "updated_at": "2026-04-26T19:01:32Z"
     },
     {
       "path": "scripts/demos/parity-confluence.sh",
@@ -2862,33 +2862,33 @@
     },
     {
       "path": "scripts/demos/swarm.sh",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 FUSE-era demo",
+      "updated_at": "2026-04-26T19:01:32Z"
     },
     {
       "path": "scripts/dev/list-confluence-spaces.sh",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "catalog-v2:DELETE",
         "repo-org-gaps:DELETE"
       ],
       "plan": "[catalog-v2] `/home/reuben/workspace/reposix/scripts/dev/list-confluence-spaces.sh` | Still functional, but is it ever run in practice? Could be replaced by a `reposix spaces` invocation. If `reposix spaces` covers it, **delete**. |",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 superseded by reposix list",
+      "updated_at": "2026-04-26T19:01:40Z"
     },
     {
       "path": "scripts/dev/probe-confluence.sh",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "catalog-v2:REFACTOR",
         "repo-org-gaps:DELETE"
       ],
       "plan": "[repo-org-gaps] 2. **`scripts/dev/list-confluence-spaces.sh` + `scripts/dev/probe-confluence.sh`** \u2014 both pre-pivot dev probes; `probe-confluence.sh` literally says \"before running `reposix mount --backend confluence`\". The same probe is now `reposix do...",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 superseded by reposix doctor",
+      "updated_at": "2026-04-26T19:01:40Z"
     },
     {
       "path": "scripts/green-gauntlet.sh",
@@ -3019,14 +3019,14 @@
     },
     {
       "path": "scripts/take-screenshots.sh",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "catalog-v2:DELETE",
         "repo-org-gaps:DELETE"
       ],
       "plan": "[catalog-v2] `/home/reuben/workspace/reposix/scripts/take-screenshots.sh` | Stub that names a contract for screenshots that \"deferred (cairo system libs unavailable)\" per STATE.md. If never executed, **delete**; otherwise document the cairo prereq in...",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "deleted \u00a77-F1 \u2014 explicit NOT IMPLEMENTED stub",
+      "updated_at": "2026-04-26T19:01:40Z"
     },
     {
       "path": "scripts/test_bench_token_economy.py",
