@@ -103,7 +103,7 @@ const PAGE_SIZE: usize = 100;
 ///
 /// `Clone` is cheap (the inner `HttpClient` is `Arc`-shared) and all methods
 /// are `&self`, so the struct is safe to share across tokio tasks.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct GithubReadOnlyBackend {
     http: Arc<HttpClient>,
     token: Option<String>,
@@ -114,6 +114,22 @@ pub struct GithubReadOnlyBackend {
     /// Shared across clones so a single depleted token can't starve the
     /// backend just because two tasks happen to hold separate handles.
     rate_limit_gate: Arc<Mutex<Option<Instant>>>,
+}
+
+// Hand-rolled `Debug` that REDACTS the `GITHUB_TOKEN`. The auto-derived
+// `Debug` would emit `Some("ghp_…")` — a credential leak the moment a
+// `tracing::error!("{:?}", backend)` or a panic backtrace catches it.
+// Mirrors the same redaction pattern in `reposix-confluence` and
+// `reposix-jira`. Surfaced by the v0.11.1 security-persona audit.
+impl std::fmt::Debug for GithubReadOnlyBackend {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GithubReadOnlyBackend")
+            .field("http", &self.http)
+            .field("token", &self.token.as_ref().map(|_| "<redacted>"))
+            .field("base_url", &self.base_url)
+            .field("rate_limit_gate", &self.rate_limit_gate)
+            .finish()
+    }
 }
 
 /// Minimal GitHub issue shape we actually consume. `deny_unknown_fields` is
