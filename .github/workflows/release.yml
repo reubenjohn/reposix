@@ -360,7 +360,7 @@ jobs:
           set -euo pipefail
           TAG="${{ needs.plan.outputs.tag }}"
           mkdir -p shas
-          gh release download "$TAG" --pattern 'SHA256SUMS' --dir shas/
+          gh release download "$TAG" --pattern 'SHA256SUMS' --dir shas/ -R reubenjohn/reposix
           cat shas/SHA256SUMS
 
       - name: Generate + commit formula
@@ -373,7 +373,6 @@ jobs:
           x86_darwin_sha=$(awk -v t="reposix-${TAG}-x86_64-apple-darwin.tar.gz" '$2==t {print $1}' shas/SHA256SUMS)
           arm_darwin_sha=$(awk -v t="reposix-${TAG}-aarch64-apple-darwin.tar.gz" '$2==t {print $1}' shas/SHA256SUMS)
           x86_linux_sha=$(awk -v t="reposix-${TAG}-x86_64-unknown-linux-musl.tar.gz" '$2==t {print $1}' shas/SHA256SUMS)
-          arm_linux_sha=$(awk -v t="reposix-${TAG}-aarch64-unknown-linux-musl.tar.gz" '$2==t {print $1}' shas/SHA256SUMS)
 
           mkdir -p tap/Formula
           cat > tap/Formula/reposix.rb <<FORMULA_EOF
@@ -394,13 +393,8 @@ jobs:
             end
 
             on_linux do
-              if Hardware::CPU.arm?
-                url "https://github.com/reubenjohn/reposix/releases/download/${TAG}/reposix-${TAG}-aarch64-unknown-linux-musl.tar.gz"
-                sha256 "${arm_linux_sha}"
-              else
-                url "https://github.com/reubenjohn/reposix/releases/download/${TAG}/reposix-${TAG}-x86_64-unknown-linux-musl.tar.gz"
-                sha256 "${x86_linux_sha}"
-              end
+              url "https://github.com/reubenjohn/reposix/releases/download/${TAG}/reposix-${TAG}-x86_64-unknown-linux-musl.tar.gz"
+              sha256 "${x86_linux_sha}"
             end
 
             def install
