@@ -102,12 +102,13 @@ impl SimBackend {
 
 /// Shared helper: consume a `reqwest::Response` and deserialize its body as
 /// `Record`, mapping HTTP errors to `Error::*`. 404 becomes
-/// `Error::Other("not found: ...")`.
+/// `Error::NotFound { project, id }` (project + id parsed from the request URL).
 async fn decode_issue(resp: reqwest::Response, context: &str) -> Result<Record> {
     let status = resp.status();
     let bytes = resp.bytes().await?;
     if status == StatusCode::NOT_FOUND {
-        return Err(Error::Other(format!("not found: {context}")));
+        let (project, id) = parse_project_id_from_url(context);
+        return Err(Error::NotFound { project, id });
     }
     if !status.is_success() {
         return Err(Error::Other(format!(
@@ -117,6 +118,25 @@ async fn decode_issue(resp: reqwest::Response, context: &str) -> Result<Record> 
     }
     let issue: Record = serde_json::from_slice(&bytes)?;
     Ok(issue)
+}
+
+/// Best-effort parse of `project` and `id` from a sim URL of the form
+/// `<origin>/projects/<project>/issues[/<id>]`. Falls back to the raw URL
+/// when the shape doesn't match — `Error::NotFound { project, id }` is for
+/// callers that want structured fields, never for routing logic, so a lossy
+/// fallback is acceptable.
+fn parse_project_id_from_url(url: &str) -> (String, String) {
+    // Strip any query string before splitting (e.g. `?since=...`).
+    let path = url.split('?').next().unwrap_or(url);
+    if let Some(rest) = path.split("/projects/").nth(1) {
+        let mut parts = rest.splitn(3, '/');
+        let project = parts.next().unwrap_or("").to_owned();
+        // parts.next() is "issues" (or similar); skip it.
+        let _ = parts.next();
+        let id = parts.next().unwrap_or("").to_owned();
+        return (project, id);
+    }
+    (String::new(), url.to_owned())
 }
 
 async fn decode_issues(resp: reqwest::Response, context: &str) -> Result<Vec<Record>> {
@@ -199,6 +219,34 @@ fn render_create_body(issue: &Record) -> Result<Vec<u8>> {
 
 fn status_to_str(s: RecordStatus) -> &'static str {
     s.as_str()
+}
+
+/// Best-effort parse of the sim's HTTP 409 body shape into
+/// `(current, requested)` strings for `Error::VersionMismatch`. Returns
+/// empty strings when the body isn't the expected JSON; callers that need
+/// the raw bytes use `Error::VersionMismatch.body` directly.
+fn parse_version_mismatch_body(body: &str, expected: Option<u64>) -> (String, String) {
+    let parsed: Option<serde_json::Value> = serde_json::from_str(body).ok();
+    let current = parsed
+        .as_ref()
+        .and_then(|v| v.get("current"))
+        .and_then(|c| {
+            c.as_u64()
+                .map(|n| n.to_string())
+                .or_else(|| c.as_str().map(ToOwned::to_owned))
+        })
+        .unwrap_or_default();
+    let requested = parsed
+        .as_ref()
+        .and_then(|v| v.get("sent"))
+        .and_then(|s| {
+            s.as_str()
+                .map(ToOwned::to_owned)
+                .or_else(|| s.as_u64().map(|n| n.to_string()))
+        })
+        .or_else(|| expected.map(|v| v.to_string()))
+        .unwrap_or_default();
+    (current, requested)
 }
 
 #[async_trait]
@@ -296,10 +344,17 @@ impl BackendConnector for SimBackend {
         let status = resp.status();
         if status == StatusCode::CONFLICT {
             let bytes = resp.bytes().await?;
-            return Err(Error::Other(format!(
-                "version mismatch: {}",
-                String::from_utf8_lossy(&bytes)
-            )));
+            let body = String::from_utf8_lossy(&bytes).into_owned();
+            // Best-effort parse of the sim's 409 body shape:
+            // `{"error":"version_mismatch","current":<u64>,"sent":"<str>"}`.
+            // Falls back to empty strings when the body isn't the expected
+            // JSON — callers wanting the raw bytes use `body` directly.
+            let (current, requested) = parse_version_mismatch_body(&body, expected_version);
+            return Err(Error::VersionMismatch {
+                current,
+                requested,
+                body,
+            });
         }
         decode_issue(resp, &url).await
     }
@@ -321,7 +376,11 @@ impl BackendConnector for SimBackend {
             .await?;
         let status = resp.status();
         if status == StatusCode::NOT_FOUND {
-            return Err(Error::Other(format!("not found: {url}")));
+            let (project_p, id_p) = parse_project_id_from_url(&url);
+            return Err(Error::NotFound {
+                project: project_p,
+                id: id_p,
+            });
         }
         if !status.is_success() {
             let bytes = resp.bytes().await?;
@@ -436,8 +495,11 @@ mod tests {
             .await
             .expect_err("404");
         match err {
-            Error::Other(msg) => assert!(msg.starts_with("not found:"), "got {msg}"),
-            other => panic!("expected Error::Other(not found), got {other:?}"),
+            Error::NotFound { project, id } => {
+                assert_eq!(project, "demo", "expected project='demo', got {project}");
+                assert_eq!(id, "9999", "expected id='9999', got {id}");
+            }
+            other => panic!("expected Error::NotFound, got {other:?}"),
         }
     }
 
@@ -516,27 +578,36 @@ mod tests {
             .await
             .expect_err("409");
         match err {
-            Error::Other(msg) => {
+            Error::VersionMismatch {
+                ref current,
+                ref requested,
+                ref body,
+            } => {
+                assert_eq!(current, "7", "expected current='7', got {current}");
+                assert_eq!(requested, "1", "expected requested='1', got {requested}");
                 assert!(
-                    msg.starts_with("version mismatch:"),
-                    "expected prefix 'version mismatch:', got {msg}"
+                    body.contains("\"current\":7"),
+                    "expected body to contain '\"current\":7', got {body}"
                 );
+                // Display string still surfaces the `version mismatch:`
+                // prefix — keeps `reposix-swarm`'s ErrorKind::classify
+                // substring-matching working during the migration.
                 assert!(
-                    msg.contains("\"current\":7"),
-                    "expected body to contain '\"current\":7', got {msg}"
+                    err.to_string().starts_with("version mismatch:"),
+                    "expected display prefix 'version mismatch:', got {err}"
                 );
             }
-            other => panic!("expected Error::Other(version mismatch), got {other:?}"),
+            other => panic!("expected Error::VersionMismatch, got {other:?}"),
         }
     }
 
     #[tokio::test]
     async fn update_issue_409_current_field_present_as_json() {
-        // R13 mitigation: companion to update_issue_409_prefix_is_version_mismatch.
-        // Asserts the tail of `Error::Other("version mismatch: {body}")` parses
-        // as JSON with a top-level `"current"` key whose value is a positive
-        // u64. This is the exact re-parse `backend_err_to_fetch` will perform
-        // in Wave B1; see 14-RESEARCH.md#Q1.
+        // POLISH2-09: closes the stringly-typed protocol. Was: parse JSON
+        // out of `Error::Other("version mismatch: {body}")` via
+        // `strip_prefix("version mismatch: ")` + `serde_json::from_str(tail)`.
+        // Now: pattern-match `Error::VersionMismatch { body, .. }` and parse
+        // `body` directly. Code-quality audit P1-5.
         let server = MockServer::start().await;
         Mock::given(method("PATCH"))
             .and(path("/projects/demo/issues/42"))
@@ -555,22 +626,89 @@ mod tests {
             .update_record("demo", RecordId(42), u, Some(1))
             .await
             .expect_err("409");
-        let Error::Other(msg) = err else {
-            panic!("expected Error::Other, got {err:?}");
+        let Error::VersionMismatch { body, .. } = err else {
+            panic!("expected Error::VersionMismatch, got {err:?}");
         };
-        // Strip the `"version mismatch: "` prefix (note the trailing space)
-        // and parse the tail as JSON — mirroring the shape Wave B1's
-        // `backend_err_to_fetch` will re-parse.
-        let tail = msg
-            .strip_prefix("version mismatch: ")
-            .expect("prefix 'version mismatch: ' present");
-        let body: serde_json::Value = serde_json::from_str(tail).expect("tail parses as JSON");
-        let current = body
+        // The body field carries the raw 409 response — parse it directly,
+        // no string slicing required.
+        let parsed: serde_json::Value =
+            serde_json::from_str(&body).expect("body parses as JSON");
+        let current = parsed
             .get("current")
             .expect("'current' key present")
             .as_u64()
             .expect("'current' is a u64");
         assert_eq!(current, 7, "expected current=7, got {current}");
+    }
+
+    #[tokio::test]
+    async fn version_mismatch_round_trips_typed_body() {
+        // POLISH2-09 happy path: prove `Error::VersionMismatch { body, .. }`
+        // exposes the raw 409 body without substring fallback. Companion to
+        // `update_issue_409_current_field_present_as_json`; here the body is
+        // a deliberately exotic string that *contains* the legacy prefix so
+        // any re-introduction of `strip_prefix("version mismatch: ")` would
+        // mis-parse and fail.
+        let server = MockServer::start().await;
+        let hostile_body = "version mismatch: not really, just a label";
+        Mock::given(method("PATCH"))
+            .and(path("/projects/demo/issues/42"))
+            .and(header("If-Match", "\"1\""))
+            .respond_with(ResponseTemplate::new(409).set_body_string(hostile_body))
+            .mount(&server)
+            .await;
+
+        let backend = SimBackend::new(server.uri()).expect("backend");
+        let u = sample_untainted();
+        let err = backend
+            .update_record("demo", RecordId(42), u, Some(1))
+            .await
+            .expect_err("409");
+        match err {
+            Error::VersionMismatch { body, .. } => {
+                assert_eq!(
+                    body, hostile_body,
+                    "body field must carry the raw 409 response verbatim"
+                );
+            }
+            other => panic!("expected Error::VersionMismatch, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn not_found_round_trips_typed() {
+        // POLISH2-09 happy path: prove the 404 → `Error::NotFound { project,
+        // id }` mapping populates structured fields, not just a stringly
+        // wrapped message. Companion to `get_maps_404_to_not_found`.
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/projects/proj-x/issues/777"))
+            .respond_with(ResponseTemplate::new(404))
+            .mount(&server)
+            .await;
+
+        let backend = SimBackend::new(server.uri()).expect("backend");
+        let err = backend
+            .get_record("proj-x", RecordId(777))
+            .await
+            .expect_err("404");
+        match err {
+            Error::NotFound { project, id } => {
+                assert_eq!(project, "proj-x");
+                assert_eq!(id, "777");
+            }
+            other => panic!("expected Error::NotFound, got {other:?}"),
+        }
+        // Display string keeps the `not found:` prefix for swarm classifier
+        // back-compat during the v0.12.0 wider migration.
+        let again = backend
+            .get_record("proj-x", RecordId(777))
+            .await
+            .expect_err("404");
+        assert!(
+            again.to_string().starts_with("not found:"),
+            "expected display prefix 'not found:', got {again}"
+        );
     }
 
     #[tokio::test]
@@ -995,9 +1133,9 @@ mod tests {
     async fn delete_or_close_404_maps_to_not_found() {
         // Companion to get_maps_404_to_not_found but for DELETE — the sim's
         // DELETE handler returns 404 for unknown ids and SimBackend renders
-        // that as `Error::Other("not found: <url>")`. Covered separately
-        // because the code path in `delete_or_close` (sim.rs:283) is distinct
-        // from the shared `decode_issue` helper.
+        // that as `Error::NotFound { project, id }`. Covered separately
+        // because the code path in `delete_or_close` is distinct from the
+        // shared `decode_issue` helper. POLISH2-09: was Error::Other.
         let server = MockServer::start().await;
         Mock::given(method("DELETE"))
             .and(path("/projects/demo/issues/9999"))
@@ -1011,11 +1149,11 @@ mod tests {
             .await
             .expect_err("404");
         match err {
-            Error::Other(msg) => assert!(
-                msg.starts_with("not found:"),
-                "expected 'not found:' prefix, got {msg}"
-            ),
-            other => panic!("expected Error::Other(not found), got {other:?}"),
+            Error::NotFound { project, id } => {
+                assert_eq!(project, "demo");
+                assert_eq!(id, "9999");
+            }
+            other => panic!("expected Error::NotFound, got {other:?}"),
         }
     }
 }
