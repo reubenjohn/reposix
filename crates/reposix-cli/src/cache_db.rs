@@ -14,6 +14,7 @@
 //! a CLI-layer schema, and keeping it there forced `anyhow` into the
 //! cache crate's dependency tree.
 
+#[cfg(unix)]
 use std::os::unix::fs::OpenOptionsExt as _;
 use std::path::Path;
 
@@ -72,12 +73,11 @@ pub fn open_cache_db(mount: &Path) -> Result<CacheDb> {
     // Pre-create the file with 0o600 permissions before rusqlite opens it.
     // `.truncate(false)` is explicit: we never want to wipe an existing DB —
     // only rusqlite's connection lifecycle manages the file contents.
-    std::fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(false)
-        .mode(0o600)
-        .open(&path)
+    let mut opts = std::fs::OpenOptions::new();
+    opts.write(true).create(true).truncate(false);
+    #[cfg(unix)]
+    opts.mode(0o600);
+    opts.open(&path)
         .with_context(|| format!("create cache.db at {}", path.display()))?;
 
     let conn = rusqlite::Connection::open(&path).map_err(|e| map_busy(e, &path))?;

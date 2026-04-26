@@ -75,10 +75,9 @@ jobs:
             os: ubuntu-latest
             archive: tgz
             cross: true
-          - target: aarch64-unknown-linux-musl
-            os: ubuntu-latest
-            archive: tgz
-            cross: true
+          # aarch64-unknown-linux-musl held back to v0.11.1: github runners
+          # default to aarch64-linux-gnu cross-toolchain, musl arm64 needs
+          # aarch64-linux-musl-gcc set up explicitly. Track in HANDOVER.md §3b.
           - target: x86_64-apple-darwin
             os: macos-latest
             archive: tgz

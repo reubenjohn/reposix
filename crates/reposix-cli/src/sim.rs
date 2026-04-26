@@ -110,10 +110,16 @@ impl SimProcess {
         // `Child::kill` on Unix sends SIGKILL, which we want only as a
         // last resort. Use rustix's safe `kill_process` for SIGTERM first
         // so `tokio`/axum graceful-shutdown paths run in the child.
-        let pid_raw = self.child.id();
-        if let Ok(pid_i32) = i32::try_from(pid_raw) {
-            if let Some(pid) = rustix::process::Pid::from_raw(pid_i32) {
-                let _ = rustix::process::kill_process(pid, rustix::process::Signal::TERM);
+        // Windows has no SIGTERM equivalent in rustix; fall through to
+        // `Child::kill` (TerminateProcess) below — graceful shutdown is
+        // a Unix-only nicety here.
+        #[cfg(unix)]
+        {
+            let pid_raw = self.child.id();
+            if let Ok(pid_i32) = i32::try_from(pid_raw) {
+                if let Some(pid) = rustix::process::Pid::from_raw(pid_i32) {
+                    let _ = rustix::process::kill_process(pid, rustix::process::Signal::TERM);
+                }
             }
         }
         let t0 = Instant::now();
