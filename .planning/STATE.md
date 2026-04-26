@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.11.0
-milestone_name: Polish & Reproducibility
-status: implementation_complete_pending_release_secrets
-last_updated: "2026-04-25T19:30:00.000Z"
-last_activity: 2026-04-25 -- v0.11.0 implementation complete. Phases 50–55 all shipped (~41 commits since Phase 50 close). All 17 POLISH requirements satisfied. CI green at HEAD. Pending owner gates before tag push, ALL non-implementation: provision CARGO_REGISTRY_TOKEN secret (release-plz crates.io); bootstrap reubenjohn/homebrew-reposix tap repo + HOMEBREW_TAP_TOKEN secret (release.yml homebrew step). Tag-time bump 0.11.0-dev → 0.11.0 is the final commit.
+milestone: v0.11.1
+milestone_name: Polish & Reproducibility (second pass)
+status: planning_v0.11.1
+last_updated: "2026-04-26T22:00:00.000Z"
+last_activity: 2026-04-26 -- v0.11.0 milestone closed via autonomous-mode §7 sweep (~12 commits this afternoon: homebrew formula shipped, hero rewrite, latency table refresh, code-quality P0-1+P0-2 dedup/JIRA fix, repo cleanup ~30 file deletes/moves, friction matrix verified, catalog.py + JSON tracker scaffolded). v0.11.1 milestone opened with 22 carry-forward requirements (POLISH2-*). crates.io email verification + JIRA secrets remain owner-action-required.
 progress:
   total_phases: 6
   completed_phases: 6
@@ -64,11 +64,11 @@ issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
 
 ## Current Position
 
-Phase: — (Phases 50–55 all SHIPPED on `main`; CI green at HEAD `4d91da4`)
+Phase: —
 Plan: —
-Cursor: **Owner action required to tag v0.11.0:** (1) provision `CARGO_REGISTRY_TOKEN` repo secret; (2) bootstrap `reubenjohn/homebrew-reposix` tap + `HOMEBREW_TAP_TOKEN`; (3) bump workspace `Cargo.toml` 0.11.0-dev → 0.11.0; (4) run `git tag v0.11.0 && git push --tags`. After tag: dist + release-plz fire and ship binaries to GH Releases + crates. Until then nothing else needs doing — implementation is complete. After tag: run `/gsd-audit-milestone` then `/gsd-complete-milestone` then start v0.12.0 planning.
-Status: implementation_complete_pending_release_secrets
-Last activity: 2026-04-25 -- v0.11.0 implementation SHIPPED. ~41 commits since Phase 50 close. All 17 POLISH requirements satisfied. CI green. Awaiting owner-provisioned release secrets before tag push.
+Cursor: v0.11.1 scaffolded. Owner-action-required gates: (1) crates.io email verification at https://crates.io/settings/profile + `gh workflow run release-plz.yml`; (2) provision JIRA_EMAIL + JIRA_API_TOKEN + REPOSIX_JIRA_INSTANCE secrets to populate JIRA latency cells; (3) review HANDOVER.md §3a + §4 to confirm carry-forwards before kicking off Phase 56+.
+Status: planning_v0.11.1
+Last activity: 2026-04-26 -- v0.11.0 closed via autonomous-mode §7 sweep; v0.11.1 milestone opened with 22 carry-forward requirements (POLISH2-*). Awaiting owner action on crates.io email verification + JIRA secrets before Phase 56+ planning.
 
 Progress: [##########] v0.10.0 complete (Phases 40–45 closed; phase dirs archived to .planning/milestones/v0.10.0-phases/)
 

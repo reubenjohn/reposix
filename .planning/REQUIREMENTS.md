@@ -1,9 +1,83 @@
-# Requirements — Active milestone: v0.11.0 Polish & Reproducibility
+# Requirements — Active milestone: v0.11.1 Polish & Reproducibility (second pass)
 
-**Active milestone:** v0.11.0 Polish & Reproducibility (planning_started 2026-04-25).
+**Active milestone:** v0.11.1 Polish & Reproducibility (second pass) (planning_started 2026-04-26).
 **Previous validated milestones:**
+- v0.11.0 Polish & Reproducibility (SHIPPED 2026-04-25 implementation + autonomous §7 sweep 2026-04-26 PM, see "v0.11.0 Requirements" section below). Pre-tag owner gates remain (crates.io email verification + JIRA secrets); these carry forward into v0.11.1 as POLISH2-01 and POLISH2-04 alongside this milestone's typed-error / file-split / machine-readability work.
 - v0.10.0 Docs & Narrative Shine (SHIPPED 2026-04-25, see "Archived (v0.10.0)" section below).
 - v0.9.0 Architecture Pivot — Git-Native Partial Clone (SHIPPED 2026-04-24, see "v0.9.0 Requirements (Validated)" section below).
+
+---
+
+## v0.11.1 Requirements — Polish & Reproducibility (second pass)
+
+**Milestone goal:** Close the carry-forward set surfaced by the autonomous §7 sweep on 2026-04-26 (HANDOVER.md §7-G). Two threads run in parallel: (a) **finish v0.11.0 ship-gates** (crates.io publish after owner email verification, linux-aarch64-musl in dist matrix, bench-latency-cron Authorization-header fix, JIRA latency cells once secrets land), and (b) **work the v0.12.0-deferred P1 list early** so the v0.11.x line gives harness authors and the security-lead persona enough machine-readability + typed-error hygiene to recommend reposix. Persona audits + code-quality gaps + repo-org gaps drive every requirement; nothing here is speculative.
+
+**Source of truth:** `HANDOVER.md` §3 (release follow-ups) + §4 (friction matrix, 23 rows) + §7-G (next-coordinator carry-forward list); `.planning/research/v0.11.1-code-quality-gaps.md` P1 list (rows 1–9) + selected P2 (1, 7); `.planning/research/v0.11.1-persona-{mcp-user,harness-author,security-lead,skeptical-oss-maintainer,coding-agent}.md` (5 persona audits); `.planning/research/v0.11.1-repo-organization-gaps.md` recs #5 + orphan list. CATALOG-v3 JSON tracker at `.planning/CATALOG-v3.json` (rendered MD at `.planning/CATALOG-v3.md`) tracks per-file completion status.
+
+**Operating-principle hooks (non-negotiable, per project CLAUDE.md):**
+
+- **Self-improving infrastructure (OP-4).** `reposix doctor` becomes the canonical capability-matrix surface (POLISH2-08), removing the need for ad-hoc `gh secret list` + `cargo tree -p reposix-jira` reasoning when an agent debugs "why doesn't JIRA work for me." Audit-log schema unification (POLISH2-22) closes the dual-table gap that currently makes `doctor` blind to half the audit history.
+- **Close the feedback loop (OP-1).** JIRA latency cells (POLISH2-04) + bench-cron Authorization fix (POLISH2-03) keep the latency table honest end-to-end; without the cron run, the table goes stale and `docs/benchmarks/v0.9.0-latency.md` rots.
+- **Numbers, not adjectives.** The capability matrix (POLISH2-06) and `--json` output (POLISH2-18) give harness authors machine-checkable data; the v1.0 stability ADR (POLISH2-17) gives them a written commitment instead of "trust the changelog."
+- **Ground truth obsession (OP-6).** Code-quality P1 work (typed errors, file splits, dep prune, `pub→pub(crate)`, sim typed-error) closes the stringly-typed protocol in `sim.rs:566-572` that the red-team analysis flagged as an attacker-controlled `Error::Other(String)` round-trip.
+
+### Active
+
+- [ ] **POLISH2-01**: crates.io email verification + first publish of all 9 reposix-* crates. Owner action: verify email at https://crates.io/settings/profile then `gh workflow run release-plz.yml`. Source: HANDOVER.md §3a.
+- [ ] **POLISH2-02**: linux-aarch64-musl binary added to `release.yml` dist matrix. Source: HANDOVER.md §3b.
+- [ ] **POLISH2-03**: `bench-latency-cron` Authorization-header duplicate fixed by setting `persist-credentials: false` on the `actions/checkout` step in `.github/workflows/bench-latency-cron.yml`. Source: bench-cron run 24965024010 failure.
+- [ ] **POLISH2-04**: JIRA real-backend latency cells populated. Owner-action prereq: provision `JIRA_EMAIL` + `JIRA_API_TOKEN` + `REPOSIX_JIRA_INSTANCE` secrets, then re-dispatch `bench-latency-v09`. Source: HANDOVER.md §4 row 5 partial.
+- [ ] **POLISH2-05**: Methodology callout added to `docs/concepts/reposix-vs-mcp-and-sdks.md` naming the synthesized MCP fixture (per HANDOVER §4 row 1). Source: friction row 1 partial.
+- [ ] **POLISH2-06**: Connector capability matrix added to landing page (per friction row 7 follow-up + persona-coding-agent F-1). Source: friction row 7 follow-up.
+- [ ] **POLISH2-07**: Comments-shape callout added to `docs/tutorials/first-run.md` ("sim round-trips; jira/github/confluence connector-specific"). Source: persona-coding-agent F-2.
+- [ ] **POLISH2-08**: `reposix doctor` prints a configured-backend capability-matrix row. Source: persona-coding-agent fix #3.
+- [ ] **POLISH2-09**: Code-quality P1 — `Error::Other(String)` rewritten to typed `Error::NotFound` / `Error::NotSupported` / `Error::VersionMismatch` variants in `reposix-core`; closes the stringly-typed protocol in `crates/reposix-core/src/backend/sim.rs:566-572`. Source: code-quality P1-1 + P1-5.
+- [ ] **POLISH2-10**: Code-quality P1 — `crates/reposix-confluence/src/lib.rs` (3 973 LOC) split into `types.rs` + `translate.rs` + `client.rs`. Source: code-quality P1-2.
+- [ ] **POLISH2-11**: Code-quality P1 — `crates/reposix-jira/src/lib.rs` (1 940 LOC) split into matching modules (mirror of POLISH2-10). Source: code-quality P1-2.
+- [ ] **POLISH2-12**: Code-quality P1 — drop 4 unused Cargo deps from `reposix-remote` (`serde`, `serde_json`, `serde_yaml`, `clap`). Source: code-quality P1-6.
+- [ ] **POLISH2-13**: Code-quality P1 — demote `pub` → `pub(crate)` on 26 `reposix-remote` module symbols (binary-only crate; `pub` is a no-op + future-confusing). Source: code-quality P1-7.
+- [ ] **POLISH2-14**: Code-quality P1 — typed `SimError` introduced in `reposix-sim`; drop `anyhow` from the library API. Source: code-quality P1-4.
+- [ ] **POLISH2-15**: `docs/development/roadmap.md` rewritten — current file still references v0.8 + FUSE work; either rewrite to a 1-screen "we use GSD; see `.planning/ROADMAP.md`" stub, or delete entirely. Source: friction row 21 NEW + repo-org docs/ orphans.
+- [ ] **POLISH2-16**: Internal ADR-002 + ADR-003 nav cleanup (ADR-003 already marked superseded; verify ADR-002 status + nav order). Source: friction row 15 partial.
+- [ ] **POLISH2-17**: v1.0 stability commitment ADR (new ADR-009 or update ADR-008 with explicit "no breaking changes after v1.0" policy). Source: friction row 13 + persona-harness-author.
+- [ ] **POLISH2-18**: `docs/reference/exit-codes.md` authored + `--json`/`--format=json` output flag added to CLI subcommands (machine-readability gaps). Source: friction row 14 + persona-harness-author.
+- [ ] **POLISH2-19**: `.claude/skills/reposix-banned-words/SKILL.md` path refs at L9+L64 updated from `.planning/notes/` → `.planning/archive/notes/`. Owner-approval gated. Source: §7-F2 deferred item 4.
+- [ ] **POLISH2-20**: Upstream issue filed against `squidfunk/mkdocs-material` for the `<pre.mermaid>` content-strip bug; link added to `.planning/research/v0.11.0-mkdocs-site-audit.md`. Source: HANDOVER §7-G last bullet.
+- [ ] **POLISH2-21**: `.planning/` tree condensed per repo-org rec #5: 8 `v0.X.0-phases` dirs collapsed into 8 `ARCHIVE.md` files (273 → ~16 files net). Source: repo-org rec #5 (P2).
+- [ ] **POLISH2-22**: Two parallel audit-log schemas unified per code-quality CC-3 (or document the dual-schema design intentionally). Source: code-quality P0-4 / friction row 12.
+
+### Out of Scope
+
+- Full glossary polish + persona-driven page rewrites — separate doc-quality milestone, not v0.11.1.
+- Supply chain hardening (cosign, SBOM, SLSA, Apple notarization, Authenticode) — friction row 19; deferred to v0.12.0+ per security-lead priority guidance.
+- `research/threat-model-and-critique.md` rewrite for v0.9.0 architecture — friction row 20; the FUSE-era file at `.planning/research/v0.1-fuse-era/threat-model-and-critique.md` stays as-is for v0.11.1; the rewrite ships in v0.12.0.
+
+### Traceability
+
+| REQ-ID | Phase | Status |
+|--------|-------|--------|
+| POLISH2-01 | TBD (Phase 56+) | planning (owner-action gate) |
+| POLISH2-02 | TBD | planning |
+| POLISH2-03 | TBD | planning |
+| POLISH2-04 | TBD | planning (owner-action gate) |
+| POLISH2-05 | TBD | planning |
+| POLISH2-06 | TBD | planning |
+| POLISH2-07 | TBD | planning |
+| POLISH2-08 | TBD | planning |
+| POLISH2-09 | TBD | planning |
+| POLISH2-10 | TBD | planning |
+| POLISH2-11 | TBD | planning |
+| POLISH2-12 | TBD | planning |
+| POLISH2-13 | TBD | planning |
+| POLISH2-14 | TBD | planning |
+| POLISH2-15 | TBD | planning |
+| POLISH2-16 | TBD | planning |
+| POLISH2-17 | TBD | planning |
+| POLISH2-18 | TBD | planning |
+| POLISH2-19 | TBD | planning (owner-approval gate) |
+| POLISH2-20 | TBD | planning |
+| POLISH2-21 | TBD | planning |
+| POLISH2-22 | TBD | planning |
 
 ---
 

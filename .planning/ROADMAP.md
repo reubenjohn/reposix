@@ -13,6 +13,7 @@
 - ✅ **v0.9.0 Architecture Pivot — Git-Native Partial Clone** — Phases 31–36 (shipped 2026-04-24) · [archive](milestones/v0.9.0-ROADMAP.md)
 - ✅ **v0.10.0 Docs & Narrative Shine** — Phases 40–45 (shipped 2026-04-25) · [archive](milestones/v0.10.0-ROADMAP.md)
 - 📋 **v0.11.0 Polish & Reproducibility** — planning (Phases 50–55 scaffolded; jargon glosses + glossary, mermaid render hygiene, fresh-clone tutorial runner, dist release pipeline, real-backend latency table, vision-innovations surface — `.planning/research/v0.11.0-vision-and-innovations.md`)
+- 📋 **v0.11.1 Polish & Reproducibility (second pass)** — planning (POLISH2-01..22; carry-forward of crates.io publish + arm64-musl + JIRA cells + code-quality P1 + machine-readability gaps + upstream mkdocs-material issue)
 
 ## Phases
 

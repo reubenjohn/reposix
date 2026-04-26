@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T19:16:49Z",
+  "generated_at": "2026-04-26T19:23:40Z",
   "schema_version": 1,
   "files": [
     {
@@ -167,11 +167,11 @@
     },
     {
       "path": ".planning/REQUIREMENTS.md",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "false-positive in audit prose; explicit KEEP",
-      "updated_at": "2026-04-26T18:54:13Z"
+      "note": "v0.11.1 scaffolded with 22 POLISH2-* req \u00a77-G",
+      "updated_at": "2026-04-26T19:23:38Z"
     },
     {
       "path": ".planning/RETROSPECTIVE.md",
@@ -183,14 +183,14 @@
     },
     {
       "path": ".planning/ROADMAP.md",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [
         "catalog-v2:DELETE",
         "repo-org-gaps:DELETE"
       ],
       "plan": "[catalog-v2] `/home/reuben/workspace/reposix/docs/development/roadmap.md` | Stops at v0.7. Mentions macFUSE / ProjFS / WinFsp. Already in `not_in_nav`. | **Delete.** `.planning/ROADMAP.md` is the live roadmap. The `docs/development/` sub-tree should ...",
-      "note": "false-positive in audit prose; explicit KEEP",
-      "updated_at": "2026-04-26T18:54:13Z"
+      "note": "v0.11.1 milestone added \u00a77-G",
+      "updated_at": "2026-04-26T19:23:39Z"
     },
     {
       "path": ".planning/SESSION-5-RATIONALE.md",
@@ -213,11 +213,11 @@
     },
     {
       "path": ".planning/STATE.md",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "cursor moved to v0.11.1 \u00a77-G",
+      "updated_at": "2026-04-26T19:23:40Z"
     },
     {
       "path": ".planning/archive/scripts/phase2_goal_backward.sh",
