@@ -1,12 +1,14 @@
 ---
-status: accepted
+status: superseded
 date: 2026-04-14
 supersedes: docs/decisions/002-confluence-page-mapping.md (§"Option A: flat" layout decision; everything else in ADR-002 remains valid)
 ---
 
+> **Superseded** by ADR-008 (URL-shape change in v0.10.0) and the v0.9.0 architecture pivot. The FUSE-era nested mount (`crates/reposix-fuse/src/{fs,tree,inode}.rs`) no longer exists.
+
 # ADR-003: Nested mount layout — pages/ + tree/ symlinks for Confluence hierarchy
 
-- **Status:** Accepted
+- **Status:** Superseded (was Accepted)
 - **Date:** 2026-04-14
 - **Deciders:** reposix core team (overnight session 4)
 - **Supersedes:** [ADR-002](002-confluence-page-mapping.md) §"Options"
