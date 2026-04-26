@@ -12,23 +12,53 @@ You are taking over an autonomous engineering session for the reposix project (`
 
 Then execute §7 of THIS file in order (steps 7-A through 7-H). Each is 30–90 min of focused work. ~5 hours total.
 
+## Deadline — 8pm tonight (2026-04-26 20:00 local)
+
+You have ~8 hours from this message landing. Pace yourself against the §7 list.
+
+- **If you finish §7 early**: do NOT idle. Expand scope into §6 ("Audit reports index") items the §7 list deferred — code-quality P1s, persona-driven page rewrites, glossary polish, the v0.11.1 milestone scaffold (REQUIREMENTS + ROADMAP + STATE), the catalog generation task you'd otherwise have to do anyway. The §7 list is the floor, not the ceiling.
+- **If you're going to overshoot 20:00**: stop at the next clean checkpoint, update this file's queue, and push. Don't leave half-finished work on disk past the deadline.
+
 ## Non-negotiable rules
 
 - **Owner is driving. Do not ask questions. Decide and proceed.**
+- **You are the coordinator. You do not type code.** Coordinator's job: decide, route, verify. Subagents (`general-purpose`, `Explore`, `Plan`) do the file reads, the edits, the cargo runs, the playwright walks, the doc rewrites. **If you find yourself about to type a >20-line edit, STOP and dispatch a subagent instead.** Context-fill is the failure mode that kills these sessions; aggressive delegation is how you avoid it. Owner's global OP #2 is "Aggressive subagent delegation"; CLAUDE.md repeats it ("Coordinating agents must delegate research, implementation, and validation to subagents to prevent context fill"). This is load-bearing for an 8-hour autonomous run — your context budget will not survive doing the work yourself.
 - **No skill changes.** `.claude/skills/` is owner-approval-gated.
-- **One cargo invocation at a time, ever.** `cargo check -p <crate>`, never `--workspace`. CLAUDE.md "Build memory budget" explains why.
+- **One cargo invocation at a time, ever.** `cargo check -p <crate>`, never `--workspace`. CLAUDE.md "Build memory budget" explains why. If a subagent does cargo work, it has the lock — don't dispatch a second cargo subagent in parallel.
 - **Push frequently** (every commit). Pre-push hook runs fmt + clippy + `scripts/check-docs-site.sh` — let it gate. Don't `--no-verify`.
 - **For docs-site work**, additionally validate via playwright per CLAUDE.md "Docs-site validation". The mermaid render bug from v0.11.0 is the reason this rule exists.
-- **Aggressive subagent delegation.** You are the coordinator. Subagents (general-purpose / Explore / etc.) do the typing. Read `.planning/` for the project's get-shit-done convention.
 - **No retrospective / walkthrough / morning-brief docs.** This file is operational; delete it once §7 is done. Owner explicitly does not want session-recap files.
 - **Banned word: "replace".** Use "complement", "alongside", "for the 80%". See `.planning/research/v0.11.0-vision-and-innovations.md` §8.
+
+## Subagent dispatch cookbook (use this; don't reinvent)
+
+For each §7 step, the default pattern is:
+
+1. **Coordinator** (you) reads HANDOVER §7-X enough to write a self-contained subagent brief. Cite file paths, line numbers, audit-report rows. Don't hand off vague intent.
+2. **Dispatch** via `Agent` tool, `subagent_type: general-purpose`, with the brief. For pure-doc work, set `run_in_background: true` if you can run the next step in parallel. For cargo-touching work, run foreground and serialize.
+3. **Subagent** does the work, runs validation, commits, pushes — return a 200-word report.
+4. **Coordinator** reads the report (NOT the full transcript), updates HANDOVER §7-X status, checks CI green via `gh run list`, moves to the next step.
+
+If a subagent's brief would be more than ~200 words, the step is too big — split it.
+
+**Parallelizable** (no cargo, no file overlap):
+- doc-only edits in disjoint subdirs (e.g. `docs/reference/` vs `docs/concepts/`)
+- repo-cleanup deletes in disjoint dirs (`scripts/demos/` vs `.planning/milestones/`)
+- audit / read-only investigations
+- playwright site walks
+
+**Serialize** (anything cargo, anything touching `Cargo.toml` or `Cargo.lock`):
+- code refactors
+- new CLI subcommands
+- dependency bumps
 
 ## When you finish §7-H
 
 - Update this file: either delete it (if §7 is genuinely done) or shrink it to ONLY the items still pending. Don't append a "I did X" log — just update the queue.
 - Update `.planning/STATE.md` with the new cursor.
 - Commit + push.
-- Stop. The owner will check back when they're back online.
+- If time remains before 20:00 and queue is empty: see "If you finish §7 early" above. Expand scope.
+- At 20:00: stop. The owner will check back when they're back online.
 
 ## If something goes wrong
 
@@ -221,12 +251,23 @@ The Atlassian secrets (`ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUEN
 - After completion: download the `latency-table` artifact, inspect the confluence column.
 - If populated: commit the regenerated `docs/benchmarks/v0.9.0-latency.md`. (Or wait for the weekly cron PR.)
 
-### 7-C. Synthesize the persona-friction matrix (45 min)
-Read all 5 persona files. Build a P0/P1/P2 friction list. Update §4 of THIS doc with the synthesis. Each friction-row gets:
-- One-line description
-- Affected personas (which of 5)
-- Fix LOC estimate
-- Owner-decision-required flag (yes/no)
+### 7-C. Synthesize the persona-friction matrix (already done — verify and extend)
+The previous coordinator already populated §4 of THIS doc with a 20-row P0/P1/P2 matrix synthesizing all 5 persona files plus the code-quality and repo-org audits. **Read §4 first.** If a row's status reads "done, verify" — verify it on the live site / in the codebase. If a row reads "not started" — that's part of your §7 queue (already mapped to specific subsequent steps).
+
+If the audits surface NEW frictions you think the matrix missed, append rows. Don't rewrite existing rows.
+
+### 7-C2. Generate CATALOG-v3 — the per-file status catalog the owner asked for (60 min)
+**Owner verbatim ask**: *"Is it truly exhaustive and organized with a catalogue of every file with a status column or some better way you can think of?"*
+
+Dispatch a `general-purpose` subagent (read-only, no cargo) with a brief along these lines (this is NOT the full prompt — write your own from the bullets, ≤200 words):
+
+- Walk every git-tracked file (`git ls-files`).
+- Output to `.planning/research/v0.11.1-CATALOG-v3.md` (≤6000 words, structured: headline counts → per-directory summary table → exhaustive DELETE / REFACTOR / REVIEW lists with rationale → KEEP totals only by dir → cross-cutting refactor opportunities → stale-archives recommendation).
+- Cross-reference prior audits (`v0.11.0-CATALOG-v2.md`, `v0.11.1-repo-organization-gaps.md`, `v0.11.1-code-quality-gaps.md`) — escalate any item a prior audit said DELETE that's still on disk.
+- Flag P0 escalations: missing-but-referenced files, on-disk-but-orphan files, FUSE-era residue, hardcoded `/home/reuben/...` paths, committed `.pyc`/`.DS_Store`, naming inconsistencies, contradicting docs.
+- 200-word return summary: total file count, breakdown by status, 5 highest-leverage moves, P0 escalations.
+
+After it lands, integrate the catalog's recommendations into 7-F's repo cleanup batch — don't apply each delete individually, batch by directory.
 
 ### 7-D. Hero rewrite — implement §5 (60 min)
 Write the new hero in `docs/index.md`. The mermaid timing diagram must:
