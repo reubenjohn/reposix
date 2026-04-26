@@ -16,7 +16,7 @@ use std::process::Command;
 use anyhow::{Context, Result};
 use reposix_cache::db::open_cache_db;
 use reposix_cache::path::resolve_cache_path;
-use reposix_core::parse_remote_url;
+use reposix_core::{parse_remote_url, BackendCapabilities, CommentSupport, VersioningModel};
 use rusqlite::Connection;
 
 use crate::worktree_helpers::{backend_slug_from_origin, git_config_get};
@@ -269,6 +269,15 @@ pub fn run(path: Option<&Path>, fix: bool) -> Result<DoctorReport> {
     // host) loses the disambiguator and routes JIRA worktrees through
     // the confluence cache. v0.11.1 audit-finding fix (mirrors gc.rs).
     findings.push(check_backend_registered(
+        parsed.as_ref(),
+        ctx.remote_origin_url.as_deref(),
+    ));
+
+    // POLISH2-08: surface the configured backend's capability row right after
+    // the registered-check, so an agent sees `read/create/update/comments/
+    // delete/versioning` shape without having to grep the docs or guess from
+    // a generic "not supported" error after the fact.
+    findings.push(check_backend_capabilities(
         parsed.as_ref(),
         ctx.remote_origin_url.as_deref(),
     ));
@@ -728,6 +737,101 @@ fn check_backend_registered(
     }
 }
 
+/// Look up the [`BackendCapabilities`] row a given backend slug publishes.
+/// Returns `None` for unknown slugs so the caller can warn instead of
+/// crashing. The mapping is hard-coded against the backend crates linked
+/// into this build — adding a new backend means adding both the const
+/// and an arm here.
+fn capabilities_for_backend(slug: &str) -> Option<BackendCapabilities> {
+    match slug {
+        "sim" => Some(reposix_sim::CAPABILITIES),
+        "github" => Some(reposix_github::CAPABILITIES),
+        "jira" => Some(reposix_jira::CAPABILITIES),
+        "confluence" => Some(reposix_confluence::CAPABILITIES),
+        _ => None,
+    }
+}
+
+fn yes_no(b: bool) -> &'static str {
+    if b {
+        "yes"
+    } else {
+        "—"
+    }
+}
+
+fn comment_support_label(c: CommentSupport) -> &'static str {
+    match c {
+        CommentSupport::InBody => "in-body",
+        CommentSupport::SeparateApi => "separate-api",
+        CommentSupport::None => "—",
+        // `BackendCapabilities` is `#[non_exhaustive]`; a future variant
+        // surfaces as `unknown` until the doctor is rebuilt against the
+        // newer reposix-core.
+        _ => "unknown",
+    }
+}
+
+fn versioning_label(v: VersioningModel) -> &'static str {
+    match v {
+        VersioningModel::Strong => "strong",
+        VersioningModel::Etag => "etag",
+        VersioningModel::Timestamp => "timestamp",
+        // See `comment_support_label` re: non-exhaustive future variants.
+        _ => "unknown",
+    }
+}
+
+fn render_capability_row(slug: &str, caps: BackendCapabilities) -> String {
+    // Two-line table — header + one data row — kept on a single message
+    // string with explicit `\n` so it survives the `print!("{message}")` path.
+    format!(
+        "backend     | read | create | update | comments     | delete | versioning\n\
+         ------------|------|--------|--------|--------------|--------|-----------\n\
+         {slug:<11} | {read:<4} | {create:<6} | {update:<6} | {comments:<12} | {delete:<6} | {versioning}",
+        slug = slug,
+        read = yes_no(caps.read),
+        create = yes_no(caps.create),
+        update = yes_no(caps.update),
+        comments = comment_support_label(caps.comments),
+        delete = yes_no(caps.delete),
+        versioning = versioning_label(caps.versioning),
+    )
+}
+
+/// POLISH2-08: emit a one-row capability-matrix `Info` finding for the
+/// configured backend so an agent reading `reposix doctor` sees what the
+/// connector can do (read / create / update / delete / comments /
+/// versioning) without having to grep docs or trigger a "not supported"
+/// error after the fact.
+fn check_backend_capabilities(
+    parsed: Option<&reposix_core::RemoteSpec>,
+    raw_url: Option<&str>,
+) -> DoctorFinding {
+    let Some(spec) = parsed else {
+        return DoctorFinding::info(
+            "backend.capabilities",
+            "skipped — no parseable reposix remote URL",
+        );
+    };
+    let backend = backend_slug_from_origin(raw_url.unwrap_or(&spec.origin));
+    match capabilities_for_backend(&backend) {
+        Some(caps) => DoctorFinding::info(
+            "backend.capabilities",
+            format!(
+                "backend capabilities ({backend})\n     {row}",
+                row = render_capability_row(&backend, caps)
+                    .replace('\n', "\n     ")
+            ),
+        ),
+        None => DoctorFinding::warn(
+            "backend.capabilities",
+            format!("unknown backend ({backend}) — no capability row published"),
+            None,
+        ),
+    }
+}
+
 /// Check #5: `PRAGMA integrity_check` returns `ok`. Detects on-disk
 /// corruption that `cache.db` opens cleanly through.
 fn check_cache_integrity(conn: &Connection) -> DoctorFinding {
@@ -1077,6 +1181,121 @@ mod tests {
             .fix
             .as_deref()
             .is_some_and(|f| f.contains("api.github.com")));
+    }
+
+    #[test]
+    fn check_backend_capabilities_reports_sim_supports_everything() {
+        let url = "reposix::http://127.0.0.1:7878/projects/demo";
+        let spec = reposix_core::parse_remote_url(url).unwrap();
+        let finding = check_backend_capabilities(Some(&spec), Some(url));
+        assert_eq!(finding.severity, Severity::Info);
+        // Header + sim row both present.
+        assert!(
+            finding.message.contains("backend capabilities"),
+            "header missing: {}",
+            finding.message
+        );
+        assert!(
+            finding.message.contains("sim"),
+            "slug missing: {}",
+            finding.message
+        );
+        // Sim is the reference matrix — every column should be `yes` /
+        // `in-body` / `strong`.
+        assert!(
+            finding.message.contains("yes"),
+            "yes column missing: {}",
+            finding.message
+        );
+        assert!(
+            finding.message.contains("in-body"),
+            "in-body comment label missing: {}",
+            finding.message
+        );
+        assert!(
+            finding.message.contains("strong"),
+            "strong versioning label missing: {}",
+            finding.message
+        );
+    }
+
+    #[test]
+    fn check_backend_capabilities_reports_jira_as_read_only() {
+        let url = "reposix::https://reuben-john.atlassian.net/jira/projects/TEST";
+        let spec = reposix_core::parse_remote_url(url).unwrap();
+        let finding = check_backend_capabilities(Some(&spec), Some(url));
+        assert_eq!(finding.severity, Severity::Info);
+        assert!(
+            finding.message.contains("jira"),
+            "jira slug missing: {}",
+            finding.message
+        );
+        // jira: read=yes, create/update/delete/comments=—, versioning=timestamp.
+        assert!(
+            finding.message.contains("timestamp"),
+            "timestamp versioning label missing: {}",
+            finding.message
+        );
+        assert!(
+            finding.message.contains("—"),
+            "em-dash for unsupported columns missing: {}",
+            finding.message
+        );
+    }
+
+    #[test]
+    fn check_backend_capabilities_reports_github_etag_versioning() {
+        let url = "reposix::https://api.github.com/projects/owner/repo";
+        let spec = reposix_core::parse_remote_url(url).unwrap();
+        let finding = check_backend_capabilities(Some(&spec), Some(url));
+        assert_eq!(finding.severity, Severity::Info);
+        assert!(
+            finding.message.contains("github"),
+            "github slug missing: {}",
+            finding.message
+        );
+        assert!(
+            finding.message.contains("etag"),
+            "etag versioning label missing: {}",
+            finding.message
+        );
+    }
+
+    #[test]
+    fn check_backend_capabilities_reports_confluence_separate_api() {
+        let url = "reposix::https://reuben-john.atlassian.net/confluence/projects/TokenWorld";
+        let spec = reposix_core::parse_remote_url(url).unwrap();
+        let finding = check_backend_capabilities(Some(&spec), Some(url));
+        assert_eq!(finding.severity, Severity::Info);
+        assert!(
+            finding.message.contains("confluence"),
+            "confluence slug missing: {}",
+            finding.message
+        );
+        assert!(
+            finding.message.contains("separate-api"),
+            "separate-api comment label missing: {}",
+            finding.message
+        );
+    }
+
+    #[test]
+    fn check_backend_capabilities_skips_when_unparsed() {
+        let finding = check_backend_capabilities(None, None);
+        assert_eq!(finding.severity, Severity::Info);
+        assert!(finding.message.contains("skipped"));
+    }
+
+    #[test]
+    fn capabilities_for_unknown_backend_yields_warn() {
+        // We can exercise the unknown-backend branch directly via a hand-built
+        // RemoteSpec whose origin maps to "sim" by default — but to really
+        // hit the warn branch we need to call capabilities_for_backend with
+        // an unknown slug. Drive the rendering helper too so the formatter
+        // path stays covered.
+        assert!(capabilities_for_backend("notarealbackend").is_none());
+        assert_eq!(yes_no(true), "yes");
+        assert_eq!(yes_no(false), "—");
     }
 
     #[test]

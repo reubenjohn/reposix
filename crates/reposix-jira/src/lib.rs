@@ -82,6 +82,23 @@ const PAGE_SIZE: usize = 100;
 /// Format string for the default production base URL.
 pub const DEFAULT_BASE_URL_FORMAT: &str = "https://{tenant}.atlassian.net";
 
+/// Capability matrix row published by this backend for `reposix doctor`.
+///
+/// JIRA Cloud is read-only in v0.11.x: the connector lists, gets, and
+/// surfaces issues, but `create_record` / `update_record` / `delete_or_close`
+/// still return `Error::Other("not supported: ...")`. Comments are not
+/// round-tripped (JIRA exposes them through a separate comments API rather
+/// than a body field), and concurrency is timestamp-based — write-after-read
+/// would race against concurrent edits if the write path were enabled.
+pub const CAPABILITIES: reposix_core::BackendCapabilities = reposix_core::BackendCapabilities::new(
+    true,
+    false,
+    false,
+    false,
+    reposix_core::CommentSupport::None,
+    reposix_core::VersioningModel::Timestamp,
+);
+
 /// JIRA fields to request in search and get-issue requests.
 const JIRA_FIELDS: &[&str] = &[
     "id",

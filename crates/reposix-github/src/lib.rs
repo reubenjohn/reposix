@@ -75,6 +75,22 @@ const MAX_RATE_LIMIT_SLEEP: Duration = Duration::from_secs(60);
 /// `wiremock::MockServer` (or a corporate GitHub Enterprise tenant).
 pub const DEFAULT_BASE_URL: &str = "https://api.github.com";
 
+/// Capability matrix row published by this backend for `reposix doctor`.
+///
+/// GitHub Issues supports the full read/write surface alongside the sim,
+/// with comments routed in-body (the read path collapses comments into the
+/// body's frontmatter+body), delete-as-close (issues are closed with a
+/// state reason rather than removed), and ETag-based optimistic concurrency
+/// for write conflicts.
+pub const CAPABILITIES: reposix_core::BackendCapabilities = reposix_core::BackendCapabilities::new(
+    true,
+    true,
+    true,
+    true,
+    reposix_core::CommentSupport::InBody,
+    reposix_core::VersioningModel::Etag,
+);
+
 /// Label prefix that encodes the two "open-but-active" variants (see
 /// ADR-001). Only `status/in-progress` and `status/in-review` participate;
 /// any other `status/*` label is ignored and the issue falls through to

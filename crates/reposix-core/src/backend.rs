@@ -73,6 +73,96 @@ pub enum BackendFeature {
     Hierarchy,
 }
 
+/// What a backend connector can do for an agent. Used by `reposix doctor`
+/// to surface a capability-matrix row at runtime so an agent doesn't have to
+/// infer support from a generic "not supported" error after the fact.
+///
+/// This is the agent-facing analogue of [`BackendFeature`]: where
+/// `BackendFeature` is the runtime capability query an *implementation*
+/// branches on, `BackendCapabilities` is the static row each backend
+/// publishes alongside its connector for *discovery* (doctor, docs, etc.).
+/// They are kept deliberately separate so the doctor row can describe the
+/// shape of the support (e.g. `CommentSupport::SeparateApi`) without
+/// inflating the runtime feature enum.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+// The four bools (read/create/update/delete) are intrinsic to the CRUD
+// matrix shape we're surfacing in `reposix doctor`; collapsing them into
+// an enum would lose the per-verb readability that's the whole point.
+#[allow(clippy::struct_excessive_bools)]
+pub struct BackendCapabilities {
+    /// Backend can read records (`GET /<collection>/<id>`).
+    pub read: bool,
+    /// Backend can create new records.
+    pub create: bool,
+    /// Backend can update existing records.
+    pub update: bool,
+    /// Backend can delete or close records.
+    pub delete: bool,
+    /// How the backend exposes comments — see [`CommentSupport`].
+    pub comments: CommentSupport,
+    /// How the backend handles concurrent edits — see [`VersioningModel`].
+    pub versioning: VersioningModel,
+}
+
+impl BackendCapabilities {
+    /// Build a capability row. `const`-callable so each backend crate can
+    /// publish a `pub const CAPABILITIES: BackendCapabilities = …` next to
+    /// its connector. The struct itself is `#[non_exhaustive]`, so this
+    /// constructor is the supported way to populate it from outside the
+    /// `reposix-core` crate — additive future fields default to a
+    /// conservative `false` / `None` shape via this constructor's signature
+    /// being bumped in the same release as the new field.
+    // See struct-level rationale: four positional bools mirror the CRUD
+    // matrix and are the readable form of this constructor.
+    #[allow(clippy::fn_params_excessive_bools)]
+    #[must_use]
+    pub const fn new(
+        read: bool,
+        create: bool,
+        update: bool,
+        delete: bool,
+        comments: CommentSupport,
+        versioning: VersioningModel,
+    ) -> Self {
+        Self {
+            read,
+            create,
+            update,
+            delete,
+            comments,
+            versioning,
+        }
+    }
+}
+
+/// Whether a backend round-trips comments inline with the body, surfaces
+/// them through a separate API, or doesn't support them at all.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum CommentSupport {
+    /// Round-tripped in the issue/page body verbatim — visible in `git diff`.
+    InBody,
+    /// Routed to a separate comments API; not visible in the body diff.
+    SeparateApi,
+    /// Not yet supported.
+    None,
+}
+
+/// How a backend exposes optimistic concurrency to writers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum VersioningModel {
+    /// Backend exposes a strong version (e.g. `version.number`), pushed
+    /// with optimistic concurrency.
+    Strong,
+    /// HTTP-style `ETag` round-tripped via `If-Match`.
+    Etag,
+    /// Best-effort timestamp — write-after-read may overwrite concurrent
+    /// edits silently.
+    Timestamp,
+}
+
 /// Reason a `delete_or_close` call was issued. Backends that support real
 /// `DELETE` may ignore the reason; backends that close-with-reason (GitHub)
 /// translate the variant into their wire shape.

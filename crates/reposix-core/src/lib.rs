@@ -18,7 +18,10 @@ mod record;
 mod remote;
 mod taint;
 
-pub use backend::{BackendConnector, BackendFeature, DeleteReason};
+pub use backend::{
+    BackendCapabilities, BackendConnector, BackendFeature, CommentSupport, DeleteReason,
+    VersioningModel,
+};
 pub use error::{Error, Result};
 pub use path::{dedupe_siblings, slug_or_fallback, slugify_title, SLUG_MAX_BYTES};
 pub use project::{Project, ProjectSlug};

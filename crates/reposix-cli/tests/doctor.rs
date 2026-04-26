@@ -272,6 +272,52 @@ fn doctor_outdated_cache_warns() {
 }
 
 #[test]
+fn doctor_prints_backend_capability_row_for_sim() {
+    // POLISH2-08: capability row surfaces in `reposix doctor` output so an
+    // agent doesn't have to grep docs to learn what the configured backend
+    // supports.
+    let tmp = tempdir().unwrap();
+    let work = tmp.path();
+    git_init(work);
+    git_config_set(work, "extensions.partialClone", "origin");
+    git_config_set(
+        work,
+        "remote.origin.url",
+        "reposix::http://127.0.0.1:7878/projects/demo",
+    );
+    let cache = tempdir().unwrap();
+
+    let out = AssertCmd::cargo_bin("reposix")
+        .unwrap()
+        .env("REPOSIX_CACHE_DIR", cache.path())
+        .arg("doctor")
+        .arg(work)
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.contains("backend.capabilities"),
+        "backend.capabilities check missing: {stdout}"
+    );
+    assert!(
+        stdout.contains("backend capabilities"),
+        "capability header missing: {stdout}"
+    );
+    assert!(
+        stdout.contains("sim"),
+        "sim slug missing: {stdout}"
+    );
+    assert!(
+        stdout.contains("yes"),
+        "yes column missing: {stdout}"
+    );
+    assert!(
+        stdout.contains("strong"),
+        "strong versioning label missing: {stdout}"
+    );
+}
+
+#[test]
 fn doctor_non_git_dir_errors() {
     let tmp = tempdir().unwrap();
     let cache = tempdir().unwrap();

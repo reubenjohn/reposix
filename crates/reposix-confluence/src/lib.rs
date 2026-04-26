@@ -100,6 +100,22 @@ const PAGE_SIZE: usize = 100;
 /// [`ConfluenceBackend::new`]).
 pub const DEFAULT_BASE_URL_FORMAT: &str = "https://{tenant}.atlassian.net";
 
+/// Capability matrix row published by this backend for `reposix doctor`.
+///
+/// Confluence Cloud supports the full read/write/delete surface for pages.
+/// Comments live behind a separate REST endpoint (not the body) and are
+/// not round-tripped in `git diff` today. Concurrency is strong via
+/// `version.number` — PUT bodies carry `current + 1` and the server returns
+/// 409 on conflict (optimistic locking).
+pub const CAPABILITIES: reposix_core::BackendCapabilities = reposix_core::BackendCapabilities::new(
+    true,
+    true,
+    true,
+    true,
+    reposix_core::CommentSupport::SeparateApi,
+    reposix_core::VersioningModel::Strong,
+);
+
 /// Basic-auth credentials for Confluence Cloud.
 ///
 /// `api_token` is an Atlassian API token issued from

@@ -32,6 +32,21 @@ pub mod state;
 
 pub use state::AppState;
 
+/// Capability matrix row published by this backend for `reposix doctor`.
+///
+/// The simulator implements the full reference matrix: read, create, update,
+/// delete, comments round-tripped in the body, and strong versioning via the
+/// `version` field. Other backends adopt this shape with caveats; the sim is
+/// the contract every other connector is benchmarked against.
+pub const CAPABILITIES: reposix_core::BackendCapabilities = reposix_core::BackendCapabilities::new(
+    true,
+    true,
+    true,
+    true,
+    reposix_core::CommentSupport::InBody,
+    reposix_core::VersioningModel::Strong,
+);
+
 /// Runtime configuration for the simulator.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SimConfig {
