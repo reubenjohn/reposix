@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T21:16:51Z",
+  "generated_at": "2026-04-26T21:29:43Z",
   "schema_version": 1,
   "files": [
     {
@@ -702,13 +702,13 @@
     },
     {
       "path": "CLAUDE.md",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [
         "catalog-v2:DELETE"
       ],
       "plan": "[catalog-v2] `/home/reuben/workspace/reposix/scripts/tag-v0.3.0.sh`, `tag-v0.4.0.sh`, `tag-v0.4.1.sh`, `tag-v0.5.0.sh`, `tag-v0.6.0.sh`, `tag-v0.8.0.sh`, `tag-v0.9.0.sh`, `tag-v0.10.0.sh` | 8 near-identical scripts, each ~120 lines, each enforcing \"c...",
-      "note": "false-positive in audit prose; explicit KEEP",
-      "updated_at": "2026-04-26T18:54:13Z"
+      "note": "POLISH2-22 \u2014 corrected single-audit-table framing",
+      "updated_at": "2026-04-26T21:29:42Z"
     },
     {
       "path": "CODE_OF_CONDUCT.md",
@@ -897,11 +897,11 @@
     },
     {
       "path": "crates/reposix-cache/src/audit.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-22 \u2014 documented dual-schema design (option B)",
+      "updated_at": "2026-04-26T21:29:41Z"
     },
     {
       "path": "crates/reposix-cache/src/builder.rs",
@@ -1398,13 +1398,13 @@
     },
     {
       "path": "crates/reposix-core/src/audit.rs",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [
         "code-quality-gaps:DELETE"
       ],
       "plan": "[code-quality-gaps] 4. **Audit append-only trigger** (`crates/reposix-core/src/audit.rs:35`, schema in `crates/reposix-core/fixtures/audit.sql`). Schema-level `BEFORE UPDATE/DELETE` triggers raise `RAISE(ABORT, \u2026)`. Tested at `crates/reposix-core/tests/audi...",
-      "note": "audit cited as load-bearing GOOD example (append-only triggers); not a TODO action",
-      "updated_at": "2026-04-26T20:12:57Z"
+      "note": "POLISH2-22 \u2014 documented dual-schema design (option B)",
+      "updated_at": "2026-04-26T21:29:40Z"
     },
     {
       "path": "crates/reposix-core/src/backend.rs",
@@ -2137,11 +2137,11 @@
     },
     {
       "path": "docs/how-it-works/trust-model.md",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-22 \u2014 dual-schema endorsement (audit log section)",
+      "updated_at": "2026-04-26T21:29:43Z"
     },
     {
       "path": "docs/index.md",

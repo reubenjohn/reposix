@@ -5,6 +5,39 @@
 //! triggers on `audit_events` — enforces append-only semantics. Runtime
 //! Rust code never needs to "remember" not to delete; the DB refuses.
 //!
+//! # Dual-schema audit design (POLISH2-22, friction row 12)
+//!
+//! reposix intentionally ships **two** append-only audit schemas, each
+//! owned by the crate that writes to it. Neither is the canonical
+//! superset; they capture disjoint event classes:
+//!
+//! - **`audit_events`** (this crate, `reposix-core`) — **backend-side
+//!   mutating writes**. Inserters: `reposix-sim::middleware::audit`,
+//!   `reposix-confluence::lib::record_audit`, `reposix-jira::lib`. Rows
+//!   describe `create_record` / `update_record` / `delete_or_close`
+//!   calls and the simulator's HTTP-handler audit.
+//! - **`audit_events_cache`** (`reposix-cache::audit`, schema in
+//!   `crates/reposix-cache/fixtures/cache_schema.sql`) — **cache-internal
+//!   operations**. Inserters: `reposix-cache::builder`, `reposix-cache::gc`,
+//!   the helper's `stateless-connect` path. Rows describe blob
+//!   materialization, gc eviction, every helper RPC turn (fetch / push),
+//!   integrity events, and sync-tag writes.
+//!
+//! The split is intentional. It keeps `reposix-cache` strictly cache-side
+//! and lets backend adapters fail closed without coupling to the cache's
+//! SQLite connection lifecycle. A given operational query (e.g., "what
+//! did we write to JIRA in the last 24h?") may need to read **both**
+//! tables — the backend mutations live here in `audit_events`, while the
+//! helper-level `helper_push_accepted` row that committed them lives in
+//! `audit_events_cache`.
+//!
+//! `reposix doctor` currently checks the `audit_events_cache` schema
+//! only; backend-mutation audit is verifiable via per-backend integration
+//! tests + the `audit_events` table directly. Future v0.12.0+ work
+//! (POLISH2-22 deferred unification per code-quality CC-3) may fold the
+//! two schemas behind a single `dyn AuditSink` trait, but the dual-table
+//! shape is the supported design for the v0.11.x line.
+//!
 //! # Schema-attack hardening (H-02, phase-1 review)
 //!
 //! Row-level UPDATE/DELETE triggers are only half the SG-06 story. An

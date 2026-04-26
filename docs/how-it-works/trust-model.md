@@ -68,7 +68,14 @@ Three rings, three cuts. A byte from the network does not reach a side-effecting
 
 ## Audit log
 
-Every network-touching action writes one row to `audit_events_cache` in `cache.db` ([SQLite WAL](../reference/glossary.md#sqlite-wal) — [write-ahead logging](https://sqlite.org/wal.html), where writes go to a separate file and merge into the main DB on checkpoint, so readers don't block writers). The table is append-only at the SQL level: `BEFORE UPDATE` and `BEFORE DELETE` triggers raise `'audit_events_cache is append-only'`. The ops vocabulary is fixed:
+Every network-touching action writes one row to **one of two** append-only audit tables — by design, not by accident.
+
+- **`audit_events_cache`** lives in `cache.db` and is owned by `reposix-cache::audit`. It records cache-internal events: blob materialization, helper RPC turns, gc eviction, sync-tag writes, push accept/reject decisions.
+- **`audit_events`** lives in the per-backend audit DB and is owned by `reposix-core::audit` (written by the sim/confluence/jira adapters). It records backend-side mutating REST calls: every `create_record`, `update_record`, and `delete_or_close`.
+
+A complete forensic query (e.g., "which JIRA write came from which `git push`?") joins both: the helper-level `helper_push_accepted` row lives in `audit_events_cache`; the per-issue `update_record` rows live in `audit_events`. Both tables use [SQLite WAL](../reference/glossary.md#sqlite-wal) ([write-ahead logging](https://sqlite.org/wal.html), where writes go to a separate file and merge into the main DB on checkpoint, so readers don't block writers) and both are append-only at the SQL level: `BEFORE UPDATE` and `BEFORE DELETE` triggers raise rather than allow row mutations. The split keeps `reposix-cache` strictly cache-side and lets backend adapters fail closed without coupling to the cache's SQLite connection lifecycle (POLISH2-22 friction row 12; physical unification deferred to v0.12.0+).
+
+The `audit_events_cache` ops vocabulary is fixed:
 
 | `op` | Written when |
 |---|---|

@@ -3,6 +3,30 @@
 //! Per `31-CONTEXT.md` §Atomicity: audit-row write failures log WARN via
 //! [`tracing::warn`] but do NOT poison the caller's flow. Callers use
 //! `let _ = log_materialize(...)` to explicitly discard the result.
+//!
+//! # Dual-schema audit design (POLISH2-22, friction row 12)
+//!
+//! This crate's `audit_events_cache` table is one of **two** audit
+//! schemas reposix ships — see [`reposix_core::audit`] for the
+//! backend-side `audit_events` table. The split is intentional, and
+//! both schemas are append-only at the SQL level (`BEFORE UPDATE` /
+//! `BEFORE DELETE` triggers raise rather than allow row mutations).
+//!
+//! - `audit_events_cache` (this crate) captures **cache-internal
+//!   operations**: blob materialization, gc eviction, helper RPC turns
+//!   (`stateless-connect` fetch / push), integrity events, sync-tag
+//!   writes.
+//! - `audit_events` (in `reposix-core`) captures **backend-side
+//!   mutating writes**: every `create_record` / `update_record` /
+//!   `delete_or_close` issued by the sim/confluence/jira adapters.
+//!
+//! A complete forensic query (e.g., "what did we write to JIRA in the
+//! last 24h?") reads both tables — the helper-level
+//! `helper_push_accepted` row lives here; the per-issue
+//! `update_record` rows live in `audit_events`. The split keeps this
+//! crate strictly cache-side and lets backend adapters fail closed
+//! without coupling to the cache's SQLite connection lifecycle.
+//! Physical unification is deferred to v0.12.0+ (CC-3).
 
 use chrono::Utc;
 use rusqlite::{params, Connection};
