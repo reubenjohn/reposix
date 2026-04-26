@@ -13,9 +13,7 @@ use reposix_cache::db::open_cache_db;
 use reposix_cache::{gc_at, GcReport, GcStrategy};
 use reposix_core::parse_remote_url;
 
-use crate::worktree_helpers::{
-    backend_slug_from_origin, cache_path_from_worktree as resolve_cache_dir, git_config_get,
-};
+use crate::worktree_helpers::{backend_slug_from_origin, cache_path_from_worktree, git_config_get};
 
 /// One orphan-cache finding from [`scan_orphans`].
 #[derive(Debug, Clone)]
@@ -70,6 +68,12 @@ pub fn run(
         None => std::env::current_dir().context("resolve current directory")?,
     };
     let cache_path = cache_path_from_worktree(&work)?;
+    if !cache_path.exists() {
+        bail!(
+            "no cache at {} (nothing to gc; run a `git fetch` first)",
+            cache_path.display()
+        );
+    }
     let strategy = match strategy_arg {
         GcStrategyArg::Lru => GcStrategy::Lru {
             max_size_bytes: max_size_mb.saturating_mul(1024 * 1024),
@@ -158,20 +162,6 @@ fn bytes_to_mb_string(bytes: u64) -> String {
     } else {
         format!("{mb:.2} MB")
     }
-}
-
-/// Resolve the cache path from a working tree, additionally requiring that
-/// the cache directory already exists on disk (gc has nothing to evict
-/// otherwise).
-fn cache_path_from_worktree(work: &Path) -> Result<PathBuf> {
-    let cache_path = resolve_cache_dir(work)?;
-    if !cache_path.exists() {
-        bail!(
-            "no cache at {} (nothing to gc; run a `git fetch` first)",
-            cache_path.display()
-        );
-    }
-    Ok(cache_path)
 }
 
 fn backend_slug_from_worktree(work: &Path) -> Option<String> {

@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{bail, Context, Result};
 use rusqlite::Connection;
 
-use crate::worktree_helpers::cache_path_from_worktree as resolve_cache_dir;
+use crate::worktree_helpers::cache_path_from_worktree;
 
 /// Aggregate stats over the token-cost rows.
 #[derive(Debug, Default, Clone)]
@@ -59,22 +59,15 @@ pub fn run(path: Option<PathBuf>) -> Result<()> {
         None => std::env::current_dir().context("resolve current directory")?,
     };
     let cache_path = cache_path_from_worktree(&work)?;
-    let summary = aggregate_at(&cache_path)?;
-    print_summary(&cache_path, &summary);
-    Ok(())
-}
-
-/// Resolve the cache path from a working tree, additionally requiring that
-/// `cache.db` exists (no token-cost rows otherwise).
-fn cache_path_from_worktree(work: &Path) -> Result<PathBuf> {
-    let cache_path = resolve_cache_dir(work)?;
     if !cache_path.exists() {
         bail!(
             "no cache at {} (run `git fetch` to populate token_cost audit rows)",
             cache_path.display()
         );
     }
-    Ok(cache_path)
+    let summary = aggregate_at(&cache_path)?;
+    print_summary(&cache_path, &summary);
+    Ok(())
 }
 
 /// Aggregate `token_cost` rows from `<cache>/cache.db`. Public for tests.

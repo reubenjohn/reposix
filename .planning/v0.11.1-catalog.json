@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T19:11:30Z",
+  "generated_at": "2026-04-26T19:14:36Z",
   "schema_version": 1,
   "files": [
     {
@@ -1081,13 +1081,13 @@
     },
     {
       "path": "crates/reposix-cli/src/cost.rs",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "code-quality-gaps:DELETE"
       ],
       "plan": "[code-quality-gaps] `crates/reposix-cli/src/cost.rs:282` | Same shape | DELETE |",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "ref \u00a77-E fix-1: inlined cache_path_from_worktree wrapper, removed local shadow",
+      "updated_at": "2026-04-26T19:14:36Z"
     },
     {
       "path": "crates/reposix-cli/src/doctor.rs",
@@ -1099,13 +1099,13 @@
     },
     {
       "path": "crates/reposix-cli/src/gc.rs",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "code-quality-gaps:DELETE"
       ],
       "plan": "[code-quality-gaps] `crates/reposix-cli/src/gc.rs:166` | `fn cache_path_from_worktree` (shadowed in module) \u2014 shells to `resolve_cache_dir` then bails if dir missing | DELETE \u2014 fold the existence check into a single wrapper or just inline at call site |",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "ref \u00a77-E fix-1: inlined cache_path_from_worktree wrapper, removed local shadow",
+      "updated_at": "2026-04-26T19:14:36Z"
     },
     {
       "path": "crates/reposix-cli/src/history.rs",
@@ -1176,13 +1176,13 @@
     },
     {
       "path": "crates/reposix-cli/src/tokens.rs",
-      "status": "TODO",
+      "status": "DONE",
       "prior": [
         "code-quality-gaps:DELETE"
       ],
       "plan": "[code-quality-gaps] `crates/reposix-cli/src/tokens.rs:69` | Same shape | DELETE |",
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "ref \u00a77-E fix-1: inlined cache_path_from_worktree wrapper, removed local shadow",
+      "updated_at": "2026-04-26T19:14:36Z"
     },
     {
       "path": "crates/reposix-cli/src/worktree_helpers.rs",

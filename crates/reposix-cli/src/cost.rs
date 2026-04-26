@@ -28,7 +28,7 @@ use chrono::{DateTime, Duration, Utc};
 use rusqlite::Connection;
 
 use crate::tokens::parse_reason;
-use crate::worktree_helpers::cache_path_from_worktree as resolve_cache_dir;
+use crate::worktree_helpers::cache_path_from_worktree;
 
 /// Default characters-per-token heuristic. Conservative for English text;
 /// over-estimates for binary protocol-v2 frames. Configurable via
@@ -256,6 +256,12 @@ pub fn run(
         None => std::env::current_dir().context("resolve current directory")?,
     };
     let cache_path = cache_path_from_worktree(&work)?;
+    if !cache_path.exists() {
+        bail!(
+            "no cache at {} (run `git fetch` first)",
+            cache_path.display()
+        );
+    }
     let cutoff = since.as_deref().map(parse_since).transpose()?;
     let cpt = chars_per_token.unwrap_or(DEFAULT_CHARS_PER_TOKEN);
     let by_op = aggregate_at(&cache_path, cutoff)?;
@@ -277,17 +283,6 @@ pub fn run(
     }
     print!("{}", render_markdown(&by_op, cpt));
     Ok(())
-}
-
-fn cache_path_from_worktree(work: &Path) -> Result<PathBuf> {
-    let cache_path = resolve_cache_dir(work)?;
-    if !cache_path.exists() {
-        bail!(
-            "no cache at {} (run `git fetch` first)",
-            cache_path.display()
-        );
-    }
-    Ok(cache_path)
 }
 
 #[cfg(test)]
