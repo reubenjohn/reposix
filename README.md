@@ -20,7 +20,7 @@ and `git` on real workflows — no MCP tool schemas, no custom CLI.
 
 - **`8 ms`** — read one issue from the local cache after first fetch ([`docs/benchmarks/v0.9.0-latency.md`](docs/benchmarks/v0.9.0-latency.md)).
 - **`24 ms`** — `reposix init` cold bootstrap against the simulator (soft threshold `500 ms`).
-- **`92.3%`** — input-context-token reduction vs MCP for the same task, measured in [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md) (v0.7 token-economy benchmark; the architectural argument is unchanged in v0.9.0).
+- **`89.1%`** — input-context-token reduction vs a synthesized MCP-tool-catalog baseline for the same task, measured in [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md) (v0.7 token-economy benchmark, recalibrated to real Anthropic tokenization in v0.10.0; the architectural argument is unchanged in v0.9.0). The MCP comparison fixture is synthesized from public Atlassian Forge tool surfaces — see the artifact for methodology.
 
 ## What it is
 
@@ -45,7 +45,7 @@ reposix init sim::demo /tmp/reposix-demo
 cd /tmp/reposix-demo
 
 # Agent UX is pure git from here.
-git checkout origin/main           # lazy-fetches blobs as needed
+git checkout -B main refs/reposix/origin/main   # helper namespaces fetched refs
 ls issues/                          # 0001.md  0002.md  ...
 sed -i 's/TODO/DONE/' issues/0001.md
 git commit -am 'mark issue 1 done'

@@ -39,7 +39,7 @@ def main() -> None:
     d = ImageDraw.Draw(img)
 
     # Headline
-    d.text((60, 60), "92.3% fewer tokens", font=font(F_BOLD, 72), fill=WHITE)
+    d.text((60, 60), "89.1% fewer tokens", font=font(F_BOLD, 72), fill=WHITE)
 
     # "in simulation" caveat — warning-amber pill next to the headline.
     pill_font = font(F_BOLD, 20)
@@ -48,7 +48,7 @@ def main() -> None:
     pill_w = (pill_bbox[2] - pill_bbox[0]) + 28
     pill_h = 32
     # Place pill just right of the headline, vertically aligned with its mid.
-    head_bbox = d.textbbox((60, 60), "92.3% fewer tokens", font=font(F_BOLD, 72))
+    head_bbox = d.textbbox((60, 60), "89.1% fewer tokens", font=font(F_BOLD, 72))
     pill_x0 = head_bbox[2] + 24
     pill_y0 = 82
     d.rounded_rectangle(

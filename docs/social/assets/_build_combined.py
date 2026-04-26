@@ -11,7 +11,7 @@ Produces two outputs:
 Slide order tells a story:
   1. hero      - "what it looks like" (file browser)
   2. workflow  - "what the agent does" (annotated shell session)
-  3. benchmark - "why it matters" (92.3% fewer tokens, in simulation)
+  3. benchmark - "why it matters" (89.1% fewer tokens, in simulation)
 """
 
 from __future__ import annotations
@@ -115,7 +115,7 @@ def _draw_compact_benchmark(
 
     # --- Row 1: headline + "in simulation" pill
     head_font = _ft(F_SANS_B, 44)
-    head_txt = "92.3% fewer tokens"
+    head_txt = "89.1% fewer tokens"
     d.text((left_x, y + 24), head_txt, font=head_font, fill=WHITE)
     head_bb = d.textbbox((left_x, y + 24), head_txt, font=head_font)
 

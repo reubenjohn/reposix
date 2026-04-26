@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675" role="img" aria-label="reposix vs MCP token economy benchmark: 92.3% fewer tokens">
-  <title>reposix vs MCP — 92.3% fewer tokens</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675" role="img" aria-label="reposix vs MCP token economy benchmark: 89.1% fewer tokens">
+  <title>reposix vs MCP — 89.1% fewer tokens</title>
   <desc>Horizontal bar chart comparing MCP-mediated baseline (4,068 tokens) against reposix (315 tokens) for the same task: read 3 issues, edit 1, push.</desc>
 
   <!-- Background: GitHub dark -->
@@ -10,7 +10,7 @@
   <text x="60" y="110"
         font-family="DejaVu Sans, Helvetica, Arial, sans-serif"
         font-size="72" font-weight="700" fill="#ffffff"
-        letter-spacing="-1">92.3% fewer tokens</text>
+        letter-spacing="-1">89.1% fewer tokens</text>
 
   <!-- Subhead -->
   <text x="60" y="155"

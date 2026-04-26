@@ -65,7 +65,7 @@ cargo build --release --workspace --bins
 export PATH="$PWD/target/release:$PATH"
 reposix sim &                                             # start the simulator on :7878
 reposix init sim::demo /tmp/reposix-demo
-cd /tmp/reposix-demo && git checkout origin/main && cat issues/0001.md
+cd /tmp/reposix-demo && git checkout -B main refs/reposix/origin/main && cat issues/0001.md
 ```
 
 After `init`, agent UX is pure git: `cat`, `grep -r`, edit, `git commit`, `git push`. The bootstrap takes ≤ `24 ms` against the simulator on a stock laptop.
@@ -89,4 +89,4 @@ The detail of how each piece works lives in [How it works](how-it-works/filesyst
 
 ---
 
-*Honest scope: built across autonomous coding-agent sessions; v0.9.0 architecture pivoted from a virtual filesystem to git-native partial clone (2026-04-24). Treat as alpha — but every demo on this site is reproducible on a stock Ubuntu host in under five minutes. The v0.7 token-economy benchmark measured a 92.3% input-context-token reduction vs MCP for the same task.*
+*Honest scope: built across autonomous coding-agent sessions; v0.9.0 architecture pivoted from a virtual filesystem to git-native partial clone (2026-04-24). Treat as alpha — but every demo on this site is reproducible on a stock Ubuntu host in under five minutes. The v0.7 token-economy benchmark measured an **89.1%** input-context-token reduction vs a synthesized MCP-tool-catalog baseline (modeled on the public Atlassian Forge surface — see [`benchmarks/RESULTS.md`](https://github.com/reubenjohn/reposix/blob/main/benchmarks/RESULTS.md) for the methodology and caveats).*
