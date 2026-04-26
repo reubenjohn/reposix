@@ -35,24 +35,28 @@ bash scripts/demo.sh
 ```text
 reposix/
 ├── crates/
-│   ├── reposix-core/       # shared types, HttpClient, Tainted<T>, audit schema
-│   ├── reposix-sim/        # axum REST simulator
-│   ├── reposix-fuse/       # FUSE daemon
-│   ├── reposix-remote/     # git-remote-reposix helper
-│   └── reposix-cli/        # top-level orchestrator
-├── docs/                   # this MkDocs site (docs/*.md)
-├── scripts/                # demo.sh + CI smoke tests + goal-backward gates
-├── .planning/              # GSD planning artifacts (PROJECT, ROADMAP, per-phase)
-├── .github/workflows/      # CI: fmt + clippy + test + integration + coverage
-├── clippy.toml             # workspace disallowed-methods lint
-└── rust-toolchain.toml     # stable channel
+│   ├── reposix-core/        # shared types, HttpClient, Tainted<T>, audit schema
+│   ├── reposix-sim/         # axum REST simulator
+│   ├── reposix-cache/       # bare-repo cache + lazy-blob materializer
+│   ├── reposix-remote/      # git-remote-reposix helper (stateless-connect + export)
+│   ├── reposix-cli/         # top-level orchestrator
+│   ├── reposix-github/      # GitHub Issues BackendConnector
+│   ├── reposix-confluence/  # Confluence Cloud BackendConnector
+│   ├── reposix-jira/        # JIRA Cloud BackendConnector
+│   └── reposix-swarm/       # multi-agent contention/swarm test harness
+├── docs/                    # this MkDocs site (docs/*.md)
+├── scripts/                 # dark-factory-test.sh + CI smoke tests + goal-backward gates
+├── .planning/               # GSD planning artifacts (PROJECT, ROADMAP, per-phase)
+├── .github/workflows/       # CI: fmt + clippy + test + integration + coverage
+├── clippy.toml              # workspace disallowed-methods lint
+└── rust-toolchain.toml      # stable channel
 ```
 
 ## Non-negotiable invariants
 
 Anything in this list is test-enforced. Break it and CI (or a clippy lint) will refuse the change.
 
-1. **`#![forbid(unsafe_code)]`** at every crate root. The FUSE callbacks are safe Rust (via `fuser`). POSIX syscalls that require `unsafe` are gated through `rustix`.
+1. **`#![forbid(unsafe_code)]`** at every crate root. POSIX syscalls that require `unsafe` are gated through `rustix`.
 2. **`reqwest::Client` is banned outside `crates/reposix-core/src/http.rs`.** Clippy `disallowed-methods` enforces this workspace-wide. The seal test `scripts/check_clippy_lint_loaded.sh` verifies the lint is loaded.
 3. **Every public `Result`-returning function has an `# Errors` doc section.** Clippy `missing-errors-doc` is on.
 4. **No hand-rolled JSON / YAML serialization.** Always `serde`. Always `serde_yaml` for frontmatter.
@@ -123,7 +127,7 @@ pre-commit install
 Open a GitHub issue. Include:
 
 - `cargo --version` and `uname -a`
-- `fusermount3 --version`
+- `git --version` (must be >= 2.34 for partial-clone + stateless-connect)
 - The exact command that failed, and the output (with `RUST_LOG=debug` ideally)
 - Whether you're using the in-process simulator or a real backend
 

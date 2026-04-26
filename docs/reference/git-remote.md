@@ -15,12 +15,12 @@ git push origin main     # → `export` capability: git → sim
 ## Capabilities
 
 ```
-import
+stateless-connect
 export
 refspec refs/heads/*:refs/reposix/*
 ```
 
-The `import`/`export` pair is [the recommended choice](https://git-scm.com/docs/gitremote-helpers) for non-git-native remotes — simpler than `fetch`/`push` and avoids materializing packfiles. The `refspec` maps the remote's `main` into a private namespace so the user's real work-tree branch is unaffected by fetches.
+`stateless-connect` is the v0.9.0 read path — the helper tunnels a protocol-v2 fetch with `--filter=blob:none` to the cache's bare repo, so `git fetch` materializes only tree metadata (blobs are fetched lazily on first read). `export` is the push path: git emits a fast-export stream, the helper parses it, runs push-time conflict detection against the backend, and applies REST writes on success. The `refspec` maps the remote's `main` into a private namespace so the user's real work-tree branch is unaffected by fetches.
 
 ## Flow: `git push`
 
@@ -74,7 +74,7 @@ M 100644 inline 0002.md
 done
 ```
 
-The bytes of each blob come from `reposix_core::issue::frontmatter::render(&issue)` — the same function the FUSE daemon uses for `read`. This guarantees deterministic SHAs across round-trips.
+The bytes of each blob come from `reposix_core::issue::frontmatter::render(&issue)` — the same function the cache materializer uses when serving `read_blob(oid)`. This guarantees deterministic SHAs across round-trips.
 
 ## Bulk-delete cap (SG-02)
 

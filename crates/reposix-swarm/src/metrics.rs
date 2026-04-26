@@ -235,9 +235,9 @@ pub struct SummaryHeader<'a> {
     pub clients: usize,
     /// Run duration (seconds).
     pub duration_sec: u64,
-    /// Mode name (`sim-direct` or `fuse`).
+    /// Mode name (`sim-direct`, `confluence-direct`, or `contention`).
     pub mode: &'a str,
-    /// Target identifier (sim URL, FUSE mount path).
+    /// Target identifier (simulator URL or Confluence base URL).
     pub target: &'a str,
 }
 
