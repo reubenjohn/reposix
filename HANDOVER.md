@@ -129,6 +129,20 @@ Owner caught FIVE quality issues at end-of-session that the previous agent (me) 
 
 The next agent should NOT just fix §0.1-§0.5 — they should also ship at least 3 of the 6 tools above so the NEXT-NEXT agent can't make the same misses.
 
+## 0.7 Update CLAUDE.md + agent-discoverable instructions so the misses don't recur
+
+**Self-critique extended**: shipping the 6 tools in §0.6 closes the *automated* gap, but the AGENT itself reads `CLAUDE.md` at session start and scopes its work from those words. The misses in §0.1-§0.5 happened because CLAUDE.md was AMBIGUOUS, not because the rules were absent. Concrete examples:
+
+- CLAUDE.md "Docs-site validation" says playwright is required for mermaid changes, but doesn't specify *scope*. I scoped to "the page I edited" → missed how-it-works pages I didn't touch but were impacted by config drift. **Fix**: rewrite the section to say "playwright walk EVERY page in the affected nav section, not just the file you changed; for `mkdocs.yml` or any `pymdownx.*` change, walk the entire site."
+- CLAUDE.md has no "Cold-reader pass" section. **Fix**: add one — "Before declaring any user-facing surface (hero, install instructions, headline numbers, benchmarks) shipped, dispatch the `doc-clarity-review` skill on the affected pages with isolated context. Owner-as-cold-reader catches positioning misses (install-path freshness, version-pinned filenames, missing nav entries) that mechanical hooks don't."
+- CLAUDE.md has no "Freshness invariants" list. **Fix**: add one — name the invariants explicitly (no version-pinned filenames outside CHANGELOG; install path leads with package manager once crates.io publish is live; benchmarks belong in mkdocs nav; loose `*ROADMAP*.md` outside `*phases/` is structural drift).
+- CLAUDE.md "Subagent delegation rules" doesn't warn about `gh pr checkout` switching the coordinator's branch. **Fix**: add to the rules — "Never delegate `gh pr checkout` to a bash subagent without isolation (worktree or `/tmp/<branch>`). Coordinator's local checkout is shared state."
+- The `gh-pr-checkout` warning AND the cherry-pick lesson AND the Edit-fail-silently lesson should ALL land in CLAUDE.md, not just in this HANDOVER. HANDOVER is operational and gets deleted; CLAUDE.md is durable.
+
+**Concrete §7 task** (added below as §7-§0): the next agent's FIRST commit should patch CLAUDE.md with the four bullets above. Then the §0.1-§0.5 work proceeds with the tightened instructions in scope. Then ship the §0.6 tools. The order matters: instructions → tools → fixes, so each layer reinforces the next.
+
+**Meta-rule (write this into CLAUDE.md too)**: when an owner catches a quality issue the agent missed, the FIX is two-fold: (1) fix the issue, (2) update the instructions so the next agent's session reads them. Just shipping a fix without updating CLAUDE.md guarantees recurrence.
+
 ---
 
 # HANDOVER — for the next agent picking up after the v0.11.1 sweep
