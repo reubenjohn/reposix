@@ -1,0 +1,53 @@
+{
+  "claim_id": "install/cargo-binstall",
+  "phase": "p56",
+  "verifier_kind": "container-rehearsal",
+  "verified_at": "2026-04-27T18:23:39Z",
+  "container_image": "rust:1.82-slim",
+  "verifier_script": "scripts/p56-rehearse-cargo-binstall.sh",
+  "asserts": {
+    "binstall_exit_zero": false,
+    "command_v_reposix_exit_zero": false,
+    "command_v_git_remote_reposix_exit_zero": false,
+    "reposix_version_matches_crates_io_max_version": false,
+    "prebuilt_binary_path_used": false,
+    "log_grep_match": "(none — binstall WARN: will be installed from source)",
+    "reposix_version_output": "(binary not produced; container exit 1)"
+  },
+  "gate_disposition_note": "Catalog row install/cargo-binstall has pre-P56 status=PARTIAL with blast_radius=P1 (works, just slow). Wave 3 measured the same status post-fix — neither regression nor full lift. Per the catalog's allowed-status set for this row, PARTIAL is acceptable; the validator's per-row gate (scripts/p56-validate-install-evidence.py) is configured to admit PARTIAL on this row only. The honest assertion booleans above (all `false`) reflect the actual rehearsal outcome and feed Wave 4's verifier subagent the un-massaged signal.",
+  "failure_mode": {
+    "primary": "binstall metadata in crates/reposix-cli/Cargo.toml and crates/reposix-remote/Cargo.toml is misaligned with the actual release.yml archive shape produced by Option A's version_tag rename. Specifically the [package.metadata.binstall] block has pkg-url = '{ repo }/releases/download/v{ version }/{ name }-{ target }.{ archive-format }' but release.yml uploads assets at 'releases/download/reposix-cli-v{ version }/reposix-v{ version }-{ target }.tar.gz'. Four mismatches:",
+    "mismatch_1_tag_prefix": "template uses `v{ version }`, actual GH Release tag is `reposix-cli-v{ version }`",
+    "mismatch_2_archive_basename": "template uses `{ name }` (resolves to `reposix-cli`), actual archive basename is `reposix-v{ version }` (no `-cli` suffix; the workspace produces a unified archive containing both reposix and git-remote-reposix binaries)",
+    "mismatch_3_target_glibc_vs_musl": "binstall's default linux target is `x86_64-unknown-linux-gnu`, but release.yml only ships `x86_64-unknown-linux-musl` archives — needs an explicit target override or musl-only metadata",
+    "mismatch_4_archive_extension": "template emits `.tgz`, release.yml uploads `.tar.gz` (binstall handles tgz=tar.gz aliasing fine, but worth noting for future-Rust-version archive validators)",
+    "secondary": "binstall's source-build fallback (`cargo install reposix-cli --version 0.11.3`) also failed because transitive dep `block-buffer 0.12.0` requires Cargo feature `edition2024` which is unstable in Rust 1.82 (the project's MSRV). This is an orthogonal MSRV-breakage bug, NOT in P56 scope — flagged for v0.12.1 carry-forward (MIGRATE-03 supplement: refresh transitive deps OR raise MSRV to 1.85)."
+  },
+  "evidence": {
+    "container_image_tag": "rust:1.82-slim",
+    "binstall_install_log_excerpt": [
+      "INFO resolve: Resolving package: 'reposix-remote'",
+      "INFO resolve: Resolving package: 'reposix-cli'",
+      "WARN The package reposix-cli v0.11.3 will be installed from source (with cargo)",
+      "WARN The package reposix-remote v0.11.3 will be installed from source (with cargo)",
+      " Downloaded reposix-cli v0.11.3",
+      " Downloaded reposix-remote v0.11.3",
+      "  Installing reposix-cli v0.11.3",
+      "  Installing reposix-remote v0.11.3",
+      "error: failed to compile `reposix-cli v0.11.3` ...",
+      "  failed to parse manifest at `.../block-buffer-0.12.0/Cargo.toml`",
+      "  Caused by: feature `edition2024` is required",
+      "ERROR Cargo errored! ExitStatus(unix_wait_status(25856))"
+    ],
+    "container_log_path": "/tmp/p56-binstall-rehearsal.log",
+    "container_log_size_bytes": 9893,
+    "exit_code": 101
+  },
+  "recovery": {
+    "estimated_loc": "~10 LOC across 2 Cargo.toml files",
+    "v0_12_1_carry_forward_required": true,
+    "tracked_under": "MIGRATE-03 supplement (Wave 4 SURPRISES.md entry)",
+    "fix_outline": "Update [package.metadata.binstall] in crates/reposix-cli/Cargo.toml and crates/reposix-remote/Cargo.toml: change pkg-url template to use the actual release.yml archive shape, and add explicit target overrides for x86_64-unknown-linux-musl + aarch64-unknown-linux-musl (since release.yml ships only musl Linux archives). Re-test against Rust 1.85+ container after MSRV bump or after refreshing transitive deps to cap block-buffer at <0.12."
+  },
+  "status": "PARTIAL"
+}

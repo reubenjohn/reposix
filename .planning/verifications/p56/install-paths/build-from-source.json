@@ -1,0 +1,24 @@
+{
+  "claim_id": "install/build-from-source",
+  "phase": "p56",
+  "verifier_kind": "shell-against-checkout (ci.yml-covered)",
+  "verified_at": "2026-04-27T18:26:40Z",
+  "ci_run": {
+    "workflow": "ci.yml",
+    "run_id": 25005567451,
+    "head_sha": "7d0cd9e66c272c4fd660489ea43737e73cf198ff",
+    "conclusion": "success",
+    "completed_at": "2026-04-27T16:03:07Z",
+    "url": "https://github.com/reubenjohn/reposix/actions/runs/25005567451",
+    "branch": "main",
+    "note": "Latest green ci.yml run on main as of verification time. ci.yml's `test` job builds the workspace via `cargo build --release --workspace` and runs the test matrix; success implies target/release/{reposix,git-remote-reposix} are produced + functional. Per the catalog row's contract, no separate fresh-build is required — we read ci.yml not a fresh build."
+  },
+  "asserts": {
+    "ci_test_job_green_on_main": true,
+    "cargo_build_workspace_bins_succeeds": true,
+    "target_release_reposix_exists": "via ci.yml `test` job — verifier reads ci.yml not a fresh build",
+    "target_release_git_remote_reposix_exists": "via ci.yml `test` job",
+    "msrv_alignment_note": "Project MSRV is 1.82 (workspace.package.rust-version). The ci.yml `test` job uses dtolnay/rust-toolchain@stable on ubuntu-latest, which builds with the latest stable Rust (1.95.0 at verification time per docker run rust:slim cargo --version). The `cargo build` works against the project's pinned Cargo.lock so transitive-dep MSRV bugs (e.g. block-buffer-0.12.0 requiring edition2024) don't surface here. The `cargo install reposix-cli` path from crates.io DOES surface that MSRV bug because cargo install ignores Cargo.lock by default — see install/cargo-binstall.json `failure_mode.secondary` for the carry-forward."
+  },
+  "status": "PASS"
+}

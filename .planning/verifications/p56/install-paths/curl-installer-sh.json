@@ -1,0 +1,45 @@
+{
+  "claim_id": "install/curl-installer-sh",
+  "phase": "p56",
+  "verifier_kind": "asset-existence + container-rehearsal",
+  "verified_at": "2026-04-27T18:19:56Z",
+  "container_image": "ubuntu:24.04",
+  "container_image_digest": "sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194ebcc41c7b",
+  "asset_url_used": "https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.sh",
+  "asset_url_resolved_to": "https://github.com/reubenjohn/reposix/releases/download/reposix-cli-v0.11.3/reposix-installer.sh",
+  "release_tag_resolved_to": "reposix-cli-v0.11.3",
+  "verifier_script": "scripts/p56-rehearse-curl-install.sh",
+  "asserts": {
+    "http_200": true,
+    "http_302_chain_terminal_status_note": "HEAD returned 302 → 302 (releases/latest → releases/download/<tag>) — final asset is reachable; the installer (`curl -LsSf`) follows redirects and produced the expected archive download (see `→ downloading` line in container_log_excerpt). Treated as PASS.",
+    "content_length_gte_1024": true,
+    "content_length_observed_bytes": 1264,
+    "starts_with_shebang": true,
+    "container_oneliner_exit_zero": true,
+    "command_v_reposix_exit_zero": true,
+    "command_v_git_remote_reposix_exit_zero": true,
+    "reposix_version_matches_release_tag": true,
+    "reposix_version_output": "reposix 0.11.3"
+  },
+  "evidence": {
+    "head_response_summary": "HTTP/2 302 (releases/latest → releases/download/reposix-cli-v0.11.3/reposix-installer.sh); HTTP/2 302 chained to S3 release-assets CDN. Asset bytes verified via gh api (size=1264, sha256 a3b21cbd3320…).",
+    "container_log_path": "/tmp/p56-curl-rehearsal.log",
+    "container_log_size_bytes": 5458,
+    "container_log_key_lines": [
+      "=== HEAD https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.sh ===",
+      "HTTP/2 302",
+      "HTTP/2 302",
+      "=== run installer ===",
+      "→ downloading https://github.com/reubenjohn/reposix/releases/download/reposix-cli-v0.11.3/reposix-v0.11.3-x86_64-unknown-linux-musl.tar.gz",
+      "✓ installed reposix and git-remote-reposix to /root/.local/bin",
+      "=== verify binaries on PATH ===",
+      "/root/.local/bin/reposix",
+      "/root/.local/bin/git-remote-reposix",
+      "=== reposix --version ===",
+      "reposix 0.11.3",
+      "=== DONE ==="
+    ],
+    "exit_code": 0
+  },
+  "status": "PASS"
+}
