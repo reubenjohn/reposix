@@ -1,0 +1,399 @@
+{
+  "schema_version": 0,
+  "schema_status": "DRAFT — not wired into pre-push or CI yet; pending owner review",
+  "purpose": "Enumerate every command/snippet a documentation reader is told to run, with a verifier that simulates a fresh user. Closes the gap between scripts/end-state.py (file-shape invariants, crates.io max_version) and reality (does the URL return bytes? does the install script actually put a binary on PATH?).",
+  "lineage": {
+    "modeled_on": ".planning/SESSION-END-STATE.json",
+    "complements": [
+      "scripts/repro-quickstart.sh — tutorial steps 2-8 against sim",
+      "scripts/end-state.py — freshness invariants + crates.io max_version",
+      "scripts/check-docs-site.sh — mkdocs --strict + mermaid renders"
+    ],
+    "fixes_class_of_miss": "documented commands silently break when release pipeline / external surface drifts. v0.11.x curl-installer-asset regression is the canonical example."
+  },
+  "field_glossary": {
+    "id": "stable slug; never renumber, never reuse",
+    "sources": "every file:line where this snippet appears; if the snippet is duplicated across docs, ONE row, MANY sources",
+    "category": "install | tutorial-step | quickstart-snippet | benchmark-claim | troubleshooting-recipe | helper-cmd",
+    "persona": "user persona this snippet targets — drives which OS/image the verifier needs",
+    "command": "the literal string the doc tells the user to paste (multi-line allowed)",
+    "preconditions": "what the doc assumes is true before this command (curl on PATH, internet, crates.io reachable, prior step succeeded)",
+    "expected_outcome": "asserts a verifier checks AFTER the command runs; written as concrete shell predicates",
+    "verifier": "how to validate without trusting the agent's word — kind, command/script, container image, network requirement, timeout",
+    "artifact": "path under .planning/verifications/repro/<id>.json the verifier writes (mirrors §0.8 pattern)",
+    "status": "PASS | FAIL | PARTIAL | NOT-VERIFIED",
+    "last_verified_at": "RFC3339 UTC of last verifier run",
+    "failure_mode": "if FAIL, the diagnosed root cause (one sentence)",
+    "remediation_hint": "where the FIX likely lives (file + glob)",
+    "automation_status": "ci-blocking | ci-warning | manual-only | not-yet",
+    "blast_radius": "P0 (every user hits) | P1 (one persona) | P2 (rare path)"
+  },
+  "verification_kinds": {
+    "asset-existence": "HEAD/GET against a URL; assert HTTP 200 AND content-length > N AND first bytes match a magic string",
+    "container-rehearsal": "spin a fresh container (ubuntu:24.04, alpine:3.19, etc.), run the snippet verbatim, assert post-conditions; this is THE 'simulate a fresh user' verifier",
+    "shell-against-checkout": "run snippet against the current git checkout; cheap, suitable for build-from-source",
+    "asset-checksum": "fetch the URL, compute sha256, assert it matches a pinned digest (drift detector)",
+    "snippet-extraction-only": "parse the doc, assert the snippet still exists at the claimed file:line (drift detector for renames/edits)",
+    "manual": "human-only — flag in catalog, never auto-graded GREEN"
+  },
+  "claims": [
+    {
+      "id": "install/curl-installer-sh",
+      "sources": [
+        "docs/index.md:42-46",
+        "docs/tutorials/first-run.md:17-21",
+        "README.md:42-44"
+      ],
+      "category": "install",
+      "persona": "first-time-linux-or-mac",
+      "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.sh | sh",
+      "preconditions": ["curl available", "internet", "GitHub releases reachable"],
+      "expected_outcome": {
+        "asserts": [
+          "the URL returns HTTP 200 with content-type containing 'shell' or starts with '#!/bin/'",
+          "after `| sh`, `command -v reposix` exits 0",
+          "after `| sh`, `command -v git-remote-reposix` exits 0",
+          "`reposix --version` prints the latest workspace version"
+        ]
+      },
+      "verifier": {
+        "kind": "asset-existence + container-rehearsal",
+        "asset_url": "https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.sh",
+        "min_bytes": 1024,
+        "magic_prefix": "#!",
+        "container_image": "ubuntu:24.04",
+        "ci_friendly": true,
+        "timeout_s": 120
+      },
+      "artifact": ".planning/verifications/repro/install__curl-installer-sh.json",
+      "status": "FAIL",
+      "last_verified_at": "2026-04-27T15:59:00Z",
+      "failure_mode": "Latest GitHub Release (`reposix-cli-v0.11.2`) has assets:[]. The release.yml workflow trigger is tag glob `v*`, but release-plz now creates per-crate tags like `reposix-cli-v0.11.2` which do not match. release.yml has not run since v0.11.0 (2026-04-26 workflow_dispatch).",
+      "remediation_hint": ".github/workflows/release.yml — either extend `on.push.tags` glob to `['v*', 'reposix-cli-v*']` and key the version off the cli-tag, OR add a release-plz post-publish step that pushes a mirror `vX.Y.Z` workspace tag whenever the CLI crate ships.",
+      "automation_status": "not-yet",
+      "blast_radius": "P0"
+    },
+    {
+      "id": "install/powershell-installer-ps1",
+      "sources": [
+        "docs/index.md:48-51",
+        "docs/tutorials/first-run.md:23-26",
+        "README.md:46-47"
+      ],
+      "category": "install",
+      "persona": "first-time-windows",
+      "command": "powershell -ExecutionPolicy Bypass -c \"irm https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.ps1 | iex\"",
+      "preconditions": ["Windows + PowerShell 5+", "internet"],
+      "expected_outcome": {
+        "asserts": [
+          "the URL returns HTTP 200 with content-length > 1024",
+          "after iex, `Get-Command reposix` returns a path",
+          "after iex, `Get-Command git-remote-reposix` returns a path"
+        ]
+      },
+      "verifier": {
+        "kind": "asset-existence (always-on) + container-rehearsal (windows runner only)",
+        "asset_url": "https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.ps1",
+        "min_bytes": 1024,
+        "container_image": "mcr.microsoft.com/windows/servercore:ltsc2022",
+        "ci_friendly": "asset-existence yes; container-rehearsal only on windows-2022 GH runner",
+        "timeout_s": 120
+      },
+      "artifact": ".planning/verifications/repro/install__powershell-installer-ps1.json",
+      "status": "FAIL",
+      "last_verified_at": "2026-04-27T15:59:00Z",
+      "failure_mode": "Same root cause as install/curl-installer-sh — release.yml doesn't fire on per-crate release-plz tags.",
+      "remediation_hint": "fixed by the same release.yml change as curl-installer-sh",
+      "automation_status": "not-yet",
+      "blast_radius": "P0"
+    },
+    {
+      "id": "install/cargo-binstall",
+      "sources": [
+        "docs/index.md:58-61",
+        "docs/tutorials/first-run.md:33-36",
+        "README.md:39-40"
+      ],
+      "category": "install",
+      "persona": "rust-developer",
+      "command": "cargo binstall reposix-cli reposix-remote",
+      "preconditions": ["cargo + cargo-binstall installed", "crates.io reachable"],
+      "expected_outcome": {
+        "asserts": [
+          "exit 0",
+          "command -v reposix exits 0",
+          "command -v git-remote-reposix exits 0",
+          "reposix --version equals the latest crates.io max_version"
+        ]
+      },
+      "verifier": {
+        "kind": "container-rehearsal",
+        "container_image": "rust:1.82-slim",
+        "ci_friendly": true,
+        "timeout_s": 600,
+        "note": "binstall will fall back to source-build when no GH binary asset exists. Verifier should warn (not fail) on fallback so we know the fast path regressed."
+      },
+      "artifact": ".planning/verifications/repro/install__cargo-binstall.json",
+      "status": "PARTIAL",
+      "last_verified_at": null,
+      "failure_mode": "binstall resolves but currently falls back to source-build because release.yml hasn't published binary assets — same root cause as curl-installer-sh; fix lifts this to PASS-fast-path.",
+      "remediation_hint": "release.yml fix lifts this row too",
+      "automation_status": "not-yet",
+      "blast_radius": "P1 (works, just slow)"
+    },
+    {
+      "id": "install/homebrew",
+      "sources": [
+        "docs/index.md:53-56",
+        "docs/tutorials/first-run.md:28-31",
+        "README.md:36-37"
+      ],
+      "category": "install",
+      "persona": "first-time-mac",
+      "command": "brew install reubenjohn/reposix/reposix",
+      "preconditions": ["macOS or linuxbrew", "internet"],
+      "expected_outcome": {
+        "asserts": [
+          "tap repo reubenjohn/homebrew-reposix is reachable",
+          "formula declares a version equal to crates.io max_version of reposix-cli",
+          "after install, `which reposix` resolves",
+          "after install, `which git-remote-reposix` resolves"
+        ]
+      },
+      "verifier": {
+        "kind": "asset-existence (always-on) + container-rehearsal (macos runner only)",
+        "tap_url": "https://github.com/reubenjohn/homebrew-reposix",
+        "ci_friendly": "tap reachability yes; brew install only on macos-14 GH runner",
+        "timeout_s": 600,
+        "note": "release.yml has an upload-homebrew-formula job; without release.yml runs the tap formula goes stale."
+      },
+      "artifact": ".planning/verifications/repro/install__homebrew.json",
+      "status": "NOT-VERIFIED",
+      "last_verified_at": null,
+      "failure_mode": "Formula version likely pinned at 0.11.0 because upload-homebrew-formula is a release.yml job that hasn't run since v0.11.0. Confirm with `gh api repos/reubenjohn/homebrew-reposix/contents/Formula/reposix.rb`.",
+      "remediation_hint": "release.yml fix lifts this row too",
+      "automation_status": "not-yet",
+      "blast_radius": "P0 for mac users"
+    },
+    {
+      "id": "install/build-from-source",
+      "sources": [
+        "docs/index.md:111-130",
+        "docs/tutorials/first-run.md:38-46",
+        "README.md:74-85"
+      ],
+      "category": "install",
+      "persona": "contributor-or-unusual-platform",
+      "command": "git clone https://github.com/reubenjohn/reposix && cd reposix && cargo build --release --workspace --bins && export PATH=\"$PWD/target/release:$PATH\"",
+      "preconditions": ["git", "rust >= 1.82", "git >= 2.34", "~6 GB free RAM (cargo workspace link)"],
+      "expected_outcome": {
+        "asserts": [
+          "exit 0",
+          "target/release/reposix exists and is executable",
+          "target/release/git-remote-reposix exists and is executable"
+        ]
+      },
+      "verifier": {
+        "kind": "shell-against-checkout",
+        "ci_friendly": "yes — already covered by ci.yml `test` job which builds the workspace",
+        "timeout_s": 600
+      },
+      "artifact": ".planning/verifications/repro/install__build-from-source.json",
+      "status": "PASS",
+      "last_verified_at": "implicit via ci.yml `test` job last green run",
+      "failure_mode": null,
+      "remediation_hint": null,
+      "automation_status": "ci-blocking",
+      "blast_radius": "low"
+    },
+    {
+      "id": "tutorial/first-run-end-to-end",
+      "sources": [
+        "docs/tutorials/first-run.md:51-166",
+        "README.md:56-70 (abbreviated quick-start)"
+      ],
+      "category": "tutorial-step",
+      "persona": "first-time-user",
+      "command": "<the eight steps in docs/tutorials/first-run.md, sequenced>",
+      "preconditions": ["install/build-from-source OR install/cargo-binstall OR install/curl-installer-sh succeeded", "port 7878 free"],
+      "expected_outcome": {
+        "asserts": [
+          "step 2: simulator starts and listens on 127.0.0.1:7878",
+          "step 3: `reposix init sim::demo /tmp/repo` exits 0 and configures partial-clone",
+          "step 4: `git checkout -B main refs/reposix/origin/main` exits 0",
+          "step 5: issues/0001.md exists with `title:` frontmatter",
+          "step 7: `git push` reports `[new branch] main -> main`",
+          "step 8: `audit_events_cache` has a row with `op LIKE 'helper_push_%'`"
+        ]
+      },
+      "verifier": {
+        "kind": "shell-against-checkout",
+        "script": "scripts/repro-quickstart.sh",
+        "ci_friendly": true,
+        "timeout_s": 60,
+        "note": "Already exists. Run it; promote to ci.yml as a job."
+      },
+      "artifact": ".planning/verifications/repro/tutorial__first-run-end-to-end.json",
+      "status": "PASS (locally) / NOT-RUN-IN-CI",
+      "last_verified_at": null,
+      "failure_mode": "not in CI — silent bit-rot risk. Script's own header notes this: 'CI wiring: NOT yet wired into .github/workflows/ci.yml'.",
+      "remediation_hint": ".github/workflows/ci.yml — add `tutorial-repro` job that runs `bash scripts/repro-quickstart.sh` after `test` job",
+      "automation_status": "manual-only",
+      "blast_radius": "P0 — tutorial is the headline conversion path"
+    },
+    {
+      "id": "quickstart/index-after-one-commit",
+      "sources": ["docs/index.md:67-72"],
+      "category": "quickstart-snippet",
+      "persona": "first-time-user-second-step",
+      "command": "cd /tmp/reposix-demo && sed -i 's/^status: .*/status: in_progress/' issues/0001.md && echo $'\\n## Comment\\nReproduced — investigating root cause.' >> issues/0001.md && git commit -am '0001: in progress' && git push",
+      "preconditions": ["tutorial/first-run-end-to-end through step 5 (a clone exists at /tmp/reposix-demo)"],
+      "expected_outcome": {
+        "asserts": [
+          "git push reports success",
+          "subsequent `git log -1 --format=%s` shows the commit message"
+        ]
+      },
+      "verifier": {
+        "kind": "shell-against-checkout",
+        "ci_friendly": true,
+        "timeout_s": 30,
+        "note": "Different working dir (/tmp/reposix-demo) than the tutorial (/tmp/repo). Real-user pitfall: the doc mixes two paths. Verifier should pin one and the docs should match."
+      },
+      "artifact": ".planning/verifications/repro/quickstart__index-after-one-commit.json",
+      "status": "NOT-VERIFIED",
+      "last_verified_at": null,
+      "failure_mode": "doc has a path inconsistency (/tmp/repo in tutorial vs /tmp/reposix-demo in index hero). Friction for a copy-paste user.",
+      "remediation_hint": "harmonize the path across docs/index.md, README.md, and docs/tutorials/first-run.md",
+      "automation_status": "not-yet",
+      "blast_radius": "P1"
+    },
+    {
+      "id": "quickstart/readme-five-line",
+      "sources": ["README.md:56-70"],
+      "category": "quickstart-snippet",
+      "persona": "first-time-user-from-github",
+      "command": "reposix sim --bind 127.0.0.1:7878 & && reposix init sim::demo /tmp/reposix-demo && cd /tmp/reposix-demo && git checkout -B main refs/reposix/origin/main && ls issues/ && sed -i 's/TODO/DONE/' issues/0001.md && git commit -am 'mark issue 1 done' && git push",
+      "preconditions": ["any install path succeeded", "port 7878 free"],
+      "expected_outcome": {"asserts": ["overlaps with tutorial/first-run-end-to-end"]},
+      "verifier": {
+        "kind": "shell-against-checkout",
+        "script": "scripts/repro-quickstart.sh (extend or fork)",
+        "ci_friendly": true,
+        "timeout_s": 60
+      },
+      "artifact": ".planning/verifications/repro/quickstart__readme-five-line.json",
+      "status": "NOT-VERIFIED",
+      "last_verified_at": null,
+      "failure_mode": null,
+      "remediation_hint": "either fold this into repro-quickstart.sh as a second mode, or assert this snippet is BYTE-IDENTICAL to a tested fixture",
+      "automation_status": "not-yet",
+      "blast_radius": "P1"
+    },
+    {
+      "id": "benchmark-claim/8ms-cached-read",
+      "sources": ["docs/index.md:14", "README.md:21"],
+      "category": "benchmark-claim",
+      "persona": "skeptical-evaluator",
+      "command": "<benchmark not directly user-runnable; numbers come from docs/benchmarks/latency.md>",
+      "preconditions": ["docs/benchmarks/latency.md fresh"],
+      "expected_outcome": {
+        "asserts": [
+          "docs/benchmarks/latency.md frontmatter `last_measured_at` is < 30 days old",
+          "the cached-read p50 cell value matches the headline `8 ms` to within ±2ms"
+        ]
+      },
+      "verifier": {
+        "kind": "shell-against-checkout",
+        "script": "scripts/latency-bench.sh sim",
+        "ci_friendly": true,
+        "timeout_s": 300,
+        "note": "Already cron'd via .github/workflows/bench-latency-cron.yml. Add a check that the headline number matches."
+      },
+      "artifact": ".planning/verifications/repro/benchmark__8ms-cached-read.json",
+      "status": "PARTIAL",
+      "last_verified_at": null,
+      "failure_mode": "no automated check that hero numbers in index/README match the bench output",
+      "remediation_hint": "add an end-state.py claim that greps the headline numbers from index.md/README.md and asserts they match the latency.md table",
+      "automation_status": "ci-warning",
+      "blast_radius": "P2"
+    },
+    {
+      "id": "benchmark-claim/89.1-percent-token-reduction",
+      "sources": ["docs/index.md:13", "README.md:23"],
+      "category": "benchmark-claim",
+      "persona": "skeptical-evaluator",
+      "command": "<benchmark; numbers come from docs/benchmarks/token-economy.md>",
+      "preconditions": ["docs/benchmarks/token-economy.md exists in mkdocs nav (already an end-state claim)"],
+      "expected_outcome": {
+        "asserts": [
+          "headline `89.1%` is greppable from docs/benchmarks/token-economy.md",
+          "the comparison fixture file referenced from token-economy.md exists"
+        ]
+      },
+      "verifier": {
+        "kind": "shell-against-checkout",
+        "script": "scripts/bench_token_economy.py",
+        "ci_friendly": true,
+        "timeout_s": 60
+      },
+      "artifact": ".planning/verifications/repro/benchmark__89-1-percent.json",
+      "status": "PARTIAL",
+      "last_verified_at": null,
+      "failure_mode": "same as 8ms claim — no cross-check between hero copy and bench output",
+      "remediation_hint": "single end-state.py claim per headline number that greps both surfaces",
+      "automation_status": "ci-warning",
+      "blast_radius": "P2"
+    },
+    {
+      "id": "troubleshooting/sparse-checkout-recovery",
+      "sources": ["docs/guides/troubleshooting.md (blob-limit section)"],
+      "category": "troubleshooting-recipe",
+      "persona": "user-hitting-blob-limit",
+      "command": "<git sparse-checkout init + git sparse-checkout set ...>",
+      "preconditions": ["a clone where blob-limit was hit"],
+      "expected_outcome": {"asserts": ["recovery succeeds; subsequent fetch under the limit works"]},
+      "verifier": {
+        "kind": "shell-against-checkout",
+        "script": "scripts/dark-factory-test.sh sim (already exercises sparse-checkout recovery)",
+        "ci_friendly": true,
+        "timeout_s": 120
+      },
+      "artifact": ".planning/verifications/repro/troubleshooting__sparse-checkout.json",
+      "status": "PASS",
+      "last_verified_at": "implicit via dark-factory CI job",
+      "failure_mode": null,
+      "remediation_hint": null,
+      "automation_status": "ci-blocking",
+      "blast_radius": "low"
+    }
+  ],
+  "automation_proposal": {
+    "summary": "Three layers, cheapest first.",
+    "layer_1_drift_detector": {
+      "what": "scripts/extract-doc-snippets.py — parse README.md, docs/index.md, docs/tutorials/*.md for fenced code blocks; emit JSON of (file, line, lang, content). Compare against the catalog's `sources`+`command` fields. Fail if a doc snippet has no catalog row, or a catalog row's content drifted from its source.",
+      "wires_into": "pre-push hook + ci.yml as a fast (<5s) check",
+      "cost": "low",
+      "catches": "doc edits that change a documented command without updating the verifier"
+    },
+    "layer_2_asset_existence": {
+      "what": "scripts/check-doc-urls.py — for every catalog row of kind asset-existence, HEAD/GET the URL, assert min_bytes + magic_prefix. Run nightly + on docs/release-workflow changes.",
+      "wires_into": "new .github/workflows/docs-repro.yml (cron + on push to release.yml/docs/**) — same shape as bench-latency-cron.yml",
+      "cost": "low (~30s, no compile)",
+      "catches": "exactly the install/curl-installer-sh regression. Would have failed within 24h of the v0.11.1 release-plz cutover."
+    },
+    "layer_3_container_rehearsal": {
+      "what": "scripts/run-doc-rehearsal.sh <id> — for catalog rows with kind container-rehearsal, spin a fresh ubuntu/alpine container, run the documented snippet verbatim, assert post-conditions. Persist log + outcome to .planning/verifications/repro/<id>.json.",
+      "wires_into": ".github/workflows/docs-repro.yml as a separate job matrix per persona (linux/mac/windows). Manual-trigger + nightly. NOT pre-push (too slow).",
+      "cost": "medium (5-10min per persona)",
+      "catches": "everything layer 2 doesn't — script content errors, env-var assumptions, path inconsistencies (e.g. the /tmp/repo vs /tmp/reposix-demo split flagged in quickstart/index-after-one-commit)"
+    },
+    "tie_in_with_session_end_state": "Add a single claim to SESSION-END-STATE.json: `docs/all-snippets-verified` whose verifier is `python3 scripts/end-state-from-repro.py` — reads docs_reproducible_catalog.json and asserts every row is PASS or has an explicit `accepted_failure: true` waiver. That hooks the catalog into the existing pre-push verdict gate."
+  },
+  "next_actions_for_owner_review": [
+    "Approve schema (this file). Suggest adding fields if useful — e.g. `accepted_failure_until: <date>` for known-broken rows we don't want to block on.",
+    "Decide on owner: this catalog is a planning artifact (.planning/) but the verifier scripts are code. Open a /gsd-quick to (a) build layer-1 drift-detector and (b) fix release.yml so install/curl-installer-sh flips to PASS.",
+    "Layer-3 container rehearsal is real money on CI. Recommend nightly cron + manual workflow_dispatch, NOT per-PR.",
+    "Three rows worth adding to SESSION-END-STATE.json TODAY (no extra infra needed): asset-existence checks for the curl/ps1 installer URLs and the homebrew tap formula version. Five lines of shell each."
+  ]
+}
