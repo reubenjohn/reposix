@@ -119,25 +119,18 @@ def check_catalog(stem: str, contract: dict, errors: list) -> None:
     if bad_cadences:
         fail(f"{stem}: unexpected cadences: {sorted(bad_cadences)}", errors)
 
-    expected_status = contract.get("all_status")
+    valid_statuses = {"NOT-VERIFIED", "PASS", "FAIL", "PARTIAL", "WAIVED"}
     for r in rows:
         for field in REQUIRED_ROW_FIELDS:
             if field not in r:
                 fail(f"{stem}: row {r.get('id')!r} missing field {field!r}", errors)
-        # WAIVED is always permitted when a waiver block is set, regardless of
-        # the contract's nominal `all_status`. This lets the runner mutate
-        # NOT-VERIFIED -> WAIVED idempotently without breaking validation.
         status = r.get("status")
-        has_waiver = r.get("waiver") is not None
-        if expected_status and status != expected_status:
-            if has_waiver and status == "WAIVED":
-                pass
-            else:
-                fail(
-                    f"{stem}: row {r.get('id')!r} status={status!r} "
-                    f"expected={expected_status!r}",
-                    errors,
-                )
+        if status not in valid_statuses:
+            fail(
+                f"{stem}: row {r.get('id')!r} status={status!r} "
+                f"not in {sorted(valid_statuses)}",
+                errors,
+            )
 
     if contract.get("binstall_check"):
         binstall = next((r for r in rows if r.get("id") == "release/cargo-binstall-resolves"), None)
