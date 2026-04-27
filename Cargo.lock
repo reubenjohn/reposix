@@ -2986,6 +2986,7 @@ dependencies = [
  "reposix-core",
  "reposix-github",
  "reposix-jira",
+ "reposix-sim",
  "serde_json",
  "tempfile",
  "thiserror",
