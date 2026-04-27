@@ -33,6 +33,18 @@ The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The f
 4. **No hidden state.** Cache state, simulator state, and git remote helper state all live in committed-or-fixture artifacts. No "it works in my session" bugs.
 5. **Working tree IS a real git checkout.** The whole point of v0.9.0 is that `.git/` is real, not synthetic; `git diff` is the change set by construction, not by emulation. The partial clone (`extensions.partialClone=origin`) makes blobs lazy, but everything else is upstream git.
 6. **Real backends are first-class test targets.** Three canonical targets are sanctioned for aggressive testing: **Confluence space "TokenWorld"** (owned by the user; safe to mutate freely), **GitHub repo `reubenjohn/reposix` issues** (ours; safe to create/close issues during tests), and **JIRA project `TEST`** (default key; overridable via `JIRA_TEST_PROJECT` or `REPOSIX_JIRA_PROJECT`). See `docs/reference/testing-targets.md` for env-var setup, owner permission statement, and cleanup procedure. Simulator remains the default (OP-1), but "simulator-only coverage" does NOT satisfy acceptance for transport-layer or performance claims.
+7. **Phase-close means catalog-row PASS.** v0.12.0 introduces the
+   "verifier subagent grades GREEN" gate per phase close (QG-06).
+   No phase ships on the executing agent's word; an unbiased subagent
+   reads the catalog rows + the Wave-N verification artifacts with
+   zero session context and writes a verdict to
+   `quality/reports/verdicts/p<N>/<ts>.md` (or `.planning/verifications/p<N>/VERDICT.md`
+   until P57 lands the `quality/reports/` tree). **The verdict is the
+   contract** — if RED, the phase loops back to fix the failing rows
+   rather than negotiating the catalog down. Meta-rule extension: when
+   a release-pipeline regression is fixed, the same PR ships
+   container-rehearsal evidence under `.planning/verifications/p56/`
+   (or `quality/reports/verifications/release/` after P58).
 
 ## Workspace layout
 
@@ -294,6 +306,108 @@ If you (the agent) notice this CLAUDE.md getting hard to keep in working memory:
 2. Read the most recent `.planning/phases/*/PLAN.md`.
 3. Skim `git log --oneline -20` to know what's recently shipped.
 4. Don't read this file linearly; grep for the section you need.
+
+## v0.12.0 Quality Gates — phase log
+
+The v0.12.0 milestone migrates ad-hoc `scripts/check-*.sh` and the
+conflated `scripts/end-state.py` to a dimension-tagged Quality
+Gates system at `quality/{gates,catalogs,reports,runners}/`. **The
+framework itself ships in P57** — until then, the catalog format
+lives in `.planning/docs_reproducible_catalog.json` (ACTIVE-V0; P57
+migrates it to the unified schema). Read
+`.planning/research/v0.12.0-{vision-and-mental-model,
+naming-and-architecture, roadmap-and-rationale,
+autonomous-execution-protocol}.md` before working on any v0.12.0
+phase. Read `quality/SURPRISES.md` (append-only pivot journal — seeded
+in P56) at the start of every phase to avoid repeating dead ends.
+Future phases follow `quality/PROTOCOL.md` (lands P57 — autonomous-mode
+runtime contract).
+
+### P56 contribution — release pipeline + install-evidence pattern
+
+`.github/workflows/release.yml` now fires on **both** `v*` AND
+`reposix-cli-v*` tag globs (Option A from
+`.planning/research/v0.12.0-install-regression-diagnosis.md`),
+because release-plz cuts per-crate tags. Archive filenames use the
+`v${version}` form (e.g. `reposix-v0.11.3-x86_64-unknown-linux-musl.tar.gz`)
+regardless of which tag triggered the workflow; the GH Release object
+still uses the actual tag name (e.g. `reposix-cli-v0.11.3`) so
+release-plz's existing release object is the one that gets assets
+attached. **If you edit release.yml,** preserve the
+`release_tag`/`version`/`version_tag` distinction in the `plan` job's
+outputs — collapsing them re-introduces the regression. The
+install-path contract lives in
+`.planning/docs_reproducible_catalog.json` until P58 splits it into
+`quality/catalogs/install-paths.json`.
+
+P56 shipped these new artifacts (referenced by future phases):
+
+- `scripts/p56-rehearse-curl-install.sh` — ubuntu:24.04 container rehearsal for the curl one-liner.
+- `scripts/p56-rehearse-cargo-binstall.sh` — rust:1.82-slim container rehearsal for `cargo binstall`.
+- `scripts/p56-asset-existence.sh` — generic HEAD/range asset reachability check.
+- `scripts/p56-validate-install-evidence.py` — install-evidence JSON validator (Wave 4 verifier subagent re-runs this).
+- `.planning/verifications/p56/install-paths/<id>.json` — per-row evidence files.
+- `.planning/docs_reproducible_catalog.json` — ACTIVE-V0 catalog seeded with 5 install rows + 6 docs/tutorial/benchmark rows.
+
+### Container-rehearsal evidence schema (P56 → P58 forward path)
+
+Every install-path verifier writes JSON to
+`.planning/verifications/p56/install-paths/<id>.json` with the shape:
+
+```jsonc
+{
+  "claim_id": "install/<slug>",
+  "phase": "p56",
+  "verifier_kind": "asset-existence | container-rehearsal | shell-against-checkout",
+  "verified_at": "<RFC3339-UTC>",
+  "container_image": "<image:tag>",     // present when verifier_kind contains container-rehearsal
+  "container_image_digest": "<sha256:…>",// optional but recommended
+  "verifier_script": "scripts/<committed-script>.sh",
+  "asserts": { /* per-row assertion booleans + observed values */ },
+  "evidence": { /* container_log_path, log excerpts, exit codes, observed bytes */ },
+  "status": "PASS | FAIL | PARTIAL | NOT-VERIFIED"
+}
+```
+
+Future-shape note: P58 ports this schema to `quality/reports/verifications/release/`
+under the unified Quality Gates layout. New install-path or release-pipeline
+verifiers should write the same shape there from day one — same `claim_id`,
+same `asserts`/`evidence` discipline.
+
+### Meta-rule (extension of OP-1 close-the-loop)
+
+When a release-pipeline regression is fixed, the same PR ships
+container-rehearsal evidence under `.planning/verifications/p56/`
+(or `quality/reports/verifications/release/` after P58). "Fix landed
+green" without a re-run-from-scratch evidence JSON is incomplete —
+release.yml can land green and still surface trigger-semantics gaps
+the next phase has to journal.
+
+### Carry-forward to v0.12.1 (tracked under MIGRATE-03)
+
+Four items discovered in P56 deferred to v0.12.1 carry-forward:
+
+1. **release-plz GITHUB_TOKEN-pushed tags don't trigger downstream workflows** —
+   GH loop-prevention rule. Workaround: `gh workflow run --ref <tag>` (workflow_dispatch).
+   Fix path: release-plz workflow uses fine-grained PAT or adds a post-tag dispatch step.
+2. **install/cargo-binstall metadata misaligned** with release.yml archive shape —
+   ~10 LOC `[package.metadata.binstall]` fix in `crates/reposix-cli/Cargo.toml` +
+   `crates/reposix-remote/Cargo.toml`; row stays PARTIAL until v0.12.1.
+3. **Rust 1.82 MSRV can't `cargo install reposix-cli` from crates.io** because
+   transitive `block-buffer-0.12.0` requires `edition2024` (unstable on 1.82).
+   Orthogonal MSRV bug — fix is either cap dep at <0.12 or raise MSRV to 1.85.
+4. **Latest-pointer caveat** — `releases/latest/download/...` follows release
+   recency; release-plz cuts per-crate releases; a non-cli release published
+   after the cli release moves the pointer and re-breaks the curl URL until the
+   next cli release. Long-term fix: `gh release create --latest` to pin the
+   pointer, or configure release-plz to publish reposix-cli last.
+
+Cross-references:
+
+- `.planning/REQUIREMENTS.md` ## v0.12.0 (active milestone scope, MIGRATE-03 carry-forward list)
+- `.planning/ROADMAP.md` ## v0.12.0 Quality Gates (PLANNING) (Phases 56-63)
+- `quality/PROTOCOL.md` (lands P57 — autonomous-mode runtime contract)
+- `quality/SURPRISES.md` (append-only pivot journal; ≤200 lines, archives at 200)
 
 ## Quick links
 
