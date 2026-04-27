@@ -25,11 +25,11 @@ pkg-fmt = "zip"
 
 [dependencies]
 reposix-core.workspace = true
-reposix-cache = { path = "../reposix-cache", version = "0.11.1" }
-reposix-sim = { path = "../reposix-sim", version = "0.11.1" }
-reposix-confluence = { path = "../reposix-confluence", version = "0.11.1" }
-reposix-github = { path = "../reposix-github", version = "0.11.1" }
-reposix-jira = { path = "../reposix-jira", version = "0.11.1" }
+reposix-cache = { path = "../reposix-cache", version = "0.11.2" }
+reposix-sim = { path = "../reposix-sim", version = "0.11.2" }
+reposix-confluence = { path = "../reposix-confluence", version = "0.11.2" }
+reposix-github = { path = "../reposix-github", version = "0.11.2" }
+reposix-jira = { path = "../reposix-jira", version = "0.11.2" }
 tokio.workspace = true
 reqwest.workspace = true
 clap.workspace = true

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.2](https://github.com/reubenjohn/reposix/compare/reposix-cache-v0.11.1...reposix-cache-v0.11.2) - 2026-04-27
+
+### Other
+
+- §0.3 + §0.4 — rename version-pinned files, hoist token-economy bench into nav
+
 ## [0.11.1](https://github.com/reubenjohn/reposix/compare/reposix-cache-v0.11.0...reposix-cache-v0.11.1) - 2026-04-27
 
 ### Added
