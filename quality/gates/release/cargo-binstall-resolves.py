@@ -29,6 +29,9 @@ PASS_SIGNAL = "github.com/reubenjohn/reposix/releases/download/"
 PARTIAL_SIGNALS = (
     "Falling back to source",
     "Falling back to install via 'cargo install'",
+    "will be installed from source",
+    "running `cargo install",
+    "running '/home/runner/.rustup",
     "compiling reposix",
 )
 
