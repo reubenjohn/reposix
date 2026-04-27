@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.3](https://github.com/reubenjohn/reposix/compare/reposix-cache-v0.11.2...reposix-cache-v0.11.3) - 2026-04-27
+
+### Other
+
+- *(readme)* fix broken badges + replace outdated tagline
+- *(cache-audit)* cover 5 helper-RPC audit fns — closes NICE-TO-HAVE #1
+
 ## [0.11.2](https://github.com/reubenjohn/reposix/compare/reposix-cache-v0.11.1...reposix-cache-v0.11.2) - 2026-04-27
 
 ### Other

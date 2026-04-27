@@ -13,7 +13,7 @@ keywords = ["git", "cache", "agent", "rest", "partial-clone"]
 categories = ["development-tools", "caching"]
 
 [dependencies]
-reposix-core = { path = "../reposix-core", version = "0.11.2" }
+reposix-core = { path = "../reposix-core", version = "0.11.3" }
 tokio = { workspace = true }
 async-trait = { workspace = true }
 chrono = { workspace = true }

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.3](https://github.com/reubenjohn/reposix/compare/reposix-jira-v0.11.2...reposix-jira-v0.11.3) - 2026-04-27
+
+### Other
+
+- *(readme)* fix broken badges + replace outdated tagline
+
 ## [0.11.2](https://github.com/reubenjohn/reposix/compare/reposix-jira-v0.11.1...reposix-jira-v0.11.2) - 2026-04-27
 
 ### Other
