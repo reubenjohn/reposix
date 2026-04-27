@@ -6,7 +6,7 @@ description: Self-check Markdown changes under docs/ against the reposix progres
 # reposix-banned-words
 
 This skill encodes the P1 + P2 framing rules from
-`.planning/notes/phase-30-narrative-vignettes.md` so an authoring agent can
+`.planning/archive/notes/phase-30-narrative-vignettes.md` so an authoring agent can
 self-check before commit. The mechanical enforcer is
 `scripts/banned-words-lint.sh`; the canonical config is
 `docs/.banned-words.toml`.
@@ -61,7 +61,7 @@ The deleted v0.1 design used a FUSE daemon. <!-- banned-words: ok --> historical
 
 > Above the fold, the only technical words permitted are ones every developer
 > already knows — file, folder, edit, commit, push, merge, YAML, markdown.
-> — `.planning/notes/phase-30-narrative-vignettes.md` §"P2 progressive disclosure"
+> — `.planning/archive/notes/phase-30-narrative-vignettes.md` §"P2 progressive disclosure"
 
 The linter is the institutional memory of that rule, not a checklist (per
 project CLAUDE.md OP-4: "ad-hoc bash is a missing-tool signal — promote it
