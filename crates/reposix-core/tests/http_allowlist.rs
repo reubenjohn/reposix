@@ -280,6 +280,76 @@ async fn request_with_headers_attaches_header() {
 }
 
 #[tokio::test]
+async fn egress_post_to_non_allowlisted_host_is_rejected() {
+    // Mirror of `egress_to_non_allowlisted_host_is_rejected`, but exercised
+    // through the `post()` convenience wrapper. Locks the contract that
+    // every wrapper goes through the same allowlist gate as `request()`.
+    let _g = EnvGuard::unset();
+    let c = client(ClientOpts::default()).expect("client builds");
+    let t0 = Instant::now();
+    let err = c
+        .post("http://evil.example/")
+        .await
+        .expect_err("non-allowlisted host must be rejected");
+    let elapsed = t0.elapsed();
+    assert!(matches!(err, Error::InvalidOrigin(_)), "got: {err:?}");
+    assert!(
+        format!("{err}").contains("evil.example"),
+        "error message must name the offending host; got: {err}"
+    );
+    assert!(
+        elapsed < Duration::from_millis(500),
+        "post() must short-circuit before I/O; took {elapsed:?}"
+    );
+}
+
+#[tokio::test]
+async fn egress_patch_to_non_allowlisted_host_is_rejected() {
+    // Mirror of `egress_to_non_allowlisted_host_is_rejected`, but exercised
+    // through the `patch()` convenience wrapper.
+    let _g = EnvGuard::unset();
+    let c = client(ClientOpts::default()).expect("client builds");
+    let t0 = Instant::now();
+    let err = c
+        .patch("http://evil.example/")
+        .await
+        .expect_err("non-allowlisted host must be rejected");
+    let elapsed = t0.elapsed();
+    assert!(matches!(err, Error::InvalidOrigin(_)), "got: {err:?}");
+    assert!(
+        format!("{err}").contains("evil.example"),
+        "error message must name the offending host; got: {err}"
+    );
+    assert!(
+        elapsed < Duration::from_millis(500),
+        "patch() must short-circuit before I/O; took {elapsed:?}"
+    );
+}
+
+#[tokio::test]
+async fn egress_delete_to_non_allowlisted_host_is_rejected() {
+    // Mirror of `egress_to_non_allowlisted_host_is_rejected`, but exercised
+    // through the `delete()` convenience wrapper.
+    let _g = EnvGuard::unset();
+    let c = client(ClientOpts::default()).expect("client builds");
+    let t0 = Instant::now();
+    let err = c
+        .delete("http://evil.example/")
+        .await
+        .expect_err("non-allowlisted host must be rejected");
+    let elapsed = t0.elapsed();
+    assert!(matches!(err, Error::InvalidOrigin(_)), "got: {err:?}");
+    assert!(
+        format!("{err}").contains("evil.example"),
+        "error message must name the offending host; got: {err}"
+    );
+    assert!(
+        elapsed < Duration::from_millis(500),
+        "delete() must short-circuit before I/O; took {elapsed:?}"
+    );
+}
+
+#[tokio::test]
 #[ignore = "sleeps ~5s to exercise the timeout; run with --ignored in CI"]
 async fn request_times_out_after_5_seconds() {
     let _g = EnvGuard::unset();
