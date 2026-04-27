@@ -33,6 +33,7 @@ on:
   push:
     tags:
       - 'v*'
+      - 'reposix-cli-v*'
   workflow_dispatch:
 
 permissions:
@@ -43,8 +44,9 @@ jobs:
     name: plan
     runs-on: ubuntu-latest
     outputs:
-      tag: ${{ steps.plan.outputs.tag }}
+      release_tag: ${{ steps.plan.outputs.release_tag }}
       version: ${{ steps.plan.outputs.version }}
+      version_tag: ${{ steps.plan.outputs.version_tag }}
     steps:
       - uses: actions/checkout@v4
 
@@ -53,15 +55,26 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            TAG="${GITHUB_REF#refs/tags/}"
+            RELEASE_TAG="${GITHUB_REF#refs/tags/}"
           else
             # Manual dispatch: derive a synthetic dev tag.
-            TAG="v0.0.0-dev-$(date -u +%Y%m%d%H%M%S)"
+            RELEASE_TAG="v0.0.0-dev-$(date -u +%Y%m%d%H%M%S)"
           fi
-          VERSION="${TAG#v}"
-          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          # Strip release-plz per-crate prefix if present.
+          # release-plz uses the pattern <crate>-v<semver>; we ship a single
+          # release pipeline keyed on reposix-cli's version (reposix-cli is the
+          # user-facing crate; reposix-remote ships in the same archive).
+          VERSION="${RELEASE_TAG#reposix-cli-v}"
+          VERSION="${VERSION#v}"
+          # version_tag is the short v-prefixed form used inside archive
+          # filenames so docs/installers see `reposix-v0.11.3-<target>.tar.gz`
+          # regardless of whether the trigger was `v0.11.3` or
+          # `reposix-cli-v0.11.3`.
+          VERSION_TAG="v${VERSION}"
+          echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "Resolved: tag=${TAG} version=${VERSION}"
+          echo "version_tag=${VERSION_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Resolved: release_tag=${RELEASE_TAG} version=${VERSION} version_tag=${VERSION_TAG}"
 
   build-binaries:
     name: build (${{ matrix.target }})
@@ -141,7 +154,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          TAG="${{ needs.plan.outputs.tag }}"
+          TAG="${{ needs.plan.outputs.version_tag }}"
           STAGE="reposix-${TAG}-${{ matrix.target }}"
           mkdir -p "$STAGE"
           if [[ "${{ matrix.target }}" == *windows* ]]; then
@@ -187,8 +200,9 @@ jobs:
     needs: [plan, build-binaries]
     runs-on: ubuntu-latest
     outputs:
-      tag: ${{ needs.plan.outputs.tag }}
+      release_tag: ${{ needs.plan.outputs.release_tag }}
       version: ${{ needs.plan.outputs.version }}
+      version_tag: ${{ needs.plan.outputs.version_tag }}
     steps:
       - uses: actions/checkout@v4
 
@@ -209,7 +223,16 @@ jobs:
       - name: Generate installer scripts
         run: |
           set -euo pipefail
-          TAG="${{ needs.plan.outputs.tag }}"
+          # RELEASE_TAG is the actual GH Release object name (e.g.
+          # `reposix-cli-v0.11.3` when triggered by release-plz, or
+          # `v0.11.3` when triggered by a workspace tag push). Used in
+          # `releases/download/<tag>/...` URL segments because that's the
+          # path GitHub serves the assets under.
+          # VERSION_TAG is the short v-prefixed form (e.g. `v0.11.3`)
+          # used inside archive filenames so docs/installers see
+          # `reposix-v0.11.3-<target>.tar.gz` regardless of trigger.
+          RELEASE_TAG="${{ needs.plan.outputs.release_tag }}"
+          VERSION_TAG="${{ needs.plan.outputs.version_tag }}"
           REPO="reubenjohn/reposix"
 
           # POSIX installer (curl | sh)
@@ -220,7 +243,8 @@ jobs:
           set -eu
 
           REPO="${REPO}"
-          TAG="${TAG}"
+          RELEASE_TAG="${RELEASE_TAG}"
+          VERSION_TAG="${VERSION_TAG}"
           INSTALL_DIR="\${REPOSIX_INSTALL_DIR:-\$HOME/.local/bin}"
 
           uname_s=\$(uname -s)
@@ -239,8 +263,8 @@ jobs:
           esac
 
           target="\${arch}-\${os}"
-          archive="reposix-\${TAG}-\${target}.tar.gz"
-          url="https://github.com/\${REPO}/releases/download/\${TAG}/\${archive}"
+          archive="reposix-\${VERSION_TAG}-\${target}.tar.gz"
+          url="https://github.com/\${REPO}/releases/download/\${RELEASE_TAG}/\${archive}"
 
           echo "→ downloading \$url"
           tmp=\$(mktemp -d)
@@ -248,8 +272,8 @@ jobs:
           tar -xzf "\$tmp/\$archive" -C "\$tmp"
 
           mkdir -p "\$INSTALL_DIR"
-          cp "\$tmp/reposix-\${TAG}-\${target}/reposix" "\$INSTALL_DIR/"
-          cp "\$tmp/reposix-\${TAG}-\${target}/git-remote-reposix" "\$INSTALL_DIR/"
+          cp "\$tmp/reposix-\${VERSION_TAG}-\${target}/reposix" "\$INSTALL_DIR/"
+          cp "\$tmp/reposix-\${VERSION_TAG}-\${target}/git-remote-reposix" "\$INSTALL_DIR/"
           chmod +x "\$INSTALL_DIR/reposix" "\$INSTALL_DIR/git-remote-reposix"
           rm -rf "\$tmp"
 
@@ -264,12 +288,13 @@ jobs:
           # Usage: irm URL | iex
           \$ErrorActionPreference = 'Stop'
           \$Repo = '${REPO}'
-          \$Tag = '${TAG}'
+          \$ReleaseTag = '${RELEASE_TAG}'
+          \$VersionTag = '${VERSION_TAG}'
           \$InstallDir = if (\$env:REPOSIX_INSTALL_DIR) { \$env:REPOSIX_INSTALL_DIR } else { "\$env:USERPROFILE\\.local\\bin" }
 
           \$target = 'x86_64-pc-windows-msvc'
-          \$archive = "reposix-\$Tag-\$target.zip"
-          \$url = "https://github.com/\$Repo/releases/download/\$Tag/\$archive"
+          \$archive = "reposix-\$VersionTag-\$target.zip"
+          \$url = "https://github.com/\$Repo/releases/download/\$ReleaseTag/\$archive"
 
           Write-Host "→ downloading \$url"
           \$tmp = New-Item -ItemType Directory -Path "\$env:TEMP\\reposix-installer-\$(Get-Random)"
@@ -278,8 +303,8 @@ jobs:
           Expand-Archive -Path \$out -DestinationPath \$tmp
 
           New-Item -ItemType Directory -Force -Path \$InstallDir | Out-Null
-          Copy-Item "\$tmp\\reposix-\$Tag-\$target\\reposix.exe" \$InstallDir
-          Copy-Item "\$tmp\\reposix-\$Tag-\$target\\git-remote-reposix.exe" \$InstallDir
+          Copy-Item "\$tmp\\reposix-\$VersionTag-\$target\\reposix.exe" \$InstallDir
+          Copy-Item "\$tmp\\reposix-\$VersionTag-\$target\\git-remote-reposix.exe" \$InstallDir
           Remove-Item -Recurse -Force \$tmp
 
           Write-Host "✓ installed reposix.exe and git-remote-reposix.exe to \$InstallDir"
@@ -292,7 +317,14 @@ jobs:
         id: changelog
         run: |
           set -euo pipefail
-          TAG="${{ needs.plan.outputs.tag }}"
+          # CHANGELOG sections are headed `## [vX.Y.Z] — DATE` (the workspace
+          # v-prefixed form), so the lookup key is version_tag, NOT the raw
+          # release_tag (which can be `reposix-cli-vX.Y.Z` under release-plz).
+          TAG="${{ needs.plan.outputs.version_tag }}"
+          # RELEASE_TAG is the GH Release object's tag — used in the per-tag
+          # install URLs we echo into the body, since users land on
+          # `releases/download/<release_tag>/...`.
+          RELEASE_TAG="${{ needs.plan.outputs.release_tag }}"
           awk -v tag="## [${TAG}]" '
             $0 ~ /^## \[/ {
               if (in_section) exit
@@ -311,10 +343,10 @@ jobs:
             echo ""
             echo "\`\`\`bash"
             echo "# Linux/macOS"
-            echo "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/reubenjohn/reposix/releases/download/${TAG}/reposix-installer.sh | sh"
+            echo "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/reubenjohn/reposix/releases/download/${RELEASE_TAG}/reposix-installer.sh | sh"
             echo ""
             echo "# Windows (PowerShell)"
-            echo "powershell -ExecutionPolicy Bypass -c \"irm https://github.com/reubenjohn/reposix/releases/download/${TAG}/reposix-installer.ps1 | iex\""
+            echo "powershell -ExecutionPolicy Bypass -c \"irm https://github.com/reubenjohn/reposix/releases/download/${RELEASE_TAG}/reposix-installer.ps1 | iex\""
             echo ""
             echo "# Homebrew"
             echo "brew install reubenjohn/reposix/reposix"
@@ -329,7 +361,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          TAG="${{ needs.plan.outputs.tag }}"
+          # gh release view/create/edit/upload all target the GH Release
+          # object's tag name. release-plz already created the object as
+          # `reposix-cli-vX.Y.Z`; using `version_tag` here would create a
+          # SECOND object, which is the wrong behaviour.
+          TAG="${{ needs.plan.outputs.release_tag }}"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release edit "$TAG" --notes-file body.md
           else
@@ -343,7 +379,7 @@ jobs:
     name: upload homebrew formula
     needs: [plan, host]
     runs-on: ubuntu-latest
-    if: ${{ !contains(needs.plan.outputs.tag, '-dev-') }}
+    if: ${{ !contains(needs.plan.outputs.release_tag, '-dev-') }}
     steps:
       - name: Check tap token
         id: check
@@ -370,7 +406,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          TAG="${{ needs.plan.outputs.tag }}"
+          # `gh release download` targets the GH Release object's tag name.
+          TAG="${{ needs.plan.outputs.release_tag }}"
           mkdir -p shas
           gh release download "$TAG" --pattern 'SHA256SUMS' --dir shas/ -R reubenjohn/reposix
           cat shas/SHA256SUMS
@@ -379,12 +416,17 @@ jobs:
         if: steps.check.outputs.skip != 'true'
         run: |
           set -euo pipefail
-          TAG="${{ needs.plan.outputs.tag }}"
+          # RELEASE_TAG = the GH Release object's tag (URL host segment in
+          # `releases/download/<tag>/...`). VERSION_TAG = v-prefixed form
+          # used in archive filenames. VERSION = bare semver for the
+          # formula `version "X.Y.Z"` field.
+          RELEASE_TAG="${{ needs.plan.outputs.release_tag }}"
           VERSION="${{ needs.plan.outputs.version }}"
+          VERSION_TAG="${{ needs.plan.outputs.version_tag }}"
 
-          x86_darwin_sha=$(awk -v t="reposix-${TAG}-x86_64-apple-darwin.tar.gz" '$2==t {print $1}' shas/SHA256SUMS)
-          arm_darwin_sha=$(awk -v t="reposix-${TAG}-aarch64-apple-darwin.tar.gz" '$2==t {print $1}' shas/SHA256SUMS)
-          x86_linux_sha=$(awk -v t="reposix-${TAG}-x86_64-unknown-linux-musl.tar.gz" '$2==t {print $1}' shas/SHA256SUMS)
+          x86_darwin_sha=$(awk -v t="reposix-${VERSION_TAG}-x86_64-apple-darwin.tar.gz" '$2==t {print $1}' shas/SHA256SUMS)
+          arm_darwin_sha=$(awk -v t="reposix-${VERSION_TAG}-aarch64-apple-darwin.tar.gz" '$2==t {print $1}' shas/SHA256SUMS)
+          x86_linux_sha=$(awk -v t="reposix-${VERSION_TAG}-x86_64-unknown-linux-musl.tar.gz" '$2==t {print $1}' shas/SHA256SUMS)
 
           mkdir -p tap/Formula
           cat > tap/Formula/reposix.rb <<FORMULA_EOF
@@ -396,16 +438,16 @@ jobs:
 
             on_macos do
               if Hardware::CPU.arm?
-                url "https://github.com/reubenjohn/reposix/releases/download/${TAG}/reposix-${TAG}-aarch64-apple-darwin.tar.gz"
+                url "https://github.com/reubenjohn/reposix/releases/download/${RELEASE_TAG}/reposix-${VERSION_TAG}-aarch64-apple-darwin.tar.gz"
                 sha256 "${arm_darwin_sha}"
               else
-                url "https://github.com/reubenjohn/reposix/releases/download/${TAG}/reposix-${TAG}-x86_64-apple-darwin.tar.gz"
+                url "https://github.com/reubenjohn/reposix/releases/download/${RELEASE_TAG}/reposix-${VERSION_TAG}-x86_64-apple-darwin.tar.gz"
                 sha256 "${x86_darwin_sha}"
               end
             end
 
             on_linux do
-              url "https://github.com/reubenjohn/reposix/releases/download/${TAG}/reposix-${TAG}-x86_64-unknown-linux-musl.tar.gz"
+              url "https://github.com/reubenjohn/reposix/releases/download/${RELEASE_TAG}/reposix-${VERSION_TAG}-x86_64-unknown-linux-musl.tar.gz"
               sha256 "${x86_linux_sha}"
             end
 
@@ -424,5 +466,5 @@ jobs:
           git config user.name "reposix-release-bot"
           git config user.email "release-bot@users.noreply.github.com"
           git add Formula/reposix.rb
-          git commit -m "reposix ${TAG}"
+          git commit -m "reposix ${RELEASE_TAG}"
           git push
