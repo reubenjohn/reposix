@@ -457,6 +457,39 @@ The v0.12.0 Quality Gates framework lives at `quality/`. Runtime contract:
 
 **Per-dimension `owner_hint`** when an owner catches a miss: see `quality/PROTOCOL.md` § "Failure modes the protocol protects against" for the routing rule. The catalog row is the contract; the verifier is the code; the artifact is the audit; the verdict is the grade.
 
+### P58 — Release dimension live (added 2026-04-27)
+
+The release dimension is now actively enforcing.
+
+| Verifier | Catalog rows | Cadence |
+|---|---|---|
+| `quality/gates/release/gh-assets-present.py` | `release/gh-assets-present` | weekly |
+| `quality/gates/release/installer-asset-bytes.py` | `install/curl-installer-sh`, `install/powershell-installer-ps1`, `install/build-from-source` | weekly |
+| `quality/gates/release/brew-formula-current.py` | `release/brew-formula-current`, `install/homebrew` | weekly |
+| `quality/gates/release/crates-io-max-version.py` | `release/crates-io-max-version/<crate>` (8 rows; `reposix-swarm` excluded — `publish=false`) | weekly |
+| `quality/gates/release/cargo-binstall-resolves.py` | `release/cargo-binstall-resolves` | post-release |
+
+**Cadence wiring.** `.github/workflows/quality-weekly.yml` (cron Monday 09:00 UTC + workflow_dispatch) drives weekly. `.github/workflows/quality-post-release.yml` (workflow_run on `release` + workflow_dispatch) drives post-release. Both pass `GH_TOKEN: ${{ github.token }}` so verifiers calling `gh` CLI auth correctly.
+
+**QG-09 P58 GH Actions badge.** README.md and docs/index.md link the live workflow status alongside the existing CI badge: `https://github.com/reubenjohn/reposix/actions/workflows/quality-weekly.yml/badge.svg`. The shields.io endpoint badge ships in P60 alongside mkdocs publishing badge.json.
+
+**Code dimension absorption (P58 Wave C).** `quality/gates/code/` ships three verifiers: `clippy-lint-loaded.sh` (SIMPLIFY-04 migration of `scripts/check_clippy_lint_loaded.sh`); `check-fixtures.py` (SIMPLIFY-05 Option A migration of `scripts/check_fixtures.py`); `ci-job-status.sh` (POLISH-CODE P58-stub thin gh-CLI wrapper backing `code/cargo-test-pass` + `code/cargo-fmt-clean`). Both old script paths DELETED — caller analysis returned zero shell/yaml/toml callers.
+
+**Orphan-scripts ledger.** `quality/catalogs/orphan-scripts.json` is empty after Wave E removed the `release/crates-io-max-version` waiver row. The dimension provides active enforcement now. SIMPLIFY-12 P63 audits this file at milestone close — goal is to keep it empty.
+
+**Recovery patterns** (the regressions this dimension catches):
+- `release/brew-formula-current` RED with stale version: `gh workflow run release.yml --ref reposix-cli-vX.Y.Z` (P56 SURPRISES.md row 2 latest-pointer pattern).
+- `release/gh-assets-present` RED with missing assets: same recovery (release.yml didn't fire on the latest tag).
+- `release/cargo-binstall-resolves` PARTIAL: documented expected per P56 SURPRISES.md row 3 + waived until 2026-07-26; MIGRATE-03 v0.12.1 ships the binstall metadata fix.
+
+**Meta-rule extension (P58).** When a release-pipeline regression is fixed, the same PR ships container-rehearsal evidence under `quality/reports/verifications/release/`. The artifact JSON IS the proof; the verifier subagent reads it.
+
+**Cross-references** (do NOT duplicate runtime detail here):
+- `quality/gates/release/README.md` — release-dim verifier table + conventions.
+- `quality/gates/code/README.md` — code-dim verifier table + SIMPLIFY-04/05 absorption record.
+- `quality/catalogs/release-assets.json` — 15-row catalog (P58 active enforcement).
+- `quality/catalogs/code.json` — 4-row catalog (clippy + fixtures PASS; test + fmt WAIVED until P63).
+
 ## Quick links
 
 - `docs/research/initial-report.md` — full architectural argument for git-remote-helper + partial clone.

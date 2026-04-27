@@ -111,3 +111,62 @@ P0+P1 rows. — Resolved by attaching a short-lived waiver
 (`until: 2026-05-11T00:00:00Z`, `tracked_in: P58 Wave C (58-03)`)
 to the catalog row. Wave C removes the waiver and flips to active
 enforcement. Rule 3 deviation; recorded in 58-01-SUMMARY.md.
+
+2026-04-27 P58: Wave D first dispatch of quality-weekly.yml exposed
+install/build-from-source RED in CI: gh CLI in GH Actions environment
+requires explicit `GH_TOKEN: ${{ github.token }}` env var on each
+runner step (the system-default GITHUB_TOKEN is NOT auto-passed to
+gh CLI, only to actions/* uses). Locally the same row PASSes because
+gh CLI uses the user's stored auth. — Fixed in commit 664b533:
+GH_TOKEN env added to runner + verdict steps in both quality-weekly.yml
+and quality-post-release.yml. Run 25020034212 confirmed fix
+(install/build-from-source PASS). Lesson: verifiers calling `gh`
+CLI must always run with GH_TOKEN env in GH Actions; treat this as
+the default workflow shape going forward.
+
+2026-04-27 P58: Wave D first dispatch of quality-post-release.yml
+exposed cargo-binstall-resolves verifier bug. The PARTIAL_SIGNALS
+tuple (`Falling back to source`, `Falling back to install via
+'cargo install'`, `compiling reposix`) did NOT match the actual
+binstall stdout, which says `will be installed from source (with
+cargo)`. The verifier graded FAIL on what should have been the
+documented PARTIAL state per P56 SURPRISES.md row 3. — Fixed in
+commit e0e5645: added 3 additional fallback signals (`will be
+installed from source`, `running \`cargo install`,
+`running '/home/runner/.rustup`). Run 25020150833 confirms fix:
+PARTIAL graded correctly. Lesson: when a "documented expected"
+PARTIAL state lands in production, exercise the verifier against
+the real production output, not just the design-intent string.
+
+2026-04-27 P58: Wave E reconciled the catalog-drift RED that
+Wave A intentionally surfaced — `release/crates-io-max-version/
+reposix-swarm` was a design-time mistake (the crate has
+`publish = false`; internal multi-agent contention test harness
+that is never published to crates.io). — Resolved by REMOVING the
+row from quality/catalogs/release-assets.json (15 rows now;
+8 crates-io-max-version/<crate> rows for the published crates).
+quality/gates/release/README.md gained a "reposix-swarm exclusion"
+section acknowledging the design-time error. Lesson: the
+catalog-first rule (write rows before code) IS load-bearing —
+the verifier surfaced the drift on first dispatch; the fix landed
+in the same milestone instead of leaking to v0.12.1.
+
+2026-04-27 P58: Wave E waived release/cargo-binstall-resolves
+explicitly (until 2026-07-26, tracked_in MIGRATE-03 v0.12.1).
+The runner's exit-code logic treats PARTIAL on P1 as fail — the
+documented expected PARTIAL needs to be a waiver, not a status.
+The waiver text covers BOTH cases: (a) CI-with-binstall observes
+"will be installed from source" → PARTIAL; (b) local-without-binstall
+sees `error: no such command: 'binstall'` → FAIL with diagnostic.
+Both are acceptable in the waiver window. — Resolution: not a
+pivot per se, but a contract clarification: PARTIAL acceptable
+under the framework's exit-code rules requires an explicit waiver.
+
+2026-04-27 P58: phase shipped with documented pivots — release-dim
+gates landed clean (15 weekly rows + 1 post-release row), code-dim
+absorption confirmed (SIMPLIFY-04 + SIMPLIFY-05 closed; check_fixtures
+audit chose Option A), quality-weekly + quality-post-release
+validated end-to-end (4 dispatches; 2 verifier/workflow fixes
+applied), QG-09 P58 GH Actions badge live in README + docs/index.md.
+— All catalog rows GREEN or WAIVED; verdict at
+quality/reports/verdicts/p58/VERDICT.md (Wave F).

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.12.0
 milestone_name: Quality Gates
 status: planning
-last_updated: "2026-04-27T20:08:00.000Z"
-last_activity: "2026-04-27 -- P57 SHIPPED. Quality Gates skeleton + structure dimension landed; 9-row catalog graded 8 PASS + 1 WAIVED via quality/runners/{run,verdict}.py; 6 verifiers in quality/gates/structure/; scripts/end-state.py reduced to <=30-line shim; SIMPLIFY-01/02/03 absorbed; POLISH-STRUCT closed (Wave D moved ~480 lines of historical ROADMAP content to *-phases/, QG-08 RED -> PASS); CLAUDE.md gained dimension/cadence/kind taxonomy section (QG-07); verifier verdict GREEN at quality/reports/verdicts/p57/VERDICT.md (Path B disclosure). Carry-forwards: BADGE-01 P60, SIMPLIFY-04..10 P58/P59/P60, MIGRATE-01..03 P63."
+last_updated: "2026-04-27T21:28:00.000Z"
+last_activity: "2026-04-27 -- P58 SHIPPED. Release-dimension gates + code-dim absorption landed. quality/gates/release/ ships 5 verifiers backing 15 catalog rows (reposix-swarm removed; publish=false); quality/gates/code/ ships clippy-lint-loaded.sh (SIMPLIFY-04), check-fixtures.py (SIMPLIFY-05 Option A), ci-job-status.sh (POLISH-CODE P58-stub) backing 4 rows (clippy + fixtures PASS, test + fmt WAIVED until P63). .github/workflows/quality-weekly.yml + quality-post-release.yml validated end-to-end (4 GH Actions dispatches; 2 fixes: GH_TOKEN env added + cargo-binstall PARTIAL_SIGNALS broadened). QG-09 P58 GH Actions badge live in README + docs/index.md. orphan-scripts.json shrunk to empty (W-2 waiver removed; reposix-swarm row removed). Verdict GREEN at quality/reports/verdicts/p58/VERDICT.md (Path B disclosure; 25/25 GREEN). Carry-forwards: cargo-binstall full PASS deferred to MIGRATE-03 v0.12.1; POLISH-CODE final P63; BADGE-01 P60."
 progress:
   total_phases: 8
-  completed_phases: 2
-  total_plans: 10
-  completed_plans: 10
-  percent: 25
+  completed_phases: 3
+  total_plans: 16
+  completed_plans: 16
+  percent: 38
 ---
 
 # Project State
@@ -19,6 +19,48 @@ progress:
 
 ### Roadmap Evolution
 
+- **P58 SHIPPED (2026-04-27, v0.12.0):** Release-dimension gates +
+  code-dim absorption landed. `quality/gates/release/` ships 5 verifiers
+  (gh-assets-present, installer-asset-bytes, brew-formula-current,
+  crates-io-max-version, cargo-binstall-resolves) backing 15 catalog
+  rows in `quality/catalogs/release-assets.json` (was 16; Wave E removed
+  `release/crates-io-max-version/reposix-swarm` because the crate has
+  `publish = false` — internal multi-agent contention test harness;
+  catalog drift fix per Wave A SURPRISES.md entry). `quality/gates/code/`
+  ships `clippy-lint-loaded.sh` (SIMPLIFY-04 migration of
+  `scripts/check_clippy_lint_loaded.sh`; old path DELETED),
+  `check-fixtures.py` (SIMPLIFY-05 Option A migration of
+  `scripts/check_fixtures.py`; old path DELETED), `ci-job-status.sh`
+  (POLISH-CODE P58-stub thin gh-CLI wrapper) backing 4 catalog rows in
+  `quality/catalogs/code.json` (clippy-lint-loaded + fixtures-valid PASS;
+  cargo-test-pass + cargo-fmt-clean WAIVED until P63 final).
+  `.github/workflows/quality-weekly.yml` + `quality-post-release.yml`
+  validated end-to-end via 4 workflow_dispatch runs; 2 fixes applied:
+  GH_TOKEN env added to runner + verdict steps (commit `664b533` —
+  gh CLI in GH Actions needs explicit `GH_TOKEN: ${{ github.token }}`);
+  cargo-binstall-resolves PARTIAL_SIGNALS broadened to match real binstall
+  output (commit `e0e5645` — `will be installed from source` was the
+  missing match string). QG-09 P58 GH Actions badge live in `README.md`
+  + `docs/index.md` (commit `d206b09`). `quality/catalogs/orphan-scripts.json`
+  shrunk to empty (W-2 waiver removed; `release/crates-io-max-version`
+  row obsolete now that the dimension provides active enforcement).
+  POLISH-RELEASE closure: every release-dim weekly row PASS;
+  cargo-binstall-resolves WAIVED until 2026-07-26 with documented
+  MIGRATE-03 v0.12.1 carry-forward. POLISH-CODE P58-stub: clippy +
+  fixtures PASS; test + fmt WAIVED until P63. Verifier subagent verdict
+  GREEN at `quality/reports/verdicts/p58/VERDICT.md` (Path B in-session
+  disclosure per P56/P57 precedent — Task tool unavailable in executor).
+  Runner state: weekly exit 0 (14 PASS), post-release exit 0 (1 WAIVED),
+  pre-push exit 0 (10 PASS, 1 WAIVED), pre-pr exit 0 (2 WAIVED). Badge
+  brightgreen, message `25/25 GREEN`. CLAUDE.md gained "P58 — Release
+  dimension live" H3 subsection (34 added lines, anti-bloat compliant).
+  SURPRISES.md gained 7 P58 entries (172 lines total; under 200 cap).
+  `.planning/docs_reproducible_catalog.json` schema_status flipped to
+  DEPRECATED — install rows have lineage in release-assets.json; file
+  slated for deletion in P63 SIMPLIFY-12. Carry-forwards: cargo-binstall
+  full PASS deferred to MIGRATE-03 v0.12.1; POLISH-CODE final P63;
+  BADGE-01 P60. Next: P59 docs-repro dimension + tutorial replay +
+  agent-ux thin home (per ROADMAP.md).
 - **P57 SHIPPED (2026-04-27, v0.12.0):** Quality Gates skeleton +
   structure dimension migration. Files landed: `quality/{gates,catalogs,
   reports,runners}/` with `quality/PROTOCOL.md` (autonomous-mode runtime
@@ -123,13 +165,13 @@ issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
 
 ## Current Position
 
-Phase: 58
+Phase: 59
 Plan: —
-Cursor: P57 SHIPPED — Quality Gates skeleton + structure dimension landed. `quality/{PROTOCOL.md, SURPRISES.md, catalogs/, gates/, reports/, runners/}` scaffolded; 9-row structure catalog at `quality/catalogs/freshness-invariants.json` graded **8 PASS + 1 WAIVED** (BADGE-01 P57 stub, verifier ships P60 with 90d TTL until 2026-07-25). Runner at `quality/runners/run.py --cadence pre-push` exit 0; verdict at `quality/runners/verdict.py --phase 57` exit 0; `quality/reports/badge.json` color=`brightgreen` message="8/8 GREEN". 6+1 verifiers landed in `quality/gates/structure/freshness-invariants.py`; `quality/gates/structure/banned-words.sh` wraps `scripts/banned-words-lint.sh` (SIMPLIFY-01 Approach A). `scripts/end-state.py` reduced 734 → ≤30-line shim that delegates to `python3 quality/runners/verdict.py session-end` (STRUCT-02 + SIMPLIFY-02). POLISH-STRUCT (Wave D) moved ~480 lines of historical milestone content from `.planning/ROADMAP.md` to per-milestone `*-phases/ROADMAP.md` (top-level 704 → 230 lines; QG-08 verifier flipped RED → PASS, commit `cfaf7bc`). SIMPLIFY-03 closed via Wave A boundary doc + Wave E audit memo (60-line `.planning/phases/57-quality-gates-skeleton-structure-dimension/57-05-SIMPLIFY-03-AUDIT.md`); `scripts/catalog.py` left in place per the audit. CLAUDE.md gained "Quality Gates — dimension/cadence/kind taxonomy" section (QG-07) + "Subagent delegation rules" QG-06 bullet. quality/SURPRISES.md 91 lines (3 P57 entries appended; 5 P56 + Wave A ownership block preserved). Verifier subagent verdict GREEN at `quality/reports/verdicts/p57/VERDICT.md` (Path B in-session disclosure per P56 precedent — Task tool unavailable in executor). Carry-forwards: BADGE-01 verifier P60, SIMPLIFY-04..10 P58/P59/P60, MIGRATE-01..03 P63. Next: P58 — release dimension gates + code-dimension absorption. Gate-state precondition for P58: read `quality/reports/verdicts/p57/VERDICT.md` to confirm GREEN, read `quality/SURPRISES.md` (3 P57 entries + 5 P56 entries), read this entry, then `/gsd-plan-phase 58`.
-Status: shipped (P57)
-Last activity: 2026-04-27 -- P57 closed with GREEN verdict at `quality/reports/verdicts/p57/VERDICT.md`. 9 catalog rows graded; 8 PASS + 1 WAIVED. Runner alongside old chain (parallel migration per D4); end-state.py ≤30-line shim. SIMPLIFY-01/02/03 absorbed. POLISH-STRUCT fix landed (QG-08 sections moved). CLAUDE.md / SURPRISES.md / STATE.md / verdict updates landed in Wave F. Next: P58.
+Cursor: P58 SHIPPED — Release-dimension gates + code-dim absorption landed. `quality/gates/release/` ships 5 verifiers (gh-assets-present, installer-asset-bytes, brew-formula-current, crates-io-max-version, cargo-binstall-resolves) backing 15 catalog rows in `quality/catalogs/release-assets.json` (Wave E removed reposix-swarm — `publish=false`). `quality/gates/code/` ships 3 verifiers (clippy-lint-loaded.sh — SIMPLIFY-04 migration; check-fixtures.py — SIMPLIFY-05 Option A migration; ci-job-status.sh — POLISH-CODE P58-stub) backing 4 rows in `quality/catalogs/code.json` (clippy + fixtures PASS; test + fmt WAIVED until P63). `.github/workflows/quality-weekly.yml` + `quality-post-release.yml` validated end-to-end via 4 GH Actions dispatches; 2 fixes applied (GH_TOKEN env added in commit 664b533; cargo-binstall PARTIAL_SIGNALS broadened in commit e0e5645). QG-09 P58 GH Actions badge live in README.md + docs/index.md (commit d206b09). `quality/catalogs/orphan-scripts.json` shrunk to empty. POLISH-RELEASE: every weekly row PASS; cargo-binstall WAIVED until 2026-07-26 (MIGRATE-03 v0.12.1 carry-forward). POLISH-CODE P58-stub: clippy + fixtures PASS; test + fmt WAIVED until P63. Runner state: weekly exit 0 (14 PASS), post-release exit 0 (1 WAIVED), pre-push exit 0 (10 PASS, 1 WAIVED), pre-pr exit 0 (2 WAIVED). Badge brightgreen, message `25/25 GREEN`. Verifier verdict GREEN at `quality/reports/verdicts/p58/VERDICT.md` (Path B in-session disclosure per P56/P57 precedent). CLAUDE.md gained "P58 — Release dimension live" H3 subsection (34 added lines). SURPRISES.md gained 7 P58 entries (172 lines total). `.planning/docs_reproducible_catalog.json` schema_status flipped DEPRECATED. Carry-forwards: cargo-binstall full PASS deferred to MIGRATE-03 v0.12.1; POLISH-CODE final P63; BADGE-01 P60. Next: P59 — docs-repro dimension + tutorial replay + agent-ux thin home. Gate-state precondition for P59: read `quality/reports/verdicts/p58/VERDICT.md` to confirm GREEN, read `quality/SURPRISES.md` (7 P58 entries + 3 P57 entries + 5 P56 entries), read this entry, then `/gsd-plan-phase 59`.
+Status: shipped (P58)
+Last activity: 2026-04-27 -- P58 closed with GREEN verdict at `quality/reports/verdicts/p58/VERDICT.md`. 25 catalog rows graded; all PASS or WAIVED with documented reason. Release dim live + code dim absorption complete. CLAUDE.md / SURPRISES.md / STATE.md / verdict updates landed in Wave F. Next: P59.
 
-Progress: [===       ] v0.12.0 planning (2/8 phases shipped; 6 plans completed in P57 + 4 in P56 = 10 plans).
+Progress: [====      ] v0.12.0 planning (3/8 phases shipped; 4 plans P56 + 6 plans P57 + 6 plans P58 = 16 plans).
 
 ## Performance Metrics
 
