@@ -95,7 +95,10 @@ def main() -> int:
     if len(sys.argv) > 1:
         targets = [Path(p) for p in sys.argv[1:]]
     else:
-        targets = sorted(p for p in CATALOG_DIR.glob("*.json"))
+        # Skip allow-list sidecars (different schema; not catalogs).
+        targets = sorted(
+            p for p in CATALOG_DIR.glob("*.json") if not p.stem.endswith("-allowlist")
+        )
     if not targets:
         print(f"no catalogs found under {CATALOG_DIR}", file=sys.stderr)
         return 1

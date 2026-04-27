@@ -22,7 +22,9 @@
       },
       "verifier": {
         "script": "quality/gates/docs-repro/container-rehearse.sh",
-        "args": ["docs-repro/example-01-shell-loop"],
+        "args": [
+          "docs-repro/example-01-shell-loop"
+        ],
         "timeout_s": 300,
         "container": "ubuntu:24.04"
       },
@@ -53,7 +55,9 @@
       },
       "verifier": {
         "script": "quality/gates/docs-repro/container-rehearse.sh",
-        "args": ["docs-repro/example-02-python-agent"],
+        "args": [
+          "docs-repro/example-02-python-agent"
+        ],
         "timeout_s": 300,
         "container": "ubuntu:24.04"
       },
@@ -85,7 +89,9 @@
       },
       "verifier": {
         "script": "quality/gates/docs-repro/manual-spec-check.sh",
-        "args": ["docs-repro/example-03-claude-code-skill"],
+        "args": [
+          "docs-repro/example-03-claude-code-skill"
+        ],
         "timeout_s": 30,
         "container": null
       },
@@ -116,7 +122,9 @@
       },
       "verifier": {
         "script": "quality/gates/docs-repro/container-rehearse.sh",
-        "args": ["docs-repro/example-04-conflict-resolve"],
+        "args": [
+          "docs-repro/example-04-conflict-resolve"
+        ],
         "timeout_s": 300,
         "container": "ubuntu:24.04"
       },
@@ -147,7 +155,9 @@
       },
       "verifier": {
         "script": "quality/gates/docs-repro/container-rehearse.sh",
-        "args": ["docs-repro/example-05-blob-limit-recovery"],
+        "args": [
+          "docs-repro/example-05-blob-limit-recovery"
+        ],
         "timeout_s": 300,
         "container": "ubuntu:24.04"
       },
@@ -254,6 +264,42 @@
       "freshness_ttl": "30d",
       "blast_radius": "P2",
       "owner_hint": "if RED: docs/benchmarks/token-economy.md drifted from headline numbers; v0.12.1 perf cross-check (perf/headline-numbers-cross-check) automates this row",
+      "waiver": null
+    },
+    {
+      "id": "docs-repro/snippet-coverage",
+      "dimension": "docs-repro",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [
+        "README.md",
+        "docs/index.md",
+        "docs/tutorials/first-run.md",
+        "docs/guides/write-your-own-connector.md",
+        "docs/guides/troubleshooting.md",
+        "docs/guides/integrate-with-your-agent.md"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "every fenced code block in user-facing docs has a catalog row in quality/catalogs/docs-reproducible.json or is matched by an allow-list entry",
+          "no catalogued snippet drifted from its source (sha256 match)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-repro/snippet-extract.py",
+        "args": [
+          "--check"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/docs-repro/snippet-coverage.json",
+      "status": "PASS",
+      "last_verified": "2026-04-27T22:09:38Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: a doc edit added a fenced code block without a catalog row OR a catalogued row's source content drifted; fix by either pasting the --write-template output or rolling back the doc edit. If the new block is illustrative, add the derived_id to quality/catalogs/docs-reproducible-allowlist.json with a reason.",
       "waiver": null
     }
   ]

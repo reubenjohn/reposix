@@ -48,10 +48,10 @@ def parse_rfc3339(s: str) -> datetime:
 
 
 def discover_catalogs() -> list[Path]:
-    """Glob catalog files. Skip orphan-scripts.json + README.md."""
+    """Glob catalog files. Skip orphan-scripts.json + allow-list sidecars + README.md."""
     out: list[Path] = []
     for p in sorted(CATALOG_DIR.glob("*.json")):
-        if p.stem == "orphan-scripts":
+        if p.stem == "orphan-scripts" or p.stem.endswith("-allowlist"):
             continue
         out.append(p)
     return out
