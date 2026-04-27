@@ -1,6 +1,6 @@
 //! Jira-style transitions endpoint.
 //!
-//! `GET /projects/:slug/issues/:id/transitions` returns the current issue
+//! `GET /projects/{slug}/issues/{id}/transitions` returns the current issue
 //! status and the list of other legal statuses. v0.1 best-effort: *all*
 //! other statuses are reported as legal; the real workflow rule set
 //! ("must pass through `in_progress`" etc.) is deferred to a future
@@ -29,7 +29,7 @@ const ALL_STATUSES: [RecordStatus; 5] = [
 pub fn router(state: AppState) -> Router {
     Router::new()
         .route(
-            "/projects/:slug/issues/:id/transitions",
+            "/projects/{slug}/issues/{id}/transitions",
             get(get_transitions),
         )
         .with_state(state)

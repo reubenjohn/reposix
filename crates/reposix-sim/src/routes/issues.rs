@@ -26,15 +26,15 @@ use serde_json::Value;
 use crate::{error::ApiError, AppState};
 
 /// Build the issues sub-router. Routes are nested under
-/// `/projects/:slug/issues` at top-level.
+/// `/projects/{slug}/issues` at top-level.
 pub fn router(state: AppState) -> Router {
     Router::new()
         .route(
-            "/projects/:slug/issues",
+            "/projects/{slug}/issues",
             get(list_records).post(create_record),
         )
         .route(
-            "/projects/:slug/issues/:id",
+            "/projects/{slug}/issues/{id}",
             get(get_record).patch(patch_issue).delete(delete_record),
         )
         .with_state(state)
