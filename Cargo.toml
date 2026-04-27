@@ -96,7 +96,7 @@ sha2 = "0.11"
 hex = "0.4"
 
 # Internal
-reposix-core = { path = "crates/reposix-core" }
+reposix-core = { path = "crates/reposix-core", version = "0.11.0" }
 
 [workspace.dependencies.dev]
 
