@@ -45,7 +45,13 @@ set -euo pipefail
 URL="$REPOSIX_INSTALLER_URL"
 apt-get update -qq && apt-get install -y -qq curl ca-certificates >/dev/null
 echo "=== HEAD ${URL} ==="
-curl -sLI "$URL" | head -20
+# `head -20` closes its stdin after 20 lines, which gives curl SIGPIPE and
+# pipefail makes the script exit. Capture into a tempfile then trim.
+TMP_HEAD=$(mktemp)
+curl -sLI "$URL" > "$TMP_HEAD"
+head -20 "$TMP_HEAD"
+echo "..."
+rm -f "$TMP_HEAD"
 echo "=== run installer ==="
 curl --proto '=https' --tlsv1.2 -LsSf "$URL" | sh
 export PATH="$HOME/.local/bin:$PATH"
