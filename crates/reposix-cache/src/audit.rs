@@ -656,4 +656,85 @@ mod tests {
             .unwrap();
         assert_eq!(reason, "since=NULL");
     }
+
+    #[test]
+    fn log_helper_connect_inserts_row() {
+        let tmp = tempdir().unwrap();
+        let conn = open_cache_db(tmp.path()).unwrap();
+        log_helper_connect(&conn, "sim", "demo", "git-upload-pack");
+        let (op, reason): (String, String) = conn
+            .query_row(
+                "SELECT op, reason FROM audit_events_cache WHERE op = 'helper_connect'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(op, "helper_connect");
+        assert_eq!(reason, "git-upload-pack");
+    }
+
+    #[test]
+    fn log_helper_advertise_records_bytes() {
+        let tmp = tempdir().unwrap();
+        let conn = open_cache_db(tmp.path()).unwrap();
+        log_helper_advertise(&conn, "sim", "demo", 512);
+        let (op, bytes): (String, i64) = conn
+            .query_row(
+                "SELECT op, bytes FROM audit_events_cache WHERE op = 'helper_advertise'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(op, "helper_advertise");
+        assert_eq!(bytes, 512);
+    }
+
+    #[test]
+    fn log_helper_fetch_encodes_reason_and_bytes() {
+        let tmp = tempdir().unwrap();
+        let conn = open_cache_db(tmp.path()).unwrap();
+        log_helper_fetch(&conn, "sim", "demo", Some("fetch"), 2, 128, 4096);
+        let (op, reason, bytes): (String, String, i64) = conn
+            .query_row(
+                "SELECT op, reason, bytes FROM audit_events_cache WHERE op = 'helper_fetch'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+            )
+            .unwrap();
+        assert_eq!(op, "helper_fetch");
+        assert_eq!(reason, "fetch:wants=2;req=128;resp=4096");
+        assert_eq!(bytes, 4096);
+    }
+
+    #[test]
+    fn log_helper_fetch_error_records_exit_and_tail() {
+        let tmp = tempdir().unwrap();
+        let conn = open_cache_db(tmp.path()).unwrap();
+        log_helper_fetch_error(&conn, "sim", "demo", 128, "fatal: not a git repository");
+        let (op, reason): (String, String) = conn
+            .query_row(
+                "SELECT op, reason FROM audit_events_cache WHERE op = 'helper_fetch_error'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(op, "helper_fetch_error");
+        assert_eq!(reason, "exit=128;tail=fatal: not a git repository");
+    }
+
+    #[test]
+    fn log_helper_backend_instantiated_records_project_for_backend() {
+        let tmp = tempdir().unwrap();
+        let conn = open_cache_db(tmp.path()).unwrap();
+        log_helper_backend_instantiated(&conn, "sim", "demo", "demo");
+        let (op, reason): (String, String) = conn
+            .query_row(
+                "SELECT op, reason FROM audit_events_cache WHERE op = 'helper_backend_instantiated'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(op, "helper_backend_instantiated");
+        assert_eq!(reason, "demo");
+    }
 }
