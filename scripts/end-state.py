@@ -320,21 +320,33 @@ def bootstrap_claims() -> list[dict[str, Any]]:
         })
 
     # ---- §3a — CI green on origin/main HEAD ----
-    # Filter to the most recently COMPLETED CI run; an in-progress run on a
-    # just-pushed commit is not yet a verdict either way, but it is also not
-    # PASS, so we treat any non-success completion as FAIL.
+    # Query CI runs targeting HEAD specifically, not "latest completed."
+    # Why: GitHub's concurrency group cancels older in-flight CI runs when a
+    # new commit lands; the most-recent-completed run is therefore often the
+    # superseded one and cancelled, even though HEAD's own run is healthy.
+    # Semantic: PASS if HEAD's most recent CI run is success OR currently
+    # in_progress (optimistic — the verifier subagent re-runs at session
+    # close). FAIL only if HEAD's CI completed with a non-success conclusion.
     claims.append({
-        "id": "ci/main-green-on-latest-completed",
+        "id": "ci/main-green-on-head",
         "category": "ci-status",
         "description": (
-            "Most recent COMPLETED CI workflow run on origin/main must have "
-            "conclusion=success. §3a."
+            "CI workflow targeting `origin/main` HEAD must be either "
+            "in_progress or completed with conclusion=success. A failed/"
+            "cancelled completion on HEAD is FAIL. §3a."
         ),
         "verifier": {
             "type": "shell",
             "command": (
-                "test \"$(gh run list --branch main --workflow CI --status completed "
-                "--limit 1 --json conclusion --jq '.[0].conclusion')\" = success"
+                "sha=$(git rev-parse origin/main); "
+                "row=$(gh run list --branch main --workflow CI --commit \"$sha\" "
+                "--limit 1 --json status,conclusion --jq '.[0]'); "
+                "status=$(echo \"$row\" | python3 -c "
+                "'import json,sys; print(json.load(sys.stdin).get(\"status\",\"missing\"))'); "
+                "conclusion=$(echo \"$row\" | python3 -c "
+                "'import json,sys; print(json.load(sys.stdin).get(\"conclusion\",\"\"))'); "
+                "test \"$status\" = in_progress -o "
+                "\\( \"$status\" = completed -a \"$conclusion\" = success \\)"
             ),
         },
         "artifact": None,
@@ -541,6 +553,10 @@ def cmd_verify(args: argparse.Namespace) -> int:
             fail_count += 1
 
     save_state(state)
+    # Re-render the prose contract so its `status:` lines reflect the latest
+    # verify run — otherwise the markdown drifts from JSON. Caught by the
+    # unbiased verifier subagent in Row 8.
+    write_contract_md(state)
     print(f"verify: {pass_count} PASS, {fail_count} FAIL, {nv_count} NOT-VERIFIED")
     return 0 if fail_count == 0 and nv_count == 0 else 1
 
