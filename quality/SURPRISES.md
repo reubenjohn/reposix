@@ -89,3 +89,25 @@ rule (markers + line counts confirmed). SIMPLIFY-03 (Wave E) audit
 confirmed Wave A's boundary doc was sufficient — no edit to
 `quality/catalogs/README.md` needed. — All 9 catalog rows GREEN or
 WAIVED; verdict at `quality/reports/verdicts/p57/VERDICT.md`.
+
+2026-04-27 P58: Wave A's release-assets.json catalog included 9
+crates-io max-version rows on the assumption that all 9 reposix
+crates publish. Wave B's self-test sweep showed reposix-swarm
+returns HTTP 404 from crates.io; `crates/reposix-swarm/Cargo.toml`
+has `publish = false` (intentional — internal multi-agent contention
+test harness). The verifier surfaces the genuine fact (FAIL with
+"GET .../reposix-swarm HTTP 200 — got status=404"). — Per stop
+condition, left as-discovered for Wave E to reconcile: either
+remove the row (catalog drift fix) or convert to a permanent
+waiver (`tracked_in: 'reposix-swarm publish=false (internal-only)'`).
+Other 8 crates PASS at 0.11.3.
+
+2026-04-27 P58: Wave A pre-push runner reported NOT-VERIFIED for
+new P1 pre-push row code/clippy-lint-loaded because Wave A commits
+the catalog row before Wave C ships the verifier wrapper at
+`quality/gates/code/clippy-lint-loaded.sh`. The runner's
+verifier-not-found branch sets NOT-VERIFIED, which fails exit on
+P0+P1 rows. — Resolved by attaching a short-lived waiver
+(`until: 2026-05-11T00:00:00Z`, `tracked_in: P58 Wave C (58-03)`)
+to the catalog row. Wave C removes the waiver and flips to active
+enforcement. Rule 3 deviation; recorded in 58-01-SUMMARY.md.
