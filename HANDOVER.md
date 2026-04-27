@@ -13,9 +13,9 @@ You are taking over an autonomous engineering session for the reposix project (`
 
 Then execute §7 of THIS file in order. Total estimate: ~3 hours of focused work — most v0.11.1 scope is already shipped.
 
-## Deadline — none fixed; work to next owner check-in
+## Deadline — 2026-04-28 01:00 local (≈4-5 hours from handoff)
 
-This is not time-boxed. Pace against §7. When the queue is empty, expand into §6 backlog or pause cleanly.
+Pace against §7. §0 quality items + the last `reposix-cli` publish are P0. When queue is empty, expand into §6 backlog or pause cleanly.
 
 ## Non-negotiable rules
 
@@ -47,6 +47,90 @@ Same as previous handover: brief in ≤200 words → dispatch via `Agent` (subag
 
 ---
 
+# §0. CRITICAL OWNER FEEDBACK — added 2026-04-27 PM (read before §1)
+
+Owner caught FIVE quality issues at end-of-session that the previous agent (me) failed to catch. **Promote these to P0 in §7. The previous §7-A through §7-G are still valid but PUSH AFTER §0 work lands.**
+
+## 0.1 Mermaid renders are broken on some `docs/how-it-works/` pages
+
+**Owner verbatim**: *"the mkdocs site is not rendering mermaid on a few how it works pages. Did you use playwright or set up UI tests? I've caught this issue multiple times."*
+
+**Self-critique**: I claimed playwright validation per CLAUDE.md "Docs-site validation" rule, but only ran playwright on the **hero page** during §7-D. The CLAUDE.md rule explicitly says playwright validation is required *for any docs-site change*; I scoped it to one page. Mermaid changes elsewhere (POLISH2-22 trust-model.md update, POLISH2-08 capability matrix table) shipped without playwright verification. Mermaid render bugs leak silently — `mkdocs build --strict` does NOT catch them (we only test for `Syntax error in text` strings, not actual SVG existence).
+
+**Fix path**:
+1. Walk every `docs/how-it-works/*.md` page with playwright (`mcp__playwright__browser_navigate` + `browser_snapshot` + `browser_console_messages`). Identify which pages are rendering broken.
+2. Diagnose the breakage. Likely candidates: a `<br/>` literal that escaped, a `{id}` template var that became HTML, a `pymdownx.emoji` interaction, a `pymdownx.superfences` config drift after the rusqlite bump churned Cargo.lock.
+3. Add a `scripts/check-mermaid-renders.sh` that loops over EVERY mkdocs page (not just how-it-works) via `mcp__playwright__browser_run_code` and asserts each `<pre.mermaid>` element has at least one `<svg>` child. Wire into pre-push.
+
+## 0.2 Install instructions on home page lead with source-compile, not package manager
+
+**Owner verbatim**: *"now that we have crates, we should continue to have Six-line quickstart instructions to compile from source but shouldn't the more prominent instructions like the ones on home page be to install using a popular package manager with links for other ways of installation?"*
+
+**Self-critique**: hero rewrite (§7-D commit `96d255a`) put a "30-second install band" with curl/PowerShell/brew/binstall but ALSO kept the "Six-line quickstart" prominently. After the v0.11.1 publish lands, source-compile should DEMOTE to a footer link or "Build from source" sub-section — most users want `brew install reubenjohn/reposix/reposix` or `cargo binstall reposix-cli`.
+
+**Fix path**:
+1. After §3b unblocks (all 9 crates on crates.io + homebrew formula bumped), reorder `docs/index.md` hero: package-manager install band PROMINENT (3 cards: brew / binstall / curl|sh), source-compile six-line as a `<details>` collapsible "Build from source".
+2. Same edit on `README.md` if it's similarly source-first.
+3. Validate via playwright per §0.1 mitigation.
+
+## 0.3 Version-pinned filename: `docs/benchmarks/v0.9.0-latency.md`
+
+**Owner verbatim**: *"is it intentional?: The latency page shows under v0.9.0. Why name the page 0.9.0?"*
+
+**Self-critique**: `repo-org-gaps.md` rec #8 explicitly flagged this: *"Rename to `scripts/latency-bench.sh` + `docs/benchmarks/latency.md` with a `last_measured_at` frontmatter field."* I deferred it during §7 ("waits for v0.12.0 first regen"). That's wrong — version-pinning the filename means the doc looks stale-by-construction. The page is about CURRENT latency, not v0.9.0-historical-latency.
+
+**Fix path**:
+1. `git mv docs/benchmarks/v0.9.0-latency.md docs/benchmarks/latency.md`.
+2. `git mv scripts/v0.9.0-latency.sh scripts/latency-bench.sh` (update internal SCRIPT_NAME refs).
+3. Add `last_measured_at: <RFC3339>` frontmatter field; bench-cron writes it.
+4. Update every cross-ref (`README.md`, `docs/index.md`, `mkdocs.yml` nav, `bench-latency-cron.yml`, `ci.yml`).
+5. mkdocs `redirect` plugin entry from old path → new path so external links don't 404.
+6. Validate playwright.
+
+## 0.4 Token economy benchmark `benchmarks/RESULTS.md` not in mkdocs nav
+
+**Owner verbatim**: *"shouldn't the token economy benchmark also be part of the mkdocs site?"*
+
+**Self-critique**: The hero (commit `96d255a`) cites `https://github.com/reubenjohn/reposix/blob/main/benchmarks/RESULTS.md` as an absolute github URL — bypassing mkdocs entirely. The token-economy result IS the headline number (89.1%) and absolutely belongs in the docs site under `Benchmarks → Token economy`.
+
+**Fix path**:
+1. Move or symlink `benchmarks/RESULTS.md` → `docs/benchmarks/token-economy.md`.
+2. Add to `mkdocs.yml` nav under the existing `Benchmarks` section, next to `latency.md` (post-§0.3 rename).
+3. Update the hero (`docs/index.md`) cite from absolute github URL to relative `benchmarks/token-economy.md`.
+4. Same for any other inbound links (search `git grep -l "benchmarks/RESULTS"`).
+5. Validate playwright.
+
+## 0.5 GSD planning org: `.planning/milestones/v0.X.0-ROADMAP.md` lives at wrong level
+
+**Owner verbatim**: *"why is .planning/milestones/v0.10.0-ROADMAP.md not in .planning/milestones/v0.10.0-phases? What is the proper gsd organization?"*
+
+**Self-critique**: `repo-org-gaps.md` flagged this: *".planning/milestones/v0.10.0-ROADMAP.md (4.5 KB) and v0.9.0-ROADMAP.md + v0.8.0-ROADMAP.md + v0.8.0-REQUIREMENTS.md are loose milestone docs. CONDENSE into the per-milestone ARCHIVE.md above (or move to .planning/archive/milestones/)."* I missed it during §7-F1 / POLISH2-21. The proper GSD organization is one of:
+  - **Option A** (preserve per-milestone history): each `.planning/milestones/v0.X.0-phases/ARCHIVE.md` (created in POLISH2-21) ABSORBS the corresponding `v0.X.0-ROADMAP.md` content.
+  - **Option B** (clean separation): `git mv` each loose `v0.X.0-{ROADMAP,REQUIREMENTS}.md` into the matching `v0.X.0-phases/` dir, OR into `.planning/archive/milestones/`.
+
+**Fix path**: pick one option, apply uniformly to v0.8/v0.9/v0.10. Document the chosen GSD convention in `CLAUDE.md` § "Workspace layout" so future milestones don't repeat the drift.
+
+## 0.6 The meta-question: missing quality tools
+
+**Owner verbatim**: *"Are you missing tools to help catch these quality issues?"*
+
+**Self-critique**: YES. The session shipped 50+ commits in 8 hours with no automated *cold-reader* check. Specific missing tools:
+
+| Gap | Proposed tool | Where it lives |
+|---|---|---|
+| Mermaid render correctness on EVERY page (not just touched ones) | `scripts/check-mermaid-renders.sh` (playwright-driven) | pre-push hook + CI |
+| Install-instruction freshness ("if crates.io publish is live, hero should lead with package-manager") | `scripts/check-install-currency.py` (parses crates.io API + greps `docs/index.md`) | weekly cron |
+| Version-pinned filename detection | `scripts/check-no-version-pinned-paths.sh` (greps `docs/`, `scripts/` for `v0\.[0-9]+\.[0-9]+` in filenames) | pre-push hook |
+| GSD planning org conformance (no loose `*ROADMAP*.md` outside `*phases/` dirs) | `scripts/check-gsd-org.sh` | pre-push hook |
+| Cold-reader pass on the full doc set after major shifts | `doc-clarity-review` skill, dispatched on every milestone close | manual but required gate |
+| Periodic playwright walk of the live site (not just `mkdocs build --strict`) | extend `scripts/check-docs-site.sh` to call `mkdocs serve` + playwright | pre-push hook |
+
+**Pattern**: the existing hooks catch *correctness* (banned words, fmt, clippy, mkdocs --strict) but not *currency* (is the install path still the right path? does the filename still match the version cadence? does the link still resolve to the right doc?). Currency is what I missed — mechanically the docs were valid, but staleness leaked.
+
+The next agent should NOT just fix §0.1-§0.5 — they should also ship at least 3 of the 6 tools above so the NEXT-NEXT agent can't make the same misses.
+
+---
+
 # HANDOVER — for the next agent picking up after the v0.11.1 sweep
 
 **Created**: 2026-04-27 by Claude Opus 4.7 (1M context). **Operational — delete once §7 is done.**
@@ -68,15 +152,16 @@ The previous milestone (v0.11.0) is closed and tagged. v0.11.1 substantively shi
 
 ## 2. In-flight at handoff
 
-- **release-plz** (run `24976688322`) — failed at the publish step. PR #20 is OPEN with v0.11.1 bumps for 8 crates. `reposix-core` v0.11.0 was already published successfully. The next 7 (cache, sim, github, confluence, jira, remote, cli) need PR #20 merged + a re-trigger after the prep failure is investigated. See §3b.
-- **Dependabot fixer subagent** (id `a825d495b91ff734b`) was dispatched for PR #16 (axum) + PR #17 (rand) before this handoff; status TBD. Verify with `gh pr view 16` / `gh pr view 17`. PR #18 (rusqlite 0.32→0.39) and #19 (bench-cron auto-PR) are already MERGED.
-- **Catalog**: `.planning/v0.11.1-catalog.json` is current (~84 files, 0 TODO post-condensation per STATE.md). Auto-rendered to `.planning/research/v0.11.1-CATALOG-v3.md`. Re-render after touching anything: `python3 scripts/catalog.py render`.
+- **crates.io publish: 7 of 8 SHIPPED as v0.11.1** (`reposix-core`, `cache`, `sim`, `github`, `confluence`, `jira`, `remote`). **Only `reposix-cli` MISSING.** PR #20 (release-plz v0.11.1 bumps) merged at commit `aedde5a`. Most recent release-plz run on `d1628a0` failed (likely tried to republish already-existing crates + `cli` cargo-publish prep error — same family as the libsqlite3-sys conflict that motivated PR #20 in the first place). See §3b.
+- **CI on HEAD `d1628a0` is RED** — `delta_sync` test failures (suspected rusqlite-0.39 fallout per §3a).
+- **Dependabot inbox**: PR #16 (axum 0.7→0.8) + #17 (rand 0.9→0.10) still OPEN. Fixer subagent (id `a825d495b91ff734b`) was running at handoff; check `gh pr view 16`/`gh pr view 17` for new commits.
+- **Catalog**: `.planning/v0.11.1-catalog.json` source-of-truth, auto-rendered to `.planning/research/v0.11.1-CATALOG-v3.md`. Re-render after touching anything.
 
 ---
 
 ## 3. Critical open items
 
-### 3a. CI RED on main (HEAD `12c2ec1`) — `delta_sync` test failures
+### 3a. CI RED on main (HEAD `d1628a0`) — `delta_sync` test failures
 
 **Symptom**: `cargo test --workspace --locked` fails in `crates/reposix-cache/tests/delta_sync.rs`:
 
@@ -93,28 +178,23 @@ Both panic at `delta_sync.rs:124` inside the shared `seed_demo_issues` helper. P
 3. If rusqlite 0.39's API is the cause, fix `seed_demo_issues` and the two callers.
 4. One commit, push. Watch `gh run watch`.
 
-### 3b. release-plz publish failed at `reposix-sim`
+### 3b. release-plz publish: 7 of 8 done, `reposix-cli` still missing
 
-**Symptom**: After `reposix-core` 0.11.0 published cleanly (last session), the v0.11.1 publish chain failed for `reposix-sim` with:
-
-```
-failed to open file `/home/runner/work/reposix/reposix/crates/reposix-sim/CHANGELOG.md`: No such file or directory
-failed to publish reposix-sim: failed to prepare local package for uploading
-```
-
-The "failed to prepare local package" is the real error; the missing per-crate CHANGELOG is just a warning. Most likely cause: `reposix-sim/Cargo.toml` is missing `description`, `license`, or `repository` (cargo refuses to publish without all three), OR a path-dep version field is still wrong even after commits `e8aebfa` + `12c2ec1`.
+**Status**: After PR #20 merged at commit `aedde5a`, release-plz published `reposix-core`, `cache`, `sim`, `github`, `confluence`, `jira`, `remote` all as v0.11.1. `reposix-cli` is the only one still MISSING from crates.io. The most recent run (on `d1628a0`) failed — possibly because release-plz tried to re-publish the already-shipped crates (which 422's) and `reposix-cli` separately hit a publish-prep error.
 
 **Fix path**:
-1. `cargo publish -p reposix-sim --dry-run` locally to surface the exact prep error.
-2. Fix the missing field(s) in the relevant `Cargo.toml`. Same audit for `reposix-cache`, `reposix-github`, `reposix-confluence`, `reposix-jira`, `reposix-remote`, `reposix-cli` — likely all 7 hit the same wall.
-3. Once green, merge PR #20. release-plz will pick up the merge and finish publishing all 8.
-4. After all 9 crates are on crates.io, tag `v0.11.1` (release-plz handles this via the `release` step after publish succeeds).
+1. `curl -s https://crates.io/api/v1/crates/reposix-cli` to confirm it's still missing.
+2. `cargo publish -p reposix-cli --dry-run --locked` locally to surface the prep error.
+3. Likely cause: `reposix-cli/Cargo.toml` has a path-dep without a version field (audit it like `e8aebfa` did for the others), OR a dev-dep that became publish-relevant.
+4. Fix, push, watch release-plz pick it up. **Do NOT manually `cargo publish` — release-plz manages the version-tag-publish chain; manual publishes break the bookkeeping.**
+5. After `reposix-cli` lands, the v0.11.1 git tag should already exist (release-plz tags after publish succeeds). Verify GH Releases page + homebrew formula bump + `cargo binstall reposix-cli` resolves.
 
 ### 3c. Dependabot inbox
 
-- PR #16 — `axum 0.7→0.8`. Major bump; touches `reposix-sim`. Verify the fixer subagent's commits compile per-crate before merging.
-- PR #17 — `rand 0.9→0.10`. Smaller surface; check `reposix-sim` (seed-data RNG) and any swarm-test usage.
-- PR #18 — `rusqlite 0.32→0.39` ✓ MERGED but suspected to have introduced the §3a failure.
+- PR #16 — `axum 0.7→0.8`. Major bump; touches `reposix-sim`. Fixer subagent `a825d495b91ff734b` was running at handoff — check for new commits before redoing.
+- PR #17 — `rand 0.9→0.10`. Smaller surface. Same subagent.
+- PR #18 — `rusqlite 0.32→0.39` ✓ MERGED (commit `5108dbc`) but suspected to have introduced the §3a `delta_sync` failure.
+- PR #19 (bench-cron) + PR #20 (release-plz v0.11.1) — both MERGED.
 
 ---
 
@@ -215,16 +295,19 @@ If anything is still pending: shrink HANDOVER.md to ONLY the open items. Don't a
 
 ## 10. Status snapshot at handoff
 
-- Branch: `main`
-- HEAD: `12c2ec1` (`fix(cargo): really add version on workspace.dependencies reposix-core`)
-- Tag latest: `v0.11.0` → `9d585bb` (force-updated). `v0.11.1` not yet cut (pending §7-B).
-- Working tree: clean.
-- CI on HEAD: **RED** — `delta_sync` test failures (run `24976684353`). See §3a.
-- release-plz: **FAILED** on `reposix-sim` publish. PR #20 OPEN. See §3b.
-- Open PRs: #20 (release-plz v0.11.1), #16 (axum), #17 (rand).
-- Recently merged: #18 (rusqlite — likely cause of §3a), #19 (bench-cron auto-PR).
-- Catalog: 0 TODO rows (coverage clean per last `set` invocation).
-- Owner-action items: NONE (all 3 from previous handover resolved — crates.io email verified, JIRA secrets provisioned, skill ref path repointed).
+- Branch: `main`. HEAD: `d1628a0` (`docs(handover): fresh HANDOVER.md for next agent (v0.11.1 mostly shipped)`).
+- Tags: `v0.11.0` shipped + binaries on GH Releases. `v0.11.1` git tag should be auto-created by release-plz once `reposix-cli` publishes (verify post-§3b).
+- crates.io v0.11.1: **7 of 8 published** (`reposix-core`, `cache`, `sim`, `github`, `confluence`, `jira`, `remote`). **`reposix-cli` MISSING** — see §3b.
+- Working tree: may have local divergence (Cargo.toml + STATE.md + ROADMAP.md + SKILL.md showed reverted-to-old states during the session). Origin/main is source of truth — `git reset --hard origin/main` if confused.
+- CI on HEAD `d1628a0`: **RED** — `delta_sync` test failures (suspected rusqlite-0.39 fallout). See §3a.
+- release-plz on HEAD: **FAILED** (probably trying to re-publish existing crates + `cli` prep error). See §3b.
+- Open PRs: #16 (axum), #17 (rand). #18, #19, #20 all MERGED this session.
+- Catalog: 0 TODO rows (coverage clean).
+- Owner-action items: NONE outstanding for this session.
+
+### Session pace observation (for the next agent's calibration)
+
+Previous session shipped ~50 commits over 8 hours but missed the §0 quality issues (mermaid render gaps, install-instruction freshness, version-pinned filenames, RESULTS.md not in nav, GSD planning org drift). The pace was high; the *cold-reader* checks were absent. Slow down for §0 work — playwright every page you touch, owner-walk-through-as-cold-reader before declaring shipped.
 
 ---
 
