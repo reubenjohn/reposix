@@ -63,3 +63,29 @@ the installer step. — Fixed in `scripts/p56-rehearse-curl-install.sh`:
 capture HEAD to a tempfile, then `head -20` on the static file. Same
 diagnostic value, no SIGPIPE. Lesson for future verifiers: tempfile-then-grep,
 not pipe-into-head, when the upstream response size is unbounded.
+
+2026-04-27 P57: Wave B runner had idempotency bug — em-dashes in catalog
+note fields were being escape-mangled across runs (`—` re-encoded to
+`—`), AND every invocation was rewriting the catalog `last_verified`
+even when no row state changed. Two pre-push runs back-to-back produced
+a non-empty `git diff` on the catalog file, breaking the GREEN-clean
+invariant. — Fixed in commit `dd458bd` (fix(p57): runner idempotency).
+Reproduction promoted to `scripts/test-runner-invariants.py` so the
+invariant is enforceable from CI; ad-hoc bash → committed test artifact
+per CLAUDE.md §4 (Self-improving infrastructure).
+
+2026-04-27 P57: Wave B catalog amendment — initial catalog row schema
+emitted unicode-escaped em-dashes (`—`) on first write; later
+runs produced literal `—` (preserve-unicode mode). One-time
+normalization sweep brought all rows to literal-em-dash form.
+— Resolved in same Wave B; subsequent runs are idempotent.
+
+2026-04-27 P57: phase shipped without further pivots — POLISH-STRUCT
+(Wave D) closed cleanly with the chunky 480-line ROADMAP move (3 details
+wrappers + the v0.11.0 H2 section + `<details>` blocks for Phase 30
+SUPERSEDED + v0.1.0–v0.7.0 archive + v0.8.0). v0.10.0 + v0.9.0
+per-milestone files were preserved verbatim per the verify-before-edit
+rule (markers + line counts confirmed). SIMPLIFY-03 (Wave E) audit
+confirmed Wave A's boundary doc was sufficient — no edit to
+`quality/catalogs/README.md` needed. — All 9 catalog rows GREEN or
+WAIVED; verdict at `quality/reports/verdicts/p57/VERDICT.md`.

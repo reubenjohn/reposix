@@ -267,6 +267,7 @@ Per the user's global OP #2: "Aggressive subagent delegation." Specifics for thi
 - `gsd-code-reviewer` after every phase ships, before declaring done.
 - Run multiple subagents in parallel whenever they're operating on disjoint files.
 - **Never delegate `gh pr checkout` to a bash subagent without isolation.** Bash subagents share the coordinator's working tree; `gh pr checkout` switches the local branch behind the coordinator's back, which already caused the cherry-pick mess at commit `5a91ae2`. Either spawn a worktree first (`git worktree add /tmp/pr-N pr-N-branch`) and have the subagent `cd` into it, or have the subagent operate inside `/tmp/<branch>-checkout`. The coordinator's checkout is shared state — treat it that way.
+- **QG-06 verifier subagent dispatch on every phase close** — see `quality/PROTOCOL.md` § "Verifier subagent prompt template" for the verbatim copy-paste prompt. The executing agent does NOT grade itself.
 
 The orchestrator's job is to route, decide, and integrate — not to type code that a subagent could type.
 
@@ -408,6 +409,53 @@ Cross-references:
 - `.planning/ROADMAP.md` ## v0.12.0 Quality Gates (PLANNING) (Phases 56-63)
 - `quality/PROTOCOL.md` (lands P57 — autonomous-mode runtime contract)
 - `quality/SURPRISES.md` (append-only pivot journal; ≤200 lines, archives at 200)
+
+## Quality Gates — dimension/cadence/kind taxonomy (added P57)
+
+The v0.12.0 Quality Gates framework lives at `quality/`. Runtime contract:
+`quality/PROTOCOL.md`. Every quality check (gate) sits at one
+`(dimension, cadence, kind)` coordinate.
+
+**8 dimensions** — the regression classes the project has:
+
+| Dimension | Checks | Home |
+|---|---|---|
+| code | clippy, fmt, cargo nextest | `quality/gates/code/` (P58) |
+| docs-build | mkdocs strict, mermaid renders, link resolve, badges resolve | `quality/gates/docs-build/` (P60) |
+| docs-repro | snippet extract, container rehearse, tutorial replay | `quality/gates/docs-repro/` (P59) |
+| release | gh assets present, brew formula current, crates.io max version, installer bytes | `quality/gates/release/` (P58) |
+| structure | freshness invariants, banned words, top-level scope (QG-08) | `quality/gates/structure/` (P57 — shipped) |
+| agent-ux | dark-factory regression | `quality/gates/agent-ux/` (P59) |
+| perf | latency, token economy | `quality/gates/perf/` (P59 file-relocate; v0.12.1 stub→real) |
+| security | allowlist enforcement, audit immutability | `quality/gates/security/` (v0.12.1 carry-forward) |
+
+**6 cadences** — when the gate runs:
+
+`pre-push` (local, every push, <60s, blocking) · `pre-pr` (PR CI, <10min, blocking) · `weekly` (cron, alerting) · `pre-release` (on tag, <15min, blocking) · `post-release` (after assets ship, alerting) · `on-demand` (manual / subagent).
+
+**5 kinds** — how the gate is verified:
+
+`mechanical` (deterministic shell + asserts) · `container` (fresh ubuntu/alpine + post-conditions) · `asset-exists` (HEAD/GET URL + min-bytes) · `subagent-graded` (rubric-driven subagent) · `manual` (human-only with TTL freshness).
+
+**Adding a new gate** is one catalog row + one verifier in the right dimension dir. The runner discovers + composes by tag. No new top-level script, no new pre-push wiring.
+
+**Catalog-first rule.** Every phase's FIRST commit writes the catalog rows that define this phase's GREEN contract; subsequent commits cite the row id. The verifier subagent reads catalog rows that exist BEFORE the implementation lands.
+
+**Verifier subagent dispatch (QG-06).** Phase close MUST dispatch an unbiased subagent that grades catalog rows from artifacts with zero session context. The executing agent does NOT get to talk the verifier out of RED.
+
+**Mandatory CLAUDE.md update per phase (QG-07).** This rule itself. Each phase introducing a new file/convention/gate updates CLAUDE.md in the same PR.
+
+**Meta-rule extension** (when an owner catches a quality miss): fix the issue, update CLAUDE.md, AND **tag the dimension**. The dimension tag tells the next agent which catalog file to add the row to + which `quality/gates/<dim>/` directory the verifier belongs in. This makes ad-hoc fixes structural.
+
+**Cross-references** (do NOT duplicate runtime detail here):
+
+- `quality/PROTOCOL.md` — autonomous-mode runtime contract.
+- `quality/catalogs/README.md` — unified catalog schema spec.
+- `quality/SURPRISES.md` — append-only pivot journal.
+- `.planning/research/v0.12.0-naming-and-architecture.md` — design rationale.
+- `.planning/research/v0.12.0-vision-and-mental-model.md` — why this exists.
+
+**Per-dimension `owner_hint`** when an owner catches a miss: see `quality/PROTOCOL.md` § "Failure modes the protocol protects against" for the routing rule. The catalog row is the contract; the verifier is the code; the artifact is the audit; the verdict is the grade.
 
 ## Quick links
 

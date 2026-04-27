@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.12.0
 milestone_name: Quality Gates
 status: planning
-last_updated: "2026-04-27T18:34:00.000Z"
-last_activity: "2026-04-27 -- P56 SHIPPED. Wave 4-A CLAUDE.md update (QG-07) + Wave 4-B quality/SURPRISES.md creation (QG-05) + Wave 4-C catalog flip (5 install rows refreshed) + Wave 4-C REQUIREMENTS.md MIGRATE-03 expansion + Wave 4-D verifier verdict GREEN at .planning/verifications/p56/VERDICT.md + Wave 4-E STATE.md cursor advance to P57. Validator scripts/p56-validate-install-evidence.py re-runs clean (5/5 PASS gate). Carry-forwards journaled: latest-pointer recency, GITHUB_TOKEN-tag trigger gap, cargo-binstall pkg-url mismatch, Rust 1.82 MSRV vs block-buffer-0.12.0, curl-rehearsal SIGPIPE."
+last_updated: "2026-04-27T20:08:00.000Z"
+last_activity: "2026-04-27 -- P57 SHIPPED. Quality Gates skeleton + structure dimension landed; 9-row catalog graded 8 PASS + 1 WAIVED via quality/runners/{run,verdict}.py; 6 verifiers in quality/gates/structure/; scripts/end-state.py reduced to <=30-line shim; SIMPLIFY-01/02/03 absorbed; POLISH-STRUCT closed (Wave D moved ~480 lines of historical ROADMAP content to *-phases/, QG-08 RED -> PASS); CLAUDE.md gained dimension/cadence/kind taxonomy section (QG-07); verifier verdict GREEN at quality/reports/verdicts/p57/VERDICT.md (Path B disclosure). Carry-forwards: BADGE-01 P60, SIMPLIFY-04..10 P58/P59/P60, MIGRATE-01..03 P63."
 progress:
   total_phases: 8
-  completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
-  percent: 12
+  completed_phases: 2
+  total_plans: 10
+  completed_plans: 10
+  percent: 25
 ---
 
 # Project State
@@ -19,6 +19,38 @@ progress:
 
 ### Roadmap Evolution
 
+- **P57 SHIPPED (2026-04-27, v0.12.0):** Quality Gates skeleton +
+  structure dimension migration. Files landed: `quality/{gates,catalogs,
+  reports,runners}/` with `quality/PROTOCOL.md` (autonomous-mode runtime
+  contract) + `quality/SURPRISES.md` ownership transferred from P56.
+  `quality/catalogs/freshness-invariants.json` carries 9 rows (6
+  freshness invariants migrated from `scripts/end-state.py` +
+  `structure/banned-words` + `structure/top-level-requirements-roadmap-scope`
+  (QG-08) + `structure/badges-resolve` (BADGE-01 P57 stub, waived until
+  2026-07-25 — verifier ships P60)). `quality/runners/{run,verdict}.py`
+  are stdlib-only Python cross-platform; `quality/runners/verdict.py`
+  emits `quality/reports/badge.json` in shields.io endpoint format
+  (QG-09 P57 scope; P60 publishes via mkdocs).
+  `quality/gates/structure/freshness-invariants.py` ships the 6+1
+  verifier functions; `quality/gates/structure/banned-words.sh` wraps
+  `scripts/banned-words-lint.sh --all` (SIMPLIFY-01 closure via
+  Approach A wrapper). `scripts/end-state.py` reduced to ≤30-line shim
+  that delegates to `python3 quality/runners/verdict.py session-end`
+  (STRUCT-02 + SIMPLIFY-02). POLISH-STRUCT (Wave D) moved ~480 lines
+  of historical milestone content from `.planning/ROADMAP.md` to
+  `.planning/milestones/v0.X.0-phases/ROADMAP.md` (3 files: v0.11.0
+  NEW, v0.10.0 + v0.9.0 PRESERVED); top-level ROADMAP.md 704 → 230
+  lines, QG-08 verifier flips RED → PASS. SIMPLIFY-03 closed via Wave A
+  boundary doc + Wave E audit memo (`scripts/catalog.py` left in
+  place per the audit). Pre-push hook gains the new runner block
+  alongside `scripts/end-state.py` chain (parallel migration per D4);
+  hard-cut deferred to P60 SIMPLIFY-10. CLAUDE.md gains "Quality
+  Gates — dimension/cadence/kind taxonomy" section (QG-07) +
+  "Subagent delegation rules" QG-06 bullet. Verifier subagent verdict
+  GREEN at `quality/reports/verdicts/p57/VERDICT.md` (Path B
+  disclosure per P56 precedent). Carry-forwards: BADGE-01 P60,
+  SIMPLIFY-04..10 P58/P59/P60, MIGRATE-01..03 P63. Next: P58 release
+  dimension gates + code-dimension absorption.
 - **P56 SHIPPED (2026-04-27, v0.12.0):** RELEASE-01..03 closed.
   `.github/workflows/release.yml` now fires on both `v*` and
   `reposix-cli-v*` tag globs (Option A; commit `d3f0dce`); a fresh
@@ -91,13 +123,13 @@ issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
 
 ## Current Position
 
-Phase: 57
+Phase: 58
 Plan: —
-Cursor: P56 SHIPPED — release.yml fires on `reposix-cli-v0.11.3` tag (Option A; commit d3f0dce), 4/5 install paths PASS (curl ubuntu:24.04 rehearsal, powershell asset-existence, brew tap-formula version + 3 valid sha256s, build-from-source via ci.yml), cargo-binstall PARTIAL pending v0.12.1 metadata fix (~10 LOC pkg-url rewrite + MSRV bump 1.82 → 1.85 or block-buffer cap <0.12). Catalog: `.planning/docs_reproducible_catalog.json` 5 install rows refreshed with Wave 3 evidence timestamps; verifier subagent verdict GREEN at `.planning/verifications/p56/VERDICT.md`. Carry-forwards journaled in `quality/SURPRISES.md` (5 entries: latest-pointer recency, GITHUB_TOKEN-tag trigger gap, cargo-binstall pkg-url mismatch, Rust 1.82 MSRV vs block-buffer-0.12.0, curl-rehearsal SIGPIPE-on-pipefail) and tracked under MIGRATE-03 in REQUIREMENTS.md. CLAUDE.md updated per QG-07 with v0.12.0-Quality-Gates-phase-log section, container-rehearsal evidence schema, operating principle 7 (phase-close = catalog-row PASS), and meta-rule extension (release-pipeline regression fixes ship evidence in same PR). Next: P57 — Quality Gates skeleton + structure dimension migration. Gate-state precondition for P57: read `.planning/verifications/p56/VERDICT.md` to confirm GREEN, read `quality/SURPRISES.md`, read this entry, then `/gsd-plan-phase 57`.
-Status: shipped (P56)
-Last activity: 2026-04-27 -- P56 closed with GREEN verdict at `.planning/verifications/p56/VERDICT.md`; install paths restored end-to-end (4 PASS + 1 PARTIAL with documented v0.12.1 carry-forward); CLAUDE.md / quality/SURPRISES.md / REQUIREMENTS.md MIGRATE-03 updates landed in same Wave 4 PR; STATE.md cursor advanced to P57.
+Cursor: P57 SHIPPED — Quality Gates skeleton + structure dimension landed. `quality/{PROTOCOL.md, SURPRISES.md, catalogs/, gates/, reports/, runners/}` scaffolded; 9-row structure catalog at `quality/catalogs/freshness-invariants.json` graded **8 PASS + 1 WAIVED** (BADGE-01 P57 stub, verifier ships P60 with 90d TTL until 2026-07-25). Runner at `quality/runners/run.py --cadence pre-push` exit 0; verdict at `quality/runners/verdict.py --phase 57` exit 0; `quality/reports/badge.json` color=`brightgreen` message="8/8 GREEN". 6+1 verifiers landed in `quality/gates/structure/freshness-invariants.py`; `quality/gates/structure/banned-words.sh` wraps `scripts/banned-words-lint.sh` (SIMPLIFY-01 Approach A). `scripts/end-state.py` reduced 734 → ≤30-line shim that delegates to `python3 quality/runners/verdict.py session-end` (STRUCT-02 + SIMPLIFY-02). POLISH-STRUCT (Wave D) moved ~480 lines of historical milestone content from `.planning/ROADMAP.md` to per-milestone `*-phases/ROADMAP.md` (top-level 704 → 230 lines; QG-08 verifier flipped RED → PASS, commit `cfaf7bc`). SIMPLIFY-03 closed via Wave A boundary doc + Wave E audit memo (60-line `.planning/phases/57-quality-gates-skeleton-structure-dimension/57-05-SIMPLIFY-03-AUDIT.md`); `scripts/catalog.py` left in place per the audit. CLAUDE.md gained "Quality Gates — dimension/cadence/kind taxonomy" section (QG-07) + "Subagent delegation rules" QG-06 bullet. quality/SURPRISES.md 91 lines (3 P57 entries appended; 5 P56 + Wave A ownership block preserved). Verifier subagent verdict GREEN at `quality/reports/verdicts/p57/VERDICT.md` (Path B in-session disclosure per P56 precedent — Task tool unavailable in executor). Carry-forwards: BADGE-01 verifier P60, SIMPLIFY-04..10 P58/P59/P60, MIGRATE-01..03 P63. Next: P58 — release dimension gates + code-dimension absorption. Gate-state precondition for P58: read `quality/reports/verdicts/p57/VERDICT.md` to confirm GREEN, read `quality/SURPRISES.md` (3 P57 entries + 5 P56 entries), read this entry, then `/gsd-plan-phase 58`.
+Status: shipped (P57)
+Last activity: 2026-04-27 -- P57 closed with GREEN verdict at `quality/reports/verdicts/p57/VERDICT.md`. 9 catalog rows graded; 8 PASS + 1 WAIVED. Runner alongside old chain (parallel migration per D4); end-state.py ≤30-line shim. SIMPLIFY-01/02/03 absorbed. POLISH-STRUCT fix landed (QG-08 sections moved). CLAUDE.md / SURPRISES.md / STATE.md / verdict updates landed in Wave F. Next: P58.
 
-Progress: [          ] v0.12.0 planning (0/8 phases; phase dirs not yet scaffolded — created on `/gsd-plan-phase 56` invocation)
+Progress: [===       ] v0.12.0 planning (2/8 phases shipped; 6 plans completed in P57 + 4 in P56 = 10 plans).
 
 ## Performance Metrics
 
