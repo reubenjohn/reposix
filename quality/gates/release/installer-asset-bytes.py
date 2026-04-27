@@ -123,10 +123,13 @@ def mode_b(args: argparse.Namespace) -> int:
     asserts_failed: list[str] = []
     row_id = "install/build-from-source"
     fname = "install-build-from-source.json"
+    # NOTE: gh CLI quirk — combining `--branch <br>` with `--json ...`
+    # silently returns [] (empty array) even when matching runs exist.
+    # Workaround: query without --branch, then post-filter on `headBranch`.
     cmd = [
         "gh", "run", "list", "--workflow", args.ci_check,
-        "--branch", args.branch, "--status", "success", "--limit", "1",
-        "--json", "databaseId,conclusion",
+        "--limit", "20",
+        "--json", "databaseId,conclusion,headBranch,status",
     ]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30,
@@ -145,19 +148,29 @@ def mode_b(args: argparse.Namespace) -> int:
             "asserts_passed": asserts_passed, "asserts_failed": asserts_failed,
         })
         return 1
-    asserts_passed.append(f"gh run list --workflow {args.ci_check} --branch {args.branch} exit 0")
+    asserts_passed.append(f"gh run list --workflow {args.ci_check} exit 0")
     try:
         runs = json.loads(result.stdout or "[]")
     except json.JSONDecodeError as e:
         asserts_failed.append(f"gh JSON parse failed: {e}")
         runs = []
-    if isinstance(runs, list) and len(runs) >= 1:
-        asserts_passed.append(f"latest successful run found (databaseId={runs[0].get('databaseId')})")
+    matching = [
+        r for r in runs
+        if r.get("headBranch") == args.branch and r.get("conclusion") == "success"
+    ]
+    if matching:
+        asserts_passed.append(
+            f"latest successful run found on {args.branch} (databaseId={matching[0].get('databaseId')})"
+        )
     else:
-        asserts_failed.append(f"no successful run found for {args.ci_check}@{args.branch}")
+        asserts_failed.append(
+            f"no successful run found for {args.ci_check}@{args.branch} in last 20 runs"
+        )
     write_artifact(fname, {
         "ts": now_iso(), "row_id": row_id, "workflow": args.ci_check, "branch": args.branch,
-        "runs": runs, "asserts_passed": asserts_passed, "asserts_failed": asserts_failed,
+        "runs_total": len(runs), "matching_count": len(matching),
+        "matching_runs": matching[:3],
+        "asserts_passed": asserts_passed, "asserts_failed": asserts_failed,
     })
     return 0 if not asserts_failed else 1
 
