@@ -1,0 +1,274 @@
+{
+  "schema_version": 1,
+  "session_id": "5468ec00-693b-45ce-bfbd-b145d6382b9b",
+  "session_started_at": "2026-04-27T05:16:54Z",
+  "workspace_version": "0.11.1",
+  "claims": [
+    {
+      "id": "freshness/no-version-pinned-filenames",
+      "category": "freshness-invariant",
+      "description": "No version-pinned filenames (vN.N.N) outside CHANGELOG and .planning/milestones/v*-phases/. Catches §0.3-class drift.",
+      "verifier": {
+        "type": "command-empty-output",
+        "command": "find docs scripts -type f | grep -E 'v[0-9]+\\.[0-9]+\\.[0-9]+' | grep -v CHANGELOG || true"
+      },
+      "artifact": null,
+      "blocked_by_claim": [],
+      "status": "FAIL",
+      "last_verified_at": "2026-04-27T05:18:02Z",
+      "last_run_log_path": ".planning/verifications/_logs/freshness__no-version-pinned-filenames.txt"
+    },
+    {
+      "id": "freshness/install-leads-with-pkg-mgr/docs-index",
+      "category": "freshness-invariant",
+      "description": "docs/index.md hero must show a package-manager install command (brew/binstall/curl) BEFORE any 'git clone'. Catches §0.2 drift.",
+      "verifier": {
+        "type": "shell",
+        "command": "python3 -c \"import re,sys; t=open('docs/index.md').read(); pm=re.search(r'(?im)(?:brew install|cargo binstall|curl[^\\n]*\\| ?sh)', t); gc=re.search(r'(?im)git clone', t); sys.exit(0 if pm and (not gc or pm.start() < gc.start()) else 1)\""
+      },
+      "artifact": null,
+      "blocked_by_claim": [],
+      "status": "FAIL",
+      "last_verified_at": "2026-04-27T05:18:02Z",
+      "last_run_log_path": ".planning/verifications/_logs/freshness__install-leads-with-pkg-mgr__docs-index.txt"
+    },
+    {
+      "id": "freshness/install-leads-with-pkg-mgr/README",
+      "category": "freshness-invariant",
+      "description": "README.md must show a package-manager install command BEFORE any 'git clone' / 'cargo build --release'. Catches §0.2 drift.",
+      "verifier": {
+        "type": "shell",
+        "command": "python3 -c \"import re,sys; t=open('README.md').read(); pm=re.search(r'(?im)(?:brew install|cargo binstall|curl[^\\n]*\\| ?sh)', t); gc=re.search(r'(?im)git clone', t); sys.exit(0 if pm and (not gc or pm.start() < gc.start()) else 1)\""
+      },
+      "artifact": null,
+      "blocked_by_claim": [],
+      "status": "FAIL",
+      "last_verified_at": "2026-04-27T05:18:02Z",
+      "last_run_log_path": ".planning/verifications/_logs/freshness__install-leads-with-pkg-mgr__README.txt"
+    },
+    {
+      "id": "freshness/benchmarks-in-mkdocs-nav",
+      "category": "freshness-invariant",
+      "description": "Every docs/benchmarks/*.md must appear in mkdocs.yml nav OR in not_in_nav. No benchmark behind an absolute github URL. §0.4.",
+      "verifier": {
+        "type": "shell",
+        "command": "python3 -c \"import sys,pathlib,re; y=open('mkdocs.yml').read(); missing=[p.name for p in pathlib.Path('docs/benchmarks').glob('*.md') if p.name not in y]; print('\\n'.join(missing)); sys.exit(1 if missing else 0)\""
+      },
+      "artifact": null,
+      "blocked_by_claim": [],
+      "status": "PASS",
+      "last_verified_at": "2026-04-27T05:18:02Z",
+      "last_run_log_path": ".planning/verifications/_logs/freshness__benchmarks-in-mkdocs-nav.txt"
+    },
+    {
+      "id": "freshness/no-loose-roadmap-or-requirements",
+      "category": "freshness-invariant",
+      "description": "No loose v*ROADMAP*.md / v*REQUIREMENTS*.md outside *phases/ or .planning/archive/. §0.5.",
+      "verifier": {
+        "type": "command-empty-output",
+        "command": "find .planning/milestones -maxdepth 2 \\( -name '*ROADMAP*' -o -name '*REQUIREMENTS*' \\) | grep -v phases | grep -v archive || true"
+      },
+      "artifact": null,
+      "blocked_by_claim": [],
+      "status": "FAIL",
+      "last_verified_at": "2026-04-27T05:18:02Z",
+      "last_run_log_path": ".planning/verifications/_logs/freshness__no-loose-roadmap-or-requirements.txt"
+    },
+    {
+      "id": "freshness/no-orphan-docs",
+      "category": "freshness-invariant",
+      "description": "Every docs/**/*.md must be in mkdocs.yml nav: OR in not_in_nav: OR a redirect_maps target. mkdocs --strict already enforces this; this row is a tripwire if --strict is ever softened.",
+      "verifier": {
+        "type": "shell",
+        "command": "bash scripts/check-docs-site.sh > /dev/null 2>&1"
+      },
+      "artifact": null,
+      "blocked_by_claim": [],
+      "status": "PASS",
+      "last_verified_at": "2026-04-27T05:18:05Z",
+      "last_run_log_path": ".planning/verifications/_logs/freshness__no-orphan-docs.txt"
+    },
+    {
+      "id": "mermaid-renders/how-it-works/filesystem-layer",
+      "category": "doc-page-with-mermaid",
+      "description": "docs/how-it-works/filesystem-layer.md — playwright walk on a cache-cold navigation must show every <pre.mermaid> block has at least one <svg> child AND zero render-error console messages. §0.1 + §0.1.b.",
+      "verifier": {
+        "type": "artifact-json-exists",
+        "command": "python3 -c \"import json,sys,pathlib; p=pathlib.Path('.planning/verifications/playwright/how-it-works/filesystem-layer.json'); sys.exit(2) if not p.exists() else None; d=json.loads(p.read_text()); mc=d.get('mermaid_count',0); sv=d.get('svg_counts',[]); ce=d.get('console_errors',[]); sys.exit(0 if (mc==0 or (len(sv)==mc and all(x>0 for x in sv))) and not ce else 1)\""
+      },
+      "artifact": ".planning/verifications/playwright/how-it-works/filesystem-layer.json",
+      "blocked_by_claim": [],
+      "status": "NOT-VERIFIED",
+      "last_verified_at": "2026-04-27T05:18:05Z",
+      "last_run_log_path": ".planning/verifications/_logs/mermaid-renders__how-it-works__filesystem-layer.txt"
+    },
+    {
+      "id": "mermaid-renders/how-it-works/git-layer",
+      "category": "doc-page-with-mermaid",
+      "description": "docs/how-it-works/git-layer.md — playwright walk on a cache-cold navigation must show every <pre.mermaid> block has at least one <svg> child AND zero render-error console messages. §0.1 + §0.1.b.",
+      "verifier": {
+        "type": "artifact-json-exists",
+        "command": "python3 -c \"import json,sys,pathlib; p=pathlib.Path('.planning/verifications/playwright/how-it-works/git-layer.json'); sys.exit(2) if not p.exists() else None; d=json.loads(p.read_text()); mc=d.get('mermaid_count',0); sv=d.get('svg_counts',[]); ce=d.get('console_errors',[]); sys.exit(0 if (mc==0 or (len(sv)==mc and all(x>0 for x in sv))) and not ce else 1)\""
+      },
+      "artifact": ".planning/verifications/playwright/how-it-works/git-layer.json",
+      "blocked_by_claim": [],
+      "status": "NOT-VERIFIED",
+      "last_verified_at": "2026-04-27T05:18:05Z",
+      "last_run_log_path": ".planning/verifications/_logs/mermaid-renders__how-it-works__git-layer.txt"
+    },
+    {
+      "id": "mermaid-renders/how-it-works/time-travel",
+      "category": "doc-page-with-mermaid",
+      "description": "docs/how-it-works/time-travel.md — playwright walk on a cache-cold navigation must show every <pre.mermaid> block has at least one <svg> child AND zero render-error console messages. §0.1 + §0.1.b.",
+      "verifier": {
+        "type": "artifact-json-exists",
+        "command": "python3 -c \"import json,sys,pathlib; p=pathlib.Path('.planning/verifications/playwright/how-it-works/time-travel.json'); sys.exit(2) if not p.exists() else None; d=json.loads(p.read_text()); mc=d.get('mermaid_count',0); sv=d.get('svg_counts',[]); ce=d.get('console_errors',[]); sys.exit(0 if (mc==0 or (len(sv)==mc and all(x>0 for x in sv))) and not ce else 1)\""
+      },
+      "artifact": ".planning/verifications/playwright/how-it-works/time-travel.json",
+      "blocked_by_claim": [],
+      "status": "NOT-VERIFIED",
+      "last_verified_at": "2026-04-27T05:18:05Z",
+      "last_run_log_path": ".planning/verifications/_logs/mermaid-renders__how-it-works__time-travel.txt"
+    },
+    {
+      "id": "mermaid-renders/how-it-works/trust-model",
+      "category": "doc-page-with-mermaid",
+      "description": "docs/how-it-works/trust-model.md — playwright walk on a cache-cold navigation must show every <pre.mermaid> block has at least one <svg> child AND zero render-error console messages. §0.1 + §0.1.b.",
+      "verifier": {
+        "type": "artifact-json-exists",
+        "command": "python3 -c \"import json,sys,pathlib; p=pathlib.Path('.planning/verifications/playwright/how-it-works/trust-model.json'); sys.exit(2) if not p.exists() else None; d=json.loads(p.read_text()); mc=d.get('mermaid_count',0); sv=d.get('svg_counts',[]); ce=d.get('console_errors',[]); sys.exit(0 if (mc==0 or (len(sv)==mc and all(x>0 for x in sv))) and not ce else 1)\""
+      },
+      "artifact": ".planning/verifications/playwright/how-it-works/trust-model.json",
+      "blocked_by_claim": [],
+      "status": "NOT-VERIFIED",
+      "last_verified_at": "2026-04-27T05:18:05Z",
+      "last_run_log_path": ".planning/verifications/_logs/mermaid-renders__how-it-works__trust-model.txt"
+    },
+    {
+      "id": "ci/main-green-on-latest-completed",
+      "category": "ci-status",
+      "description": "Most recent COMPLETED CI workflow run on origin/main must have conclusion=success. §3a.",
+      "verifier": {
+        "type": "shell",
+        "command": "test \"$(gh run list --branch main --workflow CI --status completed --limit 1 --json conclusion --jq '.[0].conclusion')\" = success"
+      },
+      "artifact": null,
+      "blocked_by_claim": [],
+      "status": "PASS",
+      "last_verified_at": "2026-04-27T05:18:06Z",
+      "last_run_log_path": ".planning/verifications/_logs/ci__main-green-on-latest-completed.txt"
+    },
+    {
+      "id": "crates-io/reposix-core-at-workspace-version",
+      "category": "crate-publish",
+      "description": "crates.io max_version of reposix-core must equal workspace version (0.11.1). §3b.",
+      "verifier": {
+        "type": "shell",
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-core | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+      },
+      "artifact": ".planning/verifications/crates-io/reposix-core.json",
+      "blocked_by_claim": [],
+      "status": "PASS",
+      "last_verified_at": "2026-04-27T05:18:06Z",
+      "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-core-at-workspace-version.txt"
+    },
+    {
+      "id": "crates-io/reposix-cache-at-workspace-version",
+      "category": "crate-publish",
+      "description": "crates.io max_version of reposix-cache must equal workspace version (0.11.1). §3b.",
+      "verifier": {
+        "type": "shell",
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-cache | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+      },
+      "artifact": ".planning/verifications/crates-io/reposix-cache.json",
+      "blocked_by_claim": [],
+      "status": "PASS",
+      "last_verified_at": "2026-04-27T05:18:06Z",
+      "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-cache-at-workspace-version.txt"
+    },
+    {
+      "id": "crates-io/reposix-sim-at-workspace-version",
+      "category": "crate-publish",
+      "description": "crates.io max_version of reposix-sim must equal workspace version (0.11.1). §3b.",
+      "verifier": {
+        "type": "shell",
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-sim | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+      },
+      "artifact": ".planning/verifications/crates-io/reposix-sim.json",
+      "blocked_by_claim": [],
+      "status": "PASS",
+      "last_verified_at": "2026-04-27T05:18:07Z",
+      "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-sim-at-workspace-version.txt"
+    },
+    {
+      "id": "crates-io/reposix-github-at-workspace-version",
+      "category": "crate-publish",
+      "description": "crates.io max_version of reposix-github must equal workspace version (0.11.1). §3b.",
+      "verifier": {
+        "type": "shell",
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-github | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+      },
+      "artifact": ".planning/verifications/crates-io/reposix-github.json",
+      "blocked_by_claim": [],
+      "status": "PASS",
+      "last_verified_at": "2026-04-27T05:18:07Z",
+      "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-github-at-workspace-version.txt"
+    },
+    {
+      "id": "crates-io/reposix-confluence-at-workspace-version",
+      "category": "crate-publish",
+      "description": "crates.io max_version of reposix-confluence must equal workspace version (0.11.1). §3b.",
+      "verifier": {
+        "type": "shell",
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-confluence | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+      },
+      "artifact": ".planning/verifications/crates-io/reposix-confluence.json",
+      "blocked_by_claim": [],
+      "status": "PASS",
+      "last_verified_at": "2026-04-27T05:18:07Z",
+      "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-confluence-at-workspace-version.txt"
+    },
+    {
+      "id": "crates-io/reposix-jira-at-workspace-version",
+      "category": "crate-publish",
+      "description": "crates.io max_version of reposix-jira must equal workspace version (0.11.1). §3b.",
+      "verifier": {
+        "type": "shell",
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-jira | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+      },
+      "artifact": ".planning/verifications/crates-io/reposix-jira.json",
+      "blocked_by_claim": [],
+      "status": "PASS",
+      "last_verified_at": "2026-04-27T05:18:07Z",
+      "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-jira-at-workspace-version.txt"
+    },
+    {
+      "id": "crates-io/reposix-remote-at-workspace-version",
+      "category": "crate-publish",
+      "description": "crates.io max_version of reposix-remote must equal workspace version (0.11.1). §3b.",
+      "verifier": {
+        "type": "shell",
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-remote | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+      },
+      "artifact": ".planning/verifications/crates-io/reposix-remote.json",
+      "blocked_by_claim": [],
+      "status": "PASS",
+      "last_verified_at": "2026-04-27T05:18:07Z",
+      "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-remote-at-workspace-version.txt"
+    },
+    {
+      "id": "crates-io/reposix-cli-at-workspace-version",
+      "category": "crate-publish",
+      "description": "crates.io max_version of reposix-cli must equal workspace version (0.11.1). §3b.",
+      "verifier": {
+        "type": "shell",
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-cli | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+      },
+      "artifact": ".planning/verifications/crates-io/reposix-cli.json",
+      "blocked_by_claim": [],
+      "status": "PASS",
+      "last_verified_at": "2026-04-27T05:18:07Z",
+      "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-cli-at-workspace-version.txt"
+    }
+  ]
+}

@@ -53,3 +53,8 @@ research/scratch/
 # Byproducts of scripts/bench_token_economy.py not involving fixtures:
 runtime/bench-*.log
 .claude/scheduled_tasks.lock
+
+# SESSION-END-STATE per-run logs (regenerated on every `verify`). Artifacts
+# under .planning/verifications/<category>/ ARE tracked — only the verifier
+# stdout/stderr captures are runtime noise.
+.planning/verifications/_logs/
