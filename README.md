@@ -1,18 +1,18 @@
 # reposix
 
-> Edit issues as files. `git push` to sync. Zero MCP schema tokens.
+> Agents already know `cat` and `git`. Stop teaching them every REST API — expose your tools as a git working tree.
 
 reposix exposes REST-based issue trackers (and similar SaaS systems) as a
 git-native partial clone, served by `git-remote-reposix` from a local
 bare-repo cache built from REST responses. Agents use `cat`, `grep`, `sed`,
 and `git` on real workflows — no MCP tool schemas, no custom CLI.
 
-[![CI](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml/badge.svg)](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml)
-[![Docs](https://github.com/reubenjohn/reposix/actions/workflows/docs.yml/badge.svg)](https://reubenjohn.github.io/reposix/)
+[![CI](https://github.com/reubenjohn/reposix/workflows/CI/badge.svg)](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml)
+[![Docs](https://github.com/reubenjohn/reposix/workflows/Docs/badge.svg)](https://reubenjohn.github.io/reposix/)
 [![codecov](https://codecov.io/gh/reubenjohn/reposix/branch/main/graph/badge.svg)](https://codecov.io/gh/reubenjohn/reposix)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE-MIT)
 [![Rust](https://img.shields.io/badge/rust-stable-orange.svg)](rust-toolchain.toml)
-[![Release](https://img.shields.io/github/v/release/reubenjohn/reposix?include_prereleases)](https://github.com/reubenjohn/reposix/releases)
+[![reposix-cli on crates.io](https://img.shields.io/crates/v/reposix-cli?label=reposix-cli)](https://crates.io/crates/reposix-cli)
 
 **Full docs and narrative:** <https://reubenjohn.github.io/reposix/>
 
