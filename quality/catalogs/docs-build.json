@@ -28,17 +28,12 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/docs-build/mkdocs-strict.json",
-      "status": "WAIVED",
-      "last_verified": "2026-04-27T23:21:25Z",
+      "status": "PASS",
+      "last_verified": "2026-04-27T23:22:24Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: mkdocs build failed --strict OR mermaid HTML-entity regression -- inspect mkdocs.yml + recent docs/ edits + the build log path under /tmp/check-docs-site*/build.log",
-      "waiver": {
-        "until": "2026-05-15T00:00:00Z",
-        "reason": "P60 Wave A catalog-first; verifier ships in P60 Wave B via git-mv from scripts/check-docs-site.sh. Until Wave B lands the canonical path, the runner returns NOT-VERIFIED on missing verifier; this short-lived waiver keeps pre-push GREEN through the implementation window. Pattern from quality/SURPRISES.md 2026-04-27 P58 row 2 (clippy-lint-loaded P58 Wave A waiver).",
-        "dimension_owner": "v0.12.0 P60 docs-build dimension owner",
-        "tracked_in": "P60 Wave B (60-02)"
-      }
+      "waiver": null
     },
     {
       "id": "docs-build/mermaid-renders",
@@ -66,17 +61,12 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/docs-build/mermaid-renders.json",
-      "status": "WAIVED",
-      "last_verified": "2026-04-27T23:21:25Z",
+      "status": "PASS",
+      "last_verified": "2026-04-27T23:22:24Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: a docs page added a mermaid fence without a matching playwright artifact OR an artifact got stale -- refresh via the playwright MCP walk per CLAUDE.md 'Whole-nav-section playwright walks' section",
-      "waiver": {
-        "until": "2026-05-15T00:00:00Z",
-        "reason": "P60 Wave A catalog-first; verifier ships in P60 Wave B via git-mv from scripts/check-mermaid-renders.sh. Short-lived waiver keeps pre-push GREEN through the implementation window. Pattern from quality/SURPRISES.md 2026-04-27 P58 row 2.",
-        "dimension_owner": "v0.12.0 P60 docs-build dimension owner",
-        "tracked_in": "P60 Wave B (60-02)"
-      }
+      "waiver": null
     },
     {
       "id": "docs-build/link-resolution",
@@ -101,17 +91,12 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/docs-build/link-resolution.json",
-      "status": "WAIVED",
-      "last_verified": "2026-04-27T23:21:25Z",
+      "status": "PASS",
+      "last_verified": "2026-04-27T23:22:24Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: a docs page references a deleted file OR a moved-without-redirect file -- run python3 quality/gates/docs-build/link-resolution.py locally for the BROKEN-list",
-      "waiver": {
-        "until": "2026-05-15T00:00:00Z",
-        "reason": "P60 Wave A catalog-first; verifier ships in P60 Wave B via git-mv from scripts/check_doc_links.py (with underscore-to-hyphen rename per directory-layout convention). Short-lived waiver keeps pre-push GREEN through the implementation window.",
-        "dimension_owner": "v0.12.0 P60 docs-build dimension owner",
-        "tracked_in": "P60 Wave B (60-02)"
-      }
+      "waiver": null
     },
     {
       "id": "docs-build/badges-resolve",
