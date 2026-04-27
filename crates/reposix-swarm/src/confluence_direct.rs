@@ -12,7 +12,7 @@ use std::time::Instant;
 use async_trait::async_trait;
 use parking_lot::Mutex;
 use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use rand::{RngExt, SeedableRng};
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::{BackendConnector, RecordId};
 
