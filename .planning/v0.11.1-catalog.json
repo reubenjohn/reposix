@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T21:48:05Z",
+  "generated_at": "2026-04-27T02:55:36Z",
   "schema_version": 1,
   "files": [
     {
@@ -143,11 +143,11 @@
     },
     {
       "path": ".planning/CATALOG.md",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "moved to .planning/research/v0.11.0-CATALOG-v1.md (lineage: v1->v2->v3)",
+      "updated_at": "2026-04-27T02:55:36Z"
     },
     {
       "path": ".planning/MILESTONES.md",
