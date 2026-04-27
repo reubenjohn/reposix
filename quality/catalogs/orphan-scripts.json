@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "comment": "Quality Gates catalog — orphan-scripts waivers. Each row documents a script that genuinely cannot be absorbed into a quality/gates/<dim>/ home and explains why. SIMPLIFY-12 (P63) audits this file at milestone close. Ideally empty.",
+  "dimension": "meta",
+  "rows": [
+    {
+      "id": "release/crates-io-max-version",
+      "dimension": "release",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/end-state.py:bootstrap_claims (crates-io-max-version)"],
+      "command": null,
+      "expected": {
+        "asserts": ["covered by scripts/end-state.py during the parallel-migration window; will be migrated to quality/gates/release/ in P58"]
+      },
+      "verifier": {
+        "script": "scripts/end-state.py",
+        "args": ["verdict"],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": null,
+      "status": "WAIVED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "P58 SIMPLIFY-04/05 ships the migrated check at quality/gates/release/crates-io-max-version.py; until then this row documents the temporary coverage gap",
+      "waiver": {
+        "until": "2026-05-15T00:00:00Z",
+        "reason": "W-2 plan-check fix: parallel-migration parity is documentary, not behavioral; the crates.io max-version check is currently in scripts/end-state.py and will move to release-dim in P58 (SIMPLIFY-04/05). Documents the temporary coverage gap so the verifier subagent knows the regression class is still gated.",
+        "dimension_owner": "v0.12.0 P58 release dimension owner",
+        "tracked_in": "SIMPLIFY-04/05 P58"
+      }
+    }
+  ]
+}

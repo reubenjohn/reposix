@@ -9,6 +9,14 @@ resolution>`. Anti-bloat: ≤200 lines. When it crosses, archive oldest
 50 to `quality/SURPRISES-archive-YYYY-QN.md` and start fresh. Seeded
 by P56 (Wave 4-B); P57 takes ownership when the framework skeleton ships.
 
+## Ownership
+
+P56 seeded this file at phase close (5 entries; commit `87cd1c3`). **P57 takes ownership 2026-04-27** as part of the Quality Gates skeleton landing. From P57 onward, this file is referenced by `quality/PROTOCOL.md` § "SURPRISES.md format" as the canonical pivot journal.
+
+Anti-bloat: ≤200 lines (currently 65). When the file crosses 200 lines, archive the oldest 50 entries to `quality/SURPRISES-archive-YYYY-QN.md` and start fresh — see `quality/PROTOCOL.md` § "Anti-bloat rules per surface" for the rotation rule.
+
+Format: `YYYY-MM-DD P<N>: <obstacle> — <one-line resolution>`. **Required reading for every phase agent at start of phase.** The next agent does NOT repeat investigations of things already journaled here.
+
 ---
 
 2026-04-27 P56: GitHub's `releases/latest/download/...` pointer follows

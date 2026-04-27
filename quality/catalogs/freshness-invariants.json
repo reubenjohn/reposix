@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "comment": "Quality Gates catalog — structure dimension. Schema spec: quality/catalogs/README.md. Verifier impl: quality/gates/structure/. Reports: quality/reports/verifications/structure/.",
+  "dimension": "structure",
+  "rows": [
+    {
+      "id": "structure/no-version-pinned-filenames",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["CLAUDE.md:Freshness invariants", "scripts/end-state.py:144-164"],
+      "command": null,
+      "expected": {
+        "asserts": ["find docs scripts -type f | grep -E 'v[0-9]+\\.[0-9]+\\.[0-9]+' | grep -v CHANGELOG returns empty stdout"]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/freshness-invariants.py",
+        "args": ["--row-id", "structure/no-version-pinned-filenames"],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/no-version-pinned-filenames.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "any new doc/script that hardcodes a version in its filename outside CHANGELOG.md and *-phases/",
+      "waiver": null
+    },
+    {
+      "id": "structure/install-leads-with-pkg-mgr-docs-index",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["docs/index.md:hero", "CLAUDE.md:Freshness invariants"],
+      "command": null,
+      "expected": {
+        "asserts": ["pkg-mgr command (brew install | cargo binstall | curl|sh | powershell-irm) appears BEFORE any 'git clone https://' or 'cargo build --release' source-compile snippet in docs/index.md"]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/freshness-invariants.py",
+        "args": ["--row-id", "structure/install-leads-with-pkg-mgr-docs-index"],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/install-leads-with-pkg-mgr-docs-index.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "docs/index.md hero section — install path order",
+      "waiver": null
+    },
+    {
+      "id": "structure/install-leads-with-pkg-mgr-readme",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["README.md:hero", "CLAUDE.md:Freshness invariants"],
+      "command": null,
+      "expected": {
+        "asserts": ["pkg-mgr command (brew install | cargo binstall | curl|sh | powershell-irm) appears BEFORE any 'git clone https://' or 'cargo build --release' source-compile snippet in README.md"]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/freshness-invariants.py",
+        "args": ["--row-id", "structure/install-leads-with-pkg-mgr-readme"],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/install-leads-with-pkg-mgr-readme.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "README.md hero section — install path order",
+      "waiver": null
+    },
+    {
+      "id": "structure/benchmarks-in-mkdocs-nav",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["docs/benchmarks/", "mkdocs.yml:nav"],
+      "command": null,
+      "expected": {
+        "asserts": ["every docs/benchmarks/*.md filename appears in mkdocs.yml"]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/freshness-invariants.py",
+        "args": ["--row-id", "structure/benchmarks-in-mkdocs-nav"],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/benchmarks-in-mkdocs-nav.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "mkdocs.yml `nav:` block — benchmarks subsection",
+      "waiver": null
+    },
+    {
+      "id": "structure/no-loose-roadmap-or-requirements",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [".planning/milestones/", "CLAUDE.md:GSD planning org is regular"],
+      "command": null,
+      "expected": {
+        "asserts": ["find .planning/milestones -maxdepth 2 ( -name '*ROADMAP*' -o -name '*REQUIREMENTS*' ) | grep -v phases | grep -v archive returns empty stdout"]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/freshness-invariants.py",
+        "args": ["--row-id", "structure/no-loose-roadmap-or-requirements"],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/no-loose-roadmap-or-requirements.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "any *ROADMAP*.md / *REQUIREMENTS*.md at .planning/milestones/ top-level (must be inside *-phases/)",
+      "waiver": null
+    },
+    {
+      "id": "structure/no-orphan-docs",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["mkdocs.yml:nav"],
+      "command": null,
+      "expected": {
+        "asserts": ["bash scripts/check-docs-site.sh exits 0 (mkdocs --strict + orphan-doc check)"]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/freshness-invariants.py",
+        "args": ["--row-id", "structure/no-orphan-docs"],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/no-orphan-docs.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "mkdocs.yml `nav:` or `not_in_nav:` or `redirect_maps:`",
+      "waiver": null
+    },
+    {
+      "id": "structure/top-level-requirements-roadmap-scope",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [".planning/REQUIREMENTS.md", ".planning/ROADMAP.md", "CLAUDE.md:GSD planning org is regular"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "top-level .planning/REQUIREMENTS.md contains exactly one '## v0.12.0 Requirements' section; the file does NOT contain '## v0.11.0' / '## v0.10.0' / '## v0.9.0' / '## v0.8.0' as top-level H2 sections (these belong inside .planning/milestones/v0.X.0-phases/REQUIREMENTS.md)",
+          "top-level .planning/ROADMAP.md contains exactly one '## v0.12.0 Quality Gates (PLANNING)' section; the file does NOT contain '## v0.11.0 Polish & Reproducibility (PLANNING)' / '## v0.10.0 Docs & Narrative Shine (PLANNING)' / '## v0.9.0 Architecture Pivot' as top-level H2 sections (these belong inside .planning/milestones/v0.X.0-phases/ROADMAP.md)",
+          "the historical milestones index paragraph (one paragraph at the top with relative links to .planning/milestones/v0.X.0-phases/{REQUIREMENTS,ROADMAP}.md) is permitted in both files"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/freshness-invariants.py",
+        "args": ["--row-id", "structure/top-level-requirements-roadmap-scope"],
+        "timeout_s": 15,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/top-level-requirements-roadmap-scope.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: move historical sections from .planning/{REQUIREMENTS,ROADMAP}.md to .planning/milestones/v0.X.0-phases/{REQUIREMENTS,ROADMAP}.md per POLISH-STRUCT (P57 Wave D)",
+      "waiver": null
+    },
+    {
+      "id": "structure/badges-resolve",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "asset-exists",
+      "sources": ["README.md:badges", "docs/index.md:badges"],
+      "command": null,
+      "expected": {
+        "asserts": ["P57 stub: row exists with verifier.script pointing at quality/gates/docs-build/badges-resolve.py (P60 ships the verifier per BADGE-01 traceability); the row anchors the contract from P57 onward; status: NOT-VERIFIED is acceptable until P60 ships the verifier."]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-build/badges-resolve.py",
+        "args": ["--row-id", "structure/badges-resolve"],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/badges-resolve.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "P60 docs-build dimension ships the verifier; for P57 the row's existence is the contract",
+      "waiver": {
+        "until": "2026-07-25T00:00:00Z",
+        "reason": "verifier ships in P60 per BADGE-01 traceability; P57 anchors the row in the catalog so the gate exists from skeleton onward",
+        "dimension_owner": "v0.12.0 P60 docs-build dimension owner",
+        "tracked_in": "BADGE-01 / P60"
+      }
+    },
+    {
+      "id": "structure/banned-words",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["docs/.banned-words.toml", "scripts/banned-words-lint.sh"],
+      "command": null,
+      "expected": {
+        "asserts": ["bash quality/gates/structure/banned-words.sh exits 0 (no banned-word violations in docs/)"]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/banned-words.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/banned-words.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "any docs/ file using banned terms (FUSE, fusermount, kernel, partial-clone, etc. — see docs/.banned-words.toml for the full matrix)",
+      "waiver": null
+    }
+  ]
+}
