@@ -29,10 +29,14 @@ jobs:
           python-version: '3.12'
 
       - name: Run weekly cadence gates
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: python3 quality/runners/run.py --cadence weekly
 
       - name: Generate verdict
         if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: python3 quality/runners/verdict.py --cadence weekly
 
       - name: Upload artifacts

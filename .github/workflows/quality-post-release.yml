@@ -37,10 +37,14 @@ jobs:
             https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 
       - name: Run post-release cadence gates
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: python3 quality/runners/run.py --cadence post-release
 
       - name: Generate verdict
         if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: python3 quality/runners/verdict.py --cadence post-release
 
       - name: Upload artifacts
