@@ -59,6 +59,7 @@ Catalogs are the data; verifiers are the code; reports are the artifacts; runner
 - [ ] **QG-06**: Mandatory verifier-subagent dispatch per phase close. No phase ships without an unbiased subagent grading the catalog rows GREEN. Pattern documented in PROTOCOL.md; same shape as the §0.8 verifier dispatch from v0.11.2.
 - [ ] **QG-07**: **Mandatory CLAUDE.md update per phase** as part of definition-of-done. Each phase that introduces a new file, convention, gate, or operational rule MUST update the relevant CLAUDE.md section in the SAME PR. The verifier subagent grades this as a phase-close requirement. Anti-bloat: each phase appends a paragraph + code reference; deletions are encouraged when superseded. Owner-flagged in this planning session.
 - [ ] **QG-08**: Top-level `.planning/REQUIREMENTS.md` MUST contain ONLY the active milestone + a "Previously validated" index pointing to per-milestone REQUIREMENTS.md files inside `*-phases/`. Same rule for `.planning/ROADMAP.md`. This catalog row in `quality/gates/structure/` enforces the convention going forward (currently unenforced; the convention is documented in CLAUDE.md §0.5 but historical sections drifted into the top-level file before this gate existed). Owner-flagged in this planning session.
+- [ ] **QG-09**: Quality Gates summary badge — `quality/runners/verdict.py` emits `quality/reports/badge.json` in [shields.io endpoint format](https://shields.io/badges/endpoint-badge): `{"schemaVersion": 1, "label": "quality gates", "message": "<N>/<M> GREEN", "color": <green|yellow|red>}`. Color thresholds: green if all P0+P1 PASS or WAIVED; yellow if any P2 RED; red if any P0+P1 RED. **P57 ships:** the verdict.py JSON emit. **P60 ships:** mkdocs publishes it as `docs/badge.json` → `https://reubenjohn.github.io/reposix/badge.json`; README + docs/index.md add the badge: `![Quality](https://img.shields.io/endpoint?url=https://reubenjohn.github.io/reposix/badge.json)`. **Plus** the cheaper standard badge `![Quality (weekly)](https://github.com/reubenjohn/reposix/actions/workflows/quality-weekly.yml/badge.svg)` lands in P58 alongside the workflow. Owner-flagged in this planning session.
 
 #### Structure dimension — migrate freshness invariants
 
@@ -75,6 +76,7 @@ Catalogs are the data; verifiers are the code; reports are the artifacts; runner
 #### Docs-build dimension migration
 
 - [ ] **DOCS-BUILD-01**: Move `scripts/check-docs-site.sh`, `scripts/check-mermaid-renders.sh`, `scripts/check-doc-links.py` into `quality/gates/docs-build/` with no behaviour change. Pre-push hook delegates to `quality/runners/run.py --cadence pre-push`. Leave shims at old paths if hooks would otherwise break.
+- [ ] **BADGE-01**: Validate every README + docs-page badge URL renders. New gate `quality/gates/docs-build/badges-resolve.py` HEADs each badge URL and asserts HTTP 200 + content-type contains `image`. Catalog row per badge in `quality/catalogs/freshness-invariants.json` (or a new `quality/catalogs/badges.json` if the count grows). Catches: shields.io drift, codecov project rename, badge-URL typos, broken endpoint URLs. Cadence: weekly + pre-push (cheap HEAD; ~1s for all 6 badges). Includes the new QG-09 endpoint badge URL once published.
 
 #### Subjective gates
 
@@ -137,6 +139,7 @@ Refined 1:1 mapping after roadmap creation (gsd-roadmapper, 2026-04-27). Coverag
 | QG-06 | P57 | planning |
 | QG-07 | P57 | planning |
 | QG-08 | P57 | planning |
+| QG-09 | P57 (verdict.py emit) + P58 (GH Actions badge) + P60 (mkdocs publish + README badge) | planning |
 | STRUCT-01 | P57 | planning |
 | STRUCT-02 | P57 | planning |
 | DOCS-REPRO-01 | P59 | planning |
@@ -144,6 +147,7 @@ Refined 1:1 mapping after roadmap creation (gsd-roadmapper, 2026-04-27). Coverag
 | DOCS-REPRO-03 | P59 | planning |
 | DOCS-REPRO-04 | P59 | planning |
 | DOCS-BUILD-01 | P60 | planning |
+| BADGE-01 | P60 | planning |
 | SUBJ-01 | P61 | planning |
 | SUBJ-02 | P61 | planning |
 | SUBJ-03 | P61 | planning |
@@ -164,7 +168,7 @@ Refined 1:1 mapping after roadmap creation (gsd-roadmapper, 2026-04-27). Coverag
 | MIGRATE-02 | P63 | planning |
 | MIGRATE-03 | P63 | planning |
 
-**Per-phase requirement counts:** P56=3 (RELEASE-01..03) · P57=13 (QG-01..08, STRUCT-01..02, SIMPLIFY-01..03) · P58=3 (RELEASE-04, SIMPLIFY-04..05) · P59=7 (DOCS-REPRO-01..04, SIMPLIFY-06..07, SIMPLIFY-11) · P60=4 (DOCS-BUILD-01, SIMPLIFY-08..10) · P61=3 (SUBJ-01..03) · P62=1 (ORG-01) · P63=4 (MIGRATE-01..03, SIMPLIFY-12). Sum = 38 ✓.
+**Per-phase requirement counts:** P56=3 (RELEASE-01..03) · P57=14 (QG-01..09, STRUCT-01..02, SIMPLIFY-01..03) · P58=3 (RELEASE-04, SIMPLIFY-04..05) · P59=7 (DOCS-REPRO-01..04, SIMPLIFY-06..07, SIMPLIFY-11) · P60=5 (DOCS-BUILD-01, BADGE-01, SIMPLIFY-08..10) · P61=3 (SUBJ-01..03) · P62=1 (ORG-01) · P63=4 (MIGRATE-01..03, SIMPLIFY-12). Sum = 40 ✓. (QG-09 spans P57+P58+P60; counted in P57 as primary owner.)
 
 **Recurring success criteria across every phase (P56–P63)** — these are part of the phase's definition-of-done and are NOT separate REQ-IDs (they are recurring expressions of QG-06 + QG-07 + the autonomous-execution protocol):
 - Catalog-first: phase's first commit writes catalog rows BEFORE implementation.
