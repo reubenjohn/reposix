@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.12.0
 milestone_name: Quality Gates
 status: planning
-last_updated: "2026-04-27T18:31:11.587Z"
-last_activity: "2026-04-27 -- v0.12.0 roadmap created via gsd-roadmapper subagent. ROADMAP.md gained `## v0.12.0 Quality Gates (PLANNING)` section above the existing v0.11.0 section with rich phase entries (Goal / Requirements / Depends on + gate-state precondition / Success criteria including 4 recurring items per phase / Context anchor). Milestones list updated: v0.11.x marked shipped (Phases 50–55 + POLISH2-* polish passes), v0.12.0 added in planning. REQUIREMENTS.md traceability table refined to 1:1 mapping. Awaiting handover bundle + Phase 56 plan kickoff."
+last_updated: "2026-04-27T18:34:00.000Z"
+last_activity: "2026-04-27 -- P56 SHIPPED. Wave 4-A CLAUDE.md update (QG-07) + Wave 4-B quality/SURPRISES.md creation (QG-05) + Wave 4-C catalog flip (5 install rows refreshed) + Wave 4-C REQUIREMENTS.md MIGRATE-03 expansion + Wave 4-D verifier verdict GREEN at .planning/verifications/p56/VERDICT.md + Wave 4-E STATE.md cursor advance to P57. Validator scripts/p56-validate-install-evidence.py re-runs clean (5/5 PASS gate). Carry-forwards journaled: latest-pointer recency, GITHUB_TOKEN-tag trigger gap, cargo-binstall pkg-url mismatch, Rust 1.82 MSRV vs block-buffer-0.12.0, curl-rehearsal SIGPIPE."
 progress:
   total_phases: 8
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 1
-  percent: 25
+  completed_plans: 4
+  percent: 12
 ---
 
 # Project State
@@ -19,6 +19,33 @@ progress:
 
 ### Roadmap Evolution
 
+- **P56 SHIPPED (2026-04-27, v0.12.0):** RELEASE-01..03 closed.
+  `.github/workflows/release.yml` now fires on both `v*` and
+  `reposix-cli-v*` tag globs (Option A; commit `d3f0dce`); a fresh
+  `reposix-cli-v0.11.3` GH Release ships with 8 assets (5 platform
+  archives + 2 installers + SHA256SUMS). 5 install paths verified
+  end-to-end via `.planning/verifications/p56/install-paths/*.json`:
+  curl PASS in ubuntu:24.04 rehearsal (`scripts/p56-rehearse-curl-install.sh`),
+  powershell PASS asset-existence (1075B, leading bytes match), homebrew
+  PASS tap formula version 0.11.3 + 3 valid sha256s + reposix-cli-v0.11.3
+  pinned URLs, build-from-source PASS via ci.yml run 25005567451,
+  cargo-binstall PARTIAL with documented v0.12.1 carry-forward (~10 LOC
+  pkg-url rewrite + MSRV 1.82→1.85 or block-buffer cap <0.12). Wave 4
+  closed phase: CLAUDE.md gained "v0.12.0 Quality Gates — phase log"
+  section + container-rehearsal evidence schema + new operating principle
+  7 (phase-close = catalog-row PASS) + meta-rule extension (release-pipeline
+  regression fixes ship evidence in same PR); `quality/SURPRISES.md`
+  created and seeded with 5 P56 carry-forwards (latest-pointer recency,
+  GITHUB_TOKEN-tag trigger gap, cargo-binstall pkg-url, Rust 1.82 MSRV,
+  curl-rehearsal SIGPIPE); REQUIREMENTS.md MIGRATE-03 expanded with 4
+  new P56-discovered carry-forward items alongside the existing perf /
+  security / cross-platform / Error::Other 156→144 list. Verifier verdict
+  GREEN at `.planning/verifications/p56/VERDICT.md` (validator
+  `scripts/p56-validate-install-evidence.py` re-run: 5/5 rows pass their
+  gate). Carry-forwards under MIGRATE-03 now total 8 items (4 original +
+  4 P56 supplements). Next: P57 framework skeleton + structure dimension
+  migration (lands `quality/{gates,catalogs,reports,runners}/` layout
+  + `quality/PROTOCOL.md`).
 - **v0.11.0 implementation SHIPPED (2026-04-25 morning, same day):** Phases 50–55 closed in ~5 hours (with one mid-session VM-OOM crash recovered cleanly). ~41 commits since Phase 50 close. All 17 POLISH requirements landed: GSD hygiene scrub + workspace version 0.9.0→0.11.0-dev + chore PR #15 merged + archival doc sweep (Phase 50); 4-way CLI helper duplication consolidated into `worktree_helpers.rs` + `parse_remote_url` unified into `reposix-core` + `cli_compat.rs` deleted + FUSE residue stripped from `refresh.rs` + broken `demo.sh` removed + CLI module privacy normalised (Phase 51); mermaid root-cause F1+F2+F3 + `pymdownx.emoji` + 24-term glossary page + first-occurrence glosses on 6 jargon-dense pages + plain-English summaries on 5 how-it-works/guides pages + ADR-004/006 deletion + agentic-engineering-reference disclaimer (Phase 52); 5-install-path tutorial rewrite + `dist` 0.31.0 5-platform pipeline + release-plz crates.io workflow + `cargo binstall` metadata + CLAUDE.md docs-site validation rule + `scripts/check-docs-site.sh` + pre-push hook wiring + `repro-quickstart.sh` (Phase 53); real-backend latency table populated for sim+github with record counts + 3-sample medians + bench-latency-v09 CI job + weekly cron PR-creator (Phase 54); `reposix doctor` extended to 18 checks with copy-pastable fix strings + `reposix log --time-travel` + `reposix init --since=<RFC3339>` + `reposix cost --since 7d` + `reposix gc --orphans/--purge/--include-sim` (Phase 55). Discovered + fixed v0.9.0-pivot tutorial bug: `git checkout origin/main` was wrong — actual ref is `refs/reposix/origin/main` (helper namespaces fetched refs). CLAUDE.md gained two new load-bearing sections: "Build memory budget" (RAM guardrail after 2 OOM crashes) and "Docs-site validation" (mermaid-syntax-error pre-push gate). All audit research artifacts retained in `.planning/research/v0.11.0-*.md` (jargon-inventory, mkdocs-site-audit, gsd-hygiene-report, CATALOG-v2, latency-benchmark-plan, release-binaries-plan, cache-location-study, vision-and-innovations). PRE-TAG GATES (owner-only, NOT implementation work): (1) provision `CARGO_REGISTRY_TOKEN` repo secret; (2) bootstrap `reubenjohn/homebrew-reposix` tap repo + `HOMEBREW_TAP_TOKEN` secret; (3) bump 0.11.0-dev → 0.11.0 in workspace `Cargo.toml` + `git tag v0.11.0`. Pre-tag gates documented in CHANGELOG `[Unreleased]`.
 - **2026-04-25 (overnight): v0.9.0 helper-hardcodes-SimBackend tech debt CLOSED.** Helper now URL-dispatches to sim/github/confluence/jira (commit `cd1b0b6`, ADR-008). 18 tests added. Real-backend GitHub fetch verified end-to-end via the `dark_factory_real_github` CI job on `reubenjohn/reposix`. Confluence + JIRA still wait on CI secrets to flip from `pending-secrets` to actual. v0.9.0 audit verdict flipped `tech_debt` → `passed`; v0.10.0 audit's carry-forward of the same item also struck.
 - **v0.10.0 SHIPPED (2026-04-25):** Phases 40–45 closed. `.planning/v0.10.0-MILESTONE-AUDIT.md` verdict `tech_debt`. 11 DOCS requirements landed: hero rewrite + concept pages (Phase 40), how-it-works trio with mermaid diagrams (Phase 41), 5-min first-run tutorial + 3 guides + simulator-relocate (Phase 42), Diátaxis nav + theme + banned-words linter + reposix-banned-words skill (Phase 43), 16-page cold-reader clarity audit (Phase 44; 2 critical fixed, 1 escalated), README rewrite 332→102 lines + CHANGELOG `[v0.10.0]` + lifecycle close (Phase 45). Carry-forward: playwright screenshots deferred (cairo system libs unavailable; `scripts/take-screenshots.sh` stub names contract); helper-hardcodes-SimBackend remains from v0.9.0 (out-of-scope per docs-only milestone). 9 major + 17 minor doc-clarity findings logged in `.planning/notes/v0.11.0-doc-polish-backlog.md`. Phase dirs archived to `.planning/milestones/v0.10.0-phases/`. ROADMAP v0.10.0 entries collapsed into `<details>`. v0.11.0 "Performance & Sales Assets" tentative scope: helper-multi-backend-dispatch fix prereq + `cargo run -p reposix-bench` + IssueId→RecordId refactor (parallel runner) + community files (CONTRIBUTING / SECURITY / examples) currently in flight.
@@ -64,11 +91,11 @@ issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
 
 ## Current Position
 
-Phase: 56
+Phase: 57
 Plan: —
-Cursor: v0.12.0 Quality Gates roadmap scaffolded (Phases 56–63, ROADMAP.md updated, REQUIREMENTS.md traceability table refined). 38 requirements mapped 1:1 to 8 phases (RELEASE-01..04, QG-01..08, STRUCT-01..02, DOCS-REPRO-01..04, DOCS-BUILD-01, SUBJ-01..03, ORG-01, SIMPLIFY-01..12, MIGRATE-01..03; coverage 100%). Recurring success criteria on every phase: catalog-first commit, CLAUDE.md update in same PR (QG-07), unbiased verifier-subagent dispatch on phase close (QG-06), SIMPLIFY absorption with fold-or-shim-or-waive resolution. Phase preconditions are gate states (e.g. P58 starts when P57's structure-dimension catalog shows GREEN in `quality/reports/verdicts/p57/`), not just "predecessor done." Cadence is weekly (not nightly) — owner cost-decision. Source-of-truth handover bundle (NOT YET WRITTEN — owner authoring 2026-04-27): 7 docs at `.planning/research/v0.12.0-*.md` referenced as Context-anchors. Next: read the handover bundle when written, then `/gsd-plan-phase 56` to plan the release-artifacts restoration.
-Status: planning
-Last activity: 2026-04-27 -- v0.12.0 roadmap created via gsd-roadmapper subagent. ROADMAP.md gained `## v0.12.0 Quality Gates (PLANNING)` section above the existing v0.11.0 section with rich phase entries (Goal / Requirements / Depends on + gate-state precondition / Success criteria including 4 recurring items per phase / Context anchor). Milestones list updated: v0.11.x marked shipped (Phases 50–55 + POLISH2-* polish passes), v0.12.0 added in planning. REQUIREMENTS.md traceability table refined to 1:1 mapping. Awaiting handover bundle + Phase 56 plan kickoff.
+Cursor: P56 SHIPPED — release.yml fires on `reposix-cli-v0.11.3` tag (Option A; commit d3f0dce), 4/5 install paths PASS (curl ubuntu:24.04 rehearsal, powershell asset-existence, brew tap-formula version + 3 valid sha256s, build-from-source via ci.yml), cargo-binstall PARTIAL pending v0.12.1 metadata fix (~10 LOC pkg-url rewrite + MSRV bump 1.82 → 1.85 or block-buffer cap <0.12). Catalog: `.planning/docs_reproducible_catalog.json` 5 install rows refreshed with Wave 3 evidence timestamps; verifier subagent verdict GREEN at `.planning/verifications/p56/VERDICT.md`. Carry-forwards journaled in `quality/SURPRISES.md` (5 entries: latest-pointer recency, GITHUB_TOKEN-tag trigger gap, cargo-binstall pkg-url mismatch, Rust 1.82 MSRV vs block-buffer-0.12.0, curl-rehearsal SIGPIPE-on-pipefail) and tracked under MIGRATE-03 in REQUIREMENTS.md. CLAUDE.md updated per QG-07 with v0.12.0-Quality-Gates-phase-log section, container-rehearsal evidence schema, operating principle 7 (phase-close = catalog-row PASS), and meta-rule extension (release-pipeline regression fixes ship evidence in same PR). Next: P57 — Quality Gates skeleton + structure dimension migration. Gate-state precondition for P57: read `.planning/verifications/p56/VERDICT.md` to confirm GREEN, read `quality/SURPRISES.md`, read this entry, then `/gsd-plan-phase 57`.
+Status: shipped (P56)
+Last activity: 2026-04-27 -- P56 closed with GREEN verdict at `.planning/verifications/p56/VERDICT.md`; install paths restored end-to-end (4 PASS + 1 PARTIAL with documented v0.12.1 carry-forward); CLAUDE.md / quality/SURPRISES.md / REQUIREMENTS.md MIGRATE-03 updates landed in same Wave 4 PR; STATE.md cursor advanced to P57.
 
 Progress: [          ] v0.12.0 planning (0/8 phases; phase dirs not yet scaffolded — created on `/gsd-plan-phase 56` invocation)
 
