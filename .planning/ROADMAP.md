@@ -112,6 +112,14 @@
 
 **Context anchor:** `.planning/REQUIREMENTS.md` § "Docs-repro dimension" + § "Aggressive simplification" SIMPLIFY-06, 07, 11, `.planning/research/v0.12.0-naming-and-architecture.md` § "docs-repro dimension", `.planning/docs_reproducible_catalog.json` (DRAFT seed being ported), existing `scripts/repro-quickstart.sh` + `scripts/dark-factory-test.sh` (surfaces being absorbed).
 
+**Plans:** 6 plans
+- [ ] 59-01-PLAN.md — Wave A catalog-first commit: docs-reproducible.json + agent-ux.json + perf-targets.json + 3 dimension READMEs (DOCS-REPRO-04 + SIMPLIFY-06/07/11 contract)
+- [ ] 59-02-PLAN.md — Wave B snippet-extract.py drift detector + docs-repro/snippet-coverage row (DOCS-REPRO-01 + DOCS-REPRO-04)
+- [ ] 59-03-PLAN.md — Wave C container-rehearse.sh + tutorial-replay.sh + manual-spec-check.sh + repro-quickstart.sh shim/delete (DOCS-REPRO-02/03 + SIMPLIFY-06)
+- [ ] 59-04-PLAN.md — Wave D dark-factory.sh migration + ci.yml canonical-path edit (SIMPLIFY-07 + POLISH-AGENT-UX)
+- [ ] 59-05-PLAN.md — Wave E perf-dimension file relocate + shims + benchmarks/README pointer (SIMPLIFY-11 v0.12.0 stub)
+- [ ] 59-06-PLAN.md — Wave F POLISH-DOCS-REPRO + POLISH-AGENT-UX broaden-and-deepen + CLAUDE.md QG-07 + verifier QG-06 verdict + STATE/SURPRISES advance
+
 ### Phase 60: Docs-build migration + composite runner cutover (v0.12.0)
 
 **Goal:** Move the docs-build surface fully into the framework with no behaviour change. `scripts/check-docs-site.sh`, `scripts/check-mermaid-renders.sh`, `scripts/check-doc-links.py` move to `quality/gates/docs-build/` (DOCS-BUILD-01 + SIMPLIFY-08); the pre-push hook delegates to `quality/runners/run.py --cadence pre-push` instead of chaining shell scripts (SIMPLIFY-10). `scripts/green-gauntlet.sh` is supplanted by `quality/runners/run.py --cadence pre-pr` and either deleted or reduced to a one-line shim (SIMPLIFY-09). `scripts/install-hooks.sh` stays as-is (developer install-of-git-hooks is its own concern — not a quality gate). The only behaviour change permitted is the gate composition: previously each pre-push hook line invoked a different script; after this phase, the pre-push hook is one runner invocation that fans out by tag. Old paths get shims if other tooling imports them; otherwise deleted. Operating-principle hooks: **OP-5 reversibility** — keep old paths as shims for one merge cycle so any hidden caller surfaces; **OP-1 close the feedback loop** — playwright walks (per CLAUDE.md docs-site validation rule) keep firing post-cutover, the runner just composes them.
