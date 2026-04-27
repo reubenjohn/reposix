@@ -121,21 +121,53 @@ Each SIMPLIFY-* item names an existing surface, its target home in the new frame
 
 ### Traceability
 
+Refined 1:1 mapping after roadmap creation (gsd-roadmapper, 2026-04-27). Coverage = 38/38 requirements ✓; no orphans, no duplicates. See `.planning/ROADMAP.md` `## v0.12.0 Quality Gates (PLANNING)` for full phase entries with goal / requirements / depends-on (gate-state preconditions) / success criteria / context anchor.
+
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| RELEASE-01..04 | P56, P58 | planning |
-| QG-01..08 | P57 (skeleton + STRUCT migration) | planning |
-| STRUCT-01..02 | P57 | planning |
-| DOCS-REPRO-01..04 | P59 | planning |
+| RELEASE-01 | P56 | planning |
+| RELEASE-02 | P56 | planning |
+| RELEASE-03 | P56 | planning |
+| RELEASE-04 | P58 | planning |
+| QG-01 | P57 | planning |
+| QG-02 | P57 | planning |
+| QG-03 | P57 | planning |
+| QG-04 | P57 | planning |
+| QG-05 | P57 | planning |
+| QG-06 | P57 | planning |
+| QG-07 | P57 | planning |
+| QG-08 | P57 | planning |
+| STRUCT-01 | P57 | planning |
+| STRUCT-02 | P57 | planning |
+| DOCS-REPRO-01 | P59 | planning |
+| DOCS-REPRO-02 | P59 | planning |
+| DOCS-REPRO-03 | P59 | planning |
+| DOCS-REPRO-04 | P59 | planning |
 | DOCS-BUILD-01 | P60 | planning |
-| SUBJ-01..03 | P61 | planning |
+| SUBJ-01 | P61 | planning |
+| SUBJ-02 | P61 | planning |
+| SUBJ-03 | P61 | planning |
 | ORG-01 | P62 | planning |
-| SIMPLIFY-01..03 | P57 | planning |
-| SIMPLIFY-04..05 | P58 | planning |
-| SIMPLIFY-06..07 | P59 | planning |
-| SIMPLIFY-08..10 | P60 | planning |
-| SIMPLIFY-11 | P59 (relocate) + v0.12.1 (cross-check) | planning |
+| SIMPLIFY-01 | P57 | planning |
+| SIMPLIFY-02 | P57 | planning |
+| SIMPLIFY-03 | P57 | planning |
+| SIMPLIFY-04 | P58 | planning |
+| SIMPLIFY-05 | P58 | planning |
+| SIMPLIFY-06 | P59 | planning |
+| SIMPLIFY-07 | P59 | planning |
+| SIMPLIFY-08 | P60 | planning |
+| SIMPLIFY-09 | P60 | planning |
+| SIMPLIFY-10 | P60 | planning |
+| SIMPLIFY-11 | P59 (relocate) + v0.12.1 (cross-check stub per MIGRATE-03) | planning |
 | SIMPLIFY-12 | P63 | planning |
-| MIGRATE-01..03 | P63 | planning |
+| MIGRATE-01 | P63 | planning |
+| MIGRATE-02 | P63 | planning |
+| MIGRATE-03 | P63 | planning |
 
-(Roadmapper subagent will refine this mapping in `## ROADMAP CREATED` step; preserve REQ-IDs.)
+**Per-phase requirement counts:** P56=3 (RELEASE-01..03) · P57=13 (QG-01..08, STRUCT-01..02, SIMPLIFY-01..03) · P58=3 (RELEASE-04, SIMPLIFY-04..05) · P59=7 (DOCS-REPRO-01..04, SIMPLIFY-06..07, SIMPLIFY-11) · P60=4 (DOCS-BUILD-01, SIMPLIFY-08..10) · P61=3 (SUBJ-01..03) · P62=1 (ORG-01) · P63=4 (MIGRATE-01..03, SIMPLIFY-12). Sum = 38 ✓.
+
+**Recurring success criteria across every phase (P56–P63)** — these are part of the phase's definition-of-done and are NOT separate REQ-IDs (they are recurring expressions of QG-06 + QG-07 + the autonomous-execution protocol):
+- Catalog-first: phase's first commit writes catalog rows BEFORE implementation.
+- CLAUDE.md update in the same PR (QG-07).
+- Unbiased verifier-subagent dispatch on phase close (QG-06).
+- SIMPLIFY absorption (where applicable): every script/example in scope is folded into `quality/gates/<dim>/`, reduced to a one-line shim, or has a waiver row in `quality/catalogs/orphan-scripts.json` with reason.

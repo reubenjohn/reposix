@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.12.0
 milestone_name: Quality Gates
 status: planning
-last_updated: "2026-04-27T16:30:00.000Z"
+last_updated: "2026-04-27T18:30:00.000Z"
 last_activity: 2026-04-27 -- v0.12.0 Quality Gates milestone scaffolded. Owner caught that the curl-installer URL is broken (release-plz cut over to per-crate tags `reposix-cli-v*` which do not match release.yml's `v*` tag glob → release.yml has not run since v0.11.0 → every release after has assets:[]). Decision sequence with owner: (1) build a dimension-tagged Quality Gates system that prevents this regression class, (2) install fix becomes P56 of the new milestone, (3) cadence "weekly" not "nightly" for cron drift detectors (cost-conscious), (4) `quality/` umbrella with `gates/<dim>/`, `catalogs/`, `reports/`, `runners/`, (5) thin `end-state.py` shim with anti-bloat comments, (6) parallel migration with pivot to hard-cut if stalling, (7) repo-org-gaps as P62, (8) **CLAUDE.md updated PER PHASE as definition-of-done** (not just P63). Innovations baked in: catalog-first phase protocol (assertions land in git BEFORE code), `quality/PROTOCOL.md` as autonomous-mode runtime contract, waivers with TTL as principled escape hatch, `quality/SURPRISES.md` append-only pivot journal, mandatory verifier-subagent grading per phase close, plan-check mandatory, phase preconditions are gate states, dimension tagging extends the meta-rule. Handover docs at `.planning/research/v0.12.0-{vision-and-mental-model, naming-and-architecture, roadmap-and-rationale, autonomous-execution-protocol, install-regression-diagnosis, decisions-log, open-questions-and-deferrals}.md`. Draft seed: `.planning/docs_reproducible_catalog.json`. Next: read the handover bundle then `/gsd-discuss-phase 56` (or skip discuss and `/gsd-plan-phase 56` directly).
 
 # Below is the HISTORICAL pre-2026-04-27 cursor preserved for context.
@@ -66,17 +66,17 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** An LLM agent can `ls`, `cat`, `grep`, edit, and `git push`
 issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
-**Current focus:** Milestone v0.11.0 "Polish & Reproducibility" — close the long tail v0.10.0 surfaced (jargon glosses + glossary, mermaid render hygiene, codebase duplicates, fresh-clone tutorial runner, pre-built binaries via dist, real-backend latency table, vision-innovations surface).
+**Current focus:** Milestone v0.12.0 "Quality Gates" — replace ad-hoc quality scripts (`scripts/check-*.sh`, the conflated `scripts/end-state.py`, the not-in-CI `scripts/repro-quickstart.sh`) with a coherent dimension-tagged Quality Gates system (`quality/{gates,catalogs,reports,runners}/`) that prevents the silent regressions the v0.11.x cycle missed (curl-installer URL dark for two releases). Phases 56–63: P56 restore release artifacts → P57 framework skeleton + structure dimension → P58 release dimension → P59 docs-repro dimension → P60 docs-build migration → P61 subjective gates skill → P62 repo-org-gaps cleanup → P63 retire migrated sources + cohesion. Catalog-first phase rule, mandatory verifier-subagent grading per phase close, mandatory CLAUDE.md update per phase, weekly cadence (not nightly).
 
 ## Current Position
 
-Phase: —
+Phase: 56
 Plan: —
-Cursor: v0.11.1 scaffolded. Owner-action-required gates: (1) crates.io email verification at https://crates.io/settings/profile + `gh workflow run release-plz.yml`; (2) provision JIRA_EMAIL + JIRA_API_TOKEN + REPOSIX_JIRA_INSTANCE secrets to populate JIRA latency cells; (3) review HANDOVER.md §3a + §4 to confirm carry-forwards before kicking off Phase 56+.
-Status: planning_v0.11.1
-Last activity: 2026-04-26 -- v0.11.0 closed via autonomous-mode §7 sweep; v0.11.1 milestone opened with 22 carry-forward requirements (POLISH2-*). Awaiting owner action on crates.io email verification + JIRA secrets before Phase 56+ planning.
+Cursor: v0.12.0 Quality Gates roadmap scaffolded (Phases 56–63, ROADMAP.md updated, REQUIREMENTS.md traceability table refined). 38 requirements mapped 1:1 to 8 phases (RELEASE-01..04, QG-01..08, STRUCT-01..02, DOCS-REPRO-01..04, DOCS-BUILD-01, SUBJ-01..03, ORG-01, SIMPLIFY-01..12, MIGRATE-01..03; coverage 100%). Recurring success criteria on every phase: catalog-first commit, CLAUDE.md update in same PR (QG-07), unbiased verifier-subagent dispatch on phase close (QG-06), SIMPLIFY absorption with fold-or-shim-or-waive resolution. Phase preconditions are gate states (e.g. P58 starts when P57's structure-dimension catalog shows GREEN in `quality/reports/verdicts/p57/`), not just "predecessor done." Cadence is weekly (not nightly) — owner cost-decision. Source-of-truth handover bundle (NOT YET WRITTEN — owner authoring 2026-04-27): 7 docs at `.planning/research/v0.12.0-*.md` referenced as Context-anchors. Next: read the handover bundle when written, then `/gsd-plan-phase 56` to plan the release-artifacts restoration.
+Status: planning
+Last activity: 2026-04-27 -- v0.12.0 roadmap created via gsd-roadmapper subagent. ROADMAP.md gained `## v0.12.0 Quality Gates (PLANNING)` section above the existing v0.11.0 section with rich phase entries (Goal / Requirements / Depends on + gate-state precondition / Success criteria including 4 recurring items per phase / Context anchor). Milestones list updated: v0.11.x marked shipped (Phases 50–55 + POLISH2-* polish passes), v0.12.0 added in planning. REQUIREMENTS.md traceability table refined to 1:1 mapping. Awaiting handover bundle + Phase 56 plan kickoff.
 
-Progress: [##########] v0.10.0 complete (Phases 40–45 closed; phase dirs archived to .planning/milestones/v0.10.0-phases/)
+Progress: [          ] v0.12.0 planning (0/8 phases; phase dirs not yet scaffolded — created on `/gsd-plan-phase 56` invocation)
 
 ## Performance Metrics
 
