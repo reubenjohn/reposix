@@ -158,6 +158,21 @@ if [ -f scripts/end-state.py ] && [ -f .planning/SESSION-END-STATE.json ]; then
   fi
 fi
 
+# --- Quality Gates runner (parallel-migration window — non-fatal warning) ----
+# Per .planning/research/v0.12.0-decisions-log.md D4 (parallel-then-cut), the
+# new quality/runners/run.py runs ALONGSIDE scripts/end-state.py for two
+# pre-push cycles. P60 (SIMPLIFY-10) hard-cuts pre-push to a single
+# `quality/runners/run.py --cadence pre-push` invocation. Until then, this
+# block is a warning that lets us compare verdicts.
+if [ -f quality/runners/run.py ]; then
+  log "${YELLOW}→${NC} running quality/runners/run.py --cadence pre-push (parallel migration; warning only)..."
+  if ! python3 quality/runners/run.py --cadence pre-push 2>&1 | sed 's/^/  /'; then
+    printf '%b\n' "${YELLOW}!${NC} quality/runners/run.py --cadence pre-push reported RED (non-fatal warning until P60)" >&2
+  else
+    log "${GREEN}✓${NC} quality/runners/run.py --cadence pre-push GREEN."
+  fi
+fi
+
 # --- Docs-site validation -------------------------------------------------
 # Only run mkdocs --strict when docs/ or mkdocs.yml are touched in any of
 # the outgoing ref ranges. mkdocs runs in <2s so this stays cheap.
