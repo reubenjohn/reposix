@@ -55,9 +55,9 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 
 ### Active
 
-> See `.planning/REQUIREMENTS.md` `## v0.11.0 Requirements` for the active list (POLISH-01..17).
+> See `.planning/REQUIREMENTS.md` `## v0.12.0 Requirements` for the active list (RELEASE-*, QG-*, STRUCT-*, DOCS-REPRO-*, DOCS-BUILD-*, SUBJ-*, ORG-*, MIGRATE-*).
 >
-> v0.11.0 thesis: v0.10.0 made the value prop legible; v0.11.0 makes the project reproducible (fresh-clone tutorial runner, pre-built binaries via dist, `cargo binstall`), polished (jargon glosses + glossary, mermaid render hygiene, ADR cleanup), and operationally honest (latency table for every backend, copy-pastable doctor output, time-travel + gc + cost surfaces).
+> v0.12.0 thesis: v0.11.x bolted on a §0.8 SESSION-END-STATE framework that catches the regression class IT was designed for — but missed the curl-installer URL going dark for two releases. v0.12.0 builds the **Quality Gates** system: dimension-tagged checks (code / docs-build / docs-repro / release / structure / perf / security / agent-ux), cadence-routed runners (pre-push / pre-pr / weekly / pre-release / post-release / on-demand), unified catalog schema, mandatory subagent verifier grading per phase, waivers with TTL, and a `quality/PROTOCOL.md` runtime contract for autonomous execution. Once the framework lands, every future quality-miss is one catalog row + one verifier — never another bespoke script.
 
 <details>
 <summary>Historical: v0.1.0 MVD Active list (shipped 2026-04-13; retained for traceability)</summary>
@@ -127,22 +127,45 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 | Skip GSD discuss step | User instruction (~12:55 AM): "do all the gsd planning, exec, review, etc, just without the discuss steps" | Validated |
 | Lethal-trifecta cuts are first-class requirements, not afterthoughts | Threat-model subagent flagged egress + bulk-delete + tainted typing as ship-blockers; safer to bake in than retrofit | Validated |
 
-## Current Milestone: v0.11.0 — Polish & Reproducibility (planning)
+## Current Milestone: v0.12.0 — Quality Gates
 
-**Goal:** Close the long tail v0.10.0 surfaced. Polish the docs site (jargon glosses + glossary + mermaid render hygiene + ADR cleanup), kill four codebase duplicates flagged by `simplify` (worktree helpers, `parse_remote_url`, `cli_compat.rs`, FUSE residue in `refresh.rs`), and ship reproducibility infrastructure: a fresh-clone tutorial runner, pre-built binaries via `dist`, `cargo binstall` metadata, `reposix doctor` / `reposix log --time-travel` / `reposix gc --orphans` / `reposix cost` surfaces, and a real-backend latency table for sim + GitHub + Confluence + JIRA. See `.planning/research/v0.11.0-vision-and-innovations.md` for the full surface and `.planning/REQUIREMENTS.md` `## v0.11.0 Requirements` for the active POLISH-01..17 list.
+**Goal:** Replace ad-hoc quality scripts with a coherent, dimension-tagged Quality Gates system that prevents the silent regressions the v0.11.x cycle missed (the curl installer URL became `Not Found` after release-plz cut over to per-crate tags; the existing `end-state.py` framework caught crates.io drift but not GitHub-release-asset drift). Ship the framework so any future change to docs, code, releases, or external integrations runs against a verifier that simulates a real user — not the agent's self-report.
 
-**Phases (50–55):** see `.planning/ROADMAP.md` `## v0.11.0 Polish & Reproducibility`. Phase 50 = Hygiene & Cleanup; 51 = Codebase Refactor; 52 = Docs Polish; 53 = Reproducibility (fresh-clone runner + dist + binstall); 54 = Real-backend Latency; 55 = Vision Innovations (doctor + cost + time-travel + gc + init --since).
+**Mental model.** Each gate answers three orthogonal questions: **dimension** (code / docs-build / docs-repro / release / structure / perf / security / agent-ux), **cadence** (pre-push / pre-pr / weekly / pre-release / post-release / on-demand), **kind** (mechanical / container / asset-exists / subagent-graded / manual). Catalogs are the data; verifiers are the code; reports are the artifacts; runners compose gates by tag. Adding a new gate is one catalog row + one verifier in the right dimension dir — no bespoke script, no new pre-push wiring.
 
-**Carry-forward already closed (do not re-open):**
-- Helper backend URL dispatch — closed `cd1b0b6` (ADR-008).
-- IssueId/Issue → RecordId/Record rename — closed `2af5491..4ad8e2a` (ADR-006).
-- `reposix doctor` / `reposix gc` / `reposix history` / `reposix at` — overnight surprise round, all in `Unreleased` CHANGELOG block; v0.11.0 polishes them to spec.
+**Target features:**
+- Restore the broken curl/PowerShell installer URLs (release-plz tag-glob mismatch with `release.yml`) and the brew formula auto-update — the immediate user-facing breakage caught this session.
+- `quality/` directory layout: `gates/<dim>/`, `catalogs/`, `reports/verifications/`, `runners/`, with `quality/PROTOCOL.md` as the autonomous-mode runtime contract and `quality/SURPRISES.md` as the append-only pivot journal.
+- A unified catalog schema generalizing `SESSION-END-STATE.json` and `docs_reproducible_catalog.json`. Every row carries `id`, `dimension`, `cadence`, `kind`, `verifier`, `artifact`, `status`, `freshness_ttl`, `waiver`, `blast_radius`, `owner_hint`.
+- Migrate the structural rows out of `scripts/end-state.py` to `quality/gates/structure/`. `end-state.py` becomes a thin shim with anti-bloat comments warning future agents off growing it.
+- Release-dimension gates: HEAD checks for installer URLs, brew formula version cross-check, crates.io max_version vs workspace, post-release container rehearsal that proves a fresh user can install from the latest release.
+- Docs-repro dimension: snippet extraction from README + docs/index + tutorials, container rehearsal harness (ubuntu:24.04 baseline), promote `scripts/repro-quickstart.sh` into a catalog-tracked gate.
+- Subjective gates: a `reposix-quality-review` skill that dispatches isolated subagents against a `subjective-rubrics.json` catalog, persists per-row artifacts, enforces freshness TTLs (catalog says "rerun within 30d or this row is RED").
+- Close out `.planning/research/v0.11.1-repo-organization-gaps.md` — each remaining gap becomes a structure-dimension catalog row that prevents recurrence.
+- Autonomous-execution protocol: catalog-first phases (end-state assertions land in git BEFORE the implementation), mandatory verifier-subagent grading per phase close, waivers with TTL as the principled escape hatch, dimension preconditions as phase gates.
 
-**Carry-forward still open:**
-- Playwright screenshots (DOCS-11 SC4) — `scripts/take-screenshots.sh` stub; rolled into POLISH-11 archival sweep (Phase 50) + Phase 53 reproducibility infra.
-- 9 major + 17 minor doc-clarity findings — `.planning/notes/v0.11.0-doc-polish-backlog.md`; rolled into Phase 52.
-- `scripts/tag-v0.10.0.sh` push — owner gate (script exists; push pending).
-- `scripts/tag-v0.9.0.sh` push — owner gate.
+**Phases (56–63):** see `.planning/ROADMAP.md`. P56 Restore release artifacts → P57 Quality Gates skeleton + structure dimension → P58 Release dimension → P59 Docs-repro dimension → P60 Docs-build migration → P61 Subjective gates skill → P62 Repo-org-gaps cleanup → P63 Retire old + document.
+
+**Source-of-truth handover bundle (read these before planning P56):**
+- `.planning/research/v0.12.0-vision-and-mental-model.md`
+- `.planning/research/v0.12.0-naming-and-architecture.md`
+- `.planning/research/v0.12.0-roadmap-and-rationale.md`
+- `.planning/research/v0.12.0-autonomous-execution-protocol.md`
+- `.planning/research/v0.12.0-install-regression-diagnosis.md`
+- `.planning/research/v0.12.0-decisions-log.md`
+- `.planning/research/v0.12.0-open-questions-and-deferrals.md`
+- `.planning/docs_reproducible_catalog.json` (DRAFT seed for the docs-repro catalog in P59)
+
+**Carry-forward from v0.11.x (rolled into v0.12.0 phases):**
+- Repo-organization-gaps cleanup → P62.
+- Documentation reproducibility (the curl-installer regression) → P56 + P58 + P59.
+- The `Error::Other` 156→144 partial migration from POLISH2-09 — explicitly NOT in scope for v0.12.0; deferred to v0.12.1.
+
+---
+
+## Previously Validated Milestone: v0.11.x — Polish & Reproducibility (SHIPPED 2026-04-27)
+
+v0.11.0 (Phases 50–55) shipped 2026-04-25; v0.11.1 + v0.11.2 polish passes shipped 2026-04-26 / 2026-04-27 via release-plz. All eight crates published to crates.io at v0.11.2; mkdocs site live at `https://reubenjohn.github.io/reposix/`; pre-push hook runs `scripts/end-state.py verify` over 20 freshness + crates.io + mermaid claims (last verdict GREEN at session close). The cycle introduced the §0.8 SESSION-END-STATE framework that v0.12.0 generalizes into the Quality Gates system. **Carry-forward NOT closed by v0.11.x:** installer URLs broken on every release after v0.11.0 because `release.yml` tag glob `v*` does not match release-plz's per-crate `reposix-cli-v*` pattern — diagnosed in `.planning/research/v0.12.0-install-regression-diagnosis.md`; fixed by P56.
 
 ---
 
@@ -217,4 +240,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-25 — Milestone v0.10.0 SHIPPED (Docs & Narrative Shine, Phases 40–45); v0.11.0 Polish & Reproducibility planning_scaffolded (Phases 50–55, POLISH-01..17)*
+*Last updated: 2026-04-27 — Milestone v0.11.x SHIPPED (Polish & Reproducibility, Phases 50–55 + POLISH2-* polish passes); v0.12.0 Quality Gates planning scaffolded (Phases 56–63, QG-01..N + RELEASE-* + DOCS-REPRO-* + SUBJ-* + ORG-* + MIGRATE-*)*
