@@ -154,13 +154,70 @@ The script runs `mkdocs build --strict` and fails on any "Syntax error
 in text" string in the rendered HTML output (mermaid + admonition +
 cross-ref bugs). The pre-push hook enforces it.
 
-**For mermaid changes specifically:** additionally use playwright (via
-`mcp__playwright__browser_navigate` + `browser_take_screenshot`) to
-confirm the diagram renders before declaring the work complete. Two
-crashes ago, a single `&lt;id&gt;` HTML entity inside a `sequenceDiagram`
-block leaked an orphan error SVG to every page on the site via
-`navigation.instant`. Manual visual verification catches this where
-`mkdocs build` alone won't.
+**Whole-nav-section playwright walks (not just the file you changed).**
+Editing one mermaid block on one page does NOT scope your validation to
+that page. The §0.1 mermaid-render misses recurred because validation
+was scoped per-file. Rules:
+
+- Touched **one page** in a docs nav section → playwright-walk every
+  page in that section.
+- Touched `mkdocs.yml`, any `pymdownx.*` config, any file under
+  `docs/javascripts/` or `docs/stylesheets/`, or any frontmatter →
+  walk the entire site.
+- All walks MUST run with the cache disabled (fresh first-load
+  semantics). The §0.1.b race condition only manifests on a cold
+  page-cache; warm reloads mask it. Use
+  `mcp__playwright__browser_navigate` on a clean context, or hard
+  reload via `location.reload(true)` before assertions.
+- For every page hit by a walk, assert `document.querySelectorAll('pre.mermaid svg').length > 0`
+  for any mermaid block, AND `browser_console_messages` contains zero
+  rendering errors. Capture artifacts under
+  `.planning/verifications/playwright/<section>/<slug>.json`.
+
+`scripts/check-mermaid-renders.sh` (wired into pre-push) automates the
+mermaid SVG assertion across every rendered page; do not rely on
+`mkdocs build --strict` alone, it never opens a browser.
+
+## Cold-reader pass on user-facing surfaces
+
+Before declaring any user-facing surface shipped — hero copy, install
+instructions, headline numbers, benchmark pages, the README, the docs
+landing page — dispatch the `doc-clarity-review` skill on the affected
+pages with isolated context. Mechanical hooks miss positioning and
+freshness misses (the §0.2 install-path lag, the §0.3 version-pinned
+filename, the §0.4 missing-from-nav benchmark all slipped past
+strict-build + clippy because none of those tools simulate a
+cold reader).
+
+The cold-reader pass is the second half of the close-the-loop principle
+(global OP #1) for prose: render → reload-as-stranger → ask "does this
+land?" before claiming done.
+
+## Freshness invariants
+
+Drift these and the docs lie. Each invariant has a verifier; the §0.8
+SESSION-END-STATE framework (`scripts/end-state.py`) is the
+machine-readable source of truth and the pre-push hook gates them.
+
+- **No version-pinned filenames** outside `CHANGELOG.md` and
+  `.planning/milestones/v*-phases/`. `find docs scripts -type f | grep
+  -E 'v[0-9]+\.[0-9]+\.[0-9]+'` returns empty.
+- **Install path leads with package manager** the moment a publish
+  surface (crates.io, brew tap, binstall) is live for a given crate
+  version. Hero on `docs/index.md` and `README.md` MUST show
+  `cargo binstall` / `brew install` BEFORE any `git clone … && cargo
+  build` snippet.
+- **Benchmarks belong in mkdocs nav.** Anything under `benchmarks/` or
+  `docs/benchmarks/` MUST appear in `mkdocs.yml` `nav:`. No
+  benchmark linked via absolute github URL bypassing the site.
+- **GSD planning org is regular.** No loose `*ROADMAP*.md` or
+  `*REQUIREMENTS*.md` outside a `*phases/` dir or
+  `.planning/archive/`. `find .planning/milestones -maxdepth 2 -name
+  '*ROADMAP*' -o -name '*REQUIREMENTS*' | grep -v phases | grep -v
+  archive` returns empty.
+- **No orphan docs.** Every `docs/**/*.md` either appears in
+  `mkdocs.yml` `nav:` OR is explicitly redirect-only (entry in
+  `mkdocs.yml` `plugins.redirects.redirect_maps`).
 
 ## Subagent delegation rules
 
@@ -171,8 +228,18 @@ Per the user's global OP #2: "Aggressive subagent delegation." Specifics for thi
 - `gsd-executor` for phase execution unless the work is trivially small.
 - `gsd-code-reviewer` after every phase ships, before declaring done.
 - Run multiple subagents in parallel whenever they're operating on disjoint files.
+- **Never delegate `gh pr checkout` to a bash subagent without isolation.** Bash subagents share the coordinator's working tree; `gh pr checkout` switches the local branch behind the coordinator's back, which already caused the cherry-pick mess at commit `5a91ae2`. Either spawn a worktree first (`git worktree add /tmp/pr-N pr-N-branch`) and have the subagent `cd` into it, or have the subagent operate inside `/tmp/<branch>-checkout`. The coordinator's checkout is shared state — treat it that way.
 
 The orchestrator's job is to route, decide, and integrate — not to type code that a subagent could type.
+
+### Meta-rule: when an owner catches a quality miss, fix it twice
+
+When the owner catches a quality issue the agent missed, the fix is
+two-fold: (1) fix the issue in the code/docs, and (2) update CLAUDE.md
+(and/or the §0.8 SESSION-END-STATE framework) so the next agent's
+session reads the tightened rule. Just shipping the fix without
+updating the instructions guarantees recurrence. The §0.1-§0.5 misses
+all happened because earlier sessions did (1) without (2).
 
 ## Threat model
 
