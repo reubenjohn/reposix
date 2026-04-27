@@ -44,9 +44,9 @@ Catalogs are the data; verifiers are the code; reports are the artifacts; runner
 
 #### Release dimension — close the immediate breakage
 
-- [ ] **RELEASE-01**: Restore the curl/PowerShell installer URLs by fixing `release.yml` so it fires on release-plz's per-crate tags. Pick the cleaner of two options (extend `on.push.tags` glob to match `reposix-cli-v*` and key version off the cli tag, OR add a release-plz post-publish step that mirrors a workspace `vX.Y.Z` tag). Cut a fresh `reposix-cli-v0.11.3` release and verify all 5 install paths work end-to-end. **P0 — every documented install path is broken.**
-- [ ] **RELEASE-02**: Homebrew tap formula auto-updates with each release (the `upload-homebrew-formula` job in `release.yml` is currently dead because the workflow doesn't fire). Verified by RELEASE-01's release cycle.
-- [ ] **RELEASE-03**: `cargo binstall reposix-cli reposix-remote` resolves to a prebuilt binary (currently falls back to source build because no GH binary asset exists). Lifted by RELEASE-01.
+- [x] **RELEASE-01**: Restore the curl/PowerShell installer URLs by fixing `release.yml` so it fires on release-plz's per-crate tags. Pick the cleaner of two options (extend `on.push.tags` glob to match `reposix-cli-v*` and key version off the cli tag, OR add a release-plz post-publish step that mirrors a workspace `vX.Y.Z` tag). Cut a fresh `reposix-cli-v0.11.3` release and verify all 5 install paths work end-to-end. **P0 — every documented install path is broken.**
+- [x] **RELEASE-02**: Homebrew tap formula auto-updates with each release (the `upload-homebrew-formula` job in `release.yml` is currently dead because the workflow doesn't fire). Verified by RELEASE-01's release cycle.
+- [x] **RELEASE-03**: `cargo binstall reposix-cli reposix-remote` resolves to a prebuilt binary (currently falls back to source build because no GH binary asset exists). Lifted by RELEASE-01.
 - [ ] **RELEASE-04**: Quality Gates `release/` dimension — `quality/gates/release/{gh-assets-present.py, brew-formula-current.py, crates-io-max-version.py, installer-asset-bytes.py}` with weekly + post-release runners. Catalog rows for every install URL, brew formula, and crates.io crate. Would have caught RELEASE-01 within 24h of the regression.
 
 #### Quality Gates framework

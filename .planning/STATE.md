@@ -3,20 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.12.0
 milestone_name: Quality Gates
 status: planning
-last_updated: "2026-04-27T18:30:00.000Z"
-last_activity: 2026-04-27 -- v0.12.0 Quality Gates milestone scaffolded. Owner caught that the curl-installer URL is broken (release-plz cut over to per-crate tags `reposix-cli-v*` which do not match release.yml's `v*` tag glob → release.yml has not run since v0.11.0 → every release after has assets:[]). Decision sequence with owner: (1) build a dimension-tagged Quality Gates system that prevents this regression class, (2) install fix becomes P56 of the new milestone, (3) cadence "weekly" not "nightly" for cron drift detectors (cost-conscious), (4) `quality/` umbrella with `gates/<dim>/`, `catalogs/`, `reports/`, `runners/`, (5) thin `end-state.py` shim with anti-bloat comments, (6) parallel migration with pivot to hard-cut if stalling, (7) repo-org-gaps as P62, (8) **CLAUDE.md updated PER PHASE as definition-of-done** (not just P63). Innovations baked in: catalog-first phase protocol (assertions land in git BEFORE code), `quality/PROTOCOL.md` as autonomous-mode runtime contract, waivers with TTL as principled escape hatch, `quality/SURPRISES.md` append-only pivot journal, mandatory verifier-subagent grading per phase close, plan-check mandatory, phase preconditions are gate states, dimension tagging extends the meta-rule. Handover docs at `.planning/research/v0.12.0-{vision-and-mental-model, naming-and-architecture, roadmap-and-rationale, autonomous-execution-protocol, install-regression-diagnosis, decisions-log, open-questions-and-deferrals}.md`. Draft seed: `.planning/docs_reproducible_catalog.json`. Next: read the handover bundle then `/gsd-discuss-phase 56` (or skip discuss and `/gsd-plan-phase 56` directly).
-
-# Below is the HISTORICAL pre-2026-04-27 cursor preserved for context.
-historical_v0_11_2_activity: 2026-04-27 -- HANDOVER §0 + §3 cycle CLOSED in autonomous mode. §0.7 CLAUDE.md tightened (whole-nav playwright walks, cold-reader pass, freshness invariants, gh pr checkout isolation, fix-it-twice meta-rule). §0.8 SESSION-END-STATE framework SHIPPED (scripts/end-state.py — init/list/status/verify/verdict/record-artifact, .planning/SESSION-END-STATE.{json,md}, .planning/verifications/, pre-push hook wired non-fatal); 20 bootstrap claims; verifier-graded done-ness migrates the project from self-reported to subagent-audited. §0.1 + §0.1.b mermaid render REGRESSION FIXED (root cause: navigation.instant XHR DOM swap never re-fired DOMContentLoaded; fix: docs/javascripts/mermaid-render.js subscribes to mkdocs-material document$ Observable; playwright artifacts at .planning/verifications/playwright/ for 5 source-mermaid pages; scripts/check-mermaid-renders.sh added + wired pre-push). §0.2 install path reordered: README.md gains "Install" section leading with brew/binstall/curl/PowerShell BEFORE source-build; docs/index.md "Six-line quickstart" demoted to <details>. §0.3 + §0.4 doc reorg: git mv docs/benchmarks/v0.9.0-latency.md → latency.md, scripts/v0.9.0-latency.sh → latency-bench.sh, benchmarks/RESULTS.md → docs/benchmarks/token-economy.md, scripts/tag-v{0.4,0.9,0.10}.0.sh → .planning/milestones/v*.0-phases/, mkdocs.yml nav adds Latency + Token economy. §0.5 GSD-org Option B: git mv v{0.8,0.9,0.10}.0-{ROADMAP,REQUIREMENTS}.md → matching *-phases/ dir; CLAUDE.md "Workspace layout" documents the convention. §3a CI green on origin/main HEAD; §3b release-plz auto-PR #21 merged at 8ec7322 → release-plz publish workflow shipping v0.11.2 to crates.io for all 8 crates. Two unbiased verifier subagent dispatches (post-bootstrap + final) confirmed 20/20 PASS. Pre-push hook now reports `SESSION-END-STATE verdict GREEN.` ~10 commits this session including framework + 4 fix commits + 1 framework-fix.
-
-# Below is the HISTORICAL pre-2026-04-27 cursor preserved for context.
-historical_v0_11_1_activity: 2026-04-26 -- v0.11.0 closed + 18 of 22 v0.11.1 POLISH2-* SHIPPED + 1 partial-shipped + bonus P2-1+P2-2 doc cleanup + POLISH2-09 ext (github not-supported sites) in autonomous-mode session (46 commits since handoff at 9dc4311; Error::Other count 156→144). v0.11.0 closure (§7-A..§7-H): homebrew tap shipped, release.yml fixed, hero rewritten (89.1%/timing-diagram/install-band), latency table github cells populated, friction matrix verified row-by-row, ~30 file repo cleanup, code-quality P0-1+P0-2 fixed, ADR-003 superseded, scripts/catalog.py JSON tracker scaffolded, HANDOVER.md deleted. v0.11.1 SHIPPED (18): POLISH2-02 (arm64-musl via cargo-zigbuild verified e2e on workflow_dispatch), POLISH2-03 (bench-cron persist-credentials), POLISH2-05+06+07 (methodology + capability matrix + comments callouts), POLISH2-08 (reposix doctor capability row + BackendCapabilities in core), POLISH2-10 (confluence/lib.rs 3989 LOC split into types/translate/client/lib), POLISH2-11 (jira/lib.rs 1957 LOC split into types/translate/client/lib), POLISH2-12 (3 unused deps dropped), POLISH2-13 (49 pub→pub(crate) demotions), POLISH2-14 (typed SimError), POLISH2-15 (roadmap.md stub rewrite), POLISH2-16+17 (ADR nav + ADR-009 v1.0 stability commitment), POLISH2-18 (exit-codes.md), POLISH2-20 (mkdocs-material upstream issue #8584), POLISH2-21 (.planning/milestones/ condensed 263→8 ARCHIVE.md, -61k LOC), POLISH2-22 option B (dual audit-schema endorsed in module docs + CLAUDE.md OP-3 reframed). v0.11.1 PARTIAL-SHIPPED (1): POLISH2-09 (3 typed Error variants + sim.rs migrated; ~150 backend sites pending v0.12.0). CHANGELOG split: [v0.11.0] released, [Unreleased] populated. Catalog: ~84 files (post-condensation), 0 TODO (coverage clean). Owner-action remaining (3): POLISH2-01 crates.io email verification at https://crates.io/settings/profile, POLISH2-04 JIRA secrets (`JIRA_EMAIL`+`JIRA_API_TOKEN`+`REPOSIX_JIRA_INSTANCE`), POLISH2-19 .claude/skills/reposix-banned-words/SKILL.md path refs L9+L64. v0.12.0 deferred: POLISH2-09 full (~150 backend Error::Other migration). CI green on a9ffa46 + post-commits (rustfmt/clippy/test/coverage/dark-factory/integration-real-{github,confluence,jira} all pass).
+last_updated: "2026-04-27T18:31:11.587Z"
+last_activity: "2026-04-27 -- v0.12.0 roadmap created via gsd-roadmapper subagent. ROADMAP.md gained `## v0.12.0 Quality Gates (PLANNING)` section above the existing v0.11.0 section with rich phase entries (Goal / Requirements / Depends on + gate-state precondition / Success criteria including 4 recurring items per phase / Context anchor). Milestones list updated: v0.11.x marked shipped (Phases 50–55 + POLISH2-* polish passes), v0.12.0 added in planning. REQUIREMENTS.md traceability table refined to 1:1 mapping. Awaiting handover bundle + Phase 56 plan kickoff."
 progress:
   total_phases: 8
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 4
+  completed_plans: 1
+  percent: 25
 ---
 
 # Project State
@@ -127,6 +121,7 @@ Progress: [          ] v0.12.0 planning (0/8 phases; phase dirs not yet scaffold
 | Phase 26 P03 | 25 | 2 tasks | 5 files |
 | Phase 26 P04 | 20 | 2 tasks | 5 files |
 | Phase 27 P01 | 5 | 2 tasks | 3 files |
+| Phase 56 P03 | 25 | 8 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -197,6 +192,8 @@ additions (2026-04-13):
 - [Phase 26]: Phase 21 HARD-00..05 hardening items added to security.md shipped section; 500-page truncation moved from deferred to shipped
 - [Phase 26]: ADR-002 scope note uses 'Active — with scope note' wording; existing superseded blockquote replaced
 - [Phase 27]: Hard rename IssueBackend to BackendConnector in reposix-core with no backward-compat alias
+- [Phase 56]: Wave 3: pivoted to workflow_dispatch when release-plz tag-push didn't trigger release.yml — root caused as GITHUB_TOKEN-can't-trigger-downstream-workflows GH limitation; v0.12.1 follow-up.
+- [Phase 56]: Wave 3: graded install/cargo-binstall PARTIAL (not FAIL) — catalog baseline already PARTIAL/P1; Wave 3 measured no regression. binstall metadata + MSRV-vs-block-buffer-0.12.0 fixes deferred to v0.12.1.
 
 ### Pending Todos
 
@@ -210,7 +207,7 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-25T16:00:00.000Z
+Last session: 2026-04-27T18:31:11.581Z
 Checkpoint: v0.11.0 milestone scaffolded (Phases 50–55, POLISH-01..17). Workspace version bumped 0.9.0 → 0.11.0-dev. GSD hygiene scrub landed. Phase 50 wave (this session) covers POLISH-11 archival sweep + POLISH-12 partial bump.
 Resume file: None
 Cursor next: **Run /gsd-plan-phase 50 to plan the Hygiene & Cleanup wave (or proceed directly to Phase 51 if 50 is already shipped).**
