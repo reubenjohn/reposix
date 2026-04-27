@@ -68,12 +68,12 @@
         "ci_friendly": true,
         "timeout_s": 120
       },
-      "artifact": ".planning/verifications/repro/install__curl-installer-sh.json",
-      "status": "FAIL",
-      "last_verified_at": null,
-      "failure_mode": "Latest GitHub Release (`reposix-cli-v0.11.2`) has assets:[]. The release.yml workflow trigger is tag glob `v*`, but release-plz now creates per-crate tags like `reposix-cli-v0.11.2` which do not match. release.yml has not run since v0.11.0 (2026-04-26 workflow_dispatch).",
-      "remediation_hint": "P56 Wave B fixes .github/workflows/release.yml to fire on `reposix-cli-v*` tags (Option A); pivot to Option B (release-plz mirror tag) if Option A breaks the version derivation. See .planning/research/v0.12.0-install-regression-diagnosis.md.",
-      "automation_status": "not-yet",
+      "artifact": ".planning/verifications/p56/install-paths/curl-installer-sh.json",
+      "status": "PASS",
+      "last_verified_at": "2026-04-27T18:19:56Z",
+      "failure_mode": null,
+      "remediation_hint": "P56 Wave B fixed .github/workflows/release.yml to fire on `reposix-cli-v*` tags (Option A; commit d3f0dce). Wave C verified end-to-end via ubuntu:24.04 container rehearsal (scripts/p56-rehearse-curl-install.sh): installer downloads reposix-v0.11.3-x86_64-unknown-linux-musl.tar.gz, places reposix + git-remote-reposix in /root/.local/bin, `reposix --version` prints `reposix 0.11.3`. Hint retained as documentation of the fix.",
+      "automation_status": "manual-only",
       "blast_radius": "P0"
     },
     {
@@ -103,12 +103,12 @@
         "ci_friendly": "asset-existence yes; container-rehearsal only on windows-2022 GH runner",
         "timeout_s": 120
       },
-      "artifact": ".planning/verifications/repro/install__powershell-installer-ps1.json",
-      "status": "FAIL",
-      "last_verified_at": null,
-      "failure_mode": "Same root cause as install/curl-installer-sh — release.yml doesn't fire on per-crate release-plz tags.",
-      "remediation_hint": "P56 Wave B fixes .github/workflows/release.yml to fire on `reposix-cli-v*` tags (Option A); pivot to Option B (release-plz mirror tag) if Option A breaks the version derivation. See .planning/research/v0.12.0-install-regression-diagnosis.md.",
-      "automation_status": "not-yet",
+      "artifact": ".planning/verifications/p56/install-paths/powershell-installer-ps1.json",
+      "status": "PASS",
+      "last_verified_at": "2026-04-27T18:20:50Z",
+      "failure_mode": null,
+      "remediation_hint": "P56 Wave B fixed .github/workflows/release.yml to fire on `reposix-cli-v*` tags (Option A; commit d3f0dce). Wave C verified asset-existence (HTTP 200, content-length 1075 bytes, leading bytes match `# reposix installer (PowerShell)`). Container-rehearsal half deferred to v0.12.1 (windows-2022 GH runners are real money). Hint retained as documentation of the fix.",
+      "automation_status": "manual-only (asset-existence ci-friendly; windows container rehearsal deferred to v0.12.1)",
       "blast_radius": "P0"
     },
     {
@@ -138,12 +138,12 @@
         "timeout_s": 600,
         "note": "binstall will fall back to source-build when no GH binary asset exists. Verifier should warn (not fail) on fallback so we know the fast path regressed."
       },
-      "artifact": ".planning/verifications/repro/install__cargo-binstall.json",
+      "artifact": ".planning/verifications/p56/install-paths/cargo-binstall.json",
       "status": "PARTIAL",
-      "last_verified_at": null,
-      "failure_mode": "binstall resolves but currently falls back to source-build because release.yml hasn't published binary assets — same root cause as curl-installer-sh; fix lifts this to PASS-fast-path.",
-      "remediation_hint": "P56 Wave B fixes .github/workflows/release.yml to fire on `reposix-cli-v*` tags (Option A); pivot to Option B (release-plz mirror tag) if Option A breaks the version derivation. See .planning/research/v0.12.0-install-regression-diagnosis.md.",
-      "automation_status": "not-yet",
+      "last_verified_at": "2026-04-27T18:23:39Z",
+      "failure_mode": "binstall resolves but falls back to source build because [package.metadata.binstall].pkg-url in crates/reposix-cli/Cargo.toml + crates/reposix-remote/Cargo.toml templates against an old archive name — 4 mismatches with the new release.yml shape (tag prefix `v` vs `reposix-cli-v`, archive basename `reposix-cli` vs `reposix`, target glibc vs musl, `.tgz` vs `.tar.gz`). Source-build fallback also fails on Rust 1.82 because transitive dep block-buffer-0.12.0 requires edition2024. Both are v0.12.1 carry-forwards under MIGRATE-03; PARTIAL is acceptable per the row's blast_radius P1 (works, just slow).",
+      "remediation_hint": "v0.12.1 carry-forward (MIGRATE-03 supplement): rewrite [package.metadata.binstall].pkg-url to `{ repo }/releases/download/reposix-cli-v{ version }/reposix-v{ version }-{ target }.tar.gz` and add explicit musl target overrides (x86_64-unknown-linux-musl, aarch64-unknown-linux-musl). Then either bump MSRV to 1.85 or cap block-buffer at <0.12 to fix the source-build fallback. See .planning/verifications/p56/install-paths/cargo-binstall.json `failure_mode` for the full diagnosis.",
+      "automation_status": "manual-only",
       "blast_radius": "P1 (works, just slow)"
     },
     {
@@ -173,12 +173,12 @@
         "timeout_s": 600,
         "note": "release.yml has an upload-homebrew-formula job; without release.yml runs the tap formula goes stale."
       },
-      "artifact": ".planning/verifications/repro/install__homebrew.json",
-      "status": "NOT-VERIFIED",
-      "last_verified_at": null,
-      "failure_mode": "Formula version likely pinned at 0.11.0 because upload-homebrew-formula is a release.yml job that hasn't run since v0.11.0. Confirm with `gh api repos/reubenjohn/homebrew-reposix/contents/Formula/reposix.rb`.",
-      "remediation_hint": "P56 Wave B fixes .github/workflows/release.yml to fire on `reposix-cli-v*` tags (Option A); pivot to Option B (release-plz mirror tag) if Option A breaks the version derivation. See .planning/research/v0.12.0-install-regression-diagnosis.md.",
-      "automation_status": "not-yet",
+      "artifact": ".planning/verifications/p56/install-paths/homebrew.json",
+      "status": "PASS",
+      "last_verified_at": "2026-04-27T18:26:14Z",
+      "failure_mode": null,
+      "remediation_hint": "P56 Wave B fixed .github/workflows/release.yml to fire on `reposix-cli-v*` tags (Option A; commit d3f0dce). Wave C verified that the upload-homebrew-formula job ran successfully against the reposix-cli-v0.11.3 release: `Formula/reposix.rb` version=0.11.3, three valid 64-hex sha256s matching SHA256SUMS at the GH Release, all URLs use the pinned reposix-cli-v0.11.3 tag form. Container rehearsal (macos-14 GH runner) deferred to v0.12.1 (real money on every release). Hint retained as documentation of the fix.",
+      "automation_status": "manual-only (tap reachability ci-friendly; macos container rehearsal deferred to v0.12.1)",
       "blast_radius": "P0 for mac users"
     },
     {
@@ -206,9 +206,9 @@
         "ci_friendly": "yes — already covered by ci.yml `test` job which builds the workspace",
         "timeout_s": 600
       },
-      "artifact": ".planning/verifications/repro/install__build-from-source.json",
+      "artifact": ".planning/verifications/p56/install-paths/build-from-source.json",
       "status": "PASS",
-      "last_verified_at": "implicit via ci.yml `test` job last green run",
+      "last_verified_at": "2026-04-27T16:03:07Z",
       "failure_mode": null,
       "remediation_hint": null,
       "automation_status": "ci-blocking",
