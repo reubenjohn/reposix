@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
+<<<<<<< Updated upstream
+=======
+- *(remote)* drive stateless-connect e2e — lifts stateless_connect.rs 42% → 75%
+>>>>>>> Stashed changes
 - *(readme)* fix broken badges + replace outdated tagline
 
 ## [0.11.2](https://github.com/reubenjohn/reposix/compare/reposix-remote-v0.11.1...reposix-remote-v0.11.2) - 2026-04-27
