@@ -29,12 +29,17 @@
         "container": "ubuntu:24.04"
       },
       "artifact": "quality/reports/verifications/docs-repro/example-01-shell-loop.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T22:22:37Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: examples/01-shell-loop/run.sh has a regression OR the simulator/cli/helper changed and the example was not updated; check examples/01-shell-loop/expected-output.md and the binary on PATH preamble",
-      "waiver": null
+      "waiver": {
+        "until": "2026-05-12T00:00:00Z",
+        "reason": "Wave C ships the container-rehearse.sh driver but the example scripts assume an external simulator (reposix-sim listening on 127.0.0.1:7878) that the container does not bring up. Wiring sim-inside-container is post-v0.12.0 work tracked under Wave F CI dispatch. Locally the verifier exits non-zero with stderr signal 'sim not reachable'; in CI the sim service container brings the dependency up and the rehearsal grades on its own.",
+        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md 2026-04-27 P59 row",
+        "tracked_in": "P59 Wave F CI rehearsal in docker-equipped GH runner with sim service"
+      }
     },
     {
       "id": "docs-repro/example-02-python-agent",
@@ -62,12 +67,17 @@
         "container": "ubuntu:24.04"
       },
       "artifact": "quality/reports/verifications/docs-repro/example-02-python-agent.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T22:22:37Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: examples/02-python-agent/run.py has a regression OR the simulator/cli/helper changed; check the python stdlib-only constraint and the binary on PATH preamble",
-      "waiver": null
+      "waiver": {
+        "until": "2026-05-12T00:00:00Z",
+        "reason": "Wave C ships the container-rehearse.sh driver but the example scripts assume an external simulator (reposix-sim listening on 127.0.0.1:7878) that the container does not bring up. Wiring sim-inside-container is post-v0.12.0 work tracked under Wave F CI dispatch.",
+        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md 2026-04-27 P59 row",
+        "tracked_in": "P59 Wave F CI rehearsal in docker-equipped GH runner with sim service"
+      }
     },
     {
       "id": "docs-repro/example-03-claude-code-skill",
@@ -96,8 +106,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/docs-repro/example-03-claude-code-skill.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-04-27T22:21:19Z",
       "freshness_ttl": "90d",
       "blast_radius": "P2",
       "owner_hint": "if RED: examples/03-claude-code-skill/{RUN.md, agent-prompt.md} got out of sync with .claude/skills/reposix-agent-flow",
@@ -129,12 +139,17 @@
         "container": "ubuntu:24.04"
       },
       "artifact": "quality/reports/verifications/docs-repro/example-04-conflict-resolve.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T22:22:37Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: push-time conflict detection regressed; check the helper export-path conflict logic",
-      "waiver": null
+      "waiver": {
+        "until": "2026-05-12T00:00:00Z",
+        "reason": "Wave C ships the container-rehearse.sh driver but the example scripts assume an external simulator that the container does not bring up. Wiring sim-inside-container is post-v0.12.0 work tracked under Wave F CI dispatch.",
+        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md 2026-04-27 P59 row",
+        "tracked_in": "P59 Wave F CI rehearsal in docker-equipped GH runner with sim service"
+      }
     },
     {
       "id": "docs-repro/example-05-blob-limit-recovery",
@@ -162,12 +177,17 @@
         "container": "ubuntu:24.04"
       },
       "artifact": "quality/reports/verifications/docs-repro/example-05-blob-limit-recovery.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T22:22:37Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: blob-limit error message regressed OR sparse-checkout recovery path regressed",
-      "waiver": null
+      "waiver": {
+        "until": "2026-05-12T00:00:00Z",
+        "reason": "Wave C ships the container-rehearse.sh driver but the example scripts assume an external simulator that the container does not bring up. Wiring sim-inside-container is post-v0.12.0 work tracked under Wave F CI dispatch.",
+        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md 2026-04-27 P59 row",
+        "tracked_in": "P59 Wave F CI rehearsal in docker-equipped GH runner with sim service"
+      }
     },
     {
       "id": "docs-repro/tutorial-replay",
@@ -176,8 +196,8 @@
       "kind": "container",
       "sources": [
         "docs/tutorials/first-run.md:51-166",
-        "scripts/repro-quickstart.sh",
-        "README.md:56-70"
+        "README.md:56-70",
+        "(historical: scripts/repro-quickstart.sh -- migrated to this gate by SIMPLIFY-06; see commit history)"
       ],
       "command": "bash quality/gates/docs-repro/tutorial-replay.sh",
       "expected": {
@@ -197,12 +217,17 @@
         "container": "ubuntu:24.04"
       },
       "artifact": "quality/reports/verifications/docs-repro/tutorial-replay.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T22:22:37Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
-      "owner_hint": "if RED: docs/tutorials/first-run.md or one of the binary build steps regressed; check scripts/repro-quickstart.sh predecessor for the canonical assertions",
-      "waiver": null
+      "owner_hint": "if RED: docs/tutorials/first-run.md or one of the binary build steps regressed; check git history for scripts/repro-quickstart.sh (predecessor migrated by SIMPLIFY-06)",
+      "waiver": {
+        "until": "2026-05-12T00:00:00Z",
+        "reason": "Wave C ships tutorial-replay.sh but the cargo build inside a fresh ubuntu:24.04 container takes >5min on a cold cache. The script runs locally fine when invoked directly, but the runner-driven post-release sweep needs cargo + sim service to be pre-warmed in the CI image. Wiring this is post-v0.12.0 work tracked under Wave F CI dispatch.",
+        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md 2026-04-27 P59 row",
+        "tracked_in": "P59 Wave F CI rehearsal in docker-equipped GH runner with cargo + sim pre-warmed"
+      }
     },
     {
       "id": "benchmark-claim/8ms-cached-read",

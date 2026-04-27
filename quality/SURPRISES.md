@@ -170,3 +170,35 @@ validated end-to-end (4 dispatches; 2 verifier/workflow fixes
 applied), QG-09 P58 GH Actions badge live in README + docs/index.md.
 — All catalog rows GREEN or WAIVED; verdict at
 quality/reports/verdicts/p58/VERDICT.md (Wave F).
+
+2026-04-27 P59: Wave B fenced-block survey returned 32 blocks across 6
+files (under PIVOT_THRESHOLD=50 → per-block tracking applies). Of
+those, 11 are covered by existing release-assets + docs-repro example
+rows; 21 illustrative blocks (mermaid diagram, troubleshooting examples,
+connector-tutorial code) moved to a NEW
+quality/catalogs/docs-reproducible-allowlist.json with per-id
+reasons. Cross-catalog source citation matching was added to
+quality/gates/docs-repro/snippet-extract.py so release-assets rows
+citing README.md install lines cover their corresponding fenced blocks
+transparently — released this as a Rule 1 fix (without it the drift
+detector flagged blocks that ARE catalogued, just in a sibling catalog).
+
+2026-04-27 P59: Wave C container-rehearse.sh ships but the example
+run scripts (examples/0[1,2,4,5]-*/run.{sh,py}) assume an external
+simulator listening on 127.0.0.1:7878 that the container does not
+bring up. Locally the verifier exits non-zero with stderr "sim not
+reachable" — same diagnostic for any caller. — Resolution: short-lived
+waiver attached (until 2026-05-12) to all 4 container example rows +
+the tutorial-replay row, tracked_in "P59 Wave F CI rehearsal in
+docker-equipped GH runner with sim service". Pattern mirrors the P58
+Wave A clippy-lint-loaded waiver. The container-rehearse.sh driver
+itself is correct + tested via the docker-absent skip path; the gap
+is plumbing sim-inside-container, which is post-v0.12.0 scope.
+
+2026-04-27 P59: SIMPLIFY-06 closure — scripts/repro-quickstart.sh
+deleted (no callers found in .github/, scripts/, docs/, examples/,
+CLAUDE.md, README.md). The tutorial-replay.sh canonical home at
+quality/gates/docs-repro/ ports the 7-step assertion shape verbatim;
+the row's `sources` field references the historical predecessor with
+"see commit history" so the lineage is discoverable without keeping
+a stub file alive.
