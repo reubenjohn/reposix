@@ -15,7 +15,7 @@
       "artifact": null,
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:11Z",
+      "last_verified_at": "2026-04-27T05:43:06Z",
       "last_run_log_path": ".planning/verifications/_logs/freshness__no-version-pinned-filenames.txt"
     },
     {
@@ -29,7 +29,7 @@
       "artifact": null,
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:11Z",
+      "last_verified_at": "2026-04-27T05:43:06Z",
       "last_run_log_path": ".planning/verifications/_logs/freshness__install-leads-with-pkg-mgr__docs-index.txt"
     },
     {
@@ -43,7 +43,7 @@
       "artifact": null,
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:11Z",
+      "last_verified_at": "2026-04-27T05:43:06Z",
       "last_run_log_path": ".planning/verifications/_logs/freshness__install-leads-with-pkg-mgr__README.txt"
     },
     {
@@ -57,7 +57,7 @@
       "artifact": null,
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:11Z",
+      "last_verified_at": "2026-04-27T05:43:06Z",
       "last_run_log_path": ".planning/verifications/_logs/freshness__benchmarks-in-mkdocs-nav.txt"
     },
     {
@@ -70,8 +70,8 @@
       },
       "artifact": null,
       "blocked_by_claim": [],
-      "status": "FAIL",
-      "last_verified_at": "2026-04-27T05:40:11Z",
+      "status": "PASS",
+      "last_verified_at": "2026-04-27T05:43:06Z",
       "last_run_log_path": ".planning/verifications/_logs/freshness__no-loose-roadmap-or-requirements.txt"
     },
     {
@@ -85,7 +85,7 @@
       "artifact": null,
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:12Z",
+      "last_verified_at": "2026-04-27T05:43:07Z",
       "last_run_log_path": ".planning/verifications/_logs/freshness__no-orphan-docs.txt"
     },
     {
@@ -99,7 +99,7 @@
       "artifact": ".planning/verifications/playwright/how-it-works/filesystem-layer.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:12Z",
+      "last_verified_at": "2026-04-27T05:43:07Z",
       "last_run_log_path": ".planning/verifications/_logs/mermaid-renders__how-it-works__filesystem-layer.txt"
     },
     {
@@ -113,7 +113,7 @@
       "artifact": ".planning/verifications/playwright/how-it-works/git-layer.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:12Z",
+      "last_verified_at": "2026-04-27T05:43:07Z",
       "last_run_log_path": ".planning/verifications/_logs/mermaid-renders__how-it-works__git-layer.txt"
     },
     {
@@ -127,7 +127,7 @@
       "artifact": ".planning/verifications/playwright/how-it-works/trust-model.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:12Z",
+      "last_verified_at": "2026-04-27T05:43:07Z",
       "last_run_log_path": ".planning/verifications/_logs/mermaid-renders__how-it-works__trust-model.txt"
     },
     {
@@ -141,7 +141,7 @@
       "artifact": ".planning/verifications/playwright/index.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:12Z",
+      "last_verified_at": "2026-04-27T05:43:07Z",
       "last_run_log_path": ".planning/verifications/_logs/mermaid-renders__index.txt"
     },
     {
@@ -155,7 +155,7 @@
       "artifact": ".planning/verifications/playwright/reference/git-remote.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:12Z",
+      "last_verified_at": "2026-04-27T05:43:07Z",
       "last_run_log_path": ".planning/verifications/_logs/mermaid-renders__reference__git-remote.txt"
     },
     {
@@ -169,7 +169,7 @@
       "artifact": null,
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:13Z",
+      "last_verified_at": "2026-04-27T05:43:08Z",
       "last_run_log_path": ".planning/verifications/_logs/ci__main-green-on-latest-completed.txt"
     },
     {
@@ -183,7 +183,7 @@
       "artifact": ".planning/verifications/crates-io/reposix-core.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:14Z",
+      "last_verified_at": "2026-04-27T05:43:08Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-core-at-workspace-version.txt"
     },
     {
@@ -197,7 +197,7 @@
       "artifact": ".planning/verifications/crates-io/reposix-cache.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:14Z",
+      "last_verified_at": "2026-04-27T05:43:09Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-cache-at-workspace-version.txt"
     },
     {
@@ -211,7 +211,7 @@
       "artifact": ".planning/verifications/crates-io/reposix-sim.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:14Z",
+      "last_verified_at": "2026-04-27T05:43:09Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-sim-at-workspace-version.txt"
     },
     {
@@ -225,7 +225,7 @@
       "artifact": ".planning/verifications/crates-io/reposix-github.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:14Z",
+      "last_verified_at": "2026-04-27T05:43:09Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-github-at-workspace-version.txt"
     },
     {
@@ -239,7 +239,7 @@
       "artifact": ".planning/verifications/crates-io/reposix-confluence.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:15Z",
+      "last_verified_at": "2026-04-27T05:43:10Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-confluence-at-workspace-version.txt"
     },
     {
@@ -253,7 +253,7 @@
       "artifact": ".planning/verifications/crates-io/reposix-jira.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:15Z",
+      "last_verified_at": "2026-04-27T05:43:10Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-jira-at-workspace-version.txt"
     },
     {
@@ -267,7 +267,7 @@
       "artifact": ".planning/verifications/crates-io/reposix-remote.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:15Z",
+      "last_verified_at": "2026-04-27T05:43:10Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-remote-at-workspace-version.txt"
     },
     {
@@ -281,7 +281,7 @@
       "artifact": ".planning/verifications/crates-io/reposix-cli.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:40:15Z",
+      "last_verified_at": "2026-04-27T05:43:11Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-cli-at-workspace-version.txt"
     }
   ]

@@ -1,30 +1,23 @@
-# SESSION-END-STATE-VERDICT — RED
+# SESSION-END-STATE-VERDICT — GREEN
 
 - Session ID: `5468ec00-693b-45ce-bfbd-b145d6382b9b`
-- Generated at: `2026-04-27T05:30:05Z`
+- Generated at: `2026-04-27T05:43:15Z`
 - Workspace version: `0.11.1`
 
 | status | count |
 |---|---|
-| PASS | 16 |
-| FAIL | 4 |
+| PASS | 20 |
+| FAIL | 0 |
 | PARTIAL | 0 |
 | NOT-VERIFIED | 0 |
 
-## FAIL
-
-- `freshness/no-version-pinned-filenames` — No version-pinned filenames (vN.N.N) outside CHANGELOG and .planning/milestones/v*-phases/. Catches §0.3-class drift.
-  - log: `.planning/verifications/_logs/freshness__no-version-pinned-filenames.txt`
-- `freshness/install-leads-with-pkg-mgr/docs-index` — docs/index.md hero must show a package-manager install command (brew/binstall/curl) BEFORE any 'git clone'. Catches §0.2 drift.
-  - log: `.planning/verifications/_logs/freshness__install-leads-with-pkg-mgr__docs-index.txt`
-- `freshness/install-leads-with-pkg-mgr/README` — README.md must show a package-manager install command BEFORE any 'git clone' / 'cargo build --release'. Catches §0.2 drift.
-  - log: `.planning/verifications/_logs/freshness__install-leads-with-pkg-mgr__README.txt`
-- `freshness/no-loose-roadmap-or-requirements` — No loose v*ROADMAP*.md / v*REQUIREMENTS*.md outside *phases/ or .planning/archive/. §0.5.
-  - log: `.planning/verifications/_logs/freshness__no-loose-roadmap-or-requirements.txt`
-
 ## PASS
 
+- `freshness/no-version-pinned-filenames`
+- `freshness/install-leads-with-pkg-mgr/docs-index`
+- `freshness/install-leads-with-pkg-mgr/README`
 - `freshness/benchmarks-in-mkdocs-nav`
+- `freshness/no-loose-roadmap-or-requirements`
 - `freshness/no-orphan-docs`
 - `mermaid-renders/how-it-works/filesystem-layer`
 - `mermaid-renders/how-it-works/git-layer`

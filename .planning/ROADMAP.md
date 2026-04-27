@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- ✅ **v0.1.0 MVD** — Phases 1-4, S (shipped 2026-04-13) · [archive](milestones/v0.8.0-ROADMAP.md)
+- ✅ **v0.1.0 MVD** — Phases 1-4, S (shipped 2026-04-13) · [archive](milestones/v0.8.0-phases/ROADMAP.md)
 - ✅ **v0.2.0-alpha** — Phase 8: GitHub read-only adapter (shipped 2026-04-13)
 - ✅ **v0.3.0** — Phase 11: Confluence Cloud read-only adapter (shipped 2026-04-14)
 - ✅ **v0.4.0** — Phase 13: Nested mount layout pages/+tree/ (shipped 2026-04-14)
@@ -10,8 +10,8 @@
 - ✅ **v0.6.0** — Phases 16-20: Write path + full sitemap (shipped 2026-04-14)
 - ✅ **v0.7.0** — Phases 21-26: Hardening + Confluence expansion + docs (shipped 2026-04-16)
 - ✅ **v0.8.0 JIRA Cloud Integration** — Phases 27-29 (shipped 2026-04-16)
-- ✅ **v0.9.0 Architecture Pivot — Git-Native Partial Clone** — Phases 31–36 (shipped 2026-04-24) · [archive](milestones/v0.9.0-ROADMAP.md)
-- ✅ **v0.10.0 Docs & Narrative Shine** — Phases 40–45 (shipped 2026-04-25) · [archive](milestones/v0.10.0-ROADMAP.md)
+- ✅ **v0.9.0 Architecture Pivot — Git-Native Partial Clone** — Phases 31–36 (shipped 2026-04-24) · [archive](milestones/v0.9.0-phases/ROADMAP.md)
+- ✅ **v0.10.0 Docs & Narrative Shine** — Phases 40–45 (shipped 2026-04-25) · [archive](milestones/v0.10.0-phases/ROADMAP.md)
 - ✅ **v0.11.0 Polish & Reproducibility** — Phases 50–55 (shipped 2026-04-25; binaries on GH Releases + homebrew tap shipped 2026-04-26; crates.io publish pending owner email verification at https://crates.io/settings/profile)
 - 📋 **v0.11.1 Polish & Reproducibility (second pass)** — planning (POLISH2-01..22; carry-forward of crates.io publish + arm64-musl + JIRA cells + code-quality P1 + machine-readability gaps + upstream mkdocs-material issue)
 
@@ -132,7 +132,7 @@
 
 ## v0.10.0 Docs & Narrative Shine (PLANNING)
 
-> **Status:** scoping complete; phases 40–45 scaffolded. The architecture pivot shipped in v0.9.0 (2026-04-24); v0.10.0 ports the deferred Phase 30 docs work onto the git-native design and adds tutorial / how-it-works / mental-model pages around the new flow. Source-of-truth design in `.planning/research/v0.10.0-post-pivot/milestone-plan.md`. Original narrative IA in `.planning/notes/phase-30-narrative-vignettes.md` (framing principles P1/P2 inherited; banned-word list revised for git-native). v0.9.0 archive in `.planning/milestones/v0.9.0-ROADMAP.md`.
+> **Status:** scoping complete; phases 40–45 scaffolded. The architecture pivot shipped in v0.9.0 (2026-04-24); v0.10.0 ports the deferred Phase 30 docs work onto the git-native design and adds tutorial / how-it-works / mental-model pages around the new flow. Source-of-truth design in `.planning/research/v0.10.0-post-pivot/milestone-plan.md`. Original narrative IA in `.planning/notes/phase-30-narrative-vignettes.md` (framing principles P1/P2 inherited; banned-word list revised for git-native). v0.9.0 archive in `.planning/milestones/v0.9.0-phases/ROADMAP.md`.
 
 **Thesis.** A cold visitor understands reposix in 10 seconds and runs the tutorial in 5 minutes. The architecture pivot becomes a story, not a code change.
 
@@ -155,7 +155,7 @@
 6. `docs/concepts/reposix-vs-mcp-and-sdks.md` numbers-table cites `docs/benchmarks/v0.9.0-latency.md` by relative link and renders in MkDocs.
 7. Playwright screenshots committed for landing page at desktop (1280px) and mobile (375px) widths.
 
-**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §2 v0.10.0 Phase 41 entry, `.planning/notes/phase-30-narrative-vignettes.md` (hero vignette V1 + framing principles P1/P2), `docs/benchmarks/v0.9.0-latency.md` (numbers source), `.planning/milestones/v0.9.0-ROADMAP.md` (architecture context).
+**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §2 v0.10.0 Phase 41 entry, `.planning/notes/phase-30-narrative-vignettes.md` (hero vignette V1 + framing principles P1/P2), `docs/benchmarks/v0.9.0-latency.md` (numbers source), `.planning/milestones/v0.9.0-phases/ROADMAP.md` (architecture context).
 
 ### Phase 41: How-it-works trio — three pages, three diagrams, git-native architecture as a story (v0.10.0)
 
@@ -175,7 +175,7 @@
 7. `git-layer.md` describes push round-trip and conflict rebase as user experience; protocol-v2 jargon stays in Reference (`docs/reference/git-remote.md`).
 8. Cross-link from each page back to `docs/concepts/mental-model-in-60-seconds.md` (Phase 40 anchor).
 
-**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §2 v0.10.0 Phase 42 entry, `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` §2–4 (cache + transport + sync), `docs/architecture.md` + `docs/security.md` (source content to carve), `.planning/notes/phase-30-narrative-vignettes.md` (P2 layer rules), `.planning/milestones/v0.9.0-ROADMAP.md` Phases 31–34.
+**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §2 v0.10.0 Phase 42 entry, `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` §2–4 (cache + transport + sync), `docs/architecture.md` + `docs/security.md` (source content to carve), `.planning/notes/phase-30-narrative-vignettes.md` (P2 layer rules), `.planning/milestones/v0.9.0-phases/ROADMAP.md` Phases 31–34.
 
 ### Phase 42: Tutorial + guides + simulator relocate to Reference (v0.10.0)
 
@@ -195,7 +195,7 @@
 7. `docs/connectors/guide.md` either redirects to `docs/guides/write-your-own-connector.md` or is deleted (Phase 43 nav restructure finalizes this).
 8. The tutorial ends with a successful `git push` and a one-line audit-log assertion the reader can run themselves.
 
-**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §2 v0.10.0 Phase 43 entry, `docs/reference/cli.md` (current CLI surface, post v0.9.0), `docs/connectors/guide.md` (existing content to migrate), `.planning/milestones/v0.9.0-ROADMAP.md` Phase 34 + 35 (push rejection + blob-limit recovery as troubleshooting source).
+**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §2 v0.10.0 Phase 43 entry, `docs/reference/cli.md` (current CLI surface, post v0.9.0), `docs/connectors/guide.md` (existing content to migrate), `.planning/milestones/v0.9.0-phases/ROADMAP.md` Phase 34 + 35 (push rejection + blob-limit recovery as troubleshooting source).
 
 ### Phase 43: Nav restructure (Diátaxis) + theme tuning + banned-words linter (v0.10.0)
 
@@ -232,7 +232,7 @@
 4. Findings file committed; `mkdocs build --strict` green after any fix-this-phase landings.
 5. Subagent fan-out happened in parallel (one subagent per page) — verified via the `.planning/phases/44-.../EXECUTION-LOG.md`.
 
-**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §3.6 (`doc-clarity-review` on every doc page as release gate), `doc-clarity-review` skill at `.claude/skills/doc-clarity-review/SKILL.md` (or wherever it lives — discoverable via skill directory), Phase 26 doc-clarity-review precedent (`.planning/milestones/v0.8.0-ROADMAP.md` Phase 26 entry).
+**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §3.6 (`doc-clarity-review` on every doc page as release gate), `doc-clarity-review` skill at `.claude/skills/doc-clarity-review/SKILL.md` (or wherever it lives — discoverable via skill directory), Phase 26 doc-clarity-review precedent (`.planning/milestones/v0.8.0-phases/ROADMAP.md` Phase 26 entry).
 
 ### Phase 45: README rewrite + CHANGELOG + screenshots + final integration + tag (v0.10.0)
 
@@ -253,7 +253,7 @@
 8. `scripts/tag-v0.10.0.sh` exists with ≥ 6 safety guards (clone Phase 36's `scripts/tag-v0.9.0.sh`); `bash scripts/tag-v0.10.0.sh` is the user-gate handoff (orchestrator does NOT push the tag).
 9. `gsd-audit-milestone` run and `.planning/v0.10.0-MILESTONE-AUDIT.md` written (mirrors `.planning/v0.9.0-MILESTONE-AUDIT.md`).
 
-**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §2 v0.10.0 Phase 45 entry + §3.5 (numbers-not-adjectives), `.planning/milestones/v0.9.0-ROADMAP.md` Phase 36 (release-cycle precedent: tag-script + audit + complete-milestone), `docs/benchmarks/v0.9.0-latency.md` (numbers source), `scripts/tag-v0.9.0.sh` (template for v0.10.0 tag script).
+**Context anchor:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` §2 v0.10.0 Phase 45 entry + §3.5 (numbers-not-adjectives), `.planning/milestones/v0.9.0-phases/ROADMAP.md` Phase 36 (release-cycle precedent: tag-script + audit + complete-milestone), `docs/benchmarks/v0.9.0-latency.md` (numbers source), `scripts/tag-v0.9.0.sh` (template for v0.10.0 tag script).
 
 </details>
 
@@ -445,7 +445,7 @@
 <details>
 <summary>✅ v0.1.0–v0.7.0 (Phases 1–26) — SHIPPED 2026-04-13 through 2026-04-16</summary>
 
-All details archived in `.planning/milestones/v0.8.0-ROADMAP.md`.
+All details archived in `.planning/milestones/v0.8.0-phases/ROADMAP.md`.
 
 Summary:
 - Phases 1–4, S: MVD simulator + FUSE + CLI + demo + write path + swarm

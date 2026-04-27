@@ -7,7 +7,7 @@
 **Source-of-truth narrative:**
 - `CHANGELOG.md` `[v0.8.0]` section — user-facing release notes.
 - `.planning/ROADMAP.md` — milestone summary line.
-- `.planning/milestones/v0.8.0-ROADMAP.md` + `.planning/milestones/v0.8.0-REQUIREMENTS.md` — milestone-level scoping (NOT condensed; kept intact).
+- `.planning/milestones/v0.8.0-phases/ROADMAP.md` + `.planning/milestones/v0.8.0-phases/REQUIREMENTS.md` — milestone-level scoping (NOT condensed; kept intact, relocated into the phases dir per HANDOVER §0.5 / Option B).
 - `git log --oneline v0.7.0..v0.8.0 -- crates/ docs/` — implementation commits.
 - `git log --oneline v0.7.0..v0.8.0 -- .planning/milestones/v0.8.0-phases/` — planning artifact history.
 

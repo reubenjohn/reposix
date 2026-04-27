@@ -54,6 +54,32 @@ research/                # Long-form research notes + red-team reports.
 runtime/                 # gitignored — local sim DB, scratch working trees.
 ```
 
+### `.planning/milestones/` convention (HANDOVER §0.5 / Option B)
+
+Per-milestone planning artifacts live INSIDE the matching `*-phases/` dir,
+never loose at `.planning/milestones/` top-level:
+
+```
+.planning/milestones/
+├── v0.8.0-phases/
+│   ├── ARCHIVE.md             # condensed milestone log (per POLISH2-21)
+│   ├── ROADMAP.md             # milestone-level scoping (kept intact)
+│   ├── REQUIREMENTS.md        # milestone-level scoping (kept intact)
+│   └── tag-v0.8.0.sh          # historical one-shot release script
+├── v0.9.0-phases/
+│   ├── ROADMAP.md
+│   └── tag-v0.9.0.sh
+└── v0.10.0-phases/
+    ├── ROADMAP.md
+    └── tag-v0.10.0.sh
+```
+
+The `freshness/no-loose-roadmap-or-requirements` claim in
+`scripts/end-state.py` enforces this — any `*ROADMAP*.md` or
+`*REQUIREMENTS*.md` placed loose at `.planning/milestones/v*.0-*.md`
+fails the verifier. New milestones must scaffold their planning docs
+inside `*-phases/` from day one.
+
 ## Tech stack
 
 - Rust stable (1.82+ via `rust-toolchain.toml`).
