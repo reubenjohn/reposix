@@ -2,7 +2,7 @@
   "schema_version": 1,
   "session_id": "5468ec00-693b-45ce-bfbd-b145d6382b9b",
   "session_started_at": "2026-04-27T05:16:54Z",
-  "workspace_version": "0.11.1",
+  "workspace_version": "0.11.2",
   "claims": [
     {
       "id": "freshness/no-version-pinned-filenames",
@@ -15,7 +15,7 @@
       "artifact": null,
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:46:57Z",
+      "last_verified_at": "2026-04-27T05:58:05Z",
       "last_run_log_path": ".planning/verifications/_logs/freshness__no-version-pinned-filenames.txt"
     },
     {
@@ -29,7 +29,7 @@
       "artifact": null,
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:46:57Z",
+      "last_verified_at": "2026-04-27T05:58:05Z",
       "last_run_log_path": ".planning/verifications/_logs/freshness__install-leads-with-pkg-mgr__docs-index.txt"
     },
     {
@@ -43,7 +43,7 @@
       "artifact": null,
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:46:57Z",
+      "last_verified_at": "2026-04-27T05:58:05Z",
       "last_run_log_path": ".planning/verifications/_logs/freshness__install-leads-with-pkg-mgr__README.txt"
     },
     {
@@ -57,7 +57,7 @@
       "artifact": null,
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:46:57Z",
+      "last_verified_at": "2026-04-27T05:58:05Z",
       "last_run_log_path": ".planning/verifications/_logs/freshness__benchmarks-in-mkdocs-nav.txt"
     },
     {
@@ -71,7 +71,7 @@
       "artifact": null,
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:46:57Z",
+      "last_verified_at": "2026-04-27T05:58:05Z",
       "last_run_log_path": ".planning/verifications/_logs/freshness__no-loose-roadmap-or-requirements.txt"
     },
     {
@@ -85,7 +85,7 @@
       "artifact": null,
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:46:58Z",
+      "last_verified_at": "2026-04-27T05:58:07Z",
       "last_run_log_path": ".planning/verifications/_logs/freshness__no-orphan-docs.txt"
     },
     {
@@ -99,7 +99,7 @@
       "artifact": ".planning/verifications/playwright/how-it-works/filesystem-layer.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:46:58Z",
+      "last_verified_at": "2026-04-27T05:58:07Z",
       "last_run_log_path": ".planning/verifications/_logs/mermaid-renders__how-it-works__filesystem-layer.txt"
     },
     {
@@ -113,7 +113,7 @@
       "artifact": ".planning/verifications/playwright/how-it-works/git-layer.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:46:58Z",
+      "last_verified_at": "2026-04-27T05:58:07Z",
       "last_run_log_path": ".planning/verifications/_logs/mermaid-renders__how-it-works__git-layer.txt"
     },
     {
@@ -127,7 +127,7 @@
       "artifact": ".planning/verifications/playwright/how-it-works/trust-model.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:46:58Z",
+      "last_verified_at": "2026-04-27T05:58:07Z",
       "last_run_log_path": ".planning/verifications/_logs/mermaid-renders__how-it-works__trust-model.txt"
     },
     {
@@ -141,7 +141,7 @@
       "artifact": ".planning/verifications/playwright/index.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:46:58Z",
+      "last_verified_at": "2026-04-27T05:58:07Z",
       "last_run_log_path": ".planning/verifications/_logs/mermaid-renders__index.txt"
     },
     {
@@ -155,7 +155,7 @@
       "artifact": ".planning/verifications/playwright/reference/git-remote.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:46:58Z",
+      "last_verified_at": "2026-04-27T05:58:07Z",
       "last_run_log_path": ".planning/verifications/_logs/mermaid-renders__reference__git-remote.txt"
     },
     {
@@ -169,119 +169,119 @@
       "artifact": null,
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:46:59Z",
+      "last_verified_at": "2026-04-27T05:58:07Z",
       "last_run_log_path": ".planning/verifications/_logs/ci__main-green-on-head.txt"
     },
     {
       "id": "crates-io/reposix-core-at-workspace-version",
       "category": "crate-publish",
-      "description": "crates.io max_version of reposix-core must equal workspace version (0.11.1). §3b.",
+      "description": "crates.io max_version of reposix-core must equal workspace version (0.11.2). §3b.",
       "verifier": {
         "type": "shell",
-        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-core | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-core | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.2\""
       },
       "artifact": ".planning/verifications/crates-io/reposix-core.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:46:59Z",
+      "last_verified_at": "2026-04-27T05:58:08Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-core-at-workspace-version.txt"
     },
     {
       "id": "crates-io/reposix-cache-at-workspace-version",
       "category": "crate-publish",
-      "description": "crates.io max_version of reposix-cache must equal workspace version (0.11.1). §3b.",
+      "description": "crates.io max_version of reposix-cache must equal workspace version (0.11.2). §3b.",
       "verifier": {
         "type": "shell",
-        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-cache | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-cache | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.2\""
       },
       "artifact": ".planning/verifications/crates-io/reposix-cache.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:46:59Z",
+      "last_verified_at": "2026-04-27T05:58:08Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-cache-at-workspace-version.txt"
     },
     {
       "id": "crates-io/reposix-sim-at-workspace-version",
       "category": "crate-publish",
-      "description": "crates.io max_version of reposix-sim must equal workspace version (0.11.1). §3b.",
+      "description": "crates.io max_version of reposix-sim must equal workspace version (0.11.2). §3b.",
       "verifier": {
         "type": "shell",
-        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-sim | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-sim | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.2\""
       },
       "artifact": ".planning/verifications/crates-io/reposix-sim.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:47:00Z",
+      "last_verified_at": "2026-04-27T05:58:08Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-sim-at-workspace-version.txt"
     },
     {
       "id": "crates-io/reposix-github-at-workspace-version",
       "category": "crate-publish",
-      "description": "crates.io max_version of reposix-github must equal workspace version (0.11.1). §3b.",
+      "description": "crates.io max_version of reposix-github must equal workspace version (0.11.2). §3b.",
       "verifier": {
         "type": "shell",
-        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-github | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-github | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.2\""
       },
       "artifact": ".planning/verifications/crates-io/reposix-github.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:47:00Z",
+      "last_verified_at": "2026-04-27T05:58:09Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-github-at-workspace-version.txt"
     },
     {
       "id": "crates-io/reposix-confluence-at-workspace-version",
       "category": "crate-publish",
-      "description": "crates.io max_version of reposix-confluence must equal workspace version (0.11.1). §3b.",
+      "description": "crates.io max_version of reposix-confluence must equal workspace version (0.11.2). §3b.",
       "verifier": {
         "type": "shell",
-        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-confluence | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-confluence | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.2\""
       },
       "artifact": ".planning/verifications/crates-io/reposix-confluence.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:47:00Z",
+      "last_verified_at": "2026-04-27T05:58:09Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-confluence-at-workspace-version.txt"
     },
     {
       "id": "crates-io/reposix-jira-at-workspace-version",
       "category": "crate-publish",
-      "description": "crates.io max_version of reposix-jira must equal workspace version (0.11.1). §3b.",
+      "description": "crates.io max_version of reposix-jira must equal workspace version (0.11.2). §3b.",
       "verifier": {
         "type": "shell",
-        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-jira | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-jira | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.2\""
       },
       "artifact": ".planning/verifications/crates-io/reposix-jira.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:47:00Z",
+      "last_verified_at": "2026-04-27T05:58:09Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-jira-at-workspace-version.txt"
     },
     {
       "id": "crates-io/reposix-remote-at-workspace-version",
       "category": "crate-publish",
-      "description": "crates.io max_version of reposix-remote must equal workspace version (0.11.1). §3b.",
+      "description": "crates.io max_version of reposix-remote must equal workspace version (0.11.2). §3b.",
       "verifier": {
         "type": "shell",
-        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-remote | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-remote | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.2\""
       },
       "artifact": ".planning/verifications/crates-io/reposix-remote.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:47:00Z",
+      "last_verified_at": "2026-04-27T05:58:09Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-remote-at-workspace-version.txt"
     },
     {
       "id": "crates-io/reposix-cli-at-workspace-version",
       "category": "crate-publish",
-      "description": "crates.io max_version of reposix-cli must equal workspace version (0.11.1). §3b.",
+      "description": "crates.io max_version of reposix-cli must equal workspace version (0.11.2). §3b.",
       "verifier": {
         "type": "shell",
-        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-cli | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.1\""
+        "command": "v=$(curl -s https://crates.io/api/v1/crates/reposix-cli | grep -o '\"max_version\":\"[^\"]*\"' | head -1 | sed 's/.*://;s/\"//g'); test \"$v\" = \"0.11.2\""
       },
       "artifact": ".planning/verifications/crates-io/reposix-cli.json",
       "blocked_by_claim": [],
       "status": "PASS",
-      "last_verified_at": "2026-04-27T05:47:00Z",
+      "last_verified_at": "2026-04-27T05:58:10Z",
       "last_run_log_path": ".planning/verifications/_logs/crates-io__reposix-cli-at-workspace-version.txt"
     }
   ]
