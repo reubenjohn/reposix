@@ -126,17 +126,12 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/docs-build/badges-resolve.json",
-      "status": "WAIVED",
-      "last_verified": "2026-04-27T23:21:25Z",
+      "status": "PASS",
+      "last_verified": "2026-04-27T23:26:32Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: a badge URL is 404 or returns non-image content-type -- fix the badge URL in README.md or docs/index.md OR substitute a current shields.io equivalent. Common: shields.io drift, codecov project rename, badge-URL typos.",
-      "waiver": {
-        "until": "2026-05-15T00:00:00Z",
-        "reason": "P60 Wave A catalog-first; verifier ships in P60 Wave C as a NEW file (no predecessor to migrate from). Short-lived waiver keeps pre-push GREEN through the implementation window. After Wave C lands the verifier, the runner flips this row to PASS or PARTIAL (PARTIAL until Wave F lands the QG-09 endpoint URL publish).",
-        "dimension_owner": "v0.12.0 P60 docs-build dimension owner",
-        "tracked_in": "P60 Wave C (60-03)"
-      }
+      "waiver": null
     }
   ]
 }

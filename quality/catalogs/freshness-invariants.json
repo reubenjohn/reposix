@@ -254,17 +254,12 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/badges-resolve.json",
-      "status": "WAIVED",
-      "last_verified": "2026-04-27T19:48:49Z",
+      "status": "PASS",
+      "last_verified": "2026-04-27T23:26:34Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "P60 docs-build dimension ships the verifier; for P57 the row's existence is the contract",
-      "waiver": {
-        "until": "2026-05-15T00:00:00Z",
-        "reason": "P60 Wave A catalog-first contract amend; verifier ships in P60 Wave C. Until Wave C, the runner's verifier-not-found branch returns NOT-VERIFIED; this short-lived waiver keeps pre-push GREEN through the implementation window. After Wave C, the runner flips this row to PASS or PARTIAL and the waiver expires harmlessly. Original P57 waiver until 2026-07-25 swapped to short-lived form per P60 Wave A spec.",
-        "dimension_owner": "v0.12.0 P60 docs-build dimension owner",
-        "tracked_in": "P60 Wave C (60-03)"
-      }
+      "waiver": null
     },
     {
       "id": "structure/banned-words",
