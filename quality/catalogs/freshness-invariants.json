@@ -260,10 +260,10 @@
       "blast_radius": "P2",
       "owner_hint": "P60 docs-build dimension ships the verifier; for P57 the row's existence is the contract",
       "waiver": {
-        "until": "2026-07-25T00:00:00Z",
-        "reason": "verifier ships in P60 per BADGE-01 traceability; P57 anchors the row in the catalog so the gate exists from skeleton onward",
+        "until": "2026-05-15T00:00:00Z",
+        "reason": "P60 Wave A catalog-first contract amend; verifier ships in P60 Wave C. Until Wave C, the runner's verifier-not-found branch returns NOT-VERIFIED; this short-lived waiver keeps pre-push GREEN through the implementation window. After Wave C, the runner flips this row to PASS or PARTIAL and the waiver expires harmlessly. Original P57 waiver until 2026-07-25 swapped to short-lived form per P60 Wave A spec.",
         "dimension_owner": "v0.12.0 P60 docs-build dimension owner",
-        "tracked_in": "BADGE-01 / P60"
+        "tracked_in": "P60 Wave C (60-03)"
       }
     },
     {
@@ -294,6 +294,42 @@
       "blast_radius": "P1",
       "owner_hint": "any docs/ file using banned terms (FUSE, fusermount, kernel, partial-clone, etc. — see docs/.banned-words.toml for the full matrix)",
       "waiver": null
+    },
+    {
+      "id": "structure/cred-hygiene",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [
+        "scripts/hooks/pre-push:41-122",
+        "CLAUDE.md:Threat model"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "no committed file on the outgoing ref-range matches the credential-prefix regex set: ATATT3[A-Za-z0-9_+/=-]{20,} (Atlassian); Bearer ATATT3 ; ghp_[A-Za-z0-9]{20,} (GitHub classic PAT); github_pat_[A-Za-z0-9_]{20,} (GitHub fine-grained PAT)",
+          "the verifier respects the same EXCLUDE_DIRS as the existing hook (.git, target, node_modules, scripts/hooks)",
+          "the verifier exits 1 on any hit so pre-push BLOCKS the push (matches existing hook semantics; non-negotiable per CLAUDE.md threat model)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/cred-hygiene.sh",
+        "args": [],
+        "timeout_s": 15,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/cred-hygiene.json",
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T23:21:25Z",
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: a real token shape was committed -- ROTATE THE TOKEN at the issuing platform BEFORE doing anything else (Atlassian: https://id.atlassian.com/manage-profile/security/api-tokens; GitHub: https://github.com/settings/tokens)",
+      "waiver": {
+        "until": "2026-05-15T00:00:00Z",
+        "reason": "P60 Wave A catalog-first; verifier wrapper ships in P60 Wave D (SIMPLIFY-10 pre-push hook one-liner). The OLD pre-push hook body keeps running until Wave E rewrites it, so the catalog row's WAIVED status only affects how the runner GRADES; the existing inline scan in scripts/hooks/pre-push still EXECUTES on every push. Short-lived waiver keeps pre-push GREEN through the implementation window without weakening security.",
+        "dimension_owner": "v0.12.0 P60 docs-build dimension owner",
+        "tracked_in": "P60 Wave D (60-04)"
+      }
     }
   ]
 }

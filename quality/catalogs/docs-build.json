@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "comment": "Quality Gates catalog -- docs-build dimension. Schema spec: quality/catalogs/README.md. Verifier impl: quality/gates/docs-build/. Reports: quality/reports/verifications/docs-build/.",
+  "dimension": "docs-build",
+  "rows": [
+    {
+      "id": "docs-build/mkdocs-strict",
+      "dimension": "docs-build",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [
+        "scripts/check-docs-site.sh",
+        "mkdocs.yml",
+        "CLAUDE.md:Docs-site validation"
+      ],
+      "command": "bash quality/gates/docs-build/mkdocs-strict.sh",
+      "expected": {
+        "asserts": [
+          "mkdocs build --strict exits 0 (catches broken cross-refs, missing nav entries, broken admonition syntax)",
+          "mkdocs build log does not contain 'Syntax error in text' (mermaid HTML-entity bug guard per POLISH-03)",
+          "rendered HTML site does not contain 'Syntax error in text' (mermaid leaked-error guard per POLISH-03 regression mode)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-build/mkdocs-strict.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/docs-build/mkdocs-strict.json",
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T23:21:25Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: mkdocs build failed --strict OR mermaid HTML-entity regression -- inspect mkdocs.yml + recent docs/ edits + the build log path under /tmp/check-docs-site*/build.log",
+      "waiver": {
+        "until": "2026-05-15T00:00:00Z",
+        "reason": "P60 Wave A catalog-first; verifier ships in P60 Wave B via git-mv from scripts/check-docs-site.sh. Until Wave B lands the canonical path, the runner returns NOT-VERIFIED on missing verifier; this short-lived waiver keeps pre-push GREEN through the implementation window. Pattern from quality/SURPRISES.md 2026-04-27 P58 row 2 (clippy-lint-loaded P58 Wave A waiver).",
+        "dimension_owner": "v0.12.0 P60 docs-build dimension owner",
+        "tracked_in": "P60 Wave B (60-02)"
+      }
+    },
+    {
+      "id": "docs-build/mermaid-renders",
+      "dimension": "docs-build",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [
+        "scripts/check-mermaid-renders.sh",
+        ".planning/verifications/playwright/",
+        "CLAUDE.md:Whole-nav-section playwright walks"
+      ],
+      "command": "bash quality/gates/docs-build/mermaid-renders.sh",
+      "expected": {
+        "asserts": [
+          "every docs/**/*.md page that source-references a triple-backtick mermaid fence has a corresponding playwright artifact at .planning/verifications/playwright/<section>/<slug>.json",
+          "each artifact's svg_counts length equals mermaid_count (no missing diagrams)",
+          "each artifact's svg_counts contains no zeros (no empty-render diagrams)",
+          "each artifact's console_errors is empty (no browser-side rendering failures)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-build/mermaid-renders.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/docs-build/mermaid-renders.json",
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T23:21:25Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: a docs page added a mermaid fence without a matching playwright artifact OR an artifact got stale -- refresh via the playwright MCP walk per CLAUDE.md 'Whole-nav-section playwright walks' section",
+      "waiver": {
+        "until": "2026-05-15T00:00:00Z",
+        "reason": "P60 Wave A catalog-first; verifier ships in P60 Wave B via git-mv from scripts/check-mermaid-renders.sh. Short-lived waiver keeps pre-push GREEN through the implementation window. Pattern from quality/SURPRISES.md 2026-04-27 P58 row 2.",
+        "dimension_owner": "v0.12.0 P60 docs-build dimension owner",
+        "tracked_in": "P60 Wave B (60-02)"
+      }
+    },
+    {
+      "id": "docs-build/link-resolution",
+      "dimension": "docs-build",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [
+        "scripts/check_doc_links.py",
+        "docs/"
+      ],
+      "command": "python3 quality/gates/docs-build/link-resolution.py",
+      "expected": {
+        "asserts": [
+          "every relative Markdown link in docs/{index.md, concepts/*.md, tutorials/*.md, how-it-works/*.md, guides/*.md, reference/*.md, benchmarks/*.md} resolves to an existing file path",
+          "http(s):// and mailto: and pure-anchor links are skipped (anchor validation is mkdocs --strict's job per the existing script docstring)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-build/link-resolution.py",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/docs-build/link-resolution.json",
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T23:21:25Z",
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: a docs page references a deleted file OR a moved-without-redirect file -- run python3 quality/gates/docs-build/link-resolution.py locally for the BROKEN-list",
+      "waiver": {
+        "until": "2026-05-15T00:00:00Z",
+        "reason": "P60 Wave A catalog-first; verifier ships in P60 Wave B via git-mv from scripts/check_doc_links.py (with underscore-to-hyphen rename per directory-layout convention). Short-lived waiver keeps pre-push GREEN through the implementation window.",
+        "dimension_owner": "v0.12.0 P60 docs-build dimension owner",
+        "tracked_in": "P60 Wave B (60-02)"
+      }
+    },
+    {
+      "id": "docs-build/badges-resolve",
+      "dimension": "docs-build",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [
+        "README.md:badges",
+        "docs/index.md:badges"
+      ],
+      "command": "python3 quality/gates/docs-build/badges-resolve.py",
+      "expected": {
+        "asserts": [
+          "every badge URL extracted from README.md badge block (CI, Quality (weekly), Docs, codecov, License MIT, Rust stable, reposix-cli on crates.io) HEADs to HTTP 200",
+          "every badge URL extracted from docs/index.md badge block (CI, Quality (weekly)) HEADs to HTTP 200",
+          "every badge URL's response Content-Type contains 'image' (svg, png, etc.)",
+          "the new QG-09 endpoint badge URL https://reubenjohn.github.io/reposix/badge.json HEADs to HTTP 200 with Content-Type containing 'json' (added in P60 Wave F; pre-Wave-F this assert is documented and the URL is in WAVE_F_PENDING_URLS until Wave F lands the publish)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-build/badges-resolve.py",
+        "args": [
+          "--row-id",
+          "docs-build/badges-resolve"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/docs-build/badges-resolve.json",
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T23:21:25Z",
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: a badge URL is 404 or returns non-image content-type -- fix the badge URL in README.md or docs/index.md OR substitute a current shields.io equivalent. Common: shields.io drift, codecov project rename, badge-URL typos.",
+      "waiver": {
+        "until": "2026-05-15T00:00:00Z",
+        "reason": "P60 Wave A catalog-first; verifier ships in P60 Wave C as a NEW file (no predecessor to migrate from). Short-lived waiver keeps pre-push GREEN through the implementation window. After Wave C lands the verifier, the runner flips this row to PASS or PARTIAL (PARTIAL until Wave F lands the QG-09 endpoint URL publish).",
+        "dimension_owner": "v0.12.0 P60 docs-build dimension owner",
+        "tracked_in": "P60 Wave C (60-03)"
+      }
+    }
+  ]
+}
