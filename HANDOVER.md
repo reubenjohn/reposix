@@ -104,6 +104,21 @@ If you run out of time mid-queue, the FLOOR is: keep CI green, keep the latest w
 
 **Verify**: `bash scripts/check-mermaid-renders.sh` exits 0 AND `.planning/verifications/playwright/how-it-works/*.json` has one file per `docs/how-it-works/*.md` with `svg_counts` showing no zeros.
 
+### 0.1.b Mermaid renders only on the SECOND page reload (added 2026-04-27 PM after a fresh owner report)
+
+**Owner verbatim**: *"the mermaid is loading when I reload the mkdocs site page 2 times. Its weird."*
+
+**Diagnosis**: classic load-order race between `docs/javascripts/mermaid-render.js` and `mermaid.min.js` under mkdocs-material's `instant` navigation. First navigation: render script fires before `mermaid.min.js` finishes loading → `window.mermaid` is `undefined` → no SVG rendered. Reload: mermaid.js is in browser cache, available immediately → renders work. This is also exactly the symptom that would let §0.1's playwright walk MISS broken pages on the first hit if the walk doesn't disable cache.
+
+**Fix path**:
+1. In `docs/javascripts/mermaid-render.js`, gate `mermaid.run()` on a `if (typeof window.mermaid === 'undefined') { return; }` early-out, then re-fire on a `mermaid` script-load promise OR poll for `window.mermaid` for up to 2s before bailing.
+2. Switch the mermaid CDN script tag in `mkdocs.yml extra_javascript` to load BEFORE `mermaid-render.js` (order matters in the `extra_javascript` array — the script earlier in the list loads first). Verify with browser DevTools network tab: mermaid.min.js must finish loading before the render script's first `mermaid.run()` call.
+3. The §0.1 playwright walk must run with cache DISABLED (`mcp__playwright__browser_navigate` with no warm cache; or hard-reload via JS `location.reload(true)`) so the walk sees what a first-time visitor sees, not the cached state.
+
+**Verify**: `mcp__playwright__browser_navigate` to a how-it-works page on a fresh context (no cache), wait 2s, then `browser_run_code` with `document.querySelectorAll('pre.mermaid svg').length` — must be > 0 on the FIRST navigation, not just on reload.
+
+**Why this matters for §0.8**: the verifier subagent's playwright walk MUST disable cache by default. Otherwise the framework will declare GREEN on a site that's broken for first-time visitors. Document this explicitly in the SESSION-END-STATE.json schema for any `playwright`-typed claim.
+
 ## 0.2 Install instructions on home page lead with source-compile, not package manager
 
 **Owner verbatim**: *"now that we have crates, we should continue to have Six-line quickstart instructions to compile from source but shouldn't the more prominent instructions like the ones on home page be to install using a popular package manager with links for other ways of installation?"*
