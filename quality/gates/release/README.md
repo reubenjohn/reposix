@@ -1,14 +1,21 @@
 # quality/gates/release/
 
-Verifiers backing `quality/catalogs/release-assets.json` (16 rows, release dimension).
+Verifiers backing `quality/catalogs/release-assets.json` (15 rows, release dimension).
 
 | Verifier | Catalog rows backed | Cadence |
 |---|---|---|
 | `gh-assets-present.py` | `release/gh-assets-present` | weekly |
 | `installer-asset-bytes.py` | `install/curl-installer-sh`, `install/powershell-installer-ps1`, `install/build-from-source` | weekly |
 | `brew-formula-current.py` | `release/brew-formula-current`, `install/homebrew` (writes both artifacts) | weekly |
-| `crates-io-max-version.py` | `release/crates-io-max-version/<crate>` (one row per published crate; 9 rows) | weekly |
+| `crates-io-max-version.py` | `release/crates-io-max-version/<crate>` (one row per published crate; 8 rows) | weekly |
 | `cargo-binstall-resolves.py` | `release/cargo-binstall-resolves` | post-release |
+
+## reposix-swarm exclusion (P58 Wave E)
+
+`reposix-swarm` is `publish = false` (internal multi-agent contention test
+harness; never published to crates.io). The Wave A catalog row
+`release/crates-io-max-version/reposix-swarm` was a design-time mistake;
+removed in Wave E. Total crates-io rows: 8 (was 9).
 
 ## Conventions
 

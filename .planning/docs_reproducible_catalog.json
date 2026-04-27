@@ -1,6 +1,7 @@
 {
   "schema_version": 0,
-  "schema_status": "ACTIVE-V0 — P56 verifier reads this as the install-path contract; P57 will migrate the install rows to quality/catalogs/install-paths.json with the unified schema (id/dimension/cadence/kind/sources/verifier/artifact/status/freshness_ttl/waiver/blast_radius/owner_hint), the docs/tutorial/benchmark rows to quality/catalogs/docs-reproducible.json",
+  "schema_status": "DEPRECATED — P58 Wave E migrated the 5 install rows into quality/catalogs/release-assets.json (rows install/curl-installer-sh, install/powershell-installer-ps1, install/homebrew, install/build-from-source, release/cargo-binstall-resolves — all PASS or WAIVED). Remaining tutorial/benchmark rows port to quality/catalogs/docs-reproducible.json in P59. This file is slated for deletion in P63 SIMPLIFY-12. Do NOT add new rows here.",
+  "schema_status_p56": "ACTIVE-V0 — P56 verifier reads this as the install-path contract; P57 will migrate the install rows to quality/catalogs/install-paths.json with the unified schema (id/dimension/cadence/kind/sources/verifier/artifact/status/freshness_ttl/waiver/blast_radius/owner_hint), the docs/tutorial/benchmark rows to quality/catalogs/docs-reproducible.json",
   "purpose": "Enumerate every command/snippet a documentation reader is told to run, with a verifier that simulates a fresh user. Closes the gap between scripts/end-state.py (file-shape invariants, crates.io max_version) and reality (does the URL return bytes? does the install script actually put a binary on PATH?).",
   "lineage": {
     "modeled_on": ".planning/SESSION-END-STATE.json",

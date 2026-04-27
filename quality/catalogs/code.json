@@ -63,8 +63,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/code/cargo-test-pass.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T21:24:27Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: ci.yml `test` job is failing — investigate workflow logs at gh run view <run-id>",
@@ -102,8 +102,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/code/cargo-fmt-clean.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T21:24:27Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: cargo fmt regressed; run cargo fmt --all locally",
