@@ -8,6 +8,7 @@ bare-repo cache built from REST responses. Agents use `cat`, `grep`, `sed`,
 and `git` on real workflows — no MCP tool schemas, no custom CLI.
 
 [![CI](https://github.com/reubenjohn/reposix/workflows/CI/badge.svg)](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml)
+[![Quality (weekly)](https://github.com/reubenjohn/reposix/actions/workflows/quality-weekly.yml/badge.svg)](https://github.com/reubenjohn/reposix/actions/workflows/quality-weekly.yml)
 [![Docs](https://github.com/reubenjohn/reposix/workflows/Docs/badge.svg)](https://reubenjohn.github.io/reposix/)
 [![codecov](https://codecov.io/gh/reubenjohn/reposix/branch/main/graph/badge.svg)](https://codecov.io/gh/reubenjohn/reposix)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE-MIT)

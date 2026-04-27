@@ -4,6 +4,9 @@ title: reposix
 
 # reposix
 
+[![CI](https://github.com/reubenjohn/reposix/workflows/CI/badge.svg)](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml)
+[![Quality (weekly)](https://github.com/reubenjohn/reposix/actions/workflows/quality-weekly.yml/badge.svg)](https://github.com/reubenjohn/reposix/actions/workflows/quality-weekly.yml)
+
 > **Agents already know `cat` and `git`. They don't know your JSON schema.**
 
 reposix exposes REST-based issue trackers (Jira, GitHub Issues, Confluence) as a **real git working tree**. An autonomous LLM agent can `git clone`, `cat`, `grep`, edit, and `git push` tickets without learning a single Model Context Protocol (MCP) tool schema or REST SDK surface. It runs alongside REST — the other 20% of operations (complex JQL, bulk imports, admin) keep using the API directly. reposix handles the 80% where an agent just needs to read, edit, and push.
