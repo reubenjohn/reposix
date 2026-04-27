@@ -143,6 +143,90 @@ The next agent should NOT just fix §0.1-§0.5 — they should also ship at leas
 
 **Meta-rule (write this into CLAUDE.md too)**: when an owner catches a quality issue the agent missed, the FIX is two-fold: (1) fix the issue, (2) update the instructions so the next agent's session reads them. Just shipping a fix without updating CLAUDE.md guarantees recurrence.
 
+## 0.8 The deeper fix: machine-verifiable end-state contract
+
+**Owner verbatim**: *"is it more robust to define a clear end state? e.g. a brand new catalogue json file, with mandatory fields populated for every file? a playwright validation JSON file for every page with mermaid?... I need the session to be exhaustive unlike previous sessions. I am still catching quality issues."*
+
+**Why this matters**: §0.1-§0.7 are reactive — each owner-caught miss → bespoke fix → updated instructions. The pattern repeats because the agent's "done" is *self-reported*. The structural fix is to make "done" something an **unbiased subagent grades from artifacts**, not the executing agent's word. The current `scripts/catalog.py` is the right prototype but tracks *file status* (KEEP/TODO/DONE), not *verification evidence*.
+
+**Proposed end-state architecture** (the next agent's P0 work — design + build BEFORE shipping more features):
+
+### A. Catalog v4 — verification-first JSON schema
+
+`.planning/SESSION-END-STATE.json` (replaces / supersedes `v0.11.1-catalog.json`). Mandatory fields per file:
+
+```json
+{
+  "path": "docs/how-it-works/git-layer.md",
+  "status": "DONE",
+  "category": "doc-page-with-mermaid",
+  "claims": [
+    {"id": "renders-clean", "verifier": "playwright", "artifact": ".planning/verifications/playwright/how-it-works/git-layer.json"},
+    {"id": "no-banned-words", "verifier": "scripts/banned-words-lint.sh docs/how-it-works/git-layer.md", "artifact": null},
+    {"id": "links-resolve", "verifier": "scripts/check-doc-links.py docs/how-it-works/git-layer.md", "artifact": null}
+  ],
+  "last_verified_at": "2026-04-27T20:38:00Z",
+  "verifier_signature": "sha256:..."
+}
+```
+
+The schema differs by `category` — Rust source rows demand `cargo_check_log + clippy_log + test_run_id`; workflow rows demand `last_run_id + conclusion`; doc rows demand the playwright artifact path. **Every row has an artifact path or a deterministic command an unbiased verifier can re-run.**
+
+### B. Verification artifacts directory
+
+`.planning/verifications/` becomes the audit trail:
+
+- `playwright/<page-slug>.json` — `{nav_path, mermaid_svg_count, console_errors[], snapshot_taken_at, agent_id}` per docs page that has any rendered content (mermaid, admonitions, tables).
+- `crates-io/<crate>.json` — `{version, published_at, install_dry_run_log_path, binstall_resolves: bool}` per published crate.
+- `invariants.json` — single file listing freshness invariants from §0.6 + last-checked timestamp + verdict per invariant.
+- `cargo/<crate>.json` — `{check_passed, clippy_passed, test_count, test_passed_count, last_log_path}` per crate.
+
+### C. End-state contract written FIRST, not last
+
+**At session START** (not at end), the coordinator writes `.planning/SESSION-END-STATE.md` declaring the exhaustive set of conditions the session PROMISES to satisfy. Example:
+
+```
+- Every docs/how-it-works/*.md page MUST have a playwright artifact dated this session.
+- Every reposix-* crate at the workspace version MUST be published to crates.io with binstall verified.
+- mkdocs.yml nav MUST include every doc page (no orphans).
+- No version-pinned filenames outside CHANGELOG.md / .planning/milestones/v*-phases/*.
+- No `*ROADMAP*.md` outside a `*phases/` dir or `.planning/archive/`.
+- All open dependabot PRs MUST be either merged or closed-with-rationale.
+```
+
+This contract is the session's commitment, not its retrospective.
+
+### D. Unbiased verifier subagent
+
+At end-of-session, the coordinator dispatches an `Explore`-typed subagent with prompt: *"Read `.planning/SESSION-END-STATE.md`. For each declared condition, find the verification artifact or run the named verifier command. Output PASS/FAIL/PARTIAL per condition with cited evidence. Refuse to grade the session GREEN unless every condition is PASS. You have NO context from the session — only the end-state contract and the artifacts."*
+
+Subagent's output goes to `.planning/SESSION-END-STATE-VERDICT.md`. If RED, session is NOT done — fix the failing rows, re-verify. The agent cannot hand off until the verdict is GREEN.
+
+### E. Why this fixes §0.1-§0.5
+
+- §0.1 (mermaid not rendering on some pages) → end-state contract requires playwright artifact dated this session for every how-it-works page → verifier subagent finds missing artifact → FAIL → agent must run playwright on those pages before shipping.
+- §0.3 (version-pinned filename) → end-state contract has invariant "no `v\d+\.\d+` in `docs/` or `scripts/` filenames" → verifier subagent greps → FAIL → forces rename before shipping.
+- §0.4 (RESULTS.md not in nav) → end-state contract requires "every benchmark MUST appear in mkdocs.yml nav" → verifier subagent diffs nav vs `find docs/benchmarks/` → FAIL.
+- §0.5 (loose ROADMAP.md) → end-state contract has invariant "no `*ROADMAP*.md` outside `*phases/` dir" → verifier subagent greps → FAIL.
+
+The verifier subagent **can't be talked out of a verdict** by the executing agent's narrative. That's the structural break in the recurrence pattern.
+
+### F. Concrete §7 work order for the next agent
+
+1. **Design `SESSION-END-STATE.json` schema** — single file, ~200 LOC of well-documented JSON schema. Co-author with the user if possible (they've signaled the meta-pattern; let them tune the verifier rules).
+2. **Build `scripts/end-state.py`** — CLI like `catalog.py` but verification-first: subcommands `init`, `record-claim`, `verify`, `verdict`. Stdlib + `subprocess` + `jq`-via-shell only.
+3. **Bootstrap `.planning/SESSION-END-STATE.md`** for THIS session's continuation — list every condition §0.1-§0.5 + §3 require, write it down.
+4. **Run the verifier subagent** — get the first FAIL list; that's the actual §7 work.
+5. **Fix → re-verify → repeat until GREEN.** Then and only then is the session done.
+6. **Add `end-state.py verdict` to the pre-push hook** as a non-fatal warning, then flip to fatal once the schema is stable.
+7. **Update CLAUDE.md** with the new "End-state contract" section pointing at the schema + the verifier dispatch pattern, so every future session picks it up.
+
+### Sizing
+
+This is real work — likely 2-4 hours including the schema design, the script, the bootstrap contract for the current session's outstanding items, and the first verifier dispatch. It is also the single highest-leverage thing the next agent can ship: it converts every future session from "agent's word for it" to "verifier's verdict on artifacts." The §0.6 tools are individual checks; §0.8 is the framework that hosts them.
+
+**Owner request to the next agent**: prioritize §0.8 ABOVE §0.1-§0.5. Build the framework first, then port the §0.1-§0.5 fixes through it. That way the framework's first proof-of-life is closing the misses that motivated it.
+
 ---
 
 # HANDOVER — for the next agent picking up after the v0.11.1 sweep
