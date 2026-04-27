@@ -57,4 +57,4 @@ chrono = { workspace = true }
 # v0.11.x coverage closure: the stateless_connect e2e test drives the
 # helper binary through a real protocol-v2 turn, which requires a live
 # sim on a random port. Programmatic library API only — no extra binary.
-reposix-sim = { path = "../reposix-sim", version = "0.11.2" }
+reposix-sim = { path = "../reposix-sim", version = "0.11.3" }
