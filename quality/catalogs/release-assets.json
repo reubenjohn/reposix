@@ -1,0 +1,549 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "comment": "Quality Gates catalog — release dimension. Schema spec: quality/catalogs/README.md. Verifier impl: quality/gates/release/. Reports: quality/reports/verifications/release/.",
+  "dimension": "release",
+  "rows": [
+    {
+      "id": "install/curl-installer-sh",
+      "dimension": "release",
+      "cadence": "weekly",
+      "kind": "asset-exists",
+      "sources": [
+        "docs/index.md:42-46",
+        "docs/tutorials/first-run.md:17-21",
+        "README.md:42-44",
+        ".planning/docs_reproducible_catalog.json:install/curl-installer-sh"
+      ],
+      "command": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.sh | sh",
+      "expected": {
+        "asserts": [
+          "GET https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.sh returns HTTP 200",
+          "the response body is >= 1024 bytes and starts with '#!'"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/installer-asset-bytes.py",
+        "args": [
+          "--url",
+          "https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.sh",
+          "--min-bytes",
+          "1024",
+          "--magic",
+          "#!"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/install-curl-installer-sh.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: release.yml did not fire on the last reposix-cli-v* tag (per P56 RELEASE-01 root cause), or release-plz cut a non-cli per-crate release after the cli release moving the latest pointer (P56 SURPRISES.md row 1)",
+      "waiver": null
+    },
+    {
+      "id": "install/powershell-installer-ps1",
+      "dimension": "release",
+      "cadence": "weekly",
+      "kind": "asset-exists",
+      "sources": [
+        "docs/index.md:48-51",
+        "docs/tutorials/first-run.md:23-26",
+        "README.md:46-47",
+        ".planning/docs_reproducible_catalog.json:install/powershell-installer-ps1"
+      ],
+      "command": "powershell -ExecutionPolicy Bypass -c \"irm https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.ps1 | iex\"",
+      "expected": {
+        "asserts": [
+          "GET https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.ps1 returns HTTP 200",
+          "the response body is >= 1024 bytes"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/installer-asset-bytes.py",
+        "args": [
+          "--url",
+          "https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.ps1",
+          "--min-bytes",
+          "1024"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/install-powershell-installer-ps1.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: release.yml did not fire on the last reposix-cli-v* tag (per P56 RELEASE-01 root cause), or release-plz cut a non-cli per-crate release after the cli release moving the latest pointer (P56 SURPRISES.md row 1)",
+      "waiver": null
+    },
+    {
+      "id": "install/homebrew",
+      "dimension": "release",
+      "cadence": "weekly",
+      "kind": "asset-exists",
+      "sources": [
+        "docs/index.md:53-56",
+        "README.md:36-37",
+        ".planning/docs_reproducible_catalog.json:install/homebrew"
+      ],
+      "command": "brew install reubenjohn/reposix/reposix",
+      "expected": {
+        "asserts": [
+          "GET https://api.github.com/repos/reubenjohn/homebrew-reposix/contents/Formula/reposix.rb returns HTTP 200",
+          "the formula's `version \"X.Y.Z\"` string equals the latest reposix-cli release tag's version component"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/brew-formula-current.py",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/install-homebrew.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: .github/workflows/release.yml upload-homebrew-formula job did not fire (P56 root cause was missing tag glob), or HOMEBREW_TAP_TOKEN secret expired",
+      "waiver": null
+    },
+    {
+      "id": "install/build-from-source",
+      "dimension": "release",
+      "cadence": "weekly",
+      "kind": "mechanical",
+      "sources": [
+        "docs/index.md:111-130",
+        "README.md:74-85",
+        ".planning/docs_reproducible_catalog.json:install/build-from-source"
+      ],
+      "command": "git clone https://github.com/reubenjohn/reposix && cd reposix && cargo build --release --workspace --bins",
+      "expected": {
+        "asserts": [
+          "the most recent successful run of ci.yml on main branch's `test` job exited 0 (build-from-source is covered by the workspace cargo test build)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/installer-asset-bytes.py",
+        "args": [
+          "--ci-check",
+          "ci.yml",
+          "--branch",
+          "main"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/install-build-from-source.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: ci.yml `test` job is failing on main; investigate ci.yml workflow logs",
+      "waiver": null
+    },
+    {
+      "id": "release/crates-io-max-version/reposix-cli",
+      "dimension": "release",
+      "cadence": "weekly",
+      "kind": "mechanical",
+      "sources": [
+        "crates/reposix-cli/Cargo.toml",
+        "Cargo.toml"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "GET https://crates.io/api/v1/crates/reposix-cli returns HTTP 200",
+          "the response's `crate.max_version` field equals the workspace.package.version in Cargo.toml (e.g., '0.11.3')"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/crates-io-max-version.py",
+        "args": [
+          "--crate",
+          "reposix-cli"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/crates-io-max-version-reposix-cli.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: release-plz failed to publish reposix-cli at the workspace version; check .github/workflows/release-plz.yml run logs",
+      "waiver": null
+    },
+    {
+      "id": "release/crates-io-max-version/reposix-remote",
+      "dimension": "release",
+      "cadence": "weekly",
+      "kind": "mechanical",
+      "sources": [
+        "crates/reposix-remote/Cargo.toml",
+        "Cargo.toml"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "GET https://crates.io/api/v1/crates/reposix-remote returns HTTP 200",
+          "the response's `crate.max_version` field equals the workspace.package.version in Cargo.toml (e.g., '0.11.3')"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/crates-io-max-version.py",
+        "args": [
+          "--crate",
+          "reposix-remote"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/crates-io-max-version-reposix-remote.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: release-plz failed to publish reposix-remote at the workspace version; check .github/workflows/release-plz.yml run logs",
+      "waiver": null
+    },
+    {
+      "id": "release/crates-io-max-version/reposix-core",
+      "dimension": "release",
+      "cadence": "weekly",
+      "kind": "mechanical",
+      "sources": [
+        "crates/reposix-core/Cargo.toml",
+        "Cargo.toml"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "GET https://crates.io/api/v1/crates/reposix-core returns HTTP 200",
+          "the response's `crate.max_version` field equals the workspace.package.version in Cargo.toml (e.g., '0.11.3')"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/crates-io-max-version.py",
+        "args": [
+          "--crate",
+          "reposix-core"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/crates-io-max-version-reposix-core.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: release-plz failed to publish reposix-core at the workspace version; check .github/workflows/release-plz.yml run logs",
+      "waiver": null
+    },
+    {
+      "id": "release/crates-io-max-version/reposix-cache",
+      "dimension": "release",
+      "cadence": "weekly",
+      "kind": "mechanical",
+      "sources": [
+        "crates/reposix-cache/Cargo.toml",
+        "Cargo.toml"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "GET https://crates.io/api/v1/crates/reposix-cache returns HTTP 200",
+          "the response's `crate.max_version` field equals the workspace.package.version in Cargo.toml (e.g., '0.11.3')"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/crates-io-max-version.py",
+        "args": [
+          "--crate",
+          "reposix-cache"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/crates-io-max-version-reposix-cache.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: release-plz failed to publish reposix-cache at the workspace version; check .github/workflows/release-plz.yml run logs",
+      "waiver": null
+    },
+    {
+      "id": "release/crates-io-max-version/reposix-sim",
+      "dimension": "release",
+      "cadence": "weekly",
+      "kind": "mechanical",
+      "sources": [
+        "crates/reposix-sim/Cargo.toml",
+        "Cargo.toml"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "GET https://crates.io/api/v1/crates/reposix-sim returns HTTP 200",
+          "the response's `crate.max_version` field equals the workspace.package.version in Cargo.toml (e.g., '0.11.3')"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/crates-io-max-version.py",
+        "args": [
+          "--crate",
+          "reposix-sim"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/crates-io-max-version-reposix-sim.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: release-plz failed to publish reposix-sim at the workspace version; check .github/workflows/release-plz.yml run logs",
+      "waiver": null
+    },
+    {
+      "id": "release/crates-io-max-version/reposix-github",
+      "dimension": "release",
+      "cadence": "weekly",
+      "kind": "mechanical",
+      "sources": [
+        "crates/reposix-github/Cargo.toml",
+        "Cargo.toml"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "GET https://crates.io/api/v1/crates/reposix-github returns HTTP 200",
+          "the response's `crate.max_version` field equals the workspace.package.version in Cargo.toml (e.g., '0.11.3')"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/crates-io-max-version.py",
+        "args": [
+          "--crate",
+          "reposix-github"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/crates-io-max-version-reposix-github.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: release-plz failed to publish reposix-github at the workspace version; check .github/workflows/release-plz.yml run logs",
+      "waiver": null
+    },
+    {
+      "id": "release/crates-io-max-version/reposix-confluence",
+      "dimension": "release",
+      "cadence": "weekly",
+      "kind": "mechanical",
+      "sources": [
+        "crates/reposix-confluence/Cargo.toml",
+        "Cargo.toml"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "GET https://crates.io/api/v1/crates/reposix-confluence returns HTTP 200",
+          "the response's `crate.max_version` field equals the workspace.package.version in Cargo.toml (e.g., '0.11.3')"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/crates-io-max-version.py",
+        "args": [
+          "--crate",
+          "reposix-confluence"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/crates-io-max-version-reposix-confluence.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: release-plz failed to publish reposix-confluence at the workspace version; check .github/workflows/release-plz.yml run logs",
+      "waiver": null
+    },
+    {
+      "id": "release/crates-io-max-version/reposix-jira",
+      "dimension": "release",
+      "cadence": "weekly",
+      "kind": "mechanical",
+      "sources": [
+        "crates/reposix-jira/Cargo.toml",
+        "Cargo.toml"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "GET https://crates.io/api/v1/crates/reposix-jira returns HTTP 200",
+          "the response's `crate.max_version` field equals the workspace.package.version in Cargo.toml (e.g., '0.11.3')"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/crates-io-max-version.py",
+        "args": [
+          "--crate",
+          "reposix-jira"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/crates-io-max-version-reposix-jira.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: release-plz failed to publish reposix-jira at the workspace version; check .github/workflows/release-plz.yml run logs",
+      "waiver": null
+    },
+    {
+      "id": "release/crates-io-max-version/reposix-swarm",
+      "dimension": "release",
+      "cadence": "weekly",
+      "kind": "mechanical",
+      "sources": [
+        "crates/reposix-swarm/Cargo.toml",
+        "Cargo.toml"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "GET https://crates.io/api/v1/crates/reposix-swarm returns HTTP 200",
+          "the response's `crate.max_version` field equals the workspace.package.version in Cargo.toml (e.g., '0.11.3')"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/crates-io-max-version.py",
+        "args": [
+          "--crate",
+          "reposix-swarm"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/crates-io-max-version-reposix-swarm.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: release-plz failed to publish reposix-swarm at the workspace version; check .github/workflows/release-plz.yml run logs",
+      "waiver": null
+    },
+    {
+      "id": "release/gh-assets-present",
+      "dimension": "release",
+      "cadence": "weekly",
+      "kind": "asset-exists",
+      "sources": [
+        ".github/workflows/release.yml",
+        ".planning/docs_reproducible_catalog.json:install/curl-installer-sh"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "GET https://api.github.com/repos/reubenjohn/reposix/releases/latest returns HTTP 200",
+          "the response's `assets` array has length >= 7 (5 platform archives + 2 installers; SHA256SUMS is bonus)",
+          "every asset's `state` is 'uploaded'"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/gh-assets-present.py",
+        "args": [
+          "--repo",
+          "reubenjohn/reposix",
+          "--tag",
+          "latest",
+          "--min-assets",
+          "7"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/gh-assets-present.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: release.yml did not fire on the last reposix-cli-v* tag (P56 SURPRISES.md row 2: GITHUB_TOKEN-tag-push exemption; recovery via `gh workflow run release.yml --ref reposix-cli-vX.Y.Z`)",
+      "waiver": null
+    },
+    {
+      "id": "release/brew-formula-current",
+      "dimension": "release",
+      "cadence": "weekly",
+      "kind": "mechanical",
+      "sources": [
+        "docs/index.md:53-56",
+        "README.md:36-37",
+        "https://github.com/reubenjohn/homebrew-reposix"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "GET https://api.github.com/repos/reubenjohn/homebrew-reposix/contents/Formula/reposix.rb returns HTTP 200",
+          "decoding the base64 `content` field and parsing for `version \"X.Y.Z\"` yields a string equal to the crates.io max_version of reposix-cli"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/brew-formula-current.py",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/brew-formula-current.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: release.yml upload-homebrew-formula job did not run (HOMEBREW_TAP_TOKEN missing or expired), or release-plz published a per-crate release between cli releases (P56 SURPRISES.md row 1 latest-pointer drift)",
+      "waiver": null
+    },
+    {
+      "id": "release/cargo-binstall-resolves",
+      "dimension": "release",
+      "cadence": "post-release",
+      "kind": "container",
+      "sources": [
+        "crates/reposix-cli/Cargo.toml:[package.metadata.binstall]",
+        "crates/reposix-remote/Cargo.toml:[package.metadata.binstall]",
+        ".planning/docs_reproducible_catalog.json:install/cargo-binstall"
+      ],
+      "command": "cargo binstall --no-confirm reposix-cli reposix-remote",
+      "expected": {
+        "asserts": [
+          "in a fresh rust:1.82-slim container with cargo-binstall installed, `cargo binstall --no-confirm --dry-run reposix-cli` resolves to a prebuilt GitHub Release binary (greppable URL match against github.com/reubenjohn/reposix/releases/download/...)",
+          "PARTIAL acceptable per P56 SURPRISES.md row 3: binstall metadata mismatch tracked under MIGRATE-03 v0.12.1 (~10 LOC fix); PARTIAL is the documented expected state until v0.12.1"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/release/cargo-binstall-resolves.py",
+        "args": [
+          "--crate",
+          "reposix-cli"
+        ],
+        "timeout_s": 600,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/release/cargo-binstall-resolves.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED (not PARTIAL): the binstall metadata regressed further OR the prebuilt binary is missing — check release.yml asset list AND crates/reposix-cli/Cargo.toml [package.metadata.binstall]",
+      "waiver": null
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "comment": "Quality Gates catalog — code dimension. Schema spec: quality/catalogs/README.md. Verifier impl: quality/gates/code/. Reports: quality/reports/verifications/code/.",
+  "dimension": "code",
+  "rows": [
+    {
+      "id": "code/clippy-lint-loaded",
+      "dimension": "code",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [
+        "clippy.toml",
+        "scripts/check_clippy_lint_loaded.sh",
+        "crates/reposix-core/src/http.rs"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "clippy.toml exists at workspace root",
+          "clippy.toml lists each of: reqwest::Client::new, reqwest::Client::builder, reqwest::ClientBuilder::new under [disallowed-methods]",
+          "no source file outside crates/reposix-core/src/http.rs constructs reqwest::Client / reqwest::ClientBuilder directly",
+          "cargo clippy --workspace --all-targets -- -D warnings exits 0"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/code/clippy-lint-loaded.sh",
+        "args": [],
+        "timeout_s": 300,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/code/clippy-lint-loaded.json",
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T20:55:02Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: clippy.toml is missing or has been edited to drop a reqwest entry; OR a new file constructs reqwest::Client directly outside http.rs (security regression — see CLAUDE.md threat-model § 'Outbound HTTP allowlist')",
+      "waiver": {
+        "until": "2026-05-11T00:00:00Z",
+        "reason": "Wave A landed the catalog row before Wave C ships quality/gates/code/clippy-lint-loaded.sh (the thin wrapper around the existing scripts/check_clippy_lint_loaded.sh). Without this short-lived waiver the runner reports NOT-VERIFIED for a P1 pre-push row and pushes break. Wave C removes this waiver and flips to active enforcement. Rule 3 deviation; recorded in 58-01-SUMMARY.md.",
+        "dimension_owner": "v0.12.0 P58 Wave C executor",
+        "tracked_in": "P58 Wave C (58-03)"
+      }
+    },
+    {
+      "id": "code/cargo-test-pass",
+      "dimension": "code",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "sources": [
+        ".github/workflows/ci.yml:test"
+      ],
+      "command": "cargo test --workspace --locked",
+      "expected": {
+        "asserts": [
+          "the most recent ci.yml `test` job for the current branch exited 0",
+          "POLISH-CODE P58-stub: this row documents what ci.yml ALREADY enforces; full per-row enforcement is P63 final"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/code/ci-job-status.sh",
+        "args": [
+          "--workflow",
+          "ci.yml",
+          "--job",
+          "test"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/code/cargo-test-pass.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: ci.yml `test` job is failing — investigate workflow logs at gh run view <run-id>",
+      "waiver": {
+        "until": "2026-07-26T00:00:00Z",
+        "reason": "POLISH-CODE P58-stub: this row documents ci.yml's existing enforcement; the verifier wrapper is a thin shim. Full per-row enforcement (running cargo test from this verifier) is deferred to P63 final per .planning/REQUIREMENTS.md § POLISH-CODE.",
+        "dimension_owner": "v0.12.0 P63 code dimension owner",
+        "tracked_in": "POLISH-CODE P63 final"
+      }
+    },
+    {
+      "id": "code/cargo-fmt-clean",
+      "dimension": "code",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "sources": [
+        ".github/workflows/ci.yml:fmt"
+      ],
+      "command": "cargo fmt --all -- --check",
+      "expected": {
+        "asserts": [
+          "the most recent ci.yml `fmt` job for the current branch exited 0",
+          "POLISH-CODE P58-stub: this row documents what ci.yml ALREADY enforces; full per-row enforcement is P63 final"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/code/ci-job-status.sh",
+        "args": [
+          "--workflow",
+          "ci.yml",
+          "--job",
+          "rustfmt"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/code/cargo-fmt-clean.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: cargo fmt regressed; run cargo fmt --all locally",
+      "waiver": {
+        "until": "2026-07-26T00:00:00Z",
+        "reason": "POLISH-CODE P58-stub: this row documents ci.yml's existing enforcement; the verifier wrapper is a thin shim. Full per-row enforcement (running cargo fmt from this verifier) is deferred to P63 final per .planning/REQUIREMENTS.md § POLISH-CODE.",
+        "dimension_owner": "v0.12.0 P63 code dimension owner",
+        "tracked_in": "POLISH-CODE P63 final"
+      }
+    }
+  ]
+}

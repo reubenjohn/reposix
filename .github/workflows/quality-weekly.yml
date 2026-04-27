@@ -1,0 +1,47 @@
+name: quality-weekly
+
+on:
+  schedule:
+    # Cost-conscious weekly cron per owner directive (NOT nightly).
+    # Monday 09:00 UTC = catches drift before week-of-work begins.
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write   # so the run can open a tracking issue if RED
+
+concurrency:
+  group: quality-weekly
+  cancel-in-progress: false
+
+jobs:
+  weekly-gates:
+    name: weekly gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run weekly cadence gates
+        run: python3 quality/runners/run.py --cadence weekly
+
+      - name: Generate verdict
+        if: always()
+        run: python3 quality/runners/verdict.py --cadence weekly
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-weekly-${{ github.run_id }}
+          path: |
+            quality/reports/verifications/
+            quality/reports/verdicts/weekly/
+            quality/reports/badge.json
+          retention-days: 90

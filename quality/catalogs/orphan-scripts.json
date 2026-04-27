@@ -24,7 +24,7 @@
       "last_verified": null,
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "P58 SIMPLIFY-04/05 ships the migrated check at quality/gates/release/crates-io-max-version.py; until then this row documents the temporary coverage gap",
+      "owner_hint": "P58 Wave A: catalog rows release/crates-io-max-version/<crate> for 9 crates anchored in quality/catalogs/release-assets.json. Wave B ships quality/gates/release/crates-io-max-version.py (the verifier). Wave E flips this waiver to resolved + removes this orphan-scripts row. The 9 crates-io max-version checks now live in release-assets.json and supersede this temporary documentation.",
       "waiver": {
         "until": "2026-05-15T00:00:00Z",
         "reason": "W-2 plan-check fix: parallel-migration parity is documentary, not behavioral; the crates.io max-version check is currently in scripts/end-state.py and will move to release-dim in P58 (SIMPLIFY-04/05). Documents the temporary coverage gap so the verifier subagent knows the regression class is still gated.",

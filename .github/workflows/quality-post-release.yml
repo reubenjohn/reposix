@@ -1,0 +1,55 @@
+name: quality-post-release
+
+on:
+  workflow_run:
+    workflows: ["release"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-post-release-${{ github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  post-release-gates:
+    name: post-release gates
+    # Only run if the release workflow succeeded.
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Rust (for cargo-binstall rehearsal)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-binstall
+        run: |
+          curl -L --proto '=https' --tlsv1.2 -sSf \
+            https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+
+      - name: Run post-release cadence gates
+        run: python3 quality/runners/run.py --cadence post-release
+
+      - name: Generate verdict
+        if: always()
+        run: python3 quality/runners/verdict.py --cadence post-release
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-post-release-${{ github.run_id }}
+          path: |
+            quality/reports/verifications/
+            quality/reports/verdicts/post-release/
+            quality/reports/badge.json
+          retention-days: 180
