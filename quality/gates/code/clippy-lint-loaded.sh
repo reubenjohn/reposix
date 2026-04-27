@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
+# Quality Gates verifier — code/clippy-lint-loaded
+#
+# Migrated from scripts/check_clippy_lint_loaded.sh per SIMPLIFY-04 (P58).
+# This is now the canonical home for the check; the old path is deleted
+# (no script callers — only documentation references).
+#
 # FIX 3 from plan-checker: prove clippy.toml is actually loaded by clippy.
 #
-# Strategy: we assert three things in sequence:
+# Strategy: we assert four things in sequence:
 #   1. clippy.toml exists at the workspace root.
 #   2. clippy.toml lists each of the three banned reqwest constructors.
 #   3. No source file outside crates/reposix-core/src/http.rs constructs a
@@ -12,7 +18,7 @@
 
 set -euo pipefail
 
-cd "$(git rev-parse --show-toplevel 2>/dev/null || dirname "$(dirname "$(realpath "$0")")")"
+cd "$(git rev-parse --show-toplevel 2>/dev/null || dirname "$(dirname "$(dirname "$(realpath "$0")")")")"
 
 test -f clippy.toml || { echo "clippy.toml missing"; exit 1; }
 grep -q 'reqwest::Client::new'        clippy.toml || { echo "clippy.toml missing reqwest::Client::new"; exit 1; }

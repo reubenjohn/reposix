@@ -10,7 +10,7 @@
       "kind": "mechanical",
       "sources": [
         "clippy.toml",
-        "scripts/check_clippy_lint_loaded.sh",
+        "scripts/check_clippy_lint_loaded.sh (migrated to quality/gates/code/clippy-lint-loaded.sh per SIMPLIFY-04 P58 Wave C)",
         "crates/reposix-core/src/http.rs"
       ],
       "command": null,
@@ -29,17 +29,12 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/code/clippy-lint-loaded.json",
-      "status": "WAIVED",
-      "last_verified": "2026-04-27T20:55:02Z",
+      "status": "PASS",
+      "last_verified": "2026-04-27T21:07:53Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: clippy.toml is missing or has been edited to drop a reqwest entry; OR a new file constructs reqwest::Client directly outside http.rs (security regression — see CLAUDE.md threat-model § 'Outbound HTTP allowlist')",
-      "waiver": {
-        "until": "2026-05-11T00:00:00Z",
-        "reason": "Wave A landed the catalog row before Wave C ships quality/gates/code/clippy-lint-loaded.sh (the thin wrapper around the existing scripts/check_clippy_lint_loaded.sh). Without this short-lived waiver the runner reports NOT-VERIFIED for a P1 pre-push row and pushes break. Wave C removes this waiver and flips to active enforcement. Rule 3 deviation; recorded in 58-01-SUMMARY.md.",
-        "dimension_owner": "v0.12.0 P58 Wave C executor",
-        "tracked_in": "P58 Wave C (58-03)"
-      }
+      "waiver": null
     },
     {
       "id": "code/cargo-test-pass",
@@ -118,6 +113,39 @@
         "dimension_owner": "v0.12.0 P63 code dimension owner",
         "tracked_in": "POLISH-CODE P63 final"
       }
+    },
+    {
+      "id": "code/fixtures-valid",
+      "dimension": "code",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [
+        "benchmarks/fixtures/github_issues.json",
+        "benchmarks/fixtures/confluence_pages.json",
+        "benchmarks/fixtures/README.md",
+        "scripts/check_fixtures.py (migrated to quality/gates/code/check-fixtures.py per SIMPLIFY-05 P58 Wave C, Option A)"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "github_issues.json: 4-12 KB JSON array, >=3 issues, required keys present, no credential-shaped strings",
+          "confluence_pages.json: 6-16 KB JSON object with results[], >=3 pages, ADF body re-parseable, no secrets/PII",
+          "fixtures/README.md: contains required terms (offline, content_hash, github_issues.json, confluence_pages.json, synthetic)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/code/check-fixtures.py",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/code/fixtures-valid.json",
+      "status": "PASS",
+      "last_verified": "2026-04-27T21:14:56Z",
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: a benchmark fixture file has been edited (added secrets, dropped required keys, drifted size). Investigate via `python3 quality/gates/code/check-fixtures.py` locally; do NOT silence.",
+      "waiver": null
     }
   ]
 }
