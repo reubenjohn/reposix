@@ -65,7 +65,7 @@ jobs:
       - name: Install runtime tooling
         run: sudo apt-get update && sudo apt-get install -y jq sqlite3
       - name: Run dark-factory test (sim backend)
-        run: bash scripts/dark-factory-test.sh sim
+        run: bash quality/gates/agent-ux/dark-factory.sh sim
 
   integration-contract:
     # Hits real GitHub (octocat/Hello-World) with the contract test helper.

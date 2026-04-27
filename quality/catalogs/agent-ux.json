@@ -23,13 +23,15 @@
       },
       "verifier": {
         "script": "quality/gates/agent-ux/dark-factory.sh",
-        "args": ["sim"],
+        "args": [
+          "sim"
+        ],
         "timeout_s": 120,
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/dark-factory-sim.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-04-27T22:27:49Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: scripts/dark-factory-test.sh (pre-migration) or quality/gates/agent-ux/dark-factory.sh (post-migration) finds the helper teaching strings missing -- inspect helper export-path / fetch-blob-limit code",
