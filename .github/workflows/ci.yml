@@ -237,7 +237,7 @@ jobs:
             allowed="${allowed},https://${REPOSIX_JIRA_INSTANCE}.atlassian.net"
           fi
           export REPOSIX_ALLOWED_ORIGINS="$allowed"
-          bash scripts/latency-bench.sh
+          bash quality/gates/perf/latency-bench.sh
       - name: Upload regenerated latency table
         if: always()
         uses: actions/upload-artifact@v4

@@ -22,13 +22,15 @@
       },
       "verifier": {
         "script": "quality/gates/perf/latency-bench.sh",
-        "args": ["sim"],
+        "args": [
+          "sim"
+        ],
         "timeout_s": 300,
         "container": null
       },
       "artifact": "quality/reports/verifications/perf/latency-bench.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T22:31:53Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: scripts/latency-bench.sh has not yet been migrated to quality/gates/perf/ (Wave E ships the move); WAIVED until 2026-07-26",
@@ -48,23 +50,23 @@
         "scripts/bench_token_economy.py",
         "scripts/test_bench_token_economy.py"
       ],
-      "command": "python3 quality/gates/perf/bench-token-economy.py",
+      "command": "python3 quality/gates/perf/bench_token_economy.py",
       "expected": {
         "asserts": [
-          "python3 quality/gates/perf/bench-token-economy.py exits 0",
+          "python3 quality/gates/perf/bench_token_economy.py exits 0",
           "the bench output is greppable from docs/benchmarks/token-economy.md",
           "[v0.12.1] the headline 89.1% in docs/index.md + README.md matches the bench output"
         ]
       },
       "verifier": {
-        "script": "quality/gates/perf/bench-token-economy.py",
+        "script": "quality/gates/perf/bench_token_economy.py",
         "args": [],
         "timeout_s": 120,
         "container": null
       },
       "artifact": "quality/reports/verifications/perf/token-economy-bench.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T22:31:53Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: scripts/bench_token_economy.py has not yet been migrated to quality/gates/perf/ (Wave E ships the move); WAIVED until 2026-07-26",
@@ -100,8 +102,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/perf/headline-numbers-cross-check.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T22:31:53Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: full v0.12.1 implementation; the verifier compares headline numbers in docs/index.md + README.md against benchmark fixture files -- WAIVED until 2026-07-26",

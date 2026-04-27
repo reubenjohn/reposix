@@ -1,8 +1,11 @@
-"""Tests for scripts/bench_token_economy.py.
+"""quality/gates/perf/test_bench_token_economy.py -- perf dimension bench tests.
 
-Run: python3 -m pytest scripts/test_bench_token_economy.py -x -q
+MIGRATED FROM: scripts/test_bench_token_economy.py per SIMPLIFY-11 (P59) -- file move only.
+SIBLING:       quality/gates/perf/bench_token_economy.py (production module)
 
-All tests run offline — no anthropic package required.
+Run: python3 -m pytest quality/gates/perf/test_bench_token_economy.py -x -q
+
+All tests run offline -- no anthropic package required.
 The counter= keyword arg in get_or_count() is used for stub injection.
 """
 from __future__ import annotations
