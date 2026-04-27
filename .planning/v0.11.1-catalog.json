@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-27T02:55:36Z",
+  "generated_at": "2026-04-27T03:01:28Z",
   "schema_version": 1,
   "files": [
     {
@@ -881,11 +881,11 @@
     },
     {
       "path": "crates/reposix-cache/Cargo.toml",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-01 ext \u2014 version field on cross-crate path-deps",
+      "updated_at": "2026-04-27T03:01:23Z"
     },
     {
       "path": "crates/reposix-cache/fixtures/cache_schema.sql",
@@ -1113,11 +1113,11 @@
     },
     {
       "path": "crates/reposix-cli/Cargo.toml",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-01 ext \u2014 version field on cross-crate path-deps",
+      "updated_at": "2026-04-27T03:01:26Z"
     },
     {
       "path": "crates/reposix-cli/src/binpath.rs",
@@ -1621,8 +1621,8 @@
       "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "POLISH2-12 \u2014 dropped 3 unused deps (serde, serde_yaml, clap); kept serde_json \u2014 used in integration tests",
-      "updated_at": "2026-04-26T19:30:42Z"
+      "note": "POLISH2-01 ext \u2014 version field on cross-crate path-deps",
+      "updated_at": "2026-04-27T03:01:27Z"
     },
     {
       "path": "crates/reposix-remote/src/backend_dispatch.rs",
@@ -1837,11 +1837,11 @@
     },
     {
       "path": "crates/reposix-swarm/Cargo.toml",
-      "status": "KEEP",
+      "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "",
-      "updated_at": "2026-04-26T18:51:42Z"
+      "note": "POLISH2-01 ext \u2014 version field on cross-crate path-deps",
+      "updated_at": "2026-04-27T03:01:28Z"
     },
     {
       "path": "crates/reposix-swarm/src/confluence_direct.rs",
