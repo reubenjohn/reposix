@@ -2,20 +2,29 @@
 
 You are taking over an autonomous engineering session for the reposix project (`https://github.com/reubenjohn/reposix`). The owner (`reubenjohn` / `reubenvjohn@gmail.com`) is offline. **Do not block on user input. Decide, ship, push.**
 
-## Start here — do these in order before anything else
+## Start here — gather actual state before believing anything in this file
 
-1. `cd /home/reuben/workspace/reposix`
-2. Read this whole file. It is your work queue.
-3. Read `CLAUDE.md` — the **"Build memory budget"** section is load-bearing (the VM has crashed twice from parallel cargo).
-4. `gh run list --branch main --limit 5 --json status,conclusion,name,headSha` — **CI on HEAD `12c2ec1` is RED** (delta_sync test failures). See §3a.
-5. `gh pr view 20 --json mergeStateStatus,statusCheckRollup` — release-plz auto-PR for v0.11.1 is open and needs attention before publish can complete. See §3b.
-6. `python3 scripts/catalog.py render` — refresh the JSON-backed catalog after touching anything.
+This file contains a snapshot taken at write time. Re-derive every state fact with these commands and trust the output, not the prose:
 
-Then execute §7 of THIS file in order. Total estimate: ~3 hours of focused work — most v0.11.1 scope is already shipped.
+```bash
+cd /home/reuben/workspace/reposix
+git log --oneline -5 origin/main
+gh run list --branch main --limit 5 --json status,conclusion,workflowName,headSha
+gh pr list -R reubenjohn/reposix --state open --json number,title,headRefName
+for c in reposix-core reposix-cache reposix-sim reposix-github reposix-confluence reposix-jira reposix-remote reposix-cli; do
+  v=$(curl -s "https://crates.io/api/v1/crates/$c" | grep -o '"max_version":"[^"]*"' | head -1 | sed 's/.*://;s/"//g')
+  printf "  %-25s %s\n" "$c" "${v:-MISSING}"
+done
+python3 scripts/catalog.py render
+```
+
+Then read CLAUDE.md (the **"Build memory budget"** section is load-bearing — the VM has crashed twice from parallel cargo). Then execute §7 of THIS file top-to-bottom.
+
+**Staleness anchor.** If `git log -1 --format=%H` does NOT equal `d10c1d8fefc91ac330869a38c29f463504e98aea`, this file is at least one commit stale — re-run the state-gather block above and TREAT §10 ASSERTIONS AS HISTORICAL ONLY. Nothing in this file overrides the live commands.
 
 ## Deadline — 2026-04-28 01:00 local (≈4-5 hours from handoff)
 
-Pace against §7. §0 quality items + the last `reposix-cli` publish are P0. When queue is empty, expand into §6 backlog or pause cleanly.
+Pace against §7. When queue is empty, expand into §6 backlog or pause cleanly.
 
 ## Non-negotiable rules
 
@@ -25,23 +34,44 @@ Pace against §7. §0 quality items + the last `reposix-cli` publish are P0. Whe
 - **No skill changes.** `.claude/skills/` is owner-approval-gated.
 - **One cargo invocation at a time, ever.** `cargo check -p <crate>`, never `--workspace`. CLAUDE.md "Build memory budget" explains why. If a subagent does cargo work, it has the lock.
 - **Push frequently** (every commit). Pre-push hook runs fmt + clippy + `scripts/check-docs-site.sh` + the banned-words linter — let it gate. Don't `--no-verify`.
-- **Never delegate `gh pr checkout` to a bash subagent without isolating the working tree.** It switches the coordinator's branch behind your back. Use `EnterWorktree` or have the subagent cd to `/tmp/<branch>-checkout`. Lesson learned at commit `5a91ae2` (cherry-pick mess).
+- **Never delegate `gh pr checkout` to a bash subagent without isolating the working tree.** It switches the coordinator's branch behind your back. Use a worktree (e.g. `git worktree add /tmp/pr-N` then have the subagent cd there) or have the subagent operate in `/tmp/<branch>-checkout`. Lesson learned at commit `5a91ae2` (cherry-pick mess).
 - **No retrospective / walkthrough / morning-brief docs.** This file is operational; delete it once §7 is done. Owner explicitly does not want session-recap files.
-- **Banned word: `replace`.** Use `complement` / `alongside` / `for the 80%` / `migrate to`. The pre-push hook enforces it.
+- **Banned word: `replace`.** Use `migrate to` / `for the 80%` / `rewrite as` / `complement` / `alongside`. The pre-push hook enforces it.
 
 ## Subagent dispatch cookbook
 
-Same as previous handover: brief in ≤200 words → dispatch via `Agent` (subagent_type: `general-purpose`) → read the report not the transcript → update §7 status → next.
+Brief in ≤200 words → dispatch via `Agent` (subagent_type: `general-purpose`) → read the report not the transcript → update §7 status → next.
 
 **Parallelizable**: doc edits in disjoint subdirs, audits, playwright walks.
 **Serialize**: anything that compiles (cargo / Cargo.toml / Cargo.lock).
+
+**Worked example — playwright walk of how-it-works pages (for §0.1 / §7-row3):**
+
+```
+Agent prompt (≤200 words):
+  Goal: walk every page under /how-it-works/ on the live mkdocs site and verify
+  every <pre.mermaid> block has at least one <svg> child rendered.
+  Steps:
+    1. cd /home/reuben/workspace/reposix
+    2. Start `mkdocs serve -a 127.0.0.1:8765` in background; wait until it serves /.
+    3. For each file under docs/how-it-works/*.md, derive the URL slug,
+       call mcp__playwright__browser_navigate, then mcp__playwright__browser_run_code
+       with: `document.querySelectorAll('pre.mermaid').length` and
+       `Array.from(document.querySelectorAll('pre.mermaid')).map(p => p.querySelectorAll('svg').length)`.
+    4. For pages with mermaid_count > 0 and any svg_count == 0, capture
+       browser_console_messages and a screenshot.
+    5. Write per-page JSON to .planning/verifications/playwright/how-it-works/<slug>.json
+       with fields: {nav_path, mermaid_count, svg_counts, console_errors, snapshot_path, captured_at_utc}.
+    6. Stop mkdocs serve.
+  Report: list of FAIL pages with one-line diagnosis each.
+```
 
 ## When the queue is empty
 
 - Update or delete this file. Don't append "I did X" entries.
 - Update `.planning/STATE.md` with the new cursor.
 - Commit + push.
-- If CI is green, release-plz published all 9 crates, dependabot inbox empty: stop.
+- If CI is green, all 8 crates are at the latest workspace version on crates.io, dependabot inbox empty: stop.
 
 **Go.**
 
@@ -49,111 +79,127 @@ Same as previous handover: brief in ≤200 words → dispatch via `Agent` (subag
 
 # §0. CRITICAL OWNER FEEDBACK — added 2026-04-27 PM (read before §1)
 
-Owner caught FIVE quality issues at end-of-session that the previous agent (me) failed to catch. **Promote these to P0 in §7. The previous §7-A through §7-G are still valid but PUSH AFTER §0 work lands.**
+## EXECUTION ORDER (non-negotiable)
+
+1. **§0.7** — patch CLAUDE.md (the instructions layer).
+2. **§0.8** — build the SESSION-END-STATE framework (the verifier layer).
+3. **§0.6** — superseded; the §0.8 verifier subsumes the six tools. SKIP unless §0.8 is descoped.
+4. **§0.1–§0.5** — let the §0.8 framework's verdict drive these as FAIL rows; do NOT hand-fix them ahead of the framework.
+5. **§3a → §3b → §7-A..G** — the original v0.11.1/v0.11.2 finish.
+
+If you run out of time mid-queue, the FLOOR is: keep CI green, keep the latest workspace-version crates published, keep `.planning/STATE.md` and HANDOVER.md current. Everything else is gravy. The full decision tree lives at the top of §7.
+
+---
 
 ## 0.1 Mermaid renders are broken on some `docs/how-it-works/` pages
 
 **Owner verbatim**: *"the mkdocs site is not rendering mermaid on a few how it works pages. Did you use playwright or set up UI tests? I've caught this issue multiple times."*
 
-**Self-critique**: I claimed playwright validation per CLAUDE.md "Docs-site validation" rule, but only ran playwright on the **hero page** during §7-D. The CLAUDE.md rule explicitly says playwright validation is required *for any docs-site change*; I scoped it to one page. Mermaid changes elsewhere (POLISH2-22 trust-model.md update, POLISH2-08 capability matrix table) shipped without playwright verification. Mermaid render bugs leak silently — `mkdocs build --strict` does NOT catch them (we only test for `Syntax error in text` strings, not actual SVG existence).
+**Friction**: Previous session shipped POLISH2-22 mermaid edits with playwright validation scoped to a single hero page; `mkdocs build --strict` does not fail on broken SVGs.
 
-**Fix path**:
-1. Walk every `docs/how-it-works/*.md` page with playwright (`mcp__playwright__browser_navigate` + `browser_snapshot` + `browser_console_messages`). Identify which pages are rendering broken.
-2. Diagnose the breakage. Likely candidates: a `<br/>` literal that escaped, a `{id}` template var that became HTML, a `pymdownx.emoji` interaction, a `pymdownx.superfences` config drift after the rusqlite bump churned Cargo.lock.
-3. Add a `scripts/check-mermaid-renders.sh` that loops over EVERY mkdocs page (not just how-it-works) via `mcp__playwright__browser_run_code` and asserts each `<pre.mermaid>` element has at least one `<svg>` child. Wire into pre-push.
+**Fix path** (executed THROUGH §0.8 framework — write the FAIL rows first, then close):
+1. Walk every `docs/how-it-works/*.md` page with playwright (`mcp__playwright__browser_navigate` + `browser_snapshot` + `browser_console_messages`). Identify pages whose `<pre.mermaid>` blocks have zero `<svg>` children.
+2. Diagnose. Likely candidates: a `<br/>` literal that escaped, a `{id}` template var that became HTML, a `pymdownx.emoji` interaction, a `pymdownx.superfences` config drift after the rusqlite bump churned Cargo.lock.
+3. Add `scripts/check-mermaid-renders.sh` that loops over EVERY mkdocs page (not just how-it-works) and asserts each `<pre.mermaid>` element has at least one `<svg>` child. Wire into pre-push.
+
+**Verify**: `bash scripts/check-mermaid-renders.sh` exits 0 AND `.planning/verifications/playwright/how-it-works/*.json` has one file per `docs/how-it-works/*.md` with `svg_counts` showing no zeros.
 
 ## 0.2 Install instructions on home page lead with source-compile, not package manager
 
 **Owner verbatim**: *"now that we have crates, we should continue to have Six-line quickstart instructions to compile from source but shouldn't the more prominent instructions like the ones on home page be to install using a popular package manager with links for other ways of installation?"*
 
-**Self-critique**: hero rewrite (§7-D commit `96d255a`) put a "30-second install band" with curl/PowerShell/brew/binstall but ALSO kept the "Six-line quickstart" prominently. After the v0.11.1 publish lands, source-compile should DEMOTE to a footer link or "Build from source" sub-section — most users want `brew install reubenjohn/reposix/reposix` or `cargo binstall reposix-cli`.
+**Friction**: Hero on `docs/index.md` keeps the source-compile six-line prominent even though all 8 crates are now on crates.io.
 
 **Fix path**:
-1. After §3b unblocks (all 9 crates on crates.io + homebrew formula bumped), reorder `docs/index.md` hero: package-manager install band PROMINENT (3 cards: brew / binstall / curl|sh), source-compile six-line as a `<details>` collapsible "Build from source".
+1. After all 8 crates at the latest workspace version are confirmed live (re-run the state-gather block at the top), reorder `docs/index.md` hero: package-manager install band PROMINENT (3 cards: brew / binstall / curl|sh), source-compile six-line as a `<details>` collapsible "Build from source".
 2. Same edit on `README.md` if it's similarly source-first.
 3. Validate via playwright per §0.1 mitigation.
+
+**Verify**: `grep -A 30 '^# ' docs/index.md | head -40` — first install snippet uses `brew install` or `cargo binstall`, NOT `git clone`.
 
 ## 0.3 Version-pinned filename: `docs/benchmarks/v0.9.0-latency.md`
 
 **Owner verbatim**: *"is it intentional?: The latency page shows under v0.9.0. Why name the page 0.9.0?"*
 
-**Self-critique**: `repo-org-gaps.md` rec #8 explicitly flagged this: *"Rename to `scripts/latency-bench.sh` + `docs/benchmarks/latency.md` with a `last_measured_at` frontmatter field."* I deferred it during §7 ("waits for v0.12.0 first regen"). That's wrong — version-pinning the filename means the doc looks stale-by-construction. The page is about CURRENT latency, not v0.9.0-historical-latency.
+**Friction**: `repo-org-gaps.md` rec #8 flagged this; it was deferred. The page is about CURRENT latency, not v0.9.0-historical.
 
 **Fix path**:
 1. `git mv docs/benchmarks/v0.9.0-latency.md docs/benchmarks/latency.md`.
-2. `git mv scripts/v0.9.0-latency.sh scripts/latency-bench.sh` (update internal SCRIPT_NAME refs).
+2. `git mv scripts/v0.9.0-latency.sh scripts/latency-bench.sh` (update internal `SCRIPT_NAME` refs).
 3. Add `last_measured_at: <RFC3339>` frontmatter field; bench-cron writes it.
 4. Update every cross-ref (`README.md`, `docs/index.md`, `mkdocs.yml` nav, `bench-latency-cron.yml`, `ci.yml`).
 5. mkdocs `redirect` plugin entry from old path → new path so external links don't 404.
 6. Validate playwright.
 
+**Verify**: `find docs scripts -type f | grep -E 'v[0-9]+\.[0-9]+\.[0-9]+' | grep -v CHANGELOG` returns nothing AND `bash scripts/check-docs-site.sh` is green.
+
 ## 0.4 Token economy benchmark `benchmarks/RESULTS.md` not in mkdocs nav
 
 **Owner verbatim**: *"shouldn't the token economy benchmark also be part of the mkdocs site?"*
 
-**Self-critique**: The hero (commit `96d255a`) cites `https://github.com/reubenjohn/reposix/blob/main/benchmarks/RESULTS.md` as an absolute github URL — bypassing mkdocs entirely. The token-economy result IS the headline number (89.1%) and absolutely belongs in the docs site under `Benchmarks → Token economy`.
+**Friction**: Hero cites `https://github.com/reubenjohn/reposix/blob/main/benchmarks/RESULTS.md` as an absolute github URL, bypassing mkdocs entirely; the 89.1% headline number lives outside the site.
 
 **Fix path**:
 1. Move or symlink `benchmarks/RESULTS.md` → `docs/benchmarks/token-economy.md`.
 2. Add to `mkdocs.yml` nav under the existing `Benchmarks` section, next to `latency.md` (post-§0.3 rename).
 3. Update the hero (`docs/index.md`) cite from absolute github URL to relative `benchmarks/token-economy.md`.
-4. Same for any other inbound links (search `git grep -l "benchmarks/RESULTS"`).
+4. Same for any other inbound links (`git grep -l 'benchmarks/RESULTS'`).
 5. Validate playwright.
+
+**Verify**: `git grep -l 'benchmarks/RESULTS' -- ':!HANDOVER.md'` returns empty AND `grep -c 'token-economy' mkdocs.yml` is ≥ 1.
 
 ## 0.5 GSD planning org: `.planning/milestones/v0.X.0-ROADMAP.md` lives at wrong level
 
 **Owner verbatim**: *"why is .planning/milestones/v0.10.0-ROADMAP.md not in .planning/milestones/v0.10.0-phases? What is the proper gsd organization?"*
 
-**Self-critique**: `repo-org-gaps.md` flagged this: *".planning/milestones/v0.10.0-ROADMAP.md (4.5 KB) and v0.9.0-ROADMAP.md + v0.8.0-ROADMAP.md + v0.8.0-REQUIREMENTS.md are loose milestone docs. CONDENSE into the per-milestone ARCHIVE.md above (or move to .planning/archive/milestones/)."* I missed it during §7-F1 / POLISH2-21. The proper GSD organization is one of:
+**Friction**: `repo-org-gaps.md` flagged this; loose `v0.X.0-{ROADMAP,REQUIREMENTS}.md` sit alongside the per-milestone `*-phases/` dirs instead of inside or in `.planning/archive/`.
+
+**Fix path**: pick one option, apply uniformly to v0.8 / v0.9 / v0.10, then document the chosen GSD convention in `CLAUDE.md` § "Workspace layout".
   - **Option A** (preserve per-milestone history): each `.planning/milestones/v0.X.0-phases/ARCHIVE.md` (created in POLISH2-21) ABSORBS the corresponding `v0.X.0-ROADMAP.md` content.
   - **Option B** (clean separation): `git mv` each loose `v0.X.0-{ROADMAP,REQUIREMENTS}.md` into the matching `v0.X.0-phases/` dir, OR into `.planning/archive/milestones/`.
 
-**Fix path**: pick one option, apply uniformly to v0.8/v0.9/v0.10. Document the chosen GSD convention in `CLAUDE.md` § "Workspace layout" so future milestones don't repeat the drift.
+**Verify**: `find .planning/milestones -maxdepth 2 -name '*ROADMAP*' -o -name '*REQUIREMENTS*' | grep -v phases | grep -v archive` returns empty.
 
-## 0.6 The meta-question: missing quality tools
+## 0.6 The meta-question: missing quality tools — SUPERSEDED by §0.8
 
 **Owner verbatim**: *"Are you missing tools to help catch these quality issues?"*
 
-**Self-critique**: YES. The session shipped 50+ commits in 8 hours with no automated *cold-reader* check. Specific missing tools:
+The original answer ranked six bespoke checkers (mermaid render, install currency, version-pinned filename, GSD org, doc-clarity, playwright cron). **§0.8's verifier subagent generalises all six**: each becomes a single row in the end-state contract whose `verifier` field points at a one-line shell command or a playwright artifact path. **SKIP §0.6 implementation** unless the next agent decides to descope §0.8 — in which case ship rows 1, 4, 6 of the original table (mermaid render check, GSD org check, playwright site walk) because those are the ones automated hooks cannot otherwise catch.
+
+Original six-tool table preserved for reference:
 
 | Gap | Proposed tool | Where it lives |
 |---|---|---|
-| Mermaid render correctness on EVERY page (not just touched ones) | `scripts/check-mermaid-renders.sh` (playwright-driven) | pre-push hook + CI |
-| Install-instruction freshness ("if crates.io publish is live, hero should lead with package-manager") | `scripts/check-install-currency.py` (parses crates.io API + greps `docs/index.md`) | weekly cron |
-| Version-pinned filename detection | `scripts/check-no-version-pinned-paths.sh` (greps `docs/`, `scripts/` for `v0\.[0-9]+\.[0-9]+` in filenames) | pre-push hook |
-| GSD planning org conformance (no loose `*ROADMAP*.md` outside `*phases/` dirs) | `scripts/check-gsd-org.sh` | pre-push hook |
-| Cold-reader pass on the full doc set after major shifts | `doc-clarity-review` skill, dispatched on every milestone close | manual but required gate |
-| Periodic playwright walk of the live site (not just `mkdocs build --strict`) | extend `scripts/check-docs-site.sh` to call `mkdocs serve` + playwright | pre-push hook |
+| Mermaid render correctness on EVERY page | `scripts/check-mermaid-renders.sh` (playwright) | pre-push + CI |
+| Install-instruction freshness | `scripts/check-install-currency.py` | weekly cron |
+| Version-pinned filename detection | `scripts/check-no-version-pinned-paths.sh` | pre-push |
+| GSD planning org conformance | `scripts/check-gsd-org.sh` | pre-push |
+| Cold-reader pass on doc set | `doc-clarity-review` skill | manual gate |
+| Periodic playwright walk of live site | extend `scripts/check-docs-site.sh` | pre-push |
 
-**Pattern**: the existing hooks catch *correctness* (banned words, fmt, clippy, mkdocs --strict) but not *currency* (is the install path still the right path? does the filename still match the version cadence? does the link still resolve to the right doc?). Currency is what I missed — mechanically the docs were valid, but staleness leaked.
+## 0.7 Update CLAUDE.md so the misses don't recur
 
-The next agent should NOT just fix §0.1-§0.5 — they should also ship at least 3 of the 6 tools above so the NEXT-NEXT agent can't make the same misses.
+The misses in §0.1-§0.5 happened because CLAUDE.md was AMBIGUOUS, not because the rules were absent. Concrete patches the next agent's FIRST commit must apply to `CLAUDE.md`:
 
-## 0.7 Update CLAUDE.md + agent-discoverable instructions so the misses don't recur
+- **"Docs-site validation" section**: change to "playwright walk EVERY page in the affected nav section, not just the file you changed; for `mkdocs.yml` or any `pymdownx.*` change, walk the entire site."
+- **Add "Cold-reader pass" section**: "Before declaring any user-facing surface (hero, install instructions, headline numbers, benchmarks) shipped, dispatch the `doc-clarity-review` skill on the affected pages with isolated context. Mechanical hooks miss positioning misses (install-path freshness, version-pinned filenames, missing nav entries)."
+- **Add "Freshness invariants" list**: no version-pinned filenames outside `CHANGELOG`; install path leads with package manager once crates.io publish is live; benchmarks belong in mkdocs nav; loose `*ROADMAP*.md` outside `*phases/` is structural drift.
+- **Extend "Subagent delegation rules"**: "Never delegate `gh pr checkout` to a bash subagent without isolation (worktree or `/tmp/<branch>`). Coordinator's local checkout is shared state."
+- **Add meta-rule**: "When an owner catches a quality issue the agent missed, the FIX is two-fold: (1) fix the issue, (2) update the instructions so the next agent's session reads them. Just shipping a fix without updating CLAUDE.md guarantees recurrence."
 
-**Self-critique extended**: shipping the 6 tools in §0.6 closes the *automated* gap, but the AGENT itself reads `CLAUDE.md` at session start and scopes its work from those words. The misses in §0.1-§0.5 happened because CLAUDE.md was AMBIGUOUS, not because the rules were absent. Concrete examples:
-
-- CLAUDE.md "Docs-site validation" says playwright is required for mermaid changes, but doesn't specify *scope*. I scoped to "the page I edited" → missed how-it-works pages I didn't touch but were impacted by config drift. **Fix**: rewrite the section to say "playwright walk EVERY page in the affected nav section, not just the file you changed; for `mkdocs.yml` or any `pymdownx.*` change, walk the entire site."
-- CLAUDE.md has no "Cold-reader pass" section. **Fix**: add one — "Before declaring any user-facing surface (hero, install instructions, headline numbers, benchmarks) shipped, dispatch the `doc-clarity-review` skill on the affected pages with isolated context. Owner-as-cold-reader catches positioning misses (install-path freshness, version-pinned filenames, missing nav entries) that mechanical hooks don't."
-- CLAUDE.md has no "Freshness invariants" list. **Fix**: add one — name the invariants explicitly (no version-pinned filenames outside CHANGELOG; install path leads with package manager once crates.io publish is live; benchmarks belong in mkdocs nav; loose `*ROADMAP*.md` outside `*phases/` is structural drift).
-- CLAUDE.md "Subagent delegation rules" doesn't warn about `gh pr checkout` switching the coordinator's branch. **Fix**: add to the rules — "Never delegate `gh pr checkout` to a bash subagent without isolation (worktree or `/tmp/<branch>`). Coordinator's local checkout is shared state."
-- The `gh-pr-checkout` warning AND the cherry-pick lesson AND the Edit-fail-silently lesson should ALL land in CLAUDE.md, not just in this HANDOVER. HANDOVER is operational and gets deleted; CLAUDE.md is durable.
-
-**Concrete §7 task** (added below as §7-§0): the next agent's FIRST commit should patch CLAUDE.md with the four bullets above. Then the §0.1-§0.5 work proceeds with the tightened instructions in scope. Then ship the §0.6 tools. The order matters: instructions → tools → fixes, so each layer reinforces the next.
-
-**Meta-rule (write this into CLAUDE.md too)**: when an owner catches a quality issue the agent missed, the FIX is two-fold: (1) fix the issue, (2) update the instructions so the next agent's session reads them. Just shipping a fix without updating CLAUDE.md guarantees recurrence.
+**Verify**: `git diff HEAD~1 CLAUDE.md` shows the four bullets above present in the diff.
 
 ## 0.8 The deeper fix: machine-verifiable end-state contract
 
 **Owner verbatim**: *"is it more robust to define a clear end state? e.g. a brand new catalogue json file, with mandatory fields populated for every file? a playwright validation JSON file for every page with mermaid?... I need the session to be exhaustive unlike previous sessions. I am still catching quality issues."*
 
-**Why this matters**: §0.1-§0.7 are reactive — each owner-caught miss → bespoke fix → updated instructions. The pattern repeats because the agent's "done" is *self-reported*. The structural fix is to make "done" something an **unbiased subagent grades from artifacts**, not the executing agent's word. The current `scripts/catalog.py` is the right prototype but tracks *file status* (KEEP/TODO/DONE), not *verification evidence*.
+**Owner request to the next agent**: prioritize §0.8 ABOVE §0.1-§0.5. Build the framework first, then port the §0.1-§0.5 fixes through it. That way the framework's first proof-of-life is closing the misses that motivated it.
 
-**Proposed end-state architecture** (the next agent's P0 work — design + build BEFORE shipping more features):
+**Why**: §0.1-§0.7 are reactive — each owner-caught miss → bespoke fix → updated instructions. The pattern repeats because the agent's "done" is *self-reported*. The structural fix is to make "done" something an **unbiased subagent grades from artifacts**, not the executing agent's word.
 
 ### A. Catalog v4 — verification-first JSON schema
 
-`.planning/SESSION-END-STATE.json` (replaces / supersedes `v0.11.1-catalog.json`). Mandatory fields per file:
+`.planning/SESSION-END-STATE.json` (complements the existing `v0.11.1-catalog.json`). Mandatory fields per file:
 
 ```json
 {
@@ -166,9 +212,12 @@ The next agent should NOT just fix §0.1-§0.5 — they should also ship at leas
     {"id": "links-resolve", "verifier": "scripts/check-doc-links.py docs/how-it-works/git-layer.md", "artifact": null}
   ],
   "last_verified_at": "2026-04-27T20:38:00Z",
-  "verifier_signature": "sha256:..."
+  "verifier_signature": "sha256:<hex of the verifier subagent's PASS report bytes>",
+  "agent_id": "<session UUID written at session start by scripts/end-state.py init>"
 }
 ```
+
+`verifier_signature` is the SHA-256 of the bytes the verifier subagent emitted as its PASS evidence (so re-tampering with the artifact later invalidates the signature). `agent_id` is the session UUID written at `end-state.py init` time so the verifier can reject claims signed by an earlier session. If either field is hard to implement on day one, OMIT them from v0 and add a TODO row in `SESSION-END-STATE.md`.
 
 The schema differs by `category` — Rust source rows demand `cargo_check_log + clippy_log + test_run_id`; workflow rows demand `last_run_id + conclusion`; doc rows demand the playwright artifact path. **Every row has an artifact path or a deterministic command an unbiased verifier can re-run.**
 
@@ -183,7 +232,7 @@ The schema differs by `category` — Rust source rows demand `cargo_check_log + 
 
 ### C. End-state contract written FIRST, not last
 
-**At session START** (not at end), the coordinator writes `.planning/SESSION-END-STATE.md` declaring the exhaustive set of conditions the session PROMISES to satisfy. Example:
+**At session START** (not end), the coordinator writes `.planning/SESSION-END-STATE.md` declaring the exhaustive set of conditions the session PROMISES to satisfy. Example:
 
 ```
 - Every docs/how-it-works/*.md page MUST have a playwright artifact dated this session.
@@ -204,28 +253,18 @@ Subagent's output goes to `.planning/SESSION-END-STATE-VERDICT.md`. If RED, sess
 
 ### E. Why this fixes §0.1-§0.5
 
-- §0.1 (mermaid not rendering on some pages) → end-state contract requires playwright artifact dated this session for every how-it-works page → verifier subagent finds missing artifact → FAIL → agent must run playwright on those pages before shipping.
-- §0.3 (version-pinned filename) → end-state contract has invariant "no `v\d+\.\d+` in `docs/` or `scripts/` filenames" → verifier subagent greps → FAIL → forces rename before shipping.
-- §0.4 (RESULTS.md not in nav) → end-state contract requires "every benchmark MUST appear in mkdocs.yml nav" → verifier subagent diffs nav vs `find docs/benchmarks/` → FAIL.
-- §0.5 (loose ROADMAP.md) → end-state contract has invariant "no `*ROADMAP*.md` outside `*phases/` dir" → verifier subagent greps → FAIL.
+- §0.1 → contract requires playwright artifact dated this session for every how-it-works page → verifier subagent finds missing artifact → FAIL → agent must run playwright before shipping.
+- §0.3 → invariant "no `v\d+\.\d+` in `docs/` or `scripts/` filenames" → verifier subagent greps → FAIL → forces rename.
+- §0.4 → "every benchmark MUST appear in mkdocs.yml nav" → verifier subagent diffs nav vs `find docs/benchmarks/` → FAIL.
+- §0.5 → "no `*ROADMAP*.md` outside `*phases/` dir" → verifier subagent greps → FAIL.
 
 The verifier subagent **can't be talked out of a verdict** by the executing agent's narrative. That's the structural break in the recurrence pattern.
 
-### F. Concrete §7 work order for the next agent
+### F. Sizing
 
-1. **Design `SESSION-END-STATE.json` schema** — single file, ~200 LOC of well-documented JSON schema. Co-author with the user if possible (they've signaled the meta-pattern; let them tune the verifier rules).
-2. **Build `scripts/end-state.py`** — CLI like `catalog.py` but verification-first: subcommands `init`, `record-claim`, `verify`, `verdict`. Stdlib + `subprocess` + `jq`-via-shell only.
-3. **Bootstrap `.planning/SESSION-END-STATE.md`** for THIS session's continuation — list every condition §0.1-§0.5 + §3 require, write it down.
-4. **Run the verifier subagent** — get the first FAIL list; that's the actual §7 work.
-5. **Fix → re-verify → repeat until GREEN.** Then and only then is the session done.
-6. **Add `end-state.py verdict` to the pre-push hook** as a non-fatal warning, then flip to fatal once the schema is stable.
-7. **Update CLAUDE.md** with the new "End-state contract" section pointing at the schema + the verifier dispatch pattern, so every future session picks it up.
+This is real work — likely 2-4 hours including the schema design, the script, the bootstrap contract for the current session's outstanding items, and the first verifier dispatch. It is also the single highest-leverage thing the next agent can ship: it migrates every future session from "agent's word for it" to "verifier's verdict on artifacts." The §0.6 tools are individual checks; §0.8 is the framework that hosts them.
 
-### Sizing
-
-This is real work — likely 2-4 hours including the schema design, the script, the bootstrap contract for the current session's outstanding items, and the first verifier dispatch. It is also the single highest-leverage thing the next agent can ship: it converts every future session from "agent's word for it" to "verifier's verdict on artifacts." The §0.6 tools are individual checks; §0.8 is the framework that hosts them.
-
-**Owner request to the next agent**: prioritize §0.8 ABOVE §0.1-§0.5. Build the framework first, then port the §0.1-§0.5 fixes through it. That way the framework's first proof-of-life is closing the misses that motivated it.
+**Verify** (when §0.8 itself ships): `python3 scripts/end-state.py verdict` exits 0 AND `.planning/SESSION-END-STATE-VERDICT.md` exists with every row PASS.
 
 ---
 
@@ -233,76 +272,83 @@ This is real work — likely 2-4 hours including the schema design, the script, 
 
 **Created**: 2026-04-27 by Claude Opus 4.7 (1M context). **Operational — delete once §7 is done.**
 
-The previous milestone (v0.11.0) is closed and tagged. v0.11.1 substantively shipped (~18-20 of 22 POLISH2-* requirements over 50+ commits): typed Error variants (sim.rs migrated; jira/confluence/github extended to `NotSupported`), reposix-doctor capability check, `exit-codes.md`, ADR-009 v1.0 stability commitment, jira+confluence lib.rs splits, `scripts/catalog.py` JSON-first tracker, mkdocs-material upstream issue #8584, dual-audit-schema endorsed in module docs. Crates.io publish chain is in flight — release-plz auto-PR #20 opened for v0.11.1 across 8 crates; first publish run failed (see §3b).
+The previous milestone (v0.11.0) is closed and tagged. v0.11.1 is FULLY published (all 8 crates on crates.io, verified at write time — re-confirm via the state-gather block). v0.11.2 release-plz auto-PR is OPEN at handoff (PR #21).
 
 ---
 
 ## 1. Read-this-first checklist
 
-1. `cat .planning/STATE.md` — current cursor.
-2. `git log --oneline -25` — what landed since this handoff.
-3. `gh run list --branch main --limit 5` — CI is RED on HEAD `12c2ec1`. See §3a before anything else.
-4. `gh pr list --state open` — three PRs open: #20 (release-plz v0.11.1 chore), #16 (axum 0.7→0.8 dependabot), #17 (rand 0.9→0.10 dependabot).
-5. `cat CHANGELOG.md` (`[Unreleased]` block).
-6. Audit reports under `.planning/research/v0.11.1-*.md` — see §6.
+1. Run the state-gather block at the top of this file. Do NOT skip.
+2. `cat .planning/STATE.md` — current cursor.
+3. `git log --oneline -25` — what landed since this handoff.
+4. `cat CHANGELOG.md` (`[Unreleased]` block).
+5. Audit reports under `.planning/research/v0.11.1-*.md` — see §6.
 
 ---
 
 ## 2. In-flight at handoff
 
-- **crates.io publish: 7 of 8 SHIPPED as v0.11.1** (`reposix-core`, `cache`, `sim`, `github`, `confluence`, `jira`, `remote`). **Only `reposix-cli` MISSING.** PR #20 (release-plz v0.11.1 bumps) merged at commit `aedde5a`. Most recent release-plz run on `d1628a0` failed (likely tried to republish already-existing crates + `cli` cargo-publish prep error — same family as the libsqlite3-sys conflict that motivated PR #20 in the first place). See §3b.
-- **CI on HEAD `d1628a0` is RED** — `delta_sync` test failures (suspected rusqlite-0.39 fallout per §3a).
-- **Dependabot inbox**: PR #16 (axum 0.7→0.8) + #17 (rand 0.9→0.10) still OPEN. Fixer subagent (id `a825d495b91ff734b`) was running at handoff; check `gh pr view 16`/`gh pr view 17` for new commits.
+- **crates.io v0.11.1**: ALL 8 crates published (`reposix-core`, `cache`, `sim`, `github`, `confluence`, `jira`, `remote`, `cli`). Verified via crates.io API at write time.
+- **PR #21**: release-plz auto-PR `chore: release v0.11.2`. All 8 crates bump to 0.11.2 (`reposix-core`, `cache`, `confluence`, `github`, `jira` as patch; `sim`, `cli` as API-compatible patch; `remote` as Cargo.lock-only). MERGEABLE at write time.
 - **Catalog**: `.planning/v0.11.1-catalog.json` source-of-truth, auto-rendered to `.planning/research/v0.11.1-CATALOG-v3.md`. Re-render after touching anything.
+- **Dependabot inbox at write time**: empty for application deps. PRs #15-#20 all MERGED. PR #21 is the only open PR.
 
 ---
 
 ## 3. Critical open items
 
-### 3a. CI RED on main (HEAD `d1628a0`) — `delta_sync` test failures
+### 3a. CI status — check live before assuming RED
 
-**Symptom**: `cargo test --workspace --locked` fails in `crates/reposix-cache/tests/delta_sync.rs`:
+At the previous handover write the CI was RED on commit `d1628a0` with `delta_sync` test failures. Since then:
 
-```
-delta_sync_empty_delta_still_writes_audit_and_bumps_cursor (line 309 / 336)
-delta_sync_updates_only_changed_issue (line 218)
-```
+- PR #18 (rusqlite 0.32→0.39) MERGED at `5108dbc`.
+- Six more commits landed on top.
+- Most recent observed runs on HEAD: Security audit GREEN, release-plz GREEN, CI in progress (re-check via `gh run list --branch main --limit 5`).
 
-Both panic at `delta_sync.rs:124` inside the shared `seed_demo_issues` helper. PR #18 (rusqlite 0.32→0.39) is the most likely culprit — it landed at commit `5108dbc`, just before HEAD. The `bundled` feature semantics or row-iteration API may have shifted.
+**Action**: re-run `gh run list --branch main --limit 5 --json status,conclusion,workflowName,headSha`. If CI is GREEN on HEAD, this row is closed — proceed to §3b. If CI is RED, the failing test signature is likely still `delta_sync_*` panicking inside `seed_demo_issues`.
 
-**Fix path**:
+**Fix path (only if CI is RED)**:
 1. Reproduce locally: `cargo test -p reposix-cache --test delta_sync` (single-crate, RAM-safe).
-2. Read the panic site at `crates/reposix-cache/tests/delta_sync.rs:124`.
-3. If rusqlite 0.39's API is the cause, fix `seed_demo_issues` and the two callers.
-4. One commit, push. Watch `gh run watch`.
+2. Bisect the rusqlite breakage: `git log --oneline 5108dbc..HEAD -- crates/reposix-cache` — start from `5108dbc` and check whether the panic signature still matches.
+3. Read the panic site at `crates/reposix-cache/tests/delta_sync.rs` (line numbers shifted post-bumps; grep for `seed_demo_issues`).
+4. The rusqlite 0.32 → 0.39 BREAKING surface to scrutinize first: `Connection::execute_batch` semantics, `Row::get_unwrap` behaviour on NULL columns, and the `ToSql`/`FromSql` impls for `chrono::DateTime<Utc>` (the chrono feature flag changed name between minor releases). If you didn't bisect, dispatch a 5-min subagent: *"Extract the actual panic message from `cargo test -p reposix-cache --test delta_sync`, then list the rusqlite 0.32→0.39 BREAKING items relevant to that signature."*
+5. One commit, push. Watch `gh run watch`.
 
-### 3b. release-plz publish: 7 of 8 done, `reposix-cli` still missing
+**Verify**: `gh run list --branch main --workflow CI --limit 1 --json conclusion --jq '.[0].conclusion'` returns `success`.
 
-**Status**: After PR #20 merged at commit `aedde5a`, release-plz published `reposix-core`, `cache`, `sim`, `github`, `confluence`, `jira`, `remote` all as v0.11.1. `reposix-cli` is the only one still MISSING from crates.io. The most recent run (on `d1628a0`) failed — possibly because release-plz tried to re-publish the already-shipped crates (which 422's) and `reposix-cli` separately hit a publish-prep error.
+### 3b. crates.io publish chain — likely already complete; verify and shrink
 
-**Fix path**:
-1. `curl -s https://crates.io/api/v1/crates/reposix-cli` to confirm it's still missing.
-2. `cargo publish -p reposix-cli --dry-run --locked` locally to surface the prep error.
-3. Likely cause: `reposix-cli/Cargo.toml` has a path-dep without a version field (audit it like `e8aebfa` did for the others), OR a dev-dep that became publish-relevant.
-4. Fix, push, watch release-plz pick it up. **Do NOT manually `cargo publish` — release-plz manages the version-tag-publish chain; manual publishes break the bookkeeping.**
-5. After `reposix-cli` lands, the v0.11.1 git tag should already exist (release-plz tags after publish succeeds). Verify GH Releases page + homebrew formula bump + `cargo binstall reposix-cli` resolves.
+At write time, all 8 crates are at 0.11.1 on crates.io. The previous handover claimed `reposix-cli` was missing; that is no longer true. PR #21 is open to bump everything to 0.11.2.
+
+**Action**:
+1. Re-run the per-crate `curl crates.io` block at the top of this file.
+2. If the workspace `Cargo.toml` version equals every published `max_version`: this row is CLOSED. Delete it.
+3. If a version mismatch exists: merge PR #21 (or whatever release-plz auto-PR is open), then watch release-plz publish, then verify via the same curl loop.
+4. Confirm `cargo binstall reposix-cli` resolves and `brew install reubenjohn/reposix/reposix` resolves at the latest version.
+
+**Why §3b is unlikely to be substantial**: release-plz handled the v0.11.1 publish chain successfully; the previous handover's "publish prep error on cli" was either spurious or fixed by a subsequent commit. **Do NOT manually `cargo publish`** — release-plz manages the version-tag-publish chain; manual publishes break the bookkeeping.
+
+**Verify**: `for c in reposix-core reposix-cache reposix-sim reposix-github reposix-confluence reposix-jira reposix-remote reposix-cli; do curl -s https://crates.io/api/v1/crates/$c | grep -o '"max_version":"[^"]*"'; done` shows the same version for all 8 AND that version equals the workspace `Cargo.toml` `version`.
 
 ### 3c. Dependabot inbox
 
-- PR #16 — `axum 0.7→0.8`. Major bump; touches `reposix-sim`. Fixer subagent `a825d495b91ff734b` was running at handoff — check for new commits before redoing.
-- PR #17 — `rand 0.9→0.10`. Smaller surface. Same subagent.
-- PR #18 — `rusqlite 0.32→0.39` ✓ MERGED (commit `5108dbc`) but suspected to have introduced the §3a `delta_sync` failure.
-- PR #19 (bench-cron) + PR #20 (release-plz v0.11.1) — both MERGED.
+- PR #16 (axum 0.7→0.8) — MERGED at commit `2a06ac2`.
+- PR #17 (rand 0.9→0.10) — MERGED at commit `d10c1d8`.
+- PR #18 (rusqlite 0.32→0.39) — MERGED at `5108dbc`. Suspected source of any lingering §3a delta_sync flake.
+- PR #19 (bench-cron) + PR #20 (release-plz v0.11.1) — MERGED.
+- PR #21 (release-plz v0.11.2) — OPEN; see §3b.
+
+If new dependabot PRs appeared after write time, dispatch a fixer subagent to a worktree (`git worktree add /tmp/pr-N pr-N-branch`) — do NOT `gh pr checkout` from a bash subagent.
+
+**Verify**: `gh pr list --state open --json number,title` returns at most the active release-plz auto-PR.
 
 ---
 
 ## 4. Friction matrix — net new this session (most v0.11.0/v0.11.1 rows RESOLVED)
 
-The 23-row matrix from the previous handover is fully verified-resolved or shipped via POLISH2-*. Net new frictions surfaced this session:
-
 | # | Friction | P | Mitigation |
 |---|---|---|---|
-| N1 | **Bash subagents that run `gh pr checkout` switch the coordinator's local branch.** Caused the cherry-pick mess at commit `5a91ae2` — coordinator made a commit thinking it was on `main` but was on `dependabot/cargo/axum-0.8.9`. | P0 | Never delegate `gh pr checkout` to a bash subagent without isolation. Use `EnterWorktree` or have the subagent operate in `/tmp/<branch>-checkout`. Documented in the AUTONOMOUS rules above. |
+| N1 | **Bash subagents that run `gh pr checkout` switch the coordinator's local branch.** Caused the cherry-pick mess at commit `5a91ae2` — coordinator made a commit thinking it was on `main` but was on `dependabot/cargo/axum-0.8.9`. | P0 | Never delegate `gh pr checkout` to a bash subagent without isolation. Use a worktree (`git worktree add /tmp/pr-N`) or `/tmp/<branch>-checkout`. Documented in the AUTONOMOUS rules above. |
 | N2 | **Edit tool can fail silently in batched commands.** "File has been modified since read" blocks the edit but the surrounding bash commit still runs, capturing whatever's on disk. | P0 | Always verify the diff after a commit, especially when chaining edit+commit in one bash invocation. `git show --stat HEAD` after each commit. |
 | N3 | **release-plz `release-pr` step can fail with HTTP 403** even when `permissions: pull-requests: write` is in the workflow file. | P1 | Repo's `default_workflow_permissions` setting is a CEILING. Fix once: `gh api -X PUT repos/<owner>/<repo>/actions/permissions/workflow -f default_workflow_permissions=write -F can_approve_pull_request_reviews=true`. Already applied for `reubenjohn/reposix`. |
 | N4 | **Bash hook denies inline `<crate-loop>` longer than 300 chars.** | P2 | Promote to a script in `scripts/` or split into multiple smaller calls. Don't try to squeeze under the threshold with trivial rewrites. |
@@ -313,7 +359,7 @@ Rows from the previous handover that are now RESOLVED: rows 1, 3, 4, 6, 9 fully 
 
 ## 5. Spec sections — none open
 
-Hero, capability matrix, exit-codes, and ADR-009 stability commitment all shipped. If §3b drags out, the only "spec" left is "complete v0.11.1 publish": 9 crates on crates.io, `v0.11.1` git tag pushed, GH release page populated, homebrew formula bumped. release-plz handles the mechanics; the human (you) handles the unblocking.
+Hero, capability matrix, exit-codes, and ADR-009 stability commitment all shipped. The only "spec" left is "complete the v0.11.x publish cycle": all crates at workspace version on crates.io, latest git tag pushed, GH release page populated, homebrew formula bumped. release-plz handles the mechanics.
 
 ---
 
@@ -338,36 +384,63 @@ Source-of-truth JSON: `.planning/v0.11.1-catalog.json`. Driver: `scripts/catalog
 
 ---
 
-## 7. Task list (in order — do not skip ahead)
+## 7. Task list — execute top to bottom
 
-### 7-A. Unblock CI on main (30-60 min)
-Fix the `delta_sync` test failures per §3a. One commit, push, verify `gh run list --branch main --limit 1` flips to green. **Nothing else proceeds while CI is red.**
+### If you run out of time — decision tree
 
-### 7-B. Drive release-plz to all-9-crates published (60-90 min)
-Per §3b: `cargo publish --dry-run -p <crate>` for each of the 7 still-unpublished crates to surface prep errors; fix the underlying `Cargo.toml` metadata gaps; merge PR #20; watch release-plz pick it up; verify `https://crates.io/crates/reposix-cli` resolves.
+- **FLOOR (must hold no matter what)**: CI green on `main`; all workspace-version crates published; HANDOVER.md and `.planning/STATE.md` reflect reality; pre-push hook passes.
+- **NEXT-MOST-VALUABLE if floor secured**: §7 row 2 (the §0.8 framework) — it converts every future session from self-graded to verifier-graded. One half-built framework is worth more than five hand-fixed §0 rows because it changes the slope of all future sessions.
+- **ABOVE-FLOOR but compressible**: §7 rows 1, 3 are fast; do them first if time-boxed. Rows 4-8 (the §0 fixes through the framework) compress by deferring to v0.12.0 with catalog notes.
 
-### 7-C. Resolve dependabot PRs #16 + #17 (30 min)
-Per §3c. The fixer subagent (id `a825d495b91ff734b`) may already have done the work — check `gh pr view 16` / `gh pr view 17` for new commits and CI status. If green, merge. If red, dispatch a fresh fixer subagent to a worktree (per N1) — do NOT `gh pr checkout` from a bash subagent.
+### Row 1 — Patch CLAUDE.md per §0.7 (15-30 min)
 
-### 7-D. Tag v0.11.1 + verify release artifacts (15 min)
-Once §7-A through §7-C are done: release-plz creates the tag automatically on PR #20 merge. Verify:
-- `https://github.com/reubenjohn/reposix/releases/tag/v0.11.1` exists with binaries for all 4 platforms (linux-x86_64-musl, linux-aarch64-musl, macOS x86 + arm64, windows-msvc).
-- `brew install reubenjohn/reposix/reposix` resolves to v0.11.1.
-- `cargo binstall reposix-cli` resolves to v0.11.1.
+> **Verbatim row 1**: Apply the four bullets in §0.7 to `CLAUDE.md`: tighten "Docs-site validation" to whole-nav-section playwright walks; add "Cold-reader pass" section; add "Freshness invariants" list; extend "Subagent delegation rules" to forbid bash-subagent `gh pr checkout` without worktree isolation; append the "fix-the-issue + fix-the-instructions" meta-rule.
 
-### 7-E. Trigger fresh bench-latency-cron run (10 min)
-JIRA cells went LIVE last session via PR #19. Trigger one more run after v0.11.1 tag to confirm the latency table on the v0.11.1 release reflects current numbers: `gh workflow run bench-latency-cron.yml -R reubenjohn/reposix`.
+`Blocked-by:` none. `Unblocks:` rows 2-8 (every subsequent fix reads tightened CLAUDE.md). Verify: `git diff HEAD~1 CLAUDE.md` shows the four sections updated.
 
-### 7-F. Catalog + STATE.md final pass (15 min)
-- `python3 scripts/catalog.py coverage` — must exit 0.
-- `python3 scripts/catalog.py render` — refresh the MD view.
-- Update `.planning/STATE.md` cursor to reflect v0.11.1 fully shipped.
-- Commit, push, watch CI.
+### Row 2 — Build the §0.8 SESSION-END-STATE framework (2-4 hr)
 
-### 7-G. Delete this HANDOVER.md (1 min)
-If §7-A..F are all done and main is green: `git rm HANDOVER.md && git commit -m "docs: remove HANDOVER.md (v0.11.1 fully shipped)" && git push`.
+Per §0.8 work order: design `.planning/SESSION-END-STATE.json` schema; build `scripts/end-state.py` (`init`, `record-claim`, `verify`, `verdict` subcommands); bootstrap `.planning/SESSION-END-STATE.md` for THIS session's outstanding items (§0.1, §0.3, §0.4, §0.5, §3a, §3b); wire `end-state.py verdict` into pre-push as a non-fatal warning. `Blocked-by:` row 1. `Unblocks:` rows 3-8 (those are graded by the framework, not hand-checked). Verify: `python3 scripts/end-state.py verdict` runs and emits a verdict file with at least the §0 conditions enumerated.
 
-If anything is still pending: shrink HANDOVER.md to ONLY the open items. Don't append "I did X".
+### Row 3 — Run the verifier subagent against the bootstrapped contract (15 min)
+
+Dispatch the `Explore`-typed unbiased verifier per §0.8.D. Output goes to `.planning/SESSION-END-STATE-VERDICT.md`. `Blocked-by:` row 2. `Unblocks:` rows 4-8 (the verdict's FAIL list IS the work for those rows). Verify: verdict file exists; if all rows GREEN, jump to row 9.
+
+### Row 4 — Close the §0.1 mermaid-render FAIL (60-90 min)
+
+Walk every `docs/how-it-works/*.md` with playwright per §0.1 fix path. Write per-page artifacts under `.planning/verifications/playwright/how-it-works/`. Diagnose any FAILs and fix. `Blocked-by:` row 3 (verdict identifies the failing pages). `Unblocks:` row 8 final verifier re-run. Verify: §0.1 verify command.
+
+### Row 5 — Close the §0.2 install-instruction freshness FAIL (30-45 min)
+
+Reorder `docs/index.md` and `README.md` per §0.2 fix path. `Blocked-by:` row 3. Verify: §0.2 verify command.
+
+### Row 6 — Close the §0.3 + §0.4 doc reorganisation FAIL (45-60 min)
+
+Per §0.3 (rename version-pinned latency files) and §0.4 (move RESULTS.md into mkdocs nav). Single mkdocs touch — batch them. `Blocked-by:` row 3. Verify: §0.3 + §0.4 verify commands.
+
+### Row 7 — Close the §0.5 GSD-org FAIL (30 min)
+
+Pick option A or B per §0.5; apply uniformly across v0.8/v0.9/v0.10; document the chosen convention in `CLAUDE.md` § "Workspace layout". `Blocked-by:` row 3. Verify: §0.5 verify command.
+
+### Row 8 — Re-run the verifier subagent — must be GREEN (15 min)
+
+Same dispatch as row 3. `Blocked-by:` rows 4-7. `Unblocks:` row 9. Verify: `.planning/SESSION-END-STATE-VERDICT.md` shows every row PASS.
+
+### Row 9 — Original v0.11.x finish: §3a CI + §3b publish (15-60 min)
+
+If §3a is already GREEN (likely at handoff) and §3b shows all 8 crates at workspace version (likely): merge open release-plz PR #21 → watch publish → verify the latest version on crates.io + brew + binstall. The release-plz workflow auto-tags after publish succeeds, so a separate "tag" step is folded in here. `Blocked-by:` row 8. Verify: §3a + §3b verify commands AND `git tag --sort=-creatordate | head -1` is the latest workspace version.
+
+### Row 10 — Trigger fresh bench-latency-cron (5 min)
+
+`gh workflow run bench-latency-cron.yml -R reubenjohn/reposix`. Confirms the latency table on the latest release reflects current numbers. `Blocked-by:` row 9.
+
+### Row 11 — Catalog + STATE.md final pass (15 min)
+
+`python3 scripts/catalog.py coverage` (must exit 0) → `python3 scripts/catalog.py render` → update `.planning/STATE.md` cursor → commit + push. `Blocked-by:` row 10.
+
+### Row 12 — Delete this HANDOVER.md (1 min)
+
+If everything above is done and main is green: `git rm HANDOVER.md && git commit -m "docs: remove HANDOVER.md (v0.11.x cycle done)" && git push`. Otherwise shrink HANDOVER.md to ONLY the open items.
 
 ---
 
@@ -377,7 +450,7 @@ If anything is still pending: shrink HANDOVER.md to ONLY the open items. Don't a
 - `mkdocs-material` JS / `extra_javascript` / `mkdocs.yml` — three stacked bugs were fixed in commits `66836f7`, `e119006`, `100ae00`. Don't change `fence_div_format`, don't re-enable `minify_html: true`, don't remove the mermaid CDN load.
 - The `refs/reposix/origin/main` checkout step in `docs/tutorials/first-run.md` step 4 — that non-standard refspec is load-bearing.
 - v0.11.0 phase dirs in `.planning/phases/` — there should be none. Don't accidentally re-create them.
-- Banned word `replace` (per `scripts/banned-words-lint.sh` and `.banned-words.toml`). Use `complement` / `alongside` / `for the 80%` / `migrate to`.
+- Banned word `replace` (per `scripts/banned-words-lint.sh` and `.banned-words.toml`). Use `migrate to` / `for the 80%` / `rewrite as` / `complement` / `alongside`.
 - **`gh pr checkout` from a bash subagent.** Per N1. Use a worktree.
 
 ## 9. Owner preferences (durable)
@@ -391,21 +464,46 @@ If anything is still pending: shrink HANDOVER.md to ONLY the open items. Don't a
 
 ---
 
-## 10. Status snapshot at handoff
+## 10. Status snapshot at handoff (re-derive via the state-gather block)
 
-- Branch: `main`. HEAD: `d1628a0` (`docs(handover): fresh HANDOVER.md for next agent (v0.11.1 mostly shipped)`).
-- Tags: `v0.11.0` shipped + binaries on GH Releases. `v0.11.1` git tag should be auto-created by release-plz once `reposix-cli` publishes (verify post-§3b).
-- crates.io v0.11.1: **7 of 8 published** (`reposix-core`, `cache`, `sim`, `github`, `confluence`, `jira`, `remote`). **`reposix-cli` MISSING** — see §3b.
-- Working tree: may have local divergence (Cargo.toml + STATE.md + ROADMAP.md + SKILL.md showed reverted-to-old states during the session). Origin/main is source of truth — `git reset --hard origin/main` if confused.
-- CI on HEAD `d1628a0`: **RED** — `delta_sync` test failures (suspected rusqlite-0.39 fallout). See §3a.
-- release-plz on HEAD: **FAILED** (probably trying to re-publish existing crates + `cli` prep error). See §3b.
-- Open PRs: #16 (axum), #17 (rand). #18, #19, #20 all MERGED this session.
-- Catalog: 0 TODO rows (coverage clean).
-- Owner-action items: NONE outstanding for this session.
+> Snapshot captured 2026-04-27 PM. Re-derive everything below before acting; if `git log -1 --format=%H` ≠ `d10c1d8fefc91ac330869a38c29f463504e98aea`, this section is stale.
+
+**HEAD on `origin/main`**:
+```
+d10c1d8 chore(deps): bump rand from 0.9.3 to 0.10.1 (#17)
+2a06ac2 chore(deps): bump axum from 0.7.9 to 0.8.9 (#16)
+cb0f190 docs(handover): §0.8 — machine-verifiable end-state contract (highest-leverage P0)
+```
+
+**CI on HEAD `d10c1d8`**: Security audit GREEN; release-plz GREEN; CI in progress at write time. Re-check before acting.
+
+**Open PRs**:
+- #21 — `chore: release v0.11.2` (release-plz auto-PR; MERGEABLE; bumps all 8 crates to 0.11.2 — `core/cache/confluence/github/jira` patch, `sim/cli` API-compatible patch, `remote` Cargo.lock-only).
+
+**crates.io v0.11.1 status (verified at write time)**:
+```
+  reposix-core              0.11.1
+  reposix-cache             0.11.1
+  reposix-sim               0.11.1
+  reposix-github            0.11.1
+  reposix-confluence        0.11.1
+  reposix-jira              0.11.1
+  reposix-remote            0.11.1
+  reposix-cli               0.11.1
+```
+ALL 8 crates published. The previous handover's "7 of 8" / "reposix-cli MISSING" is HISTORICAL.
+
+**Tags**: `v0.11.0` shipped + binaries on GH Releases. `v0.11.1` should already exist (release-plz auto-tags after publish); verify via `git tag --sort=-creatordate | head -3`.
+
+**Working tree**: should be clean. If confused, `git reset --hard origin/main` — origin is source of truth.
+
+**Catalog**: re-run `python3 scripts/catalog.py coverage` to confirm 0 TODO rows.
+
+**Owner-action items**: NONE outstanding for this session.
 
 ### Session pace observation (for the next agent's calibration)
 
-Previous session shipped ~50 commits over 8 hours but missed the §0 quality issues (mermaid render gaps, install-instruction freshness, version-pinned filenames, RESULTS.md not in nav, GSD planning org drift). The pace was high; the *cold-reader* checks were absent. Slow down for §0 work — playwright every page you touch, owner-walk-through-as-cold-reader before declaring shipped.
+Previous session shipped ~50 commits over 8 hours but missed the §0 quality issues (mermaid render gaps, install-instruction freshness, version-pinned filenames, RESULTS.md not in nav, GSD planning org drift). The pace was high; the *cold-reader* checks were absent. Slow down for §0 work — playwright every page you touch, owner-walk-through-as-cold-reader before declaring shipped. The §0.8 framework is the structural mitigation; ship it before the §0 row-fixes.
 
 ---
 
