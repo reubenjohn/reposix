@@ -222,8 +222,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/top-level-requirements-roadmap-scope.json",
-      "status": "FAIL",
-      "last_verified": "2026-04-27T19:51:50Z",
+      "status": "PASS",
+      "last_verified": "2026-04-27T19:59:36Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: move historical sections from .planning/{REQUIREMENTS,ROADMAP}.md to .planning/milestones/v0.X.0-phases/{REQUIREMENTS,ROADMAP}.md per POLISH-STRUCT (P57 Wave D)",
