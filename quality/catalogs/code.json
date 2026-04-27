@@ -169,17 +169,12 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/code/cargo-fmt-check.json",
-      "status": "WAIVED",
-      "last_verified": "2026-04-27T23:21:25Z",
+      "status": "PASS",
+      "last_verified": "2026-04-27T23:29:31Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: cargo fmt regressed; run cargo fmt --all locally and commit the result",
-      "waiver": {
-        "until": "2026-05-15T00:00:00Z",
-        "reason": "P60 Wave A catalog-first; verifier wrapper ships in P60 Wave D (SIMPLIFY-10 pre-push hook one-liner). Until Wave D, the runner returns NOT-VERIFIED on missing verifier; this short-lived waiver keeps pre-push GREEN through the implementation window. Pattern from quality/SURPRISES.md 2026-04-27 P58 row 2 (clippy-lint-loaded P58 Wave A waiver).",
-        "dimension_owner": "v0.12.0 P60 docs-build dimension owner",
-        "tracked_in": "P60 Wave D (60-04)"
-      }
+      "waiver": null
     },
     {
       "id": "code/cargo-clippy-warnings",
@@ -203,17 +198,12 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/code/cargo-clippy-warnings.json",
-      "status": "WAIVED",
-      "last_verified": "2026-04-27T23:21:25Z",
+      "status": "PASS",
+      "last_verified": "2026-04-27T23:29:31Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: a new clippy violation; cargo clippy --workspace --all-targets --fix to auto-fix where possible. Pivot rule: if cargo clippy in pre-push exceeds 60s on warm cache, P60 Wave E may move it OUTSIDE the runner; the row stays catalogued but the pre-push hook chains it externally. Document in SURPRISES.md.",
-      "waiver": {
-        "until": "2026-05-15T00:00:00Z",
-        "reason": "P60 Wave A catalog-first; verifier wrapper ships in P60 Wave D (SIMPLIFY-10 pre-push hook one-liner). Until Wave D, the runner returns NOT-VERIFIED on missing verifier; this short-lived waiver keeps pre-push GREEN through the implementation window. Pattern from quality/SURPRISES.md 2026-04-27 P58 row 2 (clippy-lint-loaded P58 Wave A waiver).",
-        "dimension_owner": "v0.12.0 P60 docs-build dimension owner",
-        "tracked_in": "P60 Wave D (60-04)"
-      }
+      "waiver": null
     }
   ]
 }

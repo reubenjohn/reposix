@@ -1,110 +1,36 @@
 #!/usr/bin/env bash
+# scripts/green-gauntlet.sh -- thin shim post-P60 SIMPLIFY-09.
 #
-# green-gauntlet.sh — run every gate a release needs to clear.
+# The composite "run everything" wrapper is supplanted by the cadence-tagged
+# Quality Gates runner. Mode mapping:
+#   --quick / default -> python3 quality/runners/run.py --cadence pre-pr
+#   --full            -> --cadence pre-pr + --cadence weekly (full sweep)
 #
-# This is the pre-tag check any agent or human should run before
-# `scripts/tag-vX.Y.Z.sh`. The tag script already re-runs a subset of
-# these (cargo test), but fmt/clippy/mkdocs need to be green too,
-# and a single named command beats typing five pipelines.
-#
-# Each gate exits non-zero on the first red check. Timings are
-# printed so regressions stand out.
-#
-# Usage:
-#   bash scripts/green-gauntlet.sh [--quick|--full]
-#
-# Modes:
-#   default  — fmt, clippy, test (fast, default).
-#   --full   — default + mkdocs --strict + dark-factory regression.
-#              Requires reposix-sim on PATH and a reasonable time
-#              budget (~30s extra).
-#   --quick  — fmt + clippy only. For tight inner-dev loops.
-#
-# Exit codes: 0 = all green, 1 = any gate red.
+# This shim survives for one merge cycle per OP-5 reversibility (any hidden
+# caller surfaces). Caller audit at P60 Wave D commit time: only the script
+# itself references its own name; no external invokers in .github/, docs/,
+# CLAUDE.md, or examples/. P63 SIMPLIFY-12 audits whether to delete or keep.
 
 set -euo pipefail
 
-readonly GREEN='\033[0;32m'
-readonly RED='\033[0;31m'
-readonly YELLOW='\033[1;33m'
-readonly BOLD='\033[1m'
-readonly NC='\033[0m'
-
-readonly repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$repo_root"
+readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$REPO_ROOT"
 
 mode="${1:-default}"
 
-print_header() {
-  printf '%b\n' "${BOLD}== [${1}] ${2}${NC}"
-}
-
-run_gate() {
-  local name="$1"
-  local cmd="$2"
-  local start end elapsed
-  start="$(date +%s)"
-  print_header "running" "$name"
-  if eval "$cmd" > /tmp/green-gauntlet-${name}.log 2>&1; then
-    end="$(date +%s)"
-    elapsed=$((end - start))
-    printf '%b %s %b %ds\n' "${GREEN}✓${NC}" "$name" "${GREEN}ok${NC}" "$elapsed"
-    return 0
-  fi
-  end="$(date +%s)"
-  elapsed=$((end - start))
-  printf '%b %s %b %ds\n' "${RED}✖${NC}" "$name" "${RED}FAIL${NC}" "$elapsed" >&2
-  printf '%b\n' "${YELLOW}→${NC} last 30 lines of /tmp/green-gauntlet-${name}.log:" >&2
-  tail -n 30 "/tmp/green-gauntlet-${name}.log" | sed 's/^/    /' >&2
-  return 1
-}
-
-failed=0
-run_gauntlet() {
-  local quick="${1:-}"
-  local full="${2:-}"
-
-  # Always-run gates.
-  run_gate fmt 'cargo fmt --all --check' || failed=$((failed + 1))
-  run_gate clippy 'cargo clippy --workspace --all-targets --locked -- -D warnings' \
-    || failed=$((failed + 1))
-
-  # Quick-mode stops here.
-  [[ "$quick" == "quick" ]] && return
-
-  # Default gates.
-  run_gate test 'cargo test --workspace --locked' || failed=$((failed + 1))
-
-  # v0.11.1: dropped FUSE smoke gate (scripts/demos/smoke.sh deleted in §7-F2).
-  # The sim path is exercised by --full's dark-factory regression.
-
-  # Full-mode adds mkdocs + dark-factory regression test.
-  if [[ "$full" == "full" ]]; then
-    if command -v mkdocs >/dev/null 2>&1; then
-      run_gate mkdocs-strict 'mkdocs build --strict' || failed=$((failed + 1))
-    else
-      printf '%b mkdocs-strict %b — mkdocs not on PATH\n' \
-        "${YELLOW}⊘${NC}" "${YELLOW}skipped${NC}"
-    fi
-    run_gate dark-factory \
-      'bash scripts/dark-factory-test.sh sim' \
-      || failed=$((failed + 1))
-  fi
-}
-
 case "$mode" in
-  --quick) run_gauntlet quick "" ;;
-  --full)  run_gauntlet "" full ;;
-  default) run_gauntlet "" "" ;;
+  --quick)
+    exec python3 quality/runners/run.py --cadence pre-pr
+    ;;
+  --full)
+    python3 quality/runners/run.py --cadence pre-pr || exit $?
+    exec python3 quality/runners/run.py --cadence weekly
+    ;;
+  default)
+    exec python3 quality/runners/run.py --cadence pre-pr
+    ;;
   *)
     printf 'usage: %s [--quick|--full]\n' "$0" >&2
-    exit 2 ;;
+    exit 2
+    ;;
 esac
-
-printf '\n'
-if [[ "$failed" -eq 0 ]]; then
-  printf '%b\n' "${GREEN}${BOLD}✓ green gauntlet passed${NC}"
-  exit 0
-fi
-printf '%b\n' "${RED}${BOLD}✖ ${failed} gate(s) red${NC}" >&2
-exit 1

@@ -314,17 +314,12 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/cred-hygiene.json",
-      "status": "WAIVED",
-      "last_verified": "2026-04-27T23:21:25Z",
+      "status": "PASS",
+      "last_verified": "2026-04-27T23:29:34Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: a real token shape was committed -- ROTATE THE TOKEN at the issuing platform BEFORE doing anything else (Atlassian: https://id.atlassian.com/manage-profile/security/api-tokens; GitHub: https://github.com/settings/tokens)",
-      "waiver": {
-        "until": "2026-05-15T00:00:00Z",
-        "reason": "P60 Wave A catalog-first; verifier wrapper ships in P60 Wave D (SIMPLIFY-10 pre-push hook one-liner). The OLD pre-push hook body keeps running until Wave E rewrites it, so the catalog row's WAIVED status only affects how the runner GRADES; the existing inline scan in scripts/hooks/pre-push still EXECUTES on every push. Short-lived waiver keeps pre-push GREEN through the implementation window without weakening security.",
-        "dimension_owner": "v0.12.0 P60 docs-build dimension owner",
-        "tracked_in": "P60 Wave D (60-04)"
-      }
+      "waiver": null
     }
   ]
 }
