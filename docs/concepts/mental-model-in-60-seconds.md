@@ -18,7 +18,7 @@ Three keys. One page. After this you can drive reposix from your shell.
     └── 0002.md
 ```
 
-`ls`, `cat`, `grep -r`, `sed -i` — all of POSIX works as it always has. The bootstrap takes `24 ms` against the simulator ([`v0.9.0-latency.md`](../benchmarks/v0.9.0-latency.md)).
+`ls`, `cat`, `grep -r`, `sed -i` — all of POSIX works as it always has. The bootstrap takes `24 ms` against the simulator ([`latency.md`](../benchmarks/latency.md)).
 
 ## 2. Frontmatter IS the schema
 
@@ -66,5 +66,5 @@ cargo run -p reposix-cli -- init sim::demo /tmp/repo \
 That's the whole loop. Next:
 
 - [How reposix complements MCP and SDKs →](reposix-vs-mcp-and-sdks.md)
-- [Latency envelope (`8 ms` cache read · `24 ms` cold init) →](../benchmarks/v0.9.0-latency.md)
+- [Latency envelope (`8 ms` cache read · `24 ms` cold init) →](../benchmarks/latency.md)
 - [Sanctioned real-backend test targets →](../reference/testing-targets.md)

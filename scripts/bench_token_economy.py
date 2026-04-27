@@ -14,8 +14,8 @@ Also compares raw-JSON token costs across backends (BENCH-02):
 - Confluence: benchmarks/fixtures/confluence_pages.json
 - Jira (real adapter): not yet implemented
 
-Emits a Markdown table to benchmarks/RESULTS.md. Prints the same table to
-stdout.
+Emits a Markdown table to docs/benchmarks/token-economy.md. Prints the same
+table to stdout.
 
 Token counts are produced by Anthropic's count_tokens endpoint (see
 requirements-bench.txt for the SDK pin). Results are cached in
@@ -48,9 +48,13 @@ from typing import Optional
 # haiku is the cheapest stable model alias -- see 22-RESEARCH.md Pitfall 3.
 COUNT_MODEL = "claude-3-haiku-20240307"
 
-BENCH_DIR = pathlib.Path(__file__).resolve().parent.parent / "benchmarks"
+REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
+BENCH_DIR = REPO_ROOT / "benchmarks"
 FIXTURES = BENCH_DIR / "fixtures"
-RESULTS = BENCH_DIR / "RESULTS.md"
+# RESULTS.md was renamed and relocated to docs/benchmarks/token-economy.md so
+# mkdocs can publish it directly (§0.4 of HANDOVER.md). The file is still
+# regenerated in place by this script.
+RESULTS = REPO_ROOT / "docs" / "benchmarks" / "token-economy.md"
 
 GITHUB_FIXTURE = FIXTURES / "github_issues.json"
 CONFLUENCE_FIXTURE = FIXTURES / "confluence_pages.json"
@@ -370,7 +374,7 @@ def _parse_args(argv: Optional[list] = None) -> argparse.Namespace:
 
 
 def main(argv: Optional[list] = None) -> int:
-    """Run the benchmark and write benchmarks/RESULTS.md.
+    """Run the benchmark and write docs/benchmarks/token-economy.md.
 
     # Errors
     Calls ``sys.exit()`` if cache is missing and ``ANTHROPIC_API_KEY`` is

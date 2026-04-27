@@ -18,9 +18,9 @@ and `git` on real workflows — no MCP tool schemas, no custom CLI.
 
 ## Three measured numbers
 
-- **`8 ms`** — read one issue from the local cache after first fetch ([`docs/benchmarks/v0.9.0-latency.md`](docs/benchmarks/v0.9.0-latency.md)).
+- **`8 ms`** — read one issue from the local cache after first fetch ([`docs/benchmarks/latency.md`](docs/benchmarks/latency.md)).
 - **`24 ms`** — `reposix init` cold bootstrap against the simulator (soft threshold `500 ms`).
-- **`89.1%`** — input-context-token reduction vs a synthesized MCP-tool-catalog baseline for the same task, measured in [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md) (v0.7 token-economy benchmark, recalibrated to real Anthropic tokenization in v0.10.0; the architectural argument is unchanged in v0.9.0). The MCP comparison fixture is synthesized from public Atlassian Forge tool surfaces — see the artifact for methodology.
+- **`89.1%`** — input-context-token reduction vs a synthesized MCP-tool-catalog baseline for the same task, measured in [`docs/benchmarks/token-economy.md`](docs/benchmarks/token-economy.md) (v0.7 token-economy benchmark, recalibrated to real Anthropic tokenization in v0.10.0; the architectural argument is unchanged in v0.9.0). The MCP comparison fixture is synthesized from public Atlassian Forge tool surfaces — see the artifact for methodology.
 
 ## What it is
 
@@ -28,15 +28,32 @@ A git remote helper plus an on-disk cache. After `reposix init <backend>::<proje
 
 The 5-minute first-run tutorial lives at [`docs/tutorials/first-run.md`](docs/tutorials/first-run.md). The architectural argument and progressive-disclosure narrative live at <https://reubenjohn.github.io/reposix/>.
 
-## Quick start (5 min)
+## Install
 
-Linux only. Requires Rust stable 1.82+ and `git >= 2.34`.
+All eight crates ship to crates.io and prebuilt binaries land on every GitHub Release. Pick whichever fits your platform — these are the supported install paths.
 
 ```bash
-# Build the workspace.
-cargo build --release --workspace --bins
-export PATH="$PWD/target/release:$PATH"
+# macOS / Linux: Homebrew (tap is reubenjohn/reposix)
+brew install reubenjohn/reposix/reposix
 
+# Cross-platform: cargo binstall (no compile)
+cargo binstall reposix-cli reposix-remote
+
+# curl | sh (Linux/macOS)
+curl --proto '=https' --tlsv1.2 -LsSf \
+    https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.sh | sh
+
+# Windows: PowerShell + irm
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.ps1 | iex"
+```
+
+Other paths (Docker, prebuilt archives, source build) are documented in [`docs/tutorials/first-run.md`](docs/tutorials/first-run.md).
+
+## Quick start (5 min)
+
+Once you have `reposix` and `git-remote-reposix` on `PATH`:
+
+```bash
 # Start the simulator.
 reposix sim --bind 127.0.0.1:7878 &
 
@@ -53,6 +70,19 @@ git push                            # round-trips through the helper to the back
 ```
 
 The full walkthrough — including the `git pull --rebase` conflict cycle and the `git sparse-checkout` blob-limit recovery — is in [`docs/tutorials/first-run.md`](docs/tutorials/first-run.md).
+
+<details>
+<summary><strong>Build from source (advanced)</strong></summary>
+
+Linux. Requires Rust stable 1.82+ and `git >= 2.34`.
+
+```bash
+git clone https://github.com/reubenjohn/reposix && cd reposix
+cargo build --release --workspace --bins
+export PATH="$PWD/target/release:$PATH"
+```
+
+</details>
 
 ## How it works (one paragraph)
 

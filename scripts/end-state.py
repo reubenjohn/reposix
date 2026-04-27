@@ -163,21 +163,31 @@ def bootstrap_claims() -> list[dict[str, Any]]:
         "last_run_log_path": None,
     })
 
+    # Source-compile pattern detection: `git clone https://` (URL → real
+    # clone-and-build, not the prose "agent can `git clone`") AND
+    # `cargo build --release` (workspace-wide source build). The verifier
+    # asserts pkg-mgr install appears BEFORE either source-compile marker.
+    install_check_template = (
+        "python3 -c \"import re,sys; t=open('{path}').read(); "
+        "pm=re.search(r'(?im)(?:brew install|cargo binstall|curl[^\\n]*\\| ?sh|powershell[^\\n]*irm)', t); "
+        "src=[m.start() for m in re.finditer(r'(?im)git clone https?://|cargo build --release', t)]; "
+        "first_src=min(src) if src else None; "
+        "sys.exit(0 if pm and (first_src is None or pm.start() < first_src) else 1)\""
+    )
+
     claims.append({
         "id": "freshness/install-leads-with-pkg-mgr/docs-index",
         "category": "freshness-invariant",
         "description": (
             "docs/index.md hero must show a package-manager install command "
-            "(brew/binstall/curl) BEFORE any 'git clone'. Catches §0.2 drift."
+            "(brew/binstall/curl|sh/PowerShell-irm) BEFORE any 'git clone "
+            "https://' or 'cargo build --release' source-compile snippet. "
+            "Catches §0.2 drift. Bare prose 'git clone' (e.g. 'agent can git "
+            "clone') does NOT trip the check — only URL-form source builds."
         ),
         "verifier": {
             "type": "shell",
-            "command": (
-                "python3 -c \"import re,sys; t=open('docs/index.md').read(); "
-                "pm=re.search(r'(?im)(?:brew install|cargo binstall|curl[^\\n]*\\| ?sh)', t); "
-                "gc=re.search(r'(?im)git clone', t); "
-                "sys.exit(0 if pm and (not gc or pm.start() < gc.start()) else 1)\""
-            ),
+            "command": install_check_template.format(path="docs/index.md"),
         },
         "artifact": None,
         "blocked_by_claim": [],
@@ -191,16 +201,12 @@ def bootstrap_claims() -> list[dict[str, Any]]:
         "category": "freshness-invariant",
         "description": (
             "README.md must show a package-manager install command BEFORE "
-            "any 'git clone' / 'cargo build --release'. Catches §0.2 drift."
+            "any 'git clone https://' or 'cargo build --release' source-"
+            "compile snippet. §0.2."
         ),
         "verifier": {
             "type": "shell",
-            "command": (
-                "python3 -c \"import re,sys; t=open('README.md').read(); "
-                "pm=re.search(r'(?im)(?:brew install|cargo binstall|curl[^\\n]*\\| ?sh)', t); "
-                "gc=re.search(r'(?im)git clone', t); "
-                "sys.exit(0 if pm and (not gc or pm.start() < gc.start()) else 1)\""
-            ),
+            "command": install_check_template.format(path="README.md"),
         },
         "artifact": None,
         "blocked_by_claim": [],

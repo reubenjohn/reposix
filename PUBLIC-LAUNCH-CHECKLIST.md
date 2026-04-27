@@ -40,7 +40,7 @@ The pre-flight, day-of, and post-launch list the owner runs through before pulli
 ## Risks to mitigate
 
 - **"Why not just MCP?"** — link to [`docs/concepts/reposix-vs-mcp-and-sdks.md`](docs/concepts/reposix-vs-mcp-and-sdks.md). MCP is fine for tools that need rich schemas; reposix complements MCP for the operations every agent does constantly.
-- **"Where are the benchmarks?"** — link to [`docs/benchmarks/v0.9.0-latency.md`](docs/benchmarks/v0.9.0-latency.md). The token claim sits in [`benchmarks/RESULTS.md`](benchmarks/RESULTS.md).
+- **"Where are the benchmarks?"** — link to [`docs/benchmarks/latency.md`](docs/benchmarks/latency.md). The token claim sits in [`docs/benchmarks/token-economy.md`](docs/benchmarks/token-economy.md).
 - **"Is this audited?"** — link to [`SECURITY.md`](SECURITY.md) and the [trust-model](docs/how-it-works/trust-model.md). The lethal-trifecta cuts are listed there.
 - **"How does it work without MCP?"** — link to [`docs/how-it-works/git-layer.md`](docs/how-it-works/git-layer.md).
 

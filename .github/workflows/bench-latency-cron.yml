@@ -1,7 +1,7 @@
 name: bench-latency-cron
 
-# POLISH-08 (Phase 54): weekly refresh of docs/benchmarks/v0.9.0-latency.md
-# numbers via a cron-driven PR. Runs scripts/v0.9.0-latency.sh against
+# POLISH-08 (Phase 54): weekly refresh of docs/benchmarks/latency.md
+# numbers via a cron-driven PR. Runs scripts/latency-bench.sh against
 # all three real backends (when secrets are configured) and opens a PR
 # with the regenerated table — never pushes directly to `main` so a bad
 # row can't slip into docs without review (mkdocs publishes from main).
@@ -38,7 +38,7 @@ jobs:
         id: pre
         run: |
           # Snapshot the existing table for the PR body diff.
-          cp docs/benchmarks/v0.9.0-latency.md /tmp/latency-before.md
+          cp docs/benchmarks/latency.md /tmp/latency-before.md
       - name: Run latency bench against sim + available real backends
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -57,7 +57,7 @@ jobs:
             allowed="${allowed},https://${REPOSIX_JIRA_INSTANCE}.atlassian.net"
           fi
           export REPOSIX_ALLOWED_ORIGINS="$allowed"
-          bash scripts/v0.9.0-latency.sh
+          bash scripts/latency-bench.sh
       - name: Compute PR body
         id: body
         run: |
@@ -68,13 +68,13 @@ jobs:
           {
             echo "## Weekly latency refresh"
             echo
-            echo "Cron-driven refresh of \`docs/benchmarks/v0.9.0-latency.md\` from"
-            echo "\`scripts/v0.9.0-latency.sh\`."
+            echo "Cron-driven refresh of \`docs/benchmarks/latency.md\` from"
+            echo "\`scripts/latency-bench.sh\`."
             echo
             echo "### Diff"
             echo
             echo '```diff'
-            if diff -u /tmp/latency-before.md docs/benchmarks/v0.9.0-latency.md; then
+            if diff -u /tmp/latency-before.md docs/benchmarks/latency.md; then
               echo "(no change — backends within ±20% wobble band)"
             fi
             echo '```'
@@ -100,4 +100,4 @@ jobs:
             bench
             automated
           add-paths: |
-            docs/benchmarks/v0.9.0-latency.md
+            docs/benchmarks/latency.md

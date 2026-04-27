@@ -3,7 +3,7 @@
 
 Mirrors the hand-authored SVG at social/assets/benchmark.svg. Kept as a
 committed script so the image is reproducible and the values trace back
-to benchmarks/RESULTS.md.
+to docs/benchmarks/token-economy.md.
 """
 from __future__ import annotations
 

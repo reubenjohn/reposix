@@ -193,7 +193,7 @@ jobs:
 
   bench-latency-v09:
     # POLISH-08 (Phase 54): real-backend latency capture for the
-    # docs/benchmarks/v0.9.0-latency.md table. Runs scripts/v0.9.0-latency.sh
+    # docs/benchmarks/latency.md table. Runs scripts/latency-bench.sh
     # with all three credential bundles wired from secrets; each backend
     # block in the script skips cleanly when its bundle is absent, so this
     # job runs cleanly on fork PRs (sim-only) and populates real-backend
@@ -237,13 +237,13 @@ jobs:
             allowed="${allowed},https://${REPOSIX_JIRA_INSTANCE}.atlassian.net"
           fi
           export REPOSIX_ALLOWED_ORIGINS="$allowed"
-          bash scripts/v0.9.0-latency.sh
+          bash scripts/latency-bench.sh
       - name: Upload regenerated latency table
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: latency-table
-          path: docs/benchmarks/v0.9.0-latency.md
+          path: docs/benchmarks/latency.md
           if-no-files-found: error
           retention-days: 90
 

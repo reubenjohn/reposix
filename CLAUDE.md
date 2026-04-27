@@ -274,7 +274,7 @@ If you (the agent) notice this CLAUDE.md getting hard to keep in working memory:
 - `docs/research/initial-report.md` — full architectural argument for git-remote-helper + partial clone.
 - `docs/research/agentic-engineering-reference.md` — dark-factory pattern, lethal trifecta, simulator-first.
 - `docs/reference/testing-targets.md` — sanctioned real-backend test targets (TokenWorld, `reubenjohn/reposix`, JIRA `TEST`).
-- `docs/benchmarks/v0.9.0-latency.md` — golden-path latency envelope per backend.
+- `docs/benchmarks/latency.md` — golden-path latency envelope per backend.
 - `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` — ratified design doc for the v0.9.0 pivot.
 - `.planning/PROJECT.md` — current scope.
 - `.planning/STATE.md` — current cursor.

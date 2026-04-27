@@ -138,7 +138,8 @@ nav:
       - JIRA backend: reference/jira.md
       - Confluence backend: reference/confluence.md
   - Benchmarks:
-      - v0.9.0 latency: benchmarks/v0.9.0-latency.md
+      - Latency: benchmarks/latency.md
+      - Token economy: benchmarks/token-economy.md
   - Decisions:
       - ADR-001 GitHub state mapping: decisions/001-github-state-mapping.md
       - ADR-002 Confluence page mapping: decisions/002-confluence-page-mapping.md

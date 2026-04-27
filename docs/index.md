@@ -10,8 +10,8 @@ reposix exposes REST-based issue trackers (Jira, GitHub Issues, Confluence) as a
 
 <div class="grid cards" markdown>
 
--   **`89.1%`** fewer tokens vs MCP for the same 3-issue read+edit+push workflow ([benchmarks/RESULTS.md](https://github.com/reubenjohn/reposix/blob/main/benchmarks/RESULTS.md))
--   **`8 ms`** cached read · **`24 ms`** cold init ([latency](benchmarks/v0.9.0-latency.md))
+-   **`89.1%`** fewer tokens vs MCP for the same 3-issue read+edit+push workflow ([token economy](benchmarks/token-economy.md))
+-   **`8 ms`** cached read · **`24 ms`** cold init ([latency](benchmarks/latency.md))
 -   **`5-line install`** — `curl`, `brew`, `cargo binstall`, or `irm` ([first-run.md](tutorials/first-run.md))
 
 </div>
@@ -35,7 +35,7 @@ sequenceDiagram
     Agent->>MCP: call_tool(post_comment, ...)
 ```
 
-Same workflow, two loops. The reposix loop reuses `cat`/`sed`/`git` — vocabulary the agent already has — and pushes one commit. The MCP loop discovers tools, then issues one call per field mutation. The token gap is measured: see [`benchmarks/RESULTS.md`](https://github.com/reubenjohn/reposix/blob/main/benchmarks/RESULTS.md).
+Same workflow, two loops. The reposix loop reuses `cat`/`sed`/`git` — vocabulary the agent already has — and pushes one commit. The MCP loop discovers tools, then issues one call per field mutation. The token gap is measured: see [`benchmarks/token-economy.md`](benchmarks/token-economy.md).
 
 ## 30-second install
 
@@ -86,7 +86,7 @@ reposix's `8 ms` cache read is measured against the in-process simulator, but th
 - **GitHub — [`reubenjohn/reposix` issues](reference/testing-targets.md#github-reubenjohnreposix-issues)** (this project's own tracker).
 - **JIRA — [project `TEST`](reference/testing-targets.md#jira-project-test-overridable)** (overridable via `JIRA_TEST_PROJECT`).
 
-Latency for each backend is captured in [`docs/benchmarks/v0.9.0-latency.md`](benchmarks/v0.9.0-latency.md). Sim cold init is `24 ms` (soft threshold `500 ms`); list-issues `9 ms`; capabilities probe `5 ms`. Real-backend cells fill in once CI secret packs are wired (Phase 36).
+Latency for each backend is captured in [`docs/benchmarks/latency.md`](benchmarks/latency.md). Sim cold init is `24 ms` (soft threshold `500 ms`); list-issues `9 ms`; capabilities probe `5 ms`. Real-backend cells fill in once CI secret packs are wired (Phase 36).
 
 ## What each backend can do
 
@@ -108,7 +108,10 @@ JIRA is currently read-only — write paths are tracked in
 For the canonical struct + per-backend constant, see
 `crates/reposix-core/src/backend.rs` (`BackendCapabilities`).
 
-## Six-line quickstart
+<details markdown>
+<summary><strong>Build from source (advanced)</strong></summary>
+
+The supported install path is the package-manager band above (curl / Homebrew / cargo binstall / PowerShell `irm`). Build-from-source is for contributors and for platforms not covered by the prebuilt binary archives.
 
 ```bash
 git clone https://github.com/reubenjohn/reposix && cd reposix
@@ -121,6 +124,8 @@ cd /tmp/reposix-demo && git checkout -B main refs/reposix/origin/main && cat iss
 
 After `init`, agent UX is pure git: `cat`, `grep -r`, edit, `git commit`, `git push`. The bootstrap takes ≤ `24 ms` against the simulator on a stock laptop.
 
+</details>
+
 ## Where to go next
 
 <div class="grid cards" markdown>
@@ -128,7 +133,8 @@ After `init`, agent UX is pure git: `cat`, `grep -r`, edit, `git commit`, `git p
 -   💡 **[Mental model in 60 seconds](concepts/mental-model-in-60-seconds.md)** — three keys to the design (clone = snapshot · frontmatter = schema · `git push` = sync verb).
 -   ⚖️ **[reposix vs MCP and SDKs](concepts/reposix-vs-mcp-and-sdks.md)** — positioning, with measured numbers per row.
 -   🔗 **How it works** — [the filesystem layer](how-it-works/filesystem-layer.md), [the git layer](how-it-works/git-layer.md), and [the trust model](how-it-works/trust-model.md). One diagram each.
--   📊 **[Latency envelope](benchmarks/v0.9.0-latency.md)** — the v0.9.0 measured numbers.
+-   📊 **[Latency envelope](benchmarks/latency.md)** — the v0.9.0 measured numbers.
+-   🪙 **[Token economy](benchmarks/token-economy.md)** — the 89.1% reduction vs MCP, methodology and fixtures.
 
 </div>
 
@@ -140,4 +146,4 @@ The detail of how each piece works lives in [How it works](how-it-works/filesyst
 
 ---
 
-*Honest scope: built across autonomous coding-agent sessions; v0.9.0 architecture pivoted from a virtual filesystem to git-native partial clone (2026-04-24). Treat as alpha — but every demo on this site is reproducible on a stock Ubuntu host in under five minutes. The v0.7 token-economy benchmark measured an **89.1%** input-context-token reduction vs a synthesized MCP-tool-catalog baseline (modeled on the public Atlassian Forge surface — see [`benchmarks/RESULTS.md`](https://github.com/reubenjohn/reposix/blob/main/benchmarks/RESULTS.md) for the methodology and caveats).*
+*Honest scope: built across autonomous coding-agent sessions; v0.9.0 architecture pivoted from a virtual filesystem to git-native partial clone (2026-04-24). Treat as alpha — but every demo on this site is reproducible on a stock Ubuntu host in under five minutes. The v0.7 token-economy benchmark measured an **89.1%** input-context-token reduction vs a synthesized MCP-tool-catalog baseline (modeled on the public Atlassian Forge surface — see [`benchmarks/token-economy.md`](benchmarks/token-economy.md) for the methodology and caveats).*

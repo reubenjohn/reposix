@@ -1,15 +1,15 @@
 # SESSION-END-STATE-VERDICT — RED
 
 - Session ID: `5468ec00-693b-45ce-bfbd-b145d6382b9b`
-- Generated at: `2026-04-27T05:20:52Z`
+- Generated at: `2026-04-27T05:30:05Z`
 - Workspace version: `0.11.1`
 
 | status | count |
 |---|---|
-| PASS | 11 |
+| PASS | 16 |
 | FAIL | 4 |
 | PARTIAL | 0 |
-| NOT-VERIFIED | 4 |
+| NOT-VERIFIED | 0 |
 
 ## FAIL
 
@@ -22,25 +22,15 @@
 - `freshness/no-loose-roadmap-or-requirements` — No loose v*ROADMAP*.md / v*REQUIREMENTS*.md outside *phases/ or .planning/archive/. §0.5.
   - log: `.planning/verifications/_logs/freshness__no-loose-roadmap-or-requirements.txt`
 
-## NOT-VERIFIED
-
-- `mermaid-renders/how-it-works/filesystem-layer` — docs/how-it-works/filesystem-layer.md — playwright walk on a cache-cold navigation must show every <pre.mermaid> block has at least one <svg> child AND zero render-error console messages. §0.1 + §0.1.b.
-  - log: `.planning/verifications/_logs/mermaid-renders__how-it-works__filesystem-layer.txt`
-  - artifact (expected): `.planning/verifications/playwright/how-it-works/filesystem-layer.json`
-- `mermaid-renders/how-it-works/git-layer` — docs/how-it-works/git-layer.md — playwright walk on a cache-cold navigation must show every <pre.mermaid> block has at least one <svg> child AND zero render-error console messages. §0.1 + §0.1.b.
-  - log: `.planning/verifications/_logs/mermaid-renders__how-it-works__git-layer.txt`
-  - artifact (expected): `.planning/verifications/playwright/how-it-works/git-layer.json`
-- `mermaid-renders/how-it-works/time-travel` — docs/how-it-works/time-travel.md — playwright walk on a cache-cold navigation must show every <pre.mermaid> block has at least one <svg> child AND zero render-error console messages. §0.1 + §0.1.b.
-  - log: `.planning/verifications/_logs/mermaid-renders__how-it-works__time-travel.txt`
-  - artifact (expected): `.planning/verifications/playwright/how-it-works/time-travel.json`
-- `mermaid-renders/how-it-works/trust-model` — docs/how-it-works/trust-model.md — playwright walk on a cache-cold navigation must show every <pre.mermaid> block has at least one <svg> child AND zero render-error console messages. §0.1 + §0.1.b.
-  - log: `.planning/verifications/_logs/mermaid-renders__how-it-works__trust-model.txt`
-  - artifact (expected): `.planning/verifications/playwright/how-it-works/trust-model.json`
-
 ## PASS
 
 - `freshness/benchmarks-in-mkdocs-nav`
 - `freshness/no-orphan-docs`
+- `mermaid-renders/how-it-works/filesystem-layer`
+- `mermaid-renders/how-it-works/git-layer`
+- `mermaid-renders/how-it-works/trust-model`
+- `mermaid-renders/index`
+- `mermaid-renders/reference/git-remote`
 - `ci/main-green-on-latest-completed`
 - `crates-io/reposix-core-at-workspace-version`
 - `crates-io/reposix-cache-at-workspace-version`

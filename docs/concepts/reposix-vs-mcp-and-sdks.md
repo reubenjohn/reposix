@@ -11,14 +11,14 @@ reposix **complements** REST and MCP — it does not stand in their place. The 8
 | Axis | reposix | MCP | Raw REST SDK |
 |---|---|---|---|
 | **Tokens before first useful op** | `~0` (POSIX is in pre-training) | `~100k` schema discovery per server | `~5k` SDK boilerplate per backend |
-| **Latency, cached read** | `8 ms` ([sim](../benchmarks/v0.9.0-latency.md)) | `200–500 ms` tool dispatch + LLM | `100–300 ms` HTTPS round-trip |
-| **Latency, cold init / first call** | `24 ms` cold init ([sim](../benchmarks/v0.9.0-latency.md)) | one tool-list at session start | per-call HTTPS handshake |
+| **Latency, cached read** | `8 ms` ([sim](../benchmarks/latency.md)) | `200–500 ms` tool dispatch + LLM | `100–300 ms` HTTPS round-trip |
+| **Latency, cold init / first call** | `24 ms` cold init ([sim](../benchmarks/latency.md)) | one tool-list at session start | per-call HTTPS handshake |
 | **Conflict semantics** | native git merge conflicts; standard `git pull --rebase` recovery | 409 retry in tool runtime | 409 retry in caller code |
 | **Pre-training overlap** | ~100% — POSIX + git are in every model | ~0% — protocol is post-training | ~80% — REST patterns are pre-trained |
 | **Egress surface** | one binary (`git-remote-reposix`); audited | tool runtime + transport (varies per server) | per-call, untyped |
 | **Audit trail** | append-only SQLite + `git log` | per-server, varies | per-call, depends on caller |
 
-The latency cells for reposix are measured ([`docs/benchmarks/v0.9.0-latency.md`](../benchmarks/v0.9.0-latency.md)). The MCP and SDK cells are characterized from public-API behaviour and the reposix project's own [agentic-engineering reference](../research/agentic-engineering-reference.md); they are not measured by reposix's harness.
+The latency cells for reposix are measured ([`docs/benchmarks/latency.md`](../benchmarks/latency.md)). The MCP and SDK cells are characterized from public-API behaviour and the reposix project's own [agentic-engineering reference](../research/agentic-engineering-reference.md); they are not measured by reposix's harness.
 
 !!! note "About the MCP comparison"
 
@@ -79,5 +79,5 @@ Both paths route through the same `REPOSIX_ALLOWED_ORIGINS` egress allowlist whe
 Next:
 
 - [Mental model in 60 seconds →](mental-model-in-60-seconds.md)
-- [Latency envelope →](../benchmarks/v0.9.0-latency.md)
+- [Latency envelope →](../benchmarks/latency.md)
 - [Sanctioned real-backend test targets →](../reference/testing-targets.md)

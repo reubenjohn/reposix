@@ -39,7 +39,7 @@ flowchart TD
     O -->|bytes| G
 ```
 
-The first `cat` of a given issue triggers one REST call. Every `cat` after that is a local read — `8 ms` against the simulator, [measured](../benchmarks/v0.9.0-latency.md). The tree (filenames, directory structure, blob OIDs) is fetched once at `init` and is essentially free thereafter; only blob *contents* are lazy.
+The first `cat` of a given issue triggers one REST call. Every `cat` after that is a local read — `8 ms` against the simulator, [measured](../benchmarks/latency.md). The tree (filenames, directory structure, blob OIDs) is fetched once at `init` and is essentially free thereafter; only blob *contents* are lazy.
 
 ## Why partial clone, not a virtual filesystem
 

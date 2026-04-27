@@ -1,7 +1,11 @@
+---
+last_measured_at: 2026-04-27T04:26:20Z
+---
+
 # v0.9.0 Latency Envelope
 
 **Generated:** 2026-04-27T04:26:20Z (commit `5108dbc`)
-**Reproducer:** `bash scripts/v0.9.0-latency.sh`
+**Reproducer:** `bash scripts/latency-bench.sh`
 
 ## How to read this
 
@@ -19,7 +23,7 @@ Take the sim column as a lower bound for transport overhead and the
 real-backend columns as a proxy for "what an agent on a typical laptop
 will see."
 
-The MCP/REST baseline comparison sits in `benchmarks/RESULTS.md`
+The MCP/REST baseline comparison sits in [`token-economy.md`](./token-economy.md)
 (token-economy benchmark, v0.7.0). v0.9.0's win is on the latency
 axis, not the token axis: the cache-backed bare repo means an agent
 can `grep -r` an issue tracker without re-hitting the API for every
@@ -63,7 +67,7 @@ for cadence; the weekly cron variant lives in
 ## Reproduce
 
 ```bash
-bash scripts/v0.9.0-latency.sh
+bash scripts/latency-bench.sh
 ```
 
 The script regenerates this file in place. To capture real-backend
@@ -78,7 +82,7 @@ export ATLASSIAN_API_KEY=… ATLASSIAN_EMAIL=… REPOSIX_CONFLUENCE_TENANT=…
 export JIRA_EMAIL=… JIRA_API_TOKEN=… REPOSIX_JIRA_INSTANCE=…
 
 export REPOSIX_ALLOWED_ORIGINS='https://api.github.com,https://reuben-john.atlassian.net'
-bash scripts/v0.9.0-latency.sh
+bash scripts/latency-bench.sh
 ```
 
 See `docs/reference/testing-targets.md` for the canonical safe-to-mutate

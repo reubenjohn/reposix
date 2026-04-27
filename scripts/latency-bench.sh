@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/v0.9.0-latency.sh — v0.11.0 Phase 54 latency capture (POLISH-08).
+# scripts/latency-bench.sh — v0.11.0 Phase 54 latency capture (POLISH-08).
 #
 # AUDIENCE: developer / sales asset author
 # RUNTIME_SEC: ~15s sim-only, ~60s with all three real-backend bundles.
@@ -20,14 +20,14 @@
 # Real-backend columns are populated when the relevant env vars are
 # present; otherwise they're empty / "n/a". Default is sim-only.
 #
-# Output: a fully-formatted Markdown file at docs/benchmarks/v0.9.0-latency.md
+# Output: a fully-formatted Markdown file at docs/benchmarks/latency.md
 # (running this script is the regenerator).
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-OUT="${WORKSPACE_ROOT}/docs/benchmarks/v0.9.0-latency.md"
+OUT="${WORKSPACE_ROOT}/docs/benchmarks/latency.md"
 
 SIM_BIND="127.0.0.1:7780"
 SIM_URL="http://${SIM_BIND}"
@@ -57,12 +57,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "v0.9.0-latency: ensuring binaries are fresh..." >&2
+echo "latency-bench: ensuring binaries are fresh..." >&2
 (cd "$WORKSPACE_ROOT" && cargo build --workspace --bins -q 2>&1 | tail -3)
 BIN_DIR="${WORKSPACE_ROOT}/target/debug"
 export PATH="${BIN_DIR}:${PATH}"
 
-echo "v0.9.0-latency: spawning reposix-sim on $SIM_BIND" >&2
+echo "latency-bench: spawning reposix-sim on $SIM_BIND" >&2
 SEED="${WORKSPACE_ROOT}/crates/reposix-sim/fixtures/seed.json"
 "${BIN_DIR}/reposix-sim" --bind "$SIM_BIND" --db "$SIM_DB" --ephemeral --seed-file "$SEED" &
 SIM_PID=$!
@@ -163,7 +163,7 @@ SIM_CAP_MS=$(median3_step sim_cap)
 GH_INIT_MS=""; GH_LIST_MS=""; GH_GET_MS=""; GH_PATCH_MS=""; GH_CAP_MS=""
 GH_N=""; GH_BLOBS=""
 if [[ -n "${GITHUB_TOKEN:-}" ]]; then
-    echo "v0.9.0-latency: GitHub probe — using reubenjohn/reposix issues" >&2
+    echo "latency-bench: GitHub probe — using reubenjohn/reposix issues" >&2
     GH_PROJECT="reubenjohn/reposix"
     GH_REPO="${RUN_DIR}/gh-repo"
     GH_ORIGIN="https://api.github.com"
@@ -217,7 +217,7 @@ if [[ -n "${GITHUB_TOKEN:-}" ]]; then
     }
     GH_CAP_MS=$(median3_step gh_cap)
 else
-    echo "v0.9.0-latency: GITHUB_TOKEN unset — skipping GitHub column" >&2
+    echo "latency-bench: GITHUB_TOKEN unset — skipping GitHub column" >&2
 fi
 
 # ---- Confluence block (skipped cleanly when bundle absent) ------------
@@ -225,7 +225,7 @@ CF_INIT_MS=""; CF_LIST_MS=""; CF_GET_MS=""; CF_PATCH_MS=""; CF_CAP_MS=""
 CF_N=""; CF_BLOBS=""
 if [[ -n "${ATLASSIAN_API_KEY:-}" && -n "${ATLASSIAN_EMAIL:-}" \
       && -n "${REPOSIX_CONFLUENCE_TENANT:-}" ]]; then
-    echo "v0.9.0-latency: Confluence probe — using TokenWorld space" >&2
+    echo "latency-bench: Confluence probe — using TokenWorld space" >&2
     CF_PROJECT="${REPOSIX_CONFLUENCE_SPACE:-TokenWorld}"
     CF_REPO="${RUN_DIR}/cf-repo"
     CF_ORIGIN="https://${REPOSIX_CONFLUENCE_TENANT}.atlassian.net"
@@ -294,7 +294,7 @@ if [[ -n "${ATLASSIAN_API_KEY:-}" && -n "${ATLASSIAN_EMAIL:-}" \
     }
     CF_CAP_MS=$(median3_step cf_cap)
 else
-    echo "v0.9.0-latency: Atlassian Confluence bundle unset — skipping Confluence column" >&2
+    echo "latency-bench: Atlassian Confluence bundle unset — skipping Confluence column" >&2
 fi
 
 # ---- JIRA block (skipped cleanly when bundle absent) -----------------
@@ -302,7 +302,7 @@ JR_INIT_MS=""; JR_LIST_MS=""; JR_GET_MS=""; JR_PATCH_MS=""; JR_CAP_MS=""
 JR_N=""; JR_BLOBS=""
 if [[ -n "${JIRA_EMAIL:-}" && -n "${JIRA_API_TOKEN:-}" \
       && -n "${REPOSIX_JIRA_INSTANCE:-}" ]]; then
-    echo "v0.9.0-latency: JIRA probe — using project ${JIRA_TEST_PROJECT:-${REPOSIX_JIRA_PROJECT:-TEST}}" >&2
+    echo "latency-bench: JIRA probe — using project ${JIRA_TEST_PROJECT:-${REPOSIX_JIRA_PROJECT:-TEST}}" >&2
     JR_PROJECT="${JIRA_TEST_PROJECT:-${REPOSIX_JIRA_PROJECT:-TEST}}"
     JR_REPO="${RUN_DIR}/jr-repo"
     JR_ORIGIN="https://${REPOSIX_JIRA_INSTANCE}.atlassian.net"
@@ -361,7 +361,7 @@ if [[ -n "${JIRA_EMAIL:-}" && -n "${JIRA_API_TOKEN:-}" \
     }
     JR_CAP_MS=$(median3_step jr_cap)
 else
-    echo "v0.9.0-latency: JIRA bundle unset — skipping JIRA column" >&2
+    echo "latency-bench: JIRA bundle unset — skipping JIRA column" >&2
 fi
 
 # ---- Cell-format helpers ------------------------------------------------
@@ -417,10 +417,14 @@ JR_PATCH_CELL="$(fmt_ms "$JR_PATCH_MS")"
 JR_CAP_CELL="$(fmt_ms "$JR_CAP_MS")"
 
 cat > "$OUT" <<MARKDOWN
+---
+last_measured_at: ${GENERATED_AT}
+---
+
 # v0.9.0 Latency Envelope
 
 **Generated:** ${GENERATED_AT} (commit \`${GIT_SHA}\`)
-**Reproducer:** \`bash scripts/v0.9.0-latency.sh\`
+**Reproducer:** \`bash scripts/latency-bench.sh\`
 
 ## How to read this
 
@@ -438,7 +442,7 @@ Take the sim column as a lower bound for transport overhead and the
 real-backend columns as a proxy for "what an agent on a typical laptop
 will see."
 
-The MCP/REST baseline comparison sits in \`benchmarks/RESULTS.md\`
+The MCP/REST baseline comparison sits in \`docs/benchmarks/token-economy.md\`
 (token-economy benchmark, v0.7.0). v0.9.0's win is on the latency
 axis, not the token axis: the cache-backed bare repo means an agent
 can \`grep -r\` an issue tracker without re-hitting the API for every
@@ -482,7 +486,7 @@ for cadence; the weekly cron variant lives in
 ## Reproduce
 
 \`\`\`bash
-bash scripts/v0.9.0-latency.sh
+bash scripts/latency-bench.sh
 \`\`\`
 
 The script regenerates this file in place. To capture real-backend
@@ -497,14 +501,14 @@ export ATLASSIAN_API_KEY=… ATLASSIAN_EMAIL=… REPOSIX_CONFLUENCE_TENANT=…
 export JIRA_EMAIL=… JIRA_API_TOKEN=… REPOSIX_JIRA_INSTANCE=…
 
 export REPOSIX_ALLOWED_ORIGINS='https://api.github.com,https://reuben-john.atlassian.net'
-bash scripts/v0.9.0-latency.sh
+bash scripts/latency-bench.sh
 \`\`\`
 
 See \`docs/reference/testing-targets.md\` for the canonical safe-to-mutate
 test targets.
 MARKDOWN
 
-echo "v0.9.0-latency: regenerated $OUT" >&2
+echo "latency-bench: regenerated $OUT" >&2
 echo "  sim    init=${SIM_INIT_MS}ms list=${SIM_LIST_MS}ms get=${SIM_GET_MS}ms patch=${SIM_PATCH_MS}ms cap=${SIM_CAP_MS}ms (N=${SIM_N}, blobs=${SIM_BLOBS:-0})" >&2
 [[ -n "$GH_INIT_MS" ]] && echo "  github init=${GH_INIT_MS}ms list=${GH_LIST_MS}ms get=${GH_GET_MS}ms patch=${GH_PATCH_MS}ms cap=${GH_CAP_MS}ms (N=${GH_N}, blobs=${GH_BLOBS:-0})" >&2 || true
 [[ -n "$CF_INIT_MS" ]] && echo "  confluence init=${CF_INIT_MS}ms list=${CF_LIST_MS}ms get=${CF_GET_MS}ms patch=${CF_PATCH_MS}ms cap=${CF_CAP_MS}ms (N=${CF_N}, blobs=${CF_BLOBS:-0})" >&2 || true

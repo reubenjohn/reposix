@@ -15,7 +15,7 @@ The simulator is the **default** backend per project [Operating Principle](../re
 - A SQLite store (bundled `rusqlite`, WAL mode) holding the issues table and the append-only `audit_events` table.
 - A deterministic seed loader (`crates/reposix-sim/fixtures/seed.json`) that lets every test run from a known starting state.
 
-Latency envelope on the dev host: `9 ms` to list issues, `8 ms` to get one issue, `8 ms` to PATCH one — see [v0.9.0 latency](../benchmarks/v0.9.0-latency.md). The sim is the lower bound for transport overhead; treat real-backend numbers as the upper bound.
+Latency envelope on the dev host: `9 ms` to list issues, `8 ms` to get one issue, `8 ms` to PATCH one — see [latency](../benchmarks/latency.md). The sim is the lower bound for transport overhead; treat real-backend numbers as the upper bound.
 
 ## Run it
 
@@ -82,7 +82,7 @@ The shape is documented in the [HTTP API reference](http-api.md); the sim is the
 - The `cargo test --workspace` suite spins ephemeral sims via `run_with_listener` on `127.0.0.1:0`.
 - `scripts/dark-factory-test.sh sim` runs the [`reposix-agent-flow`](../guides/integrate-with-your-agent.md) regression against a fresh sim.
 - The [first-run tutorial](../tutorials/first-run.md) is the user-facing entrypoint.
-- Latency capture (`scripts/v0.9.0-latency.sh`) measures sim numbers as the lower bound published in [v0.9.0 latency](../benchmarks/v0.9.0-latency.md).
+- Latency capture (`scripts/latency-bench.sh`) measures sim numbers as the lower bound published in [latency](../benchmarks/latency.md).
 
 ## See also
 
