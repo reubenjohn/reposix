@@ -1,10 +1,10 @@
 ---
-last_measured_at: 2026-04-27T04:26:20Z
+last_measured_at: 2026-04-27T05:57:07Z
 ---
 
 # v0.9.0 Latency Envelope
 
-**Generated:** 2026-04-27T04:26:20Z (commit `5108dbc`)
+**Generated:** 2026-04-27T05:57:07Z (commit `8ec7322`)
 **Reproducer:** `bash scripts/latency-bench.sh`
 
 ## How to read this
@@ -23,7 +23,7 @@ Take the sim column as a lower bound for transport overhead and the
 real-backend columns as a proxy for "what an agent on a typical laptop
 will see."
 
-The MCP/REST baseline comparison sits in [`token-economy.md`](./token-economy.md)
+The MCP/REST baseline comparison sits in `docs/benchmarks/token-economy.md`
 (token-economy benchmark, v0.7.0). v0.9.0's win is on the latency
 axis, not the token axis: the cache-backed bare repo means an agent
 can `grep -r` an issue tracker without re-hitting the API for every
@@ -34,10 +34,10 @@ match.
 | Step                                          | sim                          | github                       | confluence                   | jira                         |
 |-----------------------------------------------|------------------------------|------------------------------|------------------------------|------------------------------|
 | `reposix init` cold [^blob]                 | 27 ms             | 26 ms              | 26 ms              | 26 ms              |
-| List records [^N]                             | 9 ms (N=6)             | 335 ms (N=14)              |               | 268 ms (N=0)              |
-| Get one record                                | 9 ms              | 241 ms               |                | n/a               |
-| PATCH record (no-op)                          | 12 ms            | 575 ms             |              | n/a             |
-| Helper `capabilities` probe                 | 6 ms              | 5 ms               | 6 ms               | 5 ms               |
+| List records [^N]                             | 9 ms (N=6)             | 489 ms (N=17)              |               | 263 ms (N=0)              |
+| Get one record                                | 8 ms              | 253 ms               |                | n/a               |
+| PATCH record (no-op)                          | 12 ms            | 471 ms             |              | n/a             |
+| Helper `capabilities` probe                 | 6 ms              | 6 ms               | 5 ms               | 6 ms               |
 
 [^blob]: `reposix init` materializes blobs lazily (partial clone with
     `--filter=blob:none`). Blob counts at end of init: sim=0,
