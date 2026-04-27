@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "comment": "Quality Gates catalog -- perf dimension. Schema spec: quality/catalogs/README.md. Verifier impl: quality/gates/perf/. Reports: quality/reports/verifications/perf/. v0.12.0 ships file-relocate stubs only; full gate logic deferred to v0.12.1 per MIGRATE-03 (all rows WAIVED until 2026-07-26).",
+  "dimension": "perf",
+  "rows": [
+    {
+      "id": "perf/latency-bench",
+      "dimension": "perf",
+      "cadence": "weekly",
+      "kind": "mechanical",
+      "sources": [
+        "scripts/latency-bench.sh",
+        ".github/workflows/bench-latency-cron.yml"
+      ],
+      "command": "bash quality/gates/perf/latency-bench.sh sim",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/perf/latency-bench.sh sim exits 0",
+          "the bench output (markdown table) is greppable from docs/benchmarks/latency.md",
+          "[v0.12.1] the latency cells in docs/benchmarks/latency.md match the bench output to within +/-2ms"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/perf/latency-bench.sh",
+        "args": ["sim"],
+        "timeout_s": 300,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/perf/latency-bench.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: scripts/latency-bench.sh has not yet been migrated to quality/gates/perf/ (Wave E ships the move); WAIVED until 2026-07-26",
+      "waiver": {
+        "until": "2026-07-26T00:00:00Z",
+        "reason": "v0.12.1 stub per MIGRATE-03 -- file-relocate only at v0.12.0; full gate logic deferred (latency cross-check + token-economy bench cross-check + headline-numbers cross-check require new verifier code that did not fit in v0.12.0 P59 scope per the planner authority limits in REQUIREMENTS.md)",
+        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md",
+        "tracked_in": "MIGRATE-03 v0.12.1 (perf-dimension full implementation per REQUIREMENTS.md Out of Scope)"
+      }
+    },
+    {
+      "id": "perf/token-economy-bench",
+      "dimension": "perf",
+      "cadence": "weekly",
+      "kind": "mechanical",
+      "sources": [
+        "scripts/bench_token_economy.py",
+        "scripts/test_bench_token_economy.py"
+      ],
+      "command": "python3 quality/gates/perf/bench-token-economy.py",
+      "expected": {
+        "asserts": [
+          "python3 quality/gates/perf/bench-token-economy.py exits 0",
+          "the bench output is greppable from docs/benchmarks/token-economy.md",
+          "[v0.12.1] the headline 89.1% in docs/index.md + README.md matches the bench output"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/perf/bench-token-economy.py",
+        "args": [],
+        "timeout_s": 120,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/perf/token-economy-bench.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: scripts/bench_token_economy.py has not yet been migrated to quality/gates/perf/ (Wave E ships the move); WAIVED until 2026-07-26",
+      "waiver": {
+        "until": "2026-07-26T00:00:00Z",
+        "reason": "v0.12.1 stub per MIGRATE-03 -- file-relocate only at v0.12.0; full gate logic deferred (latency cross-check + token-economy bench cross-check + headline-numbers cross-check require new verifier code that did not fit in v0.12.0 P59 scope per the planner authority limits in REQUIREMENTS.md)",
+        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md",
+        "tracked_in": "MIGRATE-03 v0.12.1 (perf-dimension full implementation per REQUIREMENTS.md Out of Scope)"
+      }
+    },
+    {
+      "id": "perf/headline-numbers-cross-check",
+      "dimension": "perf",
+      "cadence": "weekly",
+      "kind": "mechanical",
+      "sources": [
+        "docs/index.md:13-14",
+        "README.md:21,23",
+        "docs/benchmarks/latency.md",
+        "docs/benchmarks/token-economy.md"
+      ],
+      "command": "python3 quality/gates/perf/headline-numbers-cross-check.py",
+      "expected": {
+        "asserts": [
+          "[v0.12.1] every headline number in docs/index.md + README.md is greppable from a benchmark fixture file",
+          "[v0.12.1] the cross-check fails RED if any headline drifts from its bench source"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/perf/headline-numbers-cross-check.py",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/perf/headline-numbers-cross-check.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: full v0.12.1 implementation; the verifier compares headline numbers in docs/index.md + README.md against benchmark fixture files -- WAIVED until 2026-07-26",
+      "waiver": {
+        "until": "2026-07-26T00:00:00Z",
+        "reason": "v0.12.1 stub per MIGRATE-03 -- file-relocate only at v0.12.0; full gate logic deferred (latency cross-check + token-economy bench cross-check + headline-numbers cross-check require new verifier code that did not fit in v0.12.0 P59 scope per the planner authority limits in REQUIREMENTS.md)",
+        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md",
+        "tracked_in": "MIGRATE-03 v0.12.1 (perf-dimension full implementation per REQUIREMENTS.md Out of Scope)"
+      }
+    }
+  ]
+}

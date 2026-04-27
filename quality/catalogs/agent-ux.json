@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "comment": "Quality Gates catalog -- agent-ux dimension. Schema spec: quality/catalogs/README.md. Verifier impl: quality/gates/agent-ux/. Reports: quality/reports/verifications/agent-ux/. Intentionally sparse at v0.12.0; perf and security stubs land v0.12.1 per MIGRATE-03.",
+  "dimension": "agent-ux",
+  "rows": [
+    {
+      "id": "agent-ux/dark-factory-sim",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "sources": [
+        "scripts/dark-factory-test.sh",
+        "CLAUDE.md (Local dev loop section)"
+      ],
+      "command": "bash quality/gates/agent-ux/dark-factory.sh sim",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/dark-factory.sh sim exits 0 against the local cargo workspace",
+          "the helper's stderr-teaching strings emit on the conflict and blob-limit paths (the v0.9.0 dark-factory invariant)",
+          "reposix init sim::demo <path> configures partial-clone correctly",
+          "no regression vs v0.9.0 baseline (POLISH-AGENT-UX broaden-and-deepen)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/dark-factory.sh",
+        "args": ["sim"],
+        "timeout_s": 120,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/dark-factory-sim.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: scripts/dark-factory-test.sh (pre-migration) or quality/gates/agent-ux/dark-factory.sh (post-migration) finds the helper teaching strings missing -- inspect helper export-path / fetch-blob-limit code",
+      "waiver": null
+    }
+  ]
+}

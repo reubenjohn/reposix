@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "comment": "Quality Gates catalog -- docs-repro dimension. Schema spec: quality/catalogs/README.md. Verifier impl: quality/gates/docs-repro/. Reports: quality/reports/verifications/docs-repro/.",
+  "dimension": "docs-repro",
+  "rows": [
+    {
+      "id": "docs-repro/example-01-shell-loop",
+      "dimension": "docs-repro",
+      "cadence": "post-release",
+      "kind": "container",
+      "sources": [
+        "examples/01-shell-loop/run.sh",
+        "examples/README.md:6"
+      ],
+      "command": "bash examples/01-shell-loop/run.sh",
+      "expected": {
+        "asserts": [
+          "in a fresh ubuntu:24.04 container with cargo + python3 + curl pre-installed and the workspace cargo build complete, bash examples/01-shell-loop/run.sh exits 0",
+          "the run leaves a partial-clone working tree at /tmp/reposix-example-01",
+          "the example pushes a commit and the simulator's audit log shows a helper_push_* row"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-repro/container-rehearse.sh",
+        "args": ["docs-repro/example-01-shell-loop"],
+        "timeout_s": 300,
+        "container": "ubuntu:24.04"
+      },
+      "artifact": "quality/reports/verifications/docs-repro/example-01-shell-loop.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: examples/01-shell-loop/run.sh has a regression OR the simulator/cli/helper changed and the example was not updated; check examples/01-shell-loop/expected-output.md and the binary on PATH preamble",
+      "waiver": null
+    },
+    {
+      "id": "docs-repro/example-02-python-agent",
+      "dimension": "docs-repro",
+      "cadence": "post-release",
+      "kind": "container",
+      "sources": [
+        "examples/02-python-agent/run.py",
+        "examples/README.md:7"
+      ],
+      "command": "python3 examples/02-python-agent/run.py",
+      "expected": {
+        "asserts": [
+          "in a fresh ubuntu:24.04 container, python3 examples/02-python-agent/run.py exits 0",
+          "the agent finds 'database' in some issue body and applies a severity label",
+          "git push reports success"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-repro/container-rehearse.sh",
+        "args": ["docs-repro/example-02-python-agent"],
+        "timeout_s": 300,
+        "container": "ubuntu:24.04"
+      },
+      "artifact": "quality/reports/verifications/docs-repro/example-02-python-agent.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: examples/02-python-agent/run.py has a regression OR the simulator/cli/helper changed; check the python stdlib-only constraint and the binary on PATH preamble",
+      "waiver": null
+    },
+    {
+      "id": "docs-repro/example-03-claude-code-skill",
+      "dimension": "docs-repro",
+      "cadence": "on-demand",
+      "kind": "manual",
+      "sources": [
+        "examples/03-claude-code-skill/RUN.md",
+        "examples/03-claude-code-skill/agent-prompt.md",
+        ".claude/skills/reposix-agent-flow/SKILL.md"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "examples/03-claude-code-skill/RUN.md exists and references .claude/skills/reposix-agent-flow",
+          "examples/03-claude-code-skill/agent-prompt.md exists and parses as markdown",
+          "this row is graded by manual verifier-subagent dispatch (not auto-runnable)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-repro/manual-spec-check.sh",
+        "args": ["docs-repro/example-03-claude-code-skill"],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/docs-repro/example-03-claude-code-skill.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": "90d",
+      "blast_radius": "P2",
+      "owner_hint": "if RED: examples/03-claude-code-skill/{RUN.md, agent-prompt.md} got out of sync with .claude/skills/reposix-agent-flow",
+      "waiver": null
+    },
+    {
+      "id": "docs-repro/example-04-conflict-resolve",
+      "dimension": "docs-repro",
+      "cadence": "post-release",
+      "kind": "container",
+      "sources": [
+        "examples/04-conflict-resolve/run.sh",
+        "examples/README.md:9"
+      ],
+      "command": "bash examples/04-conflict-resolve/run.sh",
+      "expected": {
+        "asserts": [
+          "bash examples/04-conflict-resolve/run.sh exits 0 in ubuntu:24.04 container",
+          "the second agent observes 'fetch first' from helper stderr and recovers via git pull --rebase",
+          "after recovery, both edits are merged"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-repro/container-rehearse.sh",
+        "args": ["docs-repro/example-04-conflict-resolve"],
+        "timeout_s": 300,
+        "container": "ubuntu:24.04"
+      },
+      "artifact": "quality/reports/verifications/docs-repro/example-04-conflict-resolve.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: push-time conflict detection regressed; check the helper export-path conflict logic",
+      "waiver": null
+    },
+    {
+      "id": "docs-repro/example-05-blob-limit-recovery",
+      "dimension": "docs-repro",
+      "cadence": "post-release",
+      "kind": "container",
+      "sources": [
+        "examples/05-blob-limit-recovery/run.sh",
+        "examples/README.md:10"
+      ],
+      "command": "bash examples/05-blob-limit-recovery/run.sh",
+      "expected": {
+        "asserts": [
+          "bash examples/05-blob-limit-recovery/run.sh exits 0 in ubuntu:24.04 container",
+          "the agent observes the blob-limit error from helper stderr and recovers via git sparse-checkout",
+          "after recovery, the targeted issue blob is materialized while siblings stay sparse"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-repro/container-rehearse.sh",
+        "args": ["docs-repro/example-05-blob-limit-recovery"],
+        "timeout_s": 300,
+        "container": "ubuntu:24.04"
+      },
+      "artifact": "quality/reports/verifications/docs-repro/example-05-blob-limit-recovery.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: blob-limit error message regressed OR sparse-checkout recovery path regressed",
+      "waiver": null
+    },
+    {
+      "id": "docs-repro/tutorial-replay",
+      "dimension": "docs-repro",
+      "cadence": "post-release",
+      "kind": "container",
+      "sources": [
+        "docs/tutorials/first-run.md:51-166",
+        "scripts/repro-quickstart.sh",
+        "README.md:56-70"
+      ],
+      "command": "bash quality/gates/docs-repro/tutorial-replay.sh",
+      "expected": {
+        "asserts": [
+          "step 2: simulator starts and listens on 127.0.0.1:7878 (or alternate port)",
+          "step 3: reposix init sim::demo /tmp/repo exits 0 and configures partial-clone",
+          "step 4: git checkout -B main refs/reposix/origin/main exits 0",
+          "step 5: 0001.md exists with title: frontmatter",
+          "step 7: git push reports [new branch] main -> main",
+          "step 8: audit_events_cache has a row with op LIKE 'helper_push_%'"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-repro/tutorial-replay.sh",
+        "args": [],
+        "timeout_s": 300,
+        "container": "ubuntu:24.04"
+      },
+      "artifact": "quality/reports/verifications/docs-repro/tutorial-replay.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: docs/tutorials/first-run.md or one of the binary build steps regressed; check scripts/repro-quickstart.sh predecessor for the canonical assertions",
+      "waiver": null
+    },
+    {
+      "id": "benchmark-claim/8ms-cached-read",
+      "dimension": "docs-repro",
+      "cadence": "weekly",
+      "kind": "manual",
+      "sources": [
+        "docs/index.md:14",
+        "README.md:21",
+        ".planning/docs_reproducible_catalog.json:303"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "docs/benchmarks/latency.md frontmatter last_measured_at is < 30 days old",
+          "the cached-read p50 cell value matches the headline 8 ms to within +/-2ms"
+        ]
+      },
+      "verifier": {
+        "script": null,
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/docs-repro/benchmark-claim-8ms-cached-read.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": "30d",
+      "blast_radius": "P2",
+      "owner_hint": "if RED: docs/benchmarks/latency.md drifted from headline numbers; v0.12.1 perf cross-check (perf/headline-numbers-cross-check) automates this row",
+      "waiver": null
+    },
+    {
+      "id": "benchmark-claim/89.1-percent-token-reduction",
+      "dimension": "docs-repro",
+      "cadence": "weekly",
+      "kind": "manual",
+      "sources": [
+        "docs/index.md:13",
+        "README.md:23",
+        ".planning/docs_reproducible_catalog.json:331"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "headline 89.1% is greppable from docs/benchmarks/token-economy.md",
+          "the comparison fixture file referenced from token-economy.md exists"
+        ]
+      },
+      "verifier": {
+        "script": null,
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/docs-repro/benchmark-claim-89.1-percent-token-reduction.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": "30d",
+      "blast_radius": "P2",
+      "owner_hint": "if RED: docs/benchmarks/token-economy.md drifted from headline numbers; v0.12.1 perf cross-check (perf/headline-numbers-cross-check) automates this row",
+      "waiver": null
+    }
+  ]
+}
