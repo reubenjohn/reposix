@@ -1,6 +1,6 @@
 {
   "schema_version": 0,
-  "schema_status": "DRAFT — not wired into pre-push or CI yet; pending owner review",
+  "schema_status": "ACTIVE-V0 — P56 verifier reads this as the install-path contract; P57 will migrate the install rows to quality/catalogs/install-paths.json with the unified schema (id/dimension/cadence/kind/sources/verifier/artifact/status/freshness_ttl/waiver/blast_radius/owner_hint), the docs/tutorial/benchmark rows to quality/catalogs/docs-reproducible.json",
   "purpose": "Enumerate every command/snippet a documentation reader is told to run, with a verifier that simulates a fresh user. Closes the gap between scripts/end-state.py (file-shape invariants, crates.io max_version) and reality (does the URL return bytes? does the install script actually put a binary on PATH?).",
   "lineage": {
     "modeled_on": ".planning/SESSION-END-STATE.json",
@@ -39,6 +39,7 @@
   "claims": [
     {
       "id": "install/curl-installer-sh",
+      "phase": "p56",
       "sources": [
         "docs/index.md:42-46",
         "docs/tutorials/first-run.md:17-21",
@@ -50,10 +51,12 @@
       "preconditions": ["curl available", "internet", "GitHub releases reachable"],
       "expected_outcome": {
         "asserts": [
-          "the URL returns HTTP 200 with content-type containing 'shell' or starts with '#!/bin/'",
-          "after `| sh`, `command -v reposix` exits 0",
-          "after `| sh`, `command -v git-remote-reposix` exits 0",
-          "`reposix --version` prints the latest workspace version"
+          "GET https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.sh returns HTTP 200",
+          "the response body is >= 1024 bytes and starts with '#!'",
+          "in a fresh ubuntu:24.04 container with curl installed, the documented one-liner exits 0",
+          "after the one-liner, `command -v reposix` exits 0",
+          "after the one-liner, `command -v git-remote-reposix` exits 0",
+          "`reposix --version` prints the latest workspace version (matches the GH release tag's version component)"
         ]
       },
       "verifier": {
@@ -67,14 +70,15 @@
       },
       "artifact": ".planning/verifications/repro/install__curl-installer-sh.json",
       "status": "FAIL",
-      "last_verified_at": "2026-04-27T15:59:00Z",
+      "last_verified_at": null,
       "failure_mode": "Latest GitHub Release (`reposix-cli-v0.11.2`) has assets:[]. The release.yml workflow trigger is tag glob `v*`, but release-plz now creates per-crate tags like `reposix-cli-v0.11.2` which do not match. release.yml has not run since v0.11.0 (2026-04-26 workflow_dispatch).",
-      "remediation_hint": ".github/workflows/release.yml — either extend `on.push.tags` glob to `['v*', 'reposix-cli-v*']` and key the version off the cli-tag, OR add a release-plz post-publish step that pushes a mirror `vX.Y.Z` workspace tag whenever the CLI crate ships.",
+      "remediation_hint": "P56 Wave B fixes .github/workflows/release.yml to fire on `reposix-cli-v*` tags (Option A); pivot to Option B (release-plz mirror tag) if Option A breaks the version derivation. See .planning/research/v0.12.0-install-regression-diagnosis.md.",
       "automation_status": "not-yet",
       "blast_radius": "P0"
     },
     {
       "id": "install/powershell-installer-ps1",
+      "phase": "p56",
       "sources": [
         "docs/index.md:48-51",
         "docs/tutorials/first-run.md:23-26",
@@ -86,9 +90,9 @@
       "preconditions": ["Windows + PowerShell 5+", "internet"],
       "expected_outcome": {
         "asserts": [
-          "the URL returns HTTP 200 with content-length > 1024",
-          "after iex, `Get-Command reposix` returns a path",
-          "after iex, `Get-Command git-remote-reposix` returns a path"
+          "GET https://github.com/reubenjohn/reposix/releases/latest/download/reposix-installer.ps1 returns HTTP 200",
+          "the response body is >= 1024 bytes",
+          "container-rehearsal deferred to v0.12.1 windows runner; for v0.12.0 the asset-existence + min-bytes check is the contract"
         ]
       },
       "verifier": {
@@ -101,14 +105,15 @@
       },
       "artifact": ".planning/verifications/repro/install__powershell-installer-ps1.json",
       "status": "FAIL",
-      "last_verified_at": "2026-04-27T15:59:00Z",
+      "last_verified_at": null,
       "failure_mode": "Same root cause as install/curl-installer-sh — release.yml doesn't fire on per-crate release-plz tags.",
-      "remediation_hint": "fixed by the same release.yml change as curl-installer-sh",
+      "remediation_hint": "P56 Wave B fixes .github/workflows/release.yml to fire on `reposix-cli-v*` tags (Option A); pivot to Option B (release-plz mirror tag) if Option A breaks the version derivation. See .planning/research/v0.12.0-install-regression-diagnosis.md.",
       "automation_status": "not-yet",
       "blast_radius": "P0"
     },
     {
       "id": "install/cargo-binstall",
+      "phase": "p56",
       "sources": [
         "docs/index.md:58-61",
         "docs/tutorials/first-run.md:33-36",
@@ -120,10 +125,10 @@
       "preconditions": ["cargo + cargo-binstall installed", "crates.io reachable"],
       "expected_outcome": {
         "asserts": [
-          "exit 0",
-          "command -v reposix exits 0",
-          "command -v git-remote-reposix exits 0",
-          "reposix --version equals the latest crates.io max_version"
+          "in a fresh rust:1.82-slim container with cargo-binstall installed, `cargo binstall --no-confirm reposix-cli reposix-remote` exits 0",
+          "stdout/stderr show binstall resolving to a prebuilt GitHub release binary, NOT a source-build fallback (assert by greppping for 'Downloading' against a github.com/reubenjohn/reposix/releases/download URL; failure mode: assert FAILS if the log contains the string 'Falling back' or 'compiling reposix' against a crates.io source path)",
+          "after install, `command -v reposix` and `command -v git-remote-reposix` both exit 0",
+          "`reposix --version` matches the latest crates.io max_version of reposix-cli"
         ]
       },
       "verifier": {
@@ -137,12 +142,13 @@
       "status": "PARTIAL",
       "last_verified_at": null,
       "failure_mode": "binstall resolves but currently falls back to source-build because release.yml hasn't published binary assets — same root cause as curl-installer-sh; fix lifts this to PASS-fast-path.",
-      "remediation_hint": "release.yml fix lifts this row too",
+      "remediation_hint": "P56 Wave B fixes .github/workflows/release.yml to fire on `reposix-cli-v*` tags (Option A); pivot to Option B (release-plz mirror tag) if Option A breaks the version derivation. See .planning/research/v0.12.0-install-regression-diagnosis.md.",
       "automation_status": "not-yet",
       "blast_radius": "P1 (works, just slow)"
     },
     {
       "id": "install/homebrew",
+      "phase": "p56",
       "sources": [
         "docs/index.md:53-56",
         "docs/tutorials/first-run.md:28-31",
@@ -154,10 +160,10 @@
       "preconditions": ["macOS or linuxbrew", "internet"],
       "expected_outcome": {
         "asserts": [
-          "tap repo reubenjohn/homebrew-reposix is reachable",
-          "formula declares a version equal to crates.io max_version of reposix-cli",
-          "after install, `which reposix` resolves",
-          "after install, `which git-remote-reposix` resolves"
+          "GET https://api.github.com/repos/reubenjohn/homebrew-reposix/contents/Formula/reposix.rb returns HTTP 200",
+          "the formula's `version \"X.Y.Z\"` string equals the latest reposix-cli release tag's version component (parsed from the GH release tag, e.g. reposix-cli-v0.11.3 → 0.11.3)",
+          "the formula's three sha256 strings are non-empty 64-hex-char strings (no template literals or empty quotes)",
+          "container-rehearsal deferred to v0.12.1 macos runner per cost-conscious decision; for v0.12.0 the formula-version check is the contract"
         ]
       },
       "verifier": {
@@ -171,12 +177,13 @@
       "status": "NOT-VERIFIED",
       "last_verified_at": null,
       "failure_mode": "Formula version likely pinned at 0.11.0 because upload-homebrew-formula is a release.yml job that hasn't run since v0.11.0. Confirm with `gh api repos/reubenjohn/homebrew-reposix/contents/Formula/reposix.rb`.",
-      "remediation_hint": "release.yml fix lifts this row too",
+      "remediation_hint": "P56 Wave B fixes .github/workflows/release.yml to fire on `reposix-cli-v*` tags (Option A); pivot to Option B (release-plz mirror tag) if Option A breaks the version derivation. See .planning/research/v0.12.0-install-regression-diagnosis.md.",
       "automation_status": "not-yet",
       "blast_radius": "P0 for mac users"
     },
     {
       "id": "install/build-from-source",
+      "phase": "p56",
       "sources": [
         "docs/index.md:111-130",
         "docs/tutorials/first-run.md:38-46",
@@ -188,9 +195,10 @@
       "preconditions": ["git", "rust >= 1.82", "git >= 2.34", "~6 GB free RAM (cargo workspace link)"],
       "expected_outcome": {
         "asserts": [
-          "exit 0",
+          "in the current git checkout, `cargo build --release --workspace --bins` exits 0",
           "target/release/reposix exists and is executable",
-          "target/release/git-remote-reposix exists and is executable"
+          "target/release/git-remote-reposix exists and is executable",
+          "covered by ci.yml `test` job — no separate Wave D verifier action needed"
         ]
       },
       "verifier": {
