@@ -1,0 +1,1 @@
+# Per-cadence + per-phase verdict dir. verdict.py writes <cadence-or-phase>/<ts>.md under here.

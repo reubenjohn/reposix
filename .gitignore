@@ -58,3 +58,11 @@ runtime/bench-*.log
 # under .planning/verifications/<category>/ ARE tracked — only the verifier
 # stdout/stderr captures are runtime noise.
 .planning/verifications/_logs/
+
+# Quality Gates runtime artifacts (per-run; regenerate on every runner invocation).
+# .gitkeep placeholders under verifications/ + verdicts/ ARE tracked so the
+# directory tree exists in git; only the per-row JSON + per-run verdict.md
+# files are runtime noise.
+quality/reports/verifications/*/*.json
+quality/reports/verdicts/*/*.md
+quality/reports/badge.json

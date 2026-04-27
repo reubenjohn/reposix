@@ -1,0 +1,1 @@
+# Per-row artifact dir. Runner writes <dim>/<slug>.json under here. .gitkeep keeps the empty tree in git.
