@@ -8,14 +8,22 @@
       "dimension": "structure",
       "cadence": "pre-push",
       "kind": "mechanical",
-      "sources": ["CLAUDE.md:Freshness invariants", "scripts/end-state.py:144-164"],
+      "sources": [
+        "CLAUDE.md:Freshness invariants",
+        "scripts/end-state.py:144-164"
+      ],
       "command": null,
       "expected": {
-        "asserts": ["find docs scripts -type f | grep -E 'v[0-9]+\\.[0-9]+\\.[0-9]+' | grep -v CHANGELOG returns empty stdout"]
+        "asserts": [
+          "find docs scripts -type f | grep -E 'v[0-9]+\\.[0-9]+\\.[0-9]+' | grep -v CHANGELOG returns empty stdout"
+        ]
       },
       "verifier": {
         "script": "quality/gates/structure/freshness-invariants.py",
-        "args": ["--row-id", "structure/no-version-pinned-filenames"],
+        "args": [
+          "--row-id",
+          "structure/no-version-pinned-filenames"
+        ],
         "timeout_s": 30,
         "container": null
       },
@@ -32,14 +40,22 @@
       "dimension": "structure",
       "cadence": "pre-push",
       "kind": "mechanical",
-      "sources": ["docs/index.md:hero", "CLAUDE.md:Freshness invariants"],
+      "sources": [
+        "docs/index.md:hero",
+        "CLAUDE.md:Freshness invariants"
+      ],
       "command": null,
       "expected": {
-        "asserts": ["pkg-mgr command (brew install | cargo binstall | curl|sh | powershell-irm) appears BEFORE any 'git clone https://' or 'cargo build --release' source-compile snippet in docs/index.md"]
+        "asserts": [
+          "pkg-mgr command (brew install | cargo binstall | curl|sh | powershell-irm) appears BEFORE any 'git clone https://' or 'cargo build --release' source-compile snippet in docs/index.md"
+        ]
       },
       "verifier": {
         "script": "quality/gates/structure/freshness-invariants.py",
-        "args": ["--row-id", "structure/install-leads-with-pkg-mgr-docs-index"],
+        "args": [
+          "--row-id",
+          "structure/install-leads-with-pkg-mgr-docs-index"
+        ],
         "timeout_s": 30,
         "container": null
       },
@@ -56,14 +72,22 @@
       "dimension": "structure",
       "cadence": "pre-push",
       "kind": "mechanical",
-      "sources": ["README.md:hero", "CLAUDE.md:Freshness invariants"],
+      "sources": [
+        "README.md:hero",
+        "CLAUDE.md:Freshness invariants"
+      ],
       "command": null,
       "expected": {
-        "asserts": ["pkg-mgr command (brew install | cargo binstall | curl|sh | powershell-irm) appears BEFORE any 'git clone https://' or 'cargo build --release' source-compile snippet in README.md"]
+        "asserts": [
+          "pkg-mgr command (brew install | cargo binstall | curl|sh | powershell-irm) appears BEFORE any 'git clone https://' or 'cargo build --release' source-compile snippet in README.md"
+        ]
       },
       "verifier": {
         "script": "quality/gates/structure/freshness-invariants.py",
-        "args": ["--row-id", "structure/install-leads-with-pkg-mgr-readme"],
+        "args": [
+          "--row-id",
+          "structure/install-leads-with-pkg-mgr-readme"
+        ],
         "timeout_s": 30,
         "container": null
       },
@@ -80,14 +104,22 @@
       "dimension": "structure",
       "cadence": "pre-push",
       "kind": "mechanical",
-      "sources": ["docs/benchmarks/", "mkdocs.yml:nav"],
+      "sources": [
+        "docs/benchmarks/",
+        "mkdocs.yml:nav"
+      ],
       "command": null,
       "expected": {
-        "asserts": ["every docs/benchmarks/*.md filename appears in mkdocs.yml"]
+        "asserts": [
+          "every docs/benchmarks/*.md filename appears in mkdocs.yml"
+        ]
       },
       "verifier": {
         "script": "quality/gates/structure/freshness-invariants.py",
-        "args": ["--row-id", "structure/benchmarks-in-mkdocs-nav"],
+        "args": [
+          "--row-id",
+          "structure/benchmarks-in-mkdocs-nav"
+        ],
         "timeout_s": 30,
         "container": null
       },
@@ -104,14 +136,22 @@
       "dimension": "structure",
       "cadence": "pre-push",
       "kind": "mechanical",
-      "sources": [".planning/milestones/", "CLAUDE.md:GSD planning org is regular"],
+      "sources": [
+        ".planning/milestones/",
+        "CLAUDE.md:GSD planning org is regular"
+      ],
       "command": null,
       "expected": {
-        "asserts": ["find .planning/milestones -maxdepth 2 ( -name '*ROADMAP*' -o -name '*REQUIREMENTS*' ) | grep -v phases | grep -v archive returns empty stdout"]
+        "asserts": [
+          "find .planning/milestones -maxdepth 2 ( -name '*ROADMAP*' -o -name '*REQUIREMENTS*' ) | grep -v phases | grep -v archive returns empty stdout"
+        ]
       },
       "verifier": {
         "script": "quality/gates/structure/freshness-invariants.py",
-        "args": ["--row-id", "structure/no-loose-roadmap-or-requirements"],
+        "args": [
+          "--row-id",
+          "structure/no-loose-roadmap-or-requirements"
+        ],
         "timeout_s": 30,
         "container": null
       },
@@ -128,14 +168,21 @@
       "dimension": "structure",
       "cadence": "pre-push",
       "kind": "mechanical",
-      "sources": ["mkdocs.yml:nav"],
+      "sources": [
+        "mkdocs.yml:nav"
+      ],
       "command": null,
       "expected": {
-        "asserts": ["bash scripts/check-docs-site.sh exits 0 (mkdocs --strict + orphan-doc check)"]
+        "asserts": [
+          "bash scripts/check-docs-site.sh exits 0 (mkdocs --strict + orphan-doc check)"
+        ]
       },
       "verifier": {
         "script": "quality/gates/structure/freshness-invariants.py",
-        "args": ["--row-id", "structure/no-orphan-docs"],
+        "args": [
+          "--row-id",
+          "structure/no-orphan-docs"
+        ],
         "timeout_s": 60,
         "container": null
       },
@@ -152,7 +199,11 @@
       "dimension": "structure",
       "cadence": "pre-push",
       "kind": "mechanical",
-      "sources": [".planning/REQUIREMENTS.md", ".planning/ROADMAP.md", "CLAUDE.md:GSD planning org is regular"],
+      "sources": [
+        ".planning/REQUIREMENTS.md",
+        ".planning/ROADMAP.md",
+        "CLAUDE.md:GSD planning org is regular"
+      ],
       "command": null,
       "expected": {
         "asserts": [
@@ -163,7 +214,10 @@
       },
       "verifier": {
         "script": "quality/gates/structure/freshness-invariants.py",
-        "args": ["--row-id", "structure/top-level-requirements-roadmap-scope"],
+        "args": [
+          "--row-id",
+          "structure/top-level-requirements-roadmap-scope"
+        ],
         "timeout_s": 15,
         "container": null
       },
@@ -180,20 +234,28 @@
       "dimension": "structure",
       "cadence": "pre-push",
       "kind": "asset-exists",
-      "sources": ["README.md:badges", "docs/index.md:badges"],
+      "sources": [
+        "README.md:badges",
+        "docs/index.md:badges"
+      ],
       "command": null,
       "expected": {
-        "asserts": ["P57 stub: row exists with verifier.script pointing at quality/gates/docs-build/badges-resolve.py (P60 ships the verifier per BADGE-01 traceability); the row anchors the contract from P57 onward; status: NOT-VERIFIED is acceptable until P60 ships the verifier."]
+        "asserts": [
+          "P57 stub: row exists with verifier.script pointing at quality/gates/docs-build/badges-resolve.py (P60 ships the verifier per BADGE-01 traceability); the row anchors the contract from P57 onward; status: NOT-VERIFIED is acceptable until P60 ships the verifier."
+        ]
       },
       "verifier": {
         "script": "quality/gates/docs-build/badges-resolve.py",
-        "args": ["--row-id", "structure/badges-resolve"],
+        "args": [
+          "--row-id",
+          "structure/badges-resolve"
+        ],
         "timeout_s": 30,
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/badges-resolve.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "WAIVED",
+      "last_verified": "2026-04-27T19:48:49Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "P60 docs-build dimension ships the verifier; for P57 the row's existence is the contract",
@@ -209,10 +271,15 @@
       "dimension": "structure",
       "cadence": "pre-push",
       "kind": "mechanical",
-      "sources": ["docs/.banned-words.toml", "scripts/banned-words-lint.sh"],
+      "sources": [
+        "docs/.banned-words.toml",
+        "scripts/banned-words-lint.sh"
+      ],
       "command": null,
       "expected": {
-        "asserts": ["bash quality/gates/structure/banned-words.sh exits 0 (no banned-word violations in docs/)"]
+        "asserts": [
+          "bash quality/gates/structure/banned-words.sh exits 0 (no banned-word violations in docs/)"
+        ]
       },
       "verifier": {
         "script": "quality/gates/structure/banned-words.sh",

@@ -70,7 +70,11 @@ def load_catalog(path: Path) -> dict:
 
 
 def save_catalog(path: Path, data: dict) -> None:
-    """Write catalog back; preserve wrapper field order ($schema, comment, dimension, rows)."""
+    """Write catalog back; preserve wrapper field order ($schema, comment, dimension, rows).
+
+    Uses ensure_ascii=False so em-dashes and other Unicode survive round-trips.
+    Caller decides whether to invoke save_catalog() — see catalog_dirty().
+    """
     ordered: dict[str, Any] = {}
     for key in ("$schema", "comment", "dimension", "rows"):
         if key in data:
@@ -78,7 +82,20 @@ def save_catalog(path: Path, data: dict) -> None:
     for key, val in data.items():
         if key not in ordered:
             ordered[key] = val
-    path.write_text(json.dumps(ordered, indent=2) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(ordered, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+
+def catalog_dirty(original: dict, updated: dict) -> bool:
+    """True iff any row's status changed. Timestamp-only updates do not count
+    as a semantic change — they belong in the artifact, not the committed
+    catalog. This keeps `git status` clean across pre-push runs that just
+    re-confirm an already-known status."""
+    orig_rows = {r["id"]: r.get("status") for r in original.get("rows", [])}
+    new_rows = {r["id"]: r.get("status") for r in updated.get("rows", [])}
+    return orig_rows != new_rows
 
 
 def is_in_scope(row: dict, cadence: str, now: datetime) -> bool:
@@ -111,7 +128,16 @@ def write_artifact(path: Path, data: dict) -> None:
 
 
 def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
-    """Invoke verifier (or short-circuit), write artifact, return (updated row, elapsed_s)."""
+    """Invoke verifier (or short-circuit), write artifact, return (updated row, elapsed_s).
+
+    Status mutation policy: the runner sets the in-memory `status` and
+    `last_verified` for use by the immediate caller (verdict generation).
+    Whether those changes get persisted back to the catalog file is
+    decided by `catalog_dirty()` in `main()` — only meaningful status
+    flips persist; per-run timestamp churn lives in the artifact, not
+    the catalog. This keeps `git status` clean across repeated pre-push
+    runs that just re-confirm an already-known status.
+    """
     started = time.monotonic()
     artifact_path = repo_root / row["artifact"] if row.get("artifact") else None
 
@@ -145,7 +171,11 @@ def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
         }
         if artifact_path:
             write_artifact(artifact_path, artifact)
-        row["status"] = "NOT-VERIFIED"
+        # Status stays whatever the catalog had (likely NOT-VERIFIED already).
+        # Don't flip from PASS->NOT-VERIFIED on a missing verifier — that
+        # would be a regression-on-deploy disguised as runner output.
+        if row.get("status") not in ("PASS", "FAIL", "PARTIAL"):
+            row["status"] = "NOT-VERIFIED"
         row["last_verified"] = artifact["ts"]
         return row, time.monotonic() - started
 
@@ -248,12 +278,18 @@ def main() -> int:
     counts = {"PASS": 0, "FAIL": 0, "PARTIAL": 0, "WAIVED": 0, "NOT-VERIFIED": 0}
 
     for cat_path in catalogs:
-        data = load_catalog(cat_path)
+        original = load_catalog(cat_path)
+        # Deep-copy via JSON round-trip so we can compare status before/after
+        # without sharing references that mutate during run_row().
+        data = json.loads(json.dumps(original))
         in_scope = [r for r in data["rows"] if is_in_scope(r, args.cadence, now)]
         if not in_scope:
             continue
         in_scope_sorted = sort_by_blast_radius(in_scope)
         print(f"  catalog: {cat_path.name} ({len(data['rows'])} rows; {len(in_scope_sorted)} in scope)")
+        # Map id -> original status for last_verified rollback below.
+        orig_status_by_id = {r["id"]: r.get("status") for r in original["rows"]}
+        orig_lv_by_id = {r["id"]: r.get("last_verified") for r in original["rows"]}
         for row in in_scope_sorted:
             updated, elapsed = run_row(row, REPO_ROOT, now)
             counts[updated.get("status", "NOT-VERIFIED")] += 1
@@ -265,8 +301,20 @@ def main() -> int:
                 extra = f"waived until {w.get('until', '?')} — {w.get('reason', '')[:60]}"
             print_row_summary(updated, elapsed, extra)
             all_rows.append(updated)
-        # Persist mutations back to catalog
-        save_catalog(cat_path, data)
+        # For rows whose status did NOT change, roll back last_verified to its
+        # original value. The runner mutated it for in-memory display; the
+        # catalog should NOT persist per-run timestamp churn — it would leave
+        # a dirty file across every pre-push run.
+        for row in data["rows"]:
+            rid = row.get("id")
+            if rid in orig_status_by_id and row.get("status") == orig_status_by_id[rid]:
+                row["last_verified"] = orig_lv_by_id[rid]
+        # Persist mutations back to catalog ONLY if any row's status actually
+        # changed. Timestamp-only updates belong in the artifact, not the
+        # committed catalog — otherwise every pre-push run leaves a dirty
+        # catalog file with formatter noise (em-dashes, array layout).
+        if catalog_dirty(original, data):
+            save_catalog(cat_path, data)
 
     exit_code = compute_exit_code(all_rows)
     summary = (

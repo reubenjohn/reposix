@@ -50,8 +50,16 @@ def check_freshness() -> None:
         diff = ids ^ EXPECTED_FRESHNESS_IDS
         fail(f"row id set drift: symmetric difference = {sorted(diff)}")
     for r in rows:
-        if r["status"] != "NOT-VERIFIED":
-            fail(f"row {r['id']}: status must be NOT-VERIFIED at Wave A close, got {r['status']!r}")
+        # Wave A pristine state has all rows NOT-VERIFIED. Wave B's first
+        # runner run legitimately flips structure/badges-resolve to WAIVED
+        # (the row's waiver is in scope until 2026-07-25). Both states are
+        # acceptable post-Wave-B; Wave C flips the rest to PASS/FAIL.
+        if r["id"] == "structure/badges-resolve":
+            if r["status"] not in ("NOT-VERIFIED", "WAIVED"):
+                fail(f"row {r['id']}: status must be NOT-VERIFIED or WAIVED, got {r['status']!r}")
+        else:
+            if r["status"] not in ("NOT-VERIFIED", "PASS", "FAIL", "PARTIAL"):
+                fail(f"row {r['id']}: unexpected status {r['status']!r} (Wave B/C should produce one of NOT-VERIFIED/PASS/FAIL/PARTIAL)")
         if r["cadence"] != "pre-push":
             fail(f"row {r['id']}: cadence must be pre-push, got {r['cadence']!r}")
     badge = next(r for r in rows if r["id"] == "structure/badges-resolve")
