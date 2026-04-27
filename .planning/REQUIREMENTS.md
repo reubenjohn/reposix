@@ -88,6 +88,19 @@ Catalogs are the data; verifiers are the code; reports are the artifacts; runner
 
 - [ ] **ORG-01**: Audit `.planning/research/v0.11.1-repo-organization-gaps.md` against current state. Each remaining gap → either fix + add a structure-dimension catalog row that prevents recurrence, OR file an explicit waiver with reason. Ensures the gaps document isn't a forgotten todo list.
 
+#### Polish passes (per-dimension RED-fix sweeps)
+
+> **Owner directive (this planning session):** "I'm really hoping that after this milestone the codebase is pristine and high quality across all the dimensions." The POLISH-* items below are the broaden-and-deepen pass: every dimension that ships a gate in v0.12.0 ALSO ships a sweep that fixes the RED rows the gate's first run flags. The milestone is not about instrumenting the codebase — it is about leaving the codebase pristine. Each POLISH-* row is P0/P1 blast radius and gates milestone close. Anything that cannot be fixed in-phase is WAIVED (with TTL ≤ 90d + dimension_owner) or filed as a v0.12.1 carry-forward via MIGRATE-03.
+
+- [ ] **POLISH-STRUCT** (P57): After structure-dim gates ship, audit every freshness invariant and fix any drift. Specifically: confirm no version-pinned filenames outside `CHANGELOG.md` and `*-phases/`; confirm install path leads with package manager (cargo binstall / brew install BEFORE any clone+build snippet) on `README.md` + `docs/index.md`; confirm benchmarks under `benchmarks/` and `docs/benchmarks/` appear in `mkdocs.yml` `nav:`; confirm no loose `*ROADMAP*.md` or `*REQUIREMENTS*.md` at `.planning/milestones/` top-level. Fix any flagged drift in the same phase (cite commit).
+- [ ] **POLISH-RELEASE** (P58): After release-dim gates ship, audit and fix any release-asset drift not already covered by P56. Specifically: every install URL in user-facing docs HEADs to HTTP 200; brew formula version is current with the latest reposix-cli release; `crates.io` `max_version` per published crate matches the latest tag; `cargo binstall` metadata resolves to a prebuilt binary for every published binary crate (no source-fallback). Fix any drift in the same phase.
+- [ ] **POLISH-DOCS-REPRO** (P59): After docs-repro gates ship, every fenced code block in user-facing docs (`README.md`, `docs/index.md`, `docs/tutorials/*`, `docs/guides/*`) has a catalog row AND a passing container rehearsal OR is explicitly marked manual/illustrative (with rationale in the catalog row). Fix any broken/stale snippets in the same phase (cite commit). Every `examples/0[1-5]-*/run.sh` passes its container rehearsal.
+- [ ] **POLISH-DOCS-BUILD** (P60): After docs-build gates ship, every badge URL in `README.md` + docs renders (BADGE-01 fix-the-REDs); every link in user-facing docs resolves (no link rot); `mkdocs build --strict` is GREEN; every mermaid block on every nav page renders without errors (assertion: `document.querySelectorAll('pre.mermaid svg').length > 0` per page, zero browser-console rendering errors). Fix any flagged failures in the same phase.
+- [ ] **POLISH-SUBJECTIVE** (P61): After subjective rubrics seed (SUBJ-01..03), dispatch the unbiased subagent for `cold-reader-hero-clarity`, `install-positioning`, and `headline-numbers-sanity` AT LEAST ONCE; fix any P0/P1 findings in the same phase; remaining P2 findings either fixed, waived (with TTL), or filed as v0.12.1 carry-forward.
+- [ ] **POLISH-ORG** (P62): Every gap in `.planning/research/v0.11.1-repo-organization-gaps.md` gets a status (`closed-by-catalog-row`, `closed-by-existing-gate`, or `waived` with reason + dimension_owner + RFC3339 `until`). This is already P62's scope per ORG-01 — listed here for cohesion across the polish-pass family.
+- [ ] **POLISH-AGENT-UX** (P59): The `dark-factory-test.sh` migration to `quality/gates/agent-ux/dark-factory.sh` runs end-to-end against the simulator; any regressions found vs. the v0.9.0 baseline are fixed in the same phase (cite commit).
+- [ ] **POLISH-CODE** (P58 stub, P63 final): `cargo clippy --workspace --all-targets -- -D warnings` passes; `cargo nextest run --workspace` passes; `cargo-audit` clean; no NEW `Error::Other(String)` sites introduced (the 156→144 partial migration completion is a v0.12.1 carry-forward per MIGRATE-03, but no new regressions are accepted in v0.12.0). P58 lands the stub catalog rows + the clippy/nextest/audit assertions; P63 confirms the final state at milestone close.
+
 #### Aggressive simplification — absorb existing surfaces into the framework
 
 > **Owner directive (this planning session):** "look aggressively for opportunities to simplify if [existing scripts/examples] can be swallowed by this framework as by incorporating them into the various phases/plans of this milestone." The framework is NOT a new layer on top of the old — it REPLACES the ad-hoc surfaces. After v0.12.0, `scripts/` holds only `hooks/` and `install-hooks.sh`; everything else lives in `quality/gates/<dimension>/`.
@@ -123,7 +136,7 @@ Each SIMPLIFY-* item names an existing surface, its target home in the new frame
 
 ### Traceability
 
-Refined 1:1 mapping after roadmap creation (gsd-roadmapper, 2026-04-27). Coverage = 38/38 requirements ✓; no orphans, no duplicates. See `.planning/ROADMAP.md` `## v0.12.0 Quality Gates (PLANNING)` for full phase entries with goal / requirements / depends-on (gate-state preconditions) / success criteria / context anchor.
+Refined 1:1 mapping after roadmap creation (gsd-roadmapper, 2026-04-27). Coverage = 46/46 requirements ✓ (38 original + 8 POLISH-* per the broaden-and-deepen directive added 2026-04-27); no orphans, no duplicates. See `.planning/ROADMAP.md` `## v0.12.0 Quality Gates (PLANNING)` for full phase entries with goal / requirements / depends-on (gate-state preconditions) / success criteria / context anchor.
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
@@ -152,6 +165,14 @@ Refined 1:1 mapping after roadmap creation (gsd-roadmapper, 2026-04-27). Coverag
 | SUBJ-02 | P61 | planning |
 | SUBJ-03 | P61 | planning |
 | ORG-01 | P62 | planning |
+| POLISH-STRUCT | P57 | planning |
+| POLISH-RELEASE | P58 | planning |
+| POLISH-DOCS-REPRO | P59 | planning |
+| POLISH-DOCS-BUILD | P60 | planning |
+| POLISH-SUBJECTIVE | P61 | planning |
+| POLISH-ORG | P62 | planning |
+| POLISH-AGENT-UX | P59 | planning |
+| POLISH-CODE | P58 (stub) + P63 (final) | planning |
 | SIMPLIFY-01 | P57 | planning |
 | SIMPLIFY-02 | P57 | planning |
 | SIMPLIFY-03 | P57 | planning |
@@ -168,10 +189,11 @@ Refined 1:1 mapping after roadmap creation (gsd-roadmapper, 2026-04-27). Coverag
 | MIGRATE-02 | P63 | planning |
 | MIGRATE-03 | P63 | planning |
 
-**Per-phase requirement counts:** P56=3 (RELEASE-01..03) · P57=14 (QG-01..09, STRUCT-01..02, SIMPLIFY-01..03) · P58=3 (RELEASE-04, SIMPLIFY-04..05) · P59=7 (DOCS-REPRO-01..04, SIMPLIFY-06..07, SIMPLIFY-11) · P60=5 (DOCS-BUILD-01, BADGE-01, SIMPLIFY-08..10) · P61=3 (SUBJ-01..03) · P62=1 (ORG-01) · P63=4 (MIGRATE-01..03, SIMPLIFY-12). Sum = 40 ✓. (QG-09 spans P57+P58+P60; counted in P57 as primary owner.)
+**Per-phase requirement counts:** P56=3 (RELEASE-01..03) · P57=15 (QG-01..09, STRUCT-01..02, SIMPLIFY-01..03, POLISH-STRUCT) · P58=5 (RELEASE-04, SIMPLIFY-04..05, POLISH-RELEASE, POLISH-CODE-stub) · P59=9 (DOCS-REPRO-01..04, SIMPLIFY-06..07, SIMPLIFY-11, POLISH-DOCS-REPRO, POLISH-AGENT-UX) · P60=6 (DOCS-BUILD-01, BADGE-01, SIMPLIFY-08..10, POLISH-DOCS-BUILD) · P61=4 (SUBJ-01..03, POLISH-SUBJECTIVE) · P62=2 (ORG-01, POLISH-ORG) · P63=5 (MIGRATE-01..03, SIMPLIFY-12, POLISH-CODE-final). Sum = 49 (40 original + 8 POLISH-* + POLISH-CODE counted in BOTH P58-stub and P63-final per its dual home) ✓. (QG-09 spans P57+P58+P60; counted in P57 as primary owner. POLISH-CODE spans P58+P63; counted in both.)
 
 **Recurring success criteria across every phase (P56–P63)** — these are part of the phase's definition-of-done and are NOT separate REQ-IDs (they are recurring expressions of QG-06 + QG-07 + the autonomous-execution protocol):
 - Catalog-first: phase's first commit writes catalog rows BEFORE implementation.
 - CLAUDE.md update in the same PR (QG-07).
 - Unbiased verifier-subagent dispatch on phase close (QG-06).
 - SIMPLIFY absorption (where applicable): every script/example in scope is folded into `quality/gates/<dim>/`, reduced to a one-line shim, or has a waiver row in `quality/catalogs/orphan-scripts.json` with reason.
+- **Fix every RED row the dimension's gates flag.** When a phase ships a new gate, the gate's first run almost always finds NOT-VERIFIED or FAIL rows. Those rows MUST be either (a) FIXED in the same phase (cite commit), (b) WAIVED with explicit `until` + `reason` + `dimension_owner` per the waiver protocol (capped at 90 days), or (c) filed as a v0.12.1 carry-forward via MIGRATE-03. **The milestone does NOT close on NOT-VERIFIED P0+P1 rows.** Goal: after v0.12.0 closes, every dimension's catalog is all-GREEN-or-WAIVED. Owner directive: "I'm really hoping that after this milestone the codebase is pristine and high quality across all the dimensions."
