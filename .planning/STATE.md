@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.12.0
 milestone_name: Quality Gates
 status: planning
-last_updated: "2026-04-27T21:28:00.000Z"
-last_activity: "2026-04-27 -- P58 SHIPPED. Release-dimension gates + code-dim absorption landed. quality/gates/release/ ships 5 verifiers backing 15 catalog rows (reposix-swarm removed; publish=false); quality/gates/code/ ships clippy-lint-loaded.sh (SIMPLIFY-04), check-fixtures.py (SIMPLIFY-05 Option A), ci-job-status.sh (POLISH-CODE P58-stub) backing 4 rows (clippy + fixtures PASS, test + fmt WAIVED until P63). .github/workflows/quality-weekly.yml + quality-post-release.yml validated end-to-end (4 GH Actions dispatches; 2 fixes: GH_TOKEN env added + cargo-binstall PARTIAL_SIGNALS broadened). QG-09 P58 GH Actions badge live in README + docs/index.md. orphan-scripts.json shrunk to empty (W-2 waiver removed; reposix-swarm row removed). Verdict GREEN at quality/reports/verdicts/p58/VERDICT.md (Path B disclosure; 25/25 GREEN). Carry-forwards: cargo-binstall full PASS deferred to MIGRATE-03 v0.12.1; POLISH-CODE final P63; BADGE-01 P60."
+last_updated: "2026-04-27T22:45:00.000Z"
+last_activity: "2026-04-27 -- P59 SHIPPED. Docs-repro + agent-ux + perf-relocate dimensions live. quality/gates/docs-repro/ ships 3 verifiers (snippet-extract.py drift detector + container-rehearse.sh + tutorial-replay.sh) + manual-spec-check.sh backing 9 catalog rows (snippet-coverage + example-03 PASS; 5 docker-absent rows WAIVED until 2026-05-12; 2 benchmark-claim manual P2 NOT-VERIFIED non-blocking). quality/gates/agent-ux/ ships dark-factory.sh (SIMPLIFY-07 migration of scripts/dark-factory-test.sh) backing 1 row (PASS). quality/gates/perf/ ships 3 file-relocates (SIMPLIFY-11; latency-bench.sh + bench_token_economy.py + test_bench_token_economy.py via git mv) backing 3 rows all WAIVED until 2026-07-26 (file-relocate stub; full gate logic v0.12.1 per MIGRATE-03). SIMPLIFY-06 closed (scripts/repro-quickstart.sh DELETED). SIMPLIFY-07 closed (shim survives for OP-5 reversibility; CLAUDE.md command unchanged). SIMPLIFY-11 closed (2 shims + 1 deletion). 4 cadences GREEN (pre-push exit 0; pre-pr exit 0; post-release exit 0; weekly exit 0). CLAUDE.md gained P59 H3 subsection (52 added lines under 80 cap). SURPRISES.md crossed 200 → archive rotation 2026-Q2 (P56 entries archived). Verdict GREEN at quality/reports/verdicts/p59/VERDICT.md (Path B disclosure). Carry-forwards: 5 docker-absent rows until 2026-05-12 (P60 CI rehearsal); 3 perf rows until 2026-07-26 (MIGRATE-03 v0.12.1); cargo-binstall + POLISH-CODE final + BADGE-01 from prior phases."
 progress:
   total_phases: 8
-  completed_phases: 3
-  total_plans: 16
-  completed_plans: 16
-  percent: 38
+  completed_phases: 4
+  total_plans: 22
+  completed_plans: 22
+  percent: 50
 ---
 
 # Project State
@@ -19,6 +19,51 @@ progress:
 
 ### Roadmap Evolution
 
+- **P59 SHIPPED (2026-04-27, v0.12.0):** Docs-repro + agent-ux thin
+  home + perf-relocate dimensions live. `quality/gates/docs-repro/`
+  ships 3 verifiers backing 9 catalog rows: `snippet-extract.py`
+  (--list/--check/--write-template drift detector; pre-push;
+  `docs-repro/snippet-coverage` PASS), `container-rehearse.sh` (4
+  example container rows + `docs-repro/tutorial-replay`; post-release;
+  WAIVED until 2026-05-12 — sim-inside-container plumbing is post-v0.12.0
+  work), `tutorial-replay.sh` (SIMPLIFY-06 closure: `scripts/repro-quickstart.sh`
+  DELETED, no callers), `manual-spec-check.sh` (`docs-repro/example-03-claude-code-skill`
+  PASS). The 2 benchmark-claim rows stay manual P2 NOT-VERIFIED
+  (non-blocking by runner exit-code rules; v0.12.1 perf cross-check
+  automates them). `quality/gates/agent-ux/` ships `dark-factory.sh`
+  (SIMPLIFY-07 migration of `scripts/dark-factory-test.sh`; canonical
+  home + 7-line shim at old path per OP-5 reversibility — 14 doc/example
+  references keep working unchanged). `agent-ux/dark-factory-sim` PASS;
+  POLISH-AGENT-UX broaden-and-deepen confirmed (no regression vs v0.9.0
+  baseline). `quality/gates/perf/` ships 3 file-relocates via git mv
+  (SIMPLIFY-11): `latency-bench.sh` + `bench_token_economy.py` (Option B
+  underscore — test imports module via Python; catalog row corrected
+  4-char) + `test_bench_token_economy.py` (renamed only; pytest
+  auto-discovers; 9/9 tests pass). REPO_ROOT path arithmetic fixed
+  (parents[3] / `../../..` for the new home depth). All 3 perf rows
+  WAIVED until 2026-07-26 (MIGRATE-03 v0.12.1 carry-forward; file-relocate
+  stub at v0.12.0). `.github/workflows/{ci.yml, bench-latency-cron.yml}`
+  invoke canonical paths explicitly per OP-1; `scripts/{latency-bench.sh,
+  bench_token_economy.py}` shims preserve OP-5 reversibility for docs +
+  green-gauntlet callers. POLISH-DOCS-REPRO Wave F sweep: 4 cadences
+  GREEN (pre-push 11 PASS + 1 WAIVED; pre-pr 1 PASS + 2 WAIVED;
+  post-release 6 WAIVED; weekly 14 PASS + 3 WAIVED + 2 P2 NOT-VERIFIED).
+  CLAUDE.md gained "P59 — Docs-repro + agent-ux + perf-relocate dimensions
+  live" H3 subsection (52 added lines under 80-line P58 precedent cap).
+  SURPRISES.md crossed 204 lines → archive rotation: 5 P56 entries
+  archived to `quality/SURPRISES-archive-2026-Q2.md`; active journal
+  retains P57 onward (3 P57 + 7 P58 + 6 P59 = 16 entries; 200 lines).
+  First archive rotation since the journal was seeded — establishes
+  the quarterly-archive convention. Verifier subagent verdict GREEN
+  at `quality/reports/verdicts/p59/VERDICT.md` (Path B in-session
+  disclosure per P56/P57/P58 precedent — Task tool unavailable in
+  executor; 4 disclosure constraints honored). 13 catalog rows graded
+  (9 docs-repro + 1 agent-ux + 3 perf): 8/8 P0+P1 rows PASS or WAIVED
+  with documented carry-forwards. Carry-forwards: 5 docker-absent rows
+  until 2026-05-12 (next phase CI rehearsal in docker-equipped GH
+  runner with sim service); 3 perf rows until 2026-07-26 (MIGRATE-03
+  v0.12.1 perf full implementation); P58 cargo-binstall waiver continues.
+  Next: P60 docs-build migration + BADGE-01 verifier ships + SIMPLIFY-10.
 - **P58 SHIPPED (2026-04-27, v0.12.0):** Release-dimension gates +
   code-dim absorption landed. `quality/gates/release/` ships 5 verifiers
   (gh-assets-present, installer-asset-bytes, brew-formula-current,
@@ -165,13 +210,13 @@ issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
 
 ## Current Position
 
-Phase: 59
+Phase: 60
 Plan: —
-Cursor: P58 SHIPPED — Release-dimension gates + code-dim absorption landed. `quality/gates/release/` ships 5 verifiers (gh-assets-present, installer-asset-bytes, brew-formula-current, crates-io-max-version, cargo-binstall-resolves) backing 15 catalog rows in `quality/catalogs/release-assets.json` (Wave E removed reposix-swarm — `publish=false`). `quality/gates/code/` ships 3 verifiers (clippy-lint-loaded.sh — SIMPLIFY-04 migration; check-fixtures.py — SIMPLIFY-05 Option A migration; ci-job-status.sh — POLISH-CODE P58-stub) backing 4 rows in `quality/catalogs/code.json` (clippy + fixtures PASS; test + fmt WAIVED until P63). `.github/workflows/quality-weekly.yml` + `quality-post-release.yml` validated end-to-end via 4 GH Actions dispatches; 2 fixes applied (GH_TOKEN env added in commit 664b533; cargo-binstall PARTIAL_SIGNALS broadened in commit e0e5645). QG-09 P58 GH Actions badge live in README.md + docs/index.md (commit d206b09). `quality/catalogs/orphan-scripts.json` shrunk to empty. POLISH-RELEASE: every weekly row PASS; cargo-binstall WAIVED until 2026-07-26 (MIGRATE-03 v0.12.1 carry-forward). POLISH-CODE P58-stub: clippy + fixtures PASS; test + fmt WAIVED until P63. Runner state: weekly exit 0 (14 PASS), post-release exit 0 (1 WAIVED), pre-push exit 0 (10 PASS, 1 WAIVED), pre-pr exit 0 (2 WAIVED). Badge brightgreen, message `25/25 GREEN`. Verifier verdict GREEN at `quality/reports/verdicts/p58/VERDICT.md` (Path B in-session disclosure per P56/P57 precedent). CLAUDE.md gained "P58 — Release dimension live" H3 subsection (34 added lines). SURPRISES.md gained 7 P58 entries (172 lines total). `.planning/docs_reproducible_catalog.json` schema_status flipped DEPRECATED. Carry-forwards: cargo-binstall full PASS deferred to MIGRATE-03 v0.12.1; POLISH-CODE final P63; BADGE-01 P60. Next: P59 — docs-repro dimension + tutorial replay + agent-ux thin home. Gate-state precondition for P59: read `quality/reports/verdicts/p58/VERDICT.md` to confirm GREEN, read `quality/SURPRISES.md` (7 P58 entries + 3 P57 entries + 5 P56 entries), read this entry, then `/gsd-plan-phase 59`.
-Status: shipped (P58)
-Last activity: 2026-04-27 -- P58 closed with GREEN verdict at `quality/reports/verdicts/p58/VERDICT.md`. 25 catalog rows graded; all PASS or WAIVED with documented reason. Release dim live + code dim absorption complete. CLAUDE.md / SURPRISES.md / STATE.md / verdict updates landed in Wave F. Next: P59.
+Cursor: P59 SHIPPED — Docs-repro + agent-ux thin home + perf-relocate dimensions live. `quality/gates/docs-repro/` ships 3 verifiers backing 9 catalog rows (snippet-coverage + example-03-claude-code-skill PASS; 5 docker-absent container rows WAIVED until 2026-05-12; 2 benchmark-claim manual P2 NOT-VERIFIED non-blocking). `quality/gates/agent-ux/` ships dark-factory.sh (SIMPLIFY-07; old path is 7-line shim) backing 1 row PASS — POLISH-AGENT-UX confirmed no regression vs v0.9.0 baseline. `quality/gates/perf/` ships 3 file-relocates via git mv (SIMPLIFY-11; Option B underscore for Python; catalog row corrected; REPO_ROOT path arithmetic fixed parents[3]) backing 3 rows all WAIVED until 2026-07-26 (MIGRATE-03 v0.12.1). SIMPLIFY-06 closed (`scripts/repro-quickstart.sh` DELETED). Runner state: pre-push exit 0 (11 PASS + 1 WAIVED); pre-pr exit 0 (1 PASS + 2 WAIVED); post-release exit 0 (6 WAIVED); weekly exit 0 (14 PASS + 3 WAIVED + 2 P2 NOT-VERIFIED). CLAUDE.md gained "P59 — Docs-repro + agent-ux + perf-relocate dimensions live" H3 subsection (52 added lines under 80 cap). SURPRISES.md archive rotation 2026-Q2 (P56 entries archived). Verifier verdict GREEN at `quality/reports/verdicts/p59/VERDICT.md` (Path B in-session disclosure per P56/P57/P58 precedent). 13 rows graded; 8/8 P0+P1 rows PASS or WAIVED with documented carry-forwards. Carry-forwards: 5 docker-absent rows until 2026-05-12 (next phase CI rehearsal); 3 perf rows until 2026-07-26 (v0.12.1 perf full implementation). Next: P60 — docs-build migration + BADGE-01 verifier ships + SIMPLIFY-10. Gate-state precondition for P60: read `quality/reports/verdicts/p59/VERDICT.md` to confirm GREEN, read `quality/SURPRISES.md` (3 P57 + 7 P58 + 6 P59 entries) + `quality/SURPRISES-archive-2026-Q2.md` (5 P56 archived entries), read this entry, then `/gsd-plan-phase 60`.
+Status: shipped (P59)
+Last activity: 2026-04-27 -- P59 closed with GREEN verdict at `quality/reports/verdicts/p59/VERDICT.md`. 13 catalog rows graded; 8/8 P0+P1 PASS or WAIVED. Docs-repro + agent-ux + perf-relocate dimensions complete. CLAUDE.md / SURPRISES.md (archive rotation 2026-Q2) / STATE.md / verdict updates landed in Wave F. Next: P60.
 
-Progress: [====      ] v0.12.0 planning (3/8 phases shipped; 4 plans P56 + 6 plans P57 + 6 plans P58 = 16 plans).
+Progress: [=====     ] v0.12.0 (4/8 phases shipped; 4 plans P56 + 6 plans P57 + 6 plans P58 + 6 plans P59 = 22 plans).
 
 ## Performance Metrics
 

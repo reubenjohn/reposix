@@ -13,56 +13,15 @@ by P56 (Wave 4-B); P57 takes ownership when the framework skeleton ships.
 
 P56 seeded this file at phase close (5 entries; commit `87cd1c3`). **P57 takes ownership 2026-04-27** as part of the Quality Gates skeleton landing. From P57 onward, this file is referenced by `quality/PROTOCOL.md` § "SURPRISES.md format" as the canonical pivot journal.
 
-Anti-bloat: ≤200 lines (currently 65). When the file crosses 200 lines, archive the oldest 50 entries to `quality/SURPRISES-archive-YYYY-QN.md` and start fresh — see `quality/PROTOCOL.md` § "Anti-bloat rules per surface" for the rotation rule.
+**P59 Wave F archive rotation:** the 5 oldest entries (P56) were archived to `quality/SURPRISES-archive-2026-Q2.md` when this file crossed 204 lines after Waves B-C landed. The active journal now retains P57+ entries.
+
+Anti-bloat: ≤200 lines. When the file crosses 200 lines, archive the oldest 50 entries to `quality/SURPRISES-archive-YYYY-QN.md` and start fresh — see `quality/PROTOCOL.md` § "Anti-bloat rules per surface" for the rotation rule.
 
 Format: `YYYY-MM-DD P<N>: <obstacle> — <one-line resolution>`. **Required reading for every phase agent at start of phase.** The next agent does NOT repeat investigations of things already journaled here.
 
 ---
 
-2026-04-27 P56: GitHub's `releases/latest/download/...` pointer follows
-release recency, but release-plz cuts ~8 per-crate releases per version
-bump. A non-cli per-crate release published after the cli release moves
-the latest pointer and re-breaks `releases/latest/download/reposix-installer.sh`
-until the next cli release. — Tracked under MIGRATE-03 (v0.12.1
-carry-forward). Recovery options: (a) `gh release create --latest` to
-pin the pointer to the cli release in release.yml, or (b) configure
-release-plz to publish reposix-cli last in its per-crate sequence.
-
-2026-04-27 P56: release-plz GITHUB_TOKEN-pushed tags do NOT trigger
-downstream `on.push.tags` workflows — GH loop-prevention rule for
-GITHUB_TOKEN-pushed refs. release.yml's `reposix-cli-v*` glob is
-correct, but the tag push from release-plz never fires the workflow.
-— Workaround: `gh workflow run release.yml --ref reposix-cli-v0.11.3`
-(workflow_dispatch) used as Wave 3 stop-gap. Fix path under MIGRATE-03
-(v0.12.1 carry-forward): release-plz workflow uses fine-grained PAT
-(non-GITHUB_TOKEN) OR adds a post-tag dispatch step. ~5 LOC.
-
-2026-04-27 P56: install/cargo-binstall metadata in
-`crates/reposix-cli/Cargo.toml` + `crates/reposix-remote/Cargo.toml`
-is misaligned with release.yml's archive shape (4 mismatches: tag
-prefix `v` vs `reposix-cli-v`, archive basename `reposix-cli` vs
-`reposix`, target glibc vs musl, `.tgz` vs `.tar.gz`). binstall falls
-back to source build, which then itself fails because of the MSRV
-bug below. — Catalog row marked PARTIAL (blast_radius P1, "works just
-slow"); ~10 LOC `[package.metadata.binstall]` fix tracked under
-MIGRATE-03 (v0.12.1 carry-forward).
-
-2026-04-27 P56: Rust 1.82 (project MSRV) cannot `cargo install reposix-cli`
-from crates.io — transitive dep `block-buffer-0.12.0` requires
-`edition2024` which is unstable on 1.82. cargo install ignores the
-project's pinned Cargo.lock so this is invisible to ci.yml's `test`
-job (which builds against the workspace lockfile). — Orthogonal MSRV
-bug; fix under MIGRATE-03 (v0.12.1 carry-forward) is either cap dep
-at `<0.12` or raise MSRV to 1.85.
-
-2026-04-27 P56: curl rehearsal `curl -sLI URL | head -20` under
-`set -euo pipefail` exits 23 (FAILED_WRITING_OUTPUT) when GitHub's
-HEAD response exceeds 20 lines (their content-security-policy
-header is huge); pipefail propagates and bash exits before running
-the installer step. — Fixed in `scripts/p56-rehearse-curl-install.sh`:
-capture HEAD to a tempfile, then `head -20` on the static file. Same
-diagnostic value, no SIGPIPE. Lesson for future verifiers: tempfile-then-grep,
-not pipe-into-head, when the upstream response size is unbounded.
+(P56 entries archived 2026-04-27 by P59 Wave F to `quality/SURPRISES-archive-2026-Q2.md`.)
 
 2026-04-27 P57: Wave B runner had idempotency bug — em-dashes in catalog
 note fields were being escape-mangled across runs (`—` re-encoded to
@@ -202,3 +161,40 @@ quality/gates/docs-repro/ ports the 7-step assertion shape verbatim;
 the row's `sources` field references the historical predecessor with
 "see commit history" so the lineage is discoverable without keeping
 a stub file alive.
+
+2026-04-27 P59: Wave D SIMPLIFY-07 chose SHIM (not delete) for
+scripts/dark-factory-test.sh, opposite of P58's SIMPLIFY-04+05 which
+DELETED their predecessors. Reason: caller audit found 14 references
+across CLAUDE.md "Local dev loop", README.md, docs/reference/cli.md,
+docs/reference/simulator.md, docs/reference/crates.md,
+docs/development/contributing.md, docs/decisions/001-github-state-mapping.md,
+examples/03-claude-code-skill/RUN.md,
+examples/04-conflict-resolve/expected-output.md,
+examples/05-blob-limit-recovery/{RUN.md, expected-output.md},
+scripts/green-gauntlet.sh. Deleting would have broken developer
+muscle memory + the canonical examples docs. P63 SIMPLIFY-12 audits
+the shim. — Resolution: 7-line shim at scripts/dark-factory-test.sh
+that exec's quality/gates/agent-ux/dark-factory.sh "$@". CI workflow
+ci.yml updated to invoke canonical path explicitly per OP-1.
+
+2026-04-27 P59: Wave E SIMPLIFY-11 had two pivots in one commit. (1)
+Option B underscore: bench_token_economy.py kept underscore at
+quality/gates/perf/ (not hyphenated like other-dim entry-points)
+because the test file imports `bench_token_economy` as a Python
+module — hyphen breaks module syntax. Wave A's hyphenated catalog
+row corrected to underscore in same commit (4-char edit). (2)
+REPO_ROOT path arithmetic: predecessor used `parent.parent` /
+`SCRIPT_DIR/..` assuming scripts/ = one-level. From quality/gates/perf/
+that resolves to quality/gates/, breaking benchmarks/fixtures lookups.
+— Resolution: Python `parents[3]`; bash `cd "${SCRIPT_DIR}/../../.."`.
+9/9 tests pass at new location; bench --offline exits 0 via shim.
+Lesson: any __file__-derived REPO_ROOT needs path-arithmetic audit
+on migration; the depth changed from 1 to 3.
+
+2026-04-27 P59: Wave F archive rotation — SURPRISES.md crossed 204
+lines after Waves B-C landed. Per quality/PROTOCOL.md anti-bloat
+rule, archived 5 oldest entries (P56) to quality/SURPRISES-archive-2026-Q2.md.
+Active journal now retains P57+ entries. First archive rotation
+since the journal was seeded — establishes the quarterly-archive
+convention. Active SURPRISES.md header gained pointer paragraph
+naming the archive file.

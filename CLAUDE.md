@@ -490,6 +490,57 @@ The release dimension is now actively enforcing.
 - `quality/catalogs/release-assets.json` — 15-row catalog (P58 active enforcement).
 - `quality/catalogs/code.json` — 4-row catalog (clippy + fixtures PASS; test + fmt WAIVED until P63).
 
+### P59 — Docs-repro + agent-ux + perf-relocate dimensions live (added 2026-04-27)
+
+Three more dimensions land. The docs-repro dimension is the deepest (9 rows + drift detector); agent-ux is intentionally sparse (1 row); perf is file-relocate-only at v0.12.0.
+
+**Docs-repro home:** `quality/gates/docs-repro/`. 3 verifiers + 1 manual-spec checker:
+
+| Verifier | Catalog rows | Cadence |
+|---|---|---|
+| `snippet-extract.py` (--list / --check / --write-template) | `docs-repro/snippet-coverage` | pre-push |
+| `container-rehearse.sh <id>` | 4 example container rows + `docs-repro/tutorial-replay` | post-release |
+| `tutorial-replay.sh` (SIMPLIFY-06; `scripts/repro-quickstart.sh` deleted) | `docs-repro/tutorial-replay` | post-release |
+| `manual-spec-check.sh <id>` | `docs-repro/example-03-claude-code-skill` | on-demand |
+
+The 4 container rows + tutorial-replay are WAIVED until 2026-05-12 — the example scripts assume an external simulator that the container does not bring up; sim-inside-container plumbing is post-v0.12.0 work. Snippet-coverage row PASS (drift detector); example-03-claude-code-skill PASS (manual-spec-check).
+
+**Agent-ux home:** `quality/gates/agent-ux/`. Intentionally sparse — dark-factory regression is the only gate at v0.12.0; perf and security stubs land v0.12.1 per MIGRATE-03.
+
+| Verifier | Catalog row | Cadence |
+|---|---|---|
+| `dark-factory.sh sim` (SIMPLIFY-07; migrated from `scripts/dark-factory-test.sh`) | `agent-ux/dark-factory-sim` | pre-pr |
+
+The v0.9.0 dark-factory invariant (helper stderr-teaching strings on conflict + blob-limit paths) is preserved verbatim. `.github/workflows/ci.yml` invokes the canonical path explicitly; `scripts/dark-factory-test.sh` survives as a 7-line shim per OP-5 reversibility (CLAUDE.md "Local dev loop" command keeps working unchanged).
+
+**Perf home (relocate-only):** `quality/gates/perf/`. File-relocate stubs only at v0.12.0; full gate logic deferred to v0.12.1 stub per MIGRATE-03. 3 catalog rows all WAIVED until 2026-07-26.
+
+| Source | Migrated to | Cadence | Status |
+|---|---|---|---|
+| `scripts/latency-bench.sh` | `quality/gates/perf/latency-bench.sh` | weekly | WAIVED v0.12.1 |
+| `scripts/bench_token_economy.py` | `quality/gates/perf/bench_token_economy.py` | weekly | WAIVED v0.12.1 |
+| `scripts/test_bench_token_economy.py` | `quality/gates/perf/test_bench_token_economy.py` | (test) | n/a |
+
+`benchmarks/fixtures/*` stays in place (test inputs, not gates). The 2 perf shims at `scripts/{latency-bench.sh, bench_token_economy.py}` exec/subprocess.run the canonical paths; the test file is renamed-only (no shim — pytest auto-discovers).
+
+**SIMPLIFY-06/07/11 absorption record:**
+- SIMPLIFY-06: `scripts/repro-quickstart.sh` DELETED (no callers; tutorial-replay.sh ports the 7-step assertion shape verbatim).
+- SIMPLIFY-07: `scripts/dark-factory-test.sh` SHIM (CLAUDE.md "Local dev loop" command + 14 doc/example refs keep working unchanged).
+- SIMPLIFY-11: 3 perf scripts MIGRATED via git mv; 2 shims at old paths; test file deleted.
+
+**Recovery patterns:**
+- snippet drift detected: `python3 quality/gates/docs-repro/snippet-extract.py --write-template <derived-id>` → paste output into `quality/catalogs/docs-reproducible.json`.
+- container rehearsal RED: read `quality/reports/verifications/docs-repro/<row-id>.json`; `stderr` field has the docker output.
+- dark-factory regression RED: run `bash quality/gates/agent-ux/dark-factory.sh sim` with `set -x`; the v0.9.0 invariant is the teaching-strings assertion.
+- docker-absent (local dev): the runner emits stderr warning + non-fatal exit; container rows grade WAIVED. CI dispatch is the actual rehearsal.
+
+**Cross-references** (do NOT duplicate runtime detail here):
+- `quality/gates/docs-repro/README.md` — docs-repro verifier table + conventions.
+- `quality/gates/agent-ux/README.md` — agent-ux thin home + intentional sparsity note.
+- `quality/gates/perf/README.md` — perf relocate-only stubs + waiver explanation.
+- `quality/PROTOCOL.md` — runtime contract (cadences + waiver protocol + verifier-subagent template).
+- MIGRATE-03 in `.planning/REQUIREMENTS.md` — v0.12.1 carry-forward (perf full implementation + container sim plumbing).
+
 ## Quick links
 
 - `docs/research/initial-report.md` — full architectural argument for git-remote-helper + partial clone.
