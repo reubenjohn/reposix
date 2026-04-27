@@ -1,0 +1,9 @@
+{
+  "nav_path": "/reposix/",
+  "mermaid_count": 1,
+  "svg_counts": [1],
+  "console_errors": [],
+  "captured_at_utc": "2026-04-27T05:28:00Z",
+  "agent_id": "5468ec00-693b-45ce-bfbd-b145d6382b9b",
+  "captured_via": "playwright MCP against mkdocs serve on 127.0.0.1:8766; Home page (docs/index.md). Verified post §0.1.b fix to mermaid-render.js."
+}

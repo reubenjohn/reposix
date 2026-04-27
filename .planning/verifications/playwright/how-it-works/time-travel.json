@@ -1,0 +1,9 @@
+{
+  "nav_path": "/reposix/how-it-works/time-travel/",
+  "mermaid_count": 0,
+  "svg_counts": [],
+  "console_errors": [],
+  "captured_at_utc": "2026-04-27T05:26:00Z",
+  "agent_id": "5468ec00-693b-45ce-bfbd-b145d6382b9b",
+  "captured_via": "playwright MCP against mkdocs serve on 127.0.0.1:8766; this page has no mermaid blocks, so it trivially passes the §0.1 invariant (mermaid_count == 0)."
+}

@@ -176,6 +176,21 @@ if [[ "$docs_touched" -eq 1 ]]; then
     exit 1
   fi
   log "${GREEN}✓${NC} docs-site clean."
+
+  # Per HANDOVER §0.1: assert every source-mermaid page has a current
+  # playwright artifact proving the SVG renders. Source→artifact check
+  # only — the actual browser walk is a session-time activity (see
+  # scripts/check-mermaid-renders.sh header). FATAL because a stale or
+  # missing artifact means the §0.1.b regression could be back undetected.
+  log "${YELLOW}→${NC} running scripts/check-mermaid-renders.sh..."
+  if ! bash scripts/check-mermaid-renders.sh 2>&1; then
+    printf '%b\n' "${RED}✖ pre-push rejected:${NC} scripts/check-mermaid-renders.sh failed." >&2
+    printf '%b\n' "${YELLOW}→${NC} Re-run the playwright walk per CLAUDE.md \"Docs-site validation\" rules:" >&2
+    printf '%b\n' "  mkdocs serve, navigate cold to each page that source-references \`\`\`mermaid," >&2
+    printf '%b\n' "  assert pre.mermaid svg > 0, write artifact JSON to .planning/verifications/playwright/." >&2
+    exit 1
+  fi
+  log "${GREEN}✓${NC} mermaid renders verified via artifact JSON."
 fi
 
 # --- Rust quality gates ---------------------------------------------------

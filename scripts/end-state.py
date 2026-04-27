@@ -91,6 +91,27 @@ def how_it_works_pages() -> list[str]:
     return sorted(p.name for p in src.glob("*.md"))
 
 
+def source_mermaid_pages() -> list[str]:
+    """Every docs page whose Markdown source contains a ```mermaid fence.
+
+    Returned as repo-relative paths under docs/, e.g. "index.md",
+    "how-it-works/git-layer.md". Used to build the playwright-artifact
+    claim set (one claim per source-mermaid page).
+    """
+    docs = REPO_ROOT / "docs"
+    if not docs.is_dir():
+        return []
+    pages: list[str] = []
+    for md in sorted(docs.rglob("*.md")):
+        try:
+            text = md.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if "```mermaid" in text:
+            pages.append(str(md.relative_to(docs)))
+    return pages
+
+
 def published_crates() -> list[str]:
     """Crates that ship to crates.io. Stays in sync with §3b verify block."""
     return [
@@ -253,18 +274,23 @@ def bootstrap_claims() -> list[dict[str, Any]]:
         "last_run_log_path": None,
     })
 
-    # ---- §0.1 — mermaid render artifacts per how-it-works page ----
-    for page in how_it_works_pages():
-        slug = page[: -len(".md")] if page.endswith(".md") else page
-        artifact = f".planning/verifications/playwright/how-it-works/{slug}.json"
+    # ---- §0.1 — mermaid render artifacts per source-mermaid page ----
+    # Enumerates EVERY docs/**/*.md page that source-references a ```mermaid
+    # fence (not just how-it-works/). The §0.1.b fix to mermaid-render.js
+    # fixed all of them at once, but the verifier insists on artifact JSON
+    # for every page so a regression on any page raises a FAIL row.
+    for rel in source_mermaid_pages():
+        slug_path = rel[: -len(".md")] if rel.endswith(".md") else rel
+        # Use the full path-with-slashes as both claim id and artifact path
+        # so two pages with the same basename in different dirs don't collide.
+        artifact = f".planning/verifications/playwright/{slug_path}.json"
         claims.append({
-            "id": f"mermaid-renders/how-it-works/{slug}",
+            "id": f"mermaid-renders/{slug_path}",
             "category": "doc-page-with-mermaid",
             "description": (
-                f"docs/how-it-works/{page} — playwright walk on a cache-cold "
-                "navigation must show every <pre.mermaid> block has at least "
-                "one <svg> child AND zero render-error console messages. "
-                "§0.1 + §0.1.b."
+                f"docs/{rel} — playwright walk on a cache-cold navigation "
+                "must show every <pre.mermaid> block has at least one <svg> "
+                "child AND zero render-error console messages. §0.1 + §0.1.b."
             ),
             "verifier": {
                 "type": "artifact-json-exists",

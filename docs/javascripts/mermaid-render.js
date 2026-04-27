@@ -1,26 +1,31 @@
 // Mermaid render workaround for mkdocs-material 9.7.x
 //
-// Symptom: <div class="mermaid"></div> ends up empty after page load.
-// Mermaid library is loaded, source is in static HTML, mermaid.render()
-// works when called directly, but the rendered DOM is missing the SVG.
-//
-// Diagnosis: Material's bundle.js strips the content of any element with
-// class="mermaid" before mermaid runs on it. The transform was designed
+// Symptom 1 (original): <div class="mermaid"></div> ends up empty after
+// page load. Material's bundle strips the content of any element with
+// class="mermaid" before mermaid runs on it; the transform was designed
 // for an older fence_code_format flow and now leaves the div empty.
-//
 // Workaround: re-fetch the page HTML, extract the original source from
 // the static markup, and call mermaid.render() ourselves.
 //
+// Symptom 2 (HANDOVER §0.1.b — surfaced 2026-04-27 PM): mermaid only
+// renders on the SECOND page reload. Diagnosis: navigation.instant is
+// enabled in mkdocs.yml; clicking an in-site link does an XHR DOM swap
+// without firing DOMContentLoaded. The previous IIFE only hooked
+// DOMContentLoaded, so subsequent in-site navs never re-ran renderAll
+// and the new page's <div class="mermaid"> blocks stayed empty. A real
+// reload triggers a full page load → DOMContentLoaded fires → script
+// runs → diagrams appear (the "works on second reload" symptom).
+//
+// Fix: subscribe to mkdocs-material's `document$` observable (re-fires
+// on every instant nav), with a DOMContentLoaded fallback for builds
+// without the Material theme. Both code paths funnel through renderAll.
+//
 // See:
 // - .planning/research/v0.11.0-mkdocs-site-audit.md
-// - https://github.com/squidfunk/mkdocs-material/issues (likely upstream)
+// - HANDOVER.md §0.1 + §0.1.b
+// - https://squidfunk.github.io/mkdocs-material/customization/#additional-javascript
 
 (function () {
-  function ready(fn) {
-    if (document.readyState !== 'loading') return fn();
-    document.addEventListener('DOMContentLoaded', fn);
-  }
-
   async function waitForMermaid(maxMs = 5000) {
     const start = Date.now();
     while (!window.mermaid && Date.now() - start < maxMs) {
@@ -80,5 +85,19 @@
     }
   }
 
-  ready(renderAll);
+  // mkdocs-material exposes `document$` as an RxJS Observable that emits
+  // on the initial page load AND on every instant navigation. Subscribing
+  // to it is the supported way to re-run setup code per page.
+  if (typeof document$ !== 'undefined' && document$ && typeof document$.subscribe === 'function') {
+    document$.subscribe(() => { renderAll(); });
+  } else {
+    // Fallback for non-Material themes or strict CSP that blocks Material's
+    // script bundle. Hooks DOMContentLoaded only — does NOT survive instant
+    // nav, but is correct for a vanilla mkdocs build.
+    if (document.readyState !== 'loading') {
+      renderAll();
+    } else {
+      document.addEventListener('DOMContentLoaded', renderAll);
+    }
+  }
 })();
