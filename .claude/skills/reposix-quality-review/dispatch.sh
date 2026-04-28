@@ -16,7 +16,8 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
-DISPATCH_CLI="$REPO_ROOT/.claude/skills/reposix-quality-review/lib/dispatch_cli.py"
+SKILL_DIR="$REPO_ROOT/.claude/skills/reposix-quality-review"
+DISPATCH_CLI="$SKILL_DIR/lib/dispatch_cli.py"
 
 usage() {
     cat <<EOF
@@ -53,12 +54,24 @@ case "${1:-}" in
             usage >&2
             exit 2
         fi
-        # Stub returns 1 for FAIL (runner records FAIL until Path A re-runs).
+        # Wave D-E: route each rubric to its dedicated dispatcher.
+        case "$2" in
+            "subjective/cold-reader-hero-clarity")
+                exec bash "$SKILL_DIR/lib/dispatch_cold_reader.sh"
+                ;;
+            "subjective/install-positioning"|"subjective/headline-numbers-sanity")
+                # Wave E ships dispatch_inline_subagent.sh; until then,
+                # fall through to the Path B stub (FAIL -> waivered row).
+                if [[ -x "$SKILL_DIR/lib/dispatch_inline_subagent.sh" ]]; then
+                    exec bash "$SKILL_DIR/lib/dispatch_inline_subagent.sh" "$2"
+                fi
+                ;;
+        esac
+        # Default Path B stub: returns 1 for FAIL (runner records FAIL).
         if python3 "$DISPATCH_CLI" stub "$2"; then
             exit 0
         else
             rc=$?
-            # rc=1 is the expected stub-FAIL signal; rc=2 is bad input.
             exit "$rc"
         fi
         ;;

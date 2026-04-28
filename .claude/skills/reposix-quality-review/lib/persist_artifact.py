@@ -57,3 +57,35 @@ def persist_artifact(
     }
     artifact_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     return artifact_path
+
+
+def main() -> int:
+    """argparse CLI shim so dispatch_*.sh subprocess invocations can write
+    artifacts without inlining JSON manipulation in bash."""
+    import argparse
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--rubric-id", required=True)
+    p.add_argument("--score", required=True, type=int)
+    p.add_argument("--verdict", required=True)
+    p.add_argument("--rationale", required=True)
+    p.add_argument("--evidence-files", nargs="+", default=[])
+    p.add_argument("--dispatched-via", required=True)
+    p.add_argument("--asserts-passed", nargs="*", default=[])
+    p.add_argument("--asserts-failed", nargs="*", default=[])
+    args = p.parse_args()
+    out = persist_artifact(
+        rubric_id=args.rubric_id,
+        score=args.score,
+        verdict=args.verdict,
+        rationale=args.rationale,
+        evidence_files=args.evidence_files,
+        dispatched_via=args.dispatched_via,
+        asserts_passed=args.asserts_passed,
+        asserts_failed=args.asserts_failed,
+    )
+    print(f"persisted: {out}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
