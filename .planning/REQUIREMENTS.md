@@ -86,7 +86,7 @@ Catalogs are the data; verifiers are the code; reports are the artifacts; runner
 
 #### Repo-org cleanup
 
-- [ ] **ORG-01**: Audit `.planning/research/v0.11.1-repo-organization-gaps.md` against current state. Each remaining gap → either fix + add a structure-dimension catalog row that prevents recurrence, OR file an explicit waiver with reason. Ensures the gaps document isn't a forgotten todo list.
+- [x] **ORG-01**: Audit `.planning/research/v0.11.1-repo-organization-gaps.md` against current state. Each remaining gap → either fix + add a structure-dimension catalog row that prevents recurrence, OR file an explicit waiver with reason. Ensures the gaps document isn't a forgotten todo list. **SHIPPED P62.** Audit at `quality/reports/audits/repo-org-gaps.md` (99 items; 13 closed-by-deletion, 26 closed-by-relocation, 50 closed-by-existing-gate, 8 out-of-scope; zero open Wave-3 items). 3 new structure-dimension rows in `quality/catalogs/freshness-invariants.json` lock recurrence guards.
 
 #### Polish passes (per-dimension RED-fix sweeps)
 
@@ -97,7 +97,7 @@ Catalogs are the data; verifiers are the code; reports are the artifacts; runner
 - [ ] **POLISH-DOCS-REPRO** (P59): After docs-repro gates ship, every fenced code block in user-facing docs (`README.md`, `docs/index.md`, `docs/tutorials/*`, `docs/guides/*`) has a catalog row AND a passing container rehearsal OR is explicitly marked manual/illustrative (with rationale in the catalog row). Fix any broken/stale snippets in the same phase (cite commit). Every `examples/0[1-5]-*/run.sh` passes its container rehearsal.
 - [ ] **POLISH-DOCS-BUILD** (P60): After docs-build gates ship, every badge URL in `README.md` + docs renders (BADGE-01 fix-the-REDs); every link in user-facing docs resolves (no link rot); `mkdocs build --strict` is GREEN; every mermaid block on every nav page renders without errors (assertion: `document.querySelectorAll('pre.mermaid svg').length > 0` per page, zero browser-console rendering errors). Fix any flagged failures in the same phase.
 - [ ] **POLISH-SUBJECTIVE** (P61): After subjective rubrics seed (SUBJ-01..03), dispatch the unbiased subagent for `cold-reader-hero-clarity`, `install-positioning`, and `headline-numbers-sanity` AT LEAST ONCE; fix any P0/P1 findings in the same phase; remaining P2 findings either fixed, waived (with TTL), or filed as v0.12.1 carry-forward.
-- [ ] **POLISH-ORG** (P62): Every gap in `.planning/research/v0.11.1-repo-organization-gaps.md` gets a status (`closed-by-catalog-row`, `closed-by-existing-gate`, or `waived` with reason + dimension_owner + RFC3339 `until`). This is already P62's scope per ORG-01 — listed here for cohesion across the polish-pass family.
+- [x] **POLISH-ORG** (P62): Every gap in `.planning/research/v0.11.1-repo-organization-gaps.md` gets a status (`closed-by-catalog-row`, `closed-by-existing-gate`, or `waived` with reason + dimension_owner + RFC3339 `until`). This is already P62's scope per ORG-01 — listed here for cohesion across the polish-pass family. **SHIPPED P62.** All 99 audit items have explicit dispositions; zero `closed-by-Wave-3-fix` items remain open. Fixes shipped in commits `eaf7068` (Wave 1 catalog), `4584fca` (Wave 2 audit), `8842d48` (Wave 3 relocations), `9011e91` (Wave 3 verifier extension), `2413f13` (Wave 4 SURPRISES rotation).
 - [ ] **POLISH-AGENT-UX** (P59): The `dark-factory-test.sh` migration to `quality/gates/agent-ux/dark-factory.sh` runs end-to-end against the simulator; any regressions found vs. the v0.9.0 baseline are fixed in the same phase (cite commit).
 - [ ] **POLISH-CODE** (P58 stub, P63 final): `cargo clippy --workspace --all-targets -- -D warnings` passes; `cargo nextest run --workspace` passes; `cargo-audit` clean; no NEW `Error::Other(String)` sites introduced (the 156→144 partial migration completion is a v0.12.1 carry-forward per MIGRATE-03, but no new regressions are accepted in v0.12.0). P58 lands the stub catalog rows + the clippy/nextest/audit assertions; P63 confirms the final state at milestone close.
 
@@ -164,13 +164,13 @@ Refined 1:1 mapping after roadmap creation (gsd-roadmapper, 2026-04-27). Coverag
 | SUBJ-01 | P61 | shipped (P61) |
 | SUBJ-02 | P61 | shipped (P61) |
 | SUBJ-03 | P61 | shipped (P61) |
-| ORG-01 | P62 | planning |
+| ORG-01 | P62 | shipped (P62) |
 | POLISH-STRUCT | P57 | planning |
 | POLISH-RELEASE | P58 | planning |
 | POLISH-DOCS-REPRO | P59 | planning |
 | POLISH-DOCS-BUILD | P60 | shipped (P60) |
 | POLISH-SUBJECTIVE | P61 | shipped (P61) |
-| POLISH-ORG | P62 | planning |
+| POLISH-ORG | P62 | shipped (P62) |
 | POLISH-AGENT-UX | P59 | planning |
 | POLISH-CODE | P58 (stub) + P63 (final) | planning |
 | SIMPLIFY-01 | P57 | planning |
