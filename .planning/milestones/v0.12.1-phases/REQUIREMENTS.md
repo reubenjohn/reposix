@@ -8,6 +8,13 @@ v0.12.1 closes the v0.12.0 carry-forward debts: perf-dimension full implementati
 
 ## Requirements
 
+### Docs-alignment coverage metric (P66)
+- [ ] **COVERAGE-01** — `Summary` struct grows 4 fields with serde back-compat: `coverage_ratio` (f64; default 0.0), `lines_covered` (u64; default 0), `total_eligible_lines` (u64; default 0), `coverage_floor` (f64; default 0.10 via `default_coverage_floor` fn). All four `#[serde(default)]` so legacy populated catalogs deserialize. Source: P66 prompt § 1.
+- [ ] **COVERAGE-02** — `crates/reposix-quality/src/coverage.rs` exposes `eligible_files`, `line_count`, `merge_ranges`, `covered_lines_for_file`, `compute_per_file`, `compute_global`. Range-merge unions overlapping AND adjacent inclusive ranges; multi-source rows attribute to each cited file independently; out-of-eligible rows warn to stderr + skip; ≥8 integration tests in `crates/reposix-quality/tests/coverage.rs` plus ≥4 unit tests for `merge_ranges`. Source: P66 prompt § 2 + § 5.
+- [ ] **COVERAGE-03** — `walk` populates `summary.lines_covered` + `summary.total_eligible_lines` + `summary.coverage_ratio` each run; BLOCKs (exit non-zero, stderr names `/reposix-quality-backfill` recovery path) when `coverage_ratio < coverage_floor`. The walker NEVER auto-tunes `coverage_floor`. Source: P66 prompt § 3.
+- [ ] **COVERAGE-04** — `status` displays a global summary block AND a per-file (worst-coverage-first) table; `--top N` (default 20), `--all`, `--json` flags supported; ZERO ROWS hint when `row_count == 0` AND `total_lines > 50`. Source: P66 prompt § 4.
+- [ ] **COVERAGE-05** — `quality/catalogs/README.md` documents the 2x2 alignment-vs-coverage matrix + `coverage_floor` ratchet semantics; CLAUDE.md gains a P66 H3 subsection ≤30 lines under whatever v0.12.1 in-flight section convention exists; verifier verdict GREEN at `quality/reports/verdicts/p66/VERDICT.md` with explicit note that pre-push exit non-zero on `docs-alignment/walk` is INTENDED until v0.12.1 cluster phases close enough rows. Source: P66 prompt § 7 + § 8 + § 9.
+
 ### Perf dimension (full implementation)
 - [ ] **PERF-01** — Latency vs headline-copy cross-check. Wire `quality/gates/perf/latency-vs-headline-copy.sh` to (a) run `quality/gates/perf/latency-bench.sh`, (b) parse the bench output, (c) diff per-backend numbers against the headline numbers in `docs/benchmarks/latency.md` within +/-15% tolerance. Source: `quality/catalogs/perf-targets.json` row `perf/latency-bench` (P59 stub) + P63 reaffirmation in MIGRATE-03.
 - [ ] **PERF-02** — Token-economy bench cross-check. Wire `quality/gates/perf/token-economy-bench.sh` to run `python3 quality/gates/perf/bench_token_economy.py` + cross-check against headline numbers in user-facing docs. Source: stub row `perf/token-economy-bench`.
@@ -41,4 +48,4 @@ v0.12.1 closes the v0.12.0 carry-forward debts: perf-dimension full implementati
 
 ## Traceability
 
-13 requirements -> >= 4 phases (assigned during `/gsd-roadmapper` for v0.12.1).
+18 requirements -> >= 5 phases (P66 coverage_ratio added 2026-04-28; original 13 carry-forwards distributed across P67-P71 per ROADMAP.md).
