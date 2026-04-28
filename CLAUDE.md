@@ -231,6 +231,15 @@ The cold-reader pass is the second half of the close-the-loop principle
 (global OP #1) for prose: render → reload-as-stranger → ask "does this
 land?" before claiming done.
 
+After P61 ships, the cold-reader pass is operationalized via the
+`reposix-quality-review` skill at `.claude/skills/reposix-quality-review/`.
+Invoke `bash .claude/skills/reposix-quality-review/dispatch.sh --rubric
+subjective/cold-reader-hero-clarity` (or `--all-stale` to grade every
+stale subjective rubric in parallel) to grade README.md + docs/index.md
+hero clarity automatically. The catalog row at
+`quality/catalogs/subjective-rubrics.json` enforces "rubric was checked
+within 30d" via the freshness-TTL gate (P61 SUBJ-03).
+
 ## Freshness invariants
 
 Drift these and the docs lie. Each invariant has a verifier; the §0.8
@@ -268,6 +277,7 @@ Per the user's global OP #2: "Aggressive subagent delegation." Specifics for thi
 - Run multiple subagents in parallel whenever they're operating on disjoint files.
 - **Never delegate `gh pr checkout` to a bash subagent without isolation.** Bash subagents share the coordinator's working tree; `gh pr checkout` switches the local branch behind the coordinator's back, which already caused the cherry-pick mess at commit `5a91ae2`. Either spawn a worktree first (`git worktree add /tmp/pr-N pr-N-branch`) and have the subagent `cd` into it, or have the subagent operate inside `/tmp/<branch>-checkout`. The coordinator's checkout is shared state — treat it that way.
 - **QG-06 verifier subagent dispatch on every phase close** — see `quality/PROTOCOL.md` § "Verifier subagent prompt template" for the verbatim copy-paste prompt. The executing agent does NOT grade itself.
+- **Dispatching subjective rubrics (cold-reader, install-positioning, headline-numbers)** — `reposix-quality-review` skill at `.claude/skills/reposix-quality-review/` (P61 SUBJ-02). Invocation: `bash .claude/skills/reposix-quality-review/dispatch.sh --rubric <id>` / `--all-stale` / `--force`. Path A (Task tool from Claude session) preferred for unbiased grading; Path B (claude -p subprocess) fallback. The cold-reader rubric integrates the existing global `doc-clarity-review` skill via subprocess.
 
 The orchestrator's job is to route, decide, and integrate — not to type code that a subagent could type.
 
@@ -574,6 +584,35 @@ Docs-build dimension lands with 4 verifiers backing 4 catalog rows in `quality/c
 - `quality/PROTOCOL.md` — cadence routing + verifier-subagent template + waiver protocol.
 - `quality/SURPRISES.md` — P60 entries (mkdocs auto-include, hook one-liner, Wave G zero-RED).
 - MIGRATE-03 in `.planning/REQUIREMENTS.md` — v0.12.1 carry-forward (auto-sync `docs/badge.json` from `quality/reports/badge.json` on every runner emit).
+
+### P61 — Subjective gates skill + freshness-TTL (added 2026-04-27)
+
+The Quality Gates `subjective` cross-dimension shipped in P61. 3 rubrics catalogued in `quality/catalogs/subjective-rubrics.json`; verifier impls live at `.claude/skills/reposix-quality-review/`.
+
+| Rubric | Implementation skill | Cadence | freshness_ttl |
+|---|---|---|---|
+| `subjective/cold-reader-hero-clarity` | `doc-clarity-review` (existing global skill) | pre-release | 30d |
+| `subjective/install-positioning` | `reposix-quality-review` (P61 ships at `.claude/skills/reposix-quality-review/`) | pre-release | 30d |
+| `subjective/headline-numbers-sanity` | `reposix-quality-review` | weekly | 30d |
+
+**reposix-quality-review skill (SUBJ-02 closure).** NEW skill scaffold + 3 rubric prompts + 2 dispatchers (~700 LOC total). The ONLY skill change pre-approved for v0.12.0 per `.planning/research/v0.12.0-open-questions-and-deferrals.md` line 124. Invocation: `bash .claude/skills/reposix-quality-review/dispatch.sh --rubric <id>` / `--all-stale` / `--force`. Path A (Task tool from a Claude session) preferred; Path B (claude -p subprocess) fallback. Path B from the runner subprocess writes a stub artifact (FAIL) until Path A re-runs from a session — the runner-subprocess-overwrites-Path-A-artifact issue is filed as v0.12.1 MIGRATE-03 carry-forward (e).
+
+**Freshness-TTL extension (SUBJ-03 closure).** `quality/runners/run.py` grew `parse_duration` + `is_stale` + STALE-counts-as-NOT-VERIFIED branch + `[STALE]` label (388 LOC final; parse_duration extracted to sibling `_freshness.py` per the Wave B 390-LOC pivot rule). `quality/runners/verdict.py` grew STALE sub-table inside the NOT-VERIFIED rollup. `quality/runners/test_freshness.py` ships 11 pytest tests + `test_freshness_synth.py` 1 end-to-end synthetic regression.
+
+**Pre-release cadence wiring (SUBJ-03 closure).** `.github/workflows/quality-pre-release.yml` (NEW; 75 LOC; triggers on tag-push `v*` + `reposix-cli-v*` + workflow_dispatch). `.github/workflows/release.yml` gains a parallel-execution comment block — hard-gate chaining (release waits for pre-release verdict) is filed as v0.12.1 MIGRATE-03 carry-forward (g) per P56 SURPRISES row 1 GH-Actions cross-workflow `needs:` limitation. Auto-dispatch from CI (Anthropic API auth on GH Actions runner) is v0.12.1 MIGRATE-03 carry-forward (f).
+
+**POLISH-SUBJECTIVE Wave G (broaden-and-deepen).** 3 rubrics graded via Path B (in-session Claude grading; full disclosure header in artifact `dispatched_via=Wave-G-Path-B-in-session`): cold-reader 8 CLEAR; install-positioning 9 CLEAR; headline-numbers 9 CLEAR. ZERO P0/P1 findings — confirmed user-facing prose already CLEAR. 4 P2 polish items (MCP acronym un-glossed; "promisor remote" jargon; docs/index.md target-arch surfacing; "5-line install" approximation) deferred to v0.12.1 docs polish. Catalog rows extended to WAIVED-2026-07-26 with documented evidence + carry-forward citations.
+
+**Recovery patterns** (the regressions this dimension catches):
+- `subjective/cold-reader-hero-clarity` RED with score < 7: README.md hero or docs/index.md hero confused the cold reader; read the rubric artifact for friction points + rewrite the offending paragraphs.
+- `subjective/install-positioning` RED: install copy regressed (refactor moved package-manager command below `git clone`); restore package-manager-first ordering per CLAUDE.md "Freshness invariants — Install path leads with package manager".
+- `subjective/headline-numbers-sanity` RED: a headline number drifted from the benchmarks/ source-of-truth; either update README/docs to match or update benchmarks (whichever is the actual ground truth).
+
+**Cross-references** (do NOT duplicate runtime detail here):
+- `quality/gates/subjective/README.md` — dimension home + rubric conventions + pivot rules.
+- `.claude/skills/reposix-quality-review/SKILL.md` — skill entry point + 5-step process.
+- `quality/PROTOCOL.md` — cadence routing + verifier-subagent template + waiver protocol.
+- MIGRATE-03 in `.planning/REQUIREMENTS.md` — v0.12.1 carry-forwards (e/f/g): subjective dispatch-and-preserve runner invariant; auto-dispatch from CI; hard-gate chaining release.yml -> quality-pre-release.yml.
 
 ## Quick links
 

@@ -161,15 +161,15 @@ Refined 1:1 mapping after roadmap creation (gsd-roadmapper, 2026-04-27). Coverag
 | DOCS-REPRO-04 | P59 | planning |
 | DOCS-BUILD-01 | P60 | shipped (P60) |
 | BADGE-01 | P60 | shipped (P60) |
-| SUBJ-01 | P61 | planning |
-| SUBJ-02 | P61 | planning |
-| SUBJ-03 | P61 | planning |
+| SUBJ-01 | P61 | shipped (P61) |
+| SUBJ-02 | P61 | shipped (P61) |
+| SUBJ-03 | P61 | shipped (P61) |
 | ORG-01 | P62 | planning |
 | POLISH-STRUCT | P57 | planning |
 | POLISH-RELEASE | P58 | planning |
 | POLISH-DOCS-REPRO | P59 | planning |
 | POLISH-DOCS-BUILD | P60 | shipped (P60) |
-| POLISH-SUBJECTIVE | P61 | planning |
+| POLISH-SUBJECTIVE | P61 | shipped (P61) |
 | POLISH-ORG | P62 | planning |
 | POLISH-AGENT-UX | P59 | planning |
 | POLISH-CODE | P58 (stub) + P63 (final) | planning |
@@ -189,7 +189,7 @@ Refined 1:1 mapping after roadmap creation (gsd-roadmapper, 2026-04-27). Coverag
 | MIGRATE-02 | P63 | planning |
 | MIGRATE-03 | P63 | planning |
 
-**Per-phase requirement counts:** P56=3 (RELEASE-01..03) · P57=15 (QG-01..09, STRUCT-01..02, SIMPLIFY-01..03, POLISH-STRUCT) · P58=5 (RELEASE-04, SIMPLIFY-04..05, POLISH-RELEASE, POLISH-CODE-stub) · P59=9 (DOCS-REPRO-01..04, SIMPLIFY-06..07, SIMPLIFY-11, POLISH-DOCS-REPRO, POLISH-AGENT-UX) · P60=6 all SHIPPED (DOCS-BUILD-01, BADGE-01, SIMPLIFY-08..10, POLISH-DOCS-BUILD) · P61=4 (SUBJ-01..03, POLISH-SUBJECTIVE) · P62=2 (ORG-01, POLISH-ORG) · P63=5 (MIGRATE-01..03, SIMPLIFY-12, POLISH-CODE-final). Sum = 49 (40 original + 8 POLISH-* + POLISH-CODE counted in BOTH P58-stub and P63-final per its dual home) ✓. (QG-09 spans P57+P58+P60; counted in P57 as primary owner. POLISH-CODE spans P58+P63; counted in both.)
+**Per-phase requirement counts:** P56=3 (RELEASE-01..03) · P57=15 (QG-01..09, STRUCT-01..02, SIMPLIFY-01..03, POLISH-STRUCT) · P58=5 (RELEASE-04, SIMPLIFY-04..05, POLISH-RELEASE, POLISH-CODE-stub) · P59=9 (DOCS-REPRO-01..04, SIMPLIFY-06..07, SIMPLIFY-11, POLISH-DOCS-REPRO, POLISH-AGENT-UX) · P60=6 all SHIPPED (DOCS-BUILD-01, BADGE-01, SIMPLIFY-08..10, POLISH-DOCS-BUILD) · P61=4 all SHIPPED (SUBJ-01, SUBJ-02, SUBJ-03, POLISH-SUBJECTIVE) · P62=2 (ORG-01, POLISH-ORG) · P63=5 (MIGRATE-01..03, SIMPLIFY-12, POLISH-CODE-final). Sum = 49 (40 original + 8 POLISH-* + POLISH-CODE counted in BOTH P58-stub and P63-final per its dual home) ✓. (QG-09 spans P57+P58+P60; counted in P57 as primary owner. POLISH-CODE spans P58+P63; counted in both.)
 
 **Recurring success criteria across every phase (P56–P63)** — these are part of the phase's definition-of-done and are NOT separate REQ-IDs (they are recurring expressions of QG-06 + QG-07 + the autonomous-execution protocol):
 - Catalog-first: phase's first commit writes catalog rows BEFORE implementation.

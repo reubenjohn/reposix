@@ -242,3 +242,61 @@ discipline (write rows BEFORE implementation) means the dimension's
 first runner sweep is the verification of the planned design, not
 a discovery sweep. The "broaden-and-deepen" pattern remains valuable
 as insurance, but a clean phase produces a clean sweep.
+
+2026-04-27 P61: Wave B run.py LOC overshoot — adding parse_duration +
+is_stale + STALE branch + STALE label + main() suffix wiring pushed
+quality/runners/run.py from 330 LOC to a transient 399, over the
+390 anti-bloat cap. Pivot rule from 61-02-PLAN fired: extracted
+parse_duration to a new sibling module quality/runners/_freshness.py
+(50 LOC); is_stale stayed in run.py as a thin 3-line wrapper that
+injects parse_rfc3339. Final run.py 388 LOC under cap. Lesson: when
+a single file's gain pushes past the soft cap, the pivot is "extract
+the leaf utility" not "rewrite the integration"; the integration
+preserves the API and the next agent can keep doing
+`from run import parse_duration`.
+
+2026-04-27 P61: Wave G runner-subprocess overwrite — the dispatcher
+(`bash .claude/skills/reposix-quality-review/dispatch.sh --rubric ...`)
+when invoked from the runner subprocess does NOT have Task tool
+access, so the Path A scored verdict produced from a Claude session
+is overwritten by Path B stub artifacts on every subsequent runner
+sweep. The waiver branch in run_row also writes a WAIVED-shape
+artifact (no score field) on every cadence run for waivered rows,
+clobbering any preceding scored artifact. Resolution: the catalog row
+authoritatively encodes the Wave G grading via an extended waiver
+(WAIVED-2026-07-26 with documented `dispatched_via=Wave-G-Path-B-in-session`
+evidence in the waiver.reason); the artifact JSON is a re-derivation
+target. Filed as v0.12.1 MIGRATE-03 carry-forward (e): "Subjective
+dispatch-and-preserve runner invariant" -- run_row should treat a
+subagent-graded row's recent Path A artifact as authoritative
+(read-only on subsequent sweeps; runner sets row.status from the
+artifact's score, never overwrites the artifact). Lesson: when the
+runner sets the artifact AND reads the artifact, "single writer" is
+ambiguous; v0.12.1 needs an explicit kind-aware read-only branch.
+
+2026-04-27 P61: Wave F GH Actions cross-workflow chaining limitation
+confirmed (this is a re-mention of P56 SURPRISES row 1 in P61
+context). `.github/workflows/quality-pre-release.yml` cannot
+chain via `needs:` from `.github/workflows/release.yml` because
+`needs:` is same-workflow-only. v0.12.0 ships SOFT-GATE
+(parallel-execution + maintainer-alert pattern); HARD-GATE
+chaining (release waits for pre-release verdict) requires composite
+workflow OR `workflow_run` trigger. Filed as v0.12.1 MIGRATE-03
+carry-forward (g). Lesson: every new workflow that wants to gate a
+release.yml in this milestone hits the same wall; the v0.12.1 fix
+is a single composite workflow restructure, not a per-gate
+workaround.
+
+2026-04-27 P61: Wave G broaden-and-deepen produced ZERO P0/P1
+findings — the rubric subagent (Path B in-session grading) scored
+all 3 rubrics CLEAR (cold-reader 8, install-positioning 9,
+headline-numbers 9). 4 P2 polish items deferred to v0.12.1 (MCP
+acronym un-glossed; "promisor remote" jargon; docs/index.md
+target-arch surfacing; "5-line install" approximation). Lesson:
+prior phases (P56 install-path + P58 release dimension) baked the
+package-manager-first install ordering and the inline benchmark
+citations into the source files; the subjective rubrics now grade
+GREEN on first dispatch because the underlying prose is already
+clean. The broaden-and-deepen sweep is more valuable as insurance
++ future-regression detection than as a fix-it-now hammer when the
+prose is already shipped clean.
