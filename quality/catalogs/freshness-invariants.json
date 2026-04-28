@@ -320,6 +320,118 @@
       "blast_radius": "P0",
       "owner_hint": "if RED: a real token shape was committed -- ROTATE THE TOKEN at the issuing platform BEFORE doing anything else (Atlassian: https://id.atlassian.com/manage-profile/security/api-tokens; GitHub: https://github.com/settings/tokens)",
       "waiver": null
+    },
+    {
+      "id": "structure/no-loose-top-level-planning-audits",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [
+        ".planning/research/v0.11.1-repo-organization-gaps.md:49 (top-level audits should live under .planning/milestones/audits/)",
+        "CLAUDE.md:Freshness invariants"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "find .planning -maxdepth 1 -type f \\( -name '*MILESTONE-AUDIT*.md' -o -name 'SESSION-END-STATE*' \\) | grep -v archive returns empty stdout"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/freshness-invariants.py",
+        "args": [
+          "--row-id",
+          "structure/no-loose-top-level-planning-audits"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/no-loose-top-level-planning-audits.json",
+      "status": "WAIVED",
+      "last_verified": "2026-04-28T04:06:03Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "any new milestone-audit or session-end-state document at .planning/ top level -- relocate under .planning/milestones/audits/ or .planning/archive/",
+      "waiver": {
+        "until": "2026-05-15T00:00:00Z",
+        "reason": "Catalog-first: row ships before verifier branch lands in Wave 3. Short-lived; expires after Wave 3 + Wave 6.",
+        "dimension_owner": "structure",
+        "tracked_in": "P62 Wave 3 (POLISH-ORG)"
+      }
+    },
+    {
+      "id": "structure/no-pre-pivot-doc-stubs",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [
+        ".planning/research/v0.11.1-repo-organization-gaps.md:82-83 (top-level doc stubs)",
+        "CLAUDE.md:Freshness invariants"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "For each docs/*.md whose byte size <500 AND whose top-level slug appears as a key in mkdocs.yml plugins.redirects.redirect_maps, the redirect target resolves to a file present under docs/. Stubs without a redirect entry AND without a nav: entry are flagged."
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/freshness-invariants.py",
+        "args": [
+          "--row-id",
+          "structure/no-pre-pivot-doc-stubs"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/no-pre-pivot-doc-stubs.json",
+      "status": "WAIVED",
+      "last_verified": "2026-04-28T04:06:03Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "any new top-level docs/<slug>.md stub <500 bytes -- add to mkdocs.yml redirect_maps or remove",
+      "waiver": {
+        "until": "2026-05-15T00:00:00Z",
+        "reason": "Catalog-first: row ships before verifier branch lands in Wave 3. Short-lived; expires after Wave 3 + Wave 6.",
+        "dimension_owner": "structure",
+        "tracked_in": "P62 Wave 3 (POLISH-ORG)"
+      }
+    },
+    {
+      "id": "structure/repo-org-audit-artifact-present",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [
+        ".planning/REQUIREMENTS.md:ORG-01 (audit must be committed under quality/reports/)",
+        ".planning/ROADMAP.md:P62 success criterion 2"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "File quality/reports/audits/repo-org-gaps.md exists",
+          "File contains a top-section with audit table mapping every numbered gap from .planning/research/v0.11.1-repo-organization-gaps.md 'Top 10 cleanup recommendations' to a closure path (closed-by-catalog-row | closed-by-existing-gate | waived)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/freshness-invariants.py",
+        "args": [
+          "--row-id",
+          "structure/repo-org-audit-artifact-present"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/repo-org-audit-artifact-present.json",
+      "status": "WAIVED",
+      "last_verified": "2026-04-28T04:06:03Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "Wave 2 produces the audit; future repo-org audits land at the same path",
+      "waiver": {
+        "until": "2026-05-15T00:00:00Z",
+        "reason": "Catalog-first: row ships before verifier branch lands in Wave 3. Short-lived; expires after Wave 3 + Wave 6.",
+        "dimension_owner": "structure",
+        "tracked_in": "P62 Wave 3 (POLISH-ORG)"
+      }
     }
   ]
 }
