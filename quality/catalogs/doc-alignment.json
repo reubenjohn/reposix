@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 210,
-    "claims_missing_test": 144,
-    "claims_retire_proposed": 4,
+    "claims_bound": 220,
+    "claims_missing_test": 122,
+    "claims_retire_proposed": 16,
     "claims_retired": 30,
-    "alignment_ratio": 0.5865921787709497,
+    "alignment_ratio": 0.6145251396648045,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-28T19:00:06Z",
+    "last_walked": "2026-04-28T19:07:53Z",
     "coverage_ratio": 0.2027223230490018,
     "lines_covered": 1117,
     "total_eligible_lines": 5510,
@@ -106,11 +106,18 @@
         "line_end": 95
       },
       "source_hash": "f648782b873bf658315f7c3bfcc86d1aca23f2df859f43b0310f501a77ca8a86",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:59Z",
-      "last_extracted": "2026-04-28T09:00:59Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-core/src/remote.rs::parses_with_prefix"
+      ],
+      "test_body_hashes": [
+        "b578d27bd199448345b50afe288f6eefe1c68dff57da2efc9d1c2a3ad5e1e7ce"
+      ],
+      "rationale": "parse_remote_url is the unified entry-point; remote.rs:91/98/105 cover prefix/no-prefix/traversal-rejection; backend_dispatch.rs::instantiate_sim_no_creds_required_succeeds confirms consolidated callsite",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/index/5-line-install",
@@ -241,11 +248,18 @@
         "line_end": 77
       },
       "source_hash": "2bbe8b2a8987bb6155cc841708fa5fcfc716ab122ca4588d25e4de62df45f19f",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:15:03Z",
-      "last_extracted": "2026-04-28T09:15:03Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-jira/src/translate.rs::adf_description_strips_to_plain_text"
+      ],
+      "test_body_hashes": [
+        "ff60f640def4731db6ec5e768eb7aef907d2793cb2a7f4d100f2116bb80ca68f"
+      ],
+      "rationale": "translate.rs:214 directly tests the strip-to-plain behavior; binding is exact",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/decisions/003-nested-mount-layout/fuse-architecture-retired-v0.9.0",
@@ -256,12 +270,12 @@
         "line_end": 1
       },
       "source_hash": "cb3f91d54eee30e53e35b2b99905f70f169ed549fd78909d3dac2defc9ed8d3b",
-      "rationale": "IMPL_GAP: v0.9.0 architecture pivot replaced the FUSE TRANSPORT with git-native partial-clone, but the user-facing-shape promise (nested page directories + symlink relations) was kept in ADR-003 prose. Owner observed 2026-04-28 that `reposix init` does NOT currently produce this shape -- silent regression. Resolution paths: (a) FIX_IMPL_THEN_BIND -- restore nested-shape generation in the cache layer under git-native partial-clone + bind a layout-shape test; (b) UPDATE_DOC -- if the layout is intentionally dropped, document the decision in `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` extension AND remove the claim from ADR-003. Then write a test asserting the resolved state. v0.12.1 cluster: core-init-shape-regressions (P72 candidate per renumbered v0.12.1 ROADMAP).",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-04-28T14:51:11Z",
-      "last_extracted": "2026-04-28T14:51:11Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded: ADR-003 marked superseded at line 7 (status: superseded; FUSE-era nested mount no longer exists). The whole ADR is now historical.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/tutorials/first-run/git-diff-edit",
@@ -1427,11 +1441,18 @@
         "line_end": 77
       },
       "source_hash": "d49248265fd03c6a6987d2ab912fe85c8337ec6ff63877cf2139dcb68d63773c",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:15:27Z",
-      "last_extracted": "2026-04-28T09:15:27Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-remote/src/backend_dispatch.rs::sanitize_project_for_cache_replaces_slashes"
+      ],
+      "test_body_hashes": [
+        "43788bcb1ec3c6b6bc45f670f7f7d87bb601299bac83c8834800c8584e1406e4"
+      ],
+      "rationale": "backend_dispatch.rs:413 directly tests slash -> dash sanitization; backend_kind_slug_matches_audit_convention at l423 verifies the slug-naming side",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "time-travel/list-sync-tags-returns-sorted-ascending",
@@ -1636,12 +1657,12 @@
         "line_end": 30
       },
       "source_hash": "777891a7fa44692211ab7248efa3c30a3695bda8932ae78af94349ff4fb3f305",
-      "rationale": "IMPL_GAP: _INDEX.md whole-mount overview was shipped in v0.6.0 but is absent from the partial-clone era — no current code synthesizes it. The promise (cat mount/_INDEX.md → overview) is a USER-FACING SHAPE claim, not a FUSE transport detail; cache can mint the blob in the tree. Resolution: either reimplement in reposix-cache as a synthesized blob in the bare-repo tree + bind a working-tree assertion test, OR write an ADR retiring the _INDEX.md feature with documented rationale + supersession.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-04-28T14:59:54Z",
-      "last_extracted": "2026-04-28T14:59:54Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by architecture-pivot-summary.md:5 + ADR-003.md:7 (FUSE-era nested mount no longer exists). Whole-mount overview was a FUSE-era convenience; partial-clone surface differs.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-01",
@@ -1652,11 +1673,12 @@
         "line_end": 87
       },
       "source_hash": "d6fac6d9367fe666fc6df0510d6dc4be42ca0938d2c77f6e4262f859ee619ee3",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:46Z",
-      "last_extracted": "2026-04-28T09:01:46Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-mount path gone).",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/index-01",
@@ -1667,12 +1689,12 @@
         "line_end": 29
       },
       "source_hash": "298321e1af9fa4f12e72b0cfe22415ffff12e95afa63c6bb566b3d10a2a2f9e2",
-      "rationale": "IMPL_GAP: tree/<subdir>/_INDEX.md per-subtree sitemap was shipped in v0.6.0 but absent from partial-clone era. The cycle-safe-DFS-from-TreeSnapshot phrasing is FUSE-era jargon; the user-facing output (cat tree/X/_INDEX.md → sitemap) is a synthesized blob, trivially representable in a bare-repo tree. Resolution: reimplement synthesis in reposix-cache + bind test, OR ADR-retire with documented rationale.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-04-28T14:59:54Z",
-      "last_extracted": "2026-04-28T14:59:54Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by .planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md:5 (FUSE-based architecture retired in v0.9.0). The TreeSnapshot DFS synthesizer was a FUSE-era artifact; partial-clone replaces this surface.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/hard-03",
@@ -1810,11 +1832,12 @@
         "line_end": 89
       },
       "source_hash": "b426e1e156e015d90badbfe12431b9ebaa8b70c15eae82e113010a5f6a4c470b",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:48Z",
-      "last_extracted": "2026-04-28T09:01:48Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-mount comment-read mechanism gone; v0.9.0 surface differs).",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "README-md/conflict-recovery-teaching",
@@ -1952,18 +1975,25 @@
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-10-confluence-split",
-      "claim": "crates/reposix-confluence/src/lib.rs (3 989 LOC) split into types.rs / translate.rs / client.rs modules",
+      "claim": "crates/reposix-confluence/src/lib.rs (3989 LOC) split into types.rs / translate.rs / client.rs modules",
       "source": {
         "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
         "line_start": 35,
         "line_end": 35
       },
       "source_hash": "3f282a5cbfa82ff88d9fb941b9da8fa50250c83faf8adc2840f052b925a35b3f",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:43Z",
-      "last_extracted": "2026-04-28T09:00:43Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-confluence/src/translate.rs::translate_populates_parent_id_for_page_parent"
+      ],
+      "test_body_hashes": [
+        "64e57dc2fb40d64f5459dff546512ef656036f24908475dbb046498c07c3ba79"
+      ],
+      "rationale": "translate.rs is one of the split modules; status_mapping_matrix unit test (8 #[test] blocks at l245+) compiles only if the split shipped",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-13-fuse-deletion",
@@ -1989,18 +2019,25 @@
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-11-jira-split",
-      "claim": "crates/reposix-jira/src/lib.rs (1 957 LOC) split into matching modules",
+      "claim": "crates/reposix-jira/src/lib.rs (1957 LOC) split into matching modules",
       "source": {
         "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
         "line_start": 36,
         "line_end": 36
       },
       "source_hash": "12c9461a1f697d2b95b3aabdecba8ef7de13a1280350d9c7e6ed3ddc010a688d",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:45Z",
-      "last_extracted": "2026-04-28T09:00:45Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-jira/src/translate.rs::status_mapping_matrix"
+      ],
+      "test_body_hashes": [
+        "e47f8720e876f909f4adf56f67494a4c820d89e0c4b56d161a0e68f7722d5bcd"
+      ],
+      "rationale": "same as POLISH2-10 -- types.rs/translate.rs/client.rs/adf.rs all present; status_mapping_matrix at line 177 exercises the split module",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/index/install-curl-https",
@@ -2395,11 +2432,18 @@
         "line_end": 34
       },
       "source_hash": "4a812f55b0cabbff313fb38b057c4244f4fb45d271c9d7e70f3ce9ac0e0b1367",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:41Z",
-      "last_extracted": "2026-04-28T09:00:41Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-core/src/backend/sim.rs::version_mismatch_round_trips_typed_body"
+      ],
+      "test_body_hashes": [
+        "cee232fc22d861751a5119f25008a3c7ae70e1905fb2f080beb91e741bac28ee"
+      ],
+      "rationale": "sim.rs:644 + sim.rs:678 round-trip typed variants over HTTP, asserting they survive simulator boundary -- typed-error binding contract",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "filesystem-layer/audit-blob-materialize-rows",
@@ -2734,11 +2778,12 @@
         "line_end": 95
       },
       "source_hash": "5e363dfe75cecc1e14d7e5678e312ee99ac538c0ec1b16083d9a0daf6c5d0901",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:52Z",
-      "last_extracted": "2026-04-28T09:01:52Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-era 'tree alongside page hierarchy' presentation gone).",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "trust-model/frontmatter-field-allowlist-strips-server-fields",
@@ -2951,19 +2996,19 @@
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/cache-02",
-      "claim": "git diff HEAD~1 in the mount shows what changed at the backend since the last refresh (mount-as-time-machine)",
+      "claim": "git diff HEAD~1 in the mount shows what changed at the backend since the last refresh",
       "source": {
         "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
         "line_start": 38,
         "line_end": 38
       },
       "source_hash": "84ef21198b5535823e7986479025a2557cd663edb38a7a1b1aa2586ca7c8ee67",
-      "rationale": "IMPL_GAP: mount-as-time-machine UX is shipped in v0.11.0 via ADR-007 sync-tags (refs/reposix/sync/<ISO8601> per Cache::sync) which is a strictly stronger generalization of the v0.6.0 git-diff-HEAD~1 promise. The user-facing capability ('see what changed at the backend') survives the FUSE-to-partial-clone pivot. No test currently binds the sync-tag history surface to a 'time-travel via git diff between refs' assertion. Resolution: either update REQUIREMENTS.md prose to refer to sync-tags + bind a test that exercises diff between two sync refs, OR confirm-retire and let ADR-007 page mint its own claim rows.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-04-28T14:59:54Z",
-      "last_extracted": "2026-04-28T14:59:54Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by architecture-pivot-summary.md:30-32 (FUSE 'mount' replaced with partial-clone working tree; v0.11.0 ADR-007 sync-tags is the v0.9.0+ form of 'see what changed at the backend'). The v0.8 git-diff-HEAD~1 in-mount form is gone in its v0.8 shape.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/dark-factory-conflict-teaching",
@@ -3446,11 +3491,18 @@
         "line_end": 48
       },
       "source_hash": "8fd9cb6b6efd90cb03f55256bc9b5f17b5e6f2841db0e6ebe3509fddac970a5b",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:15:24Z",
-      "last_extracted": "2026-04-28T09:15:24Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-remote/src/backend_dispatch.rs::instantiate_sim_no_creds_required_succeeds"
+      ],
+      "test_body_hashes": [
+        "1fc1985a00759704c81f76f507a1d4d9fcfaed06a615ec5acbf369b246dffbe6"
+      ],
+      "rationale": "backend_dispatch.rs:431 directly tests sim instantiation through the dispatch path; sibling tests at l476/497/520 cover github/confluence/jira routes",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "git-remote/blob-limit-default-200",
@@ -3753,11 +3805,18 @@
         "line_end": 61
       },
       "source_hash": "79c8399a5404e52c926635cbd49f0f38a780dd88b517e9116026bc1563ee7f88",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:15:01Z",
-      "last_extracted": "2026-04-28T09:15:01Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock"
+      ],
+      "test_body_hashes": [
+        "37afa21ee310fffcb4a85aff5bc3500794f23d53b2e5407d6e82e915bf81c1aa"
+      ],
+      "rationale": "translate.rs:120 contains let version = raw.fields.updated.timestamp_millis().unsigned_abs(); contract_jira_wiremock at tests/contract.rs:193 exercises the full read path with fixture data",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/decisions/002-confluence-page-mapping/assignee-maps-to-ownerid",
@@ -4118,19 +4177,19 @@
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/nav-01",
-      "claim": "ls mount/labels/<label>/ lists all issues/pages carrying that label as read-only symlinks pointing to the canonical file in the bucket",
+      "claim": "ls mount/labels/<label>/ lists all issues/pages carrying that label as read-only symlinks",
       "source": {
         "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
         "line_start": 33,
         "line_end": 33
       },
       "source_hash": "5d10d55061f7329d5c674f8512f92b93432179d5b8ec213e9c7bbd70808885d0",
-      "rationale": "IMPL_GAP: labels/<label>/ tree shape (one entry per labeled issue, as symlinks to canonical paths) is a USER-FACING shape promise from v0.6.0 REQUIREMENTS.md, never shipped. git natively supports symlinks in trees (mode 120000); reposix-cache could synthesize this in the bare-repo tree. The FUSE-symlink phrasing is jargon, not a transport binding. Resolution: either implement label-bucket synthesis in reposix-cache + bind a working-tree assertion test, OR write an ADR retiring the labels/ feature with documented rationale + supersession.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-04-28T14:59:54Z",
-      "last_extracted": "2026-04-28T14:59:54Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by architecture-pivot-summary.md:36-50 (partial-clone replaces FUSE mount; symlink-tree retired).",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-05",
@@ -4141,11 +4200,12 @@
         "line_end": 94
       },
       "source_hash": "30a445d4a9c864ada3616b5525510ef54fe49f5345257e2cb382e85ee497f14d",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:51Z",
-      "last_extracted": "2026-04-28T09:01:51Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-mount attachments tree retired).",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-02",
@@ -4156,11 +4216,12 @@
         "line_end": 88
       },
       "source_hash": "f68b6160b935285dca1c0a3cebe6875a0ecf88c531a2e1d34e87c6e4a2a940e5",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:47Z",
-      "last_extracted": "2026-04-28T09:01:47Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-mount comment-list shape retired).",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/nav-02",
@@ -4171,12 +4232,12 @@
         "line_end": 34
       },
       "source_hash": "f47aa0e1c292e12f716b37667d00e806f0ad2a901c830277d7850c94fe5e5082",
-      "rationale": "IMPL_GAP: spaces/<KEY>/ multi-space mount (one root per Confluence space) is a v0.6.0/v0.7.0 user-facing shape promise, never shipped. The FUSE-mount phrasing is jargon; in partial-clone terms this means 'reposix init confluence::* materializes spaces/<KEY>/ directories'. Resolution: either implement multi-space init + bind a test that asserts the spaces/ tree shape, OR write an ADR retiring the multi-space promise with supersession.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-04-28T14:59:54Z",
-      "last_extracted": "2026-04-28T14:59:54Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by architecture-pivot-summary.md:36-50 (FUSE-mount multi-space symlink shape retired).",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-04",
@@ -4187,11 +4248,12 @@
         "line_end": 93
       },
       "source_hash": "74010c040c1c1a7fc358d8cedecef1f8a7604e52cc727802bc181af444543bbb",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:51Z",
-      "last_extracted": "2026-04-28T09:01:51Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-mount whiteboards path retired).",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/hard-04",
@@ -4279,11 +4341,18 @@
         "line_end": 94
       },
       "source_hash": "13909ae63a6c79885a049f5adf02eb0111ac40ba643074e4f568de348f462046",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:15:29Z",
-      "last_extracted": "2026-04-28T09:15:29Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-remote/src/backend_dispatch.rs::instantiate_confluence_missing_creds_lists_all_three"
+      ],
+      "test_body_hashes": [
+        "94a00933a1b9df383cb0062360fcc543221cc8d089262887bf3ec503167486e2"
+      ],
+      "rationale": "l497 explicitly tests missing-creds-lists-all-three; sibling jira variant at l520. These ARE the credential-resolution binding tests",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-04-mkdocs-strict",
@@ -4420,18 +4489,25 @@
     },
     {
       "id": "docs/decisions/008-helper-backend-dispatch/audit-signal",
-      "claim": "op=helper_backend_instantiated row appended to audit_events_cache with backend_slug, project_for_cache, project_for_backend",
+      "claim": "op=helper_backend_instantiated row appended to audit_events_cache",
       "source": {
         "file": "docs/decisions/008-helper-backend-dispatch.md",
         "line_start": 96,
         "line_end": 103
       },
       "source_hash": "e3649a25621444ccaacd15d3c9dcc47767fb2764b88f7b9a9a3982477a11a805",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:15:31Z",
-      "last_extracted": "2026-04-28T09:15:31Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-cache/src/audit.rs::log_helper_backend_instantiated_records_project_for_backend"
+      ],
+      "test_body_hashes": [
+        "5fee463de64dcc44687534b13ccd517455c384dcdca23cb001fe074aa2497ee7"
+      ],
+      "rationale": "audit.rs:726 unit-tests that the audit row is written with project_for_backend; matches the ADR claim verbatim",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:17:44Z",
+      "last_extracted": "2026-04-28T19:17:44Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/write-04",
