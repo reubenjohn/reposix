@@ -189,6 +189,35 @@ def emit_markdown_verdict(rows: list[dict], cadence_or_phase: str, out_path: Pat
             )
     lines.append("")
 
+    # P61 SUBJ-03: STALE sub-table inside the NOT-VERIFIED section. A row only
+    # appears here if its artifact JSON has stale=True (the freshness branch
+    # in run.py wrote it). Provides the days-expired summary the human needs.
+    stale_rows: list[tuple[dict, dict]] = []
+    for r in not_verified:
+        art = load_artifact(r, repo_root) or {}
+        if art.get("stale") is True:
+            stale_rows.append((r, art))
+    lines.append("### STALE (subset of NOT-VERIFIED)")
+    lines.append("")
+    if not stale_rows:
+        lines.append("_None._")
+    else:
+        lines.append("| Row ID | last_verified | freshness_ttl | days expired |")
+        lines.append("|---|---|---|---|")
+        now_dt = datetime.now(timezone.utc)
+        for r, art in stale_rows:
+            lv_input = art.get("last_verified_input") or "?"
+            ttl = art.get("freshness_ttl") or r.get("freshness_ttl") or "?"
+            try:
+                from run import parse_duration as _pd
+                from run import parse_rfc3339 as _pr
+                expired_at = _pr(lv_input) + _pd(ttl)
+                days_expired = (now_dt - expired_at).days
+            except (ValueError, TypeError):
+                days_expired = "?"
+            lines.append(f"| `{r.get('id')}` | `{lv_input}` | `{ttl}` | {days_expired} |")
+    lines.append("")
+
     passed = [r for r in rows if r.get("status") == "PASS"]
     lines.append("## PASS (collapsed)")
     lines.append("")

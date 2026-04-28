@@ -25,6 +25,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+# P61 SUBJ-03: freshness helpers extracted to a sibling module per the
+# Wave B pivot rule (anti-bloat cap on run.py).
+from _freshness import parse_duration as _parse_duration_impl
+from _freshness import is_stale as _is_stale_impl
+
+# Re-export so existing callers and tests can keep doing `from run import parse_duration`.
+parse_duration = _parse_duration_impl
+
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 CATALOG_DIR = REPO_ROOT / "quality" / "catalogs"
 REPORTS_DIR = REPO_ROOT / "quality" / "reports"
@@ -118,6 +126,11 @@ def waiver_active(row: dict, now: datetime) -> bool:
         return False
 
 
+def is_stale(row: dict, now: datetime) -> bool:
+    """Thin wrapper around _freshness.is_stale; injects parse_rfc3339."""
+    return _is_stale_impl(row, now, parse_rfc3339)
+
+
 def sort_by_blast_radius(rows: list[dict]) -> list[dict]:
     return sorted(rows, key=lambda r: BLAST_RADIUS_ORDER.get(r.get("blast_radius", "P2"), 99))
 
@@ -154,6 +167,29 @@ def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
         if artifact_path:
             write_artifact(artifact_path, artifact)
         row["status"] = "WAIVED"
+        row["last_verified"] = artifact["ts"]
+        return row, time.monotonic() - started
+
+    # STALE case (freshness TTL expired). Per P61 SUBJ-03: STALE is a flavor
+    # of NOT-VERIFIED with a clearer label; compute_exit_code semantics
+    # unchanged (P0+P1 NOT-VERIFIED -> exit 1; P2 NOT-VERIFIED -> exit 0).
+    if is_stale(row, now):
+        artifact = {
+            "ts": now_iso(),
+            "row_id": row["id"],
+            "exit_code": None,
+            "stale": True,
+            "freshness_ttl": row["freshness_ttl"],
+            "last_verified_input": row["last_verified"],
+            "asserts_passed": [],
+            "asserts_failed": [
+                f"freshness expired: last_verified={row['last_verified']} + ttl={row['freshness_ttl']} < now"
+            ],
+        }
+        if artifact_path:
+            write_artifact(artifact_path, artifact)
+        row["status"] = "NOT-VERIFIED"
+        row["_stale"] = True  # transient flag for print_row_summary; not persisted
         row["last_verified"] = artifact["ts"]
         return row, time.monotonic() - started
 
@@ -255,10 +291,13 @@ def compute_exit_code(rows: list[dict]) -> int:
 
 def print_row_summary(row: dict, elapsed_s: float, extra: str = "") -> None:
     status = row.get("status", "?")
+    # P61 SUBJ-03: a NOT-VERIFIED row that flipped via the freshness branch
+    # carries a transient _stale=True flag; render as [STALE] for clarity.
+    label = "STALE" if (status == "NOT-VERIFIED" and row.get("_stale")) else status
     blast = row.get("blast_radius", "?")
     rid = row.get("id", "?")
     suffix = f" -> {extra}" if extra else ""
-    print(f"    [{status:<13}] {rid}  ({blast}, {elapsed_s:.2f}s){suffix}")
+    print(f"    [{label:<13}] {rid}  ({blast}, {elapsed_s:.2f}s){suffix}")
 
 
 def main() -> int:
@@ -295,7 +334,13 @@ def main() -> int:
             counts[updated.get("status", "NOT-VERIFIED")] += 1
             extra = ""
             if updated.get("status") == "NOT-VERIFIED":
-                extra = f"verifier not found at {row.get('verifier', {}).get('script')}"
+                if updated.get("_stale"):
+                    extra = (
+                        f"freshness expired: last_verified+{row.get('freshness_ttl')} < now "
+                        f"(input last_verified={orig_lv_by_id.get(updated['id'])})"
+                    )
+                else:
+                    extra = f"verifier not found at {row.get('verifier', {}).get('script')}"
             elif updated.get("status") == "WAIVED":
                 w = updated.get("waiver") or {}
                 extra = f"waived until {w.get('until', '?')} — {w.get('reason', '')[:60]}"
