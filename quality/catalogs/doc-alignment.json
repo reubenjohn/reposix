@@ -7,9 +7,9 @@
     "claims_total": 388,
     "claims_bound": 171,
     "claims_missing_test": 177,
-    "claims_retire_proposed": 6,
-    "claims_retired": 24,
-    "alignment_ratio": 0.4697802197802198,
+    "claims_retire_proposed": 0,
+    "claims_retired": 30,
+    "alignment_ratio": 0.4776536312849162,
     "floor": 0.5,
     "trend_30d": "+0.00",
     "last_walked": "2026-04-28T14:52:55Z"
@@ -475,8 +475,8 @@
         "line_end": 12
       },
       "rationale": "Redirect page; see docs/how-it-works/filesystem-layer.md, git-layer.md, trust-model.md for content",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:01:21Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T17:36:56Z",
       "last_extracted": "2026-04-28T09:01:21Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -1748,8 +1748,8 @@
         "line_end": 9
       },
       "rationale": "Redirect page; canonical 5-minute demo is tutorials/first-run.md",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:01:23Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T17:36:56Z",
       "last_extracted": "2026-04-28T09:01:23Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -2826,8 +2826,8 @@
         "line_end": 28
       },
       "rationale": "Superseded by v0.11.0 (commit cd1b0b6, ADR-008). Historical milestone record only.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:00:26Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T17:36:56Z",
       "last_extracted": "2026-04-28T09:00:26Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -3441,8 +3441,8 @@
         "line_end": 78
       },
       "rationale": "Superseded by v0.9.0 git-native architecture — FUSE mount infrastructure (macFUSE, fusermount3) completely replaced by git-remote-reposix helper and partial clone",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:01:42Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T17:36:56Z",
       "last_extracted": "2026-04-28T09:01:42Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -5215,8 +5215,8 @@
         "line_end": 25
       },
       "rationale": "Superseded by v0.9.0 architecture — FUSE-mount contention testing replaced by dark-factory regression (scripts/dark-factory-test.sh) which uses git-native partial clone",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:00:48Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T17:36:56Z",
       "last_extracted": "2026-04-28T09:00:48Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -5643,8 +5643,8 @@
         "line_end": 26
       },
       "rationale": "Superseded by v0.9.0 architecture — FUSE-based swarm testing replaced by git-native dark-factory regression",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:00:51Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T17:36:56Z",
       "last_extracted": "2026-04-28T09:00:51Z",
       "last_extracted_by": "propose-retire-call"
     },
