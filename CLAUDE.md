@@ -541,6 +541,40 @@ The v0.9.0 dark-factory invariant (helper stderr-teaching strings on conflict + 
 - `quality/PROTOCOL.md` — runtime contract (cadences + waiver protocol + verifier-subagent template).
 - MIGRATE-03 in `.planning/REQUIREMENTS.md` — v0.12.1 carry-forward (perf full implementation + container sim plumbing).
 
+### P60 — Docs-build dimension live + composite cutover (added 2026-04-27)
+
+Docs-build dimension lands with 4 verifiers backing 4 catalog rows in `quality/catalogs/docs-build.json` plus the back-compat `structure/badges-resolve` row in `quality/catalogs/freshness-invariants.json` (P57 pre-anchored; P60 implements via shared verifier). Same wave hard-cuts the pre-push hook to a runner one-liner and supplants the green-gauntlet composite.
+
+| Verifier | Catalog row(s) | Cadence |
+|---|---|---|
+| `quality/gates/docs-build/mkdocs-strict.sh` | `docs-build/mkdocs-strict` | pre-push |
+| `quality/gates/docs-build/mermaid-renders.sh` | `docs-build/mermaid-renders` | pre-push |
+| `quality/gates/docs-build/link-resolution.py` | `docs-build/link-resolution` | pre-push |
+| `quality/gates/docs-build/badges-resolve.py` | `docs-build/badges-resolve` + `structure/badges-resolve` | pre-push + weekly |
+
+**SIMPLIFY-08/09/10 absorption (3 closures in one phase):**
+- **SIMPLIFY-08**: 3 git-mv migrations preserve history — `scripts/check-docs-site.sh` → `mkdocs-strict.sh`; `scripts/check-mermaid-renders.sh` → `mermaid-renders.sh`; `scripts/check_doc_links.py` → `link-resolution.py`. Thin shims at old paths per OP-5; pre-push hook + CI workflows continue working unchanged through migration.
+- **SIMPLIFY-09**: `scripts/green-gauntlet.sh` rewritten as a thin shim that delegates to `python3 quality/runners/run.py --cadence pre-pr`. The 3 modes (`--quick`, default, `--full`) collapse to runner cadence calls.
+- **SIMPLIFY-10**: `scripts/hooks/pre-push` body collapsed from 229 lines (6 chained verifiers) to 40 lines total / 10 body lines — a cred-hygiene wrapper invocation (P0 fail-fast on the stdin push-ref ranges) followed by a single `exec python3 quality/runners/run.py --cadence pre-push`. Warm-cache profile 5.3s; well under the 60s pivot threshold so cargo fmt + clippy stay routed THROUGH the runner via the Wave D code-dimension wrappers.
+
+**BADGE-01 closure**: `quality/gates/docs-build/badges-resolve.py` HEADs every badge URL extracted from `README.md` + `docs/index.md` (8 unique URLs) and asserts HTTP 200 + Content-Type matches `image/*` OR `application/json`. Stdlib-only `urllib.request`; ~165 lines. Wave C handled the QG-09 chicken-and-egg via `WAVE_F_PENDING_URLS` (skip-and-log); Wave F cleared the set after the publish landed.
+
+**QG-09 P60 closure**: `docs/badge.json` seeded from `quality/reports/badge.json` and auto-included in mkdocs build → `https://reubenjohn.github.io/reposix/badge.json` resolves. `README.md` (8 badges) + `docs/index.md` (3 badges) gain `![Quality](https://img.shields.io/endpoint?url=...)`. The Quality (weekly) GH Actions badge from P58 stays alongside; the two convey complementary signals (workflow status vs catalog rollup). GH Pages publish completed within ~90s of the Wave F push commit.
+
+**POLISH-DOCS-BUILD broaden-and-deepen (Wave G)**: 4 cadences GREEN at sweep entry (zero RED to fix; Waves A-F left the dimension pristine). 19 PASS pre-push, 1+2 WAIVED pre-pr, 14+3+2 weekly, 6 WAIVED post-release. New artifact `quality/runners/check_p60_red_rows.py` reads the 3 P60-relevant catalogs and reports per-row grades for the 8 P60-touched rows — promoted from ad-hoc bash per CLAUDE.md §4.
+
+**Recovery patterns:**
+- mkdocs --strict RED: read `/tmp/check-docs-site*/build.log`; common causes are broken cross-refs, admonition syntax, mermaid HTML-entity escaping, missing nav entry.
+- mermaid-renders RED: refresh artifacts via `mcp__playwright__*` walks per CLAUDE.md "Whole-nav-section playwright walks"; fresh-context (cache disabled) walks only.
+- link-resolution RED with >5 broken: fix worst, file `.planning/notes/v0.12.1-link-backlog.md` for rest, do NOT block phase close.
+- badges-resolve PARTIAL during GH Pages propagation lag: P2 row; doesn't block; document timing in SUMMARY.
+
+**Cross-references** (do NOT duplicate runtime detail here):
+- `quality/gates/docs-build/README.md` — docs-build verifier table + conventions.
+- `quality/PROTOCOL.md` — cadence routing + verifier-subagent template + waiver protocol.
+- `quality/SURPRISES.md` — P60 entries (mkdocs auto-include, hook one-liner, Wave G zero-RED).
+- MIGRATE-03 in `.planning/REQUIREMENTS.md` — v0.12.1 carry-forward (auto-sync `docs/badge.json` from `quality/reports/badge.json` on every runner emit).
+
 ## Quick links
 
 - `docs/research/initial-report.md` — full architectural argument for git-remote-helper + partial clone.

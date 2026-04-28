@@ -198,3 +198,47 @@ Active journal now retains P57+ entries. First archive rotation
 since the journal was seeded — establishes the quarterly-archive
 convention. Active SURPRISES.md header gained pointer paragraph
 naming the archive file.
+
+2026-04-27 P60: Wave E pre-push hook one-liner — warm-cache profile
+of `python3 quality/runners/run.py --cadence pre-push` was 7.0s on
+first run + 5.3s on second (well under the 60s pivot threshold
+documented in the plan). Decision: NO PIVOT. cargo fmt + clippy stay
+routed through the runner via the Wave D code-dimension wrappers
+(cargo's incremental cache makes warm clippy 0.23s; the wrapper is
+trivial subprocess overhead on top). Hook body collapsed 229 → 40
+lines total / 10 body lines. — Resolution: SIMPLIFY-10 closed in
+commit f00affc; the test-pre-push.sh harness needed no edits but
+required the hook to be COMMITTED first (test 6's `git reset --hard
+HEAD^` reverts uncommitted working-tree changes, restoring the OLD
+hook from HEAD before test 6's restore-from-string).
+
+2026-04-27 P60: Wave F mkdocs auto-include verified — `cp
+quality/reports/badge.json docs/badge.json && mkdocs build --strict`
+produces `site/badge.json` with matching content. mkdocs-material
+copies non-md files under `docs/` into the published site without
+any `extra_files` directive. No mkdocs.yml edit needed. GH Pages
+publish completed within ~90s of the Wave F push commit (verified
+via `curl -sIL https://reubenjohn.github.io/reposix/badge.json`
+returning HTTP 200 + Content-Type application/json). — Resolution:
+QG-09 P60 closure shipped in commit 96b28ca; WAVE_F_PENDING_URLS
+cleared in badges-resolve.py; verifier 8/8 PASS immediately
+(shields.io endpoint URL returns image/svg+xml even when the inner
+github.io URL is mid-publish, so PARTIAL window was nil).
+
+2026-04-27 P60: Wave G zero-RED at sweep entry — the broaden-and-deepen
+sweep planned for fixing RED rows surfaced by the dimension's first
+production run found NOTHING TO FIX. All 5 P60-touched verifiers
+(mkdocs-strict, mermaid-renders, link-resolution, cargo-fmt-check,
+cargo-clippy-warnings) PASS individually; all 4 cadences exit 0;
+zero P0+P1 NOT-VERIFIED. Waves A-F (catalog-first → migrations → BADGE-01
+→ SIMPLIFY-09 → hook one-liner → QG-09 publish) left the dimension
+pristine. — Resolution: Wave G shipped a new artifact instead —
+`quality/runners/check_p60_red_rows.py` (50-line stdlib Python sentry
+that reads the 3 P60-relevant catalogs and reports per-row grades
+for the 8 P60-touched rows). Promoted from ad-hoc bash per CLAUDE.md
+§4 self-improving infrastructure; reusable by Wave H + verifier
+subagent + future regression detection. Lesson: catalog-first
+discipline (write rows BEFORE implementation) means the dimension's
+first runner sweep is the verification of the planned design, not
+a discovery sweep. The "broaden-and-deepen" pattern remains valuable
+as insurance, but a clean phase produces a clean sweep.
