@@ -6,6 +6,8 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [v0.12.0] -- 2026-04-28 -- Quality Gates
 
+> **Release status: NOT TAGGED — intentional.** v0.12.0 ships framework, docs, scripts, and CI changes only; no `crates/` source changed. Workspace `Cargo.toml` stays at `0.11.3`. The next binary release will be v0.13.0, which will tag the cumulative v0.11.3 + v0.12.0 + v0.13.0 worktree. The v0.12.0 work is fully merged to `main` and active in the repo — only the git tag + GitHub Release are skipped.
+
 First milestone shipping the dimension-tagged Quality Gates framework at `quality/{gates,catalogs,reports,runners}/`. Eight phases (P56-P63) absorb existing scripts/checks into 8 dimensions (code, docs-build, docs-repro, release, structure, agent-ux, perf, security) and ship the autonomous-mode runtime contract at `quality/PROTOCOL.md`.
 
 ### Shipped

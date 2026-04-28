@@ -2,6 +2,8 @@
 
 **Shipped:** 2026-04-27 — Quality Gates framework + 8 dimensions homed.
 
+**Release status:** NOT TAGGED. No `crates/` source changed across P56–P63 (framework + docs + scripts + CI only), so a binary release would be bit-for-bit identical to v0.11.3. Workspace `Cargo.toml` stays at `0.11.3`. Next binary release is v0.13.0, which will tag the cumulative worktree. See `CHANGELOG.md` `[v0.12.0]` for the user-facing version of this note.
+
 **Phases:** 56, 57, 58, 59, 60, 61, 62, 63.
 
 **Source-of-truth narrative:**
