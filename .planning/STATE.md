@@ -2,22 +2,15 @@
 gsd_state_version: 1.0
 milestone: v0.12.0
 milestone_name: Quality Gates
-status: in-progress
-status_reason: "Tag held — P64 + P65 added 2026-04-28 to fold docs-alignment dimension into v0.12.0 BEFORE tagging. See .planning/research/v0.12.0-docs-alignment-design/README.md for source-of-truth bundle. P63 verdict at quality/reports/verdicts/p63/VERDICT.md remains GREEN; the tag-gate script .planning/milestones/v0.12.0-phases/tag-v0.12.0.sh will be re-run after P65 completes against the milestone-close verifier."
-last_updated: "2026-04-28T22:00:00.000Z"
-last_activity_design_session: "2026-04-28 -- DESIGN SESSION: docs-alignment dimension scoped. The git-native pivot (v0.9.0) silently dropped Confluence page-tree-symlink behavior; no test failed because no test asserted the shape. Tests are derived from the implementation, not from the user-facing surface. v0.12.0 ships P64 (framework: crates/reposix-quality umbrella binary, syn-based hash binary, .claude/skills/reposix-quality-doc-alignment/, slash commands /reposix-quality-{refresh,backfill}, hook wiring, two project-wide principles in quality/PROTOCOL.md) + P65 (top-level execution backfill audit; surfaces punch list of MISSING_TEST + RETIRE_PROPOSED rows). v0.12.1 closes the gaps cluster-by-cluster (P71+); existing v0.12.1 placeholders renumbered P64-P68 -> P66-P70. Source-of-truth bundle at .planning/research/v0.12.0-docs-alignment-design/{README,01-rationale,02-architecture,03-execution-modes,04-overnight-protocol,05-p64-infra-brief,06-p65-backfill-brief}.md. Overnight execution deadline 08:00; suspicion-of-haste rule active (finishing < 5 hours total wall-clock means re-run verifier and spot-check three random catalog rows before any tag-related action)."
-last_activity_p63: "2026-04-28 -- P63 SHIPPED. v0.12.0 milestone-close verdict GREEN at quality/reports/verdicts/p63/VERDICT.md. All 8 phases (P56-P63) shipped. SIMPLIFY-12 audit closed: 5 DELETE / 13 SHIM-WAIVED / 4 KEEP-AS-CANONICAL per quality/reports/audits/scripts-retirement-p63.md. MIGRATE-01 retirements landed in commit 4950cdd. POLISH-CODE final: code/cargo-fmt-clean PASS via direct cargo fmt invocation through quality/gates/code/cargo-fmt-clean.sh (read-only ~5s, ONE cargo at a time safe); code/cargo-test-pass stays as ci-status canonical per memory-budget rule (tracked-forward to v0.12.1 MIGRATE-03 for per-row local cargo alternatives). MIGRATE-02 cohesion: cross-link audit verifier shipped at quality/gates/structure/cross-link-audit.py (100 paths verified, 0 stale); per-dim READMEs normalized; new quality/gates/security/README.md fills missing security home. MIGRATE-03 v0.12.1 carry-forward filed at .planning/milestones/v0.12.1-phases/{ROADMAP,REQUIREMENTS}.md (15 REQ placeholders: PERF-01..03, SEC-01..02, CROSS-01..02, MSRV-01, BINSTALL-01, LATEST-PTR-01, RELEASE-PAT-01, ERR-OTHER-01, SUBJ-RUNNER-01..HARDGATE-01; 5 placeholder phases P64-P68). New cross-link verifier quality/gates/structure/catalog-tracked-in-cross-link.py asserts 4/4 catalog tracked_in REQ-IDs resolve. CHANGELOG [v0.12.0] finalized. Tag-gate script ready at .planning/milestones/v0.12.0-phases/tag-v0.12.0.sh (6 guards including P63 verdict GREEN). All 6 cadences exit 0 (pre-push 19 PASS / pre-pr 2 PASS + 3 WAIVED / weekly 13 PASS + 1 P2-FAIL + 4 WAIVED + 2 P2-NOT-VERIFIED / pre-release 4 WAIVED / post-release 6 WAIVED / on-demand 1 PASS). 5 requirements flipped to shipped (P63): MIGRATE-01, MIGRATE-02, MIGRATE-03, SIMPLIFY-12, POLISH-CODE. Owner next step: run .planning/milestones/v0.12.0-phases/tag-v0.12.0.sh; orchestrator does NOT push the tag. Cursor advances to v0.12.1 planning."
-last_activity: "2026-04-28 -- P62 SHIPPED. Repo-org-gaps cleanup + audit closure (ORG-01 + POLISH-ORG). Audit at quality/reports/audits/repo-org-gaps.md (99 items; 13 closed-by-deletion, 26 closed-by-relocation, 50 closed-by-existing-gate, 8 out-of-scope; zero open Wave-3 items). 3 new structure-dimension rows in quality/catalogs/freshness-invariants.json (structure/no-loose-top-level-planning-audits, structure/no-pre-pivot-doc-stubs, structure/repo-org-audit-artifact-present); short-lived waivers until 2026-05-15 expire harmlessly after Wave 3 verifier extension. Verifier branches at quality/gates/structure/freshness-invariants.py (file 402 lines; helper-module extraction deferred to v0.12.1 unless Wave 6 flags it). New scripts/check_repo_org_gaps.py (stdlib audit-completeness verifier; --json mode for machine-readable summary). Relocations: git mv .planning/v0.{9,10}.0-MILESTONE-AUDIT.md to .planning/milestones/audits/; git mv .planning/SESSION-END-STATE{.md,.json,-VERDICT.md} to .planning/archive/session-end-state/ + new README.md naming quality/PROTOCOL.md as supersession. scripts/__pycache__/ purged (workspace-only; never tracked; .gitignore:30 covers it). SURPRISES.md rotation Wave 4: active 302 -> 219 lines via P59 precedent; 10 P57+P58 entries (106 lines) archived to quality/SURPRISES-archive-2026-Q2.md verbatim; banner consolidated. CLAUDE.md gained 36-line H3 subsection 'P62 -- Repo-org-gaps cleanup + audit closure (added 2026-04-28)' under Quality Gates section + meta-rule extension (every audit/cleanup phase MUST commit its closure record under quality/reports/audits/<topic>.md with a machine-checkable verifier). .planning/research/v0.11.1-repo-organization-gaps.md gained top blockquote banner naming P62 closure path; doc is now historical reference. 2 requirements flipped to shipped (P62): ORG-01, POLISH-ORG. Runner state: pre-push exit 0 (19 PASS + 3 WAIVED); the 3 P62 catalog rows pass when re-graded (waivers stay armed as safety net until 2026-05-15). Verifier subagent verdict pending Wave 6 dispatch. Next: P62 Wave 6 verifier dispatch + P63 (retire migrated sources + cohesion audit + v0.12.1 carry-forward consolidation)."
-last_activity_p61_archived: "2026-04-27 -- P61 SHIPPED. Subjective gates skill + freshness-TTL enforcement. quality/catalogs/subjective-rubrics.json ships 3 seed rubrics (cold-reader-hero-clarity P1 pre-release; install-positioning P0 pre-release; headline-numbers-sanity P2 weekly; freshness_ttl=30d). .claude/skills/reposix-quality-review/ NEW skill (only skill change pre-approved for v0.12.0): SKILL.md + dispatch.sh + lib/{catalog.py, persist_artifact.py, dispatch_cli.py} + 3 rubric prompts (rubrics/{cold-reader-hero-clarity, install-positioning, headline-numbers-sanity}.md) + 2 dispatchers (lib/{dispatch_cold_reader.sh wraps doc-clarity-review subprocess; dispatch_inline_subagent.sh routes via Path A Task / Path B claude -p}) + lib/test_lib_smoke.py (4 PASS). SUBJ-03 freshness-TTL closure: quality/runners/run.py grew parse_duration + is_stale + STALE-counts-as-NOT-VERIFIED branch + [STALE] label (final 388 LOC under 390 cap; parse_duration extracted to quality/runners/_freshness.py per pivot rule); quality/runners/verdict.py grew STALE sub-table (final 301 LOC under 305 cap); quality/runners/test_freshness.py 11 PASS + test_freshness_synth.py 1 PASS end-to-end synthetic regression. .github/workflows/quality-pre-release.yml NEW (75 LOC; triggers on v* + reposix-cli-v* + workflow_dispatch). .github/workflows/release.yml gains parallel-execution comment + v0.12.1 hard-gate carry-forward note (cross-workflow needs: unsupported per P56 SURPRISES row 1). POLISH-SUBJECTIVE Wave G: 3 rubrics graded via Path B (in-session Claude grading) -- cold-reader 8 CLEAR, install-positioning 9 CLEAR, headline-numbers 9 CLEAR; zero P0/P1 findings (broaden-and-deepen confirmed user-facing prose already CLEAR); 4 P2 polish items deferred to v0.12.1; catalog rows extended to WAIVED-2026-07-26 with documented evidence + carry-forward. CLAUDE.md gained P61 H3 subsection. v0.12.1 MIGRATE-03 carry-forwards: (e) subjective dispatch-and-preserve runner invariant; (f) auto-dispatch from CI; (g) hard-gate chaining release.yml -> quality-pre-release.yml. Verifier subagent verdict GREEN at quality/reports/verdicts/p61/VERDICT.md (Path B in-session disclosure per P56/P57/P58/P59/P60 precedent). 4 requirements flipped to shipped (P61): SUBJ-01, SUBJ-02, SUBJ-03, POLISH-SUBJECTIVE. Next: P62 -- repo-org-gaps cleanup (ORG-01 + POLISH-ORG)."
+status: executing
+last_updated: "2026-04-28T08:29:20.649Z"
+last_activity: 2026-04-28
 progress:
-  total_phases: 10
-  completed_phases: 8
-  total_plans: 50
-  completed_plans: 50
-  percent: 80
-  pending_phases:
-    - P64: Docs-alignment dimension — framework, CLI, skill, hook wiring (executor mode)
-    - P65: Docs-alignment backfill — surface the punch list (top-level mode)
+  total_phases: 11
+  completed_phases: 0
+  total_plans: 53
+  completed_plans: 13
+  percent: 25
 ---
 
 # Project State
@@ -74,6 +67,7 @@ progress:
   runner with sim service); 3 perf rows until 2026-07-26 (MIGRATE-03
   v0.12.1 perf full implementation); P58 cargo-binstall waiver continues.
   Next: P60 docs-build migration + BADGE-01 verifier ships + SIMPLIFY-10.
+
 - **P58 SHIPPED (2026-04-27, v0.12.0):** Release-dimension gates +
   code-dim absorption landed. `quality/gates/release/` ships 5 verifiers
   (gh-assets-present, installer-asset-bytes, brew-formula-current,
@@ -96,6 +90,7 @@ progress:
   cargo-binstall-resolves PARTIAL_SIGNALS broadened to match real binstall
   output (commit `e0e5645` — `will be installed from source` was the
   missing match string). QG-09 P58 GH Actions badge live in `README.md`
+
   + `docs/index.md` (commit `d206b09`). `quality/catalogs/orphan-scripts.json`
   shrunk to empty (W-2 waiver removed; `release/crates-io-max-version`
   row obsolete now that the dimension provides active enforcement).
@@ -116,6 +111,7 @@ progress:
   full PASS deferred to MIGRATE-03 v0.12.1; POLISH-CODE final P63;
   BADGE-01 P60. Next: P59 docs-repro dimension + tutorial replay +
   agent-ux thin home (per ROADMAP.md).
+
 - **P57 SHIPPED (2026-04-27, v0.12.0):** Quality Gates skeleton +
   structure dimension migration. Files landed: `quality/{gates,catalogs,
   reports,runners}/` with `quality/PROTOCOL.md` (autonomous-mode runtime
@@ -148,6 +144,7 @@ progress:
   disclosure per P56 precedent). Carry-forwards: BADGE-01 P60,
   SIMPLIFY-04..10 P58/P59/P60, MIGRATE-01..03 P63. Next: P58 release
   dimension gates + code-dimension absorption.
+
 - **P56 SHIPPED (2026-04-27, v0.12.0):** RELEASE-01..03 closed.
   `.github/workflows/release.yml` now fires on both `v*` and
   `reposix-cli-v*` tag globs (Option A; commit `d3f0dce`); a fresh
@@ -174,6 +171,7 @@ progress:
   gate). Carry-forwards under MIGRATE-03 now total 8 items (4 original +
   4 P56 supplements). Next: P57 framework skeleton + structure dimension
   migration (lands `quality/{gates,catalogs,reports,runners}/` layout
+
   + `quality/PROTOCOL.md`).
 - **v0.11.0 implementation SHIPPED (2026-04-25 morning, same day):** Phases 50–55 closed in ~5 hours (with one mid-session VM-OOM crash recovered cleanly). ~41 commits since Phase 50 close. All 17 POLISH requirements landed: GSD hygiene scrub + workspace version 0.9.0→0.11.0-dev + chore PR #15 merged + archival doc sweep (Phase 50); 4-way CLI helper duplication consolidated into `worktree_helpers.rs` + `parse_remote_url` unified into `reposix-core` + `cli_compat.rs` deleted + FUSE residue stripped from `refresh.rs` + broken `demo.sh` removed + CLI module privacy normalised (Phase 51); mermaid root-cause F1+F2+F3 + `pymdownx.emoji` + 24-term glossary page + first-occurrence glosses on 6 jargon-dense pages + plain-English summaries on 5 how-it-works/guides pages + ADR-004/006 deletion + agentic-engineering-reference disclaimer (Phase 52); 5-install-path tutorial rewrite + `dist` 0.31.0 5-platform pipeline + release-plz crates.io workflow + `cargo binstall` metadata + CLAUDE.md docs-site validation rule + `scripts/check-docs-site.sh` + pre-push hook wiring + `repro-quickstart.sh` (Phase 53); real-backend latency table populated for sim+github with record counts + 3-sample medians + bench-latency-v09 CI job + weekly cron PR-creator (Phase 54); `reposix doctor` extended to 18 checks with copy-pastable fix strings + `reposix log --time-travel` + `reposix init --since=<RFC3339>` + `reposix cost --since 7d` + `reposix gc --orphans/--purge/--include-sim` (Phase 55). Discovered + fixed v0.9.0-pivot tutorial bug: `git checkout origin/main` was wrong — actual ref is `refs/reposix/origin/main` (helper namespaces fetched refs). CLAUDE.md gained two new load-bearing sections: "Build memory budget" (RAM guardrail after 2 OOM crashes) and "Docs-site validation" (mermaid-syntax-error pre-push gate). All audit research artifacts retained in `.planning/research/v0.11.0-*.md` (jargon-inventory, mkdocs-site-audit, gsd-hygiene-report, CATALOG-v2, latency-benchmark-plan, release-binaries-plan, cache-location-study, vision-and-innovations). PRE-TAG GATES (owner-only, NOT implementation work): (1) provision `CARGO_REGISTRY_TOKEN` repo secret; (2) bootstrap `reubenjohn/homebrew-reposix` tap repo + `HOMEBREW_TAP_TOKEN` secret; (3) bump 0.11.0-dev → 0.11.0 in workspace `Cargo.toml` + `git tag v0.11.0`. Pre-tag gates documented in CHANGELOG `[Unreleased]`.
 - **2026-04-25 (overnight): v0.9.0 helper-hardcodes-SimBackend tech debt CLOSED.** Helper now URL-dispatches to sim/github/confluence/jira (commit `cd1b0b6`, ADR-008). 18 tests added. Real-backend GitHub fetch verified end-to-end via the `dark_factory_real_github` CI job on `reubenjohn/reposix`. Confluence + JIRA still wait on CI secrets to flip from `pending-secrets` to actual. v0.9.0 audit verdict flipped `tech_debt` → `passed`; v0.10.0 audit's carry-forward of the same item also struck.
@@ -216,17 +214,17 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** An LLM agent can `ls`, `cat`, `grep`, edit, and `git push`
 issues in a remote tracker without ever seeing a JSON schema or REST endpoint.
-**Current focus:** Milestone v0.12.0 "Quality Gates" — replace ad-hoc quality scripts (`scripts/check-*.sh`, the conflated `scripts/end-state.py`, the not-in-CI `scripts/repro-quickstart.sh`) with a coherent dimension-tagged Quality Gates system (`quality/{gates,catalogs,reports,runners}/`) that prevents the silent regressions the v0.11.x cycle missed (curl-installer URL dark for two releases). Phases 56–63: P56 restore release artifacts → P57 framework skeleton + structure dimension → P58 release dimension → P59 docs-repro dimension → P60 docs-build migration → P61 subjective gates skill → P62 repo-org-gaps cleanup → P63 retire migrated sources + cohesion. Catalog-first phase rule, mandatory verifier-subagent grading per phase close, mandatory CLAUDE.md update per phase, weekly cadence (not nightly).
+**Current focus:** Phase 64 — docs-alignment-framework
 
 ## Current Position
 
-Phase: 64 (next; P63 SHIPPED 2026-04-28)
-Plan: P64 catalog-first commit (`quality/catalogs/doc-alignment.json` empty schema + 3 freshness rows)
+Phase: 64 (docs-alignment-framework) — EXECUTING
+Plan: 2 of 3
 Cursor: **DESIGN SESSION 2026-04-28** — docs-alignment dimension scoped. v0.12.0 was at `ready-to-tag` (P56–P63 all GREEN, P63 verdict at `quality/reports/verdicts/p63/VERDICT.md`) — but the tag is held until P64 + P65 ship. The git-native pivot (v0.9.0) silently dropped Confluence page-tree-symlink behavior; no test failed because no test asserted the shape. Tests are derived from the implementation, not from the user-facing surface. v0.12.0 grows two phases: P64 (executor mode — build the framework: `crates/reposix-quality/` umbrella binary, `syn`-based hash binary at `quality/gates/docs-alignment/hash_test_fn`, `.claude/skills/reposix-quality-doc-alignment/` skill, slash commands `/reposix-quality-{refresh,backfill}`, hook wiring via `reposix-quality run --cadence pre-push`, two project-wide principles in `quality/PROTOCOL.md` — "subagents propose with citations; tools validate and mint" + "tools fail loud, structured, agent-resolvable", three structure-dimension freshness rows, CLAUDE.md updates) and P65 (top-level mode — backfill audit; orchestrator dispatches ~25–35 shard subagents in waves of 8 with Haiku tier, runs `merge-shards`, surfaces `PUNCH-LIST.md`). v0.12.1 closes the gaps cluster-by-cluster (P71+); existing v0.12.1 placeholders renumbered P64–P68 → P66–P70. **Source-of-truth bundle:** `.planning/research/v0.12.0-docs-alignment-design/{README,01-rationale,02-architecture,03-execution-modes,04-overnight-protocol,05-p64-infra-brief,06-p65-backfill-brief}.md`. **Read order:** README → 02 → 03 → 04 → 05 → 06 BEFORE starting P64. **Overnight execution:** deadline 08:00; suspicion-of-haste rule active (finishing < 5 hours total wall-clock means re-run verifier and spot-check three random catalog rows before any tag-related action); cargo memory-budget rule (one cargo at a time) is load-bearing; verifier dispatch is Path B for P64 (executor) and Path A for P65 (top-level). After P65 ships, dispatch milestone-close verifier; if GREEN, STATE.md cursor flips to "v0.12.0 ready-to-tag (re-verified after P64+P65); owner pushes tag." Orchestrator does NOT push the tag.
 
 Phase 62 cursor archived (was P61 SHIPPED): Subjective gates skill + freshness-TTL enforcement. 3 rubrics catalogued at `quality/catalogs/subjective-rubrics.json`; `.claude/skills/reposix-quality-review/` skill scaffold + 3 rubric impls + 2 dispatchers; runner freshness-TTL extension (parse_duration + is_stale + STALE branch + STALE label; verdict.py STALE sub-table; 11+1 pytest tests); `.github/workflows/quality-pre-release.yml` workflow live; `release.yml` parallel-execution comment + v0.12.1 hard-gate carry-forward. POLISH-SUBJECTIVE Wave G: 3 rubrics graded CLEAR via Path B (cold-reader 8, install-positioning 9, headline-numbers 9); zero P0/P1 findings; 4 P2 polish items deferred to v0.12.1. Catalog rows extended to WAIVED-2026-07-26 with documented Path B evidence. CLAUDE.md gained P61 H3 subsection. Runner state: pre-push exit 0 (19 PASS) / pre-pr exit 0 / weekly exit 0 / pre-release exit 0 (2 WAIVED-extended) / post-release exit 0. Verifier verdict GREEN at `quality/reports/verdicts/p61/VERDICT.md` (Path B in-session disclosure per P56/P57/P58/P59/P60 precedent). 4 requirements flipped to shipped (P61): SUBJ-01, SUBJ-02, SUBJ-03, POLISH-SUBJECTIVE. v0.12.1 MIGRATE-03 carry-forwards: (e) subjective dispatch-and-preserve runner invariant; (f) auto-dispatch on STALE from CI; (g) hard-gate chaining release.yml -> quality-pre-release.yml. Next: P62 — repo-org-gaps cleanup (ORG-01 + POLISH-ORG). Gate-state precondition for P62: read `quality/reports/verdicts/p61/VERDICT.md` to confirm GREEN, read `quality/SURPRISES.md`, read this entry, then `/gsd-plan-phase 62`.
-Status: shipped (P61)
-Last activity: 2026-04-27 -- P61 closed with GREEN verdict at `quality/reports/verdicts/p61/VERDICT.md`. 3 catalog rows graded; all P0+P1 PASS or WAIVED-extended. Subjective dimension complete. CLAUDE.md / SURPRISES.md / STATE.md / REQUIREMENTS.md / verdict updates landed in Wave H. Next: P62.
+Status: Ready to execute
+Last activity: 2026-04-28
 
 Progress: [=======   ] v0.12.0 (6/8 phases shipped; 4 plans P56 + 6 plans P57 + 6 plans P58 + 6 plans P59 + 8 plans P60 + 8 plans P61 = 38 plans).
 
@@ -280,6 +278,7 @@ Progress: [=======   ] v0.12.0 (6/8 phases shipped; 4 plans P56 + 6 plans P57 + 
 | Phase 26 P04 | 20 | 2 tasks | 5 files |
 | Phase 27 P01 | 5 | 2 tasks | 3 files |
 | Phase 56 P03 | 25 | 8 tasks | 11 files |
+| Phase 64 P02 | 15min | 2 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -365,7 +364,7 @@ None yet. (Capture via `/gsd-add-todo` during execution.)
 
 ## Session Continuity
 
-Last session: 2026-04-27T18:31:11.581Z
+Last session: 2026-04-28T08:29:20.644Z
 Checkpoint: v0.11.0 milestone scaffolded (Phases 50–55, POLISH-01..17). Workspace version bumped 0.9.0 → 0.11.0-dev. GSD hygiene scrub landed. Phase 50 wave (this session) covers POLISH-11 archival sweep + POLISH-12 partial bump.
 Resume file: None
 Cursor next: **Run /gsd-plan-phase 50 to plan the Hygiene & Cleanup wave (or proceed directly to Phase 51 if 50 is already shipped).**
