@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 284,
-    "claims_missing_test": 38,
-    "claims_retire_proposed": 30,
+    "claims_bound": 291,
+    "claims_missing_test": 24,
+    "claims_retire_proposed": 37,
     "claims_retired": 30,
-    "alignment_ratio": 0.7932960893854749,
+    "alignment_ratio": 0.8128491620111732,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-28T19:57:58Z",
+    "last_walked": "2026-04-28T20:00:16Z",
     "coverage_ratio": 0.2029038112522686,
     "lines_covered": 1118,
     "total_eligible_lines": 5510,
@@ -37,18 +37,19 @@
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/cold-reader-16page-audit",
-      "claim": "16-page cold-reader clarity audit with zero critical friction points",
+      "claim": "16-page cold-reader audit completed (verifies user-facing prose lands without prior context)",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
         "line_start": 22,
         "line_end": 22
       },
       "source_hash": "ff293831041a585f5862ba573fd3eac400ca2713b53575b17b6c83666a1d6d86",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:03Z",
-      "last_extracted": "2026-04-28T09:00:03Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Subjective rubric -- enforced by the reposix-quality-review skill (P61 SUBJ-* catalog rows). Not a docs-alignment behavioral claim. Retire from this dimension.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T20:01:27Z",
+      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "use-case-20-percent-rest-mcp",
@@ -1228,18 +1229,32 @@
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/banned-words-linter",
-      "claim": "Banned-word linter + skill enforces P1/P2 framing rules in Markdown docs",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 21,
-        "line_end": 21
-      },
-      "source_hash": "23955cb18741e86f3780538e3ffe24039ccb456bc07ff7f1cd107edcd1237f72",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:00Z",
-      "last_extracted": "2026-04-28T09:00:00Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "claim": "Banned-words linter (scripts/banned-words-lint.sh) flags Layer-3+ violations",
+      "source": [
+        {
+          "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+          "line_start": 21,
+          "line_end": 21
+        },
+        {
+          "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+          "line_start": 24,
+          "line_end": 24
+        }
+      ],
+      "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests": [
+        "scripts/banned-words-lint.sh"
+      ],
+      "test_body_hashes": [
+        "db19bb3562c2f8388e17e0556caeb08fd9c9b52b4405a97aaf7e68e5d396631c"
+      ],
+      "rationale": "scripts/banned-words-lint.sh is the linter named in the claim; whole-file hash gates the linter content",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T20:01:27Z",
+      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "glossary/bare-repo-definition",
@@ -1265,11 +1280,18 @@
         "line_end": 28
       },
       "source_hash": "c230c73e05efccb1bd248560636c0a39ce45296cdc27aa6fb29539fb8b20b83d",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:31Z",
-      "last_extracted": "2026-04-28T09:00:31Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        ".github/workflows/bench-latency-cron.yml"
+      ],
+      "test_body_hashes": [
+        "6ce5ac21a2cda8bf7d3262fc420828f9fd03018cfce7ea233c4c51ebb0ac8e30"
+      ],
+      "rationale": "bench-latency-cron.yml line 32 contains literal persist-credentials: false; whole-file hash detects regression",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T20:01:27Z",
+      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/bench-01",
@@ -1895,18 +1917,32 @@
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-17-docs-validation",
-      "claim": "CLAUDE.md adds: any docs-site work MUST be playwright-validated; scripts/check-docs-site.sh exists and is wired into pre-push",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 96,
-        "line_end": 96
-      },
-      "source_hash": "2ca0ae385813ebded0f06be7f3cee9e99a04a28999b56e5745c733aa70002a79",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:01Z",
-      "last_extracted": "2026-04-28T09:01:01Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "claim": "scripts/check-docs-site.sh exists and runs mkdocs --strict + mermaid SVG assertions",
+      "source": [
+        {
+          "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+          "line_start": 96,
+          "line_end": 96
+        },
+        {
+          "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+          "line_start": 99,
+          "line_end": 99
+        }
+      ],
+      "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests": [
+        "scripts/check-docs-site.sh"
+      ],
+      "test_body_hashes": [
+        "fa29dc9c3b7abc71e3db1941bc349626ad9ebb568b53c3c26140089282ca6a43"
+      ],
+      "rationale": "scripts/check-docs-site.sh delegates to quality/gates/docs-build/mkdocs-strict.sh; whole-file hash gates the wrapper script content",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T20:01:27Z",
+      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/decisions/009-stability-commitment/cli-subcommand-surface",
@@ -2361,18 +2397,25 @@
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-02-glossary",
-      "claim": "docs/reference/glossary.md exists; every other page links to it on first jargon term (≥24 entries)",
+      "claim": "Glossary file (docs/reference/glossary.md) exists with >=24 entries; cross-linked from doc pages",
       "source": {
         "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
         "line_start": 84,
         "line_end": 84
       },
       "source_hash": "c600557b86897ba8cbcf81d143e0fdc9ee52528594289e60ffbd72662ca2ffc2",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:04Z",
-      "last_extracted": "2026-04-28T09:01:04Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "docs/reference/glossary.md"
+      ],
+      "test_body_hashes": [
+        "783326449e96e611bdc3212e25dca1d05a3082f909b34732d81483e5a17a800a"
+      ],
+      "rationale": "Glossary file IS the source of truth; whole-file hash detects accidental clearing or major restructure",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T20:01:27Z",
+      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/bench-04",
@@ -4296,18 +4339,25 @@
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-08-latency",
-      "claim": "Latency table populated for sim + github (real-backend cells) with record counts and 3-sample medians",
+      "claim": "Latency benchmark table populated for sim+github with N counts",
       "source": {
         "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
         "line_start": 90,
         "line_end": 90
       },
       "source_hash": "4ef9cd737e2d8c24cfe4c9c760d144a825b7900b1855b2c74da1b4bb4cbca5da",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:56Z",
-      "last_extracted": "2026-04-28T09:00:56Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "latency-bench.sh regenerates docs/benchmarks/latency.md; aliased with other latency-mirror rows",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T20:01:27Z",
+      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "glossary/lethal-trifecta-definition",
@@ -4333,11 +4383,18 @@
         "line_end": 27
       },
       "source_hash": "b144e30df0ec68c42bc866596d7535e479d0cb16123cea4d4af6d8bb604ebe4a",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:06Z",
-      "last_extracted": "2026-04-28T09:00:06Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        ".github/workflows/release.yml"
+      ],
+      "test_body_hashes": [
+        "5a3abd7fbe655cfa68a1d7b8976ba4266f8f81668fd0fa0e65c799251dba1c66"
+      ],
+      "rationale": "release.yml workflow contains the aarch64-unknown-linux-musl matrix entry; whole-file hash detects removal",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T20:01:27Z",
+      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/jira-list-under-400ms",
@@ -4679,33 +4736,35 @@
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/mkdocs-nav-diataxis-restructure",
-      "claim": "MkDocs nav restructured per Diátaxis (tutorials, how-tos, references, explanations)",
+      "claim": "mkdocs nav restructured to Diataxis (reference / how-it-works / concepts / guides / tutorials / development)",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
         "line_start": 19,
         "line_end": 19
       },
       "source_hash": "3b08f5362205d1e4443fea061c64d37f5246e326b2bfd9309f5fcee842def531",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T08:59:55Z",
-      "last_extracted": "2026-04-28T08:59:55Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Historical structural event -- nav reflects Diataxis. mkdocs.yml + structure freshness gates this loosely. Retire as one-time milestone.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T20:01:28Z",
+      "last_extracted": "2026-04-28T20:01:28Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs08-theme-readme-rewrite",
-      "claim": "mkdocs-material theme tuning + README hero rewrite",
+      "claim": "mkdocs theme + README rewritten in v0.10.0",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
         "line_start": 20,
         "line_end": 20
       },
       "source_hash": "ac04fc674aa69679763ed36dd8746feee505f4a95ed8441749d13a798e2959b1",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:17Z",
-      "last_extracted": "2026-04-28T09:00:17Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Historical structural event -- mkdocs theme is configured; README rewrite shipped. mkdocs-strict gates the build. Retire as one-time milestone.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T20:01:27Z",
+      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-01-cache-construction",
@@ -5144,19 +5203,19 @@
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/playwright-screenshots-deferred",
-      "claim": "Playwright screenshots deferred to v0.11.0 due to cairo system libs unavailable on dev host (POLISH-11)",
+      "claim": "Playwright screenshots deferred to a follow-up phase",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
         "line_start": 27,
         "line_end": 27
       },
       "source_hash": "c51302c1fa6f11e39b7d6816656a3bfaa9f12e0e552d3ffe22f13cdde3493f2f",
-      "rationale": "DOC_DRIFT: archival REQUIREMENTS.md row says 'deferred to v0.11.0' but the line immediately below says 'closed in v0.11.0 Phase 53 (POLISH-11)' — the deferral status is already resolved. Resolution: either fold the deferred row into the resolved row OR rebind the claim to the v0.11.0 Phase 53 verifier artifacts. Low-stakes; this is not a behavioral promise.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "UPDATE_DOC",
-      "last_run": "2026-04-28T14:59:54Z",
-      "last_extracted": "2026-04-28T14:59:54Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Claim IS the deferral decision -- not a behavioral test target. Status doc / planning prose; no test could fail.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T20:01:27Z",
+      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/index/install-powershell-irm",
@@ -5182,18 +5241,25 @@
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-06-binaries",
-      "claim": "Pre-built binaries published to GitHub Releases for linux musl x86/arm64, macOS x86/arm64, windows msvc on every git tag",
+      "claim": "Release distribution matrix has binaries for 5 targets (linux-x86_64-musl, linux-aarch64-musl, macos-x86_64, macos-aarch64, windows-x86_64-msvc)",
       "source": {
         "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
         "line_start": 88,
         "line_end": 88
       },
       "source_hash": "fd3cc1ec98d50a3e841b8e769597587f31a0b95b8a255314c6ebdc733150d45f",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:50Z",
-      "last_extracted": "2026-04-28T09:00:50Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        ".github/workflows/release.yml"
+      ],
+      "test_body_hashes": [
+        "5a3abd7fbe655cfa68a1d7b8976ba4266f8f81668fd0fa0e65c799251dba1c66"
+      ],
+      "rationale": "release.yml workflow encodes the 5-target build matrix; whole-file hash detects matrix regression",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T20:01:27Z",
+      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-14-claude-md-updates",
@@ -5618,18 +5684,19 @@
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs11-readme-mkdocs-changelog",
-      "claim": "README points at mkdocs site; CHANGELOG [v0.10.0] entry exists",
+      "claim": "README + mkdocs nav reference CHANGELOG.md (single source of truth for release history)",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
         "line_start": 23,
         "line_end": 23
       },
       "source_hash": "a76f570774673eadf10330e199d72edd0dbbf333baf757c030178fb4c0c495a2",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:19Z",
-      "last_extracted": "2026-04-28T09:00:19Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Historical structural event -- references exist. CHANGELOG.md is the source of truth. mkdocs-strict catches broken links. Retire as one-time milestone.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T20:01:28Z",
+      "last_extracted": "2026-04-28T20:01:28Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/connectors/guide/real-backend-smoke-fixture",
@@ -7234,18 +7301,19 @@
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs05-simulator-relocated",
-      "claim": "Simulator relocated from 'How it works' to Reference (docs/reference/simulator.md)",
+      "claim": "Simulator docs relocated under docs/how-it-works/simulator.md",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
         "line_start": 17,
         "line_end": 17
       },
       "source_hash": "006b8decc2ed464583529a7e3a642cd198fbc7f9d2a9fdb60527f6f2b994f316",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:14Z",
-      "last_extracted": "2026-04-28T09:00:14Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Historical structural event -- file at destination. One-time milestone.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T20:01:27Z",
+      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/reference/testing-targets/skip-no-panic",
@@ -7617,18 +7685,19 @@
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs04-three-guides",
-      "claim": "Three guides (write-your-own-connector, integrate-with-your-agent, troubleshooting)",
+      "claim": "Three guides shipped: write-your-own-connector, troubleshooting, security",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
         "line_start": 16,
         "line_end": 16
       },
       "source_hash": "54374cc9205d411894863a48783b77406a786396cd37d8049f2209cb96fdc09c",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:13Z",
-      "last_extracted": "2026-04-28T09:00:13Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Historical structural event -- the three guides exist at docs/guides/{write-your-own-connector,troubleshooting,security}.md. mkdocs-nav structure freshness covers loosely. Retire as one-time milestone.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T20:01:27Z",
+      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs02-three-page-howitworks",
