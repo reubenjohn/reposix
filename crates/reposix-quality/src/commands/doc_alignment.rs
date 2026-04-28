@@ -63,6 +63,13 @@ pub enum Verb {
         source: String,
         #[arg(long)]
         rationale: Option<String>,
+        /// Explicit `next_action` override. Accepts one of:
+        /// `WRITE_TEST`, `FIX_IMPL_THEN_BIND`, `UPDATE_DOC`, `RETIRE_FEATURE`,
+        /// `BIND_GREEN`. When omitted, the value is derived from the
+        /// rationale prefix (`IMPL_GAP:` -> `FIX_IMPL_THEN_BIND`,
+        /// `DOC_DRIFT:` -> `UPDATE_DOC`, otherwise `WRITE_TEST`).
+        #[arg(long = "next-action")]
+        next_action: Option<String>,
     },
 
     /// Emit stale-row JSON manifest for one doc to stdout.
@@ -124,7 +131,15 @@ pub fn dispatch(catalog: &Path, verb: Verb) -> Result<i32> {
             claim,
             source,
             rationale,
-        } => verbs::mark_missing_test(catalog, &row_id, &claim, &source, rationale.as_deref()),
+            next_action,
+        } => verbs::mark_missing_test(
+            catalog,
+            &row_id,
+            &claim,
+            &source,
+            rationale.as_deref(),
+            next_action.as_deref(),
+        ),
         Verb::PlanRefresh { doc_file } => verbs::plan_refresh(catalog, &doc_file),
         Verb::PlanBackfill => verbs::plan_backfill(catalog),
         Verb::MergeShards { run_dir } => verbs::merge_shards(catalog, &run_dir),
@@ -143,6 +158,14 @@ pub fn verify(catalog: &Path, row_id: &str) -> Result<i32> {
     if let Some(r) = cat.row(row_id) {
         let body = serde_json::to_string_pretty(r)?;
         println!("{body}");
+        // Surface last_verdict + next_action together (W4 / v0.12.1 P68)
+        // so operators can scope cluster-closure work without re-grepping.
+        println!();
+        println!(
+            "== summary ==  last_verdict={}  next_action={}",
+            r.last_verdict.as_str(),
+            r.next_action.as_str(),
+        );
         if r.tests.len() >= 2 {
             println!();
             println!("== per-test drift (multi-test row) ==");
@@ -181,7 +204,7 @@ pub(crate) mod verbs {
     use serde_json::json;
 
     use super::{parse_source, parse_test};
-    use crate::catalog::{Catalog, Row, RowState, Source, SourceCite};
+    use crate::catalog::{Catalog, NextAction, Row, RowState, Source, SourceCite};
     use crate::coverage;
     use crate::hash;
 
@@ -272,6 +295,7 @@ pub(crate) mod verbs {
             row.set_tests(tests_clean, hashes)?;
             row.rationale = Some(rationale.to_string());
             row.last_verdict = RowState::Bound;
+            row.next_action = NextAction::BindGreen;
             row.last_run = Some(now.clone());
             row.last_extracted = Some(now.clone());
             row.last_extracted_by = Some("bind-call".to_string());
@@ -285,6 +309,7 @@ pub(crate) mod verbs {
                 test_body_hashes: Vec::new(),
                 rationale: Some(rationale.to_string()),
                 last_verdict: RowState::Bound,
+                next_action: NextAction::BindGreen,
                 last_run: Some(now.clone()),
                 last_extracted: Some(now.clone()),
                 last_extracted_by: Some("bind-call".to_string()),
@@ -323,6 +348,7 @@ pub(crate) mod verbs {
             row.claim = claim.to_string();
             row.rationale = Some(rationale.to_string());
             row.last_verdict = RowState::RetireProposed;
+            row.next_action = NextAction::RetireFeature;
             row.last_run = Some(now.clone());
             row.last_extracted = Some(now);
             row.last_extracted_by = Some("propose-retire-call".to_string());
@@ -336,6 +362,7 @@ pub(crate) mod verbs {
                 test_body_hashes: Vec::new(),
                 rationale: Some(rationale.to_string()),
                 last_verdict: RowState::RetireProposed,
+                next_action: NextAction::RetireFeature,
                 last_run: Some(now.clone()),
                 last_extracted: Some(now),
                 last_extracted_by: Some("propose-retire-call".to_string()),
@@ -379,6 +406,7 @@ pub(crate) mod verbs {
         claim: &str,
         source: &str,
         rationale: Option<&str>,
+        next_action_override: Option<&str>,
     ) -> Result<i32> {
         let (src_file, lstart, lend) = parse_source(source)?;
         if !src_file.exists() {
@@ -389,6 +417,19 @@ pub(crate) mod verbs {
         }
         let src_hash = hash::source_hash(&src_file, lstart, lend)
             .with_context(|| format!("computing source_hash for {source}"))?;
+
+        // Resolve next_action: explicit override wins; else heuristic from
+        // rationale prefix (`IMPL_GAP:` -> FIX_IMPL_THEN_BIND, `DOC_DRIFT:`
+        // -> UPDATE_DOC, otherwise WRITE_TEST).
+        let next_action = if let Some(s) = next_action_override {
+            NextAction::parse_cli(s)?
+        } else {
+            match rationale {
+                Some(r) if r.trim_start().starts_with("IMPL_GAP:") => NextAction::FixImplThenBind,
+                Some(r) if r.trim_start().starts_with("DOC_DRIFT:") => NextAction::UpdateDoc,
+                _ => NextAction::WriteTest,
+            }
+        };
 
         let mut cat = Catalog::load(catalog)?;
         let now = now_iso();
@@ -408,6 +449,7 @@ pub(crate) mod verbs {
                 row.rationale = Some(r.to_string());
             }
             row.last_verdict = RowState::MissingTest;
+            row.next_action = next_action;
             row.last_run = Some(now.clone());
             row.last_extracted = Some(now);
             row.last_extracted_by = Some("mark-missing-test-call".to_string());
@@ -421,6 +463,7 @@ pub(crate) mod verbs {
                 test_body_hashes: Vec::new(),
                 rationale: rationale.map(std::string::ToString::to_string),
                 last_verdict: RowState::MissingTest,
+                next_action,
                 last_run: Some(now.clone()),
                 last_extracted: Some(now),
                 last_extracted_by: Some("mark-missing-test-call".to_string()),
@@ -463,6 +506,7 @@ pub(crate) mod verbs {
                     "source": format!("{}:{}-{}", cite.file, cite.line_start, cite.line_end),
                     "tests": r.tests,
                     "last_verdict": r.last_verdict.as_str(),
+                    "next_action": r.next_action.as_str(),
                     "prior_rationale": r.rationale,
                 })
             })
@@ -914,6 +958,10 @@ pub(crate) mod verbs {
         }
     }
 
+    #[allow(
+        clippy::too_many_lines,
+        reason = "Single coherent procedure: load + compute counters + per-file table + json/text emit. Splitting hurts readability of a deterministic pipeline."
+    )]
     pub fn status(catalog: &Path, json_mode: bool, top: usize, all: bool) -> Result<i32> {
         let cat = Catalog::load(catalog)?;
 
@@ -929,12 +977,36 @@ pub(crate) mod verbs {
             u64::try_from(cat.rows.iter().filter(|r| r.tests.len() >= 2).count())
                 .unwrap_or(u64::MAX);
 
+        // next_action breakdown (W4 / v0.12.1 P68): counts per variant.
+        // Emitted in fixed order so output is stable across runs.
+        let mut na_write_test: u64 = 0;
+        let mut na_fix_impl: u64 = 0;
+        let mut na_update_doc: u64 = 0;
+        let mut na_retire: u64 = 0;
+        let mut na_bind_green: u64 = 0;
+        for r in &cat.rows {
+            match r.next_action {
+                NextAction::WriteTest => na_write_test += 1,
+                NextAction::FixImplThenBind => na_fix_impl += 1,
+                NextAction::UpdateDoc => na_update_doc += 1,
+                NextAction::RetireFeature => na_retire += 1,
+                NextAction::BindGreen => na_bind_green += 1,
+            }
+        }
+
         if json_mode {
             // Emit { global: {...}, per_file: [...] } -- the per_file is
             // sorted ascending by ratio (worst-first) by compute_per_file.
             let payload = serde_json::json!({
                 "global": &cat.summary,
                 "multi_test_rows": multi_test_rows,
+                "next_action_breakdown": {
+                    "WRITE_TEST": na_write_test,
+                    "FIX_IMPL_THEN_BIND": na_fix_impl,
+                    "UPDATE_DOC": na_update_doc,
+                    "RETIRE_FEATURE": na_retire,
+                    "BIND_GREEN": na_bind_green,
+                },
                 "per_file": per_file.iter().map(|p| serde_json::json!({
                     "path": p.path.to_string_lossy(),
                     "total_lines": p.total_lines,
@@ -971,6 +1043,13 @@ pub(crate) mod verbs {
         if let Some(lw) = &s.last_walked {
             println!("  last_walked            {lw}");
         }
+        println!();
+        println!("== next_action breakdown ==");
+        println!("  WRITE_TEST          : {na_write_test}");
+        println!("  FIX_IMPL_THEN_BIND  : {na_fix_impl}");
+        println!("  UPDATE_DOC          : {na_update_doc}");
+        println!("  RETIRE_FEATURE      : {na_retire}");
+        println!("  BIND_GREEN          : {na_bind_green}");
         println!();
         println!("== per-file (worst-covered first) ==");
         let limit = if all {

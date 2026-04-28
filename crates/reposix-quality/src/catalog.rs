@@ -146,6 +146,14 @@ pub struct Row {
 
     pub last_verdict: RowState,
 
+    /// Action that closes this row's gap. Set by extractors at mint time;
+    /// updated by graders on refresh. Consumer-side filter for cluster
+    /// phase scoping (e.g. P72-P80 select rows where
+    /// `next_action == FIX_IMPL_THEN_BIND`). Pre-W4 catalogs without the
+    /// field deserialize as `WRITE_TEST` via `serde(default)`.
+    #[serde(default = "NextAction::default_for_back_compat")]
+    pub next_action: NextAction,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_run: Option<String>,
 
@@ -216,6 +224,64 @@ pub enum RowState {
     TestMisaligned,
     RetireProposed,
     RetireConfirmed,
+}
+
+/// Action that closes a row's gap. Set by extractors at mint time;
+/// updated by graders on refresh; consumer-side filter for cluster
+/// phase scoping (e.g. "all rows where `next_action == FIX_IMPL_THEN_BIND`").
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum NextAction {
+    /// Test missing for a clear claim; write the test.
+    WriteTest,
+    /// Implementation regressed or never landed; fix impl, then bind.
+    FixImplThenBind,
+    /// Prose names a stale shape; update the doc, then rebind.
+    UpdateDoc,
+    /// Feature was intentionally dropped; needs `RETIRE_PROPOSED` -> `RETIRE_CONFIRMED`.
+    RetireFeature,
+    /// Already bound to a green test; nothing to do.
+    BindGreen,
+}
+
+impl NextAction {
+    /// Default used by `serde(default)` for back-compat with W7 (and
+    /// earlier) catalogs that lack the field.
+    #[must_use]
+    pub fn default_for_back_compat() -> Self {
+        Self::WriteTest
+    }
+
+    /// Display name for stderr / status output.
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            NextAction::WriteTest => "WRITE_TEST",
+            NextAction::FixImplThenBind => "FIX_IMPL_THEN_BIND",
+            NextAction::UpdateDoc => "UPDATE_DOC",
+            NextAction::RetireFeature => "RETIRE_FEATURE",
+            NextAction::BindGreen => "BIND_GREEN",
+        }
+    }
+
+    /// Parse from the `SCREAMING_SNAKE_CASE` string. Used by the
+    /// `--next-action <value>` CLI flag.
+    ///
+    /// # Errors
+    ///
+    /// Errors if `s` is not one of the five known variants.
+    pub fn parse_cli(s: &str) -> Result<Self> {
+        match s {
+            "WRITE_TEST" => Ok(NextAction::WriteTest),
+            "FIX_IMPL_THEN_BIND" => Ok(NextAction::FixImplThenBind),
+            "UPDATE_DOC" => Ok(NextAction::UpdateDoc),
+            "RETIRE_FEATURE" => Ok(NextAction::RetireFeature),
+            "BIND_GREEN" => Ok(NextAction::BindGreen),
+            _ => Err(anyhow::anyhow!(
+                "invalid --next-action value `{s}` (expected one of WRITE_TEST, FIX_IMPL_THEN_BIND, UPDATE_DOC, RETIRE_FEATURE, BIND_GREEN)"
+            )),
+        }
+    }
 }
 
 impl RowState {

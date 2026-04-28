@@ -51,8 +51,14 @@ A claim is a contract between the docs and the implementation. If the prose is j
      reposix-quality doc-alignment mark-missing-test \
        --row-id <stable-id> \
        --claim "<one-line claim text>" \
-       --source <file>:<lstart>-<lend>
+       --source <file>:<lstart>-<lend> \
+       --rationale "IMPL_GAP: <where impl exists or what's needed>"
      ```
+     The binary derives `next_action` from the rationale prefix
+     (`IMPL_GAP:` -> `FIX_IMPL_THEN_BIND`, `DOC_DRIFT:` -> `UPDATE_DOC`,
+     otherwise `WRITE_TEST`). Pass `--next-action <value>` only when you
+     need to override the heuristic. See the "next_action field" section
+     below for the full mapping.
 
    - **Claim is clearly superseded by a documented architecture decision:**
      ```
@@ -89,6 +95,41 @@ Decision tree (default to `mark-missing-test`):
 - `IMPL_GAP: <details>` — feature alive, implementation strategy changed or never landed; resolution = bind to existing/new code or write ADR retiring.
 - `DOC_DRIFT: <details>` — prose names a stale shape; resolution = update doc OR rebind to current shape.
 - (no prefix) — straightforward "test missing for a clear claim."
+
+## next_action field (W4 / v0.12.1 P68)
+
+Every row carries a structured `next_action` field that names the action that closes the gap. Cluster-closure phases (P72-P80) filter by this field, so getting it right is what turns "166 MISSING_TEST rows" into a small set of actionable cluster phases.
+
+The five enum variants:
+
+- `WRITE_TEST` — test missing for a clear claim; write the test. **Default** for plain `mark-missing-test` (no rationale prefix).
+- `FIX_IMPL_THEN_BIND` — implementation regressed or never landed; fix impl, then bind.
+- `UPDATE_DOC` — prose names a stale shape; update the doc, then rebind.
+- `RETIRE_FEATURE` — feature was intentionally dropped; needs `RETIRE_PROPOSED` -> `RETIRE_CONFIRMED`.
+- `BIND_GREEN` — already bound to a green test; nothing to do.
+
+**Heuristic** — when calling `mark-missing-test`, the binary derives `next_action` from the rationale prefix automatically:
+
+| Rationale prefix | Implied `next_action` |
+| --- | --- |
+| `IMPL_GAP: <details>` | `FIX_IMPL_THEN_BIND` |
+| `DOC_DRIFT: <details>` | `UPDATE_DOC` |
+| (no prefix) | `WRITE_TEST` |
+
+`bind` always sets `next_action=BIND_GREEN`. `propose-retire` always sets `next_action=RETIRE_FEATURE`. You do NOT pass `--next-action` to those verbs; the value is implicit.
+
+**Override flag** — `mark-missing-test --next-action <value>` overrides the heuristic when the rationale prefix would guess wrong. Example: a rationale that begins `IMPL_GAP:` but the agent has already determined the doc itself drifted (so `UPDATE_DOC` is the closer):
+
+```
+reposix-quality doc-alignment mark-missing-test \
+  --row-id <stable-id> \
+  --claim "<one-line claim text>" \
+  --source <file>:<lstart>-<lend> \
+  --rationale "IMPL_GAP: …(rest of rationale)…" \
+  --next-action UPDATE_DOC
+```
+
+If you don't pass `--next-action`, the heuristic above applies. The override is rare; reach for it only when you've thought about the closure path and the prefix would guess wrong.
 
 ### Canonical examples (drawn verbatim from the v0.12.1 audit corrections at commit `24b2b62`)
 

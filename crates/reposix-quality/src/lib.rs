@@ -20,4 +20,4 @@ pub mod commands;
 pub mod coverage;
 pub mod hash;
 
-pub use catalog::{Catalog, Row, RowState, Source, Summary};
+pub use catalog::{Catalog, NextAction, Row, RowState, Source, Summary};

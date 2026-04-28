@@ -38,6 +38,8 @@ You have ZERO session context beyond this prompt and the row context that follow
      ```
      (The mark-missing-test verb covers TEST_MISALIGNED — both states mean "this row needs a different test." Distinction matters in the verdict but not in the catalog mutation.)
 
+     **`next_action` field** (W4 / v0.12.1 P68): the binary derives `next_action` from the rationale prefix automatically: `IMPL_GAP:` -> `FIX_IMPL_THEN_BIND`, `DOC_DRIFT:` -> `UPDATE_DOC`, otherwise `WRITE_TEST`. `bind` always sets `BIND_GREEN`; `propose-retire` always sets `RETIRE_FEATURE`. Pass `--next-action <value>` only when overriding the heuristic. See `prompts/extractor.md` § "next_action field" for the full mapping.
+
    - **STALE_TEST_GONE** — the test path/symbol no longer resolves. The walker already detected this; the binary refuses to bind. Just call `mark-missing-test` with rationale "Test fn was renamed/deleted — search did not find an equivalent."
 
    - **Claim is genuinely superseded** — call `propose-retire` with the supersession source. RETIREMENT IS HUMAN-CONFIRMED ONLY. Do not call `confirm-retire`. **Before proposing retirement, apply the transport-vs-feature heuristic:** retirement requires the FEATURE to be intentionally dropped with a documented decision (ADR, CHANGELOG, research note). Transport / implementation-strategy changes do NOT retire claims about a user-facing surface — those stay `mark-missing-test` with rationale prefix `IMPL_GAP:` (feature alive, impl strategy pivoted) or `DOC_DRIFT:` (prose names a stale shape; current shape exists). See `prompts/extractor.md` § "Retirement vs implementation-gap" for canonical examples.

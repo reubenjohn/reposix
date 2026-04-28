@@ -62,6 +62,7 @@ fn synth_row(id: &str, cites: Vec<(&str, usize, usize)>) -> Row {
         test_body_hashes: Vec::new(),
         rationale: None,
         last_verdict: reposix_quality::RowState::Bound,
+        next_action: reposix_quality::NextAction::BindGreen,
         last_run: None,
         last_extracted: None,
         last_extracted_by: None,
