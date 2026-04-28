@@ -22,7 +22,12 @@ fn seed_catalog(dir: &TempDir, rows: Value) -> std::path::PathBuf {
             "alignment_ratio": 1.0,
             "floor": 0.5,
             "trend_30d": "+0.00",
-            "last_walked": null
+            "last_walked": null,
+            // P66 coverage axis: walker tests use temp-dir rows whose source
+            // files are outside the eligible set; coverage_ratio is 0.0
+            // by construction. Set coverage_floor to 0.0 so the synthetic
+            // walker tests don't trip the coverage BLOCK on unrelated data.
+            "coverage_floor": 0.0
         },
         "rows": rows,
     });

@@ -52,6 +52,33 @@ pub struct Summary {
     /// Optional time-bounded floor waiver (rare; documented in the schema spec).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub floor_waiver: Option<FloorWaiver>,
+
+    /// Coverage metric (P66 v0.12.1) -- the second axis alongside `alignment_ratio`.
+    /// `coverage_ratio = lines_covered / total_eligible_lines`. 0.0 when total==0.
+    #[serde(default)]
+    pub coverage_ratio: f64,
+
+    /// Lines covered by at least one row's source citation (after range merge).
+    #[serde(default)]
+    pub lines_covered: u64,
+
+    /// Total eligible lines across the prose universe (`docs/**/*.md` +
+    /// `README.md` + archived REQUIREMENTS).
+    #[serde(default)]
+    pub total_eligible_lines: u64,
+
+    /// Floor for the `coverage_ratio < coverage_floor` walker BLOCK. Default
+    /// 0.10 (low ratchet baseline; bumped via deliberate human commits as
+    /// gap-closure phases widen extraction).
+    #[serde(default = "default_coverage_floor")]
+    pub coverage_floor: f64,
+}
+
+/// Default `coverage_floor` for legacy catalogs that omit the field. 0.10 is
+/// low enough that even sparse mining usually clears it; future ratchets land
+/// via deliberate human commits, never auto-tuning by the walker.
+fn default_coverage_floor() -> f64 {
+    0.10
 }
 
 /// Time-bounded waiver of the `alignment_ratio < floor` pre-push block.

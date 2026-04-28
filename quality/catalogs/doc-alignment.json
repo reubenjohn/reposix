@@ -5,19 +5,18 @@
   "schema_version": "1.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 181,
+    "claims_bound": 171,
     "claims_missing_test": 166,
     "claims_retire_proposed": 41,
     "claims_retired": 0,
-    "alignment_ratio": 0.46649484536082475,
+    "alignment_ratio": 0.44072164948453607,
     "floor": 0.5,
-    "floor_waiver": {
-      "until": "2026-07-31",
-      "reason": "Initial backfill (P65, 2026-04-28); v0.12.1 gap-closure phases (P71+) close clusters identified in quality/reports/doc-alignment/backfill-20260428T085523Z/PUNCH-LIST.md.",
-      "dimension_owner": "reuben"
-    },
     "trend_30d": "+0.00",
-    "last_walked": null
+    "last_walked": "2026-04-28T14:32:47Z",
+    "coverage_ratio": 0.20551924473493102,
+    "lines_covered": 1132,
+    "total_eligible_lines": 5508,
+    "coverage_floor": 0.1
   },
   "rows": [
     {
@@ -388,7 +387,7 @@
       "test": "crates/reposix-core/tests/compile_fail.rs::http_client_inner_is_private",
       "test_body_hash": "placeholder_hash_no_match",
       "rationale": "Compile-fail test asserts HttpClient::inner is private",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "last_extracted_by": "bind-call"
     },
     {
@@ -447,7 +446,7 @@
       "test": "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error",
       "test_body_hash": "b021be2ecc99edffa48b444750485756e208836076f13dd21602267f4c23442c",
       "rationale": "Tests Error::Egress returned and audit row with op='egress_denied' written",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "last_extracted_by": "bind-call"
     },
     {
@@ -644,7 +643,7 @@
       "test": "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit",
       "test_body_hash": "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904",
       "rationale": "SC4: attempts UPDATE on audit_events, asserts error.contains(append-only)",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "last_run": "2026-04-28T09:09:36Z",
       "last_extracted": "2026-04-28T09:09:36Z",
       "last_extracted_by": "bind-call"
@@ -661,7 +660,7 @@
       "test": "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail",
       "test_body_hash": "placeholder_hash_no_match",
       "rationale": "Tests UPDATE and DELETE both fail with 'append-only' trigger abort",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1701,7 +1700,7 @@
       "test": "crates/reposix-core/tests/http_allowlist.rs::loopback_is_allowed_by_default",
       "test_body_hash": "ebbe56ee7a2b125e5cd7b45e076df44b8eb51cf01ecbfa2be87479a6100e9170",
       "rationale": "Tests loopback succeeds under default allowlist; non-loopback IP rejected",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1868,7 +1867,7 @@
       "test": "crates/reposix-core/tests/http_allowlist.rs::egress_to_non_allowlisted_host_is_rejected",
       "test_body_hash": "a59dc261043e41cb1b83c53ba3f96152182a2b0f26284b8e4cf014dd54b028e1",
       "rationale": "Tests non-allowlisted host rejected via InvalidOrigin error before any I/O",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2237,7 +2236,7 @@
       "test": "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields",
       "test_body_hash": "de220ce400c981c6c08ab0af8b6e04d6989c4702f8de0949e07b30f271ff1251",
       "rationale": "Tests inbound blob with id:999999 and version:999 overrides stripped from PATCH body",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2873,7 +2872,7 @@
       "test": "crates/reposix-core/tests/http_allowlist.rs::redirect_target_is_rechecked_against_allowlist",
       "test_body_hash": "ab297c5dfbaae7e36ec9e763500ab01653271c80dff2389e2d1a46bc16ab4fd4",
       "rationale": "Tests 302 response surfaces as-is without following redirect; re-feeding target through allowlist recheck rejects attacker.example",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "last_extracted_by": "bind-call"
     },
     {
@@ -5671,7 +5670,7 @@
       "test": "crates/reposix-core/tests/compile_fail.rs::tainted_cannot_be_used_where_untainted_required",
       "test_body_hash": "placeholder_hash_no_match",
       "rationale": "Compile-fail test asserts Tainted cannot be used where Untainted required",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "last_extracted_by": "bind-call"
     },
     {
@@ -5889,7 +5888,7 @@
       "test": "crates/reposix-core/tests/compile_fail.rs::untainted_new_is_pub_crate_only",
       "test_body_hash": "placeholder_hash_no_match",
       "rationale": "Compile-fail test prevents future promotion of pub(crate) fn new to pub fn new",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "last_extracted_by": "bind-call"
     },
     {

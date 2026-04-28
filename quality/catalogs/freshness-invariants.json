@@ -255,7 +255,7 @@
       },
       "artifact": "quality/reports/verifications/structure/badges-resolve.json",
       "status": "PASS",
-      "last_verified": "2026-04-27T23:26:34Z",
+      "last_verified": "2026-04-28T14:22:53Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "P60 docs-build dimension ships the verifier; for P57 the row's existence is the contract",
@@ -561,17 +561,12 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/docs-alignment/walk.json",
-      "status": "WAIVED",
+      "status": "FAIL",
       "last_verified": "2026-04-28T09:19:39Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: docs-alignment hash drift detected -- run /reposix-quality-refresh <doc> from a fresh top-level Claude session (cannot run from inside /gsd-execute-phase). Stderr names the affected doc.",
-      "waiver": {
-        "until": "2026-07-31T00:00:00Z",
-        "reason": "P65 initial backfill (2026-04-28) populated 388 rows; 166 MISSING_TEST + 41 RETIRE_PROPOSED block walker by design until v0.12.1 gap-closure phases (P71+) close clusters from quality/reports/doc-alignment/backfill-20260428T085523Z/PUNCH-LIST.md. Waiver matches summary.floor_waiver in quality/catalogs/doc-alignment.json. The 3 freshness-invariant rows (catalog-present, summary-block-valid, floor-not-decreased) continue to PASS at pre-push and assert catalog integrity even while the walker is waived.",
-        "dimension_owner": "reuben",
-        "tracked_in": "v0.12.1 P71+"
-      }
+      "waiver": null
     }
   ]
 }

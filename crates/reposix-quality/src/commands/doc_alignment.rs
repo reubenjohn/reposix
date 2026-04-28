@@ -154,6 +154,7 @@ pub(crate) mod verbs {
 
     use super::{parse_source, parse_test};
     use crate::catalog::{Catalog, Row, RowState, Source, SourceCite};
+    use crate::coverage;
     use crate::hash;
 
     fn now_iso() -> String {
@@ -780,6 +781,14 @@ pub(crate) mod verbs {
         cat.summary.last_walked = Some(now_iso());
         cat.recompute_summary();
 
+        // Coverage metric (P66): populate global summary fields.
+        // Walker NEVER auto-tunes coverage_floor (human-tuned via deliberate commit).
+        let per_file = coverage::compute_per_file(&cat.rows);
+        let (covered, total, cov_ratio) = coverage::compute_global(&per_file);
+        cat.summary.lines_covered = covered;
+        cat.summary.total_eligible_lines = total;
+        cat.summary.coverage_ratio = cov_ratio;
+
         // Floor check (alignment_ratio < floor BLOCKs unless waiver active).
         let waiver_active = cat
             .summary
@@ -791,6 +800,17 @@ pub(crate) mod verbs {
             blocking_lines.push(format!(
                 "docs-alignment: alignment_ratio {:.4} below floor {:.4} -- run /reposix-quality-backfill OR ratchet floor explicitly",
                 cat.summary.alignment_ratio, cat.summary.floor,
+            ));
+        }
+
+        // Coverage floor BLOCK (P66) -- separate from alignment floor; both
+        // can fire on the same walk. NO waiver semantics for coverage_floor;
+        // it is human-tuned via deliberate commits.
+        let coverage_block = cat.summary.coverage_ratio + 1e-9 < cat.summary.coverage_floor;
+        if coverage_block {
+            blocking_lines.push(format!(
+                "docs-alignment: coverage_ratio {:.4} below coverage_floor {:.4} -- run /reposix-quality-backfill to widen extraction OR ratchet floor down via deliberate human commit",
+                cat.summary.coverage_ratio, cat.summary.coverage_floor,
             ));
         }
 
