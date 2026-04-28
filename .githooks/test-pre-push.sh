@@ -135,6 +135,60 @@ git reset -q --hard HEAD^
 printf '%s' "$orig_hook_contents" > "$hook"
 chmod +x "$hook"
 
+# --- TEST 7: runner exit-non-zero MUST propagate through the hook. ----
+# Regression coverage for fdb4d24, which fixed `if ! cmd; then exit $?;
+# fi` (always exits 0 because $? after `! cmd` is the negation, masking
+# real failures). The bug let bad pushes through; the test must observe
+# that today the hook exits non-zero when the runner does.
+#
+# Mechanism: PATH-stub `python3` with a script that exits 1, then drive
+# the hook with empty stdin (so the cred-hygiene block short-circuits
+# and the runner is the only thing left that can set the exit code).
+# Cleanup overlays the existing trap so the stub dir is removed even
+# if the hook exits abnormally.
+stub_dir="$(mktemp -d)"
+runner_fail_cleanup() {
+  rm -rf "$stub_dir" 2>/dev/null || true
+}
+trap 'cleanup; runner_fail_cleanup' EXIT
+cat > "${stub_dir}/python3" <<'STUB'
+#!/usr/bin/env bash
+# Stub python3 used by .githooks/test-pre-push.sh TEST 7. Pretends to
+# be the quality-gates runner and exits non-zero so the harness can
+# assert exit-code propagation. Anything else invoking python3 during
+# this test (e.g. nested helpers) gets the same fail signal — that's
+# fine; we only run the hook here, and the hook only invokes python3
+# for the runner.
+echo "stub python3: forcing runner FAIL for harness regression test" >&2
+exit 1
+STUB
+chmod +x "${stub_dir}/python3"
+
+run_with_stub() {
+  local label="$1"
+  local expected="$2"
+  local actual=0
+  PATH="${stub_dir}:$PATH" bash "$hook" \
+    < /dev/null > /tmp/test-pre-push-runner-fail.out 2>&1 || actual=$?
+  if [[ "$actual" == "$expected" ]]; then
+    printf '%b\n' "${GREEN}✓${NC} ${label} (exit=${actual})"
+    return 0
+  else
+    printf '%b\n' "${RED}✖ ${label}: expected exit=${expected}, got ${actual}${NC}" >&2
+    sed 's/^/    /' /tmp/test-pre-push-runner-fail.out >&2
+    return 1
+  fi
+}
+
+if ! run_with_stub "runner FAIL exit propagates" 1; then
+  fails=$((fails + 1))
+fi
+
+# Restore the original trap (drop the stub-cleanup overlay) and clean
+# up the stub dir eagerly so it doesn't leak past the test boundary.
+trap cleanup EXIT
+runner_fail_cleanup
+
 # --- Summary. ---------------------------------------------------------
 printf '\n'
 if [[ "$fails" -eq 0 ]]; then
