@@ -7,14 +7,14 @@ Verifiers backing `quality/catalogs/perf-targets.json` (3 rows, perf dimension).
 | Verifier | Catalog rows backed | Cadence | Status |
 |---|---|---|---|
 | `latency-bench.sh` | `perf/latency-bench` | weekly | WAIVED until 2026-07-26 |
-| `bench-token-economy.py` | `perf/token-economy-bench` | weekly | WAIVED until 2026-07-26 |
+| `bench_token_economy.py` | `perf/token-economy-bench` | weekly | WAIVED until 2026-07-26 |
 | `headline-numbers-cross-check.py` | `perf/headline-numbers-cross-check` | weekly | WAIVED until 2026-07-26 |
 
 ## Source-script lineage (Wave E, SIMPLIFY-11)
 
 - `scripts/latency-bench.sh` -> `quality/gates/perf/latency-bench.sh`
-- `scripts/bench_token_economy.py` -> `quality/gates/perf/bench-token-economy.py`
-- `scripts/test_bench_token_economy.py` -> `quality/gates/perf/test-bench-token-economy.py`
+- `scripts/bench_token_economy.py` -> `quality/gates/perf/bench_token_economy.py`
+- `scripts/test_bench_token_economy.py` -> `quality/gates/perf/test_bench_token_economy.py`
 - `benchmarks/fixtures/*` stays in place (test inputs, not gates).
 - `headline-numbers-cross-check.py` is NEW in v0.12.1 (no predecessor; locks the cross-check between docs/index.md + README.md headlines and the bench fixture files).
 
