@@ -21,6 +21,39 @@ When you start a phase, read in this order:
 
 Skipping any of these reintroduces the failure modes documented below.
 
+## Two project-wide principles
+
+These were named in the v0.12.0 design session and apply across every gate, dimension, and tool — not just docs-alignment. They generalize the runtime contract above into operational guidance for every verifier in `quality/gates/<dim>/`.
+
+### Principle A — Subagents propose with citations; tools validate and mint
+
+LLM agents (extractor, grader, verifier subagents) must NEVER emit machine-checkable state directly. They produce proposals with file:line citations and invoke deterministic tools that:
+
+1. Validate that the cited file exists, the cited lines are valid, the cited symbol resolves.
+2. Compute the canonical hash, verdict, or row-state from the cited primary source.
+3. Refuse to mint state if validation fails.
+
+This eliminates the hallucination surface. A subagent that hallucinates a hash, verdict, or test binding cannot persist that hallucination — the tool catches it at the validation step.
+
+Cross-tool examples (already in the codebase or shipping in P64):
+
+- Test verdicts come from `cargo test` exit codes, not LLM judgment (already true).
+- Subjective rubric grades come from the rubric's score-to-verdict mapping, not LLM phrasing (P61 pattern).
+- Catalog row bindings come from `reposix-quality doc-alignment bind`, which validates citations and computes hashes (P64).
+- Hash refresh certificates come from `bind` after a fresh GREEN grader pass; the walker NEVER refreshes hashes (P64).
+
+### Principle B — Tools fail loud, structured, agent-resolvable
+
+Deterministic tools assert preconditions and emit machine-readable failure when preconditions don't hold. They never silently pick a default, never auto-resolve ambiguity, never log-warn-and-continue. Result interpretation and ambiguity resolution belong to the agent that called them — because that agent is the only actor in the loop with the context to decide.
+
+Cross-tool examples:
+
+- `merge-shards` writes `CONFLICTS.md` on ambiguity, exits non-zero, never partially writes the catalog. Agent reads `CONFLICTS.md`, edits shard JSON files, re-runs.
+- `bind` refuses to write if the cited test fn doesn't resolve.
+- `confirm-retire` env-guards: refuses to run if `$CLAUDE_AGENT_CONTEXT` is set OR if stdin is not a TTY. Only human shells can confirm.
+- The hash walker reports `STALE_*` states with a stderr message that names the relevant slash command; never tries to refresh hashes itself.
+- The runner forwards each gate's stderr verbatim so the slash-command hint reaches the user (`docs-alignment/walk` exits non-zero with `/reposix-quality-refresh <doc>` on drift).
+
 ## Failure modes the protocol protects against
 
 | Failure mode | What it looks like | Mitigation |

@@ -534,6 +534,39 @@
       "blast_radius": "P1",
       "owner_hint": "if RED: an earlier commit ratcheted the floor DOWN (audit signal) -- ratchet floor only via deliberate human commit, never auto",
       "waiver": null
+    },
+    {
+      "id": "docs-alignment/walk",
+      "dimension": "docs-alignment",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [
+        "crates/reposix-quality/src/commands/doc_alignment.rs (verb walk)",
+        ".planning/research/v0.12.0-docs-alignment-design/02-architecture.md:Pre-push wiring"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "target/release/reposix-quality (or target/debug/reposix-quality fallback) exists and is executable",
+          "reposix-quality walk exits 0 when every row's source_hash + test_body_hash match the on-disk content",
+          "reposix-quality walk exits non-zero on any blocking row state (STALE_DOCS_DRIFT, MISSING_TEST, STALE_TEST_GONE, TEST_MISALIGNED, RETIRE_PROPOSED) AND prints the slash-command hint to stderr verbatim",
+          "the walker NEVER refreshes stored hashes; only `bind` does, and only after grader returns GREEN (asserted by crates/reposix-quality/tests/walk.rs)",
+          "on the empty-state catalog (P64 Wave 1; rows == []), the walker exits 0"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-alignment/walk.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/docs-alignment/walk.json",
+      "status": "PASS",
+      "last_verified": "2026-04-28T08:30:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: docs-alignment hash drift detected -- run /reposix-quality-refresh <doc> from a fresh top-level Claude session (cannot run from inside /gsd-execute-phase). Stderr names the affected doc.",
+      "waiver": null
     }
   ]
 }
