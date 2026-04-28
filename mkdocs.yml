@@ -48,10 +48,8 @@ not_in_nav: |
   archive/*
   social/*
   screenshots/*
-  architecture.md
   security.md
   why.md
-  demo.md
   connectors/guide.md
   reference/cli.md
   reference/http-api.md
@@ -68,6 +66,10 @@ plugins:
       # Trade ~15% HTML size for diagrams that render. Re-enable with
       # explicit excludes if it ever matters for page weight.
       minify_html: false
+  - redirects:
+      redirect_maps:
+        architecture.md: how-it-works/git-layer.md
+        demo.md: tutorials/first-run.md
 
 markdown_extensions:
   - pymdownx.highlight:

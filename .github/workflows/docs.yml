@@ -31,7 +31,7 @@ jobs:
       - name: Install MkDocs + Material
         run: |
           python -m pip install --upgrade pip
-          python -m pip install mkdocs-material mkdocs-minify-plugin
+          python -m pip install mkdocs-material mkdocs-minify-plugin mkdocs-redirects
 
       - name: Lint docs (banned-words, DOCS-09)
         run: scripts/banned-words-lint.sh
