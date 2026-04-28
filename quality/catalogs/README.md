@@ -104,8 +104,48 @@ human confirms), `RETIRE_CONFIRMED` (env-guarded human-only).
 `claims_retire_proposed`, `claims_retired`, `alignment_ratio` (=
 `claims_bound / max(1, claims_total - claims_retired)`; 1.0 when
 `claims_total == 0`), `floor` (initially 0.50; only ratchets up via
-deliberate human commit), `trend_30d`, `last_walked`. Pre-push BLOCKS
-when `claims_total > 0 && alignment_ratio < floor`.
+deliberate human commit), `trend_30d`, `last_walked`, `coverage_ratio`,
+`lines_covered`, `total_eligible_lines`, `coverage_floor` (P66 v0.12.1).
+Pre-push BLOCKS when `claims_total > 0 && alignment_ratio < floor` OR
+when `coverage_ratio < coverage_floor`. Both blocks can fire on the same
+walk.
+
+### Two metrics: alignment + coverage (P66 v0.12.1)
+
+The dimension grades along TWO axes. Each answers a different question;
+together they yield the agent's mental model:
+
+- `alignment_ratio = claims_bound / max(1, claims_total - claims_retired)`
+  -- "of the claims we extracted, how many bind to passing tests?"
+- `coverage_ratio = lines_covered / total_eligible_lines`
+  -- "of the prose we said we'd mine, what fraction of lines did we
+  actually cover with at least one row?"
+
+|                  | high alignment                      | low alignment                            |
+|------------------|-------------------------------------|------------------------------------------|
+| **high coverage**| ideal -- most prose mined, most claims tested | extracted everything; most claims unbound |
+| **low coverage** | tested what we found; missed most prose       | haven't started                          |
+
+Without the coverage axis, an agent could ship a high `alignment_ratio`
+by extracting only easy claims and binding them. The coverage axis
+closes that loophole; the per-file `status --top 10` table is the
+agent's gap-target view.
+
+**`coverage_floor` ratchet semantics.** Default 0.10 (low; even sparse
+mining usually clears it). Ratcheted up by deliberate human commits as
+gap-closure phases (v0.12.1 P72+) widen extraction. The walker NEVER
+auto-tunes `coverage_floor` -- only the alignment_ratio floor does
+(monotone non-decreasing, audited by `structure/doc-alignment-floor-not-decreased`).
+There is currently no symmetric audit row for `coverage_floor`; if it
+becomes a footgun (e.g., ratcheted too high then quietly lowered to dodge
+a BLOCK), file a structure-dimension row to assert monotone behavior.
+
+**Eligible file set.** `docs/**/*.md` + `README.md` + archived
+`REQUIREMENTS.md` for v0.6.0 -- v0.11.0. Mirrors the chunker's
+`collect_backfill_inputs`. Rows whose `source.file` cite a path OUTSIDE
+this set get a stderr warning (`coverage: row {id} cites out-of-eligible
+file {path}`) and their lines are NOT counted -- forensic signal that a
+citation drifted (file moved/renamed/deleted).
 
 **Floor waiver shape:** standard catalog `waiver` block per
 `quality/PROTOCOL.md` § "Waiver protocol" applies at the row level; the

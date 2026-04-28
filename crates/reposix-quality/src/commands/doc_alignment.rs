@@ -86,10 +86,18 @@ pub enum Verb {
     /// Hash drift walker -- updates `last_verdict` only.
     Walk,
 
-    /// Print summary block (table by default; --json for machine-readable).
+    /// Print summary block + per-file coverage table (table by default; `--json` for machine-readable).
     Status {
         #[arg(long)]
         json: bool,
+
+        /// Show top N worst-covered files (default 20). Ignored if `--all` is set.
+        #[arg(long, default_value_t = 20)]
+        top: usize,
+
+        /// Show every eligible file (overrides `--top`).
+        #[arg(long)]
+        all: bool,
     },
 }
 
@@ -121,7 +129,7 @@ pub fn dispatch(catalog: &Path, verb: Verb) -> Result<i32> {
         Verb::PlanBackfill => verbs::plan_backfill(catalog),
         Verb::MergeShards { run_dir } => verbs::merge_shards(catalog, &run_dir),
         Verb::Walk => verbs::walk(catalog),
-        Verb::Status { json } => verbs::status(catalog, json),
+        Verb::Status { json, top, all } => verbs::status(catalog, json, top, all),
     }
 }
 
@@ -826,24 +834,90 @@ pub(crate) mod verbs {
         }
     }
 
-    pub fn status(catalog: &Path, json_mode: bool) -> Result<i32> {
+    pub fn status(catalog: &Path, json_mode: bool, top: usize, all: bool) -> Result<i32> {
         let cat = Catalog::load(catalog)?;
+
+        // Per-file coverage is computed from the live row set + filesystem.
+        // We do this in BOTH modes (json + table) so subagents can read the
+        // gap-target view machine-readable.
+        let per_file = coverage::compute_per_file(&cat.rows);
+
         if json_mode {
-            println!("{}", serde_json::to_string_pretty(&cat.summary)?);
+            // Emit { global: {...}, per_file: [...] } -- the per_file is
+            // sorted ascending by ratio (worst-first) by compute_per_file.
+            let payload = serde_json::json!({
+                "global": &cat.summary,
+                "per_file": per_file.iter().map(|p| serde_json::json!({
+                    "path": p.path.to_string_lossy(),
+                    "total_lines": p.total_lines,
+                    "covered_lines": p.covered_lines,
+                    "ratio": p.ratio,
+                    "row_count": p.row_count,
+                })).collect::<Vec<_>>(),
+            });
+            println!("{}", serde_json::to_string_pretty(&payload)?);
             return Ok(0);
         }
+
         let s = &cat.summary;
-        println!("docs-alignment summary:");
-        println!("  claims_total          {}", s.claims_total);
-        println!("  claims_bound          {}", s.claims_bound);
-        println!("  claims_missing_test   {}", s.claims_missing_test);
+        println!("== global ==");
+        println!("  claims_total           {}", s.claims_total);
+        println!("  claims_bound           {}", s.claims_bound);
+        println!("  claims_missing_test    {}", s.claims_missing_test);
         println!("  claims_retire_proposed {}", s.claims_retire_proposed);
-        println!("  claims_retired        {}", s.claims_retired);
-        println!("  alignment_ratio       {:.4}", s.alignment_ratio);
-        println!("  floor                 {:.4}", s.floor);
-        println!("  trend_30d             {}", s.trend_30d);
+        println!("  claims_retired         {}", s.claims_retired);
+        println!(
+            "  alignment_ratio        {:.4}   ({} bound / {} non-retired)",
+            s.alignment_ratio,
+            s.claims_bound,
+            s.claims_total.saturating_sub(s.claims_retired),
+        );
+        println!("  alignment_floor        {:.4}", s.floor);
+        println!(
+            "  coverage_ratio         {:.4}   ({} covered / {} total eligible lines)",
+            s.coverage_ratio, s.lines_covered, s.total_eligible_lines,
+        );
+        println!("  coverage_floor         {:.4}", s.coverage_floor);
+        println!("  trend_30d              {}", s.trend_30d);
         if let Some(lw) = &s.last_walked {
-            println!("  last_walked           {lw}");
+            println!("  last_walked            {lw}");
+        }
+        println!();
+        println!("== per-file (worst-covered first) ==");
+        let limit = if all {
+            per_file.len()
+        } else {
+            top.min(per_file.len())
+        };
+        if limit == 0 {
+            println!("  (no eligible files)");
+        } else {
+            // Header. Field widths: path 56, total 6, covered 7, ratio 7, rows 6.
+            println!(
+                "  {:<56}  {:>6}  {:>7}  {:>7}  {:>6}",
+                "file", "total", "covered", "ratio", "rows",
+            );
+            println!("  {}", "-".repeat(56 + 2 + 6 + 2 + 7 + 2 + 7 + 2 + 6));
+            for p in per_file.iter().take(limit) {
+                let path_disp = p.path.to_string_lossy();
+                let trimmed: String = if path_disp.len() > 56 {
+                    format!("...{}", &path_disp[path_disp.len() - 53..])
+                } else {
+                    path_disp.to_string()
+                };
+                let zero_hint = if p.row_count == 0 && p.total_lines > 50 {
+                    "   <-- ZERO ROWS"
+                } else {
+                    ""
+                };
+                println!(
+                    "  {:<56}  {:>6}  {:>7}  {:>7.3}  {:>6}{}",
+                    trimmed, p.total_lines, p.covered_lines, p.ratio, p.row_count, zero_hint,
+                );
+            }
+            if !all && per_file.len() > limit {
+                println!("  ... ({} more; use --all)", per_file.len() - limit);
+            }
         }
         Ok(0)
     }

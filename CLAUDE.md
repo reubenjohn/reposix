@@ -358,6 +358,21 @@ First backfill ran top-level (orchestrator IS executor — `gsd-executor` lacks 
 
 P65 verifier verdict at `quality/reports/verdicts/p65/VERDICT.md` (Path A — top-level orchestrator HAS `Task`). Milestone-close verifier at `quality/reports/verdicts/milestone-v0.12.0/VERDICT.md`. Owner pushes the v0.12.0 tag.
 
+## v0.12.1 — in flight
+
+### P66 — coverage_ratio metric (added 2026-04-28)
+
+The docs-alignment dimension grows a SECOND axis: `coverage_ratio = lines_covered / total_eligible_lines`. The first axis (`alignment_ratio = bound / non-retired`) answers "of the claims we extracted, how many bind to passing tests?"; coverage answers "of the prose we said we'd mine, what fraction did we actually cover?". Together they yield the agent's mental model:
+
+|                  | high alignment       | low alignment        |
+|------------------|----------------------|----------------------|
+| **high coverage**| ideal                | extracted; unbound   |
+| **low coverage** | tested what we found | haven't started      |
+
+Without coverage, an agent could ship high alignment by extracting only easy claims. The new per-file table — `reposix-quality doc-alignment status --top 10` — is the agent's gap-target view: worst-covered files surface first; rows with `row_count == 0 && total_lines > 50` get a "ZERO ROWS" hint as the most actionable miss.
+
+`coverage_floor` ships at 0.10 (low; even sparse mining usually clears it; baseline measured 0.2055 on the 388-row corpus). Ratcheted up by deliberate human commits as v0.12.1 cluster phases (P72+) widen extraction. The walker NEVER auto-tunes the floor. Walker BLOCKs (exit non-zero) when `coverage_ratio < coverage_floor`; recovery move is `/reposix-quality-backfill` to widen extraction OR a deliberate floor-down commit if extraction is genuinely complete.
+
 ## Quality Gates — dimension/cadence/kind taxonomy
 
 The v0.12.0 Quality Gates framework lives at `quality/`. Runtime contract:
