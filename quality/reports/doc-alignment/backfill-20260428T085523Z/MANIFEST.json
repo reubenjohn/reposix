@@ -1,0 +1,195 @@
+{
+  "shards": [
+    {
+      "files": [
+        "README.md"
+      ],
+      "id": "001",
+      "row_id_namespace": "README-md"
+    },
+    {
+      "files": [
+        ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md"
+      ],
+      "id": "002",
+      "row_id_namespace": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md"
+    },
+    {
+      "files": [
+        ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md"
+      ],
+      "id": "003",
+      "row_id_namespace": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md"
+    },
+    {
+      "files": [
+        ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md"
+      ],
+      "id": "004",
+      "row_id_namespace": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md"
+    },
+    {
+      "files": [
+        ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md"
+      ],
+      "id": "005",
+      "row_id_namespace": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md"
+    },
+    {
+      "files": [
+        "docs/architecture.md",
+        "docs/demo.md",
+        "docs/index.md"
+      ],
+      "id": "006",
+      "row_id_namespace": "docs-architecture-md"
+    },
+    {
+      "files": [
+        "docs/security.md",
+        "docs/why.md"
+      ],
+      "id": "007",
+      "row_id_namespace": "docs-security-md"
+    },
+    {
+      "files": [
+        "docs/benchmarks/latency.md",
+        "docs/benchmarks/token-economy.md"
+      ],
+      "id": "008",
+      "row_id_namespace": "docs-benchmarks-latency-md"
+    },
+    {
+      "files": [
+        "docs/concepts/mental-model-in-60-seconds.md",
+        "docs/concepts/reposix-vs-mcp-and-sdks.md"
+      ],
+      "id": "009",
+      "row_id_namespace": "docs-concepts-mental-model-in-60-seconds-md"
+    },
+    {
+      "files": [
+        "docs/connectors/guide.md"
+      ],
+      "id": "010",
+      "row_id_namespace": "docs-connectors-guide-md"
+    },
+    {
+      "files": [
+        "docs/decisions/001-github-state-mapping.md",
+        "docs/decisions/002-confluence-page-mapping.md",
+        "docs/decisions/003-nested-mount-layout.md"
+      ],
+      "id": "011",
+      "row_id_namespace": "docs-decisions-001-github-state-mapping-md"
+    },
+    {
+      "files": [
+        "docs/decisions/005-jira-issue-mapping.md",
+        "docs/decisions/007-time-travel-via-git-tags.md",
+        "docs/decisions/008-helper-backend-dispatch.md"
+      ],
+      "id": "012",
+      "row_id_namespace": "docs-decisions-005-jira-issue-mapping-md"
+    },
+    {
+      "files": [
+        "docs/decisions/009-stability-commitment.md"
+      ],
+      "id": "013",
+      "row_id_namespace": "docs-decisions-009-stability-commitment-md"
+    },
+    {
+      "files": [
+        "docs/development/contributing.md",
+        "docs/development/roadmap.md"
+      ],
+      "id": "014",
+      "row_id_namespace": "docs-development-contributing-md"
+    },
+    {
+      "files": [
+        "docs/guides/integrate-with-your-agent.md",
+        "docs/guides/troubleshooting.md",
+        "docs/guides/write-your-own-connector.md"
+      ],
+      "id": "015",
+      "row_id_namespace": "docs-guides-integrate-with-your-agent-md"
+    },
+    {
+      "files": [
+        "docs/how-it-works/filesystem-layer.md",
+        "docs/how-it-works/git-layer.md",
+        "docs/how-it-works/time-travel.md"
+      ],
+      "id": "016",
+      "row_id_namespace": "docs-how-it-works-filesystem-layer-md"
+    },
+    {
+      "files": [
+        "docs/how-it-works/trust-model.md"
+      ],
+      "id": "017",
+      "row_id_namespace": "docs-how-it-works-trust-model-md"
+    },
+    {
+      "files": [
+        "docs/reference/cli.md",
+        "docs/reference/confluence.md",
+        "docs/reference/crates.md"
+      ],
+      "id": "018",
+      "row_id_namespace": "docs-reference-cli-md"
+    },
+    {
+      "files": [
+        "docs/reference/exit-codes.md",
+        "docs/reference/git-remote.md",
+        "docs/reference/glossary.md"
+      ],
+      "id": "019",
+      "row_id_namespace": "docs-reference-exit-codes-md"
+    },
+    {
+      "files": [
+        "docs/reference/http-api.md",
+        "docs/reference/jira.md",
+        "docs/reference/simulator.md"
+      ],
+      "id": "020",
+      "row_id_namespace": "docs-reference-http-api-md"
+    },
+    {
+      "files": [
+        "docs/reference/testing-targets.md"
+      ],
+      "id": "021",
+      "row_id_namespace": "docs-reference-testing-targets-md"
+    },
+    {
+      "files": [
+        "docs/research/agentic-engineering-reference.md",
+        "docs/research/initial-report.md"
+      ],
+      "id": "022",
+      "row_id_namespace": "docs-research-agentic-engineering-reference-md"
+    },
+    {
+      "files": [
+        "docs/social/linkedin.md",
+        "docs/social/twitter.md"
+      ],
+      "id": "023",
+      "row_id_namespace": "docs-social-linkedin-md"
+    },
+    {
+      "files": [
+        "docs/tutorials/first-run.md"
+      ],
+      "id": "024",
+      "row_id_namespace": "docs-tutorials-first-run-md"
+    }
+  ],
+  "ts": "20260428T085523Z"
+}
