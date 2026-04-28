@@ -169,10 +169,14 @@ fn bind_valid_round_trip() {
         row["source_hash"].as_str().is_some(),
         "source_hash populated"
     );
-    assert!(
-        row["test_body_hash"].as_str().is_some(),
-        "test_body_hash populated"
-    );
+    // W7: tests + test_body_hashes are parallel arrays.
+    let tests = row["tests"].as_array().expect("tests array present");
+    let hashes = row["test_body_hashes"]
+        .as_array()
+        .expect("test_body_hashes array present");
+    assert_eq!(tests.len(), 1, "single-test bind populates one entry");
+    assert_eq!(hashes.len(), 1, "test_body_hashes parallel to tests");
+    assert!(hashes[0].as_str().is_some(), "first hash is populated");
 
     // Summary is recomputed.
     assert_eq!(v["summary"]["claims_total"], 1);

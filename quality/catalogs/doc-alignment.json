@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft-07/schema#",
   "comment": "Quality Gates catalog -- docs-alignment dimension. Schema spec: quality/catalogs/README.md (docs-alignment subsection). Verifier impl: quality/gates/docs-alignment/. Reports: quality/reports/verifications/docs-alignment/. Empty-state seed shipped by P64 Wave 1; populated by P65 backfill.",
   "dimension": "docs-alignment",
-  "schema_version": "1.0",
+  "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
     "claims_bound": 171,
@@ -139,13 +139,17 @@
         "line_end": 76
       },
       "source_hash": "09b202ea4ff8d20d3181142589995f896159ece66bab706452290d24f1ba67ae",
-      "test": "crates/reposix-cli/tests/no_truncate.rs::no_truncate_flag_exits_nonzero_when_backend_unreachable",
-      "test_body_hash": "a006265c40a1bc8df0cede032c0ba2e7eab9ec27ecc7c75ce35afdf508c9459b",
       "rationale": "crates/reposix-cli/tests/no_truncate.rs test --no-truncate flag behavior and truncation error handling",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:01:37Z",
       "last_extracted": "2026-04-28T09:01:37Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/no_truncate.rs::no_truncate_flag_exits_nonzero_when_backend_unreachable"
+      ],
+      "test_body_hashes": [
+        "a006265c40a1bc8df0cede032c0ba2e7eab9ec27ecc7c75ce35afdf508c9459b"
+      ]
     },
     {
       "id": "docs/index/latency-8ms-read",
@@ -199,13 +203,17 @@
         "line_end": 60
       },
       "source_hash": "209b5d74c1ee4f539043a3678e6e0b04225598fbb7162a4f55a66b93d994cece",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
       "rationale": "Skill directory exists at .claude/skills/reposix-agent-flow/; dark-factory regression tests (agent_flow.rs) serve as the test harness invoked by skill.",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:52Z",
       "last_extracted": "2026-04-28T09:00:52Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ]
     },
     {
       "id": "docs/decisions/005-jira-issue-mapping/adf-description-plain-text",
@@ -305,13 +313,17 @@
         "line_end": 72
       },
       "source_hash": "dbd80002e8e256ea70792f8efedaee88dc88cfbe9d89eeb903dd30c0b784d601",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
       "rationale": "agent_flow.rs:103-165 test demonstrates working tree is real git with standard config, enabling pure git UX",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T08:58:38Z",
       "last_extracted": "2026-04-28T08:58:38Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ]
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/docs-02",
@@ -336,13 +348,17 @@
         "line_end": 46
       },
       "source_hash": "f9c5b960f115af03cfb219f286943eb8e96fadc2aa1ec712c255239a07a55729",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
       "rationale": "test dark_factory_conflict_teaching_string_present (198-214) asserts literal \"git pull --rebase\" exists in main.rs; dark_factory_blob_limit_teaching_string_present (174-189) asserts \"git sparse-checkout\" exists in stateless_connect.rs",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:40Z",
       "last_extracted": "2026-04-28T09:04:40Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
+      ]
     },
     {
       "id": "docs/reference/cli.md/subcommands_exist",
@@ -353,13 +369,17 @@
         "line_end": 27
       },
       "source_hash": "d199d76e57cf64a13bebf843a7536917315bc6f2b3081d546e2d0efd7ee9f4cb",
-      "test": "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands",
-      "test_body_hash": "4dc5fe7ebc778ac27b68a1976253f7a4a2e1f53b8d213bcbb27065bf950e3b36",
       "rationale": "Test verifies help output contains sim, init, list, version; all subcommands build and are present in --help output",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:30Z",
       "last_extracted": "2026-04-28T09:08:30Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands"
+      ],
+      "test_body_hashes": [
+        "4dc5fe7ebc778ac27b68a1976253f7a4a2e1f53b8d213bcbb27065bf950e3b36"
+      ]
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/docs-03",
@@ -384,11 +404,15 @@
         "line_end": 62
       },
       "source_hash": "e6d0d0b6ebc0e180c1877bcfaa30241b17e6b4c7375be2fcf7c7d6ee902257c2",
-      "test": "crates/reposix-core/tests/compile_fail.rs::http_client_inner_is_private",
-      "test_body_hash": "placeholder_hash_no_match",
       "rationale": "Compile-fail test asserts HttpClient::inner is private",
       "last_verdict": "STALE_DOCS_DRIFT",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-core/tests/compile_fail.rs::http_client_inner_is_private"
+      ],
+      "test_body_hashes": [
+        "placeholder_hash_no_match"
+      ]
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-03-mermaid-render",
@@ -443,11 +467,15 @@
         "line_end": 84
       },
       "source_hash": "160f43b3e17e36e4740a65e897f5b6c19074ade6214b5d7196377118d314dcc9",
-      "test": "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error",
-      "test_body_hash": "b021be2ecc99edffa48b444750485756e208836076f13dd21602267f4c23442c",
       "rationale": "Tests Error::Egress returned and audit row with op='egress_denied' written",
       "last_verdict": "STALE_DOCS_DRIFT",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error"
+      ],
+      "test_body_hashes": [
+        "b021be2ecc99edffa48b444750485756e208836076f13dd21602267f4c23442c"
+      ]
     },
     {
       "id": "git-remote/bulk-delete-cap-5",
@@ -458,13 +486,17 @@
         "line_end": 81
       },
       "source_hash": "c92c7dc4c0f1858487f71190db45a9350eb7280e6e8d1d0607d25ed15beb113a",
-      "test": "crates/reposix-remote/tests/bulk_delete_cap.rs::six_deletes_refuses_and_calls_no_delete",
-      "test_body_hash": "f6257388948b82070e22c25a1cce4c8acd2dd7c74debb78d34bdd0a4ee4c17e3",
       "rationale": "Tests 6 deletes rejected; 5 deletes pass cap",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:46Z",
       "last_extracted": "2026-04-28T09:08:46Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/bulk_delete_cap.rs::six_deletes_refuses_and_calls_no_delete"
+      ],
+      "test_body_hashes": [
+        "f6257388948b82070e22c25a1cce4c8acd2dd7c74debb78d34bdd0a4ee4c17e3"
+      ]
     },
     {
       "id": "docs/architecture/redirect",
@@ -503,13 +535,17 @@
         "line_end": 36
       },
       "source_hash": "fc59fc12a90356c10441cae4bef1a467e4da365df48c6163927582b72f9cab31",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
-      "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
       "rationale": "skip_if_no_env! macro at line 138 checks ATLASSIAN_API_KEY presence; omitting it causes test skip with SKIP message",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:20Z",
       "last_extracted": "2026-04-28T09:08:20Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
+      ],
+      "test_body_hashes": [
+        "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe"
+      ]
     },
     {
       "id": "docs/reference/testing-targets/confluence-email",
@@ -520,13 +556,17 @@
         "line_end": 36
       },
       "source_hash": "fc59fc12a90356c10441cae4bef1a467e4da365df48c6163927582b72f9cab31",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
-      "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
       "rationale": "skip_if_no_env! macro at line 138 checks ATLASSIAN_EMAIL presence",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:20Z",
       "last_extracted": "2026-04-28T09:08:20Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
+      ],
+      "test_body_hashes": [
+        "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe"
+      ]
     },
     {
       "id": "docs/security/audit-append-only-triggers",
@@ -537,13 +577,17 @@
         "line_end": 67
       },
       "source_hash": "2fb847a23c6d7178b2554031e877ba3a379bc55c65efae793fb1db6535e00c69",
-      "test": "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail",
-      "test_body_hash": "9e79aa55e86b02c5a3b3e2d2c7ea3fbfd12674ad799270bbdcab13744b79fe38",
       "rationale": "Test verifies UPDATE and DELETE on audit_events_cache both fail with append-only trigger message",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:48Z",
       "last_extracted": "2026-04-28T09:00:48Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail"
+      ],
+      "test_body_hashes": [
+        "9e79aa55e86b02c5a3b3e2d2c7ea3fbfd12674ad799270bbdcab13744b79fe38"
+      ]
     },
     {
       "id": "docs/research/agentic-engineering-reference.md/audit-append-only",
@@ -554,13 +598,17 @@
         "line_end": 147
       },
       "source_hash": "ef64acf3dc747929f1c111e3062038d2403ef2849c880f7ed5a7b7d05651d676",
-      "test": "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail",
-      "test_body_hash": "9e79aa55e86b02c5a3b3e2d2c7ea3fbfd12674ad799270bbdcab13744b79fe38",
       "rationale": "Test verifies UPDATE and DELETE statements on audit_events_cache fail; only INSERT is allowed by schema CHECK constraint",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:06Z",
       "last_extracted": "2026-04-28T09:09:06Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail"
+      ],
+      "test_body_hashes": [
+        "9e79aa55e86b02c5a3b3e2d2c7ea3fbfd12674ad799270bbdcab13744b79fe38"
+      ]
     },
     {
       "id": "glossary/audit-log-definition",
@@ -585,13 +633,17 @@
         "line_end": 121
       },
       "source_hash": "7dfcde5c4c3f42a8d6ec42d3e4408457069d31a85ff60e7c5b91368d3605162e",
-      "test": "crates/reposix-core/tests/audit_schema.rs::audit_update_is_rejected_by_trigger",
-      "test_body_hash": "84c32ab7f1d1c392c928460b594f9288980f30ed0d134ac01d5450b2e09ce1ce",
       "rationale": "audit_schema.rs tests schema columns, both triggers registered, UPDATE/DELETE rejected, and rollback integrity",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T08:59:28Z",
       "last_extracted": "2026-04-28T08:59:28Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-core/tests/audit_schema.rs::audit_update_is_rejected_by_trigger"
+      ],
+      "test_body_hashes": [
+        "84c32ab7f1d1c392c928460b594f9288980f30ed0d134ac01d5450b2e09ce1ce"
+      ]
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-02-audit-append-only-triggers",
@@ -602,13 +654,17 @@
         "line_end": 27
       },
       "source_hash": "e0fb8d62e00daf491b815884d0951503b0da198cc745dfcdbef5b6c4361d0795",
-      "test": "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail",
-      "test_body_hash": "9e79aa55e86b02c5a3b3e2d2c7ea3fbfd12674ad799270bbdcab13744b79fe38",
       "rationale": "Test directly verifies UPDATE and DELETE operations fail with trigger abort message; INSERT still succeeds; row count unchanged.",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:30Z",
       "last_extracted": "2026-04-28T09:00:30Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail"
+      ],
+      "test_body_hashes": [
+        "9e79aa55e86b02c5a3b3e2d2c7ea3fbfd12674ad799270bbdcab13744b79fe38"
+      ]
     },
     {
       "id": "docs/index/audit-trail-git-log",
@@ -640,13 +696,17 @@
         }
       ],
       "source_hash": "f828f927370e3fa4c5a8cf0e04da6a9fa5965e87625cc386591858b5df917ee0",
-      "test": "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit",
-      "test_body_hash": "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904",
       "rationale": "SC4: attempts UPDATE on audit_events, asserts error.contains(append-only)",
       "last_verdict": "STALE_DOCS_DRIFT",
       "last_run": "2026-04-28T09:09:36Z",
       "last_extracted": "2026-04-28T09:09:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit"
+      ],
+      "test_body_hashes": [
+        "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904"
+      ]
     },
     {
       "id": "trust-model/audit-events-cache-append-only-triggers",
@@ -657,11 +717,15 @@
         "line_end": 67
       },
       "source_hash": "9e7f8da9c56a6d548034df43ac217759e02c4affb482effa6d7b5c8a3dae9ad8",
-      "test": "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail",
-      "test_body_hash": "placeholder_hash_no_match",
       "rationale": "Tests UPDATE and DELETE both fail with 'append-only' trigger abort",
       "last_verdict": "STALE_DOCS_DRIFT",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail"
+      ],
+      "test_body_hashes": [
+        "placeholder_hash_no_match"
+      ]
     },
     {
       "id": "docs/connectors/guide/auth-header-exact-test",
@@ -715,13 +779,17 @@
         "line_end": 33
       },
       "source_hash": "d96f053c68090c29dc11b0a3e94098f36712c6697f6a28e9b5e2d326b8734501",
-      "test": "crates/reposix-github/tests/contract.rs::contract_sim",
-      "test_body_hash": "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116",
       "rationale": "BackendConnector trait definition at crates/reposix-core/src/backend.rs:216-331 lists all 8 methods; contract_sim test (line 160) instantiates SimBackend and calls list_records/get_record via assert_contract",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:13Z",
       "last_extracted": "2026-04-28T09:05:13Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-github/tests/contract.rs::contract_sim"
+      ],
+      "test_body_hashes": [
+        "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116"
+      ]
     },
     {
       "id": "docs/connectors/guide/trait-method-count-eight",
@@ -882,13 +950,17 @@
         "line_end": 66
       },
       "source_hash": "b0a4f8b0b41fce6e501262ed9d377bf9179a774feddc076c4c115f12bb01677c",
-      "test": "crates/reposix-core/src/backend.rs::backend_feature_hierarchy_is_a_variant",
-      "test_body_hash": "53d4a9b5f6e1be317f9f0d5eb93aa59220f166d0332a7557139413ef9a0fe67f",
       "rationale": "backend.rs line 52 declares BackendFeature enum with #[non_exhaustive]; trait impl pattern documented; BackendCapabilities struct is separate and additive; all concrete backends use feature flags to branch on capability",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:18Z",
       "last_extracted": "2026-04-28T09:05:18Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-core/src/backend.rs::backend_feature_hierarchy_is_a_variant"
+      ],
+      "test_body_hashes": [
+        "53d4a9b5f6e1be317f9f0d5eb93aa59220f166d0332a7557139413ef9a0fe67f"
+      ]
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-06-list-changed-since",
@@ -899,13 +971,17 @@
         "line_end": 42
       },
       "source_hash": "4a9023a78c8af133f2c1240e814a059eb378aa4f5ae4f9a78a2813e6a7b1e690",
-      "test": "crates/reposix-cache/tests/delta_sync.rs::delta_sync_updates_only_changed_issue",
-      "test_body_hash": "fea6598bf4a08d3c839c252991443eefdbbea747c4e9ddca7817158d609bd778",
       "rationale": "Integration test invokes list_changed_since indirectly via cache.sync() delta path; seed issues, mutate one, second sync calls list_changed_since(T1) and receives only [mutated_id].",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:01:18Z",
       "last_extracted": "2026-04-28T09:01:18Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/delta_sync.rs::delta_sync_updates_only_changed_issue"
+      ],
+      "test_body_hashes": [
+        "fea6598bf4a08d3c839c252991443eefdbbea747c4e9ddca7817158d609bd778"
+      ]
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/banned-words-linter",
@@ -972,13 +1048,17 @@
         "line_end": 94
       },
       "source_hash": "77ed3a28ed9827e532b9a78d063407a345e9d8bf37f290ae6a7d69e7d690deee",
-      "test": "crates/reposix-remote/src/stateless_connect.rs::parse_blob_limit",
-      "test_body_hash": "2124b101222f26d86fe36379766512cb407930601b1d2b639b158aa3316a4943",
       "rationale": "BLOB_LIMIT constant hardcoded; env-configurable via parse_blob_limit",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:59Z",
       "last_extracted": "2026-04-28T09:05:59Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/src/stateless_connect.rs::parse_blob_limit"
+      ],
+      "test_body_hashes": [
+        "2124b101222f26d86fe36379766512cb407930601b1d2b639b158aa3316a4943"
+      ]
     },
     {
       "id": "git-layer/blob-limit-error-names-sparse-checkout",
@@ -989,13 +1069,17 @@
         "line_end": 102
       },
       "source_hash": "b4fa042fb7c5cfc75a112c8442988139f4007cb3c1279616c4286e6cd179eac9",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
-      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
       "rationale": "Tests literal BLOB_LIMIT_EXCEEDED_FMT contains 'git sparse-checkout'",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:59Z",
       "last_extracted": "2026-04-28T09:05:59Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
+      ]
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-09-blob-limit-guardrail",
@@ -1006,13 +1090,17 @@
         "line_end": 48
       },
       "source_hash": "e6b2ed5bbfea8e4bcb30f523ef713e45b0928d5fe69c9bff4899e4ac9569e9b0",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
-      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
       "rationale": "Regression test verifies literal 'git sparse-checkout' string is present in crates/reposix-remote/src/stateless_connect.rs BLOB_LIMIT_EXCEEDED_FMT",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:45Z",
       "last_extracted": "2026-04-28T09:00:45Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
+      ]
     },
     {
       "id": "docs/guides/troubleshooting/blob-limit-recovery",
@@ -1023,13 +1111,17 @@
         "line_end": 68
       },
       "source_hash": "0cfc042658310946939171b74160132993f1679f1cdbc05812e3698eebcee23d",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
-      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
       "rationale": "test dark_factory_blob_limit_teaching_string_present (174-189) asserts literal \"git sparse-checkout\" is committed in crates/reposix-remote/src/stateless_connect.rs with error message BLOB_LIMIT_EXCEEDED_FMT",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:47Z",
       "last_extracted": "2026-04-28T09:04:47Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
+      ]
     },
     {
       "id": "docs/research/initial-report.md/blobs-lazy",
@@ -1040,13 +1132,17 @@
         "line_end": 17
       },
       "source_hash": "a2508b66acdcf7cbb31160c03d2609859df9d95612d61e9beb98fdd93f87b962",
-      "test": "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from",
-      "test_body_hash": "009ffcc580b9ac30fc5f8a5cb426f49873b72de5429389f198ca38dbd4e2e1ae",
       "rationale": "Test directly asserts blob_count == 0 after build_from and separately validates blob materialization works",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:44Z",
       "last_extracted": "2026-04-28T09:08:44Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from"
+      ],
+      "test_body_hashes": [
+        "009ffcc580b9ac30fc5f8a5cb426f49873b72de5429389f198ca38dbd4e2e1ae"
+      ]
     },
     {
       "id": "git-remote/blob-limit-error-message",
@@ -1057,13 +1153,17 @@
         "line_end": 110
       },
       "source_hash": "9d8b2b5670d18da8a99f6152f7ee75558019cd106d8032bf7c1117bd37273e37",
-      "test": "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants",
-      "test_body_hash": "f55f3f3e47171456c973c443d1b3d4675f0d0f315b6e73db8b18905aee8feeb1",
       "rationale": "Test verifies stderr message instructs sparse-checkout",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:52Z",
       "last_extracted": "2026-04-28T09:08:52Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants"
+      ],
+      "test_body_hashes": [
+        "f55f3f3e47171456c973c443d1b3d4675f0d0f315b6e73db8b18905aee8feeb1"
+      ]
     },
     {
       "id": "docs/index/bootstrap-latency-24ms",
@@ -1116,13 +1216,17 @@
         "line_end": 96
       },
       "source_hash": "7ca6d63605e8e8b6149c6cf91735aa89d6a09e6bd4020087b1a4f9bf027fa14f",
-      "test": "crates/reposix-remote/tests/bulk_delete_cap.rs::six_deletes_with_allow_tag_actually_deletes",
-      "test_body_hash": "120eb2dea6f1f57c4009abb17a4c2ad99453172f94126d816f4fb21ab8e6c75b",
       "rationale": "Tests 6 deletes with override tag succeeds",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:46Z",
       "last_extracted": "2026-04-28T09:08:46Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/bulk_delete_cap.rs::six_deletes_with_allow_tag_actually_deletes"
+      ],
+      "test_body_hashes": [
+        "120eb2dea6f1f57c4009abb17a4c2ad99453172f94126d816f4fb21ab8e6c75b"
+      ]
     },
     {
       "id": "filesystem-layer/cache-bare-repo-with-wal",
@@ -1133,13 +1237,17 @@
         "line_end": 56
       },
       "source_hash": "5f3067f555701c800efbb895721a7ee70b3e1bac2f82e0d4d882832249c51c8f",
-      "test": "crates/reposix-cache/src/cache.rs::open",
-      "test_body_hash": "02be171acb27b7663ea9d1e5f85bd94790c801c9d75456363f7f302c6e983e2b",
       "rationale": "Cache::open creates bare repo with WAL-mode cache.db",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:59Z",
       "last_extracted": "2026-04-28T09:05:59Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/src/cache.rs::open"
+      ],
+      "test_body_hashes": [
+        "02be171acb27b7663ea9d1e5f85bd94790c801c9d75456363f7f302c6e983e2b"
+      ]
     },
     {
       "id": "docs/decisions/008-helper-backend-dispatch/cache-slug-naming",
@@ -1164,13 +1272,17 @@
         "line_end": 59
       },
       "source_hash": "3f5c405134fa5ddd9fcf771709589feb1fbc5ffe9369e43fec3f73dbb39f086c",
-      "test": "crates/reposix-cache/tests/sync_tags.rs::list_sync_tags_returns_sorted",
-      "test_body_hash": "a57026910265482e23a2f3ab7e1b233dd95e287932263113644e30390de30fa7",
       "rationale": "Tests multiple syncs produce tags in ascending timestamp order",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:06:00Z",
       "last_extracted": "2026-04-28T09:06:00Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/sync_tags.rs::list_sync_tags_returns_sorted"
+      ],
+      "test_body_hashes": [
+        "a57026910265482e23a2f3ab7e1b233dd95e287932263113644e30390de30fa7"
+      ]
     },
     {
       "id": "docs/decisions/007-time-travel-via-git-tags/tag-creation",
@@ -1181,13 +1293,17 @@
         "line_end": 49
       },
       "source_hash": "ff3aa38802cade3cf277a6d1a320a9dde6926c3c94a552a856d6e1cf53034712",
-      "test": "crates/reposix-cache/tests/sync_tags.rs::tag_sync_creates_ref",
-      "test_body_hash": "7d77b24b1d69dd16163acdc3643e535b60a676be51fa98e7f983b4aa9b505126",
       "rationale": "sync_tags.rs:21-46 calls cache.sync(), then cache.list_sync_tags() and asserts exactly one tag with name starting with refs/reposix/sync/",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:15:10Z",
       "last_extracted": "2026-04-28T09:15:10Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/sync_tags.rs::tag_sync_creates_ref"
+      ],
+      "test_body_hashes": [
+        "7d77b24b1d69dd16163acdc3643e535b60a676be51fa98e7f983b4aa9b505126"
+      ]
     },
     {
       "id": "time-travel/sync-tag-at-finds-closest-not-after",
@@ -1198,13 +1314,17 @@
         "line_end": 64
       },
       "source_hash": "eb37d72f23275dddddfd7a96b05fcc80d1ba2b24e78b3aa58ee7645c4cb3cf28",
-      "test": "crates/reposix-cache/tests/sync_tags.rs::sync_tag_at_finds_closest_not_after",
-      "test_body_hash": "0e6fbdaae6181a27f39c718b2512e531743846b13575c3efecb0a3633872780c",
       "rationale": "Tests sync_tag_at finds correct tag between two targets and returns None before all",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:06:00Z",
       "last_extracted": "2026-04-28T09:06:00Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/sync_tags.rs::sync_tag_at_finds_closest_not_after"
+      ],
+      "test_body_hashes": [
+        "0e6fbdaae6181a27f39c718b2512e531743846b13575c3efecb0a3633872780c"
+      ]
     },
     {
       "id": "docs/why/cached-read-8ms",
@@ -1229,13 +1349,17 @@
         "line_end": 66
       },
       "source_hash": "e90e0560f9427af618c85f8a0662d961c41f3c9400465911bd7c25c5a8259ca9",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
-      "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
       "rationale": "File docs/reference/testing-targets.md exists and documents TokenWorld, reubenjohn/reposix, JIRA TEST targets with env-var setup.",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:01:43Z",
       "last_extracted": "2026-04-28T09:01:43Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
+      ],
+      "test_body_hashes": [
+        "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe"
+      ]
     },
     {
       "id": "glossary/capability-advertisement-definition",
@@ -1375,13 +1499,17 @@
         "line_end": 77
       },
       "source_hash": "db934f4751b88dcb8f181e2fcffabebc4663f0d4d0edea34ff9bd9303aa66e52",
-      "test": "crates/reposix-swarm/tests/chaos_audit.rs::chaos_kill9_no_torn_rows",
-      "test_body_hash": "a2e42dd08baa28f89baee98f054bec8b789f38f8b89e6927a70e35d597c986a3",
       "rationale": "crates/reposix-swarm/tests/chaos_audit.rs spawn simulator, kill -9 mid-swarm, verify WAL durability",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:20Z",
       "last_extracted": "2026-04-28T09:00:20Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-swarm/tests/chaos_audit.rs::chaos_kill9_no_torn_rows"
+      ],
+      "test_body_hashes": [
+        "a2e42dd08baa28f89baee98f054bec8b789f38f8b89e6927a70e35d597c986a3"
+      ]
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-19-ci-integration-contract",
@@ -1435,13 +1563,17 @@
         "line_end": 299
       },
       "source_hash": "b97008278f7d430ecf9bbf43cfbf8a5e19074dd1311cd242bc75c7496082e65f",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
-      "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
       "rationale": "Subcommand enum (Cmd) exhaustively lists all 12 subcommands; clap-derive dispatch in main() binds all arms; dark-factory regression test validates UX end-to-end with no breaking changes",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:19Z",
       "last_extracted": "2026-04-28T09:04:19Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
+      ],
+      "test_body_hashes": [
+        "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
+      ]
     },
     {
       "id": "docs/connectors/guide/clippy-disallowed-methods-lint",
@@ -1495,13 +1627,17 @@
         "line_end": 109
       },
       "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
       "rationale": "agent_flow.rs:198-214 asserts git pull --rebase and error refs/heads/main fetch first strings remain in helper code",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T08:59:02Z",
       "last_extracted": "2026-04-28T08:59:02Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
+      ]
     },
     {
       "id": "docs/benchmarks/token-economy/confluence-reduction-76-percent",
@@ -1540,13 +1676,17 @@
         "line_end": 164
       },
       "source_hash": "37d292cfab3e569cc8aa8c45fc3cc9e23430957133e7db7129da98307c06ae73",
-      "test": "crates/reposix-github/src/lib.rs::github_list_changed_since_sends_since_param_and_returns_ids",
-      "test_body_hash": "34dab9efa580dd09f7e214e6f2a5b550f98fc9268898a7b6dabb0910107f5082",
       "rationale": "GitHub src/lib.rs has tests: list_changed_since with ?since param (line 994), parse_next_link extraction (line 1027), parse_next_link absent (line 1036), supports matrix (line 982); contract test validates list + get_record",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:31Z",
       "last_extracted": "2026-04-28T09:05:31Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-github/src/lib.rs::github_list_changed_since_sends_since_param_and_returns_ids"
+      ],
+      "test_body_hashes": [
+        "34dab9efa580dd09f7e214e6f2a5b550f98fc9268898a7b6dabb0910107f5082"
+      ]
     },
     {
       "id": "docs/connectors/guide/http-client-factory-required",
@@ -1572,13 +1712,17 @@
         "line_end": 148
       },
       "source_hash": "f9b63259e7095f41bf52fae40aae0933ce80fd222e07dcfca271f4e83c9f70de",
-      "test": "crates/reposix-github/src/lib.rs::supports_reports_workflows_only",
-      "test_body_hash": "270d08510ec278385bf87650e633112c89947141b2bbbc7a11534faeab97fae2",
       "rationale": "GitHub connector uses client() throughout (line 67); clippy disallowed-methods rule prevents direct reqwest::Client::new() at workspace level; egress allowlist enforced at client factory",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:27Z",
       "last_extracted": "2026-04-28T09:05:27Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-github/src/lib.rs::supports_reports_workflows_only"
+      ],
+      "test_body_hashes": [
+        "270d08510ec278385bf87650e633112c89947141b2bbbc7a11534faeab97fae2"
+      ]
     },
     {
       "id": "docs/guides/write-your-own-connector/contract-test",
@@ -1589,13 +1733,17 @@
         "line_end": 165
       },
       "source_hash": "9bf02b070a6a727627768c02af6959c4ab86771f0381b6f4b4a8c5c093eef5b6",
-      "test": "crates/reposix-github/tests/contract.rs::contract_sim",
-      "test_body_hash": "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116",
       "rationale": "contract.rs documents 5-invariant harness (assert_contract, lines 47-105); contract_sim test (line 160) runs against SimBackend; GitHub variant runs via wiremock with same helper",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:35Z",
       "last_extracted": "2026-04-28T09:05:35Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-github/tests/contract.rs::contract_sim"
+      ],
+      "test_body_hashes": [
+        "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116"
+      ]
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-10-confluence-split",
@@ -1620,13 +1768,17 @@
         "line_end": 58
       },
       "source_hash": "47f146089045622563cf87dbfce63863c46d5c28fde90555cbede265e74a96c9",
-      "test": "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail",
-      "test_body_hash": "9e79aa55e86b02c5a3b3e2d2c7ea3fbfd12674ad799270bbdcab13744b79fe38",
       "rationale": "FUSE crate deleted (verified via git history); fuser dependency removal verified via grep Cargo.toml; CI workflows updated. Binding to audit test as proof reposix-cache is self-contained (no FUSE).",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:52Z",
       "last_extracted": "2026-04-28T09:00:52Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail"
+      ],
+      "test_body_hashes": [
+        "9e79aa55e86b02c5a3b3e2d2c7ea3fbfd12674ad799270bbdcab13744b79fe38"
+      ]
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-11-jira-split",
@@ -1651,13 +1803,17 @@
         "line_end": 49
       },
       "source_hash": "43bc9304ebfc263e02f9ad57a10aff22aec086c8c16839aad08b9da085f9fd52",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
       "rationale": "Dark-factory regression test verifies reposix init and shell integration; installer URL follows github.com convention, validates in release workflow",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:48Z",
       "last_extracted": "2026-04-28T09:00:48Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ]
     },
     {
       "id": "glossary/dark-factory-definition",
@@ -1682,13 +1838,17 @@
         "line_end": 109
       },
       "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
-      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
       "rationale": "agent_flow.rs:174-189 asserts git sparse-checkout and BLOB_LIMIT_EXCEEDED_FMT literals remain",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T08:58:59Z",
       "last_extracted": "2026-04-28T08:58:59Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
+      ]
     },
     {
       "id": "trust-model/default-allowlist-loopback-only",
@@ -1699,11 +1859,15 @@
         "line_end": 63
       },
       "source_hash": "68b450076987cf93ae5e362ad513339eb7041f60459c9744433709862af86b90",
-      "test": "crates/reposix-core/tests/http_allowlist.rs::loopback_is_allowed_by_default",
-      "test_body_hash": "ebbe56ee7a2b125e5cd7b45e076df44b8eb51cf01ecbfa2be87479a6100e9170",
       "rationale": "Tests loopback succeeds under default allowlist; non-loopback IP rejected",
       "last_verdict": "STALE_DOCS_DRIFT",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-core/tests/http_allowlist.rs::loopback_is_allowed_by_default"
+      ],
+      "test_body_hashes": [
+        "ebbe56ee7a2b125e5cd7b45e076df44b8eb51cf01ecbfa2be87479a6100e9170"
+      ]
     },
     {
       "id": "docs/reference/http-api.md/rate-limit-default",
@@ -1714,13 +1878,17 @@
         "line_end": 100
       },
       "source_hash": "ed5627ac67400e49c66f1bbd3d403b0f8a5bd64485774b4643227145a01426f0",
-      "test": "crates/reposix-sim/tests/api.rs::rate_limit_returns_429_on_overflow",
-      "test_body_hash": "039d5774e59637a837867d77e7dfe243de6e028dac7a87313f26bdffd97f190a",
       "rationale": "spawn_sim(2) uses rps=2; test fires 10 requests expecting at least one 429",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:36Z",
       "last_extracted": "2026-04-28T09:09:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-sim/tests/api.rs::rate_limit_returns_429_on_overflow"
+      ],
+      "test_body_hashes": [
+        "039d5774e59637a837867d77e7dfe243de6e028dac7a87313f26bdffd97f190a"
+      ]
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-07-delta-sync-flow",
@@ -1731,13 +1899,17 @@
         "line_end": 43
       },
       "source_hash": "2d076f35ca2c27606d544fa2161954fc2d6446988bd85e031126216929ff79f8",
-      "test": "crates/reposix-cache/tests/delta_sync.rs::delta_sync_updates_only_changed_issue",
-      "test_body_hash": "fea6598bf4a08d3c839c252991443eefdbbea747c4e9ddca7817158d609bd778",
       "rationale": "Integration test: seed issues, sync with last_fetched_at T1, mutate one, sleep, sync again; verifies list_changed_since returns only mutated issue, one delta_sync audit row written, last_fetched_at bumped, only one blob OID changed.",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:30Z",
       "last_extracted": "2026-04-28T09:00:30Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/delta_sync.rs::delta_sync_updates_only_changed_issue"
+      ],
+      "test_body_hashes": [
+        "fea6598bf4a08d3c839c252991443eefdbbea747c4e9ddca7817158d609bd778"
+      ]
     },
     {
       "id": "docs/demo/redirect",
@@ -1762,13 +1934,17 @@
         "line_end": 16
       },
       "source_hash": "66a2831754533f1d64df82a476d9527430ade8874f9f17abca7dbaf4b40e1245",
-      "test": "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit",
-      "test_body_hash": "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904",
       "rationale": "spawn_sim loads seed_file=fixtures/seed.json defining demo project with 5 issues",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:36Z",
       "last_extracted": "2026-04-28T09:09:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit"
+      ],
+      "test_body_hashes": [
+        "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904"
+      ]
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-02-glossary",
@@ -1866,11 +2042,15 @@
         "line_end": 62
       },
       "source_hash": "e6d0d0b6ebc0e180c1877bcfaa30241b17e6b4c7375be2fcf7c7d6ee902257c2",
-      "test": "crates/reposix-core/tests/http_allowlist.rs::egress_to_non_allowlisted_host_is_rejected",
-      "test_body_hash": "a59dc261043e41cb1b83c53ba3f96152182a2b0f26284b8e4cf014dd54b028e1",
       "rationale": "Tests non-allowlisted host rejected via InvalidOrigin error before any I/O",
       "last_verdict": "STALE_DOCS_DRIFT",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-core/tests/http_allowlist.rs::egress_to_non_allowlisted_host_is_rejected"
+      ],
+      "test_body_hashes": [
+        "a59dc261043e41cb1b83c53ba3f96152182a2b0f26284b8e4cf014dd54b028e1"
+      ]
     },
     {
       "id": "docs/security/egress-denied-audit-row",
@@ -1881,13 +2061,17 @@
         "line_end": 83
       },
       "source_hash": "ad00aa1c0d1f9fa877988e12c9263335eee74a646b2f1ea7163eda85f6e8334d",
-      "test": "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error",
-      "test_body_hash": "8d1e999a3065adc79d0b5060e5a43c8003ee6e42d912df81d7ba4eb70d5481d9",
       "rationale": "Test uses EgressRejectingBackend stub; verifies read_blob returns Error::Egress and writes egress_denied row",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:51Z",
       "last_extracted": "2026-04-28T09:00:51Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error"
+      ],
+      "test_body_hashes": [
+        "8d1e999a3065adc79d0b5060e5a43c8003ee6e42d912df81d7ba4eb70d5481d9"
+      ]
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-12-dark-factory-agent-ux",
@@ -1898,13 +2082,17 @@
         "line_end": 54
       },
       "source_hash": "a8252b5352a333c596e77848fcdcf2c12be22e291071f7033bf7730fd606e560",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
       "rationale": "Test spawns reposix-sim, runs reposix init sim::demo in subprocess, verifies git config matches partial-clone expectations (extensions.partialClone=origin, remote.origin.promisor=true, etc).",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:01:27Z",
       "last_extracted": "2026-04-28T09:01:27Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ]
     },
     {
       "id": "docs/reference/cli.md/env_vars",
@@ -1915,13 +2103,17 @@
         "line_end": 304
       },
       "source_hash": "eef5791a71e06be6be257941cedc2bbf9b9b265a1376382a31cff8fb08c6a1e5",
-      "test": "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands",
-      "test_body_hash": "4dc5fe7ebc778ac27b68a1976253f7a4a2e1f53b8d213bcbb27065bf950e3b36",
       "rationale": "Env vars are enforced at runtime via httpClient and backend constructors; documented as defaults/requirements in CLI reference",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:02Z",
       "last_extracted": "2026-04-28T09:09:02Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands"
+      ],
+      "test_body_hashes": [
+        "4dc5fe7ebc778ac27b68a1976253f7a4a2e1f53b8d213bcbb27065bf950e3b36"
+      ]
     },
     {
       "id": "docs/reference/simulator.md/ephemeral-mode",
@@ -1932,13 +2124,17 @@
         "line_end": 47
       },
       "source_hash": "e6d4b022b9e11d33c28da8eb1e9eaa2a2dce84e27126812ca62e1dfaf735bf25",
-      "test": "crates/reposix-sim/src/db.rs::open_db_in_memory_succeeds",
-      "test_body_hash": "2f5190a96803e99b792fefa01873e285cef53bfad1b13112b8381d2e23e80d93",
       "rationale": "Test calls open_db(Path::new(\":memory:\"), true) and verifies issues table exists",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:36Z",
       "last_extracted": "2026-04-28T09:09:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-sim/src/db.rs::open_db_in_memory_succeeds"
+      ],
+      "test_body_hashes": [
+        "2f5190a96803e99b792fefa01873e285cef53bfad1b13112b8381d2e23e80d93"
+      ]
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-09-typed-errors",
@@ -1963,13 +2159,17 @@
         "line_end": 56
       },
       "source_hash": "5f3067f555701c800efbb895721a7ee70b3e1bac2f82e0d4d882832249c51c8f",
-      "test": "crates/reposix-cache/src/audit.rs::log_materialize",
-      "test_body_hash": "fc6ef96936b7eb61b16001a0f901eaee76e9960750c1bb07eb55d3d09714244a",
       "rationale": "Audit module writes materialize rows on blob fetch",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:59Z",
       "last_extracted": "2026-04-28T09:05:59Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/src/audit.rs::log_materialize"
+      ],
+      "test_body_hashes": [
+        "fc6ef96936b7eb61b16001a0f901eaee76e9960750c1bb07eb55d3d09714244a"
+      ]
     },
     {
       "id": "time-travel/sync-tag-refs-reposix-sync-iso8601",
@@ -1980,13 +2180,17 @@
         "line_end": 17
       },
       "source_hash": "d8abadeddc9a286537a54b5966b4895460b06266b6f78b529828089395aed58e",
-      "test": "crates/reposix-cache/tests/sync_tags.rs::tag_sync_creates_ref",
-      "test_body_hash": "7d77b24b1d69dd16163acdc3643e535b60a676be51fa98e7f983b4aa9b505126",
       "rationale": "Tests seed sync creates one tag with name starting with refs/reposix/sync/",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:06:00Z",
       "last_extracted": "2026-04-28T09:06:00Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/sync_tags.rs::tag_sync_creates_ref"
+      ],
+      "test_body_hashes": [
+        "7d77b24b1d69dd16163acdc3643e535b60a676be51fa98e7f983b4aa9b505126"
+      ]
     },
     {
       "id": "docs/connectors/guide/contract-test-required",
@@ -2026,13 +2230,17 @@
         "line_end": 46
       },
       "source_hash": "6fc28348a5c6e3c6eb068f2051be8108a48aa56b7954ad4d164e292f836ca64e",
-      "test": "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock",
-      "test_body_hash": "37afa21ee310fffcb4a85aff5bc3500794f23d53b2e5407d6e82e915bf81c1aa",
       "rationale": "contract.rs:95-103 iterates every issue and asserts status is one of {Open, InProgress, InReview, Done, WontFix}",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:15:00Z",
       "last_extracted": "2026-04-28T09:15:00Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock"
+      ],
+      "test_body_hashes": [
+        "37afa21ee310fffcb4a85aff5bc3500794f23d53b2e5407d6e82e915bf81c1aa"
+      ]
     },
     {
       "id": "time-travel/sync-tag-audit-row-sync-tag-written",
@@ -2043,13 +2251,17 @@
         "line_end": 78
       },
       "source_hash": "9d62a9b6c98a17d78f207d41b65487f3761429d08c592289dea49457172289d9",
-      "test": "crates/reposix-cache/tests/sync_tags.rs::sync_tags_audit_row_written",
-      "test_body_hash": "c2c4ef3f63fb9a22623cf790025100ae7193aed244137fb4f8975d792bba2b8c",
       "rationale": "Tests one row exists with op='sync_tag_written' and reason starts with refs/reposix/sync/",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:06:00Z",
       "last_extracted": "2026-04-28T09:06:00Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/sync_tags.rs::sync_tags_audit_row_written"
+      ],
+      "test_body_hashes": [
+        "c2c4ef3f63fb9a22623cf790025100ae7193aed244137fb4f8975d792bba2b8c"
+      ]
     },
     {
       "id": "docs/decisions/007-time-travel-via-git-tags/audit-pairing",
@@ -2060,13 +2272,17 @@
         "line_end": 56
       },
       "source_hash": "d054ff5a30c5f310b655e0afbd951ce2c4c8b6826175a00bd172a893cd871e46",
-      "test": "crates/reposix-cache/tests/sync_tags.rs::sync_tags_audit_row_written",
-      "test_body_hash": "c2c4ef3f63fb9a22623cf790025100ae7193aed244137fb4f8975d792bba2b8c",
       "rationale": "sync_tags.rs:158-205 queries audit_events_cache and asserts one row with op=sync_tag_written exists after sync",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:15:13Z",
       "last_extracted": "2026-04-28T09:15:13Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/sync_tags.rs::sync_tags_audit_row_written"
+      ],
+      "test_body_hashes": [
+        "c2c4ef3f63fb9a22623cf790025100ae7193aed244137fb4f8975d792bba2b8c"
+      ]
     },
     {
       "id": "docs/decisions/009-stability-commitment/exit-codes-locked",
@@ -2077,13 +2293,17 @@
         "line_end": 100
       },
       "source_hash": "9f027310e7e7405ea641175f63abae2115f7089fc6fe962a4e496e8e24fb6bf8",
-      "test": "crates/reposix-cli/tests/gc.rs::gc_help_renders",
-      "test_body_hash": "0e608332bc1ddc06393917a69daa0d90a579c01b43b158a95ca54a65ecf16b65",
       "rationale": "exit-codes.md documents stable contract with detailed exit-code tables per subcommand; main.rs uses anyhow Result->exit(0|1) pattern; git-remote-reposix main() has explicit 3-tier dispatch matching the spec",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:47Z",
       "last_extracted": "2026-04-28T09:04:47Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/gc.rs::gc_help_renders"
+      ],
+      "test_body_hashes": [
+        "0e608332bc1ddc06393917a69daa0d90a579c01b43b158a95ca54a65ecf16b65"
+      ]
     },
     {
       "id": "docs/reference/cli.md/exit_codes",
@@ -2094,13 +2314,17 @@
         "line_end": 312
       },
       "source_hash": "003c85239fcc62f7975a3ab4513bc7ed07e923ecc98a418439d0e760ae722eb9",
-      "test": "crates/reposix-cli/tests/cli.rs::mount_subcommand_is_removed",
-      "test_body_hash": "a8fd137976bc34abc8da35dbfdee3df9d73c1fc522216eafe926813c32c07db4",
       "rationale": "Test verifies non-zero exit on error; exit code semantics implemented in CLI handler",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:02Z",
       "last_extracted": "2026-04-28T09:09:02Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/cli.rs::mount_subcommand_is_removed"
+      ],
+      "test_body_hashes": [
+        "a8fd137976bc34abc8da35dbfdee3df9d73c1fc522216eafe926813c32c07db4"
+      ]
     },
     {
       "id": "git-remote/export-push-path",
@@ -2111,13 +2335,17 @@
         "line_end": 23
       },
       "source_hash": "be29b20a4ec78c4e55e4cb6e7b756b828334931df68223e34baa2c95572daaf1",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
-      "test_body_hash": "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97",
       "rationale": "Tests parse fast-import, detect conflicts, reject on stale base",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:46Z",
       "last_extracted": "2026-04-28T09:08:46Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
+      ],
+      "test_body_hashes": [
+        "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
+      ]
     },
     {
       "id": "glossary/extensions-partialClone-definition",
@@ -2142,13 +2370,17 @@
         "line_end": 57
       },
       "source_hash": "74a8fa626c8d4b28c851604208166e735fe8910054ebcdd2492206db1a4a4b02",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
-      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
       "rationale": "Agent-flow tests verify git config is set and blob limit teaching works",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:59Z",
       "last_extracted": "2026-04-28T09:05:59Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
+      ]
     },
     {
       "id": "glossary/fast-export-definition",
@@ -2187,13 +2419,17 @@
         "line_end": 147
       },
       "source_hash": "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
-      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
       "rationale": "Regression test verifies git sparse-checkout teaching string present in reposix-remote/src/stateless_connect.rs",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:01:39Z",
       "last_extracted": "2026-04-28T09:01:39Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
+      ]
     },
     {
       "id": "README-md/blob-limit-guardrail",
@@ -2204,13 +2440,17 @@
         "line_end": 119
       },
       "source_hash": "ff84542b2c0173b3c4a6e973d61aee6a45c418c7580c25255d8a2d5ed34b7390",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
-      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
       "rationale": "agent_flow.rs:174-189 verifies git sparse-checkout string is present in helper for blob limit exceeded error",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T08:59:20Z",
       "last_extracted": "2026-04-28T08:59:20Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
+      ]
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-06",
@@ -2235,11 +2475,15 @@
         "line_end": 64
       },
       "source_hash": "a4bf61d0a0a5efd7c0a84c8c2d7eb5350a6835c098127664291a7f39ef9277cb",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields",
-      "test_body_hash": "de220ce400c981c6c08ab0af8b6e04d6989c4702f8de0949e07b30f271ff1251",
       "rationale": "Tests inbound blob with id:999999 and version:999 overrides stripped from PATCH body",
       "last_verdict": "STALE_DOCS_DRIFT",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields"
+      ],
+      "test_body_hashes": [
+        "de220ce400c981c6c08ab0af8b6e04d6989c4702f8de0949e07b30f271ff1251"
+      ]
     },
     {
       "id": "docs/security/frontmatter-strip-server-fields",
@@ -2250,13 +2494,17 @@
         "line_end": 64
       },
       "source_hash": "8716974b2ea86ffed66e3edbbebe6b0da110e8355cce7ee5a58e34651f9c6c19",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields",
-      "test_body_hash": "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b",
       "rationale": "Test verifies PATCH body strips id and version overrides; server-authoritative values override attacker hijack attempts",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:38Z",
       "last_extracted": "2026-04-28T09:00:38Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields"
+      ],
+      "test_body_hashes": [
+        "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b"
+      ]
     },
     {
       "id": "glossary/frontmatter-definition",
@@ -2296,13 +2544,17 @@
         "line_end": 9
       },
       "source_hash": "d0915f810fc1822f9beb785942b812355b50b1e0c0923f055f92324057bbe337",
-      "test": "crates/reposix-sim/tests/api.rs::spawn_sim",
-      "test_body_hash": "2cca687c57a4030c3d23ce5ce60ff4342d6429c4623a40914f37d1b822975d7a",
       "rationale": "spawn_sim polls /healthz until is_ok_and(status.is_success()); used by all integration tests",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:36Z",
       "last_extracted": "2026-04-28T09:09:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-sim/tests/api.rs::spawn_sim"
+      ],
+      "test_body_hashes": [
+        "2cca687c57a4030c3d23ce5ce60ff4342d6429c4623a40914f37d1b822975d7a"
+      ]
     },
     {
       "id": "docs/reference/http-api.md/list-issues-endpoint",
@@ -2313,13 +2565,17 @@
         "line_end": 31
       },
       "source_hash": "58c1e74e63555bddc53190280e438fa1b7dc176755f64b1d4ce62a24a5e1bc8d",
-      "test": "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit",
-      "test_body_hash": "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904",
       "rationale": "SC1 test asserts resp.status().is_success() and json() parses as Vec<Value>",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:36Z",
       "last_extracted": "2026-04-28T09:09:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit"
+      ],
+      "test_body_hashes": [
+        "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904"
+      ]
     },
     {
       "id": "docs/benchmarks/latency/github-get-under-300ms",
@@ -2388,13 +2644,17 @@
         "line_end": 126
       },
       "source_hash": "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
       "rationale": "Dark-factory test validates git checkout and branch configuration as part of init workflow",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:01:16Z",
       "last_extracted": "2026-04-28T09:01:16Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ]
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/cache-02",
@@ -2420,13 +2680,17 @@
         "line_end": 18
       },
       "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
       "rationale": "Test asserts literal 'git pull --rebase' substring exists in crates/reposix-remote/src/main.rs for push-conflict stderr diagnostic (Phase 34 conflict-rebase teaching mechanism, regression-protected Phase 35 Plan 02)",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T08:59:51Z",
       "last_extracted": "2026-04-28T08:59:51Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
+      ]
     },
     {
       "id": "docs/research/initial-report.md/conflict-rejection",
@@ -2437,13 +2701,17 @@
         "line_end": 142
       },
       "source_hash": "c5c4beb92d6196401ccedbadb0f7ee5ff3c6738986fb7b147c53b73d81e0b0d7",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
-      "test_body_hash": "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97",
       "rationale": "Test verifies stale version rejects with canned 'fetch first' error; stderr mentions git pull --rebase",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:51Z",
       "last_extracted": "2026-04-28T09:08:51Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
+      ],
+      "test_body_hashes": [
+        "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
+      ]
     },
     {
       "id": "git-push-conflict-detection",
@@ -2498,13 +2766,17 @@
         "line_end": 18
       },
       "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
-      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
       "rationale": "Test asserts literal 'git sparse-checkout' substring exists in crates/reposix-remote/src/stateless_connect.rs BLOB_LIMIT_EXCEEDED_FMT constant (Phase 34 dark-factory teaching mechanism, regression-protected Phase 35 Plan 02)",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T08:59:49Z",
       "last_extracted": "2026-04-28T08:59:49Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
+      ]
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-04-stateless-connect",
@@ -2515,13 +2787,17 @@
         "line_end": 32
       },
       "source_hash": "236015d19ea619737c8a4e49abdb61fb88d30fb712222d92d5d1a1c10d31c082",
-      "test": "crates/reposix-remote/tests/stateless_connect.rs::capabilities_advertises_stateless_connect_and_object_format",
-      "test_body_hash": "70cd0646d2021af51f219a1c80d4f4c8edd1e2dea1183167ef20b812a4670915",
       "rationale": "Test invokes git-remote-reposix capabilities command, verifies stdout contains 'stateless-connect\\n' substring.",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:01:12Z",
       "last_extracted": "2026-04-28T09:01:12Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/stateless_connect.rs::capabilities_advertises_stateless_connect_and_object_format"
+      ],
+      "test_body_hashes": [
+        "70cd0646d2021af51f219a1c80d4f4c8edd1e2dea1183167ef20b812a4670915"
+      ]
     },
     {
       "id": "exit-codes/helper-exit-0",
@@ -2532,13 +2808,17 @@
         "line_end": 29
       },
       "source_hash": "00e3f65bf3c6344fd0e91995cda5cd7d342e224f01d26c780263e6cfca2ad5d8",
-      "test": "crates/reposix-remote/src/main.rs::main",
-      "test_body_hash": "22bd8de5333ceade5f1d70cfd4f737a18d8e1abb08cfbb2d8ca432294d8e9fc9",
       "rationale": "Line 88: Ok(true) => ExitCode::SUCCESS pattern",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:34Z",
       "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/src/main.rs::main"
+      ],
+      "test_body_hashes": [
+        "22bd8de5333ceade5f1d70cfd4f737a18d8e1abb08cfbb2d8ca432294d8e9fc9"
+      ]
     },
     {
       "id": "exit-codes/helper-exit-1-push-rejected",
@@ -2549,13 +2829,17 @@
         "line_end": 29
       },
       "source_hash": "6e61694909c7ef2b51d13f14b68388d4e98bb86257cf12f5d937db7a16ea9020",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
-      "test_body_hash": "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97",
       "rationale": "Tests push rejection with stale backend version returns exit 1",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:34Z",
       "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
+      ],
+      "test_body_hashes": [
+        "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
+      ]
     },
     {
       "id": "exit-codes/helper-exit-2-crash",
@@ -2566,13 +2850,17 @@
         "line_end": 30
       },
       "source_hash": "de745cc5e8a9865cbccd0e1cdb3bb3c55853050cf62bd2dd3551a01bebdefd01",
-      "test": "crates/reposix-remote/src/main.rs::main",
-      "test_body_hash": "22bd8de5333ceade5f1d70cfd4f737a18d8e1abb08cfbb2d8ca432294d8e9fc9",
       "rationale": "Line 92: Err(e) => ExitCode::from(2) pattern",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:34Z",
       "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/src/main.rs::main"
+      ],
+      "test_body_hashes": [
+        "22bd8de5333ceade5f1d70cfd4f737a18d8e1abb08cfbb2d8ca432294d8e9fc9"
+      ]
     },
     {
       "id": "docs/decisions/009-stability-commitment/git-remote-protocol-surface",
@@ -2583,13 +2871,17 @@
         "line_end": 55
       },
       "source_hash": "043ee66b83f2a9110d3d642873f3ca5be9064a85b508cca7bab0f4bb25eca746",
-      "test": "crates/reposix-remote/src/main.rs::real_main",
-      "test_body_hash": "50a57200ce74f4ec61f5f885bd88035ee3268fa256e2188cf5cd41b0cf484f79",
       "rationale": "main.rs lines 118-129 emit the locked capabilities and refspec; real_main() routes all verbs; stateless_connect.rs implements the handler; test coverage via dark-factory agent UX which validates git protocol end-to-end",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:54Z",
       "last_extracted": "2026-04-28T09:04:54Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/src/main.rs::real_main"
+      ],
+      "test_body_hashes": [
+        "50a57200ce74f4ec61f5f885bd88035ee3268fa256e2188cf5cd41b0cf484f79"
+      ]
     },
     {
       "id": "docs/decisions/001-github-state-mapping/closed-completed-to-done",
@@ -2600,13 +2892,17 @@
         "line_end": 44
       },
       "source_hash": "af41b764eb31c0cd1ba82c18a07bc4840b765f46651df06165dc80dc15307460",
-      "test": "crates/reposix-github/src/lib.rs::translate",
-      "test_body_hash": "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582",
       "rationale": "Code implements pessimistic fallback: closed without not_planned → Done",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:21Z",
       "last_extracted": "2026-04-28T09:04:21Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-github/src/lib.rs::translate"
+      ],
+      "test_body_hashes": [
+        "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582"
+      ]
     },
     {
       "id": "docs/decisions/001-github-state-mapping/closed-not-planned-to-wontfix",
@@ -2617,13 +2913,17 @@
         "line_end": 45
       },
       "source_hash": "39ee1ddb165bd47510511053bc1189ebcf5c814003b1ef26fba7867b83eea7a6",
-      "test": "crates/reposix-github/src/lib.rs::translate",
-      "test_body_hash": "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582",
       "rationale": "Code implements mapping via Some(not_planned) arm at line 318",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:21Z",
       "last_extracted": "2026-04-28T09:04:21Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-github/src/lib.rs::translate"
+      ],
+      "test_body_hashes": [
+        "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582"
+      ]
     },
     {
       "id": "docs/decisions/001-github-state-mapping/open-no-status-label-to-open",
@@ -2634,13 +2934,17 @@
         "line_end": 41
       },
       "source_hash": "3c186dc77e9fa6b6e5a3a5fda8faac6d330563ef440066d35d08dc3083a5f533",
-      "test": "crates/reposix-github/src/lib.rs::translate",
-      "test_body_hash": "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582",
       "rationale": "Code implements mapping via else arm at line 328",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:12Z",
       "last_extracted": "2026-04-28T09:04:12Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-github/src/lib.rs::translate"
+      ],
+      "test_body_hashes": [
+        "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582"
+      ]
     },
     {
       "id": "docs/decisions/001-github-state-mapping/open-status-in-progress-to-inprogress",
@@ -2651,13 +2955,17 @@
         "line_end": 42
       },
       "source_hash": "07d62c4eb30dadce10f09814d1bdc0848ba6ba62fda7a4fe6d5a41facb89be8b",
-      "test": "crates/reposix-github/src/lib.rs::translate",
-      "test_body_hash": "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582",
       "rationale": "Code implements mapping via else if arm at line 325",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:20Z",
       "last_extracted": "2026-04-28T09:04:20Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-github/src/lib.rs::translate"
+      ],
+      "test_body_hashes": [
+        "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582"
+      ]
     },
     {
       "id": "docs/decisions/001-github-state-mapping/open-status-in-review-to-inreview",
@@ -2668,13 +2976,17 @@
         "line_end": 43
       },
       "source_hash": "0a4d63a95f24605cf04e5d9bd59080708e0458b3732e2a57943f325826e0666d",
-      "test": "crates/reposix-github/src/lib.rs::translate",
-      "test_body_hash": "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582",
       "rationale": "Code implements mapping via else if arm at line 323 (checked before InProgress)",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:20Z",
       "last_extracted": "2026-04-28T09:04:20Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-github/src/lib.rs::translate"
+      ],
+      "test_body_hashes": [
+        "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582"
+      ]
     },
     {
       "id": "docs/benchmarks/token-economy/github-reduction-85-percent",
@@ -2699,13 +3011,17 @@
         "line_end": 72
       },
       "source_hash": "79ce6db95c588526661a8555ded0b3ee866f5f79948218a2e5e0d118d3995053",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
-      "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
       "rationale": "skip_if_no_env! macro at line 122 checks GITHUB_TOKEN presence",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:29Z",
       "last_extracted": "2026-04-28T09:08:29Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
+      ],
+      "test_body_hashes": [
+        "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
+      ]
     },
     {
       "id": "glossary/gix-definition",
@@ -2730,13 +3046,17 @@
         "line_end": 20
       },
       "source_hash": "817555ea7f9466161348919866eb44ee1063bfec950bde1a7ec24a50a68c1024",
-      "test": "crates/reposix-remote/tests/stateless_connect.rs::capabilities_advertises_stateless_connect_and_object_format",
-      "test_body_hash": "70cd0646d2021af51f219a1c80d4f4c8edd1e2dea1183167ef20b812a4670915",
       "rationale": "Capabilities advertisement includes refspec line",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:46Z",
       "last_extracted": "2026-04-28T09:08:46Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/stateless_connect.rs::capabilities_advertises_stateless_connect_and_object_format"
+      ],
+      "test_body_hashes": [
+        "70cd0646d2021af51f219a1c80d4f4c8edd1e2dea1183167ef20b812a4670915"
+      ]
     },
     {
       "id": "git-layer/helper-advertises-stateless-connect",
@@ -2747,13 +3067,17 @@
         "line_end": 57
       },
       "source_hash": "02985ce2c1e95d42c79c640ededd0882f32006df1c7a0475f7fa930cfc7b64ab",
-      "test": "crates/reposix-remote/tests/stateless_connect.rs::capabilities_advertises_stateless_connect_and_object_format",
-      "test_body_hash": "70cd0646d2021af51f219a1c80d4f4c8edd1e2dea1183167ef20b812a4670915",
       "rationale": "Tests helper binary advertises stateless-connect in capabilities output",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:59Z",
       "last_extracted": "2026-04-28T09:05:59Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/stateless_connect.rs::capabilities_advertises_stateless_connect_and_object_format"
+      ],
+      "test_body_hashes": [
+        "70cd0646d2021af51f219a1c80d4f4c8edd1e2dea1183167ef20b812a4670915"
+      ]
     },
     {
       "id": "docs/benchmarks/latency/capabilities-probe-under-10ms",
@@ -2778,13 +3102,17 @@
         "line_end": 63
       },
       "source_hash": "1d7efa8918043dce2d3a6df5d9d39d09f94a2150a1c693662af939554cf6fd2e",
-      "test": "crates/reposix-cache/tests/sync_tags.rs::helper_does_not_export_sync_tags",
-      "test_body_hash": "9b4a329d4c6101989749188a8cc519a95fd45748871a28ebfa4d9d5e7acc6e4a",
       "rationale": "sync_tags.rs:209-259 runs git upload-pack --advertise-refs and asserts refs/reposix/sync/ does NOT appear",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:15:16Z",
       "last_extracted": "2026-04-28T09:15:16Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/sync_tags.rs::helper_does_not_export_sync_tags"
+      ],
+      "test_body_hashes": [
+        "9b4a329d4c6101989749188a8cc519a95fd45748871a28ebfa4d9d5e7acc6e4a"
+      ]
     },
     {
       "id": "docs/decisions/008-helper-backend-dispatch/url-scheme-dispatch",
@@ -2809,13 +3137,17 @@
         "line_end": 110
       },
       "source_hash": "76ab21ccaeb7a2b49ceedb8cb36303d8adafe61da08b69d509ef6d0b0f1bd194",
-      "test": "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants",
-      "test_body_hash": "f55f3f3e47171456c973c443d1b3d4675f0d0f315b6e73db8b18905aee8feeb1",
       "rationale": "E2E test: REPOSIX_BLOB_LIMIT=1 set, 2 wants rejected",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:52Z",
       "last_extracted": "2026-04-28T09:08:52Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants"
+      ],
+      "test_body_hashes": [
+        "f55f3f3e47171456c973c443d1b3d4675f0d0f315b6e73db8b18905aee8feeb1"
+      ]
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/helper-sim-backend-tech-debt-closed",
@@ -2840,13 +3172,17 @@
         "line_end": 94
       },
       "source_hash": "c5a7590519c941f30be41729db3cfba05c8ad020724e8e610e4a8ecbb3f0f777",
-      "test": "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock",
-      "test_body_hash": "37afa21ee310fffcb4a85aff5bc3500794f23d53b2e5407d6e82e915bf81c1aa",
       "rationale": "Wiremock fixture sets hierarchyLevel: 0; test calls assert_contract validating enum",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:36Z",
       "last_extracted": "2026-04-28T09:09:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock"
+      ],
+      "test_body_hashes": [
+        "37afa21ee310fffcb4a85aff5bc3500794f23d53b2e5407d6e82e915bf81c1aa"
+      ]
     },
     {
       "id": "latency-hero-24ms-mismatch",
@@ -2872,11 +3208,15 @@
         "line_end": 21
       },
       "source_hash": "b9061dbdb4c02b22847415d9a1cd0a5fdbc62bc645ee6df7710df7ed9f0de70d",
-      "test": "crates/reposix-core/tests/http_allowlist.rs::redirect_target_is_rechecked_against_allowlist",
-      "test_body_hash": "ab297c5dfbaae7e36ec9e763500ab01653271c80dff2389e2d1a46bc16ab4fd4",
       "rationale": "Tests 302 response surfaces as-is without following redirect; re-feeding target through allowlist recheck rejects attacker.example",
       "last_verdict": "STALE_DOCS_DRIFT",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-core/tests/http_allowlist.rs::redirect_target_is_rechecked_against_allowlist"
+      ],
+      "test_body_hashes": [
+        "ab297c5dfbaae7e36ec9e763500ab01653271c80dff2389e2d1a46bc16ab4fd4"
+      ]
     },
     {
       "id": "docs/reference/jira.md/read-only-phase-28",
@@ -3042,13 +3382,17 @@
         "line_end": 72
       },
       "source_hash": "16a498209da64fa9aaf31f462732ddbe1d145ca3b3e10004e6e7c97f31dafa43",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields",
-      "test_body_hash": "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b",
       "rationale": "Test verifies that id/version overrides in frontmatter are rejected and replaced with server-authoritative values before PATCH",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:48Z",
       "last_extracted": "2026-04-28T09:08:48Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields"
+      ],
+      "test_body_hashes": [
+        "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b"
+      ]
     },
     {
       "id": "docs/decisions/005-jira-issue-mapping/version-synthesis",
@@ -3073,13 +3417,17 @@
         "line_end": 64
       },
       "source_hash": "35b605e16aa0bf1cc52787f6afa3c7ab7392ad1294da75c10427e29b48a6877e",
-      "test": "crates/reposix-confluence/src/translate.rs::translate",
-      "test_body_hash": "598dd1deeaf76ffd6802f677531ddc989e23a3750b0aaf887e5493c8f39b7cb2",
       "rationale": "Code maps ownerId to assignee field in translate()",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:37Z",
       "last_extracted": "2026-04-28T09:04:37Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-confluence/src/translate.rs::translate"
+      ],
+      "test_body_hashes": [
+        "598dd1deeaf76ffd6802f677531ddc989e23a3750b0aaf887e5493c8f39b7cb2"
+      ]
     },
     {
       "id": "docs/decisions/002-confluence-page-mapping/page-id-parse-u64",
@@ -3090,13 +3438,17 @@
         "line_end": 57
       },
       "source_hash": "dd2a895cc92eb8beeea072151a43cf14d410dbe6168b58525c8f6e6db66fb734",
-      "test": "crates/reposix-confluence/src/translate.rs::translate",
-      "test_body_hash": "598dd1deeaf76ffd6802f677531ddc989e23a3750b0aaf887e5493c8f39b7cb2",
       "rationale": "Code validates u64 parse with error handling",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:35Z",
       "last_extracted": "2026-04-28T09:04:35Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-confluence/src/translate.rs::translate"
+      ],
+      "test_body_hashes": [
+        "598dd1deeaf76ffd6802f677531ddc989e23a3750b0aaf887e5493c8f39b7cb2"
+      ]
     },
     {
       "id": "docs/decisions/002-confluence-page-mapping/labels-empty-deferred-v0.4",
@@ -3107,13 +3459,17 @@
         "line_end": 65
       },
       "source_hash": "b6a48dd31ce64a143d75051705039f771dd7f255e20b9a7781010deaf7eb8698",
-      "test": "crates/reposix-confluence/src/translate.rs::translate",
-      "test_body_hash": "598dd1deeaf76ffd6802f677531ddc989e23a3750b0aaf887e5493c8f39b7cb2",
       "rationale": "Code hardcodes vec![] for labels field per v0.3 spec",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:37Z",
       "last_extracted": "2026-04-28T09:04:37Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-confluence/src/translate.rs::translate"
+      ],
+      "test_body_hashes": [
+        "598dd1deeaf76ffd6802f677531ddc989e23a3750b0aaf887e5493c8f39b7cb2"
+      ]
     },
     {
       "id": "docs/decisions/002-confluence-page-mapping/page-title-passthrough",
@@ -3124,13 +3480,17 @@
         "line_end": 58
       },
       "source_hash": "ca32891e50747d85cc37e87e606ba229d14553de62cc5a4ebf3143610fba7d12",
-      "test": "crates/reposix-confluence/src/translate.rs::translate",
-      "test_body_hash": "598dd1deeaf76ffd6802f677531ddc989e23a3750b0aaf887e5493c8f39b7cb2",
       "rationale": "Code directly assigns page.title to title field",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:36Z",
       "last_extracted": "2026-04-28T09:04:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-confluence/src/translate.rs::translate"
+      ],
+      "test_body_hashes": [
+        "598dd1deeaf76ffd6802f677531ddc989e23a3750b0aaf887e5493c8f39b7cb2"
+      ]
     },
     {
       "id": "confluence.md/fuse_daemon_role",
@@ -3156,13 +3516,17 @@
         "line_end": 17
       },
       "source_hash": "3f6a0b522a51e24f7b76758970e287609a284f56823b37a0e0ce7c3783c70669",
-      "test": "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock",
-      "test_body_hash": "37afa21ee310fffcb4a85aff5bc3500794f23d53b2e5407d6e82e915bf81c1aa",
       "rationale": "crates/reposix-jira/tests/contract.rs lines 192-250 test contract_jira_wiremock: list_records and get_record with wiremock JIRA API stubs",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:31Z",
       "last_extracted": "2026-04-28T09:00:31Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock"
+      ],
+      "test_body_hashes": [
+        "37afa21ee310fffcb4a85aff5bc3500794f23d53b2e5407d6e82e915bf81c1aa"
+      ]
     },
     {
       "id": "docs/benchmarks/token-economy/jira-real-adapter-not-implemented",
@@ -3187,13 +3551,17 @@
         "line_end": 109
       },
       "source_hash": "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
-      "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
       "rationale": "skip_if_no_env! macro at line 158 checks JIRA_API_TOKEN presence",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:34Z",
       "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
+      ],
+      "test_body_hashes": [
+        "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
+      ]
     },
     {
       "id": "docs/reference/testing-targets/jira-email",
@@ -3204,13 +3572,17 @@
         "line_end": 109
       },
       "source_hash": "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
-      "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
       "rationale": "skip_if_no_env! macro at line 158 checks JIRA_EMAIL presence",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:34Z",
       "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
+      ],
+      "test_body_hashes": [
+        "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
+      ]
     },
     {
       "id": "docs/reference/testing-targets/jira-test-project-override",
@@ -3221,13 +3593,17 @@
         "line_end": 98
       },
       "source_hash": "a8f2f7328f59a9a6a05993dfc8a99874ea181e96528bbb058c4580d65657f97a",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::jira_test_project",
-      "test_body_hash": "e566b0f8dc7efc1ef47487d2235d06e35c0d0784eda53256eb322d20cf3df1d0",
       "rationale": "jira_test_project() fn at lines 79-83 checks JIRA_TEST_PROJECT first at line 80",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:34Z",
       "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::jira_test_project"
+      ],
+      "test_body_hashes": [
+        "e566b0f8dc7efc1ef47487d2235d06e35c0d0784eda53256eb322d20cf3df1d0"
+      ]
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-17-latency-benchmark",
@@ -3238,13 +3614,17 @@
         "line_end": 65
       },
       "source_hash": "242883c22eaff5fb17383cdac18cf401f3ef68998dcb2f788580ddf4abdf22d5",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
-      "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
       "rationale": "File docs/benchmarks/latency.md exists and contains latency measurements for each backend.",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:01:43Z",
       "last_extracted": "2026-04-28T09:01:43Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
+      ],
+      "test_body_hashes": [
+        "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
+      ]
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-08-latency",
@@ -3569,13 +3949,17 @@
         "line_end": 26
       },
       "source_hash": "5bef259324873d2360d0b830015494abd5d06ddc0a0cc27b01f0acb577516eee",
-      "test": "crates/reposix-cache/tests/materialize_one.rs::read_blob_materializes_exactly_one_and_audits",
-      "test_body_hash": "c8aaacb33fc3ea39ed3feba7ff9ac5ff9b1918765725d75bc77deabbc3df1513",
       "rationale": "Test seeds issue from SimBackend via BackendConnector, builds cache, verifies blob materialized with correct content via frontmatter::render.",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T08:59:58Z",
       "last_extracted": "2026-04-28T08:59:58Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/materialize_one.rs::read_blob_materializes_exactly_one_and_audits"
+      ],
+      "test_body_hashes": [
+        "c8aaacb33fc3ea39ed3feba7ff9ac5ff9b1918765725d75bc77deabbc3df1513"
+      ]
     },
     {
       "id": "docs/research/agentic-engineering-reference.md/dark-factory-blob-limit-teaching",
@@ -3586,13 +3970,17 @@
         "line_end": 31
       },
       "source_hash": "e43df21293c88d3aa16a957bc5a83c86bedbc99411fddd45cbdde8eb7d262b5f",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
-      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
       "rationale": "Regression test verifies BLOB_LIMIT_EXCEEDED_FMT constant contains literal 'git sparse-checkout' text",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:57Z",
       "last_extracted": "2026-04-28T09:08:57Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
+      ]
     },
     {
       "id": "git-layer/push-conflict-no-rest-writes-on-reject",
@@ -3603,13 +3991,17 @@
         "line_end": 90
       },
       "source_hash": "575156114df03802de2c4b3068640edaa05dd8c834bb387c714b3c182bc8a3d1",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
-      "test_body_hash": "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97",
       "rationale": "Tests wiremock expectations: PATCH count == 0, POST count == 0, DELETE count == 0",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:59Z",
       "last_extracted": "2026-04-28T09:05:59Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
+      ],
+      "test_body_hashes": [
+        "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
+      ]
     },
     {
       "id": "docs/research/agentic-engineering-reference.md/dark-factory-conflict-teaching",
@@ -3620,13 +4012,17 @@
         "line_end": 31
       },
       "source_hash": "e43df21293c88d3aa16a957bc5a83c86bedbc99411fddd45cbdde8eb7d262b5f",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
       "rationale": "Regression test verifies conflict path must contain literal 'git pull --rebase' and 'error refs/heads/main fetch first' status text",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:59Z",
       "last_extracted": "2026-04-28T09:08:59Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
+      ]
     },
     {
       "id": "docs/decisions/008-helper-backend-dispatch/audit-signal",
@@ -3651,13 +4047,17 @@
         "line_end": 22
       },
       "source_hash": "1475b5e5f5825e4162a0d12a4255c33dc53a46120f3abbe6c6bf76a8dacb68da",
-      "test": "crates/reposix-confluence/tests/roundtrip.rs::create_then_get_roundtrip_with_audit",
-      "test_body_hash": "51e78cbf736d113ae9bf8eeb06bbbfdf56aa26a5507ced550a74bd379cd0efe8",
       "rationale": "crates/reposix-confluence/tests/roundtrip.rs lines 72-183 create page, fetch in ADF format, assert body contains heading and paragraph text",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T08:59:53Z",
       "last_extracted": "2026-04-28T08:59:53Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-confluence/tests/roundtrip.rs::create_then_get_roundtrip_with_audit"
+      ],
+      "test_body_hashes": [
+        "51e78cbf736d113ae9bf8eeb06bbbfdf56aa26a5507ced550a74bd379cd0efe8"
+      ]
     },
     {
       "id": "docs/decisions/002-confluence-page-mapping/page-id-must-parse-u64",
@@ -3668,13 +4068,17 @@
         "line_end": 180
       },
       "source_hash": "50563e898c0fe555b45245b8951aa43465b25b95cd7c62023db17b6797063cd2",
-      "test": "crates/reposix-confluence/src/translate.rs::translate",
-      "test_body_hash": "598dd1deeaf76ffd6802f677531ddc989e23a3750b0aaf887e5493c8f39b7cb2",
       "rationale": "Code enforces u64 parsing with explicit error handling",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:37Z",
       "last_extracted": "2026-04-28T09:04:37Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-confluence/src/translate.rs::translate"
+      ],
+      "test_body_hashes": [
+        "598dd1deeaf76ffd6802f677531ddc989e23a3750b0aaf887e5493c8f39b7cb2"
+      ]
     },
     {
       "id": "docs/decisions/002-confluence-page-mapping/page-status-archived-to-done",
@@ -3685,13 +4089,17 @@
         "line_end": 73
       },
       "source_hash": "8f9942a7bd64ac0144c1ee25d3ac11c4b68ea327d917aba59d522a12bd15d48b",
-      "test": "crates/reposix-confluence/src/translate.rs::status_from_confluence",
-      "test_body_hash": "361061a859f6607d0909016053e1df786b6924a241f2dbe1f45a6fbffd512d24",
       "rationale": "Code implements mapping via match arm (archived | trashed | deleted)",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:36Z",
       "last_extracted": "2026-04-28T09:04:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-confluence/src/translate.rs::status_from_confluence"
+      ],
+      "test_body_hashes": [
+        "361061a859f6607d0909016053e1df786b6924a241f2dbe1f45a6fbffd512d24"
+      ]
     },
     {
       "id": "docs/decisions/002-confluence-page-mapping/page-status-current-to-open",
@@ -3702,13 +4110,17 @@
         "line_end": 71
       },
       "source_hash": "24b671672291e8e530d453b2a58918d297f5b935f23cfcd5381b023160cf9617",
-      "test": "crates/reposix-confluence/src/translate.rs::status_from_confluence",
-      "test_body_hash": "361061a859f6607d0909016053e1df786b6924a241f2dbe1f45a6fbffd512d24",
       "rationale": "Code implements mapping via match arm",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:36Z",
       "last_extracted": "2026-04-28T09:04:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-confluence/src/translate.rs::status_from_confluence"
+      ],
+      "test_body_hashes": [
+        "361061a859f6607d0909016053e1df786b6924a241f2dbe1f45a6fbffd512d24"
+      ]
     },
     {
       "id": "docs/decisions/002-confluence-page-mapping/page-status-deleted-to-done",
@@ -3719,13 +4131,17 @@
         "line_end": 73
       },
       "source_hash": "8f9942a7bd64ac0144c1ee25d3ac11c4b68ea327d917aba59d522a12bd15d48b",
-      "test": "crates/reposix-confluence/src/translate.rs::status_from_confluence",
-      "test_body_hash": "361061a859f6607d0909016053e1df786b6924a241f2dbe1f45a6fbffd512d24",
       "rationale": "Code implements mapping in same match arm as archived/trashed",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:36Z",
       "last_extracted": "2026-04-28T09:04:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-confluence/src/translate.rs::status_from_confluence"
+      ],
+      "test_body_hashes": [
+        "361061a859f6607d0909016053e1df786b6924a241f2dbe1f45a6fbffd512d24"
+      ]
     },
     {
       "id": "docs/decisions/002-confluence-page-mapping/page-status-draft-to-open",
@@ -3736,13 +4152,17 @@
         "line_end": 72
       },
       "source_hash": "24b9a096be126286645036472b4c25fce0ab85522a785b04e195a7ff2a4fcec7",
-      "test": "crates/reposix-confluence/src/translate.rs::status_from_confluence",
-      "test_body_hash": "361061a859f6607d0909016053e1df786b6924a241f2dbe1f45a6fbffd512d24",
       "rationale": "Code implements mapping via match arm (current | draft)",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:36Z",
       "last_extracted": "2026-04-28T09:04:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-confluence/src/translate.rs::status_from_confluence"
+      ],
+      "test_body_hashes": [
+        "361061a859f6607d0909016053e1df786b6924a241f2dbe1f45a6fbffd512d24"
+      ]
     },
     {
       "id": "docs/connectors/guide/pagination-cursor-test",
@@ -3768,13 +4188,17 @@
         "line_end": 123
       },
       "source_hash": "0c140ac67f10a955d6e4623848e82a62504e74e47e3a832eb9e44733adbbad75",
-      "test": "crates/reposix-confluence/src/translate.rs::parse_next_cursor",
-      "test_body_hash": "09f21d54a41b49e3ca43b5cd738c3def29fbdf0278a7879f0483161fe6dbfeca",
       "rationale": "Code constructs cursor with caller-supplied tenant base, not server base",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:38Z",
       "last_extracted": "2026-04-28T09:04:38Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-confluence/src/translate.rs::parse_next_cursor"
+      ],
+      "test_body_hashes": [
+        "09f21d54a41b49e3ca43b5cd738c3def29fbdf0278a7879f0483161fe6dbfeca"
+      ]
     },
     {
       "id": "filesystem-layer/partial-clone-tree-fetched-blobs-lazy",
@@ -3785,13 +4209,17 @@
         "line_end": 48
       },
       "source_hash": "5a981cfa3590ef262179df70527d9b20f768d900734ebc8607cf3b385b0b16d1",
-      "test": "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from",
-      "test_body_hash": "009ffcc580b9ac30fc5f8a5cb426f49873b72de5429389f198ca38dbd4e2e1ae",
       "rationale": "Tests no blobs materialized after tree sync",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:59Z",
       "last_extracted": "2026-04-28T09:05:59Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from"
+      ],
+      "test_body_hashes": [
+        "009ffcc580b9ac30fc5f8a5cb426f49873b72de5429389f198ca38dbd4e2e1ae"
+      ]
     },
     {
       "id": "glossary/partial-clone-definition",
@@ -3844,13 +4272,17 @@
         "line_end": 66
       },
       "source_hash": "af3b4d1f3f4299fa3b2490ca369f078e46207d568c6910ac8f617670e3c9ba83",
-      "test": "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit",
-      "test_body_hash": "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904",
       "rationale": "SC3: sends PATCH with If-Match=bogus, asserts resp.0==409 and error==version_mismatch",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:36Z",
       "last_extracted": "2026-04-28T09:09:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit"
+      ],
+      "test_body_hashes": [
+        "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904"
+      ]
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/bench-02",
@@ -3946,13 +4378,17 @@
         "line_end": 59
       },
       "source_hash": "6d098fd11a5e397a814e57c84bd3b6a512f30b01c6fa57cb2bbf2726fed3b89b",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
       "rationale": "CLAUDE.md updated with git-native architecture section; all FUSE references removed; tech stack documents git >= 2.34 requirement. Verified via git log --oneline that updates shipped in Phase 36.",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:01:27Z",
       "last_extracted": "2026-04-28T09:01:27Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ]
     },
     {
       "id": "glossary/promisor-remote-definition",
@@ -3991,13 +4427,17 @@
         "line_end": 42
       },
       "source_hash": "3607ab31a2e18e5d1ad4eee8f25ae387e8845a24b7ddede4c65dda2ec2cb0737",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
       "rationale": "test asserts literal \"git pull --rebase\" string is committed in crates/reposix-remote/src/main.rs; this string is the teaching message agents read",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:44Z",
       "last_extracted": "2026-04-28T09:04:44Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
+      ]
     },
     {
       "id": "glossary/push-round-trip-definition",
@@ -4022,13 +4462,17 @@
         "line_end": 66
       },
       "source_hash": "db78a5ad5a0f5617ae1fd150bef87e4a98712f20ee6858f6abb7b3c009d521ea",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
-      "test_body_hash": "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97",
       "rationale": "Test verifies stale base (local v1 vs backend v2) rejected with fetch first; zero REST calls made",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:45Z",
       "last_extracted": "2026-04-28T09:00:45Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
+      ],
+      "test_body_hashes": [
+        "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
+      ]
     },
     {
       "id": "docs/index/push-conflict-detection",
@@ -4039,13 +4483,17 @@
         "line_end": 147
       },
       "source_hash": "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
       "rationale": "Regression test verifies git pull --rebase teaching string present in reposix-remote/src/main.rs for conflict recovery",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:01:36Z",
       "last_extracted": "2026-04-28T09:01:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
+      ]
     },
     {
       "id": "git-layer/push-conflict-detection-fetch-first",
@@ -4063,13 +4511,17 @@
         }
       ],
       "source_hash": "98bcda6841515fff5c4fbab07412e88d541ab483066b13ca6a33ec3425271a11",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
-      "test_body_hash": "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97",
       "rationale": "Tests helper rejects stale push with fetch-first error and no REST writes",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:59Z",
       "last_extracted": "2026-04-28T09:05:59Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
+      ],
+      "test_body_hashes": [
+        "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
+      ]
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-08-10-conflict-detection-and-frontmatter",
@@ -4080,13 +4532,17 @@
         "line_end": 49
       },
       "source_hash": "1df8b2e522ab23c2686de07d8e433782d92e5e970c066c2a9252f32a66814285",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
       "rationale": "Regression test verifies 'error refs/heads/main fetch first' status line and 'git pull --rebase' teaching string present in crates/reposix-remote/src/main.rs export path",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:45Z",
       "last_extracted": "2026-04-28T09:00:45Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
+      ]
     },
     {
       "id": "docs/index/quality-score-badge",
@@ -4182,13 +4638,17 @@
         "line_end": 101
       },
       "source_hash": "4e3c430966877d7190bdb32d38ada223f9ed38e9d4ef3822b8b5369187aed36f",
-      "test": "crates/reposix-sim/tests/api.rs::rate_limited_request_is_audited",
-      "test_body_hash": "0372ff381ba7afc0d0764cc8a42b73ad0348b4f52f3987cef8c8e7e841993d95",
       "rationale": "Test fires requests until 429, queries audit_events WHERE status=429, asserts count>=1",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:36Z",
       "last_extracted": "2026-04-28T09:09:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-sim/tests/api.rs::rate_limited_request_is_audited"
+      ],
+      "test_body_hashes": [
+        "0372ff381ba7afc0d0764cc8a42b73ad0348b4f52f3987cef8c8e7e841993d95"
+      ]
     },
     {
       "id": "README-md/latency-8ms",
@@ -4213,13 +4673,17 @@
         "line_end": 36
       },
       "source_hash": "5e41b75fb55ec25a6aee73a8850372a949b954b0534589c114c865025652248d",
-      "test": "crates/reposix-github/tests/contract.rs::contract_sim",
-      "test_body_hash": "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116",
       "rationale": "guide documents read-only backends return error; GitHub is read-only; error contract documented in backend.rs:212 (\"not supported: ...\" msg); test coverage via contract invariants",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:38Z",
       "last_extracted": "2026-04-28T09:05:38Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-github/tests/contract.rs::contract_sim"
+      ],
+      "test_body_hashes": [
+        "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116"
+      ]
     },
     {
       "id": "docs/connectors/guide/read-only-backends-err-not-supported",
@@ -4303,13 +4767,17 @@
         "line_end": 64
       },
       "source_hash": "0246b3df9d441799f3b0f241152c4fe03ed3b24bf74a24594d461c77eb61a0a7",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
-      "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
       "rationale": "Test runs reposix init github::reubenjohn/reposix; verifies success and remote.origin.url starts with reposix::https://api.github.com/. Gated by skip_if_no_env!(GITHUB_TOKEN).",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:01:43Z",
       "last_extracted": "2026-04-28T09:01:43Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
+      ],
+      "test_body_hashes": [
+        "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
+      ]
     },
     {
       "id": "glossary/refspec-definition",
@@ -4334,13 +4802,17 @@
         "line_end": 61
       },
       "source_hash": "8590d49d39a5d54653702d6df0f8bbafce9a2d434f95e73469517a40d0ed4ac1",
-      "test": "crates/reposix-remote/tests/stateless_connect.rs::capabilities_refspec_namespace_is_reposix_not_heads",
-      "test_body_hash": "a86d4c791fb759d8bb5a34c47228ec9237d932f317f07e6321ade678863b3a82",
       "rationale": "Tests helper advertises correct refspec to avoid fast-export delta collapse",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:59Z",
       "last_extracted": "2026-04-28T09:05:59Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/stateless_connect.rs::capabilities_refspec_namespace_is_reposix_not_heads"
+      ],
+      "test_body_hashes": [
+        "a86d4c791fb759d8bb5a34c47228ec9237d932f317f07e6321ade678863b3a82"
+      ]
     },
     {
       "id": "docs/research/agentic-engineering-reference.md/reposix-tainted-default",
@@ -4351,13 +4823,17 @@
         "line_end": 147
       },
       "source_hash": "ef64acf3dc747929f1c111e3062038d2403ef2849c880f7ed5a7b7d05651d676",
-      "test": "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error",
-      "test_body_hash": "8d1e999a3065adc79d0b5060e5a43c8003ee6e42d912df81d7ba4eb70d5481d9",
       "rationale": "Test verifies egress-rejected materialization attempt writes op='egress_denied' audit row and returns Error::Egress without fallback",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:03Z",
       "last_extracted": "2026-04-28T09:09:03Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error"
+      ],
+      "test_body_hashes": [
+        "8d1e999a3065adc79d0b5060e5a43c8003ee6e42d912df81d7ba4eb70d5481d9"
+      ]
     },
     {
       "id": "docs/reference/testing-targets/confluence-url-format",
@@ -4368,13 +4844,17 @@
         "line_end": 29
       },
       "source_hash": "e0fc82ed2bff773d078fdec886c7b45db10b6c9666c210bca67e7566b22541cc",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
-      "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
       "rationale": "Assertion at lines 148-151 verifies url ends with /confluence/projects/TokenWorld",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:21Z",
       "last_extracted": "2026-04-28T09:08:21Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
+      ],
+      "test_body_hashes": [
+        "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe"
+      ]
     },
     {
       "id": "docs/reference/testing-targets/jira-url-format",
@@ -4385,13 +4865,17 @@
         "line_end": 99
       },
       "source_hash": "c382a892597c1b471d4a3a75c59748f9f22f7f0e7fc61d35f9eb56a857ee36ad",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
-      "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
       "rationale": "Assertion at lines 167-170 verifies url ends with /jira/projects/TEST",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:41Z",
       "last_extracted": "2026-04-28T09:08:41Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
+      ],
+      "test_body_hashes": [
+        "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
+      ]
     },
     {
       "id": "docs/reference/testing-targets/github-project-encoding",
@@ -4402,13 +4886,17 @@
         "line_end": 65
       },
       "source_hash": "08aa8af80be9ca7daa26a65abdb165fc3a83e90d42dc9e6c0c4f514ed32b783b",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
-      "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
       "rationale": "Assertion at line 128 verifies url contains /projects/reubenjohn/reposix",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:29Z",
       "last_extracted": "2026-04-28T09:08:29Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
+      ],
+      "test_body_hashes": [
+        "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
+      ]
     },
     {
       "id": "docs/reference/testing-targets/github-url-prefix",
@@ -4419,13 +4907,17 @@
         "line_end": 65
       },
       "source_hash": "08aa8af80be9ca7daa26a65abdb165fc3a83e90d42dc9e6c0c4f514ed32b783b",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
-      "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
       "rationale": "Assertion at lines 127-130 verifies url.contains(/projects/reubenjohn/reposix)",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:29Z",
       "last_extracted": "2026-04-28T09:08:29Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
+      ],
+      "test_body_hashes": [
+        "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
+      ]
     },
     {
       "id": "docs-development-contributing-md/git-version-2-34-required",
@@ -4508,13 +5000,17 @@
         "line_end": 92
       },
       "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
-      "test": "crates/reposix-cli/tests/cost.rs::cost_help_renders",
-      "test_body_hash": "cd41714bf4942f0d34ac434ebd3886b8bf07134ab381be2f6d55fd00daf2bc3b",
       "rationale": "crates/reposix-cli/tests/cost.rs:30-47 asserts cost --help exists with --since and --chars-per-token flags",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:21Z",
       "last_extracted": "2026-04-28T09:00:21Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/cost.rs::cost_help_renders"
+      ],
+      "test_body_hashes": [
+        "cd41714bf4942f0d34ac434ebd3886b8bf07134ab381be2f6d55fd00daf2bc3b"
+      ]
     },
     {
       "id": "docs/index/real-git-working-tree",
@@ -4539,13 +5035,17 @@
         "line_end": 19
       },
       "source_hash": "7f26b7ed1d70019df9cecce5193c67322d7f6479f1d0cc92a818f62348396c73",
-      "test": "crates/reposix-cli/tests/doctor.rs::doctor_clean_repo_reports_findings",
-      "test_body_hash": "c1226c989a6362cdda4e70ce008f6e79a5802e6dee2057b0ad32994324e3c4c1",
       "rationale": "doctor module imported at crates/reposix-cli/src/main.rs:27 and called at line 382; tests verify help renders and findings are reported; --fix applies safe deterministic fixes",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:59Z",
       "last_extracted": "2026-04-28T09:04:59Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/doctor.rs::doctor_clean_repo_reports_findings"
+      ],
+      "test_body_hashes": [
+        "c1226c989a6362cdda4e70ce008f6e79a5802e6dee2057b0ad32994324e3c4c1"
+      ]
     },
     {
       "id": "exit-codes/doctor-error-findings-exit-1",
@@ -4571,13 +5071,17 @@
         "line_end": 33
       },
       "source_hash": "d94b2d8e2a0cab813f1db44a226d21675060b3f1eb840006263d4e36c4f0fc42",
-      "test": "crates/reposix-cli/tests/doctor.rs::doctor_prints_backend_capability_row_for_sim",
-      "test_body_hash": "88e9e17e7546c831e7c3d98f8a38124a35ccae1e60be7d466e24b2eb530ec7c2",
       "rationale": "crates/reposix-cli/tests/doctor.rs:275-312 asserts backend.capabilities and sim label in doctor output",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:10Z",
       "last_extracted": "2026-04-28T09:00:10Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/doctor.rs::doctor_prints_backend_capability_row_for_sim"
+      ],
+      "test_body_hashes": [
+        "88e9e17e7546c831e7c3d98f8a38124a35ccae1e60be7d466e24b2eb530ec7c2"
+      ]
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-09-doctor-checklist",
@@ -4588,13 +5092,17 @@
         "line_end": 91
       },
       "source_hash": "13b18725a67d3aa57b61f8cda4d7051e18c4b5517c886c7351197cc06514c7cf",
-      "test": "crates/reposix-cli/tests/doctor.rs::doctor_missing_partial_clone_warns",
-      "test_body_hash": "2aa80541fb72954bf8b35963a81bdc4a8ef9d27408d605cb9408290dbe4604be",
       "rationale": "crates/reposix-cli/tests/doctor.rs:119-147 asserts doctor surfaces checklist items with copy-pastable git config fix commands",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:16Z",
       "last_extracted": "2026-04-28T09:00:16Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/doctor.rs::doctor_missing_partial_clone_warns"
+      ],
+      "test_body_hashes": [
+        "2aa80541fb72954bf8b35963a81bdc4a8ef9d27408d605cb9408290dbe4604be"
+      ]
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-10-gc-orphans",
@@ -4605,13 +5113,17 @@
         "line_end": 92
       },
       "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
-      "test": "crates/reposix-cli/tests/gc.rs::gc_help_renders",
-      "test_body_hash": "0e608332bc1ddc06393917a69daa0d90a579c01b43b158a95ca54a65ecf16b65",
       "rationale": "crates/reposix-cli/tests/gc.rs:32-46 asserts gc --help exists and renders with proper flags",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:18Z",
       "last_extracted": "2026-04-28T09:00:18Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/gc.rs::gc_help_renders"
+      ],
+      "test_body_hashes": [
+        "0e608332bc1ddc06393917a69daa0d90a579c01b43b158a95ca54a65ecf16b65"
+      ]
     },
     {
       "id": "docs/decisions/007-time-travel-via-git-tags/list-api",
@@ -4622,13 +5134,17 @@
         "line_end": 69
       },
       "source_hash": "bef70f20efa6c393b7452b96b6627bdead161cd8ed618a599f7ac0bca98b2583",
-      "test": "crates/reposix-cache/tests/sync_tags.rs::sync_tag_at_finds_closest_not_after",
-      "test_body_hash": "0e6fbdaae6181a27f39c718b2512e531743846b13575c3efecb0a3633872780c",
       "rationale": "sync_tags.rs:116-154 verifies sync_tag_at returns tag at-or-before target timestamp; list_sync_tags tests at lines 50-113 verify ordering",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:15:18Z",
       "last_extracted": "2026-04-28T09:15:18Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/sync_tags.rs::sync_tag_at_finds_closest_not_after"
+      ],
+      "test_body_hashes": [
+        "0e6fbdaae6181a27f39c718b2512e531743846b13575c3efecb0a3633872780c"
+      ]
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-10-init-since",
@@ -4639,13 +5155,17 @@
         "line_end": 92
       },
       "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
-      "test": "crates/reposix-cli/tests/doctor.rs::doctor_help_renders",
-      "test_body_hash": "1fc85fbeec6cbd847f14ae37b81e2461cac2ce76186239de392dc17e4ebedfab",
       "rationale": "init command part of standard CLI (documented via help); doctor tests validate full init flow",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:27Z",
       "last_extracted": "2026-04-28T09:00:27Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/doctor.rs::doctor_help_renders"
+      ],
+      "test_body_hashes": [
+        "1fc85fbeec6cbd847f14ae37b81e2461cac2ce76186239de392dc17e4ebedfab"
+      ]
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-11-reposix-init-cli",
@@ -4656,13 +5176,17 @@
         "line_end": 53
       },
       "source_hash": "041b8806625031d556a0dae0902a61f88cf97a8fd314e5f8747449eb58afdeec",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
       "rationale": "Test runs reposix init sim::demo on temp dir, verifies extensions.partialClone=origin, remote.origin.promisor=true, remote.origin.partialclonefilter=blob:none, remote.origin.url starts with reposix::",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:45Z",
       "last_extracted": "2026-04-28T09:00:45Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ]
     },
     {
       "id": "bootstrap-timing-24ms-vs-27ms",
@@ -4772,13 +5296,17 @@
         "line_end": 15
       },
       "source_hash": "abdad9aa1c64779b280e0831e0ed62117210862debc603fceb3b4e4e15d27902",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
       "rationale": "Test verifies reposix init produces real git checkout with correct partial-clone config; extensions.partialClone, promisor, partialclonefilter set",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:09Z",
       "last_extracted": "2026-04-28T09:09:09Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ]
     },
     {
       "id": "docs/reference/testing-targets/confluence-init-success",
@@ -4789,13 +5317,17 @@
         "line_end": 29
       },
       "source_hash": "e0fc82ed2bff773d078fdec886c7b45db10b6c9666c210bca67e7566b22541cc",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
-      "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
       "rationale": "run_init_and_assert(confluence::TokenWorld) succeeds at line 144, assertion passes at lines 100-104",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:21Z",
       "last_extracted": "2026-04-28T09:08:21Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
+      ],
+      "test_body_hashes": [
+        "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe"
+      ]
     },
     {
       "id": "docs/reference/testing-targets/github-init-success",
@@ -4806,13 +5338,17 @@
         "line_end": 65
       },
       "source_hash": "08aa8af80be9ca7daa26a65abdb165fc3a83e90d42dc9e6c0c4f514ed32b783b",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
-      "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
       "rationale": "run_init_and_assert(github::reubenjohn/reposix) succeeds at lines 123-125, assertion passes",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:29Z",
       "last_extracted": "2026-04-28T09:08:29Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
+      ],
+      "test_body_hashes": [
+        "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
+      ]
     },
     {
       "id": "docs/guides/integrate-with-your-agent/init-verb-only",
@@ -4823,13 +5359,17 @@
         "line_end": 48
       },
       "source_hash": "bf147c9e4dd1a14a222f92b16838c4e4c0c8489bfa72dc96c15d0b199daa97e4",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
       "rationale": "test dark_factory_sim_happy_path (103-165) calls reposix init, then operates via pure git; gotcha at line 48 documents removal of reposix list/get verbs",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:36Z",
       "last_extracted": "2026-04-28T09:04:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ]
     },
     {
       "id": "docs/reference/testing-targets/jira-init-success",
@@ -4840,13 +5380,17 @@
         "line_end": 99
       },
       "source_hash": "c382a892597c1b471d4a3a75c59748f9f22f7f0e7fc61d35f9eb56a857ee36ad",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
-      "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
       "rationale": "run_init_and_assert(jira::TEST) succeeds at lines 162-163, assertion passes at lines 100-104",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:41Z",
       "last_extracted": "2026-04-28T09:08:41Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
+      ],
+      "test_body_hashes": [
+        "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
+      ]
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/dark-factory-partial-clone",
@@ -4857,13 +5401,17 @@
         "line_end": 18
       },
       "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
       "rationale": "Test asserts git config extensions.partialClone=origin, remote.origin.promisor=true, remote.origin.partialclonefilter=blob:none on partial-clone working tree (Phase 35 Plan 02)",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T08:59:46Z",
       "last_extracted": "2026-04-28T08:59:46Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ]
     },
     {
       "id": "docs/index/reposix-init-demo-command",
@@ -4874,13 +5422,17 @@
         "line_end": 126
       },
       "source_hash": "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
       "rationale": "Dark-factory happy-path test verifies init creates .git/, extensions.partialClone=origin, remote.origin.promisor=true, partialclonefilter=blob:none",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:01:14Z",
       "last_extracted": "2026-04-28T09:01:14Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ]
     },
     {
       "id": "README-md/init-sim-demo-works",
@@ -4891,13 +5443,17 @@
         "line_end": 72
       },
       "source_hash": "dbd80002e8e256ea70792f8efedaee88dc88cfbe9d89eeb903dd30c0b784d601",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
       "rationale": "agent_flow.rs:103-165 tests init config, partial clone setup, and git config keys (extensions.partialClone, remote.origin.promisor, remote.origin.partialclonefilter)",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T08:58:36Z",
       "last_extracted": "2026-04-28T08:58:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ]
     },
     {
       "id": "docs/tutorials/first-run/init-config",
@@ -4908,13 +5464,17 @@
         "line_end": 73
       },
       "source_hash": "b2e1d9302f0e337ba5418f7d4ccdb2ead6a3a94eb0e9f58b79c05982639c711e",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
       "rationale": "Test spawns sim, runs reposix init, validates all four git config keys match expected values (lines 148-162)",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:50Z",
       "last_extracted": "2026-04-28T09:08:50Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ]
     },
     {
       "id": "docs/reference/cli.md/init_documented",
@@ -4925,13 +5485,17 @@
         "line_end": 62
       },
       "source_hash": "a829d8b3469aca1b3cc98eff7371b2eed426e73ee98fa8377bafbd0b02a4daed",
-      "test": "crates/reposix-cli/tests/cli.rs::init_help_documents_spec_argument",
-      "test_body_hash": "1b4dce09d126178a7db0706309700976084d6b44d2b78dae37bd29b4706b48da",
       "rationale": "Test verifies init --help contains BACKEND::PROJECT pattern and each backend (sim, github, confluence, jira)",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:37Z",
       "last_extracted": "2026-04-28T09:08:37Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/cli.rs::init_help_documents_spec_argument"
+      ],
+      "test_body_hashes": [
+        "1b4dce09d126178a7db0706309700976084d6b44d2b78dae37bd29b4706b48da"
+      ]
     },
     {
       "id": "docs/decisions/009-stability-commitment/reposix-init-url-shape",
@@ -4942,13 +5506,17 @@
         "line_end": 40
       },
       "source_hash": "46398d0a80fce22797ce1ca1f66a63dd763ac5812d382caf441581e5316d00f9",
-      "test": "crates/reposix-cli/src/init.rs::translate_sim_spec",
-      "test_body_hash": "2bd71210027624e38c06d3efc8b39677acd6deae47167e15afac7243eb60eefd",
       "rationale": "init.rs asserts the canonical form in translate_spec_to_url; ADR-008 ratified this shape; dark-factory tests validate no URL regressions via agent UX",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:32Z",
       "last_extracted": "2026-04-28T09:04:32Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/src/init.rs::translate_sim_spec"
+      ],
+      "test_body_hashes": [
+        "2bd71210027624e38c06d3efc8b39677acd6deae47167e15afac7243eb60eefd"
+      ]
     },
     {
       "id": "docs/reference/cli.md/list_query_backend",
@@ -4959,13 +5527,17 @@
         "line_end": 93
       },
       "source_hash": "e2ab3c8f22ff363ec7c4a5351dcf6679e82300776a4f357557bffea5ae924ec3",
-      "test": "crates/reposix-cli/tests/cli.rs::list_help_succeeds_and_documents_flags",
-      "test_body_hash": "4748662c087a773b3f96515829faf874af35d55e87773e3c7d23d945090abc12",
       "rationale": "Test verifies list subcommand exists with --backend/--project/--format flags",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:23Z",
       "last_extracted": "2026-04-28T09:09:23Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/cli.rs::list_help_succeeds_and_documents_flags"
+      ],
+      "test_body_hashes": [
+        "4748662c087a773b3f96515829faf874af35d55e87773e3c7d23d945090abc12"
+      ]
     },
     {
       "id": "docs/reference/cli.md/list_documented",
@@ -4976,13 +5548,17 @@
         "line_end": 93
       },
       "source_hash": "e2ab3c8f22ff363ec7c4a5351dcf6679e82300776a4f357557bffea5ae924ec3",
-      "test": "crates/reposix-cli/tests/cli.rs::list_help_succeeds_and_documents_flags",
-      "test_body_hash": "4748662c087a773b3f96515829faf874af35d55e87773e3c7d23d945090abc12",
       "rationale": "Test verifies list --help succeeds and documents backend/project/format flags",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:37Z",
       "last_extracted": "2026-04-28T09:08:37Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/cli.rs::list_help_succeeds_and_documents_flags"
+      ],
+      "test_body_hashes": [
+        "4748662c087a773b3f96515829faf874af35d55e87773e3c7d23d945090abc12"
+      ]
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-10-log-time-travel",
@@ -4993,13 +5569,17 @@
         "line_end": 92
       },
       "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
-      "test": "crates/reposix-cli/tests/doctor.rs::doctor_clean_repo_reports_findings",
-      "test_body_hash": "c1226c989a6362cdda4e70ce008f6e79a5802e6dee2057b0ad32994324e3c4c1",
       "rationale": "log command is part of standard CLI (shows in cargo run help); reposix history tests indirectly validate via doctor integration",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:24Z",
       "last_extracted": "2026-04-28T09:00:24Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/doctor.rs::doctor_clean_repo_reports_findings"
+      ],
+      "test_body_hashes": [
+        "c1226c989a6362cdda4e70ce008f6e79a5802e6dee2057b0ad32994324e3c4c1"
+      ]
     },
     {
       "id": "token-baseline-reposix-531",
@@ -5039,13 +5619,17 @@
         "line_end": 291
       },
       "source_hash": "9cb63a1b7dd6f0408e36163ee1b7701e3acce74f223e5303d25919a9359762a8",
-      "test": "crates/reposix-cli/tests/cli.rs::mount_subcommand_is_removed",
-      "test_body_hash": "a8fd137976bc34abc8da35dbfdee3df9d73c1fc522216eafe926813c32c07db4",
       "rationale": "Test verifies 'mount' subcommand errors with unrecognized subcommand message",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:37Z",
       "last_extracted": "2026-04-28T09:08:37Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/cli.rs::mount_subcommand_is_removed"
+      ],
+      "test_body_hashes": [
+        "a8fd137976bc34abc8da35dbfdee3df9d73c1fc522216eafe926813c32c07db4"
+      ]
     },
     {
       "id": "docs/index/reposix-sim-starts-7878",
@@ -5056,13 +5640,17 @@
         "line_end": 125
       },
       "source_hash": "9572807c5ebf6272e3d4248d889a5c1b5a3d1c12fad28a3162dabf300d25aa15",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
       "rationale": "Dark-factory test spawns sim on 127.0.0.1:7879 (different port) but expects default :7878; test verifies init and sim lifecycle",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:01:11Z",
       "last_extracted": "2026-04-28T09:01:11Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ]
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/spaces-01",
@@ -5087,13 +5675,17 @@
         "line_end": 284
       },
       "source_hash": "dddaf554d6fe986a5928d72c3939e81c664eb5442b93d65758961e6d2f4e4567",
-      "test": "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands",
-      "test_body_hash": "4dc5fe7ebc778ac27b68a1976253f7a4a2e1f53b8d213bcbb27065bf950e3b36",
       "rationale": "Subcommand exists and requires ATLASSIAN env vars; tested in confluence reference",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:23Z",
       "last_extracted": "2026-04-28T09:09:23Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands"
+      ],
+      "test_body_hashes": [
+        "4dc5fe7ebc778ac27b68a1976253f7a4a2e1f53b8d213bcbb27065bf950e3b36"
+      ]
     },
     {
       "id": "docs/index/rest-supported-backends",
@@ -5104,13 +5696,17 @@
         "line_end": 13
       },
       "source_hash": "1738f41c7a50a996cad966847af1a5fb5e6dd8afc2f066fbd53c9c661820ac29",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
-      "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
       "rationale": "agent_flow_real.rs has real backend tests; crates exist: reposix-github, reposix-confluence, reposix-jira",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:01:33Z",
       "last_extracted": "2026-04-28T09:01:33Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
+      ],
+      "test_body_hashes": [
+        "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
+      ]
     },
     {
       "id": "docs/social/linkedin/token-reduction-92pct",
@@ -5164,13 +5760,17 @@
         "line_end": 28
       },
       "source_hash": "5411bab4640bc6b74bd0cb693f5dade707e761bb3ee59048f0ad33f1eedc2397",
-      "test": "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error",
-      "test_body_hash": "8d1e999a3065adc79d0b5060e5a43c8003ee6e42d912df81d7ba4eb70d5481d9",
       "rationale": "Test stubs BackendConnector to return InvalidOrigin; read_blob returns Error::Egress and writes op='egress_denied' audit row; no materialize row written.",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:30Z",
       "last_extracted": "2026-04-28T09:00:30Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error"
+      ],
+      "test_body_hashes": [
+        "8d1e999a3065adc79d0b5060e5a43c8003ee6e42d912df81d7ba4eb70d5481d9"
+      ]
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-02-audit-and-tainted",
@@ -5181,13 +5781,17 @@
         "line_end": 27
       },
       "source_hash": "e0fb8d62e00daf491b815884d0951503b0da198cc745dfcdbef5b6c4361d0795",
-      "test": "crates/reposix-cache/tests/materialize_one.rs::read_blob_materializes_exactly_one_and_audits",
-      "test_body_hash": "c8aaacb33fc3ea39ed3feba7ff9ac5ff9b1918765725d75bc77deabbc3df1513",
       "rationale": "Test verifies read_blob returns Tainted<Vec<u8>>, exactly one materialize row written, second read fires second audit row.",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:30Z",
       "last_extracted": "2026-04-28T09:00:30Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/materialize_one.rs::read_blob_materializes_exactly_one_and_audits"
+      ],
+      "test_body_hashes": [
+        "c8aaacb33fc3ea39ed3feba7ff9ac5ff9b1918765725d75bc77deabbc3df1513"
+      ]
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/hard-01",
@@ -5198,13 +5802,17 @@
         "line_end": 75
       },
       "source_hash": "ea146310ae3fcf71936c7ded3f77d161ce8190ec5df7eb5df2343eacf3f3d1b9",
-      "test": "crates/reposix-swarm/tests/contention_e2e.rs::contention_50_clients_5s_deterministic_409",
-      "test_body_hash": "36ddd4dc3c119df56b227e483f96ad6b6c213ef6af195cd687d87dd5979f2255",
       "rationale": "crates/reposix-swarm/tests/contention_e2e.rs run 50 concurrent clients hammering same issue with If-Match versions, assert wins and 409 conflicts",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:08Z",
       "last_extracted": "2026-04-28T09:00:08Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-swarm/tests/contention_e2e.rs::contention_50_clients_5s_deterministic_409"
+      ],
+      "test_body_hashes": [
+        "36ddd4dc3c119df56b227e483f96ad6b6c213ef6af195cd687d87dd5979f2255"
+      ]
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/swarm-01",
@@ -5229,13 +5837,17 @@
         "line_end": 62
       },
       "source_hash": "6bd3d9308b2f949f9cebdaa676de037b396614f41b9250a9846168a2670312c6",
-      "test": "crates/reposix-core/tests/http_allowlist.rs::allowlist_default_and_env",
-      "test_body_hash": "9fd0c9069f5e56d0d0373fdbb472aecbc4ef2f3ccb50c32e96ab64611eade961",
       "rationale": "Test EnvGuard::unset() verifies loopback is allowed by default; non-loopback rejected without env override",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:32Z",
       "last_extracted": "2026-04-28T09:00:32Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-core/tests/http_allowlist.rs::allowlist_default_and_env"
+      ],
+      "test_body_hashes": [
+        "9fd0c9069f5e56d0d0373fdbb472aecbc4ef2f3ccb50c32e96ab64611eade961"
+      ]
     },
     {
       "id": "README-md/allowlist-default",
@@ -5246,13 +5858,17 @@
         "line_end": 117
       },
       "source_hash": "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa",
-      "test": "crates/reposix-core/tests/http_allowlist.rs::loopback_is_allowed_by_default",
-      "test_body_hash": "f57d468a8ca746ff50aa2b22406263f2c2de5a0d0e14b14136797dcff15b811f",
       "rationale": "http_allowlist.rs:117-131 tests loopback allowed by default; http_allowlist.rs:134-144 tests non-loopback denied by default",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T08:59:05Z",
       "last_extracted": "2026-04-28T08:59:05Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-core/tests/http_allowlist.rs::loopback_is_allowed_by_default"
+      ],
+      "test_body_hashes": [
+        "f57d468a8ca746ff50aa2b22406263f2c2de5a0d0e14b14136797dcff15b811f"
+      ]
     },
     {
       "id": "README-md/allowlist-override",
@@ -5263,13 +5879,17 @@
         "line_end": 117
       },
       "source_hash": "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa",
-      "test": "crates/reposix-core/tests/http_allowlist.rs::allowlist_default_and_env",
-      "test_body_hash": "9fd0c9069f5e56d0d0373fdbb472aecbc4ef2f3ccb50c32e96ab64611eade961",
       "rationale": "http_allowlist.rs:84-114 tests env override narrows/expands allowlist; http_allowlist.rs:147-155 tests env redefines allowlist",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T08:59:07Z",
       "last_extracted": "2026-04-28T08:59:07Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-core/tests/http_allowlist.rs::allowlist_default_and_env"
+      ],
+      "test_body_hashes": [
+        "9fd0c9069f5e56d0d0373fdbb472aecbc4ef2f3ccb50c32e96ab64611eade961"
+      ]
     },
     {
       "id": "docs/security/blob-limit-default-200",
@@ -5280,13 +5900,17 @@
         "line_end": 63
       },
       "source_hash": "b5d40134b34a42d42e78e1cbc2c8d100d859b8fd9f5855dcc19f43b43f1cd517",
-      "test": "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants",
-      "test_body_hash": "f55f3f3e47171456c973c443d1b3d4675f0d0f315b6e73db8b18905aee8feeb1",
       "rationale": "Test sets REPOSIX_BLOB_LIMIT=1 and verifies helper rejects fetch exceeding limit with stderr teaching string git sparse-checkout",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:36Z",
       "last_extracted": "2026-04-28T09:00:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants"
+      ],
+      "test_body_hashes": [
+        "f55f3f3e47171456c973c443d1b3d4675f0d0f315b6e73db8b18905aee8feeb1"
+      ]
     },
     {
       "id": "docs/guides/troubleshooting/blob-limit-env-override",
@@ -5312,13 +5936,17 @@
         "line_end": 38
       },
       "source_hash": "da3a96ed3d11cd36975cd73fad3465a83c88a2f2494a373d8a2978e33b4d364d",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
-      "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
       "rationale": "skip_if_no_env! macro at line 140 checks REPOSIX_CONFLUENCE_TENANT presence",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:21Z",
       "last_extracted": "2026-04-28T09:08:21Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
+      ],
+      "test_body_hashes": [
+        "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe"
+      ]
     },
     {
       "id": "docs/reference/testing-targets/jira-instance",
@@ -5329,13 +5957,17 @@
         "line_end": 109
       },
       "source_hash": "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
-      "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
       "rationale": "skip_if_no_env! macro at line 158 checks REPOSIX_JIRA_INSTANCE presence",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:34Z",
       "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
+      ],
+      "test_body_hashes": [
+        "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
+      ]
     },
     {
       "id": "docs/reference/testing-targets/jira-reposix-override",
@@ -5346,13 +5978,17 @@
         "line_end": 98
       },
       "source_hash": "a8f2f7328f59a9a6a05993dfc8a99874ea181e96528bbb058c4580d65657f97a",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::jira_test_project",
-      "test_body_hash": "e566b0f8dc7efc1ef47487d2235d06e35c0d0784eda53256eb322d20cf3df1d0",
       "rationale": "jira_test_project() fn checks REPOSIX_JIRA_PROJECT as fallback at line 81",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:34Z",
       "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::jira_test_project"
+      ],
+      "test_body_hashes": [
+        "e566b0f8dc7efc1ef47487d2235d06e35c0d0784eda53256eb322d20cf3df1d0"
+      ]
     },
     {
       "id": "docs/guides/write-your-own-connector/root-collection-name",
@@ -5363,13 +5999,17 @@
         "line_end": 33
       },
       "source_hash": "36f1683b71d734f1b5ab46a87ac7712afb84ee9b6f28afe43391b1da162525aa",
-      "test": "crates/reposix-github/tests/contract.rs::contract_sim",
-      "test_body_hash": "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116",
       "rationale": "BackendConnector trait defines root_collection_name() at crates/reposix-core/src/backend.rs:328-330 with default \"issues\"; Confluence overrides to \"pages\" per trait docs",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:41Z",
       "last_extracted": "2026-04-28T09:05:41Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-github/tests/contract.rs::contract_sim"
+      ],
+      "test_body_hashes": [
+        "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116"
+      ]
     },
     {
       "id": "README-md/git-2-34-requirement",
@@ -5394,13 +6034,17 @@
         "line_end": 76
       },
       "source_hash": "9fb9b8031c9c34f650180f049883ef0dd2f0586cc098f8711e0c4a025de5d3ff",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
       "rationale": "Dark-factory regression test verifies full git workflow (init, checkout, edit, commit, push) against simulator backend",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:57Z",
       "last_extracted": "2026-04-28T09:00:57Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ]
     },
     {
       "id": "git-layer/frontmatter-strips-server-controlled",
@@ -5411,13 +6055,17 @@
         "line_end": 62
       },
       "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields",
-      "test_body_hash": "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b",
       "rationale": "Tests inbound blob with id:999999 and version:999 overrides are not sent to backend",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:06:00Z",
       "last_extracted": "2026-04-28T09:06:00Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields"
+      ],
+      "test_body_hashes": [
+        "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b"
+      ]
     },
     {
       "id": "git-remote/server-field-stripping",
@@ -5428,13 +6076,17 @@
         "line_end": 113
       },
       "source_hash": "645892ad8b832118d44c70039478e6e7253bece5259d0f0db4c4c9bb67269d02",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields",
-      "test_body_hash": "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b",
       "rationale": "Tests ARCH-10: inbound blob with id/version overrides, PATCH body contains authoritative id",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:46Z",
       "last_extracted": "2026-04-28T09:08:46Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields"
+      ],
+      "test_body_hashes": [
+        "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b"
+      ]
     },
     {
       "id": "docs/decisions/009-stability-commitment/frontmatter-field-allowlist",
@@ -5445,13 +6097,17 @@
         "line_end": 61
       },
       "source_hash": "5ec1417b251ca86c448f61b9670e7f3c7faafa3116cbe6235231688321b535cd",
-      "test": "crates/reposix-core/src/taint.rs::sanitize",
-      "test_body_hash": "8e1692b3af8dde91fa4f9420b7e0b147c2beadbc122c737295334dc99b3821c5",
       "rationale": "taint.rs defines ServerMetadata struct with the four locked fields; sanitize() function destructures tainted Record, discards client id/created_at/updated_at/version fields with _, and rebuilds using ServerMetadata values; used in export path at main.rs:510,537",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:58Z",
       "last_extracted": "2026-04-28T09:04:58Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-core/src/taint.rs::sanitize"
+      ],
+      "test_body_hashes": [
+        "8e1692b3af8dde91fa4f9420b7e0b147c2beadbc122c737295334dc99b3821c5"
+      ]
     },
     {
       "id": "docs/index/soft-threshold-24ms",
@@ -5490,13 +6146,17 @@
         "line_end": 140
       },
       "source_hash": "95b5f28b22700c5f8fe8091c385648b80f8aa26a48629bb14be3ffe5e6ef2cd8",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::skip_pattern_compiles_and_runs_without_creds",
-      "test_body_hash": "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409",
       "rationale": "catch_unwind assertion at lines 207-209 confirms early-return path, not panic",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:41Z",
       "last_extracted": "2026-04-28T09:08:41Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::skip_pattern_compiles_and_runs_without_creds"
+      ],
+      "test_body_hashes": [
+        "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409"
+      ]
     },
     {
       "id": "docs/benchmarks/latency/soft-threshold-real-backend-under-3s",
@@ -5578,13 +6238,17 @@
         "line_end": 118
       },
       "source_hash": "029fbb0a6e888f58e4e3c25e901fc981c6db9c946587f2ffde3cc3efc3a0dced",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
       "rationale": "agent_flow.rs:198-214 verifies error refs/heads/main fetch first string is present in helper",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T08:59:10Z",
       "last_extracted": "2026-04-28T08:59:10Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
+      ]
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-05-protocol-gotchas",
@@ -5595,13 +6259,17 @@
         "line_end": 38
       },
       "source_hash": "d2898d57e2b28a6722a9855e28b12d45b3da7262ac0dfadcde866157749cffb7",
-      "test": "crates/reposix-remote/tests/stateless_connect.rs::capabilities_refspec_namespace_is_reposix_not_heads",
-      "test_body_hash": "a86d4c791fb759d8bb5a34c47228ec9237d932f317f07e6321ade678863b3a82",
       "rationale": "Regression test verifies refspec namespace is 'refs/heads/*:refs/reposix/*' NOT 'refs/heads/*:refs/heads/*'. This is POC Bug 1 regression protection.",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:01:12Z",
       "last_extracted": "2026-04-28T09:01:12Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/tests/stateless_connect.rs::capabilities_refspec_namespace_is_reposix_not_heads"
+      ],
+      "test_body_hashes": [
+        "a86d4c791fb759d8bb5a34c47228ec9237d932f317f07e6321ade678863b3a82"
+      ]
     },
     {
       "id": "glossary/stateless-connect-definition",
@@ -5626,13 +6294,17 @@
         "line_end": 23
       },
       "source_hash": "be29b20a4ec78c4e55e4cb6e7b756b828334931df68223e34baa2c95572daaf1",
-      "test": "crates/reposix-remote/src/stateless_connect.rs::configured_blob_limit",
-      "test_body_hash": "3c0705f7255056ba79ec95997adef10bedd1445f961123465678ad912549fe1b",
       "rationale": "Handler implements stateless-connect capability; default blob limit enforced",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:46Z",
       "last_extracted": "2026-04-28T09:08:46Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-remote/src/stateless_connect.rs::configured_blob_limit"
+      ],
+      "test_body_hashes": [
+        "3c0705f7255056ba79ec95997adef10bedd1445f961123465678ad912549fe1b"
+      ]
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/swarm-02",
@@ -5657,13 +6329,17 @@
         "line_end": 24
       },
       "source_hash": "1379e14f23ac5b5f4e54788cf0991fa47dae83ff71e487ba039115f87a810d22",
-      "test": "crates/reposix-cache/tests/sync_tags.rs::helper_does_not_export_sync_tags",
-      "test_body_hash": "9b4a329d4c6101989749188a8cc519a95fd45748871a28ebfa4d9d5e7acc6e4a",
       "rationale": "Tests git upload-pack --advertise-refs does not output refs/reposix/sync/ tags",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:06:00Z",
       "last_extracted": "2026-04-28T09:06:00Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/sync_tags.rs::helper_does_not_export_sync_tags"
+      ],
+      "test_body_hashes": [
+        "9b4a329d4c6101989749188a8cc519a95fd45748871a28ebfa4d9d5e7acc6e4a"
+      ]
     },
     {
       "id": "trust-model/tainted-untainted-type-system-barrier",
@@ -5674,11 +6350,15 @@
         "line_end": 65
       },
       "source_hash": "5adfa98de928b70c22a4e5e2db3be7913c6d93d720303d6a2b3e18e674ab9c62",
-      "test": "crates/reposix-core/tests/compile_fail.rs::tainted_cannot_be_used_where_untainted_required",
-      "test_body_hash": "placeholder_hash_no_match",
       "rationale": "Compile-fail test asserts Tainted cannot be used where Untainted required",
       "last_verdict": "STALE_DOCS_DRIFT",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-core/tests/compile_fail.rs::tainted_cannot_be_used_where_untainted_required"
+      ],
+      "test_body_hashes": [
+        "placeholder_hash_no_match"
+      ]
     },
     {
       "id": "glossary/tainted-definition",
@@ -5703,13 +6383,17 @@
         "line_end": 65
       },
       "source_hash": "5f62fa57ad810fd428d769b62c47a6c6f17d34115ddd37070376d60e8e7e917a",
-      "test": "crates/reposix-core/tests/compile_fail.rs::tainted_cannot_be_used_where_untainted_required",
-      "test_body_hash": "7f4a09843031892a30b23c0b767d50482ea163d23687a2bab8da1602d1927939",
       "rationale": "Trybuild compile-fail test locks SG-05: passing Tainted<Record> where Untainted<Record> required must NOT compile",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:00:41Z",
       "last_extracted": "2026-04-28T09:00:41Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-core/tests/compile_fail.rs::tainted_cannot_be_used_where_untainted_required"
+      ],
+      "test_body_hashes": [
+        "7f4a09843031892a30b23c0b767d50482ea163d23687a2bab8da1602d1927939"
+      ]
     },
     {
       "id": "docs/reference/testing-targets/skip-without-creds",
@@ -5720,13 +6404,17 @@
         "line_end": 140
       },
       "source_hash": "95b5f28b22700c5f8fe8091c385648b80f8aa26a48629bb14be3ffe5e6ef2cd8",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::skip_pattern_compiles_and_runs_without_creds",
-      "test_body_hash": "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409",
       "rationale": "Test at line 177 validates skip behavior; env vars cleared, skip_if_no_env! returns cleanly at lines 200-210",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:08:41Z",
       "last_extracted": "2026-04-28T09:08:41Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::skip_pattern_compiles_and_runs_without_creds"
+      ],
+      "test_body_hashes": [
+        "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409"
+      ]
     },
     {
       "id": "filesystem-layer/blob-lazy-first-cat",
@@ -5737,13 +6425,17 @@
         "line_end": 42
       },
       "source_hash": "afb1f82c18d6314a80a6daecafef429fe35ac8c8827a5966eb8e3e263245054f",
-      "test": "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from",
-      "test_body_hash": "009ffcc580b9ac30fc5f8a5cb426f49873b72de5429389f198ca38dbd4e2e1ae",
       "rationale": "Tests that after build_from, zero blob objects exist locally — they are lazy",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:06:05Z",
       "last_extracted": "2026-04-28T09:06:05Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from"
+      ],
+      "test_body_hashes": [
+        "009ffcc580b9ac30fc5f8a5cb426f49873b72de5429389f198ca38dbd4e2e1ae"
+      ]
     },
     {
       "id": "docs/decisions/005-jira-issue-mapping/numeric-id-canonical",
@@ -5754,13 +6446,17 @@
         "line_end": 21
       },
       "source_hash": "12cfc926f3b6d4b00ac9c47edf9527edb1096f8d301b1c77ac7aad64c8d76cb1",
-      "test": "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock",
-      "test_body_hash": "37afa21ee310fffcb4a85aff5bc3500794f23d53b2e5407d6e82e915bf81c1aa",
       "rationale": "contract.rs:230 calls get_record with RecordId(10001) and line 79-84 asserts issue.id == known_issue_id",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:14:57Z",
       "last_extracted": "2026-04-28T09:14:57Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock"
+      ],
+      "test_body_hashes": [
+        "37afa21ee310fffcb4a85aff5bc3500794f23d53b2e5407d6e82e915bf81c1aa"
+      ]
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs04-three-guides",
@@ -5827,13 +6523,17 @@
         "line_end": 56
       },
       "source_hash": "4e71014bb82dbfd87fc6f940e53183e5341de9e60f714e3f65a8087cb4724159",
-      "test": "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit",
-      "test_body_hash": "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904",
       "rationale": "Test queries sim audit_events; docs describe dual-table append-only design",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:09:36Z",
       "last_extracted": "2026-04-28T09:09:36Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit"
+      ],
+      "test_body_hashes": [
+        "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904"
+      ]
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs03-two-concept-pages",
@@ -5858,13 +6558,17 @@
         "line_end": 29
       },
       "source_hash": "97b1f2b68a0dd6caa5040d8c6db6c804d95ad7801f723ab3ab8c9b173a0330df",
-      "test": "crates/reposix-github/tests/contract.rs::contract_sim",
-      "test_body_hash": "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116",
       "rationale": "contract test assert_contract invariant #4 (lines 84-90) validates that get_record with u64::MAX returns Err; error contract documented in backend.rs:210",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:19Z",
       "last_extracted": "2026-04-28T09:05:19Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-github/tests/contract.rs::contract_sim"
+      ],
+      "test_body_hashes": [
+        "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116"
+      ]
     },
     {
       "id": "docs/decisions/001-github-state-mapping/unknown-status-label-fallback-to-open",
@@ -5875,13 +6579,17 @@
         "line_end": 79
       },
       "source_hash": "c84c7a15cb38bf361d85556465f0eb561e461053a90f33e74eb2d9d3530c43ec",
-      "test": "crates/reposix-github/src/lib.rs::translate",
-      "test_body_hash": "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582",
       "rationale": "Code falls through to else arm → Open when no status labels match",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:21Z",
       "last_extracted": "2026-04-28T09:04:21Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-github/src/lib.rs::translate"
+      ],
+      "test_body_hashes": [
+        "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582"
+      ]
     },
     {
       "id": "trust-model/untainted-new-is-crate-private",
@@ -5892,11 +6600,15 @@
         "line_end": 65
       },
       "source_hash": "5adfa98de928b70c22a4e5e2db3be7913c6d93d720303d6a2b3e18e674ab9c62",
-      "test": "crates/reposix-core/tests/compile_fail.rs::untainted_new_is_pub_crate_only",
-      "test_body_hash": "placeholder_hash_no_match",
       "rationale": "Compile-fail test prevents future promotion of pub(crate) fn new to pub fn new",
       "last_verdict": "STALE_DOCS_DRIFT",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-core/tests/compile_fail.rs::untainted_new_is_pub_crate_only"
+      ],
+      "test_body_hashes": [
+        "placeholder_hash_no_match"
+      ]
     },
     {
       "id": "docs-development-roadmap-md/v0-1-0-shipped",
@@ -5963,13 +6675,17 @@
         "line_end": 103
       },
       "source_hash": "41c641308b66063cc2f0aa24800b723fb51bdef18938618f9a240adf1884cc6b",
-      "test": "crates/reposix-confluence/src/translate.rs::basic_auth_header",
-      "test_body_hash": "2af469d9c595d145163cf3c6c45c4e2719444031de35ad5e8f64a895f6334cce",
       "rationale": "Code implements Basic auth header construction only",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:37Z",
       "last_extracted": "2026-04-28T09:04:37Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-confluence/src/translate.rs::basic_auth_header"
+      ],
+      "test_body_hashes": [
+        "2af469d9c595d145163cf3c6c45c4e2719444031de35ad5e8f64a895f6334cce"
+      ]
     },
     {
       "id": "docs-development-roadmap-md/v0-9-0-pivot-shipped",
@@ -5994,13 +6710,17 @@
         "line_end": 54
       },
       "source_hash": "049e66758a86c59a0a7c5c5ab0e069406d05a178e5b744bd7b38fb86c127fa29",
-      "test": "crates/reposix-github/src/lib.rs::translate",
-      "test_body_hash": "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582",
       "rationale": "Code enforces via if-else chain: InReview check precedes InProgress check",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:04:21Z",
       "last_extracted": "2026-04-28T09:04:21Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-github/src/lib.rs::translate"
+      ],
+      "test_body_hashes": [
+        "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582"
+      ]
     },
     {
       "id": "docs/guides/troubleshooting/fetch-first-error",
@@ -6011,13 +6731,17 @@
         "line_end": 46
       },
       "source_hash": "2e48b0affe6db39b71dcec706012f0972595d780ff6cbcd3a52a29e717bf8445",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
       "rationale": "test asserts literal \"error refs/heads/main fetch first\" is committed in crates/reposix-remote/src/main.rs as the canned status line for push conflict rejection",
       "last_verdict": "BOUND",
       "last_run": "2026-04-28T09:05:04Z",
       "last_extracted": "2026-04-28T09:05:04Z",
-      "last_extracted_by": "bind-call"
+      "last_extracted_by": "bind-call",
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
+      ],
+      "test_body_hashes": [
+        "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
+      ]
     },
     {
       "id": "docs/connectors/guide/error-contract-not-supported-prefix",

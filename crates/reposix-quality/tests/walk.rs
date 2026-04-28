@@ -20,13 +20,14 @@ fn seed_catalog(dir: &TempDir, rows: Value) -> std::path::PathBuf {
             "claims_retire_proposed": 0,
             "claims_retired": 0,
             "alignment_ratio": 1.0,
-            "floor": 0.5,
+            // Synthetic walker fixtures cite docs in the temp dir, which
+            // sit outside the eligible set keyed off `docs/`. Setting both
+            // the alignment floor AND the coverage floor to 0.0 keeps the
+            // walker focused on drift verdicts -- not on floor-trips on
+            // unrelated synthetic data.
+            "floor": 0.0,
             "trend_30d": "+0.00",
             "last_walked": null,
-            // P66 coverage axis: walker tests use temp-dir rows whose source
-            // files are outside the eligible set; coverage_ratio is 0.0
-            // by construction. Set coverage_floor to 0.0 so the synthetic
-            // walker tests don't trip the coverage BLOCK on unrelated data.
             "coverage_floor": 0.0
         },
         "rows": rows,
@@ -93,7 +94,11 @@ fn walk_detects_source_drift_and_preserves_stored_hashes() {
         .unwrap()
         .clone();
     let stored_source_hash = drift_row_pre["source_hash"].as_str().unwrap().to_string();
-    let stored_test_body_hash = drift_row_pre["test_body_hash"]
+    // W7: test_body_hashes is now an array parallel to tests. Capture the
+    // first (and, for these single-test fixture rows, only) element.
+    let stored_test_body_hash = drift_row_pre["test_body_hashes"]
+        .as_array()
+        .expect("test_body_hashes array")[0]
         .as_str()
         .unwrap()
         .to_string();
@@ -133,9 +138,13 @@ fn walk_detects_source_drift_and_preserves_stored_hashes() {
         "walker MUST NOT refresh stored source_hash"
     );
     assert_eq!(
-        drift_row_post["test_body_hash"].as_str().unwrap(),
+        drift_row_post["test_body_hashes"]
+            .as_array()
+            .expect("test_body_hashes array")[0]
+            .as_str()
+            .unwrap(),
         stored_test_body_hash,
-        "walker MUST NOT refresh stored test_body_hash"
+        "walker MUST NOT refresh stored test_body_hashes[0]"
     );
 
     // The clean row stays BOUND.
@@ -165,4 +174,91 @@ fn walk_clean_catalog_exits_zero() {
         .args(["--catalog", cat.to_str().unwrap(), "walk"])
         .assert()
         .success();
+}
+
+/// W7 / v0.12.1: multi-test parallel-array drift detection.
+///
+/// Seeds a row with `tests.len() == 2` (`tests[0]` clean, `tests[1]` drifted)
+/// by writing the JSON catalog directly (the bind CLI does not yet support
+/// repeated `--test`; that is W7b). Asserts that the walker:
+///   1. Sets the row's verdict to `STALE_TEST_DRIFT` (per-element compare).
+///   2. Mutating ONLY `tests[1]` does NOT promote `tests[0]` to drifted.
+///   3. Does NOT refresh either stored hash (read-only on hashes).
+///
+/// Note: `STALE_TEST_DRIFT` is currently non-blocking (`blocks_pre_push() ==
+/// false`), so this test does not assert on exit code or stderr -- the
+/// diagnostic line is only emitted on the blocking path. The verdict on
+/// disk is the unambiguous proof that per-element comparison ran. (The
+/// non-blocking design predates W7 and is unrelated to schema rollout.)
+#[test]
+fn walk_multi_test_per_element_drift_detection() {
+    use reposix_quality::hash;
+
+    let dir = TempDir::new().unwrap();
+
+    // Source: clean prose. Doc lives in temp dir so it's outside the
+    // per-file coverage eligible set (which is keyed off docs/).
+    let doc = dir.path().join("doc.md");
+    fs::write(&doc, "shared claim line\nsecond line\n").unwrap();
+
+    // Two test fns in the same file. We hash them with the real hasher
+    // so the seeded `test_body_hashes` start out matching reality, then
+    // mutate `bravo`'s body to force per-element drift on index 1.
+    let test_file = dir.path().join("t.rs");
+    fs::write(
+        &test_file,
+        "fn alpha() { let _ = 1; }\nfn bravo() { let _ = 2; }\n",
+    )
+    .unwrap();
+    let h_alpha = hash::test_body_hash(&test_file, "alpha").unwrap();
+    let h_bravo = hash::test_body_hash(&test_file, "bravo").unwrap();
+    let src_hash = hash::source_hash(&doc, 1, 2).unwrap();
+
+    let test_str = test_file.to_string_lossy().to_string();
+    let row = json!({
+        "id": "row/multi",
+        "claim": "shared claim",
+        "source": {
+            "file": doc.to_string_lossy(),
+            "line_start": 1,
+            "line_end": 2,
+        },
+        "source_hash": src_hash,
+        "tests": [format!("{test_str}::alpha"), format!("{test_str}::bravo")],
+        "test_body_hashes": [h_alpha.clone(), h_bravo.clone()],
+        "rationale": "multi-test fixture",
+        "last_verdict": "BOUND",
+        "last_run": "2026-04-28T08:00:00Z",
+        "last_extracted": "2026-04-28T08:00:00Z",
+        "last_extracted_by": "fixture"
+    });
+    let cat = seed_catalog(&dir, json!([row]));
+
+    // Drift bravo only -- alpha stays clean.
+    fs::write(
+        &test_file,
+        "fn alpha() { let _ = 1; }\nfn bravo() { let _ = 99; let _ = 100; }\n",
+    )
+    .unwrap();
+
+    Command::cargo_bin("reposix-quality")
+        .unwrap()
+        .args(["--catalog", cat.to_str().unwrap(), "walk"])
+        .assert()
+        .success();
+
+    // Per-element verdict: index 1 drifted -> row is STALE_TEST_DRIFT.
+    // Index 0 (alpha) stayed clean, so the row is NOT STALE_TEST_GONE.
+    let post: Value = serde_json::from_str(&fs::read_to_string(&cat).unwrap()).unwrap();
+    let r = &post["rows"].as_array().unwrap()[0];
+    assert_eq!(
+        r["last_verdict"], "STALE_TEST_DRIFT",
+        "row should land in STALE_TEST_DRIFT (got {})",
+        r["last_verdict"]
+    );
+
+    // Stored hashes must be untouched (walker is read-only on hashes).
+    let stored_hashes = r["test_body_hashes"].as_array().unwrap();
+    assert_eq!(stored_hashes[0].as_str().unwrap(), h_alpha);
+    assert_eq!(stored_hashes[1].as_str().unwrap(), h_bravo);
 }

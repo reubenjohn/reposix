@@ -22,9 +22,10 @@ pub enum Verb {
         /// Source citation: `<file>:<line_start>-<line_end>`.
         #[arg(long)]
         source: String,
-        /// Test citation: `<file>::<fn>`.
-        #[arg(long)]
-        test: String,
+        /// Test citation: `<file>::<fn>`. Repeat the flag to bind one claim
+        /// to multiple tests; at least one is required.
+        #[arg(long, action = clap::ArgAction::Append, num_args = 1, required = true)]
+        test: Vec<String>,
         /// Grade verdict (must be `GREEN`).
         #[arg(long)]
         grade: String,
@@ -134,11 +135,28 @@ pub fn dispatch(catalog: &Path, verb: Verb) -> Result<i32> {
 }
 
 /// Read-only `verify --row-id <id>` -- prints row state to stdout.
+///
+/// For rows with `tests.len() >= 2`, also prints a per-test drift table
+/// (W7 / v0.12.1) so operators can see which specific binding drifted
+/// without having to re-run `walk` and parse stderr diagnostics.
 pub fn verify(catalog: &Path, row_id: &str) -> Result<i32> {
     let cat = Catalog::load(catalog)?;
     if let Some(r) = cat.row(row_id) {
         let body = serde_json::to_string_pretty(r)?;
         println!("{body}");
+        if r.tests.len() >= 2 {
+            println!();
+            println!("== per-test drift (multi-test row) ==");
+            println!("  {:<5}  {:<40}  test ref", "idx", "stored hash (16-prefix)");
+            println!("  {}", "-".repeat(5 + 2 + 40 + 2 + 32));
+            for (i, t) in r.tests.iter().enumerate() {
+                let prefix = r.test_body_hashes.get(i).map_or_else(
+                    || "<missing>".to_string(),
+                    |h| h.chars().take(16).collect::<String>(),
+                );
+                println!("  {i:<5}  {prefix:<40}  {t}");
+            }
+        }
         Ok(0)
     } else {
         eprintln!(
@@ -174,13 +192,18 @@ pub(crate) mod verbs {
         row_id: &str,
         claim: &str,
         source: &str,
-        test: &str,
+        tests: &[String],
         grade: &str,
         rationale: &str,
     ) -> Result<i32> {
         if grade != "GREEN" {
             return Err(anyhow!(
                 "bind: --grade must be GREEN (got `{grade}`); regrade via the grader subagent first"
+            ));
+        }
+        if tests.is_empty() {
+            return Err(anyhow!(
+                "bind: at least one --test <file::fn> is required (W7: bind binds a claim to >=1 tests)"
             ));
         }
         let (src_file, lstart, lend) = parse_source(source)?;
@@ -190,18 +213,27 @@ pub(crate) mod verbs {
                 src_file.display()
             ));
         }
-        let (test_file, fn_name) = parse_test(test)?;
-        if !test_file.exists() {
-            return Err(anyhow!(
-                "bind: test file `{}` does not exist",
-                test_file.display()
-            ));
+
+        // Validate every test citation BEFORE mutating the catalog so a
+        // multi-test bind with one bogus entry leaves the catalog untouched.
+        let mut tests_clean: Vec<String> = Vec::with_capacity(tests.len());
+        let mut hashes: Vec<String> = Vec::with_capacity(tests.len());
+        for t in tests {
+            let (test_file, fn_name) = parse_test(t)?;
+            if !test_file.exists() {
+                return Err(anyhow!(
+                    "bind: test file `{}` does not exist",
+                    test_file.display()
+                ));
+            }
+            let body_hash = hash::test_body_hash(&test_file, &fn_name)
+                .with_context(|| format!("computing test_body_hash for {t}"))?;
+            tests_clean.push(t.clone());
+            hashes.push(body_hash);
         }
 
         let src_hash = hash::source_hash(&src_file, lstart, lend)
             .with_context(|| format!("computing source_hash for {source}"))?;
-        let body_hash = hash::test_body_hash(&test_file, &fn_name)
-            .with_context(|| format!("computing test_body_hash for {test}"))?;
 
         let mut cat = Catalog::load(catalog)?;
         let now = now_iso();
@@ -230,27 +262,28 @@ pub(crate) mod verbs {
             };
             row.claim = claim.to_string();
             row.source_hash = Some(src_hash);
-            row.test = Some(test.to_string());
-            row.test_body_hash = Some(body_hash);
+            row.set_tests(tests_clean, hashes)?;
             row.rationale = Some(rationale.to_string());
             row.last_verdict = RowState::Bound;
             row.last_run = Some(now.clone());
             row.last_extracted = Some(now.clone());
             row.last_extracted_by = Some("bind-call".to_string());
         } else {
-            cat.rows.push(Row {
+            let mut new_row = Row {
                 id: row_id.to_string(),
                 claim: claim.to_string(),
                 source: Source::Single(new_source),
                 source_hash: Some(src_hash),
-                test: Some(test.to_string()),
-                test_body_hash: Some(body_hash),
+                tests: Vec::new(),
+                test_body_hashes: Vec::new(),
                 rationale: Some(rationale.to_string()),
                 last_verdict: RowState::Bound,
                 last_run: Some(now.clone()),
                 last_extracted: Some(now.clone()),
                 last_extracted_by: Some("bind-call".to_string()),
-            });
+            };
+            new_row.set_tests(tests_clean, hashes)?;
+            cat.rows.push(new_row);
         }
 
         cat.recompute_summary();
@@ -292,8 +325,8 @@ pub(crate) mod verbs {
                 claim: claim.to_string(),
                 source: Source::Single(cite),
                 source_hash: None,
-                test: None,
-                test_body_hash: None,
+                tests: Vec::new(),
+                test_body_hashes: Vec::new(),
                 rationale: Some(rationale.to_string()),
                 last_verdict: RowState::RetireProposed,
                 last_run: Some(now.clone()),
@@ -361,6 +394,9 @@ pub(crate) mod verbs {
             row.claim = claim.to_string();
             row.source = Source::Single(cite);
             row.source_hash = Some(src_hash);
+            // mark-missing-test detaches a row from any test bindings; clear
+            // both parallel arrays atomically via the helper.
+            row.clear_tests();
             if let Some(r) = rationale {
                 row.rationale = Some(r.to_string());
             }
@@ -374,8 +410,8 @@ pub(crate) mod verbs {
                 claim: claim.to_string(),
                 source: Source::Single(cite),
                 source_hash: Some(src_hash),
-                test: None,
-                test_body_hash: None,
+                tests: Vec::new(),
+                test_body_hashes: Vec::new(),
                 rationale: rationale.map(std::string::ToString::to_string),
                 last_verdict: RowState::MissingTest,
                 last_run: Some(now.clone()),
@@ -418,7 +454,7 @@ pub(crate) mod verbs {
                     "id": r.id,
                     "claim": r.claim,
                     "source": format!("{}:{}-{}", cite.file, cite.line_start, cite.line_end),
-                    "test": r.test,
+                    "tests": r.tests,
                     "last_verdict": r.last_verdict.as_str(),
                     "prior_rationale": r.rationale,
                 })
@@ -576,10 +612,17 @@ pub(crate) mod verbs {
             let rows: Vec<Row> = serde_json::from_str(&raw)
                 .with_context(|| format!("parsing shard {} as Vec<Row>", sp.display()))?;
             for r in rows {
-                let key = (
-                    r.claim.trim().to_lowercase(),
-                    r.test.clone().unwrap_or_default(),
-                );
+                // Dedup-key the test side: pre-W7 a single `test: Option<String>`
+                // sufficed; post-W7 multi-test rows fold by the join key
+                // `tests.join(",")` so two shards proposing the SAME ordered
+                // multi-test set merge cleanly. Single-test rows degrade to
+                // the original key shape when `tests.len() == 1`.
+                let key_tests = if r.tests.is_empty() {
+                    String::new()
+                } else {
+                    r.tests.join(",")
+                };
+                let key = (r.claim.trim().to_lowercase(), key_tests);
                 groups.entry(key).or_default().push(r);
             }
         }
@@ -732,42 +775,61 @@ pub(crate) mod verbs {
                 _ => None,
             };
 
-            // Compute current test_body_hash. If the test fn is gone -> STALE_TEST_GONE.
-            let (test_present, test_drift): (bool, Option<bool>) =
-                match (row.test.as_ref(), row.test_body_hash.as_ref()) {
-                    (Some(test_str), Some(stored)) => {
-                        let parsed = super::parse_test(test_str);
-                        match parsed {
-                            Ok((tf, fn_name)) => {
-                                if tf.exists() {
-                                    match hash::test_body_hash(&tf, &fn_name) {
-                                        Ok(now) => (true, Some(&now != stored)),
-                                        // fn missing => not present
-                                        Err(_) => (false, None),
-                                    }
-                                } else {
-                                    (false, None)
-                                }
+            // Compute per-test drift state (W7 / v0.12.1). Each `tests[i]`
+            // is hashed independently against `test_body_hashes[i]`. Three
+            // outcomes per element:
+            //   - drifted: file exists, fn parses, hash != stored
+            //   - gone: file missing OR fn not found
+            //   - clean: hash == stored
+            // The row's verdict aggregates: any "gone" -> STALE_TEST_GONE,
+            // else any "drifted" -> STALE_TEST_DRIFT. The drifted/gone index
+            // sets are surfaced in the diagnostic line for forensic clarity.
+            let mut drifted_indices: Vec<usize> = Vec::new();
+            let mut gone_indices: Vec<usize> = Vec::new();
+            let has_test_bindings = !row.tests.is_empty();
+            if has_test_bindings && row.tests.len() == row.test_body_hashes.len() {
+                for (i, t) in row.tests.iter().enumerate() {
+                    match super::parse_test(t) {
+                        Ok((tf, fn_name)) => {
+                            if !tf.exists() {
+                                gone_indices.push(i);
+                                continue;
                             }
-                            Err(_) => (false, None),
+                            match hash::test_body_hash(&tf, &fn_name) {
+                                Ok(now) => {
+                                    if now != row.test_body_hashes[i] {
+                                        drifted_indices.push(i);
+                                    }
+                                }
+                                Err(_) => gone_indices.push(i),
+                            }
                         }
+                        Err(_) => gone_indices.push(i),
                     }
-                    _ => (true, None),
-                };
+                }
+            }
 
-            let new_state = if !test_present && row.test.is_some() {
+            let any_test_gone = !gone_indices.is_empty();
+            let any_test_drift = !drifted_indices.is_empty();
+
+            let new_state = if any_test_gone {
                 RowState::StaleTestGone
             } else if source_drift == Some(true) {
                 RowState::StaleDocsDrift
-            } else if test_drift == Some(true) {
+            } else if any_test_drift {
                 RowState::StaleTestDrift
             } else if row.last_verdict == RowState::MissingTest
                 || row.last_verdict == RowState::TestMisaligned
             {
                 // Walker doesn't transition out of MISSING_TEST / TEST_MISALIGNED.
                 row.last_verdict
-            } else {
+            } else if has_test_bindings {
                 RowState::Bound
+            } else {
+                // No test bindings + no drift signal: preserve existing
+                // verdict. New rows lacking tests should arrive as
+                // MISSING_TEST via mark-missing-test, not via walk.
+                row.last_verdict
             };
             row.last_verdict = new_state;
 
@@ -777,9 +839,20 @@ pub(crate) mod verbs {
                     .as_slice()
                     .first()
                     .map_or_else(String::new, |c| c.file.clone());
+                let detail = match new_state {
+                    RowState::StaleTestDrift => {
+                        format!(" drifted={drifted_indices:?}")
+                    }
+                    RowState::StaleTestGone => {
+                        format!(" gone={gone_indices:?}")
+                    }
+                    _ => String::new(),
+                };
                 blocking_lines.push(format!(
-                    "docs-alignment: {} on {} -- run /reposix-quality-refresh {}",
+                    "docs-alignment: {} row={}{} on {} -- run /reposix-quality-refresh {}",
                     new_state.as_str(),
+                    row.id,
+                    detail,
                     cite_str,
                     cite_str,
                 ));
@@ -842,11 +915,20 @@ pub(crate) mod verbs {
         // gap-target view machine-readable.
         let per_file = coverage::compute_per_file(&cat.rows);
 
+        // Multi-test row count (W7 / v0.12.1): how many rows bind to >=2
+        // tests. Surfaces the new schema's reach without changing the
+        // headline summary numbers.
+        let multi_test_rows: u64 = u64::try_from(
+            cat.rows.iter().filter(|r| r.tests.len() >= 2).count(),
+        )
+        .unwrap_or(u64::MAX);
+
         if json_mode {
             // Emit { global: {...}, per_file: [...] } -- the per_file is
             // sorted ascending by ratio (worst-first) by compute_per_file.
             let payload = serde_json::json!({
                 "global": &cat.summary,
+                "multi_test_rows": multi_test_rows,
                 "per_file": per_file.iter().map(|p| serde_json::json!({
                     "path": p.path.to_string_lossy(),
                     "total_lines": p.total_lines,
@@ -878,6 +960,7 @@ pub(crate) mod verbs {
             s.coverage_ratio, s.lines_covered, s.total_eligible_lines,
         );
         println!("  coverage_floor         {:.4}", s.coverage_floor);
+        println!("  multi_test_rows        {multi_test_rows}");
         println!("  trend_30d              {}", s.trend_30d);
         if let Some(lw) = &s.last_walked {
             println!("  last_walked            {lw}");

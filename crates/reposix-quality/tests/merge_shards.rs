@@ -42,6 +42,8 @@ fn write_shard(run_dir: &std::path::Path, name: &str, rows: &Value) {
 }
 
 fn make_row(id: &str, claim: &str, file: &str, test: &str) -> Value {
+    // W7 / v0.12.1: `tests` + `test_body_hashes` are parallel arrays.
+    // Single-test fixture rows degrade to one-element vectors.
     json!({
         "id": id,
         "claim": claim,
@@ -51,8 +53,8 @@ fn make_row(id: &str, claim: &str, file: &str, test: &str) -> Value {
             "line_end": 2,
         },
         "source_hash": "deadbeef",
-        "test": test,
-        "test_body_hash": "cafef00d",
+        "tests": [test],
+        "test_body_hashes": ["cafef00d"],
         "rationale": "fixture",
         "last_verdict": "BOUND",
         "last_run": "2026-04-28T08:00:00Z",

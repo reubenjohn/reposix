@@ -116,6 +116,12 @@ pub struct SourceCite {
 }
 
 /// Catalog row.
+///
+/// **Parallel-array invariant** (W7 / v0.12.1): `tests.len() == test_body_hashes.len()`
+/// at all times. Each `tests[i]` (a `<file>::<fn>` citation) has its corresponding
+/// hash in `test_body_hashes[i]`. Empty vec means "no test bound yet" -- the
+/// previous `Option<String>` `None` semantics. Mutation must go through
+/// [`Row::set_tests`] to preserve the invariant; readers may rely on it.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Row {
     pub id: String,
@@ -125,13 +131,17 @@ pub struct Row {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_hash: Option<String>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub test: Option<String>,
+    /// Test citations (`<file>::<fn>` form). One claim may bind to many tests.
+    /// Empty means no test bound. Parallel-arrays with `test_body_hashes`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tests: Vec<String>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub test_body_hash: Option<String>,
+    /// Hashes parallel to `tests`. `test_body_hashes[i]` is the
+    /// `to_token_stream()` sha256 of the fn body cited by `tests[i]`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub test_body_hashes: Vec<String>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rationale: Option<String>,
 
     pub last_verdict: RowState,
@@ -144,6 +154,54 @@ pub struct Row {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_extracted_by: Option<String>,
+}
+
+impl Row {
+    /// Set both `tests` and `test_body_hashes` together. Validates the
+    /// parallel-array invariant; rejects mismatched lengths so writer paths
+    /// cannot accidentally store an inconsistent row.
+    ///
+    /// # Errors
+    ///
+    /// Errors if `tests.len() != hashes.len()`.
+    pub fn set_tests(&mut self, tests: Vec<String>, hashes: Vec<String>) -> Result<()> {
+        if tests.len() != hashes.len() {
+            return Err(anyhow::anyhow!(
+                "Row::set_tests: tests.len ({}) != test_body_hashes.len ({})",
+                tests.len(),
+                hashes.len(),
+            ));
+        }
+        self.tests = tests;
+        self.test_body_hashes = hashes;
+        Ok(())
+    }
+
+    /// Validate the parallel-array invariant on this row. Cheap to call after
+    /// any direct mutation that bypasses [`Row::set_tests`] (deserializers,
+    /// for instance, populate fields independently).
+    ///
+    /// # Errors
+    ///
+    /// Errors if `tests.len() != test_body_hashes.len()`.
+    pub fn validate_parallel_arrays(&self) -> Result<()> {
+        if self.tests.len() != self.test_body_hashes.len() {
+            return Err(anyhow::anyhow!(
+                "Row {} parallel-array invariant violated: tests.len ({}) != test_body_hashes.len ({})",
+                self.id,
+                self.tests.len(),
+                self.test_body_hashes.len(),
+            ));
+        }
+        Ok(())
+    }
+
+    /// Clear all test bindings (used by `mark-missing-test` and similar verbs
+    /// that detach a row from any test).
+    pub fn clear_tests(&mut self) {
+        self.tests.clear();
+        self.test_body_hashes.clear();
+    }
 }
 
 /// Row state machine -- 8 variants from `02-architecture.md` § "Row state machine".
@@ -192,10 +250,19 @@ impl RowState {
 
 impl Catalog {
     /// Load a catalog from disk. Errors if the file is missing or malformed.
+    /// Validates the [`Row`] parallel-array invariant on every row -- a
+    /// catalog that violates it is rejected at load rather than carrying a
+    /// silent corruption forward.
     pub fn load(path: &Path) -> Result<Self> {
         let raw = fs::read_to_string(path)
             .with_context(|| format!("reading catalog at {}", path.display()))?;
-        serde_json::from_str(&raw).with_context(|| format!("parsing catalog at {}", path.display()))
+        let cat: Catalog = serde_json::from_str(&raw)
+            .with_context(|| format!("parsing catalog at {}", path.display()))?;
+        for row in &cat.rows {
+            row.validate_parallel_arrays()
+                .with_context(|| format!("validating row in catalog at {}", path.display()))?;
+        }
+        Ok(cat)
     }
 
     /// Atomic write: serialize to a sibling `.tmp` then rename onto the target.
