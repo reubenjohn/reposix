@@ -22,8 +22,7 @@ pub enum Verb {
         /// Source citation: `<file>:<line_start>-<line_end>`.
         #[arg(long)]
         source: String,
-        /// Test citation: `<file>::<fn>`. Repeat the flag to bind one claim
-        /// to multiple tests; at least one is required.
+        /// Test fn citation (`<file>::<fn>`). Repeatable -- one per binding.
         #[arg(long, action = clap::ArgAction::Append, num_args = 1, required = true)]
         test: Vec<String>,
         /// Grade verdict (must be `GREEN`).
@@ -219,18 +218,23 @@ pub(crate) mod verbs {
 
         // Validate every test citation BEFORE mutating the catalog so a
         // multi-test bind with one bogus entry leaves the catalog untouched.
+        // Index-naming on failure (`--test #<i> "<value>"`) lets operators
+        // see which specific entry tripped a multi-test invocation.
         let mut tests_clean: Vec<String> = Vec::with_capacity(tests.len());
         let mut hashes: Vec<String> = Vec::with_capacity(tests.len());
-        for t in tests {
-            let (test_file, fn_name) = parse_test(t)?;
+        for (i, t) in tests.iter().enumerate() {
+            let (test_file, fn_name) = parse_test(t).with_context(|| {
+                format!("bind: --test #{i} `{t}` failed to parse as `<file>::<fn>`")
+            })?;
             if !test_file.exists() {
                 return Err(anyhow!(
-                    "bind: test file `{}` does not exist",
+                    "bind: --test #{i} `{t}`: test file `{}` does not exist",
                     test_file.display()
                 ));
             }
-            let body_hash = hash::test_body_hash(&test_file, &fn_name)
-                .with_context(|| format!("computing test_body_hash for {t}"))?;
+            let body_hash = hash::test_body_hash(&test_file, &fn_name).with_context(|| {
+                format!("bind: --test #{i} `{t}`: computing test_body_hash failed")
+            })?;
             tests_clean.push(t.clone());
             hashes.push(body_hash);
         }

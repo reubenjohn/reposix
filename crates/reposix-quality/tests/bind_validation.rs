@@ -215,3 +215,159 @@ fn bind_rejects_non_green_grade() {
         .assert()
         .failure();
 }
+
+// W7b -- multi-test `--test` repetition (CLI surface follow-up).
+
+#[test]
+fn bind_with_two_tests_persists_both_with_parallel_hashes() {
+    let dir = TempDir::new().unwrap();
+    let cat = seed(&dir);
+    let doc = dir.path().join("doc.md");
+    fs::write(&doc, "line one\nline two\n").unwrap();
+    // Two genuinely-different test fns -> distinct body hashes.
+    let test_file = dir.path().join("t.rs");
+    fs::write(
+        &test_file,
+        "fn alpha() { let _ = 1; assert_eq!(1, 1); }\n\
+         fn beta() { let v = vec![1, 2, 3]; assert_eq!(v.len(), 3); }\n",
+    )
+    .unwrap();
+
+    Command::cargo_bin("reposix-quality")
+        .unwrap()
+        .args([
+            "--catalog",
+            cat.to_str().unwrap(),
+            "doc-alignment",
+            "bind",
+            "--row-id",
+            "test/multi-two",
+            "--claim",
+            "claim text",
+            "--source",
+            &format!("{}:1-2", doc.to_string_lossy()),
+            "--test",
+            &format!("{}::alpha", test_file.to_string_lossy()),
+            "--test",
+            &format!("{}::beta", test_file.to_string_lossy()),
+            "--grade",
+            "GREEN",
+            "--rationale",
+            "rat",
+        ])
+        .assert()
+        .success();
+
+    let raw = fs::read_to_string(&cat).unwrap();
+    let v: serde_json::Value = serde_json::from_str(&raw).unwrap();
+    let row = &v["rows"][0];
+    let tests = row["tests"].as_array().expect("tests array present");
+    let hashes = row["test_body_hashes"]
+        .as_array()
+        .expect("test_body_hashes array present");
+    assert_eq!(tests.len(), 2, "two --test args persist as two entries");
+    assert_eq!(
+        hashes.len(),
+        2,
+        "test_body_hashes is parallel to tests (len 2)"
+    );
+    let h0 = hashes[0].as_str().expect("hash 0 is a string");
+    let h1 = hashes[1].as_str().expect("hash 1 is a string");
+    assert!(!h0.is_empty(), "hash 0 non-empty");
+    assert!(!h1.is_empty(), "hash 1 non-empty");
+    assert_ne!(
+        h0, h1,
+        "alpha and beta have genuinely-different bodies -> distinct hashes"
+    );
+    assert_eq!(row["last_verdict"], "BOUND");
+}
+
+#[test]
+fn bind_rejects_when_one_of_many_tests_is_invalid() {
+    let dir = TempDir::new().unwrap();
+    let cat = seed(&dir);
+    let doc = dir.path().join("doc.md");
+    fs::write(&doc, "line one\nline two\n").unwrap();
+    let test_file = dir.path().join("t.rs");
+    fs::write(&test_file, "fn alpha() { let _ = 1; }\n").unwrap();
+    let bogus = dir.path().join("nope.rs");
+    // Note: bogus file is intentionally NOT created.
+
+    let assert = Command::cargo_bin("reposix-quality")
+        .unwrap()
+        .args([
+            "--catalog",
+            cat.to_str().unwrap(),
+            "doc-alignment",
+            "bind",
+            "--row-id",
+            "test/multi-one-invalid",
+            "--claim",
+            "claim text",
+            "--source",
+            &format!("{}:1-2", doc.to_string_lossy()),
+            "--test",
+            &format!("{}::alpha", test_file.to_string_lossy()),
+            "--test",
+            &format!("{}::ghost", bogus.to_string_lossy()),
+            "--grade",
+            "GREEN",
+            "--rationale",
+            "rat",
+        ])
+        .assert()
+        .failure();
+
+    // Error names which --test index failed.
+    let stderr = String::from_utf8_lossy(&assert.get_output().stderr).to_string();
+    assert!(
+        stderr.contains("--test #1"),
+        "stderr names which test index failed -- got:\n{stderr}"
+    );
+
+    // Catalog row was NOT created (validation runs before any mutation).
+    let raw = fs::read_to_string(&cat).unwrap();
+    let v: serde_json::Value = serde_json::from_str(&raw).unwrap();
+    let rows = v["rows"].as_array().expect("rows array present");
+    assert!(
+        rows.is_empty(),
+        "no row created when validation fails: {rows:?}"
+    );
+}
+
+#[test]
+fn bind_zero_tests_is_rejected_at_clap() {
+    let dir = TempDir::new().unwrap();
+    let cat = seed(&dir);
+    let doc = dir.path().join("doc.md");
+    fs::write(&doc, "line one\nline two\n").unwrap();
+
+    // No --test argument at all: clap rejects with the standard
+    // "required" message naming the long flag.
+    let assert = Command::cargo_bin("reposix-quality")
+        .unwrap()
+        .args([
+            "--catalog",
+            cat.to_str().unwrap(),
+            "doc-alignment",
+            "bind",
+            "--row-id",
+            "test/zero-tests",
+            "--claim",
+            "claim text",
+            "--source",
+            &format!("{}:1-2", doc.to_string_lossy()),
+            "--grade",
+            "GREEN",
+            "--rationale",
+            "rat",
+        ])
+        .assert()
+        .failure();
+
+    let stderr = String::from_utf8_lossy(&assert.get_output().stderr).to_string();
+    assert!(
+        stderr.contains("--test"),
+        "clap error mentions --test -- got:\n{stderr}"
+    );
+}
