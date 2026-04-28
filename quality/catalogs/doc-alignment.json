@@ -5,17 +5,17 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 193,
+    "claims_bound": 203,
     "claims_missing_test": 152,
     "claims_retire_proposed": 3,
     "claims_retired": 30,
-    "alignment_ratio": 0.5391061452513967,
+    "alignment_ratio": 0.5670391061452514,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-28T18:45:06Z",
-    "coverage_ratio": 0.2035720794605431,
+    "last_walked": "2026-04-28T18:59:04Z",
+    "coverage_ratio": 0.2027223230490018,
     "lines_covered": 1117,
-    "total_eligible_lines": 5487,
+    "total_eligible_lines": 5510,
     "coverage_floor": 0.1
   },
   "rows": [
@@ -449,16 +449,18 @@
         "line_start": 60,
         "line_end": 62
       },
-      "source_hash": "e6d0d0b6ebc0e180c1877bcfaa30241b17e6b4c7375be2fcf7c7d6ee902257c2",
+      "source_hash": "dd77191d9e34d1ed1174b9ac27937e6d6cf3c3962d879f34cada17003d68b561",
       "tests": [
         "crates/reposix-core/tests/compile_fail.rs::http_client_inner_is_private"
       ],
       "test_body_hashes": [
-        "placeholder_hash_no_match"
+        "3bfb81e3580bd1a53245997d8def6e11d84592392f93d4cb5998ced76ba27284"
       ],
       "rationale": "Compile-fail test asserts HttpClient::inner is private",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "WRITE_TEST",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T18:59:37Z",
+      "last_extracted": "2026-04-28T18:59:37Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -516,16 +518,18 @@
         "line_start": 83,
         "line_end": 84
       },
-      "source_hash": "160f43b3e17e36e4740a65e897f5b6c19074ade6214b5d7196377118d314dcc9",
+      "source_hash": "f77ac4b58c0499a4e067683f1efbea634be0a6b20739eac316563947e467107f",
       "tests": [
         "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error"
       ],
       "test_body_hashes": [
-        "b021be2ecc99edffa48b444750485756e208836076f13dd21602267f4c23442c"
+        "8d1e999a3065adc79d0b5060e5a43c8003ee6e42d912df81d7ba4eb70d5481d9"
       ],
       "rationale": "Tests Error::Egress returned and audit row with op='egress_denied' written",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "WRITE_TEST",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T18:59:37Z",
+      "last_extracted": "2026-04-28T18:59:37Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -757,7 +761,7 @@
           "line_end": 120
         }
       ],
-      "source_hash": "f828f927370e3fa4c5a8cf0e04da6a9fa5965e87625cc386591858b5df917ee0",
+      "source_hash": "b8fcbf98b53ca1e9287192c4e94da116b13c3c77e3671b81caa33d62040429c3",
       "tests": [
         "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit"
       ],
@@ -765,10 +769,10 @@
         "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904"
       ],
       "rationale": "SC4: attempts UPDATE on audit_events, asserts error.contains(append-only)",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:09:36Z",
-      "last_extracted": "2026-04-28T09:09:36Z",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T18:59:37Z",
+      "last_extracted": "2026-04-28T18:59:37Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -779,16 +783,18 @@
         "line_start": 67,
         "line_end": 67
       },
-      "source_hash": "9e7f8da9c56a6d548034df43ac217759e02c4affb482effa6d7b5c8a3dae9ad8",
+      "source_hash": "2fb847a23c6d7178b2554031e877ba3a379bc55c65efae793fb1db6535e00c69",
       "tests": [
         "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail"
       ],
       "test_body_hashes": [
-        "placeholder_hash_no_match"
+        "9e79aa55e86b02c5a3b3e2d2c7ea3fbfd12674ad799270bbdcab13744b79fe38"
       ],
       "rationale": "Tests UPDATE and DELETE both fail with 'append-only' trigger abort",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "WRITE_TEST",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T18:59:37Z",
+      "last_extracted": "2026-04-28T18:59:37Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2045,16 +2051,18 @@
         "line_start": 63,
         "line_end": 63
       },
-      "source_hash": "68b450076987cf93ae5e362ad513339eb7041f60459c9744433709862af86b90",
+      "source_hash": "b5d40134b34a42d42e78e1cbc2c8d100d859b8fd9f5855dcc19f43b43f1cd517",
       "tests": [
         "crates/reposix-core/tests/http_allowlist.rs::loopback_is_allowed_by_default"
       ],
       "test_body_hashes": [
-        "ebbe56ee7a2b125e5cd7b45e076df44b8eb51cf01ecbfa2be87479a6100e9170"
+        "f57d468a8ca746ff50aa2b22406263f2c2de5a0d0e14b14136797dcff15b811f"
       ],
       "rationale": "Tests loopback succeeds under default allowlist; non-loopback IP rejected",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "WRITE_TEST",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T18:59:37Z",
+      "last_extracted": "2026-04-28T18:59:37Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2258,16 +2266,18 @@
         "line_start": 60,
         "line_end": 62
       },
-      "source_hash": "e6d0d0b6ebc0e180c1877bcfaa30241b17e6b4c7375be2fcf7c7d6ee902257c2",
+      "source_hash": "dd77191d9e34d1ed1174b9ac27937e6d6cf3c3962d879f34cada17003d68b561",
       "tests": [
         "crates/reposix-core/tests/http_allowlist.rs::egress_to_non_allowlisted_host_is_rejected"
       ],
       "test_body_hashes": [
-        "a59dc261043e41cb1b83c53ba3f96152182a2b0f26284b8e4cf014dd54b028e1"
+        "ae6c75e2bada9ea1c75464ff3f9bb8c600c69640eefd1f96f1be31af328db9a5"
       ],
       "rationale": "Tests non-allowlisted host rejected via InvalidOrigin error before any I/O",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "WRITE_TEST",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T18:59:37Z",
+      "last_extracted": "2026-04-28T18:59:37Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2720,16 +2730,18 @@
         "line_start": 64,
         "line_end": 64
       },
-      "source_hash": "a4bf61d0a0a5efd7c0a84c8c2d7eb5350a6835c098127664291a7f39ef9277cb",
+      "source_hash": "8716974b2ea86ffed66e3edbbebe6b0da110e8355cce7ee5a58e34651f9c6c19",
       "tests": [
         "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields"
       ],
       "test_body_hashes": [
-        "de220ce400c981c6c08ab0af8b6e04d6989c4702f8de0949e07b30f271ff1251"
+        "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b"
       ],
       "rationale": "Tests inbound blob with id:999999 and version:999 overrides stripped from PATCH body",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "WRITE_TEST",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T18:59:37Z",
+      "last_extracted": "2026-04-28T18:59:37Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3499,16 +3511,18 @@
         "line_start": 20,
         "line_end": 21
       },
-      "source_hash": "b9061dbdb4c02b22847415d9a1cd0a5fdbc62bc645ee6df7710df7ed9f0de70d",
+      "source_hash": "ac2889ecede8e6c9f77abb0369b70f131500ffc066b794c5c5ceec09455e3d3a",
       "tests": [
         "crates/reposix-core/tests/http_allowlist.rs::redirect_target_is_rechecked_against_allowlist"
       ],
       "test_body_hashes": [
-        "ab297c5dfbaae7e36ec9e763500ab01653271c80dff2389e2d1a46bc16ab4fd4"
+        "fabaec6a19796f8e5e72a43074f6f8a30a433e0f54fc1f399c2067f80984c51c"
       ],
       "rationale": "Tests 302 response surfaces as-is without following redirect; re-feeding target through allowlist recheck rejects attacker.example",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "WRITE_TEST",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T18:59:37Z",
+      "last_extracted": "2026-04-28T18:59:37Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6878,16 +6892,18 @@
         "line_start": 65,
         "line_end": 65
       },
-      "source_hash": "5adfa98de928b70c22a4e5e2db3be7913c6d93d720303d6a2b3e18e674ab9c62",
+      "source_hash": "5f62fa57ad810fd428d769b62c47a6c6f17d34115ddd37070376d60e8e7e917a",
       "tests": [
         "crates/reposix-core/tests/compile_fail.rs::tainted_cannot_be_used_where_untainted_required"
       ],
       "test_body_hashes": [
-        "placeholder_hash_no_match"
+        "7f4a09843031892a30b23c0b767d50482ea163d23687a2bab8da1602d1927939"
       ],
       "rationale": "Compile-fail test asserts Tainted cannot be used where Untainted required",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "WRITE_TEST",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T18:59:37Z",
+      "last_extracted": "2026-04-28T18:59:37Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7142,16 +7158,18 @@
         "line_start": 65,
         "line_end": 65
       },
-      "source_hash": "5adfa98de928b70c22a4e5e2db3be7913c6d93d720303d6a2b3e18e674ab9c62",
+      "source_hash": "5f62fa57ad810fd428d769b62c47a6c6f17d34115ddd37070376d60e8e7e917a",
       "tests": [
         "crates/reposix-core/tests/compile_fail.rs::untainted_new_is_pub_crate_only"
       ],
       "test_body_hashes": [
-        "placeholder_hash_no_match"
+        "6647d741f4d2f052eb94bf3a0519805282ef915b6b16a5dbc33d3bfe9b5a354d"
       ],
       "rationale": "Compile-fail test prevents future promotion of pub(crate) fn new to pub fn new",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "WRITE_TEST",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T18:59:37Z",
+      "last_extracted": "2026-04-28T18:59:37Z",
       "last_extracted_by": "bind-call"
     },
     {
