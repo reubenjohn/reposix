@@ -29,6 +29,16 @@
 
 name: release
 
+# NOTE (P61 SUBJ-03): this workflow runs IN PARALLEL with
+# .github/workflows/quality-pre-release.yml. Both fire on the same tag
+# push (v*, reposix-cli-v*). If pre-release verification fails (RED
+# catalog -- STALE subjective rubric rows or FAIL gates), the release
+# artifacts are still produced; the maintainer must manually invalidate
+# the release. Hard-gate chaining (release waits for pre-release
+# verdict) is filed as a v0.12.1 carry-forward via MIGRATE-03 in
+# .planning/REQUIREMENTS.md, because GitHub Actions cross-workflow
+# `needs:` declarations are unsupported (P56 SURPRISES row 1).
+
 on:
   push:
     tags:

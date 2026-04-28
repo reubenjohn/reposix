@@ -1,0 +1,75 @@
+name: quality-pre-release
+
+# Pre-release catalog verification per P61 SUBJ-03. Fires on the same tag
+# globs as release.yml so the catalog verdict is produced for every release
+# tag. v0.12.0 ships SOFT-GATE (parallel) execution: release.yml does not
+# wait for this workflow's verdict because cross-workflow `needs:` is
+# unsupported by GitHub Actions (P56 SURPRISES row 1). Hard-gate chaining
+# is filed as a v0.12.1 carry-forward in MIGRATE-03.
+
+on:
+  push:
+    tags:
+      - 'v*'
+      - 'reposix-cli-v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+
+concurrency:
+  group: quality-pre-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  pre-release:
+    name: pre-release gates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run quality runner --cadence pre-release
+        id: runner
+        run: |
+          set -euo pipefail
+          python3 quality/runners/run.py --cadence pre-release | tee /tmp/pre-release-runner.log
+
+      - name: Generate verdict
+        if: always()
+        run: |
+          python3 quality/runners/verdict.py --cadence pre-release || true
+          shopt -s nullglob
+          for f in quality/reports/verdicts/pre-release/*.md; do
+            tail -120 "$f" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-pre-release-${{ github.run_id }}
+          path: |
+            quality/reports/verifications/
+            quality/reports/verdicts/pre-release/
+            quality/reports/badge.json
+            /tmp/pre-release-runner.log
+          retention-days: 90
+
+      - name: Surface STALE-or-FAIL recovery hint
+        if: failure()
+        run: |
+          echo "::error::Quality pre-release verdict RED. STALE or FAIL rows present."
+          echo "::error::Run locally in a Claude session: bash .claude/skills/reposix-quality-review/dispatch.sh --all-stale --force"
+          echo "::error::Then re-run via: gh workflow run quality-pre-release.yml --ref ${{ github.ref_name }}"
+          exit 1
