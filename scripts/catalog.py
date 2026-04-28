@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# KEEP-AS-CANONICAL (P63 SIMPLIFY-12): no canonical home under quality/gates/. Per-FILE planning aid; meta-helper distinct from quality/catalogs/ per-CHECK enforcement (SIMPLIFY-03 boundary).
 """Per-file LIVING tracker for v0.11.1.
 
 JSON at .planning/v0.11.1-catalog.json is the source of truth.

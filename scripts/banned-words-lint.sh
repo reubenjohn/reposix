@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# KEEP-AS-CANONICAL (P63 SIMPLIFY-12): canonical for own domain. .github/workflows/docs.yml invokes this exact path; meta-helper for the docs banned-words layer.
 #
 # banned-words-lint.sh — enforce P1 + P2 progressive-disclosure layer rules.
 #

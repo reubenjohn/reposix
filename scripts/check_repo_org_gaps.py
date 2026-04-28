@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# KEEP-AS-CANONICAL (P63 SIMPLIFY-12): no canonical home; meta-helper for the P62 audit closure.
 """Verify the P62 repo-org gap audit is complete and consistent.
 
 Reads:

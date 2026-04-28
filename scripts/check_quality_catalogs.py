@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# KEEP-AS-CANONICAL (P63 SIMPLIFY-12): no canonical home; meta-helper / structural-contract validator.
 """Validate quality/catalogs/*.json structural invariants.
 
 Per quality/PROTOCOL.md Step 3 (catalog-first), the catalog files define
@@ -75,12 +76,33 @@ CONTRACTS = {
     "orphan-scripts": {
         "dimension": "meta",
         # P58 Wave E removed the release/crates-io-max-version waiver row;
-        # P63 Wave 1 locks the schema with rows=[] (Wave 2 populates after
-        # caller-scan).
-        "row_count": 0,
-        "required_ids": set(),
+        # P63 Wave 1 locked the schema with rows=[]; Wave 2 populated rows[]
+        # after the SIMPLIFY-12 caller-scan: 17 surviving scripts (13
+        # SHIM-WAIVED + 4 KEEP-AS-CANONICAL; 5 DELETE decisions land in
+        # Wave 2 commit). Required-ids enforces presence; the verifier
+        # quality/gates/structure/orphan-scripts-audit.py grades shim-shape.
+        "row_count": 17,
+        "required_ids": {
+            "orphan-scripts/banned-words-lint",
+            "orphan-scripts/bench-token-economy-py",
+            "orphan-scripts/catalog-py",
+            "orphan-scripts/check-docs-site",
+            "orphan-scripts/check-mermaid-renders",
+            "orphan-scripts/check-quality-catalogs-py-dash",
+            "orphan-scripts/check-doc-links-py",
+            "orphan-scripts/check-quality-catalogs-py-underscore",
+            "orphan-scripts/check-repo-org-gaps-py",
+            "orphan-scripts/dark-factory-test",
+            "orphan-scripts/end-state-py",
+            "orphan-scripts/green-gauntlet",
+            "orphan-scripts/latency-bench",
+            "orphan-scripts/p56-asset-existence",
+            "orphan-scripts/p56-rehearse-cargo-binstall",
+            "orphan-scripts/p56-rehearse-curl-install",
+            "orphan-scripts/p56-validate-install-evidence",
+        },
         "allowed_cadences": {"pre-push"},
-        "all_status": "WAIVED",
+        "all_status": "NOT-VERIFIED",
         "orphan_lineage_check": False,
     },
 }

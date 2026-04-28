@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# KEEP-AS-CANONICAL (P63 SIMPLIFY-12): canonical for own domain (P56 install-evidence rehearsal pattern); .planning/verifications/p56/ artifact tree references this exact path.
 # P56 RELEASE-01 — asset-existence check for a release artifact URL.
 #
 # Performs a HEAD request and grabs the first 32 bytes of the asset.

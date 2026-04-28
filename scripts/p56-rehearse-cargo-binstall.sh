@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# KEEP-AS-CANONICAL (P63 SIMPLIFY-12): canonical for own domain (P56 install-evidence rehearsal); CLAUDE.md P56 section names this exact path.
 # P56 RELEASE-01 — container rehearsal for the `cargo binstall` install path.
 #
 # Runs `cargo binstall reposix-cli reposix-remote` inside a fresh

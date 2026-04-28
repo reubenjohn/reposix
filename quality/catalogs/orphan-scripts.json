@@ -1,6 +1,401 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
-  "comment": "Quality Gates catalog -- orphan-scripts waivers. SIMPLIFY-12 (P63) audits scripts/ at milestone close. Each row documents a script that survives P63 (after caller-scan in P63 Wave 2) as a thin shim because canonical removal would break documented dev-loop UX or external doc references. Pure deletions land in Wave 2 with no row here. Schema: id=orphan-scripts/<basename>, kind=mechanical, verifier=quality/gates/structure/orphan-scripts-audit.py (Wave 2 ships it). Wave 2 populates rows[] based on the actual caller-scan results.",
+  "comment": "Quality Gates catalog -- orphan-scripts waivers. SIMPLIFY-12 (P63) audits scripts/ at milestone close. Each row documents a script that survives P63 (after caller-scan in P63 Wave 2) as a thin shim because canonical removal would break documented dev-loop UX or external doc references, OR as KEEP-AS-CANONICAL because the script has no canonical home under quality/gates/<dim>/. Pure deletions land in Wave 2 with no row here. Schema: id=orphan-scripts/<basename>, kind=mechanical, verifier=quality/gates/structure/orphan-scripts-audit.py. Wave 2 retirement decisions are recorded in quality/reports/audits/scripts-retirement-p63.md.",
   "dimension": "meta",
-  "rows": []
+  "rows": [
+    {
+      "id": "orphan-scripts/banned-words-lint",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/banned-words-lint.sh", "quality/gates/structure/banned-words.sh"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/banned-words-lint.sh exists",
+          "first 10 lines mention canonical / source-of-truth (docs/.banned-words.toml)",
+          ".github/workflows/docs.yml continues to invoke this exact path"
+        ],
+        "max_lines": 220
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/banned-words-lint"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-banned-words-lint.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: scripts/banned-words-lint.sh grew beyond cap OR docs/.banned-words.toml drifted from the script's hardcoded mirror. CI workflow .github/workflows/docs.yml depends on this path; do NOT delete without updating the workflow.",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/bench-token-economy-py",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/bench_token_economy.py", "quality/gates/perf/bench_token_economy.py"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/bench_token_economy.py is a thin shim (<= 40 lines)",
+          "first 10 lines name canonical at quality/gates/perf/bench_token_economy.py"
+        ],
+        "max_lines": 40
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/bench-token-economy-py"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-bench-token-economy-py.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: shim grew OR canonical moved. docs/benchmarks/token-economy.md documents this exact entry point.",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/catalog-py",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/catalog.py", "N/A -- per-FILE catalog renderer (SIMPLIFY-03 boundary)"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/catalog.py exists",
+          "first 10 lines document this is a meta-helper / has no canonical home under quality/gates/",
+          "SIMPLIFY-03 boundary statement preserved in quality/catalogs/README.md"
+        ],
+        "max_lines": 500
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/catalog-py"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-catalog-py.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: scripts/catalog.py grew beyond 500 LOC OR the SIMPLIFY-03 boundary needs revisiting. KEEP-AS-CANONICAL: per-FILE planning aid; structurally distinct from quality/catalogs/ per-CHECK enforcement.",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/check-docs-site",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/check-docs-site.sh", "quality/gates/docs-build/mkdocs-strict.sh"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/check-docs-site.sh is a thin shim (<= 40 lines)",
+          "first 10 lines name canonical at quality/gates/docs-build/mkdocs-strict.sh"
+        ],
+        "max_lines": 40
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/check-docs-site"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-check-docs-site.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: shim grew OR canonical moved. CLAUDE.md docs-site validation section documents this path.",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/check-mermaid-renders",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/check-mermaid-renders.sh", "quality/gates/docs-build/mermaid-renders.sh"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/check-mermaid-renders.sh is a thin shim (<= 40 lines)",
+          "first 10 lines name canonical at quality/gates/docs-build/mermaid-renders.sh"
+        ],
+        "max_lines": 40
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/check-mermaid-renders"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-check-mermaid-renders.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: shim grew OR canonical moved.",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/check-quality-catalogs-py-dash",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/check-quality-catalogs.py", "N/A -- meta-helper (lightweight per-row schema validator)"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/check-quality-catalogs.py exists",
+          "first 10 lines document this is a meta-helper / lightweight schema validator"
+        ],
+        "max_lines": 200
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/check-quality-catalogs-py-dash"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-check-quality-catalogs-py-dash.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: script grew beyond 200 LOC. KEEP-AS-CANONICAL: lightweight per-row validator distinct from check_quality_catalogs.py (structural-contract validator).",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/check-doc-links-py",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/check_doc_links.py", "quality/gates/docs-build/link-resolution.py"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/check_doc_links.py is a thin shim (<= 40 lines)",
+          "first 10 lines name canonical at quality/gates/docs-build/link-resolution.py"
+        ],
+        "max_lines": 40
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/check-doc-links-py"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-check-doc-links-py.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: shim grew OR canonical moved.",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/check-quality-catalogs-py-underscore",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/check_quality_catalogs.py", "N/A -- meta-helper (structural-contract validator)"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/check_quality_catalogs.py exists",
+          "first 10 lines document this is the structural-invariant validator / meta-helper",
+          "P63 Wave 1 contract updates preserved (15/6/0 row counts; cargo-fmt-clean waiver-null assert)"
+        ],
+        "max_lines": 280
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/check-quality-catalogs-py-underscore"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-check-quality-catalogs-py-underscore.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: script grew beyond 280 LOC. KEEP-AS-CANONICAL: structural-contract validator with no canonical under quality/gates/.",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/check-repo-org-gaps-py",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/check_repo_org_gaps.py", "N/A -- P62 audit verifier (meta-helper)"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/check_repo_org_gaps.py exists",
+          "first 10 lines document P62 audit verification scope / meta-helper"
+        ],
+        "max_lines": 250
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/check-repo-org-gaps-py"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-check-repo-org-gaps-py.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: script grew. KEEP-AS-CANONICAL: P62 audit verifier with no canonical under quality/gates/.",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/dark-factory-test",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/dark-factory-test.sh", "quality/gates/agent-ux/dark-factory.sh"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/dark-factory-test.sh is a thin shim (<= 20 lines)",
+          "first 10 lines name canonical at quality/gates/agent-ux/dark-factory.sh"
+        ],
+        "max_lines": 20
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/dark-factory-test"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-dark-factory-test.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: shim grew. CLAUDE.md Local dev loop section names this exact command path.",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/end-state-py",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/end-state.py", "quality/runners/verdict.py"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/end-state.py is a thin shim (<= 60 lines)",
+          "first 10 lines name canonical at quality/runners/verdict.py"
+        ],
+        "max_lines": 60
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/end-state-py"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-end-state-py.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: shim grew. CLAUDE.md SESSION-END-STATE section + freshness invariants section reference this path.",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/green-gauntlet",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/green-gauntlet.sh", "quality/runners/run.py"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/green-gauntlet.sh is a thin shim (<= 60 lines)",
+          "first 10 lines name canonical at quality/runners/run.py (mode-mapped)"
+        ],
+        "max_lines": 60
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/green-gauntlet"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-green-gauntlet.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: shim grew. SIMPLIFY-09 P60 Wave D mode-mapping intentional.",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/latency-bench",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/latency-bench.sh", "quality/gates/perf/latency-bench.sh"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/latency-bench.sh is a thin shim (<= 20 lines)",
+          "first 10 lines name canonical at quality/gates/perf/latency-bench.sh"
+        ],
+        "max_lines": 20
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/latency-bench"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-latency-bench.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: shim grew. .github/workflows/bench-latency-cron.yml invokes this exact path.",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/p56-asset-existence",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/p56-asset-existence.sh", "N/A -- canonical install-evidence rehearsal pattern (P56)"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/p56-asset-existence.sh exists",
+          "first 10 lines document P56 install-evidence rehearsal scope / canonical for own domain"
+        ],
+        "max_lines": 80
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/p56-asset-existence"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-p56-asset-existence.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: script grew. KEEP-AS-CANONICAL: CLAUDE.md P56 section enumerates this path; .planning/verifications/p56/ artifact tree references it.",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/p56-rehearse-cargo-binstall",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/p56-rehearse-cargo-binstall.sh", "N/A -- canonical install-evidence rehearsal (P56)"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/p56-rehearse-cargo-binstall.sh exists",
+          "first 10 lines document P56 RELEASE-01 container rehearsal scope"
+        ],
+        "max_lines": 120
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/p56-rehearse-cargo-binstall"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-p56-rehearse-cargo-binstall.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: script grew. CLAUDE.md P56 section names this canonical install-evidence rehearsal entry point.",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/p56-rehearse-curl-install",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/p56-rehearse-curl-install.sh", "N/A -- canonical install-evidence rehearsal (P56)"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/p56-rehearse-curl-install.sh exists",
+          "first 10 lines document P56 RELEASE-01 container rehearsal scope"
+        ],
+        "max_lines": 120
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/p56-rehearse-curl-install"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-p56-rehearse-curl-install.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: script grew. CLAUDE.md P56 section names this canonical install-evidence rehearsal entry point.",
+      "waiver": null
+    },
+    {
+      "id": "orphan-scripts/p56-validate-install-evidence",
+      "dimension": "meta",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": ["scripts/p56-validate-install-evidence.py", "N/A -- canonical install-evidence validator (P56)"],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/p56-validate-install-evidence.py exists",
+          "first 10 lines document P56 RELEASE-01..03 install-evidence validation scope"
+        ],
+        "max_lines": 220
+      },
+      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/p56-validate-install-evidence"], "timeout_s": 30, "container": null},
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-p56-validate-install-evidence.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: script grew. CLAUDE.md P56 section names this canonical install-evidence validator; verifier subagent re-runs this exact path.",
+      "waiver": null
+    }
+  ]
 }

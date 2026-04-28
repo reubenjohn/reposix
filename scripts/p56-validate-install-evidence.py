@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# KEEP-AS-CANONICAL (P63 SIMPLIFY-12): canonical for own domain (P56 install-evidence validator); CLAUDE.md P56 section names this exact path.
 """P56 RELEASE-01..03 — install-evidence JSON validator.
 
 Validates each `.planning/verifications/p56/install-paths/<row>.json` file

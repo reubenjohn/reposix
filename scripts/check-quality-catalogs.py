@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# KEEP-AS-CANONICAL (P63 SIMPLIFY-12): no canonical home; meta-helper / lightweight per-row schema validator.
 """Lightweight schema validator for quality/catalogs/*.json.
 
 Checks structural invariants the runner depends on:
