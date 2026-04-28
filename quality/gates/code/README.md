@@ -38,6 +38,28 @@ documentation-of-existing — they reference ci.yml's `test` and
 fmt locally from the verifier) is P63 final per POLISH-CODE
 traceability.
 
+### P63 -- POLISH-CODE final wiring (added 2026-04-28)
+
+POLISH-CODE closes at P63: the two `code/cargo-*` rows graduate from
+P58-stub documentation-of-existing into final wiring.
+
+- `code/cargo-fmt-clean` flips its verifier from the `ci-job-status.sh`
+  wrapper to `quality/gates/code/cargo-fmt-clean.sh` (Wave 3 ships the
+  script). The new verifier directly invokes `cargo fmt --all -- --check`
+  -- read-only, ~5s, safe under the CLAUDE.md "Build memory budget"
+  ONE cargo at a time rule (no compile). Waiver dropped; row enforces
+  locally as well as in CI.
+- `code/cargo-test-pass` keeps the `ci-job-status.sh` wrapper as
+  canonical. Running `cargo nextest run --workspace` from the verifier
+  consumes 6-15 minutes (memory-budget rule violation per CLAUDE.md +
+  exceeds the pre-pr 10-minute cadence cap). CI is the canonical
+  enforcement venue; the waiver `tracked_in` flips to `v0.12.1
+  MIGRATE-03 -- per-row local cargo enforcement` so the v0.12.1
+  implementer can explore per-crate alternatives, sccache-warmed
+  CI-only verifier, or accepting CI as the only home.
+
+Cross-reference: `.planning/REQUIREMENTS.md` § POLISH-CODE.
+
 ## Cross-references
 
 - `quality/catalogs/code.json` — rows backed by these verifiers.

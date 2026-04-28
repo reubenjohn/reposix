@@ -26,6 +26,8 @@ CATALOG_DIR = REPO_ROOT / "quality" / "catalogs"
 VALID_DIMENSIONS = {
     "code", "docs-build", "docs-repro", "release",
     "structure", "agent-ux", "perf", "security", "meta",
+    # P63 Wave 1: v0.12.1 carry-forward stub dimension.
+    "cross-platform",
 }
 VALID_CADENCES = {
     "pre-push", "pre-pr", "weekly", "pre-release", "post-release", "on-demand",

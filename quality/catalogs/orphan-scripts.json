@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
-  "comment": "Quality Gates catalog — orphan-scripts waivers. Each row documents a script that genuinely cannot be absorbed into a quality/gates/<dim>/ home and explains why. SIMPLIFY-12 (P63) audits this file at milestone close. Currently empty (P58 Wave E removed the release/crates-io-max-version waiver after the dimension provides active enforcement via the 8 release/crates-io-max-version/<crate> rows in release-assets.json; reposix-swarm row was removed entirely per SURPRISES.md 2026-04-27 P58 Wave A entry — `publish=false`).",
+  "comment": "Quality Gates catalog -- orphan-scripts waivers. SIMPLIFY-12 (P63) audits scripts/ at milestone close. Each row documents a script that survives P63 (after caller-scan in P63 Wave 2) as a thin shim because canonical removal would break documented dev-loop UX or external doc references. Pure deletions land in Wave 2 with no row here. Schema: id=orphan-scripts/<basename>, kind=mechanical, verifier=quality/gates/structure/orphan-scripts-audit.py (Wave 2 ships it). Wave 2 populates rows[] based on the actual caller-scan results.",
   "dimension": "meta",
   "rows": []
 }

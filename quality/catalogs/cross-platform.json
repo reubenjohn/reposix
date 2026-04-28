@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "comment": "Quality Gates catalog -- cross-platform dimension. v0.12.0 ships stub rows only (NOT-VERIFIED + waiver until 2026-07-26 tracked_in v0.12.1 CROSS-* placeholders). v0.12.0 ships ubuntu-only matrix; v0.12.1 MIGRATE-03 (d) wires the windows-2022 + macos-14 GH Actions matrix rehearsals. Schema spec: quality/catalogs/README.md.",
+  "dimension": "cross-platform",
+  "rows": [
+    {
+      "id": "cross-platform/windows-2022-rehearsal",
+      "dimension": "cross-platform",
+      "cadence": "pre-release",
+      "kind": "container",
+      "sources": [
+        ".github/workflows/release.yml (matrix.os)",
+        "examples/*/run.sh"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "v0.12.1 stub -- the curl-installer + cargo-binstall paths rehearse green on a windows-2022 GH Actions runner"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/cross-platform/windows-2022-rehearsal.sh",
+        "args": [],
+        "timeout_s": 1800,
+        "container": "windows-2022"
+      },
+      "artifact": "quality/reports/verifications/cross-platform/windows-2022-rehearsal.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "v0.12.1 CROSS-01 stub: windows GH runners cost ~$0.08/min and v0.12.0 ships ubuntu-only matrix.",
+      "waiver": {
+        "until": "2026-07-26T00:00:00Z",
+        "reason": "v0.12.1 carry-forward per MIGRATE-03; windows GH runners cost ~$0.08/min and v0.12.0 ships ubuntu-only matrix. Verifier intentionally does not exist yet -- this row anchors the contract for the v0.12.1 implementer.",
+        "dimension_owner": "v0.12.0 P63 cross-platform dimension owner",
+        "tracked_in": "v0.12.1 CROSS-01"
+      }
+    },
+    {
+      "id": "cross-platform/macos-14-rehearsal",
+      "dimension": "cross-platform",
+      "cadence": "pre-release",
+      "kind": "container",
+      "sources": [
+        ".github/workflows/release.yml (matrix.os)",
+        "examples/*/run.sh"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "v0.12.1 stub -- the curl-installer + cargo-binstall paths rehearse green on a macos-14 GH Actions runner"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/cross-platform/macos-14-rehearsal.sh",
+        "args": [],
+        "timeout_s": 1800,
+        "container": "macos-14"
+      },
+      "artifact": "quality/reports/verifications/cross-platform/macos-14-rehearsal.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "v0.12.1 CROSS-02 stub: macos GH runners cost ~$0.08/min and v0.12.0 ships ubuntu-only matrix.",
+      "waiver": {
+        "until": "2026-07-26T00:00:00Z",
+        "reason": "v0.12.1 carry-forward per MIGRATE-03; macos GH runners cost ~$0.08/min and v0.12.0 ships ubuntu-only matrix. Verifier intentionally does not exist yet -- this row anchors the contract for the v0.12.1 implementer.",
+        "dimension_owner": "v0.12.0 P63 cross-platform dimension owner",
+        "tracked_in": "v0.12.1 CROSS-02"
+      }
+    }
+  ]
+}

@@ -47,8 +47,7 @@
       "command": "cargo test --workspace --locked",
       "expected": {
         "asserts": [
-          "the most recent ci.yml `test` job for the current branch exited 0",
-          "POLISH-CODE P58-stub: this row documents what ci.yml ALREADY enforces; full per-row enforcement is P63 final"
+          "the most recent ci.yml `test` job for the current branch exited 0"
         ]
       },
       "verifier": {
@@ -67,12 +66,12 @@
       "last_verified": "2026-04-27T21:24:27Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
-      "owner_hint": "if RED: ci.yml `test` job is failing — investigate workflow logs at gh run view <run-id>",
+      "owner_hint": "if RED: ci.yml test job is failing for the current branch -- run gh run view <run-id> --log-failed. The verifier intentionally does not run cargo locally (memory-budget rule); CI is the canonical enforcement venue per the P63 wiring decision.",
       "waiver": {
         "until": "2026-07-26T00:00:00Z",
-        "reason": "POLISH-CODE P58-stub: this row documents ci.yml's existing enforcement; the verifier wrapper is a thin shim. Full per-row enforcement (running cargo test from this verifier) is deferred to P63 final per .planning/REQUIREMENTS.md § POLISH-CODE.",
+        "reason": "Per-row local cargo nextest enforcement is deferred to v0.12.1 because cargo nextest run --workspace consumes 6-15 minutes + violates the CLAUDE.md ONE cargo at a time memory-budget rule + exceeds the pre-pr 10-minute cadence cap. ci.yml's test job remains the canonical enforcement venue; the ci-job-status wrapper at quality/gates/code/ci-job-status.sh checks that the most recent ci.yml run for the current branch exited 0. v0.12.1 MIGRATE-03 will explore alternatives (per-crate per-row gates, sccache-warmed verifier in CI only, or accepting CI as the only home and removing the local row).",
         "dimension_owner": "v0.12.0 P63 code dimension owner",
-        "tracked_in": "POLISH-CODE P63 final"
+        "tracked_in": "v0.12.1 MIGRATE-03 -- per-row local cargo enforcement"
       }
     },
     {
@@ -81,38 +80,29 @@
       "cadence": "pre-pr",
       "kind": "mechanical",
       "sources": [
-        ".github/workflows/ci.yml:fmt"
+        "quality/gates/code/cargo-fmt-clean.sh",
+        ".github/workflows/ci.yml:rustfmt",
+        "scripts/hooks/pre-push (cargo fmt step)"
       ],
       "command": "cargo fmt --all -- --check",
       "expected": {
         "asserts": [
-          "the most recent ci.yml `fmt` job for the current branch exited 0",
-          "POLISH-CODE P58-stub: this row documents what ci.yml ALREADY enforces; full per-row enforcement is P63 final"
+          "cargo fmt --all -- --check exits 0 (no formatting drift in any workspace crate)"
         ]
       },
       "verifier": {
-        "script": "quality/gates/code/ci-job-status.sh",
-        "args": [
-          "--workflow",
-          "ci.yml",
-          "--job",
-          "rustfmt"
-        ],
-        "timeout_s": 30,
+        "script": "quality/gates/code/cargo-fmt-clean.sh",
+        "args": [],
+        "timeout_s": 60,
         "container": null
       },
       "artifact": "quality/reports/verifications/code/cargo-fmt-clean.json",
-      "status": "WAIVED",
-      "last_verified": "2026-04-27T21:24:27Z",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: cargo fmt regressed; run cargo fmt --all locally",
-      "waiver": {
-        "until": "2026-07-26T00:00:00Z",
-        "reason": "POLISH-CODE P58-stub: this row documents ci.yml's existing enforcement; the verifier wrapper is a thin shim. Full per-row enforcement (running cargo fmt from this verifier) is deferred to P63 final per .planning/REQUIREMENTS.md § POLISH-CODE.",
-        "dimension_owner": "v0.12.0 P63 code dimension owner",
-        "tracked_in": "POLISH-CODE P63 final"
-      }
+      "owner_hint": "if RED: cargo fmt regressed; run cargo fmt --all locally and commit the result. P63 wired the verifier to actually run cargo fmt (read-only, ~5s) so the row enforces locally as well as in CI.",
+      "waiver": null
     },
     {
       "id": "code/fixtures-valid",

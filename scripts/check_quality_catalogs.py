@@ -32,7 +32,8 @@ CATALOG_DIR = REPO_ROOT / "quality" / "catalogs"
 CONTRACTS = {
     "release-assets": {
         "dimension": "release",
-        "row_count": 16,
+        # P58 Wave A removed reposix-swarm (publish=false) -> 15 rows.
+        "row_count": 15,
         "required_ids": {
             "install/curl-installer-sh",
             "install/powershell-installer-ps1",
@@ -46,7 +47,6 @@ CONTRACTS = {
             "release/crates-io-max-version/reposix-github",
             "release/crates-io-max-version/reposix-confluence",
             "release/crates-io-max-version/reposix-jira",
-            "release/crates-io-max-version/reposix-swarm",
             "release/gh-assets-present",
             "release/brew-formula-current",
             "release/cargo-binstall-resolves",
@@ -57,11 +57,16 @@ CONTRACTS = {
     },
     "code": {
         "dimension": "code",
-        "row_count": 3,
+        # P58 Wave C + P60 added clippy-warnings, fmt-check, fixtures-valid.
+        # Required-ids enforces presence of POLISH-CODE rows; extras allowed.
+        "row_count": 6,
         "required_ids": {
             "code/clippy-lint-loaded",
             "code/cargo-test-pass",
             "code/cargo-fmt-clean",
+            "code/fixtures-valid",
+            "code/cargo-fmt-check",
+            "code/cargo-clippy-warnings",
         },
         "allowed_cadences": {"pre-push", "pre-pr"},
         "all_status": "NOT-VERIFIED",
@@ -69,11 +74,14 @@ CONTRACTS = {
     },
     "orphan-scripts": {
         "dimension": "meta",
-        "row_count": 1,
-        "required_ids": {"release/crates-io-max-version"},
+        # P58 Wave E removed the release/crates-io-max-version waiver row;
+        # P63 Wave 1 locks the schema with rows=[] (Wave 2 populates after
+        # caller-scan).
+        "row_count": 0,
+        "required_ids": set(),
         "allowed_cadences": {"pre-push"},
         "all_status": "WAIVED",
-        "orphan_lineage_check": True,
+        "orphan_lineage_check": False,
     },
 }
 
@@ -146,26 +154,32 @@ def check_catalog(stem: str, contract: dict, errors: list) -> None:
         clippy = next((r for r in rows if r.get("id") == "code/clippy-lint-loaded"), None)
         if clippy:
             w = clippy.get("waiver")
-            # Active enforcement is the long-term state. Wave A landed the
-            # catalog row before Wave C ships the thin verifier wrapper;
-            # a short-lived waiver tracked_in 'P58 Wave C (58-03)' is
-            # accepted only until Wave C lands. Wave C must remove the
-            # waiver (set it to None).
-            if w is not None and w.get("tracked_in") != "P58 Wave C (58-03)":
+            # P58 Wave C closed; clippy must be actively enforced (waiver=null).
+            if w is not None:
                 fail(
-                    f"{stem}: code/clippy-lint-loaded waiver must either be null "
-                    f"(active enforcement) or tracked_in 'P58 Wave C (58-03)' "
-                    f"during Wave A->C window",
+                    f"{stem}: code/clippy-lint-loaded waiver must be null "
+                    f"(active enforcement post-P58 Wave C)",
                     errors,
                 )
-        for rid in ("code/cargo-test-pass", "code/cargo-fmt-clean"):
-            r = next((r for r in rows if r.get("id") == rid), None)
-            if r is None:
-                continue
-            w = r.get("waiver")
-            if not w or w.get("tracked_in") != "POLISH-CODE P63 final":
+        # P63 Wave 1 wiring contract:
+        # - cargo-fmt-clean: waiver MUST be null (Wave 3 wires direct cargo fmt).
+        # - cargo-test-pass: waiver MUST be present + tracked_in MUST start
+        #   with 'v0.12.1 MIGRATE-03' (memory-budget rationale; CI is
+        #   canonical enforcement venue).
+        cf = next((r for r in rows if r.get("id") == "code/cargo-fmt-clean"), None)
+        if cf is not None and cf.get("waiver") is not None:
+            fail(
+                f"{stem}: code/cargo-fmt-clean waiver must be null "
+                f"(P63 wired direct cargo fmt -- read-only ~5s, ONE cargo at a time safe)",
+                errors,
+            )
+        ct = next((r for r in rows if r.get("id") == "code/cargo-test-pass"), None)
+        if ct is not None:
+            w = ct.get("waiver")
+            if not w or not str(w.get("tracked_in", "")).startswith("v0.12.1 MIGRATE-03"):
                 fail(
-                    f"{stem}: {rid} waiver.tracked_in must be 'POLISH-CODE P63 final'",
+                    f"{stem}: code/cargo-test-pass waiver.tracked_in must start with "
+                    f"'v0.12.1 MIGRATE-03' (per-row local cargo enforcement deferred)",
                     errors,
                 )
 

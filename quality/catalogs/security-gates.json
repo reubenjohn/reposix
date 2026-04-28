@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "comment": "Quality Gates catalog -- security dimension. v0.12.0 ships stub rows only (NOT-VERIFIED + waiver until 2026-07-26 tracked_in v0.12.1 SEC-* placeholders). v0.12.1 MIGRATE-03 ships the verifier scripts + flips status to PASS. Schema spec: quality/catalogs/README.md. CLAUDE.md threat-model section drives the contract: outbound HTTP allowlist + audit-log immutability are the two P0 surfaces this dimension defends.",
+  "dimension": "security",
+  "rows": [
+    {
+      "id": "security/allowlist-enforcement",
+      "dimension": "security",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "sources": [
+        "crates/reposix-core/src/http.rs",
+        "REPOSIX_ALLOWED_ORIGINS env var",
+        "CLAUDE.md threat-model section -- Outbound HTTP allowlist"
+      ],
+      "command": "cargo test -p reposix-core http_allowlist",
+      "expected": {
+        "asserts": [
+          "v0.12.1 stub -- a fuzz test attempts outbound HTTP to an origin not in REPOSIX_ALLOWED_ORIGINS and the http::client() factory rejects with the documented error",
+          "the disallowed_methods clippy lint catches direct reqwest::Client::new outside core/http.rs (already covered by code/clippy-lint-loaded; this row is the runtime allowlist test)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/security/allowlist-enforcement.sh",
+        "args": [],
+        "timeout_s": 300,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/security/allowlist-enforcement.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "v0.12.1 SEC-01 stub: verifier script does not yet exist. CLAUDE.md threat-model section names allowlist enforcement as a P0 cut.",
+      "waiver": {
+        "until": "2026-07-26T00:00:00Z",
+        "reason": "v0.12.1 carry-forward per MIGRATE-03; CLAUDE.md threat-model section -- Outbound HTTP allowlist lift. Verifier script intentionally does not exist yet -- this row anchors the contract for the v0.12.1 implementer.",
+        "dimension_owner": "v0.12.0 P63 security dimension owner",
+        "tracked_in": "v0.12.1 SEC-01"
+      }
+    },
+    {
+      "id": "security/audit-immutability",
+      "dimension": "security",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "sources": [
+        "crates/reposix-cache/src/audit.rs (audit_events_cache)",
+        "crates/reposix-core/src/audit.rs (audit_events)",
+        "CLAUDE.md threat-model section -- Audit log is append-only"
+      ],
+      "command": "cargo test -p reposix-cache audit_immutability && cargo test -p reposix-core audit_immutability",
+      "expected": {
+        "asserts": [
+          "v0.12.1 stub -- a test attempts UPDATE/DELETE against either audit table and the SQLite layer rejects (append-only by schema)",
+          "WAL mode confirmed",
+          "both tables present in the test fixture"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/security/audit-immutability.sh",
+        "args": [],
+        "timeout_s": 300,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/security/audit-immutability.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "v0.12.1 SEC-02 stub: verifier script does not yet exist. CLAUDE.md OP-3 names audit immutability as non-optional.",
+      "waiver": {
+        "until": "2026-07-26T00:00:00Z",
+        "reason": "v0.12.1 carry-forward per MIGRATE-03; CLAUDE.md OP-3 + threat-model section name audit-log immutability as a P0 cut. Verifier script intentionally does not exist yet -- this row anchors the contract for the v0.12.1 implementer.",
+        "dimension_owner": "v0.12.0 P63 security dimension owner",
+        "tracked_in": "v0.12.1 SEC-02"
+      }
+    }
+  ]
+}

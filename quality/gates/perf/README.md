@@ -26,6 +26,18 @@ All 3 catalog rows wear a 90-day waiver (`until: 2026-07-26`, `tracked_in: MIGRA
 2. Cross-check verifier code (compares bench output against doc headlines).
 3. Removal of the waivers + flip to active enforcement.
 
+### P63 -- v0.12.1 carry-forward stubs (added 2026-04-28)
+
+The 3 perf-targets rows (`perf/latency-bench`,
+`perf/token-economy-bench`, `perf/headline-numbers-cross-check`)
+remain stubs at P63 close: file-relocate landed in P59 SIMPLIFY-11,
+but the cross-check verifier code (bench output diff vs doc headline
+numbers) is deferred to v0.12.1 per `MIGRATE-03`. P63 leaves the
+existing waivers in place and confirms the catalog rows anchor the
+v0.12.1 implementer's contract.
+
+Cross-reference: `.planning/REQUIREMENTS.md` MIGRATE-03 (v0.12.1).
+
 ## Cross-references
 
 - `quality/catalogs/perf-targets.json` -- 3-row catalog (Wave A)
