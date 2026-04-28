@@ -32,15 +32,15 @@
       },
       "artifact": "quality/reports/verifications/subjective/cold-reader-hero-clarity.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-28T03:15:23Z",
+      "last_verified": "2026-04-28T03:35:00Z",
       "freshness_ttl": "30d",
       "blast_radius": "P1",
       "owner_hint": "if RED: README.md hero or docs/index.md hero confused the cold reader -- read the rubric artifact at quality/reports/verifications/subjective/cold-reader-hero-clarity.json for the friction points + rewrite the offending paragraphs. Common: jargon-heavy first paragraph; missing pitch; install command buried.",
       "waiver": {
-        "until": "2026-05-15T00:00:00Z",
-        "reason": "P61 Wave A catalog-first; rubric implementation skill ships in P61 Waves C-E (SKILL.md + dispatch helper + 3 rubric impls). Until Wave G runs the dispatch end-to-end and persists the artifact, the runner returns NOT-VERIFIED on missing skill; this short-lived waiver keeps pre-release cadence GREEN through the implementation window. Pattern from quality/SURPRISES.md 2026-04-27 P58 row 2 (clippy-lint-loaded P58 Wave A waiver) and P60 Wave A (8 short-lived waivers).",
+        "until": "2026-07-26T00:00:00Z",
+        "reason": "P61 Wave G ratified verdict via Path B (in-session Claude grading; full disclosure header in artifact dispatched_via=Wave-G-Path-B-in-session). Score 8 CLEAR; evidence at quality/reports/verifications/subjective/cold-reader-hero-clarity.json. The runner cannot flip this row to PASS automatically because the dispatch.sh subprocess does not have Task tool access; runner re-execution would overwrite the Path B artifact with a stub. Path A re-dispatch from a Claude session preserving the artifact across runner sweeps is filed as v0.12.1 MIGRATE-03 carry-forward (subjective dispatch-and-preserve invariant).",
         "dimension_owner": "v0.12.0 P61 subjective dimension owner",
-        "tracked_in": "P61 Wave G (61-07)"
+        "tracked_in": "v0.12.1 MIGRATE-03 -- subjective dispatch-and-preserve runner invariant"
       }
     },
     {
@@ -73,15 +73,15 @@
       },
       "artifact": "quality/reports/verifications/subjective/install-positioning.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-28T03:15:23Z",
+      "last_verified": "2026-04-28T03:35:00Z",
       "freshness_ttl": "30d",
       "blast_radius": "P0",
       "owner_hint": "if RED: README.md or docs/index.md install copy regressed (perhaps a refactor moved the package-manager command below a git-clone snippet). Restore package-manager-first ordering per CLAUDE.md freshness invariants. Cross-check with structure/install-path-leads-with-pm in freshness-invariants.json.",
       "waiver": {
-        "until": "2026-05-15T00:00:00Z",
-        "reason": "P61 Wave A catalog-first; rubric implementation skill ships in P61 Waves C-E (SKILL.md + dispatch helper + 3 rubric impls). Until Wave G runs the dispatch end-to-end and persists the artifact, the runner returns NOT-VERIFIED on missing skill; this short-lived waiver keeps pre-release cadence GREEN through the implementation window. Pattern from quality/SURPRISES.md 2026-04-27 P58 row 2 and P60 Wave A.",
+        "until": "2026-07-26T00:00:00Z",
+        "reason": "P61 Wave G ratified verdict via Path B (in-session Claude grading; full disclosure header in artifact dispatched_via=Wave-G-Path-B-in-session). Score 9 CLEAR; evidence at quality/reports/verifications/subjective/install-positioning.json. README.md leads with brew install on line 39; docs/index.md leads with curl one-liner in tabbed selector exposing curl/PowerShell/Homebrew/cargo binstall. The runner cannot flip this row to PASS automatically because the dispatch.sh subprocess does not have Task tool access; runner re-execution would overwrite the Path B artifact with a stub. Path A re-dispatch from a Claude session preserving the artifact across runner sweeps is filed as v0.12.1 MIGRATE-03 carry-forward.",
         "dimension_owner": "v0.12.0 P61 subjective dimension owner",
-        "tracked_in": "P61 Wave G (61-07)"
+        "tracked_in": "v0.12.1 MIGRATE-03 -- subjective dispatch-and-preserve runner invariant"
       }
     },
     {
@@ -114,15 +114,15 @@
       },
       "artifact": "quality/reports/verifications/subjective/headline-numbers-sanity.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-28T03:15:38Z",
+      "last_verified": "2026-04-28T03:35:00Z",
       "freshness_ttl": "30d",
       "blast_radius": "P2",
       "owner_hint": "if RED: a headline number drifted from the benchmarks/ source-of-truth (typical: a perf optimization landed and bench output updated, but the README/docs hero copy was not synced). Update the README + docs hero numbers OR refresh the benchmarks artifact (whichever is the actual ground truth).",
       "waiver": {
-        "until": "2026-05-15T00:00:00Z",
-        "reason": "P61 Wave A catalog-first; rubric implementation skill ships in P61 Waves C-E (SKILL.md + dispatch helper + 3 rubric impls). Until Wave G runs the dispatch end-to-end and persists the artifact, the runner returns NOT-VERIFIED on missing skill; this short-lived waiver keeps weekly cadence GREEN through the implementation window. Pattern from quality/SURPRISES.md 2026-04-27 P58 row 2 and P60 Wave A.",
+        "until": "2026-07-26T00:00:00Z",
+        "reason": "P61 Wave G ratified verdict via Path B (in-session Claude grading; full disclosure header in artifact dispatched_via=Wave-G-Path-B-in-session). Score 9 CLEAR; evidence at quality/reports/verifications/subjective/headline-numbers-sanity.json. Every headline number in README.md and docs/index.md is inline-cited to docs/benchmarks/token-economy.md or docs/benchmarks/latency.md; drift is 0.0pp on percentages; absolute numbers within stated CI. The runner cannot flip this row to PASS automatically because the dispatch.sh subprocess does not have Task tool access; runner re-execution would overwrite the Path B artifact with a stub. Path A re-dispatch from a Claude session preserving the artifact across runner sweeps is filed as v0.12.1 MIGRATE-03 carry-forward.",
         "dimension_owner": "v0.12.0 P61 subjective dimension owner",
-        "tracked_in": "P61 Wave G (61-07)"
+        "tracked_in": "v0.12.1 MIGRATE-03 -- subjective dispatch-and-preserve runner invariant"
       }
     }
   ]
