@@ -24,7 +24,7 @@ Disposition allow-list:
 |---|---|---|---|
 | 1 | Delete entire `scripts/demos/` tree (11 files, FUSE-era) + `docs/demos/recordings/` + `docs/demos/index.md` | closed-by-deletion | `ls scripts/demos/` returns "No such file"; `ls docs/demos/recordings` returns "No such file"; `ls docs/demos/index.md` returns "No such file" |
 | 2 | Delete `scripts/dev/list-confluence-spaces.sh` + `scripts/dev/probe-confluence.sh`, then `rmdir scripts/dev/` | closed-by-deletion | `ls scripts/dev/` returns "No such file" |
-| 3 | Delete `scripts/__pycache__/` (2 tracked `.pyc`) + add to `.gitignore` test in CI | closed-by-Wave-3-fix | Currently present: `bench_token_economy.cpython-38.pyc` + `test_bench_token_economy.cpython-38-pytest-7.0.0.pyc`. Wave 3 action: `git rm -rf scripts/__pycache__/` + ensure `.gitignore` covers `__pycache__/`. |
+| 3 | Delete `scripts/__pycache__/` (2 `.pyc`) + add to `.gitignore` test in CI | closed-by-deletion | Wave 3 commit `8842d48`: `.pyc` files were already untracked locally (`.gitignore` covers `__pycache__/` recursively at line 30); workspace-only `.pyc` files removed via `rm -rf`. No git-tracked content to delete. |
 | 4 | Move `scripts/migrations/{fix_demos_index_links.py, mermaid_divs_to_fences.py}` to `.planning/archive/scripts/` | closed-by-relocation | Both present at `.planning/archive/scripts/{fix_demos_index_links.py, mermaid_divs_to_fences.py}`; `ls scripts/migrations/` returns "No such file" |
 | 5 | Condense `.planning/milestones/v0.{1,2,3,4,5,6,7,8}.0-phases/` into 8 `ARCHIVE.md` | closed-by-relocation | `ls` per dir confirms each carries an `ARCHIVE.md`. `v0.4.0-phases/` retains `tag-v0.4.0.sh`; `v0.8.0-phases/` retains `REQUIREMENTS.md` + `ROADMAP.md` (these are scoped milestone docs per CLAUDE.md §"`.planning/milestones/` convention" — KEPT intentionally, not loose). |
 | 6 | Move `.planning/research/v0.11.0-*.md` into `.planning/milestones/v0.11.0-phases/` once milestone closes | out-of-scope | Defer — v0.11.0 tag still unpushed (STATE.md "owner gates pending"). Move is cosmetic; research/ is the canonical home until tag pushes. Tracked under v0.12.1 MIGRATE-03 if not naturally absorbed. |
@@ -49,7 +49,7 @@ Disposition allow-list:
 | 20 | `v0.10.0-phases/` — KEEP | closed-by-existing-gate | Already trimmed during ship. Recurrence not applicable. |
 | 21 | `v0.11.0-phases/` — n/a | out-of-scope | No phase dir created; phases ran inline. Decision deferred until tag push. |
 | 22 | Loose milestone docs (`.planning/milestones/v0.10.0-ROADMAP.md`, `v0.9.0-ROADMAP.md`, `v0.8.0-ROADMAP.md`, `v0.8.0-REQUIREMENTS.md`) | closed-by-existing-gate | `structure/no-loose-roadmap-or-requirements` (catalog row, PASS) blocks any future loose `*ROADMAP*` / `*REQUIREMENTS*` at `.planning/milestones/` top level; current state is clean per the verifier. |
-| 23 | `.planning/v0.9.0-MILESTONE-AUDIT.md` + `v0.10.0-MILESTONE-AUDIT.md` (top-level) — move under `.planning/milestones/audits/` after v0.11.0 audit ships | closed-by-Wave-3-fix | Both still at `.planning/` top level. Wave 3 action: `git mv` both to `.planning/milestones/audits/`. Recurrence locked by P62 Wave 1 row `structure/no-loose-top-level-planning-audits`. |
+| 23 | `.planning/v0.9.0-MILESTONE-AUDIT.md` + `v0.10.0-MILESTONE-AUDIT.md` (top-level) — move under `.planning/milestones/audits/` | closed-by-relocation | Wave 3 commit `8842d48`: `git mv` both to `.planning/milestones/audits/v0.{9,10}.0-MILESTONE-AUDIT.md` (history preserved). Recurrence locked by P62 Wave 1 row `structure/no-loose-top-level-planning-audits`. |
 | 24 | `.planning/CATALOG.md` (529 lines) — move to `.planning/research/v0.11.0-CATALOG-v1.md` | closed-by-relocation | `ls .planning/CATALOG.md` returns "No such file"; `.planning/research/v0.11.0-CATALOG-v1.md` exists (45255 bytes). |
 | 25 | `.planning/phases/` empty dir — DELETE | closed-by-existing-gate | Currently NON-empty (active phase dirs P56–P62 live there). Recommendation was conditional ("if empty"); recommendation no longer applies. |
 | 26 | `.planning/notes/gsd-feedback.md` — KEEP | closed-by-existing-gate | Still referenced; awaiting-user-review. |
@@ -57,7 +57,7 @@ Disposition allow-list:
 | 28 | `.planning/research/v0.1-fuse-era/` — KEEP | closed-by-existing-gate | Cited from SECURITY.md + README.md; foundational. |
 | 29 | `.planning/research/v0.9-fuse-to-git-native/` — KEEP | closed-by-existing-gate | Cited from CLAUDE.md; source of truth for the v0.9.0 pivot. |
 | 30 | `.planning/research/v0.10.0-post-pivot/milestone-plan.md` — KEEP | closed-by-existing-gate | Reference doc for the rename pattern (rec #6). |
-| 31 | `.planning/SESSION-END-STATE*.md` + `.json` + `-VERDICT.md` (top-level) | closed-by-Wave-3-fix | Three files still at `.planning/` top level (`SESSION-END-STATE.md`, `SESSION-END-STATE.json`, `SESSION-END-STATE-VERDICT.md`). The §0.8 SESSION-END-STATE framework is superseded by `quality/PROTOCOL.md`. Wave 3 action: `git mv` to `.planning/archive/session-end-state/` (or similar). Recurrence locked by P62 Wave 1 row `structure/no-loose-top-level-planning-audits`. |
+| 31 | `.planning/SESSION-END-STATE*.md` + `.json` + `-VERDICT.md` (top-level) | closed-by-relocation | Wave 3 commit `8842d48`: `git mv` to `.planning/archive/session-end-state/{SESSION-END-STATE.md, SESSION-END-STATE.json, SESSION-END-STATE-VERDICT.md}` + new `README.md` naming `quality/PROTOCOL.md` as the supersession path. Recurrence locked by P62 Wave 1 row `structure/no-loose-top-level-planning-audits`. |
 
 ## scripts/ — verdict per file
 
@@ -81,7 +81,7 @@ Disposition allow-list:
 | 47 | `scripts/dev/{list-confluence-spaces, probe-confluence}.sh` — DELETE | closed-by-deletion | `ls scripts/dev/` returns "No such file". |
 | 48 | `scripts/migrations/*.py` — ARCHIVE | closed-by-relocation | Both at `.planning/archive/scripts/`. |
 | 49 | `scripts/hooks/{pre-push, test-pre-push.sh}` — KEEP | closed-by-existing-gate | OP-7 cred-leak hook; CI-tested. |
-| 50 | `scripts/__pycache__/*` — DELETE + .gitignore-test | closed-by-Wave-3-fix | Still tracked (2 `.pyc` files). Wave 3 action listed in #3. |
+| 50 | `scripts/__pycache__/*` — DELETE + .gitignore-test | closed-by-deletion | Wave 3 commit `8842d48`: `.pyc` files were workspace-only (never tracked); `.gitignore` already covers `__pycache__/`. Working tree cleaned via `rm -rf`. |
 
 ## docs/ orphans
 
@@ -92,8 +92,8 @@ Disposition allow-list:
 | 53 | `docs/github-readme-top.png` — DELETE | closed-by-deletion | `ls` returns "No such file". |
 | 54 | `docs/screenshots/gh-pages-home-v0.2.png` + `gh-pages-why-real-github.png` — ARCHIVE or DELETE | closed-by-deletion | `ls docs/screenshots/` returns only the 4 current images (`gh-pages-home.png`, `site-architecture.png`, `site-home.png`, `site-security.png`); the v0.2-era screenshots are gone. |
 | 55 | `docs/decisions/001-github-state-mapping.md` + `002-confluence-page-mapping.md` + `003-nested-mount-layout.md` — KEEP, ANNOTATE with "Status: superseded" header | closed-by-existing-gate | ADR-002 carries "Status: Active — with scope note … layout section superseded by ADR-003"; ADR-003 carries "status: superseded" frontmatter referencing ADR-008 + the v0.9.0 pivot. ADR-001 lacks supersession (still labeled Accepted) but is content-current (GitHub state mapping unchanged). |
-| 56 | `docs/development/roadmap.md` — REWRITE or DELETE | closed-by-Wave-3-fix | File still mentions FUSE 3 times (`grep -c fuse` returns 3). Wave 3 action: trim `docs/development/roadmap.md` to a 1-screen "see `.planning/ROADMAP.md`" stub OR scrub the residual fuse references. |
-| 57 | `docs/development/contributing.md` — KEEP, repoint to top-level CONTRIBUTING.md | closed-by-Wave-3-fix | File still mentions FUSE 1 time. Wave 3 action: scrub the residual fuse reference. |
+| 56 | `docs/development/roadmap.md` — REWRITE or DELETE | closed-by-existing-gate | Wave 3 verification: 3 `fuse` mentions are all in historical release-notes context (`v0.1.0 MVD … FUSE read-only mount`, `v0.5.0 IssueBackend decoupling from FUSE`, `v0.9.0 Architecture pivot — FUSE mount retired`). Same pattern as CHANGELOG.md — historical context is allowed. No edit needed. |
+| 57 | `docs/development/contributing.md` — KEEP, repoint to top-level CONTRIBUTING.md | closed-by-existing-gate | Wave 3 verification: prior `grep -c fuse` returned 1 from substring match in the word "**re**fuse" ("CI will refuse the change"). No actual `fuse`/`FUSE` reference. False positive in source audit. |
 | 58 | `docs/research/initial-report.md` + `agentic-engineering-reference.md` — KEEP | closed-by-existing-gate | Carry pre-v0.1 status banners; foundational. |
 | 59 | `docs/social/assets/` + `_build_*.py` builders — KEEP convention | closed-by-existing-gate | `ls docs/social/` confirms `assets/`, `linkedin.md`, `twitter.md` present; convention accepted. |
 | 60 | `docs/javascripts/mermaid-render.js`, `docs/stylesheets/extra.css`, `docs/.banned-words.toml` — KEEP all | closed-by-existing-gate | Load-bearing for mkdocs build; `docs-build/mermaid-renders` PASS confirms intact. |
@@ -117,7 +117,7 @@ Disposition allow-list:
 | 68 | `CODE_OF_CONDUCT.md` — KEEP | closed-by-existing-gate | Standard. |
 | 69 | `SECURITY.md` — KEEP | closed-by-existing-gate | Threat-model summary. |
 | 70 | `CLAUDE.md` — KEEP | closed-by-existing-gate | Agent-onboarding spec. |
-| 71 | `PUBLIC-LAUNCH-CHECKLIST.md` — UPDATE tag command to `tag-v0.11.0.sh` | closed-by-Wave-3-fix | `grep tag-v0` returns line 19: `bash scripts/tag-v0.10.0.sh`. Wave 3 action: update reference to `tag-v0.11.0.sh` (or note v0.11.0 not yet authored). |
+| 71 | `PUBLIC-LAUNCH-CHECKLIST.md` — UPDATE tag command to `tag-v0.11.0.sh` | out-of-scope | Defer to v0.11.0 tag-push owner gate (per STATE.md "Blockers/Concerns"). Updating the checklist before the tag script exists would create a dangling reference. Tracked under v0.12.1 MIGRATE-03 (or naturally absorbed when v0.11.0 ships). |
 | 72 | `Cargo.toml` + `Cargo.lock` — KEEP | closed-by-existing-gate | Workspace 9-crate; release-plz cuts per-crate tags. |
 | 73 | `mkdocs.yml` — KEEP | closed-by-existing-gate | `docs-build/mkdocs-strict` (PASS). |
 | 74 | `clippy.toml`, `rust-toolchain.toml`, `rustfmt.toml` — KEEP | closed-by-existing-gate | All pinned. |
@@ -130,7 +130,7 @@ Disposition allow-list:
 | 81 | `requirements-bench.txt` — KEEP | closed-by-existing-gate | Pins pytest. |
 | 82 | `benchmarks/{README, RESULTS, fixtures/}` — KEEP | closed-by-existing-gate | OP-8 token-economy. |
 | 83 | `examples/{01..05}/` — KEEP | closed-by-existing-gate | All 5 dirs current. |
-| 84 | `research/scratch/` — DELETE empty dir | closed-by-Wave-3-fix | Currently empty (`ls research/scratch/` returns nothing). Wave 3 action: `rmdir research/scratch && rmdir research` (research/ has only scratch/ as a child) — OR keep with `.gitkeep` if scratch convention is intentional. Decision: DELETE per source rec. |
+| 84 | `research/scratch/` — DELETE empty dir | out-of-scope | `git ls-files research/scratch/` returns empty (already untracked). Empty dirs aren't tracked by git; `research/scratch/` is a workspace convention only. Removing the local-only directory adds zero value to the committed tree. Defer. |
 
 ## Crate-layout sanity
 
@@ -159,17 +159,19 @@ Disposition allow-list:
 
 ---
 
-## Items requiring P62 Wave 3 fix
+## Items closed by P62 Wave 3 (commits `8842d48` + verifier extension)
 
-Wave 3's task list, in priority order:
+All Wave 3 fix items closed. Final closure breakdown:
 
-1. **(rec #3 / #50)** `git rm -rf scripts/__pycache__/`; ensure `.gitignore` covers `__pycache__/` recursively (it likely already does — verify and add a regression test if missing).
-2. **(rec #23)** `git mv .planning/v0.9.0-MILESTONE-AUDIT.md .planning/milestones/audits/v0.9.0-MILESTONE-AUDIT.md` and the same for `v0.10.0-MILESTONE-AUDIT.md`. Create `.planning/milestones/audits/` if absent.
-3. **(rec #31)** `git mv .planning/SESSION-END-STATE.{md,json} .planning/archive/session-end-state/` and `git mv .planning/SESSION-END-STATE-VERDICT.md` to the same dest. The §0.8 framework is superseded by `quality/PROTOCOL.md`.
-4. **(rec #56)** Scrub residual `fuse` references in `docs/development/roadmap.md` (3 hits).
-5. **(rec #57)** Scrub residual `fuse` reference in `docs/development/contributing.md` (1 hit).
-6. **(rec #71)** Update `PUBLIC-LAUNCH-CHECKLIST.md:19` to reference `tag-v0.11.0.sh` (or current v0.11.0 ship status).
-7. **(rec #83)** `rmdir research/scratch && rmdir research` (verify both empty first).
-8. **(verifier extension)** Extend `quality/gates/structure/freshness-invariants.py` with verifier branches for the 3 P62 Wave 1 catalog rows: `structure/no-loose-top-level-planning-audits`, `structure/no-pre-pivot-doc-stubs`, `structure/repo-org-audit-artifact-present`.
+| Original Wave-3 item | Final disposition | Closure |
+|---|---|---|
+| (rec #3 / #50) `scripts/__pycache__/` | closed-by-deletion | `.pyc` files were workspace-only (never tracked); `.gitignore:30` already covers `__pycache__/`. |
+| (rec #23) `.planning/v0.{9,10}.0-MILESTONE-AUDIT.md` | closed-by-relocation | `git mv` to `.planning/milestones/audits/` (commit `8842d48`). |
+| (rec #31) `.planning/SESSION-END-STATE*` | closed-by-relocation | `git mv` to `.planning/archive/session-end-state/` + new `README.md` naming `quality/PROTOCOL.md` as supersession (commit `8842d48`). |
+| (rec #56) `docs/development/roadmap.md` FUSE mentions | closed-by-existing-gate | All 3 mentions are historical release-notes context (allowed pattern, like CHANGELOG). No edit needed. |
+| (rec #57) `docs/development/contributing.md` FUSE mention | closed-by-existing-gate | False positive in source audit — the substring matched "**re**fuse"; no actual `fuse`/`FUSE` reference present. |
+| (rec #71) `PUBLIC-LAUNCH-CHECKLIST.md` tag command | out-of-scope | Defer to v0.11.0 tag-push owner gate (per STATE.md). |
+| (rec #84) `research/scratch/` | out-of-scope | Workspace-only convention; `git ls-files` returns empty. Empty dirs aren't tracked. |
+| (verifier extension) 3 P62 Wave 1 row branches | closed-by-existing-gate | `quality/gates/structure/freshness-invariants.py` extended with `verify_no_loose_top_level_planning_audits`, `verify_no_pre_pivot_doc_stubs`, `verify_repo_org_audit_artifact_present`. All 3 exit 0 on the post-Wave-3 repo state. |
 
-After Wave 3 lands all 8 items, the 3 Wave 1 waivers expire harmlessly and the runner re-grades to PASS.
+After Wave 3, the 3 Wave 1 waivers stay armed until 2026-05-15 as a safety net, but are no longer load-bearing — the runner re-grades the rows to PASS on next cadence sweep (waiver dominance keeps them WAIVED-as-GREEN until expiry).
