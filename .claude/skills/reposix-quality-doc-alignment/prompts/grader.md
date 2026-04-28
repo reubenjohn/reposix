@@ -40,7 +40,7 @@ You have ZERO session context beyond this prompt and the row context that follow
 
    - **STALE_TEST_GONE** — the test path/symbol no longer resolves. The walker already detected this; the binary refuses to bind. Just call `mark-missing-test` with rationale "Test fn was renamed/deleted — search did not find an equivalent."
 
-   - **Claim is genuinely superseded** — call `propose-retire` with the supersession source. RETIREMENT IS HUMAN-CONFIRMED ONLY. Do not call `confirm-retire`.
+   - **Claim is genuinely superseded** — call `propose-retire` with the supersession source. RETIREMENT IS HUMAN-CONFIRMED ONLY. Do not call `confirm-retire`. **Before proposing retirement, apply the transport-vs-feature heuristic:** retirement requires the FEATURE to be intentionally dropped with a documented decision (ADR, CHANGELOG, research note). Transport / implementation-strategy changes do NOT retire claims about a user-facing surface — those stay `mark-missing-test` with rationale prefix `IMPL_GAP:` (feature alive, impl strategy pivoted) or `DOC_DRIFT:` (prose names a stale shape; current shape exists). See `prompts/extractor.md` § "Retirement vs implementation-gap" for canonical examples.
 
 4. **Output** is the cumulative effect of your `reposix-quality` calls. No prose summary, no JSON. Print one stdout line on completion:
    ```

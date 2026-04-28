@@ -62,7 +62,7 @@ A claim is a contract between the docs and the implementation. If the prose is j
        --source <file>:<lstart>-<lend> \
        --rationale "Superseded by <supersession-doc>:<line>; <one-sentence why>"
      ```
-     RETIREMENT IS THE MOST EXPENSIVE OPTION. Only propose retirement when the supersession is documented in a checked-in artifact (e.g. `architecture-pivot-summary.md` retiring FUSE behavior). "I couldn't find a test" is NOT a reason to propose retirement — that's `mark-missing-test`.
+     RETIREMENT IS THE MOST EXPENSIVE OPTION. Only propose retirement when the supersession is documented in a checked-in artifact (e.g. `architecture-pivot-summary.md` retiring FUSE behavior). "I couldn't find a test" is NOT a reason to propose retirement — that's `mark-missing-test`. **Before proposing retirement, read the "Retirement vs implementation-gap" section below.**
 
 4. **Output is the cumulative effect of your `reposix-quality` calls.** Do NOT write a prose summary, do NOT write JSON files yourself, do NOT update the catalog directly. The binary is the only legitimate writer.
 
@@ -70,6 +70,51 @@ A claim is a contract between the docs and the implementation. If the prose is j
    ```
    shard <NNN>: <total> rows, <bound> BOUND, <missing> MISSING_TEST, <retire> RETIRE_PROPOSED
    ```
+
+## Retirement vs implementation-gap
+
+**Retirement requires the FEATURE to be intentionally dropped with a documented decision.** Transport / implementation-strategy changes do NOT retire claims about a user-facing surface — those remain `MISSING_TEST` and become gap-closure work for the next implementation strategy.
+
+Heuristic: if the prose claim describes WHAT the user sees (a directory layout, a filename pattern, a CLI verb output, a round-trip behavior), and the only thing that changed is HOW the project produces that surface, the row is `MISSING_TEST` with rationale prefix `IMPL_GAP:` — NOT `RETIRE_PROPOSED`.
+
+Decision tree (default to `mark-missing-test`):
+
+1. Does the claim describe a user-facing shape (directory layout, blob path, verb output, round-trip behavior, error string)? → if YES, the feature is alive even if the transport changed. Use `mark-missing-test` with rationale `IMPL_GAP: <where impl exists or what's needed>`.
+2. Does the claim describe an implementation detail tied to a specific transport (e.g. "FUSE write callback", "page-tree symlink mount") that is NOT externally observable beyond what (1) covers? → likely `mark-missing-test` with rationale `DOC_DRIFT: <prose names old transport; rebind to current transport>`.
+3. Is there an ADR, CHANGELOG entry, or research note that explicitly says "we are no longer providing X" where X is the user-facing surface? → only then `propose-retire`, citing the document in the rationale.
+4. Default if uncertain: `mark-missing-test`. Retirement is the most expensive option.
+
+**Rationale-prefix convention** for `mark-missing-test` (downstream filtering depends on it):
+
+- `IMPL_GAP: <details>` — feature alive, implementation strategy changed or never landed; resolution = bind to existing/new code or write ADR retiring.
+- `DOC_DRIFT: <details>` — prose names a stale shape; resolution = update doc OR rebind to current shape.
+- (no prefix) — straightforward "test missing for a clear claim."
+
+### Canonical examples (drawn verbatim from the v0.12.1 audit corrections at commit `24b2b62`)
+
+These four rows were initially proposed `RETIRE_PROPOSED` but the audit flipped them to `MISSING_TEST` because the user-facing surface persists across the FUSE → git-native pivot.
+
+- `req-confluence-create-page-via-write` (Confluence write path).
+  Prose: "edit a `.md` file and the page updates upstream."
+  Wrong call: retire because FUSE-mount transport was dropped in v0.9.0.
+  Right call: `IMPL_GAP:` — `ConfluenceBackend::create_record` exists in `lib.rs:280` and is wired into helper push at `reposix-remote/main.rs:513`; the user-facing capability (write `.md` → Confluence page) persists via `git push`. Resolution: bind a test in `agent_flow_real` that creates a page via working-tree write + `git push` and asserts the page exists on the backend.
+
+- `req-tree-index-overview-blob` (`_INDEX.md` whole-mount overview).
+  Prose: "`cat mount/_INDEX.md` returns an overview."
+  Wrong call: retire because the FUSE-era synthesizer was removed.
+  Right call: `IMPL_GAP:` — the promise is a USER-FACING SHAPE claim, not a FUSE transport detail. The cache can mint the blob in the bare-repo tree. Resolution: either reimplement synthesis in `reposix-cache` + bind a working-tree assertion test, OR write an ADR retiring the `_INDEX.md` feature with documented rationale + supersession.
+
+- `req-confluence-init-page-tree-mount` (multi-space mount shape).
+  Prose: "`spaces/<KEY>/` exists per Confluence space after init."
+  Wrong call: retire because "FUSE-mount" appears in the prose.
+  Right call: `IMPL_GAP:` — user-facing shape promise from v0.6.0/v0.7.0; in partial-clone terms means `reposix init confluence::*` materializes `spaces/<KEY>/` directories. Resolution: implement multi-space init + bind a test asserting the `spaces/` tree shape, OR ADR-retire with supersession.
+
+- `req-jira-readonly-phase28` (counter-example: `DOC_DRIFT:` not `IMPL_GAP:`).
+  Prose: "JIRA backend's `create_record/update_record/delete_or_close` return `not supported` (Phase 28 read-only)."
+  Wrong call: retire because the prose is stale.
+  Right call: `DOC_DRIFT:` — Phase 29 shipped the JIRA write path (`reposix-jira/src/lib.rs:8` docstring; trait impls at `lib.rs:197/279/334`). Resolution: update `docs/reference/jira.md` §Limitations to reflect Phase 29 write-path completion, then bind to `dark_factory_real_jira`.
+
+The lesson: prose that names an old TRANSPORT is not a retirement signal. The retirement signal is a documented decision to drop a user-facing SURFACE.
 
 ## Hard rules
 

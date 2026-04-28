@@ -76,6 +76,8 @@ Currently a renumbered placeholder. Repurpose: this phase OWNS W2 (apply audit f
 
 Proposed phase scope: catalog correction (W2 above) + extractor prompt update + 1 regression test (re-run `plan-refresh` on a doc with FUSE-era prose; assert no new RETIRE_PROPOSED proposals).
 
+**Status (2026-04-28):** extractor prompt + grader prompt updated with the new "Retirement vs implementation-gap" section + canonical examples drawn from commit `24b2b62` (audit flips). Smoke-test at `scripts/check-docs-extractor-prompt.sh` asserts the section header + `IMPL_GAP:` / `DOC_DRIFT:` rationale-prefix conventions stay present (cheap revert-guard). **TODO (deferred):** the proper regression test — re-run `plan-refresh` on a doc with FUSE-era prose and assert no new `RETIRE_PROPOSED` proposals — requires subagent dispatch (Task tool); `plan-refresh` itself is a read-only manifest emitter and does not invoke an extractor in-process. Defer until W4 (`next_action`) lands; structured field makes the assertion mechanical (count rows where `next_action == RETIRE_FEATURE` introduced by the run, expect 0).
+
 #### W4 — P68: `next_action` field schema extension
 
 Add `next_action: enum { WRITE_TEST, FIX_IMPL_THEN_BIND, UPDATE_DOC, RETIRE_FEATURE, BIND_GREEN }` to `Row` struct. Default `WRITE_TEST` (back-compat for existing populated rows). Update extractor prompt to set the field appropriately. Update `status` and `--json` to display. One-time backfill script walks existing 388 rows + reassigns `next_action` heuristically (RETIRE_PROPOSED → RETIRE_FEATURE; rationale prefix `IMPL_GAP:` → FIX_IMPL_THEN_BIND; default → WRITE_TEST).
