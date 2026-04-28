@@ -51,8 +51,13 @@ if [[ -n "$stdin_buf" ]]; then
 fi
 
 # (2) Quality Gates runner -- propagates exit code.
-if ! python3 "$REPO_ROOT/quality/runners/run.py" --cadence pre-push; then
-  exit $?
+# Avoid `if ! cmd; then exit $?; fi` -- $? after `! cmd` is the exit of the
+# negation (always 0), masking the real failure and letting bad pushes
+# through (caught 2026-04-28 when push went through with FAIL rows).
+python3 "$REPO_ROOT/quality/runners/run.py" --cadence pre-push
+RUNNER_EXIT=$?
+if [[ $RUNNER_EXIT -ne 0 ]]; then
+  exit "$RUNNER_EXIT"
 fi
 
 # (3) Optional personal add-on chain. Skip the delegate-to-project shim
