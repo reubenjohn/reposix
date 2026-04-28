@@ -38,35 +38,47 @@ Owner kicked off autonomous mode mid-day. Closures since then:
 | Scan C | 10 ADR/v0.11 rebinds + 12 v0.8 FUSE retires | `aad1169` |
 | Scan E | 4 index/contributing/concepts | `93392cb` |
 | Scan G | 5 tutorial/roadmap/git-version → dark_factory | `1ff1d9e` |
+| Schema ext | `--test` accepts shell/Python verifier paths (file sha256) | `090193d` |
+| Scan H | 20 perf/clippy rows via shell verifier mode (first sweep with new schema) | `faffd33` |
+| Scan I | 25 mirror/tutorial/lint rows (aliasing accepted) | `48bf274` |
+| Scan J | 9 install/badge/exit/lint final easy-rebinds | `854edc1` |
 
 **P72 doc rewrite**: `docs/reference/confluence.md` FUSE-era section rewritten for v0.9.0 git-native shape (`b6f6dd7`).
 
 **Catalog state shift this session** (vs handover snapshot at top of file):
 
 ```
-                    Start            Now
-claims_bound        171              229   (+58)
-claims_missing_test 166              113   (-53)
-claims_retire_proposed  41 -> 0      16    (a) 41 -> 0 cleared via owner TTY confirms before this session resumed; (b) 0 -> 16 from autonomous propose-retire of FUSE-era rows
-claims_retired      0 -> 30          30
-alignment_ratio     0.4407           0.6397   (+0.20)
+                    Start (handover)  Now (854edc1)
+claims_bound        171               284   (+113)
+claims_missing_test 166                52   (-114)
+claims_retire_proposed  41 -> 0       16    (a) 41 -> 0 cleared via owner TTY before this session resumed; (b) 0 -> 16 from autonomous propose-retire of FUSE-era rows
+claims_retired      0 -> 30           30
+alignment_ratio     0.4407            0.7933   (+0.35)
 ```
 
-**Remaining queued (mostly v0.13.0+ or schema-blocked):**
+**Remaining ~52 MISSING_TEST rows** are mostly:
+- Historical roadmap entries (`v0-1-0-shipped`, `v0-2-0-alpha-shipped`, etc.) — should retire as documented historical record (cluster phase work).
+- Lint/build invariants without 1:1 verifier (`forbid-unsafe-per-crate`, `rust-1-82-requirement`, `errors-doc-section-required`) — need bespoke grep/AST verifiers.
+- Subjective rubrics (`cold-reader-16page-audit`, `playwright-screenshots-deferred`) — handled by `reposix-quality-review` skill, not docs-alignment.
+- Narrative numbers (`use-case-20-percent-rest-mcp`, `mcp-fixture-synthesized`) — qualitative claims; no test possible.
+- Doc-existence claims (`docs01-value-prop-10sec`, `docs02-three-page-howitworks`) — structure freshness covers loosely; need section-presence verifiers.
+- Twitter/LinkedIn social `92%` token-reduction copy — known DOC_DRIFT vs measured 89.1% (see CLAUDE.md P65 punch list); needs prose fix not test bind.
 
-- ~17-25 MISSING_TEST rows verified by SHELL/PYTHON scripts (latency benchmarks, badge resolution, install-asset checks, mkdocs-strict, banned-words). Schema extension in flight: subagent extending `--test` to accept non-Rust verifier paths via full-file sha256. Once shipped, sweep these rows.
-- 16 RETIRE_PROPOSED rows pending owner TTY confirm (FUSE smoking gun + ADR-003 + v0.8 mount-shape rows + jira phase-28 + ADR-008 audit etc.). Run from a real terminal:
-  ```
-  for row_id in $(jq -r '.rows[] | select(.last_verdict == "RETIRE_PROPOSED") | .id' quality/catalogs/doc-alignment.json); do
-    target/release/reposix-quality doc-alignment confirm-retire --row-id "$row_id"
-  done
-  ```
-  OR, from a Claude Code session, append `--i-am-human` (audit-trailed as `confirm-retire-i-am-human`).
-- The bind verb appends source citations (Source::Multi) and overwrites source_hash with the new range's hash, but the walker reads the FIRST source citation. This causes false STALE_DOCS_DRIFT after rebind sweeps. Mitigation in this session: re-bind with the wider existing range. v0.13.0: fix bind to either preserve first-source semantics OR have walker hash all sources.
+**16 RETIRE_PROPOSED rows pending owner TTY confirm** (FUSE smoking gun + ADR-003 + v0.8 mount-shape rows + jira phase-28 + ADR-008 audit etc.). Run from a real terminal:
+```
+for row_id in $(jq -r '.rows[] | select(.last_verdict == "RETIRE_PROPOSED") | .id' quality/catalogs/doc-alignment.json); do
+  target/release/reposix-quality doc-alignment confirm-retire --row-id "$row_id"
+done
+```
+OR, from a Claude Code session, append `--i-am-human` (audit-trailed as `confirm-retire-i-am-human`).
 
-**Walker still BLOCKs pre-push** because per-row MISSING_TEST/RETIRE_PROPOSED rows each emit a blocker line. Push goes GREEN only when ALL blocking rows clear (per HANDOVER §3 original design). Best path to unblock: continue cluster phases, or relax walker to BLOCK only when alignment_ratio < floor (W9 / v0.13.0 work).
+**Confirming all 16 retires drops the denominator to 342, lifting ratio to 284/342 = 0.8304** — within striking distance of the v0.12.1 0.85 target.
 
-**Push status:** local ahead by 16+ commits (pre-push hook BLOCKs alignment_ratio walker fail; commits stay local). All hook output captured per push attempt; only the docs-alignment/walk gate fails — every other gate (clippy, fmt, mkdocs-strict, banned-words, no-version-pinned-filenames, etc.) PASSES on every push attempt.
+**Known issue captured** (not blocking): the bind verb appends source citations (Source::Multi) and overwrites source_hash with the new range's hash, but the walker reads the FIRST source citation. This caused false STALE_DOCS_DRIFT after the round-1 rebind sweep. Mitigation in this session: re-bind with the wider existing range. v0.13.0: fix bind to either preserve first-source semantics OR have walker hash all sources.
+
+**Walker still BLOCKs pre-push** because per-row MISSING_TEST/RETIRE_PROPOSED rows each emit a blocker line. Push goes GREEN only when ALL blocking rows clear (per HANDOVER §3 original design). Best path to unblock: continue cluster phases for the residual 52 MISSING_TEST + retire-confirm the 16 RETIRE_PROPOSED, OR relax walker to BLOCK only when alignment_ratio < floor (W9 / v0.13.0 work).
+
+**Push status:** local ahead of origin by ~25 commits (pre-push hook BLOCKs on docs-alignment/walk; commits stay local). Pre-push gate consistently 21 PASS / 1 FAIL / 3 WAIVED across every push attempt — only docs-alignment/walk fails, every other gate (clippy, fmt, mkdocs-strict, banned-words, structural invariants) PASSES.
 
 ---
 
