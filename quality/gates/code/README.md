@@ -60,6 +60,8 @@ P58-stub documentation-of-existing into final wiring.
 
 Cross-reference: `.planning/REQUIREMENTS.md` § POLISH-CODE.
 
+**Wave 3 lands:** verifier wired; row `code/cargo-fmt-clean` PASS as of 2026-04-28T04:52:01Z; artifact at `quality/reports/verifications/code/cargo-fmt-clean.json`.
+
 ## Cross-references
 
 - `quality/catalogs/code.json` — rows backed by these verifiers.

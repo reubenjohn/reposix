@@ -97,8 +97,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/code/cargo-fmt-clean.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-04-28T04:52:01Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: cargo fmt regressed; run cargo fmt --all locally and commit the result. P63 wired the verifier to actually run cargo fmt (read-only, ~5s) so the row enforces locally as well as in CI.",
