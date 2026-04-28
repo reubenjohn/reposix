@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 203,
-    "claims_missing_test": 152,
-    "claims_retire_proposed": 3,
+    "claims_bound": 210,
+    "claims_missing_test": 144,
+    "claims_retire_proposed": 4,
     "claims_retired": 30,
-    "alignment_ratio": 0.5670391061452514,
+    "alignment_ratio": 0.5865921787709497,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-28T18:59:04Z",
+    "last_walked": "2026-04-28T19:00:06Z",
     "coverage_ratio": 0.2027223230490018,
     "lines_covered": 1117,
     "total_eligible_lines": 5510,
@@ -963,12 +963,18 @@
         "line_end": 257
       },
       "source_hash": "665aae8456731271fd7c254d017cdf5cce11d8bc2c725b37f83b7a5229c140df",
-      "rationale": "Method exists with default impl filtering in memory",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:03:39Z",
-      "last_extracted": "2026-04-28T09:03:39Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-core/src/backend.rs::default_list_changed_since_filters_via_list_issues"
+      ],
+      "test_body_hashes": [
+        "add5ceb0be51df26279c4fa81d65141a31a619970412afe90534734d9f538d79"
+      ],
+      "rationale": "backend.rs:477 calls backend.list_changed_since(\"demo\", cutoff).await on a stub trait impl with the exact signature",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:07:15Z",
+      "last_extracted": "2026-04-28T19:07:15Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/connectors/guide/backendconnector-list-records-method",
@@ -1052,12 +1058,18 @@
         "line_end": 330
       },
       "source_hash": "2d274956096b080897f855186e60c17271e03a5f82c73b20f5105873e294f383",
-      "rationale": "Method exists with default implementation returning 'issues'",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:03:45Z",
-      "last_extracted": "2026-04-28T09:03:45Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-core/src/backend.rs::default_root_collection_name_is_issues"
+      ],
+      "test_body_hashes": [
+        "369a0acdc4d8254244577c52d4d268a26e2e085cf8382928a4715c9e90c07e01"
+      ],
+      "rationale": "backend.rs:403 asserts Stub.root_collection_name() == \"issues\" against a stub that does NOT override default impl",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:07:15Z",
+      "last_extracted": "2026-04-28T19:07:15Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/connectors/guide/backendconnector-supports-method",
@@ -1068,12 +1080,18 @@
         "line_end": 227
       },
       "source_hash": "049d8a004b8d5c8a3d80940f8da274aca2b664d3ca93c201a5846b5de23bbf61",
-      "rationale": "Method exists in trait definition",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:03:39Z",
-      "last_extracted": "2026-04-28T09:03:39Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-core/src/backend.rs::default_root_collection_name_is_issues"
+      ],
+      "test_body_hashes": [
+        "369a0acdc4d8254244577c52d4d268a26e2e085cf8382928a4715c9e90c07e01"
+      ],
+      "rationale": "backend.rs:405 calls Stub.supports(BackendFeature::Hierarchy) exercising the trait method by signature; compile-time guarantees the shape",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:07:15Z",
+      "last_extracted": "2026-04-28T19:07:15Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/decisions/009-stability-commitment/backend-connector-trait",
@@ -2880,12 +2898,18 @@
         "line_end": 157
       },
       "source_hash": "064a73ac3126c0cccff820e9d6b76646f0ab8bc23631658c460c5b93fb003f4c",
-      "rationale": "GitHub test: get_404_maps_to_not_found at crates/reposix-github/src/lib.rs:784-802",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:03:52Z",
-      "last_extracted": "2026-04-28T09:03:52Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-github/src/lib.rs::get_404_maps_to_not_found"
+      ],
+      "test_body_hashes": [
+        "b943c53df418e680f722e028fc1f2311159461b46c0afefcc59654e8ccd20007"
+      ],
+      "rationale": "lib.rs:784-802 mocks a 404 then asserts Error::Other(m) if m.starts_with(\"not found:\") at line 799",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:07:15Z",
+      "last_extracted": "2026-04-28T19:07:15Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/tutorials/first-run/checkout-origin",
@@ -3534,12 +3558,12 @@
         "line_end": 99
       },
       "source_hash": "78058088005de31b6dc6699177e43985cb93397b1744c1b195ce4e90f6cc88c8",
-      "rationale": "DOC_DRIFT: docs/reference/jira.md:96-99 claims Phase 28 read-only ('create_record/update_record/delete_or_close return not supported') but Phase 29 shipped the JIRA write path (reposix-jira/src/lib.rs:8 docstring; trait impls at lib.rs:197/279/334). Resolution: update docs/reference/jira.md §Limitations to reflect Phase 29 write-path completion, then bind a test that asserts JIRA writes via dark-factory pattern (already covered by dark_factory_real_jira; rebind row to that test).",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "UPDATE_DOC",
-      "last_run": "2026-04-28T14:59:54Z",
-      "last_extracted": "2026-04-28T14:59:54Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by Phase 29 (crates/reposix-jira/src/lib.rs:8 docstring + impls at lib.rs:197/279/334). Wiremock test contract_jira_wiremock_write at crates/reposix-jira/tests/contract.rs:419-431 exercises full create/update/delete sequence and asserts each returns Ok -- contradicts Phase-28 read-only claim. Doc prose at jira.md:96-99 also stale; UPDATE_DOC follow-up captured.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:07:15Z",
+      "last_extracted": "2026-04-28T19:07:15Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/docs-01",
@@ -5114,12 +5138,18 @@
         "line_end": 35
       },
       "source_hash": "e207c2146cfbe62afa0d5279a0dd2c9e71838ee982a1c5c0c06875d8f581ca37",
-      "rationale": "Guide statement; tests at crates/reposix-github/src/lib.rs verify behavior",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:03:52Z",
-      "last_extracted": "2026-04-28T09:03:52Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-github/src/lib.rs::supports_reports_workflows_only"
+      ],
+      "test_body_hashes": [
+        "270d08510ec278385bf87650e633112c89947141b2bbbc7a11534faeab97fae2"
+      ],
+      "rationale": "lib.rs:983 asserts read-only backend reports supports() == false for non-Workflows features (write-method side covered by error-contract-not-supported-prefix)",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:07:15Z",
+      "last_extracted": "2026-04-28T19:07:15Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/connectors/guide/error-contract-not-found-prefix",
@@ -5130,12 +5160,18 @@
         "line_end": 29
       },
       "source_hash": "97b1f2b68a0dd6caa5040d8c6db6c804d95ad7801f723ab3ab8c9b173a0330df",
-      "rationale": "Trait docs at crates/reposix-core/src/backend.rs:210-211; GitHub test verifies at line 799",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:04:04Z",
-      "last_extracted": "2026-04-28T09:04:04Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-github/src/lib.rs::get_404_maps_to_not_found"
+      ],
+      "test_body_hashes": [
+        "b943c53df418e680f722e028fc1f2311159461b46c0afefcc59654e8ccd20007"
+      ],
+      "rationale": "lib.rs:799 asserts m.starts_with(\"not found:\") against a mock 404 response",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:07:15Z",
+      "last_extracted": "2026-04-28T19:07:15Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs01-value-prop-10sec",
@@ -7322,12 +7358,18 @@
         "line_end": 35
       },
       "source_hash": "e207c2146cfbe62afa0d5279a0dd2c9e71838ee982a1c5c0c06875d8f581ca37",
-      "rationale": "Trait docs at crates/reposix-core/src/backend.rs:212-213; GitHub test verifies at line 853-876",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:04:04Z",
-      "last_extracted": "2026-04-28T09:04:04Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-github/src/lib.rs::create_returns_not_supported"
+      ],
+      "test_body_hashes": [
+        "c109427cd38d5094ae9233ffabadce75b1cbec3fda70a458ad2760571c475ddd"
+      ],
+      "rationale": "lib.rs:852-905 calls backend.create_record on read-only GitHub backend, asserts the error displays starting with \"not supported:\" at line 896",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:07:15Z",
+      "last_extracted": "2026-04-28T19:07:15Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "glossary/yaml-definition",
