@@ -1,134 +1,23 @@
 # quality/SURPRISES.md — append-only pivot journal
 
-Per `.planning/research/v0.12.0-autonomous-execution-protocol.md`
-§ "SURPRISES.md format": append one line per unexpected obstacle +
-its one-line resolution. **Required reading for the next phase agent.**
-The next agent does NOT repeat investigations of things already
-journaled here. Format: `YYYY-MM-DD P<N>: <what happened> — <one-line
-resolution>`. Anti-bloat: ≤200 lines. When it crosses, archive oldest
-50 to `quality/SURPRISES-archive-YYYY-QN.md` and start fresh. Seeded
-by P56 (Wave 4-B); P57 takes ownership when the framework skeleton ships.
+Per `.planning/research/v0.12.0-autonomous-execution-protocol.md` § "SURPRISES.md format": append one line per unexpected obstacle + its one-line resolution. **Required reading for every phase agent at start of phase.** The next agent does NOT repeat investigations of things already journaled here.
+
+Format: `YYYY-MM-DD P<N>: <obstacle> — <one-line resolution>`.
+
+Anti-bloat: ≤200 lines. When the file crosses 200 lines, archive the oldest 50 entries to `quality/SURPRISES-archive-YYYY-QN.md` and start fresh — see `quality/PROTOCOL.md` § "Anti-bloat rules per surface".
 
 ## Ownership
 
 P56 seeded this file at phase close (5 entries; commit `87cd1c3`). **P57 takes ownership 2026-04-27** as part of the Quality Gates skeleton landing. From P57 onward, this file is referenced by `quality/PROTOCOL.md` § "SURPRISES.md format" as the canonical pivot journal.
 
-**P59 Wave F archive rotation:** the 5 oldest entries (P56) were archived to `quality/SURPRISES-archive-2026-Q2.md` when this file crossed 204 lines after Waves B-C landed. The active journal now retains P57+ entries.
-
-Anti-bloat: ≤200 lines. When the file crosses 200 lines, archive the oldest 50 entries to `quality/SURPRISES-archive-YYYY-QN.md` and start fresh — see `quality/PROTOCOL.md` § "Anti-bloat rules per surface" for the rotation rule.
-
-Format: `YYYY-MM-DD P<N>: <obstacle> — <one-line resolution>`. **Required reading for every phase agent at start of phase.** The next agent does NOT repeat investigations of things already journaled here.
+**Archive rotations** (newest first):
+- **P62 Wave 4 (2026-04-28):** archived 10 P57+P58 entries (106 lines) when active crossed 302 lines after P59-P61 entries landed. Active retains P59 onward.
+- **P59 Wave F (2026-04-27):** archived 5 P56 entries when active crossed 204 lines.
 
 ---
 
 (P56 entries archived 2026-04-27 by P59 Wave F to `quality/SURPRISES-archive-2026-Q2.md`.)
 
-2026-04-27 P57: Wave B runner had idempotency bug — em-dashes in catalog
-note fields were being escape-mangled across runs (`—` re-encoded to
-`—`), AND every invocation was rewriting the catalog `last_verified`
-even when no row state changed. Two pre-push runs back-to-back produced
-a non-empty `git diff` on the catalog file, breaking the GREEN-clean
-invariant. — Fixed in commit `dd458bd` (fix(p57): runner idempotency).
-Reproduction promoted to `scripts/test-runner-invariants.py` so the
-invariant is enforceable from CI; ad-hoc bash → committed test artifact
-per CLAUDE.md §4 (Self-improving infrastructure).
-
-2026-04-27 P57: Wave B catalog amendment — initial catalog row schema
-emitted unicode-escaped em-dashes (`—`) on first write; later
-runs produced literal `—` (preserve-unicode mode). One-time
-normalization sweep brought all rows to literal-em-dash form.
-— Resolved in same Wave B; subsequent runs are idempotent.
-
-2026-04-27 P57: phase shipped without further pivots — POLISH-STRUCT
-(Wave D) closed cleanly with the chunky 480-line ROADMAP move (3 details
-wrappers + the v0.11.0 H2 section + `<details>` blocks for Phase 30
-SUPERSEDED + v0.1.0–v0.7.0 archive + v0.8.0). v0.10.0 + v0.9.0
-per-milestone files were preserved verbatim per the verify-before-edit
-rule (markers + line counts confirmed). SIMPLIFY-03 (Wave E) audit
-confirmed Wave A's boundary doc was sufficient — no edit to
-`quality/catalogs/README.md` needed. — All 9 catalog rows GREEN or
-WAIVED; verdict at `quality/reports/verdicts/p57/VERDICT.md`.
-
-2026-04-27 P58: Wave A's release-assets.json catalog included 9
-crates-io max-version rows on the assumption that all 9 reposix
-crates publish. Wave B's self-test sweep showed reposix-swarm
-returns HTTP 404 from crates.io; `crates/reposix-swarm/Cargo.toml`
-has `publish = false` (intentional — internal multi-agent contention
-test harness). The verifier surfaces the genuine fact (FAIL with
-"GET .../reposix-swarm HTTP 200 — got status=404"). — Per stop
-condition, left as-discovered for Wave E to reconcile: either
-remove the row (catalog drift fix) or convert to a permanent
-waiver (`tracked_in: 'reposix-swarm publish=false (internal-only)'`).
-Other 8 crates PASS at 0.11.3.
-
-2026-04-27 P58: Wave A pre-push runner reported NOT-VERIFIED for
-new P1 pre-push row code/clippy-lint-loaded because Wave A commits
-the catalog row before Wave C ships the verifier wrapper at
-`quality/gates/code/clippy-lint-loaded.sh`. The runner's
-verifier-not-found branch sets NOT-VERIFIED, which fails exit on
-P0+P1 rows. — Resolved by attaching a short-lived waiver
-(`until: 2026-05-11T00:00:00Z`, `tracked_in: P58 Wave C (58-03)`)
-to the catalog row. Wave C removes the waiver and flips to active
-enforcement. Rule 3 deviation; recorded in 58-01-SUMMARY.md.
-
-2026-04-27 P58: Wave D first dispatch of quality-weekly.yml exposed
-install/build-from-source RED in CI: gh CLI in GH Actions environment
-requires explicit `GH_TOKEN: ${{ github.token }}` env var on each
-runner step (the system-default GITHUB_TOKEN is NOT auto-passed to
-gh CLI, only to actions/* uses). Locally the same row PASSes because
-gh CLI uses the user's stored auth. — Fixed in commit 664b533:
-GH_TOKEN env added to runner + verdict steps in both quality-weekly.yml
-and quality-post-release.yml. Run 25020034212 confirmed fix
-(install/build-from-source PASS). Lesson: verifiers calling `gh`
-CLI must always run with GH_TOKEN env in GH Actions; treat this as
-the default workflow shape going forward.
-
-2026-04-27 P58: Wave D first dispatch of quality-post-release.yml
-exposed cargo-binstall-resolves verifier bug. The PARTIAL_SIGNALS
-tuple (`Falling back to source`, `Falling back to install via
-'cargo install'`, `compiling reposix`) did NOT match the actual
-binstall stdout, which says `will be installed from source (with
-cargo)`. The verifier graded FAIL on what should have been the
-documented PARTIAL state per P56 SURPRISES.md row 3. — Fixed in
-commit e0e5645: added 3 additional fallback signals (`will be
-installed from source`, `running \`cargo install`,
-`running '/home/runner/.rustup`). Run 25020150833 confirms fix:
-PARTIAL graded correctly. Lesson: when a "documented expected"
-PARTIAL state lands in production, exercise the verifier against
-the real production output, not just the design-intent string.
-
-2026-04-27 P58: Wave E reconciled the catalog-drift RED that
-Wave A intentionally surfaced — `release/crates-io-max-version/
-reposix-swarm` was a design-time mistake (the crate has
-`publish = false`; internal multi-agent contention test harness
-that is never published to crates.io). — Resolved by REMOVING the
-row from quality/catalogs/release-assets.json (15 rows now;
-8 crates-io-max-version/<crate> rows for the published crates).
-quality/gates/release/README.md gained a "reposix-swarm exclusion"
-section acknowledging the design-time error. Lesson: the
-catalog-first rule (write rows before code) IS load-bearing —
-the verifier surfaced the drift on first dispatch; the fix landed
-in the same milestone instead of leaking to v0.12.1.
-
-2026-04-27 P58: Wave E waived release/cargo-binstall-resolves
-explicitly (until 2026-07-26, tracked_in MIGRATE-03 v0.12.1).
-The runner's exit-code logic treats PARTIAL on P1 as fail — the
-documented expected PARTIAL needs to be a waiver, not a status.
-The waiver text covers BOTH cases: (a) CI-with-binstall observes
-"will be installed from source" → PARTIAL; (b) local-without-binstall
-sees `error: no such command: 'binstall'` → FAIL with diagnostic.
-Both are acceptable in the waiver window. — Resolution: not a
-pivot per se, but a contract clarification: PARTIAL acceptable
-under the framework's exit-code rules requires an explicit waiver.
-
-2026-04-27 P58: phase shipped with documented pivots — release-dim
-gates landed clean (15 weekly rows + 1 post-release row), code-dim
-absorption confirmed (SIMPLIFY-04 + SIMPLIFY-05 closed; check_fixtures
-audit chose Option A), quality-weekly + quality-post-release
-validated end-to-end (4 dispatches; 2 verifier/workflow fixes
-applied), QG-09 P58 GH Actions badge live in README + docs/index.md.
-— All catalog rows GREEN or WAIVED; verdict at
-quality/reports/verdicts/p58/VERDICT.md (Wave F).
 
 2026-04-27 P59: Wave B fenced-block survey returned 32 blocks across 6
 files (under PIVOT_THRESHOLD=50 → per-block tracking applies). Of
@@ -300,3 +189,31 @@ GREEN on first dispatch because the underlying prose is already
 clean. The broaden-and-deepen sweep is more valuable as insurance
 + future-regression detection than as a fix-it-now hammer when the
 prose is already shipped clean.
+
+2026-04-28 P62: Wave 2 pre-check revealed ~50/99 audited items were
+already closed by SIMPLIFY-04..11 + P56-P61 sweeps. — Wave 2 became
+"verify closures" not "plan fixes"; Wave 3's actual fix list dropped
+to 2 mechanical items (audit relocations + SESSION-END-STATE archive).
+
+2026-04-28 P62: catalog-first dominated planning. Wave 1 locked
+ORG-01 + POLISH-ORG (3 structure rows + dim README) BEFORE Wave 2
+rendered the audit. — No pivot; the rule worked as designed.
+
+2026-04-28 P62: `scripts/__pycache__/` rec was already-closed by
+`.gitignore:30` (covers `__pycache__/` recursively). The 2 .pyc
+files were workspace-only, never tracked. — Closed-by-deletion via
+workspace cleanup. Lesson: audit doc snapshots can overstate gaps;
+the verifier re-classifies present-tense.
+
+2026-04-28 P62: 2 audit "fuse residue" recs
+(`docs/development/{roadmap, contributing}.md`) were false positives.
+roadmap.md mentions are historical release-notes context (allowed,
+like CHANGELOG); contributing.md grep matched the substring "fuse"
+inside "**re**fuse". — Both re-classified to closed-by-existing-gate.
+Lesson: future audits should `grep -w` for jargon-residue counts.
+
+2026-04-28 P62: quality/gates/structure/freshness-invariants.py
+grew to 402 lines after 3 verifier branches landed (over the ~300
+anti-bloat hint). Branches share existing helpers; cohesion preserved.
+— Deferred helper-module extraction to v0.12.1 MIGRATE-03 unless
+Wave 6 flags it. P61's `_freshness.py` is the precedent.
