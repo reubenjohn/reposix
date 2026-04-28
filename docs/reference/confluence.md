@@ -1,12 +1,14 @@
 # Confluence backend reference
 
-`reposix-confluence` is a **read-only** adapter for Atlassian Confluence Cloud
-via its [REST v2 API](https://developer.atlassian.com/cloud/confluence/rest/v2/intro/).
+`reposix-confluence` is an adapter for Atlassian Confluence Cloud via its
+[REST v2 API](https://developer.atlassian.com/cloud/confluence/rest/v2/intro/).
 It implements the
 [`IssueBackend`](https://github.com/reubenjohn/reposix/blob/main/crates/reposix-core/src/backend.rs)
-trait the FUSE daemon and `reposix list` CLI consume, so the same kernel path
-and command-line surface that works against the simulator and GitHub also works
-against a real Confluence space. Ships in **v0.3.0**.
+trait that `reposix-cache` (the bare-repo cache backing `git-remote-reposix`)
+and the `reposix list` CLI consume, so the same partial-clone working-tree
+surface that works against the simulator and GitHub also works against a real
+Confluence space. The read path ships in **v0.3.0**; the `git push` write
+path lands later in the v0.4 milestone series.
 
 ## CLI surface
 
@@ -107,32 +109,47 @@ This differs from the GitHub backend, which uses `x-ratelimit-reset` (unix
 epoch); the two patterns are documented side-by-side in
 [ADR-002 §Rate-limit decision](../decisions/002-confluence-page-mapping.md).
 
-## FUSE mount layout (v0.4+)
+## Working tree layout
 
-After Phase 13 (v0.4), pages live under a `pages/` bucket rather than at the
-mount root:
+Once `reposix init confluence::<SPACE_KEY> <dir>` finishes, `<dir>` is a
+plain git checkout backed by the partial-clone helper. The shape is flat —
+each Confluence page maps to exactly one Markdown file under `pages/`,
+keyed by its stable numeric `id`:
 
 ```
-mount/
-├── pages/
-│   ├── 00000131192.md           # page body — writable target
-│   ├── 00000131192.comments/    # read-only comment overlay (Phase 23)
-│   │   ├── 00000012345.md       # inline/footer comment as frontmatter+body
-│   │   └── 00000012346.md
-│   └── 00000065916.md
-├── tree/                        # read-only symlink hierarchy (Confluence only)
-│   └── reposix-demo-space-home/
-│       ├── _self.md             -> ../../pages/00000360556.md
-│       └── architecture-notes.md -> ../../pages/00000065916.md
-└── .gitignore                   # synthesized; contains /tree/
+<dir>/
+├── .git/                       # real git directory; partial clone (extensions.partialClone=origin)
+└── pages/
+    ├── 00000131192.md          # page body (YAML frontmatter + storage-format XHTML)
+    ├── 00000065916.md
+    └── 00000360556.md
 ```
 
-`pages/<id>.comments/` directories are lazy-fetched — the backend round-trip
-for a page's comments only occurs when that directory is first accessed.
-Comment files are read-only; writes return `EROFS`.
+YAML frontmatter carries server-controlled fields (`id`, `version`,
+`spaceId`, `parentId`, `createdAt`, `updatedAt`); the body is the raw
+storage-format XHTML returned by `body.storage.value`. Filenames use the
+zero-padded numeric page id so renames and reparenting on the Confluence
+side never rewrite the working-tree path — they show up as frontmatter
+diffs only.
 
-See [ADR-003](../decisions/003-nested-mount-layout.md) for the full layout
-specification, including slug algorithm and collision resolution.
+The blob behind each `pages/<id>.md` is fetched lazily: the tree (the
+filename list) is materialized eagerly by `git fetch --filter=blob:none
+origin`, and individual page bodies download on first read via
+`git-remote-reposix`'s `stateless-connect` capability. Agents that
+operate on a subset use `git sparse-checkout set 'pages/000001312*.md'`
+before the first `git checkout`, so the helper sees a single batched
+fetch turn for exactly the blobs they need.
+
+Comment overlay (the v0.4-era `pages/<id>.comments/` directory),
+read-only-via-`EROFS` semantics, and the synthesized `tree/` symlink
+hierarchy were a FUSE-mount affordance that did not survive the v0.9.0
+git-native pivot — Confluence parent/child structure is now reachable
+via `parentId` in frontmatter, and inline-comment access is deferred
+to a future milestone. See the
+[v0.9.0 architecture-pivot summary](https://github.com/reubenjohn/reposix/tree/main/.planning/research/v0.9-fuse-to-git-native)
+and [Git layer](../how-it-works/git-layer.md) for the partial-clone
+shape in full, and [ADR-003](../decisions/003-nested-mount-layout.md)
+(superseded) for the historical FUSE-era layout.
 
 ## What's NOT supported
 
@@ -149,9 +166,15 @@ for the full list:
   body is raw XHTML from `body.storage.value`, not rendered Markdown.
 - **Labels.** Confluence labels live at a separate endpoint; v0.3 returns
   `labels: []` unconditionally.
-- **Write path.** `create_record` / `update_record` / `delete_or_close` all
-  return `not supported`. v0.4 will add the write path (with
-  server-field sanitization, mirroring SG-03).
+- **Write path on v0.3.0.** In the initial release, `create_record` /
+  `update_record` / `delete_or_close` all returned `not supported`.
+  Subsequent v0.4-series phases added the write path (with
+  server-field sanitization mirroring SG-03), so a `git push` from a
+  partial-clone working tree now translates each changed `pages/<id>.md`
+  into the matching REST PATCH/POST/DELETE call against Confluence. The
+  push round-trip — including push-time conflict detection that rejects
+  with the standard `fetch first` git error when the remote drifted —
+  is documented in [Git layer → push round-trip](../how-it-works/git-layer.md#the-push-round-trip-happy-path-and-conflict).
 
 ## Known failure modes
 
