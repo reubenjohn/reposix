@@ -370,12 +370,19 @@ def verify_doc_alignment_catalog_present(row: dict, repo_root: Path) -> int:
             for key in ("schema_version", "summary", "rows"):
                 if key not in data:
                     asserts_failed.append(f"missing top-level key: {key}")
-            if data.get("schema_version") != "1.0":
+            # Accept "1.0" (P64 baseline) and "2.0" (W7/P71 tests Vec migration).
+            # Future migrations bump this list deliberately; the verifier never
+            # auto-tracks the live catalog.
+            known_versions = ("1.0", "2.0")
+            if data.get("schema_version") not in known_versions:
                 asserts_failed.append(
-                    f"schema_version is {data.get('schema_version')!r}; expected '1.0'"
+                    f"schema_version is {data.get('schema_version')!r}; "
+                    f"expected one of {known_versions}"
                 )
             else:
-                asserts_passed.append("schema_version == '1.0'")
+                asserts_passed.append(
+                    f"schema_version == {data.get('schema_version')!r}"
+                )
     artifact = make_artifact(row, 1 if asserts_failed else 0, asserts_passed, asserts_failed)
     write_artifact(repo_root / row["artifact"], artifact)
     return artifact["exit_code"]

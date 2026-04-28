@@ -147,7 +147,10 @@ pub fn verify(catalog: &Path, row_id: &str) -> Result<i32> {
         if r.tests.len() >= 2 {
             println!();
             println!("== per-test drift (multi-test row) ==");
-            println!("  {:<5}  {:<40}  test ref", "idx", "stored hash (16-prefix)");
+            println!(
+                "  {:<5}  {:<40}  test ref",
+                "idx", "stored hash (16-prefix)"
+            );
             println!("  {}", "-".repeat(5 + 2 + 40 + 2 + 32));
             for (i, t) in r.tests.iter().enumerate() {
                 let prefix = r.test_body_hashes.get(i).map_or_else(
@@ -918,10 +921,9 @@ pub(crate) mod verbs {
         // Multi-test row count (W7 / v0.12.1): how many rows bind to >=2
         // tests. Surfaces the new schema's reach without changing the
         // headline summary numbers.
-        let multi_test_rows: u64 = u64::try_from(
-            cat.rows.iter().filter(|r| r.tests.len() >= 2).count(),
-        )
-        .unwrap_or(u64::MAX);
+        let multi_test_rows: u64 =
+            u64::try_from(cat.rows.iter().filter(|r| r.tests.len() >= 2).count())
+                .unwrap_or(u64::MAX);
 
         if json_mode {
             // Emit { global: {...}, per_file: [...] } -- the per_file is
