@@ -27,8 +27,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/security/allowlist-enforcement.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "WAIVED",
+      "last_verified": "2026-04-28T04:59:21Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "v0.12.1 SEC-01 stub: verifier script does not yet exist. CLAUDE.md threat-model section names allowlist enforcement as a P0 cut.",
@@ -64,8 +64,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/security/audit-immutability.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "WAIVED",
+      "last_verified": "2026-04-28T04:59:21Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "v0.12.1 SEC-02 stub: verifier script does not yet exist. CLAUDE.md OP-3 names audit immutability as non-optional.",

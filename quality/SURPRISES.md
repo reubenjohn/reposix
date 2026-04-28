@@ -11,7 +11,8 @@ Anti-bloat: ≤200 lines. When the file crosses 200 lines, archive the oldest 50
 P56 seeded this file at phase close (5 entries; commit `87cd1c3`). **P57 takes ownership 2026-04-27** as part of the Quality Gates skeleton landing. From P57 onward, this file is referenced by `quality/PROTOCOL.md` § "SURPRISES.md format" as the canonical pivot journal.
 
 **Archive rotations** (newest first):
-- **P62 Wave 4 (2026-04-28):** archived 10 P57+P58 entries (106 lines) when active crossed 302 lines after P59-P61 entries landed. Active retains P59 onward.
+- **P63 Wave 6 (2026-04-28):** archived 7 P59 entries (68 lines) when active crossed 282 lines after P63 entries landed. Active retains P60 onward.
+- **P62 Wave 4 (2026-04-28):** archived 10 P57+P58 entries (106 lines) when active crossed 302 lines after P59-P61 entries landed. Active retained P59 onward.
 - **P59 Wave F (2026-04-27):** archived 5 P56 entries when active crossed 204 lines.
 
 ---
@@ -19,74 +20,6 @@ P56 seeded this file at phase close (5 entries; commit `87cd1c3`). **P57 takes o
 (P56 entries archived 2026-04-27 by P59 Wave F to `quality/SURPRISES-archive-2026-Q2.md`.)
 
 
-2026-04-27 P59: Wave B fenced-block survey returned 32 blocks across 6
-files (under PIVOT_THRESHOLD=50 → per-block tracking applies). Of
-those, 11 are covered by existing release-assets + docs-repro example
-rows; 21 illustrative blocks (mermaid diagram, troubleshooting examples,
-connector-tutorial code) moved to a NEW
-quality/catalogs/docs-reproducible-allowlist.json with per-id
-reasons. Cross-catalog source citation matching was added to
-quality/gates/docs-repro/snippet-extract.py so release-assets rows
-citing README.md install lines cover their corresponding fenced blocks
-transparently — released this as a Rule 1 fix (without it the drift
-detector flagged blocks that ARE catalogued, just in a sibling catalog).
-
-2026-04-27 P59: Wave C container-rehearse.sh ships but the example
-run scripts (examples/0[1,2,4,5]-*/run.{sh,py}) assume an external
-simulator listening on 127.0.0.1:7878 that the container does not
-bring up. Locally the verifier exits non-zero with stderr "sim not
-reachable" — same diagnostic for any caller. — Resolution: short-lived
-waiver attached (until 2026-05-12) to all 4 container example rows +
-the tutorial-replay row, tracked_in "P59 Wave F CI rehearsal in
-docker-equipped GH runner with sim service". Pattern mirrors the P58
-Wave A clippy-lint-loaded waiver. The container-rehearse.sh driver
-itself is correct + tested via the docker-absent skip path; the gap
-is plumbing sim-inside-container, which is post-v0.12.0 scope.
-
-2026-04-27 P59: SIMPLIFY-06 closure — scripts/repro-quickstart.sh
-deleted (no callers found in .github/, scripts/, docs/, examples/,
-CLAUDE.md, README.md). The tutorial-replay.sh canonical home at
-quality/gates/docs-repro/ ports the 7-step assertion shape verbatim;
-the row's `sources` field references the historical predecessor with
-"see commit history" so the lineage is discoverable without keeping
-a stub file alive.
-
-2026-04-27 P59: Wave D SIMPLIFY-07 chose SHIM (not delete) for
-scripts/dark-factory-test.sh, opposite of P58's SIMPLIFY-04+05 which
-DELETED their predecessors. Reason: caller audit found 14 references
-across CLAUDE.md "Local dev loop", README.md, docs/reference/cli.md,
-docs/reference/simulator.md, docs/reference/crates.md,
-docs/development/contributing.md, docs/decisions/001-github-state-mapping.md,
-examples/03-claude-code-skill/RUN.md,
-examples/04-conflict-resolve/expected-output.md,
-examples/05-blob-limit-recovery/{RUN.md, expected-output.md},
-scripts/green-gauntlet.sh. Deleting would have broken developer
-muscle memory + the canonical examples docs. P63 SIMPLIFY-12 audits
-the shim. — Resolution: 7-line shim at scripts/dark-factory-test.sh
-that exec's quality/gates/agent-ux/dark-factory.sh "$@". CI workflow
-ci.yml updated to invoke canonical path explicitly per OP-1.
-
-2026-04-27 P59: Wave E SIMPLIFY-11 had two pivots in one commit. (1)
-Option B underscore: bench_token_economy.py kept underscore at
-quality/gates/perf/ (not hyphenated like other-dim entry-points)
-because the test file imports `bench_token_economy` as a Python
-module — hyphen breaks module syntax. Wave A's hyphenated catalog
-row corrected to underscore in same commit (4-char edit). (2)
-REPO_ROOT path arithmetic: predecessor used `parent.parent` /
-`SCRIPT_DIR/..` assuming scripts/ = one-level. From quality/gates/perf/
-that resolves to quality/gates/, breaking benchmarks/fixtures lookups.
-— Resolution: Python `parents[3]`; bash `cd "${SCRIPT_DIR}/../../.."`.
-9/9 tests pass at new location; bench --offline exits 0 via shim.
-Lesson: any __file__-derived REPO_ROOT needs path-arithmetic audit
-on migration; the depth changed from 1 to 3.
-
-2026-04-27 P59: Wave F archive rotation — SURPRISES.md crossed 204
-lines after Waves B-C landed. Per quality/PROTOCOL.md anti-bloat
-rule, archived 5 oldest entries (P56) to quality/SURPRISES-archive-2026-Q2.md.
-Active journal now retains P57+ entries. First archive rotation
-since the journal was seeded — establishes the quarterly-archive
-convention. Active SURPRISES.md header gained pointer paragraph
-naming the archive file.
 
 2026-04-27 P60: Wave E pre-push hook one-liner — warm-cache profile
 of `python3 quality/runners/run.py --cadence pre-push` was 7.0s on
@@ -217,3 +150,66 @@ grew to 402 lines after 3 verifier branches landed (over the ~300
 anti-bloat hint). Branches share existing helpers; cohesion preserved.
 — Deferred helper-module extraction to v0.12.1 MIGRATE-03 unless
 Wave 6 flags it. P61's `_freshness.py` is the precedent.
+
+2026-04-28 P63 Wave 1: scripts/check_quality_catalogs.py held stale
+contracts (release=16 expecting reposix-swarm row that P58 Wave A
+removed; code=3 missing the P58/P60 fmt-check + clippy-warnings +
+fixtures-valid additions; orphan-scripts=1 expecting the
+crates-io-max-version waiver row that P58 Wave E removed). — Updated
+catalog contracts to match current reality (release=15, code=6 with
+required-ids enforcing POLISH-CODE rows + extras allowed,
+orphan-scripts=17 after Wave 2 populates from caller-scan). Lesson:
+catalog-validator scripts need same incremental-update discipline as
+the catalogs themselves.
+
+2026-04-28 P63 Wave 2: 5 of 22 audited scripts had zero callers AND
+canonical equivalents under quality/runners/* OR per-row
+release-assets.json verifiers — DELETE landed cleanly. The other 17
+survived as SHIM-WAIVED or KEEP-AS-CANONICAL because CI workflows
+(`.github/workflows/{ci.yml, docs.yml, bench-latency-cron.yml}`),
+CLAUDE.md command-path documentation, and OP-5 reversibility argued
+against deletion. — Lesson: caller-scan that excludes only
+`.planning/archive/**` + `quality/SURPRISES-archive-*.md` (the P63 Wave
+2 default) gives an accurate picture; scripts with zero non-doc
+callers AND a documented canonical equivalent are safe to delete. The
+8 KEEP-AS-CANONICAL scripts gained `# KEEP-AS-CANONICAL (P63
+SIMPLIFY-12)` header markers as the verifier's source-of-truth.
+
+2026-04-28 P63 Wave 3: cargo-fmt-clean wiring decision — direct
+`cargo fmt --all -- --check` invocation honored ONE cargo at a time
+rule (read-only, ~5s, no compile). cargo-test-pass intentionally NOT
+wired the same way: workspace `cargo nextest run` is 6-15 min +
+violates memory-budget + exceeds pre-pr 10-min cadence cap. — CI
+remains canonical enforcement venue; tracked-forward to v0.12.1
+MIGRATE-03 for per-crate / sccache-warmed alternatives. Lesson:
+read-only cargo subcommands (fmt --check, tree, metadata) are safe
+verifier-targets; compile-or-test cargo subcommands are not.
+
+2026-04-28 P63 Wave 4: cross-link audit found `bench-token-economy.py`
+typo in quality/gates/perf/README.md (P59 SIMPLIFY-11 record had a
+dash where the actual file uses underscore). Plus 11 truncated /
+template paths flagged by the bare regex (`v0.X.0` placeholders,
+`p<N>` template, retired script lineage references). — Typo fixed
+in-line; verifier extended with KNOWN_HISTORICAL_OR_PLANNED set + a
+`looks_like_doc_anchor` heuristic skipping template patterns
+(`v0.X.`, `YYYY`, trailing-dash truncations). 100 paths now verified,
+0 stale. Lesson: cross-link verifiers need a small whitelist for
+documented-historical refs; bare regex is too aggressive.
+
+2026-04-28 P63 Wave 5: `.planning/milestones/v0.12.1-phases/` scaffold
+landed INSIDE the dimension dir per CLAUDE.md `.planning/milestones/`
+convention (Option B from HANDOVER §0.5). The
+freshness/no-loose-roadmap-or-requirements verifier stays GREEN
+because the 2 new files are inside `*-phases/`, not at the
+`.planning/milestones/` top level. — Convention is now load-bearing
+across 13 milestones (v0.1.0 through v0.12.1). Lesson: when a
+"convention" exists for 13 prior milestones, the next milestone scaffold
+follows it BY DEFAULT; deviation needs explicit reasoning.
+
+2026-04-28 P63 Wave 5: ad-hoc bash hook flagged a 587-char inline
+catalog-tracked-in cross-check pipeline. — Promoted to
+`quality/gates/structure/catalog-tracked-in-cross-link.py` per
+CLAUDE.md OP-4 (self-improving infrastructure). 4/4 catalog
+tracked_in REQ-IDs resolve to v0.12.1 placeholders. Lesson: if you
+write a 500-char inline JSON/regex pipeline twice, the second time
+the right move is `quality/gates/<dim>/<verb>-<noun>.py` first.

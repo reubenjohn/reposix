@@ -177,3 +177,74 @@ applied), QG-09 P58 GH Actions badge live in README + docs/index.md.
 — All catalog rows GREEN or WAIVED; verdict at
 quality/reports/verdicts/p58/VERDICT.md (Wave F).
 
+
+## P59 entries (rotated 2026-04-28 P63 Wave 6, active 282 -> ~214 lines)
+
+2026-04-27 P59: Wave B fenced-block survey returned 32 blocks across 6
+files (under PIVOT_THRESHOLD=50 → per-block tracking applies). Of
+those, 11 are covered by existing release-assets + docs-repro example
+rows; 21 illustrative blocks (mermaid diagram, troubleshooting examples,
+connector-tutorial code) moved to a NEW
+quality/catalogs/docs-reproducible-allowlist.json with per-id
+reasons. Cross-catalog source citation matching was added to
+quality/gates/docs-repro/snippet-extract.py so release-assets rows
+citing README.md install lines cover their corresponding fenced blocks
+transparently — released this as a Rule 1 fix (without it the drift
+detector flagged blocks that ARE catalogued, just in a sibling catalog).
+
+2026-04-27 P59: Wave C container-rehearse.sh ships but the example
+run scripts (examples/0[1,2,4,5]-*/run.{sh,py}) assume an external
+simulator listening on 127.0.0.1:7878 that the container does not
+bring up. Locally the verifier exits non-zero with stderr "sim not
+reachable" — same diagnostic for any caller. — Resolution: short-lived
+waiver attached (until 2026-05-12) to all 4 container example rows +
+the tutorial-replay row, tracked_in "P59 Wave F CI rehearsal in
+docker-equipped GH runner with sim service". Pattern mirrors the P58
+Wave A clippy-lint-loaded waiver. The container-rehearse.sh driver
+itself is correct + tested via the docker-absent skip path; the gap
+is plumbing sim-inside-container, which is post-v0.12.0 scope.
+
+2026-04-27 P59: SIMPLIFY-06 closure — scripts/repro-quickstart.sh
+deleted (no callers found in .github/, scripts/, docs/, examples/,
+CLAUDE.md, README.md). The tutorial-replay.sh canonical home at
+quality/gates/docs-repro/ ports the 7-step assertion shape verbatim;
+the row's `sources` field references the historical predecessor with
+"see commit history" so the lineage is discoverable without keeping
+a stub file alive.
+
+2026-04-27 P59: Wave D SIMPLIFY-07 chose SHIM (not delete) for
+scripts/dark-factory-test.sh, opposite of P58's SIMPLIFY-04+05 which
+DELETED their predecessors. Reason: caller audit found 14 references
+across CLAUDE.md "Local dev loop", README.md, docs/reference/cli.md,
+docs/reference/simulator.md, docs/reference/crates.md,
+docs/development/contributing.md, docs/decisions/001-github-state-mapping.md,
+examples/03-claude-code-skill/RUN.md,
+examples/04-conflict-resolve/expected-output.md,
+examples/05-blob-limit-recovery/{RUN.md, expected-output.md},
+scripts/green-gauntlet.sh. Deleting would have broken developer
+muscle memory + the canonical examples docs. P63 SIMPLIFY-12 audits
+the shim. — Resolution: 7-line shim at scripts/dark-factory-test.sh
+that exec's quality/gates/agent-ux/dark-factory.sh "$@". CI workflow
+ci.yml updated to invoke canonical path explicitly per OP-1.
+
+2026-04-27 P59: Wave E SIMPLIFY-11 had two pivots in one commit. (1)
+Option B underscore: bench_token_economy.py kept underscore at
+quality/gates/perf/ (not hyphenated like other-dim entry-points)
+because the test file imports `bench_token_economy` as a Python
+module — hyphen breaks module syntax. Wave A's hyphenated catalog
+row corrected to underscore in same commit (4-char edit). (2)
+REPO_ROOT path arithmetic: predecessor used `parent.parent` /
+`SCRIPT_DIR/..` assuming scripts/ = one-level. From quality/gates/perf/
+that resolves to quality/gates/, breaking benchmarks/fixtures lookups.
+— Resolution: Python `parents[3]`; bash `cd "${SCRIPT_DIR}/../../.."`.
+9/9 tests pass at new location; bench --offline exits 0 via shim.
+Lesson: any __file__-derived REPO_ROOT needs path-arithmetic audit
+on migration; the depth changed from 1 to 3.
+
+2026-04-27 P59: Wave F archive rotation — SURPRISES.md crossed 204
+lines after Waves B-C landed. Per quality/PROTOCOL.md anti-bloat
+rule, archived 5 oldest entries (P56) to quality/SURPRISES-archive-2026-Q2.md.
+Active journal now retains P57+ entries. First archive rotation
+since the journal was seeded — establishes the quarterly-archive
+convention. Active SURPRISES.md header gained pointer paragraph
+naming the archive file.

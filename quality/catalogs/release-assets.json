@@ -138,8 +138,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/release/install-build-from-source.json",
-      "status": "PASS",
-      "last_verified": "2026-04-27T21:06:48Z",
+      "status": "FAIL",
+      "last_verified": "2026-04-28T04:59:35Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: ci.yml `test` job is failing on main; investigate ci.yml workflow logs",

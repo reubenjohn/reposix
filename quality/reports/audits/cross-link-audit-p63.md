@@ -1,6 +1,6 @@
 # Cross-link audit (P63 MIGRATE-02)
 
-_Generated 2026-04-28T04:58:21Z by `quality/gates/structure/cross-link-audit.py`._
+_Generated 2026-04-28T05:00:17Z by `quality/gates/structure/cross-link-audit.py`._
 
 **Summary:** 138 unique paths audited across 10 docs; 0 stale.
 
