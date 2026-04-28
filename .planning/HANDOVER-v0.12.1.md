@@ -88,16 +88,31 @@ Owner explicitly authorizes retirement via flag (audit-trailed in catalog row's 
 
 Extend `scripts/test-pre-push.sh` (currently only verifies PASS-path) to also force a runner FAIL and assert the hook propagates exit non-zero. The recent `fdb4d24` hook fix was invisible to the existing test because the test asserts behavior on the PASSING side only. Companion: audit `~/.git-hooks/pre-push` (personal global) for the same `if ! cmd; exit $?` pattern.
 
-#### W7 — P71: Schema cross-cut consolidation (MIGRATE-03 (i))
+#### W7 — P71: Schema cross-cut consolidation + many-to-many bindings (MIGRATE-03 (i)) — **PRIORITY: land BEFORE P72 cluster phases**
 
-Two cross-cuts in the binary surface:
+**Why elevated:** cluster-closure phases (P72-P80) will produce rows that bind a single claim to multiple tests (e.g. a JIRA-writes claim binding to create + update + delete + conflict-recovery tests). Forcing one row per test multiplies the catalog without semantic gain. The schema generalization must land before cluster work begins.
 
-1. `bind` writes `Row.source` as `SourceCite` object; `merge-shards` reads `Source` enum (Single|Multi). Reconciled mid-flight via jq during P65; should be unified at the type level.
-2. `Row.test` is `String` but some shards emitted multi-test arrays. Should be `Vec<String>` to support multi-test claims first-class.
+Cross-cuts to fix in this phase:
 
-3. (NEW finding from this session) `Row.rationale` is `Option<String>` in the writer side but the walker's deserialize was failing on missing rationale. Verify whether this is a serde back-compat issue or a writer bug. Test required: walker round-trips a catalog with rows lacking `rationale`.
+1. `Row.test: String` → `Row.test: Vec<String>`. Empty vec = no test (currently `Option<String>` semantics). Single-element vec is the common case. Multi-element supports many-tests-per-claim.
 
-4. (NEW finding) `FloorWaiver` struct expects fields `{until, rationale}` but the design brief had `{until, reason, dimension_owner}`. Pick one consistent shape; update either the brief, the schema spec, or the struct.
+2. `Row.test_body_hash: Option<String>` → `Row.test_body_hashes: Vec<String>`. **Parallel to `Row.test`.** This is the per-function-hash improvement: when the walker detects drift, it isolates which specific test fn changed rather than re-grading every binding.
+   - Walker drift detection becomes per-element comparison.
+   - `STALE_TEST_DRIFT` carries an index or list of which test(s) drifted in the row's diagnostic.
+   - On `bind`, the binary computes hashes for each test in the input list.
+
+3. `bind` writes `Row.source` as `SourceCite` object; `merge-shards` reads `Source` enum (Single|Multi). Reconciled mid-flight via jq during P65; should be unified at the type level. (Source is already multi-capable conceptually; just needs writer-side consistency.)
+
+4. (NEW from this session) `Row.rationale` is `Option<String>` in the writer side but the walker's deserialize was failing on missing rationale. Verify whether this is a serde back-compat issue or a writer bug. Test required: walker round-trips a catalog with rows lacking `rationale`.
+
+5. (NEW) `FloorWaiver` struct expects fields `{until, rationale}` but the design brief had `{until, reason, dimension_owner}`. Pick one consistent shape; update either the brief, the schema spec, or the struct. (Pre-existing fix: the floor_waiver block in `doc-alignment.json` was reconciled to the struct shape during this session and is now removed entirely along with the walker waiver per owner directive.)
+
+6. **Migration script** for the existing 388-row catalog. `Row.test: String` → `Row.test: vec![string]`. `Row.test_body_hash: Option<String>` → `Row.test_body_hashes: vec![hash]` (or empty vec if hash absent). One-shot Python script that reads the catalog, transforms in place, validates against the new schema. Commit the migrated catalog as part of W7.
+
+CLI updates:
+- `bind` accepts `--test <file::fn>` repeatably, OR `--tests <file::fn,file::fn,...>` (pick one ergonomic; recommend repeatable for shell-quoting safety).
+- `verify --row-id X` displays per-test hashes + drift status per binding.
+- `status` shows count of multi-test rows for visibility.
 
 #### W8 — P72+: Cluster-closure phases per PUNCH-LIST.md
 
@@ -116,6 +131,38 @@ Likely cluster ordering by leverage:
 - **P80 — Coverage chunker redirect-following.** New finding from P66: `docs/connectors/guide.md`, `docs/security.md`, `docs/why.md`, `docs/reference/crates.md` show 0 rows in coverage even though shards extracted from their redirect targets. Either the chunker should follow redirects, OR rows should track the prose-source file rather than the canonical-redirect file. Pick one.
 
 After P72-P80 land, alignment_ratio + coverage_ratio both lift. Re-dispatch the milestone-close verifier; v0.12.1 ships.
+
+### Floor-ratchet plan (owner directive, captured 2026-04-28)
+
+Two floors evolve differently because they measure different things:
+
+| Floor | v0.12.0 | v0.12.1 target | v0.13.0 target | Asymptote |
+|---|---:|---:|---:|---:|
+| `alignment_floor` | 0.50 | 0.85 | 0.95 | 0.99 |
+| `coverage_floor`  | 0.10 | 0.25 | 0.40 | 0.40-0.60 |
+
+**alignment_floor → 100% is the right target.** Every behavioral claim should have a test. The 1% asymptote covers genuinely-unbinder claims (subjective rubrics that grade rather than bind, manual gates with TTL freshness). Each cluster phase commits a floor ratchet in its closing commit: `summary.floor: 0.5000 → 0.5800` after P72 closes ~30 rows, etc.
+
+**coverage_floor → 100% is wrong.** Not every doc line is a behavioral claim — preambles, narrative, examples, attribution don't bind to tests. Realistic asymptote 0.40-0.60. Anything above suggests over-mining (the v0.12.1 P65 backfill already showed the 24-glossary over-extraction failure mode). The chunker should learn to skip (W12 below) before the floor ratchets aggressively.
+
+Rule: only a deliberate human commit ratchets either floor up. The walker NEVER auto-ratchets. A regression below floor BLOCKs pre-push.
+
+### What "retire" means
+
+Retirement removes a row from the `claims_total - claims_retired` denominator. Source files **stay on disk**:
+- `docs/architecture/redirect`, `docs/demo/redirect` — keep file (mkdocs uses for redirects).
+- Archived `REQUIREMENTS.md` lines — keep line (historical record of what each milestone promised).
+- The catalog row stays (audit trail) with `last_verdict: RETIRE_CONFIRMED` — inert in the alignment math.
+
+`confirm-retire` is the only verb that flips a row to RETIRE_CONFIRMED. It is env-guarded (`$CLAUDE_AGENT_CONTEXT`) AND tty-guarded (`isatty(stdin)`), so only humans from a real terminal can confirm. The path of least resistance for an agent CANNOT be "delete the claim to make CI green."
+
+### W12 — File-level chunker exclusion (NEW)
+
+`plan-backfill`'s input set should support file-level exclusion via either:
+- `.docalignignore` at repo root (gitignore-style globs)
+- frontmatter directive `--- docalignment: skip ---`
+
+Today the chunker mines `docs/reference/glossary.md` and produces 24 definitional rows that all proposed retirement on first pass. File-level exclusion prevents recurrence on next backfill. Exclude glossary, redirect stubs, social copy (or include with explicit human curation).
 
 ### Long-tail
 
