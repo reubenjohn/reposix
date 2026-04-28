@@ -10,6 +10,7 @@ members = [
     "crates/reposix-swarm",
     "crates/reposix-confluence",
     "crates/reposix-cache",
+    "crates/reposix-quality",
 ]
 
 [workspace.metadata.dist]
@@ -94,6 +95,14 @@ governor = "0.10"  # rate limiting
 pulldown-cmark = "0.13"
 sha2 = "0.11"
 hex = "0.4"
+
+# Rust source parsing (used by reposix-quality docs-alignment hash binary)
+syn = { version = "2", features = ["full", "visit"] }
+quote = "1"
+
+# Test harness deps
+tempfile = "3"
+assert_cmd = "2"
 
 # Internal
 reposix-core = { path = "crates/reposix-core", version = "0.11.3" }

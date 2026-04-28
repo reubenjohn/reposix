@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Wrapper: invoke the compiled hash_test_fn binary from the workspace.
+# Source: crates/reposix-quality/src/bin/hash_test_fn.rs
+exec "$(git rev-parse --show-toplevel)/target/release/hash_test_fn" "$@"

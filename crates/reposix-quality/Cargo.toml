@@ -1,0 +1,45 @@
+[package]
+name = "reposix-quality"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Quality Gates dimension verifier suite for reposix -- doc-alignment + walk + run + verify."
+keywords = ["quality", "gates", "docs", "alignment", "verifier"]
+categories = ["command-line-utilities", "development-tools"]
+
+# Self-contained crate: no reposix-* deps. A future standalone-spinoff
+# is one `cargo init` away. See:
+#   .planning/research/v0.12.0-docs-alignment-design/02-architecture.md
+#   .planning/research/v0.12.0-docs-alignment-design/05-p64-infra-brief.md
+
+[lib]
+name = "reposix_quality"
+path = "src/lib.rs"
+
+[[bin]]
+name = "reposix-quality"
+path = "src/main.rs"
+
+[[bin]]
+name = "hash_test_fn"
+path = "src/bin/hash_test_fn.rs"
+
+[dependencies]
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+hex.workspace = true
+syn.workspace = true
+quote.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+assert_cmd.workspace = true
