@@ -4,6 +4,25 @@ All notable changes to reposix are documented here.
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project leaves alpha.
 
+## [v0.12.0] -- 2026-04-28 -- Quality Gates
+
+First milestone shipping the dimension-tagged Quality Gates framework at `quality/{gates,catalogs,reports,runners}/`. Eight phases (P56-P63) absorb existing scripts/checks into 8 dimensions (code, docs-build, docs-repro, release, structure, agent-ux, perf, security) and ship the autonomous-mode runtime contract at `quality/PROTOCOL.md`.
+
+### Shipped
+
+- **P56** — Release pipeline + install-evidence pattern (RELEASE-01, RELEASE-02, RELEASE-03).
+- **P57** — Quality Gates skeleton + structure dimension (QG-01..09, STRUCT-01..02, SIMPLIFY-01..03, POLISH-STRUCT).
+- **P58** — Release dimension + code dimension absorption (RELEASE-04, SIMPLIFY-04..05, POLISH-RELEASE, POLISH-CODE-stub).
+- **P59** — Docs-repro + agent-ux + perf-relocate (DOCS-REPRO-01..04, SIMPLIFY-06..07, SIMPLIFY-11, POLISH-DOCS-REPRO, POLISH-AGENT-UX).
+- **P60** — Docs-build dimension (DOCS-BUILD-01, BADGE-01, SIMPLIFY-08..10, POLISH-DOCS-BUILD).
+- **P61** — Subjective gates + skill-freshness TTL (SUBJ-01, SUBJ-02, SUBJ-03, POLISH-SUBJECTIVE).
+- **P62** — Repo-org-gaps cleanup (ORG-01, POLISH-ORG).
+- **P63** — Retire migrated sources + cohesion pass + v0.12.1 carry-forward (MIGRATE-01, MIGRATE-02, MIGRATE-03, SIMPLIFY-12, POLISH-CODE-final).
+
+### v0.12.1 carry-forward
+
+PERF-01..03, SEC-01..02, CROSS-01..02, MSRV-01, BINSTALL-01, LATEST-PTR-01, RELEASE-PAT-01, ERR-OTHER-01 (POLISH2-09 from v0.11.1), SUBJ-RUNNER-01, SUBJ-AUTODISPATCH-01, SUBJ-HARDGATE-01. See `.planning/milestones/v0.12.1-phases/REQUIREMENTS.md`.
+
 ## [Unreleased]
 
 The post-v0.11.0 polish wave, shipped autonomously on 2026-04-26 against
