@@ -256,3 +256,83 @@ same way it ignores per-row last_verified drift. Lesson: walker
 state-change semantics need to align with the runner's
 status-only-persists rule from day one; retrofit is cheaper before
 backfill populates rows.
+
+2026-04-28 P65: subagent contract violation in 1 of 24 backfill
+shards — shard 016 (`docs/how-it-works/`) wrote 17 BOUND rows to
+the LIVE catalog at `quality/catalogs/doc-alignment.json` instead
+of its shard catalog. Cause: the agent ignored the `--catalog
+<shard-path>` flag and let the binary default to the live catalog.
+The contract violation was contained (the live catalog was empty
+pre-merge; rows were valid bound rows with proper hashes), but the
+recovery had to be manual. — Resolution: jq-moved the 17 rows from
+live catalog to shard 016 file, reset live catalog to empty-state
+seed, re-ran merge-shards. v0.12.1 carry-forward (MIGRATE-03 j):
+the binary should refuse to mutate the default-path catalog when
+invoked via the `reposix-quality-doc-alignment` skill (env-guard
+or required-flag pattern), preventing this drift class.
+
+2026-04-28 P65: 2 of 24 backfill shards needed re-dispatch with
+"MUST USE BINARY" emphasis — shard 012 (`docs/decisions/005,007,008`)
+first attempt invented a bespoke schema (`test_kind: "unit (code
+inspection)", bound: true`) bypassing the binary entirely; shard 023
+(`docs/social/{linkedin,twitter}`) first attempt produced an
+incomplete row missing `test`/`test_body_hash`/`last_verdict` fields.
+Both violations bypass the architecture's "subagents propose with
+citations; tools validate and mint" principle (`02-architecture.md`).
+— Resolution: re-dispatched both with stronger isolation language;
+both retries used the binary correctly; final shard 012 = 13 rows
+(6 BOUND / 7 MISSING_TEST), shard 023 = 2 rows (both MISSING_TEST).
+Lesson: subagent prompts need an explicit "you MUST use the binary;
+no JSON edits" rule, not just "use the binary" as an aside. Updated
+extractor prompt at `.claude/skills/reposix-quality-doc-alignment/
+prompts/extractor.md` already emphasizes this; the original shard
+prompts inlined a tighter version that worked for 22/24.
+
+2026-04-28 P65: schema cross-cut between `bind` writer and
+`merge-shards` reader — `Row.source` writes as `SourceCite` object
+(file + line_start + line_end) but `merge-shards`' deserializer
+expects `Source` enum (`Single(SourceCite)` or `Multi(Vec<SourceCite>)`).
+Same issue for `Row.test`: 1 shard (017) emitted multi-test arrays
+when a claim was supported by ≥2 tests, but the Row struct's `test`
+field is a plain `String`. — Reconciled in orchestrator before
+merge: jq transformed all shards to wrap `source` in the right enum
+shape and flattened multi-test arrays to first-entry strings.
+v0.12.1 carry-forward (MIGRATE-03 (i)): unify the schema. `Source`
+should be the canonical type everywhere; `Row.test` should be
+`Vec<String>` to support multi-test claims first-class without
+flattening.
+
+2026-04-28 P65: backfill envelope of 100-200 claims (per
+`06-p65-backfill-brief.md`) overshot — final catalog at 388 rows,
+1.94x the upper end. Two over-extraction sources identified:
+shard 019 (`docs/reference/glossary.md`) extracted 24 RETIRE_PROPOSED
+rows, one per glossary term (definitional terms aren't behavioral
+claims; the agent treated each as one); shard 014 (`docs/development/
+{contributing,roadmap}.md`) extracted 17 rows where most are policy
+claims that need bespoke verifiers (good rows but inflate the
+denominator). — No mid-backfill halt: 388 is under the >800
+"wildly off" threshold. PUNCH-LIST clusters glossary as bulk-confirm
+review (`/reposix-quality-doc-alignment confirm-retire` 24 times in
+one sitting), not 24 individual investigation tickets. Lesson:
+extractor prompt for definitional/glossary docs should bias even
+more conservative (or skip those docs from the backfill manifest
+entirely; the chunker is content-agnostic so this is a manifest
+filter, not an extractor change).
+
+2026-04-28 P65: walker waiver scope mismatch with floor_waiver — 
+`summary.floor_waiver` in `doc-alignment.json` only covers the
+`alignment_ratio < floor` BLOCK; the walker also exits non-zero on
+ANY `MISSING_TEST` / `RETIRE_PROPOSED` row regardless of floor
+status. After backfill landed 166 + 41 such rows, pre-push BLOCKed
+even with floor_waiver in place. — Resolution: added a separate
+row-level waiver to `quality/catalogs/freshness-invariants.json`
+on the `docs-alignment/walk` row (matched TTL 2026-07-31; tracked_in
+v0.12.1 P71+). The 3 P64 catalog-integrity rows (`structure/
+doc-alignment-{catalog-present,summary-block-valid,floor-not-decreased}`)
+continue to PASS at pre-push and assert catalog hygiene independent
+of the walker waiver. Lesson: floor_waiver and walker waiver are
+two different pre-push BLOCK paths — the design bundle's "floor
+respected for alignment_ratio<floor BLOCK only" implied this but
+didn't make it explicit; v0.12.1 should consolidate both behind
+a single "initial-backfill grace period" mode that exits 0 with
+diagnostic stderr but doesn't BLOCK.

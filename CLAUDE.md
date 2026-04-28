@@ -342,6 +342,22 @@ Wave 3 (this commit): runner integration via new `docs-alignment/walk` gate row 
 
 Slash commands `/reposix-quality-refresh <doc>` and `/reposix-quality-backfill` are top-level only (depth-2 unreachable from inside `gsd-executor`). P65 runs the first backfill; the dimension goes from empty-state to populated then.
 
+### P65 — Docs-alignment backfill, smoking-gun surfaced (added 2026-04-28)
+
+First backfill ran top-level (orchestrator IS executor — `gsd-executor` lacks `Task`). 24-shard `MANIFEST.json` from `plan-backfill` (`docs/**/*.md` + `README.md` + archived `REQUIREMENTS.md` v0.6.0–v0.11.0; ≤3 files/shard, directory-affinity). Three waves of 8 Haiku extractor subagents (~9 min wall-clock); zero `merge-shards` conflicts.
+
+**Final catalog** (commit `a263868`): 388 rows total — 181 `BOUND`, 166 `MISSING_TEST`, 41 `RETIRE_PROPOSED`. `alignment_ratio` 0.466. `summary.floor_waiver` (until 2026-07-31) + `freshness-invariants.json::docs-alignment/walk` row waiver (matched TTL) keep pre-push green while v0.12.1 closes the punch list. The 3 P64 catalog-integrity rows continue to PASS at pre-push and assert the catalog itself stays well-formed.
+
+**Smoking gun confirmed.** `docs/reference/confluence.md` still describes the FUSE mount + page-tree symlink shape removed in v0.9.0; 3 MISSING_TEST rows captured at lines 110-128 (`fuse_mount_symlink_tree`, `fuse_daemon_role`, outdated `v0.4 write path` claim). Closing this cluster is v0.12.1 P71 work — *not* P65 scope.
+
+**Other clusters** (full breakdown in `quality/reports/doc-alignment/backfill-20260428T085523Z/PUNCH-LIST.md`): JIRA shape (`jira.md` Phase 28 RETIRE_PROPOSED — Phase 29 added writes); benchmark headline numbers (20 MISSING_TEST — perf verifiers exist as shell scripts, not Rust tests; MIGRATE-03 carry-forward); connector authoring guide (24 MISSING_TEST — contract assertions in code without named test fns); glossary over-extraction (24 RETIRE_PROPOSED — bulk-confirm review, not 24 tickets); social copy "92%" headline vs measured 89.1% (drift). v0.12.1 P71-P80 stubs in PUNCH-LIST suggest one phase per cluster.
+
+**Subagent surgery** (3 of 24 shards needed orchestrator intervention; documented in SURPRISES.md): shard 016 wrote to live catalog instead of its shard catalog (recovered via jq move + reset); shards 012 + 023 first attempts violated the binary contract (custom JSON schema or incomplete row); both re-dispatched with "MUST USE BINARY" emphasis.
+
+**Schema cross-cuts surfaced** (filed v0.12.1 carry-forward): `bind` writes `Row.source` as `SourceCite` object but `merge-shards` deserializer expected `Source` enum (object-or-array); reconciled via jq transform in orchestrator before merge. Same for `Row.test`: some shards emitted multi-test arrays, binary expects single string. Both inconsistencies are MIGRATE-03 (i) — unify the schema in v0.12.1.
+
+P65 verifier verdict at `quality/reports/verdicts/p65/VERDICT.md` (Path A — top-level orchestrator HAS `Task`). Milestone-close verifier at `quality/reports/verdicts/milestone-v0.12.0/VERDICT.md`. Owner pushes the v0.12.0 tag.
+
 ## Quality Gates — dimension/cadence/kind taxonomy
 
 The v0.12.0 Quality Gates framework lives at `quality/`. Runtime contract:
