@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "comment": "Quality Gates catalog -- subjective dimension (cross-dimension per quality/catalogs/README.md). Schema spec: quality/catalogs/README.md. Verifier impl: .claude/skills/reposix-quality-review/. Reports: quality/reports/verifications/subjective/. P61 Wave A catalog-first commit -- 3 rubric rows + short-lived waivers tracked_in P61 Wave G.",
+  "dimension": "subjective",
+  "rows": [
+    {
+      "id": "subjective/cold-reader-hero-clarity",
+      "dimension": "subjective",
+      "cadence": "pre-release",
+      "kind": "subagent-graded",
+      "sources": [
+        "README.md:1-50",
+        "docs/index.md:1-50",
+        "CLAUDE.md:Cold-reader pass on user-facing surfaces"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "the doc-clarity-review subagent verdict for README.md hero (lines 1-50) is CLEAR (numeric score >= 7 on the 10-pt scale where CLEAR=10, NEEDS-WORK=5, CONFUSING=2)",
+          "the doc-clarity-review subagent verdict for docs/index.md hero (lines 1-50) is CLEAR (numeric score >= 7)",
+          "the verdict artifact at quality/reports/verifications/subjective/cold-reader-hero-clarity.json contains {ts, score, verdict, rationale, evidence_files} per the dimension README JSON shape"
+        ]
+      },
+      "verifier": {
+        "script": ".claude/skills/reposix-quality-review/dispatch.sh",
+        "args": [
+          "--rubric",
+          "cold-reader-hero-clarity"
+        ],
+        "timeout_s": 600,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/subjective/cold-reader-hero-clarity.json",
+      "status": "WAIVED",
+      "last_verified": "2026-04-28T03:15:23Z",
+      "freshness_ttl": "30d",
+      "blast_radius": "P1",
+      "owner_hint": "if RED: README.md hero or docs/index.md hero confused the cold reader -- read the rubric artifact at quality/reports/verifications/subjective/cold-reader-hero-clarity.json for the friction points + rewrite the offending paragraphs. Common: jargon-heavy first paragraph; missing pitch; install command buried.",
+      "waiver": {
+        "until": "2026-05-15T00:00:00Z",
+        "reason": "P61 Wave A catalog-first; rubric implementation skill ships in P61 Waves C-E (SKILL.md + dispatch helper + 3 rubric impls). Until Wave G runs the dispatch end-to-end and persists the artifact, the runner returns NOT-VERIFIED on missing skill; this short-lived waiver keeps pre-release cadence GREEN through the implementation window. Pattern from quality/SURPRISES.md 2026-04-27 P58 row 2 (clippy-lint-loaded P58 Wave A waiver) and P60 Wave A (8 short-lived waivers).",
+        "dimension_owner": "v0.12.0 P61 subjective dimension owner",
+        "tracked_in": "P61 Wave G (61-07)"
+      }
+    },
+    {
+      "id": "subjective/install-positioning",
+      "dimension": "subjective",
+      "cadence": "pre-release",
+      "kind": "subagent-graded",
+      "sources": [
+        "README.md:install section",
+        "docs/index.md:install section",
+        "CLAUDE.md:Freshness invariants -- Install path leads with package manager"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "the rubric subagent confirms README.md hero install snippet leads with `cargo binstall` OR `brew install` OR `cargo install` (NOT `git clone && cargo build`) per CLAUDE.md freshness-invariants",
+          "the rubric subagent confirms docs/index.md hero install snippet leads with the same package-manager-first ordering",
+          "numeric score >= 7 on a 1-10 scale where 10 = leads with package manager + cites supported targets + names the binstall fallback path; 5 = leads with package manager but missing target list; 2 = leads with git-clone+build",
+          "the verdict artifact at quality/reports/verifications/subjective/install-positioning.json contains {ts, score, verdict, rationale, evidence_files} per the dimension README JSON shape"
+        ]
+      },
+      "verifier": {
+        "script": ".claude/skills/reposix-quality-review/dispatch.sh",
+        "args": [
+          "--rubric",
+          "install-positioning"
+        ],
+        "timeout_s": 600,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/subjective/install-positioning.json",
+      "status": "WAIVED",
+      "last_verified": "2026-04-28T03:15:23Z",
+      "freshness_ttl": "30d",
+      "blast_radius": "P0",
+      "owner_hint": "if RED: README.md or docs/index.md install copy regressed (perhaps a refactor moved the package-manager command below a git-clone snippet). Restore package-manager-first ordering per CLAUDE.md freshness invariants. Cross-check with structure/install-path-leads-with-pm in freshness-invariants.json.",
+      "waiver": {
+        "until": "2026-05-15T00:00:00Z",
+        "reason": "P61 Wave A catalog-first; rubric implementation skill ships in P61 Waves C-E (SKILL.md + dispatch helper + 3 rubric impls). Until Wave G runs the dispatch end-to-end and persists the artifact, the runner returns NOT-VERIFIED on missing skill; this short-lived waiver keeps pre-release cadence GREEN through the implementation window. Pattern from quality/SURPRISES.md 2026-04-27 P58 row 2 and P60 Wave A.",
+        "dimension_owner": "v0.12.0 P61 subjective dimension owner",
+        "tracked_in": "P61 Wave G (61-07)"
+      }
+    },
+    {
+      "id": "subjective/headline-numbers-sanity",
+      "dimension": "subjective",
+      "cadence": "weekly",
+      "kind": "subagent-graded",
+      "sources": [
+        "README.md:headline numbers (e.g. 89.1% token economy)",
+        "docs/index.md:headline numbers",
+        "benchmarks/",
+        "docs/benchmarks/"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "the rubric subagent cross-checks every headline number in README.md + docs/index.md against the source-of-truth artifacts in benchmarks/ + docs/benchmarks/ -- and confirms drift is <= 2pp for percentage claims OR within stated confidence interval for absolute numbers",
+          "numeric score >= 7 on a 1-10 scale where 10 = every headline number cites a benchmarks/ artifact and value is current; 5 = some numbers cite source but are stale (3-5pp drift); 2 = numbers stand alone with no source citation",
+          "the verdict artifact at quality/reports/verifications/subjective/headline-numbers-sanity.json contains {ts, score, verdict, rationale, evidence_files} + a per-headline-number table (number | source-file:line | source-of-truth-file | drift)"
+        ]
+      },
+      "verifier": {
+        "script": ".claude/skills/reposix-quality-review/dispatch.sh",
+        "args": [
+          "--rubric",
+          "headline-numbers-sanity"
+        ],
+        "timeout_s": 900,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/subjective/headline-numbers-sanity.json",
+      "status": "WAIVED",
+      "last_verified": "2026-04-28T03:15:38Z",
+      "freshness_ttl": "30d",
+      "blast_radius": "P2",
+      "owner_hint": "if RED: a headline number drifted from the benchmarks/ source-of-truth (typical: a perf optimization landed and bench output updated, but the README/docs hero copy was not synced). Update the README + docs hero numbers OR refresh the benchmarks artifact (whichever is the actual ground truth).",
+      "waiver": {
+        "until": "2026-05-15T00:00:00Z",
+        "reason": "P61 Wave A catalog-first; rubric implementation skill ships in P61 Waves C-E (SKILL.md + dispatch helper + 3 rubric impls). Until Wave G runs the dispatch end-to-end and persists the artifact, the runner returns NOT-VERIFIED on missing skill; this short-lived waiver keeps weekly cadence GREEN through the implementation window. Pattern from quality/SURPRISES.md 2026-04-27 P58 row 2 and P60 Wave A.",
+        "dimension_owner": "v0.12.0 P61 subjective dimension owner",
+        "tracked_in": "P61 Wave G (61-07)"
+      }
+    }
+  ]
+}
