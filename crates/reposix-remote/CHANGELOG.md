@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.4](https://github.com/reubenjohn/reposix/compare/reposix-remote-v0.11.3...reposix-remote-v0.11.4) - 2026-04-28
+
+### Added
+
+- *(p60)* publish QG-09 badge -- docs/badge.json + README + docs/index.md endpoint badge
+- *(p58)* wire QG-09 P58 GH Actions badge — quality-weekly link in README + docs/index.md
+
+### Other
+
+- release v0.11.3 ([#27](https://github.com/reubenjohn/reposix/pull/27))
+
 ## [0.11.3](https://github.com/reubenjohn/reposix/compare/reposix-remote-v0.11.2...reposix-remote-v0.11.3) - 2026-04-27
 
 ### Other
