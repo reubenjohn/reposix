@@ -10,9 +10,10 @@ Exit codes:
   1 -- FAIL (any 4xx/5xx OR wrong content-type)
   2 -- PARTIAL (transient or documented Wave-F-pending URLs)
 
-Pre-Wave-F: the QG-09 endpoint badge URL set (WAVE_F_PENDING_URLS) is
-skipped with a logged note; the row grades PARTIAL until Wave F lands
-the publish + the README badge edit.
+Post-Wave-F (2026-04-27): WAVE_F_PENDING_URLS is empty; all 8 badge
+URLs (including the QG-09 endpoint) HEAD'd unconditionally + PASS.
+The skip-branch in main() is preserved as a no-op for future
+multi-wave URL migrations.
 
 Honors --row-id <id> for catalog discrimination (the row in
 quality/catalogs/docs-build.json + the back-compat row in
@@ -40,11 +41,12 @@ ARTIFACT_DIR_STRUCTURE = REPO_ROOT / "quality" / "reports" / "verifications" / "
 # required, so the OUTER link target in [![alt](inner)](outer) is NOT matched.
 BADGE_IMG_RE = re.compile(r"!\[[^\]]*\]\((https?://[^)]+)\)")
 
-# QG-09 endpoint URLs land in P60 Wave F; until then, skip + grade PARTIAL.
-WAVE_F_PENDING_URLS = {
-    "https://reubenjohn.github.io/reposix/badge.json",
-    "https://img.shields.io/endpoint?url=https%3A%2F%2Freubenjohn.github.io%2Freposix%2Fbadge.json",
-}
+# QG-09 endpoint URLs landed in P60 Wave F (2026-04-27); set is empty.
+# The skip-branch in main() is now a no-op; all URLs HEAD'd unconditionally.
+# Future maintenance: if a new URL needs to land via a multi-wave migration,
+# repopulate this set with a comment naming the target wave + expected
+# unblock date.
+WAVE_F_PENDING_URLS: set[str] = set()
 
 TIMEOUT_S = 10
 USER_AGENT = "reposix-quality-gates/1.0"

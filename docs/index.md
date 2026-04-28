@@ -6,6 +6,7 @@ title: reposix
 
 [![CI](https://github.com/reubenjohn/reposix/workflows/CI/badge.svg)](https://github.com/reubenjohn/reposix/actions/workflows/ci.yml)
 [![Quality (weekly)](https://github.com/reubenjohn/reposix/actions/workflows/quality-weekly.yml/badge.svg)](https://github.com/reubenjohn/reposix/actions/workflows/quality-weekly.yml)
+[![Quality](https://img.shields.io/endpoint?url=https%3A%2F%2Freubenjohn.github.io%2Freposix%2Fbadge.json)](https://reubenjohn.github.io/reposix/)
 
 > **Agents already know `cat` and `git`. They don't know your JSON schema.**
 
