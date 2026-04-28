@@ -6,10 +6,10 @@
   "summary": {
     "claims_total": 388,
     "claims_bound": 171,
-    "claims_missing_test": 167,
-    "claims_retire_proposed": 40,
-    "claims_retired": 0,
-    "alignment_ratio": 0.44072164948453607,
+    "claims_missing_test": 177,
+    "claims_retire_proposed": 6,
+    "claims_retired": 24,
+    "alignment_ratio": 0.4697802197802198,
     "floor": 0.5,
     "trend_30d": "+0.00",
     "last_walked": "2026-04-28T14:52:55Z"
@@ -259,11 +259,12 @@
         "line_start": 19,
         "line_end": 19
       },
-      "rationale": "Superseded by v0.9.0 git-native partial-clone architecture (.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md) — FUSE mount replaced with real git working tree and git-remote-reposix helper",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:00:40Z",
-      "last_extracted": "2026-04-28T09:00:40Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "ad16bd7277025bc63f75129e62c79a0ad24c1f2f523aeb21c113ff134e7eb11b",
+      "rationale": "IMPL_GAP: ConfluenceBackend::create_record exists (lib.rs:280) and is wired into helper push path (reposix-remote/main.rs:513). The FUSE-mount transport was retired in v0.9.0 (architecture-pivot-summary.md) but the user-facing capability (write .md → Confluence page) persists via git push. No dark-factory-style test asserts the working-tree-edit → git-push → REST-create round-trip end-to-end. Resolution: bind a test in agent_flow_real that creates a page via working-tree write + git push and asserts the page exists on the backend.",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T14:59:53Z",
+      "last_extracted": "2026-04-28T14:59:53Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/write-03",
@@ -273,11 +274,12 @@
         "line_start": 21,
         "line_end": 21
       },
-      "rationale": "Superseded by v0.9.0 git-native architecture — FUSE mount replaced with git working tree + git-remote-reposix helper",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:00:45Z",
-      "last_extracted": "2026-04-28T09:00:45Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "c3fd4c8733c156c954f900e14e51640f1a2843b8a9e578c7b1716d62a0e1b974",
+      "rationale": "IMPL_GAP: ConfluenceBackend::delete_or_close exists (lib.rs:406) and is wired into helper push path (reposix-remote/main.rs:552). FUSE unlink callback transport retired in v0.9.0; user-facing capability (rm .md + git push → page deleted) persists. No agent_flow_real test asserts the working-tree-rm → git-push → REST-delete round-trip end-to-end.",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T14:59:54Z",
+      "last_extracted": "2026-04-28T14:59:54Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/write-02",
@@ -287,11 +289,12 @@
         "line_start": 20,
         "line_end": 20
       },
-      "rationale": "Superseded by v0.9.0 git-native architecture — FUSE mount replaced with git working tree + git-remote-reposix helper",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:00:43Z",
-      "last_extracted": "2026-04-28T09:00:43Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "cea87dcaf99bb6576d1f4c4128f65c541520b65f9a854f73e65ed54033b3a08a",
+      "rationale": "IMPL_GAP: ConfluenceBackend::update_record exists (lib.rs:335) with version-conflict handling and is wired into helper push path (reposix-remote/main.rs:540). Transport pivoted from FUSE write-callback to git push/fast-export in v0.9.0; user-facing capability (edit .md → page update) persists. No agent_flow_real test asserts working-tree-edit → git-push → REST-update round-trip with version reconciliation.",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T14:59:54Z",
+      "last_extracted": "2026-04-28T14:59:54Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "README-md/git-workflow-ux",
@@ -568,8 +571,8 @@
         "line_end": 152
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:07Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -698,8 +701,8 @@
         "line_end": 184
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:15Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:15Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -927,8 +930,8 @@
         "line_end": 84
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:07Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -1243,8 +1246,8 @@
         "line_end": 100
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:07Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -1327,11 +1330,12 @@
         "line_start": 30,
         "line_end": 30
       },
-      "rationale": "Superseded by v0.9.0 git-native architecture — whole-mount INDEX is FUSE-mount-specific; git-native tree structure is navigable via plain ls and git",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:01:07Z",
-      "last_extracted": "2026-04-28T09:01:07Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "777891a7fa44692211ab7248efa3c30a3695bda8932ae78af94349ff4fb3f305",
+      "rationale": "IMPL_GAP: _INDEX.md whole-mount overview was shipped in v0.6.0 but is absent from the partial-clone era — no current code synthesizes it. The promise (cat mount/_INDEX.md → overview) is a USER-FACING SHAPE claim, not a FUSE transport detail; cache can mint the blob in the tree. Resolution: either reimplement in reposix-cache as a synthesized blob in the bare-repo tree + bind a working-tree assertion test, OR write an ADR retiring the _INDEX.md feature with documented rationale + supersession.",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T14:59:54Z",
+      "last_extracted": "2026-04-28T14:59:54Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-01",
@@ -1355,11 +1359,12 @@
         "line_start": 29,
         "line_end": 29
       },
-      "rationale": "Superseded by v0.9.0 git-native architecture — dynamic INDEX generation is FUSE-mount-specific; git-native equivalent uses static file tree + git log",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:01:05Z",
-      "last_extracted": "2026-04-28T09:01:05Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "298321e1af9fa4f12e72b0cfe22415ffff12e95afa63c6bb566b3d10a2a2f9e2",
+      "rationale": "IMPL_GAP: tree/<subdir>/_INDEX.md per-subtree sitemap was shipped in v0.6.0 but absent from partial-clone era. The cycle-safe-DFS-from-TreeSnapshot phrasing is FUSE-era jargon; the user-facing output (cat tree/X/_INDEX.md → sitemap) is a synthesized blob, trivially representable in a bare-repo tree. Resolution: reimplement synthesis in reposix-cache + bind test, OR ADR-retire with documented rationale.",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T14:59:54Z",
+      "last_extracted": "2026-04-28T14:59:54Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/hard-03",
@@ -1663,8 +1668,8 @@
         "line_end": 216
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:15Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:15Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -1847,8 +1852,8 @@
         "line_end": 200
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:15Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:15Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -2123,8 +2128,8 @@
         "line_end": 92
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:07Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -2154,8 +2159,8 @@
         "line_end": 60
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:00Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -2168,8 +2173,8 @@
         "line_end": 52
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:00Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -2262,8 +2267,8 @@
         "line_end": 172
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:15Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:15Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -2399,11 +2404,12 @@
         "line_start": 38,
         "line_end": 38
       },
-      "rationale": "Superseded by v0.9.0 git-native architecture — git diff is native functionality in real git working tree; mount-as-time-machine is implicit in git's history mechanism",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:01:01Z",
-      "last_extracted": "2026-04-28T09:01:01Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "84ef21198b5535823e7986479025a2557cd663edb38a7a1b1aa2586ca7c8ee67",
+      "rationale": "IMPL_GAP: mount-as-time-machine UX is shipped in v0.11.0 via ADR-007 sync-tags (refs/reposix/sync/<ISO8601> per Cache::sync) which is a strictly stronger generalization of the v0.6.0 git-diff-HEAD~1 promise. The user-facing capability ('see what changed at the backend') survives the FUSE-to-partial-clone pivot. No test currently binds the sync-tag history surface to a 'time-travel via git diff between refs' assertion. Resolution: either update REQUIREMENTS.md prose to refer to sync-tags + bind a test that exercises diff between two sync refs, OR confirm-retire and let ADR-007 page mint its own claim rows.",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T14:59:54Z",
+      "last_extracted": "2026-04-28T14:59:54Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/dark-factory-conflict-teaching",
@@ -2478,8 +2484,8 @@
         "line_end": 116
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:07Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -2710,8 +2716,8 @@
         "line_end": 136
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:07Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -2880,11 +2886,12 @@
         "line_start": 96,
         "line_end": 99
       },
-      "rationale": "This claim is STALE: Phase 29 shipped full write path (commits 8eca6a0, 7318588). Tests assert_write_contract exercise all three operations. Docs need refresh to reflect current capability.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:59Z",
-      "last_extracted": "2026-04-28T09:09:59Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "78058088005de31b6dc6699177e43985cb93397b1744c1b195ce4e90f6cc88c8",
+      "rationale": "DOC_DRIFT: docs/reference/jira.md:96-99 claims Phase 28 read-only ('create_record/update_record/delete_or_close return not supported') but Phase 29 shipped the JIRA write path (reposix-jira/src/lib.rs:8 docstring; trait impls at lib.rs:197/279/334). Resolution: update docs/reference/jira.md §Limitations to reflect Phase 29 write-path completion, then bind a test that asserts JIRA writes via dark-factory pattern (already covered by dark_factory_real_jira; rebind row to that test).",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T14:59:54Z",
+      "last_extracted": "2026-04-28T14:59:54Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/docs-01",
@@ -3262,8 +3269,8 @@
         "line_end": 208
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:15Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:15Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -3361,11 +3368,12 @@
         "line_start": 33,
         "line_end": 33
       },
-      "rationale": "Superseded by v0.9.0 git-native architecture — label-based directory views are FUSE-mount-specific; git-native replacement uses git tags or refs",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:00:54Z",
-      "last_extracted": "2026-04-28T09:00:54Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "5d10d55061f7329d5c674f8512f92b93432179d5b8ec213e9c7bbd70808885d0",
+      "rationale": "IMPL_GAP: labels/<label>/ tree shape (one entry per labeled issue, as symlinks to canonical paths) is a USER-FACING shape promise from v0.6.0 REQUIREMENTS.md, never shipped. git natively supports symlinks in trees (mode 120000); reposix-cache could synthesize this in the bare-repo tree. The FUSE-symlink phrasing is jargon, not a transport binding. Resolution: either implement label-bucket synthesis in reposix-cache + bind a working-tree assertion test, OR write an ADR retiring the labels/ feature with documented rationale + supersession.",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T14:59:54Z",
+      "last_extracted": "2026-04-28T14:59:54Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-05",
@@ -3403,11 +3411,12 @@
         "line_start": 34,
         "line_end": 34
       },
-      "rationale": "Superseded by v0.9.0 git-native architecture — FUSE mount filesystem interface replaced with git-based navigation",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:00:57Z",
-      "last_extracted": "2026-04-28T09:00:57Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "f47aa0e1c292e12f716b37667d00e806f0ad2a901c830277d7850c94fe5e5082",
+      "rationale": "IMPL_GAP: spaces/<KEY>/ multi-space mount (one root per Confluence space) is a v0.6.0/v0.7.0 user-facing shape promise, never shipped. The FUSE-mount phrasing is jargon; in partial-clone terms this means 'reposix init confluence::* materializes spaces/<KEY>/ directories'. Resolution: either implement multi-space init + bind a test that asserts the spaces/ tree shape, OR write an ADR retiring the multi-space promise with supersession.",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T14:59:54Z",
+      "last_extracted": "2026-04-28T14:59:54Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-04",
@@ -3793,8 +3802,8 @@
         "line_end": 24
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:00Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -3880,8 +3889,8 @@
         "line_end": 108
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:07Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -3893,11 +3902,12 @@
         "line_start": 27,
         "line_end": 27
       },
-      "rationale": "Superseded by v0.11.0 Phase 53 which shipped this in commit cd1b0b6. Historical milestone record only.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:00:23Z",
-      "last_extracted": "2026-04-28T09:00:23Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "c51302c1fa6f11e39b7d6816656a3bfaa9f12e0e552d3ffe22f13cdde3493f2f",
+      "rationale": "DOC_DRIFT: archival REQUIREMENTS.md row says 'deferred to v0.11.0' but the line immediately below says 'closed in v0.11.0 Phase 53 (POLISH-11)' — the deferral status is already resolved. Resolution: either fold the deferred row into the resolved row OR rebind the claim to the v0.11.0 Phase 53 verifier artifacts. Low-stakes; this is not a behavioral promise.",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T14:59:54Z",
+      "last_extracted": "2026-04-28T14:59:54Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "docs/index/install-powershell-irm",
@@ -3953,8 +3963,8 @@
         "line_end": 36
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:00Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -3967,8 +3977,8 @@
         "line_end": 68
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:00Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -3998,8 +4008,8 @@
         "line_end": 124
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:07Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -4310,8 +4320,8 @@
         "line_end": 76
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:00Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -5525,8 +5535,8 @@
         "line_end": 28
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:00Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -5539,8 +5549,8 @@
         "line_end": 144
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:07Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -5602,8 +5612,8 @@
         "line_end": 44
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:00Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -5679,8 +5689,8 @@
         "line_end": 192
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:15Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:15Z",
       "last_extracted_by": "propose-retire-call"
     },
@@ -6033,8 +6043,8 @@
         "line_end": 164
       },
       "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:15Z",
+      "last_verdict": "RETIRE_CONFIRMED",
+      "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:15Z",
       "last_extracted_by": "propose-retire-call"
     }

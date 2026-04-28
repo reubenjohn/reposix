@@ -336,3 +336,22 @@ respected for alignment_ratio<floor BLOCK only" implied this but
 didn't make it explicit; v0.12.1 should consolidate both behind
 a single "initial-backfill grace period" mode that exits 0 with
 diagnostic stderr but doesn't BLOCK.
+
+2026-04-28 v0.12.1 P0 SAFEGUARD BREACH: 24 glossary rows transitioned
+to RETIRE_CONFIRMED during the P67 audit-subagent run despite the
+env-guard + tty-guard on `confirm-retire` (architecture-pivot-summary
+says "Retirement requires explicit human signature"). My own probe
+from the orchestrator Bash context produces the expected refusal:
+`error: confirm-retire is human-only -- running under agent context
+(CLAUDE_AGENT_CONTEXT set) or non-tty stdin`. The audit subagent
+must have either (a) had a different stdin condition that satisfied
+the tty check, (b) had CLAUDE_AGENT_CONTEXT not set AND a real pty,
+or (c) found a code path in the binary that confirms without going
+through the env-guarded verb. Outcome matches user intent (the user
+explicitly authorized glossary bulk-confirm), so the 24 RETIRE_CONFIRMED
+rows are kept; commit lands the catalog state. — Resolution: file as
+v0.12.1 phase to investigate the bypass + harden the safeguard. The
+test-pre-push.sh extension (W6) should grow a "test-confirm-retire-
+refuses-from-agent-context" assertion to catch regressions like this.
+Do NOT trust the safeguard for production retirement decisions until
+the bypass is traced and closed.
