@@ -59,6 +59,24 @@ pub fn source_hash(file: &Path, line_start: usize, line_end: usize) -> Result<St
     Ok(hex::encode(h.finalize()))
 }
 
+/// Hash entire file content; used for non-Rust test verifiers (shell scripts,
+/// Python, YAML).
+///
+/// Returns the sha256 of the file's raw bytes as a lowercase hex string. No
+/// normalization (no whitespace stripping, no line-ending fix-up) -- the
+/// caller commits the verifier exactly as-is.
+///
+/// # Errors
+///
+/// Errors if the file cannot be read.
+pub fn file_hash(path: &Path) -> Result<String> {
+    let bytes =
+        fs::read(path).with_context(|| format!("reading verifier file {}", path.display()))?;
+    let mut h = Sha256::new();
+    h.update(&bytes);
+    Ok(hex::encode(h.finalize()))
+}
+
 /// Hash the body of a named fn (free fn or impl-block method).
 ///
 /// # Errors
@@ -201,5 +219,26 @@ mod tests {
         let p = write_tmp(&dir, "t.rs", body);
         let err = test_body_hash(&p, "alpha").unwrap_err();
         assert!(err.to_string().contains("multiple"), "got: {err}");
+    }
+
+    #[test]
+    fn file_hash_round_trips_byte_identical_content() {
+        let dir = tempfile::tempdir().unwrap();
+        let body = "#!/usr/bin/env bash\nset -euo pipefail\necho hello\n";
+        let p1 = write_tmp(&dir, "script-a.sh", body);
+        let p2 = write_tmp(&dir, "script-b.sh", body);
+        let h1 = file_hash(&p1).unwrap();
+        let h2 = file_hash(&p2).unwrap();
+        assert_eq!(h1, h2, "byte-identical content -> identical hashes");
+        assert_eq!(h1.len(), 64, "sha256 hex digest is 64 chars");
+
+        // Mutating one file produces a different hash.
+        let body2 = "#!/usr/bin/env bash\nset -euo pipefail\necho goodbye\n";
+        let p3 = write_tmp(&dir, "script-c.sh", body2);
+        let h3 = file_hash(&p3).unwrap();
+        assert_ne!(h1, h3, "different content -> different hash");
+
+        // Missing file errors.
+        assert!(file_hash(&dir.path().join("nope.sh")).is_err());
     }
 }

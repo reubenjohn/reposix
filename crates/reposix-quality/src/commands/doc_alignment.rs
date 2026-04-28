@@ -255,18 +255,18 @@ pub(crate) mod verbs {
         let mut tests_clean: Vec<String> = Vec::with_capacity(tests.len());
         let mut hashes: Vec<String> = Vec::with_capacity(tests.len());
         for (i, t) in tests.iter().enumerate() {
-            let (test_file, fn_name) = parse_test(t).with_context(|| {
-                format!("bind: --test #{i} `{t}` failed to parse as `<file>::<fn>`")
-            })?;
+            let test_ref = parse_test(t)
+                .with_context(|| format!("bind: --test #{i} `{t}` failed to parse"))?;
+            let test_file = test_ref.file();
             if !test_file.exists() {
                 return Err(anyhow!(
                     "bind: --test #{i} `{t}`: test file `{}` does not exist",
                     test_file.display()
                 ));
             }
-            let body_hash = hash::test_body_hash(&test_file, &fn_name).with_context(|| {
-                format!("bind: --test #{i} `{t}`: computing test_body_hash failed")
-            })?;
+            let body_hash = test_ref
+                .compute_hash()
+                .with_context(|| format!("bind: --test #{i} `{t}`: computing test hash failed"))?;
             tests_clean.push(t.clone());
             hashes.push(body_hash);
         }
@@ -864,12 +864,12 @@ pub(crate) mod verbs {
             if has_test_bindings && row.tests.len() == row.test_body_hashes.len() {
                 for (i, t) in row.tests.iter().enumerate() {
                     match super::parse_test(t) {
-                        Ok((tf, fn_name)) => {
-                            if !tf.exists() {
+                        Ok(test_ref) => {
+                            if !test_ref.file().exists() {
                                 gone_indices.push(i);
                                 continue;
                             }
-                            match hash::test_body_hash(&tf, &fn_name) {
+                            match test_ref.compute_hash() {
                                 Ok(now) => {
                                     if now != row.test_body_hashes[i] {
                                         drifted_indices.push(i);
@@ -1131,15 +1131,77 @@ pub(crate) fn parse_source(s: &str) -> Result<(PathBuf, usize, usize)> {
     Ok((PathBuf::from(file), lstart, lend))
 }
 
-/// Parse a test citation `<file>::<fn>` into its parts.
-pub(crate) fn parse_test(s: &str) -> Result<(PathBuf, String)> {
-    let (file, fn_name) = s
-        .rsplit_once("::")
-        .ok_or_else(|| anyhow!("test `{s}` is not `<file>::<fn>`"))?;
-    if fn_name.is_empty() {
-        return Err(anyhow!("test fn name is empty in `{s}`"));
+/// Parsed `--test` argument: either a Rust `<file>::<fn>` citation or a
+/// non-Rust verifier path (shell, Python, YAML, ...).
+///
+/// `<file>::<fn>` form: the file part must end in `.rs` and `<fn>` must be
+/// non-empty -- hashed via [`crate::hash::test_body_hash`] (syn parser,
+/// fn-body token-stream sha256).
+///
+/// `<file>` form (no `::`, OR a `::` is present but the prefix does not end
+/// in `.rs`): hashed via [`crate::hash::file_hash`] (full-file sha256). Lets
+/// rows bind to shell-script / Python / YAML verifiers without requiring a
+/// Rust test fn wrapper.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum TestRef {
+    RustFn { file: PathBuf, fn_name: String },
+    File { file: PathBuf },
+}
+
+impl TestRef {
+    pub(crate) fn file(&self) -> &Path {
+        match self {
+            TestRef::RustFn { file, .. } | TestRef::File { file } => file,
+        }
     }
-    Ok((PathBuf::from(file), fn_name.to_string()))
+
+    /// Compute the hash for this test reference.
+    ///
+    /// `RustFn` -> [`crate::hash::test_body_hash`]; `File` -> [`crate::hash::file_hash`].
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from the underlying hash fn (file missing, parse
+    /// failure, fn not found, etc.).
+    pub(crate) fn compute_hash(&self) -> Result<String> {
+        match self {
+            TestRef::RustFn { file, fn_name } => crate::hash::test_body_hash(file, fn_name),
+            TestRef::File { file } => crate::hash::file_hash(file),
+        }
+    }
+}
+
+/// Parse a test citation. Accepts two forms:
+///
+/// - `<file>::<fn>` where `<file>` ends in `.rs` -> [`TestRef::RustFn`].
+/// - `<file>` (no `::`, OR `::` with non-Rust prefix) -> [`TestRef::File`].
+///
+/// Rationale: ~17-25 catalog rows have shell-script / Python / YAML verifiers
+/// (mkdocs-strict, latency-bench, check-badges, banned-words). The `::` form
+/// stays Rust-only so the existing fn-body-hash semantics are preserved.
+///
+/// # Errors
+///
+/// Errors if the input parses as `<file.rs>::` with an empty fn name (the
+/// only invalid form). Other shapes fall through to [`TestRef::File`].
+pub(crate) fn parse_test(s: &str) -> Result<TestRef> {
+    if let Some((file, fn_name)) = s.rsplit_once("::") {
+        let is_rust = Path::new(file)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("rs"));
+        if is_rust {
+            if fn_name.is_empty() {
+                return Err(anyhow!("test fn name is empty in `{s}`"));
+            }
+            return Ok(TestRef::RustFn {
+                file: PathBuf::from(file),
+                fn_name: fn_name.to_string(),
+            });
+        }
+    }
+    Ok(TestRef::File {
+        file: PathBuf::from(s),
+    })
 }
 
 #[cfg(test)]
@@ -1161,15 +1223,78 @@ mod parse_tests {
     }
 
     #[test]
-    fn test_parses() {
-        let (f, fn_name) = parse_test("tests/foo.rs::bar").unwrap();
-        assert_eq!(f.to_string_lossy(), "tests/foo.rs");
-        assert_eq!(fn_name, "bar");
+    fn parse_test_accepts_rust_file_fn() {
+        let parsed = parse_test("crates/foo/src/lib.rs::my_test").unwrap();
+        match parsed {
+            TestRef::RustFn { file, fn_name } => {
+                assert_eq!(file.to_string_lossy(), "crates/foo/src/lib.rs");
+                assert_eq!(fn_name, "my_test");
+            }
+            TestRef::File { .. } => panic!("expected RustFn, got File"),
+        }
     }
 
     #[test]
-    fn test_rejects_bad_shape() {
-        assert!(parse_test("foo.rs").is_err());
-        assert!(parse_test("foo.rs::").is_err());
+    fn parse_test_accepts_shell_script() {
+        let parsed = parse_test("scripts/check-foo.sh").unwrap();
+        match parsed {
+            TestRef::File { file } => {
+                assert_eq!(file.to_string_lossy(), "scripts/check-foo.sh");
+            }
+            TestRef::RustFn { .. } => panic!("expected File, got RustFn"),
+        }
+    }
+
+    #[test]
+    fn parse_test_accepts_python_script() {
+        let parsed = parse_test("quality/gates/perf/latency-bench.py").unwrap();
+        match parsed {
+            TestRef::File { file } => {
+                assert_eq!(
+                    file.to_string_lossy(),
+                    "quality/gates/perf/latency-bench.py"
+                );
+            }
+            TestRef::RustFn { .. } => panic!("expected File, got RustFn"),
+        }
+    }
+
+    #[test]
+    fn parse_test_rejects_rust_with_empty_fn() {
+        // .rs file with `::` and empty fn name -- the only invalid form.
+        assert!(parse_test("crates/foo.rs::").is_err());
+    }
+
+    #[test]
+    fn parse_test_path_only_accepts_yaml_toml_json_md() {
+        // Sanity: any non-`::` form parses as File, regardless of extension.
+        for path in &[
+            "config.yaml",
+            "Cargo.toml",
+            "data.json",
+            "docs/index.md",
+            "scripts/no-extension",
+        ] {
+            match parse_test(path).unwrap() {
+                TestRef::File { file } => assert_eq!(file.to_string_lossy(), *path),
+                TestRef::RustFn { .. } => panic!("{path} should parse as File"),
+            }
+        }
+    }
+
+    #[test]
+    fn parse_test_non_rust_with_double_colon_is_file() {
+        // `::` present but the prefix is not .rs -- treat the whole thing
+        // as a file path. Edge case; in practice file paths don't contain
+        // `::`, but the parser is defensive.
+        let parsed = parse_test("scripts/foo.sh::bar").unwrap();
+        match parsed {
+            TestRef::File { file } => {
+                assert_eq!(file.to_string_lossy(), "scripts/foo.sh::bar");
+            }
+            TestRef::RustFn { .. } => {
+                panic!("non-.rs with `::` should fall through to File")
+            }
+        }
     }
 }
