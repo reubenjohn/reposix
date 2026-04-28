@@ -13,7 +13,7 @@
 - ✅ **v0.9.0 Architecture Pivot — Git-Native Partial Clone** — Phases 31–36 (shipped 2026-04-24) · [archive](milestones/v0.9.0-phases/ROADMAP.md)
 - ✅ **v0.10.0 Docs & Narrative Shine** — Phases 40–45 (shipped 2026-04-25) · [archive](milestones/v0.10.0-phases/ROADMAP.md)
 - ✅ **v0.11.x Polish & Reproducibility** — Phases 50–55 + POLISH2-* polish passes (v0.11.0 shipped 2026-04-25; v0.11.1 + v0.11.2 polish passes shipped 2026-04-26 / 2026-04-27 via release-plz; all 8 crates published to crates.io at v0.11.2)
-- 🚧 **v0.12.0 Quality Gates** — Phases 56–65 (P56–P63 shipped 2026-04-27/28; **P64 + P65 added 2026-04-28 to fold docs-alignment dimension into v0.12.0 BEFORE tagging**; tag held until P65 ships)
+- 🚧 **v0.12.0 Quality Gates** — Phases 56–65 (P56–P64 shipped 2026-04-27/28; **P64 docs-alignment dimension shipped 2026-04-28 — verdict GREEN at `quality/reports/verdicts/p64/VERDICT.md`**; P65 backfill (top-level mode) is the only remaining phase before tag; tag held until P65 ships)
 
 ## Phases
 
