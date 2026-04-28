@@ -138,8 +138,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/release/install-build-from-source.json",
-      "status": "FAIL",
-      "last_verified": "2026-04-28T04:59:35Z",
+      "status": "PASS",
+      "last_verified": "2026-04-28T08:06:34Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: ci.yml `test` job is failing on main; investigate ci.yml workflow logs",
@@ -369,8 +369,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/release/crates-io-max-version-reposix-confluence.json",
-      "status": "PASS",
-      "last_verified": "2026-04-27T21:04:08Z",
+      "status": "FAIL",
+      "last_verified": "2026-04-28T04:59:50Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: release-plz failed to publish reposix-confluence at the workspace version; check .github/workflows/release-plz.yml run logs",

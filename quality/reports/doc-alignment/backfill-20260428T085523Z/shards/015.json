@@ -1,252 +1,238 @@
-{
-  "schema_version": "1.0",
-  "summary": {
-    "claims_total": 14,
-    "claims_bound": 13,
-    "claims_missing_test": 1,
-    "claims_retire_proposed": 0,
-    "claims_retired": 0,
-    "alignment_ratio": 0.9285714285714286,
-    "floor": 0.5,
-    "trend_30d": "+0.00",
-    "last_walked": null
+[
+  {
+    "id": "docs/guides/integrate-with-your-agent/init-verb-only",
+    "claim": "reposix init is the only user-facing CLI verb; all other operations use standard git and POSIX tools",
+    "source": {
+      "file": "docs/guides/integrate-with-your-agent.md",
+      "line_start": 48,
+      "line_end": 48
+    },
+    "source_hash": "bf147c9e4dd1a14a222f92b16838c4e4c0c8489bfa72dc96c15d0b199daa97e4",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+    "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
+    "rationale": "test dark_factory_sim_happy_path (103-165) calls reposix init, then operates via pure git; gotcha at line 48 documents removal of reposix list/get verbs",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:04:36Z",
+    "last_extracted": "2026-04-28T09:04:36Z",
+    "last_extracted_by": "bind-call"
   },
-  "rows": [
-    {
-      "id": "docs/guides/integrate-with-your-agent/init-verb-only",
-      "claim": "reposix init is the only user-facing CLI verb; all other operations use standard git and POSIX tools",
-      "source": {
-        "file": "docs/guides/integrate-with-your-agent.md",
-        "line_start": 48,
-        "line_end": 48
-      },
-      "source_hash": "bf147c9e4dd1a14a222f92b16838c4e4c0c8489bfa72dc96c15d0b199daa97e4",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
-      "rationale": "test dark_factory_sim_happy_path (103-165) calls reposix init, then operates via pure git; gotcha at line 48 documents removal of reposix list/get verbs",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:04:36Z",
-      "last_extracted": "2026-04-28T09:04:36Z",
-      "last_extracted_by": "bind-call"
+  {
+    "id": "docs/guides/integrate-with-your-agent/stderr-teaching-strings",
+    "claim": "Agents learn error recovery by reading stderr messages emitted by the helper (git pull --rebase, git sparse-checkout)",
+    "source": {
+      "file": "docs/guides/integrate-with-your-agent.md",
+      "line_start": 42,
+      "line_end": 46
     },
-    {
-      "id": "docs/guides/integrate-with-your-agent/stderr-teaching-strings",
-      "claim": "Agents learn error recovery by reading stderr messages emitted by the helper (git pull --rebase, git sparse-checkout)",
-      "source": {
-        "file": "docs/guides/integrate-with-your-agent.md",
-        "line_start": 42,
-        "line_end": 46
-      },
-      "source_hash": "f9c5b960f115af03cfb219f286943eb8e96fadc2aa1ec712c255239a07a55729",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
-      "rationale": "test dark_factory_conflict_teaching_string_present (198-214) asserts literal \"git pull --rebase\" exists in main.rs; dark_factory_blob_limit_teaching_string_present (174-189) asserts \"git sparse-checkout\" exists in stateless_connect.rs",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:04:40Z",
-      "last_extracted": "2026-04-28T09:04:40Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "f9c5b960f115af03cfb219f286943eb8e96fadc2aa1ec712c255239a07a55729",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
+    "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
+    "rationale": "test dark_factory_conflict_teaching_string_present (198-214) asserts literal \"git pull --rebase\" exists in main.rs; dark_factory_blob_limit_teaching_string_present (174-189) asserts \"git sparse-checkout\" exists in stateless_connect.rs",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:04:40Z",
+    "last_extracted": "2026-04-28T09:04:40Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/guides/troubleshooting/conflict-recovery",
+    "claim": "Push conflict recovery is git pull --rebase && git push",
+    "source": {
+      "file": "docs/guides/troubleshooting.md",
+      "line_start": 40,
+      "line_end": 42
     },
-    {
-      "id": "docs/guides/troubleshooting/conflict-recovery",
-      "claim": "Push conflict recovery is git pull --rebase && git push",
-      "source": {
-        "file": "docs/guides/troubleshooting.md",
-        "line_start": 40,
-        "line_end": 42
-      },
-      "source_hash": "3607ab31a2e18e5d1ad4eee8f25ae387e8845a24b7ddede4c65dda2ec2cb0737",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
-      "rationale": "test asserts literal \"git pull --rebase\" string is committed in crates/reposix-remote/src/main.rs; this string is the teaching message agents read",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:04:44Z",
-      "last_extracted": "2026-04-28T09:04:44Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "3607ab31a2e18e5d1ad4eee8f25ae387e8845a24b7ddede4c65dda2ec2cb0737",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
+    "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
+    "rationale": "test asserts literal \"git pull --rebase\" string is committed in crates/reposix-remote/src/main.rs; this string is the teaching message agents read",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:04:44Z",
+    "last_extracted": "2026-04-28T09:04:44Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/guides/troubleshooting/blob-limit-recovery",
+    "claim": "Blob limit recovery is git sparse-checkout set <pathspec> followed by git checkout",
+    "source": {
+      "file": "docs/guides/troubleshooting.md",
+      "line_start": 56,
+      "line_end": 68
     },
-    {
-      "id": "docs/guides/troubleshooting/blob-limit-recovery",
-      "claim": "Blob limit recovery is git sparse-checkout set <pathspec> followed by git checkout",
-      "source": {
-        "file": "docs/guides/troubleshooting.md",
-        "line_start": 56,
-        "line_end": 68
-      },
-      "source_hash": "0cfc042658310946939171b74160132993f1679f1cdbc05812e3698eebcee23d",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
-      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
-      "rationale": "test dark_factory_blob_limit_teaching_string_present (174-189) asserts literal \"git sparse-checkout\" is committed in crates/reposix-remote/src/stateless_connect.rs with error message BLOB_LIMIT_EXCEEDED_FMT",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:04:47Z",
-      "last_extracted": "2026-04-28T09:04:47Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "0cfc042658310946939171b74160132993f1679f1cdbc05812e3698eebcee23d",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
+    "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
+    "rationale": "test dark_factory_blob_limit_teaching_string_present (174-189) asserts literal \"git sparse-checkout\" is committed in crates/reposix-remote/src/stateless_connect.rs with error message BLOB_LIMIT_EXCEEDED_FMT",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:04:47Z",
+    "last_extracted": "2026-04-28T09:04:47Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/guides/troubleshooting/reposix-doctor",
+    "claim": "reposix doctor diagnoses git config, cache DB, env vars, auth, sparse-checkout patterns, and cache freshness",
+    "source": {
+      "file": "docs/guides/troubleshooting.md",
+      "line_start": 9,
+      "line_end": 19
     },
-    {
-      "id": "docs/guides/troubleshooting/reposix-doctor",
-      "claim": "reposix doctor diagnoses git config, cache DB, env vars, auth, sparse-checkout patterns, and cache freshness",
-      "source": {
-        "file": "docs/guides/troubleshooting.md",
-        "line_start": 9,
-        "line_end": 19
-      },
-      "source_hash": "7f26b7ed1d70019df9cecce5193c67322d7f6479f1d0cc92a818f62348396c73",
-      "test": "crates/reposix-cli/tests/doctor.rs::doctor_clean_repo_reports_findings",
-      "test_body_hash": "c1226c989a6362cdda4e70ce008f6e79a5802e6dee2057b0ad32994324e3c4c1",
-      "rationale": "doctor module imported at crates/reposix-cli/src/main.rs:27 and called at line 382; tests verify help renders and findings are reported; --fix applies safe deterministic fixes",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:04:59Z",
-      "last_extracted": "2026-04-28T09:04:59Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "7f26b7ed1d70019df9cecce5193c67322d7f6479f1d0cc92a818f62348396c73",
+    "test": "crates/reposix-cli/tests/doctor.rs::doctor_clean_repo_reports_findings",
+    "test_body_hash": "c1226c989a6362cdda4e70ce008f6e79a5802e6dee2057b0ad32994324e3c4c1",
+    "rationale": "doctor module imported at crates/reposix-cli/src/main.rs:27 and called at line 382; tests verify help renders and findings are reported; --fix applies safe deterministic fixes",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:04:59Z",
+    "last_extracted": "2026-04-28T09:04:59Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/guides/troubleshooting/fetch-first-error",
+    "claim": "When git push is rejected with \"! [remote rejected] ... (fetch first)\" error, the helper has detected backend drift via conflict detection",
+    "source": {
+      "file": "docs/guides/troubleshooting.md",
+      "line_start": 21,
+      "line_end": 46
     },
-    {
-      "id": "docs/guides/troubleshooting/fetch-first-error",
-      "claim": "When git push is rejected with \"! [remote rejected] ... (fetch first)\" error, the helper has detected backend drift via conflict detection",
-      "source": {
-        "file": "docs/guides/troubleshooting.md",
-        "line_start": 21,
-        "line_end": 46
-      },
-      "source_hash": "2e48b0affe6db39b71dcec706012f0972595d780ff6cbcd3a52a29e717bf8445",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
-      "rationale": "test asserts literal \"error refs/heads/main fetch first\" is committed in crates/reposix-remote/src/main.rs as the canned status line for push conflict rejection",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:05:04Z",
-      "last_extracted": "2026-04-28T09:05:04Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "2e48b0affe6db39b71dcec706012f0972595d780ff6cbcd3a52a29e717bf8445",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
+    "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
+    "rationale": "test asserts literal \"error refs/heads/main fetch first\" is committed in crates/reposix-remote/src/main.rs as the canned status line for push conflict rejection",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:04Z",
+    "last_extracted": "2026-04-28T09:05:04Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/guides/troubleshooting/blob-limit-env-override",
+    "claim": "REPOSIX_BLOB_LIMIT env var can be set to override the default blob limit (200) for a single operation",
+    "source": {
+      "file": "docs/guides/troubleshooting.md",
+      "line_start": 71,
+      "line_end": 75
     },
-    {
-      "id": "docs/guides/troubleshooting/blob-limit-env-override",
-      "claim": "REPOSIX_BLOB_LIMIT env var can be set to override the default blob limit (200) for a single operation",
-      "source": {
-        "file": "docs/guides/troubleshooting.md",
-        "line_start": 71,
-        "line_end": 75
-      },
-      "source_hash": "c0979e068818eb842cc42aba07f047b21959bb15a46db0a086039f7c4c723627",
-      "rationale": "Guide documents REPOSIX_BLOB_LIMIT=1000 git checkout as one-shot override; env var is read by helper but no test explicitly validates the override behavior",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:07Z",
-      "last_extracted": "2026-04-28T09:05:07Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "c0979e068818eb842cc42aba07f047b21959bb15a46db0a086039f7c4c723627",
+    "rationale": "Guide documents REPOSIX_BLOB_LIMIT=1000 git checkout as one-shot override; env var is read by helper but no test explicitly validates the override behavior",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:07Z",
+    "last_extracted": "2026-04-28T09:05:07Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs/guides/write-your-own-connector/backendconnector-trait",
+    "claim": "BackendConnector trait defines 8 methods: name, supports, list_records, list_changed_since, get_record, create_record, update_record, delete_or_close, root_collection_name",
+    "source": {
+      "file": "docs/guides/write-your-own-connector.md",
+      "line_start": 25,
+      "line_end": 33
     },
-    {
-      "id": "docs/guides/write-your-own-connector/backendconnector-trait",
-      "claim": "BackendConnector trait defines 8 methods: name, supports, list_records, list_changed_since, get_record, create_record, update_record, delete_or_close, root_collection_name",
-      "source": {
-        "file": "docs/guides/write-your-own-connector.md",
-        "line_start": 25,
-        "line_end": 33
-      },
-      "source_hash": "d96f053c68090c29dc11b0a3e94098f36712c6697f6a28e9b5e2d326b8734501",
-      "test": "crates/reposix-github/tests/contract.rs::contract_sim",
-      "test_body_hash": "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116",
-      "rationale": "BackendConnector trait definition at crates/reposix-core/src/backend.rs:216-331 lists all 8 methods; contract_sim test (line 160) instantiates SimBackend and calls list_records/get_record via assert_contract",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:05:13Z",
-      "last_extracted": "2026-04-28T09:05:13Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "d96f053c68090c29dc11b0a3e94098f36712c6697f6a28e9b5e2d326b8734501",
+    "test": "crates/reposix-github/tests/contract.rs::contract_sim",
+    "test_body_hash": "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116",
+    "rationale": "BackendConnector trait definition at crates/reposix-core/src/backend.rs:216-331 lists all 8 methods; contract_sim test (line 160) instantiates SimBackend and calls list_records/get_record via assert_contract",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:13Z",
+    "last_extracted": "2026-04-28T09:05:13Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/guides/write-your-own-connector/not-found-error",
+    "claim": "Unknown record ID on get_record returns Err(Error::Other(\"not found: ...\"))",
+    "source": {
+      "file": "docs/guides/write-your-own-connector.md",
+      "line_start": 29,
+      "line_end": 29
     },
-    {
-      "id": "docs/guides/write-your-own-connector/not-found-error",
-      "claim": "Unknown record ID on get_record returns Err(Error::Other(\"not found: ...\"))",
-      "source": {
-        "file": "docs/guides/write-your-own-connector.md",
-        "line_start": 29,
-        "line_end": 29
-      },
-      "source_hash": "97b1f2b68a0dd6caa5040d8c6db6c804d95ad7801f723ab3ab8c9b173a0330df",
-      "test": "crates/reposix-github/tests/contract.rs::contract_sim",
-      "test_body_hash": "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116",
-      "rationale": "contract test assert_contract invariant #4 (lines 84-90) validates that get_record with u64::MAX returns Err; error contract documented in backend.rs:210",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:05:19Z",
-      "last_extracted": "2026-04-28T09:05:19Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "97b1f2b68a0dd6caa5040d8c6db6c804d95ad7801f723ab3ab8c9b173a0330df",
+    "test": "crates/reposix-github/tests/contract.rs::contract_sim",
+    "test_body_hash": "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116",
+    "rationale": "contract test assert_contract invariant #4 (lines 84-90) validates that get_record with u64::MAX returns Err; error contract documented in backend.rs:210",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:19Z",
+    "last_extracted": "2026-04-28T09:05:19Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/guides/write-your-own-connector/egress-allowlist-client",
+    "claim": "Connectors must use reposix_core::http::client(ClientOpts::default()), never direct reqwest::Client::new()",
+    "source": {
+      "file": "docs/guides/write-your-own-connector.md",
+      "line_start": 142,
+      "line_end": 148
     },
-    {
-      "id": "docs/guides/write-your-own-connector/egress-allowlist-client",
-      "claim": "Connectors must use reposix_core::http::client(ClientOpts::default()), never direct reqwest::Client::new()",
-      "source": {
-        "file": "docs/guides/write-your-own-connector.md",
-        "line_start": 142,
-        "line_end": 148
-      },
-      "source_hash": "f9b63259e7095f41bf52fae40aae0933ce80fd222e07dcfca271f4e83c9f70de",
-      "test": "crates/reposix-github/src/lib.rs::supports_reports_workflows_only",
-      "test_body_hash": "270d08510ec278385bf87650e633112c89947141b2bbbc7a11534faeab97fae2",
-      "rationale": "GitHub connector uses client() throughout (line 67); clippy disallowed-methods rule prevents direct reqwest::Client::new() at workspace level; egress allowlist enforced at client factory",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:05:27Z",
-      "last_extracted": "2026-04-28T09:05:27Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "f9b63259e7095f41bf52fae40aae0933ce80fd222e07dcfca271f4e83c9f70de",
+    "test": "crates/reposix-github/src/lib.rs::supports_reports_workflows_only",
+    "test_body_hash": "270d08510ec278385bf87650e633112c89947141b2bbbc7a11534faeab97fae2",
+    "rationale": "GitHub connector uses client() throughout (line 67); clippy disallowed-methods rule prevents direct reqwest::Client::new() at workspace level; egress allowlist enforced at client factory",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:27Z",
+    "last_extracted": "2026-04-28T09:05:27Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/guides/write-your-own-connector/connector-tests-coverage",
+    "claim": "Connectors implement 5+ tests: happy-path list returns ≥1 issue, 404 not-found error, auth header byte-exact, pagination cursor follow, rate-limit 429/Retry-After gate",
+    "source": {
+      "file": "docs/guides/write-your-own-connector.md",
+      "line_start": 152,
+      "line_end": 164
     },
-    {
-      "id": "docs/guides/write-your-own-connector/connector-tests-coverage",
-      "claim": "Connectors implement 5+ tests: happy-path list returns ≥1 issue, 404 not-found error, auth header byte-exact, pagination cursor follow, rate-limit 429/Retry-After gate",
-      "source": {
-        "file": "docs/guides/write-your-own-connector.md",
-        "line_start": 152,
-        "line_end": 164
-      },
-      "source_hash": "37d292cfab3e569cc8aa8c45fc3cc9e23430957133e7db7129da98307c06ae73",
-      "test": "crates/reposix-github/src/lib.rs::github_list_changed_since_sends_since_param_and_returns_ids",
-      "test_body_hash": "34dab9efa580dd09f7e214e6f2a5b550f98fc9268898a7b6dabb0910107f5082",
-      "rationale": "GitHub src/lib.rs has tests: list_changed_since with ?since param (line 994), parse_next_link extraction (line 1027), parse_next_link absent (line 1036), supports matrix (line 982); contract test validates list + get_record",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:05:31Z",
-      "last_extracted": "2026-04-28T09:05:31Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "37d292cfab3e569cc8aa8c45fc3cc9e23430957133e7db7129da98307c06ae73",
+    "test": "crates/reposix-github/src/lib.rs::github_list_changed_since_sends_since_param_and_returns_ids",
+    "test_body_hash": "34dab9efa580dd09f7e214e6f2a5b550f98fc9268898a7b6dabb0910107f5082",
+    "rationale": "GitHub src/lib.rs has tests: list_changed_since with ?since param (line 994), parse_next_link extraction (line 1027), parse_next_link absent (line 1036), supports matrix (line 982); contract test validates list + get_record",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:31Z",
+    "last_extracted": "2026-04-28T09:05:31Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/guides/write-your-own-connector/contract-test",
+    "claim": "Contract test runs the same 5 invariants against both SimBackend and concrete connectors, proving normalized-shape parity",
+    "source": {
+      "file": "docs/guides/write-your-own-connector.md",
+      "line_start": 164,
+      "line_end": 165
     },
-    {
-      "id": "docs/guides/write-your-own-connector/contract-test",
-      "claim": "Contract test runs the same 5 invariants against both SimBackend and concrete connectors, proving normalized-shape parity",
-      "source": {
-        "file": "docs/guides/write-your-own-connector.md",
-        "line_start": 164,
-        "line_end": 165
-      },
-      "source_hash": "9bf02b070a6a727627768c02af6959c4ab86771f0381b6f4b4a8c5c093eef5b6",
-      "test": "crates/reposix-github/tests/contract.rs::contract_sim",
-      "test_body_hash": "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116",
-      "rationale": "contract.rs documents 5-invariant harness (assert_contract, lines 47-105); contract_sim test (line 160) runs against SimBackend; GitHub variant runs via wiremock with same helper",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:05:35Z",
-      "last_extracted": "2026-04-28T09:05:35Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "9bf02b070a6a727627768c02af6959c4ab86771f0381b6f4b4a8c5c093eef5b6",
+    "test": "crates/reposix-github/tests/contract.rs::contract_sim",
+    "test_body_hash": "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116",
+    "rationale": "contract.rs documents 5-invariant harness (assert_contract, lines 47-105); contract_sim test (line 160) runs against SimBackend; GitHub variant runs via wiremock with same helper",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:35Z",
+    "last_extracted": "2026-04-28T09:05:35Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/guides/write-your-own-connector/read-only-not-supported",
+    "claim": "Read-only backends return Err(Error::Other(\"not supported: ...\")) from create_record, update_record, delete_or_close",
+    "source": {
+      "file": "docs/guides/write-your-own-connector.md",
+      "line_start": 35,
+      "line_end": 36
     },
-    {
-      "id": "docs/guides/write-your-own-connector/read-only-not-supported",
-      "claim": "Read-only backends return Err(Error::Other(\"not supported: ...\")) from create_record, update_record, delete_or_close",
-      "source": {
-        "file": "docs/guides/write-your-own-connector.md",
-        "line_start": 35,
-        "line_end": 36
-      },
-      "source_hash": "5e41b75fb55ec25a6aee73a8850372a949b954b0534589c114c865025652248d",
-      "test": "crates/reposix-github/tests/contract.rs::contract_sim",
-      "test_body_hash": "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116",
-      "rationale": "guide documents read-only backends return error; GitHub is read-only; error contract documented in backend.rs:212 (\"not supported: ...\" msg); test coverage via contract invariants",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:05:38Z",
-      "last_extracted": "2026-04-28T09:05:38Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "5e41b75fb55ec25a6aee73a8850372a949b954b0534589c114c865025652248d",
+    "test": "crates/reposix-github/tests/contract.rs::contract_sim",
+    "test_body_hash": "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116",
+    "rationale": "guide documents read-only backends return error; GitHub is read-only; error contract documented in backend.rs:212 (\"not supported: ...\" msg); test coverage via contract invariants",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:38Z",
+    "last_extracted": "2026-04-28T09:05:38Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/guides/write-your-own-connector/root-collection-name",
+    "claim": "root_collection_name() defaults to \"issues\", overridable for backends with domain terms (e.g. Confluence -> \"pages\")",
+    "source": {
+      "file": "docs/guides/write-your-own-connector.md",
+      "line_start": 33,
+      "line_end": 33
     },
-    {
-      "id": "docs/guides/write-your-own-connector/root-collection-name",
-      "claim": "root_collection_name() defaults to \"issues\", overridable for backends with domain terms (e.g. Confluence -> \"pages\")",
-      "source": {
-        "file": "docs/guides/write-your-own-connector.md",
-        "line_start": 33,
-        "line_end": 33
-      },
-      "source_hash": "36f1683b71d734f1b5ab46a87ac7712afb84ee9b6f28afe43391b1da162525aa",
-      "test": "crates/reposix-github/tests/contract.rs::contract_sim",
-      "test_body_hash": "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116",
-      "rationale": "BackendConnector trait defines root_collection_name() at crates/reposix-core/src/backend.rs:328-330 with default \"issues\"; Confluence overrides to \"pages\" per trait docs",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:05:41Z",
-      "last_extracted": "2026-04-28T09:05:41Z",
-      "last_extracted_by": "bind-call"
-    }
-  ]
-}
+    "source_hash": "36f1683b71d734f1b5ab46a87ac7712afb84ee9b6f28afe43391b1da162525aa",
+    "test": "crates/reposix-github/tests/contract.rs::contract_sim",
+    "test_body_hash": "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116",
+    "rationale": "BackendConnector trait defines root_collection_name() at crates/reposix-core/src/backend.rs:328-330 with default \"issues\"; Confluence overrides to \"pages\" per trait docs",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:41Z",
+    "last_extracted": "2026-04-28T09:05:41Z",
+    "last_extracted_by": "bind-call"
+  }
+]

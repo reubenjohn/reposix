@@ -1,281 +1,267 @@
-{
-  "schema_version": "1.0",
-  "summary": {
-    "claims_total": 17,
-    "claims_bound": 9,
-    "claims_missing_test": 8,
-    "claims_retire_proposed": 0,
-    "claims_retired": 0,
-    "alignment_ratio": 0.5294117647058824,
-    "floor": 0.5,
-    "trend_30d": "+0.00",
-    "last_walked": null
+[
+  {
+    "id": "README-md/init-sim-demo-works",
+    "claim": "reposix init sim::demo <path> produces a functional partial-clone working tree",
+    "source": {
+      "file": "README.md",
+      "line_start": 56,
+      "line_end": 72
+    },
+    "source_hash": "dbd80002e8e256ea70792f8efedaee88dc88cfbe9d89eeb903dd30c0b784d601",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+    "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
+    "rationale": "agent_flow.rs:103-165 tests init config, partial clone setup, and git config keys (extensions.partialClone, remote.origin.promisor, remote.origin.partialclonefilter)",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T08:58:36Z",
+    "last_extracted": "2026-04-28T08:58:36Z",
+    "last_extracted_by": "bind-call"
   },
-  "rows": [
-    {
-      "id": "README-md/init-sim-demo-works",
-      "claim": "reposix init sim::demo <path> produces a functional partial-clone working tree",
-      "source": {
-        "file": "README.md",
-        "line_start": 56,
-        "line_end": 72
-      },
-      "source_hash": "dbd80002e8e256ea70792f8efedaee88dc88cfbe9d89eeb903dd30c0b784d601",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
-      "rationale": "agent_flow.rs:103-165 tests init config, partial clone setup, and git config keys (extensions.partialClone, remote.origin.promisor, remote.origin.partialclonefilter)",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T08:58:36Z",
-      "last_extracted": "2026-04-28T08:58:36Z",
-      "last_extracted_by": "bind-call"
+  {
+    "id": "README-md/git-workflow-ux",
+    "claim": "Agent workflow after init is pure git: cat, grep, sed, git commit, git push",
+    "source": {
+      "file": "README.md",
+      "line_start": 56,
+      "line_end": 72
     },
-    {
-      "id": "README-md/git-workflow-ux",
-      "claim": "Agent workflow after init is pure git: cat, grep, sed, git commit, git push",
-      "source": {
-        "file": "README.md",
-        "line_start": 56,
-        "line_end": 72
-      },
-      "source_hash": "dbd80002e8e256ea70792f8efedaee88dc88cfbe9d89eeb903dd30c0b784d601",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
-      "rationale": "agent_flow.rs:103-165 test demonstrates working tree is real git with standard config, enabling pure git UX",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T08:58:38Z",
-      "last_extracted": "2026-04-28T08:58:38Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "dbd80002e8e256ea70792f8efedaee88dc88cfbe9d89eeb903dd30c0b784d601",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+    "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
+    "rationale": "agent_flow.rs:103-165 test demonstrates working tree is real git with standard config, enabling pure git UX",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T08:58:38Z",
+    "last_extracted": "2026-04-28T08:58:38Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "README-md/dark-factory-regression",
+    "claim": "dark-factory regression test ensures blob-limit and conflict recovery teaching strings are present",
+    "source": {
+      "file": "README.md",
+      "line_start": 109,
+      "line_end": 109
     },
-    {
-      "id": "README-md/dark-factory-regression",
-      "claim": "dark-factory regression test ensures blob-limit and conflict recovery teaching strings are present",
-      "source": {
-        "file": "README.md",
-        "line_start": 109,
-        "line_end": 109
-      },
-      "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
-      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
-      "rationale": "agent_flow.rs:174-189 asserts git sparse-checkout and BLOB_LIMIT_EXCEEDED_FMT literals remain",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T08:58:59Z",
-      "last_extracted": "2026-04-28T08:58:59Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
+    "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
+    "rationale": "agent_flow.rs:174-189 asserts git sparse-checkout and BLOB_LIMIT_EXCEEDED_FMT literals remain",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T08:58:59Z",
+    "last_extracted": "2026-04-28T08:58:59Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "README-md/conflict-recovery-teaching",
+    "claim": "conflict recovery teaches git pull --rebase for stale-base pushes",
+    "source": {
+      "file": "README.md",
+      "line_start": 109,
+      "line_end": 109
     },
-    {
-      "id": "README-md/conflict-recovery-teaching",
-      "claim": "conflict recovery teaches git pull --rebase for stale-base pushes",
-      "source": {
-        "file": "README.md",
-        "line_start": 109,
-        "line_end": 109
-      },
-      "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
-      "rationale": "agent_flow.rs:198-214 asserts git pull --rebase and error refs/heads/main fetch first strings remain in helper code",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T08:59:02Z",
-      "last_extracted": "2026-04-28T08:59:02Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
+    "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
+    "rationale": "agent_flow.rs:198-214 asserts git pull --rebase and error refs/heads/main fetch first strings remain in helper code",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T08:59:02Z",
+    "last_extracted": "2026-04-28T08:59:02Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "README-md/allowlist-default",
+    "claim": "REPOSIX_ALLOWED_ORIGINS defaults to only loopback (127.0.0.1:*) when unset",
+    "source": {
+      "file": "README.md",
+      "line_start": 117,
+      "line_end": 117
     },
-    {
-      "id": "README-md/allowlist-default",
-      "claim": "REPOSIX_ALLOWED_ORIGINS defaults to only loopback (127.0.0.1:*) when unset",
-      "source": {
-        "file": "README.md",
-        "line_start": 117,
-        "line_end": 117
-      },
-      "source_hash": "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa",
-      "test": "crates/reposix-core/tests/http_allowlist.rs::loopback_is_allowed_by_default",
-      "test_body_hash": "f57d468a8ca746ff50aa2b22406263f2c2de5a0d0e14b14136797dcff15b811f",
-      "rationale": "http_allowlist.rs:117-131 tests loopback allowed by default; http_allowlist.rs:134-144 tests non-loopback denied by default",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T08:59:05Z",
-      "last_extracted": "2026-04-28T08:59:05Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa",
+    "test": "crates/reposix-core/tests/http_allowlist.rs::loopback_is_allowed_by_default",
+    "test_body_hash": "f57d468a8ca746ff50aa2b22406263f2c2de5a0d0e14b14136797dcff15b811f",
+    "rationale": "http_allowlist.rs:117-131 tests loopback allowed by default; http_allowlist.rs:134-144 tests non-loopback denied by default",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T08:59:05Z",
+    "last_extracted": "2026-04-28T08:59:05Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "README-md/allowlist-override",
+    "claim": "REPOSIX_ALLOWED_ORIGINS environment variable overrides default allowlist",
+    "source": {
+      "file": "README.md",
+      "line_start": 117,
+      "line_end": 117
     },
-    {
-      "id": "README-md/allowlist-override",
-      "claim": "REPOSIX_ALLOWED_ORIGINS environment variable overrides default allowlist",
-      "source": {
-        "file": "README.md",
-        "line_start": 117,
-        "line_end": 117
-      },
-      "source_hash": "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa",
-      "test": "crates/reposix-core/tests/http_allowlist.rs::allowlist_default_and_env",
-      "test_body_hash": "9fd0c9069f5e56d0d0373fdbb472aecbc4ef2f3ccb50c32e96ab64611eade961",
-      "rationale": "http_allowlist.rs:84-114 tests env override narrows/expands allowlist; http_allowlist.rs:147-155 tests env redefines allowlist",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T08:59:07Z",
-      "last_extracted": "2026-04-28T08:59:07Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa",
+    "test": "crates/reposix-core/tests/http_allowlist.rs::allowlist_default_and_env",
+    "test_body_hash": "9fd0c9069f5e56d0d0373fdbb472aecbc4ef2f3ccb50c32e96ab64611eade961",
+    "rationale": "http_allowlist.rs:84-114 tests env override narrows/expands allowlist; http_allowlist.rs:147-155 tests env redefines allowlist",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T08:59:07Z",
+    "last_extracted": "2026-04-28T08:59:07Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "README-md/push-conflict-reject",
+    "claim": "Stale-base pushes are rejected with standard git fetch-first error message",
+    "source": {
+      "file": "README.md",
+      "line_start": 118,
+      "line_end": 118
     },
-    {
-      "id": "README-md/push-conflict-reject",
-      "claim": "Stale-base pushes are rejected with standard git fetch-first error message",
-      "source": {
-        "file": "README.md",
-        "line_start": 118,
-        "line_end": 118
-      },
-      "source_hash": "029fbb0a6e888f58e4e3c25e901fc981c6db9c946587f2ffde3cc3efc3a0dced",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
-      "rationale": "agent_flow.rs:198-214 verifies error refs/heads/main fetch first string is present in helper",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T08:59:10Z",
-      "last_extracted": "2026-04-28T08:59:10Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "029fbb0a6e888f58e4e3c25e901fc981c6db9c946587f2ffde3cc3efc3a0dced",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
+    "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
+    "rationale": "agent_flow.rs:198-214 verifies error refs/heads/main fetch first string is present in helper",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T08:59:10Z",
+    "last_extracted": "2026-04-28T08:59:10Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "README-md/blob-limit-guardrail",
+    "claim": "Fetches exceeding REPOSIX_BLOB_LIMIT (default 200) are refused with git sparse-checkout guidance",
+    "source": {
+      "file": "README.md",
+      "line_start": 119,
+      "line_end": 119
     },
-    {
-      "id": "README-md/blob-limit-guardrail",
-      "claim": "Fetches exceeding REPOSIX_BLOB_LIMIT (default 200) are refused with git sparse-checkout guidance",
-      "source": {
-        "file": "README.md",
-        "line_start": 119,
-        "line_end": 119
-      },
-      "source_hash": "ff84542b2c0173b3c4a6e973d61aee6a45c418c7580c25255d8a2d5ed34b7390",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
-      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
-      "rationale": "agent_flow.rs:174-189 verifies git sparse-checkout string is present in helper for blob limit exceeded error",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T08:59:20Z",
-      "last_extracted": "2026-04-28T08:59:20Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "ff84542b2c0173b3c4a6e973d61aee6a45c418c7580c25255d8a2d5ed34b7390",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
+    "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
+    "rationale": "agent_flow.rs:174-189 verifies git sparse-checkout string is present in helper for blob limit exceeded error",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T08:59:20Z",
+    "last_extracted": "2026-04-28T08:59:20Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "README-md/audit-immutable",
+    "claim": "Audit log is append-only with SQLite triggers enforcing immutability (BEFORE UPDATE/DELETE RAISE)",
+    "source": {
+      "file": "README.md",
+      "line_start": 121,
+      "line_end": 121
     },
-    {
-      "id": "README-md/audit-immutable",
-      "claim": "Audit log is append-only with SQLite triggers enforcing immutability (BEFORE UPDATE/DELETE RAISE)",
-      "source": {
-        "file": "README.md",
-        "line_start": 121,
-        "line_end": 121
-      },
-      "source_hash": "7dfcde5c4c3f42a8d6ec42d3e4408457069d31a85ff60e7c5b91368d3605162e",
-      "test": "crates/reposix-core/tests/audit_schema.rs::audit_update_is_rejected_by_trigger",
-      "test_body_hash": "84c32ab7f1d1c392c928460b594f9288980f30ed0d134ac01d5450b2e09ce1ce",
-      "rationale": "audit_schema.rs tests schema columns, both triggers registered, UPDATE/DELETE rejected, and rollback integrity",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T08:59:28Z",
-      "last_extracted": "2026-04-28T08:59:28Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "7dfcde5c4c3f42a8d6ec42d3e4408457069d31a85ff60e7c5b91368d3605162e",
+    "test": "crates/reposix-core/tests/audit_schema.rs::audit_update_is_rejected_by_trigger",
+    "test_body_hash": "84c32ab7f1d1c392c928460b594f9288980f30ed0d134ac01d5450b2e09ce1ce",
+    "rationale": "audit_schema.rs tests schema columns, both triggers registered, UPDATE/DELETE rejected, and rollback integrity",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T08:59:28Z",
+    "last_extracted": "2026-04-28T08:59:28Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "README-md/latency-8ms",
+    "claim": "Read one issue from local cache takes 8ms (measured on simulator)",
+    "source": {
+      "file": "README.md",
+      "line_start": 23,
+      "line_end": 23
     },
-    {
-      "id": "README-md/latency-8ms",
-      "claim": "Read one issue from local cache takes 8ms (measured on simulator)",
-      "source": {
-        "file": "README.md",
-        "line_start": 23,
-        "line_end": 23
-      },
-      "source_hash": "de7a8acd095e2abfcc58e93deaf8d40c05a6d2b43c29deb0a1b476ffc86472f4",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T08:59:59Z",
-      "last_extracted": "2026-04-28T08:59:59Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "de7a8acd095e2abfcc58e93deaf8d40c05a6d2b43c29deb0a1b476ffc86472f4",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T08:59:59Z",
+    "last_extracted": "2026-04-28T08:59:59Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "README-md/init-24ms",
+    "claim": "reposix init cold bootstrap against simulator takes 24ms",
+    "source": {
+      "file": "README.md",
+      "line_start": 24,
+      "line_end": 24
     },
-    {
-      "id": "README-md/init-24ms",
-      "claim": "reposix init cold bootstrap against simulator takes 24ms",
-      "source": {
-        "file": "README.md",
-        "line_start": 24,
-        "line_end": 24
-      },
-      "source_hash": "9c400bd7c055e8682e6207c614363ae3ab6ca3f6b8d4ab653061d51430233c19",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:00Z",
-      "last_extracted": "2026-04-28T09:00:00Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "9c400bd7c055e8682e6207c614363ae3ab6ca3f6b8d4ab653061d51430233c19",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:00Z",
+    "last_extracted": "2026-04-28T09:00:00Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "README-md/token-89-percent",
+    "claim": "Input context token reduction is 89.1% vs MCP-tool-catalog baseline",
+    "source": {
+      "file": "README.md",
+      "line_start": 25,
+      "line_end": 25
     },
-    {
-      "id": "README-md/token-89-percent",
-      "claim": "Input context token reduction is 89.1% vs MCP-tool-catalog baseline",
-      "source": {
-        "file": "README.md",
-        "line_start": 25,
-        "line_end": 25
-      },
-      "source_hash": "2a4dcdc2c2081ba477eefd5ab1ee28e984e5eaf02735c40256c7fb167344e884",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:02Z",
-      "last_extracted": "2026-04-28T09:00:02Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "2a4dcdc2c2081ba477eefd5ab1ee28e984e5eaf02735c40256c7fb167344e884",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:02Z",
+    "last_extracted": "2026-04-28T09:00:02Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "README-md/rust-1-82-requirement",
+    "claim": "Build from source requires Rust stable 1.82+",
+    "source": {
+      "file": "README.md",
+      "line_start": 79,
+      "line_end": 79
     },
-    {
-      "id": "README-md/rust-1-82-requirement",
-      "claim": "Build from source requires Rust stable 1.82+",
-      "source": {
-        "file": "README.md",
-        "line_start": 79,
-        "line_end": 79
-      },
-      "source_hash": "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:06Z",
-      "last_extracted": "2026-04-28T09:00:06Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:06Z",
+    "last_extracted": "2026-04-28T09:00:06Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "README-md/git-2-34-requirement",
+    "claim": "Runtime requires git >= 2.34 for extensions.partialClone and stateless-connect",
+    "source": {
+      "file": "README.md",
+      "line_start": 79,
+      "line_end": 79
     },
-    {
-      "id": "README-md/git-2-34-requirement",
-      "claim": "Runtime requires git >= 2.34 for extensions.partialClone and stateless-connect",
-      "source": {
-        "file": "README.md",
-        "line_start": 79,
-        "line_end": 79
-      },
-      "source_hash": "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:08Z",
-      "last_extracted": "2026-04-28T09:00:08Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:08Z",
+    "last_extracted": "2026-04-28T09:00:08Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "README-md/tests-green",
+    "claim": "cargo test --workspace passes",
+    "source": {
+      "file": "README.md",
+      "line_start": 109,
+      "line_end": 109
     },
-    {
-      "id": "README-md/tests-green",
-      "claim": "cargo test --workspace passes",
-      "source": {
-        "file": "README.md",
-        "line_start": 109,
-        "line_end": 109
-      },
-      "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:10Z",
-      "last_extracted": "2026-04-28T09:00:10Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:10Z",
+    "last_extracted": "2026-04-28T09:00:10Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "README-md/clippy-clean",
+    "claim": "cargo clippy --workspace --all-targets with -D warnings is clean",
+    "source": {
+      "file": "README.md",
+      "line_start": 109,
+      "line_end": 109
     },
-    {
-      "id": "README-md/clippy-clean",
-      "claim": "cargo clippy --workspace --all-targets with -D warnings is clean",
-      "source": {
-        "file": "README.md",
-        "line_start": 109,
-        "line_end": 109
-      },
-      "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:12Z",
-      "last_extracted": "2026-04-28T09:00:12Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:12Z",
+    "last_extracted": "2026-04-28T09:00:12Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "README-md/forbid-unsafe-code",
+    "claim": "Every crate declares #![forbid(unsafe_code)]",
+    "source": {
+      "file": "README.md",
+      "line_start": 109,
+      "line_end": 109
     },
-    {
-      "id": "README-md/forbid-unsafe-code",
-      "claim": "Every crate declares #![forbid(unsafe_code)]",
-      "source": {
-        "file": "README.md",
-        "line_start": 109,
-        "line_end": 109
-      },
-      "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:24Z",
-      "last_extracted": "2026-04-28T09:00:24Z",
-      "last_extracted_by": "mark-missing-test-call"
-    }
-  ]
-}
+    "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:24Z",
+    "last_extracted": "2026-04-28T09:00:24Z",
+    "last_extracted_by": "mark-missing-test-call"
+  }
+]

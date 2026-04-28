@@ -1,254 +1,240 @@
-{
-  "schema_version": "1.0",
-  "summary": {
-    "claims_total": 17,
-    "claims_bound": 0,
-    "claims_missing_test": 17,
-    "claims_retire_proposed": 0,
-    "claims_retired": 0,
-    "alignment_ratio": 0.0,
-    "floor": 0.5,
-    "trend_30d": "+0.00",
-    "last_walked": null
+[
+  {
+    "id": "docs-development-contributing-md/forbid-unsafe-per-crate",
+    "claim": "Invariant row 1: #![forbid(unsafe_code)] at every crate root (except POSIX syscalls gated through rustix)",
+    "source": {
+      "file": "docs/development/contributing.md",
+      "line_start": 59,
+      "line_end": 59
+    },
+    "source_hash": "89ced95ebdeddd25544ae5c153aade4faec9d4d2934f861871f6f9be1d4b9ebe",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:04:58Z",
+    "last_extracted": "2026-04-28T09:04:58Z",
+    "last_extracted_by": "mark-missing-test-call"
   },
-  "rows": [
-    {
-      "id": "docs-development-contributing-md/forbid-unsafe-per-crate",
-      "claim": "Invariant row 1: #![forbid(unsafe_code)] at every crate root (except POSIX syscalls gated through rustix)",
-      "source": {
-        "file": "docs/development/contributing.md",
-        "line_start": 59,
-        "line_end": 59
-      },
-      "source_hash": "89ced95ebdeddd25544ae5c153aade4faec9d4d2934f861871f6f9be1d4b9ebe",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:04:58Z",
-      "last_extracted": "2026-04-28T09:04:58Z",
-      "last_extracted_by": "mark-missing-test-call"
+  {
+    "id": "docs-development-contributing-md/reqwest-client-banned",
+    "claim": "Invariant row 2: reqwest::Client is banned outside crates/reposix-core/src/http.rs via clippy disallowed-methods",
+    "source": {
+      "file": "docs/development/contributing.md",
+      "line_start": 60,
+      "line_end": 60
     },
-    {
-      "id": "docs-development-contributing-md/reqwest-client-banned",
-      "claim": "Invariant row 2: reqwest::Client is banned outside crates/reposix-core/src/http.rs via clippy disallowed-methods",
-      "source": {
-        "file": "docs/development/contributing.md",
-        "line_start": 60,
-        "line_end": 60
-      },
-      "source_hash": "dbbe77822e6decd2c5b6b9f41d06198460a6ef68643c3fd688db9aa75ebce449",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:00Z",
-      "last_extracted": "2026-04-28T09:05:00Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "dbbe77822e6decd2c5b6b9f41d06198460a6ef68643c3fd688db9aa75ebce449",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:00Z",
+    "last_extracted": "2026-04-28T09:05:00Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs-development-contributing-md/errors-doc-section-required",
+    "claim": "Invariant row 3: Every public Result-returning function has an # Errors doc section (clippy missing-errors-doc is on)",
+    "source": {
+      "file": "docs/development/contributing.md",
+      "line_start": 61,
+      "line_end": 61
     },
-    {
-      "id": "docs-development-contributing-md/errors-doc-section-required",
-      "claim": "Invariant row 3: Every public Result-returning function has an # Errors doc section (clippy missing-errors-doc is on)",
-      "source": {
-        "file": "docs/development/contributing.md",
-        "line_start": 61,
-        "line_end": 61
-      },
-      "source_hash": "59fb7eaf9511956cf57ef4899bc34e5913ce6d7e8092fddc9a1307e289c1b167",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:02Z",
-      "last_extracted": "2026-04-28T09:05:02Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "59fb7eaf9511956cf57ef4899bc34e5913ce6d7e8092fddc9a1307e289c1b167",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:02Z",
+    "last_extracted": "2026-04-28T09:05:02Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs-development-contributing-md/serde-no-handroll-json",
+    "claim": "Invariant row 4: No hand-rolled JSON/YAML serialization, always use serde and serde_yaml for frontmatter",
+    "source": {
+      "file": "docs/development/contributing.md",
+      "line_start": 62,
+      "line_end": 62
     },
-    {
-      "id": "docs-development-contributing-md/serde-no-handroll-json",
-      "claim": "Invariant row 4: No hand-rolled JSON/YAML serialization, always use serde and serde_yaml for frontmatter",
-      "source": {
-        "file": "docs/development/contributing.md",
-        "line_start": 62,
-        "line_end": 62
-      },
-      "source_hash": "16c54eee4e3edf2c4ab1c6cadae50db30d2463431d961f48c3c151abd3ca3590",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:04Z",
-      "last_extracted": "2026-04-28T09:05:04Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "16c54eee4e3edf2c4ab1c6cadae50db30d2463431d961f48c3c151abd3ca3590",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:04Z",
+    "last_extracted": "2026-04-28T09:05:04Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs-development-contributing-md/clippy-pedantic-targeted-allows",
+    "claim": "Invariant row 5: Clippy is pedantic with targeted allows only; blanket #[allow(clippy::pedantic)] is code-review failure",
+    "source": {
+      "file": "docs/development/contributing.md",
+      "line_start": 63,
+      "line_end": 63
     },
-    {
-      "id": "docs-development-contributing-md/clippy-pedantic-targeted-allows",
-      "claim": "Invariant row 5: Clippy is pedantic with targeted allows only; blanket #[allow(clippy::pedantic)] is code-review failure",
-      "source": {
-        "file": "docs/development/contributing.md",
-        "line_start": 63,
-        "line_end": 63
-      },
-      "source_hash": "3f33f1997ab4f504c4ba5999cde3054ad5893eedd74eef55a35fb39dc55cdfc5",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:08Z",
-      "last_extracted": "2026-04-28T09:05:08Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "3f33f1997ab4f504c4ba5999cde3054ad5893eedd74eef55a35fb39dc55cdfc5",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:08Z",
+    "last_extracted": "2026-04-28T09:05:08Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs-development-contributing-md/rust-stable-no-nightly",
+    "claim": "Invariant row 6: Workspace compiles on Rust stable; no nightly features; rust-toolchain.toml pins stable",
+    "source": {
+      "file": "docs/development/contributing.md",
+      "line_start": 64,
+      "line_end": 64
     },
-    {
-      "id": "docs-development-contributing-md/rust-stable-no-nightly",
-      "claim": "Invariant row 6: Workspace compiles on Rust stable; no nightly features; rust-toolchain.toml pins stable",
-      "source": {
-        "file": "docs/development/contributing.md",
-        "line_start": 64,
-        "line_end": 64
-      },
-      "source_hash": "96846ce0eb8fd49d23c44340f9217f92e9fadc9b72b4fdd8c70e423d04453ae9",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:10Z",
-      "last_extracted": "2026-04-28T09:05:10Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "96846ce0eb8fd49d23c44340f9217f92e9fadc9b72b4fdd8c70e423d04453ae9",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:10Z",
+    "last_extracted": "2026-04-28T09:05:10Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs-development-contributing-md/http-allowlist-enforcement",
+    "claim": "Invariant row 7: Every outbound HTTP request passes the allowlist via sealed HttpClient newtype; per-request URL recheck catches redirects",
+    "source": {
+      "file": "docs/development/contributing.md",
+      "line_start": 65,
+      "line_end": 65
     },
-    {
-      "id": "docs-development-contributing-md/http-allowlist-enforcement",
-      "claim": "Invariant row 7: Every outbound HTTP request passes the allowlist via sealed HttpClient newtype; per-request URL recheck catches redirects",
-      "source": {
-        "file": "docs/development/contributing.md",
-        "line_start": 65,
-        "line_end": 65
-      },
-      "source_hash": "de44ff8beba200ec724a30fc9378fdb7adfea07a977502bc5e6687ef740902f2",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:12Z",
-      "last_extracted": "2026-04-28T09:05:12Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "de44ff8beba200ec724a30fc9378fdb7adfea07a977502bc5e6687ef740902f2",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:12Z",
+    "last_extracted": "2026-04-28T09:05:12Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs-development-contributing-md/sanitize-server-fields-on-egress",
+    "claim": "Invariant row 8: Server-controlled frontmatter fields are stripped on egress via sanitize(Tainted<Issue>, ServerMetadata) -> Untainted<Issue>",
+    "source": {
+      "file": "docs/development/contributing.md",
+      "line_start": 66,
+      "line_end": 66
     },
-    {
-      "id": "docs-development-contributing-md/sanitize-server-fields-on-egress",
-      "claim": "Invariant row 8: Server-controlled frontmatter fields are stripped on egress via sanitize(Tainted<Issue>, ServerMetadata) -> Untainted<Issue>",
-      "source": {
-        "file": "docs/development/contributing.md",
-        "line_start": 66,
-        "line_end": 66
-      },
-      "source_hash": "a74f2b98a6e72a9f56de5a3e6f953e9222569c8383d1480aa7e458653d4b208e",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:15Z",
-      "last_extracted": "2026-04-28T09:05:15Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "a74f2b98a6e72a9f56de5a3e6f953e9222569c8383d1480aa7e458653d4b208e",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:15Z",
+    "last_extracted": "2026-04-28T09:05:15Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs-development-contributing-md/cargo-check-workspace-available",
+    "claim": "Quickstart: cargo check --workspace is available and used for fast type-check during development",
+    "source": {
+      "file": "docs/development/contributing.md",
+      "line_start": 15,
+      "line_end": 15
     },
-    {
-      "id": "docs-development-contributing-md/cargo-check-workspace-available",
-      "claim": "Quickstart: cargo check --workspace is available and used for fast type-check during development",
-      "source": {
-        "file": "docs/development/contributing.md",
-        "line_start": 15,
-        "line_end": 15
-      },
-      "source_hash": "f10cfb7543a2f9f77732c8239a4d5e70ea41a9f9f26ddd1046c2200feea3cc94",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:17Z",
-      "last_extracted": "2026-04-28T09:05:17Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "f10cfb7543a2f9f77732c8239a4d5e70ea41a9f9f26ddd1046c2200feea3cc94",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:17Z",
+    "last_extracted": "2026-04-28T09:05:17Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs-development-contributing-md/cargo-test-133-tests",
+    "claim": "Quickstart: cargo test --workspace runs 133 tests (one #[ignore]'d timeout test runs via --ignored)",
+    "source": {
+      "file": "docs/development/contributing.md",
+      "line_start": 20,
+      "line_end": 20
     },
-    {
-      "id": "docs-development-contributing-md/cargo-test-133-tests",
-      "claim": "Quickstart: cargo test --workspace runs 133 tests (one #[ignore]'d timeout test runs via --ignored)",
-      "source": {
-        "file": "docs/development/contributing.md",
-        "line_start": 20,
-        "line_end": 20
-      },
-      "source_hash": "12409641e3b26fe7f506183b85c4a9d499d1df787c0ebcc2420a681d9c0a46b4",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:19Z",
-      "last_extracted": "2026-04-28T09:05:19Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "12409641e3b26fe7f506183b85c4a9d499d1df787c0ebcc2420a681d9c0a46b4",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:19Z",
+    "last_extracted": "2026-04-28T09:05:19Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs-development-contributing-md/demo-script-exists",
+    "claim": "Quickstart: demo.sh script exists and runs end-to-end demo",
+    "source": {
+      "file": "docs/development/contributing.md",
+      "line_start": 28,
+      "line_end": 30
     },
-    {
-      "id": "docs-development-contributing-md/demo-script-exists",
-      "claim": "Quickstart: demo.sh script exists and runs end-to-end demo",
-      "source": {
-        "file": "docs/development/contributing.md",
-        "line_start": 28,
-        "line_end": 30
-      },
-      "source_hash": "7431250d26224551d860d7e3afb878414601663855612a7036e8babcd1641ee2",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:25Z",
-      "last_extracted": "2026-04-28T09:05:25Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "7431250d26224551d860d7e3afb878414601663855612a7036e8babcd1641ee2",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:25Z",
+    "last_extracted": "2026-04-28T09:05:25Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs-development-contributing-md/git-version-2-34-required",
+    "claim": "Reporting bugs: git >= 2.34 required for partial-clone + stateless-connect",
+    "source": {
+      "file": "docs/development/contributing.md",
+      "line_start": 130,
+      "line_end": 130
     },
-    {
-      "id": "docs-development-contributing-md/git-version-2-34-required",
-      "claim": "Reporting bugs: git >= 2.34 required for partial-clone + stateless-connect",
-      "source": {
-        "file": "docs/development/contributing.md",
-        "line_start": 130,
-        "line_end": 130
-      },
-      "source_hash": "3c4fd0f9ffcdaafaa5ea783e8ccb9956bfce058020f801caa74b14db0d530e74",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:27Z",
-      "last_extracted": "2026-04-28T09:05:27Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "3c4fd0f9ffcdaafaa5ea783e8ccb9956bfce058020f801caa74b14db0d530e74",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:27Z",
+    "last_extracted": "2026-04-28T09:05:27Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs-development-roadmap-md/v0-1-0-shipped",
+    "claim": "v0.1.0 MVD shipped 2026-04-13 with Simulator, IssueBackend trait, FUSE read-only mount, git-remote-reposix, eight security guardrails",
+    "source": {
+      "file": "docs/development/roadmap.md",
+      "line_start": 9,
+      "line_end": 9
     },
-    {
-      "id": "docs-development-roadmap-md/v0-1-0-shipped",
-      "claim": "v0.1.0 MVD shipped 2026-04-13 with Simulator, IssueBackend trait, FUSE read-only mount, git-remote-reposix, eight security guardrails",
-      "source": {
-        "file": "docs/development/roadmap.md",
-        "line_start": 9,
-        "line_end": 9
-      },
-      "source_hash": "9bebe9fec5620bd57a4ac73a473050c72dabfab34a3b3a79d696d3068846b496",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:31Z",
-      "last_extracted": "2026-04-28T09:05:31Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "9bebe9fec5620bd57a4ac73a473050c72dabfab34a3b3a79d696d3068846b496",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:31Z",
+    "last_extracted": "2026-04-28T09:05:31Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs-development-roadmap-md/v0-2-0-alpha-shipped",
+    "claim": "v0.2.0-alpha shipped 2026-04-13 with GitHub Issues read-only adapter",
+    "source": {
+      "file": "docs/development/roadmap.md",
+      "line_start": 10,
+      "line_end": 10
     },
-    {
-      "id": "docs-development-roadmap-md/v0-2-0-alpha-shipped",
-      "claim": "v0.2.0-alpha shipped 2026-04-13 with GitHub Issues read-only adapter",
-      "source": {
-        "file": "docs/development/roadmap.md",
-        "line_start": 10,
-        "line_end": 10
-      },
-      "source_hash": "d7efba4f8a58954679c147b4cc6735a78bde07be8796b82a52904e30404d5830",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:33Z",
-      "last_extracted": "2026-04-28T09:05:33Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "d7efba4f8a58954679c147b4cc6735a78bde07be8796b82a52904e30404d5830",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:33Z",
+    "last_extracted": "2026-04-28T09:05:33Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs-development-roadmap-md/v0-9-0-pivot-shipped",
+    "claim": "v0.9.0 shipped 2026-04-24: Architecture pivot to git-native partial clone; FUSE mount retired; git-remote-reposix now advertises stateless-connect + export against on-disk cache; agent UX is upstream git",
+    "source": {
+      "file": "docs/development/roadmap.md",
+      "line_start": 17,
+      "line_end": 17
     },
-    {
-      "id": "docs-development-roadmap-md/v0-9-0-pivot-shipped",
-      "claim": "v0.9.0 shipped 2026-04-24: Architecture pivot to git-native partial clone; FUSE mount retired; git-remote-reposix now advertises stateless-connect + export against on-disk cache; agent UX is upstream git",
-      "source": {
-        "file": "docs/development/roadmap.md",
-        "line_start": 17,
-        "line_end": 17
-      },
-      "source_hash": "f2ddf7956c7defefd7cc23071039d2de749848cf1ea235ed0824a9c9a06128a1",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:36Z",
-      "last_extracted": "2026-04-28T09:05:36Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "f2ddf7956c7defefd7cc23071039d2de749848cf1ea235ed0824a9c9a06128a1",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:36Z",
+    "last_extracted": "2026-04-28T09:05:36Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs-development-roadmap-md/v0-10-0-shipped",
+    "claim": "v0.10.0 shipped 2026-04-25: docs and narrative shine — landing page, tutorial set, mermaid diagrams, value-prop framing",
+    "source": {
+      "file": "docs/development/roadmap.md",
+      "line_start": 18,
+      "line_end": 18
     },
-    {
-      "id": "docs-development-roadmap-md/v0-10-0-shipped",
-      "claim": "v0.10.0 shipped 2026-04-25: docs and narrative shine — landing page, tutorial set, mermaid diagrams, value-prop framing",
-      "source": {
-        "file": "docs/development/roadmap.md",
-        "line_start": 18,
-        "line_end": 18
-      },
-      "source_hash": "363284b0afbe04cd3ac91a8c7ca414efbf05d713427cc5cb83642895e369f8aa",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:39Z",
-      "last_extracted": "2026-04-28T09:05:39Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "363284b0afbe04cd3ac91a8c7ca414efbf05d713427cc5cb83642895e369f8aa",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:39Z",
+    "last_extracted": "2026-04-28T09:05:39Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs-development-roadmap-md/v0-11-0-active-milestone",
+    "claim": "v0.11.0 is active milestone (PLANNING): Polish & Reproducibility — jargon glosses, mermaid render hygiene, fresh-clone tutorial runner, dist release pipeline, latency table, vision-innovations surface",
+    "source": {
+      "file": "docs/development/roadmap.md",
+      "line_start": 22,
+      "line_end": 22
     },
-    {
-      "id": "docs-development-roadmap-md/v0-11-0-active-milestone",
-      "claim": "v0.11.0 is active milestone (PLANNING): Polish & Reproducibility — jargon glosses, mermaid render hygiene, fresh-clone tutorial runner, dist release pipeline, latency table, vision-innovations surface",
-      "source": {
-        "file": "docs/development/roadmap.md",
-        "line_start": 22,
-        "line_end": 22
-      },
-      "source_hash": "db8987052fddc5275db8a6994df24605a60665d5a16c8730e6ce78dea9b6143c",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:42Z",
-      "last_extracted": "2026-04-28T09:05:42Z",
-      "last_extracted_by": "mark-missing-test-call"
-    }
-  ]
-}
+    "source_hash": "db8987052fddc5275db8a6994df24605a60665d5a16c8730e6ce78dea9b6143c",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:42Z",
+    "last_extracted": "2026-04-28T09:05:42Z",
+    "last_extracted_by": "mark-missing-test-call"
+  }
+]

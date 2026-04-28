@@ -1,1 +1,291 @@
-{"schema_version":"1.0","summary":{"claims_total":0,"claims_bound":0,"claims_missing_test":0,"claims_retire_proposed":0,"claims_retired":0,"alignment_ratio":1.0,"floor":0.50,"trend_30d":"+0.00","last_walked":null},"rows":[]}
+[
+  {
+    "id": "git-layer/helper-advertises-stateless-connect",
+    "claim": "Helper advertises stateless-connect capability for protocol-v2 tunneling",
+    "source": {
+      "file": "docs/how-it-works/git-layer.md",
+      "line_start": 54,
+      "line_end": 57
+    },
+    "source_hash": "02985ce2c1e95d42c79c640ededd0882f32006df1c7a0475f7fa930cfc7b64ab",
+    "test": "crates/reposix-remote/tests/stateless_connect.rs::capabilities_advertises_stateless_connect_and_object_format",
+    "test_body_hash": "70cd0646d2021af51f219a1c80d4f4c8edd1e2dea1183167ef20b812a4670915",
+    "rationale": "Tests helper binary advertises stateless-connect in capabilities output",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:59Z",
+    "last_extracted": "2026-04-28T09:05:59Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "git-layer/push-conflict-detection-fetch-first",
+    "claim": "Push-time conflict detection rejects stale-base with 'error refs/heads/main fetch first'",
+    "source": {
+      "file": "docs/how-it-works/git-layer.md",
+      "line_start": 80,
+      "line_end": 90
+    },
+    "source_hash": "98bcda6841515fff5c4fbab07412e88d541ab483066b13ca6a33ec3425271a11",
+    "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
+    "test_body_hash": "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97",
+    "rationale": "Tests helper rejects stale push with fetch-first error and no REST writes",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:59Z",
+    "last_extracted": "2026-04-28T09:05:59Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "git-layer/push-conflict-no-rest-writes-on-reject",
+    "claim": "On conflict rejection, zero PATCH/POST/DELETE calls are made",
+    "source": {
+      "file": "docs/how-it-works/git-layer.md",
+      "line_start": 82,
+      "line_end": 90
+    },
+    "source_hash": "575156114df03802de2c4b3068640edaa05dd8c834bb387c714b3c182bc8a3d1",
+    "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
+    "test_body_hash": "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97",
+    "rationale": "Tests wiremock expectations: PATCH count == 0, POST count == 0, DELETE count == 0",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:59Z",
+    "last_extracted": "2026-04-28T09:05:59Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "git-layer/blob-limit-error-names-sparse-checkout",
+    "claim": "Blob limit exceeded error names git sparse-checkout as recovery move",
+    "source": {
+      "file": "docs/how-it-works/git-layer.md",
+      "line_start": 94,
+      "line_end": 102
+    },
+    "source_hash": "b4fa042fb7c5cfc75a112c8442988139f4007cb3c1279616c4286e6cd179eac9",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
+    "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
+    "rationale": "Tests literal BLOB_LIMIT_EXCEEDED_FMT contains 'git sparse-checkout'",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:59Z",
+    "last_extracted": "2026-04-28T09:05:59Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "time-travel/sync-tag-refs-reposix-sync-iso8601",
+    "claim": "Every Cache::sync writes one ref: refs/reposix/sync/<ISO8601-no-colons>",
+    "source": {
+      "file": "docs/how-it-works/time-travel.md",
+      "line_start": 11,
+      "line_end": 17
+    },
+    "source_hash": "d8abadeddc9a286537a54b5966b4895460b06266b6f78b529828089395aed58e",
+    "test": "crates/reposix-cache/tests/sync_tags.rs::tag_sync_creates_ref",
+    "test_body_hash": "7d77b24b1d69dd16163acdc3643e535b60a676be51fa98e7f983b4aa9b505126",
+    "rationale": "Tests seed sync creates one tag with name starting with refs/reposix/sync/",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:06:00Z",
+    "last_extracted": "2026-04-28T09:06:00Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "time-travel/sync-tags-hidden-from-protocol-v2-advertisement",
+    "claim": "Sync tags are hidden from helper protocol-v2 advertisement (refs/reposix/sync/ namespace)",
+    "source": {
+      "file": "docs/how-it-works/time-travel.md",
+      "line_start": 19,
+      "line_end": 24
+    },
+    "source_hash": "1379e14f23ac5b5f4e54788cf0991fa47dae83ff71e487ba039115f87a810d22",
+    "test": "crates/reposix-cache/tests/sync_tags.rs::helper_does_not_export_sync_tags",
+    "test_body_hash": "9b4a329d4c6101989749188a8cc519a95fd45748871a28ebfa4d9d5e7acc6e4a",
+    "rationale": "Tests git upload-pack --advertise-refs does not output refs/reposix/sync/ tags",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:06:00Z",
+    "last_extracted": "2026-04-28T09:06:00Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "time-travel/sync-tag-audit-row-sync-tag-written",
+    "claim": "Every tag write produces one audit row: op='sync_tag_written' with OID and ref name",
+    "source": {
+      "file": "docs/how-it-works/time-travel.md",
+      "line_start": 70,
+      "line_end": 78
+    },
+    "source_hash": "9d62a9b6c98a17d78f207d41b65487f3761429d08c592289dea49457172289d9",
+    "test": "crates/reposix-cache/tests/sync_tags.rs::sync_tags_audit_row_written",
+    "test_body_hash": "c2c4ef3f63fb9a22623cf790025100ae7193aed244137fb4f8975d792bba2b8c",
+    "rationale": "Tests one row exists with op='sync_tag_written' and reason starts with refs/reposix/sync/",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:06:00Z",
+    "last_extracted": "2026-04-28T09:06:00Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "time-travel/sync-tag-at-finds-closest-not-after",
+    "claim": "Cache::sync_tag_at(ts) returns the latest sync tag whose timestamp is <= target",
+    "source": {
+      "file": "docs/how-it-works/time-travel.md",
+      "line_start": 61,
+      "line_end": 64
+    },
+    "source_hash": "eb37d72f23275dddddfd7a96b05fcc80d1ba2b24e78b3aa58ee7645c4cb3cf28",
+    "test": "crates/reposix-cache/tests/sync_tags.rs::sync_tag_at_finds_closest_not_after",
+    "test_body_hash": "0e6fbdaae6181a27f39c718b2512e531743846b13575c3efecb0a3633872780c",
+    "rationale": "Tests sync_tag_at finds correct tag between two targets and returns None before all",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:06:00Z",
+    "last_extracted": "2026-04-28T09:06:00Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "time-travel/list-sync-tags-returns-sorted-ascending",
+    "claim": "Cache::list_sync_tags returns tags sorted ascending by timestamp",
+    "source": {
+      "file": "docs/how-it-works/time-travel.md",
+      "line_start": 54,
+      "line_end": 59
+    },
+    "source_hash": "3f5c405134fa5ddd9fcf771709589feb1fbc5ffe9369e43fec3f73dbb39f086c",
+    "test": "crates/reposix-cache/tests/sync_tags.rs::list_sync_tags_returns_sorted",
+    "test_body_hash": "a57026910265482e23a2f3ab7e1b233dd95e287932263113644e30390de30fa7",
+    "rationale": "Tests multiple syncs produce tags in ascending timestamp order",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:06:00Z",
+    "last_extracted": "2026-04-28T09:06:00Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "filesystem-layer/blob-lazy-first-cat",
+    "claim": "The first cat of an issue file triggers one REST call; subsequent cats are local",
+    "source": {
+      "file": "docs/how-it-works/filesystem-layer.md",
+      "line_start": 42,
+      "line_end": 42
+    },
+    "source_hash": "afb1f82c18d6314a80a6daecafef429fe35ac8c8827a5966eb8e3e263245054f",
+    "test": "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from",
+    "test_body_hash": "009ffcc580b9ac30fc5f8a5cb426f49873b72de5429389f198ca38dbd4e2e1ae",
+    "rationale": "Tests that after build_from, zero blob objects exist locally — they are lazy",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:06:05Z",
+    "last_extracted": "2026-04-28T09:06:05Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "filesystem-layer/partial-clone-tree-fetched-blobs-lazy",
+    "claim": "Partial clone fetches the tree (filenames, OIDs) but skips blob contents until read",
+    "source": {
+      "file": "docs/how-it-works/filesystem-layer.md",
+      "line_start": 48,
+      "line_end": 48
+    },
+    "source_hash": "5a981cfa3590ef262179df70527d9b20f768d900734ebc8607cf3b385b0b16d1",
+    "test": "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from",
+    "test_body_hash": "009ffcc580b9ac30fc5f8a5cb426f49873b72de5429389f198ca38dbd4e2e1ae",
+    "rationale": "Tests no blobs materialized after tree sync",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:59Z",
+    "last_extracted": "2026-04-28T09:05:59Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "filesystem-layer/extensions-partialclone-signals-promisor",
+    "claim": "extensions.partialClone=origin tells git the remote is a promisor that delivers missing blobs",
+    "source": {
+      "file": "docs/how-it-works/filesystem-layer.md",
+      "line_start": 57,
+      "line_end": 57
+    },
+    "source_hash": "74a8fa626c8d4b28c851604208166e735fe8910054ebcdd2492206db1a4a4b02",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
+    "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
+    "rationale": "Agent-flow tests verify git config is set and blob limit teaching works",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:59Z",
+    "last_extracted": "2026-04-28T09:05:59Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "git-layer/refspec-namespace-reposix-not-heads",
+    "claim": "Refspec namespace is refs/heads/*:refs/reposix/* not refs/heads/*:refs/heads/*",
+    "source": {
+      "file": "docs/how-it-works/git-layer.md",
+      "line_start": 61,
+      "line_end": 61
+    },
+    "source_hash": "8590d49d39a5d54653702d6df0f8bbafce9a2d434f95e73469517a40d0ed4ac1",
+    "test": "crates/reposix-remote/tests/stateless_connect.rs::capabilities_refspec_namespace_is_reposix_not_heads",
+    "test_body_hash": "a86d4c791fb759d8bb5a34c47228ec9237d932f317f07e6321ade678863b3a82",
+    "rationale": "Tests helper advertises correct refspec to avoid fast-export delta collapse",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:59Z",
+    "last_extracted": "2026-04-28T09:05:59Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "git-layer/frontmatter-strips-server-controlled",
+    "claim": "Server-controlled fields (id, created_at, version, updated_at) are stripped on push",
+    "source": {
+      "file": "docs/how-it-works/git-layer.md",
+      "line_start": 62,
+      "line_end": 62
+    },
+    "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "test": "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields",
+    "test_body_hash": "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b",
+    "rationale": "Tests inbound blob with id:999999 and version:999 overrides are not sent to backend",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:06:00Z",
+    "last_extracted": "2026-04-28T09:06:00Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "filesystem-layer/cache-bare-repo-with-wal",
+    "claim": "Cache is a real bare git repo with cache.db in SQLite WAL mode",
+    "source": {
+      "file": "docs/how-it-works/filesystem-layer.md",
+      "line_start": 56,
+      "line_end": 56
+    },
+    "source_hash": "5f3067f555701c800efbb895721a7ee70b3e1bac2f82e0d4d882832249c51c8f",
+    "test": "crates/reposix-cache/src/cache.rs::open",
+    "test_body_hash": "02be171acb27b7663ea9d1e5f85bd94790c801c9d75456363f7f302c6e983e2b",
+    "rationale": "Cache::open creates bare repo with WAL-mode cache.db",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:59Z",
+    "last_extracted": "2026-04-28T09:05:59Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "filesystem-layer/audit-blob-materialize-rows",
+    "claim": "Every blob materialization writes an audit row to cache.db",
+    "source": {
+      "file": "docs/how-it-works/filesystem-layer.md",
+      "line_start": 56,
+      "line_end": 56
+    },
+    "source_hash": "5f3067f555701c800efbb895721a7ee70b3e1bac2f82e0d4d882832249c51c8f",
+    "test": "crates/reposix-cache/src/audit.rs::log_materialize",
+    "test_body_hash": "fc6ef96936b7eb61b16001a0f901eaee76e9960750c1bb07eb55d3d09714244a",
+    "rationale": "Audit module writes materialize rows on blob fetch",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:59Z",
+    "last_extracted": "2026-04-28T09:05:59Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "git-layer/blob-limit-default-200",
+    "claim": "Blob limit default is 200; configured via REPOSIX_BLOB_LIMIT env var",
+    "source": {
+      "file": "docs/how-it-works/git-layer.md",
+      "line_start": 94,
+      "line_end": 94
+    },
+    "source_hash": "77ed3a28ed9827e532b9a78d063407a345e9d8bf37f290ae6a7d69e7d690deee",
+    "test": "crates/reposix-remote/src/stateless_connect.rs::parse_blob_limit",
+    "test_body_hash": "2124b101222f26d86fe36379766512cb407930601b1d2b639b158aa3316a4943",
+    "rationale": "BLOB_LIMIT constant hardcoded; env-configurable via parse_blob_limit",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:05:59Z",
+    "last_extracted": "2026-04-28T09:05:59Z",
+    "last_extracted_by": "bind-call"
+  }
+]

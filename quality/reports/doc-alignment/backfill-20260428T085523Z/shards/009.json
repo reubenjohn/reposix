@@ -1,211 +1,197 @@
-{
-  "schema_version": "1.0",
-  "summary": {
-    "claims_total": 13,
-    "claims_bound": 0,
-    "claims_missing_test": 13,
-    "claims_retire_proposed": 0,
-    "claims_retired": 0,
-    "alignment_ratio": 0.0,
-    "floor": 0.5,
-    "trend_30d": "+0.00",
-    "last_walked": null
+[
+  {
+    "id": "bootstrap-timing-24ms-vs-27ms",
+    "claim": "reposix init bootstrap takes 24 ms against simulator",
+    "source": {
+      "file": "docs/concepts/mental-model-in-60-seconds.md",
+      "line_start": 21,
+      "line_end": 21
+    },
+    "source_hash": "c665b626c0e9476b0dfdf3f6203003e6bef54cdb9075a373ad49b98de2baaee9",
+    "rationale": "Drift: latency.md shows 27 ms (sim cold init), not 24 ms per benchmark table line 36",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:04:10Z",
+    "last_extracted": "2026-04-28T09:04:10Z",
+    "last_extracted_by": "mark-missing-test-call"
   },
-  "rows": [
-    {
-      "id": "bootstrap-timing-24ms-vs-27ms",
-      "claim": "reposix init bootstrap takes 24 ms against simulator",
-      "source": {
-        "file": "docs/concepts/mental-model-in-60-seconds.md",
-        "line_start": 21,
-        "line_end": 21
-      },
-      "source_hash": "c665b626c0e9476b0dfdf3f6203003e6bef54cdb9075a373ad49b98de2baaee9",
-      "rationale": "Drift: latency.md shows 27 ms (sim cold init), not 24 ms per benchmark table line 36",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:04:10Z",
-      "last_extracted": "2026-04-28T09:04:10Z",
-      "last_extracted_by": "mark-missing-test-call"
+  {
+    "id": "mcp-schema-discovery-100k-tokens",
+    "claim": "MCP requires ~100k schema discovery tokens per server",
+    "source": {
+      "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
+      "line_start": 13,
+      "line_end": 13
     },
-    {
-      "id": "mcp-schema-discovery-100k-tokens",
-      "claim": "MCP requires ~100k schema discovery tokens per server",
-      "source": {
-        "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
-        "line_start": 13,
-        "line_end": 13
-      },
-      "source_hash": "917575b56f9c55a9a5c4371e35f4d35cbb7e301ae17ea135879dac3d1732da01",
-      "rationale": "Characterized from public-API behavior; not measured by reposix harness per note on line 21",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:04:16Z",
-      "last_extracted": "2026-04-28T09:04:16Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "917575b56f9c55a9a5c4371e35f4d35cbb7e301ae17ea135879dac3d1732da01",
+    "rationale": "Characterized from public-API behavior; not measured by reposix harness per note on line 21",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:04:16Z",
+    "last_extracted": "2026-04-28T09:04:16Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "use-case-20-percent-rest-mcp",
+    "claim": "20% of agent operations should use REST/MCP for complex JQL, bulk imports, admin, reporting",
+    "source": {
+      "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
+      "line_start": 49,
+      "line_end": 54
     },
-    {
-      "id": "use-case-20-percent-rest-mcp",
-      "claim": "20% of agent operations should use REST/MCP for complex JQL, bulk imports, admin, reporting",
-      "source": {
-        "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
-        "line_start": 49,
-        "line_end": 54
-      },
-      "source_hash": "a24164b0e601151f3eb395f7369cff047eedae189c9d181c036388e5bfff92cf",
-      "rationale": "Design premise stated; no test quantifies the 20% split or verifies REST operations remain unshaded",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:04:22Z",
-      "last_extracted": "2026-04-28T09:04:22Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "a24164b0e601151f3eb395f7369cff047eedae189c9d181c036388e5bfff92cf",
+    "rationale": "Design premise stated; no test quantifies the 20% split or verifies REST operations remain unshaded",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:04:22Z",
+    "last_extracted": "2026-04-28T09:04:22Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "token-baseline-reposix-531",
+    "claim": "reposix loop = 531 tokens measured against shell session transcript on simulator",
+    "source": {
+      "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
+      "line_start": 34,
+      "line_end": 38
     },
-    {
-      "id": "token-baseline-reposix-531",
-      "claim": "reposix loop = 531 tokens measured against shell session transcript on simulator",
-      "source": {
-        "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
-        "line_start": 34,
-        "line_end": 38
-      },
-      "source_hash": "4d93866c88489f9683a462abc1b0eb92720e77036c988a8818f17b687a8ad197",
-      "rationale": "Fixture evidence: benchmarks/fixtures/reposix_session.txt.tokens.json shows input_tokens=531 (anthropic==0.72.0); no Rust test fn citation available — need test in quality/gates/perf/",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:04:29Z",
-      "last_extracted": "2026-04-28T09:04:29Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "4d93866c88489f9683a462abc1b0eb92720e77036c988a8818f17b687a8ad197",
+    "rationale": "Fixture evidence: benchmarks/fixtures/reposix_session.txt.tokens.json shows input_tokens=531 (anthropic==0.72.0); no Rust test fn citation available — need test in quality/gates/perf/",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:04:29Z",
+    "last_extracted": "2026-04-28T09:04:29Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "token-baseline-mcp-4883",
+    "claim": "MCP (synthesized fixture) = 4,883 tokens vs reposix 531 tokens = 89.1% reduction",
+    "source": {
+      "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
+      "line_start": 25,
+      "line_end": 25
     },
-    {
-      "id": "token-baseline-mcp-4883",
-      "claim": "MCP (synthesized fixture) = 4,883 tokens vs reposix 531 tokens = 89.1% reduction",
-      "source": {
-        "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
-        "line_start": 25,
-        "line_end": 25
-      },
-      "source_hash": "1e406ccf260f30100746f2f32c8e99a65a8d643fd959aa527ef53f1dcba820dd",
-      "rationale": "Fixture evidence: mcp_jira_catalog.json.tokens.json = 4883; ratio (4883-531)/4883 = 89.1%; fixture is synthesized per note at line 27-32",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:04:34Z",
-      "last_extracted": "2026-04-28T09:04:34Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "1e406ccf260f30100746f2f32c8e99a65a8d643fd959aa527ef53f1dcba820dd",
+    "rationale": "Fixture evidence: mcp_jira_catalog.json.tokens.json = 4883; ratio (4883-531)/4883 = 89.1%; fixture is synthesized per note at line 27-32",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:04:34Z",
+    "last_extracted": "2026-04-28T09:04:34Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "latency-hero-24ms-mismatch",
+    "claim": "Homepage hero: reposix cold init = 24 ms",
+    "source": {
+      "file": "docs/index.md",
+      "line_start": 18,
+      "line_end": 18
     },
-    {
-      "id": "latency-hero-24ms-mismatch",
-      "claim": "Homepage hero: reposix cold init = 24 ms",
-      "source": {
-        "file": "docs/index.md",
-        "line_start": 18,
-        "line_end": 18
-      },
-      "source_hash": "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4",
-      "rationale": "Drift: latency.md table (line 36) shows sim cold init = 27 ms. Need to update hero or benchmark table.",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:04:48Z",
-      "last_extracted": "2026-04-28T09:04:48Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4",
+    "rationale": "Drift: latency.md table (line 36) shows sim cold init = 27 ms. Need to update hero or benchmark table.",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:04:48Z",
+    "last_extracted": "2026-04-28T09:04:48Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "latency-cached-read-8ms",
+    "claim": "reposix cached read = 8 ms (sim)",
+    "source": {
+      "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
+      "line_start": 14,
+      "line_end": 14
     },
-    {
-      "id": "latency-cached-read-8ms",
-      "claim": "reposix cached read = 8 ms (sim)",
-      "source": {
-        "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
-        "line_start": 14,
-        "line_end": 14
-      },
-      "source_hash": "0e79a26df484401e4095b6799c12a8151c979ffc1cf4e74938db353afa6f5ce5",
-      "rationale": "Fixture evidence: latency.md table line 38 'Get one record' = 8 ms (sim); this is single-record not cached-read-from-warm-tree",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:04:52Z",
-      "last_extracted": "2026-04-28T09:04:52Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "0e79a26df484401e4095b6799c12a8151c979ffc1cf4e74938db353afa6f5ce5",
+    "rationale": "Fixture evidence: latency.md table line 38 'Get one record' = 8 ms (sim); this is single-record not cached-read-from-warm-tree",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:04:52Z",
+    "last_extracted": "2026-04-28T09:04:52Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "frontmatter-yaml-schema",
+    "claim": "Each issue is one Markdown file with YAML frontmatter; custom fields are additional YAML keys",
+    "source": {
+      "file": "docs/concepts/mental-model-in-60-seconds.md",
+      "line_start": 23,
+      "line_end": 41
     },
-    {
-      "id": "frontmatter-yaml-schema",
-      "claim": "Each issue is one Markdown file with YAML frontmatter; custom fields are additional YAML keys",
-      "source": {
-        "file": "docs/concepts/mental-model-in-60-seconds.md",
-        "line_start": 23,
-        "line_end": 41
-      },
-      "source_hash": "6a120fe626d0d0ae53b2aaddf4408ece13d56a6ea3197b50a199dfa12b8c7dde",
-      "rationale": "Verified: crates/reposix-core/src/record.rs line 55-96 defines Record with YAML-serializable frontmatter; extensions field allows custom keys",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:04:56Z",
-      "last_extracted": "2026-04-28T09:04:56Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "6a120fe626d0d0ae53b2aaddf4408ece13d56a6ea3197b50a199dfa12b8c7dde",
+    "rationale": "Verified: crates/reposix-core/src/record.rs line 55-96 defines Record with YAML-serializable frontmatter; extensions field allows custom keys",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:04:56Z",
+    "last_extracted": "2026-04-28T09:04:56Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "git-push-conflict-detection",
+    "claim": "git push IS the sync verb; helper parses commits, checks backend version, applies writes or rejects with standard git fetch-first error",
+    "source": {
+      "file": "docs/concepts/mental-model-in-60-seconds.md",
+      "line_start": 43,
+      "line_end": 45
     },
-    {
-      "id": "git-push-conflict-detection",
-      "claim": "git push IS the sync verb; helper parses commits, checks backend version, applies writes or rejects with standard git fetch-first error",
-      "source": {
-        "file": "docs/concepts/mental-model-in-60-seconds.md",
-        "line_start": 43,
-        "line_end": 45
-      },
-      "source_hash": "5b97292894976b87d691a051da8b8ba32ba0c72b52fee297853adbf332323625",
-      "rationale": "Verified: git-remote-reposix export path (crates/reposix-remote/src/diff.rs) parses fast-import, runs push-time conflict detection per CLAUDE.md OP",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:04:59Z",
-      "last_extracted": "2026-04-28T09:04:59Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "5b97292894976b87d691a051da8b8ba32ba0c72b52fee297853adbf332323625",
+    "rationale": "Verified: git-remote-reposix export path (crates/reposix-remote/src/diff.rs) parses fast-import, runs push-time conflict detection per CLAUDE.md OP",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:04:59Z",
+    "last_extracted": "2026-04-28T09:04:59Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "conflict-semantics-native-git",
+    "claim": "reposix uses native git merge conflicts; conflict recovery is standard git pull --rebase && git push",
+    "source": {
+      "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
+      "line_start": 16,
+      "line_end": 16
     },
-    {
-      "id": "conflict-semantics-native-git",
-      "claim": "reposix uses native git merge conflicts; conflict recovery is standard git pull --rebase && git push",
-      "source": {
-        "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
-        "line_start": 16,
-        "line_end": 16
-      },
-      "source_hash": "2aefcd3f99c94e2f2117c5370aed98f6afebe17f6b9b9a3bfc1ae265728d011c",
-      "rationale": "Design principle: git-native partial clone means merge conflicts surface as text-file conflicts, not custom protocol. Verified by architecture docs.",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:03Z",
-      "last_extracted": "2026-04-28T09:05:03Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "2aefcd3f99c94e2f2117c5370aed98f6afebe17f6b9b9a3bfc1ae265728d011c",
+    "rationale": "Design principle: git-native partial clone means merge conflicts surface as text-file conflicts, not custom protocol. Verified by architecture docs.",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:03Z",
+    "last_extracted": "2026-04-28T09:05:03Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "use-case-80-percent-routine-ops",
+    "claim": "80% of agent operations: status changes, comments, field edits, label adds, link creation absorbed by reposix",
+    "source": {
+      "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
+      "line_start": 42,
+      "line_end": 44
     },
-    {
-      "id": "use-case-80-percent-routine-ops",
-      "claim": "80% of agent operations: status changes, comments, field edits, label adds, link creation absorbed by reposix",
-      "source": {
-        "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
-        "line_start": 42,
-        "line_end": 44
-      },
-      "source_hash": "37a0b8756c0ae31b4d1a872855722255eed937765b9edd4ec40d0256e783ead8",
-      "rationale": "Examples in mental-model doc § 3 and benchmark session.txt show these ops; no measurement of agent operation distribution quantifies the 80%",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:07Z",
-      "last_extracted": "2026-04-28T09:05:07Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "37a0b8756c0ae31b4d1a872855722255eed937765b9edd4ec40d0256e783ead8",
+    "rationale": "Examples in mental-model doc § 3 and benchmark session.txt show these ops; no measurement of agent operation distribution quantifies the 80%",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:07Z",
+    "last_extracted": "2026-04-28T09:05:07Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "audit-trail-sqlite-git-log",
+    "claim": "reposix audit = append-only SQLite + git log (both committed-or-fixture artifacts)",
+    "source": {
+      "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
+      "line_start": 19,
+      "line_end": 19
     },
-    {
-      "id": "audit-trail-sqlite-git-log",
-      "claim": "reposix audit = append-only SQLite + git log (both committed-or-fixture artifacts)",
-      "source": {
-        "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
-        "line_start": 19,
-        "line_end": 19
-      },
-      "source_hash": "0630fa0c9120a9c805317b15ac6afdf0cef59d42feb41fac20e08f81d8ead3a6",
-      "rationale": "Verified: CLAUDE.md OP-3 documents dual-table design (audit_events_cache in cache crate, audit_events in core crate); both append-only WAL",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:16Z",
-      "last_extracted": "2026-04-28T09:05:16Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "0630fa0c9120a9c805317b15ac6afdf0cef59d42feb41fac20e08f81d8ead3a6",
+    "rationale": "Verified: CLAUDE.md OP-3 documents dual-table design (audit_events_cache in cache crate, audit_events in core crate); both append-only WAL",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:16Z",
+    "last_extracted": "2026-04-28T09:05:16Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "mcp-fixture-synthesized-not-live",
+    "claim": "4,883 tokens baseline is against synthesized MCP fixture modeled on Atlassian Forge, not live MCP server",
+    "source": {
+      "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
+      "line_start": 27,
+      "line_end": 32
     },
-    {
-      "id": "mcp-fixture-synthesized-not-live",
-      "claim": "4,883 tokens baseline is against synthesized MCP fixture modeled on Atlassian Forge, not live MCP server",
-      "source": {
-        "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
-        "line_start": 27,
-        "line_end": 32
-      },
-      "source_hash": "9b0fc7d18490479a0a4b44820de5e31356ddd6eb939830695ab8a53311cca812",
-      "rationale": "Caveat documented in note block; real-MCP baseline to land post-v0.12.0 when upstream MCP server GA + stable per tracked v0.12.0 follow-up",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:05:23Z",
-      "last_extracted": "2026-04-28T09:05:23Z",
-      "last_extracted_by": "mark-missing-test-call"
-    }
-  ]
-}
+    "source_hash": "9b0fc7d18490479a0a4b44820de5e31356ddd6eb939830695ab8a53311cca812",
+    "rationale": "Caveat documented in note block; real-MCP baseline to land post-v0.12.0 when upstream MCP server GA + stable per tracked v0.12.0 follow-up",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:05:23Z",
+    "last_extracted": "2026-04-28T09:05:23Z",
+    "last_extracted_by": "mark-missing-test-call"
+  }
+]

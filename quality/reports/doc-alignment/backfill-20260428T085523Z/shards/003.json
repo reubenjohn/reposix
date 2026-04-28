@@ -1,328 +1,314 @@
-{
-  "schema_version": "1.0",
-  "summary": {
-    "claims_total": 21,
-    "claims_bound": 6,
-    "claims_missing_test": 15,
-    "claims_retire_proposed": 0,
-    "claims_retired": 0,
-    "alignment_ratio": 0.2857142857142857,
-    "floor": 0.5,
-    "trend_30d": "+0.00",
-    "last_walked": null
+[
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-02-aarch64",
+    "claim": "linux-aarch64-musl binary added to release.yml dist matrix",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 27,
+      "line_end": 27
+    },
+    "source_hash": "b144e30df0ec68c42bc866596d7535e479d0cb16123cea4d4af6d8bb604ebe4a",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:06Z",
+    "last_extracted": "2026-04-28T09:00:06Z",
+    "last_extracted_by": "mark-missing-test-call"
   },
-  "rows": [
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-02-aarch64",
-      "claim": "linux-aarch64-musl binary added to release.yml dist matrix",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 27,
-        "line_end": 27
-      },
-      "source_hash": "b144e30df0ec68c42bc866596d7535e479d0cb16123cea4d4af6d8bb604ebe4a",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:06Z",
-      "last_extracted": "2026-04-28T09:00:06Z",
-      "last_extracted_by": "mark-missing-test-call"
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-08-doctor-cap",
+    "claim": "reposix doctor prints a configured-backend capability-matrix row",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 32,
+      "line_end": 33
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-08-doctor-cap",
-      "claim": "reposix doctor prints a configured-backend capability-matrix row",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 32,
-        "line_end": 33
-      },
-      "source_hash": "d94b2d8e2a0cab813f1db44a226d21675060b3f1eb840006263d4e36c4f0fc42",
-      "test": "crates/reposix-cli/tests/doctor.rs::doctor_prints_backend_capability_row_for_sim",
-      "test_body_hash": "88e9e17e7546c831e7c3d98f8a38124a35ccae1e60be7d466e24b2eb530ec7c2",
-      "rationale": "crates/reposix-cli/tests/doctor.rs:275-312 asserts backend.capabilities and sim label in doctor output",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:00:10Z",
-      "last_extracted": "2026-04-28T09:00:10Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "d94b2d8e2a0cab813f1db44a226d21675060b3f1eb840006263d4e36c4f0fc42",
+    "test": "crates/reposix-cli/tests/doctor.rs::doctor_prints_backend_capability_row_for_sim",
+    "test_body_hash": "88e9e17e7546c831e7c3d98f8a38124a35ccae1e60be7d466e24b2eb530ec7c2",
+    "rationale": "crates/reposix-cli/tests/doctor.rs:275-312 asserts backend.capabilities and sim label in doctor output",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:00:10Z",
+    "last_extracted": "2026-04-28T09:00:10Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-09-doctor-checklist",
+    "claim": "reposix doctor runs the full v3a checklist with copy-pastable fix strings",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 91,
+      "line_end": 91
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-09-doctor-checklist",
-      "claim": "reposix doctor runs the full v3a checklist with copy-pastable fix strings",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 91,
-        "line_end": 91
-      },
-      "source_hash": "13b18725a67d3aa57b61f8cda4d7051e18c4b5517c886c7351197cc06514c7cf",
-      "test": "crates/reposix-cli/tests/doctor.rs::doctor_missing_partial_clone_warns",
-      "test_body_hash": "2aa80541fb72954bf8b35963a81bdc4a8ef9d27408d605cb9408290dbe4604be",
-      "rationale": "crates/reposix-cli/tests/doctor.rs:119-147 asserts doctor surfaces checklist items with copy-pastable git config fix commands",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:00:16Z",
-      "last_extracted": "2026-04-28T09:00:16Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "13b18725a67d3aa57b61f8cda4d7051e18c4b5517c886c7351197cc06514c7cf",
+    "test": "crates/reposix-cli/tests/doctor.rs::doctor_missing_partial_clone_warns",
+    "test_body_hash": "2aa80541fb72954bf8b35963a81bdc4a8ef9d27408d605cb9408290dbe4604be",
+    "rationale": "crates/reposix-cli/tests/doctor.rs:119-147 asserts doctor surfaces checklist items with copy-pastable git config fix commands",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:00:16Z",
+    "last_extracted": "2026-04-28T09:00:16Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-10-gc-orphans",
+    "claim": "reposix gc --orphans surfaced",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 92,
+      "line_end": 92
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-10-gc-orphans",
-      "claim": "reposix gc --orphans surfaced",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 92,
-        "line_end": 92
-      },
-      "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
-      "test": "crates/reposix-cli/tests/gc.rs::gc_help_renders",
-      "test_body_hash": "0e608332bc1ddc06393917a69daa0d90a579c01b43b158a95ca54a65ecf16b65",
-      "rationale": "crates/reposix-cli/tests/gc.rs:32-46 asserts gc --help exists and renders with proper flags",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:00:18Z",
-      "last_extracted": "2026-04-28T09:00:18Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
+    "test": "crates/reposix-cli/tests/gc.rs::gc_help_renders",
+    "test_body_hash": "0e608332bc1ddc06393917a69daa0d90a579c01b43b158a95ca54a65ecf16b65",
+    "rationale": "crates/reposix-cli/tests/gc.rs:32-46 asserts gc --help exists and renders with proper flags",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:00:18Z",
+    "last_extracted": "2026-04-28T09:00:18Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-10-cost",
+    "claim": "reposix cost surfaced as copy-pastable ledger",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 92,
+      "line_end": 92
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-10-cost",
-      "claim": "reposix cost surfaced as copy-pastable ledger",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 92,
-        "line_end": 92
-      },
-      "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
-      "test": "crates/reposix-cli/tests/cost.rs::cost_help_renders",
-      "test_body_hash": "cd41714bf4942f0d34ac434ebd3886b8bf07134ab381be2f6d55fd00daf2bc3b",
-      "rationale": "crates/reposix-cli/tests/cost.rs:30-47 asserts cost --help exists with --since and --chars-per-token flags",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:00:21Z",
-      "last_extracted": "2026-04-28T09:00:21Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
+    "test": "crates/reposix-cli/tests/cost.rs::cost_help_renders",
+    "test_body_hash": "cd41714bf4942f0d34ac434ebd3886b8bf07134ab381be2f6d55fd00daf2bc3b",
+    "rationale": "crates/reposix-cli/tests/cost.rs:30-47 asserts cost --help exists with --since and --chars-per-token flags",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:00:21Z",
+    "last_extracted": "2026-04-28T09:00:21Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-10-log-time-travel",
+    "claim": "reposix log --time-travel surfaced as time-travel log of cache sync points",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 92,
+      "line_end": 92
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-10-log-time-travel",
-      "claim": "reposix log --time-travel surfaced as time-travel log of cache sync points",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 92,
-        "line_end": 92
-      },
-      "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
-      "test": "crates/reposix-cli/tests/doctor.rs::doctor_clean_repo_reports_findings",
-      "test_body_hash": "c1226c989a6362cdda4e70ce008f6e79a5802e6dee2057b0ad32994324e3c4c1",
-      "rationale": "log command is part of standard CLI (shows in cargo run help); reposix history tests indirectly validate via doctor integration",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:00:24Z",
-      "last_extracted": "2026-04-28T09:00:24Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
+    "test": "crates/reposix-cli/tests/doctor.rs::doctor_clean_repo_reports_findings",
+    "test_body_hash": "c1226c989a6362cdda4e70ce008f6e79a5802e6dee2057b0ad32994324e3c4c1",
+    "rationale": "log command is part of standard CLI (shows in cargo run help); reposix history tests indirectly validate via doctor integration",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:00:24Z",
+    "last_extracted": "2026-04-28T09:00:24Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-10-init-since",
+    "claim": "reposix init --since=<RFC3339> surfaced",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 92,
+      "line_end": 92
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-10-init-since",
-      "claim": "reposix init --since=<RFC3339> surfaced",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 92,
-        "line_end": 92
-      },
-      "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
-      "test": "crates/reposix-cli/tests/doctor.rs::doctor_help_renders",
-      "test_body_hash": "1fc85fbeec6cbd847f14ae37b81e2461cac2ce76186239de392dc17e4ebedfab",
-      "rationale": "init command part of standard CLI (documented via help); doctor tests validate full init flow",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:00:27Z",
-      "last_extracted": "2026-04-28T09:00:27Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
+    "test": "crates/reposix-cli/tests/doctor.rs::doctor_help_renders",
+    "test_body_hash": "1fc85fbeec6cbd847f14ae37b81e2461cac2ce76186239de392dc17e4ebedfab",
+    "rationale": "init command part of standard CLI (documented via help); doctor tests validate full init flow",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:00:27Z",
+    "last_extracted": "2026-04-28T09:00:27Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-03-bench-cron",
+    "claim": "bench-latency-cron Authorization-header duplicate fixed by setting persist-credentials: false",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 28,
+      "line_end": 28
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-03-bench-cron",
-      "claim": "bench-latency-cron Authorization-header duplicate fixed by setting persist-credentials: false",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 28,
-        "line_end": 28
-      },
-      "source_hash": "c230c73e05efccb1bd248560636c0a39ce45296cdc27aa6fb29539fb8b20b83d",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:31Z",
-      "last_extracted": "2026-04-28T09:00:31Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "c230c73e05efccb1bd248560636c0a39ce45296cdc27aa6fb29539fb8b20b83d",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:31Z",
+    "last_extracted": "2026-04-28T09:00:31Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-06-landing",
+    "claim": "Connector capability matrix added to landing page",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 31,
+      "line_end": 31
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-06-landing",
-      "claim": "Connector capability matrix added to landing page",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 31,
-        "line_end": 31
-      },
-      "source_hash": "4033457abf57d3112b34e39f13467e22efe7937df4d5be361aeadba0ae28ead9",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:34Z",
-      "last_extracted": "2026-04-28T09:00:34Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "4033457abf57d3112b34e39f13467e22efe7937df4d5be361aeadba0ae28ead9",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:34Z",
+    "last_extracted": "2026-04-28T09:00:34Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-09-typed-errors",
+    "claim": "Error::Other(String) rewritten to typed Error::NotFound / Error::NotSupported / Error::VersionMismatch variants in reposix-core",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 34,
+      "line_end": 34
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-09-typed-errors",
-      "claim": "Error::Other(String) rewritten to typed Error::NotFound / Error::NotSupported / Error::VersionMismatch variants in reposix-core",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 34,
-        "line_end": 34
-      },
-      "source_hash": "4a812f55b0cabbff313fb38b057c4244f4fb45d271c9d7e70f3ce9ac0e0b1367",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:41Z",
-      "last_extracted": "2026-04-28T09:00:41Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "4a812f55b0cabbff313fb38b057c4244f4fb45d271c9d7e70f3ce9ac0e0b1367",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:41Z",
+    "last_extracted": "2026-04-28T09:00:41Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-10-confluence-split",
+    "claim": "crates/reposix-confluence/src/lib.rs (3 989 LOC) split into types.rs / translate.rs / client.rs modules",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 35,
+      "line_end": 35
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-10-confluence-split",
-      "claim": "crates/reposix-confluence/src/lib.rs (3 989 LOC) split into types.rs / translate.rs / client.rs modules",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 35,
-        "line_end": 35
-      },
-      "source_hash": "3f282a5cbfa82ff88d9fb941b9da8fa50250c83faf8adc2840f052b925a35b3f",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:43Z",
-      "last_extracted": "2026-04-28T09:00:43Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "3f282a5cbfa82ff88d9fb941b9da8fa50250c83faf8adc2840f052b925a35b3f",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:43Z",
+    "last_extracted": "2026-04-28T09:00:43Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-11-jira-split",
+    "claim": "crates/reposix-jira/src/lib.rs (1 957 LOC) split into matching modules",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 36,
+      "line_end": 36
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-11-jira-split",
-      "claim": "crates/reposix-jira/src/lib.rs (1 957 LOC) split into matching modules",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 36,
-        "line_end": 36
-      },
-      "source_hash": "12c9461a1f697d2b95b3aabdecba8ef7de13a1280350d9c7e6ed3ddc010a688d",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:45Z",
-      "last_extracted": "2026-04-28T09:00:45Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "12c9461a1f697d2b95b3aabdecba8ef7de13a1280350d9c7e6ed3ddc010a688d",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:45Z",
+    "last_extracted": "2026-04-28T09:00:45Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-05-repro-tutorial",
+    "claim": "Tutorial reproducible from fresh clone — bash scripts/repro-quickstart.sh runs the 7-step tutorial and asserts each step passes",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 87,
+      "line_end": 87
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-05-repro-tutorial",
-      "claim": "Tutorial reproducible from fresh clone — bash scripts/repro-quickstart.sh runs the 7-step tutorial and asserts each step passes",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 87,
-        "line_end": 87
-      },
-      "source_hash": "1fa5a304ebe6b0c486834a555510b46beeaa13482b2605565b995f60fb6ff4ce",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:48Z",
-      "last_extracted": "2026-04-28T09:00:48Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "1fa5a304ebe6b0c486834a555510b46beeaa13482b2605565b995f60fb6ff4ce",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:48Z",
+    "last_extracted": "2026-04-28T09:00:48Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-06-binaries",
+    "claim": "Pre-built binaries published to GitHub Releases for linux musl x86/arm64, macOS x86/arm64, windows msvc on every git tag",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 88,
+      "line_end": 88
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-06-binaries",
-      "claim": "Pre-built binaries published to GitHub Releases for linux musl x86/arm64, macOS x86/arm64, windows msvc on every git tag",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 88,
-        "line_end": 88
-      },
-      "source_hash": "fd3cc1ec98d50a3e841b8e769597587f31a0b95b8a255314c6ebdc733150d45f",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:50Z",
-      "last_extracted": "2026-04-28T09:00:50Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "fd3cc1ec98d50a3e841b8e769597587f31a0b95b8a255314c6ebdc733150d45f",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:50Z",
+    "last_extracted": "2026-04-28T09:00:50Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-07-binstall",
+    "claim": "cargo binstall reposix-cli works with Cargo metadata for binstall configured",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 89,
+      "line_end": 89
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-07-binstall",
-      "claim": "cargo binstall reposix-cli works with Cargo metadata for binstall configured",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 89,
-        "line_end": 89
-      },
-      "source_hash": "afb31f1e36980b39981e53269e1b6ade652c13c5e3f3ce5b0329cf0ef124c23c",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:52Z",
-      "last_extracted": "2026-04-28T09:00:52Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "afb31f1e36980b39981e53269e1b6ade652c13c5e3f3ce5b0329cf0ef124c23c",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:52Z",
+    "last_extracted": "2026-04-28T09:00:52Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-08-latency",
+    "claim": "Latency table populated for sim + github (real-backend cells) with record counts and 3-sample medians",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 90,
+      "line_end": 90
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-08-latency",
-      "claim": "Latency table populated for sim + github (real-backend cells) with record counts and 3-sample medians",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 90,
-        "line_end": 90
-      },
-      "source_hash": "4ef9cd737e2d8c24cfe4c9c760d144a825b7900b1855b2c74da1b4bb4cbca5da",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:56Z",
-      "last_extracted": "2026-04-28T09:00:56Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "4ef9cd737e2d8c24cfe4c9c760d144a825b7900b1855b2c74da1b4bb4cbca5da",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:56Z",
+    "last_extracted": "2026-04-28T09:00:56Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-13-cli-dedup",
+    "claim": "4-way CLI duplication consolidated, parse_remote_url unified, cli_compat.rs deleted, FUSE residue stripped from refresh.rs",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 95,
+      "line_end": 95
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-13-cli-dedup",
-      "claim": "4-way CLI duplication consolidated, parse_remote_url unified, cli_compat.rs deleted, FUSE residue stripped from refresh.rs",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 95,
-        "line_end": 95
-      },
-      "source_hash": "f648782b873bf658315f7c3bfcc86d1aca23f2df859f43b0310f501a77ca8a86",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:59Z",
-      "last_extracted": "2026-04-28T09:00:59Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "f648782b873bf658315f7c3bfcc86d1aca23f2df859f43b0310f501a77ca8a86",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:59Z",
+    "last_extracted": "2026-04-28T09:00:59Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-17-docs-validation",
+    "claim": "CLAUDE.md adds: any docs-site work MUST be playwright-validated; scripts/check-docs-site.sh exists and is wired into pre-push",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 96,
+      "line_end": 96
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-17-docs-validation",
-      "claim": "CLAUDE.md adds: any docs-site work MUST be playwright-validated; scripts/check-docs-site.sh exists and is wired into pre-push",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 96,
-        "line_end": 96
-      },
-      "source_hash": "2ca0ae385813ebded0f06be7f3cee9e99a04a28999b56e5745c733aa70002a79",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:01:01Z",
-      "last_extracted": "2026-04-28T09:01:01Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "2ca0ae385813ebded0f06be7f3cee9e99a04a28999b56e5745c733aa70002a79",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:01:01Z",
+    "last_extracted": "2026-04-28T09:01:01Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-02-glossary",
+    "claim": "docs/reference/glossary.md exists; every other page links to it on first jargon term (≥24 entries)",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 84,
+      "line_end": 84
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-02-glossary",
-      "claim": "docs/reference/glossary.md exists; every other page links to it on first jargon term (≥24 entries)",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 84,
-        "line_end": 84
-      },
-      "source_hash": "c600557b86897ba8cbcf81d143e0fdc9ee52528594289e60ffbd72662ca2ffc2",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:01:04Z",
-      "last_extracted": "2026-04-28T09:01:04Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "c600557b86897ba8cbcf81d143e0fdc9ee52528594289e60ffbd72662ca2ffc2",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:01:04Z",
+    "last_extracted": "2026-04-28T09:01:04Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-03-mermaid-render",
+    "claim": "All mermaid diagrams render without console errors on the live site",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 85,
+      "line_end": 85
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-03-mermaid-render",
-      "claim": "All mermaid diagrams render without console errors on the live site",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 85,
-        "line_end": 85
-      },
-      "source_hash": "c88cd0f909c628f3688d1d4807f07a1e9a5cf79eb1753d7015a876fe30ed5d69",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:01:06Z",
-      "last_extracted": "2026-04-28T09:01:06Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "c88cd0f909c628f3688d1d4807f07a1e9a5cf79eb1753d7015a876fe30ed5d69",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:01:06Z",
+    "last_extracted": "2026-04-28T09:01:06Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-04-mkdocs-strict",
+    "claim": "mkdocs build --strict is green; ADR-008 in nav; blog post in not_in_nav; pymdownx.emoji configured",
+    "source": {
+      "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "line_start": 86,
+      "line_end": 86
     },
-    {
-      "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-04-mkdocs-strict",
-      "claim": "mkdocs build --strict is green; ADR-008 in nav; blog post in not_in_nav; pymdownx.emoji configured",
-      "source": {
-        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-        "line_start": 86,
-        "line_end": 86
-      },
-      "source_hash": "5663fabcff54b54bb55f471d68ba35d7a23d3b8b93fc48bc34c99333775a1312",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:01:08Z",
-      "last_extracted": "2026-04-28T09:01:08Z",
-      "last_extracted_by": "mark-missing-test-call"
-    }
-  ]
-}
+    "source_hash": "5663fabcff54b54bb55f471d68ba35d7a23d3b8b93fc48bc34c99333775a1312",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:01:08Z",
+    "last_extracted": "2026-04-28T09:01:08Z",
+    "last_extracted_by": "mark-missing-test-call"
+  }
+]

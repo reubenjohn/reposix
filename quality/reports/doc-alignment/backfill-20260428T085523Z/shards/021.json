@@ -1,322 +1,308 @@
-{
-  "schema_version": "1.0",
-  "summary": {
-    "claims_total": 18,
-    "claims_bound": 18,
-    "claims_missing_test": 0,
-    "claims_retire_proposed": 0,
-    "claims_retired": 0,
-    "alignment_ratio": 1.0,
-    "floor": 0.5,
-    "trend_30d": "+0.00",
-    "last_walked": null
+[
+  {
+    "id": "docs/reference/testing-targets/confluence-api-key",
+    "claim": "ATLASSIAN_API_KEY env var is required for Confluence tests",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 33,
+      "line_end": 36
+    },
+    "source_hash": "fc59fc12a90356c10441cae4bef1a467e4da365df48c6163927582b72f9cab31",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
+    "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
+    "rationale": "skip_if_no_env! macro at line 138 checks ATLASSIAN_API_KEY presence; omitting it causes test skip with SKIP message",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:20Z",
+    "last_extracted": "2026-04-28T09:08:20Z",
+    "last_extracted_by": "bind-call"
   },
-  "rows": [
-    {
-      "id": "docs/reference/testing-targets/confluence-api-key",
-      "claim": "ATLASSIAN_API_KEY env var is required for Confluence tests",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 33,
-        "line_end": 36
-      },
-      "source_hash": "fc59fc12a90356c10441cae4bef1a467e4da365df48c6163927582b72f9cab31",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
-      "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
-      "rationale": "skip_if_no_env! macro at line 138 checks ATLASSIAN_API_KEY presence; omitting it causes test skip with SKIP message",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:20Z",
-      "last_extracted": "2026-04-28T09:08:20Z",
-      "last_extracted_by": "bind-call"
+  {
+    "id": "docs/reference/testing-targets/confluence-email",
+    "claim": "ATLASSIAN_EMAIL env var is required for Confluence tests",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 33,
+      "line_end": 36
     },
-    {
-      "id": "docs/reference/testing-targets/confluence-email",
-      "claim": "ATLASSIAN_EMAIL env var is required for Confluence tests",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 33,
-        "line_end": 36
-      },
-      "source_hash": "fc59fc12a90356c10441cae4bef1a467e4da365df48c6163927582b72f9cab31",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
-      "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
-      "rationale": "skip_if_no_env! macro at line 138 checks ATLASSIAN_EMAIL presence",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:20Z",
-      "last_extracted": "2026-04-28T09:08:20Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "fc59fc12a90356c10441cae4bef1a467e4da365df48c6163927582b72f9cab31",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
+    "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
+    "rationale": "skip_if_no_env! macro at line 138 checks ATLASSIAN_EMAIL presence",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:20Z",
+    "last_extracted": "2026-04-28T09:08:20Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/confluence-tenant",
+    "claim": "REPOSIX_CONFLUENCE_TENANT env var is required for Confluence tests",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 33,
+      "line_end": 38
     },
-    {
-      "id": "docs/reference/testing-targets/confluence-tenant",
-      "claim": "REPOSIX_CONFLUENCE_TENANT env var is required for Confluence tests",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 33,
-        "line_end": 38
-      },
-      "source_hash": "da3a96ed3d11cd36975cd73fad3465a83c88a2f2494a373d8a2978e33b4d364d",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
-      "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
-      "rationale": "skip_if_no_env! macro at line 140 checks REPOSIX_CONFLUENCE_TENANT presence",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:21Z",
-      "last_extracted": "2026-04-28T09:08:21Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "da3a96ed3d11cd36975cd73fad3465a83c88a2f2494a373d8a2978e33b4d364d",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
+    "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
+    "rationale": "skip_if_no_env! macro at line 140 checks REPOSIX_CONFLUENCE_TENANT presence",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:21Z",
+    "last_extracted": "2026-04-28T09:08:21Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/confluence-init-success",
+    "claim": "reposix init confluence::TokenWorld succeeds with correct env vars",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 23,
+      "line_end": 29
     },
-    {
-      "id": "docs/reference/testing-targets/confluence-init-success",
-      "claim": "reposix init confluence::TokenWorld succeeds with correct env vars",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 23,
-        "line_end": 29
-      },
-      "source_hash": "e0fc82ed2bff773d078fdec886c7b45db10b6c9666c210bca67e7566b22541cc",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
-      "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
-      "rationale": "run_init_and_assert(confluence::TokenWorld) succeeds at line 144, assertion passes at lines 100-104",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:21Z",
-      "last_extracted": "2026-04-28T09:08:21Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "e0fc82ed2bff773d078fdec886c7b45db10b6c9666c210bca67e7566b22541cc",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
+    "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
+    "rationale": "run_init_and_assert(confluence::TokenWorld) succeeds at line 144, assertion passes at lines 100-104",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:21Z",
+    "last_extracted": "2026-04-28T09:08:21Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/confluence-url-format",
+    "claim": "remote.origin.url encodes /confluence/projects/TokenWorld marker",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 23,
+      "line_end": 29
     },
-    {
-      "id": "docs/reference/testing-targets/confluence-url-format",
-      "claim": "remote.origin.url encodes /confluence/projects/TokenWorld marker",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 23,
-        "line_end": 29
-      },
-      "source_hash": "e0fc82ed2bff773d078fdec886c7b45db10b6c9666c210bca67e7566b22541cc",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
-      "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
-      "rationale": "Assertion at lines 148-151 verifies url ends with /confluence/projects/TokenWorld",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:21Z",
-      "last_extracted": "2026-04-28T09:08:21Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "e0fc82ed2bff773d078fdec886c7b45db10b6c9666c210bca67e7566b22541cc",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
+    "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
+    "rationale": "Assertion at lines 148-151 verifies url ends with /confluence/projects/TokenWorld",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:21Z",
+    "last_extracted": "2026-04-28T09:08:21Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/github-token",
+    "claim": "GITHUB_TOKEN env var is required for GitHub tests",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 67,
+      "line_end": 72
     },
-    {
-      "id": "docs/reference/testing-targets/github-token",
-      "claim": "GITHUB_TOKEN env var is required for GitHub tests",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 67,
-        "line_end": 72
-      },
-      "source_hash": "79ce6db95c588526661a8555ded0b3ee866f5f79948218a2e5e0d118d3995053",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
-      "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
-      "rationale": "skip_if_no_env! macro at line 122 checks GITHUB_TOKEN presence",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:29Z",
-      "last_extracted": "2026-04-28T09:08:29Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "79ce6db95c588526661a8555ded0b3ee866f5f79948218a2e5e0d118d3995053",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
+    "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
+    "rationale": "skip_if_no_env! macro at line 122 checks GITHUB_TOKEN presence",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:29Z",
+    "last_extracted": "2026-04-28T09:08:29Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/github-init-success",
+    "claim": "reposix init github::reubenjohn/reposix succeeds with GITHUB_TOKEN",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 60,
+      "line_end": 65
     },
-    {
-      "id": "docs/reference/testing-targets/github-init-success",
-      "claim": "reposix init github::reubenjohn/reposix succeeds with GITHUB_TOKEN",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 60,
-        "line_end": 65
-      },
-      "source_hash": "08aa8af80be9ca7daa26a65abdb165fc3a83e90d42dc9e6c0c4f514ed32b783b",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
-      "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
-      "rationale": "run_init_and_assert(github::reubenjohn/reposix) succeeds at lines 123-125, assertion passes",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:29Z",
-      "last_extracted": "2026-04-28T09:08:29Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "08aa8af80be9ca7daa26a65abdb165fc3a83e90d42dc9e6c0c4f514ed32b783b",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
+    "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
+    "rationale": "run_init_and_assert(github::reubenjohn/reposix) succeeds at lines 123-125, assertion passes",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:29Z",
+    "last_extracted": "2026-04-28T09:08:29Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/github-url-prefix",
+    "claim": "remote.origin.url starts with reposix::https://api.github.com/",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 60,
+      "line_end": 65
     },
-    {
-      "id": "docs/reference/testing-targets/github-url-prefix",
-      "claim": "remote.origin.url starts with reposix::https://api.github.com/",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 60,
-        "line_end": 65
-      },
-      "source_hash": "08aa8af80be9ca7daa26a65abdb165fc3a83e90d42dc9e6c0c4f514ed32b783b",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
-      "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
-      "rationale": "Assertion at lines 127-130 verifies url.contains(/projects/reubenjohn/reposix)",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:29Z",
-      "last_extracted": "2026-04-28T09:08:29Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "08aa8af80be9ca7daa26a65abdb165fc3a83e90d42dc9e6c0c4f514ed32b783b",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
+    "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
+    "rationale": "Assertion at lines 127-130 verifies url.contains(/projects/reubenjohn/reposix)",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:29Z",
+    "last_extracted": "2026-04-28T09:08:29Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/github-project-encoding",
+    "claim": "remote.origin.url encodes project as reubenjohn/reposix",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 60,
+      "line_end": 65
     },
-    {
-      "id": "docs/reference/testing-targets/github-project-encoding",
-      "claim": "remote.origin.url encodes project as reubenjohn/reposix",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 60,
-        "line_end": 65
-      },
-      "source_hash": "08aa8af80be9ca7daa26a65abdb165fc3a83e90d42dc9e6c0c4f514ed32b783b",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
-      "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
-      "rationale": "Assertion at line 128 verifies url contains /projects/reubenjohn/reposix",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:29Z",
-      "last_extracted": "2026-04-28T09:08:29Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "08aa8af80be9ca7daa26a65abdb165fc3a83e90d42dc9e6c0c4f514ed32b783b",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
+    "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
+    "rationale": "Assertion at line 128 verifies url contains /projects/reubenjohn/reposix",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:29Z",
+    "last_extracted": "2026-04-28T09:08:29Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/jira-email",
+    "claim": "JIRA_EMAIL env var is required for JIRA tests",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 100,
+      "line_end": 109
     },
-    {
-      "id": "docs/reference/testing-targets/jira-email",
-      "claim": "JIRA_EMAIL env var is required for JIRA tests",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 100,
-        "line_end": 109
-      },
-      "source_hash": "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
-      "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
-      "rationale": "skip_if_no_env! macro at line 158 checks JIRA_EMAIL presence",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:34Z",
-      "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
+    "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
+    "rationale": "skip_if_no_env! macro at line 158 checks JIRA_EMAIL presence",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:34Z",
+    "last_extracted": "2026-04-28T09:08:34Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/jira-token",
+    "claim": "JIRA_API_TOKEN env var is required for JIRA tests",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 100,
+      "line_end": 109
     },
-    {
-      "id": "docs/reference/testing-targets/jira-token",
-      "claim": "JIRA_API_TOKEN env var is required for JIRA tests",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 100,
-        "line_end": 109
-      },
-      "source_hash": "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
-      "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
-      "rationale": "skip_if_no_env! macro at line 158 checks JIRA_API_TOKEN presence",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:34Z",
-      "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
+    "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
+    "rationale": "skip_if_no_env! macro at line 158 checks JIRA_API_TOKEN presence",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:34Z",
+    "last_extracted": "2026-04-28T09:08:34Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/jira-instance",
+    "claim": "REPOSIX_JIRA_INSTANCE env var is required for JIRA tests",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 100,
+      "line_end": 109
     },
-    {
-      "id": "docs/reference/testing-targets/jira-instance",
-      "claim": "REPOSIX_JIRA_INSTANCE env var is required for JIRA tests",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 100,
-        "line_end": 109
-      },
-      "source_hash": "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
-      "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
-      "rationale": "skip_if_no_env! macro at line 158 checks REPOSIX_JIRA_INSTANCE presence",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:34Z",
-      "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
+    "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
+    "rationale": "skip_if_no_env! macro at line 158 checks REPOSIX_JIRA_INSTANCE presence",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:34Z",
+    "last_extracted": "2026-04-28T09:08:34Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/jira-test-project-override",
+    "claim": "JIRA_TEST_PROJECT overrides default TEST project key",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 94,
+      "line_end": 98
     },
-    {
-      "id": "docs/reference/testing-targets/jira-test-project-override",
-      "claim": "JIRA_TEST_PROJECT overrides default TEST project key",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 94,
-        "line_end": 98
-      },
-      "source_hash": "a8f2f7328f59a9a6a05993dfc8a99874ea181e96528bbb058c4580d65657f97a",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::jira_test_project",
-      "test_body_hash": "e566b0f8dc7efc1ef47487d2235d06e35c0d0784eda53256eb322d20cf3df1d0",
-      "rationale": "jira_test_project() fn at lines 79-83 checks JIRA_TEST_PROJECT first at line 80",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:34Z",
-      "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "a8f2f7328f59a9a6a05993dfc8a99874ea181e96528bbb058c4580d65657f97a",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::jira_test_project",
+    "test_body_hash": "e566b0f8dc7efc1ef47487d2235d06e35c0d0784eda53256eb322d20cf3df1d0",
+    "rationale": "jira_test_project() fn at lines 79-83 checks JIRA_TEST_PROJECT first at line 80",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:34Z",
+    "last_extracted": "2026-04-28T09:08:34Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/jira-reposix-override",
+    "claim": "REPOSIX_JIRA_PROJECT as fallback project key override",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 94,
+      "line_end": 98
     },
-    {
-      "id": "docs/reference/testing-targets/jira-reposix-override",
-      "claim": "REPOSIX_JIRA_PROJECT as fallback project key override",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 94,
-        "line_end": 98
-      },
-      "source_hash": "a8f2f7328f59a9a6a05993dfc8a99874ea181e96528bbb058c4580d65657f97a",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::jira_test_project",
-      "test_body_hash": "e566b0f8dc7efc1ef47487d2235d06e35c0d0784eda53256eb322d20cf3df1d0",
-      "rationale": "jira_test_project() fn checks REPOSIX_JIRA_PROJECT as fallback at line 81",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:34Z",
-      "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "a8f2f7328f59a9a6a05993dfc8a99874ea181e96528bbb058c4580d65657f97a",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::jira_test_project",
+    "test_body_hash": "e566b0f8dc7efc1ef47487d2235d06e35c0d0784eda53256eb322d20cf3df1d0",
+    "rationale": "jira_test_project() fn checks REPOSIX_JIRA_PROJECT as fallback at line 81",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:34Z",
+    "last_extracted": "2026-04-28T09:08:34Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/jira-init-success",
+    "claim": "reposix init jira::TEST succeeds with required env vars",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 94,
+      "line_end": 99
     },
-    {
-      "id": "docs/reference/testing-targets/jira-init-success",
-      "claim": "reposix init jira::TEST succeeds with required env vars",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 94,
-        "line_end": 99
-      },
-      "source_hash": "c382a892597c1b471d4a3a75c59748f9f22f7f0e7fc61d35f9eb56a857ee36ad",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
-      "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
-      "rationale": "run_init_and_assert(jira::TEST) succeeds at lines 162-163, assertion passes at lines 100-104",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:41Z",
-      "last_extracted": "2026-04-28T09:08:41Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "c382a892597c1b471d4a3a75c59748f9f22f7f0e7fc61d35f9eb56a857ee36ad",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
+    "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
+    "rationale": "run_init_and_assert(jira::TEST) succeeds at lines 162-163, assertion passes at lines 100-104",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:41Z",
+    "last_extracted": "2026-04-28T09:08:41Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/jira-url-format",
+    "claim": "remote.origin.url encodes /jira/projects/TEST marker",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 94,
+      "line_end": 99
     },
-    {
-      "id": "docs/reference/testing-targets/jira-url-format",
-      "claim": "remote.origin.url encodes /jira/projects/TEST marker",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 94,
-        "line_end": 99
-      },
-      "source_hash": "c382a892597c1b471d4a3a75c59748f9f22f7f0e7fc61d35f9eb56a857ee36ad",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
-      "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
-      "rationale": "Assertion at lines 167-170 verifies url ends with /jira/projects/TEST",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:41Z",
-      "last_extracted": "2026-04-28T09:08:41Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "c382a892597c1b471d4a3a75c59748f9f22f7f0e7fc61d35f9eb56a857ee36ad",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
+    "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
+    "rationale": "Assertion at lines 167-170 verifies url ends with /jira/projects/TEST",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:41Z",
+    "last_extracted": "2026-04-28T09:08:41Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/skip-without-creds",
+    "claim": "Tests skip cleanly without env vars (fail-closed by default)",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 134,
+      "line_end": 140
     },
-    {
-      "id": "docs/reference/testing-targets/skip-without-creds",
-      "claim": "Tests skip cleanly without env vars (fail-closed by default)",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 134,
-        "line_end": 140
-      },
-      "source_hash": "95b5f28b22700c5f8fe8091c385648b80f8aa26a48629bb14be3ffe5e6ef2cd8",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::skip_pattern_compiles_and_runs_without_creds",
-      "test_body_hash": "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409",
-      "rationale": "Test at line 177 validates skip behavior; env vars cleared, skip_if_no_env! returns cleanly at lines 200-210",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:41Z",
-      "last_extracted": "2026-04-28T09:08:41Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "95b5f28b22700c5f8fe8091c385648b80f8aa26a48629bb14be3ffe5e6ef2cd8",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::skip_pattern_compiles_and_runs_without_creds",
+    "test_body_hash": "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409",
+    "rationale": "Test at line 177 validates skip behavior; env vars cleared, skip_if_no_env! returns cleanly at lines 200-210",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:41Z",
+    "last_extracted": "2026-04-28T09:08:41Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/reference/testing-targets/skip-no-panic",
+    "claim": "skip_if_no_env! early-returns without panic",
+    "source": {
+      "file": "docs/reference/testing-targets.md",
+      "line_start": 134,
+      "line_end": 140
     },
-    {
-      "id": "docs/reference/testing-targets/skip-no-panic",
-      "claim": "skip_if_no_env! early-returns without panic",
-      "source": {
-        "file": "docs/reference/testing-targets.md",
-        "line_start": 134,
-        "line_end": 140
-      },
-      "source_hash": "95b5f28b22700c5f8fe8091c385648b80f8aa26a48629bb14be3ffe5e6ef2cd8",
-      "test": "crates/reposix-cli/tests/agent_flow_real.rs::skip_pattern_compiles_and_runs_without_creds",
-      "test_body_hash": "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409",
-      "rationale": "catch_unwind assertion at lines 207-209 confirms early-return path, not panic",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:41Z",
-      "last_extracted": "2026-04-28T09:08:41Z",
-      "last_extracted_by": "bind-call"
-    }
-  ]
-}
+    "source_hash": "95b5f28b22700c5f8fe8091c385648b80f8aa26a48629bb14be3ffe5e6ef2cd8",
+    "test": "crates/reposix-cli/tests/agent_flow_real.rs::skip_pattern_compiles_and_runs_without_creds",
+    "test_body_hash": "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409",
+    "rationale": "catch_unwind assertion at lines 207-209 confirms early-return path, not panic",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:41Z",
+    "last_extracted": "2026-04-28T09:08:41Z",
+    "last_extracted_by": "bind-call"
+  }
+]

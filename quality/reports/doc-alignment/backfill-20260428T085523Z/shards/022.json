@@ -1,152 +1,138 @@
-{
-  "schema_version": "1.0",
-  "summary": {
-    "claims_total": 8,
-    "claims_bound": 8,
-    "claims_missing_test": 0,
-    "claims_retire_proposed": 0,
-    "claims_retired": 0,
-    "alignment_ratio": 1.0,
-    "floor": 0.5,
-    "trend_30d": "+0.00",
-    "last_walked": null
+[
+  {
+    "id": "docs/research/initial-report.md/blobs-lazy",
+    "claim": "Blob objects are not persisted during build_from; they are materialized lazily on-demand via read_blob",
+    "source": {
+      "file": "docs/research/initial-report.md",
+      "line_start": 16,
+      "line_end": 17
+    },
+    "source_hash": "a2508b66acdcf7cbb31160c03d2609859df9d95612d61e9beb98fdd93f87b962",
+    "test": "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from",
+    "test_body_hash": "009ffcc580b9ac30fc5f8a5cb426f49873b72de5429389f198ca38dbd4e2e1ae",
+    "rationale": "Test directly asserts blob_count == 0 after build_from and separately validates blob materialization works",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:44Z",
+    "last_extracted": "2026-04-28T09:08:44Z",
+    "last_extracted_by": "bind-call"
   },
-  "rows": [
-    {
-      "id": "docs/research/initial-report.md/blobs-lazy",
-      "claim": "Blob objects are not persisted during build_from; they are materialized lazily on-demand via read_blob",
-      "source": {
-        "file": "docs/research/initial-report.md",
-        "line_start": 16,
-        "line_end": 17
-      },
-      "source_hash": "a2508b66acdcf7cbb31160c03d2609859df9d95612d61e9beb98fdd93f87b962",
-      "test": "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from",
-      "test_body_hash": "009ffcc580b9ac30fc5f8a5cb426f49873b72de5429389f198ca38dbd4e2e1ae",
-      "rationale": "Test directly asserts blob_count == 0 after build_from and separately validates blob materialization works",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:44Z",
-      "last_extracted": "2026-04-28T09:08:44Z",
-      "last_extracted_by": "bind-call"
+  {
+    "id": "docs/research/initial-report.md/yaml-frontmatter-metadata",
+    "claim": "Issue metadata is encoded in YAML frontmatter within Markdown files; server-controlled fields (id, version) are stripped on export to prevent hijacking",
+    "source": {
+      "file": "docs/research/initial-report.md",
+      "line_start": 62,
+      "line_end": 72
     },
-    {
-      "id": "docs/research/initial-report.md/yaml-frontmatter-metadata",
-      "claim": "Issue metadata is encoded in YAML frontmatter within Markdown files; server-controlled fields (id, version) are stripped on export to prevent hijacking",
-      "source": {
-        "file": "docs/research/initial-report.md",
-        "line_start": 62,
-        "line_end": 72
-      },
-      "source_hash": "16a498209da64fa9aaf31f462732ddbe1d145ca3b3e10004e6e7c97f31dafa43",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields",
-      "test_body_hash": "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b",
-      "rationale": "Test verifies that id/version overrides in frontmatter are rejected and replaced with server-authoritative values before PATCH",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:48Z",
-      "last_extracted": "2026-04-28T09:08:48Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "16a498209da64fa9aaf31f462732ddbe1d145ca3b3e10004e6e7c97f31dafa43",
+    "test": "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields",
+    "test_body_hash": "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b",
+    "rationale": "Test verifies that id/version overrides in frontmatter are rejected and replaced with server-authoritative values before PATCH",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:48Z",
+    "last_extracted": "2026-04-28T09:08:48Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/research/initial-report.md/conflict-rejection",
+    "claim": "git push against stale base is rejected with standard git error; agent recovery is git pull --rebase",
+    "source": {
+      "file": "docs/research/initial-report.md",
+      "line_start": 140,
+      "line_end": 142
     },
-    {
-      "id": "docs/research/initial-report.md/conflict-rejection",
-      "claim": "git push against stale base is rejected with standard git error; agent recovery is git pull --rebase",
-      "source": {
-        "file": "docs/research/initial-report.md",
-        "line_start": 140,
-        "line_end": 142
-      },
-      "source_hash": "c5c4beb92d6196401ccedbadb0f7ee5ff3c6738986fb7b147c53b73d81e0b0d7",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
-      "test_body_hash": "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97",
-      "rationale": "Test verifies stale version rejects with canned 'fetch first' error; stderr mentions git pull --rebase",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:51Z",
-      "last_extracted": "2026-04-28T09:08:51Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "c5c4beb92d6196401ccedbadb0f7ee5ff3c6738986fb7b147c53b73d81e0b0d7",
+    "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
+    "test_body_hash": "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97",
+    "rationale": "Test verifies stale version rejects with canned 'fetch first' error; stderr mentions git pull --rebase",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:51Z",
+    "last_extracted": "2026-04-28T09:08:51Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/research/agentic-engineering-reference.md/dark-factory-blob-limit-teaching",
+    "claim": "On blob-limit exceeded, the helper emits error text containing git sparse-checkout command so stderr-reading agents learn recovery without context",
+    "source": {
+      "file": "docs/research/agentic-engineering-reference.md",
+      "line_start": 29,
+      "line_end": 31
     },
-    {
-      "id": "docs/research/agentic-engineering-reference.md/dark-factory-blob-limit-teaching",
-      "claim": "On blob-limit exceeded, the helper emits error text containing git sparse-checkout command so stderr-reading agents learn recovery without context",
-      "source": {
-        "file": "docs/research/agentic-engineering-reference.md",
-        "line_start": 29,
-        "line_end": 31
-      },
-      "source_hash": "e43df21293c88d3aa16a957bc5a83c86bedbc99411fddd45cbdde8eb7d262b5f",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
-      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
-      "rationale": "Regression test verifies BLOB_LIMIT_EXCEEDED_FMT constant contains literal 'git sparse-checkout' text",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:57Z",
-      "last_extracted": "2026-04-28T09:08:57Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "e43df21293c88d3aa16a957bc5a83c86bedbc99411fddd45cbdde8eb7d262b5f",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
+    "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
+    "rationale": "Regression test verifies BLOB_LIMIT_EXCEEDED_FMT constant contains literal 'git sparse-checkout' text",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:57Z",
+    "last_extracted": "2026-04-28T09:08:57Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/research/agentic-engineering-reference.md/dark-factory-conflict-teaching",
+    "claim": "On push-conflict (stale remote), helper emits diagnostic containing git pull --rebase so agents learn recovery without context",
+    "source": {
+      "file": "docs/research/agentic-engineering-reference.md",
+      "line_start": 29,
+      "line_end": 31
     },
-    {
-      "id": "docs/research/agentic-engineering-reference.md/dark-factory-conflict-teaching",
-      "claim": "On push-conflict (stale remote), helper emits diagnostic containing git pull --rebase so agents learn recovery without context",
-      "source": {
-        "file": "docs/research/agentic-engineering-reference.md",
-        "line_start": 29,
-        "line_end": 31
-      },
-      "source_hash": "e43df21293c88d3aa16a957bc5a83c86bedbc99411fddd45cbdde8eb7d262b5f",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
-      "rationale": "Regression test verifies conflict path must contain literal 'git pull --rebase' and 'error refs/heads/main fetch first' status text",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:59Z",
-      "last_extracted": "2026-04-28T09:08:59Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "e43df21293c88d3aa16a957bc5a83c86bedbc99411fddd45cbdde8eb7d262b5f",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
+    "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
+    "rationale": "Regression test verifies conflict path must contain literal 'git pull --rebase' and 'error refs/heads/main fetch first' status text",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:59Z",
+    "last_extracted": "2026-04-28T09:08:59Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/research/agentic-engineering-reference.md/reposix-tainted-default",
+    "claim": "Remote content (all bytes from backends) is treated as Tainted by default and materialization writes append-only audit events",
+    "source": {
+      "file": "docs/research/agentic-engineering-reference.md",
+      "line_start": 135,
+      "line_end": 147
     },
-    {
-      "id": "docs/research/agentic-engineering-reference.md/reposix-tainted-default",
-      "claim": "Remote content (all bytes from backends) is treated as Tainted by default and materialization writes append-only audit events",
-      "source": {
-        "file": "docs/research/agentic-engineering-reference.md",
-        "line_start": 135,
-        "line_end": 147
-      },
-      "source_hash": "ef64acf3dc747929f1c111e3062038d2403ef2849c880f7ed5a7b7d05651d676",
-      "test": "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error",
-      "test_body_hash": "8d1e999a3065adc79d0b5060e5a43c8003ee6e42d912df81d7ba4eb70d5481d9",
-      "rationale": "Test verifies egress-rejected materialization attempt writes op='egress_denied' audit row and returns Error::Egress without fallback",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:09:03Z",
-      "last_extracted": "2026-04-28T09:09:03Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "ef64acf3dc747929f1c111e3062038d2403ef2849c880f7ed5a7b7d05651d676",
+    "test": "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error",
+    "test_body_hash": "8d1e999a3065adc79d0b5060e5a43c8003ee6e42d912df81d7ba4eb70d5481d9",
+    "rationale": "Test verifies egress-rejected materialization attempt writes op='egress_denied' audit row and returns Error::Egress without fallback",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:09:03Z",
+    "last_extracted": "2026-04-28T09:09:03Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/research/agentic-engineering-reference.md/audit-append-only",
+    "claim": "Audit log is append-only and non-optional; every network-touching action (blob materialize, helper fetch/push, egress deny) is logged to immutable SQLite WAL",
+    "source": {
+      "file": "docs/research/agentic-engineering-reference.md",
+      "line_start": 135,
+      "line_end": 147
     },
-    {
-      "id": "docs/research/agentic-engineering-reference.md/audit-append-only",
-      "claim": "Audit log is append-only and non-optional; every network-touching action (blob materialize, helper fetch/push, egress deny) is logged to immutable SQLite WAL",
-      "source": {
-        "file": "docs/research/agentic-engineering-reference.md",
-        "line_start": 135,
-        "line_end": 147
-      },
-      "source_hash": "ef64acf3dc747929f1c111e3062038d2403ef2849c880f7ed5a7b7d05651d676",
-      "test": "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail",
-      "test_body_hash": "9e79aa55e86b02c5a3b3e2d2c7ea3fbfd12674ad799270bbdcab13744b79fe38",
-      "rationale": "Test verifies UPDATE and DELETE statements on audit_events_cache fail; only INSERT is allowed by schema CHECK constraint",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:09:06Z",
-      "last_extracted": "2026-04-28T09:09:06Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "ef64acf3dc747929f1c111e3062038d2403ef2849c880f7ed5a7b7d05651d676",
+    "test": "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail",
+    "test_body_hash": "9e79aa55e86b02c5a3b3e2d2c7ea3fbfd12674ad799270bbdcab13744b79fe38",
+    "rationale": "Test verifies UPDATE and DELETE statements on audit_events_cache fail; only INSERT is allowed by schema CHECK constraint",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:09:06Z",
+    "last_extracted": "2026-04-28T09:09:06Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/research/initial-report.md/partial-clone-git-config",
+    "claim": "reposix init configures working tree with extensions.partialClone=origin and remote.origin.partialclonefilter=blob:none for lazy blob fetch",
+    "source": {
+      "file": "docs/research/initial-report.md",
+      "line_start": 14,
+      "line_end": 15
     },
-    {
-      "id": "docs/research/initial-report.md/partial-clone-git-config",
-      "claim": "reposix init configures working tree with extensions.partialClone=origin and remote.origin.partialclonefilter=blob:none for lazy blob fetch",
-      "source": {
-        "file": "docs/research/initial-report.md",
-        "line_start": 14,
-        "line_end": 15
-      },
-      "source_hash": "abdad9aa1c64779b280e0831e0ed62117210862debc603fceb3b4e4e15d27902",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
-      "rationale": "Test verifies reposix init produces real git checkout with correct partial-clone config; extensions.partialClone, promisor, partialclonefilter set",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:09:09Z",
-      "last_extracted": "2026-04-28T09:09:09Z",
-      "last_extracted_by": "bind-call"
-    }
-  ]
-}
+    "source_hash": "abdad9aa1c64779b280e0831e0ed62117210862debc603fceb3b4e4e15d27902",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+    "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
+    "rationale": "Test verifies reposix init produces real git checkout with correct partial-clone config; extensions.partialClone, promisor, partialclonefilter set",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:09:09Z",
+    "last_extracted": "2026-04-28T09:09:09Z",
+    "last_extracted_by": "bind-call"
+  }
+]

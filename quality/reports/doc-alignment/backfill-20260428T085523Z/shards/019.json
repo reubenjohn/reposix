@@ -1,584 +1,570 @@
-{
-  "schema_version": "1.0",
-  "summary": {
-    "claims_total": 38,
-    "claims_bound": 11,
-    "claims_missing_test": 3,
-    "claims_retire_proposed": 24,
-    "claims_retired": 0,
-    "alignment_ratio": 0.2894736842105263,
-    "floor": 0.5,
-    "trend_30d": "+0.00",
-    "last_walked": null
+[
+  {
+    "id": "exit-codes/cli-exit-0-success",
+    "claim": "All reposix subcommands exit with 0 on success",
+    "source": {
+      "file": "docs/reference/exit-codes.md",
+      "line_start": 24,
+      "line_end": 25
+    },
+    "source_hash": "50e482d0a185815992e90d2690cc7d8bfbb5b28ecdc2db45efe94fbc84d17a4f",
+    "rationale": "CLI handlers return anyhow::Result<()>; Ok propagates to exit 0",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:08:19Z",
+    "last_extracted": "2026-04-28T09:08:19Z",
+    "last_extracted_by": "mark-missing-test-call"
   },
-  "rows": [
-    {
-      "id": "exit-codes/cli-exit-0-success",
-      "claim": "All reposix subcommands exit with 0 on success",
-      "source": {
-        "file": "docs/reference/exit-codes.md",
-        "line_start": 24,
-        "line_end": 25
-      },
-      "source_hash": "50e482d0a185815992e90d2690cc7d8bfbb5b28ecdc2db45efe94fbc84d17a4f",
-      "rationale": "CLI handlers return anyhow::Result<()>; Ok propagates to exit 0",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:08:19Z",
-      "last_extracted": "2026-04-28T09:08:19Z",
-      "last_extracted_by": "mark-missing-test-call"
+  {
+    "id": "exit-codes/cli-exit-1-error",
+    "claim": "All reposix subcommands exit with 1 on any handled error",
+    "source": {
+      "file": "docs/reference/exit-codes.md",
+      "line_start": 8,
+      "line_end": 8
     },
-    {
-      "id": "exit-codes/cli-exit-1-error",
-      "claim": "All reposix subcommands exit with 1 on any handled error",
-      "source": {
-        "file": "docs/reference/exit-codes.md",
-        "line_start": 8,
-        "line_end": 8
-      },
-      "source_hash": "3b7eb87bd8f731e7a4cf8cd46658d032c250b4024f14f7c0b84b1787bac45aee",
-      "rationale": "anyhow::bail! propagates Err through ? operator to main()",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:08:29Z",
-      "last_extracted": "2026-04-28T09:08:29Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "3b7eb87bd8f731e7a4cf8cd46658d032c250b4024f14f7c0b84b1787bac45aee",
+    "rationale": "anyhow::bail! propagates Err through ? operator to main()",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:08:29Z",
+    "last_extracted": "2026-04-28T09:08:29Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "exit-codes/doctor-error-findings-exit-1",
+    "claim": "reposix doctor exits 1 if at least one ERROR-severity finding",
+    "source": {
+      "file": "docs/reference/exit-codes.md",
+      "line_start": 27,
+      "line_end": 27
     },
-    {
-      "id": "exit-codes/doctor-error-findings-exit-1",
-      "claim": "reposix doctor exits 1 if at least one ERROR-severity finding",
-      "source": {
-        "file": "docs/reference/exit-codes.md",
-        "line_start": 27,
-        "line_end": 27
-      },
-      "source_hash": "19de94eeaca550149489c09e3a6bc8ae8c55c8d036164f468b4a9f21147f9ea0",
-      "rationale": "doctor.rs calls report.exit_code() which returns 1 for any ERROR finding",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:08:29Z",
-      "last_extracted": "2026-04-28T09:08:29Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "19de94eeaca550149489c09e3a6bc8ae8c55c8d036164f468b4a9f21147f9ea0",
+    "rationale": "doctor.rs calls report.exit_code() which returns 1 for any ERROR finding",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:08:29Z",
+    "last_extracted": "2026-04-28T09:08:29Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "exit-codes/helper-exit-0",
+    "claim": "git-remote-reposix exits 0 on successful protocol session with no push rejection",
+    "source": {
+      "file": "docs/reference/exit-codes.md",
+      "line_start": 28,
+      "line_end": 29
     },
-    {
-      "id": "exit-codes/helper-exit-0",
-      "claim": "git-remote-reposix exits 0 on successful protocol session with no push rejection",
-      "source": {
-        "file": "docs/reference/exit-codes.md",
-        "line_start": 28,
-        "line_end": 29
-      },
-      "source_hash": "00e3f65bf3c6344fd0e91995cda5cd7d342e224f01d26c780263e6cfca2ad5d8",
-      "test": "crates/reposix-remote/src/main.rs::main",
-      "test_body_hash": "22bd8de5333ceade5f1d70cfd4f737a18d8e1abb08cfbb2d8ca432294d8e9fc9",
-      "rationale": "Line 88: Ok(true) => ExitCode::SUCCESS pattern",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:34Z",
-      "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "00e3f65bf3c6344fd0e91995cda5cd7d342e224f01d26c780263e6cfca2ad5d8",
+    "test": "crates/reposix-remote/src/main.rs::main",
+    "test_body_hash": "22bd8de5333ceade5f1d70cfd4f737a18d8e1abb08cfbb2d8ca432294d8e9fc9",
+    "rationale": "Line 88: Ok(true) => ExitCode::SUCCESS pattern",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:34Z",
+    "last_extracted": "2026-04-28T09:08:34Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "exit-codes/helper-exit-1-push-rejected",
+    "claim": "git-remote-reposix exits 1 on push-time conflict rejection",
+    "source": {
+      "file": "docs/reference/exit-codes.md",
+      "line_start": 29,
+      "line_end": 29
     },
-    {
-      "id": "exit-codes/helper-exit-1-push-rejected",
-      "claim": "git-remote-reposix exits 1 on push-time conflict rejection",
-      "source": {
-        "file": "docs/reference/exit-codes.md",
-        "line_start": 29,
-        "line_end": 29
-      },
-      "source_hash": "6e61694909c7ef2b51d13f14b68388d4e98bb86257cf12f5d937db7a16ea9020",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
-      "test_body_hash": "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97",
-      "rationale": "Tests push rejection with stale backend version returns exit 1",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:34Z",
-      "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "6e61694909c7ef2b51d13f14b68388d4e98bb86257cf12f5d937db7a16ea9020",
+    "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
+    "test_body_hash": "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97",
+    "rationale": "Tests push rejection with stale backend version returns exit 1",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:34Z",
+    "last_extracted": "2026-04-28T09:08:34Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "exit-codes/helper-exit-2-crash",
+    "claim": "git-remote-reposix exits 2 on unrecoverable error (anyhow Err)",
+    "source": {
+      "file": "docs/reference/exit-codes.md",
+      "line_start": 30,
+      "line_end": 30
     },
-    {
-      "id": "exit-codes/helper-exit-2-crash",
-      "claim": "git-remote-reposix exits 2 on unrecoverable error (anyhow Err)",
-      "source": {
-        "file": "docs/reference/exit-codes.md",
-        "line_start": 30,
-        "line_end": 30
-      },
-      "source_hash": "de745cc5e8a9865cbccd0e1cdb3bb3c55853050cf62bd2dd3551a01bebdefd01",
-      "test": "crates/reposix-remote/src/main.rs::main",
-      "test_body_hash": "22bd8de5333ceade5f1d70cfd4f737a18d8e1abb08cfbb2d8ca432294d8e9fc9",
-      "rationale": "Line 92: Err(e) => ExitCode::from(2) pattern",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:34Z",
-      "last_extracted": "2026-04-28T09:08:34Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "de745cc5e8a9865cbccd0e1cdb3bb3c55853050cf62bd2dd3551a01bebdefd01",
+    "test": "crates/reposix-remote/src/main.rs::main",
+    "test_body_hash": "22bd8de5333ceade5f1d70cfd4f737a18d8e1abb08cfbb2d8ca432294d8e9fc9",
+    "rationale": "Line 92: Err(e) => ExitCode::from(2) pattern",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:34Z",
+    "last_extracted": "2026-04-28T09:08:34Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "git-remote/refspec-namespace-isolation",
+    "claim": "Helper advertises refspec refs/heads/*:refs/reposix/* for namespace isolation",
+    "source": {
+      "file": "docs/reference/git-remote.md",
+      "line_start": 20,
+      "line_end": 20
     },
-    {
-      "id": "git-remote/refspec-namespace-isolation",
-      "claim": "Helper advertises refspec refs/heads/*:refs/reposix/* for namespace isolation",
-      "source": {
-        "file": "docs/reference/git-remote.md",
-        "line_start": 20,
-        "line_end": 20
-      },
-      "source_hash": "817555ea7f9466161348919866eb44ee1063bfec950bde1a7ec24a50a68c1024",
-      "test": "crates/reposix-remote/tests/stateless_connect.rs::capabilities_advertises_stateless_connect_and_object_format",
-      "test_body_hash": "70cd0646d2021af51f219a1c80d4f4c8edd1e2dea1183167ef20b812a4670915",
-      "rationale": "Capabilities advertisement includes refspec line",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:46Z",
-      "last_extracted": "2026-04-28T09:08:46Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "817555ea7f9466161348919866eb44ee1063bfec950bde1a7ec24a50a68c1024",
+    "test": "crates/reposix-remote/tests/stateless_connect.rs::capabilities_advertises_stateless_connect_and_object_format",
+    "test_body_hash": "70cd0646d2021af51f219a1c80d4f4c8edd1e2dea1183167ef20b812a4670915",
+    "rationale": "Capabilities advertisement includes refspec line",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:46Z",
+    "last_extracted": "2026-04-28T09:08:46Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "git-remote/stateless-connect-read-path",
+    "claim": "stateless-connect is the v0.9.0 read path, tunneling protocol-v2 fetch with --filter=blob:none",
+    "source": {
+      "file": "docs/reference/git-remote.md",
+      "line_start": 23,
+      "line_end": 23
     },
-    {
-      "id": "git-remote/stateless-connect-read-path",
-      "claim": "stateless-connect is the v0.9.0 read path, tunneling protocol-v2 fetch with --filter=blob:none",
-      "source": {
-        "file": "docs/reference/git-remote.md",
-        "line_start": 23,
-        "line_end": 23
-      },
-      "source_hash": "be29b20a4ec78c4e55e4cb6e7b756b828334931df68223e34baa2c95572daaf1",
-      "test": "crates/reposix-remote/src/stateless_connect.rs::configured_blob_limit",
-      "test_body_hash": "3c0705f7255056ba79ec95997adef10bedd1445f961123465678ad912549fe1b",
-      "rationale": "Handler implements stateless-connect capability; default blob limit enforced",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:46Z",
-      "last_extracted": "2026-04-28T09:08:46Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "be29b20a4ec78c4e55e4cb6e7b756b828334931df68223e34baa2c95572daaf1",
+    "test": "crates/reposix-remote/src/stateless_connect.rs::configured_blob_limit",
+    "test_body_hash": "3c0705f7255056ba79ec95997adef10bedd1445f961123465678ad912549fe1b",
+    "rationale": "Handler implements stateless-connect capability; default blob limit enforced",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:46Z",
+    "last_extracted": "2026-04-28T09:08:46Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "git-remote/export-push-path",
+    "claim": "export is the push path: helper parses fast-import stream, runs conflict detection, applies REST writes on success",
+    "source": {
+      "file": "docs/reference/git-remote.md",
+      "line_start": 23,
+      "line_end": 23
     },
-    {
-      "id": "git-remote/export-push-path",
-      "claim": "export is the push path: helper parses fast-import stream, runs conflict detection, applies REST writes on success",
-      "source": {
-        "file": "docs/reference/git-remote.md",
-        "line_start": 23,
-        "line_end": 23
-      },
-      "source_hash": "be29b20a4ec78c4e55e4cb6e7b756b828334931df68223e34baa2c95572daaf1",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
-      "test_body_hash": "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97",
-      "rationale": "Tests parse fast-import, detect conflicts, reject on stale base",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:46Z",
-      "last_extracted": "2026-04-28T09:08:46Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "be29b20a4ec78c4e55e4cb6e7b756b828334931df68223e34baa2c95572daaf1",
+    "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
+    "test_body_hash": "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97",
+    "rationale": "Tests parse fast-import, detect conflicts, reject on stale base",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:46Z",
+    "last_extracted": "2026-04-28T09:08:46Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "git-remote/bulk-delete-cap-5",
+    "claim": "Any push that would delete more than 5 files is rejected with SG-02 cap",
+    "source": {
+      "file": "docs/reference/git-remote.md",
+      "line_start": 81,
+      "line_end": 81
     },
-    {
-      "id": "git-remote/bulk-delete-cap-5",
-      "claim": "Any push that would delete more than 5 files is rejected with SG-02 cap",
-      "source": {
-        "file": "docs/reference/git-remote.md",
-        "line_start": 81,
-        "line_end": 81
-      },
-      "source_hash": "c92c7dc4c0f1858487f71190db45a9350eb7280e6e8d1d0607d25ed15beb113a",
-      "test": "crates/reposix-remote/tests/bulk_delete_cap.rs::six_deletes_refuses_and_calls_no_delete",
-      "test_body_hash": "f6257388948b82070e22c25a1cce4c8acd2dd7c74debb78d34bdd0a4ee4c17e3",
-      "rationale": "Tests 6 deletes rejected; 5 deletes pass cap",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:46Z",
-      "last_extracted": "2026-04-28T09:08:46Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "c92c7dc4c0f1858487f71190db45a9350eb7280e6e8d1d0607d25ed15beb113a",
+    "test": "crates/reposix-remote/tests/bulk_delete_cap.rs::six_deletes_refuses_and_calls_no_delete",
+    "test_body_hash": "f6257388948b82070e22c25a1cce4c8acd2dd7c74debb78d34bdd0a4ee4c17e3",
+    "rationale": "Tests 6 deletes rejected; 5 deletes pass cap",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:46Z",
+    "last_extracted": "2026-04-28T09:08:46Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "git-remote/bulk-delete-override-tag",
+    "claim": "Bulk-delete cap is overridden by [allow-bulk-delete] tag in commit message",
+    "source": {
+      "file": "docs/reference/git-remote.md",
+      "line_start": 96,
+      "line_end": 96
     },
-    {
-      "id": "git-remote/bulk-delete-override-tag",
-      "claim": "Bulk-delete cap is overridden by [allow-bulk-delete] tag in commit message",
-      "source": {
-        "file": "docs/reference/git-remote.md",
-        "line_start": 96,
-        "line_end": 96
-      },
-      "source_hash": "7ca6d63605e8e8b6149c6cf91735aa89d6a09e6bd4020087b1a4f9bf027fa14f",
-      "test": "crates/reposix-remote/tests/bulk_delete_cap.rs::six_deletes_with_allow_tag_actually_deletes",
-      "test_body_hash": "120eb2dea6f1f57c4009abb17a4c2ad99453172f94126d816f4fb21ab8e6c75b",
-      "rationale": "Tests 6 deletes with override tag succeeds",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:46Z",
-      "last_extracted": "2026-04-28T09:08:46Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "7ca6d63605e8e8b6149c6cf91735aa89d6a09e6bd4020087b1a4f9bf027fa14f",
+    "test": "crates/reposix-remote/tests/bulk_delete_cap.rs::six_deletes_with_allow_tag_actually_deletes",
+    "test_body_hash": "120eb2dea6f1f57c4009abb17a4c2ad99453172f94126d816f4fb21ab8e6c75b",
+    "rationale": "Tests 6 deletes with override tag succeeds",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:46Z",
+    "last_extracted": "2026-04-28T09:08:46Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "git-remote/server-field-stripping",
+    "claim": "Server-controlled fields (id, version, created_at, updated_at) are stripped before PATCH/POST via sanitize()",
+    "source": {
+      "file": "docs/reference/git-remote.md",
+      "line_start": 107,
+      "line_end": 113
     },
-    {
-      "id": "git-remote/server-field-stripping",
-      "claim": "Server-controlled fields (id, version, created_at, updated_at) are stripped before PATCH/POST via sanitize()",
-      "source": {
-        "file": "docs/reference/git-remote.md",
-        "line_start": 107,
-        "line_end": 113
-      },
-      "source_hash": "645892ad8b832118d44c70039478e6e7253bece5259d0f0db4c4c9bb67269d02",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields",
-      "test_body_hash": "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b",
-      "rationale": "Tests ARCH-10: inbound blob with id/version overrides, PATCH body contains authoritative id",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:46Z",
-      "last_extracted": "2026-04-28T09:08:46Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "645892ad8b832118d44c70039478e6e7253bece5259d0f0db4c4c9bb67269d02",
+    "test": "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields",
+    "test_body_hash": "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b",
+    "rationale": "Tests ARCH-10: inbound blob with id/version overrides, PATCH body contains authoritative id",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:46Z",
+    "last_extracted": "2026-04-28T09:08:46Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "git-remote/blob-limit-default-200",
+    "claim": "Helper refuses fetch requests exceeding REPOSIX_BLOB_LIMIT blobs (default 200)",
+    "source": {
+      "file": "docs/reference/git-remote.md",
+      "line_start": 109,
+      "line_end": 110
     },
-    {
-      "id": "git-remote/blob-limit-default-200",
-      "claim": "Helper refuses fetch requests exceeding REPOSIX_BLOB_LIMIT blobs (default 200)",
-      "source": {
-        "file": "docs/reference/git-remote.md",
-        "line_start": 109,
-        "line_end": 110
-      },
-      "source_hash": "76ab21ccaeb7a2b49ceedb8cb36303d8adafe61da08b69d509ef6d0b0f1bd194",
-      "test": "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants",
-      "test_body_hash": "f55f3f3e47171456c973c443d1b3d4675f0d0f315b6e73db8b18905aee8feeb1",
-      "rationale": "E2E test: REPOSIX_BLOB_LIMIT=1 set, 2 wants rejected",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:52Z",
-      "last_extracted": "2026-04-28T09:08:52Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "76ab21ccaeb7a2b49ceedb8cb36303d8adafe61da08b69d509ef6d0b0f1bd194",
+    "test": "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants",
+    "test_body_hash": "f55f3f3e47171456c973c443d1b3d4675f0d0f315b6e73db8b18905aee8feeb1",
+    "rationale": "E2E test: REPOSIX_BLOB_LIMIT=1 set, 2 wants rejected",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:52Z",
+    "last_extracted": "2026-04-28T09:08:52Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "git-remote/blob-limit-error-message",
+    "claim": "Blob-limit refusal stderr contains literal 'git sparse-checkout set' for dark-factory recovery",
+    "source": {
+      "file": "docs/reference/git-remote.md",
+      "line_start": 110,
+      "line_end": 110
     },
-    {
-      "id": "git-remote/blob-limit-error-message",
-      "claim": "Blob-limit refusal stderr contains literal 'git sparse-checkout set' for dark-factory recovery",
-      "source": {
-        "file": "docs/reference/git-remote.md",
-        "line_start": 110,
-        "line_end": 110
-      },
-      "source_hash": "9d8b2b5670d18da8a99f6152f7ee75558019cd106d8032bf7c1117bd37273e37",
-      "test": "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants",
-      "test_body_hash": "f55f3f3e47171456c973c443d1b3d4675f0d0f315b6e73db8b18905aee8feeb1",
-      "rationale": "Test verifies stderr message instructs sparse-checkout",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T09:08:52Z",
-      "last_extracted": "2026-04-28T09:08:52Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "9d8b2b5670d18da8a99f6152f7ee75558019cd106d8032bf7c1117bd37273e37",
+    "test": "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants",
+    "test_body_hash": "f55f3f3e47171456c973c443d1b3d4675f0d0f315b6e73db8b18905aee8feeb1",
+    "rationale": "Test verifies stderr message instructs sparse-checkout",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:08:52Z",
+    "last_extracted": "2026-04-28T09:08:52Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "glossary/partial-clone-definition",
+    "claim": "partial clone fetches tree but skips blob contents until read, using --filter=blob:none",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 20,
+      "line_end": 24
     },
-    {
-      "id": "glossary/partial-clone-definition",
-      "claim": "partial clone fetches tree but skips blob contents until read, using --filter=blob:none",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 20,
-        "line_end": 24
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
-      "last_extracted": "2026-04-28T09:09:00Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:00Z",
+    "last_extracted": "2026-04-28T09:09:00Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/sparse-checkout-definition",
+    "claim": "sparse-checkout materializes only a subset of paths in working tree",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 28,
+      "line_end": 28
     },
-    {
-      "id": "glossary/sparse-checkout-definition",
-      "claim": "sparse-checkout materializes only a subset of paths in working tree",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 28,
-        "line_end": 28
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
-      "last_extracted": "2026-04-28T09:09:00Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:00Z",
+    "last_extracted": "2026-04-28T09:09:00Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/promisor-remote-definition",
+    "claim": "promisor remote promises to deliver missing objects on request",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 36,
+      "line_end": 36
     },
-    {
-      "id": "glossary/promisor-remote-definition",
-      "claim": "promisor remote promises to deliver missing objects on request",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 36,
-        "line_end": 36
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
-      "last_extracted": "2026-04-28T09:09:00Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:00Z",
+    "last_extracted": "2026-04-28T09:09:00Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/stateless-connect-definition",
+    "claim": "stateless-connect is capability allowing git to tunnel protocol-v2 traffic to helper",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 44,
+      "line_end": 44
     },
-    {
-      "id": "glossary/stateless-connect-definition",
-      "claim": "stateless-connect is capability allowing git to tunnel protocol-v2 traffic to helper",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 44,
-        "line_end": 44
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
-      "last_extracted": "2026-04-28T09:09:00Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:00Z",
+    "last_extracted": "2026-04-28T09:09:00Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/fast-import-definition",
+    "claim": "fast-import streams commits, trees, blobs as single text stream",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 52,
+      "line_end": 52
     },
-    {
-      "id": "glossary/fast-import-definition",
-      "claim": "fast-import streams commits, trees, blobs as single text stream",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 52,
-        "line_end": 52
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
-      "last_extracted": "2026-04-28T09:09:00Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:00Z",
+    "last_extracted": "2026-04-28T09:09:00Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/fast-export-definition",
+    "claim": "fast-export emits commits and tree changes as stream",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 60,
+      "line_end": 60
     },
-    {
-      "id": "glossary/fast-export-definition",
-      "claim": "fast-export emits commits and tree changes as stream",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 60,
-        "line_end": 60
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
-      "last_extracted": "2026-04-28T09:09:00Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:00Z",
+    "last_extracted": "2026-04-28T09:09:00Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/protocol-v2-definition",
+    "claim": "protocol-v2 is current git wire protocol (default since git 2.26)",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 68,
+      "line_end": 68
     },
-    {
-      "id": "glossary/protocol-v2-definition",
-      "claim": "protocol-v2 is current git wire protocol (default since git 2.26)",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 68,
-        "line_end": 68
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
-      "last_extracted": "2026-04-28T09:09:00Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:00Z",
+    "last_extracted": "2026-04-28T09:09:00Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/refspec-definition",
+    "claim": "refspec is <src>:<dst> mapping telling git which refs go where",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 76,
+      "line_end": 76
     },
-    {
-      "id": "glossary/refspec-definition",
-      "claim": "refspec is <src>:<dst> mapping telling git which refs go where",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 76,
-        "line_end": 76
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:00Z",
-      "last_extracted": "2026-04-28T09:09:00Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:00Z",
+    "last_extracted": "2026-04-28T09:09:00Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/bare-repo-definition",
+    "claim": "bare repo is git repository without working tree",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 84,
+      "line_end": 84
     },
-    {
-      "id": "glossary/bare-repo-definition",
-      "claim": "bare repo is git repository without working tree",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 84,
-        "line_end": 84
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
-      "last_extracted": "2026-04-28T09:09:07Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:07Z",
+    "last_extracted": "2026-04-28T09:09:07Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/extensions-partialClone-definition",
+    "claim": "extensions.partialClone tells git this remote is a promisor for lazy object delivery",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 92,
+      "line_end": 92
     },
-    {
-      "id": "glossary/extensions-partialClone-definition",
-      "claim": "extensions.partialClone tells git this remote is a promisor for lazy object delivery",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 92,
-        "line_end": 92
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
-      "last_extracted": "2026-04-28T09:09:07Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:07Z",
+    "last_extracted": "2026-04-28T09:09:07Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/capability-advertisement-definition",
+    "claim": "capability advertisement is first thing git remote helper writes to stdout",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 100,
+      "line_end": 100
     },
-    {
-      "id": "glossary/capability-advertisement-definition",
-      "claim": "capability advertisement is first thing git remote helper writes to stdout",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 100,
-        "line_end": 100
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
-      "last_extracted": "2026-04-28T09:09:07Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:07Z",
+    "last_extracted": "2026-04-28T09:09:07Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/pkt-line-definition",
+    "claim": "pkt-line is protocol-v2 framing: 4-byte hex length prefix plus payload",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 108,
+      "line_end": 108
     },
-    {
-      "id": "glossary/pkt-line-definition",
-      "claim": "pkt-line is protocol-v2 framing: 4-byte hex length prefix plus payload",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 108,
-        "line_end": 108
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
-      "last_extracted": "2026-04-28T09:09:07Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:07Z",
+    "last_extracted": "2026-04-28T09:09:07Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/git-remote-helper-definition",
+    "claim": "git remote helper is out-of-process binary git invokes for non-native URL schemes",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 116,
+      "line_end": 116
     },
-    {
-      "id": "glossary/git-remote-helper-definition",
-      "claim": "git remote helper is out-of-process binary git invokes for non-native URL schemes",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 116,
-        "line_end": 116
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
-      "last_extracted": "2026-04-28T09:09:07Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:07Z",
+    "last_extracted": "2026-04-28T09:09:07Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/push-round-trip-definition",
+    "claim": "push round-trip sequences from git push to backend write to confirmation",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 124,
+      "line_end": 124
     },
-    {
-      "id": "glossary/push-round-trip-definition",
-      "claim": "push round-trip sequences from git push to backend write to confirmation",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 124,
-        "line_end": 124
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
-      "last_extracted": "2026-04-28T09:09:07Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:07Z",
+    "last_extracted": "2026-04-28T09:09:07Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/gix-definition",
+    "claim": "gix is pure-Rust git implementation, pinned =0.82 because pre-1.0",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 136,
+      "line_end": 136
     },
-    {
-      "id": "glossary/gix-definition",
-      "claim": "gix is pure-Rust git implementation, pinned =0.82 because pre-1.0",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 136,
-        "line_end": 136
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
-      "last_extracted": "2026-04-28T09:09:07Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:07Z",
+    "last_extracted": "2026-04-28T09:09:07Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/sqlite-wal-definition",
+    "claim": "SQLite WAL writes go to separate file, merged on checkpoint",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 144,
+      "line_end": 144
     },
-    {
-      "id": "glossary/sqlite-wal-definition",
-      "claim": "SQLite WAL writes go to separate file, merged on checkpoint",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 144,
-        "line_end": 144
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
-      "last_extracted": "2026-04-28T09:09:07Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:07Z",
+    "last_extracted": "2026-04-28T09:09:07Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/audit-log-definition",
+    "claim": "audit log is append-only audit_events_cache table with BEFORE UPDATE/DELETE triggers",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 152,
+      "line_end": 152
     },
-    {
-      "id": "glossary/audit-log-definition",
-      "claim": "audit log is append-only audit_events_cache table with BEFORE UPDATE/DELETE triggers",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 152,
-        "line_end": 152
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:07Z",
-      "last_extracted": "2026-04-28T09:09:07Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:07Z",
+    "last_extracted": "2026-04-28T09:09:07Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/yaml-definition",
+    "claim": "YAML is human-friendly serialization format for nested key-value pairs",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 164,
+      "line_end": 164
     },
-    {
-      "id": "glossary/yaml-definition",
-      "claim": "YAML is human-friendly serialization format for nested key-value pairs",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 164,
-        "line_end": 164
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:15Z",
-      "last_extracted": "2026-04-28T09:09:15Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:15Z",
+    "last_extracted": "2026-04-28T09:09:15Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/frontmatter-definition",
+    "claim": "frontmatter is YAML block at top of Markdown file, delimited by --- lines",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 172,
+      "line_end": 172
     },
-    {
-      "id": "glossary/frontmatter-definition",
-      "claim": "frontmatter is YAML block at top of Markdown file, delimited by --- lines",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 172,
-        "line_end": 172
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:15Z",
-      "last_extracted": "2026-04-28T09:09:15Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:15Z",
+    "last_extracted": "2026-04-28T09:09:15Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/backendconnector-definition",
+    "claim": "BackendConnector is trait that every adapter implements with list_records, create_record, update_record, delete_or_close methods",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 184,
+      "line_end": 184
     },
-    {
-      "id": "glossary/backendconnector-definition",
-      "claim": "BackendConnector is trait that every adapter implements with list_records, create_record, update_record, delete_or_close methods",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 184,
-        "line_end": 184
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:15Z",
-      "last_extracted": "2026-04-28T09:09:15Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:15Z",
+    "last_extracted": "2026-04-28T09:09:15Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/tainted-definition",
+    "claim": "Tainted<T> is newtype wrapper around bytes from remote, requiring sanitize() before egress sink",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 192,
+      "line_end": 192
     },
-    {
-      "id": "glossary/tainted-definition",
-      "claim": "Tainted<T> is newtype wrapper around bytes from remote, requiring sanitize() before egress sink",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 192,
-        "line_end": 192
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:15Z",
-      "last_extracted": "2026-04-28T09:09:15Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:15Z",
+    "last_extracted": "2026-04-28T09:09:15Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/egress-allowlist-definition",
+    "claim": "egress allowlist is single choke-point via REPOSIX_ALLOWED_ORIGINS, all HTTP through reposix_core::http::client()",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 200,
+      "line_end": 200
     },
-    {
-      "id": "glossary/egress-allowlist-definition",
-      "claim": "egress allowlist is single choke-point via REPOSIX_ALLOWED_ORIGINS, all HTTP through reposix_core::http::client()",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 200,
-        "line_end": 200
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:15Z",
-      "last_extracted": "2026-04-28T09:09:15Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:15Z",
+    "last_extracted": "2026-04-28T09:09:15Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/lethal-trifecta-definition",
+    "claim": "lethal trifecta is: private data + untrusted input + exfiltration channel",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 208,
+      "line_end": 208
     },
-    {
-      "id": "glossary/lethal-trifecta-definition",
-      "claim": "lethal trifecta is: private data + untrusted input + exfiltration channel",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 208,
-        "line_end": 208
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:15Z",
-      "last_extracted": "2026-04-28T09:09:15Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:15Z",
+    "last_extracted": "2026-04-28T09:09:15Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "glossary/dark-factory-definition",
+    "claim": "dark-factory pattern: ship code with no human review via simulators, swarms, self-teaching errors",
+    "source": {
+      "file": "docs/reference/glossary.md",
+      "line_start": 216,
+      "line_end": 216
     },
-    {
-      "id": "glossary/dark-factory-definition",
-      "claim": "dark-factory pattern: ship code with no human review via simulators, swarms, self-teaching errors",
-      "source": {
-        "file": "docs/reference/glossary.md",
-        "line_start": 216,
-        "line_end": 216
-      },
-      "rationale": "Definitional entry only; no behavioral assertion to test",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:09:15Z",
-      "last_extracted": "2026-04-28T09:09:15Z",
-      "last_extracted_by": "propose-retire-call"
-    }
-  ]
-}
+    "rationale": "Definitional entry only; no behavioral assertion to test",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:09:15Z",
+    "last_extracted": "2026-04-28T09:09:15Z",
+    "last_extracted_by": "propose-retire-call"
+  }
+]

@@ -1,192 +1,202 @@
-{
-  "schema_version": "1.0",
-  "summary": {
-    "claims_total": 22,
-    "claims_bound": 22,
-    "claims_missing_test": 0,
-    "claims_retire_proposed": 0,
-    "claims_retired": 0,
-    "alignment_ratio": 1.0,
-    "floor": 0.5,
-    "trend_30d": "+0.00",
-    "last_walked": "2026-04-28T09:15:00Z"
+[
+  {
+    "id": "docs/decisions/005-jira-issue-mapping/numeric-id-canonical",
+    "claim": "The numeric JIRA issue ID is used as the canonical IssueId, not the key",
+    "source": {
+      "file": "docs/decisions/005-jira-issue-mapping.md",
+      "line_start": 19,
+      "line_end": 21
+    },
+    "source_hash": "12cfc926f3b6d4b00ac9c47edf9527edb1096f8d301b1c77ac7aad64c8d76cb1",
+    "test": "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock",
+    "test_body_hash": "37afa21ee310fffcb4a85aff5bc3500794f23d53b2e5407d6e82e915bf81c1aa",
+    "rationale": "contract.rs:230 calls get_record with RecordId(10001) and line 79-84 asserts issue.id == known_issue_id",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:14:57Z",
+    "last_extracted": "2026-04-28T09:14:57Z",
+    "last_extracted_by": "bind-call"
   },
-  "rows": [
-    {
-      "id": "docs/decisions/005-jira-issue-mapping/id-uses-numeric-not-key",
-      "claim": "Numeric JIRA ID is canonical IssueId, key preserved in extensions['jira_key']",
-      "source_loc": "ADR-005 Decision 1",
-      "test_file": "crates/reposix-jira/src/translate.rs:130-134",
-      "test_kind": "unit (code inspection)",
-      "bound": true
+  {
+    "id": "docs/decisions/005-jira-issue-mapping/status-mapping",
+    "claim": "Every JIRA issue status maps to a valid RecordStatus variant per the 5-case mapping table",
+    "source": {
+      "file": "docs/decisions/005-jira-issue-mapping.md",
+      "line_start": 29,
+      "line_end": 46
     },
-    {
-      "id": "docs/decisions/005-jira-issue-mapping/status-mapping-logic",
-      "claim": "Status mapping uses statusCategory.key + resolution name, WontFix on resolution match",
-      "source_loc": "ADR-005 Decision 2, Table",
-      "test_file": "crates/reposix-jira/src/translate.rs:66-92",
-      "test_kind": "unit (code inspection)",
-      "bound": true
+    "source_hash": "6fc28348a5c6e3c6eb068f2051be8108a48aa56b7954ad4d164e292f836ca64e",
+    "test": "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock",
+    "test_body_hash": "37afa21ee310fffcb4a85aff5bc3500794f23d53b2e5407d6e82e915bf81c1aa",
+    "rationale": "contract.rs:95-103 iterates every issue and asserts status is one of {Open, InProgress, InReview, Done, WontFix}",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:15:00Z",
+    "last_extracted": "2026-04-28T09:15:00Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/decisions/005-jira-issue-mapping/version-synthesis",
+    "claim": "Issue version is synthesized from fields.updated as Unix milliseconds (u64)",
+    "source": {
+      "file": "docs/decisions/005-jira-issue-mapping.md",
+      "line_start": 48,
+      "line_end": 61
     },
-    {
-      "id": "docs/decisions/005-jira-issue-mapping/version-synthesis-milliseconds",
-      "claim": "Issue.version synthesized from fields.updated as Unix milliseconds (u64)",
-      "source_loc": "ADR-005 Decision 3",
-      "test_file": "crates/reposix-jira/src/translate.rs:119-120",
-      "test_kind": "unit (code inspection)",
-      "bound": true
+    "source_hash": "79c8399a5404e52c926635cbd49f0f38a780dd88b517e9116026bc1563ee7f88",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:15:01Z",
+    "last_extracted": "2026-04-28T09:15:01Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs/decisions/005-jira-issue-mapping/adf-description-plain-text",
+    "claim": "ADF description extraction produces plain text only, no Markdown conversion",
+    "source": {
+      "file": "docs/decisions/005-jira-issue-mapping.md",
+      "line_start": 64,
+      "line_end": 77
     },
-    {
-      "id": "docs/decisions/005-jira-issue-mapping/adf-plain-text-extraction",
-      "claim": "ADF description extracted as plain text (no Markdown), null -> empty string",
-      "source_loc": "ADR-005 Decision 4, 5",
-      "test_file": "crates/reposix-jira/src/adf.rs:42-49",
-      "test_kind": "unit (code inspection)",
-      "bound": true
+    "source_hash": "2bbe8b2a8987bb6155cc841708fa5fcfc716ab122ca4588d25e4de62df45f19f",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:15:03Z",
+    "last_extracted": "2026-04-28T09:15:03Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs/decisions/005-jira-issue-mapping/attachments-comments-excluded",
+    "claim": "Phase 28 excludes attachments and comments; they are deferred to Phase 29+",
+    "source": {
+      "file": "docs/decisions/005-jira-issue-mapping.md",
+      "line_start": 79,
+      "line_end": 87
     },
-    {
-      "id": "docs/decisions/005-jira-issue-mapping/contract-invariant-5-status",
-      "claim": "Every listed issue status is a valid RecordStatus variant",
-      "source_loc": "ADR-005 (Validation), contract.rs invariant 5",
-      "test_file": "crates/reposix-jira/tests/contract.rs:94-109",
-      "test_kind": "integration",
-      "bound": true
+    "source_hash": "a88304418eee972df7bfae418666b915a2684d7b6de7a5a8a54c2f07e0b0d476",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:15:06Z",
+    "last_extracted": "2026-04-28T09:15:06Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs/decisions/007-time-travel-via-git-tags/tag-creation",
+    "claim": "Cache::sync writes a deterministic ref at refs/reposix/sync/<ISO8601-no-colons> for each sync",
+    "source": {
+      "file": "docs/decisions/007-time-travel-via-git-tags.md",
+      "line_start": 35,
+      "line_end": 49
     },
-    {
-      "id": "docs/decisions/007-time-travel-via-git-tags/sync-tags-namespace",
-      "claim": "Sync tags live at refs/reposix/sync/<ISO8601-no-colons>",
-      "source_loc": "ADR-007 Decision 1",
-      "test_file": "crates/reposix-cache/tests/sync_tags.rs:21-46",
-      "test_kind": "integration",
-      "bound": true
+    "source_hash": "ff3aa38802cade3cf277a6d1a320a9dde6926c3c94a552a856d6e1cf53034712",
+    "test": "crates/reposix-cache/tests/sync_tags.rs::tag_sync_creates_ref",
+    "test_body_hash": "7d77b24b1d69dd16163acdc3643e535b60a676be51fa98e7f983b4aa9b505126",
+    "rationale": "sync_tags.rs:21-46 calls cache.sync(), then cache.list_sync_tags() and asserts exactly one tag with name starting with refs/reposix/sync/",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:15:10Z",
+    "last_extracted": "2026-04-28T09:15:10Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/decisions/007-time-travel-via-git-tags/audit-pairing",
+    "claim": "Every tag_sync call appends a row to audit_events_cache with op=sync_tag_written",
+    "source": {
+      "file": "docs/decisions/007-time-travel-via-git-tags.md",
+      "line_start": 50,
+      "line_end": 56
     },
-    {
-      "id": "docs/decisions/007-time-travel-via-git-tags/tag-sync-writes-per-sync",
-      "claim": "Cache::sync writes deterministic ref per sync, idempotent re-tagging",
-      "source_loc": "ADR-007 Decision 2",
-      "test_file": "crates/reposix-cache/tests/sync_tags.rs:49-74",
-      "test_kind": "integration",
-      "bound": true
+    "source_hash": "d054ff5a30c5f310b655e0afbd951ce2c4c8b6826175a00bd172a893cd871e46",
+    "test": "crates/reposix-cache/tests/sync_tags.rs::sync_tags_audit_row_written",
+    "test_body_hash": "c2c4ef3f63fb9a22623cf790025100ae7193aed244137fb4f8975d792bba2b8c",
+    "rationale": "sync_tags.rs:158-205 queries audit_events_cache and asserts one row with op=sync_tag_written exists after sync",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:15:13Z",
+    "last_extracted": "2026-04-28T09:15:13Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/decisions/007-time-travel-via-git-tags/privacy-from-agent",
+    "claim": "Helper does not export sync tags to agent via protocol-v2 advertisement (hidden by transfer.hideRefs)",
+    "source": {
+      "file": "docs/decisions/007-time-travel-via-git-tags.md",
+      "line_start": 57,
+      "line_end": 63
     },
-    {
-      "id": "docs/decisions/007-time-travel-via-git-tags/audit-pairing-sync-tag-written",
-      "claim": "sync_tag_written row appended to audit_events_cache with op, oid, reason",
-      "source_loc": "ADR-007 Decision 3",
-      "test_file": "crates/reposix-cache/tests/sync_tags.rs:157-206",
-      "test_kind": "integration",
-      "bound": true
+    "source_hash": "1d7efa8918043dce2d3a6df5d9d39d09f94a2150a1c693662af939554cf6fd2e",
+    "test": "crates/reposix-cache/tests/sync_tags.rs::helper_does_not_export_sync_tags",
+    "test_body_hash": "9b4a329d4c6101989749188a8cc519a95fd45748871a28ebfa4d9d5e7acc6e4a",
+    "rationale": "sync_tags.rs:209-259 runs git upload-pack --advertise-refs and asserts refs/reposix/sync/ does NOT appear",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:15:16Z",
+    "last_extracted": "2026-04-28T09:15:16Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/decisions/007-time-travel-via-git-tags/list-api",
+    "claim": "reposix history lists sync tags most-recent first; reposix at returns closest tag at-or-before timestamp",
+    "source": {
+      "file": "docs/decisions/007-time-travel-via-git-tags.md",
+      "line_start": 65,
+      "line_end": 69
     },
-    {
-      "id": "docs/decisions/007-time-travel-via-git-tags/private-from-agent",
-      "claim": "transfer.hideRefs = refs/reposix/sync/ prevents exposure via git upload-pack",
-      "source_loc": "ADR-007 Decision 4",
-      "test_file": "crates/reposix-cache/tests/sync_tags.rs:208-259",
-      "test_kind": "integration",
-      "bound": true
+    "source_hash": "bef70f20efa6c393b7452b96b6627bdead161cd8ed618a599f7ac0bca98b2583",
+    "test": "crates/reposix-cache/tests/sync_tags.rs::sync_tag_at_finds_closest_not_after",
+    "test_body_hash": "0e6fbdaae6181a27f39c718b2512e531743846b13575c3efecb0a3633872780c",
+    "rationale": "sync_tags.rs:116-154 verifies sync_tag_at returns tag at-or-before target timestamp; list_sync_tags tests at lines 50-113 verify ordering",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T09:15:18Z",
+    "last_extracted": "2026-04-28T09:15:18Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "docs/decisions/008-helper-backend-dispatch/url-scheme-dispatch",
+    "claim": "Helper performs URL-scheme dispatch via parse_remote_url to instantiate matching BackendConnector",
+    "source": {
+      "file": "docs/decisions/008-helper-backend-dispatch.md",
+      "line_start": 26,
+      "line_end": 48
     },
-    {
-      "id": "docs/decisions/007-time-travel-via-git-tags/list-sync-tags-sorted",
-      "claim": "list_sync_tags returns tags sorted ascending by timestamp",
-      "source_loc": "ADR-007 Decision 5 (CLI surface) + Consequences",
-      "test_file": "crates/reposix-cache/tests/sync_tags.rs:77-113",
-      "test_kind": "integration",
-      "bound": true
+    "source_hash": "8fd9cb6b6efd90cb03f55256bc9b5f17b5e6f2841db0e6ebe3509fddac970a5b",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:15:24Z",
+    "last_extracted": "2026-04-28T09:15:24Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs/decisions/008-helper-backend-dispatch/cache-slug-naming",
+    "claim": "Cache slug format is <backend_slug>-<sanitized-project>.git; GitHub owner/repo sanitized to owner-repo",
+    "source": {
+      "file": "docs/decisions/008-helper-backend-dispatch.md",
+      "line_start": 55,
+      "line_end": 77
     },
-    {
-      "id": "docs/decisions/007-time-travel-via-git-tags/sync-tag-at-finds-closest",
-      "claim": "sync_tag_at returns closest tag at-or-before target timestamp",
-      "source_loc": "ADR-007 Decision 5 (CLI surface)",
-      "test_file": "crates/reposix-cache/tests/sync_tags.rs:115-155",
-      "test_kind": "integration",
-      "bound": true
+    "source_hash": "d49248265fd03c6a6987d2ab912fe85c8337ec6ff63877cf2139dcb68d63773c",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:15:27Z",
+    "last_extracted": "2026-04-28T09:15:27Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs/decisions/008-helper-backend-dispatch/credential-resolution",
+    "claim": "Missing-creds errors list every absent env var and point to docs/reference/testing-targets.md",
+    "source": {
+      "file": "docs/decisions/008-helper-backend-dispatch.md",
+      "line_start": 79,
+      "line_end": 94
     },
-    {
-      "id": "docs/decisions/007-time-travel-via-git-tags/cli-history-command",
-      "claim": "reposix history lists sync tags most-recent first",
-      "source_loc": "ADR-007 Decision 5 (CLI surface)",
-      "test_file": "crates/reposix-cli/tests/history.rs",
-      "test_kind": "integration",
-      "bound": true
+    "source_hash": "13909ae63a6c79885a049f5adf02eb0111ac40ba643074e4f568de348f462046",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:15:29Z",
+    "last_extracted": "2026-04-28T09:15:29Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "docs/decisions/008-helper-backend-dispatch/audit-signal",
+    "claim": "op=helper_backend_instantiated row appended to audit_events_cache with backend_slug, project_for_cache, project_for_backend",
+    "source": {
+      "file": "docs/decisions/008-helper-backend-dispatch.md",
+      "line_start": 96,
+      "line_end": 103
     },
-    {
-      "id": "docs/decisions/008-helper-backend-dispatch/url-form-sim",
-      "claim": "Sim: reposix::http://127.0.0.1:<port>/projects/<slug> (loopback)",
-      "source_loc": "ADR-008 Decision, URL table",
-      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:319-324",
-      "test_kind": "unit",
-      "bound": true
-    },
-    {
-      "id": "docs/decisions/008-helper-backend-dispatch/url-form-github",
-      "claim": "GitHub: reposix::https://api.github.com/projects/<owner>/<repo>",
-      "source_loc": "ADR-008 Decision, URL table",
-      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:333-338",
-      "test_kind": "unit",
-      "bound": true
-    },
-    {
-      "id": "docs/decisions/008-helper-backend-dispatch/url-form-confluence",
-      "claim": "Confluence: reposix::https://<tenant>.atlassian.net/confluence/projects/<space>",
-      "source_loc": "ADR-008 Decision, URL table",
-      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:340-346",
-      "test_kind": "unit",
-      "bound": true
-    },
-    {
-      "id": "docs/decisions/008-helper-backend-dispatch/url-form-jira",
-      "claim": "JIRA: reposix::https://<tenant>.atlassian.net/jira/projects/<key>",
-      "source_loc": "ADR-008 Decision, URL table",
-      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:348-354",
-      "test_kind": "unit",
-      "bound": true
-    },
-    {
-      "id": "docs/decisions/008-helper-backend-dispatch/cache-slug-naming",
-      "claim": "Cache path: <cache-root>/reposix/<backend_slug>-<project>.git, project sanitized",
-      "source_loc": "ADR-008 Decision (Cache-slug naming)",
-      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:413-420",
-      "test_kind": "unit",
-      "bound": true
-    },
-    {
-      "id": "docs/decisions/008-helper-backend-dispatch/sanitize-replaces-slashes",
-      "claim": "sanitize_project_for_cache replaces /, \\\\, : with -",
-      "source_loc": "ADR-008 Decision (Cache-slug naming)",
-      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:184-192",
-      "test_kind": "unit (code inspection)",
-      "bound": true
-    },
-    {
-      "id": "docs/decisions/008-helper-backend-dispatch/cred-env-github",
-      "claim": "GitHub instantiation requires GITHUB_TOKEN env var",
-      "source_loc": "ADR-008 Decision (Credential resolution)",
-      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:475-494",
-      "test_kind": "unit",
-      "bound": true
-    },
-    {
-      "id": "docs/decisions/008-helper-backend-dispatch/cred-env-confluence",
-      "claim": "Confluence requires ATLASSIAN_API_KEY, ATLASSIAN_EMAIL, REPOSIX_CONFLUENCE_TENANT",
-      "source_loc": "ADR-008 Decision (Credential resolution)",
-      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:496-514",
-      "test_kind": "unit",
-      "bound": true
-    },
-    {
-      "id": "docs/decisions/008-helper-backend-dispatch/cred-env-jira",
-      "claim": "JIRA requires JIRA_EMAIL, JIRA_API_TOKEN, REPOSIX_JIRA_INSTANCE",
-      "source_loc": "ADR-008 Decision (Credential resolution)",
-      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:262-274",
-      "test_kind": "unit (code inspection)",
-      "bound": true
-    },
-    {
-      "id": "docs/decisions/008-helper-backend-dispatch/audit-helper-backend-instantiated",
-      "claim": "helper_backend_instantiated audit row records (backend_slug, project_for_cache, project_for_backend)",
-      "source_loc": "ADR-008 Decision (Audit signal)",
-      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:97-103",
-      "test_kind": "unit (code inspection)",
-      "bound": true
-    }
-  ]
-}
+    "source_hash": "e3649a25621444ccaacd15d3c9dcc47767fb2764b88f7b9a9a3982477a11a805",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:15:31Z",
+    "last_extracted": "2026-04-28T09:15:31Z",
+    "last_extracted_by": "mark-missing-test-call"
+  }
+]

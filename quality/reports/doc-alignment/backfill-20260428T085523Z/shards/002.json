@@ -1,249 +1,235 @@
-{
-  "schema_version": "1.0",
-  "summary": {
-    "claims_total": 16,
-    "claims_bound": 3,
-    "claims_missing_test": 11,
-    "claims_retire_proposed": 2,
-    "claims_retired": 0,
-    "alignment_ratio": 0.1875,
-    "floor": 0.5,
-    "trend_30d": "+0.00",
-    "last_walked": null
+[
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/dark-factory-partial-clone",
+    "claim": "reposix init produces working tree with extensions.partialClone, remote.origin.promisor, remote.origin.partialclonefilter configuration",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 18,
+      "line_end": 18
+    },
+    "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+    "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
+    "rationale": "Test asserts git config extensions.partialClone=origin, remote.origin.promisor=true, remote.origin.partialclonefilter=blob:none on partial-clone working tree (Phase 35 Plan 02)",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T08:59:46Z",
+    "last_extracted": "2026-04-28T08:59:46Z",
+    "last_extracted_by": "bind-call"
   },
-  "rows": [
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/dark-factory-partial-clone",
-      "claim": "reposix init produces working tree with extensions.partialClone, remote.origin.promisor, remote.origin.partialclonefilter configuration",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 18,
-        "line_end": 18
-      },
-      "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
-      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
-      "rationale": "Test asserts git config extensions.partialClone=origin, remote.origin.promisor=true, remote.origin.partialclonefilter=blob:none on partial-clone working tree (Phase 35 Plan 02)",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T08:59:46Z",
-      "last_extracted": "2026-04-28T08:59:46Z",
-      "last_extracted_by": "bind-call"
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/dark-factory-blob-limit-teaching",
+    "claim": "git sparse-checkout recovery substring is committed in git-remote-reposix helper for blob-limit error path",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 18,
+      "line_end": 18
     },
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/dark-factory-blob-limit-teaching",
-      "claim": "git sparse-checkout recovery substring is committed in git-remote-reposix helper for blob-limit error path",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 18,
-        "line_end": 18
-      },
-      "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
-      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
-      "rationale": "Test asserts literal 'git sparse-checkout' substring exists in crates/reposix-remote/src/stateless_connect.rs BLOB_LIMIT_EXCEEDED_FMT constant (Phase 34 dark-factory teaching mechanism, regression-protected Phase 35 Plan 02)",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T08:59:49Z",
-      "last_extracted": "2026-04-28T08:59:49Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
+    "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
+    "rationale": "Test asserts literal 'git sparse-checkout' substring exists in crates/reposix-remote/src/stateless_connect.rs BLOB_LIMIT_EXCEEDED_FMT constant (Phase 34 dark-factory teaching mechanism, regression-protected Phase 35 Plan 02)",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T08:59:49Z",
+    "last_extracted": "2026-04-28T08:59:49Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/dark-factory-conflict-teaching",
+    "claim": "git pull --rebase recovery substring is committed in git-remote-reposix helper for push-conflict error path",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 18,
+      "line_end": 18
     },
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/dark-factory-conflict-teaching",
-      "claim": "git pull --rebase recovery substring is committed in git-remote-reposix helper for push-conflict error path",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 18,
-        "line_end": 18
-      },
-      "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
-      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
-      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
-      "rationale": "Test asserts literal 'git pull --rebase' substring exists in crates/reposix-remote/src/main.rs for push-conflict stderr diagnostic (Phase 34 conflict-rebase teaching mechanism, regression-protected Phase 35 Plan 02)",
-      "last_verdict": "BOUND",
-      "last_run": "2026-04-28T08:59:51Z",
-      "last_extracted": "2026-04-28T08:59:51Z",
-      "last_extracted_by": "bind-call"
+    "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
+    "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
+    "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
+    "rationale": "Test asserts literal 'git pull --rebase' substring exists in crates/reposix-remote/src/main.rs for push-conflict stderr diagnostic (Phase 34 conflict-rebase teaching mechanism, regression-protected Phase 35 Plan 02)",
+    "last_verdict": "BOUND",
+    "last_run": "2026-04-28T08:59:51Z",
+    "last_extracted": "2026-04-28T08:59:51Z",
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/mkdocs-nav-diataxis-restructure",
+    "claim": "MkDocs nav restructured per Diátaxis (tutorials, how-tos, references, explanations)",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 19,
+      "line_end": 19
     },
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/mkdocs-nav-diataxis-restructure",
-      "claim": "MkDocs nav restructured per Diátaxis (tutorials, how-tos, references, explanations)",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 19,
-        "line_end": 19
-      },
-      "source_hash": "3b08f5362205d1e4443fea061c64d37f5246e326b2bfd9309f5fcee842def531",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T08:59:55Z",
-      "last_extracted": "2026-04-28T08:59:55Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "3b08f5362205d1e4443fea061c64d37f5246e326b2bfd9309f5fcee842def531",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T08:59:55Z",
+    "last_extracted": "2026-04-28T08:59:55Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/tutorial-replay-5min",
+    "claim": "5-minute first-run tutorial verified by quality/gates/docs-repro/tutorial-replay.sh (7-step quickstart from docs/tutorials/first-run.md)",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 18,
+      "line_end": 18
     },
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/tutorial-replay-5min",
-      "claim": "5-minute first-run tutorial verified by quality/gates/docs-repro/tutorial-replay.sh (7-step quickstart from docs/tutorials/first-run.md)",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 18,
-        "line_end": 18
-      },
-      "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T08:59:58Z",
-      "last_extracted": "2026-04-28T08:59:58Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T08:59:58Z",
+    "last_extracted": "2026-04-28T08:59:58Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/banned-words-linter",
+    "claim": "Banned-word linter + skill enforces P1/P2 framing rules in Markdown docs",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 21,
+      "line_end": 21
     },
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/banned-words-linter",
-      "claim": "Banned-word linter + skill enforces P1/P2 framing rules in Markdown docs",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 21,
-        "line_end": 21
-      },
-      "source_hash": "23955cb18741e86f3780538e3ffe24039ccb456bc07ff7f1cd107edcd1237f72",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:00Z",
-      "last_extracted": "2026-04-28T09:00:00Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "23955cb18741e86f3780538e3ffe24039ccb456bc07ff7f1cd107edcd1237f72",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:00Z",
+    "last_extracted": "2026-04-28T09:00:00Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/cold-reader-16page-audit",
+    "claim": "16-page cold-reader clarity audit with zero critical friction points",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 22,
+      "line_end": 22
     },
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/cold-reader-16page-audit",
-      "claim": "16-page cold-reader clarity audit with zero critical friction points",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 22,
-        "line_end": 22
-      },
-      "source_hash": "ff293831041a585f5862ba573fd3eac400ca2713b53575b17b6c83666a1d6d86",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:03Z",
-      "last_extracted": "2026-04-28T09:00:03Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "ff293831041a585f5862ba573fd3eac400ca2713b53575b17b6c83666a1d6d86",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:03Z",
+    "last_extracted": "2026-04-28T09:00:03Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs01-value-prop-10sec",
+    "claim": "Reader can understand reposix value proposition within 10 seconds of landing on docs/index.md",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 13,
+      "line_end": 13
     },
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs01-value-prop-10sec",
-      "claim": "Reader can understand reposix value proposition within 10 seconds of landing on docs/index.md",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 13,
-        "line_end": 13
-      },
-      "source_hash": "2515acd267213548b7cfb21f10f1e54d31e17095b0400c53a3f7f5c738e2f6e8",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:05Z",
-      "last_extracted": "2026-04-28T09:00:05Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "2515acd267213548b7cfb21f10f1e54d31e17095b0400c53a3f7f5c738e2f6e8",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:05Z",
+    "last_extracted": "2026-04-28T09:00:05Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs02-three-page-howitworks",
+    "claim": "Three-page 'How it works' section (filesystem-layer, git-layer, trust-model)",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 14,
+      "line_end": 14
     },
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs02-three-page-howitworks",
-      "claim": "Three-page 'How it works' section (filesystem-layer, git-layer, trust-model)",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 14,
-        "line_end": 14
-      },
-      "source_hash": "bdc9ec2e79e6f492d5b25736296e8397e7a665424a7274990b15016a2c76e1f5",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:08Z",
-      "last_extracted": "2026-04-28T09:00:08Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "bdc9ec2e79e6f492d5b25736296e8397e7a665424a7274990b15016a2c76e1f5",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:08Z",
+    "last_extracted": "2026-04-28T09:00:08Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs03-two-concept-pages",
+    "claim": "Two home-adjacent concept pages (mental-model-in-60-seconds, reposix-vs-mcp-and-sdks)",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 15,
+      "line_end": 15
     },
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs03-two-concept-pages",
-      "claim": "Two home-adjacent concept pages (mental-model-in-60-seconds, reposix-vs-mcp-and-sdks)",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 15,
-        "line_end": 15
-      },
-      "source_hash": "99332127b927d26c02ce311437a80ff481a063224da15ee4e46b88c76340a09f",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:10Z",
-      "last_extracted": "2026-04-28T09:00:10Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "99332127b927d26c02ce311437a80ff481a063224da15ee4e46b88c76340a09f",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:10Z",
+    "last_extracted": "2026-04-28T09:00:10Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs04-three-guides",
+    "claim": "Three guides (write-your-own-connector, integrate-with-your-agent, troubleshooting)",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 16,
+      "line_end": 16
     },
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs04-three-guides",
-      "claim": "Three guides (write-your-own-connector, integrate-with-your-agent, troubleshooting)",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 16,
-        "line_end": 16
-      },
-      "source_hash": "54374cc9205d411894863a48783b77406a786396cd37d8049f2209cb96fdc09c",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:13Z",
-      "last_extracted": "2026-04-28T09:00:13Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "54374cc9205d411894863a48783b77406a786396cd37d8049f2209cb96fdc09c",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:13Z",
+    "last_extracted": "2026-04-28T09:00:13Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs05-simulator-relocated",
+    "claim": "Simulator relocated from 'How it works' to Reference (docs/reference/simulator.md)",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 17,
+      "line_end": 17
     },
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs05-simulator-relocated",
-      "claim": "Simulator relocated from 'How it works' to Reference (docs/reference/simulator.md)",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 17,
-        "line_end": 17
-      },
-      "source_hash": "006b8decc2ed464583529a7e3a642cd198fbc7f9d2a9fdb60527f6f2b994f316",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:14Z",
-      "last_extracted": "2026-04-28T09:00:14Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "006b8decc2ed464583529a7e3a642cd198fbc7f9d2a9fdb60527f6f2b994f316",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:14Z",
+    "last_extracted": "2026-04-28T09:00:14Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs08-theme-readme-rewrite",
+    "claim": "mkdocs-material theme tuning + README hero rewrite",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 20,
+      "line_end": 20
     },
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs08-theme-readme-rewrite",
-      "claim": "mkdocs-material theme tuning + README hero rewrite",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 20,
-        "line_end": 20
-      },
-      "source_hash": "ac04fc674aa69679763ed36dd8746feee505f4a95ed8441749d13a798e2959b1",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:17Z",
-      "last_extracted": "2026-04-28T09:00:17Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "ac04fc674aa69679763ed36dd8746feee505f4a95ed8441749d13a798e2959b1",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:17Z",
+    "last_extracted": "2026-04-28T09:00:17Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs11-readme-mkdocs-changelog",
+    "claim": "README points at mkdocs site; CHANGELOG [v0.10.0] entry exists",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 23,
+      "line_end": 23
     },
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs11-readme-mkdocs-changelog",
-      "claim": "README points at mkdocs site; CHANGELOG [v0.10.0] entry exists",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 23,
-        "line_end": 23
-      },
-      "source_hash": "a76f570774673eadf10330e199d72edd0dbbf333baf757c030178fb4c0c495a2",
-      "last_verdict": "MISSING_TEST",
-      "last_run": "2026-04-28T09:00:19Z",
-      "last_extracted": "2026-04-28T09:00:19Z",
-      "last_extracted_by": "mark-missing-test-call"
+    "source_hash": "a76f570774673eadf10330e199d72edd0dbbf333baf757c030178fb4c0c495a2",
+    "last_verdict": "MISSING_TEST",
+    "last_run": "2026-04-28T09:00:19Z",
+    "last_extracted": "2026-04-28T09:00:19Z",
+    "last_extracted_by": "mark-missing-test-call"
+  },
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/playwright-screenshots-deferred",
+    "claim": "Playwright screenshots deferred to v0.11.0 due to cairo system libs unavailable on dev host (POLISH-11)",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 27,
+      "line_end": 27
     },
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/playwright-screenshots-deferred",
-      "claim": "Playwright screenshots deferred to v0.11.0 due to cairo system libs unavailable on dev host (POLISH-11)",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 27,
-        "line_end": 27
-      },
-      "rationale": "Superseded by v0.11.0 Phase 53 which shipped this in commit cd1b0b6. Historical milestone record only.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:00:23Z",
-      "last_extracted": "2026-04-28T09:00:23Z",
-      "last_extracted_by": "propose-retire-call"
+    "rationale": "Superseded by v0.11.0 Phase 53 which shipped this in commit cd1b0b6. Historical milestone record only.",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:00:23Z",
+    "last_extracted": "2026-04-28T09:00:23Z",
+    "last_extracted_by": "propose-retire-call"
+  },
+  {
+    "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/helper-sim-backend-tech-debt-closed",
+    "claim": "Helper-hardcodes-SimBackend tech debt closed in v0.11.0",
+    "source": {
+      "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "line_start": 28,
+      "line_end": 28
     },
-    {
-      "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/helper-sim-backend-tech-debt-closed",
-      "claim": "Helper-hardcodes-SimBackend tech debt closed in v0.11.0",
-      "source": {
-        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 28,
-        "line_end": 28
-      },
-      "rationale": "Superseded by v0.11.0 (commit cd1b0b6, ADR-008). Historical milestone record only.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:00:26Z",
-      "last_extracted": "2026-04-28T09:00:26Z",
-      "last_extracted_by": "propose-retire-call"
-    }
-  ]
-}
+    "rationale": "Superseded by v0.11.0 (commit cd1b0b6, ADR-008). Historical milestone record only.",
+    "last_verdict": "RETIRE_PROPOSED",
+    "last_run": "2026-04-28T09:00:26Z",
+    "last_extracted": "2026-04-28T09:00:26Z",
+    "last_extracted_by": "propose-retire-call"
+  }
+]

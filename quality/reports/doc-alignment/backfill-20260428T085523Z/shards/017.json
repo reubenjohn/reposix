@@ -1,189 +1,172 @@
-{
-  "schema_version": "1.0",
-  "summary": {
-    "claims_total": 10,
-    "claims_bound": 10,
-    "claims_missing_test": 0,
-    "claims_retire_proposed": 0,
-    "claims_retired": 0,
-    "alignment_ratio": 1.0,
-    "floor": 0.5,
-    "trend_30d": "+0.00",
-    "last_walked": null
+[
+  {
+    "id": "trust-model/egress-allowlist-is-single-choke-point",
+    "claim": "Egress allowlist REPOSIX_ALLOWED_ORIGINS is the single choke-point for all outbound HTTP",
+    "source": {
+      "file": "docs/how-it-works/trust-model.md",
+      "line_start": 60,
+      "line_end": 62
+    },
+    "source_hash": "e6d0d0b6ebc0e180c1877bcfaa30241b17e6b4c7375be2fcf7c7d6ee902257c2",
+    "test": "crates/reposix-core/tests/http_allowlist.rs::egress_to_non_allowlisted_host_is_rejected",
+    "test_body_hash": "a59dc261043e41cb1b83c53ba3f96152182a2b0f26284b8e4cf014dd54b028e1",
+    "rationale": "Tests non-allowlisted host rejected via InvalidOrigin error before any I/O",
+    "last_verdict": "BOUND",
+    "last_run": null,
+    "last_extracted": null,
+    "last_extracted_by": "bind-call"
   },
-  "rows": [
-    {
-      "id": "trust-model/egress-allowlist-is-single-choke-point",
-      "claim": "Egress allowlist REPOSIX_ALLOWED_ORIGINS is the single choke-point for all outbound HTTP",
-      "source": {
-        "file": "docs/how-it-works/trust-model.md",
-        "line_start": 60,
-        "line_end": 62
-      },
-      "source_hash": "e6d0d0b6ebc0e180c1877bcfaa30241b17e6b4c7375be2fcf7c7d6ee902257c2",
-      "test": "crates/reposix-core/tests/http_allowlist.rs::egress_to_non_allowlisted_host_is_rejected",
-      "test_body_hash": "a59dc261043e41cb1b83c53ba3f96152182a2b0f26284b8e4cf014dd54b028e1",
-      "rationale": "Tests non-allowlisted host rejected via InvalidOrigin error before any I/O",
-      "last_verdict": "BOUND",
-      "last_run": null,
-      "last_extracted": null,
-      "last_extracted_by": "bind-call"
+  {
+    "id": "trust-model/no-direct-reqwest-client-construction",
+    "claim": "All HTTP clients built through reposix_core::http::client(); direct reqwest::Client::new() banned by clippy",
+    "source": {
+      "file": "docs/how-it-works/trust-model.md",
+      "line_start": 60,
+      "line_end": 62
     },
-    {
-      "id": "trust-model/no-direct-reqwest-client-construction",
-      "claim": "All HTTP clients built through reposix_core::http::client(); direct reqwest::Client::new() banned by clippy",
-      "source": {
-        "file": "docs/how-it-works/trust-model.md",
-        "line_start": 60,
-        "line_end": 62
-      },
-      "source_hash": "e6d0d0b6ebc0e180c1877bcfaa30241b17e6b4c7375be2fcf7c7d6ee902257c2",
-      "test": "crates/reposix-core/tests/compile_fail.rs::http_client_inner_is_private",
-      "test_body_hash": "placeholder_hash_no_match",
-      "rationale": "Compile-fail test asserts HttpClient::inner is private",
-      "last_verdict": "BOUND",
-      "last_run": null,
-      "last_extracted": null,
-      "last_extracted_by": "bind-call"
+    "source_hash": "e6d0d0b6ebc0e180c1877bcfaa30241b17e6b4c7375be2fcf7c7d6ee902257c2",
+    "test": "crates/reposix-core/tests/compile_fail.rs::http_client_inner_is_private",
+    "test_body_hash": "placeholder_hash_no_match",
+    "rationale": "Compile-fail test asserts HttpClient::inner is private",
+    "last_verdict": "BOUND",
+    "last_run": null,
+    "last_extracted": null,
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "trust-model/frontmatter-field-allowlist-strips-server-fields",
+    "claim": "Frontmatter field allowlist strips id/created_at/version/updated_at before REST call",
+    "source": {
+      "file": "docs/how-it-works/trust-model.md",
+      "line_start": 64,
+      "line_end": 64
     },
-    {
-      "id": "trust-model/frontmatter-field-allowlist-strips-server-fields",
-      "claim": "Frontmatter field allowlist strips id/created_at/version/updated_at before REST call",
-      "source": {
-        "file": "docs/how-it-works/trust-model.md",
-        "line_start": 64,
-        "line_end": 64
-      },
-      "source_hash": "a4bf61d0a0a5efd7c0a84c8c2d7eb5350a6835c098127664291a7f39ef9277cb",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields",
-      "test_body_hash": "de220ce400c981c6c08ab0af8b6e04d6989c4702f8de0949e07b30f271ff1251",
-      "rationale": "Tests inbound blob with id:999999 and version:999 overrides stripped from PATCH body",
-      "last_verdict": "BOUND",
-      "last_run": null,
-      "last_extracted": null,
-      "last_extracted_by": "bind-call"
+    "source_hash": "a4bf61d0a0a5efd7c0a84c8c2d7eb5350a6835c098127664291a7f39ef9277cb",
+    "test": "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields",
+    "test_body_hash": "de220ce400c981c6c08ab0af8b6e04d6989c4702f8de0949e07b30f271ff1251",
+    "rationale": "Tests inbound blob with id:999999 and version:999 overrides stripped from PATCH body",
+    "last_verdict": "BOUND",
+    "last_run": null,
+    "last_extracted": null,
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "trust-model/tainted-untainted-type-system-barrier",
+    "claim": "Tainted<T> cannot coerce to Untainted<T>; sanitize() is the only legal conversion",
+    "source": {
+      "file": "docs/how-it-works/trust-model.md",
+      "line_start": 65,
+      "line_end": 65
     },
-    {
-      "id": "trust-model/tainted-untainted-type-system-barrier",
-      "claim": "Tainted<T> cannot coerce to Untainted<T>; sanitize() is the only legal conversion",
-      "source": {
-        "file": "docs/how-it-works/trust-model.md",
-        "line_start": 65,
-        "line_end": 65
-      },
-      "source_hash": "5adfa98de928b70c22a4e5e2db3be7913c6d93d720303d6a2b3e18e674ab9c62",
-      "test": "crates/reposix-core/tests/compile_fail.rs::tainted_cannot_be_used_where_untainted_required",
-      "test_body_hash": "placeholder_hash_no_match",
-      "rationale": "Compile-fail test asserts Tainted cannot be used where Untainted required",
-      "last_verdict": "BOUND",
-      "last_run": null,
-      "last_extracted": null,
-      "last_extracted_by": "bind-call"
+    "source_hash": "5adfa98de928b70c22a4e5e2db3be7913c6d93d720303d6a2b3e18e674ab9c62",
+    "test": "crates/reposix-core/tests/compile_fail.rs::tainted_cannot_be_used_where_untainted_required",
+    "test_body_hash": "placeholder_hash_no_match",
+    "rationale": "Compile-fail test asserts Tainted cannot be used where Untainted required",
+    "last_verdict": "BOUND",
+    "last_run": null,
+    "last_extracted": null,
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "trust-model/untainted-new-is-crate-private",
+    "claim": "Untainted::new is pub(crate) only; outside-crate sites must use sanitize()",
+    "source": {
+      "file": "docs/how-it-works/trust-model.md",
+      "line_start": 65,
+      "line_end": 65
     },
-    {
-      "id": "trust-model/untainted-new-is-crate-private",
-      "claim": "Untainted::new is pub(crate) only; outside-crate sites must use sanitize()",
-      "source": {
-        "file": "docs/how-it-works/trust-model.md",
-        "line_start": 65,
-        "line_end": 65
-      },
-      "source_hash": "5adfa98de928b70c22a4e5e2db3be7913c6d93d720303d6a2b3e18e674ab9c62",
-      "test": "crates/reposix-core/tests/compile_fail.rs::untainted_new_is_pub_crate_only",
-      "test_body_hash": "placeholder_hash_no_match",
-      "rationale": "Compile-fail test prevents future promotion of pub(crate) fn new to pub fn new",
-      "last_verdict": "BOUND",
-      "last_run": null,
-      "last_extracted": null,
-      "last_extracted_by": "bind-call"
+    "source_hash": "5adfa98de928b70c22a4e5e2db3be7913c6d93d720303d6a2b3e18e674ab9c62",
+    "test": "crates/reposix-core/tests/compile_fail.rs::untainted_new_is_pub_crate_only",
+    "test_body_hash": "placeholder_hash_no_match",
+    "rationale": "Compile-fail test prevents future promotion of pub(crate) fn new to pub fn new",
+    "last_verdict": "BOUND",
+    "last_run": null,
+    "last_extracted": null,
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "trust-model/push-time-conflict-detection-fetch-first",
+    "claim": "Push-time conflict detection rejects stale-base with 'error refs/heads/main fetch first'",
+    "source": {
+      "file": "docs/how-it-works/trust-model.md",
+      "line_start": 66,
+      "line_end": 66
     },
-    {
-      "id": "trust-model/push-time-conflict-detection-fetch-first",
-      "claim": "Push-time conflict detection rejects stale-base with 'error refs/heads/main fetch first'",
-      "source": {
-        "file": "docs/how-it-works/trust-model.md",
-        "line_start": 66,
-        "line_end": 66
-      },
-      "source_hash": "e11e2837d7dda1f695d0b20b70a3123fc1993a6e6e1ca7a92b85003b052afc77",
-      "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
-      "test_body_hash": "a36c6c8fa2ac5d9432b2fd7211670abfac00a9ef74e0d6fc74d0e8529b5f0168",
-      "rationale": "Tests stale-base push rejected with canned error and zero REST writes",
-      "last_verdict": "BOUND",
-      "last_run": null,
-      "last_extracted": null,
-      "last_extracted_by": "bind-call"
+    "source_hash": "e11e2837d7dda1f695d0b20b70a3123fc1993a6e6e1ca7a92b85003b052afc77",
+    "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
+    "test_body_hash": "a36c6c8fa2ac5d9432b2fd7211670abfac00a9ef74e0d6fc74d0e8529b5f0168",
+    "rationale": "Tests stale-base push rejected with canned error and zero REST writes",
+    "last_verdict": "BOUND",
+    "last_run": null,
+    "last_extracted": null,
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "trust-model/audit-events-cache-append-only-triggers",
+    "claim": "audit_events_cache is append-only via BEFORE UPDATE/DELETE triggers in SQLite",
+    "source": {
+      "file": "docs/how-it-works/trust-model.md",
+      "line_start": 67,
+      "line_end": 67
     },
-    {
-      "id": "trust-model/audit-events-cache-append-only-triggers",
-      "claim": "audit_events_cache is append-only via BEFORE UPDATE/DELETE triggers in SQLite",
-      "source": {
-        "file": "docs/how-it-works/trust-model.md",
-        "line_start": 67,
-        "line_end": 67
-      },
-      "source_hash": "9e7f8da9c56a6d548034df43ac217759e02c4affb482effa6d7b5c8a3dae9ad8",
-      "test": "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail",
-      "test_body_hash": "placeholder_hash_no_match",
-      "rationale": "Tests UPDATE and DELETE both fail with 'append-only' trigger abort",
-      "last_verdict": "BOUND",
-      "last_run": null,
-      "last_extracted": null,
-      "last_extracted_by": "bind-call"
+    "source_hash": "9e7f8da9c56a6d548034df43ac217759e02c4affb482effa6d7b5c8a3dae9ad8",
+    "test": "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail",
+    "test_body_hash": "placeholder_hash_no_match",
+    "rationale": "Tests UPDATE and DELETE both fail with 'append-only' trigger abort",
+    "last_verdict": "BOUND",
+    "last_run": null,
+    "last_extracted": null,
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "trust-model/egress-denied-audit-op",
+    "claim": "Allowlist violation writes op='egress_denied' audit row before returning error",
+    "source": {
+      "file": "docs/how-it-works/trust-model.md",
+      "line_start": 83,
+      "line_end": 84
     },
-    {
-      "id": "trust-model/egress-denied-audit-op",
-      "claim": "Allowlist violation writes op='egress_denied' audit row before returning error",
-      "source": {
-        "file": "docs/how-it-works/trust-model.md",
-        "line_start": 83,
-        "line_end": 84
-      },
-      "source_hash": "160f43b3e17e36e4740a65e897f5b6c19074ade6214b5d7196377118d314dcc9",
-      "test": "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error",
-      "test_body_hash": "b021be2ecc99edffa48b444750485756e208836076f13dd21602267f4c23442c",
-      "rationale": "Tests Error::Egress returned and audit row with op='egress_denied' written",
-      "last_verdict": "BOUND",
-      "last_run": null,
-      "last_extracted": null,
-      "last_extracted_by": "bind-call"
+    "source_hash": "160f43b3e17e36e4740a65e897f5b6c19074ade6214b5d7196377118d314dcc9",
+    "test": "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error",
+    "test_body_hash": "b021be2ecc99edffa48b444750485756e208836076f13dd21602267f4c23442c",
+    "rationale": "Tests Error::Egress returned and audit row with op='egress_denied' written",
+    "last_verdict": "BOUND",
+    "last_run": null,
+    "last_extracted": null,
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "trust-model/default-allowlist-loopback-only",
+    "claim": "Default allowlist is http://127.0.0.1:* and http://localhost:*; non-loopback denied by default",
+    "source": {
+      "file": "docs/how-it-works/trust-model.md",
+      "line_start": 63,
+      "line_end": 63
     },
-    {
-      "id": "trust-model/default-allowlist-loopback-only",
-      "claim": "Default allowlist is http://127.0.0.1:* and http://localhost:*; non-loopback denied by default",
-      "source": {
-        "file": "docs/how-it-works/trust-model.md",
-        "line_start": 63,
-        "line_end": 63
-      },
-      "source_hash": "68b450076987cf93ae5e362ad513339eb7041f60459c9744433709862af86b90",
-      "test": [
-        "crates/reposix-core/tests/http_allowlist.rs::loopback_is_allowed_by_default",
-        "crates/reposix-core/tests/http_allowlist.rs::non_loopback_is_denied_by_default"
-      ],
-      "test_body_hash": "ebbe56ee7a2b125e5cd7b45e076df44b8eb51cf01ecbfa2be87479a6100e9170",
-      "rationale": "Tests loopback succeeds under default allowlist; non-loopback IP rejected",
-      "last_verdict": "BOUND",
-      "last_run": null,
-      "last_extracted": null,
-      "last_extracted_by": "bind-call"
+    "source_hash": "68b450076987cf93ae5e362ad513339eb7041f60459c9744433709862af86b90",
+    "test": "crates/reposix-core/tests/http_allowlist.rs::loopback_is_allowed_by_default",
+    "test_body_hash": "ebbe56ee7a2b125e5cd7b45e076df44b8eb51cf01ecbfa2be87479a6100e9170",
+    "rationale": "Tests loopback succeeds under default allowlist; non-loopback IP rejected",
+    "last_verdict": "BOUND",
+    "last_run": null,
+    "last_extracted": null,
+    "last_extracted_by": "bind-call"
+  },
+  {
+    "id": "trust-model/http-redirects-not-followed",
+    "claim": "HTTP redirects are not followed; caller must re-feed Location header target through allowlist gate",
+    "source": {
+      "file": "docs/how-it-works/trust-model.md",
+      "line_start": 20,
+      "line_end": 21
     },
-    {
-      "id": "trust-model/http-redirects-not-followed",
-      "claim": "HTTP redirects are not followed; caller must re-feed Location header target through allowlist gate",
-      "source": {
-        "file": "docs/how-it-works/trust-model.md",
-        "line_start": 20,
-        "line_end": 21
-      },
-      "source_hash": "b9061dbdb4c02b22847415d9a1cd0a5fdbc62bc645ee6df7710df7ed9f0de70d",
-      "test": "crates/reposix-core/tests/http_allowlist.rs::redirect_target_is_rechecked_against_allowlist",
-      "test_body_hash": "ab297c5dfbaae7e36ec9e763500ab01653271c80dff2389e2d1a46bc16ab4fd4",
-      "rationale": "Tests 302 response surfaces as-is without following redirect; re-feeding target through allowlist recheck rejects attacker.example",
-      "last_verdict": "BOUND",
-      "last_run": null,
-      "last_extracted": null,
-      "last_extracted_by": "bind-call"
-    }
-  ]
-}
+    "source_hash": "b9061dbdb4c02b22847415d9a1cd0a5fdbc62bc645ee6df7710df7ed9f0de70d",
+    "test": "crates/reposix-core/tests/http_allowlist.rs::redirect_target_is_rechecked_against_allowlist",
+    "test_body_hash": "ab297c5dfbaae7e36ec9e763500ab01653271c80dff2389e2d1a46bc16ab4fd4",
+    "rationale": "Tests 302 response surfaces as-is without following redirect; re-feeding target through allowlist recheck rejects attacker.example",
+    "last_verdict": "BOUND",
+    "last_run": null,
+    "last_extracted": null,
+    "last_extracted_by": "bind-call"
+  }
+]
