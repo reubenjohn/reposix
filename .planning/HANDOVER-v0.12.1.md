@@ -147,14 +147,58 @@ Two floors evolve differently because they measure different things:
 
 Rule: only a deliberate human commit ratchets either floor up. The walker NEVER auto-ratchets. A regression below floor BLOCKs pre-push.
 
-### What "retire" means
+### What "retire" means + per-row cleanup actions
 
-Retirement removes a row from the `claims_total - claims_retired` denominator. Source files **stay on disk**:
-- `docs/architecture/redirect`, `docs/demo/redirect` — keep file (mkdocs uses for redirects).
-- Archived `REQUIREMENTS.md` lines — keep line (historical record of what each milestone promised).
-- The catalog row stays (audit trail) with `last_verdict: RETIRE_CONFIRMED` — inert in the alignment math.
+Retirement removes a row from the `claims_total - claims_retired` denominator. Whether the SOURCE FILE/LINE also gets cleaned up depends on what it is — owner clarified 2026-04-28:
+
+| Source kind | After retire | Why |
+|---|---|---|
+| Redirect-only stub doc (`docs/architecture.md`, `docs/demo.md`) | **DELETE the stub file** + add to `mkdocs.yml` `plugins.redirects.redirect_maps` | The stub IS the redirect mechanism today; the proper mechanism is mkdocs `redirects` plugin (HTTP-level redirects). Stubs are technical debt — clean them up. |
+| Archived `REQUIREMENTS.md` line (e.g. `HARD-04`, `SWARM-01`, `helper-sim-backend-tech-debt-closed`) | **KEEP line** | Historical record of what the closed milestone promised. Deletion rewrites history. |
+| Catalog row | **KEEP** (`last_verdict: RETIRE_CONFIRMED`) | Audit trail of the retirement decision; inert in alignment math. |
+
+For the 6 audit-recommended retires (W2 closure):
+
+1. `docs/architecture/redirect` → `confirm-retire` THEN delete `docs/architecture.md` + update `mkdocs.yml`.
+2. `docs/demo/redirect` → `confirm-retire` THEN delete `docs/demo.md` + update `mkdocs.yml`.
+3. `helper-sim-backend-tech-debt-closed` → `confirm-retire` only (line stays).
+4. `hard-04` → `confirm-retire` only.
+5. `swarm-01` → `confirm-retire` only.
+6. `swarm-02` → `confirm-retire` only.
+
+For the 24 glossary RETIRE_CONFIRMED rows (already done): the `docs/reference/glossary.md` file STAYS — glossary is a useful reference page; just file-level-excluded from chunker via W12 (`.docalignignore` or frontmatter directive).
 
 `confirm-retire` is the only verb that flips a row to RETIRE_CONFIRMED. It is env-guarded (`$CLAUDE_AGENT_CONTEXT`) AND tty-guarded (`isatty(stdin)`), so only humans from a real terminal can confirm. The path of least resistance for an agent CANNOT be "delete the claim to make CI green."
+
+### W2-followup — redirect cleanup (NEW, owner clarified)
+
+After `bash scripts/v0.12.1-confirm-audit-retires.sh` succeeds, the redirects need physical cleanup:
+
+```bash
+# 1. Add the redirects plugin to mkdocs.yml under `plugins:`:
+#    - redirects:
+#        redirect_maps:
+#          architecture.md: how-it-works/git-layer.md
+#          demo.md: tutorials/first-run.md
+#
+# 2. Delete the stub files:
+git rm docs/architecture.md docs/demo.md
+#
+# 3. Verify the redirect plugin is installed:
+pip show mkdocs-redirects || pip install mkdocs-redirects
+#
+# 4. Build + verify:
+mkdocs build --strict
+#
+# 5. Spot-check that the previous URLs still redirect (open the site
+#    locally with `mkdocs serve` and visit /architecture/ + /demo/).
+#
+# 6. Commit:
+git add mkdocs.yml docs/architecture.md docs/demo.md
+git commit -m "docs(p67): replace stub redirects with mkdocs-redirects plugin"
+```
+
+Note: `mkdocs-redirects` may already be in the project's `requirements*.txt` for docs builds. Check before installing.
 
 ### W12 — File-level chunker exclusion (NEW)
 
