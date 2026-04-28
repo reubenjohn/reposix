@@ -330,17 +330,30 @@ Working on a quality-gates task? Read first:
 - `.planning/research/v0.12.0-{vision-and-mental-model, naming-and-architecture, roadmap-and-rationale, autonomous-execution-protocol}.md` — design rationale.
 - `.planning/milestones/v0.12.0-phases/ARCHIVE.md` — historical phase contributions.
 
+### P64 — Docs-alignment dimension framework + skill (added 2026-04-28)
+
+New 9th dimension: **docs-alignment** (claims have tests; hash drift detection). The dimension exists because v0.9.0's git-native pivot silently dropped Confluence page-tree-symlink behavior — no test failed because no test asserted the user-facing surface. Tests were derived from the implementation, not from prose claims.
+
+Wave 1 (catalog-first, `d0d4730`): empty-state catalog `quality/catalogs/doc-alignment.json` (schema_version 1.0; summary block; floor 0.50; rows []), 3 structure-dim freshness rows guarding catalog presence + summary-block-valid + floor-monotonicity, 5 skill files at `.claude/skills/reposix-quality-doc-alignment/` + 2 thin slash-command skills at `.claude/skills/reposix-quality-{refresh,backfill}/` (preflight committed alongside the contract).
+
+Wave 2 (binary surface, `98dcf11` + `86036c5`): NEW workspace crate `crates/reposix-quality/` — self-contained, `#![forbid(unsafe_code)]` + `#![warn(clippy::pedantic)]`, two `[[bin]]` targets (`reposix-quality` umbrella + `hash_test_fn` standalone). Full clap surface: `doc-alignment {bind, propose-retire, confirm-retire, mark-missing-test, plan-refresh, plan-backfill, merge-shards, walk, status}` + generic `run --gate/--cadence` + `verify --row-id` + `walk` alias. `syn`-based hash binary at `quality/gates/docs-alignment/hash_test_fn` hashes Rust function bodies as `to_token_stream()` sha256 (comments + whitespace normalize away). 28 tests (10 unit + 18 integration golden).
+
+Wave 3 (this commit): runner integration via new `docs-alignment/walk` gate row at cadence=pre-push (P0) shelling to `quality/gates/docs-alignment/walk.sh` (release-first, debug-fallback). Two project-wide principles in `quality/PROTOCOL.md`: Principle A (subagents propose with citations; tools validate and mint) and Principle B (tools fail loud, structured, agent-resolvable) with cross-tool examples. Verifier verdict at `quality/reports/verdicts/p64/VERDICT.md` (Path B in-session per P56–P63 precedent).
+
+Slash commands `/reposix-quality-refresh <doc>` and `/reposix-quality-backfill` are top-level only (depth-2 unreachable from inside `gsd-executor`). P65 runs the first backfill; the dimension goes from empty-state to populated then.
+
 ## Quality Gates — dimension/cadence/kind taxonomy
 
 The v0.12.0 Quality Gates framework lives at `quality/`. Runtime contract:
 `quality/PROTOCOL.md`. Every quality check (gate) sits at one
 `(dimension, cadence, kind)` coordinate.
 
-**8 dimensions** — the regression classes the project has:
+**9 dimensions** — the regression classes the project has:
 
 | Dimension | Checks | Home |
 |---|---|---|
 | code | clippy, fmt, cargo nextest | `quality/gates/code/` (P58) |
+| docs-alignment | claims have tests; hash drift detection | `quality/gates/docs-alignment/` (P64 — shipped) |
 | docs-build | mkdocs strict, mermaid renders, link resolve, badges resolve | `quality/gates/docs-build/` (P60) |
 | docs-repro | snippet extract, container rehearse, tutorial replay | `quality/gates/docs-repro/` (P59) |
 | release | gh assets present, brew formula current, crates.io max version, installer bytes | `quality/gates/release/` (P58) |

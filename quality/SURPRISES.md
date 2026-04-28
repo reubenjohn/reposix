@@ -213,3 +213,46 @@ CLAUDE.md OP-4 (self-improving infrastructure). 4/4 catalog
 tracked_in REQ-IDs resolve to v0.12.1 placeholders. Lesson: if you
 write a 500-char inline JSON/regex pipeline twice, the second time
 the right move is `quality/gates/<dim>/<verb>-<noun>.py` first.
+
+2026-04-28 P64: no significant pivots; the 7-doc design bundle at
+`.planning/research/v0.12.0-docs-alignment-design/` left every
+architectural decision pre-decided. Wave 1 (catalog-first commit
+`d0d4730`) ~25min; Wave 2 (full Rust crate + 28 tests + hash binary
+`98dcf11`+`86036c5`) ~15min wall-clock; Wave 3 (this commit + Path B
+verifier dispatch) within plan budget. Suspicion-of-haste rule
+honored: verifier scrutinized 14 success criteria with primary-source
+evidence, spot-checked 3 catalog rows + 3 tests, re-ran cargo test
+exit 0. — Lesson: a tight upfront design bundle (rationale +
+architecture + execution-modes + overnight-protocol + p64-infra-brief
++ p65-backfill-brief + README) trades ~3h planning for ~5h execution
+saved. Worth it on phases that touch >5 files and >2 abstractions.
+
+2026-04-28 P64 Wave 3: docs-alignment/walk gate registry placement
+required a design call — the doc-alignment.json catalog has its own
+rigid claim-row schema (id/claim/source/source_hash/test/...) that
+the binary's `Catalog` struct deserializes; mixing a runner-style gate
+row (cadence/verifier/artifact) into `rows[]` would break
+deserialization. — Resolved by adding the `docs-alignment/walk` row
+to `quality/catalogs/freshness-invariants.json` (the structure
+dimension's catalog) under dimension=`docs-alignment`. The runner is
+catalog-agnostic — it discovers rows across every catalog file. New
+gate row landed at P0 pre-push without schema change to either
+catalog. Lesson: the "catalog" dimension boundary in the unified
+schema is per-row (`row.dimension`), not per-file — gate rows can
+live wherever the schema fits.
+
+2026-04-28 P64 Wave 3: walker writes `summary.last_walked` on every
+invocation, mutating `quality/catalogs/doc-alignment.json` even when
+rows == [] (empty-state). This produces git churn on every pre-push
+that violates the runner's `catalog_dirty()` philosophy
+(per-run timestamp churn lives in artifacts, not committed catalogs).
+— Accepted for v0.12.0; the walker's spec at
+`.planning/research/v0.12.0-docs-alignment-design/02-architecture.md`
+treats `last_walked` as a catalog-summary field, not artifact metadata.
+v0.12.1 carry-forward (filed as part of MIGRATE-03): either move
+`last_walked` into the artifact (`quality/reports/verifications/docs-alignment/walk.json`)
+or extend `catalog_dirty()` to ignore summary.last_walked drift the
+same way it ignores per-row last_verified drift. Lesson: walker
+state-change semantics need to align with the runner's
+status-only-persists rule from day one; retrofit is cheaper before
+backfill populates rows.
