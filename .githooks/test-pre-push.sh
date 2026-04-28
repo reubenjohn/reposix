@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Unit tests for scripts/hooks/pre-push.
+# Unit tests for .githooks/pre-push.
 #
 # Runs in-place inside the repo. Creates a throw-away temp file with
 # adversarial content, stages it, wraps it in a dummy commit on a
@@ -8,7 +8,7 @@
 # everything down — leaving the working tree exactly as it was.
 #
 # Usage:
-#   bash scripts/hooks/test-pre-push.sh
+#   bash .githooks/test-pre-push.sh
 #
 # Exit code: 0 on all green, 1 on any failure.
 # CI-safe: no network calls, no modifications to main.
@@ -20,8 +20,8 @@ readonly GREEN='\033[0;32m'
 readonly YELLOW='\033[1;33m'
 readonly NC='\033[0m'
 
-readonly repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-readonly hook="${repo_root}/scripts/hooks/pre-push"
+readonly repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+readonly hook="${repo_root}/.githooks/pre-push"
 
 cd "$repo_root"
 

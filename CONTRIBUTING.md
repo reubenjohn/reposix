@@ -55,7 +55,7 @@ Two layers of hooks run on this repo:
    pip install pre-commit
    pre-commit install
    ```
-2. **Project git hooks** — `scripts/install-hooks.sh` symlinks `scripts/hooks/*` into `.git/hooks/`. Currently this installs a `pre-push` check.
+2. **Project git hooks** — tracked under `.githooks/`. `scripts/install-hooks.sh` is a one-liner that sets `core.hooksPath=.githooks` for this repo (idempotent), so `git pull` automatically picks up hook updates without a re-install. Personal global hooks at `~/.git-hooks/<event>` chain in at the END as optional add-ons; the project's hook is always the base layer.
    ```bash
    bash scripts/install-hooks.sh
    ```

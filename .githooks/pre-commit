@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# .githooks/pre-commit -- project-base + optional personal add-on chain.
+#
+# Composition rule:
+#   1. Project-side pre-commit logic (none yet) runs FIRST.
+#   2. Personal global hook at ~/.git-hooks/pre-commit chains in at the
+#      END if executable and non-delegate.
+#
+# When project-side logic is added later, insert it ABOVE the chain
+# block so the project gate fails fast before the personal warnings
+# fire. The recursion guard mirrors .githooks/pre-push: skip globals
+# whose body contains the "delegate to repo-local" sentinel.
+#
+# Bypass (discouraged): git commit --no-verify
+
+set -uo pipefail
+
+# (1) Project-side pre-commit logic -- intentionally empty for now.
+
+# (2) Optional personal add-on chain.
+GLOBAL="$HOME/.git-hooks/pre-commit"
+if [[ -x "$GLOBAL" ]] && ! grep -q "delegate to repo-local" "$GLOBAL" 2>/dev/null; then
+  exec "$GLOBAL" "$@"
+fi
+
+exit 0

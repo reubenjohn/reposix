@@ -39,7 +39,7 @@ readonly EXCLUDE_DIRS=(
   '.git'
   'target'
   'node_modules'
-  'scripts/hooks'
+  '.githooks'
   'quality/gates/structure'
 )
 

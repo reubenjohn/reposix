@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# .githooks/pre-push -- Quality Gates pre-push hook (tracked under .githooks/).
+#
+# Body composition:
+#   (1) Credential-hygiene gate (P0, fail-fast). Stdin (push-ref ranges
+#       from git) is piped to quality/gates/structure/cred-hygiene.sh,
+#       which scans the outgoing range for token prefixes (verbatim
+#       PATTERNS + EXCLUDE_DIRS migrated from this hook in P60 Wave D).
+#   (2) Quality Gates runner. python3 quality/runners/run.py --cadence
+#       pre-push composes every catalog row tagged pre-push: cargo fmt
+#       + clippy + mkdocs --strict + mermaid renders + doc links +
+#       badges-resolve + freshness invariants + banned words.
+#   (3) Optional personal add-on chain. If ~/.git-hooks/pre-push exists
+#       AND is NOT the delegate-to-project shim, invoke it with the
+#       same stdin so personal global checks run AFTER the project's
+#       base layer. Recursion guard: if the global hook contains the
+#       sentinel "delegate to repo-local" comment, skip it (otherwise
+#       core.hooksPath=.githooks + a delegate global produce an
+#       infinite loop).
+#
+# Composition rule (project-base + optional personal add-on):
+#   Project hooks ALWAYS run; personal global hooks chain in at the
+#   END if present and non-delegate. The reverse direction (global
+#   delegates to project) is footgun-prone and abandoned.
+#
+# Lineage: pre-Wave-E hook chained scripts/check-docs-site.sh,
+# scripts/check-mermaid-renders.sh, cargo fmt, cargo clippy, plus the
+# parallel-migration runner block. P60 SIMPLIFY-10 collapsed that into
+# the single runner invocation; the cred-hygiene scan stays IN the hook
+# because the runner does not pipe stdin.
+#
+# Bypass (strongly discouraged -- rotate any leaked tokens AT THE
+# ISSUING PLATFORM before bypassing):
+#   git push --no-verify
+#
+# Install: bash scripts/install-hooks.sh
+
+set -euo pipefail
+
+readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$REPO_ROOT"
+
+# (1) Cred-hygiene gate (P0). Buffer stdin once -- the global hook in
+# step (3) needs the same ref-range bytes git fed us, and stdin is
+# single-shot.
+stdin_buf=$(cat)
+if [[ -n "$stdin_buf" ]]; then
+  if ! printf '%s\n' "$stdin_buf" | bash "$REPO_ROOT/quality/gates/structure/cred-hygiene.sh"; then
+    exit 1
+  fi
+fi
+
+# (2) Quality Gates runner -- propagates exit code.
+if ! python3 "$REPO_ROOT/quality/runners/run.py" --cadence pre-push; then
+  exit $?
+fi
+
+# (3) Optional personal add-on chain. Skip the delegate-to-project shim
+# (its body contains the sentinel "delegate to repo-local") to avoid
+# infinite recursion when core.hooksPath=.githooks bypasses the global
+# config but a delegate global hook execs us back.
+GLOBAL="$HOME/.git-hooks/pre-push"
+if [[ -x "$GLOBAL" ]] && ! grep -q "delegate to repo-local" "$GLOBAL" 2>/dev/null; then
+  printf '%s\n' "$stdin_buf" | "$GLOBAL" "$@"
+fi

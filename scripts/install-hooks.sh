@@ -1,50 +1,54 @@
 #!/usr/bin/env bash
 #
-# Install the reposix git hooks (OP-7 from HANDOFF.md).
+# Install the reposix git hooks by pointing core.hooksPath at the
+# tracked .githooks/ directory.
 #
-# Creates symlinks in .git/hooks/ pointing at scripts/hooks/*.
-# Symlinks (not copies) so hook updates land the next time anyone
-# pulls, without a second install step.
+# Composition rule (.githooks/pre-{commit,push}):
+#   - Project hooks are the base layer that ALWAYS runs.
+#   - Personal global hooks at ~/.git-hooks/<event> chain in at the END
+#     as optional add-ons (recursion-guarded against the
+#     delegate-to-project shim pattern).
 #
-# Safe to re-run — symlinks are re-created idempotently.
+# Safe to re-run -- core.hooksPath is set idempotently.
 
 set -euo pipefail
 
 readonly repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-readonly hooks_src="${repo_root}/scripts/hooks"
-readonly hooks_dst="${repo_root}/.git/hooks"
+readonly hooks_src="${repo_root}/.githooks"
 
-if [[ ! -d "$hooks_dst" ]]; then
-  printf '%s\n' "✖ .git/hooks not found — are you inside a git working tree?" >&2
+if [[ ! -d "${repo_root}/.git" ]]; then
+  printf '%s\n' "✖ ${repo_root}/.git not found — are you inside a git working tree?" >&2
   exit 1
 fi
 
 if [[ ! -d "$hooks_src" ]]; then
-  printf '%s\n' "✖ scripts/hooks not found (expected at ${hooks_src})" >&2
+  printf '%s\n' "✖ .githooks/ not found (expected at ${hooks_src})" >&2
   exit 1
 fi
 
+# Point this repo's core.hooksPath at .githooks (relative path so the
+# value works inside worktrees too). Idempotent.
+git -C "$repo_root" config core.hooksPath .githooks
+
+# Ensure executable bits on every tracked hook.
 installed=0
 for hook_path in "$hooks_src"/*; do
   [[ -f "$hook_path" ]] || continue
-  hook_name="$(basename "$hook_path")"
-  dst="${hooks_dst}/${hook_name}"
-
-  # Make the source executable in case it was checked out without +x.
+  name="$(basename "$hook_path")"
+  # Skip the test harness and any non-hook helpers (they have a "."
+  # in the name). Real git hook events have no extension.
+  if [[ "$name" == *.* ]]; then continue; fi
   chmod +x "$hook_path"
-
-  # Replace any existing link/file with a fresh symlink.
-  rm -f "$dst"
-  ln -s "../../scripts/hooks/${hook_name}" "$dst"
   installed=$((installed + 1))
-
-  printf '✓ installed hook: %s -> scripts/hooks/%s\n' "$hook_name" "$hook_name"
+  printf '✓ enabled hook: .githooks/%s\n' "$name"
 done
 
 if [[ "$installed" -eq 0 ]]; then
-  printf '%s\n' "(nothing to install — scripts/hooks/ is empty)" >&2
+  printf '%s\n' "(nothing to enable — .githooks/ has no event hooks)" >&2
   exit 0
 fi
 
-printf '\n%s\n' "All hooks installed. To bypass a hook temporarily (discouraged):"
-printf '%s\n' "  git push --no-verify    # skip pre-push checks"
+printf '\n%s\n' "core.hooksPath = $(git -C "$repo_root" config --get core.hooksPath)"
+printf '%s\n' "All hooks enabled. To bypass a hook temporarily (discouraged):"
+printf '%s\n' "  git push --no-verify       # skip pre-push checks"
+printf '%s\n' "  git commit --no-verify     # skip pre-commit checks"
