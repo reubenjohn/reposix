@@ -74,6 +74,45 @@ The runner sets exactly one of the following on each row after every run:
 | `NOT-VERIFIED` | No artifact dated this session, or artifact predates `freshness_ttl`. The row is RED for grading purposes; the runner did not produce a determination. |
 | `WAIVED` | An in-scope `waiver` block applies and `waiver.until` is in the future. The row is treated as GREEN for verdict purposes; the verifier is not invoked. Waiver expiry flips the row back to FAIL on next verify. |
 
+## docs-alignment dimension
+
+The catalog at `quality/catalogs/doc-alignment.json` extends the unified
+schema with a per-dimension shape: a wrapper `summary` block + per-row
+`source_hash` / `test_body_hash` / `last_verdict` / `last_extracted` /
+`last_extracted_by` fields. Source of truth:
+`.planning/research/v0.12.0-docs-alignment-design/02-architecture.md`.
+
+**Row schema (added fields):** `id` (kebab-case `<slug>` -- the dimension
+prefix is implicit), `claim` (one-sentence behavioral claim), `source`
+(`f:l-l` citation, multi-source rows carry an array of citations),
+`source_hash` (`sha256` of the cited line range; computed by `bind`),
+`test` (`f::sym` Rust test fn citation), `test_body_hash`
+(`syn::ItemFn::to_token_stream()` then `sha256`; comments + whitespace
+normalized away), `rationale`, `last_verdict`, `last_run`,
+`last_extracted`, `last_extracted_by`.
+
+**Row state machine:** `BOUND` (grader GREEN), `MISSING_TEST` (extractor
+found claim with no test -- pre-push BLOCKS), `STALE_DOCS_DRIFT` (source
+hash changed -- pre-push BLOCKS, refresh required), `STALE_TEST_DRIFT`
+(test body hash changed -- soft, re-grade at next phase close),
+`STALE_TEST_GONE` (cited test path/symbol no longer resolves -- pre-push
+BLOCKS), `TEST_MISALIGNED` (grader RED -- pre-push BLOCKS),
+`RETIRE_PROPOSED` (extractor proposed retirement -- pre-push BLOCKS until
+human confirms), `RETIRE_CONFIRMED` (env-guarded human-only).
+
+**Summary block:** `claims_total`, `claims_bound`, `claims_missing_test`,
+`claims_retire_proposed`, `claims_retired`, `alignment_ratio` (=
+`claims_bound / max(1, claims_total - claims_retired)`; 1.0 when
+`claims_total == 0`), `floor` (initially 0.50; only ratchets up via
+deliberate human commit), `trend_30d`, `last_walked`. Pre-push BLOCKS
+when `claims_total > 0 && alignment_ratio < floor`.
+
+**Floor waiver shape:** standard catalog `waiver` block per
+`quality/PROTOCOL.md` § "Waiver protocol" applies at the row level; the
+floor itself has no waiver semantics -- it is monotone non-decreasing by
+design and the structure-dimension row
+`structure/doc-alignment-floor-not-decreased` audits the git history.
+
 ## SIMPLIFY-03 boundary statement (per-FILE catalog vs per-CHECK catalog)
 
 This directory's catalogs answer the question: **"What quality gates are

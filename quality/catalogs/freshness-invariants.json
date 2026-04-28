@@ -432,6 +432,108 @@
         "dimension_owner": "structure",
         "tracked_in": "P62 Wave 3 (POLISH-ORG)"
       }
+    },
+    {
+      "id": "structure/doc-alignment-catalog-present",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [
+        "quality/catalogs/doc-alignment.json",
+        ".planning/research/v0.12.0-docs-alignment-design/02-architecture.md:Catalog row schema",
+        ".planning/research/v0.12.0-docs-alignment-design/05-p64-infra-brief.md:Catalog rows P64 ships"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "File quality/catalogs/doc-alignment.json exists and json.loads parses without error",
+          "Top-level keys schema_version, summary, rows are all present",
+          "schema_version equals '1.0'"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/freshness-invariants.py",
+        "args": [
+          "--row-id",
+          "structure/doc-alignment-catalog-present"
+        ],
+        "timeout_s": 15,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/doc-alignment-catalog-present.json",
+      "status": "PASS",
+      "last_verified": "2026-04-28T08:05:14Z",
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: quality/catalogs/doc-alignment.json missing or unparseable -- restore from P64 Wave 1 commit OR recover via /reposix-quality-backfill",
+      "waiver": null
+    },
+    {
+      "id": "structure/doc-alignment-summary-block-valid",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [
+        "quality/catalogs/doc-alignment.json:summary",
+        ".planning/research/v0.12.0-docs-alignment-design/02-architecture.md:Catalog summary block"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "summary block has all 9 required keys: claims_total, claims_bound, claims_missing_test, claims_retire_proposed, claims_retired, alignment_ratio, floor, trend_30d, last_walked",
+          "alignment_ratio equals claims_bound / max(1, claims_total - claims_retired) within 0.001 epsilon (when claims_total == 0, ratio is 1.0 by definition)",
+          "floor is a number in [0.0, 1.0]"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/freshness-invariants.py",
+        "args": [
+          "--row-id",
+          "structure/doc-alignment-summary-block-valid"
+        ],
+        "timeout_s": 15,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/doc-alignment-summary-block-valid.json",
+      "status": "PASS",
+      "last_verified": "2026-04-28T08:05:14Z",
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: summary block hand-edited or runner mutation diverged from row counts -- run /reposix-quality-refresh quality/catalogs/doc-alignment.json (or fix manually)",
+      "waiver": null
+    },
+    {
+      "id": "structure/doc-alignment-floor-not-decreased",
+      "dimension": "structure",
+      "cadence": "weekly",
+      "kind": "mechanical",
+      "sources": [
+        "quality/catalogs/doc-alignment.json:summary.floor",
+        ".planning/research/v0.12.0-docs-alignment-design/02-architecture.md:Floor only ratchets up via deliberate human commit"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "git log -p --follow -- quality/catalogs/doc-alignment.json shows the floor field never decreased between commits (monotone non-decreasing)",
+          "floor regressions are an audit signal of an accidental ratchet-down; the commit SHA is named in the artifact for owner triage"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/freshness-invariants.py",
+        "args": [
+          "--row-id",
+          "structure/doc-alignment-floor-not-decreased"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/doc-alignment-floor-not-decreased.json",
+      "status": "PASS",
+      "last_verified": "2026-04-28T08:05:51Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: an earlier commit ratcheted the floor DOWN (audit signal) -- ratchet floor only via deliberate human commit, never auto",
+      "waiver": null
     }
   ]
 }

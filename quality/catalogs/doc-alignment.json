@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "comment": "Quality Gates catalog -- docs-alignment dimension. Schema spec: quality/catalogs/README.md (docs-alignment subsection). Verifier impl: quality/gates/docs-alignment/. Reports: quality/reports/verifications/docs-alignment/. Empty-state seed shipped by P64 Wave 1; populated by P65 backfill.",
+  "dimension": "docs-alignment",
+  "schema_version": "1.0",
+  "summary": {
+    "claims_total": 0,
+    "claims_bound": 0,
+    "claims_missing_test": 0,
+    "claims_retire_proposed": 0,
+    "claims_retired": 0,
+    "alignment_ratio": 1.0,
+    "floor": 0.5,
+    "trend_30d": "+0.00",
+    "last_walked": null
+  },
+  "rows": []
+}
