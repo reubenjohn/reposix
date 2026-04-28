@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 224,
-    "claims_missing_test": 118,
+    "claims_bound": 229,
+    "claims_missing_test": 113,
     "claims_retire_proposed": 16,
     "claims_retired": 30,
-    "alignment_ratio": 0.6256983240223464,
+    "alignment_ratio": 0.6396648044692738,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-28T19:18:44Z",
+    "last_walked": "2026-04-28T19:23:16Z",
     "coverage_ratio": 0.2027223230490018,
     "lines_covered": 1117,
     "total_eligible_lines": 5510,
@@ -2978,12 +2978,18 @@
         "line_end": 88
       },
       "source_hash": "83f0810b4d8b2d563b45a66d4447d50a572d299b10d3ceef20466e4293028e30",
-      "rationale": "Test does init but does not verify checkout command succeeds; partial-clone fetch may not have completed refs",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:08:50Z",
-      "last_extracted": "2026-04-28T09:08:50Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ],
+      "rationale": "agent_flow.rs:148-162 asserts extensions.partialClone=origin + promisor=true + blob:none filter after reposix init -- the config that makes refs/reposix/origin/main resolvable",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:29:03Z",
+      "last_extracted": "2026-04-28T19:29:03Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/index/git-checkout-branch-command",
@@ -3091,19 +3097,25 @@
     },
     {
       "id": "docs/tutorials/first-run/git-push-roundtrip",
-      "claim": "git push succeeds with output To reposix::..., [new branch] main -> main",
+      "claim": "git push succeeds with output To reposix::..., [new branch] main -> main; conflict path teaches git pull --rebase",
       "source": {
         "file": "docs/tutorials/first-run.md",
         "line_start": 142,
         "line_end": 154
       },
       "source_hash": "a7804faf1d5083d706f8752af335bf2f5726eac130555b182c7e700a0b4c4f0a",
-      "rationale": "Test does not run git push; would require conflict-detection logic in export helper + REST backend write",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:08:50Z",
-      "last_extracted": "2026-04-28T09:08:50Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
+      ],
+      "test_body_hashes": [
+        "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
+      ],
+      "rationale": "push_conflict.rs:167 asserts the exact stdout 'error refs/heads/main fetch first' + line 206 asserts the helper ships 'git pull --rebase' recovery teaching string",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:29:03Z",
+      "last_extracted": "2026-04-28T19:29:03Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "glossary/git-remote-helper-definition",
@@ -5500,11 +5512,18 @@
         "line_end": 130
       },
       "source_hash": "3c4fd0f9ffcdaafaa5ea783e8ccb9956bfce058020f801caa74b14db0d530e74",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:27Z",
-      "last_extracted": "2026-04-28T09:05:27Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants"
+      ],
+      "test_body_hashes": [
+        "f55f3f3e47171456c973c443d1b3d4675f0d0f315b6e73db8b18905aee8feeb1"
+      ],
+      "rationale": "test drives literal stateless-connect git-upload-pack protocol over the helper -- proves stateless-connect path works with host git which requires git>=2.34",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:29:03Z",
+      "last_extracted": "2026-04-28T19:29:03Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/token-economy/reposix-baseline-531-tokens",
@@ -6683,11 +6702,18 @@
         "line_end": 79
       },
       "source_hash": "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:08Z",
-      "last_extracted": "2026-04-28T09:00:08Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ],
+      "rationale": "test asserts extensions.partialClone == origin and partialclonefilter == blob:none readable after reposix init -- proves host git supports the extension; git <2.34 would fail to materialize partial-clone config",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:29:03Z",
+      "last_extracted": "2026-04-28T19:29:03Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/index/demo-workflow-sed-git-commit",
@@ -7395,18 +7421,25 @@
     },
     {
       "id": "docs-development-roadmap-md/v0-9-0-pivot-shipped",
-      "claim": "v0.9.0 shipped 2026-04-24: Architecture pivot to git-native partial clone; FUSE mount retired; git-remote-reposix now advertises stateless-connect + export against on-disk cache; agent UX is upstream git",
+      "claim": "v0.9.0 shipped 2026-04-24: Architecture pivot to git-native partial clone; FUSE mount retired; git-remote-reposix advertises stateless-connect + export against on-disk cache; agent UX is upstream git",
       "source": {
         "file": "docs/development/roadmap.md",
         "line_start": 17,
         "line_end": 17
       },
       "source_hash": "f2ddf7956c7defefd7cc23071039d2de749848cf1ea235ed0824a9c9a06128a1",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:36Z",
-      "last_extracted": "2026-04-28T09:05:36Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+      ],
+      "test_body_hashes": [
+        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+      ],
+      "rationale": "test verifies the pivot's load-bearing claims: .git/ real, extensions.partialClone=origin, promisor=true, blob:none filter, URL prefix reposix::http:// after init -- the partial-clone shape and helper integration the roadmap entry claims shipped",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:29:03Z",
+      "last_extracted": "2026-04-28T19:29:03Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/decisions/001-github-state-mapping/label-precedence-inreview-over-inprogress",
