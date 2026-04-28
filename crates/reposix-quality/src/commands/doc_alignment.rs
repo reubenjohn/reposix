@@ -2,15 +2,13 @@
 //!
 //! Verb shapes are byte-equivalent to the skill prompts at
 //! `.claude/skills/reposix-quality-doc-alignment/prompts/{extractor,grader}.md`.
-//!
-//! NOTE (P64-02 Commit A): every verb is wired into the dispatch tree so
-//! the `--help` smoke test passes. Subcommand bodies marked `todo:` are
-//! filled in Commit B.
 
 use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, Result};
 use clap::Subcommand;
+
+use crate::catalog::Catalog;
 
 /// All 9 docs-alignment verbs.
 #[derive(Debug, Subcommand)]
@@ -129,7 +127,6 @@ pub fn dispatch(catalog: &Path, verb: Verb) -> Result<i32> {
 
 /// Read-only `verify --row-id <id>` -- prints row state to stdout.
 pub fn verify(catalog: &Path, row_id: &str) -> Result<i32> {
-    use crate::catalog::Catalog;
     let cat = Catalog::load(catalog)?;
     if let Some(r) = cat.row(row_id) {
         let body = serde_json::to_string_pretty(r)?;
@@ -144,88 +141,695 @@ pub fn verify(catalog: &Path, row_id: &str) -> Result<i32> {
     }
 }
 
-/// Verbs implementation namespace. Bodies live here.
+/// Verbs implementation namespace.
 pub(crate) mod verbs {
-    use std::path::Path;
+    use std::collections::BTreeMap;
+    use std::fs;
+    use std::io::IsTerminal;
+    use std::path::{Path, PathBuf};
 
-    use anyhow::Result;
+    use anyhow::{anyhow, Context, Result};
+    use chrono::Utc;
+    use serde_json::json;
+
+    use super::{parse_source, parse_test};
+    use crate::catalog::{Catalog, Row, RowState, Source, SourceCite};
+    use crate::hash;
+
+    fn now_iso() -> String {
+        Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string()
+    }
 
     pub fn bind(
-        _catalog: &Path,
-        _row_id: &str,
-        _claim: &str,
-        _source: &str,
-        _test: &str,
-        _grade: &str,
-        _rationale: &str,
+        catalog: &Path,
+        row_id: &str,
+        claim: &str,
+        source: &str,
+        test: &str,
+        grade: &str,
+        rationale: &str,
     ) -> Result<i32> {
-        Err(anyhow::anyhow!("bind: not implemented (P64-02 Commit B)"))
+        if grade != "GREEN" {
+            return Err(anyhow!(
+                "bind: --grade must be GREEN (got `{grade}`); regrade via the grader subagent first"
+            ));
+        }
+        let (src_file, lstart, lend) = parse_source(source)?;
+        if !src_file.exists() {
+            return Err(anyhow!(
+                "bind: source file `{}` does not exist",
+                src_file.display()
+            ));
+        }
+        let (test_file, fn_name) = parse_test(test)?;
+        if !test_file.exists() {
+            return Err(anyhow!(
+                "bind: test file `{}` does not exist",
+                test_file.display()
+            ));
+        }
+
+        let src_hash = hash::source_hash(&src_file, lstart, lend)
+            .with_context(|| format!("computing source_hash for {source}"))?;
+        let body_hash = hash::test_body_hash(&test_file, &fn_name)
+            .with_context(|| format!("computing test_body_hash for {test}"))?;
+
+        let mut cat = Catalog::load(catalog)?;
+        let now = now_iso();
+        let new_source = SourceCite {
+            file: src_file.to_string_lossy().to_string(),
+            line_start: lstart,
+            line_end: lend,
+        };
+
+        if let Some(row) = cat.row_mut(row_id) {
+            // Preserve multi-source rows: if existing source is Multi or
+            // is a different Single citation, promote to Multi.
+            let mut sources = row.source.as_slice();
+            let already_present = sources.iter().any(|c| {
+                c.file == new_source.file
+                    && c.line_start == new_source.line_start
+                    && c.line_end == new_source.line_end
+            });
+            if !already_present {
+                sources.push(new_source.clone());
+            }
+            row.source = if sources.len() == 1 {
+                Source::Single(sources.into_iter().next().expect("len==1"))
+            } else {
+                Source::Multi(sources)
+            };
+            row.claim = claim.to_string();
+            row.source_hash = Some(src_hash);
+            row.test = Some(test.to_string());
+            row.test_body_hash = Some(body_hash);
+            row.rationale = Some(rationale.to_string());
+            row.last_verdict = RowState::Bound;
+            row.last_run = Some(now.clone());
+            row.last_extracted = Some(now.clone());
+            row.last_extracted_by = Some("bind-call".to_string());
+        } else {
+            cat.rows.push(Row {
+                id: row_id.to_string(),
+                claim: claim.to_string(),
+                source: Source::Single(new_source),
+                source_hash: Some(src_hash),
+                test: Some(test.to_string()),
+                test_body_hash: Some(body_hash),
+                rationale: Some(rationale.to_string()),
+                last_verdict: RowState::Bound,
+                last_run: Some(now.clone()),
+                last_extracted: Some(now.clone()),
+                last_extracted_by: Some("bind-call".to_string()),
+            });
+        }
+
+        cat.recompute_summary();
+        cat.save(catalog)?;
+        Ok(0)
     }
 
     pub fn propose_retire(
-        _catalog: &Path,
-        _row_id: &str,
-        _claim: &str,
-        _source: &str,
-        _rationale: &str,
+        catalog: &Path,
+        row_id: &str,
+        claim: &str,
+        source: &str,
+        rationale: &str,
     ) -> Result<i32> {
-        Err(anyhow::anyhow!(
-            "propose-retire: not implemented (P64-02 Commit B)"
-        ))
+        let (src_file, lstart, lend) = parse_source(source)?;
+        if !src_file.exists() {
+            return Err(anyhow!(
+                "propose-retire: source file `{}` does not exist",
+                src_file.display()
+            ));
+        }
+        let mut cat = Catalog::load(catalog)?;
+        let now = now_iso();
+        let cite = SourceCite {
+            file: src_file.to_string_lossy().to_string(),
+            line_start: lstart,
+            line_end: lend,
+        };
+        if let Some(row) = cat.row_mut(row_id) {
+            row.claim = claim.to_string();
+            row.rationale = Some(rationale.to_string());
+            row.last_verdict = RowState::RetireProposed;
+            row.last_run = Some(now.clone());
+            row.last_extracted = Some(now);
+            row.last_extracted_by = Some("propose-retire-call".to_string());
+        } else {
+            cat.rows.push(Row {
+                id: row_id.to_string(),
+                claim: claim.to_string(),
+                source: Source::Single(cite),
+                source_hash: None,
+                test: None,
+                test_body_hash: None,
+                rationale: Some(rationale.to_string()),
+                last_verdict: RowState::RetireProposed,
+                last_run: Some(now.clone()),
+                last_extracted: Some(now),
+                last_extracted_by: Some("propose-retire-call".to_string()),
+            });
+        }
+        cat.recompute_summary();
+        cat.save(catalog)?;
+        Ok(0)
     }
 
-    pub fn confirm_retire(_catalog: &Path, _row_id: &str) -> Result<i32> {
-        Err(anyhow::anyhow!(
-            "confirm-retire: not implemented (P64-02 Commit B)"
-        ))
+    pub fn confirm_retire(catalog: &Path, row_id: &str) -> Result<i32> {
+        let agent_env = std::env::var_os("CLAUDE_AGENT_CONTEXT").is_some();
+        let non_tty = !std::io::stdin().is_terminal();
+        if agent_env || non_tty {
+            eprintln!(
+                "error: confirm-retire is human-only -- running under agent context (CLAUDE_AGENT_CONTEXT set) or non-tty stdin"
+            );
+            return Ok(1);
+        }
+        let mut cat = Catalog::load(catalog)?;
+        let now = now_iso();
+        let row = cat
+            .row_mut(row_id)
+            .ok_or_else(|| anyhow!("confirm-retire: row-id `{row_id}` not found"))?;
+        if row.last_verdict != RowState::RetireProposed {
+            return Err(anyhow!(
+                "confirm-retire: row `{row_id}` is in state {} -- only RETIRE_PROPOSED can be confirmed",
+                row.last_verdict.as_str()
+            ));
+        }
+        row.last_verdict = RowState::RetireConfirmed;
+        row.last_run = Some(now);
+        cat.recompute_summary();
+        cat.save(catalog)?;
+        Ok(0)
     }
 
     pub fn mark_missing_test(
-        _catalog: &Path,
-        _row_id: &str,
-        _claim: &str,
-        _source: &str,
-        _rationale: Option<&str>,
+        catalog: &Path,
+        row_id: &str,
+        claim: &str,
+        source: &str,
+        rationale: Option<&str>,
     ) -> Result<i32> {
-        Err(anyhow::anyhow!(
-            "mark-missing-test: not implemented (P64-02 Commit B)"
-        ))
+        let (src_file, lstart, lend) = parse_source(source)?;
+        if !src_file.exists() {
+            return Err(anyhow!(
+                "mark-missing-test: source file `{}` does not exist",
+                src_file.display()
+            ));
+        }
+        let src_hash = hash::source_hash(&src_file, lstart, lend)
+            .with_context(|| format!("computing source_hash for {source}"))?;
+
+        let mut cat = Catalog::load(catalog)?;
+        let now = now_iso();
+        let cite = SourceCite {
+            file: src_file.to_string_lossy().to_string(),
+            line_start: lstart,
+            line_end: lend,
+        };
+        if let Some(row) = cat.row_mut(row_id) {
+            row.claim = claim.to_string();
+            row.source = Source::Single(cite);
+            row.source_hash = Some(src_hash);
+            if let Some(r) = rationale {
+                row.rationale = Some(r.to_string());
+            }
+            row.last_verdict = RowState::MissingTest;
+            row.last_run = Some(now.clone());
+            row.last_extracted = Some(now);
+            row.last_extracted_by = Some("mark-missing-test-call".to_string());
+        } else {
+            cat.rows.push(Row {
+                id: row_id.to_string(),
+                claim: claim.to_string(),
+                source: Source::Single(cite),
+                source_hash: Some(src_hash),
+                test: None,
+                test_body_hash: None,
+                rationale: rationale.map(std::string::ToString::to_string),
+                last_verdict: RowState::MissingTest,
+                last_run: Some(now.clone()),
+                last_extracted: Some(now),
+                last_extracted_by: Some("mark-missing-test-call".to_string()),
+            });
+        }
+        cat.recompute_summary();
+        cat.save(catalog)?;
+        Ok(0)
     }
 
-    pub fn plan_refresh(_catalog: &Path, _doc_file: &Path) -> Result<i32> {
-        Err(anyhow::anyhow!(
-            "plan-refresh: not implemented (P64-02 Commit B)"
-        ))
+    /// Stale-row JSON for `<doc-file>` (rows whose `source.file` matches AND
+    /// `last_verdict` is one of the stale/misaligned states).
+    pub fn plan_refresh(catalog: &Path, doc_file: &Path) -> Result<i32> {
+        let cat = Catalog::load(catalog)?;
+        let target = doc_file.to_string_lossy().to_string();
+        let stale_states = [
+            RowState::StaleDocsDrift,
+            RowState::StaleTestDrift,
+            RowState::StaleTestGone,
+            RowState::TestMisaligned,
+        ];
+
+        let stale_rows: Vec<_> = cat
+            .rows
+            .iter()
+            .filter(|r| {
+                stale_states.contains(&r.last_verdict)
+                    && r.source.as_slice().iter().any(|c| c.file == target)
+            })
+            .map(|r| {
+                let cite = r
+                    .source
+                    .as_slice()
+                    .into_iter()
+                    .find(|c| c.file == target)
+                    .expect("filter ensured at least one matching cite");
+                json!({
+                    "id": r.id,
+                    "claim": r.claim,
+                    "source": format!("{}:{}-{}", cite.file, cite.line_start, cite.line_end),
+                    "test": r.test,
+                    "last_verdict": r.last_verdict.as_str(),
+                    "prior_rationale": r.rationale,
+                })
+            })
+            .collect();
+
+        let out = json!({ "stale_rows": stale_rows });
+        println!("{}", serde_json::to_string_pretty(&out)?);
+        Ok(0)
     }
 
+    /// Deterministic backfill chunker.
+    ///
+    /// Walks `docs/**/*.md`, `README.md`, and v0.6.0 -- v0.11.0 archived
+    /// REQUIREMENTS.md files. Groups by directory affinity, ≤3 files per
+    /// shard. Output: MANIFEST.json under
+    /// `quality/reports/doc-alignment/backfill-<UTC-iso>/`.
     pub fn plan_backfill(_catalog: &Path) -> Result<i32> {
-        Err(anyhow::anyhow!(
-            "plan-backfill: not implemented (P64-02 Commit B)"
-        ))
+        let ts = Utc::now().format("%Y%m%dT%H%M%SZ").to_string();
+        let run_dir = PathBuf::from("quality/reports/doc-alignment").join(format!("backfill-{ts}"));
+        fs::create_dir_all(&run_dir)
+            .with_context(|| format!("creating run dir {}", run_dir.display()))?;
+
+        let inputs = collect_backfill_inputs()?;
+        let shards = chunk_by_dir_affinity(&inputs, 3);
+
+        let manifest_shards: Vec<_> = shards
+            .iter()
+            .enumerate()
+            .map(|(i, files)| {
+                let id = format!("{:03}", i + 1);
+                // Namespace: derive from the shared dir prefix or first file.
+                let namespace = files
+                    .first()
+                    .map(|f| {
+                        let mut buf = String::with_capacity(f.len());
+                        for c in f.chars() {
+                            buf.push(if c == '/' || c == '.' { '-' } else { c });
+                        }
+                        buf.trim_start_matches('-').to_string()
+                    })
+                    .unwrap_or_default();
+                json!({
+                    "id": id,
+                    "files": files,
+                    "row_id_namespace": namespace,
+                })
+            })
+            .collect();
+
+        let manifest = json!({
+            "ts": ts,
+            "shards": manifest_shards,
+        });
+
+        let manifest_path = run_dir.join("MANIFEST.json");
+        let mut bytes = serde_json::to_vec_pretty(&manifest)?;
+        bytes.push(b'\n');
+        fs::write(&manifest_path, &bytes)
+            .with_context(|| format!("writing {}", manifest_path.display()))?;
+        println!("{}", manifest_path.display());
+        Ok(0)
     }
 
-    pub fn merge_shards(_catalog: &Path, _run_dir: &Path) -> Result<i32> {
-        Err(anyhow::anyhow!(
-            "merge-shards: not implemented (P64-02 Commit B)"
-        ))
+    /// Collect backfill input files (deterministic order).
+    fn collect_backfill_inputs() -> Result<Vec<String>> {
+        let mut out = Vec::new();
+
+        // README.md (if present)
+        if Path::new("README.md").exists() {
+            out.push("README.md".to_string());
+        }
+
+        // docs/**/*.md
+        if Path::new("docs").is_dir() {
+            walk_md(Path::new("docs"), &mut out)?;
+        }
+
+        // .planning/milestones/v0.6.0..v0.11.0-phases/REQUIREMENTS.md
+        for v in &["v0.6.0", "v0.7.0", "v0.8.0", "v0.9.0", "v0.10.0", "v0.11.0"] {
+            let p = format!(".planning/milestones/{v}-phases/REQUIREMENTS.md");
+            if Path::new(&p).exists() {
+                out.push(p);
+            }
+        }
+
+        out.sort();
+        out.dedup();
+        Ok(out)
     }
 
-    pub fn walk(_catalog: &Path) -> Result<i32> {
-        Err(anyhow::anyhow!("walk: not implemented (P64-02 Commit B)"))
+    fn walk_md(dir: &Path, out: &mut Vec<String>) -> Result<()> {
+        for entry in fs::read_dir(dir).with_context(|| format!("reading dir {}", dir.display()))? {
+            let entry = entry?;
+            let p = entry.path();
+            if p.is_dir() {
+                walk_md(&p, out)?;
+            } else if p.extension().and_then(|e| e.to_str()) == Some("md") {
+                out.push(p.to_string_lossy().to_string());
+            }
+        }
+        Ok(())
     }
 
-    pub fn status(_catalog: &Path, _json: bool) -> Result<i32> {
-        Err(anyhow::anyhow!("status: not implemented (P64-02 Commit B)"))
+    /// Chunk files by directory affinity, then alphabetical fallback,
+    /// max `cap` files per shard.
+    fn chunk_by_dir_affinity(inputs: &[String], cap: usize) -> Vec<Vec<String>> {
+        // Group by parent directory. BTreeMap keeps the keys sorted ->
+        // deterministic iteration.
+        let mut by_dir: BTreeMap<String, Vec<String>> = BTreeMap::new();
+        for f in inputs {
+            let parent = Path::new(f)
+                .parent()
+                .map_or_else(|| ".".to_string(), |p| p.to_string_lossy().to_string());
+            by_dir.entry(parent).or_default().push(f.clone());
+        }
+        for v in by_dir.values_mut() {
+            v.sort();
+        }
+
+        let mut shards: Vec<Vec<String>> = Vec::new();
+        // Pass 1: each dir's files get packed into shards of size `cap`.
+        for files in by_dir.values() {
+            for chunk in files.chunks(cap) {
+                shards.push(chunk.to_vec());
+            }
+        }
+        shards
+    }
+
+    /// Merge per-shard JSONs in `<run-dir>/shards/*.json` into the catalog.
+    #[allow(
+        clippy::too_many_lines,
+        reason = "Single coherent procedure: load shards -> dedup-key -> conflict-detect -> upsert. Splitting hurts readability of a deterministic pipeline."
+    )]
+    pub fn merge_shards(catalog: &Path, run_dir: &Path) -> Result<i32> {
+        let shards_dir = run_dir.join("shards");
+        if !shards_dir.is_dir() {
+            return Err(anyhow!(
+                "merge-shards: shards dir `{}` does not exist",
+                shards_dir.display()
+            ));
+        }
+        let mut shard_paths: Vec<PathBuf> = fs::read_dir(&shards_dir)?
+            .filter_map(|e| e.ok().map(|e| e.path()))
+            .filter(|p| p.extension().and_then(|x| x.to_str()) == Some("json"))
+            .collect();
+        shard_paths.sort();
+
+        // (claim_normalized, test_or_empty) -> Vec<Row>
+        let mut groups: BTreeMap<(String, String), Vec<Row>> = BTreeMap::new();
+        for sp in &shard_paths {
+            let raw = fs::read_to_string(sp)
+                .with_context(|| format!("reading shard {}", sp.display()))?;
+            let rows: Vec<Row> = serde_json::from_str(&raw)
+                .with_context(|| format!("parsing shard {} as Vec<Row>", sp.display()))?;
+            for r in rows {
+                let key = (
+                    r.claim.trim().to_lowercase(),
+                    r.test.clone().unwrap_or_default(),
+                );
+                groups.entry(key).or_default().push(r);
+            }
+        }
+
+        // Detect conflicts: same claim_normalized, different test bindings.
+        let mut by_claim: BTreeMap<String, Vec<(String, Vec<Row>)>> = BTreeMap::new();
+        for ((claim_norm, test_str), rows) in &groups {
+            by_claim
+                .entry(claim_norm.clone())
+                .or_default()
+                .push((test_str.clone(), rows.clone()));
+        }
+
+        let mut conflicts: Vec<String> = Vec::new();
+        for (claim_norm, bucket) in &by_claim {
+            // bound bindings = entries with non-empty test that have at least one BOUND row
+            let bound_tests: Vec<&String> = bucket
+                .iter()
+                .filter(|(t, rows)| {
+                    !t.is_empty() && rows.iter().any(|r| r.last_verdict == RowState::Bound)
+                })
+                .map(|(t, _)| t)
+                .collect();
+            if bound_tests.len() > 1 {
+                use std::fmt::Write as _;
+                let mut detail = format!("- claim_normalized: `{claim_norm}`\n  bindings:\n");
+                for t in &bound_tests {
+                    let _ = writeln!(detail, "    - {t}");
+                }
+                conflicts.push(detail);
+            }
+        }
+
+        if !conflicts.is_empty() {
+            let mut body = String::from(
+                "# Merge conflicts\n\nMultiple shards bound the same claim to different tests. Resolve by editing the shard JSONs in `shards/` and re-running `merge-shards`.\n\n",
+            );
+            body.push_str(&conflicts.join("\n"));
+            let conflicts_path = run_dir.join("CONFLICTS.md");
+            fs::write(&conflicts_path, body.as_bytes())
+                .with_context(|| format!("writing {}", conflicts_path.display()))?;
+            eprintln!(
+                "merge-shards: conflicts detected -- see {}",
+                conflicts_path.display()
+            );
+            return Ok(1);
+        }
+
+        // Clean merge: build the final row set. Same claim_normalized + same test ->
+        // single row with multi-source citations (de-duped).
+        let mut cat = Catalog::load(catalog)?;
+
+        for bucket in by_claim.values() {
+            for (_test, rows) in bucket {
+                if rows.is_empty() {
+                    continue;
+                }
+                // Pick the first row as the prototype; collect every source citation.
+                let mut prototype = rows[0].clone();
+                let mut all_sources: Vec<SourceCite> = Vec::new();
+                for r in rows {
+                    for cite in r.source.as_slice() {
+                        let already = all_sources.iter().any(|c| {
+                            c.file == cite.file
+                                && c.line_start == cite.line_start
+                                && c.line_end == cite.line_end
+                        });
+                        if !already {
+                            all_sources.push(cite);
+                        }
+                    }
+                }
+                prototype.source = if all_sources.len() == 1 {
+                    Source::Single(all_sources.into_iter().next().expect("len==1"))
+                } else {
+                    Source::Multi(all_sources)
+                };
+                // Upsert by id.
+                if let Some(existing) = cat.row_mut(&prototype.id) {
+                    *existing = prototype;
+                } else {
+                    cat.rows.push(prototype);
+                }
+            }
+        }
+
+        cat.recompute_summary();
+        cat.save(catalog)?;
+
+        // Write a MERGE.md summary.
+        let merge_path = run_dir.join("MERGE.md");
+        let mut summary = format!(
+            "# Merge summary\n\n- shards processed: {}\n- catalog rows after merge: {}\n",
+            shard_paths.len(),
+            cat.rows.len(),
+        );
+        summary.push_str("- conflicts: 0\n");
+        fs::write(&merge_path, summary.as_bytes())
+            .with_context(|| format!("writing {}", merge_path.display()))?;
+        Ok(0)
+    }
+
+    /// Hash drift walker. Re-computes `source_hash` + `test_body_hash` for
+    /// every row from the live filesystem and updates `last_verdict`.
+    /// NEVER modifies the stored hashes -- those refresh only via `bind`.
+    #[allow(
+        clippy::too_many_lines,
+        reason = "Walker iterates every row through one state-machine arm; splitting hurts readability."
+    )]
+    pub fn walk(catalog: &Path) -> Result<i32> {
+        let mut cat = Catalog::load(catalog)?;
+        let mut blocking_lines: Vec<String> = Vec::new();
+
+        for row in &mut cat.rows {
+            // Skip already-retired rows.
+            if row.last_verdict == RowState::RetireConfirmed {
+                continue;
+            }
+            // Don't walk RETIRE_PROPOSED (it's already blocking until human acts).
+            if row.last_verdict == RowState::RetireProposed {
+                let cite_str = row
+                    .source
+                    .as_slice()
+                    .first()
+                    .map_or_else(String::new, |c| c.file.clone());
+                blocking_lines.push(format!(
+                    "docs-alignment: {} on {} -- run /reposix-quality-refresh {}",
+                    row.last_verdict.as_str(),
+                    cite_str,
+                    cite_str,
+                ));
+                continue;
+            }
+
+            // Compute current source_hash. If the file is missing, mark
+            // STALE_DOCS_DRIFT (file vanished is a strong drift signal).
+            let cite = row.source.as_slice().into_iter().next();
+            let source_drift: Option<bool> = match (cite, row.source_hash.as_ref()) {
+                (Some(c), Some(stored)) => {
+                    let p = PathBuf::from(&c.file);
+                    if p.exists() {
+                        match hash::source_hash(&p, c.line_start, c.line_end) {
+                            Ok(now) => Some(&now != stored),
+                            Err(_) => Some(true),
+                        }
+                    } else {
+                        Some(true)
+                    }
+                }
+                _ => None,
+            };
+
+            // Compute current test_body_hash. If the test fn is gone -> STALE_TEST_GONE.
+            let (test_present, test_drift): (bool, Option<bool>) =
+                match (row.test.as_ref(), row.test_body_hash.as_ref()) {
+                    (Some(test_str), Some(stored)) => {
+                        let parsed = super::parse_test(test_str);
+                        match parsed {
+                            Ok((tf, fn_name)) => {
+                                if tf.exists() {
+                                    match hash::test_body_hash(&tf, &fn_name) {
+                                        Ok(now) => (true, Some(&now != stored)),
+                                        // fn missing => not present
+                                        Err(_) => (false, None),
+                                    }
+                                } else {
+                                    (false, None)
+                                }
+                            }
+                            Err(_) => (false, None),
+                        }
+                    }
+                    _ => (true, None),
+                };
+
+            let new_state = if !test_present && row.test.is_some() {
+                RowState::StaleTestGone
+            } else if source_drift == Some(true) {
+                RowState::StaleDocsDrift
+            } else if test_drift == Some(true) {
+                RowState::StaleTestDrift
+            } else if row.last_verdict == RowState::MissingTest
+                || row.last_verdict == RowState::TestMisaligned
+            {
+                // Walker doesn't transition out of MISSING_TEST / TEST_MISALIGNED.
+                row.last_verdict
+            } else {
+                RowState::Bound
+            };
+            row.last_verdict = new_state;
+
+            if new_state.blocks_pre_push() {
+                let cite_str = row
+                    .source
+                    .as_slice()
+                    .first()
+                    .map_or_else(String::new, |c| c.file.clone());
+                blocking_lines.push(format!(
+                    "docs-alignment: {} on {} -- run /reposix-quality-refresh {}",
+                    new_state.as_str(),
+                    cite_str,
+                    cite_str,
+                ));
+            }
+        }
+
+        cat.summary.last_walked = Some(now_iso());
+        cat.recompute_summary();
+
+        // Floor check (alignment_ratio < floor BLOCKs unless waiver active).
+        let waiver_active = cat
+            .summary
+            .floor_waiver
+            .as_ref()
+            .is_some_and(|w| w.until.as_str() > now_iso().as_str());
+        let floor_block = cat.summary.alignment_ratio + 1e-9 < cat.summary.floor && !waiver_active;
+        if floor_block {
+            blocking_lines.push(format!(
+                "docs-alignment: alignment_ratio {:.4} below floor {:.4} -- run /reposix-quality-backfill OR ratchet floor explicitly",
+                cat.summary.alignment_ratio, cat.summary.floor,
+            ));
+        }
+
+        cat.save(catalog)?;
+
+        if blocking_lines.is_empty() {
+            Ok(0)
+        } else {
+            for line in &blocking_lines {
+                eprintln!("{line}");
+            }
+            Ok(1)
+        }
+    }
+
+    pub fn status(catalog: &Path, json_mode: bool) -> Result<i32> {
+        let cat = Catalog::load(catalog)?;
+        if json_mode {
+            println!("{}", serde_json::to_string_pretty(&cat.summary)?);
+            return Ok(0);
+        }
+        let s = &cat.summary;
+        println!("docs-alignment summary:");
+        println!("  claims_total          {}", s.claims_total);
+        println!("  claims_bound          {}", s.claims_bound);
+        println!("  claims_missing_test   {}", s.claims_missing_test);
+        println!("  claims_retire_proposed {}", s.claims_retire_proposed);
+        println!("  claims_retired        {}", s.claims_retired);
+        println!("  alignment_ratio       {:.4}", s.alignment_ratio);
+        println!("  floor                 {:.4}", s.floor);
+        println!("  trend_30d             {}", s.trend_30d);
+        if let Some(lw) = &s.last_walked {
+            println!("  last_walked           {lw}");
+        }
+        Ok(0)
     }
 }
 
 /// Parse a source citation `<file>:<line_start>-<line_end>` into its parts.
-///
-/// Public to the crate so `verbs` and tests can share it.
-#[allow(
-    dead_code,
-    reason = "Verb bodies wired in P64-02 Commit B consume this helper."
-)]
 pub(crate) fn parse_source(s: &str) -> Result<(PathBuf, usize, usize)> {
     let (file, range) = s
         .rsplit_once(':')
@@ -243,10 +847,6 @@ pub(crate) fn parse_source(s: &str) -> Result<(PathBuf, usize, usize)> {
 }
 
 /// Parse a test citation `<file>::<fn>` into its parts.
-#[allow(
-    dead_code,
-    reason = "Verb bodies wired in P64-02 Commit B consume this helper."
-)]
 pub(crate) fn parse_test(s: &str) -> Result<(PathBuf, String)> {
     let (file, fn_name) = s
         .rsplit_once("::")
