@@ -5,16 +5,16 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 275,
-    "claims_missing_test": 67,
+    "claims_bound": 284,
+    "claims_missing_test": 52,
     "claims_retire_proposed": 16,
     "claims_retired": 30,
-    "alignment_ratio": 0.7681564245810056,
+    "alignment_ratio": 0.7932960893854749,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-28T19:44:37Z",
-    "coverage_ratio": 0.2027223230490018,
-    "lines_covered": 1117,
+    "last_walked": "2026-04-28T19:50:56Z",
+    "coverage_ratio": 0.2029038112522686,
+    "lines_covered": 1118,
     "total_eligible_lines": 5510,
     "coverage_floor": 0.1
   },
@@ -143,18 +143,25 @@
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/tutorial-replay-5min",
-      "claim": "5-minute first-run tutorial verified by quality/gates/docs-repro/tutorial-replay.sh (7-step quickstart from docs/tutorials/first-run.md)",
+      "claim": "5-minute first-run tutorial verified by quality/gates/docs-repro/tutorial-replay.sh",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
         "line_start": 18,
         "line_end": 18
       },
       "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T08:59:58Z",
-      "last_extracted": "2026-04-28T08:59:58Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/docs-repro/tutorial-replay.sh"
+      ],
+      "test_body_hashes": [
+        "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
+      ],
+      "rationale": "Claim names the verifier path verbatim -- direct bind",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:55:58Z",
+      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/hard-02",
@@ -321,7 +328,7 @@
         "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
       ],
       "rationale": "Tutorial-replay drives the edit-and-diff step",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -542,12 +549,18 @@
         "line_end": 25
       },
       "source_hash": "50e482d0a185815992e90d2690cc7d8bfbb5b28ecdc2db45efe94fbc84d17a4f",
-      "rationale": "CLI handlers return anyhow::Result<()>; Ok propagates to exit 0",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:08:19Z",
-      "last_extracted": "2026-04-28T09:08:19Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands"
+      ],
+      "test_body_hashes": [
+        "4dc5fe7ebc778ac27b68a1976253f7a4a2e1f53b8d213bcbb27065bf950e3b36"
+      ],
+      "rationale": "Test asserts out.status.success() for every subcommand --help; coarse alias for the success-exit-0 contract",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:55:58Z",
+      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "exit-codes/cli-exit-1-error",
@@ -558,12 +571,18 @@
         "line_end": 8
       },
       "source_hash": "3b7eb87bd8f731e7a4cf8cd46658d032c250b4024f14f7c0b84b1787bac45aee",
-      "rationale": "anyhow::bail! propagates Err through ? operator to main()",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:08:29Z",
-      "last_extracted": "2026-04-28T09:08:29Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-cli/tests/doctor.rs::doctor_no_remote_errors_and_exits_one"
+      ],
+      "test_body_hashes": [
+        "330e7b5d365d0a3b603e1cedac929277eec7a58bd88b03a933d30c942194ddab"
+      ],
+      "rationale": "Existing test directly asserts non-zero exit on a handled error path",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:55:58Z",
+      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "trust-model/egress-denied-audit-op",
@@ -929,19 +948,25 @@
     },
     {
       "id": "docs/connectors/guide/trait-method-count-eight",
-      "claim": "BackendConnector trait has 8 main methods (name, supports, list_records, list_changed_since, get_record, create_record, update_record, delete_or_close)",
+      "claim": "BackendConnector trait has 8 main methods",
       "source": {
         "file": "crates/reposix-core/src/backend.rs",
         "line_start": 216,
         "line_end": 331
       },
       "source_hash": "660447a3dfdff1cd32120314402f9ae61d00bf9576593135dcece7a4b539caff",
-      "rationale": "All 8 methods defined in trait; root_collection_name is 9th but optional override",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:03:45Z",
-      "last_extracted": "2026-04-28T09:03:45Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-core/src/backend.rs"
+      ],
+      "test_body_hashes": [
+        "6125266018909a9b21c3da9767a3904ba57ccb7acb8b8f092c9ab99aad3c2e99"
+      ],
+      "rationale": "Source IS the trait definition; whole-file hash detects any signature drift in the 8 methods",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:55:58Z",
+      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/connectors/guide/backendconnector-create-record-method",
@@ -1422,11 +1447,18 @@
         "line_end": 59
       },
       "source_hash": "601193901edcec31bc26541065bd7dccfb726c8e46f3cc0a17483fa9a9a1b127",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:52Z",
-      "last_extracted": "2026-04-28T09:00:52Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/release/brew-formula-current.py"
+      ],
+      "test_body_hashes": [
+        "3d8aaf4762d8ab6ceec9edd4471510632d4c84243d90c71727cd3f0c7f4707b4"
+      ],
+      "rationale": "Verifier asserts the brew tap formula is current; coarse alias for the install claim",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:55:58Z",
+      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "README-md/rust-1-82-requirement",
@@ -1643,11 +1675,18 @@
         "line_end": 64
       },
       "source_hash": "3ae56ded42ca9097a8914f737ec9944c520d3d0a269e5a316a564ed7a87c1aba",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:54Z",
-      "last_extracted": "2026-04-28T09:00:54Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/release/cargo-binstall-resolves.py"
+      ],
+      "test_body_hashes": [
+        "a2e262f6de15827bed25a4b40b33dc85bc08efb0beec46b9ac9051d31a570f26"
+      ],
+      "rationale": "Verifier explicitly resolves binstall to a prebuilt GitHub Release; PARTIAL acceptable per docstring",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:55:58Z",
+      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-07-binstall",
@@ -1658,11 +1697,18 @@
         "line_end": 89
       },
       "source_hash": "afb31f1e36980b39981e53269e1b6ade652c13c5e3f3ce5b0329cf0ef124c23c",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:52Z",
-      "last_extracted": "2026-04-28T09:00:52Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/release/cargo-binstall-resolves.py"
+      ],
+      "test_body_hashes": [
+        "a2e262f6de15827bed25a4b40b33dc85bc08efb0beec46b9ac9051d31a570f26"
+      ],
+      "rationale": "Same verifier; archived REQUIREMENTS line restates the same shipped behavior",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:55:58Z",
+      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "README-md/clippy-clean",
@@ -1724,7 +1770,7 @@
         "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
       ],
       "rationale": "Tutorial-replay drives the first-run script through cat-issue step",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -1831,11 +1877,18 @@
         "line_end": 7
       },
       "source_hash": "4e3fb02880edab482b645e126d87eead9742553430c27966006acaafe3913e13",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:44Z",
-      "last_extracted": "2026-04-28T09:01:44Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/docs-build/badges-resolve.py"
+      ],
+      "test_body_hashes": [
+        "cde3bfece9e4efd2f40572d0177b525e769f73f5ded120821d2b2c6527ea9814"
+      ],
+      "rationale": "Verifier HEADs every badge URL in README + docs/index.md including the CI workflow badge",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:55:58Z",
+      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-17-docs-validation",
@@ -1883,12 +1936,18 @@
         "line_end": 149
       },
       "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "rationale": "Lint enforced in workspace; prevents allowlist bypass",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:03:59Z",
-      "last_extracted": "2026-04-28T09:03:59Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "clippy.toml"
+      ],
+      "test_body_hashes": [
+        "036c2a6f82004815c18c2b4fa303c4be953a65c11e4552b2b6e998d8d8589700"
+      ],
+      "rationale": "clippy.toml literally encodes the disallowed-methods entries; hash drift = lint config regressed",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:55:58Z",
+      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/bench-03",
@@ -2004,19 +2063,25 @@
     },
     {
       "id": "docs/connectors/guide/http-client-factory-required",
-      "claim": "Connectors must use reposix_core::http::client() factory for all HTTP operations (no direct reqwest::Client)",
+      "claim": "Connectors must use reposix_core::http::client() factory for all HTTP operations",
       "source": {
         "file": "docs/guides/write-your-own-connector.md",
         "line_start": 142,
         "line_end": 146
       },
       "source_hash": "1f61188339a753bf0c7e2bfac9be4c16ad59e219ac670faf64d41e949a3aa7cc",
-      "rationale": "Pattern in all three reference implementations (GitHub, Confluence, JIRA)",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:04:04Z",
-      "last_extracted": "2026-04-28T09:04:04Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "clippy.toml"
+      ],
+      "test_body_hashes": [
+        "036c2a6f82004815c18c2b4fa303c4be953a65c11e4552b2b6e998d8d8589700"
+      ],
+      "rationale": "Same clippy.toml is the enforcement mechanism; aliasing to its hash binds the prose to the live lint config",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:55:58Z",
+      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/guides/write-your-own-connector/egress-allowlist-client",
@@ -4379,7 +4444,7 @@
         "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
       ],
       "rationale": "Tutorial-replay verifies sim seed listing",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -5095,11 +5160,18 @@
         "line_end": 54
       },
       "source_hash": "08b7714e0cb70c586f261982d9f86be0705f64dcf98e389696a8105e3666be01",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:50Z",
-      "last_extracted": "2026-04-28T09:00:50Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/release/installer-asset-bytes.py"
+      ],
+      "test_body_hashes": [
+        "81c38ab767508c2f03aa283e13035faba846352a0e4615e787f39f81936f80d5"
+      ],
+      "rationale": "Verifier supports HEAD/min-bytes mode against any release URL -- exactly what an irm-source installer needs",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:55:58Z",
+      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-06-binaries",
@@ -5309,11 +5381,18 @@
         "line_end": 9
       },
       "source_hash": "0ae596d0abb9ba9357278ce765dcf86bb17c8c488db3dc14288e612003efd287",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:49Z",
-      "last_extracted": "2026-04-28T09:01:49Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/docs-build/badges-resolve.py"
+      ],
+      "test_body_hashes": [
+        "cde3bfece9e4efd2f40572d0177b525e769f73f5ded120821d2b2c6527ea9814"
+      ],
+      "rationale": "Verifier explicitly hits the QG-09 custom-endpoint badge URL",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:55:58Z",
+      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/index/quality-weekly-badge",
@@ -5324,11 +5403,18 @@
         "line_end": 8
       },
       "source_hash": "84fce6abfcbbf7559471cd74ef498792c8cac75d3faa8d553a467c878ace620b",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:47Z",
-      "last_extracted": "2026-04-28T09:01:47Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/docs-build/badges-resolve.py"
+      ],
+      "test_body_hashes": [
+        "cde3bfece9e4efd2f40572d0177b525e769f73f5ded120821d2b2c6527ea9814"
+      ],
+      "rationale": "Same verifier sweeps every badge URL on docs/index.md",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:55:58Z",
+      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs-development-contributing-md/cargo-check-workspace-available",
@@ -5900,12 +5986,18 @@
         "line_end": 27
       },
       "source_hash": "19de94eeaca550149489c09e3a6bc8ae8c55c8d036164f468b4a9f21147f9ea0",
-      "rationale": "doctor.rs calls report.exit_code() which returns 1 for any ERROR finding",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:08:29Z",
-      "last_extracted": "2026-04-28T09:08:29Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-cli/tests/doctor.rs::doctor_no_remote_errors_and_exits_one"
+      ],
+      "test_body_hashes": [
+        "330e7b5d365d0a3b603e1cedac929277eec7a58bd88b03a933d30c942194ddab"
+      ],
+      "rationale": "no remote is an ERROR-severity finding that triggers exit 1",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:55:58Z",
+      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-08-doctor-cap",
@@ -6524,7 +6616,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "Comparison page mirror of reposix-side count",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -7266,7 +7358,7 @@
         "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
       ],
       "rationale": "Tutorial-replay covers the audit-query final step",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -7568,7 +7660,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "Concept page mirror of canonical headline reduction",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -7576,18 +7668,25 @@
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-05-repro-tutorial",
-      "claim": "Tutorial reproducible from fresh clone — bash scripts/repro-quickstart.sh runs the 7-step tutorial and asserts each step passes",
+      "claim": "Tutorial reproducible from fresh clone -- runs the 7-step tutorial and asserts each step passes",
       "source": {
         "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
         "line_start": 87,
         "line_end": 87
       },
       "source_hash": "1fa5a304ebe6b0c486834a555510b46beeaa13482b2605565b995f60fb6ff4ce",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:48Z",
-      "last_extracted": "2026-04-28T09:00:48Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/docs-repro/tutorial-replay.sh"
+      ],
+      "test_body_hashes": [
+        "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
+      ],
+      "rationale": "tutorial-replay.sh ports the predecessor verbatim; same content, new home",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:55:58Z",
+      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/reference/simulator.md/audit-dual-table",
