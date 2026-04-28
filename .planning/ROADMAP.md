@@ -13,7 +13,7 @@
 - ✅ **v0.9.0 Architecture Pivot — Git-Native Partial Clone** — Phases 31–36 (shipped 2026-04-24) · [archive](milestones/v0.9.0-phases/ROADMAP.md)
 - ✅ **v0.10.0 Docs & Narrative Shine** — Phases 40–45 (shipped 2026-04-25) · [archive](milestones/v0.10.0-phases/ROADMAP.md)
 - ✅ **v0.11.x Polish & Reproducibility** — Phases 50–55 + POLISH2-* polish passes (v0.11.0 shipped 2026-04-25; v0.11.1 + v0.11.2 polish passes shipped 2026-04-26 / 2026-04-27 via release-plz; all 8 crates published to crates.io at v0.11.2)
-- 🚧 **v0.12.0 Quality Gates** — Phases 56–63 (planning 2026-04-27; dimension-tagged gates, catalog-first phases, mandatory verifier-subagent grading, weekly-cadence drift detectors, restore broken curl/PowerShell installer URLs)
+- 🚧 **v0.12.0 Quality Gates** — Phases 56–65 (P56–P63 shipped 2026-04-27/28; **P64 + P65 added 2026-04-28 to fold docs-alignment dimension into v0.12.0 BEFORE tagging**; tag held until P65 ships)
 
 ## Phases
 
@@ -219,6 +219,53 @@
 11. **Broaden-and-deepen close-out:** Every dimension's catalog has zero NOT-VERIFIED P0+P1 rows; every WAIVED row has a non-expired `until` (RFC3339) and a tracked carry-forward entry under MIGRATE-03 v0.12.1 placeholders; the milestone-close verifier subagent confirms cross-dimension coherence (no dimension shipped a gate without sweeping its first-run REDs per POLISH-* in REQUIREMENTS.md). Owner directive: "after this milestone the codebase is pristine and high quality across all the dimensions."
 
 **Context anchor:** `.planning/REQUIREMENTS.md` § "Migration close-out" MIGRATE-01..03 + § "Aggressive simplification" SIMPLIFY-12 + § "Out of Scope" (the v0.12.1 carry-forward list), `.planning/research/v0.12.0-autonomous-execution-protocol.md` (parallel migration + hard-cut + cohesion-pass design), v0.11.x tag-script precedent at `.planning/milestones/v0.11.0-phases/tag-v0.11.0.sh` (template for v0.12.0 tag script).
+
+### Phase 64: Docs-alignment dimension — framework, CLI, skill, hook wiring (v0.12.0)
+
+**Goal:** Build the docs-alignment quality dimension end-to-end so that P65 can run a backfill on top of it. Ship the `crates/reposix-quality/` workspace crate with a `clap` subcommand surface (`bind`, `propose-retire`, `confirm-retire` env-guarded against agent contexts, `mark-missing-test`, `plan-refresh`, `plan-backfill`, `merge-shards`, `walk`, `status`, `verify`, `run --gate/--cadence`); a `syn`-based hash binary at `quality/gates/docs-alignment/hash_test_fn` that hashes function bodies token-stream (whitespace + comments normalized away); a skill at `.claude/skills/reposix-quality-doc-alignment/` mirroring the P61 `reposix-quality-review` shape with `SKILL.md`, `refresh.md`, `backfill.md`, and `prompts/{extractor,grader}.md`; slash commands `/reposix-quality-refresh <doc-file>` and `/reposix-quality-backfill` (top-level only); pre-push hook integration via `reposix-quality run --cadence pre-push` invoking the deterministic hash walker; the empty-state catalog `quality/catalogs/doc-alignment.json` with summary block + zero rows + floor=0.50; three structure-dimension freshness rows asserting catalog presence/shape/floor-monotonicity; the two project-wide principles in `quality/PROTOCOL.md` ("subagents propose with citations; tools validate and mint" / "tools fail loud, structured, agent-resolvable") with cross-tool examples; CLAUDE.md updates (new `docs-alignment` row in the dimension matrix, "orchestration-shaped vs implementation-shaped phases" note under Subagent delegation rules, P64 H3 subsection ≤40 lines). Source-of-truth handover bundle: `.planning/research/v0.12.0-docs-alignment-design/{README,01-rationale,02-architecture,03-execution-modes,04-overnight-protocol,05-p64-infra-brief,06-p65-backfill-brief}.md`. **Execution mode:** `executor` (delegates to `gsd-executor`).
+
+**Requirements:** DOC-ALIGN-01, DOC-ALIGN-02, DOC-ALIGN-03, DOC-ALIGN-04, DOC-ALIGN-05, DOC-ALIGN-06, DOC-ALIGN-07.
+
+**Depends on:** P56, P57, P58, P59, P60, P61, P62, P63 ALL GREEN. (P64 builds on the v0.12.0 framework; cannot run before P63 cohesion is in place.)
+
+**Success criteria:**
+1. **Catalog-first commit (recurring QG-06):** First commit lands `quality/catalogs/doc-alignment.json` (empty-state schema, summary block) + 3 new structure-dimension rows in `quality/catalogs/freshness-invariants.json` (`structure/doc-alignment-catalog-present`, `structure/doc-alignment-summary-block-valid`, `structure/doc-alignment-floor-not-decreased`).
+2. **Crate skeleton:** `crates/reposix-quality/` registered in workspace `Cargo.toml`; `#![forbid(unsafe_code)]` + `#![warn(clippy::pedantic)]`; `cargo clippy -p reposix-quality -- -D warnings` clean; `cargo fmt -- --check` clean; `cargo test -p reposix-quality` PASS.
+3. **CLI surface complete:** every subcommand from `02-architecture.md` § "Binary surface" present and documented in `--help`; `bind` validates citations against the live filesystem and refuses on invalid; `confirm-retire` exits non-zero when `$CLAUDE_AGENT_CONTEXT` is set (test asserts this).
+4. **Hash binary:** `quality/gates/docs-alignment/hash_test_fn` compiles; tests cover comment-edit invariance (hash unchanged) AND rename detection (hash differs).
+5. **Hash walker (`walk` subcommand):** reads catalog, computes current hashes from filesystem, sets `last_verdict` to BOUND or one of the STALE_* states; NEVER updates stored hashes; exits non-zero on any blocking state with a stderr message naming the relevant slash command.
+6. **`merge-shards` golden tests:** auto-resolve case (same claim cited from two source files → one row, two `source` citations) AND conflict case (same claim, different test bindings → exit non-zero, write `CONFLICTS.md`, do NOT partial-write the catalog).
+7. **Skill + slash commands:** `.claude/skills/reposix-quality-doc-alignment/` populated; both slash commands documented as top-level-only with the depth-2 + subscription rationale in `SKILL.md`.
+8. **Pre-push integration:** `reposix-quality run --cadence pre-push` invokes the walker; exits non-zero on blocking states; stderr names the slash command; pre-push hook updated; `test-pre-push.sh` PASS for all existing scenarios.
+9. **`quality/PROTOCOL.md`** gains the two project-wide principles section with cross-tool examples (the section MUST list the cross-tool examples enumerated in `02-architecture.md`).
+10. **CLAUDE.md update (recurring QG-07):** new `docs-alignment` row in the dimension matrix; "orchestration-shaped phases" note added under Subagent delegation rules; P64 H3 subsection ≤40 lines, banned-words clean, total file ≤40 KB.
+11. **All cadences GREEN:** `python3 quality/runners/run.py --cadence pre-push` and `--cadence pre-pr` exit 0; new structure-dimension rows PASS; existing rows unchanged.
+12. **Verifier subagent dispatch (recurring QG-06):** Path B in-session per project precedent (Task unavailable in executor); verdict at `quality/reports/verdicts/p64/VERDICT.md` GREEN.
+
+**Context anchor:** `.planning/research/v0.12.0-docs-alignment-design/05-p64-infra-brief.md` (full implementation spec consumed by the planner), `.planning/research/v0.12.0-docs-alignment-design/02-architecture.md` (catalog schema + binary surface + skill layout — load-bearing), `.planning/research/v0.12.0-docs-alignment-design/03-execution-modes.md` (orchestration-vs-implementation marker convention), `.planning/research/v0.12.0-docs-alignment-design/04-overnight-protocol.md` (deadline 08:00, suspicion-of-haste rule, cargo-memory-budget reminders), the existing `.claude/skills/reposix-quality-review/` skill (P61 — copy this shape).
+
+### Phase 65: Docs-alignment backfill — surface the punch list (v0.12.0)
+
+**Goal:** Run the doc-alignment extractor across all current docs (`docs/**/*.md`, `README.md`) and archived REQUIREMENTS.md from prior milestones (v0.6.0–v0.11.0) to populate the catalog. Output is a reviewable punch list of `MISSING_TEST` and `RETIRE_PROPOSED` rows clustered by user-facing surface (Confluence backend parity, JIRA shape, ease-of-setup, outbound HTTP allowlist behavior, etc.). The Confluence page-tree-symlink regression that motivated the milestone surfaces here as a `MISSING_TEST` row; v0.12.1's gap-closure phases close it. **Execution mode:** **`top-level`** — NOT `/gsd-execute-phase`. The orchestrator IS the executor for this phase because depth-2 subagent spawning is unreachable and `gsd-executor` lacks the `Task` tool. The autonomous orchestrator follows the protocol verbatim from `06-p65-backfill-brief.md`: run `plan-backfill`, dispatch ~25–35 shard subagents in waves of 8 (Haiku tier; ≤3 files per shard; directory-affinity sharding), run `merge-shards` (deterministic), resolve any `CONFLICTS.md` by editing shard JSONs and re-running, write `PUNCH-LIST.md`, dispatch the verifier subagent (Path A — top-level has Task), commit phase-close, update CLAUDE.md, then dispatch the milestone-close verifier and STOP (owner pushes the tag).
+
+**Requirements:** DOC-ALIGN-08, DOC-ALIGN-09, DOC-ALIGN-10.
+
+**Depends on:** P64 (framework, CLI, skill, hook wiring all live and verifier-graded GREEN).
+
+**Success criteria:**
+1. **`MANIFEST.json` committed first:** deterministic chunker output at `quality/reports/doc-alignment/backfill-<ts>/MANIFEST.json` lists every shard, every input file, in stable alphabetical order. Re-running the chunker on the same inputs produces byte-identical output.
+2. **Per-shard subagent dispatch:** every shard from MANIFEST gets a Task subagent (Haiku tier). Each subagent's only durable output is `reposix-quality doc-alignment <subcmd>` calls — no hand-written JSON, no prose summary that the orchestrator interprets via LLM. The orchestrator's context only sees per-shard summary stdout strings (`shard 005: 22 rows, 3 MISSING_TEST, 0 RETIRE_PROPOSED`).
+3. **`merge-shards` exits 0 OR conflicts resolved before commit:** if `merge-shards` exits non-zero, orchestrator reads `CONFLICTS.md`, edits the relevant shard JSONs, re-runs. If conflicts persist after 2 rounds, halt and write a checkpoint to `.planning/STATE.md`. Do NOT partial-commit the catalog.
+4. **Catalog populated:** `quality/catalogs/doc-alignment.json` summary block reflects extracted state — expected `claims_total` in 100–200 range; if outside that envelope, halt and investigate (over-aggressive or under-aggressive extraction). `alignment_ratio` computed correctly.
+5. **Floor waiver written if needed:** if `alignment_ratio < 0.50`, a `summary.floor_waiver` block is written with `until=2026-07-31`, `reason="initial backfill; gap closure phased in v0.12.1"`, `dimension_owner="reuben"`. The walker honors floor_waiver.
+6. **`PUNCH-LIST.md` generated:** at `quality/reports/doc-alignment/backfill-<ts>/PUNCH-LIST.md`. MISSING_TEST rows clustered by user-facing surface (≥3 clusters expected); RETIRE_PROPOSED rows listed separately for human review; cluster counts + claim citations preserved.
+7. **CLAUDE.md update (recurring QG-07):** P65 H3 subsection ≤40 lines summarizing backfill counts + carry-forward to v0.12.1 + the `floor_waiver` rationale; banned-words clean; total file ≤40 KB.
+8. **All cadences GREEN:** `python3 quality/runners/run.py --cadence pre-push` and `--cadence pre-pr` exit 0 (with the floor_waiver in place if needed).
+9. **Verifier subagent dispatch (recurring QG-06):** Path A (top-level orchestrator HAS Task); verdict at `quality/reports/verdicts/p65/VERDICT.md` GREEN. Verifier checks the catalog matches the shard outputs + the punch list reflects the catalog state + no auto-resolved retirements (every `RETIRE_PROPOSED` is genuinely supersession-cited).
+10. **Milestone-close verifier dispatched and GREEN:** `quality/reports/verdicts/milestone-v0.12.0/VERDICT.md` confirms all P56–P65 catalog rows GREEN-or-WAIVED, tag-gate guards in `.planning/milestones/v0.12.0-phases/tag-v0.12.0.sh` all pass (re-run after P64+P65 changes), CHANGELOG `[v0.12.0]` finalized including DOC-ALIGN-* shipped.
+11. **STOP at tag boundary:** orchestrator does NOT push the tag. STATE.md cursor is updated to "v0.12.0 ready-to-tag (re-verified after P64+P65); owner pushes tag."
+
+**Context anchor:** `.planning/research/v0.12.0-docs-alignment-design/06-p65-backfill-brief.md` (full top-level execution protocol — normative; orchestrator follows verbatim), `.planning/research/v0.12.0-docs-alignment-design/03-execution-modes.md` (why this is top-level), `.planning/research/v0.12.0-docs-alignment-design/04-overnight-protocol.md` (deadline + suspicion-of-haste rule).
 
 ---
 
