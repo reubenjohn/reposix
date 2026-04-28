@@ -614,6 +614,42 @@ The Quality Gates `subjective` cross-dimension shipped in P61. 3 rubrics catalog
 - `quality/PROTOCOL.md` — cadence routing + verifier-subagent template + waiver protocol.
 - MIGRATE-03 in `.planning/REQUIREMENTS.md` — v0.12.1 carry-forwards (e/f/g): subjective dispatch-and-preserve runner invariant; auto-dispatch from CI; hard-gate chaining release.yml -> quality-pre-release.yml.
 
+### P62 — Repo-org-gaps cleanup + audit closure (added 2026-04-28)
+
+P62 closes ORG-01 + POLISH-ORG. The forgotten-todo-list document `.planning/research/v0.11.1-repo-organization-gaps.md` (snapshot 2026-04-26) was audited rec-by-rec; the closure record is `quality/reports/audits/repo-org-gaps.md` (99 items; 50 closed-by-existing-gate, 26 closed-by-relocation, 13 closed-by-deletion, 8 out-of-scope; zero open Wave-3 items).
+
+**3 new structure-dimension catalog rows** in `quality/catalogs/freshness-invariants.json` lock the recurrence guards for the gaps that actually moved this phase:
+
+| Row id | What it asserts | Owner hint |
+|---|---|---|
+| `structure/no-loose-top-level-planning-audits` | no `*MILESTONE-AUDIT*.md` or `SESSION-END-STATE*` at `.planning/` top level | new milestone-audits / session-end-state docs land under `.planning/milestones/audits/` or `.planning/archive/` |
+| `structure/no-pre-pivot-doc-stubs` | every `docs/*.md` stub <500 bytes is in `mkdocs.yml` `nav:` / `not_in_nav:` / `redirect_maps` | new top-level `docs/<slug>.md` stubs <500 B — add to redirect map or remove |
+| `structure/repo-org-audit-artifact-present` | `quality/reports/audits/repo-org-gaps.md` exists + `scripts/check_repo_org_gaps.py` exit 0 | future repo-org audits land at the same canonical path |
+
+Verifier branches at `quality/gates/structure/freshness-invariants.py` (P62 Wave 3; file grew to 402 lines — helper-module extraction deferred to v0.12.1 unless Wave 6 verifier flags it). Short-lived waivers until 2026-05-15 expire harmlessly after Wave 3 (catalog-first commit pattern).
+
+**Relocations + deletions (P62 Wave 3 commit `8842d48`):**
+- `git mv .planning/v0.{9,10}.0-MILESTONE-AUDIT.md .planning/milestones/audits/` (history preserved).
+- `git mv .planning/SESSION-END-STATE{.md,.json,-VERDICT.md} .planning/archive/session-end-state/` + new `README.md` naming `quality/PROTOCOL.md` as the supersession path. The §0.8 SESSION-END-STATE framework is superseded by `quality/PROTOCOL.md`.
+- `scripts/__pycache__/*.pyc` removed from working tree (`.gitignore:30` already covers `__pycache__/` recursively; files were never tracked).
+
+**SURPRISES.md rotation (P62 Wave 4 commit `2413f13`):** active journal trimmed 302 → 219 lines via P59 precedent. 10 P57+P58 entries (106 lines) archived to `quality/SURPRISES-archive-2026-Q2.md` verbatim. Active retains P59 onward (P59 + P60 + P61 + P62). Banner consolidated.
+
+**Recovery patterns** (the regressions this dimension catches):
+- audit doc has unclosed `closed-by-Wave-3-fix` disposition: run `python3 scripts/check_repo_org_gaps.py` for the diagnostic; the script prints which dispositions remain open + the full Wave-3 input list.
+- `structure/no-loose-top-level-planning-audits` RED: relocate the new top-level audit doc under `.planning/milestones/audits/` (or under `.planning/archive/` if the doc is historical-only).
+- `structure/no-pre-pivot-doc-stubs` RED: a new top-level `docs/<slug>.md` stub <500 B was added without a `mkdocs.yml` mapping — add to `nav:` / `not_in_nav:` / `redirect_maps` or remove.
+
+**Meta-rule (extension of QG-07):** Every audit/cleanup phase MUST commit its closure record under `quality/reports/audits/<topic>.md` with a machine-checkable verifier (`scripts/check_<topic>.py`). Forgotten-todo-list documents are not closed by silent absorption — the closure must be a committed artifact the next agent can grade against.
+
+**Cross-references** (do NOT duplicate runtime detail here):
+- `quality/reports/audits/repo-org-gaps.md` — the closure audit (99 items; per-gap disposition table + Wave-3 closure record).
+- `quality/catalogs/freshness-invariants.json` — 3 P62 rows (lines anchored after the existing 10 rows).
+- `quality/gates/structure/README.md` — dimension home with the P62 row table + verifier conventions.
+- `quality/gates/structure/freshness-invariants.py` — verifier branches (`verify_no_loose_top_level_planning_audits`, `verify_no_pre_pivot_doc_stubs`, `verify_repo_org_audit_artifact_present`).
+- `scripts/check_repo_org_gaps.py` — the audit-completeness verifier (stdlib; exit 0 on PASS; `--json` for machine-readable summary).
+- `quality/SURPRISES-archive-2026-Q2.md` — Q2 archive (P56 + P57 + P58 entries).
+
 ## Quick links
 
 - `docs/research/initial-report.md` — full architectural argument for git-remote-helper + partial clone.
