@@ -127,7 +127,7 @@
       },
       "artifact": "quality/reports/verifications/docs-build/badges-resolve.json",
       "status": "PASS",
-      "last_verified": "2026-04-27T23:26:32Z",
+      "last_verified": "2026-04-28T18:45:05Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: a badge URL is 404 or returns non-image content-type -- fix the badge URL in README.md or docs/index.md OR substitute a current shields.io equivalent. Common: shields.io drift, codecov project rename, badge-URL typos.",

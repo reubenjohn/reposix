@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 189,
-    "claims_missing_test": 155,
-    "claims_retire_proposed": 0,
+    "claims_bound": 193,
+    "claims_missing_test": 152,
+    "claims_retire_proposed": 3,
     "claims_retired": 30,
-    "alignment_ratio": 0.5279329608938548,
+    "alignment_ratio": 0.5391061452513967,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-28T18:43:08Z",
+    "last_walked": "2026-04-28T18:45:06Z",
     "coverage_ratio": 0.2035720794605431,
     "lines_covered": 1117,
     "total_eligible_lines": 5487,
@@ -21,19 +21,19 @@
   "rows": [
     {
       "id": "confluence.md/v0.4_write_path_claim",
-      "claim": "'v0.4 will add the write path' — claim is outdated, write path ships in phases 22/24 not v0.4",
+      "claim": "'v0.4 will add the write path' -- claim is outdated, write path ships in phases 22/24 not v0.4",
       "source": {
         "file": "docs/reference/confluence.md",
         "line_start": 152,
         "line_end": 154
       },
       "source_hash": "dc0ee8c40009ec06a101ff81da63961e05f3c69a625f35a58d4e16e7cb5a105c",
-      "rationale": "Docs claim write path is future work in v0.4; current version is v0.12.0 with working create/update/delete. No test validates document freshness on this claim.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:09:23Z",
-      "last_extracted": "2026-04-28T09:09:23Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded: write path shipped (Phase 22/24). The forward-looking 'v0.4 will add' framing is no longer applicable; the active write path is captured by docs/connectors/guide/backendconnector-{create,update,delete-or-close}-method rows (all BOUND). confluence.md prose rewritten in commit b6f6dd7 to describe shipped write path.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T18:58:18Z",
+      "last_extracted": "2026-04-28T18:58:18Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/cold-reader-16page-audit",
@@ -912,7 +912,7 @@
           "line_end": 315
         }
       ],
-      "source_hash": "6119bb5fe56f1834644f3fc258d802298c85506bbc777c87fa4bc2bdfeb7f4f3",
+      "source_hash": "e4dcef7bbd1d1ac0d06e0822102a11c8f6897265672cf2d7c22eb245f5cf1b68",
       "tests": [
         "crates/reposix-confluence/tests/roundtrip.rs::delete_or_close_is_audited_in_integration_context"
       ],
@@ -920,10 +920,10 @@
         "32f1c5a4ef655662b29bef9719e0b6a3edda51cf4670a2478c0aee78937a5590"
       ],
       "rationale": "roundtrip.rs:204-206 calls delete_or_close(project, RecordId, DeleteReason::Completed) -- exact parameter shape from claim",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T18:42:28Z",
-      "last_extracted": "2026-04-28T18:42:28Z",
+      "last_run": "2026-04-28T18:58:18Z",
+      "last_extracted": "2026-04-28T18:58:18Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1001,18 +1001,18 @@
           "line_end": 299
         }
       ],
-      "source_hash": "929ac2f53a64a0d004e5f027c8a86f8e978d5e0a3525c94f9efa1e1bfded1d40",
+      "source_hash": "f30bd3d1ab0dac2125165ec074f061eccb810a2db8e18ad19de960f218d1a5bb",
       "tests": [
         "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock_write"
       ],
       "test_body_hashes": [
         "eaaf7ec27258eca9496b8194c38e128b047dc4abae2baf48bf76aca207ec8557"
       ],
-      "rationale": "contract.rs:282-291 calls update_record(project, RecordId, Untainted<Record>, None: Option<u64>) and asserts updated.title -- exact signature from claim",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "contract.rs:282-291 calls update_record(project, RecordId, Untainted<Record>, None: Option<u64>) -- exact signature",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T18:42:28Z",
-      "last_extracted": "2026-04-28T18:42:28Z",
+      "last_run": "2026-04-28T18:58:18Z",
+      "last_extracted": "2026-04-28T18:58:18Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2183,18 +2183,18 @@
           "line_end": 154
         }
       ],
-      "source_hash": "2ab7568e565025e51d41a61249a4bcde2f729df19c8785c2fbe70b268bf82429",
+      "source_hash": "bbb40403b26463e65dd767a42bc2456ed6bc042def0a9dd14e1b2a001adf697b",
       "tests": [
         "crates/reposix-github/tests/contract.rs::user_agent_header_is_set"
       ],
       "test_body_hashes": [
         "1462107cc0adffec0487da9a49973099765759fb1470f94094c2260c3f4a319c"
       ],
-      "rationale": "github/tests/contract.rs ships >=5 wiremock tests: contract_github_wiremock (happy + u64::MAX 404), pagination_follows_link_header, rate_limit_429_surfaces_clean_error, user_agent_header_is_set; this test anchors the auth/identity-header item",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "github contract.rs ships >=5 wiremock tests covering happy/404/auth/pagination/rate-limit",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T18:42:28Z",
-      "last_extracted": "2026-04-28T18:42:28Z",
+      "last_run": "2026-04-28T18:58:18Z",
+      "last_extracted": "2026-04-28T18:58:18Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2778,12 +2778,12 @@
         "line_end": 128
       },
       "source_hash": "245379526463fe9a871bfafd6e16bbf993a0f0a4c4cc148337670247f57bf165",
-      "rationale": "This entire section describes FUSE mount layout removed in v0.9.0 architecture pivot. Current git-native partial-clone implementation does NOT produce tree/ or symlink hierarchies. Zero test coverage for this claim because feature does not exist in current codebase.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:08:45Z",
-      "last_extracted": "2026-04-28T09:08:45Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by .planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md: FUSE mount + page-tree symlink layout was deliberately dropped in v0.9.0 in favor of partial-clone bare-repo cache. The user-facing capability (write .md, update Confluence page) is captured by other rows that bind to dark-factory tests. confluence.md prose rewritten in commit b6f6dd7 to describe v0.9.0 git-native shape.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T18:58:18Z",
+      "last_extracted": "2026-04-28T18:58:18Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/reference/http-api.md/healthz-endpoint",
@@ -3818,12 +3818,12 @@
         "line_end": 8
       },
       "source_hash": "a7cd9157a658955c488da392d02d3e75ca95500c358f5b0c07e7329bfe68f4b4",
-      "rationale": "Intro text references FUSE daemon which was removed in v0.9.0. Statement is stale; FUSE never integrated with git-native architecture. No test validates FUSE consumption path (path does not exist).",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:08:45Z",
-      "last_extracted": "2026-04-28T09:08:45Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by architecture-pivot-summary.md: FUSE daemon retired in v0.9.0. The trait (renamed BackendConnector) is now consumed by git-remote-reposix helper, not a FUSE daemon. Trait-shape claims are captured in docs/connectors/guide/backendconnector-* rows (BOUND). confluence.md prose rewritten in commit b6f6dd7.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T18:58:18Z",
+      "last_extracted": "2026-04-28T18:58:18Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/jira-integration",
@@ -6419,18 +6419,18 @@
           "line_end": 71
         }
       ],
-      "source_hash": "bd77e73bdf624950594c31006da2d2cb6e413bfbd613c7e50cae7670486066e8",
+      "source_hash": "c0979e068818eb842cc42aba07f047b21959bb15a46db0a086039f7c4c723627",
       "tests": [
         "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants"
       ],
       "test_body_hashes": [
         "f55f3f3e47171456c973c443d1b3d4675f0d0f315b6e73db8b18905aee8feeb1"
       ],
-      "rationale": "stateless_connect_e2e.rs:176 sets REPOSIX_BLOB_LIMIT=1 and asserts the helper enforces this override by refusing wants beyond it",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "stateless_connect_e2e.rs:176 sets REPOSIX_BLOB_LIMIT=1 and asserts the helper enforces this override",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T18:42:28Z",
-      "last_extracted": "2026-04-28T18:42:28Z",
+      "last_run": "2026-04-28T18:58:18Z",
+      "last_extracted": "2026-04-28T18:58:18Z",
       "last_extracted_by": "bind-call"
     },
     {
