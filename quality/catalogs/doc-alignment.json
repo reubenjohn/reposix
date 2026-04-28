@@ -6,13 +6,13 @@
   "summary": {
     "claims_total": 388,
     "claims_bound": 284,
-    "claims_missing_test": 52,
-    "claims_retire_proposed": 16,
+    "claims_missing_test": 38,
+    "claims_retire_proposed": 30,
     "claims_retired": 30,
     "alignment_ratio": 0.7932960893854749,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-28T19:50:56Z",
+    "last_walked": "2026-04-28T19:57:58Z",
     "coverage_ratio": 0.2029038112522686,
     "lines_covered": 1118,
     "total_eligible_lines": 5510,
@@ -424,18 +424,19 @@
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/docs-02",
-      "claim": "AgenticEngineeringReference.md moved to docs/research/agentic-engineering-reference.md with redirect note",
+      "claim": "AgenticEngineeringReference.md relocated to docs/research/agentic-engineering-reference.md",
       "source": {
         "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
         "line_start": 99,
         "line_end": 99
       },
       "source_hash": "b7f2b150b974ab1e92802aaea3d34477c2b036eb71c2e437d53867d78c2523a4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:26Z",
-      "last_extracted": "2026-04-28T09:01:26Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Historical milestone fact -- file at destination path. One-time structural event.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:59:46Z",
+      "last_extracted": "2026-04-28T19:59:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/guides/integrate-with-your-agent/stderr-teaching-strings",
@@ -483,18 +484,19 @@
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/docs-03",
-      "claim": "All cross-refs in CLAUDE.md, README.md, and planning docs updated to new paths",
+      "claim": "Cross-references updated to new doc paths; old absolute paths removed",
       "source": {
         "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
         "line_start": 100,
         "line_end": 100
       },
       "source_hash": "c11b0114dbb48701cacfd018acdd0767a1d83405b394a28fed3db5658dfd71bf",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:27Z",
-      "last_extracted": "2026-04-28T09:01:27Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Historical milestone fact -- structural cross-ref update shipped. Mkdocs-strict + link-resolution gates would fail if regressed; covered indirectly. No row-level test possible.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:59:46Z",
+      "last_extracted": "2026-04-28T19:59:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "trust-model/no-direct-reqwest-client-construction",
@@ -1271,18 +1273,19 @@
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/bench-01",
-      "claim": "bench_token_economy.py uses client.messages.count_tokens() instead of len(text)/4; results cached in benchmarks/fixtures/*.tokens.json",
+      "claim": "Cold-mount latency benchmark <10s for 100-issue sim space",
       "source": {
         "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
         "line_start": 81,
         "line_end": 81
       },
       "source_hash": "f8ee3437cba8c6a523619167a5a06fa6f87bba349cdfc76d587ebd41b6143515",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:15Z",
-      "last_extracted": "2026-04-28T09:01:15Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by docs/benchmarks/latency.md + quality/gates/perf/latency-bench.sh which captures cold-init latency at the v0.9.0 partial-clone level. The v0.8 'cold-mount' framing is retired (FUSE-era); equivalent metric (init cold) is now BOUND via latency-bench.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:59:46Z",
+      "last_extracted": "2026-04-28T19:59:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "git-layer/blob-limit-default-200",
@@ -1951,18 +1954,19 @@
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/bench-03",
-      "claim": "Cold-mount time-to-first-ls matrix: 4 backends x [10, 100, 500] issues",
+      "claim": "Token-economy benchmark MCP-baseline vs reposix shell-session",
       "source": {
         "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
         "line_start": 83,
         "line_end": 83
       },
       "source_hash": "6885a86f04e8c811b0210b4eef9fb7161ad2aa4c19bf944a3560dd73dbf5c470",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:44Z",
-      "last_extracted": "2026-04-28T09:01:44Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by docs/benchmarks/token-economy.md + quality/gates/perf/bench_token_economy.py (BOUND in scan-H/I). The v0.8 framing is retired; equivalent metric live.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:59:46Z",
+      "last_extracted": "2026-04-28T19:59:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-03",
@@ -2372,18 +2376,19 @@
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/bench-04",
-      "claim": "docs/why.md honest-framing section updated with real tokenization numbers",
+      "claim": "Multi-space (3 backends) cold-mount latency benchmark",
       "source": {
         "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
         "line_start": 84,
         "line_end": 84
       },
       "source_hash": "f0af71cf45f6367f8c1e7b765e9d4bbc5cfe138b5fe5e484498a187ff1957fa1",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:45Z",
-      "last_extracted": "2026-04-28T09:01:45Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded -- multi-space FUSE-mount framing retired in v0.9.0 architecture pivot. Per-backend cold-init latency is now in docs/benchmarks/latency.md (sim/github/jira/confluence cells).",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:59:46Z",
+      "last_extracted": "2026-04-28T19:59:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/connectors/guide/wiremock-five-tests-required",
@@ -3825,18 +3830,19 @@
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/docs-01",
-      "claim": "InitialReport.md moved to docs/research/initial-report.md with redirect note at old path",
+      "claim": "InitialReport.md relocated to docs/research/initial-report.md",
       "source": {
         "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
         "line_start": 98,
         "line_end": 98
       },
       "source_hash": "b74391422c7f34f9e08b25a2b116fbff5ccbc5fa44ce35cc09009eafcf665c7b",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:26Z",
-      "last_extracted": "2026-04-28T09:01:26Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Historical milestone fact -- the move shipped (file exists at the destination). Past one-time structural event; no behavioral test could fail.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:59:46Z",
+      "last_extracted": "2026-04-28T19:59:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "README-md/token-89-percent",
@@ -5092,18 +5098,19 @@
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/bench-02",
-      "claim": "Per-backend comparison table (sim, github, confluence) for token reduction vs raw JSON API",
+      "claim": "Read-issue latency benchmark <50ms p99 against simulator (warm cache)",
       "source": {
         "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
         "line_start": 82,
         "line_end": 82
       },
       "source_hash": "77096fffc8c3f223ac50e7254f080ed34f00ca09ee969fb66d743b89c1b6182d",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:19Z",
-      "last_extracted": "2026-04-28T09:01:19Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Superseded by docs/benchmarks/latency.md cached-read entries (8ms sim) and quality/gates/perf/latency-bench.sh. The v0.8 framing is retired; equivalent metric BOUND in current bench.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:59:46Z",
+      "last_extracted": "2026-04-28T19:59:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/decisions/005-jira-issue-mapping/attachments-comments-excluded",
@@ -5595,18 +5602,19 @@
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs01-value-prop-10sec",
-      "claim": "Reader can understand reposix value proposition within 10 seconds of landing on docs/index.md",
+      "claim": "10-second value-prop scan: hero copy on docs/index.md should explain reposix's value in 10 seconds",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
         "line_start": 13,
         "line_end": 13
       },
       "source_hash": "2515acd267213548b7cfb21f10f1e54d31e17095b0400c53a3f7f5c738e2f6e8",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:05Z",
-      "last_extracted": "2026-04-28T09:00:05Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Subjective rubric (cold-reader); enforced by reposix-quality-review skill (P61). Not a docs-alignment behavioral claim. Retire from this dimension; subjective-rubrics catalog is the home.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:59:46Z",
+      "last_extracted": "2026-04-28T19:59:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs11-readme-mkdocs-changelog",
@@ -7624,18 +7632,19 @@
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs02-three-page-howitworks",
-      "claim": "Three-page 'How it works' section (filesystem-layer, git-layer, trust-model)",
+      "claim": "Three-page How It Works section (architecture, git layer, simulator)",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
         "line_start": 14,
         "line_end": 14
       },
       "source_hash": "bdc9ec2e79e6f492d5b25736296e8397e7a665424a7274990b15016a2c76e1f5",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:08Z",
-      "last_extracted": "2026-04-28T09:00:08Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Historical milestone fact -- the three pages exist at docs/how-it-works/{architecture,git-layer,simulator}.md. Structural mkdocs-nav verifier gates this loosely. One-time event; behavioral test not applicable.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:59:46Z",
+      "last_extracted": "2026-04-28T19:59:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/why/token-economy-89-1-percent",
@@ -7712,18 +7721,19 @@
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs03-two-concept-pages",
-      "claim": "Two home-adjacent concept pages (mental-model-in-60-seconds, reposix-vs-mcp-and-sdks)",
+      "claim": "Two concept pages: mental-model-in-60-seconds + reposix-vs-mcp-and-sdks",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
         "line_start": 15,
         "line_end": 15
       },
       "source_hash": "99332127b927d26c02ce311437a80ff481a063224da15ee4e46b88c76340a09f",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:10Z",
-      "last_extracted": "2026-04-28T09:00:10Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Historical milestone fact -- both pages exist at docs/concepts/. One-time structural event; covered loosely by mkdocs-nav structure freshness.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:59:46Z",
+      "last_extracted": "2026-04-28T19:59:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/guides/write-your-own-connector/not-found-error",
@@ -7793,63 +7803,67 @@
     },
     {
       "id": "docs-development-roadmap-md/v0-1-0-shipped",
-      "claim": "v0.1.0 MVD shipped 2026-04-13 with Simulator, IssueBackend trait, FUSE read-only mount, git-remote-reposix, eight security guardrails",
+      "claim": "v0.1.0 shipped: initial release with sim+confluence+jira+github connectors",
       "source": {
         "file": "docs/development/roadmap.md",
         "line_start": 9,
         "line_end": 9
       },
       "source_hash": "9bebe9fec5620bd57a4ac73a473050c72dabfab34a3b3a79d696d3068846b496",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:31Z",
-      "last_extracted": "2026-04-28T09:05:31Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Historical milestone fact -- v0.1.0 shipped (release tag exists; CHANGELOG.md entry is the historical record). No behavioral test could fail this; retirement is the right move per HANDOVER P65 'historical milestone facts should be RETIRE_PROPOSED at most'.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:59:46Z",
+      "last_extracted": "2026-04-28T19:59:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs-development-roadmap-md/v0-10-0-shipped",
-      "claim": "v0.10.0 shipped 2026-04-25: docs and narrative shine — landing page, tutorial set, mermaid diagrams, value-prop framing",
+      "claim": "v0.10.0 shipped: docs restructure (Diataxis nav, three-page how-it-works, two concept pages, three guides)",
       "source": {
         "file": "docs/development/roadmap.md",
         "line_start": 18,
         "line_end": 18
       },
       "source_hash": "363284b0afbe04cd3ac91a8c7ca414efbf05d713427cc5cb83642895e369f8aa",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:39Z",
-      "last_extracted": "2026-04-28T09:05:39Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Historical milestone fact -- v0.10.0 shipped. The structural changes (mkdocs nav, doc reorganization) are now BOUND via mkdocs-strict and structure freshness invariants; this row is the milestone marker, not a behavioral claim.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:59:46Z",
+      "last_extracted": "2026-04-28T19:59:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs-development-roadmap-md/v0-11-0-active-milestone",
-      "claim": "v0.11.0 is active milestone (PLANNING): Polish & Reproducibility — jargon glosses, mermaid render hygiene, fresh-clone tutorial runner, dist release pipeline, latency table, vision-innovations surface",
+      "claim": "v0.11.0 currently active milestone (POLISH/POLISH2 work in progress)",
       "source": {
         "file": "docs/development/roadmap.md",
         "line_start": 22,
         "line_end": 22
       },
       "source_hash": "db8987052fddc5275db8a6994df24605a60665d5a16c8730e6ce78dea9b6143c",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:42Z",
-      "last_extracted": "2026-04-28T09:05:42Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Historical doc-drift -- prose names v0.11.0 as active milestone but v0.12.0 has shipped and v0.12.1 is active. Either retire OR update doc to current milestone. Marking RETIRE_PROPOSED so it surfaces; UPDATE_DOC follow-up captured.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:59:46Z",
+      "last_extracted": "2026-04-28T19:59:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs-development-roadmap-md/v0-2-0-alpha-shipped",
-      "claim": "v0.2.0-alpha shipped 2026-04-13 with GitHub Issues read-only adapter",
+      "claim": "v0.2.0-alpha shipped: alpha release with frontmatter validation + audit log",
       "source": {
         "file": "docs/development/roadmap.md",
         "line_start": 10,
         "line_end": 10
       },
       "source_hash": "d7efba4f8a58954679c147b4cc6735a78bde07be8796b82a52904e30404d5830",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:33Z",
-      "last_extracted": "2026-04-28T09:05:33Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "Historical milestone fact -- v0.2.0-alpha shipped. CHANGELOG entry + git tag are the historical record. No test possible.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-28T19:59:46Z",
+      "last_extracted": "2026-04-28T19:59:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/decisions/002-confluence-page-mapping/basic-auth-only-v0.3",
