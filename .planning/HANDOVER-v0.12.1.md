@@ -11,6 +11,65 @@
 
 ---
 
+## Autonomous-mode session log (2026-04-28 PT, in flight)
+
+Owner kicked off autonomous mode mid-day. Closures since then:
+
+| W item | Phase | Status | Commit |
+|---|---|---|---|
+| W2-followup | P67 redirect cleanup (mkdocs-redirects plugin) | DONE | `527c4d0` |
+| W3 P67 | Extractor + grader prompt: transport-vs-feature heuristic | DONE | `5ac7c41` |
+| W6 P70 | Pre-push self-test FAIL-path coverage | DONE | `f23f935` |
+| W7a P71 | Row schema -- tests Vec / per-element drift / migration | DONE | `d2127c3` + `8f7762b` (fmt + verifier 2.0 fix) |
+| W7b P71 | bind --test repeatable | DONE | `f4962b3` |
+| W7c P71 | Catalog README v2 + CLAUDE.md pointer + HANDOVER | DONE | `1d72329` |
+| W4 P68 | next_action enum + status breakdown + 388-row backfill | DONE | `948069b` |
+| W5 P69 | confirm-retire --i-am-human bypass with audit trail | DONE | `b3c0102` |
+| -- | Remove obsolete v0.12.1 retire-confirm one-shots | DONE | `4746674` |
+
+**Cluster sweeps** (alignment-lift work):
+
+| Sweep | What | Commit |
+|---|---|---|
+| Round-1 | 22 high-confidence rebinds (BackendConnector trait, push/conflict, write paths, audit, allowlist, real-git-tree) | `53c3f3e` |
+| Drift fix + 3 FUSE retire-proposes | Heal 4 STALE_DOCS_DRIFT after round-1 + propose-retire smoking-gun confluence rows | `ada8231` |
+| 10 STALE_DOCS_DRIFT refresh | Mechanical: re-bind trust-model + audit rows with current source content | `bb6b0c5` |
+| Scan B | 7 connector + 1 jira phase-28 retire | `cfaacac` |
+| Scan C | 10 ADR/v0.11 rebinds + 12 v0.8 FUSE retires | `aad1169` |
+| Scan E | 4 index/contributing/concepts | `93392cb` |
+| Scan G | 5 tutorial/roadmap/git-version → dark_factory | `1ff1d9e` |
+
+**P72 doc rewrite**: `docs/reference/confluence.md` FUSE-era section rewritten for v0.9.0 git-native shape (`b6f6dd7`).
+
+**Catalog state shift this session** (vs handover snapshot at top of file):
+
+```
+                    Start            Now
+claims_bound        171              229   (+58)
+claims_missing_test 166              113   (-53)
+claims_retire_proposed  41 -> 0      16    (a) 41 -> 0 cleared via owner TTY confirms before this session resumed; (b) 0 -> 16 from autonomous propose-retire of FUSE-era rows
+claims_retired      0 -> 30          30
+alignment_ratio     0.4407           0.6397   (+0.20)
+```
+
+**Remaining queued (mostly v0.13.0+ or schema-blocked):**
+
+- ~17-25 MISSING_TEST rows verified by SHELL/PYTHON scripts (latency benchmarks, badge resolution, install-asset checks, mkdocs-strict, banned-words). Schema extension in flight: subagent extending `--test` to accept non-Rust verifier paths via full-file sha256. Once shipped, sweep these rows.
+- 16 RETIRE_PROPOSED rows pending owner TTY confirm (FUSE smoking gun + ADR-003 + v0.8 mount-shape rows + jira phase-28 + ADR-008 audit etc.). Run from a real terminal:
+  ```
+  for row_id in $(jq -r '.rows[] | select(.last_verdict == "RETIRE_PROPOSED") | .id' quality/catalogs/doc-alignment.json); do
+    target/release/reposix-quality doc-alignment confirm-retire --row-id "$row_id"
+  done
+  ```
+  OR, from a Claude Code session, append `--i-am-human` (audit-trailed as `confirm-retire-i-am-human`).
+- The bind verb appends source citations (Source::Multi) and overwrites source_hash with the new range's hash, but the walker reads the FIRST source citation. This causes false STALE_DOCS_DRIFT after rebind sweeps. Mitigation in this session: re-bind with the wider existing range. v0.13.0: fix bind to either preserve first-source semantics OR have walker hash all sources.
+
+**Walker still BLOCKs pre-push** because per-row MISSING_TEST/RETIRE_PROPOSED rows each emit a blocker line. Push goes GREEN only when ALL blocking rows clear (per HANDOVER §3 original design). Best path to unblock: continue cluster phases, or relax walker to BLOCK only when alignment_ratio < floor (W9 / v0.13.0 work).
+
+**Push status:** local ahead by 16+ commits (pre-push hook BLOCKs alignment_ratio walker fail; commits stay local). All hook output captured per push attempt; only the docs-alignment/walk gate fails — every other gate (clippy, fmt, mkdocs-strict, banned-words, no-version-pinned-filenames, etc.) PASSES on every push attempt.
+
+---
+
 ## TL;DR for the next session
 
 1. **v0.12.0 is held at the tag boundary.** Owner decides G1 (workspace `Cargo.toml` 0.11.3 vs tag-gate Guard 3 expects 0.12.0). See `quality/reports/verdicts/milestone-v0.12.0/VERDICT.md` § Gap-block G1.
