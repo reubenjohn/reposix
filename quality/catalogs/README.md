@@ -78,18 +78,39 @@ The runner sets exactly one of the following on each row after every run:
 
 The catalog at `quality/catalogs/doc-alignment.json` extends the unified
 schema with a per-dimension shape: a wrapper `summary` block + per-row
-`source_hash` / `test_body_hash` / `last_verdict` / `last_extracted` /
+`source_hash` / `test_body_hashes` / `last_verdict` / `last_extracted` /
 `last_extracted_by` fields. Source of truth:
 `.planning/research/v0.12.0-docs-alignment-design/02-architecture.md`.
 
-**Row schema (added fields):** `id` (kebab-case `<slug>` -- the dimension
-prefix is implicit), `claim` (one-sentence behavioral claim), `source`
-(`f:l-l` citation, multi-source rows carry an array of citations),
-`source_hash` (`sha256` of the cited line range; computed by `bind`),
-`test` (`f::sym` Rust test fn citation), `test_body_hash`
-(`syn::ItemFn::to_token_stream()` then `sha256`; comments + whitespace
-normalized away), `rationale`, `last_verdict`, `last_run`,
-`last_extracted`, `last_extracted_by`.
+**Top-level catalog field:** `schema_version` (string, currently `"2.0"`).
+v1.0 carried singular `test` / `test_body_hash` fields; v2.0 (P71/W7,
+commit `d2127c3`) replaces them with the parallel-array shape below. The
+388-row catalog was migrated in place by
+`scripts/migrate-doc-alignment-schema-w7.py`; readers MUST accept v2.0,
+and the structural verifier accepts both `"1.0"` and `"2.0"` during the
+v0.12.1 transition.
+
+**Row schema (v2 — added fields):** `id` (kebab-case `<slug>` -- the
+dimension prefix is implicit), `claim` (one-sentence behavioral claim),
+`source` (`f:l-l` citation, multi-source rows carry an array of
+citations), `source_hash` (`sha256` of the cited line range; computed by
+`bind`), `tests` (`Vec<String>` of `f::sym` Rust test fn citations;
+empty vec means "no test bound yet" — replaces v1.0's `Option<String>`),
+`test_body_hashes` (`Vec<String>`, parallel to `tests`; each element is
+`syn::ItemFn::to_token_stream()` then `sha256` for the corresponding
+test fn; comments + whitespace normalized away), `rationale` (optional;
+walker tolerates absence via `serde(default)`), `last_verdict`,
+`last_run`, `last_extracted`, `last_extracted_by`.
+
+**Parallel-array invariant (v2).** `tests.len() == test_body_hashes.len()`
+at all times. The invariant is enforced at deserialize via
+`Row::validate_parallel_arrays` and the gatekeeping setter
+`Row::set_tests(tests, hashes) -> Result<()>` (Rust); `Row::clear_tests`
+is the explicit detach used by `mark-missing-test`. Walker drift
+detection iterates per-element: any missing test fn flips the row to
+`STALE_TEST_GONE`; else any drifted hash flips to `STALE_TEST_DRIFT`;
+else `BOUND`. One row may bind to multiple tests (e.g. a JIRA-writes
+claim binding to create + update + delete + conflict-recovery tests).
 
 **Row state machine:** `BOUND` (grader GREEN), `MISSING_TEST` (extractor
 found claim with no test -- pre-push BLOCKS), `STALE_DOCS_DRIFT` (source

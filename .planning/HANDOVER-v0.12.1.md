@@ -116,6 +116,15 @@ CLI updates:
 - `verify --row-id X` displays per-test hashes + drift status per binding.
 - `status` shows count of multi-test rows for visibility.
 
+**Status (W7 closed):**
+
+- W7a SHIPPED at `d2127c3` (Row schema vectors + walker per-element drift + 388-row catalog migration) + `8f7762b` (cargo fmt + structural verifier accepts schema_version `"2.0"`). Catalog `schema_version` is now `"2.0"`; parallel-array invariant `tests.len() == test_body_hashes.len()` enforced via `Row::set_tests`.
+- W7b in flight (CLI surface — repeatable `--test` on `bind`).
+- W7c shipping this commit (docs: `quality/catalogs/README.md` row spec v2 + CLAUDE.md P64 pointer to schema bump).
+- Cross-cut §3 (SourceCite vs Source enum unification) verdict: **no-op**. Walker round-trips today's catalog cleanly; the v0.12.0 P65 jq-transform reconciliation was a one-shot during the backfill merge, not a recurring drift. If a regression surfaces in P72+ shard merges, file under W11 (subagent default-catalog refusal) territory.
+- Cross-cut §4 (rationale `Option` round-trip): **real bug, fixed in W7a** via `serde(default)` on `tests`, `test_body_hashes`, and `rationale`. Catalogs that omit any of the three deserialize cleanly.
+- Cross-cut §5 (FloorWaiver shape): **no-op**. The `floor_waiver` block was removed from `doc-alignment.json` per owner directive earlier this session; the struct/brief mismatch is moot.
+
 #### W8 — P72+: Cluster-closure phases per PUNCH-LIST.md
 
 The 14 clusters identified in `quality/reports/doc-alignment/backfill-20260428T085523Z/PUNCH-LIST.md` need closure. After W2 (audit corrections), some MISSING_TEST counts shift. Re-read PUNCH-LIST.md (or regenerate via `python3 scripts/gen_punch_list.py quality/reports/doc-alignment/backfill-20260428T085523Z/`) before scoping P72+ phases.
