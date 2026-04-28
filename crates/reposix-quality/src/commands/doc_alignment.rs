@@ -50,6 +50,13 @@ pub enum Verb {
     ConfirmRetire {
         #[arg(long = "row-id")]
         row_id: String,
+        /// EXPLICIT human authorization to bypass the env-guard. Use only
+        /// when you are a human running confirm-retire from a Claude Code
+        /// session rather than a fresh TTY. Audit-trailed in
+        /// `last_extracted_by` as `confirm-retire-i-am-human`. Subagents
+        /// must not pass this.
+        #[arg(long = "i-am-human", default_value_t = false)]
+        i_am_human: bool,
     },
 
     /// Mark a row's binding as missing/misaligned (`last_verdict=MISSING_TEST`).
@@ -125,7 +132,9 @@ pub fn dispatch(catalog: &Path, verb: Verb) -> Result<i32> {
             source,
             rationale,
         } => verbs::propose_retire(catalog, &row_id, &claim, &source, &rationale),
-        Verb::ConfirmRetire { row_id } => verbs::confirm_retire(catalog, &row_id),
+        Verb::ConfirmRetire { row_id, i_am_human } => {
+            verbs::confirm_retire(catalog, &row_id, i_am_human)
+        }
         Verb::MarkMissingTest {
             row_id,
             claim,
@@ -373,14 +382,19 @@ pub(crate) mod verbs {
         Ok(0)
     }
 
-    pub fn confirm_retire(catalog: &Path, row_id: &str) -> Result<i32> {
+    pub fn confirm_retire(catalog: &Path, row_id: &str, i_am_human: bool) -> Result<i32> {
         let agent_env = std::env::var_os("CLAUDE_AGENT_CONTEXT").is_some();
         let non_tty = !std::io::stdin().is_terminal();
-        if agent_env || non_tty {
+        if !i_am_human && (agent_env || non_tty) {
             eprintln!(
-                "error: confirm-retire is human-only -- running under agent context (CLAUDE_AGENT_CONTEXT set) or non-tty stdin"
+                "error: confirm-retire is human-only -- running under agent context (CLAUDE_AGENT_CONTEXT set) or non-tty stdin. Run from a fresh terminal, or pass --i-am-human if you are a human explicitly authorizing this retirement from a Claude Code session."
             );
             return Ok(1);
+        }
+        if i_am_human {
+            eprintln!(
+                "WARNING: --i-am-human bypassing env-guard for confirm-retire on row {row_id}. This is recorded as `confirm-retire-i-am-human` in the audit trail."
+            );
         }
         let mut cat = Catalog::load(catalog)?;
         let now = now_iso();
@@ -394,7 +408,16 @@ pub(crate) mod verbs {
             ));
         }
         row.last_verdict = RowState::RetireConfirmed;
-        row.last_run = Some(now);
+        row.last_run = Some(now.clone());
+        // Audit trail: distinguish the human-bypass path from the strict path
+        // so a commit-diff reviewer can spot --i-am-human use in retrospect.
+        let by = if i_am_human {
+            "confirm-retire-i-am-human"
+        } else {
+            "confirm-retire"
+        };
+        row.last_extracted = Some(now);
+        row.last_extracted_by = Some(by.to_string());
         cat.recompute_summary();
         cat.save(catalog)?;
         Ok(0)
