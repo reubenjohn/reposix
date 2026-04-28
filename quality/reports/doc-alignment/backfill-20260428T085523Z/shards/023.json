@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0",
+  "summary": {
+    "claims_total": 1,
+    "claims_bound": 0,
+    "claims_missing_test": 1,
+    "claims_retire_proposed": 0,
+    "claims_retired": 0,
+    "alignment_ratio": 0.0,
+    "floor": 0.5,
+    "trend_30d": "+0.00",
+    "last_walked": null
+  },
+  "rows": [
+    {
+      "id": "docs/social/twitter/92pct_reduction",
+      "claim": "~92% token reduction for same task (Jira MCP catalog vs reposix shell session)",
+      "source": {
+        "file": "docs/social/twitter.md",
+        "line_start": 18,
+        "line_end": 18
+      },
+      "source_hash": "030a5835eac0b52c89b5269e0864c56cd57e21ef7432dcc7bef6d738097b4ddf",
+      "rationale": "Measured reduction in docs/benchmarks/token-economy.md (baseline table, last run 2026-04-15): 89.1% (4883 MCP tokens → 531 reposix tokens). Claim overstates by ~2.9 percentage points. Test exists: quality/gates/perf/test_bench_token_economy.py::test_headline_reduction_matches_baseline_pair validates the benchmark runs and verifies the reduction ratio matches computed formula. PRIMARY BINDING BLOCKER: the claim uses '~92%' (approximate) but actual measured result is 89.1%, a 3.3% error margin. Requires decision: (A) update claim to '~89%', (B) rerun benchmark with updated fixture to match 92%, or (C) retire claim as marketing hypothesis pending real-backend data.",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:11:45Z",
+      "last_extracted": "2026-04-28T09:11:45Z",
+      "last_extracted_by": "mark-missing-test-call"
+    }
+  ]
+}

@@ -1,0 +1,177 @@
+{
+  "schema_version": "1.0",
+  "summary": {
+    "claims_total": 10,
+    "claims_bound": 7,
+    "claims_missing_test": 3,
+    "claims_retire_proposed": 0,
+    "claims_retired": 0,
+    "alignment_ratio": 0.7,
+    "floor": 0.5,
+    "trend_30d": "+0.00",
+    "last_walked": null
+  },
+  "rows": [
+    {
+      "id": "docs/security/allowlist-default-localhost-only",
+      "claim": "REPOSIX_ALLOWED_ORIGINS defaults to http://127.0.0.1:* only",
+      "source": {
+        "file": "docs/how-it-works/trust-model.md",
+        "line_start": 62,
+        "line_end": 62
+      },
+      "source_hash": "6bd3d9308b2f949f9cebdaa676de037b396614f41b9250a9846168a2670312c6",
+      "test": "crates/reposix-core/tests/http_allowlist.rs::allowlist_default_and_env",
+      "test_body_hash": "9fd0c9069f5e56d0d0373fdbb472aecbc4ef2f3ccb50c32e96ab64611eade961",
+      "rationale": "Test EnvGuard::unset() verifies loopback is allowed by default; non-loopback rejected without env override",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:32Z",
+      "last_extracted": "2026-04-28T09:00:32Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/security/blob-limit-default-200",
+      "claim": "REPOSIX_BLOB_LIMIT defaults to 200",
+      "source": {
+        "file": "docs/how-it-works/trust-model.md",
+        "line_start": 63,
+        "line_end": 63
+      },
+      "source_hash": "b5d40134b34a42d42e78e1cbc2c8d100d859b8fd9f5855dcc19f43b43f1cd517",
+      "test": "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants",
+      "test_body_hash": "f55f3f3e47171456c973c443d1b3d4675f0d0f315b6e73db8b18905aee8feeb1",
+      "rationale": "Test sets REPOSIX_BLOB_LIMIT=1 and verifies helper rejects fetch exceeding limit with stderr teaching string git sparse-checkout",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:36Z",
+      "last_extracted": "2026-04-28T09:00:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/security/frontmatter-strip-server-fields",
+      "claim": "Frontmatter fields id, created_at, version, updated_at are stripped from inbound writes",
+      "source": {
+        "file": "docs/how-it-works/trust-model.md",
+        "line_start": 64,
+        "line_end": 64
+      },
+      "source_hash": "8716974b2ea86ffed66e3edbbebe6b0da110e8355cce7ee5a58e34651f9c6c19",
+      "test": "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields",
+      "test_body_hash": "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b",
+      "rationale": "Test verifies PATCH body strips id and version overrides; server-authoritative values override attacker hijack attempts",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:38Z",
+      "last_extracted": "2026-04-28T09:00:38Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/security/tainted-type-prevents-egress",
+      "claim": "Tainted<T> type prevents tainted bytes from reaching egress sinks without explicit sanitize() conversion",
+      "source": {
+        "file": "docs/how-it-works/trust-model.md",
+        "line_start": 65,
+        "line_end": 65
+      },
+      "source_hash": "5f62fa57ad810fd428d769b62c47a6c6f17d34115ddd37070376d60e8e7e917a",
+      "test": "crates/reposix-core/tests/compile_fail.rs::tainted_cannot_be_used_where_untainted_required",
+      "test_body_hash": "7f4a09843031892a30b23c0b767d50482ea163d23687a2bab8da1602d1927939",
+      "rationale": "Trybuild compile-fail test locks SG-05: passing Tainted<Record> where Untainted<Record> required must NOT compile",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:41Z",
+      "last_extracted": "2026-04-28T09:00:41Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/security/push-conflict-detection",
+      "claim": "Push-time conflict detection rejects stale-base pushes with git fetch first error",
+      "source": {
+        "file": "docs/how-it-works/trust-model.md",
+        "line_start": 66,
+        "line_end": 66
+      },
+      "source_hash": "db78a5ad5a0f5617ae1fd150bef87e4a98712f20ee6858f6abb7b3c009d521ea",
+      "test": "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest",
+      "test_body_hash": "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97",
+      "rationale": "Test verifies stale base (local v1 vs backend v2) rejected with fetch first; zero REST calls made",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:45Z",
+      "last_extracted": "2026-04-28T09:00:45Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/security/audit-append-only-triggers",
+      "claim": "Audit log has BEFORE UPDATE/DELETE RAISE triggers to prevent tampering",
+      "source": {
+        "file": "docs/how-it-works/trust-model.md",
+        "line_start": 67,
+        "line_end": 67
+      },
+      "source_hash": "2fb847a23c6d7178b2554031e877ba3a379bc55c65efae793fb1db6535e00c69",
+      "test": "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail",
+      "test_body_hash": "9e79aa55e86b02c5a3b3e2d2c7ea3fbfd12674ad799270bbdcab13744b79fe38",
+      "rationale": "Test verifies UPDATE and DELETE on audit_events_cache both fail with append-only trigger message",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:48Z",
+      "last_extracted": "2026-04-28T09:00:48Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/security/egress-denied-audit-row",
+      "claim": "Egress allowlist violation writes op=egress_denied audit row",
+      "source": {
+        "file": "docs/how-it-works/trust-model.md",
+        "line_start": 83,
+        "line_end": 83
+      },
+      "source_hash": "ad00aa1c0d1f9fa877988e12c9263335eee74a646b2f1ea7163eda85f6e8334d",
+      "test": "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error",
+      "test_body_hash": "8d1e999a3065adc79d0b5060e5a43c8003ee6e42d912df81d7ba4eb70d5481d9",
+      "rationale": "Test uses EgressRejectingBackend stub; verifies read_blob returns Error::Egress and writes egress_denied row",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:51Z",
+      "last_extracted": "2026-04-28T09:00:51Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/why/cold-init-24ms-sim",
+      "claim": "reposix init cold takes 24ms against simulator",
+      "source": {
+        "file": "docs/concepts/mental-model-in-60-seconds.md",
+        "line_start": 21,
+        "line_end": 21
+      },
+      "source_hash": "c665b626c0e9476b0dfdf3f6203003e6bef54cdb9075a373ad49b98de2baaee9",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:58Z",
+      "last_extracted": "2026-04-28T09:00:58Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/why/cached-read-8ms",
+      "claim": "Cached read is 8ms",
+      "source": {
+        "file": "docs/concepts/mental-model-in-60-seconds.md",
+        "line_start": 21,
+        "line_end": 21
+      },
+      "source_hash": "c665b626c0e9476b0dfdf3f6203003e6bef54cdb9075a373ad49b98de2baaee9",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:00Z",
+      "last_extracted": "2026-04-28T09:01:00Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/why/token-economy-89-1-percent",
+      "claim": "Token reduction is 89.1% vs MCP",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 17,
+        "line_end": 17
+      },
+      "source_hash": "a2658bd81a06030413cf9d3b60f9d3750c508f53ebe4abe9d9c2ec66bb7d074e",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:02Z",
+      "last_extracted": "2026-04-28T09:01:02Z",
+      "last_extracted_by": "mark-missing-test-call"
+    }
+  ]
+}

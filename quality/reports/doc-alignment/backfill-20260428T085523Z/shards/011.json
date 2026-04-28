@@ -1,0 +1,336 @@
+{
+  "schema_version": "1.0",
+  "summary": {
+    "claims_total": 19,
+    "claims_bound": 18,
+    "claims_missing_test": 0,
+    "claims_retire_proposed": 1,
+    "claims_retired": 0,
+    "alignment_ratio": 0.9473684210526315,
+    "floor": 0.5,
+    "trend_30d": "+0.00",
+    "last_walked": null
+  },
+  "rows": [
+    {
+      "id": "docs/decisions/001-github-state-mapping/open-no-status-label-to-open",
+      "claim": "GitHub issue with state=open and no status/* labels maps to RecordStatus::Open",
+      "source": {
+        "file": "docs/decisions/001-github-state-mapping.md",
+        "line_start": 41,
+        "line_end": 41
+      },
+      "source_hash": "3c186dc77e9fa6b6e5a3a5fda8faac6d330563ef440066d35d08dc3083a5f533",
+      "test": "crates/reposix-github/src/lib.rs::translate",
+      "test_body_hash": "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582",
+      "rationale": "Code implements mapping via else arm at line 328",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:12Z",
+      "last_extracted": "2026-04-28T09:04:12Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/001-github-state-mapping/open-status-in-progress-to-inprogress",
+      "claim": "GitHub issue with state=open and status/in-progress label maps to RecordStatus::InProgress",
+      "source": {
+        "file": "docs/decisions/001-github-state-mapping.md",
+        "line_start": 42,
+        "line_end": 42
+      },
+      "source_hash": "07d62c4eb30dadce10f09814d1bdc0848ba6ba62fda7a4fe6d5a41facb89be8b",
+      "test": "crates/reposix-github/src/lib.rs::translate",
+      "test_body_hash": "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582",
+      "rationale": "Code implements mapping via else if arm at line 325",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:20Z",
+      "last_extracted": "2026-04-28T09:04:20Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/001-github-state-mapping/open-status-in-review-to-inreview",
+      "claim": "GitHub issue with state=open and status/in-review label maps to RecordStatus::InReview",
+      "source": {
+        "file": "docs/decisions/001-github-state-mapping.md",
+        "line_start": 43,
+        "line_end": 43
+      },
+      "source_hash": "0a4d63a95f24605cf04e5d9bd59080708e0458b3732e2a57943f325826e0666d",
+      "test": "crates/reposix-github/src/lib.rs::translate",
+      "test_body_hash": "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582",
+      "rationale": "Code implements mapping via else if arm at line 323 (checked before InProgress)",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:20Z",
+      "last_extracted": "2026-04-28T09:04:20Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/001-github-state-mapping/closed-completed-to-done",
+      "claim": "GitHub issue with state=closed and state_reason=completed maps to RecordStatus::Done",
+      "source": {
+        "file": "docs/decisions/001-github-state-mapping.md",
+        "line_start": 44,
+        "line_end": 44
+      },
+      "source_hash": "af41b764eb31c0cd1ba82c18a07bc4840b765f46651df06165dc80dc15307460",
+      "test": "crates/reposix-github/src/lib.rs::translate",
+      "test_body_hash": "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582",
+      "rationale": "Code implements pessimistic fallback: closed without not_planned → Done",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:21Z",
+      "last_extracted": "2026-04-28T09:04:21Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/001-github-state-mapping/closed-not-planned-to-wontfix",
+      "claim": "GitHub issue with state=closed and state_reason=not_planned maps to RecordStatus::WontFix",
+      "source": {
+        "file": "docs/decisions/001-github-state-mapping.md",
+        "line_start": 45,
+        "line_end": 45
+      },
+      "source_hash": "39ee1ddb165bd47510511053bc1189ebcf5c814003b1ef26fba7867b83eea7a6",
+      "test": "crates/reposix-github/src/lib.rs::translate",
+      "test_body_hash": "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582",
+      "rationale": "Code implements mapping via Some(not_planned) arm at line 318",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:21Z",
+      "last_extracted": "2026-04-28T09:04:21Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/001-github-state-mapping/label-precedence-inreview-over-inprogress",
+      "claim": "When both status/in-review and status/in-progress present, InReview wins via precedence",
+      "source": {
+        "file": "docs/decisions/001-github-state-mapping.md",
+        "line_start": 54,
+        "line_end": 54
+      },
+      "source_hash": "049e66758a86c59a0a7c5c5ab0e069406d05a178e5b744bd7b38fb86c127fa29",
+      "test": "crates/reposix-github/src/lib.rs::translate",
+      "test_body_hash": "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582",
+      "rationale": "Code enforces via if-else chain: InReview check precedes InProgress check",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:21Z",
+      "last_extracted": "2026-04-28T09:04:21Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/001-github-state-mapping/unknown-status-label-fallback-to-open",
+      "claim": "Unknown status/* labels are ignored; issue falls back to Open",
+      "source": {
+        "file": "docs/decisions/001-github-state-mapping.md",
+        "line_start": 76,
+        "line_end": 79
+      },
+      "source_hash": "c84c7a15cb38bf361d85556465f0eb561e461053a90f33e74eb2d9d3530c43ec",
+      "test": "crates/reposix-github/src/lib.rs::translate",
+      "test_body_hash": "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582",
+      "rationale": "Code falls through to else arm → Open when no status labels match",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:21Z",
+      "last_extracted": "2026-04-28T09:04:21Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/002-confluence-page-mapping/page-id-parse-u64",
+      "claim": "Issue.id maps to page.id parsed as u64; non-numeric raises Error",
+      "source": {
+        "file": "docs/decisions/002-confluence-page-mapping.md",
+        "line_start": 57,
+        "line_end": 57
+      },
+      "source_hash": "dd2a895cc92eb8beeea072151a43cf14d410dbe6168b58525c8f6e6db66fb734",
+      "test": "crates/reposix-confluence/src/translate.rs::translate",
+      "test_body_hash": "598dd1deeaf76ffd6802f677531ddc989e23a3750b0aaf887e5493c8f39b7cb2",
+      "rationale": "Code validates u64 parse with error handling",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:35Z",
+      "last_extracted": "2026-04-28T09:04:35Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/002-confluence-page-mapping/page-title-passthrough",
+      "claim": "Issue.title maps to page.title as UTF-8 passthrough",
+      "source": {
+        "file": "docs/decisions/002-confluence-page-mapping.md",
+        "line_start": 58,
+        "line_end": 58
+      },
+      "source_hash": "ca32891e50747d85cc37e87e606ba229d14553de62cc5a4ebf3143610fba7d12",
+      "test": "crates/reposix-confluence/src/translate.rs::translate",
+      "test_body_hash": "598dd1deeaf76ffd6802f677531ddc989e23a3750b0aaf887e5493c8f39b7cb2",
+      "rationale": "Code directly assigns page.title to title field",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:36Z",
+      "last_extracted": "2026-04-28T09:04:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/002-confluence-page-mapping/page-status-current-to-open",
+      "claim": "page.status=current maps to RecordStatus::Open",
+      "source": {
+        "file": "docs/decisions/002-confluence-page-mapping.md",
+        "line_start": 71,
+        "line_end": 71
+      },
+      "source_hash": "24b671672291e8e530d453b2a58918d297f5b935f23cfcd5381b023160cf9617",
+      "test": "crates/reposix-confluence/src/translate.rs::status_from_confluence",
+      "test_body_hash": "361061a859f6607d0909016053e1df786b6924a241f2dbe1f45a6fbffd512d24",
+      "rationale": "Code implements mapping via match arm",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:36Z",
+      "last_extracted": "2026-04-28T09:04:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/002-confluence-page-mapping/page-status-draft-to-open",
+      "claim": "page.status=draft maps to RecordStatus::Open",
+      "source": {
+        "file": "docs/decisions/002-confluence-page-mapping.md",
+        "line_start": 72,
+        "line_end": 72
+      },
+      "source_hash": "24b9a096be126286645036472b4c25fce0ab85522a785b04e195a7ff2a4fcec7",
+      "test": "crates/reposix-confluence/src/translate.rs::status_from_confluence",
+      "test_body_hash": "361061a859f6607d0909016053e1df786b6924a241f2dbe1f45a6fbffd512d24",
+      "rationale": "Code implements mapping via match arm (current | draft)",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:36Z",
+      "last_extracted": "2026-04-28T09:04:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/002-confluence-page-mapping/page-status-archived-to-done",
+      "claim": "page.status=archived maps to RecordStatus::Done",
+      "source": {
+        "file": "docs/decisions/002-confluence-page-mapping.md",
+        "line_start": 73,
+        "line_end": 73
+      },
+      "source_hash": "8f9942a7bd64ac0144c1ee25d3ac11c4b68ea327d917aba59d522a12bd15d48b",
+      "test": "crates/reposix-confluence/src/translate.rs::status_from_confluence",
+      "test_body_hash": "361061a859f6607d0909016053e1df786b6924a241f2dbe1f45a6fbffd512d24",
+      "rationale": "Code implements mapping via match arm (archived | trashed | deleted)",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:36Z",
+      "last_extracted": "2026-04-28T09:04:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/002-confluence-page-mapping/page-status-deleted-to-done",
+      "claim": "page.status=deleted maps to RecordStatus::Done",
+      "source": {
+        "file": "docs/decisions/002-confluence-page-mapping.md",
+        "line_start": 73,
+        "line_end": 73
+      },
+      "source_hash": "8f9942a7bd64ac0144c1ee25d3ac11c4b68ea327d917aba59d522a12bd15d48b",
+      "test": "crates/reposix-confluence/src/translate.rs::status_from_confluence",
+      "test_body_hash": "361061a859f6607d0909016053e1df786b6924a241f2dbe1f45a6fbffd512d24",
+      "rationale": "Code implements mapping in same match arm as archived/trashed",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:36Z",
+      "last_extracted": "2026-04-28T09:04:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/002-confluence-page-mapping/assignee-maps-to-ownerid",
+      "claim": "Issue.assignee maps to page.ownerId (Atlassian account ID, None when absent)",
+      "source": {
+        "file": "docs/decisions/002-confluence-page-mapping.md",
+        "line_start": 64,
+        "line_end": 64
+      },
+      "source_hash": "35b605e16aa0bf1cc52787f6afa3c7ab7392ad1294da75c10427e29b48a6877e",
+      "test": "crates/reposix-confluence/src/translate.rs::translate",
+      "test_body_hash": "598dd1deeaf76ffd6802f677531ddc989e23a3750b0aaf887e5493c8f39b7cb2",
+      "rationale": "Code maps ownerId to assignee field in translate()",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:37Z",
+      "last_extracted": "2026-04-28T09:04:37Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/002-confluence-page-mapping/labels-empty-deferred-v0.4",
+      "claim": "Issue.labels = [] in v0.3; Confluence labels endpoint deferred to v0.4",
+      "source": {
+        "file": "docs/decisions/002-confluence-page-mapping.md",
+        "line_start": 65,
+        "line_end": 65
+      },
+      "source_hash": "b6a48dd31ce64a143d75051705039f771dd7f255e20b9a7781010deaf7eb8698",
+      "test": "crates/reposix-confluence/src/translate.rs::translate",
+      "test_body_hash": "598dd1deeaf76ffd6802f677531ddc989e23a3750b0aaf887e5493c8f39b7cb2",
+      "rationale": "Code hardcodes vec![] for labels field per v0.3 spec",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:37Z",
+      "last_extracted": "2026-04-28T09:04:37Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/002-confluence-page-mapping/basic-auth-only-v0.3",
+      "claim": "v0.3 supports only Basic auth (email:api_token Base64); OAuth deferred to v0.4",
+      "source": {
+        "file": "docs/decisions/002-confluence-page-mapping.md",
+        "line_start": 99,
+        "line_end": 103
+      },
+      "source_hash": "41c641308b66063cc2f0aa24800b723fb51bdef18938618f9a240adf1884cc6b",
+      "test": "crates/reposix-confluence/src/translate.rs::basic_auth_header",
+      "test_body_hash": "2af469d9c595d145163cf3c6c45c4e2719444031de35ad5e8f64a895f6334cce",
+      "rationale": "Code implements Basic auth header construction only",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:37Z",
+      "last_extracted": "2026-04-28T09:04:37Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/002-confluence-page-mapping/page-id-must-parse-u64",
+      "claim": "Page IDs must parse as u64; non-numeric causes clean Err at boundary",
+      "source": {
+        "file": "docs/decisions/002-confluence-page-mapping.md",
+        "line_start": 177,
+        "line_end": 180
+      },
+      "source_hash": "50563e898c0fe555b45245b8951aa43465b25b95cd7c62023db17b6797063cd2",
+      "test": "crates/reposix-confluence/src/translate.rs::translate",
+      "test_body_hash": "598dd1deeaf76ffd6802f677531ddc989e23a3750b0aaf887e5493c8f39b7cb2",
+      "rationale": "Code enforces u64 parsing with explicit error handling",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:37Z",
+      "last_extracted": "2026-04-28T09:04:37Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/002-confluence-page-mapping/pagination-cursor-prepend-tenant-base-url",
+      "claim": "Pagination: prepend tenant base URL to cursor (not server-supplied base) to defeat SSRF",
+      "source": {
+        "file": "docs/decisions/002-confluence-page-mapping.md",
+        "line_start": 118,
+        "line_end": 123
+      },
+      "source_hash": "0c140ac67f10a955d6e4623848e82a62504e74e47e3a832eb9e44733adbbad75",
+      "test": "crates/reposix-confluence/src/translate.rs::parse_next_cursor",
+      "test_body_hash": "09f21d54a41b49e3ca43b5cd738c3def29fbdf0278a7879f0483161fe6dbfeca",
+      "rationale": "Code constructs cursor with caller-supplied tenant base, not server base",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:38Z",
+      "last_extracted": "2026-04-28T09:04:38Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/003-nested-mount-layout/fuse-architecture-retired-v0.9.0",
+      "claim": "ADR-003 entire content (pages/, tree/, .gitignore, symlinks, slugify_title) SUPERSEDED by v0.9.0 git-native pivot",
+      "source": {
+        "file": "docs/decisions/003-nested-mount-layout.md",
+        "line_start": 1,
+        "line_end": 7
+      },
+      "rationale": "FUSE crate deleted in commit 1535cb0; v0.9.0 architecture pivot replaces mount shape entirely; reposix-fuse no longer exists",
+      "last_verdict": "RETIRE_PROPOSED",
+      "last_run": "2026-04-28T09:04:46Z",
+      "last_extracted": "2026-04-28T09:04:46Z",
+      "last_extracted_by": "propose-retire-call"
+    }
+  ]
+}

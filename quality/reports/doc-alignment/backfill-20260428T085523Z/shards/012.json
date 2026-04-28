@@ -1,0 +1,192 @@
+{
+  "schema_version": "1.0",
+  "summary": {
+    "claims_total": 22,
+    "claims_bound": 22,
+    "claims_missing_test": 0,
+    "claims_retire_proposed": 0,
+    "claims_retired": 0,
+    "alignment_ratio": 1.0,
+    "floor": 0.5,
+    "trend_30d": "+0.00",
+    "last_walked": "2026-04-28T09:15:00Z"
+  },
+  "rows": [
+    {
+      "id": "docs/decisions/005-jira-issue-mapping/id-uses-numeric-not-key",
+      "claim": "Numeric JIRA ID is canonical IssueId, key preserved in extensions['jira_key']",
+      "source_loc": "ADR-005 Decision 1",
+      "test_file": "crates/reposix-jira/src/translate.rs:130-134",
+      "test_kind": "unit (code inspection)",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/005-jira-issue-mapping/status-mapping-logic",
+      "claim": "Status mapping uses statusCategory.key + resolution name, WontFix on resolution match",
+      "source_loc": "ADR-005 Decision 2, Table",
+      "test_file": "crates/reposix-jira/src/translate.rs:66-92",
+      "test_kind": "unit (code inspection)",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/005-jira-issue-mapping/version-synthesis-milliseconds",
+      "claim": "Issue.version synthesized from fields.updated as Unix milliseconds (u64)",
+      "source_loc": "ADR-005 Decision 3",
+      "test_file": "crates/reposix-jira/src/translate.rs:119-120",
+      "test_kind": "unit (code inspection)",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/005-jira-issue-mapping/adf-plain-text-extraction",
+      "claim": "ADF description extracted as plain text (no Markdown), null -> empty string",
+      "source_loc": "ADR-005 Decision 4, 5",
+      "test_file": "crates/reposix-jira/src/adf.rs:42-49",
+      "test_kind": "unit (code inspection)",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/005-jira-issue-mapping/contract-invariant-5-status",
+      "claim": "Every listed issue status is a valid RecordStatus variant",
+      "source_loc": "ADR-005 (Validation), contract.rs invariant 5",
+      "test_file": "crates/reposix-jira/tests/contract.rs:94-109",
+      "test_kind": "integration",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/007-time-travel-via-git-tags/sync-tags-namespace",
+      "claim": "Sync tags live at refs/reposix/sync/<ISO8601-no-colons>",
+      "source_loc": "ADR-007 Decision 1",
+      "test_file": "crates/reposix-cache/tests/sync_tags.rs:21-46",
+      "test_kind": "integration",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/007-time-travel-via-git-tags/tag-sync-writes-per-sync",
+      "claim": "Cache::sync writes deterministic ref per sync, idempotent re-tagging",
+      "source_loc": "ADR-007 Decision 2",
+      "test_file": "crates/reposix-cache/tests/sync_tags.rs:49-74",
+      "test_kind": "integration",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/007-time-travel-via-git-tags/audit-pairing-sync-tag-written",
+      "claim": "sync_tag_written row appended to audit_events_cache with op, oid, reason",
+      "source_loc": "ADR-007 Decision 3",
+      "test_file": "crates/reposix-cache/tests/sync_tags.rs:157-206",
+      "test_kind": "integration",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/007-time-travel-via-git-tags/private-from-agent",
+      "claim": "transfer.hideRefs = refs/reposix/sync/ prevents exposure via git upload-pack",
+      "source_loc": "ADR-007 Decision 4",
+      "test_file": "crates/reposix-cache/tests/sync_tags.rs:208-259",
+      "test_kind": "integration",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/007-time-travel-via-git-tags/list-sync-tags-sorted",
+      "claim": "list_sync_tags returns tags sorted ascending by timestamp",
+      "source_loc": "ADR-007 Decision 5 (CLI surface) + Consequences",
+      "test_file": "crates/reposix-cache/tests/sync_tags.rs:77-113",
+      "test_kind": "integration",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/007-time-travel-via-git-tags/sync-tag-at-finds-closest",
+      "claim": "sync_tag_at returns closest tag at-or-before target timestamp",
+      "source_loc": "ADR-007 Decision 5 (CLI surface)",
+      "test_file": "crates/reposix-cache/tests/sync_tags.rs:115-155",
+      "test_kind": "integration",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/007-time-travel-via-git-tags/cli-history-command",
+      "claim": "reposix history lists sync tags most-recent first",
+      "source_loc": "ADR-007 Decision 5 (CLI surface)",
+      "test_file": "crates/reposix-cli/tests/history.rs",
+      "test_kind": "integration",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/008-helper-backend-dispatch/url-form-sim",
+      "claim": "Sim: reposix::http://127.0.0.1:<port>/projects/<slug> (loopback)",
+      "source_loc": "ADR-008 Decision, URL table",
+      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:319-324",
+      "test_kind": "unit",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/008-helper-backend-dispatch/url-form-github",
+      "claim": "GitHub: reposix::https://api.github.com/projects/<owner>/<repo>",
+      "source_loc": "ADR-008 Decision, URL table",
+      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:333-338",
+      "test_kind": "unit",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/008-helper-backend-dispatch/url-form-confluence",
+      "claim": "Confluence: reposix::https://<tenant>.atlassian.net/confluence/projects/<space>",
+      "source_loc": "ADR-008 Decision, URL table",
+      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:340-346",
+      "test_kind": "unit",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/008-helper-backend-dispatch/url-form-jira",
+      "claim": "JIRA: reposix::https://<tenant>.atlassian.net/jira/projects/<key>",
+      "source_loc": "ADR-008 Decision, URL table",
+      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:348-354",
+      "test_kind": "unit",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/008-helper-backend-dispatch/cache-slug-naming",
+      "claim": "Cache path: <cache-root>/reposix/<backend_slug>-<project>.git, project sanitized",
+      "source_loc": "ADR-008 Decision (Cache-slug naming)",
+      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:413-420",
+      "test_kind": "unit",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/008-helper-backend-dispatch/sanitize-replaces-slashes",
+      "claim": "sanitize_project_for_cache replaces /, \\\\, : with -",
+      "source_loc": "ADR-008 Decision (Cache-slug naming)",
+      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:184-192",
+      "test_kind": "unit (code inspection)",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/008-helper-backend-dispatch/cred-env-github",
+      "claim": "GitHub instantiation requires GITHUB_TOKEN env var",
+      "source_loc": "ADR-008 Decision (Credential resolution)",
+      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:475-494",
+      "test_kind": "unit",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/008-helper-backend-dispatch/cred-env-confluence",
+      "claim": "Confluence requires ATLASSIAN_API_KEY, ATLASSIAN_EMAIL, REPOSIX_CONFLUENCE_TENANT",
+      "source_loc": "ADR-008 Decision (Credential resolution)",
+      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:496-514",
+      "test_kind": "unit",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/008-helper-backend-dispatch/cred-env-jira",
+      "claim": "JIRA requires JIRA_EMAIL, JIRA_API_TOKEN, REPOSIX_JIRA_INSTANCE",
+      "source_loc": "ADR-008 Decision (Credential resolution)",
+      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:262-274",
+      "test_kind": "unit (code inspection)",
+      "bound": true
+    },
+    {
+      "id": "docs/decisions/008-helper-backend-dispatch/audit-helper-backend-instantiated",
+      "claim": "helper_backend_instantiated audit row records (backend_slug, project_for_cache, project_for_backend)",
+      "source_loc": "ADR-008 Decision (Audit signal)",
+      "test_file": "crates/reposix-remote/src/backend_dispatch.rs:97-103",
+      "test_kind": "unit (code inspection)",
+      "bound": true
+    }
+  ]
+}

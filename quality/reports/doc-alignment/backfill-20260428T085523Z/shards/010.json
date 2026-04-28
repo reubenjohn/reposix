@@ -1,0 +1,376 @@
+{
+  "schema_version": "1.0",
+  "summary": {
+    "claims_total": 24,
+    "claims_bound": 0,
+    "claims_missing_test": 24,
+    "claims_retire_proposed": 0,
+    "claims_retired": 0,
+    "alignment_ratio": 0.0,
+    "floor": 0.5,
+    "trend_30d": "+0.00",
+    "last_walked": null
+  },
+  "rows": [
+    {
+      "id": "docs/connectors/guide/backendconnector-name-method",
+      "claim": "BackendConnector trait has fn name(&self) -> &'static str",
+      "source": {
+        "file": "crates/reposix-core/src/backend.rs",
+        "line_start": 219,
+        "line_end": 219
+      },
+      "source_hash": "b1e4dc343a3520e2ac2bef1282e4751c5796fcfb29be35cb0054165c3ab2dbb0",
+      "rationale": "Method exists in trait definition; no standalone test by name",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:39Z",
+      "last_extracted": "2026-04-28T09:03:39Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/backendconnector-supports-method",
+      "claim": "BackendConnector trait has fn supports(&self, feature: BackendFeature) -> bool",
+      "source": {
+        "file": "crates/reposix-core/src/backend.rs",
+        "line_start": 227,
+        "line_end": 227
+      },
+      "source_hash": "049d8a004b8d5c8a3d80940f8da274aca2b664d3ca93c201a5846b5de23bbf61",
+      "rationale": "Method exists in trait definition",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:39Z",
+      "last_extracted": "2026-04-28T09:03:39Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/backendconnector-list-records-method",
+      "claim": "BackendConnector trait has async fn list_records(&self, project: &str) -> Result<Vec<Record>>",
+      "source": {
+        "file": "crates/reposix-core/src/backend.rs",
+        "line_start": 235,
+        "line_end": 235
+      },
+      "source_hash": "a842354d65ac8b0d6163797529d075d5026ac3895ad4993748325e1a2030cdbf",
+      "rationale": "Method exists in trait definition",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:39Z",
+      "last_extracted": "2026-04-28T09:03:39Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/backendconnector-list-changed-since-method",
+      "claim": "BackendConnector trait has async fn list_changed_since(&self, project: &str, since: DateTime<Utc>) -> Result<Vec<RecordId>>",
+      "source": {
+        "file": "crates/reposix-core/src/backend.rs",
+        "line_start": 253,
+        "line_end": 257
+      },
+      "source_hash": "665aae8456731271fd7c254d017cdf5cce11d8bc2c725b37f83b7a5229c140df",
+      "rationale": "Method exists with default impl filtering in memory",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:39Z",
+      "last_extracted": "2026-04-28T09:03:39Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/backendconnector-get-record-method",
+      "claim": "BackendConnector trait has async fn get_record(&self, project, id) -> Result<Record>",
+      "source": {
+        "file": "crates/reposix-core/src/backend.rs",
+        "line_start": 272,
+        "line_end": 272
+      },
+      "source_hash": "57e32c04ce495c6aaa19b6873ace2abf756033d006f4e32bf7f1b1b8ba04f400",
+      "rationale": "Method exists in trait definition",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:39Z",
+      "last_extracted": "2026-04-28T09:03:39Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/backendconnector-create-record-method",
+      "claim": "BackendConnector trait has async fn create_record(&self, project, issue: Untainted<Record>) -> Result<Record>",
+      "source": {
+        "file": "crates/reposix-core/src/backend.rs",
+        "line_start": 284,
+        "line_end": 284
+      },
+      "source_hash": "ab180dcd459690abaee4ff624518b6a4daf8d89ea675ed47b63df965b271b759",
+      "rationale": "Method exists in trait definition",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:45Z",
+      "last_extracted": "2026-04-28T09:03:45Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/backendconnector-update-record-method",
+      "claim": "BackendConnector trait has async fn update_record(&self, project, id, patch: Untainted<Record>, expected_version: Option<u64>) -> Result<Record>",
+      "source": {
+        "file": "crates/reposix-core/src/backend.rs",
+        "line_start": 299,
+        "line_end": 305
+      },
+      "source_hash": "f30bd3d1ab0dac2125165ec074f061eccb810a2db8e18ad19de960f218d1a5bb",
+      "rationale": "Method exists in trait definition with version param",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:45Z",
+      "last_extracted": "2026-04-28T09:03:45Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/backendconnector-delete-or-close-method",
+      "claim": "BackendConnector trait has async fn delete_or_close(&self, project, id, reason: DeleteReason) -> Result<()>",
+      "source": {
+        "file": "crates/reposix-core/src/backend.rs",
+        "line_start": 315,
+        "line_end": 320
+      },
+      "source_hash": "e4dcef7bbd1d1ac0d06e0822102a11c8f6897265672cf2d7c22eb245f5cf1b68",
+      "rationale": "Method exists in trait definition with DeleteReason param",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:45Z",
+      "last_extracted": "2026-04-28T09:03:45Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/backendconnector-root-collection-name-method",
+      "claim": "BackendConnector trait has fn root_collection_name(&self) -> &'static str with default \"issues\"",
+      "source": {
+        "file": "crates/reposix-core/src/backend.rs",
+        "line_start": 328,
+        "line_end": 330
+      },
+      "source_hash": "2d274956096b080897f855186e60c17271e03a5f82c73b20f5105873e294f383",
+      "rationale": "Method exists with default implementation returning 'issues'",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:45Z",
+      "last_extracted": "2026-04-28T09:03:45Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/trait-method-count-eight",
+      "claim": "BackendConnector trait has 8 main methods (name, supports, list_records, list_changed_since, get_record, create_record, update_record, delete_or_close)",
+      "source": {
+        "file": "crates/reposix-core/src/backend.rs",
+        "line_start": 216,
+        "line_end": 331
+      },
+      "source_hash": "660447a3dfdff1cd32120314402f9ae61d00bf9576593135dcece7a4b539caff",
+      "rationale": "All 8 methods defined in trait; root_collection_name is 9th but optional override",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:45Z",
+      "last_extracted": "2026-04-28T09:03:45Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/read-only-backends-err-not-supported",
+      "claim": "Read-only backends return Error::Other('not supported: ...') from write methods and false from supports() queries",
+      "source": {
+        "file": "docs/guides/write-your-own-connector.md",
+        "line_start": 35,
+        "line_end": 35
+      },
+      "source_hash": "e207c2146cfbe62afa0d5279a0dd2c9e71838ee982a1c5c0c06875d8f581ca37",
+      "rationale": "Guide statement; tests at crates/reposix-github/src/lib.rs verify behavior",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:52Z",
+      "last_extracted": "2026-04-28T09:03:52Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/wiremock-five-tests-required",
+      "claim": "Each connector must publish ≥5 wiremock tests covering: happy path, 404, auth header, pagination, rate-limit",
+      "source": {
+        "file": "docs/guides/write-your-own-connector.md",
+        "line_start": 154,
+        "line_end": 162
+      },
+      "source_hash": "bbb40403b26463e65dd767a42bc2456ed6bc042def0a9dd14e1b2a001adf697b",
+      "rationale": "Guide requirement; GitHub connector has tests at crates/reposix-github/src/lib.rs#[cfg(test)]",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:52Z",
+      "last_extracted": "2026-04-28T09:03:52Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/list-records-happy-path-test",
+      "claim": "list_records test returns ≥1 issue on happy path, asserts length and first row",
+      "source": {
+        "file": "docs/guides/write-your-own-connector.md",
+        "line_start": 156,
+        "line_end": 156
+      },
+      "source_hash": "0ad525c80ac374de2dff82507b9ab2c1272f1febe50b7f92d23a3f9f0d36c550",
+      "rationale": "GitHub test: list_builds_the_right_url at crates/reposix-github/src/lib.rs:598-620",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:52Z",
+      "last_extracted": "2026-04-28T09:03:52Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/get-record-404-test",
+      "claim": "get_record 404 returns Error::Other whose message starts with 'not found: '",
+      "source": {
+        "file": "docs/guides/write-your-own-connector.md",
+        "line_start": 157,
+        "line_end": 157
+      },
+      "source_hash": "064a73ac3126c0cccff820e9d6b76646f0ab8bc23631658c460c5b93fb003f4c",
+      "rationale": "GitHub test: get_404_maps_to_not_found at crates/reposix-github/src/lib.rs:784-802",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:52Z",
+      "last_extracted": "2026-04-28T09:03:52Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/auth-header-exact-test",
+      "claim": "Auth header is byte-exact (Bearer prefix, Basic + base64, etc.)",
+      "source": {
+        "file": "docs/guides/write-your-own-connector.md",
+        "line_start": 158,
+        "line_end": 158
+      },
+      "source_hash": "8e141ce8e27322861cae2fe3a9f6478e3f36631446c748bb543402b5f5d7db09",
+      "rationale": "Guide requirement; pattern in GitHub/Confluence/JIRA connectors",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:52Z",
+      "last_extracted": "2026-04-28T09:03:52Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/pagination-cursor-test",
+      "claim": "Pagination cursor is followed correctly; 2-page test asserts second request URL matches first response",
+      "source": {
+        "file": "docs/guides/write-your-own-connector.md",
+        "line_start": 159,
+        "line_end": 159
+      },
+      "source_hash": "e94fae883453697c62b8ba0e3bd43f62b0fc1ef5420076272da32c075e02824c",
+      "rationale": "GitHub test: list_paginates_via_link_header at crates/reposix-github/src/lib.rs:647-699",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:59Z",
+      "last_extracted": "2026-04-28T09:03:59Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/rate-limit-429-test",
+      "claim": "Rate-limit gate arms on 429 / Retry-After header",
+      "source": {
+        "file": "docs/guides/write-your-own-connector.md",
+        "line_start": 160,
+        "line_end": 160
+      },
+      "source_hash": "71145ce1f2188ce2a5d1a2728703776377c94dbb316fa2bacbdf3c94d5258407",
+      "rationale": "GitHub test: rate_limit_zero_remaining_arms_the_gate at crates/reposix-github/src/lib.rs:805-849",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:59Z",
+      "last_extracted": "2026-04-28T09:03:59Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/contract-test-required",
+      "claim": "Every connector publishes a contract test in tests/contract.rs running fixed invariant set against both SimBackend and connector via wiremock",
+      "source": {
+        "file": "docs/guides/write-your-own-connector.md",
+        "line_start": 164,
+        "line_end": 164
+      },
+      "source_hash": "30c230fd801b6c5371e319e66efc08f9cf2a523651f95935a47ba2a8e067b705",
+      "rationale": "GitHub contract test: crates/reposix-github/tests/contract.rs; Confluence: crates/reposix-confluence/tests/contract.rs",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:59Z",
+      "last_extracted": "2026-04-28T09:03:59Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/clippy-disallowed-methods-lint",
+      "claim": "clippy disallowed-methods lint rejects direct reqwest::Client::new() and Client::builder()",
+      "source": {
+        "file": "docs/guides/write-your-own-connector.md",
+        "line_start": 149,
+        "line_end": 149
+      },
+      "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rationale": "Lint enforced in workspace; prevents allowlist bypass",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:59Z",
+      "last_extracted": "2026-04-28T09:03:59Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/real-backend-smoke-fixture",
+      "claim": "Real-backend smoke fixture lands behind #[ignore] with env-var setup docs (GITHUB_TOKEN, ATLASSIAN_API_KEY, etc.)",
+      "source": {
+        "file": "docs/guides/write-your-own-connector.md",
+        "line_start": 172,
+        "line_end": 173
+      },
+      "source_hash": "6315e06fb7627648e909377533d9a6f69e9764774672e2c830b36e63888a7f99",
+      "rationale": "Pattern in testing-targets.md; GitHub test scaffolds behind #[ignore]",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:03:59Z",
+      "last_extracted": "2026-04-28T09:03:59Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/http-client-factory-required",
+      "claim": "Connectors must use reposix_core::http::client() factory for all HTTP operations (no direct reqwest::Client)",
+      "source": {
+        "file": "docs/guides/write-your-own-connector.md",
+        "line_start": 142,
+        "line_end": 146
+      },
+      "source_hash": "1f61188339a753bf0c7e2bfac9be4c16ad59e219ac670faf64d41e949a3aa7cc",
+      "rationale": "Pattern in all three reference implementations (GitHub, Confluence, JIRA)",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:04:04Z",
+      "last_extracted": "2026-04-28T09:04:04Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/egress-allowlist-honors-reposix-allowed-origins",
+      "claim": "Egress allowlist honors REPOSIX_ALLOWED_ORIGINS env var; client factory refuses non-allowlisted origins",
+      "source": {
+        "file": "docs/guides/write-your-own-connector.md",
+        "line_start": 145,
+        "line_end": 145
+      },
+      "source_hash": "b280fb095c1192edfc86f03296c01f5d65ee3a53eca7a70984a9cf0e459e4ef8",
+      "rationale": "Implemented in reposix_core::http::client()",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:04:04Z",
+      "last_extracted": "2026-04-28T09:04:04Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/error-contract-not-found-prefix",
+      "claim": "Read-path not-found errors return Error::Other with message starting with 'not found: '",
+      "source": {
+        "file": "docs/guides/write-your-own-connector.md",
+        "line_start": 29,
+        "line_end": 29
+      },
+      "source_hash": "97b1f2b68a0dd6caa5040d8c6db6c804d95ad7801f723ab3ab8c9b173a0330df",
+      "rationale": "Trait docs at crates/reposix-core/src/backend.rs:210-211; GitHub test verifies at line 799",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:04:04Z",
+      "last_extracted": "2026-04-28T09:04:04Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/connectors/guide/error-contract-not-supported-prefix",
+      "claim": "Write-path not-supported errors return Error::Other with message starting with 'not supported: '",
+      "source": {
+        "file": "docs/guides/write-your-own-connector.md",
+        "line_start": 35,
+        "line_end": 35
+      },
+      "source_hash": "e207c2146cfbe62afa0d5279a0dd2c9e71838ee982a1c5c0c06875d8f581ca37",
+      "rationale": "Trait docs at crates/reposix-core/src/backend.rs:212-213; GitHub test verifies at line 853-876",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:04:04Z",
+      "last_extracted": "2026-04-28T09:04:04Z",
+      "last_extracted_by": "mark-missing-test-call"
+    }
+  ]
+}

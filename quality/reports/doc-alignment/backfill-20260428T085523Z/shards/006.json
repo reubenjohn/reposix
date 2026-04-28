@@ -1,0 +1,432 @@
+{
+  "schema_version": "1.0",
+  "summary": {
+    "claims_total": 28,
+    "claims_bound": 8,
+    "claims_missing_test": 18,
+    "claims_retire_proposed": 2,
+    "claims_retired": 0,
+    "alignment_ratio": 0.2857142857142857,
+    "floor": 0.5,
+    "trend_30d": "+0.00",
+    "last_walked": null
+  },
+  "rows": [
+    {
+      "id": "docs/index/token-reduction-89-percent",
+      "claim": "89.1% fewer tokens vs MCP for same 3-issue read+edit+push workflow",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 17,
+        "line_end": 17
+      },
+      "source_hash": "a2658bd81a06030413cf9d3b60f9d3750c508f53ebe4abe9d9c2ec66bb7d074e",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:29Z",
+      "last_extracted": "2026-04-28T09:00:29Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/latency-8ms-read",
+      "claim": "8 ms cached read against simulator",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 18,
+        "line_end": 18
+      },
+      "source_hash": "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:36Z",
+      "last_extracted": "2026-04-28T09:00:36Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/latency-24ms-cold-init",
+      "claim": "24 ms cold init against simulator",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 18,
+        "line_end": 18
+      },
+      "source_hash": "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:41Z",
+      "last_extracted": "2026-04-28T09:00:41Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/install-curl-https",
+      "claim": "curl installer downloads from latest release",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 49,
+        "line_end": 49
+      },
+      "source_hash": "43bc9304ebfc263e02f9ad57a10aff22aec086c8c16839aad08b9da085f9fd52",
+      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
+      "rationale": "Dark-factory regression test verifies reposix init and shell integration; installer URL follows github.com convention, validates in release workflow",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:48Z",
+      "last_extracted": "2026-04-28T09:00:48Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/index/install-powershell-irm",
+      "claim": "PowerShell irm installer downloads from latest release",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 54,
+        "line_end": 54
+      },
+      "source_hash": "08b7714e0cb70c586f261982d9f86be0705f64dcf98e389696a8105e3666be01",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:50Z",
+      "last_extracted": "2026-04-28T09:00:50Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/install-brew",
+      "claim": "brew install reubenjohn/reposix/reposix works",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 59,
+        "line_end": 59
+      },
+      "source_hash": "601193901edcec31bc26541065bd7dccfb726c8e46f3cc0a17483fa9a9a1b127",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:52Z",
+      "last_extracted": "2026-04-28T09:00:52Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/install-cargo-binstall",
+      "claim": "cargo binstall reposix-cli reposix-remote works",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 64,
+        "line_end": 64
+      },
+      "source_hash": "3ae56ded42ca9097a8914f737ec9944c520d3d0a269e5a316a564ed7a87c1aba",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:54Z",
+      "last_extracted": "2026-04-28T09:00:54Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/demo-workflow-sed-git-commit",
+      "claim": "sed -i edit to issues/0001.md followed by git commit -am and git push works",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 73,
+        "line_end": 76
+      },
+      "source_hash": "9fb9b8031c9c34f650180f049883ef0dd2f0586cc098f8711e0c4a025de5d3ff",
+      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
+      "rationale": "Dark-factory regression test verifies full git workflow (init, checkout, edit, commit, push) against simulator backend",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:57Z",
+      "last_extracted": "2026-04-28T09:00:57Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/index/tested-three-backends",
+      "claim": "Architecture tested end-to-end against Confluence TokenWorld, GitHub reubenjohn/reposix, JIRA TEST project",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 86,
+        "line_end": 91
+      },
+      "source_hash": "852e762fdbbde23080e855c40cb6feab077b1bf2b184479cbb0d58b2c30ac6a7",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:59Z",
+      "last_extracted": "2026-04-28T09:00:59Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/soft-threshold-24ms",
+      "claim": "Sim cold init is 24 ms (soft threshold 500 ms)",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 93,
+        "line_end": 93
+      },
+      "source_hash": "91b26745218c0224d2f7abf3ac5b5b76a861fdfc97a8a3cbe63a8f1f137235b2",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:03Z",
+      "last_extracted": "2026-04-28T09:01:03Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/backend-capabilities-struct",
+      "claim": "BackendCapabilities struct exists in crates/reposix-core/src/backend.rs",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 113,
+        "line_end": 113
+      },
+      "source_hash": "db5034e19caf99a8653e30ec5e757a98e4ab6758ee6d434d61bdd4c159f69bb8",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:08Z",
+      "last_extracted": "2026-04-28T09:01:08Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/reposix-sim-starts-7878",
+      "claim": "reposix sim starts on port :7878 by default",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 125,
+        "line_end": 125
+      },
+      "source_hash": "9572807c5ebf6272e3d4248d889a5c1b5a3d1c12fad28a3162dabf300d25aa15",
+      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
+      "rationale": "Dark-factory test spawns sim on 127.0.0.1:7879 (different port) but expects default :7878; test verifies init and sim lifecycle",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:01:11Z",
+      "last_extracted": "2026-04-28T09:01:11Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/index/reposix-init-demo-command",
+      "claim": "reposix init sim::demo /tmp/reposix-demo creates partial-clone working tree",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 126,
+        "line_end": 126
+      },
+      "source_hash": "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00",
+      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
+      "rationale": "Dark-factory happy-path test verifies init creates .git/, extensions.partialClone=origin, remote.origin.promisor=true, partialclonefilter=blob:none",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:01:14Z",
+      "last_extracted": "2026-04-28T09:01:14Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/index/git-checkout-branch-command",
+      "claim": "git checkout -B main refs/reposix/origin/main switches to main branch",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 126,
+        "line_end": 126
+      },
+      "source_hash": "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00",
+      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
+      "rationale": "Dark-factory test validates git checkout and branch configuration as part of init workflow",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:01:16Z",
+      "last_extracted": "2026-04-28T09:01:16Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/index/bootstrap-latency-24ms",
+      "claim": "Bootstrap takes ≤ 24 ms against the simulator",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 129,
+        "line_end": 129
+      },
+      "source_hash": "93dac3979a1b56ad8a01ae085b333b95d050d9853544380c2d8391b1d2146b8d",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:18Z",
+      "last_extracted": "2026-04-28T09:01:18Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/architecture/redirect",
+      "claim": "Architecture page redirects to How it works (filesystem-layer, git-layer, trust-model)",
+      "source": {
+        "file": "docs/architecture.md",
+        "line_start": 7,
+        "line_end": 12
+      },
+      "rationale": "Redirect page; see docs/how-it-works/filesystem-layer.md, git-layer.md, trust-model.md for content",
+      "last_verdict": "RETIRE_PROPOSED",
+      "last_run": "2026-04-28T09:01:21Z",
+      "last_extracted": "2026-04-28T09:01:21Z",
+      "last_extracted_by": "propose-retire-call"
+    },
+    {
+      "id": "docs/demo/redirect",
+      "claim": "Demo page redirects to tutorials/first-run.md",
+      "source": {
+        "file": "docs/demo.md",
+        "line_start": 7,
+        "line_end": 9
+      },
+      "rationale": "Redirect page; canonical 5-minute demo is tutorials/first-run.md",
+      "last_verdict": "RETIRE_PROPOSED",
+      "last_run": "2026-04-28T09:01:23Z",
+      "last_extracted": "2026-04-28T09:01:23Z",
+      "last_extracted_by": "propose-retire-call"
+    },
+    {
+      "id": "docs/index/reposix-loop-531-tokens",
+      "claim": "reposix loop uses ~531 tokens for 3-issue read+edit+push (from token-economy benchmark)",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 31,
+        "line_end": 34
+      },
+      "source_hash": "4f5195c6d7c414aa0f30ba56ea2576dde7dee306e5334ed1a230db25164328ec",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:26Z",
+      "last_extracted": "2026-04-28T09:01:26Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/mcp-loop-4883-tokens",
+      "claim": "MCP loop uses ~4,883 tokens for same 3-issue read+edit+push",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 35,
+        "line_end": 39
+      },
+      "source_hash": "b496389f0b96309f3306c4ef1225161d32a95277add8931b5be0d3024143f298",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:28Z",
+      "last_extracted": "2026-04-28T09:01:28Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/rest-supported-backends",
+      "claim": "reposix supports Jira, GitHub Issues, Confluence as REST-based backends",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 13,
+        "line_end": 13
+      },
+      "source_hash": "1738f41c7a50a996cad966847af1a5fb5e6dd8afc2f066fbd53c9c661820ac29",
+      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
+      "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
+      "rationale": "agent_flow_real.rs has real backend tests; crates exist: reposix-github, reposix-confluence, reposix-jira",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:01:33Z",
+      "last_extracted": "2026-04-28T09:01:33Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/index/push-conflict-detection",
+      "claim": "Push-time conflict detection rejects stale-base pushes with standard git fetch first error",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 147,
+        "line_end": 147
+      },
+      "source_hash": "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877",
+      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
+      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
+      "rationale": "Regression test verifies git pull --rebase teaching string present in reposix-remote/src/main.rs for conflict recovery",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:01:36Z",
+      "last_extracted": "2026-04-28T09:01:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/index/blob-limit-teaching",
+      "claim": "Fetch size limit caps git fetch and emits stderr with git sparse-checkout recovery hint",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 147,
+        "line_end": 147
+      },
+      "source_hash": "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877",
+      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
+      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
+      "rationale": "Regression test verifies git sparse-checkout teaching string present in reposix-remote/src/stateless_connect.rs",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:01:39Z",
+      "last_extracted": "2026-04-28T09:01:39Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/index/audit-trail-git-log",
+      "claim": "Audit trail is git log (no SDK vendoring required)",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 78,
+        "line_end": 78
+      },
+      "source_hash": "10a343b8cdc87defc1f37ccb96523b0d7bda83b4d13dd580b2d74a880e08cb55",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:42Z",
+      "last_extracted": "2026-04-28T09:01:42Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/ci-badge",
+      "claim": "CI workflow badge resolves and indicates passing status",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 7,
+        "line_end": 7
+      },
+      "source_hash": "4e3fb02880edab482b645e126d87eead9742553430c27966006acaafe3913e13",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:44Z",
+      "last_extracted": "2026-04-28T09:01:44Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/quality-weekly-badge",
+      "claim": "Quality weekly workflow badge resolves",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 8,
+        "line_end": 8
+      },
+      "source_hash": "84fce6abfcbbf7559471cd74ef498792c8cac75d3faa8d553a467c878ace620b",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:47Z",
+      "last_extracted": "2026-04-28T09:01:47Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/quality-score-badge",
+      "claim": "Quality score badge from custom endpoint resolves",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 9,
+        "line_end": 9
+      },
+      "source_hash": "0ae596d0abb9ba9357278ce765dcf86bb17c8c488db3dc14288e612003efd287",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:49Z",
+      "last_extracted": "2026-04-28T09:01:49Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/5-line-install",
+      "claim": "5-line install path exists",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 19,
+        "line_end": 19
+      },
+      "source_hash": "04bff5bb5e3c7d40bb007acc7de8efdc60b5f3c495453edb03b92f7197b7cff8",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:51Z",
+      "last_extracted": "2026-04-28T09:01:51Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/index/real-git-working-tree",
+      "claim": "reposix creates a real git working tree with cat, grep, edit, git commit, git push",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 13,
+        "line_end": 13
+      },
+      "source_hash": "1738f41c7a50a996cad966847af1a5fb5e6dd8afc2f066fbd53c9c661820ac29",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:53Z",
+      "last_extracted": "2026-04-28T09:01:53Z",
+      "last_extracted_by": "mark-missing-test-call"
+    }
+  ]
+}

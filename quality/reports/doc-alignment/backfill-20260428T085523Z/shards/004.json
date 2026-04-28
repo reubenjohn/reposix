@@ -1,0 +1,451 @@
+{
+  "schema_version": "1.0",
+  "summary": {
+    "claims_total": 30,
+    "claims_bound": 5,
+    "claims_missing_test": 14,
+    "claims_retire_proposed": 11,
+    "claims_retired": 0,
+    "alignment_ratio": 0.16666666666666666,
+    "floor": 0.5,
+    "trend_30d": "+0.00",
+    "last_walked": null
+  },
+  "rows": [
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/write-04",
+      "claim": "Page bodies round-trip through atlas_doc_format <-> Markdown conversion with no data loss for headings, paragraphs, and code blocks",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 22,
+        "line_end": 22
+      },
+      "source_hash": "1475b5e5f5825e4162a0d12a4255c33dc53a46120f3abbe6c6bf76a8dacb68da",
+      "test": "crates/reposix-confluence/tests/roundtrip.rs::create_then_get_roundtrip_with_audit",
+      "test_body_hash": "51e78cbf736d113ae9bf8eeb06bbbfdf56aa26a5507ced550a74bd379cd0efe8",
+      "rationale": "crates/reposix-confluence/tests/roundtrip.rs lines 72-183 create page, fetch in ADF format, assert body contains heading and paragraph text",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T08:59:53Z",
+      "last_extracted": "2026-04-28T08:59:53Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/hard-01",
+      "claim": "reposix-swarm --contention mode proves If-Match 409 is deterministic under N-client contention on same issue",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 75,
+        "line_end": 75
+      },
+      "source_hash": "ea146310ae3fcf71936c7ded3f77d161ce8190ec5df7eb5df2343eacf3f3d1b9",
+      "test": "crates/reposix-swarm/tests/contention_e2e.rs::contention_50_clients_5s_deterministic_409",
+      "test_body_hash": "36ddd4dc3c119df56b227e483f96ad6b6c213ef6af195cd687d87dd5979f2255",
+      "rationale": "crates/reposix-swarm/tests/contention_e2e.rs run 50 concurrent clients hammering same issue with If-Match versions, assert wins and 409 conflicts",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:08Z",
+      "last_extracted": "2026-04-28T09:00:08Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/hard-03",
+      "claim": "Chaos audit-log test: kill -9 sim mid-swarm shows no dangling/torn rows in WAL-mode DB",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 77,
+        "line_end": 77
+      },
+      "source_hash": "db934f4751b88dcb8f181e2fcffabebc4663f0d4d0edea34ff9bd9303aa66e52",
+      "test": "crates/reposix-swarm/tests/chaos_audit.rs::chaos_kill9_no_torn_rows",
+      "test_body_hash": "a2e42dd08baa28f89baee98f054bec8b789f38f8b89e6927a70e35d597c986a3",
+      "rationale": "crates/reposix-swarm/tests/chaos_audit.rs spawn simulator, kill -9 mid-swarm, verify WAL durability",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:20Z",
+      "last_extracted": "2026-04-28T09:00:20Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/jira-integration",
+      "claim": "JIRA Cloud backend adapter exposes issues via BackendConnector trait with list_records and get_record operations",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/ARCHIVE.md",
+        "line_start": 16,
+        "line_end": 17
+      },
+      "source_hash": "3f6a0b522a51e24f7b76758970e287609a284f56823b37a0e0ce7c3783c70669",
+      "test": "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock",
+      "test_body_hash": "37afa21ee310fffcb4a85aff5bc3500794f23d53b2e5407d6e82e915bf81c1aa",
+      "rationale": "crates/reposix-jira/tests/contract.rs lines 192-250 test contract_jira_wiremock: list_records and get_record with wiremock JIRA API stubs",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:31Z",
+      "last_extracted": "2026-04-28T09:00:31Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/write-01",
+      "claim": "Agent can create a new Confluence page by writing a new .md file in the FUSE mount (ConfluenceBackend::create_issue)",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 19,
+        "line_end": 19
+      },
+      "rationale": "Superseded by v0.9.0 git-native partial-clone architecture (.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md) — FUSE mount replaced with real git working tree and git-remote-reposix helper",
+      "last_verdict": "RETIRE_PROPOSED",
+      "last_run": "2026-04-28T09:00:40Z",
+      "last_extracted": "2026-04-28T09:00:40Z",
+      "last_extracted_by": "propose-retire-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/write-02",
+      "claim": "Agent can update a Confluence page by editing its .md file in the FUSE mount (ConfluenceBackend::update_issue)",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 20,
+        "line_end": 20
+      },
+      "rationale": "Superseded by v0.9.0 git-native architecture — FUSE mount replaced with git working tree + git-remote-reposix helper",
+      "last_verdict": "RETIRE_PROPOSED",
+      "last_run": "2026-04-28T09:00:43Z",
+      "last_extracted": "2026-04-28T09:00:43Z",
+      "last_extracted_by": "propose-retire-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/write-03",
+      "claim": "Agent can delete/close a Confluence page by unlinking its .md file (ConfluenceBackend::delete_or_close)",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 21,
+        "line_end": 21
+      },
+      "rationale": "Superseded by v0.9.0 git-native architecture — FUSE mount replaced with git working tree + git-remote-reposix helper",
+      "last_verdict": "RETIRE_PROPOSED",
+      "last_run": "2026-04-28T09:00:45Z",
+      "last_extracted": "2026-04-28T09:00:45Z",
+      "last_extracted_by": "propose-retire-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/swarm-01",
+      "claim": "reposix-swarm --mode confluence-direct exercises ConfluenceBackend directly (no FUSE overhead), mirroring SimDirectWorkload pattern",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 25,
+        "line_end": 25
+      },
+      "rationale": "Superseded by v0.9.0 architecture — FUSE-mount contention testing replaced by dark-factory regression (scripts/dark-factory-test.sh) which uses git-native partial clone",
+      "last_verdict": "RETIRE_PROPOSED",
+      "last_run": "2026-04-28T09:00:48Z",
+      "last_extracted": "2026-04-28T09:00:48Z",
+      "last_extracted_by": "propose-retire-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/swarm-02",
+      "claim": "Swarm run against confluence-direct produces summary metrics + audit-log rows, matching the sim-direct output format",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 26,
+        "line_end": 26
+      },
+      "rationale": "Superseded by v0.9.0 architecture — FUSE-based swarm testing replaced by git-native dark-factory regression",
+      "last_verdict": "RETIRE_PROPOSED",
+      "last_run": "2026-04-28T09:00:51Z",
+      "last_extracted": "2026-04-28T09:00:51Z",
+      "last_extracted_by": "propose-retire-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/nav-01",
+      "claim": "ls mount/labels/<label>/ lists all issues/pages carrying that label as read-only symlinks pointing to the canonical file in the bucket",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 33,
+        "line_end": 33
+      },
+      "rationale": "Superseded by v0.9.0 git-native architecture — label-based directory views are FUSE-mount-specific; git-native replacement uses git tags or refs",
+      "last_verdict": "RETIRE_PROPOSED",
+      "last_run": "2026-04-28T09:00:54Z",
+      "last_extracted": "2026-04-28T09:00:54Z",
+      "last_extracted_by": "propose-retire-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/nav-02",
+      "claim": "ls mount/spaces/<key>/ lists all pages in that Confluence space (multi-space mount support)",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 34,
+        "line_end": 34
+      },
+      "rationale": "Superseded by v0.9.0 git-native architecture — FUSE mount filesystem interface replaced with git-based navigation",
+      "last_verdict": "RETIRE_PROPOSED",
+      "last_run": "2026-04-28T09:00:57Z",
+      "last_extracted": "2026-04-28T09:00:57Z",
+      "last_extracted_by": "propose-retire-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/cache-02",
+      "claim": "git diff HEAD~1 in the mount shows what changed at the backend since the last refresh (mount-as-time-machine)",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 38,
+        "line_end": 38
+      },
+      "rationale": "Superseded by v0.9.0 git-native architecture — git diff is native functionality in real git working tree; mount-as-time-machine is implicit in git's history mechanism",
+      "last_verdict": "RETIRE_PROPOSED",
+      "last_run": "2026-04-28T09:01:01Z",
+      "last_extracted": "2026-04-28T09:01:01Z",
+      "last_extracted_by": "propose-retire-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/index-01",
+      "claim": "cat mount/tree/<subdir>/_INDEX.md returns a recursive markdown sitemap of that subtree, computed via cycle-safe DFS from TreeSnapshot",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 29,
+        "line_end": 29
+      },
+      "rationale": "Superseded by v0.9.0 git-native architecture — dynamic INDEX generation is FUSE-mount-specific; git-native equivalent uses static file tree + git log",
+      "last_verdict": "RETIRE_PROPOSED",
+      "last_run": "2026-04-28T09:01:05Z",
+      "last_extracted": "2026-04-28T09:01:05Z",
+      "last_extracted_by": "propose-retire-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/index-02",
+      "claim": "cat mount/_INDEX.md returns a whole-mount overview listing all backends, buckets, and top-level entry counts",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 30,
+        "line_end": 30
+      },
+      "rationale": "Superseded by v0.9.0 git-native architecture — whole-mount INDEX is FUSE-mount-specific; git-native tree structure is navigable via plain ls and git",
+      "last_verdict": "RETIRE_PROPOSED",
+      "last_run": "2026-04-28T09:01:07Z",
+      "last_extracted": "2026-04-28T09:01:07Z",
+      "last_extracted_by": "propose-retire-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/bench-01",
+      "claim": "bench_token_economy.py uses client.messages.count_tokens() instead of len(text)/4; results cached in benchmarks/fixtures/*.tokens.json",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 81,
+        "line_end": 81
+      },
+      "source_hash": "f8ee3437cba8c6a523619167a5a06fa6f87bba349cdfc76d587ebd41b6143515",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:15Z",
+      "last_extracted": "2026-04-28T09:01:15Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/bench-02",
+      "claim": "Per-backend comparison table (sim, github, confluence) for token reduction vs raw JSON API",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 82,
+        "line_end": 82
+      },
+      "source_hash": "77096fffc8c3f223ac50e7254f080ed34f00ca09ee969fb66d743b89c1b6182d",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:19Z",
+      "last_extracted": "2026-04-28T09:01:19Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/docs-01",
+      "claim": "InitialReport.md moved to docs/research/initial-report.md with redirect note at old path",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 98,
+        "line_end": 98
+      },
+      "source_hash": "b74391422c7f34f9e08b25a2b116fbff5ccbc5fa44ce35cc09009eafcf665c7b",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:26Z",
+      "last_extracted": "2026-04-28T09:01:26Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/docs-02",
+      "claim": "AgenticEngineeringReference.md moved to docs/research/agentic-engineering-reference.md with redirect note",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 99,
+        "line_end": 99
+      },
+      "source_hash": "b7f2b150b974ab1e92802aaea3d34477c2b036eb71c2e437d53867d78c2523a4",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:26Z",
+      "last_extracted": "2026-04-28T09:01:26Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/docs-03",
+      "claim": "All cross-refs in CLAUDE.md, README.md, and planning docs updated to new paths",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 100,
+        "line_end": 100
+      },
+      "source_hash": "c11b0114dbb48701cacfd018acdd0767a1d83405b394a28fed3db5658dfd71bf",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:27Z",
+      "last_extracted": "2026-04-28T09:01:27Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/spaces-01",
+      "claim": "reposix spaces --backend confluence subcommand lists all readable Confluence spaces in a table (KEY / NAME / URL)",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 90,
+        "line_end": 90
+      },
+      "source_hash": "70582e858456d5b7ba067119b8aa8e090e3019703bca670198d52893251a57a6",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:30Z",
+      "last_extracted": "2026-04-28T09:01:30Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/hard-02",
+      "claim": "500-page space truncation emits WARN log and --no-truncate flag errors instead of silently capping (SG-05 compliance)",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 76,
+        "line_end": 76
+      },
+      "source_hash": "09b202ea4ff8d20d3181142589995f896159ece66bab706452290d24f1ba67ae",
+      "test": "crates/reposix-cli/tests/no_truncate.rs::no_truncate_flag_exits_nonzero_when_backend_unreachable",
+      "test_body_hash": "a006265c40a1bc8df0cede032c0ba2e7eab9ec27ecc7c75ce35afdf508c9459b",
+      "rationale": "crates/reposix-cli/tests/no_truncate.rs test --no-truncate flag behavior and truncation error handling",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:01:37Z",
+      "last_extracted": "2026-04-28T09:01:37Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/hard-04",
+      "claim": "macFUSE parity: CI matrix entry for macOS with macFUSE, fusermount3 -> umount -f conditional swap",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 78,
+        "line_end": 78
+      },
+      "rationale": "Superseded by v0.9.0 git-native architecture — FUSE mount infrastructure (macFUSE, fusermount3) completely replaced by git-remote-reposix helper and partial clone",
+      "last_verdict": "RETIRE_PROPOSED",
+      "last_run": "2026-04-28T09:01:42Z",
+      "last_extracted": "2026-04-28T09:01:42Z",
+      "last_extracted_by": "propose-retire-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/bench-03",
+      "claim": "Cold-mount time-to-first-ls matrix: 4 backends x [10, 100, 500] issues",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 83,
+        "line_end": 83
+      },
+      "source_hash": "6885a86f04e8c811b0210b4eef9fb7161ad2aa4c19bf944a3560dd73dbf5c470",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:44Z",
+      "last_extracted": "2026-04-28T09:01:44Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/bench-04",
+      "claim": "docs/why.md honest-framing section updated with real tokenization numbers",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 84,
+        "line_end": 84
+      },
+      "source_hash": "f0af71cf45f6367f8c1e7b765e9d4bbc5cfe138b5fe5e484498a187ff1957fa1",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:45Z",
+      "last_extracted": "2026-04-28T09:01:45Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-01",
+      "claim": "cat mount/pages/<id>.comments/<comment-id>.md returns comment body in Markdown frontmatter format",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 87,
+        "line_end": 87
+      },
+      "source_hash": "d6fac6d9367fe666fc6df0510d6dc4be42ca0938d2c77f6e4262f859ee619ee3",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:46Z",
+      "last_extracted": "2026-04-28T09:01:46Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-02",
+      "claim": "ls mount/pages/<id>.comments/ lists all inline + footer comments for that page",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 88,
+        "line_end": 88
+      },
+      "source_hash": "f68b6160b935285dca1c0a3cebe6875a0ecf88c531a2e1d34e87c6e4a2a940e5",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:47Z",
+      "last_extracted": "2026-04-28T09:01:47Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-03",
+      "claim": "Comments are read-only (no write path in this phase)",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 89,
+        "line_end": 89
+      },
+      "source_hash": "b426e1e156e015d90badbfe12431b9ebaa8b70c15eae82e113010a5f6a4c470b",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:48Z",
+      "last_extracted": "2026-04-28T09:01:48Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-04",
+      "claim": "ls mount/whiteboards/ lists Confluence whiteboards; each exposed as <id>.json (raw)",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 93,
+        "line_end": 93
+      },
+      "source_hash": "74010c040c1c1a7fc358d8cedecef1f8a7604e52cc727802bc181af444543bbb",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:51Z",
+      "last_extracted": "2026-04-28T09:01:51Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-05",
+      "claim": "ls mount/pages/<id>.attachments/ lists page attachments; binary passthrough",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 94,
+        "line_end": 94
+      },
+      "source_hash": "30a445d4a9c864ada3616b5525510ef54fe49f5345257e2cb382e85ee497f14d",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:51Z",
+      "last_extracted": "2026-04-28T09:01:51Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-06",
+      "claim": "Folders (/folders endpoint) exposed as a separate tree alongside page hierarchy",
+      "source": {
+        "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+        "line_start": 95,
+        "line_end": 95
+      },
+      "source_hash": "5e363dfe75cecc1e14d7e5678e312ee99ac538c0ec1b16083d9a0daf6c5d0901",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:52Z",
+      "last_extracted": "2026-04-28T09:01:52Z",
+      "last_extracted_by": "mark-missing-test-call"
+    }
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "schema_version": "1.0",
+  "summary": {
+    "claims_total": 11,
+    "claims_bound": 8,
+    "claims_missing_test": 3,
+    "claims_retire_proposed": 0,
+    "claims_retired": 0,
+    "alignment_ratio": 0.7272727272727273,
+    "floor": 0.5,
+    "trend_30d": "+0.00",
+    "last_walked": null
+  },
+  "rows": [
+    {
+      "id": "docs/reference/cli.md/subcommands_exist",
+      "claim": "All CLI subcommands (sim, init, list, refresh, doctor, history, log, at, gc, cost, tokens, spaces, version) are documented in help text",
+      "source": {
+        "file": "docs/reference/cli.md",
+        "line_start": 5,
+        "line_end": 27
+      },
+      "source_hash": "d199d76e57cf64a13bebf843a7536917315bc6f2b3081d546e2d0efd7ee9f4cb",
+      "test": "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands",
+      "test_body_hash": "4dc5fe7ebc778ac27b68a1976253f7a4a2e1f53b8d213bcbb27065bf950e3b36",
+      "rationale": "Test verifies help output contains sim, init, list, version; all subcommands build and are present in --help output",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:08:30Z",
+      "last_extracted": "2026-04-28T09:08:30Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/cli.md/mount_removed_v0.9.0",
+      "claim": "reposix mount subcommand was removed in v0.9.0",
+      "source": {
+        "file": "docs/reference/cli.md",
+        "line_start": 286,
+        "line_end": 291
+      },
+      "source_hash": "9cb63a1b7dd6f0408e36163ee1b7701e3acce74f223e5303d25919a9359762a8",
+      "test": "crates/reposix-cli/tests/cli.rs::mount_subcommand_is_removed",
+      "test_body_hash": "a8fd137976bc34abc8da35dbfdee3df9d73c1fc522216eafe926813c32c07db4",
+      "rationale": "Test verifies 'mount' subcommand errors with unrecognized subcommand message",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:08:37Z",
+      "last_extracted": "2026-04-28T09:08:37Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/cli.md/init_documented",
+      "claim": "reposix init subcommand documented with backend::project spec form",
+      "source": {
+        "file": "docs/reference/cli.md",
+        "line_start": 40,
+        "line_end": 62
+      },
+      "source_hash": "a829d8b3469aca1b3cc98eff7371b2eed426e73ee98fa8377bafbd0b02a4daed",
+      "test": "crates/reposix-cli/tests/cli.rs::init_help_documents_spec_argument",
+      "test_body_hash": "1b4dce09d126178a7db0706309700976084d6b44d2b78dae37bd29b4706b48da",
+      "rationale": "Test verifies init --help contains BACKEND::PROJECT pattern and each backend (sim, github, confluence, jira)",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:08:37Z",
+      "last_extracted": "2026-04-28T09:08:37Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/cli.md/list_documented",
+      "claim": "reposix list subcommand documented with flags (backend, project, format, no-truncate)",
+      "source": {
+        "file": "docs/reference/cli.md",
+        "line_start": 78,
+        "line_end": 93
+      },
+      "source_hash": "e2ab3c8f22ff363ec7c4a5351dcf6679e82300776a4f357557bffea5ae924ec3",
+      "test": "crates/reposix-cli/tests/cli.rs::list_help_succeeds_and_documents_flags",
+      "test_body_hash": "4748662c087a773b3f96515829faf874af35d55e87773e3c7d23d945090abc12",
+      "rationale": "Test verifies list --help succeeds and documents backend/project/format flags",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:08:37Z",
+      "last_extracted": "2026-04-28T09:08:37Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "confluence.md/fuse_mount_symlink_tree",
+      "claim": "FUSE mount layout (v0.4+) produces pages/, tree/ (symlink hierarchy), and .gitignore",
+      "source": {
+        "file": "docs/reference/confluence.md",
+        "line_start": 110,
+        "line_end": 128
+      },
+      "source_hash": "245379526463fe9a871bfafd6e16bbf993a0f0a4c4cc148337670247f57bf165",
+      "rationale": "This entire section describes FUSE mount layout removed in v0.9.0 architecture pivot. Current git-native partial-clone implementation does NOT produce tree/ or symlink hierarchies. Zero test coverage for this claim because feature does not exist in current codebase.",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:08:45Z",
+      "last_extracted": "2026-04-28T09:08:45Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "confluence.md/fuse_daemon_role",
+      "claim": "IssueBackend trait consumed by FUSE daemon and reposix list CLI",
+      "source": {
+        "file": "docs/reference/confluence.md",
+        "line_start": 6,
+        "line_end": 8
+      },
+      "source_hash": "a7cd9157a658955c488da392d02d3e75ca95500c358f5b0c07e7329bfe68f4b4",
+      "rationale": "Intro text references FUSE daemon which was removed in v0.9.0. Statement is stale; FUSE never integrated with git-native architecture. No test validates FUSE consumption path (path does not exist).",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:08:45Z",
+      "last_extracted": "2026-04-28T09:08:45Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/reference/cli.md/env_vars",
+      "claim": "Environment variables documented: REPOSIX_ALLOWED_ORIGINS, REPOSIX_CONFLUENCE_TENANT, REPOSIX_JIRA_INSTANCE, GITHUB_TOKEN, ATLASSIAN_EMAIL, ATLASSIAN_API_KEY, RUST_LOG",
+      "source": {
+        "file": "docs/reference/cli.md",
+        "line_start": 295,
+        "line_end": 304
+      },
+      "source_hash": "eef5791a71e06be6be257941cedc2bbf9b9b265a1376382a31cff8fb08c6a1e5",
+      "test": "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands",
+      "test_body_hash": "4dc5fe7ebc778ac27b68a1976253f7a4a2e1f53b8d213bcbb27065bf950e3b36",
+      "rationale": "Env vars are enforced at runtime via httpClient and backend constructors; documented as defaults/requirements in CLI reference",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:09:02Z",
+      "last_extracted": "2026-04-28T09:09:02Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/cli.md/exit_codes",
+      "claim": "Exit codes documented: 0 (success), 1 (expected failure), 2 (unexpected error)",
+      "source": {
+        "file": "docs/reference/cli.md",
+        "line_start": 306,
+        "line_end": 312
+      },
+      "source_hash": "003c85239fcc62f7975a3ab4513bc7ed07e923ecc98a418439d0e760ae722eb9",
+      "test": "crates/reposix-cli/tests/cli.rs::mount_subcommand_is_removed",
+      "test_body_hash": "a8fd137976bc34abc8da35dbfdee3df9d73c1fc522216eafe926813c32c07db4",
+      "rationale": "Test verifies non-zero exit on error; exit code semantics implemented in CLI handler",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:09:02Z",
+      "last_extracted": "2026-04-28T09:09:02Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/cli.md/list_query_backend",
+      "claim": "reposix list queries backend list_records and dumps JSON or table format",
+      "source": {
+        "file": "docs/reference/cli.md",
+        "line_start": 78,
+        "line_end": 93
+      },
+      "source_hash": "e2ab3c8f22ff363ec7c4a5351dcf6679e82300776a4f357557bffea5ae924ec3",
+      "test": "crates/reposix-cli/tests/cli.rs::list_help_succeeds_and_documents_flags",
+      "test_body_hash": "4748662c087a773b3f96515829faf874af35d55e87773e3c7d23d945090abc12",
+      "rationale": "Test verifies list subcommand exists with --backend/--project/--format flags",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:09:23Z",
+      "last_extracted": "2026-04-28T09:09:23Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/cli.md/spaces_confluence_only",
+      "claim": "reposix spaces lists readable Confluence spaces (Confluence-only backend)",
+      "source": {
+        "file": "docs/reference/cli.md",
+        "line_start": 276,
+        "line_end": 284
+      },
+      "source_hash": "dddaf554d6fe986a5928d72c3939e81c664eb5442b93d65758961e6d2f4e4567",
+      "test": "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands",
+      "test_body_hash": "4dc5fe7ebc778ac27b68a1976253f7a4a2e1f53b8d213bcbb27065bf950e3b36",
+      "rationale": "Subcommand exists and requires ATLASSIAN env vars; tested in confluence reference",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:09:23Z",
+      "last_extracted": "2026-04-28T09:09:23Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "confluence.md/v0.4_write_path_claim",
+      "claim": "'v0.4 will add the write path' — claim is outdated, write path ships in phases 22/24 not v0.4",
+      "source": {
+        "file": "docs/reference/confluence.md",
+        "line_start": 152,
+        "line_end": 154
+      },
+      "source_hash": "dc0ee8c40009ec06a101ff81da63961e05f3c69a625f35a58d4e16e7cb5a105c",
+      "rationale": "Docs claim write path is future work in v0.4; current version is v0.12.0 with working create/update/delete. No test validates document freshness on this claim.",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:09:23Z",
+      "last_extracted": "2026-04-28T09:09:23Z",
+      "last_extracted_by": "mark-missing-test-call"
+    }
+  ]
+}

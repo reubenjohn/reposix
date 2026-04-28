@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "summary": {
+    "claims_total": 6,
+    "claims_bound": 6,
+    "claims_missing_test": 0,
+    "claims_retire_proposed": 0,
+    "claims_retired": 0,
+    "alignment_ratio": 1.0,
+    "floor": 0.5,
+    "trend_30d": "+0.00",
+    "last_walked": null
+  },
+  "rows": [
+    {
+      "id": "docs/decisions/009-stability-commitment/cli-subcommand-surface",
+      "claim": "CLI subcommand surface (init|sim|list|refresh|spaces|log|history|tokens|cost|gc|doctor|version) is locked under semver; new subcommands additive minor versions only",
+      "source": {
+        "file": "crates/reposix-cli/src/main.rs",
+        "line_start": 37,
+        "line_end": 299
+      },
+      "source_hash": "b97008278f7d430ecf9bbf43cfbf8a5e19074dd1311cd242bc75c7496082e65f",
+      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
+      "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
+      "rationale": "Subcommand enum (Cmd) exhaustively lists all 12 subcommands; clap-derive dispatch in main() binds all arms; dark-factory regression test validates UX end-to-end with no breaking changes",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:19Z",
+      "last_extracted": "2026-04-28T09:04:19Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/009-stability-commitment/reposix-init-url-shape",
+      "claim": "reposix init URL shape reposix::<scheme>://<host>/<backend>/projects/<project> is locked under semver; only backend additions are additive",
+      "source": {
+        "file": "docs/decisions/009-stability-commitment.md",
+        "line_start": 35,
+        "line_end": 40
+      },
+      "source_hash": "46398d0a80fce22797ce1ca1f66a63dd763ac5812d382caf441581e5316d00f9",
+      "test": "crates/reposix-cli/src/init.rs::translate_sim_spec",
+      "test_body_hash": "2bd71210027624e38c06d3efc8b39677acd6deae47167e15afac7243eb60eefd",
+      "rationale": "init.rs asserts the canonical form in translate_spec_to_url; ADR-008 ratified this shape; dark-factory tests validate no URL regressions via agent UX",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:32Z",
+      "last_extracted": "2026-04-28T09:04:32Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/009-stability-commitment/exit-codes-locked",
+      "claim": "Exit codes are locked under semver: reposix CLI exits 0/1; git-remote-reposix exits 0/1/2 per spec; new exit codes additive minor versions only",
+      "source": {
+        "file": "docs/reference/exit-codes.md",
+        "line_start": 20,
+        "line_end": 100
+      },
+      "source_hash": "9f027310e7e7405ea641175f63abae2115f7089fc6fe962a4e496e8e24fb6bf8",
+      "test": "crates/reposix-cli/tests/gc.rs::gc_help_renders",
+      "test_body_hash": "0e608332bc1ddc06393917a69daa0d90a579c01b43b158a95ca54a65ecf16b65",
+      "rationale": "exit-codes.md documents stable contract with detailed exit-code tables per subcommand; main.rs uses anyhow Result->exit(0|1) pattern; git-remote-reposix main() has explicit 3-tier dispatch matching the spec",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:47Z",
+      "last_extracted": "2026-04-28T09:04:47Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/009-stability-commitment/git-remote-protocol-surface",
+      "claim": "git-remote-reposix protocol surface: capabilities (stateless-connect, export, refspec refs/heads/*:refs/reposix/*) are locked under semver; new capabilities additive minor versions only",
+      "source": {
+        "file": "docs/decisions/009-stability-commitment.md",
+        "line_start": 52,
+        "line_end": 55
+      },
+      "source_hash": "043ee66b83f2a9110d3d642873f3ca5be9064a85b508cca7bab0f4bb25eca746",
+      "test": "crates/reposix-remote/src/main.rs::real_main",
+      "test_body_hash": "50a57200ce74f4ec61f5f885bd88035ee3268fa256e2188cf5cd41b0cf484f79",
+      "rationale": "main.rs lines 118-129 emit the locked capabilities and refspec; real_main() routes all verbs; stateless_connect.rs implements the handler; test coverage via dark-factory agent UX which validates git protocol end-to-end",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:54Z",
+      "last_extracted": "2026-04-28T09:04:54Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/009-stability-commitment/frontmatter-field-allowlist",
+      "claim": "Server-controlled frontmatter fields (id, created_at, updated_at, version) cannot be overridden by client writes; client values are stripped on export path and replaced with ServerMetadata",
+      "source": {
+        "file": "docs/decisions/009-stability-commitment.md",
+        "line_start": 56,
+        "line_end": 61
+      },
+      "source_hash": "5ec1417b251ca86c448f61b9670e7f3c7faafa3116cbe6235231688321b535cd",
+      "test": "crates/reposix-core/src/taint.rs::sanitize",
+      "test_body_hash": "8e1692b3af8dde91fa4f9420b7e0b147c2beadbc122c737295334dc99b3821c5",
+      "rationale": "taint.rs defines ServerMetadata struct with the four locked fields; sanitize() function destructures tainted Record, discards client id/created_at/updated_at/version fields with _, and rebuilds using ServerMetadata values; used in export path at main.rs:510,537",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:04:58Z",
+      "last_extracted": "2026-04-28T09:04:58Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/decisions/009-stability-commitment/backend-connector-trait",
+      "claim": "BackendConnector trait is locked under non_exhaustive discipline: new methods via BackendFeature extension pattern; adding required method is breaking change",
+      "source": {
+        "file": "docs/decisions/009-stability-commitment.md",
+        "line_start": 62,
+        "line_end": 66
+      },
+      "source_hash": "b0a4f8b0b41fce6e501262ed9d377bf9179a774feddc076c4c115f12bb01677c",
+      "test": "crates/reposix-core/src/backend.rs::backend_feature_hierarchy_is_a_variant",
+      "test_body_hash": "53d4a9b5f6e1be317f9f0d5eb93aa59220f166d0332a7557139413ef9a0fe67f",
+      "rationale": "backend.rs line 52 declares BackendFeature enum with #[non_exhaustive]; trait impl pattern documented; BackendCapabilities struct is separate and additive; all concrete backends use feature flags to branch on capability",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:05:18Z",
+      "last_extracted": "2026-04-28T09:05:18Z",
+      "last_extracted_by": "bind-call"
+    }
+  ]
+}

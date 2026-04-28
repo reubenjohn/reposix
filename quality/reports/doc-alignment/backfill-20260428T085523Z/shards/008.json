@@ -1,0 +1,296 @@
+{
+  "schema_version": "1.0",
+  "summary": {
+    "claims_total": 20,
+    "claims_bound": 0,
+    "claims_missing_test": 20,
+    "claims_retire_proposed": 0,
+    "claims_retired": 0,
+    "alignment_ratio": 0.0,
+    "floor": 0.5,
+    "trend_30d": "+0.00",
+    "last_walked": null
+  },
+  "rows": [
+    {
+      "id": "docs/benchmarks/latency/sim-init-cold-under-30ms",
+      "claim": "reposix init cold: 27 ms for sim backend",
+      "source": {
+        "file": "docs/benchmarks/latency.md",
+        "line_start": 34,
+        "line_end": 45
+      },
+      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:40Z",
+      "last_extracted": "2026-04-28T09:00:40Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/latency/github-init-under-30ms",
+      "claim": "reposix init cold: 26 ms for GitHub backend",
+      "source": {
+        "file": "docs/benchmarks/latency.md",
+        "line_start": 34,
+        "line_end": 45
+      },
+      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:46Z",
+      "last_extracted": "2026-04-28T09:00:46Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/latency/confluence-init-under-600ms",
+      "claim": "reposix init cold: 508 ms for Confluence backend",
+      "source": {
+        "file": "docs/benchmarks/latency.md",
+        "line_start": 34,
+        "line_end": 45
+      },
+      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:46Z",
+      "last_extracted": "2026-04-28T09:00:46Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/latency/jira-init-under-30ms",
+      "claim": "reposix init cold: 25 ms for JIRA backend",
+      "source": {
+        "file": "docs/benchmarks/latency.md",
+        "line_start": 34,
+        "line_end": 45
+      },
+      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:46Z",
+      "last_extracted": "2026-04-28T09:00:46Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/latency/sim-list-under-15ms",
+      "claim": "List records: 9 ms (N=6) for sim backend",
+      "source": {
+        "file": "docs/benchmarks/latency.md",
+        "line_start": 34,
+        "line_end": 45
+      },
+      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:46Z",
+      "last_extracted": "2026-04-28T09:00:46Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/latency/github-list-under-500ms",
+      "claim": "List records: 451 ms (N=18) for GitHub backend",
+      "source": {
+        "file": "docs/benchmarks/latency.md",
+        "line_start": 34,
+        "line_end": 45
+      },
+      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:46Z",
+      "last_extracted": "2026-04-28T09:00:46Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/latency/jira-list-under-400ms",
+      "claim": "List records: 332 ms (N=0) for JIRA backend",
+      "source": {
+        "file": "docs/benchmarks/latency.md",
+        "line_start": 34,
+        "line_end": 45
+      },
+      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:46Z",
+      "last_extracted": "2026-04-28T09:00:46Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/latency/sim-get-under-10ms",
+      "claim": "Get one record: 8 ms for sim backend",
+      "source": {
+        "file": "docs/benchmarks/latency.md",
+        "line_start": 34,
+        "line_end": 45
+      },
+      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:46Z",
+      "last_extracted": "2026-04-28T09:00:46Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/latency/github-get-under-300ms",
+      "claim": "Get one record: 291 ms for GitHub backend",
+      "source": {
+        "file": "docs/benchmarks/latency.md",
+        "line_start": 34,
+        "line_end": 45
+      },
+      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:46Z",
+      "last_extracted": "2026-04-28T09:00:46Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/latency/sim-patch-under-20ms",
+      "claim": "PATCH record (no-op): 11 ms for sim backend",
+      "source": {
+        "file": "docs/benchmarks/latency.md",
+        "line_start": 34,
+        "line_end": 45
+      },
+      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:51Z",
+      "last_extracted": "2026-04-28T09:00:51Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/latency/github-patch-under-900ms",
+      "claim": "PATCH record (no-op): 828 ms for GitHub backend",
+      "source": {
+        "file": "docs/benchmarks/latency.md",
+        "line_start": 34,
+        "line_end": 45
+      },
+      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:51Z",
+      "last_extracted": "2026-04-28T09:00:51Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/latency/capabilities-probe-under-10ms",
+      "claim": "Helper capabilities probe: ~5-6 ms (local-only, backend-independent)",
+      "source": {
+        "file": "docs/benchmarks/latency.md",
+        "line_start": 34,
+        "line_end": 45
+      },
+      "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:51Z",
+      "last_extracted": "2026-04-28T09:00:51Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/latency/soft-threshold-sim-init-under-500ms",
+      "claim": "Soft threshold: sim cold init < 500ms (regression-flagged, not CI-blocking)",
+      "source": {
+        "file": "docs/benchmarks/latency.md",
+        "line_start": 60,
+        "line_end": 65
+      },
+      "source_hash": "13e534dd93e93d01457cdebcd90b8a80a1a6a0ac5e3f80091f835f241de0e825",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:51Z",
+      "last_extracted": "2026-04-28T09:00:51Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/latency/soft-threshold-real-backend-under-3s",
+      "claim": "Soft threshold: real-backend step < 3s (regression-flagged, not CI-blocking)",
+      "source": {
+        "file": "docs/benchmarks/latency.md",
+        "line_start": 60,
+        "line_end": 65
+      },
+      "source_hash": "13e534dd93e93d01457cdebcd90b8a80a1a6a0ac5e3f80091f835f241de0e825",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:00:51Z",
+      "last_extracted": "2026-04-28T09:00:51Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/token-economy/mcp-mediated-baseline-4883-tokens",
+      "claim": "MCP-mediated baseline: 16,274 characters, 4,883 tokens for read-3-edit-1-push task",
+      "source": {
+        "file": "docs/benchmarks/token-economy.md",
+        "line_start": 13,
+        "line_end": 19
+      },
+      "source_hash": "85ba726df6437a441fa6330eb36d16f39a033bd3c1322906f1a4f6fb7a7937d2",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:05Z",
+      "last_extracted": "2026-04-28T09:01:05Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/token-economy/reposix-baseline-531-tokens",
+      "claim": "reposix (shell session): 1,372 characters, 531 tokens for same task",
+      "source": {
+        "file": "docs/benchmarks/token-economy.md",
+        "line_start": 13,
+        "line_end": 19
+      },
+      "source_hash": "85ba726df6437a441fa6330eb36d16f39a033bd3c1322906f1a4f6fb7a7937d2",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:06Z",
+      "last_extracted": "2026-04-28T09:01:06Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/token-economy/reduction-89-percent",
+      "claim": "reposix uses 89.1% fewer tokens than MCP baseline for same task (9.2x more context for MCP)",
+      "source": {
+        "file": "docs/benchmarks/token-economy.md",
+        "line_start": 17,
+        "line_end": 19
+      },
+      "source_hash": "c06455490c024172708f9cd27b25b66528689f00ce88e370c8db52525e8af115",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:06Z",
+      "last_extracted": "2026-04-28T09:01:06Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/token-economy/github-reduction-85-percent",
+      "claim": "GitHub raw-API fixture: 85.5% token reduction vs MCP baseline",
+      "source": {
+        "file": "docs/benchmarks/token-economy.md",
+        "line_start": 23,
+        "line_end": 27
+      },
+      "source_hash": "d547567f79945205c7e4e39d7a7977ee8facfd430d8230a27626755bb6a176a2",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:06Z",
+      "last_extracted": "2026-04-28T09:01:06Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/token-economy/confluence-reduction-76-percent",
+      "claim": "Confluence raw-API fixture: 76.4% token reduction vs MCP baseline",
+      "source": {
+        "file": "docs/benchmarks/token-economy.md",
+        "line_start": 23,
+        "line_end": 27
+      },
+      "source_hash": "d547567f79945205c7e4e39d7a7977ee8facfd430d8230a27626755bb6a176a2",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:06Z",
+      "last_extracted": "2026-04-28T09:01:06Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/benchmarks/token-economy/jira-real-adapter-not-implemented",
+      "claim": "JIRA real adapter: N/A (adapter not yet implemented)",
+      "source": {
+        "file": "docs/benchmarks/token-economy.md",
+        "line_start": 23,
+        "line_end": 28
+      },
+      "source_hash": "1f2d850733f8e2fa1919f24074588acd8d29595b5d12f702ab2f58ec08f32cb6",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:06Z",
+      "last_extracted": "2026-04-28T09:01:06Z",
+      "last_extracted_by": "mark-missing-test-call"
+    }
+  ]
+}

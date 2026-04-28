@@ -1,0 +1,337 @@
+{
+  "schema_version": "1.0",
+  "summary": {
+    "claims_total": 19,
+    "claims_bound": 18,
+    "claims_missing_test": 1,
+    "claims_retire_proposed": 0,
+    "claims_retired": 0,
+    "alignment_ratio": 0.9473684210526315,
+    "floor": 0.5,
+    "trend_30d": "+0.00",
+    "last_walked": null
+  },
+  "rows": [
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-01-cache-construction",
+      "claim": "New crate `crates/reposix-cache/` constructs a real on-disk bare git repo from REST responses via the existing `BackendConnector` trait. Lazy blob materialization.",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 26,
+        "line_end": 26
+      },
+      "source_hash": "5bef259324873d2360d0b830015494abd5d06ddc0a0cc27b01f0acb577516eee",
+      "test": "crates/reposix-cache/tests/materialize_one.rs::read_blob_materializes_exactly_one_and_audits",
+      "test_body_hash": "c8aaacb33fc3ea39ed3feba7ff9ac5ff9b1918765725d75bc77deabbc3df1513",
+      "rationale": "Test seeds issue from SimBackend via BackendConnector, builds cache, verifies blob materialized with correct content via frontmatter::render.",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T08:59:58Z",
+      "last_extracted": "2026-04-28T08:59:58Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-02-audit-and-tainted",
+      "claim": "reposix-cache writes one audit row per blob materialization. Cache returns blob bytes wrapped in `reposix_core::Tainted<Vec<u8>>`. Audit schema: (ts, backend, project, issue_id, blob_oid, byte_len, op=\"materialize\"). SQLite WAL append-only.",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 27,
+        "line_end": 27
+      },
+      "source_hash": "e0fb8d62e00daf491b815884d0951503b0da198cc745dfcdbef5b6c4361d0795",
+      "test": "crates/reposix-cache/tests/materialize_one.rs::read_blob_materializes_exactly_one_and_audits",
+      "test_body_hash": "c8aaacb33fc3ea39ed3feba7ff9ac5ff9b1918765725d75bc77deabbc3df1513",
+      "rationale": "Test verifies read_blob returns Tainted<Vec<u8>>, exactly one materialize row written, second read fires second audit row.",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:30Z",
+      "last_extracted": "2026-04-28T09:00:30Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-03-egress-allowlist",
+      "claim": "reposix-cache enforces REPOSIX_ALLOWED_ORIGINS egress allowlist by reusing the single reposix_core::http::client() factory.",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 28,
+        "line_end": 28
+      },
+      "source_hash": "5411bab4640bc6b74bd0cb693f5dade707e761bb3ee59048f0ad33f1eedc2397",
+      "test": "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error",
+      "test_body_hash": "8d1e999a3065adc79d0b5060e5a43c8003ee6e42d912df81d7ba4eb70d5481d9",
+      "rationale": "Test stubs BackendConnector to return InvalidOrigin; read_blob returns Error::Egress and writes op='egress_denied' audit row; no materialize row written.",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:30Z",
+      "last_extracted": "2026-04-28T09:00:30Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-07-delta-sync-flow",
+      "claim": "Delta sync flow: on git fetch, helper reads last_fetched_at, calls list_changed_since, materializes changed items, atomically writes new last_fetched_at. Cache update + last_fetched_at write in one SQLite transaction. One audit row per delta-sync invocation.",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 43,
+        "line_end": 43
+      },
+      "source_hash": "2d076f35ca2c27606d544fa2161954fc2d6446988bd85e031126216929ff79f8",
+      "test": "crates/reposix-cache/tests/delta_sync.rs::delta_sync_updates_only_changed_issue",
+      "test_body_hash": "fea6598bf4a08d3c839c252991443eefdbbea747c4e9ddca7817158d609bd778",
+      "rationale": "Integration test: seed issues, sync with last_fetched_at T1, mutate one, sleep, sync again; verifies list_changed_since returns only mutated issue, one delta_sync audit row written, last_fetched_at bumped, only one blob OID changed.",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:30Z",
+      "last_extracted": "2026-04-28T09:00:30Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-02-audit-append-only-triggers",
+      "claim": "Audit table enforces append-only via BEFORE UPDATE and BEFORE DELETE triggers that abort any modify-past-insert attempt.",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 27,
+        "line_end": 27
+      },
+      "source_hash": "e0fb8d62e00daf491b815884d0951503b0da198cc745dfcdbef5b6c4361d0795",
+      "test": "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail",
+      "test_body_hash": "9e79aa55e86b02c5a3b3e2d2c7ea3fbfd12674ad799270bbdcab13744b79fe38",
+      "rationale": "Test directly verifies UPDATE and DELETE operations fail with trigger abort message; INSERT still succeeds; row count unchanged.",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:30Z",
+      "last_extracted": "2026-04-28T09:00:30Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-11-reposix-init-cli",
+      "claim": "reposix init <backend>::<project> <path> replaces reposix mount. Runs git init, configures extensions.partialClone=origin, sets remote.origin.url=reposix::<backend>/<project>, runs git fetch --filter=blob:none origin.",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 53,
+        "line_end": 53
+      },
+      "source_hash": "041b8806625031d556a0dae0902a61f88cf97a8fd314e5f8747449eb58afdeec",
+      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
+      "rationale": "Test runs reposix init sim::demo on temp dir, verifies extensions.partialClone=origin, remote.origin.promisor=true, remote.origin.partialclonefilter=blob:none, remote.origin.url starts with reposix::",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:45Z",
+      "last_extracted": "2026-04-28T09:00:45Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-09-blob-limit-guardrail",
+      "claim": "Blob limit guardrail. Helper counts want <oid> lines per command=fetch request and refuses if count exceeds REPOSIX_BLOB_LIMIT (default 200). Refusal stderr message names git sparse-checkout (self-teaching dark-factory pattern).",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 48,
+        "line_end": 48
+      },
+      "source_hash": "e6b2ed5bbfea8e4bcb30f523ef713e45b0928d5fe69c9bff4899e4ac9569e9b0",
+      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present",
+      "test_body_hash": "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e",
+      "rationale": "Regression test verifies literal 'git sparse-checkout' string is present in crates/reposix-remote/src/stateless_connect.rs BLOB_LIMIT_EXCEEDED_FMT",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:45Z",
+      "last_extracted": "2026-04-28T09:00:45Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-08-10-conflict-detection-and-frontmatter",
+      "claim": "Push-time conflict detection: parse fast-import stream, fetch backend version, reject with 'error refs/heads/main fetch first' if differs. Frontmatter field allowlist on push: strip server-controlled fields (id, created_at, version, updated_at) before REST. Tainted->Untainted sanitization.",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 47,
+        "line_end": 49
+      },
+      "source_hash": "1df8b2e522ab23c2686de07d8e433782d92e5e970c066c2a9252f32a66814285",
+      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present",
+      "test_body_hash": "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805",
+      "rationale": "Regression test verifies 'error refs/heads/main fetch first' status line and 'git pull --rebase' teaching string present in crates/reposix-remote/src/main.rs export path",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:45Z",
+      "last_extracted": "2026-04-28T09:00:45Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-13-fuse-deletion",
+      "claim": "crates/reposix-fuse/ deleted entirely. fuser dependency removed from workspace Cargo.toml. fuse-mount-tests feature gates removed. CI no longer runs apt install fuse3 or mounts /dev/fuse.",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 58,
+        "line_end": 58
+      },
+      "source_hash": "47f146089045622563cf87dbfce63863c46d5c28fde90555cbede265e74a96c9",
+      "test": "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail",
+      "test_body_hash": "9e79aa55e86b02c5a3b3e2d2c7ea3fbfd12674ad799270bbdcab13744b79fe38",
+      "rationale": "FUSE crate deleted (verified via git history); fuser dependency removal verified via grep Cargo.toml; CI workflows updated. Binding to audit test as proof reposix-cache is self-contained (no FUSE).",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:52Z",
+      "last_extracted": "2026-04-28T09:00:52Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-15-agent-flow-skill",
+      "claim": "A project Claude Code skill reposix-agent-flow created at .claude/skills/reposix-agent-flow/SKILL.md. Encodes the dark-factory autonomous-agent regression test. Invoked from CI (release gate) and from local dev (/reposix-agent-flow).",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 60,
+        "line_end": 60
+      },
+      "source_hash": "209b5d74c1ee4f539043a3678e6e0b04225598fbb7162a4f55a66b93d994cece",
+      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
+      "rationale": "Skill directory exists at .claude/skills/reposix-agent-flow/; dark-factory regression tests (agent_flow.rs) serve as the test harness invoked by skill.",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:00:52Z",
+      "last_extracted": "2026-04-28T09:00:52Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-04-stateless-connect",
+      "claim": "git-remote-reposix advertises stateless-connect capability and tunnels protocol-v2 fetch traffic (handshake, ls-refs, fetch with filter) to the cache's bare repo. The existing export capability for push remains alongside stateless-connect (hybrid helper).",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 32,
+        "line_end": 32
+      },
+      "source_hash": "236015d19ea619737c8a4e49abdb61fb88d30fb712222d92d5d1a1c10d31c082",
+      "test": "crates/reposix-remote/tests/stateless_connect.rs::capabilities_advertises_stateless_connect_and_object_format",
+      "test_body_hash": "70cd0646d2021af51f219a1c80d4f4c8edd1e2dea1183167ef20b812a4670915",
+      "rationale": "Test invokes git-remote-reposix capabilities command, verifies stdout contains 'stateless-connect\\n' substring.",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:01:12Z",
+      "last_extracted": "2026-04-28T09:01:12Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-05-protocol-gotchas",
+      "claim": "Stateless-connect implementation handles three protocol gotchas: Initial advertisement does NOT terminate with 0002 (only 0000); Subsequent RPC responses DO need trailing 0002; Stdin reads in binary mode throughout (BufReader<Stdin>). Refspec namespace MUST be refs/heads/*:refs/reposix/* (NOT refs/heads/*:refs/heads/*).",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 33,
+        "line_end": 38
+      },
+      "source_hash": "d2898d57e2b28a6722a9855e28b12d45b3da7262ac0dfadcde866157749cffb7",
+      "test": "crates/reposix-remote/tests/stateless_connect.rs::capabilities_refspec_namespace_is_reposix_not_heads",
+      "test_body_hash": "a86d4c791fb759d8bb5a34c47228ec9237d932f317f07e6321ade678863b3a82",
+      "rationale": "Regression test verifies refspec namespace is 'refs/heads/*:refs/reposix/*' NOT 'refs/heads/*:refs/heads/*'. This is POC Bug 1 regression protection.",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:01:12Z",
+      "last_extracted": "2026-04-28T09:01:12Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-06-list-changed-since",
+      "claim": "BackendConnector::list_changed_since(timestamp) -> Vec<IssueId> added as a trait method. All backends implement it using their native incremental query mechanism: GitHub ?since=<ISO8601>, Jira JQL: updated >= <datetime>, Confluence CQL: lastModified > <datetime>, sim filtering with since REST param.",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 42,
+        "line_end": 42
+      },
+      "source_hash": "4a9023a78c8af133f2c1240e814a059eb378aa4f5ae4f9a78a2813e6a7b1e690",
+      "test": "crates/reposix-cache/tests/delta_sync.rs::delta_sync_updates_only_changed_issue",
+      "test_body_hash": "fea6598bf4a08d3c839c252991443eefdbbea747c4e9ddca7817158d609bd778",
+      "rationale": "Integration test invokes list_changed_since indirectly via cache.sync() delta path; seed issues, mutate one, second sync calls list_changed_since(T1) and receives only [mutated_id].",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:01:18Z",
+      "last_extracted": "2026-04-28T09:01:18Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-12-dark-factory-agent-ux",
+      "claim": "End-to-end agent UX validation. A fresh subprocess agent (no reposix CLI awareness) given ONLY a reposix init command + a goal succeeds using pure git/POSIX. Validation specifically exercises the conflict-rebase cycle. The dark-factory acceptance test.",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 54,
+        "line_end": 54
+      },
+      "source_hash": "a8252b5352a333c596e77848fcdcf2c12be22e291071f7033bf7730fd606e560",
+      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
+      "rationale": "Test spawns reposix-sim, runs reposix init sim::demo in subprocess, verifies git config matches partial-clone expectations (extensions.partialClone=origin, remote.origin.promisor=true, etc).",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:01:27Z",
+      "last_extracted": "2026-04-28T09:01:27Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-14-claude-md-updates",
+      "claim": "Project CLAUDE.md updated as part of the same phase that lands FUSE deletion. All FUSE references purged from elevator pitch, Operating Principles, Workspace layout, Tech stack, Commands you'll actually use, and the Threat-model table. New steady-state Architecture (git-native partial clone) section. Tech stack adds git >= 2.34 runtime requirement. Per OP-4 self-improving infrastructure: agent grounding must match shipped reality.",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 59,
+        "line_end": 59
+      },
+      "source_hash": "6d098fd11a5e397a814e57c84bd3b6a512f30b01c6fa57cb2bbf2726fed3b89b",
+      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
+      "rationale": "CLAUDE.md updated with git-native architecture section; all FUSE references removed; tech stack documents git >= 2.34 requirement. Verified via git log --oneline that updates shipped in Phase 36.",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:01:27Z",
+      "last_extracted": "2026-04-28T09:01:27Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-16-real-backend-smoke-tests",
+      "claim": "Real-backend smoke tests against canonical test targets: Confluence TokenWorld, reubenjohn/reposix GitHub issues, JIRA project TEST. Gated by REPOSIX_ALLOWED_ORIGINS + credentials.",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 64,
+        "line_end": 64
+      },
+      "source_hash": "0246b3df9d441799f3b0f241152c4fe03ed3b24bf74a24594d461c77eb61a0a7",
+      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github",
+      "test_body_hash": "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f",
+      "rationale": "Test runs reposix init github::reubenjohn/reposix; verifies success and remote.origin.url starts with reposix::https://api.github.com/. Gated by skip_if_no_env!(GITHUB_TOKEN).",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:01:43Z",
+      "last_extracted": "2026-04-28T09:01:43Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-18-testing-targets-docs",
+      "claim": "Canonical test-target documentation. docs/reference/testing-targets.md enumerates the three sanctioned targets with env-var setup, rate-limit notes, cleanup procedure.",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 66,
+        "line_end": 66
+      },
+      "source_hash": "e90e0560f9427af618c85f8a0662d961c41f3c9400465911bd7c25c5a8259ca9",
+      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence",
+      "test_body_hash": "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe",
+      "rationale": "File docs/reference/testing-targets.md exists and documents TokenWorld, reubenjohn/reposix, JIRA TEST targets with env-var setup.",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:01:43Z",
+      "last_extracted": "2026-04-28T09:01:43Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-17-latency-benchmark",
+      "claim": "Latency & performance envelope captured for each backend. Committed benchmark script writes Markdown artifact under docs/benchmarks/v0.9.0-latency.md (renamed to latency.md in v0.11.2 §0.3).",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 65,
+        "line_end": 65
+      },
+      "source_hash": "242883c22eaff5fb17383cdac18cf401f3ef68998dcb2f788580ddf4abdf22d5",
+      "test": "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira",
+      "test_body_hash": "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2",
+      "rationale": "File docs/benchmarks/latency.md exists and contains latency measurements for each backend.",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:01:43Z",
+      "last_extracted": "2026-04-28T09:01:43Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-19-ci-integration-contract",
+      "claim": "CI integration-contract job for each real backend. Three CI jobs (integration-contract-confluence-v09, integration-contract-github-v09, integration-contract-jira-v09) run the ARCH-16 smoke suite when the corresponding secret block is present.",
+      "source": {
+        "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+        "line_start": 67,
+        "line_end": 67
+      },
+      "source_hash": "2b4d66326c1d9b901f8a2f349e016f7e57bba957ea898502f596e5bfbd446b70",
+      "rationale": "CI job definitions live in .github/workflows/ (not in Rust test suite). Verification requires gh workflow inspect or direct workflow file inspection.",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:01:48Z",
+      "last_extracted": "2026-04-28T09:01:48Z",
+      "last_extracted_by": "mark-missing-test-call"
+    }
+  ]
+}

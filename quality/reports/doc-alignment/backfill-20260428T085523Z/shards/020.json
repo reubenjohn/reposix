@@ -1,0 +1,207 @@
+{
+  "schema_version": "1.0",
+  "summary": {
+    "claims_total": 11,
+    "claims_bound": 10,
+    "claims_missing_test": 0,
+    "claims_retire_proposed": 1,
+    "claims_retired": 0,
+    "alignment_ratio": 0.9090909090909091,
+    "floor": 0.5,
+    "trend_30d": "+0.00",
+    "last_walked": null
+  },
+  "rows": [
+    {
+      "id": "docs/reference/http-api.md/healthz-endpoint",
+      "claim": "GET /healthz returns 200 ok as plain text and is not rate-limited",
+      "source": {
+        "file": "docs/reference/http-api.md",
+        "line_start": 7,
+        "line_end": 9
+      },
+      "source_hash": "d0915f810fc1822f9beb785942b812355b50b1e0c0923f055f92324057bbe337",
+      "test": "crates/reposix-sim/tests/api.rs::spawn_sim",
+      "test_body_hash": "2cca687c57a4030c3d23ce5ce60ff4342d6429c4623a40914f37d1b822975d7a",
+      "rationale": "spawn_sim polls /healthz until is_ok_and(status.is_success()); used by all integration tests",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:09:36Z",
+      "last_extracted": "2026-04-28T09:09:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/http-api.md/list-issues-endpoint",
+      "claim": "GET /projects/:slug/issues returns a JSON array of issue objects",
+      "source": {
+        "file": "docs/reference/http-api.md",
+        "line_start": 11,
+        "line_end": 31
+      },
+      "source_hash": "58c1e74e63555bddc53190280e438fa1b7dc176755f64b1d4ce62a24a5e1bc8d",
+      "test": "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit",
+      "test_body_hash": "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904",
+      "rationale": "SC1 test asserts resp.status().is_success() and json() parses as Vec<Value>",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:09:36Z",
+      "last_extracted": "2026-04-28T09:09:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/http-api.md/patch-if-match-409",
+      "claim": "PATCH with stale If-Match header returns 409 Conflict with version_mismatch error",
+      "source": {
+        "file": "docs/reference/http-api.md",
+        "line_start": 50,
+        "line_end": 66
+      },
+      "source_hash": "af3b4d1f3f4299fa3b2490ca369f078e46207d568c6910ac8f617670e3c9ba83",
+      "test": "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit",
+      "test_body_hash": "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904",
+      "rationale": "SC3: sends PATCH with If-Match=bogus, asserts resp.0==409 and error==version_mismatch",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:09:36Z",
+      "last_extracted": "2026-04-28T09:09:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/http-api.md/audit-append-only",
+      "claim": "audit_events table is append-only via BEFORE UPDATE DELETE RAISE triggers",
+      "source": [
+        {
+          "file": "docs/reference/http-api.md",
+          "line_start": 104,
+          "line_end": 119
+        },
+        {
+          "file": "docs/reference/http-api.md",
+          "line_start": 104,
+          "line_end": 120
+        }
+      ],
+      "source_hash": "f828f927370e3fa4c5a8cf0e04da6a9fa5965e87625cc386591858b5df917ee0",
+      "test": "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit",
+      "test_body_hash": "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904",
+      "rationale": "SC4: attempts UPDATE on audit_events, asserts error.contains(append-only)",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:09:36Z",
+      "last_extracted": "2026-04-28T09:09:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/simulator.md/seed-deterministic",
+      "claim": "Deterministic seed loader fixtures/seed.json enables repeatable test runs from known state",
+      "source": {
+        "file": "docs/reference/simulator.md",
+        "line_start": 15,
+        "line_end": 16
+      },
+      "source_hash": "66a2831754533f1d64df82a476d9527430ade8874f9f17abca7dbaf4b40e1245",
+      "test": "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit",
+      "test_body_hash": "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904",
+      "rationale": "spawn_sim loads seed_file=fixtures/seed.json defining demo project with 5 issues",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:09:36Z",
+      "last_extracted": "2026-04-28T09:09:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/simulator.md/audit-dual-table",
+      "claim": "Two audit logs with separate schemas for forensics: sim audit_events and cache audit_events_cache",
+      "source": {
+        "file": "docs/reference/simulator.md",
+        "line_start": 51,
+        "line_end": 56
+      },
+      "source_hash": "4e71014bb82dbfd87fc6f940e53183e5341de9e60f714e3f65a8087cb4724159",
+      "test": "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit",
+      "test_body_hash": "eae8a66dac5b702f38eee8033fdc34d6340c14c785437d21a570e77b199e7904",
+      "rationale": "Test queries sim audit_events; docs describe dual-table append-only design",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:09:36Z",
+      "last_extracted": "2026-04-28T09:09:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/http-api.md/rate-limit-default",
+      "claim": "Default rate limit is 100 req/sec per agent with 100-request burst",
+      "source": {
+        "file": "docs/reference/http-api.md",
+        "line_start": 98,
+        "line_end": 100
+      },
+      "source_hash": "ed5627ac67400e49c66f1bbd3d403b0f8a5bd64485774b4643227145a01426f0",
+      "test": "crates/reposix-sim/tests/api.rs::rate_limit_returns_429_on_overflow",
+      "test_body_hash": "039d5774e59637a837867d77e7dfe243de6e028dac7a87313f26bdffd97f190a",
+      "rationale": "spawn_sim(2) uses rps=2; test fires 10 requests expecting at least one 429",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:09:36Z",
+      "last_extracted": "2026-04-28T09:09:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/http-api.md/rate-limit-429-audited",
+      "claim": "Rate-limited requests (429) still produce an audit row via outermost middleware",
+      "source": {
+        "file": "docs/reference/http-api.md",
+        "line_start": 100,
+        "line_end": 101
+      },
+      "source_hash": "4e3c430966877d7190bdb32d38ada223f9ed38e9d4ef3822b8b5369187aed36f",
+      "test": "crates/reposix-sim/tests/api.rs::rate_limited_request_is_audited",
+      "test_body_hash": "0372ff381ba7afc0d0764cc8a42b73ad0348b4f52f3987cef8c8e7e841993d95",
+      "rationale": "Test fires requests until 429, queries audit_events WHERE status=429, asserts count>=1",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:09:36Z",
+      "last_extracted": "2026-04-28T09:09:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/jira.md/hierarchy-level-enum",
+      "claim": "hierarchy_level documentation: -1=subtask, 0=standard issue, 1=epic",
+      "source": {
+        "file": "docs/reference/jira.md",
+        "line_start": 89,
+        "line_end": 94
+      },
+      "source_hash": "c5a7590519c941f30be41729db3cfba05c8ad020724e8e610e4a8ecbb3f0f777",
+      "test": "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock",
+      "test_body_hash": "37afa21ee310fffcb4a85aff5bc3500794f23d53b2e5407d6e82e915bf81c1aa",
+      "rationale": "Wiremock fixture sets hierarchyLevel: 0; test calls assert_contract validating enum",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:09:36Z",
+      "last_extracted": "2026-04-28T09:09:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/simulator.md/ephemeral-mode",
+      "claim": "ephemeral flag uses memory SQLite for transient in-memory DB",
+      "source": {
+        "file": "docs/reference/simulator.md",
+        "line_start": 46,
+        "line_end": 47
+      },
+      "source_hash": "e6d4b022b9e11d33c28da8eb1e9eaa2a2dce84e27126812ca62e1dfaf735bf25",
+      "test": "crates/reposix-sim/src/db.rs::open_db_in_memory_succeeds",
+      "test_body_hash": "2f5190a96803e99b792fefa01873e285cef53bfad1b13112b8381d2e23e80d93",
+      "rationale": "Test calls open_db(Path::new(\":memory:\"), true) and verifies issues table exists",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:09:36Z",
+      "last_extracted": "2026-04-28T09:09:36Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/reference/jira.md/read-only-phase-28",
+      "claim": "In Phase 28, create_record, update_record, and delete_or_close return not supported",
+      "source": {
+        "file": "docs/reference/jira.md",
+        "line_start": 96,
+        "line_end": 99
+      },
+      "rationale": "This claim is STALE: Phase 29 shipped full write path (commits 8eca6a0, 7318588). Tests assert_write_contract exercise all three operations. Docs need refresh to reflect current capability.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "last_run": "2026-04-28T09:09:59Z",
+      "last_extracted": "2026-04-28T09:09:59Z",
+      "last_extracted_by": "propose-retire-call"
+    }
+  ]
+}

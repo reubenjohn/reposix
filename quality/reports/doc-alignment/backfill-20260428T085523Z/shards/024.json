@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.0",
+  "summary": {
+    "claims_total": 7,
+    "claims_bound": 1,
+    "claims_missing_test": 6,
+    "claims_retire_proposed": 0,
+    "claims_retired": 0,
+    "alignment_ratio": 0.14285714285714285,
+    "floor": 0.5,
+    "trend_30d": "+0.00",
+    "last_walked": null
+  },
+  "rows": [
+    {
+      "id": "docs/tutorials/first-run/init-config",
+      "claim": "reposix init sim::demo creates working tree with extensions.partialClone=origin, remote.origin.promisor=true, remote.origin.partialclonefilter=blob:none",
+      "source": {
+        "file": "docs/tutorials/first-run.md",
+        "line_start": 64,
+        "line_end": 73
+      },
+      "source_hash": "b2e1d9302f0e337ba5418f7d4ccdb2ead6a3a94eb0e9f58b79c05982639c711e",
+      "test": "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path",
+      "test_body_hash": "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8",
+      "rationale": "Test spawns sim, runs reposix init, validates all four git config keys match expected values (lines 148-162)",
+      "last_verdict": "BOUND",
+      "last_run": "2026-04-28T09:08:50Z",
+      "last_extracted": "2026-04-28T09:08:50Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs/tutorials/first-run/checkout-origin",
+      "claim": "git checkout -B main refs/reposix/origin/main succeeds after reposix init",
+      "source": {
+        "file": "docs/tutorials/first-run.md",
+        "line_start": 76,
+        "line_end": 88
+      },
+      "source_hash": "83f0810b4d8b2d563b45a66d4447d50a572d299b10d3ceef20466e4293028e30",
+      "rationale": "Test does init but does not verify checkout command succeeds; partial-clone fetch may not have completed refs",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:08:50Z",
+      "last_extracted": "2026-04-28T09:08:50Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/tutorials/first-run/ls-issues",
+      "claim": "ls issues/ in initialized working tree lists exactly [0001.md 0002.md 0003.md 0004.md 0005.md]",
+      "source": {
+        "file": "docs/tutorials/first-run.md",
+        "line_start": 90,
+        "line_end": 94
+      },
+      "source_hash": "009ad183ce0959a803467c64725898dd66ffd7ce0362b25f56788027618ee8a9",
+      "rationale": "Test does not verify directory contents; would require full blob materialization or tree walk after fetch",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:08:50Z",
+      "last_extracted": "2026-04-28T09:08:50Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/tutorials/first-run/cat-issue-structure",
+      "claim": "cat issues/0001.md returns frontmatter (id, title, status, assignee, labels, version) + body markdown",
+      "source": {
+        "file": "docs/tutorials/first-run.md",
+        "line_start": 96,
+        "line_end": 107
+      },
+      "source_hash": "1b90aaad679863bb4bae6fe848f2f3b5446c0f880430c8730df3e9cf11f80100",
+      "rationale": "Test does not read or parse issue file; would require blob materialization and roundtrip validation against seed.json fixture",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:08:50Z",
+      "last_extracted": "2026-04-28T09:08:50Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/tutorials/first-run/git-diff-edit",
+      "claim": "After editing (append comment + sed status change), git diff shows both hunks",
+      "source": {
+        "file": "docs/tutorials/first-run.md",
+        "line_start": 111,
+        "line_end": 125
+      },
+      "source_hash": "fb8f1ec80713e86fa5d7ceaff4c46e514a27fe1b15e1d9ffd03239b549b73ef5",
+      "rationale": "Test does not exercise the edit path; would require symlink resolution in partial-clone working tree",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:08:50Z",
+      "last_extracted": "2026-04-28T09:08:50Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/tutorials/first-run/git-push-roundtrip",
+      "claim": "git push succeeds with output To reposix::..., [new branch] main -> main",
+      "source": {
+        "file": "docs/tutorials/first-run.md",
+        "line_start": 142,
+        "line_end": 154
+      },
+      "source_hash": "a7804faf1d5083d706f8752af335bf2f5726eac130555b182c7e700a0b4c4f0a",
+      "rationale": "Test does not run git push; would require conflict-detection logic in export helper + REST backend write",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:08:50Z",
+      "last_extracted": "2026-04-28T09:08:50Z",
+      "last_extracted_by": "mark-missing-test-call"
+    },
+    {
+      "id": "docs/tutorials/first-run/audit-query",
+      "claim": "sqlite3 ~/.cache/reposix/sim-demo.git/cache.db SELECT ts, op, decision FROM audit_events_cache WHERE op LIKE 'helper_push_%' returns rows",
+      "source": {
+        "file": "docs/tutorials/first-run.md",
+        "line_start": 156,
+        "line_end": 166
+      },
+      "source_hash": "39fe8aa49a73139aa9acd03187a2d0fa9211c7543fae69d74b2d5bf74bc954ed",
+      "rationale": "Test does not push or query audit table; would require cross-component integration (helper + cache DB)",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T09:08:50Z",
+      "last_extracted": "2026-04-28T09:08:50Z",
+      "last_extracted_by": "mark-missing-test-call"
+    }
+  ]
+}
