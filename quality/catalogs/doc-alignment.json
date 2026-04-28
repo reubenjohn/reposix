@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 229,
-    "claims_missing_test": 113,
+    "claims_bound": 249,
+    "claims_missing_test": 93,
     "claims_retire_proposed": 16,
     "claims_retired": 30,
-    "alignment_ratio": 0.6396648044692738,
+    "alignment_ratio": 0.6955307262569832,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-28T19:23:16Z",
+    "last_walked": "2026-04-28T19:38:50Z",
     "coverage_ratio": 0.2027223230490018,
     "lines_covered": 1117,
     "total_eligible_lines": 5510,
@@ -1877,11 +1877,18 @@
         "line_end": 27
       },
       "source_hash": "d547567f79945205c7e4e39d7a7977ee8facfd430d8230a27626755bb6a176a2",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:06Z",
-      "last_extracted": "2026-04-28T09:01:06Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+      ],
+      "rationale": "bench_token_economy.py BENCH-02 path loads benchmarks/fixtures/confluence_pages.json and emits the Confluence raw-API reduction row",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-06-landing",
@@ -2926,11 +2933,18 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:46Z",
-      "last_extracted": "2026-04-28T09:00:46Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "same median-of-3 GET against the GitHub backend populates this cell",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/sim-get-under-10ms",
@@ -2941,11 +2955,18 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:46Z",
-      "last_extracted": "2026-04-28T09:00:46Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "latency-bench.sh runs median-of-3 GET against sim and emits the sim get-record row",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/connectors/guide/get-record-404-test",
@@ -3383,11 +3404,18 @@
         "line_end": 27
       },
       "source_hash": "d547567f79945205c7e4e39d7a7977ee8facfd430d8230a27626755bb6a176a2",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:06Z",
-      "last_extracted": "2026-04-28T09:01:06Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+      ],
+      "rationale": "bench_token_economy.py BENCH-02 path loads benchmarks/fixtures/github_issues.json and emits the GitHub raw-API reduction row",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/reference/testing-targets/github-token",
@@ -3479,11 +3507,18 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:51Z",
-      "last_extracted": "2026-04-28T09:00:51Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "latency-bench.sh measures the local helper-capabilities round trip and emits this row",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/decisions/007-time-travel-via-git-tags/privacy-from-agent",
@@ -3696,11 +3731,18 @@
         "line_end": 60
       },
       "source_hash": "dbbe77822e6decd2c5b6b9f41d06198460a6ef68643c3fd688db9aa75ebce449",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:00Z",
-      "last_extracted": "2026-04-28T09:05:00Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/code/clippy-lint-loaded.sh"
+      ],
+      "test_body_hashes": [
+        "d72ce0e95b5665dc160d691d39a8f47ee4a8605dd3d2c28bafeced4ecbca0287"
+      ],
+      "rationale": "clippy-lint-loaded.sh asserts clippy.toml lists the three banned reqwest constructors AND no source outside http.rs constructs them",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs-development-contributing-md/errors-doc-section-required",
@@ -4140,11 +4182,18 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:46Z",
-      "last_extracted": "2026-04-28T09:00:46Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "latency-bench.sh emits the JIRA list-record row",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/github-list-under-500ms",
@@ -4155,11 +4204,18 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:46Z",
-      "last_extracted": "2026-04-28T09:00:46Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "latency-bench.sh emits the GitHub list-record row with N count",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/sim-list-under-15ms",
@@ -4170,11 +4226,18 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:46Z",
-      "last_extracted": "2026-04-28T09:00:46Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "latency-bench.sh runs median-of-3 LIST against sim and emits the list-record row with N count",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/connectors/guide/list-records-happy-path-test",
@@ -4365,11 +4428,18 @@
         "line_end": 19
       },
       "source_hash": "85ba726df6437a441fa6330eb36d16f39a033bd3c1322906f1a4f6fb7a7937d2",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:05Z",
-      "last_extracted": "2026-04-28T09:01:05Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+      ],
+      "rationale": "bench_token_economy.py load_mcp_bytes + count_tokens loop emits the MCP baseline character/token row",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/decisions/008-helper-backend-dispatch/credential-resolution",
@@ -4770,11 +4840,18 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:51Z",
-      "last_extracted": "2026-04-28T09:00:51Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "latency-bench.sh runs sim_patch median-of-3 with version round-trip and emits the sim PATCH row",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/github-patch-under-900ms",
@@ -4785,11 +4862,18 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:51Z",
-      "last_extracted": "2026-04-28T09:00:51Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "latency-bench.sh emits the GitHub PATCH row",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/reference/http-api.md/patch-if-match-409",
@@ -5534,11 +5618,18 @@
         "line_end": 19
       },
       "source_hash": "85ba726df6437a441fa6330eb36d16f39a033bd3c1322906f1a4f6fb7a7937d2",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:06Z",
-      "last_extracted": "2026-04-28T09:01:06Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+      ],
+      "rationale": "bench_token_economy.py load_reposix_bytes + count_tokens emits the reposix baseline row",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/social/twitter/token-reduction-92pct",
@@ -5862,11 +5953,18 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:46Z",
-      "last_extracted": "2026-04-28T09:00:46Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "latency-bench.sh emits the JIRA-column cold-init cell when JIRA env bundle present",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/github-init-under-30ms",
@@ -5877,11 +5975,18 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:46Z",
-      "last_extracted": "2026-04-28T09:00:46Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "latency-bench.sh populates the GitHub-column cold-init cell (auto-detects GITHUB_TOKEN, median-of-3)",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/sim-init-cold-under-30ms",
@@ -5892,11 +5997,18 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:40Z",
-      "last_extracted": "2026-04-28T09:00:40Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "latency-bench.sh measures reposix init cold against sim and emits the sim cold-init row -- IS the regenerator of latency.md",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/confluence-init-under-600ms",
@@ -5907,11 +6019,18 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:46Z",
-      "last_extracted": "2026-04-28T09:00:46Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "latency-bench.sh emits the Confluence-column cold-init cell when ATLASSIAN env bundle present",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/research/initial-report.md/partial-clone-git-config",
@@ -6379,11 +6498,18 @@
         "line_end": 19
       },
       "source_hash": "c06455490c024172708f9cd27b25b66528689f00ce88e370c8db52525e8af115",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:06Z",
-      "last_extracted": "2026-04-28T09:01:06Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+      ],
+      "rationale": "bench_token_economy.py computes MCP vs reposix token counts via Anthropic count_tokens and emits the reduction% to docs/benchmarks/token-economy.md -- IS the regenerator",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "conflict-semantics-native-git",
@@ -6864,11 +6990,18 @@
         "line_end": 65
       },
       "source_hash": "13e534dd93e93d01457cdebcd90b8a80a1a6a0ac5e3f80091f835f241de0e825",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:51Z",
-      "last_extracted": "2026-04-28T09:00:51Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "latency-bench.sh header documents the 3s real-backend WARN threshold (line 32)",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/soft-threshold-sim-init-under-500ms",
@@ -6879,11 +7012,18 @@
         "line_end": 65
       },
       "source_hash": "13e534dd93e93d01457cdebcd90b8a80a1a6a0ac5e3f80091f835f241de0e825",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:51Z",
-      "last_extracted": "2026-04-28T09:00:51Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "latency-bench.sh header lines 30-32 explicitly document and enforce this soft threshold via WARN",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:44:02Z",
+      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "glossary/sparse-checkout-definition",
