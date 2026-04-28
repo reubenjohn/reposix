@@ -6,9 +6,9 @@ versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project l
 
 ## [v0.12.0] -- 2026-04-28 -- Quality Gates
 
-> **Release status: NOT TAGGED — intentional.** v0.12.0 ships framework, docs, scripts, and CI changes only; no `crates/` source changed. Workspace `Cargo.toml` stays at `0.11.3`. The next binary release will be v0.13.0, which will tag the cumulative v0.11.3 + v0.12.0 + v0.13.0 worktree. The v0.12.0 work is fully merged to `main` and active in the repo — only the git tag + GitHub Release are skipped.
+> **Release status: PENDING owner decision.** When the milestone was first scoped (commit `d7ea26c`), `v0.12.0` was a planning-only marker because no `crates/` source changed. P64 invalidated that decision by adding the new `crates/reposix-quality/` workspace member. Owner now decides between (a) bump workspace `Cargo.toml` to `0.12.0` and cut a release-plz cycle for the new crate, OR (b) keep `0.11.3` and ship `reposix-quality` as `publish = false` while planting a planning-only `v0.12.0` git tag. See `quality/reports/verdicts/milestone-v0.12.0/VERDICT.md` § "Gap-block G1" for the structured options.
 
-First milestone shipping the dimension-tagged Quality Gates framework at `quality/{gates,catalogs,reports,runners}/`. Eight phases (P56-P63) absorb existing scripts/checks into 8 dimensions (code, docs-build, docs-repro, release, structure, agent-ux, perf, security) and ship the autonomous-mode runtime contract at `quality/PROTOCOL.md`.
+First milestone shipping the dimension-tagged Quality Gates framework at `quality/{gates,catalogs,reports,runners}/`. Ten phases (P56-P65) absorb existing scripts/checks into nine dimensions (code, docs-alignment, docs-build, docs-repro, release, structure, agent-ux, perf, security) and ship the autonomous-mode runtime contract at `quality/PROTOCOL.md`.
 
 ### Shipped
 
@@ -20,10 +20,12 @@ First milestone shipping the dimension-tagged Quality Gates framework at `qualit
 - **P61** — Subjective gates + skill-freshness TTL (SUBJ-01, SUBJ-02, SUBJ-03, POLISH-SUBJECTIVE).
 - **P62** — Repo-org-gaps cleanup (ORG-01, POLISH-ORG).
 - **P63** — Retire migrated sources + cohesion pass + v0.12.1 carry-forward (MIGRATE-01, MIGRATE-02, MIGRATE-03, SIMPLIFY-12, POLISH-CODE-final).
+- **P64** — Docs-alignment dimension framework + skill (DOC-ALIGN-01..07). Ships `crates/reposix-quality/` umbrella binary (full `clap` surface for `bind`, `propose-retire`, `confirm-retire` env-guarded, `mark-missing-test`, `plan-refresh`, `plan-backfill`, `merge-shards`, `walk`, `status` + generic `run`/`verify`), `syn`-based hash binary at `quality/gates/docs-alignment/hash_test_fn`, two project-wide principles in `quality/PROTOCOL.md` (subagents-propose / tools-validate-and-mint + tools-fail-loud-structured-agent-resolvable), three skill files (umbrella + 2 thin slash-command entries), runner integration at cadence=pre-push.
+- **P65** — Docs-alignment backfill, surface the punch list (DOC-ALIGN-08..10). Top-level orchestrator (NOT `gsd-executor`) dispatched 24 Haiku extractor subagents in 3 waves of 8; populated catalog with 388 rows (181 BOUND / 166 MISSING_TEST / 41 RETIRE_PROPOSED); `floor_waiver` + matching walker waiver until 2026-07-31. The smoking-gun confirmation: `docs/reference/confluence.md` still describes the v0.9.0-removed FUSE mount + page-tree symlink shape — exactly the silent regression that motivated the dimension. Punch list at `quality/reports/doc-alignment/backfill-20260428T085523Z/PUNCH-LIST.md` clusters 14 user-facing surfaces; v0.12.1 P71-P80 phases close them.
 
 ### v0.12.1 carry-forward
 
-PERF-01..03, SEC-01..02, CROSS-01..02, MSRV-01, BINSTALL-01, LATEST-PTR-01, RELEASE-PAT-01, ERR-OTHER-01 (POLISH2-09 from v0.11.1), SUBJ-RUNNER-01, SUBJ-AUTODISPATCH-01, SUBJ-HARDGATE-01. See `.planning/milestones/v0.12.1-phases/REQUIREMENTS.md`.
+PERF-01..03, SEC-01..02, CROSS-01..02, MSRV-01, BINSTALL-01, LATEST-PTR-01, RELEASE-PAT-01, ERR-OTHER-01 (POLISH2-09 from v0.11.1), SUBJ-RUNNER-01, SUBJ-AUTODISPATCH-01, SUBJ-HARDGATE-01. P64+P65 add: schema unification across `Source`/`Row.test` (MIGRATE-03 (i)); walker `last_walked` artifact promotion (MIGRATE-03 (h)); subagent default-catalog refusal env-guard (MIGRATE-03 (j)); 14 cluster gap-closure phases (P71-P80) closing the docs-alignment punch list. See `.planning/milestones/v0.12.1-phases/REQUIREMENTS.md`.
 
 ## [Unreleased]
 
