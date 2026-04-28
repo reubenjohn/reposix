@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 220,
-    "claims_missing_test": 122,
+    "claims_bound": 224,
+    "claims_missing_test": 118,
     "claims_retire_proposed": 16,
     "claims_retired": 30,
-    "alignment_ratio": 0.6145251396648045,
+    "alignment_ratio": 0.6256983240223464,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-28T19:07:53Z",
+    "last_walked": "2026-04-28T19:18:44Z",
     "coverage_ratio": 0.2027223230490018,
     "lines_covered": 1117,
     "total_eligible_lines": 5510,
@@ -836,11 +836,18 @@
         "line_end": 113
       },
       "source_hash": "db5034e19caf99a8653e30ec5e757a98e4ab6758ee6d434d61bdd4c159f69bb8",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:08Z",
-      "last_extracted": "2026-04-28T09:01:08Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-cli/src/doctor.rs::check_backend_capabilities_reports_sim_supports_everything"
+      ],
+      "test_body_hashes": [
+        "8c90ad9e7a5955baab60cf122989a71ababa818e4885d27120565d36db1d29c4"
+      ],
+      "rationale": "doctor.rs:1186 instantiates BackendCapabilities for sim; struct disappearance breaks compile",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:22:35Z",
+      "last_extracted": "2026-04-28T19:22:35Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "glossary/backendconnector-definition",
@@ -2269,12 +2276,18 @@
         "line_end": 41
       },
       "source_hash": "6a120fe626d0d0ae53b2aaddf4408ece13d56a6ea3197b50a199dfa12b8c7dde",
-      "rationale": "Verified: crates/reposix-core/src/record.rs line 55-96 defines Record with YAML-serializable frontmatter; extensions field allows custom keys",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:04:56Z",
-      "last_extracted": "2026-04-28T09:04:56Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-core/src/record.rs::extensions_roundtrip"
+      ],
+      "test_body_hashes": [
+        "f4f266b04761ecf58abace70815a11a83b2b7afa8bf769008d3671e447eda9df"
+      ],
+      "rationale": "record.rs:424 extensions_roundtrip covers custom-fields-as-additional-YAML-keys half by roundtripping Record.extensions through frontmatter",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:22:35Z",
+      "last_extracted": "2026-04-28T19:22:35Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/connectors/guide/egress-allowlist-honors-reposix-allowed-origins",
@@ -3701,11 +3714,18 @@
         "line_end": 62
       },
       "source_hash": "16c54eee4e3edf2c4ab1c6cadae50db30d2463431d961f48c3c151abd3ca3590",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:04Z",
-      "last_extracted": "2026-04-28T09:05:04Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-core/src/record.rs::frontmatter_roundtrips"
+      ],
+      "test_body_hashes": [
+        "b79ec3bd75b341c6f05322de058903423ecdd210d34db1f6f5299948916765b4"
+      ],
+      "rationale": "record.rs:244 frontmatter_roundtrips uses serde_yaml render+parse; hand-roll regression would break byte-identical roundtrip",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:22:35Z",
+      "last_extracted": "2026-04-28T19:22:35Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs-development-contributing-md/clippy-pedantic-targeted-allows",
@@ -3768,11 +3788,18 @@
         "line_end": 66
       },
       "source_hash": "a74f2b98a6e72a9f56de5a3e6f953e9222569c8383d1480aa7e458653d4b208e",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:15Z",
-      "last_extracted": "2026-04-28T09:05:15Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-core/src/taint.rs::server_controlled_frontmatter_fields_are_stripped"
+      ],
+      "test_body_hashes": [
+        "606225824068d5cab3a63da6d10878fdf73b21952aeaee243600ae64a1b17134"
+      ],
+      "rationale": "taint.rs:202 directly asserts sanitize() strip contract on server-controlled fields",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:22:35Z",
+      "last_extracted": "2026-04-28T19:22:35Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/research/initial-report.md/yaml-frontmatter-metadata",
