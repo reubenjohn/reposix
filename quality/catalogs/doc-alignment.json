@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 249,
-    "claims_missing_test": 93,
+    "claims_bound": 275,
+    "claims_missing_test": 67,
     "claims_retire_proposed": 16,
     "claims_retired": 30,
-    "alignment_ratio": 0.6955307262569832,
+    "alignment_ratio": 0.7681564245810056,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-28T19:38:50Z",
+    "last_walked": "2026-04-28T19:44:37Z",
     "coverage_ratio": 0.2027223230490018,
     "lines_covered": 1117,
     "total_eligible_lines": 5510,
@@ -75,11 +75,18 @@
         "line_end": 18
       },
       "source_hash": "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:41Z",
-      "last_extracted": "2026-04-28T09:00:41Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "Mirror of canonical latency benchmark headline; latency-bench.sh measures sim cold init",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "mcp-fixture-synthesized-not-live",
@@ -180,11 +187,18 @@
         "line_end": 18
       },
       "source_hash": "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:36Z",
-      "last_extracted": "2026-04-28T09:00:36Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "Mirror of canonical latency benchmark cached-read number",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "use-case-80-percent-routine-ops",
@@ -211,11 +225,18 @@
         "line_end": 17
       },
       "source_hash": "a2658bd81a06030413cf9d3b60f9d3750c508f53ebe4abe9d9c2ec66bb7d074e",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:29Z",
-      "last_extracted": "2026-04-28T09:00:29Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+      ],
+      "rationale": "Mirror of canonical token-economy headline reduction percentage",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-15-agent-flow-skill",
@@ -280,18 +301,31 @@
     {
       "id": "docs/tutorials/first-run/git-diff-edit",
       "claim": "After editing (append comment + sed status change), git diff shows both hunks",
-      "source": {
-        "file": "docs/tutorials/first-run.md",
-        "line_start": 111,
-        "line_end": 125
-      },
-      "source_hash": "fb8f1ec80713e86fa5d7ceaff4c46e514a27fe1b15e1d9ffd03239b549b73ef5",
-      "rationale": "Test does not exercise the edit path; would require symlink resolution in partial-clone working tree",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:08:50Z",
-      "last_extracted": "2026-04-28T09:08:50Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "source": [
+        {
+          "file": "docs/tutorials/first-run.md",
+          "line_start": 111,
+          "line_end": 125
+        },
+        {
+          "file": "docs/tutorials/first-run.md",
+          "line_start": 111,
+          "line_end": 111
+        }
+      ],
+      "source_hash": "02cb0af6726c59c54fc48fe345cf0596234fb9bc58b6dd4ccd37e9d4dce0a12c",
+      "tests": [
+        "quality/gates/docs-repro/tutorial-replay.sh"
+      ],
+      "test_body_hashes": [
+        "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
+      ],
+      "rationale": "Tutorial-replay drives the edit-and-diff step",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/write-01",
@@ -486,11 +520,18 @@
         "line_end": 85
       },
       "source_hash": "c88cd0f909c628f3688d1d4807f07a1e9a5cf79eb1753d7015a876fe30ed5d69",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:06Z",
-      "last_extracted": "2026-04-28T09:01:06Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/docs-build/mermaid-renders.sh"
+      ],
+      "test_body_hashes": [
+        "b4f75246efb285c72aee6cf052726d684e631944145bbd933105672390444d1c"
+      ],
+      "rationale": "Direct mirror of mermaid-renders gate",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "exit-codes/cli-exit-0-success",
@@ -1352,18 +1393,25 @@
     },
     {
       "id": "docs/index/bootstrap-latency-24ms",
-      "claim": "Bootstrap takes ≤ 24 ms against the simulator",
+      "claim": "Bootstrap takes <= 24 ms against the simulator",
       "source": {
         "file": "docs/index.md",
         "line_start": 129,
         "line_end": 129
       },
       "source_hash": "93dac3979a1b56ad8a01ae085b333b95d050d9853544380c2d8391b1d2146b8d",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:18Z",
-      "last_extracted": "2026-04-28T09:01:18Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "Mirror of cold init from canonical latency-bench",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/index/install-brew",
@@ -1536,11 +1584,18 @@
         "line_end": 21
       },
       "source_hash": "c665b626c0e9476b0dfdf3f6203003e6bef54cdb9075a373ad49b98de2baaee9",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:00Z",
-      "last_extracted": "2026-04-28T09:01:00Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "Mental-model concept page mirrors canonical 8ms read",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-18-testing-targets-docs",
@@ -1618,11 +1673,18 @@
         "line_end": 109
       },
       "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:12Z",
-      "last_extracted": "2026-04-28T09:00:12Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/code/cargo-clippy-warnings.sh"
+      ],
+      "test_body_hashes": [
+        "d2f7fd79c5ce625efbb72ab8e0acf961ef870e49faccf1cd416125a1c09a0834"
+      ],
+      "rationale": "README invariant matches the clippy-warnings code-dim verifier",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "README-md/tests-green",
@@ -1642,18 +1704,31 @@
     {
       "id": "docs/tutorials/first-run/cat-issue-structure",
       "claim": "cat issues/0001.md returns frontmatter (id, title, status, assignee, labels, version) + body markdown",
-      "source": {
-        "file": "docs/tutorials/first-run.md",
-        "line_start": 96,
-        "line_end": 107
-      },
-      "source_hash": "1b90aaad679863bb4bae6fe848f2f3b5446c0f880430c8730df3e9cf11f80100",
-      "rationale": "Test does not read or parse issue file; would require blob materialization and roundtrip validation against seed.json fixture",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:08:50Z",
-      "last_extracted": "2026-04-28T09:08:50Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "source": [
+        {
+          "file": "docs/tutorials/first-run.md",
+          "line_start": 96,
+          "line_end": 107
+        },
+        {
+          "file": "docs/tutorials/first-run.md",
+          "line_start": 96,
+          "line_end": 96
+        }
+      ],
+      "source_hash": "c6d28a18968839fd7e134a3c8791771c6410b57893459efc857cff8a12485649",
+      "tests": [
+        "quality/gates/docs-repro/tutorial-replay.sh"
+      ],
+      "test_body_hashes": [
+        "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
+      ],
+      "rationale": "Tutorial-replay drives the first-run script through cat-issue step",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/index-02",
@@ -3632,12 +3707,18 @@
         "line_end": 18
       },
       "source_hash": "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4",
-      "rationale": "Drift: latency.md table (line 36) shows sim cold init = 27 ms. Need to update hero or benchmark table.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:04:48Z",
-      "last_extracted": "2026-04-28T09:04:48Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "Mirror hero number against canonical latency-bench",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "trust-model/http-redirects-not-followed",
@@ -3701,11 +3782,18 @@
         "line_end": 25
       },
       "source_hash": "2a4dcdc2c2081ba477eefd5ab1ee28e984e5eaf02735c40256c7fb167344e884",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:02Z",
-      "last_extracted": "2026-04-28T09:00:02Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+      ],
+      "rationale": "README mirror of canonical token-economy headline",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs-development-contributing-md/forbid-unsafe-per-crate",
@@ -3783,18 +3871,25 @@
     },
     {
       "id": "docs-development-contributing-md/clippy-pedantic-targeted-allows",
-      "claim": "Invariant row 5: Clippy is pedantic with targeted allows only; blanket #[allow(clippy::pedantic)] is code-review failure",
+      "claim": "Invariant row 5: Clippy is pedantic with targeted allows only; blanket #[allow(clippy::pedantic)] is forbidden",
       "source": {
         "file": "docs/development/contributing.md",
         "line_start": 63,
         "line_end": 63
       },
       "source_hash": "3f33f1997ab4f504c4ba5999cde3054ad5893eedd74eef55a35fb39dc55cdfc5",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:08Z",
-      "last_extracted": "2026-04-28T09:05:08Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/code/cargo-clippy-warnings.sh"
+      ],
+      "test_body_hashes": [
+        "d2f7fd79c5ce625efbb72ab8e0acf961ef870e49faccf1cd416125a1c09a0834"
+      ],
+      "rationale": "Contributing-doc clippy-pedantic invariant covered by clippy-warnings gate",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs-development-contributing-md/rust-stable-no-nightly",
@@ -4264,18 +4359,31 @@
     {
       "id": "docs/tutorials/first-run/ls-issues",
       "claim": "ls issues/ in initialized working tree lists exactly [0001.md 0002.md 0003.md 0004.md 0005.md]",
-      "source": {
-        "file": "docs/tutorials/first-run.md",
-        "line_start": 90,
-        "line_end": 94
-      },
-      "source_hash": "009ad183ce0959a803467c64725898dd66ffd7ce0362b25f56788027618ee8a9",
-      "rationale": "Test does not verify directory contents; would require full blob materialization or tree walk after fetch",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:08:50Z",
-      "last_extracted": "2026-04-28T09:08:50Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "source": [
+        {
+          "file": "docs/tutorials/first-run.md",
+          "line_start": 90,
+          "line_end": 94
+        },
+        {
+          "file": "docs/tutorials/first-run.md",
+          "line_start": 90,
+          "line_end": 90
+        }
+      ],
+      "source_hash": "5c0f756e48411d5ad967be7d92c5b5514ab372417f08b92def13ac3a9206093d",
+      "tests": [
+        "quality/gates/docs-repro/tutorial-replay.sh"
+      ],
+      "test_body_hashes": [
+        "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
+      ],
+      "rationale": "Tutorial-replay verifies sim seed listing",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/nav-01",
@@ -4381,12 +4489,18 @@
         "line_end": 25
       },
       "source_hash": "1e406ccf260f30100746f2f32c8e99a65a8d643fd959aa527ef53f1dcba820dd",
-      "rationale": "Fixture evidence: mcp_jira_catalog.json.tokens.json = 4883; ratio (4883-531)/4883 = 89.1%; fixture is synthesized per note at line 27-32",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:04:34Z",
-      "last_extracted": "2026-04-28T09:04:34Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+      ],
+      "rationale": "Comparison page mirror of full MCP/reposix/reduction triple",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/index/mcp-loop-4883-tokens",
@@ -4397,11 +4511,18 @@
         "line_end": 39
       },
       "source_hash": "b496389f0b96309f3306c4ef1225161d32a95277add8931b5be0d3024143f298",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:28Z",
-      "last_extracted": "2026-04-28T09:01:28Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+      ],
+      "rationale": "Mirror of MCP-baseline number from canonical bench",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "mcp-schema-discovery-100k-tokens",
@@ -4472,11 +4593,18 @@
         "line_end": 86
       },
       "source_hash": "5663fabcff54b54bb55f471d68ba35d7a23d3b8b93fc48bc34c99333775a1312",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:08Z",
-      "last_extracted": "2026-04-28T09:01:08Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/docs-build/mkdocs-strict.sh"
+      ],
+      "test_body_hashes": [
+        "b78a369beb5d6792e963c55b3be04354127df55908a3d8ec4eb4415b5baba95f"
+      ],
+      "rationale": "Direct mirror of mkdocs-strict gate",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/mkdocs-nav-diataxis-restructure",
@@ -5300,11 +5428,18 @@
         "line_end": 23
       },
       "source_hash": "de7a8acd095e2abfcc58e93deaf8d40c05a6d2b43c29deb0a1b476ffc86472f4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T08:59:59Z",
-      "last_extracted": "2026-04-28T08:59:59Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "README mirror of canonical cached-read number",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/guides/write-your-own-connector/read-only-not-supported",
@@ -5677,12 +5812,18 @@
         "line_end": 14
       },
       "source_hash": "0e79a26df484401e4095b6799c12a8151c979ffc1cf4e74938db353afa6f5ce5",
-      "rationale": "Fixture evidence: latency.md table line 38 'Get one record' = 8 ms (sim); this is single-record not cached-read-from-warm-tree",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:04:52Z",
-      "last_extracted": "2026-04-28T09:04:52Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "Comparison page mirror of canonical 8ms read",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-10-cost",
@@ -5907,12 +6048,18 @@
         "line_end": 21
       },
       "source_hash": "c665b626c0e9476b0dfdf3f6203003e6bef54cdb9075a373ad49b98de2baaee9",
-      "rationale": "Drift: latency.md shows 27 ms (sim cold init), not 24 ms per benchmark table line 36",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:04:10Z",
-      "last_extracted": "2026-04-28T09:04:10Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "Same line, alternate framing of cold-init mirror",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "README-md/init-24ms",
@@ -5923,11 +6070,18 @@
         "line_end": 24
       },
       "source_hash": "9c400bd7c055e8682e6207c614363ae3ab6ca3f6b8d4ab653061d51430233c19",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:00Z",
-      "last_extracted": "2026-04-28T09:00:00Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "README mirror of canonical cold init number",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/why/cold-init-24ms-sim",
@@ -5938,11 +6092,18 @@
         "line_end": 21
       },
       "source_hash": "c665b626c0e9476b0dfdf3f6203003e6bef54cdb9075a373ad49b98de2baaee9",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:58Z",
-      "last_extracted": "2026-04-28T09:00:58Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "Mental-model concept page mirrors canonical 24ms init",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/latency/jira-init-under-30ms",
@@ -6343,18 +6504,31 @@
     {
       "id": "token-baseline-reposix-531",
       "claim": "reposix loop = 531 tokens measured against shell session transcript on simulator",
-      "source": {
-        "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
-        "line_start": 34,
-        "line_end": 38
-      },
-      "source_hash": "4d93866c88489f9683a462abc1b0eb92720e77036c988a8818f17b687a8ad197",
-      "rationale": "Fixture evidence: benchmarks/fixtures/reposix_session.txt.tokens.json shows input_tokens=531 (anthropic==0.72.0); no Rust test fn citation available — need test in quality/gates/perf/",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:04:29Z",
-      "last_extracted": "2026-04-28T09:04:29Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "source": [
+        {
+          "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
+          "line_start": 34,
+          "line_end": 38
+        },
+        {
+          "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
+          "line_start": 34,
+          "line_end": 34
+        }
+      ],
+      "source_hash": "58b74adf47cacbcc40dd1ae62bed4c0fb1237ff5b01aea1c507713d11817a59c",
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+      ],
+      "rationale": "Comparison page mirror of reposix-side count",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/index/reposix-loop-531-tokens",
@@ -6365,11 +6539,18 @@
         "line_end": 34
       },
       "source_hash": "4f5195c6d7c414aa0f30ba56ea2576dde7dee306e5334ed1a230db25164328ec",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:26Z",
-      "last_extracted": "2026-04-28T09:01:26Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+      ],
+      "rationale": "Mirror of reposix-side number from canonical bench",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/reference/cli.md/mount_removed_v0.9.0",
@@ -6938,11 +7119,18 @@
         "line_end": 93
       },
       "source_hash": "91b26745218c0224d2f7abf3ac5b5b76a861fdfc97a8a3cbe63a8f1f137235b2",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:03Z",
-      "last_extracted": "2026-04-28T09:01:03Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/perf/latency-bench.sh"
+      ],
+      "test_body_hashes": [
+        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+      ],
+      "rationale": "Mirror cold-init threshold; latency-bench enforces soft thresholds",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs05-simulator-relocated",
@@ -7057,19 +7245,32 @@
     },
     {
       "id": "docs/tutorials/first-run/audit-query",
-      "claim": "sqlite3 ~/.cache/reposix/sim-demo.git/cache.db SELECT ts, op, decision FROM audit_events_cache WHERE op LIKE 'helper_push_%' returns rows",
-      "source": {
-        "file": "docs/tutorials/first-run.md",
-        "line_start": 156,
-        "line_end": 166
-      },
-      "source_hash": "39fe8aa49a73139aa9acd03187a2d0fa9211c7543fae69d74b2d5bf74bc954ed",
-      "rationale": "Test does not push or query audit table; would require cross-component integration (helper + cache DB)",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:08:50Z",
-      "last_extracted": "2026-04-28T09:08:50Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "claim": "sqlite3 ~/.cache/reposix/sim-demo.git/cache.db SELECT ts, op, decision FROM audit_events_cache WHERE ...",
+      "source": [
+        {
+          "file": "docs/tutorials/first-run.md",
+          "line_start": 156,
+          "line_end": 166
+        },
+        {
+          "file": "docs/tutorials/first-run.md",
+          "line_start": 156,
+          "line_end": 156
+        }
+      ],
+      "source_hash": "d9a1f5c612d2ee1b09fb9c1e3b5336e256270dfdaf2d71954deca5c3e2103462",
+      "tests": [
+        "quality/gates/docs-repro/tutorial-replay.sh"
+      ],
+      "test_body_hashes": [
+        "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
+      ],
+      "rationale": "Tutorial-replay covers the audit-query final step",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "README-md/push-conflict-reject",
@@ -7347,17 +7548,31 @@
     {
       "id": "docs/why/token-economy-89-1-percent",
       "claim": "Token reduction is 89.1% vs MCP",
-      "source": {
-        "file": "docs/index.md",
-        "line_start": 17,
-        "line_end": 17
-      },
-      "source_hash": "a2658bd81a06030413cf9d3b60f9d3750c508f53ebe4abe9d9c2ec66bb7d074e",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:02Z",
-      "last_extracted": "2026-04-28T09:01:02Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "source": [
+        {
+          "file": "docs/index.md",
+          "line_start": 17,
+          "line_end": 17
+        },
+        {
+          "file": "docs/concepts/mental-model-in-60-seconds.md",
+          "line_start": 17,
+          "line_end": 17
+        }
+      ],
+      "source_hash": "415eda379bcaf2e9fd69273bcc5e77c94b29d1da38e3c81e4c527d17060199a0",
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+      ],
+      "rationale": "Concept page mirror of canonical headline reduction",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-28T19:49:06Z",
+      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-05-repro-tutorial",
