@@ -6,17 +6,13 @@
   "summary": {
     "claims_total": 388,
     "claims_bound": 171,
-    "claims_missing_test": 166,
-    "claims_retire_proposed": 41,
+    "claims_missing_test": 167,
+    "claims_retire_proposed": 40,
     "claims_retired": 0,
     "alignment_ratio": 0.44072164948453607,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-28T14:32:47Z",
-    "coverage_ratio": 0.20551924473493102,
-    "lines_covered": 1132,
-    "total_eligible_lines": 5508,
-    "coverage_floor": 0.1
+    "last_walked": "2026-04-28T14:52:55Z"
   },
   "rows": [
     {
@@ -227,17 +223,18 @@
     },
     {
       "id": "docs/decisions/003-nested-mount-layout/fuse-architecture-retired-v0.9.0",
-      "claim": "ADR-003 entire content (pages/, tree/, .gitignore, symlinks, slugify_title) SUPERSEDED by v0.9.0 git-native pivot",
+      "claim": "Confluence pages render as a nested directory tree (pages/<id>/ + tree/<title>/ symlinks)",
       "source": {
         "file": "docs/decisions/003-nested-mount-layout.md",
         "line_start": 1,
-        "line_end": 7
+        "line_end": 1
       },
-      "rationale": "FUSE crate deleted in commit 1535cb0; v0.9.0 architecture pivot replaces mount shape entirely; reposix-fuse no longer exists",
-      "last_verdict": "RETIRE_PROPOSED",
-      "last_run": "2026-04-28T09:04:46Z",
-      "last_extracted": "2026-04-28T09:04:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "cb3f91d54eee30e53e35b2b99905f70f169ed549fd78909d3dac2defc9ed8d3b",
+      "rationale": "IMPL_GAP: v0.9.0 architecture pivot replaced the FUSE TRANSPORT with git-native partial-clone, but the user-facing-shape promise (nested page directories + symlink relations) was kept in ADR-003 prose. Owner observed 2026-04-28 that `reposix init` does NOT currently produce this shape -- silent regression. Resolution paths: (a) FIX_IMPL_THEN_BIND -- restore nested-shape generation in the cache layer under git-native partial-clone + bind a layout-shape test; (b) UPDATE_DOC -- if the layout is intentionally dropped, document the decision in `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` extension AND remove the claim from ADR-003. Then write a test asserting the resolved state. v0.12.1 cluster: core-init-shape-regressions (P72 candidate per renumbered v0.12.1 ROADMAP).",
+      "last_verdict": "MISSING_TEST",
+      "last_run": "2026-04-28T14:51:11Z",
+      "last_extracted": "2026-04-28T14:51:11Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "docs/tutorials/first-run/git-diff-edit",
