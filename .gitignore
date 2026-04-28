@@ -61,8 +61,10 @@ runtime/bench-*.log
 
 # Quality Gates runtime artifacts (per-run; regenerate on every runner invocation).
 # .gitkeep placeholders under verifications/ + verdicts/ ARE tracked so the
-# directory tree exists in git; only the per-row JSON + per-run verdict.md
-# files are runtime noise.
+# directory tree exists in git; only the per-row JSON + per-run timestamped
+# verdict files are runtime noise. Canonical VERDICT.md per phase IS tracked
+# (QG-06 contract per CLAUDE.md: "the verdict is the contract").
 quality/reports/verifications/*/*.json
 quality/reports/verdicts/*/*.md
+!quality/reports/verdicts/*/VERDICT.md
 quality/reports/badge.json
