@@ -5,11 +5,11 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 330,
+    "claims_bound": 331,
     "claims_missing_test": 0,
     "claims_retire_proposed": 27,
     "claims_retired": 30,
-    "alignment_ratio": 0.9217877094972067,
+    "alignment_ratio": 0.9245810055865922,
     "floor": 0.5,
     "trend_30d": "+0.00",
     "last_walked": "2026-04-29T21:14:33Z",
@@ -2007,7 +2007,7 @@
         "line_start": 37,
         "line_end": 299
       },
-      "source_hash": "b97008278f7d430ecf9bbf43cfbf8a5e19074dd1311cd242bc75c7496082e65f",
+      "source_hash": "89b925f5123751703570bfd484aaa064771e60be68f06c60ff5d6ebc57f2970b",
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
       ],
@@ -2015,10 +2015,10 @@
         "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
       ],
       "rationale": "Subcommand enum (Cmd) exhaustively lists all 12 subcommands; clap-derive dispatch in main() binds all arms; dark-factory regression test validates UX end-to-end with no breaking changes",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:04:19Z",
-      "last_extracted": "2026-04-28T09:04:19Z",
+      "last_run": "2026-04-29T21:36:18Z",
+      "last_extracted": "2026-04-29T21:36:18Z",
       "last_extracted_by": "bind-call"
     },
     {
