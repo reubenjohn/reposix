@@ -387,6 +387,24 @@ SURPRISES-INTAKE.md as confirmation of the P75 hash-overwrite bug.
 
 No new test files in `crates/` (D-10). Phase is shell + prose + catalog only.
 
+### P75 — bind-verb hash-overwrite fix
+
+Invariant: `row.source_hash == hash(first source)`. `verbs::bind` previously
+overwrote `source_hash` with the newly-cited source's hash on every re-bind,
+breaking the walker's first-source compare on every Single→Multi promotion
+(false `STALE_DOCS_DRIFT` after every cluster sweep). Fix: refresh
+`source_hash` only when the result is `Source::Single`; preserve it on
+`Multi` paths. Single re-bind with the same citation is the heal path
+(P74 linkedin row).
+
+**Path-(a) tradeoff:** the walker only watches `source.as_slice()[0]`. Drift
+in non-first sources of a `Multi` row will NOT fire `STALE_DOCS_DRIFT`. Path
+(b) (parallel `source_hashes: Vec<String>` + per-source walker compare) is
+filed as v0.13.0 carry-forward `MULTI-SOURCE-WATCH-01`.
+
+Regression tests: `crates/reposix-quality/tests/walk.rs::walk_multi_source_*`
+(stable / first-drift / single-rebind-heal).
+
 ## Quick links
 
 - `docs/research/initial-report.md` — full architectural argument for git-remote-helper + partial clone.
