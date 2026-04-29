@@ -1,0 +1,19 @@
+P72 docs-alignment delta:
+  claims_bound:        313 -> 320 (delta=+7)
+  claims_missing_test: 22  -> 13  (delta=-9)
+  alignment_ratio:     0.8743 -> 0.8938 (delta=+0.0195)
+  coverage_ratio:      0.2031 -> 0.2031 (unchanged; no new rows extracted, only re-binds)
+
+Sanity gate: claims_missing_test dropped by exactly 9 (the 9 P72 rows). PASSED.
+
+Note: -9 missing_test but only +7 bound. Difference: 2 rows moved
+BOUND -> STALE_DOCS_DRIFT during the post-bind walk. Affected rows cite
+files NOT touched by P72:
+  - planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-03-mermaid-render
+    (.planning/milestones/v0.11.0-phases/REQUIREMENTS.md:85)
+  - docs/decisions/009-stability-commitment/cli-subcommand-surface
+    (crates/reposix-cli/src/main.rs:37-299)
+
+Both pre-existing drift surfaced by the walk (not caused by P72 changes);
+SCOPE BOUNDARY honoured (executor.md "FIX ATTEMPT LIMIT"). Triaged via
+SURPRISES-INTAKE.md.

@@ -5,15 +5,15 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 322,
+    "claims_bound": 320,
     "claims_missing_test": 13,
     "claims_retire_proposed": 23,
     "claims_retired": 30,
-    "alignment_ratio": 0.8994413407821229,
+    "alignment_ratio": 0.8938547486033519,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-29T18:09:20Z",
-    "coverage_ratio": 0.20308529945553536,
+    "last_walked": "2026-04-29T19:58:47Z",
+    "coverage_ratio": 0.20308529945553538,
     "lines_covered": 1119,
     "total_eligible_lines": 5510,
     "coverage_floor": 0.1
@@ -549,7 +549,7 @@
         "b4f75246efb285c72aee6cf052726d684e631944145bbd933105672390444d1c"
       ],
       "rationale": "Direct mirror of mermaid-renders gate",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -1986,7 +1986,7 @@
         "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
       ],
       "rationale": "Subcommand enum (Cmd) exhaustively lists all 12 subcommands; clap-derive dispatch in main() binds all arms; dark-factory regression test validates UX end-to-end with no breaking changes",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:04:19Z",
       "last_extracted": "2026-04-28T09:04:19Z",
