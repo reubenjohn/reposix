@@ -29,4 +29,10 @@
 
 ## Entries
 
-_(none yet — populated by P72-P76 during execution)_
+## discovered-by: P74 | size: XS | impact: clarity
+
+**What:** `docs/index.md:95` heading reads "## What each backend can do" — synonym for the catalog row claim "Connector capability matrix added to landing page" (row `polish2-06-landing`). P74 widened the verifier regex to accept either noun (`[Cc]onnector|[Bb]ackend`) per the eager-fix decision logged in P74's SUMMARY (commit c8e4111). Renaming the heading to "## Connector capability matrix" would let the verifier regex narrow back to a literal claim+heading match — a small clarity win, no behaviour change.
+
+**Proposed fix:** Edit `docs/index.md:95` heading to `## Connector capability matrix`. Optionally narrow `quality/gates/docs-alignment/connector-matrix-on-landing.sh` regex back to `[Cc]onnector` (single-noun match) once the rename lands.
+
+**STATUS:** OPEN

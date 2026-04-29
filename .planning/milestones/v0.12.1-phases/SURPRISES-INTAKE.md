@@ -61,4 +61,4 @@ Both rows surfaced now because P72 was the first walk after their referenced sou
 
 **Sketched resolution:** Either (a) keep the widened regex as-is (current state — works), or (b) rename the heading to "## Connector capability matrix" in a future docs polish phase to make claim+heading literal-match. P77 GOOD-TO-HAVES candidate.
 
-**STATUS:** OPEN
+**STATUS:** WONTFIX | rationale: The connector-matrix-on-landing.sh regex widening (P74 commit c8e4111: `[Cc]onnector` -> `[Cc]onnector|[Bb]ackend`) is a complete fix — the verifier asserts the failure mode P74 cared about ("matrix accidentally deleted from landing") against the live heading "What each backend can do." Renaming the section to "## Connector capability matrix" to literal-match the catalog row claim text is purely cosmetic; filed as a P77 GOOD-TO-HAVE (size XS, impact clarity). Cost of revisiting later is low: the row stays BOUND under the widened regex, and the heading rename — when shipped — will narrow the regex back without coverage loss.
