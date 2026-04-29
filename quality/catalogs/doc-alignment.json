@@ -12,7 +12,7 @@
     "alignment_ratio": 0.9245810055865922,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-29T21:56:59Z",
+    "last_walked": "2026-04-29T21:58:43Z",
     "coverage_ratio": 0.20308529945553538,
     "lines_covered": 1119,
     "total_eligible_lines": 5510,
@@ -2132,13 +2132,13 @@
         "quality/gates/docs-alignment/connector-matrix-on-landing.sh"
       ],
       "test_body_hashes": [
-        "b6e22c8b206a8cf95ab6410a116436848b09279db022c80c70536fdf515e7195"
+        "71ac092b65824ecdebe504ccd966c86e4b070388782ae0182c0a83fd2662bbe5"
       ],
-      "rationale": "Hash-shape bind per P74 D-06; verifier under quality/gates/docs-alignment/.",
+      "rationale": "Hash-shape bind per P74 D-06; verifier under quality/gates/docs-alignment/. Test body hash refreshed P77 (regex narrowed back to literal [Cc]onnector after heading rename).",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T20:54:42Z",
-      "last_extracted": "2026-04-29T20:54:42Z",
+      "last_run": "2026-04-29T21:58:33Z",
+      "last_extracted": "2026-04-29T21:58:33Z",
       "last_extracted_by": "bind-call"
     },
     {
