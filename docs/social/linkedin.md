@@ -18,7 +18,7 @@
 
 ☀️ What I woke up to:
 
-🚀 reposix — a working FUSE filesystem + git-remote-helper for issue trackers. In a simulated benchmark (a representative 35-tool Jira-shaped MCP catalog vs a reposix shell session for the same task) it used 📉 89.1% fewer tokens. Real-world numbers are still TBD — the simulator isn't the real GitHub API yet — but the direction is clear and the fixture is auditable in the repo.
+🚀 reposix — a working git-native partial clone + git-remote-helper for REST issue trackers. In a simulated benchmark (a representative 35-tool Jira-shaped MCP catalog vs a reposix shell session for the same task) it used 📉 89.1% fewer tokens. Real-world numbers are still TBD — the simulator isn't the real GitHub API yet — but the direction is clear and the fixture is auditable in the repo.
 
 📦 Shipped overnight:
 
