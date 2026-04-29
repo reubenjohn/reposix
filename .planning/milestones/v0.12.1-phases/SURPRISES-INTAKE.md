@@ -37,7 +37,7 @@ Both rows surfaced now because P72 was the first walk after their referenced sou
 
 **Sketched resolution:** P76 runs `/reposix-quality-refresh .planning/milestones/v0.11.0-phases/REQUIREMENTS.md` and `/reposix-quality-refresh docs/decisions/009-stability-commitment.md` (or rebinds the cli-subcommand-surface row against the current `crates/reposix-cli/src/main.rs` shape). If either claim has genuinely diverged from current code, propose-retire or rebind with updated source-line range. Ship in a single P76 commit.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED | row 1a: 0467373 (rebind, source_hash c88cd0f9 -> 6ec37650, last_verdict STALE_DOCS_DRIFT -> BOUND) | row 1b: fbc3caa (rebind, source_hash b9700827 -> 89b925f5, last_verdict STALE_DOCS_DRIFT -> BOUND). Both claims verified against live source via `sed`; both still describe current code verbatim. No propose-retire needed. Live walk post-action shows zero STALE_DOCS_DRIFT rows in catalog.
 
 ---
 

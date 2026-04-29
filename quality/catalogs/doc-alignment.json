@@ -12,8 +12,8 @@
     "alignment_ratio": 0.9245810055865922,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-29T21:14:33Z",
-    "coverage_ratio": 0.20308529945553536,
+    "last_walked": "2026-04-29T21:36:36Z",
+    "coverage_ratio": 0.20308529945553538,
     "lines_covered": 1119,
     "total_eligible_lines": 5510,
     "coverage_floor": 0.1

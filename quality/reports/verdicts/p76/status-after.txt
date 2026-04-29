@@ -1,0 +1,49 @@
+coverage: row docs/architecture/redirect cites out-of-eligible file docs/architecture.md
+coverage: row docs/connectors/guide/trait-method-count-eight cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-create-record-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-delete-or-close-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-get-record-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-list-changed-since-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-list-records-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-update-record-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-name-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-root-collection-name-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-supports-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/decisions/009-stability-commitment/cli-subcommand-surface cites out-of-eligible file crates/reposix-cli/src/main.rs
+coverage: row docs/demo/redirect cites out-of-eligible file docs/demo.md
+coverage: row planning-milestones-v0-8-0-phases-REQUIREMENTS-md/jira-integration cites out-of-eligible file .planning/milestones/v0.8.0-phases/ARCHIVE.md
+== global ==
+  claims_total           388
+  claims_bound           331
+  claims_missing_test    0
+  claims_retire_proposed 27
+  claims_retired         30
+  alignment_ratio        0.9246   (331 bound / 358 non-retired)
+  alignment_floor        0.5000
+  coverage_ratio         0.2031   (1119 covered / 5510 total eligible lines)
+  coverage_floor         0.1000
+  multi_test_rows        1
+  trend_30d              +0.00
+  last_walked            2026-04-29T21:36:36Z
+
+== next_action breakdown ==
+  WRITE_TEST          : 0
+  FIX_IMPL_THEN_BIND  : 0
+  UPDATE_DOC          : 0
+  RETIRE_FEATURE      : 57
+  BIND_GREEN          : 331
+
+== per-file (worst-covered first) ==
+  file                                                       total  covered    ratio    rows
+  ------------------------------------------------------------------------------------------
+  docs/connectors/guide.md                                       9        0    0.000       0
+  docs/reference/crates.md                                     147        0    0.000       0   <-- ZERO ROWS
+  docs/security.md                                               9        0    0.000       0
+  docs/why.md                                                   12        0    0.000       0
+  docs/decisions/003-nested-mount-layout.md                    236        1    0.004       1
+  docs/social/linkedin.md                                       41        1    0.024       1
+  docs/social/twitter.md                                        35        1    0.029       1
+  docs/how-it-works/filesystem-layer.md                         71        4    0.056       5
+  docs/guides/integrate-with-your-agent.md                      98        6    0.061       2
+  docs/reference/git-remote.md                                 130       11    0.085       8
+  ... (34 more; use --all)
