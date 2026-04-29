@@ -92,7 +92,7 @@ reposix's `8 ms` cache read is measured against the in-process simulator, but th
 
 Latency for each backend is captured in [`docs/benchmarks/latency.md`](benchmarks/latency.md). Sim cold init is `24 ms` (soft threshold `500 ms`); list-issues `9 ms`; capabilities probe `5 ms`. Real-backend cells fill in once CI secret packs are wired (Phase 36).
 
-## What each backend can do
+## Connector capability matrix
 
 The four built-in backends differ in capabilities. `reposix doctor` prints
 your configured backend's row at runtime (see [exit codes](reference/exit-codes.md)
