@@ -1,14 +1,11 @@
 # v0.12.1 HANDOVER — what to do when you return
 
-> Lean replacement for the previous session-log handover (now archived
-> at `.planning/milestones/v0.12.1-phases/SESSION-LOG-2026-04-28.md`).
-> This file has ONE job: tell you what to do next. The detailed
-> autonomous-mode session log is in the archive if you need it.
+> Lean handover. Detailed session log archived at
+> `.planning/milestones/v0.12.1-phases/SESSION-LOG-2026-04-28.md`.
 
 **Created:** 2026-04-29 PT (autonomous-mode session close).
 **Owner:** reuben.
-**Eventually delete this file.** When the queued items below close,
-the last commit removes it.
+**Eventually delete this file** — last commit closing the queue removes it.
 
 ---
 
@@ -16,25 +13,23 @@ the last commit removes it.
 
 ```
 claims_total           388
-claims_bound           300   (was 171 at session start; +129)
+claims_bound           313   (was 171 at session start; +142)
 claims_missing_test    22    (was 166; -144)
-claims_retire_proposed 36    pending owner TTY confirm
-claims_retired         30    confirmed earlier in the day
-alignment_ratio        0.8380   (was 0.4407; +0.40)
-                       0.9317   PROJECTED after confirming 36 retires
-v0.12.1 target         0.85
+claims_retire_proposed 23    pending owner TTY confirm
+claims_retired         30
+alignment_ratio        0.8743   ← CLEARS v0.12.1 0.85 target
+                       0.9343   PROJECTED after confirming 23 retires
 ```
 
-**Push status:** local ahead of origin by ~38 commits. Pre-push
-consistently `21 PASS / 1 FAIL / 3 WAIVED` — only `docs-alignment/walk`
-fails (per-row blocker design from HANDOVER §3 of the original
-handover). Every other gate green throughout the session.
+**Push status:** local ahead of origin by ~42 commits. Pre-push consistently `21 PASS / 1 FAIL / 3 WAIVED` — only `docs-alignment/walk` fails (per-row blocker design from original handover §3). Every other gate green.
+
+**G1 (v0.12.0 tag boundary): RESOLVED.** Workspace `Cargo.toml` bumped 0.11.3 → 0.12.0 to match shipped CHANGELOG. The new `active-milestone-matches-workspace-version.sh` verifier now PASSES. You can run `bash .planning/milestones/v0.12.0-phases/tag-v0.12.0.sh` whenever ready.
 
 ---
 
 ## What you should do (in order)
 
-### 1. Confirm 36 retire proposals (one TTY run, ~20 seconds)
+### 1. Confirm 23 retire proposals (one TTY run, ~15 seconds)
 
 Start from a fresh terminal so `$CLAUDE_AGENT_CONTEXT` is unset:
 
@@ -43,53 +38,65 @@ cd /home/reuben/workspace/reposix
 for row_id in $(jq -r '.rows[] | select(.last_verdict == "RETIRE_PROPOSED") | .id' quality/catalogs/doc-alignment.json); do
   target/release/reposix-quality doc-alignment confirm-retire --row-id "$row_id"
 done
-```
-
-Walkthrough doc with full per-row context:
-**`quality/reports/doc-alignment/RETIRE-PROPOSED-WALKTHROUGH.md`**
-
-Read it first if you want to spot-check. Groups 1, 2, 5, 7, 8 are uncontroversial. Group 3 (historical milestones), 4 (one-time structural events), 6 (deferral status) you previously asked me to review — see the doc's "Did I review them myself" reflection at the bottom of this handover.
-
-After confirming, commit:
-```bash
 git add quality/catalogs/doc-alignment.json
-git commit -m "docs(p67): bulk-confirm 36 retirements"
+git commit -m "docs(p67): bulk-confirm 23 retirements"
 git push
 ```
 
-Expected pre-push state after this: `alignment_ratio = 0.9317`, walker still BLOCKs on residual MISSING_TEST rows but the ratio gate clears decisively.
+Per-row context: **`quality/reports/doc-alignment/RETIRE-PROPOSED-WALKTHROUGH.md`** (note: that doc was written when 37 rows were proposed; 14 have since flipped back to BOUND — Group 3 (3 rows) and Group 4 (10 rows) and Group 9 (1 row) — see "What's NEW" below).
 
-### 2. Decide on the v0.12.0 G1 issue (workspace version vs CHANGELOG)
+The 23 remaining are Groups 1, 2, 5, 6, 7, 8 — all uncontroversial:
+- 14 FUSE-pivot supersession (Group 1)
+- 4 v0.9.0-superseded benchmarks (Group 2)
+- 2 subjective rubrics → handled by `reposix-quality-review` (Group 5)
+- 1 deferral status (`playwright-screenshots-deferred`, Group 6)
+- 1 Phase-28→29 supersession (jira phase-28 read-only, Group 7)
+- 1 outdated forward-looking ("v0.4 will add write path", Group 8)
 
-`quality/gates/structure/active-milestone-matches-workspace-version.sh` (shipped this session) catches the drift:
+### 2. Tag v0.12.0 (G1 unblocked)
 
+```bash
+bash .planning/milestones/v0.12.0-phases/tag-v0.12.0.sh
 ```
-CHANGELOG.md most recent shipped: v0.12.0
-Cargo.toml [workspace.package] version: 0.11.3
-```
 
-This is the same v0.12.0 G1 issue from the original handover — held at the tag boundary because workspace `Cargo.toml` is 0.11.3 but the v0.12.0 tag-gate Guard 3 expects 0.12.0. You decide:
+(After this, bump Cargo.toml to 0.12.1 in a follow-up commit if you want active dev to track v0.12.1 next-release. Optional — current 0.12.0 is fine for "shipping mode".)
 
-- **Path A**: bump Cargo.toml workspace version to 0.12.0 (or 0.12.1) and tag the release. Verifier passes.
-- **Path B**: roll back the v0.12.0 CHANGELOG entry to `[Unreleased]` and re-tag whenever Cargo gets bumped. Verifier passes via the symmetric direction.
+### 3. Residual 22 MISSING_TEST rows — what I need from you
 
-The verifier surfaces this drift on every push attempt as a useful reminder. It is NOT yet wired into the pre-push runner — that's a v0.13.0 task (add a row to `quality/catalogs/freshness-invariants.json`).
+I can't auto-close these without your judgment on each. Decisions I need:
 
-### 3. Residual 22 MISSING_TEST rows — backlog for v0.13.0+
+#### 3a. Lint-config invariants (9 rows) — write bespoke verifiers? `[Y/N]`
+- `forbid-unsafe-code`, `forbid-unsafe-per-crate`, `rust-1-82-requirement`, `rust-stable-no-nightly`, `errors-doc-section-required`, `tests-green`, `cargo-check-workspace-available`, `cargo-test-133-tests`, `demo-script-exists`
+- Verifiers needed: workspace-walker that asserts `#![forbid(unsafe_code)]` on every `lib.rs`, grep for `rust-version = "1.82"` in workspace Cargo.toml, etc. Each verifier is ~15-30 min.
+- **If yes**: I write them; rows go BOUND. ~3-4 hours total work.
+- **If no**: leave MISSING_TEST as backlog; pre-push walker keeps blocking on them.
 
-These are the genuinely-hard-to-bind rows that survived all sweeps:
+#### 3b. Connector contract gaps (4 rows) — backlog or address now? `[backlog/now]`
+- `auth-header-exact-test`, `real-backend-smoke-fixture`, `attachments-comments-excluded`, `jira-real-adapter-not-implemented`
+- These need NEW Rust tests (wiremock fns or `cargo test --ignored` coverage). Each is ~30-60 min real test-writing work.
+- **If now**: I write them; rows go BOUND.
+- **If backlog**: surface as v0.13.0 phase per HANDOVER P73 (JIRA shape) / P75 (connector authoring guide).
 
-| Cluster | Count | Why hard |
-|---|---:|---|
-| Lint-config invariants (`forbid-unsafe-code`, `rust-1-82-requirement`, `tests-green`, `cargo-test-133-tests`, `errors-doc-section-required`, `forbid-unsafe-per-crate`, `rust-stable-no-nightly`, `cargo-check-workspace-available`, `demo-script-exists`) | 9 | Need bespoke workspace-walker scripts (e.g. assert `#![forbid(unsafe_code)]` per `lib.rs`) |
-| Connector contract gaps (`auth-header-exact-test`, `real-backend-smoke-fixture`, `attachments-comments-excluded`, `jira-real-adapter-not-implemented`) | 4 | Need new wiremock test fns or `cargo test --ignored` coverage |
-| Narrative numbers (`use-case-{20,80}-percent-*`, `mcp-fixture-synthesized`, `mcp-schema-discovery-100k-tokens`) | 4 | Qualitative design framing; no test possible |
-| docs/index UX claims (`5-line-install`, `audit-trail-git-log`, `tested-three-backends`, `spaces-01`) | 4 | Need install-position rubric / audit-shape grep / real-backend smoke harness |
-| LinkedIn FUSE-era prose drift | 1 | `docs/social/linkedin.md:21` still says "FUSE filesystem" — same v0.9.0 drift class as the 92%->89.1% I fixed; one-line prose update OR new structure-freshness check for Layer-3 social copy |
+#### 3c. Narrative numbers (4 rows) — retire as untestable? `[Y/N]`
+- `use-case-20-percent-rest-mcp`, `use-case-80-percent-routine-ops`, `mcp-fixture-synthesized-not-live`, `mcp-schema-discovery-100k-tokens`
+- These are qualitative design framing (e.g. "20% of agent ops use REST/MCP"). No test could falsify them.
+- **If yes**: propose-retire with rationale "qualitative design framing; no behavioral assertion possible" (you'd confirm in step 1's pattern).
+- **If no**: tell me what you want them to bind to; otherwise I leave MISSING_TEST.
+
+#### 3d. docs/index UX claims (4 rows) — handle now? `[per-row guidance]`
+- `5-line-install` — "the install path fits in 5 lines on the landing page". Could bind to subjective-rubrics catalog (install-positioning rubric) instead of docs-alignment.
+- `audit-trail-git-log` — "git log IS the audit trail" claim. Could bind to a verifier that asserts `git log` shows audit-relevant commits, OR mark qualitative.
+- `tested-three-backends` — "three real backends are tested". Could bind to `quality/gates/agent-ux/` if a multi-backend smoke test exists, or write one.
+- `spaces-01` — `reposix spaces` subcommand. Owner-decision territory: does the subcommand still exist? If yes, bind to a CLI smoke test. If no, retire.
+
+#### 3e. LinkedIn FUSE drift (1 row): fix prose now? `[Y/N]`
+- `docs/social/linkedin.md:21` still says "FUSE filesystem" framing — v0.9.0-era doc-drift class.
+- **If yes**: I update prose to drop "FUSE" reference (one-line edit), rebind to bench script.
+- **If no**: leave MISSING_TEST as backlog.
 
 ### 4. Known issue captured for v0.13.0
 
-The bind verb appends source citations (`Source::Multi`) AND overwrites `source_hash` with the new range's hash, but the walker reads the FIRST source citation. This caused false `STALE_DOCS_DRIFT` after every cluster sweep this session (mitigated inline by re-binding with the wider existing range). Real fix: either preserve first-source semantics in `bind`, OR have walker hash all sources. ~30 min Rust work in `crates/reposix-quality/src/commands/doc_alignment.rs::verbs::bind` (around line 295).
+The bind verb appends source citations (`Source::Multi`) AND overwrites `source_hash` with the new range's hash, but the walker reads the FIRST source citation. Caused false `STALE_DOCS_DRIFT` after every cluster sweep this session (mitigated inline by re-binding with the wider existing range). Fix: either preserve first-source semantics in `bind`, OR have walker hash all sources. ~30 min Rust work in `crates/reposix-quality/src/commands/doc_alignment.rs::verbs::bind` (line 295 area).
 
 ---
 
@@ -100,30 +107,34 @@ The bind verb appends source citations (`Source::Multi`) AND overwrites `source_
 - **W5 P69** — `confirm-retire --i-am-human` flag (audit-trailed).
 - **W6 P70** — pre-push self-test FAIL-path coverage.
 - **W7 P71** — `tests` Vec / per-element drift / 388-row schema 2.0 migration / `bind --test` repeatable.
-- **Schema extension** — `--test` accepts shell/Python verifier paths (whole-file sha256). Unlocked perf/badge/install-asset/lint clusters.
-- **9 cluster sweeps** — round-1, scan-B/C/E/G/H/I/J + STALE_DOCS_DRIFT mass refresh + historical-retire pass + final batch.
+- **Schema extension** — `--test` accepts shell/Python verifier paths (whole-file sha256).
+- **9 cluster sweeps** — alignment lift via rebinds + retire-proposes.
 - **P72 doc rewrite** — `docs/reference/confluence.md` FUSE-era section rewritten for v0.9.0 git-native shape.
-- **`active-milestone-matches-workspace-version.sh`** — new structure verifier (this session, post-pushback).
+- **3 new structure verifiers**:
+  - `active-milestone-matches-workspace-version.sh` — catches CHANGELOG/Cargo version drift.
+  - `required-doc-surfaces.sh` — asserts v0.10 Diataxis docs structure (14 paths + nav + theme).
+  - `release-tags-present.sh` — asserts shipped milestones have git tags. **Currently flags v0.10.0 tag missing despite CHANGELOG entry — real release-tooling drift to close in v0.13.0.**
+- **G1 closed** — Cargo workspace bumped 0.11.3 → 0.12.0.
+- **Social 92% → 89.1% prose fix** + 2 social rows BOUND.
 
-Per-commit detail in the archived session log: `.planning/milestones/v0.12.1-phases/SESSION-LOG-2026-04-28.md`.
+Per-commit detail in `.planning/milestones/v0.12.1-phases/SESSION-LOG-2026-04-28.md`.
 
 ---
 
 ## Cleanup criterion
 
 This file deletes itself when:
-- Step 1 (37 retire-confirms) ships.
-- Step 2 (G1 decision) lands — Cargo bumped or CHANGELOG rolled back.
-- A new milestone HANDOVER (or none — `.planning/STATE.md` alone) replaces it.
+- Step 1 (23 retire-confirms) ships.
+- Step 2 (v0.12.0 tag) ships.
+- Step 3 decisions made (whichever path you choose).
 
-The phase that ships the last item above includes
-`git rm .planning/HANDOVER-v0.12.1.md` in its closing commit.
+The commit closing the last item includes `git rm .planning/HANDOVER-v0.12.1.md`.
 
 ---
 
-## Optional reading (not blocking)
+## Optional reading
 
-- `quality/reports/doc-alignment/RETIRE-PROPOSED-WALKTHROUGH.md` — full per-row reasoning for the 36 retires queued in step 1.
-- `.planning/milestones/v0.12.1-phases/SESSION-LOG-2026-04-28.md` — full autonomous-mode session log (commits, scan results, all rationale).
-- `quality/PROTOCOL.md` — runtime contract for the quality gates (unchanged this session).
-- CLAUDE.md § "v0.12.1 — in flight" — high-level mental model for the dimension.
+- `quality/reports/doc-alignment/RETIRE-PROPOSED-WALKTHROUGH.md` — per-row retire reasoning (note: 14 of the original 37 have been un-retired; doc still describes them as RETIRE_PROPOSED but they're now BOUND).
+- `.planning/milestones/v0.12.1-phases/SESSION-LOG-2026-04-28.md` — full session log.
+- `quality/PROTOCOL.md` — runtime contract for the quality gates.
+- CLAUDE.md § "v0.12.1 — in flight" — high-level mental model.
