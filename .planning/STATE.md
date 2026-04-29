@@ -2,33 +2,40 @@
 gsd_state_version: 1.0
 milestone: v0.12.1
 milestone_name: Carry-forwards + docs-alignment cleanup
-status: in-flight-autonomous-run-prepped
-status_reason: "v0.12.0 G1 closed (workspace Cargo.toml bumped 0.11.3 -> 0.12.0 in commit aa7472b). Local tag v0.12.0 created via `bash .planning/milestones/v0.12.0-phases/tag-v0.12.0.sh` on 2026-04-29 (commit c55b57e); push to origin BLOCKED by SSH config drift (`~/.ssh/config` points at id_github_ed25519 but key is named id_ed25519_github — owner pushes manually). v0.12.1 prep: P66 (coverage_ratio) shipped 2026-04-28; P67-P71 carry-forwards DEFERRED to follow-up session. Autonomous-run cluster P72-P77 scoped 2026-04-29: P72 lint-config invariants (9 rows), P73 connector contract gaps (4 rows), P74 narrative + UX cleanup + linkedin prose (10 actions), P75 bind-verb hash-overwrite fix, P76 surprises absorption (+2 reservation slot 1, OP-8), P77 good-to-haves polish (+2 reservation slot 2). HANDOVER-v0.12.1.md is the autonomous-run brief; CONTEXT.md per phase is dense with decisions D-01..D-12. Next agent enters via `/gsd-execute-phase 72`."
-last_updated: "2026-04-29T17:30:00Z"
+status: autonomous-run-complete-pending-owner-tty
+status_reason: "v0.12.1 autonomous-run cluster P72-P77 SHIPPED 2026-04-29 — all 6 phases verifier-GREEN. P72 (lint-config, 9 rows BOUND), P73 (connector contract, 4 rows BOUND), P74 (narrative+UX, 5 BOUND + 4 RETIRE_PROPOSED + 1 prose-fix), P75 (bind-verb hash fix + 3 walker regression tests), P76 (surprises absorption — 3 LOW entries drained: 2 RESOLVED + 1 RESOLVED + 1 WONTFIX), P77 (good-to-haves polish — 1 XS entry drained). claims_missing_test 22 -> 0. alignment_ratio 0.8743 -> 0.9246. claims_stale_docs_drift 2 -> 0. P67-P71 carry-forwards REMAIN DEFERRED to a follow-up session. v0.12.0 tag push REMAINS BLOCKED on SSH config drift (owner pushes manually). HANDOVER-v0.12.1.md PRESERVED — its self-deletion criteria require owner-TTY actions (push v0.12.0 tag, bulk-confirm 27 RETIRE_PROPOSED rows, ratify v0.12.1 milestone-close verdict). Next agent: owner-TTY items first, then `/gsd-execute-phase 67` for the carry-forward bundle."
+last_updated: "2026-04-29T22:00:00Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 12
-  completed_phases: 1
-  total_plans: 0
-  completed_plans: 0
-  percent: 8
+  completed_phases: 7
+  total_plans: 6
+  completed_plans: 6
+  percent: 58
   v0_12_0_phases_total: 10
   v0_12_0_phases_completed: 10
   v0_12_0_percent: 100
   v0_12_1_phases_total: 12
-  v0_12_1_phases_completed: 1
+  v0_12_1_phases_completed: 7
   v0_12_1_phases_deferred_to_followup: 5
   v0_12_1_phases_in_autonomous_run: 6
+  v0_12_1_autonomous_run_complete: true
+  v0_12_1_carry_forward_pending: true
 ---
 
 # Project State
 
 ## Current Focus
 
-**Milestone:** v0.12.1 — Carry-forwards + docs-alignment cleanup (in-flight; autonomous-run prepped).
-**Last shipped phase:** P66 (coverage_ratio metric, 2026-04-28).
-**Next action:** `/gsd-execute-phase 72` (autonomous-run cluster P72-P77 scoped 2026-04-29; HANDOVER-v0.12.1.md is the brief).
-**Blocker (owner):** v0.12.0 tag created locally (commit `c55b57e`) but push to origin is blocked by SSH config drift (`~/.ssh/config` references id_github_ed25519 but key file is named id_ed25519_github). Owner pushes manually.
+**Milestone:** v0.12.1 — Carry-forwards + docs-alignment cleanup (autonomous-run complete; pending owner-TTY + P67-P71 follow-up).
+**Last shipped phase:** P77 (good-to-haves polish, 2026-04-29; LAST phase of autonomous run).
+**Autonomous run summary (2026-04-29):** P72-P77 all verifier-GREEN. claims_missing_test 22 → 0. alignment_ratio 0.8743 → 0.9246. claims_stale_docs_drift 0. 70+ atomic commits.
+**Next actions (owner-TTY, blocking before milestone close):**
+  1. Push v0.12.0 tag — `git push origin main && git push origin v0.12.0` (after SSH config fix or via HTTPS).
+  2. Bulk-confirm 27 RETIRE_PROPOSED rows — see HANDOVER-v0.12.1.md § "What the owner owes" step 2.
+  3. Ratify v0.12.1 milestone-close verdict at `quality/reports/verdicts/milestone-v0.12.1/VERDICT.md` (after P67-P71 follow-up session).
+**Next agent action (after owner-TTY):** `/gsd-execute-phase 67` (P67-P71 carry-forward bundle: perf full impl, security stubs→real, cross-platform rehearsals, MSRV/binstall/release-PAT, subjective-runner invariants).
+**Blocker (owner):** v0.12.0 tag (commit `c55b57e`) push BLOCKED by SSH config drift (`~/.ssh/config` references id_github_ed25519 but key file is named id_ed25519_github).
 
 ## Per-milestone history (cross-references)
 
