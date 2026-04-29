@@ -5,15 +5,15 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 320,
-    "claims_missing_test": 13,
+    "claims_bound": 321,
+    "claims_missing_test": 12,
     "claims_retire_proposed": 23,
     "claims_retired": 30,
-    "alignment_ratio": 0.8938547486033519,
+    "alignment_ratio": 0.8966480446927374,
     "floor": 0.5,
     "trend_30d": "+0.00",
     "last_walked": "2026-04-29T19:58:47Z",
-    "coverage_ratio": 0.20308529945553538,
+    "coverage_ratio": 0.20308529945553536,
     "lines_covered": 1119,
     "total_eligible_lines": 5510,
     "coverage_floor": 0.1
@@ -5799,19 +5799,25 @@
     },
     {
       "id": "docs/connectors/guide/real-backend-smoke-fixture",
-      "claim": "Real-backend smoke fixture lands behind #[ignore] with env-var setup docs (GITHUB_TOKEN, ATLASSIAN_API_KEY, etc.)",
+      "claim": "Each backend ships an #[ignore]-gated smoke fixture wiring real-credential end-to-end agent flow.",
       "source": {
         "file": "docs/guides/write-your-own-connector.md",
         "line_start": 172,
         "line_end": 173
       },
       "source_hash": "6315e06fb7627648e909377533d9a6f69e9764774672e2c830b36e63888a7f99",
-      "rationale": "Pattern in testing-targets.md; GitHub test scaffolds behind #[ignore]",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:03:59Z",
-      "last_extracted": "2026-04-28T09:03:59Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
+      ],
+      "test_body_hashes": [
+        "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe"
+      ],
+      "rationale": "P73 CONNECTOR-GAP-02 per D-04: pure rebind to canonical existing test fn (TokenWorld is sanctioned for mutation per docs/reference/testing-targets.md). github + jira variants exist in the same file.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T20:28:37Z",
+      "last_extracted": "2026-04-29T20:28:37Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-16-real-backend-smoke-tests",
