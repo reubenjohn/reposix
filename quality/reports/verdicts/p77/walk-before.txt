@@ -1,0 +1,41 @@
+coverage: row docs/architecture/redirect cites out-of-eligible file docs/architecture.md
+coverage: row docs/connectors/guide/trait-method-count-eight cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-create-record-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-delete-or-close-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-get-record-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-list-changed-since-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-list-records-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-update-record-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-name-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-root-collection-name-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-supports-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/decisions/009-stability-commitment/cli-subcommand-surface cites out-of-eligible file crates/reposix-cli/src/main.rs
+coverage: row docs/demo/redirect cites out-of-eligible file docs/demo.md
+coverage: row planning-milestones-v0-8-0-phases-REQUIREMENTS-md/jira-integration cites out-of-eligible file .planning/milestones/v0.8.0-phases/ARCHIVE.md
+docs-alignment: RETIRE_PROPOSED on docs/reference/confluence.md -- run /reposix-quality-refresh docs/reference/confluence.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.10.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.10.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on docs/concepts/reposix-vs-mcp-and-sdks.md -- run /reposix-quality-refresh docs/concepts/reposix-vs-mcp-and-sdks.md
+docs-alignment: RETIRE_PROPOSED on docs/concepts/reposix-vs-mcp-and-sdks.md -- run /reposix-quality-refresh docs/concepts/reposix-vs-mcp-and-sdks.md
+docs-alignment: RETIRE_PROPOSED on docs/concepts/reposix-vs-mcp-and-sdks.md -- run /reposix-quality-refresh docs/concepts/reposix-vs-mcp-and-sdks.md
+docs-alignment: RETIRE_PROPOSED on docs/decisions/003-nested-mount-layout.md -- run /reposix-quality-refresh docs/decisions/003-nested-mount-layout.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.8.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.8.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.8.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.8.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.8.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.8.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.8.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.8.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on docs/reference/confluence.md -- run /reposix-quality-refresh docs/reference/confluence.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.8.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on docs/reference/jira.md -- run /reposix-quality-refresh docs/reference/jira.md
+docs-alignment: RETIRE_PROPOSED on docs/reference/confluence.md -- run /reposix-quality-refresh docs/reference/confluence.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.8.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.8.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.8.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.8.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.8.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on docs/concepts/reposix-vs-mcp-and-sdks.md -- run /reposix-quality-refresh docs/concepts/reposix-vs-mcp-and-sdks.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.8.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.10.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.10.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.10.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.10.0-phases/REQUIREMENTS.md
