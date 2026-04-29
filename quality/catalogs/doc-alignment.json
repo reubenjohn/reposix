@@ -5,11 +5,11 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 322,
-    "claims_missing_test": 11,
+    "claims_bound": 324,
+    "claims_missing_test": 9,
     "claims_retire_proposed": 23,
     "claims_retired": 30,
-    "alignment_ratio": 0.8994413407821229,
+    "alignment_ratio": 0.9050279329608939,
     "floor": 0.5,
     "trend_30d": "+0.00",
     "last_walked": "2026-04-29T19:58:47Z",
@@ -888,19 +888,27 @@
     },
     {
       "id": "docs/connectors/guide/auth-header-exact-test",
-      "claim": "Auth header is byte-exact (Bearer prefix, Basic + base64, etc.)",
+      "claim": "Connectors send byte-exact Authorization headers (Confluence: Basic <base64(email:token)>; GitHub: Bearer <token>).",
       "source": {
         "file": "docs/guides/write-your-own-connector.md",
         "line_start": 158,
         "line_end": 158
       },
       "source_hash": "8e141ce8e27322861cae2fe3a9f6478e3f36631446c748bb543402b5f5d7db09",
-      "rationale": "Guide requirement; pattern in GitHub/Confluence/JIRA connectors",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:03:52Z",
-      "last_extracted": "2026-04-28T09:03:52Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-confluence/tests/auth_header.rs::auth_header_basic_byte_exact",
+        "crates/reposix-github/tests/auth_header.rs::auth_header_bearer_byte_exact"
+      ],
+      "test_body_hashes": [
+        "36c73b41c79a4de031e932f66ca33a90e995e6db2172e47240a69079e2cdea19",
+        "292203e9ec840899a2e183bf7e2701e2f5690f0f2541daa3a30e30a9e3711c68"
+      ],
+      "rationale": "P73 CONNECTOR-GAP-01 per D-02: byte-exact via wiremock::matchers::header (HeaderExactMatcher, NOT regex); both backends covered through the BackendConnector trait seam.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T20:30:03Z",
+      "last_extracted": "2026-04-29T20:30:03Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/index/backend-capabilities-struct",
@@ -5252,18 +5260,25 @@
     },
     {
       "id": "docs/decisions/005-jira-issue-mapping/attachments-comments-excluded",
-      "claim": "Phase 28 excludes attachments and comments; they are deferred to Phase 29+",
+      "claim": "JIRA list_records strips fields.attachment + fields.comment.comments — neither leaks into Record.body or Record.extensions.",
       "source": {
         "file": "docs/decisions/005-jira-issue-mapping.md",
         "line_start": 79,
         "line_end": 87
       },
       "source_hash": "a88304418eee972df7bfae418666b915a2684d7b6de7a5a8a54c2f07e0b0d476",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:15:06Z",
-      "last_extracted": "2026-04-28T09:15:06Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "crates/reposix-jira/tests/list_records_excludes_attachments.rs::list_records_excludes_attachments_and_comments"
+      ],
+      "test_body_hashes": [
+        "9fd6927c3b6f8f6ca48a441ef169f22b45bfe0c0d802e75b20855d35124daf1c"
+      ],
+      "rationale": "P73 CONNECTOR-GAP-03 per D-03: assertion at the rendering boundary (Record.body markdown + Record.extensions allowlist), NOT the JSON parse layer.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T20:30:03Z",
+      "last_extracted": "2026-04-29T20:30:03Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "glossary/pkt-line-definition",
