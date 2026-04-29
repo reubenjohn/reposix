@@ -341,6 +341,24 @@ Verifier home: `quality/gates/code/lint-invariants/` (sub-area README at `qualit
 
 Prose updated: `docs/development/contributing.md:20` re-measured to `>= 368 test binaries` BEFORE the bind (D-06 audit trail). Verifiers minted via `bind` per `quality/PROTOCOL.md` § "Subagents propose; tools validate and mint" (Principle A). Cargo invocations serialized by the runner per CLAUDE.md "Build memory budget" (D-04).
 
+### P73 — Connector contract gaps
+
+Closed 4 `MISSING_TEST` rows asserting connector authoring + JIRA-shape contracts. Two new wiremock-based Rust tests live next to existing per-crate contract tests:
+
+- `crates/reposix-confluence/tests/auth_header.rs::auth_header_basic_byte_exact`
+- `crates/reposix-github/tests/auth_header.rs::auth_header_bearer_byte_exact`
+- `crates/reposix-jira/tests/list_records_excludes_attachments.rs::list_records_excludes_attachments_and_comments`
+
+The auth-header tests use `wiremock::matchers::header(K, V)` (returns `HeaderExactMatcher`, NOT `HeaderRegexMatcher`) for byte-exact assertion — the canonical idiom for any future connector contract test of this kind. Plan-time prose cited `header_exact` as the function name; the actual public API in wiremock 0.6.5 is `header(K, V)` (same byte-exact semantics). The JIRA test asserts at the **rendering boundary** (Record.body markdown + Record.extensions allowlist), not at the JSON parse layer — that's where the deferral in `docs/decisions/005-jira-issue-mapping.md:79-87` is observable to a downstream consumer.
+
+The `real-backend-smoke-fixture` row was a pure rebind to the existing `crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence` `#[ignore]` smoke (TokenWorld is sanctioned for free mutation per `docs/reference/testing-targets.md`).
+
+The stale `docs/benchmarks/token-economy.md:23-28` JIRA row was resolved via path (a) per D-05: prose updated to acknowledge the adapter shipped v0.11.x, plus a 5-line shell verifier at `quality/gates/docs-alignment/jira-adapter-shipped.sh` asserting the manifest exists. Bench-number re-measurement remains deferred to perf-dim P67.
+
+No SURPRISES-INTAKE / GOOD-TO-HAVES entries appended (no out-of-scope items observed during execution; no auth-header bug surfaced in either backend; OP-8 honesty check intentional).
+
+See: `quality/PROTOCOL.md` § "Principle A"; CLAUDE.md "Build memory budget" (D-09 sequential per-crate cargo).
+
 ## Quick links
 
 - `docs/research/initial-report.md` — full architectural argument for git-remote-helper + partial clone.
