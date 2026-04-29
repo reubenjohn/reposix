@@ -405,6 +405,34 @@ filed as v0.13.0 carry-forward `MULTI-SOURCE-WATCH-01`.
 Regression tests: `crates/reposix-quality/tests/walk.rs::walk_multi_source_*`
 (stable / first-drift / single-rebind-heal).
 
+### P76 — Surprises absorption
+
+Drained `.planning/milestones/v0.12.1-phases/SURPRISES-INTAKE.md` (3 LOW
+entries discovered during P72 + P74). The +2 phase practice (OP-8) is now
+operational: every intake entry has a terminal STATUS footer.
+
+Resolutions:
+- **Entry 1 (P72):** 2 pre-existing STALE rows healed.
+  polish-03-mermaid-render → RESOLVED | 0467373 (rebind, source_hash
+  c88cd0f9 → 6ec37650). cli-subcommand-surface → RESOLVED | fbc3caa
+  (rebind, b9700827 → 89b925f5). Both claims verified verbatim against
+  current source via `sed`; no propose-retire needed.
+- **Entry 2 (P74):** linkedin Source::Single → RESOLVED | healed by P75
+  commit 9e07028 (audit-trail annotation only; row already BOUND).
+- **Entry 3 (P74):** connector-matrix synonym → WONTFIX | regex widening
+  (c8e4111) is the complete fix; heading rename filed as P77 GOOD-TO-HAVE
+  (size XS, impact clarity).
+
+Honesty spot-check (D-05): sampled P74 + P75 plan/verdict pairs. Aggregate
+finding GREEN — intake yield (P72: 1, P74: 2, P73: 0, P75: 0) is consistent
+with phases honestly looking. P74's verifier independently graded OP-8
+PASS; P75's verifier executable-cross-checked the falsifiable empty-intake
+claim. Evidence at `quality/reports/verdicts/p76/honesty-spot-check.md`.
+
+Catalog deltas: claims_bound 329 → 331 (+2 entry-1 rebinds);
+alignment_ratio 0.9190 → 0.9246 (+0.0056); claims_stale_docs_drift 2 → 0.
+Live walker post-resolution: zero net new STALE_DOCS_DRIFT.
+
 ## Quick links
 
 - `docs/research/initial-report.md` — full architectural argument for git-remote-helper + partial clone.
