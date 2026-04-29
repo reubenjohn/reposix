@@ -5,15 +5,15 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 313,
-    "claims_missing_test": 22,
+    "claims_bound": 322,
+    "claims_missing_test": 13,
     "claims_retire_proposed": 23,
     "claims_retired": 30,
-    "alignment_ratio": 0.8743016759776536,
+    "alignment_ratio": 0.8994413407821229,
     "floor": 0.5,
     "trend_30d": "+0.00",
     "last_walked": "2026-04-29T18:09:20Z",
-    "coverage_ratio": 0.20308529945553538,
+    "coverage_ratio": 0.20308529945553536,
     "lines_covered": 1119,
     "total_eligible_lines": 5510,
     "coverage_floor": 0.1
@@ -1499,18 +1499,25 @@
     },
     {
       "id": "README-md/rust-1-82-requirement",
-      "claim": "Build from source requires Rust stable 1.82+",
+      "claim": "Workspace Cargo.toml pins rust-version = \"1.82\" (current MSRV).",
       "source": {
         "file": "README.md",
         "line_start": 79,
         "line_end": 79
       },
       "source_hash": "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:06Z",
-      "last_extracted": "2026-04-28T09:00:06Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/code/lint-invariants/rust-msrv.sh"
+      ],
+      "test_body_hashes": [
+        "d369ec90fd89769469df0385b496a815d934af9fd14d859e05f4627e65b64b35"
+      ],
+      "rationale": "P72 LINT-CONFIG-02: grep workspace Cargo.toml for rust-version line; tolerates indentation.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T19:58:02Z",
+      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "git-remote/bulk-delete-override-tag",
@@ -1771,18 +1778,25 @@
     },
     {
       "id": "README-md/tests-green",
-      "claim": "cargo test --workspace passes",
+      "claim": "Workspace tests compile clean (cargo test --workspace --no-run exits 0).",
       "source": {
         "file": "README.md",
         "line_start": 109,
         "line_end": 109
       },
       "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:10Z",
-      "last_extracted": "2026-04-28T09:00:10Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/code/lint-invariants/tests-green.sh"
+      ],
+      "test_body_hashes": [
+        "544a605712679f0d7c074fd81aff3c4b799013c6cb6d5f3d724c9237544e5436"
+      ],
+      "rationale": "P72 LINT-CONFIG-03 per D-05: compile-only signal; suite execution lives in pre-push nextest.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T19:58:02Z",
+      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/tutorials/first-run/cat-issue-structure",
@@ -2733,18 +2747,25 @@
     },
     {
       "id": "README-md/forbid-unsafe-code",
-      "claim": "Every crate declares #![forbid(unsafe_code)]",
+      "claim": "Every crate's lib.rs / main.rs declares #![forbid(unsafe_code)].",
       "source": {
         "file": "README.md",
         "line_start": 109,
         "line_end": 109
       },
       "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:24Z",
-      "last_extracted": "2026-04-28T09:00:24Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/code/lint-invariants/forbid-unsafe-code.sh"
+      ],
+      "test_body_hashes": [
+        "30a8d5bbd94e8fed8a041409707b7c931eca42c36cb1b2f11e70d43e7ae2a1d2"
+      ],
+      "rationale": "P72 LINT-CONFIG-01: shell verifier walks crates/*/src/{lib,main}.rs and asserts each contains #![forbid(unsafe_code)]; offending paths named in stderr.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T19:58:02Z",
+      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/decisions/005-jira-issue-mapping/status-mapping",
@@ -3929,18 +3950,25 @@
     },
     {
       "id": "docs-development-contributing-md/forbid-unsafe-per-crate",
-      "claim": "Invariant row 1: #![forbid(unsafe_code)] at every crate root (except POSIX syscalls gated through rustix)",
+      "claim": "Every crate's lib.rs / main.rs declares #![forbid(unsafe_code)].",
       "source": {
         "file": "docs/development/contributing.md",
         "line_start": 59,
         "line_end": 59
       },
       "source_hash": "89ced95ebdeddd25544ae5c153aade4faec9d4d2934f861871f6f9be1d4b9ebe",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:04:58Z",
-      "last_extracted": "2026-04-28T09:04:58Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/code/lint-invariants/forbid-unsafe-code.sh"
+      ],
+      "test_body_hashes": [
+        "30a8d5bbd94e8fed8a041409707b7c931eca42c36cb1b2f11e70d43e7ae2a1d2"
+      ],
+      "rationale": "P72 LINT-CONFIG-01 per D-01: shares verifier with README-md/forbid-unsafe-code (single source of truth).",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T19:58:02Z",
+      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs-development-contributing-md/reqwest-client-banned",
@@ -3966,18 +3994,25 @@
     },
     {
       "id": "docs-development-contributing-md/errors-doc-section-required",
-      "claim": "Invariant row 3: Every public Result-returning function has an # Errors doc section (clippy missing-errors-doc is on)",
+      "claim": "Every pub fn returning Result has a # Errors rustdoc section (clippy::missing_errors_doc).",
       "source": {
         "file": "docs/development/contributing.md",
         "line_start": 61,
         "line_end": 61
       },
       "source_hash": "59fb7eaf9511956cf57ef4899bc34e5913ce6d7e8092fddc9a1307e289c1b167",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:02Z",
-      "last_extracted": "2026-04-28T09:05:02Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/code/lint-invariants/errors-doc-section.sh"
+      ],
+      "test_body_hashes": [
+        "569a677093db66c560a22989726214718b1ac798bdd175b53adfeccd4b713d5f"
+      ],
+      "rationale": "P72 LINT-CONFIG-04 per D-07: clippy lint, not grep; handles Result aliases / trait methods correctly.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T19:58:02Z",
+      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs-development-contributing-md/serde-no-handroll-json",
@@ -4025,18 +4060,25 @@
     },
     {
       "id": "docs-development-contributing-md/rust-stable-no-nightly",
-      "claim": "Invariant row 6: Workspace compiles on Rust stable; no nightly features; rust-toolchain.toml pins stable",
+      "claim": "rust-toolchain.toml channel = \"stable\" (nightly banned).",
       "source": {
         "file": "docs/development/contributing.md",
         "line_start": 64,
         "line_end": 64
       },
       "source_hash": "96846ce0eb8fd49d23c44340f9217f92e9fadc9b72b4fdd8c70e423d04453ae9",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:10Z",
-      "last_extracted": "2026-04-28T09:05:10Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/code/lint-invariants/rust-stable-channel.sh"
+      ],
+      "test_body_hashes": [
+        "8216576e9837c50898941452d338ed124db106efd9714ff899a3ada56078c36e"
+      ],
+      "rationale": "P72 LINT-CONFIG-05: grep rust-toolchain.toml for channel line.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T19:58:02Z",
+      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs-development-contributing-md/http-allowlist-enforcement",
@@ -5521,48 +5563,69 @@
     },
     {
       "id": "docs-development-contributing-md/cargo-check-workspace-available",
-      "claim": "Quickstart: cargo check --workspace is available and used for fast type-check during development",
+      "claim": "Workspace compiles clean (cargo check --workspace -q exits 0).",
       "source": {
         "file": "docs/development/contributing.md",
         "line_start": 15,
         "line_end": 15
       },
       "source_hash": "f10cfb7543a2f9f77732c8239a4d5e70ea41a9f9f26ddd1046c2200feea3cc94",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:17Z",
-      "last_extracted": "2026-04-28T09:05:17Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/code/lint-invariants/cargo-check-workspace.sh"
+      ],
+      "test_body_hashes": [
+        "4f5cd27d6dc86bd18b996dcb0f2bdc5d2329004f8b1d886d349523c428b07fd0"
+      ],
+      "rationale": "P72 LINT-CONFIG-06: cheap compile-only assertion.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T19:58:02Z",
+      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs-development-contributing-md/cargo-test-133-tests",
-      "claim": "Quickstart: cargo test --workspace runs 133 tests (one #[ignore]'d timeout test runs via --ignored)",
+      "claim": "Workspace ships at least 368 test binaries (cargo test --workspace --no-run; unique-by-target.name; >= floor).",
       "source": {
         "file": "docs/development/contributing.md",
         "line_start": 20,
         "line_end": 20
       },
-      "source_hash": "12409641e3b26fe7f506183b85c4a9d499d1df787c0ebcc2420a681d9c0a46b4",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:19Z",
-      "last_extracted": "2026-04-28T09:05:19Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "source_hash": "e0b143a33db2624f5f7fa6b2ec7cc1a59fe412817dba18a1826e7303e525fe61",
+      "tests": [
+        "quality/gates/code/lint-invariants/cargo-test-count.sh"
+      ],
+      "test_body_hashes": [
+        "389f4979040d37e4ef69c70589b8f5570e586f53c8e90a85d1adc06ca12902a3"
+      ],
+      "rationale": "P72 LINT-CONFIG-07 per D-06: prose re-measured to 368 + verifier floor synced before bind; >= floor tolerates additions, blocks deletions.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T19:58:02Z",
+      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs-development-contributing-md/demo-script-exists",
-      "claim": "Quickstart: demo.sh script exists and runs end-to-end demo",
+      "claim": "scripts/dark-factory-test.sh exists and is executable.",
       "source": {
         "file": "docs/development/contributing.md",
         "line_start": 28,
         "line_end": 30
       },
       "source_hash": "7431250d26224551d860d7e3afb878414601663855612a7036e8babcd1641ee2",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:25Z",
-      "last_extracted": "2026-04-28T09:05:25Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/code/lint-invariants/demo-script-exists.sh"
+      ],
+      "test_body_hashes": [
+        "a2ff959b14b381b2f9c6c56b6a92c43194dbae6f3fe7653ce5b8c96011c9fc46"
+      ],
+      "rationale": "P72 LINT-CONFIG-08: filesystem-only check.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T19:58:03Z",
+      "last_extracted": "2026-04-29T19:58:03Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/connectors/guide/rate-limit-429-test",
