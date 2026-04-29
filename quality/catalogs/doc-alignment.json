@@ -5,11 +5,11 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 324,
-    "claims_missing_test": 5,
+    "claims_bound": 329,
+    "claims_missing_test": 0,
     "claims_retire_proposed": 27,
     "claims_retired": 30,
-    "alignment_ratio": 0.9050279329608939,
+    "alignment_ratio": 0.9189944134078212,
     "floor": 0.5,
     "trend_30d": "+0.00",
     "last_walked": "2026-04-29T20:30:29Z",
@@ -136,11 +136,18 @@
         "line_end": 19
       },
       "source_hash": "04bff5bb5e3c7d40bb007acc7de8efdc60b5f3c495453edb03b92f7197b7cff8",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:51Z",
-      "last_extracted": "2026-04-28T09:01:51Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/docs-alignment/install-snippet-shape.sh"
+      ],
+      "test_body_hashes": [
+        "72e94d47d4c9ca8a76a5cb33da8138fe44a3198573ac34ad80f9bb92972a6152"
+      ],
+      "rationale": "Hash-shape bind per P74 D-03; verifier under quality/gates/docs-alignment/.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T20:54:41Z",
+      "last_extracted": "2026-04-29T20:54:41Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/tutorial-replay-5min",
@@ -667,11 +674,18 @@
         "line_end": 91
       },
       "source_hash": "852e762fdbbde23080e855c40cb6feab077b1bf2b184479cbb0d58b2c30ac6a7",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:59Z",
-      "last_extracted": "2026-04-28T09:00:59Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/docs-alignment/three-backends-tested.sh"
+      ],
+      "test_body_hashes": [
+        "5da12c4e98ef21584dc1df18c33b2c4bea31f8db391e7cfda9e29ec66994c45c"
+      ],
+      "rationale": "Hash-shape bind per P74 D-05; verifier under quality/gates/docs-alignment/.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T20:54:42Z",
+      "last_extracted": "2026-04-29T20:54:42Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/reference/testing-targets/confluence-api-key",
@@ -829,11 +843,18 @@
         "line_end": 78
       },
       "source_hash": "10a343b8cdc87defc1f37ccb96523b0d7bda83b4d13dd580b2d74a880e08cb55",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:42Z",
-      "last_extracted": "2026-04-28T09:01:42Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/docs-alignment/audit-trail-git-log.sh"
+      ],
+      "test_body_hashes": [
+        "edd5caaad84327b221215a2a8598fe60d7dd7dda9275c5f3b2a8ed26285de838"
+      ],
+      "rationale": "Hash-shape bind per P74 D-04; verifier under quality/gates/docs-alignment/.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T20:54:42Z",
+      "last_extracted": "2026-04-29T20:54:42Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/reference/http-api.md/audit-append-only",
@@ -2107,11 +2128,18 @@
         "line_end": 31
       },
       "source_hash": "4033457abf57d3112b34e39f13467e22efe7937df4d5be361aeadba0ae28ead9",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:00:34Z",
-      "last_extracted": "2026-04-28T09:00:34Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/docs-alignment/connector-matrix-on-landing.sh"
+      ],
+      "test_body_hashes": [
+        "b6e22c8b206a8cf95ab6410a116436848b09279db022c80c70536fdf515e7195"
+      ],
+      "rationale": "Hash-shape bind per P74 D-06; verifier under quality/gates/docs-alignment/.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T20:54:42Z",
+      "last_extracted": "2026-04-29T20:54:42Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/guides/write-your-own-connector/connector-tests-coverage",
@@ -6906,11 +6934,18 @@
         "line_end": 90
       },
       "source_hash": "70582e858456d5b7ba067119b8aa8e090e3019703bca670198d52893251a57a6",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:30Z",
-      "last_extracted": "2026-04-28T09:01:30Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/docs-alignment/cli-spaces-smoke.sh"
+      ],
+      "test_body_hashes": [
+        "583c73f89eb39ffa229e79511f5b53353912b86768bcb3e29e109f4443ac38c3"
+      ],
+      "rationale": "Hash-shape bind per P74 D-07; verifier under quality/gates/docs-alignment/.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T20:54:42Z",
+      "last_extracted": "2026-04-29T20:54:42Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/reference/cli.md/spaces_confluence_only",
