@@ -1,0 +1,335 @@
+{
+  "global": {
+    "alignment_ratio": 0.9162011173184358,
+    "claims_bound": 328,
+    "claims_missing_test": 0,
+    "claims_retire_proposed": 27,
+    "claims_retired": 30,
+    "claims_total": 388,
+    "coverage_floor": 0.1,
+    "coverage_ratio": 0.20308529945553536,
+    "floor": 0.5,
+    "last_walked": "2026-04-29T20:54:58Z",
+    "lines_covered": 1119,
+    "total_eligible_lines": 5510,
+    "trend_30d": "+0.00"
+  },
+  "multi_test_rows": 1,
+  "next_action_breakdown": {
+    "BIND_GREEN": 331,
+    "FIX_IMPL_THEN_BIND": 0,
+    "RETIRE_FEATURE": 57,
+    "UPDATE_DOC": 0,
+    "WRITE_TEST": 0
+  },
+  "per_file": [
+    {
+      "covered_lines": 0,
+      "path": "docs/connectors/guide.md",
+      "ratio": 0.0,
+      "row_count": 0,
+      "total_lines": 9
+    },
+    {
+      "covered_lines": 0,
+      "path": "docs/reference/crates.md",
+      "ratio": 0.0,
+      "row_count": 0,
+      "total_lines": 147
+    },
+    {
+      "covered_lines": 0,
+      "path": "docs/security.md",
+      "ratio": 0.0,
+      "row_count": 0,
+      "total_lines": 9
+    },
+    {
+      "covered_lines": 0,
+      "path": "docs/why.md",
+      "ratio": 0.0,
+      "row_count": 0,
+      "total_lines": 12
+    },
+    {
+      "covered_lines": 1,
+      "path": "docs/decisions/003-nested-mount-layout.md",
+      "ratio": 0.00423728813559322,
+      "row_count": 1,
+      "total_lines": 236
+    },
+    {
+      "covered_lines": 1,
+      "path": "docs/social/linkedin.md",
+      "ratio": 0.024390243902439025,
+      "row_count": 1,
+      "total_lines": 41
+    },
+    {
+      "covered_lines": 1,
+      "path": "docs/social/twitter.md",
+      "ratio": 0.02857142857142857,
+      "row_count": 1,
+      "total_lines": 35
+    },
+    {
+      "covered_lines": 4,
+      "path": "docs/how-it-works/filesystem-layer.md",
+      "ratio": 0.056338028169014086,
+      "row_count": 5,
+      "total_lines": 71
+    },
+    {
+      "covered_lines": 6,
+      "path": "docs/guides/integrate-with-your-agent.md",
+      "ratio": 0.061224489795918366,
+      "row_count": 2,
+      "total_lines": 98
+    },
+    {
+      "covered_lines": 11,
+      "path": "docs/reference/git-remote.md",
+      "ratio": 0.08461538461538462,
+      "row_count": 8,
+      "total_lines": 130
+    },
+    {
+      "covered_lines": 18,
+      "path": "docs/research/initial-report.md",
+      "ratio": 0.08955223880597014,
+      "row_count": 4,
+      "total_lines": 201
+    },
+    {
+      "covered_lines": 10,
+      "path": "docs/decisions/001-github-state-mapping.md",
+      "ratio": 0.09090909090909091,
+      "row_count": 7,
+      "total_lines": 110
+    },
+    {
+      "covered_lines": 16,
+      "path": "docs/research/agentic-engineering-reference.md",
+      "ratio": 0.09195402298850575,
+      "row_count": 4,
+      "total_lines": 174
+    },
+    {
+      "covered_lines": 10,
+      "path": "docs/reference/jira.md",
+      "ratio": 0.09803921568627451,
+      "row_count": 2,
+      "total_lines": 102
+    },
+    {
+      "covered_lines": 22,
+      "path": "docs/decisions/002-confluence-page-mapping.md",
+      "ratio": 0.10138248847926268,
+      "row_count": 11,
+      "total_lines": 217
+    },
+    {
+      "covered_lines": 14,
+      "path": "docs/development/contributing.md",
+      "ratio": 0.1044776119402985,
+      "row_count": 12,
+      "total_lines": 134
+    },
+    {
+      "covered_lines": 10,
+      "path": "docs/reference/simulator.md",
+      "ratio": 0.10869565217391304,
+      "row_count": 3,
+      "total_lines": 92
+    },
+    {
+      "covered_lines": 12,
+      "path": "docs/how-it-works/trust-model.md",
+      "ratio": 0.11320754716981132,
+      "row_count": 17,
+      "total_lines": 106
+    },
+    {
+      "covered_lines": 5,
+      "path": "docs/development/roadmap.md",
+      "ratio": 0.11904761904761904,
+      "row_count": 5,
+      "total_lines": 42
+    },
+    {
+      "covered_lines": 25,
+      "path": "docs/reference/confluence.md",
+      "ratio": 0.11904761904761904,
+      "row_count": 3,
+      "total_lines": 210
+    },
+    {
+      "covered_lines": 28,
+      "path": "docs/reference/glossary.md",
+      "ratio": 0.12727272727272726,
+      "row_count": 24,
+      "total_lines": 220
+    },
+    {
+      "covered_lines": 21,
+      "path": "docs/decisions/009-stability-commitment.md",
+      "ratio": 0.15328467153284672,
+      "row_count": 4,
+      "total_lines": 137
+    },
+    {
+      "covered_lines": 20,
+      "path": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+      "ratio": 0.17543859649122806,
+      "row_count": 21,
+      "total_lines": 114
+    },
+    {
+      "covered_lines": 26,
+      "path": "README.md",
+      "ratio": 0.19402985074626866,
+      "row_count": 17,
+      "total_lines": 134
+    },
+    {
+      "covered_lines": 35,
+      "path": "docs/guides/write-your-own-connector.md",
+      "ratio": 0.19444444444444445,
+      "row_count": 21,
+      "total_lines": 180
+    },
+    {
+      "covered_lines": 18,
+      "path": "docs/benchmarks/latency.md",
+      "ratio": 0.20224719101123595,
+      "row_count": 14,
+      "total_lines": 89
+    },
+    {
+      "covered_lines": 26,
+      "path": "docs/how-it-works/git-layer.md",
+      "ratio": 0.21666666666666667,
+      "row_count": 7,
+      "total_lines": 120
+    },
+    {
+      "covered_lines": 13,
+      "path": "docs/benchmarks/token-economy.md",
+      "ratio": 0.22413793103448276,
+      "row_count": 6,
+      "total_lines": 58
+    },
+    {
+      "covered_lines": 29,
+      "path": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
+      "ratio": 0.23387096774193547,
+      "row_count": 29,
+      "total_lines": 124
+    },
+    {
+      "covered_lines": 55,
+      "path": "docs/guides/troubleshooting.md",
+      "ratio": 0.23605150214592274,
+      "row_count": 5,
+      "total_lines": 233
+    },
+    {
+      "covered_lines": 24,
+      "path": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
+      "ratio": 0.24,
+      "row_count": 19,
+      "total_lines": 100
+    },
+    {
+      "covered_lines": 37,
+      "path": "docs/index.md",
+      "ratio": 0.24183006535947713,
+      "row_count": 28,
+      "total_lines": 153
+    },
+    {
+      "covered_lines": 34,
+      "path": "docs/decisions/007-time-travel-via-git-tags.md",
+      "ratio": 0.2556390977443609,
+      "row_count": 4,
+      "total_lines": 133
+    },
+    {
+      "covered_lines": 48,
+      "path": "docs/reference/testing-targets.md",
+      "ratio": 0.2823529411764706,
+      "row_count": 18,
+      "total_lines": 170
+    },
+    {
+      "covered_lines": 25,
+      "path": "docs/concepts/reposix-vs-mcp-and-sdks.md",
+      "ratio": 0.30120481927710846,
+      "row_count": 9,
+      "total_lines": 83
+    },
+    {
+      "covered_lines": 94,
+      "path": "docs/reference/cli.md",
+      "ratio": 0.30128205128205127,
+      "row_count": 8,
+      "total_lines": 312
+    },
+    {
+      "covered_lines": 24,
+      "path": "docs/concepts/mental-model-in-60-seconds.md",
+      "ratio": 0.34285714285714286,
+      "row_count": 6,
+      "total_lines": 70
+    },
+    {
+      "covered_lines": 32,
+      "path": "docs/how-it-works/time-travel.md",
+      "ratio": 0.34782608695652173,
+      "row_count": 5,
+      "total_lines": 92
+    },
+    {
+      "covered_lines": 70,
+      "path": "docs/decisions/008-helper-backend-dispatch.md",
+      "ratio": 0.39106145251396646,
+      "row_count": 4,
+      "total_lines": 179
+    },
+    {
+      "covered_lines": 62,
+      "path": "docs/reference/http-api.md",
+      "ratio": 0.4217687074829932,
+      "row_count": 6,
+      "total_lines": 147
+    },
+    {
+      "covered_lines": 82,
+      "path": "docs/reference/exit-codes.md",
+      "ratio": 0.44086021505376344,
+      "row_count": 7,
+      "total_lines": 186
+    },
+    {
+      "covered_lines": 79,
+      "path": "docs/tutorials/first-run.md",
+      "ratio": 0.4438202247191011,
+      "row_count": 7,
+      "total_lines": 178
+    },
+    {
+      "covered_lines": 13,
+      "path": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+      "ratio": 0.4642857142857143,
+      "row_count": 16,
+      "total_lines": 28
+    },
+    {
+      "covered_lines": 58,
+      "path": "docs/decisions/005-jira-issue-mapping.md",
+      "ratio": 0.6170212765957447,
+      "row_count": 5,
+      "total_lines": 94
+    }
+  ]
+}

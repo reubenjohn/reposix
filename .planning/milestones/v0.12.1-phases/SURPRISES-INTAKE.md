@@ -38,3 +38,27 @@ Both rows surfaced now because P72 was the first walk after their referenced sou
 **Sketched resolution:** P76 runs `/reposix-quality-refresh .planning/milestones/v0.11.0-phases/REQUIREMENTS.md` and `/reposix-quality-refresh docs/decisions/009-stability-commitment.md` (or rebinds the cli-subcommand-surface row against the current `crates/reposix-cli/src/main.rs` shape). If either claim has genuinely diverged from current code, propose-retire or rebind with updated source-line range. Ship in a single P76 commit.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-04-29 20:55 | discovered-by: P74 | severity: LOW
+
+**What:** P74's PROSE-FIX-01 edited `docs/social/linkedin.md:21` (FUSE filesystem -> git-native partial clone). The existing BOUND row `docs/social/linkedin/token-reduction-92pct` at line 21 (`Source::Single`) tipped to `STALE_DOCS_DRIFT` on the post-edit `walk`. A second `walk` did NOT auto-heal the row — `last_verdict` remained `STALE_DOCS_DRIFT` even though `source_hash` was refreshed to `1a19b86e19e7b9730b93fef81cc4ba09fe1338052f157a4ec83fa5c988f11476`. CONTEXT.md D-08 predicted "transient STALE_DOCS_DRIFT then heals on the next walk" — that didn't happen. This is consistent with the P75 hash-overwrite bug noted in HANDOVER §4 (the bug is described there as `Source::Multi`-specific but appears to surface on `Source::Single` rows too).
+
+**Why out-of-scope for P74:** P75 is scoped specifically to fix the walker's hash/state machine bug. Fixing it inside P74 would mean editing `crates/reposix-quality/src/commands/doc_alignment.rs` walker code, which is exactly P75's planned modification set. SCOPE BOUNDARY honoured.
+
+**Sketched resolution:** P75 fixes the walker so a second `walk` after `source_hash` refresh transitions `STALE_DOCS_DRIFT` -> `BOUND` when the bound test still passes. After P75 ships, this row should heal on the next walk without a fresh bind. If P75's fix doesn't cover `Source::Single`, broaden the fix scope.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-04-29 20:56 | discovered-by: P74 | severity: LOW
+
+**What:** P74's `connector-matrix-on-landing.sh` verifier (D-06) was widened from CONTEXT.md's literal `^## .*[Cc]onnector` regex to `^## .*([Cc]onnector|[Bb]ackend)`. The actual heading on `docs/index.md:95` reads "## What each backend can do" (no "connector" word) — same matrix table at lines 102-107, synonym mismatch only. The capability matrix IS on landing; the noun differs from the catalog row's claim text ("Connector capability matrix added to landing page"). Widening the regex preserves the failure-mode the verifier cares about ("matrix accidentally deleted from landing") while being honest about live prose.
+
+**Why out-of-scope for P74:** This is a Rule-2 micro-deviation eager-fixed inside the verifier (per OP-8: < 5 min, no new dep). Logged here for traceability so a future agent doesn't re-investigate.
+
+**Sketched resolution:** Either (a) keep the widened regex as-is (current state — works), or (b) rename the heading to "## Connector capability matrix" in a future docs polish phase to make claim+heading literal-match. P77 GOOD-TO-HAVES candidate.
+
+**STATUS:** OPEN

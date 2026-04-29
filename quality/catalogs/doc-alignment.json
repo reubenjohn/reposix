@@ -5,15 +5,15 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 329,
+    "claims_bound": 328,
     "claims_missing_test": 0,
     "claims_retire_proposed": 27,
     "claims_retired": 30,
-    "alignment_ratio": 0.9189944134078212,
+    "alignment_ratio": 0.9162011173184358,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-29T20:30:29Z",
-    "coverage_ratio": 0.20308529945553536,
+    "last_walked": "2026-04-29T20:54:58Z",
+    "coverage_ratio": 0.20308529945553538,
     "lines_covered": 1119,
     "total_eligible_lines": 5510,
     "coverage_floor": 0.1
@@ -7007,7 +7007,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "Prose updated 92% -> 89.1% to match measured. bench_token_economy.py is the regenerator of the canonical 89.1% number",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-29T02:55:09Z",
       "last_extracted": "2026-04-29T02:55:09Z",
