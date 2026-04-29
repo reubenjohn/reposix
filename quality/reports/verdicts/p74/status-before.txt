@@ -1,0 +1,45 @@
+== global ==
+  claims_total           388
+  claims_bound           324
+  claims_missing_test    9
+  claims_retire_proposed 23
+  claims_retired         30
+  alignment_ratio        0.9050   (324 bound / 358 non-retired)
+  alignment_floor        0.5000
+  coverage_ratio         0.2031   (1119 covered / 5510 total eligible lines)
+  coverage_floor         0.1000
+  multi_test_rows        1
+  trend_30d              +0.00
+  last_walked            2026-04-29T20:30:29Z
+
+== next_action breakdown ==
+  WRITE_TEST          : 9
+  FIX_IMPL_THEN_BIND  : 0
+  UPDATE_DOC          : 0
+  RETIRE_FEATURE      : 53
+  BIND_GREEN          : 326
+
+== per-file (worst-covered first) ==
+  file                                                       total  covered    ratio    rows
+  ------------------------------------------------------------------------------------------
+  docs/connectors/guide.md                                       9        0    0.000       0
+  docs/reference/crates.md                                     147        0    0.000       0   <-- ZERO ROWS
+  docs/security.md                                               9        0    0.000       0
+  docs/why.md                                                   12        0    0.000       0
+  docs/decisions/003-nested-mount-layout.md                    236        1    0.004       1
+  docs/social/linkedin.md                                       41        1    0.024       1
+  docs/social/twitter.md                                        35        1    0.029       1
+  docs/how-it-works/filesystem-layer.md                         71        4    0.056       5
+  docs/guides/integrate-with-your-agent.md                      98        6    0.061       2
+  docs/reference/git-remote.md                                 130       11    0.085       8
+  docs/research/initial-report.md                              201       18    0.090       4
+  docs/decisions/001-github-state-mapping.md                   110       10    0.091       7
+  docs/research/agentic-engineering-reference.md               174       16    0.092       4
+  docs/reference/jira.md                                       102       10    0.098       2
+  docs/decisions/002-confluence-page-mapping.md                217       22    0.101      11
+  docs/development/contributing.md                             134       14    0.104      12
+  docs/reference/simulator.md                                   92       10    0.109       3
+  docs/how-it-works/trust-model.md                             106       12    0.113      17
+  docs/development/roadmap.md                                   42        5    0.119       5
+  docs/reference/confluence.md                                 210       25    0.119       3
+  ... (24 more; use --all)
