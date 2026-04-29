@@ -1,20 +1,24 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.12.0
-milestone_name: Quality Gates
-status: ready-to-tag-pending-owner-decision
-status_reason: "All 10 phases (P56-P65) shipped GREEN at the per-phase verifier level. Milestone-close verifier (Path A, commit 8a446b2) graded RED on G1 only: workspace `Cargo.toml` version is 0.11.3 but `.planning/milestones/v0.12.0-phases/tag-v0.12.0.sh` Guard 3 expects `0.12.0`. The original `v0.12.0 intentionally not tagged` decision (commit d7ea26c) was made when no `crates/` source had changed; P64 invalidated that premise by adding `crates/reposix-quality/`. Owner picks one of two paths documented in `quality/reports/verdicts/milestone-v0.12.0/VERDICT.md` § Gap-block G1: (Path A) bump workspace `Cargo.toml` to `0.12.0` and let release-plz cut a release cycle including the new crate; (Path B) keep `0.11.3`, set `crates/reposix-quality/Cargo.toml` to `publish = false`, edit `tag-v0.12.0.sh` Guard 3 to accept the planning-only tag pattern. Orchestrator does NOT autonomously bump the workspace version because either path is consequential for release-plz auto-publish behavior. STOP per overnight-protocol.md."
-last_updated: "2026-04-28T09:43:00Z"
-last_activity: 2026-04-28
+milestone: v0.12.1
+milestone_name: Carry-forwards + docs-alignment cleanup
+status: in-flight-autonomous-run-prepped
+status_reason: "v0.12.0 G1 closed (workspace Cargo.toml bumped 0.11.3 -> 0.12.0 in commit aa7472b). Local tag v0.12.0 created via `bash .planning/milestones/v0.12.0-phases/tag-v0.12.0.sh` on 2026-04-29 (commit c55b57e); push to origin BLOCKED by SSH config drift (`~/.ssh/config` points at id_github_ed25519 but key is named id_ed25519_github — owner pushes manually). v0.12.1 prep: P66 (coverage_ratio) shipped 2026-04-28; P67-P71 carry-forwards DEFERRED to follow-up session. Autonomous-run cluster P72-P77 scoped 2026-04-29: P72 lint-config invariants (9 rows), P73 connector contract gaps (4 rows), P74 narrative + UX cleanup + linkedin prose (10 actions), P75 bind-verb hash-overwrite fix, P76 surprises absorption (+2 reservation slot 1, OP-8), P77 good-to-haves polish (+2 reservation slot 2). HANDOVER-v0.12.1.md is the autonomous-run brief; CONTEXT.md per phase is dense with decisions D-01..D-12. Next agent enters via `/gsd-execute-phase 72`."
+last_updated: "2026-04-29T17:30:00Z"
+last_activity: 2026-04-29
 progress:
-  total_phases: 11
-  completed_phases: 0
-  total_plans: 53
-  completed_plans: 16
-  percent: 30
+  total_phases: 12
+  completed_phases: 1
+  total_plans: 0
+  completed_plans: 0
+  percent: 8
   v0_12_0_phases_total: 10
   v0_12_0_phases_completed: 10
   v0_12_0_percent: 100
+  v0_12_1_phases_total: 12
+  v0_12_1_phases_completed: 1
+  v0_12_1_phases_deferred_to_followup: 5
+  v0_12_1_phases_in_autonomous_run: 6
 ---
 
 # Project State

@@ -1,140 +1,133 @@
-# v0.12.1 HANDOVER — what to do when you return
+# v0.12.1 HANDOVER — autonomous-run brief
 
-> Lean handover. Detailed session log archived at
-> `.planning/milestones/v0.12.1-phases/SESSION-LOG-2026-04-28.md`.
-
-**Created:** 2026-04-29 PT (autonomous-mode session close).
+**Created:** 2026-04-29 PT (autonomous-run prep session close).
 **Owner:** reuben.
-**Eventually delete this file** — last commit closing the queue removes it.
+**Deadline:** 5pm PT.
+**Mode:** Highly autonomous. **Being ahead of schedule is suspicious** — it suggests skipping steps. Pace through the work; respect the verifier subagent dispatch on every phase close; update CLAUDE.md per phase.
+
+> **Eventually delete this file** — the last commit closing the run removes it.
 
 ---
 
-## Catalog state right now
+## Entry point
 
 ```
-claims_total           388
-claims_bound           313   (was 171 at session start; +142)
-claims_missing_test    22    (was 166; -144)
-claims_retire_proposed 23    pending owner TTY confirm
-claims_retired         30
-alignment_ratio        0.8743   ← CLEARS v0.12.1 0.85 target
-                       0.9343   PROJECTED after confirming 23 retires
+/gsd-execute-phase 72
 ```
 
-**Push status:** local ahead of origin by ~42 commits. Pre-push consistently `21 PASS / 1 FAIL / 3 WAIVED` — only `docs-alignment/walk` fails (per-row blocker design from original handover §3). Every other gate green.
-
-**G1 (v0.12.0 tag boundary): RESOLVED.** Workspace `Cargo.toml` bumped 0.11.3 → 0.12.0 to match shipped CHANGELOG. The new `active-milestone-matches-workspace-version.sh` verifier now PASSES. You can run `bash .planning/milestones/v0.12.0-phases/tag-v0.12.0.sh` whenever ready.
+Then 73 → 74 → 75 → 76 → 77 in sequence. Each phase is fully scoped:
+- ROADMAP entry: `.planning/milestones/v0.12.1-phases/ROADMAP.md` § Phase N.
+- Requirements: same file's REQUIREMENTS.md (LINT-CONFIG-*, CONNECTOR-GAP-*, NARRATIVE-*, UX-BIND-*, PROSE-FIX-*, BIND-VERB-FIX-*, SURPRISES-ABSORB-*, GOOD-TO-HAVES-*).
+- Research brief: `.planning/phases/<N>-<name>/CONTEXT.md` with 8-12 numbered decisions D-01..D-N. Treat the brief as **normative** — the planner consumes it.
 
 ---
 
-## What you should do (in order)
+## What was prepped (read before starting)
 
-### 1. Confirm 23 retire proposals (one TTY run, ~15 seconds)
+### Repo state at handover
 
-Start from a fresh terminal so `$CLAUDE_AGENT_CONTEXT` is unset:
+- Working tree clean (last commit: this handover prep).
+- Local ahead of origin by ~50 commits.
+- **Local tag `v0.12.0` exists.** Push BLOCKED — SSH config drift (`~/.ssh/config` IdentityFile points at `id_github_ed25519` but the actual key is `id_ed25519_github`). Owner pushes manually:
+  ```
+  git push origin main && git push origin v0.12.0
+  ```
+- `quality/catalogs/doc-alignment.json`: 388 rows total — 313 BOUND, 22 MISSING_TEST, 23 RETIRE_PROPOSED, 30 RETIRED. `alignment_ratio` 0.8743 (clears v0.12.1 0.85 target). `coverage_ratio` 0.2031 (above 0.10 floor). Pre-push: 21 PASS / 1 FAIL / 3 WAIVED — only `docs-alignment/walk` fails (per-row blocker by design — closes when P72-P74 land).
 
-```bash
-cd /home/reuben/workspace/reposix
-for row_id in $(jq -r '.rows[] | select(.last_verdict == "RETIRE_PROPOSED") | .id' quality/catalogs/doc-alignment.json); do
-  target/release/reposix-quality doc-alignment confirm-retire --row-id "$row_id"
-done
-git add quality/catalogs/doc-alignment.json
-git commit -m "docs(p67): bulk-confirm 23 retirements"
-git push
-```
+### Catalog rows targeted by P72-P74
 
-Per-row context: **`quality/reports/doc-alignment/RETIRE-PROPOSED-WALKTHROUGH.md`** (note: that doc was written when 37 rows were proposed; 14 have since flipped back to BOUND — Group 3 (3 rows) and Group 4 (10 rows) and Group 9 (1 row) — see "What's NEW" below).
+22 MISSING_TEST rows. Inventory by phase:
+- **P72 lint-config (9):** README + contributing.md lint/MSRV/test-count rows.
+- **P73 connector (4):** auth-header, real-backend-smoke, attachments-excluded, jira-not-implemented.
+- **P74 narrative + UX (9 + 1 prose):** 4 narrative-retires, 4 docs/index UX binds, 1 spaces-01 CLI smoke, 1 polish2-06-landing connector-matrix grep, plus linkedin.md:21 prose fix.
 
-The 23 remaining are Groups 1, 2, 5, 6, 7, 8 — all uncontroversial:
-- 14 FUSE-pivot supersession (Group 1)
-- 4 v0.9.0-superseded benchmarks (Group 2)
-- 2 subjective rubrics → handled by `reposix-quality-review` (Group 5)
-- 1 deferral status (`playwright-screenshots-deferred`, Group 6)
-- 1 Phase-28→29 supersession (jira phase-28 read-only, Group 7)
-- 1 outdated forward-looking ("v0.4 will add write path", Group 8)
+23 RETIRE_PROPOSED rows are **owner-TTY-only** to confirm — see "What the owner owes" below.
 
-### 2. Tag v0.12.0 (G1 unblocked)
+### +2 phase reservation (OP-8 — new operating principle)
 
-```bash
-bash .planning/milestones/v0.12.0-phases/tag-v0.12.0.sh
-```
-
-(After this, bump Cargo.toml to 0.12.1 in a follow-up commit if you want active dev to track v0.12.1 next-release. Optional — current 0.12.0 is fine for "shipping mode".)
-
-### 3. Residual 22 MISSING_TEST rows — what I need from you
-
-I can't auto-close these without your judgment on each. Decisions I need:
-
-#### 3a. Lint-config invariants (9 rows) — write bespoke verifiers? `[Y/N]`
-- `forbid-unsafe-code`, `forbid-unsafe-per-crate`, `rust-1-82-requirement`, `rust-stable-no-nightly`, `errors-doc-section-required`, `tests-green`, `cargo-check-workspace-available`, `cargo-test-133-tests`, `demo-script-exists`
-- Verifiers needed: workspace-walker that asserts `#![forbid(unsafe_code)]` on every `lib.rs`, grep for `rust-version = "1.82"` in workspace Cargo.toml, etc. Each verifier is ~15-30 min.
-- **If yes**: I write them; rows go BOUND. ~3-4 hours total work.
-- **If no**: leave MISSING_TEST as backlog; pre-push walker keeps blocking on them.
-
-#### 3b. Connector contract gaps (4 rows) — backlog or address now? `[backlog/now]`
-- `auth-header-exact-test`, `real-backend-smoke-fixture`, `attachments-comments-excluded`, `jira-real-adapter-not-implemented`
-- These need NEW Rust tests (wiremock fns or `cargo test --ignored` coverage). Each is ~30-60 min real test-writing work.
-- **If now**: I write them; rows go BOUND.
-- **If backlog**: surface as v0.13.0 phase per HANDOVER P73 (JIRA shape) / P75 (connector authoring guide).
-
-#### 3c. Narrative numbers (4 rows) — retire as untestable? `[Y/N]`
-- `use-case-20-percent-rest-mcp`, `use-case-80-percent-routine-ops`, `mcp-fixture-synthesized-not-live`, `mcp-schema-discovery-100k-tokens`
-- These are qualitative design framing (e.g. "20% of agent ops use REST/MCP"). No test could falsify them.
-- **If yes**: propose-retire with rationale "qualitative design framing; no behavioral assertion possible" (you'd confirm in step 1's pattern).
-- **If no**: tell me what you want them to bind to; otherwise I leave MISSING_TEST.
-
-#### 3d. docs/index UX claims (4 rows) — handle now? `[per-row guidance]`
-- `5-line-install` — "the install path fits in 5 lines on the landing page". Could bind to subjective-rubrics catalog (install-positioning rubric) instead of docs-alignment.
-- `audit-trail-git-log` — "git log IS the audit trail" claim. Could bind to a verifier that asserts `git log` shows audit-relevant commits, OR mark qualitative.
-- `tested-three-backends` — "three real backends are tested". Could bind to `quality/gates/agent-ux/` if a multi-backend smoke test exists, or write one.
-- `spaces-01` — `reposix spaces` subcommand. Owner-decision territory: does the subcommand still exist? If yes, bind to a CLI smoke test. If no, retire.
-
-#### 3e. LinkedIn FUSE drift (1 row): fix prose now? `[Y/N]`
-- `docs/social/linkedin.md:21` still says "FUSE filesystem" framing — v0.9.0-era doc-drift class.
-- **If yes**: I update prose to drop "FUSE" reference (one-line edit), rebind to bench script.
-- **If no**: leave MISSING_TEST as backlog.
-
-### 4. Known issue captured for v0.13.0
-
-The bind verb appends source citations (`Source::Multi`) AND overwrites `source_hash` with the new range's hash, but the walker reads the FIRST source citation. Caused false `STALE_DOCS_DRIFT` after every cluster sweep this session (mitigated inline by re-binding with the wider existing range). Fix: either preserve first-source semantics in `bind`, OR have walker hash all sources. ~30 min Rust work in `crates/reposix-quality/src/commands/doc_alignment.rs::verbs::bind` (line 295 area).
+CLAUDE.md OP-8 (added during prep, line ~48 of CLAUDE.md) defines the **+2 phase practice**:
+- Every milestone reserves its last two phases for surprises and good-to-haves discovered during planned-phase execution.
+- P72-P75 phases append to `.planning/milestones/v0.12.1-phases/{SURPRISES-INTAKE,GOOD-TO-HAVES}.md` when they find something out-of-scope. P76 drains SURPRISES; P77 drains GOOD-TO-HAVES.
+- **Eager-resolution preference is load-bearing:** if a discovery is < 1 hour, no new dep, no new file outside the planned set — fix it inside the discovering phase. The intake is for items that genuinely don't fit.
+- Read OP-8 in CLAUDE.md before starting P72; it's not a suggestion.
 
 ---
 
-## What's NEW in this session (one-line each)
+## Operating principles to honor (don't skip these)
 
-- **W3 P67** — extractor + grader prompts learn the transport-vs-feature heuristic.
-- **W4 P68** — `next_action` enum on every row; status breakdown.
-- **W5 P69** — `confirm-retire --i-am-human` flag (audit-trailed).
-- **W6 P70** — pre-push self-test FAIL-path coverage.
-- **W7 P71** — `tests` Vec / per-element drift / 388-row schema 2.0 migration / `bind --test` repeatable.
-- **Schema extension** — `--test` accepts shell/Python verifier paths (whole-file sha256).
-- **9 cluster sweeps** — alignment lift via rebinds + retire-proposes.
-- **P72 doc rewrite** — `docs/reference/confluence.md` FUSE-era section rewritten for v0.9.0 git-native shape.
-- **3 new structure verifiers**:
-  - `active-milestone-matches-workspace-version.sh` — catches CHANGELOG/Cargo version drift.
-  - `required-doc-surfaces.sh` — asserts v0.10 Diataxis docs structure (14 paths + nav + theme).
-  - `release-tags-present.sh` — asserts shipped milestones have git tags. **Currently flags v0.10.0 tag missing despite CHANGELOG entry — real release-tooling drift to close in v0.13.0.**
-- **G1 closed** — Cargo workspace bumped 0.11.3 → 0.12.0.
-- **Social 92% → 89.1% prose fix** + 2 social rows BOUND.
+| Principle | Where it lives | Why it matters here |
+|---|---|---|
+| **Verifier subagent grades GREEN** | CLAUDE.md OP-7 / QG-06 | Every phase close dispatches `gsd-verifier` (Path A via `Task` from top-level). Verdict at `quality/reports/verdicts/p<N>/VERDICT.md`. Executing agent does NOT talk verifier out of RED. |
+| **CLAUDE.md update per phase** | CLAUDE.md QG-07 | Each phase introducing a file/convention/gate updates CLAUDE.md in the same PR. P72-P77 each gain an H3 subsection ≤30 lines under "v0.12.1 — in flight". |
+| **Build memory budget** | CLAUDE.md § "Build memory budget" | One cargo invocation at a time. Per-crate over workspace where possible. The VM has crashed twice from parallel cargo. |
+| **+2 phase practice** | CLAUDE.md OP-8 | See above. Append to intake files instead of expanding scope or silently skipping. |
+| **No push, no tag, no release** | global CLAUDE.md "Executing actions with care" | Owner pushes (SSH config drift means they have to anyway). Don't `git push`, don't `git tag --push`, don't run `cargo publish`. Local commits only. |
+| **Catalog-first commits** | quality/PROTOCOL.md | First commit of each phase writes the catalog rows / verifier-script stubs that define GREEN; subsequent commits reference row IDs. |
+| **Subagent delegation** | CLAUDE.md § "Subagent delegation rules" | gsd-planner for plans (don't write PLAN.md by hand); gsd-executor for execution; gsd-code-reviewer after each phase ships; verifier subagent on close. |
 
-Per-commit detail in `.planning/milestones/v0.12.1-phases/SESSION-LOG-2026-04-28.md`.
+---
+
+## Per-phase budget (5pm pacing)
+
+| Phase | Effort | Run cap | Notes |
+|---|---|---|---|
+| P72 lint-config | 3.5 hr | 4 hr | Heaviest. 9 verifiers. Front-load while context fresh. |
+| P73 connector | 2-3 hr | 3 hr | 2 new Rust tests + 1 rebind + 1 prose-or-retire. |
+| P74 narrative + UX | 1.5-2 hr | 2 hr | Fastest. Mostly shell scripts + a one-line prose edit. |
+| P75 bind-verb fix | 30-45 min | 1 hr | Small Rust fix + regression test + live walk smoke. |
+| P76 surprises | variable | 1.5 hr | Depends on what P72-P75 surfaced. |
+| P77 good-to-haves | whatever fits | 30 min floor | Time-boxed to 5pm. XS items first. |
+| **Total** | **~9 hr** | **~12 hr** | Realistic ~7 hr of focused work + ~2 hr verifier dispatch + 1 hr CLAUDE.md updates. |
+
+If you're done much before 5pm, you've skipped steps. Common skips: (a) skipping CLAUDE.md updates per phase, (b) inline-grading instead of dispatching the verifier, (c) folding multiple phases into one commit, (d) handwaving REQUIREMENTS.md flips. Don't.
+
+---
+
+## What the owner owes (do NOT do these — wait for owner)
+
+1. **Push v0.12.0 tag** — `git push origin main && git push origin v0.12.0` (manually, after fixing SSH config OR via HTTPS push). Tag exists locally.
+2. **Bulk-confirm 23 RETIRE_PROPOSED rows** — env-guarded; needs TTY without `$CLAUDE_AGENT_CONTEXT` set. Owner runs:
+   ```bash
+   for row_id in $(jq -r '.rows[] | select(.last_verdict == "RETIRE_PROPOSED") | .id' quality/catalogs/doc-alignment.json); do
+     target/release/reposix-quality doc-alignment confirm-retire --row-id "$row_id"
+   done
+   git add quality/catalogs/doc-alignment.json && git commit -m "docs(v0.12.1): bulk-confirm 23 retirements"
+   ```
+3. **Confirm 4 NEW propose-retires** (added by P74 — narrative-rows). Same TTY pattern.
+4. **Bump Cargo.toml to 0.12.1** (optional; signals active dev tracks v0.12.1 next-release).
+
+The next agent should NOT attempt these — they're owner-TTY-only or consequential.
+
+---
+
+## What's NEW since the previous handover
+
+- **CLAUDE.md OP-8** (the +2 phase practice) added.
+- **6 new phase research briefs** under `.planning/phases/{72,73,74,75,76,77}-*/CONTEXT.md`.
+- **2 new intake files:** `SURPRISES-INTAKE.md` + `GOOD-TO-HAVES.md` under `.planning/milestones/v0.12.1-phases/`.
+- **ROADMAP** rewritten with concrete P72-P77 entries replacing the generic "Phase 72+" stub.
+- **REQUIREMENTS** grew from 18 to 40 items (LINT-CONFIG-* through GOOD-TO-HAVES-*).
+- **STATE.md** flipped milestone cursor to v0.12.1 in-flight.
+- **Local v0.12.0 tag** created; push pending owner SSH fix.
 
 ---
 
 ## Cleanup criterion
 
 This file deletes itself when:
-- Step 1 (23 retire-confirms) ships.
-- Step 2 (v0.12.0 tag) ships.
-- Step 3 decisions made (whichever path you choose).
+- All 6 phases (P72-P77) ship verifier-GREEN.
+- Owner has pushed v0.12.0 tag and confirmed retires.
+- A v0.12.1 milestone-close verdict is graded GREEN at `quality/reports/verdicts/milestone-v0.12.1/VERDICT.md`.
 
-The commit closing the last item includes `git rm .planning/HANDOVER-v0.12.1.md`.
+The commit closing the autonomous run includes `git rm .planning/HANDOVER-v0.12.1.md` and writes a session summary inline in the commit message.
 
 ---
 
 ## Optional reading
 
-- `quality/reports/doc-alignment/RETIRE-PROPOSED-WALKTHROUGH.md` — per-row retire reasoning (note: 14 of the original 37 have been un-retired; doc still describes them as RETIRE_PROPOSED but they're now BOUND).
-- `.planning/milestones/v0.12.1-phases/SESSION-LOG-2026-04-28.md` — full session log.
-- `quality/PROTOCOL.md` — runtime contract for the quality gates.
+- `.planning/milestones/v0.12.1-phases/ROADMAP.md` — concrete phase-by-phase scope.
+- `.planning/milestones/v0.12.1-phases/SESSION-LOG-2026-04-28.md` — previous session's full log.
+- CLAUDE.md § "Operating Principles (project-specific)" — OP-1..OP-8 (OP-8 is new).
 - CLAUDE.md § "v0.12.1 — in flight" — high-level mental model.
+- `quality/PROTOCOL.md` — runtime contract for the quality gates.
+- `quality/SURPRISES.md` — project-wide pivot journal (different from `SURPRISES-INTAKE.md` — that one's phase-scoped).

@@ -45,6 +45,49 @@ The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The f
    a release-pipeline regression is fixed, the same PR ships
    container-rehearsal evidence under `.planning/verifications/p56/`
    (or `quality/reports/verifications/release/` after P58).
+8. **Plans accommodate surprises (the +2 phase practice).** Every
+   milestone reserves its **last two phases** as absorption slots for
+   what reality surfaces during planned-phase execution:
+   - **Slot 1 — Surprises absorption.** Issues a planned phase
+     discovered but couldn't fix without doubling its scope. The
+     discovering phase appends to
+     `.planning/milestones/<v>-phases/SURPRISES-INTAKE.md` (one entry
+     per item: severity + what + whf(c)zy-out-of-scope + sketched
+     resolution) instead of silently skipping or expanding scope.
+     The surprises-absorption phase drains the file: each entry → RESOLVED |
+     DEFERRED | WONTFIX, each with a commit SHA or rationale.
+   - **Slot 2 — Good-to-haves polish.** Improvements (clarity, perf,
+     consistency, grounding) the planned phases observed but didn't
+     fold in. Same intake mechanism, separate file
+     (`GOOD-TO-HAVES.md`). Sized XS / S / M; XS items always close;
+     M items default-defer to next milestone.
+
+   **Eager-resolution preference (load-bearing):** when a planned
+   phase observes a surprise or polish item, prefer fixing it inside
+   the discovering phase IF (a) < 1 hour incremental work, (b) no
+   new dependency introduced, (c) no new file created outside the
+   phase's planned set. The +2 reservation is for items that
+   genuinely don't fit the discovering phase. **What this practice
+   prevents:** the "found-it-but-skipped-it" failure mode where good
+   signal gets dropped to keep a phase tight; AND the
+   "scope-creep-to-fit-the-finding" failure mode where a phase grows
+   to twice its planned size to absorb every drift discovered. The
+   intake split makes "I saw it, here's what I think, P<last-2> will
+   handle it" the default move.
+
+   **Verifier honesty check:** the surprises-absorption phase's
+   verifier subagent spot-checks the previous phases' plans + verdicts
+   and asks "did this phase honestly look for out-of-scope items?" An
+   empty intake is acceptable IF the running phases produced
+   "Eager-resolution" decisions in their plans; an empty intake when
+   the verdicts show skipped findings is a RED signal. This prevents
+   the practice from degrading into a no-op.
+
+   The +2 reservation is in addition to whatever planned phases the
+   milestone scopes; if the milestone has 8 planned phases, it
+   actually has 10 (planned + 2 reservation). Roadmap entries for the
+   reservation phases name them explicitly so they're not omitted by
+   accident.
 
 ## Workspace layout
 
