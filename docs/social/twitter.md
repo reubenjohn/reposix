@@ -15,7 +15,7 @@ I woke up to this 👇
 Part 2:
 Result: **reposix** — a FUSE filesystem + git-remote-helper for issue trackers.
 
-In a simulated benchmark (representative 35-tool Jira-shaped MCP fixture vs reposix shell session): **~92% fewer tokens** for the same task. Real-world numbers TBD — but the direction is clear.
+In a simulated benchmark (representative 35-tool Jira-shaped MCP fixture vs reposix shell session): **89.1% fewer tokens** for the same task. Real-world numbers TBD — but the direction is clear.
 
 Only inputs I gave it: https://github.com/reubenjohn/reposix/blob/603dfa558dd1266515be47f7cd92376c861c34d5/InitialReport.md
 

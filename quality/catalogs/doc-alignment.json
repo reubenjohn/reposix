@@ -5,16 +5,16 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 291,
-    "claims_missing_test": 24,
+    "claims_bound": 299,
+    "claims_missing_test": 22,
     "claims_retire_proposed": 37,
     "claims_retired": 30,
-    "alignment_ratio": 0.8128491620111732,
+    "alignment_ratio": 0.835195530726257,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-28T20:00:16Z",
-    "coverage_ratio": 0.2029038112522686,
-    "lines_covered": 1118,
+    "last_walked": "2026-04-29T01:59:10Z",
+    "coverage_ratio": 0.20326678765880216,
+    "lines_covered": 1120,
     "total_eligible_lines": 5510,
     "coverage_floor": 0.1
   },
@@ -321,7 +321,7 @@
           "line_end": 111
         }
       ],
-      "source_hash": "02cb0af6726c59c54fc48fe345cf0596234fb9bc58b6dd4ccd37e9d4dce0a12c",
+      "source_hash": "fb8f1ec80713e86fa5d7ceaff4c46e514a27fe1b15e1d9ffd03239b549b73ef5",
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
       ],
@@ -329,10 +329,10 @@
         "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
       ],
       "rationale": "Tutorial-replay drives the edit-and-diff step",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-04-29T02:55:42Z",
+      "last_extracted": "2026-04-29T02:55:42Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1242,7 +1242,7 @@
           "line_end": 24
         }
       ],
-      "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_hash": "23955cb18741e86f3780538e3ffe24039ccb456bc07ff7f1cd107edcd1237f72",
       "tests": [
         "scripts/banned-words-lint.sh"
       ],
@@ -1252,8 +1252,8 @@
       "rationale": "scripts/banned-words-lint.sh is the linter named in the claim; whole-file hash gates the linter content",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T20:01:27Z",
-      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_run": "2026-04-29T02:55:42Z",
+      "last_extracted": "2026-04-29T02:55:42Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1787,7 +1787,7 @@
           "line_end": 96
         }
       ],
-      "source_hash": "c6d28a18968839fd7e134a3c8791771c6410b57893459efc857cff8a12485649",
+      "source_hash": "1b90aaad679863bb4bae6fe848f2f3b5446c0f880430c8730df3e9cf11f80100",
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
       ],
@@ -1795,10 +1795,10 @@
         "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
       ],
       "rationale": "Tutorial-replay drives the first-run script through cat-issue step",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-04-29T02:55:42Z",
+      "last_extracted": "2026-04-29T02:55:42Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1930,7 +1930,7 @@
           "line_end": 99
         }
       ],
-      "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_hash": "2ca0ae385813ebded0f06be7f3cee9e99a04a28999b56e5745c733aa70002a79",
       "tests": [
         "scripts/check-docs-site.sh"
       ],
@@ -1940,8 +1940,8 @@
       "rationale": "scripts/check-docs-site.sh delegates to quality/gates/docs-build/mkdocs-strict.sh; whole-file hash gates the wrapper script content",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T20:01:27Z",
-      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_run": "2026-04-29T02:55:42Z",
+      "last_extracted": "2026-04-29T02:55:42Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4499,7 +4499,7 @@
           "line_end": 90
         }
       ],
-      "source_hash": "5c0f756e48411d5ad967be7d92c5b5514ab372417f08b92def13ac3a9206093d",
+      "source_hash": "009ad183ce0959a803467c64725898dd66ffd7ce0362b25f56788027618ee8a9",
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
       ],
@@ -4507,10 +4507,10 @@
         "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
       ],
       "rationale": "Tutorial-replay verifies sim seed listing",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-04-29T02:55:42Z",
+      "last_extracted": "2026-04-29T02:55:42Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -5929,18 +5929,25 @@
     },
     {
       "id": "docs/social/twitter/token-reduction-92pct",
-      "claim": "reposix achieves ~92% fewer tokens than MCP-mediated baseline in token-economy benchmark",
+      "claim": "reposix achieves 89.1% fewer tokens than MCP-mediated baseline in token-economy benchmark (number now matches measured)",
       "source": {
         "file": "docs/social/twitter.md",
         "line_start": 18,
         "line_end": 18
       },
-      "source_hash": "030a5835eac0b52c89b5269e0864c56cd57e21ef7432dcc7bef6d738097b4ddf",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:15:30Z",
-      "last_extracted": "2026-04-28T09:15:30Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "source_hash": "a1c019a95c55a56427dc9f187e702faa0bfd041504753815089f6339dd9ff603",
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+      ],
+      "rationale": "Prose updated 92% -> 89.1% to match measured. bench_token_economy.py is the regenerator of the canonical 89.1% number",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T02:55:09Z",
+      "last_extracted": "2026-04-29T02:55:09Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "audit-trail-sqlite-git-log",
@@ -6683,7 +6690,7 @@
           "line_end": 34
         }
       ],
-      "source_hash": "58b74adf47cacbcc40dd1ae62bed4c0fb1237ff5b01aea1c507713d11817a59c",
+      "source_hash": "4d93866c88489f9683a462abc1b0eb92720e77036c988a8818f17b687a8ad197",
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
@@ -6691,10 +6698,10 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "Comparison page mirror of reposix-side count",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-04-29T02:55:42Z",
+      "last_extracted": "2026-04-29T02:55:42Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6824,18 +6831,25 @@
     },
     {
       "id": "docs/social/linkedin/token-reduction-92pct",
-      "claim": "reposix used ~92% fewer tokens than MCP-mediated baseline in benchmark (simulated 35-tool Jira)",
+      "claim": "reposix used 89.1% fewer tokens than MCP-mediated baseline (simulated 35-tool Jira)",
       "source": {
         "file": "docs/social/linkedin.md",
         "line_start": 21,
         "line_end": 21
       },
-      "source_hash": "147a3b47f2a7805d832096cd18dac77f7ed487c4098c63ef30b9463f587e7662",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:15:34Z",
-      "last_extracted": "2026-04-28T09:15:34Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "source_hash": "1a19b86e19e7b9730b93fef81cc4ba09fe1338052f157a4ec83fa5c988f11476",
+      "tests": [
+        "quality/gates/perf/bench_token_economy.py"
+      ],
+      "test_body_hashes": [
+        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+      ],
+      "rationale": "Prose updated 92% -> 89.1% to match measured. bench_token_economy.py is the regenerator of the canonical 89.1% number",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T02:55:09Z",
+      "last_extracted": "2026-04-29T02:55:09Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/token-economy/reduction-89-percent",
@@ -7426,7 +7440,7 @@
           "line_end": 156
         }
       ],
-      "source_hash": "d9a1f5c612d2ee1b09fb9c1e3b5336e256270dfdaf2d71954deca5c3e2103462",
+      "source_hash": "39fe8aa49a73139aa9acd03187a2d0fa9211c7543fae69d74b2d5bf74bc954ed",
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
       ],
@@ -7434,10 +7448,10 @@
         "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
       ],
       "rationale": "Tutorial-replay covers the audit-query final step",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-04-29T02:55:42Z",
+      "last_extracted": "2026-04-29T02:55:42Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7730,7 +7744,7 @@
           "line_end": 17
         }
       ],
-      "source_hash": "415eda379bcaf2e9fd69273bcc5e77c94b29d1da38e3c81e4c527d17060199a0",
+      "source_hash": "a2658bd81a06030413cf9d3b60f9d3750c508f53ebe4abe9d9c2ec66bb7d074e",
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
@@ -7738,10 +7752,10 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "Concept page mirror of canonical headline reduction",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-04-29T02:55:42Z",
+      "last_extracted": "2026-04-29T02:55:42Z",
       "last_extracted_by": "bind-call"
     },
     {
