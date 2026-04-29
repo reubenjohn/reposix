@@ -6,14 +6,14 @@
   "summary": {
     "claims_total": 388,
     "claims_bound": 324,
-    "claims_missing_test": 9,
-    "claims_retire_proposed": 23,
+    "claims_missing_test": 5,
+    "claims_retire_proposed": 27,
     "claims_retired": 30,
     "alignment_ratio": 0.9050279329608939,
     "floor": 0.5,
     "trend_30d": "+0.00",
     "last_walked": "2026-04-29T20:30:29Z",
-    "coverage_ratio": 0.20308529945553538,
+    "coverage_ratio": 0.20308529945553536,
     "lines_covered": 1119,
     "total_eligible_lines": 5510,
     "coverage_floor": 0.1
@@ -60,12 +60,12 @@
         "line_end": 54
       },
       "source_hash": "a24164b0e601151f3eb395f7369cff047eedae189c9d181c036388e5bfff92cf",
-      "rationale": "Design premise stated; no test quantifies the 20% split or verifies REST operations remain unshaded",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:04:22Z",
-      "last_extracted": "2026-04-28T09:04:22Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "use-case-20-percent-rest-mcp — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-29T20:53:46Z",
+      "last_extracted": "2026-04-29T20:53:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/index/latency-24ms-cold-init",
@@ -98,12 +98,12 @@
         "line_end": 32
       },
       "source_hash": "9b0fc7d18490479a0a4b44820de5e31356ddd6eb939830695ab8a53311cca812",
-      "rationale": "Caveat documented in note block; real-MCP baseline to land post-v0.12.0 when upstream MCP server GA + stable per tracked v0.12.0 follow-up",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:23Z",
-      "last_extracted": "2026-04-28T09:05:23Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "mcp-fixture-synthesized-not-live — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-29T20:53:46Z",
+      "last_extracted": "2026-04-29T20:53:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-13-cli-dedup",
@@ -217,12 +217,12 @@
         "line_end": 44
       },
       "source_hash": "37a0b8756c0ae31b4d1a872855722255eed937765b9edd4ec40d0256e783ead8",
-      "rationale": "Examples in mental-model doc § 3 and benchmark session.txt show these ops; no measurement of agent operation distribution quantifies the 80%",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:05:07Z",
-      "last_extracted": "2026-04-28T09:05:07Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "use-case-80-percent-routine-ops — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-29T20:53:46Z",
+      "last_extracted": "2026-04-29T20:53:46Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/index/token-reduction-89-percent",
@@ -4736,12 +4736,12 @@
         "line_end": 13
       },
       "source_hash": "917575b56f9c55a9a5c4371e35f4d35cbb7e301ae17ea135879dac3d1732da01",
-      "rationale": "Characterized from public-API behavior; not measured by reposix harness per note on line 21",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:04:16Z",
-      "last_extracted": "2026-04-28T09:04:16Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "rationale": "mcp-schema-discovery-100k-tokens — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
+      "last_verdict": "RETIRE_PROPOSED",
+      "next_action": "RETIRE_FEATURE",
+      "last_run": "2026-04-29T20:53:47Z",
+      "last_extracted": "2026-04-29T20:53:47Z",
+      "last_extracted_by": "propose-retire-call"
     },
     {
       "id": "docs/benchmarks/token-economy/mcp-mediated-baseline-4883-tokens",
