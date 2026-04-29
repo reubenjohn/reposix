@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 300,
+    "claims_bound": 313,
     "claims_missing_test": 22,
-    "claims_retire_proposed": 36,
+    "claims_retire_proposed": 23,
     "claims_retired": 30,
-    "alignment_ratio": 0.8379888268156425,
+    "alignment_ratio": 0.8743016759776536,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-29T01:59:10Z",
+    "last_walked": "2026-04-29T02:59:00Z",
     "coverage_ratio": 0.20326678765880216,
     "lines_covered": 1120,
     "total_eligible_lines": 5510,
@@ -428,16 +428,22 @@
       "claim": "AgenticEngineeringReference.md relocated to docs/research/agentic-engineering-reference.md",
       "source": {
         "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
-        "line_start": 99,
-        "line_end": 99
+        "line_start": 104,
+        "line_end": 104
       },
-      "source_hash": "b7f2b150b974ab1e92802aaea3d34477c2b036eb71c2e437d53867d78c2523a4",
-      "rationale": "Historical milestone fact -- file at destination path. One-time structural event.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:59:46Z",
-      "last_extracted": "2026-04-28T19:59:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "c525640c2b0510de5746bef27b9864fdf8f1fe93d3548509d815c0da70c34a7f",
+      "tests": [
+        "quality/gates/structure/required-doc-surfaces.sh"
+      ],
+      "test_body_hashes": [
+        "a76eb01c615f48c684f846d651020b0f328aecc9a92a023af33229ad88b62718"
+      ],
+      "rationale": "required-doc-surfaces.sh asserts docs/research/agentic-engineering-reference.md exists",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T03:18:11Z",
+      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/guides/integrate-with-your-agent/stderr-teaching-strings",
@@ -488,16 +494,22 @@
       "claim": "Cross-references updated to new doc paths; old absolute paths removed",
       "source": {
         "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
-        "line_start": 100,
-        "line_end": 100
+        "line_start": 105,
+        "line_end": 105
       },
-      "source_hash": "c11b0114dbb48701cacfd018acdd0767a1d83405b394a28fed3db5658dfd71bf",
-      "rationale": "Historical milestone fact -- structural cross-ref update shipped. Mkdocs-strict + link-resolution gates would fail if regressed; covered indirectly. No row-level test possible.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:59:46Z",
-      "last_extracted": "2026-04-28T19:59:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "b26e2c96eb18e667acd052d6603d3fcc4cb882ec33d870c1c05d2f6089a3d810",
+      "tests": [
+        "quality/gates/structure/required-doc-surfaces.sh"
+      ],
+      "test_body_hashes": [
+        "a76eb01c615f48c684f846d651020b0f328aecc9a92a023af33229ad88b62718"
+      ],
+      "rationale": "required-doc-surfaces.sh asserts the relocated paths still exist; mkdocs-strict + link-resolution gates the cross-ref update",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T03:18:11Z",
+      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "trust-model/no-direct-reqwest-client-construction",
@@ -3876,16 +3888,22 @@
       "claim": "InitialReport.md relocated to docs/research/initial-report.md",
       "source": {
         "file": ".planning/milestones/v0.8.0-phases/REQUIREMENTS.md",
-        "line_start": 98,
-        "line_end": 98
+        "line_start": 103,
+        "line_end": 103
       },
-      "source_hash": "b74391422c7f34f9e08b25a2b116fbff5ccbc5fa44ce35cc09009eafcf665c7b",
-      "rationale": "Historical milestone fact -- the move shipped (file exists at the destination). Past one-time structural event; no behavioral test could fail.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:59:46Z",
-      "last_extracted": "2026-04-28T19:59:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests": [
+        "quality/gates/structure/required-doc-surfaces.sh"
+      ],
+      "test_body_hashes": [
+        "a76eb01c615f48c684f846d651020b0f328aecc9a92a023af33229ad88b62718"
+      ],
+      "rationale": "required-doc-surfaces.sh asserts docs/research/initial-report.md exists; whole-file hash detects accidental deletion of the verifier",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T03:18:11Z",
+      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "README-md/token-89-percent",
@@ -4736,35 +4754,47 @@
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/mkdocs-nav-diataxis-restructure",
-      "claim": "mkdocs nav restructured to Diataxis (reference / how-it-works / concepts / guides / tutorials / development)",
+      "claim": "mkdocs nav restructured to Diataxis (How it works / Concepts / Guides / Tutorials / Reference)",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 19,
-        "line_end": 19
+        "line_start": 23,
+        "line_end": 23
       },
-      "source_hash": "3b08f5362205d1e4443fea061c64d37f5246e326b2bfd9309f5fcee842def531",
-      "rationale": "Historical structural event -- nav reflects Diataxis. mkdocs.yml + structure freshness gates this loosely. Retire as one-time milestone.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T20:01:28Z",
-      "last_extracted": "2026-04-28T20:01:28Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "a76f570774673eadf10330e199d72edd0dbbf333baf757c030178fb4c0c495a2",
+      "tests": [
+        "quality/gates/structure/required-doc-surfaces.sh"
+      ],
+      "test_body_hashes": [
+        "a76eb01c615f48c684f846d651020b0f328aecc9a92a023af33229ad88b62718"
+      ],
+      "rationale": "Verifier asserts mkdocs.yml nav contains all 5 Diataxis section headers (case-sensitive 'How it works' lowercase i)",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T03:18:11Z",
+      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs08-theme-readme-rewrite",
-      "claim": "mkdocs theme + README rewritten in v0.10.0",
+      "claim": "mkdocs theme set to 'material' + README rewritten in v0.10.0",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 20,
-        "line_end": 20
+        "line_start": 25,
+        "line_end": 25
       },
-      "source_hash": "ac04fc674aa69679763ed36dd8746feee505f4a95ed8441749d13a798e2959b1",
-      "rationale": "Historical structural event -- mkdocs theme is configured; README rewrite shipped. mkdocs-strict gates the build. Retire as one-time milestone.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T20:01:27Z",
-      "last_extracted": "2026-04-28T20:01:27Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "df0ca33e27b70de9fa465e670e14d79656d018470b3f9dac770e10cbeb18eb8e",
+      "tests": [
+        "quality/gates/structure/required-doc-surfaces.sh"
+      ],
+      "test_body_hashes": [
+        "a76eb01c615f48c684f846d651020b0f328aecc9a92a023af33229ad88b62718"
+      ],
+      "rationale": "Verifier asserts mkdocs.yml has 'theme: name: material'; README rewrite is loosely covered by README.md->CHANGELOG.md link assertion",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T03:18:11Z",
+      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-01-cache-construction",
@@ -5687,16 +5717,22 @@
       "claim": "README + mkdocs nav reference CHANGELOG.md (single source of truth for release history)",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 23,
-        "line_end": 23
+        "line_start": 28,
+        "line_end": 28
       },
-      "source_hash": "a76f570774673eadf10330e199d72edd0dbbf333baf757c030178fb4c0c495a2",
-      "rationale": "Historical structural event -- references exist. CHANGELOG.md is the source of truth. mkdocs-strict catches broken links. Retire as one-time milestone.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T20:01:28Z",
-      "last_extracted": "2026-04-28T20:01:28Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "b6ca012dcaa174458f486152b7a5f31985fb02dbdd2576961cb04370f8d0b2e7",
+      "tests": [
+        "quality/gates/structure/required-doc-surfaces.sh"
+      ],
+      "test_body_hashes": [
+        "a76eb01c615f48c684f846d651020b0f328aecc9a92a023af33229ad88b62718"
+      ],
+      "rationale": "Verifier asserts README.md contains 'CHANGELOG.md' link",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T03:18:11Z",
+      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/connectors/guide/real-backend-smoke-fixture",
@@ -7315,19 +7351,25 @@
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs05-simulator-relocated",
-      "claim": "Simulator docs relocated under docs/how-it-works/simulator.md",
+      "claim": "Simulator docs relocated under docs/reference/simulator.md (originally proposed under docs/how-it-works/simulator.md)",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 17,
-        "line_end": 17
+        "line_start": 19,
+        "line_end": 19
       },
-      "source_hash": "006b8decc2ed464583529a7e3a642cd198fbc7f9d2a9fdb60527f6f2b994f316",
-      "rationale": "Historical structural event -- file at destination. One-time milestone.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T20:01:27Z",
-      "last_extracted": "2026-04-28T20:01:27Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "3b08f5362205d1e4443fea061c64d37f5246e326b2bfd9309f5fcee842def531",
+      "tests": [
+        "quality/gates/structure/required-doc-surfaces.sh"
+      ],
+      "test_body_hashes": [
+        "a76eb01c615f48c684f846d651020b0f328aecc9a92a023af33229ad88b62718"
+      ],
+      "rationale": "Verifier asserts docs/reference/simulator.md exists; v0.10 row claim said 'how-it-works/simulator.md' but shipped form is reference/",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T03:18:11Z",
+      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/reference/testing-targets/skip-no-panic",
@@ -7699,35 +7741,47 @@
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs04-three-guides",
-      "claim": "Three guides shipped: write-your-own-connector, troubleshooting, security",
+      "claim": "Three guides shipped: write-your-own-connector, troubleshooting, integrate-with-your-agent (note: original v0.10 row said 'security' but actual third was integrate-with-your-agent)",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 16,
-        "line_end": 16
+        "line_start": 17,
+        "line_end": 17
       },
-      "source_hash": "54374cc9205d411894863a48783b77406a786396cd37d8049f2209cb96fdc09c",
-      "rationale": "Historical structural event -- the three guides exist at docs/guides/{write-your-own-connector,troubleshooting,security}.md. mkdocs-nav structure freshness covers loosely. Retire as one-time milestone.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T20:01:27Z",
-      "last_extracted": "2026-04-28T20:01:27Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "006b8decc2ed464583529a7e3a642cd198fbc7f9d2a9fdb60527f6f2b994f316",
+      "tests": [
+        "quality/gates/structure/required-doc-surfaces.sh"
+      ],
+      "test_body_hashes": [
+        "a76eb01c615f48c684f846d651020b0f328aecc9a92a023af33229ad88b62718"
+      ],
+      "rationale": "Verifier asserts 3 guides exist (write-your-own-connector + troubleshooting + integrate-with-your-agent); v0.10 row originally listed 'security' as third but shipping form swapped it for integrate-with-your-agent",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T03:18:11Z",
+      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs02-three-page-howitworks",
-      "claim": "Three-page How It Works section (architecture, git layer, simulator)",
+      "claim": "Three-page How It Works section (architecture, git layer, simulator) -- shipped form has 4 pages: filesystem-layer, git-layer, time-travel, trust-model",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 14,
-        "line_end": 14
+        "line_start": 15,
+        "line_end": 15
       },
-      "source_hash": "bdc9ec2e79e6f492d5b25736296e8397e7a665424a7274990b15016a2c76e1f5",
-      "rationale": "Historical milestone fact -- the three pages exist at docs/how-it-works/{architecture,git-layer,simulator}.md. Structural mkdocs-nav verifier gates this loosely. One-time event; behavioral test not applicable.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:59:46Z",
-      "last_extracted": "2026-04-28T19:59:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "99332127b927d26c02ce311437a80ff481a063224da15ee4e46b88c76340a09f",
+      "tests": [
+        "quality/gates/structure/required-doc-surfaces.sh"
+      ],
+      "test_body_hashes": [
+        "a76eb01c615f48c684f846d651020b0f328aecc9a92a023af33229ad88b62718"
+      ],
+      "rationale": "Verifier asserts the 4 how-it-works pages exist; section name evolved post-shipping (v0.10 row claim said 3 pages, current is 4 -- DOC_DRIFT in claim text but Diataxis structure is preserved)",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T03:18:11Z",
+      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/why/token-economy-89-1-percent",
@@ -7807,16 +7861,22 @@
       "claim": "Two concept pages: mental-model-in-60-seconds + reposix-vs-mcp-and-sdks",
       "source": {
         "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-        "line_start": 15,
-        "line_end": 15
+        "line_start": 16,
+        "line_end": 16
       },
-      "source_hash": "99332127b927d26c02ce311437a80ff481a063224da15ee4e46b88c76340a09f",
-      "rationale": "Historical milestone fact -- both pages exist at docs/concepts/. One-time structural event; covered loosely by mkdocs-nav structure freshness.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:59:46Z",
-      "last_extracted": "2026-04-28T19:59:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "54374cc9205d411894863a48783b77406a786396cd37d8049f2209cb96fdc09c",
+      "tests": [
+        "quality/gates/structure/required-doc-surfaces.sh"
+      ],
+      "test_body_hashes": [
+        "a76eb01c615f48c684f846d651020b0f328aecc9a92a023af33229ad88b62718"
+      ],
+      "rationale": "Verifier asserts both concept pages exist at docs/concepts/",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T03:18:11Z",
+      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/guides/write-your-own-connector/not-found-error",
@@ -7889,32 +7949,44 @@
       "claim": "v0.1.0 shipped: initial release with sim+confluence+jira+github connectors",
       "source": {
         "file": "docs/development/roadmap.md",
-        "line_start": 9,
-        "line_end": 9
+        "line_start": 24,
+        "line_end": 24
       },
-      "source_hash": "9bebe9fec5620bd57a4ac73a473050c72dabfab34a3b3a79d696d3068846b496",
-      "rationale": "Historical milestone fact -- v0.1.0 shipped (release tag exists; CHANGELOG.md entry is the historical record). No behavioral test could fail this; retirement is the right move per HANDOVER P65 'historical milestone facts should be RETIRE_PROPOSED at most'.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:59:46Z",
-      "last_extracted": "2026-04-28T19:59:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "6033301200637abb9b4476a85138a297eeba4d404cb55bf173a4b38e4ce22bbb",
+      "tests": [
+        "quality/gates/structure/release-tags-present.sh"
+      ],
+      "test_body_hashes": [
+        "77d9eaa66a1bf54423a80469a235a744449ae3d61be8f62a55fe44ff31706054"
+      ],
+      "rationale": "Verifier asserts git tag v0.1.0 exists in history; the tag IS the historical record",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T03:18:11Z",
+      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs-development-roadmap-md/v0-10-0-shipped",
-      "claim": "v0.10.0 shipped: docs restructure (Diataxis nav, three-page how-it-works, two concept pages, three guides)",
+      "claim": "v0.10.0 shipped: docs restructure (Diataxis nav, three-page how-it-works, etc.)",
       "source": {
         "file": "docs/development/roadmap.md",
-        "line_start": 18,
-        "line_end": 18
+        "line_start": 13,
+        "line_end": 13
       },
-      "source_hash": "363284b0afbe04cd3ac91a8c7ca414efbf05d713427cc5cb83642895e369f8aa",
-      "rationale": "Historical milestone fact -- v0.10.0 shipped. The structural changes (mkdocs nav, doc reorganization) are now BOUND via mkdocs-strict and structure freshness invariants; this row is the milestone marker, not a behavioral claim.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:59:46Z",
-      "last_extracted": "2026-04-28T19:59:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "8478bf5d33c9c4b069be4a530ebf6e1cc4074e7d9025f8e6d8698df1e6a9587d",
+      "tests": [
+        "quality/gates/structure/release-tags-present.sh"
+      ],
+      "test_body_hashes": [
+        "77d9eaa66a1bf54423a80469a235a744449ae3d61be8f62a55fe44ff31706054"
+      ],
+      "rationale": "Verifier asserts git tag v0.10.0 exists; CURRENTLY FAILS at runtime (real drift -- CHANGELOG says shipped, no tag exists). The script is still the contract; runtime failure surfaces the missing-tag gap as a real release-tooling issue to close in v0.13.0",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T03:18:11Z",
+      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs-development-roadmap-md/v0-11-0-active-milestone",
@@ -7943,16 +8015,22 @@
       "claim": "v0.2.0-alpha shipped: alpha release with frontmatter validation + audit log",
       "source": {
         "file": "docs/development/roadmap.md",
-        "line_start": 10,
-        "line_end": 10
+        "line_start": 23,
+        "line_end": 23
       },
-      "source_hash": "d7efba4f8a58954679c147b4cc6735a78bde07be8796b82a52904e30404d5830",
-      "rationale": "Historical milestone fact -- v0.2.0-alpha shipped. CHANGELOG entry + git tag are the historical record. No test possible.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:59:46Z",
-      "last_extracted": "2026-04-28T19:59:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "source_hash": "62b67e1f685b7fef51102005dddd27774be3fee38c42965c53aab035d0b6b221",
+      "tests": [
+        "quality/gates/structure/release-tags-present.sh"
+      ],
+      "test_body_hashes": [
+        "77d9eaa66a1bf54423a80469a235a744449ae3d61be8f62a55fe44ff31706054"
+      ],
+      "rationale": "Verifier asserts git tag v0.2.0-alpha exists; the tag IS the historical record",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T03:18:11Z",
+      "last_extracted": "2026-04-29T03:18:11Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/decisions/002-confluence-page-mapping/basic-auth-only-v0.3",
