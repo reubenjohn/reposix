@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 328,
+    "claims_bound": 329,
     "claims_missing_test": 0,
     "claims_retire_proposed": 27,
     "claims_retired": 30,
-    "alignment_ratio": 0.9162011173184358,
+    "alignment_ratio": 0.9189944134078212,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-29T20:54:58Z",
+    "last_walked": "2026-04-29T21:14:33Z",
     "coverage_ratio": 0.20308529945553538,
     "lines_covered": 1119,
     "total_eligible_lines": 5510,
@@ -6999,18 +6999,18 @@
         "line_start": 21,
         "line_end": 21
       },
-      "source_hash": "1a19b86e19e7b9730b93fef81cc4ba09fe1338052f157a4ec83fa5c988f11476",
+      "source_hash": "7a1d7a4ea4c7891bff5bedc2e0191633dcd60d840625efd13aa63427c33768ed",
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
       "test_body_hashes": [
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
-      "rationale": "Prose updated 92% -> 89.1% to match measured. bench_token_economy.py is the regenerator of the canonical 89.1% number",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "Prose updated 92% -> 89.1% to match measured. bench_token_economy.py is the regenerator of the canonical 89.1% number. P75 heal-bind.",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T02:55:09Z",
-      "last_extracted": "2026-04-29T02:55:09Z",
+      "last_run": "2026-04-29T21:14:25Z",
+      "last_extracted": "2026-04-29T21:14:25Z",
       "last_extracted_by": "bind-call"
     },
     {

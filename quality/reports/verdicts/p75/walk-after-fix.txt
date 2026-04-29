@@ -1,0 +1,60 @@
+=== target/release/reposix-quality doc-alignment walk ===
+Run on: 2026-04-29 (post-fix, post-linkedin-rebind)
+exit: 1
+
+---- STDOUT ----
+(empty)
+
+---- STDERR ----
+coverage: row docs/architecture/redirect cites out-of-eligible file docs/architecture.md
+coverage: row docs/connectors/guide/trait-method-count-eight cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-create-record-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-delete-or-close-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-get-record-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-list-changed-since-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-list-records-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-update-record-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-name-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-root-collection-name-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/connectors/guide/backendconnector-supports-method cites out-of-eligible file crates/reposix-core/src/backend.rs
+coverage: row docs/decisions/009-stability-commitment/cli-subcommand-surface cites out-of-eligible file crates/reposix-cli/src/main.rs
+coverage: row docs/demo/redirect cites out-of-eligible file docs/demo.md
+coverage: row planning-milestones-v0-8-0-phases-REQUIREMENTS-md/jira-integration cites out-of-eligible file .planning/milestones/v0.8.0-phases/ARCHIVE.md
+docs-alignment: RETIRE_PROPOSED on docs/reference/confluence.md -- run /reposix-quality-refresh docs/reference/confluence.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.10.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.10.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on docs/concepts/reposix-vs-mcp-and-sdks.md -- run /reposix-quality-refresh docs/concepts/reposix-vs-mcp-and-sdks.md
+docs-alignment: RETIRE_PROPOSED on docs/concepts/reposix-vs-mcp-and-sdks.md -- run /reposix-quality-refresh docs/concepts/reposix-vs-mcp-and-sdks.md
+docs-alignment: RETIRE_PROPOSED on docs/concepts/reposix-vs-mcp-and-sdks.md -- run /reposix-quality-refresh docs/concepts/reposix-vs-mcp-and-sdks.md
+docs-alignment: RETIRE_PROPOSED on docs/decisions/003-nested-mount-layout.md -- run /reposix-quality-refresh docs/decisions/003-nested-mount-layout.md
+docs-alignment: STALE_DOCS_DRIFT row=planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-03-mermaid-render on .planning/milestones/v0.11.0-phases/REQUIREMENTS.md -- run /reposix-quality-refresh .planning/milestones/v0.11.0-phases/REQUIREMENTS.md
+docs-alignment: RETIRE_PROPOSED on .planning/milestones/v0.8.0-phases/REQUIREMENTS.md (... + 18 more RETIRE_PROPOSED lines elided ...)
+docs-alignment: STALE_DOCS_DRIFT row=docs/decisions/009-stability-commitment/cli-subcommand-surface on crates/reposix-cli/src/main.rs -- run /reposix-quality-refresh crates/reposix-cli/src/main.rs
+(... pre-existing RETIRE_PROPOSED entries continue ...)
+
+---- STALE_DOCS_DRIFT INVENTORY ----
+Total STALE_DOCS_DRIFT rows in this walk: 2
+  1. planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-03-mermaid-render
+     -> .planning/milestones/v0.11.0-phases/REQUIREMENTS.md
+     -> Pre-existing per P72 SURPRISES-INTAKE.md entry; OUT OF P75 SCOPE.
+  2. docs/decisions/009-stability-commitment/cli-subcommand-surface
+     -> crates/reposix-cli/src/main.rs
+     -> Pre-existing per P72 SURPRISES-INTAKE.md entry; OUT OF P75 SCOPE.
+
+Both rows cite files outside P75's scope. They were logged in
+.planning/milestones/v0.12.1-phases/SURPRISES-INTAKE.md by P72 and are
+explicitly carved out of the "net new STALE_DOCS_DRIFT == 0" verdict
+invariant. P76 triages.
+
+---- BEFORE/AFTER (linkedin row) ----
+Row id: docs/social/linkedin/token-reduction-92pct
+linkedin row pre-fix:  STALE_DOCS_DRIFT (source_hash=1a19b86e19e7b9730b93fef81cc4ba09fe1338052f157a4ec83fa5c988f11476)
+linkedin row post-fix: BOUND            (source_hash=7a1d7a4ea4c7891bff5bedc2e0191633dcd60d840625efd13aa63427c33768ed)
+
+---- NET NEW STALE_DOCS_DRIFT TRANSITIONS CAUSED BY P75 ----
+0
+
+The exit=1 is driven entirely by the two pre-existing STALE_DOCS_DRIFT
+rows logged in P72 SURPRISES-INTAKE plus 25+ pre-existing RETIRE_PROPOSED
+rows (the latter are blocking-until-human-acts per the walker contract).
+None of these are P75-caused; the P75 fix introduced ZERO new STALE_DOCS_DRIFT
+transitions and HEALED the linkedin row from STALE_DOCS_DRIFT to BOUND.
