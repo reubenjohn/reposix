@@ -49,7 +49,7 @@ Both rows surfaced now because P72 was the first walk after their referenced sou
 
 **Sketched resolution:** P75 fixes the walker so a second `walk` after `source_hash` refresh transitions `STALE_DOCS_DRIFT` -> `BOUND` when the bound test still passes. After P75 ships, this row should heal on the next walk without a fresh bind. If P75's fix doesn't cover `Source::Single`, broaden the fix scope.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED | healed by P75 commit 9e07028 (verbs::bind hash-overwrite fix landed in 69a30b0; an explicit re-bind at 9e07028 refreshed source_hash STALE_DOCS_DRIFT(1a19b86e…) -> BOUND(7a1d7a4e…)). P75 SUMMARY clarified the procedural finding: walks NEVER auto-refresh source_hash — only binds do, by design (walker docstring at crates/reposix-quality/src/commands/doc_alignment.rs:802-804). The "didn't auto-heal on second walk" observation was confirmed-not-a-bug; the heal path is `bind`. P76 confirms via live catalog query: `jq '.rows[] | select(.id == "docs/social/linkedin/token-reduction-92pct") | .last_verdict' == "BOUND"`. No code change required in P76; pure audit-trail update per CLAUDE.md OP-3.
 
 ---
 
