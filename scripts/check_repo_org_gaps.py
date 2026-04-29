@@ -3,7 +3,7 @@
 """Verify the P62 repo-org gap audit is complete and consistent.
 
 Reads:
-- `.planning/research/v0.11.1-repo-organization-gaps.md` (the source rec doc)
+- `.planning/research/v0.11.1/repo-organization-gaps.md` (the source rec doc)
 - `quality/reports/audits/repo-org-gaps.md` (the P62 Wave 2 audit closure)
 
 Asserts:

@@ -18,7 +18,7 @@
 //! `:`. The tag string `2026-04-25T01-13-00Z` round-trips to a `DateTime<Utc>`
 //! via [`parse_sync_tag_timestamp`].
 //!
-//! Design intent: `.planning/research/v0.11.0-vision-and-innovations.md` §3b.
+//! Design intent: `.planning/research/v0.11.0/vision-and-innovations.md` §3b.
 
 use chrono::{DateTime, SecondsFormat, Utc};
 use gix::refs::transaction::{Change, LogChange, PreviousValue, RefEdit, RefLog};

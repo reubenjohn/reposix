@@ -6,7 +6,7 @@
 
 ---
 
-> **Status:** scoping complete; phases 50–55 scaffolded. v0.10.0 surfaced a long tail (jargon density, broken mermaid renders, codebase duplicates flagged by `simplify`, missing reproducibility infra). v0.11.0 closes that tail and surfaces the vision-innovations API (`reposix doctor`, `reposix log --time-travel`, `reposix gc --orphans`, `reposix cost`, `reposix init --since`). Source-of-truth research: `.planning/research/v0.11.0-vision-and-innovations.md` plus the audit family (`v0.11.0-gsd-hygiene-report.md`, `v0.11.0-mkdocs-site-audit.md`, `v0.11.0-jargon-inventory.md`, `v0.11.0-latency-benchmark-plan.md`, `v0.11.0-release-binaries-plan.md`, `v0.11.0-cache-location-study.md`, `v0.11.0-CATALOG-v2.md`).
+> **Status:** scoping complete; phases 50–55 scaffolded. v0.10.0 surfaced a long tail (jargon density, broken mermaid renders, codebase duplicates flagged by `simplify`, missing reproducibility infra). v0.11.0 closes that tail and surfaces the vision-innovations API (`reposix doctor`, `reposix log --time-travel`, `reposix gc --orphans`, `reposix cost`, `reposix init --since`). Source-of-truth research: `.planning/research/v0.11.0/vision-and-innovations.md` plus the audit family (`v0.11.0-gsd-hygiene-report.md`, `v0.11.0-mkdocs-site-audit.md`, `v0.11.0-jargon-inventory.md`, `v0.11.0-latency-benchmark-plan.md`, `v0.11.0-release-binaries-plan.md`, `v0.11.0-cache-location-study.md`, `v0.11.0-CATALOG-v2.md`).
 
 **Thesis.** v0.10.0 made the value prop legible. v0.11.0 makes the project reproducible (fresh clone → working tutorial → installable binary), polished (no jargon shocks, no broken diagrams, no zombie ADRs), and operationally honest (latency numbers for every backend, copy-pastable doctor output, time-travel + gc + cost surfaces).
 
@@ -26,7 +26,7 @@
 5. `.planning/phases/30-docs-ia-...` archived to `.planning/milestones/v0.9.0-phases/30-docs-ia-deferred-superseded/`; `find .planning/phases/ -mindepth 1 -maxdepth 1 -type d` returns empty.
 6. Workspace version `0.11.0-dev` lands; `cargo run -p reposix-cli -- --version` prints `reposix 0.11.0-dev`.
 
-**Context anchor:** `.planning/research/v0.11.0-gsd-hygiene-report.md` (full P0/P1/P2 patch list — line-numbered fixes for STATE.md / PROJECT.md / REQUIREMENTS.md / ROADMAP.md), `.planning/research/v0.11.0-CATALOG-v2.md` (catalog of every `.planning/` artifact with keep/move/delete verdicts).
+**Context anchor:** `.planning/research/v0.11.0/gsd-hygiene-report.md` (full P0/P1/P2 patch list — line-numbered fixes for STATE.md / PROJECT.md / REQUIREMENTS.md / ROADMAP.md), `.planning/research/v0.11.0/CATALOG-v2.md` (catalog of every `.planning/` artifact with keep/move/delete verdicts).
 
 ### Phase 51: Codebase Refactor Wave (v0.11.0)
 
@@ -44,7 +44,7 @@
 5. `cargo clippy --workspace --all-targets -- -D warnings` green.
 6. `cargo test --workspace` green; existing test count preserved or grown.
 
-**Context anchor:** `.planning/research/v0.11.0-CATALOG-v2.md` (duplicate inventory + simplify findings), v0.10.0 Phase 45 simplify pass (recorded in audit).
+**Context anchor:** `.planning/research/v0.11.0/CATALOG-v2.md` (duplicate inventory + simplify findings), v0.10.0 Phase 45 simplify pass (recorded in audit).
 
 ### Phase 52: Docs Polish Wave (v0.11.0)
 
@@ -60,9 +60,9 @@
 3. ADR-004 + ADR-006 deleted from `docs/decisions/`; remaining ADR cross-refs purged.
 4. `docs/research/agentic-engineering-reference.md` carries a top-banner disclaimer naming the v0.9.0 pivot and the deletion of FUSE.
 5. `mkdocs build --strict` green; `pymdownx.emoji` extension configured; ADR-008 in nav; blog post in `not_in_nav` (or deleted per Phase 50).
-6. Mermaid F1+F2+F3 fixes from `.planning/research/v0.11.0-mkdocs-site-audit.md` all landed.
+6. Mermaid F1+F2+F3 fixes from `.planning/research/v0.11.0/mkdocs-site-audit.md` all landed.
 
-**Context anchor:** `.planning/research/v0.11.0-jargon-inventory.md` (term-by-term gloss inventory across every doc page), `.planning/research/v0.11.0-mkdocs-site-audit.md` (live-site audit findings F1/F2/F3 + nav fixes).
+**Context anchor:** `.planning/research/v0.11.0/jargon-inventory.md` (term-by-term gloss inventory across every doc page), `.planning/research/v0.11.0/mkdocs-site-audit.md` (live-site audit findings F1/F2/F3 + nav fixes).
 
 ### Phase 53: Reproducibility Wave (v0.11.0)
 
@@ -79,7 +79,7 @@
 4. CLAUDE.md updated with: any docs-site work MUST be playwright-validated.
 5. `scripts/check-docs-site.sh` exists, is executable, and is wired into the pre-push hook (not just CI). Hook fails on broken links / missing pages / mermaid errors / mkdocs --strict failures.
 
-**Context anchor:** `.planning/research/v0.11.0-release-binaries-plan.md` (dist setup, target matrix, signing strategy), `docs/tutorials/first-run.md` (current 7-step tutorial — the contract `repro-quickstart.sh` enforces).
+**Context anchor:** `.planning/research/v0.11.0/release-binaries-plan.md` (dist setup, target matrix, signing strategy), `docs/tutorials/first-run.md` (current 7-step tutorial — the contract `repro-quickstart.sh` enforces).
 
 ### Phase 54: Real-backend Latency Wave (v0.11.0)
 
@@ -94,7 +94,7 @@
 2. Weekly cron (GitHub Actions schedule) runs the bench harness against sim + (when secrets present) github / confluence / jira; PR-creates an updated table on drift.
 3. Bench harness is committed under `crates/reposix-bench/` or `scripts/bench/`; reproducible by any contributor.
 
-**Context anchor:** `.planning/research/v0.11.0-latency-benchmark-plan.md` (full benchmark plan — golden path, sample sizes, statistical handling, secret-gated CI matrix).
+**Context anchor:** `.planning/research/v0.11.0/latency-benchmark-plan.md` (full benchmark plan — golden path, sample sizes, statistical handling, secret-gated CI matrix).
 
 ### Phase 55: Vision Innovations Surface Wave (v0.11.0)
 
@@ -110,4 +110,4 @@
 3. `--help` examples for each new subcommand land in the tutorial or troubleshooting guide.
 4. CHANGELOG `[v0.11.0]` documents the new surfaces.
 
-**Context anchor:** `.planning/research/v0.11.0-vision-and-innovations.md` (full spec for doctor checklist, cost estimator semantics, time-travel UX, gc orphan policy, init --since semantics).
+**Context anchor:** `.planning/research/v0.11.0/vision-and-innovations.md` (full spec for doctor checklist, cost estimator semantics, time-travel UX, gc orphan policy, init --since semantics).

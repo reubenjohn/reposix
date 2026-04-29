@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Quality Gates runner — single entry point for cadence-tagged gates.
 
-Per .planning/research/v0.12.0-naming-and-architecture.md § runner-contract.
+Per .planning/research/v0.12.0/naming-and-architecture.md § runner-contract.
 Stdlib only. Cross-platform (linux + macOS).
 Anti-bloat: this file does not grow beyond the runner contract. Per-dimension
 verifiers live under quality/gates/<dim>/.

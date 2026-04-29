@@ -141,19 +141,19 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 - Release-dimension gates: HEAD checks for installer URLs, brew formula version cross-check, crates.io max_version vs workspace, post-release container rehearsal that proves a fresh user can install from the latest release.
 - Docs-repro dimension: snippet extraction from README + docs/index + tutorials, container rehearsal harness (ubuntu:24.04 baseline), promote `scripts/repro-quickstart.sh` into a catalog-tracked gate.
 - Subjective gates: a `reposix-quality-review` skill that dispatches isolated subagents against a `subjective-rubrics.json` catalog, persists per-row artifacts, enforces freshness TTLs (catalog says "rerun within 30d or this row is RED").
-- Close out `.planning/research/v0.11.1-repo-organization-gaps.md` — each remaining gap becomes a structure-dimension catalog row that prevents recurrence.
+- Close out `.planning/research/v0.11.1/repo-organization-gaps.md` — each remaining gap becomes a structure-dimension catalog row that prevents recurrence.
 - Autonomous-execution protocol: catalog-first phases (end-state assertions land in git BEFORE the implementation), mandatory verifier-subagent grading per phase close, waivers with TTL as the principled escape hatch, dimension preconditions as phase gates.
 
 **Phases (56–63):** see `.planning/ROADMAP.md`. P56 Restore release artifacts → P57 Quality Gates skeleton + structure dimension → P58 Release dimension → P59 Docs-repro dimension → P60 Docs-build migration → P61 Subjective gates skill → P62 Repo-org-gaps cleanup → P63 Retire old + document.
 
 **Source-of-truth handover bundle (read these before planning P56):**
-- `.planning/research/v0.12.0-vision-and-mental-model.md`
-- `.planning/research/v0.12.0-naming-and-architecture.md`
-- `.planning/research/v0.12.0-roadmap-and-rationale.md`
-- `.planning/research/v0.12.0-autonomous-execution-protocol.md`
-- `.planning/research/v0.12.0-install-regression-diagnosis.md`
-- `.planning/research/v0.12.0-decisions-log.md`
-- `.planning/research/v0.12.0-open-questions-and-deferrals.md`
+- `.planning/research/v0.12.0/vision-and-mental-model.md`
+- `.planning/research/v0.12.0/naming-and-architecture.md`
+- `.planning/research/v0.12.0/roadmap-and-rationale.md`
+- `.planning/research/v0.12.0/autonomous-execution-protocol.md`
+- `.planning/research/v0.12.0/install-regression-diagnosis.md`
+- `.planning/research/v0.12.0/decisions-log.md`
+- `.planning/research/v0.12.0/open-questions-and-deferrals.md`
 - `.planning/docs_reproducible_catalog.json` (DRAFT seed for the docs-repro catalog in P59)
 
 **Carry-forward from v0.11.x (rolled into v0.12.0 phases):**
@@ -165,7 +165,7 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 
 ## Previously Validated Milestone: v0.11.x — Polish & Reproducibility (SHIPPED 2026-04-27)
 
-v0.11.0 (Phases 50–55) shipped 2026-04-25; v0.11.1 + v0.11.2 polish passes shipped 2026-04-26 / 2026-04-27 via release-plz. All eight crates published to crates.io at v0.11.2; mkdocs site live at `https://reubenjohn.github.io/reposix/`; pre-push hook runs `scripts/end-state.py verify` over 20 freshness + crates.io + mermaid claims (last verdict GREEN at session close). The cycle introduced the §0.8 SESSION-END-STATE framework that v0.12.0 generalizes into the Quality Gates system. **Carry-forward NOT closed by v0.11.x:** installer URLs broken on every release after v0.11.0 because `release.yml` tag glob `v*` does not match release-plz's per-crate `reposix-cli-v*` pattern — diagnosed in `.planning/research/v0.12.0-install-regression-diagnosis.md`; fixed by P56.
+v0.11.0 (Phases 50–55) shipped 2026-04-25; v0.11.1 + v0.11.2 polish passes shipped 2026-04-26 / 2026-04-27 via release-plz. All eight crates published to crates.io at v0.11.2; mkdocs site live at `https://reubenjohn.github.io/reposix/`; pre-push hook runs `scripts/end-state.py verify` over 20 freshness + crates.io + mermaid claims (last verdict GREEN at session close). The cycle introduced the §0.8 SESSION-END-STATE framework that v0.12.0 generalizes into the Quality Gates system. **Carry-forward NOT closed by v0.11.x:** installer URLs broken on every release after v0.11.0 because `release.yml` tag glob `v*` does not match release-plz's per-crate `reposix-cli-v*` pattern — diagnosed in `.planning/research/v0.12.0/install-regression-diagnosis.md`; fixed by P56.
 
 ---
 

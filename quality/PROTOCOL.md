@@ -273,9 +273,9 @@ Refuse to grade GREEN unless every P0+P1 catalog row is PASS or WAIVED AND CLAUD
 
 This file (`quality/PROTOCOL.md`) is the runtime contract. The research bundle below is the design rationale — read those once at milestone planning, not every phase.
 
-- `.planning/research/v0.12.0-vision-and-mental-model.md` — WHY this protocol exists
-- `.planning/research/v0.12.0-naming-and-architecture.md` — `quality/` directory + catalog schema
-- `.planning/research/v0.12.0-roadmap-and-rationale.md` — phase-specific application of this protocol
-- `.planning/research/v0.12.0-decisions-log.md` — the owner conversation that produced these rules
+- `.planning/research/v0.12.0/vision-and-mental-model.md` — WHY this protocol exists
+- `.planning/research/v0.12.0/naming-and-architecture.md` — `quality/` directory + catalog schema
+- `.planning/research/v0.12.0/roadmap-and-rationale.md` — phase-specific application of this protocol
+- `.planning/research/v0.12.0/decisions-log.md` — the owner conversation that produced these rules
 - CLAUDE.md "Subagent delegation rules" — OP-2 detail
 - CLAUDE.md "Build memory budget" — RAM guardrail (one cargo invocation at a time)

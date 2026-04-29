@@ -17,7 +17,7 @@
     "formula_urls_use_pinned_tag_form": true,
     "formula_urls_use_release_tag_reposix_cli_v0_11_3": true
   },
-  "container_rehearsal_note": "deferred to v0.12.1 per cost decision — macos-14 GH runners are real money; .planning/research/v0.12.0-roadmap-and-rationale.md § Compression options. The formula's three sha256 entries are checksummed cryptographically against SHA256SUMS at release.yml's `Generate + commit formula` step (sha256 a3b21cbd... etc; matched by hand against `gh api` digests in this wave).",
+  "container_rehearsal_note": "deferred to v0.12.1 per cost decision — macos-14 GH runners are real money; .planning/research/v0.12.0/roadmap-and-rationale.md § Compression options. The formula's three sha256 entries are checksummed cryptographically against SHA256SUMS at release.yml's `Generate + commit formula` step (sha256 a3b21cbd... etc; matched by hand against `gh api` digests in this wave).",
   "evidence": {
     "sha256_arm_darwin": "a57002382990a28a249316ab754d4f622be91e7d346be4d5bff8847445d3b3e2",
     "sha256_x86_darwin": "4c0d86ce4cf86dfcba0ff205733925b045b3f4ffaefcc898a2d7e405adbc3fe3",

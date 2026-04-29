@@ -91,7 +91,7 @@ Trade-off: P56 ships a fix without its catalog row, so the regression class can 
 
 ### P62 — Repo-org-gaps cleanup
 
-**Goal:** Audit `.planning/research/v0.11.1-repo-organization-gaps.md` — every remaining gap is either fixed + given a structure-dimension catalog row that prevents recurrence, OR explicitly waived with reason.
+**Goal:** Audit `.planning/research/v0.11.1/repo-organization-gaps.md` — every remaining gap is either fixed + given a structure-dimension catalog row that prevents recurrence, OR explicitly waived with reason.
 
 **Why seventh:** owner explicitly requested this be folded into v0.12.0 (not lost as a separate todo). It's mostly already-done work plus a handful of remaining gaps; doing it inside the QG framework means each closure becomes a permanent catalog row.
 

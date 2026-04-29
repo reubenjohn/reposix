@@ -192,7 +192,7 @@ Prints the matching `refs/reposix/sync/<slug>` ref name, the synthesis commit sh
 
 ## `reposix gc`
 
-Evict materialized blobs from a reposix cache. Tree/commit objects, refs, and sync tags are NEVER touched — only loose blob objects under `.git/objects/<2>/<38>` are eligible. Blobs re-fetch transparently on next read. See [v0.11.0 §3j](https://github.com/reubenjohn/reposix/blob/main/.planning/research/v0.11.0-vision-and-innovations.md#3j-reposix-archive--reposix-gc--bounded-disk-usage).
+Evict materialized blobs from a reposix cache. Tree/commit objects, refs, and sync tags are NEVER touched — only loose blob objects under `.git/objects/<2>/<38>` are eligible. Blobs re-fetch transparently on next read. See [v0.11.0 §3j](https://github.com/reubenjohn/reposix/blob/main/.planning/research/v0.11.0/vision-and-innovations.md#3j-reposix-archive--reposix-gc--bounded-disk-usage).
 
 ```bash
 reposix gc                                       # LRU evict to 500 MB cap, current dir
@@ -232,7 +232,7 @@ Each orphan line shows `<path>  <size>  reason=<reason>  <status>` plus, when ap
 
 ## `reposix cost`
 
-Per-op cost table over the `op='token_cost'` audit log, rendered as a pipe-friendly Markdown table. Pairs with [`reposix tokens`](#reposix-tokens) (which surfaces a back-of-envelope MCP comparison); `cost` is the raw aggregate suitable for piping into a spreadsheet or `awk`. See [v0.11.0 §3c](https://github.com/reubenjohn/reposix/blob/main/.planning/research/v0.11.0-vision-and-innovations.md#3c-token-cost-ledger--built-in-cost-telemetry).
+Per-op cost table over the `op='token_cost'` audit log, rendered as a pipe-friendly Markdown table. Pairs with [`reposix tokens`](#reposix-tokens) (which surfaces a back-of-envelope MCP comparison); `cost` is the raw aggregate suitable for piping into a spreadsheet or `awk`. See [v0.11.0 §3c](https://github.com/reubenjohn/reposix/blob/main/.planning/research/v0.11.0/vision-and-innovations.md#3c-token-cost-ledger--built-in-cost-telemetry).
 
 ```bash
 reposix cost                                            # all-time
@@ -261,7 +261,7 @@ Both estimates are heuristic; the chars/token divisor over-estimates for binary 
 
 ## `reposix tokens`
 
-Print a token-economy ledger derived from the cache's audit log. Reads `op='token_cost'` rows (one per helper RPC turn — `fetch` or `push`), sums them, prints totals plus an honest comparison against a back-of-envelope MCP-equivalent estimate. See [v0.11.0 §3c](https://github.com/reubenjohn/reposix/blob/main/.planning/research/v0.11.0-vision-and-innovations.md#3c-token-cost-ledger--built-in-cost-telemetry).
+Print a token-economy ledger derived from the cache's audit log. Reads `op='token_cost'` rows (one per helper RPC turn — `fetch` or `push`), sums them, prints totals plus an honest comparison against a back-of-envelope MCP-equivalent estimate. See [v0.11.0 §3c](https://github.com/reubenjohn/reposix/blob/main/.planning/research/v0.11.0/vision-and-innovations.md#3c-token-cost-ledger--built-in-cost-telemetry).
 
 ```bash
 reposix tokens /tmp/repo

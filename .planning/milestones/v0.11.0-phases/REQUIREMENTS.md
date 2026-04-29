@@ -4,7 +4,7 @@
 >
 > Extracted from the top-level `.planning/REQUIREMENTS.md` on 2026-04-27 during v0.12.0 milestone scaffolding to prevent further monolith growth. Convention reference: `CLAUDE.md` §0.5 / Workspace layout.
 >
-> **Carry-forward NOT closed by v0.11.x:** the curl/PowerShell installer URLs broke on every release after v0.11.0 because `release.yml` tag glob `v*` does not match release-plz's per-crate `reposix-cli-v*` pattern. Diagnosed in `.planning/research/v0.12.0-install-regression-diagnosis.md`; fixed by RELEASE-01 in v0.12.0 P56.
+> **Carry-forward NOT closed by v0.11.x:** the curl/PowerShell installer URLs broke on every release after v0.11.0 because `release.yml` tag glob `v*` does not match release-plz's per-crate `reposix-cli-v*` pattern. Diagnosed in `.planning/research/v0.12.0/install-regression-diagnosis.md`; fixed by RELEASE-01 in v0.12.0 P56.
 
 ---
 
@@ -12,7 +12,7 @@
 
 **Milestone goal:** Close the carry-forward set surfaced by the autonomous §7 sweep on 2026-04-26 (HANDOVER.md §7-G). Two threads run in parallel: (a) **finish v0.11.0 ship-gates** (crates.io publish after owner email verification, linux-aarch64-musl in dist matrix, bench-latency-cron Authorization-header fix, JIRA latency cells once secrets land), and (b) **work the v0.12.0-deferred P1 list early** so the v0.11.x line gives harness authors and the security-lead persona enough machine-readability + typed-error hygiene to recommend reposix. Persona audits + code-quality gaps + repo-org gaps drive every requirement; nothing here is speculative.
 
-**Source of truth:** `HANDOVER.md` §3 (release follow-ups) + §4 (friction matrix, 23 rows) + §7-G (next-coordinator carry-forward list); `.planning/research/v0.11.1-code-quality-gaps.md` P1 list (rows 1–9) + selected P2 (1, 7); `.planning/research/v0.11.1-persona-{mcp-user,harness-author,security-lead,skeptical-oss-maintainer,coding-agent}.md` (5 persona audits); `.planning/research/v0.11.1-repo-organization-gaps.md` recs #5 + orphan list. CATALOG-v3 JSON tracker at `.planning/CATALOG-v3.json` (rendered MD at `.planning/CATALOG-v3.md`) tracks per-file completion status.
+**Source of truth:** `HANDOVER.md` §3 (release follow-ups) + §4 (friction matrix, 23 rows) + §7-G (next-coordinator carry-forward list); `.planning/research/v0.11.1/code-quality-gaps.md` P1 list (rows 1–9) + selected P2 (1, 7); `.planning/research/v0.11.1/persona-{mcp-user,harness-author,security-lead,skeptical-oss-maintainer,coding-agent}.md` (5 persona audits); `.planning/research/v0.11.1/repo-organization-gaps.md` recs #5 + orphan list. CATALOG-v3 JSON tracker at `.planning/CATALOG-v3.json` (rendered MD at `.planning/CATALOG-v3.md`) tracks per-file completion status.
 
 **Operating-principle hooks (non-negotiable, per project CLAUDE.md):**
 
@@ -69,7 +69,7 @@
 
 **Milestone goal:** Close the long tail that v0.10.0 surfaced. Polish the docs site (jargon glosses + glossary + mermaid render hygiene + ADR cleanup), kill four codebase duplicates flagged by `simplify` (worktree helpers, `parse_remote_url`, `cli_compat.rs`, FUSE residue in `refresh.rs`), and ship reproducibility infrastructure: a fresh-clone tutorial runner, pre-built binaries via `dist`, `cargo binstall` metadata, `reposix doctor` / `reposix log --time-travel` / `reposix gc --orphans` / `reposix cost` surfaces, and a real-backend latency table for sim + GitHub + Confluence + JIRA.
 
-**Source of truth:** `.planning/research/v0.11.0-vision-and-innovations.md` (vision spec) plus the v0.11.0 audit family: `v0.11.0-gsd-hygiene-report.md`, `v0.11.0-mkdocs-site-audit.md`, `v0.11.0-jargon-inventory.md`, `v0.11.0-latency-benchmark-plan.md`, `v0.11.0-release-binaries-plan.md`, `v0.11.0-cache-location-study.md`, `v0.11.0-CATALOG-v2.md`. Framing principles inherited from `.planning/notes/phase-30-narrative-vignettes.md`.
+**Source of truth:** `.planning/research/v0.11.0/vision-and-innovations.md` (vision spec) plus the v0.11.0 audit family: `v0.11.0-gsd-hygiene-report.md`, `v0.11.0-mkdocs-site-audit.md`, `v0.11.0-jargon-inventory.md`, `v0.11.0-latency-benchmark-plan.md`, `v0.11.0-release-binaries-plan.md`, `v0.11.0-cache-location-study.md`, `v0.11.0-CATALOG-v2.md`. Framing principles inherited from `.planning/notes/phase-30-narrative-vignettes.md`.
 
 **Operating-principle hooks (non-negotiable, per project CLAUDE.md):**
 
@@ -82,7 +82,7 @@
 
 - [shipped] **POLISH-01**: All jargon terms have inline gloss + external link at first occurrence per page (Phase 52).
 - [shipped] **POLISH-02**: `docs/reference/glossary.md` exists; every other page links to it on first jargon term (≥24 entries, Phase 52).
-- [shipped] **POLISH-03**: All mermaid diagrams render without console errors on the live site (Phase 52, F1+F2+F3 from `.planning/research/v0.11.0-mkdocs-site-audit.md`).
+- [shipped] **POLISH-03**: All mermaid diagrams render without console errors on the live site (Phase 52, F1+F2+F3 from `.planning/research/v0.11.0/mkdocs-site-audit.md`).
 - [shipped] **POLISH-04**: `mkdocs build --strict` is green; ADR-008 in nav; blog post in `not_in_nav`; `pymdownx.emoji` configured.
 - [shipped] **POLISH-05**: Tutorial reproducible from fresh clone — `bash scripts/repro-quickstart.sh` runs the 7-step tutorial and asserts each step passes (Phase 53).
 - [shipped] **POLISH-06**: Pre-built binaries published to GitHub Releases for linux musl x86/arm64, macOS x86/arm64, windows msvc on every git tag (Phase 53).

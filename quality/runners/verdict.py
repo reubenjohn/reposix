@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Quality Gates verdict — collate artifacts -> markdown verdict + shields.io badge JSON.
 
-Per .planning/research/v0.12.0-naming-and-architecture.md § runner-contract.
+Per .planning/research/v0.12.0/naming-and-architecture.md § runner-contract.
 Stdlib only. Reads quality/catalogs/*.json + quality/reports/verifications/<dim>/*.json,
 writes quality/reports/verdicts/<cadence-or-phase>/<ts>.md + quality/reports/badge.json.
 

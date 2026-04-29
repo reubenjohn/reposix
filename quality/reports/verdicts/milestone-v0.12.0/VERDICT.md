@@ -12,7 +12,7 @@
 
 ## Disclosure block (Path A, re-dispatch)
 
-Per `.planning/research/v0.12.0-autonomous-execution-protocol.md` Step 7,
+Per `.planning/research/v0.12.0/autonomous-execution-protocol.md` Step 7,
 this re-dispatch honors the four Path A constraints:
 
 1. **Dispatcher had `Task` available.** The top-level orchestrator (not the executor) re-dispatched this verifier; `gsd-executor` lacks `Task` and depth-2 spawning is forbidden, so milestone-close re-grading must run at top-level.

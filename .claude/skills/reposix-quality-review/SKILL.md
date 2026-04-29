@@ -1,6 +1,6 @@
 ---
 name: reposix-quality-review
-description: "Run subjective rubric checks (cold-reader hero clarity, install positioning, headline-numbers sanity) by dispatching one unbiased subagent per stale catalog row in parallel. Reads quality/catalogs/subjective-rubrics.json, persists JSON artifacts to quality/reports/verifications/subjective/<rubric-id>.json. The next runner sweep re-grades the catalog rows. Pre-approved for v0.12.0 P61 per .planning/research/v0.12.0-open-questions-and-deferrals.md line 124."
+description: "Run subjective rubric checks (cold-reader hero clarity, install positioning, headline-numbers sanity) by dispatching one unbiased subagent per stale catalog row in parallel. Reads quality/catalogs/subjective-rubrics.json, persists JSON artifacts to quality/reports/verifications/subjective/<rubric-id>.json. The next runner sweep re-grades the catalog rows. Pre-approved for v0.12.0 P61 per .planning/research/v0.12.0/open-questions-and-deferrals.md line 124."
 argument-hint: "[--rubric <rubric-id>] [--all-stale] [--force]"
 allowed-tools:
   - Bash
@@ -109,5 +109,5 @@ For `--all-stale` + `--force`: print a summary table (rubric | score | verdict).
 - `quality/runners/run.py` -- runner contract (`is_stale`, `run_row`, `compute_exit_code`).
 - `quality/PROTOCOL.md` -- runtime contract.
 - `$HOME/.claude/skills/doc-clarity-review/SKILL.md` -- the existing skill that implements the cold-reader rubric.
-- `.planning/research/v0.12.0-open-questions-and-deferrals.md` line 124 -- pre-approval scope for this skill.
+- `.planning/research/v0.12.0/open-questions-and-deferrals.md` line 124 -- pre-approval scope for this skill.
 </cross_references>

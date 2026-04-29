@@ -169,7 +169,7 @@ enum Cmd {
     /// observed from the backend over time.
     ///
     /// Defaults to the most recent 10 entries (override with `--limit`).
-    /// See `.planning/research/v0.11.0-vision-and-innovations.md` §3b.
+    /// See `.planning/research/v0.11.0/vision-and-innovations.md` §3b.
     History {
         /// Working-tree directory (a `reposix init`'d repo). Defaults to cwd.
         path: Option<PathBuf>,
@@ -213,7 +213,7 @@ enum Cmd {
     /// only loose blob objects under `.git/objects/<2>/<38>` are
     /// eligible. Blobs re-fetch transparently on next read.
     ///
-    /// See `.planning/research/v0.11.0-vision-and-innovations.md` §3j.
+    /// See `.planning/research/v0.11.0/vision-and-innovations.md` §3j.
     ///
     /// Examples:
     ///   reposix gc                                     # LRU evict to 500 MB cap, current dir
@@ -265,7 +265,7 @@ enum Cmd {
     /// estimates total token spend. Prints an honest comparison against
     /// a back-of-envelope MCP-equivalent estimate.
     ///
-    /// See `.planning/research/v0.11.0-vision-and-innovations.md` §3c.
+    /// See `.planning/research/v0.11.0/vision-and-innovations.md` §3c.
     Tokens {
         /// Working-tree directory (a `reposix init`'d repo). Defaults to cwd.
         path: Option<PathBuf>,
@@ -282,7 +282,7 @@ enum Cmd {
     /// chars-per-token`; configurable via `--chars-per-token` (default
     /// 3.5).
     ///
-    /// See `.planning/research/v0.11.0-vision-and-innovations.md` §3c.
+    /// See `.planning/research/v0.11.0/vision-and-innovations.md` §3c.
     Cost {
         /// Working-tree directory (a `reposix init`'d repo). Defaults to cwd.
         path: Option<PathBuf>,

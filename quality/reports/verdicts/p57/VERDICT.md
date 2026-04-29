@@ -12,7 +12,7 @@
 - SIMPLIFY-03 closure: PASS
 
 > **Verifier-context disclosure (not a subagent dispatch).** Per
-> `.planning/research/v0.12.0-autonomous-execution-protocol.md` Step 7,
+> `.planning/research/v0.12.0/autonomous-execution-protocol.md` Step 7,
 > phase close should be graded by an unbiased subagent dispatched via
 > the orchestrator's Task tool with zero session context. The agent
 > writing this verdict is the Wave F executor (running with the

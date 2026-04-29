@@ -7,7 +7,7 @@ on .md links are stripped before resolution (this script does NOT validate
 anchors — mkdocs --strict does that).
 
 Migrated from scripts/check_doc_links.py per P60 SIMPLIFY-08 (2026-04-27).
-Renamed underscore-to-hyphen per .planning/research/v0.12.0-naming-and-architecture.md
+Renamed underscore-to-hyphen per .planning/research/v0.12.0/naming-and-architecture.md
 directory-layout convention (mirrors quality/gates/release/gh-assets-present.py).
 """
 

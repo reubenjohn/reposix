@@ -408,7 +408,7 @@ pub fn log_cache_gc(
 /// `{"in":N,"out":M,"kind":"fetch|push"}` for full granular replay.
 ///
 /// The token estimate is `chars / 4` — a conservative English-text
-/// heuristic. See `.planning/research/v0.11.0-vision-and-innovations.md` §3c.
+/// heuristic. See `.planning/research/v0.11.0/vision-and-innovations.md` §3c.
 ///
 /// Best-effort: SQL errors WARN-log.
 pub fn log_token_cost(

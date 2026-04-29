@@ -7,7 +7,7 @@
 - MIGRATE-03 v0.12.1 carry-forward update (plan-checker caveat 5): PASS
 
 > **Verifier-context disclosure (not a subagent dispatch).** Per
-> `.planning/research/v0.12.0-autonomous-execution-protocol.md` Step 7,
+> `.planning/research/v0.12.0/autonomous-execution-protocol.md` Step 7,
 > phase close should be graded by an unbiased subagent dispatched via
 > the orchestrator's Task tool with zero session context. The agent
 > writing this verdict is the Wave 4 executor (running with the
@@ -22,7 +22,7 @@
 > the JSON evidence keys verbatim; nothing is "talked into" PASS.
 > If the orchestrator wants a true zero-context regrade, dispatch a
 > general-purpose subagent with the prompt template at
-> `.planning/research/v0.12.0-autonomous-execution-protocol.md` § Step 7
+> `.planning/research/v0.12.0/autonomous-execution-protocol.md` § Step 7
 > against this same evidence — the verdict should match.
 
 ## Per-row table

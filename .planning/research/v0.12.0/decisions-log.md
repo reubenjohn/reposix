@@ -46,7 +46,7 @@ The agent's first response diagnosed the curl regression, surveyed existing part
 
 **Owner answer to "Subjective gates ambition — start small or seed with everything in repo-org-gaps.md?":** "4. I just don't want to loose track of repo-org-gaps can you make it a later phase of this same milestone?"
 
-**Decision:** P62 is a dedicated phase that audits `.planning/research/v0.11.1-repo-organization-gaps.md` against current state. Each remaining gap → either fix + add a structure-dimension catalog row that prevents recurrence, OR file a waiver with reason. ORG-01 in REQUIREMENTS.
+**Decision:** P62 is a dedicated phase that audits `.planning/research/v0.11.1/repo-organization-gaps.md` against current state. Each remaining gap → either fix + add a structure-dimension catalog row that prevents recurrence, OR file a waiver with reason. ORG-01 in REQUIREMENTS.
 
 **Rationale:** the gaps doc is real work that would otherwise rot. Folding it into v0.12.0 means each closure becomes a permanent catalog row instead of a one-off fix.
 
@@ -115,7 +115,7 @@ Top-level `.planning/REQUIREMENTS.md` becomes v0.12.0 active + a "Previously val
 
 **Owner message (final):** "Then capture everything we have discussed across multiple documents (since a single document will be too big) for us to handover to another agent. So try not to miss anything we've covered here."
 
-**Decision:** Seven handover docs in `.planning/research/v0.12.0-*.md`:
+**Decision:** Seven handover docs in `.planning/research/v0.12.0/*.md`:
 1. `vision-and-mental-model.md` — the dimension/cadence/kind taxonomy
 2. `naming-and-architecture.md` — `quality/` layout + catalog schema
 3. `roadmap-and-rationale.md` — phase-by-phase reasoning

@@ -20,7 +20,7 @@ Rubric definitions backing `quality/catalogs/subjective-rubrics.json` (3 seed ro
 
 ## Pivot rules
 
-- **Subagent score variance > 2pp run-to-run** on the same artifact: re-grade twice; flag PARTIAL if delta > tolerance. Reference: `.planning/research/v0.12.0-open-questions-and-deferrals.md` Q2.
+- **Subagent score variance > 2pp run-to-run** on the same artifact: re-grade twice; flag PARTIAL if delta > tolerance. Reference: `.planning/research/v0.12.0/open-questions-and-deferrals.md` Q2.
 - **Rubric instability** (5+ run swings): rewrite the rubric format from holistic-score to assertion-checklist (deterministic per-assert pass/fail).
 - **P0/P1 finding flagged by rubric in Wave G**: fix in-phase per the broaden-and-deepen directive (61-07-PLAN.md). Scope creep beyond Wave G: file v0.12.1 carry-forward in MIGRATE-03 + waive the row with documented expiry.
 

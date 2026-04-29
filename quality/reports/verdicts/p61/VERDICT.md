@@ -82,7 +82,7 @@ ZERO P0/P1 findings on first dispatch. The broaden-and-deepen sweep confirmed us
 ## v0.12.1 MIGRATE-03 carry-forwards (P61 contributions)
 
 - **(e) Subjective dispatch-and-preserve runner invariant.** The runner's `run_row` overwrites `quality/reports/verifications/subjective/<id>.json` on every cadence sweep (waiver branch writes a WAIVED-shape stub; subprocess branch writes a Path-B-runner-subprocess stub). The Path A scored verdict produced from a Claude session is therefore not durable across runner sweeps. Fix path: extend `run_row` so a row with `kind=subagent-graded` AND a recent artifact whose `dispatched_via` starts with `Wave-G-Path-A` or `Path-A` is treated as authoritative.
-- **(f) Auto-dispatch from CI.** Requires Anthropic API auth on GH Actions runners; explicitly deferred per `.planning/research/v0.12.0-open-questions-and-deferrals.md`.
+- **(f) Auto-dispatch from CI.** Requires Anthropic API auth on GH Actions runners; explicitly deferred per `.planning/research/v0.12.0/open-questions-and-deferrals.md`.
 - **(g) Hard-gate chaining release.yml -> quality-pre-release.yml.** Requires composite workflow OR `workflow_run` trigger; v0.12.0 ships parallel-execution soft-gate per P56 SURPRISES row 1 GH Actions cross-workflow `needs:` limitation.
 
 ---

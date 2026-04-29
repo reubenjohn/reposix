@@ -85,7 +85,7 @@ Each tag is one git ref — 41 bytes on disk in loose form, less when packed. A 
 
 Most issue-tracker integrations expose the *current* state and leave history as a database query against the backend. Sync tags expose history as the same primitive your version-control already speaks: refs and commits. An agent that knows `git checkout` and `git diff` can reconstruct what changed without ever learning a reposix-specific API.
 
-The pattern is generalisable beyond reposix — any partial-clone promisor remote could write per-sync refs and turn its observation history into a checkable artefact. To our knowledge, reposix is the first to ship it. Design intent and prior-art search are recorded in `.planning/research/v0.11.0-vision-and-innovations.md` §3b.
+The pattern is generalisable beyond reposix — any partial-clone promisor remote could write per-sync refs and turn its observation history into a checkable artefact. To our knowledge, reposix is the first to ship it. Design intent and prior-art search are recorded in `.planning/research/v0.11.0/vision-and-innovations.md` §3b.
 
 ## Next
 

@@ -19,7 +19,7 @@
 
 ## v0.12.0 Quality Gates (PLANNING)
 
-> **Status:** scoping complete; Phases 56–63 scaffolded 2026-04-27. v0.11.x bolted on a §0.8 SESSION-END-STATE framework that caught the regression class IT was designed for — but missed the curl-installer URL going dark for two releases (release-plz cut over to per-crate `reposix-cli-v*` tags, but `release.yml` only matches the workspace-wide `v*` glob, so the workflow stopped firing and `assets:[]` never repopulated). v0.12.0 generalizes §0.8 into a dimension-tagged **Quality Gates** system. Source-of-truth handover bundle (NOT YET WRITTEN — owner authoring 2026-04-27): `.planning/research/v0.12.0-vision-and-mental-model.md`, `.planning/research/v0.12.0-naming-and-architecture.md`, `.planning/research/v0.12.0-roadmap-and-rationale.md`, `.planning/research/v0.12.0-autonomous-execution-protocol.md`, `.planning/research/v0.12.0-install-regression-diagnosis.md`, `.planning/research/v0.12.0-decisions-log.md`, `.planning/research/v0.12.0-open-questions-and-deferrals.md`. DRAFT seed: `.planning/docs_reproducible_catalog.json`.
+> **Status:** scoping complete; Phases 56–63 scaffolded 2026-04-27. v0.11.x bolted on a §0.8 SESSION-END-STATE framework that caught the regression class IT was designed for — but missed the curl-installer URL going dark for two releases (release-plz cut over to per-crate `reposix-cli-v*` tags, but `release.yml` only matches the workspace-wide `v*` glob, so the workflow stopped firing and `assets:[]` never repopulated). v0.12.0 generalizes §0.8 into a dimension-tagged **Quality Gates** system. Source-of-truth handover bundle (NOT YET WRITTEN — owner authoring 2026-04-27): `.planning/research/v0.12.0/vision-and-mental-model.md`, `.planning/research/v0.12.0/naming-and-architecture.md`, `.planning/research/v0.12.0/roadmap-and-rationale.md`, `.planning/research/v0.12.0/autonomous-execution-protocol.md`, `.planning/research/v0.12.0/install-regression-diagnosis.md`, `.planning/research/v0.12.0/decisions-log.md`, `.planning/research/v0.12.0/open-questions-and-deferrals.md`. DRAFT seed: `.planning/docs_reproducible_catalog.json`.
 
 **Thesis.** Catalogs are the data; verifiers are the code; reports are the artifacts; runners compose by tag. Every gate answers three orthogonal questions — **dimension** (code / docs-build / docs-repro / release / structure / perf / security / agent-ux), **cadence** (pre-push / pre-pr / weekly / pre-release / post-release / on-demand), **kind** (mechanical / container / asset-exists / subagent-graded / manual). Adding a future gate is one catalog row + one verifier in the right dimension dir — never another bespoke `scripts/check-*.sh`. The framework REPLACES the ad-hoc surfaces; after v0.12.0, `scripts/` holds only `hooks/` and `install-hooks.sh`. Every phase ends with an unbiased verifier subagent grading the catalog rows GREEN — no phase ships on the executing agent's word.
 
@@ -33,7 +33,7 @@
 
 ### Phase 56: Restore release artifacts — fix the broken installer URLs (v0.12.0)
 
-**Goal:** Close the user-facing breakage that motivated this milestone. `release.yml` does not fire on release-plz's per-crate `reposix-cli-v*` tags; consequently the curl/PowerShell installer URLs return `Not Found`, the homebrew tap formula has not auto-updated, and `cargo binstall reposix-cli reposix-remote` falls back to source build because no GH binary asset exists. Pick the cleaner of two options diagnosed in `.planning/research/v0.12.0-install-regression-diagnosis.md` (extend `on.push.tags` glob to match `reposix-cli-v*` and key the dist version off the cli tag, OR add a release-plz post-publish step that mirrors a workspace `vX.Y.Z` tag). Cut a fresh `reposix-cli-v0.11.3` (or equivalent) release and verify all 5 install paths end-to-end against the freshly-published assets. This phase is the catalyst that proves the framework is needed; the framework itself lands in P57. Operating-principle hooks: **OP-1 close the feedback loop** — fetch each install URL from a fresh container or curl session, do not trust the workflow log; **OP-6 ground truth obsession** — the verifier subagent runs each install path verbatim from the docs and asserts the binary lands on PATH.
+**Goal:** Close the user-facing breakage that motivated this milestone. `release.yml` does not fire on release-plz's per-crate `reposix-cli-v*` tags; consequently the curl/PowerShell installer URLs return `Not Found`, the homebrew tap formula has not auto-updated, and `cargo binstall reposix-cli reposix-remote` falls back to source build because no GH binary asset exists. Pick the cleaner of two options diagnosed in `.planning/research/v0.12.0/install-regression-diagnosis.md` (extend `on.push.tags` glob to match `reposix-cli-v*` and key the dist version off the cli tag, OR add a release-plz post-publish step that mirrors a workspace `vX.Y.Z` tag). Cut a fresh `reposix-cli-v0.11.3` (or equivalent) release and verify all 5 install paths end-to-end against the freshly-published assets. This phase is the catalyst that proves the framework is needed; the framework itself lands in P57. Operating-principle hooks: **OP-1 close the feedback loop** — fetch each install URL from a fresh container or curl session, do not trust the workflow log; **OP-6 ground truth obsession** — the verifier subagent runs each install path verbatim from the docs and asserts the binary lands on PATH.
 
 **Requirements:** RELEASE-01, RELEASE-02, RELEASE-03
 
@@ -47,7 +47,7 @@
 5. CLAUDE.md updated to reflect this phase's contributions (release.yml tag-glob convention, install-path verification expectation, the new install-paths catalog reference) in the same PR.
 6. Phase close: unbiased verifier subagent grades all catalog rows GREEN; verdict in `quality/reports/verdicts/p56/<ts>.md`. RELEASE-01..03 flip from `planning` → `shipped` only after the verifier verdict.
 
-**Context anchor:** `.planning/REQUIREMENTS.md` `## v0.12.0 Requirements — Quality Gates` § "Release dimension — close the immediate breakage", `.planning/research/v0.12.0-install-regression-diagnosis.md` (root cause + two fix options + recommended choice), v0.11.x release-plz workflow at `.github/workflows/release-plz.yml`, the broken `release.yml` it stopped firing.
+**Context anchor:** `.planning/REQUIREMENTS.md` `## v0.12.0 Requirements — Quality Gates` § "Release dimension — close the immediate breakage", `.planning/research/v0.12.0/install-regression-diagnosis.md` (root cause + two fix options + recommended choice), v0.11.x release-plz workflow at `.github/workflows/release-plz.yml`, the broken `release.yml` it stopped firing.
 
 ### Phase 57: Quality Gates skeleton + structure dimension migration (v0.12.0)
 
@@ -68,7 +68,7 @@
 8. **Recurring (CLAUDE.md):** CLAUDE.md updated in the same PR with: (a) new "Quality Gates" section pointing at `quality/PROTOCOL.md`, (b) updated §"Subagent delegation rules" referencing the QG-06 verifier pattern, (c) the QG-07 mandatory-update rule itself documented as a project meta-rule.
 9. **Recurring (verifier dispatch):** Phase close: unbiased verifier subagent grades all catalog rows GREEN; verdict in `quality/reports/verdicts/p57/<ts>.md`. The same subagent dogfoods the QG-06 pattern PROTOCOL.md documents.
 
-**Context anchor:** `.planning/REQUIREMENTS.md` § "Quality Gates framework" + § "Structure dimension — migrate freshness invariants" + § "Aggressive simplification" SIMPLIFY-01..03, `.planning/research/v0.12.0-naming-and-architecture.md` (directory layout + unified schema), `.planning/research/v0.12.0-autonomous-execution-protocol.md` (catalog-first rule + waiver TTL + verifier dispatch), existing `scripts/end-state.py` (the surface being absorbed).
+**Context anchor:** `.planning/REQUIREMENTS.md` § "Quality Gates framework" + § "Structure dimension — migrate freshness invariants" + § "Aggressive simplification" SIMPLIFY-01..03, `.planning/research/v0.12.0/naming-and-architecture.md` (directory layout + unified schema), `.planning/research/v0.12.0/autonomous-execution-protocol.md` (catalog-first rule + waiver TTL + verifier dispatch), existing `scripts/end-state.py` (the surface being absorbed).
 
 ### Phase 58: Release dimension gates + code-dimension absorption (v0.12.0)
 
@@ -88,7 +88,7 @@
 7. **Recurring (CLAUDE.md):** CLAUDE.md updated to reflect this phase's contributions: weekly cadence convention (cost-conscious, not nightly), the release-dimension gate inventory, the post-release hook integration. In the same PR.
 8. **Recurring (verifier dispatch):** Phase close: unbiased verifier subagent grades all catalog rows GREEN; verdict in `quality/reports/verdicts/p58/<ts>.md`.
 
-**Context anchor:** `.planning/REQUIREMENTS.md` § "Release dimension" RELEASE-04 + § "Aggressive simplification" SIMPLIFY-04..05, `.planning/research/v0.12.0-naming-and-architecture.md` § "release dimension" (gate inventory), `.planning/research/v0.12.0-install-regression-diagnosis.md` (the regression class this dimension prevents), v0.11.x crates.io rows in `scripts/end-state.py` that migrate here.
+**Context anchor:** `.planning/REQUIREMENTS.md` § "Release dimension" RELEASE-04 + § "Aggressive simplification" SIMPLIFY-04..05, `.planning/research/v0.12.0/naming-and-architecture.md` § "release dimension" (gate inventory), `.planning/research/v0.12.0/install-regression-diagnosis.md` (the regression class this dimension prevents), v0.11.x crates.io rows in `scripts/end-state.py` that migrate here.
 
 ### Phase 59: Docs-repro dimension + tutorial replay + agent-ux thin-home (v0.12.0)
 
@@ -110,7 +110,7 @@
 9. **Recurring (CLAUDE.md):** CLAUDE.md updated to reflect this phase's contributions: docs-repro container-rehearse convention, the "examples are tracked gates" rule, the agent-ux sparse-dimension note, the SIMPLIFY-11 v0.12.1 carry-forward. In the same PR.
 10. **Recurring (verifier dispatch):** Phase close: unbiased verifier subagent grades all catalog rows GREEN; verdict in `quality/reports/verdicts/p59/<ts>.md`.
 
-**Context anchor:** `.planning/REQUIREMENTS.md` § "Docs-repro dimension" + § "Aggressive simplification" SIMPLIFY-06, 07, 11, `.planning/research/v0.12.0-naming-and-architecture.md` § "docs-repro dimension", `.planning/docs_reproducible_catalog.json` (DRAFT seed being ported), existing `scripts/repro-quickstart.sh` + `scripts/dark-factory-test.sh` (surfaces being absorbed).
+**Context anchor:** `.planning/REQUIREMENTS.md` § "Docs-repro dimension" + § "Aggressive simplification" SIMPLIFY-06, 07, 11, `.planning/research/v0.12.0/naming-and-architecture.md` § "docs-repro dimension", `.planning/docs_reproducible_catalog.json` (DRAFT seed being ported), existing `scripts/repro-quickstart.sh` + `scripts/dark-factory-test.sh` (surfaces being absorbed).
 
 **Plans:** 6 plans
 - [ ] 59-01-PLAN.md — Wave A catalog-first commit: docs-reproducible.json + agent-ux.json + perf-targets.json + 3 dimension READMEs (DOCS-REPRO-04 + SIMPLIFY-06/07/11 contract)
@@ -138,7 +138,7 @@
 7. **Recurring (CLAUDE.md):** CLAUDE.md "Docs-site validation" section updated to point at `quality/gates/docs-build/` + the runner cadence; the "Subagent delegation rules" section updated if the docs-build composition changes how subagents dispatch playwright walks. In the same PR.
 8. **Recurring (verifier dispatch):** Phase close: unbiased verifier subagent grades all catalog rows GREEN; verdict in `quality/reports/verdicts/p60/<ts>.md`.
 
-**Context anchor:** `.planning/REQUIREMENTS.md` § "Docs-build dimension migration" + § "Aggressive simplification" SIMPLIFY-08..10, `.planning/research/v0.12.0-naming-and-architecture.md` § "docs-build dimension" (gate inventory), existing `scripts/check-docs-site.sh` + `scripts/check-mermaid-renders.sh` + `scripts/check-doc-links.py` + `scripts/green-gauntlet.sh` + `scripts/hooks/pre-push` (surfaces being absorbed).
+**Context anchor:** `.planning/REQUIREMENTS.md` § "Docs-build dimension migration" + § "Aggressive simplification" SIMPLIFY-08..10, `.planning/research/v0.12.0/naming-and-architecture.md` § "docs-build dimension" (gate inventory), existing `scripts/check-docs-site.sh` + `scripts/check-mermaid-renders.sh` + `scripts/check-doc-links.py` + `scripts/green-gauntlet.sh` + `scripts/hooks/pre-push` (surfaces being absorbed).
 
 **Plans:** 8 plans
 - [ ] 60-01-PLAN.md — Wave A catalog-first commit: docs-build.json (4 rows) + code.json (+2 rows) + freshness-invariants.json (+1 row + 1 amend) + docs-build dimension README (DOCS-BUILD-01 + BADGE-01 + SIMPLIFY-08/09/10 contract; short-lived waivers per the catalog-first pattern)
@@ -168,26 +168,26 @@
 7. **Recurring (CLAUDE.md):** CLAUDE.md "Cold-reader pass on user-facing surfaces" section updated to point at the new skill + the rubric catalog; the §"Subagent delegation rules" gains the `reposix-quality-review` parallel-dispatch pattern. In the same PR.
 8. **Recurring (verifier dispatch):** Phase close: unbiased verifier subagent grades all catalog rows GREEN; verdict in `quality/reports/verdicts/p61/<ts>.md`. (Verifier in this case grades catalog mechanics, not the rubrics themselves — the rubrics are graded by the skill it dispatches.)
 
-**Context anchor:** `.planning/REQUIREMENTS.md` § "Subjective gates" SUBJ-01..03, `.planning/research/v0.12.0-naming-and-architecture.md` § "subjective gates" (skill + TTL design), existing `.claude/skills/doc-clarity-review/SKILL.md` (integrated as one rubric implementation), CLAUDE.md "Cold-reader pass" section (the convention the catalog encodes).
+**Context anchor:** `.planning/REQUIREMENTS.md` § "Subjective gates" SUBJ-01..03, `.planning/research/v0.12.0/naming-and-architecture.md` § "subjective gates" (skill + TTL design), existing `.claude/skills/doc-clarity-review/SKILL.md` (integrated as one rubric implementation), CLAUDE.md "Cold-reader pass" section (the convention the catalog encodes).
 
 ### Phase 62: Repo-org-gaps cleanup — close the v0.11.1 audit (v0.12.0)
 
-**Goal:** Audit `.planning/research/v0.11.1-repo-organization-gaps.md` against current state and close out every remaining gap as either a fix + structure-dimension catalog row that prevents recurrence, or an explicit waiver with reason. The repo-organization-gaps doc is a forgotten todo list if not actioned; this phase ensures every gap becomes a tracked catalog row in the new framework (so a future gap audit doesn't have to be a manual document grep). Operating-principle hooks: **OP-4 self-improving infrastructure** — each gap that recurred under v0.11.x is evidence of a missing structure gate, which this phase backfills; **OP-6 ground truth obsession** — "fixed in CLAUDE.md but not enforced" is not a fix; only a catalog row + verifier counts.
+**Goal:** Audit `.planning/research/v0.11.1/repo-organization-gaps.md` against current state and close out every remaining gap as either a fix + structure-dimension catalog row that prevents recurrence, or an explicit waiver with reason. The repo-organization-gaps doc is a forgotten todo list if not actioned; this phase ensures every gap becomes a tracked catalog row in the new framework (so a future gap audit doesn't have to be a manual document grep). Operating-principle hooks: **OP-4 self-improving infrastructure** — each gap that recurred under v0.11.x is evidence of a missing structure gate, which this phase backfills; **OP-6 ground truth obsession** — "fixed in CLAUDE.md but not enforced" is not a fix; only a catalog row + verifier counts.
 
 **Requirements:** ORG-01
 
 **Depends on:** P57 GREEN (structure dimension must exist), P61 GREEN (so the repo-org gaps can route into the now-mature dimension set, not into a half-built framework). **Gate-state precondition:** P61's subjective-gates catalog shows GREEN in `quality/reports/verdicts/p61/`. (P62 is also independent enough to slot earlier if scheduling demands it, but the natural order is "polish the framework first, then sweep gaps into it.")
 
 **Success criteria:**
-1. Every gap in `.planning/research/v0.11.1-repo-organization-gaps.md` has a status: `closed-by-catalog-row` (gap fixed + recurrence prevented by a structure-dimension catalog row), `closed-by-existing-gate` (gap fixed + already covered by an earlier P57/P58/P60 gate), or `waived` (explicit `quality/catalogs/orphan-scripts.json` or `quality/catalogs/waivers.json` row with reason + dimension_owner + RFC3339 `until`).
+1. Every gap in `.planning/research/v0.11.1/repo-organization-gaps.md` has a status: `closed-by-catalog-row` (gap fixed + recurrence prevented by a structure-dimension catalog row), `closed-by-existing-gate` (gap fixed + already covered by an earlier P57/P58/P60 gate), or `waived` (explicit `quality/catalogs/orphan-scripts.json` or `quality/catalogs/waivers.json` row with reason + dimension_owner + RFC3339 `until`).
 2. The audit results are committed under `quality/reports/verifications/repo-org-gaps/<ts>.md` with a row per gap and its closure path.
-3. The `.planning/research/v0.11.1-repo-organization-gaps.md` document gets a top-banner update naming "fully audited and closed under P62; see `quality/reports/verifications/repo-org-gaps/<ts>.md` for per-gap closure" — the document is no longer a forgotten todo list.
+3. The `.planning/research/v0.11.1/repo-organization-gaps.md` document gets a top-banner update naming "fully audited and closed under P62; see `quality/reports/verifications/repo-org-gaps/<ts>.md` for per-gap closure" — the document is no longer a forgotten todo list.
 4. New structure-dimension catalog rows added under `quality/catalogs/freshness-invariants.json` (or a new `repo-org.json`) for each gap that needed a recurrence guard.
 5. **Recurring (catalog-first):** ORG-01 catalog row + the per-gap closure rows land BEFORE the audit-fix commits.
 6. **Recurring (CLAUDE.md):** CLAUDE.md updated to cite the audit closure + new recurrence-guard rows + waivers (if any) in the appropriate freshness-invariant or workspace-layout sections. In the same PR.
 7. **Recurring (verifier dispatch):** Phase close: unbiased verifier subagent grades all catalog rows GREEN; verdict in `quality/reports/verdicts/p62/<ts>.md`.
 
-**Context anchor:** `.planning/REQUIREMENTS.md` § "Repo-org cleanup" ORG-01, `.planning/research/v0.11.1-repo-organization-gaps.md` (the audit document being closed), existing `quality/gates/structure/` rows from P57 (the recurrence-guard infrastructure these gaps will route into).
+**Context anchor:** `.planning/REQUIREMENTS.md` § "Repo-org cleanup" ORG-01, `.planning/research/v0.11.1/repo-organization-gaps.md` (the audit document being closed), existing `quality/gates/structure/` rows from P57 (the recurrence-guard infrastructure these gaps will route into).
 
 **Plans:** 6 plans
 - [ ] 62-01-PLAN.md — Wave 1 catalog-first commit: 3 structure rows + dim README delta (ORG-01 + POLISH-ORG contract)
@@ -218,7 +218,7 @@
 10. **Recurring (verifier dispatch):** Phase close: unbiased verifier subagent grades all catalog rows GREEN AND audits cross-phase coherence (every phase's verdict file exists and is GREEN, no orphan catalog rows, no expired waivers without follow-up); verdict in `quality/reports/verdicts/p63/<ts>.md`. The milestone-close verdict is the union of P56..P63 verdicts.
 11. **Broaden-and-deepen close-out:** Every dimension's catalog has zero NOT-VERIFIED P0+P1 rows; every WAIVED row has a non-expired `until` (RFC3339) and a tracked carry-forward entry under MIGRATE-03 v0.12.1 placeholders; the milestone-close verifier subagent confirms cross-dimension coherence (no dimension shipped a gate without sweeping its first-run REDs per POLISH-* in REQUIREMENTS.md). Owner directive: "after this milestone the codebase is pristine and high quality across all the dimensions."
 
-**Context anchor:** `.planning/REQUIREMENTS.md` § "Migration close-out" MIGRATE-01..03 + § "Aggressive simplification" SIMPLIFY-12 + § "Out of Scope" (the v0.12.1 carry-forward list), `.planning/research/v0.12.0-autonomous-execution-protocol.md` (parallel migration + hard-cut + cohesion-pass design), v0.11.x tag-script precedent at `.planning/milestones/v0.11.0-phases/tag-v0.11.0.sh` (template for v0.12.0 tag script).
+**Context anchor:** `.planning/REQUIREMENTS.md` § "Migration close-out" MIGRATE-01..03 + § "Aggressive simplification" SIMPLIFY-12 + § "Out of Scope" (the v0.12.1 carry-forward list), `.planning/research/v0.12.0/autonomous-execution-protocol.md` (parallel migration + hard-cut + cohesion-pass design), v0.11.x tag-script precedent at `.planning/milestones/v0.11.0-phases/tag-v0.11.0.sh` (template for v0.12.0 tag script).
 
 ### Phase 64: Docs-alignment dimension — framework, CLI, skill, hook wiring (v0.12.0)
 

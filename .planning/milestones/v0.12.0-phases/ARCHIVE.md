@@ -23,7 +23,7 @@ Gates system at `quality/{gates,catalogs,reports,runners}/`. **The
 framework itself ships in P57** — until then, the catalog format
 lives in `.planning/docs_reproducible_catalog.json` (ACTIVE-V0; P57
 migrates it to the unified schema). Read
-`.planning/research/v0.12.0-{vision-and-mental-model,
+`.planning/research/v0.12.0/{vision-and-mental-model,
 naming-and-architecture, roadmap-and-rationale,
 autonomous-execution-protocol}.md` before working on any v0.12.0
 phase. Read `quality/SURPRISES.md` (append-only pivot journal — seeded
@@ -35,7 +35,7 @@ runtime contract).
 
 `.github/workflows/release.yml` now fires on **both** `v*` AND
 `reposix-cli-v*` tag globs (Option A from
-`.planning/research/v0.12.0-install-regression-diagnosis.md`),
+`.planning/research/v0.12.0/install-regression-diagnosis.md`),
 because release-plz cuts per-crate tags. Archive filenames use the
 `v${version}` form (e.g. `reposix-v0.11.3-x86_64-unknown-linux-musl.tar.gz`)
 regardless of which tag triggered the workflow; the GH Release object
@@ -245,7 +245,7 @@ The Quality Gates `subjective` cross-dimension shipped in P61. 3 rubrics catalog
 | `subjective/install-positioning` | `reposix-quality-review` (P61 ships at `.claude/skills/reposix-quality-review/`) | pre-release | 30d |
 | `subjective/headline-numbers-sanity` | `reposix-quality-review` | weekly | 30d |
 
-**reposix-quality-review skill (SUBJ-02 closure).** NEW skill scaffold + 3 rubric prompts + 2 dispatchers (~700 LOC total). The ONLY skill change pre-approved for v0.12.0 per `.planning/research/v0.12.0-open-questions-and-deferrals.md` line 124. Invocation: `bash .claude/skills/reposix-quality-review/dispatch.sh --rubric <id>` / `--all-stale` / `--force`. Path A (Task tool from a Claude session) preferred; Path B (claude -p subprocess) fallback. Path B from the runner subprocess writes a stub artifact (FAIL) until Path A re-runs from a session — the runner-subprocess-overwrites-Path-A-artifact issue is filed as v0.12.1 MIGRATE-03 carry-forward (e).
+**reposix-quality-review skill (SUBJ-02 closure).** NEW skill scaffold + 3 rubric prompts + 2 dispatchers (~700 LOC total). The ONLY skill change pre-approved for v0.12.0 per `.planning/research/v0.12.0/open-questions-and-deferrals.md` line 124. Invocation: `bash .claude/skills/reposix-quality-review/dispatch.sh --rubric <id>` / `--all-stale` / `--force`. Path A (Task tool from a Claude session) preferred; Path B (claude -p subprocess) fallback. Path B from the runner subprocess writes a stub artifact (FAIL) until Path A re-runs from a session — the runner-subprocess-overwrites-Path-A-artifact issue is filed as v0.12.1 MIGRATE-03 carry-forward (e).
 
 **Freshness-TTL extension (SUBJ-03 closure).** `quality/runners/run.py` grew `parse_duration` + `is_stale` + STALE-counts-as-NOT-VERIFIED branch + `[STALE]` label (388 LOC final; parse_duration extracted to sibling `_freshness.py` per the Wave B 390-LOC pivot rule). `quality/runners/verdict.py` grew STALE sub-table inside the NOT-VERIFIED rollup. `quality/runners/test_freshness.py` ships 11 pytest tests + `test_freshness_synth.py` 1 end-to-end synthetic regression.
 
@@ -266,7 +266,7 @@ The Quality Gates `subjective` cross-dimension shipped in P61. 3 rubrics catalog
 
 ### P62 — Repo-org-gaps cleanup + audit closure (added 2026-04-28)
 
-P62 closes ORG-01 + POLISH-ORG. The forgotten-todo-list document `.planning/research/v0.11.1-repo-organization-gaps.md` (snapshot 2026-04-26) was audited rec-by-rec; the closure record is `quality/reports/audits/repo-org-gaps.md` (99 items; 50 closed-by-existing-gate, 26 closed-by-relocation, 13 closed-by-deletion, 8 out-of-scope; zero open Wave-3 items).
+P62 closes ORG-01 + POLISH-ORG. The forgotten-todo-list document `.planning/research/v0.11.1/repo-organization-gaps.md` (snapshot 2026-04-26) was audited rec-by-rec; the closure record is `quality/reports/audits/repo-org-gaps.md` (99 items; 50 closed-by-existing-gate, 26 closed-by-relocation, 13 closed-by-deletion, 8 out-of-scope; zero open Wave-3 items).
 
 **3 new structure-dimension catalog rows** in `quality/catalogs/freshness-invariants.json` lock the recurrence guards for the gaps that actually moved this phase:
 

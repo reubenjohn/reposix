@@ -1,6 +1,6 @@
 # quality/SURPRISES.md — append-only pivot journal
 
-Per `.planning/research/v0.12.0-autonomous-execution-protocol.md` § "SURPRISES.md format": append one line per unexpected obstacle + its one-line resolution. **Required reading for every phase agent at start of phase.** The next agent does NOT repeat investigations of things already journaled here.
+Per `.planning/research/v0.12.0/autonomous-execution-protocol.md` § "SURPRISES.md format": append one line per unexpected obstacle + its one-line resolution. **Required reading for every phase agent at start of phase.** The next agent does NOT repeat investigations of things already journaled here.
 
 Format: `YYYY-MM-DD P<N>: <obstacle> — <one-line resolution>`.
 

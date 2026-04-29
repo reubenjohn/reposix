@@ -65,7 +65,7 @@ P62-specific: 3 catalog rows graded; 0 RED; 3 WAIVED-active (until 2026-05-15; v
 | `.planning/STATE.md` `last_activity` | names P62 SHIPPED | line 8: "2026-04-28 -- P62 SHIPPED. Repo-org-gaps cleanup + audit closure ..." | PASS |
 | `.planning/REQUIREMENTS.md` ORG-01 | `[x]` + traceability `shipped (P62)` | line 89 `- [x] **ORG-01**`; line 167 `\| ORG-01 \| P62 \| shipped (P62) \|` | PASS |
 | `.planning/REQUIREMENTS.md` POLISH-ORG | `[x]` + traceability `shipped (P62)` | line 100 `- [x] **POLISH-ORG**`; line 173 `\| POLISH-ORG \| P62 \| shipped (P62) \|` | PASS |
-| `.planning/research/v0.11.1-repo-organization-gaps.md` banner | top blockquote naming P62 closure | line 3-7 blockquote present | PASS |
+| `.planning/research/v0.11.1/repo-organization-gaps.md` banner | top blockquote naming P62 closure | line 3-7 blockquote present | PASS |
 | `quality/SURPRISES.md` rotation | active ≤220 lines + P57+P58 archived | 219 lines; archive 179 lines with P57+P58 sections | PASS |
 
 ## Verdict declaration

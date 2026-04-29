@@ -16,7 +16,7 @@ supersedes: nothing
 
 ## Context
 
-`.planning/research/v0.11.0-vision-and-innovations.md` §3b is the design
+`.planning/research/v0.11.0/vision-and-innovations.md` §3b is the design
 brief: every `Cache::sync` should write a deterministic ref pointing at
 the synthesis commit for that sync, so an agent or human can
 `git checkout <ref>` and inspect what reposix observed at any past
@@ -126,7 +126,7 @@ the new `sync_tag_written` rows.
 
 ## References
 
-- `.planning/research/v0.11.0-vision-and-innovations.md` §3b — design
+- `.planning/research/v0.11.0/vision-and-innovations.md` §3b — design
   intent, novelty audit (§6), and prior-art search.
 - `crates/reposix-cache/src/sync_tag.rs` — module home.
 - `docs/how-it-works/time-travel.md` — user-facing explanation.

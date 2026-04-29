@@ -41,12 +41,12 @@ Concrete checklist for the next phase agents:
 
 ## 3. Pivot rule for Wave B (Option A → Option B)
 
-Restated verbatim from `.planning/research/v0.12.0-install-regression-
+Restated verbatim from `.planning/research/v0.12.0/install-regression-
 diagnosis.md`: if `${{ github.ref }}` substitutions in `release.yml` cannot
 be cleanly mapped from `reposix-cli-v0.11.3` to a `version=0.11.3` for
 archive filenames (current `reposix-${TAG}-${target}.tar.gz` would become
 `reposix-reposix-cli-v0.11.3-…`), pivot to Option B per
-`.planning/research/v0.12.0-install-regression-diagnosis.md` § "Option B".
+`.planning/research/v0.12.0/install-regression-diagnosis.md` § "Option B".
 Append the pivot to `quality/SURPRISES.md` (Wave D creates the file).
 
 ## 4. Anti-bloat note
@@ -54,4 +54,4 @@ Append the pivot to `quality/SURPRISES.md` (Wave D creates the file).
 This file is single-purpose. Do not grow it. P57 deletes it as part of the
 migration close-out.
 
-Cross-references: REQUIREMENTS.md ## v0.12.0 RELEASE-01..03; ROADMAP.md ## Phase 56; .planning/research/v0.12.0-install-regression-diagnosis.md.
+Cross-references: REQUIREMENTS.md ## v0.12.0 RELEASE-01..03; ROADMAP.md ## Phase 56; .planning/research/v0.12.0/install-regression-diagnosis.md.

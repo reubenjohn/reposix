@@ -1,6 +1,6 @@
 # Repo organization gaps — P62 audit closure
 
-**Source:** `.planning/research/v0.11.1-repo-organization-gaps.md` (snapshot 2026-04-26).
+**Source:** `.planning/research/v0.11.1/repo-organization-gaps.md` (snapshot 2026-04-26).
 **Audited:** P62 Wave 2 on 2026-04-27 at commit `eaf7068`.
 **Verifier:** `scripts/check_repo_org_gaps.py` (asserts every numbered rec is line-referenced + every disposition is in the allow-list).
 
@@ -27,7 +27,7 @@ Disposition allow-list:
 | 3 | Delete `scripts/__pycache__/` (2 `.pyc`) + add to `.gitignore` test in CI | closed-by-deletion | Wave 3 commit `8842d48`: `.pyc` files were already untracked locally (`.gitignore` covers `__pycache__/` recursively at line 30); workspace-only `.pyc` files removed via `rm -rf`. No git-tracked content to delete. |
 | 4 | Move `scripts/migrations/{fix_demos_index_links.py, mermaid_divs_to_fences.py}` to `.planning/archive/scripts/` | closed-by-relocation | Both present at `.planning/archive/scripts/{fix_demos_index_links.py, mermaid_divs_to_fences.py}`; `ls scripts/migrations/` returns "No such file" |
 | 5 | Condense `.planning/milestones/v0.{1,2,3,4,5,6,7,8}.0-phases/` into 8 `ARCHIVE.md` | closed-by-relocation | `ls` per dir confirms each carries an `ARCHIVE.md`. `v0.4.0-phases/` retains `tag-v0.4.0.sh`; `v0.8.0-phases/` retains `REQUIREMENTS.md` + `ROADMAP.md` (these are scoped milestone docs per CLAUDE.md §"`.planning/milestones/` convention" — KEPT intentionally, not loose). |
-| 6 | Move `.planning/research/v0.11.0-*.md` into `.planning/milestones/v0.11.0-phases/` once milestone closes | out-of-scope | Defer — v0.11.0 tag still unpushed (STATE.md "owner gates pending"). Move is cosmetic; research/ is the canonical home until tag pushes. Tracked under v0.12.1 MIGRATE-03 if not naturally absorbed. |
+| 6 | Move `.planning/research/v0.11.0/*.md` into `.planning/milestones/v0.11.0-phases/` once milestone closes | out-of-scope | Defer — v0.11.0 tag still unpushed (STATE.md "owner gates pending"). Move is cosmetic; research/ is the canonical home until tag pushes. Tracked under v0.12.1 MIGRATE-03 if not naturally absorbed. |
 | 7 | Move `.planning/SESSION-5-RATIONALE.md` + `SESSION-7-BRIEF.md` to `.planning/archive/sessions/` | closed-by-relocation | Both present at `.planning/archive/sessions/{SESSION-5-RATIONALE.md, SESSION-7-BRIEF.md}` |
 | 8 | Rename `scripts/v0.9.0-latency.sh` + `docs/benchmarks/v0.9.0-latency.md` (drop version pin) | closed-by-relocation | `scripts/v0.9.0-latency.sh` migrated to `quality/gates/perf/latency-bench.sh` (P59 SIMPLIFY-11 via `git mv`); `docs/benchmarks/latency.md` is the version-agnostic name. Recurrence guarded by `structure/no-version-pinned-filenames` (PASS). |
 | 9 | `scripts/take-screenshots.sh` — implement or delete | closed-by-deletion | `ls scripts/take-screenshots.sh` returns "No such file" |
@@ -50,7 +50,7 @@ Disposition allow-list:
 | 21 | `v0.11.0-phases/` — n/a | out-of-scope | No phase dir created; phases ran inline. Decision deferred until tag push. |
 | 22 | Loose milestone docs (`.planning/milestones/v0.10.0-ROADMAP.md`, `v0.9.0-ROADMAP.md`, `v0.8.0-ROADMAP.md`, `v0.8.0-REQUIREMENTS.md`) | closed-by-existing-gate | `structure/no-loose-roadmap-or-requirements` (catalog row, PASS) blocks any future loose `*ROADMAP*` / `*REQUIREMENTS*` at `.planning/milestones/` top level; current state is clean per the verifier. |
 | 23 | `.planning/v0.9.0-MILESTONE-AUDIT.md` + `v0.10.0-MILESTONE-AUDIT.md` (top-level) — move under `.planning/milestones/audits/` | closed-by-relocation | Wave 3 commit `8842d48`: `git mv` both to `.planning/milestones/audits/v0.{9,10}.0-MILESTONE-AUDIT.md` (history preserved). Recurrence locked by P62 Wave 1 row `structure/no-loose-top-level-planning-audits`. |
-| 24 | `.planning/CATALOG.md` (529 lines) — move to `.planning/research/v0.11.0-CATALOG-v1.md` | closed-by-relocation | `ls .planning/CATALOG.md` returns "No such file"; `.planning/research/v0.11.0-CATALOG-v1.md` exists (45255 bytes). |
+| 24 | `.planning/CATALOG.md` (529 lines) — move to `.planning/research/v0.11.0/CATALOG-v1.md` | closed-by-relocation | `ls .planning/CATALOG.md` returns "No such file"; `.planning/research/v0.11.0/CATALOG-v1.md` exists (45255 bytes). |
 | 25 | `.planning/phases/` empty dir — DELETE | closed-by-existing-gate | Currently NON-empty (active phase dirs P56–P62 live there). Recommendation was conditional ("if empty"); recommendation no longer applies. |
 | 26 | `.planning/notes/gsd-feedback.md` — KEEP | closed-by-existing-gate | Still referenced; awaiting-user-review. |
 | 27 | `.planning/notes/v0.11.0-doc-polish-backlog.md` — KEEP | closed-by-existing-gate | Actively referenced by STATE.md. |

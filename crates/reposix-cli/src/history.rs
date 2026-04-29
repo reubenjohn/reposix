@@ -4,7 +4,7 @@
 //! `remote.origin.url`, resolve the cache directory, and read sync tags
 //! from the cache's bare repo (`refs/reposix/sync/<ISO8601-no-colons>`).
 //!
-//! Design intent: `.planning/research/v0.11.0-vision-and-innovations.md` §3b.
+//! Design intent: `.planning/research/v0.11.0/vision-and-innovations.md` §3b.
 
 use std::path::{Path, PathBuf};
 

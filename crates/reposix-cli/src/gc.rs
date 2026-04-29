@@ -4,7 +4,7 @@
 //! objects, refs, and sync tags are NEVER touched (see
 //! `reposix_cache::gc` module doc).
 //!
-//! Design intent: `.planning/research/v0.11.0-vision-and-innovations.md` §3j.
+//! Design intent: `.planning/research/v0.11.0/vision-and-innovations.md` §3j.
 
 use std::path::{Path, PathBuf};
 

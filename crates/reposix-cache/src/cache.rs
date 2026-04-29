@@ -280,7 +280,7 @@ impl Cache {
     /// Token estimate is `chars / 4` (conservative English-text heuristic).
     /// Best-effort: SQL errors WARN-log.
     ///
-    /// See `.planning/research/v0.11.0-vision-and-innovations.md` §3c.
+    /// See `.planning/research/v0.11.0/vision-and-innovations.md` §3c.
     ///
     /// # Panics
     /// Panics if the internal `cache.db` mutex is poisoned.

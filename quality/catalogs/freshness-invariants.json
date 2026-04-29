@@ -327,7 +327,7 @@
       "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
-        ".planning/research/v0.11.1-repo-organization-gaps.md:49 (top-level audits should live under .planning/milestones/audits/)",
+        ".planning/research/v0.11.1/repo-organization-gaps.md:49 (top-level audits should live under .planning/milestones/audits/)",
         "CLAUDE.md:Freshness invariants"
       ],
       "command": null,
@@ -364,7 +364,7 @@
       "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
-        ".planning/research/v0.11.1-repo-organization-gaps.md:82-83 (top-level doc stubs)",
+        ".planning/research/v0.11.1/repo-organization-gaps.md:82-83 (top-level doc stubs)",
         "CLAUDE.md:Freshness invariants"
       ],
       "command": null,
@@ -408,7 +408,7 @@
       "expected": {
         "asserts": [
           "File quality/reports/audits/repo-org-gaps.md exists",
-          "File contains a top-section with audit table mapping every numbered gap from .planning/research/v0.11.1-repo-organization-gaps.md 'Top 10 cleanup recommendations' to a closure path (closed-by-catalog-row | closed-by-existing-gate | waived)"
+          "File contains a top-section with audit table mapping every numbered gap from .planning/research/v0.11.1/repo-organization-gaps.md 'Top 10 cleanup recommendations' to a closure path (closed-by-catalog-row | closed-by-existing-gate | waived)"
         ]
       },
       "verifier": {

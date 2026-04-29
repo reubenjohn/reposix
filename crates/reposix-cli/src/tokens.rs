@@ -4,7 +4,7 @@
 //! table, sums them, prints the totals plus an honest comparison against
 //! a back-of-envelope MCP-equivalent estimate.
 //!
-//! Design intent: `.planning/research/v0.11.0-vision-and-innovations.md` §3c.
+//! Design intent: `.planning/research/v0.11.0/vision-and-innovations.md` §3c.
 
 use std::path::{Path, PathBuf};
 

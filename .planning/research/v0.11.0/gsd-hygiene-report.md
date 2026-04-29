@@ -134,7 +134,7 @@ This is two milestones stale. v0.8.0 tagged. v0.9.0 shipped. v0.10.0 shipped.
 Last session: 2026-04-25T07:30:00.000Z
 Checkpoint: v0.10.0 SHIPPED, audit verdict tech_debt→passed (helper dispatch closed); v0.11.0 planning starts.
 Resume file: None
-Cursor next: **First v0.11.0 phase to scope is the latency benchmark — see `.planning/research/v0.11.0-latency-benchmark-plan.md`.** Owner gates: tag-v0.10.0 + tag-v0.9.0 not yet pushed.
+Cursor next: **First v0.11.0 phase to scope is the latency benchmark — see `.planning/research/v0.11.0/latency-benchmark-plan.md`.** Owner gates: tag-v0.10.0 + tag-v0.9.0 not yet pushed.
 
 Recent commit trail on `main`: `cd1b0b6` (helper backend dispatch — closes Phase 32 tech debt) · `856b7b9..132c662` (time-travel via git tags + ADR-007) · `b276473..b862c71` (reposix doctor) · `37ae438..d3647ef` (Cache::gc + reposix gc + reposix tokens) · `2dd06a1..4ad8e2a` (Record rename completion) · `9151b86..6131921` (launch screencast script + quickstart fix).
 ```
@@ -216,7 +216,7 @@ Three closed items still listed open:
 
 **Recommended replacement:**
 ```
-**Goal:** Honest per-backend latency benchmarks (`scripts/v0.9.0-latency.sh` extension or new `cargo run -p reposix-bench`); close the 9 major + 17 minor doc-clarity findings (`.planning/notes/v0.11.0-doc-polish-backlog.md`); capture the playwright screenshots deferred from v0.10.0 (cairo libs); resurface real-backend integration coverage now that secret packs decrypt; ship the launch (`docs/blog/2026-04-25-reposix-launch.md` + asciinema). See `.planning/research/v0.11.0-vision-and-innovations.md` for ambitious add-ons.
+**Goal:** Honest per-backend latency benchmarks (`scripts/v0.9.0-latency.sh` extension or new `cargo run -p reposix-bench`); close the 9 major + 17 minor doc-clarity findings (`.planning/notes/v0.11.0-doc-polish-backlog.md`); capture the playwright screenshots deferred from v0.10.0 (cairo libs); resurface real-backend integration coverage now that secret packs decrypt; ship the launch (`docs/blog/2026-04-25-reposix-launch.md` + asciinema). See `.planning/research/v0.11.0/vision-and-innovations.md` for ambitious add-ons.
 
 **Carry-forward already closed (do not re-open):**
 - Helper backend URL dispatch — closed `cd1b0b6` (ADR-008).

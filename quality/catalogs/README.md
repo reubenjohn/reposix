@@ -201,6 +201,6 @@ stays in place.
 ## Cross-references
 
 - `quality/PROTOCOL.md` — autonomous-mode runtime contract that consumes these catalogs.
-- `.planning/research/v0.12.0-naming-and-architecture.md` — schema design rationale.
-- `.planning/research/v0.12.0-vision-and-mental-model.md` — dimension/cadence/kind taxonomy.
-- `.planning/research/v0.12.0-decisions-log.md` D2 (gates as umbrella term) and D11 (per-milestone REQUIREMENTS scoping).
+- `.planning/research/v0.12.0/naming-and-architecture.md` — schema design rationale.
+- `.planning/research/v0.12.0/vision-and-mental-model.md` — dimension/cadence/kind taxonomy.
+- `.planning/research/v0.12.0/decisions-log.md` D2 (gates as umbrella term) and D11 (per-milestone REQUIREMENTS scoping).

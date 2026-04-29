@@ -3,7 +3,7 @@
 """Per-file LIVING tracker for v0.11.1.
 
 JSON at .planning/v0.11.1-catalog.json is the source of truth.
-Markdown view at .planning/research/v0.11.1-CATALOG-v3.md is auto-rendered
+Markdown view at .planning/research/v0.11.1/CATALOG-v3.md is auto-rendered
 (do not hand-edit). See HANDOVER.md §7-C2 for design rationale.
 
 Stdlib only. Subcommands: init / set / coverage / render / query / stats.
@@ -29,9 +29,9 @@ VALID_STATUSES = {"KEEP", "TODO", "DONE", "REVIEW", "DELETE", "REFACTOR"}
 
 # Audits to scan for prior verdicts during init.
 AUDIT_FILES = [
-    (".planning/research/v0.11.0-CATALOG-v2.md", "catalog-v2"),
-    (".planning/research/v0.11.1-repo-organization-gaps.md", "repo-org-gaps"),
-    (".planning/research/v0.11.1-code-quality-gaps.md", "code-quality-gaps"),
+    (".planning/research/v0.11.0/CATALOG-v2.md", "catalog-v2"),
+    (".planning/research/v0.11.1/repo-organization-gaps.md", "repo-org-gaps"),
+    (".planning/research/v0.11.1/code-quality-gaps.md", "code-quality-gaps"),
 ]
 
 # Files we never want to actively track in the catalog (generated / archival /

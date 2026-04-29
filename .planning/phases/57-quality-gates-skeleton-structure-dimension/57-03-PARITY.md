@@ -1,6 +1,6 @@
 # 57-03-PARITY — old vs new chain verdicts
 
-Written at the close of P57 Wave C per `.planning/research/v0.12.0-decisions-log.md` D4 (parallel-then-cut migration). Required reading for Wave F's verifier subagent.
+Written at the close of P57 Wave C per `.planning/research/v0.12.0/decisions-log.md` D4 (parallel-then-cut migration). Required reading for Wave F's verifier subagent.
 
 ## Old chain (pre-Wave-C `scripts/end-state.py verdict`)
 

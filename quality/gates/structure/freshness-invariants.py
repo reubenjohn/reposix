@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Quality Gates structure-dimension verifier — freshness invariants.
 
-Per .planning/research/v0.12.0-naming-and-architecture.md § "Per-dimension catalog files"
+Per .planning/research/v0.12.0/naming-and-architecture.md § "Per-dimension catalog files"
 + quality/catalogs/freshness-invariants.json. Stdlib only.
 
 Each verify_<slug>(row, repo_root) function:

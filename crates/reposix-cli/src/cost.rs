@@ -18,7 +18,7 @@
 //! a back-of-envelope MCP comparison; `cost` is the raw per-op view, suitable
 //! for piping into a spreadsheet or `awk`.
 //!
-//! Design intent: `.planning/research/v0.11.0-vision-and-innovations.md` §3c.
+//! Design intent: `.planning/research/v0.11.0/vision-and-innovations.md` §3c.
 
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};

@@ -7,7 +7,7 @@
 //! fixes (currently: `git config extensions.partialClone origin`).
 //!
 //! Inspired by `flutter doctor` / `brew doctor` — the agent-era pitch is in
-//! `.planning/research/v0.11.0-vision-and-innovations.md` §3a.
+//! `.planning/research/v0.11.0/vision-and-innovations.md` §3a.
 
 use std::fmt;
 use std::path::{Path, PathBuf};

@@ -112,7 +112,7 @@ These were considered but decided; do NOT re-open during v0.12.0 execution:
 - **Repo-org-gaps is P62 of v0.12.0, not deferred.** Owner explicit (D5).
 - **Install fix (RELEASE-01) is P56 of v0.12.0, not a separate `/gsd-quick`.** Owner explicit (D8).
 - **Top-level REQUIREMENTS.md and ROADMAP.md are split per-milestone going forward.** Owner explicit (D11). Captured as QG-08.
-- **No HANDOVER.md.** Owner durable preference. Handover lives in `.planning/research/v0.12.0-*.md` bundle (D12).
+- **No HANDOVER.md.** Owner durable preference. Handover lives in `.planning/research/v0.12.0/*.md` bundle (D12).
 
 ## Items the autonomous agent should escalate (NOT decide alone)
 

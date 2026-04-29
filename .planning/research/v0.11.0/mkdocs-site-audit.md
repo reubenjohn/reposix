@@ -13,7 +13,7 @@
 - The owner's report is **largely correct**, with a useful clarification: there is **exactly one mermaid block** that throws a hard parse error (`how-it-works/git-layer.md`), but the resulting orphan error SVG bleeds onto **every page** because `navigation.instant` does not clean up body-level orphans across SPA-style page swaps. So the user is genuinely seeing "Syntax error in text / mermaid version 11.14.0" at the bottom of every page they visit *after* visiting `git-layer/`.
 - A second mermaid block (`how-it-works/trust-model.md`) **silently fails to render** (empty `<div class="mermaid"></div>`, no console error, no SVG). Likely cause: the doubly-encoded `&amp;lt;` HTML entities in the source produce a flowchart that mermaid drops without an exception.
 - A third mermaid block (`how-it-works/filesystem-layer.md`) renders an empty div on initial load — likely the same render-race / DOM-mutation issue, since the source itself parses cleanly when fed to `mermaid.parse()` directly.
-- Jargon density is real on the `how-it-works/*` cluster and the agent guide, but `.planning/research/v0.11.0-jargon-inventory.md` (also dated 2026-04-25) already enumerates the gap precisely. This report cross-validates that inventory against the live site rather than re-deriving it.
+- Jargon density is real on the `how-it-works/*` cluster and the agent guide, but `.planning/research/v0.11.0/jargon-inventory.md` (also dated 2026-04-25) already enumerates the gap precisely. This report cross-validates that inventory against the live site rather than re-deriving it.
 
 ---
 
@@ -52,7 +52,7 @@ mkdocs-material's bundled loader pulls `mermaid@11` (currently 11.14.0) from unp
 
 ## Per-page findings
 
-Pages are visited in nav order. For each: mermaid status, jargon density (compared against `.planning/research/v0.11.0-jargon-inventory.md`), and other clarity issues. Pages with nothing to report are listed at the end.
+Pages are visited in nav order. For each: mermaid status, jargon density (compared against `.planning/research/v0.11.0/jargon-inventory.md`), and other clarity issues. Pages with nothing to report are listed at the end.
 
 ### `https://reubenjohn.github.io/reposix/` (Home, `index.md`)
 
@@ -84,7 +84,7 @@ Clean. No mermaid, no errors, jargon glossed inline. The first-run tutorial in p
 
 ### `/how-it-works/time-travel/`
 
-Clean. `partial-clone` glossed in surrounding prose. One nit: references `.planning/research/v0.11.0-vision-and-innovations.md §3b` from user-facing docs — the planning tree is not on the published site.
+Clean. `partial-clone` glossed in surrounding prose. One nit: references `.planning/research/v0.11.0/vision-and-innovations.md §3b` from user-facing docs — the planning tree is not on the published site.
 
 ### `/how-it-works/trust-model/` **(diagram silently fails)**
 
@@ -190,7 +190,7 @@ markdown_extensions:
 
 **P2 — clarity debt (jargon):**
 
-- **F9.** Inline-gloss + external-link audit on `git-layer.md` and `integrate-with-your-agent.md`, using `.planning/research/v0.11.0-jargon-inventory.md` as the worklist. Add git-scm.com links on first use for `stateless-connect`, `protocol-v2`, `extensions.partialClone`, `fast-import`, `fast-export`, `refspec namespace`, `pkt-line`, `partial clone`. Gloss `OID`, `dark-factory teaching mechanism`, `dispatch verbs` in the agent guide. 1–2 h focused.
+- **F9.** Inline-gloss + external-link audit on `git-layer.md` and `integrate-with-your-agent.md`, using `.planning/research/v0.11.0/jargon-inventory.md` as the worklist. Add git-scm.com links on first use for `stateless-connect`, `protocol-v2`, `extensions.partialClone`, `fast-import`, `fast-export`, `refspec namespace`, `pkt-line`, `partial clone`. Gloss `OID`, `dark-factory teaching mechanism`, `dispatch verbs` in the agent guide. 1–2 h focused.
 - **F10.** Promote a one-page `docs/reference/glossary.md` (already recommended in the jargon inventory's "Highest-Impact Wins"). Cross-link from first occurrence on every page.
 
 **P3 — regression prevention:**
@@ -211,7 +211,7 @@ markdown_extensions:
 
 ## Cross-references to existing planning artefacts
 
-- `.planning/research/v0.11.0-jargon-inventory.md` — the existing terminology audit. F9 / F10 should pick that file up as the worklist; this report cross-validates rather than replaces it.
+- `.planning/research/v0.11.0/jargon-inventory.md` — the existing terminology audit. F9 / F10 should pick that file up as the worklist; this report cross-validates rather than replaces it.
 - `mkdocs.yml` — the source of truth for site config; F4, F6, F7 all edit this file.
 - `docs/notes/` (mentioned in commit `85a6fef docs(notes): backlog mkdocs --strict in pre-push`) — F11 / F12 belong in the same backlog.
 

@@ -146,7 +146,7 @@
       "status": "DONE",
       "prior": [],
       "plan": null,
-      "note": "moved to .planning/research/v0.11.0-CATALOG-v1.md (lineage: v1->v2->v3)",
+      "note": "moved to .planning/research/v0.11.0/CATALOG-v1.md (lineage: v1->v2->v3)",
       "updated_at": "2026-04-27T02:55:36Z"
     },
     {
@@ -435,7 +435,7 @@
       "updated_at": "2026-04-26T18:51:42Z"
     },
     {
-      "path": ".planning/research/v0.11.0-CATALOG-v2.md",
+      "path": ".planning/research/v0.11.0/CATALOG-v2.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,
@@ -443,7 +443,7 @@
       "updated_at": "2026-04-26T18:51:42Z"
     },
     {
-      "path": ".planning/research/v0.11.0-cache-location-study.md",
+      "path": ".planning/research/v0.11.0/cache-location-study.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,
@@ -451,7 +451,7 @@
       "updated_at": "2026-04-26T18:51:42Z"
     },
     {
-      "path": ".planning/research/v0.11.0-gsd-hygiene-report.md",
+      "path": ".planning/research/v0.11.0/gsd-hygiene-report.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,
@@ -459,7 +459,7 @@
       "updated_at": "2026-04-26T18:51:42Z"
     },
     {
-      "path": ".planning/research/v0.11.0-jargon-inventory.md",
+      "path": ".planning/research/v0.11.0/jargon-inventory.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,
@@ -467,7 +467,7 @@
       "updated_at": "2026-04-26T18:51:42Z"
     },
     {
-      "path": ".planning/research/v0.11.0-latency-benchmark-plan.md",
+      "path": ".planning/research/v0.11.0/latency-benchmark-plan.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,
@@ -475,7 +475,7 @@
       "updated_at": "2026-04-26T18:51:42Z"
     },
     {
-      "path": ".planning/research/v0.11.0-mkdocs-site-audit.md",
+      "path": ".planning/research/v0.11.0/mkdocs-site-audit.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,
@@ -483,7 +483,7 @@
       "updated_at": "2026-04-26T18:51:42Z"
     },
     {
-      "path": ".planning/research/v0.11.0-release-binaries-plan.md",
+      "path": ".planning/research/v0.11.0/release-binaries-plan.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,
@@ -491,7 +491,7 @@
       "updated_at": "2026-04-26T18:51:42Z"
     },
     {
-      "path": ".planning/research/v0.11.0-vision-and-innovations.md",
+      "path": ".planning/research/v0.11.0/vision-and-innovations.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,
@@ -499,7 +499,7 @@
       "updated_at": "2026-04-26T18:51:42Z"
     },
     {
-      "path": ".planning/research/v0.11.1-CATALOG-v3.md",
+      "path": ".planning/research/v0.11.1/CATALOG-v3.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,
@@ -507,7 +507,7 @@
       "updated_at": "2026-04-26T19:37:16Z"
     },
     {
-      "path": ".planning/research/v0.11.1-code-quality-gaps.md",
+      "path": ".planning/research/v0.11.1/code-quality-gaps.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,
@@ -515,7 +515,7 @@
       "updated_at": "2026-04-26T18:51:42Z"
     },
     {
-      "path": ".planning/research/v0.11.1-persona-coding-agent.md",
+      "path": ".planning/research/v0.11.1/persona-coding-agent.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,
@@ -523,7 +523,7 @@
       "updated_at": "2026-04-26T18:51:42Z"
     },
     {
-      "path": ".planning/research/v0.11.1-persona-harness-author.md",
+      "path": ".planning/research/v0.11.1/persona-harness-author.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,
@@ -531,7 +531,7 @@
       "updated_at": "2026-04-26T18:51:42Z"
     },
     {
-      "path": ".planning/research/v0.11.1-persona-mcp-user.md",
+      "path": ".planning/research/v0.11.1/persona-mcp-user.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,
@@ -539,7 +539,7 @@
       "updated_at": "2026-04-26T18:51:42Z"
     },
     {
-      "path": ".planning/research/v0.11.1-persona-security-lead.md",
+      "path": ".planning/research/v0.11.1/persona-security-lead.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,
@@ -547,7 +547,7 @@
       "updated_at": "2026-04-26T18:51:42Z"
     },
     {
-      "path": ".planning/research/v0.11.1-persona-skeptical-oss-maintainer.md",
+      "path": ".planning/research/v0.11.1/persona-skeptical-oss-maintainer.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,
@@ -555,7 +555,7 @@
       "updated_at": "2026-04-26T18:51:42Z"
     },
     {
-      "path": ".planning/research/v0.11.1-repo-organization-gaps.md",
+      "path": ".planning/research/v0.11.1/repo-organization-gaps.md",
       "status": "KEEP",
       "prior": [],
       "plan": null,

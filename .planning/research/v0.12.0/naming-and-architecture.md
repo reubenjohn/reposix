@@ -1,6 +1,6 @@
 # v0.12.0 — Naming and Architecture
 
-> **Audience.** The agent planning P57 (Quality Gates skeleton) and any phase that adds catalogs/gates/verifiers. Sibling docs in `.planning/research/v0.12.0-*.md`.
+> **Audience.** The agent planning P57 (Quality Gates skeleton) and any phase that adds catalogs/gates/verifiers. Sibling docs in `.planning/research/v0.12.0/*.md`.
 
 ## Naming critique — why we're renaming
 

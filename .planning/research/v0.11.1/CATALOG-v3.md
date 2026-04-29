@@ -78,7 +78,7 @@ _(none)_
 | crates/reposix-remote/Cargo.toml |  |  | POLISH2-01 ext — version field on cross-crate path-deps | 2026-04-27T03:01:27Z |
 | crates/reposix-cli/Cargo.toml |  |  | POLISH2-01 ext — version field on cross-crate path-deps | 2026-04-27T03:01:26Z |
 | crates/reposix-cache/Cargo.toml |  |  | POLISH2-01 ext — version field on cross-crate path-deps | 2026-04-27T03:01:23Z |
-| .planning/CATALOG.md |  |  | moved to .planning/research/v0.11.0-CATALOG-v1.md (lineage: v1->v2->v3) | 2026-04-27T02:55:36Z |
+| .planning/CATALOG.md |  |  | moved to .planning/research/v0.11.0/CATALOG-v1.md (lineage: v1->v2->v3) | 2026-04-27T02:55:36Z |
 | crates/reposix-cache/src/audit.rs |  |  | P2-1+P2-2 doc-comment cleanup | 2026-04-26T21:48:05Z |
 | crates/reposix-cache/src/builder.rs |  |  | P2-1+P2-2 doc-comment cleanup | 2026-04-26T21:48:05Z |
 | crates/reposix-cli/src/doctor.rs |  |  | P2-1+P2-2 doc-comment cleanup | 2026-04-26T21:48:05Z |
