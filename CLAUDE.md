@@ -322,6 +322,25 @@ Two axes: `alignment_ratio` (bound / non-retired) and `coverage_ratio` (lines_co
 - `/reposix-quality-refresh <doc>` — refresh stale rows for one doc.
 - `/reposix-quality-backfill` — full extraction across docs/ + archived REQUIREMENTS.md.
 
+## v0.12.1 — in flight
+
+### P72 — Lint-config invariants
+
+Verifier home: `quality/gates/code/lint-invariants/` (sub-area README at `quality/gates/code/lint-invariants/README.md`). 8 shell verifiers bind 9 `MISSING_TEST` rows in `quality/catalogs/doc-alignment.json` covering README + `docs/development/contributing.md` workspace-level invariants.
+
+| Verifier                    | Catalog row(s)                                                                                          |
+| --------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `forbid-unsafe-code.sh`     | `README-md/forbid-unsafe-code` + `docs-development-contributing-md/forbid-unsafe-per-crate` (D-01) |
+| `rust-msrv.sh`              | `README-md/rust-1-82-requirement`                                                                       |
+| `tests-green.sh`            | `README-md/tests-green` (compile-only, D-05)                                                            |
+| `errors-doc-section.sh`     | `docs-development-contributing-md/errors-doc-section-required` (clippy lint, D-07)                      |
+| `rust-stable-channel.sh`    | `docs-development-contributing-md/rust-stable-no-nightly`                                               |
+| `cargo-check-workspace.sh`  | `docs-development-contributing-md/cargo-check-workspace-available`                                      |
+| `cargo-test-count.sh`       | `docs-development-contributing-md/cargo-test-133-tests` (>= 368 floor, re-measured P72 per D-06)        |
+| `demo-script-exists.sh`     | `docs-development-contributing-md/demo-script-exists`                                                   |
+
+Prose updated: `docs/development/contributing.md:20` re-measured to `>= 368 test binaries` BEFORE the bind (D-06 audit trail). Verifiers minted via `bind` per `quality/PROTOCOL.md` § "Subagents propose; tools validate and mint" (Principle A). Cargo invocations serialized by the runner per CLAUDE.md "Build memory budget" (D-04).
+
 ## Quick links
 
 - `docs/research/initial-report.md` — full architectural argument for git-remote-helper + partial clone.
