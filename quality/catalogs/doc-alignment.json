@@ -5,11 +5,11 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 321,
-    "claims_missing_test": 12,
+    "claims_bound": 322,
+    "claims_missing_test": 11,
     "claims_retire_proposed": 23,
     "claims_retired": 30,
-    "alignment_ratio": 0.8966480446927374,
+    "alignment_ratio": 0.8994413407821229,
     "floor": 0.5,
     "trend_30d": "+0.00",
     "last_walked": "2026-04-29T19:58:47Z",
@@ -4296,18 +4296,25 @@
     },
     {
       "id": "docs/benchmarks/token-economy/jira-real-adapter-not-implemented",
-      "claim": "JIRA real adapter: N/A (adapter not yet implemented)",
+      "claim": "JIRA real-adapter crate exists in tree (bench numbers pending re-measurement under perf-dim P67).",
       "source": {
         "file": "docs/benchmarks/token-economy.md",
         "line_start": 23,
         "line_end": 28
       },
-      "source_hash": "1f2d850733f8e2fa1919f24074588acd8d29595b5d12f702ab2f58ec08f32cb6",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-04-28T09:01:06Z",
-      "last_extracted": "2026-04-28T09:01:06Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "source_hash": "e70af7637cec0477577fe1c8e343ef052c92d83215fca71a12e10522f256fcbb",
+      "tests": [
+        "quality/gates/docs-alignment/jira-adapter-shipped.sh"
+      ],
+      "test_body_hashes": [
+        "339fa7d6f68df6d0a7005b9e4201b5219300176bafe47e5afe131f9243d006fe"
+      ],
+      "rationale": "P73 CONNECTOR-GAP-04 path (a) per D-05: prose updated to reflect adapter shipped v0.11.x; verifier asserts manifest exists; full bench rerun deferred to perf-dim P67.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T20:29:36Z",
+      "last_extracted": "2026-04-29T20:29:36Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/reference/testing-targets/jira-token",

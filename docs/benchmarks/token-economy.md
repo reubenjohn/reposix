@@ -25,7 +25,7 @@ MCP-mediated baseline for the same task. Equivalently, MCP costs
 | Jira (MCP) | mcp_jira_catalog.json | 16,274 | 4,883 | 531 | 89.1% |
 | GitHub | github_issues.json | 10,100 | 3,661 | 531 | 85.5% |
 | Confluence | confluence_pages.json | 6,647 | 2,251 | 531 | 76.4% |
-| Jira (real adapter) | — | — | — | — | N/A (adapter not yet implemented) |
+| Jira (real adapter) | (pending re-measurement) | (pending) | (pending) | (pending) | TBD (adapter shipped v0.11.x; bench rerun deferred to perf-dim P67) |
 
 ## What this does NOT measure
 
