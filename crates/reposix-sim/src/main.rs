@@ -1,5 +1,7 @@
 //! `reposix-sim` binary entry point.
 
+#![forbid(unsafe_code)]
+
 use std::path::PathBuf;
 
 use anyhow::Result;
