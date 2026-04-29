@@ -5,11 +5,11 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 299,
+    "claims_bound": 300,
     "claims_missing_test": 22,
-    "claims_retire_proposed": 37,
+    "claims_retire_proposed": 36,
     "claims_retired": 30,
-    "alignment_ratio": 0.835195530726257,
+    "alignment_ratio": 0.8379888268156425,
     "floor": 0.5,
     "trend_30d": "+0.00",
     "last_walked": "2026-04-29T01:59:10Z",
@@ -7918,19 +7918,25 @@
     },
     {
       "id": "docs-development-roadmap-md/v0-11-0-active-milestone",
-      "claim": "v0.11.0 currently active milestone (POLISH/POLISH2 work in progress)",
+      "claim": "Roadmap active-milestone version matches workspace Cargo.toml version (modulo patch)",
       "source": {
         "file": "docs/development/roadmap.md",
         "line_start": 22,
         "line_end": 22
       },
       "source_hash": "db8987052fddc5275db8a6994df24605a60665d5a16c8730e6ce78dea9b6143c",
-      "rationale": "Historical doc-drift -- prose names v0.11.0 as active milestone but v0.12.0 has shipped and v0.12.1 is active. Either retire OR update doc to current milestone. Marking RETIRE_PROPOSED so it surfaces; UPDATE_DOC follow-up captured.",
-      "last_verdict": "RETIRE_PROPOSED",
-      "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:59:46Z",
-      "last_extracted": "2026-04-28T19:59:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "tests": [
+        "quality/gates/structure/active-milestone-matches-workspace-version.sh"
+      ],
+      "test_body_hashes": [
+        "df6cdeb41ad74b4f19e1b0007611212631a235c72356f50cc15e296c92cb7631"
+      ],
+      "rationale": "Verifier extracts CHANGELOG most-recent shipped version + Cargo.toml workspace version; asserts major.minor match. Surfaces every release-cycle drift; currently flags the v0.12.0/0.11.3 G1 mismatch (intentional -- v0.13.0 owner closes by bumping Cargo).",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-04-29T02:57:20Z",
+      "last_extracted": "2026-04-29T02:57:20Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs-development-roadmap-md/v0-2-0-alpha-shipped",
