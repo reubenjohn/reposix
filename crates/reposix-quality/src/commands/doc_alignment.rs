@@ -294,13 +294,31 @@ pub(crate) mod verbs {
             if !already_present {
                 sources.push(new_source.clone());
             }
-            row.source = if sources.len() == 1 {
+            // BIND-VERB-FIX-01 (P75): preserve first-source hash semantics.
+            // The walker compares row.source_hash against
+            // source.as_slice()[0]'s current bytes (see verbs::walk line ~836).
+            // Therefore source_hash MUST equal hash(first source).
+            //   - Single result: the only source IS the freshly-hashed one;
+            //     refresh source_hash. This is also the heal path for Single
+            //     rows whose prose drifted (P74 SURPRISES-INTAKE finding).
+            //   - Multi result: the first element is the EXISTING first source
+            //     (we always APPEND, never prepend); its hash is already in
+            //     row.source_hash. DO NOT overwrite with the new source's hash.
+            // Path (b) -- walker hashes every source from a Multi -- is filed
+            // as v0.13.0 carry-forward MULTI-SOURCE-WATCH-01. Path (a)
+            // limitation: drift in non-first Multi sources will not fire
+            // STALE_DOCS_DRIFT under the current walker.
+            let result_is_single = sources.len() == 1;
+            row.source = if result_is_single {
                 Source::Single(sources.into_iter().next().expect("len==1"))
             } else {
                 Source::Multi(sources)
             };
             row.claim = claim.to_string();
-            row.source_hash = Some(src_hash);
+            if result_is_single {
+                row.source_hash = Some(src_hash);
+            }
+            // else: preserve existing row.source_hash (first-source invariant).
             row.set_tests(tests_clean, hashes)?;
             row.rationale = Some(rationale.to_string());
             row.last_verdict = RowState::Bound;
