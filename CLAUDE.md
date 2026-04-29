@@ -433,6 +433,32 @@ Catalog deltas: claims_bound 329 → 331 (+2 entry-1 rebinds);
 alignment_ratio 0.9190 → 0.9246 (+0.0056); claims_stale_docs_drift 2 → 0.
 Live walker post-resolution: zero net new STALE_DOCS_DRIFT.
 
+### P77 — good-to-haves polish (closed)
+
+P77 closed GOOD-TO-HAVES-01 by draining the v0.12.1 intake (1 XS
+clarity item discovered by P74).
+
+Closure: docs/index.md:95 heading renamed "What each backend can do"
+→ "Connector capability matrix" (5f3a6fc); verifier regex narrowed
+back to literal `[Cc]onnector` (fb8bd28), reversing P74's eager-widen
+(c8e4111). Walk + rebind round-trip in 4ac9206.
+
+Walk-after verdict: `quality/reports/verdicts/p77/walk-after.txt`.
+polish2-06-landing remains BOUND; alignment_ratio unchanged at
+0.9246; zero new STALE rows.
+
+**D-09 load-bearing note:** P77 is the LAST phase of the v0.12.1
+autonomous run. HANDOVER-v0.12.1.md is intentionally LEFT IN PLACE at
+P77 close. Its self-deletion criteria (HANDOVER §"Cleanup criterion")
+require all 6 phases verifier-GREEN AND owner pushed v0.12.0 tag AND
+owner confirmed retires AND v0.12.1 milestone-close verdict GREEN —
+only criterion 1 is true at P77 close. The session-end commit that
+removes HANDOVER-v0.12.1.md is an orchestrator-level action OUTSIDE
+the phase, written by the top-level coordinator after the verifier
+subagent grades P77 GREEN.
+
+See `quality/reports/verdicts/p77/VERDICT.md` for unbiased grading.
+
 ## Quick links
 
 - `docs/research/initial-report.md` — full architectural argument for git-remote-helper + partial clone.
