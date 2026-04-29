@@ -359,6 +359,34 @@ No SURPRISES-INTAKE / GOOD-TO-HAVES entries appended (no out-of-scope items obse
 
 See: `quality/PROTOCOL.md` § "Principle A"; CLAUDE.md "Build memory budget" (D-09 sequential per-crate cargo).
 
+### P74 — Narrative cleanup + UX bindings + linkedin prose fix
+
+Closed the docs-alignment narrative+UX cluster: 4 propose-retires (qualitative
+design rows), 5 hash-shape binds (UX claims on docs/index.md + REQUIREMENTS
+rows), and a one-line linkedin.md prose fix dropping the v0.4-era FUSE
+framing. Five new shell verifiers under `quality/gates/docs-alignment/`
+(FLAT placement, sibling of `jira-adapter-shipped.sh`):
+
+- `install-snippet-shape.sh` — asserts `docs/index.md:19` lists curl/brew/cargo binstall/irm.
+- `audit-trail-git-log.sh` — asserts `git log --oneline -n 1` returns >=1 line.
+- `three-backends-tested.sh` — counts `dark_factory_real_*` fns in `agent_flow_real.rs`; asserts >=3.
+- `connector-matrix-on-landing.sh` — greps `docs/index.md` for `## ...connector|backend` heading + table.
+- `cli-spaces-smoke.sh` — asserts `target/release/reposix spaces --help` exits 0 + expected header.
+
+Each verifier is 10-30 lines (D-02 TINY shape). Body-hash drift on prose
+OR verifier file fires `STALE_DOCS_DRIFT` via the walker. No deep workflow
+logic. Bind sweep promoted to `scripts/p74-bind-ux-rows.sh` (CLAUDE.md §4
+"Ad-hoc bash is a missing-tool signal").
+
+Catalog deltas: `claims_missing_test` 9 -> 0 (5 BOUND + 4 RETIRE_PROPOSED
+awaiting owner-TTY confirm-retire per HANDOVER step 1); `claims_bound`
+324 -> 328 (+4 net; +5 binds offset by linkedin row tipping to
+STALE_DOCS_DRIFT); `alignment_ratio` 0.9050 -> 0.9162. Linkedin row's
+post-edit STALE_DOCS_DRIFT did NOT auto-heal on second walk — logged to
+SURPRISES-INTAKE.md as confirmation of the P75 hash-overwrite bug.
+
+No new test files in `crates/` (D-10). Phase is shell + prose + catalog only.
+
 ## Quick links
 
 - `docs/research/initial-report.md` — full architectural argument for git-remote-helper + partial clone.
