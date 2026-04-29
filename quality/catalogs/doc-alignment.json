@@ -5,15 +5,15 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 388,
-    "claims_bound": 329,
+    "claims_bound": 330,
     "claims_missing_test": 0,
     "claims_retire_proposed": 27,
     "claims_retired": 30,
-    "alignment_ratio": 0.9189944134078212,
+    "alignment_ratio": 0.9217877094972067,
     "floor": 0.5,
     "trend_30d": "+0.00",
     "last_walked": "2026-04-29T21:14:33Z",
-    "coverage_ratio": 0.20308529945553538,
+    "coverage_ratio": 0.20308529945553536,
     "lines_covered": 1119,
     "total_eligible_lines": 5510,
     "coverage_floor": 0.1
@@ -548,7 +548,7 @@
         "line_start": 85,
         "line_end": 85
       },
-      "source_hash": "c88cd0f909c628f3688d1d4807f07a1e9a5cf79eb1753d7015a876fe30ed5d69",
+      "source_hash": "6ec3765053883e996ec84f1bea0ead708346f69c6a68b723a0015b479c542a2b",
       "tests": [
         "quality/gates/docs-build/mermaid-renders.sh"
       ],
@@ -556,10 +556,10 @@
         "b4f75246efb285c72aee6cf052726d684e631944145bbd933105672390444d1c"
       ],
       "rationale": "Direct mirror of mermaid-renders gate",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-04-29T21:35:54Z",
+      "last_extracted": "2026-04-29T21:35:54Z",
       "last_extracted_by": "bind-call"
     },
     {
