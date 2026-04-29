@@ -29,22 +29,11 @@ The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The f
 
 1. **Simulator is the default / testing backend.** The simulator at `crates/reposix-sim/` is the default backend for every demo, unit test, and autonomous agent loop. Real backends (GitHub via `reposix-github`, Confluence via `reposix-confluence`, JIRA via `reposix-jira`) are guarded by the `REPOSIX_ALLOWED_ORIGINS` egress allowlist and require explicit credential env vars (`GITHUB_TOKEN`, `ATLASSIAN_API_KEY` + `ATLASSIAN_EMAIL` + `REPOSIX_CONFLUENCE_TENANT`, `JIRA_EMAIL` + `JIRA_API_TOKEN` + `REPOSIX_JIRA_INSTANCE`). Autonomous mode never hits a real backend unless the user has put real creds in `.env` AND set a non-default allowlist. This is both a security constraint (fail-closed by default) and the StrongDM dark-factory pattern.
 2. **Tainted by default.** Any byte that came from a remote (simulator counts) is tainted. Tainted content must not be routed into actions with side effects on other systems (e.g. don't echo issue bodies into `git push` to remotes outside an explicit allowlist). The lethal-trifecta mitigation matters even against the simulator, because the simulator is *seeded* by an agent and seed data is itself attacker-influenced.
-3. **Audit log is non-optional, and lives in TWO append-only tables.** `audit_events_cache` (cache-internal events — blob materialization, gc, helper RPC fetch/push, sync-tag writes) lives in the cache crate (`reposix-cache::audit`); `audit_events` (backend mutations — `create_record` / `update_record` / `delete_or_close`) lives in the core crate (`reposix-core::audit`) and is written by the sim/confluence/jira adapters. A complete forensic query reads both. Either schema missing a row for a network-touching action means the feature isn't done. The dual-table shape is intentional for the v0.11.x line (POLISH2-22 friction row 12); physical unification behind a `dyn AuditSink` trait is deferred to v0.12.0+ (CC-3).
+3. **Audit log is non-optional, and lives in TWO append-only tables.** `audit_events_cache` (cache-internal events — blob materialization, gc, helper RPC fetch/push, sync-tag writes) lives in the cache crate (`reposix-cache::audit`); `audit_events` (backend mutations — `create_record` / `update_record` / `delete_or_close`) lives in the core crate (`reposix-core::audit`) and is written by the sim/confluence/jira adapters. A complete forensic query reads both. Either schema missing a row for a network-touching action means the feature isn't done. The dual-table shape is intentional; physical unification behind a `dyn AuditSink` trait is deferred.
 4. **No hidden state.** Cache state, simulator state, and git remote helper state all live in committed-or-fixture artifacts. No "it works in my session" bugs.
 5. **Working tree IS a real git checkout.** The whole point of v0.9.0 is that `.git/` is real, not synthetic; `git diff` is the change set by construction, not by emulation. The partial clone (`extensions.partialClone=origin`) makes blobs lazy, but everything else is upstream git.
 6. **Real backends are first-class test targets.** Three canonical targets are sanctioned for aggressive testing: **Confluence space "TokenWorld"** (owned by the user; safe to mutate freely), **GitHub repo `reubenjohn/reposix` issues** (ours; safe to create/close issues during tests), and **JIRA project `TEST`** (default key; overridable via `JIRA_TEST_PROJECT` or `REPOSIX_JIRA_PROJECT`). See `docs/reference/testing-targets.md` for env-var setup, owner permission statement, and cleanup procedure. Simulator remains the default (OP-1), but "simulator-only coverage" does NOT satisfy acceptance for transport-layer or performance claims.
-7. **Phase-close means catalog-row PASS.** v0.12.0 introduces the
-   "verifier subagent grades GREEN" gate per phase close (QG-06).
-   No phase ships on the executing agent's word; an unbiased subagent
-   reads the catalog rows + the Wave-N verification artifacts with
-   zero session context and writes a verdict to
-   `quality/reports/verdicts/p<N>/<ts>.md` (or `.planning/verifications/p<N>/VERDICT.md`
-   until P57 lands the `quality/reports/` tree). **The verdict is the
-   contract** — if RED, the phase loops back to fix the failing rows
-   rather than negotiating the catalog down. Meta-rule extension: when
-   a release-pipeline regression is fixed, the same PR ships
-   container-rehearsal evidence under `.planning/verifications/p56/`
-   (or `quality/reports/verifications/release/` after P58).
+7. **Phase-close means catalog-row PASS.** No phase ships on the executing agent's word. An unbiased verifier subagent grades the catalog rows — if RED, the phase loops back. See "Verifier subagent dispatch" in the Quality Gates section below.
 8. **Plans accommodate surprises (the +2 phase practice).** Every
    milestone reserves its **last two phases** as absorption slots for
    what reality surfaces during planned-phase execution:
@@ -65,8 +54,7 @@ The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The f
    **Eager-resolution preference (load-bearing):** when a planned
    phase observes a surprise or polish item, prefer fixing it inside
    the discovering phase IF (a) < 1 hour incremental work, (b) no
-   new dependency introduced, (c) no new file created outside the
-   phase's planned set. The +2 reservation is for items that
+   new dependency introduced. The +2 reservation is for items that
    genuinely don't fit the discovering phase. **What this practice
    prevents:** the "found-it-but-skipped-it" failure mode where good
    signal gets dropped to keep a phase tight; AND the
@@ -224,90 +212,15 @@ The auto-mode bootstrap from 2026-04-13 set `mode: yolo`, `granularity: coarse`,
 
 ## Docs-site validation
 
-**Any change to `mkdocs.yml`, `docs/**`, or any markdown file inside the
-docs tree** MUST be validated before commit by running:
-
-```bash
-bash scripts/check-docs-site.sh
-```
-
-The script runs `mkdocs build --strict` and fails on any "Syntax error
-in text" string in the rendered HTML output (mermaid + admonition +
-cross-ref bugs). The pre-push hook enforces it.
-
-**Whole-nav-section playwright walks (not just the file you changed).**
-Editing one mermaid block on one page does NOT scope your validation to
-that page. The §0.1 mermaid-render misses recurred because validation
-was scoped per-file. Rules:
-
-- Touched **one page** in a docs nav section → playwright-walk every
-  page in that section.
-- Touched `mkdocs.yml`, any `pymdownx.*` config, any file under
-  `docs/javascripts/` or `docs/stylesheets/`, or any frontmatter →
-  walk the entire site.
-- All walks MUST run with the cache disabled (fresh first-load
-  semantics). The §0.1.b race condition only manifests on a cold
-  page-cache; warm reloads mask it. Use
-  `mcp__playwright__browser_navigate` on a clean context, or hard
-  reload via `location.reload(true)` before assertions.
-- For every page hit by a walk, assert `document.querySelectorAll('pre.mermaid svg').length > 0`
-  for any mermaid block, AND `browser_console_messages` contains zero
-  rendering errors. Capture artifacts under
-  `.planning/verifications/playwright/<section>/<slug>.json`.
-
-`scripts/check-mermaid-renders.sh` (wired into pre-push) automates the
-mermaid SVG assertion across every rendered page; do not rely on
-`mkdocs build --strict` alone, it never opens a browser.
+Any change to `mkdocs.yml` or `docs/**` MUST pass `bash scripts/check-docs-site.sh` before commit (pre-push enforces). Mermaid SVG assertions: `scripts/check-mermaid-renders.sh` (also pre-push). For playwright walk rules and scoping (which pages to re-check after a change), see `/reposix-quality-doc-alignment` skill.
 
 ## Cold-reader pass on user-facing surfaces
 
-Before declaring any user-facing surface shipped — hero copy, install
-instructions, headline numbers, benchmark pages, the README, the docs
-landing page — dispatch the `doc-clarity-review` skill on the affected
-pages with isolated context. Mechanical hooks miss positioning and
-freshness misses (the §0.2 install-path lag, the §0.3 version-pinned
-filename, the §0.4 missing-from-nav benchmark all slipped past
-strict-build + clippy because none of those tools simulate a
-cold reader).
-
-The cold-reader pass is the second half of the close-the-loop principle
-(global OP #1) for prose: render → reload-as-stranger → ask "does this
-land?" before claiming done.
-
-After P61 ships, the cold-reader pass is operationalized via the
-`reposix-quality-review` skill at `.claude/skills/reposix-quality-review/`.
-Invoke `bash .claude/skills/reposix-quality-review/dispatch.sh --rubric
-subjective/cold-reader-hero-clarity` (or `--all-stale` to grade every
-stale subjective rubric in parallel) to grade README.md + docs/index.md
-hero clarity automatically. The catalog row at
-`quality/catalogs/subjective-rubrics.json` enforces "rubric was checked
-within 30d" via the freshness-TTL gate (P61 SUBJ-03).
+Before declaring any user-facing surface shipped (hero copy, install instructions, headline numbers, README, docs landing page), dispatch `/doc-clarity-review` on the affected pages. For automated rubric grading, use `/reposix-quality-review` (`--rubric <id>` / `--all-stale`). The catalog at `quality/catalogs/subjective-rubrics.json` enforces 30-day freshness TTL.
 
 ## Freshness invariants
 
-Drift these and the docs lie. Each invariant has a verifier; the §0.8
-SESSION-END-STATE framework (`scripts/end-state.py`) is the
-machine-readable source of truth and the pre-push hook gates them.
-
-- **No version-pinned filenames** outside `CHANGELOG.md` and
-  `.planning/milestones/v*-phases/`. `find docs scripts -type f | grep
-  -E 'v[0-9]+\.[0-9]+\.[0-9]+'` returns empty.
-- **Install path leads with package manager** the moment a publish
-  surface (crates.io, brew tap, binstall) is live for a given crate
-  version. Hero on `docs/index.md` and `README.md` MUST show
-  `cargo binstall` / `brew install` BEFORE any `git clone … && cargo
-  build` snippet.
-- **Benchmarks belong in mkdocs nav.** Anything under `benchmarks/` or
-  `docs/benchmarks/` MUST appear in `mkdocs.yml` `nav:`. No
-  benchmark linked via absolute github URL bypassing the site.
-- **GSD planning org is regular.** No loose `*ROADMAP*.md` or
-  `*REQUIREMENTS*.md` outside a `*phases/` dir or
-  `.planning/archive/`. `find .planning/milestones -maxdepth 2 -name
-  '*ROADMAP*' -o -name '*REQUIREMENTS*' | grep -v phases | grep -v
-  archive` returns empty.
-- **No orphan docs.** Every `docs/**/*.md` either appears in
-  `mkdocs.yml` `nav:` OR is explicitly redirect-only (entry in
-  `mkdocs.yml` `plugins.redirects.redirect_maps`).
+All invariants are enforced by `scripts/end-state.py` (pre-push hook). When a push is blocked, read the error — it names the violated invariant and the fix. The invariants: no version-pinned filenames, install path leads with package manager, benchmarks in mkdocs nav, no loose ROADMAP/REQUIREMENTS outside `*-phases/`, no orphan docs.
 
 ## Subagent delegation rules
 
@@ -319,9 +232,9 @@ Per the user's global OP #2: "Aggressive subagent delegation." Specifics for thi
 - `gsd-code-reviewer` after every phase ships, before declaring done.
 - Run multiple subagents in parallel whenever they're operating on disjoint files.
 - **Never delegate `gh pr checkout` to a bash subagent without isolation.** Bash subagents share the coordinator's working tree; `gh pr checkout` switches the local branch behind the coordinator's back, which already caused the cherry-pick mess at commit `5a91ae2`. Either spawn a worktree first (`git worktree add /tmp/pr-N pr-N-branch`) and have the subagent `cd` into it, or have the subagent operate inside `/tmp/<branch>-checkout`. The coordinator's checkout is shared state — treat it that way.
-- **QG-06 verifier subagent dispatch on every phase close** — see `quality/PROTOCOL.md` § "Verifier subagent prompt template" for the verbatim copy-paste prompt. The executing agent does NOT grade itself.
-- **Dispatching subjective rubrics (cold-reader, install-positioning, headline-numbers)** — `reposix-quality-review` skill at `.claude/skills/reposix-quality-review/` (P61 SUBJ-02). Invocation: `bash .claude/skills/reposix-quality-review/dispatch.sh --rubric <id>` / `--all-stale` / `--force`. Path A (Task tool from Claude session) preferred for unbiased grading; Path B (claude -p subprocess) fallback. The cold-reader rubric integrates the existing global `doc-clarity-review` skill via subprocess.
-- **Orchestration-shaped phases run at top-level, not under `/gsd-execute-phase`** (added 2026-04-28 for P65). When a phase's work shape is "fan out → gather → interpret → resolve" rather than "write code → run tests → commit," the top-level coordinator IS the executor. `gsd-executor` lacks `Task` and depth-2 spawning is forbidden, so subagent fan-out cannot live inside it. Mark such phases `Execution mode: top-level` in ROADMAP and provide a research brief the orchestrator follows verbatim. P65 (docs-alignment backfill) is the canonical example; future retroactive audits follow the same pattern. Refresh runs on stale docs (`/reposix-quality-refresh <doc>`) are also top-level — pre-push that BLOCKS mid-`gsd-execute-phase` must be resolved by checkpointing the executor and invoking the slash command from a fresh top-level session.
+- **Verifier subagent on every phase close** — see "Verifier subagent dispatch" in Quality Gates section + `quality/PROTOCOL.md` § "Verifier subagent prompt template".
+- **Dispatching subjective rubrics (cold-reader, install-positioning, headline-numbers)** — `/reposix-quality-review` skill. Invocation: `bash .claude/skills/reposix-quality-review/dispatch.sh --rubric <id>` / `--all-stale` / `--force`. Path A (Task tool from Claude session) preferred for unbiased grading; Path B (claude -p subprocess) fallback.
+- **Orchestration-shaped phases run at top-level, not under `/gsd-execute-phase`.** When a phase's work shape is "fan out → gather → interpret → resolve" rather than "write code → run tests → commit," the top-level coordinator IS the executor. `gsd-executor` lacks `Task` and depth-2 spawning is forbidden, so subagent fan-out cannot live inside it. Mark such phases `Execution mode: top-level` in ROADMAP and provide a research brief the orchestrator follows verbatim. Docs-alignment backfill is the canonical example; retroactive audits follow the same pattern. Refresh runs on stale docs (`/reposix-quality-refresh <doc>`) are also top-level — pre-push that BLOCKS mid-`gsd-execute-phase` must be resolved by checkpointing the executor and invoking the slash command from a fresh top-level session.
 
 The orchestrator's job is to route, decide, and integrate — not to type code that a subagent could type.
 
@@ -331,8 +244,7 @@ When the owner catches a quality issue the agent missed, the fix is
 two-fold: (1) fix the issue in the code/docs, and (2) update CLAUDE.md
 (and/or the §0.8 SESSION-END-STATE framework) so the next agent's
 session reads the tightened rule. Just shipping the fix without
-updating the instructions guarantees recurrence. The §0.1-§0.5 misses
-all happened because earlier sessions did (1) without (2).
+updating the instructions guarantees recurrence.
 
 ## Threat model
 
@@ -362,81 +274,25 @@ If you (the agent) notice this CLAUDE.md getting hard to keep in working memory:
 3. Skim `git log --oneline -20` to know what's recently shipped.
 4. Don't read this file linearly; grep for the section you need.
 
-## v0.12.0 Quality Gates — milestone shipped 2026-04-27
-
-Framework lives at `quality/{gates,catalogs,reports,runners}/`. Runtime contract: `quality/PROTOCOL.md`. Catalog schema: `quality/catalogs/README.md`. Pivot journal: `quality/SURPRISES.md`.
-
-Per-phase contribution log (P56–P63), container-rehearsal evidence schema, and v0.12.1 carry-forwards archived at `.planning/milestones/v0.12.0-phases/ARCHIVE.md` per the `*-phases/ARCHIVE.md` convention.
-
-Working on a quality-gates task? Read first:
-- `quality/PROTOCOL.md` — runtime contract.
-- `.planning/research/v0.12.0-{vision-and-mental-model, naming-and-architecture, roadmap-and-rationale, autonomous-execution-protocol}.md` — design rationale.
-- `.planning/milestones/v0.12.0-phases/ARCHIVE.md` — historical phase contributions.
-
-### P64 — Docs-alignment dimension framework + skill (added 2026-04-28)
-
-New 9th dimension: **docs-alignment** (claims have tests; hash drift detection). The dimension exists because v0.9.0's git-native pivot silently dropped Confluence page-tree-symlink behavior — no test failed because no test asserted the user-facing surface. Tests were derived from the implementation, not from prose claims.
-
-**v0.12.1 schema bump (P71/W7):** `tests` and `test_body_hashes` are now parallel `Vec<String>` arrays — one row may bind to multiple tests (e.g. JIRA-writes binding to create + update + delete + recovery tests under one claim). Catalog `schema_version` bumped from `"1.0"` to `"2.0"` (commit `d2127c3`); migration script `scripts/migrate-doc-alignment-schema-w7.py`. Parallel-array invariant `tests.len() == test_body_hashes.len()` enforced via `Row::set_tests`. See `quality/catalogs/README.md` § "docs-alignment dimension" for the full row spec.
-
-Wave 1 (catalog-first, `d0d4730`): empty-state catalog `quality/catalogs/doc-alignment.json` (schema_version 1.0; summary block; floor 0.50; rows []), 3 structure-dim freshness rows guarding catalog presence + summary-block-valid + floor-monotonicity, 5 skill files at `.claude/skills/reposix-quality-doc-alignment/` + 2 thin slash-command skills at `.claude/skills/reposix-quality-{refresh,backfill}/` (preflight committed alongside the contract).
-
-Wave 2 (binary surface, `98dcf11` + `86036c5`): NEW workspace crate `crates/reposix-quality/` — self-contained, `#![forbid(unsafe_code)]` + `#![warn(clippy::pedantic)]`, two `[[bin]]` targets (`reposix-quality` umbrella + `hash_test_fn` standalone). Full clap surface: `doc-alignment {bind, propose-retire, confirm-retire, mark-missing-test, plan-refresh, plan-backfill, merge-shards, walk, status}` + generic `run --gate/--cadence` + `verify --row-id` + `walk` alias. `syn`-based hash binary at `quality/gates/docs-alignment/hash_test_fn` hashes Rust function bodies as `to_token_stream()` sha256 (comments + whitespace normalize away). 28 tests (10 unit + 18 integration golden).
-
-Wave 3 (this commit): runner integration via new `docs-alignment/walk` gate row at cadence=pre-push (P0) shelling to `quality/gates/docs-alignment/walk.sh` (release-first, debug-fallback). Two project-wide principles in `quality/PROTOCOL.md`: Principle A (subagents propose with citations; tools validate and mint) and Principle B (tools fail loud, structured, agent-resolvable) with cross-tool examples. Verifier verdict at `quality/reports/verdicts/p64/VERDICT.md` (Path B in-session per P56–P63 precedent).
-
-Slash commands `/reposix-quality-refresh <doc>` and `/reposix-quality-backfill` are top-level only (depth-2 unreachable from inside `gsd-executor`). P65 runs the first backfill; the dimension goes from empty-state to populated then.
-
-### P65 — Docs-alignment backfill, smoking-gun surfaced (added 2026-04-28)
-
-First backfill ran top-level (orchestrator IS executor — `gsd-executor` lacks `Task`). 24-shard `MANIFEST.json` from `plan-backfill` (`docs/**/*.md` + `README.md` + archived `REQUIREMENTS.md` v0.6.0–v0.11.0; ≤3 files/shard, directory-affinity). Three waves of 8 Haiku extractor subagents (~9 min wall-clock); zero `merge-shards` conflicts.
-
-**Final catalog** (commit `a263868`): 388 rows total — 181 `BOUND`, 166 `MISSING_TEST`, 41 `RETIRE_PROPOSED`. `alignment_ratio` 0.466. `summary.floor_waiver` (until 2026-07-31) + `freshness-invariants.json::docs-alignment/walk` row waiver (matched TTL) keep pre-push green while v0.12.1 closes the punch list. The 3 P64 catalog-integrity rows continue to PASS at pre-push and assert the catalog itself stays well-formed.
-
-**Smoking gun confirmed.** `docs/reference/confluence.md` still describes the FUSE mount + page-tree symlink shape removed in v0.9.0; 3 MISSING_TEST rows captured at lines 110-128 (`fuse_mount_symlink_tree`, `fuse_daemon_role`, outdated `v0.4 write path` claim). Closing this cluster is v0.12.1 P71 work — *not* P65 scope.
-
-**Other clusters** (full breakdown in `quality/reports/doc-alignment/backfill-20260428T085523Z/PUNCH-LIST.md`): JIRA shape (`jira.md` Phase 28 RETIRE_PROPOSED — Phase 29 added writes); benchmark headline numbers (20 MISSING_TEST — perf verifiers exist as shell scripts, not Rust tests; MIGRATE-03 carry-forward); connector authoring guide (24 MISSING_TEST — contract assertions in code without named test fns); glossary over-extraction (24 RETIRE_PROPOSED — bulk-confirm review, not 24 tickets); social copy "92%" headline vs measured 89.1% (drift). v0.12.1 P71-P80 stubs in PUNCH-LIST suggest one phase per cluster.
-
-**Subagent surgery** (3 of 24 shards needed orchestrator intervention; documented in SURPRISES.md): shard 016 wrote to live catalog instead of its shard catalog (recovered via jq move + reset); shards 012 + 023 first attempts violated the binary contract (custom JSON schema or incomplete row); both re-dispatched with "MUST USE BINARY" emphasis.
-
-**Schema cross-cuts surfaced** (filed v0.12.1 carry-forward): `bind` writes `Row.source` as `SourceCite` object but `merge-shards` deserializer expected `Source` enum (object-or-array); reconciled via jq transform in orchestrator before merge. Same for `Row.test`: some shards emitted multi-test arrays, binary expects single string. Both inconsistencies are MIGRATE-03 (i) — unify the schema in v0.12.1.
-
-P65 verifier verdict at `quality/reports/verdicts/p65/VERDICT.md` (Path A — top-level orchestrator HAS `Task`). Milestone-close verifier at `quality/reports/verdicts/milestone-v0.12.0/VERDICT.md`. Owner pushes the v0.12.0 tag.
-
-## v0.12.1 — in flight
-
-### P66 — coverage_ratio metric (added 2026-04-28)
-
-The docs-alignment dimension grows a SECOND axis: `coverage_ratio = lines_covered / total_eligible_lines`. The first axis (`alignment_ratio = bound / non-retired`) answers "of the claims we extracted, how many bind to passing tests?"; coverage answers "of the prose we said we'd mine, what fraction did we actually cover?". Together they yield the agent's mental model:
-
-|                  | high alignment       | low alignment        |
-|------------------|----------------------|----------------------|
-| **high coverage**| ideal                | extracted; unbound   |
-| **low coverage** | tested what we found | haven't started      |
-
-Without coverage, an agent could ship high alignment by extracting only easy claims. The new per-file table — `reposix-quality doc-alignment status --top 10` — is the agent's gap-target view: worst-covered files surface first; rows with `row_count == 0 && total_lines > 50` get a "ZERO ROWS" hint as the most actionable miss.
-
-`coverage_floor` ships at 0.10 (low; even sparse mining usually clears it; baseline measured 0.2055 on the 388-row corpus). Ratcheted up by deliberate human commits as v0.12.1 cluster phases (P72+) widen extraction. The walker NEVER auto-tunes the floor. Walker BLOCKs (exit non-zero) when `coverage_ratio < coverage_floor`; recovery move is `/reposix-quality-backfill` to widen extraction OR a deliberate floor-down commit if extraction is genuinely complete.
-
 ## Quality Gates — dimension/cadence/kind taxonomy
 
-The v0.12.0 Quality Gates framework lives at `quality/`. Runtime contract:
-`quality/PROTOCOL.md`. Every quality check (gate) sits at one
-`(dimension, cadence, kind)` coordinate.
+The Quality Gates framework lives at `quality/`. Runtime contract: `quality/PROTOCOL.md`. Catalog schema: `quality/catalogs/README.md`. Pivot journal: `quality/SURPRISES.md`. Historical build narrative: `.planning/milestones/v0.12.0-phases/ARCHIVE.md`.
+
+Working on a quality-gates task? Read `quality/PROTOCOL.md` first.
 
 **9 dimensions** — the regression classes the project has:
 
 | Dimension | Checks | Home |
 |---|---|---|
-| code | clippy, fmt, cargo nextest | `quality/gates/code/` (P58) |
-| docs-alignment | claims have tests; hash drift detection | `quality/gates/docs-alignment/` (P64 — shipped) |
-| docs-build | mkdocs strict, mermaid renders, link resolve, badges resolve | `quality/gates/docs-build/` (P60) |
-| docs-repro | snippet extract, container rehearse, tutorial replay | `quality/gates/docs-repro/` (P59) |
-| release | gh assets present, brew formula current, crates.io max version, installer bytes | `quality/gates/release/` (P58) |
-| structure | freshness invariants, banned words, top-level scope (QG-08) | `quality/gates/structure/` (P57 — shipped) |
-| agent-ux | dark-factory regression | `quality/gates/agent-ux/` (P59) |
-| perf | latency, token economy | `quality/gates/perf/` (P59 file-relocate; v0.12.1 stub→real) |
-| security | allowlist enforcement, audit immutability | `quality/gates/security/` (v0.12.1 carry-forward) |
+| code | clippy, fmt, cargo nextest | `quality/gates/code/` |
+| docs-alignment | claims have tests; hash drift detection | `quality/gates/docs-alignment/` |
+| docs-build | mkdocs strict, mermaid renders, link resolve, badges resolve | `quality/gates/docs-build/` |
+| docs-repro | snippet extract, container rehearse, tutorial replay | `quality/gates/docs-repro/` |
+| release | gh assets present, brew formula current, crates.io max version, installer bytes | `quality/gates/release/` |
+| structure | freshness invariants, banned words, top-level scope | `quality/gates/structure/` |
+| agent-ux | dark-factory regression | `quality/gates/agent-ux/` |
+| perf | latency, token economy | `quality/gates/perf/` |
+| security | allowlist enforcement, audit immutability | `quality/gates/security/` |
 
 **6 cadences** — when the gate runs:
 
@@ -450,21 +306,21 @@ The v0.12.0 Quality Gates framework lives at `quality/`. Runtime contract:
 
 **Catalog-first rule.** Every phase's FIRST commit writes the catalog rows that define this phase's GREEN contract; subsequent commits cite the row id. The verifier subagent reads catalog rows that exist BEFORE the implementation lands.
 
-**Verifier subagent dispatch (QG-06).** Phase close MUST dispatch an unbiased subagent that grades catalog rows from artifacts with zero session context. The executing agent does NOT get to talk the verifier out of RED.
+**Verifier subagent dispatch.** Phase close MUST dispatch an unbiased subagent that grades catalog rows from artifacts with zero session context. The executing agent does NOT grade itself — see `quality/PROTOCOL.md` § "Verifier subagent prompt template" for the verbatim prompt.
 
-**Mandatory CLAUDE.md update per phase (QG-07).** Each phase introducing a new file/convention/gate updates CLAUDE.md in the same PR. **At milestone close, per-phase contribution sections archive to `.planning/milestones/v<X.Y.Z>-phases/ARCHIVE.md`** so CLAUDE.md stays under the progressive-disclosure size budget (~40 KB; enforced by `~/.git-hooks/pre-commit`).
+**CLAUDE.md stays current.** Each phase introducing a new file/convention/gate updates CLAUDE.md in the same PR. The update means *revising existing sections* to reflect the new state — not appending a narrative. Ask: "if an agent opens this file cold, what do they need to know?" and edit the document to say that, wherever it naturally fits.
 
-**Meta-rule extension** (when an owner catches a quality miss): fix the issue, update CLAUDE.md, AND **tag the dimension**. The dimension tag tells the next agent which catalog file to add the row to + which `quality/gates/<dim>/` directory the verifier belongs in. This makes ad-hoc fixes structural.
+**Meta-rule extension** (when an owner catches a quality miss): fix the issue, update CLAUDE.md, AND **tag the dimension**. The dimension tag routes to the right catalog file + `quality/gates/<dim>/` verifier directory.
 
-**Cross-references** (do NOT duplicate runtime detail here):
+### Docs-alignment dimension
 
-- `quality/PROTOCOL.md` — autonomous-mode runtime contract.
-- `quality/catalogs/README.md` — unified catalog schema spec.
-- `quality/SURPRISES.md` — append-only pivot journal.
-- `.planning/research/v0.12.0-naming-and-architecture.md` — design rationale.
-- `.planning/research/v0.12.0-vision-and-mental-model.md` — why this exists.
+Binary: `reposix-quality doc-alignment {bind, propose-retire, confirm-retire, mark-missing-test, plan-refresh, plan-backfill, merge-shards, walk, status}`. Run `status --top 10` for gap targeting. Pre-push gate: `quality/gates/docs-alignment/walk.sh`. Full spec: `quality/catalogs/README.md` § "docs-alignment dimension".
 
-**Per-dimension `owner_hint`** when an owner catches a miss: see `quality/PROTOCOL.md` § "Failure modes the protocol protects against" for the routing rule. The catalog row is the contract; the verifier is the code; the artifact is the audit; the verdict is the grade.
+Two axes: `alignment_ratio` (bound / non-retired) and `coverage_ratio` (lines_covered / total_eligible). Walker BLOCKs when either drops below floor; recovery is `/reposix-quality-backfill`.
+
+**Slash commands** (top-level only — unreachable from inside `gsd-executor`):
+- `/reposix-quality-refresh <doc>` — refresh stale rows for one doc.
+- `/reposix-quality-backfill` — full extraction across docs/ + archived REQUIREMENTS.md.
 
 ## Quick links
 
