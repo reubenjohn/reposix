@@ -35,4 +35,4 @@
 
 **Proposed fix:** Edit `docs/index.md:95` heading to `## Connector capability matrix`. Optionally narrow `quality/gates/docs-alignment/connector-matrix-on-landing.sh` regex back to `[Cc]onnector` (single-noun match) once the rename lands.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED — 5f3a6fc (heading), fb8bd28 (verifier). Walk-after verdict captured at quality/reports/verdicts/p77/walk-after.txt; polish2-06-landing remains BOUND.
