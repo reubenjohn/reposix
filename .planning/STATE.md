@@ -35,7 +35,7 @@ progress:
 Historical phase-by-phase contribution narrative lives in per-milestone ARCHIVE files. Read these for the full record of decisions, surprises, and shipped artifacts:
 
 - `.planning/milestones/v0.12.1-phases/ARCHIVE.md` — current milestone (P66 onward).
-- `.planning/milestones/v0.12.0-phases/ARCHIVE.md` — P56-P65 Quality Gates framework + 8 dimensions homed + docs-alignment dimension live + backfill executed.
+- `.planning/milestones/v0.12.0-phases/archive/` — P56-P65 Quality Gates framework + 8 dimensions homed + docs-alignment dimension live + backfill executed (split into per-phase files).
 - `.planning/milestones/v0.11.0-phases/`, `v0.10.0-phases/`, `v0.9.0-phases/`, `v0.8.0-phases/`, etc. — earlier milestones (ROADMAP.md + ARCHIVE.md where present).
 
 ## Project Reference

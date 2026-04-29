@@ -276,7 +276,7 @@ If you (the agent) notice this CLAUDE.md getting hard to keep in working memory:
 
 ## Quality Gates — dimension/cadence/kind taxonomy
 
-The Quality Gates framework lives at `quality/`. Runtime contract: `quality/PROTOCOL.md`. Catalog schema: `quality/catalogs/README.md`. Pivot journal: `quality/SURPRISES.md`. Historical build narrative: `.planning/milestones/v0.12.0-phases/ARCHIVE.md`.
+The Quality Gates framework lives at `quality/`. Runtime contract: `quality/PROTOCOL.md`. Catalog schema: `quality/catalogs/README.md`. Pivot journal: `quality/SURPRISES.md`. Historical build narrative: `.planning/milestones/v0.12.0-phases/archive/` (per-phase files).
 
 Working on a quality-gates task? Read `quality/PROTOCOL.md` first.
 
