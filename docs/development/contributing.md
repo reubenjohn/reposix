@@ -17,7 +17,7 @@ cargo check --workspace
 # Build everything
 cargo build --workspace
 
-# Run the full test suite (133 tests; one #[ignore]'d timeout test runs via --ignored)
+# Run the full test suite (>= 368 test binaries; one #[ignore]'d timeout test runs via --ignored)
 cargo test --workspace
 
 # Run the lint + format gates CI enforces

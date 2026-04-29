@@ -21,9 +21,10 @@ set -euo pipefail
 readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 cd "$REPO_ROOT"
 
-# Default floor — task 10 (D-06) re-measures and bumps this to the live
-# value. Environment override stays intact for future deliberate ratchets.
-floor="${REPOSIX_LINT_TEST_FLOOR:-50}"
+# Default floor — re-measured at P72 task 10 (D-06): 368 unique test binaries
+# at v0.12.1 P72 close. Environment override stays intact for future
+# deliberate ratchets (re-measure prose FIRST, then bump floor).
+floor="${REPOSIX_LINT_TEST_FLOOR:-368}"
 
 json=$(cargo test --workspace --no-run --message-format=json 2>/dev/null || true)
 if [ -z "$json" ]; then
