@@ -86,10 +86,7 @@ async fn list_records_excludes_attachments_and_comments() {
     let backend = JiraBackend::new_with_base_url(creds, server.uri())
         .expect("JiraBackend::new_with_base_url");
 
-    let records = backend
-        .list_records("PROJ")
-        .await
-        .expect("list_records ok");
+    let records = backend.list_records("PROJ").await.expect("list_records ok");
     assert_eq!(records.len(), 1, "expected single issue from wiremock");
     let record = &records[0];
 
@@ -112,7 +109,9 @@ async fn list_records_excludes_attachments_and_comments() {
         record.body
     );
     assert!(
-        !record.body.contains("do-not-leak-this-comment-body-into-record"),
+        !record
+            .body
+            .contains("do-not-leak-this-comment-body-into-record"),
         "Record.body leaked comment body: {:?}",
         record.body
     );

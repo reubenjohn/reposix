@@ -277,12 +277,7 @@ fn walk_multi_test_per_element_drift_detection() {
 
 /// Local helper -- bind with explicit source range so tests can target
 /// specific files without mutating the shared `bind_row` helper above.
-fn bind_row_at(
-    catalog: &std::path::Path,
-    row_id: &str,
-    source: &str,
-    test_file: &std::path::Path,
-) {
+fn bind_row_at(catalog: &std::path::Path, row_id: &str, source: &str, test_file: &std::path::Path) {
     Command::cargo_bin("reposix-quality")
         .unwrap()
         .args([

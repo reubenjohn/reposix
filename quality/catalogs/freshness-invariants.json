@@ -561,8 +561,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/docs-alignment/walk.json",
-      "status": "FAIL",
-      "last_verified": "2026-04-28T09:19:39Z",
+      "status": "PASS",
+      "last_verified": "2026-04-28T14:09:43Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: docs-alignment hash drift detected -- run /reposix-quality-refresh <doc> from a fresh top-level Claude session (cannot run from inside /gsd-execute-phase). Stderr names the affected doc.",

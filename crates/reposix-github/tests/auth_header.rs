@@ -43,5 +43,8 @@ async fn auth_header_bearer_byte_exact() {
         .list_records("acme/demo")
         .await
         .expect("list_records should succeed");
-    assert!(records.is_empty(), "expected empty issue list from wiremock");
+    assert!(
+        records.is_empty(),
+        "expected empty issue list from wiremock"
+    );
 }
