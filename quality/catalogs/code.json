@@ -159,8 +159,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/code/cargo-fmt-check.json",
-      "status": "FAIL",
-      "last_verified": "2026-04-30T08:29:19Z",
+      "status": "PASS",
+      "last_verified": "2026-04-30T08:31:51Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: cargo fmt regressed; run cargo fmt --all locally and commit the result",
