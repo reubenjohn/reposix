@@ -7,15 +7,15 @@
     "claims_total": 388,
     "claims_bound": 331,
     "claims_missing_test": 0,
-    "claims_retire_proposed": 27,
-    "claims_retired": 30,
-    "alignment_ratio": 0.9245810055865922,
+    "claims_retire_proposed": 0,
+    "claims_retired": 57,
+    "alignment_ratio": 1.0,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-29T21:58:43Z",
-    "coverage_ratio": 0.20308529945553538,
+    "last_walked": "2026-04-30T08:27:28Z",
+    "coverage_ratio": 0.20312216373207478,
     "lines_covered": 1119,
-    "total_eligible_lines": 5510,
+    "total_eligible_lines": 5509,
     "coverage_floor": 0.1
   },
   "rows": [
@@ -29,11 +29,11 @@
       },
       "source_hash": "dc0ee8c40009ec06a101ff81da63961e05f3c69a625f35a58d4e16e7cb5a105c",
       "rationale": "Superseded: write path shipped (Phase 22/24). The forward-looking 'v0.4 will add' framing is no longer applicable; the active write path is captured by docs/connectors/guide/backendconnector-{create,update,delete-or-close}-method rows (all BOUND). confluence.md prose rewritten in commit b6f6dd7 to describe shipped write path.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T18:58:18Z",
-      "last_extracted": "2026-04-28T18:58:18Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:52Z",
+      "last_extracted": "2026-04-30T08:26:52Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/cold-reader-16page-audit",
@@ -45,11 +45,11 @@
       },
       "source_hash": "ff293831041a585f5862ba573fd3eac400ca2713b53575b17b6c83666a1d6d86",
       "rationale": "Subjective rubric -- enforced by the reposix-quality-review skill (P61 SUBJ-* catalog rows). Not a docs-alignment behavioral claim. Retire from this dimension.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T20:01:27Z",
-      "last_extracted": "2026-04-28T20:01:27Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "use-case-20-percent-rest-mcp",
@@ -61,11 +61,11 @@
       },
       "source_hash": "a24164b0e601151f3eb395f7369cff047eedae189c9d181c036388e5bfff92cf",
       "rationale": "use-case-20-percent-rest-mcp — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-29T20:53:46Z",
-      "last_extracted": "2026-04-29T20:53:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "docs/index/latency-24ms-cold-init",
@@ -99,11 +99,11 @@
       },
       "source_hash": "9b0fc7d18490479a0a4b44820de5e31356ddd6eb939830695ab8a53311cca812",
       "rationale": "mcp-fixture-synthesized-not-live — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-29T20:53:46Z",
-      "last_extracted": "2026-04-29T20:53:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-13-cli-dedup",
@@ -225,11 +225,11 @@
       },
       "source_hash": "37a0b8756c0ae31b4d1a872855722255eed937765b9edd4ec40d0256e783ead8",
       "rationale": "use-case-80-percent-routine-ops — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-29T20:53:46Z",
-      "last_extracted": "2026-04-29T20:53:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "docs/index/token-reduction-89-percent",
@@ -307,11 +307,11 @@
       },
       "source_hash": "cb3f91d54eee30e53e35b2b99905f70f169ed549fd78909d3dac2defc9ed8d3b",
       "rationale": "Superseded: ADR-003 marked superseded at line 7 (status: superseded; FUSE-era nested mount no longer exists). The whole ADR is now historical.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:17:44Z",
-      "last_extracted": "2026-04-28T19:17:44Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "docs/tutorials/first-run/git-diff-edit",
@@ -1344,11 +1344,11 @@
       },
       "source_hash": "f8ee3437cba8c6a523619167a5a06fa6f87bba349cdfc76d587ebd41b6143515",
       "rationale": "Superseded by docs/benchmarks/latency.md + quality/gates/perf/latency-bench.sh which captures cold-init latency at the v0.9.0 partial-clone level. The v0.8 'cold-mount' framing is retired (FUSE-era); equivalent metric (init cold) is now BOUND via latency-bench.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:59:46Z",
-      "last_extracted": "2026-04-28T19:59:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "git-layer/blob-limit-default-200",
@@ -1866,11 +1866,11 @@
       },
       "source_hash": "777891a7fa44692211ab7248efa3c30a3695bda8932ae78af94349ff4fb3f305",
       "rationale": "Superseded by architecture-pivot-summary.md:5 + ADR-003.md:7 (FUSE-era nested mount no longer exists). Whole-mount overview was a FUSE-era convenience; partial-clone surface differs.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:17:44Z",
-      "last_extracted": "2026-04-28T19:17:44Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-01",
@@ -1882,11 +1882,11 @@
       },
       "source_hash": "d6fac6d9367fe666fc6df0510d6dc4be42ca0938d2c77f6e4262f859ee619ee3",
       "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-mount path gone).",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:17:44Z",
-      "last_extracted": "2026-04-28T19:17:44Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/index-01",
@@ -1898,11 +1898,11 @@
       },
       "source_hash": "298321e1af9fa4f12e72b0cfe22415ffff12e95afa63c6bb566b3d10a2a2f9e2",
       "rationale": "Superseded by .planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md:5 (FUSE-based architecture retired in v0.9.0). The TreeSnapshot DFS synthesizer was a FUSE-era artifact; partial-clone replaces this surface.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:17:44Z",
-      "last_extracted": "2026-04-28T19:17:44Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/hard-03",
@@ -2053,11 +2053,11 @@
       },
       "source_hash": "6885a86f04e8c811b0210b4eef9fb7161ad2aa4c19bf944a3560dd73dbf5c470",
       "rationale": "Superseded by docs/benchmarks/token-economy.md + quality/gates/perf/bench_token_economy.py (BOUND in scan-H/I). The v0.8 framing is retired; equivalent metric live.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:59:46Z",
-      "last_extracted": "2026-04-28T19:59:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-03",
@@ -2069,11 +2069,11 @@
       },
       "source_hash": "b426e1e156e015d90badbfe12431b9ebaa8b70c15eae82e113010a5f6a4c470b",
       "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-mount comment-read mechanism gone; v0.9.0 surface differs).",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:17:44Z",
-      "last_extracted": "2026-04-28T19:17:44Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "README-md/conflict-recovery-teaching",
@@ -2489,11 +2489,11 @@
       },
       "source_hash": "f0af71cf45f6367f8c1e7b765e9d4bbc5cfe138b5fe5e484498a187ff1957fa1",
       "rationale": "Superseded -- multi-space FUSE-mount framing retired in v0.9.0 architecture pivot. Per-backend cold-init latency is now in docs/benchmarks/latency.md (sim/github/jira/confluence cells).",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:59:46Z",
-      "last_extracted": "2026-04-28T19:59:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "docs/connectors/guide/wiremock-five-tests-required",
@@ -3056,11 +3056,11 @@
       },
       "source_hash": "5e363dfe75cecc1e14d7e5678e312ee99ac538c0ec1b16083d9a0daf6c5d0901",
       "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-era 'tree alongside page hierarchy' presentation gone).",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:17:44Z",
-      "last_extracted": "2026-04-28T19:17:44Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "trust-model/frontmatter-field-allowlist-strips-server-fields",
@@ -3131,11 +3131,11 @@
       },
       "source_hash": "245379526463fe9a871bfafd6e16bbf993a0f0a4c4cc148337670247f57bf165",
       "rationale": "Superseded by .planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md: FUSE mount + page-tree symlink layout was deliberately dropped in v0.9.0 in favor of partial-clone bare-repo cache. The user-facing capability (write .md, update Confluence page) is captured by other rows that bind to dark-factory tests. confluence.md prose rewritten in commit b6f6dd7 to describe v0.9.0 git-native shape.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T18:58:18Z",
-      "last_extracted": "2026-04-28T18:58:18Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "docs/reference/http-api.md/healthz-endpoint",
@@ -3301,11 +3301,11 @@
       },
       "source_hash": "84ef21198b5535823e7986479025a2557cd663edb38a7a1b1aa2586ca7c8ee67",
       "rationale": "Superseded by architecture-pivot-summary.md:30-32 (FUSE 'mount' replaced with partial-clone working tree; v0.11.0 ADR-007 sync-tags is the v0.9.0+ form of 'see what changed at the backend'). The v0.8 git-diff-HEAD~1 in-mount form is gone in its v0.8 shape.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:17:44Z",
-      "last_extracted": "2026-04-28T19:17:44Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/dark-factory-conflict-teaching",
@@ -3934,11 +3934,11 @@
       },
       "source_hash": "78058088005de31b6dc6699177e43985cb93397b1744c1b195ce4e90f6cc88c8",
       "rationale": "Superseded by Phase 29 (crates/reposix-jira/src/lib.rs:8 docstring + impls at lib.rs:197/279/334). Wiremock test contract_jira_wiremock_write at crates/reposix-jira/tests/contract.rs:419-431 exercises full create/update/delete sequence and asserts each returns Ok -- contradicts Phase-28 read-only claim. Doc prose at jira.md:96-99 also stale; UPDATE_DOC follow-up captured.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:07:15Z",
-      "last_extracted": "2026-04-28T19:07:15Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/docs-01",
@@ -4302,11 +4302,11 @@
       },
       "source_hash": "a7cd9157a658955c488da392d02d3e75ca95500c358f5b0c07e7329bfe68f4b4",
       "rationale": "Superseded by architecture-pivot-summary.md: FUSE daemon retired in v0.9.0. The trait (renamed BackendConnector) is now consumed by git-remote-reposix helper, not a FUSE daemon. Trait-shape claims are captured in docs/connectors/guide/backendconnector-* rows (BOUND). confluence.md prose rewritten in commit b6f6dd7.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T18:58:18Z",
-      "last_extracted": "2026-04-28T18:58:18Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/jira-integration",
@@ -4626,11 +4626,11 @@
       },
       "source_hash": "5d10d55061f7329d5c674f8512f92b93432179d5b8ec213e9c7bbd70808885d0",
       "rationale": "Superseded by architecture-pivot-summary.md:36-50 (partial-clone replaces FUSE mount; symlink-tree retired).",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:17:44Z",
-      "last_extracted": "2026-04-28T19:17:44Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-05",
@@ -4642,11 +4642,11 @@
       },
       "source_hash": "30a445d4a9c864ada3616b5525510ef54fe49f5345257e2cb382e85ee497f14d",
       "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-mount attachments tree retired).",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:17:44Z",
-      "last_extracted": "2026-04-28T19:17:44Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-02",
@@ -4658,11 +4658,11 @@
       },
       "source_hash": "f68b6160b935285dca1c0a3cebe6875a0ecf88c531a2e1d34e87c6e4a2a940e5",
       "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-mount comment-list shape retired).",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:17:44Z",
-      "last_extracted": "2026-04-28T19:17:44Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/nav-02",
@@ -4674,11 +4674,11 @@
       },
       "source_hash": "f47aa0e1c292e12f716b37667d00e806f0ad2a901c830277d7850c94fe5e5082",
       "rationale": "Superseded by architecture-pivot-summary.md:36-50 (FUSE-mount multi-space symlink shape retired).",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:17:44Z",
-      "last_extracted": "2026-04-28T19:17:44Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/conf-04",
@@ -4690,11 +4690,11 @@
       },
       "source_hash": "74010c040c1c1a7fc358d8cedecef1f8a7604e52cc727802bc181af444543bbb",
       "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-mount whiteboards path retired).",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:17:44Z",
-      "last_extracted": "2026-04-28T19:17:44Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/hard-04",
@@ -4765,11 +4765,11 @@
       },
       "source_hash": "917575b56f9c55a9a5c4371e35f4d35cbb7e301ae17ea135879dac3d1732da01",
       "rationale": "mcp-schema-discovery-100k-tokens — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-29T20:53:47Z",
-      "last_extracted": "2026-04-29T20:53:47Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "docs/benchmarks/token-economy/mcp-mediated-baseline-4883-tokens",
@@ -5280,11 +5280,11 @@
       },
       "source_hash": "77096fffc8c3f223ac50e7254f080ed34f00ca09ee969fb66d743b89c1b6182d",
       "rationale": "Superseded by docs/benchmarks/latency.md cached-read entries (8ms sim) and quality/gates/perf/latency-bench.sh. The v0.8 framing is retired; equivalent metric BOUND in current bench.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:59:46Z",
-      "last_extracted": "2026-04-28T19:59:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "docs/decisions/005-jira-issue-mapping/attachments-comments-excluded",
@@ -5333,11 +5333,11 @@
       },
       "source_hash": "c51302c1fa6f11e39b7d6816656a3bfaa9f12e0e552d3ffe22f13cdde3493f2f",
       "rationale": "Claim IS the deferral decision -- not a behavioral test target. Status doc / planning prose; no test could fail.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T20:01:27Z",
-      "last_extracted": "2026-04-28T20:01:27Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "docs/index/install-powershell-irm",
@@ -5819,11 +5819,11 @@
       },
       "source_hash": "2515acd267213548b7cfb21f10f1e54d31e17095b0400c53a3f7f5c738e2f6e8",
       "rationale": "Subjective rubric (cold-reader); enforced by reposix-quality-review skill (P61). Not a docs-alignment behavioral claim. Retire from this dimension; subjective-rubrics catalog is the home.",
-      "last_verdict": "RETIRE_PROPOSED",
+      "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
-      "last_run": "2026-04-28T19:59:46Z",
-      "last_extracted": "2026-04-28T19:59:46Z",
-      "last_extracted_by": "propose-retire-call"
+      "last_run": "2026-04-30T08:26:53Z",
+      "last_extracted": "2026-04-30T08:26:53Z",
+      "last_extracted_by": "confirm-retire-i-am-human"
     },
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/docs11-readme-mkdocs-changelog",

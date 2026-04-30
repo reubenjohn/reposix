@@ -93,9 +93,8 @@ extensions:
 The `extensions` block contains JIRA-specific metadata not in the canonical schema.
 `hierarchy_level` values: `-1` = subtask, `0` = standard issue, `1` = epic.
 
-## Limitations (Phase 28)
+## Limitations
 
-- **Read-only:** `create_record`, `update_record`, and `delete_or_close` return "not supported". Write path lands in Phase 29.
 - **No strong versioning:** JIRA has no ETag; `version` is synthesized from `updated` timestamp.
 - **No attachments:** JIRA attachments are deferred to a future phase.
 - **No comments:** JIRA comments are deferred to a future phase.
