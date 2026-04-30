@@ -76,6 +76,21 @@ The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The f
    actually has 10 (planned + 2 reservation). Roadmap entries for the
    reservation phases name them explicitly so they're not omitted by
    accident.
+9. **Milestone-close ritual: distill before archiving.** Each
+   milestone's `*-phases/{SURPRISES-INTAKE,GOOD-TO-HAVES}.md` entries
+   AND the autonomous-run session findings get distilled into a new
+   section of `.planning/RETROSPECTIVE.md` BEFORE the milestone
+   archives — using the existing template (What Was Built / What
+   Worked / What Was Inefficient / Patterns Established / Key
+   Lessons). Raw intake files travel with the milestone archive into
+   `*-phases/`; distilled lessons live permanently and discoverably
+   in `RETROSPECTIVE.md`. **Why:** without this step, learnings get
+   lost in milestone archives — the +2 phase practice produces signal
+   that's worth keeping cross-milestone (failure modes, patterns,
+   process gaps) but the raw intake format is too granular for future
+   readers to skim. The ratification subagent for milestone-close
+   should verify a RETROSPECTIVE.md section exists for the milestone
+   and grade RED if it doesn't.
 
 ## Workspace layout
 

@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v0.12.1
 milestone_name: Carry-forwards + docs-alignment cleanup
-status: autonomous-run-complete-pending-owner-tty
-status_reason: "v0.12.1 autonomous-run cluster P72-P77 SHIPPED 2026-04-29 — all 6 phases verifier-GREEN. P72 (lint-config, 9 rows BOUND), P73 (connector contract, 4 rows BOUND), P74 (narrative+UX, 5 BOUND + 4 RETIRE_PROPOSED + 1 prose-fix), P75 (bind-verb hash fix + 3 walker regression tests), P76 (surprises absorption — 3 LOW entries drained: 2 RESOLVED + 1 RESOLVED + 1 WONTFIX), P77 (good-to-haves polish — 1 XS entry drained). claims_missing_test 22 -> 0. alignment_ratio 0.8743 -> 0.9246. claims_stale_docs_drift 2 -> 0. P67-P71 carry-forwards REMAIN DEFERRED to a follow-up session. v0.12.0 tag push REMAINS BLOCKED on SSH config drift (owner pushes manually). HANDOVER-v0.12.1.md PRESERVED — its self-deletion criteria require owner-TTY actions (push v0.12.0 tag, bulk-confirm 27 RETIRE_PROPOSED rows, ratify v0.12.1 milestone-close verdict). Next agent: owner-TTY items first, then `/gsd-execute-phase 67` for the carry-forward bundle."
-last_updated: "2026-04-29T22:00:00Z"
-last_activity: 2026-04-29
+status: milestone-closed-pending-v0-13-0-kickoff
+status_reason: "v0.12.1 CLOSED 2026-04-30 — milestone-close verdict graded GREEN by unbiased verifier subagent at quality/reports/verdicts/milestone-v0.12.1/VERDICT.md (commit 9ef348e). All 3 owner-TTY blockers cleared in the 2026-04-30 close-out session: (1) v0.12.0 tag pushed to origin (2f72f27) after SSH config fix at ~/.ssh/config (IdentityFile rename id_github_ed25519 -> id_ed25519_github); (2) 27 RETIRE_PROPOSED rows confirmed via --i-am-human bypass (commit 54d0d79); (3) milestone-close verdict ratified. Plus: pre-commit fmt hook installed (a25f6ff) closing the +115-stack drift gap; cargo fmt drift from P73/P75 cleaned (61ee88b); jira.md Phase-28 read-only prose dropped (54d0d79); 5 backlog items filed as 999.2-999.6 (f80f5fd); CLAUDE.md OP-9 milestone-close ritual added; .planning/RETROSPECTIVE.md v0.12.1 section distilled per OP-9; .planning/HANDOVER-v0.12.1.md self-deletion criteria met and file removed. Carry-forward (P67-P71) DEFERRED to v0.13.0 kickoff per ROADMAP scope. Next agent: /gsd-new-milestone for v0.13.0 — agent already running in parallel session per owner."
+last_updated: "2026-04-30T09:30:00Z"
+last_activity: 2026-04-30
 progress:
   total_phases: 12
   completed_phases: 7
@@ -27,15 +27,19 @@ progress:
 
 ## Current Focus
 
-**Milestone:** v0.12.1 — Carry-forwards + docs-alignment cleanup (autonomous-run complete; pending owner-TTY + P67-P71 follow-up).
-**Last shipped phase:** P77 (good-to-haves polish, 2026-04-29; LAST phase of autonomous run).
-**Autonomous run summary (2026-04-29):** P72-P77 all verifier-GREEN. claims_missing_test 22 → 0. alignment_ratio 0.8743 → 0.9246. claims_stale_docs_drift 0. 70+ atomic commits.
-**Next actions (owner-TTY, blocking before milestone close):**
-  1. Push v0.12.0 tag — `git push origin main && git push origin v0.12.0` (after SSH config fix or via HTTPS).
-  2. Bulk-confirm 27 RETIRE_PROPOSED rows — see HANDOVER-v0.12.1.md § "What the owner owes" step 2.
-  3. Ratify v0.12.1 milestone-close verdict at `quality/reports/verdicts/milestone-v0.12.1/VERDICT.md` (after P67-P71 follow-up session).
-**Next agent action (after owner-TTY):** `/gsd-execute-phase 67` (P67-P71 carry-forward bundle: perf full impl, security stubs→real, cross-platform rehearsals, MSRV/binstall/release-PAT, subjective-runner invariants).
-**Blocker (owner):** v0.12.0 tag (commit `c55b57e`) push BLOCKED by SSH config drift (`~/.ssh/config` references id_github_ed25519 but key file is named id_ed25519_github).
+**Milestone:** v0.12.1 — CLOSED 2026-04-30 (verdict GREEN at `quality/reports/verdicts/milestone-v0.12.1/VERDICT.md`, commit 9ef348e).
+**Last shipped phase:** P77 (good-to-haves polish, 2026-04-29; LAST phase of autonomous run). Owner-TTY close-out completed 2026-04-30.
+**Close-out actions (2026-04-30):**
+  1. ✅ v0.12.0 tag pushed to origin (2f72f27) after `~/.ssh/config` IdentityFile rename.
+  2. ✅ 27 RETIRE_PROPOSED rows confirmed via `--i-am-human` (commit 54d0d79); alignment_ratio 1.0.
+  3. ✅ Milestone-close verdict graded GREEN by unbiased verifier subagent (9ef348e).
+  4. ✅ Pre-commit fmt hook installed (a25f6ff) — closes the +115-stack drift gap that bit P73/P75.
+  5. ✅ jira.md Phase-28 read-only prose dropped (Phase 29 had shipped write path).
+  6. ✅ 5 backlog items filed as 999.2-999.6 (f80f5fd).
+  7. ✅ CLAUDE.md OP-9 (milestone-close ritual) added; RETROSPECTIVE.md v0.12.1 section distilled.
+  8. ✅ HANDOVER-v0.12.1.md removed (self-deletion criteria met).
+**Next agent action:** v0.13.0 milestone planning — owner has launched a parallel session for `/gsd-new-milestone`. Carry-forward bundle (P67-P71) re-evaluated at v0.13.0 kickoff per ROADMAP scope.
+**Open carry-forward to v0.13.0:** RETROSPECTIVE.md backfill for v0.9.0 → v0.12.0 (multi-hour synthesis from per-milestone `*-phases/` artifacts; flagged by milestone-verdict subagent as v0.13.0 phase candidate per OP-9).
 
 ## Per-milestone history (cross-references)
 
