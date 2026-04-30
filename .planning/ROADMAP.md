@@ -301,3 +301,49 @@ holds ONLY the active milestone (currently v0.12.0) + this index.
 - [ ] Phase 22: 22-C-wire-docs-ship (ran, no SUMMARY.md)
 - [ ] Phase 25: 25-02 (ran, no SUMMARY.md)
 - [ ] Phase 27: 27-02 (ran, no SUMMARY.md)
+
+### Phase 999.2: `confirm-retire --all-proposed` batch flag (BACKLOG)
+
+**Goal:** Eliminate ad-hoc bash loops when draining RETIRE_PROPOSED rows
+**Source:** 2026-04-30 session — 27-row drain required hand-rolled `jq | while read | call CLI per id` loop. OP #4: ad-hoc bash is a missing-tool signal.
+**Plans:**
+- [ ] Add `--all-proposed` (and/or `--ids-from-file`) flag to `reposix-quality doc-alignment confirm-retire`
+- [ ] Preserve `--i-am-human` semantics + per-row audit trail entry
+- [ ] Test on a fresh propose-retire fixture
+
+### Phase 999.3: Pre-push runner — separate `timed_out` from `asserts_failed` (BACKLOG)
+
+**Goal:** Stop network-flake timeouts from being recorded as gate FAIL when assertions actually passed
+**Source:** 2026-04-30 session — `release/crates-io-max-version/reposix-confluence` recorded `status: FAIL` despite `asserts_passed: [4]`, `asserts_failed: []`, `timed_out: true`. False positive every weekly run.
+**Plans:**
+- [ ] Audit `quality/runners/run.py` status-derivation logic
+- [ ] Distinguish `TIMEOUT` (preserve last semantic verdict, surface as PARTIAL?) from `FAIL` (asserts truly failed)
+- [ ] Backfill any rows currently FAIL-by-timeout
+
+### Phase 999.4: Autonomous-run push cadence (BACKLOG / DECISION)
+
+**Goal:** Decide and codify how often autonomous-run mode pushes to origin
+**Source:** 2026-04-30 session — v0.12.1 autonomous-run accumulated 115 unpushed commits. Pre-commit fmt now mitigates the worst case (drift compounding), but the broader feedback-loop delay (CI signal arrives at session-end) violates global OP #1 ("verify against reality"). Possible cadences: per-phase, per-N-commits, session-end.
+**Plans:**
+- [ ] Decide: per-phase / per-N / session-end (CLAUDE.md update)
+- [ ] If per-phase: ensure phase-close hooks include `git push` (and that pre-push gate passing is the close criterion)
+- [ ] Document tradeoff in CLAUDE.md `Quality Gates` section
+
+### Phase 999.5: `docs/reference/crates.md` — zero claim-to-test coverage (BACKLOG)
+
+**Goal:** Bind the most-uncovered docs file to verifier rows
+**Source:** 2026-04-30 session — `doc-alignment status` shows 0 rows / 147 eligible lines on `docs/reference/crates.md`. Largest single uncovered surface in the catalog.
+**Plans:**
+- [ ] Extract claims via `/reposix-quality-backfill` scoped to this doc
+- [ ] Bind tests; retire-propose any qualitative-only claims
+- [ ] Re-walk; confirm coverage_ratio bump
+
+### Phase 999.6: Docs-alignment coverage climb (BACKLOG)
+
+**Goal:** Raise overall `coverage_ratio` from 0.2031 toward the next milestone target
+**Source:** 2026-04-30 session — current ratio is 2× above floor (0.10) but headroom is large. Natural next dimension target after retire-backlog drained.
+**Plans:**
+- [ ] Set milestone-level coverage target (e.g., 0.30 or 0.40)
+- [ ] Identify worst-covered docs (`status` per-file table)
+- [ ] Allocate 2-3 phases of binding work per worst offender
+- [ ] Track via `claims_bound` and `coverage_ratio` headline numbers
