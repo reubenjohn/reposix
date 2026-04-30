@@ -46,7 +46,24 @@ jobs:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install MkDocs + Material (for pre-push runner gates)
+        # The pre-push self-test (TEST 1 "clean commit passes") drives the
+        # full runner, which composes docs-build/mkdocs-strict +
+        # structure/no-orphan-docs (both shell out to `mkdocs build
+        # --strict`). Mirrors the install in .github/workflows/docs.yml so
+        # the runner sees the same toolchain as a developer's pre-push.
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install mkdocs-material mkdocs-minify-plugin mkdocs-redirects
       - run: cargo test --workspace --locked
+      - name: Build reposix-quality (for docs-alignment/walk gate)
+        # The pre-push runner's docs-alignment/walk row invokes
+        # target/{release,debug}/reposix-quality. `cargo test --workspace`
+        # only ensures *test* binaries; the bin must be built explicitly.
+        run: cargo build -p reposix-quality
       - name: Test pre-push credential hook
         run: bash .githooks/test-pre-push.sh
 
