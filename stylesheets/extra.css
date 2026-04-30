@@ -1,0 +1,32 @@
+/* Phase 43 — minimal hero/typography polish for mkdocs-material.
+ * Keep this file short. Anything that grows past 30 lines is a smell that we're
+ * fighting the theme instead of using it.
+ */
+
+/* Slightly tighter heading line-height so the hero block reads as one block. */
+.md-typeset h1 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.md-typeset h2 {
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+/* Make the three-up "measured numbers" grid cards visually punchier without
+ * overriding the theme's color tokens. */
+.md-typeset .grid.cards > ul > li {
+  border-radius: 8px;
+}
+
+.md-typeset .grid.cards code {
+  font-size: 1.05em;
+  font-weight: 600;
+}
+
+/* Inline `code` in body text — slightly more contrast against light theme. */
+[data-md-color-scheme="default"] .md-typeset code {
+  background-color: rgba(63, 81, 181, 0.08);
+}
