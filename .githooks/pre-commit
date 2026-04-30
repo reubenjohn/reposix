@@ -15,7 +15,22 @@
 
 set -uo pipefail
 
-# (1) Project-side pre-commit logic -- intentionally empty for now.
+# (1) Project-side pre-commit logic.
+#
+# cargo fmt --check on staged .rs files. Catches fmt drift at commit
+# time so it doesn't accumulate across long unpushed local stacks
+# (the autonomous-run pattern lands many commits between pushes; if
+# fmt only runs at pre-push, drift compounds and surfaces against a
+# 100+-commit range -- already happened with P73/P75, fixed in 61ee88b).
+#
+# Scope: fmt only. Clippy + tests stay at pre-push (too slow for
+# every commit). Bypass: git commit --no-verify (discouraged).
+if git diff --cached --name-only --diff-filter=ACMR | grep -qE '\.rs$'; then
+  if ! cargo fmt --all -- --check >/dev/null 2>&1; then
+    echo "pre-commit: cargo fmt --check failed. Run 'cargo fmt --all' and re-stage." >&2
+    exit 1
+  fi
+fi
 
 # (2) Optional personal add-on chain.
 GLOBAL="$HOME/.git-hooks/pre-commit"
