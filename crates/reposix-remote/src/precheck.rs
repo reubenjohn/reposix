@@ -408,7 +408,9 @@ mod tests {
             .expect("no-cursor case should return Stable without erroring");
         match outcome {
             SotDriftOutcome::Stable => {}
-            other => panic!("expected Stable; got {other:?}"),
+            SotDriftOutcome::Drifted { changed_count } => {
+                panic!("expected Stable; got Drifted({changed_count})")
+            }
         }
     }
 }

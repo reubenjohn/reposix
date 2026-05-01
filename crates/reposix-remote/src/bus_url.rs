@@ -157,8 +157,8 @@ pub(crate) fn parse(url: &str) -> Result<Route> {
 mod tests {
     use super::*;
 
-    /// DVCS-BUS-URL-01 — `?mirror=` parses to Route::Bus with the
-    /// expected SoT + mirror split.
+    /// DVCS-BUS-URL-01 — `?mirror=` parses to `Route::Bus` with the
+    /// expected `SoT` + mirror split.
     #[test]
     fn parses_query_param_form_round_trip() {
         let url = "reposix::http://127.0.0.1:7878/projects/demo?mirror=file:///tmp/m.git";
@@ -168,19 +168,21 @@ mod tests {
                 assert_eq!(sot.project, "demo");
                 assert_eq!(mirror_url, "file:///tmp/m.git");
             }
-            other => panic!("expected Route::Bus; got {other:?}"),
+            Route::Single(sot) => panic!("expected Route::Bus; got Single({sot:?})"),
         }
     }
 
     /// DVCS-BUS-URL-01 — bare `reposix::<sot>` (no `?`) returns
-    /// Route::Single (single-backend regression check).
+    /// `Route::Single` (single-backend regression check).
     #[test]
     fn route_single_for_bare_reposix_url() {
         let url = "reposix::http://127.0.0.1:7878/projects/demo";
         let route = parse(url).expect("bare URL should parse");
         match route {
             Route::Single(sot) => assert_eq!(sot.project, "demo"),
-            other => panic!("expected Route::Single; got {other:?}"),
+            Route::Bus { sot, mirror_url } => {
+                panic!("expected Route::Single; got Bus(sot={sot:?}, mirror_url={mirror_url})")
+            }
         }
     }
 
