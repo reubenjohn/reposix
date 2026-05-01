@@ -570,6 +570,164 @@
       "blast_radius": "P1",
       "owner_hint": "if RED: P83's write fan-out accidentally bypassed P82's STEP 0 check; check whether handle_bus_export's mirror_remote_name resolution order changed",
       "waiver": null
+    },
+    {
+      "id": "agent-ux/bus-write-fault-injection-mirror-fail",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "comment": "Row stays FAIL through 83-02 T01-T03; flips PASS at 83-02 T04 catalog-flip BEFORE the per-phase push.",
+      "sources": [
+        "crates/reposix-remote/src/bus_handler.rs::push_mirror",
+        "crates/reposix-remote/src/bus_handler.rs::handle_bus_export (partial-fail branch)",
+        "crates/reposix-remote/tests/bus_write_mirror_fail.rs::bus_write_mirror_fail_returns_ok_with_lag_audit_row",
+        ".planning/REQUIREMENTS.md (DVCS-BUS-WRITE-06)",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q3.6 RATIFIED no-retry)"
+      ],
+      "command": "bash quality/gates/agent-ux/bus-write-fault-injection-mirror-fail.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/bus-write-fault-injection-mirror-fail.sh exits 0",
+          "fault scenario (a): mirror push fails between confluence-write and ack",
+          "helper exits zero with `ok refs/heads/main` (Q3.6 SoT contract)",
+          "audit_events_cache::helper_push_partial_fail_mirror_lag count == 1",
+          "audit_events_cache::mirror_sync_written count == 0",
+          "audit_events_cache::helper_push_accepted count == 1",
+          "refs/mirrors/<sot>-head advanced; refs/mirrors/<sot>-synced-at UNCHANGED from baseline",
+          "mirror's main ref UNCHANGED (failing-update-hook rejected the push)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/bus-write-fault-injection-mirror-fail.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/bus-write-fault-injection-mirror-fail.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: bus_handler.rs partial-fail branch regressed OR `make_failing_mirror_fixture` (P83-01 T05) returned a passing mirror",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/bus-write-fault-injection-sot-mid-stream",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "comment": "Row stays FAIL through 83-02 T01-T03; flips PASS at 83-02 T04 catalog-flip BEFORE the per-phase push.",
+      "sources": [
+        "crates/reposix-remote/src/bus_handler.rs::handle_bus_export (apply_writes SotPartialFail branch)",
+        "crates/reposix-remote/src/write_loop.rs::apply_writes",
+        "crates/reposix-remote/tests/bus_write_sot_fail.rs::bus_write_sot_mid_stream_fail_no_mirror_push_no_lag_audit",
+        ".planning/REQUIREMENTS.md (DVCS-BUS-WRITE-06)",
+        ".planning/phases/83-bus-write-fan-out/83-PLAN-OVERVIEW.md (D-09 Confluence non-atomicity)"
+      ],
+      "command": "bash quality/gates/agent-ux/bus-write-fault-injection-sot-mid-stream.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/bus-write-fault-injection-sot-mid-stream.sh exits 0",
+          "fault scenario (b): confluence write fails mid-stream (5xx on second PATCH)",
+          "helper exits non-zero with `error refs/heads/main some-actions-failed`",
+          "audit_events_cache::helper_push_accepted count == 0 (didn't reach success branch)",
+          "audit_events_cache::helper_push_partial_fail_mirror_lag count == 0 (mirror never attempted)",
+          "mirror baseline preserved (no mirror push attempted)",
+          "wiremock saw exactly 2 PATCH requests (id=1 returned 200, id=2 returned 500)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/bus-write-fault-injection-sot-mid-stream.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/bus-write-fault-injection-sot-mid-stream.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: SoT partial-fail branch regressed OR mirror push was attempted despite SoT fail; check execute_action loop in write_loop::apply_writes",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/bus-write-fault-injection-post-precheck-409",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "comment": "Row stays FAIL through 83-02 T01-T03; flips PASS at 83-02 T04 catalog-flip BEFORE the per-phase push.",
+      "sources": [
+        "crates/reposix-remote/src/bus_handler.rs::handle_bus_export",
+        "crates/reposix-remote/src/write_loop.rs::apply_writes (execute_action loop)",
+        "crates/reposix-remote/tests/bus_write_post_precheck_409.rs::bus_write_post_precheck_conflict_409_no_mirror_push",
+        ".planning/REQUIREMENTS.md (DVCS-BUS-WRITE-06)",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q3.1 PRECHECK B Stable)"
+      ],
+      "command": "bash quality/gates/agent-ux/bus-write-fault-injection-post-precheck-409.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/bus-write-fault-injection-post-precheck-409.sh exits 0",
+          "fault scenario (c): confluence 409 after PRECHECK B passed",
+          "helper exits non-zero with `error refs/heads/main some-actions-failed`",
+          "stderr names the failing record id (D-09 / Pitfall 3 documented behavior)",
+          "audit_events_cache::helper_push_accepted count == 0",
+          "mirror baseline preserved (no mirror push attempted)",
+          "wiremock saw exactly 1 PATCH (the one that 409'd) AND exactly 1 list_changed_since (PRECHECK B Stable)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/bus-write-fault-injection-post-precheck-409.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/bus-write-fault-injection-post-precheck-409.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: post-precheck 409 fault not surfaced cleanly; check apply_writes execute_action loop bails on first error",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/bus-write-audit-completeness",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "comment": "Row stays FAIL through 83-02 T01-T03; flips PASS at 83-02 T04 catalog-flip BEFORE the per-phase push. The audit_events (backend) layer in this test is asserted via wiremock's request log (the byte-equivalent of a sim audit row for the SimBackend wire path); spinning a real reposix-sim per test would break the per-crate cargo budget. See .planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md (sim audit table not directly queryable in test scope).",
+      "sources": [
+        "crates/reposix-cache/src/audit.rs (cache-internal audit ops)",
+        "crates/reposix-core/src/audit.rs (audit_events backend table)",
+        "crates/reposix-remote/tests/bus_write_audit_completeness.rs::bus_write_audit_completeness_happy_path_writes_both_tables",
+        ".planning/REQUIREMENTS.md (DVCS-BUS-WRITE-06)",
+        "CLAUDE.md (OP-3 dual-table audit non-optional)"
+      ],
+      "command": "bash quality/gates/agent-ux/bus-write-audit-completeness.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/bus-write-audit-completeness.sh exits 0",
+          "happy-path bus push writes ALL expected rows to BOTH audit layers per RESEARCH.md § 'Audit Completeness Contract'",
+          "audit_events_cache: helper_backend_instantiated (>=1) + helper_push_started (1) + helper_push_accepted (1) + mirror_sync_written (1)",
+          "audit_events (wiremock request log proxy): per-record mutation requests (PATCH/POST/DELETE) match the executed actions"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/bus-write-audit-completeness.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/bus-write-audit-completeness.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: a per-record audit row was dropped (check sim adapter's create_record / update_record / delete_or_close success path) OR a cache audit op was missed (check apply_writes + bus_handler ref/audit write blocks)",
+      "waiver": null
     }
   ]
 }
