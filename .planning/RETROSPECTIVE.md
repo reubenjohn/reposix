@@ -4,6 +4,15 @@
 
 ---
 
+## Milestone: v0.13.0 — DVCS over REST (in flight; surprises-absorbed at P87)
+
+**P87 surprises-absorption summary (2026-05-01).** P78–P86 produced 5 SURPRISES-INTAKE entries (2 RESOLVED-on-discovery via OP-8 eager-resolution: P81 `refresh_for_mirror_head` no-op skip, P83-02 `make_failing_mirror_fixture core.hooksPath` override; 3 P87-drained: P80 verifier-shape change → RESOLVED via P86 verdict cross-reference confirming cargo-test-as-verifier is sanctioned house pattern, P81 bind T01→T04 schedule shift → WONTFIX with the deeper `--test-pending` tooling polish filed for P88 GOOD-TO-HAVES, P84 binstall+yanked-gix substrate gap → DEFERRED to v0.13.x as a release-pipeline carry-forward with `scripts/webhook-latency-measure.sh` ready for owner-driven re-measurement once v0.13.x ships with non-yanked gix + binstall artifacts). Honesty spot-check at `.planning/phases/87-surprises-absorption/honesty-spot-check.md` sampled 5 phases (exceeded the ≥3 floor); aggregate GREEN — no phase exhibited the "found-it-but-skipped-it" failure mode the +2 reservation is designed to prevent. The full milestone retrospective (What Was Built / What Worked / What Was Inefficient / Patterns Established / Key Lessons) lands in P88 per OP-9 milestone-close ritual; this section is intentionally surprises-only and gets folded into the P88 retrospective at milestone close.
+
+**v0.13.0 → v0.13.x carry-forward (P87 close):**
+- **Binstall + yanked-gix release substrate** — P84 SURPRISES-INTAKE Entry 5 DEFERRED. Cutting v0.13.x with non-yanked `gix = "=0.83.x"` (workspace pin already bumped in P78) AND confirming `.github/workflows/release.yml` produces per-target binstall tarballs unblocks both legs of the webhook setup-guide install path. Owner-runnable artifact: `scripts/webhook-latency-measure.sh`. Severity stays HIGH at the entry level — the underlying release-pipeline gap is a release-quality concern affecting ANY downstream consumer of the workflow template; deferral does not soften the diagnosis, only the timing.
+
+---
+
 ## Milestone: v0.12.1 — Carry-forwards + docs-alignment cleanup
 
 **Shipped:** 2026-04-30 (autonomous run 2026-04-29; owner-TTY close-out 2026-04-30)

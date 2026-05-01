@@ -89,6 +89,16 @@ The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The f
    actually has 10 (planned + 2 reservation). Roadmap entries for the
    reservation phases name them explicitly so they're not omitted by
    accident.
+
+   **v0.13.0 surprises-absorption (P87, 2026-05-01)** — completed:
+   5-entry intake drained (2 RESOLVED-on-discovery via eager-resolution +
+   3 P87-drained as RESOLVED|WONTFIX|DEFERRED); honesty spot-check
+   GREEN at `.planning/phases/87-surprises-absorption/honesty-spot-check.md`
+   (sampled 5 phases, exceeded the ≥3 floor). One v0.13.0 → v0.13.x
+   carry-forward: binstall + yanked-gix release substrate (P84
+   SURPRISES Entry 5; release-pipeline territory; owner-runnable
+   `scripts/webhook-latency-measure.sh` ready). Full v0.13.0 milestone
+   retrospective lands in P88 per OP-9.
 9. **Milestone-close ritual: distill before archiving.** Each
    milestone's `*-phases/{SURPRISES-INTAKE,GOOD-TO-HAVES}.md` entries
    AND the autonomous-run session findings get distilled into a new
