@@ -3,24 +3,24 @@ gsd_state_version: 1.0
 milestone: v0.13.0
 milestone_name: DVCS over REST
 status: executing
-last_updated: "2026-05-01T06:33:46.364Z"
-last_activity: 2026-05-01 — P79-01 (POC-01) SHIPPED; FINDINGS emit 5 INFO + 2 REVISE; orchestrator pending re-engagement decision
+last_updated: "2026-05-01T08:00:00Z"
+last_activity: 2026-05-01 — P79 SHIPPED (POC + reposix attach core); verifier GREEN at quality/reports/verdicts/p79/VERDICT.md
 progress:
   total_phases: 11
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 4
-  percent: 67
+  completed_plans: 6
+  percent: 18
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: P79 in flight — 79-01 (POC) SHIPPED 2026-05-01; next 79-02 (scaffold) gated on POC-FINDINGS re-engagement decision
-Plan: 79-01 SHIPPED → orchestrator decides 79-02 plan revision
-Status: Executing — 1/11 phases complete; 4 plans complete (P78 × 3 + P79-01)
-Last activity: 2026-05-01 — POC-01 / 79-01 SHIPPED, 5 commits pushed (660bae0, 9dc9afa, 29c4cba, df21dbf, 4e6de2b); POC-FINDINGS.md emits 5 INFO + 2 REVISE + 0 SPLIT findings; orchestrator routing decision pending
+Phase: P79 SHIPPED 2026-05-01 (POC + reposix attach core); next P80 (mirror-lag refs)
+Plan: —
+Status: Executing — 2/11 phases complete (P78 + P79); 6 plans complete
+Last activity: 2026-05-01 — P79 verifier GREEN. POC findings absorbed at 79-02 task time (F01 + F04 REVISE tweaks). 79-03 SUMMARY.md reconstructed post-hoc after OS crash. REQUIREMENTS.md DVCS-ATTACH-01..04 checkboxes flipped to [x]. Pre-push 26 PASS / 0 FAIL.
 
 ## Current Focus
 

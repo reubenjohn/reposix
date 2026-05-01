@@ -255,7 +255,7 @@
       },
       "artifact": "quality/reports/verifications/structure/badges-resolve.json",
       "status": "PASS",
-      "last_verified": "2026-04-28T14:22:53Z",
+      "last_verified": "2026-05-01T07:20:02Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "P60 docs-build dimension ships the verifier; for P57 the row's existence is the contract",
