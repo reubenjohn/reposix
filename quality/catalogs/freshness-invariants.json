@@ -337,26 +337,18 @@
         ]
       },
       "verifier": {
-        "script": "quality/gates/structure/freshness-invariants.py",
-        "args": [
-          "--row-id",
-          "structure/no-loose-top-level-planning-audits"
-        ],
+        "script": "quality/gates/structure/no-loose-top-level-planning-audits.sh",
+        "args": [],
         "timeout_s": 30,
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/no-loose-top-level-planning-audits.json",
-      "status": "WAIVED",
-      "last_verified": "2026-04-28T04:06:03Z",
+      "status": "PASS",
+      "last_verified": "2026-05-01T05:20:52Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "any new milestone-audit or session-end-state document at .planning/ top level -- relocate under .planning/milestones/audits/ or .planning/archive/",
-      "waiver": {
-        "until": "2026-05-15T00:00:00Z",
-        "reason": "Catalog-first: row ships before verifier branch lands in Wave 3. Short-lived; expires after Wave 3 + Wave 6.",
-        "dimension_owner": "structure",
-        "tracked_in": "P62 Wave 3 (POLISH-ORG)"
-      }
+      "waiver": null
     },
     {
       "id": "structure/no-pre-pivot-doc-stubs",
@@ -374,26 +366,18 @@
         ]
       },
       "verifier": {
-        "script": "quality/gates/structure/freshness-invariants.py",
-        "args": [
-          "--row-id",
-          "structure/no-pre-pivot-doc-stubs"
-        ],
+        "script": "quality/gates/structure/no-pre-pivot-doc-stubs.sh",
+        "args": [],
         "timeout_s": 30,
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/no-pre-pivot-doc-stubs.json",
-      "status": "WAIVED",
-      "last_verified": "2026-04-28T04:06:03Z",
+      "status": "PASS",
+      "last_verified": "2026-05-01T05:20:52Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "any new top-level docs/<slug>.md stub <500 bytes -- add to mkdocs.yml redirect_maps or remove",
-      "waiver": {
-        "until": "2026-05-15T00:00:00Z",
-        "reason": "Catalog-first: row ships before verifier branch lands in Wave 3. Short-lived; expires after Wave 3 + Wave 6.",
-        "dimension_owner": "structure",
-        "tracked_in": "P62 Wave 3 (POLISH-ORG)"
-      }
+      "waiver": null
     },
     {
       "id": "structure/repo-org-audit-artifact-present",
@@ -412,26 +396,18 @@
         ]
       },
       "verifier": {
-        "script": "quality/gates/structure/freshness-invariants.py",
-        "args": [
-          "--row-id",
-          "structure/repo-org-audit-artifact-present"
-        ],
+        "script": "quality/gates/structure/repo-org-audit-artifact-present.sh",
+        "args": [],
         "timeout_s": 30,
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/repo-org-audit-artifact-present.json",
-      "status": "WAIVED",
-      "last_verified": "2026-04-28T04:06:03Z",
+      "status": "PASS",
+      "last_verified": "2026-05-01T05:20:52Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "Wave 2 produces the audit; future repo-org audits land at the same path",
-      "waiver": {
-        "until": "2026-05-15T00:00:00Z",
-        "reason": "Catalog-first: row ships before verifier branch lands in Wave 3. Short-lived; expires after Wave 3 + Wave 6.",
-        "dimension_owner": "structure",
-        "tracked_in": "P62 Wave 3 (POLISH-ORG)"
-      }
+      "waiver": null
     },
     {
       "id": "structure/doc-alignment-catalog-present",

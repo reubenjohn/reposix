@@ -271,6 +271,8 @@ def verify_badges_resolve(row: dict, repo_root: Path) -> int:
 # ---- P62 verifier branches --------------------------------------------------
 
 
+# P78-02 path-forward: quality/gates/structure/no-loose-top-level-planning-audits.sh
+# is now the catalog verifier; this Python branch retained as regression net.
 def verify_no_loose_top_level_planning_audits(row: dict, repo_root: Path) -> int:
     """Assert no *MILESTONE-AUDIT*.md or SESSION-END-STATE* file at .planning/ top level."""
     asserts_passed: list[str] = []
@@ -300,6 +302,8 @@ def verify_no_loose_top_level_planning_audits(row: dict, repo_root: Path) -> int
     return artifact["exit_code"]
 
 
+# P78-02 path-forward: quality/gates/structure/no-pre-pivot-doc-stubs.sh
+# is now the catalog verifier; this Python branch retained as regression net.
 def verify_no_pre_pivot_doc_stubs(row: dict, repo_root: Path) -> int:
     """Assert every docs/*.md stub <500B is in mkdocs.yml nav: OR not_in_nav: OR redirect_maps."""
     asserts_passed: list[str] = []
@@ -517,6 +521,8 @@ def verify_doc_alignment_floor_not_decreased(row: dict, repo_root: Path) -> int:
     return artifact["exit_code"]
 
 
+# P78-02 path-forward: quality/gates/structure/repo-org-audit-artifact-present.sh
+# is now the catalog verifier; this Python branch retained as regression net.
 def verify_repo_org_audit_artifact_present(row: dict, repo_root: Path) -> int:
     """Assert quality/reports/audits/repo-org-gaps.md exists + the consistency verifier passes."""
     asserts_passed: list[str] = []
