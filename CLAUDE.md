@@ -423,7 +423,7 @@ breaking the walker's first-source compare on every Single→Multi promotion
 `source.as_slice()[0]`, so drift in non-first sources of a `Multi` row does
 not fire `STALE_DOCS_DRIFT` — was the v0.12.1 P75 shape. Path (b) — parallel
 `source_hashes: Vec<String>` + per-source walker AND-compare — closed in
-v0.13.0 P78-03 (commit `<P78-03 commit>`); non-first-source drift now fires
+v0.13.0 P78-03 (commit `28ed9be`); non-first-source drift now fires
 `STALE_DOCS_DRIFT` per the regression test
 `crates/reposix-quality/tests/walk.rs::walk_multi_source_non_first_drift_fires_stale`.
 Legacy multi-source rows backfilled at load: `source_hashes` left empty
