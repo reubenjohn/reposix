@@ -1,7 +1,8 @@
 # v0.13.0 — Vision and Mental Model
 
-> **Audience.** The next agent picking up v0.13.0 planning, after v0.12.1 closes. Read this BEFORE running `/gsd-new-milestone v0.13.0`. Sibling doc:
-> - `architecture-sketch.md` (sibling in this folder) — the technical design for the three innovations + open questions a planner needs to resolve.
+> **Audience.** The next agent picking up v0.13.0 planning, after v0.12.1 closes. Read this BEFORE running `/gsd-new-milestone v0.13.0`. Sibling docs:
+> - `architecture-sketch.md` — the technical design for the three innovations + open questions a planner needs to resolve.
+> - `kickoff-recommendations.md` — readiness moves from the v0.12.1 close-out (open-questions resolution, POC, push-cadence decision, peer review) + pre-kickoff checklist. Read AFTER this file and `architecture-sketch.md`.
 >
 > **Supersedes:** `.planning/research/v0.10.0-post-pivot/milestone-plan.md` § "v0.13.0 — Observability & Multi-Repo". That earlier plan (OTel spans, `reposix tail`, multi-project helper) is **deferred to v0.14.0**, not cancelled — the consolidated v0.14.0 scope lives at `.planning/research/v0.14.0-observability-and-multi-repo/vision-and-mental-model.md`. The reasoning: DVCS is a thesis-level shift; observability is operational maturity for an existing thesis. Ship the thesis shift first while the design space is still fluid.
 >

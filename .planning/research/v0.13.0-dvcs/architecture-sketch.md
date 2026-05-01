@@ -1,6 +1,6 @@
 # v0.13.0 — DVCS Architecture Sketch
 
-> **Audience.** The agent planning v0.13.0 phases. Read `vision-and-mental-model.md` (sibling in this folder) first for the thesis and success gates; this doc is the technical design + the open questions a planner needs to resolve before writing PLAN.md.
+> **Audience.** The agent planning v0.13.0 phases. Read `vision-and-mental-model.md` (sibling in this folder) first for the thesis and success gates; this doc is the technical design + the open questions a planner needs to resolve before writing PLAN.md. After both, read `kickoff-recommendations.md` (sibling) for the pre-kickoff checklist + four readiness moves identified by the v0.12.1 close-out.
 >
 > **Status.** Pre-roadmap research. Owner-approved direction; specific algorithms below are starting points, not commitments.
 
