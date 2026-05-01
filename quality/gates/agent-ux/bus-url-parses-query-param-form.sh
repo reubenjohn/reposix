@@ -14,9 +14,17 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." &> /dev/null && pwd)"
 cd "${REPO_ROOT}"
 
+# The integration test file `tests/bus_url.rs` has 3 tests: positive
+# round-trip + the two reject paths. We exercise the positive path
+# here; the unit-test-level `route_single_for_bare_reposix_url`
+# (inline in `crates/reposix-remote/src/bus_url.rs`) covers the bare
+# Route::Single case at unit-test granularity and is verified by
+# `bus-fetch-not-advertised.sh` end-to-end (single-backend URL must
+# advertise stateless-connect).
 cargo test -p reposix-remote --test bus_url \
-    parses_query_param_form_round_trip route_single_for_bare_reposix_url \
-    --quiet -- --nocapture 2>&1 | tail -20
+    --quiet -- --nocapture \
+    parses_query_param_form_round_trip \
+    2>&1 | tail -20
 
 echo "PASS: bus_url::parse handles ?mirror= form + bare reposix:: form"
 exit 0

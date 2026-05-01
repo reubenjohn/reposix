@@ -14,8 +14,9 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." &> /dev/null && pwd)"
 cd "${REPO_ROOT}"
 
 cargo test -p reposix-remote --test bus_url \
+    --quiet -- --nocapture \
     rejects_plus_delimited_bus_url rejects_unknown_query_param \
-    --quiet -- --nocapture 2>&1 | tail -20
+    2>&1 | tail -20
 
 echo "PASS: bus_url::parse rejects + form AND unknown query keys"
 exit 0

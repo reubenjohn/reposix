@@ -30,6 +30,8 @@ Two guardrails are load-bearing for the dark-factory pattern:
 
 **L1 conflict detection (P81+).** On every push, the helper reads its cache cursor (`meta.last_fetched_at`), calls `backend.list_changed_since(since)`, and only conflict-checks records that overlap the push set with the changed-set. The cache is trusted as the prior; the agent's PATCH against a backend-deleted record fails at REST time with a 404 — recoverable via `reposix sync --reconcile` (DVCS-PERF-L1-02). On the cursor-present hot path, the precheck does ONE `list_changed_since` REST call plus ONE `get_record` per record in `changed_set ∩ push_set` (typically zero or one); the legacy unconditional `list_records` walk in `handle_export` is gone. First-push fallback (no cursor yet) and steady-state pushes with no actions executed (`files_touched == 0`) skip the post-write `refresh_for_mirror_head` to keep the no-op cost at zero list-records calls. L2/L3 hardening (background reconcile / transactional cache writes) defers to v0.14.0 per `.planning/research/v0.13.0-dvcs/architecture-sketch.md` § Performance subtlety.
 
+**Bus URL form (P82+).** `reposix::<sot-spec>?mirror=<mirror-url>` per Q3.3 — the SoT side dispatches via the existing `BackendConnector` pipeline (sim / confluence / github / jira); the mirror is a plain-git URL consumed as a shell-out argument to `git ls-remote` / `git push`. Bus is PUSH-only (Q3.4) — fetch on a bus URL falls through to the single-backend code path, so the helper does NOT advertise `stateless-connect` for bus URLs. The `+`-delimited form is dropped; unknown query keys (anything other than `mirror=`) are rejected. Mirror URLs containing `?` must be percent-encoded (the first unescaped `?` in the bus URL is the bus query-string boundary). On push, the bus handler runs two cheap prechecks BEFORE reading stdin: PRECHECK A (`git ls-remote -- <mirror>` versus local `refs/remotes/<name>/main`) and PRECHECK B (`list_changed_since` against the SoT cursor); both reject with `error refs/heads/main fetch first` on drift. P82 ships the URL-recognition + dispatch + precheck surface; the SoT-first write fan-out lands in P83. See `.planning/research/v0.13.0-dvcs/architecture-sketch.md § 3` and `decisions.md § Q3.3-Q3.6` for the algorithm + open-question resolutions.
+
 ## Operating Principles (project-specific)
 
 The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The following are project-specific reinforcements, not replacements:
@@ -177,6 +179,9 @@ git push reposix main                                     # push via reposix rem
 
 # L1 escape hatch (v0.13.0+): rebuild the cache from REST when a push reject suggests cache desync
 reposix sync --reconcile                                  # full list_records walk + cache rebuild (DVCS-PERF-L1-02)
+
+# Bus push (v0.13.0+ P82): URL form `reposix::<sot>?mirror=<mirror-url>` recognized + dispatched; cheap prechecks (mirror drift + SoT drift) gate the push BEFORE reading stdin. Write fan-out (DVCS-BUS-WRITE-01..06) lands in P83.
+git push reposix main                                     # bus push (URL: reposix::<sot>?mirror=<url>; SoT-first writes land in P83)
 
 # Dark-factory regression (proves agent UX is pure git, zero in-context learning)
 bash scripts/dark-factory-test.sh sim                     # local + CI
