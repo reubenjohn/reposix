@@ -249,9 +249,15 @@ if [[ -n "${ATLASSIAN_API_KEY:-}" && -n "${ATLASSIAN_EMAIL:-}" \
     CF_AUTH="${ATLASSIAN_EMAIL}:${ATLASSIAN_API_KEY}"
 
     # Warm-up + space-id resolution (matches reposix-confluence/src/lib.rs:1007).
+    # Tolerate HTTP errors here (matches the GH/JIRA warm-up + body-fetch
+    # pattern at lines 191/201/329/340 — a 404/401 from the v2 spaces
+    # endpoint must NOT crash the entire bench under `set -euo pipefail`.
+    # Empty CF_SPACE_ID falls through to the `if [[ -n ]]` guard below
+    # which leaves CF_LIST/GET/PATCH unset; fmt_ms renders those as empty
+    # cells (see line 388 fallback).
     CF_SPACE_ID=$(curl -fsS -u "${CF_AUTH}" \
         "${CF_ORIGIN}/wiki/api/v2/spaces?keys=${CF_PROJECT}" 2>/dev/null \
-        | jq -r '.results[0].id // empty' 2>/dev/null)
+        | jq -r '.results[0].id // empty' 2>/dev/null || echo "")
 
     T0=$(now_ms)
     "${BIN_DIR}/reposix" init "confluence::${CF_PROJECT}" "$CF_REPO" >/dev/null 2>&1 || true
