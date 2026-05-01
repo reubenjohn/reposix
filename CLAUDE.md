@@ -143,7 +143,7 @@ inside `*-phases/` from day one.
 - Rust stable (1.82+ via `rust-toolchain.toml`).
 - Async: `tokio` 1.
 - Web: `axum` 0.7 + `reqwest` 0.12 (rustls only, never openssl-sys).
-- Git: `gix` 0.82 (pinned with `=` because gix is pre-1.0). **Runtime requirement: `git >= 2.34`** for `extensions.partialClone` + `stateless-connect`.
+- Git: `gix` 0.83 (pinned with `=` because gix is pre-1.0; bumped from 0.82 in P78 — issues #29 + #30 yanked the prior pin). **Runtime requirement: `git >= 2.34`** for `extensions.partialClone` + `stateless-connect`.
 - Storage: `rusqlite` 0.32 with `bundled` feature (no system libsqlite3).
 - Errors: `thiserror` for typed crate errors, `anyhow` only at binary boundaries.
 

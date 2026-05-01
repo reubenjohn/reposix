@@ -77,11 +77,12 @@ libc = "0.2"
 # Storage
 rusqlite = { version = "0.39", features = ["bundled"] }
 
-# gix 0.82 — pure-Rust git object writer for the reposix-cache crate.
+# gix 0.83 — pure-Rust git object writer for the reposix-cache crate.
 # Pinned with `=` because gix is pre-1.0 (issue GitoxideLabs/gitoxide#470)
 # and minor versions have broken method signatures in the past.
+# Bumped from 0.82.0 (yanked 2026-04-28; issues #29 + #30) to 0.83.0 in P78.
 # See .planning/phases/31-.../31-RESEARCH.md §Pitfall 4.
-gix = "=0.82.0"
+gix = "=0.83.0"
 # XDG cache dir resolution for the reposix-cache default path.
 dirs = "6"
 
