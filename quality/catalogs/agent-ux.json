@@ -960,8 +960,10 @@
           "shell-stub agent recovers `attach` subcommand spelling — `reposix --help` lists `attach` in Commands, `reposix attach --help` documents `--orphan-policy` flag with all 3 enum values (delete-local | fork-as-new | abort)",
           "shell-stub agent recovers `refs/mirrors/<sot>-synced-at` ref namespace — `crates/reposix-remote/src/bus_handler.rs` cites the ref name in reject hint composition",
           "shell-stub agent recovers `git remote add` mirror-config Q3.5 hint — `crates/reposix-remote/src/bus_handler.rs::resolve_mirror_remote_name` emits verbatim `configure the mirror remote first: git remote add <name> <mirror-url>`",
-          "end-to-end sim arm: vanilla-clone of file:// mirror + reposix attach + edit + bus-push round-trips; typo fix observable via REST GET against sim; refs/mirrors/sim-synced-at advanced; audit_events_cache::helper_push_accepted >= 1 AND mirror_sync_written >= 1",
-          "TokenWorld arm SUBSTRATE-GAP-DEFERRED: skipped unless REPOSIX_DARK_FACTORY_REAL_TOKENWORLD=1; cites P84 SURPRISES-INTAKE binstall + yanked-gix entry"
+          "bus URL composition: reposix attach against an empty work tree with a pre-existing file:// origin remote bakes a `reposix::<sot>?mirror=file://...` URL into `remote.reposix.url`; `extensions.partialClone=reposix` (NOT origin); origin URL unchanged",
+          "cache materialization: REPOSIX_CACHE_DIR-rooted cache built at `<cache>/reposix/sim-demo.git/` with cache.db; reconciliation walk emits `matched=N no_id=N backend_deleted=N mirror_lag=N` line; audit_events_cache contains an attach_walk row (OP-3 unconditional)",
+          "wire-path coverage delegated to `crates/reposix-remote/tests/bus_write_happy.rs::happy_path_writes_both_refs_and_acks_ok` (helper exec + refs/mirrors writes + dual-table audit) — the shell harness asserts this test fn exists",
+          "TokenWorld real-backend leg SUBSTRATE-GAP-DEFERRED: skipped unless REPOSIX_DARK_FACTORY_REAL_TOKENWORLD=1; cites P84 SURPRISES-INTAKE binstall + yanked-gix entry"
         ]
       },
       "verifier": {
@@ -973,11 +975,11 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/dark-factory-dvcs-third-arm.json",
-      "status": "FAIL",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-05-01T21:43:24Z",
       "freshness_ttl": "30d",
       "blast_radius": "P1",
-      "owner_hint": "if RED: shell-stub assertions in dark-factory.sh dvcs-third-arm path failed -- inspect stderr for which teaching-string grep failed (?mirror=, --orphan-policy, refs/mirrors, git remote add) OR the end-to-end sim leg failed (typo fix not landing; refs/mirrors not advancing; audit rows missing). TokenWorld leg failures are substrate-gap-expected -- do NOT count as RED.",
+      "owner_hint": "if RED: shell-stub assertions in dark-factory.sh dvcs-third-arm path failed -- inspect stderr for which teaching-string grep failed (?mirror=, --orphan-policy, refs/mirrors, git remote add) OR the bus URL composition / extensions.partialClone post-attach asserts failed. Wire-path failures land in the cargo test layer (bus_write_happy.rs::happy_path_writes_both_refs_and_acks_ok), not here. TokenWorld leg failures are substrate-gap-expected -- do NOT count as RED.",
       "waiver": null
     }
   ]

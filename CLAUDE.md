@@ -193,7 +193,8 @@ gh api repos/reubenjohn/reposix-tokenworld-mirror/dispatches \
 bash scripts/webhook-latency-measure.sh                    # owner-runnable n=10 real-TokenWorld latency measurement (gated on v0.13.x release with working binstall — see SURPRISES-INTAKE)
 
 # Dark-factory regression (proves agent UX is pure git, zero in-context learning)
-bash scripts/dark-factory-test.sh sim                     # local + CI
+bash scripts/dark-factory-test.sh sim                          # v0.9.0 arm — init + partial-clone + helper teaching strings (local + CI)
+bash quality/gates/agent-ux/dark-factory.sh dvcs-third-arm     # v0.13.0 P86 arm — vanilla-clone + reposix attach + bus URL composition + cache audit (local + CI)
 
 # Testing against real backends — see docs/reference/testing-targets.md for env-var setup.
 # Confluence — TokenWorld space (safe to mutate)
@@ -346,7 +347,7 @@ Working on a quality-gates task? Read `quality/PROTOCOL.md` first.
 | docs-repro | snippet extract, container rehearse, tutorial replay | `quality/gates/docs-repro/` |
 | release | gh assets present, brew formula current, crates.io max version, installer bytes | `quality/gates/release/` |
 | structure | freshness invariants, banned words, top-level scope | `quality/gates/structure/` |
-| agent-ux | dark-factory regression | `quality/gates/agent-ux/` |
+| agent-ux | dark-factory regression (sim arm + DVCS third arm) + reposix-attach + bus URL prechecks + webhook YAML | `quality/gates/agent-ux/` |
 | perf | latency, token economy | `quality/gates/perf/` |
 | security | allowlist enforcement, audit immutability | `quality/gates/security/` |
 
