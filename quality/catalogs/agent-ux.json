@@ -759,8 +759,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/webhook-trigger-dispatch.json",
-      "status": "FAIL",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-05-01T16:48:03Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: workflow YAML drifted between template and live copy; or one copy missing; or YAML structure regressed (binstall name, client_payload reference, missing fetch-depth); inspect verifier output for which structural grep failed",
@@ -794,8 +794,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/webhook-cron-fallback.json",
-      "status": "FAIL",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-05-01T16:48:03Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: cron expression was templated with ${{ vars.* }} (Pitfall 3) OR fetch-depth was dropped OR concurrency block was edited away or has wrong cancellation semantic",
@@ -828,8 +828,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/webhook-force-with-lease-race.json",
-      "status": "FAIL",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-05-01T16:48:04Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: lease-push semantics regressed (template YAML's lease expression edited away or lease SHA composition changed); inspect harness output for which step failed (seed, fetch, bus push, lease push, untouched assertion)",
@@ -862,8 +862,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/webhook-first-run-empty-mirror.json",
-      "status": "FAIL",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-05-01T16:48:04Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: the first-run predicate `git show-ref --verify --quiet refs/remotes/mirror/main` regressed in the YAML; OR the plain-push fallback branch was edited away; inspect harness output for which sub-case failed",
@@ -895,8 +895,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/webhook-backends-without-webhooks.json",
-      "status": "FAIL",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-05-01T16:48:04Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: the workflow's `on:` block restructured such that removing repository_dispatch leaves it triggerless; restore at least schedule + workflow_dispatch as fallback triggers",
@@ -928,12 +928,12 @@
         "timeout_s": 30,
         "container": null
       },
-      "artifact": "quality/reports/verifications/perf/webhook-latency.json",
-      "status": "FAIL",
-      "last_verified": null,
+      "artifact": "quality/reports/verifications/agent-ux/webhook-latency-floor.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T16:48:13Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: latency artifact missing (T05 didn't ship) OR p95 regressed > 120s (substrate bug — investigate cron firing, binstall regression, cache build failure)",
+      "owner_hint": "if RED: latency artifact (quality/reports/verifications/perf/webhook-latency.json) missing or p95 > 120s; the catalog row's artifact field points at the runner's per-run metadata file (separate from the asset the verifier reads)",
       "waiver": null
     }
   ]
