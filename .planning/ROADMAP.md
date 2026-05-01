@@ -320,14 +320,9 @@ holds ONLY the active milestone (currently v0.12.0) + this index.
 - [ ] Distinguish `TIMEOUT` (preserve last semantic verdict, surface as PARTIAL?) from `FAIL` (asserts truly failed)
 - [ ] Backfill any rows currently FAIL-by-timeout
 
-### Phase 999.4: Autonomous-run push cadence (BACKLOG / DECISION)
+### Phase 999.4: Autonomous-run push cadence — RESOLVED 2026-04-30
 
-**Goal:** Decide and codify how often autonomous-run mode pushes to origin
-**Source:** 2026-04-30 session — v0.12.1 autonomous-run accumulated 115 unpushed commits. Pre-commit fmt now mitigates the worst case (drift compounding), but the broader feedback-loop delay (CI signal arrives at session-end) violates global OP #1 ("verify against reality"). Possible cadences: per-phase, per-N-commits, session-end.
-**Plans:**
-- [ ] Decide: per-phase / per-N / session-end (CLAUDE.md update)
-- [ ] If per-phase: ensure phase-close hooks include `git push` (and that pre-push gate passing is the close criterion)
-- [ ] Document tradeoff in CLAUDE.md `Quality Gates` section
+**Resolution:** Per-phase push. Codified in `CLAUDE.md` § "GSD workflow" → "Push cadence — per-phase" (this commit). Phase-close subagent issues `git push origin main` BEFORE verifier dispatch; pre-push gate-passing is part of the close criterion. Pre-commit fmt hook (a25f6ff) stays on as secondary safety net. Decision made at v0.13.0 kickoff per `.planning/research/v0.13.0-dvcs/kickoff-recommendations.md` rec #3.
 
 ### Phase 999.5: `docs/reference/crates.md` — zero claim-to-test coverage (BACKLOG)
 

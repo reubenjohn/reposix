@@ -127,7 +127,67 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 | Skip GSD discuss step | User instruction (~12:55 AM): "do all the gsd planning, exec, review, etc, just without the discuss steps" | Validated |
 | Lethal-trifecta cuts are first-class requirements, not afterthoughts | Threat-model subagent flagged egress + bulk-delete + tainted typing as ship-blockers; safer to bake in than retrofit | Validated |
 
-## Current Milestone: v0.12.0 — Quality Gates
+## Current Milestone: v0.13.0 — DVCS over REST
+
+**Goal:** Shift the project thesis from "VCS over REST" (one developer, one backend) to "DVCS over REST" — the SoT (e.g. confluence) remains authoritative, but a plain-git mirror on GitHub becomes the universal-read surface for everyone else. Devs `git clone git@github.com:org/repo.git` with vanilla git (zero reposix install), get all markdown, edit, commit. Install reposix only when they want to write back; `reposix attach` reconciles their existing checkout against the SoT, then `git push` via a bus remote fans out atomically to confluence (SoT-first) and the GH mirror. The litmus test: a vanilla-git clone, attach, edit, push round-trip + a webhook-driven mirror catch-up after a browser-side confluence edit, with conflict detection in both directions.
+
+**Mental model.** Three roles: SoT-holder (reposix-equipped, writes via bus); mirror-only consumer (vanilla git, read-only); round-tripper (reposix-equipped after `attach`, writes via bus). Bus remote: precheck-then-SoT-first-write — cheap network checks (`ls-remote` mirror, `list_changed_since` on SoT) bail before reading stdin; on success, REST-write to SoT then `git push` to mirror; mirror-write failure leaves "mirror lag" recoverable on next push, not data loss. Mirror-lag observability via plain-git refs (`refs/mirrors/confluence-head`, `refs/mirrors/confluence-synced-at`) — vanilla `git fetch` brings them along; `git log` shows staleness.
+
+**Target features:**
+- **`reposix attach <backend>::<project>`** — bootstrap a working tree NOT created by `reposix init`; reconcile cache OIDs against current HEAD by `id`-in-frontmatter; reject re-attach with different SoT (multi-SoT is v0.14.0); idempotent re-attach against same SoT.
+- **Bus remote** — `reposix::<sot-spec>?mirror=<mirror-url>` URL scheme; precheck + SoT-first-write algorithm with `list_changed_since`-based conflict detection; PUSH-only (read goes to SoT directly).
+- **Mirror-lag refs** — `refs/mirrors/confluence-head` (SoT SHA at last sync) + `refs/mirrors/confluence-synced-at` (annotated tag with timestamp); written by webhook sync AND bus push; bus-remote reject messages cite them in hints.
+- **Webhook-driven mirror sync** — reference GitHub Action workflow at `.github/workflows/reposix-mirror-sync.yml` shipping with `docs/guides/dvcs-mirror-setup.md`; `repository_dispatch` trigger from confluence webhook + cron safety net; `--force-with-lease` race protection against concurrent bus pushes.
+- **L1 perf migration** — replace today's unconditional `list_records` walk in `handle_export` with `list_changed_since`-based conflict detection (single REST call on success path); add `reposix sync --reconcile` escape hatch for cache-desync recovery. L2/L3 hardening defer to v0.14.0.
+- **DVCS docs** — `docs/concepts/dvcs-topology.md` (three roles + diagram + when to choose each pattern) + `docs/guides/dvcs-mirror-setup.md` (webhook + Action setup) + troubleshooting matrix entries; cold-reader pass via `doc-clarity-review` against fresh reader who has read only `docs/index.md` + `docs/concepts/mental-model-in-60-seconds.md`.
+- **Dark-factory regression — third arm** — extend `scripts/dark-factory-test.sh` so a fresh subprocess agent given only the GH mirror URL completes vanilla-clone + `reposix attach` + bus-push end-to-end with zero in-context learning beyond what the helper's stderr teaches.
+
+**Pre-DVCS hygiene (P0):**
+- **Bump `gix` off yanked `=0.82.0`** (closes #29 + #30; `gix-actor` 0.40.1 also yanked) — the `=`-pin is load-bearing per Tech stack.
+- **Land 3 WAIVED structure-row verifier scripts** — `no-loose-top-level-planning-audits`, `no-pre-pivot-doc-stubs`, `repo-org-audit-artifact-present` (waivers expire 2026-05-15).
+- **POC** — throwaway end-to-end demo in `research/v0.13.0-dvcs/poc/` BEFORE Phase 1 PLAN.md drafted; ~1 day budget; surfaces algorithm-shape decisions cheaply (v0.9.0 precedent).
+
+**Non-negotiable framing principles** (carried from project CLAUDE.md Operating Principles):
+- **OP-1 Simulator-first.** All v0.13.0 phases run end-to-end against the simulator. Two simulator instances in one process serve as "confluence-shaped SoT" + "GitHub-shaped mirror" for tests. Real-backend tests (TokenWorld + reubenjohn/reposix) gate the milestone close, not individual phase closes.
+- **OP-2 Tainted-by-default.** Mirror writes carry tainted bytes from the SoT. The GH mirror's frontmatter must preserve `Tainted<T>` semantics — a downstream agent reading from the mirror gets the same trifecta protection as one reading SoT directly. The `attach` cache marks all materialized blobs as tainted.
+- **OP-3 Audit log non-optional.** Every bus-remote push writes audit rows to BOTH tables — cache audit (helper RPC turn) + backend audit (SoT REST mutation). The mirror push writes a cache-audit row noting "mirror lag now zero" or "mirror lag now N." Webhook-driven syncs write cache-audit rows too.
+- **OP-7 Verifier subagent dispatch on every phase close.** Per `quality/PROTOCOL.md`. The DVCS round-trip test is a catalog row in dimension `agent-ux`, kind `subagent-graded`, cadence `pre-pr`.
+- **OP-8 +2 phase practice.** v0.13.0 reserves last 2 phases for surprises absorption + good-to-haves polish. The DVCS scope is large enough that something will surface; do not omit the +2 reservation.
+- **Per-phase push cadence (codified 2026-04-30).** Every phase closes with `git push origin main` BEFORE verifier-subagent dispatch. Pre-push gate-passing is part of phase-close criterion. Closes backlog 999.4.
+
+**Source-of-truth handover bundle (read these before planning Phase 1):**
+- `.planning/research/v0.13.0-dvcs/vision-and-mental-model.md` (the thesis + success gates)
+- `.planning/research/v0.13.0-dvcs/architecture-sketch.md` (technical design + open questions)
+- `.planning/research/v0.13.0-dvcs/kickoff-recommendations.md` (pre-kickoff readiness moves)
+- `.planning/research/v0.13.0-dvcs/decisions.md` (ratified open-question decisions)
+- `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md` (carry-forward items + P0 hygiene)
+- `.planning/research/v0.14.0-observability-and-multi-repo/vision-and-mental-model.md` (so the v0.13.0 ROADMAP knows what NOT to absorb when surprises surface)
+
+**Carry-forward (rolled into v0.13.0 phases):**
+- `MULTI-SOURCE-WATCH-01` from v0.12.1 P75 — walker hashes every source on `Source::Multi` rows.
+- `GIX-YANKED-PIN-01` (P0 hygiene) — bump gix off yanked baseline.
+- `WAIVED-STRUCTURE-ROWS-03` (P0/P1 hygiene) — 3 verifier scripts before waiver expires 2026-05-15.
+- `POC-DVCS-01` (pre-Phase-1) — end-to-end exploration in `research/v0.13.0-dvcs/poc/`.
+
+**Explicitly NOT in scope (deferred to v0.14.0):**
+- OTel / `reposix tail` / multi-project helper (operational maturity for an existing thesis).
+- Origin-of-truth frontmatter enforcement (only matters with multi-issues-backend bus; v0.13.0 is 1+1).
+- L2/L3 cache-desync hardening (background reconcile, transactional cache writes).
+- RETROSPECTIVE.md backfill for v0.9.0 → v0.12.0.
+
+---
+
+## Previously Validated Milestone: v0.12.x — Quality Gates + Carry-forwards (SHIPPED 2026-04-30)
+
+v0.12.0 (Phases 56–65, SHIPPED 2026-04-28) replaced ad-hoc quality scripts with the dimension-tagged Quality Gates framework: `quality/` directory layout, unified catalog schema (`id`, `dimension`, `cadence`, `kind`, `verifier`, `artifact`, `status`, `freshness_ttl`, `waiver`, `blast_radius`, `owner_hint`), 9 dimensions homed (code, docs-alignment, docs-build, docs-repro, release, structure, agent-ux, perf, security), 6 cadences, 5 kinds. `end-state.py` migrated to a thin shim. Subjective gates skill (`reposix-quality-review`) ships with 30-day TTL freshness enforcement. Repo-org-gaps from v0.11.1 closed via structure-dim catalog rows. Catalog-first phase rule + verifier-subagent dispatch became the autonomous-mode protocol.
+
+v0.12.1 (Phases 72–77, SHIPPED 2026-04-30) drained docs-alignment carry-forward: P72 lint-config invariants (8 verifiers, 9 MISSING_TEST rows closed); P73 connector contract gaps (4 wiremock-based contract tests for GitHub/Confluence auth headers + JIRA list_records rendering boundary); P74 narrative + UX cluster (4 propose-retires + 5 hash-shape binds + linkedin prose fix); P75 bind-verb hash-overwrite fix (`Source::Single` source_hash refresh, `Source::Multi` preservation; 3 walker regression tests); P76 surprises absorption (3 LOW intake entries drained); P77 good-to-haves polish (1 XS heading rename + verifier regex narrow). Owner-TTY close-out 2026-04-30: SSH config drift fixed; 27 RETIRE_PROPOSED rows confirmed via `--i-am-human`; pre-commit fmt hook installed; v0.12.0 tag pushed; 5 backlog items filed (999.2–999.6); milestone-close verdict ratified by unbiased subagent (verdict at `quality/reports/verdicts/milestone-v0.12.1/VERDICT.md`). OP-9 milestone-close ritual added; RETROSPECTIVE.md v0.12.1 section distilled.
+
+**Carry-forward NOT closed by v0.12.x (rolling into v0.13.0):** `MULTI-SOURCE-WATCH-01` (walker watches only first source on Multi rows; path-(b) deferred). 5 backlog items filed (999.2–999.6) — push cadence resolved at v0.13.0 kickoff (RESOLVED 2026-04-30 → per-phase). RETROSPECTIVE.md backfill for v0.9.0 → v0.12.0 carries to v0.14.0.
+
+---
+
+## Previously Validated Milestone: v0.12.0 — Quality Gates (SHIPPED 2026-04-28)
 
 **Goal:** Replace ad-hoc quality scripts with a coherent, dimension-tagged Quality Gates system that prevents the silent regressions the v0.11.x cycle missed (the curl installer URL became `Not Found` after release-plz cut over to per-crate tags; the existing `end-state.py` framework caught crates.io drift but not GitHub-release-asset drift). Ship the framework so any future change to docs, code, releases, or external integrations runs against a verifier that simulates a real user — not the agent's self-report.
 

@@ -197,7 +197,14 @@ Entry points:
 
 The auto-mode bootstrap from 2026-04-13 set `mode: yolo`, `granularity: coarse`, and enabled all workflow gates (research / plan_check / verifier / nyquist / code_review). Do not silently downgrade these.
 
-## Coding conventions
+### Push cadence — per-phase (codified 2026-04-30, closes backlog 999.4)
+
+**Rule:** every phase closes with `git push origin main` BEFORE the verifier-subagent dispatch. Pre-push gate-passing is part of the phase-close criterion, not an end-of-session sweep.
+
+- **Why:** v0.12.1's autonomous run accumulated 115 unpushed commits — drift compounded invisibly until session-end (P73/P75 fmt drift sat in 7 commits before pre-push caught it). Per-phase push closes the feedback loop while phase context is still warm. DVCS phases will be longer than v0.12.1's clusters; the same +N-stack pattern would compound 5-10×.
+- **Operationally:** the executing subagent pushes inside the phase; if the gate blocks, treat it as a phase-internal failure (fix and re-push) — not a deferral. The verifier subagent grades RED if the phase shipped without the push landing.
+- **Eager-resolution carve-out:** trivial in-phase chores (single-line typo fix, comment cleanup) discovered mid-phase do not require their own push round-trip — they ride to origin with the phase's terminal push.
+- **Pre-commit fmt hook (a25f6ff)** stays on as the secondary safety net; it catches drift at commit time before the per-phase push has anything to discover.
 
 - `#![forbid(unsafe_code)]` in every crate.
 - `#![warn(clippy::pedantic)]` in every crate. Allow-list specific lints with rationale; never blanket-allow `pedantic`.
