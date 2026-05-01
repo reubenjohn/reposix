@@ -30,9 +30,10 @@ mod pktline;
 mod precheck;
 mod protocol;
 mod stateless_connect;
+mod write_loop;
 
 use crate::backend_dispatch::{instantiate, sanitize_project_for_cache};
-use crate::diff::{plan, PlanError, PlannedAction};
+use crate::diff::PlannedAction;
 use crate::fast_import::{emit_import_stream, parse_export_stream};
 use crate::protocol::Protocol;
 use crate::stateless_connect::handle_stateless_connect;
@@ -339,7 +340,6 @@ fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
     Ok(())
 }
 
-#[allow(clippy::too_many_lines)]
 fn handle_export<R: std::io::Read, W: std::io::Write>(
     state: &mut State,
     proto: &mut Protocol<R, W>,
@@ -347,8 +347,7 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
     // Lazy-open the cache for audit-row writes. Best-effort: if the cache
     // can't be opened (misconfigured cache root, permission error), log
     // a WARN and continue — the push path still works, only audit rows
-    // are dropped. Phase 35 will tighten this once the cache is part of
-    // the steady-state CLI install flow.
+    // are dropped.
     if let Err(e) = ensure_cache(state) {
         tracing::warn!("cache unavailable for push audit: {e:#}");
     }
@@ -374,234 +373,53 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
         }
     };
 
-    // L1 conflict detection (DVCS-PERF-L1-01..03). Replaces the
-    // unconditional `list_records` walk + per-record loop with a single
-    // call into the shared precheck module that both this single-backend
-    // path and the future bus handler (P82+) consume.
-    //
-    // M1 fix (narrow dependencies): pass cache/backend/project/rt
-    // explicitly rather than `&mut State` so the bus handler's
-    // `BusState { sot, mirror }` shape can call this function without
-    // conforming to the single-backend `State` layout. State.backend
-    // is `Arc<dyn BackendConnector>` per main.rs:44, so deref to
-    // `&dyn BackendConnector` via `as_ref()`.
-    let (prior, mut conflicts) = match precheck::precheck_export_against_changed_set(
+    // Apply writes via shared write_loop (T02 lift). On reject outcomes,
+    // `apply_writes` has already emitted protocol error + audit rows;
+    // we just set push_failed and return. On SotOk, we (the
+    // single-backend caller) write the synced-at ref + mirror_sync_written
+    // audit row + token-cost row + ok ack — D-01 RATIFIED.
+    let outcome = write_loop::apply_writes(
         state.cache.as_ref(),
         state.backend.as_ref(),
+        &state.backend_name,
         &state.project,
         &state.rt,
-        &parsed,
-    ) {
-        Ok(precheck::PrecheckOutcome::Conflicts(c)) => (Vec::new(), c),
-        Ok(precheck::PrecheckOutcome::Proceed { prior }) => (prior, Vec::new()),
-        Err(e) => {
-            // Map the precheck error to the existing `fail_push` shape.
-            // The precheck annotates REST call sites with
-            // `.context("backend-unreachable: ...")`, so the rendered
-            // message preserves the same diagnostic the prior code
-            // emitted at line 343.
-            return fail_push(
-                proto,
-                state,
-                "backend-unreachable",
-                &format!("L1 precheck failed: {e:#}"),
-            )
-            .map_err(Into::into);
-        }
-    };
+        proto,
+        &parsed, // borrow per B1 — apply_writes takes &ParsedExport (matches precheck/plan shape)
+    )?;
 
-    if !conflicts.is_empty() {
-        conflicts.sort_by_key(|c| c.0 .0);
-        let (first_id, local_v, backend_v, backend_ts) = &conflicts[0];
-        // Stderr diagnostic — free-form context line per CONTEXT.md
-        // §Specifics (no `reposix:` prefix; mirrors git helper convention).
-        diag(&format!(
-            "issue {} modified on backend at {} since last fetch (local base version: {}, backend version: {}). Run: git pull --rebase",
-            first_id.0,
-            backend_ts,
-            local_v,
-            backend_v,
-        ));
-        if let Some(cache) = state.cache.as_ref() {
-            cache.log_helper_push_rejected_conflict(&first_id.0.to_string(), *local_v, *backend_v);
-
-            // Mirror-lag-ref reject hint (DVCS-MIRROR-REFS-03). When
-            // refs are populated (post-first-push), name the staleness
-            // gap; when absent (first-push case), omit the hint cleanly
-            // per RESEARCH.md pitfall 7.
-            if let Ok(Some(synced_at)) = cache.read_mirror_synced_at(&state.backend_name) {
-                let ago = chrono::Utc::now().signed_duration_since(synced_at);
-                let mins = ago.num_minutes().max(0);
-                diag(&format!(
-                    "hint: your origin (GH mirror) was last synced from {sot} at {ts} ({mins} minutes ago); see refs/mirrors/{sot}-synced-at",
-                    sot = state.backend_name,
-                    ts = synced_at.to_rfc3339(),
-                ));
-                diag(&format!(
-                    "hint: run `reposix sync` to update local cache from {sot} directly, then `git rebase`",
-                    sot = state.backend_name,
-                ));
-            }
-            // None case: existing diag(...) line above is the complete
-            // diagnostic; no additional hint emitted.
-        }
-        // Canned status string per CONTEXT.md §Push-reject status string.
-        // git renders the standard "perhaps a `git pull --rebase` would
-        // help" hint when it sees this exact format.
-        proto.send_line("error refs/heads/main fetch first")?;
-        proto.send_blank()?;
-        proto.flush()?;
+    let write_loop::WriteOutcome::SotOk { sot_sha, .. } = outcome else {
         state.push_failed = true;
         return Ok(());
-    }
-
-    let actions = match plan(&prior, &parsed) {
-        Ok(a) => a,
-        Err(PlanError::BulkDeleteRefused {
-            count, limit, tag, ..
-        }) => {
-            diag(&format!(
-                "error: refusing to push (would delete {count} issues; cap is {limit}; commit message tag '{tag}' overrides)"
-            ));
-            proto.send_line("error refs/heads/main bulk-delete")?;
-            proto.send_blank()?;
-            proto.flush()?;
-            state.push_failed = true;
-            return Ok(());
-        }
-        Err(PlanError::InvalidBlob { path, source }) => {
-            diag(&format!(
-                "error: invalid issue at {path}: {source}; refusing push"
-            ));
-            proto.send_line(&format!("error refs/heads/main invalid-blob:{path}"))?;
-            proto.send_blank()?;
-            proto.flush()?;
-            state.push_failed = true;
-            return Ok(());
-        }
     };
 
-    // Capture summary for the audit row before consuming `actions`.
-    let mut touched_ids: Vec<u64> = Vec::new();
-    for action in &actions {
-        match action {
-            PlannedAction::Create(issue) => touched_ids.push(issue.id.0),
-            PlannedAction::Update { id, .. } | PlannedAction::Delete { id, .. } => {
-                touched_ids.push(id.0);
-            }
+    // Single-backend caller writes synced-at + mirror_sync_written +
+    // log_token_cost unconditionally on SotOk (D-01).
+    if let Some(cache) = state.cache.as_ref() {
+        if let Err(e) = cache.write_mirror_synced_at(&state.backend_name, chrono::Utc::now()) {
+            tracing::warn!("write_mirror_synced_at failed: {e:#}");
         }
+        // OP-3 unconditional: audit-row write fires whether or not the
+        // ref writes succeeded. Records the attempt's SHA (or empty
+        // string if SHA derivation failed in apply_writes).
+        let oid_hex = sot_sha
+            .map(|oid| oid.to_hex().to_string())
+            .unwrap_or_default();
+        cache.log_mirror_sync_written(&oid_hex, &state.backend_name);
+
+        // §3c token-cost: estimate push bytes-in by summing parsed blob
+        // payloads. Bytes-out is the single ack line.
+        let chars_in: u64 = parsed
+            .blobs
+            .values()
+            .map(|b| u64::try_from(b.len()).unwrap_or(u64::MAX))
+            .sum();
+        let chars_out: u64 = "ok refs/heads/main\n".len() as u64;
+        cache.log_token_cost(chars_in, chars_out, "push");
     }
-    touched_ids.sort_unstable();
-    let summary = touched_ids
-        .iter()
-        .map(u64::to_string)
-        .collect::<Vec<_>>()
-        .join(",");
-    let files_touched = u32::try_from(touched_ids.len()).unwrap_or(u32::MAX);
-
-    // Execute. Order = creates → updates → deletes (per diff::plan).
-    let mut any_failure = false;
-    for action in actions {
-        match execute_action(state, action) {
-            Ok(()) => {}
-            Err(e) => {
-                diag(&format!("error: {e:#}"));
-                any_failure = true;
-            }
-        }
-    }
-    if any_failure {
-        proto.send_line("error refs/heads/main some-actions-failed")?;
-        proto.send_blank()?;
-        proto.flush()?;
-        state.push_failed = true;
-    } else {
-        if let Some(cache) = state.cache.as_ref() {
-            cache.log_helper_push_accepted(files_touched, &summary);
-
-            // L1 INBOUND-SoT cursor (DVCS-PERF-L1-01). Best-effort —
-            // a write failure WARN-logs and does not poison the push
-            // ack. Self-healing on next successful push (the existing
-            // log_helper_push_accepted row is always written above,
-            // even if the cursor write fails). NOTE: this cursor is
-            // distinct from the OUTBOUND mirror-lag cursor written by
-            // the P80 block below — same direction of travel on a
-            // successful push but different storage layers (meta table
-            // vs gix refs). See `crates/reposix-remote/src/precheck.rs`
-            // module-doc for the full distinction.
-            if let Err(e) = cache.write_last_fetched_at(chrono::Utc::now()) {
-                tracing::warn!("write_last_fetched_at failed: {e:#}");
-            }
-
-            // Mirror-lag refs (DVCS-MIRROR-REFS-02). Best-effort: a
-            // ref-write failure WARN-logs and does not poison the push
-            // ack. The audit row is UNCONDITIONAL per OP-3 — written
-            // even on ref-write failure. SoT SHA is the cache's
-            // post-write synthesis-commit OID.
-            //
-            // P81 L1 perf-fix: when files_touched is 0 (no creates /
-            // updates / deletes executed), the mirror state is
-            // unchanged so we SKIP the refresh_for_mirror_head call
-            // (which internally does build_from → list_records — see
-            // the P80 cost note in this code's history). The mirror
-            // refs already reflect the prior push's tree; updating
-            // synced_at without a tree refresh is honest because no
-            // tree change occurred. Self-healing on next non-trivial
-            // push: refresh_for_mirror_head fires when files_touched
-            // > 0. This drops the perf test's no-op-push list_records
-            // count from 1 → 0 and aligns with the L1 contract that
-            // list_records is replaced on the hot path.
-            //
-            // L2/L3 cache-desync hardening (e.g. running build_from
-            // unconditionally for desync detection) defers to v0.14.0
-            // per architecture-sketch.md § Performance subtlety.
-            let sot_sha_opt = if files_touched > 0 {
-                match state.rt.block_on(cache.refresh_for_mirror_head()) {
-                    Ok(oid) => Some(oid),
-                    Err(e) => {
-                        tracing::warn!("mirror-head SHA derivation failed: {e:#}");
-                        None
-                    }
-                }
-            } else {
-                None
-            };
-            if let Some(sha) = sot_sha_opt {
-                if let Err(e) = cache.write_mirror_head(&state.backend_name, sha) {
-                    tracing::warn!("write_mirror_head failed: {e:#}");
-                }
-            }
-            if let Err(e) = cache.write_mirror_synced_at(&state.backend_name, chrono::Utc::now()) {
-                tracing::warn!("write_mirror_synced_at failed: {e:#}");
-            }
-            // OP-3 unconditional: audit-row write fires whether or not
-            // the ref writes succeeded. Records the attempt's SHA (or
-            // empty string if SHA derivation failed). MUST remain
-            // unconditional even if ref writes are upgraded to
-            // propagate errors in a future refactor.
-            let oid_hex = sot_sha_opt
-                .map(|oid| oid.to_hex().to_string())
-                .unwrap_or_default();
-            cache.log_mirror_sync_written(&oid_hex, &state.backend_name);
-
-            // §3c token-cost: estimate the push bytes-in by summing the
-            // parsed blob payloads (the bytes the agent actually emitted
-            // through fast-export). Bytes-out for push is small (a single
-            // `ok` line) so we approximate it as the line itself. Honest:
-            // chars/4 over-estimates for binary packfile content, but
-            // push payloads are markdown frontmatter — predominantly text.
-            let chars_in: u64 = parsed
-                .blobs
-                .values()
-                .map(|b| u64::try_from(b.len()).unwrap_or(u64::MAX))
-                .sum();
-            let chars_out: u64 = "ok refs/heads/main\n".len() as u64;
-            cache.log_token_cost(chars_in, chars_out, "push");
-        }
-        proto.send_line("ok refs/heads/main")?;
-        proto.send_blank()?;
-        proto.flush()?;
-    }
+    proto.send_line("ok refs/heads/main")?;
+    proto.send_blank()?;
+    proto.flush()?;
     Ok(())
 }
 
@@ -616,7 +434,26 @@ pub(crate) fn issue_id_from_path(path: &str) -> Option<u64> {
     stem.parse::<u64>().ok()
 }
 
-fn execute_action(state: &mut State, action: PlannedAction) -> Result<()> {
+/// Apply a single [`PlannedAction`] to the backend.
+///
+/// Narrow-deps signature (P83-01 T02 refactor): takes `(backend,
+/// project, rt, cache, action)` rather than `&mut State` so
+/// `crate::write_loop::apply_writes` (which has no `State` access)
+/// can call it directly.
+///
+/// `pub(crate)` so the `write_loop` module can call this via
+/// `crate::execute_action`.
+///
+/// # Errors
+/// Returns `Err` from any backend REST call (`create_record`,
+/// `update_record`, `delete_or_close`).
+pub(crate) fn execute_action(
+    backend: &dyn BackendConnector,
+    project: &str,
+    rt: &Runtime,
+    cache: Option<&Cache>,
+    action: PlannedAction,
+) -> Result<()> {
     match action {
         PlannedAction::Create(issue) => {
             let now = issue.created_at;
@@ -627,9 +464,8 @@ fn execute_action(state: &mut State, action: PlannedAction) -> Result<()> {
                 version: 0,
             };
             let untainted = sanitize(Tainted::new(issue), meta);
-            let _new = state
-                .rt
-                .block_on(state.backend.create_record(&state.project, untainted))
+            let _new = rt
+                .block_on(backend.create_record(project, untainted))
                 .context("create issue")?;
             Ok(())
         }
@@ -644,7 +480,7 @@ fn execute_action(state: &mut State, action: PlannedAction) -> Result<()> {
             // boundary without re-deriving it from the diff. `version` is
             // the dominant server-controlled field; the row is per-issue
             // (not per-field).
-            if let Some(cache) = state.cache.as_ref() {
+            if let Some(cache) = cache {
                 cache.log_helper_push_sanitized_field(&id.0.to_string(), "version");
             }
             let meta = ServerMetadata {
@@ -654,25 +490,12 @@ fn execute_action(state: &mut State, action: PlannedAction) -> Result<()> {
                 version: prior_version,
             };
             let untainted = sanitize(Tainted::new(new), meta);
-            state
-                .rt
-                .block_on(state.backend.update_record(
-                    &state.project,
-                    id,
-                    untainted,
-                    Some(prior_version),
-                ))
+            rt.block_on(backend.update_record(project, id, untainted, Some(prior_version)))
                 .with_context(|| format!("patch issue {}", id.0))?;
             Ok(())
         }
         PlannedAction::Delete { id, .. } => {
-            state
-                .rt
-                .block_on(state.backend.delete_or_close(
-                    &state.project,
-                    id,
-                    DeleteReason::Abandoned,
-                ))
+            rt.block_on(backend.delete_or_close(project, id, DeleteReason::Abandoned))
                 .with_context(|| format!("delete issue {}", id.0))?;
             Ok(())
         }
@@ -682,14 +505,18 @@ fn execute_action(state: &mut State, action: PlannedAction) -> Result<()> {
 /// Adapter so `BufReader` can pull from the same underlying stdin we own
 /// inside `Protocol`. We provide a one-line-at-a-time bridge — the
 /// `parse_export_stream` parser uses `read_line` and `read_exact` only.
-struct ProtoReader<'a, R: std::io::Read, W: std::io::Write> {
+///
+/// `pub(crate)` (and `pub(crate) fn new`) so the sibling
+/// [`crate::bus_handler`] module can construct one in the bus write
+/// fan-out path (T04) — same stdin parser substrate as `handle_export`.
+pub(crate) struct ProtoReader<'a, R: std::io::Read, W: std::io::Write> {
     proto: &'a mut Protocol<R, W>,
     buf: Vec<u8>,
     pos: usize,
 }
 
 impl<'a, R: std::io::Read, W: std::io::Write> ProtoReader<'a, R, W> {
-    fn new(proto: &'a mut Protocol<R, W>) -> Self {
+    pub(crate) fn new(proto: &'a mut Protocol<R, W>) -> Self {
         Self {
             proto,
             buf: Vec::new(),
