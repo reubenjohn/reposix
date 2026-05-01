@@ -147,6 +147,10 @@ self-defeating: people learn to bypass.
 | post-release  | n/a      | alerting cadence; not blocking                                             |
 | on-demand     | n/a      | manual / subagent invocation                                               |
 
+Cadence-specific runner semantics (P61 SUBJ-03):
+- **pre-release** is the cadence where freshness-TTL enforcement materially gates a release. STALE subagent-graded rows (kind=subagent-graded with expired freshness_ttl) flip to NOT-VERIFIED; `compute_exit_code` treats P0+P1 NOT-VERIFIED as RED. The pre-release workflow at `.github/workflows/quality-pre-release.yml` fails the release with a hint pointing the maintainer at the dispatcher (`bash .claude/skills/reposix-quality-review/dispatch.sh --all-stale --force`). Auto-dispatch from CI (would require Anthropic API auth on GH Actions runners) is a v0.12.1 carry-forward via MIGRATE-03.
+- **weekly** STALE rows raise visibility but P2 rows do not block exit, per `compute_exit_code`'s P0+P1-only gating.
+
 If any P0+P1 row is RED: do NOT claim done. Either fix or file a waiver (next step).
 
 ### Step 7 — Dispatch unbiased verifier subagent

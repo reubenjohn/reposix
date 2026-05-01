@@ -1,35 +1,21 @@
 #!/usr/bin/env python3
 """Quality Gates runner — single entry point for cadence-tagged gates.
 
-Per .planning/research/v0.12.0/naming-and-architecture.md § runner-contract.
-Stdlib only. Cross-platform (linux + macOS).
-Anti-bloat: this file does not grow beyond the runner contract. Per-dimension
+Contract: .planning/research/v0.12.0/naming-and-architecture.md § runner-contract.
+Cadence semantics + cadence-specific freshness rules: quality/PROTOCOL.md.
+Stdlib only; cross-platform (linux + macOS). Anti-bloat: per-dimension
 verifiers live under quality/gates/<dim>/.
 
-Each catalog row carries `cadences: list[str]` — a single gate may fire at
-multiple cadences (e.g., `["pre-commit", "pre-push", "pre-pr"]` so a fast
-mechanical check runs at every relevant trigger). The 7 cadences are:
-pre-commit, pre-push, pre-pr, weekly, pre-release, post-release, on-demand.
+Each catalog row carries `cadences: list[str]` — one gate may fire at
+multiple cadences. The 7 cadences are pre-commit, pre-push, pre-pr,
+weekly, pre-release, post-release, on-demand.
 
 Usage:
-  python3 quality/runners/run.py --cadence <pre-commit|pre-push|pre-pr|weekly|pre-release|post-release|on-demand>
+  python3 quality/runners/run.py --cadence <cadence>
 
 Exit codes:
   0 — every P0+P1 row in scope is PASS or WAIVED.
   1 — any P0+P1 row in scope is FAIL/PARTIAL/NOT-VERIFIED.
-
-Cadence-specific notes (P61 SUBJ-03):
-  - pre-release: this is the cadence where freshness-TTL enforcement
-    materially gates a release. STALE subagent-graded rows (kind=
-    subagent-graded with expired freshness_ttl) flip to NOT-VERIFIED;
-    compute_exit_code treats P0+P1 NOT-VERIFIED as RED. The pre-release
-    workflow at .github/workflows/quality-pre-release.yml fails the
-    release with a hint pointing the maintainer at the dispatcher
-    (`bash .claude/skills/reposix-quality-review/dispatch.sh --all-stale
-    --force`). Auto-dispatch from CI (would require Anthropic API auth
-    on GH Actions runners) is a v0.12.1 carry-forward via MIGRATE-03.
-  - weekly: STALE rows raise visibility but P2 rows do not block exit
-    per compute_exit_code's existing P0+P1-only gating.
 """
 
 from __future__ import annotations
@@ -167,13 +153,8 @@ def write_artifact(path: Path, data: dict) -> None:
 def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
     """Invoke verifier (or short-circuit), write artifact, return (updated row, elapsed_s).
 
-    Status mutation policy: the runner sets the in-memory `status` and
-    `last_verified` for use by the immediate caller (verdict generation).
-    Whether those changes get persisted back to the catalog file is
-    decided by `catalog_dirty()` in `main()` — only meaningful status
-    flips persist; per-run timestamp churn lives in the artifact, not
-    the catalog. This keeps `git status` clean across repeated pre-push
-    runs that just re-confirm an already-known status.
+    Sets in-memory `status` + `last_verified` for the caller; persistence
+    back to the catalog is gated by `catalog_dirty()` in `main()`.
     """
     started = time.monotonic()
     artifact_path = repo_root / row["artifact"] if row.get("artifact") else None
@@ -370,18 +351,13 @@ def main() -> int:
                 extra = f"waived until {w.get('until', '?')} — {w.get('reason', '')[:60]}"
             print_row_summary(updated, elapsed, extra)
             all_rows.append(updated)
-        # For rows whose status did NOT change, roll back last_verified to its
-        # original value. The runner mutated it for in-memory display; the
-        # catalog should NOT persist per-run timestamp churn — it would leave
-        # a dirty file across every pre-push run.
+        # Roll back last_verified for rows whose status did NOT change;
+        # persist only on real status flips. Per-run timestamp churn
+        # belongs in the artifact, not the catalog (see catalog_dirty).
         for row in data["rows"]:
             rid = row.get("id")
             if rid in orig_status_by_id and row.get("status") == orig_status_by_id[rid]:
                 row["last_verified"] = orig_lv_by_id[rid]
-        # Persist mutations back to catalog ONLY if any row's status actually
-        # changed. Timestamp-only updates belong in the artifact, not the
-        # committed catalog — otherwise every pre-push run leaves a dirty
-        # catalog file with formatter noise (em-dashes, array layout).
         if catalog_dirty(original, data):
             save_catalog(cat_path, data)
 
