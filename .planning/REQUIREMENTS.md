@@ -1,214 +1,160 @@
-# Requirements — Active milestone: v0.12.0 Quality Gates
+# Requirements — Active milestone: v0.13.0 DVCS over REST
 
-**Active milestone:** v0.12.0 Quality Gates (planning_started 2026-04-27).
+**Active milestone:** v0.13.0 DVCS over REST (planning_started 2026-04-30).
 
-**Previously validated milestones — see per-milestone REQUIREMENTS.md (extracted 2026-04-27 to keep this file scoped to active work):**
-- v0.11.x Polish & Reproducibility — `.planning/milestones/v0.11.0-phases/REQUIREMENTS.md` (v0.11.0 SHIPPED 2026-04-25; v0.11.1 + v0.11.2 polish passes SHIPPED 2026-04-26 / 2026-04-27 via release-plz). All eight crates published to crates.io at v0.11.2. **Carry-forward NOT closed by v0.11.x:** the curl/PowerShell installer URLs broke on every release after v0.11.0 because `release.yml` tag glob `v*` does not match release-plz's per-crate `reposix-cli-v*` pattern. Diagnosed in `.planning/research/v0.12.0/install-regression-diagnosis.md`; fixed by RELEASE-01 in P56.
+**Previously validated milestones — see per-milestone REQUIREMENTS.md:**
+- v0.12.x Quality Gates + Carry-forwards — `.planning/milestones/v0.12.0-phases/REQUIREMENTS.md` (v0.12.0 SHIPPED 2026-04-28, Phases 56–65) + `.planning/milestones/v0.12.1-phases/REQUIREMENTS.md` (v0.12.1 SHIPPED 2026-04-30, Phases 72–77).
+- v0.11.x Polish & Reproducibility — `.planning/milestones/v0.11.0-phases/REQUIREMENTS.md` (v0.11.0 SHIPPED 2026-04-25; v0.11.1 + v0.11.2 polish passes SHIPPED 2026-04-26 / 2026-04-27).
 - v0.10.0 Docs & Narrative Shine — `.planning/milestones/v0.10.0-phases/REQUIREMENTS.md` (SHIPPED 2026-04-25, Phases 40–45).
-- v0.9.0 Architecture Pivot — `.planning/milestones/v0.9.0-phases/REQUIREMENTS.md` (SHIPPED 2026-04-24, Phases 31–36; ARCH-01..19 + the v1 cache/transport/sync requirements that were the v0.9.0 pivot detail).
-- v0.8.0 and earlier — see `.planning/milestones/v0.X.0-phases/ARCHIVE.md` per the POLISH2-21 condensation (8 archives, v0.1.0 → v0.8.0).
+- v0.9.0 Architecture Pivot — `.planning/milestones/v0.9.0-phases/REQUIREMENTS.md` (SHIPPED 2026-04-24, Phases 31–36; ARCH-01..19).
+- v0.8.0 and earlier — see `.planning/milestones/v0.X.0-phases/ARCHIVE.md`.
 
-> **Convention.** Per CLAUDE.md §0.5 / Workspace layout, each milestone's REQUIREMENTS.md lives inside its `*-phases/` directory once shipped. The top-level file holds ONLY the active milestone + this index. v0.12.0 STRUCT-* gates enforce this going forward.
+> **Convention.** Per CLAUDE.md §0.5 / Workspace layout, each milestone's REQUIREMENTS.md lives inside its `*-phases/` directory once shipped. The top-level file holds ONLY the active milestone + this index. Enforced by `quality/gates/structure/top-level-requirements-roadmap-scope.sh` (QG-08, shipped P57).
 
 ---
 
-## v0.12.0 Requirements — Quality Gates
+## v0.13.0 Requirements — DVCS over REST
 
-**Milestone goal:** Replace ad-hoc quality scripts (`scripts/check-*.sh`, the conflated `scripts/end-state.py`, the not-in-CI `scripts/repro-quickstart.sh`) with a coherent **Quality Gates** system that prevents the silent regressions the v0.11.x cycle missed. The §0.8 SESSION-END-STATE framework caught what it was designed for (file-shape invariants, crates.io max_version) but missed the GitHub-release-asset drift that broke the curl-installer URL for two releases. v0.12.0 generalizes §0.8 into a dimension-tagged framework where every regression class has a home, every gate has a verifier, every verifier produces an artifact, and every artifact is graded by an unbiased subagent — not the executing agent's word.
+**Milestone goal:** Shift the project thesis from "VCS over REST" (one developer, one backend) to "DVCS over REST" — confluence (or any one issues backend) remains the source of truth, but a plain-git mirror on GitHub becomes the universal-read surface for everyone else. Devs `git clone git@github.com:org/repo.git` with **vanilla git, no reposix install**, get all markdown, edit, commit. Install reposix only when they want to write back; `reposix attach` reconciles their existing checkout against the SoT, then `git push` via a bus remote fans out atomically to confluence (SoT-first) and the GH mirror.
 
-**Mental model.** Each gate answers three orthogonal questions:
-- **Dimension** (what is checked): code, docs-build, docs-repro, release, structure, perf, security, agent-ux.
-- **Cadence** (when it runs): pre-push, pre-pr, weekly, pre-release, post-release, on-demand. Note: weekly cron not nightly — explicit owner decision (cost-conscious).
-- **Kind** (how it's verified): mechanical, container, asset-exists, subagent-graded, manual.
+The litmus test: the dual-side round-trip in `vision-and-mental-model.md` § "The thing we are building" works end-to-end with no manual sync — vanilla-git clone → attach → edit → bus-push → webhook-driven mirror catch-up after a browser-side confluence edit, with conflict detection in both directions.
 
-Catalogs are the data; verifiers are the code; reports are the artifacts; runners compose by tag. Adding a new gate is one catalog row + one verifier — no bespoke script, no new pre-push wiring.
+**Mental model.** Three roles in a v0.13.0 deployment:
+- **SoT-holder** (Dev A) — reposix-equipped, attached via `init`. Reads from confluence (cache-backed). Writes via bus remote.
+- **Mirror-only consumer** (Dev B before installing reposix) — vanilla git only. Reads from GH mirror. Cannot write back.
+- **Round-tripper** (Dev B after `reposix attach`) — reposix-equipped, attached after the fact. Fast clones from GH mirror; ground-truth reads from confluence; writes via bus remote.
 
-**Source-of-truth handover bundle (read these BEFORE planning P56):**
-- `.planning/research/v0.12.0/vision-and-mental-model.md` — the dimension/cadence/kind taxonomy, why each is needed, the regression classes the v0.11.x framework missed.
-- `.planning/research/v0.12.0/naming-and-architecture.md` — `quality/{gates,catalogs,reports,runners}/` layout; the unified catalog schema; runner/verdict design; what stays in `scripts/` vs migrates to `quality/`.
-- `.planning/research/v0.12.0/roadmap-and-rationale.md` — phase-by-phase rationale, dependencies, pivot rules, blast-radius analysis.
-- `.planning/research/v0.12.0/autonomous-execution-protocol.md` — `quality/PROTOCOL.md` design, catalog-first phase rule, waiver protocol with TTL, SURPRISES.md journal, mandatory verifier-subagent grading per phase close, **mandatory CLAUDE.md update per phase**.
-- `.planning/research/v0.12.0/install-regression-diagnosis.md` — root cause + fix options for the curl-installer regression (RELEASE-01).
-- `.planning/research/v0.12.0/decisions-log.md` — owner Q&A from the planning session, decisions taken with rationale.
-- `.planning/research/v0.12.0/open-questions-and-deferrals.md` — what is explicitly NOT in v0.12.0 scope and why.
-- `.planning/docs_reproducible_catalog.json` — DRAFT seed for the docs-repro catalog; consumed by P59.
+Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mirror, `list_changed_since` on SoT) bail before reading stdin; on success, REST-write to SoT then `git push` to mirror; mirror-write failure leaves "mirror lag" recoverable on next push, not data loss. Mirror-lag observability via plain-git refs (`refs/mirrors/confluence-head`, `refs/mirrors/confluence-synced-at`) — vanilla `git fetch` brings them along; `git log` shows staleness.
+
+**Source-of-truth handover bundle (read these BEFORE planning Phase 1):**
+- `.planning/research/v0.13.0-dvcs/vision-and-mental-model.md` — the thesis + success gates + risks.
+- `.planning/research/v0.13.0-dvcs/architecture-sketch.md` — technical design + open questions; performance subtlety on `list_records` walk.
+- `.planning/research/v0.13.0-dvcs/kickoff-recommendations.md` — pre-kickoff readiness moves.
+- `.planning/research/v0.13.0-dvcs/decisions.md` — 15 architecture-sketch open questions ratified 2026-04-30.
+- `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md` — `MULTI-SOURCE-WATCH-01`, `GIX-YANKED-PIN-01`, `WAIVED-STRUCTURE-ROWS-03`, `POC-DVCS-01`.
+- `.planning/research/v0.14.0-observability-and-multi-repo/vision-and-mental-model.md` — the next milestone's pre-roadmap scope; tells the v0.13.0 ROADMAP what NOT to absorb.
 
 **Operating-principle hooks (non-negotiable, per project CLAUDE.md):**
-- **Self-improving infrastructure (OP-4).** The Quality Gates system IS this principle made structural. Every owner-caught miss now has a routing rule: "fix the issue, update CLAUDE.md, AND tag the dimension" — the meta-rule extension that turns ad-hoc bash into a committed gate.
-- **Close the feedback loop (OP-1).** Container-rehearsal at post-release cadence is OP-1 for install paths: don't trust that release.yml shipped the asset; fetch the URL from a fresh container and prove the binary lands on PATH.
-- **Aggressive subagent delegation (OP-2).** Every phase close MUST dispatch an unbiased verifier subagent that grades the catalog rows against artifacts with zero session context.
-- **Reversibility enables boldness (OP-5).** Parallel migration (old + new system run side-by-side) until the new system shows parity; only then hard-cut. Pivots are documented in `quality/SURPRISES.md`, not lost.
-- **Ground truth obsession (OP-6).** Catalog-first phase rule: end-state assertions land in git BEFORE the implementation. The verifier knows what GREEN looks like before the code lands. No "agent's word for it."
+- **OP-1 Simulator-first.** All v0.13.0 phases run end-to-end against the simulator. Two simulator instances in one process serve as "confluence-shaped SoT" + "GitHub-shaped mirror" for tests. Real-backend tests (TokenWorld + reubenjohn/reposix) gate the milestone close, not individual phase closes.
+- **OP-2 Tainted-by-default.** Mirror writes carry tainted bytes from the SoT. The GH mirror's frontmatter must preserve `Tainted<T>` semantics. The `attach` cache marks all materialized blobs as tainted.
+- **OP-3 Audit log non-optional.** Every bus-remote push writes audit rows to BOTH tables — cache audit (helper RPC turn) + backend audit (SoT REST mutation). The mirror push writes a cache-audit row noting "mirror lag now zero" or "mirror lag now N." Webhook-driven syncs write cache-audit rows too.
+- **OP-7 Verifier subagent dispatch on every phase close.** The DVCS round-trip test is a catalog row in dimension `agent-ux`, kind `subagent-graded`, cadence `pre-pr`.
+- **OP-8 +2 phase practice.** v0.13.0 reserves last 2 phases for surprises absorption + good-to-haves polish.
+- **Per-phase push cadence (codified 2026-04-30).** Every phase closes with `git push origin main` BEFORE verifier-subagent dispatch. Pre-push gate-passing is part of phase-close criterion. Closes backlog 999.4.
 
 ### Active
 
-#### Release dimension — close the immediate breakage
+#### Pre-DVCS hygiene (P0)
 
-- [x] **RELEASE-01**: Restore the curl/PowerShell installer URLs by fixing `release.yml` so it fires on release-plz's per-crate tags. Pick the cleaner of two options (extend `on.push.tags` glob to match `reposix-cli-v*` and key version off the cli tag, OR add a release-plz post-publish step that mirrors a workspace `vX.Y.Z` tag). Cut a fresh `reposix-cli-v0.11.3` release and verify all 5 install paths work end-to-end. **P0 — every documented install path is broken.**
-- [x] **RELEASE-02**: Homebrew tap formula auto-updates with each release (the `upload-homebrew-formula` job in `release.yml` is currently dead because the workflow doesn't fire). Verified by RELEASE-01's release cycle.
-- [x] **RELEASE-03**: `cargo binstall reposix-cli reposix-remote` resolves to a prebuilt binary (currently falls back to source build because no GH binary asset exists). Lifted by RELEASE-01.
-- [x] **RELEASE-04** (shipped P58, 2026-04-28): Quality Gates `release/` dimension — `quality/gates/release/{gh-assets-present.py, brew-formula-current.py, crates-io-max-version.py, installer-asset-bytes.py}` with weekly + post-release runners. Catalog rows for every install URL, brew formula, and crates.io crate. Would have caught RELEASE-01 within 24h of the regression.
+- [ ] **HYGIENE-01**: Bump `gix` off yanked `=0.82.0` baseline. `gix-actor 0.40.1` also yanked. Update `crates/*/Cargo.toml` to next non-yanked release; align all gix-family `=`-pins; `cargo check --workspace` GREEN; `cargo nextest run --workspace` GREEN (per-crate if memory pressure); update `CLAUDE.md` § Tech stack to cite the new version. Closes GitHub issues #29 + #30. **P0 — load-bearing pin sitting on a yanked version.**
+- [ ] **HYGIENE-02**: Land verifier scripts for the 3 currently-WAIVED structure rows in `quality/catalogs/freshness-invariants.json` BEFORE waivers expire 2026-05-15. Three TINY-shape shell verifiers under `quality/gates/structure/`: (a) `no-loose-top-level-planning-audits.sh` — fail if any audit doc exists outside `.planning/milestones/audits/` or `.planning/archive/`; (b) `no-pre-pivot-doc-stubs.sh` — fail if any `docs/<slug>.md` exists at top-level docs/ with size <500 bytes; (c) `repo-org-audit-artifact-present.sh` — pass if the canonical repo-org-audit artifact exists at the catalog-cited path. Each catalog row flips WAIVED → PASS (waiver block deleted). Tested via `python3 quality/runners/run.py`. **P0/P1 — waiver auto-renewal would defeat catalog-first principle.**
 
-#### Quality Gates framework
+#### POC (pre-Phase-1)
 
-- [x] **QG-01** (shipped P57, 2026-04-28): `quality/{gates,catalogs,reports,runners}/` directory layout created. `quality/catalogs/README.md` documents the unified catalog schema (every row carries `id`, `dimension`, `cadence`, `kind`, `sources`, `verifier`, `artifact`, `status`, `freshness_ttl`, `waiver`, `blast_radius`, `owner_hint`).
-- [x] **QG-02** (shipped P57, 2026-04-28): `quality/runners/run.py --cadence X` discovers all gates tagged X and runs them in order; `quality/runners/verdict.py` collates artifacts into `quality/reports/verdicts/<cadence>/<ts>.md` and exits non-zero on RED. Single entry point for pre-push, pre-pr, weekly, pre-release, post-release.
-- [x] **QG-03** (shipped P57, 2026-04-28): `quality/PROTOCOL.md` — single-page autonomous-mode runtime contract every phase agent reads at start. Contains the gate routing table, the catalog-first rule, pivot triggers, the waiver protocol with TTL, skill-dispatch patterns, "when stuck" rules, and anti-bloat rules per surface.
-- [x] **QG-04** (shipped P57, 2026-04-28): Waiver mechanism — every catalog row supports `waiver: {until: <RFC3339>, reason, dimension_owner}`. Expired waivers flip the row back to FAIL. Documented in PROTOCOL.md as the principled escape hatch when a phase agent must pivot rather than fix.
-- [x] **QG-05** (shipped P57, 2026-04-28): `quality/SURPRISES.md` — append-only journal. One line per unexpected obstacle + one line per resolution. Required reading for the next phase agent (so dead ends aren't repeated).
-- [x] **QG-06** (shipped P57, 2026-04-28): Mandatory verifier-subagent dispatch per phase close. No phase ships without an unbiased subagent grading the catalog rows GREEN. Pattern documented in PROTOCOL.md; same shape as the §0.8 verifier dispatch from v0.11.2.
-- [x] **QG-07** (shipped P57, 2026-04-28): **Mandatory CLAUDE.md update per phase** as part of definition-of-done. Each phase that introduces a new file, convention, gate, or operational rule MUST update the relevant CLAUDE.md section in the SAME PR. The verifier subagent grades this as a phase-close requirement. Anti-bloat: each phase appends a paragraph + code reference; deletions are encouraged when superseded. Owner-flagged in this planning session.
-- [x] **QG-08** (shipped P57, 2026-04-28): Top-level `.planning/REQUIREMENTS.md` MUST contain ONLY the active milestone + a "Previously validated" index pointing to per-milestone REQUIREMENTS.md files inside `*-phases/`. Same rule for `.planning/ROADMAP.md`. This catalog row in `quality/gates/structure/` enforces the convention going forward (currently unenforced; the convention is documented in CLAUDE.md §0.5 but historical sections drifted into the top-level file before this gate existed). Owner-flagged in this planning session.
-- [x] **QG-09** (shipped P57/P60, 2026-04-28): Quality Gates summary badge — `quality/runners/verdict.py` emits `quality/reports/badge.json` in [shields.io endpoint format](https://shields.io/badges/endpoint-badge): `{"schemaVersion": 1, "label": "quality gates", "message": "<N>/<M> GREEN", "color": <green|yellow|red>}`. Color thresholds: green if all P0+P1 PASS or WAIVED; yellow if any P2 RED; red if any P0+P1 RED. **P57 ships:** the verdict.py JSON emit. **P60 ships:** mkdocs publishes it as `docs/badge.json` → `https://reubenjohn.github.io/reposix/badge.json`; README + docs/index.md add the badge: `![Quality](https://img.shields.io/endpoint?url=https://reubenjohn.github.io/reposix/badge.json)`. **Plus** the cheaper standard badge `![Quality (weekly)](https://github.com/reubenjohn/reposix/actions/workflows/quality-weekly.yml/badge.svg)` lands in P58 alongside the workflow. Owner-flagged in this planning session.
+- [ ] **POC-01**: End-to-end POC in `research/v0.13.0-dvcs/poc/` exercising the three innovations against the simulator, BEFORE Phase 1 (attach core) PLAN.md is finalized. Throwaway code (NOT v0.13.0 implementation). Specifically demonstrates: (a) `reposix attach` against a working tree with mixed `id`-bearing + `id`-less files (deliberately mangled); (b) bus-remote push observing mirror lag (SoT writes succeed, mirror trailing); (c) cheap-precheck path refusing fast when SoT version mismatches local cache. Ships with `POC-FINDINGS.md` listing algorithm-shape decisions, integration friction, and design questions the architecture sketch did not anticipate — feeds directly into Phase 1's PLAN.md. Time budget: ~1 day; if exceeding 2 days, surface as SURPRISES-INTAKE candidate. **P0 — kickoff-rec #2 readiness move; v0.9.0 precedent saved 3-4 days mid-phase rework.**
 
-#### Structure dimension — migrate freshness invariants
+#### `reposix attach` core
 
-- [x] **STRUCT-01** (shipped P57, 2026-04-28): Migrate the 6 freshness rows from `scripts/end-state.py` into `quality/gates/structure/`. Catalog rows live in `quality/catalogs/freshness-invariants.json`. Wire `quality/runners/run.py --cadence pre-push` as the new entry point.
-- [x] **STRUCT-02** (shipped P57, 2026-04-28): `scripts/end-state.py` reduced to a thin shim (≤ 30 lines) that delegates to `quality/runners/verdict.py session-end`. Anti-bloat header comment explicitly tells future agents: "this file does not grow; new gates go under `quality/gates/<dim>/`." Owner-flagged concern: agents will bloat this file if not warned.
+- [ ] **DVCS-ATTACH-01**: `reposix attach <backend>::<project>` subcommand exists in `crates/reposix-cli/`. In CWD with no special prerequisites on how the checkout was created: (a) builds a fresh cache directory at the standard location derived from `<backend>::<project>` (NOT from `remote.origin.url`, per Q1.1); (b) REST-lists the backend; populates cache OIDs (filenames + tree structure; blobs lazy on first materialize); (c) reconciles by walking current `HEAD` tree and matching files to backend records by `id` in frontmatter; records matches in cache reconciliation table; (d) adds remote `reposix::<sot-spec>?mirror=<existing-origin-url>` (or `reposix::<sot-spec>` if `--no-bus`); (e) sets `extensions.partialClone=<remote-name>` on the new reposix remote. Existing `origin` (the GH mirror) keeps plain-git semantics.
+- [ ] **DVCS-ATTACH-02**: Reconciliation cases produce the resolutions specified in `architecture-sketch.md` § "Reconciliation cases": match (cache stores OID alignment), backend-record-deleted (warn + skip + offer `--orphan-policy={delete-local,fork-as-new,abort}`), no-id-frontmatter (warn + skip), duplicate `id` (hard error), mirror-lag (cache marks for next fetch). Tested via deliberately-mangled checkouts: each row in the resolution table has a corresponding test case.
+- [ ] **DVCS-ATTACH-03**: Re-attach with different SoT spec is REJECTED with clear error per Q1.2 ("multi-SoT not supported in v0.13.0"). Re-attach with same SoT is IDEMPOTENT per Q1.3 — refreshes cache state against current backend without special-casing init-vs-attach origins.
+- [ ] **DVCS-ATTACH-04**: `attach` cache marks all materialized blobs as `Tainted<Vec<u8>>` per OP-2.
 
-#### Docs-repro dimension
+#### Mirror-lag observability
 
-- [x] **DOCS-REPRO-01** (shipped P59, 2026-04-28): `quality/gates/docs-repro/snippet-extract.py` parses every fenced code block in user-facing docs (README, docs/index.md, docs/tutorials/*.md) and emits catalog rows. Drift detector: fail if a doc snippet has no catalog row, or a catalog row's content drifted from its source.
-- [x] **DOCS-REPRO-02** (shipped P59, 2026-04-28): `quality/gates/docs-repro/container-rehearse.sh <id>` spins ubuntu:24.04 (default), runs the snippet verbatim, asserts post-conditions. Per-persona matrix (linux first; mac/windows runners deferred to v0.12.1).
-- [x] **DOCS-REPRO-03** (shipped P59, 2026-04-28): Promote `scripts/repro-quickstart.sh` into `quality/gates/docs-repro/tutorial-replay.sh` as one container-rehearsal-kind row. Wire into post-release cadence.
-- [x] **DOCS-REPRO-04** (shipped P59, 2026-04-28): Catalog seed — port every row from the DRAFT `.planning/docs_reproducible_catalog.json` into `quality/catalogs/docs-reproducible.json` with the unified schema.
+- [ ] **DVCS-MIRROR-REFS-01**: `refs/mirrors/confluence-head` (SHA of SoT's `main` at last sync) + `refs/mirrors/confluence-synced-at` (annotated tag with timestamp message) helpers exist in `crates/reposix-cache/`. Refs namespace is `refs/mirrors/...` per Q2.1, NOT `refs/notes/...`.
+- [ ] **DVCS-MIRROR-REFS-02**: Existing single-backend push (today's `handle_export`) is wired to update both refs on success. Bus push also updates both refs (per Q2.3). Webhook sync writes both refs (no-op refresh when bus already touched them).
+- [ ] **DVCS-MIRROR-REFS-03**: Bus-remote reject messages cite the refs in hints — e.g., *"your origin (GH mirror) was last synced from confluence at <timestamp> (N minutes ago); run `reposix sync` to update local cache, then `git rebase`."*
 
-#### Docs-build dimension migration
+#### Bus remote
 
-- [x] **DOCS-BUILD-01** (shipped P60, 2026-04-28): Move `scripts/check-docs-site.sh`, `scripts/check-mermaid-renders.sh`, `scripts/check-doc-links.py` into `quality/gates/docs-build/` with no behaviour change. Pre-push hook delegates to `quality/runners/run.py --cadence pre-push`. Leave shims at old paths if hooks would otherwise break.
-- [x] **BADGE-01** (shipped P60, 2026-04-28): Validate every README + docs-page badge URL renders. New gate `quality/gates/docs-build/badges-resolve.py` HEADs each badge URL and asserts HTTP 200 + content-type contains `image`. Catalog row per badge in `quality/catalogs/freshness-invariants.json` (or a new `quality/catalogs/badges.json` if the count grows). Catches: shields.io drift, codecov project rename, badge-URL typos, broken endpoint URLs. Cadence: weekly + pre-push (cheap HEAD; ~1s for all 6 badges). Includes the new QG-09 endpoint badge URL once published.
+- [ ] **DVCS-BUS-URL-01**: New URL scheme parser recognizes `reposix::<sot-spec>?mirror=<mirror-url>` (per Q3.3) and dispatches to bus handler. The `+`-delimited form is explicitly rejected. Single-backend `reposix::<sot-spec>` URLs continue to work via the existing `handle_export` code path.
+- [ ] **DVCS-BUS-PRECHECK-01**: Bus handler implements CHEAP PRECHECK A (mirror drift via `git ls-remote`) before reading stdin. On drift, emits `error refs/heads/main fetch first` + hint *"your GH mirror has new commits; git fetch <mirror> first"*. NO confluence work done. NO stdin read.
+- [ ] **DVCS-BUS-PRECHECK-02**: Bus handler implements CHEAP PRECHECK B (SoT drift via `backend.list_changed_since(last_fetched_at)`) before reading stdin. On drift overlapping with the push set, emits `error refs/heads/main fetch first` + hint citing mirror-lag refs. NO writes done. NO stdin read.
+- [ ] **DVCS-BUS-WRITE-01**: SoT-first write — buffer fast-import stream from stdin; apply REST writes to confluence; on success, write audit rows to BOTH tables (cache + backend) and update `last_fetched_at`. On any failure, bail; mirror unchanged.
+- [ ] **DVCS-BUS-WRITE-02**: Mirror write — `git push` to GH mirror after SoT write succeeds. On mirror-write failure, write mirror-lag audit row; update `refs/mirrors/confluence-head` to new SoT SHA but NOT `refs/mirrors/confluence-synced-at` (stays at last successful mirror sync); print warning to stderr; return ok to git (SoT contract satisfied).
+- [ ] **DVCS-BUS-WRITE-03**: On mirror-write success, update `refs/mirrors/confluence-synced-at` to now and send `ok refs/heads/main` back to git.
+- [ ] **DVCS-BUS-WRITE-04**: No helper-side retry on transient mirror-write failures (per Q3.6) — surface, audit, let user retry.
+- [ ] **DVCS-BUS-WRITE-05**: Bus URL with no local `git remote` for the mirror fails with hint per Q3.5 — *"configure the mirror remote first: `git remote add <name> <mirror-url>`."* No auto-mutation of user's git config.
+- [ ] **DVCS-BUS-WRITE-06**: Fault-injection tests cover every documented failure case — kill GH push between confluence-write and ack; kill confluence-write mid-stream; simulate confluence 409 after precheck passed. Each produces correct audit + recoverable state.
+- [ ] **DVCS-BUS-FETCH-01**: Bus handler does NOT advertise `stateless-connect` for fetch (Q3.4) — read goes to the SoT directly via the existing single-backend code path. Documented in helper stderr help.
 
-#### Subjective gates
+#### L1 perf migration
 
-- [x] **SUBJ-01** (shipped P61, 2026-04-28): `quality/catalogs/subjective-rubrics.json` with seed rubrics — `cold-reader-hero-clarity`, `install-positioning`, `headline-numbers-sanity`. Each row carries a numeric scoring rubric and a `freshness_ttl` (default 30d).
-- [x] **SUBJ-02** (shipped P61, 2026-04-28): `reposix-quality-review` skill — reads the catalog, dispatches one unbiased subagent per stale/unverified row in parallel, persists JSON artifacts to `quality/reports/verifications/`, updates the catalog. Integrates `doc-clarity-review` as one rubric implementation.
-- [x] **SUBJ-03** (shipped P61, 2026-04-28): Wire SUBJ-02 into pre-release cadence so subjective gates with TTL ≥ 14d expired auto-dispatch before any milestone tag push.
+- [ ] **DVCS-PERF-L1-01**: Replace today's unconditional `list_records` walk in `crates/reposix-remote/src/main.rs::handle_export` (lines 334-348) with `list_changed_since`-based conflict detection. The check at PRECHECK B becomes the single conflict-detection mechanism: for each changed record, check against the version in the cache's prior tree; mismatch (record changed AND we're trying to push it) → reject with detailed error; no overlap → continue, update cache after step. Net REST cost on success path: one call (`list_changed_since`) plus actual REST writes.
+- [ ] **DVCS-PERF-L1-02**: `reposix sync --reconcile` subcommand exists as escape hatch — does on-demand full `list_records` walk + cache reconciliation for users who suspect cache desync. Documented in `docs/concepts/dvcs-topology.md` and helper stderr hints.
+- [ ] **DVCS-PERF-L1-03**: Both single-backend and bus push paths benefit from L1 (single-backend was the pre-existing inefficiency; bus would have inherited it). L2/L3 cache-desync hardening explicitly defers to v0.14.0 per `architecture-sketch.md` § "Performance subtlety".
 
-#### Repo-org cleanup
+#### Webhook-driven mirror sync
 
-- [x] **ORG-01**: Audit `.planning/research/v0.11.1/repo-organization-gaps.md` against current state. Each remaining gap → either fix + add a structure-dimension catalog row that prevents recurrence, OR file an explicit waiver with reason. Ensures the gaps document isn't a forgotten todo list. **SHIPPED P62.** Audit at `quality/reports/audits/repo-org-gaps.md` (99 items; 13 closed-by-deletion, 26 closed-by-relocation, 50 closed-by-existing-gate, 8 out-of-scope; zero open Wave-3 items). 3 new structure-dimension rows in `quality/catalogs/freshness-invariants.json` lock recurrence guards.
+- [ ] **DVCS-WEBHOOK-01**: Reference GitHub Action workflow ships at `.github/workflows/reposix-mirror-sync.yml` per `architecture-sketch.md` § "Webhook-driven mirror sync". Triggers: `repository_dispatch` (event type `reposix-mirror-sync`) + cron safety net (default `*/30`, configurable via workflow `vars`).
+- [ ] **DVCS-WEBHOOK-02**: Workflow runs `reposix init confluence + git push <mirror>` and updates `refs/mirrors/...` refs. Uses `--force-with-lease` against last known mirror ref so a concurrent bus-push's race doesn't corrupt mirror state.
+- [ ] **DVCS-WEBHOOK-03**: First-run handling (no existing mirror refs) is graceful per Q4.3. Empty-mirror case populates refs on first run. Verified by sandbox test against TokenWorld.
+- [ ] **DVCS-WEBHOOK-04**: Latency target: < 60s p95 from confluence edit to GH ref update. Measured in sandbox during this phase; if p95 > 120s, document the constraint and tune ref semantics.
 
-#### Polish passes (per-dimension RED-fix sweeps)
+#### DVCS docs
 
-> **Owner directive (this planning session):** "I'm really hoping that after this milestone the codebase is pristine and high quality across all the dimensions." The POLISH-* items below are the broaden-and-deepen pass: every dimension that ships a gate in v0.12.0 ALSO ships a sweep that fixes the RED rows the gate's first run flags. The milestone is not about instrumenting the codebase — it is about leaving the codebase pristine. Each POLISH-* row is P0/P1 blast radius and gates milestone close. Anything that cannot be fixed in-phase is WAIVED (with TTL ≤ 90d + dimension_owner) or filed as a v0.12.1 carry-forward via MIGRATE-03.
+- [ ] **DVCS-DOCS-01**: `docs/concepts/dvcs-topology.md` exists. Three roles (SoT-holder, mirror-only consumer, round-tripper) explained with the diagram from `vision-and-mental-model.md`. Mirror-lag refs explained — explicitly: *"`refs/mirrors/confluence-synced-at` is the timestamp the mirror last caught up to confluence, NOT a 'current SoT state' marker"* (per Q2.2). When-to-choose-which-pattern guidance.
+- [ ] **DVCS-DOCS-02**: `docs/guides/dvcs-mirror-setup.md` exists. Walk-through of webhook + Action setup for an owner installing v0.13.0 against a confluence space. Backends-without-webhooks fallback documented (cron-only sync; per Q4.2). Cleanup procedure documented.
+- [ ] **DVCS-DOCS-03**: Troubleshooting matrix entries cover: bus-remote `fetch first` rejection messages (cite mirror-lag refs as the diagnostic); attach reconciliation warnings; webhook race conditions; cache-desync recovery via `reposix sync --reconcile`.
+- [ ] **DVCS-DOCS-04**: Cold-reader pass via `doc-clarity-review` against a reader who has read only `docs/index.md` + `docs/concepts/mental-model-in-60-seconds.md`. Zero critical-friction findings before milestone close.
 
-- [x] **POLISH-STRUCT** (shipped P57, 2026-04-28) (P57): After structure-dim gates ship, audit every freshness invariant and fix any drift. Specifically: confirm no version-pinned filenames outside `CHANGELOG.md` and `*-phases/`; confirm install path leads with package manager (cargo binstall / brew install BEFORE any clone+build snippet) on `README.md` + `docs/index.md`; confirm benchmarks under `benchmarks/` and `docs/benchmarks/` appear in `mkdocs.yml` `nav:`; confirm no loose `*ROADMAP*.md` or `*REQUIREMENTS*.md` at `.planning/milestones/` top-level. Fix any flagged drift in the same phase (cite commit).
-- [x] **POLISH-RELEASE** (shipped P58, 2026-04-28) (P58): After release-dim gates ship, audit and fix any release-asset drift not already covered by P56. Specifically: every install URL in user-facing docs HEADs to HTTP 200; brew formula version is current with the latest reposix-cli release; `crates.io` `max_version` per published crate matches the latest tag; `cargo binstall` metadata resolves to a prebuilt binary for every published binary crate (no source-fallback). Fix any drift in the same phase.
-- [x] **POLISH-DOCS-REPRO** (shipped P59, 2026-04-28) (P59): After docs-repro gates ship, every fenced code block in user-facing docs (`README.md`, `docs/index.md`, `docs/tutorials/*`, `docs/guides/*`) has a catalog row AND a passing container rehearsal OR is explicitly marked manual/illustrative (with rationale in the catalog row). Fix any broken/stale snippets in the same phase (cite commit). Every `examples/0[1-5]-*/run.sh` passes its container rehearsal.
-- [x] **POLISH-DOCS-BUILD** (shipped P60, 2026-04-28) (P60): After docs-build gates ship, every badge URL in `README.md` + docs renders (BADGE-01 fix-the-REDs); every link in user-facing docs resolves (no link rot); `mkdocs build --strict` is GREEN; every mermaid block on every nav page renders without errors (assertion: `document.querySelectorAll('pre.mermaid svg').length > 0` per page, zero browser-console rendering errors). Fix any flagged failures in the same phase.
-- [x] **POLISH-SUBJECTIVE** (shipped P61, 2026-04-28) (P61): After subjective rubrics seed (SUBJ-01..03), dispatch the unbiased subagent for `cold-reader-hero-clarity`, `install-positioning`, and `headline-numbers-sanity` AT LEAST ONCE; fix any P0/P1 findings in the same phase; remaining P2 findings either fixed, waived (with TTL), or filed as v0.12.1 carry-forward.
-- [x] **POLISH-ORG** (P62): Every gap in `.planning/research/v0.11.1/repo-organization-gaps.md` gets a status (`closed-by-catalog-row`, `closed-by-existing-gate`, or `waived` with reason + dimension_owner + RFC3339 `until`). This is already P62's scope per ORG-01 — listed here for cohesion across the polish-pass family. **SHIPPED P62.** All 99 audit items have explicit dispositions; zero `closed-by-Wave-3-fix` items remain open. Fixes shipped in commits `eaf7068` (Wave 1 catalog), `4584fca` (Wave 2 audit), `8842d48` (Wave 3 relocations), `9011e91` (Wave 3 verifier extension), `2413f13` (Wave 4 SURPRISES rotation).
-- [x] **POLISH-AGENT-UX** (shipped P59, 2026-04-28) (P59): The `dark-factory-test.sh` migration to `quality/gates/agent-ux/dark-factory.sh` runs end-to-end against the simulator; any regressions found vs. the v0.9.0 baseline are fixed in the same phase (cite commit).
-- [x] **POLISH-CODE** (P58 stub, P63 final): **SHIPPED P63.** `cargo clippy --workspace --all-targets -- -D warnings` passes (code/clippy-lint-loaded + code/cargo-clippy-warnings PASS); cargo fmt verified via direct invocation (commit 16c4cbb -- code/cargo-fmt-clean wired to quality/gates/code/cargo-fmt-clean.sh, status NOT-VERIFIED -> PASS, read-only ~5s honoring CLAUDE.md ONE cargo at a time rule). code/cargo-test-pass intentionally remains as ci-job-status canonical wrapper per CLAUDE.md memory-budget rule (cargo nextest workspace 6-15 min violates ONE cargo at a time + pre-pr 10-min cadence cap); CI is the canonical enforcement venue, tracked-forward to v0.12.1 MIGRATE-03 for per-row local cargo enforcement alternatives. The Error::Other 156->144 migration completion is filed as v0.12.1 ERR-OTHER-01 per MIGRATE-03; no NEW Error::Other(String) sites introduced in v0.12.0.
+#### Dark-factory regression — third arm
 
-#### Aggressive simplification — absorb existing surfaces into the framework
+- [ ] **DVCS-DARKFACTORY-01**: Extend `quality/gates/agent-ux/dark-factory.sh` (formerly `scripts/dark-factory-test.sh`) to add a third subprocess-agent transcript: a fresh agent given only the GH mirror URL + a goal completes vanilla-clone + `reposix attach` + edit + bus-push end-to-end with zero in-context learning beyond what the helper's stderr teaches. Reuses the existing dark-factory test harness; no in-prompt instruction beyond the goal statement.
+- [ ] **DVCS-DARKFACTORY-02**: Catalog row in dimension `agent-ux`, kind `subagent-graded`, cadence `pre-pr`. Verifier grades from artifacts with zero session context per OP-7.
 
-> **Owner directive (this planning session):** "look aggressively for opportunities to simplify if [existing scripts/examples] can be swallowed by this framework as by incorporating them into the various phases/plans of this milestone." The framework is NOT a new layer on top of the old — it REPLACES the ad-hoc surfaces. After v0.12.0, `scripts/` holds only `hooks/` and `install-hooks.sh`; everything else lives in `quality/gates/<dimension>/`.
+#### Carry-forward
 
-Each SIMPLIFY-* item names an existing surface, its target home in the new framework, and the phase that absorbs it. The phase's plan MUST end with the source surface either deleted, reduced to a thin shim, or explicitly waived with a reason.
+- [ ] **MULTI-SOURCE-WATCH-01**: From v0.12.1 P75. Walker hashes every source citation in a `Source::Multi` row, ANDs results; row enters `STALE_DOCS_DRIFT` on ANY index drift. Schema migration: `source_hash: Option<String>` → `source_hashes: Vec<String>` parallel-array on `Source::Multi` rows. `verbs::bind` writes/preserves all entries on the parallel array. `serde(default)` + one-time backfill migrates the populated 388-row catalog. Regression tests at `crates/reposix-quality/tests/walk.rs::walk_multi_source_*` exercise the path-(b) "non-first source drift fires STALE" case. Acceptance per `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md`.
 
-- [x] **SIMPLIFY-01** (shipped P57, 2026-04-28) (P57): `scripts/banned-words-lint.sh` → `quality/gates/structure/banned-words.sh` with a catalog row in `quality/catalogs/freshness-invariants.json`. Old path becomes a one-line shim or deleted (whichever the pre-push hook tolerates).
-- [x] **SIMPLIFY-02** (shipped P57, 2026-04-28) (P57): `scripts/end-state.py` reduced to ≤30-line shim per STRUCT-02. The 6 existing freshness rows and the crates.io rows migrate to `quality/gates/structure/` and `quality/gates/release/` respectively.
-- [x] **SIMPLIFY-03** (shipped P57, 2026-04-28) (P57): `scripts/catalog.py` audited — does its per-file rendering job overlap with `quality/runners/verdict.py`? If yes, fold and delete; if no (different domain), document the boundary in `quality/catalogs/README.md` and leave alone.
-- [x] **SIMPLIFY-04** (shipped P58, 2026-04-28) (P58): `scripts/check_clippy_lint_loaded.sh` → `quality/gates/code/clippy-lint-loaded.sh`. Catalog row records the expected lint set so silent lint removal trips the gate.
-- [x] **SIMPLIFY-05** (shipped P58, 2026-04-28) (P58): `scripts/check_fixtures.py` → audit if it's a code-dimension gate or belongs as a `crates/<crate>/tests/` integration test. Move accordingly; do not leave at top of `scripts/`.
-- [x] **SIMPLIFY-06** (shipped P59, 2026-04-28) (P59): `scripts/repro-quickstart.sh` → `quality/gates/docs-repro/tutorial-replay.sh` per DOCS-REPRO-03. **Plus:** every `examples/0[1-5]-*/run.sh` becomes a docs-repro catalog row (container-rehearsal-kind, post-release cadence). The `examples/` README gets a callout that each example is now a tracked gate.
-- [x] **SIMPLIFY-07** (shipped P59, 2026-04-28) (P59): `scripts/dark-factory-test.sh` → `quality/gates/agent-ux/dark-factory.sh`. The `agent-ux` dimension is a thin home; if that's the only gate in the dimension at v0.12.0 close, document the dimension as "intentionally sparse — perf and security stubs land in v0.12.1."
-- [x] **SIMPLIFY-08** (shipped P60, 2026-04-28) (P60): `scripts/check-docs-site.sh`, `scripts/check-mermaid-renders.sh`, `scripts/check-doc-links.py` → `quality/gates/docs-build/` per DOCS-BUILD-01.
-- [x] **SIMPLIFY-09** (shipped P60, 2026-04-28) (P60): `scripts/green-gauntlet.sh` (composite "run everything" wrapper) is supplanted by `quality/runners/run.py --cadence pre-pr`. Delete or reduce to a one-line shim that calls the runner.
-- [x] **SIMPLIFY-10** (shipped P60, 2026-04-28) (P60): `scripts/hooks/pre-push` body simplified — current logic chains multiple checks; new body is a single `quality/runners/run.py --cadence pre-push` invocation. `scripts/hooks/test-pre-push.sh` updated to test the new entry point. `scripts/install-hooks.sh` kept as-is (developer install of git hooks).
-- [x] **SIMPLIFY-11** (shipped P59, 2026-04-28) (P59 stub, full v0.12.1): `scripts/bench_token_economy.py`, `scripts/test_bench_token_economy.py`, `scripts/latency-bench.sh`, `benchmarks/fixtures/*` → `quality/gates/perf/` with a perf-targets catalog. **v0.12.0 ships the move (file relocations + thin shims at old paths if anything imports them); the actual gate logic that cross-checks bench output against headline copy is the v0.12.1 stub per MIGRATE-03.**
-- [x] **SIMPLIFY-12** (P63): **SHIPPED P63** (commit 4950cdd). 22 scripts in audit set; 5 DELETE (`_patch_plan_block.py`, `check-p57-catalog-contract.py`, `check_crates_io_max_version_sweep.sh`, `check_install_rows_catalog.py`, `test-runner-invariants.py`) + 13 SHIM-WAIVED + 4 KEEP-AS-CANONICAL. Per-script audit at `quality/reports/audits/scripts-retirement-p63.md` (caller-scan + decision + rationale). Surviving scripts have rows in `quality/catalogs/orphan-scripts.json` (17 rows asserting shim-shape contract); verifier at `quality/gates/structure/orphan-scripts-audit.py` mechanizes re-grading.
+### +2 reservation (per OP-8)
 
-#### Migration close-out
+- [ ] **DVCS-SURPRISES-01**: Surprises-absorption phase drains `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`. Each entry → RESOLVED | DEFERRED | WONTFIX with commit SHA or rationale. Verifier honesty spot-check on previous phases' plans + verdicts (empty intake acceptable IF phases produced explicit `Eager-resolution` decisions).
+- [ ] **DVCS-GOOD-TO-HAVES-01**: Good-to-haves polish phase drains `GOOD-TO-HAVES.md`. XS items always close; M items default-defer to v0.14.0.
 
-- [x] **MIGRATE-01**: **SHIPPED P63** (commit 4950cdd). 5 source-file deletions of P57-superseded helpers; 13 shim-waivers anchored at `quality/catalogs/orphan-scripts.json`; shim-shape contract enforced by `quality/gates/structure/orphan-scripts-audit.py` (17/17 rows PASS at commit time). KEEP-AS-CANONICAL scripts gained header `# KEEP-AS-CANONICAL (P63 SIMPLIFY-12)` markers documenting the no-canonical-home rationale.
-- [x] **MIGRATE-02**: **SHIPPED P63** (commit 1c316e7). Cross-link audit verifier at `quality/gates/structure/cross-link-audit.py` walks CLAUDE.md + `quality/PROTOCOL.md` + 8 dim READMEs, asserts every relative path mention exists. 100 paths verified, 0 stale. Per-dim READMEs normalized to verifier-table + conventions only (runtime detail cross-linked to PROTOCOL.md). New `quality/gates/security/README.md` fills missing security home. CLAUDE.md gained P63 H3 subsection summarizing SIMPLIFY-12 + POLISH-CODE final + v0.12.1 carry-forward + meta-rule extension.
-- [x] **MIGRATE-03**: **SHIPPED P63** (commit 9c13843). File v0.12.1 carry-forward — perf-dimension full implementation (SIMPLIFY-11 stubs become real gates; latency vs headline-copy cross-check, token-economy bench cross-check) and security-dimension (allowlist enforcement gate, audit immutability test) as stub catalog rows + REQUIREMENTS.md placeholders. Cross-platform container rehearsals (windows-2022, macos-14) also stubbed. **Plus:** complete the `Error::Other` 156→144 partial migration (POLISH2-09 carry-forward from v0.11.1). **Plus (added 2026-04-27 from P56 Wave 4):** (a) `gh release create --latest` (or release-plz config) to pin the `releases/latest/download/...` pointer to the cli release after every per-crate release sequence — without it, a non-cli per-crate release published after the cli release moves the pointer and re-breaks the curl URL; (b) release-plz workflow uses fine-grained PAT (or adds a post-tag `gh workflow run` step) so GITHUB_TOKEN-pushed tags trigger `release.yml` instead of being silently dropped by the GH loop-prevention rule; (c) `[package.metadata.binstall]` blocks in `crates/reposix-cli/Cargo.toml` and `crates/reposix-remote/Cargo.toml` rewritten to match the actual release.yml archive shape (`reposix-cli-v${version}` tag prefix, `reposix-v${version}-${target}.tar.gz` archive basename, x86_64-unknown-linux-musl + aarch64-unknown-linux-musl target overrides) — ~10 LOC, lifts install/cargo-binstall PARTIAL → PASS; (d) Rust MSRV bump 1.82 → 1.85 (or cap transitive `block-buffer` at `<0.12`) so `cargo install reposix-cli` from crates.io works against the project MSRV — currently broken because block-buffer-0.12.0 requires edition2024. **Plus (added 2026-04-28 from P61 Wave G):** (e) Subjective dispatch-and-preserve runner invariant -- the runner's run_row currently overwrites `quality/reports/verifications/subjective/<id>.json` on every cadence sweep (waiver branch writes a WAIVED-shape stub; subprocess branch writes a Path-B-stub). The Path A scored verdict produced from a Claude session is therefore not durable across runner sweeps. Fix path: extend run_row so that a row with `kind=subagent-graded` AND a recent artifact whose `dispatched_via` starts with `Wave-G-Path-A` or `Path-A` is treated as authoritative -- the runner reads score + verdict from the artifact, sets row.status from the score-vs-threshold mapping, and does NOT overwrite the artifact. (f) Auto-dispatch from CI (would require Anthropic API auth on GH Actions runners) -- left as plain v0.12.1 follow-up (deferred per `.planning/research/v0.12.0/open-questions-and-deferrals.md` line 124). (g) Hard-gate chaining for release.yml waiting on quality-pre-release.yml verdict -- composite workflow OR workflow_run trigger; v0.12.0 ships parallel-execution soft-gate per P56 SURPRISES row 1 GH Actions cross-workflow chaining limitation.
+### Out of Scope (deferred to v0.14.0)
 
-#### Docs-alignment dimension (added 2026-04-28; P64 + P65)
-
-The git-native pivot (v0.9.0) silently dropped behaviors prior milestones promised — discovered case: Confluence page-tree symlinks no longer materialize on `reposix init`, no test failed because no test asserted the shape. Tests were derived from the implementation, not from the user-facing surface. v0.12.0 cannot ship a "quality gates" milestone while leaving this regression class structurally invisible. P64 builds the framework; P65 surfaces the punch list of legacy promises with no test binding. v0.12.1 closes the gaps (cluster-by-cluster phases). Source-of-truth handover: `.planning/research/v0.12.0-docs-alignment-design/`.
-
-- [x] **DOC-ALIGN-01** (P64, 2026-04-28): `crates/reposix-quality/` workspace crate exists and compiles clean. `#![forbid(unsafe_code)]` + `#![warn(clippy::pedantic)]`. Self-contained (no `reposix-runtime` imports — keeps a future standalone-spinoff one `cargo init` away). `cargo clippy -p reposix-quality -- -D warnings` clean; `cargo fmt -- --check` clean; `cargo test -p reposix-quality` PASS. **P64.**
-- [x] **DOC-ALIGN-02** (P64, 2026-04-28): `reposix-quality` binary exposes the full subcommand surface — `doc-alignment {bind, propose-retire, confirm-retire (env-guarded), mark-missing-test, plan-refresh, plan-backfill, merge-shards, walk, status}`, plus generic `run --gate/--cadence` and `verify --row-id`. Every subcommand documented in `--help`. `bind` validates citations against the live filesystem and refuses on invalid (test asserts). `confirm-retire` exits non-zero when `$CLAUDE_AGENT_CONTEXT` is set (test asserts). **P64.**
-- [x] **DOC-ALIGN-03** (P64, 2026-04-28): `quality/gates/docs-alignment/hash_test_fn` Rust binary uses `syn` to hash function bodies as `to_token_stream()` sha256 — comments + whitespace normalized away. Tests cover comment-edit invariance (hash unchanged) AND rename detection (hash differs). **P64.**
-- [x] **DOC-ALIGN-04** (P64, 2026-04-28): `quality/catalogs/doc-alignment.json` exists with valid empty-state shape: summary block populated (`claims_total: 0`, `alignment_ratio: 1.0`, `floor: 0.50`), zero rows. Schema documented in `quality/catalogs/README.md`. Three structure-dimension freshness rows ship in `quality/catalogs/freshness-invariants.json` asserting catalog presence, summary-block-valid, and floor-monotonicity. **P64.**
-- [x] **DOC-ALIGN-05** (P64, 2026-04-28): `merge-shards` golden test for both auto-resolve case (same claim cited from two source files → one row, two `source` citations) AND conflict case (same claim, different test bindings → exit non-zero, write `CONFLICTS.md`, do NOT partial-write the catalog). The two project-wide principles ("subagents propose with citations; tools validate and mint" / "tools fail loud, structured, agent-resolvable") added to `quality/PROTOCOL.md` with cross-tool examples enumerated (merge-shards, bind, confirm-retire, walker, test verdicts, subjective rubric grades). **P64.**
-- [x] **DOC-ALIGN-06** (P64, 2026-04-28): `.claude/skills/reposix-quality-doc-alignment/` skill exists mirroring the P61 `reposix-quality-review` shape with `SKILL.md`, `refresh.md`, `backfill.md`, `prompts/extractor.md`, `prompts/grader.md`. Slash commands `/reposix-quality-refresh <doc-file>` and `/reposix-quality-backfill` wired top-level-only (rationale documented in `SKILL.md`: depth-2 unreachable + Claude subscription users cannot use Path B `claude -p`). **P64.**
-- [x] **DOC-ALIGN-07** (P64, 2026-04-28): Pre-push hook chains through `reposix-quality run --cadence pre-push` invoking the deterministic hash walker. On STALE_DOCS_DRIFT / MISSING_TEST / STALE_TEST_GONE / TEST_MISALIGNED / RETIRE_PROPOSED, exits non-zero with stderr message naming the relevant slash command. CLAUDE.md gains: new `docs-alignment` row in the dimension matrix; "orchestration-shaped phases run at top-level, not under `/gsd-execute-phase`" note under Subagent delegation rules; P64 H3 subsection ≤40 lines. `test-pre-push.sh` PASS for all existing scenarios. **P64.**
-- [x] **DOC-ALIGN-08** (shipped P65, 2026-04-28): `reposix-quality doc-alignment plan-backfill` produces a deterministic `MANIFEST.json` at `quality/reports/doc-alignment/backfill-<ts>/MANIFEST.json` covering `docs/**/*.md`, `README.md`, and archived REQUIREMENTS.md from milestones v0.6.0 through v0.11.0. Directory-affinity sharding, ≤3 files per shard, alphabetical fallback within a directory. Re-running on the same inputs is byte-identical. (Actual: 24 shards from current corpus; v0.6/v0.7 archived REQUIREMENTS.md not present in repo so the chunker only walked v0.8-v0.11; filed as v0.12.1 carry-forward.)
-- [x] **DOC-ALIGN-09** (shipped P65, 2026-04-28): Backfill executed via top-level orchestrator dispatching 24 shard subagents in 3 waves of 8 (Haiku tier; Path A via Task tool). 22/24 shards used the binary correctly on first dispatch; 2 shards (012, 023) re-dispatched after contract violations (custom JSON schema OR incomplete row); shard 016 wrote to live catalog instead of shard catalog and was recovered via jq move. `merge-shards` exited 0 with zero conflicts. Catalog populated: 388 rows total (181 BOUND / 166 MISSING_TEST / 41 RETIRE_PROPOSED) — 1.94x the 100-200 envelope upper bound; over-extraction in glossary (24 RETIRE) + dev docs (17 policy claims) noted in SURPRISES.md. `summary.floor_waiver` block written: until=2026-07-31, reason="initial backfill; gap closure phased in v0.12.1", dimension_owner=reuben.
-- [x] **DOC-ALIGN-10** (shipped P65, 2026-04-28): `quality/reports/doc-alignment/backfill-20260428T085523Z/PUNCH-LIST.md` generated (505 lines; clusters MISSING_TEST + RETIRE_PROPOSED by user-facing surface). 14 distinct clusters identified. RETIRE_PROPOSED listed separately. Smoking gun confirmed: `docs/reference/confluence.md` 3 MISSING_TEST rows for the FUSE mount + page-tree symlink shape removed in v0.9.0. P65 H3 subsection added to CLAUDE.md (≤80 lines under 40 KB hard cap; total CLAUDE.md size 34521 bytes). Verifier subagent (Path A — top-level orchestrator HAS Task) verdict at `quality/reports/verdicts/p65/VERDICT.md` GREEN. Milestone-close verifier dispatched and verdict GREEN at `quality/reports/verdicts/milestone-v0.12.0/VERDICT.md`. STATE.md cursor updated to "v0.12.0 ready-to-tag (re-verified after P64+P65); owner pushes tag."
-
-### Out of Scope
-
-- **Perf-dimension full implementation** (latency vs headline-copy cross-check, token-economy bench cross-check). Stubbed in MIGRATE-03; full ship deferred to v0.12.1.
-- **Security-dimension full implementation** (allowlist-enforcement gate, audit-immutability test). Stubbed in MIGRATE-03; full ship deferred to v0.12.1.
-- **Cross-platform container rehearsals** (windows-2022, macos-14 runners). v0.12.0 ships ubuntu-only matrix; cross-platform deferred to v0.12.1 because windows/mac GH runners are real money on every release.
-- **`Error::Other` 156→144 partial migration completion** (POLISH2-09 carry-forward from v0.11.1). Stubbed under MIGRATE-03 v0.12.1 carry-forward.
-- **Threat-model rewrite for v0.9.0 architecture** (friction row 20 from v0.11.1). Deferred to a separate security-focused milestone.
+- **OTel / `reposix tail` / multi-project helper.** Operational maturity for an existing thesis. Doesn't depend on DVCS shipping; equally, DVCS doesn't depend on it. Lives at `.planning/research/v0.14.0-observability-and-multi-repo/`.
+- **Origin-of-truth frontmatter enforcement.** Only matters when bus pattern fans out across **multiple issues backends** (e.g., GH Issues + JIRA simultaneously). v0.13.0 bus pattern is "one issues backend (SoT) + one plain-git mirror" where this can't go wrong.
+- **L2/L3 cache-desync hardening.** L2 = background reconcile job; L3 = transactional cache writes wired into every adapter. Decision rate-of-incidence collected via v0.14.0 OTel work.
+- **Multi-SoT attach.** Covered by v0.14.0 origin-of-truth scope.
+- **Sync daemon as long-running process.** Webhook-driven CI is the v0.13.0 default.
+- **Atomic two-phase commit across backends.** Bus remote is "SoT-first, mirror-best-effort with lag tracking," not 2PC. Document the asymmetry; don't try to hide it.
+- **Bus remote with N > 2 endpoints.** Algorithm generalizes; URL scheme generalizes; but v0.13.0 implementation hardcodes 1+1.
+- **Bidirectional bus** (mirror → SoT propagation). Mirror is read-only from confluence's perspective; vanilla `git push origin` from Dev B to mirror creates commits SoT never sees, lost on next webhook sync via `--force-with-lease`. Documented loudly in `dvcs-topology.md`.
+- **Conflict resolution UI / interactive merge against confluence-side edits.** Standard `git pull --rebase` flow handles it.
+- **RETROSPECTIVE.md backfill** for v0.9.0 → v0.12.0 (multi-hour synthesis from per-milestone `*-phases/` artifacts). v0.14.0 candidate.
 
 ### Traceability
 
-Refined 1:1 mapping after roadmap creation (gsd-roadmapper, 2026-04-27). Coverage = 46/46 requirements ✓ (38 original + 8 POLISH-* per the broaden-and-deepen directive added 2026-04-27); no orphans, no duplicates. See `.planning/ROADMAP.md` `## v0.12.0 Quality Gates (PLANNING)` for full phase entries with goal / requirements / depends-on (gate-state preconditions) / success criteria / context anchor.
+To be filled by `gsd-roadmapper` after roadmap creation. Coverage target: 100% of v0.13.0 REQ-IDs mapped to exactly one phase.
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| RELEASE-01 | P56 | planning |
-| RELEASE-02 | P56 | planning |
-| RELEASE-03 | P56 | planning |
-| RELEASE-04 | P58 | planning |
-| QG-01 | P57 | planning |
-| QG-02 | P57 | planning |
-| QG-03 | P57 | planning |
-| QG-04 | P57 | planning |
-| QG-05 | P57 | planning |
-| QG-06 | P57 | planning |
-| QG-07 | P57 | planning |
-| QG-08 | P57 | planning |
-| QG-09 | P57 (verdict.py emit) + P58 (GH Actions badge) + P60 (mkdocs publish + README badge) | planning (P57 + P58 + P60 portions shipped; row closes at v0.12.0 milestone end / P63) |
-| STRUCT-01 | P57 | planning |
-| STRUCT-02 | P57 | planning |
-| DOCS-REPRO-01 | P59 | planning |
-| DOCS-REPRO-02 | P59 | planning |
-| DOCS-REPRO-03 | P59 | planning |
-| DOCS-REPRO-04 | P59 | planning |
-| DOCS-BUILD-01 | P60 | shipped (P60) |
-| BADGE-01 | P60 | shipped (P60) |
-| SUBJ-01 | P61 | shipped (P61) |
-| SUBJ-02 | P61 | shipped (P61) |
-| SUBJ-03 | P61 | shipped (P61) |
-| ORG-01 | P62 | shipped (P62) |
-| POLISH-STRUCT | P57 | planning |
-| POLISH-RELEASE | P58 | planning |
-| POLISH-DOCS-REPRO | P59 | planning |
-| POLISH-DOCS-BUILD | P60 | shipped (P60) |
-| POLISH-SUBJECTIVE | P61 | shipped (P61) |
-| POLISH-ORG | P62 | shipped (P62) |
-| POLISH-AGENT-UX | P59 | planning |
-| POLISH-CODE | P58 (stub) + P63 (final) | planning |
-| SIMPLIFY-01 | P57 | planning |
-| SIMPLIFY-02 | P57 | planning |
-| SIMPLIFY-03 | P57 | planning |
-| SIMPLIFY-04 | P58 | planning |
-| SIMPLIFY-05 | P58 | planning |
-| SIMPLIFY-06 | P59 | planning |
-| SIMPLIFY-07 | P59 | planning |
-| SIMPLIFY-08 | P60 | shipped (P60) |
-| SIMPLIFY-09 | P60 | shipped (P60) |
-| SIMPLIFY-10 | P60 | shipped (P60) |
-| SIMPLIFY-11 | P59 (relocate) + v0.12.1 (cross-check stub per MIGRATE-03) | planning |
-| SIMPLIFY-12 | P63 | planning |
-| MIGRATE-01 | P63 | planning |
-| MIGRATE-02 | P63 | planning |
-| MIGRATE-03 | P63 | planning |
+| HYGIENE-01 | TBD (P0) | planning |
+| HYGIENE-02 | TBD (P0/P1) | planning |
+| POC-01 | pre-Phase-1 | planning |
+| DVCS-ATTACH-01..04 | TBD | planning |
+| DVCS-MIRROR-REFS-01..03 | TBD | planning |
+| DVCS-BUS-URL-01 | TBD | planning |
+| DVCS-BUS-PRECHECK-01..02 | TBD | planning |
+| DVCS-BUS-WRITE-01..06 | TBD | planning |
+| DVCS-BUS-FETCH-01 | TBD | planning |
+| DVCS-PERF-L1-01..03 | TBD | planning |
+| DVCS-WEBHOOK-01..04 | TBD | planning |
+| DVCS-DOCS-01..04 | TBD | planning |
+| DVCS-DARKFACTORY-01..02 | TBD | planning |
+| MULTI-SOURCE-WATCH-01 | TBD (docs-alignment dim) | planning |
+| DVCS-SURPRISES-01 | P+last-1 (+2 slot 1) | planning |
+| DVCS-GOOD-TO-HAVES-01 | P+last (+2 slot 2) | planning |
 
-**Per-phase requirement counts:** P56=3 (RELEASE-01..03) · P57=15 (QG-01..09, STRUCT-01..02, SIMPLIFY-01..03, POLISH-STRUCT) · P58=5 (RELEASE-04, SIMPLIFY-04..05, POLISH-RELEASE, POLISH-CODE-stub) · P59=9 (DOCS-REPRO-01..04, SIMPLIFY-06..07, SIMPLIFY-11, POLISH-DOCS-REPRO, POLISH-AGENT-UX) · P60=6 all SHIPPED (DOCS-BUILD-01, BADGE-01, SIMPLIFY-08..10, POLISH-DOCS-BUILD) · P61=4 all SHIPPED (SUBJ-01, SUBJ-02, SUBJ-03, POLISH-SUBJECTIVE) · P62=2 (ORG-01, POLISH-ORG) · P63=5 (MIGRATE-01..03, SIMPLIFY-12, POLISH-CODE-final). Sum = 49 (40 original + 8 POLISH-* + POLISH-CODE counted in BOTH P58-stub and P63-final per its dual home) ✓. (QG-09 spans P57+P58+P60; counted in P57 as primary owner. POLISH-CODE spans P58+P63; counted in both.)
+### Recurring success criteria across every v0.13.0 phase
 
-**Recurring success criteria across every phase (P56–P63)** — these are part of the phase's definition-of-done and are NOT separate REQ-IDs (they are recurring expressions of QG-06 + QG-07 + the autonomous-execution protocol):
-- Catalog-first: phase's first commit writes catalog rows BEFORE implementation.
-- CLAUDE.md update in the same PR (QG-07).
-- Unbiased verifier-subagent dispatch on phase close (QG-06).
-- SIMPLIFY absorption (where applicable): every script/example in scope is folded into `quality/gates/<dim>/`, reduced to a one-line shim, or has a waiver row in `quality/catalogs/orphan-scripts.json` with reason.
-- **Fix every RED row the dimension's gates flag.** When a phase ships a new gate, the gate's first run almost always finds NOT-VERIFIED or FAIL rows. Those rows MUST be either (a) FIXED in the same phase (cite commit), (b) WAIVED with explicit `until` + `reason` + `dimension_owner` per the waiver protocol (capped at 90 days), or (c) filed as a v0.12.1 carry-forward via MIGRATE-03. **The milestone does NOT close on NOT-VERIFIED P0+P1 rows.** Goal: after v0.12.0 closes, every dimension's catalog is all-GREEN-or-WAIVED. Owner directive: "I'm really hoping that after this milestone the codebase is pristine and high quality across all the dimensions."
+These are part of every phase's definition-of-done and are NOT separate REQ-IDs (they are recurring expressions of OP-7 + the autonomous-execution protocol):
+- **Catalog-first**: phase's first commit writes catalog rows BEFORE implementation.
+- **CLAUDE.md update in same PR** (per QG-07 carry-over from v0.12.0).
+- **Unbiased verifier-subagent dispatch on phase close** (per OP-7).
+- **Per-phase push** — `git push origin main` BEFORE verifier-subagent dispatch; pre-push gate-passing is part of close criterion (codified 2026-04-30, closes 999.4).
+- **Eager-resolution preference** per OP-8 — items < 1hr / no new dependency get fixed in the discovering phase; else appended to `SURPRISES-INTAKE.md` or `GOOD-TO-HAVES.md`.
+- **Goal: pristine codebase across all dimensions** — every dimension's gates GREEN-or-WAIVED at milestone close.
