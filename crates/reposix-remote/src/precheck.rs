@@ -22,6 +22,16 @@
 //!   AND fetches from the backend on cache miss. Use
 //!   [`reposix_cache::Cache::read_blob_cached`] (sync, gix-only,
 //!   returns `Ok(None)` on miss).
+//!
+//! ## Bus-vs-single-backend precheck asymmetry (P82+)
+//!
+//! [`precheck_sot_drift_any`] is a COARSER sibling intended for the
+//! bus handler's PRECHECK B — it runs BEFORE reading stdin (push
+//! set unknown), so it asks "did anything change?" and bails on any
+//! drift. The finer [`precheck_export_against_changed_set`] runs
+//! AFTER stdin is read (single-backend path today; P83's bus handler
+//! will run BOTH — coarser before stdin, finer after). The
+//! architecture-sketch's step 3 prose ratifies this asymmetry per Q3.1.
 
 use std::collections::HashSet;
 
@@ -299,4 +309,111 @@ pub(crate) fn precheck_export_against_changed_set(
     };
 
     Ok(PrecheckOutcome::Proceed { prior })
+}
+
+/// Coarser SoT-drift outcome — bus handler's PRECHECK B reports
+/// whether ANY backend record has changed since the cache cursor,
+/// without intersecting against a push set (the bus path runs this
+/// BEFORE reading stdin, so the push set is unknown). The finer
+/// intersect-with-push-set check lives in
+/// [`precheck_export_against_changed_set`] and runs in P83 AFTER
+/// `parse_export_stream` consumes stdin.
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+pub(crate) enum SotDriftOutcome {
+    /// Backend has at least one record changed since `last_fetched_at`.
+    /// `changed_count` is reported for diagnostic / logging only —
+    /// the bus handler emits the rejection unconditionally on `Drifted`.
+    Drifted { changed_count: usize },
+    /// Backend stable since `last_fetched_at` (or no cursor — first-push
+    /// fallback per [`precheck_export_against_changed_set`]'s policy).
+    Stable,
+}
+
+/// PRECHECK B (coarser sibling of [`precheck_export_against_changed_set`]).
+///
+/// The bus handler runs this BEFORE reading stdin, so the push set is
+/// unknown. This wrapper asks "did anything change since
+/// `last_fetched_at`?" and bails on any drift; the architecture-sketch's
+/// step 3 prose ratifies this coarser semantic for the bus path. The
+/// finer intersect-with-push-set check (which the bus handler will
+/// also run in P83 AFTER stdin is read) lives in
+/// [`precheck_export_against_changed_set`].
+///
+/// First-push policy: when the cursor is absent, returns
+/// [`SotDriftOutcome::Stable`] — same shape as
+/// [`precheck_export_against_changed_set`]'s no-cursor path. The
+/// inner correctness check at SoT-write time (P83) is the safety
+/// net for first pushes.
+///
+/// # Errors
+/// REST failure annotates with `.context("backend-unreachable: ...")`
+/// so the bus handler maps it to the existing `fail_push(diag,
+/// "backend-unreachable", ...)` shape.
+//
+// `dead_code` allow scoped to T03 commit; T04 wires this from
+// `bus_handler::handle_bus_export`, removing the lint trigger.
+#[allow(dead_code)]
+pub(crate) fn precheck_sot_drift_any(
+    cache: Option<&Cache>,
+    backend: &dyn BackendConnector,
+    project: &str,
+    rt: &Runtime,
+) -> Result<SotDriftOutcome> {
+    // Step 1: read cursor. No cursor → first-push policy = Stable.
+    let Some(since) = cache.and_then(|c| c.read_last_fetched_at().ok().flatten()) else {
+        return Ok(SotDriftOutcome::Stable);
+    };
+
+    // Step 2: list_changed_since on SoT. Empty → Stable; non-empty →
+    // Drifted. Bus handler emits `error refs/heads/main fetch first`
+    // on Drifted.
+    let changed = rt
+        .block_on(backend.list_changed_since(project, since))
+        .context("backend-unreachable: list_changed_since (PRECHECK B)")?;
+
+    if changed.is_empty() {
+        Ok(SotDriftOutcome::Stable)
+    } else {
+        Ok(SotDriftOutcome::Drifted {
+            changed_count: changed.len(),
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// First-push policy: no cursor → Stable. Mirrors the no-cursor
+    /// fallback in `precheck_export_against_changed_set` so the bus
+    /// handler's PRECHECK B doesn't misfire on a fresh attach.
+    ///
+    /// We pass `cache: None` to short-circuit the cursor-read path
+    /// entirely — the wrapper must NOT call `list_changed_since` when
+    /// the cursor is absent. Asserting on the outcome verifies the
+    /// first-push semantic without spinning up a backend.
+    #[test]
+    fn precheck_sot_drift_any_returns_stable_when_no_cursor() {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("build runtime");
+
+        // SimBackend is the cheapest BackendConnector to instantiate.
+        // We pass loopback :0 because the test passes `cache: None` —
+        // the wrapper short-circuits on the cursor-read path and never
+        // makes an HTTP call. Even if it did, REPOSIX_ALLOWED_ORIGINS
+        // is loopback-by-default so the call would fail closed; the
+        // assertion (Stable from the no-cursor branch) is unaffected.
+        let backend = reposix_core::backend::sim::SimBackend::new("http://127.0.0.1:0".to_owned())
+            .expect("build sim backend");
+
+        let outcome = precheck_sot_drift_any(None, &backend, "demo", &rt)
+            .expect("no-cursor case should return Stable without erroring");
+        match outcome {
+            SotDriftOutcome::Stable => {}
+            other => panic!("expected Stable; got {other:?}"),
+        }
+    }
 }
