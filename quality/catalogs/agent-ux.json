@@ -1017,6 +1017,140 @@
       "blast_radius": "P3",
       "owner_hint": "if RED: rerun P87 drain. SURPRISES-INTAKE.md should have 0 OPEN entries; each entry needs RESOLVED (commit SHA), DEFERRED (target milestone + rationale), or WONTFIX (rationale).",
       "waiver": null
+    },
+    {
+      "id": "agent-ux/p88-good-to-haves-drained",
+      "dimension": "agent-ux",
+      "cadence": "on-demand",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. P88 itself defers GOOD-TO-HAVES-01 to v0.14.0, so this provenance note carries forward.",
+      "comment": "P88 (+2 reservation slot 2) GOOD-TO-HAVES drain verifier. Asserts GOOD-TO-HAVES.md is fully drained for v0.13.0 — every `## GOOD-TO-HAVES-NN` heading carries a terminal STATUS line (RESOLVED|DEFERRED|WONTFIX); zero TBD. Cadence on-demand because the file is milestone-bounded; archives with the milestone, becomes a historical PASS marker per the v0.12.1 P77 precedent.",
+      "sources": [
+        "quality/gates/agent-ux/p88-good-to-haves-drained.sh",
+        ".planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md",
+        ".planning/REQUIREMENTS.md (DVCS-GOOD-TO-HAVES-01)"
+      ],
+      "command": "bash quality/gates/agent-ux/p88-good-to-haves-drained.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/p88-good-to-haves-drained.sh exits 0 against the local working tree",
+          "every `## GOOD-TO-HAVES-NN` heading in .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md carries a matching terminal STATUS line",
+          "zero entries with STATUS: TBD",
+          "at least 1 entry with terminal STATUS (RESOLVED|DEFERRED|WONTFIX) — matches the v0.13.0 surfaced count"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p88-good-to-haves-drained.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p88-good-to-haves-drained.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T22:30:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P3",
+      "owner_hint": "if RED: rerun P88 drain. GOOD-TO-HAVES.md should have terminal STATUS on every heading; each entry needs RESOLVED (commit SHA), DEFERRED (target milestone + rationale), or WONTFIX (rationale)."
+    },
+    {
+      "id": "agent-ux/v0.13.0-changelog-entry-present",
+      "dimension": "agent-ux",
+      "cadence": "on-demand",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): see GOOD-TO-HAVES-01 (deferred to v0.14.0).",
+      "comment": "P88 milestone-close artifact verifier. Asserts CHANGELOG.md contains a substantive `[v0.13.0]` section (>=10 non-blank lines). Pairs with the tag-script Guard 4 which only checks heading existence; this verifier additionally asserts the section is not a stub. Cadence on-demand because the row is milestone-bounded; once v0.13.0 archives the row becomes a historical PASS marker.",
+      "sources": [
+        "quality/gates/agent-ux/v0.13.0-changelog-entry-present.sh",
+        "CHANGELOG.md"
+      ],
+      "command": "bash quality/gates/agent-ux/v0.13.0-changelog-entry-present.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/v0.13.0-changelog-entry-present.sh exits 0 against the local working tree",
+          "CHANGELOG.md contains a `## [v0.13.0]` heading",
+          "the v0.13.0 section is non-empty (>=10 non-blank lines between the heading and the next `## [` heading)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/v0.13.0-changelog-entry-present.sh",
+        "args": [],
+        "timeout_s": 10,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/v0.13.0-changelog-entry-present.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T22:30:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P3",
+      "owner_hint": "if RED: append a `## [v0.13.0] -- DVCS over REST -- YYYY-MM-DD` section to CHANGELOG.md above the previous entry."
+    },
+    {
+      "id": "agent-ux/v0.13.0-tag-script-present",
+      "dimension": "agent-ux",
+      "cadence": "on-demand",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): see GOOD-TO-HAVES-01 (deferred to v0.14.0).",
+      "comment": "P88 milestone-close artifact verifier. Asserts the v0.13.0 tag-script exists, is executable, has >=6 `# Guard N:` comments, and contains a `git tag -s` invocation. Mirrors the v0.12.0 tag-script precedent. Cadence on-demand because the row is milestone-bounded; the tag-script is owner-runnable, NOT executor-runnable (per ROADMAP P88 SC6 STOP-at-tag-boundary).",
+      "sources": [
+        "quality/gates/agent-ux/v0.13.0-tag-script-present.sh",
+        ".planning/milestones/v0.13.0-phases/tag-v0.13.0.sh",
+        ".planning/milestones/v0.12.0-phases/tag-v0.12.0.sh"
+      ],
+      "command": "bash quality/gates/agent-ux/v0.13.0-tag-script-present.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/v0.13.0-tag-script-present.sh exits 0 against the local working tree",
+          ".planning/milestones/v0.13.0-phases/tag-v0.13.0.sh exists",
+          "tag-v0.13.0.sh is executable (chmod +x)",
+          "tag-v0.13.0.sh has >=6 `# Guard N:` comments",
+          "tag-v0.13.0.sh contains `git tag -s` (signed-tag invocation)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/v0.13.0-tag-script-present.sh",
+        "args": [],
+        "timeout_s": 10,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/v0.13.0-tag-script-present.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T22:30:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P3",
+      "owner_hint": "if RED: re-author tag-v0.13.0.sh mirroring .planning/milestones/v0.12.0-phases/tag-v0.12.0.sh; ensure >=6 `# Guard N:` comments + `git tag -s`."
+    },
+    {
+      "id": "agent-ux/v0.13.0-retrospective-distilled",
+      "dimension": "agent-ux",
+      "cadence": "on-demand",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): see GOOD-TO-HAVES-01 (deferred to v0.14.0).",
+      "comment": "P88 milestone-close artifact verifier (OP-9 ritual). Asserts RETROSPECTIVE.md contains a v0.13.0 section using the OP-9 template — all 5 subheadings present (What Was Built / What Worked / What Was Inefficient / Patterns Established / Key Lessons). Cadence on-demand; closes the OP-9 RETROSPECTIVE.md backfill loop the v0.12.1 milestone-close ratified.",
+      "sources": [
+        "quality/gates/agent-ux/v0.13.0-retrospective-distilled.sh",
+        ".planning/RETROSPECTIVE.md",
+        "CLAUDE.md (OP-9 milestone-close ritual)"
+      ],
+      "command": "bash quality/gates/agent-ux/v0.13.0-retrospective-distilled.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/v0.13.0-retrospective-distilled.sh exits 0 against the local working tree",
+          ".planning/RETROSPECTIVE.md contains a `## Milestone: v0.13.0` heading",
+          "the v0.13.0 section contains all 5 OP-9 subheadings: What Was Built, What Worked, What Was Inefficient, Patterns Established, Key Lessons"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/v0.13.0-retrospective-distilled.sh",
+        "args": [],
+        "timeout_s": 10,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/v0.13.0-retrospective-distilled.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T22:30:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P3",
+      "owner_hint": "if RED: re-run P88 RETROSPECTIVE distillation against the OP-9 template (CLAUDE.md OP-9). Ensure all 5 subheadings appear in the v0.13.0 section."
     }
   ]
 }
