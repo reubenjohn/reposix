@@ -29,13 +29,21 @@ cleanup() {
 trap cleanup EXIT
 
 cargo build -p reposix-sim -p reposix-cli --quiet
-target/debug/reposix-sim --bind "127.0.0.1:${PORT}" --ephemeral &
+SIM_BIN="${REPO_ROOT}/target/debug/reposix-sim"
+CLI_BIN="${REPO_ROOT}/target/debug/reposix"
+"${SIM_BIN}" --bind "127.0.0.1:${PORT}" --ephemeral --no-seed &
 SIM_PID=$!
 sleep 1
 
 cd "${WORK}"
 git init -q
-target/debug/reposix attach "sim::demo" --remote-name reposix > /dev/null
+# Verifier-isolated cache + sim origin so a stale ~/.cache/reposix dir
+# from a previous run doesn't poison Cache::open's identity check.
+CACHE_DIR=$(mktemp -d -t reposix-attach-cache.XXXXXX)
+trap 'cleanup; rm -rf "${CACHE_DIR}"' EXIT
+REPOSIX_CACHE_DIR="${CACHE_DIR}" \
+REPOSIX_SIM_ORIGIN="http://127.0.0.1:${PORT}" \
+"${CLI_BIN}" attach "sim::demo" --remote-name reposix > /dev/null
 
 PCLONE=$(git config --get extensions.partialClone || true)
 RURL=$(git config --get remote.reposix.url || true)

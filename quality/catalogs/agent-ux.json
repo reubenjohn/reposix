@@ -64,8 +64,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/reposix-attach-against-vanilla-clone.json",
-      "status": "FAIL",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-05-01T07:08:21Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-cli/src/attach.rs subcommand or crates/reposix-cache/src/reconciliation.rs walk regressed; check stderr for whether extensions.partialClone or remote URL post-condition failed",

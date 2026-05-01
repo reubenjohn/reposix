@@ -15,8 +15,11 @@ The reposix runtime has three pieces:
 - **`reposix-cache`** — a real on-disk bare git repo built from REST responses via the `BackendConnector` trait. The cache produces a fully populated tree (filenames, directory structure, blob OIDs) but materializes blobs lazily — only when the helper requests one on git's behalf. Every materialization writes a row to the SQLite audit table; bytes return wrapped in `reposix_core::Tainted<Vec<u8>>`.
 - **`git-remote-reposix`** — a hybrid git remote helper. It advertises `stateless-connect` (read path: tunnels protocol-v2 fetch traffic to the cache's bare repo with `--filter=blob:none`) and `export` (push path: parses the fast-import stream, runs push-time conflict detection against the backend, applies REST writes on success). Refspec namespace is `refs/heads/*:refs/reposix/*`.
 - **`reposix init <backend>::<project> <path>`** — bootstraps a partial-clone working tree: `git init`, `extensions.partialClone=origin`, `remote.origin.url=reposix::<scheme>://<host>/projects/<project>`, then `git fetch --filter=blob:none origin`.
+- **`reposix attach <backend>::<project>`** — adopt an existing checkout (vanilla `git clone` mirror, hand-edited tree, prior `reposix init`) and bind it to a `SoT` backend. Builds the cache from REST, walks the working-tree HEAD, reconciles records by frontmatter `id` (5 cases per architecture-sketch: match / no-id / backend-deleted / duplicate-id / mirror-lag), then sets `extensions.partialClone=reposix` (NOT `origin`) and `remote.reposix.url=reposix::<sot>?mirror=<plain-mirror-url>`. Re-attach against the same `SoT` is idempotent (Q1.3); against a different `SoT` is rejected (Q1.2 — multi-SoT not supported in v0.13.0). `REPOSIX_SIM_ORIGIN` overrides the default sim port (used by integration tests).
 
-After `init`, agent UX is pure git: `cd <path> && git checkout origin/main && cat issues/<id>.md && grep -r TODO . && <edit> && git add . && git commit && git push`. Zero reposix CLI awareness required beyond `init`.
+After `init`, agent UX is pure git: `cd <path> && git checkout origin/main && cat issues/<id>.md && grep -r TODO . && <edit> && git add . && git commit && git push`. Zero reposix CLI awareness required beyond `init` (or `attach` for adopted trees).
+
+**Cache reconciliation table.** `reposix-cache` adds a `cache_reconciliation` table (`record_id PRIMARY KEY, oid, local_path, attached_at`) populated by `reposix attach` via `walk_and_reconcile`. One row per matched local record. `INSERT OR REPLACE` on re-attach (idempotent per Q1.3). NOT an audit table — it's reconciliation state, the append-only triggers in `audit_events_cache` do not apply. Audit-row trail for the attach walk itself lands in `audit_events_cache` with `op = 'attach_walk'` (OP-3 unconditional).
 
 Two guardrails are load-bearing for the dark-factory pattern:
 
@@ -161,6 +164,12 @@ cargo run -p reposix-sim                                  # start simulator on :
 cargo run -p reposix-cli -- init sim::demo /tmp/repo      # bootstrap a partial-clone working tree
 cd /tmp/repo && git checkout origin/main                  # agent UX from here is pure git
 cat issues/0001.md && grep -ril TODO . && git push        # cat, grep, edit, push
+
+# Attach an existing checkout (vanilla GH-mirror clone or hand-edited tree, v0.13.0+)
+git clone git@github.com:org/issues-repo.git /tmp/issues  # vanilla mirror clone (no reposix needed)
+cd /tmp/issues
+reposix attach sim::demo --remote-name reposix            # build cache from REST; reconcile by frontmatter id; add reposix remote
+git push reposix main                                     # push via reposix remote (single-SoT shape; bus URL form requires P82+)
 
 # Dark-factory regression (proves agent UX is pure git, zero in-context learning)
 bash scripts/dark-factory-test.sh sim                     # local + CI
