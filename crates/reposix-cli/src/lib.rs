@@ -24,5 +24,6 @@ pub mod list;
 pub mod refresh;
 pub mod sim;
 pub mod spaces;
+pub mod sync;
 pub mod tokens;
 pub mod worktree_helpers;

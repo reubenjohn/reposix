@@ -24,7 +24,9 @@ use clap::{Parser, Subcommand};
 
 // All subcommand modules live in `lib.rs` so integration tests can call
 // them directly. `main.rs` is intentionally thin: clap-derive dispatch only.
-use reposix_cli::{attach, cost, doctor, gc, history, init, list, refresh, sim, spaces, tokens};
+use reposix_cli::{
+    attach, cost, doctor, gc, history, init, list, refresh, sim, spaces, sync, tokens,
+};
 
 /// reposix — git-native partial clone for autonomous agents.
 #[derive(Debug, Parser)]
@@ -157,6 +159,32 @@ enum Cmd {
         /// Which backend to query. Only `confluence` is currently supported.
         #[arg(long, value_enum, default_value_t = list::ListBackend::Confluence)]
         backend: list::ListBackend,
+    },
+    /// On-demand cache reconciliation against the `SoT` — the L1 escape
+    /// hatch (DVCS-PERF-L1-02).
+    ///
+    /// Without `--reconcile`, prints a one-line hint pointing at the
+    /// flag (the bare `reposix sync` form is reserved for future flag
+    /// combinations per the v0.13.0 architecture-sketch).
+    ///
+    /// With `--reconcile`, opens the working tree's cache and runs a
+    /// full `Cache::sync`: `list_records` walk + tree rebuild + cursor
+    /// bump. Use this when a push reject suggests cache desync (e.g.
+    /// the L1 trade-off from architecture-sketch.md § Performance
+    /// subtlety: backend-deleted records that surface as REST 404 on
+    /// PATCH).
+    ///
+    /// Examples:
+    ///   reposix sync                        # prints a hint
+    ///   reposix sync --reconcile            # rebuild cache from `SoT` (cwd)
+    ///   reposix sync --reconcile /tmp/repo
+    Sync {
+        /// Force a full `list_records` walk + cache rebuild. Without
+        /// this flag, the subcommand prints a hint and exits 0.
+        #[arg(long)]
+        reconcile: bool,
+        /// Working-tree directory. Defaults to cwd.
+        path: Option<PathBuf>,
     },
     /// Diagnose a reposix-init'd working tree and print copy-pastable fix
     /// commands for each issue found. Exit code is 1 if any ERROR-severity
@@ -365,6 +393,7 @@ async fn main() -> Result<()> {
             .await
         }
         Cmd::Spaces { backend } => spaces::run(backend).await,
+        Cmd::Sync { reconcile, path } => sync::run(reconcile, path).await,
         Cmd::History { path, limit } => {
             let p = match path {
                 Some(p) => p,
