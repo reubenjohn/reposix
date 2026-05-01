@@ -2,26 +2,31 @@
 # .githooks/pre-commit -- project-base + optional personal add-on chain.
 #
 # Composition rule:
-#   1. Project-side pre-commit logic (none yet) runs FIRST.
-#   2. Personal global hook at ~/.git-hooks/pre-commit chains in at the
+#   1. cargo fmt --check on staged .rs files (fast-feedback on fmt drift).
+#   2. Quality Gates runner --cadence pre-commit (catalog rows tagged
+#      pre-commit, e.g. file-size-limits).
+#   3. Personal global hook at ~/.git-hooks/pre-commit chains in at the
 #      END if executable and non-delegate.
 #
-# When project-side logic is added later, insert it ABOVE the chain
-# block so the project gate fails fast before the personal warnings
-# fire. The recursion guard mirrors .githooks/pre-push: skip globals
-# whose body contains the "delegate to repo-local" sentinel.
+# When new project-side logic is added later, slot it between (1) and
+# (2) only if it must run BEFORE the runner; otherwise add a catalog
+# row tagged pre-commit and let (2) pick it up. The recursion guard
+# mirrors .githooks/pre-push: skip globals whose body contains the
+# "delegate to repo-local" sentinel.
 #
 # Bypass (discouraged): git commit --no-verify
 
 set -uo pipefail
 
-# (1) Project-side pre-commit logic.
+readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# (1) cargo fmt --check on staged .rs files.
 #
-# cargo fmt --check on staged .rs files. Catches fmt drift at commit
-# time so it doesn't accumulate across long unpushed local stacks
-# (the autonomous-run pattern lands many commits between pushes; if
-# fmt only runs at pre-push, drift compounds and surfaces against a
-# 100+-commit range -- already happened with P73/P75, fixed in 61ee88b).
+# Catches fmt drift at commit time so it doesn't accumulate across long
+# unpushed local stacks (the autonomous-run pattern lands many commits
+# between pushes; if fmt only runs at pre-push, drift compounds and
+# surfaces against a 100+-commit range -- already happened with P73/P75,
+# fixed in 61ee88b).
 #
 # Scope: fmt only. Clippy + tests stay at pre-push (too slow for
 # every commit). Bypass: git commit --no-verify (discouraged).
@@ -32,7 +37,17 @@ if git diff --cached --name-only --diff-filter=ACMR | grep -qE '\.rs$'; then
   fi
 fi
 
-# (2) Optional personal add-on chain.
+# (2) Quality Gates runner -- propagates exit code.
+# Avoid `if ! cmd; then exit $?; fi` -- $? after `! cmd` is the exit of
+# the negation (always 0), masking the real failure. Same pattern as
+# .githooks/pre-push step (2).
+python3 "$REPO_ROOT/quality/runners/run.py" --cadence pre-commit
+RUNNER_EXIT=$?
+if [[ $RUNNER_EXIT -ne 0 ]]; then
+  exit "$RUNNER_EXIT"
+fi
+
+# (3) Optional personal add-on chain.
 GLOBAL="$HOME/.git-hooks/pre-commit"
 if [[ -x "$GLOBAL" ]] && ! grep -q "delegate to repo-local" "$GLOBAL" 2>/dev/null; then
   exec "$GLOBAL" "$@"

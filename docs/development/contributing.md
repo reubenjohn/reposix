@@ -5,6 +5,21 @@
     
     This page is written for a human (or another agent) picking the project up from here.
 
+## Getting started
+
+After your first clone, run the hook installer once. It points
+`core.hooksPath` at `.githooks/` so `cargo fmt --check` and the Quality
+Gates runner fire on every commit and push.
+
+```bash
+bash scripts/install-hooks.sh
+```
+
+CI is the contract — any push that lands on `main` has cleared the same
+gates. Local hooks are fast-feedback so you don't push something CI will
+reject; they're not a substitute for CI itself. Bypass (discouraged):
+`git commit --no-verify` / `git push --no-verify`.
+
 ## Quickstart for contributors
 
 ```bash

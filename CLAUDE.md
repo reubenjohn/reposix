@@ -174,6 +174,7 @@ inside `*-phases/` from day one.
 
 ```bash
 # Local dev loop
+bash scripts/install-hooks.sh                             # one-time after fresh clone (sets core.hooksPath=.githooks)
 cargo check --workspace                                   # fast type check
 cargo test --workspace                                    # unit + integration tests
 cargo clippy --workspace --all-targets -- -D warnings     # CI lint

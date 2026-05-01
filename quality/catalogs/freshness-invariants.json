@@ -627,6 +627,43 @@
         "pre-push",
         "pre-pr"
       ]
+    },
+    {
+      "id": "structure/file-size-limits",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "sources": [
+        "quality/gates/structure/file-size-limits.sh",
+        "CLAUDE.md:Operating Principles (progressive disclosure)"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "every tracked file is within its extension's progressive-disclosure budget (CLAUDE.md=40k, .claude/skills/=10k, *.md=20k, *.rs=20k, *.py=15k, *.sh=10k); auto-generated + crates source excluded",
+          "Cargo.lock, quality/catalogs/*.json, quality/reports/, crates/.../tests/fixtures/, CHANGELOG.md, and crates/.../*.rs are excluded from scope",
+          "verifier exit 1 on any violation by default; --warn-only flag flips exit to 0 (transitional cleanup window)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/file-size-limits.sh",
+        "args": [
+          "--warn-only"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/file-size-limits.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T23:12:53Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if violations: split the file per the hint emitted by the verifier. To flip the gate from warn-only to block-mode after cleanup, remove '--warn-only' from this row's verifier.args (one-line edit).",
+      "waiver": null,
+      "cadences": [
+        "pre-commit",
+        "pre-push",
+        "pre-pr"
+      ]
     }
   ]
 }
