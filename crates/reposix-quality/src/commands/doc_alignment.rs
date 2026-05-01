@@ -221,6 +221,10 @@ pub(crate) mod verbs {
         Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string()
     }
 
+    #[allow(
+        clippy::too_many_lines,
+        reason = "Single coherent procedure: validate citations -> compute hashes -> dispatch new vs existing row -> persist. P78 added per-index source_hashes tracking that pushed the line count over the default cap; splitting hurts readability of the existing-row branch's heal logic."
+    )]
     pub fn bind(
         catalog: &Path,
         row_id: &str,
@@ -285,7 +289,9 @@ pub(crate) mod verbs {
         if let Some(row) = cat.row_mut(row_id) {
             // Preserve multi-source rows: if existing source is Multi or
             // is a different Single citation, promote to Multi.
-            let mut sources = row.source.as_slice();
+            let prior_cites = row.source.as_slice();
+            let prior_hashes = std::mem::take(&mut row.source_hashes);
+            let mut sources = prior_cites.clone();
             let already_present = sources.iter().any(|c| {
                 c.file == new_source.file
                     && c.line_start == new_source.line_start
@@ -294,31 +300,65 @@ pub(crate) mod verbs {
             if !already_present {
                 sources.push(new_source.clone());
             }
-            // BIND-VERB-FIX-01 (P75): preserve first-source hash semantics.
-            // The walker compares row.source_hash against
-            // source.as_slice()[0]'s current bytes (see verbs::walk line ~836).
-            // Therefore source_hash MUST equal hash(first source).
-            //   - Single result: the only source IS the freshly-hashed one;
-            //     refresh source_hash. This is also the heal path for Single
-            //     rows whose prose drifted (P74 SURPRISES-INTAKE finding).
-            //   - Multi result: the first element is the EXISTING first source
-            //     (we always APPEND, never prepend); its hash is already in
-            //     row.source_hash. DO NOT overwrite with the new source's hash.
-            // Path (b) -- walker hashes every source from a Multi -- is filed
-            // as v0.13.0 carry-forward MULTI-SOURCE-WATCH-01. Path (a)
-            // limitation: drift in non-first Multi sources will not fire
-            // STALE_DOCS_DRIFT under the current walker.
-            let result_is_single = sources.len() == 1;
-            row.source = if result_is_single {
+            // BIND-VERB-FIX-01 (P75) + MULTI-SOURCE-WATCH-01 (P78):
+            // Walker now AND-compares per-source hashes via
+            // `source_hashes` (path-b -- closed in P78-03). The legacy
+            // `source_hash` field tracks `source_hashes[0]` for one
+            // release cycle (back-compat for downgrade rollback);
+            // post-v0.14.0 `source_hash` can be retired.
+            //
+            // Heal paths (per-index):
+            //   - Single result: refresh source_hashes[0] AND source_hash
+            //     (heals Single rows whose prose drifted -- P74 finding).
+            //   - Multi append: push freshly-bound hash; preserve prior
+            //     index hashes (Multi rows accumulate; new source = new
+            //     index).
+            //   - Multi same-source rebind: refresh JUST that index in
+            //     source_hashes (heals individual Multi entries without
+            //     disturbing siblings).
+            //
+            // Locate where the freshly-bound source sits in `sources`
+            // BEFORE moving the vec into the Source enum.
+            let new_index = sources
+                .iter()
+                .position(|c| {
+                    c.file == new_source.file
+                        && c.line_start == new_source.line_start
+                        && c.line_end == new_source.line_end
+                })
+                .expect("new_source must appear in sources after the append/heal logic");
+            // Rebuild source_hashes parallel to sources. Reuse prior
+            // entries where the cite is unchanged; insert/overwrite at
+            // new_index for the freshly-bound source.
+            let mut new_hashes: Vec<String> = Vec::with_capacity(sources.len());
+            for (i, c) in sources.iter().enumerate() {
+                if i == new_index {
+                    new_hashes.push(src_hash.clone());
+                } else if let Some(prior_idx) = prior_cites.iter().position(|p| {
+                    p.file == c.file && p.line_start == c.line_start && p.line_end == c.line_end
+                }) {
+                    // Carry forward the prior hash for unchanged cites.
+                    new_hashes.push(
+                        prior_hashes
+                            .get(prior_idx)
+                            .cloned()
+                            .unwrap_or_else(|| src_hash.clone()),
+                    );
+                } else {
+                    // Cite never seen before; this branch shouldn't fire
+                    // under the current bind algorithm (sources is built
+                    // from the prior source.as_slice() + the new one)
+                    // but defends against future shape changes.
+                    new_hashes.push(src_hash.clone());
+                }
+            }
+            let new_source_enum = if sources.len() == 1 {
                 Source::Single(sources.into_iter().next().expect("len==1"))
             } else {
                 Source::Multi(sources)
             };
+            row.set_source(new_source_enum, new_hashes)?;
             row.claim = claim.to_string();
-            if result_is_single {
-                row.source_hash = Some(src_hash);
-            }
-            // else: preserve existing row.source_hash (first-source invariant).
             row.set_tests(tests_clean, hashes)?;
             row.rationale = Some(rationale.to_string());
             row.last_verdict = RowState::Bound;
@@ -331,7 +371,8 @@ pub(crate) mod verbs {
                 id: row_id.to_string(),
                 claim: claim.to_string(),
                 source: Source::Single(new_source),
-                source_hash: Some(src_hash),
+                source_hash: Some(src_hash.clone()),
+                source_hashes: vec![src_hash],
                 tests: Vec::new(),
                 test_body_hashes: Vec::new(),
                 rationale: Some(rationale.to_string()),
@@ -385,6 +426,10 @@ pub(crate) mod verbs {
                 claim: claim.to_string(),
                 source: Source::Single(cite),
                 source_hash: None,
+                // No source hash recorded for propose-retire rows; empty
+                // source_hashes preserves the "no-hash-recorded-yet" semantic
+                // (parallel to empty `tests`). P78 MULTI-SOURCE-WATCH-01.
+                source_hashes: Vec::new(),
                 tests: Vec::new(),
                 test_body_hashes: Vec::new(),
                 rationale: Some(rationale.to_string()),
@@ -481,8 +526,10 @@ pub(crate) mod verbs {
         };
         if let Some(row) = cat.row_mut(row_id) {
             row.claim = claim.to_string();
-            row.source = Source::Single(cite);
-            row.source_hash = Some(src_hash);
+            // P78 MULTI-SOURCE-WATCH-01: keep source_hashes parallel-array
+            // invariant by using set_source. mark-missing-test re-cites a
+            // single source so source_hashes always becomes a 1-element vec.
+            row.set_source(Source::Single(cite), vec![src_hash])?;
             // mark-missing-test detaches a row from any test bindings; clear
             // both parallel arrays atomically via the helper.
             row.clear_tests();
@@ -499,7 +546,10 @@ pub(crate) mod verbs {
                 id: row_id.to_string(),
                 claim: claim.to_string(),
                 source: Source::Single(cite),
-                source_hash: Some(src_hash),
+                source_hash: Some(src_hash.clone()),
+                // P78 MULTI-SOURCE-WATCH-01: parallel-array hash for the
+                // single source citation (one element matching Source::Single).
+                source_hashes: vec![src_hash],
                 tests: Vec::new(),
                 test_body_hashes: Vec::new(),
                 rationale: rationale.map(std::string::ToString::to_string),
@@ -787,11 +837,29 @@ pub(crate) mod verbs {
                         }
                     }
                 }
-                prototype.source = if all_sources.len() == 1 {
+                // P78 MULTI-SOURCE-WATCH-01: compute per-source hashes
+                // parallel to all_sources. Each cite hashed via
+                // hash::source_hash; failures (missing file, unreadable
+                // range) surface here at merge time rather than carrying
+                // a stale hash forward into the catalog.
+                let mut all_source_hashes: Vec<String> = Vec::with_capacity(all_sources.len());
+                for cite in &all_sources {
+                    let p = PathBuf::from(&cite.file);
+                    let h = crate::hash::source_hash(&p, cite.line_start, cite.line_end)
+                        .with_context(|| {
+                            format!(
+                                "merge-shards: hashing cite {}:{}-{} for row {}",
+                                cite.file, cite.line_start, cite.line_end, prototype.id,
+                            )
+                        })?;
+                    all_source_hashes.push(h);
+                }
+                let new_source = if all_sources.len() == 1 {
                     Source::Single(all_sources.into_iter().next().expect("len==1"))
                 } else {
                     Source::Multi(all_sources)
                 };
+                prototype.set_source(new_source, all_source_hashes)?;
                 // Upsert by id.
                 if let Some(existing) = cat.row_mut(&prototype.id) {
                     *existing = prototype;
@@ -849,22 +917,48 @@ pub(crate) mod verbs {
                 continue;
             }
 
-            // Compute current source_hash. If the file is missing, mark
-            // STALE_DOCS_DRIFT (file vanished is a strong drift signal).
-            let cite = row.source.as_slice().into_iter().next();
-            let source_drift: Option<bool> = match (cite, row.source_hash.as_ref()) {
-                (Some(c), Some(stored)) => {
+            // P78 MULTI-SOURCE-WATCH-01: AND-compare per-source hashes.
+            // Walker iterates every cite in source.as_slice() and compares
+            // against source_hashes[i]. Any-index drift fires
+            // STALE_DOCS_DRIFT; the drifted source's index + file path
+            // surface in the diagnostic line for forensic clarity (mirrors
+            // the existing drifted_indices pattern for tests below).
+            //
+            // Path-(b) closure: pre-P78 the walker only watched
+            // source.as_slice()[0] (path-(a)); drift in non-first sources
+            // of a Multi row was a false-negative window. The per-index
+            // loop below closes that window.
+            let cites = row.source.as_slice();
+            let mut drifted_source_indices: Vec<usize> = Vec::new();
+            let source_drift: Option<bool> = if row.source_hashes.is_empty() {
+                // No hashes recorded yet (e.g. retire-proposed rows or
+                // legacy rows without a stored hash). Skip drift compare.
+                None
+            } else if cites.len() != row.source_hashes.len() {
+                // Parallel-array invariant violated. Catalog::load
+                // backfill should prevent this; defend against
+                // hand-edited catalogs by treating mismatched lengths as
+                // drift.
+                Some(true)
+            } else {
+                let mut any_drift = false;
+                for (i, c) in cites.iter().enumerate() {
+                    let stored = &row.source_hashes[i];
                     let p = PathBuf::from(&c.file);
-                    if p.exists() {
+                    let drifted = if p.exists() {
                         match hash::source_hash(&p, c.line_start, c.line_end) {
-                            Ok(now) => Some(&now != stored),
-                            Err(_) => Some(true),
+                            Ok(now) => &now != stored,
+                            Err(_) => true,
                         }
                     } else {
-                        Some(true)
+                        true
+                    };
+                    if drifted {
+                        any_drift = true;
+                        drifted_source_indices.push(i);
                     }
                 }
-                _ => None,
+                Some(any_drift)
             };
 
             // Compute per-test drift state (W7 / v0.12.1). Each `tests[i]`
@@ -926,12 +1020,29 @@ pub(crate) mod verbs {
             row.last_verdict = new_state;
 
             if new_state.blocks_pre_push() {
-                let cite_str = row
-                    .source
-                    .as_slice()
-                    .first()
-                    .map_or_else(String::new, |c| c.file.clone());
+                // For STALE_DOCS_DRIFT, surface the FIRST drifted source's
+                // file path (P78 MULTI-SOURCE-WATCH-01) so the operator
+                // sees which source drifted on Multi rows -- not just the
+                // first source unconditionally. Falls back to source[0]
+                // when no per-source drift is recorded (e.g. mismatched-
+                // length rows that hit the catch-all Some(true)).
+                let cite_str = if new_state == RowState::StaleDocsDrift
+                    && !drifted_source_indices.is_empty()
+                {
+                    let first_drifted = drifted_source_indices[0];
+                    cites
+                        .get(first_drifted)
+                        .map_or_else(String::new, |c| c.file.clone())
+                } else {
+                    row.source
+                        .as_slice()
+                        .first()
+                        .map_or_else(String::new, |c| c.file.clone())
+                };
                 let detail = match new_state {
+                    RowState::StaleDocsDrift if !drifted_source_indices.is_empty() => {
+                        format!(" sources_drifted={drifted_source_indices:?}")
+                    }
                     RowState::StaleTestDrift => {
                         format!(" drifted={drifted_indices:?}")
                     }

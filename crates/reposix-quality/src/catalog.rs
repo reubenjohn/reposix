@@ -117,11 +117,19 @@ pub struct SourceCite {
 
 /// Catalog row.
 ///
-/// **Parallel-array invariant** (W7 / v0.12.1): `tests.len() == test_body_hashes.len()`
-/// at all times. Each `tests[i]` (a `<file>::<fn>` citation) has its corresponding
-/// hash in `test_body_hashes[i]`. Empty vec means "no test bound yet" -- the
-/// previous `Option<String>` `None` semantics. Mutation must go through
-/// [`Row::set_tests`] to preserve the invariant; readers may rely on it.
+/// **Parallel-array invariants:**
+///
+/// - W7 / v0.12.1: `tests.len() == test_body_hashes.len()` at all times.
+///   Each `tests[i]` (a `<file>::<fn>` citation) has its corresponding hash
+///   in `test_body_hashes[i]`. Empty vec means "no test bound yet" -- the
+///   previous `Option<String>` `None` semantics. Mutation must go through
+///   [`Row::set_tests`] to preserve the invariant; readers may rely on it.
+/// - P78 / MULTI-SOURCE-WATCH-01: `source.as_slice().len() ==
+///   source_hashes.len()` post-[`Catalog::load`] backfill. Each
+///   `source.as_slice()[i]` (a `SourceCite`) has its corresponding hash in
+///   `source_hashes[i]`. Empty vec means "no hash recorded yet" (parallel to
+///   the empty-tests semantic). Mutation must go through [`Row::set_source`]
+///   to preserve the invariant.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Row {
     pub id: String,
@@ -130,6 +138,26 @@ pub struct Row {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_hash: Option<String>,
+
+    /// Per-source hashes parallel to `source.as_slice()` (path-b per
+    /// MULTI-SOURCE-WATCH-01 / P78). `source_hashes[i]` is the
+    /// `hash::source_hash` of `source.as_slice()[i]`'s byte range.
+    /// Empty vec means "no hashes recorded yet" (matches the empty-tests
+    /// semantic of `tests` / `test_body_hashes`).
+    ///
+    /// **Parallel-array invariant** (P78): `source.as_slice().len() ==
+    /// source_hashes.len()` post-load (after [`Catalog::load`]'s one-time
+    /// backfill from the legacy `source_hash` field). Mutation must go
+    /// through [`Row::set_source`] to preserve the invariant; readers may
+    /// rely on it.
+    ///
+    /// Back-compat: legacy `source_hash` field stays on the struct for one
+    /// release cycle. Newer catalogs may have BOTH fields; readers MUST
+    /// prefer `source_hashes` post-backfill. Writers SHOULD update both
+    /// during the transition (so a downgrade rollback can still load the
+    /// catalog).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub source_hashes: Vec<String>,
 
     /// Test citations (`<file>::<fn>` form). One claim may bind to many tests.
     /// Empty means no test bound. Parallel-arrays with `test_body_hashes`.
@@ -185,13 +213,47 @@ impl Row {
         Ok(())
     }
 
-    /// Validate the parallel-array invariant on this row. Cheap to call after
-    /// any direct mutation that bypasses [`Row::set_tests`] (deserializers,
-    /// for instance, populate fields independently).
+    /// Set `source` and `source_hashes` together (P78 MULTI-SOURCE-WATCH-01).
+    /// Validates the parallel-array invariant; rejects mismatched lengths so
+    /// writer paths cannot accidentally store an inconsistent row. Mirrors
+    /// [`Row::set_tests`]'s discipline for the `tests` / `test_body_hashes` pair.
+    ///
+    /// Also keeps the legacy `source_hash` field in sync with
+    /// `source_hashes[0]` for one release cycle — back-compat for downgrade
+    /// rollback. The legacy field can be retired post-v0.14.0.
     ///
     /// # Errors
     ///
-    /// Errors if `tests.len() != test_body_hashes.len()`.
+    /// Errors if `source.as_slice().len() != hashes.len()`.
+    pub fn set_source(&mut self, source: Source, hashes: Vec<String>) -> Result<()> {
+        if source.as_slice().len() != hashes.len() {
+            return Err(anyhow::anyhow!(
+                "Row::set_source: source.as_slice().len ({}) != source_hashes.len ({})",
+                source.as_slice().len(),
+                hashes.len(),
+            ));
+        }
+        self.source = source;
+        self.source_hashes = hashes;
+        // Back-compat: keep source_hash in sync with the first element for
+        // one release cycle. Drop after v0.14.0 once the field is unused.
+        self.source_hash = self.source_hashes.first().cloned();
+        Ok(())
+    }
+
+    /// Validate the parallel-array invariants on this row. Cheap to call after
+    /// any direct mutation that bypasses [`Row::set_tests`] / [`Row::set_source`]
+    /// (deserializers, for instance, populate fields independently).
+    ///
+    /// Validates BOTH parallel-array invariants:
+    /// - W7: `tests.len() == test_body_hashes.len()`
+    /// - P78: `source.as_slice().len() == source_hashes.len()` (only when
+    ///   `source_hashes` is non-empty — empty `source_hashes` is the
+    ///   "no hashes recorded yet" semantic, parallel to empty `tests`).
+    ///
+    /// # Errors
+    ///
+    /// Errors if either invariant is violated.
     pub fn validate_parallel_arrays(&self) -> Result<()> {
         if self.tests.len() != self.test_body_hashes.len() {
             return Err(anyhow::anyhow!(
@@ -199,6 +261,16 @@ impl Row {
                 self.id,
                 self.tests.len(),
                 self.test_body_hashes.len(),
+            ));
+        }
+        if !self.source_hashes.is_empty()
+            && self.source.as_slice().len() != self.source_hashes.len()
+        {
+            return Err(anyhow::anyhow!(
+                "Row {} parallel-array invariant violated: source.as_slice().len ({}) != source_hashes.len ({})",
+                self.id,
+                self.source.as_slice().len(),
+                self.source_hashes.len(),
             ));
         }
         Ok(())
@@ -322,8 +394,43 @@ impl Catalog {
     pub fn load(path: &Path) -> Result<Self> {
         let raw = fs::read_to_string(path)
             .with_context(|| format!("reading catalog at {}", path.display()))?;
-        let cat: Catalog = serde_json::from_str(&raw)
+        let mut cat: Catalog = serde_json::from_str(&raw)
             .with_context(|| format!("parsing catalog at {}", path.display()))?;
+
+        // P78 MULTI-SOURCE-WATCH-01 backfill: legacy catalogs have
+        // `source_hash: Option<String>` and lack `source_hashes`. Promote
+        // `source_hash` into `source_hashes[0]` so every read path enters
+        // the new world. Idempotent: if `source_hashes` is already
+        // populated (newer catalog), the backfill is a no-op.
+        //
+        // Multi-source legacy rows: pre-P78 the bind verb only stored
+        // `source_hash = hash(first source)` (P75 first-source invariant);
+        // the OTHER source hashes were never recorded under path-(a).
+        // Backfilling `source_hashes = [legacy_hash]` for an N-cite Multi
+        // row would violate the parallel-array invariant
+        // (`source.len() != source_hashes.len()`). Instead, leave such
+        // rows with `source_hashes: []` -- the "no-hash-recorded-yet"
+        // semantic. The walker treats empty `source_hashes` as "skip
+        // drift compare" (preserving the path-(a) tradeoff for these
+        // legacy rows until they re-bind through P78-aware bind logic,
+        // which populates the full parallel array).
+        //
+        // Rows with `source_hash: None` keep `source_hashes: []`
+        // (no-hash-recorded-yet semantic, unchanged).
+        for row in &mut cat.rows {
+            if row.source_hashes.is_empty() {
+                if let Some(legacy) = row.source_hash.clone() {
+                    // Only backfill when the parallel-array invariant will
+                    // hold. Single-source rows: legacy_hash matches the
+                    // single cite. Multi-source rows: backfill would create
+                    // an inconsistent shape; skip and let re-bind heal.
+                    if row.source.as_slice().len() == 1 {
+                        row.source_hashes.push(legacy);
+                    }
+                }
+            }
+        }
+
         for row in &cat.rows {
             row.validate_parallel_arrays()
                 .with_context(|| format!("validating row in catalog at {}", path.display()))?;

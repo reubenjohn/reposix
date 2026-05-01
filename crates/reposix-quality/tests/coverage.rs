@@ -58,6 +58,11 @@ fn synth_row(id: &str, cites: Vec<(&str, usize, usize)>) -> Row {
         claim: format!("synthetic claim for {id}"),
         source,
         source_hash: None,
+        // P78 MULTI-SOURCE-WATCH-01: synthetic coverage rows have no
+        // recorded hashes; empty source_hashes preserves the
+        // "no-hash-recorded-yet" semantic and bypasses walker drift
+        // compares (which is correct for these coverage-only fixtures).
+        source_hashes: Vec::new(),
         tests: Vec::new(),
         test_body_hashes: Vec::new(),
         rationale: None,

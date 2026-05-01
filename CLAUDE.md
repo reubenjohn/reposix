@@ -419,10 +419,17 @@ breaking the walker's first-source compare on every Single→Multi promotion
 `Multi` paths. Single re-bind with the same citation is the heal path
 (P74 linkedin row).
 
-**Path-(a) tradeoff:** the walker only watches `source.as_slice()[0]`. Drift
-in non-first sources of a `Multi` row will NOT fire `STALE_DOCS_DRIFT`. Path
-(b) (parallel `source_hashes: Vec<String>` + per-source walker compare) is
-filed as v0.13.0 carry-forward `MULTI-SOURCE-WATCH-01`.
+**Path-(a) tradeoff (closed in P78-03):** path (a) — the walker only watches
+`source.as_slice()[0]`, so drift in non-first sources of a `Multi` row does
+not fire `STALE_DOCS_DRIFT` — was the v0.12.1 P75 shape. Path (b) — parallel
+`source_hashes: Vec<String>` + per-source walker AND-compare — closed in
+v0.13.0 P78-03 (commit `<P78-03 commit>`); non-first-source drift now fires
+`STALE_DOCS_DRIFT` per the regression test
+`crates/reposix-quality/tests/walk.rs::walk_multi_source_non_first_drift_fires_stale`.
+Legacy multi-source rows backfilled at load: `source_hashes` left empty
+("no-hash-recorded-yet" semantic) until the next bind heals the row through
+the P78-aware path. Backfill of single-source legacy rows is automatic
+(`source_hash` → `source_hashes[0]`).
 
 Regression tests: `crates/reposix-quality/tests/walk.rs::walk_multi_source_*`
 (stable / first-drift / single-rebind-heal).

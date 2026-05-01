@@ -4,15 +4,15 @@
   "dimension": "docs-alignment",
   "schema_version": "2.0",
   "summary": {
-    "claims_total": 388,
-    "claims_bound": 331,
+    "claims_total": 389,
+    "claims_bound": 299,
     "claims_missing_test": 0,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 1.0,
+    "alignment_ratio": 0.9006024096385542,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-04-30T08:48:10Z",
+    "last_walked": "2026-05-01T05:38:14Z",
     "coverage_ratio": 0.20312216373207478,
     "lines_covered": 1119,
     "total_eligible_lines": 5509,
@@ -28,6 +28,9 @@
         "line_end": 154
       },
       "source_hash": "dc0ee8c40009ec06a101ff81da63961e05f3c69a625f35a58d4e16e7cb5a105c",
+      "source_hashes": [
+        "dc0ee8c40009ec06a101ff81da63961e05f3c69a625f35a58d4e16e7cb5a105c"
+      ],
       "rationale": "Superseded: write path shipped (Phase 22/24). The forward-looking 'v0.4 will add' framing is no longer applicable; the active write path is captured by docs/connectors/guide/backendconnector-{create,update,delete-or-close}-method rows (all BOUND). confluence.md prose rewritten in commit b6f6dd7 to describe shipped write path.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -44,6 +47,9 @@
         "line_end": 22
       },
       "source_hash": "ff293831041a585f5862ba573fd3eac400ca2713b53575b17b6c83666a1d6d86",
+      "source_hashes": [
+        "ff293831041a585f5862ba573fd3eac400ca2713b53575b17b6c83666a1d6d86"
+      ],
       "rationale": "Subjective rubric -- enforced by the reposix-quality-review skill (P61 SUBJ-* catalog rows). Not a docs-alignment behavioral claim. Retire from this dimension.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -60,6 +66,9 @@
         "line_end": 54
       },
       "source_hash": "a24164b0e601151f3eb395f7369cff047eedae189c9d181c036388e5bfff92cf",
+      "source_hashes": [
+        "a24164b0e601151f3eb395f7369cff047eedae189c9d181c036388e5bfff92cf"
+      ],
       "rationale": "use-case-20-percent-rest-mcp — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -76,6 +85,9 @@
         "line_end": 18
       },
       "source_hash": "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4",
+      "source_hashes": [
+        "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -83,7 +95,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "Mirror of canonical latency benchmark headline; latency-bench.sh measures sim cold init",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -98,6 +110,9 @@
         "line_end": 32
       },
       "source_hash": "9b0fc7d18490479a0a4b44820de5e31356ddd6eb939830695ab8a53311cca812",
+      "source_hashes": [
+        "9b0fc7d18490479a0a4b44820de5e31356ddd6eb939830695ab8a53311cca812"
+      ],
       "rationale": "mcp-fixture-synthesized-not-live — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -114,6 +129,9 @@
         "line_end": 95
       },
       "source_hash": "f648782b873bf658315f7c3bfcc86d1aca23f2df859f43b0310f501a77ca8a86",
+      "source_hashes": [
+        "f648782b873bf658315f7c3bfcc86d1aca23f2df859f43b0310f501a77ca8a86"
+      ],
       "tests": [
         "crates/reposix-core/src/remote.rs::parses_with_prefix"
       ],
@@ -136,6 +154,9 @@
         "line_end": 19
       },
       "source_hash": "04bff5bb5e3c7d40bb007acc7de8efdc60b5f3c495453edb03b92f7197b7cff8",
+      "source_hashes": [
+        "04bff5bb5e3c7d40bb007acc7de8efdc60b5f3c495453edb03b92f7197b7cff8"
+      ],
       "tests": [
         "quality/gates/docs-alignment/install-snippet-shape.sh"
       ],
@@ -158,6 +179,9 @@
         "line_end": 18
       },
       "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
+      "source_hashes": [
+        "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8"
+      ],
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
       ],
@@ -180,6 +204,9 @@
         "line_end": 76
       },
       "source_hash": "09b202ea4ff8d20d3181142589995f896159ece66bab706452290d24f1ba67ae",
+      "source_hashes": [
+        "09b202ea4ff8d20d3181142589995f896159ece66bab706452290d24f1ba67ae"
+      ],
       "tests": [
         "crates/reposix-cli/tests/no_truncate.rs::no_truncate_flag_exits_nonzero_when_backend_unreachable"
       ],
@@ -202,6 +229,9 @@
         "line_end": 18
       },
       "source_hash": "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4",
+      "source_hashes": [
+        "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -209,7 +239,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "Mirror of canonical latency benchmark cached-read number",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -224,6 +254,9 @@
         "line_end": 44
       },
       "source_hash": "37a0b8756c0ae31b4d1a872855722255eed937765b9edd4ec40d0256e783ead8",
+      "source_hashes": [
+        "37a0b8756c0ae31b4d1a872855722255eed937765b9edd4ec40d0256e783ead8"
+      ],
       "rationale": "use-case-80-percent-routine-ops — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -240,6 +273,9 @@
         "line_end": 17
       },
       "source_hash": "a2658bd81a06030413cf9d3b60f9d3750c508f53ebe4abe9d9c2ec66bb7d074e",
+      "source_hashes": [
+        "a2658bd81a06030413cf9d3b60f9d3750c508f53ebe4abe9d9c2ec66bb7d074e"
+      ],
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
@@ -262,6 +298,9 @@
         "line_end": 60
       },
       "source_hash": "209b5d74c1ee4f539043a3678e6e0b04225598fbb7162a4f55a66b93d994cece",
+      "source_hashes": [
+        "209b5d74c1ee4f539043a3678e6e0b04225598fbb7162a4f55a66b93d994cece"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -284,6 +323,9 @@
         "line_end": 77
       },
       "source_hash": "2bbe8b2a8987bb6155cc841708fa5fcfc716ab122ca4588d25e4de62df45f19f",
+      "source_hashes": [
+        "2bbe8b2a8987bb6155cc841708fa5fcfc716ab122ca4588d25e4de62df45f19f"
+      ],
       "tests": [
         "crates/reposix-jira/src/translate.rs::adf_description_strips_to_plain_text"
       ],
@@ -306,6 +348,9 @@
         "line_end": 1
       },
       "source_hash": "cb3f91d54eee30e53e35b2b99905f70f169ed549fd78909d3dac2defc9ed8d3b",
+      "source_hashes": [
+        "cb3f91d54eee30e53e35b2b99905f70f169ed549fd78909d3dac2defc9ed8d3b"
+      ],
       "rationale": "Superseded: ADR-003 marked superseded at line 7 (status: superseded; FUSE-era nested mount no longer exists). The whole ADR is now historical.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -351,6 +396,9 @@
         "line_end": 19
       },
       "source_hash": "ad16bd7277025bc63f75129e62c79a0ad24c1f2f523aeb21c113ff134e7eb11b",
+      "source_hashes": [
+        "ad16bd7277025bc63f75129e62c79a0ad24c1f2f523aeb21c113ff134e7eb11b"
+      ],
       "tests": [
         "crates/reposix-confluence/tests/roundtrip.rs::create_then_get_roundtrip_with_audit"
       ],
@@ -373,6 +421,9 @@
         "line_end": 21
       },
       "source_hash": "c3fd4c8733c156c954f900e14e51640f1a2843b8a9e578c7b1716d62a0e1b974",
+      "source_hashes": [
+        "c3fd4c8733c156c954f900e14e51640f1a2843b8a9e578c7b1716d62a0e1b974"
+      ],
       "tests": [
         "crates/reposix-confluence/tests/roundtrip.rs::delete_or_close_is_audited_in_integration_context"
       ],
@@ -395,6 +446,9 @@
         "line_end": 20
       },
       "source_hash": "cea87dcaf99bb6576d1f4c4128f65c541520b65f9a854f73e65ed54033b3a08a",
+      "source_hashes": [
+        "cea87dcaf99bb6576d1f4c4128f65c541520b65f9a854f73e65ed54033b3a08a"
+      ],
       "tests": [
         "crates/reposix-confluence/tests/roundtrip.rs::create_then_get_roundtrip_with_audit"
       ],
@@ -417,6 +471,9 @@
         "line_end": 72
       },
       "source_hash": "dbd80002e8e256ea70792f8efedaee88dc88cfbe9d89eeb903dd30c0b784d601",
+      "source_hashes": [
+        "dbd80002e8e256ea70792f8efedaee88dc88cfbe9d89eeb903dd30c0b784d601"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -439,6 +496,9 @@
         "line_end": 104
       },
       "source_hash": "c525640c2b0510de5746bef27b9864fdf8f1fe93d3548509d815c0da70c34a7f",
+      "source_hashes": [
+        "c525640c2b0510de5746bef27b9864fdf8f1fe93d3548509d815c0da70c34a7f"
+      ],
       "tests": [
         "quality/gates/structure/required-doc-surfaces.sh"
       ],
@@ -461,6 +521,9 @@
         "line_end": 46
       },
       "source_hash": "f9c5b960f115af03cfb219f286943eb8e96fadc2aa1ec712c255239a07a55729",
+      "source_hashes": [
+        "f9c5b960f115af03cfb219f286943eb8e96fadc2aa1ec712c255239a07a55729"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
@@ -483,6 +546,9 @@
         "line_end": 27
       },
       "source_hash": "d199d76e57cf64a13bebf843a7536917315bc6f2b3081d546e2d0efd7ee9f4cb",
+      "source_hashes": [
+        "d199d76e57cf64a13bebf843a7536917315bc6f2b3081d546e2d0efd7ee9f4cb"
+      ],
       "tests": [
         "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands"
       ],
@@ -505,6 +571,9 @@
         "line_end": 105
       },
       "source_hash": "b26e2c96eb18e667acd052d6603d3fcc4cb882ec33d870c1c05d2f6089a3d810",
+      "source_hashes": [
+        "b26e2c96eb18e667acd052d6603d3fcc4cb882ec33d870c1c05d2f6089a3d810"
+      ],
       "tests": [
         "quality/gates/structure/required-doc-surfaces.sh"
       ],
@@ -527,6 +596,9 @@
         "line_end": 62
       },
       "source_hash": "dd77191d9e34d1ed1174b9ac27937e6d6cf3c3962d879f34cada17003d68b561",
+      "source_hashes": [
+        "dd77191d9e34d1ed1174b9ac27937e6d6cf3c3962d879f34cada17003d68b561"
+      ],
       "tests": [
         "crates/reposix-core/tests/compile_fail.rs::http_client_inner_is_private"
       ],
@@ -549,6 +621,9 @@
         "line_end": 85
       },
       "source_hash": "6ec3765053883e996ec84f1bea0ead708346f69c6a68b723a0015b479c542a2b",
+      "source_hashes": [
+        "6ec3765053883e996ec84f1bea0ead708346f69c6a68b723a0015b479c542a2b"
+      ],
       "tests": [
         "quality/gates/docs-build/mermaid-renders.sh"
       ],
@@ -571,6 +646,9 @@
         "line_end": 25
       },
       "source_hash": "50e482d0a185815992e90d2690cc7d8bfbb5b28ecdc2db45efe94fbc84d17a4f",
+      "source_hashes": [
+        "50e482d0a185815992e90d2690cc7d8bfbb5b28ecdc2db45efe94fbc84d17a4f"
+      ],
       "tests": [
         "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands"
       ],
@@ -593,6 +671,9 @@
         "line_end": 8
       },
       "source_hash": "3b7eb87bd8f731e7a4cf8cd46658d032c250b4024f14f7c0b84b1787bac45aee",
+      "source_hashes": [
+        "3b7eb87bd8f731e7a4cf8cd46658d032c250b4024f14f7c0b84b1787bac45aee"
+      ],
       "tests": [
         "crates/reposix-cli/tests/doctor.rs::doctor_no_remote_errors_and_exits_one"
       ],
@@ -615,6 +696,9 @@
         "line_end": 84
       },
       "source_hash": "f77ac4b58c0499a4e067683f1efbea634be0a6b20739eac316563947e467107f",
+      "source_hashes": [
+        "f77ac4b58c0499a4e067683f1efbea634be0a6b20739eac316563947e467107f"
+      ],
       "tests": [
         "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error"
       ],
@@ -637,6 +721,9 @@
         "line_end": 81
       },
       "source_hash": "c92c7dc4c0f1858487f71190db45a9350eb7280e6e8d1d0607d25ed15beb113a",
+      "source_hashes": [
+        "c92c7dc4c0f1858487f71190db45a9350eb7280e6e8d1d0607d25ed15beb113a"
+      ],
       "tests": [
         "crates/reposix-remote/tests/bulk_delete_cap.rs::six_deletes_refuses_and_calls_no_delete"
       ],
@@ -674,6 +761,9 @@
         "line_end": 91
       },
       "source_hash": "852e762fdbbde23080e855c40cb6feab077b1bf2b184479cbb0d58b2c30ac6a7",
+      "source_hashes": [
+        "852e762fdbbde23080e855c40cb6feab077b1bf2b184479cbb0d58b2c30ac6a7"
+      ],
       "tests": [
         "quality/gates/docs-alignment/three-backends-tested.sh"
       ],
@@ -696,6 +786,9 @@
         "line_end": 36
       },
       "source_hash": "fc59fc12a90356c10441cae4bef1a467e4da365df48c6163927582b72f9cab31",
+      "source_hashes": [
+        "fc59fc12a90356c10441cae4bef1a467e4da365df48c6163927582b72f9cab31"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
       ],
@@ -703,7 +796,7 @@
         "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe"
       ],
       "rationale": "skip_if_no_env! macro at line 138 checks ATLASSIAN_API_KEY presence; omitting it causes test skip with SKIP message",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:08:20Z",
       "last_extracted": "2026-04-28T09:08:20Z",
@@ -718,6 +811,9 @@
         "line_end": 36
       },
       "source_hash": "fc59fc12a90356c10441cae4bef1a467e4da365df48c6163927582b72f9cab31",
+      "source_hashes": [
+        "fc59fc12a90356c10441cae4bef1a467e4da365df48c6163927582b72f9cab31"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
       ],
@@ -725,7 +821,7 @@
         "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe"
       ],
       "rationale": "skip_if_no_env! macro at line 138 checks ATLASSIAN_EMAIL presence",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:08:20Z",
       "last_extracted": "2026-04-28T09:08:20Z",
@@ -740,6 +836,9 @@
         "line_end": 67
       },
       "source_hash": "2fb847a23c6d7178b2554031e877ba3a379bc55c65efae793fb1db6535e00c69",
+      "source_hashes": [
+        "2fb847a23c6d7178b2554031e877ba3a379bc55c65efae793fb1db6535e00c69"
+      ],
       "tests": [
         "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail"
       ],
@@ -762,6 +861,9 @@
         "line_end": 147
       },
       "source_hash": "ef64acf3dc747929f1c111e3062038d2403ef2849c880f7ed5a7b7d05651d676",
+      "source_hashes": [
+        "ef64acf3dc747929f1c111e3062038d2403ef2849c880f7ed5a7b7d05651d676"
+      ],
       "tests": [
         "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail"
       ],
@@ -799,6 +901,9 @@
         "line_end": 121
       },
       "source_hash": "7dfcde5c4c3f42a8d6ec42d3e4408457069d31a85ff60e7c5b91368d3605162e",
+      "source_hashes": [
+        "7dfcde5c4c3f42a8d6ec42d3e4408457069d31a85ff60e7c5b91368d3605162e"
+      ],
       "tests": [
         "crates/reposix-core/tests/audit_schema.rs::audit_update_is_rejected_by_trigger"
       ],
@@ -821,6 +926,9 @@
         "line_end": 27
       },
       "source_hash": "e0fb8d62e00daf491b815884d0951503b0da198cc745dfcdbef5b6c4361d0795",
+      "source_hashes": [
+        "e0fb8d62e00daf491b815884d0951503b0da198cc745dfcdbef5b6c4361d0795"
+      ],
       "tests": [
         "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail"
       ],
@@ -843,6 +951,9 @@
         "line_end": 78
       },
       "source_hash": "10a343b8cdc87defc1f37ccb96523b0d7bda83b4d13dd580b2d74a880e08cb55",
+      "source_hashes": [
+        "10a343b8cdc87defc1f37ccb96523b0d7bda83b4d13dd580b2d74a880e08cb55"
+      ],
       "tests": [
         "quality/gates/docs-alignment/audit-trail-git-log.sh"
       ],
@@ -894,6 +1005,9 @@
         "line_end": 67
       },
       "source_hash": "2fb847a23c6d7178b2554031e877ba3a379bc55c65efae793fb1db6535e00c69",
+      "source_hashes": [
+        "2fb847a23c6d7178b2554031e877ba3a379bc55c65efae793fb1db6535e00c69"
+      ],
       "tests": [
         "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail"
       ],
@@ -916,6 +1030,9 @@
         "line_end": 158
       },
       "source_hash": "8e141ce8e27322861cae2fe3a9f6478e3f36631446c748bb543402b5f5d7db09",
+      "source_hashes": [
+        "8e141ce8e27322861cae2fe3a9f6478e3f36631446c748bb543402b5f5d7db09"
+      ],
       "tests": [
         "crates/reposix-confluence/tests/auth_header.rs::auth_header_basic_byte_exact",
         "crates/reposix-github/tests/auth_header.rs::auth_header_bearer_byte_exact"
@@ -940,6 +1057,9 @@
         "line_end": 113
       },
       "source_hash": "db5034e19caf99a8653e30ec5e757a98e4ab6758ee6d434d61bdd4c159f69bb8",
+      "source_hashes": [
+        "db5034e19caf99a8653e30ec5e757a98e4ab6758ee6d434d61bdd4c159f69bb8"
+      ],
       "tests": [
         "crates/reposix-cli/src/doctor.rs::check_backend_capabilities_reports_sim_supports_everything"
       ],
@@ -977,6 +1097,9 @@
         "line_end": 33
       },
       "source_hash": "d96f053c68090c29dc11b0a3e94098f36712c6697f6a28e9b5e2d326b8734501",
+      "source_hashes": [
+        "d96f053c68090c29dc11b0a3e94098f36712c6697f6a28e9b5e2d326b8734501"
+      ],
       "tests": [
         "crates/reposix-github/tests/contract.rs::contract_sim"
       ],
@@ -999,6 +1122,9 @@
         "line_end": 331
       },
       "source_hash": "660447a3dfdff1cd32120314402f9ae61d00bf9576593135dcece7a4b539caff",
+      "source_hashes": [
+        "660447a3dfdff1cd32120314402f9ae61d00bf9576593135dcece7a4b539caff"
+      ],
       "tests": [
         "crates/reposix-core/src/backend.rs"
       ],
@@ -1021,6 +1147,9 @@
         "line_end": 284
       },
       "source_hash": "ab180dcd459690abaee4ff624518b6a4daf8d89ea675ed47b63df965b271b759",
+      "source_hashes": [
+        "ab180dcd459690abaee4ff624518b6a4daf8d89ea675ed47b63df965b271b759"
+      ],
       "tests": [
         "crates/reposix-confluence/tests/roundtrip.rs::create_then_get_roundtrip_with_audit"
       ],
@@ -1072,6 +1201,9 @@
         "line_end": 272
       },
       "source_hash": "57e32c04ce495c6aaa19b6873ace2abf756033d006f4e32bf7f1b1b8ba04f400",
+      "source_hashes": [
+        "57e32c04ce495c6aaa19b6873ace2abf756033d006f4e32bf7f1b1b8ba04f400"
+      ],
       "tests": [
         "crates/reposix-confluence/tests/contract.rs::contract_confluence_wiremock"
       ],
@@ -1094,6 +1226,9 @@
         "line_end": 257
       },
       "source_hash": "665aae8456731271fd7c254d017cdf5cce11d8bc2c725b37f83b7a5229c140df",
+      "source_hashes": [
+        "665aae8456731271fd7c254d017cdf5cce11d8bc2c725b37f83b7a5229c140df"
+      ],
       "tests": [
         "crates/reposix-core/src/backend.rs::default_list_changed_since_filters_via_list_issues"
       ],
@@ -1116,6 +1251,9 @@
         "line_end": 235
       },
       "source_hash": "a842354d65ac8b0d6163797529d075d5026ac3895ad4993748325e1a2030cdbf",
+      "source_hashes": [
+        "a842354d65ac8b0d6163797529d075d5026ac3895ad4993748325e1a2030cdbf"
+      ],
       "tests": [
         "crates/reposix-confluence/tests/contract.rs::contract_confluence_wiremock"
       ],
@@ -1167,6 +1305,9 @@
         "line_end": 219
       },
       "source_hash": "b1e4dc343a3520e2ac2bef1282e4751c5796fcfb29be35cb0054165c3ab2dbb0",
+      "source_hashes": [
+        "b1e4dc343a3520e2ac2bef1282e4751c5796fcfb29be35cb0054165c3ab2dbb0"
+      ],
       "tests": [
         "crates/reposix-confluence/tests/contract.rs::contract_confluence_wiremock"
       ],
@@ -1189,6 +1330,9 @@
         "line_end": 330
       },
       "source_hash": "2d274956096b080897f855186e60c17271e03a5f82c73b20f5105873e294f383",
+      "source_hashes": [
+        "2d274956096b080897f855186e60c17271e03a5f82c73b20f5105873e294f383"
+      ],
       "tests": [
         "crates/reposix-core/src/backend.rs::default_root_collection_name_is_issues"
       ],
@@ -1211,6 +1355,9 @@
         "line_end": 227
       },
       "source_hash": "049d8a004b8d5c8a3d80940f8da274aca2b664d3ca93c201a5846b5de23bbf61",
+      "source_hashes": [
+        "049d8a004b8d5c8a3d80940f8da274aca2b664d3ca93c201a5846b5de23bbf61"
+      ],
       "tests": [
         "crates/reposix-core/src/backend.rs::default_root_collection_name_is_issues"
       ],
@@ -1233,6 +1380,9 @@
         "line_end": 66
       },
       "source_hash": "b0a4f8b0b41fce6e501262ed9d377bf9179a774feddc076c4c115f12bb01677c",
+      "source_hashes": [
+        "b0a4f8b0b41fce6e501262ed9d377bf9179a774feddc076c4c115f12bb01677c"
+      ],
       "tests": [
         "crates/reposix-core/src/backend.rs::backend_feature_hierarchy_is_a_variant"
       ],
@@ -1255,6 +1405,9 @@
         "line_end": 42
       },
       "source_hash": "4a9023a78c8af133f2c1240e814a059eb378aa4f5ae4f9a78a2813e6a7b1e690",
+      "source_hashes": [
+        "4a9023a78c8af133f2c1240e814a059eb378aa4f5ae4f9a78a2813e6a7b1e690"
+      ],
       "tests": [
         "crates/reposix-cache/tests/delta_sync.rs::delta_sync_updates_only_changed_issue"
       ],
@@ -1321,6 +1474,9 @@
         "line_end": 28
       },
       "source_hash": "c230c73e05efccb1bd248560636c0a39ce45296cdc27aa6fb29539fb8b20b83d",
+      "source_hashes": [
+        "c230c73e05efccb1bd248560636c0a39ce45296cdc27aa6fb29539fb8b20b83d"
+      ],
       "tests": [
         ".github/workflows/bench-latency-cron.yml"
       ],
@@ -1343,6 +1499,9 @@
         "line_end": 81
       },
       "source_hash": "f8ee3437cba8c6a523619167a5a06fa6f87bba349cdfc76d587ebd41b6143515",
+      "source_hashes": [
+        "f8ee3437cba8c6a523619167a5a06fa6f87bba349cdfc76d587ebd41b6143515"
+      ],
       "rationale": "Superseded by docs/benchmarks/latency.md + quality/gates/perf/latency-bench.sh which captures cold-init latency at the v0.9.0 partial-clone level. The v0.8 'cold-mount' framing is retired (FUSE-era); equivalent metric (init cold) is now BOUND via latency-bench.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -1359,6 +1518,9 @@
         "line_end": 94
       },
       "source_hash": "77ed3a28ed9827e532b9a78d063407a345e9d8bf37f290ae6a7d69e7d690deee",
+      "source_hashes": [
+        "77ed3a28ed9827e532b9a78d063407a345e9d8bf37f290ae6a7d69e7d690deee"
+      ],
       "tests": [
         "crates/reposix-remote/src/stateless_connect.rs::parse_blob_limit"
       ],
@@ -1381,6 +1543,9 @@
         "line_end": 102
       },
       "source_hash": "b4fa042fb7c5cfc75a112c8442988139f4007cb3c1279616c4286e6cd179eac9",
+      "source_hashes": [
+        "b4fa042fb7c5cfc75a112c8442988139f4007cb3c1279616c4286e6cd179eac9"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
       ],
@@ -1403,6 +1568,9 @@
         "line_end": 48
       },
       "source_hash": "e6b2ed5bbfea8e4bcb30f523ef713e45b0928d5fe69c9bff4899e4ac9569e9b0",
+      "source_hashes": [
+        "e6b2ed5bbfea8e4bcb30f523ef713e45b0928d5fe69c9bff4899e4ac9569e9b0"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
       ],
@@ -1425,6 +1593,9 @@
         "line_end": 68
       },
       "source_hash": "0cfc042658310946939171b74160132993f1679f1cdbc05812e3698eebcee23d",
+      "source_hashes": [
+        "0cfc042658310946939171b74160132993f1679f1cdbc05812e3698eebcee23d"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
       ],
@@ -1447,6 +1618,9 @@
         "line_end": 17
       },
       "source_hash": "a2508b66acdcf7cbb31160c03d2609859df9d95612d61e9beb98fdd93f87b962",
+      "source_hashes": [
+        "a2508b66acdcf7cbb31160c03d2609859df9d95612d61e9beb98fdd93f87b962"
+      ],
       "tests": [
         "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from"
       ],
@@ -1469,6 +1643,9 @@
         "line_end": 110
       },
       "source_hash": "9d8b2b5670d18da8a99f6152f7ee75558019cd106d8032bf7c1117bd37273e37",
+      "source_hashes": [
+        "9d8b2b5670d18da8a99f6152f7ee75558019cd106d8032bf7c1117bd37273e37"
+      ],
       "tests": [
         "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants"
       ],
@@ -1491,6 +1668,9 @@
         "line_end": 129
       },
       "source_hash": "93dac3979a1b56ad8a01ae085b333b95d050d9853544380c2d8391b1d2146b8d",
+      "source_hashes": [
+        "93dac3979a1b56ad8a01ae085b333b95d050d9853544380c2d8391b1d2146b8d"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -1498,7 +1678,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "Mirror of cold init from canonical latency-bench",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -1513,6 +1693,9 @@
         "line_end": 59
       },
       "source_hash": "601193901edcec31bc26541065bd7dccfb726c8e46f3cc0a17483fa9a9a1b127",
+      "source_hashes": [
+        "601193901edcec31bc26541065bd7dccfb726c8e46f3cc0a17483fa9a9a1b127"
+      ],
       "tests": [
         "quality/gates/release/brew-formula-current.py"
       ],
@@ -1535,6 +1718,9 @@
         "line_end": 79
       },
       "source_hash": "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8",
+      "source_hashes": [
+        "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8"
+      ],
       "tests": [
         "quality/gates/code/lint-invariants/rust-msrv.sh"
       ],
@@ -1557,6 +1743,9 @@
         "line_end": 96
       },
       "source_hash": "7ca6d63605e8e8b6149c6cf91735aa89d6a09e6bd4020087b1a4f9bf027fa14f",
+      "source_hashes": [
+        "7ca6d63605e8e8b6149c6cf91735aa89d6a09e6bd4020087b1a4f9bf027fa14f"
+      ],
       "tests": [
         "crates/reposix-remote/tests/bulk_delete_cap.rs::six_deletes_with_allow_tag_actually_deletes"
       ],
@@ -1579,6 +1768,9 @@
         "line_end": 56
       },
       "source_hash": "5f3067f555701c800efbb895721a7ee70b3e1bac2f82e0d4d882832249c51c8f",
+      "source_hashes": [
+        "5f3067f555701c800efbb895721a7ee70b3e1bac2f82e0d4d882832249c51c8f"
+      ],
       "tests": [
         "crates/reposix-cache/src/cache.rs::open"
       ],
@@ -1601,6 +1793,9 @@
         "line_end": 77
       },
       "source_hash": "d49248265fd03c6a6987d2ab912fe85c8337ec6ff63877cf2139dcb68d63773c",
+      "source_hashes": [
+        "d49248265fd03c6a6987d2ab912fe85c8337ec6ff63877cf2139dcb68d63773c"
+      ],
       "tests": [
         "crates/reposix-remote/src/backend_dispatch.rs::sanitize_project_for_cache_replaces_slashes"
       ],
@@ -1623,6 +1818,9 @@
         "line_end": 59
       },
       "source_hash": "3f5c405134fa5ddd9fcf771709589feb1fbc5ffe9369e43fec3f73dbb39f086c",
+      "source_hashes": [
+        "3f5c405134fa5ddd9fcf771709589feb1fbc5ffe9369e43fec3f73dbb39f086c"
+      ],
       "tests": [
         "crates/reposix-cache/tests/sync_tags.rs::list_sync_tags_returns_sorted"
       ],
@@ -1645,6 +1843,9 @@
         "line_end": 49
       },
       "source_hash": "ff3aa38802cade3cf277a6d1a320a9dde6926c3c94a552a856d6e1cf53034712",
+      "source_hashes": [
+        "ff3aa38802cade3cf277a6d1a320a9dde6926c3c94a552a856d6e1cf53034712"
+      ],
       "tests": [
         "crates/reposix-cache/tests/sync_tags.rs::tag_sync_creates_ref"
       ],
@@ -1667,6 +1868,9 @@
         "line_end": 64
       },
       "source_hash": "eb37d72f23275dddddfd7a96b05fcc80d1ba2b24e78b3aa58ee7645c4cb3cf28",
+      "source_hashes": [
+        "eb37d72f23275dddddfd7a96b05fcc80d1ba2b24e78b3aa58ee7645c4cb3cf28"
+      ],
       "tests": [
         "crates/reposix-cache/tests/sync_tags.rs::sync_tag_at_finds_closest_not_after"
       ],
@@ -1689,6 +1893,9 @@
         "line_end": 21
       },
       "source_hash": "c665b626c0e9476b0dfdf3f6203003e6bef54cdb9075a373ad49b98de2baaee9",
+      "source_hashes": [
+        "c665b626c0e9476b0dfdf3f6203003e6bef54cdb9075a373ad49b98de2baaee9"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -1696,7 +1903,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "Mental-model concept page mirrors canonical 8ms read",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -1711,6 +1918,9 @@
         "line_end": 66
       },
       "source_hash": "e90e0560f9427af618c85f8a0662d961c41f3c9400465911bd7c25c5a8259ca9",
+      "source_hashes": [
+        "e90e0560f9427af618c85f8a0662d961c41f3c9400465911bd7c25c5a8259ca9"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
       ],
@@ -1718,7 +1928,7 @@
         "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe"
       ],
       "rationale": "File docs/reference/testing-targets.md exists and documents TokenWorld, reubenjohn/reposix, JIRA TEST targets with env-var setup.",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:01:43Z",
       "last_extracted": "2026-04-28T09:01:43Z",
@@ -1748,6 +1958,9 @@
         "line_end": 64
       },
       "source_hash": "3ae56ded42ca9097a8914f737ec9944c520d3d0a269e5a316a564ed7a87c1aba",
+      "source_hashes": [
+        "3ae56ded42ca9097a8914f737ec9944c520d3d0a269e5a316a564ed7a87c1aba"
+      ],
       "tests": [
         "quality/gates/release/cargo-binstall-resolves.py"
       ],
@@ -1770,6 +1983,9 @@
         "line_end": 89
       },
       "source_hash": "afb31f1e36980b39981e53269e1b6ade652c13c5e3f3ce5b0329cf0ef124c23c",
+      "source_hashes": [
+        "afb31f1e36980b39981e53269e1b6ade652c13c5e3f3ce5b0329cf0ef124c23c"
+      ],
       "tests": [
         "quality/gates/release/cargo-binstall-resolves.py"
       ],
@@ -1792,6 +2008,9 @@
         "line_end": 109
       },
       "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
+      "source_hashes": [
+        "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb"
+      ],
       "tests": [
         "quality/gates/code/cargo-clippy-warnings.sh"
       ],
@@ -1814,6 +2033,9 @@
         "line_end": 109
       },
       "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
+      "source_hashes": [
+        "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb"
+      ],
       "tests": [
         "quality/gates/code/lint-invariants/tests-green.sh"
       ],
@@ -1865,6 +2087,9 @@
         "line_end": 30
       },
       "source_hash": "777891a7fa44692211ab7248efa3c30a3695bda8932ae78af94349ff4fb3f305",
+      "source_hashes": [
+        "777891a7fa44692211ab7248efa3c30a3695bda8932ae78af94349ff4fb3f305"
+      ],
       "rationale": "Superseded by architecture-pivot-summary.md:5 + ADR-003.md:7 (FUSE-era nested mount no longer exists). Whole-mount overview was a FUSE-era convenience; partial-clone surface differs.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -1881,6 +2106,9 @@
         "line_end": 87
       },
       "source_hash": "d6fac6d9367fe666fc6df0510d6dc4be42ca0938d2c77f6e4262f859ee619ee3",
+      "source_hashes": [
+        "d6fac6d9367fe666fc6df0510d6dc4be42ca0938d2c77f6e4262f859ee619ee3"
+      ],
       "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-mount path gone).",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -1897,6 +2125,9 @@
         "line_end": 29
       },
       "source_hash": "298321e1af9fa4f12e72b0cfe22415ffff12e95afa63c6bb566b3d10a2a2f9e2",
+      "source_hashes": [
+        "298321e1af9fa4f12e72b0cfe22415ffff12e95afa63c6bb566b3d10a2a2f9e2"
+      ],
       "rationale": "Superseded by .planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md:5 (FUSE-based architecture retired in v0.9.0). The TreeSnapshot DFS synthesizer was a FUSE-era artifact; partial-clone replaces this surface.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -1913,6 +2144,9 @@
         "line_end": 77
       },
       "source_hash": "db934f4751b88dcb8f181e2fcffabebc4663f0d4d0edea34ff9bd9303aa66e52",
+      "source_hashes": [
+        "db934f4751b88dcb8f181e2fcffabebc4663f0d4d0edea34ff9bd9303aa66e52"
+      ],
       "tests": [
         "crates/reposix-swarm/tests/chaos_audit.rs::chaos_kill9_no_torn_rows"
       ],
@@ -1935,6 +2169,9 @@
         "line_end": 67
       },
       "source_hash": "2b4d66326c1d9b901f8a2f349e016f7e57bba957ea898502f596e5bfbd446b70",
+      "source_hashes": [
+        "2b4d66326c1d9b901f8a2f349e016f7e57bba957ea898502f596e5bfbd446b70"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::skip_pattern_compiles_and_runs_without_creds"
       ],
@@ -1957,6 +2194,9 @@
         "line_end": 7
       },
       "source_hash": "4e3fb02880edab482b645e126d87eead9742553430c27966006acaafe3913e13",
+      "source_hashes": [
+        "4e3fb02880edab482b645e126d87eead9742553430c27966006acaafe3913e13"
+      ],
       "tests": [
         "quality/gates/docs-build/badges-resolve.py"
       ],
@@ -2008,6 +2248,9 @@
         "line_end": 299
       },
       "source_hash": "89b925f5123751703570bfd484aaa064771e60be68f06c60ff5d6ebc57f2970b",
+      "source_hashes": [
+        "89b925f5123751703570bfd484aaa064771e60be68f06c60ff5d6ebc57f2970b"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
       ],
@@ -2030,6 +2273,9 @@
         "line_end": 149
       },
       "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_hashes": [
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      ],
       "tests": [
         "clippy.toml"
       ],
@@ -2052,6 +2298,9 @@
         "line_end": 83
       },
       "source_hash": "6885a86f04e8c811b0210b4eef9fb7161ad2aa4c19bf944a3560dd73dbf5c470",
+      "source_hashes": [
+        "6885a86f04e8c811b0210b4eef9fb7161ad2aa4c19bf944a3560dd73dbf5c470"
+      ],
       "rationale": "Superseded by docs/benchmarks/token-economy.md + quality/gates/perf/bench_token_economy.py (BOUND in scan-H/I). The v0.8 framing is retired; equivalent metric live.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -2068,6 +2317,9 @@
         "line_end": 89
       },
       "source_hash": "b426e1e156e015d90badbfe12431b9ebaa8b70c15eae82e113010a5f6a4c470b",
+      "source_hashes": [
+        "b426e1e156e015d90badbfe12431b9ebaa8b70c15eae82e113010a5f6a4c470b"
+      ],
       "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-mount comment-read mechanism gone; v0.9.0 surface differs).",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -2084,6 +2336,9 @@
         "line_end": 109
       },
       "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
+      "source_hashes": [
+        "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
@@ -2106,6 +2361,9 @@
         "line_end": 27
       },
       "source_hash": "d547567f79945205c7e4e39d7a7977ee8facfd430d8230a27626755bb6a176a2",
+      "source_hashes": [
+        "d547567f79945205c7e4e39d7a7977ee8facfd430d8230a27626755bb6a176a2"
+      ],
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
@@ -2128,6 +2386,9 @@
         "line_end": 31
       },
       "source_hash": "4033457abf57d3112b34e39f13467e22efe7937df4d5be361aeadba0ae28ead9",
+      "source_hashes": [
+        "4033457abf57d3112b34e39f13467e22efe7937df4d5be361aeadba0ae28ead9"
+      ],
       "tests": [
         "quality/gates/docs-alignment/connector-matrix-on-landing.sh"
       ],
@@ -2150,6 +2411,9 @@
         "line_end": 164
       },
       "source_hash": "37d292cfab3e569cc8aa8c45fc3cc9e23430957133e7db7129da98307c06ae73",
+      "source_hashes": [
+        "37d292cfab3e569cc8aa8c45fc3cc9e23430957133e7db7129da98307c06ae73"
+      ],
       "tests": [
         "crates/reposix-github/src/lib.rs::github_list_changed_since_sends_since_param_and_returns_ids"
       ],
@@ -2172,6 +2436,9 @@
         "line_end": 146
       },
       "source_hash": "1f61188339a753bf0c7e2bfac9be4c16ad59e219ac670faf64d41e949a3aa7cc",
+      "source_hashes": [
+        "1f61188339a753bf0c7e2bfac9be4c16ad59e219ac670faf64d41e949a3aa7cc"
+      ],
       "tests": [
         "clippy.toml"
       ],
@@ -2194,6 +2461,9 @@
         "line_end": 148
       },
       "source_hash": "f9b63259e7095f41bf52fae40aae0933ce80fd222e07dcfca271f4e83c9f70de",
+      "source_hashes": [
+        "f9b63259e7095f41bf52fae40aae0933ce80fd222e07dcfca271f4e83c9f70de"
+      ],
       "tests": [
         "crates/reposix-github/src/lib.rs::supports_reports_workflows_only"
       ],
@@ -2216,6 +2486,9 @@
         "line_end": 165
       },
       "source_hash": "9bf02b070a6a727627768c02af6959c4ab86771f0381b6f4b4a8c5c093eef5b6",
+      "source_hashes": [
+        "9bf02b070a6a727627768c02af6959c4ab86771f0381b6f4b4a8c5c093eef5b6"
+      ],
       "tests": [
         "crates/reposix-github/tests/contract.rs::contract_sim"
       ],
@@ -2238,6 +2511,9 @@
         "line_end": 35
       },
       "source_hash": "3f282a5cbfa82ff88d9fb941b9da8fa50250c83faf8adc2840f052b925a35b3f",
+      "source_hashes": [
+        "3f282a5cbfa82ff88d9fb941b9da8fa50250c83faf8adc2840f052b925a35b3f"
+      ],
       "tests": [
         "crates/reposix-confluence/src/translate.rs::translate_populates_parent_id_for_page_parent"
       ],
@@ -2260,6 +2536,9 @@
         "line_end": 58
       },
       "source_hash": "47f146089045622563cf87dbfce63863c46d5c28fde90555cbede265e74a96c9",
+      "source_hashes": [
+        "47f146089045622563cf87dbfce63863c46d5c28fde90555cbede265e74a96c9"
+      ],
       "tests": [
         "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail"
       ],
@@ -2282,6 +2561,9 @@
         "line_end": 36
       },
       "source_hash": "12c9461a1f697d2b95b3aabdecba8ef7de13a1280350d9c7e6ed3ddc010a688d",
+      "source_hashes": [
+        "12c9461a1f697d2b95b3aabdecba8ef7de13a1280350d9c7e6ed3ddc010a688d"
+      ],
       "tests": [
         "crates/reposix-jira/src/translate.rs::status_mapping_matrix"
       ],
@@ -2304,6 +2586,9 @@
         "line_end": 49
       },
       "source_hash": "43bc9304ebfc263e02f9ad57a10aff22aec086c8c16839aad08b9da085f9fd52",
+      "source_hashes": [
+        "43bc9304ebfc263e02f9ad57a10aff22aec086c8c16839aad08b9da085f9fd52"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -2341,6 +2626,9 @@
         "line_end": 109
       },
       "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
+      "source_hashes": [
+        "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
       ],
@@ -2363,6 +2651,9 @@
         "line_end": 63
       },
       "source_hash": "b5d40134b34a42d42e78e1cbc2c8d100d859b8fd9f5855dcc19f43b43f1cd517",
+      "source_hashes": [
+        "b5d40134b34a42d42e78e1cbc2c8d100d859b8fd9f5855dcc19f43b43f1cd517"
+      ],
       "tests": [
         "crates/reposix-core/tests/http_allowlist.rs::loopback_is_allowed_by_default"
       ],
@@ -2385,6 +2676,9 @@
         "line_end": 100
       },
       "source_hash": "ed5627ac67400e49c66f1bbd3d403b0f8a5bd64485774b4643227145a01426f0",
+      "source_hashes": [
+        "ed5627ac67400e49c66f1bbd3d403b0f8a5bd64485774b4643227145a01426f0"
+      ],
       "tests": [
         "crates/reposix-sim/tests/api.rs::rate_limit_returns_429_on_overflow"
       ],
@@ -2407,6 +2701,9 @@
         "line_end": 43
       },
       "source_hash": "2d076f35ca2c27606d544fa2161954fc2d6446988bd85e031126216929ff79f8",
+      "source_hashes": [
+        "2d076f35ca2c27606d544fa2161954fc2d6446988bd85e031126216929ff79f8"
+      ],
       "tests": [
         "crates/reposix-cache/tests/delta_sync.rs::delta_sync_updates_only_changed_issue"
       ],
@@ -2444,6 +2741,9 @@
         "line_end": 16
       },
       "source_hash": "66a2831754533f1d64df82a476d9527430ade8874f9f17abca7dbaf4b40e1245",
+      "source_hashes": [
+        "66a2831754533f1d64df82a476d9527430ade8874f9f17abca7dbaf4b40e1245"
+      ],
       "tests": [
         "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit"
       ],
@@ -2466,6 +2766,9 @@
         "line_end": 84
       },
       "source_hash": "c600557b86897ba8cbcf81d143e0fdc9ee52528594289e60ffbd72662ca2ffc2",
+      "source_hashes": [
+        "c600557b86897ba8cbcf81d143e0fdc9ee52528594289e60ffbd72662ca2ffc2"
+      ],
       "tests": [
         "docs/reference/glossary.md"
       ],
@@ -2488,6 +2791,9 @@
         "line_end": 84
       },
       "source_hash": "f0af71cf45f6367f8c1e7b765e9d4bbc5cfe138b5fe5e484498a187ff1957fa1",
+      "source_hashes": [
+        "f0af71cf45f6367f8c1e7b765e9d4bbc5cfe138b5fe5e484498a187ff1957fa1"
+      ],
       "rationale": "Superseded -- multi-space FUSE-mount framing retired in v0.9.0 architecture pivot. Per-backend cold-init latency is now in docs/benchmarks/latency.md (sim/github/jira/confluence cells).",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -2533,6 +2839,9 @@
         "line_end": 41
       },
       "source_hash": "6a120fe626d0d0ae53b2aaddf4408ece13d56a6ea3197b50a199dfa12b8c7dde",
+      "source_hashes": [
+        "6a120fe626d0d0ae53b2aaddf4408ece13d56a6ea3197b50a199dfa12b8c7dde"
+      ],
       "tests": [
         "crates/reposix-core/src/record.rs::extensions_roundtrip"
       ],
@@ -2555,6 +2864,9 @@
         "line_end": 145
       },
       "source_hash": "b280fb095c1192edfc86f03296c01f5d65ee3a53eca7a70984a9cf0e459e4ef8",
+      "source_hashes": [
+        "b280fb095c1192edfc86f03296c01f5d65ee3a53eca7a70984a9cf0e459e4ef8"
+      ],
       "tests": [
         "crates/reposix-core/tests/http_allowlist.rs::env_override_redefines_allowlist"
       ],
@@ -2592,6 +2904,9 @@
         "line_end": 62
       },
       "source_hash": "dd77191d9e34d1ed1174b9ac27937e6d6cf3c3962d879f34cada17003d68b561",
+      "source_hashes": [
+        "dd77191d9e34d1ed1174b9ac27937e6d6cf3c3962d879f34cada17003d68b561"
+      ],
       "tests": [
         "crates/reposix-core/tests/http_allowlist.rs::egress_to_non_allowlisted_host_is_rejected"
       ],
@@ -2614,6 +2929,9 @@
         "line_end": 83
       },
       "source_hash": "ad00aa1c0d1f9fa877988e12c9263335eee74a646b2f1ea7163eda85f6e8334d",
+      "source_hashes": [
+        "ad00aa1c0d1f9fa877988e12c9263335eee74a646b2f1ea7163eda85f6e8334d"
+      ],
       "tests": [
         "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error"
       ],
@@ -2636,6 +2954,9 @@
         "line_end": 54
       },
       "source_hash": "a8252b5352a333c596e77848fcdcf2c12be22e291071f7033bf7730fd606e560",
+      "source_hashes": [
+        "a8252b5352a333c596e77848fcdcf2c12be22e291071f7033bf7730fd606e560"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -2658,6 +2979,9 @@
         "line_end": 304
       },
       "source_hash": "eef5791a71e06be6be257941cedc2bbf9b9b265a1376382a31cff8fb08c6a1e5",
+      "source_hashes": [
+        "eef5791a71e06be6be257941cedc2bbf9b9b265a1376382a31cff8fb08c6a1e5"
+      ],
       "tests": [
         "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands"
       ],
@@ -2680,6 +3004,9 @@
         "line_end": 47
       },
       "source_hash": "e6d4b022b9e11d33c28da8eb1e9eaa2a2dce84e27126812ca62e1dfaf735bf25",
+      "source_hashes": [
+        "e6d4b022b9e11d33c28da8eb1e9eaa2a2dce84e27126812ca62e1dfaf735bf25"
+      ],
       "tests": [
         "crates/reposix-sim/src/db.rs::open_db_in_memory_succeeds"
       ],
@@ -2702,6 +3029,9 @@
         "line_end": 34
       },
       "source_hash": "4a812f55b0cabbff313fb38b057c4244f4fb45d271c9d7e70f3ce9ac0e0b1367",
+      "source_hashes": [
+        "4a812f55b0cabbff313fb38b057c4244f4fb45d271c9d7e70f3ce9ac0e0b1367"
+      ],
       "tests": [
         "crates/reposix-core/src/backend/sim.rs::version_mismatch_round_trips_typed_body"
       ],
@@ -2724,6 +3054,9 @@
         "line_end": 56
       },
       "source_hash": "5f3067f555701c800efbb895721a7ee70b3e1bac2f82e0d4d882832249c51c8f",
+      "source_hashes": [
+        "5f3067f555701c800efbb895721a7ee70b3e1bac2f82e0d4d882832249c51c8f"
+      ],
       "tests": [
         "crates/reposix-cache/src/audit.rs::log_materialize"
       ],
@@ -2746,6 +3079,9 @@
         "line_end": 17
       },
       "source_hash": "d8abadeddc9a286537a54b5966b4895460b06266b6f78b529828089395aed58e",
+      "source_hashes": [
+        "d8abadeddc9a286537a54b5966b4895460b06266b6f78b529828089395aed58e"
+      ],
       "tests": [
         "crates/reposix-cache/tests/sync_tags.rs::tag_sync_creates_ref"
       ],
@@ -2768,6 +3104,9 @@
         "line_end": 164
       },
       "source_hash": "30c230fd801b6c5371e319e66efc08f9cf2a523651f95935a47ba2a8e067b705",
+      "source_hashes": [
+        "30c230fd801b6c5371e319e66efc08f9cf2a523651f95935a47ba2a8e067b705"
+      ],
       "tests": [
         "crates/reposix-confluence/tests/contract.rs::contract_sim"
       ],
@@ -2790,6 +3129,9 @@
         "line_end": 109
       },
       "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
+      "source_hashes": [
+        "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb"
+      ],
       "tests": [
         "quality/gates/code/lint-invariants/forbid-unsafe-code.sh"
       ],
@@ -2812,6 +3154,9 @@
         "line_end": 46
       },
       "source_hash": "6fc28348a5c6e3c6eb068f2051be8108a48aa56b7954ad4d164e292f836ca64e",
+      "source_hashes": [
+        "6fc28348a5c6e3c6eb068f2051be8108a48aa56b7954ad4d164e292f836ca64e"
+      ],
       "tests": [
         "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock"
       ],
@@ -2834,6 +3179,9 @@
         "line_end": 78
       },
       "source_hash": "9d62a9b6c98a17d78f207d41b65487f3761429d08c592289dea49457172289d9",
+      "source_hashes": [
+        "9d62a9b6c98a17d78f207d41b65487f3761429d08c592289dea49457172289d9"
+      ],
       "tests": [
         "crates/reposix-cache/tests/sync_tags.rs::sync_tags_audit_row_written"
       ],
@@ -2856,6 +3204,9 @@
         "line_end": 56
       },
       "source_hash": "d054ff5a30c5f310b655e0afbd951ce2c4c8b6826175a00bd172a893cd871e46",
+      "source_hashes": [
+        "d054ff5a30c5f310b655e0afbd951ce2c4c8b6826175a00bd172a893cd871e46"
+      ],
       "tests": [
         "crates/reposix-cache/tests/sync_tags.rs::sync_tags_audit_row_written"
       ],
@@ -2878,6 +3229,9 @@
         "line_end": 100
       },
       "source_hash": "9f027310e7e7405ea641175f63abae2115f7089fc6fe962a4e496e8e24fb6bf8",
+      "source_hashes": [
+        "9f027310e7e7405ea641175f63abae2115f7089fc6fe962a4e496e8e24fb6bf8"
+      ],
       "tests": [
         "crates/reposix-cli/tests/gc.rs::gc_help_renders"
       ],
@@ -2900,6 +3254,9 @@
         "line_end": 312
       },
       "source_hash": "003c85239fcc62f7975a3ab4513bc7ed07e923ecc98a418439d0e760ae722eb9",
+      "source_hashes": [
+        "003c85239fcc62f7975a3ab4513bc7ed07e923ecc98a418439d0e760ae722eb9"
+      ],
       "tests": [
         "crates/reposix-cli/tests/cli.rs::mount_subcommand_is_removed"
       ],
@@ -2922,6 +3279,9 @@
         "line_end": 23
       },
       "source_hash": "be29b20a4ec78c4e55e4cb6e7b756b828334931df68223e34baa2c95572daaf1",
+      "source_hashes": [
+        "be29b20a4ec78c4e55e4cb6e7b756b828334931df68223e34baa2c95572daaf1"
+      ],
       "tests": [
         "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
       ],
@@ -2959,6 +3319,9 @@
         "line_end": 57
       },
       "source_hash": "74a8fa626c8d4b28c851604208166e735fe8910054ebcdd2492206db1a4a4b02",
+      "source_hashes": [
+        "74a8fa626c8d4b28c851604208166e735fe8910054ebcdd2492206db1a4a4b02"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
       ],
@@ -3011,6 +3374,9 @@
         "line_end": 147
       },
       "source_hash": "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877",
+      "source_hashes": [
+        "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
       ],
@@ -3033,6 +3399,9 @@
         "line_end": 119
       },
       "source_hash": "ff84542b2c0173b3c4a6e973d61aee6a45c418c7580c25255d8a2d5ed34b7390",
+      "source_hashes": [
+        "ff84542b2c0173b3c4a6e973d61aee6a45c418c7580c25255d8a2d5ed34b7390"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
       ],
@@ -3055,6 +3424,9 @@
         "line_end": 95
       },
       "source_hash": "5e363dfe75cecc1e14d7e5678e312ee99ac538c0ec1b16083d9a0daf6c5d0901",
+      "source_hashes": [
+        "5e363dfe75cecc1e14d7e5678e312ee99ac538c0ec1b16083d9a0daf6c5d0901"
+      ],
       "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-era 'tree alongside page hierarchy' presentation gone).",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -3071,6 +3443,9 @@
         "line_end": 64
       },
       "source_hash": "8716974b2ea86ffed66e3edbbebe6b0da110e8355cce7ee5a58e34651f9c6c19",
+      "source_hashes": [
+        "8716974b2ea86ffed66e3edbbebe6b0da110e8355cce7ee5a58e34651f9c6c19"
+      ],
       "tests": [
         "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields"
       ],
@@ -3093,6 +3468,9 @@
         "line_end": 64
       },
       "source_hash": "8716974b2ea86ffed66e3edbbebe6b0da110e8355cce7ee5a58e34651f9c6c19",
+      "source_hashes": [
+        "8716974b2ea86ffed66e3edbbebe6b0da110e8355cce7ee5a58e34651f9c6c19"
+      ],
       "tests": [
         "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields"
       ],
@@ -3130,6 +3508,9 @@
         "line_end": 128
       },
       "source_hash": "245379526463fe9a871bfafd6e16bbf993a0f0a4c4cc148337670247f57bf165",
+      "source_hashes": [
+        "245379526463fe9a871bfafd6e16bbf993a0f0a4c4cc148337670247f57bf165"
+      ],
       "rationale": "Superseded by .planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md: FUSE mount + page-tree symlink layout was deliberately dropped in v0.9.0 in favor of partial-clone bare-repo cache. The user-facing capability (write .md, update Confluence page) is captured by other rows that bind to dark-factory tests. confluence.md prose rewritten in commit b6f6dd7 to describe v0.9.0 git-native shape.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -3146,6 +3527,9 @@
         "line_end": 9
       },
       "source_hash": "d0915f810fc1822f9beb785942b812355b50b1e0c0923f055f92324057bbe337",
+      "source_hashes": [
+        "d0915f810fc1822f9beb785942b812355b50b1e0c0923f055f92324057bbe337"
+      ],
       "tests": [
         "crates/reposix-sim/tests/api.rs::spawn_sim"
       ],
@@ -3168,6 +3552,9 @@
         "line_end": 31
       },
       "source_hash": "58c1e74e63555bddc53190280e438fa1b7dc176755f64b1d4ce62a24a5e1bc8d",
+      "source_hashes": [
+        "58c1e74e63555bddc53190280e438fa1b7dc176755f64b1d4ce62a24a5e1bc8d"
+      ],
       "tests": [
         "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit"
       ],
@@ -3190,6 +3577,9 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hashes": [
+        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -3197,7 +3587,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "same median-of-3 GET against the GitHub backend populates this cell",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -3212,6 +3602,9 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hashes": [
+        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -3219,7 +3612,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "latency-bench.sh runs median-of-3 GET against sim and emits the sim get-record row",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -3234,6 +3627,9 @@
         "line_end": 157
       },
       "source_hash": "064a73ac3126c0cccff820e9d6b76646f0ab8bc23631658c460c5b93fb003f4c",
+      "source_hashes": [
+        "064a73ac3126c0cccff820e9d6b76646f0ab8bc23631658c460c5b93fb003f4c"
+      ],
       "tests": [
         "crates/reposix-github/src/lib.rs::get_404_maps_to_not_found"
       ],
@@ -3256,6 +3652,9 @@
         "line_end": 88
       },
       "source_hash": "83f0810b4d8b2d563b45a66d4447d50a572d299b10d3ceef20466e4293028e30",
+      "source_hashes": [
+        "83f0810b4d8b2d563b45a66d4447d50a572d299b10d3ceef20466e4293028e30"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -3278,6 +3677,9 @@
         "line_end": 126
       },
       "source_hash": "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00",
+      "source_hashes": [
+        "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -3300,6 +3702,9 @@
         "line_end": 38
       },
       "source_hash": "84ef21198b5535823e7986479025a2557cd663edb38a7a1b1aa2586ca7c8ee67",
+      "source_hashes": [
+        "84ef21198b5535823e7986479025a2557cd663edb38a7a1b1aa2586ca7c8ee67"
+      ],
       "rationale": "Superseded by architecture-pivot-summary.md:30-32 (FUSE 'mount' replaced with partial-clone working tree; v0.11.0 ADR-007 sync-tags is the v0.9.0+ form of 'see what changed at the backend'). The v0.8 git-diff-HEAD~1 in-mount form is gone in its v0.8 shape.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -3316,6 +3721,9 @@
         "line_end": 18
       },
       "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
+      "source_hashes": [
+        "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
@@ -3338,6 +3746,9 @@
         "line_end": 142
       },
       "source_hash": "c5c4beb92d6196401ccedbadb0f7ee5ff3c6738986fb7b147c53b73d81e0b0d7",
+      "source_hashes": [
+        "c5c4beb92d6196401ccedbadb0f7ee5ff3c6738986fb7b147c53b73d81e0b0d7"
+      ],
       "tests": [
         "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
       ],
@@ -3360,6 +3771,9 @@
         "line_end": 45
       },
       "source_hash": "5b97292894976b87d691a051da8b8ba32ba0c72b52fee297853adbf332323625",
+      "source_hashes": [
+        "5b97292894976b87d691a051da8b8ba32ba0c72b52fee297853adbf332323625"
+      ],
       "tests": [
         "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
       ],
@@ -3382,6 +3796,9 @@
         "line_end": 154
       },
       "source_hash": "a7804faf1d5083d706f8752af335bf2f5726eac130555b182c7e700a0b4c4f0a",
+      "source_hashes": [
+        "a7804faf1d5083d706f8752af335bf2f5726eac130555b182c7e700a0b4c4f0a"
+      ],
       "tests": [
         "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
       ],
@@ -3419,6 +3836,9 @@
         "line_end": 18
       },
       "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
+      "source_hashes": [
+        "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
       ],
@@ -3441,6 +3861,9 @@
         "line_end": 32
       },
       "source_hash": "236015d19ea619737c8a4e49abdb61fb88d30fb712222d92d5d1a1c10d31c082",
+      "source_hashes": [
+        "236015d19ea619737c8a4e49abdb61fb88d30fb712222d92d5d1a1c10d31c082"
+      ],
       "tests": [
         "crates/reposix-remote/tests/stateless_connect.rs::capabilities_advertises_stateless_connect_and_object_format"
       ],
@@ -3463,6 +3886,9 @@
         "line_end": 29
       },
       "source_hash": "00e3f65bf3c6344fd0e91995cda5cd7d342e224f01d26c780263e6cfca2ad5d8",
+      "source_hashes": [
+        "00e3f65bf3c6344fd0e91995cda5cd7d342e224f01d26c780263e6cfca2ad5d8"
+      ],
       "tests": [
         "crates/reposix-remote/src/main.rs::main"
       ],
@@ -3485,6 +3911,9 @@
         "line_end": 29
       },
       "source_hash": "6e61694909c7ef2b51d13f14b68388d4e98bb86257cf12f5d937db7a16ea9020",
+      "source_hashes": [
+        "6e61694909c7ef2b51d13f14b68388d4e98bb86257cf12f5d937db7a16ea9020"
+      ],
       "tests": [
         "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
       ],
@@ -3507,6 +3936,9 @@
         "line_end": 30
       },
       "source_hash": "de745cc5e8a9865cbccd0e1cdb3bb3c55853050cf62bd2dd3551a01bebdefd01",
+      "source_hashes": [
+        "de745cc5e8a9865cbccd0e1cdb3bb3c55853050cf62bd2dd3551a01bebdefd01"
+      ],
       "tests": [
         "crates/reposix-remote/src/main.rs::main"
       ],
@@ -3529,6 +3961,9 @@
         "line_end": 55
       },
       "source_hash": "043ee66b83f2a9110d3d642873f3ca5be9064a85b508cca7bab0f4bb25eca746",
+      "source_hashes": [
+        "043ee66b83f2a9110d3d642873f3ca5be9064a85b508cca7bab0f4bb25eca746"
+      ],
       "tests": [
         "crates/reposix-remote/src/main.rs::real_main"
       ],
@@ -3551,6 +3986,9 @@
         "line_end": 44
       },
       "source_hash": "af41b764eb31c0cd1ba82c18a07bc4840b765f46651df06165dc80dc15307460",
+      "source_hashes": [
+        "af41b764eb31c0cd1ba82c18a07bc4840b765f46651df06165dc80dc15307460"
+      ],
       "tests": [
         "crates/reposix-github/src/lib.rs::translate"
       ],
@@ -3573,6 +4011,9 @@
         "line_end": 45
       },
       "source_hash": "39ee1ddb165bd47510511053bc1189ebcf5c814003b1ef26fba7867b83eea7a6",
+      "source_hashes": [
+        "39ee1ddb165bd47510511053bc1189ebcf5c814003b1ef26fba7867b83eea7a6"
+      ],
       "tests": [
         "crates/reposix-github/src/lib.rs::translate"
       ],
@@ -3595,6 +4036,9 @@
         "line_end": 41
       },
       "source_hash": "3c186dc77e9fa6b6e5a3a5fda8faac6d330563ef440066d35d08dc3083a5f533",
+      "source_hashes": [
+        "3c186dc77e9fa6b6e5a3a5fda8faac6d330563ef440066d35d08dc3083a5f533"
+      ],
       "tests": [
         "crates/reposix-github/src/lib.rs::translate"
       ],
@@ -3617,6 +4061,9 @@
         "line_end": 42
       },
       "source_hash": "07d62c4eb30dadce10f09814d1bdc0848ba6ba62fda7a4fe6d5a41facb89be8b",
+      "source_hashes": [
+        "07d62c4eb30dadce10f09814d1bdc0848ba6ba62fda7a4fe6d5a41facb89be8b"
+      ],
       "tests": [
         "crates/reposix-github/src/lib.rs::translate"
       ],
@@ -3639,6 +4086,9 @@
         "line_end": 43
       },
       "source_hash": "0a4d63a95f24605cf04e5d9bd59080708e0458b3732e2a57943f325826e0666d",
+      "source_hashes": [
+        "0a4d63a95f24605cf04e5d9bd59080708e0458b3732e2a57943f325826e0666d"
+      ],
       "tests": [
         "crates/reposix-github/src/lib.rs::translate"
       ],
@@ -3661,6 +4111,9 @@
         "line_end": 27
       },
       "source_hash": "d547567f79945205c7e4e39d7a7977ee8facfd430d8230a27626755bb6a176a2",
+      "source_hashes": [
+        "d547567f79945205c7e4e39d7a7977ee8facfd430d8230a27626755bb6a176a2"
+      ],
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
@@ -3683,6 +4136,9 @@
         "line_end": 72
       },
       "source_hash": "79ce6db95c588526661a8555ded0b3ee866f5f79948218a2e5e0d118d3995053",
+      "source_hashes": [
+        "79ce6db95c588526661a8555ded0b3ee866f5f79948218a2e5e0d118d3995053"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
       ],
@@ -3720,6 +4176,9 @@
         "line_end": 20
       },
       "source_hash": "817555ea7f9466161348919866eb44ee1063bfec950bde1a7ec24a50a68c1024",
+      "source_hashes": [
+        "817555ea7f9466161348919866eb44ee1063bfec950bde1a7ec24a50a68c1024"
+      ],
       "tests": [
         "crates/reposix-remote/tests/stateless_connect.rs::capabilities_advertises_stateless_connect_and_object_format"
       ],
@@ -3742,6 +4201,9 @@
         "line_end": 57
       },
       "source_hash": "02985ce2c1e95d42c79c640ededd0882f32006df1c7a0475f7fa930cfc7b64ab",
+      "source_hashes": [
+        "02985ce2c1e95d42c79c640ededd0882f32006df1c7a0475f7fa930cfc7b64ab"
+      ],
       "tests": [
         "crates/reposix-remote/tests/stateless_connect.rs::capabilities_advertises_stateless_connect_and_object_format"
       ],
@@ -3764,6 +4226,9 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hashes": [
+        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -3771,7 +4236,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "latency-bench.sh measures the local helper-capabilities round trip and emits this row",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -3786,6 +4251,9 @@
         "line_end": 63
       },
       "source_hash": "1d7efa8918043dce2d3a6df5d9d39d09f94a2150a1c693662af939554cf6fd2e",
+      "source_hashes": [
+        "1d7efa8918043dce2d3a6df5d9d39d09f94a2150a1c693662af939554cf6fd2e"
+      ],
       "tests": [
         "crates/reposix-cache/tests/sync_tags.rs::helper_does_not_export_sync_tags"
       ],
@@ -3808,6 +4276,9 @@
         "line_end": 48
       },
       "source_hash": "8fd9cb6b6efd90cb03f55256bc9b5f17b5e6f2841db0e6ebe3509fddac970a5b",
+      "source_hashes": [
+        "8fd9cb6b6efd90cb03f55256bc9b5f17b5e6f2841db0e6ebe3509fddac970a5b"
+      ],
       "tests": [
         "crates/reposix-remote/src/backend_dispatch.rs::instantiate_sim_no_creds_required_succeeds"
       ],
@@ -3830,6 +4301,9 @@
         "line_end": 110
       },
       "source_hash": "76ab21ccaeb7a2b49ceedb8cb36303d8adafe61da08b69d509ef6d0b0f1bd194",
+      "source_hashes": [
+        "76ab21ccaeb7a2b49ceedb8cb36303d8adafe61da08b69d509ef6d0b0f1bd194"
+      ],
       "tests": [
         "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants"
       ],
@@ -3867,6 +4341,9 @@
         "line_end": 94
       },
       "source_hash": "c5a7590519c941f30be41729db3cfba05c8ad020724e8e610e4a8ecbb3f0f777",
+      "source_hashes": [
+        "c5a7590519c941f30be41729db3cfba05c8ad020724e8e610e4a8ecbb3f0f777"
+      ],
       "tests": [
         "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock"
       ],
@@ -3889,6 +4366,9 @@
         "line_end": 18
       },
       "source_hash": "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4",
+      "source_hashes": [
+        "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -3896,7 +4376,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "Mirror hero number against canonical latency-bench",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -3911,6 +4391,9 @@
         "line_end": 21
       },
       "source_hash": "ac2889ecede8e6c9f77abb0369b70f131500ffc066b794c5c5ceec09455e3d3a",
+      "source_hashes": [
+        "ac2889ecede8e6c9f77abb0369b70f131500ffc066b794c5c5ceec09455e3d3a"
+      ],
       "tests": [
         "crates/reposix-core/tests/http_allowlist.rs::redirect_target_is_rechecked_against_allowlist"
       ],
@@ -3933,6 +4416,9 @@
         "line_end": 99
       },
       "source_hash": "78058088005de31b6dc6699177e43985cb93397b1744c1b195ce4e90f6cc88c8",
+      "source_hashes": [
+        "78058088005de31b6dc6699177e43985cb93397b1744c1b195ce4e90f6cc88c8"
+      ],
       "rationale": "Superseded by Phase 29 (crates/reposix-jira/src/lib.rs:8 docstring + impls at lib.rs:197/279/334). Wiremock test contract_jira_wiremock_write at crates/reposix-jira/tests/contract.rs:419-431 exercises full create/update/delete sequence and asserts each returns Ok -- contradicts Phase-28 read-only claim. Doc prose at jira.md:96-99 also stale; UPDATE_DOC follow-up captured.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -3949,6 +4435,9 @@
         "line_end": 103
       },
       "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_hashes": [
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      ],
       "tests": [
         "quality/gates/structure/required-doc-surfaces.sh"
       ],
@@ -3971,6 +4460,9 @@
         "line_end": 25
       },
       "source_hash": "2a4dcdc2c2081ba477eefd5ab1ee28e984e5eaf02735c40256c7fb167344e884",
+      "source_hashes": [
+        "2a4dcdc2c2081ba477eefd5ab1ee28e984e5eaf02735c40256c7fb167344e884"
+      ],
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
@@ -3993,6 +4485,9 @@
         "line_end": 59
       },
       "source_hash": "89ced95ebdeddd25544ae5c153aade4faec9d4d2934f861871f6f9be1d4b9ebe",
+      "source_hashes": [
+        "89ced95ebdeddd25544ae5c153aade4faec9d4d2934f861871f6f9be1d4b9ebe"
+      ],
       "tests": [
         "quality/gates/code/lint-invariants/forbid-unsafe-code.sh"
       ],
@@ -4015,6 +4510,9 @@
         "line_end": 60
       },
       "source_hash": "dbbe77822e6decd2c5b6b9f41d06198460a6ef68643c3fd688db9aa75ebce449",
+      "source_hashes": [
+        "dbbe77822e6decd2c5b6b9f41d06198460a6ef68643c3fd688db9aa75ebce449"
+      ],
       "tests": [
         "quality/gates/code/clippy-lint-loaded.sh"
       ],
@@ -4037,6 +4535,9 @@
         "line_end": 61
       },
       "source_hash": "59fb7eaf9511956cf57ef4899bc34e5913ce6d7e8092fddc9a1307e289c1b167",
+      "source_hashes": [
+        "59fb7eaf9511956cf57ef4899bc34e5913ce6d7e8092fddc9a1307e289c1b167"
+      ],
       "tests": [
         "quality/gates/code/lint-invariants/errors-doc-section.sh"
       ],
@@ -4059,6 +4560,9 @@
         "line_end": 62
       },
       "source_hash": "16c54eee4e3edf2c4ab1c6cadae50db30d2463431d961f48c3c151abd3ca3590",
+      "source_hashes": [
+        "16c54eee4e3edf2c4ab1c6cadae50db30d2463431d961f48c3c151abd3ca3590"
+      ],
       "tests": [
         "crates/reposix-core/src/record.rs::frontmatter_roundtrips"
       ],
@@ -4081,6 +4585,9 @@
         "line_end": 63
       },
       "source_hash": "3f33f1997ab4f504c4ba5999cde3054ad5893eedd74eef55a35fb39dc55cdfc5",
+      "source_hashes": [
+        "3f33f1997ab4f504c4ba5999cde3054ad5893eedd74eef55a35fb39dc55cdfc5"
+      ],
       "tests": [
         "quality/gates/code/cargo-clippy-warnings.sh"
       ],
@@ -4103,6 +4610,9 @@
         "line_end": 64
       },
       "source_hash": "96846ce0eb8fd49d23c44340f9217f92e9fadc9b72b4fdd8c70e423d04453ae9",
+      "source_hashes": [
+        "96846ce0eb8fd49d23c44340f9217f92e9fadc9b72b4fdd8c70e423d04453ae9"
+      ],
       "tests": [
         "quality/gates/code/lint-invariants/rust-stable-channel.sh"
       ],
@@ -4125,6 +4635,9 @@
         "line_end": 65
       },
       "source_hash": "de44ff8beba200ec724a30fc9378fdb7adfea07a977502bc5e6687ef740902f2",
+      "source_hashes": [
+        "de44ff8beba200ec724a30fc9378fdb7adfea07a977502bc5e6687ef740902f2"
+      ],
       "tests": [
         "crates/reposix-core/tests/http_allowlist.rs::redirect_target_is_rechecked_against_allowlist"
       ],
@@ -4147,6 +4660,9 @@
         "line_end": 66
       },
       "source_hash": "a74f2b98a6e72a9f56de5a3e6f953e9222569c8383d1480aa7e458653d4b208e",
+      "source_hashes": [
+        "a74f2b98a6e72a9f56de5a3e6f953e9222569c8383d1480aa7e458653d4b208e"
+      ],
       "tests": [
         "crates/reposix-core/src/taint.rs::server_controlled_frontmatter_fields_are_stripped"
       ],
@@ -4169,6 +4685,9 @@
         "line_end": 72
       },
       "source_hash": "16a498209da64fa9aaf31f462732ddbe1d145ca3b3e10004e6e7c97f31dafa43",
+      "source_hashes": [
+        "16a498209da64fa9aaf31f462732ddbe1d145ca3b3e10004e6e7c97f31dafa43"
+      ],
       "tests": [
         "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields"
       ],
@@ -4191,6 +4710,9 @@
         "line_end": 61
       },
       "source_hash": "79c8399a5404e52c926635cbd49f0f38a780dd88b517e9116026bc1563ee7f88",
+      "source_hashes": [
+        "79c8399a5404e52c926635cbd49f0f38a780dd88b517e9116026bc1563ee7f88"
+      ],
       "tests": [
         "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock"
       ],
@@ -4213,6 +4735,9 @@
         "line_end": 64
       },
       "source_hash": "35b605e16aa0bf1cc52787f6afa3c7ab7392ad1294da75c10427e29b48a6877e",
+      "source_hashes": [
+        "35b605e16aa0bf1cc52787f6afa3c7ab7392ad1294da75c10427e29b48a6877e"
+      ],
       "tests": [
         "crates/reposix-confluence/src/translate.rs::translate"
       ],
@@ -4235,6 +4760,9 @@
         "line_end": 57
       },
       "source_hash": "dd2a895cc92eb8beeea072151a43cf14d410dbe6168b58525c8f6e6db66fb734",
+      "source_hashes": [
+        "dd2a895cc92eb8beeea072151a43cf14d410dbe6168b58525c8f6e6db66fb734"
+      ],
       "tests": [
         "crates/reposix-confluence/src/translate.rs::translate"
       ],
@@ -4257,6 +4785,9 @@
         "line_end": 65
       },
       "source_hash": "b6a48dd31ce64a143d75051705039f771dd7f255e20b9a7781010deaf7eb8698",
+      "source_hashes": [
+        "b6a48dd31ce64a143d75051705039f771dd7f255e20b9a7781010deaf7eb8698"
+      ],
       "tests": [
         "crates/reposix-confluence/src/translate.rs::translate"
       ],
@@ -4279,6 +4810,9 @@
         "line_end": 58
       },
       "source_hash": "ca32891e50747d85cc37e87e606ba229d14553de62cc5a4ebf3143610fba7d12",
+      "source_hashes": [
+        "ca32891e50747d85cc37e87e606ba229d14553de62cc5a4ebf3143610fba7d12"
+      ],
       "tests": [
         "crates/reposix-confluence/src/translate.rs::translate"
       ],
@@ -4301,6 +4835,9 @@
         "line_end": 8
       },
       "source_hash": "a7cd9157a658955c488da392d02d3e75ca95500c358f5b0c07e7329bfe68f4b4",
+      "source_hashes": [
+        "a7cd9157a658955c488da392d02d3e75ca95500c358f5b0c07e7329bfe68f4b4"
+      ],
       "rationale": "Superseded by architecture-pivot-summary.md: FUSE daemon retired in v0.9.0. The trait (renamed BackendConnector) is now consumed by git-remote-reposix helper, not a FUSE daemon. Trait-shape claims are captured in docs/connectors/guide/backendconnector-* rows (BOUND). confluence.md prose rewritten in commit b6f6dd7.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -4317,6 +4854,9 @@
         "line_end": 17
       },
       "source_hash": "3f6a0b522a51e24f7b76758970e287609a284f56823b37a0e0ce7c3783c70669",
+      "source_hashes": [
+        "3f6a0b522a51e24f7b76758970e287609a284f56823b37a0e0ce7c3783c70669"
+      ],
       "tests": [
         "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock"
       ],
@@ -4339,6 +4879,9 @@
         "line_end": 28
       },
       "source_hash": "e70af7637cec0477577fe1c8e343ef052c92d83215fca71a12e10522f256fcbb",
+      "source_hashes": [
+        "e70af7637cec0477577fe1c8e343ef052c92d83215fca71a12e10522f256fcbb"
+      ],
       "tests": [
         "quality/gates/docs-alignment/jira-adapter-shipped.sh"
       ],
@@ -4361,6 +4904,9 @@
         "line_end": 109
       },
       "source_hash": "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc",
+      "source_hashes": [
+        "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
       ],
@@ -4383,6 +4929,9 @@
         "line_end": 109
       },
       "source_hash": "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc",
+      "source_hashes": [
+        "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
       ],
@@ -4405,6 +4954,9 @@
         "line_end": 98
       },
       "source_hash": "a8f2f7328f59a9a6a05993dfc8a99874ea181e96528bbb058c4580d65657f97a",
+      "source_hashes": [
+        "a8f2f7328f59a9a6a05993dfc8a99874ea181e96528bbb058c4580d65657f97a"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::jira_test_project"
       ],
@@ -4427,6 +4979,9 @@
         "line_end": 65
       },
       "source_hash": "242883c22eaff5fb17383cdac18cf401f3ef68998dcb2f788580ddf4abdf22d5",
+      "source_hashes": [
+        "242883c22eaff5fb17383cdac18cf401f3ef68998dcb2f788580ddf4abdf22d5"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
       ],
@@ -4449,6 +5004,9 @@
         "line_end": 90
       },
       "source_hash": "4ef9cd737e2d8c24cfe4c9c760d144a825b7900b1855b2c74da1b4bb4cbca5da",
+      "source_hashes": [
+        "4ef9cd737e2d8c24cfe4c9c760d144a825b7900b1855b2c74da1b4bb4cbca5da"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -4456,7 +5014,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "latency-bench.sh regenerates docs/benchmarks/latency.md; aliased with other latency-mirror rows",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T20:01:27Z",
       "last_extracted": "2026-04-28T20:01:27Z",
@@ -4486,6 +5044,9 @@
         "line_end": 27
       },
       "source_hash": "b144e30df0ec68c42bc866596d7535e479d0cb16123cea4d4af6d8bb604ebe4a",
+      "source_hashes": [
+        "b144e30df0ec68c42bc866596d7535e479d0cb16123cea4d4af6d8bb604ebe4a"
+      ],
       "tests": [
         ".github/workflows/release.yml"
       ],
@@ -4508,6 +5069,9 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hashes": [
+        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -4515,7 +5079,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "latency-bench.sh emits the JIRA list-record row",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -4530,6 +5094,9 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hashes": [
+        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -4537,7 +5104,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "latency-bench.sh emits the GitHub list-record row with N count",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -4552,6 +5119,9 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hashes": [
+        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -4559,7 +5129,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "latency-bench.sh runs median-of-3 LIST against sim and emits the list-record row with N count",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -4574,6 +5144,9 @@
         "line_end": 156
       },
       "source_hash": "0ad525c80ac374de2dff82507b9ab2c1272f1febe50b7f92d23a3f9f0d36c550",
+      "source_hashes": [
+        "0ad525c80ac374de2dff82507b9ab2c1272f1febe50b7f92d23a3f9f0d36c550"
+      ],
       "tests": [
         "crates/reposix-confluence/tests/contract.rs::contract_confluence_wiremock"
       ],
@@ -4625,6 +5198,9 @@
         "line_end": 33
       },
       "source_hash": "5d10d55061f7329d5c674f8512f92b93432179d5b8ec213e9c7bbd70808885d0",
+      "source_hashes": [
+        "5d10d55061f7329d5c674f8512f92b93432179d5b8ec213e9c7bbd70808885d0"
+      ],
       "rationale": "Superseded by architecture-pivot-summary.md:36-50 (partial-clone replaces FUSE mount; symlink-tree retired).",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -4641,6 +5217,9 @@
         "line_end": 94
       },
       "source_hash": "30a445d4a9c864ada3616b5525510ef54fe49f5345257e2cb382e85ee497f14d",
+      "source_hashes": [
+        "30a445d4a9c864ada3616b5525510ef54fe49f5345257e2cb382e85ee497f14d"
+      ],
       "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-mount attachments tree retired).",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -4657,6 +5236,9 @@
         "line_end": 88
       },
       "source_hash": "f68b6160b935285dca1c0a3cebe6875a0ecf88c531a2e1d34e87c6e4a2a940e5",
+      "source_hashes": [
+        "f68b6160b935285dca1c0a3cebe6875a0ecf88c531a2e1d34e87c6e4a2a940e5"
+      ],
       "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-mount comment-list shape retired).",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -4673,6 +5255,9 @@
         "line_end": 34
       },
       "source_hash": "f47aa0e1c292e12f716b37667d00e806f0ad2a901c830277d7850c94fe5e5082",
+      "source_hashes": [
+        "f47aa0e1c292e12f716b37667d00e806f0ad2a901c830277d7850c94fe5e5082"
+      ],
       "rationale": "Superseded by architecture-pivot-summary.md:36-50 (FUSE-mount multi-space symlink shape retired).",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -4689,6 +5274,9 @@
         "line_end": 93
       },
       "source_hash": "74010c040c1c1a7fc358d8cedecef1f8a7604e52cc727802bc181af444543bbb",
+      "source_hashes": [
+        "74010c040c1c1a7fc358d8cedecef1f8a7604e52cc727802bc181af444543bbb"
+      ],
       "rationale": "Superseded by architecture-pivot-summary.md:5 (FUSE-mount whiteboards path retired).",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -4720,6 +5308,9 @@
         "line_end": 25
       },
       "source_hash": "1e406ccf260f30100746f2f32c8e99a65a8d643fd959aa527ef53f1dcba820dd",
+      "source_hashes": [
+        "1e406ccf260f30100746f2f32c8e99a65a8d643fd959aa527ef53f1dcba820dd"
+      ],
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
@@ -4742,6 +5333,9 @@
         "line_end": 39
       },
       "source_hash": "b496389f0b96309f3306c4ef1225161d32a95277add8931b5be0d3024143f298",
+      "source_hashes": [
+        "b496389f0b96309f3306c4ef1225161d32a95277add8931b5be0d3024143f298"
+      ],
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
@@ -4764,6 +5358,9 @@
         "line_end": 13
       },
       "source_hash": "917575b56f9c55a9a5c4371e35f4d35cbb7e301ae17ea135879dac3d1732da01",
+      "source_hashes": [
+        "917575b56f9c55a9a5c4371e35f4d35cbb7e301ae17ea135879dac3d1732da01"
+      ],
       "rationale": "mcp-schema-discovery-100k-tokens — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -4780,6 +5377,9 @@
         "line_end": 19
       },
       "source_hash": "85ba726df6437a441fa6330eb36d16f39a033bd3c1322906f1a4f6fb7a7937d2",
+      "source_hashes": [
+        "85ba726df6437a441fa6330eb36d16f39a033bd3c1322906f1a4f6fb7a7937d2"
+      ],
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
@@ -4802,6 +5402,9 @@
         "line_end": 94
       },
       "source_hash": "13909ae63a6c79885a049f5adf02eb0111ac40ba643074e4f568de348f462046",
+      "source_hashes": [
+        "13909ae63a6c79885a049f5adf02eb0111ac40ba643074e4f568de348f462046"
+      ],
       "tests": [
         "crates/reposix-remote/src/backend_dispatch.rs::instantiate_confluence_missing_creds_lists_all_three"
       ],
@@ -4824,6 +5427,9 @@
         "line_end": 86
       },
       "source_hash": "5663fabcff54b54bb55f471d68ba35d7a23d3b8b93fc48bc34c99333775a1312",
+      "source_hashes": [
+        "5663fabcff54b54bb55f471d68ba35d7a23d3b8b93fc48bc34c99333775a1312"
+      ],
       "tests": [
         "quality/gates/docs-build/mkdocs-strict.sh"
       ],
@@ -4846,6 +5452,9 @@
         "line_end": 23
       },
       "source_hash": "a76f570774673eadf10330e199d72edd0dbbf333baf757c030178fb4c0c495a2",
+      "source_hashes": [
+        "a76f570774673eadf10330e199d72edd0dbbf333baf757c030178fb4c0c495a2"
+      ],
       "tests": [
         "quality/gates/structure/required-doc-surfaces.sh"
       ],
@@ -4868,6 +5477,9 @@
         "line_end": 25
       },
       "source_hash": "df0ca33e27b70de9fa465e670e14d79656d018470b3f9dac770e10cbeb18eb8e",
+      "source_hashes": [
+        "df0ca33e27b70de9fa465e670e14d79656d018470b3f9dac770e10cbeb18eb8e"
+      ],
       "tests": [
         "quality/gates/structure/required-doc-surfaces.sh"
       ],
@@ -4890,6 +5502,9 @@
         "line_end": 26
       },
       "source_hash": "5bef259324873d2360d0b830015494abd5d06ddc0a0cc27b01f0acb577516eee",
+      "source_hashes": [
+        "5bef259324873d2360d0b830015494abd5d06ddc0a0cc27b01f0acb577516eee"
+      ],
       "tests": [
         "crates/reposix-cache/tests/materialize_one.rs::read_blob_materializes_exactly_one_and_audits"
       ],
@@ -4912,6 +5527,9 @@
         "line_end": 31
       },
       "source_hash": "e43df21293c88d3aa16a957bc5a83c86bedbc99411fddd45cbdde8eb7d262b5f",
+      "source_hashes": [
+        "e43df21293c88d3aa16a957bc5a83c86bedbc99411fddd45cbdde8eb7d262b5f"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
       ],
@@ -4934,6 +5552,9 @@
         "line_end": 90
       },
       "source_hash": "575156114df03802de2c4b3068640edaa05dd8c834bb387c714b3c182bc8a3d1",
+      "source_hashes": [
+        "575156114df03802de2c4b3068640edaa05dd8c834bb387c714b3c182bc8a3d1"
+      ],
       "tests": [
         "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
       ],
@@ -4956,6 +5577,9 @@
         "line_end": 31
       },
       "source_hash": "e43df21293c88d3aa16a957bc5a83c86bedbc99411fddd45cbdde8eb7d262b5f",
+      "source_hashes": [
+        "e43df21293c88d3aa16a957bc5a83c86bedbc99411fddd45cbdde8eb7d262b5f"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
@@ -4978,6 +5602,9 @@
         "line_end": 103
       },
       "source_hash": "e3649a25621444ccaacd15d3c9dcc47767fb2764b88f7b9a9a3982477a11a805",
+      "source_hashes": [
+        "e3649a25621444ccaacd15d3c9dcc47767fb2764b88f7b9a9a3982477a11a805"
+      ],
       "tests": [
         "crates/reposix-cache/src/audit.rs::log_helper_backend_instantiated_records_project_for_backend"
       ],
@@ -5000,6 +5627,9 @@
         "line_end": 22
       },
       "source_hash": "1475b5e5f5825e4162a0d12a4255c33dc53a46120f3abbe6c6bf76a8dacb68da",
+      "source_hashes": [
+        "1475b5e5f5825e4162a0d12a4255c33dc53a46120f3abbe6c6bf76a8dacb68da"
+      ],
       "tests": [
         "crates/reposix-confluence/tests/roundtrip.rs::create_then_get_roundtrip_with_audit"
       ],
@@ -5022,6 +5652,9 @@
         "line_end": 180
       },
       "source_hash": "50563e898c0fe555b45245b8951aa43465b25b95cd7c62023db17b6797063cd2",
+      "source_hashes": [
+        "50563e898c0fe555b45245b8951aa43465b25b95cd7c62023db17b6797063cd2"
+      ],
       "tests": [
         "crates/reposix-confluence/src/translate.rs::translate"
       ],
@@ -5044,6 +5677,9 @@
         "line_end": 73
       },
       "source_hash": "8f9942a7bd64ac0144c1ee25d3ac11c4b68ea327d917aba59d522a12bd15d48b",
+      "source_hashes": [
+        "8f9942a7bd64ac0144c1ee25d3ac11c4b68ea327d917aba59d522a12bd15d48b"
+      ],
       "tests": [
         "crates/reposix-confluence/src/translate.rs::status_from_confluence"
       ],
@@ -5066,6 +5702,9 @@
         "line_end": 71
       },
       "source_hash": "24b671672291e8e530d453b2a58918d297f5b935f23cfcd5381b023160cf9617",
+      "source_hashes": [
+        "24b671672291e8e530d453b2a58918d297f5b935f23cfcd5381b023160cf9617"
+      ],
       "tests": [
         "crates/reposix-confluence/src/translate.rs::status_from_confluence"
       ],
@@ -5088,6 +5727,9 @@
         "line_end": 73
       },
       "source_hash": "8f9942a7bd64ac0144c1ee25d3ac11c4b68ea327d917aba59d522a12bd15d48b",
+      "source_hashes": [
+        "8f9942a7bd64ac0144c1ee25d3ac11c4b68ea327d917aba59d522a12bd15d48b"
+      ],
       "tests": [
         "crates/reposix-confluence/src/translate.rs::status_from_confluence"
       ],
@@ -5110,6 +5752,9 @@
         "line_end": 72
       },
       "source_hash": "24b9a096be126286645036472b4c25fce0ab85522a785b04e195a7ff2a4fcec7",
+      "source_hashes": [
+        "24b9a096be126286645036472b4c25fce0ab85522a785b04e195a7ff2a4fcec7"
+      ],
       "tests": [
         "crates/reposix-confluence/src/translate.rs::status_from_confluence"
       ],
@@ -5132,6 +5777,9 @@
         "line_end": 159
       },
       "source_hash": "e94fae883453697c62b8ba0e3bd43f62b0fc1ef5420076272da32c075e02824c",
+      "source_hashes": [
+        "e94fae883453697c62b8ba0e3bd43f62b0fc1ef5420076272da32c075e02824c"
+      ],
       "tests": [
         "crates/reposix-github/tests/contract.rs::pagination_follows_link_header"
       ],
@@ -5154,6 +5802,9 @@
         "line_end": 123
       },
       "source_hash": "0c140ac67f10a955d6e4623848e82a62504e74e47e3a832eb9e44733adbbad75",
+      "source_hashes": [
+        "0c140ac67f10a955d6e4623848e82a62504e74e47e3a832eb9e44733adbbad75"
+      ],
       "tests": [
         "crates/reposix-confluence/src/translate.rs::parse_next_cursor"
       ],
@@ -5176,6 +5827,9 @@
         "line_end": 48
       },
       "source_hash": "5a981cfa3590ef262179df70527d9b20f768d900734ebc8607cf3b385b0b16d1",
+      "source_hashes": [
+        "5a981cfa3590ef262179df70527d9b20f768d900734ebc8607cf3b385b0b16d1"
+      ],
       "tests": [
         "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from"
       ],
@@ -5213,6 +5867,9 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hashes": [
+        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -5220,7 +5877,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "latency-bench.sh runs sim_patch median-of-3 with version round-trip and emits the sim PATCH row",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -5235,6 +5892,9 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hashes": [
+        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -5242,7 +5902,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "latency-bench.sh emits the GitHub PATCH row",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -5257,6 +5917,9 @@
         "line_end": 66
       },
       "source_hash": "af3b4d1f3f4299fa3b2490ca369f078e46207d568c6910ac8f617670e3c9ba83",
+      "source_hashes": [
+        "af3b4d1f3f4299fa3b2490ca369f078e46207d568c6910ac8f617670e3c9ba83"
+      ],
       "tests": [
         "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit"
       ],
@@ -5279,6 +5942,9 @@
         "line_end": 82
       },
       "source_hash": "77096fffc8c3f223ac50e7254f080ed34f00ca09ee969fb66d743b89c1b6182d",
+      "source_hashes": [
+        "77096fffc8c3f223ac50e7254f080ed34f00ca09ee969fb66d743b89c1b6182d"
+      ],
       "rationale": "Superseded by docs/benchmarks/latency.md cached-read entries (8ms sim) and quality/gates/perf/latency-bench.sh. The v0.8 framing is retired; equivalent metric BOUND in current bench.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -5295,6 +5961,9 @@
         "line_end": 87
       },
       "source_hash": "a88304418eee972df7bfae418666b915a2684d7b6de7a5a8a54c2f07e0b0d476",
+      "source_hashes": [
+        "a88304418eee972df7bfae418666b915a2684d7b6de7a5a8a54c2f07e0b0d476"
+      ],
       "tests": [
         "crates/reposix-jira/tests/list_records_excludes_attachments.rs::list_records_excludes_attachments_and_comments"
       ],
@@ -5332,6 +6001,9 @@
         "line_end": 27
       },
       "source_hash": "c51302c1fa6f11e39b7d6816656a3bfaa9f12e0e552d3ffe22f13cdde3493f2f",
+      "source_hashes": [
+        "c51302c1fa6f11e39b7d6816656a3bfaa9f12e0e552d3ffe22f13cdde3493f2f"
+      ],
       "rationale": "Claim IS the deferral decision -- not a behavioral test target. Status doc / planning prose; no test could fail.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -5348,6 +6020,9 @@
         "line_end": 54
       },
       "source_hash": "08b7714e0cb70c586f261982d9f86be0705f64dcf98e389696a8105e3666be01",
+      "source_hashes": [
+        "08b7714e0cb70c586f261982d9f86be0705f64dcf98e389696a8105e3666be01"
+      ],
       "tests": [
         "quality/gates/release/installer-asset-bytes.py"
       ],
@@ -5370,6 +6045,9 @@
         "line_end": 88
       },
       "source_hash": "fd3cc1ec98d50a3e841b8e769597587f31a0b95b8a255314c6ebdc733150d45f",
+      "source_hashes": [
+        "fd3cc1ec98d50a3e841b8e769597587f31a0b95b8a255314c6ebdc733150d45f"
+      ],
       "tests": [
         ".github/workflows/release.yml"
       ],
@@ -5392,6 +6070,9 @@
         "line_end": 59
       },
       "source_hash": "6d098fd11a5e397a814e57c84bd3b6a512f30b01c6fa57cb2bbf2726fed3b89b",
+      "source_hashes": [
+        "6d098fd11a5e397a814e57c84bd3b6a512f30b01c6fa57cb2bbf2726fed3b89b"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -5444,6 +6125,9 @@
         "line_end": 42
       },
       "source_hash": "3607ab31a2e18e5d1ad4eee8f25ae387e8845a24b7ddede4c65dda2ec2cb0737",
+      "source_hashes": [
+        "3607ab31a2e18e5d1ad4eee8f25ae387e8845a24b7ddede4c65dda2ec2cb0737"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
@@ -5481,6 +6165,9 @@
         "line_end": 66
       },
       "source_hash": "db78a5ad5a0f5617ae1fd150bef87e4a98712f20ee6858f6abb7b3c009d521ea",
+      "source_hashes": [
+        "db78a5ad5a0f5617ae1fd150bef87e4a98712f20ee6858f6abb7b3c009d521ea"
+      ],
       "tests": [
         "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
       ],
@@ -5503,6 +6190,9 @@
         "line_end": 147
       },
       "source_hash": "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877",
+      "source_hashes": [
+        "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
@@ -5554,6 +6244,9 @@
         "line_end": 49
       },
       "source_hash": "1df8b2e522ab23c2686de07d8e433782d92e5e970c066c2a9252f32a66814285",
+      "source_hashes": [
+        "1df8b2e522ab23c2686de07d8e433782d92e5e970c066c2a9252f32a66814285"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
@@ -5576,6 +6269,9 @@
         "line_end": 9
       },
       "source_hash": "0ae596d0abb9ba9357278ce765dcf86bb17c8c488db3dc14288e612003efd287",
+      "source_hashes": [
+        "0ae596d0abb9ba9357278ce765dcf86bb17c8c488db3dc14288e612003efd287"
+      ],
       "tests": [
         "quality/gates/docs-build/badges-resolve.py"
       ],
@@ -5598,6 +6294,9 @@
         "line_end": 8
       },
       "source_hash": "84fce6abfcbbf7559471cd74ef498792c8cac75d3faa8d553a467c878ace620b",
+      "source_hashes": [
+        "84fce6abfcbbf7559471cd74ef498792c8cac75d3faa8d553a467c878ace620b"
+      ],
       "tests": [
         "quality/gates/docs-build/badges-resolve.py"
       ],
@@ -5620,6 +6319,9 @@
         "line_end": 15
       },
       "source_hash": "f10cfb7543a2f9f77732c8239a4d5e70ea41a9f9f26ddd1046c2200feea3cc94",
+      "source_hashes": [
+        "f10cfb7543a2f9f77732c8239a4d5e70ea41a9f9f26ddd1046c2200feea3cc94"
+      ],
       "tests": [
         "quality/gates/code/lint-invariants/cargo-check-workspace.sh"
       ],
@@ -5642,6 +6344,9 @@
         "line_end": 20
       },
       "source_hash": "e0b143a33db2624f5f7fa6b2ec7cc1a59fe412817dba18a1826e7303e525fe61",
+      "source_hashes": [
+        "e0b143a33db2624f5f7fa6b2ec7cc1a59fe412817dba18a1826e7303e525fe61"
+      ],
       "tests": [
         "quality/gates/code/lint-invariants/cargo-test-count.sh"
       ],
@@ -5664,6 +6369,9 @@
         "line_end": 30
       },
       "source_hash": "7431250d26224551d860d7e3afb878414601663855612a7036e8babcd1641ee2",
+      "source_hashes": [
+        "7431250d26224551d860d7e3afb878414601663855612a7036e8babcd1641ee2"
+      ],
       "tests": [
         "quality/gates/code/lint-invariants/demo-script-exists.sh"
       ],
@@ -5686,6 +6394,9 @@
         "line_end": 160
       },
       "source_hash": "71145ce1f2188ce2a5d1a2728703776377c94dbb316fa2bacbdf3c94d5258407",
+      "source_hashes": [
+        "71145ce1f2188ce2a5d1a2728703776377c94dbb316fa2bacbdf3c94d5258407"
+      ],
       "tests": [
         "crates/reposix-github/tests/contract.rs::rate_limit_429_surfaces_clean_error"
       ],
@@ -5708,6 +6419,9 @@
         "line_end": 101
       },
       "source_hash": "4e3c430966877d7190bdb32d38ada223f9ed38e9d4ef3822b8b5369187aed36f",
+      "source_hashes": [
+        "4e3c430966877d7190bdb32d38ada223f9ed38e9d4ef3822b8b5369187aed36f"
+      ],
       "tests": [
         "crates/reposix-sim/tests/api.rs::rate_limited_request_is_audited"
       ],
@@ -5730,6 +6444,9 @@
         "line_end": 23
       },
       "source_hash": "de7a8acd095e2abfcc58e93deaf8d40c05a6d2b43c29deb0a1b476ffc86472f4",
+      "source_hashes": [
+        "de7a8acd095e2abfcc58e93deaf8d40c05a6d2b43c29deb0a1b476ffc86472f4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -5737,7 +6454,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "README mirror of canonical cached-read number",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -5752,6 +6469,9 @@
         "line_end": 36
       },
       "source_hash": "5e41b75fb55ec25a6aee73a8850372a949b954b0534589c114c865025652248d",
+      "source_hashes": [
+        "5e41b75fb55ec25a6aee73a8850372a949b954b0534589c114c865025652248d"
+      ],
       "tests": [
         "crates/reposix-github/tests/contract.rs::contract_sim"
       ],
@@ -5774,6 +6494,9 @@
         "line_end": 35
       },
       "source_hash": "e207c2146cfbe62afa0d5279a0dd2c9e71838ee982a1c5c0c06875d8f581ca37",
+      "source_hashes": [
+        "e207c2146cfbe62afa0d5279a0dd2c9e71838ee982a1c5c0c06875d8f581ca37"
+      ],
       "tests": [
         "crates/reposix-github/src/lib.rs::supports_reports_workflows_only"
       ],
@@ -5796,6 +6519,9 @@
         "line_end": 29
       },
       "source_hash": "97b1f2b68a0dd6caa5040d8c6db6c804d95ad7801f723ab3ab8c9b173a0330df",
+      "source_hashes": [
+        "97b1f2b68a0dd6caa5040d8c6db6c804d95ad7801f723ab3ab8c9b173a0330df"
+      ],
       "tests": [
         "crates/reposix-github/src/lib.rs::get_404_maps_to_not_found"
       ],
@@ -5818,6 +6544,9 @@
         "line_end": 13
       },
       "source_hash": "2515acd267213548b7cfb21f10f1e54d31e17095b0400c53a3f7f5c738e2f6e8",
+      "source_hashes": [
+        "2515acd267213548b7cfb21f10f1e54d31e17095b0400c53a3f7f5c738e2f6e8"
+      ],
       "rationale": "Subjective rubric (cold-reader); enforced by reposix-quality-review skill (P61). Not a docs-alignment behavioral claim. Retire from this dimension; subjective-rubrics catalog is the home.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
@@ -5834,6 +6563,9 @@
         "line_end": 28
       },
       "source_hash": "b6ca012dcaa174458f486152b7a5f31985fb02dbdd2576961cb04370f8d0b2e7",
+      "source_hashes": [
+        "b6ca012dcaa174458f486152b7a5f31985fb02dbdd2576961cb04370f8d0b2e7"
+      ],
       "tests": [
         "quality/gates/structure/required-doc-surfaces.sh"
       ],
@@ -5856,6 +6588,9 @@
         "line_end": 173
       },
       "source_hash": "6315e06fb7627648e909377533d9a6f69e9764774672e2c830b36e63888a7f99",
+      "source_hashes": [
+        "6315e06fb7627648e909377533d9a6f69e9764774672e2c830b36e63888a7f99"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
       ],
@@ -5863,7 +6598,7 @@
         "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe"
       ],
       "rationale": "P73 CONNECTOR-GAP-02 per D-04: pure rebind to canonical existing test fn (TokenWorld is sanctioned for mutation per docs/reference/testing-targets.md). github + jira variants exist in the same file.",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-29T20:28:37Z",
       "last_extracted": "2026-04-29T20:28:37Z",
@@ -5878,6 +6613,9 @@
         "line_end": 64
       },
       "source_hash": "0246b3df9d441799f3b0f241152c4fe03ed3b24bf74a24594d461c77eb61a0a7",
+      "source_hashes": [
+        "0246b3df9d441799f3b0f241152c4fe03ed3b24bf74a24594d461c77eb61a0a7"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
       ],
@@ -5915,6 +6653,9 @@
         "line_end": 61
       },
       "source_hash": "8590d49d39a5d54653702d6df0f8bbafce9a2d434f95e73469517a40d0ed4ac1",
+      "source_hashes": [
+        "8590d49d39a5d54653702d6df0f8bbafce9a2d434f95e73469517a40d0ed4ac1"
+      ],
       "tests": [
         "crates/reposix-remote/tests/stateless_connect.rs::capabilities_refspec_namespace_is_reposix_not_heads"
       ],
@@ -5937,6 +6678,9 @@
         "line_end": 147
       },
       "source_hash": "ef64acf3dc747929f1c111e3062038d2403ef2849c880f7ed5a7b7d05651d676",
+      "source_hashes": [
+        "ef64acf3dc747929f1c111e3062038d2403ef2849c880f7ed5a7b7d05651d676"
+      ],
       "tests": [
         "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error"
       ],
@@ -5959,6 +6703,9 @@
         "line_end": 29
       },
       "source_hash": "e0fc82ed2bff773d078fdec886c7b45db10b6c9666c210bca67e7566b22541cc",
+      "source_hashes": [
+        "e0fc82ed2bff773d078fdec886c7b45db10b6c9666c210bca67e7566b22541cc"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
       ],
@@ -5966,7 +6713,7 @@
         "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe"
       ],
       "rationale": "Assertion at lines 148-151 verifies url ends with /confluence/projects/TokenWorld",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:08:21Z",
       "last_extracted": "2026-04-28T09:08:21Z",
@@ -5981,6 +6728,9 @@
         "line_end": 99
       },
       "source_hash": "c382a892597c1b471d4a3a75c59748f9f22f7f0e7fc61d35f9eb56a857ee36ad",
+      "source_hashes": [
+        "c382a892597c1b471d4a3a75c59748f9f22f7f0e7fc61d35f9eb56a857ee36ad"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
       ],
@@ -6003,6 +6753,9 @@
         "line_end": 65
       },
       "source_hash": "08aa8af80be9ca7daa26a65abdb165fc3a83e90d42dc9e6c0c4f514ed32b783b",
+      "source_hashes": [
+        "08aa8af80be9ca7daa26a65abdb165fc3a83e90d42dc9e6c0c4f514ed32b783b"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
       ],
@@ -6025,6 +6778,9 @@
         "line_end": 65
       },
       "source_hash": "08aa8af80be9ca7daa26a65abdb165fc3a83e90d42dc9e6c0c4f514ed32b783b",
+      "source_hashes": [
+        "08aa8af80be9ca7daa26a65abdb165fc3a83e90d42dc9e6c0c4f514ed32b783b"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
       ],
@@ -6047,6 +6803,9 @@
         "line_end": 130
       },
       "source_hash": "3c4fd0f9ffcdaafaa5ea783e8ccb9956bfce058020f801caa74b14db0d530e74",
+      "source_hashes": [
+        "3c4fd0f9ffcdaafaa5ea783e8ccb9956bfce058020f801caa74b14db0d530e74"
+      ],
       "tests": [
         "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants"
       ],
@@ -6069,6 +6828,9 @@
         "line_end": 19
       },
       "source_hash": "85ba726df6437a441fa6330eb36d16f39a033bd3c1322906f1a4f6fb7a7937d2",
+      "source_hashes": [
+        "85ba726df6437a441fa6330eb36d16f39a033bd3c1322906f1a4f6fb7a7937d2"
+      ],
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
@@ -6091,6 +6853,9 @@
         "line_end": 18
       },
       "source_hash": "a1c019a95c55a56427dc9f187e702faa0bfd041504753815089f6339dd9ff603",
+      "source_hashes": [
+        "a1c019a95c55a56427dc9f187e702faa0bfd041504753815089f6339dd9ff603"
+      ],
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
@@ -6113,6 +6878,9 @@
         "line_end": 19
       },
       "source_hash": "0630fa0c9120a9c805317b15ac6afdf0cef59d42feb41fac20e08f81d8ead3a6",
+      "source_hashes": [
+        "0630fa0c9120a9c805317b15ac6afdf0cef59d42feb41fac20e08f81d8ead3a6"
+      ],
       "tests": [
         "crates/reposix-cache/tests/audit_is_append_only.rs::update_and_delete_on_audit_table_both_fail"
       ],
@@ -6135,6 +6903,9 @@
         "line_end": 14
       },
       "source_hash": "0e79a26df484401e4095b6799c12a8151c979ffc1cf4e74938db353afa6f5ce5",
+      "source_hashes": [
+        "0e79a26df484401e4095b6799c12a8151c979ffc1cf4e74938db353afa6f5ce5"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -6142,7 +6913,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "Comparison page mirror of canonical 8ms read",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -6157,6 +6928,9 @@
         "line_end": 92
       },
       "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
+      "source_hashes": [
+        "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d"
+      ],
       "tests": [
         "crates/reposix-cli/tests/cost.rs::cost_help_renders"
       ],
@@ -6179,6 +6953,9 @@
         "line_end": 13
       },
       "source_hash": "1738f41c7a50a996cad966847af1a5fb5e6dd8afc2f066fbd53c9c661820ac29",
+      "source_hashes": [
+        "1738f41c7a50a996cad966847af1a5fb5e6dd8afc2f066fbd53c9c661820ac29"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -6201,6 +6978,9 @@
         "line_end": 19
       },
       "source_hash": "7f26b7ed1d70019df9cecce5193c67322d7f6479f1d0cc92a818f62348396c73",
+      "source_hashes": [
+        "7f26b7ed1d70019df9cecce5193c67322d7f6479f1d0cc92a818f62348396c73"
+      ],
       "tests": [
         "crates/reposix-cli/tests/doctor.rs::doctor_clean_repo_reports_findings"
       ],
@@ -6223,6 +7003,9 @@
         "line_end": 27
       },
       "source_hash": "19de94eeaca550149489c09e3a6bc8ae8c55c8d036164f468b4a9f21147f9ea0",
+      "source_hashes": [
+        "19de94eeaca550149489c09e3a6bc8ae8c55c8d036164f468b4a9f21147f9ea0"
+      ],
       "tests": [
         "crates/reposix-cli/tests/doctor.rs::doctor_no_remote_errors_and_exits_one"
       ],
@@ -6245,6 +7028,9 @@
         "line_end": 33
       },
       "source_hash": "d94b2d8e2a0cab813f1db44a226d21675060b3f1eb840006263d4e36c4f0fc42",
+      "source_hashes": [
+        "d94b2d8e2a0cab813f1db44a226d21675060b3f1eb840006263d4e36c4f0fc42"
+      ],
       "tests": [
         "crates/reposix-cli/tests/doctor.rs::doctor_prints_backend_capability_row_for_sim"
       ],
@@ -6267,6 +7053,9 @@
         "line_end": 91
       },
       "source_hash": "13b18725a67d3aa57b61f8cda4d7051e18c4b5517c886c7351197cc06514c7cf",
+      "source_hashes": [
+        "13b18725a67d3aa57b61f8cda4d7051e18c4b5517c886c7351197cc06514c7cf"
+      ],
       "tests": [
         "crates/reposix-cli/tests/doctor.rs::doctor_missing_partial_clone_warns"
       ],
@@ -6289,6 +7078,9 @@
         "line_end": 92
       },
       "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
+      "source_hashes": [
+        "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d"
+      ],
       "tests": [
         "crates/reposix-cli/tests/gc.rs::gc_help_renders"
       ],
@@ -6311,6 +7103,9 @@
         "line_end": 69
       },
       "source_hash": "bef70f20efa6c393b7452b96b6627bdead161cd8ed618a599f7ac0bca98b2583",
+      "source_hashes": [
+        "bef70f20efa6c393b7452b96b6627bdead161cd8ed618a599f7ac0bca98b2583"
+      ],
       "tests": [
         "crates/reposix-cache/tests/sync_tags.rs::sync_tag_at_finds_closest_not_after"
       ],
@@ -6333,6 +7128,9 @@
         "line_end": 92
       },
       "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
+      "source_hashes": [
+        "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d"
+      ],
       "tests": [
         "crates/reposix-cli/tests/doctor.rs::doctor_help_renders"
       ],
@@ -6355,6 +7153,9 @@
         "line_end": 53
       },
       "source_hash": "041b8806625031d556a0dae0902a61f88cf97a8fd314e5f8747449eb58afdeec",
+      "source_hashes": [
+        "041b8806625031d556a0dae0902a61f88cf97a8fd314e5f8747449eb58afdeec"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -6377,6 +7178,9 @@
         "line_end": 21
       },
       "source_hash": "c665b626c0e9476b0dfdf3f6203003e6bef54cdb9075a373ad49b98de2baaee9",
+      "source_hashes": [
+        "c665b626c0e9476b0dfdf3f6203003e6bef54cdb9075a373ad49b98de2baaee9"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -6384,7 +7188,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "Same line, alternate framing of cold-init mirror",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -6399,6 +7203,9 @@
         "line_end": 24
       },
       "source_hash": "9c400bd7c055e8682e6207c614363ae3ab6ca3f6b8d4ab653061d51430233c19",
+      "source_hashes": [
+        "9c400bd7c055e8682e6207c614363ae3ab6ca3f6b8d4ab653061d51430233c19"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -6406,7 +7213,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "README mirror of canonical cold init number",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -6421,6 +7228,9 @@
         "line_end": 21
       },
       "source_hash": "c665b626c0e9476b0dfdf3f6203003e6bef54cdb9075a373ad49b98de2baaee9",
+      "source_hashes": [
+        "c665b626c0e9476b0dfdf3f6203003e6bef54cdb9075a373ad49b98de2baaee9"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -6428,7 +7238,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "Mental-model concept page mirrors canonical 24ms init",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -6443,6 +7253,9 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hashes": [
+        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -6450,7 +7263,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "latency-bench.sh emits the JIRA-column cold-init cell when JIRA env bundle present",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -6465,6 +7278,9 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hashes": [
+        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -6472,7 +7288,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "latency-bench.sh populates the GitHub-column cold-init cell (auto-detects GITHUB_TOKEN, median-of-3)",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -6487,6 +7303,9 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hashes": [
+        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -6494,7 +7313,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "latency-bench.sh measures reposix init cold against sim and emits the sim cold-init row -- IS the regenerator of latency.md",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -6509,6 +7328,9 @@
         "line_end": 45
       },
       "source_hash": "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4",
+      "source_hashes": [
+        "6657da046c5aa9007e52fe9c2f04a553a9b4e3d033bd028edbd25ab1e91a03f4"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -6516,7 +7338,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "latency-bench.sh emits the Confluence-column cold-init cell when ATLASSIAN env bundle present",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -6531,6 +7353,9 @@
         "line_end": 15
       },
       "source_hash": "abdad9aa1c64779b280e0831e0ed62117210862debc603fceb3b4e4e15d27902",
+      "source_hashes": [
+        "abdad9aa1c64779b280e0831e0ed62117210862debc603fceb3b4e4e15d27902"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -6553,6 +7378,9 @@
         "line_end": 29
       },
       "source_hash": "e0fc82ed2bff773d078fdec886c7b45db10b6c9666c210bca67e7566b22541cc",
+      "source_hashes": [
+        "e0fc82ed2bff773d078fdec886c7b45db10b6c9666c210bca67e7566b22541cc"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
       ],
@@ -6560,7 +7388,7 @@
         "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe"
       ],
       "rationale": "run_init_and_assert(confluence::TokenWorld) succeeds at line 144, assertion passes at lines 100-104",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:08:21Z",
       "last_extracted": "2026-04-28T09:08:21Z",
@@ -6575,6 +7403,9 @@
         "line_end": 65
       },
       "source_hash": "08aa8af80be9ca7daa26a65abdb165fc3a83e90d42dc9e6c0c4f514ed32b783b",
+      "source_hashes": [
+        "08aa8af80be9ca7daa26a65abdb165fc3a83e90d42dc9e6c0c4f514ed32b783b"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
       ],
@@ -6597,6 +7428,9 @@
         "line_end": 48
       },
       "source_hash": "bf147c9e4dd1a14a222f92b16838c4e4c0c8489bfa72dc96c15d0b199daa97e4",
+      "source_hashes": [
+        "bf147c9e4dd1a14a222f92b16838c4e4c0c8489bfa72dc96c15d0b199daa97e4"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -6619,6 +7453,9 @@
         "line_end": 99
       },
       "source_hash": "c382a892597c1b471d4a3a75c59748f9f22f7f0e7fc61d35f9eb56a857ee36ad",
+      "source_hashes": [
+        "c382a892597c1b471d4a3a75c59748f9f22f7f0e7fc61d35f9eb56a857ee36ad"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
       ],
@@ -6641,6 +7478,9 @@
         "line_end": 18
       },
       "source_hash": "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8",
+      "source_hashes": [
+        "cba6bc29f883f52089e8ad496009d8937a2fd8cc5528265e4c51ae8e8b5224a8"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -6663,6 +7503,9 @@
         "line_end": 126
       },
       "source_hash": "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00",
+      "source_hashes": [
+        "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -6685,6 +7528,9 @@
         "line_end": 72
       },
       "source_hash": "dbd80002e8e256ea70792f8efedaee88dc88cfbe9d89eeb903dd30c0b784d601",
+      "source_hashes": [
+        "dbd80002e8e256ea70792f8efedaee88dc88cfbe9d89eeb903dd30c0b784d601"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -6707,6 +7553,9 @@
         "line_end": 73
       },
       "source_hash": "b2e1d9302f0e337ba5418f7d4ccdb2ead6a3a94eb0e9f58b79c05982639c711e",
+      "source_hashes": [
+        "b2e1d9302f0e337ba5418f7d4ccdb2ead6a3a94eb0e9f58b79c05982639c711e"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -6729,6 +7578,9 @@
         "line_end": 62
       },
       "source_hash": "a829d8b3469aca1b3cc98eff7371b2eed426e73ee98fa8377bafbd0b02a4daed",
+      "source_hashes": [
+        "a829d8b3469aca1b3cc98eff7371b2eed426e73ee98fa8377bafbd0b02a4daed"
+      ],
       "tests": [
         "crates/reposix-cli/tests/cli.rs::init_help_documents_spec_argument"
       ],
@@ -6751,6 +7603,9 @@
         "line_end": 40
       },
       "source_hash": "46398d0a80fce22797ce1ca1f66a63dd763ac5812d382caf441581e5316d00f9",
+      "source_hashes": [
+        "46398d0a80fce22797ce1ca1f66a63dd763ac5812d382caf441581e5316d00f9"
+      ],
       "tests": [
         "crates/reposix-cli/src/init.rs::translate_sim_spec"
       ],
@@ -6773,6 +7628,9 @@
         "line_end": 93
       },
       "source_hash": "e2ab3c8f22ff363ec7c4a5351dcf6679e82300776a4f357557bffea5ae924ec3",
+      "source_hashes": [
+        "e2ab3c8f22ff363ec7c4a5351dcf6679e82300776a4f357557bffea5ae924ec3"
+      ],
       "tests": [
         "crates/reposix-cli/tests/cli.rs::list_help_succeeds_and_documents_flags"
       ],
@@ -6795,6 +7653,9 @@
         "line_end": 93
       },
       "source_hash": "e2ab3c8f22ff363ec7c4a5351dcf6679e82300776a4f357557bffea5ae924ec3",
+      "source_hashes": [
+        "e2ab3c8f22ff363ec7c4a5351dcf6679e82300776a4f357557bffea5ae924ec3"
+      ],
       "tests": [
         "crates/reposix-cli/tests/cli.rs::list_help_succeeds_and_documents_flags"
       ],
@@ -6817,6 +7678,9 @@
         "line_end": 92
       },
       "source_hash": "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d",
+      "source_hashes": [
+        "3c33c79cec079fc97555732bf0955d291238e980eb855d406f7e8bd19ee8a48d"
+      ],
       "tests": [
         "crates/reposix-cli/tests/doctor.rs::doctor_clean_repo_reports_findings"
       ],
@@ -6868,6 +7732,9 @@
         "line_end": 34
       },
       "source_hash": "4f5195c6d7c414aa0f30ba56ea2576dde7dee306e5334ed1a230db25164328ec",
+      "source_hashes": [
+        "4f5195c6d7c414aa0f30ba56ea2576dde7dee306e5334ed1a230db25164328ec"
+      ],
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
@@ -6890,6 +7757,9 @@
         "line_end": 291
       },
       "source_hash": "9cb63a1b7dd6f0408e36163ee1b7701e3acce74f223e5303d25919a9359762a8",
+      "source_hashes": [
+        "9cb63a1b7dd6f0408e36163ee1b7701e3acce74f223e5303d25919a9359762a8"
+      ],
       "tests": [
         "crates/reposix-cli/tests/cli.rs::mount_subcommand_is_removed"
       ],
@@ -6912,6 +7782,9 @@
         "line_end": 125
       },
       "source_hash": "9572807c5ebf6272e3d4248d889a5c1b5a3d1c12fad28a3162dabf300d25aa15",
+      "source_hashes": [
+        "9572807c5ebf6272e3d4248d889a5c1b5a3d1c12fad28a3162dabf300d25aa15"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -6934,6 +7807,9 @@
         "line_end": 90
       },
       "source_hash": "70582e858456d5b7ba067119b8aa8e090e3019703bca670198d52893251a57a6",
+      "source_hashes": [
+        "70582e858456d5b7ba067119b8aa8e090e3019703bca670198d52893251a57a6"
+      ],
       "tests": [
         "quality/gates/docs-alignment/cli-spaces-smoke.sh"
       ],
@@ -6956,6 +7832,9 @@
         "line_end": 284
       },
       "source_hash": "dddaf554d6fe986a5928d72c3939e81c664eb5442b93d65758961e6d2f4e4567",
+      "source_hashes": [
+        "dddaf554d6fe986a5928d72c3939e81c664eb5442b93d65758961e6d2f4e4567"
+      ],
       "tests": [
         "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands"
       ],
@@ -6978,6 +7857,9 @@
         "line_end": 13
       },
       "source_hash": "1738f41c7a50a996cad966847af1a5fb5e6dd8afc2f066fbd53c9c661820ac29",
+      "source_hashes": [
+        "1738f41c7a50a996cad966847af1a5fb5e6dd8afc2f066fbd53c9c661820ac29"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
       ],
@@ -7000,6 +7882,9 @@
         "line_end": 21
       },
       "source_hash": "7a1d7a4ea4c7891bff5bedc2e0191633dcd60d840625efd13aa63427c33768ed",
+      "source_hashes": [
+        "7a1d7a4ea4c7891bff5bedc2e0191633dcd60d840625efd13aa63427c33768ed"
+      ],
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
@@ -7022,6 +7907,9 @@
         "line_end": 19
       },
       "source_hash": "c06455490c024172708f9cd27b25b66528689f00ce88e370c8db52525e8af115",
+      "source_hashes": [
+        "c06455490c024172708f9cd27b25b66528689f00ce88e370c8db52525e8af115"
+      ],
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
@@ -7044,6 +7932,9 @@
         "line_end": 16
       },
       "source_hash": "2aefcd3f99c94e2f2117c5370aed98f6afebe17f6b9b9a3bfc1ae265728d011c",
+      "source_hashes": [
+        "2aefcd3f99c94e2f2117c5370aed98f6afebe17f6b9b9a3bfc1ae265728d011c"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
@@ -7066,6 +7957,9 @@
         "line_end": 28
       },
       "source_hash": "5411bab4640bc6b74bd0cb693f5dade707e761bb3ee59048f0ad33f1eedc2397",
+      "source_hashes": [
+        "5411bab4640bc6b74bd0cb693f5dade707e761bb3ee59048f0ad33f1eedc2397"
+      ],
       "tests": [
         "crates/reposix-cache/tests/egress_denied_logs.rs::egress_denied_writes_audit_row_and_returns_egress_error"
       ],
@@ -7088,6 +7982,9 @@
         "line_end": 27
       },
       "source_hash": "e0fb8d62e00daf491b815884d0951503b0da198cc745dfcdbef5b6c4361d0795",
+      "source_hashes": [
+        "e0fb8d62e00daf491b815884d0951503b0da198cc745dfcdbef5b6c4361d0795"
+      ],
       "tests": [
         "crates/reposix-cache/tests/materialize_one.rs::read_blob_materializes_exactly_one_and_audits"
       ],
@@ -7110,6 +8007,9 @@
         "line_end": 75
       },
       "source_hash": "ea146310ae3fcf71936c7ded3f77d161ce8190ec5df7eb5df2343eacf3f3d1b9",
+      "source_hashes": [
+        "ea146310ae3fcf71936c7ded3f77d161ce8190ec5df7eb5df2343eacf3f3d1b9"
+      ],
       "tests": [
         "crates/reposix-swarm/tests/contention_e2e.rs::contention_50_clients_5s_deterministic_409"
       ],
@@ -7147,6 +8047,9 @@
         "line_end": 62
       },
       "source_hash": "6bd3d9308b2f949f9cebdaa676de037b396614f41b9250a9846168a2670312c6",
+      "source_hashes": [
+        "6bd3d9308b2f949f9cebdaa676de037b396614f41b9250a9846168a2670312c6"
+      ],
       "tests": [
         "crates/reposix-core/tests/http_allowlist.rs::allowlist_default_and_env"
       ],
@@ -7169,6 +8072,9 @@
         "line_end": 117
       },
       "source_hash": "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa",
+      "source_hashes": [
+        "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa"
+      ],
       "tests": [
         "crates/reposix-core/tests/http_allowlist.rs::loopback_is_allowed_by_default"
       ],
@@ -7191,6 +8097,9 @@
         "line_end": 117
       },
       "source_hash": "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa",
+      "source_hashes": [
+        "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa"
+      ],
       "tests": [
         "crates/reposix-core/tests/http_allowlist.rs::allowlist_default_and_env"
       ],
@@ -7213,6 +8122,9 @@
         "line_end": 63
       },
       "source_hash": "b5d40134b34a42d42e78e1cbc2c8d100d859b8fd9f5855dcc19f43b43f1cd517",
+      "source_hashes": [
+        "b5d40134b34a42d42e78e1cbc2c8d100d859b8fd9f5855dcc19f43b43f1cd517"
+      ],
       "tests": [
         "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants"
       ],
@@ -7264,6 +8176,9 @@
         "line_end": 38
       },
       "source_hash": "da3a96ed3d11cd36975cd73fad3465a83c88a2f2494a373d8a2978e33b4d364d",
+      "source_hashes": [
+        "da3a96ed3d11cd36975cd73fad3465a83c88a2f2494a373d8a2978e33b4d364d"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
       ],
@@ -7271,7 +8186,7 @@
         "3da9c85d4e71da331fb8d9551240ff3ae02f86394647d4525cb877cc28b13bbe"
       ],
       "rationale": "skip_if_no_env! macro at line 140 checks REPOSIX_CONFLUENCE_TENANT presence",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:08:21Z",
       "last_extracted": "2026-04-28T09:08:21Z",
@@ -7286,6 +8201,9 @@
         "line_end": 109
       },
       "source_hash": "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc",
+      "source_hashes": [
+        "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
       ],
@@ -7308,6 +8226,9 @@
         "line_end": 98
       },
       "source_hash": "a8f2f7328f59a9a6a05993dfc8a99874ea181e96528bbb058c4580d65657f97a",
+      "source_hashes": [
+        "a8f2f7328f59a9a6a05993dfc8a99874ea181e96528bbb058c4580d65657f97a"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::jira_test_project"
       ],
@@ -7330,6 +8251,9 @@
         "line_end": 33
       },
       "source_hash": "36f1683b71d734f1b5ab46a87ac7712afb84ee9b6f28afe43391b1da162525aa",
+      "source_hashes": [
+        "36f1683b71d734f1b5ab46a87ac7712afb84ee9b6f28afe43391b1da162525aa"
+      ],
       "tests": [
         "crates/reposix-github/tests/contract.rs::contract_sim"
       ],
@@ -7352,6 +8276,9 @@
         "line_end": 79
       },
       "source_hash": "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8",
+      "source_hashes": [
+        "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -7374,6 +8301,9 @@
         "line_end": 76
       },
       "source_hash": "9fb9b8031c9c34f650180f049883ef0dd2f0586cc098f8711e0c4a025de5d3ff",
+      "source_hashes": [
+        "9fb9b8031c9c34f650180f049883ef0dd2f0586cc098f8711e0c4a025de5d3ff"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -7396,6 +8326,9 @@
         "line_end": 62
       },
       "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_hashes": [
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      ],
       "tests": [
         "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields"
       ],
@@ -7418,6 +8351,9 @@
         "line_end": 113
       },
       "source_hash": "645892ad8b832118d44c70039478e6e7253bece5259d0f0db4c4c9bb67269d02",
+      "source_hashes": [
+        "645892ad8b832118d44c70039478e6e7253bece5259d0f0db4c4c9bb67269d02"
+      ],
       "tests": [
         "crates/reposix-remote/tests/push_conflict.rs::frontmatter_strips_server_controlled_fields"
       ],
@@ -7440,6 +8376,9 @@
         "line_end": 61
       },
       "source_hash": "5ec1417b251ca86c448f61b9670e7f3c7faafa3116cbe6235231688321b535cd",
+      "source_hashes": [
+        "5ec1417b251ca86c448f61b9670e7f3c7faafa3116cbe6235231688321b535cd"
+      ],
       "tests": [
         "crates/reposix-core/src/taint.rs::sanitize"
       ],
@@ -7462,6 +8401,9 @@
         "line_end": 93
       },
       "source_hash": "91b26745218c0224d2f7abf3ac5b5b76a861fdfc97a8a3cbe63a8f1f137235b2",
+      "source_hashes": [
+        "91b26745218c0224d2f7abf3ac5b5b76a861fdfc97a8a3cbe63a8f1f137235b2"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -7469,7 +8411,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "Mirror cold-init threshold; latency-bench enforces soft thresholds",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -7484,6 +8426,9 @@
         "line_end": 19
       },
       "source_hash": "3b08f5362205d1e4443fea061c64d37f5246e326b2bfd9309f5fcee842def531",
+      "source_hashes": [
+        "3b08f5362205d1e4443fea061c64d37f5246e326b2bfd9309f5fcee842def531"
+      ],
       "tests": [
         "quality/gates/structure/required-doc-surfaces.sh"
       ],
@@ -7506,6 +8451,9 @@
         "line_end": 140
       },
       "source_hash": "95b5f28b22700c5f8fe8091c385648b80f8aa26a48629bb14be3ffe5e6ef2cd8",
+      "source_hashes": [
+        "95b5f28b22700c5f8fe8091c385648b80f8aa26a48629bb14be3ffe5e6ef2cd8"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::skip_pattern_compiles_and_runs_without_creds"
       ],
@@ -7528,6 +8476,9 @@
         "line_end": 65
       },
       "source_hash": "13e534dd93e93d01457cdebcd90b8a80a1a6a0ac5e3f80091f835f241de0e825",
+      "source_hashes": [
+        "13e534dd93e93d01457cdebcd90b8a80a1a6a0ac5e3f80091f835f241de0e825"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -7535,7 +8486,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "latency-bench.sh header documents the 3s real-backend WARN threshold (line 32)",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -7550,6 +8501,9 @@
         "line_end": 65
       },
       "source_hash": "13e534dd93e93d01457cdebcd90b8a80a1a6a0ac5e3f80091f835f241de0e825",
+      "source_hashes": [
+        "13e534dd93e93d01457cdebcd90b8a80a1a6a0ac5e3f80091f835f241de0e825"
+      ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
@@ -7557,7 +8511,7 @@
         "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
       ],
       "rationale": "latency-bench.sh header lines 30-32 explicitly document and enforce this soft threshold via WARN",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -7631,6 +8585,9 @@
         "line_end": 118
       },
       "source_hash": "029fbb0a6e888f58e4e3c25e901fc981c6db9c946587f2ffde3cc3efc3a0dced",
+      "source_hashes": [
+        "029fbb0a6e888f58e4e3c25e901fc981c6db9c946587f2ffde3cc3efc3a0dced"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
@@ -7653,6 +8610,9 @@
         "line_end": 38
       },
       "source_hash": "d2898d57e2b28a6722a9855e28b12d45b3da7262ac0dfadcde866157749cffb7",
+      "source_hashes": [
+        "d2898d57e2b28a6722a9855e28b12d45b3da7262ac0dfadcde866157749cffb7"
+      ],
       "tests": [
         "crates/reposix-remote/tests/stateless_connect.rs::capabilities_refspec_namespace_is_reposix_not_heads"
       ],
@@ -7690,6 +8650,9 @@
         "line_end": 23
       },
       "source_hash": "be29b20a4ec78c4e55e4cb6e7b756b828334931df68223e34baa2c95572daaf1",
+      "source_hashes": [
+        "be29b20a4ec78c4e55e4cb6e7b756b828334931df68223e34baa2c95572daaf1"
+      ],
       "tests": [
         "crates/reposix-remote/src/stateless_connect.rs::configured_blob_limit"
       ],
@@ -7727,6 +8690,9 @@
         "line_end": 24
       },
       "source_hash": "1379e14f23ac5b5f4e54788cf0991fa47dae83ff71e487ba039115f87a810d22",
+      "source_hashes": [
+        "1379e14f23ac5b5f4e54788cf0991fa47dae83ff71e487ba039115f87a810d22"
+      ],
       "tests": [
         "crates/reposix-cache/tests/sync_tags.rs::helper_does_not_export_sync_tags"
       ],
@@ -7749,6 +8715,9 @@
         "line_end": 65
       },
       "source_hash": "5f62fa57ad810fd428d769b62c47a6c6f17d34115ddd37070376d60e8e7e917a",
+      "source_hashes": [
+        "5f62fa57ad810fd428d769b62c47a6c6f17d34115ddd37070376d60e8e7e917a"
+      ],
       "tests": [
         "crates/reposix-core/tests/compile_fail.rs::tainted_cannot_be_used_where_untainted_required"
       ],
@@ -7786,6 +8755,9 @@
         "line_end": 65
       },
       "source_hash": "5f62fa57ad810fd428d769b62c47a6c6f17d34115ddd37070376d60e8e7e917a",
+      "source_hashes": [
+        "5f62fa57ad810fd428d769b62c47a6c6f17d34115ddd37070376d60e8e7e917a"
+      ],
       "tests": [
         "crates/reposix-core/tests/compile_fail.rs::tainted_cannot_be_used_where_untainted_required"
       ],
@@ -7808,6 +8780,9 @@
         "line_end": 140
       },
       "source_hash": "95b5f28b22700c5f8fe8091c385648b80f8aa26a48629bb14be3ffe5e6ef2cd8",
+      "source_hashes": [
+        "95b5f28b22700c5f8fe8091c385648b80f8aa26a48629bb14be3ffe5e6ef2cd8"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::skip_pattern_compiles_and_runs_without_creds"
       ],
@@ -7830,6 +8805,9 @@
         "line_end": 42
       },
       "source_hash": "afb1f82c18d6314a80a6daecafef429fe35ac8c8827a5966eb8e3e263245054f",
+      "source_hashes": [
+        "afb1f82c18d6314a80a6daecafef429fe35ac8c8827a5966eb8e3e263245054f"
+      ],
       "tests": [
         "crates/reposix-cache/tests/blobs_are_lazy.rs::no_blob_objects_after_build_from"
       ],
@@ -7852,6 +8830,9 @@
         "line_end": 21
       },
       "source_hash": "12cfc926f3b6d4b00ac9c47edf9527edb1096f8d301b1c77ac7aad64c8d76cb1",
+      "source_hashes": [
+        "12cfc926f3b6d4b00ac9c47edf9527edb1096f8d301b1c77ac7aad64c8d76cb1"
+      ],
       "tests": [
         "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock"
       ],
@@ -7874,6 +8855,9 @@
         "line_end": 17
       },
       "source_hash": "006b8decc2ed464583529a7e3a642cd198fbc7f9d2a9fdb60527f6f2b994f316",
+      "source_hashes": [
+        "006b8decc2ed464583529a7e3a642cd198fbc7f9d2a9fdb60527f6f2b994f316"
+      ],
       "tests": [
         "quality/gates/structure/required-doc-surfaces.sh"
       ],
@@ -7896,6 +8880,9 @@
         "line_end": 15
       },
       "source_hash": "99332127b927d26c02ce311437a80ff481a063224da15ee4e46b88c76340a09f",
+      "source_hashes": [
+        "99332127b927d26c02ce311437a80ff481a063224da15ee4e46b88c76340a09f"
+      ],
       "tests": [
         "quality/gates/structure/required-doc-surfaces.sh"
       ],
@@ -7947,6 +8934,9 @@
         "line_end": 87
       },
       "source_hash": "1fa5a304ebe6b0c486834a555510b46beeaa13482b2605565b995f60fb6ff4ce",
+      "source_hashes": [
+        "1fa5a304ebe6b0c486834a555510b46beeaa13482b2605565b995f60fb6ff4ce"
+      ],
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
       ],
@@ -7969,6 +8959,9 @@
         "line_end": 56
       },
       "source_hash": "4e71014bb82dbfd87fc6f940e53183e5341de9e60f714e3f65a8087cb4724159",
+      "source_hashes": [
+        "4e71014bb82dbfd87fc6f940e53183e5341de9e60f714e3f65a8087cb4724159"
+      ],
       "tests": [
         "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit"
       ],
@@ -7991,6 +8984,9 @@
         "line_end": 16
       },
       "source_hash": "54374cc9205d411894863a48783b77406a786396cd37d8049f2209cb96fdc09c",
+      "source_hashes": [
+        "54374cc9205d411894863a48783b77406a786396cd37d8049f2209cb96fdc09c"
+      ],
       "tests": [
         "quality/gates/structure/required-doc-surfaces.sh"
       ],
@@ -8013,6 +9009,9 @@
         "line_end": 29
       },
       "source_hash": "97b1f2b68a0dd6caa5040d8c6db6c804d95ad7801f723ab3ab8c9b173a0330df",
+      "source_hashes": [
+        "97b1f2b68a0dd6caa5040d8c6db6c804d95ad7801f723ab3ab8c9b173a0330df"
+      ],
       "tests": [
         "crates/reposix-github/tests/contract.rs::contract_sim"
       ],
@@ -8035,6 +9034,9 @@
         "line_end": 79
       },
       "source_hash": "c84c7a15cb38bf361d85556465f0eb561e461053a90f33e74eb2d9d3530c43ec",
+      "source_hashes": [
+        "c84c7a15cb38bf361d85556465f0eb561e461053a90f33e74eb2d9d3530c43ec"
+      ],
       "tests": [
         "crates/reposix-github/src/lib.rs::translate"
       ],
@@ -8057,6 +9059,9 @@
         "line_end": 65
       },
       "source_hash": "5f62fa57ad810fd428d769b62c47a6c6f17d34115ddd37070376d60e8e7e917a",
+      "source_hashes": [
+        "5f62fa57ad810fd428d769b62c47a6c6f17d34115ddd37070376d60e8e7e917a"
+      ],
       "tests": [
         "crates/reposix-core/tests/compile_fail.rs::untainted_new_is_pub_crate_only"
       ],
@@ -8079,6 +9084,9 @@
         "line_end": 24
       },
       "source_hash": "6033301200637abb9b4476a85138a297eeba4d404cb55bf173a4b38e4ce22bbb",
+      "source_hashes": [
+        "6033301200637abb9b4476a85138a297eeba4d404cb55bf173a4b38e4ce22bbb"
+      ],
       "tests": [
         "quality/gates/structure/release-tags-present.sh"
       ],
@@ -8101,6 +9109,9 @@
         "line_end": 13
       },
       "source_hash": "8478bf5d33c9c4b069be4a530ebf6e1cc4074e7d9025f8e6d8698df1e6a9587d",
+      "source_hashes": [
+        "8478bf5d33c9c4b069be4a530ebf6e1cc4074e7d9025f8e6d8698df1e6a9587d"
+      ],
       "tests": [
         "quality/gates/structure/release-tags-present.sh"
       ],
@@ -8123,6 +9134,9 @@
         "line_end": 22
       },
       "source_hash": "db8987052fddc5275db8a6994df24605a60665d5a16c8730e6ce78dea9b6143c",
+      "source_hashes": [
+        "db8987052fddc5275db8a6994df24605a60665d5a16c8730e6ce78dea9b6143c"
+      ],
       "tests": [
         "quality/gates/structure/active-milestone-matches-workspace-version.sh"
       ],
@@ -8145,6 +9159,9 @@
         "line_end": 23
       },
       "source_hash": "62b67e1f685b7fef51102005dddd27774be3fee38c42965c53aab035d0b6b221",
+      "source_hashes": [
+        "62b67e1f685b7fef51102005dddd27774be3fee38c42965c53aab035d0b6b221"
+      ],
       "tests": [
         "quality/gates/structure/release-tags-present.sh"
       ],
@@ -8167,6 +9184,9 @@
         "line_end": 103
       },
       "source_hash": "41c641308b66063cc2f0aa24800b723fb51bdef18938618f9a240adf1884cc6b",
+      "source_hashes": [
+        "41c641308b66063cc2f0aa24800b723fb51bdef18938618f9a240adf1884cc6b"
+      ],
       "tests": [
         "crates/reposix-confluence/src/translate.rs::basic_auth_header"
       ],
@@ -8189,6 +9209,9 @@
         "line_end": 17
       },
       "source_hash": "f2ddf7956c7defefd7cc23071039d2de749848cf1ea235ed0824a9c9a06128a1",
+      "source_hashes": [
+        "f2ddf7956c7defefd7cc23071039d2de749848cf1ea235ed0824a9c9a06128a1"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
@@ -8211,6 +9234,9 @@
         "line_end": 54
       },
       "source_hash": "049e66758a86c59a0a7c5c5ab0e069406d05a178e5b744bd7b38fb86c127fa29",
+      "source_hashes": [
+        "049e66758a86c59a0a7c5c5ab0e069406d05a178e5b744bd7b38fb86c127fa29"
+      ],
       "tests": [
         "crates/reposix-github/src/lib.rs::translate"
       ],
@@ -8233,6 +9259,9 @@
         "line_end": 46
       },
       "source_hash": "2e48b0affe6db39b71dcec706012f0972595d780ff6cbcd3a52a29e717bf8445",
+      "source_hashes": [
+        "2e48b0affe6db39b71dcec706012f0972595d780ff6cbcd3a52a29e717bf8445"
+      ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
@@ -8255,6 +9284,9 @@
         "line_end": 35
       },
       "source_hash": "e207c2146cfbe62afa0d5279a0dd2c9e71838ee982a1c5c0c06875d8f581ca37",
+      "source_hashes": [
+        "e207c2146cfbe62afa0d5279a0dd2c9e71838ee982a1c5c0c06875d8f581ca37"
+      ],
       "tests": [
         "crates/reposix-github/src/lib.rs::create_returns_not_supported"
       ],
@@ -8282,6 +9314,31 @@
       "last_run": "2026-04-28T14:56:20Z",
       "last_extracted": "2026-04-28T09:09:15Z",
       "last_extracted_by": "propose-retire-call"
+    },
+    {
+      "id": "doc-alignment/multi-source-watch-01-non-first-drift",
+      "claim": "Walker hashes every source citation in a Source::Multi row; row enters STALE_DOCS_DRIFT on any index drift (path-b per CARRY-FORWARD.md MULTI-SOURCE-WATCH-01)",
+      "source": {
+        "file": ".planning/milestones/v0.13.0-phases/CARRY-FORWARD.md",
+        "line_start": 19,
+        "line_end": 35
+      },
+      "source_hash": "cc79e88d3ddd0b005164e160d569dcd24f762bb3e9b10c4d1f7b7be87d68da52",
+      "source_hashes": [
+        "cc79e88d3ddd0b005164e160d569dcd24f762bb3e9b10c4d1f7b7be87d68da52"
+      ],
+      "tests": [
+        "crates/reposix-quality/tests/walk.rs::walk_multi_source_non_first_drift_fires_stale"
+      ],
+      "test_body_hashes": [
+        "aaca21a745bb4e5fbb2cfc4630c21166105489e83ebe8c5bc1c113f3126635c8"
+      ],
+      "rationale": "P78-03 closes the v0.12.1 P75 carry-forward false-negative window before P85 DVCS docs add multi-source rows.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-05-01T05:34:59Z",
+      "last_extracted": "2026-05-01T05:34:59Z",
+      "last_extracted_by": "bind-call"
     }
   ]
 }

@@ -70,17 +70,27 @@ fn merge_shards_auto_resolves_multi_source() {
     let run_dir = dir.path().join("run-multi");
     fs::create_dir_all(&run_dir).unwrap();
 
+    // P78 MULTI-SOURCE-WATCH-01: merge-shards now hashes every source
+    // citation, so the cited files must exist on disk. Write real files
+    // in the temp dir and cite them by absolute path.
+    let doc_a = dir.path().join("a.md");
+    let doc_b = dir.path().join("b.md");
+    fs::write(&doc_a, "alpha line\nbravo line\n").unwrap();
+    fs::write(&doc_b, "charlie line\ndelta line\n").unwrap();
+    let doc_a_path = doc_a.to_string_lossy().to_string();
+    let doc_b_path = doc_b.to_string_lossy().to_string();
+
     // Same claim, same test, different sources.
     let s1 = json!([make_row(
         "shared/claim",
         "the shared claim",
-        "docs/a.md",
+        &doc_a_path,
         "tests/foo.rs::bar"
     )]);
     let s2 = json!([make_row(
         "shared/claim",
         "the shared claim",
-        "docs/b.md",
+        &doc_b_path,
         "tests/foo.rs::bar"
     )]);
     write_shard(&run_dir, "001.json", &s1);
@@ -113,8 +123,18 @@ fn merge_shards_auto_resolves_multi_source() {
         .iter()
         .map(|c| c["file"].as_str().unwrap())
         .collect();
-    assert!(files.contains(&"docs/a.md"));
-    assert!(files.contains(&"docs/b.md"));
+    assert!(files.contains(&doc_a_path.as_str()));
+    assert!(files.contains(&doc_b_path.as_str()));
+
+    // P78: source_hashes is parallel to sources (2 elements).
+    let source_hashes = row["source_hashes"]
+        .as_array()
+        .expect("source_hashes must be present after merge-shards");
+    assert_eq!(
+        source_hashes.len(),
+        2,
+        "source_hashes parallel to 2 sources"
+    );
 
     // No CONFLICTS.md emitted.
     assert!(!run_dir.join("CONFLICTS.md").exists());
