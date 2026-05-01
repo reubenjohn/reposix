@@ -1,0 +1,20 @@
+[package]
+name = "reposix-poc-79"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# Standalone — empty `[workspace]` declares this NOT a member of the parent
+# workspace. The reposix workspace's `Cargo.toml` does NOT list this crate
+# under `members`; this empty table is the second half of that contract.
+[workspace]
+
+[dependencies]
+reposix-core = { path = "../../../../crates/reposix-core" }
+clap = { version = "4", features = ["derive"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+walkdir = "2"
+anyhow = "1"
