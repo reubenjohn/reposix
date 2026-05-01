@@ -193,22 +193,38 @@ fn dark_factory_blob_limit_teaching_string_present() {
 /// The Phase 34 push-conflict path emits a stderr diagnostic containing
 /// `git pull --rebase` so an agent that observes `! [remote rejected]`
 /// learns the exact recovery command. Regression test: the literal must
-/// remain in `crates/reposix-remote/src/main.rs`.
+/// remain SOMEWHERE in `crates/reposix-remote/src/`.
+///
+/// P83-01 T02 lifted the conflict-detection write loop into `write_loop.rs`,
+/// so the teaching string lives there (single-backend path) AND in
+/// `bus_handler.rs` (bus-remote hint). Either source counts; if all files
+/// lose it, the dark-factory contract breaks.
 #[test]
 fn dark_factory_conflict_teaching_string_present() {
-    let path = workspace_root()
+    let remote_src = workspace_root()
         .join("crates")
         .join("reposix-remote")
-        .join("src")
-        .join("main.rs");
-    let src = std::fs::read_to_string(&path).expect("read remote main.rs");
+        .join("src");
+    let candidates = ["main.rs", "write_loop.rs", "bus_handler.rs"];
+    let mut any_has_rebase = false;
+    let mut any_has_fetch_first = false;
+    for name in &candidates {
+        let path = remote_src.join(name);
+        if let Ok(src) = std::fs::read_to_string(&path) {
+            if src.contains("git pull --rebase") {
+                any_has_rebase = true;
+            }
+            if src.contains("error refs/heads/main fetch first") {
+                any_has_fetch_first = true;
+            }
+        }
+    }
     assert!(
-        src.contains("git pull --rebase"),
-        "conflict path must teach `git pull --rebase` so a stderr-reading agent recovers"
+        any_has_rebase,
+        "conflict path must teach `git pull --rebase` so a stderr-reading agent recovers; checked {candidates:?}"
     );
-    // The canned status line a follow-up `git push` matches against.
     assert!(
-        src.contains("error refs/heads/main fetch first"),
-        "canned `fetch first` status must be byte-identical to git's expected reject token"
+        any_has_fetch_first,
+        "canned `fetch first` status must be byte-identical to git's expected reject token; checked {candidates:?}"
     );
 }
