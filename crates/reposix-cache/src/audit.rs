@@ -362,6 +362,33 @@ pub fn log_sync_tag_written(
     }
 }
 
+/// Insert `op='mirror_sync_written'` row — one per mirror-refs sync
+/// (head + synced-at) attempted by `handle_export`'s success branch.
+/// `oid_hex` is the `SoT` SHA written into `refs/mirrors/<sot>-head`
+/// (or empty string if SHA derivation failed and the ref-write was
+/// skipped — the audit row records the attempt either way per OP-3).
+/// `ref_pair` is the comma-separated pair of full ref names
+/// (`refs/mirrors/<sot>-head,refs/mirrors/<sot>-synced-at`).
+/// Best-effort: SQL errors WARN-log.
+pub fn log_mirror_sync_written(
+    conn: &Connection,
+    backend: &str,
+    project: &str,
+    oid_hex: &str,
+    ref_pair: &str,
+) {
+    let res = conn.execute(
+        "INSERT INTO audit_events_cache (ts, op, backend, project, oid, reason) \
+         VALUES (?1, 'mirror_sync_written', ?2, ?3, ?4, ?5)",
+        params![Utc::now().to_rfc3339(), backend, project, oid_hex, ref_pair,],
+    );
+    if let Err(e) = res {
+        warn!(target: "reposix_cache::audit_failure",
+              backend, project, ref_pair, oid = oid_hex,
+              "log_mirror_sync_written failed: {e}");
+    }
+}
+
 /// Insert `op='cache_gc'` row — one per blob evicted by [`crate::Cache::gc`].
 ///
 /// `oid` is the evicted blob's hex OID, `bytes` records the bytes
