@@ -3,24 +3,24 @@ gsd_state_version: 1.0
 milestone: v0.13.0
 milestone_name: DVCS over REST
 status: executing
-last_updated: "2026-05-01T12:00:00Z"
-last_activity: 2026-05-01 — P81 SHIPPED (L1 perf migration); verifier GREEN at quality/reports/verdicts/p81/VERDICT.md
+last_updated: "2026-05-01T13:30:00Z"
+last_activity: 2026-05-01 — P82 SHIPPED (bus remote URL parser + prechecks); verifier GREEN at quality/reports/verdicts/p82/VERDICT.md
 progress:
   total_phases: 11
-  completed_phases: 4
-  total_plans: 8
-  completed_plans: 8
-  percent: 36
+  completed_phases: 5
+  total_plans: 9
+  completed_plans: 9
+  percent: 45
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: P81 SHIPPED 2026-05-01 (L1 perf migration: list_changed_since-based conflict detection + reposix sync --reconcile); next P82 (bus remote URL parser + prechecks)
+Phase: P82 SHIPPED 2026-05-01 (bus remote URL parser, PRECHECK A mirror-drift, PRECHECK B SoT-drift, capability-branching omits stateless-connect for bus URLs); next P83 (bus remote write fan-out — riskiest)
 Plan: —
-Status: Executing — 4/11 phases complete (P78 + P79 + P80 + P81); 8 plans complete
-Last activity: 2026-05-01 — P81 verifier GREEN. Plan-checker RED with 4 HIGH (read_blob async + does backend GET; Tainted::peek doesn't exist; State private; remote crate has no error.rs); planner revised before execution. CI fix-forward c0c8e54 closed REPOSIX_CACHE_DIR env-var race in perf_l1 tests (process-wide env-var mutation between two tokio::test threads). Two SURPRISES-INTAKE entries filed (T01 bind-schedule shift OPEN; T04 refresh_for_mirror_head no-op skip RESOLVED). Pre-push 26 PASS / 0 FAIL.
+Status: Executing — 5/11 phases complete (P78 + P79 + P80 + P81 + P82); 9 plans complete
+Last activity: 2026-05-01 — P82 verifier GREEN. Plan-checker YELLOW with 1 HIGH (positive cap-advertise assertion) + 3 MED (tests/common.rs hard-block, diag/ensure_cache pub(crate), bus_precheck_b verbatim); all revised before execution. 7 in-phase eager-resolutions per OP-8 (verifier-shell test-name shape, working-tree fixture, branch checkout, clippy --all-targets, ad-hoc bash promotion, dead_code allows, visibility widening). No SURPRISES-INTAKE entries. Pre-push 26 PASS / 0 FAIL. Two CI fix-forwards earlier in session: ee527f2 (push_conflict.rs missing per-issue GET mocks for L1 precheck), c0c8e54 (REPOSIX_CACHE_DIR env-var race).
 
 ## Current Focus
 
@@ -55,7 +55,7 @@ Last activity: 2026-05-01 — P81 verifier GREEN. Plan-checker RED with 4 HIGH (
 
 **Carry-forward bundle:** `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md` lists `MULTI-SOURCE-WATCH-01` (P78), `GIX-YANKED-PIN-01` (P78), `WAIVED-STRUCTURE-ROWS-03` (P78), `POC-DVCS-01` (P79).
 
-**Next agent action:** /gsd-plan-phase 82 → /gsd-execute-phase 82 (bus remote URL parser `reposix::<sot>?mirror=<mirror>` + cheap prechecks A/B + fetch-not-advertised dispatch). Depends on P81 GREEN — already satisfied.
+**Next agent action:** /gsd-plan-phase 83 → /gsd-execute-phase 83 (bus remote write fan-out — riskiest phase per ROADMAP; SoT-first-write algorithm with mirror-best-effort fallback + full fault-injection coverage; if plan exceeds 4 cargo-heavy tasks, /gsd-insert-phase to split P83.1/P83.2). Depends on P80 + P82 GREEN — already satisfied.
 
 ## Per-milestone history (cross-references)
 

@@ -68,16 +68,16 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 
 #### Bus remote
 
-- [ ] **DVCS-BUS-URL-01**: New URL scheme parser recognizes `reposix::<sot-spec>?mirror=<mirror-url>` (per Q3.3) and dispatches to bus handler. The `+`-delimited form is explicitly rejected. Single-backend `reposix::<sot-spec>` URLs continue to work via the existing `handle_export` code path.
-- [ ] **DVCS-BUS-PRECHECK-01**: Bus handler implements CHEAP PRECHECK A (mirror drift via `git ls-remote`) before reading stdin. On drift, emits `error refs/heads/main fetch first` + hint *"your GH mirror has new commits; git fetch <mirror> first"*. NO confluence work done. NO stdin read.
-- [ ] **DVCS-BUS-PRECHECK-02**: Bus handler implements CHEAP PRECHECK B (SoT drift via `backend.list_changed_since(last_fetched_at)`) before reading stdin. On drift overlapping with the push set, emits `error refs/heads/main fetch first` + hint citing mirror-lag refs. NO writes done. NO stdin read.
+- [x] **DVCS-BUS-URL-01** (shipped P82, 2026-05-01): `crates/reposix-remote/src/bus_url.rs::parse` recognizes `reposix::<sot-spec>?mirror=<mirror-url>` per Q3.3; `Route::{Single,Bus}` enum branches at `argv[2]` parse-time; `parse_remote_url` (single-backend) UNCHANGED; `+`-delimited form rejected with verbatim Q3.3 hint; unknown query keys rejected (D-03).
+- [x] **DVCS-BUS-PRECHECK-01** (shipped P82, 2026-05-01): `crates/reposix-remote/src/bus_handler.rs::handle_bus_export` runs `git ls-remote -- <mirror> refs/heads/main` (with `-`-prefix reject for T-82-01) before reading stdin; on drift emits verbatim `error refs/heads/main fetch first` + Q3.5 hint; NO writes; NO stdin read.
+- [x] **DVCS-BUS-PRECHECK-02** (shipped P82, 2026-05-01): `bus_handler::handle_bus_export` calls `precheck_sot_drift_any(cache, backend, project, rt)` (new 10-line wrapper around L1's `list_changed_since`) before reading stdin; on `Drifted` outcome emits verbatim `error refs/heads/main fetch first` + `git pull --rebase` hint citing mirror-lag refs (when populated); NO writes; NO stdin read.
 - [ ] **DVCS-BUS-WRITE-01**: SoT-first write — buffer fast-import stream from stdin; apply REST writes to confluence; on success, write audit rows to BOTH tables (cache + backend) and update `last_fetched_at`. On any failure, bail; mirror unchanged.
 - [ ] **DVCS-BUS-WRITE-02**: Mirror write — `git push` to GH mirror after SoT write succeeds. On mirror-write failure, write mirror-lag audit row; update `refs/mirrors/confluence-head` to new SoT SHA but NOT `refs/mirrors/confluence-synced-at` (stays at last successful mirror sync); print warning to stderr; return ok to git (SoT contract satisfied).
 - [ ] **DVCS-BUS-WRITE-03**: On mirror-write success, update `refs/mirrors/confluence-synced-at` to now and send `ok refs/heads/main` back to git.
 - [ ] **DVCS-BUS-WRITE-04**: No helper-side retry on transient mirror-write failures (per Q3.6) — surface, audit, let user retry.
 - [ ] **DVCS-BUS-WRITE-05**: Bus URL with no local `git remote` for the mirror fails with hint per Q3.5 — *"configure the mirror remote first: `git remote add <name> <mirror-url>`."* No auto-mutation of user's git config.
 - [ ] **DVCS-BUS-WRITE-06**: Fault-injection tests cover every documented failure case — kill GH push between confluence-write and ack; kill confluence-write mid-stream; simulate confluence 409 after precheck passed. Each produces correct audit + recoverable state.
-- [ ] **DVCS-BUS-FETCH-01**: Bus handler does NOT advertise `stateless-connect` for fetch (Q3.4) — read goes to the SoT directly via the existing single-backend code path. Documented in helper stderr help.
+- [x] **DVCS-BUS-FETCH-01** (shipped P82, 2026-05-01): Capabilities branching at `crates/reposix-remote/src/main.rs:150-172` omits `stateless-connect` for `Route::Bus`; `tests/bus_capabilities.rs` confirms single-backend advertises it AND bus URLs DO NOT.
 
 #### L1 perf migration
 
@@ -146,10 +146,10 @@ Drafted 2026-04-30 by `gsd-roadmapper`. Coverage: **36/36 v0.13.0 REQ-IDs mapped
 | DVCS-PERF-L1-01 | P81 | shipped |
 | DVCS-PERF-L1-02 | P81 | shipped |
 | DVCS-PERF-L1-03 | P81 | shipped |
-| DVCS-BUS-URL-01 | P82 | planning |
-| DVCS-BUS-PRECHECK-01 | P82 | planning |
-| DVCS-BUS-PRECHECK-02 | P82 | planning |
-| DVCS-BUS-FETCH-01 | P82 | planning |
+| DVCS-BUS-URL-01 | P82 | shipped |
+| DVCS-BUS-PRECHECK-01 | P82 | shipped |
+| DVCS-BUS-PRECHECK-02 | P82 | shipped |
+| DVCS-BUS-FETCH-01 | P82 | shipped |
 | DVCS-BUS-WRITE-01 | P83 | planning |
 | DVCS-BUS-WRITE-02 | P83 | planning |
 | DVCS-BUS-WRITE-03 | P83 | planning |

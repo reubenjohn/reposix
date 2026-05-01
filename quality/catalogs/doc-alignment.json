@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 390,
-    "claims_bound": 290,
+    "claims_bound": 283,
     "claims_missing_test": 0,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.8708708708708709,
+    "alignment_ratio": 0.8498498498498499,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-05-01T11:53:51Z",
+    "last_walked": "2026-05-01T13:34:56Z",
     "coverage_ratio": 0.20312216373207478,
     "lines_covered": 1119,
     "total_eligible_lines": 5509,
@@ -731,7 +731,7 @@
         "f6257388948b82070e22c25a1cce4c8acd2dd7c74debb78d34bdd0a4ee4c17e3"
       ],
       "rationale": "Tests 6 deletes rejected; 5 deletes pass cap",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:08:46Z",
       "last_extracted": "2026-04-28T09:08:46Z",
@@ -3461,7 +3461,7 @@
         "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b"
       ],
       "rationale": "Tests inbound blob with id:999999 and version:999 overrides stripped from PATCH body",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T18:59:37Z",
       "last_extracted": "2026-04-28T18:59:37Z",
@@ -3486,7 +3486,7 @@
         "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b"
       ],
       "rationale": "Test verifies PATCH body strips id and version overrides; server-authoritative values override attacker hijack attempts",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:00:38Z",
       "last_extracted": "2026-04-28T09:00:38Z",
@@ -3979,7 +3979,7 @@
         "50a57200ce74f4ec61f5f885bd88035ee3268fa256e2188cf5cd41b0cf484f79"
       ],
       "rationale": "main.rs lines 118-129 emit the locked capabilities and refspec; real_main() routes all verbs; stateless_connect.rs implements the handler; test coverage via dark-factory agent UX which validates git protocol end-to-end",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:04:54Z",
       "last_extracted": "2026-04-28T09:04:54Z",
@@ -4703,7 +4703,7 @@
         "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b"
       ],
       "rationale": "Test verifies that id/version overrides in frontmatter are rejected and replaced with server-authoritative values before PATCH",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:08:48Z",
       "last_extracted": "2026-04-28T09:08:48Z",
@@ -8344,7 +8344,7 @@
         "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b"
       ],
       "rationale": "Tests inbound blob with id:999999 and version:999 overrides are not sent to backend",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:06:00Z",
       "last_extracted": "2026-04-28T09:06:00Z",
@@ -8369,7 +8369,7 @@
         "0dff887e80f5ff77fc3fe37a3ad24b4128a1f26453a37e1d61fb320ea3dc9f7b"
       ],
       "rationale": "Tests ARCH-10: inbound blob with id/version overrides, PATCH body contains authoritative id",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:08:46Z",
       "last_extracted": "2026-04-28T09:08:46Z",
