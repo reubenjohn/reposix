@@ -1,23 +1,20 @@
 # Extractor subagent prompt — docs-alignment backfill
 
-> Loaded by the `reposix-quality-doc-alignment` skill in `backfill` mode and prepended to each shard's per-Task prompt. The orchestrator appends the shard's manifest line (input files + row-id namespace) and dispatches one Task per shard at Haiku tier.
+> Loaded by the `reposix-quality-doc-alignment` skill in `backfill` mode, prepended to each shard's per-Task prompt. Orchestrator appends the manifest line (input files + row-id namespace) and dispatches one Haiku Task per shard.
 
 ## Your role
 
-You have ZERO session context beyond this prompt and your manifest line. You are an unbiased extractor. Read the cited files. Identify behavioral claims with file:line citations. For each claim, attempt to find a binding test. Mint catalog state via the `reposix-quality` binary — never write JSON by hand.
+You have ZERO session context beyond this prompt and your manifest line. You are an unbiased extractor. Read the cited files, identify behavioral claims with file:line citations, find binding tests, and mint catalog state via the `reposix-quality` binary — never write JSON by hand.
 
 ## What counts as a claim
 
-A behavioral claim is a statement specific enough that **a test could fail**. Examples:
+A behavioral claim is a statement specific enough that **a test could fail**. It is a contract between docs and implementation. If the prose is just background, narrative, or motivation, do NOT extract a row.
 
-- BAD (too vague): "Reposix is fast."
+- BAD (too vague): "Reposix is fast." / "The simulator is the default."
 - GOOD: "`reposix init sim::demo /tmp/repo` completes in <100ms on a warm cache."
-- BAD (too vague): "The simulator is the default."
 - GOOD: "When `REPOSIX_ALLOWED_ORIGINS` is unset, only `http://127.0.0.1:*` origins resolve."
 - GOOD: "`git push` to a backend that drifted returns the standard git 'fetch first' error."
 - GOOD: "JIRA stories have a `parent` symlink pointing to their epic."
-
-A claim is a contract between the docs and the implementation. If the prose is just background, narrative, or motivation, do NOT extract a row.
 
 ## Procedure
 
@@ -79,9 +76,7 @@ A claim is a contract between the docs and the implementation. If the prose is j
 
 ## Retirement vs implementation-gap
 
-**Retirement requires the FEATURE to be intentionally dropped with a documented decision.** Transport / implementation-strategy changes do NOT retire claims about a user-facing surface — those remain `MISSING_TEST` and become gap-closure work for the next implementation strategy.
-
-Heuristic: if the prose claim describes WHAT the user sees (a directory layout, a filename pattern, a CLI verb output, a round-trip behavior), and the only thing that changed is HOW the project produces that surface, the row is `MISSING_TEST` with rationale prefix `IMPL_GAP:` — NOT `RETIRE_PROPOSED`.
+**Retirement requires the FEATURE to be intentionally dropped with a documented decision.** Transport / implementation-strategy changes do NOT retire claims about a user-facing surface — those remain `MISSING_TEST` (gap-closure work for the next implementation strategy). If the prose describes WHAT the user sees (directory layout, filename pattern, CLI verb output, round-trip behavior) and only HOW the project produces that surface changed, the row is `MISSING_TEST` with rationale prefix `IMPL_GAP:` — NOT `RETIRE_PROPOSED`.
 
 Decision tree (default to `mark-missing-test`):
 
@@ -118,44 +113,18 @@ The five enum variants:
 
 `bind` always sets `next_action=BIND_GREEN`. `propose-retire` always sets `next_action=RETIRE_FEATURE`. You do NOT pass `--next-action` to those verbs; the value is implicit.
 
-**Override flag** — `mark-missing-test --next-action <value>` overrides the heuristic when the rationale prefix would guess wrong. Example: a rationale that begins `IMPL_GAP:` but the agent has already determined the doc itself drifted (so `UPDATE_DOC` is the closer):
+**Override flag** — `mark-missing-test --next-action <value>` overrides the heuristic when the rationale prefix would guess wrong (e.g. rationale begins `IMPL_GAP:` but the doc itself drifted, so `UPDATE_DOC` is the closer). The override is rare; reach for it only when you've thought about the closure path and the prefix would guess wrong.
 
-```
-reposix-quality doc-alignment mark-missing-test \
-  --row-id <stable-id> \
-  --claim "<one-line claim text>" \
-  --source <file>:<lstart>-<lend> \
-  --rationale "IMPL_GAP: …(rest of rationale)…" \
-  --next-action UPDATE_DOC
-```
+### Canonical examples (v0.12.1 audit corrections, commit `24b2b62`)
 
-If you don't pass `--next-action`, the heuristic above applies. The override is rare; reach for it only when you've thought about the closure path and the prefix would guess wrong.
+Four rows initially proposed `RETIRE_PROPOSED` but flipped to `MISSING_TEST` — user-facing surface persists across the FUSE → git-native pivot. Lesson: prose naming an old TRANSPORT is not a retirement signal; the signal is a documented decision to drop a user-facing SURFACE.
 
-### Canonical examples (drawn verbatim from the v0.12.1 audit corrections at commit `24b2b62`)
-
-These four rows were initially proposed `RETIRE_PROPOSED` but the audit flipped them to `MISSING_TEST` because the user-facing surface persists across the FUSE → git-native pivot.
-
-- `req-confluence-create-page-via-write` (Confluence write path).
-  Prose: "edit a `.md` file and the page updates upstream."
-  Wrong call: retire because FUSE-mount transport was dropped in v0.9.0.
-  Right call: `IMPL_GAP:` — `ConfluenceBackend::create_record` exists in `lib.rs:280` and is wired into helper push at `reposix-remote/main.rs:513`; the user-facing capability (write `.md` → Confluence page) persists via `git push`. Resolution: bind a test in `agent_flow_real` that creates a page via working-tree write + `git push` and asserts the page exists on the backend.
-
-- `req-tree-index-overview-blob` (`_INDEX.md` whole-mount overview).
-  Prose: "`cat mount/_INDEX.md` returns an overview."
-  Wrong call: retire because the FUSE-era synthesizer was removed.
-  Right call: `IMPL_GAP:` — the promise is a USER-FACING SHAPE claim, not a FUSE transport detail. The cache can mint the blob in the bare-repo tree. Resolution: either reimplement synthesis in `reposix-cache` + bind a working-tree assertion test, OR write an ADR retiring the `_INDEX.md` feature with documented rationale + supersession.
-
-- `req-confluence-init-page-tree-mount` (multi-space mount shape).
-  Prose: "`spaces/<KEY>/` exists per Confluence space after init."
-  Wrong call: retire because "FUSE-mount" appears in the prose.
-  Right call: `IMPL_GAP:` — user-facing shape promise from v0.6.0/v0.7.0; in partial-clone terms means `reposix init confluence::*` materializes `spaces/<KEY>/` directories. Resolution: implement multi-space init + bind a test asserting the `spaces/` tree shape, OR ADR-retire with supersession.
-
-- `req-jira-readonly-phase28` (counter-example: `DOC_DRIFT:` not `IMPL_GAP:`).
-  Prose: "JIRA backend's `create_record/update_record/delete_or_close` return `not supported` (Phase 28 read-only)."
-  Wrong call: retire because the prose is stale.
-  Right call: `DOC_DRIFT:` — Phase 29 shipped the JIRA write path (`reposix-jira/src/lib.rs:8` docstring; trait impls at `lib.rs:197/279/334`). Resolution: update `docs/reference/jira.md` §Limitations to reflect Phase 29 write-path completion, then bind to `dark_factory_real_jira`.
-
-The lesson: prose that names an old TRANSPORT is not a retirement signal. The retirement signal is a documented decision to drop a user-facing SURFACE.
+| Row | Prose (abridged) | Wrong call | Right prefix + resolution |
+| --- | --- | --- | --- |
+| `req-confluence-create-page-via-write` | edit `.md`, page updates upstream | retire (FUSE dropped) | `IMPL_GAP:` — impl at `confluence/lib.rs:280` + `remote/main.rs:513`; bind test in `agent_flow_real`. |
+| `req-tree-index-overview-blob` | `cat mount/_INDEX.md` returns overview | retire (FUSE synthesizer removed) | `IMPL_GAP:` — user-facing shape, not transport; reimplement in `reposix-cache` OR ADR-retire. |
+| `req-confluence-init-page-tree-mount` | `spaces/<KEY>/` exists after init | retire ("FUSE-mount" in prose) | `IMPL_GAP:` — implement multi-space init materializing `spaces/<KEY>/` OR ADR-retire. |
+| `req-jira-readonly-phase28` (counter-ex: `DOC_DRIFT:`) | JIRA writes return `not supported` | retire (prose stale) | `DOC_DRIFT:` — Phase 29 shipped writes (`jira/lib.rs:8,197,279,334`); update `docs/reference/jira.md` §Limitations, rebind to `dark_factory_real_jira`. |
 
 ## Hard rules
 
@@ -168,5 +137,4 @@ The lesson: prose that names an old TRANSPORT is not a retirement signal. The re
 ## Cross-references
 
 - Catalog schema: `quality/catalogs/doc-alignment.json` + `quality/catalogs/README.md`
-- Hash semantics: `.planning/research/v0.12.0-docs-alignment-design/02-architecture.md` § "Hash semantics"
-- Row state machine: same doc § "Row state machine"
+- Hash semantics + row state machine: `.planning/research/v0.12.0-docs-alignment-design/02-architecture.md`
