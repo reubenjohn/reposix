@@ -528,6 +528,9 @@ See `quality/reports/verdicts/p77/VERDICT.md` for unbiased grading.
 - `docs/research/agentic-engineering-reference.md` — dark-factory pattern, lethal trifecta, simulator-first.
 - `docs/reference/testing-targets.md` — sanctioned real-backend test targets (TokenWorld, `reubenjohn/reposix`, JIRA `TEST`).
 - `docs/benchmarks/latency.md` — golden-path latency envelope per backend.
+- `docs/concepts/dvcs-topology.md` (P85) — three roles (SoT-holder / mirror-only consumer / round-tripper) + mirror-lag refs explained; the canonical DVCS mental model.
+- `docs/guides/dvcs-mirror-setup.md` (P85) — owner walk-through for webhook + GH Action setup; cron-only fallback (Q4.2); cleanup procedure.
+- `docs/guides/troubleshooting.md` § "DVCS push/pull issues" (P85) — bus `fetch first` rejections, attach reconciliation warnings, webhook race conditions, cache-desync recovery.
 - `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` — ratified design doc for the v0.9.0 pivot.
 - `.planning/PROJECT.md` — current scope.
 - `.planning/STATE.md` — current cursor.
