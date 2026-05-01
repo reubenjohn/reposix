@@ -48,10 +48,15 @@ grep -q "repository_dispatch:" "$TEMPLATE" \
   || { echo "FAIL: missing repository_dispatch trigger"; exit 1; }
 grep -qE "types:\s*\[\s*reposix-mirror-sync\s*\]" "$TEMPLATE" \
   || { echo "FAIL: missing types: [reposix-mirror-sync]"; exit 1; }
-grep -q "cargo binstall reposix-cli" "$TEMPLATE" \
-  || { echo "FAIL: missing 'cargo binstall reposix-cli' (D-05; must NOT be bare 'reposix')"; exit 1; }
-# Ensure no bare 'cargo binstall reposix' (without -cli suffix) line.
-if grep -E "cargo binstall reposix($|[^-])" "$TEMPLATE" >/dev/null 2>&1; then
+# Match `cargo binstall [...flags...] reposix-cli` — flags like
+# `--no-confirm` are commonly interleaved between `binstall` and the
+# crate name, so allow any whitespace-delimited tokens between them.
+grep -qE "cargo binstall( +[^[:space:]]+)* +reposix-cli\b" "$TEMPLATE" \
+  || { echo "FAIL: missing 'cargo binstall ... reposix-cli' (D-05; must NOT be bare 'reposix')"; exit 1; }
+# Ensure no bare `cargo binstall ... reposix` (without -cli suffix) on
+# any line (with or without intervening flags).
+if grep -nE "cargo binstall( +[^[:space:]]+)* +reposix($|[^-[:alnum:]])" "$TEMPLATE" \
+     | grep -v "reposix-cli" >/dev/null 2>&1; then
   echo "FAIL: bare 'cargo binstall reposix' detected (use reposix-cli per D-05)"
   exit 1
 fi
