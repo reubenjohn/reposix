@@ -12,7 +12,7 @@
     "alignment_ratio": 0.9006024096385542,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-05-01T05:44:44Z",
+    "last_walked": "2026-05-01T06:53:23Z",
     "coverage_ratio": 0.20312216373207478,
     "lines_covered": 1119,
     "total_eligible_lines": 5509,
@@ -2241,15 +2241,15 @@
     },
     {
       "id": "docs/decisions/009-stability-commitment/cli-subcommand-surface",
-      "claim": "CLI subcommand surface (init|sim|list|refresh|spaces|log|history|tokens|cost|gc|doctor|version) is locked under semver; new subcommands additive minor versions only",
+      "claim": "CLI subcommand surface (init|attach|sim|list|refresh|spaces|log|history|tokens|cost|gc|doctor|version) is locked under semver; new subcommands additive minor versions only",
       "source": {
         "file": "crates/reposix-cli/src/main.rs",
         "line_start": 37,
-        "line_end": 299
+        "line_end": 315
       },
-      "source_hash": "89b925f5123751703570bfd484aaa064771e60be68f06c60ff5d6ebc57f2970b",
+      "source_hash": "3a7dcfa41e903b8e6920f692390ad6134b0ac24ff6ce1a8e65fe88c55582f00c",
       "source_hashes": [
-        "89b925f5123751703570bfd484aaa064771e60be68f06c60ff5d6ebc57f2970b"
+        "3a7dcfa41e903b8e6920f692390ad6134b0ac24ff6ce1a8e65fe88c55582f00c"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
@@ -2257,11 +2257,11 @@
       "test_body_hashes": [
         "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
       ],
-      "rationale": "Subcommand enum (Cmd) exhaustively lists all 12 subcommands; clap-derive dispatch in main() binds all arms; dark-factory regression test validates UX end-to-end with no breaking changes",
+      "rationale": "Subcommand enum (Cmd) exhaustively lists all subcommands incl. attach (v0.13.0 P79 additive add); clap-derive dispatch in main() binds all arms; dark-factory regression test validates UX end-to-end with no breaking changes",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T21:36:18Z",
-      "last_extracted": "2026-04-29T21:36:18Z",
+      "last_run": "2026-05-01T06:51:46Z",
+      "last_extracted": "2026-05-01T06:51:46Z",
       "last_extracted_by": "bind-call"
     },
     {
