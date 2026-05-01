@@ -94,6 +94,29 @@ mod tests {
         assert!(tables.contains(&"audit_events_cache".to_owned()));
         assert!(tables.contains(&"meta".to_owned()));
         assert!(tables.contains(&"oid_map".to_owned()));
+        // v0.13.0 P79-02: cache_reconciliation tracks reposix attach state.
+        assert!(tables.contains(&"cache_reconciliation".to_owned()));
+    }
+
+    #[test]
+    fn cache_reconciliation_table_create_is_idempotent() {
+        // Re-opening the cache DB twice must not error (CREATE TABLE IF
+        // NOT EXISTS) and must leave exactly one cache_reconciliation
+        // table in the master catalog. This is the load-bearing
+        // idempotency invariant for `reposix attach <spec>` re-runs
+        // (Q1.3): same SoT re-attach refreshes state, never resets.
+        let tmp = tempdir().unwrap();
+        drop(open_cache_db(tmp.path()).expect("first open"));
+        let conn = open_cache_db(tmp.path()).expect("second open");
+        let count: i64 = conn
+            .prepare(
+                "SELECT count(*) FROM sqlite_master \
+                 WHERE type='table' AND name='cache_reconciliation'",
+            )
+            .unwrap()
+            .query_row([], |r| r.get(0))
+            .unwrap();
+        assert_eq!(count, 1, "table should exist exactly once after re-open");
     }
 
     #[test]

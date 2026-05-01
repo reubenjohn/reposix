@@ -19,7 +19,9 @@ CREATE TABLE IF NOT EXISTS audit_events_cache (
     -- the new ops will fail the CHECK and fall through the audit
     -- best-effort path (warn-logged); fresh caches see the full list.
     -- v0.11.0 §3j adds 'cache_gc' (LRU/TTL/all eviction). v0.11.0 §3c
-    -- adds 'token_cost' (per-RPC token-economy ledger).
+    -- adds 'token_cost' (per-RPC token-economy ledger). v0.13.0 P79-02
+    -- adds 'attach_walk' (DVCS-ATTACH-02; one row per `reposix attach`
+    -- walk completion); P83 sibling events extend this further.
     op            TEXT    NOT NULL CHECK (op IN (
         'materialize',
         'egress_denied',
@@ -37,7 +39,8 @@ CREATE TABLE IF NOT EXISTS audit_events_cache (
         'helper_backend_instantiated',
         'sync_tag_written',
         'cache_gc',
-        'token_cost'
+        'token_cost',
+        'attach_walk'
     )),
     backend       TEXT    NOT NULL,
     project       TEXT    NOT NULL,
@@ -61,6 +64,29 @@ CREATE TABLE IF NOT EXISTS oid_map (
 );
 CREATE INDEX IF NOT EXISTS idx_oid_map_issue
     ON oid_map(backend, project, issue_id);
+
+-- v0.13.0 P79-02: cache_reconciliation tracks the working-tree → backend
+-- record mapping captured at `reposix attach` time. INSERT OR REPLACE on
+-- re-attach (idempotent per Q1.3). Reconciliation state, NOT an audit
+-- table — append-only triggers do not apply.
+CREATE TABLE IF NOT EXISTS cache_reconciliation (
+    record_id    INTEGER PRIMARY KEY,
+    oid          TEXT    NOT NULL,
+    local_path   TEXT    NOT NULL,
+    attached_at  TEXT    NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_cache_reconciliation_local_path
+    ON cache_reconciliation(local_path);
+
+-- v0.13.0 P79-02: extend the audit_events_cache CHECK list with
+-- `attach_walk` (DVCS-ATTACH-02 / OP-3) so `Cache::log_attach_walk`
+-- can write its row. Sibling P83 events (e.g.
+-- `mirror_lag_partial_failure`) join this list when they land. NOTE:
+-- the CREATE TABLE IF NOT EXISTS above keeps the legacy CHECK on
+-- existing cache.db files. Fresh caches created from this schema get
+-- the extended list. See audit.sql comment "On stale cache.db files
+-- the new ops will fail the CHECK and fall through the audit
+-- best-effort path (warn-logged)".
 
 DROP TRIGGER IF EXISTS audit_cache_no_update;
 CREATE TRIGGER audit_cache_no_update BEFORE UPDATE ON audit_events_cache

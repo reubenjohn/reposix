@@ -35,6 +35,7 @@ pub mod error;
 pub mod gc;
 pub mod meta;
 pub mod path;
+pub mod reconciliation;
 pub mod sync_tag;
 
 /// Privileged-sink stubs used to lock the Tainted-vs-Untainted

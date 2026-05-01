@@ -84,9 +84,9 @@ enum Cmd {
         #[arg(long)]
         since: Option<String>,
     },
-    /// Attach an existing checkout to a SoT backend (DVCS-ATTACH-01..04).
+    /// Attach an existing checkout to a `SoT` backend (DVCS-ATTACH-01..04).
     ///
-    /// Builds a cache from REST against the SoT, reconciles cache OIDs
+    /// Builds a cache from REST against the `SoT`, reconciles cache OIDs
     /// against the current HEAD by matching records to backend records by
     /// `id` in frontmatter, and adds a new reposix-equipped remote
     /// (default `reposix`) configured for partial-clone.

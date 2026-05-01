@@ -315,6 +315,141 @@ impl Cache {
             project_for_backend,
         );
     }
+
+    /// Return the set of backend record IDs known to the cache from the
+    /// most recent `build_from` tree.
+    ///
+    /// Implementation: queries the `oid_map` rows belonging to this
+    /// `(backend, project)` pair. Each row encodes `(oid, issue_id)`
+    /// for one record currently in the tree; we return the
+    /// distinct, parsed `RecordId` set.
+    ///
+    /// # Errors
+    /// Returns [`Error::Sqlite`] if the underlying query fails or
+    /// [`Error::Backend`] if a stored `issue_id` cannot be parsed back
+    /// into a `u64` (data corruption — should never happen in practice).
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn list_record_ids(&self) -> Result<Vec<reposix_core::RecordId>> {
+        let db = self.db.lock().expect("cache.db mutex poisoned");
+        let mut stmt = db
+            .prepare(
+                "SELECT DISTINCT issue_id FROM oid_map \
+                 WHERE backend = ?1 AND project = ?2",
+            )
+            .map_err(|e| Error::Sqlite(format!("prepare list_record_ids: {e}")))?;
+        let rows = stmt
+            .query_map(
+                rusqlite::params![&self.backend_name, &self.project],
+                |row| row.get::<_, String>(0),
+            )
+            .map_err(|e| Error::Sqlite(format!("query list_record_ids: {e}")))?;
+        let mut out = Vec::new();
+        for r in rows {
+            let id_str = r.map_err(|e| Error::Sqlite(format!("row list_record_ids: {e}")))?;
+            let id_num: u64 = id_str.parse().map_err(|_| {
+                Error::Backend(format!("oid_map issue_id `{id_str}` is not numeric"))
+            })?;
+            out.push(reposix_core::RecordId(id_num));
+        }
+        Ok(out)
+    }
+
+    /// Return the blob OID for a given backend record id from the
+    /// most-recent tree, if any. Reads the `oid_map` row that joins
+    /// this `(backend, project, issue_id)` triple.
+    ///
+    /// # Errors
+    /// Returns [`Error::Sqlite`] if the underlying query fails or
+    /// [`Error::Git`] if the stored OID hex cannot parse back to a
+    /// `gix::ObjectId` (data corruption).
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn find_oid_for_record(&self, id: reposix_core::RecordId) -> Result<Option<gix::ObjectId>> {
+        use rusqlite::OptionalExtension as _;
+        let db = self.db.lock().expect("cache.db mutex poisoned");
+        let id_str = id.0.to_string();
+        let oid_hex: Option<String> = db
+            .query_row(
+                "SELECT oid FROM oid_map \
+                 WHERE backend = ?1 AND project = ?2 AND issue_id = ?3",
+                rusqlite::params![&self.backend_name, &self.project, &id_str],
+                |row| row.get::<_, String>(0),
+            )
+            .optional()
+            .map_err(|e| Error::Sqlite(format!("find_oid_for_record: {e}")))?;
+        let Some(hex) = oid_hex else {
+            return Ok(None);
+        };
+        let oid = gix::ObjectId::from_hex(hex.as_bytes())
+            .map_err(|e| Error::Git(format!("oid_map oid `{hex}` is not a valid hex OID: {e}")))?;
+        Ok(Some(oid))
+    }
+
+    /// Lock the cache's `cache.db` connection for transactional use.
+    ///
+    /// Returns a [`std::sync::MutexGuard`] over the underlying
+    /// [`rusqlite::Connection`]. Callers can begin a transaction via
+    /// `Connection::transaction` on the dereferenced guard, but should
+    /// keep the lock held only as long as needed (no `await` while
+    /// holding it — `Connection` is not `Send`).
+    ///
+    /// `pub(crate)` because the only consumer is the reconciliation
+    /// walker in this crate; broadening visibility would invite
+    /// helper-crate code to bypass the typed APIs above.
+    ///
+    /// # Errors
+    /// Returns [`Error::Sqlite`] if the mutex is poisoned (a previous
+    /// holder panicked while writing).
+    pub(crate) fn connection_mut(&self) -> Result<std::sync::MutexGuard<'_, rusqlite::Connection>> {
+        self.db
+            .lock()
+            .map_err(|_| Error::Sqlite("cache.db mutex poisoned".into()))
+    }
+
+    /// Write a single `audit_events_cache` row recording that an
+    /// `attach` walk completed (DVCS-ATTACH-02 / OP-3). Best-effort
+    /// in line with the rest of the `log_*` family — SQL errors
+    /// WARN-log.
+    ///
+    /// `event_type` is the `op` column value (currently always
+    /// `"attach_walk"`; the parameter shape matches POC-FINDINGS F04
+    /// so siblings like P83's `mirror_lag_partial_failure` reuse
+    /// this surface). `payload_json` is encoded into the existing
+    /// `reason` column as a JSON string.
+    ///
+    /// # Errors
+    /// Returns [`Error::Sqlite`] if the SQL insert fails. Unlike the
+    /// other `log_*` helpers (which are best-effort and return `()`),
+    /// this one returns `Result` so the caller can surface OP-3
+    /// breakage to the user — `reposix attach` MUST report an audit
+    /// failure rather than silently dropping the row.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn log_attach_walk(
+        &self,
+        event_type: &str,
+        payload_json: &serde_json::Value,
+    ) -> Result<()> {
+        let db = self.db.lock().expect("cache.db mutex poisoned");
+        let payload = payload_json.to_string();
+        db.execute(
+            "INSERT INTO audit_events_cache (ts, op, backend, project, reason) \
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            rusqlite::params![
+                chrono::Utc::now().to_rfc3339(),
+                event_type,
+                &self.backend_name,
+                &self.project,
+                payload,
+            ],
+        )
+        .map_err(|e| Error::Sqlite(format!("log_attach_walk: {e}")))?;
+        Ok(())
+    }
 }
 
 /// Ensure `transfer.hideRefs` includes our private sync-tag namespace.

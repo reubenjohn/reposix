@@ -2848,6 +2848,7 @@ dependencies = [
  "tokio",
  "tracing",
  "trybuild",
+ "walkdir",
  "wiremock",
 ]
 

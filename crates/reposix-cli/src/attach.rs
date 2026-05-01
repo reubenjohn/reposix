@@ -1,12 +1,12 @@
 //! `reposix attach <backend>::<project>` — attach an existing checkout
-//! to a SoT backend (DVCS-ATTACH-01..04, v0.13.0).
+//! to a `SoT` backend (DVCS-ATTACH-01..04, v0.13.0).
 //!
 //! Pre-conditions: CWD (or `<path>` if passed) is a git working tree
 //! (i.e. `.git/` exists). The working tree may have been created any
 //! way — vanilla `git clone`, prior `reposix init`, hand-edited.
 //!
 //! Steps (architecture-sketch.md § "1. `reposix attach <backend>::<project>`"):
-//!   1. Resolve cache path from SoT spec (NOT from `remote.origin.url`) — Q1.1.
+//!   1. Resolve cache path from `SoT` spec (NOT from `remote.origin.url`) — Q1.1.
 //!   2. REST-list the backend; populate cache OIDs (lazy blobs).
 //!   3. Walk current HEAD tree; reconcile against backend records by
 //!      `id` in frontmatter (see `crates/reposix-cache/src/reconciliation.rs`).
@@ -15,8 +15,8 @@
 //!      `?mirror=` if `--no-bus`).
 //!   5. Set `extensions.partialClone=<remote-name>` (NOT `origin`).
 //!
-//! Re-attach idempotency (Q1.3): same SoT → refresh cache + reconciliation
-//! table; different SoT → reject (Q1.2).
+//! Re-attach idempotency (Q1.3): same `SoT` → refresh cache + reconciliation
+//! table; different `SoT` → reject (Q1.2).
 //!
 //! After the reconciliation walk completes, calls `Cache::log_attach_walk`
 //! to write a row to `audit_events_cache` per OP-3 (UNCONDITIONAL —
@@ -95,9 +95,15 @@ impl From<OrphanPolicy> for reposix_cache::reconciliation::OrphanPolicy {
 /// Returns an error on any of:
 /// - Spec parse failure (delegated to `translate_spec_to_url`).
 /// - Working tree is not a git repo.
-/// - Re-attach with a different SoT (Q1.2 reject).
+/// - Re-attach with a different `SoT` (Q1.2 reject).
 /// - Duplicate `id` across two local records (architecture-sketch row 4).
 /// - Cache materialization or REST list failure.
+//
+// The body inlines architecture-sketch steps 1-5 in order (cache-path
+// derive, build_from, reconcile, remote add/set-url, partialClone
+// config). Splitting across helpers would obscure the step ordering
+// the architecture-sketch fixes verbatim.
+#[allow(clippy::too_many_lines)]
 pub async fn run(args: AttachArgs) -> Result<()> {
     let spec = &args.spec;
     let work = args.path.clone().unwrap_or_else(|| PathBuf::from("."));
@@ -186,8 +192,7 @@ pub async fn run(args: AttachArgs) -> Result<()> {
     if !report.duplicate_id_files.is_empty() {
         let dup = &report.duplicate_id_files;
         bail!(
-            "duplicate id across local records: {:?}; reconciliation aborted (no rows committed)",
-            dup
+            "duplicate id across local records: {dup:?}; reconciliation aborted (no rows committed)"
         );
     }
 
@@ -217,9 +222,9 @@ pub async fn run(args: AttachArgs) -> Result<()> {
     // Step 4: compose remote URL + add (or update-if-idempotent) remote.
     let mirror_url = git_config_get(&work, &format!("remote.{}.url", args.mirror_name))?;
     let remote_url = match (args.no_bus, &mirror_url) {
-        (true, _) => translated.clone(),
         (false, Some(m)) => format!("{translated}?mirror={m}"),
-        (false, None) => translated.clone(), // mirror remote not configured; user can add later
+        // --no-bus, or no mirror remote configured (user can add one later).
+        (true, _) | (false, None) => translated.clone(),
     };
     if existing_url.is_some() {
         run_git_in(
