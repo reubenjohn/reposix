@@ -8,33 +8,25 @@ reposix exposes REST-based issue trackers (and similar SaaS systems) as a git-na
 
 ## Architecture (git-native partial clone)
 
-> **Source of truth:** `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` (ratified 2026-04-24).
+> **Source of truth:** `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` + `.planning/research/v0.13.0-dvcs/architecture-sketch.md` (DVCS extensions, ratified P78–P88).
 
 The reposix runtime has three pieces:
 
-- **`reposix-cache`** — a real on-disk bare git repo built from REST responses via the `BackendConnector` trait. The cache produces a fully populated tree (filenames, directory structure, blob OIDs) but materializes blobs lazily — only when the helper requests one on git's behalf. Every materialization writes a row to the SQLite audit table; bytes return wrapped in `reposix_core::Tainted<Vec<u8>>`.
-- **`git-remote-reposix`** — a hybrid git remote helper. It advertises `stateless-connect` (read path: tunnels protocol-v2 fetch traffic to the cache's bare repo with `--filter=blob:none`) and `export` (push path: parses the fast-import stream, runs push-time conflict detection against the backend, applies REST writes on success). Refspec namespace is `refs/heads/*:refs/reposix/*`.
-- **`reposix init <backend>::<project> <path>`** — bootstraps a partial-clone working tree: `git init`, `extensions.partialClone=origin`, `remote.origin.url=reposix::<scheme>://<host>/projects/<project>`, then `git fetch --filter=blob:none origin`.
-- **`reposix attach <backend>::<project>`** — adopt an existing checkout (vanilla `git clone` mirror, hand-edited tree, prior `reposix init`) and bind it to a `SoT` backend. Builds the cache from REST, walks the working-tree HEAD, reconciles records by frontmatter `id` (5 cases per architecture-sketch: match / no-id / backend-deleted / duplicate-id / mirror-lag), then sets `extensions.partialClone=reposix` (NOT `origin`) and `remote.reposix.url=reposix::<sot>?mirror=<plain-mirror-url>`. Re-attach against the same `SoT` is idempotent (Q1.3); against a different `SoT` is rejected (Q1.2 — multi-SoT not supported in v0.13.0). `REPOSIX_SIM_ORIGIN` overrides the default sim port (used by integration tests).
+- **`reposix-cache`** — a real on-disk bare git repo built from REST responses via the `BackendConnector` trait. Materializes blobs lazily; every materialization writes to the `audit_events_cache` SQLite table; bytes return wrapped in `reposix_core::Tainted<Vec<u8>>`.
+- **`git-remote-reposix`** — git remote helper. Advertises `stateless-connect` (read path: tunnels protocol-v2 fetch with `--filter=blob:none`) and `export` (push path: fast-import → push-time conflict detection → REST writes). Refspec namespace `refs/heads/*:refs/reposix/*`.
+- **`reposix init <backend>::<project> <path>`** — bootstraps a partial-clone working tree (`extensions.partialClone=origin`, `remote.origin.url=reposix::<scheme>://<host>/projects/<project>`).
+- **`reposix attach <backend>::<project>`** — adopts an existing checkout (vanilla `git clone` mirror, hand-edited tree, prior `reposix init`) and binds it to a `SoT` backend. Reconciles records by frontmatter `id` (5 cases per architecture-sketch); idempotent on re-attach against the same SoT (Q1.3); rejects different SoT (Q1.2). Sets `extensions.partialClone=reposix` and `remote.reposix.url=reposix::<sot>?mirror=<plain-mirror-url>`.
 
-After `init`, agent UX is pure git: `cd <path> && git checkout origin/main && cat issues/<id>.md && grep -r TODO . && <edit> && git add . && git commit && git push`. Zero reposix CLI awareness required beyond `init` (or `attach` for adopted trees).
+After bootstrap, agent UX is pure git: `cd <path> && git checkout origin/main && cat issues/<id>.md && grep -r TODO . && <edit> && git add . && git commit && git push`. Zero reposix CLI awareness required beyond `init` / `attach`.
 
-**Cache reconciliation table.** `reposix-cache` adds a `cache_reconciliation` table (`record_id PRIMARY KEY, oid, local_path, attached_at`) populated by `reposix attach` via `walk_and_reconcile`. One row per matched local record. `INSERT OR REPLACE` on re-attach (idempotent per Q1.3). NOT an audit table — it's reconciliation state, the append-only triggers in `audit_events_cache` do not apply. Audit-row trail for the attach walk itself lands in `audit_events_cache` with `op = 'attach_walk'` (OP-3 unconditional).
+### Load-bearing behaviors
 
-Two guardrails are load-bearing for the dark-factory pattern:
-
-- **Push-time conflict detection.** The helper checks backend state when `git push` runs and rejects with the standard git "fetch first" error if the remote drifted. The agent recovers via `git pull --rebase && git push` — no custom protocol.
-- **Blob limit.** The helper refuses `command=fetch` requests that would materialize more than `REPOSIX_BLOB_LIMIT` blobs (default 200), with a stderr error that names `git sparse-checkout` as the recovery move. An agent unfamiliar with reposix observes the error and recovers without prompt engineering.
-
-**Mirror-lag refs.** `crates/reposix-cache/` writes two refs per SoT-host on every successful `handle_export` push (and, post-P83, on every successful bus push and webhook-driven mirror sync): `refs/mirrors/<sot-host>-head` (direct ref pointing at the cache's post-write synthesis-commit OID) and `refs/mirrors/<sot-host>-synced-at` (annotated tag whose message-body first line is `mirror synced at <RFC3339>`). `<sot-host>` is the SoT backend slug (`sim` | `github` | `confluence` | `jira`). Refs live in the **cache's bare repo**, NOT in the working tree's `.git/`; vanilla `git fetch` brings them along via the helper's `stateless-connect` advertisement (`git upload-pack --advertise-refs` propagates every non-hidden ref naturally — `transfer.hideRefs` only hides `refs/reposix/sync/*`). `git log refs/mirrors/<sot>-synced-at -1` reveals when the mirror last caught up, and the conflict-reject stderr cites the ref by name with a `(N minutes ago)` rendering for staleness diagnosis. **Important (Q2.2 doc-clarity contract):** `refs/mirrors/<sot>-synced-at` is the timestamp the mirror last caught up to `<sot>` — it is NOT a "current SoT state" marker. The staleness window the refs measure IS the gap between SoT-edit and webhook-fire. Full docs treatment defers to P85 (`docs/concepts/dvcs-topology.md`). Audit-row trail for the ref-write attempt lands in `audit_events_cache` with `op = 'mirror_sync_written'` (OP-3 unconditional — written even on ref-write failure). Ref writes themselves are best-effort `tracing::warn!` (mirroring the `Cache::log_*` family).
-
-**L1 conflict detection (P81+).** On every push, the helper reads its cache cursor (`meta.last_fetched_at`), calls `backend.list_changed_since(since)`, and only conflict-checks records that overlap the push set with the changed-set. The cache is trusted as the prior; the agent's PATCH against a backend-deleted record fails at REST time with a 404 — recoverable via `reposix sync --reconcile` (DVCS-PERF-L1-02). On the cursor-present hot path, the precheck does ONE `list_changed_since` REST call plus ONE `get_record` per record in `changed_set ∩ push_set` (typically zero or one); the legacy unconditional `list_records` walk in `handle_export` is gone. First-push fallback (no cursor yet) and steady-state pushes with no actions executed (`files_touched == 0`) skip the post-write `refresh_for_mirror_head` to keep the no-op cost at zero list-records calls. L2/L3 hardening (background reconcile / transactional cache writes) defers to v0.14.0 per `.planning/research/v0.13.0-dvcs/architecture-sketch.md` § Performance subtlety.
-
-**Bus URL form (P82+).** `reposix::<sot-spec>?mirror=<mirror-url>` per Q3.3 — the SoT side dispatches via the existing `BackendConnector` pipeline (sim / confluence / github / jira); the mirror is a plain-git URL consumed as a shell-out argument to `git ls-remote` / `git push`. Bus is PUSH-only (Q3.4) — fetch on a bus URL falls through to the single-backend code path, so the helper does NOT advertise `stateless-connect` for bus URLs. The `+`-delimited form is dropped; unknown query keys (anything other than `mirror=`) are rejected. Mirror URLs containing `?` must be percent-encoded (the first unescaped `?` in the bus URL is the bus query-string boundary). On push, the bus handler runs two cheap prechecks BEFORE reading stdin: PRECHECK A (`git ls-remote -- <mirror>` versus local `refs/remotes/<name>/main`) and PRECHECK B (`list_changed_since` against the SoT cursor); both reject with `error refs/heads/main fetch first` on drift. P82 ships the URL-recognition + dispatch + precheck surface; the SoT-first write fan-out lands in P83. See `.planning/research/v0.13.0-dvcs/architecture-sketch.md § 3` and `decisions.md § Q3.3-Q3.6` for the algorithm + open-question resolutions.
-
-**Bus write fan-out (P83-01+).** A bus push (`git push <reposix-remote> main` against a `reposix::<sot>?mirror=<url>` remote) runs the architecture-sketch's bus algorithm steps 4-9 after P82's prechecks pass: read fast-import from stdin, apply REST writes to `SoT` via the shared `write_loop::apply_writes` (single-backend `handle_export` calls the same function), then `git push <mirror_remote_name> main` to the GH mirror — plain push, NO `--force-with-lease` (P84 owns force-with-lease for the webhook race; D-08 RATIFIED). On `SoT`-success + mirror-success: both `refs/mirrors/<sot>-head` and `refs/mirrors/<sot>-synced-at` advance; `mirror_sync_written` audit row written; helper acks `ok refs/heads/main`. On `SoT`-success + mirror-FAIL: `head` advances but `synced-at` is FROZEN at the last successful mirror sync (observable lag for the vanilla-`git`-only operator); the new audit op `helper_push_partial_fail_mirror_lag` records SoT SHA + `git push` exit code + 3-line stderr tail (T-83-02 trim); helper still acks `ok refs/heads/main` — Q3.6 RATIFIED no helper-side retry (surface, audit, recover on next push or via webhook sync). On any `SoT`-fail: mirror push NEVER attempted; refs unchanged. Confluence partial state across actions (PATCH 1 succeeds, PATCH 2 fails) is NOT 2PC — recovery is next-push reads new `SoT` via PRECHECK B's `list_changed_since` (D-09 / Pitfall 3 in `.planning/phases/83-bus-write-fan-out/83-PLAN-OVERVIEW.md`). P83-01 ships steps 4-9 of the algorithm + the new audit op + the 3-line stderr tail trim; P83-02 lands fault-injection coverage + audit-completeness assertions. The `git push` shell-out inherits the helper's cwd (Pitfall 6) — same git-invocation context that resolved `<mirror_remote_name>` in P82's STEP 0. Fault-injection coverage (DVCS-BUS-WRITE-06): four integration tests under `crates/reposix-remote/tests/bus_write_*.rs` exercise mirror-fail (`bus_write_mirror_fail.rs`) / SoT-mid-stream-fail (`bus_write_sot_fail.rs`) / post-precheck-409 (`bus_write_post_precheck_409.rs`) / dual-table audit-completeness (`bus_write_audit_completeness.rs`) scenarios per RESEARCH.md § "Audit Completeness Contract" — every push end-state writes audit rows to BOTH `audit_events_cache` (cache-internal) AND `audit_events` (backend mutations), enforcing the OP-3 dual-table contract.
-
-**Webhook-driven mirror sync (v0.13.0 P84+).** A reference GitHub Action workflow lives in the mirror repo's `.github/workflows/reposix-mirror-sync.yml` (NOT in `reubenjohn/reposix`; the canonical repo carries the template at `docs/guides/dvcs-mirror-setup-template.yml`). The two copies are byte-equal modulo whitespace; the catalog row `agent-ux/webhook-trigger-dispatch` enforces the invariant. Triggers: `repository_dispatch` (event_type=`reposix-mirror-sync`) for the webhook path + cron `*/30 * * * *` (literal — GH Actions parses schedule blocks BEFORE evaluating `${{ vars.* }}`, so cadence overrides require editing the YAML directly per Q4.1) for the safety net. Secrets convention: `gh secret set ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT` on the **mirror repo** (per `ci.yml:114-120` precedent). The workflow uses `cargo binstall reposix-cli` (NOT bare `reposix` — that's the workspace name; the binstall metadata lives in `crates/reposix-cli/Cargo.toml`). First-run handling (Q4.3) branches on `git show-ref --verify --quiet refs/remotes/mirror/main`: present → `--force-with-lease=...` push; absent → plain push. Race protection: a concurrent bus push (P82+P83) landing between the workflow's fetch and its push triggers a clean lease rejection — the mirror is already in sync. Latency target: p95 ≤ 120s (falsifiable threshold per ROADMAP P84 SC4). **Substrate gating:** the workflow's install step requires a published `reposix-cli` crate version with working binstall artifacts AND non-yanked `gix` deps; v0.12.0 fails on both legs (no binstall artifact + yanked `gix=0.82.0`). See `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md § 2026-05-01 16:43`. Full owner walk-through: `docs/guides/dvcs-mirror-setup.md` (P85).
+- **Push-time conflict detection.** Helper rejects with the standard git "fetch first" error on remote drift; agent recovers via `git pull --rebase && git push`. v0.13.0 P81 made this efficient via `list_changed_since(cursor)` rather than full list-records; L2/L3 cache-desync hardening defers to v0.14.0.
+- **Blob limit.** Helper refuses `command=fetch` requests that would materialize more than `REPOSIX_BLOB_LIMIT` blobs (default 200). The stderr error names `git sparse-checkout` as the recovery move so an unfamiliar agent recovers without prompt engineering.
+- **Bus URL form (v0.13.0 P82+).** `reposix::<sot>?mirror=<mirror-url>` fans out to SoT (REST) + mirror (plain `git push` shell-out). Push-only (Q3.4); fetch on a bus URL falls through to the single-backend path. Two prechecks gate the push BEFORE reading stdin: PRECHECK A (`git ls-remote` against the mirror) + PRECHECK B (`list_changed_since` against the SoT cursor). `?` in mirror URLs must be percent-encoded.
+- **Bus write fan-out (v0.13.0 P83+).** SoT-first then mirror-best-effort. SoT-success + mirror-success advances both `refs/mirrors/<sot>-head` and `-synced-at`. SoT-success + mirror-FAIL freezes `synced-at` (observable lag) and writes `helper_push_partial_fail_mirror_lag` audit op; helper still acks. SoT-fail never attempts mirror. NO helper-side retry (D-08, Q3.6 RATIFIED). NOT 2PC for cross-action partial state — recovery is next-push reads new SoT via PRECHECK B.
+- **Mirror-lag refs.** Cache writes `refs/mirrors/<sot>-head` (direct ref) and `refs/mirrors/<sot>-synced-at` (annotated tag, message body `mirror synced at <RFC3339>`) per successful sync. Refs live in the cache's bare repo; vanilla `git fetch` brings them along. They measure the SoT-edit→mirror-sync gap, NOT current SoT state (Q2.2 doc-clarity contract — full treatment in `docs/concepts/dvcs-topology.md`).
+- **Webhook-driven mirror sync (v0.13.0 P84).** Reference GH Action workflow lives in the *mirror* repo (template at `docs/guides/dvcs-mirror-setup-template.yml`; byte-equal copies enforced by `agent-ux/webhook-trigger-dispatch`). Triggers: `repository_dispatch` (event_type=`reposix-mirror-sync`) + cron `*/30 * * * *` literal safety net. Secrets on the mirror repo (`ATLASSIAN_API_KEY` etc.). `cargo binstall reposix-cli` (workspace name is `reposix`; binstall metadata in `crates/reposix-cli/Cargo.toml`). p95 latency target ≤ 120s. Owner walk-through: `docs/guides/dvcs-mirror-setup.md`.
 
 ## Operating Principles (project-specific)
 
@@ -89,16 +81,6 @@ The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The f
    actually has 10 (planned + 2 reservation). Roadmap entries for the
    reservation phases name them explicitly so they're not omitted by
    accident.
-
-   **v0.13.0 surprises-absorption (P87, 2026-05-01)** — completed:
-   5-entry intake drained (2 RESOLVED-on-discovery via eager-resolution +
-   3 P87-drained as RESOLVED|WONTFIX|DEFERRED); honesty spot-check
-   GREEN at `.planning/phases/87-surprises-absorption/honesty-spot-check.md`
-   (sampled 5 phases, exceeded the ≥3 floor). One v0.13.0 → v0.13.x
-   carry-forward: binstall + yanked-gix release substrate (P84
-   SURPRISES Entry 5; release-pipeline territory; owner-runnable
-   `scripts/webhook-latency-measure.sh` ready). Full v0.13.0 milestone
-   retrospective lands in P88 per OP-9.
 9. **Milestone-close ritual: distill before archiving.** Each
    milestone's `*-phases/{SURPRISES-INTAKE,GOOD-TO-HAVES}.md` entries
    AND the autonomous-run session findings get distilled into a new
@@ -239,14 +221,11 @@ Entry points:
 
 The auto-mode bootstrap from 2026-04-13 set `mode: yolo`, `granularity: coarse`, and enabled all workflow gates (research / plan_check / verifier / nyquist / code_review). Do not silently downgrade these.
 
-### Push cadence — per-phase (codified 2026-04-30, closes backlog 999.4)
+### Push cadence — per-phase
 
-**Rule:** every phase closes with `git push origin main` BEFORE the verifier-subagent dispatch. Pre-push gate-passing is part of the phase-close criterion, not an end-of-session sweep.
+Every phase closes with `git push origin main` BEFORE the verifier-subagent dispatch. Pre-push gate-passing is part of phase close, not an end-of-session sweep — verifier grades RED if the phase shipped without the push landing. Trivial in-phase chores (typo fix, comment cleanup) ride to origin with the phase's terminal push, not their own round-trip. The pre-commit fmt hook is the secondary safety net at commit time.
 
-- **Why:** v0.12.1's autonomous run accumulated 115 unpushed commits — drift compounded invisibly until session-end (P73/P75 fmt drift sat in 7 commits before pre-push caught it). Per-phase push closes the feedback loop while phase context is still warm. DVCS phases will be longer than v0.12.1's clusters; the same +N-stack pattern would compound 5-10×.
-- **Operationally:** the executing subagent pushes inside the phase; if the gate blocks, treat it as a phase-internal failure (fix and re-push) — not a deferral. The verifier subagent grades RED if the phase shipped without the push landing.
-- **Eager-resolution carve-out:** trivial in-phase chores (single-line typo fix, comment cleanup) discovered mid-phase do not require their own push round-trip — they ride to origin with the phase's terminal push.
-- **Pre-commit fmt hook (a25f6ff)** stays on as the secondary safety net; it catches drift at commit time before the per-phase push has anything to discover.
+### Code conventions
 
 - `#![forbid(unsafe_code)]` in every crate.
 - `#![warn(clippy::pedantic)]` in every crate. Allow-list specific lints with rationale; never blanket-allow `pedantic`.
@@ -329,7 +308,7 @@ Cuts that are mandatory and tested:
 - **Outbound HTTP allowlist.** The remote helper (`git-remote-reposix`) and the cache materializer (`reposix-cache`) refuse to talk to any origin not in `REPOSIX_ALLOWED_ORIGINS` (env var, defaults to `http://127.0.0.1:*` only). All HTTP construction goes through the single `reposix_core::http::client()` factory; clippy's `disallowed_methods` catches direct `reqwest::Client::new()` call sites.
 - **No shell escape from `export` / cache writes.** Bytes-in-bytes-out; no rendering, no template expansion. The `Tainted<T>` → `Untainted<T>` conversion is the explicit `sanitize` step where escaping happens.
 - **Frontmatter field allowlist.** Server-controlled fields (`id`, `created_at`, `version`, `updated_at`) cannot be overridden by client writes; they are stripped on the inbound `export` path before the REST call.
-- **Audit log is append-only — and dual-schema by design.** SQLite WAL, no UPDATE/DELETE on either audit table. `audit_events_cache` (in `reposix-cache::audit`) records every blob materialization, helper fetch turn, helper push (accept and reject), gc eviction, and sync-tag write. `audit_events` (in `reposix-core::audit`, written by the sim/confluence/jira adapters) records every backend-side mutating REST call. Forensic queries that need both layers (e.g., "which JIRA write came from which `git push`?") read both tables. See OP-3 above for why the split is intentional.
+- **Audit log append-only.** Both `audit_events_cache` and `audit_events` tables (SQLite WAL, no UPDATE/DELETE). Schema split + forensic-query rationale in OP-3.
 
 See `research/threat-model-and-critique.md` (produced by red-team subagent) for the full analysis.
 
@@ -391,164 +370,6 @@ Two axes: `alignment_ratio` (bound / non-retired) and `coverage_ratio` (lines_co
 **Slash commands** (top-level only — unreachable from inside `gsd-executor`):
 - `/reposix-quality-refresh <doc>` — refresh stale rows for one doc.
 - `/reposix-quality-backfill` — full extraction across docs/ + archived REQUIREMENTS.md.
-
-## v0.12.1 — in flight
-
-### P72 — Lint-config invariants
-
-Verifier home: `quality/gates/code/lint-invariants/` (sub-area README at `quality/gates/code/lint-invariants/README.md`). 8 shell verifiers bind 9 `MISSING_TEST` rows in `quality/catalogs/doc-alignment.json` covering README + `docs/development/contributing.md` workspace-level invariants.
-
-| Verifier                    | Catalog row(s)                                                                                          |
-| --------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `forbid-unsafe-code.sh`     | `README-md/forbid-unsafe-code` + `docs-development-contributing-md/forbid-unsafe-per-crate` (D-01) |
-| `rust-msrv.sh`              | `README-md/rust-1-82-requirement`                                                                       |
-| `tests-green.sh`            | `README-md/tests-green` (compile-only, D-05)                                                            |
-| `errors-doc-section.sh`     | `docs-development-contributing-md/errors-doc-section-required` (clippy lint, D-07)                      |
-| `rust-stable-channel.sh`    | `docs-development-contributing-md/rust-stable-no-nightly`                                               |
-| `cargo-check-workspace.sh`  | `docs-development-contributing-md/cargo-check-workspace-available`                                      |
-| `cargo-test-count.sh`       | `docs-development-contributing-md/cargo-test-133-tests` (>= 368 floor, re-measured P72 per D-06)        |
-| `demo-script-exists.sh`     | `docs-development-contributing-md/demo-script-exists`                                                   |
-
-Prose updated: `docs/development/contributing.md:20` re-measured to `>= 368 test binaries` BEFORE the bind (D-06 audit trail). Verifiers minted via `bind` per `quality/PROTOCOL.md` § "Subagents propose; tools validate and mint" (Principle A). Cargo invocations serialized by the runner per CLAUDE.md "Build memory budget" (D-04).
-
-### P73 — Connector contract gaps
-
-Closed 4 `MISSING_TEST` rows asserting connector authoring + JIRA-shape contracts. Two new wiremock-based Rust tests live next to existing per-crate contract tests:
-
-- `crates/reposix-confluence/tests/auth_header.rs::auth_header_basic_byte_exact`
-- `crates/reposix-github/tests/auth_header.rs::auth_header_bearer_byte_exact`
-- `crates/reposix-jira/tests/list_records_excludes_attachments.rs::list_records_excludes_attachments_and_comments`
-
-The auth-header tests use `wiremock::matchers::header(K, V)` (returns `HeaderExactMatcher`, NOT `HeaderRegexMatcher`) for byte-exact assertion — the canonical idiom for any future connector contract test of this kind. Plan-time prose cited `header_exact` as the function name; the actual public API in wiremock 0.6.5 is `header(K, V)` (same byte-exact semantics). The JIRA test asserts at the **rendering boundary** (Record.body markdown + Record.extensions allowlist), not at the JSON parse layer — that's where the deferral in `docs/decisions/005-jira-issue-mapping.md:79-87` is observable to a downstream consumer.
-
-The `real-backend-smoke-fixture` row was a pure rebind to the existing `crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence` `#[ignore]` smoke (TokenWorld is sanctioned for free mutation per `docs/reference/testing-targets.md`).
-
-The stale `docs/benchmarks/token-economy.md:23-28` JIRA row was resolved via path (a) per D-05: prose updated to acknowledge the adapter shipped v0.11.x, plus a 5-line shell verifier at `quality/gates/docs-alignment/jira-adapter-shipped.sh` asserting the manifest exists. Bench-number re-measurement remains deferred to perf-dim P67.
-
-No SURPRISES-INTAKE / GOOD-TO-HAVES entries appended (no out-of-scope items observed during execution; no auth-header bug surfaced in either backend; OP-8 honesty check intentional).
-
-See: `quality/PROTOCOL.md` § "Principle A"; CLAUDE.md "Build memory budget" (D-09 sequential per-crate cargo).
-
-### P74 — Narrative cleanup + UX bindings + linkedin prose fix
-
-Closed the docs-alignment narrative+UX cluster: 4 propose-retires (qualitative
-design rows), 5 hash-shape binds (UX claims on docs/index.md + REQUIREMENTS
-rows), and a one-line linkedin.md prose fix dropping the v0.4-era FUSE
-framing. Five new shell verifiers under `quality/gates/docs-alignment/`
-(FLAT placement, sibling of `jira-adapter-shipped.sh`):
-
-- `install-snippet-shape.sh` — asserts `docs/index.md:19` lists curl/brew/cargo binstall/irm.
-- `audit-trail-git-log.sh` — asserts `git log --oneline -n 1` returns >=1 line.
-- `three-backends-tested.sh` — counts `dark_factory_real_*` fns in `agent_flow_real.rs`; asserts >=3.
-- `connector-matrix-on-landing.sh` — greps `docs/index.md` for `## ...connector|backend` heading + table.
-- `cli-spaces-smoke.sh` — asserts `target/release/reposix spaces --help` exits 0 + expected header.
-
-Each verifier is 10-30 lines (D-02 TINY shape). Body-hash drift on prose
-OR verifier file fires `STALE_DOCS_DRIFT` via the walker. No deep workflow
-logic. Bind sweep promoted to `scripts/p74-bind-ux-rows.sh` (CLAUDE.md §4
-"Ad-hoc bash is a missing-tool signal").
-
-Catalog deltas: `claims_missing_test` 9 -> 0 (5 BOUND + 4 RETIRE_PROPOSED
-awaiting owner-TTY confirm-retire per HANDOVER step 1); `claims_bound`
-324 -> 328 (+4 net; +5 binds offset by linkedin row tipping to
-STALE_DOCS_DRIFT); `alignment_ratio` 0.9050 -> 0.9162. Linkedin row's
-post-edit STALE_DOCS_DRIFT did NOT auto-heal on second walk — logged to
-SURPRISES-INTAKE.md as confirmation of the P75 hash-overwrite bug.
-
-No new test files in `crates/` (D-10). Phase is shell + prose + catalog only.
-
-### P75 — bind-verb hash-overwrite fix
-
-Invariant: `row.source_hash == hash(first source)`. `verbs::bind` previously
-overwrote `source_hash` with the newly-cited source's hash on every re-bind,
-breaking the walker's first-source compare on every Single→Multi promotion
-(false `STALE_DOCS_DRIFT` after every cluster sweep). Fix: refresh
-`source_hash` only when the result is `Source::Single`; preserve it on
-`Multi` paths. Single re-bind with the same citation is the heal path
-(P74 linkedin row).
-
-**Path-(a) tradeoff (closed in P78-03):** path (a) — the walker only watches
-`source.as_slice()[0]`, so drift in non-first sources of a `Multi` row does
-not fire `STALE_DOCS_DRIFT` — was the v0.12.1 P75 shape. Path (b) — parallel
-`source_hashes: Vec<String>` + per-source walker AND-compare — closed in
-v0.13.0 P78-03 (commit `28ed9be`); non-first-source drift now fires
-`STALE_DOCS_DRIFT` per the regression test
-`crates/reposix-quality/tests/walk.rs::walk_multi_source_non_first_drift_fires_stale`.
-Legacy multi-source rows backfilled at load: `source_hashes` left empty
-("no-hash-recorded-yet" semantic) until the next bind heals the row through
-the P78-aware path. Backfill of single-source legacy rows is automatic
-(`source_hash` → `source_hashes[0]`).
-
-Regression tests: `crates/reposix-quality/tests/walk.rs::walk_multi_source_*`
-(stable / first-drift / single-rebind-heal).
-
-### P76 — Surprises absorption
-
-Drained `.planning/milestones/v0.12.1-phases/SURPRISES-INTAKE.md` (3 LOW
-entries discovered during P72 + P74). The +2 phase practice (OP-8) is now
-operational: every intake entry has a terminal STATUS footer.
-
-Resolutions:
-- **Entry 1 (P72):** 2 pre-existing STALE rows healed.
-  polish-03-mermaid-render → RESOLVED | 0467373 (rebind, source_hash
-  c88cd0f9 → 6ec37650). cli-subcommand-surface → RESOLVED | fbc3caa
-  (rebind, b9700827 → 89b925f5). Both claims verified verbatim against
-  current source via `sed`; no propose-retire needed.
-- **Entry 2 (P74):** linkedin Source::Single → RESOLVED | healed by P75
-  commit 9e07028 (audit-trail annotation only; row already BOUND).
-- **Entry 3 (P74):** connector-matrix synonym → WONTFIX | regex widening
-  (c8e4111) is the complete fix; heading rename filed as P77 GOOD-TO-HAVE
-  (size XS, impact clarity).
-
-Honesty spot-check (D-05): sampled P74 + P75 plan/verdict pairs. Aggregate
-finding GREEN — intake yield (P72: 1, P74: 2, P73: 0, P75: 0) is consistent
-with phases honestly looking. P74's verifier independently graded OP-8
-PASS; P75's verifier executable-cross-checked the falsifiable empty-intake
-claim. Evidence at `quality/reports/verdicts/p76/honesty-spot-check.md`.
-
-Catalog deltas: claims_bound 329 → 331 (+2 entry-1 rebinds);
-alignment_ratio 0.9190 → 0.9246 (+0.0056); claims_stale_docs_drift 2 → 0.
-Live walker post-resolution: zero net new STALE_DOCS_DRIFT.
-
-### P77 — good-to-haves polish (closed)
-
-P77 closed GOOD-TO-HAVES-01 by draining the v0.12.1 intake (1 XS
-clarity item discovered by P74).
-
-Closure: docs/index.md:95 heading renamed "What each backend can do"
-→ "Connector capability matrix" (5f3a6fc); verifier regex narrowed
-back to literal `[Cc]onnector` (fb8bd28), reversing P74's eager-widen
-(c8e4111). Walk + rebind round-trip in 4ac9206.
-
-Walk-after verdict: `quality/reports/verdicts/p77/walk-after.txt`.
-polish2-06-landing remains BOUND; alignment_ratio unchanged at
-0.9246; zero new STALE rows.
-
-**D-09 load-bearing note:** P77 is the LAST phase of the v0.12.1
-autonomous run. HANDOVER-v0.12.1.md is intentionally LEFT IN PLACE at
-P77 close. Its self-deletion criteria (HANDOVER §"Cleanup criterion")
-require all 6 phases verifier-GREEN AND owner pushed v0.12.0 tag AND
-owner confirmed retires AND v0.12.1 milestone-close verdict GREEN —
-only criterion 1 is true at P77 close. The session-end commit that
-removes HANDOVER-v0.12.1.md is an orchestrator-level action OUTSIDE
-the phase, written by the top-level coordinator after the verifier
-subagent grades P77 GREEN.
-
-See `quality/reports/verdicts/p77/VERDICT.md` for unbiased grading.
-
-## v0.13.0 — DVCS over REST (SHIPPED 2026-05-01, owner tag-cut pending)
-
-Eleven phases (P78–P88) shipped the thesis-shifting DVCS topology: confluence (or any one issues backend) remains source-of-truth; a plain-git GitHub mirror becomes the universal-read surface for vanilla-git consumers; `reposix attach` reconciles existing checkouts against the SoT; `git push` via a bus remote (`reposix::<sot>?mirror=<mirror-url>`) fans out atomically to SoT-first then mirror-best-effort. P79 attach + P80 mirror-lag refs + P81 L1 perf + P82 bus URL parser + P83 bus write fan-out + P84 webhook sync + P85 DVCS docs + P86 dark-factory third arm. P87 + P88 = +2 reservation slots (surprises absorption + good-to-haves polish).
-
-**Milestone-close ratification:** `quality/reports/verdicts/milestone-v0.13.0/VERDICT.md` (dispatched after P88 push). RETROSPECTIVE distillation: `.planning/RETROSPECTIVE.md § "Milestone: v0.13.0 — DVCS over REST"` (OP-9 ritual; What Was Built / What Worked / What Was Inefficient / Patterns Established / Key Lessons + 6 distilled cross-phase lessons + carry-forward bundle to v0.14.0).
-
-**Tag-cut:** owner runs `bash .planning/milestones/v0.13.0-phases/tag-v0.13.0.sh` (8 guards) then `git push origin v0.13.0`. Orchestrator does NOT push the tag (ROADMAP P88 SC6 — STOP at tag boundary).
-
-**Carry-forward to v0.14.0:**
-- DVCS-CF-01 binstall + yanked-gix release substrate (HIGH; P84 SURPRISES Entry 5).
-- DVCS-CF-02 GOOD-TO-HAVES-01 — extend `reposix-quality bind` to all catalog dimensions.
-- DVCS-CF-03 L2/L3 cache-desync hardening (P81 deferral).
-- CLAUDE.md sign-posting for cargo-test-as-verifier shape.
 
 ## Quick links
 
