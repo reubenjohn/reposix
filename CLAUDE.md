@@ -244,6 +244,10 @@ Before declaring any user-facing surface shipped (hero copy, install instruction
 
 All invariants are enforced by `scripts/end-state.py` (pre-push hook). When a push is blocked, read the error — it names the violated invariant and the fix. The invariants: no version-pinned filenames, install path leads with package manager, benchmarks in mkdocs nav, no loose ROADMAP/REQUIREMENTS outside `*-phases/`, no orphan docs.
 
+## Release pipeline
+
+**`release-plz.toml`** — `git_release_enable = false` at the workspace level so release-plz does NOT create per-package GitHub releases. Why: each per-package release (zero assets) was published *after* the canonical `v*` release and stole the `releases/latest` pointer, 404'ing the user-facing installer URLs and 3 catalog rows (`release/gh-assets-present`, `install/curl-installer-sh`, `install/powershell-installer-ps1`). Per-package tags and crates.io publishes are unaffected. The canonical multi-platform release lives at `.github/workflows/release.yml` (tag `v*`).
+
 ## Subagent delegation rules
 
 Per the user's global OP #2: "Aggressive subagent delegation." Specifics for this project:
