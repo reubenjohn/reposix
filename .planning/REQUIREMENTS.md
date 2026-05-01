@@ -128,26 +128,46 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 
 ### Traceability
 
-To be filled by `gsd-roadmapper` after roadmap creation. Coverage target: 100% of v0.13.0 REQ-IDs mapped to exactly one phase.
+Drafted 2026-04-30 by `gsd-roadmapper`. Coverage: **36/36 v0.13.0 REQ-IDs mapped to exactly one phase** (no orphans, no duplicates). Phases P78–P88; v0.13.0 starts at P78 (continuing from v0.12.1 P77 close 2026-04-30).
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| HYGIENE-01 | TBD (P0) | planning |
-| HYGIENE-02 | TBD (P0/P1) | planning |
-| POC-01 | pre-Phase-1 | planning |
-| DVCS-ATTACH-01..04 | TBD | planning |
-| DVCS-MIRROR-REFS-01..03 | TBD | planning |
-| DVCS-BUS-URL-01 | TBD | planning |
-| DVCS-BUS-PRECHECK-01..02 | TBD | planning |
-| DVCS-BUS-WRITE-01..06 | TBD | planning |
-| DVCS-BUS-FETCH-01 | TBD | planning |
-| DVCS-PERF-L1-01..03 | TBD | planning |
-| DVCS-WEBHOOK-01..04 | TBD | planning |
-| DVCS-DOCS-01..04 | TBD | planning |
-| DVCS-DARKFACTORY-01..02 | TBD | planning |
-| MULTI-SOURCE-WATCH-01 | TBD (docs-alignment dim) | planning |
-| DVCS-SURPRISES-01 | P+last-1 (+2 slot 1) | planning |
-| DVCS-GOOD-TO-HAVES-01 | P+last (+2 slot 2) | planning |
+| HYGIENE-01 | P78 | planning |
+| HYGIENE-02 | P78 | planning |
+| MULTI-SOURCE-WATCH-01 | P78 | planning |
+| POC-01 | P79 | planning |
+| DVCS-ATTACH-01 | P79 | planning |
+| DVCS-ATTACH-02 | P79 | planning |
+| DVCS-ATTACH-03 | P79 | planning |
+| DVCS-ATTACH-04 | P79 | planning |
+| DVCS-MIRROR-REFS-01 | P80 | planning |
+| DVCS-MIRROR-REFS-02 | P80 | planning |
+| DVCS-MIRROR-REFS-03 | P80 | planning |
+| DVCS-PERF-L1-01 | P81 | planning |
+| DVCS-PERF-L1-02 | P81 | planning |
+| DVCS-PERF-L1-03 | P81 | planning |
+| DVCS-BUS-URL-01 | P82 | planning |
+| DVCS-BUS-PRECHECK-01 | P82 | planning |
+| DVCS-BUS-PRECHECK-02 | P82 | planning |
+| DVCS-BUS-FETCH-01 | P82 | planning |
+| DVCS-BUS-WRITE-01 | P83 | planning |
+| DVCS-BUS-WRITE-02 | P83 | planning |
+| DVCS-BUS-WRITE-03 | P83 | planning |
+| DVCS-BUS-WRITE-04 | P83 | planning |
+| DVCS-BUS-WRITE-05 | P83 | planning |
+| DVCS-BUS-WRITE-06 | P83 | planning |
+| DVCS-WEBHOOK-01 | P84 | planning |
+| DVCS-WEBHOOK-02 | P84 | planning |
+| DVCS-WEBHOOK-03 | P84 | planning |
+| DVCS-WEBHOOK-04 | P84 | planning |
+| DVCS-DOCS-01 | P85 | planning |
+| DVCS-DOCS-02 | P85 | planning |
+| DVCS-DOCS-03 | P85 | planning |
+| DVCS-DOCS-04 | P85 | planning |
+| DVCS-DARKFACTORY-01 | P86 | planning |
+| DVCS-DARKFACTORY-02 | P86 | planning |
+| DVCS-SURPRISES-01 | P87 | planning |
+| DVCS-GOOD-TO-HAVES-01 | P88 | planning |
 
 ### Recurring success criteria across every v0.13.0 phase
 
