@@ -39,14 +39,7 @@ use anyhow::{anyhow, Result};
 use crate::backend_dispatch::{parse_remote_url, ParsedRemote};
 
 /// Bus-vs-single-backend dispatch route. Returned by [`parse`].
-//
-// `dead_code` allow is scoped to this T02 commit: T04 wires
-// `bus_url::parse` into `main.rs::real_main` (the existing
-// `parse_dispatch_url` call site), at which point the lint is
-// satisfied without the allow. Not removing this allow now would
-// fail `cargo clippy -- -D warnings` between T02 and T04.
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[allow(dead_code)]
 pub(crate) enum Route {
     /// Single-backend URL — `reposix::<sot-spec>` (no `?mirror=`).
     /// Carries the existing `ParsedRemote` shape verbatim; the helper
@@ -72,10 +65,6 @@ pub(crate) enum Route {
 /// - The URL has a query parameter other than `mirror=` (Q-C reject).
 /// - The base form (after query-strip) is rejected by
 ///   [`backend_dispatch::parse_remote_url`].
-//
-// `dead_code` allow scoped to this T02 commit; T04 calls this from
-// `main.rs::real_main`, removing the lint trigger.
-#[allow(dead_code)]
 pub(crate) fn parse(url: &str) -> Result<Route> {
     // Strip the `reposix::` prefix if present. git typically strips it
     // before invoking the helper, but assert_cmd test harnesses pass

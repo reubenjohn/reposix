@@ -319,7 +319,6 @@ pub(crate) fn precheck_export_against_changed_set(
 /// [`precheck_export_against_changed_set`] and runs in P83 AFTER
 /// `parse_export_stream` consumes stdin.
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub(crate) enum SotDriftOutcome {
     /// Backend has at least one record changed since `last_fetched_at`.
     /// `changed_count` is reported for diagnostic / logging only —
@@ -350,10 +349,6 @@ pub(crate) enum SotDriftOutcome {
 /// REST failure annotates with `.context("backend-unreachable: ...")`
 /// so the bus handler maps it to the existing `fail_push(diag,
 /// "backend-unreachable", ...)` shape.
-//
-// `dead_code` allow scoped to T03 commit; T04 wires this from
-// `bus_handler::handle_bus_export`, removing the lint trigger.
-#[allow(dead_code)]
 pub(crate) fn precheck_sot_drift_any(
     cache: Option<&Cache>,
     backend: &dyn BackendConnector,

@@ -22,6 +22,7 @@ use reposix_core::{sanitize, ServerMetadata, Tainted};
 use tokio::runtime::Runtime;
 
 mod backend_dispatch;
+mod bus_handler;
 mod bus_url;
 mod diff;
 mod fast_import;
@@ -30,9 +31,7 @@ mod precheck;
 mod protocol;
 mod stateless_connect;
 
-use crate::backend_dispatch::{
-    instantiate, parse_remote_url as parse_dispatch_url, sanitize_project_for_cache,
-};
+use crate::backend_dispatch::{instantiate, sanitize_project_for_cache};
 use crate::diff::{plan, PlanError, PlannedAction};
 use crate::fast_import::{emit_import_stream, parse_export_stream};
 use crate::protocol::Protocol;
@@ -54,7 +53,9 @@ pub(crate) struct State {
     /// [`BackendKind::slug`] by the URL-scheme dispatcher in
     /// [`backend_dispatch`] (closes the v0.9.0 Phase 32 carry-forward
     /// where every backend wedged onto the `"sim"` cache prefix).
-    backend_name: String,
+    /// `pub(crate)` so [`crate::bus_handler`] can compose diagnostic
+    /// lines naming the `SoT` (e.g. `<sot> has N change(s)`).
+    pub(crate) backend_name: String,
     /// Project identifier passed to [`BackendConnector`] methods —
     /// `demo` for sim, `owner/repo` for GitHub, `TokenWorld` for
     /// Confluence, `TEST` for JIRA.
@@ -75,10 +76,18 @@ pub(crate) struct State {
     /// verbs don't need it), then cached for the remainder of the
     /// helper's lifetime.
     pub(crate) cache: Option<Cache>,
+    /// Bus-mode mirror URL (DVCS-BUS-URL-01). `Some(url)` when the
+    /// helper was invoked with a `reposix::<sot>?mirror=<url>` URL
+    /// per Q3.3; `None` for single-backend `reposix::<sot>` URLs.
+    /// The capabilities arm gates `stateless-connect` on
+    /// `mirror_url.is_none()` (DVCS-BUS-FETCH-01 / Q3.4); the export
+    /// arm dispatches to `bus_handler::handle_bus_export` when
+    /// `Some` and to `handle_export` when `None`.
+    pub(crate) mirror_url: Option<String>,
 }
 
 #[allow(clippy::print_stderr)]
-fn diag(msg: &str) {
+pub(crate) fn diag(msg: &str) {
     eprintln!("{msg}");
 }
 
@@ -111,7 +120,18 @@ fn real_main() -> Result<bool> {
     // identify which backend to instantiate from the remote URL, then
     // build the matching BackendConnector. Credential errors surface
     // here with a doc link to docs/reference/testing-targets.md.
-    let parsed = parse_dispatch_url(url).context("parse remote url")?;
+    //
+    // P82+ (DVCS-BUS-URL-01 / Q3.3): `bus_url::parse` recognizes
+    // `reposix::<sot>?mirror=<mirror>` and dispatches to either
+    // `Route::Single(parsed)` (single-backend, existing flow) or
+    // `Route::Bus { sot, mirror_url }` (bus mode — `state.mirror_url`
+    // is `Some(url)` and `bus_handler::handle_bus_export` runs on
+    // the export verb instead of `handle_export`).
+    let route = bus_url::parse(url).context("parse remote url")?;
+    let (parsed, mirror_url_opt): (backend_dispatch::ParsedRemote, Option<String>) = match route {
+        bus_url::Route::Single(p) => (p, None),
+        bus_url::Route::Bus { sot, mirror_url } => (sot, Some(mirror_url)),
+    };
     let backend = instantiate(&parsed).context("instantiate backend")?;
     let backend_name = parsed.kind.slug().to_owned();
     // GitHub `owner/repo` collapses to `owner-repo` for the cache
@@ -134,6 +154,7 @@ fn real_main() -> Result<bool> {
         push_failed: false,
         last_fetch_want_count: 0,
         cache: None,
+        mirror_url: mirror_url_opt,
     };
 
     let stdin_handle = stdin();
@@ -163,10 +184,17 @@ fn real_main() -> Result<bool> {
                 // `git-upload-pack` and `git-upload-archive` — push
                 // (`git-receive-pack`) falls through to `export`, so
                 // both capabilities coexist.
+                //
+                // P82+ (DVCS-BUS-FETCH-01 / Q3.4): bus URLs are
+                // PUSH-only. We omit `stateless-connect` for bus URLs
+                // so fetch falls through to the single-backend code
+                // path; single-backend URLs continue to advertise it.
                 proto.send_line("import")?;
                 proto.send_line("export")?;
                 proto.send_line("refspec refs/heads/*:refs/reposix/*")?;
-                proto.send_line("stateless-connect")?;
+                if state.mirror_url.is_none() {
+                    proto.send_line("stateless-connect")?;
+                }
                 proto.send_line("object-format=sha1")?;
                 proto.send_blank()?;
                 proto.flush()?;
@@ -185,7 +213,11 @@ fn real_main() -> Result<bool> {
                 handle_import_batch(&mut state, &mut proto, &line)?;
             }
             "export" => {
-                handle_export(&mut state, &mut proto)?;
+                if state.mirror_url.is_some() {
+                    bus_handler::handle_bus_export(&mut state, &mut proto)?;
+                } else {
+                    handle_export(&mut state, &mut proto)?;
+                }
             }
             "stateless-connect" => {
                 // Service name is the second whitespace-separated
@@ -217,7 +249,11 @@ fn real_main() -> Result<bool> {
 /// only from the `stateless-connect` dispatch arm; the import/export
 /// paths do not require the bare repo). The cache is then kept on
 /// `State` for the remainder of the helper's lifetime.
-fn ensure_cache(state: &mut State) -> Result<()> {
+///
+/// `pub(crate)` so the sibling [`crate::bus_handler`] module can
+/// lazy-open the cache during PRECHECK B without round-tripping
+/// through `handle_export`'s body.
+pub(crate) fn ensure_cache(state: &mut State) -> Result<()> {
     if state.cache.is_some() {
         return Ok(());
     }
