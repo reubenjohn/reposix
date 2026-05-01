@@ -58,7 +58,7 @@ refs/mirrors/<sot-host>-head           # SHA of the SoT's main at last sync
 refs/mirrors/<sot-host>-synced-at      # annotated tag with timestamp message
 ```
 
-For a Confluence SoT at `reuben-john.atlassian.net`, the host slug renders as `confluence` (or your tenant alias). The bus push and the webhook sync both write these refs — the bus push because the bus push **is** a sync from a developer's perspective; the webhook because the webhook is the only writer between bus pushes.
+For a Confluence SoT at `reuben-john.atlassian.net`, the host slug is `confluence`. (The slug always names the backend kind, not your tenant. The four canonical slugs are `sim`, `github`, `confluence`, `jira`.) The bus push and the webhook sync both write these refs — the bus push because the bus push **is** a sync from a developer's perspective; the webhook because the webhook is the only writer between bus pushes.
 
 > **Important:** `refs/mirrors/<sot-host>-synced-at` is the timestamp the mirror last caught up to <sot-host> — it is NOT a "current SoT state" marker. Between a Confluence edit and the next webhook fire (typically 30 seconds), the SoT has moved and the mirror has not. Reading the ref tells you "as of this timestamp, the mirror was current"; nothing more.
 
@@ -131,7 +131,7 @@ cd /tmp/issues
 $EDITOR issues/0001.md && git commit -am 'fix typo'
 
 # Install reposix and attach to the SoT:
-cargo binstall reposix
+cargo binstall reposix-cli
 reposix attach confluence::SPACE
 git push                      # bus remote handles SoT + mirror atomically
 ```
