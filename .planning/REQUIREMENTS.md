@@ -46,8 +46,8 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 
 #### Pre-DVCS hygiene (P0)
 
-- [ ] **HYGIENE-01**: Bump `gix` off yanked `=0.82.0` baseline. `gix-actor 0.40.1` also yanked. Update `crates/*/Cargo.toml` to next non-yanked release; align all gix-family `=`-pins; `cargo check --workspace` GREEN; `cargo nextest run --workspace` GREEN (per-crate if memory pressure); update `CLAUDE.md` § Tech stack to cite the new version. Closes GitHub issues #29 + #30. **P0 — load-bearing pin sitting on a yanked version.**
-- [ ] **HYGIENE-02**: Land verifier scripts for the 3 currently-WAIVED structure rows in `quality/catalogs/freshness-invariants.json` BEFORE waivers expire 2026-05-15. Three TINY-shape shell verifiers under `quality/gates/structure/`: (a) `no-loose-top-level-planning-audits.sh` — fail if any audit doc exists outside `.planning/milestones/audits/` or `.planning/archive/`; (b) `no-pre-pivot-doc-stubs.sh` — fail if any `docs/<slug>.md` exists at top-level docs/ with size <500 bytes; (c) `repo-org-audit-artifact-present.sh` — pass if the canonical repo-org-audit artifact exists at the catalog-cited path. Each catalog row flips WAIVED → PASS (waiver block deleted). Tested via `python3 quality/runners/run.py`. **P0/P1 — waiver auto-renewal would defeat catalog-first principle.**
+- [x] **HYGIENE-01** (shipped P78, 2026-04-30): Bump `gix` off yanked `=0.82.0` baseline. `gix-actor 0.40.1` also yanked. Update `crates/*/Cargo.toml` to next non-yanked release; align all gix-family `=`-pins; `cargo check --workspace` GREEN; `cargo nextest run --workspace` GREEN (per-crate if memory pressure); update `CLAUDE.md` § Tech stack to cite the new version. Closes GitHub issues #29 + #30. **P0 — load-bearing pin sitting on a yanked version.**
+- [x] **HYGIENE-02** (shipped P78, 2026-04-30): Land verifier scripts for the 3 currently-WAIVED structure rows in `quality/catalogs/freshness-invariants.json` BEFORE waivers expire 2026-05-15. Three TINY-shape shell verifiers under `quality/gates/structure/`: (a) `no-loose-top-level-planning-audits.sh` — fail if any audit doc exists outside `.planning/milestones/audits/` or `.planning/archive/`; (b) `no-pre-pivot-doc-stubs.sh` — fail if any `docs/<slug>.md` exists at top-level docs/ with size <500 bytes; (c) `repo-org-audit-artifact-present.sh` — pass if the canonical repo-org-audit artifact exists at the catalog-cited path. Each catalog row flips WAIVED → PASS (waiver block deleted). Tested via `python3 quality/runners/run.py`. **P0/P1 — waiver auto-renewal would defeat catalog-first principle.**
 
 #### POC (pre-Phase-1)
 
@@ -110,7 +110,7 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 
 #### Carry-forward
 
-- [ ] **MULTI-SOURCE-WATCH-01**: From v0.12.1 P75. Walker hashes every source citation in a `Source::Multi` row, ANDs results; row enters `STALE_DOCS_DRIFT` on ANY index drift. Schema migration: `source_hash: Option<String>` → `source_hashes: Vec<String>` parallel-array on `Source::Multi` rows. `verbs::bind` writes/preserves all entries on the parallel array. `serde(default)` + one-time backfill migrates the populated 388-row catalog. Regression tests at `crates/reposix-quality/tests/walk.rs::walk_multi_source_*` exercise the path-(b) "non-first source drift fires STALE" case. Acceptance per `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md`.
+- [x] **MULTI-SOURCE-WATCH-01** (shipped P78, 2026-04-30): From v0.12.1 P75. Walker hashes every source citation in a `Source::Multi` row, ANDs results; row enters `STALE_DOCS_DRIFT` on ANY index drift. Schema migration: `source_hash: Option<String>` → `source_hashes: Vec<String>` parallel-array on `Source::Multi` rows. `verbs::bind` writes/preserves all entries on the parallel array. `serde(default)` + one-time backfill migrates the populated 388-row catalog. Regression tests at `crates/reposix-quality/tests/walk.rs::walk_multi_source_*` exercise the path-(b) "non-first source drift fires STALE" case. Acceptance per `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md`.
 
 ### +2 reservation (per OP-8)
 
@@ -136,14 +136,14 @@ Drafted 2026-04-30 by `gsd-roadmapper`. Coverage: **36/36 v0.13.0 REQ-IDs mapped
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| HYGIENE-01 | P78 | planning |
-| HYGIENE-02 | P78 | planning |
-| MULTI-SOURCE-WATCH-01 | P78 | planning |
+| HYGIENE-01 | P78 | shipped |
+| HYGIENE-02 | P78 | shipped |
+| MULTI-SOURCE-WATCH-01 | P78 | shipped |
 | POC-01 | P79 | complete |
-| DVCS-ATTACH-01 | P79 | planning |
-| DVCS-ATTACH-02 | P79 | planning |
-| DVCS-ATTACH-03 | P79 | planning |
-| DVCS-ATTACH-04 | P79 | planning |
+| DVCS-ATTACH-01 | P79 | shipped |
+| DVCS-ATTACH-02 | P79 | shipped |
+| DVCS-ATTACH-03 | P79 | shipped |
+| DVCS-ATTACH-04 | P79 | shipped |
 | DVCS-MIRROR-REFS-01 | P80 | shipped |
 | DVCS-MIRROR-REFS-02 | P80 | shipped |
 | DVCS-MIRROR-REFS-03 | P80 | shipped |
@@ -170,8 +170,8 @@ Drafted 2026-04-30 by `gsd-roadmapper`. Coverage: **36/36 v0.13.0 REQ-IDs mapped
 | DVCS-DOCS-04 | P85 | rubric-pending-owner |
 | DVCS-DARKFACTORY-01 | P86 | shipped |
 | DVCS-DARKFACTORY-02 | P86 | shipped |
-| DVCS-SURPRISES-01 | P87 | planning |
-| DVCS-GOOD-TO-HAVES-01 | P88 | planning |
+| DVCS-SURPRISES-01 | P87 | shipped |
+| DVCS-GOOD-TO-HAVES-01 | P88 | shipped |
 
 ### Recurring success criteria across every v0.13.0 phase
 
