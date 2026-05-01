@@ -567,6 +567,37 @@
       "blast_radius": "P0",
       "owner_hint": "if RED: docs-alignment hash drift detected -- run /reposix-quality-refresh <doc> from a fresh top-level Claude session (cannot run from inside /gsd-execute-phase). Stderr names the affected doc.",
       "waiver": null
+    },
+    {
+      "id": "structure/release-plz-disables-gh-releases",
+      "dimension": "structure",
+      "cadence": "pre-push",
+      "kind": "mechanical",
+      "sources": [
+        "release-plz.toml",
+        "CLAUDE.md:release-plz.toml"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "release-plz.toml exists at repo root",
+          "release-plz.toml contains a [workspace] table",
+          "release-plz.toml contains 'git_release_enable = false' (per-package GitHub release creation disabled so the canonical v* release stays releases/latest)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/release-plz-config.sh",
+        "args": [],
+        "timeout_s": 10,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/release-plz-config.json",
+      "status": "PASS",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: someone deleted release-plz.toml or flipped git_release_enable. The fix is preventive — without it, release-plz creates one zero-asset GH release per workspace package on every push to main, stealing releases/latest from the canonical v* release. See PR #34 (commit f1d89e5) for the original rationale.",
+      "waiver": null
     }
   ]
 }
