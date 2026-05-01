@@ -42,7 +42,7 @@
       "dimension": "agent-ux",
       "cadence": "pre-pr",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0 P79; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/phases/79-poc-reposix-attach-core/79-PLAN-OVERVIEW.md § 'New GOOD-TO-HAVES entry'.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0 P79; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/phases/79-poc-reposix-attach-core/79-PLAN-OVERVIEW.md \u00a7 'New GOOD-TO-HAVES entry'.",
       "sources": [
         "crates/reposix-cli/src/attach.rs",
         "crates/reposix-cli/tests/attach.rs::attach_against_vanilla_clone_sets_partial_clone",
@@ -76,7 +76,7 @@
       "dimension": "agent-ux",
       "cadence": "pre-pr",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-cache/src/mirror_refs.rs",
         "crates/reposix-remote/src/main.rs::handle_export (success branch)",
@@ -111,7 +111,7 @@
       "dimension": "agent-ux",
       "cadence": "pre-pr",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-cache/src/mirror_refs.rs",
         "crates/reposix-remote/src/main.rs::handle_export (success branch)",
@@ -138,7 +138,7 @@
       "last_verified": "2026-05-01T08:58:35Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: crates/reposix-remote/src/stateless_connect.rs advertisement regressed OR transfer.hideRefs setup at crates/reposix-cache/src/cache.rs began hiding refs/mirrors/* — check whether vanilla-clone's for-each-ref returns the refs",
+      "owner_hint": "if RED: crates/reposix-remote/src/stateless_connect.rs advertisement regressed OR transfer.hideRefs setup at crates/reposix-cache/src/cache.rs began hiding refs/mirrors/* \u2014 check whether vanilla-clone's for-each-ref returns the refs",
       "waiver": null
     },
     {
@@ -146,7 +146,7 @@
       "dimension": "agent-ux",
       "cadence": "pre-pr",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/main.rs::handle_export (conflict reject branch)",
         "crates/reposix-cache/src/mirror_refs.rs::Cache::read_mirror_synced_at",
@@ -181,7 +181,7 @@
       "dimension": "agent-ux",
       "cadence": "pre-pr",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-cli/src/main.rs (Sync subcommand)",
         "crates/reposix-cli/src/sync.rs",
@@ -215,12 +215,12 @@
       "dimension": "agent-ux",
       "cadence": "pre-pr",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/bus_url.rs::parse",
         "crates/reposix-remote/tests/bus_url.rs::parses_query_param_form_round_trip",
         "crates/reposix-remote/tests/bus_url.rs::route_single_for_bare_reposix_url",
-        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (§ 3 — bus URL form)",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (\u00a7 3 \u2014 bus URL form)",
         ".planning/research/v0.13.0-dvcs/decisions.md (Q3.3 RATIFIED ?mirror= form)",
         ".planning/REQUIREMENTS.md (DVCS-BUS-URL-01)"
       ],
@@ -251,7 +251,7 @@
       "dimension": "agent-ux",
       "cadence": "pre-pr",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/bus_url.rs::parse",
         "crates/reposix-remote/tests/bus_url.rs::rejects_plus_delimited_bus_url",
@@ -287,11 +287,11 @@
       "dimension": "agent-ux",
       "cadence": "pre-pr",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/bus_handler.rs::precheck_mirror_drift",
         "crates/reposix-remote/tests/bus_precheck_a.rs::bus_precheck_a_emits_fetch_first_on_drift",
-        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (§ 3 step 2 — PRECHECK A)",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (\u00a7 3 step 2 \u2014 PRECHECK A)",
         ".planning/REQUIREMENTS.md (DVCS-BUS-PRECHECK-01)"
       ],
       "command": "bash quality/gates/agent-ux/bus-precheck-a-mirror-drift-emits-fetch-first.sh",
@@ -322,12 +322,12 @@
       "dimension": "agent-ux",
       "cadence": "pre-pr",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/precheck.rs::precheck_sot_drift_any",
         "crates/reposix-remote/src/bus_handler.rs::handle_bus_export",
         "crates/reposix-remote/tests/bus_precheck_b.rs::bus_precheck_b_emits_fetch_first_on_sot_drift",
-        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (§ 3 step 3 — PRECHECK B)",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (\u00a7 3 step 3 \u2014 PRECHECK B)",
         ".planning/REQUIREMENTS.md (DVCS-BUS-PRECHECK-02)"
       ],
       "command": "bash quality/gates/agent-ux/bus-precheck-b-sot-drift-emits-fetch-first.sh",
@@ -357,7 +357,7 @@
       "dimension": "agent-ux",
       "cadence": "pre-pr",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/main.rs (capabilities arm)",
         "crates/reposix-remote/tests/bus_capabilities.rs::bus_url_omits_stateless_connect",
@@ -392,7 +392,7 @@
       "dimension": "agent-ux",
       "cadence": "pre-pr",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/bus_handler.rs::resolve_mirror_remote_name",
         "crates/reposix-remote/tests/bus_precheck_a.rs::bus_no_remote_configured_emits_q35_hint",
@@ -420,6 +420,155 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: bus_handler::resolve_mirror_remote_name regressed OR Q3.5 hint composition regressed; check stderr for `configure the mirror remote first` + `git remote add` substrings",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/bus-write-sot-first-success",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "sources": [
+        "crates/reposix-remote/src/bus_handler.rs::handle_bus_export",
+        "crates/reposix-remote/src/write_loop.rs::apply_writes",
+        "crates/reposix-remote/tests/bus_write_happy.rs::happy_path_writes_both_refs_and_acks_ok",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (\u00a7 3 \u2014 bus algorithm steps 4-9)",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q2.3 RATIFIED both refs on success)",
+        ".planning/REQUIREMENTS.md (DVCS-BUS-WRITE-01 + DVCS-BUS-WRITE-03)"
+      ],
+      "command": "bash quality/gates/agent-ux/bus-write-sot-first-success.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/bus-write-sot-first-success.sh exits 0",
+          "bus_handler::handle_bus_export calls write_loop::apply_writes",
+          "On SoT-success + mirror-success: refs/mirrors/<sot>-head and refs/mirrors/<sot>-synced-at both advance",
+          "audit_events_cache contains helper_push_started + helper_push_accepted + mirror_sync_written rows",
+          "audit_events contains per-record mutation rows",
+          "helper exits zero with `ok refs/heads/main` on stdout"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/bus-write-sot-first-success.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/bus-write-sot-first-success.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: crates/reposix-remote/src/bus_handler.rs OR write_loop.rs regressed; check whether apply_writes was lifted correctly OR the mirror_sync_written row is missing on the success path",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/bus-write-mirror-fail-returns-ok",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "comment": "Row stays FAIL through 83-01 close; flips PASS at 83-02 T04 audit-completeness landing. pre-pr cadence runners between phases SHOULD NOT flag this as a phantom failure \u2014 the FAIL is by design until 83-02's bus_write_mirror_fail.rs test ships.",
+      "sources": [
+        "crates/reposix-remote/src/bus_handler.rs::handle_bus_export",
+        "crates/reposix-remote/src/bus_handler.rs::push_mirror",
+        "crates/reposix-cache/src/audit.rs::log_helper_push_partial_fail_mirror_lag",
+        "crates/reposix-remote/tests/bus_write_mirror_fail.rs::bus_write_mirror_fail_returns_ok_with_lag_audit_row",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q3.6 RATIFIED no-retry)",
+        ".planning/REQUIREMENTS.md (DVCS-BUS-WRITE-02)"
+      ],
+      "command": "bash quality/gates/agent-ux/bus-write-mirror-fail-returns-ok.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/bus-write-mirror-fail-returns-ok.sh exits 0",
+          "On SoT-success + mirror-fail: helper exits zero with `ok refs/heads/main` on stdout AND emits stderr WARN",
+          "audit_events_cache contains helper_push_partial_fail_mirror_lag row recording SoT SHA + exit_code + 3-line stderr tail",
+          "refs/mirrors/<sot>-head advanced; refs/mirrors/<sot>-synced-at UNCHANGED from baseline (frozen)",
+          "NO retry attempted (single push_mirror invocation per Q3.6)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/bus-write-mirror-fail-returns-ok.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/bus-write-mirror-fail-returns-ok.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: bus_handler.rs partial-fail branch regressed OR audit op missing from cache_schema.sql CHECK list",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/bus-write-no-helper-retry",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "sources": [
+        "crates/reposix-remote/src/bus_handler.rs::push_mirror",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q3.6 RATIFIED no-retry; D-08 RATIFIED plain push)",
+        ".planning/REQUIREMENTS.md (DVCS-BUS-WRITE-04)"
+      ],
+      "command": "bash quality/gates/agent-ux/bus-write-no-helper-retry.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/bus-write-no-helper-retry.sh exits 0",
+          "crates/reposix-remote/src/bus_handler.rs contains NO retry constructs adjacent to push_mirror (no `for _ in 0..`, no `loop {`, no `tokio::time::sleep`)",
+          "crates/reposix-remote/src/bus_handler.rs contains NO `--force-with-lease` and NO `--force` flag in push args",
+          "fn push_mirror exists in bus_handler.rs (T04 shipped)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/bus-write-no-helper-retry.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/bus-write-no-helper-retry.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: a retry construct was introduced via cargo-cult from P84; reject in code review",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/bus-write-no-mirror-remote-still-fails",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "sources": [
+        "crates/reposix-remote/src/bus_handler.rs::resolve_mirror_remote_name",
+        "crates/reposix-remote/src/bus_handler.rs (P82 STEP 0 path)",
+        "crates/reposix-remote/tests/bus_write_no_mirror_remote.rs::bus_write_no_mirror_remote_emits_q35_hint",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q3.5 RATIFIED no-auto-mutate)",
+        ".planning/REQUIREMENTS.md (DVCS-BUS-WRITE-05)"
+      ],
+      "command": "bash quality/gates/agent-ux/bus-write-no-mirror-remote-still-fails.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/bus-write-no-mirror-remote-still-fails.sh exits 0",
+          "bus URL with no local `git remote` for the mirror still emits verbatim Q3.5 hint after P83 lands",
+          "NO auto-mutation of .git/config (zero new remotes added)",
+          "NO stdin read (regression guarantee \u2014 helper bails before parse_export_stream)",
+          "audit_events_cache helper_push_started count: 0"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/bus-write-no-mirror-remote-still-fails.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/bus-write-no-mirror-remote-still-fails.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: P83's write fan-out accidentally bypassed P82's STEP 0 check; check whether handle_bus_export's mirror_remote_name resolution order changed",
       "waiver": null
     }
   ]
