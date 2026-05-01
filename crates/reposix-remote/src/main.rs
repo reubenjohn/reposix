@@ -395,6 +395,26 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
         ));
         if let Some(cache) = state.cache.as_ref() {
             cache.log_helper_push_rejected_conflict(&first_id.0.to_string(), *local_v, *backend_v);
+
+            // Mirror-lag-ref reject hint (DVCS-MIRROR-REFS-03). When
+            // refs are populated (post-first-push), name the staleness
+            // gap; when absent (first-push case), omit the hint cleanly
+            // per RESEARCH.md pitfall 7.
+            if let Ok(Some(synced_at)) = cache.read_mirror_synced_at(&state.backend_name) {
+                let ago = chrono::Utc::now().signed_duration_since(synced_at);
+                let mins = ago.num_minutes().max(0);
+                diag(&format!(
+                    "hint: your origin (GH mirror) was last synced from {sot} at {ts} ({mins} minutes ago); see refs/mirrors/{sot}-synced-at",
+                    sot = state.backend_name,
+                    ts = synced_at.to_rfc3339(),
+                ));
+                diag(&format!(
+                    "hint: run `reposix sync` to update local cache from {sot} directly, then `git rebase`",
+                    sot = state.backend_name,
+                ));
+            }
+            // None case: existing diag(...) line above is the complete
+            // diagnostic; no additional hint emitted.
         }
         // Canned status string per CONTEXT.md §Push-reject status string.
         // git renders the standard "perhaps a `git pull --rebase` would
@@ -469,6 +489,45 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
     } else {
         if let Some(cache) = state.cache.as_ref() {
             cache.log_helper_push_accepted(files_touched, &summary);
+
+            // Mirror-lag refs (DVCS-MIRROR-REFS-02). Best-effort: a
+            // ref-write failure WARN-logs and does not poison the push
+            // ack. The audit row is UNCONDITIONAL per OP-3 — written
+            // even on ref-write failure. SoT SHA is the cache's
+            // post-write synthesis-commit OID.
+            //
+            // P80 cost note: refresh_for_mirror_head() invokes
+            // build_from() to capture the post-write tree (one extra
+            // REST list_records call). P81 L1 migration replaces this
+            // with list_changed_since per
+            // .planning/research/v0.13.0-dvcs/architecture-sketch.md
+            // § Performance subtlety. L2/L3 cache-desync hardening
+            // defers to v0.14.0 per the same doc.
+            let sot_sha_opt = match state.rt.block_on(cache.refresh_for_mirror_head()) {
+                Ok(oid) => Some(oid),
+                Err(e) => {
+                    tracing::warn!("mirror-head SHA derivation failed: {e:#}");
+                    None
+                }
+            };
+            if let Some(sha) = sot_sha_opt {
+                if let Err(e) = cache.write_mirror_head(&state.backend_name, sha) {
+                    tracing::warn!("write_mirror_head failed: {e:#}");
+                }
+            }
+            if let Err(e) = cache.write_mirror_synced_at(&state.backend_name, chrono::Utc::now()) {
+                tracing::warn!("write_mirror_synced_at failed: {e:#}");
+            }
+            // OP-3 unconditional: audit-row write fires whether or not
+            // the ref writes succeeded. Records the attempt's SHA (or
+            // empty string if SHA derivation failed). MUST remain
+            // unconditional even if ref writes are upgraded to
+            // propagate errors in a future refactor.
+            let oid_hex = sot_sha_opt
+                .map(|oid| oid.to_hex().to_string())
+                .unwrap_or_default();
+            cache.log_mirror_sync_written(&oid_hex, &state.backend_name);
+
             // §3c token-cost: estimate the push bytes-in by summing the
             // parsed blob payloads (the bytes the agent actually emitted
             // through fast-export). Bytes-out for push is small (a single

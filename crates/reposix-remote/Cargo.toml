@@ -47,6 +47,7 @@ tracing-subscriber.workspace = true
 anyhow.workspace = true
 thiserror.workspace = true
 gix = { workspace = true }
+chrono = { workspace = true }
 
 [dev-dependencies]
 wiremock = "0.6"
