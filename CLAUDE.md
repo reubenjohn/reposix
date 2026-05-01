@@ -533,6 +533,20 @@ subagent grades P77 GREEN.
 
 See `quality/reports/verdicts/p77/VERDICT.md` for unbiased grading.
 
+## v0.13.0 — DVCS over REST (SHIPPED 2026-05-01, owner tag-cut pending)
+
+Eleven phases (P78–P88) shipped the thesis-shifting DVCS topology: confluence (or any one issues backend) remains source-of-truth; a plain-git GitHub mirror becomes the universal-read surface for vanilla-git consumers; `reposix attach` reconciles existing checkouts against the SoT; `git push` via a bus remote (`reposix::<sot>?mirror=<mirror-url>`) fans out atomically to SoT-first then mirror-best-effort. P79 attach + P80 mirror-lag refs + P81 L1 perf + P82 bus URL parser + P83 bus write fan-out + P84 webhook sync + P85 DVCS docs + P86 dark-factory third arm. P87 + P88 = +2 reservation slots (surprises absorption + good-to-haves polish).
+
+**Milestone-close ratification:** `quality/reports/verdicts/milestone-v0.13.0/VERDICT.md` (dispatched after P88 push). RETROSPECTIVE distillation: `.planning/RETROSPECTIVE.md § "Milestone: v0.13.0 — DVCS over REST"` (OP-9 ritual; What Was Built / What Worked / What Was Inefficient / Patterns Established / Key Lessons + 6 distilled cross-phase lessons + carry-forward bundle to v0.14.0).
+
+**Tag-cut:** owner runs `bash .planning/milestones/v0.13.0-phases/tag-v0.13.0.sh` (8 guards) then `git push origin v0.13.0`. Orchestrator does NOT push the tag (ROADMAP P88 SC6 — STOP at tag boundary).
+
+**Carry-forward to v0.14.0:**
+- DVCS-CF-01 binstall + yanked-gix release substrate (HIGH; P84 SURPRISES Entry 5).
+- DVCS-CF-02 GOOD-TO-HAVES-01 — extend `reposix-quality bind` to all catalog dimensions.
+- DVCS-CF-03 L2/L3 cache-desync hardening (P81 deferral).
+- CLAUDE.md sign-posting for cargo-test-as-verifier shape.
+
 ## Quick links
 
 - `docs/research/initial-report.md` — full architectural argument for git-remote-helper + partial clone.

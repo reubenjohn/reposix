@@ -2,25 +2,25 @@
 gsd_state_version: 1.0
 milestone: v0.13.0
 milestone_name: DVCS over REST
-status: executing
-last_updated: "2026-05-01T21:45:00Z"
-last_activity: 2026-05-01 — P86 SHIPPED (dark-factory third arm); awaiting verifier subagent dispatch.
+status: ready-to-tag
+last_updated: "2026-05-01T22:45:00Z"
+last_activity: 2026-05-01 — P88 SHIPPED (good-to-haves polish + milestone close); v0.13.0 ready-to-tag, owner pushes tag.
 progress:
   total_phases: 11
-  completed_phases: 9
-  total_plans: 14
-  completed_plans: 14
-  percent: 82
+  completed_phases: 11
+  total_plans: 15
+  completed_plans: 15
+  percent: 100
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: P86 SHIPPED 2026-05-01 (dark-factory regression — third arm `dvcs-third-arm`; DVCS-DARKFACTORY-01..02). Awaiting verifier subagent dispatch. Next P87 (surprises absorption, +2 reservation slot 1)
+Phase: P88 SHIPPED 2026-05-01 (good-to-haves polish + milestone close, +2 reservation slot 2; DVCS-GOOD-TO-HAVES-01). Awaiting BOTH verifier subagent dispatches: P88 verdict (`quality/reports/verdicts/p88/VERDICT.md`) + milestone-close verdict (`quality/reports/verdicts/milestone-v0.13.0/VERDICT.md`). Owner pushes tag.
 Plan: —
-Status: Executing — 9/11 phases complete (P78 + P79 + P80 + P81 + P82 + P83 + P84 + P85 + P86); 14 plans complete
-Last activity: 2026-05-01 — P86 plan + execute combined. 3 commits (6e95f31 catalog-first stub + 59fa6aa harness body + close commit). Catalog row `agent-ux/dvcs-third-arm` PASS with 17 asserts (5 static teaching-string greps + 5 `--help` token greps + bus URL composition + cache materialization + attach_walk audit + wire-path delegation). 1 eager-resolution: pivoted from "literal end-to-end push" → "agent UX surface + bus URL composition" with wire-path delegated to `bus_write_happy.rs` (rationale: `git fetch`/`git push` subprocess driving at shell scope is documented best-effort + brittle to env propagation; cargo tests cover wire path with assert_cmd's precise control). TokenWorld arm SUBSTRATE-GAP-DEFERRED behind REPOSIX_DARK_FACTORY_REAL_TOKENWORLD=1 (cross-references P84 SURPRISES-INTAKE).
+Status: ready-to-tag — 11/11 phases complete (P78..P88); 15 plans complete; v0.13.0 milestone artifacts finalized.
+Last activity: 2026-05-01 — P88 plan + execute combined. 5 task-commits + 1 close commit (e32c20a catalog-first 4 milestone-close rows + 1ecb16b GOOD-TO-HAVES drain + tag-v0.13.0.sh + 8bab313 CHANGELOG [v0.13.0] entry + dc6e5ab RETROSPECTIVE OP-9 distillation + close). 4 catalog rows PASS (`agent-ux/p88-good-to-haves-drained`, `agent-ux/v0.13.0-changelog-entry-present`, `agent-ux/v0.13.0-tag-script-present`, `agent-ux/v0.13.0-retrospective-distilled`). GOOD-TO-HAVES-01 (extend `reposix-quality bind` to all dimensions, Size S) DEFERRED to v0.14.0 — pure-docs envelope of P88 doesn't fit Rust+test+schema scope; provenance flag carries forward. Tag-script tag-v0.13.0.sh has 8 guards (exceeds >=6 floor). Orchestrator does NOT push tag (ROADMAP P88 SC6 -- STOP at tag boundary).
 
 ## Current Focus
 
@@ -55,7 +55,7 @@ Last activity: 2026-05-01 — P86 plan + execute combined. 3 commits (6e95f31 ca
 
 **Carry-forward bundle:** `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md` lists `MULTI-SOURCE-WATCH-01` (P78), `GIX-YANKED-PIN-01` (P78), `WAIVED-STRUCTURE-ROWS-03` (P78), `POC-DVCS-01` (P79).
 
-**Next agent action:** verifier subagent dispatch for P86 (grades the `agent-ux/dvcs-third-arm` row from artifacts; verdict at `quality/reports/verdicts/p86/VERDICT.md`). After GREEN: `/gsd-plan-phase 87 → /gsd-execute-phase 87` (surprises absorption, +2 reservation slot 1; drains `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`). Depends on P78..P86 GREEN.
+**Next agent action:** orchestrator dispatches BOTH P88 verifier subagent (grades the 4 P88 milestone-close catalog rows from artifacts; verdict at `quality/reports/verdicts/p88/VERDICT.md`) AND milestone-close verifier subagent (grades P78–P88 cross-phase coherence per ROADMAP P88 SC5; verdict at `quality/reports/verdicts/milestone-v0.13.0/VERDICT.md`). After BOTH verdicts GREEN: owner runs `bash .planning/milestones/v0.13.0-phases/tag-v0.13.0.sh` (8 guards) then `git push origin v0.13.0`. Orchestrator does NOT push the tag.
 
 ## Per-milestone history (cross-references)
 

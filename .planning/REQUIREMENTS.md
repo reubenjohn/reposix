@@ -114,8 +114,8 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 
 ### +2 reservation (per OP-8)
 
-- [ ] **DVCS-SURPRISES-01**: Surprises-absorption phase drains `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`. Each entry → RESOLVED | DEFERRED | WONTFIX with commit SHA or rationale. Verifier honesty spot-check on previous phases' plans + verdicts (empty intake acceptable IF phases produced explicit `Eager-resolution` decisions).
-- [ ] **DVCS-GOOD-TO-HAVES-01**: Good-to-haves polish phase drains `GOOD-TO-HAVES.md`. XS items always close; M items default-defer to v0.14.0.
+- [x] **DVCS-SURPRISES-01**: Surprises-absorption phase drains `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`. Each entry → RESOLVED | DEFERRED | WONTFIX with commit SHA or rationale. Verifier honesty spot-check on previous phases' plans + verdicts (empty intake acceptable IF phases produced explicit `Eager-resolution` decisions).
+- [x] **DVCS-GOOD-TO-HAVES-01**: Good-to-haves polish phase drains `GOOD-TO-HAVES.md`. XS items always close; M items default-defer to v0.14.0.
 
 ### Out of Scope (deferred to v0.14.0)
 
