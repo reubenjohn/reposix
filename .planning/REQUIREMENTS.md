@@ -62,9 +62,9 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 
 #### Mirror-lag observability
 
-- [ ] **DVCS-MIRROR-REFS-01**: `refs/mirrors/confluence-head` (SHA of SoT's `main` at last sync) + `refs/mirrors/confluence-synced-at` (annotated tag with timestamp message) helpers exist in `crates/reposix-cache/`. Refs namespace is `refs/mirrors/...` per Q2.1, NOT `refs/notes/...`.
-- [ ] **DVCS-MIRROR-REFS-02**: Existing single-backend push (today's `handle_export`) is wired to update both refs on success. Bus push also updates both refs (per Q2.3). Webhook sync writes both refs (no-op refresh when bus already touched them).
-- [ ] **DVCS-MIRROR-REFS-03**: Bus-remote reject messages cite the refs in hints — e.g., *"your origin (GH mirror) was last synced from confluence at <timestamp> (N minutes ago); run `reposix sync` to update local cache, then `git rebase`."*
+- [x] **DVCS-MIRROR-REFS-01** (shipped P80, 2026-05-01): `refs/mirrors/<sot-host>-head` (direct ref to cache post-write synthesis-commit OID) + `refs/mirrors/<sot-host>-synced-at` (annotated tag with `mirror synced at <RFC3339>` message) helpers shipped in `crates/reposix-cache/src/mirror_refs.rs`. Namespace is `refs/mirrors/...` per Q2.1.
+- [x] **DVCS-MIRROR-REFS-02** (shipped P80, 2026-05-01): Existing single-backend push (`handle_export`) wired to update both refs on success + write `audit_events_cache` row with `op = 'mirror_sync_written'` (OP-3 unconditional). Bus push (P83) and webhook sync (P84) will reuse the same cache helpers per Q2.3.
+- [x] **DVCS-MIRROR-REFS-03** (shipped P80, 2026-05-01): `handle_export` reject branch reads `read_mirror_synced_at` and emits `(N minutes ago)` rendering when present; first-push case omits the hint cleanly. Test coverage at `crates/reposix-remote/tests/mirror_refs.rs::reject_hint_after_sync_cites_age` + `reject_hint_first_push_omits_synced_at_line` (non-vacuous H3 fix per PLAN-CHECK).
 
 #### Bus remote
 
@@ -140,9 +140,9 @@ Drafted 2026-04-30 by `gsd-roadmapper`. Coverage: **36/36 v0.13.0 REQ-IDs mapped
 | DVCS-ATTACH-02 | P79 | planning |
 | DVCS-ATTACH-03 | P79 | planning |
 | DVCS-ATTACH-04 | P79 | planning |
-| DVCS-MIRROR-REFS-01 | P80 | planning |
-| DVCS-MIRROR-REFS-02 | P80 | planning |
-| DVCS-MIRROR-REFS-03 | P80 | planning |
+| DVCS-MIRROR-REFS-01 | P80 | shipped |
+| DVCS-MIRROR-REFS-02 | P80 | shipped |
+| DVCS-MIRROR-REFS-03 | P80 | shipped |
 | DVCS-PERF-L1-01 | P81 | planning |
 | DVCS-PERF-L1-02 | P81 | planning |
 | DVCS-PERF-L1-03 | P81 | planning |

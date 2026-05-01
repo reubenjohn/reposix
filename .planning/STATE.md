@@ -3,24 +3,24 @@ gsd_state_version: 1.0
 milestone: v0.13.0
 milestone_name: DVCS over REST
 status: executing
-last_updated: "2026-05-01T08:00:00Z"
-last_activity: 2026-05-01 — P79 SHIPPED (POC + reposix attach core); verifier GREEN at quality/reports/verdicts/p79/VERDICT.md
+last_updated: "2026-05-01T09:35:00Z"
+last_activity: 2026-05-01 — P80 SHIPPED (mirror-lag refs); verifier GREEN at quality/reports/verdicts/p80/VERDICT.md
 progress:
   total_phases: 11
-  completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
-  percent: 18
+  completed_phases: 3
+  total_plans: 7
+  completed_plans: 7
+  percent: 27
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: P79 SHIPPED 2026-05-01 (POC + reposix attach core); next P80 (mirror-lag refs)
+Phase: P80 SHIPPED 2026-05-01 (mirror-lag refs `refs/mirrors/<sot-host>-{head,synced-at}`); next P81 (L1 perf migration)
 Plan: —
-Status: Executing — 2/11 phases complete (P78 + P79); 6 plans complete
-Last activity: 2026-05-01 — P79 verifier GREEN. POC findings absorbed at 79-02 task time (F01 + F04 REVISE tweaks). 79-03 SUMMARY.md reconstructed post-hoc after OS crash. REQUIREMENTS.md DVCS-ATTACH-01..04 checkboxes flipped to [x]. Pre-push 26 PASS / 0 FAIL.
+Status: Executing — 3/11 phases complete (P78 + P79 + P80); 7 plans complete
+Last activity: 2026-05-01 — P80 verifier GREEN. Plan-checker YELLOW with 3 HIGH; planner revised before execution (H1 sim-port via git config remote.origin.url; H2 gix 0.83 Repository::tag arg shape resolved via two-step write_object + reference; H3 non-vacuous conflict-reject test via wiremock version=5 seeding). Eager-resolution: audit_events_cache CHECK constraint extended for 'mirror_sync_written'. One SURPRISES-INTAKE entry filed for verifier-shell shape change (cargo test thin-wrappers vs reposix init end-to-end). Pre-push 26 PASS / 0 FAIL.
 
 ## Current Focus
 
@@ -55,7 +55,7 @@ Last activity: 2026-05-01 — P79 verifier GREEN. POC findings absorbed at 79-02
 
 **Carry-forward bundle:** `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md` lists `MULTI-SOURCE-WATCH-01` (P78), `GIX-YANKED-PIN-01` (P78), `WAIVED-STRUCTURE-ROWS-03` (P78), `POC-DVCS-01` (P79).
 
-**Next agent action:** orchestrator reads `research/v0.13.0-dvcs/poc/POC-FINDINGS.md` § Implications for 79-02. Highest-severity routing tag is REVISE (F01: walker `--ignore` glob; F04: regular audit-hook signature). Decide: in-place 79-02 plan revision via `gsd-planner` subagent, OR proceed to 79-02 execution as-drafted with FINDINGS as executor context. Both REVISE items are small spec tightenings (~1 param + ~1 signature shape), no scope expansion.
+**Next agent action:** /gsd-plan-phase 81 → /gsd-execute-phase 81 (L1 perf migration: replace `list_records` walk with `list_changed_since`-based conflict detection in `handle_export`; add `reposix sync --reconcile` escape hatch). Depends on P80 GREEN — already satisfied.
 
 ## Per-milestone history (cross-references)
 
