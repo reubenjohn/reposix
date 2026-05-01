@@ -1,0 +1,24 @@
+=== Path (a): reconciliation against mangled checkout ===
+[path-a] SIM_PORT=7888
+[path-a] starting sim on 127.0.0.1:7888 (ephemeral)
+[path-a] sim PID=196045
+[path-a] waiting for sim to bind...
+[path-a] sim alive after 2 polls
+[path-a] checking seed...
+[path-a] seeded: [{"id":1,"title":"matches local 0001.md","status":"open","labels":[],"created_at":"2026-04-13T00:00:00Z","updated_at":"2026-04-13T00:00:00Z","version":1,"body":"v1"},{"id":2,"title":"no local file (mirror lag)","status":"open","labels":[],"created_at":"2026-04-13T00:00:00Z","updated_at":"2026-04-13T00:00:00Z","version":1,"body":"v1"},{"id":42,"title":"duplicate target","status":"open","labels":[],"created_at":"2026-04-13T00:00:00Z","updated_at":"2026-04-13T00:00:00Z","version":1,"body":"v1"}]
+[path-a] working tree built at /tmp/reposix-poc-79-checkout
+[path-a] building scratch reconciler...
+[path-a] invoking reconciler...
+[poc-reconciler] GET http://127.0.0.1:7888/projects/demo/issues
+[poc-reconciler] backend has 3 record(s): [1, 2, 42]
+=== Reconciliation table (POC) ===
+MATCH id=1 file=/tmp/reposix-poc-79-checkout/issues/0001.md
+DUPLICATE_ID id=42 files=[/tmp/reposix-poc-79-checkout/issues/0042-b.md,/tmp/reposix-poc-79-checkout/issues/0042-a.md]
+BACKEND_DELETED id=99 local_file=/tmp/reposix-poc-79-checkout/issues/0099.md
+NO_ID file=/tmp/reposix-poc-79-checkout/notes/freeform.md
+MIRROR_LAG id=2 (backend has, local lacks)
+
+ALL_5_CASES_OBSERVED=true
+  match=true backend_deleted=true no_id=true duplicate=true mirror_lag=true
+[path-a] reconciler exit=0
+[path-a] OK: all 5 reconciliation cases observed

@@ -1,0 +1,15 @@
+=== Path (c): cheap precheck on SoT mismatch ===
+[path-c] SIM_PORT=7888
+[path-c] starting sim on :7888
+[path-c] sim alive after 2 polls
+[path-c] Step 1: local snapshot version=1
+[path-c] Step 2: SoT drift (a third party PATCHes record id=1)
+[path-c]   server is now version=2
+[path-c] Step 3: cheap precheck
+[path-c]   precheck GET returned version=2
+[path-c]   local=1  server=2
+[path-c]   MISMATCH: refusing fast — SoT drifted (local=1, server=2)
+[path-c]   error refs/heads/main fetch first
+[path-c]   hint: confluence has changes since your last fetch; git pull --rebase
+[path-c]   (precheck completed without reading stdin or attempting any write)
+[path-c] OK: precheck refused fast on SoT mismatch.

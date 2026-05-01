@@ -2,3 +2,12 @@
 # .gitignore does NOT cover it).
 scratch/target/
 scratch/Cargo.lock
+
+# Transient sim subprocess logs — captured during run.sh for debug only;
+# the meaningful verifier evidence lives in logs/path-{a,b,c}-*.log
+# (those ARE tracked).
+logs/sim-*.log
+logs/run.log
+
+# Per-path transient seed JSONs written/cleaned by path-*.sh.
+path-*-seed*.json

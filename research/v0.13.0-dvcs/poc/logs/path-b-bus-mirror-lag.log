@@ -1,0 +1,31 @@
+=== Path (b): bus SoT-first observing mirror lag ===
+[path-b] sim A (SoT) port=7888, sim B (mirror) port=7889
+[path-b] starting sim A on :7888
+[path-b] starting sim B on :7889
+[path-b] waiting for sim A on :7888...
+[path-b] sim A alive after 2 polls
+[path-b] waiting for sim B on :7889...
+[path-b] sim B alive after 1 polls
+[path-b] Step 1: both sims seeded
+[path-b]   A:"version":1  B:"version":1
+[path-b] Step 2: SoT write to sim A (PATCH)
+[path-b]   sim A after PATCH: {"id":1,"title":"v1 record","status":"open","labels":[],"created_at":"2026-04-13T00:00:00Z","updated_at":"2026-05-01T06:28:44Z","version":2,"body":"v2 from POC"}
+[path-b] Step 3: killing sim B to simulate mirror-write failure
+[path-b] Step 4: mirror write attempt (expect failure)
+[path-b]   EXPECTED: mirror write failed (connection refused).
+[path-b]   Lag is now > 0:
+[path-b]     sim A (SoT)    : "version":2
+[path-b]     sim B (mirror) : <unreachable>
+[path-b] Step 5: restart sim B + replay PATCH
+[path-b]   sim B restart PID=196205
+[path-b]   sim B alive after 2 polls
+[path-b]   sim B after replay: {"id":1,"title":"v1 record","status":"open","labels":[],"created_at":"2026-04-13T00:00:00Z","updated_at":"2026-05-01T06:28:46Z","version":2,"body":"v2 from POC (replay)"}
+[path-b]   post-replay versions: A:"version":2  B:"version":2
+[path-b]   Lag now 0 (both at version 2).
+[path-b] Step 6: probing audit endpoint on each sim
+[path-b]   GET /projects/demo/audit on sim A: HTTP 404
+[path-b]   GET /projects/demo/audit on sim B: HTTP 404
+[path-b]   FINDING: simulator does NOT expose an HTTP /audit endpoint.
+[path-b]   Audit rows live in the sim's SQLite audit_events table only;
+[path-b]   production bus must own its own cache-side audit trail per OP-3.
+[path-b] OK: SoT-first sequencing exercised end-to-end.
