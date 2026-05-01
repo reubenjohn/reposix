@@ -202,6 +202,13 @@ async fn clean_push_emits_ok_and_mutates_backend() {
         .respond_with(ResponseTemplate::new(200).set_body_json(&issues))
         .mount(&server)
         .await;
+    // P81 L1 precheck does ONE backend.get_record(id) per record in
+    // changed_set ∩ push_set on the cursor-present hot path.
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/projects/demo/issues/42$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(sample_issue(42, 3)))
+        .mount(&server)
+        .await;
     // Backend echoes back an updated issue — version bumped to 4.
     Mock::given(method("PATCH"))
         .and(path_regex(r"^/projects/demo/issues/42$"))
@@ -260,6 +267,13 @@ async fn frontmatter_strips_server_controlled_fields() {
     Mock::given(method("GET"))
         .and(path_regex(r"^/projects/demo/issues$"))
         .respond_with(ResponseTemplate::new(200).set_body_json(&issues))
+        .mount(&server)
+        .await;
+    // P81 L1 precheck does ONE backend.get_record(id) per record in
+    // changed_set ∩ push_set on the cursor-present hot path.
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/projects/demo/issues/42$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(sample_issue(42, 3)))
         .mount(&server)
         .await;
     let captured: Arc<std::sync::Mutex<Vec<Value>>> = Arc::new(std::sync::Mutex::new(Vec::new()));
