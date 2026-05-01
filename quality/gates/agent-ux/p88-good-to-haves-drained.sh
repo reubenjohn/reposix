@@ -34,24 +34,19 @@ if [[ "${ENTRY_COUNT}" -lt 1 ]]; then
 fi
 
 # Count terminal STATUS lines outside any markdown fence.
-# Recognized terminal forms (case-insensitive on the keyword):
-#   STATUS: RESOLVED ...
-#   STATUS: DEFERRED ...
-#   STATUS: WONTFIX ...
-# (also tolerant of bold-wrapped form `**STATUS:** ...` for parity with
-# SURPRISES-INTAKE.md schema)
+# Recognized terminal form (matches both bare and bold-wrapped variants):
+#   STATUS: RESOLVED|DEFERRED|WONTFIX  (with optional ** wrappers and **)
+# Single regex avoids double-counting the bold-wrapped form.
 TERMINAL_COUNT=$(awk '
   /^```/ { in_fence = !in_fence; next }
-  !in_fence && /^[*[:space:]]*STATUS\**:?\**[[:space:]]+(RESOLVED|DEFERRED|WONTFIX)/ { count++ }
-  !in_fence && /^[*[:space:]]*\*\*STATUS:\*\*[[:space:]]+(RESOLVED|DEFERRED|WONTFIX)/ { count++ }
+  !in_fence && /^[*[:space:]]*\**[[:space:]]*STATUS[[:space:]]*\**:?\**[[:space:]]+(RESOLVED|DEFERRED|WONTFIX)/ { count++ }
   END { print count + 0 }
 ' "${GTH}")
 
 # TBD = not drained yet.
 TBD_COUNT=$(awk '
   /^```/ { in_fence = !in_fence; next }
-  !in_fence && /^[*[:space:]]*STATUS\**:?\**[[:space:]]+TBD/ { count++ }
-  !in_fence && /^[*[:space:]]*\*\*STATUS:\*\*[[:space:]]+TBD/ { count++ }
+  !in_fence && /^[*[:space:]]*\**[[:space:]]*STATUS[[:space:]]*\**:?\**[[:space:]]+TBD/ { count++ }
   END { print count + 0 }
 ' "${GTH}")
 if [[ "${TBD_COUNT}" -gt 0 ]]; then
