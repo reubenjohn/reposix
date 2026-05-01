@@ -36,6 +36,40 @@
       "blast_radius": "P1",
       "owner_hint": "if RED: scripts/dark-factory-test.sh (pre-migration) or quality/gates/agent-ux/dark-factory.sh (post-migration) finds the helper teaching strings missing -- inspect helper export-path / fetch-blob-limit code",
       "waiver": null
+    },
+    {
+      "id": "agent-ux/reposix-attach-against-vanilla-clone",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0 P79; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/phases/79-poc-reposix-attach-core/79-PLAN-OVERVIEW.md § 'New GOOD-TO-HAVES entry'.",
+      "sources": [
+        "crates/reposix-cli/src/attach.rs",
+        "crates/reposix-cli/tests/attach.rs::attach_against_vanilla_clone_sets_partial_clone",
+        ".planning/REQUIREMENTS.md (DVCS-ATTACH-01)"
+      ],
+      "command": "bash quality/gates/agent-ux/reposix-attach.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/reposix-attach.sh exits 0 against the local cargo workspace",
+          "post-attach git config extensions.partialClone equals 'reposix' (the new remote name; NOT origin)",
+          "post-attach remote.reposix.url begins with 'reposix::' and contains the SoT spec",
+          "the existing origin remote is unchanged (plain-git mirror semantics preserved)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/reposix-attach.sh",
+        "args": [],
+        "timeout_s": 180,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/reposix-attach-against-vanilla-clone.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: crates/reposix-cli/src/attach.rs subcommand or crates/reposix-cache/src/reconciliation.rs walk regressed; check stderr for whether extensions.partialClone or remote URL post-condition failed",
+      "waiver": null
     }
   ]
 }
