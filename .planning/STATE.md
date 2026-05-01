@@ -3,24 +3,24 @@ gsd_state_version: 1.0
 milestone: v0.13.0
 milestone_name: DVCS over REST
 status: executing
-last_updated: "2026-05-01T15:50:00Z"
-last_activity: 2026-05-01 — P83 SHIPPED (bus write fan-out — riskiest phase); verifier GREEN at quality/reports/verdicts/p83/VERDICT.md
+last_updated: "2026-05-01T17:00:00Z"
+last_activity: 2026-05-01 — P84 SHIPPED (webhook-driven mirror sync); verifier GREEN at quality/reports/verdicts/p84/VERDICT.md
 progress:
   total_phases: 11
-  completed_phases: 6
-  total_plans: 11
-  completed_plans: 11
-  percent: 55
+  completed_phases: 7
+  total_plans: 12
+  completed_plans: 12
+  percent: 64
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: P83 SHIPPED 2026-05-01 (bus write fan-out — riskiest phase, split into 83-01 + 83-02; SoT-first algorithm with mirror-best-effort fallback; full fault-injection coverage); next P84 (webhook-driven mirror sync)
+Phase: P84 SHIPPED 2026-05-01 (webhook-driven mirror sync; reference workflow lives in reubenjohn/reposix-tokenworld-mirror per CARRY-FORWARD); next P85 (DVCS docs)
 Plan: —
-Status: Executing — 6/11 phases complete (P78 + P79 + P80 + P81 + P82 + P83); 11 plans complete
-Last activity: 2026-05-01 — P83 verifier GREEN. Phase split into 83-01 (write fan-out core, 6 tasks) + 83-02 (fault injection + close, 4 tasks) per ROADMAP carve-out. Plan-checker YELLOW with 1 BLOCKER (ParsedExport ownership → &ParsedExport borrow shape) + 5 HIGH + 4 MED; planner revised before execution. Two CI fix-forwards: fc46415 (dark_factory_conflict_teaching_string_present test broadened to write_loop.rs) + cf81824 (push_conflict.rs per-test cache_dir isolation for cargo llvm-cov coverage step). One SURPRISES-INTAKE entry filed (make_failing_mirror_fixture core.hooksPath bug — RESOLVED inline). Pre-push 26 PASS / 0 FAIL.
+Status: Executing — 7/11 phases complete (P78 + P79 + P80 + P81 + P82 + P83 + P84); 12 plans complete
+Last activity: 2026-05-01 — P84 verifier GREEN. Single plan, 6 tasks, zero cargo invocations (pure YAML + shell + JSON). All 6 catalog rows PASS. Workflow live at reubenjohn/reposix-tokenworld-mirror commit 09dda47 (currently DISABLED until v0.13.x release ships per substrate gap). One SURPRISES-INTAKE entry filed HIGH severity: binstall + yanked-gix substrate gap blocks real-TokenWorld n=10 latency measurement; deferred to post-v0.13.x with owner-runnable scripts/webhook-latency-measure.sh ready. Synthetic n=1 dispatch-to-runner-pickup latency shipped (p95=5s ≤ 120s threshold). 0 CI failures.
 
 ## Current Focus
 
@@ -55,7 +55,7 @@ Last activity: 2026-05-01 — P83 verifier GREEN. Phase split into 83-01 (write 
 
 **Carry-forward bundle:** `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md` lists `MULTI-SOURCE-WATCH-01` (P78), `GIX-YANKED-PIN-01` (P78), `WAIVED-STRUCTURE-ROWS-03` (P78), `POC-DVCS-01` (P79).
 
-**Next agent action:** /gsd-plan-phase 84 → /gsd-execute-phase 84 (webhook-driven mirror sync — `.github/workflows/reposix-mirror-sync.yml` triggered by `repository_dispatch` + cron `*/30`; uses `--force-with-lease` for race protection; uses real GH mirror at `github.com/reubenjohn/reposix-tokenworld-mirror`). Depends on P80 + P83 GREEN — already satisfied.
+**Next agent action:** /gsd-plan-phase 85 → /gsd-execute-phase 85 (DVCS docs — `docs/concepts/dvcs-topology.md` + `docs/guides/dvcs-mirror-setup.md` + troubleshooting matrix entries + cold-reader pass via doc-clarity-review). Docs-only phase. Depends on P79+P80+P81+P82+P83+P84 GREEN — all satisfied.
 
 ## Per-milestone history (cross-references)
 

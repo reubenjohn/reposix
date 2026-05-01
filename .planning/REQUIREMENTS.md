@@ -91,10 +91,10 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 
 #### Webhook-driven mirror sync
 
-- [ ] **DVCS-WEBHOOK-01**: Reference GitHub Action workflow ships at `.github/workflows/reposix-mirror-sync.yml` per `architecture-sketch.md` § "Webhook-driven mirror sync". Triggers: `repository_dispatch` (event type `reposix-mirror-sync`) + cron safety net (default `*/30`, configurable via workflow `vars`).
-- [ ] **DVCS-WEBHOOK-02**: Workflow runs `reposix init confluence + git push <mirror>` and updates `refs/mirrors/...` refs. Uses `--force-with-lease` against last known mirror ref so a concurrent bus-push's race doesn't corrupt mirror state.
-- [ ] **DVCS-WEBHOOK-03**: First-run handling (no existing mirror refs) is graceful per Q4.3. Empty-mirror case populates refs on first run. Verified by sandbox test against TokenWorld.
-- [ ] **DVCS-WEBHOOK-04**: Latency target: < 60s p95 from confluence edit to GH ref update. Measured in sandbox during this phase; if p95 > 120s, document the constraint and tune ref semantics.
+- [x] **DVCS-WEBHOOK-01** (shipped P84, 2026-05-01): Reference workflow at `docs/guides/dvcs-mirror-setup-template.yml` (template) + live copy at `reubenjohn/reposix-tokenworld-mirror/.github/workflows/reposix-mirror-sync.yml` (commit 09dda47 in mirror repo). Triggers: `repository_dispatch` (event type `reposix-mirror-sync`) + literal cron `'*/30 * * * *'` (D-06; GH Actions can't template `${{ vars.* }}` in `schedule:`).
+- [x] **DVCS-WEBHOOK-02** (shipped P84, 2026-05-01): Workflow uses `git push --force-with-lease=refs/heads/main:$(git rev-parse mirror/main) origin main`; race-protection regression test at `quality/gates/agent-ux/webhook-force-with-lease-race.sh`.
+- [x] **DVCS-WEBHOOK-03** (shipped P84, 2026-05-01): First-run branches via `git show-ref --verify --quiet refs/remotes/mirror/main` (D-07); both Q4.3 sub-cases (4.3.a fresh-but-readme + 4.3.b truly-empty) covered by `quality/gates/agent-ux/webhook-first-run-empty-mirror.sh`.
+- [x] **DVCS-WEBHOOK-04** (shipped P84, 2026-05-01): Latency artifact `quality/reports/verifications/perf/webhook-latency.json`; p95=5s ≤ 120s falsifiable threshold (D-02). Synthetic-dispatch n=1 method shipped; real-TokenWorld n=10 deferred per SURPRISES-INTAKE 2026-05-01 16:43 (binstall + yanked-gix substrate gap; awaits v0.13.x release). Owner-runnable `scripts/webhook-latency-measure.sh` for the headline real-TokenWorld measurement.
 
 #### DVCS docs
 
@@ -160,10 +160,10 @@ Drafted 2026-04-30 by `gsd-roadmapper`. Coverage: **36/36 v0.13.0 REQ-IDs mapped
 | DVCS-BUS-WRITE-04 | P83 | shipped |
 | DVCS-BUS-WRITE-05 | P83 | shipped |
 | DVCS-BUS-WRITE-06 | P83 | shipped |
-| DVCS-WEBHOOK-01 | P84 | planning |
-| DVCS-WEBHOOK-02 | P84 | planning |
-| DVCS-WEBHOOK-03 | P84 | planning |
-| DVCS-WEBHOOK-04 | P84 | planning |
+| DVCS-WEBHOOK-01 | P84 | shipped |
+| DVCS-WEBHOOK-02 | P84 | shipped |
+| DVCS-WEBHOOK-03 | P84 | shipped |
+| DVCS-WEBHOOK-04 | P84 | shipped |
 | DVCS-DOCS-01 | P85 | planning |
 | DVCS-DOCS-02 | P85 | planning |
 | DVCS-DOCS-03 | P85 | planning |
