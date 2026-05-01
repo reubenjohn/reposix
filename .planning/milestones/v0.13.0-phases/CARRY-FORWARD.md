@@ -122,3 +122,62 @@ milestone.
 **Owner:** v0.13.0 pre-Phase-1 (after milestone container exists, before
 PLAN.md drafted). Decision ratified by owner 2026-04-30; see `decisions.md`
 § "POC scope".
+
+## DVCS-MIRROR-REPO-01 — real GitHub mirror endpoint exists
+
+**Source:** Owner-created 2026-05-01 during pre-overnight readiness pass
+(after P79 close, before P80 launch).
+
+**Repo:** `https://github.com/reubenjohn/reposix-tokenworld-mirror`
+- HTTPS clone: `https://github.com/reubenjohn/reposix-tokenworld-mirror.git`
+- SSH clone: `git@github.com:reubenjohn/reposix-tokenworld-mirror.git`
+- Public; owner = reubenjohn (same as TokenWorld Confluence space owner).
+- Currently empty except auto-generated README from `gh repo create
+  --add-readme`. Description names it as the Confluence TokenWorld mirror
+  for reposix v0.13.0 DVCS tests.
+
+**Why filed here:** the original v0.13.0 plan (architecture-sketch +
+roadmap + per-phase plans) assumed a GH mirror repo would exist for
+real-backend tests at milestone close, but did NOT name it or instruct
+its creation. Owner created the repo pre-overnight to prevent the
+milestone from blocking on it.
+
+**Phases that consume this repo:**
+
+- **P80 (mirror-lag refs):** the `refs/mirrors/confluence-head` +
+  `confluence-synced-at` ref-write integration test, when run against
+  real backends, needs a real mirror to push the refs to. Simulator-only
+  phase tests are fine; real-backend tests at milestone close need this
+  repo.
+- **P84 (webhook-driven mirror sync):** the GH Action workflow at
+  `.github/workflows/reposix-mirror-sync.yml` lands in THIS repo, not in
+  `reubenjohn/reposix`. The workflow's `repository_dispatch` target is
+  `https://api.github.com/repos/reubenjohn/reposix-tokenworld-mirror/dispatches`.
+- **P86 (dark-factory third arm):** the test agent clones THIS repo via
+  vanilla git, runs `reposix attach confluence::TokenWorld`, edits, and
+  bus-pushes back. The repo URL is hard-coded into the test transcript
+  (or env-var configurable).
+- **P88 (milestone close):** real-backend round-trip test exercises the
+  full DVCS topology — Confluence (SoT, TokenWorld) + mirror (THIS repo)
+  with the bus remote fanning out atomically.
+
+**Acceptance:**
+
+- The repo exists and is reachable (verified at filing time:
+  `gh repo view reubenjohn/reposix-tokenworld-mirror` returns 200).
+- `gh auth status` shows `repo` + `workflow` scopes (verified: yes).
+- SSH-key-based push to the repo works (implicit; same key that pushes
+  to `reubenjohn/reposix` works for any repo on the account).
+- After P80 ships, the repo's `refs/mirrors/...` namespace exists.
+- After P84 ships, the repo has `.github/workflows/reposix-mirror-sync.yml`.
+- After P88 ships, the repo's `main` branch contains a real markdown
+  mirror of TokenWorld's pages.
+
+**Cleanup procedure (if v0.13.0 doesn't ship for some reason):** delete
+the repo via `gh repo delete reubenjohn/reposix-tokenworld-mirror
+--confirm`. Public repo with no dependent services; safe to delete.
+
+**Owner:** unassigned. The phase that first needs to push to it
+(probably P80) wires the URL into wherever the integration tests look
+for it (env var `REPOSIX_GH_MIRROR_URL` or test-fixture constant —
+discovering phase decides).
