@@ -31,9 +31,11 @@ pub struct CacheDirGuard<'a> {
     prev: Option<String>,
 }
 
-impl<'a> CacheDirGuard<'a> {
+impl CacheDirGuard<'_> {
     pub fn new(path: &std::path::Path) -> Self {
-        let guard = env_lock().lock().unwrap_or_else(|p| p.into_inner());
+        let guard = env_lock()
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let prev = std::env::var(reposix_cache::CACHE_DIR_ENV).ok();
         std::env::set_var(reposix_cache::CACHE_DIR_ENV, path);
         Self {
@@ -124,4 +126,68 @@ fn issue_to_json(issue: &Record) -> serde_json::Value {
 #[must_use]
 pub fn sim_backend(server: &MockServer) -> Arc<dyn BackendConnector> {
     Arc::new(SimBackend::new(server.uri()).expect("SimBackend::new"))
+}
+
+/// Build a `file://` bare mirror whose `update` hook always fails
+/// with exit 1. Used by mirror-fail fault tests (P83-02 T02 ships
+/// the consumer test). Returns:
+///
+/// 1. the tempdir handle (KEEP IN SCOPE for the test's lifetime —
+///    drop removes the dir);
+/// 2. the `file://` URL pointing at the bare mirror's path.
+///
+/// Gated `#[cfg(unix)]` per D-04 RATIFIED — the `update`-hook +
+/// `chmod 0o755` pattern is POSIX-specific. Reposix CI is Linux-only
+/// at this phase; macOS dev workflow honors the same hook semantics.
+/// Windows hosts that try to run this fail at compile time, which
+/// is the intended behavior (the bus write fan-out's mirror push is
+/// a `git` shell-out — same Unix-shaped contract).
+#[cfg(unix)]
+#[must_use]
+pub fn make_failing_mirror_fixture() -> (tempfile::TempDir, String) {
+    use std::os::unix::fs::PermissionsExt;
+    use std::process::Command;
+
+    let mirror = tempfile::tempdir().expect("mirror tempdir");
+    let status = Command::new("git")
+        .args(["init", "--bare", "."])
+        .current_dir(mirror.path())
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .env("GIT_TERMINAL_PROMPT", "0")
+        .status()
+        .expect("spawn git init --bare");
+    assert!(status.success(), "git init --bare failed in mirror fixture");
+
+    let hook = mirror.path().join("hooks").join("update");
+    std::fs::write(
+        &hook,
+        "#!/bin/sh\necho \"intentional fail for fault test\" >&2\nexit 1\n",
+    )
+    .expect("write update hook");
+    let mut perms = std::fs::metadata(&hook)
+        .expect("stat update hook")
+        .permissions();
+    perms.set_mode(0o755);
+    std::fs::set_permissions(&hook, perms).expect("chmod update hook");
+
+    let url = format!("file://{}", mirror.path().display());
+    (mirror, url)
+}
+
+/// Open the cache.db at `cache_db_path` and count rows matching `op`.
+/// Used by audit-completeness assertions in P83-01 + P83-02 tests.
+///
+/// `cache_db_path` is the full path to the SQLite file — typically
+/// `<cache-bare-repo>/cache.db` (locate via the `find_cache_bare`
+/// helper in tests/mirror_refs.rs OR by walking the cache root for
+/// a `.git` directory).
+#[must_use]
+pub fn count_audit_cache_rows(cache_db_path: &std::path::Path, op: &str) -> i64 {
+    let conn = rusqlite::Connection::open(cache_db_path).expect("open cache.db");
+    conn.query_row(
+        "SELECT COUNT(*) FROM audit_events_cache WHERE op = ?1",
+        rusqlite::params![op],
+        |r| r.get::<_, i64>(0),
+    )
+    .expect("count audit rows")
 }
