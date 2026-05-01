@@ -675,7 +675,7 @@
           "stderr names the failing record id (D-09 / Pitfall 3 documented behavior)",
           "audit_events_cache::helper_push_accepted count == 0",
           "mirror baseline preserved (no mirror push attempted)",
-          "wiremock saw exactly 1 PATCH (the one that 409'd) AND exactly 1 list_changed_since (PRECHECK B Stable)"
+          "wiremock saw exactly 1 PATCH (the one that 409'd) AND exactly 2 list_changed_since calls (PRECHECK B + L1 precheck — both observe Stable)"
         ]
       },
       "verifier": {
