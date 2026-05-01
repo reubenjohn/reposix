@@ -981,6 +981,42 @@
       "blast_radius": "P1",
       "owner_hint": "if RED: shell-stub assertions in dark-factory.sh dvcs-third-arm path failed -- inspect stderr for which teaching-string grep failed (?mirror=, --orphan-policy, refs/mirrors, git remote add) OR the bus URL composition / extensions.partialClone post-attach asserts failed. Wire-path failures land in the cargo test layer (bus_write_happy.rs::happy_path_writes_both_refs_and_acks_ok), not here. TokenWorld leg failures are substrate-gap-expected -- do NOT count as RED.",
       "waiver": null
+    },
+    {
+      "id": "agent-ux/p87-surprises-absorption",
+      "dimension": "agent-ux",
+      "cadence": "on-demand",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P87 (+2 reservation slot 1) drain verifier. Asserts SURPRISES-INTAKE.md is fully drained for v0.13.0 — zero OPEN entries, >=5 terminal-STATUS entries (RESOLVED|DEFERRED|WONTFIX), honesty spot-check artifact present. Cadence on-demand because the intake is milestone-bounded; once v0.13.0 archives the row becomes a historical PASS marker per the v0.12.1 P76 precedent.",
+      "sources": [
+        "quality/gates/agent-ux/p87-surprises-absorption.sh",
+        ".planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md",
+        ".planning/phases/87-surprises-absorption/honesty-spot-check.md",
+        ".planning/REQUIREMENTS.md (DVCS-SURPRISES-01)"
+      ],
+      "command": "bash quality/gates/agent-ux/p87-surprises-absorption.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/p87-surprises-absorption.sh exits 0 against the local working tree",
+          "zero `**STATUS:** OPEN` lines in .planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md (all 5 entries flipped to terminal status)",
+          "at least 5 entries carry terminal STATUS (RESOLVED|DEFERRED|WONTFIX) — matches the P78-P86 entry count",
+          ".planning/phases/87-surprises-absorption/honesty-spot-check.md exists as verifier-readable honesty-check evidence"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p87-surprises-absorption.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p87-surprises-absorption.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T22:00:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P3",
+      "owner_hint": "if RED: rerun P87 drain. SURPRISES-INTAKE.md should have 0 OPEN entries; each entry needs RESOLVED (commit SHA), DEFERRED (target milestone + rationale), or WONTFIX (rationale).",
+      "waiver": null
     }
   ]
 }
