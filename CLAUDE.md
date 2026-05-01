@@ -544,7 +544,7 @@ Eleven phases (P78–P88) shipped the thesis-shifting DVCS topology: confluence 
 **Carry-forward to v0.14.0:**
 - DVCS-CF-01 binstall + yanked-gix release substrate (HIGH; P84 SURPRISES Entry 5).
 - DVCS-CF-02 GOOD-TO-HAVES-01 — extend `reposix-quality bind` to all catalog dimensions.
-- DVCS-CF-03 L2/L3 cache-desync hardening (P81 deferral).
+- DVCS-CF-03 L2/L3 cache-desync hardening (P81 deferral). Counter-proposal landed 2026-05-01 at `.planning/research/v0.14.0-observability-and-multi-repo/cache-coherence-redesign.md` — argues for optimistic-concurrency-on-write (lean on `If-Match` / `version.number`) instead of L2/L3 background reconcile. Phase shape mirrors v0.13.0: research-first → sim POC → per-backend wiring → reframe + +2 reservation. v0.14.0 planner ratifies Option A (vision doc) vs Option B (this doc) before scoping.
 - CLAUDE.md sign-posting for cargo-test-as-verifier shape.
 
 ## Quick links
