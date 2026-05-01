@@ -3,24 +3,24 @@ gsd_state_version: 1.0
 milestone: v0.13.0
 milestone_name: DVCS over REST
 status: executing
-last_updated: "2026-05-01T17:00:00Z"
-last_activity: 2026-05-01 — P84 SHIPPED (webhook-driven mirror sync); verifier GREEN at quality/reports/verdicts/p84/VERDICT.md
+last_updated: "2026-05-01T17:30:00Z"
+last_activity: 2026-05-01 — P85 SHIPPED (DVCS docs); verifier GREEN at quality/reports/verdicts/p85/VERDICT.md
 progress:
   total_phases: 11
-  completed_phases: 7
-  total_plans: 12
-  completed_plans: 12
-  percent: 64
+  completed_phases: 8
+  total_plans: 13
+  completed_plans: 13
+  percent: 73
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: P84 SHIPPED 2026-05-01 (webhook-driven mirror sync; reference workflow lives in reubenjohn/reposix-tokenworld-mirror per CARRY-FORWARD); next P85 (DVCS docs)
+Phase: P85 SHIPPED 2026-05-01 (DVCS docs — dvcs-topology.md + dvcs-mirror-setup.md + troubleshooting matrix); next P86 (dark-factory regression — third arm)
 Plan: —
-Status: Executing — 7/11 phases complete (P78 + P79 + P80 + P81 + P82 + P83 + P84); 12 plans complete
-Last activity: 2026-05-01 — P84 verifier GREEN. Single plan, 6 tasks, zero cargo invocations (pure YAML + shell + JSON). All 6 catalog rows PASS. Workflow live at reubenjohn/reposix-tokenworld-mirror commit 09dda47 (currently DISABLED until v0.13.x release ships per substrate gap). One SURPRISES-INTAKE entry filed HIGH severity: binstall + yanked-gix substrate gap blocks real-TokenWorld n=10 latency measurement; deferred to post-v0.13.x with owner-runnable scripts/webhook-latency-measure.sh ready. Synthetic n=1 dispatch-to-runner-pickup latency shipped (p95=5s ≤ 120s threshold). 0 CI failures.
+Status: Executing — 8/11 phases complete (P78 + P79 + P80 + P81 + P82 + P83 + P84 + P85); 13 plans complete
+Last activity: 2026-05-01 — P85 verifier GREEN. Single docs-only plan, 3 commits (672be2d + 06b8014 + 386b3cc). docs-alignment claims_bound 273→276; alignment_ratio 0.8198→0.8214. DVCS-DOCS-04 cold-reader rubric registered with full criteria; status NOT_VERIFIED until owner runs /reposix-quality-review (Path B). Banned-words clean; mkdocs --strict clean; mermaid renders clean. 3 in-phase eager-resolutions (Daemon-mode banned-word leak; mkdocs anchor-link slugify; walker STALE_DOCS_DRIFT post-anchor-fix).
 
 ## Current Focus
 
@@ -55,7 +55,7 @@ Last activity: 2026-05-01 — P84 verifier GREEN. Single plan, 6 tasks, zero car
 
 **Carry-forward bundle:** `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md` lists `MULTI-SOURCE-WATCH-01` (P78), `GIX-YANKED-PIN-01` (P78), `WAIVED-STRUCTURE-ROWS-03` (P78), `POC-DVCS-01` (P79).
 
-**Next agent action:** /gsd-plan-phase 85 → /gsd-execute-phase 85 (DVCS docs — `docs/concepts/dvcs-topology.md` + `docs/guides/dvcs-mirror-setup.md` + troubleshooting matrix entries + cold-reader pass via doc-clarity-review). Docs-only phase. Depends on P79+P80+P81+P82+P83+P84 GREEN — all satisfied.
+**Next agent action:** /gsd-plan-phase 86 → /gsd-execute-phase 86 (dark-factory regression — third arm: vanilla-clone + attach + bus-push end-to-end against the real GH mirror). Depends on P79..P85 GREEN — all satisfied.
 
 ## Per-milestone history (cross-references)
 

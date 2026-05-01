@@ -98,10 +98,10 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 
 #### DVCS docs
 
-- [ ] **DVCS-DOCS-01**: `docs/concepts/dvcs-topology.md` exists. Three roles (SoT-holder, mirror-only consumer, round-tripper) explained with the diagram from `vision-and-mental-model.md`. Mirror-lag refs explained — explicitly: *"`refs/mirrors/confluence-synced-at` is the timestamp the mirror last caught up to confluence, NOT a 'current SoT state' marker"* (per Q2.2). When-to-choose-which-pattern guidance.
-- [ ] **DVCS-DOCS-02**: `docs/guides/dvcs-mirror-setup.md` exists. Walk-through of webhook + Action setup for an owner installing v0.13.0 against a confluence space. Backends-without-webhooks fallback documented (cron-only sync; per Q4.2). Cleanup procedure documented.
-- [ ] **DVCS-DOCS-03**: Troubleshooting matrix entries cover: bus-remote `fetch first` rejection messages (cite mirror-lag refs as the diagnostic); attach reconciliation warnings; webhook race conditions; cache-desync recovery via `reposix sync --reconcile`.
-- [ ] **DVCS-DOCS-04**: Cold-reader pass via `doc-clarity-review` against a reader who has read only `docs/index.md` + `docs/concepts/mental-model-in-60-seconds.md`. Zero critical-friction findings before milestone close.
+- [x] **DVCS-DOCS-01** (shipped P85, 2026-05-01): `docs/concepts/dvcs-topology.md` (164 lines) — three roles (SoT-holder / mirror-only consumer / round-tripper) + Q2.2 verbatim phrase at line 63 + when-to-choose-which-pattern guidance.
+- [x] **DVCS-DOCS-02** (shipped P85, 2026-05-01): `docs/guides/dvcs-mirror-setup.md` (198 lines) — prereqs + mirror-repo creation + secrets config + webhook setup + cron-only fallback + cleanup procedure.
+- [x] **DVCS-DOCS-03** (shipped P85, 2026-05-01): `docs/guides/troubleshooting.md` "DVCS push/pull issues" section (~120 lines) — bus-remote fetch-first + attach reconciliation cases + webhook race + cache-desync via `reposix sync --reconcile`.
+- [◐] **DVCS-DOCS-04** (rubric registered P85, owner-graded): `subjective/dvcs-cold-reader` rubric row in `quality/catalogs/subjective-rubrics.json` with full criteria + reader-profile + 10-pt scale; status NOT_VERIFIED by design — owner runs `/reposix-quality-review --rubric dvcs-cold-reader` per Path B (CLAUDE.md "Cold-reader pass on user-facing surfaces"). Owner's PASS verdict completes DVCS-DOCS-04 closure.
 
 #### Dark-factory regression — third arm
 
@@ -164,10 +164,10 @@ Drafted 2026-04-30 by `gsd-roadmapper`. Coverage: **36/36 v0.13.0 REQ-IDs mapped
 | DVCS-WEBHOOK-02 | P84 | shipped |
 | DVCS-WEBHOOK-03 | P84 | shipped |
 | DVCS-WEBHOOK-04 | P84 | shipped |
-| DVCS-DOCS-01 | P85 | planning |
-| DVCS-DOCS-02 | P85 | planning |
-| DVCS-DOCS-03 | P85 | planning |
-| DVCS-DOCS-04 | P85 | planning |
+| DVCS-DOCS-01 | P85 | shipped |
+| DVCS-DOCS-02 | P85 | shipped |
+| DVCS-DOCS-03 | P85 | shipped |
+| DVCS-DOCS-04 | P85 | rubric-pending-owner |
 | DVCS-DARKFACTORY-01 | P86 | planning |
 | DVCS-DARKFACTORY-02 | P86 | planning |
 | DVCS-SURPRISES-01 | P87 | planning |
