@@ -2,26 +2,26 @@
 gsd_state_version: 1.0
 milestone: v0.13.0
 milestone_name: DVCS over REST
-status: defining-requirements
-status_reason: "Milestone v0.13.0 kicked off 2026-04-30. Pre-kickoff checklist cleared: push cadence per-phase codified in CLAUDE.md (closes 999.4); 15 architecture-sketch open questions ratified in .planning/research/v0.13.0-dvcs/decisions.md; gix yanked-pin (#29/#30) scheduled as P0 (now P78); 3 WAIVED structure rows scheduled as P0/P1 (now P78); POC commitment ratified for research/v0.13.0-dvcs/poc/ before Phase 1 PLAN.md drafted (now folded into P79); CI-monitor subagent confirmed pre-push runner GREEN (22 PASS / 0 FAIL / 3 WAIVED). PROJECT.md Current Milestone updated. ROADMAP.md drafted 2026-04-30 by gsd-roadmapper: 11 phases (P78–P88), 36 REQ-IDs mapped 100%; awaiting owner approval before commit. Next: owner approves roadmap → spawn /gsd-plan-phase 78."
-last_updated: "2026-04-30T12:30:00Z"
-last_activity: 2026-04-30
+status: executing
+status_reason: "P78 (Pre-DVCS hygiene) SHIPPED 2026-05-01 — verifier subagent GREEN at quality/reports/verdicts/p78/VERDICT.md. 3/3 REQ-IDs PASS: HYGIENE-01 (gix 0.82.0 → 0.83.0; #29 + #30 closed); HYGIENE-02 (3 WAIVED structure rows → PASS via 3 TINY shell verifiers); MULTI-SOURCE-WATCH-01 (Row.source_hashes parallel-array; walker AND-compares per-source hashes; walk_multi_source_non_first_drift_fires_stale regression test passes). 7 commits landed atomically (ba4b4f2, 5a5aad4, 2bc4dc7, 28ed9be, ef81546, 733e216, 18395f5). Pre-push GREEN: 25 PASS / 0 FAIL / 0 WAIVED. CLAUDE.md updated in-phase via two-commit pattern (placeholder + SHA cite). Per-phase push cadence (closes 999.4) working as designed. Next: /gsd-plan-phase 79 (POC + reposix attach core)."
+last_updated: "2026-05-01T05:30:00Z"
+last_activity: 2026-05-01
 progress:
   total_phases: 11
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 3
+  completed_plans: 3
+  percent: 9
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Not started (roadmap drafted; awaiting owner approval)
+Phase: P78 SHIPPED (Pre-DVCS hygiene); next P79 (POC + reposix attach core)
 Plan: —
-Status: Defining requirements / roadmap draft pending approval
-Last activity: 2026-04-30 — ROADMAP.md drafted with 11 phases (P78–P88) covering 36 v0.13.0 REQ-IDs
+Status: Executing — 1/11 phases complete
+Last activity: 2026-05-01 — P78 verifier GREEN; ready for P79 planning
 
 ## Current Focus
 
