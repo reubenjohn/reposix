@@ -728,6 +728,213 @@
       "blast_radius": "P1",
       "owner_hint": "if RED: a per-record audit row was dropped (check sim adapter's create_record / update_record / delete_or_close success path) OR a cache audit op was missed (check apply_writes + bus_handler ref/audit write blocks)",
       "waiver": null
+    },
+    {
+      "id": "agent-ux/webhook-trigger-dispatch",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "docs/guides/dvcs-mirror-setup-template.yml",
+        "reubenjohn/reposix-tokenworld-mirror:.github/workflows/reposix-mirror-sync.yml (live)",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (§ Webhook-driven mirror sync — verbatim YAML skeleton)",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q4.1/Q4.2/Q4.3)",
+        ".planning/REQUIREMENTS.md (DVCS-WEBHOOK-01)"
+      ],
+      "command": "bash quality/gates/agent-ux/webhook-trigger-dispatch.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/webhook-trigger-dispatch.sh exits 0",
+          "docs/guides/dvcs-mirror-setup-template.yml exists and parses as YAML",
+          "gh api repos/reubenjohn/reposix-tokenworld-mirror/contents/.github/workflows/reposix-mirror-sync.yml returns 200 (live copy reachable)",
+          "diff -w of the two copies returns zero (byte-equal modulo whitespace)",
+          "YAML contains: repository_dispatch types=[reposix-mirror-sync], cargo binstall reposix-cli (NOT bare 'reposix'), NO github.event.client_payload references, NO set -x"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/webhook-trigger-dispatch.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/webhook-trigger-dispatch.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: workflow YAML drifted between template and live copy; or one copy missing; or YAML structure regressed (binstall name, client_payload reference, missing fetch-depth); inspect verifier output for which structural grep failed",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/webhook-cron-fallback",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "docs/guides/dvcs-mirror-setup-template.yml",
+        ".planning/ROADMAP.md (Phase 84 SC1 — cron */30 safety net)",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q4.1 cron literal)",
+        ".planning/phases/84-webhook-mirror-sync/84-PLAN-OVERVIEW.md (D-01 concurrency, D-04 fetch-depth, D-06 literal cron)"
+      ],
+      "command": "bash quality/gates/agent-ux/webhook-cron-fallback.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/webhook-cron-fallback.sh exits 0",
+          "literal cron '*/30 * * * *' present in YAML (not vars.*-templated)",
+          "actions/checkout@v6 with fetch-depth: 0 present",
+          "concurrency: { group: reposix-mirror-sync, cancel-in-progress: false } block present"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/webhook-cron-fallback.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/webhook-cron-fallback.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: cron expression was templated with ${{ vars.* }} (Pitfall 3) OR fetch-depth was dropped OR concurrency block was edited away or has wrong cancellation semantic",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/webhook-force-with-lease-race",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "docs/guides/dvcs-mirror-setup-template.yml (push-with-lease step)",
+        ".planning/phases/84-webhook-mirror-sync/84-RESEARCH.md (§ '--force-with-lease' Semantics)",
+        ".planning/REQUIREMENTS.md (DVCS-WEBHOOK-02)"
+      ],
+      "command": "bash quality/gates/agent-ux/webhook-force-with-lease-race.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/webhook-force-with-lease-race.sh exits 0",
+          "race walk-through fixture: bare-repo seeded with SHA-A, bus push advances to SHA-B between fetch and lease push, workflow's --force-with-lease=refs/heads/main:SHA-A is rejected",
+          "rejection wording matches one of {stale info, rejected, non-fast-forward}",
+          "mirror's main remains at SHA-B (untouched by failed push)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/webhook-force-with-lease-race.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/webhook-force-with-lease-race.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: lease-push semantics regressed (template YAML's lease expression edited away or lease SHA composition changed); inspect harness output for which step failed (seed, fetch, bus push, lease push, untouched assertion)",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/webhook-first-run-empty-mirror",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "docs/guides/dvcs-mirror-setup-template.yml (first-run branch in push step)",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q4.3 first-run handling)",
+        ".planning/phases/84-webhook-mirror-sync/84-PLAN-OVERVIEW.md (D-07 first-run predicate)",
+        ".planning/REQUIREMENTS.md (DVCS-WEBHOOK-03)"
+      ],
+      "command": "bash quality/gates/agent-ux/webhook-first-run-empty-mirror.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/webhook-first-run-empty-mirror.sh exits 0",
+          "sub-case 4.3.a fresh-but-readme: lease-push branch fires; mirror's main advances from README SHA to workflow SHA",
+          "sub-case 4.3.b truly-empty: plain-push branch fires; mirror's main is created at workflow SHA"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/webhook-first-run-empty-mirror.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/webhook-first-run-empty-mirror.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: the first-run predicate `git show-ref --verify --quiet refs/remotes/mirror/main` regressed in the YAML; OR the plain-push fallback branch was edited away; inspect harness output for which sub-case failed",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/webhook-backends-without-webhooks",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "docs/guides/dvcs-mirror-setup-template.yml",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q4.2 backends without webhooks)",
+        ".planning/ROADMAP.md (Phase 84 SC5 cron-only fallback)"
+      ],
+      "command": "bash quality/gates/agent-ux/webhook-backends-without-webhooks.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/webhook-backends-without-webhooks.sh exits 0",
+          "removing the repository_dispatch: block from the workflow YAML produces still-valid YAML",
+          "after trim, at least one trigger remains (schedule or workflow_dispatch)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/webhook-backends-without-webhooks.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/webhook-backends-without-webhooks.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: the workflow's `on:` block restructured such that removing repository_dispatch leaves it triggerless; restore at least schedule + workflow_dispatch as fallback triggers",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/webhook-latency-floor",
+      "dimension": "agent-ux",
+      "cadence": "pre-release",
+      "kind": "asset-exists",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "quality/reports/verifications/perf/webhook-latency.json",
+        ".planning/phases/84-webhook-mirror-sync/84-RESEARCH.md (§ Latency Measurement Strategy)",
+        ".planning/ROADMAP.md (Phase 84 SC4 — falsifiable threshold p95 <= 120s)",
+        ".planning/REQUIREMENTS.md (DVCS-WEBHOOK-04)"
+      ],
+      "command": "bash quality/gates/agent-ux/webhook-latency-floor.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/webhook-latency-floor.sh exits 0",
+          "quality/reports/verifications/perf/webhook-latency.json exists, parses as JSON",
+          "p95_seconds <= 120 (falsifiable threshold per ROADMAP P84 SC4)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/webhook-latency-floor.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/perf/webhook-latency.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: latency artifact missing (T05 didn't ship) OR p95 regressed > 120s (substrate bug — investigate cron firing, binstall regression, cache build failure)",
+      "waiver": null
     }
   ]
 }
