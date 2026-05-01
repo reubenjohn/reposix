@@ -80,6 +80,8 @@ title: ...
 
 ## L2/L3 cache-desync hardening
 
+> **See also (2026-05-01):** `cache-coherence-redesign.md` (sibling doc) proposes an **Option B** that avoids the L2/L3 fork by leaning on optimistic concurrency at write time (`If-Match` / version preconditions) rather than pre-check-then-write. The planner should ratify Option A (this section) vs Option B (sibling doc) vs a hybrid in `decisions.md` before scoping the cache-hardening phases. The sibling doc also expands the cache-hardening scope from 3 phases to 6 (research → POC → 3 per-backend → reframe), borrowing v0.13.0's success pattern of validation-before-implementation; the milestone-shape implications are discussed there.
+
 **Problem.** v0.13.0 ships **L1** for the conflict-detection path: replace the per-push `list_records` walk with `list_changed_since(last_fetched_at)`. The trade-off is documented in `.planning/research/v0.13.0-dvcs/architecture-sketch.md` § "Performance subtlety": L1 is much faster but trusts the cache as the prior tree state. If the cache desyncs from the backend (a write succeeded backend-side but failed cache-side, or vice versa), L1's conflict detection silently misses it.
 
 L1 is the right v0.13.0 trade because (a) the bus remote's promise of "DVCS at the same UX as plain git" requires sub-100ms-ish push latency, which the old `list_records` walk made impossible at scale; (b) we don't have desync incidence numbers yet — we'd be guessing whether L2 or L3 is the right hardening; (c) `reposix sync --reconcile` ships in v0.13.0 as a manual escape hatch.

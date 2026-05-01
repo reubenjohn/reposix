@@ -18,6 +18,8 @@ The mechanism: a GitHub Action workflow living in the **mirror repository** runs
 
 If you also want the [agent-flow real-backend tests](../reference/testing-targets.md) against the mirrored space, set `REPOSIX_ALLOWED_ORIGINS` and the credentials in your shell after this setup completes.
 
+> **Workflow template location:** the GitHub Action workflow this guide installs lives at [`docs/guides/dvcs-mirror-setup-template.yml`](dvcs-mirror-setup-template.yml) in the reposix repo. Step 2 below curls it from `main`.
+
 ## Step 1 — Create the mirror repository
 
 The mirror repo holds the rendered Markdown of the SoT plus the `refs/mirrors/...` annotation refs. Make it **public** so vanilla-git mirror-only consumers can clone without auth, or **private** if your tracker is internal.
@@ -65,6 +67,8 @@ gh secret set REPOSIX_CONFLUENCE_TENANT    # e.g. 'acme' for acme.atlassian.net
 # Variables — readable, can be templated into env: blocks.
 gh variable set CONFLUENCE_SPACE --body '<SPACE-KEY>'
 ```
+
+> **Note:** `gh secret set <NAME>` (without `--body`) prompts interactively for the secret value. For non-TTY contexts (CI, automation), pipe the value via stdin or pass `--body`: `printf '%s' "$TOKEN" | gh secret set ATLASSIAN_API_KEY` or `gh secret set ATLASSIAN_API_KEY --body "$TOKEN"`.
 
 Verify:
 
@@ -144,8 +148,7 @@ To change `*/30` to a different frequency:
 
 ```bash
 cd /tmp/<space>-mirror
-sed -i "s|cron: '\\*/30 \\* \\* \\* \\*'|cron: '\\*/15 \\* \\* \\* \\*'|" \
-  .github/workflows/reposix-mirror-sync.yml
+sed -i "s|'\*/30 \* \* \* \*'|'\*/15 \* \* \* \*'|" .github/workflows/reposix-mirror-sync.yml
 git add .github/workflows/reposix-mirror-sync.yml
 git commit -m 'ci(mirror-sync): tighten cron to every 15 minutes'
 git push origin main

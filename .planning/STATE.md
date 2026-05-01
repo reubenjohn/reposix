@@ -20,7 +20,7 @@ progress:
 Phase: P88 SHIPPED 2026-05-01 (good-to-haves polish + milestone close, +2 reservation slot 2; DVCS-GOOD-TO-HAVES-01). Awaiting BOTH verifier subagent dispatches: P88 verdict (`quality/reports/verdicts/p88/VERDICT.md`) + milestone-close verdict (`quality/reports/verdicts/milestone-v0.13.0/VERDICT.md`). Owner pushes tag.
 Plan: —
 Status: ready-to-tag — 11/11 phases complete (P78..P88); 15 plans complete; v0.13.0 milestone artifacts finalized.
-Last activity: 2026-05-01 — P88 plan + execute combined. 5 task-commits + 1 close commit (e32c20a catalog-first 4 milestone-close rows + 1ecb16b GOOD-TO-HAVES drain + tag-v0.13.0.sh + 8bab313 CHANGELOG [v0.13.0] entry + dc6e5ab RETROSPECTIVE OP-9 distillation + close). 4 catalog rows PASS (`agent-ux/p88-good-to-haves-drained`, `agent-ux/v0.13.0-changelog-entry-present`, `agent-ux/v0.13.0-tag-script-present`, `agent-ux/v0.13.0-retrospective-distilled`). GOOD-TO-HAVES-01 (extend `reposix-quality bind` to all dimensions, Size S) DEFERRED to v0.14.0 — pure-docs envelope of P88 doesn't fit Rust+test+schema scope; provenance flag carries forward. Tag-script tag-v0.13.0.sh has 8 guards (exceeds >=6 floor). Orchestrator does NOT push tag (ROADMAP P88 SC6 -- STOP at tag boundary).
+Last activity: 2026-05-01 — Quick task 260501-mgn polished 5 cold-reader nits in DVCS docs (binstall crate name + secret-set note + sed readability + slug hedge + template anchor); see commit 2b9e9c9 + merge fdf2df3. Prior: P88 plan + execute combined. 5 task-commits + 1 close commit (e32c20a catalog-first 4 milestone-close rows + 1ecb16b GOOD-TO-HAVES drain + tag-v0.13.0.sh + 8bab313 CHANGELOG [v0.13.0] entry + dc6e5ab RETROSPECTIVE OP-9 distillation + close). 4 catalog rows PASS (`agent-ux/p88-good-to-haves-drained`, `agent-ux/v0.13.0-changelog-entry-present`, `agent-ux/v0.13.0-tag-script-present`, `agent-ux/v0.13.0-retrospective-distilled`). GOOD-TO-HAVES-01 (extend `reposix-quality bind` to all dimensions, Size S) DEFERRED to v0.14.0 — pure-docs envelope of P88 doesn't fit Rust+test+schema scope; provenance flag carries forward. Tag-script tag-v0.13.0.sh has 8 guards (exceeds >=6 floor). Orchestrator does NOT push tag (ROADMAP P88 SC6 -- STOP at tag boundary). 5 task-commits + 1 close commit (e32c20a catalog-first 4 milestone-close rows + 1ecb16b GOOD-TO-HAVES drain + tag-v0.13.0.sh + 8bab313 CHANGELOG [v0.13.0] entry + dc6e5ab RETROSPECTIVE OP-9 distillation + close). 4 catalog rows PASS (`agent-ux/p88-good-to-haves-drained`, `agent-ux/v0.13.0-changelog-entry-present`, `agent-ux/v0.13.0-tag-script-present`, `agent-ux/v0.13.0-retrospective-distilled`). GOOD-TO-HAVES-01 (extend `reposix-quality bind` to all dimensions, Size S) DEFERRED to v0.14.0 — pure-docs envelope of P88 doesn't fit Rust+test+schema scope; provenance flag carries forward. Tag-script tag-v0.13.0.sh has 8 guards (exceeds >=6 floor). Orchestrator does NOT push tag (ROADMAP P88 SC6 -- STOP at tag boundary).
 
 ## Current Focus
 
@@ -81,6 +81,12 @@ Historical phase-by-phase contribution narrative lives in per-milestone ARCHIVE 
 - `scripts/tag-v0.10.0.sh` and `scripts/tag-v0.9.0.sh` still exist with unpushed tags (owner gate, pre-existing).
 - 3 WAIVED structure rows expired 2026-05-15 — RESOLVED in P78.
 - ROADMAP.md top-level still holds v0.12.0 entries (lines 272+). Per CLAUDE.md §0.5, those should relocate to `.planning/milestones/v0.12.0-phases/ROADMAP.md`. Owner-driven cleanup pass; NOT in v0.13.0 phase scope.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260501-mgn | Polish 5 cold-reader nits in DVCS docs | 2026-05-01 | 2b9e9c9 | [260501-mgn-polish-5-cold-reader-nits-in-dvcs-docs-b](./quick/260501-mgn-polish-5-cold-reader-nits-in-dvcs-docs-b/) |
 
 ## Session Continuity
 
