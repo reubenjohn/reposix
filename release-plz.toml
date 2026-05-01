@@ -1,0 +1,16 @@
+# release-plz config — see https://release-plz.dev/docs/config
+#
+# We disable GitHub release creation per package because:
+#  1. The canonical multi-platform release at tag `v$VERSION` (built by
+#     `.github/workflows/release.yml`) is the user-facing artifact.
+#  2. release-plz creates per-package releases AFTER the `v*` release,
+#     which steals the `releases/latest` pointer. That breaks user
+#     install URLs (`releases/latest/download/reposix-installer.sh`)
+#     and the catalog rows in quality/catalogs/release-assets.json
+#     that resolve through `releases/latest`.
+#
+# Tag creation stays on (we still need per-package tags for crates.io
+# provenance and git history). Crates.io publishing is unaffected.
+
+[workspace]
+git_release_enable = false
