@@ -113,6 +113,41 @@
         "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md",
         "tracked_in": "MIGRATE-03 v0.12.1 (perf-dimension full implementation per REQUIREMENTS.md Out of Scope)"
       }
+    },
+    {
+      "id": "perf/handle-export-list-call-count",
+      "dimension": "perf",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; perf dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "crates/reposix-remote/src/main.rs::handle_export",
+        "crates/reposix-remote/src/precheck.rs::precheck_export_against_changed_set",
+        "crates/reposix-remote/tests/perf_l1.rs::l1_precheck_uses_list_changed_since_not_list_records",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (Performance subtlety section)",
+        ".planning/REQUIREMENTS.md (DVCS-PERF-L1-01, DVCS-PERF-L1-03)"
+      ],
+      "command": "bash quality/gates/perf/list-call-count.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/perf/list-call-count.sh exits 0 against the local cargo workspace",
+          "with N=200 records seeded in wiremock and a one-record edit pushed, the helper makes >=1 list_changed_since REST call AND zero list_records REST calls (cursor-present hot path)",
+          "the positive-control sibling test confirms wiremock fails RED if expect(0) on list_records is reverted"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/perf/list-call-count.sh",
+        "args": [],
+        "timeout_s": 180,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/perf/list-call-count.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: crates/reposix-remote/src/precheck.rs regressed OR handle_export reverted to unconditional list_records walk; check stderr for whether wiremock saw a list_records call",
+      "waiver": null
     }
   ]
 }

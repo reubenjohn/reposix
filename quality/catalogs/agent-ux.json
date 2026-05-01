@@ -175,6 +175,40 @@
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-remote/src/main.rs::handle_export conflict-reject hint composition regressed OR crates/reposix-cache/src/mirror_refs.rs::read_mirror_synced_at parser regressed; check whether stderr cites the ref name, RFC3339, and 'N minutes ago' tokens",
       "waiver": null
+    },
+    {
+      "id": "agent-ux/sync-reconcile-subcommand",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "crates/reposix-cli/src/main.rs (Sync subcommand)",
+        "crates/reposix-cli/src/sync.rs",
+        "crates/reposix-cli/tests/sync.rs::sync_reconcile_advances_cursor",
+        ".planning/REQUIREMENTS.md (DVCS-PERF-L1-02)"
+      ],
+      "command": "bash quality/gates/agent-ux/sync-reconcile-subcommand.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/sync-reconcile-subcommand.sh exits 0 against the local cargo workspace",
+          "reposix sync --reconcile --help exits 0 (clap-derive surface present)",
+          "the smoke test sync_reconcile_advances_cursor passes (last_fetched_at advances after sync --reconcile)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/sync-reconcile-subcommand.sh",
+        "args": [],
+        "timeout_s": 180,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/sync-reconcile-subcommand.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: crates/reposix-cli/src/sync.rs regressed OR clap subcommand surface broke; check stderr for whether the --help path or the smoke test failed",
+      "waiver": null
     }
   ]
 }
