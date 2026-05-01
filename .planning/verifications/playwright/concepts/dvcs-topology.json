@@ -1,0 +1,10 @@
+{
+  "nav_path": "/reposix/concepts/dvcs-topology/",
+  "mermaid_count": 1,
+  "svg_counts": [
+    1
+  ],
+  "console_errors": [],
+  "captured_at_utc": "2026-05-01T21:14:10Z",
+  "captured_via": "P85 capture via playwright (chromium headless) against mkdocs serve on 127.0.0.1:8766; direct cold navigation to the dvcs-topology page; 4s settle for mermaid CDN render."
+}

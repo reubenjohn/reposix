@@ -4,18 +4,18 @@
   "dimension": "docs-alignment",
   "schema_version": "2.0",
   "summary": {
-    "claims_total": 390,
-    "claims_bound": 273,
+    "claims_total": 393,
+    "claims_bound": 276,
     "claims_missing_test": 0,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.8198198198198198,
+    "alignment_ratio": 0.8214285714285714,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-05-01T15:56:18Z",
-    "coverage_ratio": 0.20312216373207478,
-    "lines_covered": 1119,
-    "total_eligible_lines": 5509,
+    "last_walked": "2026-05-01T21:14:41Z",
+    "coverage_ratio": 0.1899497487437186,
+    "lines_covered": 1134,
+    "total_eligible_lines": 5970,
     "coverage_floor": 0.1
   },
   "rows": [
@@ -9371,6 +9371,81 @@
       "next_action": "BIND_GREEN",
       "last_run": "2026-05-01T11:36:49Z",
       "last_extracted": "2026-05-01T11:36:49Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs-alignment/dvcs-topology-three-roles-bound",
+      "claim": "docs/concepts/dvcs-topology.md ships and explains the three DVCS roles (SoT-holder, mirror-only consumer, round-tripper) plus the Q2.2 verbatim refs/mirrors/<sot-host>-synced-at clarification",
+      "source": {
+        "file": "docs/concepts/dvcs-topology.md",
+        "line_start": 5,
+        "line_end": 11
+      },
+      "source_hash": "8772848220d3ce63bc96af796f4353a8f03d78d860748e0108a5ca77fe51d596",
+      "source_hashes": [
+        "8772848220d3ce63bc96af796f4353a8f03d78d860748e0108a5ca77fe51d596"
+      ],
+      "tests": [
+        "quality/gates/docs-alignment/dvcs-topology-three-roles.sh"
+      ],
+      "test_body_hashes": [
+        "4b48acafaa612bd71d0a0f8345cf52f6622779435866499d0fef377b38632a38"
+      ],
+      "rationale": "P85 DVCS-DOCS-01 — presence-check verifier asserts the three role tokens + Q2.2 phrase fragments. Body-hash drift on either source or verifier fires STALE_DOCS_DRIFT.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-05-01T21:08:40Z",
+      "last_extracted": "2026-05-01T21:08:40Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs-alignment/dvcs-mirror-setup-walkthrough-bound",
+      "claim": "docs/guides/dvcs-mirror-setup.md ships the owner walk-through (5 steps) + cron-only fallback (Q4.2) + cleanup procedure; references the P84 workflow template",
+      "source": {
+        "file": "docs/guides/dvcs-mirror-setup.md",
+        "line_start": 5,
+        "line_end": 11
+      },
+      "source_hash": "b43c717031c18c0c9385c28dc4d0df40bd55587b6a45d69da196fef32da961bf",
+      "source_hashes": [
+        "b43c717031c18c0c9385c28dc4d0df40bd55587b6a45d69da196fef32da961bf"
+      ],
+      "tests": [
+        "quality/gates/docs-alignment/dvcs-mirror-setup-walkthrough.sh"
+      ],
+      "test_body_hashes": [
+        "a6068105fdcba0d8ac7fc4440b97d29339fc76288ec545514cca233f956f683c"
+      ],
+      "rationale": "P85 DVCS-DOCS-02 — verifier asserts presence of Steps 1-5, Cleanup, Backends-without-webhooks sections + load-bearing gh CLI commands + cross-link to dvcs-mirror-setup-template.yml. Re-bound after anchor-link fix.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-05-01T21:14:37Z",
+      "last_extracted": "2026-05-01T21:14:37Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs-alignment/dvcs-troubleshooting-matrix-bound",
+      "claim": "docs/guides/troubleshooting.md DVCS push/pull issues section covers 4 required entries (bus fetch-first, attach reconciliation, webhook race, cache-desync) + 4 P79 reconciliation cases",
+      "source": {
+        "file": "docs/guides/troubleshooting.md",
+        "line_start": 227,
+        "line_end": 227
+      },
+      "source_hash": "89f505463f08cd9dca9eda7a4d5405fccfbd8ff50072fa3583b55f0c048234b6",
+      "source_hashes": [
+        "89f505463f08cd9dca9eda7a4d5405fccfbd8ff50072fa3583b55f0c048234b6"
+      ],
+      "tests": [
+        "quality/gates/docs-alignment/dvcs-troubleshooting-matrix.sh"
+      ],
+      "test_body_hashes": [
+        "cff8f87a0efaff6a7b99f8de02983ae0b3f2a14604e8fb729b95ca5f3d2f67b3"
+      ],
+      "rationale": "P85 DVCS-DOCS-03 — verifier asserts the section anchor + 4 entry headings + 4 attach reconciliation cases (no-id, backend-deleted, duplicate-id, mirror-lag) + --force-with-lease citation.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-05-01T21:08:52Z",
+      "last_extracted": "2026-05-01T21:08:52Z",
       "last_extracted_by": "bind-call"
     }
   ]

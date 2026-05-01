@@ -124,6 +124,55 @@
         "dimension_owner": "v0.12.0 P61 subjective dimension owner",
         "tracked_in": "v0.12.1 MIGRATE-03 -- subjective dispatch-and-preserve runner invariant"
       }
+    },
+    {
+      "id": "subjective/dvcs-cold-reader",
+      "dimension": "subjective",
+      "cadence": "pre-release",
+      "kind": "subagent-graded",
+      "sources": [
+        "docs/concepts/dvcs-topology.md",
+        "docs/guides/dvcs-mirror-setup.md",
+        "docs/guides/troubleshooting.md:DVCS push/pull issues section"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "the doc-clarity-review subagent verdict for docs/concepts/dvcs-topology.md is CLEAR (numeric score >= 7 on the 10-pt scale where CLEAR=10, NEEDS-WORK=5, CONFUSING=2) when graded against a reader profile who has read only docs/index.md + docs/concepts/mental-model-in-60-seconds.md",
+          "the doc-clarity-review subagent verdict for docs/guides/dvcs-mirror-setup.md is CLEAR (numeric score >= 7) — the cold reader can complete the walk-through end-to-end (Steps 1-5 + cleanup) without needing to consult external docs beyond the linked Atlassian webhook docs",
+          "the doc-clarity-review subagent verdict for the new 'DVCS push/pull issues' section in docs/guides/troubleshooting.md is CLEAR (numeric score >= 7) — each of the four entries (bus fetch-first, attach reconciliation, webhook race, cache-desync) names the symptom + the recovery move in concrete shell commands",
+          "zero critical-friction findings (per CLAUDE.md OP-1 / 'Cold-reader pass on user-facing surfaces'); non-critical findings either fixed in-phase or filed to .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md for P88",
+          "the verdict artifact at quality/reports/verifications/subjective/dvcs-cold-reader.json contains {ts, score, verdict, rationale, evidence_files} per the dimension README JSON shape"
+        ]
+      },
+      "verifier": {
+        "script": ".claude/skills/reposix-quality-review/dispatch.sh",
+        "args": [
+          "--rubric",
+          "dvcs-cold-reader"
+        ],
+        "timeout_s": 600,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/subjective/dvcs-cold-reader.json",
+      "status": "NOT_VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": "30d",
+      "blast_radius": "P1",
+      "owner_hint": "if RED: docs/concepts/dvcs-topology.md or docs/guides/dvcs-mirror-setup.md confused the cold reader (one who has read only docs/index.md + docs/concepts/mental-model-in-60-seconds.md). Read the rubric artifact at quality/reports/verifications/subjective/dvcs-cold-reader.json for the friction points + rewrite the offending paragraphs. Common: jargon-above-Layer-3 leaks (FUSE/partial-clone/promisor/stateless-connect/fast-import/protocol-v2 — banned per scripts/banned-words-lint.sh in concepts + guides); diagram unclear; mirror-lag refs vs current-SoT-state confusion (Q2.2); steps in mirror-setup.md missing prerequisite. Owner runs `/reposix-quality-review --rubric dvcs-cold-reader` post-phase to flip from NOT_VERIFIED to PASS.",
+      "rubric": {
+        "scale": "10-pt CLEAR=10 / NEEDS-WORK=5 / CONFUSING=2; pass threshold 7",
+        "reader_profile": "Has read only docs/index.md + docs/concepts/mental-model-in-60-seconds.md; never seen v0.13.0 docs; understands single-backend reposix but not DVCS topology; goal: install the mirror sync against a confluence space without escalating to a maintainer.",
+        "criteria": [
+          "Three roles (SoT-holder, mirror-only consumer, round-tripper) are introduced before any of them is used in a sentence",
+          "The mirror-lag refs explanation does not let the reader confuse 'last synced' with 'current SoT state' (Q2.2)",
+          "The when-to-choose-which-pattern guidance gives the reader a clear self-routing path",
+          "The mirror-setup walk-through is runnable as-written: every gh/curl/sed command works without modification when the reader substitutes their org/space",
+          "The cleanup procedure is complete enough that the reader can tear down without leaving orphan refs/secrets/webhooks",
+          "Troubleshooting entries name the symptom in concrete stderr text and the recovery in concrete shell commands",
+          "Zero plumbing-jargon leaks above Layer 3 (FUSE/kernel/partial-clone/promisor/stateless-connect/fast-import/protocol-v2)"
+        ]
+      }
     }
   ]
 }
