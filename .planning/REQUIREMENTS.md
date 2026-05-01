@@ -105,8 +105,8 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 
 #### Dark-factory regression — third arm
 
-- [ ] **DVCS-DARKFACTORY-01**: Extend `quality/gates/agent-ux/dark-factory.sh` (formerly `scripts/dark-factory-test.sh`) to add a third subprocess-agent transcript: a fresh agent given only the GH mirror URL + a goal completes vanilla-clone + `reposix attach` + edit + bus-push end-to-end with zero in-context learning beyond what the helper's stderr teaches. Reuses the existing dark-factory test harness; no in-prompt instruction beyond the goal statement.
-- [ ] **DVCS-DARKFACTORY-02**: Catalog row in dimension `agent-ux`, kind `subagent-graded`, cadence `pre-pr`. Verifier grades from artifacts with zero session context per OP-7.
+- [x] **DVCS-DARKFACTORY-01** (shipped P86, 2026-05-01): Extended `quality/gates/agent-ux/dark-factory.sh` with `dvcs-third-arm` scenario covering the agent UX surface (5 static teaching-string greps + 5 `--help` token greps + bus URL composition + cache materialization + `attach_walk` audit row + wire-path delegation cite). Wire-path round-trip delegated to `crates/reposix-remote/tests/bus_write_happy.rs::happy_path_writes_both_refs_and_acks_ok` (rationale per 86-01-SUMMARY.md "Deviations from plan").
+- [x] **DVCS-DARKFACTORY-02** (shipped P86, 2026-05-01): Catalog row `agent-ux/dvcs-third-arm` minted in `quality/catalogs/agent-ux.json` with kind `subagent-graded`, cadence `pre-pr`, freshness_ttl 30d, blast_radius P1. Status PASS post-T02 with `last_verified=2026-05-01T21:43:24Z`; 17 asserts passing.
 
 #### Carry-forward
 
@@ -168,8 +168,8 @@ Drafted 2026-04-30 by `gsd-roadmapper`. Coverage: **36/36 v0.13.0 REQ-IDs mapped
 | DVCS-DOCS-02 | P85 | shipped |
 | DVCS-DOCS-03 | P85 | shipped |
 | DVCS-DOCS-04 | P85 | rubric-pending-owner |
-| DVCS-DARKFACTORY-01 | P86 | planning |
-| DVCS-DARKFACTORY-02 | P86 | planning |
+| DVCS-DARKFACTORY-01 | P86 | shipped |
+| DVCS-DARKFACTORY-02 | P86 | shipped |
 | DVCS-SURPRISES-01 | P87 | planning |
 | DVCS-GOOD-TO-HAVES-01 | P88 | planning |
 

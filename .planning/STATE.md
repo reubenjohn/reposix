@@ -3,24 +3,24 @@ gsd_state_version: 1.0
 milestone: v0.13.0
 milestone_name: DVCS over REST
 status: executing
-last_updated: "2026-05-01T17:30:00Z"
-last_activity: 2026-05-01 — P85 SHIPPED (DVCS docs); verifier GREEN at quality/reports/verdicts/p85/VERDICT.md
+last_updated: "2026-05-01T21:45:00Z"
+last_activity: 2026-05-01 — P86 SHIPPED (dark-factory third arm); awaiting verifier subagent dispatch.
 progress:
   total_phases: 11
-  completed_phases: 8
-  total_plans: 13
-  completed_plans: 13
-  percent: 73
+  completed_phases: 9
+  total_plans: 14
+  completed_plans: 14
+  percent: 82
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: P85 SHIPPED 2026-05-01 (DVCS docs — dvcs-topology.md + dvcs-mirror-setup.md + troubleshooting matrix); next P86 (dark-factory regression — third arm)
+Phase: P86 SHIPPED 2026-05-01 (dark-factory regression — third arm `dvcs-third-arm`; DVCS-DARKFACTORY-01..02). Awaiting verifier subagent dispatch. Next P87 (surprises absorption, +2 reservation slot 1)
 Plan: —
-Status: Executing — 8/11 phases complete (P78 + P79 + P80 + P81 + P82 + P83 + P84 + P85); 13 plans complete
-Last activity: 2026-05-01 — P85 verifier GREEN. Single docs-only plan, 3 commits (672be2d + 06b8014 + 386b3cc). docs-alignment claims_bound 273→276; alignment_ratio 0.8198→0.8214. DVCS-DOCS-04 cold-reader rubric registered with full criteria; status NOT_VERIFIED until owner runs /reposix-quality-review (Path B). Banned-words clean; mkdocs --strict clean; mermaid renders clean. 3 in-phase eager-resolutions (Daemon-mode banned-word leak; mkdocs anchor-link slugify; walker STALE_DOCS_DRIFT post-anchor-fix).
+Status: Executing — 9/11 phases complete (P78 + P79 + P80 + P81 + P82 + P83 + P84 + P85 + P86); 14 plans complete
+Last activity: 2026-05-01 — P86 plan + execute combined. 3 commits (6e95f31 catalog-first stub + 59fa6aa harness body + close commit). Catalog row `agent-ux/dvcs-third-arm` PASS with 17 asserts (5 static teaching-string greps + 5 `--help` token greps + bus URL composition + cache materialization + attach_walk audit + wire-path delegation). 1 eager-resolution: pivoted from "literal end-to-end push" → "agent UX surface + bus URL composition" with wire-path delegated to `bus_write_happy.rs` (rationale: `git fetch`/`git push` subprocess driving at shell scope is documented best-effort + brittle to env propagation; cargo tests cover wire path with assert_cmd's precise control). TokenWorld arm SUBSTRATE-GAP-DEFERRED behind REPOSIX_DARK_FACTORY_REAL_TOKENWORLD=1 (cross-references P84 SURPRISES-INTAKE).
 
 ## Current Focus
 
@@ -55,7 +55,7 @@ Last activity: 2026-05-01 — P85 verifier GREEN. Single docs-only plan, 3 commi
 
 **Carry-forward bundle:** `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md` lists `MULTI-SOURCE-WATCH-01` (P78), `GIX-YANKED-PIN-01` (P78), `WAIVED-STRUCTURE-ROWS-03` (P78), `POC-DVCS-01` (P79).
 
-**Next agent action:** /gsd-plan-phase 86 → /gsd-execute-phase 86 (dark-factory regression — third arm: vanilla-clone + attach + bus-push end-to-end against the real GH mirror). Depends on P79..P85 GREEN — all satisfied.
+**Next agent action:** verifier subagent dispatch for P86 (grades the `agent-ux/dvcs-third-arm` row from artifacts; verdict at `quality/reports/verdicts/p86/VERDICT.md`). After GREEN: `/gsd-plan-phase 87 → /gsd-execute-phase 87` (surprises absorption, +2 reservation slot 1; drains `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`). Depends on P78..P86 GREEN.
 
 ## Per-milestone history (cross-references)
 
