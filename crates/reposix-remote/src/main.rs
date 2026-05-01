@@ -22,6 +22,7 @@ use reposix_core::{sanitize, ServerMetadata, Tainted};
 use tokio::runtime::Runtime;
 
 mod backend_dispatch;
+mod bus_url;
 mod diff;
 mod fast_import;
 mod pktline;
