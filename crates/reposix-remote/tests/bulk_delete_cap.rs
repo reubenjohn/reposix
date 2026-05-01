@@ -54,10 +54,13 @@ fn empty_tree_export(msg: &str) -> Vec<u8> {
 async fn six_deletes_refuses_and_calls_no_delete() {
     let server = MockServer::start().await;
     let issues: Vec<Value> = (1..=6).map(sample_issue).collect();
+    // No `.expect(N)` — after P81's L1 precheck, the helper may fire EITHER
+    // `list_changed_since` (?since=...) OR `list_records` (no since), depending
+    // on whether the cache cursor is populated. The load-bearing SG-02
+    // contract is the DELETE expect(0) below; the GET count is incidental.
     Mock::given(method("GET"))
         .and(path_regex(r"^/projects/demo/issues$"))
         .respond_with(ResponseTemplate::new(200).set_body_json(&issues))
-        .expect(1)
         .mount(&server)
         .await;
     Mock::given(method("DELETE"))
