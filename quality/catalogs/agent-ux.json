@@ -70,6 +70,111 @@
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-cli/src/attach.rs subcommand or crates/reposix-cache/src/reconciliation.rs walk regressed; check stderr for whether extensions.partialClone or remote URL post-condition failed",
       "waiver": null
+    },
+    {
+      "id": "agent-ux/mirror-refs-write-on-success",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "crates/reposix-cache/src/mirror_refs.rs",
+        "crates/reposix-remote/src/main.rs::handle_export (success branch)",
+        "crates/reposix-remote/tests/mirror_refs.rs::write_on_success_updates_both_refs",
+        ".planning/REQUIREMENTS.md (DVCS-MIRROR-REFS-01, DVCS-MIRROR-REFS-02)"
+      ],
+      "command": "bash quality/gates/agent-ux/mirror-refs-write-on-success.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/mirror-refs-write-on-success.sh exits 0 against the local cargo workspace",
+          "after a single-backend push, the cache's bare repo has refs/mirrors/sim-head AND refs/mirrors/sim-synced-at resolvable via git for-each-ref",
+          "git log refs/mirrors/sim-synced-at -1 --format=%B first line matches `mirror synced at <RFC3339>`",
+          "audit_events_cache table contains a row with op = 'mirror_sync_written' for the push (verified by integration test)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/mirror-refs-write-on-success.sh",
+        "args": [],
+        "timeout_s": 180,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/mirror-refs-write-on-success.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: crates/reposix-cache/src/mirror_refs.rs writers regressed OR crates/reposix-remote/src/main.rs::handle_export success-branch wiring regressed; check stderr for whether refs were absent, tag message body malformed, or audit row missing",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/mirror-refs-readable-by-vanilla-fetch",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "crates/reposix-cache/src/mirror_refs.rs",
+        "crates/reposix-remote/src/main.rs::handle_export (success branch)",
+        "crates/reposix-remote/src/stateless_connect.rs (ref advertisement)",
+        "crates/reposix-remote/tests/mirror_refs.rs::vanilla_fetch_brings_mirror_refs",
+        ".planning/REQUIREMENTS.md (DVCS-MIRROR-REFS-02)"
+      ],
+      "command": "bash quality/gates/agent-ux/mirror-refs-readable-by-vanilla-fetch.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/mirror-refs-readable-by-vanilla-fetch.sh exits 0 against the local cargo workspace",
+          "after a successful single-backend push, a fresh `git clone --bare` of the cache's bare repo brings BOTH refs/mirrors/sim-head and refs/mirrors/sim-synced-at into the new clone",
+          "vanilla-git readers can observe mirror lag without any reposix awareness (proves stateless-connect advertises mirror refs)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/mirror-refs-readable-by-vanilla-fetch.sh",
+        "args": [],
+        "timeout_s": 180,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/mirror-refs-readable-by-vanilla-fetch.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: crates/reposix-remote/src/stateless_connect.rs advertisement regressed OR transfer.hideRefs setup at crates/reposix-cache/src/cache.rs began hiding refs/mirrors/* — check whether vanilla-clone's for-each-ref returns the refs",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/mirror-refs-cited-in-reject-hint",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "crates/reposix-remote/src/main.rs::handle_export (conflict reject branch)",
+        "crates/reposix-cache/src/mirror_refs.rs::Cache::read_mirror_synced_at",
+        "crates/reposix-remote/tests/mirror_refs.rs::reject_hint_cites_synced_at_with_age",
+        ".planning/REQUIREMENTS.md (DVCS-MIRROR-REFS-03)"
+      ],
+      "command": "bash quality/gates/agent-ux/mirror-refs-cited-in-reject-hint.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/mirror-refs-cited-in-reject-hint.sh exits 0 against the local cargo workspace",
+          "after a successful push (refs populated) followed by a stale-prior push, the conflict-reject stderr cites refs/mirrors/sim-synced-at",
+          "reject stderr contains a parseable RFC3339 timestamp + `(N minutes ago)` rendering",
+          "first-push None case (no refs yet) omits the synced-at hint cleanly per RESEARCH.md pitfall 7 (covered by reject_hint_first_push_omits_synced_at_line integration test)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/mirror-refs-cited-in-reject-hint.sh",
+        "args": [],
+        "timeout_s": 180,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/mirror-refs-cited-in-reject-hint.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: crates/reposix-remote/src/main.rs::handle_export conflict-reject hint composition regressed OR crates/reposix-cache/src/mirror_refs.rs::read_mirror_synced_at parser regressed; check whether stderr cites the ref name, RFC3339, and 'N minutes ago' tokens",
+      "waiver": null
     }
   ]
 }
