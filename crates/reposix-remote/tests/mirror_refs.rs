@@ -372,6 +372,15 @@ async fn reject_hint_cites_synced_at_with_age() {
         .respond_with(ResponseTemplate::new(200).set_body_json(&issues))
         .mount(&server2)
         .await;
+    // P81 L1 precheck does ONE `backend.get_record(id)` per record in
+    // changed_set ∩ push_set to fetch the backend's CURRENT version
+    // for the conflict comparison. Mock the per-issue GET so the
+    // precheck sees v5 and emits a fetch-first reject.
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/projects/demo/issues/42$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(sample_issue(42, 5)))
+        .mount(&server2)
+        .await;
     // No PATCH expected.
     Mock::given(method("PATCH"))
         .and(any())

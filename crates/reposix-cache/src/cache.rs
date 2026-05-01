@@ -420,6 +420,110 @@ impl Cache {
             .map_err(|_| Error::Sqlite("cache.db mutex poisoned".into()))
     }
 
+    /// Read the cache's `meta.last_fetched_at` cursor — the timestamp
+    /// of the most recent successful [`Cache::build_from`] or
+    /// [`Cache::sync`] call. Used by the helper's L1 precheck on push
+    /// entry (`crates/reposix-remote/src/precheck.rs`).
+    ///
+    /// Returns:
+    /// - `Ok(Some(ts))` — the cursor is populated; the helper passes
+    ///   `ts` to [`reposix_core::backend::BackendConnector::list_changed_since`].
+    /// - `Ok(None)` — the cursor is absent (fresh cache, never built;
+    ///   OR the stored string failed to parse defensively). The helper
+    ///   falls through to a `list_records` walk for THIS push only
+    ///   (first-push fallback per
+    ///   `.planning/research/v0.13.0-dvcs/architecture-sketch.md
+    ///   § Performance subtlety` and P81 RESEARCH.md § Pitfall 1).
+    ///
+    /// # Errors
+    /// - [`Error::Sqlite`] for any rusqlite I/O failure.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn read_last_fetched_at(&self) -> Result<Option<chrono::DateTime<chrono::Utc>>> {
+        let conn = self.db.lock().expect("cache.db mutex poisoned");
+        let raw: Option<String> = meta::get_meta(&conn, "last_fetched_at")?;
+        let Some(s) = raw else {
+            return Ok(None);
+        };
+        match chrono::DateTime::parse_from_rfc3339(&s) {
+            Ok(dt) => Ok(Some(dt.with_timezone(&chrono::Utc))),
+            Err(e) => {
+                // Defensive: malformed RFC3339 in the cursor row should
+                // not poison the precheck path. WARN-log and fall back
+                // to first-push semantics. Same shape as the parse
+                // guard in builder.rs:233-236, except we degrade to
+                // None instead of erroring — the helper's first-push
+                // fallback is the intended recovery path.
+                tracing::warn!(
+                    "cache.last_fetched_at malformed: {s:?}: {e}; falling back to first-push semantics"
+                );
+                Ok(None)
+            }
+        }
+    }
+
+    /// Write the cache's `meta.last_fetched_at` cursor. Called by the
+    /// helper after a successful push so the next push's precheck has
+    /// a recent cursor.
+    ///
+    /// Best-effort caller pattern: callers should `tracing::warn!` on
+    /// failure and continue. The push still acks `ok` to git. Cursor
+    /// drift is recoverable via `reposix sync --reconcile` (the L1
+    /// escape hatch).
+    ///
+    /// # Errors
+    /// - [`Error::Sqlite`] for any rusqlite I/O failure.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn write_last_fetched_at(&self, ts: chrono::DateTime<chrono::Utc>) -> Result<()> {
+        let conn = self.db.lock().expect("cache.db mutex poisoned");
+        meta::set_meta(&conn, "last_fetched_at", &ts.to_rfc3339())
+    }
+
+    /// Read a blob from the cache's bare repo WITHOUT touching the
+    /// backend. Local-only inspector — the sync gix-only counterpart
+    /// to the async materializer [`crate::builder::Cache::read_blob`]
+    /// (which does a backend GET on cache miss).
+    ///
+    /// Used by the helper's L1 precheck path
+    /// (`crates/reposix-remote/src/precheck.rs::precheck_export_against_changed_set`):
+    /// the precheck must NOT trigger backend egress per record on the
+    /// hot path or the L1 perf goal collapses.
+    ///
+    /// Returns:
+    /// - `Ok(Some(Tainted<Vec<u8>>))` — the blob is materialized in
+    ///   the cache's `.git/objects/` and was decoded successfully.
+    /// - `Ok(None)` — the OID does not resolve to an object in the
+    ///   cache's bare repo (lazy-materialization gap; the OID-map row
+    ///   may exist but the actual blob bytes haven't been fetched).
+    ///   The precheck callers fall through to no-conflict for this
+    ///   record — `plan()`'s execute path will refetch via the async
+    ///   `read_blob` on demand.
+    ///
+    /// # Errors
+    /// - [`Error::Git`] if `gix::Repository::try_find_object` returns
+    ///   a non-NotFound error (corruption, I/O), or the resolved object
+    ///   is not a blob.
+    pub fn read_blob_cached(
+        &self,
+        oid: gix::ObjectId,
+    ) -> Result<Option<reposix_core::Tainted<Vec<u8>>>> {
+        let object = match self.repo.try_find_object(oid) {
+            Ok(Some(obj)) => obj,
+            Ok(None) => return Ok(None),
+            Err(e) => return Err(Error::Git(format!("try_find_object {oid}: {e}"))),
+        };
+        if !matches!(object.kind, gix::object::Kind::Blob) {
+            return Err(Error::Git(format!(
+                "read_blob_cached({oid}): object is {:?}, expected Blob",
+                object.kind
+            )));
+        }
+        Ok(Some(reposix_core::Tainted::new(object.data.clone())))
+    }
+
     /// Write a single `audit_events_cache` row recording that an
     /// `attach` walk completed (DVCS-ATTACH-02 / OP-3). Best-effort
     /// in line with the rest of the `log_*` family — SQL errors

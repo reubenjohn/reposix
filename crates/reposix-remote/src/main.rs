@@ -25,6 +25,7 @@ mod backend_dispatch;
 mod diff;
 mod fast_import;
 mod pktline;
+mod precheck;
 mod protocol;
 mod stateless_connect;
 
@@ -39,9 +40,14 @@ use crate::stateless_connect::handle_stateless_connect;
 /// Deferred-exit flag — set by the export path on push refusal. We finish
 /// the protocol exchange cleanly (so git doesn't see a torn pipe) and bail
 /// after the dispatch loop returns.
-struct State {
-    rt: Runtime,
-    backend: Arc<dyn BackendConnector>,
+///
+/// `pub(crate)` (with `pub(crate)` on `rt`/`backend`/`project`/`cache`) so
+/// the sibling [`crate::precheck`] module can access these fields without
+/// reaching into the binary root via the (invalid) `crate::main::*` path.
+/// The other fields stay private — the precheck does not consume them.
+pub(crate) struct State {
+    pub(crate) rt: Runtime,
+    pub(crate) backend: Arc<dyn BackendConnector>,
     /// Short slug used as the cache-key prefix in
     /// `<cache-root>/reposix/<backend_name>-<project>.git`. Set from
     /// [`BackendKind::slug`] by the URL-scheme dispatcher in
@@ -51,7 +57,7 @@ struct State {
     /// Project identifier passed to [`BackendConnector`] methods —
     /// `demo` for sim, `owner/repo` for GitHub, `TokenWorld` for
     /// Confluence, `TEST` for JIRA.
-    project: String,
+    pub(crate) project: String,
     /// Filesystem-safe variant of `project` used as the cache
     /// directory component (`<root>/reposix/<backend>-<cache_project>.git`).
     /// Differs from `project` only for GitHub where `owner/repo` is
@@ -67,7 +73,7 @@ struct State {
     /// `handle_stateless_connect` (the capabilities/list/import/export
     /// verbs don't need it), then cached for the remainder of the
     /// helper's lifetime.
-    cache: Option<Cache>,
+    pub(crate) cache: Option<Cache>,
 }
 
 #[allow(clippy::print_stderr)]
@@ -331,55 +337,41 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
         }
     };
 
-    let prior = match state
-        .rt
-        .block_on(state.backend.list_records(&state.project))
-    {
-        Ok(v) => v,
+    // L1 conflict detection (DVCS-PERF-L1-01..03). Replaces the
+    // unconditional `list_records` walk + per-record loop with a single
+    // call into the shared precheck module that both this single-backend
+    // path and the future bus handler (P82+) consume.
+    //
+    // M1 fix (narrow dependencies): pass cache/backend/project/rt
+    // explicitly rather than `&mut State` so the bus handler's
+    // `BusState { sot, mirror }` shape can call this function without
+    // conforming to the single-backend `State` layout. State.backend
+    // is `Arc<dyn BackendConnector>` per main.rs:44, so deref to
+    // `&dyn BackendConnector` via `as_ref()`.
+    let (prior, mut conflicts) = match precheck::precheck_export_against_changed_set(
+        state.cache.as_ref(),
+        state.backend.as_ref(),
+        &state.project,
+        &state.rt,
+        &parsed,
+    ) {
+        Ok(precheck::PrecheckOutcome::Conflicts(c)) => (Vec::new(), c),
+        Ok(precheck::PrecheckOutcome::Proceed { prior }) => (prior, Vec::new()),
         Err(e) => {
+            // Map the precheck error to the existing `fail_push` shape.
+            // The precheck annotates REST call sites with
+            // `.context("backend-unreachable: ...")`, so the rendered
+            // message preserves the same diagnostic the prior code
+            // emitted at line 343.
             return fail_push(
                 proto,
                 state,
                 "backend-unreachable",
-                &format!("cannot list prior issues: {e:#}"),
+                &format!("L1 precheck failed: {e:#}"),
             )
             .map_err(Into::into);
         }
     };
-
-    // ARCH-08: conflict detection. Build prior_by_id index, then walk
-    // the new tree. For each existing issue, parse the new blob's
-    // frontmatter and compare its `version` against the prior's
-    // `version`. Mismatch => conflict. New issues (Create path) skip
-    // the check — no base to conflict with.
-    let prior_by_id: std::collections::HashMap<reposix_core::RecordId, &reposix_core::Record> =
-        prior.iter().map(|i| (i.id, i)).collect();
-    // Tuple shape: (id, local_version, backend_version, backend_updated_at_iso8601)
-    let mut conflicts: Vec<(reposix_core::RecordId, u64, u64, String)> = Vec::new();
-    for (path, mark) in &parsed.tree {
-        let Some(id_num) = issue_id_from_path(path) else {
-            continue; // non-issue paths (e.g. README) are not conflict-checked
-        };
-        let id = reposix_core::RecordId(id_num);
-        let Some(prior_issue) = prior_by_id.get(&id) else {
-            continue; // new issue (Create path) — no base to conflict with
-        };
-        let Some(blob_bytes) = parsed.blobs.get(mark) else {
-            continue; // unresolved mark — defer to plan() error path
-        };
-        let text = String::from_utf8_lossy(blob_bytes);
-        let Ok(parsed_issue) = reposix_core::frontmatter::parse(&text) else {
-            continue; // bad frontmatter handled by plan()
-        };
-        if parsed_issue.version != prior_issue.version {
-            conflicts.push((
-                id,
-                parsed_issue.version,
-                prior_issue.version,
-                prior_issue.updated_at.to_rfc3339(),
-            ));
-        }
-    }
 
     if !conflicts.is_empty() {
         conflicts.sort_by_key(|c| c.0 .0);
@@ -490,6 +482,20 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
         if let Some(cache) = state.cache.as_ref() {
             cache.log_helper_push_accepted(files_touched, &summary);
 
+            // L1 INBOUND-SoT cursor (DVCS-PERF-L1-01). Best-effort —
+            // a write failure WARN-logs and does not poison the push
+            // ack. Self-healing on next successful push (the existing
+            // log_helper_push_accepted row is always written above,
+            // even if the cursor write fails). NOTE: this cursor is
+            // distinct from the OUTBOUND mirror-lag cursor written by
+            // the P80 block below — same direction of travel on a
+            // successful push but different storage layers (meta table
+            // vs gix refs). See `crates/reposix-remote/src/precheck.rs`
+            // module-doc for the full distinction.
+            if let Err(e) = cache.write_last_fetched_at(chrono::Utc::now()) {
+                tracing::warn!("write_last_fetched_at failed: {e:#}");
+            }
+
             // Mirror-lag refs (DVCS-MIRROR-REFS-02). Best-effort: a
             // ref-write failure WARN-logs and does not poison the push
             // ack. The audit row is UNCONDITIONAL per OP-3 — written
@@ -551,7 +557,11 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
 
 /// `0001.md` -> `1`. Returns `None` for non-issue paths (e.g. `README.md`,
 /// or anything whose stem is not a base-10 unsigned integer).
-fn issue_id_from_path(path: &str) -> Option<u64> {
+///
+/// `pub(crate)` so the [`crate::precheck`] module can reuse the same
+/// path-parsing rule as the existing conflict-detection loop in
+/// [`handle_export`].
+pub(crate) fn issue_id_from_path(path: &str) -> Option<u64> {
     let stem = path.strip_suffix(".md")?;
     stem.parse::<u64>().ok()
 }
