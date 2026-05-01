@@ -71,12 +71,16 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 - [x] **DVCS-BUS-URL-01** (shipped P82, 2026-05-01): `crates/reposix-remote/src/bus_url.rs::parse` recognizes `reposix::<sot-spec>?mirror=<mirror-url>` per Q3.3; `Route::{Single,Bus}` enum branches at `argv[2]` parse-time; `parse_remote_url` (single-backend) UNCHANGED; `+`-delimited form rejected with verbatim Q3.3 hint; unknown query keys rejected (D-03).
 - [x] **DVCS-BUS-PRECHECK-01** (shipped P82, 2026-05-01): `crates/reposix-remote/src/bus_handler.rs::handle_bus_export` runs `git ls-remote -- <mirror> refs/heads/main` (with `-`-prefix reject for T-82-01) before reading stdin; on drift emits verbatim `error refs/heads/main fetch first` + Q3.5 hint; NO writes; NO stdin read.
 - [x] **DVCS-BUS-PRECHECK-02** (shipped P82, 2026-05-01): `bus_handler::handle_bus_export` calls `precheck_sot_drift_any(cache, backend, project, rt)` (new 10-line wrapper around L1's `list_changed_since`) before reading stdin; on `Drifted` outcome emits verbatim `error refs/heads/main fetch first` + `git pull --rebase` hint citing mirror-lag refs (when populated); NO writes; NO stdin read.
-- [ ] **DVCS-BUS-WRITE-01**: SoT-first write — buffer fast-import stream from stdin; apply REST writes to confluence; on success, write audit rows to BOTH tables (cache + backend) and update `last_fetched_at`. On any failure, bail; mirror unchanged.
-- [ ] **DVCS-BUS-WRITE-02**: Mirror write — `git push` to GH mirror after SoT write succeeds. On mirror-write failure, write mirror-lag audit row; update `refs/mirrors/confluence-head` to new SoT SHA but NOT `refs/mirrors/confluence-synced-at` (stays at last successful mirror sync); print warning to stderr; return ok to git (SoT contract satisfied).
-- [ ] **DVCS-BUS-WRITE-03**: On mirror-write success, update `refs/mirrors/confluence-synced-at` to now and send `ok refs/heads/main` back to git.
-- [ ] **DVCS-BUS-WRITE-04**: No helper-side retry on transient mirror-write failures (per Q3.6) — surface, audit, let user retry.
-- [ ] **DVCS-BUS-WRITE-05**: Bus URL with no local `git remote` for the mirror fails with hint per Q3.5 — *"configure the mirror remote first: `git remote add <name> <mirror-url>`."* No auto-mutation of user's git config.
-- [ ] **DVCS-BUS-WRITE-06**: Fault-injection tests cover every documented failure case — kill GH push between confluence-write and ack; kill confluence-write mid-stream; simulate confluence 409 after precheck passed. Each produces correct audit + recoverable state.
+- [x] **DVCS-BUS-WRITE-01** (shipped P83, 2026-05-01): `bus_handler::handle_bus_export` calls `write_loop::apply_writes(cache, backend, backend_name, project, rt, proto, &parsed)` (P83-01 T02 refactor lift); SoT writes; audit rows in both tables; `last_fetched_at` advanced.
+- [x] **DVCS-BUS-WRITE-02** (shipped P83, 2026-05-01): Plain `git push <mirror_remote> main` subprocess after SoT success (NO `--force-with-lease` per D-08). On mirror failure: `helper_push_partial_fail_mirror_lag` audit row (NEW op P83-01 T03); `refs/mirrors/<sot>-head` updated; `synced-at` NOT updated; stderr warn; `ok` returned.
+- [x] **DVCS-BUS-WRITE-03** (shipped P83, 2026-05-01): On mirror success: BOTH refs updated; `mirror_sync_written` audit row; `ok refs/heads/main` returned.
+- [x] **DVCS-BUS-WRITE-04** (shipped P83, 2026-05-01): NO helper-side retry per Q3.6. Verifier shell `bus-write-no-helper-retry.sh` greps for `--force` tokens (none present).
+- [x] **DVCS-BUS-WRITE-05** (shipped P83, 2026-05-01): STEP 0 in `bus_handler::handle_bus_export` bails BEFORE `ensure_cache` when no `git remote add` configured for the mirror URL; verbatim Q3.5 hint emitted; NO cache opened (regression test in `bus_write_no_mirror_remote.rs`).
+- [x] **DVCS-BUS-WRITE-06** (shipped P83-02, 2026-05-01): Three fault-injection tests under `crates/reposix-remote/tests/`:
+  - `bus_write_mirror_fail.rs` (`#[cfg(unix)]` failing-update-hook fixture; case a)
+  - `bus_write_sot_fail.rs` (mid-stream 5xx; case b)
+  - `bus_write_post_precheck_409.rs` (post-precheck 409; case c)
+  Plus `bus_write_audit_completeness.rs` for OP-3 dual-table assertion.
 - [x] **DVCS-BUS-FETCH-01** (shipped P82, 2026-05-01): Capabilities branching at `crates/reposix-remote/src/main.rs:150-172` omits `stateless-connect` for `Route::Bus`; `tests/bus_capabilities.rs` confirms single-backend advertises it AND bus URLs DO NOT.
 
 #### L1 perf migration
@@ -150,12 +154,12 @@ Drafted 2026-04-30 by `gsd-roadmapper`. Coverage: **36/36 v0.13.0 REQ-IDs mapped
 | DVCS-BUS-PRECHECK-01 | P82 | shipped |
 | DVCS-BUS-PRECHECK-02 | P82 | shipped |
 | DVCS-BUS-FETCH-01 | P82 | shipped |
-| DVCS-BUS-WRITE-01 | P83 | planning |
-| DVCS-BUS-WRITE-02 | P83 | planning |
-| DVCS-BUS-WRITE-03 | P83 | planning |
-| DVCS-BUS-WRITE-04 | P83 | planning |
-| DVCS-BUS-WRITE-05 | P83 | planning |
-| DVCS-BUS-WRITE-06 | P83 | planning |
+| DVCS-BUS-WRITE-01 | P83 | shipped |
+| DVCS-BUS-WRITE-02 | P83 | shipped |
+| DVCS-BUS-WRITE-03 | P83 | shipped |
+| DVCS-BUS-WRITE-04 | P83 | shipped |
+| DVCS-BUS-WRITE-05 | P83 | shipped |
+| DVCS-BUS-WRITE-06 | P83 | shipped |
 | DVCS-WEBHOOK-01 | P84 | planning |
 | DVCS-WEBHOOK-02 | P84 | planning |
 | DVCS-WEBHOOK-03 | P84 | planning |

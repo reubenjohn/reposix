@@ -3,24 +3,24 @@ gsd_state_version: 1.0
 milestone: v0.13.0
 milestone_name: DVCS over REST
 status: executing
-last_updated: "2026-05-01T13:30:00Z"
-last_activity: 2026-05-01 — P82 SHIPPED (bus remote URL parser + prechecks); verifier GREEN at quality/reports/verdicts/p82/VERDICT.md
+last_updated: "2026-05-01T15:50:00Z"
+last_activity: 2026-05-01 — P83 SHIPPED (bus write fan-out — riskiest phase); verifier GREEN at quality/reports/verdicts/p83/VERDICT.md
 progress:
   total_phases: 11
-  completed_phases: 5
-  total_plans: 9
-  completed_plans: 9
-  percent: 45
+  completed_phases: 6
+  total_plans: 11
+  completed_plans: 11
+  percent: 55
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: P82 SHIPPED 2026-05-01 (bus remote URL parser, PRECHECK A mirror-drift, PRECHECK B SoT-drift, capability-branching omits stateless-connect for bus URLs); next P83 (bus remote write fan-out — riskiest)
+Phase: P83 SHIPPED 2026-05-01 (bus write fan-out — riskiest phase, split into 83-01 + 83-02; SoT-first algorithm with mirror-best-effort fallback; full fault-injection coverage); next P84 (webhook-driven mirror sync)
 Plan: —
-Status: Executing — 5/11 phases complete (P78 + P79 + P80 + P81 + P82); 9 plans complete
-Last activity: 2026-05-01 — P82 verifier GREEN. Plan-checker YELLOW with 1 HIGH (positive cap-advertise assertion) + 3 MED (tests/common.rs hard-block, diag/ensure_cache pub(crate), bus_precheck_b verbatim); all revised before execution. 7 in-phase eager-resolutions per OP-8 (verifier-shell test-name shape, working-tree fixture, branch checkout, clippy --all-targets, ad-hoc bash promotion, dead_code allows, visibility widening). No SURPRISES-INTAKE entries. Pre-push 26 PASS / 0 FAIL. Two CI fix-forwards earlier in session: ee527f2 (push_conflict.rs missing per-issue GET mocks for L1 precheck), c0c8e54 (REPOSIX_CACHE_DIR env-var race).
+Status: Executing — 6/11 phases complete (P78 + P79 + P80 + P81 + P82 + P83); 11 plans complete
+Last activity: 2026-05-01 — P83 verifier GREEN. Phase split into 83-01 (write fan-out core, 6 tasks) + 83-02 (fault injection + close, 4 tasks) per ROADMAP carve-out. Plan-checker YELLOW with 1 BLOCKER (ParsedExport ownership → &ParsedExport borrow shape) + 5 HIGH + 4 MED; planner revised before execution. Two CI fix-forwards: fc46415 (dark_factory_conflict_teaching_string_present test broadened to write_loop.rs) + cf81824 (push_conflict.rs per-test cache_dir isolation for cargo llvm-cov coverage step). One SURPRISES-INTAKE entry filed (make_failing_mirror_fixture core.hooksPath bug — RESOLVED inline). Pre-push 26 PASS / 0 FAIL.
 
 ## Current Focus
 
@@ -55,7 +55,7 @@ Last activity: 2026-05-01 — P82 verifier GREEN. Plan-checker YELLOW with 1 HIG
 
 **Carry-forward bundle:** `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md` lists `MULTI-SOURCE-WATCH-01` (P78), `GIX-YANKED-PIN-01` (P78), `WAIVED-STRUCTURE-ROWS-03` (P78), `POC-DVCS-01` (P79).
 
-**Next agent action:** /gsd-plan-phase 83 → /gsd-execute-phase 83 (bus remote write fan-out — riskiest phase per ROADMAP; SoT-first-write algorithm with mirror-best-effort fallback + full fault-injection coverage; if plan exceeds 4 cargo-heavy tasks, /gsd-insert-phase to split P83.1/P83.2). Depends on P80 + P82 GREEN — already satisfied.
+**Next agent action:** /gsd-plan-phase 84 → /gsd-execute-phase 84 (webhook-driven mirror sync — `.github/workflows/reposix-mirror-sync.yml` triggered by `repository_dispatch` + cron `*/30`; uses `--force-with-lease` for race protection; uses real GH mirror at `github.com/reubenjohn/reposix-tokenworld-mirror`). Depends on P80 + P83 GREEN — already satisfied.
 
 ## Per-milestone history (cross-references)
 

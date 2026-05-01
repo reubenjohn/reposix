@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 390,
-    "claims_bound": 283,
+    "claims_bound": 273,
     "claims_missing_test": 0,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.8498498498498499,
+    "alignment_ratio": 0.8198198198198198,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-05-01T13:34:56Z",
+    "last_walked": "2026-05-01T15:56:18Z",
     "coverage_ratio": 0.20312216373207478,
     "lines_covered": 1119,
     "total_eligible_lines": 5509,
@@ -531,7 +531,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "test dark_factory_conflict_teaching_string_present (198-214) asserts literal \"git pull --rebase\" exists in main.rs; dark_factory_blob_limit_teaching_string_present (174-189) asserts \"git sparse-checkout\" exists in stateless_connect.rs",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:04:40Z",
       "last_extracted": "2026-04-28T09:04:40Z",
@@ -2354,7 +2354,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "agent_flow.rs:198-214 asserts git pull --rebase and error refs/heads/main fetch first strings remain in helper code",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T08:59:02Z",
       "last_extracted": "2026-04-28T08:59:02Z",
@@ -3739,7 +3739,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "Test asserts literal 'git pull --rebase' substring exists in crates/reposix-remote/src/main.rs for push-conflict stderr diagnostic (Phase 34 conflict-rebase teaching mechanism, regression-protected Phase 35 Plan 02)",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T08:59:51Z",
       "last_extracted": "2026-04-28T08:59:51Z",
@@ -5595,7 +5595,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "Regression test verifies conflict path must contain literal 'git pull --rebase' and 'error refs/heads/main fetch first' status text",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:08:59Z",
       "last_extracted": "2026-04-28T09:08:59Z",
@@ -6143,7 +6143,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "test asserts literal \"git pull --rebase\" string is committed in crates/reposix-remote/src/main.rs; this string is the teaching message agents read",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:04:44Z",
       "last_extracted": "2026-04-28T09:04:44Z",
@@ -6208,7 +6208,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "Regression test verifies git pull --rebase teaching string present in reposix-remote/src/main.rs for conflict recovery",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:01:36Z",
       "last_extracted": "2026-04-28T09:01:36Z",
@@ -6262,7 +6262,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "Regression test verifies 'error refs/heads/main fetch first' status line and 'git pull --rebase' teaching string present in crates/reposix-remote/src/main.rs export path",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:00:45Z",
       "last_extracted": "2026-04-28T09:00:45Z",
@@ -7950,7 +7950,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "agent_flow.rs:206 asserts the helper binary ships literal 'git pull --rebase' recovery teaching string",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T18:42:28Z",
       "last_extracted": "2026-04-28T18:42:28Z",
@@ -8603,7 +8603,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "agent_flow.rs:198-214 verifies error refs/heads/main fetch first string is present in helper",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T08:59:10Z",
       "last_extracted": "2026-04-28T08:59:10Z",
@@ -9277,7 +9277,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "test asserts literal \"error refs/heads/main fetch first\" is committed in crates/reposix-remote/src/main.rs as the canned status line for push conflict rejection",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:05:04Z",
       "last_extracted": "2026-04-28T09:05:04Z",
