@@ -142,7 +142,13 @@ impl Cache {
             .map_err(|e| Error::Git(e.to_string()))?
             .detach();
 
-        // Commit.
+        // Commit. If `refs/heads/main` already points at a commit (re-seed
+        // path — e.g. Q1.3 idempotent re-attach), chain the new commit
+        // off the existing one. `repo.commit` writes the ref via
+        // `PreviousValue::MustExistAndMatch(...)` semantics: passing a
+        // mismatched parent set against an existing ref errors out.
+        // Reusing the existing tip as parent makes seed-then-seed
+        // succeed without losing history.
         let msg = format!(
             "sync({}:{}): {} issues at {}",
             self.backend_name,
@@ -150,14 +156,14 @@ impl Cache {
             inner_tree.entries.len(),
             Utc::now().to_rfc3339()
         );
+        let parent_commit: Option<gix::ObjectId> = self
+            .repo
+            .find_reference("refs/heads/main")
+            .ok()
+            .and_then(|mut r| r.peel_to_id().ok().map(gix::Id::detach));
         let commit_oid = self
             .repo
-            .commit(
-                "refs/heads/main",
-                msg,
-                tree_oid,
-                std::iter::empty::<gix::ObjectId>(),
-            )
+            .commit("refs/heads/main", msg, tree_oid, parent_commit)
             .map_err(|e| Error::Git(e.to_string()))?;
 
         // Explicitly point HEAD at refs/heads/main to defend against

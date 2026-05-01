@@ -146,8 +146,16 @@ pub async fn run(args: AttachArgs) -> Result<()> {
     // bail with a clear error rather than silently misbehaving.
     let connector: Arc<dyn BackendConnector> = match backend {
         "sim" => {
-            // Default sim origin matches reposix-cli::init::DEFAULT_SIM_ORIGIN.
-            let origin = "http://127.0.0.1:7878".to_string();
+            // Default sim origin matches reposix-cli::init::DEFAULT_SIM_ORIGIN;
+            // tests + alternate-port deployments override via REPOSIX_SIM_ORIGIN.
+            // The translated remote URL still bakes the default; the cache's
+            // backend connector uses this override only for the REST round-trips
+            // that build_from + reconcile depend on. The remote URL is plumbing
+            // for the helper, not a live HTTP target during attach itself.
+            let origin = std::env::var("REPOSIX_SIM_ORIGIN")
+                .ok()
+                .filter(|s| !s.is_empty())
+                .unwrap_or_else(|| "http://127.0.0.1:7878".to_string());
             let sim = SimBackend::new(origin).context("build SimBackend")?;
             Arc::new(sim)
         }

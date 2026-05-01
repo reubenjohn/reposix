@@ -62,7 +62,18 @@ impl Cache {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        let mut repo = gix::init_bare(&path).map_err(|e| Error::Git(e.to_string()))?;
+        // Idempotent open: if the cache dir already holds a bare git
+        // repo, reuse it; only `init_bare` for fresh dirs. `gix::init_bare`
+        // refuses non-empty dirs, which would break Q1.3 (re-attach against
+        // the same SoT must succeed). The presence of `HEAD` is the
+        // canonical "this is a git dir" signal — any partial init that
+        // produced HEAD is reusable; anything more partial is rare enough
+        // we let gix surface the diagnostic.
+        let mut repo = if path.join("HEAD").exists() {
+            gix::open(&path).map_err(|e| Error::Git(e.to_string()))?
+        } else {
+            gix::init_bare(&path).map_err(|e| Error::Git(e.to_string()))?
+        };
 
         // Provide a default committer/author identity so `Cache::build_from`
         // can produce a commit even when the host has no `user.name` /
