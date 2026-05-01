@@ -144,10 +144,13 @@ grep -q 'git sparse-checkout' \
     "${WORKSPACE_ROOT}/crates/reposix-remote/src/stateless_connect.rs" \
     || { echo "FAIL: BLOB_LIMIT teaching string regressed in stateless_connect.rs"; exit 1; }
 
-# 5. Assertion: conflict path teaches `git pull --rebase`.
+# 5. Assertion: conflict path teaches `git pull --rebase`. P83-01 T02
+#    lifted handle_export's conflict branch into write_loop::apply_writes;
+#    grep both files so the assertion stays valid post-lift.
 grep -q 'git pull --rebase' \
     "${WORKSPACE_ROOT}/crates/reposix-remote/src/main.rs" \
-    || { echo "FAIL: conflict-rebase teaching string regressed in main.rs"; exit 1; }
+    "${WORKSPACE_ROOT}/crates/reposix-remote/src/write_loop.rs" \
+    || { echo "FAIL: conflict-rebase teaching string regressed in main.rs/write_loop.rs"; exit 1; }
 
 echo "DARK-FACTORY DEMO COMPLETE -- sim backend: agent UX is pure git." >&2
 echo "  - init configures partial-clone working tree without FUSE" >&2
