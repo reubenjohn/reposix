@@ -54,3 +54,13 @@
 **Sketched resolution:** RESOLVED in T04 by adding the `reposix-quality doc-alignment bind` invocation to T04's action body alongside the perf_l1.rs creation. The plan body's intent is preserved (the docs-alignment row IS minted by the bind verb per Principle A); only the schedule shifts T01→T04. P88 may consider whether the bind verb should accept a `--test-pending` flag for true catalog-first contracts where the test file ships in a later commit of the same phase, but this is a tooling polish item not a P81 blocker.
 
 **STATUS:** OPEN
+
+## 2026-05-01 16:30 | discovered-by: P83-02-T02 | severity: LOW
+
+**What:** `make_failing_mirror_fixture` (P83-01 T05's `crates/reposix-remote/tests/common.rs`) writes a per-repo `hooks/update` shell hook that exits 1 to make the bare mirror reject pushes. The fixture honors `GIT_CONFIG_NOSYSTEM=1` to skip `/etc/gitconfig` but does NOT override `core.hooksPath`. On a developer machine with a user-global `~/.gitconfig` setting `core.hooksPath = ~/.git-hooks` (a common dev-environment pattern), the user-global hooks dir wins over the per-repo `hooks/` dir, and the failing-update-hook NEVER fires — the failing mirror silently becomes a passing mirror. P83-02 T02 caught this on first run: stderr was empty, the helper's partial-fail branch was unreachable.
+
+**Why out-of-scope for P83-02 T02 (escalated to eager-resolution):** Surfaced inside T02's verify step. Fix is a 5-line `git config core.hooksPath` override inside the fixture body (no new dep, < 5 minutes work). Per OP-8 eager-resolution preference, fixed inline rather than blocking T02 to file as deferred. STATUS-on-discovery is therefore RESOLVED, not OPEN; this entry exists for the +2 honesty trail (verifier subagent should observe the fixture-fix commit in P83-02's history) and to document the cross-environment hardening pattern for future fixtures that lay down per-repo hooks.
+
+**Sketched resolution:** RESOLVED in P83-02 T02 fixture-fix commit (Rule 1 deviation): `make_failing_mirror_fixture` now runs `git config core.hooksPath <bare>/hooks` in the bare repo's local config after `git init --bare`. Local config wins over global `core.hooksPath`, restoring the intended per-repo override semantics. P83-01 T05's happy-path test never exercised this code path (passing mirror has no failing hook → the override gap was latent). Future fixtures that install per-repo hooks should follow this pattern; `quality/PROTOCOL.md` may want a checklist note for "shell-hook-based fixtures" but that's a P88 GOOD-TO-HAVE.
+
+**STATUS:** RESOLVED | P83-02 T02 commit (Rule 1 — fixture bug from P83-01 T05; auto-fixed inline)

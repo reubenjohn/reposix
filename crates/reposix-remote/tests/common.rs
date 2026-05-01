@@ -158,7 +158,30 @@ pub fn make_failing_mirror_fixture() -> (tempfile::TempDir, String) {
         .expect("spawn git init --bare");
     assert!(status.success(), "git init --bare failed in mirror fixture");
 
-    let hook = mirror.path().join("hooks").join("update");
+    // Override `core.hooksPath` in the bare repo's *local* config to
+    // point at the per-repo `hooks/` directory. Without this override,
+    // a user-global `core.hooksPath = /home/.../.git-hooks` (set by
+    // some agent / dev environments) wins and the per-repo update hook
+    // we install below NEVER fires — making the failing-mirror fixture
+    // silently a passing-mirror fixture. P83-02 T02 surfaced this as a
+    // real bug (not a planning oversight). Fix is local-config override
+    // because GIT_CONFIG_NOSYSTEM only disables `/etc/gitconfig`, not
+    // the user's `~/.gitconfig`.
+    let hooks_dir = mirror.path().join("hooks");
+    let status = Command::new("git")
+        .args(["config", "core.hooksPath"])
+        .arg(&hooks_dir)
+        .current_dir(mirror.path())
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .env("GIT_TERMINAL_PROMPT", "0")
+        .status()
+        .expect("spawn git config core.hooksPath");
+    assert!(
+        status.success(),
+        "git config core.hooksPath failed in mirror fixture"
+    );
+
+    let hook = hooks_dir.join("update");
     std::fs::write(
         &hook,
         "#!/bin/sh\necho \"intentional fail for fault test\" >&2\nexit 1\n",
