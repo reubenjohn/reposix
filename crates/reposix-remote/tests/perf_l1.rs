@@ -14,7 +14,15 @@
 use std::fmt::Write as _;
 use std::io::Write;
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+
+/// Process-wide lock for `REPOSIX_CACHE_DIR` env-var mutation. Tests in this
+/// binary share the parent process; `std::env::set_var` is process-wide and
+/// races between concurrent `tokio::test`s. Each test must acquire this
+/// lock for the span where it sets the env var, calls `Cache::open` (which
+/// reads it at open time), and removes it. Subprocess invocations via
+/// `.env("REPOSIX_CACHE_DIR", ...)` are child-local and don't need the lock.
+static ENV_LOCK: Mutex<()> = Mutex::new(());
 
 use assert_cmd::Command;
 use chrono::TimeZone;
@@ -243,11 +251,15 @@ async fn l1_precheck_uses_list_changed_since_not_list_records() {
     // L1 hot-path contract is "blobs are materialized in steady state."
     let backend: Arc<dyn BackendConnector> =
         Arc::new(SimBackend::new(server.uri()).expect("SimBackend::new"));
-    std::env::set_var("REPOSIX_CACHE_DIR", &cache_root);
-    let cache = Cache::open(backend, "sim", project).expect("Cache::open");
+    let cache = {
+        let _env_guard = ENV_LOCK.lock().expect("env lock");
+        std::env::set_var("REPOSIX_CACHE_DIR", &cache_root);
+        let cache = Cache::open(backend, "sim", project).expect("Cache::open");
+        std::env::remove_var("REPOSIX_CACHE_DIR");
+        cache
+    };
     warm_cache(&cache, n).await;
     drop(cache);
-    std::env::remove_var("REPOSIX_CACHE_DIR");
 
     // ASSERTION-PHASE MOCKS: wiremock 0.6 priority is "first mounted
     // wins on ties; lower priority number wins overall" (see
@@ -356,11 +368,15 @@ async fn positive_control_list_records_call_fails_red() {
 
     let backend: Arc<dyn BackendConnector> =
         Arc::new(SimBackend::new(server.uri()).expect("SimBackend::new"));
-    std::env::set_var("REPOSIX_CACHE_DIR", &cache_root);
-    let cache = Cache::open(backend, "sim", project).expect("Cache::open");
+    let cache = {
+        let _env_guard = ENV_LOCK.lock().expect("env lock");
+        std::env::set_var("REPOSIX_CACHE_DIR", &cache_root);
+        let cache = Cache::open(backend, "sim", project).expect("Cache::open");
+        std::env::remove_var("REPOSIX_CACHE_DIR");
+        cache
+    };
     warm_cache(&cache, n).await;
     drop(cache);
-    std::env::remove_var("REPOSIX_CACHE_DIR");
 
     // ASSERTION-PHASE mocks (priority=1 so they catch helper traffic
     // even though setup mocks are mounted earlier).
