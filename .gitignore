@@ -62,9 +62,13 @@ runtime/bench-*.log
 # Quality Gates runtime artifacts (per-run; regenerate on every runner invocation).
 # .gitkeep placeholders under verifications/ + verdicts/ ARE tracked so the
 # directory tree exists in git; only the per-row JSON + per-run timestamped
-# verdict files are runtime noise. Canonical VERDICT.md per phase IS tracked
-# (QG-06 contract per CLAUDE.md: "the verdict is the contract").
+# verdict files are runtime noise. Canonical VERDICT.md and named evidence
+# artifacts (honesty-spot-check.md, triage.md, verifier-prompt.md, etc.)
+# per phase ARE tracked. The pattern below matches only timestamped runtime
+# snapshots — files whose name starts with a digit (e.g.
+# 2026-04-30T09-07-50Z.md). Renamed pattern from the broader *.md +
+# !VERDICT.md exception to avoid accidentally untracking named evidence
+# (caught in PR #31 cleanup; see commit 4b6f8f3 reversal).
 quality/reports/verifications/*/*.json
-quality/reports/verdicts/*/*.md
-!quality/reports/verdicts/*/VERDICT.md
+quality/reports/verdicts/*/[0-9]*.md
 quality/reports/badge.json
