@@ -24,7 +24,7 @@ use clap::{Parser, Subcommand};
 
 // All subcommand modules live in `lib.rs` so integration tests can call
 // them directly. `main.rs` is intentionally thin: clap-derive dispatch only.
-use reposix_cli::{cost, doctor, gc, history, init, list, refresh, sim, spaces, tokens};
+use reposix_cli::{attach, cost, doctor, gc, history, init, list, refresh, sim, spaces, tokens};
 
 /// reposix — git-native partial clone for autonomous agents.
 #[derive(Debug, Parser)]
@@ -84,6 +84,22 @@ enum Cmd {
         #[arg(long)]
         since: Option<String>,
     },
+    /// Attach an existing checkout to a SoT backend (DVCS-ATTACH-01..04).
+    ///
+    /// Builds a cache from REST against the SoT, reconciles cache OIDs
+    /// against the current HEAD by matching records to backend records by
+    /// `id` in frontmatter, and adds a new reposix-equipped remote
+    /// (default `reposix`) configured for partial-clone.
+    ///
+    /// The existing `origin` remote (if any) keeps plain-git semantics —
+    /// it is NOT mutated by attach. extensions.partialClone is set to the
+    /// new reposix remote, NOT to origin.
+    ///
+    /// Examples:
+    ///   reposix attach `sim::demo`                    # attach CWD to sim
+    ///   reposix attach `confluence::SPACE` /tmp/repo  # attach a specific path
+    ///   reposix attach `sim::demo` --no-bus           # single-SoT remote URL
+    Attach(attach::AttachArgs),
     /// List issues for a project by calling the backend's `list_records`
     /// method and dumping the result as JSON (default) or a pretty table.
     ///
@@ -324,6 +340,7 @@ async fn main() -> Result<()> {
             rate_limit,
         } => sim::run(&bind, db, seed_file, no_seed, ephemeral, rate_limit),
         Cmd::Init { spec, path, since } => init::run_with_since(spec, path, since),
+        Cmd::Attach(args) => attach::run(args).await,
         Cmd::List {
             project,
             origin,

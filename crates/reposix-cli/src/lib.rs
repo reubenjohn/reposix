@@ -12,6 +12,7 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::needless_pass_by_value)]
 
+pub mod attach;
 pub mod binpath;
 pub mod cache_db;
 pub mod cost;
