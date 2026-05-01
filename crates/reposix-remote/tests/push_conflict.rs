@@ -160,16 +160,24 @@ async fn stale_base_push_emits_fetch_first_and_writes_no_rest() {
         buf.extend_from_slice(&stream);
         buf
     };
+    // Per-test cache_dir isolation — under cargo llvm-cov, tests in the
+    // same workspace can share host-level cache state via the default
+    // REPOSIX_CACHE_DIR, polluting each other's prior trees. Pinning a
+    // tempdir per test keeps the cache deterministically empty/built.
+    let cache_dir = tempfile::tempdir().expect("cache_dir tempdir");
+    let cache_path = cache_dir.path().to_path_buf();
     let assert = tokio::task::spawn_blocking(move || {
         Command::cargo_bin("git-remote-reposix")
             .expect("binary built")
             .args(["origin", &url])
+            .env("REPOSIX_CACHE_DIR", &cache_path)
             .write_stdin(stdin_data)
             .timeout(std::time::Duration::from_secs(15))
             .assert()
     })
     .await
     .unwrap();
+    drop(cache_dir);
     let out = assert.get_output();
     let stdout = String::from_utf8_lossy(&out.stdout);
     let stderr = String::from_utf8_lossy(&out.stderr);
@@ -227,16 +235,24 @@ async fn clean_push_emits_ok_and_mutates_backend() {
         buf.extend_from_slice(&stream);
         buf
     };
+    // Per-test cache_dir isolation — under cargo llvm-cov, tests in the
+    // same workspace can share host-level cache state via the default
+    // REPOSIX_CACHE_DIR, polluting each other's prior trees. Pinning a
+    // tempdir per test keeps the cache deterministically empty/built.
+    let cache_dir = tempfile::tempdir().expect("cache_dir tempdir");
+    let cache_path = cache_dir.path().to_path_buf();
     let assert = tokio::task::spawn_blocking(move || {
         Command::cargo_bin("git-remote-reposix")
             .expect("binary built")
             .args(["origin", &url])
+            .env("REPOSIX_CACHE_DIR", &cache_path)
             .write_stdin(stdin_data)
             .timeout(std::time::Duration::from_secs(15))
             .assert()
     })
     .await
     .unwrap();
+    drop(cache_dir);
     let out = assert.get_output();
     let stdout = String::from_utf8_lossy(&out.stdout);
     let stderr = String::from_utf8_lossy(&out.stderr);
@@ -309,16 +325,24 @@ async fn frontmatter_strips_server_controlled_fields() {
         buf.extend_from_slice(&stream);
         buf
     };
+    // Per-test cache_dir isolation — under cargo llvm-cov, tests in the
+    // same workspace can share host-level cache state via the default
+    // REPOSIX_CACHE_DIR, polluting each other's prior trees. Pinning a
+    // tempdir per test keeps the cache deterministically empty/built.
+    let cache_dir = tempfile::tempdir().expect("cache_dir tempdir");
+    let cache_path = cache_dir.path().to_path_buf();
     let assert = tokio::task::spawn_blocking(move || {
         Command::cargo_bin("git-remote-reposix")
             .expect("binary built")
             .args(["origin", &url])
+            .env("REPOSIX_CACHE_DIR", &cache_path)
             .write_stdin(stdin_data)
             .timeout(std::time::Duration::from_secs(15))
             .assert()
     })
     .await
     .unwrap();
+    drop(cache_dir);
     let out = assert.get_output();
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(
