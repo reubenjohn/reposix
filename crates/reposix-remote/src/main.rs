@@ -502,19 +502,32 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
             // even on ref-write failure. SoT SHA is the cache's
             // post-write synthesis-commit OID.
             //
-            // P80 cost note: refresh_for_mirror_head() invokes
-            // build_from() to capture the post-write tree (one extra
-            // REST list_records call). P81 L1 migration replaces this
-            // with list_changed_since per
-            // .planning/research/v0.13.0-dvcs/architecture-sketch.md
-            // § Performance subtlety. L2/L3 cache-desync hardening
-            // defers to v0.14.0 per the same doc.
-            let sot_sha_opt = match state.rt.block_on(cache.refresh_for_mirror_head()) {
-                Ok(oid) => Some(oid),
-                Err(e) => {
-                    tracing::warn!("mirror-head SHA derivation failed: {e:#}");
-                    None
+            // P81 L1 perf-fix: when files_touched is 0 (no creates /
+            // updates / deletes executed), the mirror state is
+            // unchanged so we SKIP the refresh_for_mirror_head call
+            // (which internally does build_from → list_records — see
+            // the P80 cost note in this code's history). The mirror
+            // refs already reflect the prior push's tree; updating
+            // synced_at without a tree refresh is honest because no
+            // tree change occurred. Self-healing on next non-trivial
+            // push: refresh_for_mirror_head fires when files_touched
+            // > 0. This drops the perf test's no-op-push list_records
+            // count from 1 → 0 and aligns with the L1 contract that
+            // list_records is replaced on the hot path.
+            //
+            // L2/L3 cache-desync hardening (e.g. running build_from
+            // unconditionally for desync detection) defers to v0.14.0
+            // per architecture-sketch.md § Performance subtlety.
+            let sot_sha_opt = if files_touched > 0 {
+                match state.rt.block_on(cache.refresh_for_mirror_head()) {
+                    Ok(oid) => Some(oid),
+                    Err(e) => {
+                        tracing::warn!("mirror-head SHA derivation failed: {e:#}");
+                        None
+                    }
                 }
+            } else {
+                None
             };
             if let Some(sha) = sot_sha_opt {
                 if let Err(e) = cache.write_mirror_head(&state.backend_name, sha) {

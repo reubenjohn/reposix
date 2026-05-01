@@ -28,6 +28,8 @@ Two guardrails are load-bearing for the dark-factory pattern:
 
 **Mirror-lag refs.** `crates/reposix-cache/` writes two refs per SoT-host on every successful `handle_export` push (and, post-P83, on every successful bus push and webhook-driven mirror sync): `refs/mirrors/<sot-host>-head` (direct ref pointing at the cache's post-write synthesis-commit OID) and `refs/mirrors/<sot-host>-synced-at` (annotated tag whose message-body first line is `mirror synced at <RFC3339>`). `<sot-host>` is the SoT backend slug (`sim` | `github` | `confluence` | `jira`). Refs live in the **cache's bare repo**, NOT in the working tree's `.git/`; vanilla `git fetch` brings them along via the helper's `stateless-connect` advertisement (`git upload-pack --advertise-refs` propagates every non-hidden ref naturally — `transfer.hideRefs` only hides `refs/reposix/sync/*`). `git log refs/mirrors/<sot>-synced-at -1` reveals when the mirror last caught up, and the conflict-reject stderr cites the ref by name with a `(N minutes ago)` rendering for staleness diagnosis. **Important (Q2.2 doc-clarity contract):** `refs/mirrors/<sot>-synced-at` is the timestamp the mirror last caught up to `<sot>` — it is NOT a "current SoT state" marker. The staleness window the refs measure IS the gap between SoT-edit and webhook-fire. Full docs treatment defers to P85 (`docs/concepts/dvcs-topology.md`). Audit-row trail for the ref-write attempt lands in `audit_events_cache` with `op = 'mirror_sync_written'` (OP-3 unconditional — written even on ref-write failure). Ref writes themselves are best-effort `tracing::warn!` (mirroring the `Cache::log_*` family).
 
+**L1 conflict detection (P81+).** On every push, the helper reads its cache cursor (`meta.last_fetched_at`), calls `backend.list_changed_since(since)`, and only conflict-checks records that overlap the push set with the changed-set. The cache is trusted as the prior; the agent's PATCH against a backend-deleted record fails at REST time with a 404 — recoverable via `reposix sync --reconcile` (DVCS-PERF-L1-02). On the cursor-present hot path, the precheck does ONE `list_changed_since` REST call plus ONE `get_record` per record in `changed_set ∩ push_set` (typically zero or one); the legacy unconditional `list_records` walk in `handle_export` is gone. First-push fallback (no cursor yet) and steady-state pushes with no actions executed (`files_touched == 0`) skip the post-write `refresh_for_mirror_head` to keep the no-op cost at zero list-records calls. L2/L3 hardening (background reconcile / transactional cache writes) defers to v0.14.0 per `.planning/research/v0.13.0-dvcs/architecture-sketch.md` § Performance subtlety.
+
 ## Operating Principles (project-specific)
 
 The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The following are project-specific reinforcements, not replacements:
@@ -172,6 +174,9 @@ git clone git@github.com:org/issues-repo.git /tmp/issues  # vanilla mirror clone
 cd /tmp/issues
 reposix attach sim::demo --remote-name reposix            # build cache from REST; reconcile by frontmatter id; add reposix remote
 git push reposix main                                     # push via reposix remote (single-SoT shape; bus URL form requires P82+)
+
+# L1 escape hatch (v0.13.0+): rebuild the cache from REST when a push reject suggests cache desync
+reposix sync --reconcile                                  # full list_records walk + cache rebuild (DVCS-PERF-L1-02)
 
 # Dark-factory regression (proves agent UX is pure git, zero in-context learning)
 bash scripts/dark-factory-test.sh sim                     # local + CI

@@ -4,16 +4,16 @@
   "dimension": "docs-alignment",
   "schema_version": "2.0",
   "summary": {
-    "claims_total": 389,
-    "claims_bound": 298,
+    "claims_total": 390,
+    "claims_bound": 299,
     "claims_missing_test": 0,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.8975903614457831,
+    "alignment_ratio": 0.8978978978978979,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-05-01T09:03:54Z",
-    "coverage_ratio": 0.20312216373207478,
+    "last_walked": "2026-05-01T10:53:50Z",
+    "coverage_ratio": 0.2031221637320748,
     "lines_covered": 1119,
     "total_eligible_lines": 5509,
     "coverage_floor": 0.1
@@ -9338,6 +9338,31 @@
       "next_action": "BIND_GREEN",
       "last_run": "2026-05-01T05:34:59Z",
       "last_extracted": "2026-05-01T05:34:59Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs-alignment/perf-subtlety-prose-bound",
+      "claim": "L1 trades one safety property: today's list_records would catch a record that exists on backend but missing from cache",
+      "source": {
+        "file": ".planning/research/v0.13.0-dvcs/architecture-sketch.md",
+        "line_start": 164,
+        "line_end": 164
+      },
+      "source_hash": "dbba8a5e3c84e6468628f0a763ab7f2c48e5da42f22aade4135ffb83551c8c38",
+      "source_hashes": [
+        "dbba8a5e3c84e6468628f0a763ab7f2c48e5da42f22aade4135ffb83551c8c38"
+      ],
+      "tests": [
+        "crates/reposix-remote/tests/perf_l1.rs::l1_precheck_uses_list_changed_since_not_list_records"
+      ],
+      "test_body_hashes": [
+        "c9c02c20be5d224a4aa678ca2f3112fffa0bdf0490573b7d7be3723fee07fec8"
+      ],
+      "rationale": "Performance-subtlety paragraph cited verbatim from architecture-sketch line 164. Verifier-test counts list_records calls via wiremock matchers (zero on the precheck hot path) AND list_changed_since calls (>=1 on the cursor-present path). Bind deferred from T01 to T04 because the bind verb at crates/reposix-quality/src/commands/doc_alignment.rs:265-270 validates the cited test file exists on disk; perf_l1.rs landed in T04. SURPRISES-INTAKE entry filed for the deferral.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-05-01T11:36:49Z",
+      "last_extracted": "2026-05-01T11:36:49Z",
       "last_extracted_by": "bind-call"
     }
   ]

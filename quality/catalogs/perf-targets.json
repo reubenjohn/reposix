@@ -142,8 +142,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/perf/list-call-count.json",
-      "status": "FAIL",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-05-01T11:37:34Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-remote/src/precheck.rs regressed OR handle_export reverted to unconditional list_records walk; check stderr for whether wiremock saw a list_records call",

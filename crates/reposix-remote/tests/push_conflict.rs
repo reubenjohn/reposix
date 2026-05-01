@@ -116,6 +116,20 @@ async fn stale_base_push_emits_fetch_first_and_writes_no_rest() {
         .respond_with(ResponseTemplate::new(200).set_body_json(&issues))
         .mount(&server)
         .await;
+    // P81 L1 precheck does ONE backend.get_record(id) per record in
+    // changed_set ∩ push_set on the cursor-present hot path. Mount
+    // per-issue GETs so the precheck gets the v2 response and emits
+    // the correct fetch-first reject.
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/projects/demo/issues/1$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(sample_issue(1, 1)))
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path_regex(r"^/projects/demo/issues/2$"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(sample_issue(2, 2)))
+        .mount(&server)
+        .await;
     // Strict expectation: NO writes should fire.
     Mock::given(method("PATCH"))
         .and(any())

@@ -35,6 +35,16 @@
 
 **STATUS:** OPEN
 
+## 2026-05-01 11:30 | discovered-by: P81-01-T04 | severity: LOW
+
+**What:** P80's `handle_export` success branch unconditionally calls `cache.refresh_for_mirror_head()` to capture the post-write tree's synthesis-commit OID for the mirror-head ref write. `refresh_for_mirror_head` invokes `Cache::build_from()` which makes a `list_records` REST call. The P80 author left a comment ("P81 L1 migration replaces this with list_changed_since") flagging this as P81 territory, but the P81 plan body's `<must_haves>` did not include the replacement. Without addressing it, the perf regression test cannot assert "ZERO list_records calls on the hot path" — every successful push fires one.
+
+**Why out-of-scope for the original P81 plan body:** The plan focused on the conflict-detection precheck rewrite and didn't fold in the P80 success-branch fix. Replacing `refresh_for_mirror_head` with a list_changed_since-driven equivalent would require either (a) wider Cache crate refactoring (Cache::sync also list_records during its delta tree-rebuild step at builder.rs:291) or (b) cleverness about when the post-write tree refresh is needed.
+
+**Sketched resolution:** RESOLVED in T04 via eager-resolution per OP-8 (small, scope-bounded, no new dependency). Single edit in `crates/reposix-remote/src/main.rs` success branch: when `files_touched == 0` (no creates / updates / deletes executed), SKIP the `refresh_for_mirror_head` call. Justified because no tree change occurred, so the existing mirror-head ref still reflects the prior tree's OID. Self-healing on next non-trivial push: `refresh_for_mirror_head` fires when `files_touched > 0`. This drops the perf test's no-op-push list_records count from 1 → 0. The full L1 promise (`refresh_for_mirror_head` itself uses `list_changed_since` for the post-write tree synthesis) defers to v0.14.0 alongside the L2/L3 cache-desync hardening per architecture-sketch.md § Performance subtlety. Filed for visibility; the eager-resolution chose the smallest correct change rather than the architecturally-complete one.
+
+**STATUS:** RESOLVED | T04 commit (eager-resolution; CLAUDE.md L1 paragraph documents the no-op skip semantics)
+
 ## 2026-05-01 11:00 | discovered-by: P81-01-T01 | severity: LOW
 
 **What:** P81-01 plan body schedules `reposix-quality doc-alignment bind` to mint the `docs-alignment/perf-subtlety-prose-bound` row in T01 (catalog-first commit), with the test citation pointing at `crates/reposix-remote/tests/perf_l1.rs::l1_precheck_uses_list_changed_since_not_list_records`. The bind verb at `crates/reposix-quality/src/commands/doc_alignment.rs:265-270` validates that the cited test file exists on disk AND computes a `test_body_hash` against the cited fn (file + fn must both exist). Since `perf_l1.rs` is created in T04, the bind in T01 fails with `bind: --test #0 ...: test file ... does not exist`. The plan didn't account for the bind verb's filesystem validation contract.
