@@ -5,15 +5,15 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 390,
-    "claims_bound": 299,
+    "claims_bound": 291,
     "claims_missing_test": 0,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.8978978978978979,
+    "alignment_ratio": 0.8738738738738738,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-05-01T10:53:50Z",
-    "coverage_ratio": 0.2031221637320748,
+    "last_walked": "2026-05-01T11:42:56Z",
+    "coverage_ratio": 0.20312216373207478,
     "lines_covered": 1119,
     "total_eligible_lines": 5509,
     "coverage_floor": 0.1
@@ -2241,15 +2241,23 @@
     },
     {
       "id": "docs/decisions/009-stability-commitment/cli-subcommand-surface",
-      "claim": "CLI subcommand surface (init|attach|sim|list|refresh|spaces|log|history|tokens|cost|gc|doctor|version) is locked under semver; new subcommands additive minor versions only",
-      "source": {
-        "file": "crates/reposix-cli/src/main.rs",
-        "line_start": 37,
-        "line_end": 315
-      },
-      "source_hash": "3a7dcfa41e903b8e6920f692390ad6134b0ac24ff6ce1a8e65fe88c55582f00c",
+      "claim": "CLI subcommand surface (init|attach|sim|list|refresh|spaces|sync|log|history|tokens|cost|gc|doctor|version) is locked under semver; new subcommands additive minor versions only",
+      "source": [
+        {
+          "file": "crates/reposix-cli/src/main.rs",
+          "line_start": 37,
+          "line_end": 315
+        },
+        {
+          "file": "crates/reposix-cli/src/main.rs",
+          "line_start": 37,
+          "line_end": 336
+        }
+      ],
+      "source_hash": "48f4725f275d557c371cec415f125ab7576aaf1a96c4e6f4b30d7863d90d7e12",
       "source_hashes": [
-        "3a7dcfa41e903b8e6920f692390ad6134b0ac24ff6ce1a8e65fe88c55582f00c"
+        "48f4725f275d557c371cec415f125ab7576aaf1a96c4e6f4b30d7863d90d7e12",
+        "9bc4824c63f18dbd22654604ccd0d29bd6651795141fe6d112f85d12d9037491"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
@@ -2257,11 +2265,11 @@
       "test_body_hashes": [
         "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
       ],
-      "rationale": "Subcommand enum (Cmd) exhaustively lists all subcommands incl. attach (v0.13.0 P79 additive add); clap-derive dispatch in main() binds all arms; dark-factory regression test validates UX end-to-end with no breaking changes",
+      "rationale": "Subcommand enum (Cmd) exhaustively lists all subcommands incl. attach (v0.13.0 P79 additive add) AND sync (v0.13.0 P81 additive add); clap-derive dispatch in main() binds all arms; dark-factory regression test validates UX end-to-end with no breaking changes. Refreshed in P81-T04 to capture the new Sync clap variant — source_hashes[0] now reflects post-Sync main.rs lines 37-315.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-01T06:51:46Z",
-      "last_extracted": "2026-05-01T06:51:46Z",
+      "last_run": "2026-05-01T11:42:20Z",
+      "last_extracted": "2026-05-01T11:42:20Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3289,7 +3297,7 @@
         "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
       ],
       "rationale": "Tests parse fast-import, detect conflicts, reject on stale base",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:08:46Z",
       "last_extracted": "2026-04-28T09:08:46Z",
@@ -3756,7 +3764,7 @@
         "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
       ],
       "rationale": "Test verifies stale version rejects with canned 'fetch first' error; stderr mentions git pull --rebase",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:08:51Z",
       "last_extracted": "2026-04-28T09:08:51Z",
@@ -3781,7 +3789,7 @@
         "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
       ],
       "rationale": "push_conflict.rs:167 asserts 'error refs/heads/main fetch first' on stale-base push; expects 0 PATCH/POST/DELETE proving no writes on conflict",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T18:42:28Z",
       "last_extracted": "2026-04-28T18:42:28Z",
@@ -3806,7 +3814,7 @@
         "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
       ],
       "rationale": "push_conflict.rs:167 asserts the exact stdout 'error refs/heads/main fetch first' + line 206 asserts the helper ships 'git pull --rebase' recovery teaching string",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:29:03Z",
       "last_extracted": "2026-04-28T19:29:03Z",
@@ -3921,7 +3929,7 @@
         "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
       ],
       "rationale": "Tests push rejection with stale backend version returns exit 1",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:08:34Z",
       "last_extracted": "2026-04-28T09:08:34Z",
@@ -5562,7 +5570,7 @@
         "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
       ],
       "rationale": "Tests wiremock expectations: PATCH count == 0, POST count == 0, DELETE count == 0",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:05:59Z",
       "last_extracted": "2026-04-28T09:05:59Z",
@@ -6175,7 +6183,7 @@
         "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
       ],
       "rationale": "Test verifies stale base (local v1 vs backend v2) rejected with fetch first; zero REST calls made",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:00:45Z",
       "last_extracted": "2026-04-28T09:00:45Z",
@@ -6229,7 +6237,7 @@
         "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
       ],
       "rationale": "Tests helper rejects stale push with fetch-first error and no REST writes",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:05:59Z",
       "last_extracted": "2026-04-28T09:05:59Z",
