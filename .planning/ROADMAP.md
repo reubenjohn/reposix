@@ -75,7 +75,10 @@
 
 **Context anchor:** `.planning/research/v0.13.0-dvcs/architecture-sketch.md` § "1. `reposix attach <backend>::<project>`" + § "Reconciliation cases" + Q1.1/Q1.2/Q1.3, `.planning/research/v0.13.0-dvcs/decisions.md` § "Phase-N (`reposix attach`) decisions" + § "POC scope", `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md` § "POC-DVCS-01", `crates/reposix-cli/src/main.rs` (subcommand dispatch site), `crates/reposix-cache/src/lib.rs` (lazy materialization path; reconciliation-table home), `crates/reposix-core/src/tainted.rs` (Tainted<T> contract).
 
-**Plans:** TBD
+**Plans:**
+- **79-01** — POC-01 (throwaway POC at `research/v0.13.0-dvcs/poc/`). **SHIPPED 2026-05-01** (5 commits 660bae0..4e6de2b; SUMMARY at `.planning/phases/79-poc-reposix-attach-core/79-01-SUMMARY.md`; FINDINGS at `research/v0.13.0-dvcs/poc/POC-FINDINGS.md` — 5 INFO + 2 REVISE + 0 SPLIT routing tags).
+- **79-02** — DVCS-ATTACH-01..02 (scaffold + cache reconciliation module). PENDING orchestrator's POC-FINDINGS re-engagement decision.
+- **79-03** — DVCS-ATTACH-02..04 (tests + idempotency + close). PENDING 79-02.
 
 ### Phase 80: Mirror-lag refs (`refs/mirrors/confluence-head`, `confluence-synced-at`) (v0.13.0)
 

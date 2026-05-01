@@ -51,7 +51,7 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 
 #### POC (pre-Phase-1)
 
-- [ ] **POC-01**: End-to-end POC in `research/v0.13.0-dvcs/poc/` exercising the three innovations against the simulator, BEFORE Phase 1 (attach core) PLAN.md is finalized. Throwaway code (NOT v0.13.0 implementation). Specifically demonstrates: (a) `reposix attach` against a working tree with mixed `id`-bearing + `id`-less files (deliberately mangled); (b) bus-remote push observing mirror lag (SoT writes succeed, mirror trailing); (c) cheap-precheck path refusing fast when SoT version mismatches local cache. Ships with `POC-FINDINGS.md` listing algorithm-shape decisions, integration friction, and design questions the architecture sketch did not anticipate — feeds directly into Phase 1's PLAN.md. Time budget: ~1 day; if exceeding 2 days, surface as SURPRISES-INTAKE candidate. **P0 — kickoff-rec #2 readiness move; v0.9.0 precedent saved 3-4 days mid-phase rework.**
+- [x] **POC-01**: End-to-end POC in `research/v0.13.0-dvcs/poc/` exercising the three innovations against the simulator, BEFORE Phase 1 (attach core) PLAN.md is finalized. Throwaway code (NOT v0.13.0 implementation). Specifically demonstrates: (a) `reposix attach` against a working tree with mixed `id`-bearing + `id`-less files (deliberately mangled); (b) bus-remote push observing mirror lag (SoT writes succeed, mirror trailing); (c) cheap-precheck path refusing fast when SoT version mismatches local cache. Ships with `POC-FINDINGS.md` listing algorithm-shape decisions, integration friction, and design questions the architecture sketch did not anticipate — feeds directly into Phase 1's PLAN.md. Time budget: ~1 day; if exceeding 2 days, surface as SURPRISES-INTAKE candidate. **P0 — kickoff-rec #2 readiness move; v0.9.0 precedent saved 3-4 days mid-phase rework.**
 
 #### `reposix attach` core
 
@@ -135,7 +135,7 @@ Drafted 2026-04-30 by `gsd-roadmapper`. Coverage: **36/36 v0.13.0 REQ-IDs mapped
 | HYGIENE-01 | P78 | planning |
 | HYGIENE-02 | P78 | planning |
 | MULTI-SOURCE-WATCH-01 | P78 | planning |
-| POC-01 | P79 | planning |
+| POC-01 | P79 | complete |
 | DVCS-ATTACH-01 | P79 | planning |
 | DVCS-ATTACH-02 | P79 | planning |
 | DVCS-ATTACH-03 | P79 | planning |
