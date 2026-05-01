@@ -19,14 +19,42 @@
 #           reposix-sim, reposix, git-remote-reposix on PATH.
 #
 # Usage:
-#   bash quality/gates/agent-ux/dark-factory.sh sim          # default
+#   bash quality/gates/agent-ux/dark-factory.sh sim          # default (v0.9.0 arm)
+#   bash quality/gates/agent-ux/dark-factory.sh dvcs-third-arm  # v0.13.0 P86 arm
 #   bash quality/gates/agent-ux/dark-factory.sh github       # delegates to 35-03 tests
 #   bash quality/gates/agent-ux/dark-factory.sh confluence
 #   bash quality/gates/agent-ux/dark-factory.sh jira
+#
+# THIRD ARM — `dvcs-third-arm` (P86, DVCS-DARKFACTORY-01..02)
+# ===========================================================
+# Proves the v0.13.0 DVCS thesis: a fresh agent given only a bus URL +
+# a goal can complete vanilla-clone + `reposix attach` + edit + bus-push
+# end-to-end because the helper teaches itself via stderr / `--help`
+# output. Implementation lands in P86-01 T02; the T01 catalog-first
+# commit ships this stub so `agent-ux/dvcs-third-arm` row's FAIL status
+# is mechanically grounded.
+#
+# Substrate-gap deferral: the real-TokenWorld leg
+# (REPOSIX_DARK_FACTORY_REAL_TOKENWORLD=1) is skipped until v0.13.x
+# ships to crates.io with non-yanked gix + binstall artifacts per
+# `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md` (P84 entry).
+# Sim arm covers the falsifiable threshold for P86 in CI.
 
 set -euo pipefail
 
 BACKEND="${1:-sim}"
+
+# Third-arm scenario stub — T01 catalog-first commit. T02 replaces this
+# with the full body. Exit 1 here so the catalog row's FAIL status is
+# mechanically grounded between T01 and T02.
+if [[ "$BACKEND" == "dvcs-third-arm" ]]; then
+    cat >&2 <<EOF
+dark-factory.sh: dvcs-third-arm scenario not yet implemented; T02
+lands the body. Catalog row 'agent-ux/dvcs-third-arm' status FAIL is
+mechanically grounded by this stub exit code. See P86-01 PLAN.md.
+EOF
+    exit 1
+fi
 
 if [[ "$BACKEND" != "sim" ]]; then
     cat >&2 <<EOF
