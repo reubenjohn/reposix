@@ -81,9 +81,9 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 
 #### L1 perf migration
 
-- [ ] **DVCS-PERF-L1-01**: Replace today's unconditional `list_records` walk in `crates/reposix-remote/src/main.rs::handle_export` (lines 334-348) with `list_changed_since`-based conflict detection. The check at PRECHECK B becomes the single conflict-detection mechanism: for each changed record, check against the version in the cache's prior tree; mismatch (record changed AND we're trying to push it) → reject with detailed error; no overlap → continue, update cache after step. Net REST cost on success path: one call (`list_changed_since`) plus actual REST writes.
-- [ ] **DVCS-PERF-L1-02**: `reposix sync --reconcile` subcommand exists as escape hatch — does on-demand full `list_records` walk + cache reconciliation for users who suspect cache desync. Documented in `docs/concepts/dvcs-topology.md` and helper stderr hints.
-- [ ] **DVCS-PERF-L1-03**: Both single-backend and bus push paths benefit from L1 (single-backend was the pre-existing inefficiency; bus would have inherited it). L2/L3 cache-desync hardening explicitly defers to v0.14.0 per `architecture-sketch.md` § "Performance subtlety".
+- [x] **DVCS-PERF-L1-01** (shipped P81, 2026-05-01): Unconditional `list_records` walk in `handle_export` replaced with `crates/reposix-remote/src/precheck.rs::precheck_export_against_changed_set` (narrow-deps signature; bus handler P82+ reuses without `State` coupling). On the cursor-present hot path the precheck makes one `list_changed_since` REST call + per-id GETs bounded by `changed_set ∩ push_set`. L1-strict delete trade-off RATIFIED: cache is trusted as the prior; backend-side deletes surface as REST 404 on PATCH at write time.
+- [x] **DVCS-PERF-L1-02** (shipped P81, 2026-05-01): `reposix sync --reconcile` clap subcommand at `crates/reposix-cli/src/sync.rs` (3-test smoke suite at `crates/reposix-cli/tests/sync.rs`). On-demand full `list_records` walk + cache reconciliation for users who suspect cache desync. Documentation defers to P85 (`docs/concepts/dvcs-topology.md`); CLAUDE.md § Commands carries the inline bullet now.
+- [x] **DVCS-PERF-L1-03** (shipped P81, 2026-05-01): N=200 wiremock perf regression at `crates/reposix-remote/tests/perf_l1.rs::l1_precheck_uses_list_changed_since_not_list_records` (+ positive-control sibling that confirms wiremock matcher fails RED when violated). Both single-backend and bus push paths use the same `precheck.rs` module per M1 narrow-deps signature. L2/L3 cache-desync hardening explicitly defers to v0.14.0 per `architecture-sketch.md` § "Performance subtlety" + CLAUDE.md § Architecture L1 paragraph.
 
 #### Webhook-driven mirror sync
 
@@ -143,9 +143,9 @@ Drafted 2026-04-30 by `gsd-roadmapper`. Coverage: **36/36 v0.13.0 REQ-IDs mapped
 | DVCS-MIRROR-REFS-01 | P80 | shipped |
 | DVCS-MIRROR-REFS-02 | P80 | shipped |
 | DVCS-MIRROR-REFS-03 | P80 | shipped |
-| DVCS-PERF-L1-01 | P81 | planning |
-| DVCS-PERF-L1-02 | P81 | planning |
-| DVCS-PERF-L1-03 | P81 | planning |
+| DVCS-PERF-L1-01 | P81 | shipped |
+| DVCS-PERF-L1-02 | P81 | shipped |
+| DVCS-PERF-L1-03 | P81 | shipped |
 | DVCS-BUS-URL-01 | P82 | planning |
 | DVCS-BUS-PRECHECK-01 | P82 | planning |
 | DVCS-BUS-PRECHECK-02 | P82 | planning |

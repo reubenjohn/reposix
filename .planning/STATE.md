@@ -3,24 +3,24 @@ gsd_state_version: 1.0
 milestone: v0.13.0
 milestone_name: DVCS over REST
 status: executing
-last_updated: "2026-05-01T09:35:00Z"
-last_activity: 2026-05-01 — P80 SHIPPED (mirror-lag refs); verifier GREEN at quality/reports/verdicts/p80/VERDICT.md
+last_updated: "2026-05-01T12:00:00Z"
+last_activity: 2026-05-01 — P81 SHIPPED (L1 perf migration); verifier GREEN at quality/reports/verdicts/p81/VERDICT.md
 progress:
   total_phases: 11
-  completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
-  percent: 27
+  completed_phases: 4
+  total_plans: 8
+  completed_plans: 8
+  percent: 36
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: P80 SHIPPED 2026-05-01 (mirror-lag refs `refs/mirrors/<sot-host>-{head,synced-at}`); next P81 (L1 perf migration)
+Phase: P81 SHIPPED 2026-05-01 (L1 perf migration: list_changed_since-based conflict detection + reposix sync --reconcile); next P82 (bus remote URL parser + prechecks)
 Plan: —
-Status: Executing — 3/11 phases complete (P78 + P79 + P80); 7 plans complete
-Last activity: 2026-05-01 — P80 verifier GREEN. Plan-checker YELLOW with 3 HIGH; planner revised before execution (H1 sim-port via git config remote.origin.url; H2 gix 0.83 Repository::tag arg shape resolved via two-step write_object + reference; H3 non-vacuous conflict-reject test via wiremock version=5 seeding). Eager-resolution: audit_events_cache CHECK constraint extended for 'mirror_sync_written'. One SURPRISES-INTAKE entry filed for verifier-shell shape change (cargo test thin-wrappers vs reposix init end-to-end). Pre-push 26 PASS / 0 FAIL.
+Status: Executing — 4/11 phases complete (P78 + P79 + P80 + P81); 8 plans complete
+Last activity: 2026-05-01 — P81 verifier GREEN. Plan-checker RED with 4 HIGH (read_blob async + does backend GET; Tainted::peek doesn't exist; State private; remote crate has no error.rs); planner revised before execution. CI fix-forward c0c8e54 closed REPOSIX_CACHE_DIR env-var race in perf_l1 tests (process-wide env-var mutation between two tokio::test threads). Two SURPRISES-INTAKE entries filed (T01 bind-schedule shift OPEN; T04 refresh_for_mirror_head no-op skip RESOLVED). Pre-push 26 PASS / 0 FAIL.
 
 ## Current Focus
 
@@ -55,7 +55,7 @@ Last activity: 2026-05-01 — P80 verifier GREEN. Plan-checker YELLOW with 3 HIG
 
 **Carry-forward bundle:** `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md` lists `MULTI-SOURCE-WATCH-01` (P78), `GIX-YANKED-PIN-01` (P78), `WAIVED-STRUCTURE-ROWS-03` (P78), `POC-DVCS-01` (P79).
 
-**Next agent action:** /gsd-plan-phase 81 → /gsd-execute-phase 81 (L1 perf migration: replace `list_records` walk with `list_changed_since`-based conflict detection in `handle_export`; add `reposix sync --reconcile` escape hatch). Depends on P80 GREEN — already satisfied.
+**Next agent action:** /gsd-plan-phase 82 → /gsd-execute-phase 82 (bus remote URL parser `reposix::<sot>?mirror=<mirror>` + cheap prechecks A/B + fetch-not-advertised dispatch). Depends on P81 GREEN — already satisfied.
 
 ## Per-milestone history (cross-references)
 
