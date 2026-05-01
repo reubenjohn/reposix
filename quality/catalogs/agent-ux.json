@@ -209,6 +209,218 @@
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-cli/src/sync.rs regressed OR clap subcommand surface broke; check stderr for whether the --help path or the smoke test failed",
       "waiver": null
+    },
+    {
+      "id": "agent-ux/bus-url-parses-query-param-form",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "crates/reposix-remote/src/bus_url.rs::parse",
+        "crates/reposix-remote/tests/bus_url.rs::parses_query_param_form_round_trip",
+        "crates/reposix-remote/tests/bus_url.rs::route_single_for_bare_reposix_url",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (§ 3 — bus URL form)",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q3.3 RATIFIED ?mirror= form)",
+        ".planning/REQUIREMENTS.md (DVCS-BUS-URL-01)"
+      ],
+      "command": "bash quality/gates/agent-ux/bus-url-parses-query-param-form.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/bus-url-parses-query-param-form.sh exits 0",
+          "bus_url::parse('reposix::sim::demo?mirror=file:///tmp/m.git') returns Route::Bus { sot: ParsedRemote { kind: Sim, project: 'demo', .. }, mirror_url: 'file:///tmp/m.git' }",
+          "bus_url::parse('reposix::sim::demo') (no ?) returns Route::Single(ParsedRemote { kind: Sim, project: 'demo', .. })"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/bus-url-parses-query-param-form.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/bus-url-parses-query-param-form.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: crates/reposix-remote/src/bus_url.rs regressed OR backend_dispatch::parse_remote_url stripped query string handling; check stderr for parse error message",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/bus-url-rejects-plus-delimited",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "crates/reposix-remote/src/bus_url.rs::parse",
+        "crates/reposix-remote/tests/bus_url.rs::rejects_plus_delimited_bus_url",
+        "crates/reposix-remote/tests/bus_url.rs::rejects_unknown_query_param",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q3.3 RATIFIED ?mirror= form; + form dropped)",
+        ".planning/phases/82-bus-remote-url-parser/82-PLAN-OVERVIEW.md (D-03 / Q-C unknown-key reject)",
+        ".planning/REQUIREMENTS.md (DVCS-BUS-URL-01)"
+      ],
+      "command": "bash quality/gates/agent-ux/bus-url-rejects-plus-delimited.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/bus-url-rejects-plus-delimited.sh exits 0",
+          "helper rejects + form with hint citing `?mirror=` as the canonical form (Q3.3)",
+          "helper rejects unknown query keys with verbatim 'unknown query parameter `<key>`' hint (Q-C / D-03)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/bus-url-rejects-plus-delimited.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/bus-url-rejects-plus-delimited.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: bus_url::parse `+`-delimited reject path regressed OR unknown-query-key reject path regressed; check stderr for the verbatim hint strings",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/bus-precheck-a-mirror-drift-emits-fetch-first",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "crates/reposix-remote/src/bus_handler.rs::precheck_mirror_drift",
+        "crates/reposix-remote/tests/bus_precheck_a.rs::bus_precheck_a_emits_fetch_first_on_drift",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (§ 3 step 2 — PRECHECK A)",
+        ".planning/REQUIREMENTS.md (DVCS-BUS-PRECHECK-01)"
+      ],
+      "command": "bash quality/gates/agent-ux/bus-precheck-a-mirror-drift-emits-fetch-first.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/bus-precheck-a-mirror-drift-emits-fetch-first.sh exits 0",
+          "helper exits non-zero with `error refs/heads/main fetch first` on stdout AND `your GH mirror has new commits` on stderr",
+          "ZERO `parse_export_stream` invocation observable; helper exits BEFORE stdin read",
+          "bus_handler shells out `git ls-remote -- <mirror_url> refs/heads/main` (T-82-01: -- separator unconditional)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/bus-precheck-a-mirror-drift-emits-fetch-first.sh",
+        "args": [],
+        "timeout_s": 120,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/bus-precheck-a-mirror-drift-emits-fetch-first.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: bus_handler::precheck_mirror_drift regressed OR git ls-remote shell-out broke; check stderr for the `your GH mirror has new commits` substring",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/bus-precheck-b-sot-drift-emits-fetch-first",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "crates/reposix-remote/src/precheck.rs::precheck_sot_drift_any",
+        "crates/reposix-remote/src/bus_handler.rs::handle_bus_export",
+        "crates/reposix-remote/tests/bus_precheck_b.rs::bus_precheck_b_emits_fetch_first_on_sot_drift",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (§ 3 step 3 — PRECHECK B)",
+        ".planning/REQUIREMENTS.md (DVCS-BUS-PRECHECK-02)"
+      ],
+      "command": "bash quality/gates/agent-ux/bus-precheck-b-sot-drift-emits-fetch-first.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/bus-precheck-b-sot-drift-emits-fetch-first.sh exits 0",
+          "helper exits non-zero with `error refs/heads/main fetch first` on stdout AND hint citing `git pull --rebase` on stderr",
+          "ZERO PATCH/PUT calls hit wiremock (Mock::expect(0) on PATCH path)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/bus-precheck-b-sot-drift-emits-fetch-first.sh",
+        "args": [],
+        "timeout_s": 120,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/bus-precheck-b-sot-drift-emits-fetch-first.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: precheck::precheck_sot_drift_any regressed OR bus_handler PRECHECK B wiring regressed; check stderr for `git pull --rebase` substring",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/bus-fetch-not-advertised",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "crates/reposix-remote/src/main.rs (capabilities arm)",
+        "crates/reposix-remote/tests/bus_capabilities.rs::bus_url_omits_stateless_connect",
+        "crates/reposix-remote/tests/bus_capabilities.rs::single_backend_url_advertises_stateless_connect",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q3.4 RATIFIED PUSH-only)",
+        ".planning/REQUIREMENTS.md (DVCS-BUS-FETCH-01)"
+      ],
+      "command": "bash quality/gates/agent-ux/bus-fetch-not-advertised.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/bus-fetch-not-advertised.sh exits 0",
+          "capability list for bus URL contains import / export / refspec / object-format=sha1 but NOT stateless-connect (DVCS-BUS-FETCH-01)",
+          "capability list for bare reposix:: URL DOES contain stateless-connect (regression check on single-backend)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/bus-fetch-not-advertised.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/bus-fetch-not-advertised.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: main.rs capabilities arm branching on state.mirror_url regressed; check stdout for whether stateless-connect appears for the bus URL or vanishes for the single-backend URL",
+      "waiver": null
+    },
+    {
+      "id": "agent-ux/bus-no-remote-configured-error",
+      "dimension": "agent-ux",
+      "cadence": "pre-pr",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "crates/reposix-remote/src/bus_handler.rs::resolve_mirror_remote_name",
+        "crates/reposix-remote/tests/bus_precheck_a.rs::bus_no_remote_configured_emits_q35_hint",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q3.5 RATIFIED no-auto-mutate)",
+        ".planning/ROADMAP.md (Phase 82 SC5)",
+        ".planning/REQUIREMENTS.md (DVCS-BUS-PRECHECK-01)"
+      ],
+      "command": "bash quality/gates/agent-ux/bus-no-remote-configured-error.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/bus-no-remote-configured-error.sh exits 0",
+          "bus URL referencing a `mirror_url` not in any local `remote.<name>.url` fails with verbatim Q3.5 hint 'configure the mirror remote first: `git remote add <name> <mirror-url>`'",
+          "NO auto-mutation observable in the test working tree's .git/config (zero new remotes)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/bus-no-remote-configured-error.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/bus-no-remote-configured-error.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: bus_handler::resolve_mirror_remote_name regressed OR Q3.5 hint composition regressed; check stderr for `configure the mirror remote first` + `git remote add` substrings",
+      "waiver": null
     }
   ]
 }
