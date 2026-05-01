@@ -120,10 +120,32 @@ This rule exists because the v0.12.0 plan ORIGINALLY had CLAUDE.md updated only 
 Before claiming done:
 
 ```
-quality/runners/run.py --cadence pre-push   # for any pre-push gates this phase added
-quality/runners/run.py --cadence weekly     # for weekly gates
-quality/runners/verdict.py --phase <N>      # rolls up to quality/reports/verdicts/p<N>/<ts>.md
+quality/runners/run.py --cadence pre-commit  # for any pre-commit gates this phase added
+quality/runners/run.py --cadence pre-push    # for any pre-push gates this phase added
+quality/runners/run.py --cadence weekly      # for weekly gates
+quality/runners/verdict.py --phase <N>       # rolls up to quality/reports/verdicts/p<N>/<ts>.md
 ```
+
+Rows carry `cadences: list[str]`; a single gate may fire at multiple
+cadences (a fast mechanical check tagged `["pre-commit", "pre-push", "pre-pr"]`
+will be picked up by all three runner invocations).
+
+#### Latency budgets
+
+Each cadence carries a hard time budget; rows whose verifier exceeds the
+budget either move down-cadence or get split. Over-budget at the gate
+that contributors hit interactively (pre-commit, pre-push) is
+self-defeating: people learn to bypass.
+
+| Cadence       | Budget   | Notes                                                                      |
+|---------------|----------|----------------------------------------------------------------------------|
+| pre-commit    | <2s      | every commit; over budget means contributors `--no-verify`                 |
+| pre-push      | <60s     | per-phase per CLAUDE.md "Push cadence"; runner gate is part of phase-close |
+| pre-pr        | <10min   | CI tier-1 (PR check)                                                       |
+| pre-release   | <15min   | tag-time release gate                                                      |
+| weekly        | n/a      | alerting cadence; not blocking                                             |
+| post-release  | n/a      | alerting cadence; not blocking                                             |
+| on-demand     | n/a      | manual / subagent invocation                                               |
 
 If any P0+P1 row is RED: do NOT claim done. Either fix or file a waiver (next step).
 

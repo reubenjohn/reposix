@@ -34,7 +34,7 @@ REPORTS_DIR = REPO_ROOT / "quality" / "reports"
 VERDICTS_DIR = REPORTS_DIR / "verdicts"
 BADGE_PATH = REPORTS_DIR / "badge.json"
 
-CADENCES = ("pre-push", "pre-pr", "weekly", "pre-release", "post-release", "on-demand")
+CADENCES = ("pre-commit", "pre-push", "pre-pr", "weekly", "pre-release", "post-release", "on-demand")
 
 
 def now_iso() -> str:
@@ -74,7 +74,7 @@ def load_artifact(row: dict, repo_root: Path) -> dict | None:
 def in_scope_filter(rows: list[dict], cadence: str | None) -> list[dict]:
     if cadence is None:
         return list(rows)
-    return [r for r in rows if r.get("cadence") == cadence]
+    return [r for r in rows if cadence in r.get("cadences", [])]
 
 
 def compute_status_counts(rows: list[dict]) -> dict[str, int]:
@@ -240,7 +240,7 @@ def collate_rows(cadence: str | None) -> list[dict]:
     for cat_path in discover_catalogs():
         data = load_catalog(cat_path)
         for r in data.get("rows", []):
-            if cadence is None or r.get("cadence") == cadence:
+            if cadence is None or cadence in r.get("cadences", []):
                 rows.append(r)
     return rows
 

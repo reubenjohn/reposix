@@ -6,8 +6,13 @@ Stdlib only. Cross-platform (linux + macOS).
 Anti-bloat: this file does not grow beyond the runner contract. Per-dimension
 verifiers live under quality/gates/<dim>/.
 
+Each catalog row carries `cadences: list[str]` — a single gate may fire at
+multiple cadences (e.g., `["pre-commit", "pre-push", "pre-pr"]` so a fast
+mechanical check runs at every relevant trigger). The 7 cadences are:
+pre-commit, pre-push, pre-pr, weekly, pre-release, post-release, on-demand.
+
 Usage:
-  python3 quality/runners/run.py --cadence <pre-push|pre-pr|weekly|pre-release|post-release|on-demand>
+  python3 quality/runners/run.py --cadence <pre-commit|pre-push|pre-pr|weekly|pre-release|post-release|on-demand>
 
 Exit codes:
   0 — every P0+P1 row in scope is PASS or WAIVED.
@@ -52,7 +57,7 @@ REPORTS_DIR = REPO_ROOT / "quality" / "reports"
 BLAST_RADIUS_ORDER = {"P0": 0, "P1": 1, "P2": 2}
 
 VALID_CADENCES = (
-    "pre-push", "pre-pr", "weekly", "pre-release", "post-release", "on-demand",
+    "pre-commit", "pre-push", "pre-pr", "weekly", "pre-release", "post-release", "on-demand",
 )
 
 
@@ -120,8 +125,14 @@ def catalog_dirty(original: dict, updated: dict) -> bool:
 
 
 def is_in_scope(row: dict, cadence: str, now: datetime) -> bool:
-    """Row applies to this cadence AND any waiver is still in effect (or absent)."""
-    if row.get("cadence") != cadence:
+    """Row applies to this cadence AND any waiver is still in effect (or absent).
+
+    Rows carry `cadences: list[str]`; a row is in scope iff the requested
+    cadence is one of the row's tagged cadences. The legacy scalar
+    `cadence` key is no longer recognized — every catalog row migrated
+    to the list shape per scripts/migrations/2026-05-cadence-to-list.py.
+    """
+    if cadence not in row.get("cadences", []):
         return False
     return True  # waiver doesn't drop scope; it just changes status to WAIVED
 

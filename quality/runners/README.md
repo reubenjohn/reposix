@@ -5,14 +5,18 @@ Two entry points that compose the entire runtime:
 ## `run.py` — execute gates by cadence
 
 ```bash
+python3 quality/runners/run.py --cadence pre-commit
 python3 quality/runners/run.py --cadence pre-push
 python3 quality/runners/run.py --cadence weekly
 python3 quality/runners/run.py --cadence pre-release
 ```
 
-Reads every `quality/catalogs/*.json`, filters rows by the requested cadence,
-executes each row's `verifier.script` within `verifier.timeout_s`, and writes
-per-row artifacts to `quality/reports/verifications/<dim>/<slug>.json`.
+Reads every `quality/catalogs/*.json`, filters rows whose `cadences: list[str]`
+contains the requested cadence, executes each row's `verifier.script` within
+`verifier.timeout_s`, and writes per-row artifacts to
+`quality/reports/verifications/<dim>/<slug>.json`. A single row may declare
+multiple cadences (e.g., `["pre-commit", "pre-push", "pre-pr"]`) so the same
+gate fires at every relevant trigger.
 
 **Exit codes:** `0` = every P0+P1 row PASS or WAIVED. `1` = any P0+P1 row RED.
 
@@ -45,6 +49,7 @@ verdict to `quality/reports/verdicts/<scope>/<timestamp>.md` and updates
 
 ## Integration points
 
+- **Pre-commit hook:** calls `run.py --cadence pre-commit` (blocking, <2s; cheap mechanical checks only).
 - **Pre-push hook:** calls `run.py --cadence pre-push` (blocking, <60s).
 - **CI workflow:** calls `run.py --cadence pre-pr` (blocking, <10min).
 - **Phase close:** agent runs `verdict.py --phase <N>` then dispatches verifier subagent.

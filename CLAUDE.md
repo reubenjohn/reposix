@@ -343,9 +343,11 @@ Working on a quality-gates task? Read `quality/PROTOCOL.md` first.
 | perf | latency, token economy | `quality/gates/perf/` |
 | security | allowlist enforcement, audit immutability | `quality/gates/security/` |
 
-**6 cadences** — when the gate runs:
+**7 cadences** — when the gate runs:
 
-`pre-push` (local, every push, <60s, blocking) · `pre-pr` (PR CI, <10min, blocking) · `weekly` (cron, alerting) · `pre-release` (on tag, <15min, blocking) · `post-release` (after assets ship, alerting) · `on-demand` (manual / subagent).
+`pre-commit` (local, every commit, <2s, blocking) · `pre-push` (local, every push, <60s, blocking) · `pre-pr` (PR CI, <10min, blocking) · `weekly` (cron, alerting) · `pre-release` (on tag, <15min, blocking) · `post-release` (after assets ship, alerting) · `on-demand` (manual / subagent).
+
+Rows carry `cadences: list[str]` (a single gate may declare multiple cadences and fire at every relevant trigger; see `quality/PROTOCOL.md` § "Latency budgets").
 
 **5 kinds** — how the gate is verified:
 

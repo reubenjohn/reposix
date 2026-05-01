@@ -23,7 +23,7 @@ Every catalog row across every dimension uses this exact shape:
 | --- | --- | --- |
 | `id` | yes | stable slug, never reused; `<dimension>/<slug>` form |
 | `dimension` | yes | one of: `code`, `docs-build`, `docs-repro`, `release`, `structure`, `agent-ux`, `perf`, `security` |
-| `cadence` | yes | one of: `pre-push`, `pre-pr`, `weekly`, `pre-release`, `post-release`, `on-demand` |
+| `cadences` | yes | non-empty list; each element one of: `pre-commit`, `pre-push`, `pre-pr`, `weekly`, `pre-release`, `post-release`, `on-demand`. A single gate MAY fire at multiple cadences (e.g., a cheap mechanical check tagged `["pre-commit", "pre-push", "pre-pr"]` runs at every relevant trigger). |
 | `kind` | yes | one of: `mechanical`, `container`, `asset-exists`, `subagent-graded`, `manual` |
 | `sources` | recommended | file:line refs to the doc/code surface this gate is about; lets the verifier flag drift |
 | `command` | for docs-repro / install rows | the literal command a user runs |
