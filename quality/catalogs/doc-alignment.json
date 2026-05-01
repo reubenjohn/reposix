@@ -4,18 +4,18 @@
   "dimension": "docs-alignment",
   "schema_version": "2.0",
   "summary": {
-    "claims_total": 390,
-    "claims_bound": 283,
+    "claims_total": 393,
+    "claims_bound": 276,
     "claims_missing_test": 0,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.8498498498498499,
+    "alignment_ratio": 0.8214285714285714,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-05-01T13:34:56Z",
-    "coverage_ratio": 0.20312216373207478,
-    "lines_covered": 1119,
-    "total_eligible_lines": 5509,
+    "last_walked": "2026-05-01T22:33:12Z",
+    "coverage_ratio": 0.1899497487437186,
+    "lines_covered": 1134,
+    "total_eligible_lines": 5970,
     "coverage_floor": 0.1
   },
   "rows": [
@@ -531,7 +531,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "test dark_factory_conflict_teaching_string_present (198-214) asserts literal \"git pull --rebase\" exists in main.rs; dark_factory_blob_limit_teaching_string_present (174-189) asserts \"git sparse-checkout\" exists in stateless_connect.rs",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:04:40Z",
       "last_extracted": "2026-04-28T09:04:40Z",
@@ -2354,7 +2354,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "agent_flow.rs:198-214 asserts git pull --rebase and error refs/heads/main fetch first strings remain in helper code",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T08:59:02Z",
       "last_extracted": "2026-04-28T08:59:02Z",
@@ -3739,7 +3739,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "Test asserts literal 'git pull --rebase' substring exists in crates/reposix-remote/src/main.rs for push-conflict stderr diagnostic (Phase 34 conflict-rebase teaching mechanism, regression-protected Phase 35 Plan 02)",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T08:59:51Z",
       "last_extracted": "2026-04-28T08:59:51Z",
@@ -5595,7 +5595,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "Regression test verifies conflict path must contain literal 'git pull --rebase' and 'error refs/heads/main fetch first' status text",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:08:59Z",
       "last_extracted": "2026-04-28T09:08:59Z",
@@ -6143,7 +6143,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "test asserts literal \"git pull --rebase\" string is committed in crates/reposix-remote/src/main.rs; this string is the teaching message agents read",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:04:44Z",
       "last_extracted": "2026-04-28T09:04:44Z",
@@ -6208,7 +6208,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "Regression test verifies git pull --rebase teaching string present in reposix-remote/src/main.rs for conflict recovery",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:01:36Z",
       "last_extracted": "2026-04-28T09:01:36Z",
@@ -6262,7 +6262,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "Regression test verifies 'error refs/heads/main fetch first' status line and 'git pull --rebase' teaching string present in crates/reposix-remote/src/main.rs export path",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:00:45Z",
       "last_extracted": "2026-04-28T09:00:45Z",
@@ -7950,7 +7950,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "agent_flow.rs:206 asserts the helper binary ships literal 'git pull --rebase' recovery teaching string",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T18:42:28Z",
       "last_extracted": "2026-04-28T18:42:28Z",
@@ -8603,7 +8603,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "agent_flow.rs:198-214 verifies error refs/heads/main fetch first string is present in helper",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T08:59:10Z",
       "last_extracted": "2026-04-28T08:59:10Z",
@@ -9277,7 +9277,7 @@
         "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
       ],
       "rationale": "test asserts literal \"error refs/heads/main fetch first\" is committed in crates/reposix-remote/src/main.rs as the canned status line for push conflict rejection",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:05:04Z",
       "last_extracted": "2026-04-28T09:05:04Z",
@@ -9371,6 +9371,81 @@
       "next_action": "BIND_GREEN",
       "last_run": "2026-05-01T11:36:49Z",
       "last_extracted": "2026-05-01T11:36:49Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs-alignment/dvcs-topology-three-roles-bound",
+      "claim": "docs/concepts/dvcs-topology.md ships and explains the three DVCS roles (SoT-holder, mirror-only consumer, round-tripper) plus the Q2.2 verbatim refs/mirrors/<sot-host>-synced-at clarification",
+      "source": {
+        "file": "docs/concepts/dvcs-topology.md",
+        "line_start": 5,
+        "line_end": 11
+      },
+      "source_hash": "8772848220d3ce63bc96af796f4353a8f03d78d860748e0108a5ca77fe51d596",
+      "source_hashes": [
+        "8772848220d3ce63bc96af796f4353a8f03d78d860748e0108a5ca77fe51d596"
+      ],
+      "tests": [
+        "quality/gates/docs-alignment/dvcs-topology-three-roles.sh"
+      ],
+      "test_body_hashes": [
+        "4b48acafaa612bd71d0a0f8345cf52f6622779435866499d0fef377b38632a38"
+      ],
+      "rationale": "P85 DVCS-DOCS-01 — presence-check verifier asserts the three role tokens + Q2.2 phrase fragments. Body-hash drift on either source or verifier fires STALE_DOCS_DRIFT.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-05-01T21:08:40Z",
+      "last_extracted": "2026-05-01T21:08:40Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs-alignment/dvcs-mirror-setup-walkthrough-bound",
+      "claim": "docs/guides/dvcs-mirror-setup.md ships the owner walk-through (5 steps) + cron-only fallback (Q4.2) + cleanup procedure; references the P84 workflow template",
+      "source": {
+        "file": "docs/guides/dvcs-mirror-setup.md",
+        "line_start": 5,
+        "line_end": 11
+      },
+      "source_hash": "b43c717031c18c0c9385c28dc4d0df40bd55587b6a45d69da196fef32da961bf",
+      "source_hashes": [
+        "b43c717031c18c0c9385c28dc4d0df40bd55587b6a45d69da196fef32da961bf"
+      ],
+      "tests": [
+        "quality/gates/docs-alignment/dvcs-mirror-setup-walkthrough.sh"
+      ],
+      "test_body_hashes": [
+        "a6068105fdcba0d8ac7fc4440b97d29339fc76288ec545514cca233f956f683c"
+      ],
+      "rationale": "P85 DVCS-DOCS-02 — verifier asserts presence of Steps 1-5, Cleanup, Backends-without-webhooks sections + load-bearing gh CLI commands + cross-link to dvcs-mirror-setup-template.yml. Re-bound after anchor-link fix.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-05-01T21:14:37Z",
+      "last_extracted": "2026-05-01T21:14:37Z",
+      "last_extracted_by": "bind-call"
+    },
+    {
+      "id": "docs-alignment/dvcs-troubleshooting-matrix-bound",
+      "claim": "docs/guides/troubleshooting.md DVCS push/pull issues section covers 4 required entries (bus fetch-first, attach reconciliation, webhook race, cache-desync) + 4 P79 reconciliation cases",
+      "source": {
+        "file": "docs/guides/troubleshooting.md",
+        "line_start": 227,
+        "line_end": 227
+      },
+      "source_hash": "89f505463f08cd9dca9eda7a4d5405fccfbd8ff50072fa3583b55f0c048234b6",
+      "source_hashes": [
+        "89f505463f08cd9dca9eda7a4d5405fccfbd8ff50072fa3583b55f0c048234b6"
+      ],
+      "tests": [
+        "quality/gates/docs-alignment/dvcs-troubleshooting-matrix.sh"
+      ],
+      "test_body_hashes": [
+        "cff8f87a0efaff6a7b99f8de02983ae0b3f2a14604e8fb729b95ca5f3d2f67b3"
+      ],
+      "rationale": "P85 DVCS-DOCS-03 — verifier asserts the section anchor + 4 entry headings + 4 attach reconciliation cases (no-id, backend-deleted, duplicate-id, mirror-lag) + --force-with-lease citation.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-05-01T21:08:52Z",
+      "last_extracted": "2026-05-01T21:08:52Z",
       "last_extracted_by": "bind-call"
     }
   ]

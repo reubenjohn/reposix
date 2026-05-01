@@ -768,6 +768,453 @@
       "cadences": [
         "pre-pr"
       ]
+    },
+    {
+      "id": "agent-ux/webhook-trigger-dispatch",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "docs/guides/dvcs-mirror-setup-template.yml",
+        "reubenjohn/reposix-tokenworld-mirror:.github/workflows/reposix-mirror-sync.yml (live)",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (§ Webhook-driven mirror sync — verbatim YAML skeleton)",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q4.1/Q4.2/Q4.3)",
+        ".planning/REQUIREMENTS.md (DVCS-WEBHOOK-01)"
+      ],
+      "command": "bash quality/gates/agent-ux/webhook-trigger-dispatch.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/webhook-trigger-dispatch.sh exits 0",
+          "docs/guides/dvcs-mirror-setup-template.yml exists and parses as YAML",
+          "gh api repos/reubenjohn/reposix-tokenworld-mirror/contents/.github/workflows/reposix-mirror-sync.yml returns 200 (live copy reachable)",
+          "diff -w of the two copies returns zero (byte-equal modulo whitespace)",
+          "YAML contains: repository_dispatch types=[reposix-mirror-sync], cargo binstall reposix-cli (NOT bare 'reposix'), NO github.event.client_payload references, NO set -x"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/webhook-trigger-dispatch.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/webhook-trigger-dispatch.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T16:48:03Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: workflow YAML drifted between template and live copy; or one copy missing; or YAML structure regressed (binstall name, client_payload reference, missing fetch-depth); inspect verifier output for which structural grep failed",
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
+    },
+    {
+      "id": "agent-ux/webhook-cron-fallback",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "docs/guides/dvcs-mirror-setup-template.yml",
+        ".planning/ROADMAP.md (Phase 84 SC1 — cron */30 safety net)",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q4.1 cron literal)",
+        ".planning/phases/84-webhook-mirror-sync/84-PLAN-OVERVIEW.md (D-01 concurrency, D-04 fetch-depth, D-06 literal cron)"
+      ],
+      "command": "bash quality/gates/agent-ux/webhook-cron-fallback.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/webhook-cron-fallback.sh exits 0",
+          "literal cron '*/30 * * * *' present in YAML (not vars.*-templated)",
+          "actions/checkout@v6 with fetch-depth: 0 present",
+          "concurrency: { group: reposix-mirror-sync, cancel-in-progress: false } block present"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/webhook-cron-fallback.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/webhook-cron-fallback.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T16:48:03Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: cron expression was templated with ${{ vars.* }} (Pitfall 3) OR fetch-depth was dropped OR concurrency block was edited away or has wrong cancellation semantic",
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
+    },
+    {
+      "id": "agent-ux/webhook-force-with-lease-race",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "docs/guides/dvcs-mirror-setup-template.yml (push-with-lease step)",
+        ".planning/phases/84-webhook-mirror-sync/84-RESEARCH.md (§ '--force-with-lease' Semantics)",
+        ".planning/REQUIREMENTS.md (DVCS-WEBHOOK-02)"
+      ],
+      "command": "bash quality/gates/agent-ux/webhook-force-with-lease-race.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/webhook-force-with-lease-race.sh exits 0",
+          "race walk-through fixture: bare-repo seeded with SHA-A, bus push advances to SHA-B between fetch and lease push, workflow's --force-with-lease=refs/heads/main:SHA-A is rejected",
+          "rejection wording matches one of {stale info, rejected, non-fast-forward}",
+          "mirror's main remains at SHA-B (untouched by failed push)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/webhook-force-with-lease-race.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/webhook-force-with-lease-race.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T16:48:04Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: lease-push semantics regressed (template YAML's lease expression edited away or lease SHA composition changed); inspect harness output for which step failed (seed, fetch, bus push, lease push, untouched assertion)",
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
+    },
+    {
+      "id": "agent-ux/webhook-first-run-empty-mirror",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "docs/guides/dvcs-mirror-setup-template.yml (first-run branch in push step)",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q4.3 first-run handling)",
+        ".planning/phases/84-webhook-mirror-sync/84-PLAN-OVERVIEW.md (D-07 first-run predicate)",
+        ".planning/REQUIREMENTS.md (DVCS-WEBHOOK-03)"
+      ],
+      "command": "bash quality/gates/agent-ux/webhook-first-run-empty-mirror.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/webhook-first-run-empty-mirror.sh exits 0",
+          "sub-case 4.3.a fresh-but-readme: lease-push branch fires; mirror's main advances from README SHA to workflow SHA",
+          "sub-case 4.3.b truly-empty: plain-push branch fires; mirror's main is created at workflow SHA"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/webhook-first-run-empty-mirror.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/webhook-first-run-empty-mirror.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T16:48:04Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: the first-run predicate `git show-ref --verify --quiet refs/remotes/mirror/main` regressed in the YAML; OR the plain-push fallback branch was edited away; inspect harness output for which sub-case failed",
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
+    },
+    {
+      "id": "agent-ux/webhook-backends-without-webhooks",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "docs/guides/dvcs-mirror-setup-template.yml",
+        ".planning/research/v0.13.0-dvcs/decisions.md (Q4.2 backends without webhooks)",
+        ".planning/ROADMAP.md (Phase 84 SC5 cron-only fallback)"
+      ],
+      "command": "bash quality/gates/agent-ux/webhook-backends-without-webhooks.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/webhook-backends-without-webhooks.sh exits 0",
+          "removing the repository_dispatch: block from the workflow YAML produces still-valid YAML",
+          "after trim, at least one trigger remains (schedule or workflow_dispatch)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/webhook-backends-without-webhooks.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/webhook-backends-without-webhooks.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T16:48:04Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: the workflow's `on:` block restructured such that removing repository_dispatch leaves it triggerless; restore at least schedule + workflow_dispatch as fallback triggers",
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
+    },
+    {
+      "id": "agent-ux/webhook-latency-floor",
+      "dimension": "agent-ux",
+      "kind": "asset-exists",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "sources": [
+        "quality/reports/verifications/perf/webhook-latency.json",
+        ".planning/phases/84-webhook-mirror-sync/84-RESEARCH.md (§ Latency Measurement Strategy)",
+        ".planning/ROADMAP.md (Phase 84 SC4 — falsifiable threshold p95 <= 120s)",
+        ".planning/REQUIREMENTS.md (DVCS-WEBHOOK-04)"
+      ],
+      "command": "bash quality/gates/agent-ux/webhook-latency-floor.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/webhook-latency-floor.sh exits 0",
+          "quality/reports/verifications/perf/webhook-latency.json exists, parses as JSON",
+          "p95_seconds <= 120 (falsifiable threshold per ROADMAP P84 SC4)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/webhook-latency-floor.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/webhook-latency-floor.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T16:48:13Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: latency artifact (quality/reports/verifications/perf/webhook-latency.json) missing or p95 > 120s; the catalog row's artifact field points at the runner's per-run metadata file (separate from the asset the verifier reads)",
+      "waiver": null,
+      "cadences": [
+        "pre-release"
+      ]
+    },
+    {
+      "id": "agent-ux/dvcs-third-arm",
+      "dimension": "agent-ux",
+      "kind": "subagent-graded",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "comment": "Row stays FAIL through 86-01 T01 (catalog-first commit; harness stub returns exit 1); flips PASS at 86-01 T02 BEFORE the per-phase push. The TokenWorld arm is substrate-gap-deferred per .planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md (P84 entry: binstall + yanked-gix block end-to-end run against the live GH mirror until v0.13.x ships to crates.io). The sim arm closes the falsifiable threshold for P86; TokenWorld arm runs only when REPOSIX_DARK_FACTORY_REAL_TOKENWORLD=1 + creds + REPOSIX_ALLOWED_ORIGINS=https://reuben-john.atlassian.net.",
+      "sources": [
+        "quality/gates/agent-ux/dark-factory.sh",
+        "crates/reposix-cli/src/attach.rs",
+        "crates/reposix-remote/src/bus_url.rs",
+        "crates/reposix-remote/src/bus_handler.rs",
+        ".planning/REQUIREMENTS.md (DVCS-DARKFACTORY-01, DVCS-DARKFACTORY-02)",
+        ".planning/research/v0.13.0-dvcs/vision-and-mental-model.md (§ Success gates #6 — third-arm requirement)",
+        ".claude/skills/reposix-agent-flow/SKILL.md (dark-factory pattern reference)"
+      ],
+      "command": "bash quality/gates/agent-ux/dark-factory.sh dvcs-third-arm",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/dark-factory.sh dvcs-third-arm exits 0 against the local cargo workspace",
+          "shell-stub agent recovers `?mirror=` canonical bus URL form (Q3.3) — `crates/reposix-remote/src/bus_url.rs` contains the `?mirror=` teaching string in reject hints",
+          "shell-stub agent recovers `attach` subcommand spelling — `reposix --help` lists `attach` in Commands, `reposix attach --help` documents `--orphan-policy` flag with all 3 enum values (delete-local | fork-as-new | abort)",
+          "shell-stub agent recovers `refs/mirrors/<sot>-synced-at` ref namespace — `crates/reposix-remote/src/bus_handler.rs` cites the ref name in reject hint composition",
+          "shell-stub agent recovers `git remote add` mirror-config Q3.5 hint — `crates/reposix-remote/src/bus_handler.rs::resolve_mirror_remote_name` emits verbatim `configure the mirror remote first: git remote add <name> <mirror-url>`",
+          "bus URL composition: reposix attach against an empty work tree with a pre-existing file:// origin remote bakes a `reposix::<sot>?mirror=file://...` URL into `remote.reposix.url`; `extensions.partialClone=reposix` (NOT origin); origin URL unchanged",
+          "cache materialization: REPOSIX_CACHE_DIR-rooted cache built at `<cache>/reposix/sim-demo.git/` with cache.db; reconciliation walk emits `matched=N no_id=N backend_deleted=N mirror_lag=N` line; audit_events_cache contains an attach_walk row (OP-3 unconditional)",
+          "wire-path coverage delegated to `crates/reposix-remote/tests/bus_write_happy.rs::happy_path_writes_both_refs_and_acks_ok` (helper exec + refs/mirrors writes + dual-table audit) — the shell harness asserts this test fn exists",
+          "TokenWorld real-backend leg SUBSTRATE-GAP-DEFERRED: skipped unless REPOSIX_DARK_FACTORY_REAL_TOKENWORLD=1; cites P84 SURPRISES-INTAKE binstall + yanked-gix entry"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/dark-factory.sh",
+        "args": [
+          "dvcs-third-arm"
+        ],
+        "timeout_s": 120,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/dark-factory-dvcs-third-arm.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T21:43:24Z",
+      "freshness_ttl": "30d",
+      "blast_radius": "P1",
+      "owner_hint": "if RED: shell-stub assertions in dark-factory.sh dvcs-third-arm path failed -- inspect stderr for which teaching-string grep failed (?mirror=, --orphan-policy, refs/mirrors, git remote add) OR the bus URL composition / extensions.partialClone post-attach asserts failed. Wire-path failures land in the cargo test layer (bus_write_happy.rs::happy_path_writes_both_refs_and_acks_ok), not here. TokenWorld leg failures are substrate-gap-expected -- do NOT count as RED.",
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
+    },
+    {
+      "id": "agent-ux/p87-surprises-absorption",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P87 (+2 reservation slot 1) drain verifier. Asserts SURPRISES-INTAKE.md is fully drained for v0.13.0 — zero OPEN entries, >=5 terminal-STATUS entries (RESOLVED|DEFERRED|WONTFIX), honesty spot-check artifact present. Cadence on-demand because the intake is milestone-bounded; once v0.13.0 archives the row becomes a historical PASS marker per the v0.12.1 P76 precedent.",
+      "sources": [
+        "quality/gates/agent-ux/p87-surprises-absorption.sh",
+        ".planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md",
+        ".planning/phases/87-surprises-absorption/honesty-spot-check.md",
+        ".planning/REQUIREMENTS.md (DVCS-SURPRISES-01)"
+      ],
+      "command": "bash quality/gates/agent-ux/p87-surprises-absorption.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/p87-surprises-absorption.sh exits 0 against the local working tree",
+          "zero `**STATUS:** OPEN` lines in .planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md (all 5 entries flipped to terminal status)",
+          "at least 5 entries carry terminal STATUS (RESOLVED|DEFERRED|WONTFIX) — matches the P78-P86 entry count",
+          ".planning/phases/87-surprises-absorption/honesty-spot-check.md exists as verifier-readable honesty-check evidence"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p87-surprises-absorption.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p87-surprises-absorption.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T22:00:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P3",
+      "owner_hint": "if RED: rerun P87 drain. SURPRISES-INTAKE.md should have 0 OPEN entries; each entry needs RESOLVED (commit SHA), DEFERRED (target milestone + rationale), or WONTFIX (rationale).",
+      "waiver": null,
+      "cadences": [
+        "on-demand"
+      ]
+    },
+    {
+      "id": "agent-ux/p88-good-to-haves-drained",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. P88 itself defers GOOD-TO-HAVES-01 to v0.14.0, so this provenance note carries forward.",
+      "comment": "P88 (+2 reservation slot 2) GOOD-TO-HAVES drain verifier. Asserts GOOD-TO-HAVES.md is fully drained for v0.13.0 — every `## GOOD-TO-HAVES-NN` heading carries a terminal STATUS line (RESOLVED|DEFERRED|WONTFIX); zero TBD. Cadence on-demand because the file is milestone-bounded; archives with the milestone, becomes a historical PASS marker per the v0.12.1 P77 precedent.",
+      "sources": [
+        "quality/gates/agent-ux/p88-good-to-haves-drained.sh",
+        ".planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md",
+        ".planning/REQUIREMENTS.md (DVCS-GOOD-TO-HAVES-01)"
+      ],
+      "command": "bash quality/gates/agent-ux/p88-good-to-haves-drained.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/p88-good-to-haves-drained.sh exits 0 against the local working tree",
+          "every `## GOOD-TO-HAVES-NN` heading in .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md carries a matching terminal STATUS line",
+          "zero entries with STATUS: TBD",
+          "at least 1 entry with terminal STATUS (RESOLVED|DEFERRED|WONTFIX) — matches the v0.13.0 surfaced count"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p88-good-to-haves-drained.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p88-good-to-haves-drained.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T22:30:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P3",
+      "owner_hint": "if RED: rerun P88 drain. GOOD-TO-HAVES.md should have terminal STATUS on every heading; each entry needs RESOLVED (commit SHA), DEFERRED (target milestone + rationale), or WONTFIX (rationale).",
+      "cadences": [
+        "on-demand"
+      ]
+    },
+    {
+      "id": "agent-ux/v0.13.0-changelog-entry-present",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): see GOOD-TO-HAVES-01 (deferred to v0.14.0).",
+      "comment": "P88 milestone-close artifact verifier. Asserts CHANGELOG.md contains a substantive `[v0.13.0]` section (>=10 non-blank lines). Pairs with the tag-script Guard 4 which only checks heading existence; this verifier additionally asserts the section is not a stub. Cadence on-demand because the row is milestone-bounded; once v0.13.0 archives the row becomes a historical PASS marker.",
+      "sources": [
+        "quality/gates/agent-ux/v0.13.0-changelog-entry-present.sh",
+        "CHANGELOG.md"
+      ],
+      "command": "bash quality/gates/agent-ux/v0.13.0-changelog-entry-present.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/v0.13.0-changelog-entry-present.sh exits 0 against the local working tree",
+          "CHANGELOG.md contains a `## [v0.13.0]` heading",
+          "the v0.13.0 section is non-empty (>=10 non-blank lines between the heading and the next `## [` heading)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/v0.13.0-changelog-entry-present.sh",
+        "args": [],
+        "timeout_s": 10,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/v0.13.0-changelog-entry-present.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T22:30:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P3",
+      "owner_hint": "if RED: append a `## [v0.13.0] -- DVCS over REST -- YYYY-MM-DD` section to CHANGELOG.md above the previous entry.",
+      "cadences": [
+        "on-demand"
+      ]
+    },
+    {
+      "id": "agent-ux/v0.13.0-tag-script-present",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): see GOOD-TO-HAVES-01 (deferred to v0.14.0).",
+      "comment": "P88 milestone-close artifact verifier. Asserts the v0.13.0 tag-script exists, is executable, has >=6 `# Guard N:` comments, and contains a `git tag -s` invocation. Mirrors the v0.12.0 tag-script precedent. Cadence on-demand because the row is milestone-bounded; the tag-script is owner-runnable, NOT executor-runnable (per ROADMAP P88 SC6 STOP-at-tag-boundary).",
+      "sources": [
+        "quality/gates/agent-ux/v0.13.0-tag-script-present.sh",
+        ".planning/milestones/v0.13.0-phases/tag-v0.13.0.sh",
+        ".planning/milestones/v0.12.0-phases/tag-v0.12.0.sh"
+      ],
+      "command": "bash quality/gates/agent-ux/v0.13.0-tag-script-present.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/v0.13.0-tag-script-present.sh exits 0 against the local working tree",
+          ".planning/milestones/v0.13.0-phases/tag-v0.13.0.sh exists",
+          "tag-v0.13.0.sh is executable (chmod +x)",
+          "tag-v0.13.0.sh has >=6 `# Guard N:` comments",
+          "tag-v0.13.0.sh contains `git tag -s` (signed-tag invocation)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/v0.13.0-tag-script-present.sh",
+        "args": [],
+        "timeout_s": 10,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/v0.13.0-tag-script-present.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T22:30:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P3",
+      "owner_hint": "if RED: re-author tag-v0.13.0.sh mirroring .planning/milestones/v0.12.0-phases/tag-v0.12.0.sh; ensure >=6 `# Guard N:` comments + `git tag -s`.",
+      "cadences": [
+        "on-demand"
+      ]
+    },
+    {
+      "id": "agent-ux/v0.13.0-retrospective-distilled",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): see GOOD-TO-HAVES-01 (deferred to v0.14.0).",
+      "comment": "P88 milestone-close artifact verifier (OP-9 ritual). Asserts RETROSPECTIVE.md contains a v0.13.0 section using the OP-9 template — all 5 subheadings present (What Was Built / What Worked / What Was Inefficient / Patterns Established / Key Lessons). Cadence on-demand; closes the OP-9 RETROSPECTIVE.md backfill loop the v0.12.1 milestone-close ratified.",
+      "sources": [
+        "quality/gates/agent-ux/v0.13.0-retrospective-distilled.sh",
+        ".planning/RETROSPECTIVE.md",
+        "CLAUDE.md (OP-9 milestone-close ritual)"
+      ],
+      "command": "bash quality/gates/agent-ux/v0.13.0-retrospective-distilled.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/v0.13.0-retrospective-distilled.sh exits 0 against the local working tree",
+          ".planning/RETROSPECTIVE.md contains a `## Milestone: v0.13.0` heading",
+          "the v0.13.0 section contains all 5 OP-9 subheadings: What Was Built, What Worked, What Was Inefficient, Patterns Established, Key Lessons"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/v0.13.0-retrospective-distilled.sh",
+        "args": [],
+        "timeout_s": 10,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/v0.13.0-retrospective-distilled.json",
+      "status": "PASS",
+      "last_verified": "2026-05-01T22:30:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P3",
+      "owner_hint": "if RED: re-run P88 RETROSPECTIVE distillation against the OP-9 template (CLAUDE.md OP-9). Ensure all 5 subheadings appear in the v0.13.0 section.",
+      "cadences": [
+        "on-demand"
+      ]
     }
   ]
 }

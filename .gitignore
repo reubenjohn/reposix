@@ -70,6 +70,10 @@ runtime/bench-*.log
 # !VERDICT.md exception to avoid accidentally untracking named evidence
 # (caught in PR #31 cleanup; see commit 4b6f8f3 reversal).
 quality/reports/verifications/*/*.json
+# Exception: P84 webhook-latency.json is `asset-exists`-kind committed
+# evidence — the verifier `webhook-latency-floor.sh` READS this artifact
+# on every pre-release run; it's not a per-run runtime snapshot.
+!quality/reports/verifications/perf/webhook-latency.json
 quality/reports/verdicts/*/[0-9]*.md
 quality/reports/verdicts/session-end/SESSION-VERDICT.md
 quality/reports/badge.json

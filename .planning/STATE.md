@@ -2,25 +2,25 @@
 gsd_state_version: 1.0
 milestone: v0.13.0
 milestone_name: DVCS over REST
-status: executing
-last_updated: "2026-05-01T13:30:00Z"
-last_activity: 2026-05-01 — P82 SHIPPED (bus remote URL parser + prechecks); verifier GREEN at quality/reports/verdicts/p82/VERDICT.md
+status: ready-to-tag
+last_updated: "2026-05-01T22:45:00Z"
+last_activity: 2026-05-01 — P88 SHIPPED (good-to-haves polish + milestone close); v0.13.0 ready-to-tag, owner pushes tag.
 progress:
   total_phases: 11
-  completed_phases: 5
-  total_plans: 9
-  completed_plans: 9
-  percent: 45
+  completed_phases: 11
+  total_plans: 15
+  completed_plans: 15
+  percent: 100
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: P82 SHIPPED 2026-05-01 (bus remote URL parser, PRECHECK A mirror-drift, PRECHECK B SoT-drift, capability-branching omits stateless-connect for bus URLs); next P83 (bus remote write fan-out — riskiest)
+Phase: P88 SHIPPED 2026-05-01 (good-to-haves polish + milestone close, +2 reservation slot 2; DVCS-GOOD-TO-HAVES-01). Awaiting BOTH verifier subagent dispatches: P88 verdict (`quality/reports/verdicts/p88/VERDICT.md`) + milestone-close verdict (`quality/reports/verdicts/milestone-v0.13.0/VERDICT.md`). Owner pushes tag.
 Plan: —
-Status: Executing — 5/11 phases complete (P78 + P79 + P80 + P81 + P82); 9 plans complete
-Last activity: 2026-05-01 — P82 verifier GREEN. Plan-checker YELLOW with 1 HIGH (positive cap-advertise assertion) + 3 MED (tests/common.rs hard-block, diag/ensure_cache pub(crate), bus_precheck_b verbatim); all revised before execution. 7 in-phase eager-resolutions per OP-8 (verifier-shell test-name shape, working-tree fixture, branch checkout, clippy --all-targets, ad-hoc bash promotion, dead_code allows, visibility widening). No SURPRISES-INTAKE entries. Pre-push 26 PASS / 0 FAIL. Two CI fix-forwards earlier in session: ee527f2 (push_conflict.rs missing per-issue GET mocks for L1 precheck), c0c8e54 (REPOSIX_CACHE_DIR env-var race).
+Status: ready-to-tag — 11/11 phases complete (P78..P88); 15 plans complete; v0.13.0 milestone artifacts finalized.
+Last activity: 2026-05-01 — P88 plan + execute combined. 5 task-commits + 1 close commit (e32c20a catalog-first 4 milestone-close rows + 1ecb16b GOOD-TO-HAVES drain + tag-v0.13.0.sh + 8bab313 CHANGELOG [v0.13.0] entry + dc6e5ab RETROSPECTIVE OP-9 distillation + close). 4 catalog rows PASS (`agent-ux/p88-good-to-haves-drained`, `agent-ux/v0.13.0-changelog-entry-present`, `agent-ux/v0.13.0-tag-script-present`, `agent-ux/v0.13.0-retrospective-distilled`). GOOD-TO-HAVES-01 (extend `reposix-quality bind` to all dimensions, Size S) DEFERRED to v0.14.0 — pure-docs envelope of P88 doesn't fit Rust+test+schema scope; provenance flag carries forward. Tag-script tag-v0.13.0.sh has 8 guards (exceeds >=6 floor). Orchestrator does NOT push tag (ROADMAP P88 SC6 -- STOP at tag boundary).
 
 ## Current Focus
 
@@ -55,7 +55,7 @@ Last activity: 2026-05-01 — P82 verifier GREEN. Plan-checker YELLOW with 1 HIG
 
 **Carry-forward bundle:** `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md` lists `MULTI-SOURCE-WATCH-01` (P78), `GIX-YANKED-PIN-01` (P78), `WAIVED-STRUCTURE-ROWS-03` (P78), `POC-DVCS-01` (P79).
 
-**Next agent action:** /gsd-plan-phase 83 → /gsd-execute-phase 83 (bus remote write fan-out — riskiest phase per ROADMAP; SoT-first-write algorithm with mirror-best-effort fallback + full fault-injection coverage; if plan exceeds 4 cargo-heavy tasks, /gsd-insert-phase to split P83.1/P83.2). Depends on P80 + P82 GREEN — already satisfied.
+**Next agent action:** orchestrator dispatches BOTH P88 verifier subagent (grades the 4 P88 milestone-close catalog rows from artifacts; verdict at `quality/reports/verdicts/p88/VERDICT.md`) AND milestone-close verifier subagent (grades P78–P88 cross-phase coherence per ROADMAP P88 SC5; verdict at `quality/reports/verdicts/milestone-v0.13.0/VERDICT.md`). After BOTH verdicts GREEN: owner runs `bash .planning/milestones/v0.13.0-phases/tag-v0.13.0.sh` (8 guards) then `git push origin v0.13.0`. Orchestrator does NOT push the tag.
 
 ## Per-milestone history (cross-references)
 

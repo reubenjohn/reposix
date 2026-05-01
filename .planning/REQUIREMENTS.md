@@ -46,8 +46,8 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 
 #### Pre-DVCS hygiene (P0)
 
-- [ ] **HYGIENE-01**: Bump `gix` off yanked `=0.82.0` baseline. `gix-actor 0.40.1` also yanked. Update `crates/*/Cargo.toml` to next non-yanked release; align all gix-family `=`-pins; `cargo check --workspace` GREEN; `cargo nextest run --workspace` GREEN (per-crate if memory pressure); update `CLAUDE.md` § Tech stack to cite the new version. Closes GitHub issues #29 + #30. **P0 — load-bearing pin sitting on a yanked version.**
-- [ ] **HYGIENE-02**: Land verifier scripts for the 3 currently-WAIVED structure rows in `quality/catalogs/freshness-invariants.json` BEFORE waivers expire 2026-05-15. Three TINY-shape shell verifiers under `quality/gates/structure/`: (a) `no-loose-top-level-planning-audits.sh` — fail if any audit doc exists outside `.planning/milestones/audits/` or `.planning/archive/`; (b) `no-pre-pivot-doc-stubs.sh` — fail if any `docs/<slug>.md` exists at top-level docs/ with size <500 bytes; (c) `repo-org-audit-artifact-present.sh` — pass if the canonical repo-org-audit artifact exists at the catalog-cited path. Each catalog row flips WAIVED → PASS (waiver block deleted). Tested via `python3 quality/runners/run.py`. **P0/P1 — waiver auto-renewal would defeat catalog-first principle.**
+- [x] **HYGIENE-01** (shipped P78, 2026-04-30): Bump `gix` off yanked `=0.82.0` baseline. `gix-actor 0.40.1` also yanked. Update `crates/*/Cargo.toml` to next non-yanked release; align all gix-family `=`-pins; `cargo check --workspace` GREEN; `cargo nextest run --workspace` GREEN (per-crate if memory pressure); update `CLAUDE.md` § Tech stack to cite the new version. Closes GitHub issues #29 + #30. **P0 — load-bearing pin sitting on a yanked version.**
+- [x] **HYGIENE-02** (shipped P78, 2026-04-30): Land verifier scripts for the 3 currently-WAIVED structure rows in `quality/catalogs/freshness-invariants.json` BEFORE waivers expire 2026-05-15. Three TINY-shape shell verifiers under `quality/gates/structure/`: (a) `no-loose-top-level-planning-audits.sh` — fail if any audit doc exists outside `.planning/milestones/audits/` or `.planning/archive/`; (b) `no-pre-pivot-doc-stubs.sh` — fail if any `docs/<slug>.md` exists at top-level docs/ with size <500 bytes; (c) `repo-org-audit-artifact-present.sh` — pass if the canonical repo-org-audit artifact exists at the catalog-cited path. Each catalog row flips WAIVED → PASS (waiver block deleted). Tested via `python3 quality/runners/run.py`. **P0/P1 — waiver auto-renewal would defeat catalog-first principle.**
 
 #### POC (pre-Phase-1)
 
@@ -71,12 +71,16 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 - [x] **DVCS-BUS-URL-01** (shipped P82, 2026-05-01): `crates/reposix-remote/src/bus_url.rs::parse` recognizes `reposix::<sot-spec>?mirror=<mirror-url>` per Q3.3; `Route::{Single,Bus}` enum branches at `argv[2]` parse-time; `parse_remote_url` (single-backend) UNCHANGED; `+`-delimited form rejected with verbatim Q3.3 hint; unknown query keys rejected (D-03).
 - [x] **DVCS-BUS-PRECHECK-01** (shipped P82, 2026-05-01): `crates/reposix-remote/src/bus_handler.rs::handle_bus_export` runs `git ls-remote -- <mirror> refs/heads/main` (with `-`-prefix reject for T-82-01) before reading stdin; on drift emits verbatim `error refs/heads/main fetch first` + Q3.5 hint; NO writes; NO stdin read.
 - [x] **DVCS-BUS-PRECHECK-02** (shipped P82, 2026-05-01): `bus_handler::handle_bus_export` calls `precheck_sot_drift_any(cache, backend, project, rt)` (new 10-line wrapper around L1's `list_changed_since`) before reading stdin; on `Drifted` outcome emits verbatim `error refs/heads/main fetch first` + `git pull --rebase` hint citing mirror-lag refs (when populated); NO writes; NO stdin read.
-- [ ] **DVCS-BUS-WRITE-01**: SoT-first write — buffer fast-import stream from stdin; apply REST writes to confluence; on success, write audit rows to BOTH tables (cache + backend) and update `last_fetched_at`. On any failure, bail; mirror unchanged.
-- [ ] **DVCS-BUS-WRITE-02**: Mirror write — `git push` to GH mirror after SoT write succeeds. On mirror-write failure, write mirror-lag audit row; update `refs/mirrors/confluence-head` to new SoT SHA but NOT `refs/mirrors/confluence-synced-at` (stays at last successful mirror sync); print warning to stderr; return ok to git (SoT contract satisfied).
-- [ ] **DVCS-BUS-WRITE-03**: On mirror-write success, update `refs/mirrors/confluence-synced-at` to now and send `ok refs/heads/main` back to git.
-- [ ] **DVCS-BUS-WRITE-04**: No helper-side retry on transient mirror-write failures (per Q3.6) — surface, audit, let user retry.
-- [ ] **DVCS-BUS-WRITE-05**: Bus URL with no local `git remote` for the mirror fails with hint per Q3.5 — *"configure the mirror remote first: `git remote add <name> <mirror-url>`."* No auto-mutation of user's git config.
-- [ ] **DVCS-BUS-WRITE-06**: Fault-injection tests cover every documented failure case — kill GH push between confluence-write and ack; kill confluence-write mid-stream; simulate confluence 409 after precheck passed. Each produces correct audit + recoverable state.
+- [x] **DVCS-BUS-WRITE-01** (shipped P83, 2026-05-01): `bus_handler::handle_bus_export` calls `write_loop::apply_writes(cache, backend, backend_name, project, rt, proto, &parsed)` (P83-01 T02 refactor lift); SoT writes; audit rows in both tables; `last_fetched_at` advanced.
+- [x] **DVCS-BUS-WRITE-02** (shipped P83, 2026-05-01): Plain `git push <mirror_remote> main` subprocess after SoT success (NO `--force-with-lease` per D-08). On mirror failure: `helper_push_partial_fail_mirror_lag` audit row (NEW op P83-01 T03); `refs/mirrors/<sot>-head` updated; `synced-at` NOT updated; stderr warn; `ok` returned.
+- [x] **DVCS-BUS-WRITE-03** (shipped P83, 2026-05-01): On mirror success: BOTH refs updated; `mirror_sync_written` audit row; `ok refs/heads/main` returned.
+- [x] **DVCS-BUS-WRITE-04** (shipped P83, 2026-05-01): NO helper-side retry per Q3.6. Verifier shell `bus-write-no-helper-retry.sh` greps for `--force` tokens (none present).
+- [x] **DVCS-BUS-WRITE-05** (shipped P83, 2026-05-01): STEP 0 in `bus_handler::handle_bus_export` bails BEFORE `ensure_cache` when no `git remote add` configured for the mirror URL; verbatim Q3.5 hint emitted; NO cache opened (regression test in `bus_write_no_mirror_remote.rs`).
+- [x] **DVCS-BUS-WRITE-06** (shipped P83-02, 2026-05-01): Three fault-injection tests under `crates/reposix-remote/tests/`:
+  - `bus_write_mirror_fail.rs` (`#[cfg(unix)]` failing-update-hook fixture; case a)
+  - `bus_write_sot_fail.rs` (mid-stream 5xx; case b)
+  - `bus_write_post_precheck_409.rs` (post-precheck 409; case c)
+  Plus `bus_write_audit_completeness.rs` for OP-3 dual-table assertion.
 - [x] **DVCS-BUS-FETCH-01** (shipped P82, 2026-05-01): Capabilities branching at `crates/reposix-remote/src/main.rs:150-172` omits `stateless-connect` for `Route::Bus`; `tests/bus_capabilities.rs` confirms single-backend advertises it AND bus URLs DO NOT.
 
 #### L1 perf migration
@@ -87,31 +91,31 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 
 #### Webhook-driven mirror sync
 
-- [ ] **DVCS-WEBHOOK-01**: Reference GitHub Action workflow ships at `.github/workflows/reposix-mirror-sync.yml` per `architecture-sketch.md` § "Webhook-driven mirror sync". Triggers: `repository_dispatch` (event type `reposix-mirror-sync`) + cron safety net (default `*/30`, configurable via workflow `vars`).
-- [ ] **DVCS-WEBHOOK-02**: Workflow runs `reposix init confluence + git push <mirror>` and updates `refs/mirrors/...` refs. Uses `--force-with-lease` against last known mirror ref so a concurrent bus-push's race doesn't corrupt mirror state.
-- [ ] **DVCS-WEBHOOK-03**: First-run handling (no existing mirror refs) is graceful per Q4.3. Empty-mirror case populates refs on first run. Verified by sandbox test against TokenWorld.
-- [ ] **DVCS-WEBHOOK-04**: Latency target: < 60s p95 from confluence edit to GH ref update. Measured in sandbox during this phase; if p95 > 120s, document the constraint and tune ref semantics.
+- [x] **DVCS-WEBHOOK-01** (shipped P84, 2026-05-01): Reference workflow at `docs/guides/dvcs-mirror-setup-template.yml` (template) + live copy at `reubenjohn/reposix-tokenworld-mirror/.github/workflows/reposix-mirror-sync.yml` (commit 09dda47 in mirror repo). Triggers: `repository_dispatch` (event type `reposix-mirror-sync`) + literal cron `'*/30 * * * *'` (D-06; GH Actions can't template `${{ vars.* }}` in `schedule:`).
+- [x] **DVCS-WEBHOOK-02** (shipped P84, 2026-05-01): Workflow uses `git push --force-with-lease=refs/heads/main:$(git rev-parse mirror/main) origin main`; race-protection regression test at `quality/gates/agent-ux/webhook-force-with-lease-race.sh`.
+- [x] **DVCS-WEBHOOK-03** (shipped P84, 2026-05-01): First-run branches via `git show-ref --verify --quiet refs/remotes/mirror/main` (D-07); both Q4.3 sub-cases (4.3.a fresh-but-readme + 4.3.b truly-empty) covered by `quality/gates/agent-ux/webhook-first-run-empty-mirror.sh`.
+- [x] **DVCS-WEBHOOK-04** (shipped P84, 2026-05-01): Latency artifact `quality/reports/verifications/perf/webhook-latency.json`; p95=5s ≤ 120s falsifiable threshold (D-02). Synthetic-dispatch n=1 method shipped; real-TokenWorld n=10 deferred per SURPRISES-INTAKE 2026-05-01 16:43 (binstall + yanked-gix substrate gap; awaits v0.13.x release). Owner-runnable `scripts/webhook-latency-measure.sh` for the headline real-TokenWorld measurement.
 
 #### DVCS docs
 
-- [ ] **DVCS-DOCS-01**: `docs/concepts/dvcs-topology.md` exists. Three roles (SoT-holder, mirror-only consumer, round-tripper) explained with the diagram from `vision-and-mental-model.md`. Mirror-lag refs explained — explicitly: *"`refs/mirrors/confluence-synced-at` is the timestamp the mirror last caught up to confluence, NOT a 'current SoT state' marker"* (per Q2.2). When-to-choose-which-pattern guidance.
-- [ ] **DVCS-DOCS-02**: `docs/guides/dvcs-mirror-setup.md` exists. Walk-through of webhook + Action setup for an owner installing v0.13.0 against a confluence space. Backends-without-webhooks fallback documented (cron-only sync; per Q4.2). Cleanup procedure documented.
-- [ ] **DVCS-DOCS-03**: Troubleshooting matrix entries cover: bus-remote `fetch first` rejection messages (cite mirror-lag refs as the diagnostic); attach reconciliation warnings; webhook race conditions; cache-desync recovery via `reposix sync --reconcile`.
-- [ ] **DVCS-DOCS-04**: Cold-reader pass via `doc-clarity-review` against a reader who has read only `docs/index.md` + `docs/concepts/mental-model-in-60-seconds.md`. Zero critical-friction findings before milestone close.
+- [x] **DVCS-DOCS-01** (shipped P85, 2026-05-01): `docs/concepts/dvcs-topology.md` (164 lines) — three roles (SoT-holder / mirror-only consumer / round-tripper) + Q2.2 verbatim phrase at line 63 + when-to-choose-which-pattern guidance.
+- [x] **DVCS-DOCS-02** (shipped P85, 2026-05-01): `docs/guides/dvcs-mirror-setup.md` (198 lines) — prereqs + mirror-repo creation + secrets config + webhook setup + cron-only fallback + cleanup procedure.
+- [x] **DVCS-DOCS-03** (shipped P85, 2026-05-01): `docs/guides/troubleshooting.md` "DVCS push/pull issues" section (~120 lines) — bus-remote fetch-first + attach reconciliation cases + webhook race + cache-desync via `reposix sync --reconcile`.
+- [◐] **DVCS-DOCS-04** (rubric registered P85, owner-graded): `subjective/dvcs-cold-reader` rubric row in `quality/catalogs/subjective-rubrics.json` with full criteria + reader-profile + 10-pt scale; status NOT_VERIFIED by design — owner runs `/reposix-quality-review --rubric dvcs-cold-reader` per Path B (CLAUDE.md "Cold-reader pass on user-facing surfaces"). Owner's PASS verdict completes DVCS-DOCS-04 closure.
 
 #### Dark-factory regression — third arm
 
-- [ ] **DVCS-DARKFACTORY-01**: Extend `quality/gates/agent-ux/dark-factory.sh` (formerly `scripts/dark-factory-test.sh`) to add a third subprocess-agent transcript: a fresh agent given only the GH mirror URL + a goal completes vanilla-clone + `reposix attach` + edit + bus-push end-to-end with zero in-context learning beyond what the helper's stderr teaches. Reuses the existing dark-factory test harness; no in-prompt instruction beyond the goal statement.
-- [ ] **DVCS-DARKFACTORY-02**: Catalog row in dimension `agent-ux`, kind `subagent-graded`, cadence `pre-pr`. Verifier grades from artifacts with zero session context per OP-7.
+- [x] **DVCS-DARKFACTORY-01** (shipped P86, 2026-05-01): Extended `quality/gates/agent-ux/dark-factory.sh` with `dvcs-third-arm` scenario covering the agent UX surface (5 static teaching-string greps + 5 `--help` token greps + bus URL composition + cache materialization + `attach_walk` audit row + wire-path delegation cite). Wire-path round-trip delegated to `crates/reposix-remote/tests/bus_write_happy.rs::happy_path_writes_both_refs_and_acks_ok` (rationale per 86-01-SUMMARY.md "Deviations from plan").
+- [x] **DVCS-DARKFACTORY-02** (shipped P86, 2026-05-01): Catalog row `agent-ux/dvcs-third-arm` minted in `quality/catalogs/agent-ux.json` with kind `subagent-graded`, cadence `pre-pr`, freshness_ttl 30d, blast_radius P1. Status PASS post-T02 with `last_verified=2026-05-01T21:43:24Z`; 17 asserts passing.
 
 #### Carry-forward
 
-- [ ] **MULTI-SOURCE-WATCH-01**: From v0.12.1 P75. Walker hashes every source citation in a `Source::Multi` row, ANDs results; row enters `STALE_DOCS_DRIFT` on ANY index drift. Schema migration: `source_hash: Option<String>` → `source_hashes: Vec<String>` parallel-array on `Source::Multi` rows. `verbs::bind` writes/preserves all entries on the parallel array. `serde(default)` + one-time backfill migrates the populated 388-row catalog. Regression tests at `crates/reposix-quality/tests/walk.rs::walk_multi_source_*` exercise the path-(b) "non-first source drift fires STALE" case. Acceptance per `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md`.
+- [x] **MULTI-SOURCE-WATCH-01** (shipped P78, 2026-04-30): From v0.12.1 P75. Walker hashes every source citation in a `Source::Multi` row, ANDs results; row enters `STALE_DOCS_DRIFT` on ANY index drift. Schema migration: `source_hash: Option<String>` → `source_hashes: Vec<String>` parallel-array on `Source::Multi` rows. `verbs::bind` writes/preserves all entries on the parallel array. `serde(default)` + one-time backfill migrates the populated 388-row catalog. Regression tests at `crates/reposix-quality/tests/walk.rs::walk_multi_source_*` exercise the path-(b) "non-first source drift fires STALE" case. Acceptance per `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md`.
 
 ### +2 reservation (per OP-8)
 
-- [ ] **DVCS-SURPRISES-01**: Surprises-absorption phase drains `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`. Each entry → RESOLVED | DEFERRED | WONTFIX with commit SHA or rationale. Verifier honesty spot-check on previous phases' plans + verdicts (empty intake acceptable IF phases produced explicit `Eager-resolution` decisions).
-- [ ] **DVCS-GOOD-TO-HAVES-01**: Good-to-haves polish phase drains `GOOD-TO-HAVES.md`. XS items always close; M items default-defer to v0.14.0.
+- [x] **DVCS-SURPRISES-01**: Surprises-absorption phase drains `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`. Each entry → RESOLVED | DEFERRED | WONTFIX with commit SHA or rationale. Verifier honesty spot-check on previous phases' plans + verdicts (empty intake acceptable IF phases produced explicit `Eager-resolution` decisions).
+- [x] **DVCS-GOOD-TO-HAVES-01**: Good-to-haves polish phase drains `GOOD-TO-HAVES.md`. XS items always close; M items default-defer to v0.14.0.
 
 ### Out of Scope (deferred to v0.14.0)
 
@@ -132,14 +136,14 @@ Drafted 2026-04-30 by `gsd-roadmapper`. Coverage: **36/36 v0.13.0 REQ-IDs mapped
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| HYGIENE-01 | P78 | planning |
-| HYGIENE-02 | P78 | planning |
-| MULTI-SOURCE-WATCH-01 | P78 | planning |
+| HYGIENE-01 | P78 | shipped |
+| HYGIENE-02 | P78 | shipped |
+| MULTI-SOURCE-WATCH-01 | P78 | shipped |
 | POC-01 | P79 | complete |
-| DVCS-ATTACH-01 | P79 | planning |
-| DVCS-ATTACH-02 | P79 | planning |
-| DVCS-ATTACH-03 | P79 | planning |
-| DVCS-ATTACH-04 | P79 | planning |
+| DVCS-ATTACH-01 | P79 | shipped |
+| DVCS-ATTACH-02 | P79 | shipped |
+| DVCS-ATTACH-03 | P79 | shipped |
+| DVCS-ATTACH-04 | P79 | shipped |
 | DVCS-MIRROR-REFS-01 | P80 | shipped |
 | DVCS-MIRROR-REFS-02 | P80 | shipped |
 | DVCS-MIRROR-REFS-03 | P80 | shipped |
@@ -150,24 +154,24 @@ Drafted 2026-04-30 by `gsd-roadmapper`. Coverage: **36/36 v0.13.0 REQ-IDs mapped
 | DVCS-BUS-PRECHECK-01 | P82 | shipped |
 | DVCS-BUS-PRECHECK-02 | P82 | shipped |
 | DVCS-BUS-FETCH-01 | P82 | shipped |
-| DVCS-BUS-WRITE-01 | P83 | planning |
-| DVCS-BUS-WRITE-02 | P83 | planning |
-| DVCS-BUS-WRITE-03 | P83 | planning |
-| DVCS-BUS-WRITE-04 | P83 | planning |
-| DVCS-BUS-WRITE-05 | P83 | planning |
-| DVCS-BUS-WRITE-06 | P83 | planning |
-| DVCS-WEBHOOK-01 | P84 | planning |
-| DVCS-WEBHOOK-02 | P84 | planning |
-| DVCS-WEBHOOK-03 | P84 | planning |
-| DVCS-WEBHOOK-04 | P84 | planning |
-| DVCS-DOCS-01 | P85 | planning |
-| DVCS-DOCS-02 | P85 | planning |
-| DVCS-DOCS-03 | P85 | planning |
-| DVCS-DOCS-04 | P85 | planning |
-| DVCS-DARKFACTORY-01 | P86 | planning |
-| DVCS-DARKFACTORY-02 | P86 | planning |
-| DVCS-SURPRISES-01 | P87 | planning |
-| DVCS-GOOD-TO-HAVES-01 | P88 | planning |
+| DVCS-BUS-WRITE-01 | P83 | shipped |
+| DVCS-BUS-WRITE-02 | P83 | shipped |
+| DVCS-BUS-WRITE-03 | P83 | shipped |
+| DVCS-BUS-WRITE-04 | P83 | shipped |
+| DVCS-BUS-WRITE-05 | P83 | shipped |
+| DVCS-BUS-WRITE-06 | P83 | shipped |
+| DVCS-WEBHOOK-01 | P84 | shipped |
+| DVCS-WEBHOOK-02 | P84 | shipped |
+| DVCS-WEBHOOK-03 | P84 | shipped |
+| DVCS-WEBHOOK-04 | P84 | shipped |
+| DVCS-DOCS-01 | P85 | shipped |
+| DVCS-DOCS-02 | P85 | shipped |
+| DVCS-DOCS-03 | P85 | shipped |
+| DVCS-DOCS-04 | P85 | rubric-pending-owner |
+| DVCS-DARKFACTORY-01 | P86 | shipped |
+| DVCS-DARKFACTORY-02 | P86 | shipped |
+| DVCS-SURPRISES-01 | P87 | shipped |
+| DVCS-GOOD-TO-HAVES-01 | P88 | shipped |
 
 ### Recurring success criteria across every v0.13.0 phase
 

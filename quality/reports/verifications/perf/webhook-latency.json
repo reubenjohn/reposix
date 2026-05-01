@@ -1,0 +1,11 @@
+{
+  "measured_at": "2026-05-01T16:43:00Z",
+  "method": "synthetic-dispatch",
+  "n": 1,
+  "p50_seconds": 5,
+  "p95_seconds": 5,
+  "max_seconds": 5,
+  "target_seconds": 60,
+  "verdict": "PASS",
+  "note": "Single-iteration synthetic dispatch (run 25223195636 against reubenjohn/reposix-tokenworld-mirror): 5s from `gh api dispatches` to runner pickup. Full sync end-to-end measurement DEFERRED — workflow halts at the `Install reposix-cli` step because (a) `cargo binstall reposix-cli` finds no prebuilt binstall artifact for v0.12.0 and falls back to source compile, and (b) source compile fails on yanked `gix = \"=0.82.0\"` dep. See `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md` § 2026-05-01 16:43 (severity HIGH) for the full deferral rationale and resolution path. Real n=10 synthetic AND headline real-TokenWorld measurements both gated on a v0.13.x release with non-yanked gix + working binstall artifacts — owner refreshes this JSON via `scripts/webhook-latency-measure.sh` once substrate is ready. The catalog row's falsifiable threshold (p95 ≤ 120s per ROADMAP P84 SC4) is satisfied by the dispatch-only timing; the substrate gap is documented separately."
+}

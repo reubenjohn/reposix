@@ -34,6 +34,8 @@ Two guardrails are load-bearing for the dark-factory pattern:
 
 **Bus write fan-out (P83-01+).** A bus push (`git push <reposix-remote> main` against a `reposix::<sot>?mirror=<url>` remote) runs the architecture-sketch's bus algorithm steps 4-9 after P82's prechecks pass: read fast-import from stdin, apply REST writes to `SoT` via the shared `write_loop::apply_writes` (single-backend `handle_export` calls the same function), then `git push <mirror_remote_name> main` to the GH mirror — plain push, NO `--force-with-lease` (P84 owns force-with-lease for the webhook race; D-08 RATIFIED). On `SoT`-success + mirror-success: both `refs/mirrors/<sot>-head` and `refs/mirrors/<sot>-synced-at` advance; `mirror_sync_written` audit row written; helper acks `ok refs/heads/main`. On `SoT`-success + mirror-FAIL: `head` advances but `synced-at` is FROZEN at the last successful mirror sync (observable lag for the vanilla-`git`-only operator); the new audit op `helper_push_partial_fail_mirror_lag` records SoT SHA + `git push` exit code + 3-line stderr tail (T-83-02 trim); helper still acks `ok refs/heads/main` — Q3.6 RATIFIED no helper-side retry (surface, audit, recover on next push or via webhook sync). On any `SoT`-fail: mirror push NEVER attempted; refs unchanged. Confluence partial state across actions (PATCH 1 succeeds, PATCH 2 fails) is NOT 2PC — recovery is next-push reads new `SoT` via PRECHECK B's `list_changed_since` (D-09 / Pitfall 3 in `.planning/phases/83-bus-write-fan-out/83-PLAN-OVERVIEW.md`). P83-01 ships steps 4-9 of the algorithm + the new audit op + the 3-line stderr tail trim; P83-02 lands fault-injection coverage + audit-completeness assertions. The `git push` shell-out inherits the helper's cwd (Pitfall 6) — same git-invocation context that resolved `<mirror_remote_name>` in P82's STEP 0. Fault-injection coverage (DVCS-BUS-WRITE-06): four integration tests under `crates/reposix-remote/tests/bus_write_*.rs` exercise mirror-fail (`bus_write_mirror_fail.rs`) / SoT-mid-stream-fail (`bus_write_sot_fail.rs`) / post-precheck-409 (`bus_write_post_precheck_409.rs`) / dual-table audit-completeness (`bus_write_audit_completeness.rs`) scenarios per RESEARCH.md § "Audit Completeness Contract" — every push end-state writes audit rows to BOTH `audit_events_cache` (cache-internal) AND `audit_events` (backend mutations), enforcing the OP-3 dual-table contract.
 
+**Webhook-driven mirror sync (v0.13.0 P84+).** A reference GitHub Action workflow lives in the mirror repo's `.github/workflows/reposix-mirror-sync.yml` (NOT in `reubenjohn/reposix`; the canonical repo carries the template at `docs/guides/dvcs-mirror-setup-template.yml`). The two copies are byte-equal modulo whitespace; the catalog row `agent-ux/webhook-trigger-dispatch` enforces the invariant. Triggers: `repository_dispatch` (event_type=`reposix-mirror-sync`) for the webhook path + cron `*/30 * * * *` (literal — GH Actions parses schedule blocks BEFORE evaluating `${{ vars.* }}`, so cadence overrides require editing the YAML directly per Q4.1) for the safety net. Secrets convention: `gh secret set ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT` on the **mirror repo** (per `ci.yml:114-120` precedent). The workflow uses `cargo binstall reposix-cli` (NOT bare `reposix` — that's the workspace name; the binstall metadata lives in `crates/reposix-cli/Cargo.toml`). First-run handling (Q4.3) branches on `git show-ref --verify --quiet refs/remotes/mirror/main`: present → `--force-with-lease=...` push; absent → plain push. Race protection: a concurrent bus push (P82+P83) landing between the workflow's fetch and its push triggers a clean lease rejection — the mirror is already in sync. Latency target: p95 ≤ 120s (falsifiable threshold per ROADMAP P84 SC4). **Substrate gating:** the workflow's install step requires a published `reposix-cli` crate version with working binstall artifacts AND non-yanked `gix` deps; v0.12.0 fails on both legs (no binstall artifact + yanked `gix=0.82.0`). See `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md § 2026-05-01 16:43`. Full owner walk-through: `docs/guides/dvcs-mirror-setup.md` (P85).
+
 ## Operating Principles (project-specific)
 
 The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The following are project-specific reinforcements, not replacements:
@@ -87,6 +89,16 @@ The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The f
    actually has 10 (planned + 2 reservation). Roadmap entries for the
    reservation phases name them explicitly so they're not omitted by
    accident.
+
+   **v0.13.0 surprises-absorption (P87, 2026-05-01)** — completed:
+   5-entry intake drained (2 RESOLVED-on-discovery via eager-resolution +
+   3 P87-drained as RESOLVED|WONTFIX|DEFERRED); honesty spot-check
+   GREEN at `.planning/phases/87-surprises-absorption/honesty-spot-check.md`
+   (sampled 5 phases, exceeded the ≥3 floor). One v0.13.0 → v0.13.x
+   carry-forward: binstall + yanked-gix release substrate (P84
+   SURPRISES Entry 5; release-pipeline territory; owner-runnable
+   `scripts/webhook-latency-measure.sh` ready). Full v0.13.0 milestone
+   retrospective lands in P88 per OP-9.
 9. **Milestone-close ritual: distill before archiving.** Each
    milestone's `*-phases/{SURPRISES-INTAKE,GOOD-TO-HAVES}.md` entries
    AND the autonomous-run session findings get distilled into a new
@@ -185,8 +197,14 @@ reposix sync --reconcile                                  # full list_records wa
 # Bus push (v0.13.0+ P83-01): URL form `reposix::<sot>?mirror=<mirror-url>` recognized + dispatched; cheap prechecks (mirror drift + SoT drift) gate the push BEFORE reading stdin. Write fan-out shipped in P83-01 — SoT-first + mirror-best-effort + lag-tracking (DVCS-BUS-WRITE-01..05); fault-injection coverage lands in P83-02.
 git push reposix main                                     # bus push (URL: reposix::<sot>?mirror=<url>; SoT-first + mirror-best-effort + lag-tracking — DVCS-BUS-WRITE-01..05 in v0.13.0)
 
+# Webhook-driven mirror sync (v0.13.0 P84+; mirror repo only)
+gh api repos/reubenjohn/reposix-tokenworld-mirror/dispatches \
+  -f event_type=reposix-mirror-sync                       # manually trigger mirror sync (synthetic; cron is */30min)
+bash scripts/webhook-latency-measure.sh                    # owner-runnable n=10 real-TokenWorld latency measurement (gated on v0.13.x release with working binstall — see SURPRISES-INTAKE)
+
 # Dark-factory regression (proves agent UX is pure git, zero in-context learning)
-bash scripts/dark-factory-test.sh sim                     # local + CI
+bash scripts/dark-factory-test.sh sim                          # v0.9.0 arm — init + partial-clone + helper teaching strings (local + CI)
+bash quality/gates/agent-ux/dark-factory.sh dvcs-third-arm     # v0.13.0 P86 arm — vanilla-clone + reposix attach + bus URL composition + cache audit (local + CI)
 
 # Testing against real backends — see docs/reference/testing-targets.md for env-var setup.
 # Confluence — TokenWorld space (safe to mutate)
@@ -339,7 +357,7 @@ Working on a quality-gates task? Read `quality/PROTOCOL.md` first.
 | docs-repro | snippet extract, container rehearse, tutorial replay | `quality/gates/docs-repro/` |
 | release | gh assets present, brew formula current, crates.io max version, installer bytes | `quality/gates/release/` |
 | structure | freshness invariants, banned words, top-level scope | `quality/gates/structure/` |
-| agent-ux | dark-factory regression | `quality/gates/agent-ux/` |
+| agent-ux | dark-factory regression (sim arm + DVCS third arm) + reposix-attach + bus URL prechecks + webhook YAML | `quality/gates/agent-ux/` |
 | perf | latency, token economy | `quality/gates/perf/` |
 | security | allowlist enforcement, audit immutability | `quality/gates/security/` |
 
@@ -517,12 +535,29 @@ subagent grades P77 GREEN.
 
 See `quality/reports/verdicts/p77/VERDICT.md` for unbiased grading.
 
+## v0.13.0 — DVCS over REST (SHIPPED 2026-05-01, owner tag-cut pending)
+
+Eleven phases (P78–P88) shipped the thesis-shifting DVCS topology: confluence (or any one issues backend) remains source-of-truth; a plain-git GitHub mirror becomes the universal-read surface for vanilla-git consumers; `reposix attach` reconciles existing checkouts against the SoT; `git push` via a bus remote (`reposix::<sot>?mirror=<mirror-url>`) fans out atomically to SoT-first then mirror-best-effort. P79 attach + P80 mirror-lag refs + P81 L1 perf + P82 bus URL parser + P83 bus write fan-out + P84 webhook sync + P85 DVCS docs + P86 dark-factory third arm. P87 + P88 = +2 reservation slots (surprises absorption + good-to-haves polish).
+
+**Milestone-close ratification:** `quality/reports/verdicts/milestone-v0.13.0/VERDICT.md` (dispatched after P88 push). RETROSPECTIVE distillation: `.planning/RETROSPECTIVE.md § "Milestone: v0.13.0 — DVCS over REST"` (OP-9 ritual; What Was Built / What Worked / What Was Inefficient / Patterns Established / Key Lessons + 6 distilled cross-phase lessons + carry-forward bundle to v0.14.0).
+
+**Tag-cut:** owner runs `bash .planning/milestones/v0.13.0-phases/tag-v0.13.0.sh` (8 guards) then `git push origin v0.13.0`. Orchestrator does NOT push the tag (ROADMAP P88 SC6 — STOP at tag boundary).
+
+**Carry-forward to v0.14.0:**
+- DVCS-CF-01 binstall + yanked-gix release substrate (HIGH; P84 SURPRISES Entry 5).
+- DVCS-CF-02 GOOD-TO-HAVES-01 — extend `reposix-quality bind` to all catalog dimensions.
+- DVCS-CF-03 L2/L3 cache-desync hardening (P81 deferral).
+- CLAUDE.md sign-posting for cargo-test-as-verifier shape.
+
 ## Quick links
 
 - `docs/research/initial-report.md` — full architectural argument for git-remote-helper + partial clone.
 - `docs/research/agentic-engineering-reference.md` — dark-factory pattern, lethal trifecta, simulator-first.
 - `docs/reference/testing-targets.md` — sanctioned real-backend test targets (TokenWorld, `reubenjohn/reposix`, JIRA `TEST`).
 - `docs/benchmarks/latency.md` — golden-path latency envelope per backend.
+- `docs/concepts/dvcs-topology.md` (P85) — three roles (SoT-holder / mirror-only consumer / round-tripper) + mirror-lag refs explained; the canonical DVCS mental model.
+- `docs/guides/dvcs-mirror-setup.md` (P85) — owner walk-through for webhook + GH Action setup; cron-only fallback (Q4.2); cleanup procedure.
+- `docs/guides/troubleshooting.md` § "DVCS push/pull issues" (P85) — bus `fetch first` rejections, attach reconciliation warnings, webhook race conditions, cache-desync recovery.
 - `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` — ratified design doc for the v0.9.0 pivot.
 - `.planning/PROJECT.md` — current scope.
 - `.planning/STATE.md` — current cursor.

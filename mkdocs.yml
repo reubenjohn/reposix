@@ -121,6 +121,7 @@ nav:
   - Concepts:
       - Mental model in 60 seconds: concepts/mental-model-in-60-seconds.md
       - reposix vs MCP and SDKs: concepts/reposix-vs-mcp-and-sdks.md
+      - DVCS topology — three roles: concepts/dvcs-topology.md
   - Tutorials:
       - First run (5 min): tutorials/first-run.md
   - How it works:
@@ -131,6 +132,7 @@ nav:
   - Guides:
       - Write your own connector: guides/write-your-own-connector.md
       - Integrate with your agent: guides/integrate-with-your-agent.md
+      - DVCS mirror setup: guides/dvcs-mirror-setup.md
       - Troubleshooting: guides/troubleshooting.md
   - Reference:
       - Exit codes: reference/exit-codes.md
