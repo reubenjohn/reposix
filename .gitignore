@@ -71,4 +71,5 @@ runtime/bench-*.log
 # (caught in PR #31 cleanup; see commit 4b6f8f3 reversal).
 quality/reports/verifications/*/*.json
 quality/reports/verdicts/*/[0-9]*.md
+quality/reports/verdicts/session-end/SESSION-VERDICT.md
 quality/reports/badge.json
