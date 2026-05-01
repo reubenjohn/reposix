@@ -21,7 +21,10 @@ CREATE TABLE IF NOT EXISTS audit_events_cache (
     -- v0.11.0 §3j adds 'cache_gc' (LRU/TTL/all eviction). v0.11.0 §3c
     -- adds 'token_cost' (per-RPC token-economy ledger). v0.13.0 P79-02
     -- adds 'attach_walk' (DVCS-ATTACH-02; one row per `reposix attach`
-    -- walk completion); P83 sibling events extend this further.
+    -- walk completion); v0.13.0 P80-01 adds 'mirror_sync_written'
+    -- (DVCS-MIRROR-REFS-02 OP-3; one row per `handle_export` success
+    -- branch — written even when ref writes fail). P83 sibling events
+    -- extend this further.
     op            TEXT    NOT NULL CHECK (op IN (
         'materialize',
         'egress_denied',
@@ -40,7 +43,8 @@ CREATE TABLE IF NOT EXISTS audit_events_cache (
         'sync_tag_written',
         'cache_gc',
         'token_cost',
-        'attach_walk'
+        'attach_walk',
+        'mirror_sync_written'
     )),
     backend       TEXT    NOT NULL,
     project       TEXT    NOT NULL,

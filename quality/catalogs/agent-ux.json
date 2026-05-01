@@ -99,8 +99,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/mirror-refs-write-on-success.json",
-      "status": "FAIL",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-05-01T08:58:34Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-cache/src/mirror_refs.rs writers regressed OR crates/reposix-remote/src/main.rs::handle_export success-branch wiring regressed; check stderr for whether refs were absent, tag message body malformed, or audit row missing",
@@ -134,8 +134,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/mirror-refs-readable-by-vanilla-fetch.json",
-      "status": "FAIL",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-05-01T08:58:35Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-remote/src/stateless_connect.rs advertisement regressed OR transfer.hideRefs setup at crates/reposix-cache/src/cache.rs began hiding refs/mirrors/* — check whether vanilla-clone's for-each-ref returns the refs",
@@ -169,8 +169,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/mirror-refs-cited-in-reject-hint.json",
-      "status": "FAIL",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-05-01T08:58:35Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-remote/src/main.rs::handle_export conflict-reject hint composition regressed OR crates/reposix-cache/src/mirror_refs.rs::read_mirror_synced_at parser regressed; check whether stderr cites the ref name, RFC3339, and 'N minutes ago' tokens",
