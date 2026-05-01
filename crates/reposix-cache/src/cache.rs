@@ -285,6 +285,39 @@ impl Cache {
         );
     }
 
+    /// Bus-push partial-fail audit row (DVCS-BUS-WRITE-02 OP-3). Called
+    /// by `bus_handler::handle_bus_export` on the SoT-success-mirror-fail
+    /// branch. Best-effort: a CHECK violation on stale `cache.db`
+    /// WARN-logs without poisoning the helper's `ok refs/heads/main`
+    /// ack to git (Q3.6 RATIFIED — surface, no helper-side retry; user
+    /// retries the whole push or webhook sync recovers).
+    ///
+    /// `sot_sha_hex` is the `refs/mirrors/<sot>-head` SHA the ref
+    /// advanced to. `stderr_tail` should be trimmed to **at most 3
+    /// lines** by the caller (T-83-02 — bound the operator-readable
+    /// info-leak surface for `git push` stderr that may include hook
+    /// output, ref names, and commit SHAs). The trim happens at the
+    /// `bus_handler::push_mirror` site (one trim, one storage).
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn log_helper_push_partial_fail_mirror_lag(
+        &self,
+        sot_sha_hex: &str,
+        exit_code: i32,
+        stderr_tail: &str,
+    ) {
+        let db = self.db.lock().expect("cache.db mutex poisoned");
+        crate::audit::log_helper_push_partial_fail_mirror_lag(
+            &db,
+            &self.backend_name,
+            &self.project,
+            sot_sha_hex,
+            exit_code,
+            stderr_tail,
+        );
+    }
+
     /// Write an `op='token_cost'` audit row — one per helper RPC turn.
     /// `chars_in` is the request-bytes received from the agent; `chars_out`
     /// is the response-bytes sent back. `kind` is `"fetch"` or `"push"`.

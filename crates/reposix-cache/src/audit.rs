@@ -302,6 +302,51 @@ pub fn log_helper_push_sanitized_field(
     }
 }
 
+/// Insert `op='helper_push_partial_fail_mirror_lag'` row — one per
+/// bus push where `SoT` writes succeeded but the mirror push subprocess
+/// (`git push <mirror_remote_name> main`) failed (DVCS-BUS-WRITE-02
+/// OP-3). The row records:
+///
+/// - `oid` — the `SoT` SHA the `refs/mirrors/<sot>-head` ref advanced to
+///   (the ref still moves on the partial-fail path; only `synced-at`
+///   stays frozen);
+/// - `reason` — `exit=<code>;tail=<3-line stderr tail>`. The 3-line
+///   bound on `stderr_tail` is documented at the [`crate::Cache`]
+///   wrapper site (T-83-02 — bound the operator-readable info-leak
+///   surface for `git push` stderr that may include hook output, ref
+///   names, commit SHAs).
+///
+/// Best-effort: a CHECK violation on a stale `cache.db` (where the
+/// CHECK list does not yet include this op) WARN-logs and the
+/// caller's push still succeeds. Fresh caches accept the row
+/// immediately. Pitfall 7 / D-03 / D-06.
+pub fn log_helper_push_partial_fail_mirror_lag(
+    conn: &Connection,
+    backend: &str,
+    project: &str,
+    sot_sha_hex: &str,
+    exit_code: i32,
+    stderr_tail: &str,
+) {
+    let reason = format!("exit={exit_code};tail={stderr_tail}");
+    let res = conn.execute(
+        "INSERT INTO audit_events_cache (ts, op, backend, project, oid, reason) \
+         VALUES (?1, 'helper_push_partial_fail_mirror_lag', ?2, ?3, ?4, ?5)",
+        params![
+            Utc::now().to_rfc3339(),
+            backend,
+            project,
+            sot_sha_hex,
+            reason
+        ],
+    );
+    if let Err(e) = res {
+        warn!(target: "reposix_cache::audit_failure",
+              backend, project, exit_code,
+              "log_helper_push_partial_fail_mirror_lag failed: {e}");
+    }
+}
+
 /// Insert `op='helper_backend_instantiated'` row — one per
 /// `git-remote-reposix` invocation, written from the URL-scheme
 /// dispatcher when the helper resolves the remote URL to a concrete
@@ -665,6 +710,49 @@ mod tests {
             .unwrap();
         assert_eq!(issue_id, "42");
         assert_eq!(reason, "version");
+    }
+
+    #[test]
+    fn log_helper_push_partial_fail_mirror_lag_inserts_row() {
+        let tmp = tempdir().unwrap();
+        let conn = open_cache_db(tmp.path()).unwrap();
+
+        log_helper_push_partial_fail_mirror_lag(
+            &conn,
+            "sim",
+            "demo",
+            "abcdef0123456789",
+            128,
+            "remote: hook declined / fatal: unable to push",
+        );
+
+        let (op, backend, project, oid, reason): (String, String, String, String, String) = conn
+            .query_row(
+                "SELECT op, backend, project, oid, reason FROM audit_events_cache \
+                 WHERE op = 'helper_push_partial_fail_mirror_lag'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)),
+            )
+            .unwrap();
+        assert_eq!(op, "helper_push_partial_fail_mirror_lag");
+        assert_eq!(backend, "sim");
+        assert_eq!(project, "demo");
+        assert_eq!(oid, "abcdef0123456789");
+        assert_eq!(
+            reason,
+            "exit=128;tail=remote: hook declined / fatal: unable to push"
+        );
+
+        // Append-only trigger invariant: UPDATE must be blocked.
+        let upd_err = conn.execute(
+            "UPDATE audit_events_cache SET reason = 'tampered' \
+             WHERE op = 'helper_push_partial_fail_mirror_lag'",
+            [],
+        );
+        assert!(
+            upd_err.is_err(),
+            "audit_events_cache UPDATE must be blocked by trigger"
+        );
     }
 
     #[test]
