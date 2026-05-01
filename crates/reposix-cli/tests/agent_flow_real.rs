@@ -82,6 +82,13 @@ fn jira_test_project() -> String {
         .unwrap_or_else(|_| "TEST".to_owned())
 }
 
+/// Resolve the Confluence test space key:
+///   `REPOSIX_CONFLUENCE_SPACE`, default `TokenWorld` (historical canonical
+///   per docs/reference/testing-targets.md).
+fn confluence_test_space() -> String {
+    std::env::var("REPOSIX_CONFLUENCE_SPACE").unwrap_or_else(|_| "TokenWorld".to_owned())
+}
+
 /// Run `reposix init <spec> <path>` and assert success + correct
 /// `remote.origin.url` config. Returns the configured URL.
 fn run_init_and_assert(spec: &str, expected_url_prefix: &str) -> String {
@@ -130,7 +137,10 @@ fn dark_factory_real_github() {
     );
 }
 
-/// Confluence `TokenWorld` real-backend init smoke.
+/// Confluence real-backend init smoke. Space is configurable via
+/// `REPOSIX_CONFLUENCE_SPACE` (default `TokenWorld`); mirrors the JIRA
+/// `jira_test_project()` pattern so the test follows whichever space the
+/// configured Atlassian tenant actually owns.
 #[test]
 #[ignore = "real-backend; requires ATLASSIAN_API_KEY/EMAIL/REPOSIX_CONFLUENCE_TENANT"]
 fn dark_factory_real_confluence() {
@@ -140,14 +150,17 @@ fn dark_factory_real_confluence() {
         "REPOSIX_CONFLUENCE_TENANT"
     );
     let tenant = std::env::var("REPOSIX_CONFLUENCE_TENANT").expect("env-presence checked above");
+    let space = confluence_test_space();
     let expected_prefix = format!("reposix::https://{tenant}.atlassian.net/");
-    let url = run_init_and_assert("confluence::TokenWorld", &expected_prefix);
+    let spec = format!("confluence::{space}");
+    let url = run_init_and_assert(&spec, &expected_prefix);
     // Phase 36-followup: the `/confluence/` path marker is required so
     // the helper's URL-scheme dispatcher (crates/reposix-remote/src/
     // backend_dispatch.rs) picks the Confluence backend instead of JIRA.
+    let expected_suffix = format!("/confluence/projects/{space}");
     assert!(
-        url.ends_with("/confluence/projects/TokenWorld"),
-        "url should encode the /confluence/ marker + TokenWorld project, got {url}"
+        url.ends_with(&expected_suffix),
+        "url should encode the /confluence/ marker + space {space}, got {url}"
     );
 }
 

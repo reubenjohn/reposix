@@ -241,8 +241,8 @@ CF_INIT_MS=""; CF_LIST_MS=""; CF_GET_MS=""; CF_PATCH_MS=""; CF_CAP_MS=""
 CF_N=""; CF_BLOBS=""
 if [[ -n "${ATLASSIAN_API_KEY:-}" && -n "${ATLASSIAN_EMAIL:-}" \
       && -n "${REPOSIX_CONFLUENCE_TENANT:-}" ]]; then
-    echo "latency-bench: Confluence probe — using TokenWorld space" >&2
     CF_PROJECT="${REPOSIX_CONFLUENCE_SPACE:-TokenWorld}"
+    echo "latency-bench: Confluence probe — using ${CF_PROJECT} space" >&2
     CF_REPO="${RUN_DIR}/cf-repo"
     CF_ORIGIN="https://${REPOSIX_CONFLUENCE_TENANT}.atlassian.net"
     export REPOSIX_ALLOWED_ORIGINS="${SIM_URL},${CF_ORIGIN}"
@@ -487,8 +487,9 @@ match.
     that pulled actual blob bytes during the bootstrap fetch.
 [^N]: \`N\` = records returned by the canonical list endpoint:
     sim/github/jira issues, confluence pages in the configured space.
-    **N values reflect live backend state at run time** — the TokenWorld
-    space and \`reubenjohn/reposix\` issue count drift over time; expect
+    **N values reflect live backend state at run time** — the configured
+    Confluence space (\`${CF_PROJECT:-TokenWorld}\`) and \`reubenjohn/reposix\`
+    issue count drift over time; expect
     ±20% wobble between runs. The \`Helper capabilities probe\` row is
     local-only (no network), so it's identical across columns and serves
     as a runner-variance control.
@@ -517,8 +518,8 @@ columns, export the relevant credential bundle before running:
 \`\`\`bash
 # GitHub (reubenjohn/reposix issues)
 export GITHUB_TOKEN=…
-# Confluence (TokenWorld space)
-export ATLASSIAN_API_KEY=… ATLASSIAN_EMAIL=… REPOSIX_CONFLUENCE_TENANT=…
+# Confluence (space key set via REPOSIX_CONFLUENCE_SPACE; default TokenWorld)
+export ATLASSIAN_API_KEY=… ATLASSIAN_EMAIL=… REPOSIX_CONFLUENCE_TENANT=… REPOSIX_CONFLUENCE_SPACE=…
 # JIRA (TEST project, overridable via JIRA_TEST_PROJECT)
 export JIRA_EMAIL=… JIRA_API_TOKEN=… REPOSIX_JIRA_INSTANCE=…
 
