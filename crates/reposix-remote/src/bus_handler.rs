@@ -21,11 +21,56 @@
 //!   plus hint citing `refs/mirrors/<sot>-synced-at` (when populated
 //!   by P80), bail. NO stdin read.
 //!
-//! Steps 4-9 — the WRITE fan-out — are DEFERRED to P83. P82 emits a
-//! clean "P83 not yet shipped" error per Q-B / D-02 after prechecks
-//! pass. The user sees a clear diagnostic; tests assert prechecks
-//! fired. P83 replaces this stub with the `SoT`-write + mirror-write
-//! + audit + ref-update logic.
+//! On the `export` verb (AFTER P82's prechecks pass — steps 4-9 of
+//! the architecture-sketch's bus algorithm, P83-01 T04):
+//!
+//! - **Step 4 — read fast-import stream from stdin** (verbatim
+//!   `parse_export_stream` — same parser `handle_export` uses).
+//! - **Step 5 — apply REST writes to `SoT`** via the shared
+//!   [`crate::write_loop::apply_writes`] (T02 lift). On `SotOk` the
+//!   `refs/mirrors/<sot>-head` ref + `helper_push_accepted` audit row +
+//!   `last_fetched_at` cursor are advanced inside `apply_writes`. The
+//!   caller (this module) decides what happens to `synced-at` /
+//!   `mirror_sync_written` / `log_token_cost` / the `ok` ack.
+//! - **Step 6 — `git push <mirror_remote_name> main`** via the
+//!   [`push_mirror`] helper. Plain push — NO `--force-with-lease`
+//!   (D-08 RATIFIED; P84 owns force-with-lease for the webhook race).
+//!   NO retry (Q3.6 RATIFIED — surface, audit, recover on next push or
+//!   webhook sync).
+//! - **Step 7 — branch on (`WriteOutcome`, `MirrorResult`):** see the
+//!   three terminal branches below.
+//!
+//! On `SotOk` and `MirrorResult::Ok`: write `refs/mirrors/<sot>-synced-at`,
+//! write the `mirror_sync_written` audit row, write the `token_cost` row,
+//! and emit `ok refs/heads/main` to git.
+//!
+//! On `SotOk` and `MirrorResult::Failed`: do NOT write `synced-at`
+//! (FROZEN at last successful mirror sync — observable lag for the
+//! vanilla-`git`-only operator), write the
+//! `helper_push_partial_fail_mirror_lag` audit row, write the `token_cost`
+//! row, emit stderr WARN, and emit `ok refs/heads/main` to git (Q3.6
+//! contract).
+//!
+//! On non-`SotOk`: mirror push NEVER attempted; reject lines and audit
+//! rows already emitted inside `apply_writes`; `state.push_failed` is
+//! set to `true`; return cleanly.
+//!
+//! ## Cwd assumption (Pitfall 6)
+//!
+//! `git push <mirror_remote_name> main` inherits the helper's cwd (the
+//! working tree git invoked the helper from). This is the same git
+//! invocation context that resolved `<mirror_remote_name>` in P82's
+//! STEP 0; the cwd is implicit but consistent. Tests use temp working
+//! trees with `current_dir(...)` set explicitly.
+//!
+//! ## Confluence non-atomicity (D-09 / Pitfall 3)
+//!
+//! REST writes via [`crate::write_loop::apply_writes`] are NOT 2PC
+//! across actions. A multi-action push that fails mid-loop (PATCH 1
+//! succeeds, PATCH 2 fails) leaves `SoT` in a partial state observable
+//! to the next push. Recovery is the next-push PRECHECK B reading new
+//! `SoT` state via `list_changed_since` and either accepting the local
+//! change (if version still matches) or rejecting with conflict.
 //!
 //! ## Security (T-82-01)
 //!
@@ -63,12 +108,17 @@ enum MirrorDriftOutcome {
 ///
 /// Called from `main.rs`'s `"export"` arm when `state.mirror_url.is_some()`.
 /// Emits stdout/stderr per the architecture-sketch's bus algorithm
-/// steps 1-3; the deferred-shipped error closes step 4 (Q-B / D-02).
+/// steps 1-9: P82 shipped steps 1-3 (URL parse, prechecks A + B);
+/// P83-01 shipped steps 4-9 (read stdin, apply REST writes via
+/// [`crate::write_loop::apply_writes`], `git push` mirror via
+/// [`push_mirror`], branch on `(WriteOutcome, MirrorResult)` for ref
+/// + audit + ack writes).
 ///
 /// # Errors
 /// All errors are [`anyhow::Error`]. Reject paths reuse the existing
 /// `crate::fail_push` shape via the bus handler's local
 /// `bus_fail_push` helper.
+#[allow(clippy::too_many_lines)] // narrow steps 1-9; readability beats split fns here
 pub(crate) fn handle_bus_export<R: std::io::Read, W: std::io::Write>(
     state: &mut State,
     proto: &mut Protocol<R, W>,
@@ -169,8 +219,99 @@ pub(crate) fn handle_bus_export<R: std::io::Read, W: std::io::Write>(
         );
     }
 
-    // STEPS 4-9 — write fan-out (DEFERRED to P83 per Q-B / D-02).
-    emit_deferred_shipped_error(proto, state)
+    // STEPS 4-9 — write fan-out (P83-01 T04 / D-01 / D-08 / Q3.6 / D-09).
+    //
+    // PRECHECK B passed. Now: read stdin, write SoT, push mirror,
+    // branch on outcomes, ack git.
+    let parsed = {
+        let mut buffered = std::io::BufReader::new(crate::ProtoReader::new(proto));
+        let parse_result = crate::fast_import::parse_export_stream(&mut buffered);
+        drop(buffered);
+        match parse_result {
+            Ok(v) => v,
+            Err(e) => {
+                return bus_fail_push(
+                    proto,
+                    state,
+                    "parse-error",
+                    &format!("parse export stream: {e:#}"),
+                );
+            }
+        }
+    };
+
+    if let Some(cache) = state.cache.as_ref() {
+        cache.log_helper_push_started("refs/heads/main");
+    }
+
+    let outcome = crate::write_loop::apply_writes(
+        state.cache.as_ref(),
+        state.backend.as_ref(),
+        &state.backend_name,
+        &state.project,
+        &state.rt,
+        proto,
+        &parsed, // borrow per B1 — apply_writes takes &ParsedExport
+    )?;
+
+    let crate::write_loop::WriteOutcome::SotOk { sot_sha, .. } = outcome else {
+        // apply_writes already emitted the protocol error + audit rows.
+        // Mirror push NEVER attempted on any non-SotOk outcome.
+        state.push_failed = true;
+        return Ok(());
+    };
+
+    let mirror_result = push_mirror(&mirror_remote_name)?;
+
+    // chars_in is the same in both arms: count of all blob payload bytes
+    // from the fast-import stream. chars_out is the count of stdout bytes
+    // ack'd to git (the `ok refs/heads/main\n` line) — emitted in BOTH
+    // arms per Q3.6 contract; stderr (the WARN on the failure arm) is
+    // NOT counted in chars_out, keeping the token_cost ledger consistent
+    // across success and partial-fail (M4).
+    let chars_in: u64 = parsed
+        .blobs
+        .values()
+        .map(|b| u64::try_from(b.len()).unwrap_or(u64::MAX))
+        .sum();
+    let chars_out: u64 = "ok refs/heads/main\n".len() as u64;
+
+    match mirror_result {
+        MirrorResult::Ok => {
+            if let Some(cache) = state.cache.as_ref() {
+                if let Err(e) =
+                    cache.write_mirror_synced_at(&state.backend_name, chrono::Utc::now())
+                {
+                    tracing::warn!("write_mirror_synced_at failed: {e:#}");
+                }
+                let oid_hex = sot_sha.map(|o| o.to_hex().to_string()).unwrap_or_default();
+                cache.log_mirror_sync_written(&oid_hex, &state.backend_name);
+                cache.log_token_cost(chars_in, chars_out, "push");
+            }
+            proto.send_line("ok refs/heads/main")?;
+            proto.send_blank()?;
+            proto.flush()?;
+        }
+        MirrorResult::Failed {
+            exit_code,
+            stderr_tail,
+        } => {
+            if let Some(cache) = state.cache.as_ref() {
+                let oid_hex = sot_sha.map(|o| o.to_hex().to_string()).unwrap_or_default();
+                cache.log_helper_push_partial_fail_mirror_lag(&oid_hex, exit_code, &stderr_tail);
+                cache.log_token_cost(chars_in, chars_out, "push");
+            }
+            crate::diag(&format!(
+                "warning: SoT push succeeded; mirror push failed \
+                 (will retry on next push or via webhook sync). \
+                 Reason: exit={exit_code}; tail={stderr_tail}"
+            ));
+            proto.send_line("ok refs/heads/main")?;
+            proto.send_blank()?;
+            proto.flush()?;
+        }
+    }
+    Ok(())
 }
 
 /// STEP 0 helper. Returns the local remote name whose `.url` value
@@ -291,22 +432,67 @@ fn precheck_mirror_drift(mirror_url: &str, mirror_remote_name: &str) -> Result<M
     }
 }
 
-/// Q-B / D-02: emit the deferred-shipped error after prechecks pass.
-/// P82 is dispatch-only; P83 replaces this with the `SoT`-first-write
-/// plus mirror-best-effort algorithm. The protocol-level error is
-/// `bus-write-not-yet-shipped` so a downstream test-harness can
-/// distinguish "prechecks fired AND succeeded; write deferred" from
-/// "prechecks rejected".
-fn emit_deferred_shipped_error<R: std::io::Read, W: std::io::Write>(
-    proto: &mut Protocol<R, W>,
-    state: &mut State,
-) -> Result<()> {
-    crate::diag("bus write fan-out (DVCS-BUS-WRITE-01..06) is not yet shipped — lands in P83");
-    proto.send_line("error refs/heads/main bus-write-not-yet-shipped")?;
-    proto.send_blank()?;
-    proto.flush()?;
-    state.push_failed = true;
-    Ok(())
+/// Outcome of the mirror push subprocess (`git push <mirror_remote_name>
+/// main`). Pattern 2 of `83-RESEARCH.md`. The non-zero-exit case is
+/// `Failed`, NOT a propagated error — `bus_handler::handle_bus_export`
+/// branches on this enum to write the partial-fail audit row + still
+/// ack `ok` to git per Q3.6.
+#[derive(Debug)]
+enum MirrorResult {
+    /// `git push <mirror_remote_name> main` exited zero.
+    Ok,
+    /// Non-zero exit. `stderr_tail` is the last <= 3 lines of the
+    /// subprocess stderr (T-83-02 — bound the operator-readable
+    /// info-leak surface). `exit_code` is the process exit code
+    /// (`-1` if signaled — `Command::ExitStatus::code()` returns
+    /// `None` on signal termination on Unix).
+    Failed { exit_code: i32, stderr_tail: String },
+}
+
+/// Run `git push <mirror_remote_name> main` from the helper's cwd
+/// (Pitfall 6 — the working tree git invoked the helper from). NO
+/// RETRY (Q3.6 RATIFIED — surface, no helper-side retry; user retries
+/// the whole push or webhook sync recovers). NO `--force-with-lease`
+/// (D-08 RATIFIED — P84 owns force-with-lease for the webhook race).
+///
+/// `mirror_remote_name` is helper-resolved via P82's STEP 0
+/// (`resolve_mirror_remote_name`) and bounded by git's own
+/// remote-name validation. Defensive-in-depth (T-83-01): reject
+/// `-`-prefixed names BEFORE shell-out — git would interpret a leading
+/// `-` as a flag, so an attacker who somehow injected a remote-name
+/// like `-foo` could otherwise convert that into a flag injection.
+///
+/// # Errors
+/// Returns `Err` on `Command::output()` spawn failure (e.g. git not
+/// on PATH) OR on the defensive `mirror_remote_name.starts_with('-')`
+/// reject. A non-zero `git push` exit is `Ok(MirrorResult::Failed { ... })`,
+/// NOT a propagated error — that's the partial-fail path the bus
+/// caller branches on.
+fn push_mirror(mirror_remote_name: &str) -> Result<MirrorResult> {
+    if mirror_remote_name.starts_with('-') {
+        return Err(anyhow!(
+            "mirror_remote_name cannot start with `-`: {mirror_remote_name}"
+        ));
+    }
+    let out = Command::new("git")
+        .args(["push", mirror_remote_name, "main"])
+        .output()
+        .with_context(|| format!("spawn `git push {mirror_remote_name} main`"))?;
+    if out.status.success() {
+        Ok(MirrorResult::Ok)
+    } else {
+        // T-83-02: trim stderr to <= 3 lines, joined with " / ". This
+        // bounds the operator-readable info-leak (git stderr can include
+        // hook output, ref names, commit SHAs).
+        let all = String::from_utf8_lossy(&out.stderr);
+        let lines: Vec<&str> = all.lines().collect();
+        let tail: Vec<&str> = lines.iter().rev().take(3).rev().copied().collect();
+        let stderr_tail = tail.join(" / ");
+        Ok(MirrorResult::Failed {
+            exit_code: out.status.code().unwrap_or(-1),
+            stderr_tail,
+        })
+    }
 }
 
 /// Bus-handler-local `fail_push` wrapper. The parent crate's

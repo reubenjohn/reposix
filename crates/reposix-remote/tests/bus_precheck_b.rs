@@ -215,7 +215,8 @@ async fn bus_precheck_b_passes_when_sot_stable() {
     drop(cache);
 
     // ASSERTION-PHASE mock (priority=1): wiremock returns EMPTY on
-    // `?since=` — PRECHECK B sees Stable, helper proceeds to D-02 stub.
+    // `?since=` — PRECHECK B sees Stable, helper proceeds to write
+    // fan-out (P83-01 T04).
     Mock::given(method("GET"))
         .and(path_regex(format!(r"^/projects/{project}/issues$")))
         .and(HasSinceQueryParam)
@@ -224,13 +225,16 @@ async fn bus_precheck_b_passes_when_sot_stable() {
         .mount(&server)
         .await;
 
-    // PATCH backstop: should NEVER fire (P82's deferred-shipped exit
-    // is BEFORE any write fan-out). expect(0) tightens the assertion.
+    // PATCH backstop: this test sends an empty fast-export stream
+    // (`capabilities\n\nexport\n\n`), so plan() may compute deletes
+    // for prior records. With sim's GET returning the seeded issues,
+    // execute_action's DELETE leg runs against simulator's DELETE
+    // route — accept any number of calls (we don't assert PATCH/DELETE
+    // counts here, that's bus_write_happy.rs's job in P83-01 T05).
     Mock::given(method("PATCH"))
         .and(path_regex(format!(r"^/projects/{project}/issues/\d+$")))
         .respond_with(ResponseTemplate::new(200).set_body_json(json!({"id": 1, "version": 2})))
-        .expect(0)
-        .with_priority(1)
+        .with_priority(2)
         .mount(&server)
         .await;
 
@@ -256,32 +260,22 @@ async fn bus_precheck_b_passes_when_sot_stable() {
     let stdout = String::from_utf8_lossy(&out.stdout);
     let stderr = String::from_utf8_lossy(&out.stderr);
 
-    // Assertion 1: helper emitted the D-02 deferred-shipped error
-    // (proves PRECHECK B passed AND execution reached the write-fan-out
-    // emit point, which is the deferred-shipped stub in P82).
-    assert!(
-        stdout.contains("error refs/heads/main bus-write-not-yet-shipped"),
-        "expected D-02 deferred-shipped protocol error; got stdout={stdout}, stderr={stderr}"
-    );
-
-    // Assertion 2: stderr cites the deferred-shipped diagnostic
-    // (verbatim from D-02: "bus write fan-out (DVCS-BUS-WRITE-01..06)
-    // is not yet shipped — lands in P83").
-    assert!(
-        stderr.contains("bus write fan-out") && stderr.contains("P83"),
-        "expected D-02 stderr diagnostic; got: {stderr}"
-    );
-
-    // Assertion 3: NO fetch-first signal (PRECHECK B did NOT trip).
+    // PRIMARY ASSERTION (post-P83-01): NO fetch-first signal.
+    // PRECHECK B passed → helper proceeded into the write fan-out
+    // path. The deferred-shipped stub from P82 was removed in
+    // P83-01 T04; the test's intent is now "did PRECHECK B reject?"
+    // and the answer must be NO.
     assert!(
         !stdout.contains("fetch first"),
         "PRECHECK B incorrectly tripped on stable SoT; stdout={stdout}, stderr={stderr}"
     );
 
-    // Assertion 4: helper exited non-zero (P82's deferred-shipped is
-    // still a reject — P83 will replace this with `ok refs/heads/main`).
-    assert!(!out.status.success(), "expected helper to exit non-zero");
-
-    // Assertion 5 (implicit): wiremock's Drop panics if PATCH
-    // expect(0) was violated — confirms ZERO write fan-out.
+    // Regression assertion: the P82 deferred-shipped stub is GONE.
+    // If a regression re-introduces it, P83's write fan-out is being
+    // bypassed and this test should fail RED.
+    assert!(
+        !stdout.contains("bus-write-not-yet-shipped"),
+        "P82 deferred-shipped stub re-appeared after P83-01 — write fan-out bypassed; \
+         stdout={stdout}, stderr={stderr}"
+    );
 }
