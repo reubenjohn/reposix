@@ -39,7 +39,7 @@ progress:
   7. ✅ CLAUDE.md OP-9 (milestone-close ritual) added; RETROSPECTIVE.md v0.12.1 section distilled.
   8. ✅ HANDOVER-v0.12.1.md removed (self-deletion criteria met).
 **Next agent action:** v0.13.0 milestone planning — owner has launched a parallel session for `/gsd-new-milestone`. Carry-forward bundle (P67-P71) re-evaluated at v0.13.0 kickoff per ROADMAP scope.
-**Open carry-forward to v0.13.0:** RETROSPECTIVE.md backfill for v0.9.0 → v0.12.0 (multi-hour synthesis from per-milestone `*-phases/` artifacts; flagged by milestone-verdict subagent as v0.13.0 phase candidate per OP-9).
+**Open carry-forward to v0.14.0:** RETROSPECTIVE.md backfill for v0.9.0 → v0.12.0 (multi-hour synthesis from per-milestone `*-phases/` artifacts). Verifier subagent flagged as "v0.13.0 phase candidate" but pre-planned research at `.planning/research/v0.14.0-observability-and-multi-repo/` is the better home — v0.14.0 is operational-maturity scope (project-self-observability fits the retrospective-backfill thematically); v0.13.0 is the DVCS thesis shift and adding off-topic backfill work would dilute it.
 
 ## Per-milestone history (cross-references)
 
