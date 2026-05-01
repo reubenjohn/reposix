@@ -6,7 +6,6 @@
     {
       "id": "code/clippy-lint-loaded",
       "dimension": "code",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "clippy.toml",
@@ -34,12 +33,15 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: clippy.toml is missing or has been edited to drop a reqwest entry; OR a new file constructs reqwest::Client directly outside http.rs (security regression — see CLAUDE.md threat-model § 'Outbound HTTP allowlist')",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "code/cargo-test-pass",
       "dimension": "code",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "sources": [
         ".github/workflows/ci.yml:test"
@@ -72,12 +74,14 @@
         "reason": "Per-row local cargo nextest enforcement is deferred to v0.12.1 because cargo nextest run --workspace consumes 6-15 minutes + violates the CLAUDE.md ONE cargo at a time memory-budget rule + exceeds the pre-pr 10-minute cadence cap. ci.yml's test job remains the canonical enforcement venue; the ci-job-status wrapper at quality/gates/code/ci-job-status.sh checks that the most recent ci.yml run for the current branch exited 0. v0.12.1 MIGRATE-03 will explore alternatives (per-crate per-row gates, sccache-warmed verifier in CI only, or accepting CI as the only home and removing the local row).",
         "dimension_owner": "v0.12.0 P63 code dimension owner",
         "tracked_in": "v0.12.1 MIGRATE-03 -- per-row local cargo enforcement"
-      }
+      },
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "code/cargo-fmt-clean",
       "dimension": "code",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "sources": [
         "quality/gates/code/cargo-fmt-clean.sh",
@@ -102,12 +106,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: cargo fmt regressed; run cargo fmt --all locally and commit the result. P63 wired the verifier to actually run cargo fmt (read-only, ~5s) so the row enforces locally as well as in CI.",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "code/fixtures-valid",
       "dimension": "code",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "benchmarks/fixtures/github_issues.json",
@@ -135,12 +141,15 @@
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: a benchmark fixture file has been edited (added secrets, dropped required keys, drifted size). Investigate via `python3 quality/gates/code/check-fixtures.py` locally; do NOT silence.",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "code/cargo-fmt-check",
       "dimension": "code",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "scripts/hooks/pre-push:215-219",
@@ -164,12 +173,15 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: cargo fmt regressed; run cargo fmt --all locally and commit the result",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "code/cargo-clippy-warnings",
       "dimension": "code",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "scripts/hooks/pre-push:222-227",
@@ -193,7 +205,11 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: a new clippy violation; cargo clippy --workspace --all-targets --fix to auto-fix where possible. Pivot rule: if cargo clippy in pre-push exceeds 60s on warm cache, P60 Wave E may move it OUTSIDE the runner; the row stays catalogued but the pre-push hook chains it externally. Document in SURPRISES.md.",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     }
   ]
 }

@@ -6,7 +6,6 @@
     {
       "id": "docs-repro/example-01-shell-loop",
       "dimension": "docs-repro",
-      "cadence": "post-release",
       "kind": "container",
       "sources": [
         "examples/01-shell-loop/run.sh",
@@ -39,12 +38,14 @@
         "reason": "Wave C ships the container-rehearse.sh driver but the example scripts assume an external simulator (reposix-sim listening on 127.0.0.1:7878) that the container does not bring up. Wiring sim-inside-container is post-v0.12.0 work tracked under Wave F CI dispatch. Locally the verifier exits non-zero with stderr signal 'sim not reachable'; in CI the sim service container brings the dependency up and the rehearsal grades on its own.",
         "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md 2026-04-27 P59 row",
         "tracked_in": "P59 Wave F CI rehearsal in docker-equipped GH runner with sim service"
-      }
+      },
+      "cadences": [
+        "post-release"
+      ]
     },
     {
       "id": "docs-repro/example-02-python-agent",
       "dimension": "docs-repro",
-      "cadence": "post-release",
       "kind": "container",
       "sources": [
         "examples/02-python-agent/run.py",
@@ -77,12 +78,14 @@
         "reason": "Wave C ships the container-rehearse.sh driver but the example scripts assume an external simulator (reposix-sim listening on 127.0.0.1:7878) that the container does not bring up. Wiring sim-inside-container is post-v0.12.0 work tracked under Wave F CI dispatch.",
         "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md 2026-04-27 P59 row",
         "tracked_in": "P59 Wave F CI rehearsal in docker-equipped GH runner with sim service"
-      }
+      },
+      "cadences": [
+        "post-release"
+      ]
     },
     {
       "id": "docs-repro/example-03-claude-code-skill",
       "dimension": "docs-repro",
-      "cadence": "on-demand",
       "kind": "manual",
       "sources": [
         "examples/03-claude-code-skill/RUN.md",
@@ -111,12 +114,14 @@
       "freshness_ttl": "90d",
       "blast_radius": "P2",
       "owner_hint": "if RED: examples/03-claude-code-skill/{RUN.md, agent-prompt.md} got out of sync with .claude/skills/reposix-agent-flow",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "on-demand"
+      ]
     },
     {
       "id": "docs-repro/example-04-conflict-resolve",
       "dimension": "docs-repro",
-      "cadence": "post-release",
       "kind": "container",
       "sources": [
         "examples/04-conflict-resolve/run.sh",
@@ -149,12 +154,14 @@
         "reason": "Wave C ships the container-rehearse.sh driver but the example scripts assume an external simulator that the container does not bring up. Wiring sim-inside-container is post-v0.12.0 work tracked under Wave F CI dispatch.",
         "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md 2026-04-27 P59 row",
         "tracked_in": "P59 Wave F CI rehearsal in docker-equipped GH runner with sim service"
-      }
+      },
+      "cadences": [
+        "post-release"
+      ]
     },
     {
       "id": "docs-repro/example-05-blob-limit-recovery",
       "dimension": "docs-repro",
-      "cadence": "post-release",
       "kind": "container",
       "sources": [
         "examples/05-blob-limit-recovery/run.sh",
@@ -187,12 +194,14 @@
         "reason": "Wave C ships the container-rehearse.sh driver but the example scripts assume an external simulator that the container does not bring up. Wiring sim-inside-container is post-v0.12.0 work tracked under Wave F CI dispatch.",
         "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md 2026-04-27 P59 row",
         "tracked_in": "P59 Wave F CI rehearsal in docker-equipped GH runner with sim service"
-      }
+      },
+      "cadences": [
+        "post-release"
+      ]
     },
     {
       "id": "docs-repro/tutorial-replay",
       "dimension": "docs-repro",
-      "cadence": "post-release",
       "kind": "container",
       "sources": [
         "docs/tutorials/first-run.md:51-166",
@@ -227,12 +236,14 @@
         "reason": "Wave C ships tutorial-replay.sh but the cargo build inside a fresh ubuntu:24.04 container takes >5min on a cold cache. The script runs locally fine when invoked directly, but the runner-driven post-release sweep needs cargo + sim service to be pre-warmed in the CI image. Wiring this is post-v0.12.0 work tracked under Wave F CI dispatch.",
         "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md 2026-04-27 P59 row",
         "tracked_in": "P59 Wave F CI rehearsal in docker-equipped GH runner with cargo + sim pre-warmed"
-      }
+      },
+      "cadences": [
+        "post-release"
+      ]
     },
     {
       "id": "benchmark-claim/8ms-cached-read",
       "dimension": "docs-repro",
-      "cadence": "weekly",
       "kind": "manual",
       "sources": [
         "docs/index.md:14",
@@ -258,12 +269,14 @@
       "freshness_ttl": "30d",
       "blast_radius": "P2",
       "owner_hint": "if RED: docs/benchmarks/latency.md drifted from headline numbers; v0.12.1 perf cross-check (perf/headline-numbers-cross-check) automates this row",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "benchmark-claim/89.1-percent-token-reduction",
       "dimension": "docs-repro",
-      "cadence": "weekly",
       "kind": "manual",
       "sources": [
         "docs/index.md:13",
@@ -289,12 +302,14 @@
       "freshness_ttl": "30d",
       "blast_radius": "P2",
       "owner_hint": "if RED: docs/benchmarks/token-economy.md drifted from headline numbers; v0.12.1 perf cross-check (perf/headline-numbers-cross-check) automates this row",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "docs-repro/snippet-coverage",
       "dimension": "docs-repro",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "README.md",
@@ -325,7 +340,11 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: a doc edit added a fenced code block without a catalog row OR a catalogued row's source content drifted; fix by either pasting the --write-template output or rolling back the doc edit. If the new block is illustrative, add the derived_id to quality/catalogs/docs-reproducible-allowlist.json with a reason.",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     }
   ]
 }

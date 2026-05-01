@@ -6,7 +6,6 @@
     {
       "id": "perf/latency-bench",
       "dimension": "perf",
-      "cadence": "weekly",
       "kind": "mechanical",
       "sources": [
         "scripts/latency-bench.sh",
@@ -39,12 +38,14 @@
         "reason": "v0.12.1 stub per MIGRATE-03 -- file-relocate only at v0.12.0; full gate logic deferred (latency cross-check + token-economy bench cross-check + headline-numbers cross-check require new verifier code that did not fit in v0.12.0 P59 scope per the planner authority limits in REQUIREMENTS.md)",
         "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md",
         "tracked_in": "MIGRATE-03 v0.12.1 (perf-dimension full implementation per REQUIREMENTS.md Out of Scope)"
-      }
+      },
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "perf/token-economy-bench",
       "dimension": "perf",
-      "cadence": "weekly",
       "kind": "mechanical",
       "sources": [
         "scripts/bench_token_economy.py",
@@ -75,12 +76,14 @@
         "reason": "v0.12.1 stub per MIGRATE-03 -- file-relocate only at v0.12.0; full gate logic deferred (latency cross-check + token-economy bench cross-check + headline-numbers cross-check require new verifier code that did not fit in v0.12.0 P59 scope per the planner authority limits in REQUIREMENTS.md)",
         "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md",
         "tracked_in": "MIGRATE-03 v0.12.1 (perf-dimension full implementation per REQUIREMENTS.md Out of Scope)"
-      }
+      },
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "perf/headline-numbers-cross-check",
       "dimension": "perf",
-      "cadence": "weekly",
       "kind": "mechanical",
       "sources": [
         "docs/index.md:13-14",
@@ -112,12 +115,14 @@
         "reason": "v0.12.1 stub per MIGRATE-03 -- file-relocate only at v0.12.0; full gate logic deferred (latency cross-check + token-economy bench cross-check + headline-numbers cross-check require new verifier code that did not fit in v0.12.0 P59 scope per the planner authority limits in REQUIREMENTS.md)",
         "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md",
         "tracked_in": "MIGRATE-03 v0.12.1 (perf-dimension full implementation per REQUIREMENTS.md Out of Scope)"
-      }
+      },
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "perf/handle-export-list-call-count",
       "dimension": "perf",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; perf dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
@@ -147,7 +152,10 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-remote/src/precheck.rs regressed OR handle_export reverted to unconditional list_records walk; check stderr for whether wiremock saw a list_records call",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     }
   ]
 }

@@ -6,7 +6,6 @@
     {
       "id": "install/curl-installer-sh",
       "dimension": "release",
-      "cadence": "weekly",
       "kind": "asset-exists",
       "sources": [
         "docs/index.md:42-46",
@@ -40,12 +39,14 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: release.yml did not fire on the last reposix-cli-v* tag (per P56 RELEASE-01 root cause), or release-plz cut a non-cli per-crate release after the cli release moving the latest pointer (P56 SURPRISES.md row 1)",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "install/powershell-installer-ps1",
       "dimension": "release",
-      "cadence": "weekly",
       "kind": "asset-exists",
       "sources": [
         "docs/index.md:48-51",
@@ -77,12 +78,14 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: release.yml did not fire on the last reposix-cli-v* tag (per P56 RELEASE-01 root cause), or release-plz cut a non-cli per-crate release after the cli release moving the latest pointer (P56 SURPRISES.md row 1)",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "install/homebrew",
       "dimension": "release",
-      "cadence": "weekly",
       "kind": "asset-exists",
       "sources": [
         "docs/index.md:53-56",
@@ -108,12 +111,14 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: .github/workflows/release.yml upload-homebrew-formula job did not fire (P56 root cause was missing tag glob), or HOMEBREW_TAP_TOKEN secret expired",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "install/build-from-source",
       "dimension": "release",
-      "cadence": "weekly",
       "kind": "mechanical",
       "sources": [
         "docs/index.md:111-130",
@@ -143,12 +148,14 @@
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: ci.yml `test` job is failing on main; investigate ci.yml workflow logs",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "release/crates-io-max-version/reposix-cli",
       "dimension": "release",
-      "cadence": "weekly",
       "kind": "mechanical",
       "sources": [
         "crates/reposix-cli/Cargo.toml",
@@ -176,12 +183,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: release-plz failed to publish reposix-cli at the workspace version; check .github/workflows/release-plz.yml run logs",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "release/crates-io-max-version/reposix-remote",
       "dimension": "release",
-      "cadence": "weekly",
       "kind": "mechanical",
       "sources": [
         "crates/reposix-remote/Cargo.toml",
@@ -209,12 +218,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: release-plz failed to publish reposix-remote at the workspace version; check .github/workflows/release-plz.yml run logs",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "release/crates-io-max-version/reposix-core",
       "dimension": "release",
-      "cadence": "weekly",
       "kind": "mechanical",
       "sources": [
         "crates/reposix-core/Cargo.toml",
@@ -242,12 +253,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: release-plz failed to publish reposix-core at the workspace version; check .github/workflows/release-plz.yml run logs",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "release/crates-io-max-version/reposix-cache",
       "dimension": "release",
-      "cadence": "weekly",
       "kind": "mechanical",
       "sources": [
         "crates/reposix-cache/Cargo.toml",
@@ -275,12 +288,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: release-plz failed to publish reposix-cache at the workspace version; check .github/workflows/release-plz.yml run logs",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "release/crates-io-max-version/reposix-sim",
       "dimension": "release",
-      "cadence": "weekly",
       "kind": "mechanical",
       "sources": [
         "crates/reposix-sim/Cargo.toml",
@@ -308,12 +323,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: release-plz failed to publish reposix-sim at the workspace version; check .github/workflows/release-plz.yml run logs",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "release/crates-io-max-version/reposix-github",
       "dimension": "release",
-      "cadence": "weekly",
       "kind": "mechanical",
       "sources": [
         "crates/reposix-github/Cargo.toml",
@@ -341,12 +358,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: release-plz failed to publish reposix-github at the workspace version; check .github/workflows/release-plz.yml run logs",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "release/crates-io-max-version/reposix-confluence",
       "dimension": "release",
-      "cadence": "weekly",
       "kind": "mechanical",
       "sources": [
         "crates/reposix-confluence/Cargo.toml",
@@ -374,12 +393,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: release-plz failed to publish reposix-confluence at the workspace version; check .github/workflows/release-plz.yml run logs",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "release/crates-io-max-version/reposix-jira",
       "dimension": "release",
-      "cadence": "weekly",
       "kind": "mechanical",
       "sources": [
         "crates/reposix-jira/Cargo.toml",
@@ -407,12 +428,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: release-plz failed to publish reposix-jira at the workspace version; check .github/workflows/release-plz.yml run logs",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "release/gh-assets-present",
       "dimension": "release",
-      "cadence": "weekly",
       "kind": "asset-exists",
       "sources": [
         ".github/workflows/release.yml",
@@ -445,12 +468,14 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: release.yml did not fire on the last reposix-cli-v* tag (P56 SURPRISES.md row 2: GITHUB_TOKEN-tag-push exemption; recovery via `gh workflow run release.yml --ref reposix-cli-vX.Y.Z`)",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "release/brew-formula-current",
       "dimension": "release",
-      "cadence": "weekly",
       "kind": "mechanical",
       "sources": [
         "docs/index.md:53-56",
@@ -476,12 +501,14 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: release.yml upload-homebrew-formula job did not run (HOMEBREW_TAP_TOKEN missing or expired), or release-plz published a per-crate release between cli releases (P56 SURPRISES.md row 1 latest-pointer drift)",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "release/cargo-binstall-resolves",
       "dimension": "release",
-      "cadence": "post-release",
       "kind": "container",
       "sources": [
         "crates/reposix-cli/Cargo.toml:[package.metadata.binstall]",
@@ -515,7 +542,10 @@
         "reason": "Documented PARTIAL state per P56 SURPRISES.md row 3: cargo-binstall metadata in crates/reposix-cli/Cargo.toml + crates/reposix-remote/Cargo.toml is misaligned with release.yml's archive shape (4 mismatches); binstall falls back to source build. CI verifier observes 'will be installed from source' signal and grades PARTIAL — that's the design (P56 SURPRISES.md row 3 + Wave D run 25020150833). The waiver makes PARTIAL acceptable. Locally without binstall installed the verifier reports FAIL with diagnostic 'cargo-binstall not installed' — also acceptable under this waiver. v0.12.1 MIGRATE-03 ships the ~10 LOC binstall metadata fix that flips this to PASS.",
         "dimension_owner": "v0.12.0 P58 release dimension owner",
         "tracked_in": "MIGRATE-03 v0.12.1 — cargo-binstall metadata + MSRV (P56 SURPRISES.md rows 3-4)"
-      }
+      },
+      "cadences": [
+        "post-release"
+      ]
     }
   ]
 }

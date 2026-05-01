@@ -6,7 +6,6 @@
     {
       "id": "docs-build/mkdocs-strict",
       "dimension": "docs-build",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "scripts/check-docs-site.sh",
@@ -33,12 +32,15 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: mkdocs build failed --strict OR mermaid HTML-entity regression -- inspect mkdocs.yml + recent docs/ edits + the build log path under /tmp/check-docs-site*/build.log",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "docs-build/mermaid-renders",
       "dimension": "docs-build",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "scripts/check-mermaid-renders.sh",
@@ -66,12 +68,15 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: a docs page added a mermaid fence without a matching playwright artifact OR an artifact got stale -- refresh via the playwright MCP walk per CLAUDE.md 'Whole-nav-section playwright walks' section",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "docs-build/link-resolution",
       "dimension": "docs-build",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "scripts/check_doc_links.py",
@@ -96,12 +101,15 @@
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: a docs page references a deleted file OR a moved-without-redirect file -- run python3 quality/gates/docs-build/link-resolution.py locally for the BROKEN-list",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "docs-build/badges-resolve",
       "dimension": "docs-build",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "README.md:badges",
@@ -131,7 +139,11 @@
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: a badge URL is 404 or returns non-image content-type -- fix the badge URL in README.md or docs/index.md OR substitute a current shields.io equivalent. Common: shields.io drift, codecov project rename, badge-URL typos.",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     }
   ]
 }

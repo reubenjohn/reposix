@@ -6,7 +6,6 @@
     {
       "id": "structure/no-version-pinned-filenames",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "CLAUDE.md:Freshness invariants",
@@ -33,12 +32,15 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "any new doc/script that hardcodes a version in its filename outside CHANGELOG.md and *-phases/",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/install-leads-with-pkg-mgr-docs-index",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "docs/index.md:hero",
@@ -65,12 +67,15 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "docs/index.md hero section — install path order",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/install-leads-with-pkg-mgr-readme",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "README.md:hero",
@@ -97,12 +102,15 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "README.md hero section — install path order",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/benchmarks-in-mkdocs-nav",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "docs/benchmarks/",
@@ -129,12 +137,15 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "mkdocs.yml `nav:` block — benchmarks subsection",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/no-loose-roadmap-or-requirements",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         ".planning/milestones/",
@@ -161,12 +172,15 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "any *ROADMAP*.md / *REQUIREMENTS*.md at .planning/milestones/ top-level (must be inside *-phases/)",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/no-orphan-docs",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "mkdocs.yml:nav"
@@ -192,12 +206,15 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "mkdocs.yml `nav:` or `not_in_nav:` or `redirect_maps:`",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/top-level-requirements-roadmap-scope",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         ".planning/REQUIREMENTS.md",
@@ -227,12 +244,15 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: move historical sections from .planning/{REQUIREMENTS,ROADMAP}.md to .planning/milestones/v0.X.0-phases/{REQUIREMENTS,ROADMAP}.md per POLISH-STRUCT (P57 Wave D)",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/badges-resolve",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "asset-exists",
       "sources": [
         "README.md:badges",
@@ -259,12 +279,15 @@
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "P60 docs-build dimension ships the verifier; for P57 the row's existence is the contract",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/banned-words",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "docs/.banned-words.toml",
@@ -288,12 +311,15 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "any docs/ file using banned terms (FUSE, fusermount, kernel, partial-clone, etc. — see docs/.banned-words.toml for the full matrix)",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/cred-hygiene",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "scripts/hooks/pre-push:41-122",
@@ -319,12 +345,15 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: a real token shape was committed -- ROTATE THE TOKEN at the issuing platform BEFORE doing anything else (Atlassian: https://id.atlassian.com/manage-profile/security/api-tokens; GitHub: https://github.com/settings/tokens)",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/no-loose-top-level-planning-audits",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         ".planning/research/v0.11.1/repo-organization-gaps.md:49 (top-level audits should live under .planning/milestones/audits/)",
@@ -348,12 +377,15 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "any new milestone-audit or session-end-state document at .planning/ top level -- relocate under .planning/milestones/audits/ or .planning/archive/",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/no-pre-pivot-doc-stubs",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         ".planning/research/v0.11.1/repo-organization-gaps.md:82-83 (top-level doc stubs)",
@@ -377,12 +409,15 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "any new top-level docs/<slug>.md stub <500 bytes -- add to mkdocs.yml redirect_maps or remove",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/repo-org-audit-artifact-present",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         ".planning/REQUIREMENTS.md:ORG-01 (audit must be committed under quality/reports/)",
@@ -407,12 +442,15 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "Wave 2 produces the audit; future repo-org audits land at the same path",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/doc-alignment-catalog-present",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "quality/catalogs/doc-alignment.json",
@@ -442,12 +480,15 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: quality/catalogs/doc-alignment.json missing or unparseable -- restore from P64 Wave 1 commit OR recover via /reposix-quality-backfill",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/doc-alignment-summary-block-valid",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "quality/catalogs/doc-alignment.json:summary",
@@ -476,12 +517,15 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: summary block hand-edited or runner mutation diverged from row counts -- run /reposix-quality-refresh quality/catalogs/doc-alignment.json (or fix manually)",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/doc-alignment-floor-not-decreased",
       "dimension": "structure",
-      "cadence": "weekly",
       "kind": "mechanical",
       "sources": [
         "quality/catalogs/doc-alignment.json:summary.floor",
@@ -509,12 +553,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: an earlier commit ratcheted the floor DOWN (audit signal) -- ratchet floor only via deliberate human commit, never auto",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "weekly"
+      ]
     },
     {
       "id": "docs-alignment/walk",
       "dimension": "docs-alignment",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "crates/reposix-quality/src/commands/doc_alignment.rs (verb walk)",
@@ -542,12 +588,15 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: docs-alignment hash drift detected -- run /reposix-quality-refresh <doc> from a fresh top-level Claude session (cannot run from inside /gsd-execute-phase). Stderr names the affected doc.",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     },
     {
       "id": "structure/release-plz-disables-gh-releases",
       "dimension": "structure",
-      "cadence": "pre-push",
       "kind": "mechanical",
       "sources": [
         "release-plz.toml",
@@ -573,7 +622,11 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: someone deleted release-plz.toml or flipped git_release_enable. The fix is preventive — without it, release-plz creates one zero-asset GH release per workspace package on every push to main, stealing releases/latest from the canonical v* release. See PR #34 (commit f1d89e5) for the original rationale.",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     }
   ]
 }

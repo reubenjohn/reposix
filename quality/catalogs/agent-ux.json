@@ -6,7 +6,6 @@
     {
       "id": "agent-ux/dark-factory-sim",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "sources": [
         "scripts/dark-factory-test.sh",
@@ -35,12 +34,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: scripts/dark-factory-test.sh (pre-migration) or quality/gates/agent-ux/dark-factory.sh (post-migration) finds the helper teaching strings missing -- inspect helper export-path / fetch-blob-limit code",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/reposix-attach-against-vanilla-clone",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0 P79; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/phases/79-poc-reposix-attach-core/79-PLAN-OVERVIEW.md § 'New GOOD-TO-HAVES entry'.",
       "sources": [
@@ -69,12 +70,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-cli/src/attach.rs subcommand or crates/reposix-cache/src/reconciliation.rs walk regressed; check stderr for whether extensions.partialClone or remote URL post-condition failed",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/mirror-refs-write-on-success",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
@@ -104,12 +107,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-cache/src/mirror_refs.rs writers regressed OR crates/reposix-remote/src/main.rs::handle_export success-branch wiring regressed; check stderr for whether refs were absent, tag message body malformed, or audit row missing",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/mirror-refs-readable-by-vanilla-fetch",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
@@ -139,12 +144,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-remote/src/stateless_connect.rs advertisement regressed OR transfer.hideRefs setup at crates/reposix-cache/src/cache.rs began hiding refs/mirrors/* — check whether vanilla-clone's for-each-ref returns the refs",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/mirror-refs-cited-in-reject-hint",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
@@ -174,12 +181,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-remote/src/main.rs::handle_export conflict-reject hint composition regressed OR crates/reposix-cache/src/mirror_refs.rs::read_mirror_synced_at parser regressed; check whether stderr cites the ref name, RFC3339, and 'N minutes ago' tokens",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/sync-reconcile-subcommand",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
@@ -208,12 +217,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-cli/src/sync.rs regressed OR clap subcommand surface broke; check stderr for whether the --help path or the smoke test failed",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/bus-url-parses-query-param-form",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
@@ -244,12 +255,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-remote/src/bus_url.rs regressed OR backend_dispatch::parse_remote_url stripped query string handling; check stderr for parse error message",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/bus-url-rejects-plus-delimited",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
@@ -280,12 +293,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: bus_url::parse `+`-delimited reject path regressed OR unknown-query-key reject path regressed; check stderr for the verbatim hint strings",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/bus-precheck-a-mirror-drift-emits-fetch-first",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
@@ -315,12 +330,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: bus_handler::precheck_mirror_drift regressed OR git ls-remote shell-out broke; check stderr for the `your GH mirror has new commits` substring",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/bus-precheck-b-sot-drift-emits-fetch-first",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
@@ -350,12 +367,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: precheck::precheck_sot_drift_any regressed OR bus_handler PRECHECK B wiring regressed; check stderr for `git pull --rebase` substring",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/bus-fetch-not-advertised",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
@@ -385,12 +404,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: main.rs capabilities arm branching on state.mirror_url regressed; check stdout for whether stateless-connect appears for the bus URL or vanishes for the single-backend URL",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/bus-no-remote-configured-error",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
@@ -420,12 +441,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: bus_handler::resolve_mirror_remote_name regressed OR Q3.5 hint composition regressed; check stderr for `configure the mirror remote first` + `git remote add` substrings",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/bus-write-sot-first-success",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
@@ -459,12 +482,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: crates/reposix-remote/src/bus_handler.rs OR write_loop.rs regressed; check whether apply_writes was lifted correctly OR the mirror_sync_written row is missing on the success path",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/bus-write-mirror-fail-returns-ok",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "comment": "Row stays FAIL through 83-01 close; flips PASS at 83-02 T04 audit-completeness landing. pre-pr cadence runners between phases SHOULD NOT flag this as a phantom failure — the FAIL is by design until 83-02's bus_write_mirror_fail.rs test ships.",
@@ -498,12 +523,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: bus_handler.rs partial-fail branch regressed OR audit op missing from cache_schema.sql CHECK list",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/bus-write-no-helper-retry",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
@@ -532,12 +559,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: a retry construct was introduced via cargo-cult from P84; reject in code review",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/bus-write-no-mirror-remote-still-fails",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
@@ -569,12 +598,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: P83's write fan-out accidentally bypassed P82's STEP 0 check; check whether handle_bus_export's mirror_remote_name resolution order changed",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/bus-write-fault-injection-mirror-fail",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "comment": "Row stays FAIL through 83-02 T01-T03; flips PASS at 83-02 T04 catalog-flip BEFORE the per-phase push.",
@@ -610,12 +641,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: bus_handler.rs partial-fail branch regressed OR `make_failing_mirror_fixture` (P83-01 T05) returned a passing mirror",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/bus-write-fault-injection-sot-mid-stream",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "comment": "Row stays FAIL through 83-02 T01-T03; flips PASS at 83-02 T04 catalog-flip BEFORE the per-phase push.",
@@ -650,12 +683,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: SoT partial-fail branch regressed OR mirror push was attempted despite SoT fail; check execute_action loop in write_loop::apply_writes",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/bus-write-fault-injection-post-precheck-409",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "comment": "Row stays FAIL through 83-02 T01-T03; flips PASS at 83-02 T04 catalog-flip BEFORE the per-phase push.",
@@ -690,12 +725,14 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: post-precheck 409 fault not surfaced cleanly; check apply_writes execute_action loop bails on first error",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     },
     {
       "id": "agent-ux/bus-write-audit-completeness",
       "dimension": "agent-ux",
-      "cadence": "pre-pr",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "comment": "Row stays FAIL through 83-02 T01-T03; flips PASS at 83-02 T04 catalog-flip BEFORE the per-phase push. The audit_events (backend) layer in this test is asserted via wiremock's request log (the byte-equivalent of a sim audit row for the SimBackend wire path); spinning a real reposix-sim per test would break the per-crate cargo budget. See .planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md (sim audit table not directly queryable in test scope).",
@@ -727,7 +764,10 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: a per-record audit row was dropped (check sim adapter's create_record / update_record / delete_or_close success path) OR a cache audit op was missed (check apply_writes + bus_handler ref/audit write blocks)",
-      "waiver": null
+      "waiver": null,
+      "cadences": [
+        "pre-pr"
+      ]
     }
   ]
 }
