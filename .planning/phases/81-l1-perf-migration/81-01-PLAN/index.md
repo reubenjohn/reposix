@@ -286,7 +286,9 @@ This plan is split into the following chapters for readability:
 
 - **[Threat Analysis](./01-threat-analysis.md)** — Trust boundaries and STRIDE threat register.
 - **[Task 01: Catalog-first](./T01-catalog-first.md)** — Mint 3 catalog rows and author 2 verifier shells.
-- **[Task 02: Cache Cursor & Precheck](./T02-cache-cursor-precheck.md)** — Cache cursor wrappers, helper precheck rewrite, and new `precheck.rs` module.
+- **[Task 02a: Cache Cursor Wrappers](./T02a-cache-cursor-wrappers.md)** — Read-first checklist + `read_last_fetched_at` / `write_last_fetched_at` wrappers + unit tests + build steps.
+- **[Task 02b: State Widening & precheck.rs](./T02b-state-widening-precheck-module.md)** — `pub(crate) struct State` widening, `issue_id_from_path` visibility, and new `precheck.rs` module with full algorithm.
+- **[Task 02c: handle_export Rewrite & Cursor Write](./T02c-handle-export-rewrite-cursor-write.md)** — `handle_export` precheck call, cursor-write insertion, serial build/test, and commit.
 - **[Task 03: Sync Reconcile CLI](./T03-sync-reconcile.md)** — `reposix sync --reconcile` CLI subcommand and smoke test.
 - **[Task 04: Perf Test & Catalog Flip](./T04-perf-test-close.md)** — Perf regression test, positive-control, catalog flip, CLAUDE.md update, and per-phase push.
 - **[Close Protocol](./05-close-protocol.md)** — Plan-internal close protocol and orchestrator actions.
