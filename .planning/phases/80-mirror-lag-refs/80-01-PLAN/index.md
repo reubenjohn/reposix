@@ -28,9 +28,11 @@ mode: standard
 - **[Objective & Architecture Overview](./01-objective.md)** — goal, task breakdown, and executor context (architecture + ref shapes + hint template).
 - **[Trust Boundaries & Threat Model](./02-threat-model.md)** — threat boundaries and STRIDE register.
 - **[Task T01: Catalog-first](./03-T01-catalog-first.md)** — mint 3 agent-ux rows + author 3 verifier shells (FAIL status).
-- **[Task T02: Cache impl](./04-T02-cache-impl.md)** — `mirror_refs.rs` + `audit::log_mirror_sync_written` + `lib.rs` re-export + 4 unit tests.
+- **[Task T02: Cache impl — module](./04a-T02-cache-impl-module.md)** — `mirror_refs.rs` module: Cache impl methods + 4 unit tests (§ 2a).
+- **[Task T02: Cache impl — audit/lib/commit](./04b-T02-cache-impl-audit-lib-tests.md)** — `audit::log_mirror_sync_written` + `lib.rs` re-export + API verification + build/test/commit (§§ 2b–2d).
 - **[Task T03: Helper wiring](./05-T03-helper-wiring.md)** — ref writes in `handle_export` success branch + reject-hint composition + advertisement widening.
-- **[Task T04: Integration & close](./06-T04-integration-tests.md)** — integration tests + verifier flip + CLAUDE.md update + per-phase push (terminal).
+- **[Task T04: Integration tests](./06a-T04-integration-tests.md)** — integration test file + SimSubprocess helper + M1 dev-deps + H3 fallback (§ 4a).
+- **[Task T04: Integration close](./06b-T04-integration-close.md)** — verifier flip + CLAUDE.md update + per-phase push (§§ 4b–4d, terminal).
 - **[Must-haves & Requirements](./07-must-haves.md)** — detailed specification of all deliverables.
 - **[Canonical References](./08-canonical-refs.md)** — source documents and code precedents.
 
