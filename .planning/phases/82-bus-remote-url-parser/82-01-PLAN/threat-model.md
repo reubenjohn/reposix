@@ -1,103 +1,6 @@
 ← [back to index](./index.md) · phase 82 plan 01
 
-<canonical_refs>
-**Spec sources:**
-- `.planning/REQUIREMENTS.md` DVCS-BUS-URL-01 / DVCS-BUS-PRECHECK-01 /
-  DVCS-BUS-PRECHECK-02 / DVCS-BUS-FETCH-01 (lines 71-80) — verbatim
-  acceptance.
-- `.planning/ROADMAP.md` § Phase 82 (lines 124-143) — phase goal +
-  7 success criteria.
-- `.planning/research/v0.13.0-dvcs/architecture-sketch.md` § "3. Bus
-  remote with cheap-precheck + SoT-first-write" (lines 83-146) — bus
-  algorithm steps 1–3 (P82 scope) + steps 4–9 (P83 deferred).
-- `.planning/research/v0.13.0-dvcs/decisions.md` Q3.3 (URL form),
-  Q3.4 (PUSH-only), Q3.5 (no auto-mutate), Q3.6 (no helper retry).
-- `.planning/phases/82-bus-remote-url-parser/82-RESEARCH.md` — full
-  research bundle (especially § Architecture Patterns Pattern 1, §
-  Common Pitfalls 1-7, § Catalog Row Design, § Test Fixture Strategy).
-- `.planning/phases/82-bus-remote-url-parser/82-PLAN-OVERVIEW.md`
-  § "Decisions ratified at plan time" (D-01..D-06).
-
-**Bus URL parser substrate (T02):**
-- `crates/reposix-remote/src/backend_dispatch.rs:74-200`
-  (`ParsedRemote`, `parse_remote_url`, `BackendKind::slug`,
-  `instantiate`).
-- `crates/reposix-core/src/remote.rs:43` (`split_reposix_url`) — the
-  canonical splitter `parse_remote_url` delegates to.
-
-**Coarser SoT precheck wrapper (T03):**
-- `crates/reposix-remote/src/precheck.rs` (entire file, 302 lines
-  post-P81) — donor pattern; the new wrapper is a 10-line sibling
-  of `precheck_export_against_changed_set` (lines 80-302).
-- `crates/reposix-cache/src/cache.rs::read_last_fetched_at` (P81)
-  — read cursor; first-push fallback semantics.
-- `crates/reposix-core/src/backend.rs:253` —
-  `BackendConnector::list_changed_since` signature.
-
-**Bus handler substrate (T04):**
-- `crates/reposix-remote/src/main.rs::handle_export` (currently lines
-  280-549 post-P81) — sibling pattern; bus_handler shares the
-  diag()/fail_push()/Protocol idiom but does NOT call
-  parse_export_stream.
-- `crates/reposix-remote/src/main.rs:48` (`State` struct definition)
-  — extension site (`mirror_url: Option<String>`).
-- `crates/reposix-remote/src/main.rs:103-136` (`real_main` body) —
-  URL dispatch site.
-- `crates/reposix-remote/src/main.rs:150-172` (`"capabilities"` arm)
-  — capabilities branching site (S1).
-- `crates/reposix-remote/src/main.rs:186-188` (`"export"` arm) —
-  bus dispatch insertion site.
-- `crates/reposix-remote/src/main.rs:246-258` (`fail_push`) — reject-
-  path helper bus_handler reuses verbatim.
-- `crates/reposix-cli/src/doctor.rs:446-944` — donor pattern for
-  `Command::new("git").args(...).output()` shell-outs (D-06).
-- `crates/reposix-cache/src/mirror_refs.rs:227` —
-  `Cache::read_mirror_synced_at` (P80) for PRECHECK B's hint
-  composition.
-
-**Test fixtures (T05):**
-- `crates/reposix-remote/tests/perf_l1.rs` (P81) — wiremock fixture
-  donor pattern for `bus_precheck_b.rs`.
-- `crates/reposix-remote/tests/mirror_refs.rs` (P80) —
-  helper-driver donor pattern (`drive_helper_export`,
-  `render_with_overrides`, etc.) for `bus_precheck_a.rs` and
-  `bus_capabilities.rs`.
-- `scripts/dark-factory-test.sh` — file:// bare-repo fixture donor
-  pattern (RESEARCH.md Test Fixture Strategy option (a)).
-- `crates/reposix-remote/Cargo.toml` `[dev-dependencies]` —
-  `wiremock`, `assert_cmd`, `tempfile` already present (verified
-  during P81).
-
-**Quality Gates:**
-- `quality/catalogs/agent-ux.json` — existing file with 6 rows
-  (P79/P80/P81 precedents); the 6 new rows join.
-- `quality/gates/agent-ux/sync-reconcile-subcommand.sh` (P81 TINY
-  verifier precedent — 30-line shape).
-- `quality/gates/agent-ux/mirror-refs-write-on-success.sh` (P80 TINY
-  verifier precedent).
-- `quality/PROTOCOL.md` § "Verifier subagent prompt template" + §
-  "Principle A".
-
-**Operating principles:**
-- `CLAUDE.md` § "Build memory budget" — strict serial cargo,
-  per-crate fallback.
-- `CLAUDE.md` § "Push cadence — per-phase" — terminal push protocol.
-- `CLAUDE.md` § Operating Principles OP-1 (simulator-first), OP-2
-  (Tainted-by-default — no new tainted byte source in P82), OP-3
-  (audit log unchanged in P82 — bus_handler does NOT write audit
-  rows for the deferred-shipped path; P83 wires audit), OP-7
-  (verifier subagent), OP-8 (+2 reservation).
-- `CLAUDE.md` § "Threat model" — `<threat_model>` section below
-  enumerates the new shell-out boundary's STRIDE register.
-- `CLAUDE.md` § Quality Gates — 9 dimensions / 6 cadences / 5 kinds.
-
-This plan introduces TWO new shell-out construction sites
-(`git ls-remote` for PRECHECK A; `git config --get-regexp` for
-STEP 0; `git rev-parse` for local SHA read). The
-`BackendConnector::list_changed_since` call in PRECHECK B goes
-through the existing `client()` factory + `REPOSIX_ALLOWED_ORIGINS`
-allowlist (no new HTTP construction site). See `<threat_model>`
-below for the STRIDE register.
+# Threat Model
 
 <threat_model>
 ## Trust Boundaries
@@ -126,3 +29,4 @@ No new HTTP origin in scope (PRECHECK B reuses the existing
 introduced in P82 (mirror SHA from `git ls-remote` is byte-compared,
 not parsed/executed/committed — bounded). Three new shell-out sites
 all mitigated via D-06 + T-82-01/04/05. No new sanitization branch.
+</threat_model>
