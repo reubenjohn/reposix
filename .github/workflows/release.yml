@@ -58,7 +58,7 @@ jobs:
       version: ${{ steps.plan.outputs.version }}
       version_tag: ${{ steps.plan.outputs.version_tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Resolve tag + version
         id: plan
@@ -120,7 +120,7 @@ jobs:
             archive: zip
             cross: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -214,7 +214,7 @@ jobs:
       version: ${{ needs.plan.outputs.version }}
       version_tag: ${{ needs.plan.outputs.version_tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -403,7 +403,7 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: steps.check.outputs.skip != 'true'
         with:
           repository: reubenjohn/homebrew-reposix
