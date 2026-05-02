@@ -646,9 +646,7 @@
       },
       "verifier": {
         "script": "quality/gates/structure/file-size-limits.sh",
-        "args": [
-          "--warn-only"
-        ],
+        "args": [],
         "timeout_s": 30,
         "container": null
       },
@@ -657,7 +655,7 @@
       "last_verified": "2026-05-01T23:12:53Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if violations: split the file per the hint emitted by the verifier. To flip the gate from warn-only to block-mode after cleanup, remove '--warn-only' from this row's verifier.args (one-line edit).",
+      "owner_hint": "if violations: split the file per the hint emitted by the verifier (CLAUDE.md=40k, .claude/skills/=10k, *.md=20k, *.rs=20k, *.py=15k, *.sh=10k). Auto-generated/lockfile/catalog/fixture/CHANGELOG paths are excluded; *.rs in crates/ is also excluded pending source-code-budget cleanup in a future milestone.",
       "waiver": null,
       "cadences": [
         "pre-commit",
