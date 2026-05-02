@@ -1,0 +1,19 @@
+# Phase 61: Subjective gates skill + freshness TTL enforcement (v0.12.0)
+
+**Goal:** Subjective gates (cold-reader hero clarity, install positioning, headline-numbers sanity) become first-class catalog citizens with TTL freshness enforcement. `quality/catalogs/subjective-rubrics.json` ships with seed rubrics — `cold-reader-hero-clarity`, `install-positioning`, `headline-numbers-sanity` — each with a numeric scoring rubric and `freshness_ttl: 30d` default. The `reposix-quality-review` skill ships at `.claude/skills/reposix-quality-review/SKILL.md`: it reads the catalog, dispatches one unbiased subagent per stale/unverified row in parallel (per OP-2), persists JSON artifacts to `quality/reports/verifications/subjective/`, updates the catalog row's `last_verified` timestamp + `status`. It integrates the existing `doc-clarity-review` skill as one rubric implementation (the cold-reader rubric). SUBJ-03 wires the skill into pre-release cadence so subjective gates with TTL ≥ 14d expired auto-dispatch before any milestone tag push — a release cannot ship with stale subjective rows. Operating-principle hooks: **OP-2 aggressive subagent delegation** — one rubric = one isolated subagent, parallel dispatch; **OP-6 ground truth obsession** — TTL is the explicit "this row's freshness is proof, not history" contract.
+
+**Requirements:** SUBJ-01, SUBJ-02, SUBJ-03
+
+**Depends on:** P60 GREEN. **Gate-state precondition:** P60's docs-build-dimension catalog shows GREEN in `quality/reports/verdicts/p60/`, AND the runner cadence cutover is complete (subjective gates compose into the same runner contract as a `pre-release`-cadence consumer).
+
+**Success criteria:**
+1. `quality/catalogs/subjective-rubrics.json` exists with at minimum 3 seed rows: `cold-reader-hero-clarity`, `install-positioning`, `headline-numbers-sanity`. Each row carries a numeric scoring rubric, `freshness_ttl` (default 30d), `last_verified` timestamp, and `status`.
+2. `.claude/skills/reposix-quality-review/SKILL.md` ships with frontmatter `name: reposix-quality-review` and a one-line description. The skill reads the rubrics catalog, dispatches one subagent per stale/unverified row IN PARALLEL, persists per-row JSON artifacts to `quality/reports/verifications/subjective/<rubric-id>/<ts>.json`, updates catalog row.
+3. The skill integrates the existing `doc-clarity-review` skill as the implementation of the `cold-reader-hero-clarity` rubric (rubric → skill mapping documented in the catalog row).
+4. `quality/runners/run.py --cadence pre-release` invokes the `reposix-quality-review` skill against any rubric whose `last_verified + freshness_ttl < now`, blocks the runner exit on RED, and writes a verdict to `quality/reports/verdicts/pre-release/<ts>.md`.
+5. Synthetic regression test: backdate a rubric's `last_verified` past its TTL, run `--cadence pre-release`, confirm the skill auto-dispatches a fresh review and updates the row.
+6. **Recurring (catalog-first):** Catalog rows for SUBJ-01..03 land in `quality/catalogs/subjective-rubrics.json` BEFORE the skill commits.
+7. **Recurring (CLAUDE.md):** CLAUDE.md "Cold-reader pass on user-facing surfaces" section updated to point at the new skill + the rubric catalog; the §"Subagent delegation rules" gains the `reposix-quality-review` parallel-dispatch pattern. In the same PR.
+8. **Recurring (verifier dispatch):** Phase close: unbiased verifier subagent grades all catalog rows GREEN; verdict in `quality/reports/verdicts/p61/<ts>.md`. (Verifier in this case grades catalog mechanics, not the rubrics themselves — the rubrics are graded by the skill it dispatches.)
+
+**Context anchor:** `.planning/REQUIREMENTS.md` § "Subjective gates" SUBJ-01..03, `.planning/research/v0.12.0/naming-and-architecture.md` § "subjective gates" (skill + TTL design), existing `.claude/skills/doc-clarity-review/SKILL.md` (integrated as one rubric implementation), CLAUDE.md "Cold-reader pass" section (the convention the catalog encodes).
