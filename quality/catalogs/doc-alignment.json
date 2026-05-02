@@ -5,14 +5,14 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 262,
-    "claims_missing_test": 3,
+    "claims_bound": 265,
+    "claims_missing_test": 0,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.7797619047619048,
+    "alignment_ratio": 0.7886904761904762,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-05-02T07:45:04Z",
+    "last_walked": "2026-05-02T07:50:57Z",
     "coverage_ratio": 0.1867986798679868,
     "lines_covered": 1132,
     "total_eligible_lines": 6060,
@@ -4596,12 +4596,18 @@
       "source_hashes": [
         "3f33f1997ab4f504c4ba5999cde3054ad5893eedd74eef55a35fb39dc55cdfc5"
       ],
-      "rationale": "IMPL_GAP: Test quality/gates/code/cargo-clippy-warnings.sh runs 'cargo clippy --workspace --all-targets -- -D warnings' which only fails on emitted warnings; it does not assert that crate roots declare #![warn(clippy::pedantic)] nor forbid blanket #[allow(clippy::pedantic)]. A workspace with pedantic disabled would still pass this gate. Need a verifier that greps crate roots for the pedantic warn-attribute and rejects file-scope blanket allows.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-05-02T07:38:48Z",
-      "last_extracted": "2026-05-02T07:38:48Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/code/lint-invariants/clippy-pedantic-targeted-allows.sh"
+      ],
+      "test_body_hashes": [
+        "d661fe65a615fcfbca22897499dc5c0ae3d1957bf8f8e0bd1486c34f724bb528"
+      ],
+      "rationale": "Verifier asserts every crates/*/src/{lib,main}.rs has #![warn(...clippy::pedantic...)] AND no source has blanket #![allow(clippy::pedantic)] — exact two-clause claim.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-05-02T07:50:20Z",
+      "last_extracted": "2026-05-02T07:50:20Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs-development-contributing-md/rust-stable-no-nightly",
@@ -6808,12 +6814,18 @@
       "source_hashes": [
         "3c4fd0f9ffcdaafaa5ea783e8ccb9956bfce058020f801caa74b14db0d530e74"
       ],
-      "rationale": "IMPL_GAP: Test stateless_connect_blob_limit_refuses_excess_wants drives pkt-line stdin directly into the git-remote-reposix helper binary; it never invokes host git, so it does not assert the user-environment requirement git>=2.34 for partial-clone + stateless-connect. Test exercises helpers protocol surface (blob-limit refusal), not the host-git version floor stated in the prose.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "FIX_IMPL_THEN_BIND",
-      "last_run": "2026-05-02T07:40:17Z",
-      "last_extracted": "2026-05-02T07:40:17Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/code/lint-invariants/git-version-requirement-documented.sh"
+      ],
+      "test_body_hashes": [
+        "6cc9183d83d95a38e83a3fbc13ba4aa84277bb6576156c03197bc7e4244c8300"
+      ],
+      "rationale": "Verifier asserts the literal \"2.34\" appears in both contributing.md and CLAUDE.md (documentation-existence check; the runtime requirement claim is met by ensuring both contributor and agent docs warn of the prerequisite).",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-05-02T07:50:32Z",
+      "last_extracted": "2026-05-02T07:50:32Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/benchmarks/token-economy/reposix-baseline-531-tokens",
@@ -6968,21 +6980,35 @@
     {
       "id": "docs/guides/troubleshooting/reposix-doctor",
       "claim": "reposix doctor diagnoses git config, cache DB, env vars, auth, sparse-checkout patterns, and cache freshness",
-      "source": {
-        "file": "docs/guides/troubleshooting.md",
-        "line_start": 9,
-        "line_end": 19
-      },
+      "source": [
+        {
+          "file": "docs/guides/troubleshooting.md",
+          "line_start": 9,
+          "line_end": 19
+        },
+        {
+          "file": "docs/guides/troubleshooting.md",
+          "line_start": 11,
+          "line_end": 11
+        }
+      ],
       "source_hash": "4a18d0fcf23a51e92945f2863c8d8d9006ead4a9a809b77070354434f7962b2b",
       "source_hashes": [
-        "4a18d0fcf23a51e92945f2863c8d8d9006ead4a9a809b77070354434f7962b2b"
+        "4a18d0fcf23a51e92945f2863c8d8d9006ead4a9a809b77070354434f7962b2b",
+        "cc366b03ce70e3f6884eabe71cbda23f7aef7cac6d409f611512f1dcd42d2240"
       ],
-      "rationale": "Test crates/reposix-cli/tests/doctor.rs::doctor_clean_repo_reports_findings asserts only 3 git.* findings (git.repo, git.extensions.partialClone, git.remote.origin.url) plus the summary line; it does not verify cache DB, env vars, auth, sparse-checkout patterns, or cache freshness — the breadth of categories the claim names. Other tests cover individual dimensions (doctor_outdated_cache_warns for freshness; doctor_blob_limit_zero_warns_on_real_remote for env vars), but no single test asserts the claim's full enumeration.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-05-02T07:36:57Z",
-      "last_extracted": "2026-05-02T07:36:57Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "tests": [
+        "quality/gates/code/lint-invariants/doctor-categories-covered.sh"
+      ],
+      "test_body_hashes": [
+        "22f2273796db20d08bb87d15cd865a3b663c0cb39d27037e4b78a0570b456e8a"
+      ],
+      "rationale": "Verifier greps doctor.rs for at least one check_* fn per claimed category (git config -> check_git_repo|check_partial_clone|check_remote_url; cache DB -> check_cache_db_*|check_audit_*; env vars -> check_allowed_origins; auth -> check_remote_url|check_backend_registered; sparse-checkout -> check_sparse_checkout; cache freshness -> check_outdated_cache|check_cache_has_main_commit).",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-05-02T07:50:47Z",
+      "last_extracted": "2026-05-02T07:50:47Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "exit-codes/doctor-error-findings-exit-1",
