@@ -5,17 +5,17 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 276,
-    "claims_missing_test": 0,
+    "claims_bound": 262,
+    "claims_missing_test": 3,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.8214285714285714,
+    "alignment_ratio": 0.7797619047619048,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-05-01T22:33:12Z",
-    "coverage_ratio": 0.1899497487437186,
-    "lines_covered": 1134,
-    "total_eligible_lines": 5970,
+    "last_walked": "2026-05-02T07:45:04Z",
+    "coverage_ratio": 0.1867986798679868,
+    "lines_covered": 1132,
+    "total_eligible_lines": 6060,
     "coverage_floor": 0.1
   },
   "rows": [
@@ -283,7 +283,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "Mirror of canonical token-economy headline reduction percentage",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -1592,9 +1592,9 @@
         "line_start": 56,
         "line_end": 68
       },
-      "source_hash": "0cfc042658310946939171b74160132993f1679f1cdbc05812e3698eebcee23d",
+      "source_hash": "20a761383c7e330f3cb89caabf1e9edb6c05f22c7e651eff4a186b486b53270d",
       "source_hashes": [
-        "0cfc042658310946939171b74160132993f1679f1cdbc05812e3698eebcee23d"
+        "20a761383c7e330f3cb89caabf1e9edb6c05f22c7e651eff4a186b486b53270d"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
@@ -1602,11 +1602,11 @@
       "test_body_hashes": [
         "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
       ],
-      "rationale": "test dark_factory_blob_limit_teaching_string_present (174-189) asserts literal \"git sparse-checkout\" is committed in crates/reposix-remote/src/stateless_connect.rs with error message BLOB_LIMIT_EXCEEDED_FMT",
+      "rationale": "agent_flow.rs:181-184 still asserts `src.contains(\"git sparse-checkout\")` against stateless_connect.rs BLOB_LIMIT_EXCEEDED_FMT — teaches the literal recovery command in the cited prose",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:04:47Z",
-      "last_extracted": "2026-04-28T09:04:47Z",
+      "last_run": "2026-05-02T07:36:23Z",
+      "last_extracted": "2026-05-02T07:36:23Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2379,7 +2379,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "bench_token_economy.py BENCH-02 path loads benchmarks/fixtures/confluence_pages.json and emits the Confluence raw-API reduction row",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -4129,7 +4129,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "bench_token_economy.py BENCH-02 path loads benchmarks/fixtures/github_issues.json and emits the GitHub raw-API reduction row",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -4478,7 +4478,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "README mirror of canonical token-economy headline",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -4489,8 +4489,8 @@
       "claim": "Every crate's lib.rs / main.rs declares #![forbid(unsafe_code)].",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 59,
-        "line_end": 59
+        "line_start": 74,
+        "line_end": 74
       },
       "source_hash": "89ced95ebdeddd25544ae5c153aade4faec9d4d2934f861871f6f9be1d4b9ebe",
       "source_hashes": [
@@ -4502,11 +4502,11 @@
       "test_body_hashes": [
         "30a8d5bbd94e8fed8a041409707b7c931eca42c36cb1b2f11e70d43e7ae2a1d2"
       ],
-      "rationale": "P72 LINT-CONFIG-01 per D-01: shares verifier with README-md/forbid-unsafe-code (single source of truth).",
+      "rationale": "docs/development/contributing.md:74 still asserts '#![forbid(unsafe_code)] at every crate root'; verifier walks crates/*/src/{lib,main}.rs and greps '^#!\\[forbid\\(unsafe_code\\)\\]' on each (D-01 shared verifier with README-md/forbid-unsafe-code).",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T19:58:02Z",
-      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_run": "2026-05-02T07:38:11Z",
+      "last_extracted": "2026-05-02T07:38:11Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4514,8 +4514,8 @@
       "claim": "Invariant row 2: reqwest::Client is banned outside crates/reposix-core/src/http.rs via clippy disallowed-methods",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 60,
-        "line_end": 60
+        "line_start": 75,
+        "line_end": 75
       },
       "source_hash": "dbbe77822e6decd2c5b6b9f41d06198460a6ef68643c3fd688db9aa75ebce449",
       "source_hashes": [
@@ -4527,11 +4527,11 @@
       "test_body_hashes": [
         "d72ce0e95b5665dc160d691d39a8f47ee4a8605dd3d2c28bafeced4ecbca0287"
       ],
-      "rationale": "clippy-lint-loaded.sh asserts clippy.toml lists the three banned reqwest constructors AND no source outside http.rs constructs them",
+      "rationale": "docs/development/contributing.md:75 still asserts 'reqwest::Client is banned outside crates/reposix-core/src/http.rs. Clippy disallowed-methods enforces this workspace-wide'; clippy-lint-loaded.sh verifies clippy.toml lists the three banned constructors AND greps crates/ for direct construction outside http.rs",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:44:02Z",
-      "last_extracted": "2026-04-28T19:44:02Z",
+      "last_run": "2026-05-02T07:38:17Z",
+      "last_extracted": "2026-05-02T07:38:17Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4539,8 +4539,8 @@
       "claim": "Every pub fn returning Result has a # Errors rustdoc section (clippy::missing_errors_doc).",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 61,
-        "line_end": 61
+        "line_start": 76,
+        "line_end": 76
       },
       "source_hash": "59fb7eaf9511956cf57ef4899bc34e5913ce6d7e8092fddc9a1307e289c1b167",
       "source_hashes": [
@@ -4552,11 +4552,11 @@
       "test_body_hashes": [
         "569a677093db66c560a22989726214718b1ac798bdd175b53adfeccd4b713d5f"
       ],
-      "rationale": "P72 LINT-CONFIG-04 per D-07: clippy lint, not grep; handles Result aliases / trait methods correctly.",
+      "rationale": "docs/development/contributing.md:76 still asserts 'Clippy missing-errors-doc is on' and the verifier runs cargo clippy -W clippy::missing_errors_doc and asserts zero hits.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T19:58:02Z",
-      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_run": "2026-05-02T07:38:21Z",
+      "last_extracted": "2026-05-02T07:38:21Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4564,8 +4564,8 @@
       "claim": "Invariant row 4: No hand-rolled JSON/YAML serialization, always use serde and serde_yaml for frontmatter",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 62,
-        "line_end": 62
+        "line_start": 77,
+        "line_end": 77
       },
       "source_hash": "16c54eee4e3edf2c4ab1c6cadae50db30d2463431d961f48c3c151abd3ca3590",
       "source_hashes": [
@@ -4577,11 +4577,11 @@
       "test_body_hashes": [
         "b79ec3bd75b341c6f05322de058903423ecdd210d34db1f6f5299948916765b4"
       ],
-      "rationale": "record.rs:244 frontmatter_roundtrips uses serde_yaml render+parse; hand-roll regression would break byte-identical roundtrip",
+      "rationale": "record.rs:244-254 frontmatter_roundtrips calls frontmatter::render (serde_yaml::to_string at line 143) + frontmatter::parse (serde_yaml::from_str at line 186); roundtrip asserts id/title/status/body/version preserved — proves no hand-rolled YAML path.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:22:35Z",
-      "last_extracted": "2026-04-28T19:22:35Z",
+      "last_run": "2026-05-02T07:38:35Z",
+      "last_extracted": "2026-05-02T07:38:35Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4589,33 +4589,27 @@
       "claim": "Invariant row 5: Clippy is pedantic with targeted allows only; blanket #[allow(clippy::pedantic)] is forbidden",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 63,
-        "line_end": 63
+        "line_start": 78,
+        "line_end": 78
       },
       "source_hash": "3f33f1997ab4f504c4ba5999cde3054ad5893eedd74eef55a35fb39dc55cdfc5",
       "source_hashes": [
         "3f33f1997ab4f504c4ba5999cde3054ad5893eedd74eef55a35fb39dc55cdfc5"
       ],
-      "tests": [
-        "quality/gates/code/cargo-clippy-warnings.sh"
-      ],
-      "test_body_hashes": [
-        "d2f7fd79c5ce625efbb72ab8e0acf961ef870e49faccf1cd416125a1c09a0834"
-      ],
-      "rationale": "Contributing-doc clippy-pedantic invariant covered by clippy-warnings gate",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "IMPL_GAP: Test quality/gates/code/cargo-clippy-warnings.sh runs 'cargo clippy --workspace --all-targets -- -D warnings' which only fails on emitted warnings; it does not assert that crate roots declare #![warn(clippy::pedantic)] nor forbid blanket #[allow(clippy::pedantic)]. A workspace with pedantic disabled would still pass this gate. Need a verifier that greps crate roots for the pedantic warn-attribute and rejects file-scope blanket allows.",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "FIX_IMPL_THEN_BIND",
+      "last_run": "2026-05-02T07:38:48Z",
+      "last_extracted": "2026-05-02T07:38:48Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "docs-development-contributing-md/rust-stable-no-nightly",
       "claim": "rust-toolchain.toml channel = \"stable\" (nightly banned).",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 64,
-        "line_end": 64
+        "line_start": 79,
+        "line_end": 79
       },
       "source_hash": "96846ce0eb8fd49d23c44340f9217f92e9fadc9b72b4fdd8c70e423d04453ae9",
       "source_hashes": [
@@ -4627,11 +4621,11 @@
       "test_body_hashes": [
         "8216576e9837c50898941452d338ed124db106efd9714ff899a3ada56078c36e"
       ],
-      "rationale": "P72 LINT-CONFIG-05: grep rust-toolchain.toml for channel line.",
+      "rationale": "docs/development/contributing.md:79 still asserts \"rust-toolchain.toml pins stable\" — verifier greps channel = \"stable\" in rust-toolchain.toml.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T19:58:02Z",
-      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_run": "2026-05-02T07:38:38Z",
+      "last_extracted": "2026-05-02T07:38:38Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4639,8 +4633,8 @@
       "claim": "Invariant row 7: Every outbound HTTP request passes the allowlist via sealed HttpClient newtype; per-request URL recheck catches redirects",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 65,
-        "line_end": 65
+        "line_start": 80,
+        "line_end": 80
       },
       "source_hash": "de44ff8beba200ec724a30fc9378fdb7adfea07a977502bc5e6687ef740902f2",
       "source_hashes": [
@@ -4652,11 +4646,11 @@
       "test_body_hashes": [
         "fabaec6a19796f8e5e72a43074f6f8a30a433e0f54fc1f399c2067f80984c51c"
       ],
-      "rationale": "http_allowlist.rs:184-200 mounts a 302 to attacker.example and asserts the recheck rejects it -- directly the claim's 'per-request URL recheck catches redirects'",
+      "rationale": "http_allowlist.rs:184-228 mounts 302 to attacker.example and asserts per-request recheck returns Error::InvalidOrigin before any I/O — directly enforces the claim verbatim",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T18:42:28Z",
-      "last_extracted": "2026-04-28T18:42:28Z",
+      "last_run": "2026-05-02T07:39:45Z",
+      "last_extracted": "2026-05-02T07:39:45Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4664,8 +4658,8 @@
       "claim": "Invariant row 8: Server-controlled frontmatter fields are stripped on egress via sanitize(Tainted<Issue>, ServerMetadata) -> Untainted<Issue>",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 66,
-        "line_end": 66
+        "line_start": 81,
+        "line_end": 81
       },
       "source_hash": "a74f2b98a6e72a9f56de5a3e6f953e9222569c8383d1480aa7e458653d4b208e",
       "source_hashes": [
@@ -4677,11 +4671,11 @@
       "test_body_hashes": [
         "606225824068d5cab3a63da6d10878fdf73b21952aeaee243600ae64a1b17134"
       ],
-      "rationale": "taint.rs:202 directly asserts sanitize() strip contract on server-controlled fields",
+      "rationale": "taint.rs:202-218 still asserts sanitize() strips server-controlled fields: 'assert_eq!(inner.id, meta.id)' + version/created_at/updated_at all from meta; agent fields (title/status/assignee/labels/body) preserved byte-for-byte",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:22:35Z",
-      "last_extracted": "2026-04-28T19:22:35Z",
+      "last_run": "2026-05-02T07:39:45Z",
+      "last_extracted": "2026-05-02T07:39:45Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -5326,7 +5320,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "Comparison page mirror of full MCP/reposix/reduction triple",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -5351,7 +5345,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "Mirror of MCP-baseline number from canonical bench",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -5395,7 +5389,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "bench_token_economy.py load_mcp_bytes + count_tokens loop emits the MCP baseline character/token row",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -6140,13 +6134,13 @@
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
       "test_body_hashes": [
-        "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
+        "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
-      "rationale": "test asserts literal \"git pull --rebase\" string is committed in crates/reposix-remote/src/main.rs; this string is the teaching message agents read",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "agent_flow.rs:222-229 still asserts literal 'git pull --rebase' present in reposix-remote/src/{main,write_loop,bus_handler}.rs",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:04:44Z",
-      "last_extracted": "2026-04-28T09:04:44Z",
+      "last_run": "2026-05-02T07:36:20Z",
+      "last_extracted": "2026-05-02T07:36:20Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6323,8 +6317,8 @@
       "claim": "Workspace compiles clean (cargo check --workspace -q exits 0).",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 15,
-        "line_end": 15
+        "line_start": 30,
+        "line_end": 30
       },
       "source_hash": "f10cfb7543a2f9f77732c8239a4d5e70ea41a9f9f26ddd1046c2200feea3cc94",
       "source_hashes": [
@@ -6336,11 +6330,11 @@
       "test_body_hashes": [
         "4f5cd27d6dc86bd18b996dcb0f2bdc5d2329004f8b1d886d349523c428b07fd0"
       ],
-      "rationale": "P72 LINT-CONFIG-06: cheap compile-only assertion.",
+      "rationale": "docs/development/contributing.md:30 still names cargo check --workspace; verifier runs cargo check --workspace -q and asserts exit 0",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T19:58:02Z",
-      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_run": "2026-05-02T07:39:35Z",
+      "last_extracted": "2026-05-02T07:39:35Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6348,8 +6342,8 @@
       "claim": "Workspace ships at least 368 test binaries (cargo test --workspace --no-run; unique-by-target.name; >= floor).",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 20,
-        "line_end": 20
+        "line_start": 35,
+        "line_end": 35
       },
       "source_hash": "e0b143a33db2624f5f7fa6b2ec7cc1a59fe412817dba18a1826e7303e525fe61",
       "source_hashes": [
@@ -6361,11 +6355,11 @@
       "test_body_hashes": [
         "389f4979040d37e4ef69c70589b8f5570e586f53c8e90a85d1adc06ca12902a3"
       ],
-      "rationale": "P72 LINT-CONFIG-07 per D-06: prose re-measured to 368 + verifier floor synced before bind; >= floor tolerates additions, blocks deletions.",
+      "rationale": "docs/development/contributing.md:35 still asserts '>= 368 test binaries'; cargo-test-count.sh asserts count >= floor (default 368) via cargo test --workspace --no-run + unique-by-target.name.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T19:58:02Z",
-      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_run": "2026-05-02T07:39:39Z",
+      "last_extracted": "2026-05-02T07:39:39Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6373,12 +6367,12 @@
       "claim": "scripts/dark-factory-test.sh exists and is executable.",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 28,
-        "line_end": 30
+        "line_start": 63,
+        "line_end": 63
       },
-      "source_hash": "7431250d26224551d860d7e3afb878414601663855612a7036e8babcd1641ee2",
+      "source_hash": "bd4759c93060dd5f73d77a214666331c6d1aa475efa2ab0495f869c41d44b797",
       "source_hashes": [
-        "7431250d26224551d860d7e3afb878414601663855612a7036e8babcd1641ee2"
+        "bd4759c93060dd5f73d77a214666331c6d1aa475efa2ab0495f869c41d44b797"
       ],
       "tests": [
         "quality/gates/code/lint-invariants/demo-script-exists.sh"
@@ -6386,11 +6380,11 @@
       "test_body_hashes": [
         "a2ff959b14b381b2f9c6c56b6a92c43194dbae6f3fe7653ce5b8c96011c9fc46"
       ],
-      "rationale": "P72 LINT-CONFIG-08: filesystem-only check.",
+      "rationale": "docs/development/contributing.md:63 names dark-factory-test.sh in scripts/ tree comment; verifier stats scripts/dark-factory-test.sh as -e and -x (script is -rwxr-xr-x).",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T19:58:03Z",
-      "last_extracted": "2026-04-29T19:58:03Z",
+      "last_run": "2026-05-02T07:39:51Z",
+      "last_extracted": "2026-05-02T07:39:51Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6807,25 +6801,19 @@
       "claim": "Reporting bugs: git >= 2.34 required for partial-clone + stateless-connect",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 130,
-        "line_end": 130
+        "line_start": 145,
+        "line_end": 145
       },
       "source_hash": "3c4fd0f9ffcdaafaa5ea783e8ccb9956bfce058020f801caa74b14db0d530e74",
       "source_hashes": [
         "3c4fd0f9ffcdaafaa5ea783e8ccb9956bfce058020f801caa74b14db0d530e74"
       ],
-      "tests": [
-        "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants"
-      ],
-      "test_body_hashes": [
-        "f55f3f3e47171456c973c443d1b3d4675f0d0f315b6e73db8b18905aee8feeb1"
-      ],
-      "rationale": "test drives literal stateless-connect git-upload-pack protocol over the helper -- proves stateless-connect path works with host git which requires git>=2.34",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:29:03Z",
-      "last_extracted": "2026-04-28T19:29:03Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "IMPL_GAP: Test stateless_connect_blob_limit_refuses_excess_wants drives pkt-line stdin directly into the git-remote-reposix helper binary; it never invokes host git, so it does not assert the user-environment requirement git>=2.34 for partial-clone + stateless-connect. Test exercises helpers protocol surface (blob-limit refusal), not the host-git version floor stated in the prose.",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "FIX_IMPL_THEN_BIND",
+      "last_run": "2026-05-02T07:40:17Z",
+      "last_extracted": "2026-05-02T07:40:17Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "docs/benchmarks/token-economy/reposix-baseline-531-tokens",
@@ -6846,7 +6834,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "bench_token_economy.py load_reposix_bytes + count_tokens emits the reposix baseline row",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -6871,7 +6859,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "Prose updated 92% -> 89.1% to match measured. bench_token_economy.py is the regenerator of the canonical 89.1% number",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-29T02:55:09Z",
       "last_extracted": "2026-04-29T02:55:09Z",
@@ -6985,22 +6973,16 @@
         "line_start": 9,
         "line_end": 19
       },
-      "source_hash": "7f26b7ed1d70019df9cecce5193c67322d7f6479f1d0cc92a818f62348396c73",
+      "source_hash": "4a18d0fcf23a51e92945f2863c8d8d9006ead4a9a809b77070354434f7962b2b",
       "source_hashes": [
-        "7f26b7ed1d70019df9cecce5193c67322d7f6479f1d0cc92a818f62348396c73"
+        "4a18d0fcf23a51e92945f2863c8d8d9006ead4a9a809b77070354434f7962b2b"
       ],
-      "tests": [
-        "crates/reposix-cli/tests/doctor.rs::doctor_clean_repo_reports_findings"
-      ],
-      "test_body_hashes": [
-        "c1226c989a6362cdda4e70ce008f6e79a5802e6dee2057b0ad32994324e3c4c1"
-      ],
-      "rationale": "doctor module imported at crates/reposix-cli/src/main.rs:27 and called at line 382; tests verify help renders and findings are reported; --fix applies safe deterministic fixes",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:04:59Z",
-      "last_extracted": "2026-04-28T09:04:59Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "Test crates/reposix-cli/tests/doctor.rs::doctor_clean_repo_reports_findings asserts only 3 git.* findings (git.repo, git.extensions.partialClone, git.remote.origin.url) plus the summary line; it does not verify cache DB, env vars, auth, sparse-checkout patterns, or cache freshness — the breadth of categories the claim names. Other tests cover individual dimensions (doctor_outdated_cache_warns for freshness; doctor_blob_limit_zero_warns_on_real_remote for env vars), but no single test asserts the claim's full enumeration.",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "WRITE_TEST",
+      "last_run": "2026-05-02T07:36:57Z",
+      "last_extracted": "2026-05-02T07:36:57Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "exit-codes/doctor-error-findings-exit-1",
@@ -7725,7 +7707,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "Comparison page mirror of reposix-side count",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-29T02:55:42Z",
       "last_extracted": "2026-04-29T02:55:42Z",
@@ -7750,7 +7732,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "Mirror of reposix-side number from canonical bench",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -7900,7 +7882,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "Prose updated 92% -> 89.1% to match measured. bench_token_economy.py is the regenerator of the canonical 89.1% number. P75 heal-bind.",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-29T21:14:25Z",
       "last_extracted": "2026-04-29T21:14:25Z",
@@ -7925,7 +7907,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "bench_token_economy.py computes MCP vs reposix token counts via Anthropic count_tokens and emits the reduction% to docs/benchmarks/token-economy.md -- IS the regenerator",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:44:02Z",
       "last_extracted": "2026-04-28T19:44:02Z",
@@ -8927,7 +8909,7 @@
         "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
       ],
       "rationale": "Concept page mirror of canonical headline reduction",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-29T02:55:42Z",
       "last_extracted": "2026-04-29T02:55:42Z",
@@ -9266,21 +9248,21 @@
         "line_start": 21,
         "line_end": 46
       },
-      "source_hash": "2e48b0affe6db39b71dcec706012f0972595d780ff6cbcd3a52a29e717bf8445",
+      "source_hash": "f238f895f07a601ea4e537470c195940c39fd8cb7f70e93e10371816328949f2",
       "source_hashes": [
-        "2e48b0affe6db39b71dcec706012f0972595d780ff6cbcd3a52a29e717bf8445"
+        "f238f895f07a601ea4e537470c195940c39fd8cb7f70e93e10371816328949f2"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
       "test_body_hashes": [
-        "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
+        "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
-      "rationale": "test asserts literal \"error refs/heads/main fetch first\" is committed in crates/reposix-remote/src/main.rs as the canned status line for push conflict rejection",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "agent_flow.rs:217 still asserts literal \"error refs/heads/main fetch first\" is committed as reject status line in one of crates/reposix-remote/src/{main.rs,write_loop.rs,bus_handler.rs}, plus \"git pull --rebase\" teaching string is present",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:05:04Z",
-      "last_extracted": "2026-04-28T09:05:04Z",
+      "last_run": "2026-05-02T07:36:43Z",
+      "last_extracted": "2026-05-02T07:36:43Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -9352,9 +9334,9 @@
       "id": "docs-alignment/perf-subtlety-prose-bound",
       "claim": "L1 trades one safety property: today's list_records would catch a record that exists on backend but missing from cache",
       "source": {
-        "file": ".planning/research/v0.13.0-dvcs/architecture-sketch.md",
-        "line_start": 164,
-        "line_end": 164
+        "file": ".planning/research/v0.13.0-dvcs/architecture-sketch/innovations.md",
+        "line_start": 162,
+        "line_end": 162
       },
       "source_hash": "dbba8a5e3c84e6468628f0a763ab7f2c48e5da42f22aade4135ffb83551c8c38",
       "source_hashes": [
@@ -9364,13 +9346,13 @@
         "crates/reposix-remote/tests/perf_l1.rs::l1_precheck_uses_list_changed_since_not_list_records"
       ],
       "test_body_hashes": [
-        "c9c02c20be5d224a4aa678ca2f3112fffa0bdf0490573b7d7be3723fee07fec8"
+        "0c9369f77dca10ea6f37af690371de3360a63fc58b7d93ab4fce1cd72da1ca01"
       ],
-      "rationale": "Performance-subtlety paragraph cited verbatim from architecture-sketch line 164. Verifier-test counts list_records calls via wiremock matchers (zero on the precheck hot path) AND list_changed_since calls (>=1 on the cursor-present path). Bind deferred from T01 to T04 because the bind verb at crates/reposix-quality/src/commands/doc_alignment.rs:265-270 validates the cited test file exists on disk; perf_l1.rs landed in T04. SURPRISES-INTAKE entry filed for the deferral.",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "innovations.md:162 still asserts 'Trades one safety property: today list_records would catch a record that exists on backend but missing from cache (cache desync)'; test asserts NoSinceQueryParam expect(0) AND HasSinceQueryParam expect(1..) on cursor-present hot path",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-01T11:36:49Z",
-      "last_extracted": "2026-05-01T11:36:49Z",
+      "last_run": "2026-05-02T07:40:12Z",
+      "last_extracted": "2026-05-02T07:40:12Z",
       "last_extracted_by": "bind-call"
     },
     {
