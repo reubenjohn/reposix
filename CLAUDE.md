@@ -8,7 +8,7 @@ reposix exposes REST-based issue trackers (and similar SaaS systems) as a git-na
 
 ## Architecture (git-native partial clone)
 
-> **Source of truth:** `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` + `.planning/research/v0.13.0-dvcs/architecture-sketch.md` (DVCS extensions, ratified P78–P88).
+> **Source of truth:** `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` + `.planning/research/v0.13.0-dvcs/architecture-sketch/index.md` (DVCS extensions, ratified P78–P88; entry-point + 3 chapter files post-split).
 
 The reposix runtime has three pieces:
 
