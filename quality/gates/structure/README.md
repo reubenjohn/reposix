@@ -6,7 +6,7 @@ Verifiers backing the catalog rows in `quality/catalogs/freshness-invariants.jso
 
 | Script | Catalog rows | Cadence |
 |---|---|---|
-| `freshness-invariants.py` | 10 structure rows + 3 P62 rows (see below) | pre-push |
+| `freshness-invariants.py` (dispatcher) | 14 structure / doc-alignment-schema / P62 rows; per-invariant logic in `freshness/` package (split 2026-05-01 to fit `*.py` ≤ 15k char budget) | pre-push |
 | `banned-words.sh` | structure/banned-words | pre-push |
 | `cred-hygiene.sh` | structure/cred-hygiene | pre-push |
 
