@@ -1,0 +1,104 @@
+# reposix-mirror-sync — v0.13.0 webhook-driven mirror sync
+#
+# What: sync the GH mirror with confluence-side edits (the pull
+# direction; bus-remote handles the push direction).
+# Triggers: repository_dispatch (event_type=reposix-mirror-sync) +
+# cron */30min safety net + workflow_dispatch (manual).
+# Secrets needed: ATLASSIAN_API_KEY, ATLASSIAN_EMAIL,
+# REPOSIX_CONFLUENCE_TENANT (set via `gh secret set` on this repo).
+# Cron override: edit this YAML directly (the schedule field cannot
+# read ${{ vars.* }} — see Pitfall 3 in P84 RESEARCH).
+# Full setup walk-through: docs/guides/dvcs-mirror-setup.md (P85).
+
+name: reposix-mirror-sync
+
+on:
+  repository_dispatch:
+    types: [reposix-mirror-sync]
+  schedule:
+    # Literal '*/30 * * * *' — Actions parses schedule BEFORE evaluating
+    # ${{ vars.* }} contexts; cron CANNOT be templated. To change cadence,
+    # edit this line directly. See P84 RESEARCH § Pitfall 3.
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: reposix-mirror-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  REPOSIX_ALLOWED_ORIGINS: 'http://127.0.0.1:*,https://${{ secrets.REPOSIX_CONFLUENCE_TENANT }}.atlassian.net'
+
+jobs:
+  sync:
+    name: sync-confluence-to-mirror
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout mirror repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # full history needed for --force-with-lease
+
+      - name: Install reposix-cli
+        run: |
+          set -euo pipefail
+          # cargo binstall reads the binstall metadata in
+          # crates/reposix-cli/Cargo.toml [package.metadata.binstall]
+          # and downloads the right tarball from the matching GH
+          # release. Faster than cargo install (~10s vs ~3min).
+          curl -L --proto '=https' --tlsv1.2 -sSf \
+            https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh \
+            | bash
+          # NOTE: published crate name is `reposix-cli`, NOT `reposix`
+          # (the workspace root). See P84 RESEARCH § Pitfall 2.
+          cargo binstall --no-confirm reposix-cli
+
+      - name: Build SoT cache via reposix init
+        env:
+          ATLASSIAN_API_KEY: ${{ secrets.ATLASSIAN_API_KEY }}
+          ATLASSIAN_EMAIL: ${{ secrets.ATLASSIAN_EMAIL }}
+          REPOSIX_CONFLUENCE_TENANT: ${{ secrets.REPOSIX_CONFLUENCE_TENANT }}
+        run: |
+          set -euo pipefail
+          SPACE="${{ vars.CONFLUENCE_SPACE || 'TokenWorld' }}"
+          reposix init "confluence::${SPACE}" /tmp/sot
+          # Post-init the cache has refs/mirrors/confluence-{head,synced-at}
+          # populated (P80 ships these on init). Working tree at /tmp/sot
+          # is a partial-clone checkout from the cache.
+
+      - name: Configure mirror remote in /tmp/sot
+        run: |
+          set -euo pipefail
+          cd /tmp/sot
+          MIRROR_URL="${{ github.server_url }}/${{ github.repository }}.git"
+          git remote add mirror "$MIRROR_URL"
+          # First-run handling (Q4.3): on a truly-empty mirror, the
+          # fetch fails with "couldn't find remote ref main"; downstream
+          # `git show-ref --verify --quiet refs/remotes/mirror/main`
+          # detects the absence and routes to the plain-push branch.
+          git fetch mirror main 2>/dev/null \
+            || echo "first-run: mirror has no main yet"
+
+      - name: Push to mirror with --force-with-lease
+        run: |
+          set -euo pipefail
+          cd /tmp/sot
+          # Branch on local tracking ref presence (D-07).
+          if git show-ref --verify --quiet refs/remotes/mirror/main; then
+            LEASE_SHA=$(git rev-parse refs/remotes/mirror/main)
+            git push mirror "refs/heads/main:refs/heads/main" \
+              --force-with-lease="refs/heads/main:${LEASE_SHA}"
+          else
+            # First-run path: empty mirror; no lease available.
+            git push mirror "refs/heads/main:refs/heads/main"
+          fi
+          # Mirror-lag refs in a SEPARATE invocation so a refs-write
+          # failure doesn't taint the main-branch push outcome. Cron
+          # tick re-attempts on transient failure.
+          git push mirror "refs/mirrors/confluence-head" \
+                          "refs/mirrors/confluence-synced-at" \
+            || echo "warn: mirror-lag refs push failed (non-fatal); cron will retry"
