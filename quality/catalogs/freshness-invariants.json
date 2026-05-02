@@ -583,7 +583,7 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/docs-alignment/walk.json",
-      "status": "FAIL",
+      "status": "PASS",
       "last_verified": "2026-05-02T01:29:33Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
