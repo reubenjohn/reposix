@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0](https://github.com/reubenjohn/reposix/compare/reposix-cache-v0.12.0...reposix-cache-v0.13.0) - 2026-05-02
+
+### Added
+
+- *(reposix-cache)* add helper_push_partial_fail_mirror_lag audit op (DVCS-BUS-WRITE-02 OP-3)
+- *(cache,remote)* L1 precheck — read_last_fetched_at + precheck.rs + handle_export rewrite (DVCS-PERF-L1-01, DVCS-PERF-L1-03)
+- *(cache)* mirror_refs module + log_mirror_sync_written audit helper (DVCS-MIRROR-REFS-01)
+- *(cache)* cache_reconciliation table + reconciliation walk module + 3 new public Cache APIs + audit hook (DVCS-ATTACH-02 + 04 part 1)
+
+### Fixed
+
+- *(cache,cli)* idempotent Cache::open + build_from + REPOSIX_SIM_ORIGIN env override (P79-03 fix-forward)
+
+### Other
+
+- *(remote)* integration tests for mirror-lag refs + verifier flip + CLAUDE.md update + schema migration (DVCS-MIRROR-REFS-01..03 close)
+
 ## [0.11.3](https://github.com/reubenjohn/reposix/compare/reposix-cache-v0.11.2...reposix-cache-v0.11.3) - 2026-04-27
 
 ### Other

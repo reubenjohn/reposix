@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0](https://github.com/reubenjohn/reposix/compare/reposix-cli-v0.12.0...reposix-cli-v0.13.0) - 2026-05-02
+
+### Added
+
+- *(cli)* reposix sync --reconcile subcommand (DVCS-PERF-L1-02)
+- *(cache)* cache_reconciliation table + reconciliation walk module + 3 new public Cache APIs + audit hook (DVCS-ATTACH-02 + 04 part 1)
+- *(cli)* scaffold `reposix attach <spec>` subcommand body (DVCS-ATTACH-01 + Q1.2/Q1.3 wiring)
+
+### Fixed
+
+- *(cli)* broaden dark_factory_conflict_teaching_string_present to write_loop.rs
+- *(cache,cli)* idempotent Cache::open + build_from + REPOSIX_SIM_ORIGIN env override (P79-03 fix-forward)
+
+### Other
+
+- *(cli)* integration tests for `reposix attach` (DVCS-ATTACH-01..04 + OP-3)
+- *(testing)* parameterize Confluence space, kill TokenWorld hardcoding ([#33](https://github.com/reubenjohn/reposix/pull/33))
+
 ## [0.11.3](https://github.com/reubenjohn/reposix/compare/reposix-cli-v0.11.2...reposix-cli-v0.11.3) - 2026-04-27
 
 ### Other
