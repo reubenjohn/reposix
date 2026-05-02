@@ -154,4 +154,13 @@ nav:
       - ADR-009 Stability commitment (v1.0): decisions/009-stability-commitment.md
   - Research:
       - Initial report: research/initial-report.md
+      - Initial report — chapters:
+          - FUSE architecture: research/initial-report/fuse-architecture.md
+          - Git remote helper: research/initial-report/git-remote-helper.md
+          - REST-to-POSIX: research/initial-report/rest-to-posix.md
+          - Jira workflows: research/initial-report/jira-workflows.md
+          - Confluence drafts: research/initial-report/confluence-drafts.md
+          - Conflict resolution: research/initial-report/conflict-resolution.md
+          - Governance + RBAC: research/initial-report/governance-rbac.md
+          - Performance dynamics: research/initial-report/performance.md
       - Agentic engineering reference: research/agentic-engineering-reference.md

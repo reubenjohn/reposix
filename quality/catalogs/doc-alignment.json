@@ -1614,8 +1614,8 @@
       "claim": "Blob objects are not persisted during build_from; they are materialized lazily on-demand via read_blob",
       "source": {
         "file": "docs/research/initial-report.md",
-        "line_start": 16,
-        "line_end": 17
+        "line_start": 29,
+        "line_end": 30
       },
       "source_hash": "a2508b66acdcf7cbb31160c03d2609859df9d95612d61e9beb98fdd93f87b962",
       "source_hashes": [
@@ -3750,8 +3750,8 @@
       "claim": "git push against stale base is rejected with standard git error; agent recovery is git pull --rebase",
       "source": {
         "file": "docs/research/initial-report.md",
-        "line_start": 140,
-        "line_end": 142
+        "line_start": 66,
+        "line_end": 68
       },
       "source_hash": "c5c4beb92d6196401ccedbadb0f7ee5ff3c6738986fb7b147c53b73d81e0b0d7",
       "source_hashes": [
@@ -4689,8 +4689,8 @@
       "claim": "Issue metadata is encoded in YAML frontmatter within Markdown files; server-controlled fields (id, version) are stripped on export to prevent hijacking",
       "source": {
         "file": "docs/research/initial-report.md",
-        "line_start": 62,
-        "line_end": 72
+        "line_start": 41,
+        "line_end": 51
       },
       "source_hash": "16a498209da64fa9aaf31f462732ddbe1d145ca3b3e10004e6e7c97f31dafa43",
       "source_hashes": [
@@ -7357,8 +7357,8 @@
       "claim": "reposix init configures working tree with extensions.partialClone=origin and remote.origin.partialclonefilter=blob:none for lazy blob fetch",
       "source": {
         "file": "docs/research/initial-report.md",
-        "line_start": 14,
-        "line_end": 15
+        "line_start": 27,
+        "line_end": 28
       },
       "source_hash": "abdad9aa1c64779b280e0831e0ed62117210862debc603fceb3b4e4e15d27902",
       "source_hashes": [
