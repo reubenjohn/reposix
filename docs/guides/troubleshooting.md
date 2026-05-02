@@ -4,11 +4,11 @@ title: Troubleshooting
 
 # Troubleshooting
 
-When reposix's substrate property holds, an agent recovers from every error reposix can produce by reading the stderr message and following its instructions verbatim. This page is for the cases where you (or your agent) need a slightly bigger hint than the stderr alone provides — and for the diagnostic queries you'd run when nothing is broken but you want to know what reposix did.
+Reposix's substrate property means an agent recovers from every error by reading stderr and following it verbatim. This page is for cases where you need a bigger hint than stderr provides — plus diagnostic queries for when nothing is broken but you want to know what reposix did.
 
 ## Quick triage with `reposix doctor`
 
-When something feels off, run `reposix doctor` from inside (or against) your reposix working tree. It checks the most common setup pitfalls — git repo layout, lazy-fetch config, remote URL scheme, helper binary on PATH, cache DB integrity, audit-table append-only triggers, env vars, [sparse-checkout](../reference/glossary.md#sparse-checkout) patterns ([git mode](https://git-scm.com/docs/git-sparse-checkout) that materializes only a subset of paths in the working tree), git version, and cache freshness — and prints a copy-pastable fix command for each finding.
+Run `reposix doctor` from (or against) your working tree. It checks the common setup pitfalls — git layout, lazy-fetch config, remote URL scheme, helper on PATH, cache DB integrity, audit-table append-only triggers, env vars, [sparse-checkout](../reference/glossary.md#sparse-checkout) patterns ([git mode](https://git-scm.com/docs/git-sparse-checkout) that materializes only a subset of paths), git version, cache freshness — and prints a copy-pastable fix per finding.
 
 ```bash
 reposix doctor                    # diagnose current dir
@@ -16,7 +16,7 @@ reposix doctor /tmp/repo          # diagnose another dir
 reposix doctor --fix /tmp/repo    # also apply safe fixes
 ```
 
-`--fix` only applies deterministic, non-destructive fixes (e.g. `git config extensions.partialClone origin`). It will never mutate the cache, the audit log, or the backend. Exit code is 1 if any ERROR-severity finding is reported, 0 otherwise — so you can wire `reposix doctor` into CI as a gate.
+`--fix` only applies deterministic, non-destructive fixes (e.g. `git config extensions.partialClone origin`); it never mutates the cache, audit log, or backend. Exit 1 on any ERROR-severity finding, 0 otherwise — wire it into CI as a gate.
 
 ## `git push` rejected with "fetch first"
 
@@ -33,7 +33,7 @@ hint: to the same ref. You may want to first integrate the remote changes
 hint: (e.g., 'git pull ...') before pushing again.
 ```
 
-What it means: the helper noticed that the backend version of an issue you are pushing has moved since your last `git fetch`. Pushing now would silently overwrite the other writer.
+What it means: the backend version of an issue you are pushing moved since your last `git fetch`. Pushing now would silently overwrite the other writer.
 
 Fix:
 
@@ -42,7 +42,7 @@ git pull --rebase
 git push
 ```
 
-`git pull --rebase` runs a delta-sync of the changed issues into your working tree, replays your commit on top, and you push again. If the rebase produces a conflict, resolve it with the standard git tools (`git status`, edit, `git rebase --continue`).
+`git pull --rebase` delta-syncs changed issues, replays your commit on top, then push again. On conflict, resolve with standard git tools (`git status`, edit, `git rebase --continue`).
 
 Mechanism: see [git layer §push-time conflict detection](../how-it-works/git-layer.md#push-time-conflict-detection).
 
@@ -56,7 +56,7 @@ error: refusing to fetch 487 blobs (limit: 200).
        Narrow your scope with `git sparse-checkout set <pathspec>` and retry.
 ```
 
-What it means: the helper counted more `want` lines on a single `command=fetch` request than `REPOSIX_BLOB_LIMIT` allows. This is the guardrail that keeps a naive `git grep` over a 10 000-issue tree from racking up thousands of REST calls.
+What it means: a single `command=fetch` carried more `want` lines than `REPOSIX_BLOB_LIMIT` allows. The guardrail keeps a naive `git grep` over a 10 000-issue tree from racking up thousands of REST calls.
 
 Fix:
 
@@ -66,7 +66,7 @@ git checkout origin/main
 git grep TODO
 ```
 
-`git sparse-checkout set <pathspec>` tells git to only materialize blobs matching the pathspec. The next `git checkout` issues a much smaller `command=fetch` and the operation proceeds. Tighten the pathspec until you stay under the limit.
+`git sparse-checkout set <pathspec>` restricts blob materialization to matching paths. The next `git checkout` issues a smaller `command=fetch` that proceeds. Tighten the pathspec until you stay under the limit.
 
 To raise the limit explicitly (one shot, your shell only):
 
@@ -83,7 +83,7 @@ git fetch
 git diff --name-only origin/main
 ```
 
-`git fetch` runs a delta-sync against the backend (incremental — only IDs whose `updated_at > last_fetched_at`). `git diff --name-only origin/main` lists changed files. No reposix-specific tooling required; the diff IS the change set.
+`git fetch` runs an incremental delta-sync (only IDs whose `updated_at > last_fetched_at`). `git diff --name-only origin/main` lists changed files. No reposix-specific tooling required — the diff IS the change set.
 
 If you want to see who/what changed it (subject to backend metadata):
 
@@ -137,7 +137,7 @@ The full vocabulary and what each row means lives in [trust model §audit log](.
 
 ## Real-backend setup
 
-If `git fetch` errors with `fatal: protocol error` or `Could not resolve hostname`, you are probably pointing at a real backend without the credential bundle. The three sanctioned test targets — Confluence TokenWorld, GitHub `reubenjohn/reposix`, JIRA `TEST` — each need a specific env-var pack.
+If `git fetch` errors with `fatal: protocol error` or `Could not resolve hostname`, you're probably pointing at a real backend without the credential bundle. The three sanctioned test targets — Confluence TokenWorld, GitHub `reubenjohn/reposix`, JIRA `TEST` — each need a specific env-var pack.
 
 See [Testing targets](../reference/testing-targets.md) for:
 
@@ -148,8 +148,8 @@ See [Testing targets](../reference/testing-targets.md) for:
 
 Most "real backend doesn't work" issues come down to one of two missing variables:
 
-- `REPOSIX_ALLOWED_ORIGINS` not including the backend host. Symptom: `egress_denied` audit rows.
-- A credential env var unset (`GITHUB_TOKEN`, `ATLASSIAN_API_KEY`, etc). Symptom: 401/403 from the REST call surfaced as `helper_fetch_error`.
+- `REPOSIX_ALLOWED_ORIGINS` excludes the backend host. Symptom: `egress_denied` audit rows.
+- Credential env var unset (`GITHUB_TOKEN`, `ATLASSIAN_API_KEY`, etc). Symptom: 401/403 surfaced as `helper_fetch_error`.
 
 ## "I have credentials but `git fetch` says missing-env" {#missing-env-with-creds}
 
@@ -166,9 +166,9 @@ Common causes:
    export REPOSIX_ALLOWED_ORIGINS='https://api.github.com,https://reuben-john.atlassian.net'
    ```
 
-   Note: `REPOSIX_ALLOWED_ORIGINS` is read by `reposix_core::http::client()` at request time, not at helper startup, so the failure surfaces as an `Error::InvalidOrigin` on the first outbound call rather than as a missing-env error.
+   Note: `REPOSIX_ALLOWED_ORIGINS` is read at request time (not helper startup), so the failure surfaces as `Error::InvalidOrigin` on the first outbound call rather than a missing-env error.
 
-2. **Helper started in a different shell than the one that set the env vars.** `git fetch` spawns `git-remote-reposix` as a subprocess that inherits the parent shell's env; if you set the vars in one terminal and ran `git fetch` in another, the helper sees the empty environment. Check with:
+2. **Helper started in a different shell than the one that set the env vars.** `git fetch` spawns `git-remote-reposix` as a subprocess inheriting the parent shell's env; if you set vars in one terminal and ran `git fetch` in another, the helper sees an empty environment. Check with:
 
    ```bash
    env | grep -E 'GITHUB_TOKEN|ATLASSIAN_|JIRA_|REPOSIX_'
@@ -189,7 +189,7 @@ The full env-var matrix per backend is at [Testing targets](../reference/testing
 
 ## Cache disk usage (`reposix gc`)
 
-`reposix gc` evicts materialized blobs from a reposix cache so you can keep disk usage bounded. Tree/commit objects, refs, and sync tags are NEVER touched — only loose blob objects are eligible. Evicted blobs are transparently re-fetched on the next read.
+`reposix gc` evicts materialized blobs to keep disk usage bounded. Tree/commit objects, refs, and sync tags are NEVER touched — only loose blobs. Evicted blobs are transparently re-fetched on next read.
 
 ```bash
 reposix gc                                       # LRU evict to 500 MB cap, current dir
@@ -211,7 +211,7 @@ sqlite3 ~/.cache/reposix/sim-demo.git/cache.db \
      WHERE op = 'cache_gc' ORDER BY ts DESC LIMIT 10"
 ```
 
-If you'd rather wipe everything (audit log included), `rm -rf ~/.cache/reposix/<backend>-<project>.git` and the next `reposix init` (or `git fetch`) re-creates it.
+To wipe everything (audit log included), `rm -rf ~/.cache/reposix/<backend>-<project>.git`; next `reposix init` (or `git fetch`) re-creates it.
 
 ## Token-economy ledger (`reposix tokens`)
 
@@ -226,9 +226,9 @@ Actual savings vary by workload — blob-heavy reads favour reposix; metadata-on
 
 ## DVCS push/pull issues
 
-The v0.13.0 DVCS topology — SoT (Confluence/GitHub Issues/JIRA) plus a plain-git GH mirror — adds a new class of failure modes that the bus remote and `reposix attach` produce. Each entry below is a stderr message you might see, what it means, and the recovery move.
+The v0.13.0 DVCS topology — SoT (Confluence/GitHub Issues/JIRA) plus a plain-git GH mirror — adds failure modes from the bus remote and `reposix attach`. Each entry below is a stderr message, what it means, and the recovery.
 
-For the mental model behind these errors, read [DVCS topology — three roles](../concepts/dvcs-topology.md) first; the recovery moves below assume you know what `refs/mirrors/<sot-host>-synced-at` is and what "mirror lag" means.
+Read [DVCS topology — three roles](../concepts/dvcs-topology.md) first for the mental model; recoveries below assume you know what `refs/mirrors/<sot-host>-synced-at` is and what "mirror lag" means.
 
 ### Bus-remote `fetch first` rejection
 
@@ -241,7 +241,7 @@ hint: your origin (GH mirror) was last synced from confluence at 2026-04-30T17:2
 hint: run `reposix sync --reconcile` to refresh your cache against the SoT, then `git pull --rebase`
 ```
 
-What it means: between your last `git fetch origin` (from the GH mirror) and your `git push`, the SoT moved. The mirror has not caught up yet — `refs/mirrors/<sot-host>-synced-at` shows the gap. Pushing now would silently overwrite the other writer's edits to issue 0001.
+What it means: between your last `git fetch origin` (from the GH mirror) and your `git push`, the SoT moved. The mirror has not caught up — `refs/mirrors/<sot-host>-synced-at` shows the gap. Pushing now would silently overwrite the other writer's edits to issue 0001.
 
 Fix:
 
@@ -251,9 +251,9 @@ git pull --rebase                 # replay your commits on top of the fresh stat
 git push                          # bus remote retries; precheck B passes
 ```
 
-Why two commands and not just `git pull --rebase`: `git pull` from the GH mirror gives you the mirror's view, which lags. `reposix sync --reconcile` walks the SoT directly via REST and updates your cache to match — that is the ground-truth refresh you actually need before rebasing. Once the cache is fresh, `git pull --rebase` becomes a local-only rebase and `git push` succeeds.
+Why two commands: `git pull` from the GH mirror gives you the mirror's lagging view. `reposix sync --reconcile` walks the SoT directly via REST and updates your cache to match — the ground-truth refresh needed before rebasing. Once the cache is fresh, `git pull --rebase` becomes a local-only rebase and `git push` succeeds.
 
-If the rebase produces a conflict, resolve with the standard git tools (`git status`, edit, `git rebase --continue`).
+On conflict, resolve with standard git tools (`git status`, edit, `git rebase --continue`).
 
 Mechanism: the bus-remote `CHEAP PRECHECK B` runs `backend.list_changed_since(last_fetched_at)` on the SoT before reading stdin; the rejection comes from that step. See [DVCS topology — Two refs you can `git log`](../concepts/dvcs-topology.md#two-refs-you-can-git-log) for the staleness model.
 
@@ -285,19 +285,19 @@ $ gh run view <run-id> --log
 error: failed to push some refs to 'github.com:org/<space>-mirror'
 ```
 
-What it means: between the workflow's `git fetch mirror main` and its `git push --force-with-lease`, a bus-remote push from a developer landed on the mirror. The lease check (`--force-with-lease=refs/heads/main:<sha-the-workflow-fetched>`) noticed the mirror's `main` is no longer at the SHA the workflow saw — and refused to clobber it. This is the **correct behavior**: the bus push already did the work the webhook would have done.
+What it means: between the workflow's `git fetch mirror main` and its `git push --force-with-lease`, a developer's bus-remote push landed on the mirror. The lease check (`--force-with-lease=refs/heads/main:<sha-the-workflow-fetched>`) saw the mirror's `main` had moved off that SHA and refused to clobber. This is the **correct behavior**: the bus push already did the work the webhook would have done.
 
-Fix: nothing. The workflow exits cleanly (the push step's failure is caught and logged); the next webhook fire or cron tick will see a clean state. If you see this fire frequently (more than once an hour), it suggests bus pushes and webhook syncs are racing — consider increasing the cron interval or relying on webhooks alone.
+Fix: nothing. The workflow exits cleanly (push-step failure is caught and logged); the next webhook fire or cron tick sees a clean state. If this fires more than once an hour, bus pushes and webhook syncs are racing — increase the cron interval or rely on webhooks alone.
 
-Why `--force-with-lease` and not plain `git push --force`: plain `--force` would clobber the bus-pushed commit, which Dev B has already fetched. Their `git pull` would then fast-forward back to the older SoT state, and their next push would replay an outdated diff. `--force-with-lease` makes the race observable instead of silently destructive.
+Why `--force-with-lease` and not plain `--force`: plain `--force` would clobber the bus-pushed commit Dev B already fetched. Their `git pull` would fast-forward back to the older SoT state and their next push would replay an outdated diff. `--force-with-lease` makes the race observable instead of silently destructive.
 
 Mechanism: see the workflow template at [`dvcs-mirror-setup-template.yml`](dvcs-mirror-setup-template.yml) (the `Push to mirror with --force-with-lease` step) and [DVCS mirror setup → Step 4](dvcs-mirror-setup.md#step-4-smoke-test-with-a-manual-run).
 
 ### Cache-desync recovery via `reposix sync --reconcile`
 
-Symptom: bus pushes are passing the cheap precheck (`list_changed_since` is empty) but writes are landing on stale records — you push a fix to issue 42, the audit log shows `helper_push_accepted`, but the SoT version still shows your old edit. Or: your cache claims an OID for a record that the SoT no longer has.
+Symptom: bus pushes pass the cheap precheck (`list_changed_since` empty) but writes land on stale records — you push a fix to issue 42, audit log shows `helper_push_accepted`, but the SoT still shows your old edit. Or: your cache claims an OID for a record the SoT no longer has.
 
-What it means: your local cache has drifted from the SoT. The L1 conflict-detection path trusts the cache as the prior; if the cache is desync'd from a previous failed sync (network blip mid-fetch, manual cache mutation, race with a concurrent run), the bus precheck sees nothing wrong because it is comparing against a stale prior. The fix is to re-walk the SoT and rebuild the cache.
+What it means: your cache has drifted from the SoT. L1 conflict-detection trusts the cache as prior; a desync from a failed sync (network blip mid-fetch, manual cache mutation, race with a concurrent run) makes the bus precheck see nothing wrong because it compares against a stale prior. The fix is to re-walk the SoT and rebuild the cache.
 
 Fix:
 
@@ -307,7 +307,7 @@ git fetch                         # bring in any records the cache missed
 git push                          # bus push now sees fresh prior
 ```
 
-`reposix sync --reconcile` is the explicit escape hatch for cache desync. It is **safe to run any time** — it never mutates the SoT; it only refreshes the local cache. The on-demand cost is the same as the pre-L1 per-push cost (one full `list_records` walk), which is why it is on-demand rather than automatic.
+`reposix sync --reconcile` is the explicit escape hatch for cache desync. **Safe to run any time** — it never mutates the SoT, only refreshes the local cache. Cost equals the pre-L1 per-push cost (one full `list_records` walk), which is why it's on-demand rather than automatic.
 
 When to suspect cache desync (signals from the audit log):
 
@@ -317,7 +317,7 @@ sqlite3 ~/.cache/reposix/<backend>-<project>.git/cache.db \
      WHERE op LIKE 'delta_sync%' ORDER BY ts DESC LIMIT 10"
 ```
 
-If you see `delta_sync` rows that returned empty for a long stretch but the SoT actually moved during that window, the `last_fetched_at` cursor is wrong — `reposix sync --reconcile` rebuilds it from the SoT's current state.
+If `delta_sync` rows returned empty over a stretch but the SoT actually moved during that window, the `last_fetched_at` cursor is wrong — `reposix sync --reconcile` rebuilds it from the SoT's current state.
 
 Mechanism: see [DVCS topology — Out of scope](../concepts/dvcs-topology.md#out-of-scope-intentionally) for the L1/L2/L3 trade-off; L2 hardening (background reconcile job) and L3 (transactional cache writes) defer to v0.14.0.
 
