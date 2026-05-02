@@ -25,6 +25,7 @@ The structural insight, validated against the live source: **the SoT-write half 
 - [**09-Pitfalls & Security**](./09-pitfalls-security.md) — Common pitfalls (6), risks summary, ASVS security domain, threat patterns.
 - [**10-Validation & Sources**](./10-validation-sources.md) — Validation architecture, primary/secondary/tertiary sources, assumptions log.
 - [**11-Metadata**](./11-metadata.md) — Confidence breakdown, validity window, resolved open questions.
+- [**12-Open Questions (Resolved)**](./12-open-questions-resolved.md) — Open Questions 1–4 + Q-A..Q-F for the planner; all resolved in 83-PLAN-OVERVIEW.md § D-01..D-10.
 
 ## Key Insight
 
