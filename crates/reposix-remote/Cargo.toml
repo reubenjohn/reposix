@@ -32,14 +32,14 @@ integration-git = []
 
 [dependencies]
 reposix-core.workspace = true
-reposix-cache = { path = "../reposix-cache", version = "0.12.0" }
+reposix-cache = { path = "../reposix-cache", version = "0.13.0" }
 # Phase 36-followup (helper backend dispatch): the helper instantiates
 # concrete backend connectors based on the remote URL's scheme, so it
 # pulls every backend adapter crate. Pre-Phase-36 the helper hardcoded
 # `SimBackend` and these deps were CLI-only.
-reposix-github = { path = "../reposix-github", version = "0.12.0" }
-reposix-confluence = { path = "../reposix-confluence", version = "0.12.0" }
-reposix-jira = { path = "../reposix-jira", version = "0.12.0" }
+reposix-github = { path = "../reposix-github", version = "0.13.0" }
+reposix-confluence = { path = "../reposix-confluence", version = "0.13.0" }
+reposix-jira = { path = "../reposix-jira", version = "0.13.0" }
 tokio.workspace = true
 serde_json.workspace = true
 tracing.workspace = true
@@ -58,7 +58,7 @@ chrono = { workspace = true }
 # v0.11.x coverage closure: the stateless_connect e2e test drives the
 # helper binary through a real protocol-v2 turn, which requires a live
 # sim on a random port. Programmatic library API only — no extra binary.
-reposix-sim = { path = "../reposix-sim", version = "0.12.0" }
+reposix-sim = { path = "../reposix-sim", version = "0.13.0" }
 walkdir = "2.5.0"
 regex = "1.12.3"
 rusqlite = { workspace = true, features = ["bundled"] }
