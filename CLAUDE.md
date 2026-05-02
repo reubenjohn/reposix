@@ -8,7 +8,7 @@ reposix exposes REST-based issue trackers (and similar SaaS systems) as a git-na
 
 ## Architecture (git-native partial clone)
 
-> **Source of truth:** `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` + `.planning/research/v0.13.0-dvcs/architecture-sketch/index.md` (DVCS extensions, ratified P78–P88; entry-point + 3 chapter files post-split).
+> **Source of truth:** `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary/index.md` + `.planning/research/v0.13.0-dvcs/architecture-sketch/index.md` (DVCS extensions, ratified P78–P88; both are entry-points + chapter files post-split).
 
 The reposix runtime has three pieces:
 
@@ -380,6 +380,6 @@ Two axes: `alignment_ratio` (bound / non-retired) and `coverage_ratio` (lines_co
 - `docs/concepts/dvcs-topology.md` (P85) — three roles (SoT-holder / mirror-only consumer / round-tripper) + mirror-lag refs explained; the canonical DVCS mental model.
 - `docs/guides/dvcs-mirror-setup.md` (P85) — owner walk-through for webhook + GH Action setup; cron-only fallback (Q4.2); cleanup procedure.
 - `docs/guides/troubleshooting.md` § "DVCS push/pull issues" (P85) — bus `fetch first` rejections, attach reconciliation warnings, webhook race conditions, cache-desync recovery.
-- `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md` — ratified design doc for the v0.9.0 pivot.
+- `.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary/index.md` — ratified design doc for the v0.9.0 pivot (entry-point + chapters post-split).
 - `.planning/PROJECT.md` — current scope.
 - `.planning/STATE.md` — current cursor.
