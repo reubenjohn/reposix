@@ -1,10 +1,10 @@
 ---
-last_measured_at: 2026-04-27T13:40:53Z
+last_measured_at: 2026-05-04T13:43:37Z
 ---
 
 # v0.9.0 Latency Envelope
 
-**Generated:** 2026-04-27T13:40:53Z (commit `2fb7561`)
+**Generated:** 2026-05-04T13:43:37Z (commit `34f9f45`)
 **Reproducer:** `bash scripts/latency-bench.sh`
 
 ## How to read this
@@ -33,11 +33,11 @@ match.
 
 | Step                                          | sim                          | github                       | confluence                   | jira                         |
 |-----------------------------------------------|------------------------------|------------------------------|------------------------------|------------------------------|
-| `reposix init` cold [^blob]                 | 27 ms             | 26 ms              | 508 ms              | 25 ms              |
-| List records [^N]                             | 9 ms (N=6)             | 451 ms (N=18)              |               | 332 ms (N=0)              |
-| Get one record                                | 8 ms              | 291 ms               |                | n/a               |
-| PATCH record (no-op)                          | 11 ms            | 828 ms             |              | n/a             |
-| Helper `capabilities` probe                 | 6 ms              | 5 ms               | 5 ms               | 5 ms               |
+| `reposix init` cold [^blob]                 | 27 ms             | 25 ms              | 26 ms              | 25 ms              |
+| List records [^N]                             | 8 ms (N=6)             | 906 ms (N=33)              |               | 427 ms (N=0)              |
+| Get one record                                | 8 ms              | 446 ms               |                | n/a               |
+| PATCH record (no-op)                          | 11 ms            | 962 ms             |              | n/a             |
+| Helper `capabilities` probe                 | 5 ms              | 5 ms               | 6 ms               | 5 ms               |
 
 [^blob]: `reposix init` materializes blobs lazily (partial clone with
     `--filter=blob:none`). Blob counts at end of init: sim=0,
@@ -46,8 +46,9 @@ match.
     that pulled actual blob bytes during the bootstrap fetch.
 [^N]: `N` = records returned by the canonical list endpoint:
     sim/github/jira issues, confluence pages in the configured space.
-    **N values reflect live backend state at run time** — the TokenWorld
-    space and `reubenjohn/reposix` issue count drift over time; expect
+    **N values reflect live backend state at run time** — the configured
+    Confluence space (`TokenWorld`) and `reubenjohn/reposix`
+    issue count drift over time; expect
     ±20% wobble between runs. The `Helper capabilities probe` row is
     local-only (no network), so it's identical across columns and serves
     as a runner-variance control.
@@ -76,8 +77,8 @@ columns, export the relevant credential bundle before running:
 ```bash
 # GitHub (reubenjohn/reposix issues)
 export GITHUB_TOKEN=…
-# Confluence (TokenWorld space)
-export ATLASSIAN_API_KEY=… ATLASSIAN_EMAIL=… REPOSIX_CONFLUENCE_TENANT=…
+# Confluence (space key set via REPOSIX_CONFLUENCE_SPACE; default TokenWorld)
+export ATLASSIAN_API_KEY=… ATLASSIAN_EMAIL=… REPOSIX_CONFLUENCE_TENANT=… REPOSIX_CONFLUENCE_SPACE=…
 # JIRA (TEST project, overridable via JIRA_TEST_PROJECT)
 export JIRA_EMAIL=… JIRA_API_TOKEN=… REPOSIX_JIRA_INSTANCE=…
 
