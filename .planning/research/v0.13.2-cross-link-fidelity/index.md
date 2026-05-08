@@ -70,11 +70,11 @@ Coverage @ L3 floor is monotonic per scope. Pushes that decrease it BLOCK. Floor
 - **ADR-12.** Ratcheting coverage floor (monotonic, per-scope) is the enforcement mechanism.
 - **ADR-15.** Bootstrap is CI-only; pre-push runs only L0+L1+L2+drift-triggered-L3.
 
-## What still needs owner decision (BLOCKS-PLAN)
+## What still needs owner decision
 
-- **Q2.** Rust binary vs Python script for v1? (recommend Rust)
-- **Q6.** Sanitization tier for grading_context? (recommend cred-hygiene + ${} reject + length cap)
-- **Q14.** Phase decomposition shape? (sketched in [`08-open-questions.md`](./08-open-questions.md))
+The 3 BLOCKS-PLAN questions are RATIFIED (see [`08-open-questions.md`](./08-open-questions.md) § "Owner ratification"): Q2 = Rust sub-command of `reposix-quality`; Q6 = cred-hygiene regex pre-commit only; Q14 = 10-phase decomposition.
+
+What's still open: **whether to formalize this as its own milestone** (e.g., v0.13.2) or absorb into another, and 6 deferrable design questions in [`08-open-questions.md`](./08-open-questions.md) (schema versioning discipline, edge-count scale, auto-classifier heuristics, prompt registry override, floor reset semantics, auto-fix sketch — none block phase planning).
 
 ## Routing — what to read by depth of need
 
@@ -82,11 +82,11 @@ Coverage @ L3 floor is monotonic per scope. Pushes that decrease it BLOCK. Floor
 1. [`01-vision-and-problem.md`](./01-vision-and-problem.md) — why this gate exists.
 2. [`02-architecture.md`](./02-architecture.md) — five primitives + ladder + scope model.
 
-### "I'm planning the v0.13.2 phase"
-1. [`02-architecture.md`](./02-architecture.md) — concepts.
-2. [`08-open-questions.md`](./08-open-questions.md) — what owner must decide.
-3. [`06-decisions-log.md`](./06-decisions-log.md) — what's already decided.
-4. Phase decomposition sketch in `08-open-questions.md` § Q14.
+### "I'm formalizing this as a milestone / planning the first phase"
+1. [`PROPOSED-ROADMAP.md`](./PROPOSED-ROADMAP.md) — one proposed phase shape (10 phases). NOT yet formalized; owner decides whether this becomes its own milestone or absorbs into another.
+2. [`08-open-questions.md`](./08-open-questions.md) § "Owner ratification" — the 3 BLOCKS-PLAN answers.
+3. [`06-decisions-log.md`](./06-decisions-log.md) — what's already decided (ADRs 1–28).
+4. [`02-architecture.md`](./02-architecture.md) — conceptual model.
 
 ### "I'm writing the implementation"
 1. [`03-schemas.md`](./03-schemas.md) — config + tracker + frontmatter schemas.
@@ -120,11 +120,12 @@ Coverage @ L3 floor is monotonic per scope. Pushes that decrease it BLOCK. Floor
 ├── 03-schemas.md                         # what (data shapes)
 ├── 04-cli-and-workflow.md                # how (verbs, CI integration)
 ├── 05-edge-cases.md                      # named failure modes
-├── 06-decisions-log.md                   # ADRs 1–18
+├── 06-decisions-log.md                   # ADRs 1–28
 ├── 07-extraction-plan.md                 # standalone-tool roadmap
-├── 08-open-questions.md                  # what needs owner decision
+├── 08-open-questions.md                  # owner ratifications + deferrable opens
 ├── 09-brownfield-and-onboarding.md       # adoption journey
 ├── prior-art.md                          # OSS landscape (research-agent output)
+├── PROPOSED-ROADMAP.md                   # one proposed phase shape (10 phases) — NOT yet formalized as a milestone
 └── examples/
     ├── default-config.toml               # working .cross-link-fidelity for this project
     ├── tracker-row.json                  # one tracker entry, fully populated
@@ -134,10 +135,10 @@ Coverage @ L3 floor is monotonic per scope. Pushes that decrease it BLOCK. Floor
 
 ## What this folder does not contain
 
-- A `PLAN.md`. That's `gsd-planner`'s output, post-discuss-phase.
+- A `PLAN.md`. That's `gsd-planner`'s output, post-discuss-phase, after the work is formalized as a milestone.
 - Implementation code. That belongs in `crates/cross-link-fidelity/` (per ADR + extraction plan).
-- A finalized phase decomposition. Sketched in Q14; finalized in PLAN.md.
-- Owner decisions on the BLOCKS-PLAN questions. Those need explicit ratification.
+- A formalized milestone roadmap. [`PROPOSED-ROADMAP.md`](./PROPOSED-ROADMAP.md) sketches one shape (10 phases) but the owner has not yet decided whether this work becomes its own milestone, absorbs into another, or renumbers.
+- Owner decisions still open. The 3 BLOCKS-PLAN questions ARE ratified ([`08-open-questions.md`](./08-open-questions.md) § "Owner ratification"); 6 deferrable questions remain.
 
 ## Cross-references back
 
