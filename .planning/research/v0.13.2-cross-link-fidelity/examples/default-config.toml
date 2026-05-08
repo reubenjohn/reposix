@@ -1,0 +1,95 @@
+# Example .cross-link-fidelity configuration for the reposix project.
+# This is the config that this project would use after v0.13.2 ships and bootstrap completes.
+# See ../03-schemas.md for the full schema.
+
+schema_version = "1.0.0"
+
+[project]
+catalog_path = "quality/catalogs/cross-link-fidelity.json"     # runner-readable, ~4 rows; ADR-25
+tracker_path = "quality/state/cross-link-fidelity-tracker.json"  # gate-internal per-edge state; ADR-25
+badge_path = "quality/reports/badges/"
+# Note: no `walk_paths` allowlist — discovery is the union of non-ignore scope source_globs (ADR-24).
+
+# REQUIRED: default scope. Catch-all; named scopes refine it.
+[scopes.default]
+source_glob = "**/*.md"
+target_glob = "**/*"
+max_level = "L3"                      # dark-factory ethos — see ADR-8
+tags = ["pre-push", "fidelity-critical"]  # ADR-23: free-form, orchestration-agnostic
+enforcement_mode = "block-newedge"    # steady-state target; brownfield projects start at "warn"
+ignore = false
+count_in_coverage = true
+freshness_ttl = "30d"
+floor_increment_per_pr = 0.0          # 0.0 = documented opt-out sentinel (ADR-23 hygiene)
+max_l3_per_push = 10                  # per-scope cap; ADR-24
+
+# Anchor READMEs are the highest-stakes scope: parent forecasts child.
+[scopes.anchor-readme]
+source_glob = "**/README.md"
+target_glob = "**/*"
+grading_context_override = "anchor-readme"
+# inherits max_level=L3, tags, max_l3_per_push from default
+
+# "See also" lists are nav pointers, not fidelity claims.
+[scopes.nav-only]
+source_glob = "**/*.md"
+target_glob = "**/*.md"
+source_section_regex = "(?i)^(see also|further reading|references)$"  # renamed from source_section_pattern; ADR-23 hygiene
+max_level = "L1"                      # downgrade — links must resolve, anchor must exist, no L3
+enforcement_mode = "block-broken"
+tags = ["pre-commit", "pre-push"]     # cheap; run on every local commit
+max_l3_per_push = 0                   # never spend L3 budget on nav links
+
+# Archived planning content. Don't penalize coverage for legacy material.
+[scopes.historical]
+source_glob = ".planning/archive/**"
+target_glob = "**/*"
+max_level = "L0"
+count_in_coverage = false
+tags = ["weekly"]                     # not in pre-push; only swept by the weekly cron
+
+# Generated docs (e.g., CHANGELOG, auto-generated reference). Skip discovery entirely.
+[scopes.generated]
+source_glob = "**/CHANGELOG.md"
+target_glob = "**/*"
+ignore = true
+
+# Licenses are verbatim text — fidelity grading is not meaningful.
+[scopes.licenses]
+source_glob = "**/*.md"
+target_glob = "**/{LICENSE,LICENSE-*,*-LICENSE.md,THIRD-PARTY-*.md}"
+max_level = "L0"
+count_in_coverage = false
+tags = ["pre-commit"]                 # link-resolves only
+
+# --- Source-side grading contexts ---
+
+[grading_contexts.anchor-readme]
+audience = "agent navigating the doc tree for the first time"
+context = """
+This is a README that is expected to forecast its children. The reader
+trusts the README to summarize what the children teach. A failure mode
+is the README mentioning a concept the children no longer cover, OR
+the children covering a concept the README never hints at — the
+"unknown unknowns" failure mode this gate exists to catch.
+
+Grading guidance:
+- The README does NOT need to mirror every sub-section of every child.
+- The README DOES need to forecast the major concepts so a reader
+  can decide what to read next.
+- Pay attention to new sections in children that the README's framing
+  doesn't cover at all — that's a BLOCK.
+- Pay LESS attention to wording mismatches if the concepts align.
+"""
+
+# --- Per-edge overrides (use sparingly) ---
+# Keys MUST match tracker edge-ID format <source>@<section|root>-><target>@<anchor|root>
+# (ADR-23 hygiene D-3).
+
+[edge_overrides."docs/README.md@root->docs/concepts/dvcs-topology.md@root"]
+# Anchor README forecasts dvcs-topology — keep at scope default (L3 anchor-readme).
+# This override block exists only as a documented example; in practice no override needed.
+
+[edge_overrides."docs/quality/README.md@root->quality/PROTOCOL.md@root"]
+max_level = "L3"
+reason = "PROTOCOL.md is the runtime contract; quality README must accurately forecast it. High stakes; explicit override to avoid scope drift."
