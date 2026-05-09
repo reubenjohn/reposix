@@ -20,6 +20,39 @@ specific targets.
 
 ---
 
+## Pre-flight verification
+
+Before running any real-backend test (the `cargo test … --ignored
+dark_factory_real_*` invocations below, or any P91+ phase that gates on a
+real backend), run:
+
+```bash
+bash scripts/preflight-real-backends.sh
+```
+
+The script auto-sources `.env` if present and probes each sanctioned
+target with a single read-only `GET`. Exit codes:
+
+| Exit | Meaning | Next action |
+|------|---------|-------------|
+| `0` | All configured targets reachable + the named test target exists. | Safe to start. |
+| `1` | At least one configured target failed (auth, network, or named target missing). | Fix `.env` or the target before invoking real-backend tests. |
+| `2` | No backend creds configured at all. | Populate `.env` per the per-backend sections below. |
+
+The script is idempotent + read-only (no mutations). It is the
+recommended first step at the boundary between any code phase and a
+real-backend smoke test.
+
+> **Known finding (May 8, 2026 pre-flight):** the script reports the
+> sanctioned Confluence space under key `REPOSIX` ("reposix demo space"),
+> NOT `TokenWorld`. The "TokenWorld" name in the Confluence section
+> below is documentation drift — a fix lands in v0.13.0 extension P95
+> (REQ `RBF-D-03`) which renames every `TokenWorld` reference in this
+> doc + adds a tenant-probe verifier. Until P95 ships, treat both names
+> as referring to the same physical space.
+
+---
+
 ## Confluence — `TokenWorld` space
 
 The `TokenWorld` Confluence space at

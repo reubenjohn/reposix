@@ -190,6 +190,8 @@ bash scripts/dark-factory-test.sh sim                          # v0.9.0 arm — 
 bash quality/gates/agent-ux/dark-factory.sh dvcs-third-arm     # v0.13.0 P86 arm — vanilla-clone + reposix attach + bus URL composition + cache audit (local + CI)
 
 # Testing against real backends — see docs/reference/testing-targets.md for env-var setup.
+# Pre-flight (verify .env creds + sanctioned targets reachable before running any real-backend test):
+bash scripts/preflight-real-backends.sh                    # exit 0 = sanctioned targets reachable; exit 1 = auth/network gap; exit 2 = no creds
 # Confluence — TokenWorld space (safe to mutate)
 export ATLASSIAN_API_KEY=… ATLASSIAN_EMAIL=… REPOSIX_CONFLUENCE_TENANT=reuben-john
 export REPOSIX_ALLOWED_ORIGINS='https://reuben-john.atlassian.net'
