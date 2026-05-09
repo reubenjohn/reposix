@@ -82,8 +82,8 @@ What's still open: **whether to formalize this as its own milestone** (e.g., v0.
 1. [`01-vision-and-problem.md`](./01-vision-and-problem.md) — why this gate exists.
 2. [`02-architecture.md`](./02-architecture.md) — five primitives + ladder + scope model.
 
-### "I'm formalizing this as a milestone / planning the first phase"
-1. [`PROPOSED-ROADMAP.md`](./PROPOSED-ROADMAP.md) — one proposed phase shape (10 phases). NOT yet formalized; owner decides whether this becomes its own milestone or absorbs into another.
+### "I'm planning the first phase"
+1. **`.planning/milestones/v0.13.2-phases/ROADMAP.md`** — formalized milestone roadmap (P98–P107). Source of truth for phase scope, dependencies, success criteria.
 2. [`08-open-questions.md`](./08-open-questions.md) § "Owner ratification" — the 3 BLOCKS-PLAN answers.
 3. [`06-decisions-log.md`](./06-decisions-log.md) — what's already decided (ADRs 1–28).
 4. [`02-architecture.md`](./02-architecture.md) — conceptual model.
@@ -125,7 +125,6 @@ What's still open: **whether to formalize this as its own milestone** (e.g., v0.
 ├── 08-open-questions.md                  # owner ratifications + deferrable opens
 ├── 09-brownfield-and-onboarding.md       # adoption journey
 ├── prior-art.md                          # OSS landscape (research-agent output)
-├── PROPOSED-ROADMAP.md                   # one proposed phase shape (10 phases) — NOT yet formalized as a milestone
 └── examples/
     ├── default-config.toml               # working .cross-link-fidelity for this project
     ├── tracker-row.json                  # one tracker entry, fully populated
@@ -137,7 +136,7 @@ What's still open: **whether to formalize this as its own milestone** (e.g., v0.
 
 - A `PLAN.md`. That's `gsd-planner`'s output, post-discuss-phase, after the work is formalized as a milestone.
 - Implementation code. That belongs in `crates/cross-link-fidelity/` (per ADR + extraction plan).
-- A formalized milestone roadmap. [`PROPOSED-ROADMAP.md`](./PROPOSED-ROADMAP.md) sketches one shape (10 phases) but the owner has not yet decided whether this work becomes its own milestone, absorbs into another, or renumbers.
+- A milestone roadmap. The formalized roadmap (P98–P107) lives at `.planning/milestones/v0.13.2-phases/ROADMAP.md`. Per-phase plans (`*-PLAN-OVERVIEW.md`) get authored at `/gsd-discuss-phase` time.
 - Owner decisions still open. The 3 BLOCKS-PLAN questions ARE ratified ([`08-open-questions.md`](./08-open-questions.md) § "Owner ratification"); 6 deferrable questions remain.
 
 ## Cross-references back
