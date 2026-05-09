@@ -506,7 +506,7 @@ The catalog rows carry the four scrutiny levels (with L2 bundled into L3 because
 
 ## ADR-27 — Lift markdown walker to a shared module
 
-**Decision.** Before P97 (P1) lands edge-walker code, lift the existing markdown-walking utilities from `crates/reposix-quality/src/coverage.rs` (specifically `eligible_files()` at line 46, `walk_md()` at line 73, and the related glob/path normalizers) into a shared module — either `crates/reposix-quality/src/md_walker.rs` (intra-crate) or a new `crates/reposix-md-walker/` crate (extraction-friendly per `07-extraction-plan.md`). Both `docs-alignment` and cross-link-fidelity consume the shared module.
+**Decision.** Before P98 (P1) lands edge-walker code, lift the existing markdown-walking utilities from `crates/reposix-quality/src/coverage.rs` (specifically `eligible_files()` at line 46, `walk_md()` at line 73, and the related glob/path normalizers) into a shared module — either `crates/reposix-quality/src/md_walker.rs` (intra-crate) or a new `crates/reposix-md-walker/` crate (extraction-friendly per `07-extraction-plan.md`). Both `docs-alignment` and cross-link-fidelity consume the shared module.
 
 **Options considered.**
 - (a) Cross-link's walker is a separate fork of `coverage.rs::walk_md`. ~150 LOC duplicated. Two divergent walkers in one binary.
@@ -519,7 +519,7 @@ The catalog rows carry the four scrutiny levels (with L2 bundled into L3 because
 
 **Origin.** Subagent cross-gate design review 2026-05-08 finding S-1.
 
-**Trade-off accepted.** P97 (P1) gains a refactor task. The refactor must precede new edge-walker code so cross-link is built on the lifted module from day one.
+**Trade-off accepted.** P98 (P1) gains a refactor task. The refactor must precede new edge-walker code so cross-link is built on the lifted module from day one.
 
 ---
 

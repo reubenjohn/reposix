@@ -1,32 +1,59 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.13.0
-milestone_name: DVCS over REST
-status: ready-to-tag
-last_updated: "2026-05-01T22:45:00Z"
-last_activity: 2026-05-01 — P88 SHIPPED (good-to-haves polish + milestone close); v0.13.0 ready-to-tag, owner pushes tag.
-progress:
-  total_phases: 11
-  completed_phases: 11
-  total_plans: 15
-  completed_plans: 15
-  percent: 100
+mode: parallel-workstreams
+last_updated: "2026-05-08T18:00:00Z"
+last_activity: 2026-05-08 — formalized v0.13.0 extension (P89-P97) + v0.13.2 (P98-P107) for parallel execution via /gsd-workstreams. Two ROADMAPs scaffolded; PROJECT.md + STATE.md updated; ready for workstream creation + autonomous dispatch.
+workstreams:
+  workstream_a:
+    milestone: v0.13.0
+    milestone_name: DVCS over REST (extended)
+    status: in-flight
+    phases_total: 20  # P78-P97 (P78-P88 shipped + P89-P97 extension)
+    phases_completed: 11  # P78-P88
+    next_phase: P89
+    blocks_tag: true  # v0.13.0 tag does NOT push until P97 GREEN
+  workstream_b:
+    milestone: v0.13.2
+    milestone_name: Cross-link fidelity
+    status: in-flight
+    phases_total: 10  # P98-P107
+    phases_completed: 0
+    next_phase: P98
+    blocks_tag: false  # v0.13.2 tag independent of v0.13.0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: P88 SHIPPED 2026-05-01 (good-to-haves polish + milestone close, +2 reservation slot 2; DVCS-GOOD-TO-HAVES-01). Awaiting BOTH verifier subagent dispatches: P88 verdict (`quality/reports/verdicts/p88/VERDICT.md`) + milestone-close verdict (`quality/reports/verdicts/milestone-v0.13.0/VERDICT.md`). Owner pushes tag.
-Plan: —
-Status: ready-to-tag — 11/11 phases complete (P78..P88); 15 plans complete; v0.13.0 milestone artifacts finalized.
-Last activity: 2026-05-01 — Quick task 260501-mgn polished 5 cold-reader nits in DVCS docs (binstall crate name + secret-set note + sed readability + slug hedge + template anchor); see commit 2b9e9c9 + merge fdf2df3. Prior: P88 plan + execute combined. 5 task-commits + 1 close commit (e32c20a catalog-first 4 milestone-close rows + 1ecb16b GOOD-TO-HAVES drain + tag-v0.13.0.sh + 8bab313 CHANGELOG [v0.13.0] entry + dc6e5ab RETROSPECTIVE OP-9 distillation + close). 4 catalog rows PASS (`agent-ux/p88-good-to-haves-drained`, `agent-ux/v0.13.0-changelog-entry-present`, `agent-ux/v0.13.0-tag-script-present`, `agent-ux/v0.13.0-retrospective-distilled`). GOOD-TO-HAVES-01 (extend `reposix-quality bind` to all dimensions, Size S) DEFERRED to v0.14.0 — pure-docs envelope of P88 doesn't fit Rust+test+schema scope; provenance flag carries forward. Tag-script tag-v0.13.0.sh has 8 guards (exceeds >=6 floor). Orchestrator does NOT push tag (ROADMAP P88 SC6 -- STOP at tag boundary). 5 task-commits + 1 close commit (e32c20a catalog-first 4 milestone-close rows + 1ecb16b GOOD-TO-HAVES drain + tag-v0.13.0.sh + 8bab313 CHANGELOG [v0.13.0] entry + dc6e5ab RETROSPECTIVE OP-9 distillation + close). 4 catalog rows PASS (`agent-ux/p88-good-to-haves-drained`, `agent-ux/v0.13.0-changelog-entry-present`, `agent-ux/v0.13.0-tag-script-present`, `agent-ux/v0.13.0-retrospective-distilled`). GOOD-TO-HAVES-01 (extend `reposix-quality bind` to all dimensions, Size S) DEFERRED to v0.14.0 — pure-docs envelope of P88 doesn't fit Rust+test+schema scope; provenance flag carries forward. Tag-script tag-v0.13.0.sh has 8 guards (exceeds >=6 floor). Orchestrator does NOT push tag (ROADMAP P88 SC6 -- STOP at tag boundary).
+**Mode:** parallel-workstreams (2 milestones in flight via `/gsd-workstreams`).
+
+### Workstream A — v0.13.0 (extended)
+
+Phase: P88 SHIPPED 2026-05-01 (good-to-haves polish + milestone close from the original v0.13.0 scope). v0.13.0 then EXTENDED 2026-05-08 with P89–P97 (real-backend frictions remediation, sourced from `.planning/research/v0.13.0-real-backend-frictions/03-synthesis/REMEDIATION-PLAN.md`). Tag pushed only after P97 GREEN.
+Plan: TBD — P89 plan-overview not yet authored.
+Status: ready-to-extend — 11/20 phases complete (P78–P88 shipped); P89–P97 ready for `/gsd-discuss-phase`. v0.13.0 tag held until P97 closes.
+Next agent action: workstream A starts at `/gsd-discuss-phase 89` (top-level execution mode per REMEDIATION-PLAN). P89 + P90 are framework fixes that subsequent code phases (P91–P95) depend on; serial execution with mid-stream litmus checkpoints (Decision 1 in REMEDIATION-PLAN).
+
+### Workstream B — v0.13.2
+
+Phase: P98 (entry-point) — crate skeleton + shared-compute lift + edge model + walker + catalog + tracker schemas. Sourced from `.planning/research/v0.13.2-cross-link-fidelity/`.
+Plan: TBD — P98 plan-overview not yet authored.
+Status: ready-to-start — 0/10 phases complete; ROADMAP scaffolded; REQUIREMENTS scaffolded; intakes scaffolded with 2 Q6 deferrals seeded in GOOD-TO-HAVES.
+Next agent action: workstream B starts at `/gsd-discuss-phase 98`. Cross-link is largely independent of v0.13.0 ext (md_walker.rs lift in P98 touches files v0.13.0 doesn't).
+
+Last activity: 2026-05-08 — formalized parallel execution: v0.13.0 ROADMAP extended with P89–P97 (sourced from REMEDIATION-PLAN); v0.13.2 milestone scaffolded at `.planning/milestones/v0.13.2-phases/` with ROADMAP (P98–P107), REQUIREMENTS, SURPRISES-INTAKE, GOOD-TO-HAVES (seeded with 2 Q6 deferrals); PROPOSED-ROADMAP.md + research-folder ADRs 23–28 + 8 deferred audit fixes already shipped in commits 5bc65d6 / 7b02abb / 7a6935e. Phase-number collision at P97 resolved by shifting v0.13.2 from P97-P106 → P98-P107.
 
 ## Current Focus
 
-**Milestone:** v0.13.0 — DVCS over REST. KICKED OFF 2026-04-30. PROJECT.md Current Milestone section reflects the new scope.
+**Active milestones (parallel via `/gsd-workstreams`):**
+
+- **Workstream A — v0.13.0 extended.** P78–P88 shipped 2026-05-01; extended 2026-05-08 with P89–P97 (real-backend frictions). Holds v0.13.0 tag until P97 GREEN. ROADMAP at `.planning/milestones/v0.13.0-phases/ROADMAP.md`.
+- **Workstream B — v0.13.2 cross-link-fidelity.** Scoped 2026-05-08; P98–P107. ROADMAP at `.planning/milestones/v0.13.2-phases/ROADMAP.md`. Independent of v0.13.0 tag.
 
 **Last shipped milestone:** v0.12.1 (closed 2026-04-30). Verdict GREEN at `quality/reports/verdicts/milestone-v0.12.1/VERDICT.md` (commit 9ef348e).
+
+**Cargo serialization rule (CLAUDE.md memory budget):** workstreams run on separate worktrees but share VM RAM; only ONE cargo invocation across both worktrees at a time. Doc-only / planning-only subagents can run truly concurrent.
 
 **Pre-kickoff checklist (kickoff-recommendations.md § "Pre-kickoff checklist"):**
 

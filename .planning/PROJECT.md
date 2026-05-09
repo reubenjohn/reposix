@@ -62,7 +62,20 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 | Skip GSD discuss step | User instruction (~12:55 AM): "do all the gsd planning, exec, review, etc, just without the discuss steps" | Validated |
 | Lethal-trifecta cuts are first-class requirements, not afterthoughts | Threat-model subagent flagged egress + bulk-delete + tainted typing as ship-blockers; safer to bake in than retrofit | Validated |
 
-## Current Milestone: v0.13.0 — DVCS over REST
+## Active Milestones (parallel execution via worktrees, 2026-05-08)
+
+Two milestones run concurrently via `/gsd-workstreams`. Each lives in its own git worktree on its own branch; cargo invocations serialize across worktrees per CLAUDE.md memory budget.
+
+| Workstream | Milestone | Phases | Theme | Owner |
+|---|---|---|---|---|
+| **A** | v0.13.0 (extended) | P89–P97 (post-P88 extension) | Real-backend frictions remediation + framework upgrades | dispatched via `/gsd-autonomous` |
+| **B** | v0.13.2 | P98–P107 | Cross-link fidelity quality gate (10th dimension) | dispatched via `/gsd-autonomous` |
+
+The v0.13.0 tag does NOT push until workstream A's P97 (milestone-close) lands GREEN. Workstream B can ship v0.13.2 independently — it does not block on v0.13.0's tag.
+
+See `.planning/milestones/v0.13.0-phases/ROADMAP.md` (P78–P97) and `.planning/milestones/v0.13.2-phases/ROADMAP.md` (P98–P107) for phase-by-phase scope.
+
+## Current Milestone: v0.13.0 — DVCS over REST (extended)
 
 **Goal:** Shift the project thesis from "VCS over REST" (one developer, one backend) to "DVCS over REST" — the SoT (e.g. confluence) remains authoritative, but a plain-git mirror on GitHub becomes the universal-read surface for everyone else. Devs `git clone git@github.com:org/repo.git` with vanilla git (zero reposix install), get all markdown, edit, commit. Install reposix only when they want to write back; `reposix attach` reconciles their existing checkout against the SoT, then `git push` via a bus remote fans out atomically to confluence (SoT-first) and the GH mirror. The litmus test: a vanilla-git clone, attach, edit, push round-trip + a webhook-driven mirror catch-up after a browser-side confluence edit, with conflict detection in both directions.
 
@@ -107,8 +120,48 @@ A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge b
 **Explicitly NOT in scope (deferred to v0.14.0):**
 - OTel / `reposix tail` / multi-project helper (operational maturity for an existing thesis).
 - Origin-of-truth frontmatter enforcement (only matters with multi-issues-backend bus; v0.13.0 is 1+1).
-- L2/L3 cache-desync hardening (background reconcile, transactional cache writes).
+- L2/L3 cache-desync hardening (background reconcile, transactional cache writes) — promoted INTO v0.13.0 P93 by REMEDIATION-PLAN Decision 2.
 - RETROSPECTIVE.md backfill for v0.9.0 → v0.12.0.
+
+---
+
+## Current Milestone: v0.13.2 — Cross-link fidelity (workstream B, parallel)
+
+**Goal:** Land a 10th quality-gate dimension that grades whether every markdown link `[A](B)` in the project remains a faithful *fidelity assertion* (does A's framing of B match what B currently teaches?). Catches the unknown-unknowns failure mode where progressive-disclosure parents silently lie because nobody re-graded them after the children drifted. Brownfield-friendly: ratcheting coverage floor per scope, UNGRADED is legitimate baseline.
+
+**Mental model.** Every markdown link is treated as an A asserting "B is what I'm framing it as." A four-level scrutiny ladder grades that assertion: L0 (link target file exists) → L1 (`#anchor` exists) → L2 (target's content hash unchanged since last grade) → L3 (LLM-judged subjective fidelity via Sonnet, drift-triggered). Five enforcement modes per scope (`warn` → `block-broken` → `block-stale` → `block-floor` → `block-newedge`); coverage floor monotonic per scope (ADR-22). Two-file split: runner-readable catalog at `quality/catalogs/cross-link-fidelity.json` + per-edge tracker at `quality/state/cross-link-fidelity-tracker.json` (ADR-25).
+
+**Target features:**
+- **Rust sub-command of `reposix-quality`** — `reposix-quality cross-link {walk, status, plan-refresh, bootstrap, suggest-scopes, ...}`. Orchestration-agnostic CLI (ADR-23): user wires `--tags` filter into pre-commit / prek / Claude Code hooks / GitHub Actions / cron / MCP — framework does not assume an orchestrator.
+- **Four-level scrutiny ladder** (L0/L1/L2/L3) with drift-triggered L3. Most pushes drift zero edges → no Sonnet calls.
+- **Five enforcement modes per scope.** Config-side sugar that compiles to per-row `blast_radius` at walk-time inside reposix; standalone tool drives CLI exit code directly.
+- **Ratcheting coverage floor** — monotonic per scope; `cross-link reset-floor --reason` is the only way down (ADR-22). Brownfield onboarding climbs from 0% over time.
+- **Shared markdown walker** — lift `coverage.rs::{walk_md, eligible_files}` to `crates/reposix-quality/src/md_walker.rs` (ADR-27); shared with docs-alignment.
+- **Shared `heading_subtree_hash`** — add next to existing `source_hash` + `test_body_hash` in `hash.rs` (ADR-28).
+- **L3 dispatcher reuse** — verdicts persist via `lib/persist_artifact.py`; dispatch follows Path A/B from `dispatch_inline_subagent.sh` (ADR-26). No new Anthropic SDK wrapper.
+- **Reposix dogfood** — bootstrap full ~400-edge graph; flip `default` scope to `block-newedge`. Real-cost L3 spend ~$20 (P106 dogfood).
+
+**Non-negotiable framing principles** (carried from project CLAUDE.md Operating Principles):
+- **OP-1 Simulator-first.** Mock Anthropic client used in unit tests; real API used only in P106 dogfood (gated by `ANTHROPIC_API_KEY` + opt-in `--real-api` flag).
+- **OP-2 Tainted-by-default.** `grading_context` content shipped to Anthropic carries `Tainted<T>` marker. Q6 ratification: pre-commit cred-hygiene regex only at v1; templated-secret + log-dump leak vectors are author-discipline (deferred to v0.13.3 GOOD-TO-HAVES).
+- **OP-3 Audit log non-optional.** Every L3 dispatch writes a row to the cache audit table (request → vendor → cost → verdict-id) so a forensic query can trace every shipped grading_context byte.
+- **OP-7 Verifier subagent dispatch on every phase close.** Standard GSD per-phase contract.
+- **OP-8 +2 phase practice.** P107 absorbs both reservation duties (surprises absorption + good-to-haves polish + milestone close); seeded with the 2 Q6 deferrals.
+- **Per-phase push cadence.** Every phase closes with `git push origin main` BEFORE verifier-subagent dispatch.
+
+**Source-of-truth handover bundle (read these before planning P98):**
+- `.planning/research/v0.13.2-cross-link-fidelity/index.md` (entry point, routing table, 90-second design summary)
+- `.planning/research/v0.13.2-cross-link-fidelity/02-architecture.md` (five primitives + four-level ladder + scope model + five enforcement modes)
+- `.planning/research/v0.13.2-cross-link-fidelity/03-schemas.md` (config TOML + catalog JSON + tracker JSON + frontmatter YAML — canonical schemas)
+- `.planning/research/v0.13.2-cross-link-fidelity/06-decisions-log.md` (ADRs 1–28; ADRs 23–28 are the load-bearing 2026-05-08 design-scrutiny decisions)
+- `.planning/research/v0.13.2-cross-link-fidelity/08-open-questions.md` § "Owner ratification" (Q2/Q6/Q14 BLOCKS-PLAN answers)
+- `.planning/research/v0.13.2-cross-link-fidelity/examples/` (concrete config + tracker row + frontmatter + ladder walkthrough)
+
+**Explicitly NOT in scope (deferred to v0.13.3 / extraction):**
+- `${...}` env-var reject + 2KB length cap on `grading_context` (Q6 deferrals; XLINK-SANITIZE-DOLLAR-VAR-REJECT M-class, XLINK-SANITIZE-2KB-CAP S-class).
+- `JudgeProvider` trait abstraction (ADR-26 — reuses rubric infrastructure instead).
+- Per-scope multi-vendor LLM dispatch (inherits from rubric infrastructure post-extraction).
+- `cross-link auto-fix` apply mode (suggest-only at v1.x).
 
 ---
 

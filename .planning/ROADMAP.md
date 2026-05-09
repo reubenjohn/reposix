@@ -15,7 +15,8 @@
 - ✅ **v0.11.x Polish & Reproducibility** — Phases 50–55 + POLISH2-* polish passes (v0.11.0 shipped 2026-04-25; v0.11.1 + v0.11.2 polish passes shipped 2026-04-26 / 2026-04-27 via release-plz; all 8 crates published to crates.io at v0.11.2)
 - ✅ **v0.12.0 Quality Gates** — Phases 56–65 (shipped 2026-04-29) · [archive](milestones/v0.12.0-phases/ROADMAP.md)
 - ✅ **v0.12.1 Polish** — Phases 72–77 (shipped 2026-04-30) · [archive](milestones/v0.12.1-phases/ARCHIVE.md)
-- 🚧 **v0.13.0 DVCS over REST** — Phases 78–88 (in flight; scoped 2026-04-30) · [milestone roadmap](milestones/v0.13.0-phases/ROADMAP.md)
+- 🚧 **v0.13.0 DVCS over REST (extended)** — Phases 78–97 (P78–P88 shipped; P89–P97 added 2026-05-08 for real-backend frictions remediation; workstream A) · [milestone roadmap](milestones/v0.13.0-phases/ROADMAP.md)
+- 🚧 **v0.13.2 Cross-link fidelity** — Phases 98–107 (scoped 2026-05-08; runs in parallel as workstream B) · [milestone roadmap](milestones/v0.13.2-phases/ROADMAP.md)
 
 ## Phases
 
@@ -27,7 +28,7 @@
 >
 > **Recurring per-phase success criteria** (catalog-first, CLAUDE.md-in-same-PR, per-phase push, unbiased verifier subagent, eager-resolution preference, simulator-first, tainted-by-default, dual-table audit) — see milestone ROADMAP.md § "Recurring success criteria for EVERY phase (P78–P88)".
 
-### Phase index (P78–P88)
+### Phase index (P78–P88, original v0.13.0)
 
 - **P78** Pre-DVCS hygiene — gix bump, WAIVED-row verifiers, multi-source walker · [78-PLAN-OVERVIEW](phases/78-pre-dvcs-hygiene/78-PLAN-OVERVIEW.md)
 - **P79** POC + `reposix attach` core · [79-PLAN-OVERVIEW](phases/79-poc-reposix-attach-core/79-PLAN-OVERVIEW.md)
@@ -41,7 +42,42 @@
 - **P87** Surprises absorption (+2 reservation slot 1) · [87-PLAN-OVERVIEW](phases/87-surprises-absorption/) (TBD)
 - **P88** Good-to-haves polish (+2 reservation slot 2) — milestone close · [88-PLAN-OVERVIEW](phases/88-good-to-haves-polish/) (TBD)
 
-For full per-phase goals, requirements, dependencies, success criteria, and context anchors, see `.planning/milestones/v0.13.0-phases/ROADMAP.md` per CLAUDE.md §0.5 / Workspace layout (verbose per-phase blocks live in the milestone roadmap; this top-level file is the navigable index).
+### Phase index (P89–P97, v0.13.0 extension — added 2026-05-08, workstream A)
+
+Source: `.planning/research/v0.13.0-real-backend-frictions/03-synthesis/REMEDIATION-PLAN.md`. P89–P90 are framework fixes; P91–P95 ride the framework substrate; P96 + P97 supersede P87 + P88 as the +2 reservation for the EXTENDED milestone. v0.13.0 tag pushes only after P97 GREEN.
+
+- **P89** Framework fixes: real-backend cadence + shell-subprocess kind + milestone-close litmus probe (top-level)
+- **P90** Framework fixes: catalog-row honesty rules + dishonest-test triage + spot-check meta-rule (top-level)
+- **P91** `reposix attach` + `sync --reconcile` real-backend wiring (Cluster A)
+- **P92** Push-flow correctness fixes: rebase recovery + OP-3 audit log silence (Clusters B + C)
+- **P93** L2/L3 cache-coherence + SotPartialFail recovery (Decision 2 promotion from v0.14.0)
+- **P94** Bus-push compatibility with documented mirror setup (Cluster D)
+- **P95** Quality framework upgrade + doc fixes (Clusters E + F + H + I) — split candidate
+- **P96** Surprises absorption (+2 reservation slot 1, OP-8) — supersedes P87
+- **P97** Good-to-haves polish + milestone close + tag v0.13.0 (+2 reservation slot 2, OP-9) — supersedes P88
+
+For full per-phase goals, requirements, dependencies, success criteria, and context anchors, see `.planning/milestones/v0.13.0-phases/ROADMAP.md`.
+
+## v0.13.2 Cross-link fidelity (PLANNING — workstream B, parallel)
+
+> **Status:** scoped 2026-05-08. The full milestone roadmap (thesis, mental model, recurring success criteria, and per-phase detail for P98–P107) lives at `.planning/milestones/v0.13.2-phases/ROADMAP.md`.
+>
+> **Source-of-truth handover bundle:** `.planning/research/v0.13.2-cross-link-fidelity/{index,01-vision-and-problem,02-architecture,03-schemas,06-decisions-log,08-open-questions}.md` + `examples/` (10 chapters, 28 ADRs, 4 examples; ratifications captured in `08-open-questions.md` § "Owner ratification" Q2/Q6/Q14).
+
+### Phase index (P98–P107, v0.13.2 — workstream B)
+
+- **P98** Crate skeleton + shared-compute lift + edge model + walker + catalog + tracker schemas (lifts `coverage.rs::walk_md` to `md_walker.rs`; adds `heading_subtree_hash`)
+- **P99** Config TOML schema + scope resolution + glob matcher
+- **P100** L0 + L1 verifiers + pre-commit hook integration
+- **P101** L2 hash-drift + edge state classifier
+- **P102** L3 judge dispatcher (via `persist_artifact` + Path A/B) + grading_context merge
+- **P103** `bootstrap` + `plan-refresh` + cron CI integration
+- **P104** `suggest-scopes` migration assistant
+- **P105** Pre-push hook integration; phased enforcement modes; `max_l3_per_push` cap
+- **P106** Reposix dogfood — bootstrap + flip default to `block-newedge` (real ~$20 Anthropic API spend)
+- **P107** +2 reservation slot — surprises absorption + good-to-haves polish + milestone close + tag v0.13.2
+
+For full per-phase goals, requirements, dependencies, success criteria, and context anchors, see `.planning/milestones/v0.13.2-phases/ROADMAP.md`.
 
 ## Previously planned milestones
 
