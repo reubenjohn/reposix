@@ -176,7 +176,7 @@ The verifier subagent prompt template per `quality/PROTOCOL.md` requires evidenc
 
 **Reality:** None of these public-facing claims is qualified to "sim only" or "post-substrate-gap." A real reader applying these claims to a real Confluence/GitHub/JIRA backend hits CLUSTERS A–F: attach unimplemented (CLUSTER A), `git pull --rebase` recovery broken (CLUSTER B), audit log silent (CLUSTER C), bus push rejects mirror-setup files (CLUSTER D), init UX broken (CLUSTER E), tutorial output stale (CLUSTER F). P86 was the guard for the public claim; its sim-only scope means the public claim ships with no real-backend gate behind it.
 
-**Evidence:** `docs/index.md:129`; `CLAUDE.md:20, 188-191`; `README.md:66`; CLUSTER A–F findings in `.planning/research/v0.13.0-real-backend-frictions/SUMMARY.md:29-118`; ROADMAP SC #3 + #5 at `.planning/milestones/v0.13.0-phases/ROADMAP.md:91, 93` (the gates that should have caught this).
+**Evidence:** `docs/index.md:129`; `CLAUDE.md:20, 188-191`; `README.md:66`; CLUSTER A–F findings in `.planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/SUMMARY.md:29-118`; ROADMAP SC #3 + #5 at `.planning/milestones/v0.13.0-phases/ROADMAP.md:91, 93` (the gates that should have caught this).
 
 **Why it matters:** This is the headline of CLUSTER G. The deferral was internal (catalog row `comment` field at `quality/catalogs/agent-ux.json:996`); the public-facing docs make an unqualified claim. A vanilla cold-reader cannot tell from any user-facing doc that the "pure git after init/attach" claim has not been gated against a real backend. The phase that promised to be the guard shipped GREEN with the gate disabled.
 

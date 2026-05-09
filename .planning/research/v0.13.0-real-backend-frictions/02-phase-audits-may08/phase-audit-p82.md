@@ -13,7 +13,7 @@
 - `quality/catalogs/agent-ux.json` (six P82 rows)
 - `crates/reposix-remote/src/{main.rs,bus_url.rs,bus_handler.rs}`
 - `crates/reposix-remote/tests/{bus_url.rs,bus_capabilities.rs,bus_precheck_a.rs,bus_precheck_b.rs}`
-- `.planning/research/v0.13.0-real-backend-frictions/{SUMMARY.md,T3-bus-push.md}`
+- `.planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/{SUMMARY.md,T3-bus-push.md}`
 
 ## Verdict at a glance
 
@@ -192,7 +192,7 @@ silently sets up all three preconditions invisibly.
   ref, treated as Drifted at line 418-421)
 - `crates/reposix-remote/tests/bus_precheck_b.rs:60-96`
   (`make_synced_mirror_fixture` invisibly sets up all 3 preconditions)
-- `.planning/research/v0.13.0-real-backend-frictions/T3-bus-push.md:124-152`
+- `.planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/T3-bus-push.md:124-152`
   (F9 + F11 frictions on real backend)
 - `docs/guides/dvcs-mirror-setup.md` (per F8 in T3) does NOT show the
   bus URL string OR the three-step prereq
@@ -443,7 +443,7 @@ verifier's contract was insufficient.
 - `quality/reports/verdicts/p82/VERDICT.md:295-303`
 - `quality/catalogs/agent-ux.json` (six P82 rows; `cadences: ["pre-pr"]`
   on every one)
-- `.planning/research/v0.13.0-real-backend-frictions/T3-bus-push.md`
+- `.planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/T3-bus-push.md`
   (dark-factory frictions)
 - `crates/reposix-cli/tests/agent_flow_real.rs` (zero P82 surface
   exercised)

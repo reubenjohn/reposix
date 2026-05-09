@@ -62,8 +62,8 @@ clause without a deferral note.
 The dark-factory exercise that surfaced these (2026-05-02, 24h post-tag) found "37 frictions, 16 HIGH" against the v0.13.0 milestone — meaning 16 HIGH issues existed at the point P88 wrote the RETROSPECTIVE and were grep-able from the shipped code/docs. The distillation discusses telemetry-bearing catalog churn, the OP-9 ritual, eager-resolution carve-outs, and CARRY-FORWARD entries about gix yanked pins — none of which would have flagged the v0.13.0 failures.
 **Evidence:**
 - `.planning/RETROSPECTIVE.md:15-51` — full v0.13.0 distillation section.
-- `.planning/research/v0.13.0-real-backend-frictions/SUMMARY.md:18-110` — 37 frictions / 8 clusters / dated 2026-05-02 (1 day post-P88).
-- `.planning/research/v0.13.0-real-backend-frictions/T1-sim-baseline.md` and T2/T3/T4 — per-cluster evidence.
+- `.planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/SUMMARY.md:18-110` — 37 frictions / 8 clusters / dated 2026-05-02 (1 day post-P88).
+- `.planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/T1-sim-baseline.md` and T2/T3/T4 — per-cluster evidence.
 - Even the `RETROSPECTIVE-FULL.md:21` mentions "TokenWorld arm SUBSTRATE-GAP-DEFERRED" — the only acknowledgment of the real-backend gap in the entire milestone-close artifact set.
 **Why it matters:** Failure-mode #4 from the audit brief (project's own non-negotiable invariants violated silently). OP-9 codifies the RETROSPECTIVE ritual specifically because "raw intake format is too granular for future readers to skim — the +2 phase practice produces signal that's worth keeping cross-milestone (failure modes, patterns, process gaps)." P88 produced a clean-looking distillation that was *uninformed by the actual reality of the shipped milestone* — because no part of P88's process was wired to interrogate real-backend behavior. The OP-9 ritual passed the verifier and missed its actual purpose.
 

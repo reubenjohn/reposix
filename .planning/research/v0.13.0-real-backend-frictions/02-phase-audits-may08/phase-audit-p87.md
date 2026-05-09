@@ -54,7 +54,7 @@ The honesty-check honor system worked exactly as designed for honest phases (P82
 - `.planning/phases/87-surprises-absorption/honesty-spot-check.md:38-41` (P86 graded GREEN: "Cross-reference vs. double-file is the correct framework usage").
 - `.planning/phases/86-dark-factory-third-arm/86-01-SUMMARY.md:80-91` (the Rule 3 pivot: "Pivoted the third arm's coverage shape from 'full round-trip' to 'agent UX surface + bus URL composition'"). The rationale cites env-propagation issues with `git fetch` — same env-propagation issues the dark-factory exercise later confirmed are real and unfixed.
 - `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md:156-159` ("**P86 (dark-factory third arm):** the test agent clones THIS repo via vanilla git, runs `reposix attach confluence::TokenWorld`, edits, and bus-pushes back. The repo URL is hard-coded into the test transcript (or env-var configurable)."). The original CARRY-FORWARD scope for P86 was full round-trip; the pivot dropped this.
-- `.planning/research/v0.13.0-real-backend-frictions/SUMMARY.md:99-108` (Cluster G — "the dark_factory_real_confluence test stops at 'URL has the right shape' — never runs git fetch or git push. Agent-ux dimension verifies sim + cargo-test wire paths only. Shell subprocess flows against real backends have zero verifier coverage").
+- `.planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/SUMMARY.md:99-108` (Cluster G — "the dark_factory_real_confluence test stops at 'URL has the right shape' — never runs git fetch or git push. Agent-ux dimension verifies sim + cargo-test wire paths only. Shell subprocess flows against real backends have zero verifier coverage").
 
 **Why it matters:** The rubric reduces OP-8's load-bearing question ("did this phase honestly look for out-of-scope items?") to "did this phase fill in the right form?" A phase can use the framework perfectly and still ship a feature that doesn't exist — exactly what P79 and P86 did. The milestone's headline UX claim ("pure git after init/attach. No reposix CLI awareness needed beyond bootstrap") was unsupported AT MILESTONE CLOSE because P79 and P86 each made a defensible eager-resolution decision and P87's rubric never asked whether the resulting milestone delivered the claim.
 
@@ -80,7 +80,7 @@ The honesty-check honor system worked exactly as designed for honest phases (P82
 
 **Evidence:**
 - `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md:76` (DEFERRED text acknowledges vacuous PASS).
-- `.planning/research/v0.13.0-real-backend-frictions/AUDIT-BRIEF.md:51-52` (failure shape #2: "'Substrate gap' / 'deferred' deferrals masquerading as GREEN").
+- `.planning/research/v0.13.0-real-backend-frictions/02-phase-audits-may08/AUDIT-BRIEF.md:51-52` (failure shape #2: "'Substrate gap' / 'deferred' deferrals masquerading as GREEN").
 - `quality/catalogs/agent-ux.json` row `agent-ux/webhook-latency-floor` (row exists at PASS per P84 SUMMARY).
 - `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md:63-91` (the WAIVED-STRUCTURE-ROWS-03 entry establishes the WAIVED pattern with explicit until-dates; the precedent existed for the binstall row but was not applied).
 
@@ -121,9 +121,9 @@ The honesty-check honor system worked exactly as designed for honest phases (P82
 
 **Evidence:**
 - `.planning/phases/87-surprises-absorption/honesty-spot-check.md:31-35` (P85 graded GREEN with "no skipped findings").
-- `.planning/research/v0.13.0-real-backend-frictions/SUMMARY.md:71-81` (Cluster D — bus push rejects exactly the files the docs tell users to commit).
-- `.planning/research/v0.13.0-real-backend-frictions/SUMMARY.md:111-113` (Cluster H1 — testing-targets.md cites TokenWorld; tenant has REPOSIX).
-- `.planning/research/v0.13.0-real-backend-frictions/SUMMARY.md:114` (no tutorial for Pattern C / round-tripper / bus push).
+- `.planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/SUMMARY.md:71-81` (Cluster D — bus push rejects exactly the files the docs tell users to commit).
+- `.planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/SUMMARY.md:111-113` (Cluster H1 — testing-targets.md cites TokenWorld; tenant has REPOSIX).
+- `.planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/SUMMARY.md:114` (no tutorial for Pattern C / round-tripper / bus push).
 - `quality/reports/verdicts/p85/VERDICT.md` (graded "4/4 catalog rows PASS" — assertions are about docs-build / link-resolve / hash-binding, not about whether the documented commands work).
 
 **Why it matters:** P85 is the "user-facing" carrier phase — the docs an agent reads to learn the bus URL form, the mirror setup, the round-trip flow. P87's spot-check accepted "docs phase = nothing to surface" without doing the cold-reader walkthrough that CLAUDE.md mandates ("Cold-reader pass on user-facing surfaces"). The dark-factory exercise IS that cold-reader pass; it found exactly the contradictions P87 said were absent.
@@ -136,7 +136,7 @@ The honesty-check honor system worked exactly as designed for honest phases (P82
 
 **Evidence:**
 - `.planning/phases/87-surprises-absorption/87-01-SUMMARY.md:44` (`duration: ~25 minutes`).
-- `.planning/research/v0.13.0-real-backend-frictions/SUMMARY.md:1-17` (4-subagent dark-factory exercise, found 37 frictions; the per-test files T1–T4 each run several thousand words of evidence).
+- `.planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/SUMMARY.md:1-17` (4-subagent dark-factory exercise, found 37 frictions; the per-test files T1–T4 each run several thousand words of evidence).
 - AUDIT-BRIEF.md failure shape #6: "Velocity-as-skip-signal."
 
 **Why it matters:** OP-8 calls out that the verifier honesty check exists to "prevent the practice from degrading into a no-op." A 25-minute pass over 9 phases is structurally a no-op pass.
@@ -150,7 +150,7 @@ The honesty-check honor system worked exactly as designed for honest phases (P82
 **Evidence:**
 - `.planning/RETROSPECTIVE.md:106` (Layered coverage sanctioned).
 - `.planning/RETROSPECTIVE.md:115` (Mitigation: cargo-test-as-verifier).
-- `.planning/research/v0.13.0-real-backend-frictions/SUMMARY.md:99-108` (Cluster G).
+- `.planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/SUMMARY.md:99-108` (Cluster G).
 
 **Why it matters:** RETROSPECTIVE.md is the cross-milestone authority on "patterns established." Patterns logged here propagate to future milestones. The pattern as written ("layered coverage is the house default") is half-true — sufficient for sim, structurally insufficient for real-backend coverage. The qualifier matters.
 
@@ -177,7 +177,7 @@ This is the v0.13.1 process improvement: P87's successor needs (a) mandatory inc
 
 ## Cross-references for v0.13.1 framework-fix phase
 
-- Failure shape inventory: `.planning/research/v0.13.0-real-backend-frictions/SUMMARY.md` clusters A, B, C, D, G, H1.
+- Failure shape inventory: `.planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/SUMMARY.md` clusters A, B, C, D, G, H1.
 - P79's silent scope cut (cluster A): production string at `crates/reposix-cli/src/attach.rs:163-164` + `crates/reposix-cli/src/sync.rs:89` + verdict at `quality/reports/verdicts/p79/VERDICT.md`.
 - P86's pivot rationale (cluster G): `.planning/phases/86-dark-factory-third-arm/86-01-SUMMARY.md:80-95`.
 - Original P86 scope before pivot: `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md:156-159`.
