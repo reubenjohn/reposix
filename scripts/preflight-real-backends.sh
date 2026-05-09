@@ -35,28 +35,26 @@ probe_pass() { printf "  \033[32mPASS\033[0m  %s\n" "$1"; PASS=$((PASS+1)); }
 probe_fail() { printf "  \033[31mFAIL\033[0m  %s\n" "$1"; FAIL=$((FAIL+1)); }
 probe_skip() { printf "  \033[33mSKIP\033[0m  %s\n" "$1"; SKIP=$((SKIP+1)); }
 
-echo "=== Confluence (sanctioned: TokenWorld; also probes REPOSIX per May 2 audit) ==="
+echo "=== Confluence (sanctioned: TokenWorld) ==="
 if [ -n "${ATLASSIAN_EMAIL:-}" ] && [ -n "${ATLASSIAN_API_KEY:-}" ] && [ -n "${REPOSIX_CONFLUENCE_TENANT:-}" ]; then
-  for key in TokenWorld REPOSIX; do
-    body=$(curl -sS -u "$ATLASSIAN_EMAIL:$ATLASSIAN_API_KEY" \
-      "https://$REPOSIX_CONFLUENCE_TENANT.atlassian.net/wiki/api/v2/spaces?keys=$key" \
-      -w "\nHTTP_CODE:%{http_code}\n" 2>&1) || {
-        probe_fail "Confluence key=$key — curl error"
-        continue
-      }
-    code=$(printf '%s' "$body" | awk -F: '/^HTTP_CODE:/ {print $2}')
-    json=$(printf '%s' "$body" | sed '/^HTTP_CODE:/d')
-    if [ "$code" = "200" ]; then
-      result=$(printf '%s' "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); rs=d.get('results',[]); print(rs[0]['name'] if rs else 'EMPTY')" 2>/dev/null || echo "PARSE_ERROR")
-      if [ "$result" = "EMPTY" ]; then
-        probe_fail "Confluence key=$key — auth OK but space not found"
-      else
-        probe_pass "Confluence key=$key — space \"$result\" reachable"
-      fi
+  body=$(curl -sS -u "$ATLASSIAN_EMAIL:$ATLASSIAN_API_KEY" \
+    "https://$REPOSIX_CONFLUENCE_TENANT.atlassian.net/wiki/api/v2/spaces?keys=TokenWorld" \
+    -w "\nHTTP_CODE:%{http_code}\n" 2>&1) || {
+      probe_fail "Confluence — curl error"
+      :
+    }
+  code=$(printf '%s' "$body" | awk -F: '/^HTTP_CODE:/ {print $2}')
+  json=$(printf '%s' "$body" | sed '/^HTTP_CODE:/d')
+  if [ "$code" = "200" ]; then
+    result=$(printf '%s' "$json" | python3 -c "import sys,json; d=json.load(sys.stdin); rs=d.get('results',[]); print(rs[0]['name'] if rs else 'EMPTY')" 2>/dev/null || echo "PARSE_ERROR")
+    if [ "$result" = "EMPTY" ]; then
+      probe_fail "Confluence key=TokenWorld — auth OK but space not found (was the space renamed?)"
     else
-      probe_fail "Confluence key=$key — HTTP $code"
+      probe_pass "Confluence key=TokenWorld — space \"$result\" reachable"
     fi
-  done
+  else
+    probe_fail "Confluence key=TokenWorld — HTTP $code"
+  fi
 else
   probe_skip "Confluence — set ATLASSIAN_EMAIL + ATLASSIAN_API_KEY + REPOSIX_CONFLUENCE_TENANT in .env"
 fi

@@ -43,14 +43,6 @@ The script is idempotent + read-only (no mutations). It is the
 recommended first step at the boundary between any code phase and a
 real-backend smoke test.
 
-> **Known finding (May 8, 2026 pre-flight):** the script reports the
-> sanctioned Confluence space under key `REPOSIX` ("reposix demo space"),
-> NOT `TokenWorld`. The "TokenWorld" name in the Confluence section
-> below is documentation drift — a fix lands in v0.13.0 extension P95
-> (REQ `RBF-D-03`) which renames every `TokenWorld` reference in this
-> doc + adds a tenant-probe verifier. Until P95 ships, treat both names
-> as referring to the same physical space.
-
 ---
 
 ## Confluence — `TokenWorld` space
