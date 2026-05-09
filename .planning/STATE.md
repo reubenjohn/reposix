@@ -1,25 +1,15 @@
 ---
 gsd_state_version: 1.0
-mode: parallel-workstreams
-last_updated: "2026-05-08T18:00:00Z"
-last_activity: 2026-05-08 — formalized v0.13.0 extension (P89-P97) + v0.13.2 (P98-P107) for parallel execution via /gsd-workstreams. Two ROADMAPs scaffolded; PROJECT.md + STATE.md updated; ready for workstream creation + autonomous dispatch.
-workstreams:
-  workstream_a:
-    milestone: v0.13.0
-    milestone_name: DVCS over REST (extended)
-    status: in-flight
-    phases_total: 20  # P78-P97 (P78-P88 shipped + P89-P97 extension)
-    phases_completed: 11  # P78-P88
-    next_phase: P89
-    blocks_tag: true  # v0.13.0 tag does NOT push until P97 GREEN
-  workstream_b:
-    milestone: v0.13.2
-    milestone_name: Cross-link fidelity
-    status: in-flight
-    phases_total: 10  # P98-P107
-    phases_completed: 0
-    next_phase: P98
-    blocks_tag: false  # v0.13.2 tag independent of v0.13.0
+milestone: v0.13.0
+milestone_name: DVCS over REST (extended)
+status: completed
+last_updated: "2026-05-09T02:04:42.366Z"
+last_activity: "2026-05-08 — formalized parallel execution: v0.13.0 ROADMAP extended with P89–P97 (sourced from REMEDIATION-PLAN); v0.13.2 milestone scaffolded at `.planning/milestones/v0.13.2-phases/` with ROADMAP (P98–P107), REQUIREMENTS, SURPRISES-INTAKE, GOOD-TO-HAVES (seeded with 2 Q6 deferrals); PROPOSED-ROADMAP.md + research-folder ADRs 23–28 + 8 deferred audit fixes already shipped in commits 5bc65d6 / 7b02abb / 7a6935e. Phase-number collision at P97 resolved by shifting v0.13.2 from P97-P106 → P98-P107."
+progress:
+  total_phases: 6
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
