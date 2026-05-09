@@ -68,12 +68,12 @@ Every edge sits in exactly one state at any time. The state taxonomy is the load
 
 **The new-edge contract (asymmetry).** Edges *introduced in this PR* are held to the scope's `max_level` immediately — UNGRADED-on-arrival is rejected for L3 scopes, because new content has no excuse for being ungraded. Edges that already existed pre-adoption stay UNGRADED until their natural turn (`plan-refresh` cron or owner-driven sweep).
 
-**Interaction with `max_l3_per_push` cap.** A PR adding 15 new edges to an L3-scope hits the cap (default 10). Three options were considered:
+**Interaction with `max_l3_per_push` cap.** `max_l3_per_push` is **per-scope**, not project-wide (ADR-24): each scope owns its own budget (default 10), and budget exhaustion stays local to the offending scope. A PR adding 15 new edges to a single L3-scope hits *that scope's* cap of 10. Three options were considered:
 - (a) BLOCK with directive to split the PR.
 - (b) Batch-grade the first 10, mark the rest `STALE_PENDING`, BLOCK push.
 - (c) Raise the cap for PR-introduced edges only.
 
-Chosen: **(a) BLOCK with split-PR directive.** Smaller PRs are easier to review and align with the dark-factory ethos (review the framing, not the volume). A 15-new-edge PR likely does multiple things; splitting clarifies the atomic units.
+Chosen: **(a) BLOCK with split-PR directive (ADR-21).** Smaller PRs are easier to review and align with the dark-factory ethos (review the framing, not the volume). A 15-new-edge PR likely does multiple things; splitting clarifies the atomic units. The recovery message names which scope hit its cap so the contributor knows which slice of the PR to peel off — not "the project hit its cap."
 
 **The "NEW-IN-PR" tag.** Edges newly discovered in a walk are tagged with `introduced_in_pr: <branch-name>`. The tag clears when (a) the edge is graded for the first time and reaches GRADED, or (b) the branch lands on main and the next walk on main re-classifies the edge as no-longer-new. Until cleared, the edge is held to the new-edge contract regardless of subsequent edits.
 
@@ -292,6 +292,8 @@ A scope's `enforcement_mode` controls how strictly the gate enforces. Adopters p
 
 This project's plan: bootstrap to ≥80% L3 coverage in CI, flip the `default` scope to `block-newedge` once stable. Other adopters can stay at `warn` or `block-broken` indefinitely.
 
+Modes are config-side sugar: inside reposix they compile at walk-time to per-row `blast_radius` (P0/P1/P2) on the catalog rows the scope owns; the standalone tool drives the CLI exit code directly from modes. See [`03-schemas.md`](./03-schemas.md) § "`enforcement_mode` is config-side sugar" for the mapping table.
+
 ## Bootstrap and steady-state — CI-only vs local-only operations
 
 Two distinct phases, each with strict cost-asymmetry rules:
@@ -322,6 +324,8 @@ The cap is the load-bearing protection. Without it, a content-heavy edit cascade
 
 ## What lives where
 
+Per ADR-25, the catalog (runner-readable) and the tracker (gate-internal per-edge state) live in different files:
+
 ```
 .cross-link-fidelity                         # human-authored TOML
 .cross-link-fidelity/                        # OR folder form for complex configs
@@ -334,7 +338,8 @@ The cap is the load-bearing protection. Without it, a content-heavy edit cascade
 docs/concepts/dvcs-topology.md               # target-side context in frontmatter
 └─ frontmatter: cross_link_fidelity.grading_context
 
-quality/catalogs/cross-link-fidelity.json    # tracker (machine-managed, git-tracked)
+quality/catalogs/cross-link-fidelity.json    # catalog (~4 runner-readable rows; ADR-25)
+quality/state/cross-link-fidelity-tracker.json  # tracker (gate-internal, not runner-discovered)
 
 quality/gates/cross-link-fidelity/           # gate dimension home
 ├── README.md

@@ -97,7 +97,7 @@ What does NOT migrate:
 
 - The `quality/gates/cross-link-fidelity/walk.sh` shell wrapper — reposix's internal harness.
 - The `[scopes.default]` config that's project-specific (anchor-readme glob patterns, etc).
-- The catalog row registration in `quality/catalogs/cross-link-fidelity.json` (different from the tracker — see [03-schemas.md](./03-schemas.md)).
+- The catalog row registration in `quality/catalogs/cross-link-fidelity.json` (the runner-readable catalog with ~4 rows; the per-edge tracker at `quality/state/cross-link-fidelity-tracker.json` is gate-internal — see [03-schemas.md](./03-schemas.md) § "Four schemas, four owners" or ADR-25).
 
 ## What this gate could become — vision
 

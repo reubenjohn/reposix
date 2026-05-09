@@ -134,7 +134,7 @@ The gate can't disambiguate intent — but it can flag it:
 [scopes.default]                     # 1st: catch-all
 [scopes.nav-only]                    # 2nd: refines a subset of default
 [scopes.anchor-readme]               # 3rd: more specific subset
-[scopes."edge_overrides.specific"]   # last: per-edge override beats all scopes
+[edge_overrides."README.md@root->LICENSE.md@root"]   # last: per-edge override beats all scopes (ADR-23 D-3 edge-ID format)
 ```
 
 ## 9. Tracker corruption / schema bump
@@ -164,7 +164,7 @@ count_in_coverage = false  # don't pull coverage @ L3 down
 Or per-edge override:
 
 ```toml
-[edge_overrides."README.md->LICENSE.md"]
+[edge_overrides."README.md@root->LICENSE.md@root"]
 max_level = "L0"
 reason = "license text is verbatim; no fidelity grading possible"
 ```

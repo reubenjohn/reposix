@@ -81,7 +81,7 @@ on:
 jobs:
   bootstrap-batch:
     steps:
-      - run: cross-link plan-refresh --batch 20 --target UNGRADED
+      - run: cross-link plan-refresh --tags weekly --batch 20 --target UNGRADED
       - run: git commit -am "cross-link: bootstrap batch (20 edges, $(date +%F))"
 ```
 
@@ -247,7 +247,7 @@ The distinction matters because archive dirs often have many cross-references th
 
 - **What it does:** sets the scope's `coverage_floor` to current measured coverage @ L3, regardless of prior value.
 - **Required flag:** `--reason "<text>"` (free-form; minimum 20 characters; written to tracker as audit entry).
-- **Audit trail:** writes a row to the tracker's `audit_events` array with timestamp, scope, prior_floor, new_floor, reason, git_user. PR review surfaces the diff.
+- **Audit trail:** PR review surfaces the diff via tracker entries' `last_verdict` + `last_judge_rationale` fields (timestamp, scope, prior_floor, new_floor, reason, git_user are captured in the commit message + tracker scope-level fields per the schema in [03-schemas.md](./03-schemas.md) § "Tracker schema").
 - **Permissions:** v1 has no permission system; the verb runs for whoever can git-commit. v1.1 may add `--approved-by <github-user>` requirement (sketched in [`08-open-questions.md`](./08-open-questions.md) Q8).
 - **When to use:** scope rename redistributes edges, large file deletion shifts denominator, intentional curriculum change ("we're rewriting the docs site").
 - **When NOT to use:** "I don't want to fix the failing edges." Reset-floor is for measurement-validity events, not for shedding work.
