@@ -5,7 +5,7 @@
 ## Decisions the owner made this session
 
 1. **Path A — hold the v0.13.0 tag; extend with corrective phases (P89–P96).** Do NOT push the v0.13.0 tag. CHANGELOG fidelity outweighs the 2–4 week delay.
-2. **S1 (external arbiter) is approved.** `gsd-review` skill is installed. Cross-AI peer review on the framework-redesign phases is in scope. CLIs available now: `claude`, `codex`, `gemini` [2026-05-08 update: `gemini@0.41.2` installed; first-run requires interactive workspace-trust on this repo (`cd /home/reuben/workspace/reposix && gemini` → choose "trust this directory") OR `export GEMINI_CLI_TRUST_WORKSPACE=true` in the session env, because gsd-review invokes `gemini -p -` without `--skip-trust`].
+2. **S1 (external arbiter) is approved.** `gsd-review` skill is installed. Cross-AI peer review on the framework-redesign phases is in scope. CLIs available now: `claude`, `codex`. Optional install: `gemini` (adds a third model lineage).
 3. **No more decision-making this session.** Future sessions will be interactive, with simpler/shorter docs in front of the owner. Don't expand the synthesis docs; don't re-author.
 
 ## Decisions still open (next session)
@@ -30,7 +30,7 @@ These came up in conversation but didn't land in `PATTERNS / REMEDIATION / STRAT
 
 6. **Audit-process meta-grounding (the "we can learn from how we did this audit itself" point).** The dispatch pattern that worked this session: shared brief file (DRY) + 11+1 parallel subagents + reorg into chronological subdirs (`01-`/`02-`/`03-`) + adversarial completeness subagent at the end. This is reusable infrastructure for future audits. Worth promoting to a `.claude/skills/` skill so future agents don't re-derive it. Skill name idea: `multi-subagent-audit`.
 
-7. **`gsd-review` install state on this machine** — see "Decisions" above. [2026-05-08 update: `gemini` installed, joining `claude` + `codex` for three-lineage cross-AI coverage (Anthropic + OpenAI + Google).] Two remaining optional installs (`opencode`, `qwen`) would expand cross-AI coverage further if the owner wants more lineage diversity for S1.
+7. **`gsd-review` install state on this machine** — see "Decisions" above. Three optional CLI installs (`gemini`, `opencode`, `qwen`) would expand cross-AI coverage if the owner wants more lineage diversity than just Anthropic + OpenAI for S1.
 
 ## Audit-process learnings worth promoting
 
