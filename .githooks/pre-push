@@ -10,18 +10,22 @@
 #       pre-push composes every catalog row tagged pre-push: cargo fmt
 #       + clippy + mkdocs --strict + mermaid renders + doc links +
 #       badges-resolve + freshness invariants + banned words.
-#   (3) Optional personal add-on chain. If ~/.git-hooks/pre-push exists
-#       AND is NOT the delegate-to-project shim, invoke it with the
-#       same stdin so personal global checks run AFTER the project's
-#       base layer. Recursion guard: if the global hook contains the
-#       sentinel "delegate to repo-local" comment, skip it (otherwise
-#       core.hooksPath=.githooks + a delegate global produce an
-#       infinite loop).
+#   (3) Optional personal add-on chain. If ~/.git-hooks/pre-push exists,
+#       invoke it with the same stdin so personal global checks (e.g.
+#       a secret scan) run AFTER the project's base layer. Recursion
+#       guard: only delegate when `git config core.hooksPath` is SET --
+#       which proves git invoked US directly (the project hook is the
+#       entry point), so the global hook hasn't already run. When
+#       core.hooksPath is UNSET, the global hook was the entry point
+#       and ALREADY called us; calling it back would loop infinitely.
 #
-# Composition rule (project-base + optional personal add-on):
-#   Project hooks ALWAYS run; personal global hooks chain in at the
-#   END if present and non-delegate. The reverse direction (global
-#   delegates to project) is footgun-prone and abandoned.
+# Composition rule (symmetric, runtime-detected):
+#   Both hooks key off `git config core.hooksPath`:
+#     - core.hooksPath SET   -> git invoked PROJECT directly; project delegates to global at the end.
+#     - core.hooksPath UNSET -> git invoked GLOBAL directly; global delegates to project; project does NOT call back.
+#   Each hook checks the same fact and decides whether it is the entry
+#   point (delegates) or the callee (skips delegation). No sentinel
+#   strings, no spelling-mismatch bugs.
 #
 # Lineage: pre-Wave-E hook chained scripts/check-docs-site.sh,
 # scripts/check-mermaid-renders.sh, cargo fmt, cargo clippy, plus the
@@ -60,11 +64,13 @@ if [[ $RUNNER_EXIT -ne 0 ]]; then
   exit "$RUNNER_EXIT"
 fi
 
-# (3) Optional personal add-on chain. Skip the delegate-to-project shim
-# (its body contains the sentinel "delegate to repo-local") to avoid
-# infinite recursion when core.hooksPath=.githooks bypasses the global
-# config but a delegate global hook execs us back.
+# (3) Optional personal add-on chain. Only delegate to global when
+# core.hooksPath is SET -- which proves git invoked us as the entry
+# point and the global hook has NOT already run. When core.hooksPath is
+# unset, the global was the entry point (it called us); calling it back
+# would loop. The global hook applies the symmetric check: it delegates
+# to the project hook only when core.hooksPath is UNSET.
 GLOBAL="$HOME/.git-hooks/pre-push"
-if [[ -x "$GLOBAL" ]] && ! grep -q "delegate to repo-local" "$GLOBAL" 2>/dev/null; then
+if [[ -n "$(git config core.hooksPath 2>/dev/null)" ]] && [[ -x "$GLOBAL" ]]; then
   printf '%s\n' "$stdin_buf" | "$GLOBAL" "$@"
 fi
