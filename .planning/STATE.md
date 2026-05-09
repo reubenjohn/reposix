@@ -1,8 +1,9 @@
 ---
 gsd_state_version: 1.0
 mode: parallel-workstreams
+status: extending-via-corrective-phases-p89-p97
 last_updated: "2026-05-08T18:00:00Z"
-last_activity: 2026-05-08 — formalized v0.13.0 extension (P89-P97) + v0.13.2 (P98-P107) for parallel execution via /gsd-workstreams. Two ROADMAPs scaffolded; PROJECT.md + STATE.md updated; ready for workstream creation + autonomous dispatch.
+last_activity: 2026-05-08 — formalized v0.13.0 extension (P89-P97) + v0.13.2 (P98-P107) for parallel execution via /gsd-workstreams. Two ROADMAPs scaffolded; PROJECT.md + STATE.md updated; pre-P89 housekeeping landed (status flag, CHANGELOG PENDING line, tag-script disabled until P97 ratifies).
 workstreams:
   workstream_a:
     milestone: v0.13.0
@@ -82,7 +83,7 @@ Last activity: 2026-05-08 — formalized parallel execution: v0.13.0 ROADMAP ext
 
 **Carry-forward bundle:** `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md` lists `MULTI-SOURCE-WATCH-01` (P78), `GIX-YANKED-PIN-01` (P78), `WAIVED-STRUCTURE-ROWS-03` (P78), `POC-DVCS-01` (P79).
 
-**Next agent action:** orchestrator dispatches BOTH P88 verifier subagent (grades the 4 P88 milestone-close catalog rows from artifacts; verdict at `quality/reports/verdicts/p88/VERDICT.md`) AND milestone-close verifier subagent (grades P78–P88 cross-phase coherence per ROADMAP P88 SC5; verdict at `quality/reports/verdicts/milestone-v0.13.0/VERDICT.md`). After BOTH verdicts GREEN: owner runs `bash .planning/milestones/v0.13.0-phases/tag-v0.13.0.sh` (8 guards) then `git push origin v0.13.0`. Orchestrator does NOT push the tag.
+**Next agent action:** v0.13.0 tag is HELD per Path A / Option B (ratified 2026-05-08). The original P78–P88 milestone-close verdict (2026-05-01 GREEN) remains on disk but is superseded by the post-extension verdict P97 will write. The tag-script `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh` is RENAMED `.disabled` until P97 ratifies; do NOT run it. Workstream A's next step is `/gsd-discuss-phase 89` (top-level execution mode); P89 + P90 are framework fixes (RBF-FW-*) that gate every subsequent extension phase.
 
 ## Per-milestone history (cross-references)
 
