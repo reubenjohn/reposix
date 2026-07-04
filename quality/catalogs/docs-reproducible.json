@@ -29,16 +29,17 @@
       },
       "artifact": "quality/reports/verifications/docs-repro/example-01-shell-loop.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-27T22:22:37Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: examples/01-shell-loop/run.sh has a regression OR the simulator/cli/helper changed and the example was not updated; check examples/01-shell-loop/expected-output.md and the binary on PATH preamble",
       "waiver": {
-        "until": "2026-05-12T00:00:00Z",
-        "reason": "Wave C ships the container-rehearse.sh driver but the example scripts assume an external simulator (reposix-sim listening on 127.0.0.1:7878) that the container does not bring up. Wiring sim-inside-container is post-v0.12.0 work tracked under Wave F CI dispatch. Locally the verifier exits non-zero with stderr signal 'sim not reachable'; in CI the sim service container brings the dependency up and the rehearsal grades on its own.",
-        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md 2026-04-27 P59 row",
-        "tracked_in": "P59 Wave F CI rehearsal in docker-equipped GH runner with sim service"
+        "until": "2026-09-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04): still-broken per R2 § D live re-check -- container-rehearse.sh never brings up the external simulator (reposix-sim listening on 127.0.0.1:7878) that the example script assumes; the P59-tracked 'Wave F CI rehearsal' work never landed and the 'v0.12.1' cliff label was dead. Locally the verifier exits non-zero with stderr signal 'sim not reachable'; in CI a sim service container would need to bring the dependency up, which it does not today.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 1",
+        "tracked_in": "P95 (Quality framework upgrade + doc fixes) -- RBF-D-14 RAISE LIST drain, quality/reports/raise-list-p90.md § 1"
       },
+      "claim_vs_assertion_audit": "If the example actually worked end to end, bash examples/01-shell-loop/run.sh would exit 0 and the simulator's audit log would show a helper_push_* row; the observed 'sim not reachable' abort directly falsifies the 'exits 0' claim, which is why this row is WAIVED rather than PASS.",
       "cadences": [
         "post-release"
       ]
@@ -69,16 +70,17 @@
       },
       "artifact": "quality/reports/verifications/docs-repro/example-02-python-agent.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-27T22:22:37Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: examples/02-python-agent/run.py has a regression OR the simulator/cli/helper changed; check the python stdlib-only constraint and the binary on PATH preamble",
       "waiver": {
-        "until": "2026-05-12T00:00:00Z",
-        "reason": "Wave C ships the container-rehearse.sh driver but the example scripts assume an external simulator (reposix-sim listening on 127.0.0.1:7878) that the container does not bring up. Wiring sim-inside-container is post-v0.12.0 work tracked under Wave F CI dispatch.",
-        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md 2026-04-27 P59 row",
-        "tracked_in": "P59 Wave F CI rehearsal in docker-equipped GH runner with sim service"
+        "until": "2026-09-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04): still-broken per R2 § D live re-check -- same root cause as example-01 (container-rehearse.sh never brings up the external simulator the example assumes); the 'v0.12.1'-tracked Wave F CI rehearsal work never landed.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 1",
+        "tracked_in": "P95 (Quality framework upgrade + doc fixes) -- RBF-D-14 RAISE LIST drain, quality/reports/raise-list-p90.md § 1"
       },
+      "claim_vs_assertion_audit": "If the agent actually applied a severity label and pushed successfully, the run.py process would exit 0 and 'git push' would report success in its stdout; the same sim-not-reachable abort as example-01 falsifies both asserts directly, which is why this row is WAIVED rather than PASS.",
       "cadences": [
         "post-release"
       ]
@@ -145,16 +147,17 @@
       },
       "artifact": "quality/reports/verifications/docs-repro/example-04-conflict-resolve.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-27T22:22:37Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: push-time conflict detection regressed; check the helper export-path conflict logic",
       "waiver": {
-        "until": "2026-05-12T00:00:00Z",
-        "reason": "Wave C ships the container-rehearse.sh driver but the example scripts assume an external simulator that the container does not bring up. Wiring sim-inside-container is post-v0.12.0 work tracked under Wave F CI dispatch.",
-        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md 2026-04-27 P59 row",
-        "tracked_in": "P59 Wave F CI rehearsal in docker-equipped GH runner with sim service"
+        "until": "2026-09-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04): still-broken per R2 § D live re-check -- same container-never-brings-up-sim root cause as example-01/02; the 'v0.12.1'-tracked Wave F CI rehearsal work never landed.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 1",
+        "tracked_in": "P95 (Quality framework upgrade + doc fixes) -- RBF-D-14 RAISE LIST drain, quality/reports/raise-list-p90.md § 1"
       },
+      "claim_vs_assertion_audit": "If conflict recovery actually worked, the second agent would observe 'fetch first' from helper stderr and both edits would be merged after 'git pull --rebase'; the container's sim-not-reachable abort means neither observable ever occurs, directly falsifying both asserts.",
       "cadences": [
         "post-release"
       ]
@@ -185,16 +188,17 @@
       },
       "artifact": "quality/reports/verifications/docs-repro/example-05-blob-limit-recovery.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-27T22:22:37Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: blob-limit error message regressed OR sparse-checkout recovery path regressed",
       "waiver": {
-        "until": "2026-05-12T00:00:00Z",
-        "reason": "Wave C ships the container-rehearse.sh driver but the example scripts assume an external simulator that the container does not bring up. Wiring sim-inside-container is post-v0.12.0 work tracked under Wave F CI dispatch.",
-        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md 2026-04-27 P59 row",
-        "tracked_in": "P59 Wave F CI rehearsal in docker-equipped GH runner with sim service"
+        "until": "2026-09-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04): still-broken per R2 § D live re-check -- same container-never-brings-up-sim root cause as example-01/02/04; the 'v0.12.1'-tracked Wave F CI rehearsal work never landed.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 1",
+        "tracked_in": "P95 (Quality framework upgrade + doc fixes) -- RBF-D-14 RAISE LIST drain, quality/reports/raise-list-p90.md § 1"
       },
+      "claim_vs_assertion_audit": "If blob-limit recovery actually worked, the agent would observe the blob-limit error and the targeted issue blob would materialize while siblings stay sparse after 'git sparse-checkout'; the container's sim-not-reachable abort means neither observable ever occurs, directly falsifying both asserts.",
       "cadences": [
         "post-release"
       ]
@@ -227,16 +231,17 @@
       },
       "artifact": "quality/reports/verifications/docs-repro/tutorial-replay.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-27T22:22:37Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: docs/tutorials/first-run.md or one of the binary build steps regressed; check git history for scripts/repro-quickstart.sh (predecessor migrated by SIMPLIFY-06)",
       "waiver": {
-        "until": "2026-05-12T00:00:00Z",
-        "reason": "Wave C ships tutorial-replay.sh but the cargo build inside a fresh ubuntu:24.04 container takes >5min on a cold cache. The script runs locally fine when invoked directly, but the runner-driven post-release sweep needs cargo + sim service to be pre-warmed in the CI image. Wiring this is post-v0.12.0 work tracked under Wave F CI dispatch.",
-        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md 2026-04-27 P59 row",
-        "tracked_in": "P59 Wave F CI rehearsal in docker-equipped GH runner with cargo + sim pre-warmed"
+        "until": "2026-09-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04): still-broken, TWO causes per R2 § D live re-check -- (1) cold cargo build inside a fresh ubuntu:24.04 container still exceeds the 5-min container budget when not pre-warmed; (2) the push step (tutorial step 7) is additionally blocked by QL-001 (path-shape bug, routed to P91, D90-01). The 'v0.12.1'-tracked Wave F CI rehearsal work never landed.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 1",
+        "tracked_in": "P95 (Quality framework upgrade + doc fixes) -- RBF-D-14 RAISE LIST drain for the cold-build-budget cause; P91 QL-001 fix required before cause (2) clears; see quality/reports/raise-list-p90.md § 1"
       },
+      "claim_vs_assertion_audit": "If the tutorial actually replayed clean, steps 2-8 (sim up, init, checkout, file materialized, push success, audit row) would each observably succeed; a >5min cold-build timeout or a QL-001 push failure directly falsifies the corresponding step's assert, which is why this row is WAIVED rather than PASS.",
       "cadences": [
         "post-release"
       ]

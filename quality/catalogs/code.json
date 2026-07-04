@@ -65,16 +65,17 @@
       },
       "artifact": "quality/reports/verifications/code/cargo-test-pass.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-27T21:24:27Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: ci.yml test job is failing for the current branch -- run gh run view <run-id> --log-failed. D-CONV-1 (2026-07-04): stripped from pre-pr and demoted to on-demand -- ci.yml's dedicated `test` job (cargo test --workspace --locked) is the canonical enforcement venue; this row's own verifier only polls `gh run list` for the most recent successful run (needs gh CLI + auth, and is circular when run from inside the very CI run it's checking). Kept on-demand for manual post-hoc audits (e.g. \"did main's last CI run actually pass\").",
       "waiver": {
-        "until": "2026-07-26T00:00:00Z",
-        "reason": "Per-row local cargo nextest enforcement is deferred to v0.12.1 because cargo nextest run --workspace consumes 6-15 minutes + violates the CLAUDE.md ONE cargo at a time memory-budget rule + exceeds the pre-pr 10-minute cadence cap. ci.yml's test job remains the canonical enforcement venue; the ci-job-status wrapper at quality/gates/code/ci-job-status.sh checks that the most recent ci.yml run for the current branch exited 0. v0.12.1 MIGRATE-03 will explore alternatives (per-crate per-row gates, sccache-warmed verifier in CI only, or accepting CI as the only home and removing the local row).",
-        "dimension_owner": "v0.12.0 P63 code dimension owner",
-        "tracked_in": "v0.12.1 MIGRATE-03 -- per-row local cargo enforcement"
+        "until": "2026-09-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04): reason still true -- cargo nextest run --workspace still consumes 6-15 minutes, still violates the CLAUDE.md ONE-cargo-at-a-time memory-budget rule, and still exceeds the pre-pr 10-minute cadence cap on this VM. ci.yml's test job remains the canonical enforcement venue. The 'v0.12.1 MIGRATE-03' label was dead -- repointed per D90-02(c) mass-renewal rule.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 5",
+        "tracked_in": "P97 (Good-to-haves polish + milestone close, launch-readiness slot) -- per-row local cargo enforcement alternatives (or formally retiring this row in favor of CI-only)"
       },
+      "claim_vs_assertion_audit": "If the most recent ci.yml test job for the branch actually failed, `gh run list` would report a non-success conclusion for that run and the verifier would exit non-zero naming it -- a real CI failure is the falsifying evidence, not a local proxy signal.",
       "cadences": [
         "on-demand"
       ]

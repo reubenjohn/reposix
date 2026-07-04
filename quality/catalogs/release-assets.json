@@ -519,7 +519,7 @@
       "expected": {
         "asserts": [
           "in a fresh rust:1.82-slim container with cargo-binstall installed, `cargo binstall --no-confirm --dry-run reposix-cli` resolves to a prebuilt GitHub Release binary (greppable URL match against github.com/reubenjohn/reposix/releases/download/...)",
-          "PARTIAL acceptable per P56 SURPRISES.md row 3: binstall metadata mismatch tracked under MIGRATE-03 v0.12.1 (~10 LOC fix); PARTIAL is the documented expected state until v0.12.1"
+          "P90 90-05 (2026-07-04): the historical PARTIAL-acceptable carve-out (P56 SURPRISES.md row 3) is RETIRED -- the pkg-url metadata fix landed pre-P90 (commit 33dd41f, QL-003); PASS is now the expected outcome on the next real container run, not PARTIAL"
         ]
       },
       "verifier": {
@@ -532,17 +532,13 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/release/cargo-binstall-resolves.json",
-      "status": "WAIVED",
-      "last_verified": "2026-04-27T21:23:21Z",
+      "status": "NOT-VERIFIED",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED (not PARTIAL): the binstall metadata regressed further OR the prebuilt binary is missing — check release.yml asset list AND crates/reposix-cli/Cargo.toml [package.metadata.binstall]",
-      "waiver": {
-        "until": "2026-07-26T00:00:00Z",
-        "reason": "Documented PARTIAL state per P56 SURPRISES.md row 3: cargo-binstall metadata in crates/reposix-cli/Cargo.toml + crates/reposix-remote/Cargo.toml is misaligned with release.yml's archive shape (4 mismatches); binstall falls back to source build. CI verifier observes 'will be installed from source' signal and grades PARTIAL — that's the design (P56 SURPRISES.md row 3 + Wave D run 25020150833). The waiver makes PARTIAL acceptable. Locally without binstall installed the verifier reports FAIL with diagnostic 'cargo-binstall not installed' — also acceptable under this waiver. v0.12.1 MIGRATE-03 ships the ~10 LOC binstall metadata fix that flips this to PASS.",
-        "dimension_owner": "v0.12.0 P58 release dimension owner",
-        "tracked_in": "MIGRATE-03 v0.12.1 — cargo-binstall metadata + MSRV (P56 SURPRISES.md rows 3-4)"
-      },
+      "owner_hint": "P90 90-05 (2026-07-04): WAIVER CLEARED per D90-02(a) -- LANDED, not renewed. The ~10-LOC pkg-url alignment this row's waiver named was ALREADY SHIPPED pre-P90 by commit 33dd41f 'fix(binstall): correct pkg-url to real release asset name (QL-003)' (2026-07-03, an ancestor of P90's HEAD before 90-05 started -- D90-11-style already-fixed disposition, not re-done here). Verified against reality in THIS dispatch by re-deriving both templates against release.yml's actual archive-staging logic (release.yml:167-193: STAGE=\"reposix-${version_tag}-${target}\", archive=\"${STAGE}.tar.gz\" or .zip) and confirming byte-for-byte match against crates/reposix-cli/Cargo.toml + crates/reposix-remote/Cargo.toml's current [package.metadata.binstall] pkg-url/bin-dir templates (both crates identical shape). If RED: the binstall metadata regressed again OR release.yml's archive-staging logic changed without a matching Cargo.toml update — check release.yml AND crates/{reposix-cli,reposix-remote}/Cargo.toml [package.metadata.binstall].",
+      "waiver": null,
+      "claim_vs_assertion_audit": "If the pkg-url metadata actually still mismatched release.yml's archive shape, a real `cargo binstall --dry-run reposix-cli` in a fresh container would report a 404 or a 'falling back to source' signal instead of resolving the prebuilt binary URL -- that observable failure is what would falsify this row's PASS claim, not the manual template comparison alone.",
       "cadences": [
         "post-release"
       ]

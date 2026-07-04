@@ -25,16 +25,17 @@
       },
       "artifact": "quality/reports/verifications/cross-platform/windows-2022-rehearsal.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-28T04:59:35Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "v0.12.1 CROSS-01 stub: windows GH runners cost ~$0.08/min and v0.12.0 ships ubuntu-only matrix.",
       "waiver": {
-        "until": "2026-07-26T00:00:00Z",
-        "reason": "v0.12.1 carry-forward per MIGRATE-03; windows GH runners cost ~$0.08/min and v0.12.0 ships ubuntu-only matrix. Verifier intentionally does not exist yet -- this row anchors the contract for the v0.12.1 implementer.",
-        "dimension_owner": "v0.12.0 P63 cross-platform dimension owner",
-        "tracked_in": "v0.12.1 CROSS-01"
+        "until": "2026-09-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04): windows GH runners still cost ~$0.08/min and the workspace still ships an ubuntu-only local matrix; verifier confirmed still absent (`quality/gates/cross-platform/` is empty save README.md/.gitkeep). The 'v0.12.1 CROSS-01' label was dead (v0.12.1 never shipped this gate) -- repointed per D90-02(c) mass-renewal rule.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 5",
+        "tracked_in": "P97 (Good-to-haves polish + milestone close, launch-readiness slot) -- windows/macos GH Actions runner-cost decision"
       },
+      "claim_vs_assertion_audit": "If the curl-installer + cargo-binstall paths actually worked on windows-2022, a real GH Actions run against that runner image would exit 0; the verifier script's confirmed absence means no such run has ever executed, which directly falsifies any claim of windows coverage today.",
       "cadences": [
         "pre-release"
       ]
@@ -61,16 +62,17 @@
       },
       "artifact": "quality/reports/verifications/cross-platform/macos-14-rehearsal.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-28T04:59:35Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "v0.12.1 CROSS-02 stub: macos GH runners cost ~$0.08/min and v0.12.0 ships ubuntu-only matrix.",
       "waiver": {
-        "until": "2026-07-26T00:00:00Z",
-        "reason": "v0.12.1 carry-forward per MIGRATE-03; macos GH runners cost ~$0.08/min and v0.12.0 ships ubuntu-only matrix. Verifier intentionally does not exist yet -- this row anchors the contract for the v0.12.1 implementer.",
-        "dimension_owner": "v0.12.0 P63 cross-platform dimension owner",
-        "tracked_in": "v0.12.1 CROSS-02"
+        "until": "2026-09-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04): macos GH runners still cost ~$0.08/min and the workspace still ships an ubuntu-only local matrix; verifier confirmed still absent. The 'v0.12.1 CROSS-02' label was dead -- repointed per D90-02(c) mass-renewal rule.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 5",
+        "tracked_in": "P97 (Good-to-haves polish + milestone close, launch-readiness slot) -- windows/macos GH Actions runner-cost decision"
       },
+      "claim_vs_assertion_audit": "If the curl-installer + cargo-binstall paths actually worked on macos-14, a real GH Actions run against that runner image would exit 0; the verifier script's confirmed absence means no such run has ever executed, which directly falsifies any claim of macos coverage today.",
       "cadences": [
         "pre-release"
       ]

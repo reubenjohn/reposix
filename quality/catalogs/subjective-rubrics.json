@@ -31,16 +31,17 @@
       },
       "artifact": "quality/reports/verifications/subjective/cold-reader-hero-clarity.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-28T03:35:00Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": "30d",
       "blast_radius": "P1",
       "owner_hint": "if RED: README.md hero or docs/index.md hero confused the cold reader -- read the rubric artifact at quality/reports/verifications/subjective/cold-reader-hero-clarity.json for the friction points + rewrite the offending paragraphs. Common: jargon-heavy first paragraph; missing pitch; install command buried.",
       "waiver": {
-        "until": "2026-07-26T00:00:00Z",
-        "reason": "P61 Wave G ratified verdict via Path B (in-session Claude grading; full disclosure header in artifact dispatched_via=Wave-G-Path-B-in-session). Score 8 CLEAR; evidence at quality/reports/verifications/subjective/cold-reader-hero-clarity.json. The runner cannot flip this row to PASS automatically because the dispatch.sh subprocess does not have Task tool access; runner re-execution would overwrite the Path B artifact with a stub. Path A re-dispatch from a Claude session preserving the artifact across runner sweeps is filed as v0.12.1 MIGRATE-03 carry-forward (subjective dispatch-and-preserve invariant).",
-        "dimension_owner": "v0.12.0 P61 subjective dimension owner",
-        "tracked_in": "v0.12.1 MIGRATE-03 -- subjective dispatch-and-preserve runner invariant"
+        "until": "2026-09-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04), NOT mooted by 90-03's dvcs-cold-reader dispatch wiring (D90-02b) -- this waiver covers a different gap: the runner subprocess lacks Task tool access, so a bare re-sweep would overwrite the ratified Path B artifact (score 8 CLEAR) with a Path-B stub (`dispatch_inline_subagent.sh` persists --score 0 --verdict CONFUSING + exit 1 when `claude` CLI is absent). The dispatch-and-preserve invariant fix (MIGRATE-03 shape) still does not exist in the runner. The 'v0.12.1 MIGRATE-03' label was dead -- repointed per D90-02(c) mass-renewal rule.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 5",
+        "tracked_in": "P95 (Quality framework upgrade + doc fixes) -- runner dispatch-and-preserve invariant for subjective-graded rows"
       },
+      "claim_vs_assertion_audit": "If README.md or docs/index.md hero copy actually confused a cold reader, the dispatched doc-clarity-review subagent would score below 7/10 CLEAR on at least one surface, and that sub-7 score is recorded directly in the ratified artifact -- the score IS the falsifying evidence, not a proxy for it.",
       "cadences": [
         "pre-release"
       ]
@@ -74,16 +75,17 @@
       },
       "artifact": "quality/reports/verifications/subjective/install-positioning.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-28T03:35:00Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": "30d",
       "blast_radius": "P0",
       "owner_hint": "if RED: README.md or docs/index.md install copy regressed (perhaps a refactor moved the package-manager command below a git-clone snippet). Restore package-manager-first ordering per CLAUDE.md freshness invariants. Cross-check with structure/install-path-leads-with-pm in freshness-invariants.json.",
       "waiver": {
-        "until": "2026-07-26T00:00:00Z",
-        "reason": "P61 Wave G ratified verdict via Path B (in-session Claude grading; full disclosure header in artifact dispatched_via=Wave-G-Path-B-in-session). Score 9 CLEAR; evidence at quality/reports/verifications/subjective/install-positioning.json. README.md leads with brew install on line 39; docs/index.md leads with curl one-liner in tabbed selector exposing curl/PowerShell/Homebrew/cargo binstall. The runner cannot flip this row to PASS automatically because the dispatch.sh subprocess does not have Task tool access; runner re-execution would overwrite the Path B artifact with a stub. Path A re-dispatch from a Claude session preserving the artifact across runner sweeps is filed as v0.12.1 MIGRATE-03 carry-forward.",
-        "dimension_owner": "v0.12.0 P61 subjective dimension owner",
-        "tracked_in": "v0.12.1 MIGRATE-03 -- subjective dispatch-and-preserve runner invariant"
+        "until": "2026-09-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04), NOT mooted by 90-03's dvcs-cold-reader dispatch wiring (D90-02b) -- same runner dispatch-and-preserve gap as cold-reader-hero-clarity: no Task tool access in the runner subprocess means a bare re-sweep would clobber the ratified Path B artifact (score 9 CLEAR) with a stub. The 'v0.12.1 MIGRATE-03' label was dead -- repointed per D90-02(c) mass-renewal rule.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 5",
+        "tracked_in": "P95 (Quality framework upgrade + doc fixes) -- runner dispatch-and-preserve invariant for subjective-graded rows"
       },
+      "claim_vs_assertion_audit": "If the install snippet actually led with git-clone+build instead of a package manager, the rubric subagent would score below 7/10 on the package-manager-first criterion and name the offending line in its rationale -- the recorded score+rationale directly falsifies (or confirms) the claim, not a proxy signal.",
       "cadences": [
         "pre-release"
       ]
@@ -117,16 +119,17 @@
       },
       "artifact": "quality/reports/verifications/subjective/headline-numbers-sanity.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-28T03:35:00Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": "30d",
       "blast_radius": "P2",
       "owner_hint": "if RED: a headline number drifted from the benchmarks/ source-of-truth (typical: a perf optimization landed and bench output updated, but the README/docs hero copy was not synced). Update the README + docs hero numbers OR refresh the benchmarks artifact (whichever is the actual ground truth).",
       "waiver": {
-        "until": "2026-07-26T00:00:00Z",
-        "reason": "P61 Wave G ratified verdict via Path B (in-session Claude grading; full disclosure header in artifact dispatched_via=Wave-G-Path-B-in-session). Score 9 CLEAR; evidence at quality/reports/verifications/subjective/headline-numbers-sanity.json. Every headline number in README.md and docs/index.md is inline-cited to docs/benchmarks/token-economy.md or docs/benchmarks/latency.md; drift is 0.0pp on percentages; absolute numbers within stated CI. The runner cannot flip this row to PASS automatically because the dispatch.sh subprocess does not have Task tool access; runner re-execution would overwrite the Path B artifact with a stub. Path A re-dispatch from a Claude session preserving the artifact across runner sweeps is filed as v0.12.1 MIGRATE-03 carry-forward.",
-        "dimension_owner": "v0.12.0 P61 subjective dimension owner",
-        "tracked_in": "v0.12.1 MIGRATE-03 -- subjective dispatch-and-preserve runner invariant"
+        "until": "2026-09-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04), NOT mooted by 90-03's dvcs-cold-reader dispatch wiring (D90-02b) -- same runner dispatch-and-preserve gap as the other two subjective rows: no Task tool access in the runner subprocess means a bare re-sweep would clobber the ratified Path B artifact (score 9 CLEAR) with a stub. The 'v0.12.1 MIGRATE-03' label was dead -- repointed per D90-02(c) mass-renewal rule.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 5",
+        "tracked_in": "P95 (Quality framework upgrade + doc fixes) -- runner dispatch-and-preserve invariant for subjective-graded rows"
       },
+      "claim_vs_assertion_audit": "If a headline number actually drifted from its benchmarks/ source, the rubric subagent's per-headline-number table would show a drift value exceeding the stated threshold and the numeric score would drop below 7 -- the table entry is the falsifying evidence, not an inference from it.",
       "cadences": [
         "weekly"
       ]

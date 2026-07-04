@@ -12,7 +12,7 @@
         "REPOSIX_ALLOWED_ORIGINS env var",
         "CLAUDE.md threat-model section -- Outbound HTTP allowlist"
       ],
-      "command": "cargo test -p reposix-core http_allowlist",
+      "command": "cargo test -p reposix-core --test http_allowlist",
       "expected": {
         "asserts": [
           "v0.12.1 stub -- a fuzz test attempts outbound HTTP to an origin not in REPOSIX_ALLOWED_ORIGINS and the http::client() factory rejects with the documented error",
@@ -27,16 +27,17 @@
       },
       "artifact": "quality/reports/verifications/security/allowlist-enforcement.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-28T04:59:21Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
-      "owner_hint": "v0.12.1 SEC-01 stub: verifier script does not yet exist. CLAUDE.md threat-model section names allowlist enforcement as a P0 cut.",
+      "owner_hint": "P90 90-05 (2026-07-04): quality/gates/security/allowlist-enforcement.sh now EXISTS (was dangling per R2 § D/H finding #3) -- wraps `cargo test -p reposix-core --test http_allowlist` (13 real #[tokio::test] fns already asserting egress-rejected/redirect-recheck/env-override/loopback-allow, crates/reposix-core/tests/http_allowlist.rs) plus a static grep that clippy.toml bans direct reqwest::Client construction AND that production request_with_headers_and_body() checks load_allowlist_from_env() BEFORE self.inner.request(...) (crates/reposix-core/src/http.rs:305-311). The script has NOT been executed via a real cargo run in this dispatch (no-cargo constraint); waiver stays renewed until a real pre-pr/CI run confirms PASS -- explicit P92 line item.",
       "waiver": {
-        "until": "2026-07-26T00:00:00Z",
-        "reason": "v0.12.1 carry-forward per MIGRATE-03; CLAUDE.md threat-model section -- Outbound HTTP allowlist lift. Verifier script intentionally does not exist yet -- this row anchors the contract for the v0.12.1 implementer.",
-        "dimension_owner": "v0.12.0 P63 security dimension owner",
-        "tracked_in": "v0.12.1 SEC-01"
+        "until": "2026-08-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04): the verifier script landed this commit (was fully dangling before), but its exit code has not been confirmed by an actual `cargo test` run (CLAUDE.md build-memory-budget forbids ad-hoc cargo during this F-class framework dispatch). Manual code inspection confirms the real behavioral test file + the static-grep targets both already exist and look correct. Renewing as a safety net until a real cargo run (tracked as an explicit P92 line item) confirms the wrapper script itself has no integration bug. The 'v0.12.1 SEC-01' label was dead -- repointed per D90-02(c)/(d) mass-renewal rule.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 5",
+        "tracked_in": "P92 (Push-flow correctness) -- explicit security-e2e verifier-wrapper confirmation line item, quality/reports/raise-list-p90.md § 5"
       },
+      "claim_vs_assertion_audit": "If the allowlist gate actually failed to reject a non-allowlisted origin, `cargo test -p reposix-core --test http_allowlist` would report a FAILED test (e.g. egress_to_non_allowlisted_host_is_rejected) instead of Error::InvalidOrigin, and the wrapper script's asserts_failed array would name it directly.",
       "cadences": [
         "pre-pr"
       ]
@@ -50,7 +51,7 @@
         "crates/reposix-core/src/audit.rs (audit_events)",
         "CLAUDE.md threat-model section -- Audit log is append-only"
       ],
-      "command": "cargo test -p reposix-cache audit_immutability && cargo test -p reposix-core audit_immutability",
+      "command": "cargo test -p reposix-core --test audit_schema && cargo test -p reposix-cache --test audit_is_append_only",
       "expected": {
         "asserts": [
           "v0.12.1 stub -- a test attempts UPDATE/DELETE against either audit table and the SQLite layer rejects (append-only by schema)",
@@ -66,16 +67,17 @@
       },
       "artifact": "quality/reports/verifications/security/audit-immutability.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-28T04:59:21Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
-      "owner_hint": "v0.12.1 SEC-02 stub: verifier script does not yet exist. CLAUDE.md OP-3 names audit immutability as non-optional.",
+      "owner_hint": "P90 90-05 (2026-07-04): quality/gates/security/audit-immutability.sh now EXISTS (was dangling per R2 § D/H finding #3) -- wraps `cargo test -p reposix-core --test audit_schema` (8 tests: append-only triggers reject UPDATE/DELETE, H-02 schema-attack hardening) AND `cargo test -p reposix-cache --test audit_is_append_only` (audit_events_cache counterpart), plus a static grep confirming WAL mode on the cache-side connection (crates/reposix-cache/src/db.rs:54-55). NOTE asymmetry: reposix-core::audit::open_audit_db does NOT set WAL explicitly -- only the cache-side connection is WAL-tuned; the script only claims WAL where it's real. Script has NOT been executed via a real cargo run in this dispatch (no-cargo constraint); waiver stays renewed until a real pre-pr/CI run confirms PASS -- explicit P92 line item.",
       "waiver": {
-        "until": "2026-07-26T00:00:00Z",
-        "reason": "v0.12.1 carry-forward per MIGRATE-03; CLAUDE.md OP-3 + threat-model section name audit-log immutability as a P0 cut. Verifier script intentionally does not exist yet -- this row anchors the contract for the v0.12.1 implementer.",
-        "dimension_owner": "v0.12.0 P63 security dimension owner",
-        "tracked_in": "v0.12.1 SEC-02"
+        "until": "2026-08-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04): the verifier script landed this commit (was fully dangling before), but its exit code has not been confirmed by an actual `cargo test` run (CLAUDE.md build-memory-budget forbids ad-hoc cargo during this F-class framework dispatch). Manual code inspection confirms both real test files (crates/reposix-core/tests/audit_schema.rs, crates/reposix-cache/tests/audit_is_append_only.rs) already exist and look correct against both audit tables. Renewing as a safety net until a real cargo run (tracked as an explicit P92 line item) confirms the wrapper script itself has no integration bug. The 'v0.12.1 SEC-02' label was dead -- repointed per D90-02(c)/(d) mass-renewal rule.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 5",
+        "tracked_in": "P92 (Push-flow correctness) -- explicit security-e2e verifier-wrapper confirmation line item, quality/reports/raise-list-p90.md § 5"
       },
+      "claim_vs_assertion_audit": "If either audit table actually accepted an UPDATE/DELETE, `audit_schema.rs`'s or `audit_is_append_only.rs`'s trigger-rejection assertion would fail to see an 'append-only' error and the row survival count would drop -- a real schema regression is the falsifying evidence, not an inferred one.",
       "cadences": [
         "pre-pr"
       ]

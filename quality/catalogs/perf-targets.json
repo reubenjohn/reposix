@@ -29,16 +29,17 @@
       },
       "artifact": "quality/reports/verifications/perf/latency-bench.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-27T22:31:53Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
-      "owner_hint": "if RED: quality/gates/perf/latency-bench.sh regressed (D-CONV-3, 2026-07-04: the pre-migration scripts/latency-bench.sh shim this owner_hint used to describe as 'not yet migrated' was deleted -- the migration referenced here completed back in Wave E); WAIVED until 2026-07-26",
+      "owner_hint": "if RED: quality/gates/perf/latency-bench.sh regressed (D-CONV-3, 2026-07-04: the pre-migration scripts/latency-bench.sh shim this owner_hint used to describe as 'not yet migrated' was deleted -- the migration referenced here completed back in Wave E); WAIVED until 2026-09-15",
       "waiver": {
-        "until": "2026-07-26T00:00:00Z",
-        "reason": "v0.12.1 stub per MIGRATE-03 -- file-relocate only at v0.12.0; full gate logic deferred (latency cross-check + token-economy bench cross-check + headline-numbers cross-check require new verifier code that did not fit in v0.12.0 P59 scope per the planner authority limits in REQUIREMENTS.md)",
-        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md",
-        "tracked_in": "MIGRATE-03 v0.12.1 (perf-dimension full implementation per REQUIREMENTS.md Out of Scope)"
+        "until": "2026-09-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04): still sim-derived numbers only, per R2 § A.2 -- bench runs (sim), but the real-backend headline cross-check remains a self-declared stub. Full perf-dimension implementation (latency cross-check + token-economy cross-check + headline-numbers cross-check) remains out of v0.13.0 REQUIREMENTS.md scope. The 'v0.12.1 MIGRATE-03' label was dead -- repointed per D90-02(c) mass-renewal rule.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 1",
+        "tracked_in": "P97 (Good-to-haves polish + milestone close, launch-readiness slot) -- perf-dimension full implementation"
       },
+      "claim_vs_assertion_audit": "If the sim-derived latency bench regressed, `bash quality/gates/perf/latency-bench.sh sim` would exit non-zero or the docs/benchmarks/latency.md table would go missing; a real-backend headline drift would NOT be caught today because that cross-check is the explicitly-deferred, still-stubbed half of this row's claim.",
       "cadences": [
         "weekly"
       ]
@@ -67,16 +68,17 @@
       },
       "artifact": "quality/reports/verifications/perf/token-economy-bench.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-27T22:31:53Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
-      "owner_hint": "if RED: scripts/bench_token_economy.py has not yet been migrated to quality/gates/perf/ (Wave E ships the move); WAIVED until 2026-07-26",
+      "owner_hint": "if RED: scripts/bench_token_economy.py has not yet been migrated to quality/gates/perf/ (Wave E ships the move); WAIVED until 2026-09-15",
       "waiver": {
-        "until": "2026-07-26T00:00:00Z",
-        "reason": "v0.12.1 stub per MIGRATE-03 -- file-relocate only at v0.12.0; full gate logic deferred (latency cross-check + token-economy bench cross-check + headline-numbers cross-check require new verifier code that did not fit in v0.12.0 P59 scope per the planner authority limits in REQUIREMENTS.md)",
-        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md",
-        "tracked_in": "MIGRATE-03 v0.12.1 (perf-dimension full implementation per REQUIREMENTS.md Out of Scope)"
+        "until": "2026-09-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04): still fixture/modeled per R2 § A.2 -- computes token counts from committed benchmarks/fixtures/*.tokens.json, a modeled comparison, not a live agent run. Full perf-dimension implementation remains out of v0.13.0 REQUIREMENTS.md scope. The 'v0.12.1 MIGRATE-03' label was dead -- repointed per D90-02(c) mass-renewal rule.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 1",
+        "tracked_in": "P97 (Good-to-haves polish + milestone close, launch-readiness slot) -- perf-dimension full implementation"
       },
+      "claim_vs_assertion_audit": "If the modeled token-economy comparison regressed, `python3 quality/gates/perf/bench_token_economy.py` would exit non-zero or the docs/benchmarks/token-economy.md table would go missing; a live-agent-run drift would NOT be caught because this bench is fixture-derived by design, not a real agent measurement.",
       "cadences": [
         "weekly"
       ]
@@ -106,16 +108,17 @@
       },
       "artifact": "quality/reports/verifications/perf/headline-numbers-cross-check.json",
       "status": "WAIVED",
-      "last_verified": "2026-04-27T22:31:53Z",
+      "last_verified": "2026-07-04T12:00:00Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
-      "owner_hint": "if RED: full v0.12.1 implementation; the verifier compares headline numbers in docs/index.md + README.md against benchmark fixture files -- WAIVED until 2026-07-26",
+      "owner_hint": "if RED: full v0.13.x implementation; the verifier compares headline numbers in docs/index.md + README.md against benchmark fixture files -- WAIVED until 2026-09-15. NOTE (P90 90-05 R2 § A.2/H): the verifier script quality/gates/perf/headline-numbers-cross-check.py is confirmed ABSENT entirely from quality/gates/perf/ -- this is a dangling-verifier row, flagged in quality/reports/raise-list-p90.md § 1, not just a soft-target row.",
       "waiver": {
-        "until": "2026-07-26T00:00:00Z",
-        "reason": "v0.12.1 stub per MIGRATE-03 -- file-relocate only at v0.12.0; full gate logic deferred (latency cross-check + token-economy bench cross-check + headline-numbers cross-check require new verifier code that did not fit in v0.12.0 P59 scope per the planner authority limits in REQUIREMENTS.md)",
-        "dimension_owner": "v0.12.0 P59 -- see SURPRISES.md",
-        "tracked_in": "MIGRATE-03 v0.12.1 (perf-dimension full implementation per REQUIREMENTS.md Out of Scope)"
+        "until": "2026-09-15T00:00:00Z",
+        "reason": "RENEWED P90 90-05 (2026-07-04) + dangling-verifier flag: quality/gates/perf/headline-numbers-cross-check.py confirmed absent (R2 § A.2/H). Full perf-dimension implementation remains out of v0.13.0 REQUIREMENTS.md scope. The 'v0.12.1 MIGRATE-03' label was dead -- repointed per D90-02(c) mass-renewal rule.",
+        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 1",
+        "tracked_in": "P97 (Good-to-haves polish + milestone close, launch-readiness slot) -- perf-dimension full implementation incl. this row's missing verifier script"
       },
+      "claim_vs_assertion_audit": "If a headline number drifted from its benchmark source, the cross-check script would need to grep docs/index.md + README.md against the fixture files and exit non-zero on mismatch; since quality/gates/perf/headline-numbers-cross-check.py is confirmed absent, no such comparison can run today and drift would go undetected.",
       "cadences": [
         "weekly"
       ]
