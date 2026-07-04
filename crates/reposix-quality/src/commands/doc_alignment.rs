@@ -287,17 +287,40 @@ pub(crate) mod verbs {
         };
 
         if let Some(row) = cat.row_mut(row_id) {
-            // Preserve multi-source rows: if existing source is Multi or
-            // is a different Single citation, promote to Multi.
+            // BIND-RELOCATION-FIX (P89): match cites by FILE, not by exact
+            // line range. A line-shift refresh (`bind --source
+            // <same-file>:<new-lines>`) must REPLACE the row's existing cite
+            // for that file in place -- otherwise every refresh strands a
+            // phantom stale cite pointing at the old line range, and that
+            // phantom never heals, so the row stays STALE_DOCS_DRIFT forever.
+            // Different-file sources still append: multi-source rows are
+            // legitimate (a claim mirrored in both index.md and
+            // mental-model.md is two cites, two files).
+            //
+            // The same-file collapse also *heals* rows already carrying
+            // phantom duplicate same-file cites from the pre-fix append bug:
+            // every prior cite for this file is dropped and replaced by the
+            // single fresh one at the first same-file position, so a single
+            // rebind un-strands historical duplicates.
             let prior_cites = row.source.as_slice();
             let prior_hashes = std::mem::take(&mut row.source_hashes);
-            let mut sources = prior_cites.clone();
-            let already_present = sources.iter().any(|c| {
-                c.file == new_source.file
-                    && c.line_start == new_source.line_start
-                    && c.line_end == new_source.line_end
-            });
-            if !already_present {
+            let mut sources: Vec<SourceCite> = Vec::with_capacity(prior_cites.len() + 1);
+            let mut replaced = false;
+            for c in &prior_cites {
+                if c.file == new_source.file {
+                    // First same-file cite -> replace in place. Later
+                    // same-file cites are phantom duplicates -> drop them.
+                    if !replaced {
+                        sources.push(new_source.clone());
+                        replaced = true;
+                    }
+                } else {
+                    sources.push(c.clone());
+                }
+            }
+            if !replaced {
+                // No prior cite for this file -> append (brand-new row body
+                // or a legitimate different-file multi-source addition).
                 sources.push(new_source.clone());
             }
             // BIND-VERB-FIX-01 (P75) + MULTI-SOURCE-WATCH-01 (P78):
