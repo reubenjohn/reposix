@@ -218,3 +218,28 @@ async fn delete_or_close_is_audited_in_integration_context() {
         "exactly 1 DELETE audit row expected, got {del_count}"
     );
 }
+
+/// Capability parity (`capabilities_match`): the published
+/// `CAPABILITIES.create` bool MUST agree with observable `create_record`
+/// behavior. Confluence advertises
+/// `create = true`, so `create_record` must NOT short-circuit with
+/// `Error::NotSupported` — pointed at a stub server with no routes it attempts
+/// the space-id resolve HTTP call and fails with a transport/HTTP error
+/// instead, which is still "supported". Substrate for the Stage-2
+/// `code/capabilities-match-impl` catalog row (grep `capabilities_match`).
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn capabilities_match_create_impl() {
+    let server = MockServer::start().await;
+    let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+    let issue = make_issue("cap probe", "body");
+    let is_not_supported = matches!(
+        backend.create_record("REPOSIX", issue).await,
+        Err(reposix_core::Error::NotSupported { .. })
+    );
+    assert_eq!(
+        is_not_supported,
+        !reposix_confluence::CAPABILITIES.create,
+        "CAPABILITIES.create ({}) disagrees with create_record NotSupported behavior ({is_not_supported})",
+        reposix_confluence::CAPABILITIES.create,
+    );
+}

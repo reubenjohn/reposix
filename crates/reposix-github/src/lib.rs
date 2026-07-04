@@ -4,13 +4,13 @@
 //!
 //! # Scope
 //!
-//! v0.1 ships **read-only**: `list_records` and `get_record` work against real
-//! GitHub; `create_record` / `update_record` / `delete_or_close` return
+//! This cut ships **read-only**: `list_records` and `get_record` work against
+//! real GitHub; `create_record` / `update_record` / `delete_or_close` return
 //! `Error::NotSupported { operation }` (display string preserved as
 //! `"not supported: …"` for back-compat with stderr greps and the legacy
-//! `Error::Other("not supported: …")` shape from v0.11.x). The v0.2 cut will
-//! flip on the write path once credentials-handling UX lands (see ADR-001 for
-//! the write-side of the state mapping).
+//! `Error::Other("not supported: …")` shape from v0.11.x). A later write cut
+//! will flip on create/update/delete once credentials-handling UX lands (see
+//! ADR-001 for the write-side of the state mapping).
 //!
 //! # State mapping
 //!
@@ -79,18 +79,26 @@ pub const DEFAULT_BASE_URL: &str = "https://api.github.com";
 
 /// Capability matrix row published by this backend for `reposix doctor`.
 ///
-/// GitHub Issues supports the full read/write surface alongside the sim,
-/// with comments routed in-body (the read path collapses comments into the
-/// body's frontmatter+body), delete-as-close (issues are closed with a
-/// state reason rather than removed), and ETag-based optimistic concurrency
-/// for write conflicts.
+/// GitHub Issues is **read-only** in this cut: `list_records` / `get_record`
+/// work, but `create_record` / `update_record` / `delete_or_close` return
+/// `Error::NotSupported`, so create/update/delete are advertised `false`.
+/// Comments are `None` — the read path maps only the issue body and never
+/// fetches the comments API. Versioning is `Timestamp`: GitHub's native
+/// `ETag` / `If-Match` optimistic concurrency is **not** plumbed here (the
+/// read path hard-codes record `version` to `1` and carries `updated_at` as
+/// the only freshness signal). When the write cut lands it will flip
+/// create/update/delete to `true` and can revisit `ETag` versioning — see the
+/// module header.
+///
+/// The `capabilities_match_create_impl` test asserts this row agrees with the
+/// connector's observable behavior so the doctor matrix cannot drift.
 pub const CAPABILITIES: reposix_core::BackendCapabilities = reposix_core::BackendCapabilities::new(
     true,
-    true,
-    true,
-    true,
-    reposix_core::CommentSupport::InBody,
-    reposix_core::VersioningModel::Etag,
+    false,
+    false,
+    false,
+    reposix_core::CommentSupport::None,
+    reposix_core::VersioningModel::Timestamp,
 );
 
 /// Label prefix that encodes the two "open-but-active" variants (see
@@ -536,7 +544,7 @@ impl BackendConnector for GithubReadOnlyBackend {
 
     async fn create_record(&self, _project: &str, _issue: Untainted<Record>) -> Result<Record> {
         Err(Error::NotSupported {
-            operation: "create_record — reposix-github is read-only in v0.1".into(),
+            operation: "create_record — reposix-github is read-only in this cut".into(),
         })
     }
 
@@ -548,7 +556,7 @@ impl BackendConnector for GithubReadOnlyBackend {
         _expected_version: Option<u64>,
     ) -> Result<Record> {
         Err(Error::NotSupported {
-            operation: "update_record — reposix-github is read-only in v0.1".into(),
+            operation: "update_record — reposix-github is read-only in this cut".into(),
         })
     }
 
@@ -559,7 +567,7 @@ impl BackendConnector for GithubReadOnlyBackend {
         _reason: DeleteReason,
     ) -> Result<()> {
         Err(Error::NotSupported {
-            operation: "delete_or_close — reposix-github is read-only in v0.1".into(),
+            operation: "delete_or_close — reposix-github is read-only in this cut".into(),
         })
     }
 }
@@ -901,6 +909,50 @@ mod tests {
                 "expected Error::NotSupported {{ operation: create_record … }}, got {other:?}"
             ),
         }
+    }
+
+    /// Capability parity (`capabilities_match`): the published
+    /// `CAPABILITIES.create` bool MUST agree with observable `create_record`
+    /// behavior. This backend advertises
+    /// `create = false`, so `create_record` must short-circuit with
+    /// `Error::NotSupported`. Substrate for the Stage-2
+    /// `code/capabilities-match-impl` catalog row (grep `capabilities_match`).
+    #[tokio::test]
+    async fn capabilities_match_create_impl() {
+        let backend = GithubReadOnlyBackend::new_with_base_url(None, DEFAULT_BASE_URL.to_owned())
+            .expect("backend");
+        let t = chrono::Utc::now();
+        let u = sanitize(
+            Tainted::new(Record {
+                id: RecordId(0),
+                title: "x".into(),
+                status: RecordStatus::Open,
+                assignee: None,
+                labels: vec![],
+                created_at: t,
+                updated_at: t,
+                version: 0,
+                body: String::new(),
+                parent_id: None,
+                extensions: std::collections::BTreeMap::new(),
+            }),
+            ServerMetadata {
+                id: RecordId(1),
+                created_at: t,
+                updated_at: t,
+                version: 1,
+            },
+        );
+        let is_not_supported = matches!(
+            backend.create_record("x/y", u).await,
+            Err(Error::NotSupported { .. })
+        );
+        assert_eq!(
+            is_not_supported,
+            !CAPABILITIES.create,
+            "CAPABILITIES.create ({}) disagrees with create_record NotSupported behavior ({is_not_supported})",
+            CAPABILITIES.create,
+        );
     }
 
     #[tokio::test]

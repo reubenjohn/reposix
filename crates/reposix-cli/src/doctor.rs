@@ -1219,7 +1219,7 @@ mod tests {
     }
 
     #[test]
-    fn check_backend_capabilities_reports_jira_as_read_only() {
+    fn check_backend_capabilities_reports_jira_read_write_timestamp() {
         let url = "reposix::https://reuben-john.atlassian.net/jira/projects/TEST";
         let spec = reposix_core::parse_remote_url(url).unwrap();
         let finding = check_backend_capabilities(Some(&spec), Some(url));
@@ -1229,21 +1229,28 @@ mod tests {
             "jira slug missing: {}",
             finding.message
         );
-        // jira: read=yes, create/update/delete/comments=—, versioning=timestamp.
+        // jira: read/create/update/delete=yes, comments=— (None),
+        // versioning=timestamp. (Write path is live — QL-002 truth.)
         assert!(
             finding.message.contains("timestamp"),
             "timestamp versioning label missing: {}",
             finding.message
         );
         assert!(
+            finding.message.contains("yes"),
+            "yes column missing (writes are live): {}",
+            finding.message
+        );
+        // Comments are None → em-dash in the comments column.
+        assert!(
             finding.message.contains("—"),
-            "em-dash for unsupported columns missing: {}",
+            "em-dash for None comments column missing: {}",
             finding.message
         );
     }
 
     #[test]
-    fn check_backend_capabilities_reports_github_etag_versioning() {
+    fn check_backend_capabilities_reports_github_read_only_timestamp() {
         let url = "reposix::https://api.github.com/projects/owner/repo";
         let spec = reposix_core::parse_remote_url(url).unwrap();
         let finding = check_backend_capabilities(Some(&spec), Some(url));
@@ -1253,9 +1260,17 @@ mod tests {
             "github slug missing: {}",
             finding.message
         );
+        // github: read=yes, create/update/delete=— (read-only in this cut),
+        // comments=— (None), versioning=timestamp (ETag not plumbed). QL-002
+        // truth — the connector returns Error::NotSupported for all writes.
         assert!(
-            finding.message.contains("etag"),
-            "etag versioning label missing: {}",
+            finding.message.contains("timestamp"),
+            "timestamp versioning label missing: {}",
+            finding.message
+        );
+        assert!(
+            !finding.message.contains("etag"),
+            "stale etag versioning label must be gone: {}",
             finding.message
         );
     }

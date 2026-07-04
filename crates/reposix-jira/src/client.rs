@@ -799,6 +799,35 @@ mod tests {
         )
     }
 
+    // ─── Test: capabilities_match_create_impl ────────────────────────────
+
+    /// Capability parity (`capabilities_match`): the published
+    /// `CAPABILITIES.create` bool MUST agree with observable `create_record`
+    /// behavior. JIRA advertises
+    /// `create = true`, so `create_record` must NOT short-circuit with
+    /// `Error::NotSupported` — pointed at a stub server it attempts HTTP and
+    /// fails with a transport/HTTP error instead, which is still "supported".
+    /// Substrate for the Stage-2 `code/capabilities-match-impl` catalog row
+    /// (grep `capabilities_match`).
+    #[tokio::test]
+    async fn capabilities_match_create_impl() {
+        // No routes mounted: create_record fetches issue types first and gets a
+        // non-2xx, surfacing Error::Other — never Error::NotSupported.
+        let server = MockServer::start().await;
+        let backend = make_backend(&server.uri());
+        let issue = make_untainted("cap probe", "body");
+        let is_not_supported = matches!(
+            backend.create_record("P", issue).await,
+            Err(reposix_core::Error::NotSupported { .. })
+        );
+        assert_eq!(
+            is_not_supported,
+            !crate::CAPABILITIES.create,
+            "CAPABILITIES.create ({}) disagrees with create_record NotSupported behavior ({is_not_supported})",
+            crate::CAPABILITIES.create,
+        );
+    }
+
     // ─── Test: create_issue_posts_to_rest_api ────────────────────────────
 
     #[tokio::test]

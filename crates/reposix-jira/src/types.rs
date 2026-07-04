@@ -24,19 +24,23 @@ pub const DEFAULT_BASE_URL_FORMAT: &str = "https://{tenant}.atlassian.net";
 
 /// Capability matrix row published by this backend for `reposix doctor`.
 ///
-/// JIRA Cloud is read-only in v0.11.x: the connector lists, gets, and
-/// surfaces issues, but `create_record` / `update_record` / `delete_or_close`
-/// still return `Error::NotSupported { operation }` (display string preserved
-/// as `"not supported: …"` for back-compat with stderr greps). Comments are
-/// not round-tripped (JIRA exposes them through a separate comments API
-/// rather than a body field), and concurrency is timestamp-based —
-/// write-after-read would race against concurrent edits if the write path
-/// were enabled.
+/// JIRA Cloud exposes the full read/write surface. The connector lists and
+/// gets issues, and the write path is live: `create_record`
+/// (`POST /rest/api/3/issue`), `update_record` (`PUT /rest/api/3/issue/{id}`),
+/// and `delete_or_close` (transitions API with a `DELETE` fallback). Comments
+/// are `None` — JIRA keeps them behind a separate comments API that reposix
+/// does not round-trip into the body. Concurrency is `Timestamp`: JIRA exposes
+/// no `ETag`, so `update_record` ignores `expected_version` and a
+/// write-after-read races against concurrent edits.
+///
+/// This constant is the source of truth `reposix doctor` and the docs
+/// capability matrix render; the `capabilities_match_create_impl` test keeps
+/// it honest against the connector's observable behavior.
 pub const CAPABILITIES: reposix_core::BackendCapabilities = reposix_core::BackendCapabilities::new(
     true,
-    false,
-    false,
-    false,
+    true,
+    true,
+    true,
     reposix_core::CommentSupport::None,
     reposix_core::VersioningModel::Timestamp,
 );

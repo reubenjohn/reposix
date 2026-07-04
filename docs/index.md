@@ -102,15 +102,18 @@ reading:
 | Backend     | Read | Create | Update | Comments         | Delete | Versioning |
 |-------------|------|--------|--------|------------------|--------|------------|
 | sim         | yes  | yes    | yes    | in-body          | yes    | strong     |
-| github      | yes  | yes    | yes    | in-body          | yes    | ETag       |
+| github      | yes  | no     | no     | no               | no     | timestamp  |
 | confluence  | yes  | yes    | yes    | separate API     | yes    | strong     |
-| jira        | yes  | no     | no     | no               | no     | timestamp  |
+| jira        | yes  | yes    | yes    | no               | yes    | timestamp  |
 
 
-JIRA is currently read-only — write paths are tracked in
-[`v0.11.1` POLISH2-08+](https://github.com/reubenjohn/reposix/blob/main/.planning/REQUIREMENTS.md).
-For the canonical struct + per-backend constant, see
-`crates/reposix-core/src/backend.rs` (`BackendCapabilities`).
+GitHub Issues is currently read-only — `create` / `update` / `delete` return
+`Error::NotSupported`, and its ETag concurrency is not yet plumbed (hence
+`timestamp`). JIRA and Confluence round-trip the full write surface via
+`git push`. For the canonical struct + per-backend constant, see
+`crates/reposix-core/src/backend.rs` (`BackendCapabilities`); each connector's
+`CAPABILITIES` row is regression-tested against its observable behavior
+(`capabilities_match_create_impl`).
 
 <details markdown>
 <summary><strong>Build from source (advanced)</strong></summary>
