@@ -30,3 +30,23 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 ---
 
 > Add new entries below this line.
+
+## GOOD-TO-HAVES-02 — `DEFERRAL-REGEX-INTERVENING-WORDS` — deferral-pointer linter misses PNNs separated from the verb by intervening words
+
+**Discovered during:** P89 89-05 (deferral-pointer linter, RBF-FW-05)
+
+**Size:** XS (~5 lines shell — one widened regex alternative + a synthetic-scenario test line)
+
+**Source:** `crates/reposix-cli/src/attach.rs:163` — the stderr message says "github/confluence/jira land alongside the integration tests in P79-03". The F-K6-verbatim pattern `lands? (alongside|in) P[0-9]+` requires the PNN to immediately follow the verb phrase, so "land alongside the integration tests in P79-03" is INVISIBLE to `quality/gates/structure/deferral-pointer-linter.sh` — its P79-03 pointer is never cross-referenced. Zero impact today (the same line's "not yet wired in P79-02" fragment matches pattern 1 and P79 resolves), but a future deferral written only in the intervening-words phrasing would silently escape the linter entirely — neither the orphan-PNN BLOCK nor the no-PNN BLOCK fires when no pattern matches at all.
+
+**Acceptance:**
+
+- Pattern 2 widened to tolerate a bounded run of intervening words (e.g. `lands? (alongside|in) ([a-zA-Z-]+ ){0,5}P[0-9]+` or equivalent), OR a documented decision that F-K6-verbatim stays and the phrasing convention is enforced editorially.
+- Synthetic-scenario coverage: a line like `// this lands alongside the follow-up work in P999` BLOCKs.
+- PNN extraction stays phrase-scoped (the widened fragment must not swallow adjacent allowlist-marker PNNs like the P91 in attach.rs:163's trailing comment).
+
+**Why deferred from 89-05:** the three patterns are mandated F-K6 VERBATIM by 89-CONTEXT.md D-05a/b and the 89-05 plan; widening them is a design decision outside the task's envelope, and content cross-reference/pattern polish is already earmarked for P90/P95 (CONTEXT D-05c).
+
+**Default disposition:** Size XS; XS items always close per CLAUDE.md OP-8 — fold into the P90/P95 polish slot that already owns deferral-linter content cross-reference.
+
+**STATUS:** OPEN
