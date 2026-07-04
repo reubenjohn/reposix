@@ -392,3 +392,23 @@ All 5 are now honestly `MISSING_TEST`, which per `RowState::blocks_pre_push()` (
 **Sketched resolution:** For each of the 5 rows, either (a) write a dedicated test that actually asserts the claim (e.g. a `help_lists_all_subcommands`-style test parameterized over the FULL current subcommand list including `attach`/`sync`; a doctor/allowlist test that references the documented env-var names; an exit-code-table test that drives each subcommand to its documented code), or (b) soften/retire the claim if it's not worth a dedicated test (e.g. `spaces_confluence_only`'s "Confluence-only" half could fold into the existing `spaces.rs` bail-message tests instead of `help_lists_all_subcommands`). Whoever picks this up should re-run `/reposix-quality-refresh docs/reference/cli.md` and `/reposix-quality-refresh docs/reference/exit-codes.md` afterward to flip the rows back to `BOUND`. Until then, `pre-push` on this repo will show `docs-alignment/walk` RED for these 5 specific rows — this is a known, tracked, honest state, not a regression introduced by the catalog-row-minting work that triggered the re-grade.
 
 **STATUS:** OPEN
+
+## 2026-07-04 18:10 | discovered-by: quality-convergence connector re-audit | severity: HIGH
+
+**What:** ~440 lines of dead Confluence API surface — `list_comments` (crates/reposix-confluence/src/lib.rs:501-570), `list_attachments` (644-705), `list_whiteboards` (720-803), `download_attachment` (819-844) plus their backing types in types.rs (~184-388: ConfComment/CommentKind/ConfCommentList, ConfAttachment/ConfAttachmentList, ConfWhiteboard/ConfDirectChildrenList/ConfDirectChild) have zero non-test callers workspace-wide. Nothing in reposix-cache or reposix-remote references comments/attachments at all, so none of this reaches a working tree. Each function is individually well-documented and well-tested — this is orphaned code built ahead of a cache-integration phase that never landed, not sloppy code. Related: `CommentSupport::SeparateApi` in the capability surface is backed only by this dead code, so any doc cell implying reposix delivers comment access is aspirational.
+
+**Why out-of-scope for eager-resolution:** wire-vs-delete is a product decision (do comments/attachments become working-tree files in P91+ real-backend wiring, or do we shed the surface?), and either path is M-sized (materializer integration + record layout, or deletion + type cleanup + capability/doc reconciliation).
+
+**Sketched resolution:** P91/P92 (real-backend charter) decides: (a) wire comments/attachments into the cache materializer as working-tree content, or (b) delete the four functions + backing types, downgrade `CommentSupport` claims, and update the docs capability matrix. Until decided, ensure no user-facing doc promises comment/attachment access.
+
+**STATUS:** OPEN
+
+## 2026-07-04 18:10 | discovered-by: quality-convergence connector re-audit | severity: HIGH
+
+**What:** reposix-swarm has zero write-contention coverage for the one real backend it drives directly. `confluence_direct.rs` never calls `create_record`/`update_record` even though Confluence writes have been live for over a milestone — the harness's entire purpose is multi-agent contention testing, and the write-contention path (the risky one: version conflicts, push-time drift) is untested by it. (The stale "Phase 17 read-only by design — writes ship in Phase 21 / OP-7" comment is being fixed eagerly in the convergence fix wave; this entry tracks the missing workload.)
+
+**Why out-of-scope for eager-resolution:** designing a write-contention workload (N agents racing update_record on shared records, asserting version-conflict handling + audit-row completeness) is M-sized test-harness work with real-backend etiquette concerns (TokenWorld mutation volume).
+
+**Sketched resolution:** add a swarm write-contention scenario against the simulator first (default per OP-1), then an --ignored real-Confluence variant against TokenWorld per docs/reference/testing-targets.md cleanup conventions. Home: P91 (real-backend wiring) or P95.
+
+**STATUS:** OPEN

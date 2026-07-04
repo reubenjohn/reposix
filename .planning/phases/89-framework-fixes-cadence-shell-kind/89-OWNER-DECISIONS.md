@@ -133,3 +133,31 @@ Owner's words, verbatim:
 
 All subsequent scope/priority judgment calls resolve toward
 polish-for-adoption.
+
+## DECISION OD-4 — Delegation tiering, quality-convergence-before-features, launch-readiness resequence
+
+**Date:** 2026-07-04
+**Source:** owner grant (session directive), committed at the Quality
+Convergence drain window per the handoff protocol. Post-dates OD-3;
+AMENDS OD-3's sequencing (item 3 below); all OD-3 autonomy grants and
+OD-2 hard-RED semantics remain in force UNCHANGED.
+
+1. **Delegation tiering.** The top-level orchestrator delegates ONLY to
+   fable coordinators, which tier sub-delegation (opus for genuinely
+   complex/security lanes, sonnet default, haiku mechanical). Never
+   fable at the leaf level.
+2. **Quality upkeep is fable-judgment work.** Iterative
+   unification/simplification loops — unify ci.yml↔catalog cadences
+   (incl. the previously missing pre-pr wiring), collapse script shims,
+   reconcile run.py/verdict.py exit semantics, judge the orphan-scripts
+   registry — accepting trivial capability loss for major complexity
+   reduction; re-audit between iterations until convergence; **features
+   WAIT for convergence.** (Implemented as D-CONV-1..8, journaled in
+   `quality/SURPRISES.md` 2026-07-04.)
+3. **EXECUTIVE RESEQUENCE.** v0.13.2 cross-link (P98–P107) moves AFTER a
+   new launch-readiness milestone (post-P97 tag): asciinema hero demo,
+   CI-verified headline numbers (makes the weekly badge honestly green),
+   install-path excellence, positioning/Show-HN kit — pulled forward
+   from the v0.10.0-post-pivot v1.0 vision. Goal: global-map adoption.
+   Owner quote: "make executive autonomous decisions and tangential
+   pivots that ultimately puts this project on the global map."

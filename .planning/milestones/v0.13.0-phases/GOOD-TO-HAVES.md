@@ -107,3 +107,19 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 **Default disposition:** Size M; default-defer to the launch-readiness milestone per OP-8 (M items default-defer) and OD-4 §3. Owner quote (2026-07-04): "makes weekly badge honestly green."
 
 **STATUS:** OPEN
+
+## GOOD-TO-HAVES-05 — deferral-pointer-linter misses word-form "Phase NN" pointers
+
+**Discovered during:** Quality Convergence re-audit Round 1 (2026-07-04)
+
+**Size:** S
+
+**Source:** `quality/gates/structure/deferral-pointer-linter.sh` regexes (`not yet wired in P\d+`, `lands? (alongside|in) P\d+`, `substrate-gap-deferred`) miss the word form: `crates/reposix-jira/src/client.rs:381` carried `#[allow(dead_code)] // ... production retry wired in Phase 29` — a stale pointer to an already-shipped phase that the linter never saw. Proven non-hypothetical (that pointer sat stale for a milestone; the underlying dead-code finding is being fixed in the convergence fix wave).
+
+**Acceptance:** linter catches `(wired|ships?|lands?) in Phase \d+` (word form) in `crates/`, with the same phrase-scoped PNN extraction + PLAN-artifact cross-reference as the existing patterns; existing allowlist-marker semantics unchanged; a fixture-style negative test or in-script self-check documents the new shape.
+
+**Why deferred:** regex-scope expansion on a blocking pre-push gate deserves its own small change with false-positive review across the existing crates/ corpus, not a rider on an unrelated fix wave.
+
+**Default disposition:** S — close in P90 (quality-framework honesty phase) or next debt-drain window.
+
+**STATUS:** OPEN

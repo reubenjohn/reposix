@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 mode: serial-workstreams
 status: executing-p89-serial-workstreams
-last_updated: "2026-07-04T05:30:00Z"
-last_activity: 2026-07-04 — P89 SHIPPED GREEN (verdict 0e21e2a at quality/reports/verdicts/p89/VERDICT.md). All 6 framework rows landed (5 PASS + vision-litmus SLOT NOT-VERIFIED per D-03c); cross-AI review of implemented framework executed per OD-1/OD-3 (89-CROSS-AI-REVIEW.md; H1+H3 fixed in-phase, H2/H4 intake→P90); pushed origin/main a4ac3e4. Next: P90.
+last_updated: "2026-07-04T18:00:00Z"
+last_activity: 2026-07-04 — Quality Convergence window (OD-4 item 2) between P89 close and P90 dispatch. D-CONV-1..8 journaled (quality/SURPRISES.md 5bba77a) + implemented; QL-001..006 BLOCKERs dispositioned (5 fixed, QL-001 filed BLOCKER intake for P90/P91); 5 permanent catalog rows minted; ledger reconstruction at .planning/audits/QUALITY-LEDGER.md. Next: P90 (gated on convergence coordinator GO).
 workstreams:
   workstream_a:
     milestone: v0.13.0
@@ -16,11 +16,11 @@ workstreams:
   workstream_b:
     milestone: v0.13.2
     milestone_name: Cross-link fidelity
-    status: queued  # QUEUED BEHIND workstream A per OD-3 serial ratification — do NOT start P98 until P97 GREEN
+    status: queued  # RESEQUENCED per OD-4 item 3 (2026-07-04): queued BEHIND the new launch-readiness milestone, which itself follows P97/v0.13.0 tag
     phases_total: 10  # P98-P107
     phases_completed: 0
     next_phase: P98
-    blocks_tag: false  # v0.13.2 tag ships at P107, sequenced after v0.13.0 tag under OD-3 serial execution; tag push delegated to orchestrator
+    blocks_tag: false  # v0.13.2 tag ships at P107, sequenced after v0.13.0 tag AND the launch-readiness milestone per OD-4; tag push delegated to orchestrator
 ---
 
 # Project State
@@ -38,12 +38,12 @@ Plan: shipped — 8 plan files at `.planning/phases/89-framework-fixes-cadence-s
 Status: P89 GREEN — 12/20 phases complete (P78–P89 shipped); next P90. v0.13.0 tag held until P97 GREEN (tag push delegated to orchestrator per OD-3).
 Next agent action: plan + execute P90 (F-K4 honesty rules: coverage_kind, asserts cross-check, dispatch.sh — RBF-FW-06..09, -10, -12). P90's plans should drain the four cross-AI intake entries (missing-verifier PASS-preservation, minted_at anchor, sanctioned-target residual, skip-demote semantics — all RBF-FW-07/-08/-12-shaped).
 
-### Workstream B — v0.13.2 — QUEUED (behind workstream A per OD-3)
+### Workstream B — v0.13.2 — QUEUED (RESEQUENCED per OD-4)
 
 Phase: P98 (entry-point) — crate skeleton + shared-compute lift + edge model + walker + catalog + tracker schemas. Sourced from `.planning/research/v0.13.2-cross-link-fidelity/`.
 Plan: TBD — P98 plan-overview not yet authored.
-Status: QUEUED BEHIND workstream A per OD-3 serial ratification — P98's "Depends on: v0.13.0 milestone GREEN" is taken literally; do NOT start P98 until P97 GREEN. 0/10 phases complete; ROADMAP scaffolded; REQUIREMENTS scaffolded; intakes scaffolded with 2 Q6 deferrals seeded in GOOD-TO-HAVES.
-Next agent action: none until P97 GREEN; then `/gsd-discuss-phase 98`.
+Status: RESEQUENCED per OD-4 item 3 (2026-07-04, `89-OWNER-DECISIONS.md` § "DECISION OD-4"): a new **launch-readiness milestone** (asciinema hero demo, CI-verified headline numbers, install-path excellence, positioning/Show-HN kit) is scoped and executed AFTER the P97/v0.13.0 tag and BEFORE P98. P98's "Depends on: v0.13.0 milestone GREEN" still holds; it additionally now depends on launch-readiness GREEN. 0/10 phases complete; ROADMAP scaffolded; REQUIREMENTS scaffolded; intakes scaffolded with 2 Q6 deferrals seeded in GOOD-TO-HAVES.
+Next agent action: none until P97 GREEN + launch-readiness milestone scoped via `/gsd-new-milestone`; then `/gsd-discuss-phase 98`.
 
 Last activity: 2026-07-03 — resumption after 8-week idle gap: OD-3 full-autonomy mandate ratified, P89 pre-execution consolidation landed (5a6a388), main fast-forward from workstream/v0.13.0-ext pending, P89 execution starting.
 
