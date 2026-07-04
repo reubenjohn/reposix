@@ -59,8 +59,12 @@ fn tokens_no_remote_url_reports_error() {
     assert!(!out.status.success(), "tokens with no remote should fail");
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(
-        stderr.contains("remote.origin.url"),
-        "expected remote.origin.url in error: {stderr}"
+        stderr.contains("no reposix remote"),
+        "expected no-reposix-remote error: {stderr}"
+    );
+    assert!(
+        stderr.contains("reposix init") && stderr.contains("reposix attach"),
+        "error must teach both bootstrap paths: {stderr}"
     );
 }
 

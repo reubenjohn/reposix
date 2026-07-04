@@ -63,8 +63,12 @@ fn cost_no_remote_url_reports_error() {
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(!out.status.success(), "expected non-zero exit: {out:?}");
     assert!(
-        stderr.contains("no remote.origin.url") || stderr.contains("remote.origin.url"),
-        "expected remote-url error: stderr={stderr}"
+        stderr.contains("no reposix remote"),
+        "expected no-reposix-remote error: stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("reposix init") && stderr.contains("reposix attach"),
+        "error must teach both bootstrap paths: stderr={stderr}"
     );
 }
 
