@@ -93,7 +93,6 @@ jobs:
           title: "chore(bench): refresh v0.9.0 latency"
           body: ${{ steps.body.outputs.body }}
           branch: bench/refresh-latency
-          branch-suffix: timestamp
           base: main
           delete-branch: true
           labels: |
