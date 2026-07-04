@@ -257,6 +257,36 @@ On conflict, resolve with standard git tools (`git status`, edit, `git rebase --
 
 Mechanism: the bus-remote `CHEAP PRECHECK B` runs `backend.list_changed_since(last_fetched_at)` on the SoT before reading stdin; the rejection comes from that step. See [DVCS topology — Two refs you can `git log`](../concepts/dvcs-topology.md#two-refs-you-can-git-log) for the staleness model.
 
+### Bus-remote mirror-egress rejection (`egress-denied`)
+
+Symptom (the bus push refused to contact the mirror host):
+
+```text
+$ git push
+mirror push blocked: origin `ssh://github.com` is not authorised by REPOSIX_ALLOWED_ORIGINS.
+The mirror push sends issue content over the network, so the mirror host must be on the egress
+allowlist (the allowlist matches on HOST, so an `https://<host>` entry authorises an `ssh` mirror
+on the same host).
+To authorise it:
+  export REPOSIX_ALLOWED_ORIGINS='https://reuben-john.atlassian.net,https://github.com'
+error: remote rejected main -> main (egress-denied)
+```
+
+What it means: a bus push (`reposix::<sot>?mirror=<mirror-url>`) shells out `git ls-remote` and `git push` against the mirror. That is a **second egress channel** — issue content leaves the machine to the mirror host — so it is gated by the same `REPOSIX_ALLOWED_ORIGINS` allowlist that guards REST calls to the SoT. The mirror host is not on your allowlist, so the push was refused **before any network contact** (no `git ls-remote`, no SoT write).
+
+Fix: add the mirror host to the allowlist. The allowlist grammar is `http`/`https` only and the mirror gate matches on **host**, so use an `https://<host>` entry even when the mirror remote itself is `ssh` (`git@github.com:org/repo.git`):
+
+```bash
+export REPOSIX_ALLOWED_ORIGINS='https://reuben-john.atlassian.net,https://github.com'
+git push
+```
+
+Local mirrors (`file://…` or a filesystem path) are exempt — they perform no network egress and never trip this gate.
+
+Note: this gate lives in the bus remote (`git-remote-reposix`). The webhook GH Action syncs the mirror with **plain `git push`** (not the bus remote), so it is unaffected by this check — its allowlist only needs the SoT tenant.
+
+Mechanism: `bus_handler::handle_bus_export` runs the mirror-egress check (`mirror_egress::check_mirror_allowed`) before STEP 0 / PRECHECK A. See [DVCS topology — Why SoT-first for writes](../concepts/dvcs-topology.md#why-sot-first-for-writes-asymmetry-on-purpose).
+
 ### Attach reconciliation warnings
 
 `reposix attach <backend>::<project>` walks the working-tree HEAD, matches each `*.md` file to a backend record by its frontmatter `id`, and records the alignment in the cache. The walk produces one of five outcomes per file:

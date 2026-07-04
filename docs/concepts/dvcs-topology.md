@@ -149,6 +149,8 @@ The bus remote writes the SoT first, then the mirror. The asymmetry matters when
 
 You will see this in the bus reject messages: when the mirror push fails after the SoT write succeeded, the helper prints a warning to stderr but returns `ok` to git. The contract from your shell's perspective is "the SoT write landed"; the mirror catch-up is a separate event tracked via the `refs/mirrors/...` annotations.
 
+**Both writes are egress-gated.** The SoT write (REST) and the mirror push (`git ls-remote` + `git push`) each send issue content off the machine, so both are checked against `REPOSIX_ALLOWED_ORIGINS` before any network contact — the mirror push is not a privileged side channel. A bus push to a mirror whose host is not on the allowlist is refused with an `egress-denied` message (local `file://` mirrors are exempt — no egress). Because the allowlist grammar is `http`/`https` and the mirror gate matches on **host**, authorise an `ssh` mirror (`git@github.com:…`) with an `https://<host>` entry. See [Troubleshooting → mirror-egress rejection](../guides/troubleshooting.md#bus-remote-mirror-egress-rejection-egress-denied).
+
 ## Out of scope (intentionally)
 
 - **Bidirectional bus.** A `git push` to the GH mirror with vanilla git creates commits the SoT will never see. The next webhook sync will force-with-lease over them. To write back to the SoT, you must go through a reposix-equipped bus push. This constraint is deliberate — the mirror is a read surface, not a write surface.

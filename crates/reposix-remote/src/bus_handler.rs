@@ -138,6 +138,29 @@ pub(crate) fn handle_bus_export<R: std::io::Read, W: std::io::Write>(
         );
     }
 
+    // QL-006 — mirror-egress allowlist gate. The bus push shells out
+    // `git ls-remote <mirror>` (PRECHECK A) and `git push` (STEP 6), both
+    // of which send issue content to the mirror host. Per the threat model
+    // (CLAUDE.md § Threat model) every outbound channel that can carry
+    // tainted issue content must be gated by REPOSIX_ALLOWED_ORIGINS. Run
+    // this BEFORE STEP 0 / PRECHECK A / any stdin read — a non-allowlisted
+    // mirror never touches the network. Local mirrors (`file://`, bare
+    // paths) are exempt: no egress leaves the machine.
+    match crate::mirror_egress::check_mirror_allowed(&mirror_url)
+        .context("evaluate mirror egress allowlist")?
+    {
+        Ok(()) => {}
+        Err(denied) => {
+            crate::diag(&denied.teaching_message());
+            return bus_fail_push(
+                proto,
+                state,
+                "egress-denied",
+                &format!("mirror egress blocked: {}", denied.origin),
+            );
+        }
+    }
+
     // STEP 0 — resolve local mirror remote name (Q-A / D-01).
     let Some(mirror_remote_name) = resolve_mirror_remote_name(&mirror_url)? else {
         // Q3.5 RATIFIED: emit the verbatim hint, do NOT auto-mutate

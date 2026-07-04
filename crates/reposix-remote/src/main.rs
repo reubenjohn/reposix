@@ -26,6 +26,7 @@ mod bus_handler;
 mod bus_url;
 mod diff;
 mod fast_import;
+mod mirror_egress;
 mod pktline;
 mod precheck;
 mod protocol;

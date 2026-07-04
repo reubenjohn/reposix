@@ -21,11 +21,15 @@
 //!
 //! ## Mirror URL with embedded `?`
 //!
-//! If the mirror URL itself contains `?` (e.g.,
-//! `https://gh.example/foo?token=secret`), the user MUST percent-encode
-//! the value. The first unescaped `?` in the bus URL is the bus
-//! query-string boundary. CLAUDE.md § Architecture documents this
-//! requirement.
+//! If the mirror URL itself contains a `?` (e.g.,
+//! `https://gh.example/foo?ref=main`), the user MUST percent-encode the
+//! value. The first unescaped `?` in the bus URL is the bus query-string
+//! boundary. CLAUDE.md § Architecture documents this requirement.
+//!
+//! **Never put credentials in the mirror URL** (`https://user:token@host/…`
+//! or `?token=…`). The URL lands in `.git/config` in cleartext and is
+//! echoed in helper diagnostics; use a git credential helper (or ssh keys)
+//! for mirror authentication instead.
 //!
 //! ## Trust boundary
 //!

@@ -189,6 +189,34 @@ pub(crate) fn load_allowlist_from_env() -> Result<Vec<OriginGlob>> {
     }
 }
 
+/// The set of hosts authorised by `REPOSIX_ALLOWED_ORIGINS` (each entry's
+/// host, lower-cased, deduplicated), read from the environment with the
+/// same loopback-only default as [`load_allowlist_from_env`].
+///
+/// This is the **host-level** view of the allowlist. The `HttpClient` gate
+/// matches on scheme + host + port because it governs one specific
+/// transport (outbound HTTP). Callers that guard a *different* egress
+/// channel to the same operator-sanctioned destinations — notably the
+/// git-mirror push shell-out in `git-remote-reposix`, which may use `ssh`
+/// or `https` transport that the HTTP grammar cannot even express — match
+/// on host alone: the destination host is the exfiltration boundary, not
+/// the wire protocol used to reach it. An operator who has declared
+/// `https://github.com` a sanctioned origin has sanctioned `github.com` as
+/// a place issue content may flow to, regardless of transport.
+///
+/// # Errors
+/// Returns [`Error::Other`] if `REPOSIX_ALLOWED_ORIGINS` is set but
+/// un-parseable (same failure mode as [`load_allowlist_from_env`]).
+pub fn allowlisted_hosts() -> Result<Vec<String>> {
+    let mut hosts: Vec<String> = load_allowlist_from_env()?
+        .into_iter()
+        .map(|g| g.host.to_ascii_lowercase())
+        .collect();
+    hosts.sort();
+    hosts.dedup();
+    Ok(hosts)
+}
+
 /// Sealed HTTP client wrapper.
 ///
 /// The internal [`reqwest::Client`] is deliberately private: callers have no
@@ -502,6 +530,34 @@ mod tests {
         let glob = &parse_allowlist("http://[::1]:7777").unwrap()[0];
         let url = Url::parse("http://[::1]:7778/").unwrap();
         assert!(!glob.matches(&url));
+    }
+
+    #[test]
+    fn allowlisted_hosts_default_is_loopback_pair() {
+        // With the env var unset the default loopback allowlist applies.
+        // Snapshot + clear so a concurrently-set env var can't perturb us.
+        let saved = std::env::var(ALLOWLIST_ENV_VAR).ok();
+        std::env::remove_var(ALLOWLIST_ENV_VAR);
+        let hosts = allowlisted_hosts().unwrap();
+        assert!(hosts.contains(&"127.0.0.1".to_owned()), "got {hosts:?}");
+        assert!(hosts.contains(&"localhost".to_owned()), "got {hosts:?}");
+        if let Some(v) = saved {
+            std::env::set_var(ALLOWLIST_ENV_VAR, v);
+        }
+    }
+
+    #[test]
+    fn allowlisted_hosts_dedups_and_lowercases() {
+        // Two entries, same host, different scheme/port → one host out.
+        // Parse directly (not via env) to avoid env-var mutation races.
+        let mut hosts: Vec<String> = parse_allowlist("https://GitHub.com:443,http://github.com")
+            .unwrap()
+            .into_iter()
+            .map(|g| g.host.to_ascii_lowercase())
+            .collect();
+        hosts.sort();
+        hosts.dedup();
+        assert_eq!(hosts, vec!["github.com".to_owned()]);
     }
 
     #[test]
