@@ -338,6 +338,61 @@ fn attach_against_vanilla_clone_sets_partial_clone() {
     kill_child(&mut sim);
 }
 
+/// Wave-5.5 credential-leak fix (MEDIUM intake, 91-05 litmus finding):
+/// a token-in-URL origin (`https://user:TOKEN@host/...`) must NOT have its
+/// credentials folded into `remote.reposix.url` — the bus URL lands in
+/// plaintext `.git/config` and is echoed by git on every push. The token
+/// stays only in origin's own config; attach warns and strips.
+#[test]
+#[ignore = "spawns reposix-sim child; requires `cargo build --workspace --bins` first"]
+fn attach_strips_credentials_from_mirror_url() {
+    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let port = pick_free_port();
+    let mut sim = spawn_sim(port);
+
+    let work_tmp = TempDir::new().expect("work tempdir");
+    let cache_tmp = TempDir::new().expect("cache tempdir");
+    git_init(work_tmp.path());
+    let cred_url = "https://x-access-token:ghp_FAKESECRET@example.invalid/mirror.git";
+    let _ = Command::new("git")
+        .arg("-C")
+        .arg(work_tmp.path())
+        .args(["remote", "add", "origin", cred_url])
+        .status();
+
+    let out = run_attach(
+        work_tmp.path(),
+        cache_tmp.path(),
+        port,
+        &["sim::demo", "--remote-name", "reposix"],
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(out.status.success(), "attach failed: stderr={stderr:?}");
+
+    let url = git_config(work_tmp.path(), "remote.reposix.url")
+        .expect("remote.reposix.url should be set");
+    assert!(
+        !url.contains("ghp_FAKESECRET") && !url.contains("x-access-token"),
+        "remote.reposix.url must NOT embed origin's credentials; got {url}"
+    );
+    assert!(
+        url.contains("?mirror=https://example.invalid/mirror.git"),
+        "cred-stripped mirror URL must still be folded; got {url}"
+    );
+    assert!(
+        stderr.contains("embeds credentials"),
+        "attach must warn about the stripped credentials; stderr={stderr}"
+    );
+    // Origin keeps its own (credential-bearing) URL — auth is unaffected.
+    assert_eq!(
+        git_config(work_tmp.path(), "remote.origin.url").as_deref(),
+        Some(cred_url),
+        "origin remote URL must be unchanged"
+    );
+
+    kill_child(&mut sim);
+}
+
 /// DVCS-ATTACH-02 case 1 — match: local file with `id` matching a
 /// backend record produces a `cache_reconciliation` row.
 #[test]

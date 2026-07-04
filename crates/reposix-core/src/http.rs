@@ -217,6 +217,42 @@ pub fn allowlisted_hosts() -> Result<Vec<String>> {
     Ok(hosts)
 }
 
+/// Strip embedded userinfo (`user:token@` / `token@`) from an `http`/`https`
+/// URL. Returns `(sanitized_url, had_userinfo)`.
+///
+/// Credential-in-URL clones (`https://x-access-token:<TOKEN>@github.com/…`
+/// or the username-only `https://<TOKEN>@github.com/…` form) embed a live
+/// secret in the URL string. Any surface that persists or prints such a URL
+/// — `remote.<name>.url` in `.git/config`, helper stderr, transcripts — is
+/// an exfiltration leg under the project threat model (CLAUDE.md § Threat
+/// model). Callers folding a user-supplied URL into config or diagnostics
+/// MUST pass it through here first.
+///
+/// Non-`http(s)` inputs are returned unchanged with `false`:
+/// - `ssh://git@host/path` — the `git` username is structural for SSH, not
+///   a secret (auth is key-based); stripping it would break the URL.
+/// - scp-style `git@github.com:org/repo.git` — not a parseable URL at all;
+///   the syntax has no password field.
+/// - anything unparseable — returned verbatim (never mangle what we don't
+///   understand).
+#[must_use]
+pub fn strip_url_userinfo(raw: &str) -> (String, bool) {
+    let Ok(mut u) = Url::parse(raw) else {
+        return (raw.to_owned(), false);
+    };
+    if !matches!(u.scheme(), "http" | "https") {
+        return (raw.to_owned(), false);
+    }
+    if u.username().is_empty() && u.password().is_none() {
+        return (raw.to_owned(), false);
+    }
+    // set_username/set_password only fail for cannot-be-a-base URLs, which
+    // http(s) URLs never are.
+    let _ = u.set_username("");
+    let _ = u.set_password(None);
+    (u.to_string(), true)
+}
+
 /// Sealed HTTP client wrapper.
 ///
 /// The internal [`reqwest::Client`] is deliberately private: callers have no
@@ -567,5 +603,50 @@ mod tests {
         assert_eq!(entries[0].scheme, "https");
         assert_eq!(entries[0].host, "localhost");
         assert_eq!(entries[0].port, None);
+    }
+
+    // --- Wave-5.5: strip_url_userinfo (credential-leak MEDIUM intake) ------
+
+    #[test]
+    fn strip_userinfo_removes_user_and_password() {
+        let (s, had) =
+            strip_url_userinfo("https://x-access-token:ghp_SECRET@github.com/org/repo.git");
+        assert!(had);
+        assert_eq!(s, "https://github.com/org/repo.git");
+        assert!(!s.contains("SECRET"));
+    }
+
+    #[test]
+    fn strip_userinfo_removes_username_only_token() {
+        // GitHub also accepts the bare-token-as-username form.
+        let (s, had) = strip_url_userinfo("https://ghp_SECRET@github.com/org/repo.git");
+        assert!(had);
+        assert_eq!(s, "https://github.com/org/repo.git");
+    }
+
+    #[test]
+    fn strip_userinfo_leaves_clean_https_unchanged() {
+        let raw = "https://github.com/org/repo.git";
+        let (s, had) = strip_url_userinfo(raw);
+        assert!(!had);
+        assert_eq!(s, raw);
+    }
+
+    #[test]
+    fn strip_userinfo_leaves_ssh_and_scp_forms_unchanged() {
+        // ssh:// username is structural (key auth), not a secret.
+        let ssh = "ssh://git@github.com/org/repo.git";
+        assert_eq!(strip_url_userinfo(ssh), (ssh.to_owned(), false));
+        // scp-style is not a parseable URL; must pass through verbatim.
+        let scp = "git@github.com:org/repo.git";
+        assert_eq!(strip_url_userinfo(scp), (scp.to_owned(), false));
+    }
+
+    #[test]
+    fn strip_userinfo_leaves_garbage_unchanged() {
+        let junk = "not a url at all";
+        assert_eq!(strip_url_userinfo(junk), (junk.to_owned(), false));
+        let filepath = "file:///tmp/mirror.git";
+        assert_eq!(strip_url_userinfo(filepath), (filepath.to_owned(), false));
     }
 }

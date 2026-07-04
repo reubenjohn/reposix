@@ -226,7 +226,27 @@ pub async fn run(args: AttachArgs) -> Result<()> {
     // Step 4: compose remote URL + add (or update-if-idempotent) remote.
     let mirror_url = git_config_get(&work, &format!("remote.{}.url", args.mirror_name))?;
     let remote_url = match (args.no_bus, &mirror_url) {
-        (false, Some(m)) => format!("{translated}?mirror={m}"),
+        (false, Some(m)) => {
+            // Security (Wave-5.5, credential-leak MEDIUM intake): never fold
+            // embedded credentials (`user:token@`) into `remote.<name>.url`.
+            // The bus URL is persisted in `.git/config` AND printed by git on
+            // every push (`To reposix::…?mirror=…`), so a token-in-URL origin
+            // would leak into plaintext config + stderr/logs — a lethal-
+            // trifecta exfiltration leg. Auth is unaffected: the actual
+            // mirror push uses the LOCAL remote name (whose own URL keeps
+            // its credentials); the folded URL is only used for matching +
+            // drift prechecks.
+            let (clean, had_creds) = reposix_core::http::strip_url_userinfo(m);
+            if had_creds {
+                eprintln!(
+                    "attach: warning: remote `{}`'s URL embeds credentials; they were NOT \
+                     copied into remote.{}.url. Prefer an SSH origin or a git credential \
+                     helper for the mirror remote.",
+                    args.mirror_name, args.remote_name
+                );
+            }
+            format!("{translated}?mirror={clean}")
+        }
         // --no-bus, or no mirror remote configured (user can add one later).
         (true, _) | (false, None) => translated.clone(),
     };

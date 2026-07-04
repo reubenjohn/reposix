@@ -130,11 +130,13 @@ pub(crate) fn handle_bus_export<R: std::io::Read, W: std::io::Write>(
 
     // T-82-01: reject `-`-prefixed mirror URLs BEFORE any shell-out.
     if mirror_url.starts_with('-') {
+        // Redact any embedded userinfo before echoing (Wave-5.5).
+        let (mirror_display, _) = reposix_core::http::strip_url_userinfo(&mirror_url);
         return bus_fail_push(
             proto,
             state,
             "bad-mirror-url",
-            &format!("mirror URL cannot start with `-`: {mirror_url}"),
+            &format!("mirror URL cannot start with `-`: {mirror_display}"),
         );
     }
 
@@ -165,11 +167,14 @@ pub(crate) fn handle_bus_export<R: std::io::Read, W: std::io::Write>(
     let Some(mirror_remote_name) = resolve_mirror_remote_name(&mirror_url)? else {
         // Q3.5 RATIFIED: emit the verbatim hint, do NOT auto-mutate
         // the user's git config. NO PRECHECK A run.
+        // Redact any embedded userinfo before echoing the URL (Wave-5.5
+        // credential-leak intake — stderr is an exfiltration leg).
+        let (mirror_display, _) = reposix_core::http::strip_url_userinfo(&mirror_url);
         return bus_fail_push(
             proto,
             state,
             "no-mirror-remote",
-            &format!("configure the mirror remote first: `git remote add <name> {mirror_url}`"),
+            &format!("configure the mirror remote first: `git remote add <name> {mirror_display}`"),
         );
     };
 
@@ -182,10 +187,12 @@ pub(crate) fn handle_bus_export<R: std::io::Read, W: std::io::Write>(
             // status string on stdout (git's standard form;
             // `git pull --rebase` will be suggested by git), and the
             // human hint on stderr.
+            // Redacted display form — never echo embedded userinfo (Wave-5.5).
+            let (mirror_display, _) = reposix_core::http::strip_url_userinfo(&mirror_url);
             crate::diag(&format!(
                 "your GH mirror has new commits: \
                  local refs/remotes/{mirror_remote_name}/main = {local}; \
-                 remote {mirror_url} HEAD = {remote}"
+                 remote {mirror_display} HEAD = {remote}"
             ));
             crate::diag(&format!(
                 "hint: run `git fetch {mirror_remote_name}` first, \
@@ -338,9 +345,15 @@ pub(crate) fn handle_bus_export<R: std::io::Read, W: std::io::Write>(
 }
 
 /// STEP 0 helper. Returns the local remote name whose `.url` value
-/// byte-equals `mirror_url` (with trailing-slash normalization), or
-/// `None` if zero matches. Picks first alphabetical + emits stderr
-/// WARNING if multiple matches (Pitfall 4 / D-01).
+/// byte-equals `mirror_url` (with trailing-slash + embedded-userinfo
+/// normalization), or `None` if zero matches. Picks first alphabetical +
+/// emits stderr WARNING if multiple matches (Pitfall 4 / D-01).
+///
+/// Userinfo normalization (Wave-5.5): `reposix attach` strips embedded
+/// credentials from the `?mirror=` param before persisting it, but the
+/// LOCAL remote's own URL may still carry `user:token@` (a token-in-URL
+/// clone). Both sides are stripped before comparing so the credential-
+/// bearing local remote still resolves against the cred-free bus param.
 fn resolve_mirror_remote_name(mirror_url: &str) -> Result<Option<String>> {
     let out = Command::new("git")
         .args(["config", "--get-regexp", r"^remote\..+\.url$"])
@@ -361,7 +374,8 @@ fn resolve_mirror_remote_name(mirror_url: &str) -> Result<Option<String>> {
     }
 
     let stdout = String::from_utf8_lossy(&out.stdout);
-    let mirror_norm = mirror_url.trim_end_matches('/');
+    let (mirror_stripped, _) = reposix_core::http::strip_url_userinfo(mirror_url);
+    let mirror_norm = mirror_stripped.trim_end_matches('/').to_owned();
     let mut matched: Vec<String> = Vec::new();
     for line in stdout.lines() {
         // Each line: `remote.<name>.url <value>`. Use splitn(2, ...)
@@ -373,7 +387,8 @@ fn resolve_mirror_remote_name(mirror_url: &str) -> Result<Option<String>> {
         let Some(value) = parts.next() else {
             continue;
         };
-        let value_norm = value.trim_end_matches('/');
+        let (value_stripped, _) = reposix_core::http::strip_url_userinfo(value);
+        let value_norm = value_stripped.trim_end_matches('/');
         if value_norm != mirror_norm {
             continue;
         }
@@ -392,8 +407,9 @@ fn resolve_mirror_remote_name(mirror_url: &str) -> Result<Option<String>> {
         1 => Ok(Some(matched.into_iter().next().unwrap())),
         _ => {
             let chosen = matched.first().cloned().unwrap();
+            // mirror_norm (cred-stripped) — never echo raw userinfo to stderr.
             crate::diag(&format!(
-                "warning: multiple local remotes point at {mirror_url}: {matched:?}; \
+                "warning: multiple local remotes point at {mirror_norm}: {matched:?}; \
                  picking first alphabetical (`{chosen}`)"
             ));
             Ok(Some(chosen))
