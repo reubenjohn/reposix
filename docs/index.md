@@ -103,8 +103,10 @@ reading:
 |-------------|------|--------|--------|------------------|--------|------------|
 | sim         | yes  | yes    | yes    | in-body          | yes    | strong     |
 | github      | yes  | no     | no     | no               | no     | timestamp  |
-| confluence  | yes  | yes    | yes    | separate API     | yes    | strong     |
+| confluence  | yes  | yes    | yes    | no (see below)   | yes    | strong     |
 | jira        | yes  | yes    | yes    | no               | yes    | timestamp  |
+
+**Comments footnote:** `reposix-confluence` has a `list_comments`/`list_attachments` API surface in the crate, but nothing in the cache or materializer wires it into a working tree — no file, no `git diff`, no push path reaches it. Treat Confluence's Comments cell as "no" until a future milestone lands the wiring (tracked as a P95 candidate).
 
 
 GitHub Issues is currently read-only — `create` / `update` / `delete` return

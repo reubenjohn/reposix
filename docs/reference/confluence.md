@@ -120,23 +120,24 @@ keyed by its stable numeric `id`:
 <dir>/
 ├── .git/                       # real git directory; partial clone (extensions.partialClone=origin)
 └── pages/
-    ├── 00000131192.md          # page body (YAML frontmatter + storage-format XHTML)
-    ├── 00000065916.md
-    └── 00000360556.md
+    ├── 2818063.md              # page body (YAML frontmatter + storage-format XHTML)
+    ├── 65916.md
+    └── 360556.md
 ```
 
 YAML frontmatter carries server-controlled fields (`id`, `version`,
 `spaceId`, `parentId`, `createdAt`, `updatedAt`); the body is the raw
-storage-format XHTML returned by `body.storage.value`. Filenames use the
-zero-padded numeric page id so renames and reparenting on the Confluence
-side never rewrite the working-tree path — they show up as frontmatter
-diffs only.
+storage-format XHTML returned by `body.storage.value`. Filenames are
+`pages/<id>.md` with the numeric page id **unpadded** (`reposix_core::path::record_path`,
+D91-01/D91-13 — same canonical, unpadded shape as the `issues/<id>.md`
+bucket) so renames and reparenting on the Confluence side never rewrite
+the working-tree path — they show up as frontmatter diffs only.
 
 The blob behind each `pages/<id>.md` is fetched lazily: the tree (the
 filename list) is materialized eagerly by `git fetch --filter=blob:none
 origin`, and individual page bodies download on first read via
 `git-remote-reposix`'s `stateless-connect` capability. Agents that
-operate on a subset use `git sparse-checkout set 'pages/000001312*.md'`
+operate on a subset use `git sparse-checkout set 'pages/2818*.md'`
 before the first `git checkout`, so the helper sees a single batched
 fetch turn for exactly the blobs they need.
 

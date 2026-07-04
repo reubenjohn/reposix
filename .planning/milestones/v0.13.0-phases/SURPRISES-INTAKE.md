@@ -403,7 +403,7 @@ All 5 are now honestly `MISSING_TEST`, which per `RowState::blocks_pre_push()` (
 
 **Sketched resolution:** P91/P92 (real-backend charter) decides: (a) wire comments/attachments into the cache materializer as working-tree content, or (b) delete the four functions + backing types, downgrade `CommentSupport` claims, and update the docs capability matrix. Until decided, ensure no user-facing doc promises comment/attachment access.
 
-**STATUS:** OPEN
+**STATUS:** ROUTED-P95 | Per D91-05: v0.13.0 ships WITHOUT the comment/attachment working-tree surface. P91 (91-06) did NOT wire or delete the dead API — the wire-vs-delete call stays a P95 product decision (M-sized either way). P91's obligation was narrower: verify no user-facing doc promises comment/attachment access. Grepped `docs/` and found + fixed two aspirational cells: `docs/index.md` connector capability matrix (Confluence's "Comments" cell read "separate API", implying a working path; now reads "no (see below)" with a footnote naming the dead surface) and `docs/tutorials/first-run.md`'s per-connector `## Comment` table (confluence row claimed "use the dedicated comments API (separate endpoint)"; now says the body text round-trips verbatim like any other backend, with Confluence's native comments explicitly out of scope). Home for wire-vs-delete stays P95.
 
 ## 2026-07-04 18:10 | discovered-by: quality-convergence connector re-audit | severity: HIGH
 
@@ -413,7 +413,7 @@ All 5 are now honestly `MISSING_TEST`, which per `RowState::blocks_pre_push()` (
 
 **Sketched resolution:** add a swarm write-contention scenario against the simulator first (default per OP-1), then an --ignored real-Confluence variant against TokenWorld per docs/reference/testing-targets.md cleanup conventions. Home: P91 (real-backend wiring) or P95.
 
-**STATUS:** OPEN
+**STATUS:** ROUTED-P95 | Per D91-12: swarm write-contention workload is explicitly routed OUT of P91 (do not absorb). P91's real-backend charter was `attach`/`sync` dispatch (D91-03), not the swarm harness; designing the N-agent write-contention scenario (sim-first, then an `--ignored` real-Confluence variant) remains M-sized test-harness work. Entry stays open at P95 with the home confirmed (not "P91 or P95" — P91 close makes it P95, full stop).
 
 ## 2026-07-04 | discovered-by: P90 90-03 (confirmed live by 90-05) | severity: MEDIUM
 
