@@ -66,3 +66,25 @@ async fn main() -> Result<()> {
     .await?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Args;
+    use clap::Parser;
+
+    /// The documented default bind address (docs/index.md, mental-model,
+    /// README) is `127.0.0.1:7878`. Assert the clap default resolves to port
+    /// 7878 when `reposix-sim` is invoked with no `--bind` flag, so the
+    /// ":7878 by default" claim has a genuine, executable test behind it
+    /// rather than a fixture string.
+    #[test]
+    fn default_bind_addr_is_7878() {
+        let args = Args::parse_from(["reposix-sim"]);
+        assert_eq!(args.bind.port(), 7878, "default sim port is 7878");
+        assert_eq!(
+            args.bind.to_string(),
+            "127.0.0.1:7878",
+            "default sim bind address is 127.0.0.1:7878"
+        );
+    }
+}
