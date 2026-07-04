@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "quality gates",
-  "message": "37/37 GREEN",
+  "message": "14/14 green, 2 pending",
   "color": "yellow"
 }

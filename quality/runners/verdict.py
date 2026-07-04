@@ -10,13 +10,33 @@ it via mkdocs as docs/badge.json -> https://reubenjohn.github.io/reposix/badge.j
 
 Usage:
   python3 quality/runners/verdict.py --cadence pre-push
+  python3 quality/runners/verdict.py --cadence weekly --fail-on red
   python3 quality/runners/verdict.py --phase 57
   python3 quality/runners/verdict.py session-end   # roll up across every cadence; emit SESSION-VERDICT.md
   python3 quality/runners/verdict.py            # all cadences
 
-Exit codes:
-  0 — verdict is GREEN.
-  1 — verdict is RED.
+Verdict is a 3-state color, not a binary (D-CONV-2, 2026-07-04 --
+quality/SURPRISES.md "Quality Convergence"): `compute_color()` returns
+brightgreen (every P0+P1 row PASS/WAIVED, every P2 row PASS/WAIVED too),
+yellow (every P0+P1 row PASS/WAIVED, but >=1 P2 row is not), or red (>=1
+P0+P1 row is not PASS/WAIVED). A P2-only gap is real but non-blocking by
+design -- some P2 rows (e.g. the two headline-number benchmark-claim rows
+in docs-reproducible.json) are `kind: manual` with no verifier.script and
+are structurally unable to PASS without a human/mechanical follow-up;
+routed to the launch-readiness milestone (OD-4 §3), not softened here.
+
+`--fail-on {red,yellow}` controls which color makes this exit nonzero:
+  --fail-on yellow (default) — strict: yellow OR red exit 1. Callers that
+      want a hard requirement (e.g. a PR gate) get this by default.
+  --fail-on red              — tolerant: only red exits 1; yellow exits 0
+      (renders as a yellow badge + alert, not a failed job crying wolf).
+      Use for cadences (e.g. weekly) whose only red-badge cause today is
+      the two structurally-manual P2 rows above.
+
+Exit codes (before --fail-on is applied to pick the reported code):
+  0 — verdict is brightgreen, always.
+  0 or 1 — verdict is yellow, depending on --fail-on (see above).
+  1 — verdict is red, always.
 """
 
 from __future__ import annotations
@@ -111,11 +131,43 @@ def compute_color(rows: list[dict]) -> str:
 
 
 def compute_badge_message(rows: list[dict]) -> str:
+    """Render shields.io endpoint `message` text that matches `compute_color`.
+
+    QL-178 (D-CONV-2, 2026-07-04): the prior implementation always rendered
+    "N/N GREEN" against the P0+P1 count alone, even when `compute_color`
+    returned yellow because a P2 row was not green -- a badge that reads
+    fully green while rendering a yellow color swatch. The P0+P1 fraction
+    is still the headline (P0+P1 is the blocking contract), but a yellow
+    verdict now names the pending P2 count instead of claiming "GREEN".
+    """
     p0p1 = [r for r in rows if is_p0_p1(r)]
     if not p0p1:
         return "0/0 GREEN"
-    green = sum(1 for r in p0p1 if is_green_status(r.get("status", "")))
-    return f"{green}/{len(p0p1)} GREEN"
+    p0p1_green = sum(1 for r in p0p1 if is_green_status(r.get("status", "")))
+    color = compute_color(rows)
+    if color == "red":
+        return f"{p0p1_green}/{len(p0p1)} P0/P1 green (RED)"
+    if color == "yellow":
+        p2_rows = [r for r in rows if r.get("blast_radius") == "P2"]
+        p2_pending = sum(1 for r in p2_rows if not is_green_status(r.get("status", "")))
+        return f"{p0p1_green}/{len(p0p1)} green, {p2_pending} pending"
+    return f"{p0p1_green}/{len(p0p1)} GREEN"
+
+
+def compute_exit_code(color: str, fail_on: str) -> int:
+    """0 iff `color` is strictly better than the `--fail-on` threshold.
+
+    brightgreen always exits 0; red always exits 1. yellow exits 0 only
+    when `fail_on == "red"` (the caller opted into tolerating a P2-only
+    gap); the default `fail_on == "yellow"` is strict (yellow exits 1),
+    matching the pre-D-CONV-2 behavior for every caller that doesn't
+    explicitly ask for tolerance.
+    """
+    if color == "brightgreen":
+        return 0
+    if color == "yellow":
+        return 0 if fail_on == "red" else 1
+    return 1
 
 
 def emit_shields_endpoint_json(rows: list[dict], out_path: Path) -> None:
@@ -252,6 +304,7 @@ def emit_session_end_rollup(repo_root: Path, args: list[str]) -> int:
     """Run rollup across every cadence; emit timestamped + stable SESSION-VERDICT.md."""
     sub = argparse.ArgumentParser(prog="verdict.py session-end")
     sub.add_argument("--phase", type=int, default=None)
+    sub.add_argument("--fail-on", choices=("red", "yellow"), default="yellow")
     sub_args = sub.parse_args(args)
 
     # Union rows across every cadence (each row reports its primary cadence).
@@ -269,7 +322,7 @@ def emit_session_end_rollup(repo_root: Path, args: list[str]) -> int:
     emit_shields_endpoint_json(rows, BADGE_PATH)
 
     color = compute_color(rows)
-    return 0 if color == "brightgreen" else 1
+    return compute_exit_code(color, sub_args.fail_on)
 
 
 def main() -> int:
@@ -280,6 +333,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Quality Gates verdict generator")
     parser.add_argument("--cadence", choices=CADENCES, default=None)
     parser.add_argument("--phase", type=int, default=None)
+    parser.add_argument(
+        "--fail-on",
+        choices=("red", "yellow"),
+        default="yellow",
+        help="Exit nonzero at this color or worse (default: yellow -- strict). "
+        "--fail-on red tolerates a yellow verdict (exit 0) and reserves "
+        "nonzero exit for red.",
+    )
     args = parser.parse_args()
 
     rows = collate_rows(args.cadence)
@@ -297,7 +358,7 @@ def main() -> int:
 
     color = compute_color(rows)
     print(f"verdict: {color} ({compute_badge_message(rows)}) -> {out_path.relative_to(REPO_ROOT)}")
-    return 0 if color == "brightgreen" else 1
+    return compute_exit_code(color, args.fail_on)
 
 
 if __name__ == "__main__":

@@ -37,7 +37,15 @@ jobs:
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 quality/runners/verdict.py --cadence weekly
+        # D-CONV-2 (2026-07-04, quality/SURPRISES.md "Quality Convergence"):
+        # --fail-on red tolerates a yellow verdict here. The only red-badge
+        # cause on the weekly cadence today is the two structurally-manual
+        # P2 headline-number rows (docs-reproducible.json
+        # benchmark-claim/8ms-cached-read + 89.1-percent-token-reduction --
+        # kind: manual, verifier.script: null); a yellow verdict renders as
+        # an honest yellow badge + this workflow's own alerting, not a
+        # failed job crying wolf every week.
+        run: python3 quality/runners/verdict.py --cadence weekly --fail-on red
 
       - name: Upload artifacts
         if: always()

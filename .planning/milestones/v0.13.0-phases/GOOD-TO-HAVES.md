@@ -87,3 +87,23 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 **Default disposition:** Size S; (b) is the most user-visible (a headline-number doc-lie) — fold into the next docs-alignment refresh or the P90/P91 round-trip phase (which will already be rebinding the checkout rows). (a) and (c) ride the same P90/P91 quality-framework slot.
 
 **STATUS:** OPEN
+
+## GOOD-TO-HAVES-04 — mechanically verify the two permanently-yellow headline-number rows (8ms-cached-read, 89.1%-token-reduction)
+
+**Discovered during:** D-CONV-2 (2026-07-04, quality/SURPRISES.md "Quality Convergence" — verdict 3-state honest contract)
+
+**Size:** M (needs new verifier scripts + wiring, not just a catalog edit)
+
+**Source:** `quality/catalogs/docs-reproducible.json` rows `benchmark-claim/8ms-cached-read` and `benchmark-claim/89.1-percent-token-reduction` are `kind: manual` with `verifier.script: null` — structurally unable to PASS by any runner invocation; they are the sole reason the `weekly` cadence verdict has never been brightgreen (both are P2, so they render as a yellow badge, not a blocking red one, once D-CONV-2's `--fail-on red` tolerance lands on `quality-weekly.yml`). `perf/headline-numbers-cross-check` (`quality/gates/perf/headline-numbers-cross-check.py`) already exists and is tagged `weekly` — it's the closest existing automation, but these two `benchmark-claim/*` rows themselves remain manual-only and were deliberately NOT downgraded/waived by D-CONV-2 (owner directive: "verifying them mechanically is exactly 'CI-verified headline numbers' from the launch-readiness milestone (OD-4 §3)").
+
+**Acceptance:**
+
+- `benchmark-claim/8ms-cached-read` and `benchmark-claim/89.1-percent-token-reduction` each get a real `verifier.script` (likely thin wrappers around/reusing `perf/headline-numbers-cross-check.py`'s existing extraction logic) that can mechanically PASS/FAIL against `docs/benchmarks/latency.md` and `docs/benchmarks/token-economy.md`.
+- The `weekly` cadence badge reaches brightgreen without any `--fail-on red` tolerance once both rows PASS for real.
+- Routed to the launch-readiness milestone per OD-4 §3 (not a v0.13.0 P90/P91 fix — mechanizing these two rows is scoped work, not a quality-convergence cleanup).
+
+**Why deferred:** building+wiring two new mechanical verifiers (not just a catalog-row edit) is real engineering work, not the trivial-capability-loss simplification D-CONV-2 is scoped to do; it belongs in the milestone that owns "CI-verified headline numbers" as a deliverable.
+
+**Default disposition:** Size M; default-defer to the launch-readiness milestone per OP-8 (M items default-defer) and OD-4 §3. Owner quote (2026-07-04): "makes weekly badge honestly green."
+
+**STATUS:** OPEN
