@@ -21,3 +21,104 @@ _Compressed 2026-04-29 from multi-paragraph entries; per-line format per file's 
 2026-04-28 P65: walker waiver scope mismatch — `summary.floor_waiver` only covers `alignment_ratio<floor` BLOCK, not `MISSING_TEST`/`RETIRE_PROPOSED` rows; resolved via separate row-level waiver on `docs-alignment/walk` in `freshness-invariants.json` (TTL 2026-07-31); v0.12.1 should consolidate behind one initial-backfill grace period.
 2026-04-28 P65: backfill envelope overshoot (388 rows vs planned 100-200) driven by glossary doc extracting 24 RETIRE_PROPOSED rows (one per term) — under "wildly off" threshold, no halt; future backfills should bias-conservative or filter definitional/glossary docs from the manifest.
 2026-04-28 v0.12.1: orchestrator falsely logged a safeguard breach (`confirm-retire` running from agent context) — retracted; owner had run the bulk-confirm script from a real TTY in parallel. Lesson: check git reflog and ask the owner before logging a safeguard breach.
+## 2026-07-04 — Quality Convergence: unification decisions (owner mandate OD-4)
+
+Context: pre-P90 quality-convergence session (170-row audit ledger; 6 BLOCKERs
+dispositioned same session). Owner directive: cross-cutting simplification
+accepting trivial capability loss for major complexity reduction; iterate
+until convergence. Decisions below are committed contracts — implementation
+commits cite this entry.
+
+### D-CONV-1 — pre-pr cadence gets real CI wiring (was: 61 rows, zero executions)
+Evidence: no workflow invokes `run.py --cadence pre-pr`; only the
+green-gauntlet.sh shim does (itself invoked by nothing). 61 rows across 7
+catalogs carry the tag; PROTOCOL.md:177 promises "CI tier-1 (PR check)".
+DECISION: add a `quality-pre-pr` job to ci.yml running
+`python3 quality/runners/run.py --cadence pre-pr`; STRIP the pre-pr tag from
+rows whose substance ci.yml already hand-wires as dedicated jobs (fmt,
+clippy, cargo test, dark-factory, latency-bench) — hand-wired jobs stay for
+per-check UI granularity and rust-cache reuse; the run.py job covers the
+cheap mechanical remainder. Kill `code/cargo-fmt-clean` (exact duplicate of
+`code/cargo-fmt-check`, QL-031) and fix both rows' phantom
+`scripts/hooks/pre-push` source cites. A tag that never fires is worse than
+no tag: it teaches agents the catalog lies.
+
+### D-CONV-2 — verdict exit semantics: 3-state honest contract (was: weekly never green)
+Evidence: verdict.py computes red/yellow/brightgreen but exits nonzero on
+yellow while its docstring documents a binary; quality-weekly.yml has no
+tolerance → the ONLY workflow consuming yellow has never been green. Root
+yellow: 2 P2 kind:manual rows (benchmark-claim/8ms-cached-read,
+89.1-percent-token-reduction) with verifier.script null — structurally
+unable to PASS.
+DECISION: (i) verdict.py grows `--fail-on {red,yellow}` (default yellow —
+strict by default, callers opt into tolerance); docstring documents all
+three states. (ii) quality-weekly.yml passes `--fail-on red`: yellow renders
+as a yellow badge + alerting, not a failed job crying wolf. (iii) badge JSON
+text must state the true counts (no "N/N GREEN" text on a yellow badge —
+QL-178). (iv) The two headline-number rows are NOT softened: verifying them
+mechanically is exactly "CI-verified headline numbers" from the
+launch-readiness milestone (OD-4 §3); routed to intake, tracked, and the
+badge stays honestly yellow until then.
+
+### D-CONV-3 — scripts/ collapse: delete shims + dead one-shots; inverse registry gate
+Evidence: 33 files in scripts/; ~13 referenced by any live surface. 6 shims
+exec quality/gates/* equivalents; ~14 one-shot phase scripts (p56/p74/p82/
+p83/w4/w7 era) invoked by nothing; near-duplicate pair check-quality-catalogs.py
+vs check_quality_catalogs.py; orphan-scripts.json uses the retired scalar
+`cadence` key, is skipped by verdict.py, and its auditor iterates only
+registered rows (structurally blind to new orphans).
+DECISION: delete the shims (updating CLAUDE.md/docs invocations to canonical
+quality/gates paths) and the dead one-shots (git history is the archive);
+migrations go under scripts/migrations/; keep the duplicate-pair member that
+matches current schema, fix its enums (SURPRISES-14), delete the other;
+convert orphan-scripts.json rows to the `cadences` list schema; mint
+`structure/scripts-registry-complete` — an INVERSE scan (every file in
+scripts/ excl. migrations/ must have a registry row or live wiring) so new
+orphans fail loud. Capability lost: none (shims were exec one-liners; the
+one-shots already ran).
+
+### D-CONV-4 — cred-hygiene: two-layer scanning (committed gitleaks + grep fallback)
+Evidence: grep gate covers 5 prefixes; known blind spots (AWS, Slack,
+OpenAI, PEM). gitleaks 8.30.1 exists on the owner's machine only — its
+"Secret scan: clean" is invisible to CI and other contributors; no
+.gitleaks.toml committed. The AIza incident was exactly this asymmetry.
+DECISION: commit .gitleaks.toml (fixture allowlist; runtime-assembled test
+keys stay invisible by construction) + a pinned gitleaks CI job; extend the
+grep gate with AWS AKIA/Slack xox/OpenAI sk-/PEM patterns as the zero-dep
+local layer. The grep gate stays because a committed hook must not
+hard-depend on an uninstalled binary; CI provides the full-ruleset backstop.
+
+### D-CONV-5 — doc-alignment stabilization (partially shipped this session)
+Shipped already: bind same-file cite relocation (5da5a68 — phantom-cite
+accumulation was structural); per-row waiver verb (af11847 — time-boxed,
+loud, tracked; MISSING_TEST had no honest escape valve and blocked ALL
+pushes on an unfixable-today claim).
+DECISION (remainder): walk verb skips catalog save when only `last_walked`
+changed (mirrors the runner's catalog_dirty guard; kills the
+telemetry-tick commit churn — 75 commits touch the 405KB catalog).
+Content-anchored (non-positional) citations are real surgery → intake with
+sketch, not now. Cross-file cite retarget verb: filed GTH-03(a).
+
+### D-CONV-6 — test-pre-push.sh: guard, don't re-wire
+Evidence: ledger claimed "runs never"; REFUTED — ci.yml:68 runs it in the
+test job. Real gap: no dirty-tree guard while its cleanup trap runs
+`git reset --hard` unconditionally.
+DECISION: add an abort-if-dirty guard at entry. No catalog row — a row
+duplicating existing CI wiring is bookkeeping, not safety.
+
+### D-CONV-7 — CLAUDE.md compaction via progressive disclosure (39,742B → target ≤35k)
+DECISION: real-backend env blocks → pointer to docs/reference/
+testing-targets.md (which CLAUDE.md already cites before duplicating);
+threat-model table → 3-line summary + pointer to
+docs/how-it-works/trust-model.md; build commands dedupe with CONTRIBUTING;
++2-phase practice long-form → .planning/PRACTICES.md with a 5-line summary
+in place; shim references updated per D-CONV-3. FOLD IN: the ownership
+charter (owner directive 2026-07-03) into § Subagent delegation rules.
+Net: every removed block gains a named home that was already the
+authoritative source.
+
+### D-CONV-8 — journal revival (this entry)
+quality/SURPRISES.md was dead since 2026-04-29 while PROTOCOL.md:19 calls it
+required reading (QL-042). This entry revives it; per-milestone
+SURPRISES-INTAKE.md remains the intake surface for phase-scoped findings,
+and PROTOCOL.md gets a cross-reference clarifying the split.
