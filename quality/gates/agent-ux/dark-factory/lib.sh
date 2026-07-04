@@ -100,3 +100,16 @@ spawn_sim() {
     echo "FAIL: sim did not come up at ${SIM_URL} within 5s" >&2
     return 1
 }
+
+# --- generic assertion helper ------------------------------------------------
+# assert_grep <desc> <pattern> <file> — grep -qE pattern in file; PASS logs to
+# ASSERT_LOG, FAIL calls fail_with. Shared across per-arm scripts.
+assert_grep() {
+    local desc="$1" pattern="$2" file="$3"
+    if grep -qE "$pattern" "$file"; then
+        echo "  PASS: ${desc}" >&2
+        ASSERT_LOG+=("$desc")
+    else
+        fail_with "$desc" "pattern '$pattern' not found in $file"
+    fi
+}
