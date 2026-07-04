@@ -468,7 +468,12 @@ fn check_helper_on_path() -> DoctorFinding {
             "helper.binary",
             "git-remote-reposix is NOT on PATH — git can't dispatch reposix:: URLs",
             Some(
-                "cargo install --path crates/reposix-remote (or download a release binary)".into(),
+                // Match `reposix attach`'s helper-absent teaching (T2 H2):
+                // the helper ships as the `reposix-remote` package (binary
+                // `git-remote-reposix`), separate from the `reposix-cli`
+                // package. Name the install by crate so it works off-tree,
+                // not a repo-relative `--path` that only resolves in a checkout.
+                "cargo binstall reposix-remote (or cargo install reposix-remote, or download a release binary)".into(),
             ),
         )
     }
