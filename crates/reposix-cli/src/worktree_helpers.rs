@@ -1,12 +1,18 @@
-//! Worktree-context helpers shared by the `reposix doctor`, `reposix history`,
-//! `reposix gc`, and `reposix tokens` subcommands.
+//! Worktree-context helpers shared by the `reposix {doctor, history, gc,
+//! tokens, cost, sync}` subcommands.
 //!
-//! All four subcommands need to (1) read the working tree's `remote.origin.url`,
-//! (2) parse it into a `RemoteSpec`, (3) map the origin to a backend slug, and
-//! (4) resolve the corresponding cache directory. Before this module they each
-//! defined verbatim copies of the trio (`cache_path_from_worktree`,
-//! `backend_slug_from_origin`, `git_config_get`); this module is the shared
-//! home that consolidates them.
+//! Each subcommand needs to (1) resolve the working tree's reposix `SoT`
+//! remote URL, (2) parse it into a `RemoteSpec`, (3) map the origin to a
+//! backend slug, and (4) resolve the corresponding cache directory. Before
+//! this module they each defined verbatim copies of the trio
+//! (`cache_path_from_worktree`, `backend_slug_from_origin`,
+//! `git_config_get`); this module is the shared home that consolidates
+//! them.
+//!
+//! Remote resolution is partialClone-aware (QL-004): it reads the remote
+//! named by `extensions.partialClone` (`origin` for `reposix init`,
+//! `<remote-name>` for `reposix attach`), falling back to a reposix-URL
+//! scan and finally `remote.origin.url`. See [`resolve_reposix_remote_url`].
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
