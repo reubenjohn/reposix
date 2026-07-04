@@ -176,6 +176,53 @@ fn walk_clean_catalog_exits_zero() {
         .success();
 }
 
+/// D-CONV-5 (2026-07-04): a walk on an already-settled catalog (no drift,
+/// no verdict change) must NOT rewrite the catalog file -- even though
+/// `summary.last_walked` "wants" to advance every invocation. Pre-fix,
+/// `walk` unconditionally called `cat.save()`, producing a commit-sized
+/// diff (the timestamp bump) on every single pre-push run -- the
+/// "telemetry-tick commit churn" this fix kills (quality/SURPRISES.md
+/// D-CONV-5).
+///
+/// First walk is allowed to change bytes (it's transitioning the row into
+/// its settled BOUND state + populating summary counters for the first
+/// time). The SECOND walk, run immediately after with nothing on disk
+/// touched in between, must leave the file byte-for-byte identical.
+#[test]
+fn walk_on_unchanged_catalog_leaves_file_bytes_identical() {
+    let dir = TempDir::new().unwrap();
+    let cat = seed_catalog(&dir, json!([]));
+
+    let doc = dir.path().join("doc.md");
+    fs::write(&doc, "alpha\nbeta\n").unwrap();
+    let test_file = dir.path().join("t.rs");
+    fs::write(&test_file, "fn alpha() { let _ = 1; }\n").unwrap();
+    bind_row(&cat, "row/clean", &doc, &test_file);
+
+    // First walk: settles the row + populates summary. Bytes may change.
+    Command::cargo_bin("reposix-quality")
+        .unwrap()
+        .args(["--catalog", cat.to_str().unwrap(), "walk"])
+        .assert()
+        .success();
+
+    let bytes_before_second_walk = fs::read(&cat).unwrap();
+
+    // Second walk: nothing drifted, nothing to settle. File must be
+    // byte-for-byte unchanged, proving the save was skipped.
+    Command::cargo_bin("reposix-quality")
+        .unwrap()
+        .args(["--catalog", cat.to_str().unwrap(), "walk"])
+        .assert()
+        .success();
+
+    let bytes_after_second_walk = fs::read(&cat).unwrap();
+    assert_eq!(
+        bytes_before_second_walk, bytes_after_second_walk,
+        "a no-op walk (only last_walked would change) must not rewrite the catalog file"
+    );
+}
+
 /// W7 / v0.12.1: multi-test parallel-array drift detection.
 ///
 /// Seeds a row with `tests.len() == 2` (`tests[0]` clean, `tests[1]` drifted)

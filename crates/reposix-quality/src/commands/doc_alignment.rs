@@ -1051,6 +1051,19 @@ pub(crate) mod verbs {
         reason = "Walker iterates every row through one state-machine arm; splitting hurts readability."
     )]
     pub fn walk(catalog: &Path) -> Result<i32> {
+        // D-CONV-5 (2026-07-04): snapshot the RAW on-disk bytes before
+        // `Catalog::load` runs its own backfill mutation, so the dirty-check
+        // below can tell a real change (including a load-time backfill)
+        // apart from a walk that only re-stamps `summary.last_walked` --
+        // mirrors the runner's `catalog_dirty()` guard (quality/runners/
+        // run.py) and kills the telemetry-tick commit churn (75 commits
+        // touching this 405KB catalog for a no-op timestamp bump).
+        let on_disk_raw = fs::read_to_string(catalog).with_context(|| {
+            format!(
+                "reading catalog at {} for dirty-check snapshot",
+                catalog.display()
+            )
+        })?;
         let mut cat = Catalog::load(catalog)?;
         let mut blocking_lines: Vec<String> = Vec::new();
         // Waiver-suppressed blocking rows: surfaced loudly on EVERY walk
@@ -1282,7 +1295,12 @@ pub(crate) mod verbs {
             ));
         }
 
-        cat.save(catalog)?;
+        // D-CONV-5: only write the catalog back when something besides the
+        // telemetry timestamp changed. A no-op walk (nothing drifted) must
+        // leave the file bytes identical so `git status` stays clean.
+        if cat.dirty_ignoring_last_walked(&on_disk_raw)? {
+            cat.save(catalog)?;
+        }
 
         // Loud waiver surfacing: print WAIVED lines even on a clean walk so
         // a suppressed block is visible on EVERY push, never silent.

@@ -545,6 +545,43 @@ impl Catalog {
         Ok(())
     }
 
+    /// True iff `self`, once serialized, differs from `on_disk_raw` (the raw
+    /// JSON text read from the catalog file BEFORE `load()`'s in-memory
+    /// backfill/mutation ran) in any respect OTHER than `summary.last_walked`.
+    ///
+    /// Mirrors `quality/runners/run.py`'s `catalog_dirty()` guard (D-CONV-5,
+    /// 2026-07-04): a walk that only re-stamps the telemetry timestamp
+    /// should not dirty the working tree or produce a commit.
+    ///
+    /// Deliberately compares against the RAW on-disk text rather than an
+    /// in-memory clone taken right after `load()` -- `load()` performs its
+    /// own backfill (e.g. promoting legacy `source_hash` into
+    /// `source_hashes`), and that backfill IS a real, save-worthy change
+    /// even when no row's verdict moved. Comparing two post-load clones
+    /// would silently swallow it and never persist the backfill.
+    ///
+    /// Uses `serde_json::Value` equality (not string equality) so this is
+    /// robust to key-order/whitespace differences between the freshly
+    /// serialized catalog and however the file happened to be formatted on
+    /// disk.
+    ///
+    /// # Errors
+    /// Returns an error if `self` fails to serialize, or `on_disk_raw` fails
+    /// to parse as JSON (should not happen for a catalog that just loaded
+    /// successfully via [`Catalog::load`]).
+    pub fn dirty_ignoring_last_walked(&self, on_disk_raw: &str) -> Result<bool> {
+        let mut after =
+            serde_json::to_value(self).context("serializing catalog (after) for dirty-check")?;
+        let mut before: serde_json::Value =
+            serde_json::from_str(on_disk_raw).context("parsing on-disk catalog for dirty-check")?;
+        for v in [&mut after, &mut before] {
+            if let Some(summary) = v.get_mut("summary").and_then(|s| s.as_object_mut()) {
+                summary.insert("last_walked".to_string(), serde_json::Value::Null);
+            }
+        }
+        Ok(after != before)
+    }
+
     /// Recompute summary counters from the current row states.
     pub fn recompute_summary(&mut self) {
         let mut total: u64 = 0;
