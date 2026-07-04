@@ -851,6 +851,243 @@
         "pre-push",
         "pre-pr"
       ]
+    },
+    {
+      "id": "structure/coverage-kind-required",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "comment": "RBF-FW-06 (P90 90-02) — transport/perf-claim rows must carry coverage_kind: real-backend or an explicit WAIVED+until_date; hard-enforced at catalog-load time for rows minted >= P90 (D90-05), RAISE-only for legacy P78–P88 rows until P95 RBF-D-06 migrates them. transport_claim is a tri-state: explicit true/false wins, absent falls back to a regex over comment+id for dims perf/agent-ux/security (P90-D1).",
+      "sources": [
+        "quality/runners/_audit_field.py",
+        "quality/catalogs/README.md"
+      ],
+      "command": "bash quality/gates/structure/runner-honesty-semantics.sh coverage-kind-required",
+      "expected": {
+        "asserts": [
+          "is_transport_or_perf_row honors transport_claim tri-state (true→transport, false→suppress, absent→regex over comment+id in dims perf/agent-ux/security)",
+          "a transport-detected row minted >= P90 lacking coverage_kind AND lacking a compliant waiver → SystemExit at load",
+          "a legacy (pre-cutoff) transport row lacking coverage_kind loads clean (RAISE-only)",
+          "non-transport mechanical row without coverage_kind loads clean (no over-fire)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/runner-honesty-semantics.sh",
+        "args": [
+          "coverage-kind-required"
+        ],
+        "timeout_s": 15,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/coverage-kind-required.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "quality/runners/_audit_field.py gains is_transport_or_perf_row() + the coverage_kind hard-check; verifier ships 90-02",
+      "claim_vs_assertion_audit": "The verifier runs python3 -m unittest quality.runners.test_audit_field.TestCoverageKind, which constructs synthetic rows exercising all three transport_claim states plus the minted_at cutoff split. If the description's claim (\"a new transport/perf row minted at P90 or later without coverage_kind or a compliant waiver is rejected at load, while legacy pre-cutoff rows only RAISE\") were false — e.g. the hard/RAISE split were inverted, or the transport_claim tri-state collapsed to a boolean and ignored the explicit-false override — the synthetic new-row case would load silently (no SystemExit) or the legacy-row case would wrongly hard-block, and the corresponding assertion would fail.",
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ],
+      "minted_at": "2026-07-04T12:00:00Z",
+      "transport_claim": false
+    },
+    {
+      "id": "structure/minted-at-write-once",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "comment": "D90-03 (cross-AI H2 drain) — minted_at becomes the write-once audit-cutoff anchor for claim_vs_assertion_audit enforcement: when present it is the sole anchor (immutable), and the validator anchors on it in preference to the legacy last_verified heuristic. A row minted >= P90_MINT_CUTOFF (2026-07-05Z) without minted_at is rejected only via the existing last_verified>=cutoff guard; null-last_verified legacy rows are not retroactively forced (P90-D2 residual, drains at P95 RBF-D-06).",
+      "sources": [
+        "quality/runners/_audit_field.py",
+        "quality/catalogs/README.md"
+      ],
+      "command": "bash quality/gates/structure/runner-honesty-semantics.sh minted-at-write-once",
+      "expected": {
+        "asserts": [
+          "when minted_at present it is the sole audit-cutoff anchor (immutable; a hand-edited last_verified no longer moves the cutoff)",
+          "a row with minted_at >= P90_MINT_CUTOFF (2026-07-05Z) and no minted_at is rejected only via the lv>=cutoff guard (null-lv legacy rows NOT forced)",
+          "full-catalog load sweep succeeds at landing (no existing row trips the reject)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/runner-honesty-semantics.sh",
+        "args": [
+          "minted-at-write-once"
+        ],
+        "timeout_s": 15,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/minted-at-write-once.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "quality/runners/_audit_field.py: anchor claim_vs_assertion_audit cutoff on minted_at when present; verifier ships 90-02",
+      "claim_vs_assertion_audit": "The verifier runs python3 -m unittest quality.runners.test_audit_field.TestMintedAt, which includes a backdate-attack fixture: a row carrying minted_at=2026-06-... alongside a hand-edited last_verified=2026-04-... (an attempt to dodge the cutoff by rewriting the older, no-longer-authoritative field). If the description's claim (\"minted_at, once present, is the sole immutable audit-cutoff anchor\") were false — e.g. the validator still consulted last_verified when minted_at was present — that backdate fixture would load without the claim_vs_assertion_audit requirement being enforced, and the test asserting rejection would fail. A second fixture asserts the full live catalog sweep still loads clean at landing time, guarding against an over-eager anchor swap breaking existing rows.",
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ],
+      "minted_at": "2026-07-04T12:00:00Z"
+    },
+    {
+      "id": "structure/verifier-missing-demotes",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "comment": "RBF-FW-07a (cross-AI H4 drain) — a row whose verifier.script path does not exist on disk at grade time must flip to NOT-VERIFIED, never silently preserve a stale PASS. The artifact distinguishes a deploy/path glitch (error: verifier not found at <path>) from a real regression FAIL so on-call triage doesn't confuse the two. The transient _verifier_missing marker is stripped before the artifact is persisted.",
+      "sources": [
+        "quality/runners/run.py",
+        "quality/runners/_audit_field.py"
+      ],
+      "command": "bash quality/gates/structure/runner-honesty-semantics.sh verifier-missing-demotes",
+      "expected": {
+        "asserts": [
+          "a PASS row whose verifier.script is absent flips to NOT-VERIFIED (never preserves PASS)",
+          "the artifact carries error='verifier not found at <path>' distinguishing a deploy glitch from a real FAIL",
+          "_verifier_missing transient flag is stripped before persist"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/runner-honesty-semantics.sh",
+        "args": [
+          "verifier-missing-demotes"
+        ],
+        "timeout_s": 15,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/verifier-missing-demotes.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "quality/runners/run.py: missing-verifier-script branch demotes to NOT-VERIFIED with the error marker; ships 90-02",
+      "claim_vs_assertion_audit": "The verifier runs a new test class asserting that a synthetic catalog row with status: PASS and a verifier.script path pointed at a nonexistent file, when re-graded, ends up with status NOT-VERIFIED and an artifact containing error='verifier not found at <path>', with no residual _verifier_missing key persisted. If the description's claim (\"a missing verifier script demotes PASS to NOT-VERIFIED rather than preserving the stale grade\") were false — e.g. today's single preserve-everything branch stayed intact — the fixture's re-grade would leave status: PASS untouched and the assertion would fail.",
+      "waiver": null,
+      "cadences": [
+        "pre-push"
+      ],
+      "minted_at": "2026-07-04T12:00:00Z"
+    },
+    {
+      "id": "structure/skip-fail-closed-with-history",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "comment": "RBF-FW-07b (cross-AI M8, AMENDED D90-04 per D90-12 item 2) — env-gated skip of pre-release-real-backend rows (creds/allowlist missing) is fail-closed WITH preserved history: current status flips and PERSISTS NOT-VERIFIED for ALL such rows including the P0 litmus (never a skip-as-pass channel, OD-2-safe), while the prior REAL grade survives in last_real_grade + last_real_verified write-history fields (written only when the prior status was PASS/FAIL/PARTIAL), and the artifact/report carries skip_reason: env-missing so the churn is explained. A second cred-less run is idempotent (byte-identical catalog).",
+      "sources": [
+        "quality/runners/_realbackend.py",
+        "quality/PROTOCOL.md"
+      ],
+      "command": "bash quality/gates/structure/runner-honesty-semantics.sh skip-fail-closed-with-history",
+      "expected": {
+        "asserts": [
+          "an env-gated skip flips and persists status NOT-VERIFIED for ALL pre-release-real-backend rows including the P0 litmus (fail-closed, OD-2-safe)",
+          "the prior real grade is preserved in last_real_grade + last_real_verified write-history fields (written only when prior status was PASS/FAIL/PARTIAL)",
+          "the skip artifact/report carries skip_reason: env-missing so the churn is explained",
+          "a second cred-less run after the flip leaves the catalog byte-identical (idempotent)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/runner-honesty-semantics.sh",
+        "args": [
+          "skip-fail-closed-with-history"
+        ],
+        "timeout_s": 15,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/skip-fail-closed-with-history.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "quality/runners/_realbackend.py: env-gate skip branch gains fail-closed-with-history semantics; ships 90-02",
+      "claim_vs_assertion_audit": "MUST match the fail-closed-with-history contract (NOT the rejected preserve-PASS wording). The verifier runs quality.runners.test_realbackend.TestRunRowEnvGateIntegration, which fixtures a row previously graded PASS by a real run, then re-runs it with REPOSIX_ALLOWED_ORIGINS and creds scrubbed from the environment. If the description's claim (\"a cred-less run can never ride a stale real PASS; history + skip_reason explain the demotion\") were false, the test would observe one of two failure shapes: status still PASS (the skip-as-pass channel OD-2 forbids reopening), or status NOT-VERIFIED with no last_real_grade/skip_reason recorded (silent ground-truth loss — M8's actual complaint). Either observation fails the assertion; only the fail-closed-with-history shape passes.",
+      "waiver": null,
+      "cadences": [
+        "pre-push"
+      ],
+      "minted_at": "2026-07-04T12:00:00Z",
+      "transport_claim": false
+    },
+    {
+      "id": "structure/shell-subprocess-transcript-runtime",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "comment": "RBF-FW-08 (cross-AI M6) — kind:shell-subprocess rows declare a transcript-emitting contract at load time (RBF-FW-11 precedent), but nothing today enforces the contract was actually FULFILLED at grade time. This row closes that gap: a kind:shell-subprocess row that computed PASS on verifier exit 0 is downgraded to FAIL at grade time unless artifact.transcript_path names a file that actually exists and contains an argv: line, proving a real subprocess transcript was written, not merely promised in the catalog row.",
+      "sources": [
+        "quality/runners/run.py",
+        "quality/catalogs/README.md"
+      ],
+      "command": "bash quality/gates/structure/runner-honesty-semantics.sh shell-subprocess-transcript-runtime",
+      "expected": {
+        "asserts": [
+          "a kind:shell-subprocess row computing PASS on exit 0 is downgraded to FAIL unless artifact.transcript_path names an existing file containing an argv: line",
+          "non-shell-subprocess rows are unaffected (no over-fire)",
+          "the live agent-ux/kind-shell-subprocess-worked-example row still PASSes (its verifier emits a real transcript)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/runner-honesty-semantics.sh",
+        "args": [
+          "shell-subprocess-transcript-runtime"
+        ],
+        "timeout_s": 20,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/shell-subprocess-transcript-runtime.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "quality/runners/run.py: _run_synthetic gains a post-exit-0 transcript-existence check for kind:shell-subprocess rows; ships 90-02",
+      "claim_vs_assertion_audit": "The verifier extends quality.runners.test_realbackend._run_synthetic with a kind:shell-subprocess fixture whose verifier script exits 0 but never writes the transcript file it names. If the description's claim (\"a shell-subprocess row cannot PASS on exit-0 alone; the transcript must actually exist with an argv: line\") were false — e.g. the runner trusted exit code alone, as it does today — that fixture would grade PASS despite the missing transcript, and the assertion would fail. A companion fixture asserts non-shell-subprocess rows are unaffected, and a live-catalog fixture asserts the real agent-ux/kind-shell-subprocess-worked-example row still PASSes because its verifier genuinely emits a transcript.",
+      "waiver": null,
+      "cadences": [
+        "pre-push"
+      ],
+      "minted_at": "2026-07-04T12:00:00Z",
+      "transport_claim": false
+    },
+    {
+      "id": "structure/asserts-congruence-grade-time",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "comment": "F-K4b / ROADMAP SC2 (confirmed shipping per D90-12 item 1: per-expected-assert design ruled by D90-12 item 1, defer-to-P95 rejected) — today's grading only checks that verifier-written asserts_passed and a row's expected.asserts share SOME vocabulary overlap globally, which let the p86 F6 shape (9 expected vs 17 passed, heavy shared vocabulary, 2 expected uncovered) grade PASS dishonestly. This row requires per-expected-assert coverage: when both lists are non-empty, EVERY expected.asserts entry must map to at least one asserts_passed entry via normalized per-pair token matching; any unmatched expected assert blocks the PASS flip and asserts_failed names the unmatched entries. The check is a no-op when asserts_passed is empty (backward-compat with the ~91 pre-existing mechanical rows that don't yet emit per-assert results).",
+      "sources": [
+        "quality/runners/run.py",
+        ".planning/ROADMAP.md"
+      ],
+      "command": "bash quality/gates/structure/runner-honesty-semantics.sh asserts-congruence-grade-time",
+      "expected": {
+        "asserts": [
+          "when BOTH expected.asserts and verifier-written asserts_passed are non-empty, EVERY expected.asserts entry must map to >=1 asserts_passed entry via normalized per-pair token matching; any unmatched expected assert blocks the PASS flip and asserts_failed names the unmatched entries",
+          "when asserts_passed is empty (verifier wrote none) the check is a no-op (backward-compat with the 91 mechanical rows)",
+          "the p86 F6 shape (9 expected vs 17 passed, heavy shared vocabulary, 2 expected uncovered) goes RED",
+          "zero false RED across all existing catalog rows against their current artifacts"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/runner-honesty-semantics.sh",
+        "args": [
+          "asserts-congruence-grade-time"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/asserts-congruence-grade-time.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "quality/runners/run.py: grade-time per-expected-assert congruence check; ships 90-02",
+      "claim_vs_assertion_audit": "The verifier runs quality.runners.test_run.TestAssertsCongruence, whose central fixture reproduces the p86 F6 shape verbatim (9 expected.asserts vs 17 asserts_passed, heavy shared vocabulary, 2 of the 9 expected entries genuinely uncovered by any passed entry). If the description's claim (\"every expected assert must be covered by at least one passed assert via per-pair matching, not merely global vocabulary overlap\") were false — e.g. only a global bag-of-tokens overlap check ran, as it does today — the F6 fixture would grade PASS (the shared vocabulary masks the 2 uncovered entries) and the assertion expecting RED would fail. A second fixture sweeps every existing catalog row against its live artifact and asserts zero false RED, guarding against an over-eager per-pair matcher breaking honest existing PASSes.",
+      "waiver": null,
+      "cadences": [
+        "pre-push"
+      ],
+      "minted_at": "2026-07-04T12:00:00Z",
+      "transport_claim": false
     }
   ]
 }

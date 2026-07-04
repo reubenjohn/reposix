@@ -1377,6 +1377,118 @@
         "pre-release",
         "on-demand"
       ]
+    },
+    {
+      "id": "agent-ux/test-name-vs-asserts",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "comment": "RBF-FW-09 (F-K8) — a Rust #[test] fn whose name promises real/dark-factory/round-trip/e2e/push/fetch coverage but whose body neither drives a real git push/fetch subprocess nor targets a non-127.0.0.1 host nor is #[ignore] real-backend-gated is a dishonest test name. This row seeds the committed expected-RAISE baseline (R2 § C.2, 4 entries) from quality/reports/raise-list-p90.md § 2; a NEW un-baselined dishonest name (not yet in the baseline) fails the gate outright.",
+      "sources": [
+        "quality/gates/agent-ux/test-name-vs-asserts.sh",
+        "quality/reports/raise-list-p90.md"
+      ],
+      "command": "bash quality/gates/agent-ux/test-name-vs-asserts.sh",
+      "expected": {
+        "asserts": [
+          "a Rust #[test] fn whose name matches (real|dark_factory|round_?trip|end_to_end|e2e|push|fetch) whose body neither drives a git push/fetch subprocess nor a non-127.0.0.1 host nor is #[ignore] real-backend-gated is RAISEd",
+          "the committed expected-RAISE baseline (R2 § C.2, 4 entries) matches → exit 0",
+          "a NEW un-baselined dishonest name → exit 1",
+          "per-line // test-name-honesty: ok — <reason> marker exempts, and a bare marker with no reason itself RAISEs"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/test-name-vs-asserts.sh",
+        "args": [],
+        "timeout_s": 15,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/test-name-vs-asserts.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "quality/gates/agent-ux/test-name-vs-asserts.sh (NEW, ships 90-03) scans crates/**/*.rs for honesty-suspect #[test] fn names against the committed baseline",
+      "claim_vs_assertion_audit": "The verifier scans crates/**/*.rs for #[test] fns whose names match the honesty-suspect regex, inspects each body for a real git push/fetch subprocess invocation, a non-127.0.0.1 host reference, or a #[ignore] real-backend gate, and RAISEs (non-exempt, non-baselined) mismatches. If the description's claim (\"a committed 4-entry baseline of known-dishonest names passes clean, and any NEW un-baselined dishonest name fails\") were false — e.g. the scanner ignored test bodies entirely and only matched names — a synthetic fixture adding a 5th un-baselined dishonestly-named test would still exit 0, and the assertion expecting exit 1 would fail. A companion fixture asserts the per-line // test-name-honesty: ok marker exempts a flagged test, and that a bare marker with no reason string itself RAISEs (closing the silent-exemption loophole).",
+      "waiver": null,
+      "cadences": [
+        "pre-push"
+      ],
+      "minted_at": "2026-07-04T12:00:00Z",
+      "transport_claim": false
+    },
+    {
+      "id": "agent-ux/absorption-honesty-template-present",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "comment": "RBF-FW-10 (F-K5, consumed by P96) — the absorption-honesty spot-check template (D90-08: quality/dispatch/absorption-honesty-spot-check.md) must exist, be content-hash-bound (not merely present, since a gutted-but-present file would still pass an existence-only check), and contain the four F-K5 clauses verbatim: sample EVERY no-intake phase; spot-check author != milestone orchestrator; rubric 'walk one critical example end-to-end mentally — does it work?'; content-hash binding.",
+      "sources": [
+        "quality/dispatch/absorption-honesty-spot-check.md",
+        "quality/PROTOCOL.md",
+        "PRACTICES.md"
+      ],
+      "command": "bash quality/gates/agent-ux/absorption-honesty-template-present.sh",
+      "expected": {
+        "asserts": [
+          "quality/dispatch/absorption-honesty-spot-check.md exists",
+          "its content sha256 matches the committed hash (content-hash binding, not mere existence)",
+          "it contains the four F-K5 clauses verbatim: sample EVERY no-intake phase / author != milestone orchestrator / rubric 'walk one critical example end-to-end mentally — does it work?' / content-hash binding"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/absorption-honesty-template-present.sh",
+        "args": [],
+        "timeout_s": 10,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/absorption-honesty-template-present.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "quality/dispatch/absorption-honesty-spot-check.md (NEW, D90-08, ships 90-04) + verifier ships 90-04",
+      "claim_vs_assertion_audit": "The verifier checks the template file exists, computes its sha256 and compares against the hash recorded at grade time, and greps for the four F-K5 clauses verbatim. If the description's claim (\"the template exists, is content-hash-bound, and carries all four clauses\") were false — e.g. a future edit silently dropped the 'author != milestone orchestrator' clause while leaving the file present — the grep for that clause would find nothing and the assertion would fail; likewise if the file were deleted, the existence assertion fails, and if the file were edited without updating the recorded hash, the drift assertion fails.",
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ],
+      "minted_at": "2026-07-04T12:00:00Z"
+    },
+    {
+      "id": "agent-ux/milestone-adversarial-pass",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "comment": "RBF-FW-12 (D90-09) — a milestone-close verdict must not go GREEN unless a fresh adversarial subagent has graded the closing milestone's catalog rows and the resulting artifact (quality/reports/verifications/adversarial/<milestone>.json, D90-09 path — NOT the R1 § FW-12 milestone-adversarial/ path) reports zero failed-row audits. The gate can only DARKEN a verdict (green→red), never lighten one; it composes with compute_color/compute_exit_code rather than replacing them.",
+      "sources": [
+        "quality/dispatch/milestone-adversarial.md",
+        "quality/runners/verdict.py"
+      ],
+      "command": "bash quality/gates/agent-ux/milestone-adversarial-pass.sh",
+      "expected": {
+        "asserts": [
+          "milestone-close verdict blocks GREEN (forces red) when quality/reports/verifications/adversarial/<milestone>.json is absent",
+          "blocks GREEN when the artifact reports >=1 failed row audit",
+          "the gate can only DARKEN (green->red), never lighten — composes with compute_color/compute_exit_code"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/milestone-adversarial-pass.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/milestone-adversarial-pass.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "quality/runners/verdict.py gains the adversarial-artifact hook; quality/dispatch/milestone-adversarial.md (NEW, D90-09) ships 90-04",
+      "claim_vs_assertion_audit": "The verifier is a thin bash wrapper running python3 -m unittest quality.runners.test_verdict adversarial cases: an absent-artifact fixture and a failed-row-count>=1 fixture, both asserting the milestone-close verdict computes RED despite an otherwise-all-PASS catalog. If the description's claim (\"milestone-close cannot go GREEN without a passing fresh adversarial audit, and the hook can only darken never lighten a verdict\") were false — e.g. the hook were wired as advisory-only, or an absent artifact defaulted to a pass-through GREEN — both fixtures would observe the verdict staying GREEN and the assertions would fail. A third fixture asserts the hook cannot flip an already-RED verdict to GREEN, confirming the darken-only direction.",
+      "waiver": null,
+      "cadences": [
+        "pre-release-real-backend"
+      ],
+      "minted_at": "2026-07-04T12:00:00Z"
     }
   ]
 }
