@@ -104,7 +104,9 @@ empty vec means "no test bound yet" — replaces v1.0's `Option<String>`),
 `syn::ItemFn::to_token_stream()` then `sha256` for the corresponding
 test fn; comments + whitespace normalized away), `rationale` (optional;
 walker tolerates absence via `serde(default)`), `last_verdict`,
-`last_run`, `last_extracted`, `last_extracted_by`.
+`last_run`, `last_extracted`, `last_extracted_by`, `waiver` (optional
+per-row blocking-verdict waiver — see "Per-row blocking-verdict waiver"
+below; absent on the un-waived majority).
 
 **Parallel-array invariant (v2).** `tests.len() == test_body_hashes.len()`
 at all times. The invariant is enforced at deserialize via
@@ -177,6 +179,39 @@ citation drifted (file moved/renamed/deleted).
 floor itself has no waiver semantics -- it is monotone non-decreasing by
 design and the structure-dimension row
 `structure/doc-alignment-floor-not-decreased` audits the git history.
+
+**Per-row blocking-verdict waiver.** A row parked in a *blocking* state
+(`MISSING_TEST`, `STALE_DOCS_DRIFT`, `STALE_TEST_GONE`, `TEST_MISALIGNED`,
+`RETIRE_PROPOSED`) can carry an optional `waiver` block —
+`{until: <RFC3339>, reason: <string>, tracked_in: <string>}` — that
+time-boxes the pre-push *consequence* without lying about the verdict.
+This mirrors the unified-catalog waiver contract (the `waiver_active`
+check in `quality/runners/run.py` + the `structure/file-size-limits`
+precedent in `freshness-invariants.json`) into this dimension's separate
+row schema, so the docs-alignment walker gains an honest escape valve
+instead of forcing a bypass (`--no-verify`) or a dishonest bind.
+
+- **Mint:** `reposix-quality doc-alignment waive --row-id <id> --until
+  <RFC3339> --reason <s> --tracked-in <s>`. Refuses if the row is absent,
+  is *not* in a blocking state (nothing to defer), `--until` is already
+  past, or `--until` is **more than 90 days out** — the horizon cap forces
+  re-justification and prevents self-licensing a permanent exemption.
+  `unwaive --row-id <id>` removes it.
+- **Walker semantics:** a blocking row with an *unexpired* waiver does NOT
+  count toward the walker's non-zero exit, but the walker prints a loud
+  line on **every** push — `docs-alignment: WAIVED-<STATE> row=<id>
+  until=<date> tracked_in=<ref> -- <reason>` — so a suppressed block is
+  never silent. An *expired* waiver blocks again and prints
+  `WAIVER-EXPIRED`. `last_verdict` is never mutated by `waive`; the row
+  stays honest and `summary.claims_waived` counts live waivers distinctly.
+- **Contract, in one line:** time-boxed, loud, tracked — a deferral, not a
+  green.
+
+This verb is scoped to the docs-alignment dimension only. In particular it
+does **not** override the `pre-release-real-backend` hard-RED cadence
+(OD-2): those rows live in other dimension catalogs, not in
+`doc-alignment.json`, and carry no docs-alignment `waiver` field — a
+docs-alignment waiver has no reach over them.
 
 ## SIMPLIFY-03 boundary statement (per-FILE catalog vs per-CHECK catalog)
 

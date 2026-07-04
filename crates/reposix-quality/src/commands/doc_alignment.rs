@@ -97,6 +97,35 @@ pub enum Verb {
         run_dir: PathBuf,
     },
 
+    /// Time-box a blocking row's pre-push consequence (loud + tracked).
+    ///
+    /// The row's `last_verdict` is NOT changed -- it stays honest (e.g.
+    /// `MISSING_TEST`); only the pre-push BLOCK is deferred until `--until`.
+    /// Refuses if the row is absent, is not in a blocking state, `--until`
+    /// is already past, or `--until` is more than 90 days out (anti
+    /// self-licensing bound). The walker prints a loud `WAIVED-<STATE>`
+    /// line on every push while the waiver is active.
+    Waive {
+        #[arg(long = "row-id")]
+        row_id: String,
+        /// RFC3339 expiry (e.g. `2026-07-31T00:00:00Z`). Must be in the
+        /// future and ≤90 days out.
+        #[arg(long)]
+        until: String,
+        /// Why the block is deferred and what will unblock it.
+        #[arg(long)]
+        reason: String,
+        /// Tracking ref (SURPRISES-INTAKE entry / issue / phase) owning the fix.
+        #[arg(long = "tracked-in")]
+        tracked_in: String,
+    },
+
+    /// Remove a row's waiver (symmetry with `waive`).
+    Unwaive {
+        #[arg(long = "row-id")]
+        row_id: String,
+    },
+
     /// Hash drift walker -- updates `last_verdict` only.
     Walk,
 
@@ -149,6 +178,13 @@ pub fn dispatch(catalog: &Path, verb: Verb) -> Result<i32> {
             rationale.as_deref(),
             next_action.as_deref(),
         ),
+        Verb::Waive {
+            row_id,
+            until,
+            reason,
+            tracked_in,
+        } => verbs::waive(catalog, &row_id, &until, &reason, &tracked_in),
+        Verb::Unwaive { row_id } => verbs::unwaive(catalog, &row_id),
         Verb::PlanRefresh { doc_file } => verbs::plan_refresh(catalog, &doc_file),
         Verb::PlanBackfill => verbs::plan_backfill(catalog),
         Verb::MergeShards { run_dir } => verbs::merge_shards(catalog, &run_dir),
@@ -213,7 +249,9 @@ pub(crate) mod verbs {
     use serde_json::json;
 
     use super::{parse_source, parse_test};
-    use crate::catalog::{Catalog, NextAction, Row, RowState, Source, SourceCite};
+    use crate::catalog::{
+        Catalog, NextAction, Row, RowState, RowWaiver, Source, SourceCite, WaiverStatus,
+    };
     use crate::coverage;
     use crate::hash;
 
@@ -404,6 +442,7 @@ pub(crate) mod verbs {
                 last_run: Some(now.clone()),
                 last_extracted: Some(now.clone()),
                 last_extracted_by: Some("bind-call".to_string()),
+                waiver: None,
             };
             new_row.set_tests(tests_clean, hashes)?;
             cat.rows.push(new_row);
@@ -461,6 +500,7 @@ pub(crate) mod verbs {
                 last_run: Some(now.clone()),
                 last_extracted: Some(now),
                 last_extracted_by: Some("propose-retire-call".to_string()),
+                waiver: None,
             });
         }
         cat.recompute_summary();
@@ -504,6 +544,100 @@ pub(crate) mod verbs {
         };
         row.last_extracted = Some(now);
         row.last_extracted_by = Some(by.to_string());
+        cat.recompute_summary();
+        cat.save(catalog)?;
+        Ok(0)
+    }
+
+    /// Maximum look-ahead for a `waive --until` date. A waiver is a
+    /// time-box, not a permanent exemption; capping the horizon at 90 days
+    /// forces a re-justification cadence (anti self-licensing).
+    const WAIVER_MAX_DAYS: i64 = 90;
+
+    /// Time-box a blocking row's pre-push consequence. See the `Waive` verb
+    /// doc for the contract; refusal cases enforce the honesty bounds
+    /// (row must exist, must be blocking, `until` must be future and ≤90d).
+    pub fn waive(
+        catalog: &Path,
+        row_id: &str,
+        until: &str,
+        reason: &str,
+        tracked_in: &str,
+    ) -> Result<i32> {
+        let until_dt = chrono::DateTime::parse_from_rfc3339(until)
+            .map_err(|e| {
+                anyhow!("waive: --until `{until}` is not RFC3339 (e.g. 2026-07-31T00:00:00Z): {e}")
+            })?
+            .with_timezone(&chrono::Utc);
+        let now = Utc::now();
+        if until_dt <= now {
+            return Err(anyhow!(
+                "waive: --until `{until}` is not in the future (now={}); a waiver must expire after now",
+                now.to_rfc3339()
+            ));
+        }
+        let horizon = now + chrono::Duration::days(WAIVER_MAX_DAYS);
+        if until_dt > horizon {
+            return Err(anyhow!(
+                "waive: --until `{until}` is more than {WAIVER_MAX_DAYS} days out (max {}); waivers are time-boxed to force re-justification (anti self-licensing)",
+                horizon.to_rfc3339()
+            ));
+        }
+        if reason.trim().is_empty() {
+            return Err(anyhow!("waive: --reason must be non-empty"));
+        }
+        if tracked_in.trim().is_empty() {
+            return Err(anyhow!("waive: --tracked-in must be non-empty"));
+        }
+
+        let mut cat = Catalog::load(catalog)?;
+        let now_str = now_iso();
+        let row = cat.row_mut(row_id).ok_or_else(|| {
+            anyhow!(
+                "waive: row-id `{row_id}` not found in {}",
+                catalog.display()
+            )
+        })?;
+        if !row.last_verdict.blocks_pre_push() {
+            return Err(anyhow!(
+                "waive: row `{row_id}` is in non-blocking state {} -- only blocking rows (MISSING_TEST, STALE_DOCS_DRIFT, STALE_TEST_GONE, TEST_MISALIGNED, RETIRE_PROPOSED) can be waived; nothing to defer",
+                row.last_verdict.as_str()
+            ));
+        }
+        row.waiver = Some(RowWaiver {
+            until: until.to_string(),
+            reason: reason.to_string(),
+            tracked_in: tracked_in.to_string(),
+        });
+        // Audit trail: record who/when set the waiver without touching the
+        // honest last_verdict.
+        row.last_extracted = Some(now_str.clone());
+        row.last_extracted_by = Some("waive-call".to_string());
+        cat.recompute_summary();
+        cat.save(catalog)?;
+        eprintln!(
+            "waive: row `{row_id}` waived until {until} -- tracked_in={tracked_in}. Walker will print a loud WAIVED line every push; the block returns when the waiver expires."
+        );
+        Ok(0)
+    }
+
+    /// Remove a row's waiver (symmetry with [`waive`]).
+    pub fn unwaive(catalog: &Path, row_id: &str) -> Result<i32> {
+        let mut cat = Catalog::load(catalog)?;
+        let now_str = now_iso();
+        let row = cat.row_mut(row_id).ok_or_else(|| {
+            anyhow!(
+                "unwaive: row-id `{row_id}` not found in {}",
+                catalog.display()
+            )
+        })?;
+        if row.waiver.is_none() {
+            eprintln!("unwaive: row `{row_id}` has no waiver -- nothing to do");
+            return Ok(0);
+        }
+        row.waiver = None;
+        row.last_extracted = Some(now_str);
+        row.last_extracted_by = Some("unwaive-call".to_string());
         cat.recompute_summary();
         cat.save(catalog)?;
         Ok(0)
@@ -581,6 +715,7 @@ pub(crate) mod verbs {
                 last_run: Some(now.clone()),
                 last_extracted: Some(now),
                 last_extracted_by: Some("mark-missing-test-call".to_string()),
+                waiver: None,
             });
         }
         cat.recompute_summary();
@@ -918,6 +1053,12 @@ pub(crate) mod verbs {
     pub fn walk(catalog: &Path) -> Result<i32> {
         let mut cat = Catalog::load(catalog)?;
         let mut blocking_lines: Vec<String> = Vec::new();
+        // Waiver-suppressed blocking rows: surfaced loudly on EVERY walk
+        // (even a clean exit-0 walk) so a time-boxed waiver is never silent.
+        let mut waived_lines: Vec<String> = Vec::new();
+        let mut waived_count: u64 = 0;
+        // Single `now` for every per-row waiver classification this walk.
+        let now = Utc::now();
 
         for row in &mut cat.rows {
             // Skip already-retired rows.
@@ -931,12 +1072,21 @@ pub(crate) mod verbs {
                     .as_slice()
                     .first()
                     .map_or_else(String::new, |c| c.file.clone());
-                blocking_lines.push(format!(
+                let base = format!(
                     "docs-alignment: {} on {} -- run /reposix-quality-refresh {}",
                     row.last_verdict.as_str(),
                     cite_str,
                     cite_str,
-                ));
+                );
+                route_blocking(
+                    row,
+                    RowState::RetireProposed,
+                    now,
+                    base,
+                    &mut blocking_lines,
+                    &mut waived_lines,
+                    &mut waived_count,
+                );
                 continue;
             }
 
@@ -1074,19 +1224,30 @@ pub(crate) mod verbs {
                     }
                     _ => String::new(),
                 };
-                blocking_lines.push(format!(
+                let base = format!(
                     "docs-alignment: {} row={}{} on {} -- run /reposix-quality-refresh {}",
                     new_state.as_str(),
                     row.id,
                     detail,
                     cite_str,
                     cite_str,
-                ));
+                );
+                route_blocking(
+                    row,
+                    new_state,
+                    now,
+                    base,
+                    &mut blocking_lines,
+                    &mut waived_lines,
+                    &mut waived_count,
+                );
             }
         }
 
         cat.summary.last_walked = Some(now_iso());
         cat.recompute_summary();
+        // recompute_summary() doesn't know `now`; set the waiver count here.
+        cat.summary.claims_waived = waived_count;
 
         // Coverage metric (P66): populate global summary fields.
         // Walker NEVER auto-tunes coverage_floor (human-tuned via deliberate commit).
@@ -1123,6 +1284,11 @@ pub(crate) mod verbs {
 
         cat.save(catalog)?;
 
+        // Loud waiver surfacing: print WAIVED lines even on a clean walk so
+        // a suppressed block is visible on EVERY push, never silent.
+        for line in &waived_lines {
+            eprintln!("{line}");
+        }
         if blocking_lines.is_empty() {
             Ok(0)
         } else {
@@ -1130,6 +1296,55 @@ pub(crate) mod verbs {
                 eprintln!("{line}");
             }
             Ok(1)
+        }
+    }
+
+    /// Route one blocking-state row to either the waived-lines bucket (active
+    /// waiver -> loud `WAIVED-<STATE>`, does NOT block) or the blocking-lines
+    /// bucket (no waiver -> `base`; expired waiver -> `WAIVER-EXPIRED` +
+    /// `base`, blocks again). Shared by the `RETIRE_PROPOSED` early-continue
+    /// branch and the main state-machine branch so both honor waivers.
+    #[allow(clippy::too_many_arguments)]
+    fn route_blocking(
+        row: &Row,
+        state: RowState,
+        now: chrono::DateTime<chrono::Utc>,
+        base: String,
+        blocking_lines: &mut Vec<String>,
+        waived_lines: &mut Vec<String>,
+        waived_count: &mut u64,
+    ) {
+        match row.waiver_status(now) {
+            WaiverStatus::None => blocking_lines.push(base),
+            WaiverStatus::Active => {
+                // Active implies Some(waiver).
+                if let Some(w) = &row.waiver {
+                    *waived_count += 1;
+                    waived_lines.push(format!(
+                        "docs-alignment: WAIVED-{} row={} until={} tracked_in={} -- {}",
+                        state.as_str(),
+                        row.id,
+                        w.until,
+                        w.tracked_in,
+                        w.reason,
+                    ));
+                }
+            }
+            WaiverStatus::Expired => {
+                if let Some(w) = &row.waiver {
+                    blocking_lines.push(format!(
+                        "docs-alignment: WAIVER-EXPIRED row={} state={} until={} tracked_in={} -- {} ({})",
+                        row.id,
+                        state.as_str(),
+                        w.until,
+                        w.tracked_in,
+                        w.reason,
+                        base,
+                    ));
+                } else {
+                    blocking_lines.push(base);
+                }
+            }
         }
     }
 
@@ -1201,6 +1416,7 @@ pub(crate) mod verbs {
         println!("  claims_missing_test    {}", s.claims_missing_test);
         println!("  claims_retire_proposed {}", s.claims_retire_proposed);
         println!("  claims_retired         {}", s.claims_retired);
+        println!("  claims_waived          {}", s.claims_waived);
         println!(
             "  alignment_ratio        {:.4}   ({} bound / {} non-retired)",
             s.alignment_ratio,

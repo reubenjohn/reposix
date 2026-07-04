@@ -72,6 +72,15 @@ pub struct Summary {
     /// gap-closure phases widen extraction).
     #[serde(default = "default_coverage_floor")]
     pub coverage_floor: f64,
+
+    /// Count of rows in a blocking state that carry an ACTIVE waiver on the
+    /// last walk -- rows that would otherwise block pre-push but are
+    /// time-boxed-deferred. Distinct from `claims_missing_test` so an
+    /// operator can see "N blocking rows suppressed by live waivers" at a
+    /// glance. Recomputed by the walker (needs `now`); `serde(default)`
+    /// keeps legacy catalogs loadable.
+    #[serde(default)]
+    pub claims_waived: u64,
 }
 
 /// Default `coverage_floor` for legacy catalogs that omit the field. 0.10 is
@@ -86,6 +95,44 @@ fn default_coverage_floor() -> f64 {
 pub struct FloorWaiver {
     pub until: String,
     pub rationale: String,
+}
+
+/// Per-row time-bounded waiver of a blocking `last_verdict`.
+///
+/// Mirrors the unified-catalog waiver contract (`quality/runners/run.py`
+/// `waiver_active` + `quality/catalogs/freshness-invariants.json` row
+/// `structure/file-size-limits`) into the docs-alignment dimension's
+/// separate row schema. A row in a blocking state (see
+/// [`RowState::blocks_pre_push`]) carrying an UNEXPIRED waiver does not
+/// count toward the walker's blocking exit, but the walker prints a loud
+/// `WAIVED-<STATE>` line on every push so the waiver is never silent.
+/// An EXPIRED waiver blocks again (`WAIVER-EXPIRED`).
+///
+/// Contract: time-boxed (`until`, bounded ≤90 days out at mint by the
+/// `waive` verb), loud (walker output), tracked (`tracked_in` names the
+/// intake/issue ref). It is NOT a status flip -- `last_verdict` stays
+/// honest (e.g. `MISSING_TEST`); only the pre-push consequence is deferred.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RowWaiver {
+    /// RFC3339 expiry. After this instant the waiver is EXPIRED and the
+    /// row blocks again.
+    pub until: String,
+    /// Human rationale -- why the block is deferred and what unblocks it.
+    pub reason: String,
+    /// Tracking reference (SURPRISES-INTAKE / issue / phase) that owns the
+    /// underlying fix. Keeps the waiver auditable.
+    pub tracked_in: String,
+}
+
+/// Waiver state of a row relative to a point in time.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WaiverStatus {
+    /// No waiver on the row.
+    None,
+    /// Waiver present and not yet past its `until` instant.
+    Active,
+    /// Waiver present but `until` has passed (blocks again).
+    Expired,
 }
 
 /// Row source citation. Either a single object or an array of objects
@@ -190,9 +237,31 @@ pub struct Row {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_extracted_by: Option<String>,
+
+    /// Optional per-row blocking-verdict waiver (see [`RowWaiver`]). Absent
+    /// on every existing row -- `serde(default)` keeps legacy catalogs
+    /// backward-compatible; `skip_serializing_if` keeps the JSON clean for
+    /// the un-waived majority.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub waiver: Option<RowWaiver>,
 }
 
 impl Row {
+    /// Classify this row's waiver relative to `now`.
+    ///
+    /// An unparseable `until` is treated as [`WaiverStatus::Expired`]
+    /// (fail-closed: a malformed waiver blocks rather than silently passing).
+    #[must_use]
+    pub fn waiver_status(&self, now: chrono::DateTime<chrono::Utc>) -> WaiverStatus {
+        match &self.waiver {
+            None => WaiverStatus::None,
+            Some(w) => match chrono::DateTime::parse_from_rfc3339(&w.until) {
+                Ok(until) if until.with_timezone(&chrono::Utc) > now => WaiverStatus::Active,
+                _ => WaiverStatus::Expired,
+            },
+        }
+    }
+
     /// Set both `tests` and `test_body_hashes` together. Validates the
     /// parallel-array invariant; rejects mismatched lengths so writer paths
     /// cannot accidentally store an inconsistent row.

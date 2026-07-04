@@ -71,6 +71,7 @@ fn synth_row(id: &str, cites: Vec<(&str, usize, usize)>) -> Row {
         last_run: None,
         last_extracted: None,
         last_extracted_by: None,
+        waiver: None,
     }
 }
 
