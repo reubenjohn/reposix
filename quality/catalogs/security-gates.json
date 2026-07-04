@@ -79,6 +79,42 @@
       "cadences": [
         "pre-pr"
       ]
+    },
+    {
+      "id": "security/connector-audit-wired",
+      "dimension": "security",
+      "kind": "mechanical",
+      "comment": "Stage-2 catalog-row minting (2026-07-04). Substrate already exists (commit a0c84a3): connector_audit_wired_confluence / connector_audit_wired_jira tests in reposix-remote's backend_dispatch.rs.",
+      "sources": [
+        "crates/reposix-remote/src/backend_dispatch.rs::connector_audit_wired_confluence",
+        "crates/reposix-remote/src/backend_dispatch.rs::connector_audit_wired_jira",
+        "crates/reposix-remote/src/backend_dispatch.rs (build_confluence, build_jira -- production dispatch paths)"
+      ],
+      "command": "cargo test -p reposix-remote connector_audit_wired",
+      "expected": {
+        "asserts": [
+          "cargo test -p reposix-remote connector_audit_wired exits 0 and runs >=2 tests",
+          "a static grep of crates/reposix-remote/src/backend_dispatch.rs confirms build_confluence and build_jira (the non-test production dispatch paths) each call .with_audit(...) before returning"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/security/connector-audit-wired.sh",
+        "args": [],
+        "timeout_s": 180,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/security/connector-audit-wired.json",
+      "status": "PASS",
+      "last_verified": "2026-07-04T08:40:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: build_confluence or build_jira in crates/reposix-remote/src/backend_dispatch.rs stopped calling .with_audit(...) before returning the connector, or the connector_audit_wired_* tests regressed -- OP-3 (CLAUDE.md) requires every dispatched write-capable connector to have audit_events wired",
+      "waiver": null,
+      "claim_vs_assertion_audit": "The verifier runs `cargo test -p reposix-remote connector_audit_wired` (>=2 tests, each building a real Confluence/JIRA connector via the production build_confluence/build_jira functions and asserting backend.has_audit() plus a real audit_events table row) AND greps backend_dispatch.rs to confirm build_confluence/build_jira (outside #[cfg(test)]) call .with_audit(...). If the claim ('production dispatch wires audit for write-capable real connectors') were false -- e.g. someone removed .with_audit(audit) from build_jira -- the cargo test would fail its has_audit() assertion OR the grep would find zero with_audit call sites in the production functions, and the verifier would exit non-zero.",
+      "cadences": [
+        "pre-pr",
+        "pre-release"
+      ]
     }
   ]
 }

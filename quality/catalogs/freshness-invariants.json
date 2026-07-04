@@ -583,7 +583,7 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/docs-alignment/walk.json",
-      "status": "PASS",
+      "status": "FAIL",
       "last_verified": "2026-04-28T14:09:43Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
@@ -774,6 +774,42 @@
       "owner_hint": "add a claim_vs_assertion_audit paragraph (>=50 chars) to the row explaining how the verifier would falsify the description claim if false; for kind:shell-subprocess rows ALSO declare a transcript path",
       "claim_vs_assertion_audit": "The verifier asserts that `python3 -m unittest quality.runners.test_audit_field` constructs a synthetic catalog containing a row dated 2026-05-08 with no `claim_vs_assertion_audit` field and that load_catalog() refuses it with `SystemExit(FAIL: ...missing claim_vs_assertion_audit (>=50 chars required for rows minted on/after 2026-05-08))`, AND additionally that any row declaring `kind: shell-subprocess` without an emitting-transcript contract triggers `SystemExit(FAIL: ...kind=shell-subprocess row missing transcript_path)`. If the description's claim ('the runner enforces the field on rows minted >= 2026-05-08, grandfathers older rows, AND enforces transcript_path on kind:shell-subprocess rows') were false — e.g., the date-cutoff was hard-coded to a future date, the field check was absent, or the kind=shell-subprocess sub-rule was missing — the assertion would fail because the synthetic catalogs would load successfully and the test would error.",
       "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
+    },
+    {
+      "id": "structure/cli-subcommand-parity",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "comment": "Stage-2 catalog-row minting (2026-07-04). Prerequisite doc fixes (eager-window ledger items) landed in the same phase: docs/reference/cli.md gained attach + sync sections, docs/reference/exit-codes.md gained attach + sync rows plus re-derived (fn-name, not line-number) citations, docs/reference/crates.md fixed 'nine crates' -> ten + added a reposix-quality section.",
+      "sources": [
+        "crates/reposix-cli/src/main.rs (Cmd enum)",
+        "docs/reference/cli.md",
+        "docs/reference/exit-codes.md"
+      ],
+      "command": "python3 quality/gates/structure/cli-subcommand-parity.py",
+      "expected": {
+        "asserts": [
+          "every variant of the clap Cmd enum in crates/reposix-cli/src/main.rs (except Version, which has no dedicated cli.md prose section by long-standing convention) has a matching '## `reposix <name>`' section in docs/reference/cli.md",
+          "every variant (including Version) has a row in docs/reference/exit-codes.md's per-subcommand table"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/cli-subcommand-parity.py",
+        "args": [],
+        "timeout_s": 10,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/cli-subcommand-parity.json",
+      "status": "PASS",
+      "last_verified": "2026-07-04T08:37:38Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: a new/renamed Cmd enum variant in crates/reposix-cli/src/main.rs has no matching section in docs/reference/cli.md or no row in docs/reference/exit-codes.md -- add both in the same PR",
+      "waiver": null,
+      "claim_vs_assertion_audit": "The verifier regex-parses `enum Cmd { ... }` in main.rs for variant names, then for each non-exempt variant greps docs/reference/cli.md for a `## `reposix <name>`` heading (kebab-cased) and for every variant greps docs/reference/exit-codes.md for a backtick-wrapped row naming that subcommand. If the claim ('every CLI subcommand is documented in both reference pages') were false -- e.g. a new `reposix attach` variant shipped with no cli.md section -- the heading regex would find zero matches for 'attach' and the verifier would exit 1 naming the undocumented variant.",
       "cadences": [
         "pre-push",
         "pre-pr"

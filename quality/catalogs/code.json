@@ -210,6 +210,41 @@
         "pre-push",
         "pre-pr"
       ]
+    },
+    {
+      "id": "code/capabilities-match-impl",
+      "dimension": "code",
+      "kind": "mechanical",
+      "comment": "Stage-2 catalog-row minting (2026-07-04). Substrate already exists (commit ca7cb61): capabilities_match_create_impl tests in reposix-github, reposix-jira, reposix-confluence.",
+      "sources": [
+        "crates/reposix-github/src/lib.rs::capabilities_match_create_impl",
+        "crates/reposix-jira/src/client.rs::capabilities_match_create_impl",
+        "crates/reposix-confluence/tests/roundtrip.rs::capabilities_match_create_impl"
+      ],
+      "command": "cargo test -p reposix-github -p reposix-jira -p reposix-confluence capabilities_match",
+      "expected": {
+        "asserts": [
+          "cargo test -p reposix-github -p reposix-jira -p reposix-confluence capabilities_match exits 0",
+          "at least 3 tests matched and ran (guards against a silent 0-matches false-pass if a test name or --lib filter drifts)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/code/capabilities-match-impl.sh",
+        "args": [],
+        "timeout_s": 180,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/code/capabilities-match-impl.json",
+      "status": "PASS",
+      "last_verified": "2026-07-04T08:39:49Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: a connector's CAPABILITIES constant claims support for an operation (e.g. BackendFeature::Create) that create_record actually returns Error::NotSupported for, or vice versa -- check the connector's supports() impl against its create_record match arms",
+      "waiver": null,
+      "claim_vs_assertion_audit": "The verifier runs `cargo test -p reposix-github -p reposix-jira -p reposix-confluence capabilities_match` and parses the libtest summary lines to confirm >=3 tests ran and none failed. If the claim ('each connector's CAPABILITIES constant agrees with observable create_record behavior') were false -- e.g. a connector's supports(Create) returned true while create_record actually returned Err(NotSupported), or the test filter matched 0 tests because a test was renamed/deleted -- the assertion would fail because cargo test would report a FAILED test or the parsed ran-count would be 0, and the verifier would exit non-zero naming which.",
+      "cadences": [
+        "pre-pr"
+      ]
     }
   ]
 }
