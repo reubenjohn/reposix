@@ -65,7 +65,7 @@ runtime/                 # gitignored — local sim DB, scratch working trees.
 ### `.planning/milestones/` convention (HANDOVER §0.5 / Option B)
 
 Per-milestone planning artifacts live INSIDE the matching `*-phases/` dir,
-never loose at `.planning/milestones/` top-level:
+never loose at `.planning/milestones/` top-level (illustrative; repeats per milestone):
 
 ```
 .planning/milestones/
