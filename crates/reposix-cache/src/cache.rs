@@ -600,6 +600,27 @@ impl Cache {
     }
 }
 
+/// Build a `git -C <repo_path>` command with the caller's git repo-context
+/// env scrubbed (`GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE`,
+/// `GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY`, `GIT_NAMESPACE`) so the
+/// subprocess operates on the bare cache repo, not on whatever repo the
+/// PARENT process (e.g. `git push` spawning git-remote-reposix) injected.
+fn git_config_cmd(repo_path: &std::path::Path) -> std::process::Command {
+    let mut cmd = std::process::Command::new("git");
+    cmd.arg("-C").arg(repo_path);
+    for var in [
+        "GIT_DIR",
+        "GIT_WORK_TREE",
+        "GIT_INDEX_FILE",
+        "GIT_COMMON_DIR",
+        "GIT_OBJECT_DIRECTORY",
+        "GIT_NAMESPACE",
+    ] {
+        cmd.env_remove(var);
+    }
+    cmd
+}
+
 /// Ensure `transfer.hideRefs` includes our private sync-tag namespace.
 /// Idempotent — `git config --add` skipping duplicate values would simplify
 /// this, but git treats `transfer.hideRefs` as a multi-valued key without
@@ -607,9 +628,16 @@ impl Cache {
 fn ensure_hide_sync_refs(repo_path: &std::path::Path) -> Result<()> {
     let want = "refs/reposix/sync/";
     // Read all current values; skip if already present.
-    let out = std::process::Command::new("git")
-        .arg("-C")
-        .arg(repo_path)
+    //
+    // env_remove(GIT_*): `Cache::open` also runs INSIDE git-remote-reposix,
+    // which git spawns with repo-context env vars pointing at the USER's
+    // working tree (GIT_DIR is typically the relative `.git`). Inherited
+    // into a `git -C <bare-cache>` shell-out, that relative GIT_DIR is
+    // resolved against the cache path and git dies with "fatal: not in a
+    // git directory" — which used to silently disable ALL push-side OP-3
+    // bookkeeping (audit rows + refs/mirrors/*). Scrub the context so the
+    // shell-out always operates on the bare cache repo named by `-C`.
+    let out = git_config_cmd(repo_path)
         .args(["config", "--get-all", "transfer.hideRefs"])
         .output()
         .map_err(|e| {
@@ -623,9 +651,7 @@ fn ensure_hide_sync_refs(repo_path: &std::path::Path) -> Result<()> {
         return Ok(());
     }
     // Add the value.
-    let add = std::process::Command::new("git")
-        .arg("-C")
-        .arg(repo_path)
+    let add = git_config_cmd(repo_path)
         .args(["config", "--add", "transfer.hideRefs", want])
         .output()
         .map_err(|e| Error::Git(format!("spawn `git config --add transfer.hideRefs`: {e}")))?;

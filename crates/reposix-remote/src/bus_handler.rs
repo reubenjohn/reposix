@@ -213,7 +213,17 @@ pub(crate) fn handle_bus_export<R: std::io::Read, W: std::io::Write>(
     // PRECHECK B's no-cursor path returns Stable, so a cache-open
     // failure (non-fatal) collapses to "first-push policy" via the
     // wrapper's `cache: None` arm.
-    let _ = crate::ensure_cache(state);
+    if let Err(e) = crate::ensure_cache(state) {
+        // Cache-open failure is non-fatal for the push itself (PRECHECK B
+        // degrades to first-push policy), but it silently disables ALL
+        // OP-3 bookkeeping for this push (helper_push_* audit rows,
+        // refs/mirrors/<sot>-{head,synced-at}, token_cost). Never swallow
+        // that silently — say so on stderr with the cause.
+        crate::diag(&format!(
+            "warning: reposix cache unavailable for this push — audit rows and \
+             refs/mirrors/* will NOT be recorded. Cause: {e:#}"
+        ));
+    }
     let drift = precheck_sot_drift_any(
         state.cache.as_ref(),
         state.backend.as_ref(),
