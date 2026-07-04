@@ -175,7 +175,7 @@
 **Requirements:** RBF-A-01, RBF-A-02, RBF-A-03, RBF-A-04, RBF-A-05, RBF-A-06, RBF-A-07, **QL-001** · **Depends on:** P89 GREEN, P90 GREEN · **Plan:** 6 plans (91-01..91-06; overview 91-OVERVIEW.md)
 - [ ] 91-01-PLAN.md — catalog-first mint (ql-001-canonical-path-shape, attach-sync-real-backend; NOT-VERIFIED)
 - [ ] 91-02-PLAN.md — Lane 1 QL-001 canonical path-shape + stream-parser fix + fixture re-key + waiver retire
-- [ ] 91-03-PLAN.md — Lane 2 attach/sync real-backend dispatch + reconciliation + smokes (D91-03/04/09)
+- [x] 91-03-PLAN.md — Lane 2 attach/sync real-backend dispatch + reconciliation + smokes (D91-03/04/09) — SHIPPED 2026-07-04 (91-03-SUMMARY.md; 5 commits 1f7fff3..bd5e115; real Confluence attach+sync verified live; catalog row grading deferred to coordinator)
 - [ ] 91-04-PLAN.md — dvcs-third-arm populate (RBF-A-05) + Confluence hierarchy self-seed + testing-targets doc
 - [ ] 91-05-PLAN.md — litmus verifier rewrite (D91-06) + substrate prep; T2 REOPEN gate left for coordinator
 - [ ] 91-06-PLAN.md — docs (REQUIREMENTS/CLAUDE/comments-attachments) + phase close (push, CI watch, handoff)
