@@ -35,6 +35,7 @@ from typing import Any
 from _freshness import parse_duration as _parse_duration_impl
 from _freshness import is_stale as _is_stale_impl
 import _realbackend  # P89 RBF-FW-01: env-gate + exit-code map (sibling per anti-bloat rule)
+import _audit_field  # P89 RBF-FW-11: claim_vs_assertion_audit + kind:shell-subprocess cross-check
 
 # Re-export so existing callers and tests can keep doing `from run import parse_duration`.
 parse_duration = _parse_duration_impl
@@ -81,6 +82,13 @@ def load_catalog(path: Path) -> dict:
     for k in ("dimension", "rows"):
         if k not in data:
             raise SystemExit(f"FAIL: {path}: wrapper missing {k!r}")
+    # P89 RBF-FW-11: fail loud BEFORE any verifier runs. Skipped for the
+    # docs-alignment dimension, whose distinct per-row schema (last_verdict/
+    # last_extracted) has no last_verified key for the date-cutoff to anchor
+    # on (quality/catalogs/README.md "docs-alignment dimension").
+    if data["dimension"] != "docs-alignment":
+        for row in data.get("rows", []):
+            _audit_field.validate_row(row, str(path), parse_rfc3339)
     return data
 
 
@@ -288,6 +296,13 @@ def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
     artifact.setdefault("stderr", stderr)
     artifact.setdefault("asserts_passed", [])
     artifact.setdefault("asserts_failed", [])
+    # RBF-FW-11: persist content-hash on the normally-graded path so verifier
+    # subagents detect drift between row mint and grading run. Not persisted
+    # on the real-backend-skip/WAIVED/STALE/verifier-not-found short-circuits
+    # above -- those artifacts describe a non-execution, not a grade.
+    audit_hash = _audit_field.compute_hash(row)
+    if audit_hash:
+        artifact["claim_vs_assertion_audit_hash"] = audit_hash
     if artifact_path:
         write_artifact(artifact_path, artifact)
 

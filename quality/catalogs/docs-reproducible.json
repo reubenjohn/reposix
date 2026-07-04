@@ -270,6 +270,7 @@
       "blast_radius": "P2",
       "owner_hint": "if RED: docs/benchmarks/latency.md drifted from headline numbers; v0.12.1 perf cross-check (perf/headline-numbers-cross-check) automates this row",
       "waiver": null,
+      "claim_vs_assertion_audit": "If the headline 8ms cached-read claim were false, either assert would falsify it: a stale last_measured_at (>=30d) means the reviewer can no longer trust the recorded number and must FAIL pending re-measurement, and a p50 cell value outside 8ms+/-2ms directly contradicts the docs/index.md and README.md headline text the row exists to police.",
       "cadences": [
         "weekly"
       ]
@@ -303,6 +304,7 @@
       "blast_radius": "P2",
       "owner_hint": "if RED: docs/benchmarks/token-economy.md drifted from headline numbers; v0.12.1 perf cross-check (perf/headline-numbers-cross-check) automates this row",
       "waiver": null,
+      "claim_vs_assertion_audit": "If the 89.1% token-reduction headline were false, the reviewer's grep for the exact figure in docs/benchmarks/token-economy.md would come back empty (the number was never actually printed where the headline claims it lives), or the comparison fixture backing the calculation would be missing -- either finding directly falsifies the claim and flips the row to FAIL rather than PASS.",
       "cadences": [
         "weekly"
       ]

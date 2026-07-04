@@ -623,6 +623,7 @@
       "blast_radius": "P0",
       "owner_hint": "if RED: someone deleted release-plz.toml or flipped git_release_enable. The fix is preventive — without it, release-plz creates one zero-asset GH release per workspace package on every push to main, stealing releases/latest from the canonical v* release. See PR #34 (commit f1d89e5) for the original rationale.",
       "waiver": null,
+      "claim_vs_assertion_audit": "If per-package GitHub releases were re-enabled (release-plz.toml deleted, or git_release_enable flipped away from false), the verifier's grep for the exact file/table/key would come back empty or find the wrong value, exiting non-zero and flipping the row to FAIL -- directly falsifying the claim that per-package releases stay disabled and releases/latest stays pointed at the canonical v* tag.",
       "cadences": [
         "pre-push",
         "pre-pr"
@@ -664,6 +665,7 @@
         "dimension_owner": "structure dimension owner (currently maintained by orchestrator)",
         "tracked_in": "v0.13.0 extension SURPRISES-INTAKE (file-size-limits warn-only re-instated 2026-05-08)"
       },
+      "claim_vs_assertion_audit": "If a tracked file blew past its extension's progressive-disclosure budget, the verifier's per-extension byte-count scan would report the specific path + size and (absent --warn-only) exit non-zero -- directly falsifying the claim that every tracked file fits its budget. The active waiver enumerates exactly the 10 known violations; a NEW, unenumerated violation would still surface in the verifier's own warning output for the next waiver-renewal review to catch.",
       "cadences": [
         "pre-commit",
         "pre-push",
