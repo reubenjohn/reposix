@@ -5,17 +5,17 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 277,
-    "claims_missing_test": 1,
+    "claims_bound": 273,
+    "claims_missing_test": 6,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.8244047619047619,
+    "alignment_ratio": 0.8125,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-04T08:08:33Z",
-    "coverage_ratio": 0.18709150326797386,
-    "lines_covered": 1145,
-    "total_eligible_lines": 6120,
+    "last_walked": "2026-07-04T08:39:54Z",
+    "coverage_ratio": 0.19511800840607824,
+    "lines_covered": 1207,
+    "total_eligible_lines": 6186,
     "coverage_floor": 0.1,
     "claims_waived": 1
   },
@@ -544,24 +544,18 @@
       "source": {
         "file": "docs/reference/cli.md",
         "line_start": 5,
-        "line_end": 27
+        "line_end": 29
       },
-      "source_hash": "d199d76e57cf64a13bebf843a7536917315bc6f2b3081d546e2d0efd7ee9f4cb",
+      "source_hash": "afd37974ff5116384f2a3f8dfcd9a73f612ca1fc50562da0ec1d003829263548",
       "source_hashes": [
-        "d199d76e57cf64a13bebf843a7536917315bc6f2b3081d546e2d0efd7ee9f4cb"
+        "afd37974ff5116384f2a3f8dfcd9a73f612ca1fc50562da0ec1d003829263548"
       ],
-      "tests": [
-        "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands"
-      ],
-      "test_body_hashes": [
-        "4dc5fe7ebc778ac27b68a1976253f7a4a2e1f53b8d213bcbb27065bf950e3b36"
-      ],
-      "rationale": "Test verifies help output contains sim, init, list, version; all subcommands build and are present in --help output",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:08:30Z",
-      "last_extracted": "2026-04-28T09:08:30Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "Test crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands asserts only the subset [sim, init, list, version] are present (plus negative checks for mount/demo); it does not assert the newly-added attach and sync subcommands now listed in the doc's Commands block, so it does not fully verify the claim that ALL subcommands are documented.",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "WRITE_TEST",
+      "last_run": "2026-07-04T08:31:07Z",
+      "last_extracted": "2026-07-04T08:31:07Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/docs-03",
@@ -2984,25 +2978,19 @@
       "claim": "Environment variables documented: REPOSIX_ALLOWED_ORIGINS, REPOSIX_CONFLUENCE_TENANT, REPOSIX_JIRA_INSTANCE, GITHUB_TOKEN, ATLASSIAN_EMAIL, ATLASSIAN_API_KEY, RUST_LOG",
       "source": {
         "file": "docs/reference/cli.md",
-        "line_start": 295,
-        "line_end": 304
+        "line_start": 334,
+        "line_end": 343
       },
       "source_hash": "eef5791a71e06be6be257941cedc2bbf9b9b265a1376382a31cff8fb08c6a1e5",
       "source_hashes": [
         "eef5791a71e06be6be257941cedc2bbf9b9b265a1376382a31cff8fb08c6a1e5"
       ],
-      "tests": [
-        "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands"
-      ],
-      "test_body_hashes": [
-        "4dc5fe7ebc778ac27b68a1976253f7a4a2e1f53b8d213bcbb27065bf950e3b36"
-      ],
-      "rationale": "Env vars are enforced at runtime via httpClient and backend constructors; documented as defaults/requirements in CLI reference",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:09:02Z",
-      "last_extracted": "2026-04-28T09:09:02Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "Cited test cli.rs::help_lists_all_subcommands only asserts subcommand names (sim/init/list/version) appear in reposix --help and mount/demo are absent; it makes no reference to any environment variable. It would still pass if the env-var table were deleted or a var renamed, so it does not ground this claim. Env-var table content is intact (all 7 vars present); source re-anchored 334-343 after sibling attach/sync sections shifted it down. Needs a test that actually references the documented env vars (allowlist enforcement / doctor env checks).",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "WRITE_TEST",
+      "last_run": "2026-07-04T08:32:43Z",
+      "last_extracted": "2026-07-04T08:32:43Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "docs/reference/simulator.md/ephemeral-mode",
@@ -3235,49 +3223,37 @@
       "source": {
         "file": "docs/reference/exit-codes.md",
         "line_start": 20,
-        "line_end": 100
+        "line_end": 157
       },
-      "source_hash": "9f027310e7e7405ea641175f63abae2115f7089fc6fe962a4e496e8e24fb6bf8",
+      "source_hash": "58433f0847b6ca406bc1029d722802047610b5847a950958970678a490848d88",
       "source_hashes": [
-        "9f027310e7e7405ea641175f63abae2115f7089fc6fe962a4e496e8e24fb6bf8"
+        "58433f0847b6ca406bc1029d722802047610b5847a950958970678a490848d88"
       ],
-      "tests": [
-        "crates/reposix-cli/tests/gc.rs::gc_help_renders"
-      ],
-      "test_body_hashes": [
-        "0e608332bc1ddc06393917a69daa0d90a579c01b43b158a95ca54a65ecf16b65"
-      ],
-      "rationale": "exit-codes.md documents stable contract with detailed exit-code tables per subcommand; main.rs uses anyhow Result->exit(0|1) pattern; git-remote-reposix main() has explicit 3-tier dispatch matching the spec",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:04:47Z",
-      "last_extracted": "2026-04-28T09:04:47Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "Test crates/reposix-cli/tests/gc.rs::gc_help_renders exists but only asserts that 'reposix gc --help' renders successfully and its stdout contains the --strategy and --dry-run flags. It asserts nothing about exit-code VALUES (no 0/1 CLI contract, no 0/1/2 git-remote-reposix contract) nor semver-locking / additive-minor-only. A gc --help rendering check is a loose name match, not an assertion of the exit-codes-locked claim. Needs a dedicated test that spawns reposix subcommands + git-remote-reposix and asserts the documented exit codes (e.g. exit 0 on success, exit 1 on handled error, helper exit 1 on push-reject / exit 2 on anyhow crash).",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "WRITE_TEST",
+      "last_run": "2026-07-04T08:34:25Z",
+      "last_extracted": "2026-07-04T08:34:25Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "docs/reference/cli.md/exit_codes",
       "claim": "Exit codes documented: 0 (success), 1 (expected failure), 2 (unexpected error)",
       "source": {
         "file": "docs/reference/cli.md",
-        "line_start": 306,
-        "line_end": 312
+        "line_start": 345,
+        "line_end": 351
       },
       "source_hash": "003c85239fcc62f7975a3ab4513bc7ed07e923ecc98a418439d0e760ae722eb9",
       "source_hashes": [
         "003c85239fcc62f7975a3ab4513bc7ed07e923ecc98a418439d0e760ae722eb9"
       ],
-      "tests": [
-        "crates/reposix-cli/tests/cli.rs::mount_subcommand_is_removed"
-      ],
-      "test_body_hashes": [
-        "a8fd137976bc34abc8da35dbfdee3df9d73c1fc522216eafe926813c32c07db4"
-      ],
-      "rationale": "Test verifies non-zero exit on error; exit code semantics implemented in CLI handler",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:09:02Z",
-      "last_extracted": "2026-04-28T09:09:02Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "Test crates/reposix-cli/tests/cli.rs::mount_subcommand_is_removed only asserts !out.status.success() (non-zero exit for a removed subcommand); it does not assert the 0/1/2 exit-code contract — no test distinguishes code 1 (expected failure) from code 2 (unexpected error) or verifies code 0 for the success path. Needs a dedicated exit-code-semantics test.",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "WRITE_TEST",
+      "last_run": "2026-07-04T08:30:47Z",
+      "last_extracted": "2026-07-04T08:30:47Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "git-remote/export-push-path",
@@ -3926,13 +3902,13 @@
         "crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest"
       ],
       "test_body_hashes": [
-        "78b155b8fcec798a6cacd90c8cda7aec668d612724eb7d4daaf75793da053f97"
+        "8bc8d5b9980e97cb2a471c167063649f18770eeb6ae1bf47709adcb470871d86"
       ],
-      "rationale": "Tests push rejection with stale backend version returns exit 1",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "docs/reference/exit-codes.md:29 still asserts the helper exits 1 on push rejection; test asserts !status.success() plus stdout 'error refs/heads/main fetch first' (the exit-1 push-rejection path, distinct from the exit-2 crash path) and stderr 'git pull --rebase' recovery hint",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:08:34Z",
-      "last_extracted": "2026-04-28T09:08:34Z",
+      "last_run": "2026-07-04T08:34:01Z",
+      "last_extracted": "2026-07-04T08:34:01Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7590,12 +7566,12 @@
       "claim": "reposix init subcommand documented with backend::project spec form",
       "source": {
         "file": "docs/reference/cli.md",
-        "line_start": 40,
-        "line_end": 62
+        "line_start": 42,
+        "line_end": 65
       },
-      "source_hash": "a829d8b3469aca1b3cc98eff7371b2eed426e73ee98fa8377bafbd0b02a4daed",
+      "source_hash": "c712b2d1dc893569e012dbda83ea85e790516f15f79524e1db651f118506ffe3",
       "source_hashes": [
-        "a829d8b3469aca1b3cc98eff7371b2eed426e73ee98fa8377bafbd0b02a4daed"
+        "c712b2d1dc893569e012dbda83ea85e790516f15f79524e1db651f118506ffe3"
       ],
       "tests": [
         "crates/reposix-cli/tests/cli.rs::init_help_documents_spec_argument"
@@ -7603,11 +7579,11 @@
       "test_body_hashes": [
         "1b4dce09d126178a7db0706309700976084d6b44d2b78dae37bd29b4706b48da"
       ],
-      "rationale": "Test verifies init --help contains BACKEND::PROJECT pattern and each backend (sim, github, confluence, jira)",
+      "rationale": "cli.rs:78-88 still asserts init --help contains BACKEND::PROJECT/<backend>::<project> spec form and mentions each backend sim/github/confluence/jira; doc section documents the same spec form with all four backend examples",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:08:37Z",
-      "last_extracted": "2026-04-28T09:08:37Z",
+      "last_run": "2026-07-04T08:30:42Z",
+      "last_extracted": "2026-07-04T08:30:42Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7640,8 +7616,8 @@
       "claim": "reposix list queries backend list_records and dumps JSON or table format",
       "source": {
         "file": "docs/reference/cli.md",
-        "line_start": 78,
-        "line_end": 93
+        "line_start": 102,
+        "line_end": 117
       },
       "source_hash": "e2ab3c8f22ff363ec7c4a5351dcf6679e82300776a4f357557bffea5ae924ec3",
       "source_hashes": [
@@ -7653,11 +7629,11 @@
       "test_body_hashes": [
         "4748662c087a773b3f96515829faf874af35d55e87773e3c7d23d945090abc12"
       ],
-      "rationale": "Test verifies list subcommand exists with --backend/--project/--format flags",
+      "rationale": "docs/reference/cli.md:104 \"Query the backend's list_records and dump JSON or a fixed-width table\" — test asserts list --help succeeds and documents --project/--origin/--format (json|table) flags; pure line-shift, content unchanged",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:09:23Z",
-      "last_extracted": "2026-04-28T09:09:23Z",
+      "last_run": "2026-07-04T08:33:33Z",
+      "last_extracted": "2026-07-04T08:33:33Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7665,8 +7641,8 @@
       "claim": "reposix list subcommand documented with flags (backend, project, format, no-truncate)",
       "source": {
         "file": "docs/reference/cli.md",
-        "line_start": 78,
-        "line_end": 93
+        "line_start": 102,
+        "line_end": 117
       },
       "source_hash": "e2ab3c8f22ff363ec7c4a5351dcf6679e82300776a4f357557bffea5ae924ec3",
       "source_hashes": [
@@ -7678,11 +7654,11 @@
       "test_body_hashes": [
         "4748662c087a773b3f96515829faf874af35d55e87773e3c7d23d945090abc12"
       ],
-      "rationale": "Test verifies list --help succeeds and documents backend/project/format flags",
+      "rationale": "crates/reposix-cli/tests/cli.rs:109 asserts list --help succeeds and documents the list-subcommand flags [--project, --origin, --format]; pure line-shift refresh, section content unchanged",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:08:37Z",
-      "last_extracted": "2026-04-28T09:08:37Z",
+      "last_run": "2026-07-04T08:34:02Z",
+      "last_extracted": "2026-07-04T08:34:02Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7769,12 +7745,12 @@
       "claim": "reposix mount subcommand was removed in v0.9.0",
       "source": {
         "file": "docs/reference/cli.md",
-        "line_start": 286,
-        "line_end": 291
+        "line_start": 325,
+        "line_end": 332
       },
-      "source_hash": "9cb63a1b7dd6f0408e36163ee1b7701e3acce74f223e5303d25919a9359762a8",
+      "source_hash": "3f0fe8082eebb19486a2ac4194cb323b28ac70fcef8ac846d7c827be224d578d",
       "source_hashes": [
-        "9cb63a1b7dd6f0408e36163ee1b7701e3acce74f223e5303d25919a9359762a8"
+        "3f0fe8082eebb19486a2ac4194cb323b28ac70fcef8ac846d7c827be224d578d"
       ],
       "tests": [
         "crates/reposix-cli/tests/cli.rs::mount_subcommand_is_removed"
@@ -7782,11 +7758,11 @@
       "test_body_hashes": [
         "a8fd137976bc34abc8da35dbfdee3df9d73c1fc522216eafe926813c32c07db4"
       ],
-      "rationale": "Test verifies 'mount' subcommand errors with unrecognized subcommand message",
+      "rationale": "crates/reposix-cli/tests/cli.rs:43 mount_subcommand_is_removed runs `reposix mount /tmp/nowhere` and asserts !out.status.success() — confirms the removed subcommand errors; section content unchanged, pure line-shift.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:08:37Z",
-      "last_extracted": "2026-04-28T09:08:37Z",
+      "last_run": "2026-07-04T08:33:55Z",
+      "last_extracted": "2026-07-04T08:33:55Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7844,25 +7820,19 @@
       "claim": "reposix spaces lists readable Confluence spaces (Confluence-only backend)",
       "source": {
         "file": "docs/reference/cli.md",
-        "line_start": 276,
-        "line_end": 284
+        "line_start": 315,
+        "line_end": 323
       },
       "source_hash": "dddaf554d6fe986a5928d72c3939e81c664eb5442b93d65758961e6d2f4e4567",
       "source_hashes": [
         "dddaf554d6fe986a5928d72c3939e81c664eb5442b93d65758961e6d2f4e4567"
       ],
-      "tests": [
-        "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands"
-      ],
-      "test_body_hashes": [
-        "4dc5fe7ebc778ac27b68a1976253f7a4a2e1f53b8d213bcbb27065bf950e3b36"
-      ],
-      "rationale": "Subcommand exists and requires ATLASSIAN env vars; tested in confluence reference",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:09:23Z",
-      "last_extracted": "2026-04-28T09:09:23Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "Test crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands asserts only that [sim, init, list, version] appear in top-level --help; it never references the spaces subcommand and asserts nothing about the Confluence-only backend constraint. No test covers this claim.",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "WRITE_TEST",
+      "last_run": "2026-07-04T08:33:42Z",
+      "last_extracted": "2026-07-04T08:33:42Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "docs/index/rest-supported-backends",
