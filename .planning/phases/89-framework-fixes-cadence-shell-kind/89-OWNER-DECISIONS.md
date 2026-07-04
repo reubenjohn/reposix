@@ -81,3 +81,55 @@ creds/targets are missing/unreachable. That state is RED, full stop.
 
 These are surgical contract tightenings, not a scope change. Wave
 decomposition + task count are unchanged.
+
+## DECISION OD-3 — Full-autonomy drive to v1.0
+
+**Date:** 2026-07-03
+**Source:** owner (Reuben), interactive session with the coordinating agent,
+ratified at execution kick-off after the 8-week idle gap (2026-05-16 →
+2026-07-03). Post-dates OD-1/OD-2. AMENDS OD-1's sign-off mechanics (see
+"Autonomy" below); OD-2 remains in force UNCHANGED.
+
+### Scope — drive to v1.0
+
+Complete v0.13.0-ext (P89–P97, tag v0.13.0), then v0.13.2 (P98–P107, tag
+v0.13.2) **STRICTLY SERIALLY** — workstream A then workstream B. P98's
+"Depends on: v0.13.0 milestone GREEN" is taken literally; the
+parallel-worktree model in STATE.md is retired. After both tags, formalize
+the research-only ladder (v0.14.0 observability/multi-repo → plugin
+ecosystem/launch readiness → v1.0.0 + ADR-009 semver activation) as real
+GSD milestones via `/gsd-new-milestone` and execute them.
+
+### Branching
+
+`main` becomes the working branch: `workstream/v0.13.0-ext` is
+fast-forwarded into `main` on 2026-07-03 and retired; the per-phase push
+cadence (CLAUDE.md § "Push cadence — per-phase") targets `origin/main`
+directly from here on.
+
+### Autonomy — full, including former hard gates
+
+1. **OD-1 amendment.** OD-1's cross-AI review of the *implemented*
+   framework at P89 close REMAINS REQUIRED, but the "explicit owner
+   sign-off" leg (OD-1 item 2, including its "Absent owner sign-off ⇒ P89
+   does NOT close" clause) is delegated to the orchestrator — the owner is
+   notified in the session summary instead of blocking P89 close.
+2. **Tag pushes delegated.** Tag pushes at P97 (v0.13.0) and P107
+   (v0.13.2) are delegated to the orchestrator, contingent on GREEN
+   milestone verdicts.
+3. **Spend pre-authorization.** Real-money spend for v0.13.2 P106 L3
+   dogfood is pre-authorized up to ~$50.
+4. **Gates unchanged.** OD-2 remains in force UNCHANGED, and litmus REOPEN
+   gates remain in force — autonomy does not weaken gates; on RED the
+   orchestrator loops back, never waives to keep moving.
+
+### North star
+
+Owner's words, verbatim:
+
+> "The project is not yet used by anyone, and I want it to go as far as
+> possible and reach a state where it is a highly polished tool for
+> thousands of devs to adopt like wildfire."
+
+All subsequent scope/priority judgment calls resolve toward
+polish-for-adoption.
