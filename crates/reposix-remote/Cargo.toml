@@ -16,11 +16,21 @@ categories = ["development-tools", "command-line-utilities"]
 name = "git-remote-reposix"
 path = "src/main.rs"
 
+# The release pipeline (.github/workflows/release.yml) ships ONE combined
+# archive per target — `reposix-v<version>-<target>.tar.gz` — that contains
+# BOTH `reposix` and `git-remote-reposix` under a `reposix-v<version>-<target>/`
+# directory. The archive stem uses the product name `reposix` (not the package
+# name `reposix-remote`), so the default `{ name }-{ target }` template 404'd.
+# bin-dir uses `{ bin }` so binstall picks `git-remote-reposix` out of the
+# shared archive. Extension is hardcoded because assets are `.tar.gz`, which
+# binstall's `{ archive-format }` renders as `tgz`.
 [package.metadata.binstall]
-pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }.{ archive-format }"
+pkg-url = "{ repo }/releases/download/v{ version }/reposix-v{ version }-{ target }.tar.gz"
 pkg-fmt = "tgz"
+bin-dir = "reposix-v{ version }-{ target }/{ bin }{ binary-ext }"
 
 [package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-url = "{ repo }/releases/download/v{ version }/reposix-v{ version }-{ target }.zip"
 pkg-fmt = "zip"
 
 [features]
