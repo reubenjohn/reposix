@@ -267,3 +267,41 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 **Default disposition:** M — default-defer; fold into a v0.14.0 helper-protocol or perf window.
 
 **STATUS:** OPEN
+
+## GOOD-TO-HAVES-15 — consolidated file-size overages under the `structure/file-size-limits` waiver (expires 2026-08-08)
+
+**Discovered during:** P91 91-02/91-04/91-05 (deferred-items.md), P91 T2 code-review pass, and P91 91-06 docs edits (2026-07-04)
+
+**Size:** M (real split work across ~9 files, two languages)
+
+**Source:** The `structure/file-size-limits` catalog row is WAIVED until 2026-08-08, and the list of files over their per-extension budget (`.rs`/`.md` 20000 chars, `.py` 15000 chars) has grown across the P91 window rather than shrunk:
+- `crates/reposix-cli/src/doctor.rs` — 64780 chars (noticed by the P91 T2 code-review pass; single largest overage in the workspace).
+- `crates/reposix-cli/tests/attach.rs` — 44330 chars (same T2 pass).
+- `crates/reposix-confluence/tests/contract.rs` — 37844 chars (was 32583 pre-91-04; D91-08's hybrid-rewrite added ~5.3k; tracked in `deferred-items.md` § 91-04).
+- `quality/runners/test_audit_field.py` — 18861/15000, `quality/runners/test_realbackend.py` — 16889/15000, `quality/runners/verdict.py` — 16498/15000 (all pre-existing, tracked in `deferred-items.md` § Wave-5 91-05).
+- `.planning/milestones/v0.13.0-phases/REQUIREMENTS.md` — 20954/20000 (newly crossed the budget in 91-06's honest DVCS-ATTACH flip; the file had only 18 chars of headroom before that edit — any real correction would have crossed it).
+- `docs/guides/troubleshooting.md` — 22339/20000 and `docs/reference/cli.md` — 22158/20000 (both pre-existing overages — 22020 and 21764 respectively before 91-06 — nudged slightly further by the LOW8/MED5/Pattern-C-sweep edits in this phase).
+
+**Acceptance:** Split each file along its natural seams (`doctor.rs` by diagnostic-check group; `attach.rs` tests by reconciliation-case family, mirroring the pattern `reposix-remote`'s test suite already uses; `contract.rs` by connector-mode arm, e.g. hoist the `_live`/`_live_hierarchy` arms into a sibling `tests/contract_live.rs` per the 91-04 sketch; the three `quality/runners/*.py` files by function-group into sibling modules; the three docs files via progressive disclosure — child pages or linked docs — per project CLAUDE.md OP-4) until each is back under its budget, then confirm `structure/file-size-limits` passes un-waived for these paths.
+
+**Why deferred:** each split is real design work (natural seam identification + import/export wiring, or in the docs case a nav restructure), not a mechanical trim; doing all nine properly is well over the 1-hour eager-fix budget, and the waiver already covers the group until 2026-08-08 so nothing is silently RED today.
+
+**Default disposition:** M — default-defer to the pre-2026-08-08 waiver-renewal window (or a dedicated P95/P96 structure-hygiene pass); do NOT let the waiver silently auto-renew past its TTL without this list being re-triaged (per HYGIENE-02's precedent for waiver expiry discipline).
+
+**STATUS:** OPEN
+
+## GOOD-TO-HAVES-16 — `quality/runners/run.py` mutates the catalog in place with no `--dry-run` escape hatch
+
+**Discovered during:** P91 91-06 deferred-items.md reconciliation (2026-07-04)
+
+**Size:** S
+
+**Source:** `run.py` writes verdicts back into the catalog JSON as a side effect of running (catalog-first state mutation), with no flag to preview what a run would change without committing the mutation. An agent (or a human) who wants to know "what would this cadence flip before I run it for real" has no way to ask without accepting the write.
+
+**Acceptance:** Add a `--dry-run` flag to `run.py` that executes the full verifier sweep and prints the would-be verdict diff (row id, old status → new status) without writing the catalog file. Document the flag in `quality/PROTOCOL.md` alongside the existing runner-behavior description (the XS honest callout added in 91-06 names this gap; this entry is the actual flag implementation).
+
+**Why deferred:** implementing a true dry-run mode means threading a write-suppression flag through every catalog-mutation call site in `run.py` and its shared runner helpers — real (if small) plumbing, not a one-line change, and orthogonal to 91-06's docs-only charter.
+
+**Default disposition:** S — default-defer; natural fit for the next `quality/runners/` framework-touching phase (P95/P96 territory, alongside GOOD-TO-HAVES-06's `run.py`/`verdict.py` line-count gate).
+
+**STATUS:** OPEN

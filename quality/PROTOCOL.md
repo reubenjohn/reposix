@@ -134,6 +134,13 @@ Milestone-close ritual MUST also invoke
 `python3 quality/runners/run.py --cadence pre-release-real-backend` and
 require exit 0; absent ⇒ verdict graded RED (per RBF-FW-03 9th probe).
 
+**Honest callout (added P91 91-06):** every `run.py --cadence ...` invocation
+above mutates the catalog JSON in place as a side effect of running — there
+is currently no `--dry-run` flag to preview a would-be verdict diff without
+writing it. If you want to see what a cadence run would flip before
+committing to the mutation, there is no supported way to do that today;
+tracked as GOOD-TO-HAVES-16 (`.planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md`).
+
 **OD-2 hard-RED skip-semantics (89-OWNER-DECISIONS.md, binding):** If the
 `pre-release-real-backend` cadence cannot EXECUTE against the sanctioned
 target at milestone-close, the milestone-close verdict is **RED**. Milestone

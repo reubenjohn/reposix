@@ -3,6 +3,23 @@
 Per gsd-executor SCOPE BOUNDARY: issues NOT directly caused by the current
 task's changes are logged here, not fixed.
 
+> **RECONCILED (91-06, 2026-07-04).** Every entry below has been routed to
+> its proper permanent home per project convention (this file is a
+> nonstandard side-file, not one of the two canonical drain targets):
+> - **p87/p88 catalog rows missing `claim_vs_assertion_audit`** (§ 91-02) →
+>   `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`'s 2026-07-04
+>   "P91 91-02 (deferred-items.md), reconciled during 91-06 docs wave"
+>   entry, STATUS `DEFERRED-P96/P97`.
+> - **`contract.rs` file-size overage** (§ 91-04) and the **Wave-5 `.py`
+>   overages** (§ Wave-5 91-05) → consolidated into GOOD-TO-HAVES-15 in
+>   `.planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md` (also folds in
+>   `doctor.rs` + `attach.rs` tests noticed by the T2 code-review pass, and
+>   the `REQUIREMENTS.md`/`troubleshooting.md`/`cli.md` overages 91-06
+>   itself nudged), STATUS `OPEN`, waiver expires 2026-08-08.
+>
+> No further action needed against this file — read the two linked
+> entries above for current status, not this file's original prose.
+
 ## 91-02 (Lane 1 QL-001)
 
 - **[pre-existing] `agent-ux/p87-surprises-absorption` catalog row missing
