@@ -322,7 +322,8 @@
       "dimension": "structure",
       "kind": "mechanical",
       "sources": [
-        "scripts/hooks/pre-push:41-122",
+        "quality/gates/structure/cred-hygiene.sh",
+        ".githooks/pre-push",
         "CLAUDE.md:Threat model"
       ],
       "command": null,

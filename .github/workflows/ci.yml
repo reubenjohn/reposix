@@ -92,7 +92,9 @@ jobs:
     # attach) that had never run in CI before today.
     name: quality gates (pre-pr)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # 15 (not the 10-min PROTOCOL budget): margin for a cold rust-cache
+    # first run; warm runs finish well inside 10 (observed 290bb21+b866c90).
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
