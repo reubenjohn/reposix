@@ -12,11 +12,12 @@
     "alignment_ratio": 0.8244047619047619,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-04T07:49:26Z",
+    "last_walked": "2026-07-04T08:08:33Z",
     "coverage_ratio": 0.18709150326797386,
     "lines_covered": 1145,
     "total_eligible_lines": 6120,
-    "coverage_floor": 0.1
+    "coverage_floor": 0.1,
+    "claims_waived": 1
   },
   "rows": [
     {
@@ -3692,8 +3693,13 @@
       "last_verdict": "MISSING_TEST",
       "next_action": "WRITE_TEST",
       "last_run": "2026-07-04T07:19:13Z",
-      "last_extracted": "2026-07-04T07:19:13Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "last_extracted": "2026-07-04T08:08:06Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-07-31T00:00:00Z",
+        "reason": "claim unverifiable until QL-001 push/fetch round-trip lands (P90/P91); real test = tutorial-replay step 4 currently WAIVED for the same root cause",
+        "tracked_in": "v0.13.0 SURPRISES-INTAKE QL-001 entry (2026-07-03)"
+      }
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/cache-02",
