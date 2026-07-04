@@ -25,7 +25,7 @@ The `GithubReadOnlyBackend` (Phase 8-C) needs a **deterministic, documented,
 round-trippable mapping** so:
 - The list/get read path translates GitHub rows into the same
   `IssueStatus` enum the FUSE layer already understands.
-- The dark-factory regression (`scripts/dark-factory-test.sh github`) can drive
+- The dark-factory regression (`quality/gates/agent-ux/dark-factory.sh github`) can drive
   end-to-end clone+grep+edit+push against the sim and GitHub backends and get
   structural agreement on normalized output.[^parity]
 - The future v0.2 write path can reverse the mapping (set a state + state_reason
@@ -106,5 +106,5 @@ variant into the FUSE mount.
 
 [^parity]: The historical `scripts/demos/parity.sh` demo script was deleted in
     v0.11.1 (§7-F2) alongside the FUSE-era `scripts/demos/` directory. The
-    v0.9.0 architecture's regression equivalent is `scripts/dark-factory-test.sh
+    v0.9.0 architecture's regression equivalent is `quality/gates/agent-ux/dark-factory.sh
     github`.

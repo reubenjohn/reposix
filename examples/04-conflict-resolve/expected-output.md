@@ -33,7 +33,7 @@ The line that matters most is in step [3/5]:
 issue 1 modified on backend at ... since last fetch (local base version: 1, backend version: 2). Run: git pull --rebase
 ```
 
-The literal substring `Run: git pull --rebase` is the dark-factory teaching string -- the dark-factory regression test (`scripts/dark-factory-test.sh`) asserts this string is present in the helper source so an stderr-reading agent always learns the recovery move.
+The literal substring `Run: git pull --rebase` is the dark-factory teaching string -- the dark-factory regression test (`quality/gates/agent-ux/dark-factory.sh`) asserts this string is present in the helper source so an stderr-reading agent always learns the recovery move.
 
 ## Audit-log rows
 

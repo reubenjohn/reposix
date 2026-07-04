@@ -15,6 +15,16 @@ row's contract:
 Modes:
   --row-id <id>     verify a single row; write artifact + exit 0/1.
   --all             iterate every row; aggregate; exit 0 only if all PASS.
+  --inverse-scan    D-CONV-3 (2026-07-04): the modes above only check rows
+                    THAT EXIST -- structurally blind to a brand-new file
+                    dropped in scripts/ with no registry row. This mode
+                    walks scripts/ (excluding scripts/migrations/, which is
+                    exempt by policy) and asserts every file has EITHER a
+                    registry row here OR live wiring (a reference from
+                    .githooks/, .github/workflows/, docs/, CLAUDE.md,
+                    quality/, or .claude/skills/). Backs catalog row
+                    structure/scripts-registry-complete
+                    (quality/catalogs/freshness-invariants.json).
 
 Stdlib only. No third-party deps.
 """
@@ -140,6 +150,102 @@ def cmd_row(row_id: str) -> int:
     return 0 if status == "PASS" else 1
 
 
+
+# D-CONV-3 (2026-07-04): directories/files grepped for "live wiring" when a
+# scripts/ file has no orphan-scripts.json row. Deliberately narrow -- these
+# are the surfaces that actually execute or document dev-loop commands.
+# quality/reports/ and .planning/ are EXCLUDED on purpose: they're historical
+# artifact trees (verdicts, phase logs) that will mention almost any path
+# that ever existed, which would make this scan structurally unable to catch
+# a truly-dead file (everything "resolves" via some old report).
+LIVE_WIRE_ROOTS = (
+    REPO_ROOT / ".githooks",
+    REPO_ROOT / ".github" / "workflows",
+    REPO_ROOT / "docs",
+    REPO_ROOT / "CLAUDE.md",
+    REPO_ROOT / "quality" / "gates",
+    REPO_ROOT / "quality" / "catalogs",
+    REPO_ROOT / "quality" / "PROTOCOL.md",
+    REPO_ROOT / ".claude" / "skills",
+)
+
+
+def _iter_live_wire_files() -> list[Path]:
+    out: list[Path] = []
+    for root in LIVE_WIRE_ROOTS:
+        if root.is_file():
+            out.append(root)
+        elif root.is_dir():
+            out.extend(p for p in root.rglob("*") if p.is_file())
+    return out
+
+
+def is_live_wired(basename: str, haystacks: list[Path]) -> bool:
+    """True iff any live-wiring surface mentions `scripts/<basename>`."""
+    needle = f"scripts/{basename}"
+    for p in haystacks:
+        try:
+            text = p.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        if needle in text:
+            return True
+    return False
+
+
+def cmd_inverse_scan() -> int:
+    """D-CONV-3 inverse scan: every scripts/ file (excl. migrations/) has a
+    registry row OR live wiring. Writes the
+    structure/scripts-registry-complete artifact; exit 0 iff clean."""
+    catalog = load_catalog()
+    registered = {
+        Path(r["sources"][0]).name
+        for r in catalog.get("rows", [])
+        if r.get("sources")
+    }
+    scripts_dir = REPO_ROOT / "scripts"
+    haystacks = _iter_live_wire_files()
+
+    orphans: list[str] = []
+    scanned: list[str] = []
+    for f in sorted(scripts_dir.iterdir()):
+        if not f.is_file():
+            continue  # skips the migrations/ subdirectory too
+        scanned.append(f.name)
+        if f.name in registered:
+            continue
+        if is_live_wired(f.name, haystacks):
+            continue
+        orphans.append(f.name)
+
+    status = "PASS" if not orphans else "FAIL"
+    artifact_dir = REPO_ROOT / "quality" / "reports" / "verifications" / "structure"
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    out = artifact_dir / "scripts-registry-complete.json"
+    payload = {
+        "claim_id": "structure/scripts-registry-complete",
+        "verifier_kind": "mechanical",
+        "verified_at": now_rfc3339(),
+        "verifier_script": "quality/gates/structure/orphan-scripts-audit.py --inverse-scan",
+        "asserts": {
+            "every_scripts_file_registered_or_live_wired": status == "PASS",
+        },
+        "evidence": {
+            "scanned_count": len(scanned),
+            "registered_count": len(registered),
+            "orphans": orphans,
+        },
+        "status": status,
+    }
+    out.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    print(f"[{status:<6}] structure/scripts-registry-complete -> {out.relative_to(REPO_ROOT)}")
+    if orphans:
+        print("  new orphans (no orphan-scripts.json row, no live wiring):", file=sys.stderr)
+        for o in orphans:
+            print(f"    - scripts/{o}", file=sys.stderr)
+    return 0 if status == "PASS" else 1
+
+
 def cmd_all() -> int:
     catalog = load_catalog()
     rows = catalog.get("rows", [])
@@ -167,9 +273,16 @@ def main() -> int:
     g = parser.add_mutually_exclusive_group(required=True)
     g.add_argument("--row-id", help="verify a single row by id")
     g.add_argument("--all", action="store_true", help="iterate every row")
+    g.add_argument(
+        "--inverse-scan",
+        action="store_true",
+        help="D-CONV-3: assert every scripts/ file (excl. migrations/) is registered or live-wired",
+    )
     args = parser.parse_args()
     if args.row_id:
         return cmd_row(args.row_id)
+    if args.inverse_scan:
+        return cmd_inverse_scan()
     return cmd_all()
 
 

@@ -8,7 +8,7 @@
       "dimension": "agent-ux",
       "kind": "mechanical",
       "sources": [
-        "scripts/dark-factory-test.sh",
+        "quality/gates/agent-ux/dark-factory.sh",
         "CLAUDE.md (Local dev loop section)"
       ],
       "command": "bash quality/gates/agent-ux/dark-factory.sh sim",
@@ -33,7 +33,7 @@
       "last_verified": "2026-05-01T15:21:18Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: scripts/dark-factory-test.sh (pre-migration) or quality/gates/agent-ux/dark-factory.sh (post-migration) finds the helper teaching strings missing -- inspect helper export-path / fetch-blob-limit code | D-CONV-1 (2026-07-04): stripped from pre-pr and demoted to on-demand -- ci.yml's dedicated `dark-factory` job runs the identical `bash quality/gates/agent-ux/dark-factory.sh sim` command directly; a second invocation via quality-pre-pr would double the ~30s regression + full workspace build for no new signal.",
+      "owner_hint": "if RED: quality/gates/agent-ux/dark-factory.sh (the scripts/dark-factory-test.sh shim it replaced was deleted D-CONV-3, 2026-07-04) finds the helper teaching strings missing -- inspect helper export-path / fetch-blob-limit code | D-CONV-1 (2026-07-04): stripped from pre-pr and demoted to on-demand -- ci.yml's dedicated `dark-factory` job runs the identical `bash quality/gates/agent-ux/dark-factory.sh sim` command directly; a second invocation via quality-pre-pr would double the ~30s regression + full workspace build for no new signal.",
       "waiver": null,
       "cadences": [
         "on-demand"
@@ -1068,8 +1068,8 @@
       "status": "PASS",
       "last_verified": "2026-05-01T22:00:00Z",
       "freshness_ttl": null,
-      "blast_radius": "P3",
-      "owner_hint": "if RED: rerun P87 drain. SURPRISES-INTAKE.md should have 0 OPEN entries; each entry needs RESOLVED (commit SHA), DEFERRED (target milestone + rationale), or WONTFIX (rationale).",
+      "blast_radius": "P2",
+      "owner_hint": "if RED: rerun P87 drain. SURPRISES-INTAKE.md should have 0 OPEN entries; each entry needs RESOLVED (commit SHA), DEFERRED (target milestone + rationale), or WONTFIX (rationale). (D-CONV-3, 2026-07-04: blast_radius corrected from the non-existent 'P3' tier to 'P2' -- schema only defines P0/P1/P2, quality/catalogs/README.md.)",
       "waiver": null,
       "cadences": [
         "on-demand"
@@ -1105,8 +1105,9 @@
       "status": "PASS",
       "last_verified": "2026-05-01T22:30:00Z",
       "freshness_ttl": null,
-      "blast_radius": "P3",
-      "owner_hint": "if RED: rerun P88 drain. GOOD-TO-HAVES.md should have terminal STATUS on every heading; each entry needs RESOLVED (commit SHA), DEFERRED (target milestone + rationale), or WONTFIX (rationale).",
+      "blast_radius": "P2",
+      "owner_hint": "if RED: rerun P88 drain. GOOD-TO-HAVES.md should have terminal STATUS on every heading; each entry needs RESOLVED (commit SHA), DEFERRED (target milestone + rationale), or WONTFIX (rationale). (D-CONV-3, 2026-07-04: blast_radius corrected from the non-existent 'P3' tier to 'P2'; waiver:null backfilled -- both required by the unified schema, quality/catalogs/README.md.)",
+      "waiver": null,
       "cadences": [
         "on-demand"
       ]
@@ -1139,8 +1140,9 @@
       "status": "PASS",
       "last_verified": "2026-05-01T22:30:00Z",
       "freshness_ttl": null,
-      "blast_radius": "P3",
-      "owner_hint": "if RED: append a `## [v0.13.0] -- DVCS over REST -- YYYY-MM-DD` section to CHANGELOG.md above the previous entry.",
+      "blast_radius": "P2",
+      "owner_hint": "if RED: append a `## [v0.13.0] -- DVCS over REST -- YYYY-MM-DD` section to CHANGELOG.md above the previous entry. (D-CONV-3, 2026-07-04: blast_radius corrected from the non-existent 'P3' tier to 'P2'; waiver:null backfilled -- both required by the unified schema.)",
+      "waiver": null,
       "cadences": [
         "on-demand"
       ]
@@ -1176,8 +1178,9 @@
       "status": "PASS",
       "last_verified": "2026-05-01T22:30:00Z",
       "freshness_ttl": null,
-      "blast_radius": "P3",
-      "owner_hint": "if RED: re-author tag-v0.13.0.sh mirroring .planning/milestones/v0.12.0-phases/tag-v0.12.0.sh; ensure >=6 `# Guard N:` comments + `git tag -s`.",
+      "blast_radius": "P2",
+      "owner_hint": "if RED: re-author tag-v0.13.0.sh mirroring .planning/milestones/v0.12.0-phases/tag-v0.12.0.sh; ensure >=6 `# Guard N:` comments + `git tag -s`. (D-CONV-3, 2026-07-04: blast_radius corrected from the non-existent 'P3' tier to 'P2'; waiver:null backfilled -- both required by the unified schema.)",
+      "waiver": null,
       "cadences": [
         "on-demand"
       ]
@@ -1211,8 +1214,9 @@
       "status": "PASS",
       "last_verified": "2026-05-01T22:30:00Z",
       "freshness_ttl": null,
-      "blast_radius": "P3",
-      "owner_hint": "if RED: re-run P88 RETROSPECTIVE distillation against the OP-9 template (CLAUDE.md OP-9). Ensure all 5 subheadings appear in the v0.13.0 section.",
+      "blast_radius": "P2",
+      "owner_hint": "if RED: re-run P88 RETROSPECTIVE distillation against the OP-9 template (CLAUDE.md OP-9). Ensure all 5 subheadings appear in the v0.13.0 section. (D-CONV-3, 2026-07-04: blast_radius corrected from the non-existent 'P3' tier to 'P2'; waiver:null backfilled -- both required by the unified schema.)",
+      "waiver": null,
       "cadences": [
         "on-demand"
       ]

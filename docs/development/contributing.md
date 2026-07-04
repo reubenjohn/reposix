@@ -39,10 +39,11 @@ cargo test --workspace
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 
-# Run the end-to-end demo
+# Run the end-to-end demo (dark-factory regression: init + partial-clone +
+# helper teaching strings, pure git/POSIX against a fresh simulator)
 cargo build --release --workspace --bins
 export PATH="$PWD/target/release:$PATH"
-bash scripts/demo.sh
+bash quality/gates/agent-ux/dark-factory.sh sim
 ```
 
 ## What the code layout looks like
@@ -60,7 +61,8 @@ reposix/
 │   ├── reposix-jira/        # JIRA Cloud BackendConnector
 │   └── reposix-swarm/       # multi-agent contention/swarm test harness
 ├── docs/                    # this MkDocs site (docs/*.md)
-├── scripts/                 # dark-factory-test.sh + CI smoke tests + goal-backward gates
+├── scripts/                 # dev-loop helpers (install-hooks.sh, preflight checks)
+├── quality/gates/           # per-dimension verifiers, incl. quality/gates/agent-ux/dark-factory.sh (the dark-factory regression)
 ├── .planning/               # GSD planning artifacts (PROJECT, ROADMAP, per-phase)
 ├── .github/workflows/       # CI: fmt + clippy + test + integration + coverage
 ├── clippy.toml              # workspace disallowed-methods lint

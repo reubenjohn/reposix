@@ -14,7 +14,7 @@ From any Claude Code session in this repo:
 /reposix-agent-flow
 ```
 
-That runs `bash scripts/dark-factory-test.sh sim` -- the regression script lives at the top of the repo.
+That runs `bash quality/gates/agent-ux/dark-factory.sh sim` -- the regression script.
 
 ## Two example goals you can hand the agent
 
@@ -33,4 +33,4 @@ Either goal works against the simulator out of the box once `reposix init sim::d
 ## See also
 
 - [`docs/guides/integrate-with-your-agent.md`](../../docs/guides/integrate-with-your-agent.md) Pattern 1 (Claude Code skill).
-- [`scripts/dark-factory-test.sh`](../../scripts/dark-factory-test.sh) -- the underlying script the skill invokes.
+- [`quality/gates/agent-ux/dark-factory.sh`](../../quality/gates/agent-ux/dark-factory.sh) -- the underlying script the skill invokes.

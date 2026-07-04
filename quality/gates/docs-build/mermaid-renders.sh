@@ -16,8 +16,8 @@
 #   which is heavy for a Rust+mkdocs project's pre-push hook. The
 #   pragmatic split:
 #
-#     - mkdocs --strict (via scripts/check-docs-site.sh) catches mermaid
-#       SYNTAX errors at build time. Already wired into pre-push.
+#     - mkdocs --strict (via quality/gates/docs-build/mkdocs-strict.sh) catches
+#       mermaid SYNTAX errors at build time. Already wired into pre-push.
 #     - This script asserts that the artifact JSON proving the SVG
 #       renders is PRESENT and valid for every source-mermaid page.
 #       Artifacts are produced via the playwright MCP tool (or by an
@@ -34,7 +34,7 @@
 #        console_errors is non-empty
 #
 # Usage:
-#   bash scripts/check-mermaid-renders.sh
+#   bash quality/gates/docs-build/mermaid-renders.sh
 
 set -euo pipefail
 

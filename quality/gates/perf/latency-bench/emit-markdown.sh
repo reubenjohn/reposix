@@ -40,7 +40,7 @@ last_measured_at: ${GENERATED_AT}
 # v0.9.0 Latency Envelope
 
 **Generated:** ${GENERATED_AT} (commit \`${GIT_SHA}\`)
-**Reproducer:** \`bash scripts/latency-bench.sh\`
+**Reproducer:** \`bash quality/gates/perf/latency-bench.sh\`
 
 ## How to read this
 
@@ -103,7 +103,7 @@ for cadence; the weekly cron variant lives in
 ## Reproduce
 
 \`\`\`bash
-bash scripts/latency-bench.sh
+bash quality/gates/perf/latency-bench.sh
 \`\`\`
 
 The script regenerates this file in place. To capture real-backend
@@ -118,7 +118,7 @@ export ATLASSIAN_API_KEY=… ATLASSIAN_EMAIL=… REPOSIX_CONFLUENCE_TENANT=… R
 export JIRA_EMAIL=… JIRA_API_TOKEN=… REPOSIX_JIRA_INSTANCE=…
 
 export REPOSIX_ALLOWED_ORIGINS='https://api.github.com,https://reuben-john.atlassian.net'
-bash scripts/latency-bench.sh
+bash quality/gates/perf/latency-bench.sh
 \`\`\`
 
 See \`docs/reference/testing-targets.md\` for the canonical safe-to-mutate

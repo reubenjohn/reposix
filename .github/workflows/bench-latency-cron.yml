@@ -1,7 +1,9 @@
 name: bench-latency-cron
 
 # POLISH-08 (Phase 54): weekly refresh of docs/benchmarks/latency.md
-# numbers via a cron-driven PR. Runs scripts/latency-bench.sh against
+# numbers via a cron-driven PR. Runs quality/gates/perf/latency-bench.sh
+# (QL-109, D-CONV-3 2026-07-04: comment previously named the deleted
+# scripts/latency-bench.sh shim) against
 # all three real backends (when secrets are configured) and opens a PR
 # with the regenerated table — never pushes directly to `main` so a bad
 # row can't slip into docs without review (mkdocs publishes from main).
@@ -69,7 +71,7 @@ jobs:
             echo "## Weekly latency refresh"
             echo
             echo "Cron-driven refresh of \`docs/benchmarks/latency.md\` from"
-            echo "\`scripts/latency-bench.sh\`."
+            echo "\`quality/gates/perf/latency-bench.sh\`."
             echo
             echo "### Diff"
             echo

@@ -89,10 +89,15 @@ def verify_no_loose_roadmap_or_requirements(row: dict, repo_root: Path) -> int:
 
 
 def verify_no_orphan_docs(row: dict, repo_root: Path) -> int:
-    """Run scripts/check-docs-site.sh and grade by exit code."""
+    """Run quality/gates/docs-build/mkdocs-strict.sh and grade by exit code.
+
+    D-CONV-3 (2026-07-04): scripts/check-docs-site.sh (the shim this
+    verifier used to shell out to) was deleted; call the canonical path
+    directly.
+    """
     asserts_passed: list[str] = []
     asserts_failed: list[str] = []
-    script = repo_root / "scripts" / "check-docs-site.sh"
+    script = repo_root / "quality" / "gates" / "docs-build" / "mkdocs-strict.sh"
     if not script.exists():
         asserts_failed.append(f"verifier prereq missing: {script}")
         artifact = make_artifact(row, 1, asserts_passed, asserts_failed)
@@ -104,10 +109,10 @@ def verify_no_orphan_docs(row: dict, repo_root: Path) -> int:
         timeout=60, check=False,
     )
     if result.returncode == 0:
-        asserts_passed.append("bash scripts/check-docs-site.sh exits 0 (mkdocs --strict + orphan-doc check)")
+        asserts_passed.append("bash quality/gates/docs-build/mkdocs-strict.sh exits 0 (mkdocs --strict + orphan-doc check)")
     else:
         asserts_failed.append(
-            f"bash scripts/check-docs-site.sh exited {result.returncode}: "
+            f"bash quality/gates/docs-build/mkdocs-strict.sh exited {result.returncode}: "
             + (result.stderr.strip()[:400] or result.stdout.strip()[:400])
         )
     artifact = make_artifact(

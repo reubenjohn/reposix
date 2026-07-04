@@ -106,7 +106,7 @@ Real-backend test targets and env-var setup: [`docs/reference/testing-targets.md
 - **v0.9.0 — shipped 2026-04-24.** Architecture pivot to git-native partial clone. `crates/reposix-fuse/` deleted; `git-remote-reposix` is now a hybrid promisor remote (`stateless-connect` reads + `export` push). Migration: `reposix mount /tmp/m --backend sim --project demo` becomes `reposix init sim::demo /tmp/m`. See [`CHANGELOG.md`](CHANGELOG.md#v090--2026-04-24).
 - **v0.10.0 — landing 2026-04-25.** Diátaxis-structured docs site, 5-minute tutorial verified by `scripts/tutorial-runner.sh`, mental-model + vs-MCP concept pages, banned-words linter, README rewritten for v0.9.0 surface.
 
-`cargo test --workspace` is green; `cargo clippy --workspace --all-targets -- -D warnings` is clean; `bash scripts/dark-factory-test.sh sim` passes the dark-factory regression. `#![forbid(unsafe_code)]` at every crate root.
+`cargo test --workspace` is green; `cargo clippy --workspace --all-targets -- -D warnings` is clean; `bash quality/gates/agent-ux/dark-factory.sh sim` passes the dark-factory regression. `#![forbid(unsafe_code)]` at every crate root.
 
 Treat as alpha per Simon Willison's "proof of usage, not proof of concept" rule — the v0.9.0 quickstart above is reproducible on a stock Ubuntu host in under five minutes against the in-process simulator, with no system packages required beyond `git >= 2.34` and a Rust toolchain.
 

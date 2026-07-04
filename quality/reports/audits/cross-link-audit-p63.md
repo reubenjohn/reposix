@@ -1,20 +1,23 @@
 # Cross-link audit (P63 MIGRATE-02)
 
-_Generated 2026-04-28T05:00:17Z by `quality/gates/structure/cross-link-audit.py`._
+_Generated 2026-07-04T09:49:12Z by `quality/gates/structure/cross-link-audit.py`._
 
-**Summary:** 138 unique paths audited across 10 docs; 0 stale.
+**Summary:** 88 unique paths audited across 10 docs; 1 stale.
 
 ## CLAUDE.md
-- paths: 88
+- paths: 34
 - stale: 0
 
 ## quality/PROTOCOL.md
-- paths: 12
+- paths: 16
 - stale: 0
 
 ## quality/gates/code/README.md
 - paths: 9
-- stale: 0
+- stale: 1
+
+Stale paths:
+  - `.planning/phases/58-release-dimension-gates-code-absorption/58-03-SIMPLIFY-05-AUDIT.md`
 
 ## quality/gates/release/README.md
 - paths: 3

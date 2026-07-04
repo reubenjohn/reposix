@@ -80,9 +80,9 @@ The shape is documented in the [HTTP API reference](http-api.md); the sim is the
 ## Where it's used
 
 - The `cargo test --workspace` suite spins ephemeral sims via `run_with_listener` on `127.0.0.1:0`.
-- `scripts/dark-factory-test.sh sim` runs the [`reposix-agent-flow`](../guides/integrate-with-your-agent.md) regression against a fresh sim.
+- `quality/gates/agent-ux/dark-factory.sh sim` runs the [`reposix-agent-flow`](../guides/integrate-with-your-agent.md) regression against a fresh sim.
 - The [first-run tutorial](../tutorials/first-run.md) is the user-facing entrypoint.
-- Latency capture (`scripts/latency-bench.sh`) measures sim numbers as the lower bound published in [latency](../benchmarks/latency.md).
+- Latency capture (`quality/gates/perf/latency-bench.sh`) measures sim numbers as the lower bound published in [latency](../benchmarks/latency.md).
 
 ## See also
 

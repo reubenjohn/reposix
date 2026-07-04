@@ -9,7 +9,7 @@
       "kind": "mechanical",
       "sources": [
         "CLAUDE.md:Freshness invariants",
-        "scripts/end-state.py:144-164"
+        "quality/gates/structure/freshness/structure_misc.py:verify_no_version_pinned_filenames"
       ],
       "command": null,
       "expected": {
@@ -188,7 +188,7 @@
       "command": null,
       "expected": {
         "asserts": [
-          "bash scripts/check-docs-site.sh exits 0 (mkdocs --strict + orphan-doc check)"
+          "bash quality/gates/docs-build/mkdocs-strict.sh exits 0 (mkdocs --strict + orphan-doc check)"
         ]
       },
       "verifier": {
@@ -810,6 +810,42 @@
       "owner_hint": "if RED: a new/renamed Cmd enum variant in crates/reposix-cli/src/main.rs has no matching section in docs/reference/cli.md or no row in docs/reference/exit-codes.md -- add both in the same PR",
       "waiver": null,
       "claim_vs_assertion_audit": "The verifier regex-parses `enum Cmd { ... }` in main.rs for variant names, then for each non-exempt variant greps docs/reference/cli.md for a `## `reposix <name>`` heading (kebab-cased) and for every variant greps docs/reference/exit-codes.md for a backtick-wrapped row naming that subcommand. If the claim ('every CLI subcommand is documented in both reference pages') were false -- e.g. a new `reposix attach` variant shipped with no cli.md section -- the heading regex would find zero matches for 'attach' and the verifier would exit 1 naming the undocumented variant.",
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
+    },
+    {
+      "id": "structure/scripts-registry-complete",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "comment": "D-CONV-3 (2026-07-04, quality/SURPRISES.md 'Quality Convergence'): the scripts/ collapse deleted 6 dead shims + ~15 one-shot phase scripts, collapsed a duplicate validator pair, and converted quality/catalogs/orphan-scripts.json to the cadences-list schema. This row is the INVERSE gate that keeps the collapse from silently regressing -- the existing orphan-scripts-audit.py --all mode only re-checks rows that already exist, so it is structurally blind to a brand-new file dropped in scripts/ with no registry row.",
+      "sources": [
+        "quality/catalogs/orphan-scripts.json",
+        "quality/gates/structure/orphan-scripts-audit.py"
+      ],
+      "command": "python3 quality/gates/structure/orphan-scripts-audit.py --inverse-scan",
+      "expected": {
+        "asserts": [
+          "every file directly under scripts/ (excluding the scripts/migrations/ subdirectory, exempt by policy) has EITHER a matching row in quality/catalogs/orphan-scripts.json OR is referenced by a live-wiring surface (.githooks/, .github/workflows/, docs/, CLAUDE.md, quality/gates/, quality/catalogs/, quality/PROTOCOL.md, or .claude/skills/)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/orphan-scripts-audit.py",
+        "args": [
+          "--inverse-scan"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/scripts-registry-complete.json",
+      "status": "PASS",
+      "last_verified": "2026-07-04T09:48:29Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: a new file landed in scripts/ (excl. migrations/) with no orphan-scripts.json row and no reference from any live-wiring surface -- either add a registry row (mirroring an existing one) or wire it into a hook/workflow/doc and let this gate's grep pick it up.",
+      "waiver": null,
+      "claim_vs_assertion_audit": "If a new orphan script were added to scripts/ without a registry row or any live-wiring reference, the inverse scan's per-file loop would find it absent from both the `registered` id-set (derived from orphan-scripts.json rows) and every haystack file's text (grepped for `scripts/<basename>`), append it to `orphans`, and flip the row to FAIL naming the exact orphaned path -- the completeness claim is falsified the moment a single untracked file exists.",
       "cadences": [
         "pre-push",
         "pre-pr"

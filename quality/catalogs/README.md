@@ -90,7 +90,7 @@ schema with a per-dimension shape: a wrapper `summary` block + per-row
 v1.0 carried singular `test` / `test_body_hash` fields; v2.0 (P71/W7,
 commit `d2127c3`) replaces them with the parallel-array shape below. The
 388-row catalog was migrated in place by
-`scripts/migrate-doc-alignment-schema-w7.py`; readers MUST accept v2.0,
+`scripts/migrations/migrate-doc-alignment-schema-w7.py`; readers MUST accept v2.0,
 and the structural verifier accepts both `"1.0"` and `"2.0"` during the
 v0.12.1 transition.
 

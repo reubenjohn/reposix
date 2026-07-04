@@ -138,7 +138,7 @@ never loose at `.planning/milestones/` top-level:
 ```
 
 The `freshness/no-loose-roadmap-or-requirements` claim in
-`scripts/end-state.py` enforces this — any `*ROADMAP*.md` or
+`quality/gates/structure/freshness-invariants.py` enforces this — any `*ROADMAP*.md` or
 `*REQUIREMENTS*.md` placed loose at `.planning/milestones/v*.0-*.md`
 fails the verifier. New milestones must scaffold their planning docs
 inside `*-phases/` from day one.
@@ -186,7 +186,7 @@ gh api repos/reubenjohn/reposix-tokenworld-mirror/dispatches \
 bash scripts/webhook-latency-measure.sh                    # owner-runnable n=10 real-TokenWorld latency measurement (gated on v0.13.x release with working binstall — see SURPRISES-INTAKE)
 
 # Dark-factory regression (proves agent UX is pure git, zero in-context learning)
-bash scripts/dark-factory-test.sh sim                          # v0.9.0 arm — init + partial-clone + helper teaching strings (local + CI)
+bash quality/gates/agent-ux/dark-factory.sh sim                # v0.9.0 arm — init + partial-clone + helper teaching strings (local + CI)
 bash quality/gates/agent-ux/dark-factory.sh dvcs-third-arm     # v0.13.0 P86 arm — vanilla-clone + reposix attach + bus URL composition + cache audit (local + CI)
 
 # Testing against real backends — see docs/reference/testing-targets.md for env-var setup.
@@ -259,7 +259,7 @@ Every phase closes with `git push origin main` BEFORE the verifier-subagent disp
 
 ## Docs-site validation
 
-Any change to `mkdocs.yml` or `docs/**` MUST pass `bash scripts/check-docs-site.sh` before commit (pre-push enforces). Mermaid SVG assertions: `scripts/check-mermaid-renders.sh` (also pre-push). For playwright walk rules and scoping (which pages to re-check after a change), see `/reposix-quality-doc-alignment` skill.
+Any change to `mkdocs.yml` or `docs/**` MUST pass `bash quality/gates/docs-build/mkdocs-strict.sh` before commit (pre-push enforces). Mermaid SVG assertions: `quality/gates/docs-build/mermaid-renders.sh` (also pre-push). For playwright walk rules and scoping (which pages to re-check after a change), see `/reposix-quality-doc-alignment` skill.
 
 ## Cold-reader pass on user-facing surfaces
 
@@ -267,7 +267,7 @@ Before declaring any user-facing surface shipped (hero copy, install instruction
 
 ## Freshness invariants
 
-All invariants are enforced by `scripts/end-state.py` (pre-push hook). When a push is blocked, read the error — it names the violated invariant and the fix. The invariants: no version-pinned filenames, install path leads with package manager, benchmarks in mkdocs nav, no loose ROADMAP/REQUIREMENTS outside `*-phases/`, no orphan docs.
+All invariants are enforced by `quality/runners/verdict.py` (pre-push hook; `python3 quality/runners/verdict.py session-end` is the module `scripts/end-state.py` used to shim to). When a push is blocked, read the error — it names the violated invariant and the fix. The invariants: no version-pinned filenames, install path leads with package manager, benchmarks in mkdocs nav, no loose ROADMAP/REQUIREMENTS outside `*-phases/`, no orphan docs.
 
 ## Release pipeline
 

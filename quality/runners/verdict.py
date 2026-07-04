@@ -69,10 +69,12 @@ def now_iso_filename() -> str:
 
 
 def discover_catalogs() -> list[Path]:
+    # D-CONV-3 (2026-07-04): orphan-scripts.json used to be skipped here (it
+    # carried the retired scalar `cadence` key); it's been converted to the
+    # `cadences` list schema and now participates like every other catalog --
+    # see the matching comment in quality/runners/run.py's discover_catalogs().
     out: list[Path] = []
     for p in sorted(CATALOG_DIR.glob("*.json")):
-        if p.stem == "orphan-scripts":
-            continue
         out.append(p)
     return out
 

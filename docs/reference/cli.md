@@ -327,7 +327,7 @@ Requires `ATLASSIAN_API_KEY`, `ATLASSIAN_EMAIL`, `REPOSIX_CONFLUENCE_TENANT`, an
 Two subcommands were removed in v0.9.0 alongside the pivot to git-native partial clone. Older docs, recordings, and scripts may still mention them; they no longer exist in the binary.
 
 - `reposix mount` — removed; use [`reposix init`](#reposix-init). The working tree is now a regular partial-clone repository, so `git clone`, `git status`, and `git push` cover what `mount` used to do.
-- `reposix demo` — removed; the canonical regression is `bash scripts/dark-factory-test.sh sim`, which exercises the full agent loop end-to-end against the simulator.
+- `reposix demo` — removed; the canonical regression is `bash quality/gates/agent-ux/dark-factory.sh sim`, which exercises the full agent loop end-to-end against the simulator.
 
 See the [v0.9.0 architecture-pivot summary](https://github.com/reubenjohn/reposix/blob/main/.planning/research/v0.9-fuse-to-git-native/architecture-pivot-summary.md) for the migration rationale.
 

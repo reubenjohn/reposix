@@ -4,6 +4,9 @@
 # Shipped in P84 T05; produces the headline real-TokenWorld
 # number for the v0.13.0 latency artifact refresh.
 #
+# No canonical home under quality/gates/ -- canonical for its own domain
+# (owner-runnable, not CI-wired; registered at orphan-scripts/webhook-latency-measure-sh).
+#
 # Prerequisites:
 #   - gh auth status confirms repo + workflow scopes.
 #   - Confluence webhook configured to dispatch reposix-mirror-sync.

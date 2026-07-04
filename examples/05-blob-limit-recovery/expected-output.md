@@ -39,7 +39,7 @@ On v0.9.0 the helper takes the `import` (fast-import) path on `git fetch`, which
 The teaching string is still the contract:
 
 - The literal `BLOB_LIMIT_EXCEEDED_FMT` constant lives at `crates/reposix-remote/src/stateless_connect.rs:54-55`.
-- `scripts/dark-factory-test.sh` greps the source for `git sparse-checkout` to regression-protect the teaching string on every CI run.
+- `quality/gates/agent-ux/dark-factory.sh` greps the source for `git sparse-checkout` to regression-protect the teaching string on every CI run.
 - `crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present` does the same in the cargo test layer.
 
 When the helper migrates to a stateless-connect-only read path (planned for v0.10), this script's pre-emptive `git sparse-checkout set` becomes the literal recovery from a runtime stderr -- the agent's recovery move is unchanged because the teaching string is unchanged.

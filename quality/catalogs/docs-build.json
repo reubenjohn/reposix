@@ -8,7 +8,7 @@
       "dimension": "docs-build",
       "kind": "mechanical",
       "sources": [
-        "scripts/check-docs-site.sh",
+        "quality/gates/docs-build/mkdocs-strict.sh",
         "mkdocs.yml",
         "CLAUDE.md:Docs-site validation"
       ],
@@ -43,7 +43,7 @@
       "dimension": "docs-build",
       "kind": "mechanical",
       "sources": [
-        "scripts/check-mermaid-renders.sh",
+        "quality/gates/docs-build/mermaid-renders.sh",
         ".planning/verifications/playwright/",
         "CLAUDE.md:Whole-nav-section playwright walks"
       ],

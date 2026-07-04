@@ -60,6 +60,12 @@ KNOWN_HISTORICAL_OR_PLANNED = {
     "scripts/repro-quickstart.sh",
     "scripts/test_bench_token_economy.py",
     "scripts/dark-factory-test.sh",
+    # D-CONV-3 (2026-07-04): shims deleted; only "Source-script lineage"
+    # historical mentions in quality/gates/<dim>/README.md remain.
+    "scripts/latency-bench.sh",
+    "scripts/check-docs-site.sh",
+    "scripts/check-mermaid-renders.sh",
+    "scripts/end-state.py",
 }
 
 PATH_PREFIXES = (

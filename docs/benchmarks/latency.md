@@ -5,7 +5,7 @@ last_measured_at: 2026-04-27T13:40:53Z
 # v0.9.0 Latency Envelope
 
 **Generated:** 2026-04-27T13:40:53Z (commit `2fb7561`)
-**Reproducer:** `bash scripts/latency-bench.sh`
+**Reproducer:** `bash quality/gates/perf/latency-bench.sh`
 
 ## How to read this
 
@@ -67,7 +67,7 @@ for cadence; the weekly cron variant lives in
 ## Reproduce
 
 ```bash
-bash scripts/latency-bench.sh
+bash quality/gates/perf/latency-bench.sh
 ```
 
 The script regenerates this file in place. To capture real-backend
@@ -82,7 +82,7 @@ export ATLASSIAN_API_KEY=… ATLASSIAN_EMAIL=… REPOSIX_CONFLUENCE_TENANT=…
 export JIRA_EMAIL=… JIRA_API_TOKEN=… REPOSIX_JIRA_INSTANCE=…
 
 export REPOSIX_ALLOWED_ORIGINS='https://api.github.com,https://reuben-john.atlassian.net'
-bash scripts/latency-bench.sh
+bash quality/gates/perf/latency-bench.sh
 ```
 
 See `docs/reference/testing-targets.md` for the canonical safe-to-mutate

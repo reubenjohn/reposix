@@ -54,14 +54,14 @@ contract, not implementation details.
 
 ```bash
 # Default — sim backend, run from anywhere in the workspace.
-bash scripts/dark-factory-test.sh sim
+bash quality/gates/agent-ux/dark-factory.sh sim
 
 # Real-backend variants delegate to the gated cargo tests in
 # crates/reposix-cli/tests/agent_flow_real.rs. Each requires the
 # corresponding env-var pack (see docs/reference/testing-targets.md):
-bash scripts/dark-factory-test.sh github       # → cargo test --ignored dark_factory_real_github
-bash scripts/dark-factory-test.sh confluence   # → cargo test --ignored dark_factory_real_confluence
-bash scripts/dark-factory-test.sh jira         # → cargo test --ignored dark_factory_real_jira
+bash quality/gates/agent-ux/dark-factory.sh github       # → cargo test --ignored dark_factory_real_github
+bash quality/gates/agent-ux/dark-factory.sh confluence   # → cargo test --ignored dark_factory_real_confluence
+bash quality/gates/agent-ux/dark-factory.sh jira         # → cargo test --ignored dark_factory_real_jira
 ```
 
 When this skill is invoked from the Skill tool with no argument, default to
@@ -84,7 +84,7 @@ that runs in autonomous mode without explicit credentials.
 
 ## How to interpret failures
 
-If `dark-factory-test.sh sim` fails:
+If `dark-factory.sh sim` fails:
 
 - **`reposix init` exit non-zero** — `crates/reposix-cli/src/init.rs`
   regression. Check `extensions.partialClone` config writes.
@@ -100,7 +100,7 @@ If `dark-factory-test.sh sim` fails:
 
 - `architecture-pivot-summary.md §4 "Agent UX: pure git, zero in-context
   learning"` — the central design claim this skill regression-tests.
-- `scripts/dark-factory-test.sh` — the underlying script.
+- `quality/gates/agent-ux/dark-factory.sh` — the underlying script.
 - `crates/reposix-cli/tests/agent_flow.rs` — the cargo test variant
   (regression-protects the teaching strings via file-content asserts).
 - `crates/reposix-cli/tests/agent_flow_real.rs` — real-backend gated tests.

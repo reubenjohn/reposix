@@ -2,6 +2,9 @@
 # preflight-real-backends.sh — verify the three sanctioned real-backend test targets
 # are reachable + auth works + the named test target exists.
 #
+# No canonical home under quality/gates/ -- canonical for its own domain
+# (dev-loop pre-flight check registered at orphan-scripts/preflight-real-backends-sh).
+#
 # Sanctioned targets (per docs/reference/testing-targets.md):
 #   - Confluence: TokenWorld space (also probes REPOSIX defensively per the May 2 audit gap)
 #   - GitHub:     reubenjohn/reposix issues

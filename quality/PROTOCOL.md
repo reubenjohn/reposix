@@ -307,7 +307,6 @@ If the agent is stuck (verifier RED for >1 hour with no clear path forward):
 
 | File | Anti-bloat rule |
 |---|---|
-| `scripts/end-state.py` | After STRUCT-02: ≤30 lines + header comment "this file does not grow; new gates go under quality/gates/<dim>/." |
 | `quality/PROTOCOL.md` | ≤500 lines (this file). New rules go here only when they apply to MORE than one dimension; dimension-specific rules go in `quality/gates/<dim>/README.md`. |
 | `quality/SURPRISES.md` | ≤200 lines. When it crosses, archive oldest 50 to `quality/SURPRISES-archive-YYYY-QN.md` and start fresh. |
 | `quality/runners/run.py` | ≤350 lines. Grow the dispatch table, not the runner core. |

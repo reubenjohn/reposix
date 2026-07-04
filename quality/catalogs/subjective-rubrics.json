@@ -163,11 +163,12 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/subjective/dvcs-cold-reader.json",
-      "status": "NOT_VERIFIED",
+      "status": "NOT-VERIFIED",
       "last_verified": null,
       "freshness_ttl": "30d",
       "blast_radius": "P1",
-      "owner_hint": "if RED: docs/concepts/dvcs-topology.md or docs/guides/dvcs-mirror-setup.md confused the cold reader (one who has read only docs/index.md + docs/concepts/mental-model-in-60-seconds.md). Read the rubric artifact at quality/reports/verifications/subjective/dvcs-cold-reader.json for the friction points + rewrite the offending paragraphs. Common: jargon-above-Layer-3 leaks (FUSE/partial-clone/promisor/stateless-connect/fast-import/protocol-v2 — banned per scripts/banned-words-lint.sh in concepts + guides); diagram unclear; mirror-lag refs vs current-SoT-state confusion (Q2.2); steps in mirror-setup.md missing prerequisite. Owner runs `/reposix-quality-review --rubric dvcs-cold-reader` post-phase to flip from NOT_VERIFIED to PASS.",
+      "owner_hint": "if RED: docs/concepts/dvcs-topology.md or docs/guides/dvcs-mirror-setup.md confused the cold reader (one who has read only docs/index.md + docs/concepts/mental-model-in-60-seconds.md). Read the rubric artifact at quality/reports/verifications/subjective/dvcs-cold-reader.json for the friction points + rewrite the offending paragraphs. Common: jargon-above-Layer-3 leaks (FUSE/partial-clone/promisor/stateless-connect/fast-import/protocol-v2 — banned per scripts/banned-words-lint.sh in concepts + guides); diagram unclear; mirror-lag refs vs current-SoT-state confusion (Q2.2); steps in mirror-setup.md missing prerequisite. Owner runs `/reposix-quality-review --rubric dvcs-cold-reader` post-phase to flip from NOT-VERIFIED to PASS.",
+      "waiver": null,
       "claim_vs_assertion_audit": "If the DVCS docs were actually confusing to a cold reader, the dispatched doc-clarity-review subagent would score below the 7/10 CLEAR threshold on at least one of the three graded surfaces, or would surface a critical-friction finding -- either directly falsifies the 'clear to a cold reader' claim this row exists to police and the verdict artifact records the sub-7 score / finding as the falsifying evidence.",
       "rubric": {
         "scale": "10-pt CLEAR=10 / NEEDS-WORK=5 / CONFUSING=2; pass threshold 7",

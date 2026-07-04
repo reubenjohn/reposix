@@ -138,11 +138,12 @@
       },
       "artifact": "quality/reports/verifications/code/cargo-fmt-check.json",
       "status": "PASS",
-      "last_verified": "2026-05-01T13:30:32Z",
+      "last_verified": "2026-07-04T09:45:48Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: cargo fmt regressed; run cargo fmt --all locally and commit the result. D-CONV-1 (2026-07-04): stripped from pre-pr -- ci.yml's dedicated `fmt` job runs the identical command with rust-cache reuse; a second cargo fmt in quality-pre-pr would be pure duplicate compute. Row still gates pre-push locally.",
       "waiver": null,
+      "claim_vs_assertion_audit": "If any workspace crate had formatting drift, `cargo fmt --all -- --check` would exit non-zero and print the offending diff, which the verifier greps for and reports as FAIL -- the 'no formatting drift' claim is falsified directly by the tool this row wraps, not by a proxy signal.",
       "cadences": [
         "pre-push"
       ]

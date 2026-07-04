@@ -64,10 +64,19 @@ def parse_rfc3339(s: str) -> datetime:
 
 
 def discover_catalogs() -> list[Path]:
-    """Glob catalog files. Skip orphan-scripts.json + allow-list sidecars + README.md."""
+    """Glob catalog files. Skip allow-list sidecars + README.md.
+
+    D-CONV-3 (2026-07-04): orphan-scripts.json used to be skipped here because
+    it carried the retired scalar `cadence` key -- this runner only recognizes
+    the `cadences` list shape. It has since been converted to the list schema
+    (scripts/migrations/2026-05-cadence-to-list.py's shape) and every row now
+    carries a `claim_vs_assertion_audit`, so it participates like any other
+    catalog: it is discovered, graded by run.py, and rolled into verdict.py's
+    badge like every other dimension.
+    """
     out: list[Path] = []
     for p in sorted(CATALOG_DIR.glob("*.json")):
-        if p.stem == "orphan-scripts" or p.stem.endswith("-allowlist"):
+        if p.stem.endswith("-allowlist"):
             continue
         out.append(p)
     return out

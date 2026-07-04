@@ -23,7 +23,7 @@
 # the failure was in the rendered HTML. This script grep's the rendered
 # output as a guardrail. See CLAUDE.md "Docs-site validation" rule.
 #
-# Run: bash scripts/check-docs-site.sh
+# Run: bash quality/gates/docs-build/mkdocs-strict.sh
 # Exit codes:
 #   0 — site clean.
 #   1 — mkdocs build log emitted "Syntax error in text".

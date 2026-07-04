@@ -2,7 +2,7 @@
 //!
 //! Fixture strategy: two local bare repos via tempfile + git init
 //! --bare (RESEARCH.md § Test Fixture Strategy option (a) —
-//! mirrors `scripts/dark-factory-test.sh` idiom). NO network. NO
+//! mirrors `quality/gates/agent-ux/dark-factory.sh` idiom). NO network. NO
 //! SSH agent.
 
 #![allow(clippy::missing_panics_doc)]

@@ -5,17 +5,17 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 271,
+    "claims_bound": 270,
     "claims_missing_test": 6,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.8065476190476191,
+    "alignment_ratio": 0.8035714285714286,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-04T09:08:30Z",
-    "coverage_ratio": 0.19511800840607824,
-    "lines_covered": 1207,
-    "total_eligible_lines": 6186,
+    "last_walked": "2026-07-04T09:43:19Z",
+    "coverage_ratio": 0.19489334195216548,
+    "lines_covered": 1206,
+    "total_eligible_lines": 6188,
     "coverage_floor": 0.1,
     "claims_waived": 6
   },
@@ -631,7 +631,7 @@
         "b4f75246efb285c72aee6cf052726d684e631944145bbd933105672390444d1c"
       ],
       "rationale": "Direct mirror of mermaid-renders gate",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-29T21:35:54Z",
       "last_extracted": "2026-04-29T21:35:54Z",
@@ -2007,9 +2007,9 @@
         "line_start": 109,
         "line_end": 109
       },
-      "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
+      "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
-        "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb"
+        "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4"
       ],
       "tests": [
         "quality/gates/code/cargo-clippy-warnings.sh"
@@ -2020,8 +2020,8 @@
       "rationale": "README invariant matches the clippy-warnings code-dim verifier",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-07-04T09:32:48Z",
+      "last_extracted": "2026-07-04T09:32:48Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2032,9 +2032,9 @@
         "line_start": 109,
         "line_end": 109
       },
-      "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
+      "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
-        "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb"
+        "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4"
       ],
       "tests": [
         "quality/gates/code/lint-invariants/tests-green.sh"
@@ -2045,8 +2045,8 @@
       "rationale": "P72 LINT-CONFIG-03 per D-05: compile-only signal; suite execution lives in pre-push nextest.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T19:58:02Z",
-      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_run": "2026-07-04T09:32:48Z",
+      "last_extracted": "2026-07-04T09:32:48Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2213,30 +2213,26 @@
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-17-docs-validation",
       "claim": "scripts/check-docs-site.sh exists and runs mkdocs --strict + mermaid SVG assertions",
-      "source": [
-        {
-          "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-          "line_start": 96,
-          "line_end": 96
-        },
-        {
-          "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
-          "line_start": 99,
-          "line_end": 99
-        }
+      "source": {
+        "file": ".planning/milestones/v0.11.0-phases/REQUIREMENTS.md",
+        "line_start": 99,
+        "line_end": 99
+      },
+      "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_hashes": [
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       ],
-      "source_hash": "2ca0ae385813ebded0f06be7f3cee9e99a04a28999b56e5745c733aa70002a79",
       "tests": [
-        "scripts/check-docs-site.sh"
+        "quality/gates/docs-build/mkdocs-strict.sh"
       ],
       "test_body_hashes": [
-        "fa29dc9c3b7abc71e3db1941bc349626ad9ebb568b53c3c26140089282ca6a43"
+        "5c2aa02ba70d94078d9471a38c7d57f116afa93200e7faa88c917a1ce3ebde81"
       ],
-      "rationale": "scripts/check-docs-site.sh delegates to quality/gates/docs-build/mkdocs-strict.sh; whole-file hash gates the wrapper script content",
+      "rationale": "D-CONV-3 (2026-07-04): scripts/check-docs-site.sh (the wrapper this archived POLISH-17 requirement named) was deleted; quality/gates/docs-build/mkdocs-strict.sh is the canonical implementation it always delegated to -- whole-file hash now gates that file instead. Archived requirements text is historical and left unedited.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T02:55:42Z",
-      "last_extracted": "2026-04-29T02:55:42Z",
+      "last_run": "2026-07-04T09:36:02Z",
+      "last_extracted": "2026-07-04T09:36:02Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2343,21 +2339,21 @@
         "line_start": 109,
         "line_end": 109
       },
-      "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
+      "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
-        "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb"
+        "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
       "test_body_hashes": [
-        "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
+        "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
       "rationale": "agent_flow.rs:198-214 asserts git pull --rebase and error refs/heads/main fetch first strings remain in helper code",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T08:59:02Z",
-      "last_extracted": "2026-04-28T08:59:02Z",
+      "last_run": "2026-07-04T09:32:48Z",
+      "last_extracted": "2026-07-04T09:32:48Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2633,9 +2629,9 @@
         "line_start": 109,
         "line_end": 109
       },
-      "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
+      "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
-        "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb"
+        "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
@@ -2646,8 +2642,8 @@
       "rationale": "agent_flow.rs:174-189 asserts git sparse-checkout and BLOB_LIMIT_EXCEEDED_FMT literals remain",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T08:58:59Z",
-      "last_extracted": "2026-04-28T08:58:59Z",
+      "last_run": "2026-07-04T09:32:48Z",
+      "last_extracted": "2026-07-04T09:32:48Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3135,9 +3131,9 @@
         "line_start": 109,
         "line_end": 109
       },
-      "source_hash": "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb",
+      "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
-        "f70f86f3cc07d370481d9c04612121107f4818c915695b204f64ec7b68b820fb"
+        "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4"
       ],
       "tests": [
         "quality/gates/code/lint-invariants/forbid-unsafe-code.sh"
@@ -3148,8 +3144,8 @@
       "rationale": "P72 LINT-CONFIG-01: shell verifier walks crates/*/src/{lib,main}.rs and asserts each contains #![forbid(unsafe_code)]; offending paths named in stderr.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T19:58:02Z",
-      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_run": "2026-07-04T09:32:48Z",
+      "last_extracted": "2026-07-04T09:32:48Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4485,8 +4481,8 @@
       "claim": "Every crate's lib.rs / main.rs declares #![forbid(unsafe_code)].",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 74,
-        "line_end": 74
+        "line_start": 76,
+        "line_end": 76
       },
       "source_hash": "89ced95ebdeddd25544ae5c153aade4faec9d4d2934f861871f6f9be1d4b9ebe",
       "source_hashes": [
@@ -4498,11 +4494,11 @@
       "test_body_hashes": [
         "30a8d5bbd94e8fed8a041409707b7c931eca42c36cb1b2f11e70d43e7ae2a1d2"
       ],
-      "rationale": "docs/development/contributing.md:74 still asserts '#![forbid(unsafe_code)] at every crate root'; verifier walks crates/*/src/{lib,main}.rs and greps '^#!\\[forbid\\(unsafe_code\\)\\]' on each (D-01 shared verifier with README-md/forbid-unsafe-code).",
+      "rationale": "docs/development/contributing.md:76 still asserts '#![forbid(unsafe_code)] at every crate root'; verifier walks crates/*/src/{lib,main}.rs and greps '^#!\\[forbid\\(unsafe_code\\)\\]' on each (D-01 shared verifier with README-md/forbid-unsafe-code). D-CONV-3 (2026-07-04): line shifted +2 from the scripts/ tree-comment edit earlier in the file.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-02T07:38:11Z",
-      "last_extracted": "2026-05-02T07:38:11Z",
+      "last_run": "2026-07-04T09:44:37Z",
+      "last_extracted": "2026-07-04T09:44:37Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4510,8 +4506,8 @@
       "claim": "Invariant row 2: reqwest::Client is banned outside crates/reposix-core/src/http.rs via clippy disallowed-methods",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 75,
-        "line_end": 75
+        "line_start": 77,
+        "line_end": 77
       },
       "source_hash": "dbbe77822e6decd2c5b6b9f41d06198460a6ef68643c3fd688db9aa75ebce449",
       "source_hashes": [
@@ -4523,11 +4519,11 @@
       "test_body_hashes": [
         "d72ce0e95b5665dc160d691d39a8f47ee4a8605dd3d2c28bafeced4ecbca0287"
       ],
-      "rationale": "docs/development/contributing.md:75 still asserts 'reqwest::Client is banned outside crates/reposix-core/src/http.rs. Clippy disallowed-methods enforces this workspace-wide'; clippy-lint-loaded.sh verifies clippy.toml lists the three banned constructors AND greps crates/ for direct construction outside http.rs",
+      "rationale": "docs/development/contributing.md:77 still asserts 'reqwest::Client is banned outside crates/reposix-core/src/http.rs. Clippy disallowed-methods enforces this workspace-wide'; clippy-lint-loaded.sh verifies clippy.toml lists the three banned constructors AND greps crates/ for direct construction outside http.rs. D-CONV-3 (2026-07-04): line shifted +2.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-02T07:38:17Z",
-      "last_extracted": "2026-05-02T07:38:17Z",
+      "last_run": "2026-07-04T09:44:37Z",
+      "last_extracted": "2026-07-04T09:44:37Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4535,8 +4531,8 @@
       "claim": "Every pub fn returning Result has a # Errors rustdoc section (clippy::missing_errors_doc).",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 76,
-        "line_end": 76
+        "line_start": 78,
+        "line_end": 78
       },
       "source_hash": "59fb7eaf9511956cf57ef4899bc34e5913ce6d7e8092fddc9a1307e289c1b167",
       "source_hashes": [
@@ -4548,11 +4544,11 @@
       "test_body_hashes": [
         "569a677093db66c560a22989726214718b1ac798bdd175b53adfeccd4b713d5f"
       ],
-      "rationale": "docs/development/contributing.md:76 still asserts 'Clippy missing-errors-doc is on' and the verifier runs cargo clippy -W clippy::missing_errors_doc and asserts zero hits.",
+      "rationale": "docs/development/contributing.md:78 still asserts 'Clippy missing-errors-doc is on' and the verifier runs cargo clippy -W clippy::missing_errors_doc and asserts zero hits. D-CONV-3 (2026-07-04): line shifted +2.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-02T07:38:21Z",
-      "last_extracted": "2026-05-02T07:38:21Z",
+      "last_run": "2026-07-04T09:44:45Z",
+      "last_extracted": "2026-07-04T09:44:45Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4560,8 +4556,8 @@
       "claim": "Invariant row 4: No hand-rolled JSON/YAML serialization, always use serde and serde_yaml for frontmatter",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 77,
-        "line_end": 77
+        "line_start": 79,
+        "line_end": 79
       },
       "source_hash": "16c54eee4e3edf2c4ab1c6cadae50db30d2463431d961f48c3c151abd3ca3590",
       "source_hashes": [
@@ -4573,11 +4569,11 @@
       "test_body_hashes": [
         "b79ec3bd75b341c6f05322de058903423ecdd210d34db1f6f5299948916765b4"
       ],
-      "rationale": "record.rs:244-254 frontmatter_roundtrips calls frontmatter::render (serde_yaml::to_string at line 143) + frontmatter::parse (serde_yaml::from_str at line 186); roundtrip asserts id/title/status/body/version preserved — proves no hand-rolled YAML path.",
+      "rationale": "record.rs:244-254 frontmatter_roundtrips calls frontmatter::render (serde_yaml::to_string at line 143) + frontmatter::parse (serde_yaml::from_str at line 186); roundtrip asserts id/title/status/body/version preserved -- proves no hand-rolled YAML path. D-CONV-3 (2026-07-04): line shifted +2.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-02T07:38:35Z",
-      "last_extracted": "2026-05-02T07:38:35Z",
+      "last_run": "2026-07-04T09:44:45Z",
+      "last_extracted": "2026-07-04T09:44:45Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4585,8 +4581,8 @@
       "claim": "Invariant row 5: Clippy is pedantic with targeted allows only; blanket #[allow(clippy::pedantic)] is forbidden",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 78,
-        "line_end": 78
+        "line_start": 80,
+        "line_end": 80
       },
       "source_hash": "3f33f1997ab4f504c4ba5999cde3054ad5893eedd74eef55a35fb39dc55cdfc5",
       "source_hashes": [
@@ -4598,11 +4594,11 @@
       "test_body_hashes": [
         "d661fe65a615fcfbca22897499dc5c0ae3d1957bf8f8e0bd1486c34f724bb528"
       ],
-      "rationale": "Verifier asserts every crates/*/src/{lib,main}.rs has #![warn(...clippy::pedantic...)] AND no source has blanket #![allow(clippy::pedantic)] — exact two-clause claim.",
+      "rationale": "Verifier asserts every crates/*/src/{lib,main}.rs has #![warn(...clippy::pedantic...)] AND no source has blanket #![allow(clippy::pedantic)] -- exact two-clause claim. D-CONV-3 (2026-07-04): line shifted +2.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-02T07:50:20Z",
-      "last_extracted": "2026-05-02T07:50:20Z",
+      "last_run": "2026-07-04T09:44:58Z",
+      "last_extracted": "2026-07-04T09:44:58Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4610,8 +4606,8 @@
       "claim": "rust-toolchain.toml channel = \"stable\" (nightly banned).",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 79,
-        "line_end": 79
+        "line_start": 81,
+        "line_end": 81
       },
       "source_hash": "96846ce0eb8fd49d23c44340f9217f92e9fadc9b72b4fdd8c70e423d04453ae9",
       "source_hashes": [
@@ -4623,11 +4619,11 @@
       "test_body_hashes": [
         "8216576e9837c50898941452d338ed124db106efd9714ff899a3ada56078c36e"
       ],
-      "rationale": "docs/development/contributing.md:79 still asserts \"rust-toolchain.toml pins stable\" — verifier greps channel = \"stable\" in rust-toolchain.toml.",
+      "rationale": "docs/development/contributing.md:81 still asserts \"rust-toolchain.toml pins stable\" -- verifier greps channel = \"stable\" in rust-toolchain.toml. D-CONV-3 (2026-07-04): line shifted +2.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-02T07:38:38Z",
-      "last_extracted": "2026-05-02T07:38:38Z",
+      "last_run": "2026-07-04T09:44:58Z",
+      "last_extracted": "2026-07-04T09:44:58Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4635,8 +4631,8 @@
       "claim": "Invariant row 7: Every outbound HTTP request passes the allowlist via sealed HttpClient newtype; per-request URL recheck catches redirects",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 80,
-        "line_end": 80
+        "line_start": 82,
+        "line_end": 82
       },
       "source_hash": "de44ff8beba200ec724a30fc9378fdb7adfea07a977502bc5e6687ef740902f2",
       "source_hashes": [
@@ -4648,11 +4644,11 @@
       "test_body_hashes": [
         "fabaec6a19796f8e5e72a43074f6f8a30a433e0f54fc1f399c2067f80984c51c"
       ],
-      "rationale": "http_allowlist.rs:184-228 mounts 302 to attacker.example and asserts per-request recheck returns Error::InvalidOrigin before any I/O — directly enforces the claim verbatim",
+      "rationale": "http_allowlist.rs:184-228 mounts 302 to attacker.example and asserts per-request recheck returns Error::InvalidOrigin before any I/O -- directly enforces the claim verbatim. D-CONV-3 (2026-07-04): line shifted +2.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-02T07:39:45Z",
-      "last_extracted": "2026-05-02T07:39:45Z",
+      "last_run": "2026-07-04T09:45:09Z",
+      "last_extracted": "2026-07-04T09:45:09Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4660,8 +4656,8 @@
       "claim": "Invariant row 8: Server-controlled frontmatter fields are stripped on egress via sanitize(Tainted<Issue>, ServerMetadata) -> Untainted<Issue>",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 81,
-        "line_end": 81
+        "line_start": 83,
+        "line_end": 83
       },
       "source_hash": "a74f2b98a6e72a9f56de5a3e6f953e9222569c8383d1480aa7e458653d4b208e",
       "source_hashes": [
@@ -4673,11 +4669,11 @@
       "test_body_hashes": [
         "606225824068d5cab3a63da6d10878fdf73b21952aeaee243600ae64a1b17134"
       ],
-      "rationale": "taint.rs:202-218 still asserts sanitize() strips server-controlled fields: 'assert_eq!(inner.id, meta.id)' + version/created_at/updated_at all from meta; agent fields (title/status/assignee/labels/body) preserved byte-for-byte",
+      "rationale": "taint.rs:202-218 still asserts sanitize() strips server-controlled fields: 'assert_eq!(inner.id, meta.id)' + version/created_at/updated_at all from meta; agent fields (title/status/assignee/labels/body) preserved byte-for-byte. D-CONV-3 (2026-07-04): line shifted +2.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-02T07:39:45Z",
-      "last_extracted": "2026-05-02T07:39:45Z",
+      "last_run": "2026-07-04T09:45:10Z",
+      "last_extracted": "2026-07-04T09:45:10Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -5441,7 +5437,7 @@
         "b78a369beb5d6792e963c55b3be04354127df55908a3d8ec4eb4415b5baba95f"
       ],
       "rationale": "Direct mirror of mkdocs-strict gate",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:49:06Z",
       "last_extracted": "2026-04-28T19:49:06Z",
@@ -6366,27 +6362,27 @@
     },
     {
       "id": "docs-development-contributing-md/demo-script-exists",
-      "claim": "scripts/dark-factory-test.sh exists and is executable.",
+      "claim": "quality/gates/agent-ux/dark-factory.sh exists and is executable.",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 63,
-        "line_end": 63
+        "line_start": 65,
+        "line_end": 65
       },
-      "source_hash": "bd4759c93060dd5f73d77a214666331c6d1aa475efa2ab0495f869c41d44b797",
+      "source_hash": "e7c5f5475a6557d21823a6831b8e8a755a0b700f8f96f42f4e29a9e01ec953e6",
       "source_hashes": [
-        "bd4759c93060dd5f73d77a214666331c6d1aa475efa2ab0495f869c41d44b797"
+        "e7c5f5475a6557d21823a6831b8e8a755a0b700f8f96f42f4e29a9e01ec953e6"
       ],
       "tests": [
         "quality/gates/code/lint-invariants/demo-script-exists.sh"
       ],
       "test_body_hashes": [
-        "a2ff959b14b381b2f9c6c56b6a92c43194dbae6f3fe7653ce5b8c96011c9fc46"
+        "37eee262a399c32ba3822a9b804f6ab2ec4dcea117dd2f92d10166289062f3c9"
       ],
-      "rationale": "docs/development/contributing.md:63 names dark-factory-test.sh in scripts/ tree comment; verifier stats scripts/dark-factory-test.sh as -e and -x (script is -rwxr-xr-x).",
+      "rationale": "docs/development/contributing.md:65 names quality/gates/agent-ux/dark-factory.sh in the tree overview (D-CONV-3 retarget after scripts/dark-factory-test.sh shim deletion); verifier stats the canonical path as -e and -x.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-02T07:39:51Z",
-      "last_extracted": "2026-05-02T07:39:51Z",
+      "last_run": "2026-07-04T09:25:26Z",
+      "last_extracted": "2026-07-04T09:25:26Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6803,8 +6799,8 @@
       "claim": "Reporting bugs: git >= 2.34 required for partial-clone + stateless-connect",
       "source": {
         "file": "docs/development/contributing.md",
-        "line_start": 145,
-        "line_end": 145
+        "line_start": 147,
+        "line_end": 147
       },
       "source_hash": "3c4fd0f9ffcdaafaa5ea783e8ccb9956bfce058020f801caa74b14db0d530e74",
       "source_hashes": [
@@ -6816,11 +6812,11 @@
       "test_body_hashes": [
         "6cc9183d83d95a38e83a3fbc13ba4aa84277bb6576156c03197bc7e4244c8300"
       ],
-      "rationale": "Verifier asserts the literal \"2.34\" appears in both contributing.md and CLAUDE.md (documentation-existence check; the runtime requirement claim is met by ensuring both contributor and agent docs warn of the prerequisite).",
+      "rationale": "Verifier asserts the literal \"2.34\" appears in both contributing.md and CLAUDE.md (documentation-existence check; the runtime requirement claim is met by ensuring both contributor and agent docs warn of the prerequisite). D-CONV-3 (2026-07-04): line shifted +2.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-02T07:50:32Z",
-      "last_extracted": "2026-05-02T07:50:32Z",
+      "last_run": "2026-07-04T09:45:10Z",
+      "last_extracted": "2026-07-04T09:45:10Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7768,9 +7764,9 @@
         "line_start": 325,
         "line_end": 332
       },
-      "source_hash": "3f0fe8082eebb19486a2ac4194cb323b28ac70fcef8ac846d7c827be224d578d",
+      "source_hash": "31500ccab7b727642ff67653ce0dc918190d5f60860b99729df22fb5759d9e25",
       "source_hashes": [
-        "3f0fe8082eebb19486a2ac4194cb323b28ac70fcef8ac846d7c827be224d578d"
+        "31500ccab7b727642ff67653ce0dc918190d5f60860b99729df22fb5759d9e25"
       ],
       "tests": [
         "crates/reposix-cli/tests/cli.rs::mount_subcommand_is_removed"
@@ -7778,11 +7774,11 @@
       "test_body_hashes": [
         "a8fd137976bc34abc8da35dbfdee3df9d73c1fc522216eafe926813c32c07db4"
       ],
-      "rationale": "crates/reposix-cli/tests/cli.rs:43 mount_subcommand_is_removed runs `reposix mount /tmp/nowhere` and asserts !out.status.success() — confirms the removed subcommand errors; section content unchanged, pure line-shift.",
+      "rationale": "crates/reposix-cli/tests/cli.rs:43 mount_subcommand_is_removed runs 'reposix mount /tmp/nowhere' and asserts !out.status.success() -- confirms the removed subcommand errors; D-CONV-3 (2026-07-04) retargeted the demo line from the deleted scripts/dark-factory-test.sh shim to quality/gates/agent-ux/dark-factory.sh, shifting the cited range's bytes without changing its meaning.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T08:33:55Z",
-      "last_extracted": "2026-07-04T08:33:55Z",
+      "last_run": "2026-07-04T09:28:54Z",
+      "last_extracted": "2026-07-04T09:28:54Z",
       "last_extracted_by": "bind-call"
     },
     {

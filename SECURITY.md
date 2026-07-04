@@ -46,7 +46,7 @@ We aim to acknowledge security reports within **7 days**. For confirmed vulnerab
 
 ## Security regression kit
 
-A `scripts/security-regression.sh` script that exercises every guardrail end-to-end is **planned** (not yet implemented) and will be linked here once it lands. In the meantime, the existing `bash scripts/dark-factory-test.sh sim` exercises the egress-allowlist + audit-log guardrails as part of the dark-factory regression suite, and the unit tests in `crates/reposix-core/src/tainted.rs` + `crates/reposix-cache/` cover the type-system and SQL invariants.
+A `scripts/security-regression.sh` script that exercises every guardrail end-to-end is **planned** (not yet implemented) and will be linked here once it lands. In the meantime, the existing `bash quality/gates/agent-ux/dark-factory.sh sim` exercises the egress-allowlist + audit-log guardrails as part of the dark-factory regression suite, and the unit tests in `crates/reposix-core/src/tainted.rs` + `crates/reposix-cache/` cover the type-system and SQL invariants.
 
 ## Supply chain
 

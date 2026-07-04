@@ -156,5 +156,5 @@ fn sim_accepts_no_seed_and_rate_limit_flags() {
 
 // `demo_exits_zero_within_30s` removed in v0.9.0 — the FUSE-backed `reposix
 // demo` subcommand was deleted alongside `crates/reposix-fuse/`. The
-// dark-factory regression replaces it: `scripts/dark-factory-test.sh sim`
+// dark-factory regression replaces it: `quality/gates/agent-ux/dark-factory.sh sim`
 // + `crates/reposix-cli/tests/agent_flow.rs`.

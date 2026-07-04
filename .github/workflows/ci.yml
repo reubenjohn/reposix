@@ -250,8 +250,10 @@ jobs:
 
   bench-latency-v09:
     # POLISH-08 (Phase 54): real-backend latency capture for the
-    # docs/benchmarks/latency.md table. Runs scripts/latency-bench.sh
-    # with all three credential bundles wired from secrets; each backend
+    # docs/benchmarks/latency.md table. Runs quality/gates/perf/latency-bench.sh
+    # (QL-109, D-CONV-3 2026-07-04: comment was still naming the deleted
+    # scripts/latency-bench.sh shim; the run step below always invoked the
+    # canonical path) with all three credential bundles wired from secrets; each backend
     # block in the script skips cleanly when its bundle is absent, so this
     # job runs cleanly on fork PRs (sim-only) and populates real-backend
     # cells when secrets are configured on the canonical repo.
