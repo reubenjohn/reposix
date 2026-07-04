@@ -1,6 +1,10 @@
 //! `confluence-direct` workload: each client drives [`ConfluenceBackend`]
-//! directly over HTTP. Mirror of `sim_direct.rs` minus the patch step
-//! (Phase 17 is read-only by design — writes ship in Phase 21 / OP-7).
+//! directly over HTTP. Mirror of `sim_direct.rs` minus the patch step —
+//! this harness currently exercises read-only contention only (list + get);
+//! Confluence writes shipped long ago, but a write-contention workload
+//! (agents racing `create_record`/`update_record`) has not been added here.
+//! Tracked in `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`
+//! (2026-07-04 entry).
 //!
 //! Rate-limit handling is transparent: [`ConfluenceBackend`]'s internal
 //! `rate_limit_gate` sleeps on 429 Retry-After; the workload records a
@@ -103,7 +107,10 @@ impl Workload for ConfluenceDirectWorkload {
                 }
             }
         }
-        // NOTE: no patch step in Phase 17 (read-only; writes in Phase 21).
+        // NOTE: no write step here — this workload is read-only-by-omission,
+        // not read-only-by-design. See the module doc: the write-contention
+        // workload is tracked in SURPRISES-INTAKE.md (2026-07-04 entry), not
+        // shipped yet.
         Ok(())
     }
 }
