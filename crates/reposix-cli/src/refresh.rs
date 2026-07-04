@@ -113,11 +113,35 @@ pub fn run_refresh_inner(
     std::fs::create_dir_all(&bucket_dir)
         .with_context(|| format!("create bucket dir {}", bucket_dir.display()))?;
 
-    // Write one .md file per issue.
+    // D91-10: remove stale, differently-spelled record files before writing.
+    // Prior `refresh` runs wrote 11-zero-padded names (`00000000042.md`); the
+    // canonical spelling is now unpadded (`42.md`, QL-001 / D91-01). Without
+    // this sweep a schema change would leave BOTH files on disk for the same
+    // id — two divergent git blobs. Only files whose stem parses to a record
+    // id AND whose spelling differs from canonical are removed; non-record
+    // files (READMEs, hand-authored notes, `.gitignore`) are never touched.
+    if bucket_dir.exists() {
+        for entry in std::fs::read_dir(&bucket_dir)
+            .with_context(|| format!("scan bucket dir {}", bucket_dir.display()))?
+        {
+            let entry = entry.with_context(|| "read bucket dir entry")?;
+            let os_name = entry.file_name();
+            let name = os_name.to_string_lossy();
+            if let Ok(rid) = reposix_core::path::validate_record_filename(&name) {
+                if *name != reposix_core::path::record_filename(rid.0) {
+                    std::fs::remove_file(entry.path()).with_context(|| {
+                        format!("remove stale-padded record {}", entry.path().display())
+                    })?;
+                }
+            }
+        }
+    }
+
+    // Write one .md file per issue under the canonical unpadded filename.
     for issue in &issues {
         let rendered =
             reposix_core::frontmatter::render(issue).context("render issue frontmatter")?;
-        let filename = format!("{:011}.md", issue.id.0);
+        let filename = reposix_core::path::record_filename(issue.id.0);
         let dest = bucket_dir.join(&filename);
         std::fs::write(&dest, rendered.as_bytes())
             .with_context(|| format!("write {}", dest.display()))?;
@@ -324,6 +348,64 @@ mod tests {
 
     use super::*;
     use tempfile::tempdir;
+
+    fn sample_record(id: u64) -> reposix_core::Record {
+        let t = chrono::Utc::now();
+        reposix_core::Record {
+            id: reposix_core::RecordId(id),
+            title: format!("issue {id}"),
+            status: reposix_core::RecordStatus::Open,
+            assignee: None,
+            labels: vec![],
+            created_at: t,
+            updated_at: t,
+            version: 1,
+            body: "body".to_owned(),
+            parent_id: None,
+            extensions: std::collections::BTreeMap::new(),
+        }
+    }
+
+    /// D91-10: a working tree left with a stale 11-zero-padded record file
+    /// from a prior `refresh` must be regenerated to the canonical unpadded
+    /// spelling, and the stale duplicate removed — never leaving two divergent
+    /// blobs for the same id. Non-record files are left untouched.
+    #[test]
+    fn refresh_removes_stale_padded_duplicate_and_regenerates_canonical() {
+        let dir = tempdir().unwrap();
+        let working_tree = dir.path().to_path_buf();
+        let bucket_dir = working_tree.join("issues");
+        std::fs::create_dir_all(&bucket_dir).unwrap();
+
+        // Pre-seed the stale-padded file (old 11-pad producer output) + a
+        // hand-authored non-record file that must survive the sweep.
+        let stale = bucket_dir.join("00000000042.md");
+        std::fs::write(&stale, b"stale padded blob").unwrap();
+        let keep = bucket_dir.join("NOTES.md");
+        std::fs::write(&keep, b"human notes, not a record").unwrap();
+
+        let cfg = RefreshConfig {
+            working_tree: working_tree.clone(),
+            origin: "http://127.0.0.1:0".to_owned(),
+            project: "demo".to_owned(),
+            backend: ListBackend::Sim,
+            offline: false,
+        };
+        run_refresh_inner(&cfg, vec![sample_record(42)], None).expect("refresh");
+
+        assert!(
+            !stale.exists(),
+            "stale 11-pad `00000000042.md` must be removed (D91-10)"
+        );
+        assert!(
+            bucket_dir.join("42.md").exists(),
+            "canonical `42.md` must be regenerated"
+        );
+        assert!(
+            keep.exists(),
+            "non-record file `NOTES.md` must never be touched"
+        );
+    }
 
     /// `git_refresh_commit` creates a git commit in a fresh temp directory.
     #[test]

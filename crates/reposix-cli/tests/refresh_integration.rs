@@ -42,7 +42,8 @@ fn make_cfg(dir: &std::path::Path) -> RefreshConfig {
 // ── tests ─────────────────────────────────────────────────────────────────────
 
 /// `refresh_writes_md_files`:
-/// - calling `run_refresh_inner` with one issue creates `issues/00000000001.md`
+/// - calling `run_refresh_inner` with one issue creates `issues/1.md`
+///   (canonical unpadded shape — QL-001 / D91-01)
 /// - the file contains YAML frontmatter (starts with `---`)
 /// - `git log --oneline` shows exactly one commit
 /// - the commit author line contains "reposix"
@@ -55,7 +56,7 @@ async fn refresh_writes_md_files() {
     reposix_cli::refresh::run_refresh_inner(&cfg, issues, None).expect("run_refresh_inner");
 
     // .md file exists and has YAML frontmatter.
-    let md_path = dir.path().join("issues").join("00000000001.md");
+    let md_path = dir.path().join("issues").join("1.md");
     assert!(md_path.exists(), "md file must exist at {md_path:?}");
     let contents = std::fs::read_to_string(&md_path).unwrap();
     assert!(
