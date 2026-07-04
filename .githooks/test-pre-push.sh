@@ -30,6 +30,20 @@ if [[ ! -x "$hook" ]]; then
   exit 1
 fi
 
+# D-CONV-6 (2026-07-04): abort BEFORE any git mutation if the working tree is
+# dirty. cleanup() below runs `git reset -q --hard "$orig_head"`
+# unconditionally on EXIT -- against a dirty tree that would silently
+# discard uncommitted work. Runs in CI too (ci.yml's test job invokes this
+# script), but a dirty tree there is a checkout anomaly worth failing loud
+# on, not a case to special-case around.
+if [[ -n "$(git status --porcelain)" ]]; then
+  printf '%b\n' "${RED}✖ working tree is dirty -- aborting before any test fixtures are created.${NC}" >&2
+  printf '%b\n' "${RED}  This harness's cleanup trap runs \`git reset --hard\` unconditionally on exit, which would discard your uncommitted changes.${NC}" >&2
+  printf '%b\n' "${RED}  Commit or stash (git stash -u) your changes, then re-run: bash .githooks/test-pre-push.sh${NC}" >&2
+  git status --porcelain >&2
+  exit 1
+fi
+
 # Save current branch + HEAD so cleanup() can restore. The test
 # detaches HEAD during execution; cleanup must return us to the
 # original branch if we started on one, not leave us in detached
