@@ -52,10 +52,21 @@ else
 fi
 
 # (4) the box-independent QL-001 regression tests exist (RED-if-bug-returns).
+#     Wave-5.5 added the pages/-bucket family (confluence mass-delete BLOCKER)
+#     + the bucket_for_backend helper assert below.
 declare -A REGRESSIONS=(
-  ["crates/reposix-remote/src/diff.rs"]="full_seeded_tree_push_emits_zero_deletes canonical_single_edit_is_one_update reposix_metadata_paths_are_ignored_not_rejected delete_wins_over_add_for_same_path"
+  ["crates/reposix-remote/src/diff.rs"]="full_seeded_tree_push_emits_zero_deletes canonical_single_edit_is_one_update reposix_metadata_paths_are_ignored_not_rejected delete_wins_over_add_for_same_path pages_full_tree_push_emits_zero_deletes pages_single_edit_is_one_update cross_bucket_tree_still_matches_by_id duplicate_record_id_across_buckets_is_refused pages_bulk_delete_still_capped"
   ["crates/reposix-remote/src/fast_import.rs"]="commit_message_without_trailing_lf_does_not_swallow_first_m_line"
+  ["crates/reposix-cache/tests/bucket_tree.rs"]="confluence_cache_tree_uses_pages_bucket sim_cache_tree_uses_issues_bucket"
 )
+
+# (5) Wave-5.5: the bucket-aware helper exists in reposix-core.
+if grep -qE '^[[:space:]]*pub fn bucket_for_backend' crates/reposix-core/src/path.rs; then
+  PASSED+=("bucket_for_backend helper present in reposix-core (Wave-5.5)")
+else
+  echo "FAIL: bucket_for_backend missing from reposix-core/src/path.rs" >&2
+  FAILED+=("bucket_for_backend missing from reposix-core")
+fi
 for file in "${!REGRESSIONS[@]}"; do
   for fn in ${REGRESSIONS[$file]}; do
     if grep -q "fn ${fn}(" "$file" 2>/dev/null; then

@@ -50,23 +50,26 @@ _litmus_flow() {
   fi
   pass "reconciliation safe: matched=${matched} backend_deleted=0 (push cannot mass-delete)"
 
-  # GUARD B: records must live under the canonical issues/ bucket. `reposix
-  # refresh` writes confluence records under pages/, which the push/diff path
-  # ignores -> would delete every issues/<id>.md. Refuse (mass-delete guard).
-  if compgen -G "${tree}/pages/*.md" > /dev/null; then
-    fail "working tree carries pages/*.md records — non-canonical bucket the push/diff path ignores (issues/<id>.md is canonical per builder.rs/diff.rs/D91-01). Refusing to push. Substrate not litmus-ready: refresh's confluence bucket must be issues/."
+  # GUARD B (Wave-5.5 update): confluence records live under the pages/
+  # bucket — the canonical confluence spelling per bucket_for_backend
+  # (reposix-core), refresh output, and docs/reference/confluence.md. The
+  # push planner is now id-keyed (bucket-agnostic), so a bucket mismatch can
+  # no longer mass-delete; this guard remains as defense-in-depth asserting
+  # the mirror substrate is in the documented confluence shape.
+  if ! compgen -G "${tree}/pages/*.md" > /dev/null; then
+    fail "working tree carries zero pages/*.md records — the confluence bucket is pages/ (bucket_for_backend, Wave-5.5). Substrate not litmus-ready: repopulate the mirror via reposix refresh --backend confluence."
     return 1
   fi
 
-  # Pick an editable, NON-protected record.
+  # Pick an editable, NON-protected record from the confluence bucket.
   target=""
-  for md in "$tree"/issues/*.md; do
+  for md in "$tree"/pages/*.md; do
     [ -e "$md" ] || continue
     id="$(basename "$md" .md)"
     case "$PROTECTED_IDS" in *" $id "*) continue ;; esac
     target="$md"; break
   done
-  [ -z "$target" ] && { fail "no editable non-protected issues/<id>.md record in the clone"; return 1; }
+  [ -z "$target" ] && { fail "no editable non-protected pages/<id>.md record in the clone"; return 1; }
   echo "edit target: $target (protected denylist honoured)"
 
   marker="litmus-marker-$(date -u +%s)"

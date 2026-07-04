@@ -81,6 +81,8 @@ None — the stub is fully replaced.
 ## Coordinator hand-off (D91-07 REOPEN gate)
 The mechanical litmus is now real and anchors the REOPEN gate. On the CURRENT substrate it hard-FAILs (exit 1) at GUARD B — the honest signal that the confluence attach→edit→push round-trip is NOT milestone-close-ready (BLOCKER intake). Once the code lane fixes the bucket/mass-delete bug and the mirror is repopulated with `issues/`-shaped records, the coordinator re-runs (a) this script → exit 0 and (b) a fresh dark-factory subprocess agent for the T2 friction grade. Executor did NOT flip the row status or run the fresh-agent grade (coordinator's phase gate).
 
+**Wave-5.5 UPDATE (code fix landed — supersedes the repopulation instruction above):** the bucket/mass-delete BLOCKER is RESOLVED at commit `d6e1411` (+ credential-leak MEDIUM at `e2f8acd`). The design KEEPS `pages/` as the canonical confluence bucket (bucket-aware `reposix_core::path` + id-keyed `diff::plan` — see the RESOLVED intake entry), so the mirror must **stay `pages/`-shaped — do NOT repopulate it to `issues/`**. GUARD B in `lib/litmus-flow.sh` was updated accordingly (asserts ≥1 `pages/*.md` record and picks the edit target from `pages/`); GUARD A and the SG-02 delete cap are unchanged. The coordinator re-run needs no substrate changes beyond creds/env.
+
 ## Self-Check: PASSED
 - `quality/gates/agent-ux/milestone-close-vision-litmus.sh` — FOUND (7227 chars, exec, `bash -n` clean)
 - `quality/gates/agent-ux/lib/litmus-flow.sh` — FOUND (7211 chars, `bash -n` clean)
