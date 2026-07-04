@@ -54,6 +54,16 @@ Cargo dependencies are pinned in `Cargo.lock` (committed). `cargo-deny` and `car
 
 GitHub Actions versions are pinned via Dependabot configuration ([`.github/dependabot.yml`](.github/dependabot.yml)) so a workflow update is always a reviewable PR.
 
+## Secret scanning
+
+Credential leakage is caught in **two independent layers** so neither is a single point of failure:
+
+- **Layer 1 — zero-dependency grep gate (local, pre-push).** [`quality/gates/structure/cred-hygiene.sh`](quality/gates/structure/cred-hygiene.sh) greps the outgoing ref-range for a fixed set of credential prefixes (Atlassian `ATATT3`, GitHub `ghp_` / `github_pat_`, Google `AIza`, AWS `AKIA`, Slack `xox[baprs]-`, OpenAI `sk-`, PEM private-key headers). It is invoked by the [`.githooks/pre-push`](.githooks/pre-push) hook and needs no binary beyond `bash` + `grep`, so a fresh clone is protected the moment `bash scripts/install-hooks.sh` runs. Narrow by design — it trades recall for zero setup.
+- **Layer 2 — gitleaks full ruleset (CI, every push/PR).** The `gitleaks` job in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs a version-pinned, checksum-verified [gitleaks](https://github.com/gitleaks/gitleaks) binary over **full history** (`fetch-depth: 0`), governed by [`.gitleaks.toml`](.gitleaks.toml). This is the broad backstop the grep gate cannot be. We pin the release binary by SHA-256 rather than using the marketplace action (no license-key requirement, smaller supply-chain surface).
+- **Layer 0 (optional) — personal global hook.** A contributor may wire their own secret scanner at `~/.git-hooks/pre-push`; the project hook chains to it. This is convenience, not a guarantee — it is invisible to CI and to other contributors, which is precisely why Layer 2 exists.
+
+The one allowlisted false positive (`.playwright-mcp/` browser-automation console logs, which capture third-party pages' own client-side Google web keys) is documented inline in [`.gitleaks.toml`](.gitleaks.toml). Allowlisting is by path, never by pattern, so a real key committed anywhere else still trips both layers.
+
 ## Known limitations
 
 Honesty about the threat model is a feature, not a footnote. The following are **not** mitigated by reposix and are not bugs to file:
