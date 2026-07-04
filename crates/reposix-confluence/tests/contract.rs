@@ -37,11 +37,14 @@
 //!   `cargo test -p reposix-confluence -- --ignored`.
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
+use parking_lot::Mutex;
 use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
 use reposix_core::backend::sim::SimBackend;
-use reposix_core::backend::BackendConnector;
-use reposix_core::{RecordId, RecordStatus};
+use reposix_core::backend::{BackendConnector, DeleteReason};
+use reposix_core::{sanitize, Record, RecordId, RecordStatus, ServerMetadata, Tainted, Untainted};
+use rusqlite::Connection;
 use serde_json::json;
 use wiremock::matchers::{method, path, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -740,11 +743,72 @@ async fn contract_confluence_live() {
 
 // ----------------------------------------------- live-Atlassian hierarchy test
 
-/// Phase 13 Wave B1 extension: prove the adapter populates `Record::parent_id`
-/// from real REST v2 `parentId`/`parentType` bytes, not just wiremock fixtures.
-/// The REPOSIX demo space in the reuben-john tenant has homepage `360556`
-/// with three children — so at least one listed page MUST have
-/// `parent_id == Some(_)` if hierarchy plumbing is live.
+/// The D91-08 protected durable fixture pair (space `REPOSIX`, id `360450`,
+/// tenant `reuben-john`), labeled `reposix-durable-fixture` — documented in
+/// `docs/reference/testing-targets.md` § "Protected durable fixtures". This
+/// test NEVER deletes either id (see `contract_confluence_live_hierarchy` below).
+const DURABLE_PARENT_ID: RecordId = RecordId(7_766_017);
+const DURABLE_CHILD_ID: RecordId = RecordId(7_798_785);
+
+/// Build an [`Untainted<Record>`] for the D91-08 self-seeding hierarchy
+/// test. `parent` is `None` for the parent page itself, `Some(parent_id)`
+/// for the child. Labeled `kind=test` per `docs/reference/testing-targets.md`
+/// so a cleanup sweep can locate it (distinct from the durable fixture's
+/// `reposix-durable-fixture` label, which cleanup sweeps must spare).
+fn make_hierarchy_issue(title: &str, parent: Option<RecordId>) -> Untainted<Record> {
+    let t = chrono::Utc::now();
+    sanitize(
+        Tainted::new(Record {
+            id: RecordId(0),
+            title: title.to_owned(),
+            status: RecordStatus::Open,
+            assignee: None,
+            labels: vec!["kind=test".to_owned()],
+            created_at: t,
+            updated_at: t,
+            version: 0,
+            body: "D91-08 self-seeded hierarchy fixture \
+                   (contract_confluence_live_hierarchy); safe to delete."
+                .to_owned(),
+            parent_id: parent,
+            extensions: std::collections::BTreeMap::new(),
+        }),
+        ServerMetadata {
+            id: RecordId(0),
+            created_at: t,
+            updated_at: t,
+            version: 1,
+        },
+    )
+}
+
+/// Open an in-memory `SQLite` DB with the audit schema loaded, ready for
+/// [`ConfluenceBackend::with_audit`] (OP-3: mutation calls below must land
+/// `audit_events` rows).
+fn open_audit_db() -> Arc<Mutex<Connection>> {
+    let conn = Connection::open_in_memory().expect("in-memory db");
+    reposix_core::audit::load_schema(&conn).expect("load audit schema");
+    Arc::new(Mutex::new(conn))
+}
+
+/// D91-08: prove the adapter populates `Record::parent_id` from real REST v2
+/// `parentId`/`parentType` bytes against a live tenant, WITHOUT depending on
+/// whatever the configured space happens to contain that day (the original
+/// v0.13.0-era version of this test asserted `≥1` page with `parent_id.is_some()`
+/// across the whole space's listing — read-only against live state it didn't
+/// own, and it broke CI run `28692818500` when that ambient state changed;
+/// see `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`).
+///
+/// Hybrid strategy (avoids Confluence-space clutter across repeated runs):
+/// 1. `get_record` both halves of the durable fixture pair
+///    (`DURABLE_PARENT_ID`/`DURABLE_CHILD_ID`, see `docs/reference/testing-targets.md`
+///    § "Protected durable fixtures"). If BOTH resolve, assert the child's
+///    `parent_id` read-only and return — no mutation, no teardown, the
+///    durable pair is untouched.
+/// 2. If either is missing, self-seed a FRESH `kind=test`-labeled parent+child
+///    pair via `create_record`, assert immediately, then delete BOTH in
+///    teardown. The durable fixture ids are NEVER created, mutated, or
+///    deleted by this path.
 ///
 /// Same `#[ignore]` + `skip_if_no_env!` gating as `contract_confluence_live`.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -771,27 +835,91 @@ async fn contract_confluence_live_hierarchy() {
         api_token: std::env::var("ATLASSIAN_API_KEY").unwrap(),
     };
     let space = std::env::var("REPOSIX_CONFLUENCE_SPACE").unwrap();
-    let backend = ConfluenceBackend::new(creds, &tenant).expect("backend");
+    let audit_conn = open_audit_db();
+    let backend = ConfluenceBackend::new(creds, &tenant)
+        .expect("backend")
+        .with_audit(Arc::clone(&audit_conn));
 
-    let issues = backend
-        .list_records(&space)
-        .await
-        .unwrap_or_else(|e| panic!("list_records({space}) failed: {e:?}"));
-    assert!(
-        !issues.is_empty(),
-        "live Confluence space {space} has zero pages"
+    // Step 1: verify the durable fixture pair still exists (read-only).
+    let durable_parent = backend.get_record(&space, DURABLE_PARENT_ID).await;
+    let durable_child = backend.get_record(&space, DURABLE_CHILD_ID).await;
+    if let (Ok(_parent), Ok(child)) = (&durable_parent, &durable_child) {
+        assert_eq!(
+            child.parent_id,
+            Some(DURABLE_PARENT_ID),
+            "durable fixture child {} must have parent_id == Some({}) \
+             (docs/reference/testing-targets.md § Protected durable fixtures); \
+             this test NEVER deletes either id",
+            DURABLE_CHILD_ID.0,
+            DURABLE_PARENT_ID.0,
+        );
+        eprintln!(
+            "contract_confluence_live_hierarchy: durable fixture pair {}/{} present in space {space}; \
+             verified read-only, no mutation, no teardown",
+            DURABLE_PARENT_ID.0, DURABLE_CHILD_ID.0,
+        );
+        return;
+    }
+
+    // Step 2: durable pair missing (or one half is) — self-seed a fresh pair.
+    eprintln!(
+        "contract_confluence_live_hierarchy: durable fixture pair {}/{} not fully present in space \
+         {space} (parent: {:?}, child: {:?}); self-seeding a fresh kind=test pair",
+        DURABLE_PARENT_ID.0,
+        DURABLE_CHILD_ID.0,
+        durable_parent.is_ok(),
+        durable_child.is_ok(),
     );
 
-    // The REPOSIX demo space is seeded with homepage 360556 + 3 direct
-    // children; any well-configured Confluence space exercised through this
-    // test should have at least one non-root page. If this assertion fails,
-    // either (a) the space truly is flat, or (b) `parentId` plumbing
-    // regressed — both cases warrant loud failure.
-    let with_parent = issues.iter().filter(|i| i.parent_id.is_some()).count();
+    let parent = backend
+        .create_record(
+            &space,
+            make_hierarchy_issue("D91-08 self-seed parent", None),
+        )
+        .await
+        .unwrap_or_else(|e| panic!("create_record(parent) failed: {e:?}"));
+    let child = backend
+        .create_record(
+            &space,
+            make_hierarchy_issue("D91-08 self-seed child", Some(parent.id)),
+        )
+        .await
+        .unwrap_or_else(|e| panic!("create_record(child) failed: {e:?}"));
+
+    assert_eq!(
+        child.parent_id,
+        Some(parent.id),
+        "self-seeded child {} must have parent_id == Some({}) immediately after create_record",
+        child.id.0,
+        parent.id.0,
+    );
+
+    // Teardown: delete BOTH self-seeded pages. Never DURABLE_PARENT_ID/DURABLE_CHILD_ID.
+    for id in [child.id, parent.id] {
+        if let Err(e) = backend
+            .delete_or_close(&space, id, DeleteReason::Abandoned)
+            .await
+        {
+            eprintln!(
+                "contract_confluence_live_hierarchy: teardown delete_or_close({}) failed \
+                 (non-fatal, leaves a kind=test page for manual cleanup): {e:?}",
+                id.0
+            );
+        }
+    }
+
+    // OP-3: the 2 create_record mutations above must have landed audit_events rows.
+    let audit_count: i64 = audit_conn
+        .lock()
+        .query_row(
+            "SELECT COUNT(*) FROM audit_events WHERE method = 'POST'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
     assert!(
-        with_parent >= 1,
-        "live Confluence space {space} must have ≥1 page with parent_id populated \
-         (hierarchy plumbing check); found {with_parent} of {} pages with a parent",
-        issues.len()
+        audit_count >= 2,
+        "expected >=2 audit_events POST rows for the 2 self-seed create_record calls, got {audit_count} \
+         (OP-3: mutations must land dual audit rows)"
     );
 }

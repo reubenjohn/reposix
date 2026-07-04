@@ -70,13 +70,40 @@ adapter honors `Retry-After` and falls back to exponential backoff with
 a 4-attempt cap. For aggressive test loops (>10 mutations per second)
 serialize the test run via `--test-threads=1`.
 
+### Protected durable fixtures — NEVER delete
+
+The `REPOSIX` space (space id `360450`, same `reuben-john` tenant as
+`TokenWorld` above) carries a durable parent/child page pair that
+`crates/reposix-confluence/tests/contract.rs::contract_confluence_live_hierarchy`
+depends on (D91-08):
+
+| Role | Page id | Label |
+|------|---------|-------|
+| parent | `7766017` | `reposix-durable-fixture` |
+| child | `7798785` | `reposix-durable-fixture` |
+
+These two ids are load-bearing for the hierarchy test's read-only fast
+path (verify-then-assert, no mutation) — but the test does NOT require
+them: if either is missing, it self-seeds a fresh `kind=test`-labeled
+pair, asserts against it, and deletes both in teardown instead. The
+`reposix-durable-fixture` label is deliberately distinct from the
+sweepable `kind=test` label precisely so cleanup below does not catch
+them.
+
+**Any cleanup sweep (manual or automated) of the `REPOSIX` or
+`TokenWorld` spaces MUST spare page ids `7766017` and `7798785`.**
+This constraint previously lived only in oral tradition / research
+notes — it is now a committed, discoverable fact.
+
 ### Cleanup
 
 Tests that create pages SHOULD tag them with a `kind=test` label so the
 Phase 36 cleanup procedure (deferred per the v0.9.0 plan) can sweep
-them. For now, manually delete leftover pages from
+them. For now, manually delete leftover `kind=test` pages from
 `https://${REPOSIX_CONFLUENCE_TENANT}.atlassian.net/wiki/spaces/TokenWorld`
-after a test session. Do not leave junk pages lying around.
+(or the `REPOSIX` space) after a test session — **except page ids
+`7766017` and `7798785`** (see "Protected durable fixtures" above,
+label `reposix-durable-fixture`). Do not leave junk pages lying around.
 
 > "TokenWorld is for testing — go crazy, it's safe." — project owner, 2026-04-24
 
