@@ -12,6 +12,7 @@ Run: python3 -m unittest quality.runners.test_verdict -v
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -74,6 +75,37 @@ class TestComputeBadgeMessage(unittest.TestCase):
     def test_no_p0p1_rows_falls_back_to_zero_of_zero(self):
         rows = [_row("P2", "FAIL")]
         self.assertEqual(verdict.compute_badge_message(rows), "0/0 GREEN")
+
+
+class TestEmitMarkdownVerdictThreeState(unittest.TestCase):
+    """re-audit R1: the Verdict line must be 3-valued (GREEN/YELLOW/RED),
+    matching the adjacent Color line exactly -- not collapsed to a binary
+    GREEN/RED that prints "Verdict: **RED**" on a yellow run."""
+
+    def _render(self, rows: list[dict]) -> str:
+        with tempfile.TemporaryDirectory() as tmp:
+            out_path = Path(tmp) / "verdict.md"
+            verdict.emit_markdown_verdict(rows, "on-demand", out_path, Path(tmp))
+            return out_path.read_text(encoding="utf-8")
+
+    def test_yellow_run_prints_yellow_verdict(self):
+        rows = [_row("P0", "PASS"), _row("P1", "WAIVED"), _row("P2", "FAIL")]
+        self.assertEqual(verdict.compute_color(rows), "yellow")
+        text = self._render(rows)
+        self.assertIn("Verdict: **YELLOW**", text)
+        self.assertIn("Color: `yellow`", text)
+
+    def test_brightgreen_run_prints_green_verdict(self):
+        rows = [_row("P0", "PASS"), _row("P1", "WAIVED")]
+        self.assertEqual(verdict.compute_color(rows), "brightgreen")
+        text = self._render(rows)
+        self.assertIn("Verdict: **GREEN**", text)
+
+    def test_red_run_prints_red_verdict(self):
+        rows = [_row("P0", "FAIL")]
+        self.assertEqual(verdict.compute_color(rows), "red")
+        text = self._render(rows)
+        self.assertIn("Verdict: **RED**", text)
 
 
 if __name__ == "__main__":

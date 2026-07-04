@@ -186,7 +186,7 @@ def emit_shields_endpoint_json(rows: list[dict], out_path: Path) -> None:
 def emit_markdown_verdict(rows: list[dict], cadence_or_phase: str, out_path: Path, repo_root: Path) -> None:
     counts = compute_status_counts(rows)
     color = compute_color(rows)
-    verdict = "GREEN" if color == "brightgreen" else "RED"
+    verdict = {"brightgreen": "GREEN", "yellow": "YELLOW", "red": "RED"}.get(color, "RED")
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     lines: list[str] = []
