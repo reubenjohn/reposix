@@ -71,3 +71,19 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 **Default disposition:** Size S; default-defer to a P90/P95 runner-polish slot or v0.14.0. Cheap enough (~20 lines + one test) that a runner-touching phase should fold it in eagerly per OP-8 eager-resolution.
 
 **STATUS:** OPEN
+
+## GOOD-TO-HAVES-03 — `bind` cannot retarget/remove a cross-file cite; mental-model 27ms mirror + sibling-row drift
+
+**Discovered during:** doc-alignment unblock lane (2026-07-04)
+
+**Size:** S (three loosely-related grounding items surfaced together)
+
+**(a) Tooling gap — no way to retarget/remove one cross-file cite.** BIND-RELOCATION-FIX (P89) makes `bind` replace SAME-file cites and append DIFFERENT-file ones — deliberately, since multi-source rows are legitimate. But that leaves no verb to RETARGET or REMOVE a cross-file cite that has drifted to vanished content. `docs/why/token-economy-89-1-percent` cited `docs/concepts/mental-model-in-60-seconds.md:17` for the 89.1% claim, but that file no longer carries 89.1% anywhere (the cite had drifted to a tree-diagram line). The only fix was a surgical hand-edit of the catalog JSON to point the second cite at the canonical `docs/benchmarks/token-economy.md:17`, then re-bind. A `bind --drop-source <file>` (or `unbind-source`) verb would keep such repairs inside Principle A instead of hand-editing.
+
+**(b) mental-model still says `24 ms` (doc-lie vs the reconciled 27 ms).** QL-027's reconciliation was scoped to `docs/index.md` + `README.md`; `docs/concepts/mental-model-in-60-seconds.md` lines 21 and 69 still say `24 ms` cold init, now inconsistent with the canonical 27 ms. Deferred (not fixed in-lane) because editing those lines flips three currently-non-blocking `STALE_TEST_DRIFT` rows (`bootstrap-timing-24ms-vs-27ms`, `docs/why/cold-init-24ms-sim`, `docs/why/cached-read-8ms`) into blocking `STALE_DOCS_DRIFT` requiring rebinds — scope creep beyond the unblock lane. Also noticed: `docs/why/cached-read-8ms` cites mental-model:21 (a bootstrap-latency line, no `8 ms`) — a mis-cite worth fixing in the same pass.
+
+**(c) Sibling checkout row not flipped.** `docs/tutorials/first-run/checkout-origin` (claim "`git checkout -B main refs/reposix/origin/main` succeeds after reposix init") is still bound to the config-only `dark_factory_sim_happy_path` (which never runs the checkout) yet the grader did NOT flip it, while it DID flip the near-identical `docs/index/git-checkout-branch-command`. Same latent weakness; should be flipped/rebound together when the P90/P91 round-trip lands.
+
+**Default disposition:** Size S; (b) is the most user-visible (a headline-number doc-lie) — fold into the next docs-alignment refresh or the P90/P91 round-trip phase (which will already be rebinding the checkout rows). (a) and (c) ride the same P90/P91 quality-framework slot.
+
+**STATUS:** OPEN
