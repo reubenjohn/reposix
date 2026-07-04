@@ -1,0 +1,6 @@
+# Build memory budget (CLAUDE.md § "Build memory budget"): this VM has OOM-crashed
+# three times under parallel rustc/linker pressure (latest 2026-07-03, mid-P89).
+# Cap parallel codegen jobs; combined with the "one cargo invocation at a time"
+# rule this keeps peak RSS inside the VM's budget. Delete only on beefier hardware.
+[build]
+jobs = 2
