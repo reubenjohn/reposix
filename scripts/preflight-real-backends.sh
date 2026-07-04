@@ -85,8 +85,14 @@ echo
 echo "=== JIRA (project ${JIRA_TEST_PROJECT:-TEST}) ==="
 if [ -n "${JIRA_EMAIL:-}" ] && [ -n "${JIRA_API_TOKEN:-}" ] && [ -n "${REPOSIX_JIRA_INSTANCE:-}" ]; then
   proj=${JIRA_TEST_PROJECT:-${REPOSIX_JIRA_PROJECT:-TEST}}
+  # Mirror reposix-jira's contract (client.rs: format!("https://{tenant}.atlassian.net")):
+  # REPOSIX_JIRA_INSTANCE is a bare subdomain; accept a full host for back-compat.
+  case "$REPOSIX_JIRA_INSTANCE" in
+    *.*) jira_host=$REPOSIX_JIRA_INSTANCE ;;
+    *)   jira_host="$REPOSIX_JIRA_INSTANCE.atlassian.net" ;;
+  esac
   body=$(curl -sS -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-    "https://$REPOSIX_JIRA_INSTANCE/rest/api/3/project/$proj" \
+    "https://$jira_host/rest/api/3/project/$proj" \
     -w "\nHTTP_CODE:%{http_code}\n" 2>&1) || {
       probe_fail "JIRA — curl error"
       :
