@@ -153,7 +153,7 @@
 
 **Sketched resolution:** Implement ForkAsNew or explicitly document it as unsupported (error instead of logged no-op); natural home P91 (attach real-backend wiring), which owns the reconciliation surface.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (P91-03 Task 2, commit cf7a37d) — disposition: **works for free**. Investigation per D91-04 (research §2.3, confirmed against `reposix-remote/src/diff.rs:177`): once the canonical-path fix landed (91-02/QL-001), leaving the orphan file in place IS the whole mechanism — the next `git push` sees a path absent from the pushed prior state and plans a `PlannedAction::Create`. No speculative machinery built. The "TODO P82+" no-op message is replaced with an honest "kept; next push creates it" message; a new integration test `attach_fork_as_new_keeps_orphan_for_next_push` (tests/attach.rs) proves the file is kept (not deleted, attach not aborted) and no TODO stub is advertised. Also fixed the misleading `OrphanPolicy::Abort` doc (it never aborts).
 
 ## 2026-07-03 11:40 | discovered-by: resumption audit (8-week idle gap) | severity: LOW
 
@@ -183,7 +183,7 @@
 
 **Sketched resolution:** P91's per-task PLAN should include a step "remove the corresponding `// banned-words: ok` markers when scrubbing each deferral string" with grep-verified post-condition (`grep -rn 'banned-words: ok — P91' crates/` returns zero matches after the scrub).
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (P91-03 Task 1, commit 1f7fff3). Deleting the sim-only bail arms in `attach.rs`/`sync.rs` removed both the `P79-02`/`P82+` deferral strings AND the `// banned-words: ok — P91 RBF-A-03` marker on the same line. Post-condition verified: `grep -rn 'banned-words: ok — P91' crates/` returns zero matches.
 
 ## 2026-07-03 20:16 | discovered-by: P89-02 | severity: LOW
 
@@ -422,5 +422,15 @@ All 5 are now honestly `MISSING_TEST`, which per `RowState::blocks_pre_push()` (
 **Why out-of-scope for P90:** P90's mandate is the honesty-rules framework fixes (RBF-FW-06..12); reconciling a pre-existing bare-slug-vs-full-id inconsistency in the dispatcher/catalog contract is a small but distinct wiring fix, not one of the chartered honesty rules, and touching the dispatcher script is outside 90-03/90-05's task envelopes.
 
 **Sketched resolution:** Normalize on full row ids (`subjective/<slug>`) in every row's `verifier.args`, OR make `dispatch.sh`'s case statement accept both the bare slug and the full id (e.g. strip a leading `subjective/` before the case match). Either way, add a wiring smoke test that invokes each of the 4 rows' exact `verifier.script` + `verifier.args` and asserts the dispatcher recognizes the rubric (not just that the rubric name appears somewhere in the script). Home: P92 (or the next quality window that touches the dispatcher).
+
+**STATUS:** OPEN
+
+## 2026-07-04 | discovered-by: P91 91-03 (D91-09 token-scrub) | severity: LOW
+
+**What:** `quality/gates/structure/banned-production-tokens.sh` catches only the suffixed phase-ID shape `\bP\d{2,3}-\d+\b` (e.g. `P79-02`, `P83-01`). The no-suffix `P\d{2,3}\+` shape (e.g. `P82+`, `P83+`) — used as a "lands in P82 and later" forward-reference — is NOT caught by any structure gate (framework research B(f); confirmed this pass: `P82+` in `sync.rs`/`reconciliation.rs` sailed past pre-push before P91-03 scrubbed it by grep + the deferral-pointer linter, never by the banned-token gate). Only the *deferral-pointer linter* (`lands? (alongside|in) P\d+`) covers a subset of these phrasings; a bare `action=FORK_AS_NEW (TODO P82+)` inside an eprintln string was covered by neither.
+
+**Why out-of-scope for eager-resolution in P91-03:** extending the regex to `\bP\d{2,3}[-+]\d*\b` (or adding a `P\d{2,3}\+` alternative) is NOT cheap: existing production comments carry `P82+`/`P83+` forward-references across `reposix-remote/src/{main.rs:125, precheck.rs, bus_handler.rs}` (historical, some without `// banned-words: ok` markers). Turning the regex on now would newly BLOCK pre-push on legitimate historical comment lines in files outside P91-03's envelope — a cross-file marker sweep + regression risk, not a one-line change. Per D91-09 ("intake entry if not cheaply extendable").
+
+**Sketched resolution:** In a structure-dimension window (P97 good-to-haves, or whenever `banned-production-tokens.sh` is next touched): (1) add the `P\d{2,3}\+` alternative to `PATTERN`, (2) sweep `crates/**/*.rs` for the now-caught historical hits and either reword them to drop the phase ID or add a per-line `// banned-words: ok` marker with rationale, (3) update the CLAUDE.md "Banned-token regex scope" section + the script header to document the widened shape. Grep target for the sweep: `grep -rnE 'P[0-9]{2,3}\+' crates --include='*.rs' | grep -v tests/`. Home: P97 (or the next structure-gate touch).
 
 **STATUS:** OPEN
