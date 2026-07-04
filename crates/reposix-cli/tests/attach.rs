@@ -422,6 +422,72 @@ fn attach_warns_on_backend_deleted() {
     kill_child(&mut sim);
 }
 
+/// DVCS-ATTACH-02 case 2 + D91-04 — fork-as-new: an orphan local record
+/// (id absent from the backend) under `--orphan-policy=fork-as-new` is
+/// KEPT on disk (not deleted, attach not aborted) so the next `git push`
+/// creates it as a new backend record. Proves ForkAsNew is neither
+/// DeleteLocal nor a hard abort, and that it needs no extra reconciliation
+/// state — leaving the file in place IS the mechanism (diff.rs classifies
+/// a path with no pushed prior as a Create).
+#[test]
+#[ignore = "spawns reposix-sim child; requires `cargo build --workspace --bins` first"]
+fn attach_fork_as_new_keeps_orphan_for_next_push() {
+    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let (mut sim, port) = spawn_sim_with_issue("demo", 1);
+
+    let work_tmp = TempDir::new().expect("work tempdir");
+    let cache_tmp = TempDir::new().expect("cache tempdir");
+    git_init(work_tmp.path());
+
+    let orphan = work_tmp.path().join("issues/0099.md");
+    write_record_md(&orphan, 99, "fork me as new");
+
+    let out = run_attach(
+        work_tmp.path(),
+        cache_tmp.path(),
+        port,
+        &[
+            "sim::demo",
+            "--remote-name",
+            "reposix",
+            "--orphan-policy",
+            "fork-as-new",
+        ],
+    );
+    assert!(
+        out.status.success(),
+        "attach --orphan-policy=fork-as-new should succeed: stderr={:?}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("FORK_AS_NEW"),
+        "expected FORK_AS_NEW token in stderr, got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("TODO"),
+        "fork-as-new must not advertise a TODO stub, got: {stderr}"
+    );
+    // The orphan file is KEPT (not deleted) — this is what lets the next
+    // `git push` classify it as a Create.
+    assert!(
+        orphan.exists(),
+        "fork-as-new must leave the orphan file in place for the next push"
+    );
+    // It is not a backend match, so no cache_reconciliation row.
+    let conn = open_cache_connection(cache_tmp.path(), "sim", "demo");
+    let count: i64 = conn
+        .query_row(
+            "SELECT count(*) FROM cache_reconciliation WHERE record_id = 99",
+            [],
+            |r| r.get(0),
+        )
+        .expect("query reconciliation");
+    assert_eq!(count, 0, "no reconciliation row for orphan record_id=99");
+
+    kill_child(&mut sim);
+}
+
 /// DVCS-ATTACH-02 case 3 — no-id: local file lacking parseable `id`
 /// frontmatter. Walker warns + skips; the file is not in
 /// `cache_reconciliation`.

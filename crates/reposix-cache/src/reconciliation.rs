@@ -50,14 +50,24 @@ pub struct ReconciliationReport {
 /// Policy controlling case-2 (backend-deleted) handling.
 #[derive(Debug, Clone, Copy)]
 pub enum OrphanPolicy {
-    /// Abort attach (default).
+    /// Report the orphan and leave the file untouched for manual triage
+    /// (default). Despite the name, this does NOT abort the attach — the
+    /// attach still succeeds. Duplicate-id (case 4) is the only condition
+    /// that hard-aborts reconciliation. The CLI surfaces this as
+    /// `--orphan-policy=abort`; the user docs describe it as "refuse and
+    /// report / leave for manual triage".
     Abort,
     /// Delete the local file (destructive).
     DeleteLocal,
-    /// Treat the local file as a new record to be created on next push.
-    /// `walk_and_reconcile` only logs the intent in this scaffold; the
-    /// "create on push" follow-through arrives with the bus-remote
-    /// machinery in P82+.
+    /// Keep the orphan as a brand-new record. This needs no extra
+    /// reconciliation state: leaving the file in place is sufficient,
+    /// because the next `git push` from this tree sees a path that is
+    /// present in the working tree but absent from the pushed prior
+    /// state and plans a Create for it (see `reposix-remote/src/diff.rs`
+    /// — a path with no prior entry becomes `PlannedAction::Create`).
+    /// Behaviourally identical to `Abort` at reconcile time (both keep
+    /// the file); the difference is the operator's stated intent, echoed
+    /// in the reconciliation warning.
     ForkAsNew,
 }
 
@@ -178,8 +188,13 @@ pub fn walk_and_reconcile(
                 );
             }
             OrphanPolicy::ForkAsNew => {
+                // No extra state needed: leaving the file in place is the
+                // whole mechanism. The next `git push` from this tree
+                // sees a path absent from the pushed prior state and
+                // plans a Create (reposix-remote/src/diff.rs), so the
+                // orphan becomes a new backend record on that push.
                 eprintln!(
-                    "BACKEND_DELETED id={} local_file={} action=FORK_AS_NEW (TODO P82+)",
+                    "BACKEND_DELETED id={} local_file={} action=FORK_AS_NEW (kept; next push creates it)",
                     id.0,
                     path.display(),
                 );

@@ -75,7 +75,9 @@ pub enum OrphanPolicy {
     DeleteLocal,
     /// Treat the local file as a new record to be created on next push.
     ForkAsNew,
-    /// Abort attach (default).
+    /// Report the orphan and leave the file in place for manual triage
+    /// (default). Does NOT abort the attach — attach still succeeds;
+    /// duplicate-id is the only hard stop.
     Abort,
 }
 
