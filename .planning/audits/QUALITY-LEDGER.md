@@ -72,4 +72,25 @@ confirmed the flagged Google key was a FALSE POSITIVE, 2026-07-03).
 | PEM pattern d0af03e | — | verified correct (hand-traced) |
 | All other audited surfaces (cli-subcommand-parity, orphan-scripts registry, walk() skip logic, dirty-tree guard, SECURITY.md vs gates, script hygiene) | — | CLEAN |
 
-Round 2+ results are appended below as they complete.
+## Re-audit Round 2 (2026-07-04, fresh-eyes sonnet over the 9 fix-wave commits)
+
+Zero HIGH+. Round-1 fixes verified correct (serde default handling, backoff
+reset/overflow semantics, non-tautological capabilities test, all 25 ledger
+SHA citations cross-checked) — CLEAN.
+
+| Finding | Severity | Status |
+|---|---|---|
+| GitHub pagination page-cap could truncate silently in PR-heavy repos post-filter; warn message implied the issue cap was hit when it wasn't (pre-existing, sharpened by d722491) | MED | FIXED `a7921f3` — raw-item valve (MAX_RAW_ITEMS_PER_LIST = 10x issue cap) + honest warn naming raw/pages/returned/cap + two-cap doc comments + PR-heavy-prefix wiremock regression test |
+| CLAUDE.md milestones tree example reads as exhaustive after compaction | LOW | FIXED `203d724` (CLAUDE.md 34,993B, within 35k) |
+
+**CI-surfaced (validates the PR filter against reality):** run 28709863939
+job `integration (contract, real github)` FAILED at 7a0f010 because
+`contract_github` asserted `RecordId(1)` on octocat/Hello-World — record 1
+is a PULL REQUEST; the fixture passed for a milestone only because of the
+bug d722491 fixed. FIXED `64106cd` — fixture moved to issue #7 (oldest
+genuine issue, stable since 2011) with an explanatory comment. Textbook
+"fixture silently relying on the bug."
+
+**Convergence:** Round 2 yielded zero HIGH+ findings; every Round-1/Round-2
+item is FIXED, INTAKE'd, or WONTFIX'd with rationale. Window converged in
+2 rounds (cap was 3).
