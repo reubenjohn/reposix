@@ -9,16 +9,31 @@ report-once-at-close — same charter as the paused session):
    phase — origin/main = `29cc497`; local is 4 commits ahead (`603024e`
    Wave A catalog-first; `91bec9a` 90-02a/b/e/f validator helpers;
    `859f14d` 90-02c/d/e/f runner branch edits; `fdc6bbc` 90-02g wrapper +
-   schema docs + GOOD-TO-HAVES). Wave-B1 (90-02, opus) landed all its
-   commits but was stopped by the pause directive BEFORE delivering its
-   final report — its unittest-count / zero-false-RED-sweep evidence was
-   NOT reported back. **Resume step 0: independently re-verify B1's work**:
-   `python3 -m unittest discover -s quality/runners -p 'test_*.py'` and
-   `python3 quality/runners/run.py --cadence pre-commit`; read the three
-   commit bodies for claimed coverage; spot-check 90-02f per-assert
-   congruence against the p86 F6 fixture and 90-02d
-   fail-closed-with-history against D90-04(AMENDED)/D90-12. Do not take
-   the commits' word for green.
+   schema docs + GOOD-TO-HAVES). Wave-B1 (90-02, opus) completed all
+   subtasks a–g; its final report arrived post-pause. **B1 evidence
+   (received):** 93 unit tests OK (`unittest discover -s quality/runners`);
+   pre-commit exit 0; catalog load sweep 12/12 clean;
+   `git diff --stat quality/catalogs/` empty (zero status flips); gated
+   zero-false-RED sweep = 0; p86 F6 fixture (9-vs-17, per-pair ≤1 shared
+   token) correctly REDs. run.py now 459 lines (its ≤350 cap-breach filed
+   as GOOD-TO-HAVES-06); verdict.py untouched at 367.
+   **B1 deviations the resumed session MUST know:**
+   (1) 90-02f congruence is GATED ON `minted_at` (new-regime rows only),
+   NOT "both lists non-empty" — legacy prose asserts (e.g.
+   docs-repro/example-03) would false-RED under any token threshold; the
+   pure helper `asserts_congruent` stays threshold-based (≥2 shared
+   significant tokens; ≥1 for ≤2-token asserts) so the F6 fixture fires.
+   Congruence is therefore armed-but-dormant on legacy rows — honest, per
+   D90-05's new-vs-legacy split.
+   (2) artifact `skip_reason` is the machine marker `"env-missing"`; human
+   text lives in a new `skip_detail` field (no existing consumer broke).
+   (3) 90-02g wrapper uses the minimal sibling pattern (run suite + echo
+   PASS; runner synthesizes artifact) per claim-vs-assertion-audit
+   precedent.
+   (4) verdict.py does NOT yet render FW-07a's artifact `error` marker —
+   deliberately homed in 90-04 (its verdict.py task), do not lose it.
+   Resume step 0 (cheap spot-check, evidence already reported): re-run the
+   two verification commands above before building on the runner.
 
 2. **Where we are in the P90 cycle:**
    - DONE: research (R1+R2), plan authoring, plan-check (GO-WITH-FIXES, all
