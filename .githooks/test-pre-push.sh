@@ -119,9 +119,10 @@ fi
 git reset -q --hard HEAD^
 
 # --- TEST 5b: commit with a Google API key (AIza...) is rejected. -----
-# Regression coverage for secret-scanning alert #1 (2026-07-04): a
-# google_api_key leaked in a bootstrap-seed .playwright-mcp log and the
-# committed cred-hygiene gate had no Google pattern. Fixture is a
+# Regression coverage for secret-scanning alert #1 (2026-07-04): the
+# alert flagged an AIza-shaped string in a bootstrap-seed .playwright-mcp
+# log (owner triaged: FALSE POSITIVE — no real key), which exposed that
+# the committed cred-hygiene gate had no Google pattern. Fixture is a
 # SYNTHETIC AIza-shaped string (39 chars: prefix + 35), never a real key.
 # The key is assembled at RUNTIME from two halves so no AIza-shaped
 # literal exists in this source file — secret scanners (gitleaks etc.)
