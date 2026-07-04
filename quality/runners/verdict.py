@@ -34,7 +34,10 @@ REPORTS_DIR = REPO_ROOT / "quality" / "reports"
 VERDICTS_DIR = REPORTS_DIR / "verdicts"
 BADGE_PATH = REPORTS_DIR / "badge.json"
 
-CADENCES = ("pre-commit", "pre-push", "pre-pr", "weekly", "pre-release", "post-release", "on-demand")
+CADENCES = (
+    "pre-commit", "pre-push", "pre-pr", "weekly", "pre-release", "post-release",
+    "on-demand", "pre-release-real-backend",
+)
 
 
 def now_iso() -> str:

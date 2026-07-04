@@ -130,6 +130,20 @@ Rows carry `cadences: list[str]`; a single gate may fire at multiple
 cadences (a fast mechanical check tagged `["pre-commit", "pre-push", "pre-pr"]`
 will be picked up by all three runner invocations).
 
+Milestone-close ritual MUST also invoke
+`python3 quality/runners/run.py --cadence pre-release-real-backend` and
+require exit 0; absent ⇒ verdict graded RED (per RBF-FW-03 9th probe).
+
+**OD-2 hard-RED skip-semantics (89-OWNER-DECISIONS.md, binding):** If the
+`pre-release-real-backend` cadence cannot EXECUTE against the sanctioned
+target at milestone-close, the milestone-close verdict is **RED**. Milestone
+does NOT close. No owner-waiver. No `until_date`. No PASS-with-comment. No
+skip-counts-as-pass. The 9th-probe entry in the milestone-close verdict
+template carries NO waiver column (skip ⇒ RED). Two states must never be
+blurred: `NOT-VERIFIED` remains the honest status for the P89–P95 SLOT
+state (env set, substrate not yet built); creds/targets-missing-at-
+milestone-close is a DIFFERENT state and is RED, full stop.
+
 #### Latency budgets
 
 Each cadence carries a hard time budget; rows whose verifier exceeds the
@@ -146,6 +160,25 @@ self-defeating: people learn to bypass.
 | weekly        | n/a      | alerting cadence; not blocking                                             |
 | post-release  | n/a      | alerting cadence; not blocking                                             |
 | on-demand     | n/a      | manual / subagent invocation                                               |
+| pre-release-real-backend | n/a (env-gated) | mandatory at milestone-close; default-skip in CI; first-run cache-warming heavy |
+
+First-run-heavy: the initial `--cadence pre-release-real-backend` invocation
+against TokenWorld / `reubenjohn/reposix` / JIRA `TEST` pays a cache-warming
+cost (`list_records` walk + blob materialization). Run it in a dedicated
+session window with no concurrent cargo work (CLAUDE.md "Build memory budget").
+
+#### Verifier exit-code conventions
+
+The runner maps verifier exit codes via
+`quality/runners/_realbackend.py:map_exit_code_to_status`: `0` → PASS, `2` →
+PARTIAL, `75` → NOT-VERIFIED, anything else → FAIL. Verifiers MAY exit 75
+(sysexits.h `EX_TEMPFAIL` repurposed) to signal NOT-VERIFIED — the runner
+preserves the honest status rather than mapping the non-zero exit to FAIL.
+Used by the milestone-close-vision-litmus SLOT verifier (P89 RBF-FW-03) when
+env IS set but the P91–P95 substrate has not landed. Exit-75 is NOT a
+soft-skip channel: per OD-2 the creds-missing-at-milestone-close state must
+never reach exit-75 — that state is hard RED at the verdict layer (see the
+OD-2 block above).
 
 Cadence-specific runner semantics (P61 SUBJ-03):
 - **pre-release** is the cadence where freshness-TTL enforcement materially gates a release. STALE subagent-graded rows (kind=subagent-graded with expired freshness_ttl) flip to NOT-VERIFIED; `compute_exit_code` treats P0+P1 NOT-VERIFIED as RED. The pre-release workflow at `.github/workflows/quality-pre-release.yml` fails the release with a hint pointing the maintainer at the dispatcher (`bash .claude/skills/reposix-quality-review/dispatch.sh --all-stale --force`). Auto-dispatch from CI (would require Anthropic API auth on GH Actions runners) is a v0.12.1 carry-forward via MIGRATE-03.

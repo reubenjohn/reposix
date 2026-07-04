@@ -7,8 +7,8 @@ Stdlib only; cross-platform (linux + macOS). Anti-bloat: per-dimension
 verifiers live under quality/gates/<dim>/.
 
 Each catalog row carries `cadences: list[str]` — one gate may fire at
-multiple cadences. The 7 cadences are pre-commit, pre-push, pre-pr,
-weekly, pre-release, post-release, on-demand.
+multiple cadences. The 8 cadences are pre-commit, pre-push, pre-pr, weekly,
+pre-release, post-release, on-demand, pre-release-real-backend (env-gated).
 
 Usage:
   python3 quality/runners/run.py --cadence <cadence>
@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -33,6 +34,7 @@ from typing import Any
 # Wave B pivot rule (anti-bloat cap on run.py).
 from _freshness import parse_duration as _parse_duration_impl
 from _freshness import is_stale as _is_stale_impl
+import _realbackend  # P89 RBF-FW-01: env-gate + exit-code map (sibling per anti-bloat rule)
 
 # Re-export so existing callers and tests can keep doing `from run import parse_duration`.
 parse_duration = _parse_duration_impl
@@ -43,7 +45,8 @@ REPORTS_DIR = REPO_ROOT / "quality" / "reports"
 BLAST_RADIUS_ORDER = {"P0": 0, "P1": 1, "P2": 2}
 
 VALID_CADENCES = (
-    "pre-commit", "pre-push", "pre-pr", "weekly", "pre-release", "post-release", "on-demand",
+    "pre-commit", "pre-push", "pre-pr", "weekly", "pre-release", "post-release",
+    "on-demand", "pre-release-real-backend",
 )
 
 
@@ -158,6 +161,20 @@ def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
     """
     started = time.monotonic()
     artifact_path = repo_root / row["artifact"] if row.get("artifact") else None
+
+    # Real-backend env-gate skip (RBF-FW-01); must precede the WAIVED case.
+    if _realbackend.is_skipped(row, os.environ):
+        artifact = {
+            "ts": now_iso(), "row_id": row["id"], "exit_code": None,
+            "skipped_real_backend": True, "skip_reason": _realbackend.skip_reason(os.environ),
+            "asserts_passed": [], "asserts_failed": [],
+        }
+        if artifact_path:
+            write_artifact(artifact_path, artifact)
+        row["status"] = "NOT-VERIFIED"
+        row["_skipped_real_backend"] = True  # transient; stripped before save
+        row["last_verified"] = artifact["ts"]
+        return row, time.monotonic() - started
 
     # WAIVED case
     if waiver_active(row, now):
@@ -275,12 +292,9 @@ def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
 
     if timed_out:
         row["status"] = "FAIL"
-    elif exit_code == 0:
-        row["status"] = "PASS"
-    elif exit_code == 2:
-        row["status"] = "PARTIAL"
     else:
-        row["status"] = "FAIL"
+        # 0->PASS, 2->PARTIAL, 75->NOT-VERIFIED (RBF-FW-01), else FAIL.
+        row["status"] = _realbackend.map_exit_code_to_status(exit_code)
     row["last_verified"] = artifact["ts"]
     return row, time.monotonic() - started
 
@@ -344,6 +358,8 @@ def main() -> int:
                         f"freshness expired: last_verified+{row.get('freshness_ttl')} < now "
                         f"(input last_verified={orig_lv_by_id.get(updated['id'])})"
                     )
+                elif updated.get("_skipped_real_backend"):
+                    extra = "skipped: env not set (real-backend origins/creds absent)"
                 else:
                     extra = f"verifier not found at {row.get('verifier', {}).get('script')}"
             elif updated.get("status") == "WAIVED":
@@ -355,6 +371,8 @@ def main() -> int:
         # persist only on real status flips. Per-run timestamp churn
         # belongs in the artifact, not the catalog (see catalog_dirty).
         for row in data["rows"]:
+            row.pop("_stale", None)  # transient render flags — never persisted
+            row.pop("_skipped_real_backend", None)
             rid = row.get("id")
             if rid in orig_status_by_id and row.get("status") == orig_status_by_id[rid]:
                 row["last_verified"] = orig_lv_by_id[rid]
