@@ -12,6 +12,13 @@
 //! will flip on create/update/delete once credentials-handling UX lands (see
 //! ADR-001 for the write-side of the state mapping).
 //!
+//! GitHub's `/issues` REST endpoints (list AND single-item GET) return pull
+//! requests interleaved with issues — a PR *is* an issue with a
+//! `pull_request` object attached, in GitHub's data model. reposix maps
+//! issues only: `list_records` / `list_changed_since` silently drop any PR
+//! entries before translating/counting, and `get_record` on a PR-shaped
+//! payload returns a typed error explaining the item is a pull request.
+//!
 //! # State mapping
 //!
 //! GitHub's 2-valued `state` + optional `state_reason` + label conventions
@@ -176,6 +183,23 @@ struct GhIssue {
     assignee: Option<GhUser>,
     created_at: chrono::DateTime<chrono::Utc>,
     updated_at: chrono::DateTime<chrono::Utc>,
+    /// GitHub's `/issues` endpoints (list AND single-item GET) return pull
+    /// requests interleaved with issues — a PR is "an issue with a
+    /// `pull_request` object attached" in GitHub's data model. reposix maps
+    /// issues only, so any payload carrying this key is a PR, not an issue.
+    /// `Option<serde_json::Value>` rather than a typed struct: we only ever
+    /// need presence/absence, never the URLs inside it.
+    #[serde(default)]
+    pull_request: Option<serde_json::Value>,
+}
+
+impl GhIssue {
+    /// `true` iff this payload is actually a pull request masquerading as an
+    /// issue (GitHub attaches a non-null `pull_request` object to PRs
+    /// returned from the `/issues` endpoints).
+    fn is_pull_request(&self) -> bool {
+        self.pull_request.is_some()
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -441,6 +465,12 @@ impl BackendConnector for GithubReadOnlyBackend {
             }
             let page: Vec<GhIssue> = serde_json::from_slice(&bytes)?;
             for gh in page {
+                // GitHub's `/issues` endpoint interleaves pull requests with
+                // real issues; drop PRs before translate/count so
+                // MAX_ISSUES_PER_LIST caps actual issues, not PRs we discard.
+                if gh.is_pull_request() {
+                    continue;
+                }
                 out.push(translate(gh));
                 if out.len() >= MAX_ISSUES_PER_LIST {
                     return Ok(out);
@@ -474,6 +504,12 @@ impl BackendConnector for GithubReadOnlyBackend {
             )));
         }
         let gh: GhIssue = serde_json::from_slice(&bytes)?;
+        if gh.is_pull_request() {
+            return Err(Error::Other(format!(
+                "github record {} is a pull request, not an issue; reposix maps issues only",
+                id.0
+            )));
+        }
         Ok(translate(gh))
     }
 
@@ -531,6 +567,10 @@ impl BackendConnector for GithubReadOnlyBackend {
             }
             let page: Vec<GhIssue> = serde_json::from_slice(&bytes)?;
             for gh in page {
+                // Same PR-filtering as list_records — see the comment there.
+                if gh.is_pull_request() {
+                    continue;
+                }
                 let issue = translate(gh);
                 out.push(issue.id);
                 if out.len() >= MAX_ISSUES_PER_LIST {
@@ -597,6 +637,16 @@ mod tests {
             "created_at": "2026-04-13T00:00:00Z",
             "updated_at": "2026-04-13T00:00:00Z",
         })
+    }
+
+    /// PR-shaped variant of [`gh_issue_json`]: GitHub attaches a non-null
+    /// `pull_request` object to PRs returned from the `/issues` endpoints.
+    fn gh_pr_json(number: u64, state: &str) -> serde_json::Value {
+        let mut v = gh_issue_json(number, state, None, &[]);
+        v["pull_request"] = json!({
+            "url": format!("https://api.github.com/repos/o/r/pulls/{number}"),
+        });
+        v
     }
 
     /// The default reposix-core allowlist is `http://127.0.0.1:*,http://localhost:*`.
@@ -1089,5 +1139,83 @@ mod tests {
     fn parse_next_link_absent_returns_none() {
         let h = r#"<https://api.github.com/repositories/1/issues?page=5>; rel="last""#;
         assert!(parse_next_link(h).is_none());
+    }
+
+    /// connector re-audit: GitHub's `/issues` endpoint interleaves pull
+    /// requests with real issues (a PR IS an issue with a `pull_request`
+    /// object attached, in GitHub's data model). `list_records` must drop
+    /// them before translating/counting.
+    #[tokio::test]
+    async fn list_records_drops_pull_requests() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/repos/o/r/issues"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+                gh_issue_json(1, "open", None, &[]),
+                gh_pr_json(2, "open"),
+                gh_issue_json(3, "closed", Some("completed"), &[]),
+            ])))
+            .mount(&server)
+            .await;
+
+        let backend =
+            GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
+        let issues = backend.list_records("o/r").await.expect("list");
+        assert_eq!(issues.len(), 2, "the PR must be dropped, not translated");
+        assert_eq!(issues[0].id, RecordId(1));
+        assert_eq!(issues[1].id, RecordId(3));
+    }
+
+    /// connector re-audit: `get_record` on a PR-shaped payload must error
+    /// with a message that teaches the caller what happened, not silently
+    /// translate the PR as if it were an issue.
+    #[tokio::test]
+    async fn get_record_on_pull_request_errors_with_teaching_message() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/repos/o/r/issues/5"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(gh_pr_json(5, "open")))
+            .mount(&server)
+            .await;
+
+        let backend =
+            GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
+        let err = backend
+            .get_record("o/r", RecordId(5))
+            .await
+            .expect_err("PR should not be returned as an issue");
+        match err {
+            Error::Other(m) => {
+                assert!(m.contains("pull request"), "message should teach: got {m}");
+                assert!(
+                    m.contains("issues only"),
+                    "message should teach the fix: got {m}"
+                );
+            }
+            other => panic!("expected Error::Other(...pull request...), got {other:?}"),
+        }
+    }
+
+    /// connector re-audit: `list_changed_since` must apply the same
+    /// PR-filtering as `list_records`.
+    #[tokio::test]
+    async fn list_changed_since_drops_pull_requests() {
+        use chrono::{TimeZone, Utc};
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/repos/o/r/issues"))
+            .and(query_param("since", "2026-04-24T00:00:00Z"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+                gh_issue_json(1, "open", None, &[]),
+                gh_pr_json(2, "open"),
+            ])))
+            .mount(&server)
+            .await;
+
+        let backend =
+            GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
+        let t = Utc.with_ymd_and_hms(2026, 4, 24, 0, 0, 0).unwrap();
+        let ids = backend.list_changed_since("o/r", t).await.expect("list");
+        assert_eq!(ids, vec![RecordId(1)], "the PR must be dropped");
     }
 }
