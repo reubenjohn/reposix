@@ -1243,8 +1243,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/cadence-pre-release-real-backend.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-04T04:08:45Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "quality/runners/run.py + _realbackend.py (env-gate + VALID_CADENCES entry ship in 89-03)",

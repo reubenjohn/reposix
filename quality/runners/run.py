@@ -296,6 +296,14 @@ def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
     else:
         # 0->PASS, 2->PARTIAL, 75->NOT-VERIFIED (RBF-FW-01), else FAIL.
         row["status"] = _realbackend.map_exit_code_to_status(exit_code)
+        if exit_code == _realbackend.EXIT_NOT_VERIFIED:
+            # Transient flag (89-06): distinguishes "verifier ran and
+            # legitimately exited 75" from the verifier-not-found case at
+            # line ~221 — both produce status NOT-VERIFIED, but only one is
+            # a missing-script problem. Without this flag, main()'s summary
+            # line falsely printed "verifier not found" for a verifier that
+            # DID run (see 89-06 SUMMARY.md "Deviations"). Not persisted.
+            row["_exit75_not_verified"] = True
     row["last_verified"] = artifact["ts"]
     return row, time.monotonic() - started
 
@@ -361,6 +369,8 @@ def main() -> int:
                     )
                 elif updated.get("_skipped_real_backend"):
                     extra = "skipped: env not set (real-backend origins/creds absent)"
+                elif updated.get("_exit75_not_verified"):
+                    extra = "verifier exited 75 (NOT-VERIFIED convention; not a missing-script error)"
                 else:
                     extra = f"verifier not found at {row.get('verifier', {}).get('script')}"
             elif updated.get("status") == "WAIVED":
@@ -374,6 +384,7 @@ def main() -> int:
         for row in data["rows"]:
             row.pop("_stale", None)  # transient render flags — never persisted
             row.pop("_skipped_real_backend", None)
+            row.pop("_exit75_not_verified", None)
             rid = row.get("id")
             if rid in orig_status_by_id and row.get("status") == orig_status_by_id[rid]:
                 row["last_verified"] = orig_lv_by_id[rid]

@@ -144,6 +144,22 @@ blurred: `NOT-VERIFIED` remains the honest status for the P89–P95 SLOT
 state (env set, substrate not yet built); creds/targets-missing-at-
 milestone-close is a DIFFERENT state and is RED, full stop.
 
+#### Milestone-close 9th probe (added P89 RBF-FW-03 89-06)
+
+The milestone-close ritual runs against the TEMPLATE at
+`quality/dispatch/milestone-close-verdict.md` (9-row probe table). Probe 9
+is catalog row `agent-ux/milestone-close-vision-litmus-real-backend`
+(`blast_radius: P0`, verifier `quality/gates/agent-ux/milestone-close-vision-litmus.sh`)
+— it runs the vision litmus test against the sanctioned real backend
+(TokenWorld for v0.13.0; see `docs/reference/testing-targets.md`). Until
+P91–P95 ship their substrate, this row legitimately reads NOT-VERIFIED via
+the two paths already documented above (env-gate short-circuit; exit-75
+mapping) — see "Verifier exit-code conventions" below and the OD-2 block
+immediately above for the full semantics; this subsection does not repeat
+them. **P97's `tag-v0.13.0.sh` MUST wire this guard** (the script currently
+ships `.disabled` per Path A/Option B; P97 RBF-G-04 re-enables it and adds
+the probe-9 invocation before any tag is cut).
+
 #### Latency budgets
 
 Each cadence carries a hard time budget; rows whose verifier exceeds the
