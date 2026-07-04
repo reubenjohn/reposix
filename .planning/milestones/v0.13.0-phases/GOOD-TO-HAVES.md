@@ -139,3 +139,115 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 **Default disposition:** XS — the gate+disposition close in a near-term structure/debt window; the run.py decomposition that makes the cap green is M (default-defer). Filed by 90-02 (sole Wave-B writer of this file per D90-12 item 4).
 
 **STATUS:** OPEN
+
+## GOOD-TO-HAVES-07 — move `parse_rfc3339` from `run.py` into `_freshness.py`
+
+**Discovered during:** P90 90-04 (2026-07-04)
+
+**Size:** XS-S (~10 lines Python — move one helper function + update the one import site)
+
+**Source:** `quality/runners/verdict.py` needs `parse_rfc3339` (used for `minted_at`/`last_verified` comparisons) but the canonical implementation lives in `run.py`, forcing `verdict.py` to do a lazy `from run import parse_rfc3339` inside a function body rather than a clean top-level import — a minor layering smell (verdict.py importing from the runner it's meant to summarize, not a shared helper module). `_freshness.py` already exists as the shared-helper module for exactly this kind of cross-file utility.
+
+**Acceptance:** `parse_rfc3339` relocated to `_freshness.py`; `run.py` and `verdict.py` both import it from there; the lazy in-function import in `verdict.py` removed; existing tests (`test_freshness_synth.py` and friends) still pass unchanged.
+
+**Why deferred:** 90-04's task envelope was the honesty-rules PROTOCOL.md/schema docs work, not a `run.py`/`verdict.py` refactor; moving the function is a clean, low-risk change but touches both files' import graphs and deserved its own small change rather than a rider.
+
+**Default disposition:** XS — always closes; fold into the next runner-touching phase (P92/P95 quality-framework window).
+
+**STATUS:** OPEN
+
+## GOOD-TO-HAVES-08 — trim/split `quality/reports/raise-list-p90.md` below the pre-commit WARN threshold
+
+**Discovered during:** P90 90-05 (2026-07-04)
+
+**Size:** XS
+
+**Source:** `quality/reports/raise-list-p90.md` is 24,679 chars, above the 20k-char pre-commit WARN threshold (warns, does not block). The file is P90's SC5 deliverable (5-section RAISE LIST seeding P91/P92/P95 work) and is genuinely dense evidence, not padding, so trimming risks losing decision-ready detail; a split by section (waivers / dishonest-test baseline / magic-fixture schism / subagent-graded migration record) would keep each file under threshold without losing content.
+
+**Acceptance:** Either (a) split `raise-list-p90.md` into per-section files under `quality/reports/raise-list-p90/` with an index, each under 20k chars, or (b) trim prose duplication while preserving every cited fact/table, bringing the single file under 20k chars. Pre-commit WARN clears.
+
+**Why deferred:** the WARN is non-blocking and the file is fresh SC5 evidence other phases (P91/P92/P95) are about to consume verbatim — restructuring it mid-consumption risked breaking those phases' citations; better done as a deliberate follow-up once the RAISE LIST's consumers have read it once.
+
+**Default disposition:** XS — always closes; fold into whichever of P91/P92/P95 finishes draining the RAISE LIST first (natural moment to restructure what's left).
+
+**STATUS:** OPEN
+
+## GOOD-TO-HAVES-09 — doc-note the WAL asymmetry between `reposix-core::open_audit_db` and `reposix-cache::open_cache_db`
+
+**Discovered during:** P90 90-05 (2026-07-04)
+
+**Size:** XS
+
+**Source:** `reposix-cache`'s `open_cache_db` sets `PRAGMA journal_mode=WAL`; `reposix-core`'s `open_audit_db` does not. Investigated during 90-05's security-waiver renewal (audit-immutability verifier reads both DBs) and confirmed NOT a bug: the audit DB is single-writer-per-process and append-only, so WAL's concurrent-reader benefit doesn't apply the same way; the asymmetry is a deliberate-by-outcome, undocumented state.
+
+**Acceptance:** A short code comment on `open_audit_db` (or a line in `docs/how-it-works/trust-model.md`) stating the asymmetry is intentional and why, so a future reader doesn't file it as a bug again.
+
+**Why deferred:** zero functional risk, pure documentation debt; 90-05's task envelope was waiver disposition, not code-comment polish.
+
+**Default disposition:** XS — always closes; fold into the next `reposix-core`/audit-touching phase.
+
+**STATUS:** OPEN
+
+## GOOD-TO-HAVES-10 — `docs/reference/exit-codes.md` TL;DR table omits clap's own usage-error exit-2 layer
+
+**Discovered during:** P90 90-06 (2026-07-04)
+
+**Size:** XS
+
+**Source:** Empirically confirmed during 90-06's real-test work: clap's own argument-parsing usage errors (e.g. missing required arg, unknown flag) exit 2 BEFORE reposix's own `anyhow`-based error handler ever runs — a distinct pre-dispatch exit-2 layer from the one `docs/reference/exit-codes.md`'s TL;DR table documents (which describes reposix's own handler's exit-2 semantics). The corresponding catalog claim text was corrected in 90-06 to reflect this distinction; the doc prose itself was not updated.
+
+**Acceptance:** Add a sentence/footnote to the TL;DR table in `docs/reference/exit-codes.md` distinguishing "clap usage-error exit 2 (pre-dispatch)" from "reposix handler exit 2 (post-dispatch)".
+
+**Why deferred:** doc-prose polish, not a test/catalog correctness issue (the catalog claim is already accurate); out of 90-06's real-test-writing envelope.
+
+**Default disposition:** XS — always closes; fold into the next docs-touching phase or a `/reposix-quality-refresh docs/reference/exit-codes.md` pass.
+
+**STATUS:** OPEN
+
+## GOOD-TO-HAVES-11 — extend `subcommand_help_renders` (cli.rs) beyond 3/15 spot-checked subcommands
+
+**Discovered during:** P90 90-06 (2026-07-04)
+
+**Size:** XS-S
+
+**Source:** The existing `subcommand_help_renders`-style test in `cli.rs` spot-checks only 3 of the CLI's 15 subcommands' `--help` output rendering; the other 12 (including the newer `attach`/`sync`) are untested for help-render sanity.
+
+**Acceptance:** Parameterize the test over the full current subcommand list (or add the missing 12 as additional cases) so a broken `--help` render on any subcommand fails CI, not just the 3 currently covered.
+
+**Why deferred:** 90-06's task was the 5 MISSING_TEST docs-alignment rows, not a general test-coverage expansion; widening this test is adjacent but distinct scope.
+
+**Default disposition:** XS-S — close in the next CLI-touching phase (P91 adds `attach`/`sync` real-backend coverage and is a natural place to extend this test to include them).
+
+**STATUS:** OPEN
+
+## GOOD-TO-HAVES-12 — annotate `docs/reference/cli.md` exit-codes table: helper-only vs CLI-only examples
+
+**Discovered during:** P90 90-06 (2026-07-04)
+
+**Size:** XS
+
+**Source:** Some of the exit-code examples in `docs/reference/cli.md`'s table are helper-only (`git-remote-reposix`) behaviors and others are CLI-only (`reposix` binary) behaviors, but the table doesn't currently label which is which — a reader could reasonably try an CLI-only exit code against the helper (or vice versa) and be confused when it doesn't reproduce.
+
+**Acceptance:** Add a column or inline annotation to the exit-codes table in `docs/reference/cli.md` marking each row helper-only / CLI-only / shared.
+
+**Why deferred:** doc-clarity polish noticed while writing the 90-06 exit-code tests; not itself a test-correctness gap, out of the MISSING_TEST-closure envelope.
+
+**Default disposition:** XS — always closes; fold into the next docs-touching phase or a `/reposix-quality-refresh docs/reference/cli.md` pass.
+
+**STATUS:** OPEN
+
+## GOOD-TO-HAVES-13 — doc-note: sandbox `rg` binary breaks under process substitution
+
+**Discovered during:** P90 90-03 (2026-07-04)
+
+**Size:** XS
+
+**Source:** The `rg` (ripgrep) binary available in this agent sandbox is an emulation layer that breaks under process substitution (`<(...)`) constructs, unlike real ripgrep. Quality gates in this repo use `grep` by convention rather than `rg`, which sidesteps the issue, but the convention itself isn't documented anywhere an agent would find it before hitting the same breakage.
+
+**Acceptance:** A short note (CLAUDE.md "What to do when context fills" area, or a `quality/PROTOCOL.md` aside) stating: prefer `grep` over `rg` for process-substitution-heavy shell in this sandbox; `rg`'s emulation here doesn't support `<(...)`.
+
+**Why deferred:** pure agent-session grounding note, not a code or catalog change; noticed as an aside during 90-03's gate-authoring work, not itself in scope for the gate being authored.
+
+**Default disposition:** XS — always closes; fold into the next CLAUDE.md-touching commit.
+
+**STATUS:** OPEN

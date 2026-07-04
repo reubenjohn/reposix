@@ -83,7 +83,7 @@
 
 **Sketched resolution:** The phase running when the cliff hits (likely P90 or P91) must either land the carry-forwards or consciously renew each waiver with a new `tracked_in` — no silent expiry-into-FAIL. Note: P89/P90's dispatch.sh migration and P95's row migration may moot the 3 subjective waivers; check before renewing those.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED | 90-05 commit e702822 — per-waiver conscious disposition (D90-02): 11 of the 12 cliff waivers RENEWED with `tracked_in` repointed from the dead "v0.12.1" label to live phase homes (P95/P97/launch-readiness); `release/cargo-binstall-resolves` CLEARED (not renewed) because the ~10-LOC fix it named already shipped pre-P90 (33dd41f, QL-003), re-verified byte-for-byte against `release.yml` in this dispatch. The 3 subjective waivers were confirmed NOT mooted by 90-03's dispatch.sh migration (they cover a distinct runner dispatch-and-preserve gap) and renewed honestly. The 2 security waivers additionally got their dangling verifier scripts fixed, not just re-pointed (D90-02d). Full table: `quality/reports/raise-list-p90.md` § Waivers (commit ab7078c).
 
 ## 2026-07-03 11:05 | discovered-by: resumption audit (8-week idle gap) | severity: MEDIUM
 
@@ -93,7 +93,7 @@
 
 **Sketched resolution:** Same treatment as the 2026-07-26 waiver-cliff entry above, but already overdue: the next phase that touches the quality framework (P89/P90 window) either restores the docs-repro examples to PASS or renews the waivers with honest `tracked_in` pointers before a `post-release` cadence run fires.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED | 90-05 commit e702822 — the 5 docs-repro waivers (`example-01`, `example-02`, `example-04`, `example-05`, `tutorial-replay`) RENEWED with honest `tracked_in` acknowledging they remain genuinely broken (container never spawns the sim; `tutorial-replay` is additionally QL-001-blocked on the push step) rather than falsely restored to PASS — conscious renewal per D90-02, not silent expiry.
 
 ## 2026-07-03 11:10 | discovered-by: resumption audit (8-week idle gap) | severity: MEDIUM
 
@@ -103,7 +103,7 @@
 
 **Sketched resolution:** Diagnose in the P89 window, since the weekly verdict is part of the framework P89 touches — read the two failed "Generate verdict" logs, fix the root cause (or fold into the relevant 89-0x task if it is the runner), and confirm the next scheduled run goes GREEN.
 
-**STATUS:** OPEN
+**STATUS:** DEFERRED-P95/P97 | Root cause diagnosed in P90 (90-05 RAISE LIST § 1, commit ab7078c): 2 `docs-repro` P2 rows (`benchmark-claim/8ms-cached-read`, `benchmark-claim/89.1-percent-token-reduction`) are `kind: manual` with `verifier.script: null` — structurally unable to PASS, so `weekly` renders yellow/RED every run regardless of everything else. North-star fix is writing the 2 real verifier scripts (tracked as GOOD-TO-HAVES-04, size M) — routed to P95/P97 per OD-4 §3, NOT closed by softening `verdict.py` (explicitly rejected; see the sibling 2026-07-04 05:30 entry below, same disposition).
 
 ## 2026-07-03 11:15 | discovered-by: resumption audit (8-week idle gap) | severity: HIGH
 
@@ -253,7 +253,7 @@
 
 **Sketched resolution:** Flip `"NOT_VERIFIED"` → `"NOT-VERIFIED"` in `quality/catalogs/subjective-rubrics.json`; grep the other catalogs for the same underscore-vs-hyphen typo while at it (worth a P95 sweep, XS-sized).
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED-c0d5459 | Already fixed by the convergence window per D90-11 (`.planning/phases/90-framework-fixes-honesty-rules/90-DECISIONS.md` D90-11, R2 § B.2) — confirmed during 90-07: `subjective/dvcs-cold-reader`'s `status` field reads `"NOT-VERIFIED"` (hyphen) in the current catalog. Not re-fixed in P90.
 
 ## 2026-07-04 05:10 | discovered-by: P89 cross-AI review (Codex leg) | severity: HIGH
 
@@ -263,7 +263,7 @@
 
 **Sketched resolution:** P90 RBF-FW-07: missing verifier ⇒ NOT-VERIFIED (never preserve PASS), paired with a distinct artifact `error` field so a deploy glitch is distinguishable from a real regression. Full analysis: 89-CROSS-AI-REVIEW.md H4.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED | 90-02c/d commit 859f14d (RBF-FW-07a) — missing verifier now flips the row to `NOT-VERIFIED` unconditionally (never preserves prior PASS/FAIL/PARTIAL), with a distinct `error: verifier-not-found` artifact marker so a deploy glitch is distinguishable from a real regression at a glance.
 
 ## 2026-07-04 05:10 | discovered-by: P89 cross-AI review (all three legs) | severity: HIGH
 
@@ -273,7 +273,7 @@
 
 **Sketched resolution:** P90: add `minted_at` (write-once, set by the catalog-first commit; validator rejects rows minted post-P90 without it) and switch `_audit_field.validate_row`'s anchor to it. P95 RBF-D-06 then retires the exemption class entirely. Full analysis: 89-CROSS-AI-REVIEW.md H2.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED | 90-02a/b commit 91bec9a — write-once `minted_at` (RFC3339) added to every catalog row minted from P90 onward; `_audit_field.validate_row` anchors `claim_vs_assertion_audit` on `minted_at` when present, falling back to the legacy `last_verified` heuristic for pre-P90 rows. Validator rejects a post-P90 row lacking `minted_at`, closing the backdated-`last_verified` dodge for all new rows. Legacy exemption retires at P95 RBF-D-06 as designed.
 
 ## 2026-07-04 05:10 | discovered-by: P89 cross-AI review (Claude leg) | severity: MEDIUM
 
@@ -283,7 +283,7 @@
 
 **Sketched resolution:** P91's litmus implementation MUST itself assert the resolved target is one of the sanctioned three (docs/reference/testing-targets.md) and fail loud otherwise; optionally `_realbackend` gains a sanctioned-host allowlist check at milestone-close. Full analysis: 89-CROSS-AI-REVIEW.md H1 residual.
 
-**STATUS:** OPEN
+**STATUS:** ROUTED-P91 | D90-06 — the proof obligation (litmus verifier body asserts the resolved real-backend target is one of the sanctioned three and fails loud otherwise) is now a named P91 ROADMAP acceptance criterion (`.planning/milestones/v0.13.0-phases/ROADMAP.md` Phase 91 SC-6, amended this commit) rather than a second, weaker allowlist check in `_realbackend` that would duplicate the real assertion. Not resolved in P90 by design.
 
 ## 2026-07-04 05:10 | discovered-by: P89 cross-AI review (independent leg) + coordinator repro | severity: MEDIUM
 
@@ -293,7 +293,7 @@
 
 **Sketched resolution:** P90 RBF-FW-07: skip-events should not overwrite a prior real grade; instead mark staleness (e.g. `last_real_grade` + TTL) so honesty is preserved without ground-truth loss. Full analysis: 89-CROSS-AI-REVIEW.md M8.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED | 90-02c/d commit 859f14d (RBF-FW-07b, amended D90-04) — env-gated skip now fails closed: current `status` flips (and persists) to `NOT-VERIFIED`, while the prior REAL grade is preserved in `last_real_grade` + `last_real_verified` history fields and the artifact carries an explicit `skip_reason: env-missing` marker. Drains the silent ground-truth-loss complaint without reopening the OD-2 skip-as-pass hole.
 
 ## 2026-07-04 05:30 | discovered-by: steward-window (post-P89) | severity: MEDIUM
 
@@ -303,7 +303,7 @@
 
 **Sketched resolution (north-star: VERIFY, don't soften):** Give both rows a real `verifier.script`. Their `expected.asserts` are already mechanical and cheap: (8ms row) assert `docs/benchmarks/latency.md` frontmatter `last_measured_at` is < 30 days old AND the cached-read p50 cell is within 8ms±2ms; (89.1% row) assert `89.1%` is greppable from `docs/benchmarks/token-economy.md` AND the referenced comparison fixture file exists. Both are a ~20-line python verifier apiece emitting the standard artifact JSON. Home: P95 (docs-alignment / headline-numbers automation) or P97 (release-polish), whichever the roadmap assigns `perf/headline-numbers-cross-check`. Until then, `quality-weekly` red is a known-yellow, not an acute failure.
 
-**STATUS:** OPEN
+**STATUS:** DEFERRED-P95/P97 | Same disposition as the sibling 2026-07-03 11:10 entry above (P90 90-05 RAISE LIST § 1, commit ab7078c): the two verifier-less P2 rows are the confirmed root cause; the fix is tracked as GOOD-TO-HAVES-04 (size M, routed to launch-readiness milestone per OD-4 §3) rather than softened in `verdict.py` — verify, don't soften, per this entry's own north-star language.
 
 ## 2026-07-04 05:30 | discovered-by: steward-window (post-P89, PR #58 triage) | severity: LOW
 
@@ -363,7 +363,7 @@
 
 **ADDENDUM 2026-07-04 (doc-alignment unblock lane) — the checkout claim is untested-and-unverifiable until this lands.** The docs-alignment grader flipped `docs/index/git-checkout-branch-command` (claim: "`git checkout -B main refs/reposix/origin/main` switches to main branch", cite `docs/index.md:129`) `BOUND → MISSING_TEST`: its prior binding `crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path` asserts only partial-clone CONFIG and never runs the checkout. The one test in the tree that DOES run the exact command — `quality/gates/docs-repro/tutorial-replay.sh` step 4 (`git checkout -B main refs/reposix/origin/main`, lines 76-82) — **HARD-FAILS (not skips)** when `refs/reposix/origin/main` fails to resolve, which is exactly the FINDING-A / BUG-1 failure on git < 2.34 and on the broken push/fetch path. So no test can be graded GREEN against this claim today without violating "don't declare green without seeing green": impossible on this git-2.25.1 box, and suspect on git ≥ 2.34 until BUG-1's canonical path shape lands. The row is therefore left `MISSING_TEST` (honest). **Walker impact (asked + answered):** `MISSING_TEST` is in `RowState::blocks_pre_push()` (`crates/reposix-quality/src/catalog.rs:362-369`), so this single row makes `quality/gates/docs-alignment/walk.sh` exit 1 and BLOCKS pre-push **independent of the floor/coverage ratios** — the block is per-row (each `blocks_pre_push()` state pushes a blocking line → `walk` returns `Ok(1)`), not a floor effect. When P90/P91 lands the real round-trip (acceptance criterion #5 above), bind this row to that regression; alternatively a human may soften/retire the `docs/index.md:129` checkout claim. NB: the sibling row `docs/tutorials/first-run/checkout-origin` (same checkout, claim "succeeds after reposix init") is *still* bound to the config-only `dark_factory_sim_happy_path` and was NOT flipped — an inconsistency the grader left; it has the same latent weakness.
 
-**STATUS:** OPEN
+**STATUS:** ROUTED-P91 | D90-01 — this is C-class product-code work (canonical path-shape decision across 4 sites + stream-parser fix + a REAL `git push` regression whose green depends on all of it landing together), out of scope for P90's F-class (framework) charter. `.planning/milestones/v0.13.0-phases/ROADMAP.md` Phase 91 entry amended (this commit) to name QL-001 explicitly, with the six sharpened acceptance criteria from this entry's numbered list reproduced verbatim, plus D90-06's sanctioned-target litmus-body criterion folded into SC-6. The `agent-ux/real-git-push-e2e` waiver (2026-07-31) is NOT renewed — it is retired when P91 lands the fix; its expiry is the intentional backstop if P91 slips. Full routing rationale: `90-DECISIONS.md` D90-01.
 
 ## 2026-07-04 05:40 | discovered-by: steward-window (post-P89) | severity: LOW
 
@@ -373,7 +373,7 @@
 
 **Sketched resolution:** Run `/reposix-quality-refresh` (or `reposix-quality doc-alignment bind` per row) against the 3 STALE_TEST_DRIFT rows to rehash them back to BOUND — the claims are all still valid, so it's a clean re-bind that restores `claims_bound` to 270. Home: P90 (quality-framework) or a standalone refresh run. Separately worth a design look: whole-file-hash bindings are brittle — a version-ref bump on an unrelated line reddens a matrix-presence claim; a line-anchored or content-substring binding would be more robust for these "file contains X" claims.
 
-**STATUS:** OPEN
+**STATUS:** DEFERRED-P95 | Checked during 90-07: the 3 named rows (`planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-03-bench-cron`, `.../polish2-02-aarch64`, `.../polish-06-binaries`) remain `STALE_TEST_DRIFT` in `quality/catalogs/doc-alignment.json` as of this commit — not rebound in P90, which was out of F-class framework scope (90-04 confirmed zero doc-alignment rows cite `PROTOCOL.md`/`PRACTICES.md`; 90-06's only STALE cascade handled in-phase was the `cli.md`/`exit-codes.md` line-shift, a different root cause). `STALE_TEST_DRIFT` does not block `pre-push` (only `MISSING_TEST`/`STALE_DOCS_DRIFT`/`STALE_TEST_GONE`/`TEST_MISALIGNED`/`RETIRE_PROPOSED` do, per `RowState::blocks_pre_push`), so this remains non-blocking debt. Rebind via `/reposix-quality-refresh` when convenient; the whole-file-vs-line-anchored design question defers to P95.
 
 ## 2026-07-04 08:30 | discovered-by: Stage-2 catalog-row-minting | severity: MEDIUM
 
@@ -391,7 +391,7 @@ All 5 are now honestly `MISSING_TEST`, which per `RowState::blocks_pre_push()` (
 
 **Sketched resolution:** For each of the 5 rows, either (a) write a dedicated test that actually asserts the claim (e.g. a `help_lists_all_subcommands`-style test parameterized over the FULL current subcommand list including `attach`/`sync`; a doctor/allowlist test that references the documented env-var names; an exit-code-table test that drives each subcommand to its documented code), or (b) soften/retire the claim if it's not worth a dedicated test (e.g. `spaces_confluence_only`'s "Confluence-only" half could fold into the existing `spaces.rs` bail-message tests instead of `help_lists_all_subcommands`). Whoever picks this up should re-run `/reposix-quality-refresh docs/reference/cli.md` and `/reposix-quality-refresh docs/reference/exit-codes.md` afterward to flip the rows back to `BOUND`. Until then, `pre-push` on this repo will show `docs-alignment/walk` RED for these 5 specific rows — this is a known, tracked, honest state, not a regression introduced by the catalog-row-minting work that triggered the re-grade.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED | 90-06 commits 661a0f1 (5 real tests written, each genuinely asserting its claim: full 15-subcommand help listing, env-var-name doctor/allowlist coverage, per-subcommand exit-code table, Confluence-only `spaces` constraint, exit-code semver-lock behavior) + 12e7f72 (rebind to `BOUND` + un-waive). All 5 rows (`subcommands_exist`, `env_vars`, `exit_codes`, `spaces_confluence_only`, `exit-codes-locked`) now cite tests that actually assert the documented claims. The 6th sibling (`git-checkout-branch-command`) stays `MISSING_TEST`/waived — QL-001-blocked, unfixable until P91 per the BLOCKER entry above.
 
 ## 2026-07-04 18:10 | discovered-by: quality-convergence connector re-audit | severity: HIGH
 
@@ -410,5 +410,15 @@ All 5 are now honestly `MISSING_TEST`, which per `RowState::blocks_pre_push()` (
 **Why out-of-scope for eager-resolution:** designing a write-contention workload (N agents racing update_record on shared records, asserting version-conflict handling + audit-row completeness) is M-sized test-harness work with real-backend etiquette concerns (TokenWorld mutation volume).
 
 **Sketched resolution:** add a swarm write-contention scenario against the simulator first (default per OP-1), then an --ignored real-Confluence variant against TokenWorld per docs/reference/testing-targets.md cleanup conventions. Home: P91 (real-backend wiring) or P95.
+
+**STATUS:** OPEN
+
+## 2026-07-04 | discovered-by: P90 90-03 (confirmed live by 90-05) | severity: MEDIUM
+
+**What:** All 4 subjective-rubrics rows' `verifier.args` pass bare rubric slugs (`cold-reader-hero-clarity`, `install-positioning`, `headline-numbers-sanity`, `dvcs-cold-reader`) to `--rubric`, but `.claude/skills/reposix-quality-review/dispatch.sh`'s case statement keys on the FULL `subjective/<slug>` id (`"subjective/cold-reader-hero-clarity")`, `"subjective/install-positioning"|"subjective/headline-numbers-sanity"`, `"subjective/dvcs-cold-reader"`). A bare-slug invocation path falls through to no matching case (and, upstream, a runner/catalog `find_row` lookup keyed on the full id would `KeyError`/miss for a bare slug) — the two spellings are inconsistent across the catalog-row/dispatcher boundary. Confirmed live (not hypothetical) by both 90-03 (which wired the `dvcs-cold-reader` dispatch case) and 90-05 (which renewed the 3 subjective waivers and re-read the same `verifier.args` while doing so).
+
+**Why out-of-scope for P90:** P90's mandate is the honesty-rules framework fixes (RBF-FW-06..12); reconciling a pre-existing bare-slug-vs-full-id inconsistency in the dispatcher/catalog contract is a small but distinct wiring fix, not one of the chartered honesty rules, and touching the dispatcher script is outside 90-03/90-05's task envelopes.
+
+**Sketched resolution:** Normalize on full row ids (`subjective/<slug>`) in every row's `verifier.args`, OR make `dispatch.sh`'s case statement accept both the bare slug and the full id (e.g. strip a leading `subjective/` before the case match). Either way, add a wiring smoke test that invokes each of the 4 rows' exact `verifier.script` + `verifier.args` and asserts the dispatcher recognizes the rubric (not just that the rubric name appears somewhere in the script). Home: P92 (or the next quality window that touches the dispatcher).
 
 **STATUS:** OPEN
