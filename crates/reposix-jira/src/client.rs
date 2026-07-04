@@ -110,6 +110,17 @@ impl JiraBackend {
         self
     }
 
+    /// Whether an audit-log connection is attached (see [`Self::with_audit`]).
+    ///
+    /// Exposed for callers that must *verify* audit is wired before
+    /// serving a write path (OP-3: backend mutations are non-optional to
+    /// audit). The `git-remote-reposix` dispatch and its
+    /// `connector_audit_wired_*` tests assert on this.
+    #[must_use]
+    pub fn has_audit(&self) -> bool {
+        self.audit.is_some()
+    }
+
     /// Strict variant of [`reposix_core::backend::BackendConnector::list_records`]:
     /// returns `Err` instead of silently truncating at the
     /// [`MAX_ISSUES_PER_LIST`] cap.

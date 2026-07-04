@@ -34,9 +34,12 @@
 
 use std::sync::Arc;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
+use parking_lot::Mutex;
+use reposix_cache::path::resolve_cache_path;
 use reposix_core::backend::{sim::SimBackend, BackendConnector};
 use reposix_core::split_reposix_url;
+use rusqlite::Connection;
 
 /// Which concrete backend the helper should instantiate for a given URL.
 ///
@@ -220,26 +223,66 @@ pub(crate) fn instantiate(parsed: &ParsedRemote) -> Result<Arc<dyn BackendConnec
     match parsed.kind {
         BackendKind::Sim => instantiate_sim(&parsed.origin),
         BackendKind::GitHub => instantiate_github(&parsed.origin),
-        BackendKind::Confluence => instantiate_confluence(&parsed.origin),
-        BackendKind::Jira => instantiate_jira(&parsed.origin),
+        BackendKind::Confluence => Ok(Arc::new(build_confluence(parsed)?)),
+        BackendKind::Jira => Ok(Arc::new(build_jira(parsed)?)),
     }
 }
 
-fn instantiate_sim(origin: &str) -> Result<Arc<dyn BackendConnector>> {
-    let backend = SimBackend::with_agent_suffix(origin.to_owned(), Some("remote"))
-        .map_err(|e| anyhow!("instantiate sim backend at `{origin}`: {e}"))?;
-    Ok(Arc::new(backend))
+/// Open the `audit_events` (backend-mutation) audit DB for a write-capable
+/// connector and wrap it for [`with_audit`](reposix_confluence::ConfluenceBackend::with_audit).
+///
+/// OP-3 (audit is non-optional): every network-touching mutation the
+/// helper drives against a real Confluence/JIRA backend MUST write an
+/// `audit_events` row. The `sim` backend records its own audit rows
+/// server-side (the simulator's middleware), and `github` is read-only
+/// (writes are `NotSupported`), so only Confluence + JIRA wire a
+/// client-side audit connection here.
+///
+/// ## DB location — a SIBLING of the bare-repo cache dir
+///
+/// The audit DB lives at `<root>/reposix/<backend>-<project>.audit.db`,
+/// a sibling *file* of the bare-repo cache dir
+/// (`<root>/reposix/<backend>-<project>.git/`). It deliberately does NOT
+/// live inside the `.git` dir: `reposix_cache::Cache::open` calls
+/// `gix::init_bare`, which refuses a non-empty directory, so a `cache.db`
+/// created here before the cache initialises would break the first
+/// fetch/push against a fresh project. The sibling file sidesteps that
+/// ordering hazard entirely. A complete forensic query joins this DB's
+/// `audit_events` with the bare repo's `cache.db::audit_events_cache`
+/// (the dual-table design — see `reposix_core::audit` module docs).
+///
+/// ## Failure semantics — hard error (OP-3)
+///
+/// A failure to open the audit DB is a hard error, propagated to the
+/// helper's top-level exit. Rationale: the audit DB sits in the same
+/// `<root>/reposix/` directory as the cache, so if it cannot be opened
+/// (read-only FS, permission error) the cache cannot be opened either and
+/// the session is already non-functional — failing loud at construction
+/// is strictly more informative than a silent no-audit write path. This
+/// matches CLI/simulator semantics, where [`open_audit_db`] errors
+/// propagate rather than being swallowed.
+///
+/// [`open_audit_db`]: reposix_core::audit::open_audit_db
+fn open_connector_audit(kind: BackendKind, project: &str) -> Result<Arc<Mutex<Connection>>> {
+    let cache_project = sanitize_project_for_cache(project);
+    let bare = resolve_cache_path(kind.slug(), &cache_project)
+        .map_err(|e| anyhow!("resolve cache path for audit DB: {e}"))?;
+    // Sibling file: `<...>-<project>.git` -> `<...>-<project>.audit.db`.
+    let audit_path = bare.with_extension("audit.db");
+    if let Some(parent) = audit_path.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("create audit DB dir {}", parent.display()))?;
+    }
+    let conn = reposix_core::audit::open_audit_db(&audit_path)
+        .map_err(|e| anyhow!("open audit DB at {}: {e}", audit_path.display()))?;
+    Ok(Arc::new(Mutex::new(conn)))
 }
 
-fn instantiate_github(origin: &str) -> Result<Arc<dyn BackendConnector>> {
-    let token = required_env("GITHUB_TOKEN", &["GITHUB_TOKEN"])?;
-    let backend =
-        reposix_github::GithubReadOnlyBackend::new_with_base_url(Some(token), origin.to_owned())
-            .map_err(|e| anyhow!("instantiate github backend at `{origin}`: {e}"))?;
-    Ok(Arc::new(backend))
-}
-
-fn instantiate_confluence(origin: &str) -> Result<Arc<dyn BackendConnector>> {
+/// Build a Confluence backend with the `audit_events` connection wired
+/// (OP-3). Split from [`instantiate`] so the `connector_audit_wired_*`
+/// tests can assert on the concrete `has_audit()` state.
+fn build_confluence(parsed: &ParsedRemote) -> Result<reposix_confluence::ConfluenceBackend> {
+    let origin = &parsed.origin;
     let required = [
         "ATLASSIAN_API_KEY",
         "ATLASSIAN_EMAIL",
@@ -253,13 +296,18 @@ fn instantiate_confluence(origin: &str) -> Result<Arc<dyn BackendConnector>> {
     let api_token = std::env::var("ATLASSIAN_API_KEY").expect("checked");
     let email = std::env::var("ATLASSIAN_EMAIL").expect("checked");
     let creds = reposix_confluence::ConfluenceCreds { email, api_token };
+    let audit = open_connector_audit(BackendKind::Confluence, &parsed.project)?;
     let backend =
         reposix_confluence::ConfluenceBackend::new_with_base_url(creds, origin.to_owned())
-            .map_err(|e| anyhow!("instantiate confluence backend at `{origin}`: {e}"))?;
-    Ok(Arc::new(backend))
+            .map_err(|e| anyhow!("instantiate confluence backend at `{origin}`: {e}"))?
+            .with_audit(audit);
+    Ok(backend)
 }
 
-fn instantiate_jira(origin: &str) -> Result<Arc<dyn BackendConnector>> {
+/// Build a JIRA backend with the `audit_events` connection wired (OP-3).
+/// Split from [`instantiate`] for the same reason as [`build_confluence`].
+fn build_jira(parsed: &ParsedRemote) -> Result<reposix_jira::JiraBackend> {
+    let origin = &parsed.origin;
     let required = ["JIRA_EMAIL", "JIRA_API_TOKEN", "REPOSIX_JIRA_INSTANCE"];
     let missing = collect_missing(&required);
     if !missing.is_empty() {
@@ -268,8 +316,24 @@ fn instantiate_jira(origin: &str) -> Result<Arc<dyn BackendConnector>> {
     let email = std::env::var("JIRA_EMAIL").expect("checked");
     let api_token = std::env::var("JIRA_API_TOKEN").expect("checked");
     let creds = reposix_jira::JiraCreds { email, api_token };
+    let audit = open_connector_audit(BackendKind::Jira, &parsed.project)?;
     let backend = reposix_jira::JiraBackend::new_with_base_url(creds, origin.to_owned())
-        .map_err(|e| anyhow!("instantiate jira backend at `{origin}`: {e}"))?;
+        .map_err(|e| anyhow!("instantiate jira backend at `{origin}`: {e}"))?
+        .with_audit(audit);
+    Ok(backend)
+}
+
+fn instantiate_sim(origin: &str) -> Result<Arc<dyn BackendConnector>> {
+    let backend = SimBackend::with_agent_suffix(origin.to_owned(), Some("remote"))
+        .map_err(|e| anyhow!("instantiate sim backend at `{origin}`: {e}"))?;
+    Ok(Arc::new(backend))
+}
+
+fn instantiate_github(origin: &str) -> Result<Arc<dyn BackendConnector>> {
+    let token = required_env("GITHUB_TOKEN", &["GITHUB_TOKEN"])?;
+    let backend =
+        reposix_github::GithubReadOnlyBackend::new_with_base_url(Some(token), origin.to_owned())
+            .map_err(|e| anyhow!("instantiate github backend at `{origin}`: {e}"))?;
     Ok(Arc::new(backend))
 }
 
@@ -439,10 +503,23 @@ mod tests {
         assert_eq!(backend.name(), "simulator");
     }
 
+    /// Process-wide lock serialising every env-mutating test in this
+    /// module. Rust runs tests as parallel threads sharing one process
+    /// environment; without this, a test that *sets* `ATLASSIAN_*` and a
+    /// test that *clears* them race. Poison is ignored — a panicking test
+    /// still leaves the env consistent because each helper restores.
+    fn env_guard() -> std::sync::MutexGuard<'static, ()> {
+        static LOCK: std::sync::OnceLock<std::sync::Mutex<()>> = std::sync::OnceLock::new();
+        LOCK.get_or_init(|| std::sync::Mutex::new(()))
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+
     /// Test helper: snapshot+clear a list of env vars for the duration
     /// of the closure, then restore. Required because Rust runs tests in
     /// the same process and other tests may set creds.
     fn with_cleared_env<F: FnOnce()>(names: &[&str], f: F) {
+        let _g = env_guard();
         let saved: Vec<(String, Option<String>)> = names
             .iter()
             .map(|n| ((*n).to_owned(), std::env::var(n).ok()))
@@ -533,5 +610,114 @@ mod tests {
                 assert!(msg.contains("REPOSIX_JIRA_INSTANCE"), "msg: {msg}");
             },
         );
+    }
+
+    /// Run `f` with `vars` set (and `REPOSIX_CACHE_DIR` pointed at a fresh
+    /// temp dir), restoring every touched var afterwards. Serialised via
+    /// [`env_guard`]. Returns the temp dir so the caller can inspect the
+    /// audit DB it produced.
+    fn with_env_and_cache<F: FnOnce()>(vars: &[(&str, &str)], f: F) -> tempfile::TempDir {
+        let _g = env_guard();
+        let cache = tempfile::tempdir().expect("cache tempdir");
+        let mut names: Vec<&str> = vars.iter().map(|(k, _)| *k).collect();
+        names.push(reposix_cache::path::CACHE_DIR_ENV);
+        names.push(reposix_core::http::ALLOWLIST_ENV_VAR);
+        let saved: Vec<(String, Option<String>)> = names
+            .iter()
+            .map(|n| ((*n).to_owned(), std::env::var(n).ok()))
+            .collect();
+        for (k, v) in vars {
+            std::env::set_var(k, v);
+        }
+        std::env::set_var(reposix_cache::path::CACHE_DIR_ENV, cache.path());
+        // A valid (loopback) allowlist so `client()` construction succeeds.
+        std::env::set_var(reposix_core::http::ALLOWLIST_ENV_VAR, "http://127.0.0.1:*");
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(f));
+        for (n, v) in saved {
+            match v {
+                Some(s) => std::env::set_var(&n, s),
+                None => std::env::remove_var(&n),
+            }
+        }
+        if let Err(e) = result {
+            std::panic::resume_unwind(e);
+        }
+        cache
+    }
+
+    /// Assert the audit DB file the dispatch just created holds the
+    /// backend-mutation `audit_events` table (proves the schema was
+    /// loaded, not merely that a file was touched).
+    fn assert_audit_events_table(cache_root: &std::path::Path, backend: &str, project: &str) {
+        let bare = cache_root
+            .join("reposix")
+            .join(format!("{backend}-{project}.git"));
+        let audit_db = bare.with_extension("audit.db");
+        assert!(
+            audit_db.exists(),
+            "audit DB not created at {}",
+            audit_db.display()
+        );
+        let conn = rusqlite::Connection::open(&audit_db).expect("open audit db");
+        let n: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='audit_events'",
+                [],
+                |r| r.get(0),
+            )
+            .expect("query sqlite_master");
+        assert_eq!(n, 1, "audit_events table missing in {}", audit_db.display());
+    }
+
+    /// OP-3: a Confluence backend dispatched by the helper MUST have its
+    /// `audit_events` connection wired. `connector_audit_wired` greps here.
+    #[test]
+    fn connector_audit_wired_confluence() {
+        let parsed = ParsedRemote {
+            kind: BackendKind::Confluence,
+            origin: "https://reuben-john.atlassian.net".to_owned(),
+            project: "TokenWorld".to_owned(),
+        };
+        let cache = with_env_and_cache(
+            &[
+                ("ATLASSIAN_API_KEY", "dummy-token"),
+                ("ATLASSIAN_EMAIL", "dummy@example.com"),
+                ("REPOSIX_CONFLUENCE_TENANT", "reuben-john"),
+            ],
+            || {
+                let backend = build_confluence(&parsed).expect("build confluence");
+                assert!(
+                    backend.has_audit(),
+                    "confluence backend dispatched without audit wired (OP-3 violation)"
+                );
+            },
+        );
+        assert_audit_events_table(cache.path(), "confluence", "TokenWorld");
+    }
+
+    /// OP-3: a JIRA backend dispatched by the helper MUST have its
+    /// `audit_events` connection wired. `connector_audit_wired` greps here.
+    #[test]
+    fn connector_audit_wired_jira() {
+        let parsed = ParsedRemote {
+            kind: BackendKind::Jira,
+            origin: "https://reuben-john.atlassian.net".to_owned(),
+            project: "TEST".to_owned(),
+        };
+        let cache = with_env_and_cache(
+            &[
+                ("JIRA_EMAIL", "dummy@example.com"),
+                ("JIRA_API_TOKEN", "dummy-token"),
+                ("REPOSIX_JIRA_INSTANCE", "reuben-john"),
+            ],
+            || {
+                let backend = build_jira(&parsed).expect("build jira");
+                assert!(
+                    backend.has_audit(),
+                    "jira backend dispatched without audit wired (OP-3 violation)"
+                );
+            },
+        );
+        assert_audit_events_table(cache.path(), "jira", "TEST");
     }
 }

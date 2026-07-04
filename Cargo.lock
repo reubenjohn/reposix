@@ -2993,6 +2993,7 @@ dependencies = [
  "assert_cmd",
  "chrono",
  "gix",
+ "parking_lot",
  "regex",
  "reposix-cache",
  "reposix-confluence",

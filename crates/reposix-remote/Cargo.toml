@@ -58,6 +58,12 @@ anyhow.workspace = true
 thiserror.workspace = true
 gix = { workspace = true }
 chrono = { workspace = true }
+# QL-005: the helper wires the backend-mutation `audit_events` DB into the
+# Confluence/JIRA connectors (OP-3). `open_audit_db` returns a
+# `rusqlite::Connection`; the connectors' `with_audit` takes a
+# `parking_lot::Mutex`-wrapped handle.
+rusqlite = { workspace = true, features = ["bundled"] }
+parking_lot = { workspace = true }
 
 [dev-dependencies]
 wiremock = "0.6"
@@ -71,4 +77,3 @@ chrono = { workspace = true }
 reposix-sim = { path = "../reposix-sim", version = "0.12.0" }
 walkdir = "2.5.0"
 regex = "1.12.3"
-rusqlite = { workspace = true, features = ["bundled"] }
