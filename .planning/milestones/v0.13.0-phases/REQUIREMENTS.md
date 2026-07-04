@@ -42,10 +42,12 @@ Bus remote: precheck-then-SoT-first-write. Cheap network checks (`ls-remote` mir
 
 #### `reposix attach` core
 
-- [x] **DVCS-ATTACH-01**: `reposix attach <backend>::<project>` subcommand in `crates/reposix-cli/`. In CWD: builds fresh cache directory derived from `<backend>::<project>` (NOT `remote.origin.url`, per Q1.1); REST-lists backend; populates cache OIDs lazily; reconciles by walking current HEAD tree matching files to backend records by frontmatter `id`; adds remote `reposix::<sot-spec>?mirror=<existing-origin-url>` (or `reposix::<sot-spec>` if `--no-bus`); sets `extensions.partialClone=<remote-name>`. Existing `origin` keeps plain-git semantics.
-- [x] **DVCS-ATTACH-02**: Reconciliation cases per `architecture-sketch.md` § "Reconciliation cases": match (OID alignment), backend-deleted (warn+skip+`--orphan-policy={delete-local,fork-as-new,abort}`), no-id (warn+skip), duplicate `id` (hard error), mirror-lag (cache marks for next fetch). Each row has a corresponding test case.
-- [x] **DVCS-ATTACH-03**: Re-attach with different SoT spec is REJECTED with clear error per Q1.2 ("multi-SoT not supported in v0.13.0"). Re-attach with same SoT is IDEMPOTENT per Q1.3 — refreshes cache state against current backend without special-casing init-vs-attach origins.
-- [x] **DVCS-ATTACH-04**: `Cache::read_blob` (the lazy seam git invokes during `extensions.partialClone` fetches) returns `Tainted<Vec<u8>>` per OP-2. Verified by static type-system assertion + runtime integration test in `crates/reposix-cli/tests/attach.rs`. The Tainted contract belongs to the `read_blob` materialization seam, not to `attach` itself (P79 plan revision per checker B2).
+- [x] **DVCS-ATTACH-01**: `reposix attach <backend>::<project>` subcommand in `crates/reposix-cli/`. In CWD: builds fresh cache directory derived from `<backend>::<project>` (NOT `remote.origin.url`, per Q1.1); REST-lists backend; populates cache OIDs lazily; reconciles by walking current HEAD tree matching files to backend records by frontmatter `id`; adds remote `reposix::<sot-spec>?mirror=<existing-origin-url>` (or `reposix::<sot-spec>` if `--no-bus`); sets `extensions.partialClone=<remote-name>`. Existing `origin` keeps plain-git semantics. Shipped P79 against the **simulator only**; real-backend dispatch (github/confluence/jira) landed **P91** via the shared `backend_dispatch` factory (D91-03, commit `1f7fff3`) — see `attach_real_confluence`/`attach_real_github`/`attach_real_jira` in `crates/reposix-cli/tests/agent_flow_real.rs` (commit `3f67c0e`).
+- [x] **DVCS-ATTACH-02**: Reconciliation cases per `architecture-sketch.md` § "Reconciliation cases": match (OID alignment), backend-deleted (warn+skip+`--orphan-policy={delete-local,fork-as-new,abort}`), no-id (warn+skip), duplicate `id` (hard error), mirror-lag (cache marks for next fetch). Each row has a corresponding test case. P79 sim-only; P91 proved the same cases against real TokenWorld (Confluence) via the milestone-close vision litmus (D91-06/D91-07, 11/11 asserts) and fixed `ForkAsNew`/`Abort` (D91-04), which P79 had left as stubs.
+- [x] **DVCS-ATTACH-03**: Re-attach with different SoT spec is REJECTED with clear error per Q1.2 ("multi-SoT not supported in v0.13.0"). Re-attach with same SoT is IDEMPOTENT per Q1.3 — refreshes cache state against current backend without special-casing init-vs-attach origins. Sim-only through P79; real-backend idempotency re-verified in P91's `sync_real_*` smoke suite.
+- [x] **DVCS-ATTACH-04**: `Cache::read_blob` (the lazy seam git invokes during `extensions.partialClone` fetches) returns `Tainted<Vec<u8>>` per OP-2. Verified by static type-system assertion + runtime integration test in `crates/reposix-cli/tests/attach.rs`. The Tainted contract belongs to the `read_blob` materialization seam, not to `attach` itself (P79 plan revision per checker B2). Sim-only assertion through P79; the wrapper is backend-agnostic, so P91's real-backend wiring reuses it unchanged — re-verified, not re-derived.
+
+> **Honest coverage note (added P91, RBF-A-06):** the four rows above shipped [x] at P79 against the **simulator backend only** — `attach`'s real-backend (github/confluence/jira) code paths did not exist yet. Reading "[x] shipped" as "real-backend attach works" would have been an overclaim between P79 and P91. P91 (`91-attach-sync-real-backend-wiring`) wired the real-backend dispatch, fixed the `ForkAsNew`/`Abort` orphan-policy stubs (D91-04), set `remote.pushDefault` + missing-helper warnings (commit `854586b`), and proved the full flow end-to-end against real TokenWorld via the milestone-close vision litmus (D91-06/D91-07). Bucket-aware canonical paths (`issues/` vs `pages/`, D91-13) also landed in this window.
 
 #### Mirror-lag observability
 
@@ -127,10 +129,10 @@ Drafted 2026-04-30 by `gsd-roadmapper`. Coverage: **36/36 v0.13.0 REQ-IDs mapped
 | HYGIENE-02 | P78 | shipped |
 | MULTI-SOURCE-WATCH-01 | P78 | shipped |
 | POC-01 | P79 | complete |
-| DVCS-ATTACH-01 | P79 | shipped |
-| DVCS-ATTACH-02 | P79 | shipped |
-| DVCS-ATTACH-03 | P79 | shipped |
-| DVCS-ATTACH-04 | P79 | shipped |
+| DVCS-ATTACH-01 | P79 (sim) / P91 (real-backend) | shipped |
+| DVCS-ATTACH-02 | P79 (sim) / P91 (real-backend) | shipped |
+| DVCS-ATTACH-03 | P79 (sim) / P91 (real-backend) | shipped |
+| DVCS-ATTACH-04 | P79 (sim) / P91 (real-backend) | shipped |
 | DVCS-MIRROR-REFS-01 | P80 | shipped |
 | DVCS-MIRROR-REFS-02 | P80 | shipped |
 | DVCS-MIRROR-REFS-03 | P80 | shipped |
@@ -159,6 +161,8 @@ Drafted 2026-04-30 by `gsd-roadmapper`. Coverage: **36/36 v0.13.0 REQ-IDs mapped
 | DVCS-DARKFACTORY-02 | P86 | shipped |
 | DVCS-SURPRISES-01 | P87 | shipped |
 | DVCS-GOOD-TO-HAVES-01 | P88 | shipped |
+
+**Coverage note (added P91):** the `P79 (sim) / P91 (real-backend)` split on the four `DVCS-ATTACH-*` rows is the ONLY dual-phase entry in this table — every other REQ-ID's "shipped" status was true for its listed phase against whatever backend that phase's own acceptance criteria targeted. `attach`'s real-backend dispatch was out of P79's scope by design (P79 shipped the sim-only mechanism per the phase's own plan) and was not a gap until P91 closed it; see the honest-coverage note under `reposix attach` core above for detail.
 
 ### Recurring success criteria across every v0.13.0 phase
 
