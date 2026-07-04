@@ -12,6 +12,13 @@ readme = "../../README.md"
 keywords = ["git", "remote-helper", "agent", "rest", "partial-clone"]
 categories = ["development-tools", "command-line-utilities"]
 
+# D91-03: expose `backend_dispatch` as a library so `reposix-cli`'s
+# attach/sync subcommands reuse the one URL→connector factory (with its
+# OP-3 `.with_audit(…)` wiring) instead of hand-rolling a third/fourth copy.
+[lib]
+name = "reposix_remote"
+path = "src/lib.rs"
+
 [[bin]]
 name = "git-remote-reposix"
 path = "src/main.rs"

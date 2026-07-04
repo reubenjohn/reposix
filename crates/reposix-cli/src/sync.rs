@@ -11,24 +11,20 @@
 //! exists). After the call, the cursor is bumped to `Utc::now()` and
 //! the cache's tree state matches the backend.
 //!
-//! Design intent: the bus remote (P82–P83) names this command in its
-//! reject-path stderr hints. Renaming or making the bare form error
-//! would force a doc-rev cascade.
+//! Design intent: the bus remote names this command in its reject-path
+//! stderr hints. Renaming or making the bare form error would force a
+//! doc-rev cascade.
 //!
 //! See `.planning/research/v0.13.0-dvcs/architecture-sketch.md`
 //! § Performance subtlety.
 
 use std::path::PathBuf;
-use std::sync::Arc;
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use reposix_cache::Cache;
-use reposix_core::backend::sim::SimBackend;
-use reposix_core::{parse_remote_url, BackendConnector};
+use reposix_remote::backend_dispatch::{self, BackendKind};
 
-use crate::worktree_helpers::{
-    backend_slug_from_origin, resolve_reposix_remote_url, strip_bus_query,
-};
+use crate::worktree_helpers::{resolve_reposix_remote_url, strip_bus_query};
 
 /// Entrypoint for `reposix sync [--reconcile] [path]`.
 ///
@@ -39,9 +35,11 @@ use crate::worktree_helpers::{
 /// cache. The `meta.last_fetched_at` cursor is bumped as a side effect.
 ///
 /// # Errors
-/// - The working tree has no `remote.origin.url` configured.
+/// - The working tree has no reposix remote configured.
 /// - The remote URL fails to parse.
-/// - The backend slug isn't `sim` (real-backend wiring lands in P82+).
+/// - Backend construction fails (e.g. a real backend is missing a
+///   required credential env var — the error names each unset var and
+///   points at `docs/reference/testing-targets.md`).
 /// - I/O when opening the cache.
 /// - REST when calling `Cache::sync` against the backend.
 pub async fn run(reconcile: bool, path: Option<PathBuf>) -> Result<()> {
@@ -74,35 +72,29 @@ pub async fn run(reconcile: bool, path: Option<PathBuf>) -> Result<()> {
         )
     })?;
     let sot = strip_bus_query(&url);
-    let spec = parse_remote_url(sot).with_context(|| format!("parse reposix remote url={url}"))?;
-    let backend_slug = backend_slug_from_origin(sot);
+    let mut parsed = backend_dispatch::parse_remote_url(sot)
+        .with_context(|| format!("parse reposix remote url={url}"))?;
 
-    // Construct the backend connector. v0.13.0 scaffolds sim only —
-    // matches `attach.rs`'s scope; real backends arrive when the
-    // credential paths land in later milestones.
-    let backend: Arc<dyn BackendConnector> = match backend_slug.as_str() {
-        "sim" => {
-            let origin = std::env::var("REPOSIX_SIM_ORIGIN")
-                .ok()
-                .filter(|s| !s.is_empty())
-                .unwrap_or_else(|| "http://127.0.0.1:7878".to_string());
-            let sim = SimBackend::new(origin).context("build SimBackend")?;
-            Arc::new(sim)
+    // Construct the backend connector through the git remote helper's
+    // shared dispatch factory (D91-03) — the same path `attach` and the
+    // helper binary use, so sim/github/confluence/jira all instantiate
+    // identically and Confluence/JIRA inherit the OP-3 `.with_audit(…)`
+    // wiring. For sim, honour REPOSIX_SIM_ORIGIN so tests can target a
+    // random port while the remote URL keeps its canonical origin.
+    if parsed.kind == BackendKind::Sim {
+        if let Some(origin) = std::env::var("REPOSIX_SIM_ORIGIN")
+            .ok()
+            .filter(|s| !s.is_empty())
+        {
+            parsed.origin = origin;
         }
-        other => bail!(
-            "sync --reconcile: backend `{other}` not yet wired in v0.13.0 (sim only); \
-             github/confluence/jira land alongside the bus-remote work in P82+"
-        ),
-    };
+    }
+    let backend = backend_dispatch::instantiate(&parsed)
+        .with_context(|| format!("instantiate backend for {sot}"))?;
+    let backend_slug = parsed.kind.slug();
+    let cache_project = backend_dispatch::sanitize_project_for_cache(&parsed.project);
 
-    // Filesystem-safe project (only github needs the slash rewrite).
-    let cache_project = if backend_slug == "github" {
-        spec.project.as_str().replace('/', "-")
-    } else {
-        spec.project.as_str().to_string()
-    };
-
-    let cache = Cache::open(backend, &backend_slug, &cache_project).context("open cache")?;
+    let cache = Cache::open(backend, backend_slug, &cache_project).context("open cache")?;
     let report = cache.sync().await.context("Cache::sync for --reconcile")?;
     if let Some(commit) = report.new_commit {
         println!(

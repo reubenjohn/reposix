@@ -21,7 +21,6 @@ use reposix_core::backend::{BackendConnector, DeleteReason};
 use reposix_core::{sanitize, ServerMetadata, Tainted};
 use tokio::runtime::Runtime;
 
-mod backend_dispatch;
 mod bus_handler;
 mod bus_url;
 mod diff;
@@ -33,11 +32,11 @@ mod protocol;
 mod stateless_connect;
 mod write_loop;
 
-use crate::backend_dispatch::{instantiate, sanitize_project_for_cache};
 use crate::diff::PlannedAction;
 use crate::fast_import::{emit_import_stream, parse_export_stream};
 use crate::protocol::Protocol;
 use crate::stateless_connect::handle_stateless_connect;
+use reposix_remote::backend_dispatch::{self, instantiate, sanitize_project_for_cache};
 
 /// Deferred-exit flag — set by the export path on push refusal. We finish
 /// the protocol exchange cleanly (so git doesn't see a torn pipe) and bail
@@ -52,8 +51,8 @@ pub(crate) struct State {
     pub(crate) backend: Arc<dyn BackendConnector>,
     /// Short slug used as the cache-key prefix in
     /// `<cache-root>/reposix/<backend_name>-<project>.git`. Set from
-    /// [`BackendKind::slug`] by the URL-scheme dispatcher in
-    /// [`backend_dispatch`] (closes the v0.9.0 Phase 32 carry-forward
+    /// [`backend_dispatch::BackendKind::slug`] by the URL-scheme
+    /// dispatcher in [`backend_dispatch`] (closes the v0.9.0 Phase 32 carry-forward
     /// where every backend wedged onto the `"sim"` cache prefix).
     /// `pub(crate)` so [`crate::bus_handler`] can compose diagnostic
     /// lines naming the `SoT` (e.g. `<sot> has N change(s)`).

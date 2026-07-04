@@ -40,7 +40,7 @@
 
 use anyhow::{anyhow, Result};
 
-use crate::backend_dispatch::{parse_remote_url, ParsedRemote};
+use reposix_remote::backend_dispatch::{parse_remote_url, ParsedRemote};
 
 /// Bus-vs-single-backend dispatch route. Returned by [`parse`].
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -68,7 +68,7 @@ pub(crate) enum Route {
 /// - The URL has a query string but no `mirror=` parameter.
 /// - The URL has a query parameter other than `mirror=` (Q-C reject).
 /// - The base form (after query-strip) is rejected by
-///   [`backend_dispatch::parse_remote_url`].
+///   [`parse_remote_url`].
 pub(crate) fn parse(url: &str) -> Result<Route> {
     // Strip the `reposix::` prefix if present. git typically strips it
     // before invoking the helper, but assert_cmd test harnesses pass

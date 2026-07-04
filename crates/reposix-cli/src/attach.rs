@@ -31,9 +31,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::Arc;
 
-use anyhow::{anyhow, bail, Context, Result};
-use reposix_core::backend::sim::SimBackend;
+use anyhow::{bail, Context, Result};
 use reposix_core::BackendConnector;
+use reposix_remote::backend_dispatch::{self, BackendKind};
 
 use crate::init::translate_spec_to_url;
 
@@ -111,24 +111,22 @@ pub async fn run(args: AttachArgs) -> Result<()> {
         bail!("not a git working tree: {} (.git/ missing)", work.display());
     }
 
-    // Step 1: derive cache path FROM SoT (Q1.1 — NOT from remote.origin.url).
-    let (backend, project) = spec
-        .split_once("::")
-        .ok_or_else(|| anyhow!("invalid spec `{spec}`: expected `<backend>::<project>` form"))?;
-    if project.is_empty() {
-        bail!("invalid spec `{spec}`: empty project");
-    }
-    let cache_project = if backend == "github" {
-        project.replace('/', "-")
-    } else {
-        project.to_string()
-    };
-
-    // Q1.2 / Q1.3 — re-attach handling.
-    let existing_url = git_config_get(&work, &format!("remote.{}.url", args.remote_name))?;
+    // Step 1: derive cache identity + backend connector FROM the SoT spec
+    // (Q1.1 — NOT from remote.origin.url). `translate_spec_to_url` produces
+    // the canonical `reposix::…` URL, which the git remote helper's mature
+    // dispatch factory (`reposix_remote::backend_dispatch`, D91-03) parses
+    // into a `(kind, origin, project)` tuple. Reusing that factory means
+    // sim/github/confluence/jira all construct through ONE code path — and
+    // Confluence/JIRA inherit the OP-3 `.with_audit(…)` wiring for free
+    // instead of a hand-rolled arm that could silently drop it.
     let translated = translate_spec_to_url(spec)?;
+    let mut parsed = backend_dispatch::parse_remote_url(&translated)
+        .with_context(|| format!("parse SoT url for spec `{spec}`"))?;
+
+    // Q1.2 / Q1.3 — re-attach handling. Compare only the core SoT spec
+    // (strip any `?mirror=` suffix on the stored URL).
+    let existing_url = git_config_get(&work, &format!("remote.{}.url", args.remote_name))?;
     if let Some(existing) = &existing_url {
-        // Strip the `?mirror=` suffix to compare core SoT spec only.
         let existing_sot = existing.split('?').next().unwrap_or(existing);
         let new_sot = translated.split('?').next().unwrap_or(&translated);
         if existing_sot != new_sot {
@@ -140,32 +138,29 @@ pub async fn run(args: AttachArgs) -> Result<()> {
         // Same SoT → idempotent re-attach; fall through and refresh.
     }
 
-    // Step 2: build a backend connector + open the cache. Only `sim` is
-    // wired in this scaffold; real backends arrive when 79-03 (and later
-    // milestones) plumb the credential paths through. Out-of-scope backends
-    // bail with a clear error rather than silently misbehaving.
-    let connector: Arc<dyn BackendConnector> = match backend {
-        "sim" => {
-            // Default sim origin matches reposix-cli::init::DEFAULT_SIM_ORIGIN;
-            // tests + alternate-port deployments override via REPOSIX_SIM_ORIGIN.
-            // The translated remote URL still bakes the default; the cache's
-            // backend connector uses this override only for the REST round-trips
-            // that build_from + reconcile depend on. The remote URL is plumbing
-            // for the helper, not a live HTTP target during attach itself.
-            let origin = std::env::var("REPOSIX_SIM_ORIGIN")
-                .ok()
-                .filter(|s| !s.is_empty())
-                .unwrap_or_else(|| "http://127.0.0.1:7878".to_string());
-            let sim = SimBackend::new(origin).context("build SimBackend")?;
-            Arc::new(sim)
+    // Step 2: build the backend connector through the shared factory.
+    // For sim, honour REPOSIX_SIM_ORIGIN so tests + alternate-port
+    // deployments can point the REST round-trips (build_from + reconcile)
+    // at a non-default port while the remote URL keeps the canonical
+    // origin. Real backends read their credentials from the environment
+    // inside the factory and surface a doc-linked error naming any unset
+    // var (docs/reference/testing-targets.md).
+    if parsed.kind == BackendKind::Sim {
+        if let Some(origin) = std::env::var("REPOSIX_SIM_ORIGIN")
+            .ok()
+            .filter(|s| !s.is_empty())
+        {
+            parsed.origin = origin;
         }
-        other => bail!(
-            "attach: backend `{other}` not yet wired in P79-02 scaffold (sim only); github/confluence/jira land alongside the integration tests in P79-03" // banned-words: ok — P91 RBF-A-03 will remove this string
-        ),
-    };
+    }
+    let connector: Arc<dyn BackendConnector> = backend_dispatch::instantiate(&parsed)
+        .with_context(|| format!("instantiate backend connector for `{spec}`"))?;
 
-    let mut cache =
-        reposix_cache::Cache::open(connector, backend, &cache_project).context("open cache")?;
+    let backend_slug = parsed.kind.slug();
+    let cache_project = backend_dispatch::sanitize_project_for_cache(&parsed.project);
+
+    let mut cache = reposix_cache::Cache::open(connector, backend_slug, &cache_project)
+        .context("open cache")?;
 
     // Build the cache tree from REST. `build_from` populates `oid_map`
     // (filenames + tree OIDs) without materializing blobs — the lazy
