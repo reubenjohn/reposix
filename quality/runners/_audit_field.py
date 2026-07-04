@@ -55,6 +55,16 @@ def validate_row(row: dict, catalog_path: str, parse_rfc3339) -> None:
             f"(expected.artifact.transcript_path or schema-equivalent); see "
             f"quality/catalogs/README.md kind:shell-subprocess paragraph"
         )
+    # OD-2 mechanical enforcement (P89 cross-AI review, finding H3): waivers
+    # are FORBIDDEN on real-backend-cadence rows -- "no waiver, no until_date,
+    # no PASS-with-comment" is a load-time contract, not prose.
+    if "pre-release-real-backend" in row.get("cadences", []) and row.get("waiver"):
+        raise SystemExit(
+            f"FAIL: {catalog_path}: row {row.get('id', '?')} carries a waiver "
+            f"but is tagged cadence pre-release-real-backend -- OD-2 forbids "
+            f"waivers on real-backend gates; remove the waiver block (see "
+            f"quality/PROTOCOL.md OD-2 hard-RED skip-semantics)"
+        )
 
 
 def compute_hash(row: dict) -> str | None:

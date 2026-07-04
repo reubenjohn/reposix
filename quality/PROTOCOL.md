@@ -139,7 +139,10 @@ require exit 0; absent ⇒ verdict graded RED (per RBF-FW-03 9th probe).
 target at milestone-close, the milestone-close verdict is **RED**. Milestone
 does NOT close. No owner-waiver. No `until_date`. No PASS-with-comment. No
 skip-counts-as-pass. The 9th-probe entry in the milestone-close verdict
-template carries NO waiver column (skip ⇒ RED). Two states must never be
+template carries NO waiver column (skip ⇒ RED). Mechanically enforced at
+catalog-load time: any row tagged `pre-release-real-backend` that carries a
+`waiver` block refuses to load (`quality/runners/_audit_field.py`,
+SystemExit before any verifier runs). Two states must never be
 blurred: `NOT-VERIFIED` remains the honest status for the P89–P95 SLOT
 state (env set, substrate not yet built); creds/targets-missing-at-
 milestone-close is a DIFFERENT state and is RED, full stop.

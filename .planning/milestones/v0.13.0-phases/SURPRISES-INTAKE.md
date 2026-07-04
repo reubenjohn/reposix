@@ -254,3 +254,43 @@
 **Sketched resolution:** Flip `"NOT_VERIFIED"` → `"NOT-VERIFIED"` in `quality/catalogs/subjective-rubrics.json`; grep the other catalogs for the same underscore-vs-hyphen typo while at it (worth a P95 sweep, XS-sized).
 
 **STATUS:** OPEN
+
+## 2026-07-04 05:10 | discovered-by: P89 cross-AI review (Codex leg) | severity: HIGH
+
+**What:** `quality/runners/run.py`'s verifier-not-found branch preserves prior PASS/FAIL/PARTIAL status (comment: "Don't flip from PASS->NOT-VERIFIED on a missing verifier"). Deleting or typo-ing a verifier path leaves an already-PASS row green on every subsequent run — a dishonest-GREEN channel that contradicts "rows only claim what verifiers assert". Pre-existing (landed dd458bd, P57/v0.12.0), NOT introduced by P89.
+
+**Why out-of-scope for P89:** Runner-wide status-preservation semantics are explicitly P90 RBF-FW-07 territory; a drive-by flip would make every deploy-path glitch demote all rows, which is the regression P57 was avoiding — needs a deliberate design decision.
+
+**Sketched resolution:** P90 RBF-FW-07: missing verifier ⇒ NOT-VERIFIED (never preserve PASS), paired with a distinct artifact `error` field so a deploy glitch is distinguishable from a real regression. Full analysis: 89-CROSS-AI-REVIEW.md H4.
+
+**STATUS:** OPEN
+
+## 2026-07-04 05:10 | discovered-by: P89 cross-AI review (all three legs) | severity: HIGH
+
+**What:** The `claim_vs_assertion_audit` date-cutoff anchors on the freely editable `last_verified` field: a newly minted row with a backdated `last_verified` (< 2026-05-08) and no audit paragraph loads cleanly, and the runner's same-status timestamp-rollback makes the backdate durable. Empirically reproduced by two reviewers.
+
+**Why out-of-scope for P89:** An immutable `minted_at` field is a schema addition touching all mint paths; P89's designed counters (phase-close verifier backdate spot-check + P90 RBF-FW-12 adversarial dispatch + P95 RBF-D-06 backfill that makes the check unconditional) already bracket the window.
+
+**Sketched resolution:** P90: add `minted_at` (write-once, set by the catalog-first commit; validator rejects rows minted post-P90 without it) and switch `_audit_field.validate_row`'s anchor to it. P95 RBF-D-06 then retires the exemption class entirely. Full analysis: 89-CROSS-AI-REVIEW.md H2.
+
+**STATUS:** OPEN
+
+## 2026-07-04 05:10 | discovered-by: P89 cross-AI review (Claude leg) | severity: MEDIUM
+
+**What:** The `pre-release-real-backend` env-gate (`_realbackend.is_skipped`) checks non-loopback origin + one complete cred set, but NOT sanctioned-target membership nor cred↔origin correspondence — `REPOSIX_ALLOWED_ORIGINS=https://example.com GITHUB_TOKEN=x` un-skips the cadence. P89 tightened loopback spellings (89-CROSS-AI-REVIEW.md H1 fix); the membership residual remains: once P91–P95 make the litmus executable, a mis-pointed origin could exercise the wrong target.
+
+**Why out-of-scope for P89:** The env-gate is a skip heuristic; the actual proof obligation (real execution against the sanctioned target) belongs to the litmus verifier body, which P91 writes.
+
+**Sketched resolution:** P91's litmus implementation MUST itself assert the resolved target is one of the sanctioned three (docs/reference/testing-targets.md) and fail loud otherwise; optionally `_realbackend` gains a sanctioned-host allowlist check at milestone-close. Full analysis: 89-CROSS-AI-REVIEW.md H1 residual.
+
+**STATUS:** OPEN
+
+## 2026-07-04 05:10 | discovered-by: P89 cross-AI review (independent leg) + coordinator repro | severity: MEDIUM
+
+**What:** Running `--cadence pre-release-real-backend` with env scrubbed DEMOTES a previously-PASS row (e.g. the cadence wiring smoke) to NOT-VERIFIED and persists the flip to the committed catalog with no record of why — a verification RE-RUN in a cred-less shell silently rewrites catalog ground truth. Reproduced live during 89-08 (coordinator reverted the churn).
+
+**Why out-of-scope for P89:** Whether an env-gate skip should count as a re-grade event (demote) or a no-op (preserve last real grade + staleness) is a runner status-preservation design call — P90 RBF-FW-07's exact remit.
+
+**Sketched resolution:** P90 RBF-FW-07: skip-events should not overwrite a prior real grade; instead mark staleness (e.g. `last_real_grade` + TTL) so honesty is preserved without ground-truth loss. Full analysis: 89-CROSS-AI-REVIEW.md M8.
+
+**STATUS:** OPEN

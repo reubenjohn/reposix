@@ -23,9 +23,27 @@ _CRED_SETS = {
     "github": ("GITHUB_TOKEN",),
     "jira": ("JIRA_EMAIL", "JIRA_API_TOKEN", "REPOSIX_JIRA_INSTANCE"),
 }
-_NON_LOCAL_RE = re.compile(r"^https?://(?!127\.0\.0\.1)")
+# Loopback/unspecified hosts in ANY spelling (P89 cross-AI review, finding H1:
+# the original `(?!127\.0\.0\.1)` lookahead let localhost / [::1] / 0.0.0.0 /
+# 127.0.0.2 count as "real backend"). Sanctioned-target MEMBERSHIP is NOT
+# checked here — that belongs to the litmus verifier itself (P91); see
+# 89-CROSS-AI-REVIEW.md disposition H1.
+_LOCAL_HOST_RE = re.compile(
+    r"^https?://(?:127(?:\.\d{1,3}){3}|localhost|0\.0\.0\.0|\[::1\])(?::\d+|/|$)",
+    re.IGNORECASE,
+)
+_SCHEME_RE = re.compile(r"^https?://", re.IGNORECASE)
 
 CADENCE_NAME = "pre-release-real-backend"
+
+
+def _has_non_local_origin(origins: str) -> bool:
+    """True iff any comma/space-separated origin token is http(s) and non-loopback."""
+    return any(
+        _SCHEME_RE.match(tok) and not _LOCAL_HOST_RE.match(tok)
+        for tok in re.split(r"[,\s]+", origins.strip())
+        if tok
+    )
 
 # sysexits.h EX_TEMPFAIL (75) repurposed: "verifier completed but the
 # conditions for a real grade are not met — preserve NOT-VERIFIED, do NOT
@@ -41,7 +59,7 @@ def is_skipped(row: dict, env: Mapping[str, str]) -> bool:
     if CADENCE_NAME not in row.get("cadences", []):
         return False
     origins = env.get("REPOSIX_ALLOWED_ORIGINS", "")
-    if not origins or not _NON_LOCAL_RE.search(origins):
+    if not origins or not _has_non_local_origin(origins):
         return True
     return not any(all(env.get(k) for k in keys) for keys in _CRED_SETS.values())
 
@@ -51,8 +69,8 @@ def skip_reason(env: Mapping[str, str]) -> str:
     origins = env.get("REPOSIX_ALLOWED_ORIGINS", "")
     if not origins:
         return "REPOSIX_ALLOWED_ORIGINS unset"
-    if not _NON_LOCAL_RE.search(origins):
-        return f"REPOSIX_ALLOWED_ORIGINS={origins} matches 127.0.0.1 (local-only)"
+    if not _has_non_local_origin(origins):
+        return f"REPOSIX_ALLOWED_ORIGINS={origins} has no non-loopback http(s) origin (local-only)"
     return (
         "no credential set complete (need Confluence: ATLASSIAN_API_KEY"
         "+ATLASSIAN_EMAIL+REPOSIX_CONFLUENCE_TENANT, OR GitHub: GITHUB_TOKEN, "

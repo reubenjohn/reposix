@@ -145,5 +145,36 @@ class TestComputeHash(unittest.TestCase):
         self.assertEqual(_audit_field.compute_hash(row1), _audit_field.compute_hash(row2))
 
 
+class TestOD2WaiverRejection(unittest.TestCase):
+    """P89 cross-AI review H3: waivers forbidden on pre-release-real-backend rows."""
+
+    def _row(self, **overrides):
+        row = {
+            "id": "x/y",
+            "last_verified": None,
+            "claim_vs_assertion_audit": VALID_AUDIT,
+            "cadences": ["pre-release-real-backend"],
+            "waiver": None,
+        }
+        row.update(overrides)
+        return row
+
+    def test_waiver_on_real_backend_row_fails_loud(self):
+        row = self._row(waiver={"until": "2099-01-01T00:00:00Z", "reason": "nope"})
+        with self.assertRaises(SystemExit) as ctx:
+            _audit_field.validate_row(row, "test.json", parse_rfc3339)
+        self.assertIn("OD-2 forbids", str(ctx.exception))
+
+    def test_null_waiver_on_real_backend_row_passes(self):
+        _audit_field.validate_row(self._row(), "test.json", parse_rfc3339)  # no raise
+
+    def test_waiver_on_other_cadence_row_passes(self):
+        row = self._row(
+            cadences=["pre-push"],
+            waiver={"until": "2099-01-01T00:00:00Z", "reason": "sanctioned elsewhere"},
+        )
+        _audit_field.validate_row(row, "test.json", parse_rfc3339)  # no raise
+
+
 if __name__ == "__main__":
     unittest.main()

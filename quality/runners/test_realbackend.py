@@ -146,5 +146,45 @@ class TestRunRowEnvGateIntegration(unittest.TestCase):
         self.assertIn("REPOSIX_ALLOWED_ORIGINS unset", artifact["skip_reason"])
 
 
+class TestLoopbackSpellings(unittest.TestCase):
+    """P89 cross-AI review H1: every loopback spelling must skip, not just 127.0.0.1."""
+
+    ROW = {"id": "x/y", "cadences": ["pre-release-real-backend"]}
+    CREDS = {"GITHUB_TOKEN": "x"}
+
+    def _env(self, origins):
+        return {"REPOSIX_ALLOWED_ORIGINS": origins, **self.CREDS}
+
+    def test_localhost_skips(self):
+        self.assertTrue(_realbackend.is_skipped(self.ROW, self._env("http://localhost:7878")))
+
+    def test_ipv6_loopback_skips(self):
+        self.assertTrue(_realbackend.is_skipped(self.ROW, self._env("http://[::1]:7878")))
+
+    def test_unspecified_addr_skips(self):
+        self.assertTrue(_realbackend.is_skipped(self.ROW, self._env("http://0.0.0.0:7878")))
+
+    def test_other_127_addr_skips(self):
+        self.assertTrue(_realbackend.is_skipped(self.ROW, self._env("http://127.0.0.2:7878")))
+
+    def test_uppercase_localhost_skips(self):
+        self.assertTrue(_realbackend.is_skipped(self.ROW, self._env("HTTP://LOCALHOST:7878")))
+
+    def test_multi_origin_all_local_skips(self):
+        env = self._env("http://127.0.0.1:7878,http://localhost:9999")
+        self.assertTrue(_realbackend.is_skipped(self.ROW, env))
+
+    def test_multi_origin_one_real_runs(self):
+        env = self._env("http://127.0.0.1:7878,https://api.github.com")
+        self.assertFalse(_realbackend.is_skipped(self.ROW, env))
+
+    def test_real_origin_still_runs(self):
+        self.assertFalse(_realbackend.is_skipped(self.ROW, self._env("https://api.github.com")))
+
+    def test_local_skip_reason_names_loopback(self):
+        reason = _realbackend.skip_reason({"REPOSIX_ALLOWED_ORIGINS": "http://localhost:7878"})
+        self.assertIn("local-only", reason)
+
+
 if __name__ == "__main__":
     unittest.main()
