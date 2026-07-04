@@ -11,7 +11,7 @@ created: 2026-05-08
 
 > Per-phase validation contract for feedback sampling during execution.
 
-Source: `89-RESEARCH.md` § "Validation Architecture" — sampled here as the executable contract.
+Source: `89-CONTEXT.md` — sampled here as the executable contract.
 
 ---
 
@@ -62,9 +62,9 @@ Source: `89-RESEARCH.md` § "Validation Architecture" — sampled here as the ex
 - [ ] `quality/gates/structure/deferral-pointer-linter.sh` — RBF-FW-05 verifier
 - [ ] `quality/gates/agent-ux/shell-subprocess-example.sh` — RBF-FW-02 worked example
 - [ ] `quality/gates/agent-ux/milestone-close-vision-litmus.sh` — RBF-FW-03 SLOT verifier
-- [ ] `quality/dispatch/milestone-close-verdict.md` — verdict template (NEW per RESEARCH § Q-LOC-1)
-- [ ] `quality/gates/agent-ux/lib/transcript.sh` — shared transcript-writing helper (per RESEARCH § Q-SHELL-1)
-- [ ] 6 catalog rows minted NOT-VERIFIED in `agent-ux.json` + `freshness-invariants.json` (3+3 split per RESEARCH § Q-CATALOG-DIM-1)
+- [ ] `quality/dispatch/milestone-close-verdict.md` — verdict template (NEW per 89-CONTEXT.md (Q-LOC-1))
+- [ ] `quality/gates/agent-ux/lib/transcript.sh` — shared transcript-writing helper (per 89-CONTEXT.md (Q-SHELL-1))
+- [ ] 6 catalog rows minted NOT-VERIFIED in `agent-ux.json` + `freshness-invariants.json` (3+3 split per 89-CONTEXT.md (Q-CATALOG-DIM-1))
 - [ ] No framework install needed — Python stdlib + bash already established
 
 ---
