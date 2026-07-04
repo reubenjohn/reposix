@@ -669,6 +669,113 @@
         "pre-push",
         "pre-pr"
       ]
+    },
+    {
+      "id": "structure/banned-production-tokens",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "comment": "RBF-FW-04 (P89 89-02) — bans v0.13+ phase-ID tokens (regex \\bP[0-9]{2,3}-[0-9]+\\b) in production Rust source. Rust-native sibling of scripts/banned-words-lint.sh (docs-scoped); allowlist marker is `// banned-words: ok`. The regex intentionally misses v0.8/v0.9 audit IDs (P1-1 shape) — see the 89-02 script header for the trade-off. Minted NOT-VERIFIED in the P89 catalog-first commit (89-01); verifier ships in 89-02.",
+      "sources": [
+        "quality/gates/structure/banned-production-tokens.sh",
+        "scripts/banned-words-lint.sh:107-141 (mirror)"
+      ],
+      "command": "bash quality/gates/structure/banned-production-tokens.sh",
+      "expected": {
+        "asserts": [
+          "grep -nHE '\\bP[0-9]{2,3}-[0-9]+\\b' over crates/**/*.rs (excluding tests/, **/CHANGELOG.md, allowlist-marker lines) returns zero matches",
+          "violation lines emit owner_hint pointing at allowlist marker convention"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/banned-production-tokens.sh",
+        "args": [],
+        "timeout_s": 10,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/banned-production-tokens.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "add '// banned-words: ok' allowlist marker OR rename the phase-id token",
+      "claim_vs_assertion_audit": "The verifier asserts `grep -nHE '\\bP[0-9]{2,3}-[0-9]+\\b' crates/**/*.rs` (excluding tests/ and allowlist-marker lines and **/CHANGELOG.md) returns zero matches. If the description's claim ('phase IDs are banned in production source') were false — e.g., a `P79-02 scaffold` literal stayed in `crates/reposix-cli/src/attach.rs` — the assertion would fail because grep would report the match line and the verifier would exit 1.",
+      "waiver": null,
+      "cadences": [
+        "pre-commit",
+        "pre-push",
+        "pre-pr"
+      ]
+    },
+    {
+      "id": "structure/deferral-pointer-linter",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "comment": "RBF-FW-05 (P89 89-05) — cross-references deferral pointers in crates/ ('not yet wired in P\\d+' / 'lands? (alongside|in) P\\d+' / 'substrate-gap-deferred') against the named phase's PLAN file existence; ALSO BLOCKs explicitly on bare deferral matches carrying NO phase number. Minted NOT-VERIFIED in the P89 catalog-first commit (89-01); verifier ships in 89-05.",
+      "sources": [
+        "quality/gates/structure/deferral-pointer-linter.sh"
+      ],
+      "command": "bash quality/gates/structure/deferral-pointer-linter.sh",
+      "expected": {
+        "asserts": [
+          "every match of 'not yet wired in P\\d+' / 'lands? (alongside|in) P\\d+' / 'substrate-gap-deferred' in crates/ resolves to .planning/phases/N-*/PLAN*.md existing",
+          "missing PLAN file BLOCKs with structured stderr naming the file:line + missing phase number",
+          "deferral pattern match with NO phase number (PNN suffix) BLOCKs explicitly rather than silently passing"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/deferral-pointer-linter.sh",
+        "args": [],
+        "timeout_s": 15,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/deferral-pointer-linter.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "create the named phase's PLAN file or scrub the deferral pointer or add the missing PNN suffix",
+      "claim_vs_assertion_audit": "The verifier asserts that for every match of three deferral patterns (`not yet wired in P\\d+`, `lands? (alongside|in) P\\d+`, `substrate-gap-deferred`) in `crates/`, the named phase number resolves to a `.planning/phases/N-*/` directory containing at least one `*PLAN*.md` file AND that any deferral-pattern match yields >=1 extracted phase number (else BLOCK explicitly with stderr citing the missing PNN suffix). If the description's claim ('deferral pointers cross-reference an existing downstream PLAN') were false — e.g., a comment said `// substrate-gap-deferred until P150 lands` and no .planning/phases/150-* exists, OR a comment said `// substrate-gap-deferred` with no phase number at all — the assertion would fail because the find command would return empty (orphan-PNN case) OR the PNN-extraction would yield zero matches (silent-pass case) and the verifier would exit 1 naming the bad reference.",
+      "waiver": null,
+      "cadences": [
+        "pre-push"
+      ]
+    },
+    {
+      "id": "structure/claim-vs-assertion-audit-required",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "comment": "RBF-FW-11 (P89 89-07) — load-time runner cross-check: every catalog row minted on/after 2026-05-08 must carry a claim_vs_assertion_audit string >=50 chars stating how the verifier's asserts would falsify the row's description claim if false; kind:shell-subprocess rows must ALSO declare a transcript-emitting contract (transcript_path). Pre-cutoff legacy rows (P78-P88) validate without the field until P95 RBF-D-06 backfills. Minted NOT-VERIFIED in the P89 catalog-first commit (89-01), which eats its own dogfood — all 6 P89 rows carry the field; verifier ships in 89-07.",
+      "sources": [
+        "quality/runners/_audit_field.py",
+        "quality/runners/run.py:72-81",
+        "quality/catalogs/README.md:22-41"
+      ],
+      "command": "bash quality/gates/structure/claim-vs-assertion-audit-required.sh",
+      "expected": {
+        "asserts": [
+          "load_catalog() refuses any catalog containing a row with last_verified >= 2026-05-08 OR last_verified=null AND missing claim_vs_assertion_audit string >=50 chars",
+          "load_catalog() additionally refuses any row with kind: shell-subprocess that lacks expected.artifact.transcript_path (or equivalent transcript-emitting contract)",
+          "SystemExit message names the catalog path + row id + cutoff date"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/claim-vs-assertion-audit-required.sh",
+        "args": [],
+        "timeout_s": 10,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/claim-vs-assertion-audit-required.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "add a claim_vs_assertion_audit paragraph (>=50 chars) to the row explaining how the verifier would falsify the description claim if false; for kind:shell-subprocess rows ALSO declare a transcript path",
+      "claim_vs_assertion_audit": "The verifier asserts that `python3 -m unittest quality.runners.test_audit_field` constructs a synthetic catalog containing a row dated 2026-05-08 with no `claim_vs_assertion_audit` field and that load_catalog() refuses it with `SystemExit(FAIL: ...missing claim_vs_assertion_audit (>=50 chars required for rows minted on/after 2026-05-08))`, AND additionally that any row declaring `kind: shell-subprocess` without an emitting-transcript contract triggers `SystemExit(FAIL: ...kind=shell-subprocess row missing transcript_path)`. If the description's claim ('the runner enforces the field on rows minted >= 2026-05-08, grandfathers older rows, AND enforces transcript_path on kind:shell-subprocess rows') were false — e.g., the date-cutoff was hard-coded to a future date, the field check was absent, or the kind=shell-subprocess sub-rule was missing — the assertion would fail because the synthetic catalogs would load successfully and the test would error.",
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     }
   ]
 }

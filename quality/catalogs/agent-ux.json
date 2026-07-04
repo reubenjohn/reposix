@@ -1215,6 +1215,120 @@
       "cadences": [
         "on-demand"
       ]
+    },
+    {
+      "id": "agent-ux/cadence-pre-release-real-backend",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. Minted NOT-VERIFIED in the P89 catalog-first commit (89-01) per quality/PROTOCOL.md Step 3.",
+      "comment": "RBF-FW-01 (P89 89-03) — new runner cadence `pre-release-real-backend`: env-gated (REPOSIX_ALLOWED_ORIGINS + >=1 complete sanctioned-target cred set), default-skips to NOT-VERIFIED in CI, REQUIRED at milestone-close. Per OD-2 (89-OWNER-DECISIONS.md): if this cadence cannot EXECUTE against the sanctioned target at milestone-close, the milestone-close verdict is hard RED — no owner-waiver, no until_date, no PASS-with-comment, no skip-counts-as-pass.",
+      "sources": [
+        "quality/runners/run.py:45-47",
+        "quality/runners/_realbackend.py",
+        "quality/PROTOCOL.md:140-148"
+      ],
+      "command": "bash quality/gates/agent-ux/cadence-pre-release-real-backend.sh",
+      "expected": {
+        "asserts": [
+          "VALID_CADENCES contains 'pre-release-real-backend'",
+          "rows tagged with cadence skip with NOT-VERIFIED when REPOSIX_ALLOWED_ORIGINS unset",
+          "rows execute when REPOSIX_ALLOWED_ORIGINS + a credential set are present",
+          "the env-gated skip maps to NOT-VERIFIED (never PASS or WAIVED), so a milestone-close invocation of this cadence without executable creds/targets exits non-zero — hard RED per OD-2 (no waiver, no until_date, no skip-counts-as-pass)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/cadence-pre-release-real-backend.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/cadence-pre-release-real-backend.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "quality/runners/run.py + _realbackend.py (env-gate + VALID_CADENCES entry ship in 89-03)",
+      "claim_vs_assertion_audit": "The verifier asserts quality/runners/run.py VALID_CADENCES tuple contains the literal string 'pre-release-real-backend' AND that a probe row tagged with that cadence runs only when REPOSIX_ALLOWED_ORIGINS plus a complete credential set are present, skipping to status NOT-VERIFIED otherwise. If the description's claim ('the new cadence is env-gated and default-skips in CI') were false — e.g., the runner ran the verifier with no env vars set — the assertion would fail because the env-gate short-circuit would not fire and the verifier would attempt a real-backend HTTP call against a missing allowlist. Per OD-2 (89-OWNER-DECISIONS.md) the skip is NEVER a pass state: it maps to NOT-VERIFIED, so the milestone-close invocation of this cadence exits non-zero when creds/targets are missing — hard RED, no waiver, no until_date, no skip-counts-as-pass.",
+      "waiver": null,
+      "cadences": [
+        "pre-release-real-backend"
+      ]
+    },
+    {
+      "id": "agent-ux/kind-shell-subprocess-worked-example",
+      "dimension": "agent-ux",
+      "kind": "shell-subprocess",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. Minted NOT-VERIFIED in the P89 catalog-first commit (89-01) per quality/PROTOCOL.md Step 3.",
+      "comment": "RBF-FW-02 (P89 89-04) — worked example for the new verifier kind `shell-subprocess`: drives a REAL binary subprocess (reposix preferred; bash --version as INTENTIONAL CI-portability fallback when the cargo target is absent) and emits a transcript artifact under quality/reports/transcripts/. The bash-fallback is honestly named in expected.asserts[0] — it satisfies the kind contract (subprocess + transcript), not the stronger 'invoked reposix' claim.",
+      "sources": [
+        "quality/catalogs/README.md:27",
+        "quality/gates/agent-ux/lib/transcript.sh",
+        "quality/gates/agent-ux/shell-subprocess-example.sh"
+      ],
+      "command": "bash quality/gates/agent-ux/shell-subprocess-example.sh",
+      "expected": {
+        "asserts": [
+          "exits 0 against a real binary subprocess (reposix preferred; bash --version as CI fallback when cargo target absent)",
+          "transcript artifact written to quality/reports/transcripts/<slug>-<RFC3339>.txt",
+          "transcript contains argv + env_keys (NOT values) + exit_code + stdout + stderr blocks"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/shell-subprocess-example.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/kind-shell-subprocess-worked-example.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "quality/gates/agent-ux/shell-subprocess-example.sh + lib/transcript.sh (ship in 89-04); if RED, check transcript emission under quality/reports/transcripts/",
+      "claim_vs_assertion_audit": "The verifier asserts that `bash quality/gates/agent-ux/shell-subprocess-example.sh` exits 0 AND writes a transcript file at quality/reports/transcripts/kind-shell-subprocess-worked-example-<RFC3339>.txt containing argv + env_keys (NAMES only) + cwd + exit_code + stdout + stderr blocks. The subprocess invoked is the local `reposix` binary when present (preferred); when the cargo target directory is absent (CI portability path) the verifier falls back to `bash --version` so the kind:shell-subprocess proof shape — real subprocess + transcript — is exercised regardless of whether reposix has been built. If the description's claim ('the kind drives a REAL subprocess + emits a transcript') were false — e.g., the verifier called a Python function inline rather than spawning any subprocess at all — the assertion would fail because no transcript file would exist OR the transcript would be missing the `argv:` line that proves subprocess invocation. The bash-fallback satisfies the kind contract (subprocess + transcript) but does NOT satisfy the stronger 'invoked reposix' claim; downstream P92 verifiers tightening to a real-backend invocation MUST update this row's first assert to drop the bash-fallback alternative.",
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
+    },
+    {
+      "id": "agent-ux/milestone-close-vision-litmus-real-backend",
+      "dimension": "agent-ux",
+      "kind": "shell-subprocess",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. Minted NOT-VERIFIED in the P89 catalog-first commit (89-01) per quality/PROTOCOL.md Step 3.",
+      "comment": "RBF-FW-03 (P89 89-06) — milestone-close 9th probe SLOT: the dark-factory third-arm vision litmus run verbatim against TokenWorld. blast_radius P0 is load-bearing (CONTEXT D-03c): any milestone-close grading attempt while this row is NOT-VERIFIED returns exit 1, defending against the C7 self-licensing-deferral-loop. NO waiver mechanism for this row (D-03c + OD-2): a waiver block must never be added. The SLOT legitimately reads NOT-VERIFIED until P91+P92+P93+P94+P95 land the substrate; per OD-2, once the substrate exists, inability to EXECUTE this probe at milestone-close is hard RED.",
+      "sources": [
+        "quality/dispatch/milestone-close-verdict.md",
+        "quality/gates/agent-ux/milestone-close-vision-litmus.sh",
+        ".planning/research/v0.13.0-dvcs/vision-and-mental-model.md"
+      ],
+      "command": "bash quality/gates/agent-ux/milestone-close-vision-litmus.sh",
+      "expected": {
+        "asserts": [
+          "agent completes vanilla-clone + reposix attach + edit + git push end-to-end against TokenWorld with zero in-context learning",
+          "audit_events_cache AND audit_events tables both have rows for the action",
+          "refs/mirrors/<sot>-{head,synced-at} advanced",
+          "transcript artifact emitted per RBF-FW-02 convention"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/milestone-close-vision-litmus.sh",
+        "args": [],
+        "timeout_s": 300,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/milestone-close-vision-litmus-real-backend.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "SLOT verifier quality/gates/agent-ux/milestone-close-vision-litmus.sh (ships in 89-06); substrate lands P91-P95; if RED after substrate ships, inspect transcript + audit_events/audit_events_cache rows + refs/mirrors advancement",
+      "claim_vs_assertion_audit": "The verifier asserts that the milestone-close 9th probe runs the dark-factory third-arm scenario against TokenWorld (or sanctioned alternative per docs/reference/testing-targets.md) AND that audit_events_cache + audit_events both contain rows for the round-trip AND that refs/mirrors/<sot>-{head,synced-at} advanced. This row WILL flip to PASS only when P91+P92+P93+P94+P95 ship their substrate; until then it legitimately returns NOT-VERIFIED. If the description's claim ('the litmus test runs verbatim against a real backend before the v0.13.0 tag') were false — e.g., the verifier silently ran against the in-process simulator — the assertion would fail because the transcript's argv would not name `reposix attach confluence::TokenWorld` and audit_events would not contain real-backend host fingerprints. Distinct from the substrate-absent SLOT state: once the substrate exists, inability to EXECUTE this probe at milestone-close (creds/targets missing or unreachable) is hard RED per OD-2 — no waiver, no until_date, no PASS-with-comment.",
+      "waiver": null,
+      "cadences": [
+        "pre-release-real-backend"
+      ]
     }
   ]
 }
