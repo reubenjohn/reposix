@@ -152,3 +152,54 @@ row remains P92's RBF-B-05 (do not overclaim it here).
 - Comments/attachments deletion → P95 (D91-05).
 - Subjective-rubrics bare-slug vs full-id dispatch mismatch → P92 (already routed).
 - Any L2/L3 cache-desync work → v0.14.0 (per CLAUDE.md).
+
+## D91-13 — Bucket-aware canonical path layer (extends/supersedes D91-01)
+
+Ratified de facto in Wave-5.5 (commits `3090499`/`d6e1411`) while fixing the litmus-REOPEN
+BLOCKER (mass-delete of real Confluence pages — see SURPRISES-INTAKE 2026-07-04 21:00
+"discovered-by: P91 91-05 (vision-litmus real-run) | severity: BLOCKER"); formalized here
+per 91-06 Task 6 so the decision has a proper D-number, not just a buried intake STATUS line.
+
+**What changed:** D91-01 ratified a single universal canonical shape, `issues/<id>.md`,
+unpadded, for every backend. That was wrong for Confluence: `docs/reference/confluence.md`
+already documented (and the repopulated TokenWorld mirror already carried) `pages/<id>.md`
+as the Confluence UX, while `reposix-cache`'s builder/diff/refresh sites had been silently
+forced onto `issues/` for confluence too. The mismatch meant a `pages/`-shaped working tree
+(the real, documented shape) diffed against an `issues/`-shaped cache read every one of its
+records as DELETED — the mass-delete BLOCKER that trashed the durable fixture pages
+(`7766017`, `7798785`) and the space Home (`2818063`) during 91-05 litmus development
+(all three restored; see the intake entry for the restore log).
+
+**Resolution (inverts the originally-sketched fix):** rather than forcing Confluence onto
+`issues/` to match D91-01, the path layer went **bucket-aware** and the diff planner went
+**id-keyed**:
+
+- `reposix_core::path::bucket_for_backend(backend) -> &'static str` — `confluence` maps to
+  `"pages"`; every other backend (`sim`, `github`, `jira`) maps to `"issues"`. The sanctioned
+  bucket set is `RECORD_BUCKETS = {"issues", "pages"}` — never hand-pick a bucket string
+  outside this function.
+- `reposix_core::path::record_path(bucket, id) -> String` — `"<bucket>/<id>.md"`, unpadded
+  (D91-01's unpadded-id rule is UNCHANGED and extends to both buckets).
+- `record_id_from_path` accepts either sanctioned bucket prefix and returns the id; unknown
+  buckets return `None`.
+- `diff::plan` matches prior↔tree by **record id**, never by path string — a mis-bucketed or
+  padding-variant tree can no longer be misclassified as prior-Delete + tree-Create.
+  Duplicate ids across paths (e.g. one record at `issues/42.md` and another at `pages/42.md`)
+  refuse loud as a protocol error rather than silently picking one. This is strictly stronger
+  than the originally-sketched count-based delete guard; the SG-02 bulk-delete cap
+  (>5 deletes without `[allow-bulk-delete]`) remains as defense-in-depth on top of it.
+- `builder.rs`, `fast_import`'s emit side, and `refresh.rs` all route through
+  `bucket_for_backend` — the Confluence CACHE tree now also says `pages/` (previously the
+  cache said `issues/` even for Confluence, which is what caused the mismatch in the first
+  place: cache and refresh/docs disagreed with each other, not just docs vs. code).
+
+**Relationship to D91-01:** D91-01's core claim (canonical paths are unpadded, single
+source of truth in `reposix_core::path`, no ad hoc `format!` construction outside
+`reposix-core`) is UNCHANGED and still binding. What D91-13 supersedes is D91-01's
+*universal-`issues/`* claim — that part was premature; the real canonical shape is
+bucket-aware, with `issues/` and `pages/` as the two sanctioned buckets, selected per
+backend via `bucket_for_backend`, not hardcoded.
+
+**CLAUDE.md follow-up:** the "agent UX is pure git" bullet + bootstrap example now note the
+bucket split (`issues/<id>.md` vs `pages/<id>.md`) alongside the `record_path`/
+`bucket_for_backend` reference (91-06).
