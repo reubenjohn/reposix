@@ -484,6 +484,10 @@ fn attach_warns_on_backend_deleted() {
 /// DeleteLocal nor a hard abort, and that it needs no extra reconciliation
 /// state — leaving the file in place IS the mechanism (diff.rs classifies
 /// a path with no pushed prior as a Create).
+// test-name-honesty: ok — "next push" describes the mechanism under test
+// (the orphan file is left in place so a FUTURE git push classifies it as
+// a Create), not a claim this test itself issues a push; it drives a real
+// attach against a real reposix-sim child + real cache DB.
 #[test]
 #[ignore = "spawns reposix-sim child; requires `cargo build --workspace --bins` first"]
 fn attach_fork_as_new_keeps_orphan_for_next_push() {
@@ -965,6 +969,10 @@ fn attach_audit_log_records_walk_event() {
 /// remote so a bare `git push` (the closing step in Pattern C) routes
 /// through the SoT bus, NOT the vanilla mirror on `origin`. The origin
 /// fetch config MUST be left untouched — reads keep coming from the mirror.
+// test-name-honesty: ok — genuinely asserts `remote.pushDefault` git config
+// after a real attach run (real reposix-sim child), which is exactly what
+// routes a bare `git push` to the reposix remote; no network push is
+// issued, but the claim is about push ROUTING config, not push execution.
 #[test]
 #[ignore = "spawns reposix-sim child; requires `cargo build --workspace --bins` first"]
 fn attach_sets_push_default_to_reposix_remote() {
@@ -1028,6 +1036,10 @@ fn attach_sets_push_default_to_reposix_remote() {
 /// H1 (T2-REOPEN) — a user-set `remote.pushDefault` is the user's explicit
 /// choice: attach must NOT clobber it. It warns to stderr and leaves the
 /// value intact.
+// test-name-honesty: ok — genuinely asserts attach does NOT clobber a
+// pre-set `remote.pushDefault` git config value, against a real reposix-sim
+// child; the claim is about push-routing config preservation, not push
+// execution.
 #[test]
 #[ignore = "spawns reposix-sim child; requires `cargo build --workspace --bins` first"]
 fn attach_preserves_user_set_push_default() {

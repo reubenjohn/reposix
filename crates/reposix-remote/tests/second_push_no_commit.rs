@@ -54,6 +54,11 @@ fn no_commit_export_stream() -> Vec<u8> {
     out
 }
 
+// test-name-honesty: ok — genuinely drives the real compiled
+// `git-remote-reposix` binary (via assert_cmd) through the real
+// export/push protocol against a wiremock HTTP backend (not a real
+// external SaaS, hence no `#[ignore = "real-backend; ..."]` gate); the
+// module doc comment above states this scope explicitly.
 #[tokio::test]
 async fn second_push_without_commit_deletes_nothing() {
     let server = MockServer::start().await;

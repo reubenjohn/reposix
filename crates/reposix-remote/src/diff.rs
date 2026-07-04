@@ -438,6 +438,10 @@ mod tests {
     /// create/delete storm). Six records > the bulk-delete cap, so if the
     /// prior-key mismatch returned, `plan()` would either error on the cap
     /// or emit 6 spurious deletes.
+    // test-name-honesty: ok — "push" names the code path under test
+    // (`diff::plan`, the git-push diff planner) fed a synthetic
+    // export-stream fixture; it's an honest unit test of the planner's
+    // push-diff semantics, not a claim of a live network push.
     #[test]
     fn full_seeded_tree_push_emits_zero_deletes() {
         let prior: Vec<Record> = (1..=6).map(sample).collect();
@@ -556,6 +560,9 @@ mod tests {
     /// of `pages/<id>.md` records against a matching prior produces ZERO
     /// Deletes and ZERO Creates. Against the pre-fix planner this was the
     /// mass-delete: every prior → Delete (the litmus-observed data loss).
+    // test-name-honesty: ok — same as full_seeded_tree_push_emits_zero_deletes
+    // above: an honest unit test of `diff::plan`'s push-diff semantics for
+    // the pages/ bucket, not a live network push.
     #[test]
     fn pages_full_tree_push_emits_zero_deletes() {
         let prior: Vec<Record> = (1..=6).map(sample).collect();
@@ -685,6 +692,10 @@ mod tests {
     /// 3-record prior. The whole point is that `reset`/`from` WITHOUT a
     /// `commit` must not be diffed as an empty tree. RED against pre-fix code
     /// (3 spurious Deletes — the exact 21:44 incident shape).
+    // test-name-honesty: ok — "end_to_end" scopes the parse→plan pipeline
+    // boundary (literal git fast-export bytes through `parse_export_stream`
+    // then `plan`), not a full subprocess/network e2e claim; the doc
+    // comment above states this scope explicitly.
     #[test]
     fn no_commit_export_stream_is_a_noop_end_to_end() {
         use crate::fast_import::parse_export_stream;
@@ -721,6 +732,10 @@ mod tests {
     /// the tree (user `git rm`'d everything, committed, pushed) is still a
     /// bulk delete and still hits the SG-02 cap. `saw_commit=true` + empty
     /// tree + 6 prior → refused. Guards against an over-broad short-circuit.
+    // test-name-honesty: ok — "real" distinguishes a REAL commit
+    // (saw_commit=true, per the doc comment above) from the no-commit
+    // case in the preceding tests, not a claim of real-backend/network
+    // coverage.
     #[test]
     fn real_commit_emptying_tree_still_hits_cap() {
         let prior: Vec<Record> = (1..=6).map(sample).collect();

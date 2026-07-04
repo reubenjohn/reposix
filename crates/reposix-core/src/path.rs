@@ -362,6 +362,10 @@ mod tests {
         assert_eq!(record_path("pages", 2_818_063), "pages/2818063.md");
     }
 
+    // test-name-honesty: ok — "round_trips" is a literal, honest
+    // description of the property under test (record_path -> parse back via
+    // record_id_from_path -> same id), not a claim of git/network round-trip
+    // coverage.
     #[test]
     fn record_path_round_trips_through_record_id_from_path_for_both_buckets() {
         for bucket in RECORD_BUCKETS {
