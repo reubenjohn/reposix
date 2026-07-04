@@ -74,3 +74,103 @@
 **Sketched resolution:** P85's setup-guide work is the natural carrier — the guide can include a "verify install" step that runs `cargo binstall --dry-run reposix-cli` against the latest published version BEFORE attempting webhook setup. When v0.13.x ships (with non-yanked gix + binstall artifacts), the next P85 (or a follow-on phase) re-runs `scripts/webhook-latency-measure.sh --synthetic` (TODO: add `--synthetic` flag to the script) against the live mirror and refreshes `quality/reports/verifications/perf/webhook-latency.json`. T05 ships the JSON with `method: "synthetic-dispatch-deferred"`, `n: 0`, and a `note` field documenting this exact gating; the catalog row's `p95_seconds <= 120` verifier passes vacuously (p95=0). Real synthetic and real-TokenWorld measurements both deferred to a post-v0.13.x phase that has working binstall substrate. Filed at HIGH because the release pipeline producing zero binstall assets is a release-quality gap that affects ANY downstream consumer of the workflow template.
 
 **STATUS:** DEFERRED | v0.13.0 → v0.13.x carry-forward. Release-pipeline territory — fix requires (a) cutting v0.13.x with non-yanked `gix = "=0.83.x"` (P78 already bumped the workspace pin; transitively unblocks the source-compile leg of `cargo binstall`), AND (b) confirming `.github/workflows/release.yml` produces the per-target binstall tarballs the metadata URL expects. Owner-runnable artifact already in tree: `scripts/webhook-latency-measure.sh` (P84 T05; CONFIRMED EXISTS at `/home/reuben/workspace/reposix/scripts/webhook-latency-measure.sh` — verified during P87 drain). Once v0.13.x ships, owner runs the script with `--synthetic` against the live `reubenjohn/reposix-tokenworld-mirror` and refreshes `quality/reports/verifications/perf/webhook-latency.json` with real timings. Catalog row `agent-ux/webhook-latency-floor` currently passes vacuously (p95=5s synthetic placeholder per P84 verdict GREEN); the row's freshness_ttl + the post-release re-measurement together close the loop. Documented as a v0.13.0 → v0.13.x carry-forward in `.planning/RETROSPECTIVE.md` (P87 close); also a natural P88 milestone-close-CHANGELOG callout. Severity stays HIGH at the entry level because the underlying release-pipeline gap (binstall artifacts produced for tags? source-compile path unblocked?) is a release-quality concern affecting ANY downstream consumer of the workflow template; the deferral does not soften the diagnosis, only the timing.
+
+## 2026-07-03 11:00 | discovered-by: resumption audit (8-week idle gap) | severity: HIGH
+
+**What:** Waiver cliff on 2026-07-26: 12 catalog waivers expire simultaneously — `code/cargo-test-pass`, cross-platform ×2, perf ×3, `release/cargo-binstall-resolves`, security ×2, subjective ×3. All are `tracked_in` v0.12.1 carry-forwards (MIGRATE-03, SEC-01/02, CROSS-01/02), and those carry-forwards show no evidence of execution during the idle gap. When the cliff hits, all 12 rows flip WAIVED → FAIL on their next relevant cadence run at once.
+
+**Why out-of-scope for the resumption audit:** Intake-only by mandate (OD-3 execution kick-off) — landing five carry-forward workstreams or consciously renewing 12 waivers is multi-task work that would front-run P89's framework fixes.
+
+**Sketched resolution:** The phase running when the cliff hits (likely P90 or P91) must either land the carry-forwards or consciously renew each waiver with a new `tracked_in` — no silent expiry-into-FAIL. Note: P89/P90's dispatch.sh migration and P95's row migration may moot the 3 subjective waivers; check before renewing those.
+
+**STATUS:** OPEN
+
+## 2026-07-03 11:05 | discovered-by: resumption audit (8-week idle gap) | severity: MEDIUM
+
+**What:** 5 docs-reproducible waivers (`example-01`, `example-02`, `example-04`, `example-05`, `tutorial-replay`) already EXPIRED 2026-05-12 during the idle gap; the next `post-release` cadence run flips them FAIL.
+
+**Why out-of-scope for the resumption audit:** Intake-only by mandate; fixing the underlying doc-repro gaps (or renewing with new `tracked_in`) is real work belonging inside a phase, not the resumption sweep.
+
+**Sketched resolution:** Same treatment as the 2026-07-26 waiver-cliff entry above, but already overdue: the next phase that touches the quality framework (P89/P90 window) either restores the docs-repro examples to PASS or renews the waivers with honest `tracked_in` pointers before a `post-release` cadence run fires.
+
+**STATUS:** OPEN
+
+## 2026-07-03 11:10 | discovered-by: resumption audit (8-week idle gap) | severity: MEDIUM
+
+**What:** The `quality-weekly` workflow is RED on main for 2 consecutive weeks (Jun 22 + Jun 29), failing at the "Generate verdict" step; nobody drained it during the idle gap.
+
+**Why out-of-scope for the resumption audit:** Diagnosing a CI-side verdict-generation failure needs log-reading + possibly a runner fix — phase work, not intake.
+
+**Sketched resolution:** Diagnose in the P89 window, since the weekly verdict is part of the framework P89 touches — read the two failed "Generate verdict" logs, fix the root cause (or fold into the relevant 89-0x task if it is the runner), and confirm the next scheduled run goes GREEN.
+
+**STATUS:** OPEN
+
+## 2026-07-03 11:15 | discovered-by: resumption audit (8-week idle gap) | severity: HIGH
+
+**What:** Two open RUSTSEC advisories: RUSTSEC-2026-0186 (memmap2; issue #57) + RUSTSEC-2026-0185 (quinn-proto; issue #56). The Security-audit cron failed 2026-06-29. Dependabot PR #55 (12 cargo updates) was blocked by the red-CI credential-hook step, which the 7ca7d40 fix resolves after the main fast-forward.
+
+**Why out-of-scope for the resumption audit:** Merging #55 requires main CI green (post fast-forward) plus a cargo build/test cycle — sequenced work under the one-cargo-at-a-time budget, not an intake-sweep action.
+
+**Sketched resolution:** Rebase/merge dependabot #55 once main CI is green after the fast-forward; verify both advisories clear (`cargo audit` / Security-audit cron re-run); confirm the cron itself goes green.
+
+**STATUS:** OPEN
+
+## 2026-07-03 11:20 | discovered-by: resumption audit (8-week idle gap) | severity: LOW
+
+**What:** 9 stacked weekly bench-refresh PRs (#40..#58) with CI stuck `action_required`; the cron produces PRs faster than they get merged.
+
+**Why out-of-scope for the resumption audit:** Batch merge-or-close plus a policy decision (auto-merge for cron PRs) deserves a deliberate pass, not an intake-sweep side effect.
+
+**Sketched resolution:** Merge-or-close the batch (newest-wins for bench data; close the superseded ones), then consider an auto-merge policy for the cron so the stack cannot rebuild.
+
+**STATUS:** OPEN
+
+## 2026-07-03 11:25 | discovered-by: resumption audit (8-week idle gap) | severity: LOW
+
+**What:** 5 dependabot GH-Actions bumps (#35–#39) parked since 2026-05-02; Node-20 deprecation warnings already appearing in workflow runs.
+
+**Why out-of-scope for the resumption audit:** Same PR-drain shape as the bench-refresh stack — needs CI-green main first (post fast-forward) and a merge pass.
+
+**Sketched resolution:** Merge the 5 action-version bumps in the same PR-drain batch as the bench-refresh cleanup (low-risk, workflow-only diffs); verify the Node-20 deprecation warnings disappear from subsequent runs.
+
+**STATUS:** OPEN
+
+## 2026-07-03 11:30 | discovered-by: resumption audit (8-week idle gap) | severity: MEDIUM
+
+**What:** Doc staleness cluster: `PROJECT.md:5` still says "git-backed FUSE filesystem" (pre-v0.9.0-pivot); PROJECT.md pins gix 0.82 and points Active requirements at v0.12.0; README "Project status" stops at v0.10.0; `.planning/MILESTONES.md` top entry is v0.10.0; CLAUDE.md tech-stack says axum 0.7 / rusqlite 0.32 (actual: axum 0.8 / rusqlite 0.39) and its workspace-layout omits the 10th crate `reposix-quality`.
+
+**Why out-of-scope for the resumption audit:** A cross-file doc-refresh sweep with doc-alignment catalog implications — a phase-sized pass, not an intake fix.
+
+**Sketched resolution:** Single doc-refresh sweep correcting all named locations in one commit series; natural home P95 (docs/UX phase) or P96 (surprises absorption). Run the doc-alignment walker after so drifted rows re-grade.
+
+**STATUS:** OPEN
+
+## 2026-07-03 11:35 | discovered-by: resumption audit (8-week idle gap) | severity: MEDIUM
+
+**What:** `crates/reposix-cache/src/reconciliation.rs:182` — `OrphanPolicy::ForkAsNew` is a logged no-op stub tagged "TODO P82+" even though P82 shipped. Attach reconciliation silently does nothing for the fork-as-new orphan case.
+
+**Why out-of-scope for the resumption audit:** Implementing (or formally deprecating) a reconciliation policy is cache-crate code work with real-backend test implications.
+
+**Sketched resolution:** Implement ForkAsNew or explicitly document it as unsupported (error instead of logged no-op); natural home P91 (attach real-backend wiring), which owns the reconciliation surface.
+
+**STATUS:** OPEN
+
+## 2026-07-03 11:40 | discovered-by: resumption audit (8-week idle gap) | severity: LOW
+
+**What:** `crates/reposix-cli/tests/agent_flow_real.rs` module docs still claim the Phase-32 "helper hardcodes SimBackend" limitation (superseded by Phase-36 `backend_dispatch`); the real dark-factory tests there are init+URL smoke only, not real fetch/push coverage.
+
+**Why out-of-scope for the resumption audit:** Rewriting the real-backend tests as genuine fetch/push assertions is exactly the RBF remediation work the extension phases exist for.
+
+**Sketched resolution:** P91 rewrites these as real fetch/push assertions per the RBF plan; drop the stale Phase-32 module-doc claim in the same commit.
+
+**STATUS:** OPEN
+
+## 2026-07-03 11:45 | discovered-by: resumption audit (8-week idle gap) | severity: LOW
+
+**What:** Owner-voiced quality controls with no gate yet: (a) a gitignore-hygiene check, and (b) a file-ownership / file-local-instructions check (e.g. what README owns vs CLAUDE.md vs code comments). Improvement-shaped (GOOD-TO-HAVES territory per this file's header) but filed here per owner routing during the resumption audit.
+
+**Why out-of-scope for the resumption audit:** New gates are catalog-row + verifier work under the framework's extension contract — phase work, and the framework itself is mid-fix in P89/P90.
+
+**Sketched resolution:** Mint as catalog rows + verifiers in a good-to-haves slot (P97) — one catalog row + one verifier each per the framework's own extension contract ("Adding a new gate is one catalog row + one verifier in the right dimension dir").
+
+**STATUS:** OPEN
