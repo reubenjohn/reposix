@@ -36,6 +36,11 @@ pub struct JiraBackend {
     /// Base URL (no trailing slash). E.g. `https://myco.atlassian.net`.
     pub(crate) base_url: String,
     pub(crate) rate_limit_gate: Arc<Mutex<Option<Instant>>>,
+    /// Consecutive-429-without-`Retry-After` counter driving
+    /// [`Self::arm_rate_limit_backoff`]'s exponential delay. Resets to 0 on
+    /// any successful response or on a 429 that DOES carry `Retry-After`
+    /// (the server told us the real delay, so there's nothing to guess).
+    pub(crate) rate_limit_backoff_attempt: Arc<Mutex<u32>>,
     pub(crate) audit: Option<Arc<Mutex<Connection>>>,
     /// Per-session cache for valid issue type names (populated on first `create_record`).
     pub(crate) issue_type_cache: Arc<OnceLock<Vec<String>>>,
@@ -47,6 +52,7 @@ impl std::fmt::Debug for JiraBackend {
             .field("base_url", &self.base_url)
             .field("creds", &self.creds)
             .field("rate_limit_gate", &"<gate>")
+            .field("rate_limit_backoff_attempt", &"<counter>")
             .field(
                 "audit",
                 if self.audit.is_some() {
@@ -90,6 +96,7 @@ impl JiraBackend {
             creds,
             base_url,
             rate_limit_gate: Arc::new(Mutex::new(None)),
+            rate_limit_backoff_attempt: Arc::new(Mutex::new(0)),
             audit: None,
             issue_type_cache: Arc::new(OnceLock::new()),
         })
@@ -359,29 +366,67 @@ impl JiraBackend {
         }
     }
 
+    /// Cap on the stored backoff-attempt counter. `1 << 6 == 64s`, already
+    /// past [`MAX_RATE_LIMIT_SLEEP`] (60s), so attempts beyond this yield the
+    /// same capped delay — and capping the *stored* counter (not just the
+    /// delay) keeps the `1_u64 << attempt` shift in
+    /// [`Self::arm_rate_limit_backoff`] from ever approaching an overflow
+    /// shift amount.
+    const MAX_BACKOFF_ATTEMPT: u32 = 6;
+
     pub(crate) fn ingest_rate_limit(&self, resp: &reqwest::Response) {
+        if resp.status().is_success() {
+            // A successful call means we're through the rate limit; reset
+            // the backoff counter so a future no-Retry-After 429 starts
+            // fresh instead of compounding delays from an unrelated earlier
+            // burst.
+            *self.rate_limit_backoff_attempt.lock() = 0;
+            return;
+        }
         if resp.status() != StatusCode::TOO_MANY_REQUESTS {
             return;
         }
-        let delay_secs: u64 = resp
+        let retry_after = resp
             .headers()
             .get("Retry-After")
             .and_then(|v| v.to_str().ok())
-            .and_then(|s| s.parse::<u64>().ok())
-            .unwrap_or(2);
-        let gate = Instant::now() + Duration::from_secs(delay_secs);
-        *self.rate_limit_gate.lock() = Some(gate);
+            .and_then(|s| s.parse::<u64>().ok());
+        if let Some(delay_secs) = retry_after {
+            // Server told us the exact delay; trust it and reset the
+            // backoff counter (this wasn't a guess, so it shouldn't compound
+            // into a later no-header 429's backoff).
+            *self.rate_limit_backoff_attempt.lock() = 0;
+            let gate = Instant::now() + Duration::from_secs(delay_secs);
+            *self.rate_limit_gate.lock() = Some(gate);
+        } else {
+            // No Retry-After header: fall back to exponential backoff,
+            // growing the attempt counter each consecutive no-header 429 and
+            // resetting it on the next success (see ingest_rate_limit's
+            // success branch above and arm_rate_limit_backoff below).
+            let attempt = {
+                let mut guard = self.rate_limit_backoff_attempt.lock();
+                let current = *guard;
+                *guard = current.saturating_add(1).min(Self::MAX_BACKOFF_ATTEMPT);
+                current
+            };
+            self.arm_rate_limit_backoff(attempt);
+        }
     }
 
     /// Arm the rate-limit gate using exponential backoff (no `Retry-After` header).
     ///
-    /// Used when the server returns 429 without a `Retry-After` header. The
-    /// delay is `1s * 2^attempt`, capped at [`MAX_RATE_LIMIT_SLEEP`].
-    /// Tested by the `rate_limit_429_honors_retry_after` wiremock test.
-    #[allow(dead_code)] // tested in rate_limit_429_honors_retry_after; production retry wired in Phase 29
+    /// Called from [`Self::ingest_rate_limit`]'s no-`Retry-After` branch,
+    /// which supplies the current consecutive-attempt count. The delay is
+    /// `1s * 2^attempt`, capped at [`MAX_RATE_LIMIT_SLEEP`] (60s). No jitter —
+    /// deterministic backoff was judged sufficient for a single-writer CLI
+    /// backend; revisit if concurrent-agent JIRA usage shows thundering-herd
+    /// symptoms.
+    /// Tested directly by `rate_limit_429_honors_retry_after` (backoff-arm
+    /// half) and by `rate_limit_429_without_header_uses_exponential_backoff`.
     pub(crate) fn arm_rate_limit_backoff(&self, attempt: u32) {
         // Exponential backoff: 1s * 2^attempt, cap at MAX_RATE_LIMIT_SLEEP.
-        let secs = (1_u64 << attempt).min(MAX_RATE_LIMIT_SLEEP.as_secs());
+        let capped_attempt = attempt.min(Self::MAX_BACKOFF_ATTEMPT);
+        let secs = (1_u64 << capped_attempt).min(MAX_RATE_LIMIT_SLEEP.as_secs());
         let gate = Instant::now() + Duration::from_secs(secs);
         *self.rate_limit_gate.lock() = Some(gate);
     }
@@ -761,6 +806,89 @@ mod tests {
         assert!(
             backend2.rate_limit_gate.lock().is_some(),
             "rate limit gate must be armed after backoff"
+        );
+    }
+
+    // ─── Test: rate_limit_429_without_header_uses_growing_backoff ────────
+
+    /// connector re-audit (reconcile rate-limit backoff code and docs):
+    /// `ingest_rate_limit`'s no-`Retry-After` branch must wire into
+    /// `arm_rate_limit_backoff` with a growing attempt counter, and that
+    /// counter must reset to 0 on the next successful response.
+    #[tokio::test]
+    async fn rate_limit_429_without_header_uses_growing_backoff_and_resets_on_success() {
+        let server = MockServer::start().await;
+        // Two consecutive no-Retry-After 429s, then a success.
+        Mock::given(method("GET"))
+            .and(path("/rest/api/3/issue/2"))
+            .respond_with(ResponseTemplate::new(429).set_body_bytes(b"rate limited"))
+            .up_to_n_times(2)
+            .mount(&server)
+            .await;
+        let issue = issue_json(2, "PROJ-2", "Issue 2", "new", "Open", None);
+        Mock::given(method("GET"))
+            .and(path("/rest/api/3/issue/2"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(issue))
+            .mount(&server)
+            .await;
+
+        let backend = make_backend(&server.uri());
+        let header_owned = backend.standard_headers();
+        let header_refs: Vec<(&str, &str)> =
+            header_owned.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        let url = format!("{}/rest/api/3/issue/2", backend.base_url);
+
+        // First 429 (no header): attempt 0 consumed -> counter becomes 1.
+        let resp1 = backend
+            .http
+            .request_with_headers(Method::GET, url.as_str(), &header_refs)
+            .await
+            .unwrap();
+        backend.ingest_rate_limit(&resp1);
+        assert_eq!(
+            *backend.rate_limit_backoff_attempt.lock(),
+            1,
+            "first no-header 429 must advance the attempt counter to 1"
+        );
+        let gate_after_first = backend
+            .rate_limit_gate
+            .lock()
+            .expect("gate armed after first 429");
+
+        // Second 429 (no header): attempt 1 consumed -> counter becomes 2,
+        // and the resulting delay must be strictly longer than the first
+        // (exponential growth, not a flat repeat).
+        let resp2 = backend
+            .http
+            .request_with_headers(Method::GET, url.as_str(), &header_refs)
+            .await
+            .unwrap();
+        backend.ingest_rate_limit(&resp2);
+        assert_eq!(
+            *backend.rate_limit_backoff_attempt.lock(),
+            2,
+            "second consecutive no-header 429 must advance the attempt counter to 2"
+        );
+        let gate_after_second = backend
+            .rate_limit_gate
+            .lock()
+            .expect("gate armed after second 429");
+        assert!(
+            gate_after_second > gate_after_first,
+            "second backoff delay must exceed the first (exponential growth)"
+        );
+
+        // Third call succeeds (200) -> the attempt counter must reset to 0.
+        let resp3 = backend
+            .http
+            .request_with_headers(Method::GET, url.as_str(), &header_refs)
+            .await
+            .unwrap();
+        backend.ingest_rate_limit(&resp3);
+        assert_eq!(
+            *backend.rate_limit_backoff_attempt.lock(),
+            0,
+            "a successful response must reset the backoff attempt counter"
         );
     }
 

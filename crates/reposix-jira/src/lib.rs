@@ -33,8 +33,13 @@
 //! # Rate limiting
 //!
 //! On HTTP 429 the adapter honors the `Retry-After` header (seconds) and
-//! parks the rate-limit gate. If the header is absent, exponential backoff
-//! with jitter is applied (max 4 attempts, base 1 s, cap 60 s).
+//! parks the rate-limit gate; the backoff-attempt counter resets to 0 in
+//! this branch since the server gave an authoritative delay. If the header
+//! is absent, deterministic exponential backoff is applied instead: `1s *
+//! 2^attempt`, capped at 60s, where `attempt` counts consecutive
+//! no-`Retry-After` 429s and resets to 0 on the next successful response
+//! (no jitter — see `JiraBackend::arm_rate_limit_backoff` for the
+//! single-writer-CLI rationale).
 //!
 //! # Security
 //!
