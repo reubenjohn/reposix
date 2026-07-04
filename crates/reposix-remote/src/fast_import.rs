@@ -93,6 +93,23 @@ pub(crate) struct ParsedExport {
     pub(crate) tree: BTreeMap<String, u64>,
     /// Paths explicitly removed via `D <path>` lines.
     pub(crate) deletes: Vec<String>,
+    /// `true` iff the stream carried at least one `commit ...` directive.
+    ///
+    /// CRITICAL SAFETY SIGNAL (litmus REOPEN mass-delete BLOCKER). git's
+    /// remote-helper `export` re-invokes the helper on EVERY `git push`,
+    /// even when the local ref already matches what git tracks in
+    /// `refs/reposix/*` — because our `list for-push` answers `?` (remote
+    /// value unknown), git can never decide the ref is up-to-date and
+    /// re-runs export unconditionally. On a no-new-commit push git emits a
+    /// stream with NO `commit` directive at all — just:
+    /// `feature done` / `reset refs/heads/main` / `from 000…000` / `done`.
+    /// That is NOT an empty *tree* (which would arrive as a `commit` with
+    /// zero `M`/explicit `D` lines and be governed by the SG-02 cap); it is
+    /// the ABSENCE of any commit. The diff planner MUST refuse to diff such
+    /// a stream — treating "no commit parsed" as "user deleted every
+    /// record" mass-deleted a live Confluence space on a second push
+    /// (audit: 3 real DELETEs at 21:44 in transcript 2026-07-04T21-36-37Z).
+    pub(crate) saw_commit: bool,
 }
 
 /// Parse a git fast-export stream from `r`, narrowed to the one-file-per-issue
@@ -194,6 +211,11 @@ pub(crate) fn parse_export_stream<R: BufRead>(r: &mut R) -> io::Result<ParsedExp
             let _ = rest;
             current_blob_mark = None;
             in_commit = true;
+            // Record that a real commit was present in the stream. The
+            // planner keys the no-op-vs-delete-all decision on this: a
+            // stream with zero `commit` directives (no-new-commit push)
+            // must NEVER be diffed as an empty tree (mass-delete BLOCKER).
+            out.saw_commit = true;
             continue;
         }
         if let Some(rest) = line.strip_prefix("M 100644 :") {
@@ -281,5 +303,45 @@ mod tests {
         let mut cur = Cursor::new(stream);
         let parsed = parse_export_stream(&mut cur).expect("parse");
         assert_eq!(parsed.blobs.get(&7).map(Vec::as_slice), Some(&blob[..]));
+    }
+
+    /// Litmus REOPEN: a no-new-commit push emits `reset`/`from` with NO
+    /// `commit` directive. `saw_commit` must be `false` so the planner
+    /// treats it as a no-op rather than a delete-all. Bytes are the literal
+    /// capture from a local sim reproduction of the second-push mass-delete.
+    #[test]
+    fn reset_from_without_commit_sets_saw_commit_false() {
+        let stream = b"feature done\nreset refs/heads/main\nfrom 0000000000000000000000000000000000000000\ndone\n";
+        let mut cur = Cursor::new(&stream[..]);
+        let parsed = parse_export_stream(&mut cur).expect("parse");
+        assert!(
+            !parsed.saw_commit,
+            "a reset/from stream with no `commit` line must have saw_commit=false"
+        );
+        assert!(parsed.tree.is_empty(), "no M lines → empty tree");
+        assert!(parsed.deletes.is_empty(), "no D lines → no deletes");
+    }
+
+    /// The positive half of the contract: a stream that DOES carry a
+    /// `commit` directive sets `saw_commit = true`, so a genuine
+    /// emptied-tree bulk delete still reaches the SG-02 cap.
+    #[test]
+    fn commit_directive_sets_saw_commit_true() {
+        let msg = b"delete all";
+        let mut stream: Vec<u8> = Vec::new();
+        writeln!(&mut stream, "feature done").unwrap();
+        writeln!(&mut stream, "commit refs/heads/main").unwrap();
+        writeln!(&mut stream, "mark :1").unwrap();
+        writeln!(&mut stream, "committer test <t@t> 0 +0000").unwrap();
+        writeln!(&mut stream, "data {}", msg.len()).unwrap();
+        stream.extend_from_slice(msg);
+        stream.push(b'\n');
+        writeln!(&mut stream, "done").unwrap();
+        let mut cur = Cursor::new(stream);
+        let parsed = parse_export_stream(&mut cur).expect("parse");
+        assert!(
+            parsed.saw_commit,
+            "a stream with a `commit` directive must set saw_commit=true"
+        );
     }
 }

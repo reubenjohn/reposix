@@ -112,6 +112,32 @@ pub(crate) fn plan(
     prior: &[Record],
     parsed: &ParsedExport,
 ) -> Result<Vec<PlannedAction>, PlanError> {
+    // SAFETY GUARD (litmus REOPEN second-push mass-delete BLOCKER).
+    //
+    // git re-invokes the `export` helper on EVERY push (our `list
+    // for-push` answers `?`, so git can never decide the ref is
+    // up-to-date). On a no-new-commit push git emits a stream with NO
+    // `commit` directive — `feature done` / `reset refs/heads/main` /
+    // `from 000…000` / `done`. That parses to an empty `ParsedExport`.
+    //
+    // Without this guard the empty tree walks `prior` and plans a DELETE
+    // for EVERY record — the exact mass-delete that trashed a live
+    // Confluence space on a second push (3 real DELETEs, audit
+    // 2026-07-04T21:44).
+    //
+    // The distinction is semantic, not size-based:
+    //   - `saw_commit == false` → git exported NOTHING to apply. No-op.
+    //   - `saw_commit == true` + empty tree → the user genuinely emptied
+    //     the tree, committed, and pushed. That IS a real bulk delete and
+    //     is (correctly) governed by the SG-02 cap below.
+    //
+    // Keying on the presence of a `commit` directive — not on tree
+    // emptiness — is what separates "nothing to push" from "delete
+    // everything." Never conflate the two.
+    if !parsed.saw_commit {
+        return Ok(Vec::new());
+    }
+
     let prior_by_id: HashMap<RecordId, &Record> = prior.iter().map(|i| (i.id, i)).collect();
 
     // Bucket-aware matching (Wave-5.5, confluence mass-delete BLOCKER):
@@ -273,7 +299,14 @@ mod tests {
     #[test]
     fn five_deletes_passes_cap() {
         let prior: Vec<Record> = (1..=5).map(sample).collect();
-        let parsed = ParsedExport::default(); // empty new tree
+        // Genuine emptied-tree commit (saw_commit=true): user removed all
+        // files, committed, pushed. This IS a real bulk delete governed by
+        // the SG-02 cap — distinct from a no-commit stream (saw_commit=false)
+        // which is a no-op (see plan()'s safety guard).
+        let parsed = ParsedExport {
+            saw_commit: true,
+            ..Default::default()
+        };
         let actions = plan(&prior, &parsed).expect("5 deletes is at the cap");
         assert_eq!(actions.len(), 5);
     }
@@ -281,7 +314,10 @@ mod tests {
     #[test]
     fn six_deletes_fires_cap() {
         let prior: Vec<Record> = (1..=6).map(sample).collect();
-        let parsed = ParsedExport::default();
+        let parsed = ParsedExport {
+            saw_commit: true,
+            ..Default::default()
+        };
         let err = plan(&prior, &parsed).expect_err("6 deletes must be refused");
         assert!(matches!(
             err,
@@ -298,6 +334,7 @@ mod tests {
         let prior: Vec<Record> = (1..=6).map(sample).collect();
         let parsed = ParsedExport {
             commit_message: "[allow-bulk-delete] cleanup\n".to_owned(),
+            saw_commit: true,
             ..Default::default()
         };
         let actions = plan(&prior, &parsed).expect("override tag must bypass cap");
@@ -333,6 +370,7 @@ mod tests {
             blobs,
             tree,
             deletes: vec![],
+            saw_commit: true,
         };
         let actions = plan(&prior, &parsed).expect("unchanged push must plan clean");
         assert_eq!(
@@ -359,6 +397,7 @@ mod tests {
             blobs,
             tree,
             deletes: vec![],
+            saw_commit: true,
         };
         let actions = plan(&prior, &parsed).expect("plan");
         assert_eq!(
@@ -390,6 +429,7 @@ mod tests {
             blobs,
             tree,
             deletes: vec![],
+            saw_commit: true,
         }
     }
 
@@ -508,6 +548,7 @@ mod tests {
             blobs,
             tree,
             deletes: vec![],
+            saw_commit: true,
         }
     }
 
@@ -592,7 +633,8 @@ mod tests {
         let prior: Vec<Record> = (1..=6).map(sample).collect();
         let parsed = ParsedExport {
             commit_message: "cleanup\n".to_owned(),
-            ..Default::default() // empty tree → 6 deletes
+            saw_commit: true,
+            ..Default::default() // real commit, empty tree → 6 deletes
         };
         let err = plan(&prior, &parsed).expect_err("6 deletes must still be refused");
         assert!(
@@ -605,6 +647,93 @@ mod tests {
                 }
             ),
             "SG-02 cap must still fire; got: {err:?}"
+        );
+    }
+
+    // --- Litmus REOPEN: second-push mass-delete BLOCKER ---------------------
+    //
+    // The P91 real-TokenWorld vision litmus mass-deleted a live Confluence
+    // space on a SECOND push that carried no new commit. git re-invoked the
+    // export helper (our `list for-push` answers `?`, so git can never decide
+    // the ref is current), and fast-export emitted a stream with NO `commit`
+    // directive. The old planner read that empty parse as "delete every
+    // record". These pin the fix at the planner layer AND at the parse+plan
+    // boundary using the EXACT bytes git sends (captured from a local sim
+    // reproduction: `feature done` / `reset` / `from 000…` / `done`).
+
+    /// Planner layer: a stream that carried NO commit (`saw_commit == false`)
+    /// must plan ZERO actions against a non-empty prior — never a delete-all.
+    /// RED against pre-fix code (which returned one Delete per prior record).
+    #[test]
+    fn no_commit_stream_plans_no_actions() {
+        let prior: Vec<Record> = (1..=3).map(sample).collect();
+        // Empty parse with saw_commit=false — exactly what a no-new-commit
+        // push produces. Three prior records, cap is 5, so the SG-02 cap
+        // would NOT have caught this (3 <= 5): the guard is the only defense.
+        let parsed = ParsedExport::default();
+        assert!(!parsed.saw_commit, "sanity: default has no commit");
+        let actions = plan(&prior, &parsed).expect("no-commit stream must plan clean");
+        assert_eq!(
+            actions.len(),
+            0,
+            "no-commit stream must be a pure no-op, NEVER a mass-delete; got: {actions:?}"
+        );
+    }
+
+    /// Parse+plan boundary: feed the LITERAL bytes git's remote-helper export
+    /// pipes on a no-new-commit push, parse them, then plan against a
+    /// 3-record prior. The whole point is that `reset`/`from` WITHOUT a
+    /// `commit` must not be diffed as an empty tree. RED against pre-fix code
+    /// (3 spurious Deletes — the exact 21:44 incident shape).
+    #[test]
+    fn no_commit_export_stream_is_a_noop_end_to_end() {
+        use crate::fast_import::parse_export_stream;
+        use std::io::Cursor;
+
+        // Verbatim capture from the local sim reproduction (repro2.sh).
+        let stream = b"feature done\nreset refs/heads/main\nfrom 0000000000000000000000000000000000000000\ndone\n";
+        let mut cur = Cursor::new(&stream[..]);
+        let parsed = parse_export_stream(&mut cur).expect("parse no-commit stream");
+        assert!(
+            !parsed.saw_commit,
+            "a reset/from stream with no `commit` line must have saw_commit=false"
+        );
+        assert!(parsed.tree.is_empty(), "no M lines → empty tree");
+
+        let prior: Vec<Record> = (1..=3).map(sample).collect();
+        let actions = plan(&prior, &parsed).expect("plan must not error");
+        let deletes = actions
+            .iter()
+            .filter(|a| matches!(a, PlannedAction::Delete { .. }))
+            .count();
+        assert_eq!(
+            deletes, 0,
+            "no-new-commit push must issue ZERO deletes (second-push mass-delete BLOCKER); got: {actions:?}"
+        );
+        assert_eq!(
+            actions.len(),
+            0,
+            "and zero actions overall; got: {actions:?}"
+        );
+    }
+
+    /// The fix must NOT weaken the legitimate case: a REAL commit that empties
+    /// the tree (user `git rm`'d everything, committed, pushed) is still a
+    /// bulk delete and still hits the SG-02 cap. `saw_commit=true` + empty
+    /// tree + 6 prior → refused. Guards against an over-broad short-circuit.
+    #[test]
+    fn real_commit_emptying_tree_still_hits_cap() {
+        let prior: Vec<Record> = (1..=6).map(sample).collect();
+        let parsed = ParsedExport {
+            commit_message: "delete all the things\n".to_owned(),
+            saw_commit: true, // a REAL commit that happens to have an empty tree
+            ..Default::default()
+        };
+        let err = plan(&prior, &parsed)
+            .expect_err("a real emptied-tree commit is a bulk delete → capped");
+        assert!(
+            matches!(err, PlanError::BulkDeleteRefused { count: 6, .. }),
+            "emptied-tree commit must still trip SG-02; got: {err:?}"
         );
     }
 }
