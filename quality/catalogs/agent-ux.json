@@ -1441,8 +1441,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/absorption-honesty-template-present.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-04T17:05:02Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "quality/dispatch/absorption-honesty-spot-check.md (NEW, D90-08, ships 90-04) + verifier ships 90-04",
@@ -1478,8 +1478,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/milestone-adversarial-pass.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-04T18:07:06Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "quality/runners/verdict.py gains the adversarial-artifact hook; quality/dispatch/milestone-adversarial.md (NEW, D90-09) ships 90-04",
