@@ -151,10 +151,10 @@
       "last_verified": "2026-05-01T11:37:34Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: crates/reposix-remote/src/precheck.rs regressed OR handle_export reverted to unconditional list_records walk; check stderr for whether wiremock saw a list_records call",
+      "owner_hint": "if RED: crates/reposix-remote/src/precheck.rs regressed OR handle_export reverted to unconditional list_records walk; check stderr for whether wiremock saw a list_records call | D-CONV-1 (2026-07-04): stripped from pre-pr and demoted to on-demand -- the underlying test (crates/reposix-remote/tests/perf_l1.rs::l1_precheck_uses_list_changed_since_not_list_records) is already exercised by ci.yml's `test` job (`cargo test --workspace --locked` runs every workspace test including this one); kept on-demand for standalone focused verification with this specific invariant's PASS/FAIL semantics.",
       "waiver": null,
       "cadences": [
-        "pre-pr"
+        "on-demand"
       ]
     }
   ]

@@ -68,7 +68,7 @@
       "last_verified": "2026-04-27T21:24:27Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
-      "owner_hint": "if RED: ci.yml test job is failing for the current branch -- run gh run view <run-id> --log-failed. The verifier intentionally does not run cargo locally (memory-budget rule); CI is the canonical enforcement venue per the P63 wiring decision.",
+      "owner_hint": "if RED: ci.yml test job is failing for the current branch -- run gh run view <run-id> --log-failed. D-CONV-1 (2026-07-04): stripped from pre-pr and demoted to on-demand -- ci.yml's dedicated `test` job (cargo test --workspace --locked) is the canonical enforcement venue; this row's own verifier only polls `gh run list` for the most recent successful run (needs gh CLI + auth, and is circular when run from inside the very CI run it's checking). Kept on-demand for manual post-hoc audits (e.g. \"did main's last CI run actually pass\").",
       "waiver": {
         "until": "2026-07-26T00:00:00Z",
         "reason": "Per-row local cargo nextest enforcement is deferred to v0.12.1 because cargo nextest run --workspace consumes 6-15 minutes + violates the CLAUDE.md ONE cargo at a time memory-budget rule + exceeds the pre-pr 10-minute cadence cap. ci.yml's test job remains the canonical enforcement venue; the ci-job-status wrapper at quality/gates/code/ci-job-status.sh checks that the most recent ci.yml run for the current branch exited 0. v0.12.1 MIGRATE-03 will explore alternatives (per-crate per-row gates, sccache-warmed verifier in CI only, or accepting CI as the only home and removing the local row).",
@@ -76,39 +76,7 @@
         "tracked_in": "v0.12.1 MIGRATE-03 -- per-row local cargo enforcement"
       },
       "cadences": [
-        "pre-pr"
-      ]
-    },
-    {
-      "id": "code/cargo-fmt-clean",
-      "dimension": "code",
-      "kind": "mechanical",
-      "sources": [
-        "quality/gates/code/cargo-fmt-clean.sh",
-        ".github/workflows/ci.yml:rustfmt",
-        "scripts/hooks/pre-push (cargo fmt step)"
-      ],
-      "command": "cargo fmt --all -- --check",
-      "expected": {
-        "asserts": [
-          "cargo fmt --all -- --check exits 0 (no formatting drift in any workspace crate)"
-        ]
-      },
-      "verifier": {
-        "script": "quality/gates/code/cargo-fmt-clean.sh",
-        "args": [],
-        "timeout_s": 60,
-        "container": null
-      },
-      "artifact": "quality/reports/verifications/code/cargo-fmt-clean.json",
-      "status": "PASS",
-      "last_verified": "2026-05-01T11:39:06Z",
-      "freshness_ttl": null,
-      "blast_radius": "P1",
-      "owner_hint": "if RED: cargo fmt regressed; run cargo fmt --all locally and commit the result. P63 wired the verifier to actually run cargo fmt (read-only, ~5s) so the row enforces locally as well as in CI.",
-      "waiver": null,
-      "cadences": [
-        "pre-pr"
+        "on-demand"
       ]
     },
     {
@@ -152,7 +120,8 @@
       "dimension": "code",
       "kind": "mechanical",
       "sources": [
-        "scripts/hooks/pre-push:215-219",
+        ".githooks/pre-push:61 (invokes python3 quality/runners/run.py --cadence pre-push, which composes this row)",
+        "quality/gates/code/cargo-fmt-check.sh (actual cargo fmt --all -- --check invocation)",
         ".github/workflows/ci.yml:rustfmt"
       ],
       "command": "cargo fmt --all -- --check",
@@ -172,11 +141,10 @@
       "last_verified": "2026-05-01T13:30:32Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: cargo fmt regressed; run cargo fmt --all locally and commit the result",
+      "owner_hint": "if RED: cargo fmt regressed; run cargo fmt --all locally and commit the result. D-CONV-1 (2026-07-04): stripped from pre-pr -- ci.yml's dedicated `fmt` job runs the identical command with rust-cache reuse; a second cargo fmt in quality-pre-pr would be pure duplicate compute. Row still gates pre-push locally.",
       "waiver": null,
       "cadences": [
-        "pre-push",
-        "pre-pr"
+        "pre-push"
       ]
     },
     {
@@ -184,7 +152,8 @@
       "dimension": "code",
       "kind": "mechanical",
       "sources": [
-        "scripts/hooks/pre-push:222-227",
+        ".githooks/pre-push:61 (invokes python3 quality/runners/run.py --cadence pre-push, which composes this row)",
+        "quality/gates/code/cargo-clippy-warnings.sh (actual cargo clippy invocation)",
         ".github/workflows/ci.yml:clippy"
       ],
       "command": "cargo clippy --workspace --all-targets -- -D warnings",
@@ -204,11 +173,10 @@
       "last_verified": "2026-05-01T13:29:56Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: a new clippy violation; cargo clippy --workspace --all-targets --fix to auto-fix where possible. Pivot rule: if cargo clippy in pre-push exceeds 60s on warm cache, P60 Wave E may move it OUTSIDE the runner; the row stays catalogued but the pre-push hook chains it externally. Document in SURPRISES.md.",
+      "owner_hint": "if RED: a new clippy violation; cargo clippy --workspace --all-targets --fix to auto-fix where possible. D-CONV-1 (2026-07-04): stripped from pre-pr -- ci.yml's dedicated `clippy` job runs the identical command with rust-cache reuse; a second clippy pass in quality-pre-pr would double compile time for no new signal. Row still gates pre-push locally. Pivot rule: if cargo clippy in pre-push exceeds 60s on warm cache, P60 Wave E may move it OUTSIDE the runner; document in SURPRISES.md.",
       "waiver": null,
       "cadences": [
-        "pre-push",
-        "pre-pr"
+        "pre-push"
       ]
     },
     {

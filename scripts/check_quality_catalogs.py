@@ -81,7 +81,10 @@ CONTRACTS = {
         # SHIM-WAIVED + 4 KEEP-AS-CANONICAL; 5 DELETE decisions land in
         # Wave 2 commit). Required-ids enforces presence; the verifier
         # quality/gates/structure/orphan-scripts-audit.py grades shim-shape.
-        "row_count": 17,
+        # D-CONV-1 (2026-07-04): scripts/green-gauntlet.sh deleted -- its
+        # purpose (a thin `run.py --cadence pre-pr` shim) is now the
+        # quality-pre-pr CI job; orphan-scripts/green-gauntlet row removed.
+        "row_count": 16,
         "required_ids": {
             "orphan-scripts/banned-words-lint",
             "orphan-scripts/bench-token-economy-py",
@@ -94,7 +97,6 @@ CONTRACTS = {
             "orphan-scripts/check-repo-org-gaps-py",
             "orphan-scripts/dark-factory-test",
             "orphan-scripts/end-state-py",
-            "orphan-scripts/green-gauntlet",
             "orphan-scripts/latency-bench",
             "orphan-scripts/p56-asset-existence",
             "orphan-scripts/p56-rehearse-cargo-binstall",

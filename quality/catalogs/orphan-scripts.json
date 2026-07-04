@@ -260,29 +260,6 @@
       "waiver": null
     },
     {
-      "id": "orphan-scripts/green-gauntlet",
-      "dimension": "meta",
-      "cadence": "pre-push",
-      "kind": "mechanical",
-      "sources": ["scripts/green-gauntlet.sh", "quality/runners/run.py"],
-      "command": null,
-      "expected": {
-        "asserts": [
-          "scripts/green-gauntlet.sh is a thin shim (<= 60 lines)",
-          "first 10 lines name canonical at quality/runners/run.py (mode-mapped)"
-        ],
-        "max_lines": 60
-      },
-      "verifier": {"script": "quality/gates/structure/orphan-scripts-audit.py", "args": ["--row-id", "orphan-scripts/green-gauntlet"], "timeout_s": 30, "container": null},
-      "artifact": "quality/reports/verifications/structure/orphan-scripts-green-gauntlet.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
-      "freshness_ttl": null,
-      "blast_radius": "P2",
-      "owner_hint": "if RED: shim grew. SIMPLIFY-09 P60 Wave D mode-mapping intentional.",
-      "waiver": null
-    },
-    {
       "id": "orphan-scripts/latency-bench",
       "dimension": "meta",
       "cadence": "pre-push",

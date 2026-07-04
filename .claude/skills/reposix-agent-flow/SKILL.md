@@ -26,8 +26,10 @@ then complete its task using only standard git and POSIX tools.
 - **Local dev** — `/reposix-agent-flow` (or the Skill tool from a coordinating
   agent) before any change touching `crates/reposix-remote/`,
   `crates/reposix-cache/`, or `crates/reposix-cli/src/init.rs`.
-- **Pre-tag verification** — `bash scripts/green-gauntlet.sh --full` runs the
-  sim variant; the real-backend variants run via the gated cargo tests.
+- **Pre-tag verification** — `python3 quality/runners/run.py --cadence pre-pr`
+  (D-CONV-1, 2026-07-04: `scripts/green-gauntlet.sh` shim deleted, superseded
+  by the `quality-pre-pr` CI job) runs the sim variant; the real-backend
+  variants run via the gated cargo tests.
 
 ## What it asserts
 

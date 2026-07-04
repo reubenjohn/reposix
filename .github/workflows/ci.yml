@@ -39,6 +39,46 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo clippy --workspace --all-targets -- -D warnings
 
+  quality-pre-pr:
+    # D-CONV-1 (2026-07-04, quality/SURPRISES.md "Quality Convergence"):
+    # wires the pre-pr cadence for real. Before this job, 61 rows across 7
+    # catalogs carried the pre-pr tag with ZERO CI executions -- a tag that
+    # never fires teaches agents the catalog lies. Rows whose substance
+    # this workflow already hand-wires as a dedicated job (fmt, clippy,
+    # cargo test --workspace, dark-factory sim arm) were stripped from
+    # pre-pr to avoid duplicate compute -- those jobs stay for per-check
+    # UI granularity + rust-cache reuse. This job covers everything else:
+    # docs-build, freshness invariants, docs-alignment/walk, and ~20
+    # DVCS/agent-ux integration rows (bus writes, mirror refs, webhooks,
+    # attach) that had never run in CI before today.
+    name: quality gates (pre-pr)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install MkDocs + Material (for docs-build/* rows)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install mkdocs-material mkdocs-minify-plugin mkdocs-redirects
+      - name: Install runtime tooling (jq, sqlite3 -- agent-ux/dvcs-third-arm)
+        run: sudo apt-get update && sudo apt-get install -y jq sqlite3
+      - name: Warm cargo build
+        # Several pre-pr rows (bus-write-*, mirror-refs-*, dvcs-third-arm,
+        # capabilities-match-impl, docs-alignment/walk, ...) shell out to
+        # `cargo build`/`cargo test -p <crate>` individually. Building the
+        # workspace once up front means those per-row invocations hit warm
+        # incremental compilation instead of each paying a cold-compile
+        # cost -- keeps the whole job inside the <10min pre-pr budget
+        # (quality/PROTOCOL.md "Latency budgets").
+        run: cargo build --workspace --bins --quiet
+      - name: Run quality gates (pre-pr cadence)
+        run: python3 quality/runners/run.py --cadence pre-pr
+
   test:
     name: test
     runs-on: ubuntu-latest

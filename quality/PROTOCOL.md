@@ -174,7 +174,7 @@ self-defeating: people learn to bypass.
 |---------------|----------|----------------------------------------------------------------------------|
 | pre-commit    | <2s      | every commit; over budget means contributors `--no-verify`                 |
 | pre-push      | <60s     | per-phase per CLAUDE.md "Push cadence"; runner gate is part of phase-close |
-| pre-pr        | <10min   | CI tier-1 (PR check)                                                       |
+| pre-pr        | <10min   | CI tier-1 (PR check) — wired as the `quality-pre-pr` job in ci.yml (D-CONV-1, 2026-07-04). Rows whose substance a dedicated ci.yml job already covers (fmt, clippy, cargo test --workspace, dark-factory sim arm) are intentionally NOT tagged pre-pr — see quality/SURPRISES.md "Quality Convergence" D-CONV-1. |
 | pre-release   | <15min   | tag-time release gate                                                      |
 | weekly        | n/a      | alerting cadence; not blocking                                             |
 | post-release  | n/a      | alerting cadence; not blocking                                             |

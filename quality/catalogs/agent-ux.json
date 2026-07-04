@@ -33,10 +33,10 @@
       "last_verified": "2026-05-01T15:21:18Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: scripts/dark-factory-test.sh (pre-migration) or quality/gates/agent-ux/dark-factory.sh (post-migration) finds the helper teaching strings missing -- inspect helper export-path / fetch-blob-limit code",
+      "owner_hint": "if RED: scripts/dark-factory-test.sh (pre-migration) or quality/gates/agent-ux/dark-factory.sh (post-migration) finds the helper teaching strings missing -- inspect helper export-path / fetch-blob-limit code | D-CONV-1 (2026-07-04): stripped from pre-pr and demoted to on-demand -- ci.yml's dedicated `dark-factory` job runs the identical `bash quality/gates/agent-ux/dark-factory.sh sim` command directly; a second invocation via quality-pre-pr would double the ~30s regression + full workspace build for no new signal.",
       "waiver": null,
       "cadences": [
-        "pre-pr"
+        "on-demand"
       ]
     },
     {
@@ -802,10 +802,10 @@
       "last_verified": "2026-05-01T16:48:03Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: workflow YAML drifted between template and live copy; or one copy missing; or YAML structure regressed (binstall name, client_payload reference, missing fetch-depth); inspect verifier output for which structural grep failed",
+      "owner_hint": "if RED: workflow YAML drifted between template and live copy; or one copy missing; or YAML structure regressed (binstall name, client_payload reference, missing fetch-depth); inspect verifier output for which structural grep failed | D-CONV-1 (2026-07-04): stripped from pre-pr -- the verifier makes a live `gh api` call against the EXTERNAL mirror repo (reubenjohn/reposix-tokenworld-mirror), which needs gh auth wired + couples every PR's CI run to that repo's current file contents and GitHub API rate limits. Unsuitable for a blocking per-PR gate as-is. Demoted to on-demand; a follow-up should either wire GITHUB_TOKEN explicitly into a dedicated job or move this to weekly/pre-release cadence (filed as a GOOD-TO-HAVE).",
       "waiver": null,
       "cadences": [
-        "pre-pr"
+        "on-demand"
       ]
     },
     {
@@ -1027,14 +1027,15 @@
       },
       "artifact": "quality/reports/verifications/agent-ux/dark-factory-dvcs-third-arm.json",
       "status": "PASS",
-      "last_verified": "2026-05-01T21:43:24Z",
+      "last_verified": "2026-07-04T09:00:04Z",
       "freshness_ttl": "30d",
       "blast_radius": "P1",
       "owner_hint": "if RED: shell-stub assertions in dark-factory.sh dvcs-third-arm path failed -- inspect stderr for which teaching-string grep failed (?mirror=, --orphan-policy, refs/mirrors, git remote add) OR the bus URL composition / extensions.partialClone post-attach asserts failed. Wire-path failures land in the cargo test layer (bus_write_happy.rs::happy_path_writes_both_refs_and_acks_ok), not here. TokenWorld leg failures are substrate-gap-expected -- do NOT count as RED.",
       "waiver": null,
       "cadences": [
         "pre-pr"
-      ]
+      ],
+      "claim_vs_assertion_audit": "If the shell-stub agent recovery claims were false -- e.g. the `?mirror=` teaching string, `--orphan-policy` flag, or `refs/mirrors/<sot>-synced-at` ref name were missing from reject hints or `reposix attach --help` -- the corresponding grep/--help assertions in dark-factory/dvcs-third-arm.sh would fail to match and the script would exit non-zero naming the missing string; the bus-URL composition and cache-materialization asserts likewise fail loud (wrong remote.reposix.url, wrong extensions.partialClone, or a missing attach_walk audit row) rather than silently passing."
     },
     {
       "id": "agent-ux/p87-surprises-absorption",
@@ -1360,7 +1361,7 @@
       "last_verified": "2026-07-04T08:37:48Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
-      "owner_hint": "QL-001 BLOCKER: fix the push planner path-shape mismatch (diff.rs:104-107 vs builder.rs:90 / refresh.rs:104 / fast_import.rs:63 all spell issue paths differently) + the fast_import.rs stream-parser trailing-LF bug (156-157) + add an issues/*.md path filter (BUG-2). See SURPRISES-INTAKE.md 2026-07-04 entry for the sketched resolution P90/P91 MUST consume.",
+      "owner_hint": "QL-001 BLOCKER: fix the push planner path-shape mismatch (diff.rs:104-107 vs builder.rs:90 / refresh.rs:104 / fast_import.rs:63 all spell issue paths differently) + the fast_import.rs stream-parser trailing-LF bug (156-157) + add an issues/*.md path filter (BUG-2). See SURPRISES-INTAKE.md 2026-07-04 entry for the sketched resolution P90/P91 MUST consume. | D-CONV-1 (2026-07-04): stripped from pre-pr -- a WAIVED row failing loud in every PR's CI run is noise, not signal; the QL-001 fix lands in P90/P91, at which point that phase MUST re-add pre-pr per the SURPRISES.md contract. Kept on-demand + pre-release so it's still reachable without waiting for a tag.",
       "waiver": {
         "until": "2026-07-31T00:00:00Z",
         "reason": "QL-001 verified BLOCKER (real end-to-end git push reproduction, not a synthetic fast-export stream) -- the push diff planner misclassifies every record as Create+Delete due to a 4-way path-shape mismatch, and a separate stream-parser bug drops the first M-line on a genuine no-op push. The verifier exists and is genuinely correct; it fails honestly against the real bug rather than being stubbed out. This row anchors the P90/P91 fix contract -- mirrors the security/allowlist-enforcement precedent row's waiver-on-a-real-verifier pattern.",
@@ -1369,8 +1370,8 @@
       },
       "claim_vs_assertion_audit": "The verifier drives a REAL git commit+push against a real reposix-init'd tree (not a hand-built fast-export stream) and queries the sim's own audit_events table for PATCH/POST/DELETE counts. If the claim ('a real push round-trips one update with zero misclassification and a no-op push writes nothing') were false -- e.g. the planner treated an unchanged issue as Create+Delete (QL-001 BUG-1) or the no-op push's stream parser dropped an M-line and issued a spurious DELETE (BUG-3) -- the PATCH/POST/DELETE count assertions would fail because sqlite3 would report POST_COUNT>0 or DELETE_COUNT>0 or a nonzero delta on the no-op push, and the verifier would exit 1 naming the exact mismatched count.",
       "cadences": [
-        "pre-pr",
-        "pre-release"
+        "pre-release",
+        "on-demand"
       ]
     }
   ]
