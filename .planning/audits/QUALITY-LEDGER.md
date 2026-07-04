@@ -54,19 +54,19 @@ confirmed the flagged Google key was a FALSE POSITIVE, 2026-07-03).
 | Finding | Severity | Status |
 |---|---|---|
 | JIRA CAPABILITIES claims read-only, writes implemented (types.rs:35) | BLOCKER | FIXED `ca7cb61` (subsumed by QL-002) |
-| GitHub lists PRs as issues — no `pull_request` filter in list_records / list_changed_since / get_record (reposix-github/src/lib.rs:399-543) | HIGH | OPEN → fix wave this window |
-| JIRA backoff dead code — `arm_rate_limit_backoff` zero prod callers + lib.rs:33-36 doc claims unimplemented exponential-backoff behavior | HIGH | OPEN → fix wave this window |
+| GitHub lists PRs as issues — no `pull_request` filter in list_records / list_changed_since / get_record (reposix-github/src/lib.rs:399-543) | HIGH | FIXED `d722491` — PR skip in both list paths (cap counts real issues), teaching error on get_record, 3 new tests |
+| JIRA backoff dead code — `arm_rate_limit_backoff` zero prod callers + lib.rs:33-36 doc claims unimplemented exponential-backoff behavior | HIGH | FIXED `40bb2a0` — wired into no-Retry-After branch (attempt counter, cap 6, resets on success); doc reconciled incl. removing false "with jitter" claim; regression test added |
 | ~440 lines dead Confluence API (list_comments / list_attachments / list_whiteboards / download_attachment + backing types; larger than the ~340 estimate) | HIGH | INTAKE → v0.13.0 SURPRISES-INTAKE (wire-vs-delete belongs to P91/P92 real-backend charter) |
-| Swarm harness: stale "Phase 17 read-only" claim; zero write-contention coverage despite live Confluence writes | HIGH | SPLIT: stale claim → fix wave (XS); write-contention workload → INTAKE (M) |
-| Confluence missing capabilities self-check test (github+jira have one) | MED | OPEN → fix wave this window (XS) |
+| Swarm harness: stale "Phase 17 read-only" claim; zero write-contention coverage despite live Confluence writes | HIGH | SPLIT: stale claim FIXED `57cbba2`; write-contention workload → INTAKE (M) |
+| Confluence missing capabilities self-check test (github+jira have one) | MED | FIXED `d9de09b` — unit-level test mirroring github/jira; NOTE finding was partially stale (integration-level equivalent already existed at reposix-confluence/tests/roundtrip.rs) |
 | Remaining ~19 MED/LOW connector rows | MED/LOW | LOST with the ledger; covered by the recovery method above (fresh audits re-find anything real) |
 
 ## Re-audit Round 1 (2026-07-04, fresh-eyes sonnet x2 over changed surfaces)
 
 | Finding | Severity | Status |
 |---|---|---|
-| verdict.py:189 markdown `Verdict:` line still 2-state (GREEN/RED) — contradicts yellow badge on next weekly run; untested | HIGH | OPEN → fix wave this window (XS) |
-| freshness-invariants.json:333 cred-hygiene assert text names stale `scripts/hooks` EXCLUDE_DIRS, omits real `quality/gates/structure` self-exclusion | MED | OPEN → fix wave this window (XS) |
+| verdict.py:189 markdown `Verdict:` line still 2-state (GREEN/RED) — contradicts yellow badge on next weekly run; untested | HIGH | FIXED `7567a8f` — 3-state GREEN/YELLOW/RED + emit_markdown_verdict tests (11/11 pass) |
+| freshness-invariants.json:333 cred-hygiene assert text names stale `scripts/hooks` EXCLUDE_DIRS, omits real `quality/gates/structure` self-exclusion | MED | FIXED `b4755e8` |
 | deferral-pointer-linter regex blind spot: "wired in Phase 29" (word form) escapes all patterns — proven non-hypothetical by the JIRA stale pointer | MED | INTAKE → GOOD-TO-HAVES (S) |
 | ci.yml quality-pre-pr timeout 15m vs PROTOCOL.md <10min budget (in-comment justified) | LOW | WONTFIX — justified in-line where a reader meets it; cross-file duplication of the number would add drift risk, not remove it |
 | PEM pattern d0af03e | — | verified correct (hand-traced) |
