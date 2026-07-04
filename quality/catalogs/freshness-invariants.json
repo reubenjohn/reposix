@@ -731,8 +731,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/deferral-pointer-linter.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-04T04:50:30Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "create the named phase's PLAN file or scrub the deferral pointer or add the missing PNN suffix",
@@ -767,8 +767,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/claim-vs-assertion-audit-required.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-04T04:50:28Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "add a claim_vs_assertion_audit paragraph (>=50 chars) to the row explaining how the verifier would falsify the description claim if false; for kind:shell-subprocess rows ALSO declare a transcript path",
