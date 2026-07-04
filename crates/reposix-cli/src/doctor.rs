@@ -19,7 +19,10 @@ use reposix_cache::path::resolve_cache_path;
 use reposix_core::{parse_remote_url, BackendCapabilities, CommentSupport, VersioningModel};
 use rusqlite::Connection;
 
-use crate::worktree_helpers::{backend_slug_from_origin, git_config_get};
+use crate::worktree_helpers::{
+    backend_slug_from_origin, git_config_get, looks_like_reposix_url, resolve_reposix_remote_url,
+    strip_bus_query,
+};
 
 /// Severity tier for a single check finding.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -193,7 +196,13 @@ struct DoctorCtx {
     path: PathBuf,
     is_git_repo: bool,
     partial_clone_value: Option<String>,
-    remote_origin_url: Option<String>,
+    /// The resolved reposix `SoT` remote URL (QL-004): partialClone-aware,
+    /// so it is populated for both `reposix init` trees
+    /// (`partialClone=origin`) and `reposix attach` trees
+    /// (`partialClone=<remote-name>`). May carry a bus `?mirror=` query —
+    /// consumers strip it via [`strip_bus_query`]. `None` when the tree has
+    /// no reposix remote at all.
+    reposix_remote_url: Option<String>,
     sparse_checkout_lines: Option<String>,
 }
 
@@ -208,8 +217,8 @@ impl DoctorCtx {
             None
         };
 
-        let remote_origin_url = if is_git_repo {
-            git_config_get(path, "remote.origin.url")
+        let reposix_remote_url = if is_git_repo {
+            resolve_reposix_remote_url(path)
         } else {
             None
         };
@@ -224,7 +233,7 @@ impl DoctorCtx {
             path: path.to_path_buf(),
             is_git_repo,
             partial_clone_value,
-            remote_origin_url,
+            reposix_remote_url,
             sparse_checkout_lines,
         }
     }
@@ -254,23 +263,25 @@ pub fn run(path: Option<&Path>, fix: bool) -> Result<DoctorReport> {
         check_git_version(),
     ];
 
-    // Cache-related checks need a (backend, project) tuple. If we couldn't
-    // parse one from the remote URL, skip the cache checks with INFO so the
-    // user still sees that we tried.
-    let parsed = ctx
-        .remote_origin_url
+    // Cache-related checks need a (backend, project) tuple. Resolve it from
+    // the reposix SoT remote (QL-004: partialClone-aware, works on attach
+    // trees), stripping any bus `?mirror=` query. If we couldn't parse one,
+    // skip the cache checks with INFO so the user still sees we tried.
+    let sot_url: Option<String> = ctx
+        .reposix_remote_url
         .as_deref()
-        .and_then(|u| parse_remote_url(u).ok());
+        .map(|u| strip_bus_query(u).to_owned());
+    let parsed = sot_url.as_deref().and_then(|u| parse_remote_url(u).ok());
 
     // Check 3: backend connector registered for the scheme parsed out of
-    // `remote.origin.url`. Runs whether or not the cache path resolves.
+    // the reposix SoT remote. Runs whether or not the cache path resolves.
     // Pass the FULL URL so the `/jira/` vs `/confluence/` marker is
     // visible — `spec.origin` alone (just the host) loses the
     // disambiguator and would route JIRA worktrees through the confluence
     // cache (mirrors gc.rs).
     findings.push(check_backend_registered(
         parsed.as_ref(),
-        ctx.remote_origin_url.as_deref(),
+        sot_url.as_deref(),
     ));
 
     // POLISH2-08: surface the configured backend's capability row right after
@@ -279,12 +290,12 @@ pub fn run(path: Option<&Path>, fix: bool) -> Result<DoctorReport> {
     // a generic "not supported" error after the fact.
     findings.push(check_backend_capabilities(
         parsed.as_ref(),
-        ctx.remote_origin_url.as_deref(),
+        sot_url.as_deref(),
     ));
 
     if let Some(spec) = parsed.as_ref() {
         // Same URL-aware mapping as check_backend_registered above.
-        let url_for_slug = ctx.remote_origin_url.as_deref().unwrap_or(&spec.origin);
+        let url_for_slug = sot_url.as_deref().unwrap_or(&spec.origin);
         let backend = backend_slug_from_origin(url_for_slug);
         let project = spec.project.as_str();
         match resolve_cache_path(&backend, project) {
@@ -370,21 +381,39 @@ fn check_partial_clone(ctx: &DoctorCtx) -> DoctorFinding {
             None,
         );
     }
+    // QL-004: partialClone may name ANY remote — `origin` for `reposix
+    // init`, or `<remote-name>` (default `reposix`) for `reposix attach`.
+    // The tree is healthy as long as the named remote carries a reposix
+    // URL. Reporting `partialClone=reposix` as "expected origin" (and
+    // auto-fixing it back to origin) would break an attached tree.
     match ctx.partial_clone_value.as_deref() {
-        Some("origin") => DoctorFinding::ok(
-            "git.extensions.partialClone",
-            "extensions.partialClone=origin",
-        ),
-        Some(other) => DoctorFinding::warn(
-            "git.extensions.partialClone",
-            format!("extensions.partialClone={other} (expected `origin`)"),
-            Some("git config extensions.partialClone origin".into()),
-        )
-        .auto_fixable(),
+        Some(name) => {
+            let remote_url = git_config_get(&ctx.path, &format!("remote.{name}.url"));
+            match remote_url {
+                Some(url) if looks_like_reposix_url(&url) => DoctorFinding::ok(
+                    "git.extensions.partialClone",
+                    format!("extensions.partialClone={name} → remote.{name}.url is a reposix remote"),
+                ),
+                Some(url) => DoctorFinding::warn(
+                    "git.extensions.partialClone",
+                    format!(
+                        "extensions.partialClone={name} but remote.{name}.url={url} is not a reposix remote"
+                    ),
+                    Some(format!(
+                        "point partialClone at a reposix remote, or re-run `reposix init`/`reposix attach` (offending remote `{name}`)"
+                    )),
+                ),
+                None => DoctorFinding::warn(
+                    "git.extensions.partialClone",
+                    format!("extensions.partialClone={name} but remote.{name}.url is unset"),
+                    Some(format!("git remote add {name} reposix::<backend>::<project>, or re-run `reposix init`/`reposix attach`")),
+                ),
+            }
+        }
         None => DoctorFinding::warn(
             "git.extensions.partialClone",
             "extensions.partialClone is unset",
-            Some("git config extensions.partialClone origin".into()),
+            Some("git config extensions.partialClone origin (or re-run `reposix init`/`reposix attach`)".into()),
         )
         .auto_fixable(),
     }
@@ -394,36 +423,39 @@ fn check_remote_url(ctx: &DoctorCtx) -> DoctorFinding {
     if !ctx.is_git_repo {
         return DoctorFinding::error("git.remote.origin.url", "skipped — not a git repo", None);
     }
-    match ctx.remote_origin_url.as_deref() {
+    // QL-004: check the RESOLVED reposix remote (partialClone-aware), not
+    // `remote.origin.url` verbatim. On a `reposix attach` tree the SoT
+    // binding lives on `remote.<name>.url` (default `reposix`) while
+    // `origin` is a plain-git mirror — checking origin alone reported a
+    // healthy attached tree as ERROR.
+    match ctx.reposix_remote_url.as_deref() {
         None => DoctorFinding::error(
             "git.remote.origin.url",
-            "remote.origin.url is unset — `git fetch` has nowhere to go",
-            Some("git remote add origin reposix::sim::demo".into()),
+            "no reposix remote — `git fetch` has nowhere to go (run `reposix init` or `reposix attach`)",
+            Some("reposix init <backend>::<project> <path>  # or: reposix attach <backend>::<project>".into()),
         ),
-        Some(url) => {
-            if url.starts_with("reposix::") {
-                if parse_remote_url(url).is_ok() {
-                    DoctorFinding::ok("git.remote.origin.url", format!("remote.origin.url={url}"))
-                } else {
-                    DoctorFinding::error(
-                        "git.remote.origin.url",
-                        format!("remote.origin.url={url} — `reposix::` prefix present but URL doesn't parse (no `/projects/<slug>`?)"),
-                        Some(
-                            "reposix init <backend>::<project> <path> (re-run init in a fresh dir)"
-                                .into(),
-                        ),
-                    )
-                }
+        Some(url) if looks_like_reposix_url(url) => {
+            let sot = strip_bus_query(url);
+            if parse_remote_url(sot).is_ok() {
+                DoctorFinding::ok("git.remote.origin.url", format!("reposix remote={url}"))
             } else {
                 DoctorFinding::error(
                     "git.remote.origin.url",
-                    format!("remote.origin.url={url} — does not use `reposix::` scheme"),
-                    Some(format!(
-                        "git remote set-url origin reposix::<backend>::<project> (replace `{url}`)"
-                    )),
+                    format!("reposix remote={url} — `reposix::` prefix present but URL doesn't parse (no `/projects/<slug>`?)"),
+                    Some(
+                        "reposix init <backend>::<project> <path> (re-run init in a fresh dir)"
+                            .into(),
+                    ),
                 )
             }
         }
+        Some(url) => DoctorFinding::error(
+            "git.remote.origin.url",
+            format!("remote url={url} — does not use `reposix::` scheme (no reposix remote found)"),
+            Some(format!(
+                "git remote set-url origin reposix::<backend>::<project> (replace `{url}`), or `reposix attach <backend>::<project>`"
+            )),
+        ),
     }
 }
 
@@ -1103,6 +1135,96 @@ mod tests {
             .expect("git.repo finding present");
         assert_eq!(git_finding.severity, Severity::Error);
         assert_eq!(report.exit_code(), 1);
+    }
+
+    fn git(dir: &std::path::Path, args: &[&str]) {
+        let out = std::process::Command::new("git")
+            .arg("-C")
+            .arg(dir)
+            .args(args)
+            .env("GIT_CONFIG_NOSYSTEM", "1")
+            .output()
+            .unwrap_or_else(|e| panic!("git {args:?}: {e}"));
+        assert!(
+            out.status.success(),
+            "git {args:?} failed: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+
+    fn finding<'a>(report: &'a DoctorReport, check: &str) -> &'a DoctorFinding {
+        report
+            .findings
+            .iter()
+            .find(|f| f.check == check)
+            .unwrap_or_else(|| panic!("{check} finding present"))
+    }
+
+    /// QL-004: a `reposix attach` tree (partialClone=reposix, `SoT` on
+    /// `remote.reposix.url`, plain-git mirror on origin) reports HEALTHY —
+    /// previously it flagged partialClone "expected origin" and the remote
+    /// URL as "does not use `reposix::` scheme".
+    #[test]
+    fn doctor_reports_attached_tree_healthy() {
+        let tmp = tempfile::tempdir().unwrap();
+        git(tmp.path(), &["init", "."]);
+        git(
+            tmp.path(),
+            &["remote", "add", "origin", "git@github.com:org/repo.git"],
+        );
+        git(
+            tmp.path(),
+            &[
+                "remote",
+                "add",
+                "reposix",
+                "reposix::https://reuben-john.atlassian.net/jira/projects/TEST",
+            ],
+        );
+        git(
+            tmp.path(),
+            &["config", "extensions.partialClone", "reposix"],
+        );
+
+        let report = run(Some(tmp.path()), false).unwrap();
+        assert_eq!(
+            finding(&report, "git.extensions.partialClone").severity,
+            Severity::Ok,
+            "attach tree partialClone should be OK"
+        );
+        assert_eq!(
+            finding(&report, "git.remote.origin.url").severity,
+            Severity::Ok,
+            "attach tree reposix remote should be OK (not ERROR)"
+        );
+    }
+
+    /// Regression: a `reposix init` tree (partialClone=origin, reposix URL
+    /// on origin) still reports HEALTHY.
+    #[test]
+    fn doctor_reports_init_tree_healthy() {
+        let tmp = tempfile::tempdir().unwrap();
+        git(tmp.path(), &["init", "."]);
+        git(
+            tmp.path(),
+            &[
+                "remote",
+                "add",
+                "origin",
+                "reposix::http://127.0.0.1:7878/projects/demo",
+            ],
+        );
+        git(tmp.path(), &["config", "extensions.partialClone", "origin"]);
+
+        let report = run(Some(tmp.path()), false).unwrap();
+        assert_eq!(
+            finding(&report, "git.extensions.partialClone").severity,
+            Severity::Ok
+        );
+        assert_eq!(
+            finding(&report, "git.remote.origin.url").severity,
+            Severity::Ok
+        );
     }
 
     // Note: `backend_slug_from_origin` now lives in `crate::worktree_helpers`

@@ -13,7 +13,9 @@ use reposix_cache::db::open_cache_db;
 use reposix_cache::{gc_at, GcReport, GcStrategy};
 use reposix_core::parse_remote_url;
 
-use crate::worktree_helpers::{backend_slug_from_origin, cache_path_from_worktree, git_config_get};
+use crate::worktree_helpers::{
+    backend_slug_from_origin, cache_path_from_worktree, resolve_reposix_remote_url, strip_bus_query,
+};
 
 /// One orphan-cache finding from [`scan_orphans`].
 #[derive(Debug, Clone)]
@@ -165,18 +167,23 @@ fn bytes_to_mb_string(bytes: u64) -> String {
 }
 
 fn backend_slug_from_worktree(work: &Path) -> Option<String> {
-    let url = git_config_get(work, "remote.origin.url")?;
-    // Validate the URL parses but pass the FULL url (not just origin) to
+    // QL-004: resolve the reposix remote (partialClone-aware — works on
+    // both `reposix init` and `reposix attach` trees), then strip any bus
+    // `?mirror=` query so only the SoT spec is parsed.
+    let url = resolve_reposix_remote_url(work)?;
+    let sot = strip_bus_query(&url);
+    // Validate the URL parses but pass the FULL sot url (not just origin) to
     // backend_slug_from_origin so JIRA's `/jira/` marker is visible. The
     // earlier `&spec.origin` form silently routed JIRA worktrees to the
     // confluence cache. v0.11.1 audit-finding fix.
-    let _spec = parse_remote_url(&url).ok()?;
-    Some(backend_slug_from_origin(&url))
+    let _spec = parse_remote_url(sot).ok()?;
+    Some(backend_slug_from_origin(sot))
 }
 
 fn project_slug_from_worktree(work: &Path) -> Option<String> {
-    let url = git_config_get(work, "remote.origin.url")?;
-    let spec = parse_remote_url(&url).ok()?;
+    let url = resolve_reposix_remote_url(work)?;
+    let sot = strip_bus_query(&url);
+    let spec = parse_remote_url(sot).ok()?;
     Some(spec.project.as_str().to_owned())
 }
 

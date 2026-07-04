@@ -26,7 +26,9 @@ use reposix_cache::Cache;
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::{parse_remote_url, BackendConnector};
 
-use crate::worktree_helpers::{backend_slug_from_origin, git_config_get};
+use crate::worktree_helpers::{
+    backend_slug_from_origin, resolve_reposix_remote_url, strip_bus_query,
+};
 
 /// Entrypoint for `reposix sync [--reconcile] [path]`.
 ///
@@ -60,18 +62,20 @@ pub async fn run(reconcile: bool, path: Option<PathBuf>) -> Result<()> {
         None => std::env::current_dir().context("get cwd")?,
     };
 
-    // Resolve (backend, project) from the working tree's remote URL.
-    // Pattern matches what attach.rs / refresh.rs / history.rs use; we
-    // reuse the existing `cache_path_from_worktree` parser via the
-    // worktree_helpers module instead of inventing a new accessor.
-    let url = git_config_get(&work, "remote.origin.url").ok_or_else(|| {
+    // Resolve (backend, project) from the working tree's reposix remote.
+    // QL-004: partialClone-aware so this works on both `reposix init`
+    // (partialClone=origin) and `reposix attach` (partialClone=<name>)
+    // trees, and strips any bus `?mirror=` query to the SoT spec.
+    let url = resolve_reposix_remote_url(&work).ok_or_else(|| {
         anyhow!(
-            "no remote.origin.url in {} (run `reposix init` or `reposix attach` first)",
+            "no reposix remote in {} — run `reposix init <backend>::<project> <path>` \
+             or `reposix attach <backend>::<project>` first",
             work.display()
         )
     })?;
-    let spec = parse_remote_url(&url).with_context(|| format!("parse remote.origin.url={url}"))?;
-    let backend_slug = backend_slug_from_origin(&url);
+    let sot = strip_bus_query(&url);
+    let spec = parse_remote_url(sot).with_context(|| format!("parse reposix remote url={url}"))?;
+    let backend_slug = backend_slug_from_origin(sot);
 
     // Construct the backend connector. v0.13.0 scaffolds sim only —
     // matches `attach.rs`'s scope; real backends arrive when the
