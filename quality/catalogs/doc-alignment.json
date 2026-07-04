@@ -5,19 +5,19 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 250,
+    "claims_bound": 275,
     "claims_missing_test": 0,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.7440476190476191,
+    "alignment_ratio": 0.8184523809523809,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-04T23:07:55Z",
-    "coverage_ratio": 0.1935173299101412,
-    "lines_covered": 1206,
+    "last_walked": "2026-07-04T23:19:00Z",
+    "coverage_ratio": 0.1949614890885751,
+    "lines_covered": 1215,
     "total_eligible_lines": 6232,
     "coverage_floor": 0.1,
-    "claims_waived": 1
+    "claims_waived": 0
   },
   "rows": [
     {
@@ -783,12 +783,12 @@
       "claim": "ATLASSIAN_API_KEY env var is required for Confluence tests",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 58,
-        "line_end": 63
+        "line_start": 72,
+        "line_end": 72
       },
-      "source_hash": "da3a96ed3d11cd36975cd73fad3465a83c88a2f2494a373d8a2978e33b4d364d",
+      "source_hash": "ac6dcdae24efb434675c1574a325eb61ae94c738898dc18e7e872a801e2daaf7",
       "source_hashes": [
-        "da3a96ed3d11cd36975cd73fad3465a83c88a2f2494a373d8a2978e33b4d364d"
+        "ac6dcdae24efb434675c1574a325eb61ae94c738898dc18e7e872a801e2daaf7"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
@@ -796,11 +796,11 @@
       "test_body_hashes": [
         "ef83c6b8cbe42fd15759626494bacb30524cba1b97c0bbbccc954cae4ef78afc"
       ],
-      "rationale": "skip_if_no_env! at line 147-151 still gates on ATLASSIAN_API_KEY presence",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:152 skip_if_no_env! lists ATLASSIAN_API_KEY inside dark_factory_real_confluence (151-155); test early-returns if unset, enforcing the documented requirement",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:25:50Z",
-      "last_extracted": "2026-05-09T05:25:50Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -808,12 +808,12 @@
       "claim": "ATLASSIAN_EMAIL env var is required for Confluence tests",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 56,
-        "line_end": 63
+        "line_start": 73,
+        "line_end": 73
       },
-      "source_hash": "b691d1c4e3154d662007748f9ea1524a1b016daecfa5e4eb5ee4939052f586f5",
+      "source_hash": "22f6ce0679c09cd0a4607e7711518f1dbab3af1605e13823df1819231a43692d",
       "source_hashes": [
-        "b691d1c4e3154d662007748f9ea1524a1b016daecfa5e4eb5ee4939052f586f5"
+        "22f6ce0679c09cd0a4607e7711518f1dbab3af1605e13823df1819231a43692d"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
@@ -821,11 +821,11 @@
       "test_body_hashes": [
         "ef83c6b8cbe42fd15759626494bacb30524cba1b97c0bbbccc954cae4ef78afc"
       ],
-      "rationale": "agent_flow_real.rs:147-151 skip_if_no_env! lists ATLASSIAN_EMAIL — test returns early if unset, enforcing the documented env-var requirement",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:153 skip_if_no_env! lists ATLASSIAN_EMAIL inside dark_factory_real_confluence (151-155); test early-returns if unset",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1054,12 +1054,12 @@
       "claim": "BackendCapabilities struct exists in crates/reposix-core/src/backend.rs",
       "source": {
         "file": "docs/index.md",
-        "line_start": 113,
-        "line_end": 113
+        "line_start": 116,
+        "line_end": 116
       },
-      "source_hash": "531f8fbe410f6907229314067dc724847517cab814f835d3cb8cb182b3a8af6b",
+      "source_hash": "b07098fc3466c164678c30742a4dac019cdda8b99e2fac1dfa96ca9a78d9ca54",
       "source_hashes": [
-        "531f8fbe410f6907229314067dc724847517cab814f835d3cb8cb182b3a8af6b"
+        "b07098fc3466c164678c30742a4dac019cdda8b99e2fac1dfa96ca9a78d9ca54"
       ],
       "tests": [
         "crates/reposix-cli/src/doctor.rs::check_backend_capabilities_reports_sim_supports_everything"
@@ -1067,11 +1067,11 @@
       "test_body_hashes": [
         "8c90ad9e7a5955baab60cf122989a71ababa818e4885d27120565d36db1d29c4"
       ],
-      "rationale": "docs/index.md:113 names BackendCapabilities in crates/reposix-core/src/backend.rs; doctor.rs test exercises check_backend_capabilities for sim (struct deletion breaks compile)",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "docs/index.md:116 names BackendCapabilities in crates/reposix-core/src/backend.rs; check_backend_capabilities_reports_sim_supports_everything exercises check_backend_capabilities (struct deletion breaks compile) and asserts the sim row shows yes/in-body/strong",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T07:18:53Z",
-      "last_extracted": "2026-07-04T07:18:53Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1665,8 +1665,8 @@
       "claim": "Bootstrap takes <= 27 ms against the simulator",
       "source": {
         "file": "docs/index.md",
-        "line_start": 132,
-        "line_end": 132
+        "line_start": 134,
+        "line_end": 134
       },
       "source_hash": "1a1b9bf294989a75387993f0117aaf775b1a6d77bcf8819210ebf2ccbe743729",
       "source_hashes": [
@@ -1678,11 +1678,11 @@
       "test_body_hashes": [
         "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "docs/index.md:132 mirrors cold init; latency-bench.sh measures SIM_INIT_MS bootstrap latency (27 ms per docs/benchmarks/latency.md)",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "docs/index.md:134 claims bootstrap <=27ms vs sim; latency-bench.sh spawns reposix-sim and measures SIM_INIT_MS bootstrap latency (27 ms per docs/benchmarks/latency.md)",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T07:48:53Z",
-      "last_extracted": "2026-07-04T07:48:53Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3377,8 +3377,8 @@
       "claim": "Fetch size limit caps git fetch and emits stderr with git sparse-checkout recovery hint",
       "source": {
         "file": "docs/index.md",
-        "line_start": 150,
-        "line_end": 150
+        "line_start": 152,
+        "line_end": 152
       },
       "source_hash": "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877",
       "source_hashes": [
@@ -3390,11 +3390,11 @@
       "test_body_hashes": [
         "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
       ],
-      "rationale": "docs/index.md:150 claims sparse-checkout recovery hint; test asserts stateless_connect.rs contains 'git sparse-checkout' + BLOB_LIMIT_EXCEEDED_FMT",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "docs/index.md:152 claims the fetch-size-limit stderr names git sparse-checkout as recovery; test asserts stateless_connect.rs contains the literal 'git sparse-checkout' plus the BLOB_LIMIT_EXCEEDED_FMT constant",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T07:48:53Z",
-      "last_extracted": "2026-07-04T07:48:53Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3680,19 +3680,25 @@
       "claim": "git checkout -B main refs/reposix/origin/main switches to main branch",
       "source": {
         "file": "docs/index.md",
-        "line_start": 129,
-        "line_end": 129
+        "line_start": 131,
+        "line_end": 131
       },
       "source_hash": "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00",
       "source_hashes": [
         "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00"
       ],
-      "rationale": "Test crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path asserts reposix init partial-clone config (extensions.partialClone/promisor/partialclonefilter) but never runs 'git checkout -B main refs/reposix/origin/main' — the checkout-to-main behavior is unasserted; no test in the tree runs this checkout",
-      "last_verdict": "STALE_DOCS_DRIFT",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-07-04T07:19:13Z",
-      "last_extracted": "2026-07-04T08:08:06Z",
-      "last_extracted_by": "waive-call",
+      "tests": [
+        "quality/gates/docs-repro/tutorial-replay.sh"
+      ],
+      "test_body_hashes": [
+        "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
+      ],
+      "rationale": "docs/index.md:131 runs 'git checkout -B main refs/reposix/origin/main'; tutorial-replay.sh step 4 runs that exact command after verifying the ref exists and records PASS only on exit 0, setting EXIT_CODE=1 on failure",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
+      "last_extracted_by": "bind-call",
       "waiver": {
         "until": "2026-07-31T00:00:00Z",
         "reason": "claim unverifiable until QL-001 push/fetch round-trip lands (P90/P91); real test = tutorial-replay step 4 currently WAIVED for the same root cause",
@@ -4138,12 +4144,12 @@
       "claim": "GITHUB_TOKEN env var is required for GitHub tests",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 92,
-        "line_end": 97
+        "line_start": 135,
+        "line_end": 135
       },
-      "source_hash": "79ce6db95c588526661a8555ded0b3ee866f5f79948218a2e5e0d118d3995053",
+      "source_hash": "2e6d735aaed1e6979765f5d9fe0fc5d06670f22795d1d6a9afccf6a8ca542273",
       "source_hashes": [
-        "79ce6db95c588526661a8555ded0b3ee866f5f79948218a2e5e0d118d3995053"
+        "2e6d735aaed1e6979765f5d9fe0fc5d06670f22795d1d6a9afccf6a8ca542273"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
@@ -4151,11 +4157,11 @@
       "test_body_hashes": [
         "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
       ],
-      "rationale": "agent_flow_real.rs:129 skip_if_no_env!(GITHUB_TOKEN) — test returns early if unset",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:133 skip_if_no_env!(GITHUB_TOKEN) in dark_factory_real_github; test early-returns if unset",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4906,12 +4912,12 @@
       "claim": "JIRA_API_TOKEN env var is required for JIRA tests",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 124,
-        "line_end": 134
+        "line_start": 169,
+        "line_end": 169
       },
-      "source_hash": "710918c31b20ca044201fc1cde76b30ba42aeac9035d92594c9fce0ea755a686",
+      "source_hash": "c25aa41c5f194b5817ef770bb731a40d9eea842598236e37eb1c63d92620b9aa",
       "source_hashes": [
-        "710918c31b20ca044201fc1cde76b30ba42aeac9035d92594c9fce0ea755a686"
+        "c25aa41c5f194b5817ef770bb731a40d9eea842598236e37eb1c63d92620b9aa"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
@@ -4919,11 +4925,11 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "agent_flow_real.rs:171 skip_if_no_env! lists JIRA_API_TOKEN — test returns early if unset",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:175 skip_if_no_env! lists JIRA_API_TOKEN in dark_factory_real_jira; test early-returns if unset",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4931,12 +4937,12 @@
       "claim": "JIRA_EMAIL env var is required for JIRA tests",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 124,
-        "line_end": 134
+        "line_start": 168,
+        "line_end": 168
       },
-      "source_hash": "710918c31b20ca044201fc1cde76b30ba42aeac9035d92594c9fce0ea755a686",
+      "source_hash": "d912f0895db5ee928e96ae7d979bc89f9ca2e58c51d937a29a8cc16f51fa16d1",
       "source_hashes": [
-        "710918c31b20ca044201fc1cde76b30ba42aeac9035d92594c9fce0ea755a686"
+        "d912f0895db5ee928e96ae7d979bc89f9ca2e58c51d937a29a8cc16f51fa16d1"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
@@ -4944,11 +4950,11 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "agent_flow_real.rs:171 skip_if_no_env! lists JIRA_EMAIL — test returns early if unset",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:175 skip_if_no_env! lists JIRA_EMAIL in dark_factory_real_jira; test early-returns if unset",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -4956,12 +4962,12 @@
       "claim": "JIRA_TEST_PROJECT overrides default TEST project key",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 119,
-        "line_end": 137
+        "line_start": 160,
+        "line_end": 162
       },
-      "source_hash": "d550dbca2609edb0647067398ef4d52bf7053347ee3a1af85e95e8f81e2a47db",
+      "source_hash": "bb1e6054b3a0a4c50a9198649efda4fee2828e72872c8d5a3b309e28555a3351",
       "source_hashes": [
-        "d550dbca2609edb0647067398ef4d52bf7053347ee3a1af85e95e8f81e2a47db"
+        "bb1e6054b3a0a4c50a9198649efda4fee2828e72872c8d5a3b309e28555a3351"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
@@ -4969,11 +4975,11 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "jira_test_project() at lines 79-83 reads JIRA_TEST_PROJECT first (line 80) before falling back; dark_factory_real_jira at line 173 calls it to resolve project, exercising the override",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "jira_test_project() at agent_flow_real.rs:84 reads JIRA_TEST_PROJECT first before or_else fallback to REPOSIX_JIRA_PROJECT then default TEST; dark_factory_real_jira:177 calls it to resolve the project and asserts it in the URL at 184-187, exercising the override",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6192,8 +6198,8 @@
       "claim": "Push-time conflict detection rejects stale-base pushes with standard git fetch first error",
       "source": {
         "file": "docs/index.md",
-        "line_start": 150,
-        "line_end": 150
+        "line_start": 152,
+        "line_end": 152
       },
       "source_hash": "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877",
       "source_hashes": [
@@ -6205,11 +6211,11 @@
       "test_body_hashes": [
         "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
-      "rationale": "docs/index.md:150 claims 'fetch first' reject; test asserts reposix-remote/src contains 'git pull --rebase' + 'error refs/heads/main fetch first'",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "docs/index.md:152 claims the standard git 'fetch first' reject with git pull --rebase recovery; test asserts reposix-remote/src (write_loop.rs/bus_handler.rs/main.rs) contains 'git pull --rebase' plus 'error refs/heads/main fetch first'",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T07:48:53Z",
-      "last_extracted": "2026-07-04T07:48:53Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6706,11 +6712,11 @@
       "source": {
         "file": "docs/reference/testing-targets.md",
         "line_start": 48,
-        "line_end": 54
+        "line_end": 57
       },
-      "source_hash": "e0fc82ed2bff773d078fdec886c7b45db10b6c9666c210bca67e7566b22541cc",
+      "source_hash": "d251368e71f8de935d1758927fa19f80514f882c383ea16e7b80f09d38ac2e8e",
       "source_hashes": [
-        "e0fc82ed2bff773d078fdec886c7b45db10b6c9666c210bca67e7566b22541cc"
+        "d251368e71f8de935d1758927fa19f80514f882c383ea16e7b80f09d38ac2e8e"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
@@ -6718,11 +6724,11 @@
       "test_body_hashes": [
         "ef83c6b8cbe42fd15759626494bacb30524cba1b97c0bbbccc954cae4ef78afc"
       ],
-      "rationale": "agent_flow_real.rs:160-164 asserts url.ends_with(/confluence/projects/{space}); space defaults to TokenWorld via confluence_test_space() at line 89",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:165-168 asserts url.ends_with(/confluence/projects/{space}); space defaults to TokenWorld via confluence_test_space() at 92-93, matching doc line 57 naming the TokenWorld default",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6730,12 +6736,12 @@
       "claim": "remote.origin.url encodes /jira/projects/TEST marker",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 119,
-        "line_end": 137
+        "line_start": 158,
+        "line_end": 162
       },
-      "source_hash": "d550dbca2609edb0647067398ef4d52bf7053347ee3a1af85e95e8f81e2a47db",
+      "source_hash": "a8f2f7328f59a9a6a05993dfc8a99874ea181e96528bbb058c4580d65657f97a",
       "source_hashes": [
-        "d550dbca2609edb0647067398ef4d52bf7053347ee3a1af85e95e8f81e2a47db"
+        "a8f2f7328f59a9a6a05993dfc8a99874ea181e96528bbb058c4580d65657f97a"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
@@ -6743,11 +6749,11 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "agent_flow_real.rs:179-183 asserts url.ends_with(/jira/projects/{project}); project resolves to TEST by default via jira_test_project()",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:184-187 asserts url.ends_with(/jira/projects/{project}); project defaults to TEST via jira_test_project() at 86, matching doc TEST default at 160-162",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6755,12 +6761,12 @@
       "claim": "remote.origin.url encodes project as reubenjohn/reposix",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 85,
-        "line_end": 97
+        "line_start": 124,
+        "line_end": 127
       },
-      "source_hash": "433f941fcf5836b2aa4def90edd86405704276821307d179f6a15eb76bec8225",
+      "source_hash": "fbf2c7d826efcfe2df5480bfa95fb8a6298e18a38edddbaf3ac59856b86a7837",
       "source_hashes": [
-        "433f941fcf5836b2aa4def90edd86405704276821307d179f6a15eb76bec8225"
+        "fbf2c7d826efcfe2df5480bfa95fb8a6298e18a38edddbaf3ac59856b86a7837"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
@@ -6768,11 +6774,11 @@
       "test_body_hashes": [
         "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
       ],
-      "rationale": "agent_flow_real.rs:134-137 asserts url.contains(/projects/reubenjohn/reposix)",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:138-141 asserts url.contains(/projects/reubenjohn/reposix), matching the doc section naming the reubenjohn/reposix repo",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6780,12 +6786,12 @@
       "claim": "remote.origin.url starts with reposix::https://api.github.com/",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 85,
-        "line_end": 97
+        "line_start": 205,
+        "line_end": 211
       },
-      "source_hash": "433f941fcf5836b2aa4def90edd86405704276821307d179f6a15eb76bec8225",
+      "source_hash": "9a21c89aa0d22cd69e9abb7890734a31f20c61ed9a29f000242ee6ce66df6d8a",
       "source_hashes": [
-        "433f941fcf5836b2aa4def90edd86405704276821307d179f6a15eb76bec8225"
+        "9a21c89aa0d22cd69e9abb7890734a31f20c61ed9a29f000242ee6ce66df6d8a"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
@@ -6793,11 +6799,11 @@
       "test_body_hashes": [
         "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
       ],
-      "rationale": "run_init_and_assert at lines 118-121 asserts url.starts_with(expected_url_prefix); github call at line 132 passes reposix::https://api.github.com/ as the prefix",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:122-125 asserts url.starts_with(expected_url_prefix); dark_factory_real_github passes reposix::https://api.github.com/ as the prefix at line 136",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7389,11 +7395,11 @@
       "source": {
         "file": "docs/reference/testing-targets.md",
         "line_start": 48,
-        "line_end": 54
+        "line_end": 66
       },
-      "source_hash": "e0fc82ed2bff773d078fdec886c7b45db10b6c9666c210bca67e7566b22541cc",
+      "source_hash": "e602e440108700a3a0cd98ea0b2d109711be874b886377450d47344d813a6812",
       "source_hashes": [
-        "e0fc82ed2bff773d078fdec886c7b45db10b6c9666c210bca67e7566b22541cc"
+        "e602e440108700a3a0cd98ea0b2d109711be874b886377450d47344d813a6812"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_confluence"
@@ -7401,11 +7407,11 @@
       "test_body_hashes": [
         "ef83c6b8cbe42fd15759626494bacb30524cba1b97c0bbbccc954cae4ef78afc"
       ],
-      "rationale": "dark_factory_real_confluence at line 146 invokes run_init_and_assert with spec confluence::{space} (default TokenWorld); run_init_and_assert asserts out.status.success() at lines 107-112",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:111-116 asserts out.status.success() for reposix init; dark_factory_real_confluence uses spec confluence::{space}, space defaulting to TokenWorld via confluence_test_space() at line 93",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7413,8 +7419,8 @@
       "claim": "reposix init github::reubenjohn/reposix succeeds with GITHUB_TOKEN",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 85,
-        "line_end": 97
+        "line_start": 124,
+        "line_end": 136
       },
       "source_hash": "433f941fcf5836b2aa4def90edd86405704276821307d179f6a15eb76bec8225",
       "source_hashes": [
@@ -7426,11 +7432,11 @@
       "test_body_hashes": [
         "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
       ],
-      "rationale": "dark_factory_real_github at line 130 invokes run_init_and_assert(github::reubenjohn/reposix); run_init_and_assert asserts out.status.success() at lines 107-112",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:134-137 invokes run_init_and_assert(github::reubenjohn/reposix), which asserts out.status.success() at lines 111-116; skip_if_no_env!(GITHUB_TOKEN) at line 133 gates on the token",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7463,8 +7469,8 @@
       "claim": "reposix init jira::TEST succeeds with required env vars",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 119,
-        "line_end": 137
+        "line_start": 158,
+        "line_end": 176
       },
       "source_hash": "d550dbca2609edb0647067398ef4d52bf7053347ee3a1af85e95e8f81e2a47db",
       "source_hashes": [
@@ -7476,11 +7482,11 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "dark_factory_real_jira at line 176 invokes run_init_and_assert(jira::{project}, default TEST); run_init_and_assert asserts out.status.success() at lines 107-112",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:179-180 invokes run_init_and_assert(jira::{project}) with project defaulting to TEST via jira_test_project() at line 83; success asserted at lines 111-116",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7513,8 +7519,8 @@
       "claim": "reposix init sim::demo /tmp/reposix-demo creates partial-clone working tree",
       "source": {
         "file": "docs/index.md",
-        "line_start": 128,
-        "line_end": 128
+        "line_start": 130,
+        "line_end": 130
       },
       "source_hash": "9572807c5ebf6272e3d4248d889a5c1b5a3d1c12fad28a3162dabf300d25aa15",
       "source_hashes": [
@@ -7526,11 +7532,11 @@
       "test_body_hashes": [
         "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
       ],
-      "rationale": "docs/index.md:128 'reposix init sim::demo'; test runs init and asserts extensions.partialClone=origin, remote.origin.promisor=true, partialclonefilter=blob:none",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "docs/index.md:130 'reposix init sim::demo /tmp/reposix-demo'; dark_factory_sim_happy_path runs init and asserts extensions.partialClone=origin, remote.origin.promisor=true, remote.origin.partialclonefilter=blob:none",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T07:48:53Z",
-      "last_extracted": "2026-07-04T07:48:53Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7792,8 +7798,8 @@
       "claim": "reposix sim starts on port :7878 by default",
       "source": {
         "file": "docs/index.md",
-        "line_start": 127,
-        "line_end": 127
+        "line_start": 129,
+        "line_end": 129
       },
       "source_hash": "d7ca12bf9854d98ac7540461ffc76878a0040c7958c80571ec4adbdd0b9cbe4b",
       "source_hashes": [
@@ -7805,11 +7811,11 @@
       "test_body_hashes": [
         "9711053b2b00fddd6cacc627e74a1153efa3e73302dd7a3c4353e61506fd9e8a"
       ],
-      "rationale": "docs/index.md:127 'reposix sim &' starts sim on :7878; main.rs:16 #[arg(default_value=127.0.0.1:7878)] + unit test default_bind_addr_is_7878 asserts Args::parse_from([reposix-sim]) binds 127.0.0.1:7878",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "docs/index.md:129 'reposix sim &' starts the sim on :7878; default_bind_addr_is_7878 asserts Args::parse_from([reposix-sim]).bind resolves to 127.0.0.1:7878 (port 7878)",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T07:48:53Z",
-      "last_extracted": "2026-07-04T07:48:53Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8186,8 +8192,8 @@
       "claim": "REPOSIX_CONFLUENCE_TENANT env var is required for Confluence tests",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 56,
-        "line_end": 63
+        "line_start": 68,
+        "line_end": 75
       },
       "source_hash": "b691d1c4e3154d662007748f9ea1524a1b016daecfa5e4eb5ee4939052f586f5",
       "source_hashes": [
@@ -8199,11 +8205,11 @@
       "test_body_hashes": [
         "ef83c6b8cbe42fd15759626494bacb30524cba1b97c0bbbccc954cae4ef78afc"
       ],
-      "rationale": "agent_flow_real.rs:147-151 skip_if_no_env! lists REPOSIX_CONFLUENCE_TENANT and line 152 unwraps it — test gates on env-var presence",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:151-155 skip_if_no_env! lists REPOSIX_CONFLUENCE_TENANT and line 156 unwraps it — test early-returns if the env var is unset",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8211,12 +8217,12 @@
       "claim": "REPOSIX_JIRA_INSTANCE env var is required for JIRA tests",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 124,
-        "line_end": 134
+        "line_start": 164,
+        "line_end": 173
       },
-      "source_hash": "710918c31b20ca044201fc1cde76b30ba42aeac9035d92594c9fce0ea755a686",
+      "source_hash": "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc",
       "source_hashes": [
-        "710918c31b20ca044201fc1cde76b30ba42aeac9035d92594c9fce0ea755a686"
+        "cc4365e9dc6b49022ae3a1e54cb4363afd2177923d48e05019c5908c1ca29dbc"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
@@ -8224,11 +8230,11 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "agent_flow_real.rs:171 skip_if_no_env! lists REPOSIX_JIRA_INSTANCE and line 172 unwraps it — test gates on env-var presence",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:175 skip_if_no_env! lists REPOSIX_JIRA_INSTANCE and line 176 unwraps it — test early-returns if the env var is unset",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8236,12 +8242,12 @@
       "claim": "REPOSIX_JIRA_PROJECT as fallback project key override",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 119,
-        "line_end": 137
+        "line_start": 160,
+        "line_end": 176
       },
-      "source_hash": "d550dbca2609edb0647067398ef4d52bf7053347ee3a1af85e95e8f81e2a47db",
+      "source_hash": "1ccb7a24184f78f64c545683898e180ed1d35ac44f89df98fb73efb66cf64c1c",
       "source_hashes": [
-        "d550dbca2609edb0647067398ef4d52bf7053347ee3a1af85e95e8f81e2a47db"
+        "1ccb7a24184f78f64c545683898e180ed1d35ac44f89df98fb73efb66cf64c1c"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_jira"
@@ -8249,11 +8255,11 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "jira_test_project() at line 81 reads REPOSIX_JIRA_PROJECT as the fallback override before defaulting to TEST",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:83-87 jira_test_project() reads JIRA_TEST_PROJECT.or_else(REPOSIX_JIRA_PROJECT).unwrap_or(TEST) — REPOSIX_JIRA_PROJECT is the fallback override, matching doc precedence at line 176",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8461,12 +8467,12 @@
       "claim": "skip_if_no_env! early-returns without panic",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 159,
-        "line_end": 172
+        "line_start": 200,
+        "line_end": 203
       },
-      "source_hash": "596b5d71e2bc215e5e5c9af304e8314f97b37119a8e0a95855dad15fd9cfbbaf",
+      "source_hash": "acfe170c174d757b240a1ee28d39922808359a25eaf2baecf3b49de82a0707e7",
       "source_hashes": [
-        "596b5d71e2bc215e5e5c9af304e8314f97b37119a8e0a95855dad15fd9cfbbaf"
+        "acfe170c174d757b240a1ee28d39922808359a25eaf2baecf3b49de82a0707e7"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::skip_pattern_compiles_and_runs_without_creds"
@@ -8474,11 +8480,11 @@
       "test_body_hashes": [
         "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409"
       ],
-      "rationale": "agent_flow_real.rs:213-223 wraps skip_if_no_env! in catch_unwind and asserts ran.is_ok(), proving the macro early-returns rather than panics",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:450-460 wraps skip_if_no_env! in catch_unwind and asserts ran.is_ok() — must early-return cleanly, not panic",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8790,12 +8796,12 @@
       "claim": "Tests skip cleanly without env vars (fail-closed by default)",
       "source": {
         "file": "docs/reference/testing-targets.md",
-        "line_start": 159,
-        "line_end": 172
+        "line_start": 200,
+        "line_end": 203
       },
-      "source_hash": "596b5d71e2bc215e5e5c9af304e8314f97b37119a8e0a95855dad15fd9cfbbaf",
+      "source_hash": "acfe170c174d757b240a1ee28d39922808359a25eaf2baecf3b49de82a0707e7",
       "source_hashes": [
-        "596b5d71e2bc215e5e5c9af304e8314f97b37119a8e0a95855dad15fd9cfbbaf"
+        "acfe170c174d757b240a1ee28d39922808359a25eaf2baecf3b49de82a0707e7"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::skip_pattern_compiles_and_runs_without_creds"
@@ -8803,11 +8809,11 @@
       "test_body_hashes": [
         "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409"
       ],
-      "rationale": "agent_flow_real.rs:191-232 clears all backend env vars then exercises skip_if_no_env! and confirms clean early-return — fail-closed contract",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "agent_flow_real.rs:427-469 clears all backend env vars then exercises skip_if_no_env! and confirms clean early-return — the fail-closed contract",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-09T05:28:46Z",
-      "last_extracted": "2026-05-09T05:28:46Z",
+      "last_run": "2026-07-04T23:18:53Z",
+      "last_extracted": "2026-07-04T23:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
