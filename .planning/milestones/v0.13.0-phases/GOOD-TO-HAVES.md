@@ -251,3 +251,19 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 **Default disposition:** XS — always closes; fold into the next CLAUDE.md-touching commit.
 
 **STATUS:** OPEN
+
+## GOOD-TO-HAVES-14 — helper `list for-push` reports `?` (unknown remote SHA), forcing a redundant export on every push
+
+**Discovered during:** P91 litmus-REOPEN second-push mass-delete root-cause (2026-07-04)
+
+**Size:** M
+
+**Source:** `git-remote-reposix`'s `list`/`list for-push` arm hardcodes `? refs/heads/main` (remote value UNKNOWN). Because git can never conclude the ref is up-to-date, it re-runs the `export` helper on EVERY `git push` — even when the local ref already equals what git tracks in `refs/reposix/*`. That is exactly what produced the no-commit `feature done` / `reset` / `from 000…000` / `done` stream on a second push (the mass-delete trigger, now neutralized by the `saw_commit` guard in `5612fa6`). Reporting the real remote head SHA would let git short-circuit no-op pushes entirely (no helper spawn, no REST round-trip, no cache open).
+
+**Acceptance:** `list for-push` reports the actual remote head SHA (derived from the cache's `refs/reposix/origin/main` or a cheap `list_changed_since`/head lookup) instead of `?`, so a genuinely-current push is skipped by git before the helper does any work. Add a test asserting a second `git push` with no new commit does NOT re-invoke `apply_writes` (e.g. zero new audit rows / zero REST calls). The `saw_commit` guard remains the correctness backstop; this is the efficiency + belt-and-suspenders layer.
+
+**Why deferred:** computing an accurate remote SHA in `list for-push` touches the cache head-derivation + protocol arm (`main.rs`), is >1h, and the `saw_commit` fix already removes the data-loss danger. Efficiency/robustness improvement, not a correctness gap.
+
+**Default disposition:** M — default-defer; fold into a v0.14.0 helper-protocol or perf window.
+
+**STATUS:** OPEN
