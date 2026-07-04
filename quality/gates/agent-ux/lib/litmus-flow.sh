@@ -73,7 +73,14 @@ _litmus_flow() {
   echo "edit target: $target (protected denylist honoured)"
 
   marker="litmus-marker-$(date -u +%s)"
-  printf '\n<!-- %s -->\n' "$marker" >> "$target"
+  # VISIBLE text, never an HTML comment: Confluence's storage sanitizer
+  # strips comments server-side, so a comment-only edit is a content no-op —
+  # the PUT returns 200 WITHOUT minting a new version and the REST confirm
+  # below can never see the marker (observed against real TokenWorld,
+  # transcript 2026-07-04T21-36-37Z). Drop any prior run's marker line first
+  # so the sanctioned page carries at most one marker instead of accumulating.
+  sed -i '/litmus-marker-/d' "$target"
+  printf '\n%s\n' "$marker" >> "$target"
   git -C "$tree" config user.email "litmus@reposix.invalid"
   git -C "$tree" config user.name "reposix-litmus"
   git -C "$tree" add -A && git -C "$tree" commit --quiet -m "litmus edit ${marker}"
