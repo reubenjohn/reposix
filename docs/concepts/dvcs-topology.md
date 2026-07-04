@@ -130,11 +130,15 @@ git commit -am 'fix typo' && git push
 cd /tmp/issues
 $EDITOR issues/0001.md && git commit -am 'fix typo'
 
-# Install reposix and attach to the SoT:
-cargo binstall reposix-cli
+# Install reposix AND the git remote helper (two separate binaries):
+cargo binstall reposix-cli reposix-remote
 reposix attach confluence::SPACE
 git push                      # bus remote handles SoT + mirror atomically
 ```
+
+The `reposix-cli` package installs the `reposix` CLI; the `reposix-remote` package installs the `git-remote-reposix` helper that git shells out to for `reposix::` URLs. Installing only the CLI leaves `git push` failing with `unable to find remote helper for 'reposix'` — `reposix attach` prints a warning naming the missing helper if it is not on PATH.
+
+`reposix attach` also sets `remote.pushDefault` to the reposix remote, so the bare `git push` above routes through the SoT bus rather than silently pushing to the vanilla mirror on `origin`. Fetch is untouched: `git fetch` / `git pull` keep reading from the mirror. (A `remote.pushDefault` you set yourself is left alone — attach warns instead of clobbering it.)
 
 **Trade-off:** keeps your existing clone; reuses the GH mirror you already fetched from for fast subsequent pulls. The cache is built fresh against the SoT during attach (one REST walk; subsequent pushes use `list_changed_since` for cheap conflict detection).
 

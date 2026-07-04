@@ -958,3 +958,262 @@ fn attach_audit_log_records_walk_event() {
 
     kill_child(&mut sim);
 }
+
+// --- Tests: T2-REOPEN H1 — remote.pushDefault routes `git push` to SoT ------
+
+/// H1 (T2-REOPEN) — after attach, `remote.pushDefault` names the reposix
+/// remote so a bare `git push` (the closing step in Pattern C) routes
+/// through the SoT bus, NOT the vanilla mirror on `origin`. The origin
+/// fetch config MUST be left untouched — reads keep coming from the mirror.
+#[test]
+#[ignore = "spawns reposix-sim child; requires `cargo build --workspace --bins` first"]
+fn attach_sets_push_default_to_reposix_remote() {
+    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let port = pick_free_port();
+    let mut sim = spawn_sim(port);
+
+    let work_tmp = TempDir::new().expect("work tempdir");
+    let cache_tmp = TempDir::new().expect("cache tempdir");
+    git_init(work_tmp.path());
+    let _ = Command::new("git")
+        .arg("-C")
+        .arg(work_tmp.path())
+        .args([
+            "remote",
+            "add",
+            "origin",
+            "https://example.invalid/mirror.git",
+        ])
+        .status();
+    // Snapshot origin's fetch refspec BEFORE attach — it must survive
+    // untouched (attach configures push routing only, never fetch).
+    let origin_fetch_before = git_config(work_tmp.path(), "remote.origin.fetch");
+    assert!(
+        origin_fetch_before.is_some(),
+        "sanity: `git remote add origin` should set remote.origin.fetch"
+    );
+
+    let out = run_attach(
+        work_tmp.path(),
+        cache_tmp.path(),
+        port,
+        &["sim::demo", "--remote-name", "reposix"],
+    );
+    assert!(
+        out.status.success(),
+        "attach failed: stderr={:?}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    assert_eq!(
+        git_config(work_tmp.path(), "remote.pushDefault").as_deref(),
+        Some("reposix"),
+        "attach must set remote.pushDefault to the reposix remote so `git push` hits the SoT bus"
+    );
+    // Origin FETCH config is untouched.
+    assert_eq!(
+        git_config(work_tmp.path(), "remote.origin.fetch"),
+        origin_fetch_before,
+        "attach must NOT modify origin's fetch config (reads still come from the mirror)"
+    );
+    assert_eq!(
+        git_config(work_tmp.path(), "remote.origin.url").as_deref(),
+        Some("https://example.invalid/mirror.git"),
+        "origin remote URL must be unchanged"
+    );
+
+    kill_child(&mut sim);
+}
+
+/// H1 (T2-REOPEN) — a user-set `remote.pushDefault` is the user's explicit
+/// choice: attach must NOT clobber it. It warns to stderr and leaves the
+/// value intact.
+#[test]
+#[ignore = "spawns reposix-sim child; requires `cargo build --workspace --bins` first"]
+fn attach_preserves_user_set_push_default() {
+    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let port = pick_free_port();
+    let mut sim = spawn_sim(port);
+
+    let work_tmp = TempDir::new().expect("work tempdir");
+    let cache_tmp = TempDir::new().expect("cache tempdir");
+    git_init(work_tmp.path());
+    let _ = Command::new("git")
+        .arg("-C")
+        .arg(work_tmp.path())
+        .args([
+            "remote",
+            "add",
+            "origin",
+            "https://example.invalid/mirror.git",
+        ])
+        .status();
+    // User has already pinned pushDefault to origin.
+    let _ = Command::new("git")
+        .arg("-C")
+        .arg(work_tmp.path())
+        .args(["config", "remote.pushDefault", "origin"])
+        .status();
+
+    let out = run_attach(
+        work_tmp.path(),
+        cache_tmp.path(),
+        port,
+        &["sim::demo", "--remote-name", "reposix"],
+    );
+    assert!(
+        out.status.success(),
+        "attach must still succeed when pushDefault is pre-set: stderr={:?}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert_eq!(
+        git_config(work_tmp.path(), "remote.pushDefault").as_deref(),
+        Some("origin"),
+        "attach must NOT clobber a user-set remote.pushDefault"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("remote.pushDefault is already set to `origin`"),
+        "attach must warn that it left the user's pushDefault unchanged; stderr={stderr}"
+    );
+
+    kill_child(&mut sim);
+}
+
+// --- Tests: T2-REOPEN H2 — helper-on-PATH teaching warning ------------------
+
+/// Resolve a binary's absolute path via the ambient PATH. Used to build a
+/// curated PATH for the helper-discovery tests below.
+#[cfg(unix)]
+fn resolve_bin(name: &str) -> PathBuf {
+    let out = Command::new("sh")
+        .arg("-c")
+        .arg(format!("command -v {name}"))
+        .output()
+        .expect("command -v");
+    assert!(out.status.success(), "{name} not found on ambient PATH");
+    PathBuf::from(String::from_utf8_lossy(&out.stdout).trim())
+}
+
+/// Build a tempdir containing symlinks to `git` and `sh` (the only PATH
+/// binaries `reposix attach` shells out to), optionally plus a fake
+/// `git-remote-reposix`. Returns the dir; the caller sets it as the
+/// subprocess PATH to control helper discoverability deterministically,
+/// regardless of what is installed on the host.
+#[cfg(unix)]
+fn curated_bindir(include_helper: bool) -> TempDir {
+    use std::os::unix::fs::symlink;
+    let dir = TempDir::new().expect("bindir tempdir");
+    let git = resolve_bin("git");
+    let sh = resolve_bin("sh");
+    symlink(&git, dir.path().join("git")).expect("symlink git");
+    symlink(&sh, dir.path().join("sh")).expect("symlink sh");
+    if include_helper {
+        // Any executable file satisfies discovery via `command -v` — the
+        // warning keys off presence on PATH, not on the helper running.
+        symlink(&git, dir.path().join("git-remote-reposix")).expect("symlink fake helper");
+    }
+    dir
+}
+
+#[cfg(unix)]
+fn run_attach_with_path(
+    work: &Path,
+    cache_dir: &Path,
+    sim_port: u16,
+    extra_args: &[&str],
+    path_value: &Path,
+) -> std::process::Output {
+    let bin = target_bin("reposix");
+    let mut cmd = Command::new(&bin);
+    cmd.arg("attach")
+        .args(extra_args)
+        .current_dir(work)
+        .env("REPOSIX_CACHE_DIR", cache_dir)
+        .env("REPOSIX_SIM_ORIGIN", format!("http://127.0.0.1:{sim_port}"))
+        .env("PATH", path_value)
+        .stdin(Stdio::null());
+    cmd.output().expect("spawn reposix attach")
+}
+
+/// H2 (T2-REOPEN) — when `git-remote-reposix` is NOT on PATH, attach still
+/// succeeds (config is valid) but prints a prominent teaching warning that
+/// names the failure git will emit AND the exact install command.
+#[cfg(unix)]
+#[test]
+#[ignore = "spawns reposix-sim child; requires `cargo build --workspace --bins` first"]
+fn attach_warns_when_helper_absent_from_path() {
+    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let port = pick_free_port();
+    let mut sim = spawn_sim(port);
+
+    let work_tmp = TempDir::new().expect("work tempdir");
+    let cache_tmp = TempDir::new().expect("cache tempdir");
+    git_init(work_tmp.path());
+    let bindir = curated_bindir(false); // helper deliberately absent
+
+    let out = run_attach_with_path(
+        work_tmp.path(),
+        cache_tmp.path(),
+        port,
+        &["sim::demo", "--remote-name", "reposix"],
+        bindir.path(),
+    );
+    assert!(
+        out.status.success(),
+        "attach must succeed even without the helper (non-fatal warning): stderr={:?}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("`git-remote-reposix` is not on PATH"),
+        "expected helper-absent warning; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("cargo binstall reposix-remote")
+            && stderr.contains("cargo install reposix-remote"),
+        "warning must name both install commands; stderr={stderr}"
+    );
+    assert!(
+        stderr.contains("unable to find remote helper for 'reposix'"),
+        "warning must name the exact git failure so the fix is unambiguous; stderr={stderr}"
+    );
+
+    kill_child(&mut sim);
+}
+
+/// H2 (T2-REOPEN) — when `git-remote-reposix` IS on PATH, attach emits no
+/// helper-absent warning (guards against a spurious nag on healthy setups).
+#[cfg(unix)]
+#[test]
+#[ignore = "spawns reposix-sim child; requires `cargo build --workspace --bins` first"]
+fn attach_no_helper_warning_when_present_on_path() {
+    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let port = pick_free_port();
+    let mut sim = spawn_sim(port);
+
+    let work_tmp = TempDir::new().expect("work tempdir");
+    let cache_tmp = TempDir::new().expect("cache tempdir");
+    git_init(work_tmp.path());
+    let bindir = curated_bindir(true); // helper present
+
+    let out = run_attach_with_path(
+        work_tmp.path(),
+        cache_tmp.path(),
+        port,
+        &["sim::demo", "--remote-name", "reposix"],
+        bindir.path(),
+    );
+    assert!(
+        out.status.success(),
+        "attach failed: stderr={:?}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        !stderr.contains("is not on PATH"),
+        "attach must NOT warn about the helper when it is on PATH; stderr={stderr}"
+    );
+
+    kill_child(&mut sim);
+}

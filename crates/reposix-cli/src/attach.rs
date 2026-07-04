@@ -272,7 +272,88 @@ pub async fn run(args: AttachArgs) -> Result<()> {
         args.remote_name,
     );
 
+    // H1 (T2-REOPEN): route a bare `git push` through the reposix SoT bus.
+    //
+    // After attach, `branch.<b>.remote` still points at `origin` (the
+    // vanilla mirror the tree was cloned from), so the closing step
+    // documented in Pattern C (docs/concepts/dvcs-topology.md) — a plain
+    // `git push` — would SILENTLY target the mirror, bypassing the SoT.
+    // That is the exact anti-pattern the topology doc warns against: the
+    // mirror is a read surface, not a write surface, and a vanilla push to
+    // it creates commits the SoT never sees (the next webhook sync
+    // force-with-leases over them). Setting `remote.pushDefault` to the
+    // reposix remote makes `git push` fan out through the bus (SoT +
+    // mirror) by construction.
+    //
+    // Only the PUSH default is touched — fetch is deliberately left alone.
+    // `git fetch` / `git pull` keep reading from `origin` (the mirror) via
+    // `branch.<b>.remote`, which is precisely the round-tripper topology:
+    // cheap mirror clones for reads, SoT writes for pushes. This is why we
+    // set `remote.pushDefault` (push-only) and NOT `branch.<b>.remote`.
+    //
+    // Never clobber a user-set `remote.pushDefault`. `remote.pushDefault`
+    // is git 1.8-era (works on git < 2.34, so no version-gating needed),
+    // and a value we did not write is the user's explicit choice — warn and
+    // leave it. Re-attach stays idempotent (Q1.3): a pushDefault we already
+    // set (== remote_name) is left untouched silently.
+    let push_default = git_config_get(&work, "remote.pushDefault")?;
+    match push_default {
+        None => {
+            run_git_in(&work, &["config", "remote.pushDefault", &args.remote_name])?;
+            println!(
+                "  remote.pushDefault = {} (plain `git push` now routes through the SoT bus; \
+                 `git fetch`/`git pull` still read from the `{}` mirror)",
+                args.remote_name, args.mirror_name
+            );
+        }
+        Some(ref existing) if existing == &args.remote_name => {
+            // Idempotent re-attach — already pointed at the reposix remote.
+        }
+        Some(existing) => {
+            eprintln!(
+                "attach: warning: remote.pushDefault is already set to `{existing}`; leaving it \
+                 unchanged. Plain `git push` will target `{existing}`, NOT the reposix SoT bus. \
+                 To route pushes through the SoT: git config remote.pushDefault {}",
+                args.remote_name
+            );
+        }
+    }
+
+    // H2 (T2-REOPEN): the reposix remote is only usable when the
+    // `git-remote-reposix` helper binary is discoverable on PATH — git
+    // shells out to it to dispatch `reposix::` URLs. A Pattern-C install
+    // that ships only the CLI (`cargo binstall reposix-cli`) leaves the
+    // helper absent, and the failure otherwise surfaces much later as an
+    // opaque `fatal: unable to find remote helper for 'reposix'` on the
+    // first push, with zero reposix guidance. Warn NOW (non-fatal — the
+    // config we just wrote is valid; the only gap is a one-line install)
+    // so the miss is caught at attach time, not push time.
+    if !helper_on_path() {
+        eprintln!(
+            "attach: warning: `git-remote-reposix` is not on PATH. `git push {}` will fail with \
+             `fatal: unable to find remote helper for 'reposix'` until you install the helper:\n\
+             \x20   cargo binstall reposix-remote   # or: cargo install reposix-remote\n\
+             The `reposix` CLI and the `git-remote-reposix` helper ship as SEPARATE binaries; \
+             installing only `reposix-cli` gets you the CLI but not the helper.",
+            args.remote_name
+        );
+    }
+
     Ok(())
+}
+
+/// True when `git-remote-reposix` is discoverable on `PATH`.
+///
+/// git invokes this helper (by the `remote-<scheme>` naming convention) to
+/// service `reposix::` remote URLs; without it, any `git push`/`git fetch`
+/// against the reposix remote fails with `unable to find remote helper for
+/// 'reposix'`. Mirrors `doctor::check_helper_on_path`'s discovery probe.
+fn helper_on_path() -> bool {
+    Command::new("sh")
+        .arg("-c")
+        .arg("command -v git-remote-reposix")
+        .output()
+        .is_ok_and(|o| o.status.success())
 }
 
 /// Read `git -C <work> config --get <key>`. Returns `Ok(None)` when the
