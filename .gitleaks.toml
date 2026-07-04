@@ -1,0 +1,49 @@
+# .gitleaks.toml — reposix secret-scanning config (D-CONV-4, 2026-07-04).
+#
+# This is the CI backstop layer of the two-layer secret-scanning design
+# documented in quality/SURPRISES.md § "2026-07-04 — Quality Convergence"
+# (D-CONV-4) and SECURITY.md § "Secret scanning":
+#
+#   Layer 1 (zero-dep, local): quality/gates/structure/cred-hygiene.sh — a
+#           grep of a fixed prefix set, run in the pre-push hook. No binary
+#           dependency, so a fresh clone is protected the moment hooks are
+#           installed. Narrow by construction.
+#   Layer 2 (full ruleset, CI): this file + the `gitleaks` job in
+#           .github/workflows/ci.yml. gitleaks' full detector set is the
+#           broad backstop the grep gate can't be. Runs on every push/PR
+#           over FULL history (fetch-depth: 0) so a secret introduced in any
+#           commit is caught, not just the tip.
+#
+# Why gitleaks in CI and not only the owner's personal global hook: the
+# owner's machine has gitleaks 8.30.1 wired into a global pre-commit hook,
+# but that protection is INVISIBLE to CI and to every other contributor.
+# The AIza incident (see allowlist below) was exactly that asymmetry biting.
+
+[extend]
+# Inherit gitleaks' full built-in ruleset. We ADD an allowlist below; we do
+# NOT weaken or replace any default rule. Pinned to gitleaks 8.30.1 (the
+# version pinned in the CI job); `useDefault` tracks that binary's embedded
+# config.
+useDefault = true
+
+[allowlist]
+description = "reposix-specific false positives, triaged individually (D-CONV-4)"
+
+# Paths whose matches are verified-benign. Kept DELIBERATELY narrow: we do
+# NOT blanket-allowlist test/fixture dirs, because the whole point of the
+# gate is to catch a real key that lands in a fixture by accident.
+paths = [
+  # .playwright-mcp/ holds dead browser-automation console/page dumps from
+  # doc-screenshot sessions. They capture third-party pages (gemini.google.com
+  # etc.) whose client-side JS embeds Google's OWN public, domain-restricted
+  # web API keys (e.g. an AIzaSy… key in a signaler-pa.clients6.google.com
+  # URL). Those are Google's keys in Google's pages, not a reposix secret —
+  # no rotation, no exfiltration risk. GitHub secret-scanning alert #1 flagged
+  # one; the owner triaged it FALSE POSITIVE (no history rewrite; rewrite was
+  # declined). The dir is now gitignored, but the blob survives at commit
+  # 603dfa5, so history scans must tolerate it. Allowlisting by PATH (not by
+  # a broad regex) means a real AIza key committed ANYWHERE ELSE still trips
+  # the gate — this entry did NOT mask the pattern-coverage lesson the alert
+  # taught (that lesson landed in cred-hygiene.sh's AIza pattern instead).
+  '''\.playwright-mcp/''',
+]
