@@ -98,10 +98,15 @@ pub fn run_refresh_inner(
 ) -> Result<()> {
     let n = issues.len();
 
-    // Determine the bucket directory name.
+    // Determine the bucket directory name via the shared canonical mapping
+    // (Wave-5.5): confluence → pages/, everything else → issues/. This is
+    // the same helper the cache tree builder and fast-import emit use, so
+    // refresh output round-trips through the push planner per-backend.
     let bucket = match cfg.backend {
-        ListBackend::Confluence => "pages",
-        ListBackend::Sim | ListBackend::Github | ListBackend::Jira => "issues",
+        ListBackend::Confluence => reposix_core::path::bucket_for_backend("confluence"),
+        ListBackend::Sim | ListBackend::Github | ListBackend::Jira => {
+            reposix_core::path::bucket_for_backend("sim")
+        }
     };
 
     // Ensure the .reposix and bucket directories exist.

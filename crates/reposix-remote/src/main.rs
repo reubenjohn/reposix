@@ -332,9 +332,11 @@ fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
             .map_err(Into::into);
         }
     };
-    // Emit fast-import stream over stdout via the protocol writer.
+    // Emit fast-import stream over stdout via the protocol writer, using
+    // the backend's canonical record bucket (issues/ vs pages/).
+    let bucket = reposix_core::path::bucket_for_backend(&state.backend_name);
     let mut sink: Vec<u8> = Vec::with_capacity(1024 + issues.len() * 256);
-    emit_import_stream(&mut sink, &issues)?;
+    emit_import_stream(&mut sink, &issues, bucket)?;
     proto.send_raw(&sink)?;
     proto.flush()?;
     Ok(())

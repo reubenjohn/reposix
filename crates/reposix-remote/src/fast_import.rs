@@ -26,10 +26,17 @@ pub(crate) fn render_blob(issue: &Record) -> Result<String, reposix_core::Error>
 /// Emit a fast-import stream for `issues` to `w`. Issues are sorted by id ASC
 /// so the resulting commit's tree is deterministic and SHA-stable.
 ///
+/// `bucket` is the backend's canonical record bucket per
+/// [`reposix_core::path::bucket_for_backend`] (`"issues"` or `"pages"`).
+///
 /// # Errors
 /// Returns any [`io::Error`] from the writer or any rendering failure
 /// translated into an `io::Error::Other`.
-pub(crate) fn emit_import_stream<W: Write>(w: &mut W, issues: &[Record]) -> io::Result<()> {
+pub(crate) fn emit_import_stream<W: Write>(
+    w: &mut W,
+    issues: &[Record],
+    bucket: &str,
+) -> io::Result<()> {
     // First line of every import response: `feature done\n` per
     // gitremote-helpers(7); marks the stream as well-formed.
     writeln!(w, "feature done")?;
@@ -60,14 +67,14 @@ pub(crate) fn emit_import_stream<W: Write>(w: &mut W, issues: &[Record]) -> io::
     writeln!(w, "data {}", msg.len())?;
     w.write_all(msg.as_bytes())?;
     for (i, issue) in sorted.iter().enumerate() {
-        // Canonical `issues/<id>.md` path (QL-001 / D91-01) — matches the
-        // cache/stateless-connect production read path and the push planner's
-        // prior-key so a fetch→edit→push loop round-trips without churn.
+        // Canonical `<bucket>/<id>.md` path (QL-001 / D91-01, bucket-aware
+        // per Wave-5.5) — matches the cache/stateless-connect production
+        // read path so a fetch→edit→push loop round-trips without churn.
         writeln!(
             w,
             "M 100644 :{} {}",
             blob_marks[i],
-            reposix_core::path::record_path(issue.id.0)
+            reposix_core::path::record_path(bucket, issue.id.0)
         )?;
     }
 

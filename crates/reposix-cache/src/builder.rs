@@ -78,9 +78,11 @@ impl Cache {
         // such validation.
         let hash_kind = self.repo.object_hash();
 
-        // Build entries for the `issues/` subtree: `<id>.md -> blob_oid`,
-        // keeping the `issue_id` alongside so we can populate oid_map
-        // with the same computed OIDs the tree references.
+        // Build entries for the record-bucket subtree (`issues/` or, for
+        // confluence, `pages/` — Wave-5.5 bucket-aware canonicalization):
+        // `<id>.md -> blob_oid`, keeping the `issue_id` alongside so we can
+        // populate oid_map with the same computed OIDs the tree references.
+        let bucket = reposix_core::path::bucket_for_backend(&self.backend_name);
         let mut records: Vec<(gix::objs::tree::Entry, String)> = Vec::with_capacity(issues.len());
         for issue in &issues {
             let rendered = frontmatter::render(issue)?;
@@ -88,7 +90,7 @@ impl Cache {
             let oid = gix::objs::compute_hash(hash_kind, gix::object::Kind::Blob, &bytes)
                 .map_err(|e| Error::Git(e.to_string()))?;
             // Canonical bare filename (QL-001 / D91-01); the outer tree entry
-            // nests it under `issues/`, so the full path is `issues/<id>.md`.
+            // nests it under the bucket, so the full path is `<bucket>/<id>.md`.
             let filename = reposix_core::path::record_filename(issue.id.0);
             records.push((
                 gix::objs::tree::Entry {
@@ -130,11 +132,11 @@ impl Cache {
             .map_err(|e| Error::Git(e.to_string()))?
             .detach();
 
-        // Outer tree with one entry: `issues/` -> inner_tree_oid.
+        // Outer tree with one entry: `<bucket>/` -> inner_tree_oid.
         let outer_tree = gix::objs::Tree {
             entries: vec![gix::objs::tree::Entry {
                 mode: gix::object::tree::EntryKind::Tree.into(),
-                filename: b"issues".as_slice().into(),
+                filename: bucket.as_bytes().into(),
                 oid: inner_tree_oid,
             }],
         };
@@ -312,7 +314,8 @@ impl Cache {
                     .map_err(|e| Error::Git(e.to_string()))?
             };
             // Canonical bare filename (QL-001 / D91-01); the outer tree entry
-            // nests it under `issues/`, so the full path is `issues/<id>.md`.
+            // nests it under the backend's bucket (Wave-5.5), so the full
+            // path is `<bucket>/<id>.md`.
             let filename = reposix_core::path::record_filename(issue.id.0);
             records.push((
                 gix::objs::tree::Entry {
@@ -333,10 +336,11 @@ impl Cache {
             .write_object(&inner_tree)
             .map_err(|e| Error::Git(e.to_string()))?
             .detach();
+        let bucket = reposix_core::path::bucket_for_backend(&self.backend_name);
         let outer_tree = gix::objs::Tree {
             entries: vec![gix::objs::tree::Entry {
                 mode: gix::object::tree::EntryKind::Tree.into(),
-                filename: b"issues".as_slice().into(),
+                filename: bucket.as_bytes().into(),
                 oid: inner_tree_oid,
             }],
         };

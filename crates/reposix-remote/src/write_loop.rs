@@ -229,6 +229,16 @@ where
             proto.flush()?;
             return Ok(WriteOutcome::PlanRejected);
         }
+        Err(PlanError::DuplicateRecordId { id, first, second }) => {
+            crate::diag(&format!(
+                "error: two files in the pushed tree resolve to record id {id} \
+                 ({first} and {second}); remove one and retry"
+            ));
+            proto.send_line(&format!("error refs/heads/main duplicate-record-id:{id}"))?;
+            proto.send_blank()?;
+            proto.flush()?;
+            return Ok(WriteOutcome::PlanRejected);
+        }
     };
 
     // Capture summary for the audit row before consuming `actions`.

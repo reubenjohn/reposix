@@ -7,10 +7,10 @@
 
 #![forbid(unsafe_code)]
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use reposix_core::frontmatter;
-use reposix_core::path::{issue_id_from_path, record_path};
+use reposix_core::path::record_id_from_path;
 use reposix_core::{Record, RecordId};
 use thiserror::Error;
 
@@ -70,6 +70,21 @@ pub(crate) enum PlanError {
         #[source]
         source: reposix_core::Error,
     },
+    /// Two tree paths resolve to the same record id — ambiguous intent,
+    /// push is rejected (e.g. `issues/42.md` + `pages/42.md`, or
+    /// `issues/42.md` + `issues/0042.md` after padding collapse).
+    #[error(
+        "two paths in the pushed tree resolve to the same record id {id} \
+         ({first} and {second}); remove one and retry"
+    )]
+    DuplicateRecordId {
+        /// The colliding record id.
+        id: u64,
+        /// First path seen for this id.
+        first: String,
+        /// Second path seen for this id.
+        second: String,
+    },
 }
 
 /// Canonicalize a rendered blob for semantic-equivalence comparison
@@ -92,38 +107,64 @@ fn normalize_for_compare(s: &str) -> String {
 /// # Errors
 /// - [`PlanError::BulkDeleteRefused`] if the cap fires.
 /// - [`PlanError::InvalidBlob`] if a new-tree blob can't parse as an issue.
+/// - [`PlanError::DuplicateRecordId`] if two tree paths resolve to one id.
 pub(crate) fn plan(
     prior: &[Record],
     parsed: &ParsedExport,
 ) -> Result<Vec<PlannedAction>, PlanError> {
     let prior_by_id: HashMap<RecordId, &Record> = prior.iter().map(|i| (i.id, i)).collect();
-    let prior_by_path: BTreeMap<String, RecordId> =
-        prior.iter().map(|i| (record_path(i.id.0), i.id)).collect();
+
+    // Bucket-aware matching (Wave-5.5, confluence mass-delete BLOCKER):
+    // prior records and tree entries are matched by RECORD ID, never by path
+    // string. The id is extracted via the shared bucket-aware parser
+    // (`record_id_from_path`, sanctioned buckets: issues/ + pages/), so the
+    // tree's bucket spelling can never cause a record to be misclassified as
+    // Create+Delete — the failure mode that mass-deleted a live Confluence
+    // space when a `pages/`-shaped tree hit an `issues/`-keyed planner.
 
     // BUG-2 (QL-001): the export stream can legitimately carry a path both
     // as an `M` add and a later `D` delete (git fast-export emits this for
-    // some rewrite shapes). Deletes win: a path present in `parsed.deletes`
-    // must NOT be treated as a live tree entry, or a delete-then-re-add would
+    // some rewrite shapes). Deletes win, keyed by id: an id named by a `D`
+    // line must NOT be treated as live, or a delete-then-re-add would
     // spuriously survive as a Create/Update.
-    let deleted_paths: std::collections::HashSet<&str> =
-        parsed.deletes.iter().map(String::as_str).collect();
+    let deleted_ids: HashSet<RecordId> = parsed
+        .deletes
+        .iter()
+        .filter_map(|p| record_id_from_path(p))
+        .map(RecordId)
+        .collect();
 
     let mut creates: Vec<PlannedAction> = Vec::new();
     let mut updates: Vec<PlannedAction> = Vec::new();
     let mut deletes: Vec<PlannedAction> = Vec::new();
 
+    // Ids present as live records in the new tree (for the delete walk),
+    // plus the first path seen per id (for duplicate detection).
+    let mut live_tree_ids: BTreeMap<RecordId, &str> = BTreeMap::new();
+
     // Walk the new tree.
     for (path, mark) in &parsed.tree {
-        // BUG-2 (QL-001): only `issues/<id>.md` paths are records. `reposix
-        // refresh` writes `.reposix/fetched_at.txt` + `.reposix/.gitignore`
-        // into the same tree; without this filter `frontmatter::parse` rejects
-        // them as invalid blobs and the whole push fails. Non-record paths are
-        // silently ignored (not parsed, not diffed).
-        if issue_id_from_path(path).is_none() {
+        // BUG-2 (QL-001): only `<sanctioned-bucket>/<id>.md` paths are
+        // records. `reposix refresh` writes `.reposix/fetched_at.txt` +
+        // `.reposix/.gitignore` into the same tree; without this filter
+        // `frontmatter::parse` rejects them as invalid blobs and the whole
+        // push fails. Non-record paths are silently ignored.
+        let Some(id_num) = record_id_from_path(path) else {
             continue;
+        };
+        let id = RecordId(id_num);
+        // Two paths resolving to one id (cross-bucket or padding collision)
+        // is ambiguous intent — refuse loudly rather than guess.
+        if let Some(first) = live_tree_ids.get(&id) {
+            return Err(PlanError::DuplicateRecordId {
+                id: id_num,
+                first: (*first).to_owned(),
+                second: path.clone(),
+            });
         }
-        // Deletes win over adds for a path appearing in both (see above).
-        if deleted_paths.contains(path.as_str()) {
+        live_tree_ids.insert(id, path.as_str());
+        // Deletes win over adds for an id appearing in both (see above).
+        if deleted_ids.contains(&id) {
             continue;
         }
         let Some(bytes) = parsed.blobs.get(mark) else {
@@ -135,9 +176,8 @@ pub(crate) fn plan(
             path: path.clone(),
             source: e,
         })?;
-        match prior_by_path.get(path).copied() {
-            Some(id) => {
-                let prior_issue = prior_by_id.get(&id).copied();
+        match prior_by_id.get(&id).copied() {
+            Some(prior_issue) => {
                 // Normalized-compare (M-03): render BOTH sides through
                 // `frontmatter::render`, normalize line endings to LF and
                 // trim trailing whitespace, then compare. Byte-for-byte
@@ -150,26 +190,22 @@ pub(crate) fn plan(
                 // through the same canonicalization, so "no edits" pushes
                 // emit zero Update actions — matching the user's mental
                 // model.
-                let equivalent = if let Some(p) = prior_issue {
-                    let prior_rendered =
-                        frontmatter::render(p).map_err(|e| PlanError::InvalidBlob {
-                            path: path.clone(),
-                            source: e,
-                        })?;
-                    let new_rendered =
-                        frontmatter::render(&new_issue).map_err(|e| PlanError::InvalidBlob {
-                            path: path.clone(),
-                            source: e,
-                        })?;
-                    normalize_for_compare(&prior_rendered) == normalize_for_compare(&new_rendered)
-                } else {
-                    false
-                };
+                let prior_rendered =
+                    frontmatter::render(prior_issue).map_err(|e| PlanError::InvalidBlob {
+                        path: path.clone(),
+                        source: e,
+                    })?;
+                let new_rendered =
+                    frontmatter::render(&new_issue).map_err(|e| PlanError::InvalidBlob {
+                        path: path.clone(),
+                        source: e,
+                    })?;
+                let equivalent =
+                    normalize_for_compare(&prior_rendered) == normalize_for_compare(&new_rendered);
                 if !equivalent {
-                    let prior_version = prior_issue.map_or(0, |p| p.version);
                     updates.push(PlannedAction::Update {
                         id,
-                        prior_version,
+                        prior_version: prior_issue.version,
                         new: new_issue,
                     });
                 }
@@ -180,27 +216,18 @@ pub(crate) fn plan(
         }
     }
 
-    // Walk prior to find deletes.
-    for (path, &id) in &prior_by_path {
-        if !parsed.tree.contains_key(path) {
-            // also tolerate explicit `D <path>` lines but the result is the same.
-            let prior_version = prior_by_id.get(&id).map_or(0, |p| p.version);
-            deletes.push(PlannedAction::Delete { id, prior_version });
-        }
-    }
-    // Also honor explicit `D <path>` lines (in case the new tree omitted
-    // doesn't cover them — git fast-export typically uses one or the other).
-    for path in &parsed.deletes {
-        if let Some(id) = issue_id_from_path(path).map(RecordId) {
-            // Only add if not already counted.
-            if !deletes
-                .iter()
-                .any(|a| matches!(a, PlannedAction::Delete { id: x, .. } if *x == id))
-                && prior_by_id.contains_key(&id)
-            {
-                let prior_version = prior_by_id.get(&id).map_or(0, |p| p.version);
-                deletes.push(PlannedAction::Delete { id, prior_version });
-            }
+    // Walk prior to find deletes, keyed by id: a prior record is deleted
+    // when its id is absent from the new tree's record ids, OR an explicit
+    // `D <path>` line names it (deletes win over adds — see above). Sorted
+    // by id for deterministic action order.
+    let mut prior_sorted: Vec<&Record> = prior.iter().collect();
+    prior_sorted.sort_by_key(|p| p.id);
+    for p in prior_sorted {
+        if !live_tree_ids.contains_key(&p.id) || deleted_ids.contains(&p.id) {
+            deletes.push(PlannedAction::Delete {
+                id: p.id,
+                prior_version: p.version,
+            });
         }
     }
 
@@ -454,6 +481,130 @@ mod tests {
         assert!(
             matches!(&actions[0], PlannedAction::Delete { id, .. } if id.0 == 1),
             "expected a Delete for id 1 (deletes win); got: {actions:?}"
+        );
+    }
+
+    // --- Wave-5.5 regressions: `pages/<id>.md` (confluence bucket) ---------
+    //
+    // The P91 vision-litmus real-run proved a pages/-shaped tree pushed
+    // against an issues/-keyed planner mass-deletes the backend (every prior
+    // record → Delete, every tree blob → Create). These pin the QL-001
+    // criteria for the confluence bucket. LITERAL `pages/<id>.md` strings on
+    // purpose (magic-fixture hazard, raise-list §3).
+
+    /// Build a pages/-bucket [`ParsedExport`]: each prior record re-emitted
+    /// unchanged under its `pages/<id>.md` path. LITERAL paths on purpose.
+    fn pages_noop_export(prior: &[Record]) -> ParsedExport {
+        let mut blobs: HashMap<u64, Vec<u8>> = HashMap::new();
+        let mut tree: BTreeMap<String, u64> = BTreeMap::new();
+        for (i, issue) in prior.iter().enumerate() {
+            let mark = u64::try_from(i).unwrap() + 1;
+            let rendered = frontmatter::render(issue).expect("render sample");
+            blobs.insert(mark, rendered.into_bytes());
+            tree.insert(format!("pages/{}.md", issue.id.0), mark);
+        }
+        ParsedExport {
+            commit_message: "no-op pages push\n".to_owned(),
+            blobs,
+            tree,
+            deletes: vec![],
+        }
+    }
+
+    /// Wave-5.5 / QL-001 criterion 3 for the pages bucket: a full-tree push
+    /// of `pages/<id>.md` records against a matching prior produces ZERO
+    /// Deletes and ZERO Creates. Against the pre-fix planner this was the
+    /// mass-delete: every prior → Delete (the litmus-observed data loss).
+    #[test]
+    fn pages_full_tree_push_emits_zero_deletes() {
+        let prior: Vec<Record> = (1..=6).map(sample).collect();
+        let parsed = pages_noop_export(&prior);
+        let actions = plan(&prior, &parsed).expect("pages full-tree push must plan clean");
+        assert_eq!(
+            actions.len(),
+            0,
+            "unchanged pages/ full-tree push must be a pure no-op; got: {actions:?}"
+        );
+    }
+
+    /// Wave-5.5 / QL-001 criteria 1+2 for the pages bucket: one edited
+    /// `pages/<id>.md` record round-trips as exactly one Update — no
+    /// Creates, no Deletes, no invalid-blob reject.
+    #[test]
+    fn pages_single_edit_is_one_update() {
+        let prior: Vec<Record> = (1..=3).map(sample).collect();
+        let mut parsed = pages_noop_export(&prior);
+        let mut edited = sample(2);
+        edited.body = "a real confluence edit\n".to_owned();
+        let rendered = frontmatter::render(&edited).expect("render edited");
+        parsed.blobs.insert(2, rendered.into_bytes());
+        let actions = plan(&prior, &parsed).expect("pages single edit plans clean");
+        assert_eq!(
+            actions.len(),
+            1,
+            "exactly one action expected; got: {actions:?}"
+        );
+        assert!(
+            matches!(&actions[0], PlannedAction::Update { id, .. } if id.0 == 2),
+            "expected a single Update for id 2; got: {actions:?}"
+        );
+    }
+
+    /// Wave-5.5: bucket spelling is irrelevant to matching (id-keyed
+    /// planner) — an issues/-shaped tree against the same prior also
+    /// round-trips as a no-op. The two buckets are interchangeable for the
+    /// CONSUMER side; producers pick per-backend via `bucket_for_backend`.
+    #[test]
+    fn cross_bucket_tree_still_matches_by_id() {
+        let prior: Vec<Record> = (1..=3).map(sample).collect();
+        // pages/-keyed prior semantics, issues/-shaped tree: still a no-op.
+        let parsed = canonical_noop_export(&prior);
+        let actions = plan(&prior, &parsed).expect("cross-bucket push must plan clean");
+        assert_eq!(
+            actions.len(),
+            0,
+            "id-keyed matching must ignore bucket spelling; got: {actions:?}"
+        );
+    }
+
+    /// Wave-5.5: two tree paths resolving to one record id (cross-bucket or
+    /// padding collision) is ambiguous — the planner must refuse loudly,
+    /// never guess.
+    #[test]
+    fn duplicate_record_id_across_buckets_is_refused() {
+        let prior: Vec<Record> = vec![sample(1)];
+        let mut parsed = canonical_noop_export(&prior); // issues/1.md
+        let rendered = frontmatter::render(&prior[0]).expect("render");
+        parsed.blobs.insert(50, rendered.into_bytes());
+        parsed.tree.insert("pages/1.md".to_owned(), 50); // same id, other bucket
+        let err = plan(&prior, &parsed).expect_err("duplicate id must be refused");
+        assert!(
+            matches!(err, PlanError::DuplicateRecordId { id: 1, .. }),
+            "expected DuplicateRecordId for id 1; got: {err:?}"
+        );
+    }
+
+    /// Wave-5.5 composition check: the SG-02 bulk-delete cap still fires on
+    /// a genuinely delete-shaped pages/ push (defense-in-depth preserved —
+    /// the bucket fix must NOT weaken the cap).
+    #[test]
+    fn pages_bulk_delete_still_capped() {
+        let prior: Vec<Record> = (1..=6).map(sample).collect();
+        let parsed = ParsedExport {
+            commit_message: "cleanup\n".to_owned(),
+            ..Default::default() // empty tree → 6 deletes
+        };
+        let err = plan(&prior, &parsed).expect_err("6 deletes must still be refused");
+        assert!(
+            matches!(
+                err,
+                PlanError::BulkDeleteRefused {
+                    count: 6,
+                    limit: 5,
+                    ..
+                }
+            ),
+            "SG-02 cap must still fire; got: {err:?}"
         );
     }
 }

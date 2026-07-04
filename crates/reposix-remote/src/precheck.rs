@@ -42,7 +42,7 @@ use reposix_cache::Cache;
 use reposix_core::{backend::BackendConnector, frontmatter, Record, RecordId};
 
 use crate::fast_import::ParsedExport;
-use reposix_core::path::issue_id_from_path;
+use reposix_core::path::record_id_from_path;
 
 /// Outcome of the L1 precheck. The caller (today: `handle_export`,
 /// future: bus handler) consumes this to either reject the push with
@@ -148,8 +148,8 @@ pub(crate) fn precheck_export_against_changed_set(
     let mut conflicts: Vec<(RecordId, u64, u64, String)> = Vec::new();
 
     for (path, mark) in &parsed.tree {
-        let Some(id_num) = issue_id_from_path(path) else {
-            continue; // non-issue paths (e.g. README.md)
+        let Some(id_num) = record_id_from_path(path) else {
+            continue; // non-record paths (e.g. README.md, .reposix/*)
         };
         let id = RecordId(id_num);
         if !changed_set.contains(&id) {
