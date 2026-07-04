@@ -15,7 +15,7 @@ reposix exposes REST-based issue trackers (Jira, GitHub Issues, Confluence) as a
 <div class="grid cards" markdown>
 
 -   **`89.1%`** fewer tokens vs MCP for the same 3-issue read+edit+push workflow ([token economy](benchmarks/token-economy.md))
--   **`8 ms`** cached read · **`24 ms`** cold init ([latency](benchmarks/latency.md))
+-   **`8 ms`** cached read · **`27 ms`** cold init ([latency](benchmarks/latency.md))
 -   **`5-line install`** — `curl`, `brew`, `cargo binstall`, or `irm` ([first-run.md](tutorials/first-run.md))
 
 </div>
@@ -90,7 +90,7 @@ reposix's `8 ms` cache read is measured against the in-process simulator, but th
 - **GitHub — [`reubenjohn/reposix` issues](reference/testing-targets.md#github-reubenjohnreposix-issues)** (this project's own tracker).
 - **JIRA — [project `TEST`](reference/testing-targets.md#jira-project-test-overridable)** (overridable via `JIRA_TEST_PROJECT`).
 
-Latency for each backend is captured in [`docs/benchmarks/latency.md`](benchmarks/latency.md). Sim cold init is `24 ms` (soft threshold `500 ms`); list-issues `9 ms`; capabilities probe `5 ms`. Real-backend cells fill in once CI secret packs are wired (Phase 36).
+Latency for each backend is captured in [`docs/benchmarks/latency.md`](benchmarks/latency.md). Sim cold init is `27 ms` (soft threshold `500 ms`); list-issues `9 ms`; capabilities probe `5 ms`. Real-backend cells fill in once CI secret packs are wired (Phase 36).
 
 ## Connector capability matrix
 
@@ -129,7 +129,7 @@ reposix init sim::demo /tmp/reposix-demo
 cd /tmp/reposix-demo && git checkout -B main refs/reposix/origin/main && cat issues/0001.md
 ```
 
-After `init`, agent UX is pure git: `cat`, `grep -r`, edit, `git commit`, `git push`. The bootstrap takes ≤ `24 ms` against the simulator on a stock laptop.
+After `init`, agent UX is pure git: `cat`, `grep -r`, edit, `git commit`, `git push`. The bootstrap takes ≤ `27 ms` against the simulator on a stock laptop.
 
 </details>
 
