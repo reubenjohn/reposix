@@ -110,8 +110,12 @@ fn doctor_no_remote_errors_and_exits_one() {
         "doctor should exit non-zero with no remote: stdout={stdout}"
     );
     assert!(
-        stdout.contains("remote.origin.url is unset"),
+        stdout.contains("no reposix remote"),
         "missing-remote message absent: {stdout}"
+    );
+    assert!(
+        stdout.contains("reposix init") && stdout.contains("reposix attach"),
+        "missing-remote finding must teach both bootstrap paths: {stdout}"
     );
 }
 
