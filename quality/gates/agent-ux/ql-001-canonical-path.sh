@@ -4,14 +4,10 @@
 #
 # Implements catalog row agent-ux/ql-001-canonical-path-shape.
 #
-# Substrate dependency: 91-02 (the D91-01 path-fix + cargo regression tests
-# that make these asserts real). Until 91-02 lands, this verifier legitimately
-# returns NOT-VERIFIED (exit 75) — the code is not yet canonicalized, so
-# running the real asserts today would either false-PASS against the old
-# broken shape or false-FAIL for a reason unrelated to the actual bug.
-#
-# The 91-02 executor flips this script by deleting the short-circuit block
-# below and un-gating the three real asserts already sketched here.
+# Box-independent (D91-02): grep-only asserts + fn-name existence checks. No
+# git ≥2.34 required — the full-stack e2e proof lives in the sibling
+# agent-ux/real-git-push-e2e row (CI, pre-pr). 91-02 landed the D91-01 path
+# fix + canonical cargo regression tests, so these asserts are now REAL.
 set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." &> /dev/null && pwd)"
@@ -21,45 +17,72 @@ ARTIFACT="${REPO_ROOT}/quality/reports/verifications/agent-ux/ql-001-canonical-p
 mkdir -p "$(dirname "$ARTIFACT")"
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-# --- 91-02 fills these in for real; short-circuited to exit 75 until then. ---
-# shellcheck disable=SC2317  # unreachable until the short-circuit below is removed
-run_real_asserts() {
-  local fail=0
+PASSED=()
+FAILED=()
 
-  # (1) zero zero-padded record-path construction outside reposix-core.
-  if grep -rnE 'format!\("\{:04\}\.md"|format!\("\{:011\}\.md"' crates/ \
-      | grep -v '^crates/reposix-core/' \
-      | grep -v '^crates/[a-z-]*/tests/'; then
-    echo "FAIL: zero-padded record-path construction found outside reposix-core" >&2
-    fail=1
-  fi
+# (1) QL-001 criterion 6: zero zero-padded record-path construction outside
+#     reposix-core (fixtures in tests/ legitimately name issues/N.md literals,
+#     never format!{:04}/{:011}, so tests/ need not be excluded — but we keep
+#     the exclusion for defense-in-depth against a helper-derived fixture).
+if grep -rnE 'format!\("\{:04\}\.md"|format!\("\{:011\}\.md"' crates/ \
+    | grep -v '^crates/reposix-core/' \
+    | grep -v '^crates/[a-z-]*/tests/' >&2; then
+  echo "FAIL: zero-padded record-path construction found outside reposix-core" >&2
+  FAILED+=("criterion-6: zero-padded record-path construction outside reposix-core")
+else
+  PASSED+=("criterion-6: no {:04}/{:011} record-path construction outside reposix-core")
+fi
 
-  # (2) a single shared path-id helper exists in reposix-core (not counting
-  #     comment lines).
-  local helper_count
-  helper_count="$(grep -rn '^[^#]*pub fn \(issue_id_from_path\|record_path\)' \
-    crates/reposix-core/src/ | grep -v '^#' | wc -l)"
-  if [ "$helper_count" -lt 1 ]; then
-    echo "FAIL: no shared issue_id_from_path/record_path helper found in reposix-core" >&2
-    fail=1
-  fi
+# (2) a single shared path-id helper exists in reposix-core.
+helper_count="$(grep -rnE '^[[:space:]]*pub fn (issue_id_from_path|record_path)' \
+  crates/reposix-core/src/ | wc -l | tr -d ' ')"
+if [ "$helper_count" -lt 1 ]; then
+  echo "FAIL: no shared issue_id_from_path/record_path helper in reposix-core" >&2
+  FAILED+=("no shared helper in reposix-core")
+else
+  PASSED+=("shared helper present in reposix-core (record_path + issue_id_from_path)")
+fi
 
-  # (3) the QL-157 duplicate is gone from reposix-remote/src/main.rs.
-  if grep -q 'issue_id_from_path' crates/reposix-remote/src/main.rs 2>/dev/null; then
-    echo "FAIL: QL-157 duplicate issue_id_from_path still present in reposix-remote/src/main.rs" >&2
-    fail=1
-  fi
+# (3) the QL-157 duplicate is gone from reposix-remote/src/main.rs.
+if grep -q 'issue_id_from_path' crates/reposix-remote/src/main.rs 2>/dev/null; then
+  echo "FAIL: QL-157 duplicate issue_id_from_path still in reposix-remote/src/main.rs" >&2
+  FAILED+=("QL-157 duplicate still present in main.rs")
+else
+  PASSED+=("QL-157 duplicate deleted from main.rs")
+fi
 
-  return "$fail"
-}
+# (4) the box-independent QL-001 regression tests exist (RED-if-bug-returns).
+declare -A REGRESSIONS=(
+  ["crates/reposix-remote/src/diff.rs"]="full_seeded_tree_push_emits_zero_deletes canonical_single_edit_is_one_update reposix_metadata_paths_are_ignored_not_rejected delete_wins_over_add_for_same_path"
+  ["crates/reposix-remote/src/fast_import.rs"]="commit_message_without_trailing_lf_does_not_swallow_first_m_line"
+)
+for file in "${!REGRESSIONS[@]}"; do
+  for fn in ${REGRESSIONS[$file]}; do
+    if grep -q "fn ${fn}(" "$file" 2>/dev/null; then
+      PASSED+=("regression fn present: ${fn}")
+    else
+      echo "FAIL: missing QL-001 regression fn ${fn} in ${file}" >&2
+      FAILED+=("missing regression fn: ${fn}")
+    fi
+  done
+done
 
-# --- Short-circuit: 91-02 has not landed yet. Remove this block (and call
-# run_real_asserts above) once the D91-01 path fix + cargo regression tests ship.
-cat > "$ARTIFACT" <<EOF
-{"ts":"${TS}","row_id":"agent-ux/ql-001-canonical-path-shape","exit_code":75,"status":"NOT-VERIFIED","reason":"91-02 not yet landed","blocked_on":["91-02"],"asserts_passed":[],"asserts_failed":["substrate not landed: 91-02 (D91-01 path fix + canonical cargo regression tests) required before this verifier's asserts are meaningful"]}
+# --- Emit artifact + exit ----------------------------------------------------
+pass_json="$(printf '%s\n' "${PASSED[@]}" | sed 's/"/\\"/g' | awk 'NR>1{printf ","}{printf "\"%s\"",$0}')"
+fail_json="$(printf '%s\n' "${FAILED[@]:-}" | sed 's/"/\\"/g' | awk 'NF{if(n++)printf ",";printf "\"%s\"",$0}')"
+
+if [ "${#FAILED[@]}" -eq 0 ]; then
+  cat > "$ARTIFACT" <<EOF
+{"ts":"${TS}","row_id":"agent-ux/ql-001-canonical-path-shape","exit_code":0,"status":"PASS","asserts_passed":[${pass_json}],"asserts_failed":[]}
 EOF
-
-echo "NOT-VERIFIED: 91-02 not yet landed (D91-01 path fix + canonical cargo regression tests)" >&2
-echo "  artifact: ${ARTIFACT}" >&2
-echo "  exit 75 (sysexits.h EX_TEMPFAIL repurposed) -> runner preserves NOT-VERIFIED" >&2
-exit 75
+  echo "PASS: QL-001 canonical path shape (${#PASSED[@]} asserts)" >&2
+  echo "  artifact: ${ARTIFACT}" >&2
+  exit 0
+else
+  cat > "$ARTIFACT" <<EOF
+{"ts":"${TS}","row_id":"agent-ux/ql-001-canonical-path-shape","exit_code":1,"status":"FAIL","asserts_passed":[${pass_json}],"asserts_failed":[${fail_json}]}
+EOF
+  echo "FAIL: QL-001 canonical path shape (${#FAILED[@]} failed)" >&2
+  echo "  artifact: ${ARTIFACT}" >&2
+  exit 1
+fi

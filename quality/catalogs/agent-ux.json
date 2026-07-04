@@ -1340,7 +1340,7 @@
       "dimension": "agent-ux",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
-      "comment": "Stage-2 catalog-row minting (2026-07-04) -- anchors the QL-001 BLOCKER fix contract (push planner path-shape bugs). See .planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md 2026-07-04 entry ('discovered-by: Stage-1 Lane-A (QL-001 empirical reproduction)') for the full repro + sketched resolution that P90/P91 MUST consume. This row is EXPECTED TO FAIL once git >= 2.34 is available -- that is the honest, intentional state; on this box (git 2.25.1) the verifier's version precondition short-circuits to NOT-VERIFIED (exit 75) before any of the buggy code paths run.",
+      "comment": "Full-stack real-git-push round-trip against the LOCAL sim (not a real backend -- transport_claim:false). 91-02 landed the QL-001 fix (canonical issues/<id>.md across all producer/consumer sites + fast-import peek-LF + issues/*.md plan filter), so this row's assertions are now EXPECTED TO PASS wherever git >= 2.34 is available (CI ubuntu-latest, pre-pr job). On this dev box (git 2.25.1) the verifier's version precondition short-circuits to NOT-VERIFIED (exit 75) -- an honest environment gap, NOT a code regression (D91-02). The box-independent proof lives in the sibling agent-ux/ql-001-canonical-path-shape row (grep + cargo regressions). Waiver retired by 91-02; legacy row (no minted_at, D91-11 / PLAN-CHECK MF-2).",
       "sources": [
         "crates/reposix-remote/src/diff.rs:104-107 (BUG-1 path-shape mismatch)",
         "crates/reposix-remote/src/fast_import.rs:156-157,181,185 (BUG-2/BUG-3)",
@@ -1361,19 +1361,15 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/real-git-push-e2e.json",
-      "status": "WAIVED",
-      "last_verified": "2026-07-04T08:37:48Z",
+      "status": "NOT-VERIFIED",
+      "last_verified": "2026-07-04T19:34:39Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
-      "owner_hint": "QL-001 BLOCKER: fix the push planner path-shape mismatch (diff.rs:104-107 vs builder.rs:90 / refresh.rs:104 / fast_import.rs:63 all spell issue paths differently) + the fast_import.rs stream-parser trailing-LF bug (156-157) + add an issues/*.md path filter (BUG-2). See SURPRISES-INTAKE.md 2026-07-04 entry for the sketched resolution P90/P91 MUST consume. | D-CONV-1 (2026-07-04): stripped from pre-pr -- a WAIVED row failing loud in every PR's CI run is noise, not signal; the QL-001 fix lands in P90/P91, at which point that phase MUST re-add pre-pr per the SURPRISES.md contract. Kept on-demand + pre-release so it's still reachable without waiting for a tag.",
-      "waiver": {
-        "until": "2026-07-31T00:00:00Z",
-        "reason": "QL-001 verified BLOCKER (real end-to-end git push reproduction, not a synthetic fast-export stream) -- the push diff planner misclassifies every record as Create+Delete due to a 4-way path-shape mismatch, and a separate stream-parser bug drops the first M-line on a genuine no-op push. The verifier exists and is genuinely correct; it fails honestly against the real bug rather than being stubbed out. This row anchors the P90/P91 fix contract -- mirrors the security/allowlist-enforcement precedent row's waiver-on-a-real-verifier pattern.",
-        "dimension_owner": "v0.13.0 Stage-2 catalog-row minting (2026-07-04)",
-        "tracked_in": "v0.13.0 SURPRISES-INTAKE.md 2026-07-04 QL-001 entry"
-      },
-      "claim_vs_assertion_audit": "The verifier drives a REAL git commit+push against a real reposix-init'd tree (not a hand-built fast-export stream) and queries the sim's own audit_events table for PATCH/POST/DELETE counts. If the claim ('a real push round-trips one update with zero misclassification and a no-op push writes nothing') were false -- e.g. the planner treated an unchanged issue as Create+Delete (QL-001 BUG-1) or the no-op push's stream parser dropped an M-line and issued a spurious DELETE (BUG-3) -- the PATCH/POST/DELETE count assertions would fail because sqlite3 would report POST_COUNT>0 or DELETE_COUNT>0 or a nonzero delta on the no-op push, and the verifier would exit 1 naming the exact mismatched count.",
+      "owner_hint": "Drives the LOCAL sim (transport_claim:false). If RED on CI (git >= 2.34), the QL-001 push round-trip regressed: check diff.rs prior-key spelling, fast_import.rs peek-LF, and the issues/*.md plan filter. On this box (git 2.25.1) it honestly exits 75 (NOT-VERIFIED) -- do NOT fabricate a local PASS. | 91-02 re-added pre-pr per the SURPRISES.md contract now that the QL-001 fix has landed and the waiver is retired.",
+      "claim_vs_assertion_audit": "The verifier drives a REAL git commit+push against a real reposix-init'd tree (not a hand-built fast-export stream) and queries the sim's own audit_events table for PATCH/POST/DELETE counts. If the claim ('a real push round-trips one update with zero misclassification and a no-op push writes nothing') were false -- e.g. the planner treated an unchanged issue as Create+Delete (QL-001 BUG-1) or the no-op push's stream parser dropped an M-line and issued a spurious DELETE (BUG-3) -- the PATCH/POST/DELETE count assertions would fail because sqlite3 would report POST_COUNT>0 or DELETE_COUNT>0 or a nonzero delta on the no-op push, and the verifier would exit 1 naming the exact mismatched count. Sim-only: this row does NOT claim real-backend behavior (P92 RBF-B-05 owns that).",
+      "transport_claim": false,
       "cadences": [
+        "pre-pr",
         "pre-release",
         "on-demand"
       ]
@@ -1406,11 +1402,11 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/ql-001-canonical-path.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-04T19:34:39Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "crates/reposix-remote/src/diff.rs / fast_import.rs / crates/reposix-core/src/path.rs -- if RED after 91-02 lands, a record-path spelling regressed outside core, or the QL-157 duplicate crept back into main.rs",
+      "owner_hint": "crates/reposix-remote/src/diff.rs / fast_import.rs / crates/reposix-core/src/path.rs -- if RED, a record-path spelling regressed outside core, the QL-157 duplicate crept back into main.rs, or a QL-001 regression test fn was renamed/deleted. 91-02 landed the fix (canonical issues/<id>.md across all sites + parse/plan regressions).",
       "claim_vs_assertion_audit": "The verifier greps for zero-padded record-path format! constructions outside reposix-core, checks a single shared path-id helper exists, confirms the 91-02 cargo regression tests exist by name, and confirms the QL-157 duplicate in main.rs is deleted. If the description's claim ('canonical issues/<id>.md path shape is grep-verifiable and drives every producer/consumer site') were false -- e.g. a stray `format!(\"{:04}.md\"` reappeared in fast_import.rs, or main.rs's duplicate issue_id_from_path were never deleted -- the grep assertions would find a nonzero hit and the verifier would exit 1 naming the offending file.",
       "waiver": null,
       "cadences": [
