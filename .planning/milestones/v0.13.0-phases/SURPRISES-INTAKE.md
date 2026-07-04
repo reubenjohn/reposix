@@ -194,3 +194,43 @@
 **Sketched resolution:** None required beyond the marker already applied; if P95 tree-sitter block detection lands, re-audit whether historical-marker comments should be rewritten instead of allowlisted.
 
 **STATUS:** OPEN
+
+## 2026-07-03 21:00 | discovered-by: P89 orchestrator (CI triage) | severity: MEDIUM
+
+**What:** `contract_confluence_live_hierarchy` (crates/reposix-confluence/tests/contract.rs:752-797) is fragile-by-design: read-only assert on live state it doesn't own; doc comment hard-codes stale space state (745-747); project's own cleanup convention (testing-targets.md:79) invites the breakage. Broke CI run 28692818500 on main. Mitigated 2026-07-03 by durable fixture pages in TokenWorld (space key REPOSIX, id 360450): parent 7766017 → child 7798785, label `reposix-durable-fixture` (deliberately NOT the sweepable kind=test label), bodies explain purpose.
+
+**Why out-of-scope for P89:** P89 is framework-fix scope (cadence/kind/linters/schema); rewriting a real-backend contract test is P91 real-backend wiring territory.
+
+**Sketched resolution:** Durable fix: make the test self-seeding (create_record already supports parentId, reposix-confluence/src/lib.rs:288) OR document the fixture pair as a named precondition in testing-targets.md. Home: P91 (real-backend wiring).
+
+**STATUS:** OPEN
+
+## 2026-07-03 21:00 | discovered-by: P89 orchestrator (owner .env note) | severity: LOW
+
+**What:** JIRA_TEST_PROJECT not forwarded in ci.yml's JIRA integration job; owner's live project key is KAN, CI silently defaults to TEST. Source: owner's .env.example note.
+
+**Why out-of-scope for P89:** CI workflow env plumbing for real-backend jobs belongs with the real-backend wiring phases, not the framework-fix phase.
+
+**Sketched resolution:** Forward JIRA_TEST_PROJECT (secret or repo variable) in ci.yml's JIRA integration job. Home: P91 or P95.
+
+**STATUS:** OPEN
+
+## 2026-07-03 21:00 | discovered-by: P89 orchestrator (CI triage) | severity: LOW
+
+**What:** CI annotations noise: ENOENT opendir 'target/tests/target' in test + coverage jobs (jobs green; some uploader glob). Observed on run 28692818500.
+
+**Why out-of-scope for P89:** Cosmetic CI-annotation noise from an uploader glob; zero functional impact; not framework-fix scope.
+
+**Sketched resolution:** Locate the uploader step whose glob expands to `target/tests/target` and tighten the pattern (or create the dir). Home: P95 polish.
+
+**STATUS:** OPEN
+
+## 2026-07-03 21:00 | discovered-by: P89-01 | severity: LOW
+
+**What:** `scripts/check-quality-catalogs.py` stale: ROW_REQUIRED demands legacy scalar `cadence`; VALID_KINDS lacks `shell-subprocess`; VALID_CADENCES lacks `pre-release-real-backend` + `pre-commit`. Invoked by no hook/CI (on-demand meta-helper), so nothing regresses. Source: 89-01 executor report.
+
+**Why out-of-scope for P89-01:** The catalog-first commit's contract is minting rows, not refreshing an unwired meta-helper; the fix is sanctioned for fold-in only if 89-03/89-04's plans touch the script.
+
+**Sketched resolution:** Update ROW_REQUIRED to `cadences: list`, add `shell-subprocess` to VALID_KINDS and `pre-release-real-backend` + `pre-commit` to VALID_CADENCES — fold into 89-03/89-04 if sanctioned, else P95.
+
+**STATUS:** OPEN
