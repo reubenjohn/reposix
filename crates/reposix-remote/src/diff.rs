@@ -269,6 +269,7 @@ mod tests {
     /// canonicalizes away trailing-newline and YAML-serializer quirks that
     /// a raw byte-compare would flag as spurious Updates.
     #[test]
+    // test-name-honesty: ok — unit test of the diff planner's push-plan computation over an in-memory tree, no live git push
     fn unchanged_push_emits_no_patches() {
         let prior: Vec<Record> = (1..=3).map(sample).collect();
         // Simulate `git pull` → no edits → `git push`:

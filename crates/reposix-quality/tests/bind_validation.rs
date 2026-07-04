@@ -126,6 +126,7 @@ fn bind_rejects_missing_fn_symbol() {
 }
 
 #[test]
+// test-name-honesty: ok — bind-string validation round trip, no network
 fn bind_valid_round_trip() {
     let dir = TempDir::new().unwrap();
     let cat = seed(&dir);

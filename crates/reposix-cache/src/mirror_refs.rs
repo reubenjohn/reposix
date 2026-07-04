@@ -304,6 +304,7 @@ mod tests {
     use super::*;
 
     #[test]
+    // test-name-honesty: ok — parses a committed annotated-tag message string round trip, no live git fetch
     fn parse_synced_at_message_round_trips() {
         let ts: DateTime<Utc> = "2026-05-01T12:34:56Z".parse().expect("parse rfc3339");
         let body = format!(

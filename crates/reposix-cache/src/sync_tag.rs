@@ -221,6 +221,7 @@ mod tests {
     use super::*;
 
     #[test]
+    // test-name-honesty: ok — string-slug round trip, no git/network operation
     fn slug_round_trip() {
         let ts: DateTime<Utc> = "2026-04-25T01:13:00Z".parse().unwrap();
         let slug = format_sync_tag_slug(ts);

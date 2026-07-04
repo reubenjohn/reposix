@@ -531,6 +531,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — command-keyword parsing unit test, no live git fetch subprocess
     fn blob_limit_check_logic_skips_non_fetch_commands() {
         let limit = 200_u32;
         let want_count = 250_u32;
@@ -540,6 +541,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — command-keyword parsing unit test, no live git fetch subprocess
     fn parse_command_keyword_extracts_fetch() {
         assert_eq!(
             parse_command_keyword(b"command=fetch\n"),

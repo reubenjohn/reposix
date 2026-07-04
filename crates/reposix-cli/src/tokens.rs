@@ -280,6 +280,7 @@ mod tests {
     use super::*;
 
     #[test]
+    // test-name-honesty: ok — reason-string parse round trip, no live git push
     fn parse_reason_round_trip() {
         let parsed = parse_reason(r#"{"in":1234,"out":5678,"kind":"fetch"}"#).unwrap();
         assert_eq!(parsed.chars_in, 1234);
@@ -288,6 +289,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — handles the literal word 'push' in a cost-tracking payload string, no live git push
     fn parse_reason_handles_push() {
         let parsed = parse_reason(r#"{"in":99,"out":18,"kind":"push"}"#).unwrap();
         assert_eq!(parsed.kind, "push");

@@ -123,6 +123,7 @@ mod tests {
     use super::*;
 
     #[test]
+    // test-name-honesty: ok — pkt-line wire-format encode/decode round trip over in-memory bytes, no live git push/fetch
     fn round_trip_flush() {
         let mut buf = Vec::new();
         encode_frame(&Frame::Flush, &mut buf);
@@ -132,6 +133,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — pkt-line wire-format encode/decode round trip over in-memory bytes, no live git push/fetch
     fn round_trip_delim() {
         let mut buf = Vec::new();
         encode_frame(&Frame::Delim, &mut buf);
@@ -140,6 +142,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — pkt-line wire-format encode/decode round trip over in-memory bytes, no live git push/fetch
     fn round_trip_response_end() {
         let mut buf = Vec::new();
         encode_frame(&Frame::ResponseEnd, &mut buf);
@@ -148,6 +151,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — pkt-line wire-format encode/decode round trip over in-memory bytes, no live git push/fetch
     fn round_trip_data() {
         let mut buf = Vec::new();
         encode_frame(&Frame::Data(b"want abc\n".to_vec()), &mut buf);
@@ -159,6 +163,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — pkt-line wire-format encode/decode round trip over in-memory bytes, no live git push/fetch
     fn round_trip_empty_data() {
         let mut buf = Vec::new();
         encode_frame(&Frame::Data(Vec::new()), &mut buf);

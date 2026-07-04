@@ -138,6 +138,7 @@ async fn refresh_idempotent_no_diff() {
 /// - its content parses as a valid RFC3339 UTC timestamp
 /// - the timestamp is within 30 seconds of wall clock time
 #[tokio::test]
+// test-name-honesty: ok — asserts a DB timestamp column freshness, not a live fetch operation
 async fn fetched_at_is_current_timestamp() {
     let dir = tempdir().unwrap();
     let cfg = make_cfg(dir.path());

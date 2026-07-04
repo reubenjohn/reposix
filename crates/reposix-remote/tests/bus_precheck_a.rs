@@ -92,6 +92,7 @@ fn make_drifting_mirror_fixture() -> (tempfile::TempDir, tempfile::TempDir, Stri
 }
 
 #[test]
+// test-name-honesty: ok — drives PRECHECK A via real `git ls-remote` + wiremock SoT; genuine fetch-first detection coverage
 fn bus_precheck_a_emits_fetch_first_on_drift() {
     let (wtree, _mirror, mirror_url, drifted_sha, stale_local_sha) = make_drifting_mirror_fixture();
     let bus_url = format!("reposix::http://127.0.0.1:9/projects/demo?mirror={mirror_url}");

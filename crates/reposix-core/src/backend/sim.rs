@@ -641,6 +641,7 @@ mod tests {
     }
 
     #[tokio::test]
+    // test-name-honesty: ok — typed-error round trip through the in-process simulator, no live network
     async fn version_mismatch_round_trips_typed_body() {
         // POLISH2-09 happy path: prove `Error::VersionMismatch { body, .. }`
         // exposes the raw 409 body without substring fallback. Companion to
@@ -675,6 +676,7 @@ mod tests {
     }
 
     #[tokio::test]
+    // test-name-honesty: ok — typed-error round trip through the in-process simulator, no live network
     async fn not_found_round_trips_typed() {
         // POLISH2-09 happy path: prove the 404 → `Error::NotFound { project,
         // id }` mapping populates structured fields, not just a stringly

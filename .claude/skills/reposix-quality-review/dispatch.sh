@@ -32,6 +32,7 @@ Seed rubrics:
     subjective/cold-reader-hero-clarity   (pre-release; doc-clarity-review impl)
     subjective/install-positioning        (pre-release)
     subjective/headline-numbers-sanity    (weekly)
+    subjective/dvcs-cold-reader           (pre-release; doc-clarity-review impl; P90 90-03)
 
 The skill persists JSON artifacts to quality/reports/verifications/subjective/<id>.json.
 The next quality runner sweep re-grades the catalog row's status from the artifact.
@@ -65,6 +66,12 @@ case "${1:-}" in
                 if [[ -x "$SKILL_DIR/lib/dispatch_inline_subagent.sh" ]]; then
                     exec bash "$SKILL_DIR/lib/dispatch_inline_subagent.sh" "$2"
                 fi
+                ;;
+            "subjective/dvcs-cold-reader")
+                # P90 90-03 (D90-10 B2): was the actually-decorative
+                # subagent-graded row (no dispatcher case existed; fell
+                # through to the Path B stub). Wired for real grading.
+                exec bash "$SKILL_DIR/lib/dispatch_dvcs_cold_reader.sh"
                 ;;
         esac
         # Default Path B stub: returns 1 for FAIL (runner records FAIL).

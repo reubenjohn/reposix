@@ -222,6 +222,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — content-hash round trip over in-memory bytes, no network
     fn file_hash_round_trips_byte_identical_content() {
         let dir = tempfile::tempdir().unwrap();
         let body = "#!/usr/bin/env bash\nset -euo pipefail\necho hello\n";

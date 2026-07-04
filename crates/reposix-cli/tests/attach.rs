@@ -545,6 +545,7 @@ fn attach_errors_on_duplicate_id() {
 /// view of records includes id=1 (visible to the next fetch).
 #[test]
 #[ignore = "spawns reposix-sim child; requires `cargo build --workspace --bins` first"]
+// test-name-honesty: ok — real attach subprocess + cache-state assert; sets up mirror-lag state for a subsequent fetch it does not itself drive (thin but honestly named per R2 adjacent-exempt list)
 fn attach_marks_mirror_lag_for_next_fetch() {
     let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
     let (mut sim, port) = spawn_sim_with_issue("demo", 1);

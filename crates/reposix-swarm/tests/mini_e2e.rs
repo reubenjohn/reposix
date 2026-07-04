@@ -97,6 +97,7 @@ fn audit_row_count(path: &std::path::Path) -> rusqlite::Result<i64> {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+// test-name-honesty: ok — real in-process sim + 5 real swarm clients + real audit rows; genuine end-to-end coverage
 async fn swarm_mini_e2e_sim_5_clients_1_5s() {
     // Generous rate limit so 5 clients × ~5 ops/cycle don't immediately
     // saturate the per-agent bucket. Each client gets its own bucket via

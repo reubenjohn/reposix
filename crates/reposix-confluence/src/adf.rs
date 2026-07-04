@@ -651,6 +651,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — ADF<->Markdown conversion round trip, no network
     fn roundtrip_adf_to_md_to_storage() {
         // Build ADF programmatically: heading + paragraph + bullet list.
         let adf = json!({

@@ -241,6 +241,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — frontmatter/JSON serde round trip, no git or network operation
     fn frontmatter_roundtrips() {
         let original = sample();
         let rendered = frontmatter::render(&original).expect("render");
@@ -263,6 +264,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — frontmatter/JSON serde round trip, no git or network operation
     fn parent_id_roundtrips_through_json_when_some() {
         let mut iss = sample();
         iss.parent_id = Some(RecordId(42));
@@ -294,6 +296,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — frontmatter/JSON serde round trip, no git or network operation
     fn parent_id_roundtrips_through_frontmatter_when_some() {
         let mut iss = sample();
         iss.parent_id = Some(RecordId(777));
@@ -369,6 +372,7 @@ Body goes here.\n";
     }
 
     #[test]
+    // test-name-honesty: ok — frontmatter/JSON serde round trip, no git or network operation
     fn frontmatter_roundtrip_with_parent() {
         // Deep-equality roundtrip: parse(render(issue)) yields the same Issue.
         // Catches any drift between the public `Record` struct and the private
@@ -390,6 +394,7 @@ Body goes here.\n";
     }
 
     #[test]
+    // test-name-honesty: ok — frontmatter/JSON serde round trip, no git or network operation
     fn frontmatter_roundtrip_without_parent() {
         // Deep-equality roundtrip for the None branch — verifies `skip_serializing_if`
         // doesn't accidentally drop other fields and that the deserialize default
@@ -421,6 +426,7 @@ Body goes here.\n";
     }
 
     #[test]
+    // test-name-honesty: ok — frontmatter/JSON serde round trip, no git or network operation
     fn extensions_roundtrip() {
         // Non-empty extensions survive a render→parse cycle with value equality.
         let mut iss = sample();

@@ -1002,6 +1002,7 @@ mod tests {
     // -------- 1: list resolves space key and fetches pages --------
 
     #[tokio::test]
+    // test-name-honesty: ok — wiremock-mocked HTTP fetch/pagination test, no live network
     async fn list_resolves_space_key_and_fetches_pages() {
         let server = MockServer::start().await;
         mount_space_lookup(&server, "REPOSIX", "12345").await;
@@ -1337,6 +1338,7 @@ mod tests {
     /// isolation). Mixes three shapes in one list so we assert all branches
     /// with a single wiremock round-trip.
     #[tokio::test]
+    // test-name-honesty: ok — wiremock-mocked HTTP pagination test, no live network
     async fn list_populates_parent_id_end_to_end() {
         let server = MockServer::start().await;
         mount_space_lookup(&server, "REPOSIX", "12345").await;
@@ -1685,6 +1687,7 @@ mod tests {
     // -------- B6.3: update_record with None version fetches then PUTs --------
 
     #[tokio::test]
+    // test-name-honesty: ok — wiremock-mocked HTTP fetch-then-PUT test, no live network
     async fn update_issue_none_version_fetches_then_puts() {
         let server = MockServer::start().await;
         // Pre-flight GET: version=7

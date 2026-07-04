@@ -11,6 +11,7 @@
 use assert_cmd::Command;
 
 #[test]
+// test-name-honesty: ok — URL query-param parse round trip, no live git fetch
 fn parses_query_param_form_round_trip() {
     // POSITIVE capability-advertise assertion (HIGH-1 fix from P82
     // plan-check). The original negative assertion

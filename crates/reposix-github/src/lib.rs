@@ -1311,6 +1311,7 @@ mod tests {
     }
 
     #[tokio::test]
+    // test-name-honesty: ok — 'real_issues' names the issues-vs-PRs domain distinction in a mocked pagination test, no live GitHub network call
     async fn list_records_reaches_real_issues_past_a_pr_heavy_prefix() {
         let server = MockServer::start().await;
         Mock::given(method("GET"))

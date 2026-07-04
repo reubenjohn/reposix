@@ -26,6 +26,7 @@ fn token_cost_op_accepted_by_check_constraint() {
 }
 
 #[test]
+// test-name-honesty: ok — struct serde round trip, no network
 fn token_cost_reason_payload_round_trips() {
     let tmp = tempfile::tempdir().unwrap();
     let conn = open_cache_db(tmp.path()).unwrap();

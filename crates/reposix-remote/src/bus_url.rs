@@ -164,6 +164,7 @@ mod tests {
     /// DVCS-BUS-URL-01 — `?mirror=` parses to `Route::Bus` with the
     /// expected `SoT` + mirror split.
     #[test]
+    // test-name-honesty: ok — URL query-param parse round trip, no live git fetch
     fn parses_query_param_form_round_trip() {
         let url = "reposix::http://127.0.0.1:7878/projects/demo?mirror=file:///tmp/m.git";
         let route = parse(url).expect("bus URL should parse");

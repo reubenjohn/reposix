@@ -244,6 +244,7 @@ async fn write_on_success_updates_both_refs() {
 }
 
 #[tokio::test]
+// test-name-honesty: ok — drives helper export then a real `git clone --mirror`; genuine push+fetch coverage
 async fn vanilla_fetch_brings_mirror_refs() {
     let server = MockServer::start().await;
     mount_get_and_patch(&server, 42, 3).await;
@@ -429,6 +430,7 @@ async fn reject_hint_cites_synced_at_with_age() {
 }
 
 #[tokio::test]
+// test-name-honesty: ok — drives helper export via stdin asserting reject-hint stderr shape; genuine push-path coverage
 async fn reject_hint_first_push_omits_synced_at_line() {
     // First-push conflict: the cache has NEVER seen a successful push,
     // so refs/mirrors/* are absent. The helper's read_mirror_synced_at

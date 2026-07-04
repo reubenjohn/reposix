@@ -34,6 +34,7 @@ fn run_git_in(dir: &Path, args: &[&str]) {
 }
 
 #[test]
+// test-name-honesty: ok — real git-remote fixture asserting denial before egress; negative security test, name is exact
 fn bus_push_to_non_allowlisted_mirror_is_denied_before_egress() {
     // Working tree with a `mirror` remote pointing at a NON-allowlisted
     // host. The host is `.invalid` (RFC 6761) so if the gate ever failed

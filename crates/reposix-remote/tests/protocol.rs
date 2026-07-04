@@ -103,6 +103,7 @@ fn issue_response(id: u64, body: &str) -> Value {
 /// H-01: A blob body containing `\r\n` line endings must round-trip
 /// through the helper's raw-bytes path — no silent `\r` stripping.
 #[tokio::test]
+// test-name-honesty: ok — drives helper push via stdin with POST-body byte inspection; genuine push-path coverage
 async fn crlf_blob_body_round_trips_byte_for_byte() {
     let server = MockServer::start().await;
     // Empty prior tree → the new blob triggers a Create (POST).

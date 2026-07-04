@@ -157,6 +157,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — SQLite metadata round trip, no network
     fn update_metadata_roundtrip() {
         let dir = tempdir().unwrap();
         let db = open_cache_db(dir.path()).expect("open");

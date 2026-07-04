@@ -369,6 +369,7 @@ mod tests {
     use super::*;
 
     #[test]
+    // test-name-honesty: ok — string-slug round trip, no git/network operation
     fn strategy_slug_round_trip() {
         assert_eq!(
             GcStrategy::Lru {

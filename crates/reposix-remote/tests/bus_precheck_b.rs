@@ -96,6 +96,7 @@ fn make_synced_mirror_fixture() -> (tempfile::TempDir, tempfile::TempDir, String
 }
 
 #[tokio::test(flavor = "multi_thread")]
+// test-name-honesty: ok — drives PRECHECK B via wiremock `?since=` drift; genuine fetch-first detection coverage
 async fn bus_precheck_b_emits_fetch_first_on_sot_drift() {
     let server = MockServer::start().await;
     let project = "demo";

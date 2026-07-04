@@ -156,6 +156,7 @@ fn make_synced_mirror_fixture() -> (tempfile::TempDir, tempfile::TempDir, String
 }
 
 #[tokio::test(flavor = "multi_thread")]
+// test-name-honesty: ok — drives helper bus export via stdin against a 409 fixture; genuine push-path coverage
 async fn bus_write_post_precheck_conflict_409_no_mirror_push() {
     let server = MockServer::start().await;
     let project = "demo";

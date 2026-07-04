@@ -649,6 +649,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — asserts SQLite audit-row insertion for a push/fetch audit-log helper, no live git operation
     fn log_helper_push_started_inserts_row() {
         let tmp = tempdir().unwrap();
         let conn = open_cache_db(tmp.path()).unwrap();
@@ -665,6 +666,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — asserts SQLite audit-row insertion for a push/fetch audit-log helper, no live git operation
     fn log_helper_push_accepted_records_summary() {
         let tmp = tempdir().unwrap();
         let conn = open_cache_db(tmp.path()).unwrap();
@@ -681,6 +683,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — asserts SQLite audit-row insertion for a push/fetch audit-log helper, no live git operation
     fn log_helper_push_rejected_conflict_records_versions() {
         let tmp = tempdir().unwrap();
         let conn = open_cache_db(tmp.path()).unwrap();
@@ -697,6 +700,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — asserts SQLite audit-row insertion for a push/fetch audit-log helper, no live git operation
     fn log_helper_push_sanitized_field_records_field_name() {
         let tmp = tempdir().unwrap();
         let conn = open_cache_db(tmp.path()).unwrap();
@@ -713,6 +717,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — asserts SQLite audit-row insertion for a push/fetch audit-log helper, no live git operation
     fn log_helper_push_partial_fail_mirror_lag_inserts_row() {
         let tmp = tempdir().unwrap();
         let conn = open_cache_db(tmp.path()).unwrap();
@@ -805,6 +810,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — asserts SQLite audit-row insertion for a push/fetch audit-log helper, no live git operation
     fn log_helper_fetch_encodes_reason_and_bytes() {
         let tmp = tempdir().unwrap();
         let conn = open_cache_db(tmp.path()).unwrap();
@@ -822,6 +828,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — asserts SQLite audit-row insertion for a push/fetch audit-log helper, no live git operation
     fn log_helper_fetch_error_records_exit_and_tail() {
         let tmp = tempdir().unwrap();
         let conn = open_cache_db(tmp.path()).unwrap();

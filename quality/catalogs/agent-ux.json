@@ -991,9 +991,9 @@
     {
       "id": "agent-ux/dvcs-third-arm",
       "dimension": "agent-ux",
-      "kind": "subagent-graded",
+      "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
-      "comment": "Row stays FAIL through 86-01 T01 (catalog-first commit; harness stub returns exit 1); flips PASS at 86-01 T02 BEFORE the per-phase push. The TokenWorld arm is substrate-gap-deferred per .planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md (P84 entry: binstall + yanked-gix block end-to-end run against the live GH mirror until v0.13.x ships to crates.io). The sim arm closes the falsifiable threshold for P86; TokenWorld arm runs only when REPOSIX_DARK_FACTORY_REAL_TOKENWORLD=1 + creds + REPOSIX_ALLOWED_ORIGINS=https://reuben-john.atlassian.net.",
+      "comment": "Row stays FAIL through 86-01 T01 (catalog-first commit; harness stub returns exit 1); flips PASS at 86-01 T02 BEFORE the per-phase push. The TokenWorld arm is substrate-gap-deferred per .planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md (P84 entry: binstall + yanked-gix block end-to-end run against the live GH mirror until v0.13.x ships to crates.io). The sim arm closes the falsifiable threshold for P86; TokenWorld arm runs only when REPOSIX_DARK_FACTORY_REAL_TOKENWORLD=1 + creds + REPOSIX_ALLOWED_ORIGINS=https://reuben-john.atlassian.net. P90 90-03 (D90-10): kind flipped subagent-graded -> mechanical — the verifier (quality/gates/agent-ux/dark-factory.sh dvcs-third-arm) is pure deterministic shell asserts with zero claude/Task/rubric invocation anywhere in its call chain; `subagent-graded` was decorative (R2 § B.1).",
       "sources": [
         "quality/gates/agent-ux/dark-factory.sh",
         "crates/reposix-cli/src/attach.rs",

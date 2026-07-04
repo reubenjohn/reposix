@@ -107,6 +107,7 @@ fn one_file_export(path: &str, blob: &str, msg: &str) -> Vec<u8> {
 /// version=2) must reject with canned `fetch first` and write zero
 /// PATCH/POST/DELETE calls.
 #[tokio::test]
+// test-name-honesty: ok — drives helper export via stdin against wiremock; genuine push-path coverage
 async fn stale_base_push_emits_fetch_first_and_writes_no_rest() {
     let server = MockServer::start().await;
     // Backend has issue 2 at version=2 — local will claim version=1.
@@ -202,6 +203,7 @@ async fn stale_base_push_emits_fetch_first_and_writes_no_rest() {
 /// Happy-path regression: local base matches backend, body change goes
 /// through. Helper emits `ok refs/heads/main`; backend sees one PATCH.
 #[tokio::test]
+// test-name-honesty: ok — drives helper export via stdin against wiremock; genuine push-path coverage
 async fn clean_push_emits_ok_and_mutates_backend() {
     let server = MockServer::start().await;
     let issues: Vec<Value> = vec![sample_issue(42, 3)];

@@ -1,0 +1,4 @@
+crates/reposix-cli/tests/agent_flow.rs:dark_factory_sim_happy_path
+crates/reposix-cli/tests/doctor.rs:doctor_blob_limit_zero_warns_on_real_remote
+crates/reposix-cli/tests/agent_flow.rs:dark_factory_blob_limit_teaching_string_present
+crates/reposix-cli/tests/agent_flow.rs:dark_factory_conflict_teaching_string_present

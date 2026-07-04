@@ -69,6 +69,7 @@ fn make_issue(title: &str, body: &str) -> Untainted<Record> {
 /// WRITE-04: create a page then read it back; assert body round-trip and
 /// audit log row.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+// test-name-honesty: ok — wiremock create-then-get round trip against a mocked REST server, no live network
 async fn create_then_get_roundtrip_with_audit() {
     let server = MockServer::start().await;
 

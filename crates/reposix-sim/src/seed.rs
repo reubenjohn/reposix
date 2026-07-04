@@ -197,6 +197,7 @@ mod tests {
     }
 
     #[test]
+    // test-name-honesty: ok — seed-struct serde round trip, no network
     fn apply_seed_round_trips() {
         let seed: SeedFile =
             serde_json::from_str(include_str!("../fixtures/seed.json")).expect("json");

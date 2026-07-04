@@ -26,6 +26,7 @@ fn sim_backend(server: &MockServer) -> Arc<dyn BackendConnector> {
 }
 
 #[tokio::test]
+// test-name-honesty: ok — DB column read/write round trip, no live network fetch
 async fn read_last_fetched_at_round_trips() {
     let server = MockServer::start().await;
     let cache_root = tempfile::tempdir().expect("tempdir");
@@ -46,6 +47,7 @@ async fn read_last_fetched_at_round_trips() {
 }
 
 #[tokio::test]
+// test-name-honesty: ok — DB column read/write round trip, no live network fetch
 async fn read_last_fetched_at_returns_none_when_absent() {
     let server = MockServer::start().await;
     let cache_root = tempfile::tempdir().expect("tempdir");

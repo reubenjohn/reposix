@@ -160,6 +160,7 @@ fn make_synced_mirror_fixture() -> (tempfile::TempDir, tempfile::TempDir, String
 }
 
 #[tokio::test(flavor = "multi_thread")]
+// test-name-honesty: ok — drives helper bus export via stdin against a mid-stream SoT failure fixture; genuine push-path coverage
 async fn bus_write_sot_mid_stream_fail_no_mirror_push_no_lag_audit() {
     let server = MockServer::start().await;
     let project = "demo";

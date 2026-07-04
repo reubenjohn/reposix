@@ -4,12 +4,17 @@
 #
 # CATALOG ROW: agent-ux/dvcs-third-arm
 # INVARIANT: a fresh agent given only a bus URL + goal completes
-# vanilla-clone + reposix attach + edit + bus-push end-to-end because the
-# helper teaches itself via stderr / `--help`. Asserted via shell stub:
-# emulate git workflow + grep teaching strings from source / `--help`.
-# No real LLM in CI.
+# vanilla-clone + reposix attach + edit via teaching strings the helper
+# emits over stderr / `--help`. This harness verifies the attach +
+# agent-UX teaching-string surface; it does NOT drive `git push reposix
+# main` itself (see "Coverage layering" below — wire-path bus-push
+# end-to-end coverage lives in the cargo integration test named there).
+# Asserted via shell stub: emulate git workflow + grep teaching strings
+# from source / `--help`. No real LLM in CI.
 #
-# Coverage layering (subagent-graded contract):
+# Coverage layering (mechanical contract; kind flipped from subagent-graded
+# to mechanical in P90 90-03 — this shell stub is deterministic shell
+# asserts, zero subagent grading involved):
 #   - this harness      : agent UX surface (teaching strings, attach
 #                         config, bus URL composition).
 #   - cargo integration : wire-path round-trip (helper exec, push fan-out,
