@@ -2860,4 +2860,35 @@ mod tests {
             .expect("download_attachment");
         assert_eq!(bytes, b"PDF_CONTENT".to_vec());
     }
+
+    // -------- capabilities_match_create_impl --------
+
+    /// Capability parity (`capabilities_match`): the published
+    /// `CAPABILITIES.create` bool MUST agree with observable `create_record`
+    /// behavior. Confluence advertises `create = true`, so `create_record`
+    /// must NOT short-circuit with `Error::NotSupported` — pointed at a
+    /// server with no routes mounted, it attempts the space-lookup HTTP call
+    /// first and fails with a transport/HTTP error instead, which is still
+    /// "supported". Mirrors the analogous test in `reposix-github` and
+    /// `reposix-jira`. Substrate for the Stage-2
+    /// `code/capabilities-match-impl` catalog row (grep `capabilities_match`).
+    #[tokio::test]
+    async fn capabilities_match_create_impl() {
+        // No routes mounted: create_record's space lookup gets an unmatched
+        // 404 from wiremock, surfacing Error::Other — never
+        // Error::NotSupported.
+        let server = MockServer::start().await;
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let issue = make_untainted("cap probe", "body", None);
+        let is_not_supported = matches!(
+            backend.create_record("REPOSIX", issue).await,
+            Err(Error::NotSupported { .. })
+        );
+        assert_eq!(
+            is_not_supported,
+            !crate::types::CAPABILITIES.create,
+            "CAPABILITIES.create ({}) disagrees with create_record NotSupported behavior ({is_not_supported})",
+            crate::types::CAPABILITIES.create,
+        );
+    }
 }
