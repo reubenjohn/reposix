@@ -9,6 +9,8 @@ Run: python3 -m unittest quality.runners.test_realbackend -v
 
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import os
 import sys
@@ -143,7 +145,10 @@ class TestRunRowEnvGateIntegration(unittest.TestCase):
         self.assertEqual(updated["status"], "NOT-VERIFIED")
         self.assertTrue(updated["_skipped_real_backend"])
         self.assertTrue(artifact["skipped_real_backend"])
-        self.assertIn("REPOSIX_ALLOWED_ORIGINS unset", artifact["skip_reason"])
+        # RBF-FW-07b: skip_reason is now the machine marker; the human recovery
+        # text moved to skip_detail so the churn is explained without ambiguity.
+        self.assertEqual(artifact["skip_reason"], "env-missing")
+        self.assertIn("REPOSIX_ALLOWED_ORIGINS unset", artifact["skip_detail"])
 
 
 class TestLoopbackSpellings(unittest.TestCase):
@@ -184,6 +189,179 @@ class TestLoopbackSpellings(unittest.TestCase):
     def test_local_skip_reason_names_loopback(self):
         reason = _realbackend.skip_reason({"REPOSIX_ALLOWED_ORIGINS": "http://localhost:7878"})
         self.assertIn("local-only", reason)
+
+
+class TestVerifierMissing(unittest.TestCase):
+    """RBF-FW-07a (cross-AI H4): a missing verifier script demotes to
+    NOT-VERIFIED unconditionally, with a distinct `error` marker."""
+
+    def _run(self, status):
+        with tempfile.TemporaryDirectory() as td:
+            row = {
+                "id": "test/missing", "cadences": ["pre-push"], "blast_radius": "P1",
+                "status": status, "artifact": "artifact.json",
+                "verifier": {"script": "does-not-exist.sh"},
+            }
+            with mock.patch.dict(os.environ, {}, clear=True):
+                updated, _ = run.run_row(row, Path(td), datetime.now(timezone.utc))
+            artifact = json.loads((Path(td) / "artifact.json").read_text())
+        return updated, artifact
+
+    def test_prior_pass_demotes_to_not_verified_with_error(self):
+        updated, artifact = self._run("PASS")
+        self.assertEqual(updated["status"], "NOT-VERIFIED")
+        self.assertIn("verifier not found", artifact["error"])
+        self.assertTrue(updated["_verifier_missing"])
+
+    def test_prior_not_verified_stays(self):
+        updated, _ = self._run("NOT-VERIFIED")
+        self.assertEqual(updated["status"], "NOT-VERIFIED")
+
+    def test_verifier_missing_flag_stripped_by_main(self):
+        # End-to-end: main() must strip the transient flag before persisting.
+        persisted = _run_main_over_synthetic_catalog(
+            dimension="structure",
+            row={
+                "id": "test/missing", "cadences": ["pre-push"], "blast_radius": "P1",
+                "status": "PASS", "last_verified": "2026-04-01T00:00:00Z",
+                "artifact": "quality/reports/verifications/test-missing.json",
+                "verifier": {"script": "quality/gates/structure/does-not-exist.sh"},
+            },
+        )
+        self.assertEqual(persisted["status"], "NOT-VERIFIED")
+        self.assertNotIn("_verifier_missing", persisted)
+
+
+class TestSkipFailClosedWithHistory(unittest.TestCase):
+    """RBF-FW-07b (AMENDED D90-04): env-gated skip is fail-closed NOT-VERIFIED
+    for ALL pre-release-real-backend rows, with the prior real grade preserved
+    in write-history fields and an explicit env-missing marker."""
+
+    def _skip(self, prior_status, prior_lv="2026-06-01T00:00:00Z", blast="P1"):
+        with tempfile.TemporaryDirectory() as td:
+            row = {
+                "id": "test/rb", "cadences": ["pre-release-real-backend"],
+                "blast_radius": blast, "status": prior_status,
+                "last_verified": prior_lv, "artifact": "artifact.json",
+                "verifier": {"script": "nonexistent.sh"},
+            }
+            with mock.patch.dict(os.environ, {}, clear=True):
+                updated, _ = run.run_row(row, Path(td), datetime.now(timezone.utc))
+            artifact = json.loads((Path(td) / "artifact.json").read_text())
+        return updated, artifact
+
+    def test_prior_pass_flips_and_preserves_history(self):
+        updated, artifact = self._skip("PASS")
+        self.assertEqual(updated["status"], "NOT-VERIFIED")
+        self.assertEqual(updated["last_real_grade"], "PASS")
+        self.assertEqual(updated["last_real_verified"], "2026-06-01T00:00:00Z")
+        self.assertEqual(artifact["skip_reason"], "env-missing")
+        self.assertIn("REPOSIX_ALLOWED_ORIGINS", artifact["skip_detail"])
+
+    def test_litmus_p0_prior_pass_flips_and_is_red(self):
+        # OD-2: a cred-less milestone-close can never ride a stale real PASS.
+        updated, _ = self._skip("PASS", blast="P0")
+        self.assertEqual(updated["status"], "NOT-VERIFIED")
+        self.assertEqual(run.compute_exit_code([updated]), 1)  # RED
+
+    def test_prior_not_verified_writes_no_history(self):
+        updated, _ = self._skip("NOT-VERIFIED", prior_lv=None)
+        self.assertEqual(updated["status"], "NOT-VERIFIED")
+        self.assertNotIn("last_real_grade", updated)
+
+    def test_second_skip_is_idempotent_on_persistent_fields(self):
+        # Run 1: prior PASS -> NOT-VERIFIED + last_real_grade=PASS. Feed the
+        # persisted shape into run 2 (prior NOT-VERIFIED) -> history untouched.
+        r1, _ = self._skip("PASS")
+        r1_persist = {k: v for k, v in r1.items() if not k.startswith("_")}
+        with tempfile.TemporaryDirectory() as td:
+            r1_persist["artifact"] = "artifact.json"
+            r1_persist["verifier"] = {"script": "nonexistent.sh"}
+            with mock.patch.dict(os.environ, {}, clear=True):
+                r2, _ = run.run_row(r1_persist, Path(td), datetime.now(timezone.utc))
+        self.assertEqual(r2["status"], "NOT-VERIFIED")
+        self.assertEqual(r2["last_real_grade"], "PASS")  # not overwritten
+        self.assertEqual(r2["last_real_verified"], "2026-06-01T00:00:00Z")
+
+
+class TestShellSubprocessTranscriptRuntime(unittest.TestCase):
+    """RBF-FW-08 (M6): the runner refuses a shell-subprocess PASS without real
+    transcript evidence (file exists + argv: line)."""
+
+    def _run_ss(self, *, kind="shell-subprocess", transcript_path=None,
+                transcript_body=None, exit_code=0):
+        with tempfile.TemporaryDirectory() as td:
+            tdp = Path(td)
+            if transcript_path is not None and transcript_body is not None:
+                fp = tdp / transcript_path
+                fp.parent.mkdir(parents=True, exist_ok=True)
+                fp.write_text(transcript_body)
+            artifact_body = {"asserts_passed": [], "asserts_failed": []}
+            if transcript_path is not None:
+                artifact_body["transcript_path"] = transcript_path
+            script = tdp / "v.sh"
+            script.write_text(
+                "#!/bin/bash\n"
+                f"cat > artifact.json <<'JSON'\n{json.dumps(artifact_body)}\nJSON\n"
+                f"exit {exit_code}\n"
+            )
+            script.chmod(0o755)
+            row = {
+                "id": "test/ss", "cadences": ["on-demand"], "blast_radius": "P2",
+                "kind": kind, "artifact": "artifact.json",
+                "verifier": {"script": "v.sh", "timeout_s": 10},
+            }
+            updated, _ = run.run_row(row, tdp, datetime.now(timezone.utc))
+            final = json.loads((tdp / "artifact.json").read_text())
+        return updated, final
+
+    def test_valid_transcript_passes(self):
+        updated, _ = self._run_ss(
+            transcript_path="t.txt",
+            transcript_body="argv: /usr/bin/reposix --version\nexit_code: 0\n")
+        self.assertEqual(updated["status"], "PASS")
+
+    def test_no_transcript_path_fails(self):
+        updated, final = self._run_ss(transcript_path=None)
+        self.assertEqual(updated["status"], "FAIL")
+        self.assertTrue(any("no transcript_path" in a for a in final["asserts_failed"]))
+
+    def test_missing_transcript_file_fails(self):
+        updated, final = self._run_ss(transcript_path="gone.txt", transcript_body=None)
+        self.assertEqual(updated["status"], "FAIL")
+        self.assertTrue(any("missing" in a for a in final["asserts_failed"]))
+
+    def test_transcript_without_argv_fails(self):
+        updated, final = self._run_ss(
+            transcript_path="t.txt", transcript_body="cwd: /x\nexit_code: 0\n")
+        self.assertEqual(updated["status"], "FAIL")
+        self.assertTrue(any("argv" in a for a in final["asserts_failed"]))
+
+    def test_non_shell_subprocess_row_not_gated(self):
+        updated, _ = self._run_ss(kind="mechanical", transcript_path=None)
+        self.assertEqual(updated["status"], "PASS")  # gate does not over-fire
+
+
+def _run_main_over_synthetic_catalog(*, dimension: str, row: dict) -> dict:
+    """Drive run.main() over a one-row synthetic catalog in a temp REPO_ROOT so
+    the full grade->strip->persist path is exercised. Returns the persisted row.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        tdp = Path(td)
+        cat_dir = tdp / "quality" / "catalogs"
+        cat_dir.mkdir(parents=True)
+        catalog = {"dimension": dimension, "rows": [row]}
+        cat_path = cat_dir / "synthetic.json"
+        cat_path.write_text(json.dumps(catalog))
+        with mock.patch.object(run, "REPO_ROOT", tdp), \
+             mock.patch.object(run, "CATALOG_DIR", cat_dir), \
+             mock.patch.object(run, "REPORTS_DIR", tdp / "quality" / "reports"), \
+             mock.patch.object(sys, "argv", ["run.py", "--cadence", "pre-push"]), \
+             mock.patch.dict(os.environ, {}, clear=True), \
+             contextlib.redirect_stdout(io.StringIO()):
+            run.main()
+        persisted = json.loads(cat_path.read_text())
+    return persisted["rows"][0]
 
 
 if __name__ == "__main__":

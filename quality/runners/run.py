@@ -97,7 +97,7 @@ def load_catalog(path: Path) -> dict:
     # on (quality/catalogs/README.md "docs-alignment dimension").
     if data["dimension"] != "docs-alignment":
         for row in data.get("rows", []):
-            _audit_field.validate_row(row, str(path), parse_rfc3339)
+            _audit_field.validate_row(row, str(path), parse_rfc3339, data["dimension"])
     return data
 
 
@@ -180,14 +180,29 @@ def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
     artifact_path = repo_root / row["artifact"] if row.get("artifact") else None
 
     # Real-backend env-gate skip (RBF-FW-01); must precede the WAIVED case.
+    # RBF-FW-07b (M8, AMENDED D90-04): a cred-less skip is FAIL-CLOSED for ALL
+    # pre-release-real-backend rows incl. the P0 litmus -- status flips (and
+    # persists) NOT-VERIFIED so a stale real PASS can never ride a cred-less
+    # milestone-close (the skip-as-pass channel OD-2 forbids). The prior REAL
+    # grade is preserved in write-history fields, and the artifact carries an
+    # explicit env-missing marker so the churn is explained, not silent.
     if _realbackend.is_skipped(row, os.environ):
+        prior_status = row.get("status")
         artifact = {
             "ts": now_iso(), "row_id": row["id"], "exit_code": None,
-            "skipped_real_backend": True, "skip_reason": _realbackend.skip_reason(os.environ),
+            "skipped_real_backend": True,
+            "skip_reason": "env-missing",  # machine marker (RBF-FW-07b)
+            "skip_detail": _realbackend.skip_reason(os.environ),  # human recovery text
             "asserts_passed": [], "asserts_failed": [],
         }
         if artifact_path:
             write_artifact(artifact_path, artifact)
+        # Preserve the prior REAL grade ONCE (never overwritten by a subsequent
+        # skip: a second cred-less run sees prior_status NOT-VERIFIED and skips
+        # this branch, leaving last_real_grade untouched -> idempotent).
+        if prior_status in ("PASS", "FAIL", "PARTIAL"):
+            row["last_real_grade"] = prior_status
+            row["last_real_verified"] = row.get("last_verified")
         row["status"] = "NOT-VERIFIED"
         row["_skipped_real_backend"] = True  # transient; stripped before save
         row["last_verified"] = artifact["ts"]
@@ -246,11 +261,13 @@ def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
         }
         if artifact_path:
             write_artifact(artifact_path, artifact)
-        # Status stays whatever the catalog had (likely NOT-VERIFIED already).
-        # Don't flip from PASS->NOT-VERIFIED on a missing verifier — that
-        # would be a regression-on-deploy disguised as runner output.
-        if row.get("status") not in ("PASS", "FAIL", "PARTIAL"):
-            row["status"] = "NOT-VERIFIED"
+        # RBF-FW-07a (cross-AI H4): a missing verifier script is a
+        # framework-integrity FAILURE, not a reason to preserve a stale PASS.
+        # Flip UNCONDITIONALLY to NOT-VERIFIED; the artifact's distinct
+        # `error: verifier not found at ...` marker (above) lets a downstream
+        # reader tell a deploy glitch from a real regression at a glance.
+        row["status"] = "NOT-VERIFIED"
+        row["_verifier_missing"] = True  # transient; drives summary line, stripped before save
         row["last_verified"] = artifact["ts"]
         return row, time.monotonic() - started
 
@@ -312,8 +329,6 @@ def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
     audit_hash = _audit_field.compute_hash(row)
     if audit_hash:
         artifact["claim_vs_assertion_audit_hash"] = audit_hash
-    if artifact_path:
-        write_artifact(artifact_path, artifact)
 
     if timed_out:
         row["status"] = "FAIL"
@@ -328,6 +343,14 @@ def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
             # line falsely printed "verifier not found" for a verifier that
             # DID run (see 89-06 SUMMARY.md "Deviations"). Not persisted.
             row["_exit75_not_verified"] = True
+
+    # Grade-time PASS honesty gates (RBF-FW-08 transcript evidence + F-K4b
+    # per-expected-assert congruence). Logic lives in _audit_field to keep
+    # run.py under its anti-bloat budget; no-op unless status == PASS.
+    _audit_field.apply_pass_gates(row, artifact, repo_root)
+
+    if artifact_path:
+        write_artifact(artifact_path, artifact)
     row["last_verified"] = artifact["ts"]
     return row, time.monotonic() - started
 
@@ -395,6 +418,12 @@ def main() -> int:
                     extra = "skipped: env not set (real-backend origins/creds absent)"
                 elif updated.get("_exit75_not_verified"):
                     extra = "verifier exited 75 (NOT-VERIFIED convention; not a missing-script error)"
+                elif updated.get("_verifier_missing"):
+                    extra = (
+                        f"verifier not found at {row.get('verifier', {}).get('script')} "
+                        f"(RBF-FW-07a: demoted from prior status; deploy glitch vs regression "
+                        f"-> see artifact `error` field)"
+                    )
                 else:
                     extra = f"verifier not found at {row.get('verifier', {}).get('script')}"
             elif updated.get("status") == "WAIVED":
@@ -409,6 +438,7 @@ def main() -> int:
             row.pop("_stale", None)  # transient render flags — never persisted
             row.pop("_skipped_real_backend", None)
             row.pop("_exit75_not_verified", None)
+            row.pop("_verifier_missing", None)
             rid = row.get("id")
             if rid in orig_status_by_id and row.get("status") == orig_status_by_id[rid]:
                 row["last_verified"] = orig_lv_by_id[rid]
