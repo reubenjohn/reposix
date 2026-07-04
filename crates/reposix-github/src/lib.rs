@@ -116,15 +116,29 @@ const STATUS_LABEL_PREFIX: &str = "status/";
 const STATUS_LABEL_IN_PROGRESS: &str = "status/in-progress";
 const STATUS_LABEL_IN_REVIEW: &str = "status/in-review";
 
-/// Max issues we'll page through in one `list_records` call. GitHub allows
-/// 100/page; at 5 pages that's 500 issues — enough for the `octocat/Hello-World`
+/// Max issues we'll return from one `list_records`/`list_changed_since` call.
+/// GitHub allows 100/page; 500 is enough for the `octocat/Hello-World`
 /// fixture and a bounded memory budget for pathological repos. Adjustable in
 /// a future version if users hit the cap.
 const MAX_ISSUES_PER_LIST: usize = 500;
 
 /// Page size GitHub accepts (1..=100). We pick the maximum to minimize HTTP
-/// round-trips within the 5-page cap above.
+/// round-trips.
 const PAGE_SIZE: usize = 100;
+
+/// Safety valve on *raw* items examined (issues + pull requests GitHub's
+/// `/issues` endpoint interleaves), independent of [`MAX_ISSUES_PER_LIST`].
+///
+/// GitHub's `/issues` endpoint returns PRs alongside issues; we discard PRs
+/// before counting against `MAX_ISSUES_PER_LIST` (see the PR-filtering
+/// comment in `list_records`). If the raw-item cap were the same as the
+/// issue-count cap, a PR-heavy repo could exhaust the page budget after
+/// examining mostly PRs, stopping well short of `MAX_ISSUES_PER_LIST` real
+/// issues even though more were reachable a few pages further out. Sizing
+/// this 10x larger than `MAX_ISSUES_PER_LIST` keeps the common (few-PR)
+/// case unaffected — `out.len() >= MAX_ISSUES_PER_LIST` still fires first —
+/// while bounding worst-case pagination against a repo dominated by PRs.
+const MAX_RAW_ITEMS_PER_LIST: usize = MAX_ISSUES_PER_LIST * 10;
 
 /// `BackendConnector` implementation for GitHub's REST v3 Issues API.
 ///
@@ -420,6 +434,20 @@ impl BackendConnector for GithubReadOnlyBackend {
         matches!(feature, BackendFeature::Workflows)
     }
 
+    /// Pages through GitHub's `/repos/{project}/issues?state=all` endpoint,
+    /// translating each real issue and dropping pull requests (GitHub
+    /// interleaves both on this endpoint; see `GhIssue::is_pull_request`).
+    ///
+    /// Two independent caps bound the work:
+    /// - `out.len() >= MAX_ISSUES_PER_LIST` stops once we've collected that
+    ///   many *real* issues — the common-case cap.
+    /// - `raw_examined >= MAX_RAW_ITEMS_PER_LIST` is a safety valve on total
+    ///   items looked at (issues + discarded PRs), so a repo whose `/issues`
+    ///   feed is mostly PRs can't paginate unboundedly while still returning
+    ///   fewer than `MAX_ISSUES_PER_LIST` real issues. When this valve trips
+    ///   the warning states exactly what happened — items examined, pages
+    ///   fetched, issues returned so far, and the configured cap — rather
+    ///   than implying `MAX_ISSUES_PER_LIST` real issues were found.
     async fn list_records(&self, project: &str) -> Result<Vec<Record>> {
         let first = format!(
             "{}/repos/{}/issues?state=all&per_page={}",
@@ -430,6 +458,7 @@ impl BackendConnector for GithubReadOnlyBackend {
         let mut next_url: Option<String> = Some(first);
         let mut out: Vec<Record> = Vec::new();
         let mut pages: usize = 0;
+        let mut raw_examined: usize = 0;
 
         let header_owned = self.standard_headers();
         let header_refs: Vec<(&str, &str)> =
@@ -437,13 +466,6 @@ impl BackendConnector for GithubReadOnlyBackend {
 
         while let Some(url) = next_url.take() {
             pages += 1;
-            if pages > (MAX_ISSUES_PER_LIST / PAGE_SIZE) {
-                tracing::warn!(
-                    pages,
-                    "reached MAX_ISSUES_PER_LIST cap; stopping pagination"
-                );
-                break;
-            }
             self.await_rate_limit_gate().await;
             let resp = self
                 .http
@@ -465,6 +487,7 @@ impl BackendConnector for GithubReadOnlyBackend {
             }
             let page: Vec<GhIssue> = serde_json::from_slice(&bytes)?;
             for gh in page {
+                raw_examined += 1;
                 // GitHub's `/issues` endpoint interleaves pull requests with
                 // real issues; drop PRs before translate/count so
                 // MAX_ISSUES_PER_LIST caps actual issues, not PRs we discard.
@@ -475,6 +498,16 @@ impl BackendConnector for GithubReadOnlyBackend {
                 if out.len() >= MAX_ISSUES_PER_LIST {
                     return Ok(out);
                 }
+            }
+            if raw_examined >= MAX_RAW_ITEMS_PER_LIST {
+                let returned = out.len();
+                let message = format!(
+                    "stopped pagination after examining {raw_examined} raw items \
+                     (issues + PRs) across {pages} pages; returned {returned} issues \
+                     (cap {MAX_ISSUES_PER_LIST}); remainder not listed"
+                );
+                tracing::warn!(raw_examined, pages, returned, "{}", message);
+                break;
             }
             next_url = link_hdr.as_deref().and_then(parse_next_link);
         }
@@ -513,6 +546,10 @@ impl BackendConnector for GithubReadOnlyBackend {
         Ok(translate(gh))
     }
 
+    /// Same pagination loop as `list_records` (reuses `MAX_ISSUES_PER_LIST` /
+    /// `MAX_RAW_ITEMS_PER_LIST` and the PR-filtering behavior — see that
+    /// function's doc comment), narrowed to GitHub's native `?since=` filter
+    /// and emitting IDs only instead of full `Record`s.
     async fn list_changed_since(
         &self,
         project: &str,
@@ -532,6 +569,7 @@ impl BackendConnector for GithubReadOnlyBackend {
         let mut next_url: Option<String> = Some(first);
         let mut out: Vec<RecordId> = Vec::new();
         let mut pages: usize = 0;
+        let mut raw_examined: usize = 0;
 
         let header_owned = self.standard_headers();
         let header_refs: Vec<(&str, &str)> =
@@ -539,13 +577,6 @@ impl BackendConnector for GithubReadOnlyBackend {
 
         while let Some(url) = next_url.take() {
             pages += 1;
-            if pages > (MAX_ISSUES_PER_LIST / PAGE_SIZE) {
-                tracing::warn!(
-                    pages,
-                    "reached MAX_ISSUES_PER_LIST cap; stopping pagination"
-                );
-                break;
-            }
             self.await_rate_limit_gate().await;
             let resp = self
                 .http
@@ -567,6 +598,7 @@ impl BackendConnector for GithubReadOnlyBackend {
             }
             let page: Vec<GhIssue> = serde_json::from_slice(&bytes)?;
             for gh in page {
+                raw_examined += 1;
                 // Same PR-filtering as list_records — see the comment there.
                 if gh.is_pull_request() {
                     continue;
@@ -576,6 +608,16 @@ impl BackendConnector for GithubReadOnlyBackend {
                 if out.len() >= MAX_ISSUES_PER_LIST {
                     return Ok(out);
                 }
+            }
+            if raw_examined >= MAX_RAW_ITEMS_PER_LIST {
+                let returned = out.len();
+                let message = format!(
+                    "stopped pagination after examining {raw_examined} raw items \
+                     (issues + PRs) across {pages} pages; returned {returned} changed \
+                     issue ids (cap {MAX_ISSUES_PER_LIST}); remainder not listed"
+                );
+                tracing::warn!(raw_examined, pages, returned, "{}", message);
+                break;
             }
             next_url = link_hdr.as_deref().and_then(parse_next_link);
         }
@@ -1217,5 +1259,82 @@ mod tests {
         let t = Utc.with_ymd_and_hms(2026, 4, 24, 0, 0, 0).unwrap();
         let ids = backend.list_changed_since("o/r", t).await.expect("list");
         assert_eq!(ids, vec![RecordId(1)], "the PR must be dropped");
+    }
+
+    /// Re-audit (R2): the old page-count safety valve (`pages >
+    /// MAX_ISSUES_PER_LIST / PAGE_SIZE`, i.e. 5 pages) fired regardless of
+    /// how many of the examined items were PRs. A repo whose first 9 pages
+    /// are all pull requests would have stopped at page 5 with ZERO real
+    /// issues returned, even though page 10 holds 100 genuine issues.
+    ///
+    /// The fix decouples the safety valve from page count and bases it on
+    /// raw items examined (`MAX_RAW_ITEMS_PER_LIST` = 10x `MAX_ISSUES_PER_LIST`),
+    /// so pagination continues past the old 5-page boundary while still
+    /// under the new raw-item budget, and the real issues on page 10 are
+    /// reached and returned.
+    struct PrHeavyThenIssuesResponder {
+        next_page: std::sync::atomic::AtomicUsize,
+        server_uri: String,
+    }
+
+    impl wiremock::Respond for PrHeavyThenIssuesResponder {
+        fn respond(&self, _request: &wiremock::Request) -> ResponseTemplate {
+            let page = self
+                .next_page
+                .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
+                + 1;
+            // Pages 1..=9 (900 raw items) are 100% PRs; page 10 is 100% real
+            // issues. Old cap: 5 pages -> 0 issues returned. New cap: 5000
+            // raw items -> pagination reaches page 10 (1000 raw items).
+            let body: Vec<serde_json::Value> = (0..100)
+                .map(|i| {
+                    let number = u64::try_from(page * 1000 + i).unwrap();
+                    if page < 10 {
+                        gh_pr_json(number, "open")
+                    } else {
+                        gh_issue_json(number, "open", None, &[])
+                    }
+                })
+                .collect();
+            let mut resp = ResponseTemplate::new(200).set_body_json(json!(body));
+            if page < 10 {
+                let next_url = format!(
+                    "{}/repos/o/r/issues?state=all&per_page=100&page={}",
+                    self.server_uri,
+                    page + 1
+                );
+                let link_val = format!("<{next_url}>; rel=\"next\"");
+                resp = resp.insert_header("Link", link_val.as_str());
+            }
+            resp
+        }
+    }
+
+    #[tokio::test]
+    async fn list_records_reaches_real_issues_past_a_pr_heavy_prefix() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/repos/o/r/issues"))
+            .respond_with(PrHeavyThenIssuesResponder {
+                next_page: std::sync::atomic::AtomicUsize::new(0),
+                server_uri: server.uri(),
+            })
+            .mount(&server)
+            .await;
+
+        let backend =
+            GithubReadOnlyBackend::new_with_base_url(None, server.uri()).expect("backend");
+        let issues = backend.list_records("o/r").await.expect("list");
+        assert_eq!(
+            issues.len(),
+            100,
+            "the 100 real issues on page 10 must be reached and returned, not \
+             discarded by a page-count-based safety valve that fires on PR-heavy pages"
+        );
+        assert_eq!(
+            issues[0].id,
+            RecordId(10_000),
+            "expected the page-10 issue numbering"
+        );
     }
 }
