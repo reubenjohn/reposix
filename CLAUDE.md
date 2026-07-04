@@ -39,63 +39,8 @@ The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The f
 5. **Working tree IS a real git checkout.** The whole point of v0.9.0 is that `.git/` is real, not synthetic; `git diff` is the change set by construction, not by emulation. The partial clone (`extensions.partialClone=origin`) makes blobs lazy, but everything else is upstream git.
 6. **Real backends are first-class test targets.** Three canonical targets are sanctioned for aggressive testing: **Confluence space "TokenWorld"** (owned by the user; safe to mutate freely), **GitHub repo `reubenjohn/reposix` issues** (ours; safe to create/close issues during tests), and **JIRA project `TEST`** (default key; overridable via `JIRA_TEST_PROJECT` or `REPOSIX_JIRA_PROJECT`). See `docs/reference/testing-targets.md` for env-var setup, owner permission statement, and cleanup procedure. Simulator remains the default (OP-1), but "simulator-only coverage" does NOT satisfy acceptance for transport-layer or performance claims.
 7. **Phase-close means catalog-row PASS.** No phase ships on the executing agent's word. An unbiased verifier subagent grades the catalog rows — if RED, the phase loops back. See "Verifier subagent dispatch" in the Quality Gates section below.
-8. **Plans accommodate surprises (the +2 phase practice).** Every
-   milestone reserves its **last two phases** as absorption slots for
-   what reality surfaces during planned-phase execution:
-   - **Slot 1 — Surprises absorption.** Issues a planned phase
-     discovered but couldn't fix without doubling its scope. The
-     discovering phase appends to
-     `.planning/milestones/<v>-phases/SURPRISES-INTAKE.md` (one entry
-     per item: severity + what + whf(c)zy-out-of-scope + sketched
-     resolution) instead of silently skipping or expanding scope.
-     The surprises-absorption phase drains the file: each entry → RESOLVED |
-     DEFERRED | WONTFIX, each with a commit SHA or rationale.
-   - **Slot 2 — Good-to-haves polish.** Improvements (clarity, perf,
-     consistency, grounding) the planned phases observed but didn't
-     fold in. Same intake mechanism, separate file
-     (`GOOD-TO-HAVES.md`). Sized XS / S / M; XS items always close;
-     M items default-defer to next milestone.
-
-   **Eager-resolution preference (load-bearing):** when a planned
-   phase observes a surprise or polish item, prefer fixing it inside
-   the discovering phase IF (a) < 1 hour incremental work, (b) no
-   new dependency introduced. The +2 reservation is for items that
-   genuinely don't fit the discovering phase. **What this practice
-   prevents:** the "found-it-but-skipped-it" failure mode where good
-   signal gets dropped to keep a phase tight; AND the
-   "scope-creep-to-fit-the-finding" failure mode where a phase grows
-   to twice its planned size to absorb every drift discovered. The
-   intake split makes "I saw it, here's what I think, P<last-2> will
-   handle it" the default move.
-
-   **Verifier honesty check:** the surprises-absorption phase's
-   verifier subagent spot-checks the previous phases' plans + verdicts
-   and asks "did this phase honestly look for out-of-scope items?" An
-   empty intake is acceptable IF the running phases produced
-   "Eager-resolution" decisions in their plans; an empty intake when
-   the verdicts show skipped findings is a RED signal. This prevents
-   the practice from degrading into a no-op.
-
-   The +2 reservation is in addition to whatever planned phases the
-   milestone scopes; if the milestone has 8 planned phases, it
-   actually has 10 (planned + 2 reservation). Roadmap entries for the
-   reservation phases name them explicitly so they're not omitted by
-   accident.
-9. **Milestone-close ritual: distill before archiving.** Each
-   milestone's `*-phases/{SURPRISES-INTAKE,GOOD-TO-HAVES}.md` entries
-   AND the autonomous-run session findings get distilled into a new
-   section of `.planning/RETROSPECTIVE.md` BEFORE the milestone
-   archives — using the existing template (What Was Built / What
-   Worked / What Was Inefficient / Patterns Established / Key
-   Lessons). Raw intake files travel with the milestone archive into
-   `*-phases/`; distilled lessons live permanently and discoverably
-   in `RETROSPECTIVE.md`. **Why:** without this step, learnings get
-   lost in milestone archives — the +2 phase practice produces signal
-   that's worth keeping cross-milestone (failure modes, patterns,
-   process gaps) but the raw intake format is too granular for future
-   readers to skim. The ratification subagent for milestone-close
-   should verify a RETROSPECTIVE.md section exists for the milestone
-   and grade RED if it doesn't.
+8. **Plans accommodate surprises (the +2 phase practice).** Every milestone reserves its last two phases as absorption slots: Slot 1 drains `SURPRISES-INTAKE.md` (each entry → RESOLVED | DEFERRED | WONTFIX with SHA or rationale), Slot 2 drains `GOOD-TO-HAVES.md` (XS always closes; M default-defers). Eager-resolution preference: fix inside the discovering phase if < 1 hour and no new dependency; otherwise file to intake — never silently skip, never scope-creep to fit. The surprises-absorption verifier spot-checks prior phases' honesty: an empty intake alongside skipped findings in verdicts is RED. Long-form (slots, failure modes, honesty check): `.planning/PRACTICES.md` § OP-8.
+9. **Milestone-close ritual: distill before archiving.** Intake files + autonomous-run findings get distilled into a new `.planning/RETROSPECTIVE.md` section BEFORE the milestone archives; raw intakes travel with the archive. The milestone-close ratification subagent grades RED if the RETROSPECTIVE.md section is missing. Long-form: `.planning/PRACTICES.md` § OP-9.
 
 ## Workspace layout
 
@@ -124,17 +69,11 @@ never loose at `.planning/milestones/` top-level:
 
 ```
 .planning/milestones/
-├── v0.8.0-phases/
-│   ├── ARCHIVE.md             # condensed milestone log (per POLISH2-21)
-│   ├── ROADMAP.md             # milestone-level scoping (kept intact)
-│   ├── REQUIREMENTS.md        # milestone-level scoping (kept intact)
-│   └── tag-v0.8.0.sh          # historical one-shot release script
-├── v0.9.0-phases/
-│   ├── ROADMAP.md
-│   └── tag-v0.9.0.sh
-└── v0.10.0-phases/
-    ├── ROADMAP.md
-    └── tag-v0.10.0.sh
+└── v0.8.0-phases/
+    ├── ARCHIVE.md             # condensed milestone log (per POLISH2-21)
+    ├── ROADMAP.md             # milestone-level scoping (kept intact)
+    ├── REQUIREMENTS.md        # milestone-level scoping (kept intact)
+    └── tag-v0.8.0.sh          # historical one-shot release script
 ```
 
 The `freshness/no-loose-roadmap-or-requirements` claim in
@@ -148,19 +87,17 @@ inside `*-phases/` from day one.
 - Rust stable (1.82+ via `rust-toolchain.toml`).
 - Async: `tokio` 1.
 - Web: `axum` 0.7 + `reqwest` 0.12 (rustls only, never openssl-sys).
-- Git: `gix` 0.83 (pinned with `=` because gix is pre-1.0; bumped from 0.82 in P78 — issues #29 + #30 yanked the prior pin). **Runtime requirement: `git >= 2.34`** for `extensions.partialClone` + `stateless-connect`.
+- Git: `gix` 0.83 (pinned with `=` because gix is pre-1.0). **Runtime requirement: `git >= 2.34`** for `extensions.partialClone` + `stateless-connect`.
 - Storage: `rusqlite` 0.32 with `bundled` feature (no system libsqlite3).
 - Errors: `thiserror` for typed crate errors, `anyhow` only at binary boundaries.
 
 ## Commands you'll actually use
 
 ```bash
-# Local dev loop
+# Local dev loop (full matrix in CONTRIBUTING.md)
 bash scripts/install-hooks.sh                             # one-time after fresh clone (sets core.hooksPath=.githooks)
-cargo check --workspace                                   # fast type check
-cargo test --workspace                                    # unit + integration tests
-cargo clippy --workspace --all-targets -- -D warnings     # CI lint
-cargo fmt --all                                           # CI fmt
+cargo check --workspace && cargo test --workspace         # type check + tests (see Build memory budget below)
+cargo clippy --workspace --all-targets -- -D warnings && cargo fmt --all
 
 # Run the stack
 cargo run -p reposix-sim                                  # start simulator on :7878
@@ -177,8 +114,7 @@ git push reposix main                                     # push via reposix rem
 # L1 escape hatch (v0.13.0+): rebuild the cache from REST when a push reject suggests cache desync
 reposix sync --reconcile                                  # full list_records walk + cache rebuild (DVCS-PERF-L1-02)
 
-# Bus push (v0.13.0+ P83-01): URL form `reposix::<sot>?mirror=<mirror-url>` recognized + dispatched; cheap prechecks (mirror drift + SoT drift) gate the push BEFORE reading stdin. Write fan-out shipped in P83-01 — SoT-first + mirror-best-effort + lag-tracking (DVCS-BUS-WRITE-01..05); fault-injection coverage lands in P83-02.
-git push reposix main                                     # bus push (URL: reposix::<sot>?mirror=<url>; SoT-first + mirror-best-effort + lag-tracking — DVCS-BUS-WRITE-01..05 in v0.13.0)
+git push reposix main                                     # bus push (URL: reposix::<sot>?mirror=<url>; prechecks + SoT-first fan-out — see § Load-bearing behaviors)
 
 # Webhook-driven mirror sync (v0.13.0 P84+; mirror repo only)
 gh api repos/reubenjohn/reposix-tokenworld-mirror/dispatches \
@@ -189,23 +125,9 @@ bash scripts/webhook-latency-measure.sh                    # owner-runnable n=10
 bash quality/gates/agent-ux/dark-factory.sh sim                # v0.9.0 arm — init + partial-clone + helper teaching strings (local + CI)
 bash quality/gates/agent-ux/dark-factory.sh dvcs-third-arm     # v0.13.0 P86 arm — vanilla-clone + reposix attach + bus URL composition + cache audit (local + CI)
 
-# Testing against real backends — see docs/reference/testing-targets.md for env-var setup.
-# Pre-flight (verify .env creds + sanctioned targets reachable before running any real-backend test):
+# Testing against real backends — env-var setup, per-backend export blocks, and the
+# dark_factory_real_{confluence,github,jira} invocations live in docs/reference/testing-targets.md.
 bash scripts/preflight-real-backends.sh                    # exit 0 = sanctioned targets reachable; exit 1 = auth/network gap; exit 2 = no creds
-# Confluence — TokenWorld space (safe to mutate)
-export ATLASSIAN_API_KEY=… ATLASSIAN_EMAIL=… REPOSIX_CONFLUENCE_TENANT=reuben-john
-export REPOSIX_ALLOWED_ORIGINS='https://reuben-john.atlassian.net'
-cargo test -p reposix-cli --test agent_flow_real -- --ignored dark_factory_real_confluence
-
-# GitHub — reubenjohn/reposix issues (safe to mutate)
-export GITHUB_TOKEN=…
-export REPOSIX_ALLOWED_ORIGINS='https://api.github.com'
-cargo test -p reposix-cli --test agent_flow_real -- --ignored dark_factory_real_github
-
-# JIRA — default project key TEST (overridable via JIRA_TEST_PROJECT or REPOSIX_JIRA_PROJECT)
-export JIRA_EMAIL=… JIRA_API_TOKEN=… REPOSIX_JIRA_INSTANCE=…
-export JIRA_TEST_PROJECT=TEST
-cargo test -p reposix-cli --test agent_flow_real -- --ignored dark_factory_real_jira
 ```
 
 ## GSD workflow
@@ -267,11 +189,11 @@ Before declaring any user-facing surface shipped (hero copy, install instruction
 
 ## Freshness invariants
 
-All invariants are enforced by `quality/runners/verdict.py` (pre-push hook; `python3 quality/runners/verdict.py session-end` is the module `scripts/end-state.py` used to shim to). When a push is blocked, read the error — it names the violated invariant and the fix. The invariants: no version-pinned filenames, install path leads with package manager, benchmarks in mkdocs nav, no loose ROADMAP/REQUIREMENTS outside `*-phases/`, no orphan docs.
+All invariants are enforced by `quality/runners/verdict.py` (pre-push hook; on-demand: `python3 quality/runners/verdict.py session-end`). When a push is blocked, read the error — it names the violated invariant and the fix. The invariants: no version-pinned filenames, install path leads with package manager, benchmarks in mkdocs nav, no loose ROADMAP/REQUIREMENTS outside `*-phases/`, no orphan docs.
 
 ## Release pipeline
 
-**`release-plz.toml`** — `git_release_enable = false` at the workspace level so release-plz does NOT create per-package GitHub releases. Why: each per-package release (zero assets) was published *after* the canonical `v*` release and stole the `releases/latest` pointer, 404'ing the user-facing installer URLs and 3 catalog rows (`release/gh-assets-present`, `install/curl-installer-sh`, `install/powershell-installer-ps1`). Per-package tags and crates.io publishes are unaffected. The canonical multi-platform release lives at `.github/workflows/release.yml` (tag `v*`).
+**`release-plz.toml`** — `git_release_enable = false` at the workspace level so release-plz does NOT create per-package GitHub releases: each zero-asset per-package release used to steal the `releases/latest` pointer, 404'ing installer URLs and 3 release/install catalog rows. Per-package tags and crates.io publishes are unaffected. The canonical multi-platform release lives at `.github/workflows/release.yml` (tag `v*`).
 
 ## Subagent delegation rules
 
@@ -302,23 +224,9 @@ updating the instructions guarantees recurrence.
 
 ## Threat model
 
-This project is a textbook lethal-trifecta machine:
+This project is a textbook lethal-trifecta machine: private data (issue bodies in the working tree) + untrusted input (every body/comment/title is attacker-influenced) + exfiltration paths (`git push` to arbitrary remotes; helper + cache make outbound HTTP). The mandatory, tested cuts: `REPOSIX_ALLOWED_ORIGINS` egress allowlist through the single `reposix_core::http::client()` factory (clippy `disallowed_methods` bans direct `reqwest::Client::new()`); bytes-in-bytes-out export path with `Tainted<T>` → `sanitize()` as the only escape hatch; frontmatter field allowlist stripping server-controlled fields on inbound writes; append-only dual audit tables (OP-3); and the env-gated `pre-release-real-backend` cadence that makes allowlist enforcement testable end-to-end (fails closed, see § "Subagent delegation rules").
 
-| Leg of trifecta | Where it shows up here |
-| --- | --- |
-| Private data | The partial-clone working tree exposes issue bodies, internal field values, attachments. |
-| Untrusted input | Every issue body / comment / title is attacker-influenced text. |
-| Exfiltration | `git push` can target arbitrary remotes; the helper + cache make outbound HTTP. |
-
-Cuts that are mandatory and tested:
-
-- **Outbound HTTP allowlist.** The remote helper (`git-remote-reposix`) and the cache materializer (`reposix-cache`) refuse to talk to any origin not in `REPOSIX_ALLOWED_ORIGINS` (env var, defaults to `http://127.0.0.1:*` only). All HTTP construction goes through the single `reposix_core::http::client()` factory; clippy's `disallowed_methods` catches direct `reqwest::Client::new()` call sites.
-- **No shell escape from `export` / cache writes.** Bytes-in-bytes-out; no rendering, no template expansion. The `Tainted<T>` → `Untainted<T>` conversion is the explicit `sanitize` step where escaping happens.
-- **Frontmatter field allowlist.** Server-controlled fields (`id`, `created_at`, `version`, `updated_at`) cannot be overridden by client writes; they are stripped on the inbound `export` path before the REST call.
-- **Audit log append-only.** Both `audit_events_cache` and `audit_events` tables (SQLite WAL, no UPDATE/DELETE). Schema split + forensic-query rationale in OP-3.
-- **`pre-release-real-backend` cadence (P89 RBF-FW-01)** is the gate that makes real-backend HTTP-allowlist enforcement testable end-to-end: it env-gates on `REPOSIX_ALLOWED_ORIGINS` naming a non-localhost origin AND a complete credential set, so it cannot run against a missing allowlist and its milestone-close 9th probe fails closed (see § "Subagent delegation rules").
-
-See `research/threat-model-and-critique.md` (produced by red-team subagent) for the full analysis.
+Full per-cut table with code locations: `docs/how-it-works/trust-model.md`. Red-team analysis: `research/threat-model-and-critique.md`.
 
 ## What to do when context fills
 
