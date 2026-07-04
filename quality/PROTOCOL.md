@@ -163,6 +163,129 @@ them. **P97's `tag-v0.13.0.sh` MUST wire this guard** (the script currently
 ships `.disabled` per Path A/Option B; P97 RBF-G-04 re-enables it and adds
 the probe-9 invocation before any tag is cut).
 
+#### Absorption honesty spot-check dispatch (P90 RBF-FW-10 / F-K5, D90-08)
+
+Every milestone's Slot-1 absorption phase (OP-8's "+2 phase practice",
+`.planning/PRACTICES.md` § OP-8) MUST run the honesty spot-check per the
+F-K5 meta-rule template at `quality/dispatch/absorption-honesty-spot-check.md`
+— four binding clauses, verbatim in that file: (a) sample **every** phase
+that closed without filing intake, (b) spot-check author **≠** the
+milestone orchestrator, (c) rubric is "walk one critical example
+end-to-end mentally — does it work?" (not "did the phase follow
+procedure?"), (d) the verifier **content-hash-binds** the report, not
+mere file existence. Row `agent-ux/absorption-honesty-template-present`
+(verifier `quality/gates/agent-ux/absorption-honesty-template-present.sh`)
+asserts the template itself exists, its sha256 matches the script's
+`EXPECTED_SHA` constant, and all four clauses are grep-present — this
+guards the template, not any given milestone's report. Editing the
+template requires updating `EXPECTED_SHA` in the same commit (the
+hash-binding contract).
+
+#### Milestone-close adversarial pass (P90 RBF-FW-12 / D90-09)
+
+A milestone cannot close GREEN on catalog-row status alone. A **fresh
+subagent, distinct from the milestone orchestrator**, reads catalog row
+**descriptions only** (`comment` / `expected.asserts` / `owner_hint` /
+`claim_vs_assertion_audit` — never verifier source or implementation) per
+`quality/dispatch/milestone-adversarial.md`, and grades whether each row's
+assertion would actually falsify its description if the description were
+false. It writes
+`quality/reports/verifications/adversarial/<version>.json` (the D90-09
+path — deliberately **not** the `milestone-adversarial/` path sketched in
+`90-RESEARCH-runner.md` § RBF-FW-12; the catalog row comment for
+`agent-ux/milestone-adversarial-pass` names the D90-09 path as
+authoritative).
+
+`quality/runners/verdict.py --milestone <version>` reads this artifact via
+`milestone_adversarial_gate(repo_root, version)` (`verdict.py:159-173`):
+blocks (forces `color = "red"`) if the artifact is absent, or if it
+reports ≥1 entry in `rows_failed`. The gate is wired in `main()`
+(`verdict.py:386-394`) strictly as a **darken-only** step — it composes
+with `compute_color`/`compute_exit_code` by forcing red after they run; it
+never lightens an already-red verdict back to green (D-CONV-2's 3-state
+contract is unmodified). Row `agent-ux/milestone-adversarial-pass`
+(verifier `quality/gates/agent-ux/milestone-adversarial-pass.sh`, a thin
+wrapper over `python3 -m unittest quality.runners.test_verdict`) backs the
+regression cases in `TestMilestoneAdversarialGate`
+(`quality/runners/test_verdict.py`): artifact-absent blocks even when every
+row is PASS, empty `rows_failed` does not block, ≥1 failed row blocks, and
+darken-only never flips an already-red verdict to green.
+
+#### New runner/validator semantics (P90 90-01/90-02, RBF-FW-06/07/08/12 + F-K4b)
+
+Progressive disclosure: this is the reference index; full design rationale
+lives in `.planning/phases/90-framework-fixes-honesty-rules/90-RESEARCH-runner.md`
+(cited `R1` below) and the four **deviations from R1's original proposal**
+ratified during implementation are recorded in
+`.planning/phases/90-framework-fixes-honesty-rules/90-PAUSE-HANDOFF.md`
+§ 1 (cited `PAUSE-HANDOFF` below) — read that file before trusting R1's
+prose over the code for the skip-path and congruence-gating semantics.
+
+- **Missing-verifier demote + `error` marker (RBF-FW-07a).** A catalog row
+  whose `verifier.script` does not exist on disk flips **unconditionally**
+  to `NOT-VERIFIED` (`run.py:252-270`, transient `_verifier_missing` flag
+  stripped before persist) — no longer preserving a stale PASS (R1 § 1a).
+  The artifact's `error: "verifier not found at ..."` marker is now
+  **rendered** by `verdict.py`'s NOT-VERIFIED section (`verdict.py:258-265`)
+  so a missing-script row is visually distinguishable from a merely-stale
+  one, instead of looking identical (R1 noticing 2, closed in this task).
+- **Env-gated skip is fail-closed, not preserve-status (RBF-FW-07b,
+  AMENDED D90-04 — deviates from R1's original "preserve prior status"
+  design; see PAUSE-HANDOFF item (1)).** A cred-less
+  `pre-release-real-backend` run ALWAYS flips (and persists) the row to
+  `NOT-VERIFIED` (`run.py:187-207`), including the P0 vision-litmus row —
+  this closes the skip-as-pass channel OD-2 forbids. The prior real grade
+  is not lost: when the prior status was PASS/FAIL/PARTIAL it is recorded
+  once in the write-history fields **`last_real_grade`** /
+  **`last_real_verified`** (`run.py:203-205`; schema:
+  `quality/catalogs/README.md:41`), never overwritten by a subsequent
+  skip. The skip artifact carries the machine marker **`skip_reason:
+  "env-missing"`** plus human-readable **`skip_detail`**
+  (`run.py:194-195`) — NOT a single combined field; both names are
+  load-bearing for any code that reads the artifact (PAUSE-HANDOFF item
+  (2)).
+- **`minted_at` write-once audit-cutoff anchor (D90-03 / cross-AI H2).**
+  `_audit_field.py:38-42,229-247`: when a row carries `minted_at` it is the
+  SOLE anchor for the `claim_vs_assertion_audit` cutoff (a hand-edited
+  `last_verified` can no longer move it); rows whose `last_verified` is
+  on/after `P90_MINT_CUTOFF` (`_audit_field.py:42`,
+  `2026-07-05T00:00:00Z`) but lack `minted_at` are rejected at load.
+  Legacy rows (no `minted_at`) fall back to the pre-P90 `last_verified`
+  heuristic — the docs-alignment dimension is exempted from this whole
+  validation loop unchanged (`run.py:98-100`).
+- **`coverage_kind` hard-new / RAISE-legacy split + `transport_claim`
+  tri-state (RBF-FW-06 / D90-05).** `_audit_field.py:81-99,260-278`: rows
+  minted ≥ P90 that are transport/perf-claim (via
+  `is_transport_or_perf_row` — explicit `transport_claim: true/false`
+  overrides the description-regex, which is gated to the
+  `perf`/`agent-ux`/`security` dimensions) MUST declare
+  `coverage_kind: real-backend` (or a compliant waiver) — hard `SystemExit`
+  at load if absent. Legacy (pre-`minted_at`) transport/perf rows are
+  RAISE-only (`quality/reports/raise-list-p90.md`), never blocked — the
+  migration is P95 RBF-D-06's chartered work, not enforced retroactively.
+- **`kind: shell-subprocess` transcript enforcement at grade time
+  (RBF-FW-08 / M6).** Two halves, co-located in `_audit_field.py` per R1
+  noticing: `_has_transcript_contract` (load-time: a transcript CONTRACT
+  must be declared) and `transcript_evidence_ok` (`_audit_field.py:100-124`,
+  runtime: the transcript file must actually exist and carry an `argv:`
+  line). `apply_pass_gates` (`_audit_field.py:182-220`, called from
+  `run.py:350`) demotes a would-be PASS to FAIL when the transcript
+  evidence is missing — a shell-subprocess row can no longer PASS on exit
+  0 alone with no transcript.
+- **F-K4b per-expected-assert congruence, gated on `minted_at`
+  (ROADMAP SC2 / D90-12 item 1 — deviates from a naive "both lists
+  non-empty" design; see PAUSE-HANDOFF item (1)).** `asserts_congruent`
+  (`_audit_field.py:151-181`) requires each `expected.asserts` entry to
+  normalized-token-match at least one `asserts_passed` entry; an unmatched
+  expected assert blocks the PASS flip. Called from `apply_pass_gates`
+  **only when `row.get("minted_at")` is truthy** (`_audit_field.py:209`) —
+  new-regime rows only. This is deliberate, not an oversight: legacy prose
+  asserts (e.g. `docs-repro/example-03`) would false-RED under any
+  token-threshold check, so congruence is **armed-but-dormant** on legacy
+  rows until they're re-minted. The p86 F6 fixture (9-item `expected` vs
+  17-item `asserts_passed`, two uncovered) is the required regression case
+  proving the gate actually fires when it should.
+
 #### Latency budgets
 
 Each cadence carries a hard time budget; rows whose verifier exceeds the

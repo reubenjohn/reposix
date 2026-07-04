@@ -108,5 +108,115 @@ class TestEmitMarkdownVerdictThreeState(unittest.TestCase):
         self.assertIn("Verdict: **RED**", text)
 
 
+class TestNotVerifiedRendersErrorMarker(unittest.TestCase):
+    """FW-07a (R1 noticing 2): the NOT-VERIFIED section must surface an
+    artifact's `error` field (e.g. "verifier not found at ...") so a
+    missing-verifier row is distinguishable from a merely-stale one."""
+
+    def test_error_marker_rendered_when_present(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            art_dir = repo_root / "quality" / "reports" / "verifications" / "agent-ux"
+            art_dir.mkdir(parents=True)
+            art_path = art_dir / "some-row.json"
+            art_path.write_text(
+                '{"error": "verifier not found at quality/gates/agent-ux/missing.sh"}',
+                encoding="utf-8",
+            )
+            row = {
+                "id": "agent-ux/some-row",
+                "blast_radius": "P1",
+                "status": "NOT-VERIFIED",
+                "dimension": "agent-ux",
+                "artifact": "quality/reports/verifications/agent-ux/some-row.json",
+            }
+            out_path = repo_root / "verdict.md"
+            verdict.emit_markdown_verdict([row], "on-demand", out_path, repo_root)
+            text = out_path.read_text(encoding="utf-8")
+            self.assertIn("error: `verifier not found at quality/gates/agent-ux/missing.sh`", text)
+
+    def test_no_error_marker_when_absent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            row = {
+                "id": "agent-ux/some-other-row",
+                "blast_radius": "P1",
+                "status": "NOT-VERIFIED",
+                "dimension": "agent-ux",
+            }
+            out_path = repo_root / "verdict.md"
+            verdict.emit_markdown_verdict([row], "on-demand", out_path, repo_root)
+            text = out_path.read_text(encoding="utf-8")
+            self.assertNotIn("error:", text)
+
+
+class TestMilestoneAdversarialGate(unittest.TestCase):
+    """RBF-FW-12 / D90-09: milestone-close cannot go GREEN without a fresh
+    adversarial-pass artifact reporting zero failed rows. R1's 3 cases plus
+    the darken-only-never-lightens regression (D-CONV-2)."""
+
+    def _artifact_dir(self, repo_root: Path) -> Path:
+        d = repo_root / "quality" / "reports" / "verifications" / "adversarial"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+    def test_artifact_absent_blocks_even_with_all_pass_rows(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            blocked, reason = verdict.milestone_adversarial_gate(repo_root, "v0.13.0")
+            self.assertTrue(blocked)
+            self.assertIn("artifact absent", reason)
+
+    def test_empty_rows_failed_does_not_block(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            d = self._artifact_dir(repo_root)
+            (d / "v0.13.0.json").write_text(
+                '{"milestone": "v0.13.0", "rows_failed": [], "verdict": "PASS"}',
+                encoding="utf-8",
+            )
+            blocked, reason = verdict.milestone_adversarial_gate(repo_root, "v0.13.0")
+            self.assertFalse(blocked)
+            self.assertEqual(reason, "")
+
+    def test_one_failed_row_blocks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            d = self._artifact_dir(repo_root)
+            (d / "v0.13.0.json").write_text(
+                '{"milestone": "v0.13.0", '
+                '"rows_failed": [{"id": "agent-ux/some-row", "reason": "vacuous assertion"}], '
+                '"verdict": "FAIL"}',
+                encoding="utf-8",
+            )
+            blocked, reason = verdict.milestone_adversarial_gate(repo_root, "v0.13.0")
+            self.assertTrue(blocked)
+            self.assertIn("agent-ux/some-row", reason)
+
+    def test_darken_only_never_lightens_an_already_red_verdict(self):
+        # Simulate main()'s --milestone branch logic directly: a P0 FAIL row
+        # makes compute_color red on its own; a clean (non-blocking)
+        # adversarial artifact must not flip it back to green.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            d = self._artifact_dir(repo_root)
+            (d / "v0.13.0.json").write_text(
+                '{"milestone": "v0.13.0", "rows_failed": [], "verdict": "PASS"}',
+                encoding="utf-8",
+            )
+            rows = [_row("P0", "FAIL")]
+            color = verdict.compute_color(rows)
+            self.assertEqual(color, "red")
+            blocked, _reason = verdict.milestone_adversarial_gate(repo_root, "v0.13.0")
+            self.assertFalse(blocked)
+            # main()'s logic: color starts red, gate does not block -> color
+            # stays whatever compute_color said. It never gets set back to
+            # green by the gate -- the gate can only ever force red, never
+            # override a red compute_color result to green.
+            if blocked:
+                color = "red"
+            self.assertEqual(color, "red")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -41,6 +41,17 @@ decisions in their plans; an empty intake when the verdicts show
 skipped findings is a RED signal. This prevents the practice from
 degrading into a no-op.
 
+**F-K5 meta-rule (P90 RBF-FW-10, D90-08):** the above honesty check is
+not discretionary prose — it is formalized, hash-bound, and
+mechanically verified at
+`quality/dispatch/absorption-honesty-spot-check.md` (four binding
+clauses: sample EVERY no-intake phase; spot-check author ≠ milestone
+orchestrator; rubric = "walk one critical example end-to-end mentally
+— does it work?"; verifier content-hash-binds the report). Every
+Slot-1 absorption phase MUST run that template, not reinvent this
+section's prose from scratch. See `quality/PROTOCOL.md` § "Absorption
+honesty spot-check dispatch" for the runtime contract.
+
 The +2 reservation is in addition to whatever planned phases the
 milestone scopes; if the milestone has 8 planned phases, it actually
 has 10 (planned + 2 reservation). Roadmap entries for the reservation

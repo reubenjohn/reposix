@@ -156,6 +156,23 @@ def compute_badge_message(rows: list[dict]) -> str:
     return f"{p0p1_green}/{len(p0p1)} GREEN"
 
 
+def milestone_adversarial_gate(repo_root: Path, version: str) -> tuple[bool, str]:
+    """RBF-FW-12/D90-09 (blocked, reason): fresh-subagent adversarial-pass
+    artifact at quality/reports/verifications/adversarial/<version>.json.
+    Blocks if absent or reports >=1 rows_failed. Darken-only -- see --milestone."""
+    art_path = repo_root / "quality" / "reports" / "verifications" / "adversarial" / f"{version}.json"
+    if not art_path.exists():
+        return True, f"adversarial-pass artifact absent at {art_path.relative_to(repo_root)}"
+    try:
+        data = json.loads(art_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return True, f"adversarial-pass artifact at {art_path.relative_to(repo_root)} is not valid JSON"
+    failed = data.get("rows_failed", []) or []
+    if failed:
+        return True, f"{len(failed)} row(s) failed adversarial audit: {[r.get('id', '?') for r in failed]}"
+    return False, ""
+
+
 def compute_exit_code(color: str, fail_on: str) -> int:
     """0 iff `color` is strictly better than the `--fail-on` threshold.
 
@@ -241,9 +258,11 @@ def emit_markdown_verdict(rows: list[dict], cadence_or_phase: str, out_path: Pat
         for r in not_verified:
             lv = r.get("last_verified") or "never"
             ttl = r.get("freshness_ttl") or "(mechanical)"
-            lines.append(
-                f"- `{r.get('id')}` (P{r.get('blast_radius', '?')[-1]}, dim={r.get('dimension')}) — last_verified: `{lv}`, freshness_ttl: `{ttl}`"
-            )
+            line = f"- `{r.get('id')}` (P{r.get('blast_radius', '?')[-1]}, dim={r.get('dimension')}) — last_verified: `{lv}`, freshness_ttl: `{ttl}`"
+            art = load_artifact(r, repo_root) or {}  # FW-07a: surface `error` (e.g. missing-verifier) when present
+            if art.get("error"):
+                line += f" — error: `{art['error']}`"
+            lines.append(line)
     lines.append("")
 
     # P61 SUBJ-03: STALE sub-table inside the NOT-VERIFIED section. A row only
@@ -336,6 +355,10 @@ def main() -> int:
     parser.add_argument("--cadence", choices=CADENCES, default=None)
     parser.add_argument("--phase", type=int, default=None)
     parser.add_argument(
+        "--milestone", default=None,
+        help="Version (e.g. v0.13.0); gates close-verdict on RBF-FW-12 adversarial-pass artifact (darken-only).",
+    )
+    parser.add_argument(
         "--fail-on",
         choices=("red", "yellow"),
         default="yellow",
@@ -346,7 +369,9 @@ def main() -> int:
     args = parser.parse_args()
 
     rows = collate_rows(args.cadence)
-    if args.phase is not None:
+    if args.milestone is not None:
+        scope = f"milestone-{args.milestone}"
+    elif args.phase is not None:
         scope = f"p{args.phase}"
     elif args.cadence is not None:
         scope = args.cadence
@@ -359,7 +384,14 @@ def main() -> int:
     emit_shields_endpoint_json(rows, BADGE_PATH)
 
     color = compute_color(rows)
+    adversarial_reason = ""
+    if args.milestone is not None:
+        blocked, adversarial_reason = milestone_adversarial_gate(REPO_ROOT, args.milestone)
+        if blocked:
+            color = "red"  # darken-only (D-CONV-2): never lightens an already-red verdict
     print(f"verdict: {color} ({compute_badge_message(rows)}) -> {out_path.relative_to(REPO_ROOT)}")
+    if adversarial_reason:
+        print(f"milestone-adversarial-gate: BLOCKED — {adversarial_reason}")
     return compute_exit_code(color, args.fail_on)
 
 
