@@ -630,7 +630,13 @@ async fn contract_github() {
     let token = std::env::var("GITHUB_TOKEN").ok();
     let backend = GithubReadOnlyBackend::new(token).expect("backend");
 
-    // octocat/Hello-World is GitHub's canonical stable fixture repo. Issue
-    // #1 has existed since 2011 and is unlikely to disappear.
-    assert_contract(&backend, "octocat/Hello-World", RecordId(1)).await;
+    // octocat/Hello-World is GitHub's canonical stable fixture repo. Record
+    // #1 on this repo's `/issues` endpoint is actually a pull request (GitHub
+    // interleaves PRs there); since the PR filter landed in d722491,
+    // get_record(1) now correctly errors as "not an issue" instead of
+    // silently translating it. #7 (created 2011-12-22, closed, verified via
+    // `gh api repos/octocat/Hello-World/issues?state=all&sort=created` to
+    // have no `pull_request` field) is the oldest genuine issue and has been
+    // stable for 14+ years — use it as the known-good round-trip id.
+    assert_contract(&backend, "octocat/Hello-World", RecordId(7)).await;
 }
