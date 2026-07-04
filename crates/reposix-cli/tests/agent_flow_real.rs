@@ -22,25 +22,29 @@
 //! `cargo test --test agent_flow_real -- --ignored` is safe to run on a
 //! fresh-clone CI without any secrets.
 //!
-//! Per Plan 35-03: the helper still hardcodes `SimBackend` (Phase 32
-//! limitation — see 32-SUMMARY.md), so the "real-backend exercise"
-//! verified here is bounded to:
-//!   1. `reposix init <real-backend>::<project> <path>` succeeds
-//!      (init configures local state; fetch is best-effort).
+//! The `dark_factory_real_*` init smokes assert the config-string
+//! contract:
+//!   1. `reposix init <real-backend>::<project> <path>` succeeds.
 //!   2. `git config remote.origin.url` returns the expected
-//!      `reposix::https://...` URL.
+//!      `reposix::https://…` URL (incl. the `/confluence/` or `/jira/`
+//!      disambiguator marker).
 //!
-//! Live `git fetch` against a real backend is deferred to a future phase
-//! when the helper learns multi-backend dispatch. Plan 35-03 ships the
-//! gated infrastructure now so Phase 36 can wire the
-//! `integration-contract-{confluence,github,jira}-v09` CI jobs without
-//! touching test source.
+//! The `attach_real_*` / `sync_real_*` smokes go further and exercise a
+//! REAL round-trip. `reposix attach` and `reposix sync --reconcile`
+//! construct the concrete backend connector through the git remote
+//! helper's shared dispatch factory (`reposix_remote::backend_dispatch`)
+//! and call `list_records` against the live backend. This supersedes the
+//! old "the helper still hardcodes `SimBackend`" Phase-32 limitation —
+//! that debt was closed by `backend_dispatch` (Phase 36-followup) and is
+//! now consumed by `attach`/`sync` (v0.13.0 real-backend wiring). The
+//! smokes assert `extensions.partialClone` + `remote.<name>.url` are
+//! configured and that `sync --reconcile` reports a reconcile result.
 
 #![forbid(unsafe_code)]
 #![warn(clippy::pedantic)]
 
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 /// Skip the enclosing test if any listed env var is unset or empty.
 ///
@@ -181,6 +185,239 @@ fn dark_factory_real_jira() {
         url.ends_with(&expected_suffix),
         "url should encode the /jira/ marker + project {project}, got {url}"
     );
+}
+
+// --- attach_real_* / sync_real_* — real round-trip smokes (RBF-A-04) ------
+//
+// Unlike the init smokes above (which only assert a config string), these
+// drive `reposix attach` / `sync --reconcile` end-to-end against a live
+// backend: the shared dispatch factory constructs the real connector and
+// `build_from` / `Cache::sync` issue a real `list_records`. All are
+// `#[ignore]` + `skip_if_no_env!`-gated, so `cargo test` (no `--ignored`)
+// on a fresh clone with no secrets is a clean no-op.
+
+/// Vanilla `git init` a fresh repo, then run
+/// `reposix attach <spec> <repo> --remote-name <name> --no-bus` with an
+/// isolated cache dir and egress allowlist. Returns the tempdir (kept
+/// alive by the caller), the attach output, the repo path, and the cache
+/// dir (so a follow-up `sync --reconcile` can reuse the same cache).
+fn run_attach_real(
+    spec: &str,
+    remote_name: &str,
+    allowed_origins: &str,
+) -> (tempfile::TempDir, std::process::Output, PathBuf, PathBuf) {
+    let bin = target_bin("reposix");
+    assert!(
+        bin.exists(),
+        "reposix not built at {}; run `cargo build --workspace --bins` first",
+        bin.display()
+    );
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let repo = tmp.path().join("repo");
+    std::fs::create_dir_all(&repo).expect("create repo dir");
+    let init = Command::new("git")
+        .args(["-C", repo.to_str().unwrap(), "init", "-q"])
+        .status()
+        .expect("git init");
+    assert!(init.success(), "git init failed");
+    let cache = tmp.path().join("cache");
+    let out = Command::new(&bin)
+        .args([
+            "attach",
+            spec,
+            repo.to_str().unwrap(),
+            "--remote-name",
+            remote_name,
+            "--no-bus",
+        ])
+        .env("REPOSIX_CACHE_DIR", &cache)
+        .env("REPOSIX_ALLOWED_ORIGINS", allowed_origins)
+        .stdin(Stdio::null())
+        .output()
+        .expect("run reposix attach");
+    (tmp, out, repo, cache)
+}
+
+/// Assert an attach output configured the reposix remote:
+/// `extensions.partialClone == <remote_name>` and `remote.<name>.url`
+/// starts with `reposix::` and contains `expected_url_contains`.
+fn assert_attach_configured(
+    out: &std::process::Output,
+    repo: &Path,
+    remote_name: &str,
+    expected_url_contains: &str,
+) {
+    assert!(
+        out.status.success(),
+        "reposix attach failed: stdout={:?} stderr={:?}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let pclone = Command::new("git")
+        .args([
+            "-C",
+            repo.to_str().unwrap(),
+            "config",
+            "extensions.partialClone",
+        ])
+        .output()
+        .expect("git config partialClone");
+    assert_eq!(
+        String::from_utf8_lossy(&pclone.stdout).trim(),
+        remote_name,
+        "extensions.partialClone must be the reposix remote name"
+    );
+    let url_out = Command::new("git")
+        .args([
+            "-C",
+            repo.to_str().unwrap(),
+            "config",
+            &format!("remote.{remote_name}.url"),
+        ])
+        .output()
+        .expect("git config remote url");
+    let url = String::from_utf8_lossy(&url_out.stdout).trim().to_string();
+    assert!(
+        url.starts_with("reposix::") && url.contains(expected_url_contains),
+        "remote.{remote_name}.url should start with reposix:: and contain {expected_url_contains}, got {url}"
+    );
+}
+
+/// Run `reposix sync --reconcile <repo>` reusing the cache the attach
+/// populated (so the configured reposix remote is discoverable) and assert
+/// it lists real records without error.
+fn assert_sync_reconcile_ok(repo: &Path, cache: &Path, allowed_origins: &str) {
+    let bin = target_bin("reposix");
+    let out = Command::new(&bin)
+        .args(["sync", "--reconcile", repo.to_str().unwrap()])
+        .env("REPOSIX_CACHE_DIR", cache)
+        .env("REPOSIX_ALLOWED_ORIGINS", allowed_origins)
+        .stdin(Stdio::null())
+        .output()
+        .expect("run reposix sync --reconcile");
+    assert!(
+        out.status.success(),
+        "sync --reconcile failed: stdout={:?} stderr={:?}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.contains("reposix sync:"),
+        "sync --reconcile should report a reconcile result, got: {stdout}"
+    );
+}
+
+/// Confluence `TokenWorld` real-backend attach round-trip.
+#[test]
+#[ignore = "real-backend; requires ATLASSIAN_API_KEY/EMAIL/REPOSIX_CONFLUENCE_TENANT"]
+fn attach_real_confluence() {
+    skip_if_no_env!(
+        "ATLASSIAN_API_KEY",
+        "ATLASSIAN_EMAIL",
+        "REPOSIX_CONFLUENCE_TENANT"
+    );
+    let tenant = std::env::var("REPOSIX_CONFLUENCE_TENANT").expect("checked");
+    let space = confluence_test_space();
+    let allowed = format!("http://127.0.0.1:*,https://{tenant}.atlassian.net");
+    let (_tmp, out, repo, _cache) =
+        run_attach_real(&format!("confluence::{space}"), "reposix", &allowed);
+    assert_attach_configured(
+        &out,
+        &repo,
+        "reposix",
+        &format!("{tenant}.atlassian.net/confluence/projects/{space}"),
+    );
+}
+
+/// Confluence `TokenWorld` real-backend `sync --reconcile` round-trip.
+#[test]
+#[ignore = "real-backend; requires ATLASSIAN_API_KEY/EMAIL/REPOSIX_CONFLUENCE_TENANT"]
+fn sync_real_confluence() {
+    skip_if_no_env!(
+        "ATLASSIAN_API_KEY",
+        "ATLASSIAN_EMAIL",
+        "REPOSIX_CONFLUENCE_TENANT"
+    );
+    let tenant = std::env::var("REPOSIX_CONFLUENCE_TENANT").expect("checked");
+    let space = confluence_test_space();
+    let allowed = format!("http://127.0.0.1:*,https://{tenant}.atlassian.net");
+    let (_tmp, out, repo, cache) =
+        run_attach_real(&format!("confluence::{space}"), "reposix", &allowed);
+    assert!(
+        out.status.success(),
+        "attach prerequisite failed: {:?}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert_sync_reconcile_ok(&repo, &cache, &allowed);
+}
+
+/// GitHub `reubenjohn/reposix` real-backend attach round-trip.
+#[test]
+#[ignore = "real-backend; requires GITHUB_TOKEN"]
+fn attach_real_github() {
+    skip_if_no_env!("GITHUB_TOKEN");
+    let allowed = "http://127.0.0.1:*,https://api.github.com";
+    let (_tmp, out, repo, _cache) =
+        run_attach_real("github::reubenjohn/reposix", "reposix", allowed);
+    assert_attach_configured(
+        &out,
+        &repo,
+        "reposix",
+        "api.github.com/projects/reubenjohn/reposix",
+    );
+}
+
+/// GitHub `reubenjohn/reposix` real-backend `sync --reconcile` round-trip.
+#[test]
+#[ignore = "real-backend; requires GITHUB_TOKEN"]
+fn sync_real_github() {
+    skip_if_no_env!("GITHUB_TOKEN");
+    let allowed = "http://127.0.0.1:*,https://api.github.com";
+    let (_tmp, out, repo, cache) =
+        run_attach_real("github::reubenjohn/reposix", "reposix", allowed);
+    assert!(
+        out.status.success(),
+        "attach prerequisite failed: {:?}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert_sync_reconcile_ok(&repo, &cache, allowed);
+}
+
+/// JIRA `TEST` (or `JIRA_TEST_PROJECT` override) real-backend attach.
+#[test]
+#[ignore = "real-backend; requires JIRA_EMAIL/JIRA_API_TOKEN/REPOSIX_JIRA_INSTANCE"]
+fn attach_real_jira() {
+    skip_if_no_env!("JIRA_EMAIL", "JIRA_API_TOKEN", "REPOSIX_JIRA_INSTANCE");
+    let instance = std::env::var("REPOSIX_JIRA_INSTANCE").expect("checked");
+    let project = jira_test_project();
+    let allowed = format!("http://127.0.0.1:*,https://{instance}.atlassian.net");
+    let (_tmp, out, repo, _cache) =
+        run_attach_real(&format!("jira::{project}"), "reposix", &allowed);
+    assert_attach_configured(
+        &out,
+        &repo,
+        "reposix",
+        &format!("{instance}.atlassian.net/jira/projects/{project}"),
+    );
+}
+
+/// JIRA `TEST` (or override) real-backend `sync --reconcile` round-trip.
+#[test]
+#[ignore = "real-backend; requires JIRA_EMAIL/JIRA_API_TOKEN/REPOSIX_JIRA_INSTANCE"]
+fn sync_real_jira() {
+    skip_if_no_env!("JIRA_EMAIL", "JIRA_API_TOKEN", "REPOSIX_JIRA_INSTANCE");
+    let instance = std::env::var("REPOSIX_JIRA_INSTANCE").expect("checked");
+    let project = jira_test_project();
+    let allowed = format!("http://127.0.0.1:*,https://{instance}.atlassian.net");
+    let (_tmp, out, repo, cache) =
+        run_attach_real(&format!("jira::{project}"), "reposix", &allowed);
+    assert!(
+        out.status.success(),
+        "attach prerequisite failed: {:?}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert_sync_reconcile_ok(&repo, &cache, &allowed);
 }
 
 /// Defensive sanity test: without any env vars, all three skip cleanly.

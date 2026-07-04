@@ -280,6 +280,11 @@ jobs:
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           REPOSIX_JIRA_INSTANCE: ${{ secrets.REPOSIX_JIRA_INSTANCE }}
+          # Owner's live JIRA project key is KAN, not the default TEST; forward
+          # it so the real-backend smoke targets the project the tenant owns
+          # (SURPRISES-INTAKE 2026-07-03, D91-09). Absent secret -> jira_test_project()
+          # falls back to TEST.
+          JIRA_TEST_PROJECT: ${{ secrets.JIRA_TEST_PROJECT }}
         run: |
           if [ -z "$JIRA_EMAIL" ] || [ -z "$JIRA_API_TOKEN" ] \
              || [ -z "$REPOSIX_JIRA_INSTANCE" ]; then
@@ -321,10 +326,12 @@ jobs:
           ATLASSIAN_API_KEY: ${{ secrets.ATLASSIAN_API_KEY }}
           ATLASSIAN_EMAIL: ${{ secrets.ATLASSIAN_EMAIL }}
           REPOSIX_CONFLUENCE_TENANT: ${{ secrets.REPOSIX_CONFLUENCE_TENANT }}
-          # JIRA — TEST project; instance via REPOSIX_JIRA_INSTANCE.
+          # JIRA — project key via JIRA_TEST_PROJECT (owner's is KAN; falls
+          # back to TEST when unset); instance via REPOSIX_JIRA_INSTANCE.
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           REPOSIX_JIRA_INSTANCE: ${{ secrets.REPOSIX_JIRA_INSTANCE }}
+          JIRA_TEST_PROJECT: ${{ secrets.JIRA_TEST_PROJECT }}
         run: |
           # Build the full allowlist up-front; the script narrows per
           # backend block so the helper-spawned cache only sees the
