@@ -10,8 +10,8 @@ workstreams:
     milestone_name: DVCS over REST (extended)
     status: executing  # P89 execution started 2026-07-03 (top-level orchestration mode)
     phases_total: 20  # P78-P97 (P78-P88 shipped + P89-P97 extension)
-    phases_completed: 12  # P78-P89
-    next_phase: P90  # P89 SHIPPED GREEN 2026-07-04 (verdict 0e21e2a); P90 planning next
+    phases_completed: 13  # P78-P90
+    next_phase: P91  # P90 SHIPPED GREEN 2026-07-04 (verdict at quality/reports/verdicts/p90/VERDICT.md); P91 next — QL-001 ROUTED to P91 per D90-01 (real-git-push-e2e waiver backstop expires 2026-07-31)
     blocks_tag: true  # v0.13.0 tag does NOT push until P97 GREEN; tag push delegated to orchestrator per OD-3
   workstream_b:
     milestone: v0.13.2
@@ -33,10 +33,10 @@ workstreams:
 
 ### Workstream A — v0.13.0 (extended) — EXECUTING
 
-Phase: P89 SHIPPED 2026-07-04. Verdict GREEN at `quality/reports/verdicts/p89/VERDICT.md` (commit 0e21e2a). All 6 framework rows landed: 5 PASS + `agent-ux/milestone-close-vision-litmus-real-backend` legitimately NOT-VERIFIED (SLOT per D-03c until P91–P95 substrate). OD-1/OD-3 satisfied: cross-AI review of the IMPLEMENTED framework at `.planning/phases/89-framework-fixes-cadence-shell-kind/89-CROSS-AI-REVIEW.md` (Codex gpt-5.5 + Claude + independent leg substituting for unavailable Gemini); H1 (loopback env-gate) + H3 (OD-2 waiver rejection) fixed in-phase; H2/H4/M8 filed to SURPRISES-INTAKE for P90. OD-3 delegation exercised (owner sign-off delegated; owner notified in session summary). v0.13.0 originally shipped P78–P88 2026-05-01, then EXTENDED 2026-05-08 with P89–P97 (real-backend frictions remediation, sourced from `.planning/research/v0.13.0-real-backend-frictions/03-synthesis/REMEDIATION-PLAN.md`). Tag pushed only after P97 GREEN.
-Plan: shipped — 8 plan files at `.planning/phases/89-framework-fixes-cadence-shell-kind/89-0*-PLAN.md` executed (waves 1–4); execution deviations recorded in 89-CROSS-AI-REVIEW.md + SURPRISES-INTAKE.
-Status: P89 GREEN — 12/20 phases complete (P78–P89 shipped); next P90. v0.13.0 tag held until P97 GREEN (tag push delegated to orchestrator per OD-3).
-Next agent action: plan + execute P90 (F-K4 honesty rules: coverage_kind, asserts cross-check, dispatch.sh — RBF-FW-06..09, -10, -12). P90's plans should drain the four cross-AI intake entries (missing-verifier PASS-preservation, minted_at anchor, sanctioned-target residual, skip-demote semantics — all RBF-FW-07/-08/-12-shaped).
+Phase: P90 SHIPPED 2026-07-04. Verdict GREEN at `quality/reports/verdicts/p90/VERDICT.md` (all 8 SCs PASS; unbiased zero-context verifier re-ran the 9 P90-minted rows independently). Honesty rules landed: `minted_at` write-once anchor, `coverage_kind` hard-new/RAISE-legacy + `transport_claim` tri-state, missing-verifier→NOT-VERIFIED + `error` marker, env-skip fail-closed with `last_real_grade`/`last_real_verified` history, shell-subprocess transcript-at-grade-time, F-K4b per-expected-assert congruence (gated on minted_at per D90-05, p86 F6 fixture REDs), `test-name-vs-asserts.sh` pre-push gate (4-entry baseline), absorption-honesty + milestone-adversarial dispatch templates + verdict.py GREEN-block. RAISE LIST at `quality/reports/raise-list-p90.md` seeds P92/P94/P95. Waiver cliff disposed per-waiver (D90-02): 14 renewed with live `tracked_in`, binstall cleared (already fixed 33dd41f), `agent-ux/real-git-push-e2e` deliberately NOT renewed. **QL-001 ROUTED to P91 per D90-01** — ROADMAP P91 names its 6 sharpened criteria + D90-06 sanctioned-target litmus criterion; the `real-git-push-e2e` waiver (expires 2026-07-31) is the backstop if P91 slips. 5 MISSING_TEST doc-alignment rows closed with real tests (90-06); `git-checkout-branch-command` stays waived (QL-001-blocked). Deviations journaled in `quality/SURPRISES.md` (5 entries 2026-07-04). Tag pushed only after P97 GREEN.
+Plan: shipped — 7 plan files + OVERVIEW + DECISIONS at `.planning/phases/90-framework-fixes-honesty-rules/` executed (waves A–E, sequential single-tree-writer); Wave B1 evidence + 4 deviations in `90-PAUSE-HANDOFF.md`.
+Status: P90 GREEN — 13/20 phases complete (P78–P90 shipped); next P91. v0.13.0 tag held until P97 GREEN (tag push delegated to orchestrator per OD-3).
+Next agent action: plan + execute P91 (real-backend wiring; TokenWorld litmus T2 REOPEN gate; QL-001 fix per the amended ROADMAP P91 entry — 6 criteria + sanctioned-target litmus-body assertion; preflight 3/3 PASS as of 2026-07-03). P91 must land QL-001 before the 2026-07-31 `real-git-push-e2e` waiver expiry.
 
 ### Workstream B — v0.13.2 — QUEUED (RESEQUENCED per OD-4)
 
