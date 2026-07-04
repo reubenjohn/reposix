@@ -315,6 +315,54 @@
 
 **STATUS:** OPEN
 
+## 2026-07-04 06:20 | discovered-by: Stage-1 Lane-A (QL-001 empirical reproduction) | severity: BLOCKER
+
+**What:** The push diff planner cannot round-trip a genuinely git-produced push from a real reposix working tree. VERIFIED by real end-to-end `git push` against the seeded sim (not a hand-crafted fast-export stream). Three compounding bugs, plus two environmental/consistency findings:
+
+- **BUG-1 (path-shape mismatch — the ledger's QL-001).** `diff::plan` keys the prior record list on `format!("{:04}.md", id)` = bare, 4-zero-padded, NO `issues/` prefix (`crates/reposix-remote/src/diff.rs:104-107`). But every real on-disk tree uses `issues/<id>.md`. There are in fact FOUR code sites that spell the same issue's path THREE different ways:
+  - cache / stateless-connect production read path → `issues/42.md` (unpadded, `issues/` subtree): `crates/reposix-cache/src/builder.rs:90` (`format!("{}.md", id)`) + `:135` (`issues` outer entry).
+  - `reposix refresh` CLI → `issues/00000000042.md` (11-zero-pad): `crates/reposix-cli/src/refresh.rs:104,120` (`format!("{:011}.md", id)`).
+  - import fallback (deprecated, git<2.34) → `0042.md` (bare 4-pad): `crates/reposix-remote/src/fast_import.rs:63` (`M 100644 :{} {:04}.md`).
+  - push planner prior-key → `0042.md` (bare 4-pad): `diff.rs:106`.
+  The planner agrees ONLY with the deprecated import fallback. Against the real cache/refresh shape, `prior_by_path.get(path)` misses for every record → each blob is a Create and each prior record is a Delete. **Reproduced:** unmodified push of a 6-issue `issues/<id>.md` tree vs a fresh 6-issue sim → `error: refusing to push (would delete 6 issues; cap is 5; commit message tag '[allow-bulk-delete]' overrides)` / `! [remote rejected] master -> main (bulk-delete)`. With ≤5 prior records the cap does NOT fire and the push silently deletes every existing record and re-creates them under fresh IDs (observed: ids 1-6 rotated to 7-11 in an earlier trial). Also: `issue_id_from_path` (`diff.rs:74-77` AND its duplicate `main.rs:432-435` — QL-157) does `strip_suffix(".md")` then `parse::<u64>()`; it returns `None` for any `issues/`-prefixed path, so the explicit `D issues/<id>.md` delete branch (`diff.rs:180`) is also silently dropped for real paths.
+
+- **BUG-2 (planner parses non-issue blobs as issues — no path filter).** `plan()` runs `frontmatter::parse` on EVERY tree path. `reposix refresh` writes `.reposix/fetched_at.txt` + `.reposix/.gitignore` into the tree; any push carrying them fails with `error: invalid issue at .reposix/fetched_at.txt: ... missing frontmatter open fence; refusing push` / `(invalid-blob:.reposix/fetched_at.txt)`. There is no `issues/*.md`-only filter. Compounds with the fact that `parse_export_stream` inserts every `M`-added path into `out.tree` and never removes it on a later `D` (`fast_import.rs:181` insert vs `:185` deletes-vec append), so a file added then deleted across commits (e.g. a `.reposix/` blob dropped in a later commit) still reaches `plan()` and rejects the push.
+
+- **BUG-3 (stream parser swallows a directive after commit-message data — silent data loss on the CORRECT path shape too).** `parse_export_stream`'s `data N` handler unconditionally consumes one whole line after `read_exact` (`fast_import.rs:156-157`: `let _ = r.read_line(&mut maybe_nl);`). The comment says "consume one [LF] if present" but it eats a full line whether or not an LF is present. Blob payloads are followed by an extra blank line (safe), but git fast-export emits the commit **message** payload immediately followed by the first `M` line with no extra LF — so that `read_line` swallows `M 100644 :1 <path>`. Result: the lowest-id issue (first M-line after the commit) is dropped from `parsed.tree` → classified as a spurious Delete. **Reproduced:** a NO-OP push (zero edits) of the planner's OWN native `0001.md..0006.md` shape against a fresh 6-issue sim returned exit 0 but DELETED issue 1 (`GET /projects/demo/issues/1` → HTTP 404; sim count 6→5, ids 2-6, no version bumps). This is a data-loss bug independent of BUG-1 and deterministic (always the first M-line).
+
+- **FINDING-A (environment: production read path needs git ≥ 2.34; this box has 2.25.1).** With git 2.25, `git fetch` falls back to the deprecated `import` capability, which (a) emits the commit to `refs/reposix/origin/main` while git expects `refs/reposix/main` → `fatal: could not read ref refs/reposix/main`; and (b) a forced `-c protocol.version=2` fetch reaches stateless-connect but the cache open dies with `git: git config --add transfer.hideRefs failed: fatal: not in a git directory`. So the canonical `reposix init && git checkout origin/main && edit && git push` loop cannot run to completion on git < 2.34, and the failure messages do NOT teach "upgrade git" — they surface as cryptic ref/gitdir errors. The reproduction above therefore drove the real export→parse→plan code by constructing the real on-disk tree shapes directly and pushing them; the planner code path exercised is byte-identical to the git-2.34 path.
+
+- **FINDING-B (test blind spot confirmed).** Every unit test in `diff.rs` (`five_deletes_passes_cap`, `unchanged_push_emits_no_patches`, etc.) hand-builds the `parsed.tree` map with the bare-padded `0001.md` shape, so they all pass while never touching the real path shape. `quality/gates/agent-ux/dark-factory/sim.sh` asserts only working-tree CONFIG (partialClone/promisor/filter) and helper stderr-teaching strings — it never performs a `git push`, so the round-trip is untested at the agent-ux gate too.
+
+**Why out-of-scope for eager-resolution:** This is not a contained single-crate fix. A coherent fix must (1) pick ONE canonical on-disk path shape and align four code sites (`builder.rs`, `refresh.rs`, `fast_import.rs`, `diff.rs`) + the shared `issue_id_from_path` contract (consolidating the QL-157 duplicate as part of it — consolidating the two copies NOW would be churn, since the correct fix rewrites the function to strip the `issues/` prefix and tolerate any/zero padding); (2) add an `issues/*.md` path filter to the planner; (3) harden the stream parser to peek-and-consume the optional LF instead of eating a line, plus reconcile M-then-D within the stream; and (4) ship a regression test that performs a REAL `git push` (not a synthetic stream) whose green state depends on all of the above landing together — a parser-only fix cannot be verified against reality because the path-shape bug still fails the push. Attempting a partial fix would land code whose regression test cannot pass and risks half-fixing the planner semantics.
+
+**Sketched resolution (P90/P91 MUST consume):** Decide the canonical path shape (recommend `issues/<id>.md` unpadded — the cache/stateless-connect production shape at `builder.rs:90`, which is also the CLAUDE.md-documented UX `issues/42.md`) and make `refresh.rs`, `fast_import.rs` (import + emit), and `diff.rs` all produce/consume exactly that, with a single shared `issue_id_from_path` that strips the `issues/` prefix. Add the non-issue-path filter. Fix the parser's trailing-LF handling (peek one byte; consume only if `\n`) and make `D` remove from `out.tree`. Then add the agent-ux `git push` round-trip.
+
+**Sharpened acceptance criteria (verifiable, must be a REAL push):**
+1. A real `git push` from a `reposix init`'d tree (or a tree in the canonical `issues/<id>.md` shape) round-trips exactly ONE edited record against the sim as a single PATCH, with **zero** manual fast-export and **misclassification count == 0** (no Creates, no Deletes).
+2. A **no-op** push (pull, no edits, push) produces **zero** backend writes — no create/update/delete, no record deleted, no version bump on any record (directly falsifies BUG-3).
+3. A push of the full seeded tree against a matching sim produces **zero** Delete actions (falsifies BUG-1's create/delete storm).
+4. A tree containing `.reposix/` metadata (as `reposix refresh` writes) pushes without an `invalid-blob` rejection (falsifies BUG-2).
+5. The regression runs a REAL `git push` end-to-end at the agent-ux gate; if the harness requires git ≥ 2.34, it asserts the version precondition and fails loud (not silently skips) on older git.
+6. All four path-shape sites are grep-verifiable as producing the single canonical spelling for a given id.
+
+**Repro recipe (self-contained; drove the real export→parse→plan path on git 2.25 by constructing the real tree shapes):**
+```
+# sim: target/debug/reposix-sim --bind 127.0.0.1:7878 --ephemeral \
+#        --seed-file crates/reposix-sim/fixtures/seed.json   (6 issues, ids 1-6)
+# PATH must include target/debug (for git-remote-reposix); export
+#   REPOSIX_ALLOWED_ORIGINS=http://127.0.0.1:7878
+# In a fresh git repo, remote.origin.url=reposix::http://127.0.0.1:7878/projects/demo:
+#   BUG-1: commit issues/1.md..issues/6.md (rendered by `reposix refresh`), push
+#          -> "refusing to push (would delete 6 issues; cap is 5)"
+#   BUG-3: commit 0001.md..0006.md (bare shape), push unmodified
+#          -> exit 0 but issue 1 GONE (GET /projects/demo/issues/1 -> 404)
+#   BUG-2: keep `reposix refresh`'s .reposix/fetched_at.txt in the tree, push
+#          -> "invalid issue at .reposix/fetched_at.txt ... refusing push"
+```
+
+**STATUS:** OPEN
+
 ## 2026-07-04 05:40 | discovered-by: steward-window (post-P89) | severity: LOW
 
 **What:** Editing any file that a docs-alignment row binds via a **whole-file hash** flips that row `BOUND` → `STALE_TEST_DRIFT` even when the row's actual claim is untouched. The steward window's committed changes tripped 3 such rows (`claims_bound` 270→267, `alignment_ratio` 0.804→0.795, still well above the 0.5 floor so the pre-push walk stayed GREEN): one bound to `bench-latency-cron.yml` (whole-file hash; drifted by the item-4 `branch-suffix: timestamp` removal — the cited `line 32` persist-credentials claim is unchanged) and two bound to `release.yml` (aarch64-musl matrix + 5-target matrix whole-file hashes; drifted by the sanctioned dependabot `actions/checkout@v7` + `upload/download-artifact` version-ref bumps merged in #35/#36/#37). All 3 claims remain TRUE; only the whole-file hashes are stale. The pre-push docs-alignment walker also mutates `quality/catalogs/doc-alignment.json` in place (last_walked + verdict flips), so a chore that touches any hash-bound file leaves the tree dirty post-push — committed here per the established `catalog(...)` convention (e.g. a4ac3e4).
