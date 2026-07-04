@@ -163,7 +163,7 @@
 
 **Sketched resolution:** P91 rewrites these as real fetch/push assertions per the RBF plan; drop the stale Phase-32 module-doc claim in the same commit.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (P91-03 Task 3, commit 3f67c0e). Added `attach_real_{confluence,github,jira}` + `sync_real_{confluence,github,jira}` #[ignore] smokes that exercise a REAL round-trip (attach + `sync --reconcile` construct the connector via the shared dispatch factory and call `list_records` against the live backend), not just an init config string. The stale "helper still hardcodes SimBackend" module-doc claim was corrected in the same commit. Verified against reality: the Confluence pair ran green against the live tenant (2 passed).
 
 ## 2026-07-03 11:45 | discovered-by: resumption audit (8-week idle gap) | severity: LOW
 
@@ -213,7 +213,7 @@
 
 **Sketched resolution:** Forward JIRA_TEST_PROJECT (secret or repo variable) in ci.yml's JIRA integration job. Home: P91 or P95.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (P91-03 Task 3, commit 3f67c0e). Added `JIRA_TEST_PROJECT: ${{ secrets.JIRA_TEST_PROJECT }}` to BOTH JIRA env blocks in ci.yml (integration-contract-jira-v09 and bench-latency-v09). `jira_test_project()` resolves `JIRA_TEST_PROJECT` → `REPOSIX_JIRA_PROJECT` → `TEST`, so the owner's KAN key now reaches the real-backend smokes; absent secret still falls back to TEST.
 
 ## 2026-07-03 21:00 | discovered-by: P89 orchestrator (CI triage) | severity: LOW
 
