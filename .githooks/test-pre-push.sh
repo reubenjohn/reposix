@@ -118,6 +118,25 @@ if ! run_and_check "github_pat_ rejected" 1; then
 fi
 git reset -q --hard HEAD^
 
+# --- TEST 5b: commit with a Google API key (AIza...) is rejected. -----
+# Regression coverage for secret-scanning alert #1 (2026-07-04): a
+# google_api_key leaked in a bootstrap-seed .playwright-mcp log and the
+# committed cred-hygiene gate had no Google pattern. Fixture is a
+# SYNTHETIC AIza-shaped string (39 chars: prefix + 35), never a real key.
+# The key is assembled at RUNTIME from two halves so no AIza-shaped
+# literal exists in this source file — secret scanners (gitleaks etc.)
+# pattern-match any AIza-shaped string, real or fake, and would
+# otherwise block the push that ships this harness.
+fake_google_prefix='AIza'
+fake_google_rest='SyDfakeFAKEfake0123456789abcdefghij'
+printf 'GOOGLE_KEY=%s%s\n' "$fake_google_prefix" "$fake_google_rest" > .test-pre-push-fixture.txt
+git add .test-pre-push-fixture.txt
+git -c user.email=test@test -c user.name=test commit -q -m "test: inject fake Google API key"
+if ! run_and_check "Google AIza API key rejected" 1; then
+  fails=$((fails + 1))
+fi
+git reset -q --hard HEAD^
+
 # --- TEST 6: hook file itself is excluded from self-scan. -------------
 # (Confirm the hook doesn't fail against its own PATTERNS=('ATATT3' ...)
 # body. We do this by triggering a fake commit that touches only the

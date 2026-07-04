@@ -28,12 +28,19 @@ fi
 cd "$REPO_ROOT"
 mkdir -p "$ARTIFACT_DIR"
 
-# VERBATIM PATTERNS + EXCLUDE_DIRS from scripts/hooks/pre-push:41-57
+# VERBATIM PATTERNS + EXCLUDE_DIRS from scripts/hooks/pre-push:41-57.
+# Google API key added 2026-07-04 after secret-scanning alert #1 (a
+# google_api_key leaked in a bootstrap-seed .playwright-mcp log): this
+# committed gate greps only these prefixes, so a Google `AIza...` key
+# was invisible to it and only caught server-side. ADDING a pattern is
+# a security UPGRADE (broader coverage), not the threat-model-review
+# downgrade the header warns against.
 readonly PATTERNS=(
   'ATATT3[A-Za-z0-9_+/=-]{20,}'
   'Bearer[[:space:]]+ATATT3[A-Za-z0-9_+/=-]{20,}'
   'ghp_[A-Za-z0-9]{20,}'
   'github_pat_[A-Za-z0-9_]{20,}'
+  'AIza[0-9A-Za-z_-]{35}'
 )
 readonly EXCLUDE_DIRS=(
   '.git'
