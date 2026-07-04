@@ -123,3 +123,19 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 **Default disposition:** S — close in P90 (quality-framework honesty phase) or next debt-drain window.
 
 **STATUS:** OPEN
+
+## GOOD-TO-HAVES-06 — structure `wc -l` gate on run.py / verdict.py so the ≤350/≤400 caps are checked, not aspirational
+
+**Discovered during:** P90 90-02 (2026-07-04)
+
+**Size:** XS (one catalog row + a `wc -l` verifier)
+
+**Source:** `quality/runners/run.py` carries a documented ≤350-line anti-bloat cap (header `:6-7`, `_freshness.py:4-7`, 90-RESEARCH-runner.md § 1), yet it sits at **459 lines** after 90-02 (was 429 pre-P90; 90-02 added ~+30 for the FW-07a/07b branch edits + the FW-08/F-K4b PASS-gate call-site, with the actual decision logic pushed into `_audit_field.apply_pass_gates` / `asserts_congruent` / `transcript_evidence_ok` per the helper-first rule). `verdict.py` is 367/≤400. The caps are prose in docstrings that NO gate enforces — so run.py silently breached its cap for two milestones and the only pressure toward helper extraction is agents reading the docstring. A mechanical `wc -l` structure gate (row + verifier asserting `run.py ≤ 350` and `verdict.py ≤ 400`, RAISE-only or waived-with-tracked_in for the current run.py overage until a dedicated run.py-decomposition phase) would make the cap real.
+
+**Acceptance:** a `structure`-dimension catalog row + `quality/gates/structure/file-size-limits.sh`-style verifier (that gate already exists for other files — extend it or add a sibling) asserting the line-count caps on `run.py`/`verdict.py`; the current run.py overage is either waived with an honest `tracked_in` pointing at a run.py-decomposition phase, or the cap is RAISE-only until then. Do NOT hard-block pre-push on the pre-existing overage (that would turn every push RED before the decomposition phase exists — the deferral-loop the framework fixes prevent).
+
+**Why deferred:** decomposing run.py to actually MEET the cap is real refactoring (extract the main()-loop persistence machinery into a helper), not a 90-02-scoped edit; and adding a hard-blocking gate before that refactor lands would RED every push. Filing the gate + the honest overage disposition is the XS down-payment; the refactor is the M follow-up.
+
+**Default disposition:** XS — the gate+disposition close in a near-term structure/debt window; the run.py decomposition that makes the cap green is M (default-defer). Filed by 90-02 (sole Wave-B writer of this file per D90-12 item 4).
+
+**STATUS:** OPEN
