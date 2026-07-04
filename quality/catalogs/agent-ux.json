@@ -1486,7 +1486,8 @@
       "claim_vs_assertion_audit": "The verifier is a thin bash wrapper running python3 -m unittest quality.runners.test_verdict adversarial cases: an absent-artifact fixture and a failed-row-count>=1 fixture, both asserting the milestone-close verdict computes RED despite an otherwise-all-PASS catalog. If the description's claim (\"milestone-close cannot go GREEN without a passing fresh adversarial audit, and the hook can only darken never lighten a verdict\") were false — e.g. the hook were wired as advisory-only, or an absent artifact defaulted to a pass-through GREEN — both fixtures would observe the verdict staying GREEN and the assertions would fail. A third fixture asserts the hook cannot flip an already-RED verdict to GREEN, confirming the darken-only direction.",
       "waiver": null,
       "cadences": [
-        "pre-release-real-backend"
+        "pre-push",
+        "pre-pr"
       ],
       "minted_at": "2026-07-04T12:00:00Z"
     }
