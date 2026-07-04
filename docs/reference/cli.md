@@ -66,7 +66,7 @@ With `--since=<RFC3339>`, `init` reads sync tags from the cache's bare repo, pic
 
 ## `reposix attach`
 
-Adopt an existing checkout — a vanilla `git clone` mirror, a hand-edited tree, or a prior `reposix init` — and bind it to a `SoT` backend (DVCS-ATTACH-01..04, v0.13.0). Builds a cache from REST against the `SoT`, reconciles the current `HEAD` tree against backend records by frontmatter `id`, and adds a new reposix-equipped remote configured for partial clone. The existing `origin` remote (if any) is left untouched — plain-git mirror semantics are preserved; `extensions.partialClone` is set to the *new* remote, never to `origin`.
+Adopt an existing checkout — a vanilla `git clone` mirror, a hand-edited tree, or a prior `reposix init` — and bind it to a `SoT` backend (DVCS-ATTACH-01..04, v0.13.0; real-backend dispatch for sim/github/confluence/jira landed P91 via the shared `backend_dispatch` factory). Builds a cache from REST against the `SoT`, reconciles the current `HEAD` tree against backend records by frontmatter `id`, and adds a new reposix-equipped remote configured for partial clone. The existing `origin` remote (if any) is left untouched — plain-git mirror semantics are preserved; `extensions.partialClone` is set to the *new* remote, never to `origin`. Attach also sets `remote.pushDefault` to the new remote so a bare `git push` routes through the bus (warns instead of clobbering a `pushDefault` you already set), and warns to stderr if `git-remote-reposix` is not on PATH (the CLI and the helper are separate `cargo binstall` packages).
 
 ```bash
 reposix attach sim::demo                    # attach CWD to sim

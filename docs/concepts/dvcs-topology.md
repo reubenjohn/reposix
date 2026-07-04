@@ -49,37 +49,35 @@ flowchart LR
 
 The bus remote (yellow arrow on each writer) is the **only** writer to the SoT. The GH Action is the **only** writer to the mirror that did not already come through a bus push. Everything else — the mirror-only consumer's `git clone`, the round-tripper's `git fetch origin` — is plain git, no protocol extensions.
 
-## Two refs you can `git log`
+## Two refs — and where they actually live
 
-The mirror is eventually consistent with the SoT. The webhook fires within ~30 seconds of a Confluence edit; the GH Action runs; the mirror catches up. To make that staleness window observable to the cold reader, the mirror carries two refs that any plain-git client picks up via `git fetch`:
+The mirror is eventually consistent with the SoT. The webhook fires within ~30 seconds of a Confluence edit; the GH Action runs; the mirror catches up. To make that staleness window observable, every successful sync (a bus push, or the webhook) writes two refs:
 
 ```text
 refs/mirrors/<sot-host>-head           # SHA of the SoT's main at last sync
 refs/mirrors/<sot-host>-synced-at      # annotated tag with timestamp message
 ```
 
-For a Confluence SoT at `reuben-john.atlassian.net`, the host slug is `confluence`. (The slug always names the backend kind, not your tenant. The four canonical slugs are `sim`, `github`, `confluence`, `jira`.) The bus push and the webhook sync both write these refs — the bus push because the bus push **is** a sync from a developer's perspective; the webhook because the webhook is the only writer between bus pushes.
+For a Confluence SoT at `reuben-john.atlassian.net`, the host slug is `confluence`. (The slug always names the backend kind, not your tenant. The four canonical slugs are `sim`, `github`, `confluence`, `jira`.)
 
-> **Important:** `refs/mirrors/<sot-host>-synced-at` is the timestamp the mirror last caught up to <sot-host> — it is NOT a "current SoT state" marker. Between a Confluence edit and the next webhook fire (typically 30 seconds), the SoT has moved and the mirror has not. Reading the ref tells you "as of this timestamp, the mirror was current"; nothing more.
+> **Where these refs live (verified P91 91-06, correcting an earlier overclaim in this doc):** `refs/mirrors/...` are written into the **local reposix cache's own bare repo** — one per machine whose `reposix` install ran the push. They are **not** pushed to the plain-git GH mirror. A real bus push was traced end to end for this rewrite: after the push, the mirror's own ref list shows only `refs/heads/main` — no `refs/mirrors/*` ever arrives there, because the bus's mirror leg is a plain `git push <mirror> main` subprocess (DVCS-BUS-WRITE-02) that only ever touches `main`. And a bus-attached round-tripper's own `git fetch` of the reposix remote doesn't pick them up either (DVCS-BUS-FETCH-01; confirmed: fetching the bus remote populated its `refs/remotes/.../main` tracking ref and nothing under `refs/mirrors/`).
+>
+> The one shape where a real `git fetch` *would* bring these refs into a working tree is a **single-backend** (non-bus, Pattern B) `reposix::` remote — the helper's git-native fetch tunnel talks directly to the cache's bare repo, which advertises every ref it holds, `refs/mirrors/*` included. See [Git layer](../how-it-works/git-layer.md) for that mechanism. That path is architecture-derived, not independently re-verified here — this repo's dev box runs an older git than the runtime requirement (D91-02), so it can't drive the git-native fetch tunnel at all.
+>
+> **Practical upshot:** "Dev C" (mirror-only, vanilla git, no reposix) can **never** read these refs — there is no path from the mirror to them. Today's only two working consumers are (1) the bus push's own reject-hint, which reads the ref internally and renders the age inline (below), and (2) manual inspection of the cache's bare repo directly, on the machine that owns it: `git --git-dir=<cache-path> log refs/mirrors/<sot-host>-synced-at -1 --format='%ai %s'` (find `<cache-path>` from `reposix gc`'s printed cache root).
 
-What this enables, concretely:
+> **Important:** `refs/mirrors/<sot-host>-synced-at` is the timestamp the mirror last caught up to `<sot-host>` — it is NOT a "current SoT state" marker. Between a Confluence edit and the next webhook fire (typically 30 seconds), the SoT has moved and the mirror has not. Reading the ref tells you "as of this timestamp, the mirror was current"; nothing more.
+
+What this enables, concretely — Dev B (round-tripper) gets a bus-remote rejection that cites the mirror lag, read straight out of the cache's own ref (no fetch required, since the helper already has the cache open):
 
 ```bash
-# Dev C (mirror-only, vanilla git) wants to know how stale their clone is.
-git fetch origin
-git log refs/mirrors/confluence-synced-at -1 --format='%ai %s'
-# 2026-04-30 17:25:00 +0000 mirror synced from confluence
-```
-
-```bash
-# Dev B (round-tripper) gets a bus-remote rejection that cites the mirror lag.
 $ git push
 error: confluence rejected the push (issue 0001 modified at 2026-04-30T17:30:00Z, your version 7, backend version 8)
 hint: your origin (GH mirror) was last synced from confluence at 2026-04-30T17:25:00Z (5 minutes ago)
 hint: run `reposix sync --reconcile` to refresh your cache against the SoT, then `git pull --rebase`
 ```
 
-The reject message reads its own ref state and translates the staleness window into a human sentence. The recovery is the same `git pull --rebase` you already know.
+The reject message reads its own cache's ref state and translates the staleness window into a human sentence. The recovery is the same `git pull --rebase` you already know.
 
 ## When to choose which pattern
 

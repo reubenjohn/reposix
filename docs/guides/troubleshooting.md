@@ -255,7 +255,7 @@ Why two commands: `git pull` from the GH mirror gives you the mirror's lagging v
 
 On conflict, resolve with standard git tools (`git status`, edit, `git rebase --continue`).
 
-Mechanism: the bus-remote `CHEAP PRECHECK B` runs `backend.list_changed_since(last_fetched_at)` on the SoT before reading stdin; the rejection comes from that step. See [DVCS topology — Two refs you can `git log`](../concepts/dvcs-topology.md#two-refs-you-can-git-log) for the staleness model.
+Mechanism: the bus-remote `CHEAP PRECHECK B` runs `backend.list_changed_since(last_fetched_at)` on the SoT before reading stdin; the rejection comes from that step. See [DVCS topology — Two refs, and where they actually live](../concepts/dvcs-topology.md#two-refs-and-where-they-actually-live) for the staleness model.
 
 ### Bus-remote mirror-egress rejection (`egress-denied`)
 
@@ -294,10 +294,10 @@ Mechanism: `bus_handler::handle_bus_export` runs the mirror-egress check (`mirro
 | Case | What you see | Resolution |
 |---|---|---|
 | **match** | (silent — no warning) | Nothing to do; cache stores the OID alignment. |
-| **no-id** | `WARN: issues/x.md has no 'id' field — skipping (not a reposix-managed file)` | If the file IS supposed to be tracked, add `id: <number>` to the frontmatter and re-attach. If it is genuinely a local artifact (notes, drafts), leave it; the bus push will not propagate it. |
-| **backend-deleted** | `WARN: issues/0001.md claims id: 1 but no backend record exists — skipping` | The record was deleted on the SoT side after your last fetch. Re-run with `reposix attach --orphan-policy=delete-local` to remove the local file, `--orphan-policy=fork-as-new` to file a new issue with the local content, or `--orphan-policy=abort` (default) to leave it for manual triage. |
-| **duplicate-id** | `ERROR: id: 1 claimed by both issues/0001.md and issues/duplicate.md — refusing to attach` | You have two local files claiming the same backend `id`. Pick one, rename or delete the other, then re-attach. This is hard-error because reconciliation cannot guess your intent. |
-| **mirror-lag** | (no warning per file; one summary line) `INFO: backend has 3 records not yet in the mirror; cache marks for next fetch` | Normal. The SoT has records the mirror has not synced yet (the staleness window). The cache notes them; your next `git fetch` will pull them in once the mirror catches up. |
+| **no-id** | `NO_ID local_file=./README.md` | If the file IS supposed to be tracked, add `id: <number>` to the frontmatter and re-attach. If it is genuinely a local artifact (notes, drafts), leave it; the bus push will not propagate it. |
+| **backend-deleted** | `BACKEND_DELETED id=1 local_file=issues/0001.md` (default `--orphan-policy=abort`); `... action=DELETED` for `--orphan-policy=delete-local`; `... action=FORK_AS_NEW (kept; next push creates it)` for `--orphan-policy=fork-as-new` | The record was deleted on the SoT side after your last fetch. Re-run with `reposix attach --orphan-policy=delete-local` to remove the local file, `--orphan-policy=fork-as-new` to file a new issue with the local content, or leave `--orphan-policy=abort` (default) for manual triage — none of the three abort the attach itself; duplicate-id is the only hard stop. |
+| **duplicate-id** | `Error: duplicate id across local records: [(RecordId(1), ["issues/0001.md", "issues/duplicate.md"])]; reconciliation aborted (no rows committed)` | You have two local files claiming the same backend `id`. Pick one, rename or delete the other, then re-attach. This is hard-error because reconciliation cannot guess your intent — no cache rows are written for that attach run. |
+| **mirror-lag** | (no per-file line; folded into the one-line summary every attach prints) `attach: matched=0 no_id=1 backend_deleted=0 mirror_lag=3` | Normal. The SoT has records the mirror has not synced yet (the staleness window). The cache notes them; your next `git fetch` will pull them in once the mirror catches up. |
 
 If the walk fails entirely (cache initialization error, REST 401, missing credentials), the attach aborts before touching any local state — your working tree is unchanged.
 

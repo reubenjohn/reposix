@@ -47,6 +47,18 @@ real-backend smoke test.
 
 ## Confluence — `TokenWorld` space
 
+There is exactly **one** sanctioned Confluence test space, not two.
+Verified live against `GET /wiki/api/v2/spaces?keys=TokenWorld`: Atlassian
+`key` is `REPOSIX`, `id` is `360450`, `name` is "TokenWorld reposix demo
+space", and `currentActiveAlias` is `TokenWorld` — the alias is what
+resolves via `reposix-confluence`'s `resolve_space_id` (its `?keys=`
+lookup matches the active alias, not only the raw key). This doc,
+`confluence::TokenWorld` specs, and `agent_flow_real.rs`'s
+`confluence_test_space()` default all use the `TokenWorld` spelling; the
+"Protected durable fixtures" section below uses the raw `REPOSIX` key —
+same space, same id `360450`, same tenant (`reuben-john`), just two valid
+spellings for the one `?keys=` lookup.
+
 The `TokenWorld` Confluence space at
 `https://${REPOSIX_CONFLUENCE_TENANT}.atlassian.net/wiki/spaces/TokenWorld`
 is the project owner's test-only Confluence space. Tests that create
@@ -72,8 +84,8 @@ serialize the test run via `--test-threads=1`.
 
 ### Protected durable fixtures — NEVER delete
 
-The `REPOSIX` space (space id `360450`, same `reuben-john` tenant as
-`TokenWorld` above) carries a durable parent/child page pair that
+The `TokenWorld` space (key `REPOSIX`, id `360450` — same space as above,
+not a second one) carries a durable parent/child page pair that
 `crates/reposix-confluence/tests/contract.rs::contract_confluence_live_hierarchy`
 depends on (D91-08):
 

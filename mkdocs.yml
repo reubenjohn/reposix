@@ -51,7 +51,6 @@ not_in_nav: |
   security.md
   why.md
   connectors/guide.md
-  reference/cli.md
   reference/http-api.md
   reference/git-remote.md
   reference/crates.md
@@ -135,6 +134,7 @@ nav:
       - DVCS mirror setup: guides/dvcs-mirror-setup.md
       - Troubleshooting: guides/troubleshooting.md
   - Reference:
+      - CLI: reference/cli.md
       - Exit codes: reference/exit-codes.md
       - Glossary: reference/glossary.md
       - Simulator: reference/simulator.md
