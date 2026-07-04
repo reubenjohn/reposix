@@ -71,47 +71,96 @@ pub fn validate_record_filename(name: &str) -> Result<RecordId> {
     Ok(RecordId(n))
 }
 
+/// The sanctioned record-bucket directory names (Wave-5.5 bucket-aware
+/// canonicalization).
+///
+/// A record lives at `<bucket>/<id>.md` where `<bucket>` is exactly one of
+/// these. `issues/` is the bucket for issue-shaped backends (sim, GitHub,
+/// JIRA); `pages/` is the bucket for Confluence (the documented UX in
+/// `docs/reference/confluence.md` and what `reposix refresh --backend
+/// confluence` writes). Consumers ([`record_id_from_path`]) accept BOTH so a
+/// tree's bucket spelling can never cause the push planner to misclassify
+/// records — the mass-delete failure mode found by the P91 vision-litmus
+/// real-run (SURPRISES-INTAKE 2026-07-04 21:00 BLOCKER).
+pub const RECORD_BUCKETS: [&str; 2] = ["issues", "pages"];
+
+/// The canonical record bucket for a backend name.
+///
+/// `"confluence"` → `"pages"`; every other backend (`"sim"`, `"simulator"`,
+/// `"github"`, `"jira"`, …) → `"issues"`. Producers (cache tree builder,
+/// `reposix refresh`, fast-import emit) MUST route through this so every
+/// site agrees per-backend — never hand-pick a bucket string.
+#[must_use]
+pub fn bucket_for_backend(backend: &str) -> &'static str {
+    if backend == "confluence" {
+        "pages"
+    } else {
+        "issues"
+    }
+}
+
 /// The canonical bare filename for a record id: `"<id>.md"`, unpadded.
 ///
 /// This is the single source of truth for the record-file spelling. The
-/// cache tree materializer nests it under an `issues/` subtree entry; the
-/// refresh CLI writes it under the `issues/`/`pages/` bucket dir; the push
-/// planner and the fast-import emit side prefix it via [`record_path`]. All
-/// four sites route through here so a given id spells identically everywhere
-/// (QL-001 / D91-01).
+/// cache tree materializer nests it under the backend's bucket subtree; the
+/// refresh CLI writes it under the bucket dir; the fast-import emit side
+/// prefixes it via [`record_path`]. All sites route through here so a given
+/// id spells identically everywhere (QL-001 / D91-01).
 #[must_use]
 pub fn record_filename(id: u64) -> String {
     format!("{id}.md")
 }
 
-/// The canonical on-disk path for a record id: `"issues/<id>.md"`, unpadded.
+/// The canonical on-disk path for a record id in a given bucket:
+/// `"<bucket>/<id>.md"`, unpadded.
 ///
-/// This is what a real reposix working tree contains and what
-/// stateless-connect serves verbatim from the cache. Producers (`refresh`,
-/// `fast_import` emit) and consumers (`diff::plan` prior-key) MUST agree on
-/// this spelling; a mismatch classifies every record as a spurious
-/// Create+Delete on push (QL-001 BUG-1).
+/// `bucket` is the backend's sanctioned bucket per [`bucket_for_backend`]
+/// (one of [`RECORD_BUCKETS`]). This is what a real reposix working tree
+/// contains and what stateless-connect serves verbatim from the cache.
+/// Producers (`refresh`, `fast_import` emit, cache builder) MUST agree on
+/// this spelling per-backend; a mismatch classifies every record as a
+/// spurious Create+Delete on push (QL-001 BUG-1 / the confluence
+/// mass-delete BLOCKER).
+///
+/// The push planner itself does NOT depend on the bucket: `diff::plan`
+/// matches prior records to tree entries by record id (via
+/// [`record_id_from_path`]), so no bucket special-casing exists in the
+/// planner.
 #[must_use]
-pub fn record_path(id: u64) -> String {
-    format!("issues/{}", record_filename(id))
+pub fn record_path(bucket: &str, id: u64) -> String {
+    debug_assert!(
+        RECORD_BUCKETS.contains(&bucket),
+        "record_path called with unsanctioned bucket {bucket:?}"
+    );
+    format!("{bucket}/{}", record_filename(id))
 }
 
-/// Parse a record id out of a canonical `issues/<id>.md` path.
+/// Parse a record id out of a canonical `<bucket>/<id>.md` path, accepting
+/// any sanctioned bucket ([`RECORD_BUCKETS`]: `issues/` or `pages/`).
 ///
-/// Padding-agnostic: `"issues/42.md"` and `"issues/00000000042.md"` both
-/// yield `Some(42)` (built on [`validate_record_filename`], which parses the
-/// stem via `u64::from_str` so any zero-padding collapses). Returns `None`
-/// for anything that is not exactly `issues/<digits>.md` — non-`issues/`
-/// buckets (`pages/x.md`), metadata files (`.reposix/y.txt`), bare filenames
-/// with no prefix (`foo.md`), and nested paths (`issues/sub/1.md`, rejected
-/// because the stripped remainder still contains a `/`).
+/// Padding-agnostic: `"issues/42.md"`, `"pages/42.md"`, and
+/// `"issues/00000000042.md"` all yield `Some(42)` (built on
+/// [`validate_record_filename`], which parses the stem via `u64::from_str`
+/// so any zero-padding collapses). Returns `None` for anything that is not
+/// exactly `<sanctioned-bucket>/<digits>.md` — unknown buckets
+/// (`wiki/x.md`), metadata files (`.reposix/y.txt`), bare filenames with no
+/// prefix (`foo.md`), and nested paths (`issues/sub/1.md`, rejected because
+/// the stripped remainder still contains a `/`).
+///
+/// Accepting the full sanctioned set (rather than only the backend's own
+/// bucket) is deliberate: the push planner matches by id, so a tree whose
+/// bucket differs from the cache's spelling still round-trips correctly
+/// instead of mass-deleting the backend (the P91 litmus BLOCKER).
 ///
 /// This replaces the two hand-rolled bare-filename parsers that previously
 /// lived in `reposix-remote` (`diff.rs` + the QL-157 `main.rs` duplicate),
-/// both of which returned `None` for every real `issues/`-prefixed path.
+/// both of which returned `None` for every real bucket-prefixed path.
 #[must_use]
-pub fn issue_id_from_path(path: &str) -> Option<u64> {
-    let name = path.strip_prefix("issues/")?;
+pub fn record_id_from_path(path: &str) -> Option<u64> {
+    let (bucket, name) = path.split_once('/')?;
+    if !RECORD_BUCKETS.contains(&bucket) {
+        return None;
+    }
     validate_record_filename(name).ok().map(|rid| rid.0)
 }
 
@@ -280,7 +329,8 @@ mod tests {
         }
     }
 
-    // --- Phase 91: canonical record_path / issue_id_from_path (QL-001) -----
+    // --- Phase 91: canonical record_path / record_id_from_path (QL-001,
+    // bucket-aware per Wave-5.5 confluence mass-delete BLOCKER) -------------
 
     #[test]
     fn record_filename_is_unpadded() {
@@ -290,43 +340,72 @@ mod tests {
     }
 
     #[test]
-    fn record_path_is_issues_prefixed_unpadded() {
-        assert_eq!(record_path(42), "issues/42.md");
-        assert_eq!(record_path(1), "issues/1.md");
-    }
-
-    #[test]
-    fn record_path_round_trips_through_issue_id_from_path() {
-        for id in [0u64, 1, 42, 9999, u64::MAX] {
-            assert_eq!(issue_id_from_path(&record_path(id)), Some(id));
+    fn bucket_for_backend_maps_confluence_to_pages() {
+        assert_eq!(bucket_for_backend("confluence"), "pages");
+        for other in ["sim", "simulator", "github", "jira", "anything-else"] {
+            assert_eq!(bucket_for_backend(other), "issues", "{other}");
         }
     }
 
     #[test]
-    fn issue_id_from_path_is_padding_agnostic() {
-        assert_eq!(issue_id_from_path("issues/42.md"), Some(42));
-        assert_eq!(issue_id_from_path("issues/00000000042.md"), Some(42));
-        assert_eq!(issue_id_from_path("issues/0.md"), Some(0));
+    fn every_backend_bucket_is_sanctioned() {
+        for b in ["sim", "github", "confluence", "jira"] {
+            assert!(RECORD_BUCKETS.contains(&bucket_for_backend(b)));
+        }
     }
 
     #[test]
-    fn issue_id_from_path_rejects_non_issue_paths() {
-        // No `issues/` prefix, wrong bucket, metadata, nested, junk stem.
+    fn record_path_is_bucket_prefixed_unpadded() {
+        assert_eq!(record_path("issues", 42), "issues/42.md");
+        assert_eq!(record_path("issues", 1), "issues/1.md");
+        assert_eq!(record_path("pages", 42), "pages/42.md");
+        assert_eq!(record_path("pages", 2_818_063), "pages/2818063.md");
+    }
+
+    #[test]
+    fn record_path_round_trips_through_record_id_from_path_for_both_buckets() {
+        for bucket in RECORD_BUCKETS {
+            for id in [0u64, 1, 42, 9999, u64::MAX] {
+                assert_eq!(
+                    record_id_from_path(&record_path(bucket, id)),
+                    Some(id),
+                    "bucket={bucket} id={id}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn record_id_from_path_is_padding_agnostic_in_both_buckets() {
+        assert_eq!(record_id_from_path("issues/42.md"), Some(42));
+        assert_eq!(record_id_from_path("issues/00000000042.md"), Some(42));
+        assert_eq!(record_id_from_path("issues/0.md"), Some(0));
+        assert_eq!(record_id_from_path("pages/42.md"), Some(42));
+        assert_eq!(record_id_from_path("pages/00000000042.md"), Some(42));
+    }
+
+    #[test]
+    fn record_id_from_path_rejects_non_record_paths() {
+        // Unsanctioned bucket, metadata, bare, nested, junk stem.
         for bad in [
-            "pages/x.md",
+            "pages/x.md",  // sanctioned bucket, non-digit stem
+            "wiki/42.md",  // unsanctioned bucket
+            "Pages/42.md", // case-sensitive: not sanctioned
             ".reposix/fetched_at.txt",
             ".reposix/.gitignore",
             "foo.md",
             "42.md",            // bare, no prefix — the OLD buggy shape
             "0042.md",          // bare 4-pad — the OLD planner shape
             "issues/sub/1.md",  // nested: remainder still contains '/'
+            "pages/sub/1.md",   // nested in pages bucket
             "issues/readme.md", // non-digit stem
             "issues/.md",       // empty stem
             "issues/12a.md",    // mixed
             "issues/",          // no filename
             "issues/1.txt",     // wrong extension
+            "pages/1.txt",      // wrong extension in pages bucket
         ] {
-            assert_eq!(issue_id_from_path(bad), None, "{bad:?} must not parse");
+            assert_eq!(record_id_from_path(bad), None, "{bad:?} must not parse");
         }
     }
 
