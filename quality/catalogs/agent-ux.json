@@ -1379,6 +1379,92 @@
       ]
     },
     {
+      "id": "agent-ux/ql-001-canonical-path-shape",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. Minted NOT-VERIFIED in the P91 catalog-first commit (91-01) per quality/PROTOCOL.md Step 3.",
+      "comment": "QL-001 (D91-01/D91-02) -- proves the canonical record-path shape (`issues/<id>.md`, unpadded) is grep-verifiable box-independently: no zero-padded record-path construction (`format!(\"{:04}.md\"` / `format!(\"{:011}.md\"`) survives outside reposix-core, a single shared path-id helper (`issue_id_from_path`/`record_path`) exists, and the diff planner's prior-key parsing plus the fast-import emit side route through it; cargo-level tests drive parse_export_stream + diff::plan against canonical fixture trees (D91-02 strategy step 1). Sim/box-local proof only, entirely within the local cargo workspace -- not a claim about behavior against any external service (see transport_claim below).",
+      "sources": [
+        "crates/reposix-core/src/path.rs",
+        "crates/reposix-remote/src/diff.rs",
+        "crates/reposix-remote/src/fast_import.rs",
+        ".planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md (QL-001 entry)"
+      ],
+      "command": "bash quality/gates/agent-ux/ql-001-canonical-path.sh",
+      "expected": {
+        "asserts": [
+          "grep proves zero `format!(\"{:04}.md\"` / `format!(\"{:011}.md\"` record-path construction outside crates/reposix-core",
+          "a single shared issue_id_from_path/record_path helper exists in reposix-core (not duplicated in reposix-remote/main.rs)",
+          "the canonical cargo regression tests added in 91-02 (parse_export_stream + diff::plan against issues/<id>.md fixture trees) exist and are referenced by name",
+          "the QL-157 duplicate issue_id_from_path in crates/reposix-remote/src/main.rs is deleted"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/ql-001-canonical-path.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/ql-001-canonical-path.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "crates/reposix-remote/src/diff.rs / fast_import.rs / crates/reposix-core/src/path.rs -- if RED after 91-02 lands, a record-path spelling regressed outside core, or the QL-157 duplicate crept back into main.rs",
+      "claim_vs_assertion_audit": "The verifier greps for zero-padded record-path format! constructions outside reposix-core, checks a single shared path-id helper exists, confirms the 91-02 cargo regression tests exist by name, and confirms the QL-157 duplicate in main.rs is deleted. If the description's claim ('canonical issues/<id>.md path shape is grep-verifiable and drives every producer/consumer site') were false -- e.g. a stray `format!(\"{:04}.md\"` reappeared in fast_import.rs, or main.rs's duplicate issue_id_from_path were never deleted -- the grep assertions would find a nonzero hit and the verifier would exit 1 naming the offending file.",
+      "waiver": null,
+      "cadences": [
+        "pre-pr",
+        "on-demand"
+      ],
+      "minted_at": "2026-07-05T00:00:00Z",
+      "transport_claim": false
+    },
+    {
+      "id": "agent-ux/attach-sync-real-backend",
+      "dimension": "agent-ux",
+      "kind": "shell-subprocess",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. Minted NOT-VERIFIED in the P91 catalog-first commit (91-01) per quality/PROTOCOL.md Step 3.",
+      "comment": "RBF-A-01/A-02/A-04 -- real-backend `reposix attach` + `sync --reconcile` against a sanctioned target (Confluence TokenWorld / reubenjohn/reposix / JIRA KAN-or-TEST per docs/reference/testing-targets.md); anchors the attach_real_*/sync_real_* #[ignore] smokes in crates/reposix-cli/tests/agent_flow_real.rs, gated by the pre-release-real-backend cadence.",
+      "sources": [
+        "crates/reposix-cli/src/attach.rs",
+        "crates/reposix-cli/src/sync.rs",
+        "crates/reposix-cli/tests/agent_flow_real.rs",
+        "crates/reposix-remote/src/backend_dispatch.rs"
+      ],
+      "command": "bash quality/gates/agent-ux/attach-sync-real-backend.sh",
+      "expected": {
+        "asserts": [
+          "reposix attach <backend>::<project> against a sanctioned target configures extensions.partialClone + remote.<name>.url correctly",
+          "sync --reconcile lists real records from the sanctioned backend",
+          "dual-table audit (audit_events_cache AND audit_events) shows rows for the attach + sync actions",
+          "transcript artifact emitted per RBF-FW-02 convention"
+        ],
+        "artifact": {
+          "transcript_path": "quality/reports/transcripts/attach-sync-real-backend-<RFC3339>.txt"
+        }
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/attach-sync-real-backend.sh",
+        "args": [],
+        "timeout_s": 300,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/attach-sync-real-backend.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "real-backend attach/sync dispatch or audit wiring regressed; inspect the transcript at quality/reports/transcripts/attach-sync-real-backend-<RFC3339>.txt",
+      "claim_vs_assertion_audit": "The verifier drives a real `reposix attach`/`sync --reconcile` subprocess against a sanctioned real backend and asserts the transcript's argv names the real backend spec, that extensions.partialClone + remote url are configured, and that both audit_events_cache and audit_events gain rows. If the description's claim ('attach + sync genuinely round-trip against a real backend, not the simulator') were false -- e.g. attach/sync silently dispatched to SimBackend -- the transcript argv would not name the sanctioned spec and audit_events would lack real-host fingerprints, so the assertion would fail.",
+      "waiver": null,
+      "cadences": [
+        "pre-release-real-backend"
+      ],
+      "minted_at": "2026-07-05T00:00:00Z",
+      "coverage_kind": "real-backend"
+    },
+    {
       "id": "agent-ux/test-name-vs-asserts",
       "dimension": "agent-ux",
       "kind": "mechanical",
