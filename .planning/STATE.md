@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 mode: serial-workstreams
 status: executing-p89-serial-workstreams
-last_updated: "2026-07-03T00:00:00Z"
-last_activity: 2026-07-03 — resumption after 8-week idle gap. OD-3 full-autonomy mandate ratified (drive to v1.0, serial A→B, main as working branch); P89 consolidation landed (5a6a388, incl. 89-OWNER-DECISIONS.md); main fast-forward from workstream/v0.13.0-ext pending; P89 execution starting in top-level orchestration mode.
+last_updated: "2026-07-04T05:30:00Z"
+last_activity: 2026-07-04 — P89 SHIPPED GREEN (verdict 0e21e2a at quality/reports/verdicts/p89/VERDICT.md). All 6 framework rows landed (5 PASS + vision-litmus SLOT NOT-VERIFIED per D-03c); cross-AI review of implemented framework executed per OD-1/OD-3 (89-CROSS-AI-REVIEW.md; H1+H3 fixed in-phase, H2/H4 intake→P90); pushed origin/main a4ac3e4. Next: P90.
 workstreams:
   workstream_a:
     milestone: v0.13.0
     milestone_name: DVCS over REST (extended)
     status: executing  # P89 execution started 2026-07-03 (top-level orchestration mode)
     phases_total: 20  # P78-P97 (P78-P88 shipped + P89-P97 extension)
-    phases_completed: 11  # P78-P88
-    next_phase: P89  # planned + converged (5f51f74..d2b2782 + consolidation 5a6a388); execution started 2026-07-03
+    phases_completed: 12  # P78-P89
+    next_phase: P90  # P89 SHIPPED GREEN 2026-07-04 (verdict 0e21e2a); P90 planning next
     blocks_tag: true  # v0.13.0 tag does NOT push until P97 GREEN; tag push delegated to orchestrator per OD-3
   workstream_b:
     milestone: v0.13.2
@@ -33,10 +33,10 @@ workstreams:
 
 ### Workstream A — v0.13.0 (extended) — EXECUTING
 
-Phase: P89 planned + converged (planning commits 5f51f74..d2b2782; consolidation commit 5a6a388 landed 2026-07-03, including 89-OWNER-DECISIONS.md). Execution began 2026-07-03 in top-level orchestration mode. v0.13.0 originally shipped P78–P88 2026-05-01, then EXTENDED 2026-05-08 with P89–P97 (real-backend frictions remediation, sourced from `.planning/research/v0.13.0-real-backend-frictions/03-synthesis/REMEDIATION-PLAN.md`). Tag pushed only after P97 GREEN.
-Plan: 8 plan files at `.planning/phases/89-framework-fixes-cadence-shell-kind/89-0*-PLAN.md` (waves 1–4) + 89-PLAN-OVERVIEW.md + 89-OWNER-DECISIONS.md (OD-1/OD-2 folded into 89-03/89-08 plan bodies).
-Status: executing — 11/20 phases complete (P78–P88 shipped); P89 in flight. v0.13.0 tag held until P97 GREEN (tag push delegated to orchestrator per OD-3).
-Next agent action: execute P89 waves 1–4 per the 8 plan files, top-level mode. P89 + P90 are framework fixes that subsequent code phases (P91–P95) depend on; serial execution with mid-stream litmus checkpoints (Decision 1 in REMEDIATION-PLAN).
+Phase: P89 SHIPPED 2026-07-04. Verdict GREEN at `quality/reports/verdicts/p89/VERDICT.md` (commit 0e21e2a). All 6 framework rows landed: 5 PASS + `agent-ux/milestone-close-vision-litmus-real-backend` legitimately NOT-VERIFIED (SLOT per D-03c until P91–P95 substrate). OD-1/OD-3 satisfied: cross-AI review of the IMPLEMENTED framework at `.planning/phases/89-framework-fixes-cadence-shell-kind/89-CROSS-AI-REVIEW.md` (Codex gpt-5.5 + Claude + independent leg substituting for unavailable Gemini); H1 (loopback env-gate) + H3 (OD-2 waiver rejection) fixed in-phase; H2/H4/M8 filed to SURPRISES-INTAKE for P90. OD-3 delegation exercised (owner sign-off delegated; owner notified in session summary). v0.13.0 originally shipped P78–P88 2026-05-01, then EXTENDED 2026-05-08 with P89–P97 (real-backend frictions remediation, sourced from `.planning/research/v0.13.0-real-backend-frictions/03-synthesis/REMEDIATION-PLAN.md`). Tag pushed only after P97 GREEN.
+Plan: shipped — 8 plan files at `.planning/phases/89-framework-fixes-cadence-shell-kind/89-0*-PLAN.md` executed (waves 1–4); execution deviations recorded in 89-CROSS-AI-REVIEW.md + SURPRISES-INTAKE.
+Status: P89 GREEN — 12/20 phases complete (P78–P89 shipped); next P90. v0.13.0 tag held until P97 GREEN (tag push delegated to orchestrator per OD-3).
+Next agent action: plan + execute P90 (F-K4 honesty rules: coverage_kind, asserts cross-check, dispatch.sh — RBF-FW-06..09, -10, -12). P90's plans should drain the four cross-AI intake entries (missing-verifier PASS-preservation, minted_at anchor, sanctioned-target residual, skip-demote semantics — all RBF-FW-07/-08/-12-shaped).
 
 ### Workstream B — v0.13.2 — QUEUED (behind workstream A per OD-3)
 
