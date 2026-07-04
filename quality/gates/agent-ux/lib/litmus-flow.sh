@@ -93,10 +93,17 @@ _litmus_flow() {
   fi
   pass "git push reposix main succeeded (real helper round-trip, not a synthetic stream)"
 
-  # STEP 4 box 5: server-side confirm via REST.
+  # STEP 4 box 5: server-side confirm via REST — a DIRECT Confluence read,
+  # independent of every reposix code path. (`reposix list` is deliberately
+  # lazy: list_records returns metadata with EMPTY bodies, so grepping its
+  # JSON for the marker can never succeed — observed litmus run 5,
+  # 2026-07-04. The direct read is also the more honest probe: it cannot
+  # share a bug with the code under test.)
   id="$(basename "$target" .md)"
-  if "$BIN" list --backend confluence --project "$SPACE" --format json 2>/dev/null | grep -qF "$marker"; then
-    pass "server-side change confirmed via REST (reposix list shows the edit)"
+  if curl -sS -u "${ATLASSIAN_EMAIL}:${ATLASSIAN_API_KEY}" \
+      "https://${REPOSIX_CONFLUENCE_TENANT}.atlassian.net/wiki/api/v2/pages/${id}?body-format=storage" \
+      | grep -qF "$marker"; then
+    pass "server-side change confirmed via REST (page ${id} body carries the marker)"
   else
     fail "REST read does NOT show the pushed edit — push acked but SoT unchanged (documented happy path disagrees with binary). HIGH friction, hard RED (OD-2)."
     return 1
