@@ -489,18 +489,43 @@ fn check_git_version() -> DoctorFinding {
     let parts: Vec<&str> = version.split('.').collect();
     let major: u32 = parts.first().and_then(|s| s.parse().ok()).unwrap_or(0);
     let minor: u32 = parts.get(1).and_then(|s| s.parse().ok()).unwrap_or(0);
+    git_version_finding(version, major, minor)
+}
+
+/// Classify a parsed git version into a `DoctorFinding`.
+///
+/// MED#6 (T2-REOPEN): this check used to hard-ERR (exit 1) below git 2.27.
+/// That was dishonest — the `reposix attach` + `git push` (export) flow
+/// works fine on the dev host's git 2.25.1; only the partial-clone READ
+/// path (`git clone`/`git fetch` via `stateless-connect` with
+/// `--filter=blob:none`) needs a newer git (filter support landed in 2.27,
+/// and reposix recommends 2.34 for reliable stateless-connect). `doctor`
+/// diagnoses the whole flow, so failing the exit code purely on git
+/// version — while push demonstrably works — is a false negative for those
+/// users. The finding is now a WARN at every below-2.34 tier, and the
+/// message names precisely what does and does not work so the reader can
+/// judge whether they need to upgrade before relying on fetch.
+fn git_version_finding(version: &str, major: u32, minor: u32) -> DoctorFinding {
     if (major, minor) >= (2, 34) {
         DoctorFinding::ok("git.version", format!("git version {version}"))
     } else if (major, minor) >= (2, 27) {
         DoctorFinding::warn(
             "git.version",
-            format!("git {version} works but >=2.34 is recommended (better partial-clone support)"),
+            format!(
+                "git {version} works but >=2.34 is recommended for reliable stateless-connect \
+                 (the partial-clone fetch path); attach + push are unaffected"
+            ),
             Some("install git >= 2.34 from your package manager".into()),
         )
     } else {
-        DoctorFinding::error(
+        DoctorFinding::warn(
             "git.version",
-            format!("git {version} is too old — partial-clone + stateless-connect needs >=2.27 (recommend 2.34)"),
+            format!(
+                "git {version}: `reposix attach` and `git push` (the export path) work, but \
+                 `git clone`/`git fetch --filter=blob:none` (the partial-clone read path via \
+                 stateless-connect) needs >=2.34 (blob-filter support landed in 2.27). Upgrade \
+                 before relying on fetch"
+            ),
             Some("install git >= 2.34 from your package manager".into()),
         )
     }
@@ -961,6 +986,41 @@ fn check_worktree_head_drift(ctx: &DoctorCtx, cache_path: &Path) -> DoctorFindin
             ),
         );
     }
+
+    // H4 (T2-REOPEN): a raw SHA comparison is only meaningful when the
+    // working tree's HEAD shares the cache's commit lineage — i.e. the tree
+    // was fetched FROM the cache (the `reposix init` topology). It does NOT
+    // hold in two common, healthy situations:
+    //
+    //   1. `reposix attach` topology — the working tree is a vanilla mirror
+    //      clone, and the cache synthesizes its OWN commits from REST state.
+    //      Tree HEAD and cache main are independent lineages that never
+    //      share a SHA by construction.
+    //   2. any tree immediately after a push — the cache re-synthesizes a
+    //      fresh commit from the just-written REST records, distinct from
+    //      the local commit the working tree is sitting on.
+    //
+    // In both, the tree HEAD is simply NOT an object the cache knows about,
+    // and the old unconditional SHA compare fired a permanent false
+    // `worktree.head.drift` WARN whose fix-line (`git pull --rebase`) did
+    // nothing and which `reposix sync --reconcile` could not clear (exit
+    // stayed 1 forever). Gate the comparison on the tree HEAD actually
+    // being a commit in the cache: if it is not, this SHA check does not
+    // apply — report OK and point at the id-based reconciliation that DOES
+    // measure record drift in that topology.
+    if !object_in_cache(cache_path, &head_oid) {
+        return DoctorFinding::ok(
+            "worktree.head.drift",
+            format!(
+                "working tree HEAD ({head}) is not in the cache's commit lineage — expected when the \
+                 cache synthesizes commits from REST state (the `reposix attach` topology, or any tree \
+                 after a push). SHA drift is not meaningful here; record drift is tracked by id-based \
+                 reconciliation. Run `reposix sync --reconcile` if a push was rejected as stale.",
+                head = short_oid(&head_oid),
+            ),
+        );
+    }
+
     // Try to count commits between them in either direction. Walk the
     // cache repo's object graph (it contains both sides if the working
     // tree was fetched from the same cache).
@@ -999,6 +1059,23 @@ fn check_worktree_head_drift(ctx: &DoctorCtx, cache_path: &Path) -> DoctorFindin
 
 fn short_oid(oid: &str) -> String {
     oid.chars().take(7).collect()
+}
+
+/// True when `oid` names an object present in the cache's bare repo.
+///
+/// Used by [`check_worktree_head_drift`] to decide whether a working-tree
+/// HEAD vs cache-main SHA comparison is even meaningful: in the `reposix
+/// attach` topology (and immediately after any push) the tree HEAD is an
+/// independent lineage the cache never materialized, so `git cat-file -e`
+/// against the cache returns non-zero and the drift check correctly
+/// abstains. Best-effort: a failed `git` invocation is treated as absent.
+fn object_in_cache(cache_path: &Path, oid: &str) -> bool {
+    Command::new("git")
+        .arg("-C")
+        .arg(cache_path)
+        .args(["cat-file", "-e", oid])
+        .output()
+        .is_ok_and(|o| o.status.success())
 }
 
 fn check_blob_limit(parsed: Option<&reposix_core::RemoteSpec>) -> DoctorFinding {
@@ -1440,5 +1517,149 @@ mod tests {
         let path = tmp.path().join("does-not-exist");
         let finding = check_cache_has_main_commit(&path);
         assert_eq!(finding.severity, Severity::Info);
+    }
+
+    // --- MED#6 (T2-REOPEN): git-version severity honesty -------------------
+
+    /// git >= 2.34 is the recommended baseline → OK.
+    #[test]
+    fn git_version_2_34_is_ok() {
+        assert_eq!(git_version_finding("2.43.0", 2, 43).severity, Severity::Ok);
+    }
+
+    /// git 2.27..2.34 works with a recommendation to upgrade → WARN.
+    #[test]
+    fn git_version_2_30_is_warn() {
+        let f = git_version_finding("2.30.0", 2, 30);
+        assert_eq!(f.severity, Severity::Warn);
+        assert!(
+            f.message.contains("attach + push are unaffected"),
+            "message must reassure the push path works: {}",
+            f.message
+        );
+    }
+
+    /// MED#6 core assertion: git 2.25.1 (the dev host) must NOT hard-ERR.
+    /// The attach + push flow works there; only the fetch/clone read path
+    /// needs >=2.34. A false ERR flipped `doctor`'s exit code to 1 on a
+    /// working setup.
+    #[test]
+    fn git_version_2_25_is_warn_not_error() {
+        let f = git_version_finding("2.25.1", 2, 25);
+        assert_eq!(
+            f.severity,
+            Severity::Warn,
+            "git 2.25.1 must be WARN, not ERROR — push/attach work; only fetch needs >=2.34"
+        );
+        assert!(
+            f.message.contains("git push") && f.message.contains("stateless-connect"),
+            "message must name what works (push) and what doesn't (stateless-connect fetch): {}",
+            f.message
+        );
+    }
+
+    // --- H4 (T2-REOPEN): worktree.head.drift topology awareness ------------
+
+    /// Build a repo at `dir` with a committer identity, an initial commit,
+    /// and `refs/heads/main` present (git < 2.28 defaults to `master`, so
+    /// we rename explicitly to keep the check's `refs/heads/main` lookup
+    /// deterministic across git versions).
+    fn init_repo_main(dir: &std::path::Path, msg: &str) -> String {
+        git(dir, &["init", "."]);
+        git(dir, &["config", "user.email", "t@reposix.invalid"]);
+        git(dir, &["config", "user.name", "reposix-test"]);
+        git(dir, &["commit", "--allow-empty", "-m", msg]);
+        git(dir, &["branch", "-m", "main"]);
+        rev_parse(dir, "HEAD")
+    }
+
+    fn rev_parse(dir: &std::path::Path, rev: &str) -> String {
+        let out = std::process::Command::new("git")
+            .arg("-C")
+            .arg(dir)
+            .args(["rev-parse", rev])
+            .env("GIT_CONFIG_NOSYSTEM", "1")
+            .output()
+            .expect("git rev-parse");
+        assert!(
+            out.status.success(),
+            "git rev-parse {rev} failed: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        String::from_utf8_lossy(&out.stdout).trim().to_string()
+    }
+
+    /// H4 core assertion: in the `reposix attach` topology the working
+    /// tree's HEAD is an independent lineage the cache never materialized,
+    /// so the drift check must NOT fire a false WARN — it reports OK and
+    /// explains the topology. (Before the fix this returned WARN with the
+    /// useless `git pull --rebase` fix-line.)
+    #[test]
+    fn drift_check_ok_when_head_not_in_cache_attach_topology() {
+        let cache = tempfile::tempdir().unwrap();
+        let work = tempfile::tempdir().unwrap();
+        // Cache main is a synthesized commit; the work tree has its OWN,
+        // unrelated commit (as a vanilla mirror clone would).
+        init_repo_main(cache.path(), "cache synthesized commit");
+        init_repo_main(work.path(), "independent work-tree commit");
+
+        let ctx = DoctorCtx::gather(work.path());
+        let finding = check_worktree_head_drift(&ctx, cache.path());
+        assert_eq!(
+            finding.severity,
+            Severity::Ok,
+            "attach-topology drift must be OK, not a false WARN: {finding:?}"
+        );
+        assert!(
+            finding
+                .message
+                .contains("not in the cache's commit lineage"),
+            "OK message must explain the attach topology: {}",
+            finding.message
+        );
+    }
+
+    /// H4 regression guard: a genuinely stale `init`-topology tree — HEAD is
+    /// a real cache-lineage commit that is BEHIND cache main — must still
+    /// WARN. This proves the fix narrows the check to the meaningful case
+    /// rather than silencing it wholesale.
+    #[test]
+    fn drift_check_warns_when_head_in_cache_but_behind_main() {
+        let cache = tempfile::tempdir().unwrap();
+        let outer = tempfile::tempdir().unwrap();
+        // Cache: C1 <- C2 on main.
+        let c1 = init_repo_main(cache.path(), "C1");
+        git(cache.path(), &["commit", "--allow-empty", "-m", "C2"]);
+
+        // Work tree is a full clone of the cache, then reset to C1 so its
+        // HEAD is a commit the cache knows (present in the cache's object
+        // graph) but is one behind main.
+        let work_path = outer.path().join("work");
+        git(
+            cache.path(),
+            &[
+                "clone",
+                cache.path().to_str().unwrap(),
+                work_path.to_str().unwrap(),
+            ],
+        );
+        git(&work_path, &["config", "user.email", "t@reposix.invalid"]);
+        git(&work_path, &["config", "user.name", "reposix-test"]);
+        git(&work_path, &["reset", "--hard", &c1]);
+
+        // Sanity: HEAD really is C1 and C1 is in the cache.
+        assert_eq!(rev_parse(&work_path, "HEAD"), c1);
+        assert!(
+            object_in_cache(cache.path(), &c1),
+            "C1 must be an object in the cache for this regression to be valid"
+        );
+
+        let ctx = DoctorCtx::gather(&work_path);
+        let finding = check_worktree_head_drift(&ctx, cache.path());
+        assert_eq!(
+            finding.severity,
+            Severity::Warn,
+            "a genuinely stale init tree (HEAD behind cache main, in-lineage) must WARN: {finding:?}"
+        );
     }
 }

@@ -168,7 +168,7 @@ Checks performed (each finding is OK / INFO / WARN / ERROR; copy-pastable `Fix:`
 - `git.extensions.partialClone` — `extensions.partialClone` names a remote (`origin` for `reposix init`, or the `--remote-name` used by `reposix attach`) whose URL is a reposix remote. **Auto-fixable** with `--fix` only when the setting is entirely unset (defaults to `origin`); if it points at a non-reposix or missing remote, `doctor` reports a WARN with a copy-pastable fix instead of silently rewriting it (QL-004 — rewriting to `origin` would corrupt an attached tree).
 - `git.remote.origin.url` — despite the check name (kept for compatibility), this resolves the *reposix* remote (partialClone-aware: `origin` for `reposix init` trees, the attach remote name for `reposix attach` trees) and confirms it uses the `reposix::` scheme and parses cleanly.
 - `helper.binary` — `git-remote-reposix` is on PATH.
-- `git.version` — `git --version >= 2.34` (>=2.27 minimum).
+- `git.version` — `git --version >= 2.34` recommended. Below 2.34 this is a WARN, never an ERROR: `reposix attach` and `git push` (the export path) work on older git; only `git clone`/`git fetch --filter=blob:none` (the partial-clone read path via `stateless-connect`) needs >=2.34 (blob-filter support landed in 2.27).
 - `backend.registered` — the backend named by the URL scheme (sim/github/confluence/jira) is registered in this build.
 - `cache.db` — cache DB exists at the expected path.
 - `cache.db.readable` — cache DB opens cleanly.
@@ -177,7 +177,7 @@ Checks performed (each finding is OK / INFO / WARN / ERROR; copy-pastable `Fix:`
 - `cache.audit.triggers` — `audit_cache_no_update` / `audit_cache_no_delete` append-only triggers present (security guardrail).
 - `cache.freshness` — `meta.last_fetched_at` not older than 24h.
 - `cache.refs.main` — cache's bare repo has at least one commit on `refs/heads/main`.
-- `worktree.head.drift` — working-tree HEAD matches the cache's `refs/heads/main`. WARN with ahead/behind counts when they diverge.
+- `worktree.head.drift` — working-tree HEAD vs the cache's `refs/heads/main`. WARN with ahead/behind counts only when HEAD is a commit in the cache's lineage (the `reposix init` topology) and has drifted. In the `reposix attach` topology — and immediately after any push — the cache synthesizes its own commits from REST state, so HEAD is an independent lineage the SHA compare cannot meaningfully judge; the check reports OK and defers to id-based reconciliation instead (no false drift WARN).
 - `env.REPOSIX_ALLOWED_ORIGINS` — env-var allowlist actually covers the configured remote (port-glob `:*` honoured for loopback). WARN when it doesn't.
 - `env.REPOSIX_BLOB_LIMIT` — not set to `0` on a non-sim backend.
 - `git.sparse-checkout` — pattern count (informational).
