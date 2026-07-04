@@ -63,7 +63,13 @@ readonly PATTERNS=(
   'AKIA[0-9A-Z]{16}'
   'xox[baprs]-[0-9A-Za-z-]{10,}'
   'sk-(proj-)?[A-Za-z0-9]{20,}'
-  '-----BEGIN( RSA| EC| OPENSSH)? PRIVATE KEY-----'
+  # PEM header. The leading char class `[-]` (not a bare `-----`) is
+  # load-bearing: patterns are passed to `grep -qE "$pattern"` unquoted-
+  # at-the-option-boundary, so a pattern STARTING with `-` is parsed by
+  # grep as an option ("unrecognized option", rc=2) and silently never
+  # matches -- a hole TEST 5d in .githooks/test-pre-push.sh caught.
+  # `[-]----` matches the same five dashes without a leading `-` arg.
+  '[-]----BEGIN( RSA| EC| OPENSSH)? PRIVATE KEY-----'
 )
 readonly EXCLUDE_DIRS=(
   '.git'
