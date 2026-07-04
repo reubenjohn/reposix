@@ -87,7 +87,9 @@ impl Cache {
             let bytes = rendered.into_bytes();
             let oid = gix::objs::compute_hash(hash_kind, gix::object::Kind::Blob, &bytes)
                 .map_err(|e| Error::Git(e.to_string()))?;
-            let filename = format!("{}.md", issue.id.0);
+            // Canonical bare filename (QL-001 / D91-01); the outer tree entry
+            // nests it under `issues/`, so the full path is `issues/<id>.md`.
+            let filename = reposix_core::path::record_filename(issue.id.0);
             records.push((
                 gix::objs::tree::Entry {
                     mode: gix::object::tree::EntryKind::Blob.into(),
@@ -309,7 +311,9 @@ impl Cache {
                 gix::objs::compute_hash(hash_kind, gix::object::Kind::Blob, &bytes)
                     .map_err(|e| Error::Git(e.to_string()))?
             };
-            let filename = format!("{}.md", issue.id.0);
+            // Canonical bare filename (QL-001 / D91-01); the outer tree entry
+            // nests it under `issues/`, so the full path is `issues/<id>.md`.
+            let filename = reposix_core::path::record_filename(issue.id.0);
             records.push((
                 gix::objs::tree::Entry {
                     mode: gix::object::tree::EntryKind::Blob.into(),

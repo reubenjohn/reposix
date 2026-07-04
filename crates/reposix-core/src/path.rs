@@ -71,6 +71,50 @@ pub fn validate_record_filename(name: &str) -> Result<RecordId> {
     Ok(RecordId(n))
 }
 
+/// The canonical bare filename for a record id: `"<id>.md"`, unpadded.
+///
+/// This is the single source of truth for the record-file spelling. The
+/// cache tree materializer nests it under an `issues/` subtree entry; the
+/// refresh CLI writes it under the `issues/`/`pages/` bucket dir; the push
+/// planner and the fast-import emit side prefix it via [`record_path`]. All
+/// four sites route through here so a given id spells identically everywhere
+/// (QL-001 / D91-01).
+#[must_use]
+pub fn record_filename(id: u64) -> String {
+    format!("{id}.md")
+}
+
+/// The canonical on-disk path for a record id: `"issues/<id>.md"`, unpadded.
+///
+/// This is what a real reposix working tree contains and what
+/// stateless-connect serves verbatim from the cache. Producers (`refresh`,
+/// `fast_import` emit) and consumers (`diff::plan` prior-key) MUST agree on
+/// this spelling; a mismatch classifies every record as a spurious
+/// Create+Delete on push (QL-001 BUG-1).
+#[must_use]
+pub fn record_path(id: u64) -> String {
+    format!("issues/{}", record_filename(id))
+}
+
+/// Parse a record id out of a canonical `issues/<id>.md` path.
+///
+/// Padding-agnostic: `"issues/42.md"` and `"issues/00000000042.md"` both
+/// yield `Some(42)` (built on [`validate_record_filename`], which parses the
+/// stem via `u64::from_str` so any zero-padding collapses). Returns `None`
+/// for anything that is not exactly `issues/<digits>.md` — non-`issues/`
+/// buckets (`pages/x.md`), metadata files (`.reposix/y.txt`), bare filenames
+/// with no prefix (`foo.md`), and nested paths (`issues/sub/1.md`, rejected
+/// because the stripped remainder still contains a `/`).
+///
+/// This replaces the two hand-rolled bare-filename parsers that previously
+/// lived in `reposix-remote` (`diff.rs` + the QL-157 `main.rs` duplicate),
+/// both of which returned `None` for every real `issues/`-prefixed path.
+#[must_use]
+pub fn issue_id_from_path(path: &str) -> Option<u64> {
+    let name = path.strip_prefix("issues/")?;
+    validate_record_filename(name).ok().map(|rid| rid.0)
+}
+
 /// Convert a free-form title to a filesystem-safe slug.
 ///
 /// Algorithm (locked by Phase 13 CONTEXT.md §slug-algorithm):
@@ -233,6 +277,56 @@ mod tests {
                 matches!(err, Error::InvalidPath(_)),
                 "{bad:?} must be rejected"
             );
+        }
+    }
+
+    // --- Phase 91: canonical record_path / issue_id_from_path (QL-001) -----
+
+    #[test]
+    fn record_filename_is_unpadded() {
+        assert_eq!(record_filename(1), "1.md");
+        assert_eq!(record_filename(42), "42.md");
+        assert_eq!(record_filename(0), "0.md");
+    }
+
+    #[test]
+    fn record_path_is_issues_prefixed_unpadded() {
+        assert_eq!(record_path(42), "issues/42.md");
+        assert_eq!(record_path(1), "issues/1.md");
+    }
+
+    #[test]
+    fn record_path_round_trips_through_issue_id_from_path() {
+        for id in [0u64, 1, 42, 9999, u64::MAX] {
+            assert_eq!(issue_id_from_path(&record_path(id)), Some(id));
+        }
+    }
+
+    #[test]
+    fn issue_id_from_path_is_padding_agnostic() {
+        assert_eq!(issue_id_from_path("issues/42.md"), Some(42));
+        assert_eq!(issue_id_from_path("issues/00000000042.md"), Some(42));
+        assert_eq!(issue_id_from_path("issues/0.md"), Some(0));
+    }
+
+    #[test]
+    fn issue_id_from_path_rejects_non_issue_paths() {
+        // No `issues/` prefix, wrong bucket, metadata, nested, junk stem.
+        for bad in [
+            "pages/x.md",
+            ".reposix/fetched_at.txt",
+            ".reposix/.gitignore",
+            "foo.md",
+            "42.md",            // bare, no prefix — the OLD buggy shape
+            "0042.md",          // bare 4-pad — the OLD planner shape
+            "issues/sub/1.md",  // nested: remainder still contains '/'
+            "issues/readme.md", // non-digit stem
+            "issues/.md",       // empty stem
+            "issues/12a.md",    // mixed
+            "issues/",          // no filename
+            "issues/1.txt",     // wrong extension
+        ] {
+            assert_eq!(issue_id_from_path(bad), None, "{bad:?} must not parse");
         }
     }
 
