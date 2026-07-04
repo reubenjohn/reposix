@@ -152,6 +152,39 @@ if ! run_and_check "Google AIza API key rejected" 1; then
 fi
 git reset -q --hard HEAD^
 
+# --- TEST 5c: commit with an AWS access key id (AKIA...) is rejected. --
+# D-CONV-4 (2026-07-04): coverage for the AKIA[0-9A-Z]{16} pattern added
+# to cred-hygiene.sh. Fixture is a SYNTHETIC AKIA-shaped id assembled at
+# RUNTIME from two halves so no AKIA-shaped literal exists in this source
+# file — the gitleaks CI backstop (aws-access-token rule) pattern-matches
+# any AKIA-shaped string and would otherwise block the push shipping this
+# harness. Same invisibility-by-construction trick as TEST 5b.
+fake_aws_prefix='AKIA'
+fake_aws_rest='IOSFODNN7EXAMPLE0'   # 17 chars -> 16 taken by the {16} quantifier
+printf 'AWS_ACCESS_KEY_ID=%s%s\n' "$fake_aws_prefix" "$fake_aws_rest" > .test-pre-push-fixture.txt
+git add .test-pre-push-fixture.txt
+git -c user.email=test@test -c user.name=test commit -q -m "test: inject fake AWS access key id"
+if ! run_and_check "AWS AKIA access key rejected" 1; then
+  fails=$((fails + 1))
+fi
+git reset -q --hard HEAD^
+
+# --- TEST 5d: commit with a PEM private-key header is rejected. --------
+# D-CONV-4 (2026-07-04): coverage for the
+# -----BEGIN( RSA| EC| OPENSSH)? PRIVATE KEY----- pattern. The header is
+# assembled at RUNTIME from two halves so no full PEM header literal
+# exists in this source file — gitleaks' private-key rule matches the
+# complete header, so a literal would block the push shipping this harness.
+pem_head='-----BEGIN'
+pem_tail=' RSA PRIVATE KEY-----'
+printf '%s%s\n' "$pem_head" "$pem_tail" > .test-pre-push-fixture.txt
+git add .test-pre-push-fixture.txt
+git -c user.email=test@test -c user.name=test commit -q -m "test: inject fake PEM private-key header"
+if ! run_and_check "PEM private-key header rejected" 1; then
+  fails=$((fails + 1))
+fi
+git reset -q --hard HEAD^
+
 # --- TEST 6: hook file itself is excluded from self-scan. -------------
 # (Confirm the hook doesn't fail against its own PATTERNS=('ATATT3' ...)
 # body. We do this by triggering a fake commit that touches only the

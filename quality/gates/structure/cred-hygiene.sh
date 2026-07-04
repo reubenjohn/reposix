@@ -37,12 +37,33 @@ mkdir -p "$ARTIFACT_DIR"
 # would have been invisible to it and caught only server-side. ADDING a
 # pattern is a security UPGRADE (broader coverage), not the
 # threat-model-review downgrade the header warns against.
+#
+# AWS/Slack/OpenAI/PEM patterns added 2026-07-04 (D-CONV-4,
+# quality/SURPRISES.md "Quality Convergence"): the gate's prior five
+# prefixes were the known blind spots. These four are the highest-value
+# additions, matched by the gitleaks CI backstop too (Layer 2) but worth
+# catching in the zero-dep local layer so a fresh clone with hooks
+# installed is protected without the gitleaks binary. Adding patterns is a
+# security UPGRADE.
+#
+# OpenAI note: the "obvious" pattern `sk-[A-Za-z0-9_-]{20,}` collides with
+# kebab-case doc slugs — `.planning/.../task-4-summary-changelog` yields a
+# 19-char `sk-…` run (ta[sk-4-summary-changelog]), one char shy of a false
+# hit, and a slightly longer slug WOULD trip it. Real OpenAI keys have a
+# pure-alphanumeric body run (legacy `sk-`+48 alnum; project `sk-proj-`+
+# alnum) — so we match an alnum RUN, which kebab-case (separator-broken)
+# can never produce at length 20+. This keeps detection while dropping the
+# slug-collision vector (verified: zero matches across the current tree).
 readonly PATTERNS=(
   'ATATT3[A-Za-z0-9_+/=-]{20,}'
   'Bearer[[:space:]]+ATATT3[A-Za-z0-9_+/=-]{20,}'
   'ghp_[A-Za-z0-9]{20,}'
   'github_pat_[A-Za-z0-9_]{20,}'
   'AIza[0-9A-Za-z_-]{35}'
+  'AKIA[0-9A-Z]{16}'
+  'xox[baprs]-[0-9A-Za-z-]{10,}'
+  'sk-(proj-)?[A-Za-z0-9]{20,}'
+  '-----BEGIN( RSA| EC| OPENSSH)? PRIVATE KEY-----'
 )
 readonly EXCLUDE_DIRS=(
   '.git'
