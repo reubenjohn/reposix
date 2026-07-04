@@ -50,3 +50,24 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 **Default disposition:** Size XS; XS items always close per CLAUDE.md OP-8 — fold into the P90/P95 polish slot that already owns deferral-linter content cross-reference.
 
 **STATUS:** OPEN
+
+## GOOD-TO-HAVES-03 — `run.py` runner has no per-row / per-dimension scope flag (only `--cadence`)
+
+**Discovered during:** P89 89-04 (kind: shell-subprocess worked example, RBF-FW-02)
+
+**Size:** S (~15-25 lines Python — add mutually-exclusive `--row <id>` / `--dimension <dim>` argparse options that further filter `in_scope` after the cadence filter in `main()`)
+
+**Source:** `quality/runners/run.py:325` — the runner accepts ONLY `--cadence` (required, `choices=VALID_CADENCES`). There is no way to grade a single row or a single dimension. Consequence observed in 89-04: verifying that the runner copies `transcript_path` into the top-level artifact required exercising the real `run_row` -> artifact-synthesis path for exactly one row (`agent-ux/kind-shell-subprocess-worked-example`), but the only sanctioned CLI path — `python3 quality/runners/run.py --cadence pre-push` — fans out across EVERY pre-push-tagged row, several of which shell out to `cargo build --workspace` / `cargo clippy` / `cargo test` (dark-factory, reposix-attach, code-dim gates). Under the task's binding NO-cargo constraint + CLAUDE.md "Build memory budget" (VM crashed twice on cargo RAM pressure), the full cadence run was unsafe, so the end-to-end runner proof had to be driven via an isolated Python harness importing `run.run_row` directly (evidence in the 89-04 session scratchpad). The plan's step 9 even invoked a fictional `--row agent-ux/kind-shell-subprocess-worked-example` flag that does not exist.
+
+**Acceptance:**
+
+- `python3 quality/runners/run.py --cadence pre-push --row <id>` grades and persists exactly one row (still stdlib-only, still cadence-gated so `--row` must also match the cadence).
+- Optionally `--dimension <dim>` scopes to one catalog file (mutually exclusive with `--row`).
+- A single-row invocation of a cheap mechanical/shell row (e.g. the shell-subprocess worked example) completes without triggering any sibling cargo verifier — makes the "prove the runner preserves transcript_path" check a one-liner instead of a bespoke harness.
+- Existing full-cadence behavior unchanged when neither flag is passed.
+
+**Why deferred from 89-04:** adding a runner CLI flag is outside RBF-FW-02's envelope (kind + transcript convention), touches `main()` row-selection + argparse, and warrants its own `test_run_scope.py` unit coverage — an S-sized change that would expand 89-04's scope. The transcript_path preservation was proven via the isolated harness in-session, so nothing is blocked; this only removes future friction (and closes the gap the plan's fictional `--row` implied should exist).
+
+**Default disposition:** Size S; default-defer to a P90/P95 runner-polish slot or v0.14.0. Cheap enough (~20 lines + one test) that a runner-touching phase should fold it in eagerly per OP-8 eager-resolution.
+
+**STATUS:** OPEN

@@ -328,6 +328,8 @@ Output a scored markdown table with file:line citations. Write to quality/report
 Refuse to grade GREEN unless every P0+P1 catalog row is PASS or WAIVED AND CLAUDE.md is updated.
 ```
 
+**For rows with `kind: shell-subprocess`** (RBF-FW-02; see also § "Verifier exit-code conventions" above): dereference `artifact.transcript_path`, read the transcript file, and verify (a) the `argv:` line names a real binary (NOT a Python function or `assert_cmd` envelope), (b) `env_keys:` contains expected variable NAMES only (no `=value` pairs — security), (c) `exit_code:` matches the row's expected outcome, (d) `--- STDOUT ---` / `--- STDERR ---` blocks contain evidence consistent with the row's `claim_vs_assertion_audit` paragraph. Reject the row's PASS grade if the transcript is missing or shows a synthetic invocation. **Note:** the worked-example row `agent-ux/kind-shell-subprocess-worked-example` may legitimately invoke `bash --version` as a CI-portability fallback (per its `expected.asserts[0]`); transport-claim rows MUST invoke a real reposix binary or backend endpoint and the verifier subagent grades accordingly.
+
 ## Cross-references
 
 This file (`quality/PROTOCOL.md`) is the runtime contract. The research bundle below is the design rationale — read those once at milestone planning, not every phase.

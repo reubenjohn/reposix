@@ -1280,8 +1280,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/kind-shell-subprocess-worked-example.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-04T03:56:11Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "quality/gates/agent-ux/shell-subprocess-example.sh + lib/transcript.sh (ship in 89-04); if RED, check transcript emission under quality/reports/transcripts/",

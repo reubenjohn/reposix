@@ -24,7 +24,7 @@ Every catalog row across every dimension uses this exact shape:
 | `id` | yes | stable slug, never reused; `<dimension>/<slug>` form |
 | `dimension` | yes | one of: `code`, `docs-build`, `docs-repro`, `release`, `structure`, `agent-ux`, `perf`, `security` |
 | `cadences` | yes | non-empty list; each element one of: `pre-commit`, `pre-push`, `pre-pr`, `weekly`, `pre-release`, `post-release`, `on-demand`. A single gate MAY fire at multiple cadences (e.g., a cheap mechanical check tagged `["pre-commit", "pre-push", "pre-pr"]` runs at every relevant trigger). |
-| `kind` | yes | one of: `mechanical`, `container`, `asset-exists`, `subagent-graded`, `manual` |
+| `kind` | yes | one of: `mechanical`, `container`, `asset-exists`, `subagent-graded`, `manual`, `shell-subprocess` |
 | `sources` | recommended | file:line refs to the doc/code surface this gate is about; lets the verifier flag drift |
 | `command` | for docs-repro / install rows | the literal command a user runs |
 | `expected.asserts` | yes | concrete predicates ("exit 0", "stdout matches /.../", "file X exists with mode 0755") |
@@ -39,6 +39,8 @@ Every catalog row across every dimension uses this exact shape:
 | `blast_radius` | yes | `P0`, `P1`, or `P2` — drives verdict severity routing |
 | `owner_hint` | recommended | one-liner naming where the FIX likely lives |
 | `waiver` | nullable | the principled escape hatch (see PROTOCOL §waivers); shape `{until: RFC3339, reason: str, dimension_owner: str, tracked_in: str}` |
+
+**`kind: shell-subprocess`** (introduced P89 RBF-FW-02): the verifier MUST drive `reposix init/attach/sync/push` (or a similar real binary) as an actual subprocess against a real backend (NOT via `assert_cmd`-style cargo-test envelopes — the cargo-test pattern is what F-K2 explicitly targets as untrustworthy). The verifier MUST write a transcript artifact at `quality/reports/transcripts/<row-slug>-<RFC3339>.txt` containing argv + env_keys (sorted variable NAMES only, NEVER values — security) + cwd + exit_code + stdout + stderr blocks. The JSON artifact gets a `transcript_path` field so verifier subagents can dereference it. Use the shared helper at `quality/gates/agent-ux/lib/transcript.sh` for transcript writes. **The worked example at `quality/gates/agent-ux/shell-subprocess-example.sh` falls back to `bash --version` when the local `reposix` binary is unavailable (CI portability) — this is an INTENTIONAL part of the kind contract: the proof shape (real subprocess + transcript) is exercised regardless of whether reposix has been built. Downstream consumers (P92 transport tests) MUST tighten to a real reposix binary or a real-backend invocation in their own catalog rows; the worked example is the kind-demonstration row, not a transport-claim row.**
 
 The catalog file itself wraps these rows in a small metadata object:
 

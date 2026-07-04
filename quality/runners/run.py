@@ -273,6 +273,7 @@ def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
     # Try to parse the artifact the verifier may have written (it has authoritative
     # asserts_passed / asserts_failed). If verifier wrote it, we keep its body and
     # only annotate top-level metadata. Otherwise we synthesize.
+    # RBF-FW-02: existing dict-merge preserves verifier-written transcript_path (confirmed 89-04 step 6).
     artifact: dict[str, Any] = {}
     if artifact_path and artifact_path.exists():
         try:

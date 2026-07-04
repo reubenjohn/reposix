@@ -75,5 +75,10 @@ quality/reports/verifications/*/*.json
 # on every pre-release run; it's not a per-run runtime snapshot.
 !quality/reports/verifications/perf/webhook-latency.json
 quality/reports/verdicts/*/[0-9]*.md
+# kind: shell-subprocess transcripts (RBF-FW-02) are per-run runtime snapshots,
+# same as verifications/*.json above — the dir is scaffolded by .gitkeep and the
+# convention is documented in quality/catalogs/README.md; regenerate any
+# transcript by running its verifier (e.g. quality/gates/agent-ux/shell-subprocess-example.sh).
+quality/reports/transcripts/*.txt
 quality/reports/verdicts/session-end/SESSION-VERDICT.md
 quality/reports/badge.json
