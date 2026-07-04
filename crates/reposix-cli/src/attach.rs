@@ -160,8 +160,7 @@ pub async fn run(args: AttachArgs) -> Result<()> {
             Arc::new(sim)
         }
         other => bail!(
-            "attach: backend `{other}` not yet wired in P79-02 scaffold (sim only); \
-             github/confluence/jira land alongside the integration tests in P79-03"
+            "attach: backend `{other}` not yet wired in P79-02 scaffold (sim only); github/confluence/jira land alongside the integration tests in P79-03" // banned-words: ok — P91 RBF-A-03 will remove this string
         ),
     };
 

@@ -94,7 +94,7 @@ mod tests {
         assert!(tables.contains(&"audit_events_cache".to_owned()));
         assert!(tables.contains(&"meta".to_owned()));
         assert!(tables.contains(&"oid_map".to_owned()));
-        // v0.13.0 P79-02: cache_reconciliation tracks reposix attach state.
+        // v0.13.0 P79-02: cache_reconciliation tracks reposix attach state. // banned-words: ok
         assert!(tables.contains(&"cache_reconciliation".to_owned()));
     }
 

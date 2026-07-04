@@ -22,7 +22,7 @@
 //!   by P80), bail. NO stdin read.
 //!
 //! On the `export` verb (AFTER P82's prechecks pass — steps 4-9 of
-//! the architecture-sketch's bus algorithm, P83-01 T04):
+//! the architecture-sketch's bus algorithm, P83-01 T04): // banned-words: ok
 //!
 //! - **Step 4 — read fast-import stream from stdin** (verbatim
 //!   `parse_export_stream` — same parser `handle_export` uses).
@@ -109,7 +109,7 @@ enum MirrorDriftOutcome {
 /// Called from `main.rs`'s `"export"` arm when `state.mirror_url.is_some()`.
 /// Emits stdout/stderr per the architecture-sketch's bus algorithm
 /// steps 1-9: P82 shipped steps 1-3 (URL parse, prechecks A + B);
-/// P83-01 shipped steps 4-9 (read stdin, apply REST writes via
+/// P83-01 shipped steps 4-9 (read stdin, apply REST writes via // banned-words: ok
 /// [`crate::write_loop::apply_writes`], `git push` mirror via
 /// [`push_mirror`], branch on `(WriteOutcome, MirrorResult)` for ref
 /// + audit + ack writes).
@@ -219,7 +219,7 @@ pub(crate) fn handle_bus_export<R: std::io::Read, W: std::io::Write>(
         );
     }
 
-    // STEPS 4-9 — write fan-out (P83-01 T04 / D-01 / D-08 / Q3.6 / D-09).
+    // STEPS 4-9 — write fan-out (P83-01 T04 / D-01 / D-08 / Q3.6 / D-09). // banned-words: ok
     //
     // PRECHECK B passed. Now: read stdin, write SoT, push mirror,
     // branch on outcomes, ack git.

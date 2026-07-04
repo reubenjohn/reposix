@@ -174,3 +174,23 @@
 **Sketched resolution:** Mint as catalog rows + verifiers in a good-to-haves slot (P97) — one catalog row + one verifier each per the framework's own extension contract ("Adding a new gate is one catalog row + one verifier in the right dimension dir").
 
 **STATUS:** OPEN
+
+## 2026-07-03 20:16 | discovered-by: P89-02 | severity: LOW
+
+**What:** P89→P91 dead-allowlist-marker coupling. When P91 RBF-A-03 scrubs the deferral strings in `crates/reposix-cli/src/{attach.rs (the P79-02/P79-03 bail! string, marker on the same line), sync.rs:42}`, it MUST also remove the corresponding `// banned-words: ok — P91 RBF-A-03 will remove this string` allowlist comment from the SAME line in attach.rs. Otherwise dead allowlist markers accumulate, polluting the diff and creating a false impression that the file still hosts a banned token. Note: sync.rs:42 carries NO marker — its token is `P82+` (no `-\d+` suffix), which the tightened `\bP\d{2,3}-\d+\b` regex intentionally does not match; it is instead covered by 89-05's deferral-pointer linter (`lands? (alongside|in) P\d+`) and remains a P91 scrub target.
+
+**Why out-of-scope for P89-02:** P91 owns the scrub; P89 only ships the linter that creates the marker dependency.
+
+**Sketched resolution:** P91's per-task PLAN should include a step "remove the corresponding `// banned-words: ok` markers when scrubbing each deferral string" with grep-verified post-condition (`grep -rn 'banned-words: ok — P91' crates/` returns zero matches after the scrub).
+
+**STATUS:** OPEN
+
+## 2026-07-03 20:16 | discovered-by: P89-02 | severity: LOW
+
+**What:** The pre-allowlist banned-token scan found a production hit NOT enumerated in 89-CONTEXT.md (Q-DEFERRAL-1): `crates/reposix-quality/src/commands/doc_alignment.rs:305` (`// \`source_hashes\` (path-b -- closed in P78-03). The legacy`). Same historical-refactor-marker class as the enumerated bus_handler.rs/main.rs/db.rs hits — NOT an active deferral. Handled in-task with a `// banned-words: ok` allowlist marker. Filed per 89-02-PLAN's Auto-Resolution Preference clause ("surface if a sixth-or-larger production hit not enumerated in Q-DEFERRAL-1 is found — the unexpected count signals the linter scope may need rethinking").
+
+**Why out-of-scope for P89-02:** One extra hit of the already-recognized historical-marker class does not change linter scope; it only means Q-DEFERRAL-1's enumeration missed the reposix-quality crate. No scope rethink needed, but the discrepancy is recorded so the P95/P97 absorption phases can decide whether the enumeration process (grep target list) needs widening.
+
+**Sketched resolution:** None required beyond the marker already applied; if P95 tree-sitter block detection lands, re-audit whether historical-marker comments should be rewritten instead of allowlisted.
+
+**STATUS:** OPEN

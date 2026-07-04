@@ -436,7 +436,7 @@ pub(crate) fn issue_id_from_path(path: &str) -> Option<u64> {
 
 /// Apply a single [`PlannedAction`] to the backend.
 ///
-/// Narrow-deps signature (P83-01 T02 refactor): takes `(backend,
+/// Narrow-deps signature (P83-01 T02 refactor): takes `(backend, // banned-words: ok
 /// project, rt, cache, action)` rather than `&mut State` so
 /// `crate::write_loop::apply_writes` (which has no `State` access)
 /// can call it directly.

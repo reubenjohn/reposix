@@ -693,8 +693,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/banned-production-tokens.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-04T03:07:34Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "add '// banned-words: ok' allowlist marker OR rename the phase-id token",

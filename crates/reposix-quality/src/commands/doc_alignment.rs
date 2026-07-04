@@ -302,7 +302,7 @@ pub(crate) mod verbs {
             }
             // BIND-VERB-FIX-01 (P75) + MULTI-SOURCE-WATCH-01 (P78):
             // Walker now AND-compares per-source hashes via
-            // `source_hashes` (path-b -- closed in P78-03). The legacy
+            // `source_hashes` (path-b -- closed in P78-03). The legacy // banned-words: ok
             // `source_hash` field tracks `source_hashes[0]` for one
             // release cycle (back-compat for downgrade rollback);
             // post-v0.14.0 `source_hash` can be retired.
