@@ -1,6 +1,6 @@
 # Crates overview
 
-reposix is a Cargo workspace of nine crates. `reposix-core` is the seam: every other crate depends on it; it depends on no internal crate. All crates are currently path-only — none publish to crates.io yet (release readiness tracked under v0.11.0).
+reposix is a Cargo workspace of ten crates. `reposix-core` is the seam: every other crate depends on it; it depends on no internal crate. All crates are currently path-only — none publish to crates.io yet (release readiness tracked under v0.11.0).
 
 ## reposix-core
 
@@ -74,8 +74,8 @@ Top-level `reposix` binary. `clap`-derive CLI; the orchestrator described in [re
 
 ### Public API entry points
 
-- Subcommands: `init`, `sim`, `list`, `refresh`, `spaces`, `version`.
-- `reposix_cli::list`, `reposix_cli::refresh`, `reposix_cli::spaces` re-exported as a library so integration tests can drive the same code paths the CLI does.
+- Subcommands: `init`, `attach`, `sim`, `list`, `refresh`, `spaces`, `sync`, `doctor`, `history`, `log`, `at`, `gc`, `tokens`, `cost`, `version`. Full per-subcommand reference: [reference/cli.md](cli.md).
+- `reposix_cli::list`, `reposix_cli::refresh`, `reposix_cli::spaces`, `reposix_cli::attach`, `reposix_cli::sync` re-exported as a library so integration tests can drive the same code paths the CLI does.
 
 ### Used by
 
@@ -145,3 +145,19 @@ Motivation: the "10k agent QA team" pattern from the StrongDM dark-factory playb
 ### Used by
 
 The `chaos_audit` CI job and ad-hoc local soak tests.
+
+## reposix-quality
+
+Dimension verifier suite for the Quality Gates framework (`quality/` at the repo root). Self-contained — depends on no other `reposix-*` crate, so it is one `cargo init` away from a standalone spinoff. Ships both a library (`reposix_quality`) and the `reposix-quality` umbrella binary.
+
+### Public API entry points
+
+- `reposix-quality doc-alignment {bind, propose-retire, confirm-retire, mark-missing-test, plan-refresh, plan-backfill, merge-shards, walk, status, waive, unwaive}` — the docs-alignment dimension's mint/validate/query surface; see [`quality/catalogs/README.md`](https://github.com/reubenjohn/reposix/blob/main/quality/catalogs/README.md) § "docs-alignment dimension".
+- `reposix-quality walk` — alias for `doc-alignment walk` (the pre-push hash-drift gate).
+- `reposix-quality verify --row-id <id>` — read-only inspection of a single catalog row.
+- `reposix-quality run` — cadence-driven invocation, mutually exclusive with `--gate`.
+- `catalog`, `hash` modules — shared row/hash primitives used by both the umbrella binary and the standalone `hash_test_fn` binary.
+
+### Used by
+
+`quality/runners/run.py` (the cadence runner), the `/reposix-quality-*` skills, and every subagent that proposes a claim→test binding (Principle A: subagents propose with citations, this crate validates and mints).

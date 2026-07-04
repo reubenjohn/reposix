@@ -42,22 +42,33 @@ recoverable-vs-fatal errors at this layer; all failures collapse to
 `std::process::exit(report.exit_code())` after printing its findings
 table.
 
+**A note on the `Source` column.** Citations below name the function
+that contains the exit path rather than a line range. Line numbers
+drift silently every time an earlier `Cmd` enum variant grows a field —
+a prior revision of this table cited `main.rs:314-317` for `version`
+and `main.rs:387-390` for `doctor`, both of which pointed at the wrong
+code once `attach` and `sync` were inserted into the enum. A function
+name is grep-able and survives that churn; a line range isn't.
+
 | Code | Subcommand | Condition | Source |
 |------|------------|-----------|--------|
 | `0` | all | success | `Ok(())` from handler |
-| `1` | `init` | invalid `<backend>::<project>` spec, unknown backend, `git init`/`git fetch` failure, time-travel `--since` finds no matching sync tag | `crates/reposix-cli/src/init.rs` (multiple `bail!` sites) |
-| `1` | `sim` | child `reposix-sim` process exited non-zero, bind-port already in use, seed-file parse error | `crates/reposix-cli/src/sim.rs:194` |
-| `1` | `list` | missing required env vars for non-sim backends (`ATLASSIAN_*`, `JIRA_*`, `GITHUB_TOKEN` per backend), allowlist denial, REST 4xx/5xx | `crates/reposix-cli/src/list.rs:204,254` |
-| `1` | `refresh` | `--offline` (Phase 21 not implemented), backend error, `git commit`/`git init` failure, working-tree validation failure | `crates/reposix-cli/src/refresh.rs:67,192,215,265,278,309` |
-| `1` | `spaces` | `--backend sim`, `--backend github`, or `--backend jira` (only Confluence supported) | `crates/reposix-cli/src/spaces.rs:26-32` |
-| `0` | `doctor` | no `ERROR`-severity findings (clean tree, or only `INFO`/`WARN`) | `crates/reposix-cli/src/doctor.rs:164-166` |
-| `1` | `doctor` | at least one `ERROR`-severity finding (e.g. missing `extensions.partialClone`, `git rev-parse` failure, cache directory missing) | `crates/reposix-cli/src/main.rs:387-390` (calls `std::process::exit(report.exit_code())`) |
-| `1` | `log` | called without `--time-travel` (the bare form is reserved for a future commit-graph view) | `crates/reposix-cli/src/main.rs:363-367` |
-| `1` | `history` / `at` | working tree missing, no sync tags in cache, RFC-3339 parse failure, no tag at-or-before timestamp | `crates/reposix-cli/src/history.rs:26` |
-| `1` | `tokens` | working tree missing, no `cache.db` audit log alongside the cache | `crates/reposix-cli/src/tokens.rs:63,81` |
-| `1` | `cost` | working tree missing, no `cache.db`, `--since` parse failure | `crates/reposix-cli/src/cost.rs:113,260` |
-| `1` | `gc` | invalid strategy combo, working tree missing, IO failure walking the cache | `crates/reposix-cli/src/gc.rs:72` |
-| `0` | `version` | always | `crates/reposix-cli/src/main.rs:314-317` |
+| `1` | `init` | invalid `<backend>::<project>` spec, unknown backend, `git init`/`git fetch` failure, time-travel `--since` finds no matching sync tag | `crates/reposix-cli/src/init.rs` (`run_with_since`, `run_git`) |
+| `1` | `attach` | not a git working tree, invalid `<backend>::<project>` spec, re-attach against a different `SoT` (Q1.2 reject), duplicate `id` across local records, backend not yet wired, cache/reconciliation/REST failure | `crates/reposix-cli/src/attach.rs` (`run`) |
+| `1` | `sim` | child `reposix-sim` process exited non-zero, bind-port already in use, seed-file parse error | `crates/reposix-cli/src/sim.rs` (`run`) |
+| `1` | `list` | missing required env vars for non-sim backends (`ATLASSIAN_*`, `JIRA_*`, `GITHUB_TOKEN` per backend), allowlist denial, REST 4xx/5xx | `crates/reposix-cli/src/list.rs` (`run`) |
+| `1` | `refresh` | `--offline` (not implemented), backend error, `git commit`/`git init` failure, working-tree validation failure | `crates/reposix-cli/src/refresh.rs` (`run_refresh`, `run_refresh_inner`) |
+| `0` | `sync` (bare form) | always — prints a hint pointing at `--reconcile`; the bare form is reserved for future flag combinations, not an error | `crates/reposix-cli/src/sync.rs` (`run`) |
+| `1` | `sync --reconcile` | no reposix remote configured on the working tree, remote URL fails to parse, backend isn't `sim` yet (real-backend wiring lands in P82+), cache-open or REST failure | `crates/reposix-cli/src/sync.rs` (`run`) |
+| `1` | `spaces` | `--backend sim`, `--backend github`, or `--backend jira` (only Confluence supported) | `crates/reposix-cli/src/spaces.rs` (`run`) |
+| `0` | `doctor` | no `ERROR`-severity findings (clean tree, or only `INFO`/`WARN`) | `crates/reposix-cli/src/doctor.rs` (`DoctorReport::exit_code`) |
+| `1` | `doctor` | at least one `ERROR`-severity finding (e.g. no reposix remote resolves, `git rev-parse` failure, cache directory missing) | `crates/reposix-cli/src/main.rs` (`Cmd::Doctor` arm; calls `std::process::exit(report.exit_code())`) |
+| `1` | `log` | called without `--time-travel` (the bare form is reserved for a future commit-graph view) | `crates/reposix-cli/src/main.rs` (`Cmd::Log` arm) |
+| `1` | `history` / `at` | working tree missing, no sync tags in cache, RFC-3339 parse failure, no tag at-or-before timestamp | `crates/reposix-cli/src/history.rs` (`run_history`, `run_at`) |
+| `1` | `tokens` | working tree missing, no `cache.db` audit log alongside the cache | `crates/reposix-cli/src/tokens.rs` (`run`) |
+| `1` | `cost` | working tree missing, no `cache.db`, `--since` parse failure | `crates/reposix-cli/src/cost.rs` (`run`) |
+| `1` | `gc` | invalid strategy combo, working tree missing, IO failure walking the cache | `crates/reposix-cli/src/gc.rs` (`run`, `run_orphans`) |
+| `0` | `version` | always | `crates/reposix-cli/src/main.rs` (`Cmd::Version` arm) |
 
 ### What "anyhow propagation" looks like in practice
 

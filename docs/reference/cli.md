@@ -11,10 +11,12 @@ Usage: reposix <COMMAND>
 
 Commands:
   init     Initialize a partial-clone working tree backed by reposix
+  attach   Attach an existing checkout to a SoT backend (DVCS-ATTACH-01..04)
   sim      Run the REST simulator (delegates to reposix-sim)
   list     List issues/pages in a project (prints JSON or table)
   refresh  Re-fetch all issues and write a commit (force delta sync)
   spaces   List readable Confluence spaces (Confluence backend only)
+  sync     On-demand cache reconciliation against the SoT (--reconcile)
   doctor   Diagnose a reposix working tree and print fix commands
   history  List sync tags (time-travel snapshots) for a working tree
   log      Time-travel log alias (--time-travel) for sync history
@@ -62,6 +64,28 @@ With `--since=<RFC3339>`, `init` reads sync tags from the cache's bare repo, pic
 
 `confluence::` and `jira::` specs require `REPOSIX_CONFLUENCE_TENANT` or `REPOSIX_JIRA_INSTANCE`. See [Confluence](confluence.md) and [JIRA](jira.md) for credential setup.
 
+## `reposix attach`
+
+Adopt an existing checkout — a vanilla `git clone` mirror, a hand-edited tree, or a prior `reposix init` — and bind it to a `SoT` backend (DVCS-ATTACH-01..04, v0.13.0). Builds a cache from REST against the `SoT`, reconciles the current `HEAD` tree against backend records by frontmatter `id`, and adds a new reposix-equipped remote configured for partial clone. The existing `origin` remote (if any) is left untouched — plain-git mirror semantics are preserved; `extensions.partialClone` is set to the *new* remote, never to `origin`.
+
+```bash
+reposix attach sim::demo                    # attach CWD to sim
+reposix attach confluence::SPACE /tmp/repo  # attach a specific path
+reposix attach sim::demo --no-bus           # single-SoT remote URL (skip ?mirror=)
+```
+
+| Argument / flag | Default | Purpose |
+|---|---|---|
+| `<spec>` | required | `<backend>::<project>`, same form as `reposix init`. |
+| `<path>` | cwd | Working tree to attach (must already be a git repo — `.git/` must exist). |
+| `--no-bus` | off | Skip the `?mirror=` query param; configure a single-`SoT` remote URL instead of the bus form. |
+| `--mirror-name` | `origin` | Existing plain-git remote to fold into the bus URL's `?mirror=` half. |
+| `--remote-name` | `reposix` | Name of the new reposix-equipped remote this command adds. |
+| `--orphan-policy` | `abort` | What to do when a local record's `id` isn't found on the backend: `delete-local` (destructive), `fork-as-new` (treat as a new record to create on next push), or `abort` (refuse and report). |
+| `--ignore` | `.git,.github` | Comma-separated directory names skipped during the reconciliation walk. |
+
+Re-attaching against the *same* `SoT` is idempotent (refreshes the cache + reconciliation table); re-attaching against a *different* `SoT` is rejected. Every attach writes an unconditional `attach_walk` row to `audit_events_cache` (OP-3). See [DVCS topology](../concepts/dvcs-topology.md) for the mental model and [`docs/guides/troubleshooting.md`](../guides/troubleshooting.md) for reconciliation-warning recovery.
+
 ## `reposix sim`
 
 Spawn the REST simulator as a child process. Default backend for tests and demos; see the [simulator reference](simulator.md) for the REST shape and seed semantics.
@@ -108,6 +132,21 @@ reposix refresh /tmp/repo --backend sim --project demo
 | `--backend` | `sim` | Backend to query. |
 | `--offline` | off | Reserved for the offline cache path; currently errors. |
 
+## `reposix sync`
+
+On-demand cache reconciliation against the `SoT` — the L1 escape hatch (DVCS-PERF-L1-02). Use this when a push reject suggests cache desync (e.g. the backend deleted a record that surfaces as a REST 404 on `PATCH`). Without `--reconcile`, the bare form prints a one-line hint and exits 0 — it's reserved for future flag combinations, not an error.
+
+```bash
+reposix sync                        # prints a hint; no-op
+reposix sync --reconcile            # rebuild cache from SoT (cwd)
+reposix sync --reconcile /tmp/repo
+```
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `--reconcile` | off | Run a full `list_records` walk + cache rebuild + cursor bump. Without this flag, `sync` only prints a hint. |
+| `<path>` | cwd | Working-tree directory. Resolves the reposix remote the same partial-clone-aware way `doctor` / `gc` do (works on both `reposix init` and `reposix attach` trees). |
+
 ## `reposix doctor`
 
 Audit a reposix working tree and print copy-pastable fix commands for every issue found. Inspired by `flutter doctor` / `brew doctor`. Exits 0 if no ERROR-severity finding, 1 otherwise — wire into CI as a gate.
@@ -126,8 +165,8 @@ reposix doctor --fix /tmp/repo  # also apply safe fixes inline
 Checks performed (each finding is OK / INFO / WARN / ERROR; copy-pastable `Fix:` line below the message when applicable):
 
 - `git.repo` — working tree is a git repo.
-- `git.extensions.partialClone` — `extensions.partialClone=origin` set. **Auto-fixable** with `--fix`.
-- `git.remote.origin.url` — uses `reposix::` scheme + parses cleanly.
+- `git.extensions.partialClone` — `extensions.partialClone` names a remote (`origin` for `reposix init`, or the `--remote-name` used by `reposix attach`) whose URL is a reposix remote. **Auto-fixable** with `--fix` only when the setting is entirely unset (defaults to `origin`); if it points at a non-reposix or missing remote, `doctor` reports a WARN with a copy-pastable fix instead of silently rewriting it (QL-004 — rewriting to `origin` would corrupt an attached tree).
+- `git.remote.origin.url` — despite the check name (kept for compatibility), this resolves the *reposix* remote (partialClone-aware: `origin` for `reposix init` trees, the attach remote name for `reposix attach` trees) and confirms it uses the `reposix::` scheme and parses cleanly.
 - `helper.binary` — `git-remote-reposix` is on PATH.
 - `git.version` — `git --version >= 2.34` (>=2.27 minimum).
 - `backend.registered` — the backend named by the URL scheme (sim/github/confluence/jira) is registered in this build.
