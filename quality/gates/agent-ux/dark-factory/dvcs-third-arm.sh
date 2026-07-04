@@ -127,18 +127,83 @@ done
 WORK_REPO="${RUN_DIR}/work-repo"
 MIRROR_BARE="${RUN_DIR}/mirror.git"
 
-# 3.1-3.2 Empty work tree + bare "GH mirror" remote (post-vanilla-clone).
+# 3.1-3.2 NON-EMPTY work tree + populated bare "GH mirror" remote
+# (post-vanilla-clone). RBF-A-05 (p86 F13): an empty tree can only ever
+# report an all-zeros reconciliation summary, which is vacuous — this
+# harness seeds real content shaped to the 5 reconciliation cases from
+# reposix-cache/src/reconciliation.rs (module doc :4-15).
 git init --quiet "$WORK_REPO"
 git -C "$WORK_REPO" config user.email "p86@example.invalid"
 git -C "$WORK_REPO" config user.name "P86 Third Arm"
+# Repoint the still-unborn HEAD to refs/heads/main (no commits exist yet,
+# so this is a safe rename regardless of init.defaultBranch / git version).
+git -C "$WORK_REPO" symbolic-ref HEAD refs/heads/main
+mkdir -p "${WORK_REPO}/issues"
+
+# write_issue <id> <path> <title> — canonical Record frontmatter shape
+# (reposix_core::record::frontmatter::Frontmatter; id/title/status/
+# created_at/updated_at required). Ids 1-6 come from the `seeded` fixture
+# (crates/reposix-sim/fixtures/seed.json) that `spawn_sim seeded` loads
+# above at :55.
+write_issue() {
+    local id="$1" path="$2" title="$3"
+    cat > "$path" <<EOF
+---
+id: ${id}
+title: "${title}"
+status: open
+created_at: 2026-07-04T00:00:00Z
+updated_at: 2026-07-04T00:00:00Z
+version: 1
+---
+RBF-A-05 reconciliation fixture body for seeded record ${id}.
+EOF
+}
+
+# Case 1 (matched, reconciliation.rs :203-227): local ids 1-3 exist in the
+# seeded backend set -> 3 matched rows.
+write_issue 1 "${WORK_REPO}/issues/0001.md" "database connection drops under load"
+write_issue 2 "${WORK_REPO}/issues/0002.md" "add --no-color flag to CLI"
+write_issue 3 "${WORK_REPO}/issues/0003.md" "document the new auth flow"
+
+# Case 3 (no-id, :117-127): a .md file with no frontmatter fence at all —
+# frontmatter::parse returns Err(InvalidRecord), so the walker counts it
+# toward no_id_count instead of silently skipping it unexplained.
+cat > "${WORK_REPO}/issues/scratch-note.md" <<'EOF'
+# scratch note
+
+Deliberately has no YAML frontmatter fence, so reconciliation's
+frontmatter::parse fails and this file counts toward the no_id case (case 3).
+EOF
+
+# Case 2 (backend-deleted, :166-189): local file claims id 4, but the
+# backend record 4 is deleted for real (DELETE /projects/demo/issues/4,
+# route confirmed at reposix-sim/src/routes/issues.rs:473) BEFORE attach
+# runs, so `attach`'s build_from() no longer sees id 4 in the backend set.
+write_issue 4 "${WORK_REPO}/issues/0004.md" "flaky integration test on CI"
+curl -fsS -X DELETE "${SIM_URL}/projects/demo/issues/4" >/dev/null \
+    || fail_with "seed-time DELETE of backend record 4 failed (backend-deleted fixture setup)"
+
+# Case 5 (mirror-lag, :191-196): seeded ids 5 and 6 are deliberately left
+# with NO local file — the walker counts every backend id absent from
+# local_ids, so this yields mirror_lag_count=2 for free.
+
+git -C "$WORK_REPO" add -A
+git -C "$WORK_REPO" commit --quiet \
+    -m "RBF-A-05 reconciliation fixture (matched/no_id/backend_deleted/mirror_lag)"
+
 git init --bare --quiet "$MIRROR_BARE"
 git -C "$WORK_REPO" remote add origin "file://${MIRROR_BARE}"
+# Vanilla-clone baseline: push the populated tree into the bare mirror,
+# mirroring the "clone an existing GH-mirror repo" precondition that
+# `reposix attach` assumes (architecture-sketch attach step 0).
+git -C "$WORK_REPO" push --quiet origin main
 
 # 3.3 Run reposix attach — folds origin URL into bus URL `?mirror=...`.
 echo "dark-factory: reposix attach sim::demo --remote-name reposix --mirror-name origin" >&2
 ATTACH_OUT=$("${BIN_DIR}/reposix" attach "sim::demo" "$WORK_REPO" \
     --remote-name reposix --mirror-name origin 2>&1)
-echo "$ATTACH_OUT" | head -3 >&2
+echo "$ATTACH_OUT" | head -6 >&2
 
 # 3.4 Cache at $REPOSIX_CACHE_DIR/reposix/sim-demo.git per resolve_cache_path.
 CACHE_BARE="${THIRD_ARM_CACHE_DIR}/reposix/sim-demo.git"
@@ -165,11 +230,32 @@ ORIGIN_URL=$(git -C "$WORK_REPO" config --get remote.origin.url || true)
     || fail_with "origin remote URL mutated by attach (must be unchanged per attach.rs invariant)" "got '$ORIGIN_URL'"
 ASSERT_LOG+=("origin remote URL unchanged by attach (plain-git semantics preserved)")
 
-# 3.8 Reconciliation report + audit_events_cache attach_walk row (OP-3 per attach.rs:215).
-if echo "$ATTACH_OUT" | grep -qE 'matched=[0-9]+ no_id=[0-9]+ backend_deleted=[0-9]+ mirror_lag=[0-9]+'; then
-    ASSERT_LOG+=("attach reconciliation report emitted (matched/no_id/backend_deleted/mirror_lag)")
+# 3.8 Reconciliation report + audit_events_cache attach_walk row (OP-3 per
+# attach.rs:215). RBF-A-05: this is no longer a shape-only regex — the
+# populated work tree above (3.1-3.2) makes an all-zeros report impossible,
+# so we extract each count and require matched>=1 AND at least 3 of the 4
+# counters non-zero (the honest gate the p86 F13 all-zeros stub could hide
+# behind before this phase).
+RECON_LINE=$(echo "$ATTACH_OUT" | grep -E 'matched=[0-9]+ no_id=[0-9]+ backend_deleted=[0-9]+ mirror_lag=[0-9]+' || true)
+[[ -n "$RECON_LINE" ]] || fail_with "attach reconciliation report missing"
+
+MATCHED=$(echo "$RECON_LINE" | grep -oE 'matched=[0-9]+' | cut -d= -f2)
+NO_ID=$(echo "$RECON_LINE" | grep -oE 'no_id=[0-9]+' | cut -d= -f2)
+BACKEND_DELETED=$(echo "$RECON_LINE" | grep -oE 'backend_deleted=[0-9]+' | cut -d= -f2)
+MIRROR_LAG=$(echo "$RECON_LINE" | grep -oE 'mirror_lag=[0-9]+' | cut -d= -f2)
+echo "dark-factory: reconciliation counts -> matched=${MATCHED} no_id=${NO_ID} backend_deleted=${BACKEND_DELETED} mirror_lag=${MIRROR_LAG}" >&2
+
+NONZERO_CASES=0
+if [[ "$MATCHED" -ge 1 ]]; then NONZERO_CASES=$((NONZERO_CASES + 1)); fi
+if [[ "$NO_ID" -ge 1 ]]; then NONZERO_CASES=$((NONZERO_CASES + 1)); fi
+if [[ "$BACKEND_DELETED" -ge 1 ]]; then NONZERO_CASES=$((NONZERO_CASES + 1)); fi
+if [[ "$MIRROR_LAG" -ge 1 ]]; then NONZERO_CASES=$((NONZERO_CASES + 1)); fi
+
+if [[ "$MATCHED" -ge 1 && "$NONZERO_CASES" -ge 3 ]]; then
+    ASSERT_LOG+=("attach reconciliation report has case-specific NON-ZERO counts: matched=${MATCHED} no_id=${NO_ID} backend_deleted=${BACKEND_DELETED} mirror_lag=${MIRROR_LAG} (>=3 non-zero cases, matched required; RBF-A-05 closes p86 F13)")
 else
-    fail_with "attach reconciliation report missing"
+    fail_with "reconciliation report is vacuous (all-zeros or <3 non-zero cases)" \
+        "matched=${MATCHED} no_id=${NO_ID} backend_deleted=${BACKEND_DELETED} mirror_lag=${MIRROR_LAG}"
 fi
 
 ATTACH_WALK_COUNT=$(sqlite3 "${CACHE_BARE}/cache.db" \
@@ -187,6 +273,37 @@ grep -q 'happy_path_writes_both_refs_and_acks_ok' "$WIRE_TEST" \
     || fail_with "bus_write_happy.rs missing happy_path test fn"
 ASSERT_LOG+=("wire-path round-trip covered by bus_write_happy.rs::happy_path_writes_both_refs_and_acks_ok (cargo test layer)")
 
+# 3.10 Duplicate-id (case 4) hard-abort — isolated sub-invocation so a
+# deliberately-aborting attach doesn't corrupt the case-1/2/3/5 report
+# asserted above. reconciliation.rs :136-144 detects duplicates BEFORE any
+# backend cross-reference or SQLite write, so this needs no backend setup
+# beyond the same seeded sim.
+echo "dark-factory: third-arm duplicate-id (case 4) hard-abort sub-invocation" >&2
+DUP_WORK_REPO="${RUN_DIR}/work-repo-dup"
+DUP_CACHE_DIR="$(mktemp -d -t dark-factory-third-dupcache.XXXXXX)"
+mkdir -p "${DUP_WORK_REPO}/issues"
+git init --quiet "$DUP_WORK_REPO"
+git -C "$DUP_WORK_REPO" config user.email "p86@example.invalid"
+git -C "$DUP_WORK_REPO" config user.name "P86 Third Arm"
+git -C "$DUP_WORK_REPO" symbolic-ref HEAD refs/heads/main
+write_issue 2 "${DUP_WORK_REPO}/issues/a.md" "add --no-color flag to CLI"
+write_issue 2 "${DUP_WORK_REPO}/issues/b.md" "add --no-color flag to CLI (duplicate id)"
+git -C "$DUP_WORK_REPO" add -A
+git -C "$DUP_WORK_REPO" commit --quiet -m "duplicate-id fixture (case 4)"
+
+set +e
+DUP_OUT=$(REPOSIX_CACHE_DIR="$DUP_CACHE_DIR" REPOSIX_SIM_ORIGIN="$SIM_URL" \
+    "${BIN_DIR}/reposix" attach "sim::demo" "$DUP_WORK_REPO" --remote-name reposix 2>&1)
+DUP_EXIT=$?
+set -e
+rm -rf "$DUP_CACHE_DIR" "$DUP_WORK_REPO"
+
+if [[ "$DUP_EXIT" -ne 0 ]] && echo "$DUP_OUT" | grep -q "duplicate id"; then
+    ASSERT_LOG+=("duplicate-id (case 4) hard-aborts reconciliation with non-zero exit + 'duplicate id' message, zero rows committed (isolated sub-invocation)")
+else
+    fail_with "duplicate-id sub-invocation did not hard-abort as expected" "exit=${DUP_EXIT} out=${DUP_OUT}"
+fi
+
 # Step 4 — TokenWorld substrate-gap deferral notice.
 echo "" >&2
 if [[ "${REPOSIX_DARK_FACTORY_REAL_TOKENWORLD:-0}" == "1" ]]; then
@@ -202,6 +319,8 @@ echo "DARK-FACTORY THIRD ARM COMPLETE -- DVCS thesis: pure-git agent UX." >&2
 echo "  - teaching strings recoverable from source / --help (?mirror=, attach, --orphan-policy, refs/mirrors, git remote add)" >&2
 echo "  - reposix attach binds ?mirror=file:// into remote.reposix.url; extensions.partialClone=reposix; origin unchanged" >&2
 echo "  - cache materialized at REPOSIX_CACHE_DIR; audit_events_cache has attach_walk row" >&2
+echo "  - reconciliation report NON-VACUOUS: matched=${MATCHED} no_id=${NO_ID} backend_deleted=${BACKEND_DELETED} mirror_lag=${MIRROR_LAG} (RBF-A-05, closes p86 F13)" >&2
+echo "  - duplicate-id (case 4) hard-aborts with non-zero exit (isolated sub-invocation)" >&2
 echo "  - wire-path covered by crates/reposix-remote/tests/bus_write_happy.rs::happy_path_writes_both_refs_and_acks_ok" >&2
 echo "  - TokenWorld leg substrate-gap-deferred (P84)" >&2
 
