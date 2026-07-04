@@ -122,3 +122,27 @@ quality/SURPRISES.md was dead since 2026-04-29 while PROTOCOL.md:19 calls it
 required reading (QL-042). This entry revives it; per-milestone
 SURPRISES-INTAKE.md remains the intake surface for phase-scoped findings,
 and PROTOCOL.md gets a cross-reference clarifying the split.
+
+2026-07-04 P90: F-K4b asserts-congruence shipped GATED ON minted_at (new-regime
+rows only), not "both lists non-empty" — legacy prose asserts would false-RED
+under any token threshold; congruence is armed-but-dormant on legacy rows until
+P95 RBF-D-06 migrates them (D90-05 split).
+
+2026-07-04 P90: agent-ux/milestone-adversarial-pass was minted with cadence
+[pre-release-real-backend] although its verifier is a creds-free unittest
+wrapper — under the env gate it could never honestly flip PASS. Re-cadenced to
+[pre-push, pre-pr] by coordinator (e968d36); the milestone-close GREEN-block is
+enforced by the verdict.py --milestone hook, not the row's cadence.
+
+2026-07-04 P90: rustfmt relocates over-length trailing comments into fn bodies,
+which would have silently broken test-name-honesty marker detection — markers
+seeded as standalone comment lines above each fn instead (90-03).
+
+2026-07-04 P90: R2's "2 dangling security verifier scripts" was a
+substring-filter miss — comprehensive tests already existed (http_allowlist.rs,
+audit_schema.rs, audit_is_append_only.rs); real wrapper scripts written at
+quality/gates/security/ (e702822), exit codes to be confirmed by P92.
+
+2026-07-04 P90: release/cargo-binstall-resolves' planned ~10-LOC pkg-url fix
+was already shipped pre-P90 (33dd41f, QL-003) — waiver cleared without re-work
+per the D90-11 already-landed pattern.
