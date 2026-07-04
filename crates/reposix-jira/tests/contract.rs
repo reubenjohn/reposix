@@ -447,7 +447,12 @@ async fn contract_jira_live() {
     let email = std::env::var("JIRA_EMAIL").unwrap();
     let token = std::env::var("JIRA_API_TOKEN").unwrap();
     let instance = std::env::var("REPOSIX_JIRA_INSTANCE").unwrap();
-    let project = std::env::var("JIRA_TEST_PROJECT").unwrap_or_else(|_| "TEST".to_string());
+    // Empty-but-set (an undefined CI secret arrives as "") is treated as
+    // unset so it can't override the default with a blank project key.
+    let project = std::env::var("JIRA_TEST_PROJECT")
+        .ok()
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "TEST".to_string());
 
     let creds = JiraCreds {
         email,
@@ -483,7 +488,11 @@ async fn contract_jira_live_write() {
     let email = std::env::var("JIRA_EMAIL").unwrap();
     let token = std::env::var("JIRA_API_TOKEN").unwrap();
     let instance = std::env::var("REPOSIX_JIRA_INSTANCE").unwrap();
-    let project = std::env::var("REPOSIX_JIRA_PROJECT").unwrap_or_else(|_| "TEST".to_string());
+    // Empty-but-set (an undefined CI secret arrives as "") is treated as unset.
+    let project = std::env::var("REPOSIX_JIRA_PROJECT")
+        .ok()
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "TEST".to_string());
 
     let creds = JiraCreds {
         email,

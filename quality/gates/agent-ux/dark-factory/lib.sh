@@ -81,6 +81,18 @@ build_and_resolve_bins() {
 spawn_sim() {
     local mode="${1:-}"
     echo "dark-factory: spawning reposix-sim on $SIM_BIND" >&2
+
+    # Pre-flight: refuse to proceed if SIM_URL is ALREADY served. Otherwise a
+    # stale/foreign sim left on this port silently satisfies the readiness
+    # probe below while OUR freshly-spawned process exits with EADDRINUSE --
+    # the script then runs against unknown backend state and fails much later
+    # with a bogus mid-fixture 404 (observed locally: "seed-time DELETE of
+    # backend record 4 failed"). Fail loud, here, with the port named.
+    if curl -fsS "${SIM_URL}/projects/demo/issues" >/dev/null 2>&1; then
+        echo "FAIL: ${SIM_URL} is already serving BEFORE spawn -- port ${SIM_BIND} is occupied by a stale/foreign reposix-sim; refusing to run against unknown state (kill it: pkill -f 'reposix-sim.*${SIM_BIND}')" >&2
+        return 1
+    fi
+
     if [[ "$mode" == "seeded" ]]; then
         "${BIN_DIR}/reposix-sim" --bind "$SIM_BIND" --db "$SIM_DB" --ephemeral \
             --seed-file "${WORKSPACE_ROOT}/crates/reposix-sim/fixtures/seed.json" &
@@ -90,14 +102,20 @@ spawn_sim() {
     SIM_PID=$!
     export SIM_PID
 
-    # Wait up to 5s for the sim to be reachable.
+    # Wait up to 5s for the sim to be reachable. Bail immediately if the
+    # process we spawned has died (bind failure, bad seed file, panic) rather
+    # than blocking the full 5s and reporting a generic timeout.
     for _ in $(seq 1 50); do
+        if ! kill -0 "$SIM_PID" 2>/dev/null; then
+            echo "FAIL: reposix-sim (pid ${SIM_PID}) exited during startup on ${SIM_BIND} -- inspect its bind/seed errors above (mode='${mode:-unseeded}', seed=${WORKSPACE_ROOT}/crates/reposix-sim/fixtures/seed.json)" >&2
+            return 1
+        fi
         if curl -fsS "${SIM_URL}/projects/demo/issues" >/dev/null 2>&1; then
             return 0
         fi
         sleep 0.1
     done
-    echo "FAIL: sim did not come up at ${SIM_URL} within 5s" >&2
+    echo "FAIL: sim did not come up at ${SIM_URL} within 5s (pid ${SIM_PID} still alive but not answering)" >&2
     return 1
 }
 

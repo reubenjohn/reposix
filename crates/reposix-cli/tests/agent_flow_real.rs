@@ -78,19 +78,48 @@ fn target_bin(name: &str) -> PathBuf {
     workspace_root().join("target").join("debug").join(name)
 }
 
+/// Pure resolver: first non-empty candidate in order, else `default`.
+///
+/// An **empty-but-set** env var is treated as unset. This is load-bearing:
+/// an undefined GitHub Actions secret (e.g. `${{ secrets.JIRA_TEST_PROJECT }}`
+/// when the repo has no such secret) is forwarded to the job as the empty
+/// STRING, not as absent. The old `env::var(..).or_else(..).unwrap_or_else(..)`
+/// chain treated `Ok("")` as a present value, so an empty `JIRA_TEST_PROJECT`
+/// won over the `TEST` default and produced the spec `jira::` — which
+/// `reposix init` rejects (`invalid spec jira::: empty project`, CI run
+/// 28723077083). Skipping empties fixes that for every candidate.
+fn first_nonempty_or(
+    candidates: impl IntoIterator<Item = Option<String>>,
+    default: &str,
+) -> String {
+    candidates
+        .into_iter()
+        .flatten()
+        .find(|v| !v.is_empty())
+        .unwrap_or_else(|| default.to_owned())
+}
+
 /// Resolve the JIRA test project key per the prompt:
 ///   `JIRA_TEST_PROJECT` ∨ `REPOSIX_JIRA_PROJECT`, default `TEST`.
+/// Empty-but-set env vars fall through (see `first_nonempty_or`).
 fn jira_test_project() -> String {
-    std::env::var("JIRA_TEST_PROJECT")
-        .or_else(|_| std::env::var("REPOSIX_JIRA_PROJECT"))
-        .unwrap_or_else(|_| "TEST".to_owned())
+    first_nonempty_or(
+        [
+            std::env::var("JIRA_TEST_PROJECT").ok(),
+            std::env::var("REPOSIX_JIRA_PROJECT").ok(),
+        ],
+        "TEST",
+    )
 }
 
 /// Resolve the Confluence test space key:
 ///   `REPOSIX_CONFLUENCE_SPACE`, default `TokenWorld` (historical canonical
-///   per docs/reference/testing-targets.md).
+///   per docs/reference/testing-targets.md). Empty-but-set falls through.
 fn confluence_test_space() -> String {
-    std::env::var("REPOSIX_CONFLUENCE_SPACE").unwrap_or_else(|_| "TokenWorld".to_owned())
+    first_nonempty_or(
+        [std::env::var("REPOSIX_CONFLUENCE_SPACE").ok()],
+        "TokenWorld",
+    )
 }
 
 /// Run `reposix init <spec> <path>` and assert success + correct
@@ -466,4 +495,38 @@ fn skip_pattern_compiles_and_runs_without_creds() {
             None => std::env::remove_var(n),
         }
     }
+}
+
+/// Regression for CI run 28723077083: a set-but-empty env var (an undefined
+/// GitHub Actions secret forwarded as `""`) must NOT win over the default —
+/// otherwise `jira_test_project()` returns `""` and the caller builds the
+/// spec `jira::`, which `reposix init` rejects with `empty project`.
+///
+/// Pure — exercises `first_nonempty_or` directly rather than mutating process
+/// env (deterministic, race-free under parallel test execution).
+#[test]
+fn empty_but_set_candidate_falls_through_to_default() {
+    // Empty primary + absent fallback -> default (the exact CI shape:
+    // JIRA_TEST_PROJECT="" set, REPOSIX_JIRA_PROJECT unset).
+    assert_eq!(
+        first_nonempty_or([Some(String::new()), None], "TEST"),
+        "TEST"
+    );
+    // Both empty -> default.
+    assert_eq!(
+        first_nonempty_or([Some(String::new()), Some(String::new())], "TEST"),
+        "TEST"
+    );
+    // Empty primary falls through to a non-empty fallback (not the default).
+    assert_eq!(
+        first_nonempty_or([Some(String::new()), Some("KAN".to_owned())], "TEST"),
+        "KAN"
+    );
+    // First non-empty wins over later candidates and the default.
+    assert_eq!(
+        first_nonempty_or([Some("KAN".to_owned()), Some("OTHER".to_owned())], "TEST"),
+        "KAN"
+    );
+    // All absent -> default.
+    assert_eq!(first_nonempty_or([None, None], "TEST"), "TEST");
 }

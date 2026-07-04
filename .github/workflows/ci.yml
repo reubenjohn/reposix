@@ -119,6 +119,15 @@ jobs:
         run: cargo build --workspace --bins --quiet
       - name: Run quality gates (pre-pr cadence)
         run: python3 quality/runners/run.py --cadence pre-pr
+      - name: Dump verification artifacts on failure
+        # run.py captures each verifier's stdout/stderr into the per-row JSON
+        # artifact, NOT the job log -- so a FAIL row (e.g. agent-ux/*) leaves
+        # its diagnosis in an ephemeral file the runner never prints. On
+        # failure, dump every verification artifact + any transcript so the
+        # root cause is visible in the CI log without a local reproduction
+        # (v0.13.0 GOOD-TO-HAVES: pre-pr artifact diagnosability).
+        if: failure()
+        run: python3 quality/runners/dump_verifications.py
 
   test:
     name: test
