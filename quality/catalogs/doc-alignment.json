@@ -5,17 +5,17 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 267,
-    "claims_missing_test": 0,
+    "claims_bound": 277,
+    "claims_missing_test": 1,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.7946428571428571,
+    "alignment_ratio": 0.8244047619047619,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-04T05:34:40Z",
-    "coverage_ratio": 0.18816762530813474,
+    "last_walked": "2026-07-04T07:49:26Z",
+    "coverage_ratio": 0.18709150326797386,
     "lines_covered": 1145,
-    "total_eligible_lines": 6085,
+    "total_eligible_lines": 6120,
     "coverage_floor": 0.1
   },
   "rows": [
@@ -78,27 +78,27 @@
     },
     {
       "id": "docs/index/latency-24ms-cold-init",
-      "claim": "24 ms cold init against simulator",
+      "claim": "27 ms cold init against simulator",
       "source": {
         "file": "docs/index.md",
         "line_start": 18,
         "line_end": 18
       },
-      "source_hash": "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4",
+      "source_hash": "039d9310d6b3bc05d327ac3f735eda7af1603afebc7843342c66de5114e5a2b6",
       "source_hashes": [
-        "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4"
+        "039d9310d6b3bc05d327ac3f735eda7af1603afebc7843342c66de5114e5a2b6"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "Mirror of canonical latency benchmark headline; latency-bench.sh measures sim cold init",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "docs/index.md:18 mirrors canonical latency benchmark (27 ms sim cold init); latency-bench.sh measures SIM_INIT_MS cold init under <500ms soft threshold",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-07-04T07:48:53Z",
+      "last_extracted": "2026-07-04T07:48:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -228,21 +228,21 @@
         "line_start": 18,
         "line_end": 18
       },
-      "source_hash": "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4",
+      "source_hash": "039d9310d6b3bc05d327ac3f735eda7af1603afebc7843342c66de5114e5a2b6",
       "source_hashes": [
-        "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4"
+        "039d9310d6b3bc05d327ac3f735eda7af1603afebc7843342c66de5114e5a2b6"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "Mirror of canonical latency benchmark cached-read number",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "docs/index.md:18 mirrors cached-read number (8 ms unchanged); latency-bench.sh measures SIM_GET_MS cached GET issues/1 against sim",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-07-04T07:48:53Z",
+      "last_extracted": "2026-07-04T07:48:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -280,13 +280,13 @@
         "quality/gates/perf/bench_token_economy.py"
       ],
       "test_body_hashes": [
-        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+        "5b4ebaed5045662715ad8c06daaa8f1708a61ceaa70b55ac0947c104a19b958e"
       ],
-      "rationale": "Mirror of canonical token-economy headline reduction percentage",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "docs/index.md:17 mirrors token-economy headline; bench_token_economy.py computes reduction_pct = 100*(1 - reposix_tokens/mcp_tokens)",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-07-04T07:18:47Z",
+      "last_extracted": "2026-07-04T07:18:47Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1056,9 +1056,9 @@
         "line_start": 113,
         "line_end": 113
       },
-      "source_hash": "db5034e19caf99a8653e30ec5e757a98e4ab6758ee6d434d61bdd4c159f69bb8",
+      "source_hash": "531f8fbe410f6907229314067dc724847517cab814f835d3cb8cb182b3a8af6b",
       "source_hashes": [
-        "db5034e19caf99a8653e30ec5e757a98e4ab6758ee6d434d61bdd4c159f69bb8"
+        "531f8fbe410f6907229314067dc724847517cab814f835d3cb8cb182b3a8af6b"
       ],
       "tests": [
         "crates/reposix-cli/src/doctor.rs::check_backend_capabilities_reports_sim_supports_everything"
@@ -1066,11 +1066,11 @@
       "test_body_hashes": [
         "8c90ad9e7a5955baab60cf122989a71ababa818e4885d27120565d36db1d29c4"
       ],
-      "rationale": "doctor.rs:1186 instantiates BackendCapabilities for sim; struct disappearance breaks compile",
+      "rationale": "docs/index.md:113 names BackendCapabilities in crates/reposix-core/src/backend.rs; doctor.rs test exercises check_backend_capabilities for sim (struct deletion breaks compile)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:22:35Z",
-      "last_extracted": "2026-04-28T19:22:35Z",
+      "last_run": "2026-07-04T07:18:53Z",
+      "last_extracted": "2026-07-04T07:18:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1661,27 +1661,27 @@
     },
     {
       "id": "docs/index/bootstrap-latency-24ms",
-      "claim": "Bootstrap takes <= 24 ms against the simulator",
+      "claim": "Bootstrap takes <= 27 ms against the simulator",
       "source": {
         "file": "docs/index.md",
-        "line_start": 129,
-        "line_end": 129
+        "line_start": 132,
+        "line_end": 132
       },
-      "source_hash": "93dac3979a1b56ad8a01ae085b333b95d050d9853544380c2d8391b1d2146b8d",
+      "source_hash": "1a1b9bf294989a75387993f0117aaf775b1a6d77bcf8819210ebf2ccbe743729",
       "source_hashes": [
-        "93dac3979a1b56ad8a01ae085b333b95d050d9853544380c2d8391b1d2146b8d"
+        "1a1b9bf294989a75387993f0117aaf775b1a6d77bcf8819210ebf2ccbe743729"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "Mirror of cold init from canonical latency-bench",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "docs/index.md:132 mirrors cold init; latency-bench.sh measures SIM_INIT_MS bootstrap latency (27 ms per docs/benchmarks/latency.md)",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-07-04T07:48:53Z",
+      "last_extracted": "2026-07-04T07:48:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3378,8 +3378,8 @@
       "claim": "Fetch size limit caps git fetch and emits stderr with git sparse-checkout recovery hint",
       "source": {
         "file": "docs/index.md",
-        "line_start": 147,
-        "line_end": 147
+        "line_start": 150,
+        "line_end": 150
       },
       "source_hash": "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877",
       "source_hashes": [
@@ -3391,11 +3391,11 @@
       "test_body_hashes": [
         "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
       ],
-      "rationale": "Regression test verifies git sparse-checkout teaching string present in reposix-remote/src/stateless_connect.rs",
+      "rationale": "docs/index.md:150 claims sparse-checkout recovery hint; test asserts stateless_connect.rs contains 'git sparse-checkout' + BLOB_LIMIT_EXCEEDED_FMT",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:01:39Z",
-      "last_extracted": "2026-04-28T09:01:39Z",
+      "last_run": "2026-07-04T07:48:53Z",
+      "last_extracted": "2026-07-04T07:48:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3681,25 +3681,19 @@
       "claim": "git checkout -B main refs/reposix/origin/main switches to main branch",
       "source": {
         "file": "docs/index.md",
-        "line_start": 126,
-        "line_end": 126
+        "line_start": 129,
+        "line_end": 129
       },
       "source_hash": "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00",
       "source_hashes": [
         "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00"
       ],
-      "tests": [
-        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
-      ],
-      "test_body_hashes": [
-        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
-      ],
-      "rationale": "Dark-factory test validates git checkout and branch configuration as part of init workflow",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:01:16Z",
-      "last_extracted": "2026-04-28T09:01:16Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "Test crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path asserts reposix init partial-clone config (extensions.partialClone/promisor/partialclonefilter) but never runs 'git checkout -B main refs/reposix/origin/main' — the checkout-to-main behavior is unasserted; no test in the tree runs this checkout",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "WRITE_TEST",
+      "last_run": "2026-07-04T07:19:13Z",
+      "last_extracted": "2026-07-04T07:19:13Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/cache-02",
@@ -4367,27 +4361,27 @@
     },
     {
       "id": "latency-hero-24ms-mismatch",
-      "claim": "Homepage hero: reposix cold init = 24 ms",
+      "claim": "Homepage hero: reposix cold init = 27 ms",
       "source": {
         "file": "docs/index.md",
         "line_start": 18,
         "line_end": 18
       },
-      "source_hash": "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4",
+      "source_hash": "039d9310d6b3bc05d327ac3f735eda7af1603afebc7843342c66de5114e5a2b6",
       "source_hashes": [
-        "52addec524f3df2b54d9f99cd8b2e990e75a937a8c5e22d9b66b2f7432de0ec4"
+        "039d9310d6b3bc05d327ac3f735eda7af1603afebc7843342c66de5114e5a2b6"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "Mirror hero number against canonical latency-bench",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "docs/index.md:18 hero cold-init number (27 ms, reconciled to canonical docs/benchmarks/latency.md); latency-bench.sh measures SIM_INIT_MS cold init",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-07-04T07:48:53Z",
+      "last_extracted": "2026-07-04T07:48:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -5348,13 +5342,13 @@
         "quality/gates/perf/bench_token_economy.py"
       ],
       "test_body_hashes": [
-        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+        "5b4ebaed5045662715ad8c06daaa8f1708a61ceaa70b55ac0947c104a19b958e"
       ],
-      "rationale": "Mirror of MCP-baseline number from canonical bench",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "docs/index.md:35-39 mirrors MCP-baseline token count; bench_token_economy.py computes mcp_tokens via get_or_count(mcp_text)",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-07-04T07:19:26Z",
+      "last_extracted": "2026-07-04T07:19:26Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6194,8 +6188,8 @@
       "claim": "Push-time conflict detection rejects stale-base pushes with standard git fetch first error",
       "source": {
         "file": "docs/index.md",
-        "line_start": 147,
-        "line_end": 147
+        "line_start": 150,
+        "line_end": 150
       },
       "source_hash": "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877",
       "source_hashes": [
@@ -6205,13 +6199,13 @@
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
       "test_body_hashes": [
-        "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
+        "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
-      "rationale": "Regression test verifies git pull --rebase teaching string present in reposix-remote/src/main.rs for conflict recovery",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "docs/index.md:150 claims 'fetch first' reject; test asserts reposix-remote/src contains 'git pull --rebase' + 'error refs/heads/main fetch first'",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:01:36Z",
-      "last_extracted": "2026-04-28T09:01:36Z",
+      "last_run": "2026-07-04T07:48:53Z",
+      "last_extracted": "2026-07-04T07:48:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7212,27 +7206,27 @@
     },
     {
       "id": "README-md/init-24ms",
-      "claim": "reposix init cold bootstrap against simulator takes 24ms",
+      "claim": "reposix init cold bootstrap against simulator takes 27ms",
       "source": {
         "file": "README.md",
         "line_start": 24,
         "line_end": 24
       },
-      "source_hash": "9c400bd7c055e8682e6207c614363ae3ab6ca3f6b8d4ab653061d51430233c19",
+      "source_hash": "b98aa89752b9e4a4cab0d8f641a42325dc812b1cc18fac2957fc55b924f59b02",
       "source_hashes": [
-        "9c400bd7c055e8682e6207c614363ae3ab6ca3f6b8d4ab653061d51430233c19"
+        "b98aa89752b9e4a4cab0d8f641a42325dc812b1cc18fac2957fc55b924f59b02"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "README mirror of canonical cold init number",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "README:24 mirror of canonical cold init number (27 ms per docs/benchmarks/latency.md)",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-07-04T07:48:53Z",
+      "last_extracted": "2026-07-04T07:48:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7515,12 +7509,12 @@
       "claim": "reposix init sim::demo /tmp/reposix-demo creates partial-clone working tree",
       "source": {
         "file": "docs/index.md",
-        "line_start": 126,
-        "line_end": 126
+        "line_start": 128,
+        "line_end": 128
       },
-      "source_hash": "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00",
+      "source_hash": "9572807c5ebf6272e3d4248d889a5c1b5a3d1c12fad28a3162dabf300d25aa15",
       "source_hashes": [
-        "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00"
+        "9572807c5ebf6272e3d4248d889a5c1b5a3d1c12fad28a3162dabf300d25aa15"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
@@ -7528,11 +7522,11 @@
       "test_body_hashes": [
         "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
       ],
-      "rationale": "Dark-factory happy-path test verifies init creates .git/, extensions.partialClone=origin, remote.origin.promisor=true, partialclonefilter=blob:none",
+      "rationale": "docs/index.md:128 'reposix init sim::demo'; test runs init and asserts extensions.partialClone=origin, remote.origin.promisor=true, partialclonefilter=blob:none",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:01:14Z",
-      "last_extracted": "2026-04-28T09:01:14Z",
+      "last_run": "2026-07-04T07:48:53Z",
+      "last_extracted": "2026-07-04T07:48:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7755,13 +7749,13 @@
         "quality/gates/perf/bench_token_economy.py"
       ],
       "test_body_hashes": [
-        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+        "5b4ebaed5045662715ad8c06daaa8f1708a61ceaa70b55ac0947c104a19b958e"
       ],
-      "rationale": "Mirror of reposix-side number from canonical bench",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "docs/index.md:31-34 mirrors reposix-side token count; bench_token_economy.py computes reposix_tokens via get_or_count(reposix_text)",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-07-04T07:19:44Z",
+      "last_extracted": "2026-07-04T07:19:44Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7794,24 +7788,24 @@
       "claim": "reposix sim starts on port :7878 by default",
       "source": {
         "file": "docs/index.md",
-        "line_start": 125,
-        "line_end": 125
+        "line_start": 127,
+        "line_end": 127
       },
-      "source_hash": "9572807c5ebf6272e3d4248d889a5c1b5a3d1c12fad28a3162dabf300d25aa15",
+      "source_hash": "d7ca12bf9854d98ac7540461ffc76878a0040c7958c80571ec4adbdd0b9cbe4b",
       "source_hashes": [
-        "9572807c5ebf6272e3d4248d889a5c1b5a3d1c12fad28a3162dabf300d25aa15"
+        "d7ca12bf9854d98ac7540461ffc76878a0040c7958c80571ec4adbdd0b9cbe4b"
       ],
       "tests": [
-        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
+        "crates/reposix-sim/src/main.rs::default_bind_addr_is_7878"
       ],
       "test_body_hashes": [
-        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+        "9711053b2b00fddd6cacc627e74a1153efa3e73302dd7a3c4353e61506fd9e8a"
       ],
-      "rationale": "Dark-factory test spawns sim on 127.0.0.1:7879 (different port) but expects default :7878; test verifies init and sim lifecycle",
+      "rationale": "docs/index.md:127 'reposix sim &' starts sim on :7878; main.rs:16 #[arg(default_value=127.0.0.1:7878)] + unit test default_bind_addr_is_7878 asserts Args::parse_from([reposix-sim]) binds 127.0.0.1:7878",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:01:11Z",
-      "last_extracted": "2026-04-28T09:01:11Z",
+      "last_run": "2026-07-04T07:48:53Z",
+      "last_extracted": "2026-07-04T07:48:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8410,27 +8404,27 @@
     },
     {
       "id": "docs/index/soft-threshold-24ms",
-      "claim": "Sim cold init is 24 ms (soft threshold 500 ms)",
+      "claim": "Sim cold init is 27 ms (soft threshold 500 ms)",
       "source": {
         "file": "docs/index.md",
         "line_start": 93,
         "line_end": 93
       },
-      "source_hash": "91b26745218c0224d2f7abf3ac5b5b76a861fdfc97a8a3cbe63a8f1f137235b2",
+      "source_hash": "6e10439c5991cec52ed0f339803b5e874d0d42c614d9004499f02ffbf8d72822",
       "source_hashes": [
-        "91b26745218c0224d2f7abf3ac5b5b76a861fdfc97a8a3cbe63a8f1f137235b2"
+        "6e10439c5991cec52ed0f339803b5e874d0d42c614d9004499f02ffbf8d72822"
       ],
       "tests": [
         "quality/gates/perf/latency-bench.sh"
       ],
       "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
+        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
       ],
-      "rationale": "Mirror cold-init threshold; latency-bench enforces soft thresholds",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "docs/index.md:93 states cold init w/ 500ms soft threshold; latency-bench.sh WARNs when SIM_INIT_MS > 500ms and measures cold init",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
+      "last_run": "2026-07-04T07:48:53Z",
+      "last_extracted": "2026-07-04T07:48:53Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8922,23 +8916,27 @@
           "line_end": 17
         },
         {
-          "file": "docs/concepts/mental-model-in-60-seconds.md",
+          "file": "docs/benchmarks/token-economy.md",
           "line_start": 17,
           "line_end": 17
         }
       ],
       "source_hash": "a2658bd81a06030413cf9d3b60f9d3750c508f53ebe4abe9d9c2ec66bb7d074e",
+      "source_hashes": [
+        "a2658bd81a06030413cf9d3b60f9d3750c508f53ebe4abe9d9c2ec66bb7d074e",
+        "c2fbfd83a9e4353a6279b146b0b96892eeb3b40f17ab40975836ead95cb11925"
+      ],
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
       "test_body_hashes": [
-        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
+        "5b4ebaed5045662715ad8c06daaa8f1708a61ceaa70b55ac0947c104a19b958e"
       ],
-      "rationale": "Concept page mirror of canonical headline reduction",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "89.1% token reduction; canonical source docs/benchmarks/token-economy.md:17 ('reposix uses 89.1% fewer tokens') + docs/index.md:17 grid-card mirror; bench_token_economy.py computes reduction_pct; retargeted the drifted mental-model-in-60-seconds.md:17 cite (that file no longer carries the 89.1% claim) to the canonical benchmark line",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T02:55:42Z",
-      "last_extracted": "2026-04-29T02:55:42Z",
+      "last_run": "2026-07-04T07:48:53Z",
+      "last_extracted": "2026-07-04T07:48:53Z",
       "last_extracted_by": "bind-call"
     },
     {
