@@ -33,3 +33,6 @@ task's changes are logged here, not fixed.
   `tests/contract_live.rs`, or extract `assert_contract`/fixture helpers into
   a shared `tests/common/mod.rs` the way `reposix-remote`'s test suite already
   does.
+
+## Wave-5 (91-05) out-of-scope discoveries — 2026-07-04T21:00:02Z
+- file-size-limits: pre-existing over-budget files (NOT touched by 91-05): quality/runners/test_audit_field.py (18861/15000), test_realbackend.py (16889/15000), verdict.py (16498/15000). Route to a P90/P92 framework-file split.
