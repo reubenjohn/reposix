@@ -82,7 +82,7 @@ fn render_with_overrides(
 }
 
 /// Build a fast-export stream containing one updated issue.
-/// `path` is e.g. `0042.md`; `blob` is the rendered frontmatter+body.
+/// `path` is e.g. `issues/42.md`; `blob` is the rendered frontmatter+body.
 fn one_file_export(path: &str, blob: &str, msg: &str) -> Vec<u8> {
     let mut out: Vec<u8> = Vec::new();
     writeln!(&mut out, "feature done").unwrap();
@@ -152,7 +152,7 @@ async fn stale_base_push_emits_fetch_first_and_writes_no_rest() {
         .await;
 
     let blob = render_with_overrides(2, "issue 2", "edited body\n", 1, 2);
-    let stream = one_file_export("0002.md", &blob, "edit issue 2\n");
+    let stream = one_file_export("issues/2.md", &blob, "edit issue 2\n");
 
     let url = format!("reposix::{}/projects/demo", server.uri());
     let stdin_data = {
@@ -228,7 +228,7 @@ async fn clean_push_emits_ok_and_mutates_backend() {
         .await;
 
     let blob = render_with_overrides(42, "issue 42", "edited body for 42\n", 3, 42);
-    let stream = one_file_export("0042.md", &blob, "edit issue 42\n");
+    let stream = one_file_export("issues/42.md", &blob, "edit issue 42\n");
 
     let url = format!("reposix::{}/projects/demo", server.uri());
     let stdin_data = {
@@ -318,7 +318,7 @@ async fn frontmatter_strips_server_controlled_fields() {
         3,       // version: matches backend so conflict-check passes
         999_999, // id override — server must replace with 42
     );
-    let stream = one_file_export("0042.md", &blob, "sanitize regression\n");
+    let stream = one_file_export("issues/42.md", &blob, "sanitize regression\n");
 
     let url = format!("reposix::{}/projects/demo", server.uri());
     let stdin_data = {

@@ -424,17 +424,6 @@ fn handle_export<R: std::io::Read, W: std::io::Write>(
     Ok(())
 }
 
-/// `0001.md` -> `1`. Returns `None` for non-issue paths (e.g. `README.md`,
-/// or anything whose stem is not a base-10 unsigned integer).
-///
-/// `pub(crate)` so the [`crate::precheck`] module can reuse the same
-/// path-parsing rule as the existing conflict-detection loop in
-/// [`handle_export`].
-pub(crate) fn issue_id_from_path(path: &str) -> Option<u64> {
-    let stem = path.strip_suffix(".md")?;
-    stem.parse::<u64>().ok()
-}
-
 /// Apply a single [`PlannedAction`] to the backend.
 ///
 /// Narrow-deps signature (P83-01 T02 refactor): takes `(backend, // banned-words: ok

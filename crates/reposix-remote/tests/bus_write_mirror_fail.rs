@@ -209,8 +209,11 @@ mod test_impl {
         let blob1 = render_issue_blob(1, 1, "edited body for 1\n");
         let blob2 = render_issue_blob(2, 1, "body of issue 2");
         let blob3 = render_issue_blob(3, 1, "body of issue 3");
-        let entries: Vec<(&str, String)> =
-            vec![("0001.md", blob1), ("0002.md", blob2), ("0003.md", blob3)];
+        let entries: Vec<(&str, String)> = vec![
+            ("issues/1.md", blob1),
+            ("issues/2.md", blob2),
+            ("issues/3.md", blob3),
+        ];
         let stream = multi_file_export(&entries, "edit issue 1\n");
         let stdin_data = {
             let mut buf = Vec::new();

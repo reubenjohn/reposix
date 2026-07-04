@@ -42,7 +42,7 @@ use reposix_cache::Cache;
 use reposix_core::{backend::BackendConnector, frontmatter, Record, RecordId};
 
 use crate::fast_import::ParsedExport;
-use crate::issue_id_from_path;
+use reposix_core::path::issue_id_from_path;
 
 /// Outcome of the L1 precheck. The caller (today: `handle_export`,
 /// future: bus handler) consumes this to either reject the push with

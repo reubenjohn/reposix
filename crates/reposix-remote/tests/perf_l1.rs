@@ -165,7 +165,9 @@ fn no_op_tree_export(n: u64, msg: &str) -> Vec<u8> {
     out.extend_from_slice(bytes);
     out.push(b'\n');
     for (id, mark) in &blob_marks {
-        writeln!(&mut out, "M 100644 :{mark} {id:04}.md").unwrap();
+        // Canonical `issues/<id>.md` (QL-001) — LITERAL, not record_path(),
+        // so a regressed helper cannot mask a returning bug.
+        writeln!(&mut out, "M 100644 :{mark} issues/{id}.md").unwrap();
     }
     writeln!(&mut out, "done").unwrap();
     out
@@ -308,7 +310,7 @@ async fn l1_precheck_uses_list_changed_since_not_list_records() {
     // Drive the export verb via the helper subprocess. The blob is a
     // CLEAN push (version=1, same as backend) so the precheck enters
     // the no-conflict branch and falls through to plan(). plan() sees
-    // 0001.md in parsed.tree matching prior; render-compare equates;
+    // issues/1.md in parsed.tree matching prior; render-compare equates;
     // no Update fired. The helper acks `ok refs/heads/main`.
     let stream = no_op_tree_export(n, "no-op push\n");
     let url = format!("reposix::{}/projects/{project}", server.uri());

@@ -60,7 +60,15 @@ pub(crate) fn emit_import_stream<W: Write>(w: &mut W, issues: &[Record]) -> io::
     writeln!(w, "data {}", msg.len())?;
     w.write_all(msg.as_bytes())?;
     for (i, issue) in sorted.iter().enumerate() {
-        writeln!(w, "M 100644 :{} {:04}.md", blob_marks[i], issue.id.0)?;
+        // Canonical `issues/<id>.md` path (QL-001 / D91-01) — matches the
+        // cache/stateless-connect production read path and the push planner's
+        // prior-key so a fetch→edit→push loop round-trips without churn.
+        writeln!(
+            w,
+            "M 100644 :{} {}",
+            blob_marks[i],
+            reposix_core::path::record_path(issue.id.0)
+        )?;
     }
 
     writeln!(w, "done")?;
@@ -150,11 +158,22 @@ pub(crate) fn parse_export_stream<R: BufRead>(r: &mut R) -> io::Result<ParsedExp
                 .map_err(|e| io::Error::other(format!("bad data len `{rest}`: {e}")))?;
             let mut buf = vec![0u8; len];
             r.read_exact(&mut buf)?;
-            // git may or may not emit a trailing LF after the data; consume
-            // one if present so the next line read aligns to the next
-            // directive.
-            let mut maybe_nl = String::new();
-            let _ = r.read_line(&mut maybe_nl);
+            // git may or may not emit a trailing LF after the `data` payload.
+            // Peek exactly ONE byte and consume it only when it is an LF.
+            //
+            // BUG-3 (QL-001): the previous `read_line` consumed the entire
+            // following line, not a single byte. For a blob payload that was
+            // harmless (git always follows blob data with a bare LF). But git
+            // fast-export emits the commit-MESSAGE payload immediately followed
+            // by the first `M 100644 :N issues/<id>.md` directive with NO
+            // separating LF — so `read_line` swallowed that first M-line,
+            // dropping the lowest-id record from the parsed tree and
+            // classifying it as a spurious Delete. Peeking one byte via
+            // `fill_buf`/`consume` never crosses a directive boundary.
+            let has_trailing_lf = matches!(r.fill_buf()?.first(), Some(&b'\n'));
+            if has_trailing_lf {
+                r.consume(1);
+            }
             if in_commit {
                 // Commit message body.
                 out.commit_message = String::from_utf8_lossy(&buf).into_owned();
@@ -189,4 +208,71 @@ pub(crate) fn parse_export_stream<R: BufRead>(r: &mut R) -> io::Result<ParsedExp
         // the tree shape we maintain.
     }
     Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    /// QL-001 criterion 2 / BUG-3: git fast-export emits the commit-MESSAGE
+    /// `data N` payload immediately followed by the first `M` directive with
+    /// NO separating LF. The old `read_line`-based trailing-newline consume
+    /// swallowed that entire first M-line, dropping the lowest-id record from
+    /// `parsed.tree` and classifying it as a spurious Delete. The peek-one-
+    /// byte fix must retain `issues/1.md` in the tree.
+    #[test]
+    fn commit_message_without_trailing_lf_does_not_swallow_first_m_line() {
+        let blob = b"---\nid: 1\n---\nbody\n";
+        let msg = b"edit issue 1 (no trailing LF before M)";
+        let mut stream: Vec<u8> = Vec::new();
+        writeln!(&mut stream, "feature done").unwrap();
+        writeln!(&mut stream, "blob").unwrap();
+        writeln!(&mut stream, "mark :1").unwrap();
+        writeln!(&mut stream, "data {}", blob.len()).unwrap();
+        stream.extend_from_slice(blob);
+        stream.push(b'\n'); // blob payloads ARE followed by a bare LF
+        writeln!(&mut stream, "commit refs/heads/main").unwrap();
+        writeln!(&mut stream, "mark :2").unwrap();
+        writeln!(&mut stream, "committer test <t@t> 0 +0000").unwrap();
+        writeln!(&mut stream, "data {}", msg.len()).unwrap();
+        stream.extend_from_slice(msg); // NO trailing LF — the fast-export shape
+        writeln!(&mut stream, "M 100644 :1 issues/1.md").unwrap();
+        writeln!(&mut stream, "done").unwrap();
+
+        let mut cur = Cursor::new(stream);
+        let parsed = parse_export_stream(&mut cur).expect("parse");
+
+        assert!(
+            parsed.tree.contains_key("issues/1.md"),
+            "BUG-3: first M-line after commit message must survive; tree={:?}",
+            parsed.tree
+        );
+        assert_eq!(parsed.tree.get("issues/1.md"), Some(&1));
+        assert!(
+            parsed.blobs.contains_key(&1),
+            "blob mark 1 must be captured"
+        );
+        assert_eq!(parsed.commit_message.as_bytes(), msg);
+    }
+
+    /// The blob-data path (which IS followed by a bare LF) must still consume
+    /// exactly that one LF and align to the next directive — the peek-one-byte
+    /// fix must not regress the common case.
+    #[test]
+    fn blob_data_trailing_lf_is_consumed() {
+        let blob = b"hello";
+        let mut stream: Vec<u8> = Vec::new();
+        writeln!(&mut stream, "feature done").unwrap();
+        writeln!(&mut stream, "blob").unwrap();
+        writeln!(&mut stream, "mark :7").unwrap();
+        writeln!(&mut stream, "data {}", blob.len()).unwrap();
+        stream.extend_from_slice(blob);
+        stream.push(b'\n');
+        writeln!(&mut stream, "done").unwrap();
+
+        let mut cur = Cursor::new(stream);
+        let parsed = parse_export_stream(&mut cur).expect("parse");
+        assert_eq!(parsed.blobs.get(&7).map(Vec::as_slice), Some(&blob[..]));
+    }
 }

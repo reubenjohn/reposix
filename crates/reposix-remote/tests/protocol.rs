@@ -64,7 +64,7 @@ fn unknown_command_writes_to_stderr_not_stdout() {
 }
 
 /// Build a synthetic fast-export stream with a single new blob at mark 1
-/// mapped to path `0001.md`. The blob bytes are `blob_bytes` verbatim —
+/// mapped to path `issues/1.md`. The blob bytes are `blob_bytes` verbatim —
 /// no UTF-8 encoding, no line-ending normalization — so tests can exercise
 /// the raw-bytes path with CRLF or non-UTF-8 payloads.
 fn single_blob_export(blob_bytes: &[u8]) -> Vec<u8> {
@@ -82,7 +82,7 @@ fn single_blob_export(blob_bytes: &[u8]) -> Vec<u8> {
     writeln!(&mut out, "data {}", msg.len()).unwrap();
     out.extend_from_slice(msg);
     out.push(b'\n');
-    writeln!(&mut out, "M 100644 :1 0001.md").unwrap();
+    writeln!(&mut out, "M 100644 :1 issues/1.md").unwrap();
     writeln!(&mut out, "done").unwrap();
     out
 }

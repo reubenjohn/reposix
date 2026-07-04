@@ -10,6 +10,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use reposix_core::frontmatter;
+use reposix_core::path::{issue_id_from_path, record_path};
 use reposix_core::{Record, RecordId};
 use thiserror::Error;
 
@@ -71,11 +72,6 @@ pub(crate) enum PlanError {
     },
 }
 
-fn issue_id_from_path(path: &str) -> Option<u64> {
-    let stem = path.strip_suffix(".md")?;
-    stem.parse::<u64>().ok()
-}
-
 /// Canonicalize a rendered blob for semantic-equivalence comparison
 /// (M-03). Normalizes `\r\n` → `\n` (CRLF from git's normalization) and
 /// trims trailing whitespace on the final byte sequence (absorbs
@@ -101,10 +97,16 @@ pub(crate) fn plan(
     parsed: &ParsedExport,
 ) -> Result<Vec<PlannedAction>, PlanError> {
     let prior_by_id: HashMap<RecordId, &Record> = prior.iter().map(|i| (i.id, i)).collect();
-    let prior_by_path: BTreeMap<String, RecordId> = prior
-        .iter()
-        .map(|i| (format!("{:04}.md", i.id.0), i.id))
-        .collect();
+    let prior_by_path: BTreeMap<String, RecordId> =
+        prior.iter().map(|i| (record_path(i.id.0), i.id)).collect();
+
+    // BUG-2 (QL-001): the export stream can legitimately carry a path both
+    // as an `M` add and a later `D` delete (git fast-export emits this for
+    // some rewrite shapes). Deletes win: a path present in `parsed.deletes`
+    // must NOT be treated as a live tree entry, or a delete-then-re-add would
+    // spuriously survive as a Create/Update.
+    let deleted_paths: std::collections::HashSet<&str> =
+        parsed.deletes.iter().map(String::as_str).collect();
 
     let mut creates: Vec<PlannedAction> = Vec::new();
     let mut updates: Vec<PlannedAction> = Vec::new();
@@ -112,6 +114,18 @@ pub(crate) fn plan(
 
     // Walk the new tree.
     for (path, mark) in &parsed.tree {
+        // BUG-2 (QL-001): only `issues/<id>.md` paths are records. `reposix
+        // refresh` writes `.reposix/fetched_at.txt` + `.reposix/.gitignore`
+        // into the same tree; without this filter `frontmatter::parse` rejects
+        // them as invalid blobs and the whole push fails. Non-record paths are
+        // silently ignored (not parsed, not diffed).
+        if issue_id_from_path(path).is_none() {
+            continue;
+        }
+        // Deletes win over adds for a path appearing in both (see above).
+        if deleted_paths.contains(path.as_str()) {
+            continue;
+        }
         let Some(bytes) = parsed.blobs.get(mark) else {
             // mark unresolved — skip
             continue;
@@ -281,7 +295,11 @@ mod tests {
             let mark = u64::try_from(i).unwrap() + 1;
             let rendered = frontmatter::render(issue).expect("render sample");
             blobs.insert(mark, rendered.into_bytes());
-            tree.insert(format!("{:04}.md", issue.id.0), mark);
+            // Canonical `issues/<id>.md` shape — LITERAL, not record_path():
+            // a fixture that called the helper would silently follow a
+            // regressed helper and mask the bug (raise-list §3 magic-fixture
+            // hazard). Hardcoding keeps this RED-if-bug-returns.
+            tree.insert(format!("issues/{}.md", issue.id.0), mark);
         }
         let parsed = ParsedExport {
             commit_message: "no-op push\n".to_owned(),
@@ -308,7 +326,7 @@ mod tests {
         let mut blobs = HashMap::new();
         blobs.insert(1, rendered.into_bytes());
         let mut tree = BTreeMap::new();
-        tree.insert("0001.md".to_owned(), 1);
+        tree.insert("issues/1.md".to_owned(), 1);
         let parsed = ParsedExport {
             commit_message: "noop\n".to_owned(),
             blobs,
@@ -320,6 +338,122 @@ mod tests {
             actions.len(),
             0,
             "trailing-newline variation must be a no-op; got: {actions:?}"
+        );
+    }
+
+    // --- QL-001 regressions: canonical `issues/<id>.md` round-trip ---------
+    //
+    // These pin the six acceptance criteria at the `plan()` layer (box-
+    // independent, no git ≥2.34 required). All fixtures use LITERAL
+    // `issues/<id>.md` strings so a regressed `record_path` cannot mask them.
+
+    /// Build a canonical-shape [`ParsedExport`]: each prior record re-emitted
+    /// unchanged under its `issues/<id>.md` path. LITERAL paths on purpose.
+    fn canonical_noop_export(prior: &[Record]) -> ParsedExport {
+        let mut blobs: HashMap<u64, Vec<u8>> = HashMap::new();
+        let mut tree: BTreeMap<String, u64> = BTreeMap::new();
+        for (i, issue) in prior.iter().enumerate() {
+            let mark = u64::try_from(i).unwrap() + 1;
+            let rendered = frontmatter::render(issue).expect("render sample");
+            blobs.insert(mark, rendered.into_bytes());
+            tree.insert(format!("issues/{}.md", issue.id.0), mark);
+        }
+        ParsedExport {
+            commit_message: "no-op push\n".to_owned(),
+            blobs,
+            tree,
+            deletes: vec![],
+        }
+    }
+
+    /// QL-001 criterion 3: a push of the full seeded tree in the canonical
+    /// `issues/<id>.md` shape produces ZERO Deletes (falsifies BUG-1's
+    /// create/delete storm). Six records > the bulk-delete cap, so if the
+    /// prior-key mismatch returned, `plan()` would either error on the cap
+    /// or emit 6 spurious deletes.
+    #[test]
+    fn full_seeded_tree_push_emits_zero_deletes() {
+        let prior: Vec<Record> = (1..=6).map(sample).collect();
+        let parsed = canonical_noop_export(&prior);
+        let actions = plan(&prior, &parsed).expect("canonical full-tree push must plan clean");
+        let deletes = actions
+            .iter()
+            .filter(|a| matches!(a, PlannedAction::Delete { .. }))
+            .count();
+        assert_eq!(
+            deletes, 0,
+            "canonical full-tree push must emit ZERO deletes; got: {actions:?}"
+        );
+        assert_eq!(
+            actions.len(),
+            0,
+            "unchanged full-tree push must be a pure no-op; got: {actions:?}"
+        );
+    }
+
+    /// QL-001 criterion 1: a canonical tree that edits exactly one record
+    /// round-trips as a single Update (PATCH) — no Creates, no Deletes.
+    #[test]
+    fn canonical_single_edit_is_one_update() {
+        let prior: Vec<Record> = (1..=3).map(sample).collect();
+        let mut parsed = canonical_noop_export(&prior);
+        // Edit record 2's body: re-render an edited copy under issues/2.md.
+        let mut edited = sample(2);
+        edited.body = "an actual edit\n".to_owned();
+        let rendered = frontmatter::render(&edited).expect("render edited");
+        // mark 2 corresponds to prior[1] (id 2) in canonical_noop_export.
+        parsed.blobs.insert(2, rendered.into_bytes());
+        let actions = plan(&prior, &parsed).expect("single edit plans clean");
+        assert_eq!(
+            actions.len(),
+            1,
+            "exactly one action expected; got: {actions:?}"
+        );
+        match &actions[0] {
+            PlannedAction::Update { id, .. } => assert_eq!(id.0, 2, "the edited record is id 2"),
+            other => panic!("expected a single Update for id 2, got {other:?}"),
+        }
+    }
+
+    /// QL-001 criterion 4: a tree carrying `.reposix/` metadata (as
+    /// `reposix refresh` writes) pushes without an invalid-blob rejection —
+    /// the non-issue paths are filtered out before `frontmatter::parse` (BUG-2).
+    #[test]
+    fn reposix_metadata_paths_are_ignored_not_rejected() {
+        let prior: Vec<Record> = (1..=2).map(sample).collect();
+        let mut parsed = canonical_noop_export(&prior);
+        // Inject a `.reposix/fetched_at.txt` blob with NON-issue content that
+        // would fail frontmatter::parse if the planner tried to parse it.
+        parsed.blobs.insert(99, b"2026-07-04T00:00:00Z".to_vec());
+        parsed.tree.insert(".reposix/fetched_at.txt".to_owned(), 99);
+        let actions = plan(&prior, &parsed)
+            .expect("non-issue metadata path must not reject the push (BUG-2)");
+        assert_eq!(
+            actions.len(),
+            0,
+            "metadata-only addition is a no-op; got: {actions:?}"
+        );
+    }
+
+    /// QL-001 BUG-2 (deletes-win): a path present as BOTH an `M` add and a
+    /// `D` delete in the same stream yields a net Delete, never a surviving
+    /// Create/Update.
+    #[test]
+    fn delete_wins_over_add_for_same_path() {
+        let prior: Vec<Record> = (1..=2).map(sample).collect();
+        let mut parsed = canonical_noop_export(&prior);
+        // Mark issues/1.md as also deleted in the same stream.
+        parsed.deletes.push("issues/1.md".to_owned());
+        let actions = plan(&prior, &parsed).expect("delete-wins plans clean");
+        // issue 1: delete wins → one Delete. issue 2: unchanged → no action.
+        assert_eq!(
+            actions.len(),
+            1,
+            "exactly the net delete survives; got: {actions:?}"
+        );
+        assert!(
+            matches!(&actions[0], PlannedAction::Delete { id, .. } if id.0 == 1),
+            "expected a Delete for id 1 (deletes win); got: {actions:?}"
         );
     }
 }

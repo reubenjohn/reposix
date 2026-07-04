@@ -146,7 +146,7 @@ async fn write_on_success_updates_both_refs() {
 
     let cache_dir = tempfile::tempdir().expect("tempdir");
     let blob = render_with_overrides(42, "issue 42", "edited body for 42\n", 3, 42);
-    let stream = one_file_export("0042.md", &blob, "edit issue 42\n");
+    let stream = one_file_export("issues/42.md", &blob, "edit issue 42\n");
     let url = format!("reposix::{}/projects/demo", server.uri());
 
     let cache_path = cache_dir.path().to_path_buf();
@@ -251,7 +251,7 @@ async fn vanilla_fetch_brings_mirror_refs() {
 
     let cache_dir = tempfile::tempdir().expect("tempdir");
     let blob = render_with_overrides(42, "issue 42", "edited body fetch test\n", 3, 42);
-    let stream = one_file_export("0042.md", &blob, "edit issue 42\n");
+    let stream = one_file_export("issues/42.md", &blob, "edit issue 42\n");
     let url = format!("reposix::{}/projects/demo", server.uri());
 
     let cache_path = cache_dir.path().to_path_buf();
@@ -341,7 +341,7 @@ async fn reject_hint_cites_synced_at_with_age() {
         let server = MockServer::start().await;
         mount_get_and_patch(&server, 42, 3).await;
         let blob = render_with_overrides(42, "issue 42", "first push body\n", 3, 42);
-        let stream = one_file_export("0042.md", &blob, "first push\n");
+        let stream = one_file_export("issues/42.md", &blob, "first push\n");
         let url = format!("reposix::{}/projects/demo", server.uri());
         let cache_path = cache_dir.path().to_path_buf();
         let stream_clone = stream.clone();
@@ -391,7 +391,7 @@ async fn reject_hint_cites_synced_at_with_age() {
         .await;
 
     let blob = render_with_overrides(42, "issue 42", "stale push body\n", 3, 42);
-    let stream = one_file_export("0042.md", &blob, "stale push\n");
+    let stream = one_file_export("issues/42.md", &blob, "stale push\n");
     let url = format!("reposix::{}/projects/demo", server2.uri());
     let cache_path = cache_dir.path().to_path_buf();
     let stream_clone = stream.clone();
@@ -457,7 +457,7 @@ async fn reject_hint_first_push_omits_synced_at_line() {
 
     let cache_dir = tempfile::tempdir().expect("tempdir");
     let blob = render_with_overrides(42, "issue 42", "first stale push\n", 3, 42);
-    let stream = one_file_export("0042.md", &blob, "first stale push\n");
+    let stream = one_file_export("issues/42.md", &blob, "first stale push\n");
     let url = format!("reposix::{}/projects/demo", server.uri());
 
     let cache_path = cache_dir.path().to_path_buf();
