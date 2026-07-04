@@ -1403,8 +1403,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/test-name-vs-asserts.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-04T17:05:02Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "quality/gates/agent-ux/test-name-vs-asserts.sh (NEW, ships 90-03) scans crates/**/*.rs for honesty-suspect #[test] fn names against the committed baseline",
