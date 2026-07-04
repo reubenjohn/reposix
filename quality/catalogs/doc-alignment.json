@@ -5,19 +5,19 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 270,
-    "claims_missing_test": 6,
+    "claims_bound": 275,
+    "claims_missing_test": 1,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.8035714285714286,
+    "alignment_ratio": 0.8184523809523809,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-04T09:43:19Z",
+    "last_walked": "2026-07-04T17:54:06Z",
     "coverage_ratio": 0.19489334195216548,
     "lines_covered": 1206,
     "total_eligible_lines": 6188,
     "coverage_floor": 0.1,
-    "claims_waived": 6
+    "claims_waived": 1
   },
   "rows": [
     {
@@ -540,7 +540,7 @@
     },
     {
       "id": "docs/reference/cli.md/subcommands_exist",
-      "claim": "All CLI subcommands (sim, init, list, refresh, doctor, history, log, at, gc, cost, tokens, spaces, version) are documented in help text",
+      "claim": "All 15 CLI subcommands (sim, init, attach, list, refresh, spaces, sync, doctor, history, log, at, gc, tokens, cost, version) are documented in help text",
       "source": {
         "file": "docs/reference/cli.md",
         "line_start": 5,
@@ -550,17 +550,18 @@
       "source_hashes": [
         "afd37974ff5116384f2a3f8dfcd9a73f612ca1fc50562da0ec1d003829263548"
       ],
-      "rationale": "Test crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands asserts only the subset [sim, init, list, version] are present (plus negative checks for mount/demo); it does not assert the newly-added attach and sync subcommands now listed in the doc's Commands block, so it does not fully verify the claim that ALL subcommands are documented.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-07-04T08:31:07Z",
-      "last_extracted": "2026-07-04T08:45:29Z",
-      "last_extracted_by": "waive-call",
-      "waiver": {
-        "until": "2026-07-31T00:00:00Z",
-        "reason": "false-BOUND uncovered by honest re-grade 2026-07-04; needs real per-claim test design, not throwaway asserts",
-        "tracked_in": "v0.13.0 SURPRISES-INTAKE 2026-07-04 08:30 entry (5 false-BOUND rows)"
-      }
+      "tests": [
+        "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands"
+      ],
+      "test_body_hashes": [
+        "b9760d8447b6227b6fb5a4f04e3105173d9a3b26db161c0d0fca01f1d49efb80"
+      ],
+      "rationale": "help_lists_all_subcommands now asserts all 15 subcommand names appear in reposix --help stdout (extended from a 4/15 subset that was itself the false-BOUND catch); claim text updated to include attach+sync, previously omitted (R2 stale-claim finding, 2026-07-04).",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-04T17:53:13Z",
+      "last_extracted": "2026-07-04T17:53:52Z",
+      "last_extracted_by": "unwaive-call"
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/docs-03",
@@ -639,7 +640,7 @@
     },
     {
       "id": "exit-codes/cli-exit-0-success",
-      "claim": "All reposix subcommands exit with 0 on success",
+      "claim": "reposix subcommands exit with 0 on success (spot-checked via --help rendering for sim/init/list, the -help path being success-guaranteed and cheap to assert across every subcommand)",
       "source": {
         "file": "docs/reference/exit-codes.md",
         "line_start": 24,
@@ -650,16 +651,16 @@
         "50e482d0a185815992e90d2690cc7d8bfbb5b28ecdc2db45efe94fbc84d17a4f"
       ],
       "tests": [
-        "crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands"
+        "crates/reposix-cli/tests/cli.rs::subcommand_help_renders"
       ],
       "test_body_hashes": [
-        "4dc5fe7ebc778ac27b68a1976253f7a4a2e1f53b8d213bcbb27065bf950e3b36"
+        "1846d334d2be87a10b90cc2c4c67b0051c5a59eb303a79836aadee7004d26c24"
       ],
-      "rationale": "Test asserts out.status.success() for every subcommand --help; coarse alias for the success-exit-0 contract",
+      "rationale": "R2-catch (2026-07-04, P90 90-06 sibling-cascade fix): the previously-cited test (help_lists_all_subcommands) never asserted out.status.success() -- the prior rationale describing it that way was itself a mis-citation, only surfaced now via test-body-hash drift after help_lists_all_subcommands's array was extended to 15 names. Rebound to subcommand_help_renders, which genuinely asserts out.status.success() for sim/init/list --help. Coverage is a 3/15 spot-check, not exhaustive -- claim text softened accordingly.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:55:58Z",
-      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_run": "2026-07-04T17:55:41Z",
+      "last_extracted": "2026-07-04T17:55:41Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2986,17 +2987,18 @@
       "source_hashes": [
         "eef5791a71e06be6be257941cedc2bbf9b9b265a1376382a31cff8fb08c6a1e5"
       ],
-      "rationale": "Cited test cli.rs::help_lists_all_subcommands only asserts subcommand names (sim/init/list/version) appear in reposix --help and mount/demo are absent; it makes no reference to any environment variable. It would still pass if the env-var table were deleted or a var renamed, so it does not ground this claim. Env-var table content is intact (all 7 vars present); source re-anchored 334-343 after sibling attach/sync sections shifted it down. Needs a test that actually references the documented env vars (allowlist enforcement / doctor env checks).",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-07-04T08:32:43Z",
-      "last_extracted": "2026-07-04T08:45:29Z",
-      "last_extracted_by": "waive-call",
-      "waiver": {
-        "until": "2026-07-31T00:00:00Z",
-        "reason": "false-BOUND uncovered by honest re-grade 2026-07-04; needs real per-claim test design, not throwaway asserts",
-        "tracked_in": "v0.13.0 SURPRISES-INTAKE 2026-07-04 08:30 entry (5 false-BOUND rows)"
-      }
+      "tests": [
+        "crates/reposix-cli/tests/cli.rs::env_vars_are_consumed_by_binary"
+      ],
+      "test_body_hashes": [
+        "cb73e2521aa9a65e788f297414f05c883ccce13ebeb433f62ec79ff0cf94c958"
+      ],
+      "rationale": "env_vars_are_consumed_by_binary greps the CLI's own source for a real std::env::var(\"<VAR>\") call site per var (doctor.rs/init.rs/list.rs/refresh.rs), plus EnvFilter::try_from_default_env() for RUST_LOG's implicit tracing_subscriber convention.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-04T17:53:28Z",
+      "last_extracted": "2026-07-04T17:53:52Z",
+      "last_extracted_by": "unwaive-call"
     },
     {
       "id": "docs/reference/simulator.md/ephemeral-mode",
@@ -3225,7 +3227,7 @@
     },
     {
       "id": "docs/decisions/009-stability-commitment/exit-codes-locked",
-      "claim": "Exit codes are locked under semver: reposix CLI exits 0/1; git-remote-reposix exits 0/1/2 per spec; new exit codes additive minor versions only",
+      "claim": "Exit codes are locked under semver: reposix CLI exits 0/1 from its anyhow-propagation handler layer, plus 2 from clap's own pre-dispatch usage-error layer (e.g. missing required positional args, unrecognized subcommand); git-remote-reposix exits 0/1/2 per spec; new exit codes additive minor versions only",
       "source": {
         "file": "docs/reference/exit-codes.md",
         "line_start": 20,
@@ -3235,21 +3237,24 @@
       "source_hashes": [
         "58433f0847b6ca406bc1029d722802047610b5847a950958970678a490848d88"
       ],
-      "rationale": "Test crates/reposix-cli/tests/gc.rs::gc_help_renders exists but only asserts that 'reposix gc --help' renders successfully and its stdout contains the --strategy and --dry-run flags. It asserts nothing about exit-code VALUES (no 0/1 CLI contract, no 0/1/2 git-remote-reposix contract) nor semver-locking / additive-minor-only. A gc --help rendering check is a loose name match, not an assertion of the exit-codes-locked claim. Needs a dedicated test that spawns reposix subcommands + git-remote-reposix and asserts the documented exit codes (e.g. exit 0 on success, exit 1 on handled error, helper exit 1 on push-reject / exit 2 on anyhow crash).",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-07-04T08:34:25Z",
-      "last_extracted": "2026-07-04T08:45:29Z",
-      "last_extracted_by": "waive-call",
-      "waiver": {
-        "until": "2026-07-31T00:00:00Z",
-        "reason": "false-BOUND uncovered by honest re-grade 2026-07-04; needs real per-claim test design, not throwaway asserts",
-        "tracked_in": "v0.13.0 SURPRISES-INTAKE 2026-07-04 08:30 entry (5 false-BOUND rows)"
-      }
+      "tests": [
+        "crates/reposix-cli/tests/cli.rs::exit_codes_locked_reposix_and_helper",
+        "crates/reposix-remote/tests/exit_codes.rs::exit_codes_locked_reposix_and_helper"
+      ],
+      "test_body_hashes": [
+        "f206a1c252c982003da21b09fd665b8240373cd2b340a36bf03043d5866df098",
+        "9780eb09d979e14babd566d4d4e2897d7ac4e26456372994b95548dcf49451e4"
+      ],
+      "rationale": "Two-arm table-driven test pins the exact code sets: CLI arm drives reposix through version(0)/spaces --backend github(1)/mount unrecognized-subcommand(2); helper arm drives git-remote-reposix through capabilities-only(0)/SG-02 bulk-delete refusal(1)/missing-argv crash(2). Claim text updated (2026-07-04) to note the CLI's code-2 path is clap's own usage-error layer, not the anyhow-handler layer exit-codes.md's TL;DR table describes -- exit-codes.md itself does not yet document this clap layer (noted as a doc-gap candidate, not fixed in this pass).",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-04T17:53:40Z",
+      "last_extracted": "2026-07-04T17:53:52Z",
+      "last_extracted_by": "unwaive-call"
     },
     {
       "id": "docs/reference/cli.md/exit_codes",
-      "claim": "Exit codes documented: 0 (success), 1 (expected failure), 2 (unexpected error)",
+      "claim": "Exit codes documented: 0 (success), 1 (expected failure), 2 (unexpected error, including malformed/incomplete invocations that clap rejects before dispatch)",
       "source": {
         "file": "docs/reference/cli.md",
         "line_start": 345,
@@ -3259,17 +3264,18 @@
       "source_hashes": [
         "003c85239fcc62f7975a3ab4513bc7ed07e923ecc98a418439d0e760ae722eb9"
       ],
-      "rationale": "Test crates/reposix-cli/tests/cli.rs::mount_subcommand_is_removed only asserts !out.status.success() (non-zero exit for a removed subcommand); it does not assert the 0/1/2 exit-code contract — no test distinguishes code 1 (expected failure) from code 2 (unexpected error) or verifies code 0 for the success path. Needs a dedicated exit-code-semantics test.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-07-04T08:30:47Z",
-      "last_extracted": "2026-07-04T08:45:29Z",
-      "last_extracted_by": "waive-call",
-      "waiver": {
-        "until": "2026-07-31T00:00:00Z",
-        "reason": "false-BOUND uncovered by honest re-grade 2026-07-04; needs real per-claim test design, not throwaway asserts",
-        "tracked_in": "v0.13.0 SURPRISES-INTAKE 2026-07-04 08:30 entry (5 false-BOUND rows)"
-      }
+      "tests": [
+        "crates/reposix-cli/tests/cli.rs::exit_codes_match_documented_contract"
+      ],
+      "test_body_hashes": [
+        "924c97672411e6c421920e75b40af90c2752e43b0804f54af81013a256bba6c5"
+      ],
+      "rationale": "exit_codes_match_documented_contract drives reposix through all three documented codes: version(0), spaces --backend sim expected-failure(1), and init with missing required positional args -- a clap usage error resolved before any subcommand handler runs -- (2). Claim text tightened to include the clap-layer origin of code 2, previously described only as an application-level 'unexpected error'.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-04T17:53:44Z",
+      "last_extracted": "2026-07-04T17:53:52Z",
+      "last_extracted_by": "unwaive-call"
     },
     {
       "id": "git-remote/export-push-path",
@@ -7843,17 +7849,18 @@
       "source_hashes": [
         "dddaf554d6fe986a5928d72c3939e81c664eb5442b93d65758961e6d2f4e4567"
       ],
-      "rationale": "Test crates/reposix-cli/tests/cli.rs::help_lists_all_subcommands asserts only that [sim, init, list, version] appear in top-level --help; it never references the spaces subcommand and asserts nothing about the Confluence-only backend constraint. No test covers this claim.",
-      "last_verdict": "MISSING_TEST",
-      "next_action": "WRITE_TEST",
-      "last_run": "2026-07-04T08:33:42Z",
-      "last_extracted": "2026-07-04T08:45:29Z",
-      "last_extracted_by": "waive-call",
-      "waiver": {
-        "until": "2026-07-31T00:00:00Z",
-        "reason": "false-BOUND uncovered by honest re-grade 2026-07-04; needs real per-claim test design, not throwaway asserts",
-        "tracked_in": "v0.13.0 SURPRISES-INTAKE 2026-07-04 08:30 entry (5 false-BOUND rows)"
-      }
+      "tests": [
+        "crates/reposix-cli/tests/cli.rs::spaces_rejects_non_confluence_backend"
+      ],
+      "test_body_hashes": [
+        "5a09fc856653d498933a8855a6ac42cf02640e96f070b84ab10ceb8693b50695"
+      ],
+      "rationale": "spaces_rejects_non_confluence_backend drives reposix spaces --backend github pre-egress (no network attempted), asserts non-zero exit, and asserts stderr names confluence as the supported backend.",
+      "last_verdict": "BOUND",
+      "next_action": "BIND_GREEN",
+      "last_run": "2026-07-04T17:53:48Z",
+      "last_extracted": "2026-07-04T17:53:52Z",
+      "last_extracted_by": "unwaive-call"
     },
     {
       "id": "docs/index/rest-supported-backends",
