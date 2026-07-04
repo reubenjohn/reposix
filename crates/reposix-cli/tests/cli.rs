@@ -1,5 +1,26 @@
 //! CLI surface tests: `reposix --help` lists every subcommand.
 
+use std::path::{Path, PathBuf};
+
+/// Resolve the workspace root from `CARGO_MANIFEST_DIR` (which points at
+/// `crates/reposix-cli`). Mirrors the identical helper in
+/// `agent_flow.rs` / `attach.rs` — kept local (not shared via a common
+/// module) since each `tests/*.rs` file compiles as its own binary.
+fn workspace_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("workspace root from CARGO_MANIFEST_DIR")
+        .to_path_buf()
+}
+
+/// docs/reference/cli.md/subcommands_exist — `reposix --help` must list
+/// every one of the 15 subcommands (clap `Cmd` enum,
+/// `crates/reposix-cli/src/main.rs:39-343`). Previously asserted only
+/// 4/15 (sim, init, list, version) — a false-BOUND catch (R2 § F): the
+/// doc-alignment claim text itself also enumerated only 13 names, missing
+/// `attach` and `sync` (both shipped + documented at cli.md:14,19). Fixed
+/// at rebind (2026-07-04); this test now grounds the full-15 claim.
 #[test]
 fn help_lists_all_subcommands() {
     use assert_cmd::Command;
@@ -10,7 +31,12 @@ fn help_lists_all_subcommands() {
         .unwrap();
     let s = String::from_utf8_lossy(&out.stdout);
     // v0.9.0: `mount` and `demo` removed; `init` is the canonical entry point.
-    for sub in ["sim", "init", "list", "version"] {
+    // Full 15-subcommand set per main.rs `Cmd` enum + cli.md's own
+    // Commands block (cli.md:5-29).
+    for sub in [
+        "sim", "init", "attach", "list", "refresh", "spaces", "sync", "doctor", "history", "log",
+        "at", "gc", "tokens", "cost", "version",
+    ] {
         assert!(s.contains(sub), "help missing {sub}: {s}");
     }
     // mount/demo must NOT appear — they were deleted in v0.9.0.
@@ -18,6 +44,156 @@ fn help_lists_all_subcommands() {
         assert!(
             !s.contains(removed),
             "help should not list removed subcommand `{removed}`: {s}"
+        );
+    }
+}
+
+/// docs/reference/cli.md/env_vars — every env var documented at
+/// cli.md:334-343 has a real consuming call site somewhere in the CLI's
+/// own source (not merely named in a doc comment). Static-grep coverage:
+/// this proves the wiring exists, not that the runtime read path behaves
+/// correctly under a given value (that's covered by the backend-specific
+/// contract tests, e.g. `reposix-confluence/tests/contract.rs`,
+/// `reposix-jira/tests/contract.rs`).
+#[test]
+fn env_vars_are_consumed_by_binary() {
+    let root = workspace_root();
+    // (var name, source file with a real `std::env::var("<VAR>")` call site)
+    let cases: &[(&str, &str)] = &[
+        (
+            "REPOSIX_ALLOWED_ORIGINS",
+            "crates/reposix-cli/src/doctor.rs",
+        ),
+        (
+            "REPOSIX_CONFLUENCE_TENANT",
+            "crates/reposix-cli/src/init.rs",
+        ),
+        ("REPOSIX_JIRA_INSTANCE", "crates/reposix-cli/src/init.rs"),
+        ("GITHUB_TOKEN", "crates/reposix-cli/src/list.rs"),
+        ("ATLASSIAN_EMAIL", "crates/reposix-cli/src/refresh.rs"),
+        ("ATLASSIAN_API_KEY", "crates/reposix-cli/src/refresh.rs"),
+    ];
+    for (var, rel_path) in cases {
+        let src = std::fs::read_to_string(root.join(rel_path))
+            .unwrap_or_else(|e| panic!("read {rel_path}: {e}"));
+        let needle = format!("std::env::var(\"{var}\")");
+        assert!(
+            src.contains(&needle),
+            "{var}: expected `{needle}` consuming call site in {rel_path}, not found"
+        );
+    }
+    // RUST_LOG is consumed implicitly: `tracing_subscriber`'s
+    // `EnvFilter::try_from_default_env()` reads `RUST_LOG` by the crate's
+    // own documented convention rather than a literal
+    // `env::var("RUST_LOG")` call, so we assert the API call site exists
+    // instead of the literal var name.
+    let main_src =
+        std::fs::read_to_string(root.join("crates/reposix-cli/src/main.rs")).expect("read main.rs");
+    assert!(
+        main_src.contains("EnvFilter::try_from_default_env"),
+        "RUST_LOG: expected EnvFilter::try_from_default_env() call site in main.rs, not found"
+    );
+}
+
+/// docs/reference/cli.md/exit_codes — drives the `reposix` binary to all
+/// three codes cli.md's own "Exit codes" table (cli.md:345-351)
+/// documents: 0 (success), 1 (expected/handled failure — anyhow `bail!`
+/// propagation), 2 (malformed invocation — clap's own usage-error layer,
+/// which runs BEFORE any subcommand handler and is a distinct mechanism
+/// from the anyhow-propagation layer that produces code 1).
+#[test]
+fn exit_codes_match_documented_contract() {
+    use assert_cmd::Command;
+
+    let out = Command::cargo_bin("reposix")
+        .unwrap()
+        .arg("version")
+        .output()
+        .unwrap();
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "`reposix version` should exit 0: {out:?}"
+    );
+
+    // Expected/handled failure: `spaces` rejects non-Confluence backends
+    // via `anyhow::bail!` (crates/reposix-cli/src/spaces.rs) — no
+    // network attempted.
+    let out = Command::cargo_bin("reposix")
+        .unwrap()
+        .args(["spaces", "--backend", "sim"])
+        .output()
+        .unwrap();
+    assert_eq!(
+        out.status.code(),
+        Some(1),
+        "`reposix spaces --backend sim` should exit 1: {out:?}"
+    );
+
+    // Malformed invocation: `init` requires two positional args
+    // (`<BACKEND::PROJECT> <PATH>`); omitting both is a clap usage
+    // error, which clap itself resolves to exit 2 before our handler
+    // code ever runs.
+    let out = Command::cargo_bin("reposix")
+        .unwrap()
+        .arg("init")
+        .output()
+        .unwrap();
+    assert_eq!(
+        out.status.code(),
+        Some(2),
+        "malformed `reposix init` (missing required args) should exit 2: {out:?}"
+    );
+}
+
+/// docs/reference/cli.md/spaces_confluence_only — `reposix spaces`
+/// rejects every backend except Confluence, pre-egress (no network
+/// attempted — `spaces::run`'s `ListBackend::Github` arm bails before
+/// `read_confluence_env`/`ConfluenceBackend` are ever reached).
+#[test]
+fn spaces_rejects_non_confluence_backend() {
+    use assert_cmd::Command;
+    let out = Command::cargo_bin("reposix")
+        .unwrap()
+        .args(["spaces", "--backend", "github"])
+        .output()
+        .unwrap();
+    assert!(
+        !out.status.success(),
+        "spaces --backend github should exit non-zero: {out:?}"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.to_lowercase().contains("confluence"),
+        "spaces --backend github stderr should name confluence as the supported backend: {stderr}"
+    );
+}
+
+/// docs/decisions/009-stability-commitment/exit-codes-locked — CLI arm.
+/// Pins the `reposix` binary's exact locked exit-code set: {0, 1, 2}.
+/// The `git-remote-reposix` helper's {0, 1, 2} arm lives in
+/// `crates/reposix-remote/tests/exit_codes.rs::exit_codes_locked_reposix_and_helper`
+/// (same fn name, sibling crate — the two arms of one claim).
+#[test]
+fn exit_codes_locked_reposix_and_helper() {
+    use assert_cmd::Command;
+
+    let table: &[(&[&str], i32)] = &[
+        (&["version"], 0),
+        (&["spaces", "--backend", "github"], 1),
+        // Unrecognized subcommand — clap's usage-error layer, exit 2.
+        (&["mount", "/tmp/nowhere"], 2),
+    ];
+    for (args, expected) in table {
+        let out = Command::cargo_bin("reposix")
+            .unwrap()
+            .args(*args)
+            .output()
+            .unwrap();
+        assert_eq!(
+            out.status.code(),
+            Some(*expected),
+            "reposix {args:?} should exit {expected}: {out:?}"
         );
     }
 }
