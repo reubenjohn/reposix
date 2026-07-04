@@ -12,12 +12,12 @@
     "alignment_ratio": 0.8125,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-04T08:43:25Z",
+    "last_walked": "2026-07-04T08:45:30Z",
     "coverage_ratio": 0.19511800840607824,
     "lines_covered": 1207,
     "total_eligible_lines": 6186,
     "coverage_floor": 0.1,
-    "claims_waived": 1
+    "claims_waived": 6
   },
   "rows": [
     {
@@ -554,8 +554,13 @@
       "last_verdict": "MISSING_TEST",
       "next_action": "WRITE_TEST",
       "last_run": "2026-07-04T08:31:07Z",
-      "last_extracted": "2026-07-04T08:31:07Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "last_extracted": "2026-07-04T08:45:29Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-07-31T00:00:00Z",
+        "reason": "false-BOUND uncovered by honest re-grade 2026-07-04; needs real per-claim test design, not throwaway asserts",
+        "tracked_in": "v0.13.0 SURPRISES-INTAKE 2026-07-04 08:30 entry (5 false-BOUND rows)"
+      }
     },
     {
       "id": "planning-milestones-v0-8-0-phases-REQUIREMENTS-md/docs-03",
@@ -2989,8 +2994,13 @@
       "last_verdict": "MISSING_TEST",
       "next_action": "WRITE_TEST",
       "last_run": "2026-07-04T08:32:43Z",
-      "last_extracted": "2026-07-04T08:32:43Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "last_extracted": "2026-07-04T08:45:29Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-07-31T00:00:00Z",
+        "reason": "false-BOUND uncovered by honest re-grade 2026-07-04; needs real per-claim test design, not throwaway asserts",
+        "tracked_in": "v0.13.0 SURPRISES-INTAKE 2026-07-04 08:30 entry (5 false-BOUND rows)"
+      }
     },
     {
       "id": "docs/reference/simulator.md/ephemeral-mode",
@@ -3233,8 +3243,13 @@
       "last_verdict": "MISSING_TEST",
       "next_action": "WRITE_TEST",
       "last_run": "2026-07-04T08:34:25Z",
-      "last_extracted": "2026-07-04T08:34:25Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "last_extracted": "2026-07-04T08:45:29Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-07-31T00:00:00Z",
+        "reason": "false-BOUND uncovered by honest re-grade 2026-07-04; needs real per-claim test design, not throwaway asserts",
+        "tracked_in": "v0.13.0 SURPRISES-INTAKE 2026-07-04 08:30 entry (5 false-BOUND rows)"
+      }
     },
     {
       "id": "docs/reference/cli.md/exit_codes",
@@ -3252,8 +3267,13 @@
       "last_verdict": "MISSING_TEST",
       "next_action": "WRITE_TEST",
       "last_run": "2026-07-04T08:30:47Z",
-      "last_extracted": "2026-07-04T08:30:47Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "last_extracted": "2026-07-04T08:45:29Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-07-31T00:00:00Z",
+        "reason": "false-BOUND uncovered by honest re-grade 2026-07-04; needs real per-claim test design, not throwaway asserts",
+        "tracked_in": "v0.13.0 SURPRISES-INTAKE 2026-07-04 08:30 entry (5 false-BOUND rows)"
+      }
     },
     {
       "id": "git-remote/export-push-path",
@@ -7831,8 +7851,13 @@
       "last_verdict": "MISSING_TEST",
       "next_action": "WRITE_TEST",
       "last_run": "2026-07-04T08:33:42Z",
-      "last_extracted": "2026-07-04T08:33:42Z",
-      "last_extracted_by": "mark-missing-test-call"
+      "last_extracted": "2026-07-04T08:45:29Z",
+      "last_extracted_by": "waive-call",
+      "waiver": {
+        "until": "2026-07-31T00:00:00Z",
+        "reason": "false-BOUND uncovered by honest re-grade 2026-07-04; needs real per-claim test design, not throwaway asserts",
+        "tracked_in": "v0.13.0 SURPRISES-INTAKE 2026-07-04 08:30 entry (5 false-BOUND rows)"
+      }
     },
     {
       "id": "docs/index/rest-supported-backends",
