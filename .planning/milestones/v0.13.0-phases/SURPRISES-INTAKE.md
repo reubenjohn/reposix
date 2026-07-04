@@ -203,7 +203,7 @@
 
 **Sketched resolution:** Durable fix: make the test self-seeding (create_record already supports parentId, reposix-confluence/src/lib.rs:288) OR document the fixture pair as a named precondition in testing-targets.md. Home: P91 (real-backend wiring).
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (P91-04, commit 6ca3f6d). Rewrote `contract_confluence_live_hierarchy` as the planner-recommended hybrid: `get_record` both durable fixture ids first (read-only); if both resolve, assert the child's `parent_id` against them and return — no mutation. If either is missing, self-seed a fresh `kind=test`-labeled parent+child pair via `create_record`, assert immediately, and delete both in teardown; the durable ids (`7766017`/`7798785`) are never created, mutated, or deleted by either path. Wired `.with_audit()` so the self-seed path's 2 `create_record` calls are OP-3 verifiable. Verified against reality: ran live against the real Confluence tenant twice — once with the durable pair present (read-only path, pair confirmed still intact after), once with the durable-parent id temporarily swapped to a nonexistent id to force the self-seed path (reverted before commit) — both passed, including the `audit_events` POST-count assertion. `docs/reference/testing-targets.md` now documents the durable pair as a named "Protected durable fixtures — NEVER delete" precondition (previously only in oral tradition / this intake entry) and the generic cleanup section explicitly excludes both ids.
 
 ## 2026-07-03 21:00 | discovered-by: P89 orchestrator (owner .env note) | severity: LOW
 

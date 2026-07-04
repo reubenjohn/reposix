@@ -13,3 +13,23 @@ task's changes are logged here, not fixed.
   the `real-git-push-e2e` and `ql-001-canonical-path-shape` rows). Out of
   scope for the QL-001 push-path fix. Candidate for a structure/catalog-honesty
   drain in P95 or a steward window.
+
+## 91-04 (D91-08 hierarchy self-seed)
+
+- **[pre-existing, worsened] `crates/reposix-confluence/tests/contract.rs`
+  exceeds the `.rs` file-size-limits progressive-disclosure budget (20000
+  chars).** Was already 32583 chars before 91-04's edit (well over budget);
+  91-04's D91-08 hybrid rewrite of `contract_confluence_live_hierarchy` (+
+  `make_hierarchy_issue`/`open_audit_db`/`DURABLE_PARENT_ID`/`DURABLE_CHILD_ID`
+  helpers) added ~5.3k chars, landing at 37844. The `structure/file-size-limits`
+  gate is currently WAIVED (until 2026-08-08) so this did not block the
+  commit, but the file is now further from compliant. NOT fixed inline —
+  splitting a 700+ line multi-arm contract test file (sim / wiremock / live /
+  live-hierarchy arms, each with real fixture setup) into composable files is
+  a real restructuring effort, not a <1h eager-fix, and orthogonal to D91-08's
+  scope (making one test self-seeding). Candidate for a P95 (or waiver-renewal
+  window before 2026-08-08) split — e.g. hoist `contract_confluence_live` +
+  `contract_confluence_live_hierarchy` into a sibling
+  `tests/contract_live.rs`, or extract `assert_contract`/fixture helpers into
+  a shared `tests/common/mod.rs` the way `reposix-remote`'s test suite already
+  does.
