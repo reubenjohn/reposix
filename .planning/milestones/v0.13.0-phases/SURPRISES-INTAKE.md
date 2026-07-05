@@ -885,3 +885,55 @@ P94–P97 debt-drain window, ideally as its own short lane rather than a rider o
 phase's mechanical close.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Pagination-truncation safety of sync's `prune_oid_map` — a truncated `list_records()` can DELETE oid_map rows for LIVE records beyond the cap | discovered-by: P93 DP-2 REOPEN re-review (relayed via coordinator, independently re-verified) | severity: HIGH
+
+**What:** D-P93-02's shipped fix (`meta::prune_oid_map`, commit `272882c`/`e246e84`)
+DELETEs `oid_map` rows whose `issue_id` is absent from a `keep_ids` set built from
+`self.backend.list_records(&self.project)`. But `list_records()` on the GitHub, JIRA, and
+Confluence connectors can silently return a **truncated** `Ok(partial_list)` at a
+pagination/size cap (`github/lib.rs` `MAX_ISSUES_PER_LIST=500` / `MAX_RAW_ITEMS_PER_LIST`;
+`jira/lib.rs` non-strict `list_issues_impl`; the Confluence equivalent) — the caller has no
+way to distinguish "the project only has 40 records" from "the project has 4000 records and
+we truncated at 500." Feeding a truncated `keep_ids` set into the prune's DELETE wipes
+`oid_map` rows for **live records that exist beyond the cap** — a real record now looks
+ghost/deleted to `Cache::list_record_ids()`, and it recurs on EVERY sync, not once. The
+sim backend (the project default per OP-1) never truncates, so every sim-run gate —
+including all of P93's own GREEN test runs — is structurally blind to this. Completeness is
+known-but-DROPPED inside all three real connectors: `BackendConnector::list_records`
+returns a bare `Result<Vec<Record>>` with no completeness/has-more signal in its type.
+Before `272882c` a truncated list only under-populated the working tree (an accepted,
+documented HARD-02 tradeoff); the prune fix turned that same truncation into an active
+data-loss operation. No existing test guards this (all P93 tests are sim-backed with small
+record counts). Full analysis + a 4-option decision tree already drafted:
+`.planning/phases/93-cache-coherence/93-RELIEF-HANDOFF.md` §4-6.
+
+**Why out-of-scope for P93:** P93's charter (mint the missing verification artifacts +
+close the phase) is not the place to make an architectural connector-contract decision.
+The safe fix genuinely forks: either (a) an **E2 connector-contract change** — add a
+completeness/`has_more` signal to `BackendConnector::list_records`'s return type (or a
+sibling method) so the prune can be gated on "listing is known-complete" — or (b) a
+**truncation-safe prune redesign** that restricts pruning to a dedicated full-paginated
+reconcile path (e.g. `reposix sync --reconcile`, which already forces a full rebuild) and
+skips pruning on the normal delta path entirely, or reverts to the pre-`272882c` Strategy 2
+(reclassify delete-time `NotFound` as idempotent success — already filed separately above
+as a deliberate, NOT-chosen defense-in-depth alternative). Both forks are real API-surface /
+architectural decisions (Rule 4 territory), not a same-phase mechanical fix.
+
+**Sketched resolution:** P94 should (1) build a mock/capped-backend test proving the data-
+loss reproduction (not just a code-read assertion) and check whether any connector already
+exposes a completeness signal a truncation-safe fix could key off, then (2) package an E2
+consult with the four options already sketched in the RELIEF-HANDOFF (§6 step 2): **A** —
+add a completeness signal to the `list_records` contract and gate the prune on it; **B** —
+revert `272882c`, ship Strategy 2 instead; **C** — restrict the prune to the dedicated
+full-paginated reconcile path only; **D** — a cap-count heuristic that skips the prune when
+`keep_ids.len()` is suspiciously close to a known cap. Plan for an E2 consult in P94 rather
+than self-deciding.
+
+**Default disposition:** HIGH — real data-loss hazard against live upstream records once a
+real-backend project exceeds its connector's pagination cap; P94 (real-backend frictions)
+is the natural next phase to prove + package this for an E2 decision.
+
+**STATUS:** OPEN
