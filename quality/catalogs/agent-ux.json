@@ -1328,8 +1328,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/milestone-close-vision-litmus-real-backend.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-05T02:23:17Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "SLOT verifier quality/gates/agent-ux/milestone-close-vision-litmus.sh (ships in 89-06); substrate lands P91-P95; if RED after substrate ships, inspect transcript + audit_events/audit_events_cache rows + refs/mirrors advancement",
@@ -1337,7 +1337,9 @@
       "waiver": null,
       "cadences": [
         "pre-release-real-backend"
-      ]
+      ],
+      "minted_at": "2026-07-04T03:08:07Z",
+      "coverage_kind": "real-backend"
     },
     {
       "id": "agent-ux/real-git-push-e2e",
@@ -1451,8 +1453,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/attach-sync-real-backend.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-05T02:23:26Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "real-backend attach/sync dispatch or audit wiring regressed; inspect the transcript at quality/reports/transcripts/attach-sync-real-backend-<RFC3339>.txt",
