@@ -304,3 +304,12 @@ stays the distilled core; the skill is the reference manual. Permanent homes
 never hard-reference a transient/arc-scoped file by path (only the reverse is
 safe) — this file describes any arc-scoped runbook generically rather than
 naming one, so it never goes stale when a runbook archives.
+
+**Promotion sweep (standing rule).** Any doctrine change or promotion into this
+file MUST end with a stale-reference sweep across `.claude/hooks/`,
+`.claude/agents/`, `.claude/skills/`, and the SessionStart brief, grepping for
+superseded numbers, tier names, and rule phrasings. These injected surfaces are
+trusted and never re-read by the agents they instruct — a stale hook poisons
+every future session silently; the 17b1c94 promotion skipped this sweep and
+left the SessionStart brief teaching the superseded ~50% budget until a
+fresh-agent audit caught it (fixed fe5e8f2).
