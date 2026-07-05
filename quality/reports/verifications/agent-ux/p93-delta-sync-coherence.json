@@ -1,0 +1,11 @@
+{
+  "ts": "2026-07-05T21:12:40Z",
+  "row_id": "agent-ux/p93-delta-sync-coherence-invariant",
+  "exit_code": 0,
+  "timed_out": false,
+  "stdout": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.14s\n     Running tests/delta_sync.rs (target/debug/deps/delta_sync-bca2d077fc90d523)\n\nrunning 4 tests\ntest delta_sync_atomic_on_backend_error_midsync ... ok\ntest delta_sync_tree_references_only_resolvable_oids ... ok\ntest delta_sync_empty_delta_still_writes_audit_and_bumps_cursor ... ok\ntest delta_sync_updates_only_changed_issue ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.39s\n\nPASS (agent-ux/p93-delta-sync-coherence-invariant): test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.39s -- delta_sync_tree_references_only_resolvable_oids un-ignored + GREEN, other 3 delta_sync tests stay green\n",
+  "stderr": "  confirmed: no #[ignore] attribute on delta_sync_tree_references_only_resolvable_oids\nrunning: cargo test -p reposix-cache --test delta_sync\n",
+  "asserts_passed": [],
+  "asserts_failed": [],
+  "claim_vs_assertion_audit_hash": "d4d68f8f166c05bcacf18fea138e76c784ff7e11b1eef48d387ce23a0e28d59e"
+}
