@@ -312,7 +312,13 @@ where
 
         // Mirror-head ref (DVCS-MIRROR-REFS-02). Best-effort. P81
         // L1 perf-fix: skip refresh_for_mirror_head when files_touched
-        // is 0 (no-op push). Self-healing on next non-trivial push.
+        // is 0 -- a SEMANTIC no-op, not a coherence shortcut: a push
+        // that touches nothing changes nothing in the SoT, so there is
+        // nothing new for the mirror-head to reflect (ADR-010
+        // RBF-LR-04). refresh_for_mirror_head already forwards to the
+        // coherent build_from on every push that DOES touch files;
+        // `reposix sync --reconcile` is the manual catch-up if the
+        // mirror-head ever needs a forced refresh outside a push.
         if files_touched > 0 {
             match rt.block_on(c.refresh_for_mirror_head()) {
                 Ok(oid) => {
