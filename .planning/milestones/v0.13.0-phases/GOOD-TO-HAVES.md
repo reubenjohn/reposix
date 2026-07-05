@@ -591,3 +591,67 @@ lane.
 a v0.14.0 connector-completeness window.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Sim same-second `list_changed_since` under-report (defense-in-depth precision fix) | discovered-by: P93 Wave 2b executor | severity: P3
+
+**What:** The D-P92-03 *trigger* — the sim (and every second-resolution backend) drops
+same-wall-clock-second writes from `list_changed_since` — is still live. The *amplifier*
+(the load-bearing cache-coherence invariant break) is CLOSED and verified GREEN this wave:
+`Cache::sync` Step 5 now upserts `oid_map` for the full `list_records` set (`e2a7297`), so
+a dropped delta no longer produces an unservable OID. ADR-010's sub-decision ratified the
+sim-precision fix as **optional defense-in-depth, explicitly NOT load-bearing for
+coherence** ("a precision fix alone would NOT fix the amplifier and MUST NOT ship as the
+sole remedy"). It is filed here rather than shipped in the Wave-2b minimal-fix window
+because (a) it is optional per the ratified ADR, (b) it does NOT help the real backends —
+Confluence/JIRA/GitHub `updated_at` are inherently second-resolution, so a sim-only
+precision fix cannot close the trigger there (the committed invariant fix already does),
+and (c) done correctly it is a multi-crate change with a wiremock-contract and
+regression-test-comment ripple, past the OP-8 "<1h clean eager-fix" line.
+
+**Benefit if done:** eliminates the *natural* same-second under-report on the sim (fewer
+missed changes → more eager pre-materialization on the delta path) and de-risks OTHER
+`list_changed_since` consumers, notably the push precheck's changed-set. Pure efficiency /
+belt-and-suspenders; the coherence guarantee does not depend on it.
+
+**Acceptance (the "sub-second precision on `updated_at`" option — minimal correct):**
+
+- `crates/reposix-sim/src/routes/issues.rs:139` `now_rfc3339()` → `SecondsFormat::Nanos`
+  (fixed-width, so SQLite lexicographic `>` stays monotonic).
+- `crates/reposix-sim/src/routes/issues.rs:180` cutoff → `SecondsFormat::Nanos` to MATCH
+  storage (mixed widths break lexicographic monotonicity — e.g. `10:08:10Z` sorts after
+  `10:08:10.5…Z` because `'Z' > '.'`), and update the seconds-precision comment at
+  `:175-178`.
+- `crates/reposix-sim/src/seed.rs:99` seed timestamp → `SecondsFormat::Nanos` (keep ALL
+  stored `updated_at`/`created_at` at one fixed width).
+- `crates/reposix-core/src/backend/sim.rs:290` — the SimBackend CLIENT also truncates the
+  OUTGOING cursor to `SecondsFormat::Secs`; it must send sub-second too, else the server
+  cannot do better than seconds regardless of its own precision. THIS is why a
+  server-only change would be a broken half-fix.
+- Update the wiremock contract assertion at `crates/reposix-core/src/backend/sim.rs:1089`
+  (`query_param("since", "2026-04-24T00:00:00Z")` → the Nanos rendering).
+- Update the now-stale "the sim truncates the cursor to seconds" comments in
+  `crates/reposix-cache/tests/delta_sync.rs` (~L497-498) and
+  `crates/reposix-cache/tests/cache_coherence.rs` (~L303-305). The two coherence
+  regressions SURVIVE this change unmodified in behavior: both pin the cursor to
+  `upd.with_nanosecond(999_999_999)` (the max nanosecond of the write-second), so a
+  full-precision compare still drops the write (`actual_ns < 999_999_999`) and
+  `changed_ids.len() == 0` still holds — the invariant is then proven independent of
+  timestamp resolution. Note: `>` with Nanos needs no de-dup (nanosecond wall-clock
+  collisions across two HTTP writes are effectively impossible; the cursor is set to
+  `Utc::now()` strictly after any observed write).
+- Migration caveat: persistent sim DBs seeded by a pre-fix binary hold seconds-format
+  rows; mixed widths would mis-sort. Acceptable — the sim DB is a rebuildable runtime
+  artifact (`runtime/`), not a stability contract; re-seed on upgrade.
+
+**Why deferred:** optional per ratified ADR-010; multi-crate (reposix-sim + reposix-core
+client + a wiremock contract test) with no real-backend benefit; the Wave-2b charter
+scoped a single-tree-writer minimal fix and the load-bearing coherence fix already shipped
+and verified GREEN. Half-shipping (server-only) would be a lying "fix" that does not make
+same-second writes visible.
+
+**Default disposition:** P3 — pick up in the P94–P97 debt window or the next
+`reposix-sim`-touching phase; re-dispatchable as its own scoped wave using the sketch above.
+
+**STATUS:** OPEN
