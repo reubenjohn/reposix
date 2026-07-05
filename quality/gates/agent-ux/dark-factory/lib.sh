@@ -93,11 +93,24 @@ spawn_sim() {
         return 1
     fi
 
+    # DB durability: default ephemeral (in-memory) — the sim's `--ephemeral`
+    # IGNORES `--db`, so `$SIM_DB` is never written to disk. Rows that ASSERT
+    # against the sim's audit_events table (real-git-push-e2e) must set
+    # SIM_PERSIST=1 so mutations land in `$SIM_DB` and `sqlite3 "$SIM_DB" ...`
+    # can read them; dvcs-third-arm inspects only the CACHE audit and stays
+    # ephemeral. (Without a persistent DB the audit query fails and the
+    # count-based asserts read -1 — CI run 28725091985.)
+    local db_flag="--ephemeral"
+    if [[ "${SIM_PERSIST:-}" == "1" ]]; then
+        db_flag=""
+    fi
     if [[ "$mode" == "seeded" ]]; then
-        "${BIN_DIR}/reposix-sim" --bind "$SIM_BIND" --db "$SIM_DB" --ephemeral \
+        # shellcheck disable=SC2086
+        "${BIN_DIR}/reposix-sim" --bind "$SIM_BIND" --db "$SIM_DB" $db_flag \
             --seed-file "${WORKSPACE_ROOT}/crates/reposix-sim/fixtures/seed.json" &
     else
-        "${BIN_DIR}/reposix-sim" --bind "$SIM_BIND" --db "$SIM_DB" --ephemeral &
+        # shellcheck disable=SC2086
+        "${BIN_DIR}/reposix-sim" --bind "$SIM_BIND" --db "$SIM_DB" $db_flag &
     fi
     SIM_PID=$!
     export SIM_PID

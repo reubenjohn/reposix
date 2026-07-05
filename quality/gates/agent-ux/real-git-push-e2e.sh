@@ -123,6 +123,11 @@ export REPOSIX_CACHE_DIR="${RUN_DIR}/cache"
 source "${SCRIPT_DIR}/dark-factory/lib.sh"
 
 build_and_resolve_bins
+# Persist the sim DB to disk: the assertions below query `$SIM_DB`'s
+# audit_events table for the backend mutations this push produced. The sim's
+# `--ephemeral` (spawn_sim default) uses an in-memory DB that ignores `--db`,
+# so the file would never exist and the sqlite3 queries would return -1.
+export SIM_PERSIST=1
 spawn_sim seeded
 
 REPO="${RUN_DIR}/repo"
