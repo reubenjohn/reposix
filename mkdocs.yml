@@ -152,6 +152,7 @@ nav:
       - ADR-007 Time-travel via git tags: decisions/007-time-travel-via-git-tags.md
       - ADR-008 Helper backend dispatch: decisions/008-helper-backend-dispatch.md
       - ADR-009 Stability commitment (v1.0): decisions/009-stability-commitment.md
+      - ADR-010 L2/L3 cache coherence: decisions/010-l2-l3-cache-coherence.md
   - Research:
       - Initial report: research/initial-report.md
       - Initial report — chapters:
