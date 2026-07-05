@@ -400,7 +400,7 @@ jobs:
         # while the failed gate step keeps the job red. Mirrors the `coverage`
         # job's upload shape (fail_ci_if_error: false + CODECOV_TOKEN).
         if: always()
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           files: quality/reports/verifications/code/shell-coverage.cobertura.xml
           flags: shell
@@ -423,7 +423,7 @@ jobs:
       - name: Generate coverage
         run: cargo llvm-cov --workspace --lcov --output-path lcov.info
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           files: lcov.info
           fail_ci_if_error: false
