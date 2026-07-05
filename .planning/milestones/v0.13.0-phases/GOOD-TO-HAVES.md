@@ -375,3 +375,45 @@ STATUS 2026-07-05 (D-P92-03): DOWNGRADED to UNREPRODUCED SUSPICION — Exec2 cou
 **Default disposition:** MEDIUM — default-defer to the P95 quality-framework honesty/documentation pass; the gate itself is correct and documented at `quality/PROTOCOL.md` § "Honesty rules: test-name-asserts / marker format," but the placement-distance requirement is missing from both the gate script and CLAUDE.md.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Tighten `audit-immutability.sh` WAL grep to a single-line match | discovered-by: P92 security-waiver-flip executor | severity: LOW
+
+**What:** `quality/gates/security/audit-immutability.sh` validates that `crates/reposix-cache/src/db.rs` sets `PRAGMA journal_mode=WAL` via two independent grep calls: `grep -q 'journal_mode' <db.rs> && grep -q '"WAL"' <db.rs>`. This checks both substrings exist *anywhere* in the file, not on the same statement. A `journal_mode` mention in a comment plus `"WAL"` in an unrelated log string would pass the check vacuously today.
+
+**Acceptance:** Tighten the gate's WAL validation to a single-line or statement-scoped pattern (e.g. grep for `PRAGMA journal_mode.*WAL` or equivalent within a single line's context) so the gate confirms the pragma is actually set, not just that both words appear scattered in the file.
+
+**Why deferred:** Low risk today (`db.rs` is stable and the current check passes correctly); the asymmetry matters only if `db.rs` becomes a high-churn area where a casual comment or log edit could trigger a false-pass.
+
+**Default disposition:** LOW — fold into the next `quality/gates/security/` framework-touching phase (P95/P96) or when `db.rs` development density increases. No blocker today.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Refresh stale header caveats in the two security gate scripts | discovered-by: P92 security-waiver-flip executor | severity: LOW
+
+**What:** `quality/gates/security/allowlist-enforcement.sh` and `quality/gates/security/audit-immutability.sh` both carry header comments stating the gate "has NOT been executed via a real cargo run" — now false. Both gates ran green (real cargo, full pre-commit/pre-push sweep) on 2026-07-05; their catalog rows are PASS (commit 99b57b4). The header comments are lying to the next reader.
+
+**Acceptance:** Update both scripts' header comments to reflect that they have been executed and passed (remove or update the "NOT been executed" caveat). Optionally note the execution date or the commit at which they first passed.
+
+**Why deferred:** pure documentation update; the gates themselves are correct and running. This is fix-it-twice grounding (notice + update instructions so the next reader isn't misled).
+
+**Default disposition:** LOW — fold into the next CLAUDE.md or `quality/gates/security/` documentation pass, or into whichever phase next touches these scripts.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Drain or consciously renew `structure/file-size-limits` before its 2026-08-08 waiver expiry | discovered-by: P92 verifier + security-waiver-flip executor | severity: LOW
+
+**What:** The `structure/file-size-limits` catalog row is WAIVED (warn-now/block-later) until 2026-08-08. On that date, the waiver expires and the gate will start BLOCKING all pushes where files exceed their per-extension budgets (`crates/reposix-cache/src/db.rs` already listed in `GOOD-TO-HAVES-15`). The milestone-close checklist (P97) must address this waiver before the date flips: either drain the overage files back under their limits OR make a conscious decision to extend the waiver (a tracked, intentional renewal, not a silent auto-renewal).
+
+**Acceptance:** As part of the P97 milestone-close process, either (a) complete or schedule the work in `GOOD-TO-HAVES-15` to bring overaged files under their budget before 2026-08-08, OR (b) update the waiver row in `quality/catalogs/structure.json` with a documented reason and a new expiry date (ensuring the reason and date appear in the phase that renewed it). Do not let the waiver silently start blocking pushes mid-milestone.
+
+**Why deferred:** the actual file-size splits are scoped to `GOOD-TO-HAVES-15` (M-sized real work); this entry is a hygiene reminder to ensure the waiver is consciously renewed or the work is scheduled before the date.
+
+**Default disposition:** LOW (waiver-management) — fold into the P97 milestone-close checklist and governance review. The actual file splits remain M-sized and default-defer per `GOOD-TO-HAVES-15`.
+
+**STATUS:** OPEN
