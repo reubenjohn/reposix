@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
 mode: serial-workstreams
-status: executing-p89-serial-workstreams
+status: executing-p92-post-close-drain
 last_updated: "2026-07-05"
-last_activity: 2026-07-05 — P92 RECON complete (NOT executed) → decision D-P92-01 no-split (2bfccdf, CONSULT-DECISIONS ledger): heavy fixes already landed pre-recon (cb630e5 GIT_DIR scrub; a0c84a3 .with_audit on Confluence+JIRA). P92 residual = T4 rebase-ancestry regression test (prove-before-fix) + bus_write_audit_completeness.rs dual-table upgrade + behavioral no-retry verifier + TokenWorld smoke. quality-weekly fixed + GREEN (live run 28731753695). Session ended to re-launch L0 with a leaner bootstrap (over-fanning lesson: 6 recon agents burned ~12% of L0 context). Non-blocking owner-gated: PR #62 (codecov 6→7, green), ~9 stale branches, 17 docs-alignment rows→P95. Next: L0 re-launch → execute P92.
+last_activity: 2026-07-05 — P92 CLOSED GREEN. Verdict at quality/reports/verdicts/p92/VERDICT.md (8/8 SC PASS, CI run 28735908764 green on git 2.54, HEAD a0177af). Carry-forwards to P93: delta-sync suspicion (D-P92-03), TokenWorld two-writer verifier→P97 (HIGH), git-2.43 fallback-sentinel→P94 (HIGH), marker footgun→P95.
 workstreams:
   workstream_a:
     milestone: v0.13.0
     milestone_name: DVCS over REST (extended)
     status: executing  # P89 execution started 2026-07-03 (top-level orchestration mode)
     phases_total: 20  # P78-P97 (P78-P88 shipped + P89-P97 extension)
-    phases_completed: 14  # P78-P91
-    next_phase: P92  # P91 SHIPPED GREEN 2026-07-04 (verdict at quality/reports/verdicts/p91/VERDICT.md); P92 next — push-flow correctness (rebase recovery + OP-3 audit log silence, Clusters B+C)
+    phases_completed: 15  # P78-P92
+    next_phase: P93  # P92 SHIPPED GREEN 2026-07-05 (verdict at quality/reports/verdicts/p92/VERDICT.md); P93 next — L2/L3 cache-coherence + SotPartialFail recovery
     blocks_tag: true  # v0.13.0 tag does NOT push until P97 GREEN; tag push delegated to orchestrator per OD-3
   workstream_b:
     milestone: v0.13.2
@@ -33,10 +33,10 @@ workstreams:
 
 ### Workstream A — v0.13.0 (extended) — EXECUTING
 
-Phase: P91 SHIPPED 2026-07-04. Verdict GREEN at `quality/reports/verdicts/p91/VERDICT.md`. Attach/sync real-backend wiring + QL-001 closed: litmus REAL vs TokenWorld 11/11 asserts PASS; T2 REOPEN gate (Decision 1 mid-stream litmus checkpoint) 0-HIGH on the second run (run 1 surfaced HIGH=4 MED=2 LOW=3, all 4 HIGH fixed in-phase — `854586b`/`726f277`/`d6f7966`; run 2's residual MED/LOW findings are docs-discoverability gaps ROUTED to the launch-readiness milestone/P95, not correctness bugs). Two mass-delete BLOCKERs fixed (`5612fa6`), the fetch-path 3-layer bug (allowFilter/refspec/harness-DB-persist — `5c758fb`/`a4bb090`/`c64a8c0`) fixed, and the `oid_map` stale-prior desync root-caused + fixed (`01cd552` cache ORDER BY fix + `4feb5f6` planner server-field neutralization). CI green including `real-git-push-e2e` PASS (runs 28726703296 and 28726932499). 2 P2 honesty nits from the verifier (missing commit SHAs on the oid_map RESOLVED entry; missing MED/LOW tally on the T2-REOPEN run-1 entry) fixed in `SURPRISES-INTAKE.md` at phase-wrap. Tag pushed only after P97 GREEN.
-Plan: shipped — plan files at `.planning/phases/91-*/`; execution deviations + fix chronology recorded in `SURPRISES-INTAKE.md` (T2-REOPEN entries + fetch-path/oid_map entries, 2026-07-04/05).
-Status: P91 GREEN — 14/20 phases complete (P78–P91 shipped); next P92. v0.13.0 tag held until P97 GREEN (tag push delegated to orchestrator per OD-3).
-Next agent action: plan + execute P92 (push-flow correctness — Clusters B+C: helper-side fetch must preserve ancestry across post-push refetches / no fresh root commits per fetch; OP-3 audit-log silence fix so `helper_push_*` rows land on every push; `.with_audit(audit_conn)` chained on all three real-backend connectors; dark-factory third-arm extended to assert OP-3 dual-table audit rows on a real push). Depends on P89 GREEN, P90 GREEN, P91 GREEN — all satisfied.
+Phase: P92 SHIPPED 2026-07-05. Verdict GREEN at `quality/reports/verdicts/p92/VERDICT.md` (8/8 SC PASS, CI run 28735908764, git 2.54, HEAD a0177af). Push-flow correctness: HIGH-1 ancestry bug (fresh root on refetch) is FIXED + locked via regression gate `quality/gates/agent-ux/t4-conflict-rebase-ancestry.sh` (proven to bite + green on current main); OP-3 dual-table audit completeness verified; behavioral no-retry verifier shipped. NEW finding filed: cache delta-sync "0 changed" false-negative blocking rebase blob fetch (delta-sync cursor issue, separate root cause from cb630e5 — routed to P93 as D-P92-03). Real-backend compatibility gap on git 2.43 (fallback sentinel protocol gap, LTS git version — no-retry contract + routed to P94 HIGH). TokenWorld two-writer conflict scenario scaffolded NOT-VERIFIED; implementation deferred to P97 (HIGH, awaits TokenWorld verifier owner sign-off).
+Plan: shipped — plan files at `.planning/phases/92-*/`; executor findings + deferred items recorded in phase wrap artifacts.
+Status: P92 GREEN — 15/20 phases complete (P78–P92 shipped); next P93. v0.13.0 tag held until P97 GREEN (tag push delegated to orchestrator per OD-3).
+Next agent action: plan + execute P93 (L2/L3 cache-coherence + SotPartialFail recovery). Depends on P92 GREEN — satisfied. Carry-forwards: D-P92-03 delta-sync cursor (blocks step-6 completion in T4 rebase scenario), TokenWorld two-writer verifier→P97, git-2.43 fallback-sentinel→P94, marker footgun→P95.
 
 ### Workstream B — v0.13.2 — QUEUED (RESEQUENCED per OD-4)
 

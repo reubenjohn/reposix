@@ -1742,7 +1742,7 @@
       "last_verified": "2026-07-05T08:46:00Z",
       "freshness_ttl": "90d",
       "blast_radius": "P1",
-      "owner_hint": "NOT IMPLEMENTED this session -- verifier script does not exist yet. Second executor: add the honesty-rule sentence to quality/PROTOCOL.md's verifier prompt template (if not already implied) and a small mechanical grep-based gate asserting the sentence is present, mirroring agent-ux/absorption-honesty-template-present's hash-binding pattern if drift-safety is wanted.",
+      "owner_hint": "Implemented via quality/gates/agent-ux/audit-absence-is-red.sh (P92 T01 landed). Gate greps quality/PROTOCOL.md's verifier prompt template for three verbatim clauses: 'audit-row absence is RED', 'OP-3 non-optional', and the row id anchor. If RED: drift in PROTOCOL.md verifier prompt template removed one of the audit-honesty clauses.",
       "waiver": null,
       "claim_vs_assertion_audit": "Once implemented, the verifier greps quality/PROTOCOL.md for the explicit honesty-rule sentence and (optionally) content-hash-binds it; if the rule text were silently removed or watered down the grep/hash assert would fail concretely, naming the missing or drifted sentence.",
       "transport_claim": false,

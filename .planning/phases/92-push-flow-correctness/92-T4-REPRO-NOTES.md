@@ -56,11 +56,11 @@ targets the two-cache topology.
 
 **GREEN on the narrow HIGH-1 claim** ("does a fresh root commit appear after the helper
 refetch") — ancestry is preserved, confirmed twice, across two topologies and two git
-versions (2.43.0, 2.54.0). Per the prove-before-fix protocol this is written up as a locked
-regression test (`crates/reposix-cache/tests/no_fresh_root_after_refetch.rs`) asserting NO
-fresh root commit after a refetch that follows a real conflicting push — proven to BITE by
+versions (2.43.0, 2.54.0). Per the prove-before-fix protocol this is locked as a regression
+gate (`quality/gates/agent-ux/t4-conflict-rebase-ancestry.sh`) asserting NO fresh root
+commit after a refetch that follows a real conflicting push — proven to BITE by
 temporarily reintroducing the pre-`cb630e5` `ensure_hide_sync_refs` shell-out (no env scrub)
-and confirming the test fails (RED) against that reverted code, then reverting back to
+and confirming the gate fails (RED) against that reverted code, then reverting back to
 confirm GREEN against current `main`. See `.planning/CONSULT-DECISIONS.md` `[SELF]` entry
 for the full DP-2 disposition.
 
