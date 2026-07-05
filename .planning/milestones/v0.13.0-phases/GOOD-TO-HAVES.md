@@ -731,3 +731,35 @@ artifact-minting re-run, not a `quality/gates/` script edit.
 P94–P97 debt window.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Arm the F-K4b congruence gate for the 5 P93 agent-ux verification artifacts — all carry `asserts_passed: []` | discovered-by: P93 phase-close verifier (unbiased re-verify) | severity: P3
+
+**What:** All five P93 runner-minted verification artifacts (RBF-LR-01/02/04/05 +
+D-P92-03) carry `asserts_passed: []`. This is legitimate today — `asserts_congruent` is a
+documented no-op when either the expected or actual asserts list is empty
+(`_audit_field.py:169-170`) — so these agent-ux mechanical gates inherit the fleet-wide
+"exit-0-IS-the-assertion" posture, and the P93 verdict confirmed the gate honesty
+line-by-line. But it means the F-K4b per-expected-assert congruence protection is
+**dormant** on these five P0 rows: a gate that emitted structured `asserts_passed` entries
+would arm F-K4b's real per-assertion congruence check instead of relying on bare exit-code
+honesty alone.
+
+**Benefit if done:** teaching the five agent-ux gate wrappers
+(`p93-l2-l3-coherence-adr.sh`, `p93-cache-coherence.sh`, `p93-delta-sync-coherence.sh`,
+`p93-l1-promise-reconciled.sh`, and the mid-stream litmus T1-T4 wrapper) to emit a
+structured `asserts_passed` list (one entry per catalog-row `expected.asserts` item) arms
+F-K4b's per-assertion congruence protection on these P0 rows, closing the same class of
+"test name lies" gap that `agent-ux/test-name-vs-asserts` already polices for Rust tests.
+
+**Why deferred:** discovered while grading (unbiased phase-close verify), not
+implementing — editing the five gate scripts' output-parsing/emission logic is
+`quality/gates/agent-ux/`-touching work outside the RED-loop/verify charter, and each
+wrapper's assert-list needs a deliberate per-row pass rather than a blind mechanical edit.
+
+**Default disposition:** P3 — fold into the next `quality/gates/agent-ux/`-touching phase
+or the P94–P97 debt-drain window, alongside the sibling `verdict.py --phase` scoping item
+already filed above.
+
+**STATUS:** OPEN

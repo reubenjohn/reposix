@@ -851,3 +851,37 @@ the P94–P97 debt-drain window; natural pairing with the sibling recurring-self
 `quality/runners/` surface).
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Catalog-freshness sweep needed before v0.13.0 milestone-close — an on-demand re-grade this session flipped several NON-P93 rows PASS↔FAIL | discovered-by: P93 close-out executor | severity: MEDIUM
+
+**What:** During the P93 close-out session, a `python3 quality/runners/run.py --cadence
+on-demand` re-grade ran as a real re-grade (not a phantom mutation) and flipped several
+NON-P93 catalog rows PASS↔FAIL: `agent-ux/p92-mid-stream-litmus-t1-t4`,
+`agent-ux/v0.13.0-tag-script-present`, `agent-ux/v0.13.0-retrospective-distilled`,
+`agent-ux/p87-surprises-absorption`, `agent-ux/p88-good-to-haves-drained`. These rows'
+committed catalog statuses are therefore STALE relative to what the runner just measured.
+`agent-ux/p92-mid-stream-litmus-t1-t4` flipping FAIL is plausibly the same git>=2.34/T4
+env-gate class that P93's RBF-LR-05 handles via a git-2.54 container — this is a
+hypothesis to verify, NOT an assumption to act on.
+
+**Why out-of-scope for the P93 close-out session:** the close-out charter is advancing
+durable state + routing findings for a phase already verified GREEN — characterizing five
+unrelated rows' re-grades (env-gate artifact vs. genuine regression, one by one) is real
+diagnostic work that would expand this session's scope well past its mandate, and doing it
+carelessly risks conflating an env-gate false-negative with an actual regression.
+
+**Sketched resolution:** before the v0.13.0 milestone-close (P97), run a dedicated
+catalog-freshness sweep: for each of the five flipped rows, (a) re-run its verifier in
+isolation, (b) determine whether the FAIL is env-gated (e.g. git version, missing creds,
+sandbox limitation — mirroring the git-2.34/T4 pattern P93's RBF-LR-05 already
+characterizes) or a genuine regression, and (c) fix the regression, renew a waiver with an
+honest `tracked_in`, or confirm the row's status now matches reality. Do this BEFORE
+milestone-close so P97's 9-probe verdict isn't built on stale sibling-row statuses.
+
+**Default disposition:** MEDIUM — pre-milestone-close health item; schedule in the
+P94–P97 debt-drain window, ideally as its own short lane rather than a rider on any single
+phase's mechanical close.
+
+**STATUS:** OPEN
