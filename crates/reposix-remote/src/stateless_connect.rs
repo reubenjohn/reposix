@@ -54,6 +54,20 @@ pub(crate) const DEFAULT_BLOB_LIMIT: u32 = 200;
 pub(crate) const BLOB_LIMIT_EXCEEDED_FMT: &str =
     "error: refusing to fetch {N} blobs (limit: {M}). Narrow your scope with `git sparse-checkout set <pathspec>` and retry.";
 
+/// Verbatim teaching hint printed when an UNFILTERED fetch dies inside
+/// upload-pack because the lazy cache has no blob objects for the full
+/// reachable closure. The literal `--filter=blob:none` is the recovery
+/// move (same dark-factory contract as [`BLOB_LIMIT_EXCEEDED_FMT`]).
+pub(crate) const UNFILTERED_FETCH_HINT: &str =
+    "error: this reposix cache materializes blobs lazily and cannot serve an unfiltered fetch (upload-pack tried to pack blobs that were never materialized). Re-run with `--filter=blob:none` — `reposix init` sets this automatically; a manual `git fetch` must pass it.";
+
+/// True when upload-pack's stderr carries the signature of a fetch that
+/// walked into unmaterialized blobs (the misleading "corruption" death).
+/// Pure predicate so the detection is unit-tested without a live git fetch.
+fn is_unmaterialized_closure_error(stderr: &str) -> bool {
+    stderr.contains("possible repository corruption") || stderr.contains("unable to read")
+}
+
 /// Process-wide cache for `REPOSIX_BLOB_LIMIT`. Read once at first
 /// access; subsequent calls are lock-free.
 ///
@@ -198,7 +212,7 @@ pub(crate) fn handle_stateless_connect<R: Read, W: Write>(
     cache.log_helper_advertise(adv_bytes);
 
     // RPC loop: read request → pipe to upload-pack → write response + 0002.
-    while let ProxyOutcome::Continued = proxy_one_rpc(proto, cache)? {}
+    while let ProxyOutcome::Continued = proxy_one_rpc(proto, rt, cache)? {}
 
     Ok(())
 }
@@ -263,11 +277,14 @@ enum ProxyOutcome {
 #[allow(clippy::too_many_lines)]
 fn proxy_one_rpc<R: Read, W: Write>(
     proto: &mut Protocol<R, W>,
+    rt: &Runtime,
     cache: &Cache,
 ) -> Result<ProxyOutcome> {
     // Drain frames until flush into a re-encoded request buffer.
     let mut request = Vec::<u8>::with_capacity(1024);
     let mut stats = RpcStats::default();
+    // OIDs named in `want` lines — materialized below (lazy-blob read path).
+    let mut want_oids = Vec::<gix::ObjectId>::new();
 
     loop {
         let frame = match pktline::read_frame(proto.reader_mut()) {
@@ -286,6 +303,9 @@ fn proxy_one_rpc<R: Read, W: Write>(
             Frame::Data(p) => {
                 if pktline::is_want_line(p) {
                     stats.want_count = stats.want_count.saturating_add(1);
+                    if let Some(oid) = parse_want_oid(p) {
+                        want_oids.push(oid);
+                    }
                 }
                 if stats.command.is_none() {
                     if let Some(cmd) = parse_command_keyword(p) {
@@ -332,6 +352,38 @@ fn proxy_one_rpc<R: Read, W: Write>(
         );
     }
 
+    // Lazy-blob read path (the core of the partial-clone design). The cache
+    // materializes blobs lazily: `build_from` writes trees + the commit but
+    // NO blob objects (reposix_cache lib.rs "Blob materialization = lazy").
+    // A `git checkout` populating the working tree after a
+    // `--filter=blob:none` clone issues a follow-up fetch whose `want` lines
+    // name the missing blobs by exact OID. Those objects are absent from the
+    // cache until fetched from the backend, so upload-pack would die
+    // "not our ref <oid>" (verified: crates/reposix-cache
+    // tests/partial_clone_serves.rs). Materialize each wanted OID that maps to
+    // a record BEFORE spawning upload-pack. Skip commit/tree tips
+    // (`read_blob_cached` finds a non-blob → Err) and OIDs already in the
+    // store (`Ok(Some)`); only absent OIDs (`Ok(None)`) reach the backend, and
+    // a want that is not a known record (`UnknownOid`) is left for upload-pack
+    // to resolve or reject.
+    for oid in &want_oids {
+        // Already in the store (`Ok(Some)`) or present but not a blob —
+        // a commit/tree tip (`Err`): nothing to materialize. Only an absent
+        // object (`Ok(None)`) needs a backend round-trip.
+        if !matches!(cache.read_blob_cached(*oid), Ok(None)) {
+            continue;
+        }
+        match rt.block_on(cache.read_blob(*oid)) {
+            // Ok → materialized; UnknownOid → not a known record (leave it
+            // for upload-pack to resolve or reject). Both are non-fatal here.
+            Ok(_) | Err(reposix_cache::Error::UnknownOid(_)) => {}
+            Err(e) => {
+                return Err(anyhow::Error::new(e))
+                    .with_context(|| format!("materialize wanted blob {oid} for upload-pack"));
+            }
+        }
+    }
+
     // Invoke upload-pack with the re-framed request on stdin.
     let mut child = Command::new("git")
         .args([
@@ -375,6 +427,21 @@ fn proxy_one_rpc<R: Read, W: Write>(
                 .collect::<String>()
                 .as_str(),
         );
+        // Teaching hint: an UNFILTERED fetch (no `--filter=blob:none`) makes
+        // upload-pack walk the full reachable object closure and hit blobs
+        // this lazy cache never materialized — git reports it as the cryptic
+        // "unable to read <oid> / possible repository corruption on the remote
+        // side", which does NOT tell the agent what to do. `reposix init`
+        // always sets the filter, so this is reachable only via a manual
+        // unfiltered fetch; name the recovery move explicitly instead of
+        // leaving "corruption" as the last word.
+        if stats.command.as_deref() == Some("fetch") && is_unmaterialized_closure_error(&stderr_str)
+        {
+            #[allow(clippy::print_stderr)]
+            {
+                eprintln!("{UNFILTERED_FETCH_HINT}");
+            }
+        }
         anyhow::bail!(
             "git upload-pack --stateless-rpc exited {}: {}",
             out.status,
@@ -425,6 +492,21 @@ fn parse_command_keyword(payload: &[u8]) -> Option<String> {
         return None;
     }
     std::str::from_utf8(&rest[..end]).ok().map(str::to_owned)
+}
+
+/// Extract the object id from a `want <oid>[ capabilities]\n` line.
+/// Returns `None` if the payload is not a want line or the hex token
+/// does not parse as an object id. The first turn of a protocol-v2
+/// fetch also carries capability tokens after the OID (`want <oid>
+/// filter ofs-delta ...`), so we take only the first whitespace-
+/// delimited token.
+fn parse_want_oid(payload: &[u8]) -> Option<gix::ObjectId> {
+    let rest = payload.strip_prefix(b"want ")?;
+    let end = rest
+        .iter()
+        .position(u8::is_ascii_whitespace)
+        .unwrap_or(rest.len());
+    gix::ObjectId::from_hex(&rest[..end]).ok()
 }
 
 // -----------------------------------------------------------------------
@@ -561,6 +643,49 @@ mod tests {
     fn parse_command_keyword_none_for_non_command() {
         assert_eq!(parse_command_keyword(b"want abcdef\n"), None);
         assert_eq!(parse_command_keyword(b""), None);
+    }
+
+    #[test]
+    // test-name-honesty: ok — pure predicate + constant assertions, no live git fetch subprocess
+    fn unfiltered_fetch_hint_detects_corruption_signature_and_teaches_filter() {
+        // The exact upload-pack stderr from the QL-001 CI failure.
+        assert!(is_unmaterialized_closure_error(
+            "fatal: git upload-pack: aborting due to possible repository corruption on the remote side."
+        ));
+        assert!(is_unmaterialized_closure_error(
+            "remote: fatal: unable to read 94b5c50ec3458ebd8399b492cffbb5d1e9915a4d"
+        ));
+        // Unrelated failures must NOT trip the hint.
+        assert!(!is_unmaterialized_closure_error(
+            "fatal: the remote end hung up"
+        ));
+        assert!(!is_unmaterialized_closure_error(""));
+        // The hint literally names the recovery move.
+        assert!(
+            UNFILTERED_FETCH_HINT.contains("--filter=blob:none"),
+            "teaching hint MUST name `--filter=blob:none`; got: {UNFILTERED_FETCH_HINT}"
+        );
+    }
+
+    #[test]
+    // test-name-honesty: ok — pure OID-parsing unit test, no live git fetch subprocess
+    fn parse_want_oid_extracts_bare_and_capability_suffixed() {
+        let hex = "94b5c50ec3458ebd8399b492cffbb5d1e9915a4d";
+        let expected = gix::ObjectId::from_hex(hex.as_bytes()).unwrap();
+        // Bare `want <oid>\n`.
+        assert_eq!(
+            parse_want_oid(format!("want {hex}\n").as_bytes()),
+            Some(expected)
+        );
+        // First fetch turn carries capabilities after the OID.
+        assert_eq!(
+            parse_want_oid(format!("want {hex} filter ofs-delta\n").as_bytes()),
+            Some(expected)
+        );
+        // Non-want / malformed → None (no panic).
+        assert_eq!(parse_want_oid(b"have 94b5c50\n"), None);
+        assert_eq!(parse_want_oid(b"want notahexoid\n"), None);
+        assert_eq!(parse_want_oid(b""), None);
     }
 
     /// Gotcha #1 regression: the initial advertisement must end with a

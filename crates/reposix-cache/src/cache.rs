@@ -112,6 +112,32 @@ impl Cache {
         // (the snapshot is dropped once we're done with `Cache::open`).
         ensure_hide_sync_refs(&path)?;
 
+        // Teach the cache's `git upload-pack` to serve the partial-clone
+        // protocol. WITHOUT these two knobs, the read path is dead on
+        // arrival — reproduced end-to-end (file:// transport, git 2.25) in
+        // `tests/partial_clone_serves.rs`:
+        //
+        //  * `uploadpack.allowFilter` — the cache lazily materializes blobs
+        //    (`build_from` writes trees+commit but NO blob objects, see
+        //    `lib.rs` "Blob materialization = lazy"). A client fetch carries
+        //    `--filter=blob:none`; if the server does not advertise the
+        //    filter capability, git SILENTLY IGNORES the filter
+        //    ("warning: filtering not recognized by server, ignoring") and
+        //    `pack-objects` tries to pack EVERY reachable blob — including the
+        //    unmaterialized ones — then dies with the misleading "possible
+        //    repository corruption on the remote side". allowFilter makes
+        //    upload-pack honor the filter so only the requested tips (commit
+        //    + trees) travel.
+        //  * `uploadpack.allowAnySHA1InWant` — the follow-up lazy blob fetch
+        //    (`git checkout` populating the working tree) requests blobs by
+        //    exact OID. Those OIDs are NOT advertised ref tips, so upload-pack
+        //    rejects them ("not our ref") unless any-SHA1-in-want is allowed.
+        //    This is a concrete protocol need on the read path, not
+        //    speculative hardening: without it `git checkout origin/main` on a
+        //    freshly `reposix init`'d tree fails after the filtered clone
+        //    succeeds.
+        ensure_upload_pack_partial_clone(&path)?;
+
         // cache.db lives inside the bare repo dir so a single path
         // scheme covers both git state and cache state.
         let db = open_cache_db(&path)?;
@@ -660,6 +686,36 @@ fn ensure_hide_sync_refs(repo_path: &std::path::Path) -> Result<()> {
             "git config --add transfer.hideRefs failed: {}",
             String::from_utf8_lossy(&add.stderr).trim()
         )));
+    }
+    Ok(())
+}
+
+/// Ensure the cache's `git upload-pack` will serve the partial-clone
+/// protocol: `uploadpack.allowFilter=true` (honor `--filter=blob:none`
+/// rather than silently ignoring it) and `uploadpack.allowAnySHA1InWant=true`
+/// (serve the follow-up lazy blob fetch that requests blobs by non-tip OID).
+///
+/// Both are single-valued booleans, so we write with `config <key> <value>`
+/// (not `--add`) — the write is idempotent (same value ⇒ no diff). The
+/// `git_config_cmd` env-scrub is essential here for the SAME reason as
+/// `ensure_hide_sync_refs`: `Cache::open` runs inside git-remote-reposix,
+/// which git spawns with repo-context `GIT_*` vars pointing at the user's
+/// working tree.
+fn ensure_upload_pack_partial_clone(repo_path: &std::path::Path) -> Result<()> {
+    for (key, value) in [
+        ("uploadpack.allowFilter", "true"),
+        ("uploadpack.allowAnySHA1InWant", "true"),
+    ] {
+        let out = git_config_cmd(repo_path)
+            .args(["config", key, value])
+            .output()
+            .map_err(|e| Error::Git(format!("spawn `git config {key} {value}`: {e}")))?;
+        if !out.status.success() {
+            return Err(Error::Git(format!(
+                "git config {key} {value} failed: {}",
+                String::from_utf8_lossy(&out.stderr).trim()
+            )));
+        }
     }
     Ok(())
 }
