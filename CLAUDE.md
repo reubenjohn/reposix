@@ -28,6 +28,22 @@ After bootstrap, agent UX is pure git: `cd <path> && git checkout origin/main &&
 - **Mirror-lag refs.** Cache writes `refs/mirrors/<sot>-head` (direct ref) and `refs/mirrors/<sot>-synced-at` (annotated tag, message body `mirror synced at <RFC3339>`) per successful sync. Refs live ONLY in the local reposix cache's own bare repo — verified empirically (P91 91-06): they are NEVER pushed to the plain-git mirror (a real bus push leaves the mirror's `git for-each-ref` showing just `refs/heads/main`), and bus remotes omit `stateless-connect` (DVCS-BUS-FETCH-01) so `git fetch <bus-remote>` does not bring them across either. Today's only consumers are the bus push's own reject-hint (reads the ref internally, renders age inline) and manual inspection of the cache's bare repo directly (`git --git-dir=<cache-path> log refs/mirrors/<sot>-synced-at -1`; find `<cache-path>` via `reposix gc`'s printed cache root). They measure the SoT-edit→mirror-sync gap, NOT current SoT state (Q2.2 doc-clarity contract — full treatment in `docs/concepts/dvcs-topology.md`).
 - **Webhook-driven mirror sync (v0.13.0 P84).** Reference GH Action workflow lives in the *mirror* repo (template at `docs/guides/dvcs-mirror-setup-template.yml`; byte-equal copies enforced by `agent-ux/webhook-trigger-dispatch`). Triggers: `repository_dispatch` (event_type=`reposix-mirror-sync`) + cron `*/30 * * * *` literal safety net. Secrets on the mirror repo (`ATLASSIAN_API_KEY` etc.). `cargo binstall reposix-cli` (workspace name is `reposix`; binstall metadata in `crates/reposix-cli/Cargo.toml`). p95 latency target ≤ 120s. Owner walk-through: `docs/guides/dvcs-mirror-setup.md`.
 
+## Orchestration doctrine (how autonomous sessions run)
+
+Full doctrine — delegation, coordinator discipline, relief, cadence, durable state —
+lives in **`.planning/ORCHESTRATION.md`** (read before dispatching any agent).
+
+- Top-level delegates ONLY to **fable** coordinators, which tier down to **opus**
+  (complex/security), **sonnet** (default), **haiku** (mechanical). Never fable at a leaf.
+- Coordinators **route, don't work**; relieve past **~50% context** at a wave boundary
+  (write+commit a handover first).
+- **Uncommitted = didn't happen** — enforced by `.claude/hooks/` (cargo mutex,
+  stop-on-dirty, precompact-persist). External mutations need owner-named-target approval.
+- Understand **intention over faithful plan execution**.
+
+Scoped rules auto-load by directory: **`crates/CLAUDE.md`**, **`.planning/CLAUDE.md`**,
+**`quality/CLAUDE.md`**.
+
 ## Operating Principles (project-specific)
 
 The user's global Operating Principles in `~/.claude/CLAUDE.md` are bible. The following are project-specific reinforcements, not replacements:
