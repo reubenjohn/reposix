@@ -380,14 +380,17 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install kcov
-        # apt dropped kcov on Ubuntu 24.04 (noble), so pull the prebuilt v42
-        # release binary instead. The tarball unpacks to usr/local/bin/kcov,
-        # so extract into /usr/local (no --strip-components needed). The
-        # `kcov --version` line makes the step fail loudly if the binary can't
-        # run (e.g. a lib/glibc mismatch), signalling a switch to a source build.
+        # apt dropped kcov on Ubuntu 24.04 (noble), and the prebuilt release
+        # binary links against binutils-2.38 / libssl.so.1.1 / GLIBC 2.34 —
+        # none present on noble — so build kcov from source. The
+        # `kcov --version` line makes the step fail loudly if the build is unusable.
         run: |
-          curl -sSL https://github.com/SimonKagstrom/kcov/releases/download/v42/kcov-amd64.tar.gz -o /tmp/kcov.tar.gz
-          sudo tar -xzf /tmp/kcov.tar.gz -C /usr/local
+          sudo apt-get update
+          sudo apt-get install -y binutils-dev libcurl4-openssl-dev libdw-dev libiberty-dev zlib1g-dev libssl-dev cmake g++
+          git clone --depth 1 --branch v43 https://github.com/SimonKagstrom/kcov /tmp/kcov-src
+          cmake -S /tmp/kcov-src -B /tmp/kcov-build -DCMAKE_BUILD_TYPE=Release
+          cmake --build /tmp/kcov-build -j2
+          sudo cmake --install /tmp/kcov-build
           kcov --version
       - name: Run shell-coverage gate (enforces the ratchet floor)
         run: bash quality/gates/code/shell-coverage.sh
