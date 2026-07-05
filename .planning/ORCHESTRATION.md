@@ -38,6 +38,12 @@ its own sub-delegation:
 
 **Never `fable` at a leaf** — it is overkill and defeats the tiering. (OD-4 item 1.)
 
+> **No-fable mode (P92→v1.0):** when the top-level session itself runs on opus,
+> `.planning/RUNBOOK-TO-V1/index.md` Amendments 1–3 govern: five-tier recursion
+> (L0 ~10%-of-context portions → L1 portion coordinators → L2 phase coordinators →
+> L3 work lanes → L4 helpers), the 10x scoping rule, honest corrective iteration,
+> and a single-shot fable consult valve replacing standing fable coordinators.
+
 ## 2. Coordinators route, they do not work
 
 A coordinator's own tool calls are limited to: Agent dispatches, one-line git/gh
@@ -112,7 +118,10 @@ The writer confirms the commit SHA in its report.
 
 Top-level (whole-session) rotations use the same template but write
 `.planning/SESSION-HANDOVER.md` (not a phase-numbered filename) — see that file for
-the current live example.
+the current live example. Successor top-level sessions running without fable
+follow `.planning/RUNBOOK-TO-V1/index.md` — the committed runbook for the
+P92→v1.0 drive (decision procedures, escalation valve, loops, context budgets,
+portion map, bootstrap prompt).
 
 ## 4. Operating cadence A/B + debt-drain
 

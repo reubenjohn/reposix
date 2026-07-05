@@ -7,9 +7,12 @@ Checked against git/gh/on-disk artifacts at write time (2026-07-05T03:xx UTC);
 unverifiable claims are marked "(unverified, from outgoing orchestrator)".
 
 **Read-first order:** (1) `.planning/STATE.md`, (2) this file, (3)
-`.planning/ORCHESTRATION.md`, (4) `.planning/milestones/v0.13.0-phases/ROADMAP.md`
-(P92 section) + `SURPRISES-INTAKE.md`/`GOOD-TO-HAVES.md`, (5) `quality/PROTOCOL.md`
-if touching gates.
+`.planning/RUNBOOK-TO-V1/index.md` + chapters (the no-fable operating runbook for
+P92→v1.0 — decision procedures, escalation valve, loops, portion map, bootstrap
+prompt), (4) `.planning/ORCHESTRATION.md`, (5)
+`.planning/milestones/v0.13.0-phases/ROADMAP.md` (P92 section) +
+`SURPRISES-INTAKE.md`/`GOOD-TO-HAVES.md`, (6) `quality/PROTOCOL.md` if touching
+gates.
 
 **Guardrail:** do not run `tag-v0.13.0.sh` (`.disabled`) until P97 GREEN. Do not
 touch PR #61 until P97 (§5).
