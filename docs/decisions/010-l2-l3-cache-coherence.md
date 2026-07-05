@@ -2,7 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | **PROPOSED** (coordinator ratifies/routes; NOT yet accepted) |
+| **Status** | **ACCEPTED** |
+| **Ratified** | 2026-07-05 by the P93 coordinator — reversibility verdict is NOT an irreversible fork (reversible internal cache-strategy behind `Cache::sync`; no wire/ref/`Tainted`/audit/latency contract change), so no E2 escalation. |
 | **Date** | 2026-07-05 |
 | **Phase** | v0.13.0 P93 (RBF-LR-01 / RBF-LR-02 / RBF-LR-03; closes D-P92-03) |
 | **Supersedes / amends** | none — operates *within* the ratified partial-clone + lazy-materialization architecture (P78–P88) |
@@ -193,7 +194,7 @@ changed-set), explicitly **not** load-bearing for the coherence guarantee.
 
 ## Decision
 
-**Recommended (Status: PROPOSED — coordinator ratifies):**
+**Ratified (ACCEPTED 2026-07-05 by the P93 coordinator):**
 
 1. **Coherence model: Option C = Option B (transactional cache writes) + a
    `reposix sync --reconcile` escape hatch.** The fix wave restores the
