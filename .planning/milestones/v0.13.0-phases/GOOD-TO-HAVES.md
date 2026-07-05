@@ -481,3 +481,86 @@ The docs-only, <1h-sized GTH orphans (GOOD-TO-HAVES-02, -05, -06, -07, -09, -10,
 **Default disposition:** LOW — real but narrow (requires a genuine concurrent-delete race now that the ghost-row root cause is fixed); a good defense-in-depth follow-up. Default-defer to a v0.14.0 push-flow-robustness or the OP-8 absorption slots. Reversible (one match arm).
 
 **STATUS:** OPEN (deliberate deferral — Strategy 1 shipped as the primary fix)
+
+---
+
+## 2026-07-05 | `badges-resolve` FAILs on pre-push (docs-build + structure dimensions) | discovered-by: P93 Wave 1 de-risk executor | severity: MEDIUM
+
+**What:** The `badges-resolve` check (spanning the `docs-build` and `structure` quality
+dimensions — README/docs badge URLs must resolve, e.g. shields.io, Codecov, CI status)
+is FAILing on pre-push. Most likely a shields.io or Codecov transient network flake
+rather than a genuine broken badge, but this has not yet been confirmed either way.
+
+**Acceptance:** During the P94–P97 debt-drain window, re-run `badges-resolve` in
+isolation (ideally on more than one occasion, spaced apart) to distinguish a real broken
+badge URL from a transient upstream flake. If transient: consider whether the gate needs
+a retry/backoff before failing, or a documented waiver note. If real: fix the underlying
+badge URL/config.
+
+**Why deferred:** confirming real-vs-transient requires multiple isolated re-runs over
+time, which doesn't fit Wave 1's single-pass de-risk window; the fix (if any) is also
+docs-build/structure-gate territory, orthogonal to this wave's durable-record + push-risk
+scope.
+
+**Default disposition:** MEDIUM — confirm real-vs-transient in the P94–P97 debt window,
+then fix (if real) or waive with a documented reason (if transient/flaky-upstream).
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Intake files don't name meta-infra (orchestration/agents/skills/hooks/runner-infra/coordinator-discipline) as in-scope | discovered-by: P93 Wave 1 de-risk executor | severity: LOW (deferred tangent)
+
+**What:** `SURPRISES-INTAKE.md` and `GOOD-TO-HAVES.md`'s own framing describes what
+phases discover in code/docs/catalogs, but neither file's scope language explicitly
+names the ORCHESTRATION/agent-definition/skill/hook/runner-infra/coordinator-discipline
+layer as fair game for an intake entry — a finding about, say, a hook footgun or a
+coordinator-discipline gap could plausibly be read as "out of these files' scope" by a
+literal reader, even though such findings are exactly the kind of thing this project's
+dark-factory doctrine wants surfaced (cf. CLAUDE.md OP-4's "self-improving infrastructure"
+and the OD-3 meta-rule "fix it twice"). A 4-edit proposal to close this gap has already
+been drafted: (i) a scope note in `PRACTICES.md`, (ii) an addition to `ORCHESTRATION.md`
+§5, (iii) a new `decision-procedures` entry DP-5, and (iv) a fix-it-twice cross-reference
+in root `CLAUDE.md`.
+
+**Acceptance:** Land the 4-edit proposal (PRACTICES.md scope note; ORCHESTRATION.md §5;
+decision-procedures DP-5; root CLAUDE.md fix-it-twice pointer) as a tracked `/gsd-quick`,
+scheduled AFTER the v0.13.0 tag lands (P97 GREEN) — NOT during the active P92→P97 close-out
+drive, to avoid touching orchestration doctrine mid-milestone-close.
+
+**Why deferred:** this is itself a meta-infra/tangent proposal (per root CLAUDE.md
+Operating Principle 4, "high-leverage tangents are first-class to propose... the owner
+gates the spend, never the surfacing") — surfacing it now, landing it later, post-tag,
+keeps the active close-out drive's blast radius small.
+
+**Default disposition:** LOW/deferred-tangent — land as a `/gsd-quick` AFTER the
+v0.13.0 tag, not during this drive.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-05 | `.claude/hooks/dispatch-doctrine.sh` re-fires its full text on EVERY Agent dispatch with no session-scoped guard | discovered-by: P93 Wave 1 de-risk executor | severity: LOW (cheap fix)
+
+**What:** `.claude/hooks/dispatch-doctrine.sh` fires its full doctrine text on every
+single `Agent`/subagent dispatch within a session, with no "already applied this
+session" marker to suppress repeats. This is the root cause of the dispatch-doctrine
+reminder text re-appearing on every dispatch observed across recent sessions — it's
+working as coded, just coded to repeat unconditionally.
+
+**Acceptance:** Add a session-scoped marker file (e.g. under the session's scratch/temp
+dir, or keyed off a session-id env var already available to hooks) that the hook checks
+before firing; once set, subsequent dispatches within the same session skip the full
+text (a one-line "doctrine already applied this session" ack is fine, or full silence).
+Verify: dispatch two Agents in the same session, confirm the doctrine text fires once
+and is suppressed (or abbreviated) on the second.
+
+**Why deferred:** small (~5-15 lines shell), but touches `.claude/hooks/` — a
+tooling/infra surface outside this wave's `.planning/` ledger + push-derisk scope, and
+warrants its own tiny verification pass (confirm session-marker semantics don't leak
+across genuinely separate sessions) rather than a rushed inline edit here.
+
+**Default disposition:** cheap fix — pick up in the P94–P97 debt window or the next
+`.claude/hooks/`-touching phase.
+
+**STATUS:** OPEN
