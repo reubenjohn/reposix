@@ -1,0 +1,43 @@
+=== RBF-LR-05 T4 (t4-conflict-rebase-ancestry.sh) in git-2.54 container ===
+host cwd: /home/reuben/workspace/reposix
+host HEAD: 3976789e508ced11c0b778335fd452e68d43d72d
+host git --version: git version 2.25.1
+date: 2026-07-05T20:53:25Z
+cmd: bash .planning/phases/93-cache-coherence/repro/run-t4-in-container.sh /tmp/claude-1000/-home-reuben-workspace-reposix/6a372d36-8300-45fa-80c4-4123b45f9398/scratchpad/cargo-shim
+
+== T4 in git-2.54 container: repo mounted at /home/reuben/workspace/reposix (identical path) ==
+== in-container git --version ==
+git version 2.54.0
+== installing python3 (needed by t4-conflict-rebase-ancestry.sh JSON asserts_passed encoding) ==
+== running quality/gates/agent-ux/t4-conflict-rebase-ancestry.sh (UNMODIFIED) ==
+dark-factory: ensuring binaries are fresh...
+[cargo-shim] no-op: pre-built host binaries already mounted at target/debug (args: build --workspace --bins -q)
+dark-factory: spawning reposix-sim on 127.0.0.1:7878
+[2m2026-07-05T20:53:29.444206Z[0m [32m INFO[0m [2mreposix_sim[0m[2m:[0m seed loaded [3minserted[0m[2m=[0m6 [3mpath[0m[2m=[0m/home/reuben/workspace/reposix/crates/reposix-sim/fixtures/seed.json
+[2m2026-07-05T20:53:29.444305Z[0m [32m INFO[0m [2mreposix_sim[0m[2m:[0m reposix-sim listening [3maddr[0m[2m=[0m127.0.0.1:7878
+t4-conflict-rebase-ancestry: reposix init A (own cache)
+[2m2026-07-05T20:53:29.536015Z[0m [32m INFO[0m [2mreposix_cli::init[0m[2m:[0m git fetch --filter=blob:none succeeded
+reposix init: configured `/tmp/t4-conflict-rebase-ancestry-203/A` with remote.origin.url = reposix::http://127.0.0.1:7878/projects/demo
+Next: cd /tmp/t4-conflict-rebase-ancestry-203/A && git checkout origin/main (or git sparse-checkout set <pathspec> first)
+t4-conflict-rebase-ancestry: reposix init B (own cache)
+[2m2026-07-05T20:53:29.603313Z[0m [32m INFO[0m [2mreposix_cli::init[0m[2m:[0m git fetch --filter=blob:none succeeded
+reposix init: configured `/tmp/t4-conflict-rebase-ancestry-203/B` with remote.origin.url = reposix::http://127.0.0.1:7878/projects/demo
+Next: cd /tmp/t4-conflict-rebase-ancestry-203/B && git checkout origin/main (or git sparse-checkout set <pathspec> first)
+Switched to a new branch 'main'
+branch 'main' set up to track 'origin/main'.
+Switched to a new branch 'main'
+branch 'main' set up to track 'origin/main'.
+t4-conflict-rebase-ancestry: A edits + pushes (baseline)
+To reposix::http://127.0.0.1:7878/projects/demo
+ * [new branch]      main -> main
+  PASS: A's baseline push (no conflict) succeeded
+t4-conflict-rebase-ancestry: B edits the SAME record (stale base) + pushes (expect rejection)
+  PASS: B's stale-base push against the SAME record A just pushed was correctly rejected (version mismatch / fetch first)
+t4-conflict-rebase-ancestry: B recovers via git fetch origin
+From reposix::http://127.0.0.1:7878/projects/demo
+   a7f5651..e0f43a7  main       -> refs/reposix/origin/main
+  PASS: refetched refs/reposix/origin/main's root commit is IDENTICAL before and after the recovery fetch (no fresh disconnected root -- HIGH-1 stays fixed)
+  PASS: refs/reposix/origin/main genuinely advanced past the shared root (commit count=2) -- the ancestry assertion is not vacuous
+T4-CONFLICT-REBASE-ANCESTRY COMPLETE -- two-writer conflict correctly rejected; recovery refetch preserves ancestry (no fresh root).
+
+=== EXIT CODE: 0 ===

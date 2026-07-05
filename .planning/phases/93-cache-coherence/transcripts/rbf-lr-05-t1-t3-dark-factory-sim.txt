@@ -1,0 +1,23 @@
+=== RBF-LR-05 T1-T3 dark-factory sim arm ===
+cwd: /home/reuben/workspace/reposix
+HEAD: 3976789e508ced11c0b778335fd452e68d43d72d
+date: 2026-07-05T20:50:58Z
+cmd: bash quality/gates/agent-ux/dark-factory.sh sim
+
+dark-factory: ensuring binaries are fresh...
+dark-factory: spawning reposix-sim on 127.0.0.1:7779
+[2m2026-07-05T20:51:06.572715Z[0m [32m INFO[0m [2mreposix_sim[0m[2m:[0m reposix-sim listening [3maddr[0m[2m=[0m127.0.0.1:7779
+dark-factory: reposix init sim::demo /tmp/dark-factory-220837/repo
+[2m2026-07-05T20:51:06.708691Z[0m [33m WARN[0m [2mreposix_cli::init[0m[2m:[0m git fetch --filter=blob:none failed with status exit status: 128 — local repo is configured but not yet synced. Stderr: error: cannot list issues for import: blocked origin: http://127.0.0.1:7878/projects/demo/issues
+fatal: Unsupported command: error refs/heads/main backend-unreachable
+fast-import: dumping crash report to .git/fast_import_crash_221914
+fatal: error while running fast-import
+reposix init: configured `/tmp/dark-factory-220837/repo` with remote.origin.url = reposix::http://127.0.0.1:7878/projects/demo
+Next: cd /tmp/dark-factory-220837/repo && git checkout origin/main (or git sparse-checkout set <pathspec> first)
+dark-factory: working tree configured correctly
+DARK-FACTORY DEMO COMPLETE -- sim backend: agent UX is pure git.
+  - init configures partial-clone working tree without FUSE
+  - blob-limit error message names sparse-checkout recovery
+  - conflict error message names git-pull recovery
+
+=== EXIT CODE: 0 ===
