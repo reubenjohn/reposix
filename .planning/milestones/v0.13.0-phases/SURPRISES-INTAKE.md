@@ -693,3 +693,58 @@ GOOD-TO-HAVES-03's `--row`/`--dimension` scope-flag work, all in the same `run.p
 surface).
 
 **STATUS:** OPEN
+
+## 2026-07-05 | Pre-push BLOCKED: pre-existing `clippy::doc_markdown` errors in `crates/reposix-remote/tests/common.rs` fail `code/clippy-lint-loaded` + `code/cargo-clippy-warnings` | discovered-by: P93 Wave 1 de-risk executor (Task B, push-stack rebase+push) | severity: HIGH (blocks push origin main)
+
+**What:** After a clean `git pull --rebase origin main` (24 commits replayed with zero
+conflicts, including the owner-approved PR #62 squash `5118ed1`), `git push origin main`
+was BLOCKED by the pre-push hook. `python3 quality/runners/run.py --cadence pre-push`
+reported 3 FAIL rows: `code/clippy-lint-loaded`, `code/cargo-clippy-warnings` (both `-D
+warnings` cargo-clippy invocations, same underlying compile failure), and
+`structure/badges-resolve` (the already-filed, separately-tracked flake — see the
+2026-07-05 `badges-resolve` entry in `GOOD-TO-HAVES.md`, same window). The two clippy
+rows fail because `cargo clippy --workspace --all-targets -- -D warnings` cannot
+compile the `deleted_record_ghost_oid_map_row_forces_false_partial_fail` test target:
+`clippy::doc_markdown` fires 4 times in `crates/reposix-remote/tests/common.rs` (doc
+comments missing backticks around `read_blob`, `build_from`, `cache_db_path`/`SQLite`,
+`tests/mirror_refs.rs`, at lines 28 and 232/234) and `-D warnings` promotes each to a
+hard compile error.
+
+**Confirmed pre-existing, NOT caused by this wave's Task A/B changes:** `git blame`
+traces all 4 flagged lines to commit `f0340e0` ("feat(agent-ux): P92 SC5 — behavioral
+no-helper-retry assertion", 2026-07-05, authored during P92 — before P93 started).
+`git merge-base --is-ancestor f0340e0 7caf3ea` confirms `f0340e0` is an ancestor of this
+Wave 1 session's starting HEAD (the P93 relief-handoff commit) — the lint failure
+predates this session entirely and is unrelated to the 3 Task A ledger commits or to any
+P93 DP-2/cache-coherence code (explicitly out of this wave's scope per the SCOPE
+BOUNDARY rule and per the wave's own instruction: "if a pre-push gate other than the
+[mkdocs] one blocks, report the exact gate + output; do not bypass"). Left unfixed and
+reported rather than auto-patched, per that explicit instruction.
+
+**Side-effect noticed + cleaned up:** the failed pre-push run mutated 3 committed
+catalog JSON files in place (`quality/catalogs/code.json`, `doc-alignment.json`,
+`freshness-invariants.json` — small 4-8 line diffs, verdict/timestamp flips from the
+FAIL run) — a live instance of the recurring quality-runner self-mutation bug filed
+immediately above this entry. Restored via `git checkout -- <3 files>` (specific paths,
+not a blanket reset) before reporting, so the working tree stays clean pending the
+coordinator's decision on the clippy fix.
+
+**Acceptance:** Add backticks around the 4 flagged doc-comment terms in
+`crates/reposix-remote/tests/common.rs` (lines 28, 232, 234) — a zero-behavior-change,
+~4-line doc-comment fix. Re-run `cargo clippy -p reposix-remote --all-targets -- -D
+warnings` to confirm GREEN, then retry `git push origin main`.
+
+**Why deferred (not auto-fixed this lane):** the wave's explicit instruction for Task B
+step 3 was to report rather than bypass any non-mkdocs pre-push blocker; `common.rs` is
+test-support infrastructure for P93's own D-P93-01 repro test, arguably adjacent to (if
+not squarely inside) the "P93 DP-2/cache-coherence code" the wave was told not to touch.
+Left for the coordinator to route: either a same-window trivial doc-comment fix (lowest
+risk, matches the "eager-fix <1h, no new dependency" bar) or an explicit hand-off to the
+next P93 wave.
+
+**Current state:** local `main` is rebased cleanly onto `origin/main` (contains PR #62)
+but the push has NOT landed — `git rev-list --left-right --count origin/main...HEAD`
+reads `0  24` (origin 0 ahead, HEAD 24 ahead), not the required `0  0`. No `--no-verify`
+bypass was used.
+
+**STATUS:** OPEN (blocks Task B push completion — awaiting coordinator decision)
