@@ -974,40 +974,42 @@ structure dimension).
 
 **STATUS:** OPEN
 
-## 2026-07-05 23:10 | discovered-by: P94 D2 lane | severity: HIGH
+## 2026-07-05 23:10 | discovered-by: P94 D2 lane | severity: HIGH → RESOLVED (2026-07-05, DP-2 root-cause `28855b8`)
 
-**What:** The P94 D1 commit `5cb9a14` ("gate prune_oid_map on connector completeness signal
-(Fork A) + idempotent delete-NotFound (Fork B)") REGRESSED the export bulk-delete-cap
-refusal path. Two reposix-remote integration tests now fail against a wiremock/mock backend:
-`tests/exit_codes.rs::exit_codes_locked_reposix_and_helper` (DETERMINISTIC — the exit-1
-bulk-delete-cap case returns `ok refs/heads/main` / exit 0 instead of refusing; this is a
-STABILITY-LOCKED exit-code contract, `docs/decisions/009-stability-commitment`) and
-`tests/bulk_delete_cap.rs::{six_deletes_refuses_and_calls_no_delete,
-six_deletes_with_allow_tag_actually_deletes}` (INTERMITTENT — flaky, consistent with the
-"0 changed" delta-sync false-negative documented in `92-T4-REPRO-NOTES.md`). Proven
-pre-existing to the D2 lane's changes: both fail identically on pristine HEAD (`git stash`
-of all D2 edits, rebuild, re-run). Symptom: the export precheck under-counts deletes (the
-6-delete empty-tree push is seen as < the cap of 5, or 0), so the cap never trips and a push
-that MUST be refused is silently accepted — a real correctness hole (silent SoT delete
-storm) masked behind a passing sim (the sim returns `is_complete=true`; only mock/bare-array
-backends without the Fork-A completeness envelope expose it).
+**CORRECTION / RETRACTION (2026-07-05, DP-2, commit `28855b8`; ratified by P94 Finish lane A):**
+The original report below attributed two RED `reposix-remote` integration tests to a
+*regression in P94 D1's Fork B* (`5cb9a14`) and claimed the RED exit-code test "blocks tag."
+**Both claims are FALSE and are hereby retracted.** DP-2 root-caused the failures to a
+NON-HERMETIC test-fixture leak — no Fork B (nor Fork A) code change is implicated. **Fork B
+is EXONERATED, and this is NOT a v0.13.0 tag blocker.**
 
-**Why out-of-scope for P94 D2:** the D2 lane owns the git-2.43 fallback-sentinel; the broken
-code (`5cb9a14`: `reposix-core/src/backend.rs` completeness plumbing + `main.rs` export
-precheck +147 lines + all connectors) is the D1 lane's territory, disjoint from the
-stateless-connect fix. Fixing it means re-opening D1's Fork-A envelope parsing against
-non-sim backends — a different charter, and touching it risks colliding with the concurrent
-code-reviewer.
+**True root cause (test-hermeticity bug, not a code regression):**
+`tests/exit_codes.rs::exit_codes_locked_reposix_and_helper` and `tests/bulk_delete_cap.rs::*`
+shared the SAME on-disk cache — `~/.cache/reposix/sim-demo.git` — across runs. A prior run
+left a live `last_fetched_at` cursor paired with **0 `oid_map` rows**, so the export
+precheck's warm-cursor hot path read `prior = []` → computed **0 planned deletes** → the
+bulk-delete cap was never tripped (the cap counts PLANNED deletes *before* any
+`execute_action`, so a 6-delete push that should refuse instead saw nothing to delete).
+That is a stale-shared-cursor artifact, NOT a delete-storm and NOT a Fork-A
+completeness-envelope parsing bug. Proven by (a) byte-identical delete-cap code paths — the
+cap logic is untouched by `5cb9a14` — and (b) a controlled cursor-only experiment that
+reproduced "0 planned deletes" purely by pre-seeding the cursor with an empty `oid_map`,
+with no D1 code in play. Because the cap counts planned deletes before execution, a silent
+SoT delete-storm was never realizable through Fork B.
 
-**Sketched resolution:** Route to the D1 lane / code-reviewer. Likely the Fork-A
-`Listing{records,is_complete}` (or sibling) return-shape change made the export precheck's
-`list_records` interpretation drop records when the backend response is a bare JSON array
-(mock/wiremock) lacking the completeness envelope, so the delete-set diff under-counts.
-Add a mock-backend regression to the D1 gate (not just sim) so the bulk-delete-cap refusal
-is exercised against a non-enveloped listing. Un-RED `exit_codes` + `bulk_delete_cap` before
-the v0.13.0 tag — a stability-LOCKED exit-code test being RED blocks milestone-close.
+**Fix (commit `28855b8` — "test(94): isolate REPOSIX_CACHE_DIR in exit-code + bulk-delete-cap
+tests (non-hermetic cursor leak, NOT a Fork B regression)"):** each child helper now runs
+under an isolated `REPOSIX_CACHE_DIR`, eliminating the cross-test cursor leak. Both
+`exit_codes_locked_reposix_and_helper` and the `bulk_delete_cap` tests are GREEN; the
+stability-LOCKED exit-code contract (`docs/decisions/009-stability-commitment`) holds.
 
-**STATUS:** OPEN
+**Retracted specifics (for the audit trail, do NOT re-file):** the "Fork-A
+`Listing{records,is_complete}` return-shape drops records on bare-array backends" hypothesis
+was wrong (the sim vs. mock difference was a red herring — the real variable was the shared
+cache cursor), and the "blocks milestone-close" assertion was wrong (the tests are green and
+the fix is a test-only change). No mock-backend delete-cap regression is required for the tag.
+
+**STATUS:** RESOLVED (28855b8 — non-hermetic `REPOSIX_CACHE_DIR` cursor leak isolated; Fork B exonerated; NOT a tag blocker)
 
 ## 2026-07-05 23:12 | discovered-by: P94 D2 lane | severity: MEDIUM
 
@@ -1035,5 +1037,48 @@ follow-up), correct the row's `comment` + `claim_vs_assertion_audit` to name the
 (`option object-format` unsupported → git-2.43-fatal), keep the asserts (they hold), and add
 a source-assert that `main.rs` answers `option object-format` with `ok` (the verifier
 already checks this). Update the L602-610 intake source note likewise.
+
+**RESOLVED (2026-07-05, P94 Finish lane A — non-grading pass):** corrected the row
+`agent-ux/p94-git243-fallback-sentinel`'s `comment` + `claim_vs_assertion_audit` to name the
+true mechanism (`option object-format` unsupported → git-2.43-fatal exit 128; fix = answer
+`option object-format` with `ok` in `main.rs`, commit `c136795`; the `fallback` sentinel is
+git-remote-helpers(7) spec-compliance / dead-code-for-push), added `main.rs` + the DP-2
+correction to the row `sources`, and LEFT the asserts + verifier untouched (they hold — the
+container push-exits-0 outcome is unchanged). Catalog re-validates (`run.py load_catalog`, 54
+rows OK).
+
+**STATUS:** RESOLVED (catalog row description corrected; asserts unchanged)
+
+## 2026-07-05 | `list_changed_since` truncation UNDER-materializes (no completeness signal) | discovered-by: P94 Finish lane A | severity: MEDIUM
+
+**What:** `list_changed_since` on the github/jira/confluence connectors also paginates
+(GitHub `Link: rel="next"`, JIRA `nextPageToken`, Confluence `_links.next`) and can TRUNCATE
+at the `MAX_ISSUES_PER_LIST` cap — but, unlike the P94 `list_records_complete`, it carries NO
+completeness signal: its return type is a bare `Vec<RecordId>` and it just `break`s at the
+cap behind a `tracing::warn!` (see e.g. `crates/reposix-jira/src/lib.rs::list_changed_since`,
+which has the exact `if is_last { break } … else { break }` shape — no `is_complete`). This
+is a DISTINCT mechanism from the P94/D1 prune hazard: `list_changed_since` feeds DELTA BLOB
+MATERIALIZATION (the cache's since-cursor delta sync), NOT the gated `keep_ids` prune. So a
+truncated `list_changed_since` UNDER-materializes — some changed blobs are simply not lazily
+fetched this cycle — rather than OVER-deleting. The failure mode is self-healing staleness
+(the next sync with a fresh cursor picks up the missed records), NOT the D1 deletion /
+data-loss hazard.
+
+**Why filed, not fixed here:** P94 Finish lane A's charter is the `list_records_complete`
+cursor-authoritative fix. Threading a completeness signal into `list_changed_since` is a
+different return shape PLUS a new cache delta-sync consumer (step-3 materialization) — a
+separate charter and a new plumbing change, past this lane's `<1h` eager-fix budget with no
+new-dependency guarantee.
+
+**Sketched resolution:** Either (a) give `list_changed_since` a completeness signal and gate
+the cache's delta-materialization step the way Fork A gates the prune (a truncated delta
+window is retried rather than silently short), or (b) accept it as documented, self-healing
+staleness — note the bound in the connector docs and add a regression test that a capped
+`list_changed_since` is re-driven on the next cursor advance. Route to a v0.14.0
+cache-hardening phase alongside the L2/L3 delta-sync work.
+
+**Default disposition:** MEDIUM — no data-loss / deletion hazard (distinct from D1), only a
+transient under-materialization that self-heals; low probability (a single delta window must
+exceed the cap). Route to v0.14.0 cache-hardening.
 
 **STATUS:** OPEN

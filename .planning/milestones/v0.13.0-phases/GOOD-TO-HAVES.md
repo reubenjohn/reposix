@@ -788,3 +788,33 @@ not summarize away the rejected-alternatives detail. Pre-commit WARN clears.
 intake-file-bloat split (sibling of `raise-list-p90.md`).
 
 **STATUS:** OPEN
+
+## 2026-07-05 | GitHub `list_records` → `list_records_complete` delegation is a self-recursion footgun | discovered-by: P94 Finish lane A | severity: P3
+
+**What:** `crates/reposix-github/src/lib.rs::list_records` delegates UP to the
+completeness-aware form and drops the flag: `Ok(self.list_records_complete(project).await?.records)`.
+GitHub is safe ONLY because it ALSO provides a CONCRETE `list_records_complete` override (the
+real pagination loop) right below. But the `BackendConnector` trait's DEFAULT
+`list_records_complete` (`crates/reposix-core/src/backend.rs:280`) delegates the OTHER way —
+it calls `self.list_records()`. So the two defaults form a delegation cycle broken only by
+GitHub's concrete override: if a future edit ever REMOVES GitHub's `list_records_complete`
+override (e.g. "the trait default is fine now"), `list_records` → default `list_records_complete`
+→ `list_records` → … infinite-loops / stack-overflows at runtime, with no compile-time guard.
+The inline comment ("Concrete override below, so no recursion through the trait default")
+documents the hazard but does not enforce it.
+
+**Acceptance:** Restructure so the default cannot self-delegate into a live cycle. Options:
+(a) invert the direction so `list_records_complete` is the primitive and `list_records` is
+the only delegator (make the trait's default `list_records` call `list_records_complete`, and
+require backends to implement `list_records_complete` — the opposite of today's default), or
+(b) keep the shape but add a `#[test]` / debug-assert that a mock backend using the trait
+default for BOTH methods does NOT recurse (a recursion-guard sentinel), or (c) at minimum a
+doc-comment cross-link on the core default warning that overriding `list_records` to delegate
+to `list_records_complete` requires a concrete `list_records_complete`. Pure hardening — no
+current runtime bug.
+
+**Default disposition:** P3 — latent footgun, zero current runtime impact (GitHub's concrete
+override is present); fold into a v0.14.0 connector-trait cleanup or the OP-8 good-to-haves
+drain.
+
+**STATUS:** OPEN
