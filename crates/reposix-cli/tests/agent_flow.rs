@@ -149,6 +149,9 @@ fn dark_factory_sim_happy_path() {
         ("extensions.partialClone", "origin"),
         ("remote.origin.promisor", "true"),
         ("remote.origin.partialclonefilter", "blob:none"),
+        // Fetch refspec that populates refs/reposix/origin/* so a real
+        // `git checkout refs/reposix/origin/main` resolves after init.
+        ("remote.origin.fetch", "+refs/heads/*:refs/reposix/origin/*"),
     ] {
         let v = Command::new("git")
             .args(["-C", repo.to_str().unwrap(), "config", key])

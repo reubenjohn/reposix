@@ -194,6 +194,23 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
         "remote.origin.partialclonefilter",
         "blob:none",
     ])?;
+    // Explicit fetch refspec. WITHOUT this, `git fetch origin` maps nothing
+    // into a persistent ref (FETCH_HEAD only), so `git checkout
+    // refs/reposix/origin/main` — the documented next step (docs/index.md,
+    // mental-model-in-60-seconds) and the push-side bookkeeping ref
+    // (reposix-remote fast_import.rs writes `refs/reposix/origin/main`) —
+    // has nothing to resolve. The `refs/reposix/origin/*` namespace (not
+    // git's default `refs/remotes/origin/*`) keeps helper-side refs out of
+    // the agent's `refs/heads/*`, matching the helper's advertised
+    // `refspec refs/heads/*:refs/reposix/*` push namespace. The leading `+`
+    // force-updates the tracking ref on drift.
+    run_git(&[
+        "-C",
+        path_str,
+        "config",
+        "remote.origin.fetch",
+        "+refs/heads/*:refs/reposix/origin/*",
+    ])?;
 
     // 6. git fetch --filter=blob:none origin (best-effort).
     let out = run_git_in(&path, &["fetch", "--filter=blob:none", "origin"]);
