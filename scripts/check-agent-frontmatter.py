@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Guard: every `.claude/agents/*.md` must have YAML frontmatter that parses.
+"""No canonical home under quality/gates/ -- standalone repo-hygiene script,
+registered KEEP-AS-CANONICAL in quality/catalogs/orphan-scripts.json (not yet
+wired into a pre-commit catalog row; run manually or via CI until it is).
+
+Guard: every `.claude/agents/*.md` must have YAML frontmatter that parses.
 
 A subagent definition whose frontmatter fails to parse is SILENTLY DROPPED from the
 agent registry — the type never appears and dispatch fails with "agent type not found",

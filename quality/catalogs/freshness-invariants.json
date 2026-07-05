@@ -841,7 +841,7 @@
       },
       "artifact": "quality/reports/verifications/structure/scripts-registry-complete.json",
       "status": "PASS",
-      "last_verified": "2026-07-04T09:48:29Z",
+      "last_verified": "2026-07-05T08:21:35Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: a new file landed in scripts/ (excl. migrations/) with no orphan-scripts.json row and no reference from any live-wiring surface -- either add a registry row (mirroring an existing one) or wire it into a hook/workflow/doc and let this gate's grep pick it up.",
@@ -850,7 +850,8 @@
       "cadences": [
         "pre-push",
         "pre-pr"
-      ]
+      ],
+      "minted_at": "2026-07-05T08:21:35Z"
     },
     {
       "id": "structure/coverage-kind-required",

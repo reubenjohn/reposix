@@ -343,6 +343,44 @@
       "cadences": [
         "pre-push"
       ]
+    },
+    {
+      "id": "orphan-scripts/check-agent-frontmatter",
+      "dimension": "meta",
+      "kind": "mechanical",
+      "sources": [
+        "scripts/check-agent-frontmatter.py"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "scripts/check-agent-frontmatter.py exists",
+          "first 10 lines name 'no canonical home under quality/gates/'",
+          "kind == mechanical and dimension == meta"
+        ],
+        "max_lines": 90
+      },
+      "verifier": {
+        "script": "quality/gates/structure/orphan-scripts-audit.py",
+        "args": [
+          "--row-id",
+          "orphan-scripts/check-agent-frontmatter"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-check-agent-frontmatter.json",
+      "status": "PASS",
+      "last_verified": "2026-07-05T00:00:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "Registered per D-CONV-3 inverse-scan (structure/scripts-registry-complete) -- the script (added a630a29, guards .claude/agents/*.md YAML frontmatter against the silent-drop footgun) had no registry row and no live-wiring reference, tripping the inverse scan as a 'new orphan'. NOT wired into a pre-commit catalog row yet (its own docstring says 'Wire into pre-commit / CI' -- that remains a GOOD-TO-HAVES item, out of scope for the P92 push this row unblocks). If RED: the script was deleted, grew past 90 lines, or lost its 'no canonical home' header hint.",
+      "waiver": null,
+      "claim_vs_assertion_audit": "If scripts/check-agent-frontmatter.py were deleted, grew past 90 lines, or lost its 'no canonical home under quality/gates/' header comment, the verifier's exists-check, line-count assert, or header-hint regex scan would each independently fail and flip this row to FAIL -- the claim cannot silently hold while the file drifts.",
+      "cadences": [
+        "pre-push"
+      ],
+      "minted_at": "2026-07-05T00:00:00Z"
     }
   ]
 }
