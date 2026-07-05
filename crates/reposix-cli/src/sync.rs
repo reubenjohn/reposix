@@ -5,11 +5,16 @@
 //! `--reconcile` (NOT an error — `reposix sync` is a v0.13.0+ surface
 //! whose bare form is reserved for future flag combinations per D-02).
 //!
-//! With `--reconcile`, opens the cache for the working tree and runs
-//! [`Cache::sync`] (which delegates to `Cache::build_from` on a fresh
-//! cache, or runs the delta path with `last_fetched_at` if a cursor
-//! exists). After the call, the cursor is bumped to `Utc::now()` and
-//! the cache's tree state matches the backend.
+//! With `--reconcile`, opens the cache for the working tree and forces
+//! a full rebuild via [`Cache::build_from`] directly — NOT
+//! [`Cache::sync`], which would take the delta path whenever a
+//! `last_fetched_at` cursor is present (ADR-010 / RBF-LR-01). This is
+//! what makes `--reconcile` an actual escape hatch: it heals a cache
+//! that has already drifted from the tree↔`oid_map` coherence
+//! invariant (e.g. one written by a pre-fix binary), which a delta
+//! sync cannot do. After the call, the cursor is bumped to
+//! `Utc::now()` and the cache's tree state matches the backend
+//! exactly (a full `list_records` walk, not a delta).
 //!
 //! Design intent: the bus remote names this command in its reject-path
 //! stderr hints. Renaming or making the bare form error would force a
@@ -30,9 +35,12 @@ use crate::worktree_helpers::{resolve_reposix_remote_url, strip_bus_query};
 ///
 /// `reconcile=false`: prints a hint pointing at `--reconcile`; exits 0.
 /// `reconcile=true`: opens the cache for the working tree at `path`
-/// (or cwd) and calls [`Cache::sync`] to perform a `list_records` walk
-/// (or `list_changed_since` delta if cursor present) and rebuild the
-/// cache. The `meta.last_fetched_at` cursor is bumped as a side effect.
+/// (or cwd) and calls [`Cache::build_from`] directly — a full
+/// `list_records` walk and tree rebuild, bypassing `Cache::sync`'s
+/// delta path entirely (ADR-010 / RBF-LR-01) — so `--reconcile` can
+/// heal a cache that has already drifted from the tree↔`oid_map`
+/// coherence invariant. The `meta.last_fetched_at` cursor is bumped as
+/// a side effect.
 ///
 /// # Errors
 /// - The working tree has no reposix remote configured.
@@ -41,7 +49,7 @@ use crate::worktree_helpers::{resolve_reposix_remote_url, strip_bus_query};
 ///   required credential env var — the error names each unset var and
 ///   points at `docs/reference/testing-targets.md`).
 /// - I/O when opening the cache.
-/// - REST when calling `Cache::sync` against the backend.
+/// - REST when calling `Cache::build_from` against the backend.
 pub async fn run(reconcile: bool, path: Option<PathBuf>) -> Result<()> {
     if !reconcile {
         println!(
@@ -95,18 +103,19 @@ pub async fn run(reconcile: bool, path: Option<PathBuf>) -> Result<()> {
     let cache_project = backend_dispatch::sanitize_project_for_cache(&parsed.project);
 
     let cache = Cache::open(backend, backend_slug, &cache_project).context("open cache")?;
-    let report = cache.sync().await.context("Cache::sync for --reconcile")?;
-    if let Some(commit) = report.new_commit {
-        println!(
-            "reposix sync: cache rebuilt (synthesis-commit OID = {commit}, \
-             changed records = {n}); meta.last_fetched_at advanced.",
-            n = report.changed_ids.len(),
-        );
-    } else {
-        println!(
-            "reposix sync: cache already up-to-date (no changed records); \
-             meta.last_fetched_at advanced."
-        );
-    }
+    // ADR-010 / RBF-LR-01: call `build_from()` directly (NOT `cache.sync()`,
+    // which takes the delta path whenever a `last_fetched_at` cursor is
+    // present). `--reconcile` promises "a full list_records walk + cache
+    // rebuild" — only a forced full rebuild honours that promise and can
+    // heal a cache that already drifted from the tree↔`oid_map` coherence
+    // invariant (e.g. one written by a pre-fix binary).
+    let commit = cache
+        .build_from()
+        .await
+        .context("Cache::build_from for --reconcile")?;
+    println!(
+        "reposix sync: cache rebuilt from a full list_records walk \
+         (synthesis-commit OID = {commit}); meta.last_fetched_at advanced."
+    );
     Ok(())
 }
