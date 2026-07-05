@@ -236,3 +236,56 @@ is a design call the coordinator should make explicitly, not default silently.
 **Reversibility:** Reversible — repro-only, no production code touched this lane.
 
 ---
+
+## D-P93-02 — Fix the ghost `oid_map` row via Strategy 1 (prune on sync), NOT Strategy 2 (reclassify delete-NotFound) [SELF] 2026-07-05
+
+**Situation:** D-P93-01 CONFIRMED the HIGH by execution and left TWO candidate fix
+strategies for the coordinator to choose between (deliberately not patched in the repro
+lane):
+1. **Prune `oid_map` on sync** — DELETE rows for ids absent from the full `list_records`
+   set inside `Cache::sync`'s Step-5 transaction (and `build_from`'s equivalent).
+2. **Reclassify delete-time `NotFound`** — treat `Error::NotFound` from `delete_or_close`
+   as idempotent success in `execute_action`'s `PlannedAction::Delete` arm.
+
+**Decision: Strategy 1 (prune).** Implemented and shipped this lane.
+
+**Rationale (Strategy 1 over Strategy 2):**
+- **Fixes the root cause, not the symptom.** The defect is a cache-coherence gap: the
+  tree is rebuilt from `list_records` but `oid_map` was insert-only, so a deleted
+  record's row lingered and `list_record_ids()` resurrected it. Strategy 1 restores the
+  tree↔`oid_map` invariant symmetrically for deletions — the exact mirror of Lane 1's
+  addition-direction fix (`299ade0`), IN-FAMILY with ratified ADR-010. Strategy 2 leaves
+  the cache incoherent: the ghost row survives, `list_record_ids()` still lies, and the
+  planner still emits a phantom Delete on every push — it merely swallows the resulting
+  404.
+- **No spurious outbound side-effect.** Under Strategy 2 a real `DELETE` still hits the
+  SoT for an already-gone id on every push (wasted request, audit noise, and — against a
+  real backend with soft-delete/restore semantics — a latent correctness hazard).
+  Strategy 1 emits ZERO phantom Deletes because the id never re-enters `prior`.
+- **Narrower semantic blast radius.** Strategy 2 broadens what `SotPartialFail` /
+  delete-`NotFound` means at the write boundary GENERALLY — ANY future NotFound-on-delete
+  (not just the ghost-row case) would silently reclassify to success, masking genuine
+  "the record I meant to delete isn't there" bugs. Strategy 1 changes only the cache's
+  own write contract.
+
+**Evidence (executed, not asserted):**
+- Fix commit `272882c` (`meta::prune_oid_map` + `Cache::sync` Step-5 txn + `build_from`
+  wrapped in one txn, covering `reposix sync --reconcile`).
+- `cargo test -p reposix-remote --test deleted_record_ghost_oid_map_row_forces_false_partial_fail -j 2`
+  → **1 passed, 0 ignored** (the D-P93-01 repro, un-ignored, now a permanent GREEN
+  regression guard).
+- `cargo test -p reposix-cache --test cache_coherence -j 2` → **3 passed** (incl. new
+  `ghost_oid_map_row_pruned_after_upstream_delete` DELETION-direction case).
+- `cargo test -p reposix-cache --test delta_sync -j 2` → **4 passed**;
+  `cargo test -p reposix-remote --test partial_failure_recovery -j 2` → **1 passed**
+  (no regression). `meta` unit tests (`prune_*`) → **2 passed**.
+
+**Reversibility:** Reversible — internal cache/write-path behavior only, no public API
+break; `git revert 272882c` restores the prior insert-only path. No E2 escalation (stays
+below the threshold, in-family with ADR-010).
+
+**Deferred:** Strategy 2 filed to `.planning/GOOD-TO-HAVES.md` as considered
+defense-in-depth (a second, independent layer that would also swallow a genuine
+double-delete race) — a deliberate deferral, not an oversight.
+
+---

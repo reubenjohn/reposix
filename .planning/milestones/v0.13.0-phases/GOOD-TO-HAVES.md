@@ -463,3 +463,21 @@ The docs-only, <1h-sized GTH orphans (GOOD-TO-HAVES-02, -05, -06, -07, -09, -10,
 **Default disposition:** LOW — tidiness only, zero functional impact while `core.hooksPath=.githooks` remains set. Fold into the next `scripts/install-hooks.sh` touch or P95/P97 housekeeping pass.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Strategy 2 (defense-in-depth): reclassify delete-time `NotFound` as idempotent success | discovered-by: P93 DP-2 FIX lane (D-P93-02) | severity: LOW
+
+**Deliberate deferral, NOT an oversight.** This is the SECOND candidate fix for the D-P93-01 ghost-`oid_map`-row HIGH. The coordinator chose **Strategy 1 (prune `oid_map` on sync)** as the shipped root-cause fix (commit `272882c`, ledger `D-P93-02`); Strategy 2 is filed here as a considered, independent defense-in-depth layer that was intentionally NOT taken this lane.
+
+**What:** In `git-remote-reposix`'s write path, `execute_action`'s `PlannedAction::Delete` arm currently treats an `Error::NotFound` from `BackendConnector::delete_or_close` as a FAILURE (feeding `write_loop`'s `failed_ids` → `SotPartialFail`). Strategy 2 would reclassify it as idempotent success: a `Delete` whose target is already absent has reached its desired end state, so it should count as a no-op success, not a partial failure.
+
+**Why it was NOT chosen as the primary fix (see D-P93-02 rationale):** Strategy 2 masks the symptom rather than fixing the root cause — the ghost `oid_map` row would still survive, `Cache::list_record_ids()` would still resurrect the dead id, and the planner would still emit + dispatch a phantom `DELETE` to the SoT on every push (wasted request + audit noise; a latent hazard against a real backend with soft-delete/restore semantics). It also broadens `SotPartialFail` semantics generally: ANY future NotFound-on-delete would silently reclassify to success, masking genuine "the record I meant to delete isn't there" bugs. Strategy 1 leaves the cache coherent and emits zero phantom Deletes.
+
+**Why it's still worth having (defense-in-depth):** even with Strategy 1 shipped, a genuine two-writer delete race exists — agent A pushes a `Delete` for issue N while agent B's push (or an upstream actor) already removed N between A's precheck and A's write. That is NOT a ghost row; it's a real concurrent-delete collision that Strategy 1 does not address, and today it would surface as a `SotPartialFail` for a delete that actually achieved its goal. Strategy 2 would make that race degrade gracefully.
+
+**Sketched resolution (~10-20 lines + a test):** in `execute_action`'s `Delete` arm, map `Err(Error::NotFound)` (from `delete_or_close`) to the same success outcome as a 2xx delete, with a `WARN`-level audit note distinguishing "deleted" from "already-absent". Add an integration test (mirror the `partial_failure_recovery.rs` wiremock harness) asserting a `Delete` against an already-404 id yields `ok refs/heads/main`, NOT `SotPartialFail`. Confirm the reclassification is scoped to the `Delete` arm only (a `NotFound` on Create/Update remains a real failure).
+
+**Default disposition:** LOW — real but narrow (requires a genuine concurrent-delete race now that the ghost-row root cause is fixed); a good defense-in-depth follow-up. Default-defer to a v0.14.0 push-flow-robustness or the OP-8 absorption slots. Reversible (one match arm).
+
+**STATUS:** OPEN (deliberate deferral — Strategy 1 shipped as the primary fix)
