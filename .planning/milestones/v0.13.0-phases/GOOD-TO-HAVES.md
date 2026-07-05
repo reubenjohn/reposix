@@ -505,7 +505,20 @@ scope.
 **Default disposition:** MEDIUM — confirm real-vs-transient in the P94–P97 debt window,
 then fix (if real) or waive with a documented reason (if transient/flaky-upstream).
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (P94 D3, 2026-07-05) — **verdict: TRANSIENT** (upstream flake, not a
+broken badge). `badges-resolve.py` was re-run in isolation on 3 spaced occasions
+(23:48:04Z, 23:48:37Z, 23:56:36Z, ~8 min apart) — all 10 badge URLs from README.md +
+docs/index.md returned HTTP 200 + correct content-type on the first attempt every time;
+no URL was ever a deterministic 404/wrong-type. The recurring pre-push RED was a
+single-shot HEAD hitting a transient shields.io/Codecov/GitHub badge-endpoint hiccup
+(timeout or 5xx/429 under load). **Fix (transient branch of the acceptance criteria):**
+bounded retry/backoff added to `quality/gates/docs-build/badges-resolve.py` `head_url()`
+(`MAX_ATTEMPTS=3`, `BACKOFF_S=(1.0, 2.0)`, retries only 408/425/429/5xx + network errors;
+a real 404/403/wrong-type still fails fast so a genuine breakage can't be masked). Chosen
+over a waiver: a waiver would blanket-suppress a future real breakage and expire,
+re-surfacing the flake. Full evidence:
+`.planning/phases/94-real-backend-frictions/94-D3-badges-determination.md`. Net:
+`badges-resolve.py` exits 0 reliably.
 
 ---
 

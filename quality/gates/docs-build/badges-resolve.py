@@ -27,6 +27,7 @@ import argparse
 import json
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -51,6 +52,22 @@ WAVE_F_PENDING_URLS: set[str] = set()
 TIMEOUT_S = 10
 USER_AGENT = "reposix-quality-gates/1.0"
 
+# P94 D3 (docs-build/p94-badges-real-vs-transient): bounded retry/backoff for
+# TRANSIENT upstream flakes. The badges-resolve check FAILed intermittently on
+# pre-push across P93/P94 (SURPRISES-INTAKE + GOOD-TO-HAVES badges-resolve
+# entry); two spaced isolated re-runs (2026-07-05, both exit 0, all 10 badges
+# HTTP 200) proved the failure is a TRANSIENT shields.io/Codecov/GitHub badge
+# endpoint flake, NOT a broken URL. A single network hiccup or a transient 5xx/
+# 429 from shields.io used to fail the whole gate; we now retry those before
+# declaring FAIL, so the check reaches green reliably. A DETERMINISTIC failure
+# (404/403 or a wrong content-type) is NOT retried — a genuinely-dead badge
+# still fails fast, so the retry cannot mask a real breakage.
+MAX_ATTEMPTS = 3
+BACKOFF_S = (1.0, 2.0)  # slept after attempt 1 and attempt 2 (bounded)
+# Statuses treated as transient (retryable): request timeout, too-early, rate
+# limit, and the 5xx server-side family shields.io/Codecov emit under load.
+TRANSIENT_HTTP = frozenset({408, 425, 429, 500, 502, 503, 504})
+
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -67,19 +84,38 @@ def extract_badge_urls(path: Path) -> list[str]:
     return seen
 
 
-def head_url(url: str) -> tuple[int | None, str | None, str | None]:
-    """Return (status_code, content_type, error_message)."""
+def head_url(url: str) -> tuple[int | None, str | None, str | None, int]:
+    """HEAD `url`, retrying TRANSIENT failures with bounded backoff.
+
+    Returns (status_code, content_type, error_message, attempts). A transient
+    failure — a network error (status None: DNS/connect/timeout) or a transient
+    HTTP status (`TRANSIENT_HTTP`: 408/425/429/5xx) — is retried up to
+    MAX_ATTEMPTS with BACKOFF_S spacing before the last result is returned. A
+    DETERMINISTIC status (200 success; 404/403/other 4xx failure) returns
+    immediately on the first attempt, so a genuinely-broken badge still fails
+    fast and the retry cannot mask a real breakage (P94 D3 determination:
+    the recurring pre-push failure was a transient upstream flake).
+    """
     req = urllib.request.Request(
         url, method="HEAD", headers={"User-Agent": USER_AGENT}
     )
-    try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT_S) as resp:
-            return resp.status, resp.headers.get("Content-Type", ""), None
-    except urllib.error.HTTPError as e:
-        ctype = e.headers.get("Content-Type", "") if e.headers else ""
-        return e.code, ctype, str(e)
-    except (urllib.error.URLError, TimeoutError, OSError) as e:
-        return None, None, str(e)
+    status: int | None = None
+    ctype: str | None = None
+    err: str | None = None
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=TIMEOUT_S) as resp:
+                return resp.status, resp.headers.get("Content-Type", ""), None, attempt
+        except urllib.error.HTTPError as e:
+            ctype = e.headers.get("Content-Type", "") if e.headers else ""
+            status, err = e.code, str(e)
+            if e.code not in TRANSIENT_HTTP:
+                return status, ctype, err, attempt  # deterministic — do not retry
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            status, ctype, err = None, None, str(e)
+        if attempt < MAX_ATTEMPTS:
+            time.sleep(BACKOFF_S[min(attempt - 1, len(BACKOFF_S) - 1)])
+    return status, ctype, err, MAX_ATTEMPTS
 
 
 def main() -> int:
@@ -108,13 +144,17 @@ def main() -> int:
             has_partial = True
             continue
 
-        status, ctype, err = head_url(url)
-        url_results[url] = {"status": status, "content_type": ctype, "error": err}
+        status, ctype, err, attempts = head_url(url)
+        url_results[url] = {
+            "status": status, "content_type": ctype, "error": err,
+            "attempts": attempts,
+        }
 
         ctype_l = (ctype or "").lower()
         if status != 200:
             asserts_failed.append(
-                f"{url} HEAD => {status} (expected 200) [{err}]"
+                f"{url} HEAD => {status} after {attempts} attempt(s) "
+                f"(expected 200) [{err}]"
             )
         elif "image" not in ctype_l and "json" not in ctype_l:
             asserts_failed.append(
