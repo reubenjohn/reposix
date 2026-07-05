@@ -167,12 +167,17 @@ impl JiraBackend {
 
     /// Shared pagination loop for `list_records`, `list_records_strict`, and
     /// `list_records_complete`. Returns the records paired with a completeness
-    /// flag: `true` iff the loop terminated on JIRA's `isLast: true` (the whole
-    /// project was listed), `false` at every truncation exit (the page cap, the
-    /// `MAX_ISSUES_PER_LIST` early return, or a missing cursor while `isLast`
-    /// was false). The cache gates its `oid_map` prune on that flag (P94
-    /// pagination-prune-safety). In `strict` mode a truncation is an `Err`, so
-    /// a strict `Ok` always carries `is_complete == true`.
+    /// flag. Cursor presence is AUTHORITATIVE: the flag is `true` only when the
+    /// loop terminated on a page with NO next-page cursor AND `isLast` was not
+    /// `false` (the whole project was listed). It is `false` at every truncation
+    /// exit (the page cap, the `MAX_ISSUES_PER_LIST` early return, `isLast:
+    /// false` with no cursor) AND whenever the terminating page still carried a
+    /// `next_token` — because a present cursor means more pages exist even if an
+    /// OMITTED `isLast` (defaulting `true`) claims otherwise. The cache gates its
+    /// `oid_map` prune on that flag (P94 pagination-prune-safety), so an
+    /// optimistic `true` here would risk pruning live rows. In `strict` mode a
+    /// truncation is an `Err`, so a strict `Ok` always carries `is_complete ==
+    /// true`.
     pub(crate) async fn list_issues_impl(
         &self,
         project: &str,
@@ -271,6 +276,24 @@ impl JiraBackend {
             }
 
             if is_last {
+                // Cursor presence is AUTHORITATIVE for completeness. `is_last`
+                // here may be a DEFAULT — `search_resp.is_last.unwrap_or(true)`
+                // above optimistically reads an OMITTED `isLast` as "last page".
+                // A still-present `next_token` means this page is actually
+                // truncated, so trusting the optimistic default would mark a
+                // cursor-bearing page complete and let the cache prune `oid_map`
+                // rows for issues on the unfetched pages — the exact data-loss
+                // class D1 closed, bypassed via a malformed/omitted `isLast`.
+                // So: a present cursor ⇒ more pages ⇒ INCOMPLETE, regardless of
+                // isLast. (Well-formed JIRA always sends `isLast`, so this only
+                // changes the defensive omitted-`isLast` path; real pagination
+                // still follows the cursor via the `isLast: false` branch below.)
+                if next_token.is_some() {
+                    is_complete = false;
+                }
+                // else: no cursor and `isLast` (real or defaulted) — the whole
+                // project was listed; leave `is_complete` at its optimistic
+                // initial `true`.
                 break;
             }
 
@@ -708,6 +731,67 @@ mod tests {
             .await
             .expect("list must succeed");
         assert_eq!(result.len(), 6, "expected 6 issues across 2 pages");
+    }
+
+    // ─── Test: cursor_present_forces_incomplete_when_islast_absent ───────
+
+    /// DP-2 completeness hole: a JIRA `search/jql` page carrying a next-page
+    /// CURSOR but OMITTING `isLast` must be reported INCOMPLETE. `isLast`
+    /// deserializes as `Option<bool>` and `list_issues_impl` reads it via
+    /// `.unwrap_or(true)`, so evaluating `isLast` BEFORE the cursor once marked
+    /// such a truncated page complete — the cache would then prune `oid_map`
+    /// rows for issues on the unfetched pages (the data-loss class D1 closed,
+    /// bypassed via a malformed/omitted `isLast`). Cursor presence is
+    /// authoritative: a present `next_token` ⇒ more pages ⇒ not complete.
+    ///
+    /// `.expect(1)` also pins that the helper does NOT chase the (untrusted,
+    /// possibly-adversarial) cursor into a second request on this defensive
+    /// path — it fetches the page it was given and declares the listing
+    /// incomplete, leaving the cache to skip its prune rather than delete.
+    #[tokio::test]
+    async fn cursor_present_forces_incomplete_when_islast_absent() {
+        use reposix_core::backend::BackendConnector;
+        let server = MockServer::start().await;
+        // Single page: three issues + a next-page cursor, `isLast` ABSENT.
+        let issues: Vec<serde_json::Value> = (1..=3)
+            .map(|i| {
+                issue_json(
+                    i,
+                    &format!("PROJ-{i}"),
+                    &format!("Record {i}"),
+                    "new",
+                    "Open",
+                    None,
+                )
+            })
+            .collect();
+        Mock::given(method("POST"))
+            .and(path("/rest/api/3/search/jql"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "issues": issues,
+                "nextPageToken": "more-pages-exist"
+                // NOTE: `isLast` DELIBERATELY ABSENT (defaults to true).
+            })))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let backend = make_backend(&server.uri());
+        let listing = backend
+            .list_records_complete("PROJ")
+            .await
+            .expect("list_records_complete must succeed");
+        assert_eq!(
+            listing.records.len(),
+            3,
+            "the fetched page's records are still returned to the caller"
+        );
+        assert!(
+            !listing.is_complete,
+            "a page with a next-page cursor but no isLast MUST be reported \
+             incomplete (cursor presence is authoritative); marking it complete \
+             reopens the D1 prune-based data-loss hole"
+        );
     }
 
     // ─── Test 3: get_by_numeric_id ───────────────────────────────────────

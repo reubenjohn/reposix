@@ -1086,6 +1086,64 @@ mod tests {
         assert_eq!(issues[2].id, RecordId(3));
     }
 
+    // -------- 2b: cursor is authoritative for completeness (DP-2 audit) ----
+
+    /// P94/DP-2 completeness audit, Confluence side. Confluence pagination is
+    /// purely cursor-based (`_links.next` via `parse_next_cursor`) with NO
+    /// `isLast` field, so — unlike JIRA, which had an omitted-`isLast`
+    /// optimism hole this same wave closed — a present cursor STRUCTURALLY
+    /// forces another fetch: the `while let Some(url) = next_url.take()` loop
+    /// only reports `is_complete = true` once the cursor chain is exhausted
+    /// (`next_url` → `None`). This locks that invariant so a future refactor
+    /// can't reintroduce an "optimistic terminate while a cursor is live" bug:
+    /// page 1 carries a cursor and must NOT short-circuit to complete;
+    /// completeness is declared only after the cursor-free terminal page 2.
+    /// The `.expect(1)` on page 2 proves the cursor was actually followed.
+    #[tokio::test]
+    async fn cursor_present_is_followed_not_prematurely_complete() {
+        let server = MockServer::start().await;
+        mount_space_lookup(&server, "REPOSIX", "12345").await;
+        // Page 1: a cursor is present — must NOT terminate as complete here.
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/spaces/12345/pages"))
+            .and(query_param("limit", "100"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [ page_json("1", "current", "p1", None) ],
+                "_links": { "next": "/wiki/api/v2/spaces/12345/pages?cursor=ABC&limit=100" }
+            })))
+            .up_to_n_times(1)
+            .mount(&server)
+            .await;
+        // Page 2: cursor exhausted (no `_links.next`) — the terminal page.
+        Mock::given(method("GET"))
+            .and(path("/wiki/api/v2/spaces/12345/pages"))
+            .and(query_param("cursor", "ABC"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "results": [ page_json("2", "current", "p2", None) ],
+                "_links": {}
+            })))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let listing = backend
+            .list_records_complete("REPOSIX")
+            .await
+            .expect("list_records_complete must succeed");
+        assert_eq!(
+            listing.records.len(),
+            2,
+            "both pages must be fetched by following the cursor to exhaustion"
+        );
+        assert!(
+            listing.is_complete,
+            "completeness is declared only AFTER the cursor chain is exhausted; \
+             a cursor-bearing page never terminates the loop, so Confluence has \
+             no analogue of the JIRA omitted-isLast hole"
+        );
+    }
+
     // -------- 3: get_record returns ADF body converted to Markdown --------
 
     #[tokio::test]
