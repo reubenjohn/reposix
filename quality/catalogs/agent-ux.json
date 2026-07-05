@@ -533,17 +533,18 @@
       "dimension": "agent-ux",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "comment": "P92 SC5 (RBF-B-04) upgrade contract, minted NOT-VERIFIED at phase scaffold: the current verifier is a SOURCE-GREP (asserts absence of retry-looking tokens in bus_handler.rs), which cannot distinguish 'no retry construct was ever written' from 'a retry construct exists but doesn't match this exact regex'. The upgrade replaces it with a BEHAVIORAL assertion: fault-inject a mirror-push failure and assert the helper's OWN process makes exactly ONE `git push` attempt against the mirror (e.g. via a spy/counting wrapper or a mock mirror remote that counts invocations), not zero-vs-nonzero grep hits. Second executor's job (this phase); row reset to NOT-VERIFIED at P92 catalog-first per the catalog-first rule (quality/CLAUDE.md) so the verifier subagent grades against the NEW contract, not the old PASS.",
       "sources": [
         "crates/reposix-remote/src/bus_handler.rs::push_mirror",
         ".planning/research/v0.13.0-dvcs/decisions.md (Q3.6 RATIFIED no-retry; D-08 RATIFIED plain push)",
-        ".planning/REQUIREMENTS.md (DVCS-BUS-WRITE-04)"
+        ".planning/REQUIREMENTS.md (DVCS-BUS-WRITE-04)",
+        ".planning/milestones/v0.13.0-phases/ROADMAP.md (Phase 92, SC5)"
       ],
       "command": "bash quality/gates/agent-ux/bus-write-no-helper-retry.sh",
       "expected": {
         "asserts": [
           "bash quality/gates/agent-ux/bus-write-no-helper-retry.sh exits 0",
-          "crates/reposix-remote/src/bus_handler.rs contains NO retry constructs adjacent to push_mirror (no `for _ in 0..`, no `loop {`, no `tokio::time::sleep`)",
-          "crates/reposix-remote/src/bus_handler.rs contains NO `--force-with-lease` and NO `--force` flag in push args",
+          "BEHAVIORAL: under an injected mirror-push failure, the helper process makes exactly ONE git-push attempt against the mirror remote (counted via a spy wrapper or invocation-counting mock), not source-grep absence of retry-looking tokens",
           "fn push_mirror exists in bus_handler.rs (T04 shipped)"
         ]
       },
@@ -554,11 +555,11 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/bus-write-no-helper-retry.json",
-      "status": "PASS",
+      "status": "NOT-VERIFIED",
       "last_verified": "2026-05-01T15:19:42Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: a retry construct was introduced via cargo-cult from P84; reject in code review",
+      "owner_hint": "P92 SC5: replace the source-grep body in quality/gates/agent-ux/bus-write-no-helper-retry.sh with a behavioral fault-injection + invocation-count assertion. Prior PASS (source-grep) is superseded, not deleted -- keep the grep as a cheap pre-check if useful, but it can no longer be the sole assertion.",
       "waiver": null,
       "cadences": [
         "pre-pr"
@@ -735,13 +736,15 @@
       "dimension": "agent-ux",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
-      "comment": "Row stays FAIL through 83-02 T01-T03; flips PASS at 83-02 T04 catalog-flip BEFORE the per-phase push. The audit_events (backend) layer in this test is asserted via wiremock's request log (the byte-equivalent of a sim audit row for the SimBackend wire path); spinning a real reposix-sim per test would break the per-crate cargo budget. See .planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md (sim audit table not directly queryable in test scope).",
+      "comment": "P92 SC2+SC3 (RBF-B-02, RBF-B-03) upgrade contract, minted NOT-VERIFIED at phase scaffold: prior state (PASS through 83-02) asserted the `audit_events` (backend) layer via wiremock's REQUEST LOG as a proxy for a real audit table -- a metaphor, not a real dual-table query (see the prior comment + SURPRISES-INTAKE 'sim audit table not directly queryable in test scope'). The upgrade replaces the wiremock-proxy assertion with a REAL query against the sim's own `audit_events` SQLite table (spin a real `reposix-sim` process with a persistent `--db`, as `real-git-push-e2e.sh` / `agent-ux/real-git-push-e2e` already does for its own audit assertions -- that pattern is the template) so the OP-3 dual-table claim is real, not metaphorical. Second executor's job (this phase); row reset to NOT-VERIFIED at P92 catalog-first per the catalog-first rule (quality/CLAUDE.md) so the verifier subagent grades against the NEW contract, not the old PASS.",
       "sources": [
         "crates/reposix-cache/src/audit.rs (cache-internal audit ops)",
         "crates/reposix-core/src/audit.rs (audit_events backend table)",
         "crates/reposix-remote/tests/bus_write_audit_completeness.rs::bus_write_audit_completeness_happy_path_writes_both_tables",
         ".planning/REQUIREMENTS.md (DVCS-BUS-WRITE-06)",
-        "CLAUDE.md (OP-3 dual-table audit non-optional)"
+        "CLAUDE.md (OP-3 dual-table audit non-optional)",
+        "quality/gates/agent-ux/real-git-push-e2e.sh (template: persistent sim --db + sqlite3 audit_events query)",
+        ".planning/milestones/v0.13.0-phases/ROADMAP.md (Phase 92, SC2 + SC3)"
       ],
       "command": "bash quality/gates/agent-ux/bus-write-audit-completeness.sh",
       "expected": {
@@ -749,7 +752,7 @@
           "bash quality/gates/agent-ux/bus-write-audit-completeness.sh exits 0",
           "happy-path bus push writes ALL expected rows to BOTH audit layers per RESEARCH.md § 'Audit Completeness Contract'",
           "audit_events_cache: helper_backend_instantiated (>=1) + helper_push_started (1) + helper_push_accepted (1) + mirror_sync_written (1)",
-          "audit_events (wiremock request log proxy): per-record mutation requests (PATCH/POST/DELETE) match the executed actions"
+          "audit_events (REAL sim SQLite table, queried directly via sqlite3 -- NOT a wiremock request-log proxy): per-record mutation rows (PATCH/POST/DELETE) match the executed actions"
         ]
       },
       "verifier": {
@@ -759,11 +762,11 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/bus-write-audit-completeness.json",
-      "status": "PASS",
+      "status": "NOT-VERIFIED",
       "last_verified": "2026-05-01T15:41:28Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: a per-record audit row was dropped (check sim adapter's create_record / update_record / delete_or_close success path) OR a cache audit op was missed (check apply_writes + bus_handler ref/audit write blocks)",
+      "owner_hint": "P92 SC2+SC3: upgrade bus_write_audit_completeness.rs (or its verifier wrapper) to spin a real reposix-sim with a persistent --db and query audit_events directly via sqlite3, replacing the wiremock request-log proxy. If RED after the upgrade: a per-record audit row was dropped (check sim adapter's create_record / update_record / delete_or_close success path) OR a cache audit op was missed (check apply_writes + bus_handler ref/audit write blocks).",
       "waiver": null,
       "cadences": [
         "pre-pr"
@@ -1620,6 +1623,167 @@
         "on-demand"
       ],
       "minted_at": "2026-07-05T06:10:00Z"
+    },
+    {
+      "id": "agent-ux/t4-conflict-rebase-ancestry",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P92 SC1 sim arm (RBF-B-01, T4 prove-before-fix, DP-2 discipline). The heavy mechanism fix (cb630e5, GIT_DIR env scrub before Cache::open's bare-cache git-config shell-out) landed BEFORE this phase started; this row locks the regression, it does not introduce a new fix. Drives a REAL two-writer conflict against the LOCAL sim (transport_claim:false): two independent working trees, each with its OWN cache (the realistic two-agent topology -- a shared-cache single-machine topology was tried first and found NOT to trigger conflict detection at all, a different, separately-filed finding). A pushes (baseline, succeeds); B edits the SAME record with a stale base and pushes (must be REJECTED: version mismatch / fetch first); B recovers via `git fetch origin`; asserts B's root commit (`git rev-list --max-parents=0`) is IDENTICAL before and after the refetch (no fresh disconnected root -- the original May-02 dark-factory T4 HIGH-1 symptom). Does NOT drive `git rebase` to completion -- the rebase's own 3-way merge hits a SEPARATE, newly-discovered bug (cache delta-sync under-reports changed records) unrelated to this row's ancestry claim; see .planning/phases/92-push-flow-correctness/92-T4-REPRO-NOTES.md.",
+      "sources": [
+        "crates/reposix-cache/src/cache.rs::git_config_cmd, ensure_hide_sync_refs (cb630e5 fix)",
+        ".planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/T4-conflict-recovery.md (HIGH-1 finding)",
+        ".planning/phases/92-push-flow-correctness/92-T4-REPRO-NOTES.md (this phase's repro + DP-2 disposition)",
+        ".planning/CONSULT-DECISIONS.md (D-P92-01)",
+        ".planning/milestones/v0.13.0-phases/ROADMAP.md (Phase 92, SC1)"
+      ],
+      "command": "bash quality/gates/agent-ux/t4-conflict-rebase-ancestry.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/t4-conflict-rebase-ancestry.sh exits 0 (or 75 NOT-VERIFIED on git < 2.34, an honest environment gap)",
+          "A's baseline push (no conflict) succeeded",
+          "B's stale-base push against the SAME record A just pushed was correctly rejected (version mismatch / fetch first)",
+          "refetched refs/reposix/origin/main's root commit is IDENTICAL before and after the recovery fetch (no fresh disconnected root -- HIGH-1 stays fixed)",
+          "refs/reposix/origin/main genuinely advanced past the shared root (the ancestry assertion is not vacuous)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/t4-conflict-rebase-ancestry.sh",
+        "args": [],
+        "timeout_s": 180,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/t4-conflict-rebase-ancestry.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": "2026-07-05T08:16:12Z",
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "This box's system git (2.25.1) is below the >= 2.34 requirement so the verifier honestly exits 75 (NOT-VERIFIED) here -- do NOT fabricate a local PASS. Proven GREEN via a container run matching CI's git version (~2.54.0); see 92-T4-REPRO-NOTES.md for the repro + the prove-bites cycle (temporarily reverted cb630e5's env scrub, confirmed RED, restored, confirmed GREEN). If RED on CI (git >= 2.34): the GIT_DIR scrub in Cache::open regressed -- check crates/reposix-cache/src/cache.rs::git_config_cmd is still called (not bypassed) by ensure_hide_sync_refs.",
+      "waiver": null,
+      "claim_vs_assertion_audit": "The verifier drives a REAL two-writer conflict (two independent reposix-init'd trees, two independent caches) against a real reposix-sim and asserts the refetched ref's root commit via `git rev-list --max-parents=0` is byte-identical before and after B's recovery fetch. If the HIGH-1 claim were false (a refetch mints a fresh, disconnected root commit, as the original May-02 T4 dark-factory test found) the root-commit comparison would fail concretely and the verifier would exit non-zero naming the mismatched ROOT_B(before)/ROOT_B(after) SHAs -- proven to actually fire by temporarily reverting the underlying fix and observing the exact expected failure (see 92-T4-REPRO-NOTES.md).",
+      "transport_claim": false,
+      "cadences": [
+        "pre-pr",
+        "pre-release",
+        "on-demand"
+      ],
+      "minted_at": "2026-07-05T08:00:00Z"
+    },
+    {
+      "id": "agent-ux/t4-conflict-rebase-ancestry-real-backend",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P92 SC1 real-backend (TokenWorld) arm, minted NOT-VERIFIED at phase catalog-first scaffold -- NOT implemented this session. Scope: the sibling sim-arm scenario (agent-ux/t4-conflict-rebase-ancestry) re-run against the sanctioned real-backend target (TokenWorld Confluence space, docs/reference/testing-targets.md) using two independent working trees + caches, asserting the same no-fresh-root-commit claim. Gated behind pre-release-real-backend per RBF-FW-06 (env-gated, fails closed to NOT-VERIFIED when REPOSIX_ALLOWED_ORIGINS/creds are unset -- never skip-counts-as-pass, OD-2).",
+      "sources": [
+        "docs/reference/testing-targets.md (TokenWorld sanctioned target)",
+        ".planning/milestones/v0.13.0-phases/ROADMAP.md (Phase 92, SC1 'against sim AND TokenWorld')",
+        "quality/gates/agent-ux/t4-conflict-rebase-ancestry.sh (sim-arm sibling, template for the real-backend arm)"
+      ],
+      "command": "bash quality/gates/agent-ux/t4-conflict-rebase-ancestry-real-backend.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/t4-conflict-rebase-ancestry-real-backend.sh exits 0 against real TokenWorld with credentials set, or NOT-VERIFIED (env-gated) without",
+          "two independent working trees against TokenWorld reproduce the same conflict-reject + no-fresh-root-on-refetch behavior as the sim arm"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/t4-conflict-rebase-ancestry-real-backend.sh",
+        "args": [],
+        "timeout_s": 300,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/t4-conflict-rebase-ancestry-real-backend.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "NOT IMPLEMENTED this session -- verifier script does not exist yet (PROTOCOL.md Step 3: catalog-first rows may point at a verifier that doesn't exist yet). Implement by adapting quality/gates/agent-ux/t4-conflict-rebase-ancestry.sh's two-cache topology to a TokenWorld-backed project per docs/reference/testing-targets.md; owner: a later P92 wave or P93+ real-backend hardening.",
+      "waiver": null,
+      "coverage_kind": "real-backend",
+      "claim_vs_assertion_audit": "The verifier (once implemented) will drive the same two-independent-writer conflict scenario against real TokenWorld and assert the refetched ref's root commit is unchanged across the recovery fetch. If false, the root-commit comparison fails concretely naming the mismatched SHAs, exactly as the sim-arm sibling row proves for the sim target.",
+      "cadences": [
+        "pre-release-real-backend"
+      ],
+      "minted_at": "2026-07-05T08:00:00Z"
+    },
+    {
+      "id": "agent-ux/audit-absence-is-red",
+      "dimension": "agent-ux",
+      "kind": "manual",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P92 SC4 (verifier honesty rule), minted NOT-VERIFIED at phase catalog-first scaffold. Consumes the P90 RAISE LIST honesty framework: the milestone/phase-close verifier subagent's dispatch prompt (quality/PROTOCOL.md 'Verifier subagent prompt template') must treat an ABSENT audit_events / audit_events_cache row for an executed push as RED, never as 'out of scope for this layer' or a soft miss. Not a runnable script (kind: manual) -- graded by confirming the verifier dispatch prompt template names this rule explicitly and the P92 phase-close verifier subagent applies it when grading agent-ux/bus-write-audit-completeness.",
+      "sources": [
+        "quality/PROTOCOL.md § 'Verifier subagent prompt template'",
+        "CLAUDE.md § Operating Principles OP-3 (audit log non-optional, dual-table)",
+        ".planning/milestones/v0.13.0-phases/ROADMAP.md (Phase 92, SC4)"
+      ],
+      "command": "manual review of quality/PROTOCOL.md verifier dispatch prompt + the P92 verifier subagent's grading of agent-ux/bus-write-audit-completeness",
+      "expected": {
+        "asserts": [
+          "quality/PROTOCOL.md's verifier subagent prompt template explicitly names 'audit-row absence is RED, not out of scope for this layer' as a grading rule",
+          "the P92 phase-close verifier subagent, when grading agent-ux/bus-write-audit-completeness, treats a missing audit_events or audit_events_cache row as a FAIL, not a waived/soft finding"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/audit-absence-is-red.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/audit-absence-is-red.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": "90d",
+      "blast_radius": "P1",
+      "owner_hint": "NOT IMPLEMENTED this session -- verifier script does not exist yet. Second executor: add the honesty-rule sentence to quality/PROTOCOL.md's verifier prompt template (if not already implied) and a small mechanical grep-based gate asserting the sentence is present, mirroring agent-ux/absorption-honesty-template-present's hash-binding pattern if drift-safety is wanted.",
+      "waiver": null,
+      "claim_vs_assertion_audit": "Once implemented, the verifier greps quality/PROTOCOL.md for the explicit honesty-rule sentence and (optionally) content-hash-binds it; if the rule text were silently removed or watered down the grep/hash assert would fail concretely, naming the missing or drifted sentence.",
+      "transport_claim": false,
+      "cadences": [
+        "on-demand"
+      ],
+      "minted_at": "2026-07-05T08:00:00Z"
+    },
+    {
+      "id": "agent-ux/p92-mid-stream-litmus-t1-t4",
+      "dimension": "agent-ux",
+      "kind": "manual",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P92 SC6 (Decision-1-style mid-stream litmus checkpoint), minted NOT-VERIFIED at phase catalog-first scaffold. After this phase declares GREEN, the orchestrator re-runs dark-factory T1 (sim baseline) + T4 (two-writer conflict/rebase recovery) against BOTH sim AND TokenWorld; ANY HIGH-severity friction REOPENS this phase (P93 must not start until T1+T4 return <=0 HIGH). This is a phase-gate ritual (top-level orchestration re-run of existing dark-factory + T4 test surfaces), not a new mechanism -- the row exists for traceability of the checkpoint's disposition, not as a novel verifier.",
+      "sources": [
+        ".planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/T1-sim-baseline.md",
+        ".planning/research/v0.13.0-real-backend-frictions/01-dark-factory-may02/T4-conflict-recovery.md",
+        "quality/gates/agent-ux/dark-factory.sh",
+        "quality/gates/agent-ux/t4-conflict-rebase-ancestry.sh",
+        ".planning/milestones/v0.13.0-phases/ROADMAP.md (Phase 92, SC6)"
+      ],
+      "command": "bash quality/gates/agent-ux/dark-factory.sh sim && bash quality/gates/agent-ux/t4-conflict-rebase-ancestry.sh (re-run against sim AND TokenWorld)",
+      "expected": {
+        "asserts": [
+          "T1 (sim baseline) dark-factory re-run reports 0 HIGH-severity frictions",
+          "T4 (two-writer conflict + rebase recovery) re-run against sim AND TokenWorld reports 0 HIGH-severity frictions",
+          "if >=1 HIGH surfaces: this phase REOPENS (P93 blocked) per the Decision-1 mid-stream litmus pattern"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/dark-factory.sh",
+        "args": ["sim"],
+        "timeout_s": 120,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p92-mid-stream-litmus-t1-t4.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "Run at phase close, AFTER GREEN declared, per Decision-1 (mid-stream litmus checkpoint). Orchestrator-owned re-run, not an implementation task for either executor.",
+      "waiver": null,
+      "claim_vs_assertion_audit": "The checkpoint re-runs the SAME dark-factory T1 + T4 surfaces this phase already exercises and asserts the friction tally stays at 0 HIGH; if the phase's fixes introduced a NEW regression the re-run's own asserts (dark-factory-sim's exit code + the T4 ancestry/reject asserts) would fail concretely, naming the specific broken step.",
+      "cadences": [
+        "on-demand"
+      ],
+      "minted_at": "2026-07-05T08:00:00Z"
     }
   ]
 }
