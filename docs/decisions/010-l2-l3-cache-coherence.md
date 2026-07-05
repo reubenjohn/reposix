@@ -18,7 +18,7 @@ promisor remote` **whenever the conflicting write lands in the same wall-clock
 second as the puller's cache cursor**. This is reproduced, deterministic, and
 NOT environmental: 4/4 same-second runs fail, and the 2-second-gap negative
 control is clean (executed transcripts + root cause:
-[`.planning/phases/93-cache-coherence/93-DP2-REPRO-NOTES.md`](../../.planning/phases/93-cache-coherence/93-DP2-REPRO-NOTES.md);
+`.planning/phases/93-cache-coherence/93-DP2-REPRO-NOTES.md`;
 repro commit `9c46e49`).
 
 The failure is two coupled defects — a *trigger* and a latent *amplifier*:
@@ -377,7 +377,7 @@ too stays reversible.)
 
 ## References
 
-- [`.planning/phases/93-cache-coherence/93-DP2-REPRO-NOTES.md`](../../.planning/phases/93-cache-coherence/93-DP2-REPRO-NOTES.md) — executed repro + root cause (repro commit `9c46e49`).
+- `.planning/phases/93-cache-coherence/93-DP2-REPRO-NOTES.md` — executed repro + root cause (repro commit `9c46e49`).
 - `crates/reposix-cache/tests/delta_sync.rs::delta_sync_tree_references_only_resolvable_oids` — the RED regression this ADR's fix flips GREEN.
 - `crates/reposix-cache/src/builder.rs` — `sync()` Steps 3-5 (`:265-406`), `build_from` (`:56-191`), `read_blob` (`:450-511`).
 - `crates/reposix-remote/src/write_loop.rs` — `SotPartialFail` (`:105`, `:277`), PRECHECK B (`:159`), `files_touched > 0` skip (`:295`).
