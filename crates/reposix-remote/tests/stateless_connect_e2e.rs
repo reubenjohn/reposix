@@ -194,15 +194,24 @@ async fn stateless_connect_blob_limit_refuses_excess_wants() {
     );
 }
 
-/// Scenario 3 — non-upload-pack service rejected with a clear error.
+/// Scenario 3 — non-upload-pack service answered with the `fallback`
+/// sentinel (git-2.43 push-compat regression, P94 D2).
 ///
-/// Drives `stateless-connect git-receive-pack`, which the helper does
-/// not support (push uses the `export` capability instead). Asserts
-/// the helper writes an `unsupported service:` line to stdout, then
-/// bails. Covers the early-return branch in `handle_stateless_connect`
-/// at `service != "git-upload-pack"`.
+/// Drives `stateless-connect git-receive-pack`, the service git >= 2.43
+/// probes FIRST for the push direction. reposix serves push through the
+/// `export` capability, not protocol-v2, so per git-remote-helpers(7) the
+/// helper MUST reply the literal `fallback` line — git then retries the
+/// push via `export`. The pre-fix helper wrote a custom `unsupported
+/// service: ...` line, which git treats as "unknown response to connect"
+/// and aborts the whole push (exit 128, no export attempt).
+///
+/// Asserts: the helper writes `fallback` to stdout, does NOT emit the old
+/// `unsupported service:` rejection line, and exits 0 — `fallback` is a
+/// normal negotiated outcome (the helper resumes its verb loop and hits a
+/// clean EOF here), NOT an error. Covers the non-upload-pack branch of
+/// `handle_stateless_connect` returning `StatelessConnectOutcome::FellBack`.
 #[tokio::test]
-async fn stateless_connect_rejects_non_upload_pack_service() {
+async fn stateless_connect_replies_fallback_for_non_upload_pack_service() {
     let (origin, _sim) = spawn_sim().await;
     let cache_dir = tempfile::tempdir().expect("tempdir");
 
@@ -226,16 +235,23 @@ async fn stateless_connect_rejects_non_upload_pack_service() {
     let stderr = String::from_utf8_lossy(&out.stderr);
     let stdout = String::from_utf8_lossy(&out.stdout);
 
+    // The reply is a single `fallback` line (git-remote-helpers(7)) — git
+    // retries via `export`. It is NOT an error: the helper resumes its
+    // verb loop, reads EOF, and exits 0.
     assert!(
-        !out.status.success(),
-        "non-upload-pack service must exit non-zero; stderr={stderr}"
+        out.status.success(),
+        "`fallback` is a normal negotiated reply, not an error; must exit 0; \
+         status={:?}; stderr={stderr}",
+        out.status
     );
     assert!(
-        stdout.contains("unsupported service: git-receive-pack"),
-        "stdout missing `unsupported service` rejection line; stdout={stdout}"
+        stdout.lines().any(|l| l == "fallback"),
+        "stdout must contain the literal `fallback` sentinel line; stdout={stdout:?}"
     );
+    // Guard against the pre-fix bug reappearing: the custom rejection line
+    // is exactly what made git 2.43 abort the push.
     assert!(
-        stderr.contains("stateless-connect only supports git-upload-pack"),
-        "stderr missing diagnostic about supported service; stderr={stderr}"
+        !stdout.contains("unsupported service"),
+        "stdout must NOT carry the bug-preserving `unsupported service` line; stdout={stdout:?}"
     );
 }

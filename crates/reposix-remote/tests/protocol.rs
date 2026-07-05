@@ -42,6 +42,53 @@ fn option_replies_unsupported() {
     assert_eq!(stdout.trim(), "unsupported", "stdout: {stdout:?}");
 }
 
+/// P94 D2 regression: `option object-format` MUST be answered `ok`, not
+/// `unsupported`. git 2.43.x sends this option before a push's `list`/`export`
+/// and treats `unsupported` as fatal (exit 128, no export attempt) — the real,
+/// version-windowed cause of the git-2.43 single-backend-push failure. The bare
+/// form (no argument) is exactly what git 2.43 emits; `sha1`/`true` are the
+/// spec forms; any other algorithm must be rejected because the reposix cache
+/// is sha1-only.
+#[test]
+fn option_object_format_sha1_replies_ok() {
+    for line in [
+        "option object-format\n",
+        "option object-format sha1\n",
+        "option object-format true\n",
+    ] {
+        let mut cmd = Command::cargo_bin("git-remote-reposix").expect("binary built");
+        let assert = cmd
+            .args(["origin", "reposix::http://127.0.0.1:7878/projects/demo"])
+            .write_stdin(line)
+            .timeout(std::time::Duration::from_secs(10))
+            .assert();
+        let out = assert.get_output();
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        assert_eq!(
+            stdout.trim(),
+            "ok",
+            "`{}` must be answered `ok` (git-2.43 push blocker); stdout: {stdout:?}",
+            line.trim()
+        );
+    }
+}
+
+#[test]
+fn option_object_format_non_sha1_replies_error() {
+    let mut cmd = Command::cargo_bin("git-remote-reposix").expect("binary built");
+    let assert = cmd
+        .args(["origin", "reposix::http://127.0.0.1:7878/projects/demo"])
+        .write_stdin("option object-format sha256\n")
+        .timeout(std::time::Duration::from_secs(10))
+        .assert();
+    let out = assert.get_output();
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.trim_start().starts_with("error"),
+        "a non-sha1 object-format must be rejected with `error ...` (cache is sha1-only); stdout: {stdout:?}"
+    );
+}
+
 #[test]
 fn unknown_command_writes_to_stderr_not_stdout() {
     let mut cmd = Command::cargo_bin("git-remote-reposix").expect("binary built");

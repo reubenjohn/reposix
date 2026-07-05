@@ -148,11 +148,33 @@ impl HelperFetchRecord for RpcStats {
     }
 }
 
+/// Outcome of [`handle_stateless_connect`] — tells the caller's command
+/// loop whether git has taken over the stream or the helper must resume
+/// reading verbs.
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum StatelessConnectOutcome {
+    /// `git-upload-pack` was served: the protocol-v2 session ran to EOF
+    /// and git owned stdin/stdout for its duration. The helper must now
+    /// exit — the stream belongs to git and there are no further verbs.
+    TookOver,
+    /// A non-upload-pack service was requested (push probes
+    /// `git-receive-pack` first). The helper replied the
+    /// git-remote-helpers(7) `fallback` sentinel; git will retry via
+    /// another advertised capability (`export` for push). The command
+    /// loop MUST resume so the SAME live helper process handles the
+    /// follow-up verb.
+    FellBack,
+}
+
 /// Entry point for the `stateless-connect <service>` verb.
 ///
-/// The caller has already read the verb line from stdin. We write the
-/// one-line "ready" response, send the protocol-v2 advertisement, then
-/// loop reading RPC turns from git until EOF.
+/// The caller has already read the verb line from stdin. For
+/// `git-upload-pack` we write the one-line "ready" response, send the
+/// protocol-v2 advertisement, then loop reading RPC turns from git until
+/// EOF (returns [`StatelessConnectOutcome::TookOver`]). For any other
+/// service we reply the `fallback` sentinel and return
+/// [`StatelessConnectOutcome::FellBack`] so the caller resumes its verb
+/// loop.
 ///
 /// # Errors
 /// Any I/O error from stdin/stdout, any `upload-pack` spawn failure,
@@ -163,19 +185,31 @@ pub(crate) fn handle_stateless_connect<R: Read, W: Write>(
     rt: &Runtime,
     cache: &Cache,
     service: &str,
-) -> Result<()> {
+) -> Result<StatelessConnectOutcome> {
     if service != "git-upload-pack" {
-        // POC behaviour: non-upload-pack services are an error. Push
-        // uses `export` (different capability entirely).
-        proto.diag_stderr(&format!(
-            "git-remote-reposix: stateless-connect only supports git-upload-pack, got `{service}`"
-        ));
-        // Write error line per helper protocol, then bail.
+        // git-remote-helpers(7): the three valid replies to
+        // `stateless-connect <service>` are an empty line (connection
+        // established), the literal `fallback` line (this helper cannot
+        // serve the service over protocol-v2 — retry via another
+        // advertised capability), or exiting with an error (don't fall
+        // back at all). git >= 2.43 probes `stateless-connect
+        // git-receive-pack` FIRST for the push direction; reposix serves
+        // push through the `export` capability, so we MUST answer
+        // `fallback` — replying anything else (the pre-fix custom
+        // `unsupported service: ...` line hit the "unknown response to
+        // connect" die-path) makes git abort the push instead of trying
+        // `export`. Git 2.54 (this project's CI) never probes push via
+        // stateless-connect, so the regression is windowed to the 2.43.x
+        // LTS line the `>= 2.34` floor does NOT protect against.
+        tracing::debug!(
+            service,
+            "stateless-connect: replying `fallback` for non-upload-pack service (push falls back to `export`)"
+        );
         proto
-            .send_line(&format!("unsupported service: {service}"))
-            .context("write stateless-connect error line")?;
-        proto.flush().context("flush error line")?;
-        anyhow::bail!("unsupported stateless-connect service: {service}");
+            .send_line("fallback")
+            .context("write stateless-connect `fallback` sentinel")?;
+        proto.flush().context("flush `fallback` sentinel")?;
+        return Ok(StatelessConnectOutcome::FellBack);
     }
 
     // Delta-sync the cache before tunneling protocol-v2 to git.
@@ -214,7 +248,7 @@ pub(crate) fn handle_stateless_connect<R: Read, W: Write>(
     // RPC loop: read request → pipe to upload-pack → write response + 0002.
     while let ProxyOutcome::Continued = proxy_one_rpc(proto, rt, cache)? {}
 
-    Ok(())
+    Ok(StatelessConnectOutcome::TookOver)
 }
 
 /// Spawn `git upload-pack --advertise-refs --stateless-rpc` and write
@@ -507,22 +541,6 @@ fn parse_want_oid(payload: &[u8]) -> Option<gix::ObjectId> {
         .position(u8::is_ascii_whitespace)
         .unwrap_or(rest.len());
     gix::ObjectId::from_hex(&rest[..end]).ok()
-}
-
-// -----------------------------------------------------------------------
-// Small helpers on Protocol — live here (not in protocol.rs) because they
-// are specific to the stateless-connect flow.
-// -----------------------------------------------------------------------
-
-trait DiagExt {
-    fn diag_stderr(&self, msg: &str);
-}
-
-impl<R: Read, W: Write> DiagExt for Protocol<R, W> {
-    #[allow(clippy::print_stderr)]
-    fn diag_stderr(&self, msg: &str) {
-        eprintln!("{msg}");
-    }
 }
 
 // Unused under `-D warnings` in release builds without `dead_code`

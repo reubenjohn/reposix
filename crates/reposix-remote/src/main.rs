@@ -35,7 +35,7 @@ mod write_loop;
 use crate::diff::PlannedAction;
 use crate::fast_import::{emit_import_stream, parse_export_stream};
 use crate::protocol::Protocol;
-use crate::stateless_connect::handle_stateless_connect;
+use crate::stateless_connect::{handle_stateless_connect, StatelessConnectOutcome};
 use reposix_remote::backend_dispatch::{self, instantiate, sanitize_project_for_cache};
 
 /// Deferred-exit flag — set by the export path on push refusal. We finish
@@ -167,6 +167,7 @@ fn real_main() -> Result<bool> {
         if trimmed.is_empty() {
             continue;
         }
+        tracing::debug!(cmd = %trimmed, "git-remote-reposix: verb");
         let mut parts = trimmed.splitn(2, char::is_whitespace);
         let cmd = parts.next().unwrap_or("");
         match cmd {
@@ -201,7 +202,33 @@ fn real_main() -> Result<bool> {
                 proto.flush()?;
             }
             "option" => {
-                proto.send_line("unsupported")?;
+                // git-remote-helpers(7): a helper that advertises
+                // `object-format` MUST accept `option object-format
+                // {true|<algo>}` with `ok`. git 2.43.x sends this option
+                // BEFORE the push `list`/`export` verbs and treats an
+                // `unsupported` reply as FATAL — the real, version-windowed
+                // cause of the P94 D2 git-2.43 single-backend-push failure
+                // (exit 128, no export attempt). git 2.54 skips the
+                // negotiation entirely (the advertised `object-format=sha1`
+                // capability suffices), which is why `>= 2.34` did not
+                // protect and CI (2.54) never saw it. reposix's cache is
+                // sha1-only, so accept sha1/true (and the bare form git
+                // 2.43 actually sends) and reject any other algorithm.
+                // Every other option stays `unsupported` — git treats that
+                // as "ignore this option", the intended behaviour.
+                let opt = parts.next().unwrap_or("").trim();
+                if let Some(rest) = opt.strip_prefix("object-format") {
+                    let algo = rest.trim();
+                    if algo.is_empty() || algo == "true" || algo == "sha1" {
+                        proto.send_line("ok")?;
+                    } else {
+                        proto.send_line(&format!(
+                            "error reposix cache is sha1-only, cannot honor object-format {algo}"
+                        ))?;
+                    }
+                } else {
+                    proto.send_line("unsupported")?;
+                }
                 proto.flush()?;
             }
             "list" | "list for-push" => {
@@ -221,19 +248,27 @@ fn real_main() -> Result<bool> {
                 }
             }
             "stateless-connect" => {
-                // Service name is the second whitespace-separated
-                // field. An unknown or empty service becomes a clean
-                // error inside the handler.
+                // Service name is the second whitespace-separated field.
+                // `git-upload-pack` (fetch) is served in-band; any other
+                // service (push probes `git-receive-pack` first under
+                // git >= 2.43) gets the `fallback` sentinel and the loop
+                // resumes so the follow-up `export` verb is handled here.
                 let service = parts.next().unwrap_or("").trim();
                 let service_owned = service.to_owned();
                 ensure_cache(&mut state)?;
                 let cache_ref = state.cache.as_ref().expect("cache initialised");
-                handle_stateless_connect(&mut proto, &state.rt, cache_ref, &service_owned)?;
-                // Per the helper-protocol spec, stateless-connect is
-                // always the last verb of a helper invocation: git
-                // takes over stdin/stdout for the duration of the
-                // protocol-v2 session and closes the stream on EOF.
-                return Ok(!state.push_failed);
+                match handle_stateless_connect(&mut proto, &state.rt, cache_ref, &service_owned)? {
+                    // upload-pack served: git owned stdin/stdout for the
+                    // protocol-v2 session and closed the stream on EOF.
+                    // There are no further verbs — exit cleanly.
+                    StatelessConnectOutcome::TookOver => return Ok(!state.push_failed),
+                    // Non-upload-pack service fell back to `fallback`; git
+                    // will retry via another capability. Resume the verb
+                    // loop on the SAME live helper process (do NOT exit —
+                    // exiting here would tear the pipe git needs for the
+                    // follow-up `export`).
+                    StatelessConnectOutcome::FellBack => {}
+                }
             }
             other => {
                 diag(&format!("git-remote-reposix: unknown command: {other}"));
