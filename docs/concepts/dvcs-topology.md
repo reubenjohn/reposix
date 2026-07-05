@@ -153,6 +153,37 @@ You will see this in the bus reject messages: when the mirror push fails after t
 
 **Both writes are egress-gated.** The SoT write (REST) and the mirror push (`git ls-remote` + `git push`) each send issue content off the machine, so both are checked against `REPOSIX_ALLOWED_ORIGINS` before any network contact — the mirror push is not a privileged side channel. A bus push to a mirror whose host is not on the allowlist is refused with an `egress-denied` message (local `file://` mirrors are exempt — no egress). Because the allowlist grammar is `http`/`https` and the mirror gate matches on **host**, authorise an `ssh` mirror (`git@github.com:…`) with an `https://<host>` entry. See [Troubleshooting → mirror-egress rejection](../guides/troubleshooting.md#bus-remote-mirror-egress-rejection-egress-denied).
 
+## Cache coherence: L1 / L2 / L3 (ADR-010)
+
+The bus remote's conflict detection and the fetch/sync path both lean on the local
+cache as a trust boundary; three layers, two shipped and one deferred:
+
+- **L1 — trust the cache as prior.** The bus push precheck and delta sync both treat
+  the cache's `oid_map` / `last_fetched_at` cursor as ground truth for "what changed."
+  Fast (no extra network round-trip), but a drifted cache — a failed sync, a
+  same-second write racing the cursor — makes it silently wrong. Recovery: `reposix
+  sync --reconcile` (a full `list_records` walk that rebuilds the cache from the SoT).
+  Also gates the mirror-head refresh: `refresh_for_mirror_head` runs on every push
+  that changes the SoT (`files_touched > 0`); a push that changes nothing is a
+  semantic no-op — skipped because there is nothing new to refresh, not a coherence
+  shortcut (RBF-LR-04).
+- **L3 — transactional cache writes (shipped, ADR-010 Option B).** `Cache::sync`'s
+  delta path upserts `oid_map` for the *full* `list_records` set inside the same
+  atomic transaction that writes the tree — not just the changed IDs the delta query
+  reports — so the HEAD tree can never reference an OID `read_blob` cannot resolve.
+  This is the fix for the reproduced two-writer `not our ref` failure (D-P92-03): the
+  tree↔`oid_map` invariant now holds by construction, independent of the backend's
+  second-resolution `updated_at` precision.
+- **L2 — re-fetch on cache miss (deferred to v0.14.0, ADR-010 Option A).** A future
+  belt-and-suspenders layer: on an `oid_map` miss, `read_blob` would re-scan the
+  backend and materialize the winning blob on demand instead of failing the want.
+  Deferred because it moves outbound HTTP onto the read/fetch path (latency-envelope
+  and OP-1/OP-2 taint-surface cost) and L3 already restores the invariant at its
+  source, making L2 a redundant safety net rather than the primary fix.
+
+Full trade-off analysis, reversibility assessment, and the rejected/deferred
+alternatives: [ADR-010](../decisions/010-l2-l3-cache-coherence.md).
+
 ## Out of scope (intentionally)
 
 - **Bidirectional bus.** A `git push` to the GH mirror with vanilla git creates commits the SoT will never see. The next webhook sync will force-with-lease over them. To write back to the SoT, you must go through a reposix-equipped bus push. This constraint is deliberate — the mirror is a read surface, not a write surface.

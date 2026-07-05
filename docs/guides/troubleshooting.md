@@ -349,7 +349,7 @@ sqlite3 ~/.cache/reposix/<backend>-<project>.git/cache.db \
 
 If `delta_sync` rows returned empty over a stretch but the SoT actually moved during that window, the `last_fetched_at` cursor is wrong — `reposix sync --reconcile` rebuilds it from the SoT's current state.
 
-Mechanism: see [DVCS topology — Out of scope](../concepts/dvcs-topology.md#out-of-scope-intentionally) for the L1/L2/L3 trade-off; L2 hardening (background reconcile job) and L3 (transactional cache writes) defer to v0.14.0.
+Mechanism: see [DVCS topology — Cache coherence: L1 / L2 / L3](../concepts/dvcs-topology.md#cache-coherence-l1-l2-l3-adr-010) for the trade-off. L3 (transactional cache writes) is shipped — it restores the tree↔`oid_map` invariant at its source, which is what `reposix sync --reconcile` above is recovering from when it drifts. Only L2 (re-fetch-on-cache-miss) remains deferred to v0.14.0; see [ADR-010](../decisions/010-l2-l3-cache-coherence.md) for the full trade-off.
 
 ## See also
 
