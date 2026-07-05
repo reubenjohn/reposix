@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 mode: serial-workstreams
 status: executing-p92-post-close-drain
 last_updated: "2026-07-05"
-last_activity: 2026-07-05 — P92 CLOSED GREEN. Verdict at quality/reports/verdicts/p92/VERDICT.md (8/8 SC PASS, CI run 28735908764 green on git 2.54, HEAD a0177af). Carry-forwards to P93: delta-sync suspicion (D-P92-03), TokenWorld two-writer verifier→P97 (HIGH), git-2.43 fallback-sentinel→P94 (HIGH), marker footgun→P95.
+last_activity: 2026-07-05 — P93 CLOSED GREEN. Verdict at quality/reports/verdicts/p93/VERDICT.md (6/6 P93 rows PASS-or-expected-NOT-VERIFIED, HEAD 9c389ab). Carry-forwards to P94: pagination-truncation safety of sync prune_oid_map (HIGH, E2-fork candidate — see SURPRISES-INTAKE.md), git-2.43 fallback-sentinel (HIGH). Carry-forwards to P97: TokenWorld two-writer verifier (HIGH). Carry-forward to P95: marker footgun.
 workstreams:
   workstream_a:
     milestone: v0.13.0
     milestone_name: DVCS over REST (extended)
     status: executing  # P89 execution started 2026-07-03 (top-level orchestration mode)
     phases_total: 20  # P78-P97 (P78-P88 shipped + P89-P97 extension)
-    phases_completed: 15  # P78-P92
-    next_phase: P93  # P92 SHIPPED GREEN 2026-07-05 (verdict at quality/reports/verdicts/p92/VERDICT.md); P93 next — L2/L3 cache-coherence + SotPartialFail recovery
+    phases_completed: 16  # P78-P93
+    next_phase: P94  # P93 CLOSED GREEN 2026-07-05 (verdict at quality/reports/verdicts/p93/VERDICT.md, HEAD 9c389ab); P94 next — real-backend frictions (pagination-truncation E2-fork + git-2.43 fallback-sentinel)
     blocks_tag: true  # v0.13.0 tag does NOT push until P97 GREEN; tag push delegated to orchestrator per OD-3
   workstream_b:
     milestone: v0.13.2
@@ -33,10 +33,10 @@ workstreams:
 
 ### Workstream A — v0.13.0 (extended) — EXECUTING
 
-Phase: P92 SHIPPED 2026-07-05. Verdict GREEN at `quality/reports/verdicts/p92/VERDICT.md` (8/8 SC PASS, CI run 28735908764, git 2.54, HEAD a0177af). Push-flow correctness: HIGH-1 ancestry bug (fresh root on refetch) is FIXED + locked via regression gate `quality/gates/agent-ux/t4-conflict-rebase-ancestry.sh` (proven to bite + green on current main); OP-3 dual-table audit completeness verified; behavioral no-retry verifier shipped. NEW finding filed: cache delta-sync "0 changed" false-negative blocking rebase blob fetch (delta-sync cursor issue, separate root cause from cb630e5 — routed to P93 as D-P92-03). Real-backend compatibility gap on git 2.43 (fallback sentinel protocol gap, LTS git version — no-retry contract + routed to P94 HIGH). TokenWorld two-writer conflict scenario scaffolded NOT-VERIFIED; implementation deferred to P97 (HIGH, awaits TokenWorld verifier owner sign-off).
-Plan: shipped — plan files at `.planning/phases/92-*/`; executor findings + deferred items recorded in phase wrap artifacts.
-Status: P92 GREEN — 15/20 phases complete (P78–P92 shipped); next P93. v0.13.0 tag held until P97 GREEN (tag push delegated to orchestrator per OD-3).
-Next agent action: plan + execute P93 (L2/L3 cache-coherence + SotPartialFail recovery). Depends on P92 GREEN — satisfied. Carry-forwards: D-P92-03 delta-sync cursor (blocks step-6 completion in T4 rebase scenario), TokenWorld two-writer verifier→P97, git-2.43 fallback-sentinel→P94, marker footgun→P95.
+Phase: P93 CLOSED GREEN 2026-07-05. Verdict at `quality/reports/verdicts/p93/VERDICT.md` (unbiased phase-close re-verify, HEAD `9c389ab`; all 6 P93 rows graded — 5 PASS with runner-minted artifacts, RBF-LR-03 honest NOT-VERIFIED per OD-2 creds-absent deferral to the v0.13.0 milestone-close 9th probe). D-P92-03 delta-sync coherence bug REPRODUCED + root-caused + fixed (ghost-`oid_map`-row prune, D-P93-01/02); ADR-010 (L2/L3 cache-coherence) ratified ACCEPTED. NEW finding filed: sync's `prune_oid_map` DELETEs `oid_map` rows using a `list_records()` set that GitHub/JIRA/Confluence connectors can silently truncate at a pagination/size cap — a live-record data-loss hazard beyond the cap, invisible to sim-backed gates (routed to P94, HIGH, E2-fork candidate; full analysis `.planning/phases/93-cache-coherence/93-RELIEF-HANDOFF.md` §4-6).
+Plan: shipped — plan files + relief-handoff at `.planning/phases/93-cache-coherence/`; executor findings + deferred items recorded in phase wrap artifacts.
+Status: P93 GREEN — 16/20 phases complete (P78–P93 shipped); next P94. v0.13.0 tag held until P97 GREEN (tag push delegated to orchestrator per OD-3).
+Next agent action: plan + execute P94 (real-backend frictions). Depends on P93 GREEN — satisfied. Carry-forwards: pagination-truncation safety of `prune_oid_map`→P94 (HIGH, E2-fork), git-2.43 fallback-sentinel→P94 (HIGH), TokenWorld two-writer verifier→P97 (HIGH), marker footgun→P95.
 
 ### Workstream B — v0.13.2 — QUEUED (RESEQUENCED per OD-4)
 
