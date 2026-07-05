@@ -100,3 +100,20 @@ mechanism (`stateless_connect.rs`'s reply string, not `Cache::open`'s env scrub)
 proven GREEN this session) + `agent-ux/t4-conflict-rebase-ancestry-real-backend`
 (TokenWorld arm, scaffold only) + SC2/SC3/SC4/SC5/SC6 scaffold rows minted
 NOT-VERIFIED, commit `858330a` / `600755e` (post-rebase SHA), pushed before this entry.
+
+---
+
+## D-P92-03 — SC1 full round-trip GREEN on sim; delta-sync downgraded to suspicion; TokenWorld arm NOT-VERIFIED by design [SELF] 2026-07-05
+
+**Situation:** Two independent executors verified T4 litmus on the sim in a git-2.54 container (host git 2.25.1 is below the >=2.34 floor).
+
+**Decision:** SC1 = GREEN on the sim arm (ancestry locked + full round-trip completes; overlapping-edit conflict is expected git behavior). The "not our ref"/cache-delta-sync item is DOWNGRADED from a confirmed bug to an UNREPRODUCED SUSPICION (DP-2: independent runner could not reproduce) and routed to P93 (cache-coherence) to reproduce-or-close, no blind fix. SC1 real-backend (TokenWorld) arm remains NOT-VERIFIED BY DESIGN (coverage_kind: real-backend; verified at the P97 9th probe `pre-release-real-backend`).
+
+**Evidence (Exec1 + Exec2):**
+
+- **Exec1** locked the ancestry regression (no fresh root after refetch) GREEN and NOTICED a "not our ref <oid>/promisor remote" cache delta-sync failure during `git pull --rebase`, routed to P93.
+- **Exec2** ran the FULL `pull --rebase` round-trip twice on independent per-writer caches: non-overlapping edits complete cleanly (reject → rebase → push all exit 0, ancestry preserved); overlapping edits stop at an ordinary textual `CONFLICT (content)` from a real 3-way merge (proves the blob WAS fetched) = correct git behavior, not a bug. Exec2 did NOT reproduce Exec1's "not our ref" failure.
+
+**Rationale:** DP-2 prove-before-fix — a defect an independent runner cannot reproduce is a suspicion, not a confirmed bug; P92 must not carry a blind P93 fix. SC1's designed coverage split (sim GREEN now, real-backend at P97) matches ROADMAP SC7 (rows minted NOT-VERIFIED, coverage_kind real-backend).
+
+**Reversibility:** Reversible — if P93 reproduces the delta-sync failure it re-escalates as a confirmed P93 finding; the suspicion note preserves Exec1's transcript path.

@@ -612,3 +612,15 @@ Candidate (b) (fast_import M-line handling) FALSIFIED — the merge-commit fast-
 **Tagged for:** P94 (bus-push compatibility) — real, currently-reproducible, user-impacting (Ubuntu 24.04 LTS's stock git is a very common baseline for both human developers and CI runners other than this project's own).
 
 **STATUS:** OPEN
+
+## 2026-07-05 | TokenWorld two-writer conflict verifier does not exist — SC1 real-backend arm cannot be verified until built | discovered-by: P92 SC1 adjudication (D-P92-03) | severity: HIGH
+
+**What:** The P97 9th probe (`pre-release-real-backend`) MUST exercise a real-backend two-writer CONFLICT (reject → pull --rebase → push), not just single-writer push, to close SC1's real-backend arm. P92 SC1 accepted this gap by design (coverage_kind: real-backend, verified at P97 only). Both P92 executors independently identified building this as a genuine new artifact unwise to rush late-session: requires git>=2.34 container + a Confluence conflict fixture on the TokenWorld space + cleanup harness.
+
+**Why out-of-scope for P92:** SC1's designed split (sim arm GREEN now via T4 litmus; real-backend arm NOT-VERIFIED by design) matches ROADMAP coverage-kind semantics. The two-writer conflict verifier is a P97 deliverable, not a P92 scope miss — filed to chain visibility into the P97 9th probe.
+
+**Sketched resolution:** Build a replica of the `agent-ux/t4-conflict-rebase-ancestry-real-backend` verifier that drives a REAL two-writer scenario against TokenWorld: (1) init + sync against the Confluence backend, (2) writer A edits record X, pushes (succeeds), (3) writer B performs the same edit with a stale base, pushes (correctly rejected: version mismatch), (4) writer B runs `git pull --rebase origin main` (FULL round-trip), (5) conflict resolves cleanly (ordinary textual conflict from 3-way merge proves blob fetch succeeded), (6) writer B's recovery push succeeds. Verifier script template: `quality/gates/agent-ux/t4-conflict-rebase-ancestry.sh` (sim arm) extended with a Confluence fixture create/cleanup arm + real-backend URL substitution. The fixture must be durable-safe (per `docs/reference/testing-targets.md` cleanup conventions) or self-seeding (create/assert/delete within the harness like the updated `contract_confluence_live_hierarchy` test).
+
+**Why deferred:** both P92 executors noted the new-artifact risk (schedule+complexity, not a high-confidence one-liner). The sim arm is proven GREEN; deferring the real-backend verifier to P97's final probe (which mandates it) is the OP-8 eager-resolution principle applied to sequencing: do not rush low-confidence, high-stakes shipping checks.
+
+**STATUS:** OPEN

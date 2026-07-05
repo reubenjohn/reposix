@@ -350,6 +350,8 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 
 ## 2026-07-05 | Cache delta-sync under-reports changed records, blocking `git rebase`'s lazy blob fetch | discovered-by: P92 T4 prove-before-fix executor
 
+STATUS 2026-07-05 (D-P92-03): DOWNGRADED to UNREPRODUCED SUSPICION — Exec2 could not reproduce in a git-2.54 container (full pull --rebase round-trip completed; overlapping edits gave an ordinary textual conflict). P93 must build a reliable executable repro BEFORE any fix; if none, close [SELF] as false. Routed to P93 cache-coherence.
+
 **What:** During the T4 two-writer conflict repro (`.planning/phases/92-push-flow-correctness/92-T4-REPRO-NOTES.md`), after B's stale push is correctly rejected and B runs `git pull --rebase origin main`, the FETCH leg succeeds and advances `refs/reposix/origin/main` (ancestry preserved, HIGH-1 stays fixed), but `git rebase`'s own 3-way merge then fails: `fatal: git upload-pack: not our ref <oid>` / `could not fetch <oid> from promisor remote`. Root cause candidate: the cache's delta-sync (`list_changed_since` cursor query, `crates/reposix-remote/src/precheck.rs`) reports `0 changed (of 6)` even 2+ seconds after the conflicting writer's edit landed on the backend, so the specific blob the rebase's merge needs was never lazily materialized into B's cache object store — `git upload-pack` then genuinely doesn't have the object (`allowAnySHA1InWant=true` is already set per `crates/reposix-cache/src/cache.rs:713-726`, so this isn't a config gap; the object plain isn't there).
 
 **Acceptance:** root-cause why `list_changed_since`/the cache's "since" cursor comparison misses a record that unambiguously changed (check the SIM's `updated_at` timestamp precision vs the cursor comparison operator — `>` vs `>=` — and/or whether the cache's delta-sync path actually writes new blob objects for records it DOES detect as changed vs just advancing a marker commit). Add a regression test exercising `git pull --rebase` (not just `git fetch`) to completion for the T4 two-writer scenario once root-caused.
@@ -357,5 +359,19 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 **Why deferred:** different root cause than `cb630e5` (that fix was `Cache::open`'s git-config shell-out env pollution; this is the delta-sync cursor/materialization path) — Rule 4 territory (architectural, needs its own investigation), not a hand-wave-able quick fix. Also affects whether SC1's literal "completes step 6 + step 7" acceptance criterion can be met as worded — a later P92 wave or P93+ should decide whether to loosen that wording or fix the underlying gap.
 
 **Default disposition:** M — default-defer; likely intersects P93's L2/L3 cache-coherence redesign (`refresh_for_mirror_head` / SotPartialFail work) since both touch the cache's post-write refresh semantics.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Quality-gate footgun: test-name-honesty marker silently ignored outside the 6-line lookback window | discovered-by: P92 Exec2 (SC5 test verification) | severity: MEDIUM
+
+**What:** The `test-name-vs-asserts` agent-ux gate (`quality/gates/agent-ux/test-name-vs-asserts.sh`) only scans a 6-line window immediately after each `#[test]` or `fn test_` function signature for the honesty marker (`// HONEST: {reason}`). A correctly-present marker placed farther than 6 lines from the test declaration is silently ignored by the gate's regex scan, so the test reads as passing the gate despite carrying an honest marker — the gate's own contract is invisible once the marker drifts beyond the window. A P92 executor hit this: SC5 test read as passing until the marker was moved into range, surfacing the gate's silent distance requirement.
+
+**Why deferred from P92:** SC5's task envelope is writing the test and embedding the marker; understanding the gate's placement-distance requirement belongs in the gate's own documentation + CLAUDE.md notes, not SC5's scope. The gate is correctly tuned (6 lines = function signature + 1-2 lines of setup is the typical case; enforcing tight placement is reasonable), but the distance constraint is undocumented.
+
+**Sketched resolution:** (1) Document the 6-line lookback window in `quality/gates/agent-ux/test-name-vs-asserts.sh`'s header comment (state the window size, give an example of a correctly-placed marker and a mis-placed one outside the window). (2) Add a similar note to `quality/CLAUDE.md` under the test-name-honesty section (or wherever it documents the marker format) — name the placement rule so a future agent planning a honesty marker knows where to put it BEFORE writing the test. This is fix-it-twice per CLAUDE.md OD-3 meta-rule (notice is a deliverable; update the instructions to prevent recurrence).
+
+**Default disposition:** MEDIUM — default-defer to the P95 quality-framework honesty/documentation pass; the gate itself is correct and documented at `quality/PROTOCOL.md` § "Honesty rules: test-name-asserts / marker format," but the placement-distance requirement is missing from both the gate script and CLAUDE.md.
 
 **STATUS:** OPEN
