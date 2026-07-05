@@ -649,3 +649,47 @@ See the companion `GOOD-TO-HAVES.md` for the same-window disposition of the P92-
 **Why staged, not executed:** branch deletion and PR merges are external mutations against the shared remote (`origin`) outside this window's file-editing charter — owner-named-target approval required per CLAUDE.md's dark-factory guardrails.
 
 **STATUS:** OPEN (staged for owner action)
+
+## 2026-07-05 | Recurring quality-runner self-mutation bug: catalog-first FAIL row minted missing `minted_at` — same `git checkout HEAD -- <catalog>` workaround recurring across P78/P91/P93 (3x, never permanently fixed) | discovered-by: P93 Wave 1 de-risk executor | severity: HIGH
+
+**What:** `quality/runners/run.py` mutates the committed catalog JSON files in place as a
+side effect of grading (catalog-first state mutation — the runner writes verdicts back
+into `quality/catalogs/*.json`). At least once, this self-mutation minted a FAIL row
+that was missing its `minted_at` field entirely — a malformed row written by the
+runner's own catalog-write path, not by a subagent's `bind` call (Principle A: subagents
+propose rows via `bind`; the runner should only flip PASS/FAIL/verdict fields on
+existing, well-formed rows, not mint new malformed ones). The identical recovery
+workaround — `git checkout HEAD -- <catalog-file>` to discard the runner's bad
+self-mutation and restore the last-good committed catalog state — has now recurred
+across at least THREE separate phases (P78, P91, P93), each time as an ad hoc
+in-session fix, never as a permanent code change to the runner itself.
+
+**Why out-of-scope for P93 (Wave 1):** Wave 1's charter is durable-record ledger entries
++ push-stack de-risking; a real fix to `run.py`'s catalog-write path (root-causing why a
+FAIL row can be minted without `minted_at`, and/or hardening the write path against
+partial/malformed writes) is a `quality/runners/`-framework change requiring its own
+scoped investigation and test coverage — explicitly NOT DP-2/cache-coherence code, but
+still a nontrivial framework surface outside this wave's scope, and this executor holds
+the single cargo mutex for de-risking the push stack, not for quality-runner surgery.
+
+**Sketched resolution:** Root-cause the exact code path in `run.py` (and/or
+`quality/runners/_freshness.py` / shared writer helpers) that can produce a catalog row
+missing `minted_at`. Two candidate angles: (a) the runner's write path may construct a
+row dict without the field when a verifier throws before fully populating its result, or
+(b) a race/partial-write during the JSON dump leaves a row half-written. Once
+root-caused, either validate-and-reject malformed rows before persisting (fail loud
+instead of writing a broken row), or ensure every code path that constructs a row always
+sets `minted_at` (e.g. a single row-construction helper/dataclass with the field
+mandatory, replacing ad hoc dict literals scattered across write sites). Add a
+regression test that exercises the failing verifier path and asserts the written catalog
+row is always well-formed (has `minted_at`), closing the gap that has forced the same
+manual `git checkout HEAD -- <catalog>` recovery three times.
+
+**Default disposition:** HIGH — actionable and non-blocking (the existing workaround is
+safe and well-understood), but a real fix belongs in the P94–P97 debt-drain window, not
+a fourth ad hoc workaround. Propose scheduling as a dedicated `quality/runners/`-touching
+task in that window (natural fit alongside GOOD-TO-HAVES-16's `--dry-run` flag and
+GOOD-TO-HAVES-03's `--row`/`--dimension` scope-flag work, all in the same `run.py`
+surface).
+
+**STATUS:** OPEN
