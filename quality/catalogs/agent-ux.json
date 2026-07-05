@@ -555,15 +555,18 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/bus-write-no-helper-retry.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": "2026-05-01T15:19:42Z",
+      "status": "PASS",
+      "last_verified": "2026-07-05T08:49:23Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "P92 SC5: replace the source-grep body in quality/gates/agent-ux/bus-write-no-helper-retry.sh with a behavioral fault-injection + invocation-count assertion. Prior PASS (source-grep) is superseded, not deleted -- keep the grep as a cheap pre-check if useful, but it can no longer be the sole assertion.",
       "waiver": null,
       "cadences": [
         "pre-pr"
-      ]
+      ],
+      "minted_at": "2026-07-05T08:00:00Z",
+      "transport_claim": false,
+      "claim_vs_assertion_audit": "crates/reposix-remote/tests/bus_write_no_helper_retry.rs fault-injects a mirror-push failure (the same failing update-hook fixture bus_write_mirror_fail.rs uses) whose hook APPENDS one line to an invocation-count log every time git actually runs it, then drives a real push through git-remote-reposix and asserts the log has EXACTLY 1 line. Proven to bite: temporarily inserted a fake extra git-push attempt into push_mirror (bus_handler.rs), confirmed the test failed RED with 'got 2 invocations', then reverted and confirmed GREEN again (2026-07-05, this session). If push_mirror ever grew a retry loop, this assertion would fail concretely naming the invocation count, unlike the prior source-grep which could only detect specific known retry-token spellings."
     },
     {
       "id": "agent-ux/bus-write-no-mirror-remote-still-fails",

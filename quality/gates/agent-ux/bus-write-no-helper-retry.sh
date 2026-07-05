@@ -3,15 +3,19 @@
 # verifier for catalog row `agent-ux/bus-write-no-helper-retry`.
 #
 # CATALOG ROW: quality/catalogs/agent-ux.json -> agent-ux/bus-write-no-helper-retry
-# CADENCE:     pre-pr (~2s wall time)
-# INVARIANT:   crates/reposix-remote/src/bus_handler.rs contains
-#              NO retry constructs adjacent to push_mirror calls
-#              (no `for _ in 0..` loops, no `loop {`, no
-#              `tokio::time::sleep`, no `--force-with-lease`,
-#              no `--force` in args).
-#
-# Status until P83-01 T06: FAIL (until T04 lands push_mirror
-# AND the grep confirms no retry constructs).
+# CADENCE:     pre-pr (~15s wall time)
+# INVARIANT:   P92 SC5 upgrade -- a BEHAVIORAL assertion, not a source
+#              grep: fault-inject a mirror-push failure (the
+#              `common::make_failing_mirror_fixture` failing `update`
+#              hook) and assert the helper's OWN process made EXACTLY
+#              ONE `git push` attempt against the mirror (counted via
+#              the hook's own invocation log,
+#              `common::count_mirror_hook_invocations` --
+#              `crates/reposix-remote/tests/bus_write_no_helper_retry.rs`).
+#              The source-grep below is KEPT as a cheap pre-check (a
+#              retry construct textually present would be a code smell
+#              even if it happened not to fire in this scenario) but is
+#              no longer the sole assertion.
 #
 # Per Q3.6 RATIFIED 2026-04-30: surface, no helper-side retry.
 # User retries the whole push.
@@ -53,5 +57,15 @@ if ! grep -q 'fn push_mirror' "${FILE}"; then
     exit 1
 fi
 
-echo "PASS: bus_handler.rs contains no retry constructs adjacent to push_mirror"
+echo "pre-check PASS: no retry-shaped tokens found in ${FILE} (cheap grep, not the sole assertion)"
+
+# BEHAVIORAL assertion (P92 SC5): fault-inject a mirror-push failure and
+# assert the helper's OWN process made EXACTLY ONE git-push attempt
+# against the mirror remote, counted via the failing update hook's own
+# invocation log -- not a source-grep proxy.
+cargo test -p reposix-remote --test bus_write_no_helper_retry \
+    bus_write_no_helper_retry_makes_exactly_one_push_attempt \
+    --quiet -- --nocapture 2>&1 | tail -20
+
+echo "PASS: bus_handler.rs contains no retry constructs adjacent to push_mirror (grep pre-check) AND the helper made exactly 1 git-push attempt against a faulted mirror (behavioral)"
 exit 0

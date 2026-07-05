@@ -181,10 +181,23 @@ pub fn make_failing_mirror_fixture() -> (tempfile::TempDir, String) {
         "git config core.hooksPath failed in mirror fixture"
     );
 
+    // P92 SC5: the hook ALSO appends one line to `invocation-count.log` in
+    // the bare repo's top level (absolute path baked in at fixture-creation
+    // time, not relative — hooks may run with a different CWD than the
+    // bare repo root depending on the invoking git version) BEFORE it
+    // fails. This turns "git ran the update hook" into a counted,
+    // queryable fact: `count_mirror_hook_invocations` below reads it so a
+    // behavioral no-retry test can assert the helper's OWN process made
+    // EXACTLY ONE `git push` attempt against this mirror, rather than
+    // grepping bus_handler.rs source for retry-shaped tokens.
+    let invocation_log = mirror.path().join("invocation-count.log");
     let hook = hooks_dir.join("update");
     std::fs::write(
         &hook,
-        "#!/bin/sh\necho \"intentional fail for fault test\" >&2\nexit 1\n",
+        format!(
+            "#!/bin/sh\necho invoked >> {}\necho \"intentional fail for fault test\" >&2\nexit 1\n",
+            invocation_log.display()
+        ),
     )
     .expect("write update hook");
     let mut perms = std::fs::metadata(&hook)
@@ -195,6 +208,22 @@ pub fn make_failing_mirror_fixture() -> (tempfile::TempDir, String) {
 
     let url = format!("file://{}", mirror.path().display());
     (mirror, url)
+}
+
+/// Count how many times the failing `update` hook installed by
+/// [`make_failing_mirror_fixture`] actually ran (P92 SC5 behavioral
+/// no-retry assertion). Returns 0 if the log was never created (hook
+/// never invoked at all — a DIFFERENT failure mode than "invoked more
+/// than once", so callers should distinguish 0 from >1, not just assert
+/// `!= 1`).
+#[cfg(unix)]
+#[must_use]
+pub fn count_mirror_hook_invocations(mirror_dir: &std::path::Path) -> usize {
+    let log_path = mirror_dir.join("invocation-count.log");
+    match std::fs::read_to_string(&log_path) {
+        Ok(contents) => contents.lines().filter(|l| !l.is_empty()).count(),
+        Err(_) => 0,
+    }
 }
 
 /// Open the cache.db at `cache_db_path` and count rows matching `op`.
