@@ -655,3 +655,79 @@ same-second writes visible.
 `reposix-sim`-touching phase; re-dispatchable as its own scoped wave using the sketch above.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | `verdict.py --phase N` is a pure rollup and does NOT scope the P0/P1 gate to phase-N rows | discovered-by: P93 RED-loop verifier (unbiased phase-close grade at `bf3bc9c`) | severity: P2
+
+**What:** `quality/runners/verdict.py --phase N` reads the FULL catalog rollup and reports
+overall RED/GREEN against the global P0/P1 gate — it does not filter or scope that gate to
+rows tagged/owned by phase N. Concretely, at the P93 phase-close grading session,
+`verdict.py --phase 93` reported RED with "103/112 P0/P1 green", but the 9 red rows mixed
+P93's own (at-the-time) ungraded rows together with unrelated, pre-existing stale rows from
+OTHER phases (`real-git-push-e2e`, `t4-conflict-rebase-ancestry`, `cargo-binstall-resolves`,
+`subjective/dvcs-cold-reader`, `p92-mid-stream-litmus-t1-t4`, etc.). A verifier or executor
+skimming the rollup's headline RED could easily misattribute the failure to the phase being
+graded, or — in the opposite direction — rubber-stamp a genuine phase-N regression as "not
+mine" and dismiss it because the rollup doesn't say which rows belong to N.
+
+**Benefit if done:** a phase-close verifier gets a `--phase N` output that actually answers
+"is phase N's own contract green," not "is the whole catalog green as of today" — removing
+a class of misdiagnosis (both false-attribution and false-dismissal) at exactly the moment
+(phase-close grading) where an accurate signal matters most.
+
+**Acceptance:** `verdict.py --phase N` gains a phase-scoped sub-line (e.g. "phase-N rows:
+X/Y green") computed from rows whose `id` or a row-level `phase` field matches N, printed
+ALONGSIDE (not replacing) the existing global rollup line. Minimal-viable: derive the
+phase-N row set from the existing `pNN-*`/`RBF-*` id-prefix convention already used across
+catalogs (no new schema field required); if a durable per-row `phase` field is preferred
+instead, land it as a superset covering both this and future phases' id-prefix drift.
+
+**Why deferred:** discovered while grading, not implementing — fixing `verdict.py` itself is
+a `quality/runners/`-framework change outside the P93 RED-loop mechanical re-run charter
+(mint artifacts, don't touch runner code). Filed for the P94–P97 debt-drain window,
+alongside the other `run.py`/`verdict.py` surface-area items already queued there
+(GOOD-TO-HAVES `--dry-run` flag, `--row`/`--dimension` scope flags, the recurring
+self-mutation bug in SURPRISES-INTAKE).
+
+**Default disposition:** P2 — fold into the same P94–P97 `quality/runners/`-touching debt
+window as the sibling `run.py` scope-flag work.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-05 | `dark-factory.sh sim` T1-T3 emits a confusing `blocked origin` WARN on git < 2.34 that reads like a failure at first glance | discovered-by: P93 RED-loop verifier (unbiased phase-close grade at `bf3bc9c`) | severity: P3
+
+**What:** On a box whose on-path `git` is below the script's documented `>=2.34` floor
+(e.g. 2.25.1), `dark-factory.sh sim`'s T1-T3 leg emits a `WARN git fetch --filter=blob:none
+failed with status exit status: 128` plus a raw `error: cannot list issues for import:
+blocked origin: http://127.0.0.1:7878/...` / `fatal: Unsupported command` stderr block
+during the on-box init fetch attempt — yet the script still exits 0. This is by design: the
+sim arm validates config wiring + the recovery-hint message text, not a full end-to-end
+fetch (the real fetch is exercised separately, e.g. in a git-2.54 container for T4). But the
+raw WARN + `fatal:`/`blocked origin` stderr, un-annotated, reads exactly like a fetch
+failure on first glance — a future reader (human or agent) skimming the transcript could
+reasonably conclude the gate is broken or that sim connectivity failed, when in fact exit 0
+is correct and expected.
+
+**Benefit if done:** a one-line annotation ("expected on git < 2.34 — validating config +
+recovery-hint text only, not a live fetch; see T4 container arm for the real fetch") next to
+the WARN removes a recurring "is this actually broken?" double-take for anyone reading a
+dark-factory-sim transcript on an old-git box, without changing the gate's pass/fail logic.
+
+**Acceptance:** `quality/gates/agent-ux/dark-factory.sh` (sim arm) emits an explanatory note
+alongside the WARN when the on-box git fetch fails due to sub-2.34 version detection (it
+already detects the version to decide script behavior elsewhere), OR the note is added to
+the row's `owner_hint` / a comment near the WARN's emission site so a transcript reader has
+the context inline instead of needing to cross-reference this file.
+
+**Why deferred:** cosmetic / documentation-of-intent only — does not change the gate's
+correctness or its exit code; discovered while grading (verifier read the transcript), not
+implementing. Filed rather than eager-fixed because the RED-loop charter is a mechanical
+artifact-minting re-run, not a `quality/gates/` script edit.
+
+**Default disposition:** P3 — pick up alongside other `dark-factory.sh` polish items in the
+P94–P97 debt window.
+
+**STATUS:** OPEN

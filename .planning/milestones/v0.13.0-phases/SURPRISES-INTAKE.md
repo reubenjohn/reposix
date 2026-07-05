@@ -797,3 +797,57 @@ mirroring the mermaid-regression fixture pattern already used for POLISH-03.
 flake investigation (same dimension, same debt window).
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | `status: WAIVED` + `waiver: null` loads silently and counts toward green (phantom-green) — root cause of the P93 RED | discovered-by: P93 RED-loop verifier (unbiased phase-close grade at `bf3bc9c`) | severity: MEDIUM (honesty hole, enables silent-descope)
+
+**What:** A catalog row with `status: "WAIVED"` but `waiver: null` (empty `until`/
+`tracked_in`/reason) loads without complaint and counts toward the rollup's green tally —
+there is no load-time invariant enforcing `status == WAIVED ⟺ a well-formed waiver block is
+present`. This was the LITERAL root cause of the P93 phase-close RED verdict at `bf3bc9c`:
+commit `3976789` deleted the waiver *blocks* from RBF-LR-01/RBF-LR-02/D-P92-03 (intending a
+WAIVED→PASS flip once their verifiers existed) but never actually ran the runner to perform
+that flip. The three rows were left at `status: WAIVED` / `waiver: null` — a phantom-green
+state: not a real waiver (no reason, no expiry), not a real PASS (no runner-minted artifact,
+`last_verified: null`), yet loading and displaying as if waived-and-fine. A verifier or
+dashboard that trusts `status` at face value without checking `waiver` would silently treat
+these rows as green when they were, in truth, simply ungraded.
+
+**Why this matters (severity rationale):** the project already has a defensive precedent for
+exactly this shape of bug — the `pre-release-real-backend` waiver-refuses-to-load guard
+(rows in that cadence hard-fail to load if a waiver is present, per OD-2's "creds-missing ⇒
+RED, no waiver" rule). The general catalog loader has no equivalent guard for the inverse
+case (`WAIVED` status with a missing/malformed waiver), which is precisely the gap that let
+a real regression (three ungraded rows) hide behind a green-looking status string for an
+entire commit's lifetime (`3976789` → `25dcd16`).
+
+**Sketched resolution:** `quality/runners/_audit_field.py` (or wherever row-load validation
+already lives, alongside the existing `claim_vs_assertion_audit_required` /
+`minted_at_write_once` structure invariants) should add a load-time assertion: any row with
+`status: "WAIVED"` MUST carry a non-null `waiver` object with populated `until` + a
+reason/`tracked_in` pointer, else the loader raises the row to `NOT-VERIFIED` (or hard-fails
+the catalog load, mirroring the pre-release-real-backend precedent) rather than silently
+passing the phantom-green string through. This closes the exact hole `3976789` fell into —
+a waiver-block deletion without a matching runner re-grade would now be caught at the NEXT
+load, not three commits later by a human/subagent reading transcripts line-by-line.
+
+**Acceptance:** a `structure`-dimension freshness-invariant (or an `_audit_field.py`
+addition) that walks every catalog row, asserts `status != "WAIVED" or waiver is not None`
+(and that `waiver.until` + `waiver.tracked_in`/reason are non-empty when present), and
+BLOCKs pre-push/pre-pr on violation. Add a regression fixture: a synthetic row with
+`status: WAIVED, waiver: null` that the new check must catch (mirroring the existing
+synthetic-fixture pattern used for other freshness invariants).
+
+**Why deferred:** discovered while grading the P93 RED, not implementing — the RED-loop fix
+dispatch's charter is a mechanical runner re-run (mint the missing artifacts), NOT a
+`quality/runners/_audit_field.py` code change. A real fix touches shared catalog-loader
+code used by every dimension and deserves its own scoped test coverage, not a fold-in during
+an unrelated mechanical fix.
+
+**Default disposition:** MEDIUM — schedule as its own `quality/runners/`-touching task in
+the P94–P97 debt-drain window; natural pairing with the sibling recurring-self-mutation
+`minted_at` bug already filed above (both are catalog-loader/writer honesty gaps in the same
+`quality/runners/` surface).
+
+**STATUS:** OPEN
