@@ -96,6 +96,38 @@ fn normalize_for_compare(s: &str) -> String {
     s.replace("\r\n", "\n").trim_end().to_owned()
 }
 
+/// Render a record for the Update-equivalence check with SERVER-CONTROLLED
+/// frontmatter neutralized (QL-001 Assertion-2 / no-op-push idempotency).
+///
+/// `id`, `created_at`, `updated_at`, and `version` are server-owned: the
+/// write path ([`crate::execute_action`]'s `Update` arm) sanitizes them
+/// (it sends only writable fields and uses the cache-derived `prior_version`
+/// for `If-Match`, never the blob's own values). So a push whose blob differs
+/// from the backend prior in ONLY these fields is NOT a real edit and must
+/// emit zero actions. A `git pull --no-rebase` merge routinely produces
+/// exactly this shape — the cache-served `origin/main` re-render carries the
+/// post-PATCH `version`/`updated_at` while the merged working blob keeps the
+/// pre-fetch values (cache-rebuild divergence). Comparing the FULL render
+/// (as the old code did) turned every routine pull/push cycle into a spurious
+/// PATCH + audit-log noise + a needless version bump.
+///
+/// We normalize the four fields to fixed sentinels on a clone (id is the
+/// match key and identical by construction, but neutralize it too so the
+/// projection is a pure writable-field view) and render through the same
+/// `frontmatter::render` both sides use, so YAML/whitespace canonicalization
+/// still applies. A difference the write path WOULD send (title, status,
+/// assignee, labels, body, `parent_id`, extensions) still surfaces as a PATCH.
+fn render_writable_for_compare(issue: &Record) -> Result<String, reposix_core::Error> {
+    // A fixed epoch sentinel — value is irrelevant, only that both sides share it.
+    let sentinel = chrono::DateTime::from_timestamp(0, 0).unwrap_or_else(chrono::Utc::now);
+    let mut w = issue.clone();
+    w.id = RecordId(0);
+    w.created_at = sentinel;
+    w.updated_at = sentinel;
+    w.version = 0;
+    frontmatter::render(&w)
+}
+
 /// Compute the per-issue actions for the new tree. Enforces the SG-02
 /// bulk-delete cap unless the commit message contains
 /// [`ALLOW_BULK_DELETE_TAG`].
@@ -204,28 +236,33 @@ pub(crate) fn plan(
         })?;
         match prior_by_id.get(&id).copied() {
             Some(prior_issue) => {
-                // Normalized-compare (M-03): render BOTH sides through
-                // `frontmatter::render`, normalize line endings to LF and
-                // trim trailing whitespace, then compare. Byte-for-byte
-                // compare against the raw new blob emitted a spurious
-                // PATCH on every push for unchanged content, because git's
-                // trailing-newline + CRLF handling (and any future YAML-
-                // serializer quirks) can diverge from `render`'s output
-                // even when the Issue is semantically identical. Rendering
-                // both sides + stripping line-ending noise funnels them
-                // through the same canonicalization, so "no edits" pushes
-                // emit zero Update actions — matching the user's mental
-                // model.
-                let prior_rendered =
-                    frontmatter::render(prior_issue).map_err(|e| PlanError::InvalidBlob {
+                // Normalized-compare (M-03 + QL-001 Assertion-2): render BOTH
+                // sides through `render_writable_for_compare`, which
+                // canonicalizes YAML/whitespace (M-03) AND neutralizes the
+                // server-controlled fields id/created_at/updated_at/version
+                // (QL-001 Assertion-2). Byte-for-byte compare against the raw
+                // new blob emitted a spurious PATCH on every push for unchanged
+                // content (git's trailing-newline + CRLF handling); comparing
+                // the FULL render additionally emitted a spurious PATCH on every
+                // routine pull/push cycle, because a merge's working blob keeps
+                // the pre-fetch version/updated_at while the backend prior
+                // carries the post-PATCH values (cache-rebuild divergence). The
+                // write path sanitizes those fields anyway, so funnelling both
+                // sides through the writable projection makes a content-no-op
+                // push emit zero Update actions — matching the user's mental
+                // model AND the write path's actual behavior.
+                let prior_rendered = render_writable_for_compare(prior_issue).map_err(|e| {
+                    PlanError::InvalidBlob {
                         path: path.clone(),
                         source: e,
-                    })?;
-                let new_rendered =
-                    frontmatter::render(&new_issue).map_err(|e| PlanError::InvalidBlob {
+                    }
+                })?;
+                let new_rendered = render_writable_for_compare(&new_issue).map_err(|e| {
+                    PlanError::InvalidBlob {
                         path: path.clone(),
                         source: e,
-                    })?;
+                    }
+                })?;
                 let equivalent =
                     normalize_for_compare(&prior_rendered) == normalize_for_compare(&new_rendered);
                 if !equivalent {
@@ -377,6 +414,57 @@ mod tests {
             actions.len(),
             0,
             "unchanged push should emit ZERO actions; got: {actions:?}"
+        );
+    }
+
+    /// QL-001 Assertion-2 (no-op push idempotency): a pushed blob whose
+    /// ONLY difference from the backend prior is in SERVER-CONTROLLED
+    /// frontmatter (`version`, `updated_at`, `created_at`) must emit ZERO
+    /// actions. This is exactly what a `git pull --no-rebase` merge produces
+    /// when the cache-served `origin/main` re-render carries the post-PATCH
+    /// `version`/`updated_at` while the merged working blob retains the
+    /// pre-fetch values (cache-rebuild divergence). The write path
+    /// (`execute_action::Update`) already sanitizes these fields — it uses
+    /// `prior_version` for `If-Match` and never writes the blob's
+    /// `version`/`updated_at`/`created_at` — so a difference in ONLY these
+    /// fields can never be a real write and MUST NOT trigger a PATCH.
+    ///
+    /// RED against the pre-fix planner, which rendered the FULL frontmatter
+    /// (including `version`/`updated_at`) and emitted a spurious Update.
+    #[test]
+    // test-name-honesty: ok — unit test of `diff::plan`'s equivalence check
+    // over an in-memory export fixture; no live git push.
+    fn server_controlled_field_drift_emits_no_patch() {
+        // prior = backend's CURRENT state: version bumped to 2, fresh updated_at.
+        let mut prior_rec = sample(1);
+        prior_rec.version = 2;
+        prior_rec.updated_at = chrono::Utc.with_ymd_and_hms(2026, 7, 5, 12, 0, 0).unwrap();
+        let prior: Vec<Record> = vec![prior_rec];
+
+        // new-tree blob = the merged working file: SAME writable content
+        // (title/status/body/...) but STALE server-controlled fields
+        // (version 1, old updated_at) — the cache-rebuild-divergence shape.
+        let stale = sample(1); // version 1, updated_at 2026-04-13
+        let rendered = frontmatter::render(&stale).expect("render stale");
+        let mut blobs: HashMap<u64, Vec<u8>> = HashMap::new();
+        blobs.insert(1, rendered.into_bytes());
+        let mut tree: BTreeMap<String, u64> = BTreeMap::new();
+        tree.insert("issues/1.md".to_owned(), 1);
+        let parsed = ParsedExport {
+            commit_message: "merge; no writable edits\n".to_owned(),
+            blobs,
+            tree,
+            deletes: vec![],
+            saw_commit: true,
+        };
+        let actions = plan(&prior, &parsed).expect("plan must not error");
+        assert_eq!(
+            actions.len(),
+            0,
+            "a push differing only in server-controlled frontmatter \
+             (version/updated_at/created_at) must emit ZERO actions — the write \
+             path sanitizes those fields, so a PATCH here is spurious backend \
+             noise on every routine pull/push cycle; got: {actions:?}"
         );
     }
 

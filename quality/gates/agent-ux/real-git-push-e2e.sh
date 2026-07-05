@@ -176,8 +176,38 @@ git -C "$REPO" push origin main > "${RUN_DIR}/noop-push.log" 2>&1 || true
 TOTAL_AFTER=$(sqlite3 "$SIM_DB" \
   "SELECT COUNT(*) FROM audit_events WHERE method IN ('POST','PATCH','DELETE') AND path LIKE '/projects/demo/issues%';" 2>/dev/null || echo "-1")
 EXPECTED_TOTAL=$((PATCH_COUNT + POST_COUNT + DELETE_COUNT))
-[[ "$TOTAL_AFTER" -eq "$EXPECTED_TOTAL" ]] \
-  || fail_with "no-op push wrote backend mutations" "expected ${EXPECTED_TOTAL} total mutating requests, got ${TOTAL_AFTER} (QL-001 BUG-3 stream-parser data loss)"
+if [[ "$TOTAL_AFTER" -ne "$EXPECTED_TOTAL" ]]; then
+  # Failure forensics (fires ONLY on the assertion failure — GREEN path is
+  # untouched). The known root cause of an EXTRA mutation here is
+  # server-controlled-frontmatter drift: a `pull --no-rebase` merge produces a
+  # working blob whose version/updated_at diverge from the backend's current
+  # values (cache-rebuild divergence), and a diff planner that compared the
+  # FULL frontmatter emitted a spurious PATCH (QL-001 Assertion-2; fixed in
+  # crates/reposix-remote/src/diff.rs::render_writable_for_compare). If this
+  # reddens again, the dump below shows whether the regression returned
+  # (working blob vs cache prior differ only in server-owned fields) or a NEW
+  # cause surfaced. The `noop-push.log` holds the push #2 helper stderr.
+  ISSUE_BASE="$(basename "$ISSUE_FILE")"
+  CACHE_REPO="${REPOSIX_CACHE_DIR}/reposix/sim-demo.git"
+  # Isolate the dump in a `set +e` subshell so a failing git/sqlite3 command
+  # (under the script's `set -euo pipefail`) cannot bypass `fail_with` below.
+  (
+    set +e
+    echo "===== real-git-push-e2e Assertion-2 FAIL dump (got ${TOTAL_AFTER}, expected ${EXPECTED_TOTAL}) ====="
+    echo "--- diff: cache render (planner prior) vs working merged blob (planner new) ---"
+    diff <(git -C "$CACHE_REPO" show "refs/heads/main:issues/${ISSUE_BASE}" 2>/dev/null) \
+         <(git -C "$REPO" show "HEAD:issues/${ISSUE_BASE}" 2>/dev/null) \
+      && echo "(identical: a PATCH here is a planner regression)" \
+      || echo "(^^ differ: if ONLY version/updated_at/created_at, QL-001 Assertion-2 regressed)"
+    echo "--- backend mutation audit rows ---"
+    sqlite3 -header -column "$SIM_DB" \
+      "SELECT id, method, path, substr(request_body,1,160) AS body FROM audit_events \
+       WHERE method IN ('POST','PATCH','DELETE') AND path LIKE '/projects/demo/issues%' ORDER BY id;" 2>&1
+    echo "--- push #2 helper stderr (noop-push.log) ---"; cat "${RUN_DIR}/noop-push.log" 2>&1
+    echo "===== END dump ====="
+  ) >&2 || true
+  fail_with "no-op push wrote backend mutations" "expected ${EXPECTED_TOTAL} total mutating requests, got ${TOTAL_AFTER} (server-controlled frontmatter drift? see Assertion-2 FAIL dump above)"
+fi
 ASSERT_NOOP_LOG="no-op push (pull, no edits, push) wrote zero additional backend mutations"
 echo "  PASS: ${ASSERT_NOOP_LOG}" >&2
 
