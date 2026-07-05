@@ -179,7 +179,7 @@ Every phase closes with `git push origin main` BEFORE the verifier-subagent disp
 
 ## Build memory budget (load-bearing — read before parallelizing)
 
-**The VM has crashed twice from RAM pressure caused by parallel cargo workspace builds.** The reposix workspace links large crates (`gix` chain, `rusqlite-bundled`, `reqwest+rustls`); a single `cargo check --workspace` peaks rustc + linker around 4–6 GB; `cargo test --workspace` is worse because rustc + N test binaries all link in parallel by default.
+**The VM has crashed three times from RAM pressure caused by parallel cargo workspace builds.** The reposix workspace links large crates (`gix` chain, `rusqlite-bundled`, `reqwest+rustls`); a single `cargo check --workspace` peaks rustc + linker around 4–6 GB; `cargo test --workspace` is worse because rustc + N test binaries all link in parallel by default.
 
 **Hard rules — both apply, no exceptions without explicit user override:**
 

@@ -27,9 +27,10 @@ touch PR #61 until P97 (§5).
   all 6 QL-001 criteria PASS. No FAIL/PARTIAL.
 - `STATE.md` frontmatter: `phases_completed: 14`, `next_phase: P92` (P78-P91
   shipped of 20 total P78-P97). Read directly, not inferred.
-- Doctrine-landing commits: **7 commits** `a16a19d..7f03260` (`git log
-  00ddc53..7f03260` also = 7; the outgoing orchestrator's "8" count could not
-  be reproduced either way I sliced — treat as approximate/(unverified)):
+- Doctrine-landing commits: **7 commits** `a16a19d..7f03260` (checklist steps
+  0-6; step 7 was verdict+push only). The outgoing orchestrator's "8" counted
+  the pre-flight walker-state chore `00ddc53` too — 8 commits in the pushed
+  range `d754461..7f03260`. RESOLVED (orchestrator, post-handover):
   `a16a19d` institutionalize evidence home → `e186537` ORCHESTRATION.md →
   `b6e2341` scoped CLAUDE.md files → `ee1ab17` root pointer block →
   `4d31012` 6 hooks → `db30bf8` 5 agent defs → `7f03260` coordinator-dispatch
@@ -75,12 +76,11 @@ Carried from the outgoing orchestrator; artifacts checked where cheap.
   injects via system-reminder when the agent `Read`s a file under that dir —
   I observed this directly this session (reading under `.planning/` triggered
   the `.planning/CLAUDE.md` system-reminder, visible in this transcript).
-- **(d) Stop hook — ADVISORY per owner decision (Q2).** Task brief states
-  `stop-uncommitted.sh` ships exit 0 + `systemMessage`. **Discrepancy noticed:**
-  ORCHESTRATION.md's enforcement-map table still says exit 2 (blocking) for
-  this hook. Not resolved here (would need reading the script body) — see
-  "Noticed, not filed" below. `cargo-mutex.sh` remains blocking (exit 2),
-  machine-global `pgrep`-based (per ORCHESTRATION.md's table).
+- **(d) Stop hook — ADVISORY per owner decision (Q2).** `stop-uncommitted.sh`
+  ships exit 0 + `systemMessage` (script body confirms: "ALWAYS exits 0 —
+  never blocks"). ORCHESTRATION.md's enforcement-map table briefly said exit 2
+  (blocking); RESOLVED post-handover — table now reads advisory.
+  `cargo-mutex.sh` remains blocking (exit 2), machine-global `pgrep`-based.
 - **(e) Live-wiring** — `cargo-mutex.sh` firing on real Bash calls this
   session is carried forward from the outgoing orchestrator, not personally
   triggered by this handover pass (no cargo command run). `SessionStart`
@@ -224,12 +224,12 @@ outside this repo, so it is not part of this commit).
 
 ## Noticed, not filed (this handover writer's own pass)
 
-- ORCHESTRATION.md's enforcement-map table says `stop-uncommitted.sh` is exit
-  2 (blocking); the task brief for this handover says it shipped ADVISORY
-  (exit 0 + `systemMessage`) per owner decision Q2. Not resolved here (would
-  need reading the script body) — next session should either fix the table
-  or correct this reading.
-- The commit-count discrepancy in §1 ("8" vs the 7 I measured both ways) is
+- ~~ORCHESTRATION.md's enforcement-map table says `stop-uncommitted.sh` is
+  exit 2 (blocking)~~ RESOLVED post-handover by the orchestrator: script body
+  confirmed advisory (always exit 0); the table row now reads
+  "exit 0 + systemMessage / advisory hook (owner decision Q2)".
+- The commit-count discrepancy in §1 (RESOLVED: 7 doctrine commits + 1
+  pre-flight walker chore = 8 in the pushed range) is
   small but is exactly the class of unverified numeric claim this format
   exists to catch — future handovers should re-derive counts from `git log`
   rather than carry forward a verbal count.

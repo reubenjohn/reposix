@@ -14,7 +14,7 @@ session-local accumulator that previously held these rules in `/tmp`.
 | Doctrine | Enforced by | Layer |
 |---|---|---|
 | One cargo machine-wide | `.claude/hooks/cargo-mutex.sh` (exit 2) | blocking hook |
-| Uncommitted = didn't happen | `.claude/hooks/stop-uncommitted.sh` (exit 2) | blocking hook |
+| Uncommitted = didn't happen | `.claude/hooks/stop-uncommitted.sh` (exit 0 + systemMessage) | advisory hook (owner decision Q2) |
 | Persist before compaction | `.claude/hooks/precompact-persist.sh` | state hook |
 | Session brief on startup | `.claude/hooks/session-start-brief.sh` | state hook |
 | Tier check / charter / lane size at dispatch | `.claude/hooks/dispatch-doctrine.sh` | JIT injection |
