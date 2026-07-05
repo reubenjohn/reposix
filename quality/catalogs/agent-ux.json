@@ -1578,6 +1578,48 @@
         "pre-pr"
       ],
       "minted_at": "2026-07-04T12:00:00Z"
+    },
+    {
+      "id": "agent-ux/hook-throttle",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "Regression gate for the per-agent JIT-context emission throttle (.claude/hooks/throttle.sh) and its two wired consumers (dispatch-doctrine.sh PreToolUse Task|Agent, post-dispatch-relay.sh PostToolUse Task|Agent). Guards the two failure classes a live-hook edit risks: (1) a malformed/suppressed PreToolUse output losing permissionDecision=allow would break every future dispatch; (2) an over-eager throttle starving a fresh agent of its first nudge would silently undo the JIT-doctrine design. Hermetic: the verifier sandboxes TMPDIR so it never touches live session throttle state.",
+      "sources": [
+        "quality/gates/agent-ux/hook-throttle.sh",
+        ".claude/hooks/throttle.sh",
+        ".claude/hooks/dispatch-doctrine.sh",
+        ".claude/hooks/post-dispatch-relay.sh"
+      ],
+      "command": "bash quality/gates/agent-ux/hook-throttle.sh",
+      "expected": {
+        "asserts": [
+          "first invocation per transcript_path emits valid JSON with additionalContext; a second agent's first call is unaffected by the first agent's state",
+          "repeat within cooldown is suppressed: PreToolUse output is still valid JSON carrying permissionDecision=allow; PostToolUse output is empty with exit 0",
+          "state older than the cooldown re-emits; explicit cooldown argument to throttle.sh is honored; state is keyed per hook name",
+          "empty stdin, invalid-JSON stdin, and nonexistent transcript file all fail OPEN (exit 0, valid JSON, nudge emitted)",
+          "10 rapid calls on one transcript_path produce exactly 1 emission"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/hook-throttle.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/hook-throttle.json",
+      "status": "PASS",
+      "last_verified": "2026-07-05T06:10:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: a hook edit broke the throttle contract. Check (in order): suppressed PreToolUse branch still prints the bare permissionDecision=allow JSON; throttle.sh still fail-opens (exit 0) on every error path; state filename scheme (<hook>.<sha256-16-of-transcript-path>) unchanged in BOTH throttle.sh and the gate's stale-state assert. Never fix by making the hook fail closed — a lost dispatch beats a lost nudge in no case.",
+      "claim_vs_assertion_audit": "The gate executes the real committed hook scripts (not reimplementations) against a sandboxed TMPDIR and asserts observable outputs per scenario. If the comment's claims were false the asserts fail concretely: were suppressed PreToolUse output malformed or missing permissionDecision=allow, the json.tool parse / allow-substring asserts fail; were a fresh agent starved of its first emission, the second-transcript-path assert fails; were fail-open broken, the three bad-stdin scenarios exit nonzero or emit no JSON; were throttling itself inert (emit-always), the rapid-fire assert counts >1 emission and fails.",
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "on-demand"
+      ],
+      "minted_at": "2026-07-05T06:10:00Z"
     }
   ]
 }
