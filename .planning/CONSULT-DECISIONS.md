@@ -322,3 +322,48 @@ Holding #61 is the reversible, conservative choice — it can be merged the mome
 goes GREEN.
 
 ---
+
+## 2026-07-05 [FABLE] pagination-truncation prune-safety fork (A/B/C/D)
+
+- **Decision:** **A** (primary) — add a completeness signal to
+  `BackendConnector::list_records`'s return (e.g. `Listing { records, is_complete }`)
+  and gate BOTH `prune_oid_map` call sites (`builder.rs:138-139` full-rebuild,
+  `builder.rs:442` delta) on `is_complete == true` — **plus B as cheap
+  defense-in-depth** (reclassify delete-time `NotFound` as idempotent success in
+  `write_loop.rs`, per the already-filed GOOD-TO-HAVE), WITHOUT reverting 272882c.
+- **Rationale:** A is the only fork that meets the SUCCESS bar. (1) It eliminates
+  the data-loss: prune runs only on known-complete listings; on truncation we fall
+  back to the pre-272882c accepted HARD-02 posture (under-populated tree, rows
+  retained). (2) It preserves ADR-010's invariant-at-source: `builder.rs:120-128`
+  upserts an `oid_map` row for every tree entry BEFORE the prune, so tree→oid_map
+  resolvability holds whether or not the prune fires — skipping prune on incomplete
+  input leaves a superset, never a dangling tree ref; nothing is deferred to
+  read-path. (3) Completeness is already known-but-dropped at every truncation exit
+  (`github/lib.rs:498-499` early-return at cap with pages remaining, `:502-510` raw
+  valve; intake confirms JIRA/Confluence likewise), so the flag is additive plumbing,
+  not new pagination logic; sim always returns `is_complete=true`, so existing sim
+  gates keep exercising the prune path, and a capped-mock connector test pins the
+  skip branch — not sim-blind. Reversible (drop the gate).
+  **C rejected:** `--reconcile` forces `build_from`, whose `list_records`
+  (`builder.rs:65`) hits the same cap — C's prune-at-reconcile still deletes live
+  rows beyond the cap; it turns the documented recovery command into the data-loss
+  vector. **B-alone rejected:** reverting 272882c abandons ADR-010's coherence
+  enforcement and leaves ghost rows firing phantom SoT DELETEs every push; filed as
+  defense-in-depth, not root fix. **D rejected:** `MAX_RAW_ITEMS_PER_LIST` can
+  truncate far below 500 on PR-heavy repos (`:502-510` breaks on raw count with
+  `returned` « cap), so the count-margin heuristic has structural false negatives.
+- **Risks + what would change this answer:** If any connector genuinely cannot
+  determine completeness (no has-more/link signal), A degrades to warn-and-skip for
+  that connector — evidence says all three know their truncation point, so this is
+  theoretical. If the owner vetoes the E2 return-type change, the fallback is a
+  sibling method (`list_records_complete()`) — same signal, uglier surface — not C/D.
+  Residual: prune-skipped-on-truncation lets genuine upstream deletes linger as
+  ghost rows in over-cap projects; B (the complementary defense) converts their
+  phantom DELETEs into idempotent successes, bounding the blast to audit noise.
+- **Spot-checks performed:** `crates/reposix-cache/src/meta.rs:75-114`;
+  `crates/reposix-cache/src/builder.rs:55-149`;
+  `crates/reposix-github/src/lib.rs:118-132,488-515`;
+  `docs/decisions/010-l2-l3-cache-coherence.md:195-239`;
+  `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md:891-939`.
+
+---
