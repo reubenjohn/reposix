@@ -106,6 +106,16 @@ mkdir -p "$RUN_DIR"
 
 export REPOSIX_ALLOWED_ORIGINS="${SIM_URL}"
 
+# Isolate the cache under RUN_DIR (auto-cleaned by lib.sh's trap). Without
+# this the row reuses the DEFAULT cache location, where a sibling pre-pr row
+# can leave a half-built sim-demo.git bare repo; `reposix init`'s partial-clone
+# fetch then serves a stale/incomplete cache and git upload-pack dies with
+# "git-pack-objects died / possible repository corruption on the remote side"
+# (CI run 28723945973 real-git-push-e2e failure). reposix-attach + dvcs-third-arm
+# already isolate for the same reason; a fresh cache built from THIS row's sim
+# is the only state the fetch should ever see.
+export REPOSIX_CACHE_DIR="${RUN_DIR}/cache"
+
 # Reuse the shared dark-factory helpers (build/resolve bins, spawn sim,
 # fail_with, cleanup-and-write-artifact trap). These expect WORKSPACE_ROOT,
 # RUN_DIR, ARTIFACT, ROW_ID, SIM_BIND, SIM_URL, SIM_DB to be set (done above).
