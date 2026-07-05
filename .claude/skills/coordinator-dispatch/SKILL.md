@@ -32,7 +32,7 @@ For a specific stalled/BLOCKER/sketch/resequence/tangent judgment call, use the
 | Genuinely complex / security judgment | opus | executor (opus) |
 | Default implementation | sonnet | gsd-executor / executor |
 | Mechanical / leaf / >100-line read | haiku | reader-digester |
-| Coordinate a wave of sub-lanes | fable (inherit) | phase-coordinator |
+| Coordinate a wave of sub-lanes | fable (inherit); no-fable mode: explicit `model: opus` (ORCHESTRATION §11) | phase-coordinator |
 
 **Never fable at a leaf.**
 
