@@ -25,15 +25,21 @@
 #      call cannot slip through even if the test file itself weren't
 #      touched.
 #
-# NOTE (honesty caveat, 90-05): this script has NOT been executed by the
-# agent that wrote it -- CLAUDE.md's "Build memory budget" section forbids
-# ad-hoc cargo invocations during framework-dimension (F-class) dispatches
-# on this VM. Correctness was established by manual line-by-line reading of
-# crates/reposix-core/tests/http_allowlist.rs and
+# NOTE (honesty caveat, updated 2026-07-05): at P90 90-05 (2026-07-04) this
+# script had NOT yet been executed by the agent that wrote it --
+# CLAUDE.md's "Build memory budget" section forbade ad-hoc cargo
+# invocations during framework-dimension (F-class) dispatches on this VM.
+# Correctness was established at that time by manual line-by-line reading
+# of crates/reposix-core/tests/http_allowlist.rs and
 # crates/reposix-core/src/http.rs:294-321 (quoted verbatim in the commit).
-# The catalog row's waiver stays renewed (not cleared) until a real
-# `cargo test` run confirms this script's exit code -- tracked as an
-# explicit P92 line item (RAISE LIST § 5) rather than assumed green.
+# That gap is now CLOSED: this gate was executed via a real `cargo test`
+# run on 2026-07-05 -- 12 tests passing (13 fns, 1 #[ignore]d timeout
+# case) plus both static greps confirmed true -- and independently
+# reconfirmed in P92 CI run 28735908764 (git 2.54, all jobs success). The
+# catalog row (quality/catalogs/security-gates.json,
+# security/allowlist-enforcement) reflects WAIVED→PASS as of that run; see
+# its owner_hint field and quality/reports/verifications/security/
+# allowlist-enforcement.json for the full artifact.
 #
 # Honors --row-id <id> (defaults to security/allowlist-enforcement).
 # Implements catalog row security/allowlist-enforcement.

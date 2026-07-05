@@ -27,16 +27,27 @@
 #      module doc. This script only claims WAL on the cache side, matching
 #      reality instead of assuming symmetry that doesn't exist.
 #
-# NOTE (honesty caveat, 90-05): this script has NOT been executed by the
-# agent that wrote it -- CLAUDE.md's "Build memory budget" section forbids
-# ad-hoc cargo invocations during framework-dimension (F-class) dispatches
-# on this VM. Correctness was established by manual line-by-line reading of
-# crates/reposix-core/tests/audit_schema.rs,
+# NOTE (honesty caveat, updated 2026-07-05): at P90 90-05 (2026-07-04) this
+# script had NOT yet been executed by the agent that wrote it --
+# CLAUDE.md's "Build memory budget" section forbade ad-hoc cargo
+# invocations during framework-dimension (F-class) dispatches on this VM.
+# Correctness was established at that time by manual line-by-line reading
+# of crates/reposix-core/tests/audit_schema.rs,
 # crates/reposix-cache/tests/audit_is_append_only.rs, and
-# crates/reposix-cache/src/db.rs:54-55 (WAL pragma). The catalog row's
-# waiver stays renewed (not cleared) until a real `cargo test` run confirms
-# this script's exit code -- tracked as an explicit P92 line item
-# (RAISE LIST § 5) rather than assumed green.
+# crates/reposix-cache/src/db.rs:54-55 (WAL pragma). That gap is now
+# CLOSED: this gate was executed via real `cargo test` runs on 2026-07-05
+# -- `cargo test -p reposix-core --test audit_schema` 8/8 passing and
+# `cargo test -p reposix-cache --test audit_is_append_only` 1/1 passing,
+# plus the WAL-mode grep confirmed true -- and independently reconfirmed
+# in P92 CI run 28735908764 (git 2.54, all jobs success). The catalog row
+# (quality/catalogs/security-gates.json, security/audit-immutability)
+# reflects WAIVED→PASS as of that run; see its owner_hint field and
+# quality/reports/verifications/security/audit-immutability.json for the
+# full artifact. The WAL asymmetry noted above (reposix-core::audit::
+# open_audit_db does not set WAL; only the cache-side connection is
+# WAL-tuned) is unchanged by this run -- immutability is enforced by the
+# append-only triggers, not WAL, so this remains a durability-mode
+# difference, not an immutability hole.
 #
 # Honors --row-id <id> (defaults to security/audit-immutability).
 # Implements catalog row security/audit-immutability.
