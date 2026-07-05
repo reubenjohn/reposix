@@ -113,7 +113,7 @@
 
 **Sketched resolution:** Rebase/merge dependabot #55 once main CI is green after the fast-forward; verify both advisories clear (`cargo audit` / Security-audit cron re-run); confirm the cron itself goes green.
 
-**STATUS:** OPEN
+**STATUS:** OPEN | 2026-07-05 debt-drain triage: PARTIALLY RESOLVED / RE-SEQUENCED. Ground truth (verified via `gh`): PR #55 (the bundled 12-update group) is now **CLOSED**, superseded by individual dependabot PRs #64 (tower-http), #65 (gix), #66 (rusqlite), all OPEN + mergeable. The "Security audit" (cargo-audit) cron is GREEN on all three branches as of 2026-07-05. `memmap2 0.9.11` and `quinn-proto 0.11.15` are both present in `Cargo.lock`. The definitive re-confirmation that RUSTSEC-2026-0186 (memmap2) + RUSTSEC-2026-0185 (quinn-proto) are cleared requires a `cargo audit` run naming those IDs — DEFERRED to a cargo-holding lane (this debt-drain window runs under a no-cargo firewall). Net: the original "rebase/merge PR #55" action is now MOOT (PR dead); replacement action = land PRs #64/#65/#66 (owner-gated merges). Kept OPEN pending that cargo-audit confirmation.
 
 ## 2026-07-03 11:20 | discovered-by: resumption audit (8-week idle gap) | severity: LOW
 
@@ -624,3 +624,14 @@ Candidate (b) (fast_import M-line handling) FALSIFIED — the merge-commit fast-
 **Why deferred:** both P92 executors noted the new-artifact risk (schedule+complexity, not a high-confidence one-liner). The sim arm is proven GREEN; deferring the real-backend verifier to P97's final probe (which mandates it) is the OP-8 eager-resolution principle applied to sequencing: do not rush low-confidence, high-stakes shipping checks.
 
 **STATUS:** OPEN
+
+## 2026-07-05 debt-drain triage
+
+**Scope:** A tree-writer session running interleaved with the active P93 phase lane (no cargo, disjoint files from P93's `crates/`+`quality/` code) reviewed the intake backlog and recorded dispositions below. No items were silently skipped; each was either resolved, re-sequenced, or confirmed correctly routed.
+
+- **Dependabot PR #55 + RUSTSEC** (2026-07-03 11:15 entry above): disposition updated in place on its own STATUS line — PARTIALLY RESOLVED / RE-SEQUENCED (PR #55 closed/superseded by #64/#65/#66; cargo-audit re-confirmation of the two RUSTSEC IDs deferred to a cargo-holding lane).
+- **Catalog date-cutoff schema gap** (2026-07-03 21:35 / 89-07 entry, "OPEN" above): LEFT AS-IS. Already correctly routed to P95 RBF-D-06 per that entry's own Sketched resolution paragraph; no debt-drain action needed.
+- **git 2.43.0 breaks single-backend push** (2026-07-05 / P92 T4 entry above): LEFT AS-IS. Already tagged for P94 (bus-push compatibility); no debt-drain action needed.
+- **TokenWorld two-writer conflict verifier missing** (2026-07-05 / P92 SC1 entry above): LEFT AS-IS. Already routed to the P97 9th probe by design; no debt-drain action needed.
+
+See the companion `GOOD-TO-HAVES.md` for the same-window disposition of the P92-filed security-gate good-to-haves (one resolved this window, one deferred, one left as-is) and the follow-on "branch hygiene + PR triage" entry appended below for owner-gated repo housekeeping.

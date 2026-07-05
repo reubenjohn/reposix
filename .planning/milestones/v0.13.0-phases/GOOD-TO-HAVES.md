@@ -388,7 +388,7 @@ STATUS 2026-07-05 (D-P92-03): **REPRODUCED — CONFIRMED REAL, deterministic** (
 
 **Default disposition:** LOW — fold into the next `quality/gates/security/` framework-touching phase (P95/P96) or when `db.rs` development density increases. No blocker today.
 
-**STATUS:** OPEN
+**STATUS:** OPEN | 2026-07-05 debt-drain triage: DEFERRED (confirmed, not actioned). Editing the gate's grep logic requires RE-RUNNING the gate (cargo) to confirm it still passes post-edit, which cannot be verified under this window's no-cargo firewall. Kept OPEN, routed to the P95/P96 security-gates window as already noted above.
 
 ---
 
@@ -402,7 +402,7 @@ STATUS 2026-07-05 (D-P92-03): **REPRODUCED — CONFIRMED REAL, deterministic** (
 
 **Default disposition:** LOW — fold into the next CLAUDE.md or `quality/gates/security/` documentation pass, or into whichever phase next touches these scripts.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED — 2026-07-05 debt-drain triage, commit `ae93cfb` (`docs(security-gates): refresh stale "not executed" caveats in gate script headers (P92 GTH)`). Both scripts' header comments now state the real 2026-07-05 execution (12/13 + 8/8 + 1/1 tests passing) and the P92 CI run 28735908764 confirmation, matching `quality/catalogs/security-gates.json`'s owner_hint fields for both rows. Comment-only change; no shell logic touched.
 
 ---
 
@@ -416,7 +416,7 @@ STATUS 2026-07-05 (D-P92-03): **REPRODUCED — CONFIRMED REAL, deterministic** (
 
 **Default disposition:** LOW (waiver-management) — fold into the P97 milestone-close checklist and governance review. The actual file splits remain M-sized and default-defer per `GOOD-TO-HAVES-15`.
 
-**STATUS:** OPEN
+**STATUS:** OPEN | 2026-07-05 debt-drain triage: LEFT AS-IS. This is a P97 milestone-close governance action (renew waiver or complete GTH-15 splits); no debt-drain window action taken. Flagged that it remains a hard, non-skippable P97 gate item ahead of the 2026-08-08 expiry.
 
 ## 2026-07-05 | Malformed `last_fetched_at` cursor bricks the fetch leg but only warns the push leg (inconsistent degradation) | discovered-by: P93 Exec1 (noticed while building the D-P92-03 repro) | severity: LOW
 
@@ -443,3 +443,9 @@ STATUS 2026-07-05 (D-P92-03): **REPRODUCED — CONFIRMED REAL, deterministic** (
 **Default disposition:** LOW — current `gsd-executor`/`gsd-verifier` split already covers correctness (verifier is the ungameable grading step); this is a defense-in-depth / mid-execution-hygiene nice-to-have, not a gap that blocks anything today. Owner-gated spend — do not create without explicit approval.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 debt-drain triage
+
+The docs-only, <1h-sized GTH orphans (GOOD-TO-HAVES-02, -05, -06, -07, -09, -10, -12, -13; and the 2026-07-05 test-name-honesty marker entry above) were reviewed this window and LEFT to their already-routed phases (P90/P91/P95/refresh) — each either touches a linter/runner needing a real test run (cargo-adjacent) or a `docs/**` file under the mkdocs + doc-alignment regime routed to P95, so none were safe to eager-fix in a no-cargo, no-docs-alignment debt-drain window. See the companion `SURPRISES-INTAKE.md` for this same window's disposition of the surprises backlog and the branch-hygiene/PR-triage housekeeping entry.
