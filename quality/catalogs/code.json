@@ -172,6 +172,7 @@
       },
       "artifact": "quality/reports/verifications/code/cargo-clippy-warnings.json",
       "status": "PASS",
+      "minted_at": "2026-05-01T13:29:56Z",
       "last_verified": "2026-05-01T13:29:56Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
