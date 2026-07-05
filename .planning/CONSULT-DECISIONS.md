@@ -289,3 +289,36 @@ defense-in-depth (a second, independent layer that would also swallow a genuine
 double-delete race) — a deliberate deferral, not an oversight.
 
 ---
+
+## D-P93-03 — Owner decisions: PR #62 merged, stale release-plz branch deleted, PR #61 HELD to P97 [SELF] 2026-07-05
+
+**Situation:** The 2026-07-05 debt-drain branch-hygiene + PR triage (see
+`.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md` § "2026-07-05 debt-drain:
+branch hygiene + PR triage") staged three owner-gated external mutations rather than
+executing them directly — per CLAUDE.md's "Uncommitted = didn't happen... External
+mutations need owner-named-target approval." The owner has since reviewed and approved
+all three.
+
+**Decisions (owner-approved 2026-07-05):**
+
+1. **PR #62** (`codecov-action` 6→7, all 16 checks green, mergeable) — **MERGED**
+   (squash) at commit `5118ed1`. This is the ONE commit `origin/main` carries that this
+   session's `main` lacked, resolved via Task B's `git pull --rebase`.
+2. **Branch `release-plz-2026-05-01T03-32-29Z`** — **DELETED** from `origin`. Its PR #32
+   was already CLOSED/superseded by PR #61; the branch was a 2-month-stale orphaned
+   release-plz artifact, the sole item on the debt-drain triage's "safe-to-delete" list.
+3. **PR #61** (release-plz v0.13.0 → crates.io publish) — **HELD until P97 GREEN**.
+   Rationale: a crates.io publish is functionally irreversible (yanking exists but does
+   not un-publish; downstream consumers can already resolve a yanked version once
+   published), and `STATE.md`'s `blocks_tag: true` for workstream A explicitly reserves
+   the v0.13.0 tag/publish gate for P97's GREEN verdict. Merging PR #61 now would
+   pre-empt that gate. Honors the existing `blocks_tag` contract; not a new decision so
+   much as a confirmation that the contract still holds.
+
+**Reversibility:** #62-merge and branch-deletion are the only two irreversible actions
+here (a squash-merge and a remote branch delete), both narrowly scoped (CI-action version
+bump; an already-superseded, unmerged branch) and both owner-approved before execution.
+Holding #61 is the reversible, conservative choice — it can be merged the moment P97
+goes GREEN.
+
+---
