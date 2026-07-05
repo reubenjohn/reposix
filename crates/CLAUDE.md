@@ -1,7 +1,34 @@
 # crates/CLAUDE.md — Rust workspace rules (auto-loaded under crates/)
 
-Extends root `CLAUDE.md`. Long-form build/memory doctrine lives here; root keeps a
-pointer. Full orchestration doctrine: `.planning/ORCHESTRATION.md`.
+Extends root `CLAUDE.md`. Long-form build/memory doctrine + tech stack + workspace
+layout live here; root keeps a pointer. Full orchestration doctrine:
+`.planning/ORCHESTRATION.md`.
+
+## Workspace layout
+
+```
+crates/
+├── reposix-core/        # Shared types: Record, Project, RemoteSpec, Error, Tainted<T>.
+├── reposix-sim/         # In-process axum HTTP simulator (default backend).
+├── reposix-cache/       # On-disk bare-repo cache backed by gix; lazy blob materialization.
+├── reposix-remote/      # git-remote-reposix binary (stateless-connect + export).
+├── reposix-cli/         # Top-level `reposix` CLI (init, attach, sim, list, refresh, spaces, sync).
+├── reposix-github/      # GitHub Issues BackendConnector.
+├── reposix-confluence/  # Confluence Cloud BackendConnector.
+├── reposix-jira/        # JIRA Cloud BackendConnector.
+└── reposix-swarm/       # Multi-agent contention/swarm test harness.
+```
+(Repo-root siblings: `.planning/` GSD state — do not hand-edit; `docs/` user-facing;
+`research/` long-form notes; `runtime/` gitignored sim DB + scratch trees.)
+
+## Tech stack
+
+- Rust stable (1.82+ via `rust-toolchain.toml`).
+- Async: `tokio` 1. Web: `axum` 0.7 + `reqwest` 0.12 (rustls only, never openssl-sys).
+- Git: `gix` 0.83 (pinned with `=`, gix is pre-1.0). **Runtime requirement:
+  `git >= 2.34`** for `extensions.partialClone` + `stateless-connect`.
+- Storage: `rusqlite` 0.32 with `bundled` (no system libsqlite3).
+- Errors: `thiserror` for typed crate errors, `anyhow` only at binary boundaries.
 
 ## Build memory budget (load-bearing — read before parallelizing)
 
@@ -38,3 +65,10 @@ let two run at once, not the linker.
 - Times are `chrono::DateTime<Utc>`; no `SystemTime` in serialized form.
 - Banned in production `crates/**/*.rs` (outside `tests/`): `\bP\d{2,3}-\d+\b` phase-ID
   tokens (`banned-production-tokens.sh`); use `// banned-words: ok` for justified refs.
+  The regex CATCHES v0.13+ phase numbers (`P79-02`, `P150-01`) and INTENTIONALLY MISSES
+  v0.8/v0.9-era audit IDs `P\d-\d` (`P1-1` in `error.rs` — code-quality refs, not phase
+  IDs). Forward convention: new audit-ID schemes adopt `P\d{2,3}-` numbering or a distinct
+  prefix (`AUD-1`). Full rationale in the script header. Separately,
+  `deferral-pointer-linter.sh` (pre-push) requires every deferral pointer in `crates/`
+  (phrases like "lands in P<N>") to name a real downstream phase with a PLAN artifact
+  under `.planning/phases/N-*/`; see the script header for the exact patterns.
