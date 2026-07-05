@@ -178,15 +178,20 @@ TOTAL_AFTER=$(sqlite3 "$SIM_DB" \
 EXPECTED_TOTAL=$((PATCH_COUNT + POST_COUNT + DELETE_COUNT))
 if [[ "$TOTAL_AFTER" -ne "$EXPECTED_TOTAL" ]]; then
   # Failure forensics (fires ONLY on the assertion failure — GREEN path is
-  # untouched). The known root cause of an EXTRA mutation here is
-  # server-controlled-frontmatter drift: a `pull --no-rebase` merge produces a
-  # working blob whose version/updated_at diverge from the backend's current
-  # values (cache-rebuild divergence), and a diff planner that compared the
-  # FULL frontmatter emitted a spurious PATCH (QL-001 Assertion-2; fixed in
-  # crates/reposix-remote/src/diff.rs::render_writable_for_compare). If this
-  # reddens again, the dump below shows whether the regression returned
-  # (working blob vs cache prior differ only in server-owned fields) or a NEW
-  # cause surfaced. The `noop-push.log` holds the push #2 helper stderr.
+  # untouched). The QL-001 Assertion-2 root cause was a cache-desync: after
+  # push #1 bumps a record's version, `oid_map` (PK = blob oid) accumulates a
+  # SECOND row for the same issue_id, and `find_oid_for_record` returned the
+  # STALE oid, so the L1 precheck's prior read an OLD version of the record and
+  # the planner diffed the freshly-merged working tree against it — emitting a
+  # spurious PATCH the backend rejected with `version mismatch: current=N
+  # requested=N-1`. Fixed in reposix-cache `find_oid_for_record` (ORDER BY
+  # rowid DESC) + reposix-remote `diff.rs::render_writable_for_compare`
+  # (ignore server-owned fields). If this reddens again, the helper stderr
+  # below shows the tell — a `version mismatch` line means the cache prior went
+  # stale again; a clean PATCH of unchanged content means a planner regression.
+  # NOTE the cache render below is refs/heads/main's (fresh) tree, which may
+  # match the working blob even when the planner's oid_map-derived prior does
+  # NOT — trust the `version mismatch` line over this diff.
   ISSUE_BASE="$(basename "$ISSUE_FILE")"
   CACHE_REPO="${REPOSIX_CACHE_DIR}/reposix/sim-demo.git"
   # Isolate the dump in a `set +e` subshell so a failing git/sqlite3 command
@@ -194,11 +199,14 @@ if [[ "$TOTAL_AFTER" -ne "$EXPECTED_TOTAL" ]]; then
   (
     set +e
     echo "===== real-git-push-e2e Assertion-2 FAIL dump (got ${TOTAL_AFTER}, expected ${EXPECTED_TOTAL}) ====="
-    echo "--- diff: cache render (planner prior) vs working merged blob (planner new) ---"
+    echo "--- cache oid_map rows for issue ${ISSUE_BASE%.md} (duplicate rows => stale-prior desync) ---"
+    sqlite3 -header -column "${CACHE_REPO}/cache.db" \
+      "SELECT rowid, issue_id, oid FROM oid_map WHERE issue_id='${ISSUE_BASE%.md}' ORDER BY rowid;" 2>&1
+    echo "--- diff: cache refs/heads/main tree blob vs working merged blob ---"
     diff <(git -C "$CACHE_REPO" show "refs/heads/main:issues/${ISSUE_BASE}" 2>/dev/null) \
          <(git -C "$REPO" show "HEAD:issues/${ISSUE_BASE}" 2>/dev/null) \
-      && echo "(identical: a PATCH here is a planner regression)" \
-      || echo "(^^ differ: if ONLY version/updated_at/created_at, QL-001 Assertion-2 regressed)"
+      && echo "(refs/heads/main tree == working blob; check the version-mismatch line below for the real prior)" \
+      || echo "(^^ differ)"
     echo "--- backend mutation audit rows ---"
     sqlite3 -header -column "$SIM_DB" \
       "SELECT id, method, path, substr(request_body,1,160) AS body FROM audit_events \
@@ -206,7 +214,7 @@ if [[ "$TOTAL_AFTER" -ne "$EXPECTED_TOTAL" ]]; then
     echo "--- push #2 helper stderr (noop-push.log) ---"; cat "${RUN_DIR}/noop-push.log" 2>&1
     echo "===== END dump ====="
   ) >&2 || true
-  fail_with "no-op push wrote backend mutations" "expected ${EXPECTED_TOTAL} total mutating requests, got ${TOTAL_AFTER} (server-controlled frontmatter drift? see Assertion-2 FAIL dump above)"
+  fail_with "no-op push wrote backend mutations" "expected ${EXPECTED_TOTAL} total mutating requests, got ${TOTAL_AFTER} (stale-prior cache-desync / planner drift — see Assertion-2 FAIL dump above)"
 fi
 ASSERT_NOOP_LOG="no-op push (pull, no edits, push) wrote zero additional backend mutations"
 echo "  PASS: ${ASSERT_NOOP_LOG}" >&2

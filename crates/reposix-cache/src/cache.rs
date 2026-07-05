@@ -441,10 +441,29 @@ impl Cache {
         use rusqlite::OptionalExtension as _;
         let db = self.db.lock().expect("cache.db mutex poisoned");
         let id_str = id.0.to_string();
+        // `oid_map`'s PRIMARY KEY is `oid` (the blob hash), so `issue_id` is
+        // NON-unique: `put_oid_mapping`'s `INSERT OR REPLACE` keys on the oid,
+        // so every time a record's content changes (e.g. a push bumps it to a
+        // new version) build_from inserts a NEW `(new_oid, issue_id)` row
+        // WITHOUT removing the prior `(old_oid, issue_id)` row. Retaining the
+        // old oids is intentional — `get_issue_for_oid` (the reverse lookup)
+        // needs them so a lazy fetch of ANY historical blob still resolves its
+        // record. But the forward lookup (this function) must return the
+        // CURRENT oid, not an arbitrary historical one. Without the ORDER BY,
+        // SQLite returned the first-inserted (stale) row: after a push, the
+        // planner's L1 prior (precheck Step 5) then read the OLD version's blob
+        // and diffed the freshly-merged working tree against it, emitting a
+        // spurious PATCH that the backend rejected with a version mismatch
+        // (409) — the QL-001 Assertion-2 no-op-push failure. `rowid` is
+        // monotonic with insertion (INSERT OR REPLACE re-inserts with a fresh
+        // rowid), so `ORDER BY rowid DESC LIMIT 1` returns the most-recently
+        // synced oid — matching this function's documented "most-recent tree"
+        // contract.
         let oid_hex: Option<String> = db
             .query_row(
                 "SELECT oid FROM oid_map \
-                 WHERE backend = ?1 AND project = ?2 AND issue_id = ?3",
+                 WHERE backend = ?1 AND project = ?2 AND issue_id = ?3 \
+                 ORDER BY rowid DESC LIMIT 1",
                 rusqlite::params![&self.backend_name, &self.project, &id_str],
                 |row| row.get::<_, String>(0),
             )
