@@ -1792,6 +1792,258 @@
         "on-demand"
       ],
       "minted_at": "2026-07-05T08:00:00Z"
+    },
+    {
+      "id": "agent-ux/p93-l2-l3-coherence-adr",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P93 SC1 / RBF-LR-01 (catalog-first scaffold, NOT-VERIFIED). An ADR lands in docs/decisions/ capturing the L2 (re-fetch-on-cache-miss) vs L3 (transactional-cache-writes) cache-coherence trade-off AND the CHOSEN path. Authored top-level (L2 coordinator fan-out) per ROADMAP P93 SC1 + RUNBOOK 03-road-to-v1.md §C decision rubric (default = REMEDIATION-PLAN Decision-2 option (b): narrow fix + ADR documenting the bounded exposure + a `reposix sync --reconcile` teaching-string; NO re-deferral to v0.14.0 without owner sign-off). This row gates the artifact's existence + content, not the code fix (that is RBF-LR-02).",
+      "sources": [
+        ".planning/RUNBOOK-TO-V1/03-road-to-v1.md §C (P93 L2/L3 ADR decision rubric)",
+        ".planning/milestones/v0.13.0-phases/ROADMAP.md (Phase 93, SC1)",
+        ".planning/research/v0.13.0-real-backend-frictions/03-synthesis/REMEDIATION-PLAN.md § P93 + § Honesty caveats #4",
+        "docs/decisions/009-stability-commitment.md (ADR numbering + format precedent)"
+      ],
+      "command": "bash quality/gates/agent-ux/p93-l2-l3-coherence-adr.sh",
+      "expected": {
+        "asserts": [
+          "an ADR file matching docs/decisions/*cache-coherence*.md (or *l2-l3*.md) exists",
+          "the ADR names BOTH options: L2 = re-fetch-on-cache-miss AND L3 = transactional-cache-writes",
+          "the ADR states a CHOSEN path plus its trade-off (a decision, not just an enumeration)",
+          "the ADR records the v0.14.0-deferral list explicitly (what is NOT fixed in v0.13.x) with the no-re-deferral-without-owner-signoff rule per RUNBOOK §C",
+          "the ADR cross-references the honest-L1 outcome (RBF-LR-02) -- asterisk removed or kept+qualified"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p93-l2-l3-coherence-adr.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p93-l2-l3-coherence-adr.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "NOT AUTHORED this session -- verifier script + ADR do not exist yet (PROTOCOL.md Step 3: catalog-first rows may point at a verifier that doesn't exist yet). Author the ADR top-level under docs/decisions/ (next free number is 010; 004/006 are historical gaps) following ADR-009's format; then land a grep verifier asserting options + chosen path + trade-off + deferral list.",
+      "waiver": null,
+      "claim_vs_assertion_audit": "The verifier greps the ADR file for both option names (L2 re-fetch-on-cache-miss, L3 transactional-cache-writes), a CHOSEN-path marker, a trade-off paragraph, and the deferral list. If the description's claim ('an ADR states the chosen coherence model + trade-off') were false -- e.g. the ADR only enumerated options without deciding, or was never written -- the grep asserts would fail concretely naming the missing option/decision/trade-off token, and the file-exists assert would fail if no docs/decisions/*cache-coherence*.md was authored at all.",
+      "transport_claim": false,
+      "cadences": [
+        "pre-pr",
+        "on-demand"
+      ],
+      "minted_at": "2026-07-05T10:30:00Z"
+    },
+    {
+      "id": "agent-ux/p93-cache-coherence-refresh-honest",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P93 SC2 / RBF-LR-02 (catalog-first scaffold, NOT-VERIFIED). `cargo test -p reposix-cache --test cache_coherence` passes against the ADR-chosen architecture AND `refresh_for_mirror_head` (crates/reposix-cache/src/mirror_refs.rs:297) no longer no-ops on the post-write path -- the honest L1 promise without an asterisk. Also lands the `SotPartialFail` recovery test (simulate SoT-success + mirror-fail; assert the NEXT push reads new SoT via PRECHECK B and replans correctly). NOTE (wording): ROADMAP SC2 pins the binary to `reposix-cache --test cache_coherence`, but SotPartialFail/PRECHECK B are reposix-remote concerns (write_loop.rs / precheck.rs) -- the P93 plan decides whether the recovery test co-locates in cache_coherence or a reposix-remote test binary; this row asserts the SC2 binary + that a SotPartialFail recovery test exists wherever it lands.",
+      "sources": [
+        ".planning/milestones/v0.13.0-phases/ROADMAP.md (Phase 93, SC2 + Goal)",
+        ".planning/RUNBOOK-TO-V1/03-road-to-v1.md (P93 bullet: refresh_for_mirror_head stops no-op'ing post-write; SotPartialFail recovery test)",
+        "crates/reposix-cache/src/mirror_refs.rs:297 (refresh_for_mirror_head)",
+        "crates/reposix-remote/src/write_loop.rs:293-296 (the L1 no-op-push perf-skip being reconciled)"
+      ],
+      "command": "cargo test -p reposix-cache --test cache_coherence",
+      "expected": {
+        "asserts": [
+          "cargo test -p reposix-cache --test cache_coherence exits 0 (all cache-coherence tests pass against the chosen architecture)",
+          "a SotPartialFail recovery test exists that simulates SoT-success + mirror-fail and asserts the next push reads new SoT via PRECHECK B and replans correctly",
+          "refresh_for_mirror_head is exercised on the post-write path and no longer no-ops (the L1 promise holds without an asterisk, or the asterisk is honestly qualified per RBF-LR-04)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p93-cache-coherence.sh",
+        "args": [],
+        "timeout_s": 600,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p93-cache-coherence.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "NOT IMPLEMENTED this session -- the cache_coherence test binary + the refresh_for_mirror_head post-write fix do not exist yet. If RED after implementation: check refresh_for_mirror_head is actually called on the post-write path (write_loop.rs must not skip it when files_touched>0) and the SotPartialFail recovery test's PRECHECK B replan. Runs cargo -- honor the one-cargo-invocation-machine-wide budget (crates/CLAUDE.md).",
+      "waiver": null,
+      "claim_vs_assertion_audit": "The verifier runs the real `cargo test -p reposix-cache --test cache_coherence` binary and asserts exit 0 plus the presence of a SotPartialFail recovery test. If the description's claim ('cache-coherence holds + refresh_for_mirror_head no longer no-ops post-write') were false -- e.g. refresh_for_mirror_head still short-circuits on the no-op path, or the SotPartialFail replan reads stale SoT -- the cache_coherence assertions would fail non-zero and the runner would record FAIL naming the failing test fn. This is a sim/unit gate (transport_claim:false); the real-backend arm is RBF-LR-03.",
+      "transport_claim": false,
+      "cadences": [
+        "pre-pr",
+        "pre-release",
+        "on-demand"
+      ],
+      "minted_at": "2026-07-05T10:30:00Z"
+    },
+    {
+      "id": "agent-ux/p93-delta-sync-coherence-invariant",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P93 D-P92-03 acceptance gate (sibling of RBF-LR-02). The prove-before-fix RED regression crates/reposix-cache/tests/delta_sync.rs::delta_sync_tree_references_only_resolvable_oids (currently `#[ignore]`d RED against main; repro commit 9c46e49) must flip RED->GREEN once the cache-layer coherence fix lands: the `#[ignore]` attribute is REMOVED and the test PASSES in the default `cargo test -p reposix-cache --test delta_sync` run. Root cause (D-P92-03, CONFIRMED/REPRODUCED): Cache::sync sources the tree from list_records (full current) while blob-materialization + oid_map cover only the list_changed_since delta (builder.rs:293-328) -> dangling tree entry -> read_blob UnknownOid -> `git upload-pack: not our ref`. Fix belongs at the CACHE layer (restore the tree<->oid_map invariant), NOT sim-precision-only (real Confluence/JIRA/GitHub updated_at are second-resolution too). Scope is FETCH/sync; the PUSH precheck path is NOT vulnerable.",
+      "sources": [
+        "crates/reposix-cache/tests/delta_sync.rs::delta_sync_tree_references_only_resolvable_oids (RED regression, #[ignore])",
+        ".planning/phases/93-cache-coherence/93-DP2-REPRO-NOTES.md (root cause + executed transcripts)",
+        ".planning/CONSULT-DECISIONS.md (D-P92-03, REPRODUCED)",
+        "crates/reposix-cache/src/builder.rs:293-328 (Cache::sync Step 4 tree from list_records)",
+        "crates/reposix-sim/src/routes/issues.rs:138-139,180-183 (seconds-truncation trigger)"
+      ],
+      "command": "cargo test -p reposix-cache --test delta_sync delta_sync_tree_references_only_resolvable_oids",
+      "expected": {
+        "asserts": [
+          "the `#[ignore]` attribute is REMOVED from delta_sync_tree_references_only_resolvable_oids in crates/reposix-cache/tests/delta_sync.rs (grep confirms no #[ignore] on that fn)",
+          "cargo test -p reposix-cache --test delta_sync runs delta_sync_tree_references_only_resolvable_oids (NOT skipped) and it PASSES -- every blob OID the HEAD tree references is resolvable by read_blob (no UnknownOid, no `not our ref`)",
+          "the other 3 delta_sync tests stay green (regression: 4 passed, 0 ignored)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p93-delta-sync-coherence.sh",
+        "args": [],
+        "timeout_s": 600,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p93-delta-sync-coherence.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "NOT FIXED this session -- the RED regression is proven and #[ignore]d (coordinator-gated; repro commit 9c46e49). Un-ignore + flip GREEN in the SAME commit that lands the cache-layer fix. Candidate fixes (93-DP2-REPRO-NOTES.md): (a) in sync() Step 4 never emit a tree entry for an OID neither freshly-written nor already in oid_map -- reconcile list_records against the materialized set and materialize/record the difference; or (b) make read_blob content-addressed-refetch an unknown OID. Runs cargo -- one-cargo-invocation budget.",
+      "waiver": null,
+      "claim_vs_assertion_audit": "The verifier greps for the removed #[ignore] and runs `cargo test -p reposix-cache --test delta_sync` asserting delta_sync_tree_references_only_resolvable_oids is executed (not skipped) and passes. If the description's claim ('the cache-layer coherence fix restores the tree<->oid_map invariant') were false -- e.g. the fix only tightened sim timestamp precision, leaving the latent amplifier live -- the test would still hit Err(UnknownOid(..)) and the verifier would record FAIL; if the #[ignore] were left on to fake-green, the ignore-removed assert would fail concretely. This is the acceptance gate for D-P92-03.",
+      "transport_claim": false,
+      "cadences": [
+        "pre-pr",
+        "pre-release",
+        "on-demand"
+      ],
+      "minted_at": "2026-07-05T10:30:00Z"
+    },
+    {
+      "id": "agent-ux/p93-partial-failure-recovery-real-confluence",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P93 SC3 / RBF-LR-03 (catalog-first scaffold, NOT-VERIFIED, real-backend arm). The `partial_failure_recovery_real_confluence` `#[ignore]` smoke in crates/reposix-cli/tests/agent_flow_real.rs: GREEN with credentials (ATLASSIAN_API_KEY + ATLASSIAN_EMAIL + REPOSIX_CONFLUENCE_TENANT + a REPOSIX_ALLOWED_ORIGINS entry for the Confluence origin), default-skipped without. Simulates SoT-success + mirror-fail against the sanctioned TokenWorld Confluence space and asserts the next push reads new SoT via PRECHECK B + replans. Env-gated per RBF-FW-06 / OD-2: fails closed to NOT-VERIFIED when creds/allowlist unset -- never skip-counts-as-pass.",
+      "sources": [
+        ".planning/milestones/v0.13.0-phases/ROADMAP.md (Phase 93, SC3)",
+        ".planning/RUNBOOK-TO-V1/03-road-to-v1.md (P93 bullet: partial_failure_recovery_real_confluence #[ignore] smoke)",
+        "crates/reposix-cli/tests/agent_flow_real.rs (host for the #[ignore] real-backend smoke)",
+        "docs/reference/testing-targets.md (TokenWorld sanctioned Confluence target)"
+      ],
+      "command": "cargo test -p reposix-cli --test agent_flow_real partial_failure_recovery_real_confluence -- --ignored --exact",
+      "expected": {
+        "asserts": [
+          "with TokenWorld creds (ATLASSIAN_API_KEY + ATLASSIAN_EMAIL + REPOSIX_CONFLUENCE_TENANT) AND REPOSIX_ALLOWED_ORIGINS including the Confluence origin: cargo test -p reposix-cli --test agent_flow_real partial_failure_recovery_real_confluence -- --ignored --exact exits 0",
+          "the smoke simulates SoT-success + mirror-fail and asserts the next push reads the new SoT via PRECHECK B and replans correctly against the real TokenWorld space",
+          "without creds/allowlist: the row is env-gated and flips to NOT-VERIFIED (fail-closed, never skip-as-pass, OD-2) -- NOT PASS, NOT FAIL"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p93-partial-failure-recovery-real-confluence.sh",
+        "args": [],
+        "timeout_s": 600,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p93-partial-failure-recovery-real-confluence.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "NOT IMPLEMENTED this session -- neither the #[ignore] smoke nor the verifier exist yet. Implement partial_failure_recovery_real_confluence in crates/reposix-cli/tests/agent_flow_real.rs adapting the existing #[ignore] real-backend smokes there; gate the verifier on REPOSIX_ALLOWED_ORIGINS + Atlassian creds and exit 75 (NOT-VERIFIED) when absent. First-run cache-warming heavy (PROTOCOL.md latency note) -- run in a dedicated no-cargo window.",
+      "waiver": null,
+      "coverage_kind": "real-backend",
+      "claim_vs_assertion_audit": "The verifier (once implemented) drives the partial_failure_recovery_real_confluence smoke against the REAL TokenWorld Confluence space and asserts the post-mirror-fail replan reads the new SoT via PRECHECK B. If the claim ('partial-failure recovery is exercised, not just architected') were false -- e.g. the next push re-used stale cached SoT instead of re-reading via PRECHECK B -- the smoke's assertion would fail against the live backend. Env-gated: creds-absent yields NOT-VERIFIED (fail-closed, OD-2), never a fabricated PASS. Verified at the P97 milestone-close pre-release-real-backend 9th probe.",
+      "cadences": [
+        "pre-release-real-backend"
+      ],
+      "minted_at": "2026-07-05T10:30:00Z"
+    },
+    {
+      "id": "agent-ux/p93-l1-promise-reconciled",
+      "dimension": "agent-ux",
+      "kind": "manual",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P93 SC4 / RBF-LR-04 (catalog-first scaffold, NOT-VERIFIED). The L1 promise in root CLAUDE.md + docs/concepts/dvcs-topology.md (the `no-op push skips refresh_for_mirror_head` L1 perf-fix) is reconciled with the honest RBF-LR-02 behavior: if refresh_for_mirror_head now runs on the post-write path (RBF-LR-02 GREEN + delta-sync gate GREEN), the unqualified asterisk/caveat is REMOVED; if architectural reality forces retaining the skip, the asterisk is KEPT and qualified in dvcs-topology.md with the bounded-exposure explanation + a `reposix sync --reconcile` pointer. No lying doc. CLAUDE.md updated in the SAME PR as RBF-LR-02 (ROADMAP SC6 / QG-07).",
+      "sources": [
+        ".planning/milestones/v0.13.0-phases/ROADMAP.md (Phase 93, SC4)",
+        "CLAUDE.md (L1 promise / no-op-push perf claim)",
+        "docs/concepts/dvcs-topology.md (L1/L2/L3 mental model + mirror-lag refs)",
+        "crates/reposix-remote/src/write_loop.rs:293-296 (the L1 no-op-push perf-skip being reconciled)"
+      ],
+      "command": "manual review of the L1 promise text in CLAUDE.md + docs/concepts/dvcs-topology.md against the shipped refresh_for_mirror_head behavior (RBF-LR-02)",
+      "expected": {
+        "asserts": [
+          "the L1 promise text in CLAUDE.md + docs/concepts/dvcs-topology.md is internally consistent with the shipped refresh_for_mirror_head behavior (RBF-LR-02)",
+          "if RBF-LR-02 landed the honest post-write refresh: the unqualified asterisk/caveat on the L1 promise is REMOVED",
+          "if the skip is architecturally retained: the asterisk is KEPT AND qualified in dvcs-topology.md with the bounded-exposure explanation + a `reposix sync --reconcile` pointer",
+          "the same PR that lands RBF-LR-02 updates this promise (CLAUDE.md updated in same PR per ROADMAP SC6 / QG-07)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p93-l1-promise-reconciled.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p93-l1-promise-reconciled.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": "90d",
+      "blast_radius": "P1",
+      "owner_hint": "NOT RECONCILED this session -- depends on RBF-LR-02's outcome. Graded by the phase-close verifier subagent adjudicating the conditional (asterisk removed IFF the post-write refresh is honest); a backing grep verifier can assert which branch the docs took, but the subagent decides consistency with the shipped behavior. If RED: the doc still promises no-op-skip while refresh_for_mirror_head runs post-write (lying doc), or removed the asterisk without the fix landing.",
+      "waiver": null,
+      "claim_vs_assertion_audit": "The verifier greps CLAUDE.md + docs/concepts/dvcs-topology.md for the L1 promise text and the phase-close verifier subagent cross-checks it against RBF-LR-02's shipped behavior. If the description's claim ('the L1 promise is reconciled with honest behavior, no lying doc') were false -- e.g. the docs still advertise the no-op skip while refresh_for_mirror_head now runs post-write, or the asterisk was dropped without the fix -- the consistency assert fails, naming the drifted sentence. Doc-honesty gate (transport_claim:false).",
+      "transport_claim": false,
+      "cadences": [
+        "on-demand"
+      ],
+      "minted_at": "2026-07-05T10:30:00Z"
+    },
+    {
+      "id": "agent-ux/p93-mid-stream-litmus-t1-t4",
+      "dimension": "agent-ux",
+      "kind": "manual",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P93 SC5 / RBF-LR-05 (Decision-1 mid-stream litmus checkpoint), catalog-first scaffold NOT-VERIFIED. After P93 declares GREEN, the orchestrator re-runs dark-factory T1 (sim baseline) + T4 (two-writer conflict/rebase recovery) against BOTH sim AND TokenWorld (the relevant real backends for cache-coherence + recovery). ANY HIGH-severity friction REOPENS P93 (P94 MUST NOT start until T1+T4 return <=0 HIGH). The delta-sync `not our ref` path (D-P92-03) MUST NOT recur -- RBF-LR-02 + the delta-sync gate close it. TokenWorld arm reads NOT-VERIFIED when creds absent (env-gated, never skip-as-pass). Phase-gate ritual, not a novel verifier -- mirrors the P92 sibling agent-ux/p92-mid-stream-litmus-t1-t4.",
+      "sources": [
+        ".planning/milestones/v0.13.0-phases/ROADMAP.md (Phase 93, SC5)",
+        "quality/gates/agent-ux/dark-factory.sh",
+        "quality/gates/agent-ux/t4-conflict-rebase-ancestry.sh",
+        "agent-ux/p92-mid-stream-litmus-t1-t4 (P92 sibling precedent)"
+      ],
+      "command": "bash quality/gates/agent-ux/dark-factory.sh sim && bash quality/gates/agent-ux/t4-conflict-rebase-ancestry.sh (re-run against sim AND TokenWorld)",
+      "expected": {
+        "asserts": [
+          "T1 (sim baseline) dark-factory re-run reports 0 HIGH-severity frictions",
+          "T4 (two-writer conflict + rebase recovery) re-run against sim AND TokenWorld reports 0 HIGH-severity frictions -- the delta-sync `not our ref` path (D-P92-03) does NOT recur",
+          "if >=1 HIGH surfaces: P93 REOPENS (P94 blocked) per the Decision-1 mid-stream litmus pattern",
+          "the TokenWorld arm reads NOT-VERIFIED (never skip-as-pass) when creds/allowlist are absent"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/dark-factory.sh",
+        "args": [
+          "sim"
+        ],
+        "timeout_s": 120,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p93-mid-stream-litmus-t1-t4.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "Run at phase close, AFTER P93 GREEN declared, per Decision-1. Same TokenWorld-arm substrate gap as the P92 sibling (no dedicated real-backend verifier script yet) -- the sim arm runs via dark-factory.sh + t4-conflict-rebase-ancestry.sh; the TokenWorld arm stays NOT-VERIFIED until that arm runs. This box's git (2.25.1) is below >=2.34 so the T4 leg exits 75 here -- reproduce in a git-2.54 container matching CI (see 92/93 REPRO-NOTES).",
+      "waiver": null,
+      "claim_vs_assertion_audit": "The checkpoint re-runs the SAME dark-factory T1 + T4 surfaces P93 exercises and asserts the friction tally stays at 0 HIGH. If P93's cache-coherence fixes introduced a NEW regression (or failed to close D-P92-03), the re-run's own asserts -- dark-factory-sim exit code + the T4 ancestry/reject/no-`not our ref` asserts -- would fail concretely naming the broken step, and the phase REOPENS. TokenWorld arm honestly NOT-VERIFIED when creds absent (never skip-as-pass).",
+      "transport_claim": false,
+      "cadences": [
+        "on-demand"
+      ],
+      "minted_at": "2026-07-05T10:30:00Z"
     }
   ]
 }
