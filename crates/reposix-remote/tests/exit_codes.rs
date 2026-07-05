@@ -103,6 +103,21 @@ async fn exit_codes_locked_reposix_and_helper() {
         .mount(&server)
         .await;
     let url = format!("reposix::{}/projects/demo", server.uri());
+    // Hermetic cache (P94 blocker). The SG-02 cap only fires when the L1
+    // precheck takes the first-push fallback: no `last_fetched_at` cursor
+    // ⇒ full `list_records` ⇒ 6-record prior ⇒ 6 deletes > cap of 5. With
+    // no isolated `REPOSIX_CACHE_DIR` the helper shares
+    // `~/.cache/reposix/sim-demo.git`, where a cursor leaked from ANY prior
+    // push-success test (every sibling pushes to `demo`) flips the precheck
+    // to the hot path and materializes an EMPTY prior from the unpopulated
+    // oid_map — 0 deletes, cap never trips, exit 0 instead of the locked
+    // exit 1. Isolating the cache per the crate's `CacheDirGuard` convention
+    // (see `common.rs` + the 18 sibling push tests) makes this
+    // stability-LOCKED exit-code assertion deterministic.
+    // `cache_dir` (TempDir) is bound for the rest of the test so the isolated
+    // dir outlives the spawned child; `cache_path` is moved into the closure.
+    let cache_dir = tempfile::tempdir().expect("cache tempdir");
+    let cache_path = cache_dir.path().to_path_buf();
     let stdin_data = {
         let mut buf = Vec::new();
         writeln!(&mut buf, "export").unwrap();
@@ -112,6 +127,7 @@ async fn exit_codes_locked_reposix_and_helper() {
     let push_out = tokio::task::spawn_blocking(move || {
         Command::cargo_bin("git-remote-reposix")
             .expect("binary built")
+            .env("REPOSIX_CACHE_DIR", &cache_path)
             .args(["origin", &url])
             .write_stdin(stdin_data)
             .timeout(std::time::Duration::from_secs(15))
@@ -120,6 +136,8 @@ async fn exit_codes_locked_reposix_and_helper() {
     })
     .await
     .unwrap();
+    // Keep the isolated cache alive until the child has been reaped above.
+    drop(cache_dir);
     assert_eq!(
         push_out.status.code(),
         Some(1),

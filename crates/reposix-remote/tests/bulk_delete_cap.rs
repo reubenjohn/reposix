@@ -3,6 +3,23 @@
 //! `[allow-bulk-delete]` tag in the commit message, deletes go through.
 //!
 //! These tests drive the binary against a wiremock backend.
+//!
+//! ## Hermetic cache (P94 blocker)
+//!
+//! Every scenario here runs the helper via [`run_export_isolated`], which
+//! gives each child its own `REPOSIX_CACHE_DIR` tempdir. This is NOT
+//! optional hygiene — it is load-bearing for the cap assertions. The SG-02
+//! cap is computed by `diff::plan(prior, tree)`, and `prior` comes from the
+//! L1 precheck: with a `last_fetched_at` cursor present the precheck takes
+//! the hot path and materializes `prior` from the cache oid_map; an
+//! unpopulated oid_map ⇒ EMPTY prior ⇒ 0 planned deletes ⇒ the cap silently
+//! no-ops and the "delete storm" reports `ok`. Without cache isolation the
+//! helper shares `~/.cache/reposix/sim-demo.git`, where a cursor leaked from
+//! any sibling push-success test flips the precheck to that hot path and
+//! makes these tests flaky (order-dependent). A fresh cache has no cursor ⇒
+//! first-push fallback ⇒ full `list_records` ⇒ authoritative prior ⇒ the cap
+//! fires deterministically. Matches the crate's `CacheDirGuard` convention
+//! (`common.rs` + the 18 sibling push tests).
 
 #![forbid(unsafe_code)]
 
@@ -50,6 +67,22 @@ fn empty_tree_export(msg: &str) -> Vec<u8> {
     out
 }
 
+/// Run the helper's `export` path against `url` with `stdin_data`, in a
+/// HERMETIC cache (a fresh `REPOSIX_CACHE_DIR` tempdir per call). See the
+/// module docs for why cache isolation is load-bearing for the cap
+/// assertions. `.assert()` runs the child to completion synchronously, so
+/// the tempdir is safe to drop when this function returns.
+fn run_export_isolated(url: &str, stdin_data: Vec<u8>) -> assert_cmd::assert::Assert {
+    let cache_dir = tempfile::tempdir().expect("cache tempdir");
+    Command::cargo_bin("git-remote-reposix")
+        .expect("binary built")
+        .env("REPOSIX_CACHE_DIR", cache_dir.path())
+        .args(["origin", url])
+        .write_stdin(stdin_data)
+        .timeout(std::time::Duration::from_secs(15))
+        .assert()
+}
+
 #[tokio::test]
 async fn six_deletes_refuses_and_calls_no_delete() {
     let server = MockServer::start().await;
@@ -78,16 +111,9 @@ async fn six_deletes_refuses_and_calls_no_delete() {
         buf.extend_from_slice(&empty_tree_export("cleanup\n"));
         buf
     };
-    let assert = tokio::task::spawn_blocking(move || {
-        Command::cargo_bin("git-remote-reposix")
-            .expect("binary built")
-            .args(["origin", &url])
-            .write_stdin(stdin_data)
-            .timeout(std::time::Duration::from_secs(15))
-            .assert()
-    })
-    .await
-    .unwrap();
+    let assert = tokio::task::spawn_blocking(move || run_export_isolated(&url, stdin_data))
+        .await
+        .unwrap();
     let out = assert.get_output();
     let exit_ok = out.status.success();
     let stderr = String::from_utf8_lossy(&out.stderr);
@@ -124,16 +150,9 @@ async fn five_deletes_passes_cap() {
         buf.extend_from_slice(&empty_tree_export("cleanup\n"));
         buf
     };
-    let assert = tokio::task::spawn_blocking(move || {
-        Command::cargo_bin("git-remote-reposix")
-            .expect("binary built")
-            .args(["origin", &url])
-            .write_stdin(stdin_data)
-            .timeout(std::time::Duration::from_secs(15))
-            .assert()
-    })
-    .await
-    .unwrap();
+    let assert = tokio::task::spawn_blocking(move || run_export_isolated(&url, stdin_data))
+        .await
+        .unwrap();
     let out = assert.get_output();
     let stdout = String::from_utf8_lossy(&out.stdout);
     let stderr = String::from_utf8_lossy(&out.stderr);
@@ -169,16 +188,9 @@ async fn six_deletes_with_allow_tag_actually_deletes() {
         buf.extend_from_slice(&empty_tree_export("[allow-bulk-delete] cleanup\n"));
         buf
     };
-    let assert = tokio::task::spawn_blocking(move || {
-        Command::cargo_bin("git-remote-reposix")
-            .expect("binary built")
-            .args(["origin", &url])
-            .write_stdin(stdin_data)
-            .timeout(std::time::Duration::from_secs(15))
-            .assert()
-    })
-    .await
-    .unwrap();
+    let assert = tokio::task::spawn_blocking(move || run_export_isolated(&url, stdin_data))
+        .await
+        .unwrap();
     let out = assert.get_output();
     let stdout = String::from_utf8_lossy(&out.stdout);
     let stderr = String::from_utf8_lossy(&out.stderr);
