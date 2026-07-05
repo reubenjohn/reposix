@@ -246,7 +246,14 @@ context (recurses per tier, not per sub-unit) — the remaining ~90% is correcti
 margin, never planned workload; tracking past it with scope outstanding is a
 scoping failure, split or rotate. Assume every charter is 10x more complex than
 planned: recon via an L4 lane before every dispatch, and pre-authorize the split
-in the charter rather than making the child ask permission. What does NOT
+in the charter rather than making the child ask permission. **Consolidate
+recon into ONE lane per dispatch decision** — absorb a single synthesized
+conclusion, never N report-bearing agents fanned into your own window.
+Splitting preflight by source (git/CI/steward/charter) and reading each
+report yourself is the over-fan anti-pattern: it makes you an L1 gathering
+evidence, not an L0 receiving a verdict. Past ~5% of your context before the
+first coordinator is dispatched → you're over-fanning; stop and consolidate.
+What does NOT
 multiply: one cargo machine-wide, one-tree-writer-at-a-time, ≤400-word reports
 (§2 and the enforcement map already cover these — more agents means more
 discipline on shared resources, not less).
