@@ -973,3 +973,67 @@ the next planner; route to the P96/P97 milestone-close docs reconciliation (fres
 structure dimension).
 
 **STATUS:** OPEN
+
+## 2026-07-05 23:10 | discovered-by: P94 D2 lane | severity: HIGH
+
+**What:** The P94 D1 commit `5cb9a14` ("gate prune_oid_map on connector completeness signal
+(Fork A) + idempotent delete-NotFound (Fork B)") REGRESSED the export bulk-delete-cap
+refusal path. Two reposix-remote integration tests now fail against a wiremock/mock backend:
+`tests/exit_codes.rs::exit_codes_locked_reposix_and_helper` (DETERMINISTIC — the exit-1
+bulk-delete-cap case returns `ok refs/heads/main` / exit 0 instead of refusing; this is a
+STABILITY-LOCKED exit-code contract, `docs/decisions/009-stability-commitment`) and
+`tests/bulk_delete_cap.rs::{six_deletes_refuses_and_calls_no_delete,
+six_deletes_with_allow_tag_actually_deletes}` (INTERMITTENT — flaky, consistent with the
+"0 changed" delta-sync false-negative documented in `92-T4-REPRO-NOTES.md`). Proven
+pre-existing to the D2 lane's changes: both fail identically on pristine HEAD (`git stash`
+of all D2 edits, rebuild, re-run). Symptom: the export precheck under-counts deletes (the
+6-delete empty-tree push is seen as < the cap of 5, or 0), so the cap never trips and a push
+that MUST be refused is silently accepted — a real correctness hole (silent SoT delete
+storm) masked behind a passing sim (the sim returns `is_complete=true`; only mock/bare-array
+backends without the Fork-A completeness envelope expose it).
+
+**Why out-of-scope for P94 D2:** the D2 lane owns the git-2.43 fallback-sentinel; the broken
+code (`5cb9a14`: `reposix-core/src/backend.rs` completeness plumbing + `main.rs` export
+precheck +147 lines + all connectors) is the D1 lane's territory, disjoint from the
+stateless-connect fix. Fixing it means re-opening D1's Fork-A envelope parsing against
+non-sim backends — a different charter, and touching it risks colliding with the concurrent
+code-reviewer.
+
+**Sketched resolution:** Route to the D1 lane / code-reviewer. Likely the Fork-A
+`Listing{records,is_complete}` (or sibling) return-shape change made the export precheck's
+`list_records` interpretation drop records when the backend response is a bare JSON array
+(mock/wiremock) lacking the completeness envelope, so the delete-set diff under-counts.
+Add a mock-backend regression to the D1 gate (not just sim) so the bulk-delete-cap refusal
+is exercised against a non-enveloped listing. Un-RED `exit_codes` + `bulk_delete_cap` before
+the v0.13.0 tag — a stability-LOCKED exit-code test being RED blocks milestone-close.
+
+**STATUS:** OPEN
+
+## 2026-07-05 23:12 | discovered-by: P94 D2 lane | severity: MEDIUM
+
+**What:** The catalog row `agent-ux/p94-git243-fallback-sentinel` (and the SURPRISES-INTAKE
+L602-610 source finding it mints from) MISDIAGNOSED the git-2.43 push mechanism. The row's
+`comment` + assert-c rationale state git 2.43 "tries `stateless-connect git-receive-pack`
+first ... the non-`fallback` reply aborts the push ... the push succeeds by falling back to
+the `export` capability." DP-2 container tracing (`GIT_TRANSPORT_HELPER_DEBUG=1`, see
+`94-D2-REPRO-NOTES.md`) DISPROVED this: git 2.43 (and 2.54) NEVER probe `stateless-connect`
+for the push. The real, version-windowed blocker is the helper answering `option
+object-format` with `unsupported` — git 2.43 sends that option (helper advertises the
+`object-format` cap) and treats `unsupported` as FATAL (exit 128); git 2.54 skips the option
+entirely. The fix that actually unblocks the push is answering `option object-format` →
+`ok` (`main.rs`), NOT the fallback sentinel (which is dead code for the push path). The
+outcome the row asserts (container push exits 0) IS achieved, so the asserts pass; only the
+mechanism description is wrong.
+
+**Why out-of-scope for P94 D2 (as a catalog rewrite):** catalog-first integrity — the D2
+lane must not rewrite the GREEN-contract row it is being graded against (that would be
+self-serving). The fix + tests + verifier land under the row's existing asserts; the
+description correction is a separate, non-grading edit.
+
+**Sketched resolution:** In a non-grading pass (P96/P97 milestone-close or a code-reviewer
+follow-up), correct the row's `comment` + `claim_vs_assertion_audit` to name the true cause
+(`option object-format` unsupported → git-2.43-fatal), keep the asserts (they hold), and add
+a source-assert that `main.rs` answers `option object-format` with `ok` (the verifier
+already checks this). Update the L602-610 intake source note likewise.
+
+**STATUS:** OPEN

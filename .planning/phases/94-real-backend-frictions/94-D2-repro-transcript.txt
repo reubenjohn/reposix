@@ -1,0 +1,56 @@
+P94 D2 — git-2.43 fallback-sentinel DP-2 prove-before-fix transcript
+====================================================================
+Driver:  .planning/phases/94-real-backend-frictions/94-D2-git243-repro.sh
+Method:  docker run ubuntu:24.04 (stock apt git 2.43.0), --network host to a
+         host-spawned reposix-sim on 127.0.0.1:7878, host-built binaries
+         bind-mounted read-only. GIT_TRANSPORT_HELPER_DEBUG=1 + a helper
+         verb-log at RUST_LOG=debug expose the exact handshake.
+Note:    the in-run RED/GREEN banner wording in the earlier captures said
+         "fallback-sentinel"; that was the pre-DP-2 hypothesis. The DP-2
+         TRACE below CORRECTS it — the real blocker is `option object-format`
+         answered `unsupported`, which git 2.43 treats as fatal. See
+         94-D2-REPRO-NOTES.md.
+
+--------------------------------------------------------------------
+[1] RED — pre-fix helper, git 2.43.0 (option object-format -> unsupported -> die)
+--------------------------------------------------------------------
+container git: git version 2.43.0
+reposix init sim::demo /work/repo   -> git fetch --filter=blob:none succeeded (fetch OK on 2.43)
+git push origin main:
+  DEBUG git-remote-reposix: verb cmd=capabilities
+  DEBUG git-remote-reposix: verb cmd=option object-format     <-- git 2.43 sends this
+  (helper replies `unsupported`; git aborts)
+  Pushing to reposix::http://127.0.0.1:7878/projects/demo
+PUSH_EXIT=128                        <-- matches intake symptom "exit 128, no helper output"
+
+--------------------------------------------------------------------
+[2] GREEN — fixed helper, git 2.43.0 (option object-format -> ok -> list -> export)
+--------------------------------------------------------------------
+container git: git version 2.43.0
+git push origin main:
+  Pushing to reposix::http://127.0.0.1:7878/projects/demo
+  To reposix::http://127.0.0.1:7878/projects/demo
+   * [new branch]      main -> main
+  updating local tracking ref 'refs/reposix/origin/main'
+PUSH_EXIT=0                          <-- the fix closes the regression
+
+--------------------------------------------------------------------
+[3] COMPARISON — same fixed helper, git 2.54.0 (GIT_CHANNEL=ppa)
+    Proves the version window: 2.54 NEVER sends `option object-format`.
+--------------------------------------------------------------------
+container git: git version 2.54.0
+git push origin main (GIT_TRANSPORT_HELPER_DEBUG):
+  Debug: Remote helper: -> capabilities
+  Debug: Remote helper: -> list          <-- straight to list; NO `option object-format`
+  Debug: Remote helper: -> export
+  Debug: Remote helper: <- ok refs/heads/main
+   * [new branch]      main -> main
+PUSH_EXIT=0
+
+--------------------------------------------------------------------
+DP-2 verdict: GREEN on the true claim (real git-2.43 single-backend push exits 0
+after the fix, RED->GREEN in-container). The intake's stateless-connect/`fallback`
+mechanism was a misdiagnosis; neither git 2.43 nor 2.54 probes stateless-connect for
+the push. Real fix: helper answers `option object-format {<empty>|true|sha1}` -> `ok`
+(main.rs). The `fallback` sentinel (stateless_connect.rs) is also fixed for
+git-remote-helpers(7) spec-compliance but is not the push-unblocker.
