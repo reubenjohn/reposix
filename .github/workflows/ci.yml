@@ -380,7 +380,15 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install kcov
-        run: sudo apt-get update && sudo apt-get install -y kcov
+        # apt dropped kcov on Ubuntu 24.04 (noble), so pull the prebuilt v42
+        # release binary instead. The tarball unpacks to usr/local/bin/kcov,
+        # so extract into /usr/local (no --strip-components needed). The
+        # `kcov --version` line makes the step fail loudly if the binary can't
+        # run (e.g. a lib/glibc mismatch), signalling a switch to a source build.
+        run: |
+          curl -sSL https://github.com/SimonKagstrom/kcov/releases/download/v42/kcov-amd64.tar.gz -o /tmp/kcov.tar.gz
+          sudo tar -xzf /tmp/kcov.tar.gz -C /usr/local
+          kcov --version
       - name: Run shell-coverage gate (enforces the ratchet floor)
         run: bash quality/gates/code/shell-coverage.sh
       - name: Upload shell coverage to Codecov

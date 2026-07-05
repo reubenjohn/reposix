@@ -42,8 +42,10 @@ ORCHESTRATION.md, AND tag the dimension (routes to the right catalog + `gates/<d
 **Shell-coverage ratchet:** `code/shell-coverage` (kcov, `gates/code/shell-coverage.sh`)
 grades an *aggregate* line-coverage % over the whole in-scope shell corpus (never-run
 scripts counted at 0%) against the floor in `quality/shell-coverage-floor.txt` — raise it
-over time, never above the measured aggregate to force-pass. Needs `kcov` (`sudo apt-get
-install -y kcov`); the CI `shell-coverage` job uploads a `shell`-flag cobertura to Codecov.
+over time, never above the measured aggregate to force-pass. Needs `kcov` — on modern
+distros (noble dropped it from apt) install the prebuilt release binary or build from
+source (see the `shell-coverage` job in `.github/workflows/ci.yml`); `sudo apt-get install
+-y kcov` still works on focal. The CI `shell-coverage` job uploads a `shell`-flag cobertura to Codecov.
 Follow-up (documented, left at 0%): the cargo/sim-dependent gates are unexercised by the
 harnesses, so they sit at 0% and drag the aggregate down — closing them is deferred.
 
