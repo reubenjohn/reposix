@@ -232,15 +232,20 @@ mod test_impl {
     }
 }
 
+// Drives the real compiled `git-remote-reposix` binary against a
+// wiremock SoT + a REAL bare git mirror with a counting failing hook.
+// test-name-honesty: ok — genuine push-path coverage, invocation count
+// comes from the real hook's own log, not a mock.
 #[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
 async fn bus_write_no_helper_retry_makes_exactly_one_push_attempt() {
     test_impl::run_no_retry().await;
 }
 
-// On non-Unix targets the test compiles to a no-op stub (D-04 RATIFIED:
-// failing-update-hook + chmod 0o755 is POSIX-specific; reposix CI is
-// Linux-only).
+// Non-Unix compile stub (D-04 RATIFIED: failing-update-hook + chmod
+// 0o755 is POSIX-specific; reposix CI is Linux-only).
+// test-name-honesty: ok — no-op stub; the real scenario is the
+// #[cfg(unix)] fn above (same name), gated by D-04.
 #[cfg(not(unix))]
 #[test]
 fn bus_write_no_helper_retry_makes_exactly_one_push_attempt() {
