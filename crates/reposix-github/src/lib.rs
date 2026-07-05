@@ -70,7 +70,7 @@ use parking_lot::Mutex;
 use reqwest::{Method, StatusCode};
 use serde::Deserialize;
 
-use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason};
+use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason, Listing};
 use reposix_core::http::{client, ClientOpts, HttpClient};
 use reposix_core::{Error, Record, RecordId, RecordStatus, Result, Untainted};
 
@@ -449,6 +449,18 @@ impl BackendConnector for GithubReadOnlyBackend {
     ///   fetched, issues returned so far, and the configured cap — rather
     ///   than implying `MAX_ISSUES_PER_LIST` real issues were found.
     async fn list_records(&self, project: &str) -> Result<Vec<Record>> {
+        // Delegate to the completeness-aware form and drop the flag. Concrete
+        // override below, so no recursion through the trait default.
+        Ok(self.list_records_complete(project).await?.records)
+    }
+
+    /// Same pagination loop as [`list_records`](Self::list_records), but keeps
+    /// the completeness signal the cache needs to gate its `oid_map` prune
+    /// (P94). `is_complete` starts `true` and is set `false` at EITHER
+    /// truncation exit — the `MAX_ISSUES_PER_LIST` real-issue cap or the
+    /// `MAX_RAW_ITEMS_PER_LIST` raw-items safety valve. Natural pagination
+    /// exhaustion (`Link: rel="next"` absent) leaves it `true`.
+    async fn list_records_complete(&self, project: &str) -> Result<Listing> {
         let first = format!(
             "{}/repos/{}/issues?state=all&per_page={}",
             self.base(),
@@ -459,6 +471,8 @@ impl BackendConnector for GithubReadOnlyBackend {
         let mut out: Vec<Record> = Vec::new();
         let mut pages: usize = 0;
         let mut raw_examined: usize = 0;
+        // Optimistic: only the two truncation exits below flip this false.
+        let mut is_complete = true;
 
         let header_owned = self.standard_headers();
         let header_refs: Vec<(&str, &str)> =
@@ -496,7 +510,12 @@ impl BackendConnector for GithubReadOnlyBackend {
                 }
                 out.push(translate(gh));
                 if out.len() >= MAX_ISSUES_PER_LIST {
-                    return Ok(out);
+                    // TRUNCATION: capped at the real-issue limit with (possibly)
+                    // more upstream — the listing is a prefix, not complete.
+                    return Ok(Listing {
+                        records: out,
+                        is_complete: false,
+                    });
                 }
             }
             if raw_examined >= MAX_RAW_ITEMS_PER_LIST {
@@ -507,11 +526,17 @@ impl BackendConnector for GithubReadOnlyBackend {
                      (cap {MAX_ISSUES_PER_LIST}); remainder not listed"
                 );
                 tracing::warn!(raw_examined, pages, returned, "{}", message);
+                // TRUNCATION: the raw-items safety valve tripped before the
+                // feed was exhausted — the listing is incomplete.
+                is_complete = false;
                 break;
             }
             next_url = link_hdr.as_deref().and_then(parse_next_link);
         }
-        Ok(out)
+        Ok(Listing {
+            records: out,
+            is_complete,
+        })
     }
 
     async fn get_record(&self, project: &str, id: RecordId) -> Result<Record> {

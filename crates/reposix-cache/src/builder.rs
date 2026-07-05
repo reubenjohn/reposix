@@ -34,7 +34,9 @@ impl Cache {
     /// - a prune of `oid_map` rows whose `issue_id` is no longer in
     ///   `list_records` (DELETION-direction coherence — matters on the
     ///   `--reconcile` full rebuild against a populated cache; a no-op on a
-    ///   fresh seed);
+    ///   fresh seed). SKIPPED when the listing is truncated
+    ///   (`Listing::is_complete == false`) so a pagination cap cannot delete
+    ///   `oid_map` rows for live records beyond the cap (P94 data-loss guard);
     /// - one `op='tree_sync'` audit row (best-effort — a failed insert
     ///   warns rather than aborting the transaction);
     /// - `meta.last_fetched_at` upserted to the current UTC RFC-3339
@@ -58,14 +60,27 @@ impl Cache {
     /// thread panicked while holding it). A panic in this path means
     /// the process state is corrupt; this method does not attempt to
     /// recover.
+    // Seed-path orchestration (list → render → atomic oid_map txn with the
+    // completeness-gated prune → tree/commit → sync tag) is intrinsic to the
+    // spec; splitting would obscure the single-transaction boundary the doc
+    // comment above documents. Mirrors `sync`'s same allowance.
+    #[allow(clippy::too_many_lines)]
     pub async fn build_from(&self) -> Result<gix::ObjectId> {
         // List issues. If this fails with an egress-denial variant, fire
         // the audit row BEFORE returning the typed error — same shape
         // as `read_blob`'s egress path.
-        let issues = match self.backend.list_records(&self.project).await {
+        //
+        // `list_records_complete` carries a per-listing completeness signal
+        // (P94 pagination-prune-safety): a truncated listing (`is_complete ==
+        // false`, a real GitHub/JIRA/Confluence cap) must NOT drive the
+        // DELETION-direction prune below, or it would wipe `oid_map` rows for
+        // live records beyond the cap. The sim always reports `true`.
+        let listing = match self.backend.list_records_complete(&self.project).await {
             Ok(v) => v,
             Err(e) => return Err(self.classify_backend_error(&e, None)),
         };
+        let is_complete = listing.is_complete;
+        let issues = listing.records;
 
         // Render each issue, compute the blob OID WITHOUT writing the
         // blob object. The tree references each blob_oid; the blob
@@ -135,8 +150,33 @@ impl Cache {
             // guards (`.planning/CONSULT-DECISIONS.md` § D-P93-01/02). Prune // banned-words: ok
             // the same way, in the same transaction. On a genuine first seed
             // oid_map is empty, so this is a no-op.
-            let keep_ids: Vec<&str> = records.iter().map(|(_, id)| id.as_str()).collect();
-            meta::prune_oid_map(&tx, &self.backend_name, &self.project, &keep_ids)?;
+            //
+            // P94 pagination-prune-safety GATE: prune ONLY on a COMPLETE
+            // listing. A truncated `list_records` (real GitHub/JIRA/Confluence
+            // cap; `--reconcile` hits the SAME cap since it re-lists in full)
+            // would build `keep_ids` from a PREFIX, so the prune would DELETE
+            // oid_map rows for records that are still LIVE upstream, merely
+            // beyond the cap — silent data loss. On truncation we SKIP the
+            // prune and fall back to the pre-272882c accepted posture (a
+            // superset of rows retained). The upsert loop above already wrote
+            // an oid_map row for every tree entry, so retaining extra rows
+            // cannot dangle a tree reference — the ADR-010 invariant holds
+            // either way. See `.planning/CONSULT-DECISIONS.md` 2026-07-05
+            // [FABLE] pagination-truncation prune-safety fork (Fork A).
+            if is_complete {
+                let keep_ids: Vec<&str> = records.iter().map(|(_, id)| id.as_str()).collect();
+                meta::prune_oid_map(&tx, &self.backend_name, &self.project, &keep_ids)?;
+            } else {
+                tracing::warn!(
+                    target: "reposix_cache::prune_skip",
+                    backend = self.backend_name.as_str(),
+                    project = self.project.as_str(),
+                    records = records.len(),
+                    "list_records truncated (is_complete=false) on build_from/reconcile; \
+                     SKIPPING oid_map prune to avoid deleting live records beyond the \
+                     pagination cap (P94 data-loss guard) — retaining a superset of rows"
+                );
+            }
             audit::log_tree_sync(&tx, &self.backend_name, &self.project, records.len());
             meta::set_meta(&tx, "last_fetched_at", &Utc::now().to_rfc3339())?;
             tx.commit()?;
@@ -231,7 +271,9 @@ impl Cache {
     ///    [`Cache::read_blob`], and no upstream-deleted record may leave a
     ///    ghost row that resurrects a phantom Delete; ADR-010 /
     ///    RBF-LR-01/02, D-P93-02), update `meta.last_fetched_at`, insert the // banned-words: ok
-    ///    `op='delta_sync'` audit row.
+    ///    `op='delta_sync'` audit row. The prune is GATED on
+    ///    `Listing::is_complete`: a truncated listing skips it so a pagination
+    ///    cap cannot delete rows for live records beyond the cap (P94).
     ///
     /// An empty-delta sync still bumps `last_fetched_at` and writes an
     /// audit row with `bytes=0` — intentional so audit history has one
@@ -316,10 +358,17 @@ impl Cache {
 
         // Step 4: re-list the full current set for unconditional full
         // tree sync (per CONTEXT.md §Tree sync vs. blob materialization).
-        let all_issues = match self.backend.list_records(&self.project).await {
+        //
+        // `list_records_complete` carries the completeness signal that gates
+        // the Step-5 prune (P94 pagination-prune-safety): a truncated listing
+        // must not drive the DELETION-direction prune. The sim always reports
+        // `true`, so every sim-backed gate keeps exercising the prune path.
+        let all_listing = match self.backend.list_records_complete(&self.project).await {
             Ok(v) => v,
             Err(e) => return Err(self.classify_backend_error(&e, None)),
         };
+        let all_is_complete = all_listing.is_complete;
+        let all_issues = all_listing.records;
         let mut records: Vec<(gix::objs::tree::Entry, String)> =
             Vec::with_capacity(all_issues.len());
         for issue in &all_issues {
@@ -437,9 +486,33 @@ impl Cache {
             // push plans a phantom Delete that 404s into a FALSE SotPartialFail
             // (see `.planning/CONSULT-DECISIONS.md` § D-P93-01/02). The tree is // banned-words: ok
             // built from the same `list_records`, so a pruned id is exactly a
-            // record that no longer exists — no live row is ever removed.
-            let keep_ids: Vec<&str> = records.iter().map(|(_, id)| id.as_str()).collect();
-            meta::prune_oid_map(&tx, &self.backend_name, &self.project, &keep_ids)?;
+            // record that no longer exists — no live row is ever removed…
+            //
+            // …UNLESS the listing was TRUNCATED. P94 pagination-prune-safety
+            // GATE: prune ONLY on a COMPLETE listing. On a truncated
+            // `list_records` (`is_complete == false`) an id "missing" from the
+            // set is ambiguous — it may be an upstream delete OR a live record
+            // beyond the cap — so we SKIP the prune rather than risk deleting a
+            // live row (silent data loss). The upserts above already covered
+            // every tree entry, so retaining a superset cannot dangle a tree
+            // reference; ADR-010's invariant holds. Residual ghost rows on
+            // over-cap projects are bounded to audit noise by Fork B
+            // (idempotent delete-NotFound). See `.planning/CONSULT-DECISIONS.md`
+            // 2026-07-05 [FABLE] pagination-truncation prune-safety fork.
+            if all_is_complete {
+                let keep_ids: Vec<&str> = records.iter().map(|(_, id)| id.as_str()).collect();
+                meta::prune_oid_map(&tx, &self.backend_name, &self.project, &keep_ids)?;
+            } else {
+                tracing::warn!(
+                    target: "reposix_cache::prune_skip",
+                    backend = self.backend_name.as_str(),
+                    project = self.project.as_str(),
+                    records = records.len(),
+                    "list_records truncated (is_complete=false) on delta sync; \
+                     SKIPPING oid_map prune to avoid deleting live records beyond the \
+                     pagination cap (P94 data-loss guard) — retaining a superset of rows"
+                );
+            }
             tx.execute(
                 "INSERT INTO meta (key, value, updated_at) VALUES ('last_fetched_at', ?1, ?2) \
                  ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",

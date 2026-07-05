@@ -165,13 +165,22 @@ impl ConfluenceBackend {
     /// - Returns `Error::Other` if pagination would exceed `MAX_ISSUES_PER_LIST`.
     /// - All errors that `list_records` would raise also apply here.
     pub async fn list_records_strict(&self, project: &str) -> Result<Vec<Record>> {
-        self.list_issues_impl(project, true).await
+        // Strict mode returns Err at any truncation, so an Ok is always
+        // complete — drop the flag.
+        self.list_issues_impl(project, true).await.map(|(r, _)| r)
     }
 
-    /// Shared pagination loop for both `list_records` and
-    /// [`Self::list_records_strict`]. When `strict == true` the cap site
-    /// returns `Err`; when `false` it emits a `tracing::warn!` and returns
-    /// `Ok(capped)`.
+    /// Shared pagination loop for `list_records`,
+    /// [`Self::list_records_strict`], and `list_records_complete`. When
+    /// `strict == true` the cap site returns `Err`; when `false` it emits a
+    /// `tracing::warn!` and returns `Ok((capped, false))`.
+    ///
+    /// Returns the pages paired with a completeness flag: `true` iff cursor
+    /// pagination was exhausted naturally (the whole space was listed),
+    /// `false` at either truncation exit (the page cap or the
+    /// `MAX_ISSUES_PER_LIST` early return). The cache gates its `oid_map` prune
+    /// on that flag (P94 pagination-prune-safety). A strict `Ok` is always
+    /// complete.
     ///
     /// # Errors
     ///
@@ -181,7 +190,7 @@ impl ConfluenceBackend {
         &self,
         project: &str,
         strict: bool,
-    ) -> Result<Vec<Record>> {
+    ) -> Result<(Vec<Record>, bool)> {
         let space_id = self.resolve_space_id(project).await?;
         let first = format!(
             "{}/wiki/api/v2/spaces/{}/pages?limit={}",
@@ -192,6 +201,9 @@ impl ConfluenceBackend {
         let mut next_url: Option<String> = Some(first);
         let mut out: Vec<Record> = Vec::new();
         let mut pages: usize = 0;
+        // Optimistic: natural cursor exhaustion leaves this true; only a
+        // truncation exit flips it false.
+        let mut is_complete = true;
 
         let header_owned = self.standard_headers();
         let header_refs: Vec<(&str, &str)> =
@@ -210,6 +222,8 @@ impl ConfluenceBackend {
                     pages,
                     "reached MAX_ISSUES_PER_LIST cap; stopping pagination"
                 );
+                // TRUNCATION: page cap tripped before cursor exhaustion.
+                is_complete = false;
                 break;
             }
             self.await_rate_limit_gate().await;
@@ -244,7 +258,8 @@ impl ConfluenceBackend {
                              refusing to truncate (strict mode)"
                         )));
                     }
-                    return Ok(out);
+                    // TRUNCATION: hit the page cap with more upstream.
+                    return Ok((out, false));
                 }
             }
             // Drop the typed list's own `links` field in favor of the pure
@@ -263,7 +278,9 @@ impl ConfluenceBackend {
                 }
             });
         }
-        Ok(out)
+        // Natural cursor exhaustion (next_url became None) — the whole space
+        // was listed, so `is_complete` is still true here.
+        Ok((out, is_complete))
     }
 
     pub(crate) fn base(&self) -> &str {

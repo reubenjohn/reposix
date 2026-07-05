@@ -19,7 +19,7 @@ mod remote;
 mod taint;
 
 pub use backend::{
-    BackendCapabilities, BackendConnector, BackendFeature, CommentSupport, DeleteReason,
+    BackendCapabilities, BackendConnector, BackendFeature, CommentSupport, DeleteReason, Listing,
     VersioningModel,
 };
 pub use error::{Error, Result};

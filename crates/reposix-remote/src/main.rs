@@ -486,11 +486,40 @@ pub(crate) fn execute_action(
             Ok(())
         }
         PlannedAction::Delete { id, .. } => {
-            rt.block_on(backend.delete_or_close(project, id, DeleteReason::Abandoned))
-                .with_context(|| format!("delete issue {}", id.0))?;
-            Ok(())
+            match rt.block_on(backend.delete_or_close(project, id, DeleteReason::Abandoned)) {
+                // Fork B (P94 defense-in-depth): a delete-time "not found" means
+                // the record is ALREADY gone — exactly the desired end state.
+                // Treat it as an IDEMPOTENT SUCCESS, not a failure, so a
+                // phantom/ghost Delete that slips past the Fork-A prune gate
+                // (e.g. a residual oid_map row on an over-cap project where the
+                // prune is skipped) cannot force a FALSE SotPartialFail on every
+                // push. Bounds the residual blast to audit noise. See
+                // `.planning/CONSULT-DECISIONS.md` 2026-07-05 [FABLE]
+                // pagination-truncation prune-safety fork (Fork B).
+                Err(e) if is_delete_notfound(&e) => {
+                    diag(&format!(
+                        "delete issue {}: already absent on the backend — \
+                         idempotent no-op (Fork B)",
+                        id.0
+                    ));
+                    Ok(())
+                }
+                other => other.with_context(|| format!("delete issue {}", id.0)),
+            }
         }
     }
+}
+
+/// Fork B (P94): does this error mean the record a delete targeted is ALREADY
+/// absent on the backend? Such a delete is idempotently satisfied — the record
+/// is in the desired end state — so it must NOT count as a write failure.
+///
+/// Matches both the typed [`reposix_core::Error::NotFound`] and the legacy
+/// stringly `Error::Other("not found: …")` shape some adapters still emit
+/// during the typed-error migration (see `reposix_core::error`).
+fn is_delete_notfound(e: &reposix_core::Error) -> bool {
+    matches!(e, reposix_core::Error::NotFound { .. })
+        || matches!(e, reposix_core::Error::Other(msg) if msg.trim_start().starts_with("not found"))
 }
 
 /// Adapter so `BufReader` can pull from the same underlying stdin we own
@@ -538,5 +567,117 @@ impl<R: std::io::Read, W: std::io::Write> std::io::Read for ProtoReader<'_, R, W
         out[..n].copy_from_slice(&avail[..n]);
         self.pos += n;
         Ok(n)
+    }
+}
+
+#[cfg(test)]
+mod fork_b_tests {
+    //! Fork B (P94 pagination-prune-safety, defense-in-depth): a delete against
+    //! an already-absent record is an IDEMPOTENT SUCCESS at the write boundary,
+    //! never a `SotPartialFail`-forcing failure. `execute_action` is
+    //! `pub(crate)`, so this in-crate unit test drives it directly — the full
+    //! push-loop end-to-end is covered by
+    //! `tests/deleted_record_ghost_oid_map_row_forces_false_partial_fail.rs`.
+
+    use super::{execute_action, is_delete_notfound};
+    use crate::diff::PlannedAction;
+    use async_trait::async_trait;
+    use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason};
+    use reposix_core::{Error as CoreError, Record, RecordId, Result as CoreResult, Untainted};
+    use tokio::runtime::Runtime;
+
+    /// Backend whose `delete_or_close` returns a caller-chosen error.
+    struct DeleteBackend {
+        err: fn() -> CoreError,
+    }
+
+    #[async_trait]
+    impl BackendConnector for DeleteBackend {
+        fn name(&self) -> &'static str {
+            "delete-backend-stub"
+        }
+        fn supports(&self, _f: BackendFeature) -> bool {
+            false
+        }
+        async fn list_records(&self, _: &str) -> CoreResult<Vec<Record>> {
+            Ok(vec![])
+        }
+        async fn get_record(&self, _: &str, _: RecordId) -> CoreResult<Record> {
+            Err(CoreError::Other("unused".into()))
+        }
+        async fn create_record(&self, _: &str, _: Untainted<Record>) -> CoreResult<Record> {
+            Err(CoreError::Other("unused".into()))
+        }
+        async fn update_record(
+            &self,
+            _: &str,
+            _: RecordId,
+            _: Untainted<Record>,
+            _: Option<u64>,
+        ) -> CoreResult<Record> {
+            Err(CoreError::Other("unused".into()))
+        }
+        async fn delete_or_close(&self, _: &str, _: RecordId, _: DeleteReason) -> CoreResult<()> {
+            Err((self.err)())
+        }
+    }
+
+    fn run_delete(err: fn() -> CoreError) -> anyhow::Result<()> {
+        let rt = Runtime::new().unwrap();
+        let backend = DeleteBackend { err };
+        let action = PlannedAction::Delete {
+            id: RecordId(2),
+            prior_version: 1,
+        };
+        execute_action(&backend, "demo", &rt, None, action)
+    }
+
+    #[test]
+    fn typed_notfound_is_classified_idempotent() {
+        assert!(is_delete_notfound(&CoreError::NotFound {
+            project: "demo".into(),
+            id: "2".into(),
+        }));
+    }
+
+    #[test]
+    fn stringly_not_found_is_classified_idempotent() {
+        // Legacy adapters still emit the not-found condition via Error::Other.
+        assert!(is_delete_notfound(&CoreError::Other(
+            "not found: demo/2".into()
+        )));
+    }
+
+    #[test]
+    fn genuine_failures_are_not_classified_idempotent() {
+        assert!(!is_delete_notfound(&CoreError::Other("boom".into())));
+        assert!(!is_delete_notfound(&CoreError::Other(
+            "version mismatch: current=2 requested=1".into()
+        )));
+    }
+
+    #[test]
+    fn delete_of_already_absent_record_is_idempotent_success() {
+        // Fork B core contract: a NotFound on delete resolves to Ok(()), so
+        // write_loop's failed_ids stays empty and no false SotPartialFail fires.
+        let out = run_delete(|| CoreError::NotFound {
+            project: "demo".into(),
+            id: "2".into(),
+        });
+        assert!(
+            out.is_ok(),
+            "delete of an already-absent record must be an idempotent success (Fork B), got {out:?}"
+        );
+    }
+
+    #[test]
+    fn delete_with_genuine_error_still_fails() {
+        // A non-NotFound backend error on delete must STILL surface as Err —
+        // Fork B must not swallow real failures.
+        let out = run_delete(|| CoreError::Other("500 internal".into()));
+        assert!(
+            out.is_err(),
+            "a genuine (non-NotFound) delete error must still fail the action, not be swallowed"
+        );
     }
 }

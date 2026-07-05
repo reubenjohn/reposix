@@ -137,7 +137,9 @@ impl JiraBackend {
     /// - Returns `Error::Other` if pagination would exceed `MAX_ISSUES_PER_LIST`.
     /// - All errors that `list_records` would raise also apply here.
     pub async fn list_records_strict(&self, project: &str) -> Result<Vec<Record>> {
-        self.list_issues_impl(project, true).await
+        // Strict mode returns Err at any truncation, so an Ok is always
+        // complete — drop the flag.
+        self.list_issues_impl(project, true).await.map(|(r, _)| r)
     }
 
     // ─── Internal helpers ────────────────────────────────────────────────
@@ -163,11 +165,19 @@ impl JiraBackend {
         h
     }
 
+    /// Shared pagination loop for `list_records`, `list_records_strict`, and
+    /// `list_records_complete`. Returns the records paired with a completeness
+    /// flag: `true` iff the loop terminated on JIRA's `isLast: true` (the whole
+    /// project was listed), `false` at every truncation exit (the page cap, the
+    /// `MAX_ISSUES_PER_LIST` early return, or a missing cursor while `isLast`
+    /// was false). The cache gates its `oid_map` prune on that flag (P94
+    /// pagination-prune-safety). In `strict` mode a truncation is an `Err`, so
+    /// a strict `Ok` always carries `is_complete == true`.
     pub(crate) async fn list_issues_impl(
         &self,
         project: &str,
         strict: bool,
-    ) -> Result<Vec<Record>> {
+    ) -> Result<(Vec<Record>, bool)> {
         let url = format!("{}/rest/api/3/search/jql", self.base());
 
         let fields: Vec<String> = JIRA_FIELDS.iter().map(|s| (*s).to_owned()).collect();
@@ -179,6 +189,9 @@ impl JiraBackend {
 
         let mut out: Vec<Record> = Vec::new();
         let mut pages: usize = 0;
+        // Optimistic: only a truncation exit flips this false. `isLast: true`
+        // (the natural terminator) leaves it true.
+        let mut is_complete = true;
 
         let header_owned = self.write_headers();
         let header_refs: Vec<(&str, &str)> =
@@ -197,6 +210,8 @@ impl JiraBackend {
                     pages,
                     "reached MAX_ISSUES_PER_LIST cap; stopping pagination"
                 );
+                // TRUNCATION: page cap tripped before the project was exhausted.
+                is_complete = false;
                 break;
             }
 
@@ -250,7 +265,8 @@ impl JiraBackend {
                         count = out.len(),
                         "reached MAX_ISSUES_PER_LIST cap; stopping early"
                     );
-                    return Ok(out);
+                    // TRUNCATION: hit the real-issue cap with more upstream.
+                    return Ok((out, false));
                 }
             }
 
@@ -261,12 +277,15 @@ impl JiraBackend {
             if let Some(token) = next_token {
                 request_body["nextPageToken"] = serde_json::Value::String(token);
             } else {
-                // No cursor and not marked last — stop to avoid infinite loop.
+                // No cursor yet isLast was false: the server says more pages
+                // exist but gave us no way to reach them — the listing is
+                // INCOMPLETE, not merely terminated.
+                is_complete = false;
                 break;
             }
         }
 
-        Ok(out)
+        Ok((out, is_complete))
     }
 
     pub(crate) async fn get_issue_inner(&self, id: RecordId) -> Result<Record> {

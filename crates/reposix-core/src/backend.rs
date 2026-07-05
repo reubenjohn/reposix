@@ -186,6 +186,31 @@ pub enum DeleteReason {
     Abandoned,
 }
 
+/// A record listing paired with whether it represents the COMPLETE set.
+///
+/// Returned by [`BackendConnector::list_records_complete`]. `is_complete ==
+/// false` means the backend TRUNCATED the listing — it hit a pagination or
+/// size cap and `records` is a PREFIX of the true set, not the whole thing.
+///
+/// The cache uses this to gate DELETION-direction `oid_map` pruning
+/// (`reposix-cache`'s `builder.rs`). Pruning `oid_map` against a truncated
+/// `keep_ids` would delete rows for records that are still LIVE upstream but
+/// happened to fall beyond the cap — silent data loss. So the prune is SKIPPED
+/// whenever `is_complete == false`, leaving a safe SUPERSET of rows (the
+/// ADR-010 tree→`oid_map` resolvability invariant is preserved: every tree
+/// entry's OID was already upserted before the prune, so an extra retained row
+/// can never dangle a tree reference). See the P94 pagination-prune-safety fork
+/// (`.planning/CONSULT-DECISIONS.md`, 2026-07-05).
+#[derive(Debug, Clone)]
+pub struct Listing {
+    /// The records returned. A PREFIX of the true set when `is_complete` is
+    /// `false`; the whole set when `true`.
+    pub records: Vec<Record>,
+    /// `true` iff `records` is the backend's COMPLETE record set for the
+    /// project. `false` iff pagination was truncated at a cap or safety valve.
+    pub is_complete: bool,
+}
+
 /// The seam every concrete issue-tracker adapter implements.
 ///
 /// Implementors:
@@ -233,6 +258,32 @@ pub trait BackendConnector: Send + Sync {
     /// Propagates transport errors. Returns an empty vec (not an error) when
     /// the project exists but has no issues.
     async fn list_records(&self, project: &str) -> Result<Vec<Record>>;
+
+    /// List all records in `project` PLUS whether the listing is COMPLETE.
+    ///
+    /// This is the completeness-aware sibling of
+    /// [`list_records`](Self::list_records). The default implementation calls
+    /// `list_records` and reports `is_complete = true` — correct for any
+    /// backend that cannot truncate (the simulator, in-memory test doubles).
+    /// Backends that page against a remote and can hit a truncation cap
+    /// (GitHub, JIRA, Confluence) MUST override this to report
+    /// `is_complete = false` at their truncation exits.
+    ///
+    /// The cache calls THIS (not `list_records`) before pruning `oid_map`, so a
+    /// truncated listing skips the DELETION-direction prune and cannot wipe
+    /// rows for live records beyond the cap (P94 pagination-prune-safety —
+    /// data-loss guard; ADR-010). See [`Listing`].
+    ///
+    /// # Errors
+    /// Same as [`list_records`](Self::list_records) — transport errors,
+    /// egress-allowlist denial, or backend-specific error shapes.
+    async fn list_records_complete(&self, project: &str) -> Result<Listing> {
+        let records = self.list_records(project).await?;
+        Ok(Listing {
+            records,
+            is_complete: true,
+        })
+    }
 
     /// List issue IDs whose `updated_at` is strictly greater than `since`.
     ///

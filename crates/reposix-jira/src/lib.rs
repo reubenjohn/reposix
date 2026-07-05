@@ -80,7 +80,7 @@ pub mod types;
 use async_trait::async_trait;
 use reqwest::{Method, StatusCode};
 
-use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason};
+use reposix_core::backend::{BackendConnector, BackendFeature, DeleteReason, Listing};
 use reposix_core::{Error, Record, RecordId, Result, Tainted, Untainted};
 
 pub use client::JiraBackend;
@@ -107,7 +107,19 @@ impl BackendConnector for JiraBackend {
     }
 
     async fn list_records(&self, project: &str) -> Result<Vec<Record>> {
-        self.list_issues_impl(project, false).await
+        self.list_issues_impl(project, false).await.map(|(r, _)| r)
+    }
+
+    /// Completeness-aware listing (P94 pagination-prune-safety): `is_complete`
+    /// is `false` whenever `list_issues_impl` truncated at a cap, so the cache
+    /// skips its `oid_map` prune rather than deleting rows for live issues
+    /// beyond the JIRA page cap.
+    async fn list_records_complete(&self, project: &str) -> Result<Listing> {
+        let (records, is_complete) = self.list_issues_impl(project, false).await?;
+        Ok(Listing {
+            records,
+            is_complete,
+        })
     }
 
     async fn list_changed_since(

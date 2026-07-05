@@ -78,6 +78,11 @@ assert_cmd = "2"
 tempfile = "3"
 tokio = { workspace = true }
 chrono = { workspace = true }
+# Fork B unit test (P94) hand-rolls a BackendConnector to drive execute_action's
+# delete-NotFound reclassification directly (execute_action is pub(crate), so it
+# is unreachable from integration tests). Workspace-managed; used by every other
+# connector crate.
+async-trait = { workspace = true }
 # v0.11.x coverage closure: the stateless_connect e2e test drives the
 # helper binary through a real protocol-v2 turn, which requires a live
 # sim on a random port. Programmatic library API only — no extra binary.
