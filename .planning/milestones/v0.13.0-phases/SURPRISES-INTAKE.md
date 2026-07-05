@@ -635,3 +635,17 @@ Candidate (b) (fast_import M-line handling) FALSIFIED — the merge-commit fast-
 - **TokenWorld two-writer conflict verifier missing** (2026-07-05 / P92 SC1 entry above): LEFT AS-IS. Already routed to the P97 9th probe by design; no debt-drain action needed.
 
 See the companion `GOOD-TO-HAVES.md` for the same-window disposition of the P92-filed security-gate good-to-haves (one resolved this window, one deferred, one left as-is) and the follow-on "branch hygiene + PR triage" entry appended below for owner-gated repo housekeeping.
+
+## 2026-07-05 debt-drain: branch hygiene + PR triage (staged for owner)
+
+**What:** A tree-writer session (same window as the triage above) ran a remote-branch + open-PR inventory as housekeeping. Findings, transcribed as verified:
+
+- **Remote-branch inventory:** 9 branches total (NOT the ~32 previously assumed). Safe-to-delete list = EXACTLY ONE: `release-plz-2026-05-01T03-32-29Z` (its PR #32 is CLOSED/superseded by #61; 1 orphaned release-plz commit, 2 months stale). All others KEEP: `main`, `gh-pages`, the 4 dependabot branches backing OPEN PRs #62/#64/#65/#66, `release-plz-2026-07-04T05-03-11Z` (backs OPEN PR #61), and `workstream/v0.13.2` (holds 2 UNMERGED commits `cf79fd4` + `c4ed713` = P98-CONTEXT.md + P98-DISCUSSION-LOG.md, 285 lines, NOT on main — do NOT sweep; decide at P98 kickoff whether to cherry-pick or regenerate).
+- **Deletion is OWNER-GATED** (external mutation per CLAUDE.md's "Uncommitted = didn't happen... External mutations need owner-named-target approval") — STAGED, not executed. Owner action: `git push origin --delete release-plz-2026-05-01T03-32-29Z` (only after confirming PR #61 supersedes #32's intent).
+- **PR #62** (codecov-action 6→7): all 16 checks green, mergeable — merge proposal STAGED for owner: `gh pr merge 62 --squash --delete-branch`. Owner-gated, not executed.
+- **Note:** the "quality gates (pre-pr)" FAILURE currently showing on PRs #64/#65/#66 is NOT a defect in those dependency bumps — it's the parallel P93 lane's own catalog-first rows (commit `543bfb4` added 3 `agent-ux/p93-*` catalog rows whose verifiers don't exist yet → NOT-VERIFIED → exit=1). Self-resolves once P93 ships its verifiers. PR #62 predates `543bfb4` so it reads green.
+- **Note (cosmetic debt, filed below as a new GOOD-TO-HAVE):** `.git/hooks/pre-push` is a BROKEN symlink → nonexistent `scripts/hooks/pre-push` (confirmed: `ls` on the target errors ENOENT), but it's INERT because `core.hooksPath=.githooks` overrides it — the real active hook is `.githooks/pre-push`. Follow-up filed as a new low-sev entry in `GOOD-TO-HAVES.md` to delete the dead symlink for tidiness.
+
+**Why staged, not executed:** branch deletion and PR merges are external mutations against the shared remote (`origin`) outside this window's file-editing charter — owner-named-target approval required per CLAUDE.md's dark-factory guardrails.
+
+**STATUS:** OPEN (staged for owner action)

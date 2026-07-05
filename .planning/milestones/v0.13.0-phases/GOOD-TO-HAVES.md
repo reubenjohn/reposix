@@ -449,3 +449,17 @@ STATUS 2026-07-05 (D-P92-03): **REPRODUCED — CONFIRMED REAL, deterministic** (
 ## 2026-07-05 debt-drain triage
 
 The docs-only, <1h-sized GTH orphans (GOOD-TO-HAVES-02, -05, -06, -07, -09, -10, -12, -13; and the 2026-07-05 test-name-honesty marker entry above) were reviewed this window and LEFT to their already-routed phases (P90/P91/P95/refresh) — each either touches a linter/runner needing a real test run (cargo-adjacent) or a `docs/**` file under the mkdocs + doc-alignment regime routed to P95, so none were safe to eager-fix in a no-cargo, no-docs-alignment debt-drain window. See the companion `SURPRISES-INTAKE.md` for this same window's disposition of the surprises backlog and the branch-hygiene/PR-triage housekeeping entry.
+
+---
+
+## 2026-07-05 | `.git/hooks/pre-push` is a dead symlink to a nonexistent target | discovered-by: 2026-07-05 debt-drain branch-hygiene triage | severity: LOW
+
+**What:** `.git/hooks/pre-push` is a symlink to `../../scripts/hooks/pre-push`, which does not exist (`ls` on the target errors ENOENT). It is currently INERT because `core.hooksPath` is set to `.githooks`, so the real active pre-push hook is `.githooks/pre-push` — the dead symlink never fires. Cosmetic debt only: no functional impact today, but a confusing artifact for anyone inspecting `.git/hooks/` directly (e.g. `git config --unset core.hooksPath` would silently resurrect a hook pointing at nothing).
+
+**Acceptance:** Delete the dead `.git/hooks/pre-push` symlink (or replace it with a thin delegator to `.githooks/pre-push` if defense-in-depth against a future `core.hooksPath` unset is wanted).
+
+**Why deferred:** `.git/` is not tracked by git itself (deleting a file there isn't a normal commit), so this needs either a `scripts/install-hooks.sh` update (if that script created the dangling symlink) or a one-off local cleanup step, not a tree-writer commit. Out of scope for a docs-only debt-drain window.
+
+**Default disposition:** LOW — tidiness only, zero functional impact while `core.hooksPath=.githooks` remains set. Fold into the next `scripts/install-hooks.sh` touch or P95/P97 housekeeping pass.
+
+**STATUS:** OPEN
