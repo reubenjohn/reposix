@@ -11,12 +11,20 @@
 //! the helper left the `want` for `git upload-pack`, which rejected it:
 //! `fatal: git upload-pack: not our ref <oid>`.
 //!
-//! `RBF-LR-02`'s gate runs `cargo test -p reposix-cache --test cache_coherence`.
-//! Both tests walk the HEAD tree after a sync and assert `read_blob` resolves
-//! every referenced blob OID. The seed-sync test is a positive control
-//! (`build_from` was always coherent); the same-second delta-sync test is the
-//! D-P92-03 regression the coherence fix closes. Full executed repro:
-//! `.planning/phases/93-cache-coherence/93-DP2-REPRO-NOTES.md`.
+//! `RBF-LR-02`'s gate runs `cargo test -p reposix-cache --test cache_coherence`
+//! and now guards BOTH directions of the invariant:
+//! - ADDITION direction — the two `head_tree_blobs_resolvable_*` tests walk the
+//!   HEAD tree after a sync and assert `read_blob` resolves every referenced
+//!   blob OID. The seed-sync test is a positive control (`build_from` was always
+//!   coherent); the same-second delta-sync test is the D-P92-03 regression the
+//!   coherence fix closes.
+//! - DELETION direction — `ghost_oid_map_row_pruned_after_upstream_delete`
+//!   asserts an upstream delete leaves NO ghost `oid_map` row (the D-P93-02
+//!   Strategy-1 prune). Without it, a resurrected id drives a phantom Delete →
+//!   false `SotPartialFail` on every push.
+//!
+//! Full executed repros: `.planning/phases/93-cache-coherence/93-DP2-REPRO-NOTES.md`
+//! and `.planning/CONSULT-DECISIONS.md` § D-P93-01/02.
 
 #![allow(clippy::missing_panics_doc)]
 
@@ -146,6 +154,30 @@ async fn patch_issue_title(origin: &str, project: &str, id: u64, new_title: &str
     assert!(
         resp.status().is_success(),
         "patch issue {id} failed: {}",
+        resp.status()
+    );
+}
+
+/// DELETE an issue from the sim's `SoT` — models an upstream deletion nobody
+/// local initiated. The sim's `list_changed_since` never surfaces a delete, so
+/// (exactly like the D-P93-01 repro) the removal is invisible to the delta
+/// cursor and only shows up as an id missing from `list_records`.
+async fn delete_issue(origin: &str, project: &str, id: u64) {
+    let client =
+        reposix_core::http::client(reposix_core::http::ClientOpts::default()).expect("http client");
+    let url = format!("{origin}/projects/{project}/issues/{id}");
+    let resp = client
+        .request_with_headers_and_body(
+            reqwest::Method::DELETE,
+            url.as_str(),
+            &[("X-Reposix-Agent", "cache-coherence-test")],
+            None::<Vec<u8>>,
+        )
+        .await
+        .unwrap();
+    assert!(
+        resp.status().is_success(),
+        "delete issue {id} failed: {}",
         resp.status()
     );
 }
@@ -300,5 +332,87 @@ async fn head_tree_blobs_resolvable_after_same_second_delta_sync() {
 
     // Invariant: every HEAD-tree blob OID — including issue 2's new,
     // un-detected-as-changed OID — resolves via read_blob.
+    assert_head_tree_coherent(&cache).await;
+}
+
+/// DELETION-direction coherence (RBF-LR-02 / D-P93-02): the ADDITION-direction
+/// tests above guard that every tree-referenced OID stays resolvable; this one
+/// guards the SYMMETRIC invariant — an upstream delete must not leave a ghost
+/// `oid_map` row behind. Before the Strategy-1 prune, the deleted id's row
+/// survived every sync (`INSERT OR REPLACE`, never `DELETE`);
+/// `Cache::list_record_ids()` resurrected it, the export planner turned it
+/// into a phantom `PlannedAction::Delete`, and the backend 404 forced a false
+/// `SotPartialFail` + `helper_push_partial_fail_sot` audit row on EVERY push
+/// (`.planning/CONSULT-DECISIONS.md` § D-P93-01/02). This asserts the fix
+/// end-to-end at the cache boundary: after an upstream delete + delta sync the
+/// dead id is absent from BOTH `list_record_ids()` and `find_oid_for_record`,
+/// the survivors remain, and the HEAD tree stays coherent for them.
+#[tokio::test(flavor = "multi_thread")]
+async fn ghost_oid_map_row_pruned_after_upstream_delete() {
+    let (origin, _sim) = spawn_sim().await;
+    seed_demo_issues(&origin, 3).await;
+
+    let cache_root = tempfile::tempdir().unwrap();
+    let _env = CacheDirGuard::new(cache_root.path());
+
+    let backend: Arc<dyn BackendConnector> =
+        Arc::new(SimBackend::new(origin.clone()).expect("SimBackend"));
+    let cache = Cache::open(backend, "sim", "demo").expect("Cache::open");
+
+    // Seed sync (build_from): oid_map rows for issues 1, 2, 3.
+    cache.sync().await.expect("seed sync");
+    let seeded: Vec<u64> = cache
+        .list_record_ids()
+        .expect("list_record_ids after seed")
+        .iter()
+        .map(|r| r.0)
+        .collect();
+    assert!(
+        seeded.contains(&2),
+        "issue 2 must be present after seed (setup precondition), got {seeded:?}"
+    );
+
+    // Upstream deletes issue 2 — invisible to list_changed_since.
+    delete_issue(&origin, "demo", 2).await;
+
+    // Delta sync: rebuilds the tree from list_records (issues 1, 3) and — with
+    // the Strategy-1 prune — removes issue 2's now-ghost oid_map row inside the
+    // same Step-5 transaction as the survivors' upserts.
+    let r = cache
+        .sync()
+        .await
+        .expect("delta sync after upstream delete");
+    assert!(
+        r.since.is_some(),
+        "second sync must take the delta path (cursor present)"
+    );
+
+    // The DELETION-direction assertions RBF-LR-02's gate now guards.
+    let after: Vec<u64> = cache
+        .list_record_ids()
+        .expect("list_record_ids after delete")
+        .iter()
+        .map(|r| r.0)
+        .collect();
+    assert!(
+        !after.contains(&2),
+        "GHOST ROW: list_record_ids() still returns upstream-deleted id 2 \
+         (would drive a phantom Delete -> false SotPartialFail); got {after:?}"
+    );
+    assert_eq!(
+        cache
+            .find_oid_for_record(reposix_core::RecordId(2))
+            .expect("find_oid_for_record(2)"),
+        None,
+        "GHOST ROW: an oid_map row for upstream-deleted id 2 still resolves via \
+         find_oid_for_record"
+    );
+
+    // Survivors stay present and the HEAD tree stays coherent for them — the
+    // prune removed ONLY the dead id's rows.
+    assert!(
+        after.contains(&1) && after.contains(&3),
+        "surviving ids 1 and 3 must remain after the prune, got {after:?}"
+    );
     assert_head_tree_coherent(&cache).await;
 }

@@ -28,10 +28,15 @@ impl Cache {
     /// Does NOT materialize blobs — the returned commit references blob
     /// OIDs that are only persisted on demand (see [`Cache::read_blob`]).
     ///
-    /// Side effects on `cache.db`:
+    /// Side effects on `cache.db` (all in one transaction):
     /// - one `INSERT OR REPLACE` per issue into `oid_map` linking the
     ///   computed blob OID to its `issue_id` and `(backend, project)`;
-    /// - one `op='tree_sync'` audit row (best-effort);
+    /// - a prune of `oid_map` rows whose `issue_id` is no longer in
+    ///   `list_records` (DELETION-direction coherence — matters on the
+    ///   `--reconcile` full rebuild against a populated cache; a no-op on a
+    ///   fresh seed);
+    /// - one `op='tree_sync'` audit row (best-effort — a failed insert
+    ///   warns rather than aborting the transaction);
     /// - `meta.last_fetched_at` upserted to the current UTC RFC-3339
     ///   timestamp.
     ///
@@ -105,22 +110,36 @@ impl Cache {
         // is lexicographic by raw bytes.
         records.sort_by(|a, b| a.0.filename.cmp(&b.0.filename));
 
-        // Populate oid_map + fire tree_sync audit row + upsert
-        // last_fetched_at. We hold the lock only for these fast SQL
-        // calls; it's released before the git object writes.
+        // Populate oid_map + prune ghost rows + fire tree_sync audit row +
+        // upsert last_fetched_at, all in ONE transaction so a crash cannot
+        // half-apply. We hold the lock only for these fast SQL calls; it's
+        // released before the git object writes.
         {
-            let conn = self.db.lock().expect("cache db mutex poisoned");
+            let mut conn = self.db.lock().expect("cache db mutex poisoned");
+            let tx = conn.transaction()?;
             for (entry, issue_id) in &records {
                 meta::put_oid_mapping(
-                    &conn,
+                    &tx,
                     &self.backend_name,
                     &self.project,
                     &entry.oid.to_hex().to_string(),
                     issue_id,
                 )?;
             }
-            audit::log_tree_sync(&conn, &self.backend_name, &self.project, records.len());
-            meta::set_meta(&conn, "last_fetched_at", &Utc::now().to_rfc3339())?;
+            // DELETION-direction coherence (ADR-010 / RBF-LR-02, D-P93-02): // banned-words: ok
+            // build_from is ALSO the `reposix sync --reconcile` full-rebuild
+            // path (crates/reposix-cli/src/sync.rs), which runs against an
+            // EXISTING populated oid_map. Rebuilding the tree from
+            // `list_records` while leaving an upstream-deleted record's row in
+            // place would reintroduce the ghost-row bug the delta path now
+            // guards (`.planning/CONSULT-DECISIONS.md` § D-P93-01/02). Prune // banned-words: ok
+            // the same way, in the same transaction. On a genuine first seed
+            // oid_map is empty, so this is a no-op.
+            let keep_ids: Vec<&str> = records.iter().map(|(_, id)| id.as_str()).collect();
+            meta::prune_oid_map(&tx, &self.backend_name, &self.project, &keep_ids)?;
+            audit::log_tree_sync(&tx, &self.backend_name, &self.project, records.len());
+            meta::set_meta(&tx, "last_fetched_at", &Utc::now().to_rfc3339())?;
+            tx.commit()?;
         }
 
         let inner_tree = gix::objs::Tree {
@@ -206,10 +225,13 @@ impl Cache {
     ///    unconditional full per CONTEXT.md §"Tree sync vs. blob
     ///    materialization (locked)".
     /// 5. In ONE [`rusqlite::Transaction`]: upsert `oid_map` rows for the
-    ///    FULL `list_records` set (the tree↔`oid_map` coherence invariant —
-    ///    every tree-referenced OID must be resolvable by
-    ///    [`Cache::read_blob`]; ADR-010 / RBF-LR-01), update
-    ///    `meta.last_fetched_at`, insert the `op='delta_sync'` audit row.
+    ///    FULL `list_records` set AND prune `oid_map` rows whose `issue_id`
+    ///    left `list_records` (the tree↔`oid_map` coherence invariant, BOTH
+    ///    directions — every tree-referenced OID must be resolvable by
+    ///    [`Cache::read_blob`], and no upstream-deleted record may leave a
+    ///    ghost row that resurrects a phantom Delete; ADR-010 /
+    ///    RBF-LR-01/02, D-P93-02), update `meta.last_fetched_at`, insert the // banned-words: ok
+    ///    `op='delta_sync'` audit row.
     ///
     /// An empty-delta sync still bumps `last_fetched_at` and writes an
     /// audit row with `bytes=0` — intentional so audit history has one
@@ -405,6 +427,19 @@ impl Cache {
                     ],
                 )?;
             }
+            // DELETION-direction coherence (ADR-010 / RBF-LR-02, D-P93-02): // banned-words: ok
+            // the HEAD tree above was rebuilt from `list_records` (the full
+            // current backend state), so an `oid_map` row for any id NOT in
+            // that set belongs to an upstream-deleted record. Pruning here —
+            // in the SAME transaction as the upserts — keeps tree↔`oid_map`
+            // coherent symmetrically: without it a ghost row survives forever,
+            // `list_record_ids` resurrects the dead id, and every subsequent
+            // push plans a phantom Delete that 404s into a FALSE SotPartialFail
+            // (see `.planning/CONSULT-DECISIONS.md` § D-P93-01/02). The tree is // banned-words: ok
+            // built from the same `list_records`, so a pruned id is exactly a
+            // record that no longer exists — no live row is ever removed.
+            let keep_ids: Vec<&str> = records.iter().map(|(_, id)| id.as_str()).collect();
+            meta::prune_oid_map(&tx, &self.backend_name, &self.project, &keep_ids)?;
             tx.execute(
                 "INSERT INTO meta (key, value, updated_at) VALUES ('last_fetched_at', ?1, ?2) \
                  ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",

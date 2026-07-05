@@ -1,29 +1,30 @@
-//! DP-2 PROVE-BEFORE-FIX repro (P93 HIGH, code-reviewer finding).
+//! DP-2 regression guard for the ghost-`oid_map`-row fix (P93 HIGH,
+//! code-reviewer finding). CONFIRMED-RED-then-fixed under Strategy 1 (prune
+//! `oid_map` on sync — see `.planning/CONSULT-DECISIONS.md` § D-P93-02); now
+//! GREEN and permanently enabled to keep the defect from reappearing.
 //!
-//! `#[ignore]` — CONFIRMED RED (asserts the DESIRED/correct behavior, so it
-//! currently FAILS against the buggy code and is expected to flip to PASS
-//! once a fix lands; un-ignore as part of that fix's commit). Root cause:
-//! `Cache::sync`/`Cache::build_from` upsert `oid_map` (`INSERT OR REPLACE`,
-//! never `DELETE`), so an upstream-deleted record's `oid_map` row survives
-//! forever. `Cache::list_record_ids()` (`SELECT DISTINCT issue_id FROM
-//! oid_map` — unfiltered) resurrects the dead id. `precheck.rs`'s
-//! steady-state branch (reached once every `oid_map` blob is already
-//! materialized — the NORMAL case after an agent has read its issues) uses
-//! that stale id set as `diff::plan`'s `prior`. `plan()` sees the id absent
-//! from the pushed tree and emits a phantom `PlannedAction::Delete`;
-//! `execute_action` -> `delete_or_close` 404s (already gone) -> `Error::
-//! NotFound`; `write_loop`'s `failed_ids` turns that into `SotPartialFail` +
-//! a FALSE `helper_push_partial_fail_sot` audit row — on every push,
-//! forever, even though the agent did nothing wrong.
+//! The bug (before the fix): `Cache::sync`/`Cache::build_from` only upserted
+//! `oid_map` (`INSERT OR REPLACE`, never `DELETE`), so an upstream-deleted
+//! record's `oid_map` row survived forever. `Cache::list_record_ids()`
+//! (`SELECT DISTINCT issue_id FROM oid_map` — unfiltered) resurrected the
+//! dead id. `precheck.rs`'s steady-state branch (reached once every
+//! `oid_map` blob is already materialized — the NORMAL case after an agent
+//! has read its issues) used that stale id set as `diff::plan`'s `prior`.
+//! `plan()` saw the id absent from the pushed tree and emitted a phantom
+//! `PlannedAction::Delete`; `execute_action` -> `delete_or_close` 404'd
+//! (already gone) -> `Error::NotFound`; `write_loop`'s `failed_ids` turned
+//! that into `SotPartialFail` + a FALSE `helper_push_partial_fail_sot` audit
+//! row — on every push, forever, even though the agent did nothing wrong.
 //!
-//! The assertions below intentionally do NOT pin down `oid_map`'s row count
-//! (implementation detail) — they pin down the OBSERVABLE contract a fix
-//! must restore, so either ratified fix strategy (prune `oid_map` on sync,
-//! or reclassify a delete-time `NotFound` as idempotent success) flips this
-//! test to green: (1) the push succeeds, (2) no phantom DELETE ever reaches
-//! the backend for the already-gone id, (3) no false
-//! `helper_push_partial_fail_sot` audit row is written. Left enabled in CI
-//! this would perma-red the suite until the fix lands — hence `#[ignore]`.
+//! The fix prunes `oid_map` rows whose `issue_id` left `list_records`, inside
+//! `sync`'s Step-5 transaction (and the `build_from`/`--reconcile` rebuild),
+//! restoring tree↔`oid_map` coherence in the DELETION direction (the mirror
+//! of Lane 1's ADDITION-direction fix). The assertions below intentionally do
+//! NOT pin down `oid_map`'s row count (implementation detail) — they pin the
+//! OBSERVABLE contract the fix restores, so it stays valid under either
+//! ratified strategy: (1) the push succeeds, (2) no phantom DELETE ever
+//! reaches the backend for the already-gone id, (3) no false
+//! `helper_push_partial_fail_sot` audit row is written.
 //!
 //! Repro shape (mirrors `tests/partial_failure_recovery.rs`'s stateful
 //! wiremock harness):
@@ -193,9 +194,6 @@ fn run_helper_export(url: &str, cache_dir: &std::path::Path, stdin: Vec<u8>) -> 
     )
 }
 
-#[ignore = "CONFIRMED RED (P93 HIGH ghost oid_map row): un-ignore when the \
-            fix (prune oid_map on sync, or treat delete-time NotFound as \
-            idempotent success) lands — see .planning/CONSULT-DECISIONS.md"]
 #[tokio::test(flavor = "multi_thread")]
 // test-name-honesty: ok — drives the real helper export path against a
 // stateful wiremock SoT that models an upstream delete; genuine end-to-end
