@@ -167,3 +167,72 @@ RED→GREEN (the `#[ignore]` removed) once the cache fix lands.
 **Reversibility:** this is the TERMINAL adjudication of the reproduce-or-close fork —
 CONFIRMED, not reversible back to "suspicion." What remains open is only the FIX (P93), not
 the existence of the bug.
+
+---
+
+## D-P93-01 — Deleted-record ghost `oid_map` row forces false `SotPartialFail` — CONFIRMED via execution (DP-2 prove-before-fix) [SELF] 2026-07-05
+
+**Situation:** A code-reviewer raised a HIGH by code-reading only (never executed): an
+upstream-DELETED record's `oid_map` row is never pruned (`INSERT OR REPLACE`, never
+`DELETE`, in both `Cache::build_from` and `Cache::sync`); `Cache::list_record_ids()`
+(`SELECT DISTINCT issue_id FROM oid_map`, unfiltered) resurrects the dead id;
+`precheck.rs`'s steady-state branch (reached once every `oid_map` blob is already
+materialized — the NORMAL case after an agent has read its issues) trusts that stale id
+set as `diff::plan`'s `prior`; `plan()` emits a phantom `PlannedAction::Delete` for the
+gone id; `execute_action` -> `delete_or_close` 404s (already gone) -> `Error::NotFound`;
+`write_loop`'s `failed_ids` turns that into `SotPartialFail` + a FALSE
+`helper_push_partial_fail_sot` audit row, on every subsequent push, forever, even though
+the agent did nothing wrong. Per DP-2, this is a HYPOTHESIS until executed — a code-read
+chain is not evidence.
+
+**Decision: CONFIRMED.** Built and ran a minimal sim-backed repro exercising the REAL
+`git-remote-reposix export` path (not a unit-level shortcut — `precheck`/`diff`/
+`write_loop` are all `pub(crate)`, so only the compiled helper binary can drive the full
+chain from an integration test). Both load-bearing links execute-verified true:
+
+- **LINK (a):** `Cache::list_record_ids()` DOES still return the deleted id after a real
+  `Cache::sync()` delta-sync cycle post-upstream-delete (`[1, 2]` — printed at repro
+  runtime, not just asserted).
+- **LINK (b):** `diff::plan` DOES emit + execute a phantom Delete for the gone id — a
+  real DELETE request lands at the sim's `DELETE /projects/demo/issues/2` route (already
+  404, matching `SimBackend::delete_or_close`'s real double-delete contract), forcing
+  `error refs/heads/main some-actions-failed` and (in the buggy build) a
+  `helper_push_partial_fail_sot` audit row for a push that had zero real work left to do.
+
+**Evidence:** Repro commit `0b20c6c` adds
+`crates/reposix-remote/tests/deleted_record_ghost_oid_map_row_forces_false_partial_fail.rs`,
+`#[ignore]`d (asserts the DESIRED/correct behavior so it currently FAILS RED against the
+buggy code — confirmed via `cargo test -p reposix-remote --test
+deleted_record_ghost_oid_map_row_forces_false_partial_fail -- --ignored --nocapture`,
+panic: `a no-real-work push must succeed, not false-fail on a ghost id;
+stdout=error refs/heads/main some-actions-failed`; default `cargo test` run without
+`--ignored` shows `1 ignored`, so CI stays green until the fix lands).
+
+**Fix sketch (NOT implemented this lane — repro only, per DP-2):** two candidate
+strategies, either flips the repro test to GREEN unmodified (assertions deliberately do
+not pin `oid_map`'s row count, only the observable contract):
+1. Prune `oid_map` rows for ids absent from the full `list_records` set as part of
+   `Cache::sync`'s Step 5 transaction (and `build_from`'s equivalent) — restores the
+   tree↔`oid_map` coherence invariant symmetrically for deletions, not just additions.
+2. Reclassify a delete-time `Error::NotFound` from `delete_or_close` as idempotent
+   success in `execute_action`'s `PlannedAction::Delete` arm (the record is already in
+   the desired end state) rather than a failure.
+
+**Load-bearing / E2-boundary assessment for the coordinator:** Strategy 1 changes
+`Cache::sync`/`build_from`'s write contract (adds a `DELETE FROM oid_map` to a
+previously INSERT-only path) — touches the same coherence invariant ADR-010
+(L2/L3 cache-coherence) already ratified for the fetch-side amplifier in this same
+ledger's prior entry, so it is IN-FAMILY with that ADR's scope, not a fresh
+architectural surface. Strategy 2 changes a public error-to-outcome mapping in the
+write/push path (`NotFound` on delete goes from "failure" to "success") — smaller
+blast radius (one match arm) but changes what `SotPartialFail` means at the write
+boundary generally (any future NotFound-on-delete, not just the ghost-row case, would
+also go quiet). Recommend routing the actual fix decision through the same P93
+fix-wave / ADR-010 follow-up the fetch-side amplifier used, rather than a blind
+inline patch — both strategies are REVERSIBLE (internal cache/write-path behavior,
+no public API break), so this does not need E2 escalation, but the CHOICE between them
+is a design call the coordinator should make explicitly, not default silently.
+
+**Reversibility:** Reversible — repro-only, no production code touched this lane.
+
+---
