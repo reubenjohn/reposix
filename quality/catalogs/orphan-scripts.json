@@ -301,6 +301,48 @@
       "cadences": [
         "pre-push"
       ]
+    },
+    {
+      "id": "orphan-scripts/claude-hooks",
+      "dimension": "meta",
+      "kind": "mechanical",
+      "sources": [
+        ".claude/hooks/cargo-mutex.sh",
+        ".claude/hooks/session-start-brief.sh",
+        ".claude/hooks/dispatch-doctrine.sh",
+        ".claude/hooks/post-dispatch-relay.sh",
+        ".claude/hooks/stop-uncommitted.sh",
+        ".claude/hooks/precompact-persist.sh"
+      ],
+      "command": null,
+      "expected": {
+        "asserts": [
+          "all six .claude/hooks/*.sh files exist",
+          "first 10 lines of each name the wiring: no canonical home under quality/gates/ -- wired via .claude/settings.json",
+          "kind == mechanical and dimension == meta"
+        ],
+        "max_lines": 34
+      },
+      "verifier": {
+        "script": "quality/gates/structure/orphan-scripts-audit.py",
+        "args": [
+          "--row-id",
+          "orphan-scripts/claude-hooks"
+        ],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/orphan-scripts-claude-hooks.json",
+      "status": "PASS",
+      "last_verified": "2026-07-04T00:00:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: sources[0] (cargo-mutex.sh) was deleted, grew past 34 lines, or lost its header wiring-comment. KEEP-AS-CANONICAL: Claude Code project hooks; wired via .claude/settings.json hooks block, out of scope for the scripts/ inverse-scan (that walk covers scripts/ only). Row added per owner decision Q7 (forward-proofing) so the six-hook set has a registry entry even though .claude/hooks/ is not scanned by orphan-scripts-audit.py --inverse-scan. max_lines=34 is the longest hook (session-start-brief.sh, 26 lines) + ~30% headroom; the verifier itself only checks sources[0].",
+      "waiver": null,
+      "claim_vs_assertion_audit": "If .claude/hooks/cargo-mutex.sh (sources[0], the row the verifier actually inspects) were deleted, grew past 34 lines, or lost its 'no canonical home ... wired via .claude/settings.json' header comment, the verifier's exists-check, line-count assert, or header-hint regex scan would each independently fail and flip this row to FAIL -- the claim cannot silently hold while the file drifts.",
+      "cadences": [
+        "pre-push"
+      ]
     }
   ]
 }

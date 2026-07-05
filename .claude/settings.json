@@ -6,5 +6,23 @@
       "Skill(gsd-health)",
       "Skill(gsd-health:*)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/session-start-brief.sh\"", "timeout": 10 } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/cargo-mutex.sh\"", "timeout": 5 } ] },
+      { "matcher": "Task|Agent", "hooks": [ { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/dispatch-doctrine.sh\"", "timeout": 5 } ] }
+    ],
+    "PostToolUse": [
+      { "matcher": "Task|Agent", "hooks": [ { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/post-dispatch-relay.sh\"", "timeout": 5 } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-uncommitted.sh\"", "timeout": 5 } ] }
+    ],
+    "PreCompact": [
+      { "hooks": [ { "type": "command", "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/precompact-persist.sh\"", "timeout": 10 } ] }
+    ]
   }
 }
