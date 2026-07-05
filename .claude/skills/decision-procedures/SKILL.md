@@ -34,17 +34,19 @@ failed re-charters → valve E4.
 
 Trigger: any BLOCKER/HIGH finding (ledger row, verifier RED, intake entry, audit-fleet
 report) whose evidence is a static trace, a code reading, or a reviewer's assertion —
-anything not EXECUTED. Decide: an L4/L3 runner builds a minimal executable repro (a
+anything not EXECUTED. Decide: an L4/L3 lane (dispatch `gsd-executor` — see
+`coordinator-dispatch` skill §2 for the role→subagent_type table; "runner" here is a
+role word, not a literal `subagent_type`) builds a minimal executable repro (a
 failing test, a script, or a `shell-subprocess`-shaped transcript) BEFORE any fixer is
 dispatched, committed. Repro executes and fails → CONFIRMED, becomes the regression test,
 dispatch the fix with the repro path in its charter. Repro can't be built within one lane
 budget → DOWNGRADE to suspicion, route to intake with the static trace attached, do not
 fix blind. Repro executes and passes → finding is FALSE, record `[SELF]` in the ledger
 with the transcript path, close the row. No fix lane without a committed failing
-artifact; a fix merges only when the repro flips green AND a fresh reviewer confirms the
-fix addresses the mechanism, not the symptom. Escalates when the repro proves a
-design-level flaw — fixing it would change a Load-bearing behavior or a public contract →
-valve E2.
+artifact; a fix merges only when the repro flips green AND a fresh reviewer
+(`gsd-code-reviewer`) confirms the fix addresses the mechanism, not the symptom.
+Escalates when the repro proves a design-level flaw — fixing it would change a
+Load-bearing behavior or a public contract → valve E2.
 
 ## DP-3 — Intake-design inversion
 

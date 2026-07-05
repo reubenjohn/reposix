@@ -59,7 +59,12 @@ reports/handovers. The 5 rules (verbatim, owner directive 2026-07-04
    `reader-digester` that returns a ≤300-word digest), run test suites/litmus/builds
    yourself (dispatch a runner), write or edit repo files yourself (dispatch an
    executor — including planning docs and handovers), or review diffs yourself
-   (dispatch a reviewer).
+   (dispatch a reviewer). **"runner"/"executor"/"reviewer" here are role words, not
+   `subagent_type` values** — none of those three bare strings is a registered
+   dispatchable type; `.claude/skills/coordinator-dispatch/SKILL.md` §2 is the
+   canonical role→subagent_type table (executor/runner→`gsd-executor`,
+   reviewer→`gsd-code-reviewer`, phase-close runner→`gsd-verifier`) — copy from
+   there, not from this prose.
 2. **SLICE LANES SMALL.** No executor lane should need >100 tool calls; if a plan
    implies more, split into sub-lanes before dispatching. Executors may sub-delegate
    mechanical parts to haiku.
