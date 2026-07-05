@@ -25,7 +25,7 @@ fn env_lock() -> &'static Mutex<()> {
 
 /// Test-scoped RAII guard for the `REPOSIX_CACHE_DIR` env var.
 /// Tests that do any `Cache::open` MUST hold one of these for the
-/// duration of the open / build_from / read_blob calls.
+/// duration of the open / `build_from` / `read_blob` calls.
 pub struct CacheDirGuard<'a> {
     _guard: MutexGuard<'a, ()>,
     prev: Option<String>,
@@ -229,9 +229,9 @@ pub fn count_mirror_hook_invocations(mirror_dir: &std::path::Path) -> usize {
 /// Open the cache.db at `cache_db_path` and count rows matching `op`.
 /// Used by audit-completeness assertions in P83-01 + P83-02 tests.
 ///
-/// `cache_db_path` is the full path to the SQLite file — typically
+/// `cache_db_path` is the full path to the `SQLite` file — typically
 /// `<cache-bare-repo>/cache.db` (locate via the `find_cache_bare`
-/// helper in tests/mirror_refs.rs OR by walking the cache root for
+/// helper in `tests/mirror_refs.rs` OR by walking the cache root for
 /// a `.git` directory).
 #[must_use]
 pub fn count_audit_cache_rows(cache_db_path: &std::path::Path, op: &str) -> i64 {
