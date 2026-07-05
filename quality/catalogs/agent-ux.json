@@ -762,15 +762,18 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/bus-write-audit-completeness.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": "2026-05-01T15:41:28Z",
+      "status": "PASS",
+      "last_verified": "2026-07-05T08:42:48Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "P92 SC2+SC3: upgrade bus_write_audit_completeness.rs (or its verifier wrapper) to spin a real reposix-sim with a persistent --db and query audit_events directly via sqlite3, replacing the wiremock request-log proxy. If RED after the upgrade: a per-record audit row was dropped (check sim adapter's create_record / update_record / delete_or_close success path) OR a cache audit op was missed (check apply_writes + bus_handler ref/audit write blocks).",
       "waiver": null,
       "cadences": [
         "pre-pr"
-      ]
+      ],
+      "claim_vs_assertion_audit": "The test spins a REAL reposix-sim axum process in-process (reposix_sim::run_with_listener) backed by a persistent SQLite file, pre-seeds it via the sim's own production reposix_sim::seed::apply_seed, drives a real push through git-remote-reposix, then opens that SAME sqlite file with rusqlite::Connection::open and queries audit_events directly (COUNT(*) WHERE method=... AND path=...) -- not a wiremock request-log proxy. If the backend-mutation audit row were silently dropped, patch_count would read 0 and the assert_eq!(patch_count, 1, ...) would fail concretely, naming the missing count. Run + confirmed PASS on this host (git 2.25.1) 2026-07-05 -- this scenario never touches git>=2.34 codepaths (plain git init/commit/push against a file:// mirror + the export capability), so it is NOT gated by the git-version floor.",
+      "minted_at": "2026-07-05T08:00:00Z",
+      "transport_claim": false
     },
     {
       "id": "agent-ux/webhook-trigger-dispatch",
@@ -1768,7 +1771,9 @@
       },
       "verifier": {
         "script": "quality/gates/agent-ux/dark-factory.sh",
-        "args": ["sim"],
+        "args": [
+          "sim"
+        ],
         "timeout_s": 120,
         "container": null
       },

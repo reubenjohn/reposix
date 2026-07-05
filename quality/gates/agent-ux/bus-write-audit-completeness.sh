@@ -8,12 +8,15 @@
 #              audit tables per OP-3:
 #              audit_events_cache: helper_push_started +
 #                helper_push_accepted + mirror_sync_written +
-#                helper_backend_instantiated;
-#              audit_events (sim DB or wiremock-equivalent at the
-#                wire boundary): one row per executed REST mutation
+#                helper_backend_instantiated (queried directly against
+#                cache.db);
+#              audit_events (P92 SC2+SC3 upgrade: a REAL `reposix-sim`
+#                process, spawned in-process with a persistent SQLite
+#                file, queried DIRECTLY via rusqlite -- not a wiremock
+#                request-log proxy): one row per executed REST mutation
 #                (create_record / update_record / delete_or_close).
 #
-# Status until P83-02 T04: FAIL.
+# Status: GREEN (P92; both tables asserted via real queries).
 set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." &> /dev/null && pwd)"

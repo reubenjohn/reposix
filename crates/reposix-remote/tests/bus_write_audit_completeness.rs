@@ -7,21 +7,31 @@
 //! | Layer                      | Implementation                                                     |
 //! |----------------------------|--------------------------------------------------------------------|
 //! | `audit_events_cache`       | SQLite cache.db; queried directly via `count_audit_cache_rows`.    |
-//! | `audit_events` (sim DB)    | Sim adapter's audit middleware — one row per HTTP request.         |
+//! | `audit_events` (sim DB)    | REAL `reposix-sim` SQLite file; queried directly (see below).      |
 //!
-//! ## Audit-events queryability scope (P83-02 read_first finding)
+//! ## P92 SC2+SC3 upgrade: real dual-table query, not a wiremock proxy
 //!
-//! The bus_write integration tests use wiremock (`tests/common.rs::seed_mock`)
-//! rather than spawning a real `reposix-sim` axum process. Wiremock has
-//! no `audit_events` SQLite table. Per the plan's read_first guidance
-//! ("If sim's audit_events table location requires a sibling helper,
-//! add count_audit_events_rows... OR file as SURPRISES-INTAKE entry if
-//! the sim doesn't expose its audit table; OP-8"), we file as
-//! SURPRISES-INTAKE and assert the SimBackend wire-boundary instead:
-//! the sim's audit middleware writes ONE row per HTTP request, so the
-//! wiremock request log IS the byte-equivalent of the audit_events
-//! table for the SimBackend wire path. The OP-3 dual-table contract
-//! is enforced at the boundary that has actual coverage parity.
+//! Prior state (PASS through 83-02) asserted the `audit_events` (backend)
+//! layer via wiremock's REQUEST LOG as a proxy for a real audit table — a
+//! metaphor, not a real dual-table query (P83-02 read_first finding: "the
+//! sim's audit_events table location requires a sibling helper ... file as
+//! SURPRISES-INTAKE if not directly queryable in test scope"). This upgrade
+//! closes that gap by spinning a REAL `reposix-sim` axum process in-process
+//! (`reposix_sim::run_with_listener`, the same library entry point
+//! `tests/stateless_connect_e2e.rs` already uses) backed by a PERSISTENT
+//! (non-ephemeral) `SQLite` file, pre-seeded via the sim's own production
+//! `reposix_sim::seed::apply_seed` — not a hand-rolled `INSERT` — so the
+//! seeded rows are indistinguishable from a normal `--seed-file` boot. After
+//! the push, the test opens that SAME file with `rusqlite::Connection::open`
+//! and queries `audit_events` directly (`real-git-push-e2e.sh`'s shell
+//! pattern, ported to Rust). No new dependency: `reposix-sim` and
+//! `rusqlite` are both already present in this crate's manifest.
+//!
+//! A useful side effect: because the sim's own routes now serve the
+//! list/get/patch requests for real, the wiremock priority-mocks that used
+//! to hand-tune "precheck B stable" and the PATCH response body are gone —
+//! the real backend's own read-your-writes behavior produces the same
+//! shape without any mocking at all.
 //!
 //! Test name: `bus_write_audit_completeness_happy_path_writes_both_tables`.
 
@@ -41,18 +51,77 @@ use assert_cmd::Command as AssertCommand;
 use chrono::TimeZone;
 use reposix_cache::Cache;
 use reposix_core::BackendConnector;
-use serde_json::json;
-use wiremock::matchers::{method, path_regex};
-use wiremock::{Match, Mock, MockServer, Request, ResponseTemplate};
+use reposix_sim::seed::{apply_seed, SeedFile, SeedIssue, SeedProject};
 
 mod common;
-use common::{count_audit_cache_rows, sample_issues, seed_mock, sim_backend, CacheDirGuard};
+use common::{count_audit_cache_rows, CacheDirGuard};
 
-struct HasSinceQueryParam;
-impl Match for HasSinceQueryParam {
-    fn matches(&self, req: &Request) -> bool {
-        req.url.query_pairs().any(|(k, _)| k == "since")
+/// Spawn a REAL `reposix-sim` axum process in-process on a random loopback
+/// port, backed by a PERSISTENT `SQLite` file at `db_path`. Mirrors
+/// `tests/stateless_connect_e2e.rs::spawn_sim`, generalized to accept a
+/// caller-supplied persistent path (that test uses `:memory:` +
+/// `ephemeral: true` since it never queries the DB after the fact; this
+/// test needs the file to survive the push so it can query `audit_events`
+/// directly afterward).
+async fn spawn_real_sim(db_path: &Path) -> (String, tokio::task::JoinHandle<()>) {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+        .await
+        .expect("bind 127.0.0.1:0");
+    let addr = listener.local_addr().expect("local_addr");
+    let origin = format!("http://{addr}");
+
+    let cfg = reposix_sim::SimConfig {
+        bind: addr,
+        db_path: db_path.to_path_buf(),
+        seed: false,
+        seed_file: None,
+        ephemeral: false,
+        rate_limit_rps: 1000,
+    };
+    let handle = tokio::spawn(async move {
+        let _ = reposix_sim::run_with_listener(listener, cfg).await;
+    });
+    let client =
+        reposix_core::http::client(reposix_core::http::ClientOpts::default()).expect("http client");
+    for _ in 0..50 {
+        if let Ok(r) = client.get(format!("{origin}/healthz")).await {
+            if r.status().is_success() {
+                return (origin, handle);
+            }
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
+    panic!("sim did not become healthy at {origin}");
+}
+
+/// Pre-seed `db_path` (not yet opened by any server) with `n` deterministic
+/// issues field-matching `render_issue_blob`'s unchanged shape for ids 2..n
+/// (and id 1's PRE-edit shape) via the sim's own production seeding code
+/// (`reposix_sim::seed::apply_seed`) — not a hand-rolled `INSERT INTO`.
+fn seed_sim_db(db_path: &Path, project: &str, n: u64) {
+    let conn = reposix_sim::db::open_db(db_path, false).expect("open sim db for seeding");
+    let issues = (1..=n)
+        .map(|i| SeedIssue {
+            id: i,
+            title: format!("issue {i} in {project}"),
+            status: "open".to_owned(),
+            assignee: None,
+            labels: vec![],
+            body: format!("body of issue {i}"),
+        })
+        .collect();
+    let seed = SeedFile {
+        project: SeedProject {
+            slug: project.to_owned(),
+            name: project.to_owned(),
+            description: String::new(),
+        },
+        issues,
+    };
+    let inserted = apply_seed(&conn, &seed).expect("apply_seed");
+    let want = usize::try_from(n).unwrap_or(usize::MAX);
+    assert_eq!(inserted, want, "expected {n} issues seeded, got {inserted}");
+    drop(conn);
 }
 
 fn run_git_in(dir: &Path, args: &[&str]) -> String {
@@ -162,49 +231,34 @@ fn make_synced_mirror_fixture() -> (tempfile::TempDir, tempfile::TempDir, String
 
 #[tokio::test(flavor = "multi_thread")]
 async fn bus_write_audit_completeness_happy_path_writes_both_tables() {
-    let server = MockServer::start().await;
     let project = "demo";
-    let issues = sample_issues(project, 3);
 
-    seed_mock(&server, project, &issues).await;
+    // Real, persistent sim DB — pre-seeded via production seeding code
+    // BEFORE the server binds, then handed to the in-process axum server.
+    // Kept alive (not dropped) for the rest of the test: assertion 3 below
+    // opens this SAME file and queries `audit_events` directly.
+    let sim_db_dir = tempfile::tempdir().expect("sim_db_dir");
+    let sim_db_path = sim_db_dir.path().join("sim.db");
+    seed_sim_db(&sim_db_path, project, 3);
+    let (sim_origin, _sim_handle) = spawn_real_sim(&sim_db_path).await;
 
     let cache_root = tempfile::tempdir().expect("cache_root");
     let _env = CacheDirGuard::new(cache_root.path());
-    let backend: Arc<dyn BackendConnector> = sim_backend(&server);
+    let backend: Arc<dyn BackendConnector> = Arc::new(
+        reposix_core::backend::sim::SimBackend::new(sim_origin.clone()).expect("SimBackend::new"),
+    );
     let cache = Cache::open(backend, "sim", project).expect("Cache::open");
     cache.sync().await.expect("seed sync (warm cache cursor)");
     drop(cache);
 
-    // PRECHECK B Stable.
-    Mock::given(method("GET"))
-        .and(path_regex(format!(r"^/projects/{project}/issues$")))
-        .and(HasSinceQueryParam)
-        .respond_with(ResponseTemplate::new(200).set_body_json(json!([])))
-        .with_priority(1)
-        .mount(&server)
-        .await;
-
-    // PATCH /1 → 200 (SoT update succeeds).
-    Mock::given(method("PATCH"))
-        .and(path_regex(format!(r"^/projects/{project}/issues/1$")))
-        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
-            "id": 1, "title": "issue 1 in demo", "status": "open",
-            "assignee": null, "labels": [],
-            "created_at": "2026-04-13T00:00:00Z",
-            "updated_at": "2026-05-01T00:00:00Z",
-            "version": 2, "body": "edited body for 1\n"
-        })))
-        .with_priority(1)
-        .expect(1..)
-        .mount(&server)
-        .await;
+    // No wiremock priority-mocks needed: the real sim's own `GET
+    // .../issues?since=<cursor>` naturally returns `[]` (nothing changed
+    // since seeding — PRECHECK B Stable for free), and the real `PATCH
+    // .../issues/1` naturally bumps version 1 -> 2 and writes a genuine
+    // `audit_events` row (queried directly below).
 
     let (wtree, mirror_bare, mirror_url) = make_synced_mirror_fixture();
-    let bus_url = format!(
-        "reposix::{}/projects/{project}?mirror={}",
-        server.uri(),
-        mirror_url
-    );
+    let bus_url = format!("reposix::{sim_origin}/projects/{project}?mirror={mirror_url}");
 
     // Fast-export: id=1 changed → 1 PATCH; ids 2+3 unchanged.
     let blob1 = render_issue_blob(1, 1, "edited body for 1\n");
@@ -293,50 +347,50 @@ async fn bus_write_audit_completeness_happy_path_writes_both_tables() {
         "expected 0 helper_push_partial_fail_mirror_lag rows on happy path, got {partial}"
     );
 
-    // ASSERTION 3: audit_events (backend) — wiremock request log proxy.
-    //  The sim's audit middleware (crates/reposix-sim/src/middleware/audit.rs)
-    //  writes EXACTLY ONE row per HTTP request received. So the wiremock
-    //  request log's count of REST mutations (PATCH/POST/DELETE) is the
-    //  byte-equivalent of the sim's audit_events row count for the
-    //  SimBackend wire path. We assert at least 1 PATCH to /projects/demo/issues/1
-    //  (the mutation we drove); wiremock's Mock::expect(1..) at mount
-    //  time has already validated the lower bound on Drop.
-    //
-    //  We additionally assert NO unexpected mutations (no POST or DELETE
-    //  for this single-update payload — plan() should compute exactly
-    //  one Update action).
-    let received = server.received_requests().await.unwrap_or_default();
-    let mutations: Vec<&Request> = received
-        .iter()
-        .filter(|r| {
-            let m = r.method.as_str();
-            m == "PATCH" || m == "POST" || m == "DELETE"
-        })
-        .collect();
-    let patches: Vec<&Request> = mutations
-        .iter()
-        .copied()
-        .filter(|r| r.method.as_str() == "PATCH")
-        .collect();
+    // ASSERTION 3: audit_events (backend) — REAL query, not a wiremock
+    //  request-log proxy (P92 SC2+SC3). Opens the SAME sqlite file the
+    //  in-process sim server is still holding open (WAL mode + 5s
+    //  busy_timeout, set by `reposix_sim::db::open_db`, tolerates the
+    //  concurrent reader) and queries `audit_events` — the table
+    //  `reposix-core::audit` owns and the sim's audit middleware writes
+    //  one row per HTTP request into — directly via `rusqlite`.
+    let sim_audit_conn =
+        rusqlite::Connection::open(&sim_db_path).expect("open sim db for audit_events query");
+    let patch_count: i64 = sim_audit_conn
+        .query_row(
+            "SELECT COUNT(*) FROM audit_events WHERE method = 'PATCH' AND path = ?1",
+            rusqlite::params![format!("/projects/{project}/issues/1")],
+            |r| r.get(0),
+        )
+        .expect("count PATCH audit_events rows");
+    let post_count: i64 = sim_audit_conn
+        .query_row(
+            "SELECT COUNT(*) FROM audit_events WHERE method = 'POST' AND path = ?1",
+            rusqlite::params![format!("/projects/{project}/issues")],
+            |r| r.get(0),
+        )
+        .expect("count POST audit_events rows");
+    let delete_count: i64 = sim_audit_conn
+        .query_row(
+            "SELECT COUNT(*) FROM audit_events WHERE method = 'DELETE' AND path LIKE ?1",
+            rusqlite::params![format!("/projects/{project}/issues/%")],
+            |r| r.get(0),
+        )
+        .expect("count DELETE audit_events rows");
+    drop(sim_audit_conn);
+
     assert_eq!(
-        patches.len(),
-        1,
-        "expected 1 PATCH (audit_events backend equivalent for 1 update_record); \
-         all mutations: {:?}",
-        mutations
-            .iter()
-            .map(|r| (r.method.as_str().to_owned(), r.url.path().to_owned()))
-            .collect::<Vec<_>>()
+        patch_count, 1,
+        "expected exactly 1 real audit_events PATCH row for issue 1 \
+         (OP-3 backend-mutation table, queried directly — not a wiremock proxy)"
     );
     assert_eq!(
-        mutations.len(),
-        1,
-        "expected exactly 1 mutation (1 PATCH for id=1); no creates / no deletes; \
-         got: {:?}",
-        mutations
-            .iter()
-            .map(|r| (r.method.as_str().to_owned(), r.url.path().to_owned()))
-            .collect::<Vec<_>>()
+        post_count, 0,
+        "expected 0 audit_events POST (create) rows on a single-update happy path, got {post_count}"
+    );
+    assert_eq!(
+        delete_count, 0,
+        "expected 0 audit_events DELETE rows on a single-update happy path, got {delete_count}"
     );
 
     // ASSERTION 4: mirror's main ref points at new SoT SHA (full happy
