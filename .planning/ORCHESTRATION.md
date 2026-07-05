@@ -40,8 +40,9 @@ its own sub-delegation:
 
 > **No-fable mode (P92→v1.0):** when the top-level session itself runs on opus,
 > `.planning/RUNBOOK-TO-V1/index.md` Amendments 1–3 govern: five-tier recursion
-> (L0 ~10%-of-context portions → L1 portion coordinators → L2 phase coordinators →
-> L3 work lanes → L4 helpers), the 10x scoping rule, honest corrective iteration,
+> (L0's whole drive reaches end state at ~10% of its own context, total → L1
+> portion coordinators → L2 phase coordinators → L3 work lanes → L4 helpers), the
+> 10x scoping rule, honest corrective iteration,
 > and a single-shot fable consult valve replacing standing fable coordinators.
 
 ## 2. Coordinators route, they do not work

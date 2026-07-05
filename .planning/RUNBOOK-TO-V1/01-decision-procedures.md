@@ -105,8 +105,9 @@ intention ("puts this project on the global map"), not from phase order.
 
 - **Trigger:** evidence that executing the NEXT PLANNED item no longer serves
   the ratified mission: a dependency inverted, new information invalidated the
-  ordering rationale, an owner remark implies a different priority, or a portion
-  is tracking >10% of L0 context (Amendment 1 arithmetic broken).
+  ordering rationale, an owner remark implies a different priority, or the drive
+  is tracking >10% of L0 context with portions still outstanding (Amendment 1
+  arithmetic broken).
 - **Evidence (delegate):** a one-page mission-delta memo from an L4 lane: what
   the plan says next / what the mission (OD-3 north star + OD-4 sequence)
   implies / the delta / cost + reversibility of resequencing.

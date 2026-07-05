@@ -34,7 +34,7 @@ review agents, etc."*
 
 | Tier | Role | Model | Scope + discipline |
 |---|---|---|---|
-| **L0** | Top-level orchestrator | opus | Scopes the drive into **very large portions**, each budgeted at **~10% of L0 context to reach that portion's end state**. Report-only diet; routes, decides, integrates. Never reads source, never builds, never edits. |
+| **L0** | Top-level orchestrator | opus | Scopes the drive into **very large portions** such that the ENTIRE drive reaches its end state by the time L0 has spent **~10% of its own context, total** — not 10% per portion. Report-only diet; routes, decides, integrates. Never reads source, never builds, never edits. |
 | **L1** | Portion coordinator | opus (`model: opus` on a `phase-coordinator` dispatch) | Owns one large portion (a milestone close-out, a whole new milestone). A pure coordinator: charters L2s, arbitrates, integrates verdicts. |
 | **L2** | Phase / drain-window coordinator | opus for security-judgment phases, sonnet otherwise | **Still a coordinator with very large work** — owns a phase or debt-drain window end-to-end by chartering L3 lanes. Never leaf work. |
 | **L3** | Work lanes (executors, runners, fixers) | sonnet default | **Where most actual work happens.** Makes **case-by-case calls** on what to push down to L4 — recon before edit, review before report, digest instead of raw read. ≤100 tool calls; if bigger, split via L2. |
@@ -44,10 +44,13 @@ Fable exists in exactly one place: the **single-shot consult valve** (ch.01 §Va
 dispatched by L0 with `model: fable`, one bounded question per dispatch. Never a
 standing fable coordinator; never fable at a leaf (OD-4 item 1 still holds).
 
-**L0 portion arithmetic:** the whole drive to v1.0 is ~5 portions (ch.03 §A). At
-~10% L0 context each, the end state lands by ~50% context — exactly the relief
-headroom ORCHESTRATION §3 demands. A portion tracking above 10% of L0 context is a
-**scoping failure**: split the portion or rotate L0, don't push through.
+**L0 portion arithmetic:** the whole drive to v1.0 is ~5 portions (ch.03 §A), but
+the ~10% budget applies to the DRIVE, not each portion — plans are chronically
+optimistic (Amendment 2's 10x rule), so children (L1 portion coordinators) absorb
+the blowup inside THEIR contexts, never L0's. L0's remaining ~90% is correction
+margin — for verdicts, decisions, and the unexpected — never planned workload. The
+drive tracking above ~10% of L0 context with portions still outstanding is a
+**scoping failure**: split further or rotate L0, don't push through.
 
 ## Amendment 2 — the 10x rule
 
@@ -141,9 +144,11 @@ session:
 > You are the top-level orchestrator (L0, opus) for reposix at
 > `/home/reuben/workspace/reposix`, branch `main`. Operating mode: no-fable,
 > report-only diet — you route, decide, and integrate; you never read source
-> files, run builds, or edit the tree yourself. Scope the drive into large
-> portions costing ~10% of your context each; delegate every read >100 lines;
-> consume ≤400-word reports.
+> files, run builds, or edit the tree yourself. Scope delegations so large that
+> the entire drive reaches its end state by the time you have spent ~10% of your
+> own context — children absorb the 10x blowup in their contexts, not yours; your
+> remaining 90% is correction margin, never planned workload. Delegate every read
+> >100 lines; consume ≤400-word reports.
 >
 > Read order (digests, not raw reads, for 4 and 5):
 > 1. `.planning/STATE.md`

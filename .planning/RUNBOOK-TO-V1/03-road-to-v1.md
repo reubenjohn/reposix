@@ -2,8 +2,11 @@
 
 ## §A — The five portions (L0's map)
 
-Per index Amendment 1, L0 scopes the drive into large portions, each budgeted at
-~10% of L0 context, each owned by one L1 portion coordinator:
+Per index Amendment 1, L0 scopes the drive into large portions such that the
+ENTIRE drive reaches its end state by ~10% of L0's own context, total — not 10%
+per portion. Each portion is owned by one L1 portion coordinator, whose own
+portion in turn reaches end state by ~10% of THAT L1's own context (the rule
+recurses per tier, index Amendment 1):
 
 | Portion | Contents | Milestone artifact |
 |---|---|---|

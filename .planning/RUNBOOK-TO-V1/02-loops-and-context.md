@@ -108,7 +108,7 @@ L0 at session start. Checklist — current values as of 2026-07-05, verify live:
 
 | Tier | Budget | Mechanism |
 |---|---|---|
-| L0 | ~10% of context per PORTION; end-state by ~50%, second half is relief headroom | Report-only diet: consumes ≤400-word reports and ≤300-word digests ONLY. Never opens source files, plans, or transcripts — an L0 that reads a 500-line file has spent a phase's budget on one turn |
+| L0 | ~10% of context for the WHOLE drive (all portions together, not per-portion); remaining ~90% is correction margin, never planned workload | Report-only diet: consumes ≤400-word reports and ≤300-word digests ONLY. Never opens source files, plans, or transcripts — an L0 that reads a 500-line file has spent a phase's budget on one turn |
 | L1/L2 coordinators | end-state by ~50% of own context; relief at any wave boundary past 50% | `relief-handover-writer` (L4) writes+commits the handover; PRE-NOTIFIED rotation (DP-1); `gsd-context-monitor.js` warns at ≤35%/≤25% remaining but do not wait for it |
 | L3 lanes | ≤100 tool calls | If a plan implies more → split via L2 BEFORE dispatch (10x rule). L3 may push mechanical halves down to L4 haiku |
 | L4 leaves | single errand; digest ≤300 words, report ≤400 words | Terminal — no spawning |
