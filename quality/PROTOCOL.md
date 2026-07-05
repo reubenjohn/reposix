@@ -385,6 +385,8 @@ Rules:
 
 Waivers are the principled escape hatch. Without them, an agent stuck on an inherited problem either silently descopes (bad) or blocks indefinitely (bad). With them, the descope is explicit, time-bounded, and re-surfaced when the waiver expires.
 
+**Un-waiving requires a runner mint, not just waiver deletion.** Un-waiving a catalog-first row (deleting its `waiver` block once the verifier now exists) REQUIRES running the runner (Step 6) to mint the PASS artifact in the same commit sequence — deleting the waiver block alone leaves a phantom-green `status: WAIVED` / `waiver: null` row that loads without complaint and counts toward green (this was the literal root cause of the P93 phase-close RED at `bf3bc9c`; the deeper load-time `_audit_field.py` enforcement for this class of row is filed in `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`).
+
 ## SURPRISES.md format
 
 Append-only. One line per surprise. Format:
