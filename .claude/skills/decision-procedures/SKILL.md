@@ -14,15 +14,17 @@ description: Use as a reposix orchestrator/coordinator facing one of five concre
 # Decision procedures + escalation valve
 
 Doctrine home: `.planning/ORCHESTRATION.md` §11. Each DP: **trigger → evidence (delegate
-to an L4 lane) → decide → what escalates**. No match → go straight to the Valve below.
+to an L4 lane) → decide → what escalates**. No match → the Valve below.
 
 ## DP-1 — Coordinator-rot diagnosis from behavioral signals
 
 Trigger: ≥2 of {stop/watch cycles; repeated <5-tool-call bookkeeping turns; arming
 watchers/sleeps/polling (violates ORCHESTRATION §2 rule 4); re-asking already-answered
 questions; report latency up while commit rate falls; self-contradiction on wave state}
-in a child's reports + `git log` — OR 1 signal + child past ~50% context. Decide: rotate
-at the next wave boundary via **pre-notified** handover (ORCHESTRATION §3 template) — the
+in a child's reports + `git log` — OR 1 signal + child past ~50% context. (1 signal +
+child under ~50% context → don't rotate yet: send one corrective message naming the
+signal; rotate only if it recurs.) Decide: above the threshold, rotate at the next wave
+boundary via **pre-notified** handover (ORCHESTRATION §3 template) — the
 child is told IN ADVANCE, finishes its atomic unit, `relief-handover-writer` commits the
 handover, successor spawned with it as charter. Escalates when the SUCCESSOR rots within
 one wave — mis-scoped charter (10x rule violated), not rot: split and re-charter; two
@@ -106,10 +108,9 @@ never idle** — waiting for permission you don't need is a rot signal (DP-1).
 
 ## Fable consult-dispatch (single-shot, reusable)
 
-Dispatched by the top-level orchestrator only, via the Agent tool, `model: fable`, a
-fresh agent (no inherited context — the evidence digest IS the context), ONE bounded
-question per dispatch. If fable is unavailable in the environment → owner, with the same
-package.
+Dispatched by the top-level orchestrator only, via the Agent tool, `model: fable`,
+fresh agent (no inherited context — the digest IS the context), ONE bounded
+question per dispatch. Fable unavailable → owner, same package.
 
 ```
 Agent(model: "fable", description: "Fable consult: <topic>"):
@@ -136,9 +137,9 @@ DELIVERABLE — append to .planning/CONSULT-DECISIONS.md and commit:
 Then report the commit SHA and the decision in ≤200 words.
 ```
 
-The top-level orchestrator relays the decision to the requesting coordinator and
-resumes. A consult that comes back "cannot decide on this evidence" is a valid outcome:
-gather the named missing evidence once, re-consult once; still undecidable → owner.
+The orchestrator relays the decision and resumes. A consult that returns "cannot decide
+on this evidence" is valid: gather the named missing evidence once, re-consult once;
+still undecidable → owner.
 
 ## Decision ledger
 
