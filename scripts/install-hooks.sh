@@ -13,7 +13,10 @@
 
 set -euo pipefail
 
-readonly repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Repo root defaults to this script's parent (the real checkout). A test
+# harness may override REPOSIX_INSTALL_HOOKS_ROOT to point at a sandbox repo so
+# the install path can be exercised without mutating the live checkout's config.
+readonly repo_root="${REPOSIX_INSTALL_HOOKS_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 readonly hooks_src="${repo_root}/.githooks"
 
 if [[ ! -d "${repo_root}/.git" ]]; then
