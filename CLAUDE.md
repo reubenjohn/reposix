@@ -163,6 +163,7 @@ cargo run -p reposix-cli -- init sim::demo /tmp/repo  # bootstrap a partial-clon
 cd /tmp/repo && git checkout origin/main             # agent UX from here is pure git
 bash quality/gates/agent-ux/dark-factory.sh sim              # v0.9 dark-factory regression
 bash quality/gates/agent-ux/dark-factory.sh dvcs-third-arm   # v0.13 attach+bus arm
+bash quality/gates/code/shell-coverage.sh                    # kcov shell coverage (needs kcov)
 bash scripts/preflight-real-backends.sh              # 0=reachable 1=auth/net gap 2=no creds
 ```
 
