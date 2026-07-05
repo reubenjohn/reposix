@@ -47,6 +47,10 @@ Full doctrine: `.planning/ORCHESTRATION.md`. This is the paste-ready operational
 ≤400-word structured report: verdict/outcome, commit SHAs, RAISE LIST for downstream,
 intake disposition, and a NOTICED section. Full evidence → committed artifacts, never chat.
 
+**Then triage what comes back (parent's job):** each lane's NOTICED / RAISE LIST is
+routed on receipt — absorb into the current wave (low charter-deviation + 10x capacity),
+re-delegate as a new lane, or file to intake; never drop it (ORCHESTRATION §2).
+
 ## 5. Relief trigger (ask at every wave boundary)
 
 **Am I past ~50% of my context?** If yes: dispatch `relief-handover-writer` to

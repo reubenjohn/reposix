@@ -145,7 +145,9 @@ not silent absorption.
   3. **Balloon test:** would it consume more than one phase-slot of work? →
      surface as an explicit SCOPE DECISION to the owner (this specific case
      goes to the owner, not fable — it is a budget question only the owner can
-     answer).
+     answer). This is a **proposal, not a confession**: a large generic /
+     cross-project framework is expected leverage to surface, not scope-creep
+     to bury — the owner gates approval, never the surfacing (ORCHESTRATION §5).
 - **Evidence:** the discovering lane's own report suffices for tests 1–2; the
   balloon case gets a 10-line scope memo (what, why now, cost, cost-of-delay).
 - **Default:** file, don't absorb. The intake files are the pressure valve that

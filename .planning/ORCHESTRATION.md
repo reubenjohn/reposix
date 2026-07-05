@@ -70,6 +70,18 @@ reports/handovers. The 5 rules (verbatim, owner directive 2026-07-04
    yes: dispatch `relief-handover-writer` to write+commit the handover, then tell the
    orchestrator to relieve you. Relief is cheap; rot is not.
 
+**Bottom-up triage (the receiving side of "noticing is a deliverable").** Every
+sub-agent report carries a NOTICED section + RAISE LIST + intake disposition (rule 3 +
+ownership charter). The parent does not just collect these — it **triages each item and
+routes it, never drops it**: (a) low-deviation from the current charter and it fits the
+10x capacity → **absorb** into this wave (replan the wave; DP-5 charter test); (b) real
+work outside this charter → **re-delegate** as a new lane, or hand to the owning
+downstream phase as a RAISE-LIST item; (c) larger-than-intake → **file / escalate**
+(OP-8; valve). A leaf's reported friction that surfaces in NO commit, NO intake row, and
+NO re-dispatch is a dropped deliverable — the same red flag as an empty noticing section.
+Leaves report friction UP because they cannot see the whole charter; making the
+absorb-vs-redelegate call is the parent's job precisely because it can.
+
 ## 3. Context budget + relief/handover protocol
 
 Track context percentage from turn one, not just at milestones. Target reaching the
@@ -141,11 +153,22 @@ reduction) is itself fable-tier delegation-worthy work. (OD-4 item 2; D-CONV-1..
 ## 5. Tangent scoping (charter = budget)
 
 Tooling, guardrails, and hooks are deliverables, not distractions (the entire
-`quality/` framework was an unplanned tangent). Graduated response:
+`quality/` framework was an unplanned tangent — and the project's best investment).
+Graduated response:
 - **<1h + no new dependency** → fix inline in the discovering lane.
 - **larger** → file to `SURPRISES-INTAKE.md` / `GOOD-TO-HAVES.md` with severity + sketch.
 - **balloons past intake-sized** → surface as an explicit scope decision to the owner.
   **Never silently absorb; never scope-creep to fit.** (OP-8; directive #12.)
+
+**Proposing a large generic framework is expected work, not scope-creep to suppress.**
+When a lane spots leverage that pays off across THIS project and others — a reusable
+framework, a cross-cutting guardrail, an infra investment that deviates substantially
+from the current charter — surfacing and scoping that proposal (a ~10-line scope memo:
+what, why now, cross-project value, cost, cost-of-delay) is a first-class deliverable.
+The quality-infra milestone is the canonical precedent: an unplanned tangent that became
+the backbone. The owner still gates scope/spend (valve E3) — but the valve gates
+**approval, never the surfacing**. Withholding a high-leverage proposal because "it's not
+on the plan" is the failure mode, not the discipline.
 
 ## 6. Pause/resume at logical boundary
 

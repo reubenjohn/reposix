@@ -45,7 +45,13 @@ One tree-writer at a time; ONE cargo invocation machine-wide (a hook enforces th
 no `--no-verify`; push origin main BEFORE the verifier dispatch; understand the
 project's intention and pivot toward it rather than executing a stale plan literally.
 
+## Triage what your lanes report up (bottom-up loop)
+Every lane hands you a NOTICED section + RAISE LIST. Triage each item, never drop it:
+absorb into the current wave (low charter-deviation + 10x capacity), re-delegate as a
+new lane, or file to SURPRISES-INTAKE / GOOD-TO-HAVES. A reported friction that lands in
+no commit, no intake row, and no re-dispatch is a dropped deliverable. (ORCHESTRATION §2.)
+
 ## Your report (≤400 words)
-Verdict, commits (SHAs), RAISE LIST for downstream phases, intake disposition, what you
-NOTICED, and the handover pointer if you were relieved. Evidence goes in committed
-artifacts, not this report.
+Verdict, commits (SHAs), RAISE LIST for downstream phases, intake disposition (incl. how
+you routed each lane's noticing), what you NOTICED, and the handover pointer if you were
+relieved. Evidence goes in committed artifacts, not this report.

@@ -331,3 +331,17 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 **Default disposition:** XS owner-action — no code change. File for owner awareness only.
 
 **STATUS:** OPEN (owner decision)
+
+---
+
+## 2026-07-05 | Coverage-as-asset: propose a `code/coverage-ratchet` catalog row | discovered-by: doctrine-coverage audit (owner request)
+
+**What:** `cargo-llvm-cov` runs in CI (`.github/workflows/ci.yml` `coverage` job → Codecov, lines 366-386) but NO doctrine or gate watches, raises, or ratchets code coverage. Coverage is generated and then ignored — it can silently regress phase-over-phase with zero signal. The steward-window checklist (RUNBOOK ch.02 §A-L5) now carries a watch-only reminder, but watch-only is honest-but-weak: nothing prevents a slow decay.
+
+**Acceptance:** mint one `code/coverage-ratchet` row in `quality/catalogs/` (dimension `code`, kind `mechanical`) + one verifier in `quality/gates/code/` that reads the lcov/Codecov result and flags when workspace line coverage drops below a stored ratchet floor (floor only moves UP — a green run bumps the floor; a drop fails/alerts). This is the framework's own one-row-one-verifier extension contract (the runner discovers by tag — no new top-level script, no new pre-push wiring). Start as `weekly` / `pre-pr` **alerting** to establish a trustworthy baseline, promote to blocking (`pre-release`) once the floor is stable.
+
+**Why deferred / proposal-only:** inventing a blocking enforcement gate silently is exactly the anti-pattern the framework forbids. A coverage gate carries real design decisions — floor value, per-crate vs workspace, alert-vs-block, flaky-coverage tolerance — that deserve a scoped phase, not a bolt-on. Filed as a proposal (not a stealth gate) so the owner / next `quality/gates/code/`-touching phase scopes it deliberately.
+
+**Default disposition:** M — default-defer; natural fit for the launch-readiness milestone (its headline-numbers work already mechanizes CI-verified metrics) or the next `quality/gates/code/` phase.
+
+**STATUS:** OPEN

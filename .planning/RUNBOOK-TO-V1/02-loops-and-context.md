@@ -26,7 +26,10 @@ portions).
      the fan-out itself.
   3. **L2 runs waves** via L3 lanes; L3 makes case-by-case L4 calls (recon
      before edit, reviewer before report — HCI). One tree-writer at a time; ONE
-     cargo invocation machine-wide.
+     cargo invocation machine-wide. **Bottom-up triage:** every returning lane's
+     NOTICED / RAISE LIST gets triaged on receipt — absorb into this wave (low
+     charter-deviation + 10x capacity), re-delegate as a new lane, or file to
+     intake; never drop it (ORCHESTRATION §2).
   4. **Phase close:** L2 ensures `git push origin main` lands BEFORE step 5
      (verifier grades RED without it), CI green (`gh run` — one watch, read
      failures, never declare green unseen).
@@ -103,6 +106,8 @@ L0 at session start. Checklist — current values as of 2026-07-05, verify live:
 | Orphan processes | e.g. stale `claude` PIDs, leftover cargo | `ps aux | grep -E "cargo|rustc|claude"`; kill only OWN session's orphans; foreign long-lived PIDs → note to owner |
 | ~19 stale remote branches | blocked on owner-named approval | list to owner once per portion; never delete unnamed |
 | `tag-v0.13.0.sh` | `.disabled` | stays disabled until P97 milestone verdict GREEN |
+| Scheduled-workflow health (weekly quality verdict, `security-audit`/RUSTSEC, bench-cron) | chronic-yellow + bench rows above are the known-benign set | Read each scheduled run at the phase-close steward window (`gh run list --workflow=<name>`); a NEWLY-red scheduled run is a regression to fix BEFORE the next dispatch, not alerting-only noise. Chronic-yellow rows (above) stay yellow by design — do not "fix" them |
+| Code-coverage trend (`cargo-llvm-cov` → Codecov, `ci.yml` `coverage` job) | generated in CI; NO ratchet floor gated today; watch-only | Check the phase's Codecov delta; an unexplained line-coverage DROP is a regression to explain or restore before advancing. Ratchet-floor catalog row proposed in `GOOD-TO-HAVES.md` (2026-07-05, `code/coverage-ratchet`) — NOT yet an enforcement gate, do not treat watch-only as blocking |
 
 ## §B — Context budgets (quantified, per tier)
 
@@ -157,7 +162,11 @@ already be committed. Duplicate lanes cost context AND can double-write the tree
 - **Every owner message:** treat casual asides as rule seeds — encode into the
   relevant artifact same-session (fix-it-twice; this very runbook's Amendments
   1–3 came from asides).
-- **Every CLAUDE.md edit:** root file is at 39,910/40,000 bytes — additions
-  require equal removals or pointerization until the P95 slim lands.
+- **Every CLAUDE.md edit:** root file was slimmed to ~16k (a74f9b3, ahead of the
+  P95 plan) via the ORCHESTRATION.md pointerization pattern (~6-line summary +
+  pointer); the ≤40k discipline holds with headroom. Additions still pointerize to
+  a scoped `CLAUDE.md` or long-form home rather than inlining — grow the pointer,
+  not the root. (Note: ch.03 §D bucket 2 still frames the slim as pending P95 work;
+  that framing is now stale — the slim already landed.)
 - **Weekly (or first session after):** chronic-row check — yellow rows listed in
   A-L5 stay yellow by design; anything NEWLY yellow gets a ledger row.
