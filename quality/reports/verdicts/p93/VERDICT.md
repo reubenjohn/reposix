@@ -1,118 +1,84 @@
-# P93 phase-close verdict (unbiased verifier subagent) — 2026-07-05T21:05:11Z
+# P93 phase-close verdict (unbiased verifier subagent, RED-loop re-verify) — 2026-07-05T21:32Z
 
-- **Overall: RED** — P93 not closeable at `bf3bc9c`.
-- Verifier: unbiased subagent, zero implementation context. Graded against reality
-  (ran every gate, read every transcript) + the catalog contracts, not anyone's word.
-- Auto-rollup companion: `quality/reports/verdicts/p93/2026-07-05T20-57-23Z.md`
-  (`verdict.py --phase 93` → red, 103/112 P0/P1 green).
+- **Overall: GREEN** — P93 closeable at `10fa081`. Supersedes the prior RED at `bf3bc9c`
+  (`2026-07-05T21-05-11Z.md`, root cause: PROTOCOL Step 6 skipped → no minted artifacts).
+- Verifier: unbiased subagent, zero implementation context. Graded against reality (ran
+  the P0 cargo gate + two grep gates + the real-backend env-gate live, read every minted
+  artifact + catalog row) + the catalog contracts, not anyone's word.
+- Scope discipline (dispatch §5): P93 is graded on its **6 rows only**. `verdict.py --phase`
+  is a pure rollup and does NOT scope the P0/P1 gate to phase-93 rows; its global RED
+  (`2026-07-05T21-24-30Z.md`, 105/112) is driven by UNRELATED stale rows — **out of P93 scope**
+  (see § Rollup).
 
-## RED reason (ONE root cause, trivially fixable — substance already holds)
+## Prior RED root cause — RESOLVED
 
-**The P93 phase-close skipped PROTOCOL Step 6 (run the runner) for its own rows.**
-No verification artifact exists for ANY of the six P93 rows —
-`quality/reports/verifications/agent-ux/p93-*.json` are **all MISSING** (none
-git-tracked), and `last_verified: null` on all six. The runner never minted a PASS:
+The prior RED had ONE cause: the six P93 rows had no runner-minted verification artifacts
+(RBF-LR-01/02/D-P92-03 sat phantom-green `status:WAIVED / waiver:null`; RBF-LR-04/05
+`NOT-VERIFIED/last_verified:null`). The fix lane (`8dd6639` mint, `10fa081` findings) ran
+the runner (Step 6). Re-checked independently this session:
 
-- **RBF-LR-01 / RBF-LR-02 / D-P92-03** carry an invalid `status: WAIVED` with
-  `waiver: null`. Commit `3976789` deleted the waiver *block* but never ran the
-  runner to perform the WAIVED→PASS flip the deleted waiver text itself documented
-  ("flips WAIVED->PASS then [when the verifier lands]"). Result: a phantom-green
-  status with no waiver justification AND no runner-minted PASS.
-- **RBF-LR-04 / RBF-LR-05** carry `status: NOT-VERIFIED`, `last_verified: null`.
+- **No row remains in the `WAIVED / waiver:null` phantom state.** All six carry `waiver:null`
+  AND a non-WAIVED status. The three formerly-phantom rows are now runner-minted PASS.
+- **Five PASS rows each have a git-tracked artifact + non-null `last_verified`** (below).
+- **RBF-LR-03 is honest NOT-VERIFIED** (creds absent) — expected, deferred to the v0.13.0
+  milestone-close 9th probe per OD-2; does NOT block phase-close.
 
-Per the PROTOCOL's foundational principle — *"If the verifier reads the catalog and
-sees no artifact dated this session, the row is RED"* — every P93 row is ungraded.
-`verdict.py`'s own rollup agrees (RED). The executing agent's word ("all three grade
-PASS", `3976789` message) is not the verdict; the runner is, and it never ran.
+## Per-row grades (all 6)
 
-**The substance is fully present and PASSES** — I ran all five gates and confirmed
-RBF-LR-05's evidence. The fix is a re-run, NOT re-implementation (see § Fix).
-
-## Per-row grades
-
-| Row | Catalog id | Substance (ran it) | Catalog contract | Grade |
+| Row | Catalog id | Grade | Minted artifact | last_verified |
 |---|---|---|---|---|
-| RBF-LR-01 | p93-l2-l3-coherence-adr | gate **exit 0** (ADR-010: ACCEPTED, names L2+L3, Option C + trade-off, v0.14.0 deferral + owner-signoff, x-refs RBF-LR-02) | no artifact; `status=WAIVED/waiver=null`; `last_verified=null` | **NOT-VERIFIED** (blocks) |
-| RBF-LR-02 | p93-cache-coherence-refresh-honest | gate **exit 0** (`cargo test -p reposix-cache --test cache_coherence` 3/3 green; `reposix-remote --test partial_failure_recovery` 1/1 green; refresh honesty holds) | no artifact; `status=WAIVED/waiver=null`; `last_verified=null` | **NOT-VERIFIED** (blocks) |
-| D-P92-03 | p93-delta-sync-coherence-invariant | gate **exit 0** (`#[ignore]` removed; `delta_sync` 4 passed, 0 ignored; target fn ran + passed) | no artifact; `status=WAIVED/waiver=null`; `last_verified=null` | **NOT-VERIFIED** (blocks) |
-| RBF-LR-03 | p93-partial-failure-recovery-real-confluence | gate **exit 75** (creds absent, fail-closed OD-2) | no artifact; `status=NOT-VERIFIED` | **NOT-VERIFIED-expected** (does NOT block phase-close) |
-| RBF-LR-04 | p93-l1-promise-reconciled | gate **exit 0** (keep+qualify branch consistent across CLAUDE.md + dvcs-topology.md + troubleshooting.md; reconcile pointer + RBF-LR-04 cites present; no lying-doc token) | no artifact; `status=NOT-VERIFIED`; `last_verified=null` | **NOT-VERIFIED** (blocks) |
-| RBF-LR-05 | p93-mid-stream-litmus-t1-t4 | **PASS from committed transcripts** (T1–T3 sim `dark-factory.sh sim` exit 0 → 0 HIGH; T4 4/4 PASS in git-2.54.0 container; TokenWorld arm NOT-VERIFIED-expected) | no artifact JSON; `status=NOT-VERIFIED`; `last_verified=null` | **NOT-VERIFIED** (evidence exists; row never graded/minted) |
+| RBF-LR-01 | agent-ux/p93-l2-l3-coherence-adr | **PASS** | verifications/agent-ux/p93-l2-l3-coherence-adr.json | 2026-07-05T21:13:52Z |
+| RBF-LR-02 | agent-ux/p93-cache-coherence-refresh-honest | **PASS** (P0) | verifications/agent-ux/p93-cache-coherence.json | 2026-07-05T21:12:38Z |
+| D-P92-03 | agent-ux/p93-delta-sync-coherence-invariant | **PASS** (P0) | verifications/agent-ux/p93-delta-sync-coherence.json | 2026-07-05T21:12:40Z |
+| RBF-LR-04 | agent-ux/p93-l1-promise-reconciled | **PASS** | verifications/agent-ux/p93-l1-promise-reconciled.json | 2026-07-05T21:16:47Z |
+| RBF-LR-05 | agent-ux/p93-mid-stream-litmus-t1-t4 | **PASS** (P0) | verifications/agent-ux/p93-mid-stream-litmus-t1-t4.json | 2026-07-05T21:16:45Z |
+| RBF-LR-03 | agent-ux/p93-partial-failure-recovery-real-confluence | **NOT-VERIFIED** (creds absent, deferred, OD-2) | none minted (correct) | never |
 
-### RBF-LR-03 cadence determination (independent, per PROTOCOL Step 6 / OD-2)
-Row cadence = `["pre-release-real-backend"]` only (not pre-pr/pre-push). At **phase**-close
-with creds absent, `exit 75 → NOT-VERIFIED` is the honest SLOT state and does **not** block
-P93. The OD-2 hard-RED rule ("creds-missing ⇒ RED, no waiver") fires at **v0.13.0
-milestone-close** (9th probe, `--cadence pre-release-real-backend`), not here. Its own
-`expected.asserts[2]` codifies this ("without creds/allowlist: … NOT-VERIFIED … NOT PASS,
-NOT FAIL"). Correctly deferred.
+All five PASS artifacts confirmed git-tracked (`git ls-files`). Artifact bodies are
+substantive — real `cargo test` output (cache_coherence 3/3, partial_failure_recovery 1/1,
+delta_sync 4/4) and real gate stdout, not stubs.
 
-### RBF-LR-05 manual-kind grading (from committed evidence, per dispatch instruction)
-- `rbf-lr-05-t1-t3-dark-factory-sim.txt`: `dark-factory.sh sim` **exit 0** → 0 HIGH frictions (T1 baseline).
-- `rbf-lr-05-t4-git254-container.txt`: host git 2.25.1 (T4 needs ≥2.34), so run in a
-  **git 2.54.0** container. All **4 T4 assertions PASS** — baseline push; stale-base push
-  correctly rejected; refetched root IDENTICAL before/after (HIGH-1 stays fixed);
-  ancestry advanced past shared root (count=2, non-vacuous) — **exit 0, not env-skipped.**
-  Not RED'd for old on-box git per dispatch. TokenWorld arm NOT-VERIFIED-expected (creds absent).
+## Live spot-checks (ran this session — minted PASSes reflect reality, not stale artifacts)
 
-## Gate-honesty findings (per script — the axis the dispatch flagged as RED-triggering)
+| Gate | Live result |
+|---|---|
+| p93-delta-sync-coherence.sh (D-P92-03, P0, cargo) | **exit 0** — `4 passed; 0 failed; 0 ignored`; `delta_sync_tree_references_only_resolvable_oids` un-ignored + `... ok`. Matches artifact. |
+| p93-l2-l3-coherence-adr.sh (RBF-LR-01, grep) | **exit 0** — ADR-010 ACCEPTED, names L2+L3, Option C + trade-off, v0.14.0 deferral + owner-signoff, x-ref RBF-LR-02. |
+| p93-l1-promise-reconciled.sh (RBF-LR-04, grep) | **exit 0** — keep+qualify branch consistent across CLAUDE.md + dvcs-topology.md + troubleshooting.md; no lying-doc token. |
+| p93-partial-failure-recovery-real-confluence.sh (RBF-LR-03) | **exit 75** → NOT-VERIFIED (creds unset: ATLASSIAN_API_KEY / EMAIL / TENANT). OD-2 fail-closed, never skip-as-pass. Correct. |
 
-**All five newly-landed scripts (`75bdd21`) GENUINELY assert their row's contract —
-no trivial `exit 0`, no check weaker than the row's `expected.asserts`.** Verified
-line-by-line:
+One cargo invocation at a time; no concurrent cargo (build-memory budget honored).
 
-- **p93-l2-l3-coherence-adr.sh** — greps the real ADR for both option ids (`re-fetch-on-cache-miss`(L2) + `transactional-cache-writes`(L3)), `Status ACCEPTED`, `## Decision`, chosen `Option C`, `v0.14.0` deferral + `owner sign-off` rule, x-ref `RBF-LR-02`. Maps 5/5 asserts. HONEST.
-- **p93-cache-coherence.sh** — runs two **real** cargo test binaries sequentially (one-cargo budget honored), greps `partial_fail…replan…converg` fn, checks `refresh_for_mirror_head` files_touched-gate honesty in write_loop.rs + CLAUDE.md + dvcs-topology.md. Maps 3/3 asserts. HONEST.
-- **p93-delta-sync-coherence.sh** — walks attribute lines to confirm `#[ignore]` truly removed from the target fn, runs real cargo, asserts `test <fn> … ok` observed AND `4 passed; 0 ignored`. Maps 3/3 asserts. HONEST (not vacuous — checks fn actually ran, not just suite exit 0).
-- **p93-l1-promise-reconciled.sh** — branch-detects (files_touched gate present ⇒ keep+qualify), asserts matching qualifiers + `reposix sync --reconcile` pointer + `RBF-LR-04` cites in both docs, and troubleshooting.md doesn't lie ("L3 defers to v0.14.0"). Honestly leaves process-claim #4 (same-PR) to the subagent per row owner_hint. HONEST.
-- **p93-partial-failure-recovery-real-confluence.sh** — OD-2 env-gate (exit 75), sanctioned-target hard-FAIL (exit 1, never 75) for non-TokenWorld, drives the real `--ignored` smoke, emits a `lib/transcript.sh` transcript. HONEST.
+## Rollup RED is out-of-P93-scope
 
-RBF-LR-05's verifier is the pre-existing `dark-factory.sh sim` (already-PASSING
-`agent-ux/dark-factory-sim`); its T4 container evidence is genuine + complete.
-
-**No gate-honesty RED.** The RED is purely the un-run-runner / stale-catalog defect.
+`verdict.py --phase 93` → red (105/112 P0/P1). The P0/P1 NOT-VERIFIED rows dragging it:
+`agent-ux/real-git-push-e2e` (P0, stale 07-04), `agent-ux/p92-mid-stream-litmus-t1-t4`
+(P0, P92), `release/cargo-binstall-resolves` (P1), `subjective/dvcs-cold-reader` (P1) —
+**none are P93 rows**. The only P93 row in the NOT-VERIFIED list is RBF-LR-03 (expected
+deferral). Per dispatch §5 the unrelated rollup RED does NOT force a P93 RED.
 
 ## Phase-close hygiene
-- HEAD == origin/main == `bf3bc9c` — push-before-verifier landed. ✓
-- Un-waive `3976789` removed waiver blocks from **exactly** RBF-LR-01/02/D-P92-03 (3 rows,
-  18 deletions / 3 `waiver:null` insertions); no other row touched. ✓ (but see RED reason —
-  removal without runner flip is the defect, not the row scope)
-- CLAUDE.md + docs/concepts/dvcs-topology.md + docs/guides/troubleshooting.md +
-  docs/decisions/010-l2-l3-cache-coherence.md reconciled in-phase (QG-07); RBF-LR-04 gate
-  PASS proves CLAUDE.md carries the RBF-LR-04-qualified "semantic no-op" caveat. ✓
-
-## Fix (substance already verified GREEN by this verifier — expect green on re-run)
-1. `python3 quality/runners/run.py --cadence pre-pr` — executes + mints PASS artifacts for
-   RBF-LR-01/02/D-P92-03 (I confirmed each exits 0). Also refreshes the pre-existing
-   mechanical rows currently stale-NOT-VERIFIED (real-git-push-e2e, t4-conflict-rebase-ancestry,
-   p92-mid-stream-litmus, etc.) that also drag the rollup red.
-2. `python3 quality/runners/run.py --cadence on-demand` — mints RBF-LR-04 (grep PASS) +
-   RBF-LR-05 (dark-factory sim exit 0). Confirm the manual-kind LR-05 handling preserves the
-   committed git-2.54 T4 transcript as its evidence.
-3. RBF-LR-03 stays NOT-VERIFIED (exit 75, creds absent) — correct; defer to milestone-close 9th probe.
-4. Commit the runner-minted catalog + artifacts, push, re-run `verdict.py --phase 93` → GREEN for P93 rows.
+- HEAD == origin/main == `10fa081`, parity 0 0, clean tree — push-before-verifier landed. ✓
+- CLAUDE.md + dvcs-topology.md + troubleshooting.md + ADR-010 reconciled in-phase (QG-07);
+  RBF-LR-04 gate proves the RBF-LR-04-qualified caveat + reconcile pointer are present. ✓
+- All five formerly-missing artifacts committed (`8dd6639`); no dirty working tree. ✓
 
 ## NOTICED (ownership charter OD-3)
-1. **`verdict.py --phase 93` is a pure rollup, NOT a grader, and `--phase` does not scope the
-   P0/P1 gate to phase-93 rows** — the RED mixes P93 rows with unrelated pre-existing
-   NOT-VERIFIED rows (real-git-push-e2e, cargo-binstall-resolves, subjective/dvcs-cold-reader,
-   p92-*). A phase verifier could misread the global RED as a P93 failure, or rubber-stamp
-   green by dismissing it. Suggest: `--phase N` emits a "phase-N rows: X/Y" sub-line, or scopes
-   the gate. Filed candidate for GOOD-TO-HAVES.
-2. **`status:WAIVED` + `waiver:null` loads silently and counts under "Waivers"** (toward green)
-   with empty `until`/`tracked_in` ("?"). A deleted waiver leaves a phantom-green row.
-   `_audit_field.py` should reject `status==WAIVED ⟺ waiver present` at load — mirroring the
-   pre-release-real-backend waiver-refuses-to-load guard. This is a honesty hole. Filed candidate
-   for SURPRISES-INTAKE (severity: MEDIUM — enables silent-descope).
-3. **`3976789` commit message overstates** — "all three grade PASS" is false at `bf3bc9c`;
-   deleting a waiver does not grade. The rows never graded PASS (no runner run).
-4. **T1–T3 sim transcript** (line 11) shows the on-box init fetch failing with
-   `blocked origin: http://127.0.0.1:7878` while the sim was spawned on :7779 (port/origin
-   mismatch on git-2.25.1). `dark-factory.sh sim` still exits 0 — it validates config +
-   recovery-hint messages, not a full fetch (consistent with the PASSING dark-factory-sim
-   row). The real end-to-end fetch is exercised in the git-2.54 T4 container. Not a P93
-   regression; worth documenting that the on-box sim arm is a config/message check.
+1. **All five minted artifacts carry `asserts_passed: []`.** Legitimate — `asserts_congruent`
+   is a documented no-op when either list is empty (`_audit_field.py:169-170`), so these
+   agent-ux mechanical gates inherit the fleet-wide "exit-0-IS-the-assertion" posture (gate
+   honesty confirmed line-by-line by the prior verdict). But it means the F-K4b
+   per-expected-assert congruence protection is **dormant on these P0 rows** — a gate that
+   emitted structured `asserts_passed` would arm it. Directional match to prior noticing #2.
+   Candidate GOOD-TO-HAVE: teach the agent-ux gate wrappers to emit `asserts_passed`.
+2. **`verdict.py --phase N` does not scope the P0/P1 gate to phase-N rows** (confirmed still
+   true; prior verdict filed it). A phase verifier could misread the global RED as a P93
+   failure. Suggest a "phase-N: X/Y" sub-line or gate-scoping.
+3. **`minted_at` on all six rows is the identical hand-set `2026-07-05T10:30:00Z`** while
+   `last_verified` carries the real runner timestamp — correct per D90-03 (minted_at is the
+   write-once audit-cutoff anchor, distinct from last_verified); noted for provenance clarity.
 
 ---
-*Verifier: Claude (unbiased P93 phase-close verifier). Evidence: gates run live + transcripts
-read this session. verdict.py rollup: 2026-07-05T20-57-23Z.md.*
+*Verifier: Claude (unbiased P93 phase-close re-verifier). Evidence: gates run live +
+artifacts/catalog read this session. Supersedes RED `2026-07-05T21-05-11Z.md`. Rollup:
+`2026-07-05T21-24-30Z.md`.*
