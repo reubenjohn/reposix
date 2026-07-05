@@ -146,3 +146,15 @@ quality/gates/security/ (e702822), exit codes to be confirmed by P92.
 2026-07-04 P90: release/cargo-binstall-resolves' planned ~10-LOC pkg-url fix
 was already shipped pre-P90 (33dd41f, QL-003) — waiver cleared without re-work
 per the D90-11 already-landed pattern.
+
+2026-07-04 P91: Cache::open shell-out inherited the parent process's GIT_DIR
+env var, silently opening the wrong repo and disabling OP-3 audit bookkeeping
+with no error — fixed by scrubbing inherited GIT_* env before the shell-out
+and never `let _ =`-discarding an audit-bearing handle (cb630e5).
+
+2026-07-05 P91: the read (fetch) path had ZERO successful-fetch coverage
+before P91 — every existing test asserted config-shape only, so three latent
+bugs (missing uploadpack.allowFilter, missing remote.origin.fetch refspec,
+harness DB not persisted for audit assertions) shipped stacked and only
+surfaced once real-git-push-e2e finally drove a real fetch+checkout in CI
+(5c758fb allowFilter, a4bb090 refspec, c64a8c0 harness DB-persist).

@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 mode: serial-workstreams
 status: executing-p89-serial-workstreams
-last_updated: "2026-07-04T18:00:00Z"
-last_activity: 2026-07-04 — Quality Convergence window (OD-4 item 2) between P89 close and P90 dispatch. D-CONV-1..8 journaled (quality/SURPRISES.md 5bba77a) + implemented; QL-001..006 BLOCKERs dispositioned (5 fixed, QL-001 filed BLOCKER intake for P90/P91); 5 permanent catalog rows minted; ledger reconstruction at .planning/audits/QUALITY-LEDGER.md. Next: P90 (gated on convergence coordinator GO).
+last_updated: "2026-07-04T23:35:00Z"
+last_activity: 2026-07-04 — P91 SHIPPED GREEN (verdict at quality/reports/verdicts/p91/VERDICT.md). Attach/sync real-backend wiring + QL-001 closed; litmus REAL vs TokenWorld 11/11; T2 REOPEN gate 0-HIGH (run 1 was 4-HIGH, fixed in-phase); 2 mass-delete BLOCKERs + fetch-path 3-layer + oid_map staleness fixed in-phase; CI green incl. real-git-push-e2e PASS. Next: P92.
 workstreams:
   workstream_a:
     milestone: v0.13.0
     milestone_name: DVCS over REST (extended)
     status: executing  # P89 execution started 2026-07-03 (top-level orchestration mode)
     phases_total: 20  # P78-P97 (P78-P88 shipped + P89-P97 extension)
-    phases_completed: 13  # P78-P90
-    next_phase: P91  # P90 SHIPPED GREEN 2026-07-04 (verdict at quality/reports/verdicts/p90/VERDICT.md); P91 next — QL-001 ROUTED to P91 per D90-01 (real-git-push-e2e waiver backstop expires 2026-07-31)
+    phases_completed: 14  # P78-P91
+    next_phase: P92  # P91 SHIPPED GREEN 2026-07-04 (verdict at quality/reports/verdicts/p91/VERDICT.md); P92 next — push-flow correctness (rebase recovery + OP-3 audit log silence, Clusters B+C)
     blocks_tag: true  # v0.13.0 tag does NOT push until P97 GREEN; tag push delegated to orchestrator per OD-3
   workstream_b:
     milestone: v0.13.2
@@ -33,10 +33,10 @@ workstreams:
 
 ### Workstream A — v0.13.0 (extended) — EXECUTING
 
-Phase: P90 SHIPPED 2026-07-04. Verdict GREEN at `quality/reports/verdicts/p90/VERDICT.md` (all 8 SCs PASS; unbiased zero-context verifier re-ran the 9 P90-minted rows independently). Honesty rules landed: `minted_at` write-once anchor, `coverage_kind` hard-new/RAISE-legacy + `transport_claim` tri-state, missing-verifier→NOT-VERIFIED + `error` marker, env-skip fail-closed with `last_real_grade`/`last_real_verified` history, shell-subprocess transcript-at-grade-time, F-K4b per-expected-assert congruence (gated on minted_at per D90-05, p86 F6 fixture REDs), `test-name-vs-asserts.sh` pre-push gate (4-entry baseline), absorption-honesty + milestone-adversarial dispatch templates + verdict.py GREEN-block. RAISE LIST at `quality/reports/raise-list-p90.md` seeds P92/P94/P95. Waiver cliff disposed per-waiver (D90-02): 14 renewed with live `tracked_in`, binstall cleared (already fixed 33dd41f), `agent-ux/real-git-push-e2e` deliberately NOT renewed. **QL-001 ROUTED to P91 per D90-01** — ROADMAP P91 names its 6 sharpened criteria + D90-06 sanctioned-target litmus criterion; the `real-git-push-e2e` waiver (expires 2026-07-31) is the backstop if P91 slips. 5 MISSING_TEST doc-alignment rows closed with real tests (90-06); `git-checkout-branch-command` stays waived (QL-001-blocked). Deviations journaled in `quality/SURPRISES.md` (5 entries 2026-07-04). Tag pushed only after P97 GREEN.
-Plan: shipped — 7 plan files + OVERVIEW + DECISIONS at `.planning/phases/90-framework-fixes-honesty-rules/` executed (waves A–E, sequential single-tree-writer); Wave B1 evidence + 4 deviations in `90-PAUSE-HANDOFF.md`.
-Status: P90 GREEN — 13/20 phases complete (P78–P90 shipped); next P91. v0.13.0 tag held until P97 GREEN (tag push delegated to orchestrator per OD-3).
-Next agent action: plan + execute P91 (real-backend wiring; TokenWorld litmus T2 REOPEN gate; QL-001 fix per the amended ROADMAP P91 entry — 6 criteria + sanctioned-target litmus-body assertion; preflight 3/3 PASS as of 2026-07-03). P91 must land QL-001 before the 2026-07-31 `real-git-push-e2e` waiver expiry.
+Phase: P91 SHIPPED 2026-07-04. Verdict GREEN at `quality/reports/verdicts/p91/VERDICT.md`. Attach/sync real-backend wiring + QL-001 closed: litmus REAL vs TokenWorld 11/11 asserts PASS; T2 REOPEN gate (Decision 1 mid-stream litmus checkpoint) 0-HIGH on the second run (run 1 surfaced HIGH=4 MED=2 LOW=3, all 4 HIGH fixed in-phase — `854586b`/`726f277`/`d6f7966`; run 2's residual MED/LOW findings are docs-discoverability gaps ROUTED to the launch-readiness milestone/P95, not correctness bugs). Two mass-delete BLOCKERs fixed (`5612fa6`), the fetch-path 3-layer bug (allowFilter/refspec/harness-DB-persist — `5c758fb`/`a4bb090`/`c64a8c0`) fixed, and the `oid_map` stale-prior desync root-caused + fixed (`01cd552` cache ORDER BY fix + `4feb5f6` planner server-field neutralization). CI green including `real-git-push-e2e` PASS (runs 28726703296 and 28726932499). 2 P2 honesty nits from the verifier (missing commit SHAs on the oid_map RESOLVED entry; missing MED/LOW tally on the T2-REOPEN run-1 entry) fixed in `SURPRISES-INTAKE.md` at phase-wrap. Tag pushed only after P97 GREEN.
+Plan: shipped — plan files at `.planning/phases/91-*/`; execution deviations + fix chronology recorded in `SURPRISES-INTAKE.md` (T2-REOPEN entries + fetch-path/oid_map entries, 2026-07-04/05).
+Status: P91 GREEN — 14/20 phases complete (P78–P91 shipped); next P92. v0.13.0 tag held until P97 GREEN (tag push delegated to orchestrator per OD-3).
+Next agent action: plan + execute P92 (push-flow correctness — Clusters B+C: helper-side fetch must preserve ancestry across post-push refetches / no fresh root commits per fetch; OP-3 audit-log silence fix so `helper_push_*` rows land on every push; `.with_audit(audit_conn)` chained on all three real-backend connectors; dark-factory third-arm extended to assert OP-3 dual-table audit rows on a real push). Depends on P89 GREEN, P90 GREEN, P91 GREEN — all satisfied.
 
 ### Workstream B — v0.13.2 — QUEUED (RESEQUENCED per OD-4)
 
