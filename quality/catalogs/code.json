@@ -251,8 +251,7 @@
       "waiver": null,
       "claim_vs_assertion_audit": "The verifier runs scripts/shell_coverage.py, which drives every harness under quality/gates/code/shell-coverage-tests/ through kcov, merges the runs, and computes the aggregate line-coverage across the full in-scope shell corpus (never-run scripts counted at 0% in the denominator). If the claim ('aggregate shell coverage is at or above the floor, and the coverable-line counter tracks kcov within 15%') were false -- coverage regressed below quality/shell-coverage-floor.txt, or the Python line-counter drifted from kcov's own total on an executed script -- the driver appends the failing assertion to asserts_failed and exits 1, and the gate propagates that non-zero exit; a passing floor and a clean counter are the falsifying evidence, not a proxy signal.",
       "cadences": [
-        "pre-push",
-        "pre-pr"
+        "pre-push"
       ]
     }
   ]
