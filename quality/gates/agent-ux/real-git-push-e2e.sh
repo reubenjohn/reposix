@@ -86,7 +86,19 @@ EOF
 fi
 
 # --- git >= 2.34: real end-to-end scenario ---------------------------------
-SIM_BIND="127.0.0.1:7781"
+# SIM_BIND MUST equal reposix-cli's DEFAULT_SIM_ORIGIN (crates/reposix-cli/
+# src/init.rs:24 = 127.0.0.1:7878): `reposix init sim::demo` bakes that default
+# origin into remote.origin.url and translate_spec_to_url does NOT honour
+# REPOSIX_SIM_ORIGIN (unlike sync.rs:84). Binding the sim on any other port
+# makes init's partial-clone fetch target 7878 (where nothing is listening)
+# AND trips the egress allowlist (REPOSIX_ALLOWED_ORIGINS below is derived from
+# SIM_BIND) with "blocked origin: http://127.0.0.1:7878" -- observed as the
+# real-git-push-e2e FAIL in CI run 28723720784. run.py runs rows sequentially
+# with a kill+wait cleanup, so sharing 7878 with the dvcs-third-arm row is safe
+# (and spawn_sim now fails loud if the port is somehow still occupied).
+# GOOD-TO-HAVES: teach translate_spec_to_url to honour REPOSIX_SIM_ORIGIN so
+# this scenario can use a collision-proof dedicated port.
+SIM_BIND="127.0.0.1:7878"
 RUN_DIR="/tmp/real-git-push-e2e-$$"
 SIM_URL="http://${SIM_BIND}"
 SIM_DB="${RUN_DIR}/sim.db"

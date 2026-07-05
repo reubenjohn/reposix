@@ -177,6 +177,12 @@ assert_duplicate_id_hard_aborts "$RUN_DIR" "$SIM_URL" "$BIN_DIR"
 echo "" >&2
 echo "dark-factory: TokenWorld arm SUBSTRATE-GAP-DEFERRED (P84; non-yanked gix + binstall pending v0.13.x crates.io). Set REPOSIX_DARK_FACTORY_REAL_TOKENWORLD=1 + creds after v0.13.x ships." >&2
 
+# F-K4b (quality/runners/_audit_field.py::asserts_congruent): affirm the row's
+# headline expected assert ("...exits 0 against the local cargo workspace") in
+# asserts_passed, else the runner blocks the PASS flip on this minted_at row
+# even though the script exits 0 (dvcs-third-arm FAIL in CI run 28723720784).
+ASSERT_LOG+=("dark-factory.sh dvcs-third-arm exits 0 against the local cargo workspace: all asserts above passed")
+
 ASSERTS_PASSED=$(python3 -c "import json,sys; print(json.dumps(sys.argv[1:]))" "${ASSERT_LOG[@]}")
 
 echo "" >&2
