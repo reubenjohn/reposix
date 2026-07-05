@@ -449,6 +449,254 @@ fn sync_real_jira() {
     assert_sync_reconcile_ok(&repo, &cache, &allowed);
 }
 
+// --- partial_failure_recovery_real_confluence (ADR-010 / RBF-LR-03 real-backend arm) ---
+//
+// A page id that cannot exist in any sanctioned test space -- forces a
+// genuine `POST /wiki/api/v2/pages` rejection
+// (`reposix_confluence::create_record`, `crates/reposix-confluence/src/lib.rs:280-329`)
+// for the "bad parent" create below, deterministically reproducing a real
+// `SotPartialFail` without timing games or a mocked fault.
+const UNRESOLVABLE_PARENT_ID: u64 = 9_999_999_999_999;
+
+/// Render a Confluence page blob for a brand-new record. Any id not already
+/// present in the `SoT`'s `list_records` result is planned as a `Create`
+/// (`crates/reposix-remote/src/diff.rs:276-278`).
+fn render_new_page_blob(id: u64, parent_id: Option<u64>, title: &str, body: &str) -> String {
+    let now = chrono::Utc::now();
+    let record = reposix_core::Record {
+        id: reposix_core::RecordId(id),
+        title: title.to_owned(),
+        status: reposix_core::RecordStatus::Open,
+        assignee: None,
+        labels: vec![],
+        created_at: now,
+        updated_at: now,
+        version: 0,
+        body: body.to_owned(),
+        parent_id: parent_id.map(reposix_core::RecordId),
+        extensions: std::collections::BTreeMap::new(),
+    };
+    reposix_core::frontmatter::render(&record).expect("render page blob")
+}
+
+/// Build a single-backend `export` fast-import payload creating the given
+/// `(path, blob)` entries in one commit. Mirrors
+/// `crates/reposix-remote/tests/partial_failure_recovery.rs::export_stdin`.
+fn export_stdin_real(entries: &[(&str, String)], msg: &str) -> Vec<u8> {
+    use std::io::Write as _;
+    let mut stream: Vec<u8> = Vec::new();
+    writeln!(&mut stream, "feature done").unwrap();
+    let base_mark: u64 = 100;
+    for (i, (_, blob)) in entries.iter().enumerate() {
+        writeln!(&mut stream, "blob").unwrap();
+        writeln!(&mut stream, "mark :{}", base_mark + i as u64).unwrap();
+        writeln!(&mut stream, "data {}", blob.len()).unwrap();
+        stream.extend_from_slice(blob.as_bytes());
+        stream.push(b'\n');
+    }
+    writeln!(&mut stream, "commit refs/heads/main").unwrap();
+    writeln!(&mut stream, "mark :1").unwrap();
+    writeln!(&mut stream, "committer test <t@t> 0 +0000").unwrap();
+    writeln!(&mut stream, "data {}", msg.len()).unwrap();
+    stream.extend_from_slice(msg.as_bytes());
+    stream.push(b'\n');
+    for (i, (path, _)) in entries.iter().enumerate() {
+        writeln!(&mut stream, "M 100644 :{} {path}", base_mark + i as u64).unwrap();
+    }
+    writeln!(&mut stream, "done").unwrap();
+
+    let mut buf = Vec::new();
+    writeln!(&mut buf, "export").unwrap();
+    buf.extend_from_slice(&stream);
+    buf
+}
+
+/// Read `remote.<name>.url` for `repo` (the value `reposix attach` configured).
+fn git_remote_url(repo: &Path, remote_name: &str) -> String {
+    let out = Command::new("git")
+        .args([
+            "-C",
+            repo.to_str().unwrap(),
+            "config",
+            &format!("remote.{remote_name}.url"),
+        ])
+        .output()
+        .expect("git config remote url");
+    String::from_utf8_lossy(&out.stdout).trim().to_string()
+}
+
+/// Drive `git-remote-reposix` directly with a raw `export` fast-import
+/// stream on stdin -- bypasses `git push`'s own remote-helper discovery,
+/// same low-level pattern as
+/// `partial_failure_recovery.rs::run_helper_export`, adapted for a real
+/// backend (needs `REPOSIX_ALLOWED_ORIGINS` too, unlike the sim arm).
+fn run_helper_export_real(
+    url: &str,
+    cache_dir: &Path,
+    allowed_origins: &str,
+    stdin: &[u8],
+) -> (bool, String) {
+    let bin = target_bin("git-remote-reposix");
+    assert!(
+        bin.exists(),
+        "git-remote-reposix not built at {}; run `cargo build --workspace --bins` first",
+        bin.display()
+    );
+    let mut child = Command::new(&bin)
+        .args(["reposix", url])
+        .env("REPOSIX_CACHE_DIR", cache_dir)
+        .env("REPOSIX_ALLOWED_ORIGINS", allowed_origins)
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .env("GIT_TERMINAL_PROMPT", "0")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("spawn git-remote-reposix");
+    {
+        use std::io::Write as _;
+        child
+            .stdin
+            .take()
+            .expect("child stdin")
+            .write_all(stdin)
+            .expect("write export stream to helper stdin");
+    }
+    let out = child.wait_with_output().expect("wait for helper");
+    (
+        out.status.success(),
+        String::from_utf8_lossy(&out.stdout).into_owned(),
+    )
+}
+
+/// Confluence `TokenWorld` real-backend `SotPartialFail` recovery smoke
+/// (ADR-010 / RBF-LR-03, catalog row
+/// `agent-ux/p93-partial-failure-recovery-real-confluence`).
+///
+/// Drives the same two-push recovery shape as
+/// `crates/reposix-remote/tests/partial_failure_recovery.rs`, but against
+/// the REAL Confluence `TokenWorld` backend instead of a wiremock-modeled
+/// sim, and using a REAL fault instead of a mocked 500:
+///
+/// - **Push 1:** creates two brand-new pages in one export. Page A has
+///   `parent_id = None` (a top-level page -- succeeds). Page B has
+///   `parent_id = Some(UNRESOLVABLE_PARENT_ID)`, a page id that cannot
+///   exist in any sanctioned space, so its `POST /wiki/api/v2/pages`
+///   fails and `execute_action` reports it as failed while page A lands.
+///   This is a genuine backend-validated partial fail, not a timing race
+///   or a mocked fault.
+/// - **Push 2:** fixes page B's `parent_id` to `None` and retries.
+///   PRECHECK B re-reads the current `SoT`, `diff::plan` diffs page A away
+///   (already landed, content-equivalent) and replans page B, which now
+///   succeeds -- the push converges (`ok refs/heads/main`).
+///
+/// Created pages are titled with a `kind=test <unix-ts>` marker per
+/// `docs/reference/testing-targets.md`'s cleanup convention. NOTE:
+/// `reposix_confluence::create_record` does not yet wire `Record::labels`
+/// to a real Confluence label (`lib.rs:25` documents this as deferred), so
+/// the marker lives in the page TITLE, not an actual label, until that gap
+/// closes -- a human sweep must search titles, not labels.
+///
+/// `#[ignore]` + `skip_if_no_env!`-gated (`TokenWorld` creds). NOT run in
+/// this session (no creds in autonomous mode) -- expected to grade
+/// NOT-VERIFIED until a credentialed run exercises it.
+#[test]
+#[ignore = "real-backend; requires ATLASSIAN_API_KEY/EMAIL/REPOSIX_CONFLUENCE_TENANT; mutates TokenWorld"]
+fn partial_failure_recovery_real_confluence() {
+    skip_if_no_env!(
+        "ATLASSIAN_API_KEY",
+        "ATLASSIAN_EMAIL",
+        "REPOSIX_CONFLUENCE_TENANT"
+    );
+    let tenant = std::env::var("REPOSIX_CONFLUENCE_TENANT").expect("checked");
+    let space = confluence_test_space();
+    let allowed = format!("http://127.0.0.1:*,https://{tenant}.atlassian.net");
+
+    let (_tmp, attach_out, repo, cache) =
+        run_attach_real(&format!("confluence::{space}"), "reposix", &allowed);
+    assert!(
+        attach_out.status.success(),
+        "attach prerequisite failed: {:?}",
+        String::from_utf8_lossy(&attach_out.stderr)
+    );
+    let url = git_remote_url(&repo, "reposix");
+
+    // Timestamp-derived ids: astronomically larger than any real Confluence
+    // page id in a modest test space (the durable fixtures sit at 7-8
+    // digits), so collision with an existing record is not a practical
+    // concern.
+    let now_secs = u64::try_from(chrono::Utc::now().timestamp()).expect("post-1970 clock");
+    let id_a = now_secs;
+    let id_b = now_secs + 1;
+    let marker = format!("kind=test {now_secs}");
+
+    let push1 = export_stdin_real(
+        &[
+            (
+                &format!("pages/{id_a}.md"),
+                render_new_page_blob(
+                    id_a,
+                    None,
+                    &format!("p93 smoke A ({marker})"),
+                    "top-level page\n",
+                ),
+            ),
+            (
+                &format!("pages/{id_b}.md"),
+                render_new_page_blob(
+                    id_b,
+                    Some(UNRESOLVABLE_PARENT_ID),
+                    &format!("p93 smoke B ({marker})"),
+                    "child of an unresolvable parent -- forces a real partial fail\n",
+                ),
+            ),
+        ],
+        "p93 partial-fail smoke: create A + (deliberately broken) B\n",
+    );
+    let (ok1, stdout1) = run_helper_export_real(&url, &cache, &allowed, &push1);
+    assert!(!ok1, "push 1 must fail (partial fail); stdout={stdout1}");
+    assert!(
+        stdout1.contains("error refs/heads/main some-actions-failed"),
+        "push 1 must emit some-actions-failed; stdout={stdout1}"
+    );
+
+    // Push 2: fix page B's parent_id -> None, retry. Page A is diffed away
+    // by PRECHECK B (already landed, content-equivalent); only page B is
+    // replanned and now succeeds.
+    let push2 = export_stdin_real(
+        &[
+            (
+                &format!("pages/{id_a}.md"),
+                render_new_page_blob(
+                    id_a,
+                    None,
+                    &format!("p93 smoke A ({marker})"),
+                    "top-level page\n",
+                ),
+            ),
+            (
+                &format!("pages/{id_b}.md"),
+                render_new_page_blob(
+                    id_b,
+                    None,
+                    &format!("p93 smoke B ({marker})"),
+                    "child of an unresolvable parent -- forces a real partial fail\n",
+                ),
+            ),
+        ],
+        "p93 partial-fail smoke: retry B with a valid parent\n",
+    );
+    let (ok2, stdout2) = run_helper_export_real(&url, &cache, &allowed, &push2);
+    assert!(
+        ok2,
+        "push 2 (recovery) must succeed and converge; stdout={stdout2}"
+    );
+    assert!(
+        stdout2.contains("ok refs/heads/main"),
+        "push 2 must emit ok refs/heads/main; stdout={stdout2}"
+    );
+}
+
 /// Defensive sanity test: without any env vars, all three skip cleanly.
 /// Runs in default `cargo test` (not #[ignore]) so a fresh clone CI
 /// surfaces any regression in the `skip_if_no_env!` plumbing — the
