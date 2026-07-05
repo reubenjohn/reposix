@@ -305,3 +305,29 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 **Default disposition:** S — default-defer; natural fit for the next `quality/runners/` framework-touching phase (P95/P96 territory, alongside GOOD-TO-HAVES-06's `run.py`/`verdict.py` line-count gate).
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | `reposix init` should honour `REPOSIX_SIM_ORIGIN` (test-port hardcode) | discovered-by: P91 CI-red fix executor
+
+**What:** `crates/reposix-cli/src/init.rs:55` (`translate_spec_to_url`) hardcodes `DEFAULT_SIM_ORIGIN` (`127.0.0.1:7878`) for `sim::<slug>` and — unlike `crates/reposix-cli/src/sync.rs:84` — does NOT honour the `REPOSIX_SIM_ORIGIN` env override. This forced the `agent-ux/real-git-push-e2e` gate to bind its sim on the exact default port 7878 (commit 5eae1c9): binding any other port makes init bake a 7878 URL into `remote.origin.url` while the sim listens elsewhere, so the fetch targets a dead port AND trips the egress allowlist. The task's original NOTICED item ("SIM_BIND=7781 hardcode port-collision risk") is a symptom of this asymmetry.
+
+**Acceptance:** teach `translate_spec_to_url` (or its caller) to honour `REPOSIX_SIM_ORIGIN` when the backend is `sim`, mirroring `sync.rs:84-90` (`std::env::var("REPOSIX_SIM_ORIGIN").ok().filter(|s| !s.is_empty())`). Then `real-git-push-e2e.sh` can use a dedicated collision-proof port again by exporting `REPOSIX_SIM_ORIGIN`, and the init/sync inconsistency is closed. Add a unit test for the override (needs a non-env-mutating shape — e.g. pass the resolved origin as a param, or a serialized-env test lock as `history.rs` uses).
+
+**Why deferred:** production-code change touching init URL generation + a non-trivial (env-mutation-safe) test; the CI-red hotfix pinned the port to 7878 instead, which is sequential-run-safe. Low value until someone needs distinct sim ports across concurrent gates.
+
+**Default disposition:** S — default-defer; next `reposix-cli` init/sync-touching phase.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Owner may want to set the `JIRA_TEST_PROJECT` repo secret (KAN) | discovered-by: P91 CI-red fix executor
+
+**What:** `.github/workflows/ci.yml` forwards `JIRA_TEST_PROJECT: ${{ secrets.JIRA_TEST_PROJECT }}` in the jira job env, but the repo has no such secret, so it arrives as the empty string. The code was hardened this session to treat empty-set as unset (falls back to `TEST`, commit 963f8bc), so CI is now robust either way. HOWEVER, per `docs/reference/testing-targets.md` + the ci.yml comment (D91-09), the owner's live JIRA project key is **KAN**, not `TEST` — the intent is for the real-backend smoke to target the project the tenant actually owns. Right now, absent the secret, the jira init-smoke targets `jira::TEST` (which passes because it's a config-string smoke that doesn't require the project to exist).
+
+**Acceptance:** owner runs `gh secret set JIRA_TEST_PROJECT` (value `KAN`) so any future jira gate that lists/mutates real records targets the owned project. Purely an owner action; the code is already robust to it being present-or-absent.
+
+**Default disposition:** XS owner-action — no code change. File for owner awareness only.
+
+**STATUS:** OPEN (owner decision)
