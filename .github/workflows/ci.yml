@@ -106,8 +106,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install mkdocs-material mkdocs-minify-plugin mkdocs-redirects
-      - name: Install runtime tooling (jq, sqlite3 -- agent-ux/dvcs-third-arm)
-        run: sudo apt-get update && sudo apt-get install -y jq sqlite3
+      - name: Install runtime tooling (jq, sqlite3, kcov)
+        # jq + sqlite3: agent-ux/dvcs-third-arm. kcov: code/shell-coverage is
+        # tagged pre-pr, so this composed run executes its gate; without kcov
+        # the gate would exit 1 and the row would FAIL here (its own dedicated
+        # `shell-coverage` job below is the Codecov-upload venue).
+        run: sudo apt-get update && sudo apt-get install -y jq sqlite3 kcov
       - name: Warm cargo build
         # Several pre-pr rows (bus-write-*, mirror-refs-*, dvcs-third-arm,
         # capabilities-match-impl, docs-alignment/walk, ...) shell out to
@@ -362,6 +366,37 @@ jobs:
           path: docs/benchmarks/latency.md
           if-no-files-found: error
           retention-days: 90
+
+  shell-coverage:
+    # kcov aggregate line-coverage for the in-scope shell-script corpus
+    # (catalog row code/shell-coverage). The gate's own non-zero exit enforces
+    # the ratchet floor in quality/shell-coverage-floor.txt — a drop below it
+    # fails this job. No `needs:` — it shares nothing with the Rust build, so it
+    # runs immediately in parallel rather than serializing behind `test`.
+    name: shell-coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install kcov
+        run: sudo apt-get update && sudo apt-get install -y kcov
+      - name: Run shell-coverage gate (enforces the ratchet floor)
+        run: bash quality/gates/code/shell-coverage.sh
+      - name: Upload shell coverage to Codecov
+        # if: always() — publish the cobertura even on a floor breach (the gate
+        # writes it before grading), so Codecov still shows the shell number
+        # while the failed gate step keeps the job red. Mirrors the `coverage`
+        # job's upload shape (fail_ci_if_error: false + CODECOV_TOKEN).
+        if: always()
+        uses: codecov/codecov-action@v6
+        with:
+          files: quality/reports/verifications/code/shell-coverage.cobertura.xml
+          flags: shell
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   coverage:
     name: coverage

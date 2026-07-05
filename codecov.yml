@@ -5,8 +5,25 @@ coverage:
         target: auto
         threshold: 1%
         if_not_found: success
+      # kcov shell-script coverage, uploaded by the CI `shell-coverage` job
+      # under the `shell` flag. The gate's own floor (quality/shell-coverage-floor.txt)
+      # is the hard ratchet; this Codecov block is an informational trend on the
+      # executed-file subset (never-run corpus scripts are absent from the
+      # cobertura, so this % is higher than the gate's corpus-wide aggregate).
+      shell:
+        target: auto
+        threshold: 2%
+        if_not_found: success
+        flags:
+          - shell
     patch:
       default:
         target: auto
         threshold: 0%
         if_not_found: success
+
+flags:
+  shell:
+    paths:
+      - '**/*.sh'
+    carryforward: true

@@ -28,12 +28,16 @@ if ! command -v kcov >/dev/null 2>&1; then
 fi
 
 readonly ARTIFACT="quality/reports/verifications/code/shell-coverage.json"
+readonly COBERTURA="quality/reports/verifications/code/shell-coverage.cobertura.xml"
 mkdir -p "$(dirname "$ARTIFACT")"
 
+# --cobertura-out writes the merged kcov cobertura.xml for the CI Codecov
+# upload (shell flag). Both generated paths are gitignored (per-run artifacts).
 rc=0
 python3 scripts/shell_coverage.py run \
   --floor-file quality/shell-coverage-floor.txt \
-  --json "$ARTIFACT" || rc=$?
+  --json "$ARTIFACT" \
+  --cobertura-out "$COBERTURA" || rc=$?
 
 if [[ $rc -eq 0 ]]; then
   echo "PASS: aggregate shell line-coverage >= floor (artifact: $ARTIFACT)"

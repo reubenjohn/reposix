@@ -243,13 +243,32 @@ def _parse_coverage_json(cov_json: Path, root: Path) -> dict[str, tuple[int, int
     return out
 
 
-def compute(root: Path, floor: float, keep_workdir: bool = False) -> Result:
+def compute(
+    root: Path,
+    floor: float,
+    keep_workdir: bool = False,
+    cobertura_out: Path | None = None,
+) -> Result:
     corpus = enumerate_corpus(root)
     corpus_rel = {str(p.relative_to(root)) for p in corpus}
 
     workdir = Path(tempfile.mkdtemp(prefix="shellcov-"))
     try:
         seen = run_harnesses(root, workdir)
+        # Codecov ingestion: the merged kcov run emits a cobertura.xml covering
+        # every script kcov executed (never-run corpus files are absent — they
+        # are the 0%-denominator the JSON artifact/floor account for, not
+        # Codecov). Copy it out before the tempdir is reaped so CI can upload it.
+        if cobertura_out is not None:
+            merged_cobertura = workdir / "merged" / "kcov-merged" / "cobertura.xml"
+            if merged_cobertura.is_file():
+                cobertura_out.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(merged_cobertura, cobertura_out)
+            else:
+                sys.stderr.write(
+                    f"WARN: no merged cobertura.xml at {merged_cobertura} — "
+                    f"Codecov artifact {cobertura_out} not written\n"
+                )
     finally:
         if not keep_workdir:
             shutil.rmtree(workdir, ignore_errors=True)
@@ -380,8 +399,19 @@ def cmd_run(args: argparse.Namespace) -> int:
         floor_file = root / floor_file
     floor = read_floor(floor_file)
 
-    res = compute(root, floor, keep_workdir=args.keep_workdir)
+    cobertura_out: Path | None = None
+    if args.cobertura_out:
+        cobertura_out = Path(args.cobertura_out)
+        if not cobertura_out.is_absolute():
+            cobertura_out = root / cobertura_out
+
+    res = compute(
+        root, floor, keep_workdir=args.keep_workdir, cobertura_out=cobertura_out
+    )
     print_table(res)
+
+    if cobertura_out is not None and cobertura_out.is_file():
+        print(f"cobertura: {cobertura_out}")
 
     if args.json:
         dest = Path(args.json)
@@ -414,6 +444,11 @@ def main(argv: list[str] | None = None) -> int:
         "--floor-file", default="quality/shell-coverage-floor.txt"
     )
     p_run.add_argument("--json", default=None, help="write JSON artifact here")
+    p_run.add_argument(
+        "--cobertura-out",
+        default=None,
+        help="copy the merged kcov cobertura.xml here (for Codecov upload)",
+    )
     p_run.add_argument(
         "--keep-workdir", action="store_true", help="keep kcov temp dir (debug)"
     )
