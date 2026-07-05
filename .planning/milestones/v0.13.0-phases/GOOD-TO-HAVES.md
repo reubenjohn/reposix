@@ -429,3 +429,17 @@ STATUS 2026-07-05 (D-P92-03): **REPRODUCED — CONFIRMED REAL, deterministic** (
 **Default disposition:** LOW — real but narrow (requires an already-corrupted cursor); good first-issue-sized robustness + error-message-teaching fix. Candidate for a P93 wave or the OP-8 absorption slots.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Consider a dedicated read-only "runner" subagent type distinct from `gsd-executor` | discovered-by: grounding-bug fix (coordinator dispatched `subagent_type: "executor"`, got "Agent type not found") | severity: LOW
+
+**What:** ORCHESTRATION.md's coordinator rule 1 names four dispatch roles — reader, runner (build/test/litmus), executor (file write/edit), reviewer (diffs) — but only three of those roles have a dedicated registered `subagent_type` (`reader-digester`, `gsd-executor`, `gsd-code-reviewer`). "runner" has no dedicated type; today it's covered by overloading `gsd-executor` for routine build/test runs during implementation, and `gsd-verifier` for phase-close gate/litmus grading (`quality/PROTOCOL.md` Step 6/7). This was resolved as a DOCS fix (canonical role→subagent_type table added to `.claude/skills/coordinator-dispatch/SKILL.md` §2) rather than a new agent def, per the "don't invent, file it" rule.
+
+**Why it might be worth a real type:** `gsd-executor` has `Edit`+`Write` tools. A coordinator that wants an arms-length "did the tests actually pass" signal — distinct from "the same agent that could edit the code to make it look like it passed" — currently has no `Bash`+`Read`-only, no-`Edit` runner to dispatch for that purpose. `gsd-verifier` fills this need for phase-close grading (it's genuinely a fresh, unbiased dispatch per `quality/PROTOCOL.md`), but mid-execution "run the test suite and report" (e.g. a `cargo nextest run -p <crate>` sanity check between plan waves) has no read-only equivalent — a coordinator either does it itself (violates ROUTE, DON'T WORK) or dispatches a full `gsd-executor` (which can silently patch a failing assertion instead of just reporting it failed).
+
+**Sketched resolution:** a new `.claude/agents/gsd-runner.md`-style def (or reuse `reader-digester`'s tool set: `Read, Grep, Glob, Bash`, no `Edit`/`Write`) scoped to "run a named build/test/litmus command, report pass/fail + tail of output, never touch files." Small, mechanical, haiku-tier.
+
+**Default disposition:** LOW — current `gsd-executor`/`gsd-verifier` split already covers correctness (verifier is the ungameable grading step); this is a defense-in-depth / mid-execution-hygiene nice-to-have, not a gap that blocks anything today. Owner-gated spend — do not create without explicit approval.
+
+**STATUS:** OPEN
