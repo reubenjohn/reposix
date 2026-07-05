@@ -1782,10 +1782,10 @@
       },
       "artifact": "quality/reports/verifications/agent-ux/p92-mid-stream-litmus-t1-t4.json",
       "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "last_verified": "2026-07-05T09:00:59Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
-      "owner_hint": "Run at phase close, AFTER GREEN declared, per Decision-1 (mid-stream litmus checkpoint). Orchestrator-owned re-run, not an implementation task for either executor.",
+      "owner_hint": "Run at phase close, AFTER GREEN declared, per Decision-1 (mid-stream litmus checkpoint). 2026-07-05: T4 executor ran both surfaces in a git-2.54.0 container matching CI (bind-mounted host-built binaries, cargo stubbed to skip an in-container rebuild): `dark-factory.sh sim` exit=0, `t4-conflict-rebase-ancestry.sh` exit=0 -- 0 HIGH frictions on the sim arm. The TokenWorld-space arm of this checkpoint was NOT exercised this session (no dedicated verifier script exists yet for that arm -- same gap as the sibling t4-conflict-rebase-ancestry-real-backend row); status stays NOT-VERIFIED until that arm runs too.",
       "waiver": null,
       "claim_vs_assertion_audit": "The checkpoint re-runs the SAME dark-factory T1 + T4 surfaces this phase already exercises and asserts the friction tally stays at 0 HIGH; if the phase's fixes introduced a NEW regression the re-run's own asserts (dark-factory-sim's exit code + the T4 ancestry/reject asserts) would fail concretely, naming the specific broken step.",
       "cadences": [
