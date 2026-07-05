@@ -70,6 +70,11 @@ awareness beyond `init` / `attach`.
 - **Bus URL / mirror fan-out / webhook sync** (`reposix::<sot>?mirror=<url>`, SoT-first
   then mirror-best-effort, mirror-lag refs, webhook-driven sync, p95 ≤ 120s): compressed
   out of root — see `docs/concepts/dvcs-topology.md` + `docs/guides/dvcs-mirror-setup.md`.
+- **Mirror-head refresh promise (qualified, ADR-010 RBF-LR-04).** The mirror-head ref
+  refreshes on every push that changes the SoT (`files_touched > 0`); a push that
+  changes nothing in the SoT is a semantic no-op — skipped because there is nothing new
+  to refresh, not a coherence shortcut. Manual catch-up if it ever needs a forced
+  refresh: `reposix sync --reconcile`. Detail: `docs/concepts/dvcs-topology.md`.
 
 **Runtime prerequisite: `git >= 2.34`** (for `extensions.partialClone` +
 `stateless-connect`). Full tech stack: `crates/CLAUDE.md`.
