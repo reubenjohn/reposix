@@ -205,9 +205,11 @@ impl Cache {
     ///    and rebuild the tree with current blob OIDs. Tree sync is
     ///    unconditional full per CONTEXT.md §"Tree sync vs. blob
     ///    materialization (locked)".
-    /// 5. In ONE [`rusqlite::Transaction`]: upsert `oid_map` rows for
-    ///    changed items, update `meta.last_fetched_at`, insert the
-    ///    `op='delta_sync'` audit row.
+    /// 5. In ONE [`rusqlite::Transaction`]: upsert `oid_map` rows for the
+    ///    FULL `list_records` set (the tree↔`oid_map` coherence invariant —
+    ///    every tree-referenced OID must be resolvable by
+    ///    [`Cache::read_blob`]; ADR-010 / RBF-LR-01), update
+    ///    `meta.last_fetched_at`, insert the `op='delta_sync'` audit row.
     ///
     /// An empty-delta sync still bumps `last_fetched_at` and writes an
     /// audit row with `bytes=0` — intentional so audit history has one
@@ -378,13 +380,26 @@ impl Cache {
         {
             let mut conn = self.db.lock().expect("cache db mutex poisoned");
             let tx = conn.transaction()?;
-            for (id, oid) in &changed_blob_oids {
+            // Coherence invariant (ADR-010 / RBF-LR-01): upsert oid_map for
+            // the FULL `list_records` set (`records`), not just the
+            // `list_changed_since` delta (`changed_blob_oids`). The HEAD
+            // tree above is built from `list_records` (always the current
+            // backend state), so EVERY tree entry's OID must be resolvable
+            // by `read_blob`. Covering only the delta left a dangling tree
+            // entry whenever `list_changed_since` under-reported relative to
+            // `list_records` (e.g. a same-wall-clock-second write dropped by
+            // a seconds-resolution `updated_at` cursor), producing
+            // `git upload-pack: not our ref <oid>` on a puller's lazy fetch.
+            // Blobs stay lazy — this is a metadata-only upsert, matching the
+            // coverage `build_from` already provides. See
+            // docs/decisions/010-l2-l3-cache-coherence.md.
+            for (entry, issue_id) in &records {
                 tx.execute(
                     "INSERT OR REPLACE INTO oid_map (oid, issue_id, backend, project) \
                      VALUES (?1, ?2, ?3, ?4)",
                     rusqlite::params![
-                        oid.to_hex().to_string(),
-                        id.0.to_string(),
+                        entry.oid.to_hex().to_string(),
+                        issue_id,
                         &self.backend_name,
                         &self.project,
                     ],

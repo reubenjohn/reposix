@@ -469,9 +469,12 @@ async fn delta_sync_atomic_on_backend_error_midsync() {
 /// pinning the cursor into the write's second, then assert the coherence
 /// invariant the helper relies on: EVERY blob OID the HEAD tree references
 /// must be resolvable by `read_blob` (no `UnknownOid`).
+// GREEN as of ADR-010 / RBF-LR-01: `Cache::sync` Step 5 now upserts oid_map
+// for the FULL `list_records` set, so the HEAD tree entry for a same-second
+// under-reported change is resolvable by `read_blob` (was RED — `not our
+// ref <oid>` — before the coherence fix). See
+// docs/decisions/010-l2-l3-cache-coherence.md.
 #[tokio::test(flavor = "multi_thread")]
-#[ignore = "RED: D-P92-03 delta-sync tree/oid_map divergence (`not our ref`); \
-            drop #[ignore] in the commit that lands the coherence fix (coordinator-gated)"]
 async fn delta_sync_tree_references_only_resolvable_oids() {
     let (origin, _sim) = spawn_sim().await;
     seed_demo_issues(&origin, 3).await;
