@@ -472,6 +472,10 @@ For SURPRISES.md:
 1. Read the file; confirm any pivot in the phase has a corresponding entry
 2. If a pivot is mentioned in commits but absent from SURPRISES.md: ungrounded pivot — flag
 
+For OP-3 audit-completeness rows (P92 SC4, `agent-ux/audit-absence-is-red`): audit-row absence is RED, not out of scope for this layer.
+If a row's own assertion queries `audit_events` and/or `audit_events_cache` and finds either table missing an expected row for an executed push, grade that row FAIL — never wave it off as "the audit table is a different layer's concern" or downgrade it to PARTIAL/waived.
+OP-3 (CLAUDE.md) makes the dual-table audit log non-optional; a silently-dropped audit row is a correctness regression, graded with the same severity as a wrong HTTP response.
+
 Output a scored markdown table with file:line citations. Write to quality/reports/verdicts/p<N>/<ISO_TIMESTAMP>.md.
 Refuse to grade GREEN unless every P0+P1 catalog row is PASS or WAIVED AND CLAUDE.md is updated.
 ```
