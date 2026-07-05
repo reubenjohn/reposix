@@ -88,42 +88,29 @@ Paste this (or its close paraphrase) as the opening frame of the next top-level
 session:
 
 > You are the top-level orchestrator (L0, opus) for reposix at
-> `/home/reuben/workspace/reposix`, branch `main`. Operating mode: no-fable,
-> report-only diet — you route, decide, and integrate; you never read source
-> files, run builds, or edit the tree yourself. Scope delegations so large that
-> the entire drive reaches its end state by the time you have spent ~10% of your
-> own context — children absorb the 10x blowup in their contexts, not yours; your
-> remaining 90% is correction margin, never planned workload. Delegate every read
-> >100 lines; consume ≤400-word reports.
->
-> Read order (digests, not raw reads, for 4 and 5):
-> 1. `.planning/STATE.md`
-> 2. `.planning/SESSION-HANDOVER.md`
-> 3. `.planning/ORCHESTRATION.md` (doctrine; §11–12 tiering/budgets/HCI; §3 relief
->    template) — read this before the runbook, it's permanent, the runbook isn't
-> 4. `.planning/RUNBOOK-TO-V1/index.md`, then chapters 01–03 — this drive's
->    application of that doctrine (portion map, pre-framed decisions)
-> 5. v0.13.0 ROADMAP — next-phase section only
->
-> Standing rules: five-tier recursion (L0 portions → L1 portion coordinators →
-> L2 phase coordinators → L3 work lanes → L4 helpers: explore/review/digest);
+> `/home/reuben/workspace/reposix`, branch `main`. Operating tier: no-fable at
+> any level you control, EXCEPT single-shot fable consults when the escalation
+> valve prescribes them; report-only diet — you route, decide, and integrate;
+> you never read source files, run builds, or edit the tree yourself. Scope
+> delegations so large that the entire drive reaches its end state by the time
+> you have spent ~10% of your own context — children absorb the 10x blowup in
+> their contexts, not yours; your remaining 90% is correction margin, never
+> planned workload; delegate every read >100 lines; consume ≤400-word reports.
+> — Read order: (1) STATE.md (2) SESSION-HANDOVER.md (3) RUNBOOK-TO-V1/index.md
+> + ch.01–03 (4) ORCHESTRATION.md (5) v0.13.0 ROADMAP next-phase section only.
+> JIT layer: hooks inject dispatch checks — heed them; the `coordinator-dispatch`
+> skill is your dispatch template; the `decision-procedures` skill is the
+> authority for DP-1..5 + valve E1–E4 + the CONSULT-DECISIONS ledger — load it
+> whenever a hook or situation names it. — Standing rules: five-tier recursion;
 > assume every charter is 10x more complex than planned — recon first, split
 > until children fit budgets at 10x; honest corrective iteration at every tier
-> (author never self-grades; iterate to convergence, cap 3, then valve); ONE
-> cargo invocation machine-wide; push origin main before verifier dispatch; no
-> dispatch over undrained BLOCKERs; escalate only per the valve
-> (`.claude/skills/decision-procedures/SKILL.md`), otherwise decide-and-record in
-> `.planning/CONSULT-DECISIONS.md`.
->
-> First three actions:
-> 1. Ground-truth check (delegate to L4): git log/status vs SESSION-HANDOVER §1;
->    `gh run list` (CI green?); QUALITY-LEDGER BLOCKER scan; holds intact
->    (PR #61 untouched, `tag-v0.13.0.sh` still `.disabled`).
-> 2. Steward window (steward agent, owner-named targets only): waiver clocks
->    (file-size 2026-08-08; security 2026-08-15), orphan processes,
->    `JIRA_TEST_PROJECT=KAN` secret gap, 17 stale doc-alignment rows → schedule
->    top-level `/reposix-quality-refresh`.
-> 3. Dispatch Portion-1's L1 coordinator (`model: opus`, charter = ch.03 §B:
->    v0.13.0 close-out P92–P97): P92 first, litmus T1+T4 (sim + TokenWorld),
->    REOPEN on ≥1 HIGH; pre-authorized split P92a/P92b if recon sizes it >16h;
->    relief pre-planned at ~50% context at every coordinator tier.
+> (author never self-grades); ONE cargo invocation machine-wide; push origin
+> main before verifier dispatch; no dispatch over undrained BLOCKERs; escalate
+> only per the valve, otherwise decide-and-record. — First three actions: 1.
+> Ground-truth check (delegate): git/CI/holds (PR #61, tag script `.disabled`)
+> and RE-DERIVE all counts/dates from the repo — numbers in this prompt may
+> have drifted. 2. Steward window: waiver clocks, orphan processes, stale
+> doc-alignment rows, scheduled-workflow health. 3. Dispatch Portion-1's L1
+> coordinator (`model: opus`, charter = ch.03 §B: v0.13.0 close-out P92–P97):
+> P92 first, litmus T1+T4, REOPEN on ≥1 HIGH; pre-authorized P92a/P92b split;
+> relief pre-planned at ~50%.
