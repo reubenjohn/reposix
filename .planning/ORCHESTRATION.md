@@ -110,6 +110,10 @@ cursor advance, final-report contents).
 
 The writer confirms the commit SHA in its report.
 
+Top-level (whole-session) rotations use the same template but write
+`.planning/SESSION-HANDOVER.md` (not a phase-numbered filename) — see that file for
+the current live example.
+
 ## 4. Operating cadence A/B + debt-drain
 
 Two standing operations, interleaved:

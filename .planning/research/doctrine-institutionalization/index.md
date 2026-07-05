@@ -109,3 +109,30 @@ actual commit SHAs and dates rather than assuming this file's original draft
 sequencing. This directory is the historical evidence trail, not the live doctrine
 surface: for current orchestration doctrine, read `.planning/ORCHESTRATION.md` and
 its pointer in root `CLAUDE.md`.
+
+## Stage-B probe outcomes (2026-07-04)
+
+Empirical results from probing the artifacts this landing shipped, gathered
+during the same session (full detail + session-metrics context:
+`.planning/SESSION-HANDOVER.md` §3):
+
+- **(a) Model resolution — Q1 RESOLVED.** Agent-tool model resolves as
+  `claude-fable-5`; `phase-coordinator.md` ships `model: fable` with an
+  explicit `model: inherit` fallback note.
+- **(b) New `.claude/agents/` defs dispatchable mid-session, no restart** —
+  a `reader-digester` dispatch succeeded immediately after the defining
+  commit landed.
+- **(c) CLAUDE.md injection scope — Q5 RESOLVED.** Root `CLAUDE.md` reaches
+  custom agents at spawn; scoped `CLAUDE.md` (`crates/`, `.planning/`,
+  `quality/`) does NOT inject at spawn but DOES inject via system-reminder
+  the moment the agent `Read`s a file under that directory — independently
+  re-confirmed by the handover writer.
+- **(d) Stop hook — Q2 DECIDED: ADVISORY** (exit 0 + `systemMessage`) per
+  owner decision; `cargo-mutex.sh` stays blocking (exit 2, machine-global
+  `pgrep`).
+- **Q6 / hook live-wiring — PARTIALLY verified.** `PreToolUse` cargo-mutex
+  firing on real Bash calls was observed in-session. `SessionStart` brief and
+  `PreCompact` persistence reach are UNVERIFIED pending a fresh session start
+  (neither event fires mid-session by construction) — confirm at next boot.
+- **Q7 DONE** — `orphan-scripts/claude-hooks` catalog row minted, documenting
+  the hooks surface as audited rather than orphaned.

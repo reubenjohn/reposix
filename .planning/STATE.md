@@ -121,3 +121,5 @@ Historical phase-by-phase contribution narrative lives in per-milestone ARCHIVE 
 ## Session Continuity
 
 Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current cursor is "execute P89 waves 1–4 per the 8 plan files, top-level mode" (workstream B queued behind A per OD-3).
+
+Top-level session handover: `.planning/SESSION-HANDOVER.md` (whole-session rotation handover for session 7e2a4cf2, 2026-07-04/05; distinct from per-phase relief handovers under `.planning/phases/`).
