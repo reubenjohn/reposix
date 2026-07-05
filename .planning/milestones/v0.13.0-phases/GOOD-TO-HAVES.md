@@ -345,3 +345,31 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 **Default disposition:** M — default-defer; natural fit for the launch-readiness milestone (its headline-numbers work already mechanizes CI-verified metrics) or the next `quality/gates/code/` phase.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Cache delta-sync under-reports changed records, blocking `git rebase`'s lazy blob fetch | discovered-by: P92 T4 prove-before-fix executor
+
+**What:** During the T4 two-writer conflict repro (`.planning/phases/92-push-flow-correctness/92-T4-REPRO-NOTES.md`), after B's stale push is correctly rejected and B runs `git pull --rebase origin main`, the FETCH leg succeeds and advances `refs/reposix/origin/main` (ancestry preserved, HIGH-1 stays fixed), but `git rebase`'s own 3-way merge then fails: `fatal: git upload-pack: not our ref <oid>` / `could not fetch <oid> from promisor remote`. Root cause candidate: the cache's delta-sync (`list_changed_since` cursor query, `crates/reposix-remote/src/precheck.rs`) reports `0 changed (of 6)` even 2+ seconds after the conflicting writer's edit landed on the backend, so the specific blob the rebase's merge needs was never lazily materialized into B's cache object store — `git upload-pack` then genuinely doesn't have the object (`allowAnySHA1InWant=true` is already set per `crates/reposix-cache/src/cache.rs:713-726`, so this isn't a config gap; the object plain isn't there).
+
+**Acceptance:** root-cause why `list_changed_since`/the cache's "since" cursor comparison misses a record that unambiguously changed (check the SIM's `updated_at` timestamp precision vs the cursor comparison operator — `>` vs `>=` — and/or whether the cache's delta-sync path actually writes new blob objects for records it DOES detect as changed vs just advancing a marker commit). Add a regression test exercising `git pull --rebase` (not just `git fetch`) to completion for the T4 two-writer scenario once root-caused.
+
+**Why deferred:** different root cause than `cb630e5` (that fix was `Cache::open`'s git-config shell-out env pollution; this is the delta-sync cursor/materialization path) — Rule 4 territory (architectural, needs its own investigation), not a hand-wave-able quick fix. Also affects whether SC1's literal "completes step 6 + step 7" acceptance criterion can be met as worded — a later P92 wave or P93+ should decide whether to loosen that wording or fix the underlying gap.
+
+**Default disposition:** M — default-defer; likely intersects P93's L2/L3 cache-coherence redesign (`refresh_for_mirror_head` / SotPartialFail work) since both touch the cache's post-write refresh semantics.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-05 | git 2.43.0 (stock Ubuntu 24.04) fails every real single-backend `git push` outright | discovered-by: P92 T4 prove-before-fix executor
+
+**What:** Reproduced via a throwaway `docker run ubuntu:24.04` (stock apt git = 2.43.0): a plain `git push origin main` against a `reposix init`'d tree (no mirror URL) fails immediately with exit 128 and NO helper-side output at all — `strace` shows the top-level `git push` process exits 128 BEFORE its own remote-helper subprocess even finishes. Root cause: git's transport-helper tries the advertised `stateless-connect` capability FIRST for the push direction too (`stateless-connect git-receive-pack`), and `crates/reposix-remote/src/stateless_connect.rs`'s `handle_stateless_connect` (service != "git-upload-pack" branch) replies with a custom `"unsupported service: {service}"` line instead of the literal `git-remote-helpers(7)`-mandated `fallback` sentinel. Per that spec, the three valid replies to a `connect`/`stateless-connect` request are: empty line (proceed), `fallback` (git retries via another capability), or "just exiting with error message printed (can't connect, don't bother trying to fall back)" — reposix's helper picks the THIRD option, so git never attempts the `export` capability the push actually needs. Confirmed version-windowed: git 2.54.0 (this project's CI runner, `gh run view 28726703296`) does NOT hit it, nor does old-enough git (this dev box's system git, 2.25.1, gated NOT-VERIFIED by the `>= 2.34` floor before it would matter) — the existing `stateless_connect_e2e.rs::stateless_connect_rejects_non_upload_pack_service` test already asserts the CURRENT (bug-preserving) `"unsupported service: ..."` reply shape, so fixing this would need that test's assertion updated too.
+
+**Acceptance:** change `handle_stateless_connect`'s non-upload-pack branch to reply with the literal `fallback` line (not a custom string) when `service != "git-upload-pack"`, so git falls back to the `export` capability for push. Update `stateless_connect_e2e.rs::stateless_connect_rejects_non_upload_pack_service`'s asserted reply shape to match. Add a regression test pinned to a specific git version window (or run in a container with git 2.43.x) proving a real single-backend push succeeds on that version.
+
+**Why deferred:** real, currently-reproducible, user-impacting (Ubuntu 24.04 LTS's stock git is a very common baseline) — but orthogonal to T4/HIGH-1 (different file, different mechanism: `stateless_connect.rs`'s reply string, not `Cache::open`'s env scrub) and touches a wire-protocol contract an existing test already asserts the opposite of, so it's an architectural-adjacent fix needing its own scoped task, not a same-session hand-wave.
+
+**Default disposition:** M — default-defer; candidate for P95 (RAISE LIST drain / real-backend-friction hardening) given the direct user-facing severity on a currently-supported LTS git version.
+
+**STATUS:** OPEN

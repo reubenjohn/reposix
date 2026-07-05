@@ -33,3 +33,70 @@ the 16h split trigger.
 
 **Debugger risk:** LOW — root cause already diagnosed/fixed; escalate only if the new
 ancestry test grades RED against current main.
+
+---
+
+## D-P92-02 — T4 prove-before-fix: HIGH-1 GREEN, regression locked; two NEW findings not fixed [SELF] 2026-07-05
+
+**Situation:** D-P92-01's debugger-escalation condition ("escalate only if the new
+ancestry test grades RED against current main"). Executed the prove-before-fix step.
+
+**Decision:** HIGH-1 (fresh root commit / no ancestry across a helper refetch) is
+GREEN against current `main` — no escalation triggered. Locked with a regression test
+(`quality/gates/agent-ux/t4-conflict-rebase-ancestry.sh`, catalog row
+`agent-ux/t4-conflict-rebase-ancestry`). Two SEPARATE, previously-undocumented findings
+surfaced during the repro; both filed (not fixed — different root causes than
+`cb630e5`, Rule 4 territory) rather than hand-waved.
+
+**Evidence:** This dev box's system git (2.25.1) is below the project's `>= 2.34`
+floor, so the scenario cannot run natively here (matches `agent-ux/real-git-push-e2e`'s
+own NOT-VERIFIED precedent on this exact box). Reproduced instead via a throwaway
+`docker run ubuntu:24.04` + `git-core` PPA to match CI's runner git (`gh run view
+28726703296` → `actions/checkout@v7` reports `git version 2.54.0`), `--network host`
+to reach a `reposix-sim` built once on the host and bind-mounted read-only. Full
+transcript citations: `.planning/phases/92-push-flow-correctness/92-T4-REPRO-NOTES.md`.
+
+Two independent working trees (A, B), each with its OWN `REPOSIX_CACHE_DIR` (the
+realistic two-agent topology — matches the original May-02 T4 test's structure; a
+shared-cache single-machine variant was tried first and found to NOT trigger conflict
+detection at all, a third, separately-noted finding, not escalated further since it's
+an artificial topology this project doesn't actually recommend). A pushes (succeeds);
+B edits the same record with a stale base and pushes (correctly REJECTED: `version
+mismatch: current=2 requested=1`, `[remote rejected] ... (some-actions-failed)`); B
+recovers via `git fetch origin`; `git rev-list --max-parents=0
+refs/reposix/origin/main` is IDENTICAL before and after the refetch, across 3
+consecutive runs. **Proven to bite:** temporarily reverted `git_config_cmd`'s env
+scrub in `crates/reposix-cache/src/cache.rs` (reintroducing the pre-`cb630e5` bug),
+rebuilt, re-ran the container repro — the row's own gate failed RED exactly as
+predicted (`git config --add transfer.hideRefs failed: fatal: not in a git
+directory` → `reposix init`'s fetch fails → `git checkout -B main
+refs/reposix/origin/main` fails with `'refs/reposix/origin/main' is not a commit`).
+Reverted the temporary change back (`git diff` confirmed byte-identical to the
+committed state), rebuilt, reconfirmed GREEN.
+
+**NEW finding 1 (filed, not fixed):** `git rebase`'s own 3-way merge (the literal
+`git pull --rebase` command, not just `git fetch`) fails separately with `fatal: git
+upload-pack: not our ref <oid>` / `could not fetch <oid> from promisor remote`. Root
+cause: the cache's delta-sync ("since" cursor query) reports `0 changed (of 6)` even
+2+ seconds after the conflicting write landed, so the blob the rebase's merge needs
+was never lazily materialized. Blocks "step 6 completes" in SC1's literal wording even
+though the HIGH-1 ancestry mechanism is fixed. Different root cause than `cb630e5`
+(cache delta-sync cursor logic, not `Cache::open`'s git shell-out env). Filed to
+`.planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md`.
+
+**NEW finding 2 (filed, not fixed):** stock Ubuntu 24.04 git (2.43.0, this project's
+current LTS-default) fails EVERY real single-backend `git push` outright — the helper
+answers a `stateless-connect git-receive-pack` probe with a custom `"unsupported
+service: ..."` string instead of the `git-remote-helpers(7)`-mandated `fallback`
+sentinel; per that spec, any reply other than `fallback` means "don't bother trying to
+fall back," so git never attempts the `export` capability push actually needs. CI's
+runner (2.54.0) and old-enough git (< the version that started probing `connect`-family
+capabilities for push, matching this box's 2.25.1) don't hit it. Filed to
+`.planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md` — real-user impact on a
+currently-supported LTS git version, orthogonal to T4/HIGH-1, genuinely a different
+mechanism (`stateless_connect.rs`'s reply string, not `Cache::open`'s env scrub).
+
+**Catalog-first:** `agent-ux/t4-conflict-rebase-ancestry` (sim arm, implemented +
+proven GREEN this session) + `agent-ux/t4-conflict-rebase-ancestry-real-backend`
+(TokenWorld arm, scaffold only) + SC2/SC3/SC4/SC5/SC6 scaffold rows minted
+NOT-VERIFIED, commit `858330a` / `600755e` (post-rebase SHA), pushed before this entry.

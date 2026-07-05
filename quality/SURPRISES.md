@@ -158,3 +158,24 @@ bugs (missing uploadpack.allowFilter, missing remote.origin.fetch refspec,
 harness DB not persisted for audit assertions) shipped stacked and only
 surfaced once real-git-push-e2e finally drove a real fetch+checkout in CI
 (5c758fb allowFilter, a4bb090 refspec, c64a8c0 harness DB-persist).
+
+2026-07-05 P92: this dev box's system git (2.25.1) is too old to run the T4
+two-writer conflict scenario natively (< 2.34 floor) — reproduced instead via
+a throwaway `docker run ubuntu:24.04` + the `git-core` PPA to match CI's
+runner git exactly (2.54.0, confirmed via `gh run view`), `--network host` to
+reach a host-built `reposix-sim`. The HIGH-1 ancestry regression (fresh root
+commit per fetch) is confirmed FIXED (cb630e5) and locked with
+`agent-ux/t4-conflict-rebase-ancestry`. Two NEW, separate bugs surfaced during
+the repro and were filed (not fixed, different root causes) to
+GOOD-TO-HAVES.md: (1) cache delta-sync under-reports changed records, so
+`git rebase`'s own 3-way merge fails with "not our ref" even though the
+preceding `git fetch` succeeds and preserves ancestry; (2) git 2.43.0 (stock
+Ubuntu 24.04) fails every real single-backend push outright because the
+helper's `stateless-connect git-receive-pack` rejection uses a custom string
+instead of the git-remote-helpers(7) `fallback` sentinel, so git never falls
+back to `export` — version-windowed, doesn't hit CI's 2.54.0 or old-enough
+git. A same-machine shared-cache two-writer topology was ALSO tried first and
+found to not trigger conflict detection at all (the shared cache's own
+delta-sync absorbs the other writer's change before the second push's
+precheck runs) — not the realistic topology, not escalated further, but
+worth remembering if someone reaches for a shared-cache test fixture again.
