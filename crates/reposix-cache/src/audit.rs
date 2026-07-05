@@ -347,6 +347,49 @@ pub fn log_helper_push_partial_fail_mirror_lag(
     }
 }
 
+/// Insert `op='helper_push_partial_fail_sot'` row — one per SoT-write push
+/// where at least one `execute_action` failed AFTER others succeeded, so the
+/// `SoT` is partially written (ADR-010 / RBF-LR-03 OP-3). Records the partial
+/// outcome forensically:
+///
+/// - `bytes` — the count of failed (still-needed) actions;
+/// - `reason` — `succeeded=[<csv>];failed=[<csv>]`, naming the record ids on
+///   each side so a query over the two audit tables can reconstruct which
+///   writes landed (`audit_events` also carries per-record rows for the
+///   succeeded set) and which must be replanned.
+///
+/// The failed push does NOT advance the cursor / `oid_map` / mirror-head
+/// (those writes live on the `SotOk` branch); convergence is the agent's next
+/// push re-reading the current `SoT` via PRECHECK B and replanning only the
+/// failed ids. Best-effort: a CHECK violation on a stale `cache.db` (op not
+/// yet in its CHECK list) WARN-logs and the push still returns its protocol
+/// error line.
+pub fn log_helper_push_partial_fail_sot(
+    conn: &Connection,
+    backend: &str,
+    project: &str,
+    succeeded_ids: &[u64],
+    failed_ids: &[u64],
+) {
+    let csv = |ids: &[u64]| ids.iter().map(u64::to_string).collect::<Vec<_>>().join(",");
+    let reason = format!(
+        "succeeded=[{}];failed=[{}]",
+        csv(succeeded_ids),
+        csv(failed_ids)
+    );
+    let bytes = i64::try_from(failed_ids.len()).unwrap_or(i64::MAX);
+    let res = conn.execute(
+        "INSERT INTO audit_events_cache (ts, op, backend, project, bytes, reason) \
+         VALUES (?1, 'helper_push_partial_fail_sot', ?2, ?3, ?4, ?5)",
+        params![Utc::now().to_rfc3339(), backend, project, bytes, reason],
+    );
+    if let Err(e) = res {
+        warn!(target: "reposix_cache::audit_failure",
+              backend, project,
+              "log_helper_push_partial_fail_sot failed: {e}");
+    }
+}
+
 /// Insert `op='helper_backend_instantiated'` row — one per
 /// `git-remote-reposix` invocation, written from the URL-scheme
 /// dispatcher when the helper resolves the remote URL to a concrete
@@ -758,6 +801,31 @@ mod tests {
             upd_err.is_err(),
             "audit_events_cache UPDATE must be blocked by trigger"
         );
+    }
+
+    #[test]
+    // test-name-honesty: ok — asserts SQLite audit-row insertion for a push audit-log helper, no live git operation
+    fn log_helper_push_partial_fail_sot_records_succeeded_and_failed_ids() {
+        let tmp = tempdir().unwrap();
+        let conn = open_cache_db(tmp.path()).unwrap();
+
+        // Two writes landed (ids 1, 3), one failed (id 2).
+        log_helper_push_partial_fail_sot(&conn, "sim", "demo", &[1, 3], &[2]);
+
+        let (op, backend, project, bytes, reason): (String, String, String, i64, String) = conn
+            .query_row(
+                "SELECT op, backend, project, bytes, reason FROM audit_events_cache \
+                 WHERE op = 'helper_push_partial_fail_sot'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)),
+            )
+            .unwrap();
+        assert_eq!(op, "helper_push_partial_fail_sot");
+        assert_eq!(backend, "sim");
+        assert_eq!(project, "demo");
+        // bytes = count of failed (still-needed) actions.
+        assert_eq!(bytes, 1);
+        assert_eq!(reason, "succeeded=[1,3];failed=[2]");
     }
 
     #[test]

@@ -27,7 +27,12 @@ CREATE TABLE IF NOT EXISTS audit_events_cache (
     -- 'helper_push_partial_fail_mirror_lag' (DVCS-BUS-WRITE-02 OP-3;
     -- one row per bus push where SoT writes succeeded but the mirror
     -- push subprocess failed — recovery on next push or via webhook
-    -- sync per Q3.6).
+    -- sync per Q3.6). ADR-010 / RBF-LR-03 adds
+    -- 'helper_push_partial_fail_sot' (OP-3): one row per SoT-write push
+    -- where some execute_action calls succeeded and >=1 failed — the SoT
+    -- is partially written; the failed push does NOT advance the cursor /
+    -- oid_map / mirror-head, and recovery is the next push replanning only
+    -- the still-needed actions via PRECHECK B.
     op            TEXT    NOT NULL CHECK (op IN (
         'materialize',
         'egress_denied',
@@ -48,7 +53,8 @@ CREATE TABLE IF NOT EXISTS audit_events_cache (
         'token_cost',
         'attach_walk',
         'mirror_sync_written',
-        'helper_push_partial_fail_mirror_lag'
+        'helper_push_partial_fail_mirror_lag',
+        'helper_push_partial_fail_sot'
     )),
     backend       TEXT    NOT NULL,
     project       TEXT    NOT NULL,

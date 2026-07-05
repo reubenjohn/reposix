@@ -344,6 +344,30 @@ impl Cache {
         );
     }
 
+    /// `SoT`-write partial-fail audit row (ADR-010 / RBF-LR-03 OP-3). Called
+    /// by `write_loop::apply_writes` on the `SotPartialFail` branch — at
+    /// least one `execute_action` failed after others succeeded, so the `SoT`
+    /// is partially written. `succeeded_ids` / `failed_ids` name the record
+    /// ids on each side of the partial outcome; the failed push does NOT
+    /// advance the cursor / `oid_map` / mirror-head (those live on the
+    /// `SotOk` branch), and recovery is the next push replanning only the
+    /// still-needed (failed) ids via PRECHECK B. Best-effort: a CHECK
+    /// violation on a stale `cache.db` WARN-logs without poisoning the
+    /// helper's `error refs/heads/main some-actions-failed` protocol line.
+    ///
+    /// # Panics
+    /// Panics if the internal `cache.db` mutex is poisoned.
+    pub fn log_helper_push_partial_fail_sot(&self, succeeded_ids: &[u64], failed_ids: &[u64]) {
+        let db = self.db.lock().expect("cache.db mutex poisoned");
+        crate::audit::log_helper_push_partial_fail_sot(
+            &db,
+            &self.backend_name,
+            &self.project,
+            succeeded_ids,
+            failed_ids,
+        );
+    }
+
     /// Write an `op='token_cost'` audit row — one per helper RPC turn.
     /// `chars_in` is the request-bytes received from the agent; `chars_out`
     /// is the response-bytes sent back. `kind` is `"fetch"` or `"push"`.

@@ -97,11 +97,14 @@ pub(crate) enum WriteOutcome {
     PlanRejected,
     /// At least one `execute_action` returned `Err`. Protocol
     /// error `error refs/heads/main some-actions-failed` already
-    /// emitted; per-action stderr `error: <e>` already emitted.
-    /// Caller sets `state.push_failed = true`. Note: per Pitfall
-    /// 3 / D-09, `SoT` may be in a partial state (some `PATCHes`
-    /// succeeded, some did not); recovery is next-push reads new
-    /// `SoT` via PRECHECK B.
+    /// emitted; per-action stderr `error: <e>` already emitted;
+    /// the `helper_push_partial_fail_sot` audit row (ADR-010 /
+    /// RBF-LR-03 OP-3) naming the succeeded vs failed ids already
+    /// written. Caller sets `state.push_failed = true`. Note: per
+    /// Pitfall 3 / D-09, `SoT` may be in a partial state (some
+    /// `PATCHes` succeeded, some did not) and NO cursor / `oid_map`
+    /// / mirror-head advance happened; recovery is next-push reads
+    /// new `SoT` via PRECHECK B and replans only the failed ids.
     SotPartialFail,
     /// L1 precheck itself errored (REST unreachable). Protocol
     /// error `error refs/heads/main backend-unreachable` already
@@ -260,17 +263,35 @@ where
     let files_touched = u32::try_from(touched_ids.len()).unwrap_or(u32::MAX);
 
     // Execute. Order = creates → updates → deletes (per diff::plan).
-    let mut any_failure = false;
+    // Track the per-action outcome so the partial-fail path (ADR-010 /
+    // RBF-LR-03) can name which SoT writes LANDED vs which still need
+    // replanning on the next push (the git-standard per-action `error: <e>`
+    // still goes to stderr for the agent).
+    let mut succeeded_ids: Vec<u64> = Vec::new();
+    let mut failed_ids: Vec<u64> = Vec::new();
     for action in actions {
+        let action_id = match &action {
+            PlannedAction::Create(issue) => issue.id.0,
+            PlannedAction::Update { id, .. } | PlannedAction::Delete { id, .. } => id.0,
+        };
         match execute_action(backend, project, rt, cache, action) {
-            Ok(()) => {}
+            Ok(()) => succeeded_ids.push(action_id),
             Err(e) => {
                 crate::diag(&format!("error: {e:#}"));
-                any_failure = true;
+                failed_ids.push(action_id);
             }
         }
     }
-    if any_failure {
+    if !failed_ids.is_empty() {
+        // OP-3 (audit is non-optional): a partial-fail is a network-touching
+        // mutation — record the partial outcome (which writes landed, which
+        // must be replanned). The SotOk-branch writes below (cursor /
+        // oid_map / mirror-head advance) are deliberately NOT reached, so
+        // the failed push leaves no torn cursor state; convergence is the
+        // next push's PRECHECK-B re-read of the current SoT.
+        if let Some(c) = cache {
+            c.log_helper_push_partial_fail_sot(&succeeded_ids, &failed_ids);
+        }
         proto.send_line("error refs/heads/main some-actions-failed")?;
         proto.send_blank()?;
         proto.flush()?;
