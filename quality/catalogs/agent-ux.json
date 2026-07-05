@@ -2044,6 +2044,98 @@
         "on-demand"
       ],
       "minted_at": "2026-07-05T10:30:00Z"
+    },
+    {
+      "id": "agent-ux/p94-pagination-prune-completeness-gate",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P94 D1 — pagination-truncation prune-safety (Fork A + Fork B, RATIFIED at .planning/CONSULT-DECISIONS.md 2026-07-05 [FABLE] pagination-truncation prune-safety fork, commit 3478dcc; NO revert of 272882c). Bug (SURPRISES-INTAKE.md ~L891-939, HIGH): meta::prune_oid_map (272882c/e246e84) DELETEs oid_map rows whose issue_id is absent from a keep_ids set built from self.backend.list_records(&self.project); GitHub/JIRA/Confluence connectors can silently return a TRUNCATED Ok(partial_list) at a pagination/size cap (github/lib.rs MAX_ISSUES_PER_LIST=500 / MAX_RAW_ITEMS_PER_LIST; jira/lib.rs non-strict list_issues_impl; Confluence equivalent), so a truncated keep_ids wipes oid_map rows for LIVE records beyond the cap — a real record looks ghost/deleted, recurring on EVERY sync; the sim never truncates so every sim-run gate (incl. all of P93's GREEN runs) is structurally blind. Fork A (primary): add a completeness signal to BackendConnector::list_records's return (Listing { records, is_complete }, or a sibling list_records_complete() if the E2 return-type change is vetoed) and gate BOTH prune_oid_map call sites (builder.rs:138-139 full-rebuild, builder.rs:442 delta) on is_complete == true — on is_complete==false the prune is SKIPPED, falling back to the pre-272882c HARD-02 posture (retained rows, no data loss); the sim returns is_complete=true so existing sim gates keep firing the prune. Fork B (defense-in-depth): reclassify delete-time NotFound as idempotent success in write_loop.rs, bounding residual ghost-row phantom DELETEs to audit noise. This is a sim/unit gate keyed off a capped-MOCK connector (transport_claim:false); it does NOT need a real backend.",
+      "sources": [
+        ".planning/CONSULT-DECISIONS.md (2026-07-05 [FABLE] pagination-truncation prune-safety fork — RATIFIED Fork A+B design)",
+        ".planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md:891-939 (pagination-truncation data-loss finding, HIGH)",
+        ".planning/phases/93-cache-coherence/93-RELIEF-HANDOFF.md (§4-6 full data-loss analysis + 4-option decision tree)",
+        "crates/reposix-cache/src/builder.rs:138-139 (prune_oid_map full-rebuild call site — Fork A gate)",
+        "crates/reposix-cache/src/builder.rs:442 (prune_oid_map delta call site — Fork A gate)",
+        "crates/reposix-cache/src/meta.rs:75-114 (prune_oid_map DELETE)",
+        "crates/reposix-github/src/lib.rs:488-515 (truncation exit points where is_complete is known-but-dropped)",
+        "crates/reposix-remote/src/write_loop.rs (Fork B delete-time NotFound reclassification)"
+      ],
+      "command": "cargo test -p reposix-cache --test pagination_prune_safety",
+      "expected": {
+        "asserts": [
+          "a NEW capped-mock BackendConnector returning is_complete=false with records truncated at a cap drives Cache::sync in a regression test; after sync, oid_map rows for records BEYOND the cap are NOT deleted (the is_complete==false prune-SKIP branch is pinned) — the live-record data-loss is proven eliminated, not just code-read",
+          "BackendConnector::list_records returns a completeness signal (Listing { records, is_complete } or a sibling list_records_complete()); BOTH prune_oid_map call sites (builder.rs:138-139 full-rebuild AND builder.rs:442 delta) are gated on is_complete == true (grep/AST confirms neither call site prunes unconditionally)",
+          "the sim connector returns is_complete=true so existing sim-backed gates still exercise the prune path (regression: a complete listing STILL prunes truly-absent oid_map rows)",
+          "Fork B: a delete against an already-absent record returns idempotent success (not Err) in write_loop.rs (unit test)",
+          "272882c is NOT reverted — ADR-010 coherence enforcement (oid_map upsert-before-prune at builder.rs:120-128) is retained"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p94-pagination-prune-completeness-gate.sh",
+        "args": [],
+        "timeout_s": 600,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p94-pagination-prune-completeness-gate.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "NOT IMPLEMENTED this session (catalog-first SPEC mint). Fix belongs in crates/reposix-core (BackendConnector::list_records signature) + crates/reposix-cache/src/builder.rs (both prune gates) + each connector's list_records (populate is_complete: sim=true always; github/jira/confluence=false when truncated at cap) + crates/reposix-remote/src/write_loop.rs (Fork B). Add the capped-mock regression at crates/reposix-cache/tests/pagination_prune_safety.rs. Runs cargo — one-cargo-invocation budget. If the owner vetoes the E2 return-type change, fall back to list_records_complete() (same signal, uglier surface) — NOT Fork C/D (both rejected in the consult).",
+      "claim_vs_assertion_audit": "The verifier runs the capped-mock regression and asserts oid_map rows beyond the cap survive a truncated (is_complete=false) sync, then asserts the sim (is_complete=true) still prunes. If the description's claim ('the prune skips on incomplete listings, so live records beyond the cap are never deleted') were false — e.g. the fix added the flag but left builder.rs:442 pruning unconditionally, or the connector always reports is_complete=true, or 272882c was quietly reverted losing coherence — the capped-mock test would still find beyond-cap oid_map rows DELETED (data-loss reproduced) and the assert would record FAIL naming the deleted id, while a sim-prune regression would catch an over-broad skip. This is the acceptance gate for the HIGH pagination-truncation data-loss finding.",
+      "waiver": null,
+      "transport_claim": false,
+      "cadences": [
+        "pre-pr",
+        "pre-release",
+        "on-demand"
+      ],
+      "minted_at": "2026-07-05T22:00:00Z"
+    },
+    {
+      "id": "agent-ux/p94-git243-fallback-sentinel",
+      "dimension": "agent-ux",
+      "kind": "container",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P94 D2 — git-2.43 fallback-sentinel (HIGH carry-forward, SURPRISES-INTAKE.md L602-610). Stock Ubuntu 24.04 git (2.43.0) fails EVERY real single-backend `git push` outright (exit 128, no helper output): git's transport-helper tries `stateless-connect git-receive-pack` FIRST for the push direction, and crates/reposix-remote/src/stateless_connect.rs's handle_stateless_connect (service != 'git-upload-pack' branch) replies with a custom 'unsupported service: {service}' line instead of the git-remote-helpers(7)-mandated `fallback` sentinel — per that spec the three valid replies are empty-line (proceed), `fallback` (retry via another capability), or exit-with-error (don't fall back); reposix picks the THIRD, so git never tries the `export` capability the push needs. Version-windowed: git 2.54.0 (this project's CI runner) does NOT hit it; the >= 2.34 floor does NOT protect (2.43 > 2.34 yet breaks). transport_claim is set FALSE (explicit opt-out): the transport under test is the LOCAL git<->helper protocol handshake (backend-agnostic, exercised against sim in a git-2.43 container), NOT a remote-backend transport claim — coverage_kind: mechanical documents the container/sim substrate; a real-backend push on git 2.43 is out of CI's reach (CI runs 2.54) and is the container repro's job here.",
+      "sources": [
+        ".planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md:602-610 (git 2.43.0 single-backend push failure, HIGH; fix sketch at :610)",
+        "crates/reposix-remote/src/stateless_connect.rs (handle_stateless_connect non-upload-pack branch — reply must become `fallback`)",
+        "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_rejects_non_upload_pack_service (currently asserts the BUG-preserving reply; assertion must FLIP to `fallback`)",
+        ".planning/phases/92-push-flow-correctness/92-T4-REPRO-NOTES.md (git-2.43 container-repro pattern)"
+      ],
+      "command": "bash quality/gates/agent-ux/p94-git243-fallback-sentinel.sh",
+      "expected": {
+        "asserts": [
+          "handle_stateless_connect replies with the literal `fallback` line (not a custom 'unsupported service: ...' string) when service != 'git-upload-pack' (grep/source assert on stateless_connect.rs)",
+          "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_rejects_non_upload_pack_service's asserted reply shape is FLIPPED to `fallback` and the test passes (cargo test arm)",
+          "a git-2.43.x container (ubuntu:24.04 stock apt git) drives a real single-backend `git push` against a sim backend to exit 0 — the push succeeds by falling back to the `export` capability (the version-windowed regression the fix closes)",
+          "when docker is unavailable the row is env-gated to NOT-VERIFIED (fail-closed, exit 75, never skip-as-pass per OD-2) — the source-grep + cargo arms still run where possible"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p94-git243-fallback-sentinel.sh",
+        "args": [],
+        "timeout_s": 600,
+        "container": "ubuntu:24.04"
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p94-git243-fallback-sentinel.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "NOT IMPLEMENTED this session (catalog-first SPEC mint). Fix: change handle_stateless_connect's service != 'git-upload-pack' branch in crates/reposix-remote/src/stateless_connect.rs to reply with the literal `fallback` line; flip stateless_connect_e2e.rs::stateless_connect_rejects_non_upload_pack_service's asserted reply shape to match (it currently pins the bug-preserving reply). Add the container regression adapting 92-T4-REPRO-NOTES.md's `docker run ubuntu:24.04` (stock git 2.43.0) pattern; the verifier gates on docker presence and exits 75 (NOT-VERIFIED) when absent. Runs cargo — one-cargo-invocation budget.",
+      "coverage_kind": "mechanical",
+      "claim_vs_assertion_audit": "The verifier asserts the source reply is now `fallback`, the e2e assertion flipped, and a real git-2.43 container push exits 0. If the description's claim ('reposix's helper now emits the protocol-mandated fallback sentinel so git 2.43 falls back to export and the push succeeds') were false — e.g. the helper still replied 'unsupported service: ...', or the production reply changed but the e2e test was left asserting the old shape (fake-green), or the container push still exited 128 — the container arm's exit-0 assert would fail concretely on the still-broken version and the source/e2e asserts would name the un-flipped reply. Env-gated: docker-absent yields NOT-VERIFIED (fail-closed, OD-2), never a fabricated PASS.",
+      "waiver": null,
+      "transport_claim": false,
+      "cadences": [
+        "pre-pr",
+        "pre-release",
+        "on-demand"
+      ],
+      "minted_at": "2026-07-05T22:00:00Z"
     }
   ]
 }

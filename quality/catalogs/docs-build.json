@@ -144,6 +144,48 @@
         "pre-push",
         "pre-pr"
       ]
+    },
+    {
+      "id": "docs-build/p94-badges-real-vs-transient",
+      "dimension": "docs-build",
+      "kind": "mechanical",
+      "sources": [
+        ".planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md:487-508 (badges-resolve FAILs on pre-push — real-vs-transient determination, MEDIUM/P2)",
+        "quality/catalogs/docs-build/badges-resolve.py",
+        "quality/catalogs/docs-build.json (docs-build/badges-resolve row this determination stabilizes)",
+        "README.md:badges",
+        "docs/index.md:badges"
+      ],
+      "command": "python3 quality/gates/docs-build/badges-resolve.py",
+      "expected": {
+        "asserts": [
+          "badges-resolve.py has been re-run in isolation on >=2 spaced occasions and the pass/fail pattern recorded (the determination artifact distinguishes a transient shields.io/Codecov flake from a genuinely broken badge URL)",
+          "the real-vs-transient verdict is recorded and the GOOD-TO-HAVES.md badges-resolve entry (L487-508) is RESOLVED with that finding (status flipped from OPEN)",
+          "if GENUINELY BROKEN: the offending badge URL in README.md/docs/index.md is fixed (or substituted with a current shields.io equivalent)",
+          "if TRANSIENT: badges-resolve.py gains a retry/backoff before failing OR a documented waiver note is added, so the check reaches brightgreen reliably",
+          "net: python3 quality/gates/docs-build/badges-resolve.py exits 0 (docs-build/badges-resolve is GREEN, no longer FAILing pre-push)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/docs-build/p94-badges-real-vs-transient.sh",
+        "args": [],
+        "timeout_s": 120,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/docs-build/p94-badges-real-vs-transient.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "NOT DONE this session (catalog-first SPEC mint). During the P94-P97 debt-drain window: re-run `python3 quality/gates/docs-build/badges-resolve.py` >=2x spaced apart, record which badge (if any) flaps. If a specific URL is consistently 404/non-image -> fix it in README.md/docs/index.md. If it flaps -> add retry/backoff to badges-resolve.py (or a documented waiver note). Then close the GOOD-TO-HAVES badges-resolve entry with the verdict.",
+      "claim_vs_assertion_audit": "The verifier confirms >=2 spaced isolated re-runs happened, that a real-vs-transient verdict was recorded and the GOOD-TO-HAVES entry resolved, and that badges-resolve.py now exits 0. If the description's claim ('the badge failure was diagnosed and fixed-or-waived, not left as an unexplained recurring red') were false — e.g. the entry was closed WITHOUT a determination, or badges-resolve.py still exits non-zero, or a genuinely-broken URL was papered over with a waiver instead of fixed — the exit-0 assert and the entry-resolved assert would fail concretely. Doc-honesty/build gate (docs-build dimension).",
+      "waiver": null,
+      "cadences": [
+        "pre-push",
+        "pre-pr",
+        "on-demand"
+      ],
+      "minted_at": "2026-07-05T22:00:00Z"
     }
   ]
 }

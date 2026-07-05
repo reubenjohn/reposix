@@ -937,3 +937,39 @@ real-backend project exceeds its connector's pagination cap; P94 (real-backend f
 is the natural next phase to prove + package this for an E2 decision.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | ROADMAP.md § "Phase 94"–"Phase 97" prose is STALE/orphaned vs the LIVE STATE.md cursor | discovered-by: P94 catalog-first planning lane | severity: MEDIUM
+
+**What:** `.planning/milestones/v0.13.0-phases/ROADMAP.md` § "Phase 94: Bus-push
+compatibility with documented mirror setup (Cluster D)" (RBF-C-01..07) and its
+downstream P95–P97 prose describe work that no longer matches what those phases deliver.
+STATE.md frontmatter — the LIVE machine-readable cursor — says `next_phase: P94 …
+real-backend frictions (pagination-truncation E2-fork + git-2.43 fallback-sentinel)`. The
+bus-push / mirror-setup / Cluster-D work the ROADMAP prose describes already shipped in
+P82–P86. A future planner grepping the ROADMAP for "Phase 94" would plan against
+orphaned prose (RBF-C-* requirement IDs that no longer map to P94's true scope). P94's
+PLAN.md carries an explicit `<scope-correction>` block flagging this so THIS phase does
+not mis-execute, but the ROADMAP itself is still uncorrected.
+
+**Why deferred (not fixed here):** the P94 catalog-first lane is a SPEC/mint lane
+(markdown + catalog JSON only, no re-authoring of milestone ROADMAP prose). Reconciling
+the ROADMAP's P94–P97 phase descriptions against the delivered reality is a milestone-close
+docs-reconciliation task (freshness/structure dimension), which is exactly what the P96/P97
+absorption + milestone-close slots exist for. Fixing it mid-P94 would be scope-creep on a
+mint lane.
+
+**Sketched resolution:** During the P96/P97 milestone-close docs reconciliation, rewrite
+ROADMAP.md § Phase 94–97 to reflect delivered scope (P94 = real-backend frictions:
+pagination-prune fix + git-2.43 fallback-sentinel + badge determination + freshness
+sweep), retire or remap the orphaned RBF-C-* requirement IDs (confirm they were satisfied
+in P82–P86 or move them to their true home), and reconcile the P95–P97 prose against
+STATE. Cross-check REQUIREMENTS.md traceability so no RBF-C-* row points at a phase that
+never touched it.
+
+**Default disposition:** MEDIUM — no runtime impact, but a real mis-direction hazard for
+the next planner; route to the P96/P97 milestone-close docs reconciliation (freshness /
+structure dimension).
+
+**STATUS:** OPEN

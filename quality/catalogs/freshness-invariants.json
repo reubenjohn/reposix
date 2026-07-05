@@ -1089,6 +1089,48 @@
       ],
       "minted_at": "2026-07-04T12:00:00Z",
       "transport_claim": false
+    },
+    {
+      "id": "structure/p94-catalog-freshness-sweep",
+      "dimension": "structure",
+      "kind": "subagent-graded",
+      "comment": "P94 D4 — catalog-freshness sweep before v0.13.0 milestone-close. Re-grade every STALE (TTL-expired or session-stale) NON-P93 catalog row across all dimensions and confirm no NEW code regression hides behind a stale NOT-VERIFIED/FAIL. PRE-ESTABLISHED FACT baked into the GREEN contract (do NOT re-triage as a bug): the agent-ux/p92-mid-stream-litmus-t1-t4 FAIL is the EXPECTED git<2.34 environment gate — local exit 75 on the dev box's git 2.25.1; the same row PASSED on CI's git 2.54.0. It is an accounted-for env-gate, NOT a code regression; any similar exit-75 env-gate FAIL is likewise accounted-for. GREEN = every stale non-P93 row re-graded AND every resulting FAIL is a NAMED, accounted-for env-gate (not a genuine code regression). Milestone-close readiness gate; subagent adjudicates 'env-gate vs regression' from the runner output.",
+      "sources": [
+        "quality/runners/run.py (the sweep engine — re-grades stale rows)",
+        "quality/runners/verdict.py (verdict + severity routing)",
+        "quality/catalogs/agent-ux.json (agent-ux/p92-mid-stream-litmus-t1-t4 — the accounted-for git<2.34 env-gate FAIL)",
+        ".planning/CLAUDE.md (push cadence + milestone-close 9th probe context)",
+        "quality/PROTOCOL.md (NOT-VERIFIED / env-gated fail-closed conventions)"
+      ],
+      "command": "python3 quality/runners/run.py --all && python3 quality/runners/verdict.py",
+      "expected": {
+        "asserts": [
+          "every STALE (session-stale or freshness_ttl-expired) NON-P93 catalog row is re-graded in the sweep (no stale row left un-run)",
+          "every resulting FAIL is a NAMED, accounted-for environment gate (e.g. agent-ux/p92-mid-stream-litmus-t1-t4 exit 75 on git<2.34, PASSED on CI git 2.54.0) — NOT a genuine code regression",
+          "the accounted-for env-gates are enumerated with their exit code + the reason they are not regressions (subagent-graded adjudication, not a bare pass)",
+          "no re-graded row flips PASS->FAIL for a reason attributable to a code change in this milestone (a true regression BLOCKS the milestone-close verdict)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/p94-catalog-freshness-sweep.sh",
+        "args": [],
+        "timeout_s": 600,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/p94-catalog-freshness-sweep.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": "30d",
+      "blast_radius": "P1",
+      "owner_hint": "NOT RUN this session (catalog-first SPEC mint). Run LAST in P94 (after D1-D3 land): `python3 quality/runners/run.py --all` then inspect the verdict for stale-row re-grades. For each FAIL, classify env-gate (exit 75 / creds-absent / git<2.34) vs code-regression; a subagent adjudicates and records the enumeration. The p92-mid-stream git<2.34 exit-75 FAIL is pre-accounted (reproduce on git 2.54 container to confirm it PASSES there, per 92/93 REPRO-NOTES). Any UN-accounted FAIL BLOCKS milestone-close.",
+      "claim_vs_assertion_audit": "The verifier re-grades stale non-P93 rows and the subagent enumerates every FAIL as env-gate-or-regression. If the description's claim ('the milestone can close because every stale row was re-graded and every FAIL is an accounted-for env-gate, none a code regression') were false — e.g. a stale row was skipped (never re-graded), or a genuine PASS->FAIL code regression was silently bucketed as an 'env-gate', or the p92-mid-stream FAIL was passed off without confirming it PASSES on git 2.54 — the per-FAIL classification would name an un-accounted regression and the assert requiring zero code-regressions would fail. Milestone-close readiness gate (structure dimension); 30d TTL so it must be re-run fresh at the actual close.",
+      "waiver": null,
+      "transport_claim": false,
+      "cadences": [
+        "pre-release",
+        "on-demand"
+      ],
+      "minted_at": "2026-07-05T22:00:00Z"
     }
   ]
 }

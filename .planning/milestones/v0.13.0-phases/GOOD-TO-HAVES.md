@@ -763,3 +763,28 @@ or the P94–P97 debt-drain window, alongside the sibling `verdict.py --phase` s
 already filed above.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | `.planning/CONSULT-DECISIONS.md` is 25,074 chars, above the 20k soft limit | discovered-by: P94 catalog-first planning lane | severity: P3
+
+**Source:** `.planning/CONSULT-DECISIONS.md` measures 25,074 chars — above the 20k-char
+pre-commit WARN threshold (warns, does not block), same window as the already-filed
+`raise-list-p90.md` file-bloat item above (24,679 chars). The file is an append-only log
+of fable/E2 consult decisions (each entry is decision-ready evidence: chosen fork +
+rationale + rejected alternatives + spot-checks), so trimming risks losing the audit trail
+a future planner keys off. The most recent entry (the ratified pagination-truncation
+prune-safety fork) is what P94 D1 executes against.
+
+**Acceptance:** Fold into the intake-file-bloat split during the P96/P97 milestone-close
+window, alongside the sibling `raise-list-p90.md` entry above. Either (a) split
+`CONSULT-DECISIONS.md` into per-quarter or per-milestone shards under
+`.planning/consult-decisions/` with an index (each under 20k chars), or (b) archive the
+already-superseded/closed entries to a `.planning/archive/` companion, keeping only LIVE
+decisions in the root file under 20k. Preserve every chosen-fork + rationale verbatim; do
+not summarize away the rejected-alternatives detail. Pre-commit WARN clears.
+
+**Default disposition:** P3 — maintainability, no runtime impact; fold into the P96/P97
+intake-file-bloat split (sibling of `raise-list-p90.md`).
+
+**STATUS:** OPEN
