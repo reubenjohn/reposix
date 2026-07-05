@@ -12,10 +12,10 @@
     "alignment_ratio": 0.7678571428571429,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-05T02:39:30Z",
-    "coverage_ratio": 0.1949614890885751,
+    "last_walked": "2026-07-05T21:29:18Z",
+    "coverage_ratio": 0.18270676691729323,
     "lines_covered": 1215,
-    "total_eligible_lines": 6232,
+    "total_eligible_lines": 6650,
     "coverage_floor": 0.1,
     "claims_waived": 0
   },
