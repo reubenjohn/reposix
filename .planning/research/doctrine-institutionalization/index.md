@@ -117,8 +117,20 @@ during the same session (full detail + session-metrics context:
 `.planning/SESSION-HANDOVER.md` §3):
 
 - **(a) Model resolution — Q1 RESOLVED.** Agent-tool model resolves as
-  `claude-fable-5`; `phase-coordinator.md` ships `model: fable` with an
+  `claude-fable-5`; `phase-coordinator.md` shipped `model: fable` with an
   explicit `model: inherit` fallback note.
+  - **CORRECTION (2026-07-05):** the def had NOT registered — but the cause
+    was NOT the model value. `phase-coordinator.md`'s `description` frontmatter
+    held a bare `: ` (inside a literal `` `model: opus` ``), which broke YAML
+    parsing; the harness then silently DROPPED the whole def from the registry
+    (no error — the type just never appeared). Missed here because probe (b)
+    exercised `reader-digester`, whose frontmatter parses; this file's never
+    did. Fixed by making `description` a block scalar (`>-`); `model` also
+    moved `fable`→`inherit` per §11, but that was ORTHOGONAL to the parse bug.
+    An initial fix attempt misdiagnosed the cause as the model value and did
+    NOT fix registration — falsified only by a post-restart dispatch smoke test
+    (defs are scanned at session start, so the miss survived until restart).
+    Guardrail: `scripts/check-agent-frontmatter.py`.
 - **(b) New `.claude/agents/` defs dispatchable mid-session, no restart** —
   a `reader-digester` dispatch succeeded immediately after the defining
   commit landed.
