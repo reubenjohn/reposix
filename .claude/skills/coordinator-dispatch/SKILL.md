@@ -10,6 +10,8 @@ when_to_use: When you are a coordinator about to dispatch executor/reader/review
 # Coordinator dispatch template
 
 Full doctrine: `.planning/ORCHESTRATION.md`. This is the paste-ready operational form.
+For a specific stalled/BLOCKER/sketch/resequence/tangent judgment call, use the
+`decision-procedures` skill (DP-1..5 + escalation valve) instead of improvising.
 
 ## 1. Charter block (paste VERBATIM into every dispatch)
 

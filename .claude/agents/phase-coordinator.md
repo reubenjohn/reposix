@@ -45,6 +45,13 @@ One tree-writer at a time; ONE cargo invocation machine-wide (a hook enforces th
 no `--no-verify`; push origin main BEFORE the verifier dispatch; understand the
 project's intention and pivot toward it rather than executing a stale plan literally.
 
+## Judgment calls
+Recurring judgment calls (a lane looks stalled, a BLOCKER lacks an executed repro, an
+intake entry sketches a design, the plan looks wrong, out-of-charter work appears) follow
+named procedures, not improvisation. Invoke the `decision-procedures` skill when one of
+these actually comes up (DP-1..5 + escalation valve E1-E4); ORCHESTRATION.md §11 is the
+one-paragraph map.
+
 ## Triage what your lanes report up (bottom-up loop)
 Every lane hands you a NOTICED section + RAISE LIST. Triage each item, never drop it:
 absorb into the current wave (low charter-deviation + 10x capacity), re-delegate as a

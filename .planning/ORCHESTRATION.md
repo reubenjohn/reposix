@@ -23,6 +23,7 @@ session-local accumulator that previously held these rules in `/tmp`.
 | External mutation approval | `.claude/settings.json` + `.claude/agents/steward.md` | permission + agent-def |
 | Context %/relief nudge | user-level `gsd-context-monitor.js` (≤35%/≤25%) | JIT injection |
 | Intention-over-plan; tangent scoping; cadence | this file + `coordinator-dispatch` skill | prose + skill |
+| Judgment-call procedures (DP-1..5) + escalation valve (E1-E4) + consult template | `.claude/skills/decision-procedures/SKILL.md` | on-demand skill (loaded when a judgment call appears, not every session) |
 
 Everything below that is NOT hook- or permission-enforced is a judgment call — the
 prose here is the standard you are held to.
@@ -38,12 +39,14 @@ its own sub-delegation:
 
 **Never `fable` at a leaf** — it is overkill and defeats the tiering. (OD-4 item 1.)
 
-> **No-fable mode (P92→v1.0):** when the top-level session itself runs on opus,
-> `.planning/RUNBOOK-TO-V1/index.md` Amendments 1–3 govern: five-tier recursion
-> (L0's whole drive reaches end state at ~10% of its own context, total → L1
-> portion coordinators → L2 phase coordinators → L3 work lanes → L4 helpers), the
-> 10x scoping rule, honest corrective iteration,
-> and a single-shot fable consult valve replacing standing fable coordinators.
+> **No-fable mode:** when the top-level session itself runs on opus (or below), §11
+> governs — five-tier recursion, the 10%/10x budget rules, named judgment-call
+> procedures, and a single-shot fable consult valve replacing standing fable
+> coordinators. §12 holds honest-corrective-iteration doctrine. Any arc-scoped
+> runbook for a specific drive (e.g. a `.planning/RUNBOOK-TO-V1`-shaped doc, or its
+> successor for whatever's currently active) APPLIES this doctrine to that drive's
+> portions and pre-framed decisions — doctrine lives here and outlives any one
+> runbook; the runbook is disposable, this file is not.
 
 ## 2. Coordinators route, they do not work
 
@@ -131,10 +134,11 @@ The writer confirms the commit SHA in its report.
 
 Top-level (whole-session) rotations use the same template but write
 `.planning/SESSION-HANDOVER.md` (not a phase-numbered filename) — see that file for
-the current live example. Successor top-level sessions running without fable
-follow `.planning/RUNBOOK-TO-V1/index.md` — the committed runbook for the
-P92→v1.0 drive (decision procedures, escalation valve, loops, context budgets,
-portion map, bootstrap prompt).
+the current live example. Successor top-level sessions running without fable read
+§11–12 below for the standing doctrine (tiering, budgets, judgment procedures,
+HCI), then whatever arc-scoped runbook currently governs the active drive (if any)
+for the portion map and pre-framed decisions specific to that drive — check
+`.planning/STATE.md` for which runbook, if any, is live.
 
 ## 4. Operating cadence A/B + debt-drain
 
@@ -216,6 +220,66 @@ launch-readiness milestone (hero demo, CI-verified headline numbers, install-pat
 excellence, Show-HN kit) AHEAD of v0.13.2 cross-link, re-derived from the owner's stated
 intention ("puts this project on the global map"), not from the existing phase order.
 
+## 11. No-fable mode: five-tier tiering, budgets, judgment calls
+
+Two operating configurations, chosen by whether a fable-tier session runs at the
+top level. §1 above is the fable-present default (three tiers under a standing
+fable coordinator). This section is the general, arc-independent doctrine for the
+**no-fable configuration** — any top-level session that itself runs opus or below.
+The deep procedural mechanics this section only names live in
+`.claude/skills/decision-procedures/SKILL.md` — load that skill at the moment a
+judgment call actually appears, not every session; this section is the map, not
+the territory.
+
+**Five-tier recursion.** L0 top-level orchestrator (opus) scopes work into
+portions so the WHOLE drive reaches end state by ~10% of L0's own context, total
+— report-only diet, never reads source/builds/edits. L1 portion coordinator
+(opus) owns one large portion, charters L2s. L2 phase/drain-window coordinator
+(opus for security-judgment work, sonnet otherwise) owns a phase/window,
+charters L3 lanes. L3 work lanes (sonnet) are where most actual work happens,
+≤100 tool calls, case-by-case L4 delegation. L4 helper leaves (haiku mechanical,
+sonnet for review judgment) are terminal. Fable appears in exactly one place:
+the single-shot consult valve below — never a standing coordinator, never a leaf.
+
+**Budgets.** Every tier's ENTIRE charter reaches end state by ~10% of ITS OWN
+context (recurses per tier, not per sub-unit) — the remaining ~90% is correction
+margin, never planned workload; tracking past it with scope outstanding is a
+scoping failure, split or rotate. Assume every charter is 10x more complex than
+planned: recon via an L4 lane before every dispatch, and pre-authorize the split
+in the charter rather than making the child ask permission. What does NOT
+multiply: one cargo machine-wide, one-tree-writer-at-a-time, ≤400-word reports
+(§2 and the enforcement map already cover these — more agents means more
+discipline on shared resources, not less).
+
+**Judgment calls.** Five named decision procedures — DP-1 coordinator-rot
+diagnosis, DP-2 prove-before-fix on BLOCKERs, DP-3 intake-design inversion, DP-4
+executive resequencing (§10 in procedural form), DP-5 tangent-vs-charter
+classification (§5 in procedural form) — turn recurring judgment calls into
+trigger → evidence → decide → escalate. Anything a DP doesn't resolve goes
+through a 4-criterion escalation valve: **E1** irreversible/destructive → owner,
+always; **E2** architecture-shaping (ADR-class) → fable consult first; **E3**
+mission-priority tradeoff → owner for scope/spend; **E4** two failed
+self-attempts at the same gate → fable consult. Below the bar: decide-and-record
+in `.planning/CONSULT-DECISIONS.md` (append-only; create on first use) — never
+idle, waiting for permission you don't need is itself a rot signal. Full DP
+mechanics, the fable consult-dispatch template, and the ledger entry format live
+in the decision-procedures skill named above.
+
+## 12. Honest corrective iteration (HCI)
+
+Every deliverable, at every tier, passes an independent corrective review before
+it counts done, and iterating to convergence is expected, never a failure:
+**the author never self-grades** — a fresh reviewer or verifier grades from
+committed artifacts only (this project's standing verifier-subagent mandate,
+`quality/PROTOCOL.md`, is the phase-level instance of this rule; audits get a
+fresh-eyes re-audit capped at 3 iterations; a milestone gets the 9-probe verdict
+plus an independent honesty spot-check, author ≠ orchestrator). A review that
+finds HIGH/RED gets a targeted fix, then a re-review by a DIFFERENT fresh
+reviewer (never the one being checked, never the author) — two failed
+iterations at the same gate escalates to valve E4 above. An empty findings
+section from code-touching review is itself a red flag; "PASS because the
+author said so" is not a grade.
+
 ## Provenance
 
 Distilled from session 7e2a4cf2. Full 14-theme inventory with verbatim owner quotes,
@@ -224,3 +288,19 @@ per-theme encoding-status, and the coverage check:
 Prior committed homes: `89-OWNER-DECISIONS.md` (OD-1..4), `.planning/PRACTICES.md`
 (OP-8/OP-9), `quality/SURPRISES.md` (D-CONV-1..8). This file supersedes the
 session-local accumulator (`~/.claude/jobs/7e2a4cf2/tmp/PENDING-INTAKE-AND-CHORES.md`).
+
+**2026-07-05 permanence audit.** §11–12 (five-tier tiering, the 10%/10x rules,
+the DP-1..5 / escalation-valve pointer, honest corrective iteration) were
+promoted here from an arc-scoped runbook's amendments (that runbook itself is
+unchanged in purpose, just relieved of restating general doctrine) — they are
+general doctrine, not specific to any one drive, so they belong in a permanent
+home rather than only in a runbook that archives when its drive ends. The deep
+procedural bodies (DP-1..5 full triggers/evidence/decide/escalate text, the E1-E4
+valve table, the fable consult-dispatch template, the `.planning/CONSULT-DECISIONS.md`
+ledger format) live in `.claude/skills/decision-procedures/SKILL.md` rather than
+inline here, per the owner's steer that episodic procedures belong in
+on-demand skills, not in doctrine every session re-reads in full — this file
+stays the distilled core; the skill is the reference manual. Permanent homes
+never hard-reference a transient/arc-scoped file by path (only the reverse is
+safe) — this file describes any arc-scoped runbook generically rather than
+naming one, so it never goes stale when a runbook archives.
