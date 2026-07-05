@@ -1827,13 +1827,8 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "NOT AUTHORED this session -- verifier script + ADR do not exist yet (PROTOCOL.md Step 3: catalog-first rows may point at a verifier that doesn't exist yet). Author the ADR top-level under docs/decisions/ (next free number is 010; 004/006 are historical gaps) following ADR-009's format; then land a grep verifier asserting options + chosen path + trade-off + deferral list.",
-      "waiver": {
-        "until": "2026-08-05T00:00:00Z",
-        "reason": "catalog-first: verifier script + implementation land in the P93 fix wave (ADR-010); flips WAIVED->PASS then. Minted WAIVED (not NOT-VERIFIED) because the pre-pr runner is fail-closed on NOT-VERIFIED (a missing verifier -> RBF-FW-07a demote -> exit=1).",
-        "dimension_owner": "v0.13.0 P93 cache-coherence (catalog-first mint, 2026-07-05)",
-        "tracked_in": "P93 fix wave -- ADR-010 (docs/decisions/010-l2-l3-cache-coherence.md); RBF-LR-01 + D-P92-03 gate flip WAIVED->PASS when the verifier script + ADR ratification land"
-      },
       "claim_vs_assertion_audit": "The verifier greps the ADR file for both option names (L2 re-fetch-on-cache-miss, L3 transactional-cache-writes), a CHOSEN-path marker, a trade-off paragraph, and the deferral list. If the description's claim ('an ADR states the chosen coherence model + trade-off') were false -- e.g. the ADR only enumerated options without deciding, or was never written -- the grep asserts would fail concretely naming the missing option/decision/trade-off token, and the file-exists assert would fail if no docs/decisions/*cache-coherence*.md was authored at all.",
+      "waiver": null,
       "transport_claim": false,
       "cadences": [
         "pre-pr",
@@ -1873,13 +1868,8 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "NOT IMPLEMENTED this session -- the cache_coherence test binary + the refresh_for_mirror_head post-write fix do not exist yet. If RED after implementation: check refresh_for_mirror_head is actually called on the post-write path (write_loop.rs must not skip it when files_touched>0) and the SotPartialFail recovery test's PRECHECK B replan. Runs cargo -- honor the one-cargo-invocation-machine-wide budget (crates/CLAUDE.md).",
-      "waiver": {
-        "until": "2026-08-05T00:00:00Z",
-        "reason": "catalog-first: verifier script + implementation land in the P93 fix wave (ADR-010); flips WAIVED->PASS then. Minted WAIVED (not NOT-VERIFIED) because the pre-pr runner is fail-closed on NOT-VERIFIED (a missing verifier -> RBF-FW-07a demote -> exit=1).",
-        "dimension_owner": "v0.13.0 P93 cache-coherence (catalog-first mint, 2026-07-05)",
-        "tracked_in": "P93 fix wave -- ADR-010 (docs/decisions/010-l2-l3-cache-coherence.md); RBF-LR-02 (cache_coherence test + refresh honesty) flips WAIVED->PASS when the verifier script + fix land"
-      },
       "claim_vs_assertion_audit": "The verifier runs the real `cargo test -p reposix-cache --test cache_coherence` binary and asserts exit 0 plus the presence of a SotPartialFail recovery test. If the description's claim ('cache-coherence holds + refresh_for_mirror_head no longer no-ops post-write') were false -- e.g. refresh_for_mirror_head still short-circuits on the no-op path, or the SotPartialFail replan reads stale SoT -- the cache_coherence assertions would fail non-zero and the runner would record FAIL naming the failing test fn. This is a sim/unit gate (transport_claim:false); the real-backend arm is RBF-LR-03.",
+      "waiver": null,
       "transport_claim": false,
       "cadences": [
         "pre-pr",
@@ -1921,13 +1911,8 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "NOT FIXED this session -- the RED regression is proven and #[ignore]d (coordinator-gated; repro commit 9c46e49). Un-ignore + flip GREEN in the SAME commit that lands the cache-layer fix. Candidate fixes (93-DP2-REPRO-NOTES.md): (a) in sync() Step 4 never emit a tree entry for an OID neither freshly-written nor already in oid_map -- reconcile list_records against the materialized set and materialize/record the difference; or (b) make read_blob content-addressed-refetch an unknown OID. Runs cargo -- one-cargo-invocation budget.",
-      "waiver": {
-        "until": "2026-08-05T00:00:00Z",
-        "reason": "catalog-first: verifier script + implementation land in the P93 fix wave (ADR-010); flips WAIVED->PASS then. Minted WAIVED (not NOT-VERIFIED) because the pre-pr runner is fail-closed on NOT-VERIFIED (a missing verifier -> RBF-FW-07a demote -> exit=1).",
-        "dimension_owner": "v0.13.0 P93 cache-coherence (catalog-first mint, 2026-07-05)",
-        "tracked_in": "P93 fix wave -- ADR-010 (docs/decisions/010-l2-l3-cache-coherence.md); D-P92-03 acceptance gate flips WAIVED->PASS when the #[ignore] drops + the cache-layer fix lands (verifier script land in the same wave)"
-      },
       "claim_vs_assertion_audit": "The verifier greps for the removed #[ignore] and runs `cargo test -p reposix-cache --test delta_sync` asserting delta_sync_tree_references_only_resolvable_oids is executed (not skipped) and passes. If the description's claim ('the cache-layer coherence fix restores the tree<->oid_map invariant') were false -- e.g. the fix only tightened sim timestamp precision, leaving the latent amplifier live -- the test would still hit Err(UnknownOid(..)) and the verifier would record FAIL; if the #[ignore] were left on to fake-green, the ignore-removed assert would fail concretely. This is the acceptance gate for D-P92-03.",
+      "waiver": null,
       "transport_claim": false,
       "cadences": [
         "pre-pr",
