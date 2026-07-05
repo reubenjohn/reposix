@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 mode: serial-workstreams
 status: executing-p89-serial-workstreams
-last_updated: "2026-07-04T23:35:00Z"
-last_activity: 2026-07-04 — P91 SHIPPED GREEN (verdict at quality/reports/verdicts/p91/VERDICT.md). Attach/sync real-backend wiring + QL-001 closed; litmus REAL vs TokenWorld 11/11; T2 REOPEN gate 0-HIGH (run 1 was 4-HIGH, fixed in-phase); 2 mass-delete BLOCKERs + fetch-path 3-layer + oid_map staleness fixed in-phase; CI green incl. real-git-push-e2e PASS. Next: P92.
+last_updated: "2026-07-05"
+last_activity: 2026-07-05 — P92 RECON complete (NOT executed) → decision D-P92-01 no-split (2bfccdf, CONSULT-DECISIONS ledger): heavy fixes already landed pre-recon (cb630e5 GIT_DIR scrub; a0c84a3 .with_audit on Confluence+JIRA). P92 residual = T4 rebase-ancestry regression test (prove-before-fix) + bus_write_audit_completeness.rs dual-table upgrade + behavioral no-retry verifier + TokenWorld smoke. quality-weekly fixed + GREEN (live run 28731753695). Session ended to re-launch L0 with a leaner bootstrap (over-fanning lesson: 6 recon agents burned ~12% of L0 context). Non-blocking owner-gated: PR #62 (codecov 6→7, green), ~9 stale branches, 17 docs-alignment rows→P95. Next: L0 re-launch → execute P92.
 workstreams:
   workstream_a:
     milestone: v0.13.0
