@@ -117,3 +117,53 @@ NOT-VERIFIED, commit `858330a` / `600755e` (post-rebase SHA), pushed before this
 **Rationale:** DP-2 prove-before-fix — a defect an independent runner cannot reproduce is a suspicion, not a confirmed bug; P92 must not carry a blind P93 fix. SC1's designed coverage split (sim GREEN now, real-backend at P97) matches ROADMAP SC7 (rows minted NOT-VERIFIED, coverage_kind real-backend).
 
 **Reversibility:** Reversible — if P93 reproduces the delta-sync failure it re-escalates as a confirmed P93 finding; the suspicion note preserves Exec1's transcript path.
+
+### UPDATE 2026-07-05 (P93 recon, prove-before-fix / DP-2) — REPRODUCED / CONFIRMED [SELF]
+
+**Verdict: REPRODUCED — a real, deterministic cache-coherence bug, NOT environmental.**
+The DP-2 downgrade above ("unreproduced suspicion, reproduce-or-close in P93") resolves in
+the REPRODUCE direction — the reversal the prior entry pre-authorized. Writer B's `git pull
+--rebase` after a two-writer conflict dies `fatal: git upload-pack: not our ref <oid>` /
+`could not fetch <oid> from promisor remote` **whenever the conflicting write shares a
+truncated wall-clock second with B's cache cursor** — reproduced 4/4 in that window (1
+deterministic cursor-pin + 3 natural same-second runs, git-2.54 container) and cleanly
+ABSENT in the 2-second-gap negative control (`1 changed` → ordinary `CONFLICT (content)`).
+P92 Exec2's non-repro was a TIMING STRADDLE (its run crossed a second boundary, like the
+`gap2s` control), not evidence of falseness. **Do NOT close D-P92-03 as false.**
+
+**Evidence pointers:**
+
+- Repro transcript/notes + root cause: `.planning/phases/93-cache-coherence/93-DP2-REPRO-NOTES.md`.
+- FAILING RED regression (prove-before-fix, `#[ignore]`d so CI stays green):
+  `crates/reposix-cache/tests/delta_sync.rs::delta_sync_tree_references_only_resolvable_oids`
+  (run `cargo test -p reposix-cache --test delta_sync -- --ignored` to see it bite).
+- Repro commit `9c46e49` (RED test + container litmus harness + notes + GOOD-TO-HAVES flip;
+  NO production fix — coordinator-gated). Harness: `.planning/phases/93-cache-coherence/repro/run-repro.sh`.
+
+**Root cause (a trigger + a latent amplifier):**
+
+- **TRIGGER (sim):** `crates/reposix-sim/src/routes/issues.rs` seconds-truncates `updated_at`
+  (`SecondsFormat::Secs`, L138-139) and filters `list_changed_since` with a seconds-truncated
+  cursor under a STRICT `updated_at > ?` (L180-183), so a same-truncated-second write is
+  invisible to `list_changed_since` even though `list_records` (unfiltered) still returns its
+  new content.
+- **AMPLIFIER (the actual defect, cache layer):** `Cache::sync` builds the git TREE from the
+  full `list_records` set (`crates/reposix-cache/src/builder.rs:293-328`) while
+  blob-materialization + `oid_map` cover only the `list_changed_since` delta → a dangling tree
+  entry → `read_blob` `UnknownOid` → the helper leaves the `want` → `git upload-pack: not our
+  ref`. Invariant violated: every blob OID the HEAD tree references MUST be resolvable by
+  `read_blob`.
+
+**Disposition:** fix DEFERRED to the P93 ADR (RBF-LR-01) + fix wave — no blind fix here.
+Recommended fix is at the **CACHE layer** (restore the tree↔`oid_map` invariant), NOT
+sim-precision-only: real Confluence/JIRA/GitHub `updated_at` are second-resolution too, so a
+pure sim-timestamp tightening leaves the latent amplifier live for any backend whose clock
+resolution or skew re-creates the disagreement. Scope is **FETCH/`sync`** only — the PUSH
+precheck path (`read_last_fetched_at`) is NOT vulnerable (it tolerates the same condition; see
+the separate LOW degradation-asymmetry finding filed in GOOD-TO-HAVES 2026-07-05). Acceptance
+gate: the catalog row `agent-ux/p93-delta-sync-coherence-invariant` (this session's mint) flips
+RED→GREEN (the `#[ignore]` removed) once the cache fix lands.
+
+**Reversibility:** this is the TERMINAL adjudication of the reproduce-or-close fork —
+CONFIRMED, not reversible back to "suspicion." What remains open is only the FIX (P93), not
+the existence of the bug.
