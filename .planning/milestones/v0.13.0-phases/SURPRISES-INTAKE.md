@@ -747,4 +747,53 @@ but the push has NOT landed — `git rev-list --left-right --count origin/main..
 reads `0  24` (origin 0 ahead, HEAD 24 ahead), not the required `0  0`. No `--no-verify`
 bypass was used.
 
-**STATUS:** OPEN (blocks Task B push completion — awaiting coordinator decision)
+**STATUS:** RESOLVED | P93 Wave 2a Task A commit `24b8899` (`fix(93): backtick
+doc-comment identifiers in reposix-remote tests (unblock push)`). Wrapped `build_from` /
+`read_blob` (line 28) and `SQLite` / `tests/mirror_refs.rs` (lines 232/234) in backticks
+in `crates/reposix-remote/tests/common.rs`; `cargo clippy -p reposix-remote --tests`
+confirmed 0 warnings post-fix. No test logic changed, no `#[allow]` added. Push
+subsequently landed in the same wave (Task C) — see the sibling 2026-07-05 entry filing
+the mkdocs anchor-swallow gate-honesty item for this wave's remaining tracked findings.
+
+---
+
+## 2026-07-05 | `quality/gates/docs-build/mkdocs-strict.sh` under-reports broken internal anchors (swallowed at INFO log level) | discovered-by: P93 Wave 2a executor | severity: MEDIUM
+
+**What:** `quality/gates/docs-build/mkdocs-strict.sh` runs `mkdocs build --strict` and
+then greps the build log + rendered HTML for the literal string `"Syntax error in
+text"` (the mermaid HTML-entity failure mode) — but does nothing to catch broken
+internal anchor/fragment links (e.g. `[text](page.md#stale-heading-slug)`). mkdocs's own
+link-validation machinery logs anchor-resolution misses at `INFO` level, not
+`WARNING`, so `mkdocs build --strict` (which only promotes `WARNING`-and-above to a
+build failure) does not fail on them and the wrapper script's own grep never looks for
+them either. Net effect: the gate is named `mkdocs-strict.sh` and is wired into
+`pre-push`/`pre-pr` as the docs-build authority, but a broken `#anchor` fragment inside
+`docs/**` can land on `main` with a fully GREEN `docs-build` dimension — the strict gate
+silently under-reports exactly the class of link rot it implies it catches.
+
+**Why out-of-scope for P93 (Wave 2a):** confirming and fixing this needs (a) a
+reproduction — a synthetic doc with a genuinely broken internal anchor, run through the
+real `mkdocs build --strict` to confirm the INFO-vs-WARNING behavior empirically rather
+than from documentation of mkdocs's log-level defaults, and (b) a considered change to
+either the script (parse `mkdocs build`'s INFO-level output for anchor misses and fail
+on them) or the mkdocs config (a plugin/log-level override that promotes anchor-miss
+INFO records to WARNING so `--strict` already catches them). Both are `docs-build`-gate
+surgery requiring a real `mkdocs build` run to verify the fix actually changes the
+gate's behavior — orthogonal to Wave 2a's push-unblock + de-risk charter, and this
+executor was the sole cargo/tree-writer for a different, narrower fix (Task A).
+
+**Sketched resolution:** Promote broken-anchor detection to a real FAIL (preferred: grep
+the build log for mkdocs's own anchor-miss message pattern — e.g. text containing
+"contains a link to ... which is not found" or the specific phrasing mkdocs emits for
+unresolved fragments — and `exit` non-zero when found, mirroring the existing
+`Syntax error in text` grep pattern already in the script) or, at minimum, a `WARN` line
+the runner surfaces in its summary output rather than a fully silent INFO log line
+nobody reads. Add a synthetic-fixture regression test (a throwaway doc page with a
+`[text](other.md#does-not-exist)` link) proving the tightened gate actually catches it,
+mirroring the mermaid-regression fixture pattern already used for POLISH-03.
+
+**Default disposition:** MEDIUM — fold into the P94–P97 debt-drain window or the next
+`docs-build`-gate-touching phase; natural pairing with the already-filed `badges-resolve`
+flake investigation (same dimension, same debt window).
+
+**STATUS:** OPEN

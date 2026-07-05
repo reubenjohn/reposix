@@ -564,3 +564,30 @@ across genuinely separate sessions) rather than a rushed inline edit here.
 `.claude/hooks/`-touching phase.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Confluence connector's `Record::labels` is not wired to real Confluence labels | discovered-by: P93 Wave 2a executor | severity: P2
+
+**What:** The Confluence `BackendConnector` implementation does not populate
+`Record::labels` from the real Confluence page label API — `Record::labels` reads back
+empty/default regardless of what labels the page actually carries in Confluence Cloud.
+Feature gap, not a correctness regression (nothing currently reads `Record::labels` for
+Confluence records downstream), but the field silently lies about page state today.
+
+**Acceptance:** Map the page's label API response (Confluence Cloud REST `GET
+/wiki/rest/api/content/{id}/label` or equivalent) into `Record::labels` in the confluence
+adapter (`crates/reposix-confluence/src/lib.rs`), for both the read path
+(`get_record`/`list_records`) and any write-path round-trip. Add a contract test
+(mirroring the existing `contract.rs` pattern) asserting a page with a real label
+round-trips through `Record::labels`.
+
+**Why deferred:** feature-gap noticed while filing Wave 2a's tracked items — wiring the
+label API is real connector work (new REST call + response mapping + a contract test
+against the live tenant) deserving its own scoped task, not a rider on the push-unblock
+lane.
+
+**Default disposition:** P2 — fold into the next `reposix-confluence`-touching phase or
+a v0.14.0 connector-completeness window.
+
+**STATUS:** OPEN
