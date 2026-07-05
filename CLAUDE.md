@@ -1,19 +1,18 @@
 # CLAUDE.md — reposix project guide
 
-Read by every agent (Claude Code, Codex, Cursor, …) that opens this repo. Local
-extension of the user's global `~/.claude/CLAUDE.md`; overrides nothing, adds
-project-specific rules. **This file holds only what every agent needs before its
-first tool call.** Detail lives in scoped `CLAUDE.md`s (auto-load by directory:
-`crates/`, `.planning/`, `quality/`) and the linked long-form homes. Working on X?
-→ read Y (see § Pointer map).
+Project-specific grounding, layered on the user's global `~/.claude/CLAUDE.md` —
+overrides nothing, adds. **Holds only what every agent needs before its first tool
+call**; detail lives in scoped `CLAUDE.md`s (auto-load by directory: `crates/`,
+`.planning/`, `quality/`) and the linked long-form homes. Working on X? → read Y
+(see § Pointer map).
 
 ## Project elevator pitch
 
-reposix exposes REST-based issue trackers (and similar SaaS) as a git-native partial
-clone, served by `git-remote-reposix` from a local bare-repo cache built from REST
-responses. Agents use `cat`, `grep`, `sed`, `git` on real workflows — no MCP tool
-schemas, no custom CLI, no FUSE mount. Architectural argument:
-`docs/research/initial-report.md`. Dark-factory / simulator-first motivation:
+reposix exposes REST-backed systems of record — issue trackers, wikis, project
+trackers — as a git-native partial clone, served by `git-remote-reposix` from a local
+bare-repo cache built from REST responses. Agents use `cat`, `grep`, `sed`, `git` on
+real workflows — no MCP tool schemas, no custom CLI, no FUSE mount. Architectural
+argument: `docs/research/initial-report.md`. Dark-factory / simulator-first motivation:
 `docs/research/agentic-engineering-reference.md`.
 
 ## Architecture (git-native partial clone)
@@ -33,7 +32,7 @@ Three runtime pieces:
 - **`reposix init <backend>::<project> <path>`** bootstraps a partial-clone tree;
   **`reposix attach <backend>::<project>`** adopts an existing checkout (vanilla clone,
   hand-edited tree, or prior `init`) and binds it to a `SoT` backend (all four backends
-  wired P91). Reconciles records by frontmatter `id`; idempotent on same-SoT re-attach,
+  wired). Reconciles records by frontmatter `id`; idempotent on same-SoT re-attach,
   rejects a different SoT. Record paths are bucket-aware: `issues/<id>.md` for
   sim/GitHub/JIRA, `pages/<id>.md` for Confluence — `reposix_core::path::{record_path,
   bucket_for_backend}` is the single source of truth; never hand-pick a bucket string.
@@ -212,7 +211,7 @@ tested cuts: `REPOSIX_ALLOWED_ORIGINS` egress allowlist through the single
 server-controlled fields on inbound writes; append-only dual audit tables (OP-3); and
 the env-gated `pre-release-real-backend` cadence that makes allowlist enforcement
 testable end-to-end (fails closed). Full per-cut table with code locations:
-`docs/how-it-works/trust-model.md`. Red-team analysis: `research/threat-model-and-critique.md`.
+`docs/how-it-works/trust-model.md`.
 
 ## Quality Gates
 
@@ -239,7 +238,7 @@ linearly; grep for the section you need.
 | Planning, GSD, orchestration dispatch | `.planning/CLAUDE.md`, `.planning/ORCHESTRATION.md` |
 | Quality gates / catalogs / verifiers | `quality/CLAUDE.md`, `quality/PROTOCOL.md`, `quality/catalogs/README.md` |
 | OP-8/OP-9 long-form (surprises, retro) | `.planning/PRACTICES.md` |
-| Threat model / security cuts | `docs/how-it-works/trust-model.md`, `research/threat-model-and-critique.md` |
+| Threat model / security cuts | `docs/how-it-works/trust-model.md` |
 | DVCS topology / mirror-lag refs | `docs/concepts/dvcs-topology.md` |
 | Mirror + webhook owner setup | `docs/guides/dvcs-mirror-setup.md` |
 | DVCS push/pull troubleshooting | `docs/guides/troubleshooting.md` |
