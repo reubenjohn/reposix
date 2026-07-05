@@ -1,0 +1,66 @@
+sim up (pid 1163532), seed issue1 present
+MODE=gap2s   git=git version 2.54.0   date=2026-07-05T10:02:51.540665617Z
+
+############### reposix init A (cache A) + checkout ###############
+[initA] [2m2026-07-05T10:02:51.588695Z[0m [32m INFO[0m [2mreposix_cli::init[0m[2m:[0m git fetch --filter=blob:none succeeded
+[initA] reposix init: configured `/work/A` with remote.origin.url = reposix::http://127.0.0.1:7878/projects/demo
+[initA] Next: cd /work/A && git checkout origin/main (or git sparse-checkout set <pathspec> first)
+[coA] Reset branch 'main'
+[coA] branch 'main' set up to track 'origin/main'.
+
+############### reposix init B (cache B) + checkout ###############
+[initB] [2m2026-07-05T10:02:51.672588Z[0m [32m INFO[0m [2mreposix_cli::init[0m[2m:[0m git fetch --filter=blob:none succeeded
+[initB] reposix init: configured `/work/B` with remote.origin.url = reposix::http://127.0.0.1:7878/projects/demo
+[initB] Next: cd /work/B && git checkout origin/main (or git sparse-checkout set <pathspec> first)
+[coB] Reset branch 'main'
+[coB] branch 'main' set up to track 'origin/main'.
+B cursor right after init: 2026-07-05T10:02:51.688086977+00:00
+
+############### sleep 2s (push lands in a LATER wall-clock second than B's cursor) ###############
+
+############### A edits issues/1.md, commit, git push origin main  (expect exit 0) ###############
+[pushA] To reposix::http://127.0.0.1:7878/projects/demo
+[pushA]  * [new branch]      main -> main
+==> A push exit: 0
+
+############### sim state after A push ###############
+issue 1 (backend): {"id":1,"title":"database connection drops under load","status":"open","labels":["bug","p1"],"created_at":"2026-04-13T00:00:00Z","updated_at":"2026-07-05T10:02:53Z","version":2,"body":"..."}
+issue 1 updated_at = 2026-07-05T10:02:53Z
+B cursor (before any pin) = 2026-07-05T10:02:51.688086977+00:00
+
+############### B edits issues/1.md from STALE base, commit, git push origin main  (expect exit 1 conflict) ###############
+[pushB] issue 1 modified on backend at 2026-07-05T10:02:53+00:00 since last fetch (local base version: 1, backend version: 2). Run: git pull --rebase
+[pushB] To reposix::http://127.0.0.1:7878/projects/demo
+[pushB]  ! [rejected]        main -> main (fetch first)
+[pushB] error: failed to push some refs to 'reposix::http://127.0.0.1:7878/projects/demo'
+[pushB] hint: Updates were rejected because the remote contains work that you do not
+[pushB] hint: have locally. This is usually caused by another repository pushing to
+[pushB] hint: the same ref. If you want to integrate the remote changes, use
+[pushB] hint: 'git pull' before pushing again.
+[pushB] hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+==> B push exit: 1
+
+############### B: git pull --rebase origin main   <<< THE MOMENT — watch for 'not our ref' >>> ###############
+[pullB] From reposix::http://127.0.0.1:7878/projects/demo
+[pullB]  * branch            main       -> FETCH_HEAD
+[pullB]    596e55a..75e2e27  main       -> refs/reposix/origin/main
+[pullB] Rebasing (1/1)Auto-merging issues/1.md
+[pullB] CONFLICT (content): Merge conflict in issues/1.md
+[pullB] error: could not apply b53e544... B edits issue 1
+[pullB] hint: Resolve all conflicts manually, mark them as resolved with
+[pullB] hint: "git add/rm <conflicted_files>", then run "git rebase --continue".
+[pullB] hint: You can instead skip this commit: run "git rebase --skip".
+[pullB] hint: To abort and get back to the state before "git rebase", run "git rebase --abort".
+[pullB] hint: Disable this message with "git config set advice.mergeConflict false"
+[pullB] Could not apply b53e544... # B edits issue 1
+==> B pull --rebase exit: 1
+
+############### post-pull B cursor + delta-sync commit message (shows 'N changed (of M)') ###############
+B cursor (after pull) = 2026-07-05T10:02:53.841886863+00:00
+B cache HEAD log:
+[cacheBlog] 28691ee delta-sync(sim:demo): 0 changed (of 6) at 2026-07-05T10:02:53.841439138+00:00
+[cacheBlog] 75e2e27 delta-sync(sim:demo): 1 changed (of 6) at 2026-07-05T10:02:53.814488390+00:00
+[cacheBlog] a399d60 delta-sync(sim:demo): 0 changed (of 6) at 2026-07-05T10:02:51.687649237+00:00
+
+############### END MODE=gap2s ###############
+=== docker litmus exit: 0 ===

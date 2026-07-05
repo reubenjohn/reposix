@@ -23,6 +23,7 @@
 use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
 use std::time::Duration;
 
+use chrono::{Timelike, Utc};
 use reposix_cache::Cache;
 use reposix_core::backend::sim::SimBackend;
 use reposix_core::BackendConnector;
@@ -127,6 +128,26 @@ async fn seed_demo_issues(origin: &str, n: u64) {
             resp.status()
         );
     }
+}
+
+/// GET a single issue and return its `updated_at` as a parsed
+/// `DateTime<Utc>`. Used by the D-P92-03 coherence regression to pin the
+/// cache cursor into the same wall-clock second as a backend write.
+async fn fetch_issue_updated_at(origin: &str, project: &str, id: u64) -> chrono::DateTime<Utc> {
+    let client =
+        reposix_core::http::client(reposix_core::http::ClientOpts::default()).expect("http client");
+    let url = format!("{origin}/projects/{project}/issues/{id}");
+    let resp = client.get(url.as_str()).await.expect("GET issue");
+    assert!(
+        resp.status().is_success(),
+        "GET issue {id}: {}",
+        resp.status()
+    );
+    let v: serde_json::Value = resp.json().await.expect("issue json");
+    let raw = v["updated_at"].as_str().expect("updated_at is a string");
+    chrono::DateTime::parse_from_rfc3339(raw)
+        .expect("updated_at is RFC3339")
+        .with_timezone(&Utc)
 }
 
 async fn patch_issue_title(origin: &str, project: &str, id: u64, new_title: &str) {
@@ -406,5 +427,112 @@ async fn delta_sync_atomic_on_backend_error_midsync() {
         audit.len(),
         0,
         "failed delta sync must not leak a delta_sync audit row"
+    );
+}
+
+/// RED regression for D-P92-03 (P93 cache-coherence) — delta-sync builds a
+/// tree entry it cannot serve.
+///
+/// PROVE-BEFORE-FIX: this test is deliberately RED against current `main`. It
+/// is `#[ignore]`d so it does not break the default CI gate; the fix is
+/// coordinator-gated (do NOT apply it in the investigation lane). Un-ignore it
+/// (drop the `#[ignore]`) in the same commit that lands the coherence fix.
+///
+/// ## The defect
+///
+/// `Cache::sync` (crates/reposix-cache/src/builder.rs) sources the git TREE
+/// from `list_records` (the FULL current backend state, Step 4) while it only
+/// materializes blob objects + upserts `oid_map` for the `list_changed_since`
+/// delta (Steps 3 & 5). When the two disagree, the tree references a blob OID
+/// that was neither written to the object store nor recorded in `oid_map` — a
+/// dangling entry. A partial-clone lazy fetch of that OID hits
+/// `Cache::read_blob` → `Error::UnknownOid` → the helper leaves the `want` for
+/// `git upload-pack`, which rejects it: `fatal: git upload-pack: not our ref
+/// <oid>` / `could not fetch <oid> from promisor remote`.
+///
+/// ## The trigger (executed side-by-side in the container litmus)
+///
+/// The `reposix-sim` stores `updated_at` at SECONDS precision
+/// (`now_rfc3339` = `SecondsFormat::Secs`) and filters `list_changed_since`
+/// with a seconds-truncated cursor under a STRICT `updated_at > ?` compare
+/// (crates/reposix-sim/src/routes/issues.rs). Any backend write whose
+/// truncated second is `<=` the cursor's truncated second is therefore invisible
+/// to `list_changed_since`, even though `list_records` (unfiltered) still returns
+/// its new content. This is exactly what happens when a second writer's cache
+/// cursor and the first writer's push land in the same wall-clock second — the
+/// D-P92-03 two-writer `git pull --rebase` scenario. Full executed transcripts
+/// (git 2.54 container, "not our ref" reproduced 4/4 same-second runs; clean
+/// `CONFLICT (content)` in the 2s-gap negative control):
+/// `.planning/phases/93-cache-coherence/93-DP2-REPRO-NOTES.md`.
+///
+/// Here we reproduce the trigger deterministically at the cache layer by
+/// pinning the cursor into the write's second, then assert the coherence
+/// invariant the helper relies on: EVERY blob OID the HEAD tree references
+/// must be resolvable by `read_blob` (no `UnknownOid`).
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "RED: D-P92-03 delta-sync tree/oid_map divergence (`not our ref`); \
+            drop #[ignore] in the commit that lands the coherence fix (coordinator-gated)"]
+async fn delta_sync_tree_references_only_resolvable_oids() {
+    let (origin, _sim) = spawn_sim().await;
+    seed_demo_issues(&origin, 3).await;
+
+    let cache_root = tempfile::tempdir().unwrap();
+    let _env = CacheDirGuard::new(cache_root.path());
+
+    let backend: Arc<dyn BackendConnector> =
+        Arc::new(SimBackend::new(origin.clone()).expect("SimBackend"));
+    let cache = Cache::open(backend, "sim", "demo").expect("Cache::open");
+
+    // Seed sync (build_from): tree + oid_map + blobs for the 3 seeds.
+    let _ = cache.sync().await.expect("seed sync");
+
+    // A second writer changes issue 2 on the backend ("writer A pushes").
+    patch_issue_title(&origin, "demo", 2, "CHANGED-BY-A").await;
+
+    // Pin THIS cache's cursor into issue 2's write-second, sub-second max —
+    // exactly the same-wall-clock-second race the litmus hits naturally.
+    // The sim truncates the cursor to seconds and compares `updated_at > cursor`
+    // strictly, so issue 2's write (updated_at == that second) is dropped.
+    let upd = fetch_issue_updated_at(&origin, "demo", 2).await;
+    let pinned = upd
+        .with_nanosecond(999_999_999)
+        .expect("valid nanosecond")
+        .to_rfc3339();
+    {
+        let conn = rusqlite::Connection::open(cache.repo_path().join("cache.db")).unwrap();
+        conn.execute(
+            "INSERT INTO meta (key, value, updated_at) VALUES ('last_fetched_at', ?1, ?2) \
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",
+            rusqlite::params![&pinned, &pinned],
+        )
+        .unwrap();
+    }
+
+    // Delta sync. The boundary bug makes list_changed_since under-report:
+    // 0 changed, even though issue 2's content is new.
+    let r = cache.sync().await.expect("delta sync");
+    assert_eq!(
+        r.changed_ids.len(),
+        0,
+        "same-second boundary: list_changed_since must under-report here (got {:?}) — \
+         if this is non-empty the sim's cursor semantics changed and the trigger no longer holds",
+        r.changed_ids
+    );
+    let commit = r.new_commit.expect("delta sync writes a commit");
+
+    // The HEAD tree STILL reflects issue 2's NEW content (built from
+    // list_records), so it references the new blob OID...
+    let tree_oid = blob_oid_in_tree_at_commit(cache.repo_path(), commit, "2.md")
+        .expect("post-sync tree has issues/2.md");
+
+    // ...but the coherence invariant is violated: read_blob cannot resolve it
+    // (no oid_map row was written for the un-detected change), which is the
+    // precise precondition for `git upload-pack: not our ref <oid>`.
+    let resolved = cache.read_blob(tree_oid).await;
+    assert!(
+        resolved.is_ok(),
+        "COHERENCE VIOLATION (D-P92-03): HEAD tree references blob {tree_oid} that \
+         read_blob cannot resolve — a partial-clone lazy fetch of this OID dies \
+         `git upload-pack: not our ref {tree_oid}`. Got: {resolved:?}"
     );
 }

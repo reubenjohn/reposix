@@ -1,0 +1,30 @@
+########## NATURAL same-second run 1 ##########
+issue 1 updated_at = 2026-07-05T10:03:11Z
+B cursor (before any pin) = 2026-07-05T10:03:11.080901557+00:00
+############### B: git pull --rebase origin main   <<< THE MOMENT — watch for 'not our ref' >>> ###############
+[pullB] git-remote-reposix: git upload-pack --stateless-rpc exited exit status: 128: fatal: git upload-pack: not our ref 437b7239c72ba1345482a5be02fabc92d3f75641
+==> B pull --rebase exit: 128
+[cacheBlog] 5695bfc delta-sync(sim:demo): 0 changed (of 6) at 2026-07-05T10:03:11.215727378+00:00
+[cacheBlog] d501b1f delta-sync(sim:demo): 0 changed (of 6) at 2026-07-05T10:03:11.184345897+00:00
+[cacheBlog] 1197585 delta-sync(sim:demo): 0 changed (of 6) at 2026-07-05T10:03:11.080463645+00:00
+
+########## NATURAL same-second run 2 ##########
+issue 1 updated_at = 2026-07-05T10:03:12Z
+B cursor (before any pin) = 2026-07-05T10:03:12.657752109+00:00
+############### B: git pull --rebase origin main   <<< THE MOMENT — watch for 'not our ref' >>> ###############
+[pullB] git-remote-reposix: git upload-pack --stateless-rpc exited exit status: 128: fatal: git upload-pack: not our ref 85ed40efa94848d93f52f8d55412d835edaaadfa
+==> B pull --rebase exit: 128
+[cacheBlog] a303cf7 delta-sync(sim:demo): 0 changed (of 6) at 2026-07-05T10:03:12.788744207+00:00
+[cacheBlog] 038a612 delta-sync(sim:demo): 0 changed (of 6) at 2026-07-05T10:03:12.761532826+00:00
+[cacheBlog] 091b1f5 delta-sync(sim:demo): 0 changed (of 6) at 2026-07-05T10:03:12.657285399+00:00
+
+########## NATURAL same-second run 3 ##########
+issue 1 updated_at = 2026-07-05T10:03:14Z
+B cursor (before any pin) = 2026-07-05T10:03:14.238636150+00:00
+############### B: git pull --rebase origin main   <<< THE MOMENT — watch for 'not our ref' >>> ###############
+[pullB] git-remote-reposix: git upload-pack --stateless-rpc exited exit status: 128: fatal: git upload-pack: not our ref e1ea7a08e211ce1999301f1f5b528e67a65aafa2
+==> B pull --rebase exit: 128
+[cacheBlog] aa7c6e7 delta-sync(sim:demo): 0 changed (of 6) at 2026-07-05T10:03:14.371462449+00:00
+[cacheBlog] 1f95e9e delta-sync(sim:demo): 0 changed (of 6) at 2026-07-05T10:03:14.344326318+00:00
+[cacheBlog] 8b3746b delta-sync(sim:demo): 0 changed (of 6) at 2026-07-05T10:03:14.238151388+00:00
+
