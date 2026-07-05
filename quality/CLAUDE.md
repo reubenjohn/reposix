@@ -29,7 +29,7 @@ ORCHESTRATION.md, AND tag the dimension (routes to the right catalog + `gates/<d
 
 | Dimension | Checks |
 |---|---|
-| code | clippy, fmt, cargo nextest |
+| code | clippy, fmt, cargo nextest, shell-coverage (kcov aggregate, ratchet floor) |
 | docs-alignment | claims have tests; hash drift detection |
 | docs-build | mkdocs strict, mermaid renders, link resolve, badges resolve |
 | docs-repro | snippet extract, container rehearse, tutorial replay |
@@ -38,6 +38,16 @@ ORCHESTRATION.md, AND tag the dimension (routes to the right catalog + `gates/<d
 | agent-ux | dark-factory (sim + DVCS third arm, both `mechanical`) + reposix-attach + bus URL prechecks + webhook YAML + test-name-vs-asserts honesty gate |
 | perf | latency, token economy |
 | security | allowlist enforcement, audit immutability |
+
+**Shell-coverage ratchet:** `code/shell-coverage` (kcov, `gates/code/shell-coverage.sh`)
+grades an *aggregate* line-coverage % over the whole in-scope shell corpus (never-run
+scripts counted at 0%) against the floor in `quality/shell-coverage-floor.txt` — raise it
+over time, never above the measured aggregate to force-pass. Needs `kcov` — on modern
+distros (noble dropped it from apt) install the prebuilt release binary or build from
+source (see the `shell-coverage` job in `.github/workflows/ci.yml`); `sudo apt-get install
+-y kcov` still works on focal. The CI `shell-coverage` job uploads a `shell`-flag cobertura to Codecov.
+Follow-up (documented, left at 0%): the cargo/sim-dependent gates are unexercised by the
+harnesses, so they sit at 0% and drag the aggregate down — closing them is deferred.
 
 **Cadences:** `pre-commit` (<2s) · `pre-push` (<60s) · `pre-pr` (PR CI, <10min) ·
 `weekly` (cron, alerting) · `pre-release` (on tag, <15min) · `post-release` (alerting) ·
