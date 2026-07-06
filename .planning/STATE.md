@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
 mode: serial-workstreams
-status: executing-p95-post-close-drain
+status: executing-p96-post-close-drain
 last_updated: "2026-07-05"
-last_activity: "2026-07-05 — P95 CLOSED GREEN. Unbiased verdict at quality/reports/verdicts/p95/VERDICT.md (verdict commit e1d73d8, graded code HEAD da63a85). Marker-footgun resolved as the test-name-honesty 6-line-window doc pass (doc-only; the marker's 6-line lookback window is now documented, and a preamble-anchored robust-fix was filed as a LOW GOOD-TO-HAVE rather than shipped). Docs-alignment 17-row refresh landed (claims_bound=261), re-binding the 5 STALE_TEST_DRIFT rows plus the P94 Fork-A backend.rs list_records_complete drift. Carry-forwards — P96 (OP-8 Slot 1, SURPRISES-INTAKE drain): quality-runner self-mutation bug (HIGH; real validate-before-persist fix in the pre-push/runner path, verified NOT the walk verb) + intake-file bloat split (SURPRISES ~182k / GOOD-TO-HAVES ~83k, both over the 20k budget) + list_changed_since under-materialization (MEDIUM) + source_hashes false-negative (doc_alignment.rs:1119-1122, MEDIUM) + P94 4-row clean re-mint (unblocked once the self-mutation bug is fixed) + bind->summary.last_walked refresh nit; P97 (OP-8 Slot 2 + milestone-close): non-skippable 9th probe pre-release-real-backend (TokenWorld two-writer + RBF-LR-03), OP-9 RETROSPECTIVE distillation, PR #61 decision."
+last_activity: "2026-07-05 — P96 CLOSED GREEN (OP-8 Slot 1, SURPRISES-INTAKE drain). Unbiased verdict at quality/reports/verdicts/p96/VERDICT.md (verdict commit f50f9f2, graded HEAD 0bdd752) — all 5 GREEN-contract items PASS, catalogs byte-immutable across the entire grading pass. Quality-runner self-mutation bug FIXED via the grade/persist split + --persist flag (validate-only pre-push now writes zero catalog bytes; the docs-build.json flip is graded in-memory + artifact-written, never persisted). P94 3 rows re-minted PASS (0bdd752); docs-build/p94-badges stays NOT-VERIFIED — a genuine badge-non-determinism flake, do NOT inherit p94's frozen transient PASS at P97. Intake terminal-vs-active split landed (zero row loss; active corpus 63k/81k, structure/file-size WAIVED to 2026-08-08). Carry-forward — P97 (OP-8 Slot 2 + milestone-close): GOOD-TO-HAVES drain (incl. meta-infra doctrine 4-edit /gsd-quick + dispatch-doctrine.sh session-guard) + non-skippable 9th probe pre-release-real-backend (TokenWorld two-writer + RBF-LR-03; grades NOT-VERIFIED honestly if creds unset) + OP-9 RETROSPECTIVE distillation (RED if missing) + PR #61 decision + HANDBACK to L0 for the v0.13.0 tag push."
 workstreams:
   workstream_a:
     milestone: v0.13.0
     milestone_name: DVCS over REST (extended)
     status: executing  # P89 execution started 2026-07-03 (top-level orchestration mode)
     phases_total: 20  # P78-P97 (P78-P88 shipped + P89-P97 extension)
-    phases_completed: 18  # P78-P95
-    next_phase: P96  # P95 CLOSED GREEN 2026-07-05 (verdict quality/reports/verdicts/p95/VERDICT.md, verdict commit e1d73d8, graded code HEAD da63a85); P96 next — OP-8 Slot 1 SURPRISES-INTAKE drain
+    phases_completed: 19  # P78-P96
+    next_phase: P97  # P96 CLOSED GREEN 2026-07-05 (verdict quality/reports/verdicts/p96/VERDICT.md, verdict commit f50f9f2, graded HEAD 0bdd752); P97 next — OP-8 Slot 2 GOOD-TO-HAVES drain + milestone-close
     blocks_tag: true  # v0.13.0 tag does NOT push until P97 GREEN; tag push delegated to orchestrator per OD-3
   workstream_b:
     milestone: v0.13.2
@@ -33,10 +33,10 @@ workstreams:
 
 ### Workstream A — v0.13.0 (extended) — EXECUTING
 
-Phase: P95 CLOSED GREEN 2026-07-05. Unbiased verdict at `quality/reports/verdicts/p95/VERDICT.md` (verdict commit `e1d73d8`, graded code HEAD `da63a85`). Outcomes: the **marker-footgun** was resolved as the test-name-honesty **6-line-window doc pass** — doc-only; the marker's 6-line lookback window is now documented, and a preamble-anchored robust-fix was filed as a **LOW** GOOD-TO-HAVE rather than shipped. The **docs-alignment 17-row refresh** landed (`claims_bound=261`), re-binding the 5 STALE_TEST_DRIFT rows `exit-codes-locked`/`ci-badge`/`quality-score-badge`/`quality-weekly-badge`/`bulk-delete-override-tag` plus the P94 Fork-A `backend.rs` `list_records_complete` hash-drift.
-Plan: shipped — plan + refresh evidence under `.planning/phases/95-*/`; the P95 close-out (STATE advance to P96) is this session.
-Status: P95 GREEN — 18/20 phases complete (P78–P95 shipped); next P96. v0.13.0 tag held until P97 GREEN (tag push delegated to orchestrator per OD-3).
-Next agent action: plan + execute **P96** (OP-8 Slot 1, SURPRISES-INTAKE drain). Depends on P95 GREEN — satisfied. Carry-forwards: **P96** (OP-8 Slot 1) → quality-runner self-mutation bug (**HIGH** — the real fix is validate-before-persist in the pre-push/runner path, verified NOT the walk verb) + intake-file bloat split (SURPRISES ~182k / GOOD-TO-HAVES ~83k, both over the 20k budget) + `list_changed_since` under-materialization (**MEDIUM**) + `source_hashes` false-negative (`doc_alignment.rs:1119-1122`, **MEDIUM**) + P94 4-row clean re-mint (unblocked once the self-mutation bug is fixed) + `bind`→`summary.last_walked` refresh nit; **P97** (OP-8 Slot 2 + milestone-close) → non-skippable 9th probe `pre-release-real-backend` (TokenWorld two-writer + RBF-LR-03), OP-9 RETROSPECTIVE distillation, PR #61 decision.
+Phase: P96 CLOSED GREEN 2026-07-05 (OP-8 Slot 1, SURPRISES-INTAKE drain). Unbiased verdict at `quality/reports/verdicts/p96/VERDICT.md` (verdict commit `f50f9f2`, graded HEAD `0bdd752`) — all 5 GREEN-contract items PASS; every catalog byte was md5-snapshotted at grading entry and exit (CATALOGS_UNCHANGED_ACROSS_ENTIRE_VERIFICATION). Outcomes: the **quality-runner self-mutation bug** is FIXED via the grade/persist split + `--persist` flag — a validate-only pre-push now writes **zero** catalog bytes (the `docs-build.json` status flip is graded in-memory, artifact-written, and never persisted). **P94's 3 verdict-GREEN rows re-minted PASS** (`0bdd752`); `docs-build/p94-badges-real-vs-transient` deliberately stays **NOT-VERIFIED** (a genuine badge-non-determinism flake — P97's milestone verdict must NOT inherit p94's frozen transient PASS). Intake **terminal↔active split** landed with zero row loss (active corpus 63k/81k; `structure/file-size` WAIVED to 2026-08-08).
+Plan: shipped — plan + verdict evidence under `.planning/phases/96-*/` + `quality/reports/verdicts/p96/`; the P96 close-out (STATE advance to P97) is this session.
+Status: P96 GREEN — 19/20 phases complete (P78–P96 shipped); next P97. v0.13.0 tag held until P97 GREEN (tag push delegated to orchestrator per OD-3).
+Next agent action: plan + execute **P97** (OP-8 Slot 2, GOOD-TO-HAVES drain + milestone-close). Depends on P96 GREEN — satisfied. Carry-forwards for **P97**: GOOD-TO-HAVES drain (incl. the meta-infra doctrine **4-edit** `/gsd-quick` + the `dispatch-doctrine.sh` session-guard, both filed LOW) + non-skippable **9th probe** `pre-release-real-backend` (TokenWorld two-writer + RBF-LR-03; grades **NOT-VERIFIED honestly** if creds unset, never skip-as-pass) + **OP-9 RETROSPECTIVE distillation** (ratification grades RED if missing) + **PR #61 decision** + **HANDBACK to L0** for the v0.13.0 tag push. Filed this session: subjective-rows-restaged-on-every-mint (**MEDIUM**, SURPRISES — P97's milestone mint must restore this collateral) + run.py `run_row` stale-artifact freshness + `catalog-immutable-on-read` cadence-coverage gap (both LOW, GOOD-TO-HAVES).
 
 ### Workstream B — v0.13.2 — QUEUED (RESEQUENCED per OD-4)
 
@@ -58,34 +58,7 @@ Last activity: 2026-07-03 — resumption after 8-week idle gap: OD-3 full-autono
 
 **Cargo serialization rule (CLAUDE.md memory budget):** only ONE cargo invocation at a time. The separate-worktrees caveat is moot under OD-3 serial execution (single working branch: main); doc-only / planning-only subagents can still run truly concurrent with one cargo subagent.
 
-**Pre-kickoff checklist (kickoff-recommendations.md § "Pre-kickoff checklist"):**
-
-1. ✅ Open-questions resolved or explicitly deferred — `.planning/research/v0.13.0-dvcs/decisions.md`.
-2. ◐ POC scheduled in `research/v0.13.0-dvcs/poc/` — folded into P79 (POC ships first; attach implementation absorbs findings).
-3. ✅ Push cadence decided — per-phase, codified in `CLAUDE.md` § GSD workflow (closes backlog 999.4).
-4. ◐ `/gsd-review` scheduled — runs after ROADMAP + first PLAN.md drafted, before execution. ROADMAP drafted 2026-04-30; review can run after owner approval.
-5. ✅ 3 WAIVED structure rows scheduled — P78 includes verifiers before waiver expires 2026-05-15.
-6. ✅ ROADMAP.md drafted — 11 phases (P78–P88) drafted by gsd-roadmapper 2026-04-30; awaiting owner approval.
-
-**Phase decomposition (P78–P88):**
-
-- **P78** — Pre-DVCS hygiene (gix bump + 3 WAIVED-row verifiers + MULTI-SOURCE-WATCH-01 walker schema migration)
-- **P79** — POC + `reposix attach` core (POC ships in `research/v0.13.0-dvcs/poc/` first; then attach subcommand)
-- **P80** — Mirror-lag refs (`refs/mirrors/confluence-head` + `refs/mirrors/confluence-synced-at`)
-- **P81** — L1 perf migration (replace `list_records` walk with `list_changed_since`-based conflict detection; `reposix sync --reconcile` escape hatch)
-- **P82** — Bus remote URL parser + cheap prechecks + fetch-not-advertised dispatch
-- **P83** — Bus remote write fan-out (SoT-first, mirror-best-effort, fault injection — riskiest phase, may split)
-- **P84** — Webhook-driven mirror sync (GH Action workflow + `--force-with-lease` race protection)
-- **P85** — DVCS docs (topology, mirror setup, troubleshooting, cold-reader pass)
-- **P86** — Dark-factory regression — third arm (vanilla-clone + attach + bus-push)
-- **P87** — Surprises absorption (+2 reservation slot 1, OP-8)
-- **P88** — Good-to-haves polish + milestone close (+2 reservation slot 2, OP-9 retrospective ritual)
-
-**Coverage:** 36/36 v0.13.0 REQ-IDs mapped to exactly one phase (no orphans, no duplicates).
-
-**Carry-forward bundle:** `.planning/milestones/v0.13.0-phases/CARRY-FORWARD.md` lists `MULTI-SOURCE-WATCH-01` (P78), `GIX-YANKED-PIN-01` (P78), `WAIVED-STRUCTURE-ROWS-03` (P78), `POC-DVCS-01` (P79).
-
-**Next agent action:** execute P89 waves 1–4 per the 8 plan files (`.planning/phases/89-framework-fixes-cadence-shell-kind/89-0*-PLAN.md`), top-level orchestration mode. v0.13.0 tag is HELD per Path A / Option B (ratified 2026-05-08); tag push at P97 is delegated to the orchestrator per OD-3, contingent on GREEN milestone verdict. The original P78–P88 milestone-close verdict (2026-05-01 GREEN) remains on disk but is superseded by the post-extension verdict P97 will write. The tag-script `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh` is RENAMED `.disabled` until P97 ratifies; do NOT run it. P89 + P90 are framework fixes (RBF-FW-*) that gate every subsequent extension phase.
+**Phase decomposition + pre-kickoff scaffolding (superseded — see live cursor above):** the milestone-start scaffolding (pre-kickoff checklist, the original P78–P88 decomposition, the 36/36 REQ-ID coverage map, the CARRY-FORWARD bundle, and the long-dead "execute P89 waves 1–4" cursor) is historical. The live cursor is the frontmatter + § "Workstream A — v0.13.0 (extended)" above (**P96 CLOSED GREEN 2026-07-05, next P97**). Archived detail: `.planning/milestones/v0.13.0-phases/ROADMAP.md` (full P78–P97 decomposition) + `.../CARRY-FORWARD.md`. **Still live:** v0.13.0 tag stays HELD until P97 GREEN; the tag-script `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh.disabled` stays disabled until P97 ratifies (**do NOT run it**); tag push at P97 is delegated to the orchestrator per OD-3, contingent on a GREEN milestone verdict.
 
 ## Per-milestone history (cross-references)
 
@@ -120,6 +93,6 @@ Historical phase-by-phase contribution narrative lives in per-milestone ARCHIVE 
 
 ## Session Continuity
 
-Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current cursor is "plan + execute P96 (OP-8 Slot 1, SURPRISES-INTAKE drain), top-level mode" — P95 CLOSED GREEN 2026-07-05 (verdict commit e1d73d8, graded code HEAD da63a85). Workstream B stays queued behind A per OD-3.
+Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current cursor is "plan + execute P97 (OP-8 Slot 2, GOOD-TO-HAVES drain + milestone-close), top-level mode" — P96 CLOSED GREEN 2026-07-05 (verdict commit f50f9f2, graded HEAD 0bdd752). Workstream B stays queued behind A per OD-3.
 
 Top-level session handover: `.planning/SESSION-HANDOVER.md` (whole-session rotation handover for session 7e2a4cf2, 2026-07-04/05; distinct from per-phase relief handovers under `.planning/phases/`).
