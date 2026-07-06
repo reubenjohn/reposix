@@ -160,6 +160,8 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 
 **Appended P96 Wave 3a — concrete run.py decomposition target + a free dead-condition cleanup:** `run.py` has since grown to **510 lines** (verified on HEAD `889c922`; was 459 at 90-02) — the cap drifts further every phase. The natural M-refactor extraction unit is the **persist-gate / pending-mint machinery** the P96 grade/persist split added (`run.py:483-500`: the `catalog_dirty → if args.persist: save_catalog else: pending_mint.append` block plus the validate-only `note:` printer), lifted into a sibling module (e.g. `quality/runners/_persist.py`) mirroring how `_audit_field` / `_freshness` already host the decision logic. **Zero-risk down-payment available now:** the guard at ~`run.py:491` `if pending_mint and not args.persist:` carries a redundant `not args.persist` — `pending_mint` is ONLY appended in the `else` branch of `if args.persist:` (`run.py:487-488`), so a non-empty `pending_mint` already implies `not args.persist`. Dropping the dead condition (`if pending_mint:`) is a harmless one-token cleanup with no behavior change — safe to fold into the next `run.py`-touching phase.
 
+**Appended P96 close — `run_row` stale-artifact freshness (LOW; pairs with the persist-gate extraction above):** for verifiers that do NOT self-write their own JSON artifact, `run.py`'s `run_row` merges the PRIOR artifact via `setdefault`, which carries that artifact's STALE `ts` / `last_verified` forward even though the row's *grade* is freshly recomputed this run. Grade correctness is fail-safe (never stale — the status IS re-derived), but a TTL'd row's artifact would report an **understated freshness**: the row is really graded now, yet its timestamp claims the previous mint. LOW because no grading hazard, purely a reported-freshness lag. Fix: stamp a fresh `ts`/`last_verified` on EVERY `run_row` pass (not only when the verifier self-writes), so artifact freshness tracks the actual grading moment. Fold into the same `run.py`-touching phase as the persist-gate extraction above.
+
 **STATUS:** OPEN
 
 ## GOOD-TO-HAVES-07 — move `parse_rfc3339` from `run.py` into `_freshness.py`
@@ -873,5 +875,35 @@ alongside the crates-source-budget enforcement so it is checked, not aspirationa
 
 **Default disposition:** LOW/S — cosmetic/maintainability; bundle with the crates-source file-size
 budget rollout.
+
+**STATUS:** OPEN
+
+## 2026-07-05 | `catalog-immutable-on-read` gate covers only the `pre-commit` cadence in its real-tree check, not `pre-release`/`pre-push` | discovered-by: P96 phase-close (verdict NOTICED #2 review) | severity: LOW
+
+**Size:** XS (extend one gate's real-tree assert across cadences)
+
+**Source:** `quality/gates/structure/catalog-immutable-on-read.sh` proves the self-mutation fix with
+4 asserts — 3 hermetic synthetic-flip cases + 1 real-tree breadth check. The real-tree check runs
+`python3 quality/runners/run.py --cadence pre-commit` (validate-only) and asserts zero catalog bytes
+change. But the bug it guards actually bit the **`pre-push`** cadence (the `docs-build.json` flip),
+and the milestone mint runs the **`pre-release`** cadence — neither is exercised by the gate's
+real-tree assert. The P96 verdict NOTICED #2 flagged this: `pre-commit` was chosen to avoid
+recursion + double-cargo, and the verifier closed the residual gap MANUALLY with a one-off real
+`--cadence pre-push` validate-only run (zero drift). So the byte-immutability invariant is only
+*automatically* regression-guarded on `pre-commit`; `pre-release`/`pre-push` rest on the hermetic
+synthetic-flip proof.
+
+**Acceptance:** extend the real-tree breadth assert to loop `--cadence` over
+`{pre-commit, pre-push, pre-release}` (validate-only, no `--persist`), each asserting zero catalog
+byte drift — while PRESERVING the cargo-free / no-recursion property that motivated the original
+`pre-commit`-only choice (skip or stub any cargo-shelling row so the gate stays fast + hermetic).
+Document the cadence coverage in the gate header.
+
+**Why deferred:** widening a blocking structure gate deserves its own change with a check that the
+added cadences don't drag cargo verifiers into the gate's runtime (the reason `pre-commit` was
+picked) — not a P96-close rider.
+
+**Default disposition:** XS/LOW — fold into the next `quality/runners`- or `catalog-immutable`-
+touching window; pairs with the run.py persist-gate extraction (GOOD-TO-HAVES-06).
 
 **STATUS:** OPEN

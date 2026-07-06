@@ -662,3 +662,37 @@ non-zero and leave the file byte-identical. Route to the next `run.py`-touching 
 window (P97 or v0.14.0).
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | `--persist` mint re-flips `subjective/*` rows off a STALE rubric artifact on every mint (pre-release cadence collateral churn) | discovered-by: P96 phase-close (post-close drain / verdict NOTICED review) | severity: MEDIUM
+
+**What:** The P96 grade/persist split fixed the *validate-only* leak — cadence runs no longer
+persist status flips. But the legitimate `--persist` MINT path still re-grades every in-scope row
+in-memory, INCLUDING the `subjective`-kind rows (`subjective/dvcs-cold-reader` and its `pre-release`
+siblings) whose status comes from a subagent RUBRIC artifact, not a mechanical verifier. That rubric
+artifact is only refreshed by an explicit `/reposix-quality-review` dispatch (30-day TTL), so every
+UNRELATED `--persist` mint recomputes the subjective row off the STALE artifact, flips its status,
+and dirties `subjective-rubrics.json` with a spurious change the mint author must then hand-restore.
+This bit the P96 mint and — left unfixed — will bite the **upcoming P97 milestone mint**: the
+non-skippable `pre-release-real-backend` 9th probe runs `--persist` in exactly the cadence these
+subjective rows live in. Distinct from the RESOLVED self-mutation bug (that was the validate-only
+path) and from the `--persist` load-refusal entry above (that is about un-loadable `minted_at`-less
+rows).
+
+**Why out-of-scope for P96:** the clean fix is a `quality/runners/run.py` change (drop subjective
+rows from the `pre-release` mint scope, OR make `--persist` treat manual/subagent-graded rows as
+no-ops that preserve their prior status) carrying its own test obligation — a runner-touching change
+orthogonal to the P96 no-cargo hygiene window, which deliberately left the mint path untouched beyond
+the grade/persist split.
+
+**Sketched resolution:** make `--persist` a **no-op for `kind: subjective`/`kind: manual` rows** —
+never overwrite a subagent-graded status/`last_verified` from a mechanical mint; only the
+rubric-dispatch path (which actually re-ran the rubric) may write them. Alternatively drop the
+subjective rows from `pre-release` cadence membership so the milestone mint never touches them. Pairs
+with GOOD-TO-HAVES-03's per-row `--row` filter (a scoped mint avoids fanning across subjective rows
+at all). **Explicit P97 note:** until this lands, P97's milestone `--persist` mint MUST restore the
+subjective-row collateral (git-checkout the spurious flips on `subjective-rubrics.json`) as a known,
+expected step — do NOT let it ride into the tagged tree.
+
+**STATUS:** OPEN
