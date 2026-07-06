@@ -133,6 +133,47 @@ async fn seed_demo_issues(origin: &str, n: u64) {
     }
 }
 
+/// CREATE a brand-new issue on the sim's `SoT` and return its server-assigned
+/// id. Models the finding's specific trigger: a record that was NEVER in
+/// `oid_map` before this sync (unlike a PATCH, which updates a row seeded by
+/// `build_from`). The freshly-created id can still be dropped by
+/// `list_changed_since`'s strict `>` seconds filter if the cursor is pinned
+/// into its write-second — the exact under-materialization the static trace
+/// warns about.
+async fn create_issue(origin: &str, project: &str, title: &str) -> u64 {
+    let client =
+        reposix_core::http::client(reposix_core::http::ClientOpts::default()).expect("http client");
+    let body = serde_json::json!({
+        "title": title,
+        "body": "",
+        "status": "open",
+        "labels": [],
+    });
+    let body_bytes = serde_json::to_vec(&body).unwrap();
+    let url = format!("{origin}/projects/{project}/issues");
+    let resp = client
+        .request_with_headers_and_body(
+            reqwest::Method::POST,
+            url.as_str(),
+            &[
+                ("Content-Type", "application/json"),
+                ("X-Reposix-Agent", "cache-coherence-test"),
+            ],
+            Some(body_bytes),
+        )
+        .await
+        .unwrap();
+    assert!(
+        resp.status().is_success(),
+        "create issue failed: {}",
+        resp.status()
+    );
+    let v: serde_json::Value = resp.json().await.expect("create response json");
+    v["id"]
+        .as_u64()
+        .expect("create response carries numeric id")
+}
+
 async fn patch_issue_title(origin: &str, project: &str, id: u64, new_title: &str) {
     let client =
         reposix_core::http::client(reposix_core::http::ClientOpts::default()).expect("http client");
@@ -332,6 +373,121 @@ async fn head_tree_blobs_resolvable_after_same_second_delta_sync() {
 
     // Invariant: every HEAD-tree blob OID — including issue 2's new,
     // un-detected-as-changed OID — resolves via read_blob.
+    assert_head_tree_coherent(&cache).await;
+}
+
+/// D-P96 same-second-CREATE variant (executed DP-2 repro). The
+/// `head_tree_blobs_resolvable_after_same_second_delta_sync` test above pins the
+/// cursor into an UPDATE's write-second; a PATCH mutates a row `build_from`
+/// already seeded into `oid_map`. This test hardens the SHARPER edge the static
+/// trace flagged: a record CREATED after the seed — one that was NEVER in
+/// `oid_map` — and then dropped by `list_changed_since`'s strict `>` seconds
+/// filter. If the ADDITION-direction fix only covered updates, a same-second
+/// CREATE would leave the HEAD tree pointing at a brand-new OID with no
+/// `oid_map` row → `read_blob` → `UnknownOid` → the helper hands the `want` to
+/// `git upload-pack` → `not our ref <oid>` on a puller's lazy fetch.
+///
+/// The ADR-010 upsert loops over the FULL `list_records` set (not just the
+/// delta), so a created-but-undetected record is covered identically to an
+/// updated one. This asserts that end-to-end: the created id is (a) absent from
+/// `changed_ids` (proving the strict-`>` drop actually fired), yet (b) present
+/// in `list_record_ids`, (c) resolvable via `find_oid_for_record` +
+/// `read_blob`, and (d) the whole HEAD tree stays coherent. A GREEN result on
+/// current HEAD downgrades the static trace to a covered scenario; a RED result
+/// would promote it to a live regression.
+#[tokio::test(flavor = "multi_thread")]
+async fn same_second_created_record_resolvable_after_delta_sync() {
+    let (origin, _sim) = spawn_sim().await;
+    seed_demo_issues(&origin, 3).await;
+
+    let cache_root = tempfile::tempdir().unwrap();
+    let _env = CacheDirGuard::new(cache_root.path());
+
+    let backend: Arc<dyn BackendConnector> =
+        Arc::new(SimBackend::new(origin.clone()).expect("SimBackend"));
+    let cache = Cache::open(backend, "sim", "demo").expect("Cache::open");
+
+    // Seed sync (build_from): oid_map rows for issues 1, 2, 3 only.
+    cache.sync().await.expect("seed sync");
+    let seeded: Vec<u64> = cache
+        .list_record_ids()
+        .expect("list_record_ids after seed")
+        .iter()
+        .map(|r| r.0)
+        .collect();
+    assert!(
+        !seeded.contains(&4),
+        "issue 4 must NOT exist yet — it is created post-seed to model a \
+         never-before-seen record; got {seeded:?}"
+    );
+
+    // A second writer CREATES a brand-new issue (id 4) on the backend.
+    let new_id = create_issue(&origin, "demo", "CREATED-BY-A").await;
+    assert_eq!(new_id, 4, "sim assigns sequential ids after seeding 3");
+
+    // Pin THIS cache's cursor into issue 4's creation-second (sub-second max) —
+    // the sim truncates the cursor to seconds and compares `updated_at >
+    // cursor` strictly, so issue 4's write is dropped from list_changed_since.
+    let upd = fetch_issue_updated_at(&origin, "demo", new_id).await;
+    let pinned = upd
+        .with_nanosecond(999_999_999)
+        .expect("valid nanosecond")
+        .to_rfc3339();
+    {
+        let conn = rusqlite::Connection::open(cache.repo_path().join("cache.db")).unwrap();
+        conn.execute(
+            "INSERT INTO meta (key, value, updated_at) VALUES ('last_fetched_at', ?1, ?2) \
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",
+            rusqlite::params![&pinned, &pinned],
+        )
+        .unwrap();
+    }
+
+    // Delta sync: list_changed_since under-reports (issue 4 dropped) but the
+    // tree is rebuilt from list_records, which DOES include issue 4.
+    let r = cache.sync().await.expect("delta sync");
+    assert!(
+        !r.changed_ids.iter().any(|id| id.0 == new_id),
+        "same-second boundary must make list_changed_since DROP the created id \
+         (got {:?}); if it surfaced, the strict-`>` trigger no longer holds and \
+         this repro is not exercising the flagged edge",
+        r.changed_ids
+    );
+
+    // (b) The created id is present in the cache's record set (tree + oid_map).
+    let after: Vec<u64> = cache
+        .list_record_ids()
+        .expect("list_record_ids after delta sync")
+        .iter()
+        .map(|r| r.0)
+        .collect();
+    assert!(
+        after.contains(&new_id),
+        "created id {new_id} must appear in list_record_ids (rebuilt from \
+         list_records); got {after:?}"
+    );
+
+    // (c) Its OID resolves — this is the exact `read_blob` call the helper's
+    // stateless-connect handler makes to materialize a puller's wanted blob.
+    let oid = cache
+        .find_oid_for_record(reposix_core::RecordId(new_id))
+        .expect("find_oid_for_record")
+        .unwrap_or_else(|| {
+            panic!(
+                "DANGLING TREE ENTRY: no oid_map row for same-second-created id \
+                 {new_id} — a puller's lazy fetch of its tree OID would die \
+                 `git upload-pack: not our ref`"
+            )
+        });
+    let resolved = cache.read_blob(oid).await;
+    assert!(
+        resolved.is_ok(),
+        "COHERENCE VIOLATION: same-second-created id {new_id}'s tree OID {oid} \
+         is not resolvable via read_blob — a partial-clone lazy fetch dies \
+         `git upload-pack: not our ref {oid}`. Got: {resolved:?}"
+    );
+
+    // (d) And the whole HEAD tree stays coherent (belt-and-suspenders).
     assert_head_tree_coherent(&cache).await;
 }
 
