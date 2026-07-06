@@ -1,93 +1,67 @@
-# SESSION-HANDOVER.md — top-level (L0) session rotation, 2026-07-05
+# SESSION-HANDOVER.md — v0.13.0 tag-halted, 2026-07-06
 
-Written for the incoming top-level orchestrator (L0). The prior L0 session ended
-deliberately to **re-launch with a leaner bootstrap** — its P92 recon over-fanned
-(6 recon agents fanned separate reports into L0, burning ~12% of L0 context before
-any execution). Compact per `.planning/ORCHESTRATION.md` §3.
+For the incoming top-level orchestrator (L0). Replaces the P92-era handover (all closed).
+This is the map, not the territory — detail lives in git and the linked files.
 
-**Read-first order:** (1) `.planning/STATE.md`, (2) this file, (3)
-`.planning/CONSULT-DECISIONS.md` (D-P92-01), (4) `.planning/ORCHESTRATION.md`
-§11–12 (no-fable tiering, 10%/10x budgets, DP/valve, HCI), (5)
-`.planning/milestones/v0.13.0-phases/ROADMAP.md` (P92 section) +
-`SURPRISES-INTAKE.md`, (6) `quality/PROTOCOL.md` if touching gates.
+## 1. Current state
 
-**Guardrails:** do NOT run `tag-v0.13.0.sh` (`.disabled`) until P97 GREEN. Do NOT
-touch PR #61 (release hold) until P97. Do NOT `git add .` — a `M CLAUDE.md` is
-intentionally dirty (at the 40k cap, slimmed) and stays UNSTAGED; only touch it
-through a GSD-tracked change.
+- **v0.13.0 autonomously GREEN** — P78–P97, 20/20 phases shipped.
+- **Tag HALTED** on one owner decision (§2), not on any failing phase.
+- **Git:** published `origin/main = 8a39efc`. Local `HEAD = 1b37350` **UNPUSHED**
+  (chain `8a39efc` → `3109fbb` doctrine → `1b37350` prune, plus this window's wind-down
+  commits). **Next session must coordinate the push** — flag it before any new work.
 
-## 1. Ground truth (git)
+## 2. #1 tag gate (E4) — the decision the tag waits on
 
-- HEAD (pre-this-commit) = `2bfccdf` on `main`, up to date with `origin/main`.
-- This handover commit adds ONLY `.planning/STATE.md` + `.planning/SESSION-HANDOVER.md`
-  (local, not pushed — owner said leave local). `M CLAUDE.md` left unstaged.
-- `STATE.md` frontmatter: `phases_completed: 14`, `next_phase: P92` — P78–P91
-  SHIPPED of 20 (P78–P97). **P92 is recon-complete but NOT executed.**
-- Recent load-bearing commits: `2bfccdf` D-P92-01 ledger open; `9f1dd7d` hook-throttle
-  gate; `e69b325` per-agent JIT throttle; `fe8c558`/`fe5e8f2` doctrine stale-sweep.
+Create-partial-fail reconciliation **cannot converge on id-reassigning backends**
+(GitHub / JIRA / Confluence): the placeholder-id → backend-id map has no home, because
+cursor / `oid_map` is deliberately NOT advanced on `SotPartialFail`. Surfaced by the
+real-backend 9th probe (P93) — a P0 the SIM backend HID.
 
-## 2. Wave/cycle state
+→ **Owner design decision required:** revise or supersede
+`docs/decisions/010-l2-l3-cache-coherence.md` §3 (RBF-LR-03), deciding where the mapping
+lives. **Nothing tags until this resolves.**
 
-| Item | State | Note |
-|---|---|---|
-| P91 | DONE GREEN | verdict `quality/reports/verdicts/p91/VERDICT.md` |
-| P92 recon | DONE | → decision D-P92-01 no-split (2bfccdf) |
-| P92 execution | NOT STARTED | residual scope below; next L0 dispatch |
-| quality-weekly | GREEN | fixed; live run `28731753695` |
+## 3. t4-real — unimplemented
 
-**D-P92-01 carry-forward (no-split).** Recon found the heavy P92 fixes ALREADY
-LANDED before recon: `cb630e5` (GIT_DIR scrub) + `a0c84a3` (`.with_audit` chained
-on Confluence + JIRA connectors). So P92 stays ONE phase — no P92a/P92b split.
+Real-backend sibling of sim's T4 litmus (conflict → rebase root-commit ancestry
+invariant). **Option B** (recommended, `.planning/milestones/v0.13.0-phases/97-HANDOVER.md`):
+an `#[ignore]` Rust smoke in `crates/reposix-cli/tests/agent_flow_real.rs` (~1.5h, no
+schema change) + a shell wrapper mirroring the sim T4 assertions.
 
-**P92 residual scope (what execution must still deliver):**
-1. **T4 rebase-ancestry regression test** — prove-before-fix (DP-2): write the
-   failing test that reproduces the ancestry-drift before any fix.
-2. **`bus_write_audit_completeness.rs`** — upgrade to assert OP-3 **dual-table**
-   audit rows (both `audit_events` + `audit_events_cache`) on a real push.
-3. **Behavioral no-retry verifier** — assert the push path does not silently retry.
-4. **TokenWorld smoke** — real-backend litmus (cred-gated; see §4).
+## 4. Live deferred backlog
 
-## 3. Binding constraints (unchanged)
+The pruned intakes ARE the live registry (open-only; resolved items are DELETED — git is
+the archive):
 
-- ONE cargo invocation machine-wide (`cargo-mutex.sh`, exit 2). Prefer `-p <crate>`.
-- One tree-writer at a time; no `--no-verify`; commit-trailer format; model tiering.
-- **Root `CLAUDE.md` is at the 40k cap** (~39,910 bytes) — any addition must be
-  paid for by a deletion; push detail to a scoped `CLAUDE.md` or linked doc.
-- **TokenWorld real-backend is cred-gated** — real Confluence/GitHub/JIRA litmus
-  runs only when creds are in `.env` AND a non-default `REPOSIX_ALLOWED_ORIGINS`
-  is set. Env-unset reads NOT-VERIFIED (never FAIL/skip-as-pass). Sim is default.
+- `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md` — **28 open**
+- `.planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md` — **40 open** (incl. the 2
+  doctrine follow-ups)
 
-## 4. Litmus / gate / REOPEN state
+**Git-only relocated items** — deleted with the SURPRISES archive during the prune, NOT
+proven resolved; carry forward as pointers. Full text:
+`git show 3109fbb:.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE-ARCHIVE-P89-P97.md`
 
-- P92 litmus: T1 + **T4** on sim + TokenWorld; REOPENS on ≥1 HIGH (OD-2 unchanged).
-- Milestone-close (P97) 9th probe `pre-release-real-backend` is non-skippable and
-  never waivable (`.planning/CLAUDE.md`); env-gated rows read NOT-VERIFIED.
-- No open REOPEN loops carried in. quality-weekly is GREEN as of run `28731753695`.
+- **P84-01-T05** (HIGH)
+- **P89 cross-AI Claude-leg**
+- **steward-window** (MEDIUM)
+- **quality-convergence** (HIGH)
+- **P91 T2-REOPEN** (MEDIUM)
+- **Entry-27** — walker forward pre-audit (post-v0.14.0 gate)
 
-## 5. Mid-execution decisions + noticed, not yet filed
+## 5. Known brittle gate — p94 badges misfire
 
-- **D-P92-01 (no-split)** formalized in `.planning/CONSULT-DECISIONS.md` (append-only
-  ledger, opened this window at `2bfccdf`).
-- **Owner-gated non-blockers (do NOT self-authorize; surface, don't act):**
-  - **PR #62** — codecov-action dependabot bump (6→7), CI green. Not owner-named →
-    no steward action (steward.md rule).
-  - **~9 stale branches** (`bench/refresh-latency-*`, `release-plz-2026-*`, a few
-    `fix/*`) — deletion blocked on owner-named-target approval.
-  - **17 docs-alignment rows** flipped `STALE_TEST_DRIFT` → routed to **P95**
-    (`/reposix-quality-refresh`); above the 0.5 alignment floor, non-blocking now.
+`quality/gates/docs-build/p94-badges-real-vs-transient.sh:78` greps `GOOD-TO-HAVES.md` for
+an h2 heading that the OP-8 archive-drain relocated → regex fails → **false pre-push
+FAIL**. Pre-existing, not session-introduced. Fix by asserting the invariant, not the
+heading (see RETROSPECTIVE calibration § "Gates assert invariants"). A known brittle gate
+to fix or replace.
 
-## 6. Precise next steps (successor runbook)
+## 6. Doctrine
 
-1. Ground-truth first: `git log --oneline -8`, `git status`, confirm HEAD `2bfccdf`
-   (+ this local handover commit) and that `M CLAUDE.md` is the only dirty path.
-2. Read `.planning/CONSULT-DECISIONS.md` (D-P92-01) before touching P92.
-3. **Re-launch LEAN — ONE consolidated recon lane, not 6.** Per ORCHESTRATION.md
-   §11 report-only diet + 10% budget: dispatch a SINGLE recon/plan lane that returns
-   ONE conclusion, not N separate report-bearing agents fanned into L0. Absorb a
-   conclusion, not raw reports; children absorb the 10x blowup (pre-authorize the
-   split in their charter).
-4. Plan + execute **P92** on its residual scope (§2 items 1–4). Prove-before-fix on
-   T4 (DP-2). Litmus T1+T4 sim+TokenWorld; REOPEN on ≥1 HIGH.
-5. Per-phase close ritual: `git push origin main` BEFORE the verifier subagent;
-   verifier grades RED on a missing push. Advance STATE.md cursor to P93.
-6. Do NOT drain the owner-gated non-blockers (§5) without explicit owner naming.
+C2 / relief-threshold doctrine finalized this session — see `.planning/ORCHESTRATION.md`
+(pointer only; do not restate or edit here).
+
+---
+
+History lives in git — `git log` / `git show`, not restated here.
