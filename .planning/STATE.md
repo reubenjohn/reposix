@@ -1,9 +1,9 @@
 ---
 gsd_state_version: 1.0
 mode: serial-workstreams
-status: v0.13.0-tag-ready-owner-decisions-settled
+status: v0.13.0-pre-tag-doc-planning-cleared-awaiting-owner-tail
 last_updated: "2026-07-06"
-last_activity: "2026-07-06 — Owner tag-gate decisions SETTLED (ledger .planning/CONSULT-DECISIONS.md). (1) Tag-timing → T1: ship v0.13.0 NOW; RBF-LR-03 ships as an honestly-WAIVED documented known-limitation; the reconciliation redesign becomes the v0.14.0 headline milestone (coordinator-of-coordinators explore→prototype→converge, directional-inspiration not spec, 131315c + amendment). (2) Real-backend 9th probe is VERIFIED — committed catalog last_real_grade=PASS + fresh 2026-07-06 green Confluence round-trip; mechanical status NOT-VERIFIED is honest-by-design env-gate, NOT a gap (no new real call needed to tag). Handover rewritten (.planning/SESSION-HANDOVER.md) with owner-calibration guidance so the next session over-asks less. NEXT: orchestrator drives the pre-tag checklist (SESSION-HANDOVER §3: document RBF-LR-03 limitation, dvcs-cold-reader review, SURPRISES disposition, PR #61 regen), then OWNER cuts the v0.13.0 tag; then v0.14.0 pivot milestone scoping + workstream B."
+last_activity: "2026-07-06 — L0 drove the pre-tag checklist doc/planning items to GREEN (SESSION-HANDOVER §3 items 1-3), delegated to one opus C2 coordinator; commits cd93dbc→56307be, HEAD==origin/main, verified clean, NO v0.13.0 tag cut. CLEARED: (1) RBF-LR-03 documented as honest WAIVED-for-v0.13.0 known-limitation — ADR-010 §3 additive marker + troubleshooting.md recovery subsection + dvcs-topology.md out-of-scope cross-ref, all pointing at the v0.14.0 pivot (dfc3a9b/b03266d); (2) DVCS cold-reader review via /doc-clarity-review — 7 findings incl. a real refs/mirrors/* doc↔code BLOCKER, all FIXED, 0 filed (b8de57c); (3) OP-8 SURPRISES/GOOD-TO-HAVES disposition + bound-to-live-state sweep — 6 terminal entries deleted (git-archived), open items carried forward, 1 MEDIUM filed (56307be). REMAINING = OWNER TAIL ONLY (see § Workstream A): PR #61 regen+crates.io publish (E3), env-gated real-backend rows + waiver renewal, then OWNER cuts the v0.13.0 tag (E1). 5 live HIGH carry-forwards raised for v0.14.0 scoping (RUSTSEC memmap2/quinn-proto, prune_oid_map pagination-truncation, RBF-FW-11 date-cutoff, quality-convergence write-contention). NEXT: owner cuts tag + handles PR #61; then v0.14.0 pivot scoping + launch-readiness milestone + workstream B."
 workstreams:
   workstream_a:
     milestone: v0.13.0
@@ -36,14 +36,17 @@ workstreams:
 Phase: **v0.13.0-extension (P78–P97) CLOSED GREEN with owner-gated caveats, 2026-07-05.** Milestone verdict `quality/reports/verdicts/milestone-v0.13.0/VERDICT.md` (verdict commit `390ce31`, graded HEAD `3c6d72f`, on origin/main). Disk tally: **117 PASS / 0 FAIL / 15 WAIVED / 13 ratified-honest NOT-VERIFIED**. P97 (the OP-8 Slot 2 + milestone-close phase) is **closed via this milestone verdict** — there is no separate `p97/VERDICT.md`; the milestone-close verdict IS P97's close. OP-9 RETROSPECTIVE distilled (ratifier exit 0); the non-skippable **9th probe** graded honestly **NOT-VERIFIED** (real-backend env-gate unset — never skip-as-pass); the release-plz git-state blocker (5 tracked+ignored P93 evidence JSONs) was fixed at `3c6d72f`.
 Status: **20/20 phases complete (P78–P97)** — workstream A / v0.13.0-extension COMPLETE. The v0.13.0 tag is phase-ready; the **tag push itself is L0/owner's, NOT the coordinator's** (`.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh.disabled` stays disabled — do NOT run it) and is gated on the owner pre-tag actions below.
 
-**OWNER PRE-TAG ACTIONS (durable — the next session/owner must clear these before the v0.13.0 tag push):**
-1. Run/ratify the real-backend **9th probe** — `python3 quality/runners/run.py --cadence pre-release-real-backend` with ATLASSIAN creds + `REPOSIX_ALLOWED_ORIGINS` set (currently honestly NOT-VERIFIED, env-gated).
-2. Fresh **`dvcs-cold-reader`** rubric review (TTL expired; top-level tooling surface) via `/reposix-quality-review --rubric dvcs-cold-reader`.
-3. Run/accept the **6 env-gated real-backend** transport / attach / conflict catalog rows (part of the 13 ratified-honest NOT-VERIFIEDs).
-4. **Disposition-or-carry-forward the 19 bare-OPEN SURPRISES entries** into the next milestone's intake (zero-loss split already landed at P96, but the per-entry terminal disposition is owed — carry-forward debt, no un-addressed HIGH/BLOCKER).
-5. **Renew the `structure/file-size-limits` waiver before 2026-08-08** (active-corpus WAIVED).
-6. **PR #61 (release-plz) is stale vs HEAD** — regenerate from `390ce31` → review → merge (owner-gated crates.io publish).
-7. **The v0.13.0 tag push is L0/owner's, NOT the coordinator's** — hand back to L0 for it.
+**PRE-TAG CHECKLIST — doc/planning items CLEARED by L0 2026-07-06 (commits cd93dbc→56307be, verified HEAD==origin/main, tree clean, no tag cut):**
+- ✅ **9th probe VERIFIED** (owner decision, SESSION-HANDOVER §4): committed `last_real_grade=PASS` + fresh 2026-07-06 green Confluence round-trip. Mechanical `status: NOT-VERIFIED` is honest-by-design env-gate; no new real call needed to tag.
+- ✅ **RBF-LR-03 documented** as honest WAIVED-for-v0.13.0 known-limitation (ADR-010 §3 additive marker + troubleshooting.md recovery subsection + dvcs-topology.md out-of-scope cross-ref → v0.14.0 pivot). `dfc3a9b`/`b03266d`.
+- ✅ **DVCS cold-reader review** via `/doc-clarity-review` — 7 findings incl. a real `refs/mirrors/*` doc↔code BLOCKER, ALL fixed, 0 filed. `b8de57c`. NOTE: this satisfied the cold-reader **doc** review (SESSION-HANDOVER §3 item 2 reframing); the separate subjective-rubric row `dvcs-cold-reader` in `subjective-rubrics.json` may still show TTL-expired — non-blocking, carry-forward.
+- ✅ **OP-8 SURPRISES/GOOD-TO-HAVES disposition** + bound-to-live-state sweep: 6 terminal entries deleted (git-archived), open carried forward, 1 MEDIUM filed. `56307be`. No un-addressed HIGH/BLOCKER left dangling.
+
+**REMAINING OWNER TAIL (E1/E3 — L0 does NOT self-do; hand to owner):**
+1. **PR #61 (release-plz)** — regenerate from current `origin/main` (`56307be`) → review → merge (owner-gated **crates.io publish**, E3 spend). L0 can dispatch a steward to regen+review, leaving merge/publish to owner — owner's call.
+2. **6 env-gated real-backend** transport/attach/conflict rows (part of the 13 ratified-honest NOT-VERIFIEDs) — accept via creds, or leave honestly NOT-VERIFIED (env-gate, not a gap).
+3. **Renew `structure/file-size-limits` waiver before 2026-08-08** (active-corpus WAIVED) — future deadline.
+4. **OWNER cuts the v0.13.0 tag** (E1) — `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh.disabled` stays disabled; canonical release is `.github/workflows/release.yml` (tag `v*`).
 
 **Queued post-tag `/gsd-quick` meta-infra items (run AFTER the tag lands, each via GSD):**
 - The doctrine **4-edit** `/gsd-quick` — NOTE its "create DP-5" step is **stale** (DP-5 already exists = tangent-classification); adjust the edit, do NOT apply verbatim.
