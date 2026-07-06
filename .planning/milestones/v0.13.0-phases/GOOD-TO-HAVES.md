@@ -22,6 +22,94 @@
 
 ---
 
+## P97 OP-8 Slot-2 DRAIN LEDGER (2026-07-05, Wave A)
+
+> **Terminal drain disposition for EVERY active entry below** — this is the OP-8 Slot-2
+> drain-decision record (P97). Vocabulary: **RESOLVING-P97** (executed in P97 Wave A;
+> the entry's own `STATUS` is flipped to RESOLVED + commit SHA), **DEFERRED-v0.14.0**
+> `[-<routed-target>]`, **DEFERRED-post-tag** (land after the v0.13.0 tag, not
+> mid-milestone-close), **DEFERRED-to-Wave-B-mint** (catalog-JSON-owned; the Wave-B
+> milestone `--persist` mint owns it), **OWNER-ACTION** (not agent-executable). Standing
+> rationale for the runner/gate/code XS deferrals (GTH-06, GTH-06-append, GTH-07): *avoid
+> destabilizing the quality-runner/gate infra during the milestone gate; pairs with the
+> run.py anti-bloat.* No entry silently skipped (OP-8). Wave B (milestone mint) owns
+> catalogs/verdicts/RETROSPECTIVE — this ledger is the planning-side drain only.
+
+| # | Entry (header topic) | Disposition | Rationale (one-line) |
+|---|---|---|---|
+| 01 | GTH-01 bind all catalog dimensions | DEFERRED-v0.14.0 (observability-and-multi-repo) | Path A shipped; Path B = 7 dims, ~30-50 lines Rust + fixture — out of the no-cargo P97 envelope |
+| 02 | GTH-02 deferral-regex intervening-words | **RESOLVING-P97** | doc/shell XS — executed Part 2 |
+| 03a | GTH-03 run.py `--row`/`--dimension` scope | DEFERRED-v0.14.0 | runner CLI flag + test; pairs w/ run.py anti-bloat |
+| 03b | GTH-03 bind retarget cross-file cite + mental-model 24ms | DEFERRED-v0.14.0 | (b) 24ms→27ms doc-lie flip cascades 3 STALE rows into blocking rebinds → cargo/docs-alignment, unsafe in no-cargo window |
+| 04 | GTH-04 mechanize 8ms / 89.1% headline rows | DEFERRED-v0.14.0-launch-readiness | new verifier scripts (OD-4 §3); M — makes weekly badge honestly green |
+| 05 | GTH-05 deferral-linter word-form "Phase NN" | DEFERRED-v0.14.0 | regex on a blocking pre-push gate needs cargo re-run + false-positive corpus sweep |
+| 06 | GTH-06 wc -l gate on run.py/verdict.py (+ P96 appends) | DEFERRED-v0.14.0 | runner/gate XS — standing rationale; run.py now 510+ lines, decomposition is the paired M |
+| 07 | GTH-07 move `parse_rfc3339` → `_freshness.py` | DEFERRED-v0.14.0 | runner/code XS — standing rationale |
+| 08 | GTH-08 trim/split `raise-list-p90.md` <20k | **RESOLVING-P97** | doc XS — executed Part 2 |
+| 09 | GTH-09 WAL-asymmetry intentional doc note | **RESOLVING-P97** | doc XS — executed Part 2 |
+| 10 | GTH-10 exit-codes clap-2 vs handler-2 footnote | **RESOLVING-P97** | doc XS — executed Part 2 |
+| 11 | GTH-11 extend `subcommand_help_renders` beyond 3/15 | DEFERRED-v0.14.0 | cargo test-coverage widening |
+| 12 | GTH-12 annotate `cli.md` exit-codes helper/CLI/shared | **RESOLVING-P97** | doc XS — executed Part 2 |
+| 13 | GTH-13 grep-over-rg sandbox note | **RESOLVING-P97** | doc XS — executed Part 2 |
+| 14 | GTH-14 helper `list for-push` reports `?` | DEFERRED-v0.14.0 (helper-protocol/perf) | M; `saw_commit` guard already removes the data-loss danger |
+| 15 | GTH-15 consolidated file-size overages (9 files) | DEFERRED-v0.14.0 (structure-hygiene, pre-2026-08-08) | M split work; waiver-renewal itself → Wave-B mint (see FLAG below) |
+| 16 | GTH-16 run.py `--dry-run` flag | DEFERRED-v0.14.0 | S runner plumbing; pairs w/ run.py anti-bloat |
+| 17 | REPOSIX_SIM_ORIGIN honored in init.rs | DEFERRED-v0.14.0 (reposix-cli init/sync) | prod-code + env-safe test |
+| 18 | JIRA_TEST_PROJECT=KAN repo secret | **OWNER-ACTION** | `gh secret set JIRA_TEST_PROJECT KAN` — not agent-executable (surfaced in report) |
+| 19 | code/coverage-ratchet proposal | DEFERRED-v0.14.0-launch-readiness | owner-gated spend; M new gate (OD-4 §3) |
+| 20 | Cache delta-sync under-reports (M) | DEFERRED-v0.14.0 (L2/L3 cache-hardening) | correctness fine today (ADR-010 Step-5 upsert); efficiency residual LOW |
+| 21 | Preamble-anchored marker scan (retire 6-line lookback) | DEFERRED-v0.14.0 (quality/gates/agent-ux) | 0/85 fns affected today; changes a P0-adjacent gate's scan loop, needs corpus re-run |
+| 22 | Tighten `audit-immutability.sh` WAL grep | DEFERRED-v0.14.0 (security-gates) | editing the gate needs a cargo re-run to confirm still-passes — no-cargo firewall |
+| 23 | Drain/renew `structure/file-size-limits` waiver | **DEFERRED-to-Wave-B-mint** | enumeration lives in `freshness-invariants.json` (catalog); see FLAG below |
+| 24 | Malformed `last_fetched_at` cursor degradation | DEFERRED-v0.14.0 | cache code + test (cargo) |
+| 25 | dedicated read-only "runner" subagent type | DEFERRED-post-tag | meta-infra (`.claude/agents/`), owner-gated spend — not mid-milestone-close |
+| 26 | `.git/hooks/pre-push` dead symlink | DEFERRED-v0.14.0 (next `install-hooks.sh` touch) | `.git/`-local, not a tree-writer commit; inert while `core.hooksPath=.githooks` |
+| 27 | Strategy 2 delete-time NotFound idempotent | DEFERRED-v0.14.0 (push-flow-robustness) | deliberate deferral — Strategy 1 shipped as primary; defense-in-depth only |
+| 28 | Item A: intake files name meta-infra (4-edit /gsd-quick) | **DEFERRED-post-tag** `/gsd-quick` | per Item A's own acceptance; **DP-5 STALE** — see NOTE below |
+| 29 | Item B: `dispatch-doctrine.sh` session-guard | **DEFERRED-post-tag** `/gsd-quick` | meta-infra (`.claude/hooks/`), own verification pass |
+| 30 | Confluence `Record::labels` not wired | DEFERRED-v0.14.0-connector-completeness | P2 connector work (REST call + contract test) |
+| 31 | Sim same-second `list_changed_since` precision | DEFERRED-v0.14.0 (reposix-sim) | P3, OPTIONAL per ratified ADR-010 (NOT load-bearing for coherence); multi-crate |
+| 32 | `verdict.py --phase N` pure rollup | DEFERRED-v0.14.0 (quality/runners) | P2; pairs w/ run.py scope-flag work |
+| 33 | `dark-factory.sh sim` blocked-origin WARN | DEFERRED-v0.14.0 | P3 cosmetic gate-script annotation |
+| 34 | Arm F-K4b congruence on 5 P93 agent-ux artifacts | DEFERRED-v0.14.0 (quality/gates/agent-ux) | P3; per-row assert-list edit, gate-touching |
+| 35 | `CONSULT-DECISIONS.md` 25k over soft limit | DEFERRED-v0.14.0 (intake-bloat split) | P3; actively-consumed log, split not in Wave A's 6-item docs scope |
+| 36 | GitHub `list_records` self-recursion footgun | DEFERRED-v0.14.0-connector-trait-cleanup | P3 latent, zero current runtime bug |
+| 37 | Split `doc_alignment.rs` 71k monolith | DEFERRED-v0.14.0 | LOW/M cargo refactor; pairs w/ crates-source file-size-gate exclusion removal |
+| 38 | Split `cache_coherence.rs` 23.4k | DEFERRED-v0.14.0 | LOW/S cargo test split; bundle w/ crates-source budget rollout |
+| 39 | `catalog-immutable-on-read` cadence coverage | DEFERRED-v0.14.0 | XS/LOW gate+runner; pairs w/ run.py persist-gate extraction |
+
+**Tally:** RESOLVING-P97 = 6 · DEFERRED-v0.14.0 (incl. `-target`) = 28 · DEFERRED-post-tag = 3 · DEFERRED-to-Wave-B-mint = 1 · OWNER-ACTION = 1 → **39 entry-topics across 40 STATUS lines** (GTH-01 is one PARTIAL line; all else OPEN).
+
+**FLAG — file-size waiver understatement (routed to Wave B, NOT edited here):** The
+`structure/file-size-limits` waiver in `quality/catalogs/freshness-invariants.json` says
+*"Current violations: 10 files"* in both its `waiver.reason` and its
+`claim_vs_assertion_audit` — but `bash quality/gates/structure/file-size-limits.sh
+--warn-only` reports **50 violations** (41 `.md`, 6 `.py`, 3 `.sh`; verified 2026-07-05).
+A waiver that understates violations 5× is a lying artifact. Because the enumeration lives
+in a **catalog JSON** — editing it would tangle with the P97 milestone `--persist` mint
+that Wave B owns — it is **DEFERRED-to-Wave-B-mint**: the Wave-B mint MUST correct the
+`reason`/`claim_vs_assertion_audit` count to the real 50 (keep the `until:
+2026-08-08T00:00:00Z` expiry) so the waiver stops lying. Do NOT let it auto-renew past TTL
+carrying the stale "10".
+
+**NOTE — Item A's "create DP-5" step is STALE:** the 4-edit proposal (entry #28) lists
+*"(iii) a new `decision-procedures` entry DP-5"* — but **DP-5 already exists**
+(`DP-5 — Tangent-vs-charter classification`, `.claude/skills/decision-procedures/SKILL.md:80`
++ `.planning/RUNBOOK-TO-V1/01-decision-procedures.md:29`). The post-tag `/gsd-quick` must
+NOT create DP-5; it must reconcile **where the fix-it-twice meta-rule actually lands** —
+root `CLAUDE.md` already carries the "when an owner catches a quality miss, fix it twice"
+meta-rule under §OD-3, so Item A's step (iv) is partly satisfied and its scope needs a
+re-read before execution.
+
+**NOTE — badges real-vs-transient flap:** the transient-classifier follow-up (distinguish a
+shields.io/Codecov flake from a genuinely broken badge URL) is **DEFERRED-v0.14.0** (fix the
+classifier). The catalog row `docs-build/p94-badges-real-vs-transient` correctly stays
+**NOT-VERIFIED** this milestone — its assertion requires ≥2 spaced re-runs to characterize
+the flap, which an autonomous single-pass window cannot manufacture. Not edited (catalog =
+Wave B territory); the working-file badges entry is already archived RESOLVED.
+
+---
+
 ## GOOD-TO-HAVES-01 — extend `reposix-quality bind` to support all catalog dimensions
 
 **Discovered during:** P79-02 (2026-05-01)

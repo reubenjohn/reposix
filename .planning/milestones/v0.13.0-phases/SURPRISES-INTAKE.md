@@ -265,7 +265,13 @@
 
 **Tagged for:** P94 (bus-push compatibility) — real, currently-reproducible, user-impacting (Ubuntu 24.04 LTS's stock git is a very common baseline for both human developers and CI runners other than this project's own).
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (P97 Wave A reconciliation, 2026-07-05) — the `fallback`-sentinel fix
+shipped in P94: `handle_stateless_connect`'s non-`git-upload-pack` branch now replies with
+the git-mandated literal `fallback` line so git falls back to the `export` capability for
+push on git 2.43.x. The catalog row `agent-ux/p94-git243-fallback-sentinel` is **PASS**
+(`last_verified: 2026-07-06T03:41:43Z`, re-minted clean at `0bdd752`). Cited: P94 + that
+row. (The paired `stateless_connect_e2e.rs` assertion was flipped alongside the production
+fix, per this entry's own resolution sketch.)
 
 ## 2026-07-05 | TokenWorld two-writer conflict verifier does not exist — SC1 real-backend arm cannot be verified until built | discovered-by: P92 SC1 adjudication (D-P92-03) | severity: HIGH
 
@@ -277,7 +283,13 @@
 
 **Why deferred:** both P92 executors noted the new-artifact risk (schedule+complexity, not a high-confidence one-liner). The sim arm is proven GREEN; deferring the real-backend verifier to P97's final probe (which mandates it) is the OP-8 eager-resolution principle applied to sequencing: do not rush low-confidence, high-stakes shipping checks.
 
-**STATUS:** OPEN
+**STATUS:** OPEN — P97 Wave A reconciliation, 2026-07-05: CONFIRMED KEPT OPEN. The two-writer
+CONFLICT-replay verifier still does not exist. The P97 milestone-close 9th probe
+(`pre-release-real-backend`) will read **NOT-VERIFIED this run** — the autonomous window has
+no TokenWorld creds, and OD-2's fail-closed rule is creds-missing ⇒ NOT-VERIFIED (never
+skip-as-pass). Full conflict-replay coverage (reject → `git pull --rebase` → push against a
+real Confluence fixture) is to be verified on a **live owner run or v0.14.0**; building it
+late-session against a live tenant remains the new-artifact risk both P92 executors flagged.
 
 ## 2026-07-05 debt-drain triage
 
@@ -397,7 +409,17 @@ the P94–P97 debt-drain window; natural pairing with the sibling recurring-self
 `minted_at` bug already filed above (both are catalog-loader/writer honesty gaps in the same
 `quality/runners/` surface).
 
-**STATUS:** OPEN
+**STATUS:** OPEN — P97 Wave A reconciliation, 2026-07-05: **phantom-green grep is CLEAN.** A
+read-only sweep of every `quality/catalogs/*.json` for `status: WAIVED` combined with
+`waiver: null` found **ZERO** rows: all 15 WAIVED rows (`code/cargo-test-pass`,
+`cross-platform/{windows,macos}-*`, `docs-repro/example-0{1,2,4,5}` + `tutorial-replay`,
+`structure/file-size-limits`, `perf/{latency,token-economy,headline-numbers}-*`,
+`subjective/{cold-reader-hero-clarity,install-positioning,headline-numbers-sanity}`) carry a
+well-formed `waiver` object, and every `waiver: null` row is legitimately `PASS`. **No active
+phantom-green rows this milestone** — not a milestone-honesty blocker. The load-time guard
+(assert `status == WAIVED ⟺ well-formed waiver`) remains a real hardening gap but is
+**DEFERRED-v0.14.0** (a shared `_audit_field.py` loader change with its own test obligation,
+cargo/runner-touching, out of Wave A's planning-only scope).
 
 ---
 
@@ -431,7 +453,15 @@ milestone-close so P97's 9-probe verdict isn't built on stale sibling-row status
 P94–P97 debt-drain window, ideally as its own short lane rather than a rider on any single
 phase's mechanical close.
 
-**STATUS:** OPEN
+**STATUS:** OPEN — P97 Wave A reconciliation, 2026-07-05: the **Wave-B `--persist` milestone
+mint IS the freshness sweep.** Running `run.py --cadence pre-release[-real-backend] --persist`
+at milestone-close re-grades every in-scope row and rewrites committed status to the live
+grade — exactly the per-row re-verification this entry asks for; the five flipped sibling rows
+(`p92-mid-stream-litmus-t1-t4`, `v0.13.0-tag-script-present`, `v0.13.0-retrospective-distilled`,
+`p87-surprises-absorption`, `p88-good-to-haves-drained`) land at their true grade in that mint.
+Wave A is planning-only (no cargo, no mint) and cannot run it. Kept OPEN until the Wave-B mint
+lands; if any flip proves a genuine regression (vs an env-gate false-negative like the
+git≥2.34/T4 class), Wave B loops it RED rather than tagging over it.
 
 ---
 
@@ -579,7 +609,19 @@ cite but an empty hash array would otherwise silently lose source-drift coverage
 false-negative this entry documents). Cheap check: assert no non-retired, source-citing row
 has an empty `source_hashes` at `Catalog::load` BEFORE deleting the `is_empty()` skip arm.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (false-negative closed) — P97 Wave A reconciliation, 2026-07-05,
+verified against current code. The walker now keys the empty-`source_hashes` handling on
+**BIND STATE, not the empty array**: `doc_alignment.rs:1126-1152` treats a row with empty
+`source_hashes` AND `last_verdict == Bound` as `Some(true)` → `STALE_DOCS_DRIFT` (fail-loud),
+and only skips (`None`) for non-BOUND states — so a BOUND source-citing row can no longer
+silently escape drift detection. `Catalog::load` backfills legacy single-cite + same-file-multi
+rows into `source_hashes` (`catalog.rs:501-519`), and the 9 legacy same-file-multi rows were
+collapsed at `17a7b02`. The P96 verifier `walk_multi_source_stable_no_false_drift`
+(`crates/reposix-quality/tests/walk.rs`) PASSED. **Trimmed residual → DEFERRED-v0.14.0:** the
+different-file-Multi legacy / `source_hash: None` case-3 deliberately leaves `source_hashes`
+empty (unreconstructable) and rests on the bind-state fail-loud; the **Forward pre-audit** para
+above is the post-v0.14.0 gate to run BEFORE retiring the legacy `source_hash` handling. Only
+the retirement-gate residual is v0.14.0 scope — the false-negative bug itself is fixed.
 
 ---
 
@@ -695,4 +737,9 @@ at all). **Explicit P97 note:** until this lands, P97's milestone `--persist` mi
 subjective-row collateral (git-checkout the spurious flips on `subjective-rubrics.json`) as a known,
 expected step — do NOT let it ride into the tagged tree.
 
-**STATUS:** OPEN
+**STATUS:** OPEN — P97 Wave A reconciliation, 2026-07-05: CONFIRMED KEPT OPEN. The clean fix is a
+`run.py` change (runner-touching, cargo) → **DEFERRED-v0.14.0**. **Load-bearing hand-off to Wave B:
+the P97 milestone `--persist` mint MUST restore the `subjective-rubrics.json` collateral** —
+git-checkout the spurious `subjective/*` status flips off the STALE (unrefreshed) rubric artifact so
+they do NOT ride into the tagged tree. Wave A is planning-only and does not run the mint; this note
+is the explicit instruction for whichever agent runs the Wave-B 9th-probe `--persist`.
