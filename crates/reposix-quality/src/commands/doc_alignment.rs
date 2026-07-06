@@ -449,6 +449,13 @@ pub(crate) mod verbs {
         }
 
         cat.recompute_summary();
+        // P96 (P95 verifier NOTICED): `recompute_summary` refreshes the row
+        // counters but never touches `summary.last_walked` -- only `walk`
+        // stamps it. Without this line a `bind` leaves `last_walked` pinned to
+        // whenever the last walk ran, so the summary timestamp PREDATES the
+        // re-bind and lies to any reader treating it as "catalog last touched".
+        // Stamp it here so a bind advances the summary clock too.
+        cat.summary.last_walked = Some(now.clone());
         cat.save(catalog)?;
         Ok(0)
     }
@@ -1117,9 +1124,32 @@ pub(crate) mod verbs {
             let cites = row.source.as_slice();
             let mut drifted_source_indices: Vec<usize> = Vec::new();
             let source_drift: Option<bool> = if row.source_hashes.is_empty() {
-                // No hashes recorded yet (e.g. retire-proposed rows or
-                // legacy rows without a stored hash). Skip drift compare.
-                None
+                // P96 false-negative fix: whether an empty `source_hashes`
+                // array is a legitimate skip or a hidden drift window depends
+                // on BIND STATE, not on the empty array itself. The pre-P96
+                // code keyed the skip on `is_empty()`, so a BOUND row that
+                // reached the walker with empty `source_hashes` (a genuine
+                // different-file Multi legacy row that `Catalog::load`'s
+                // same-file collapse backfill could not heal, or a
+                // `source_hash: None` row) silently escaped drift detection --
+                // its cited doc could drift and the gate stayed green.
+                //
+                //   - BOUND: the row claims verified doc alignment but carries
+                //     no per-source baseline to check against. An unverifiable
+                //     "bound" claim must not stay green -> flag
+                //     STALE_DOCS_DRIFT so the operator rebinds and populates
+                //     the parallel hash array.
+                //   - anything else reaching here (MISSING_TEST /
+                //     TEST_MISALIGNED / already-stale): the row is already
+                //     blocking on -- or intentionally decoupled from -- its own
+                //     state; a source-drift verdict would mask the more
+                //     actionable one, so skip the compare. (Retire states
+                //     already `continue`d above and never reach this point.)
+                if row.last_verdict == RowState::Bound {
+                    Some(true)
+                } else {
+                    None
+                }
             } else if cites.len() != row.source_hashes.len() {
                 // Parallel-array invariant violated. Catalog::load
                 // backfill should prevent this; defend against

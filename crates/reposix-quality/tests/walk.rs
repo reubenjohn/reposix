@@ -817,3 +817,273 @@ fn bind_multi_same_source_rebind_refreshes_just_that_index() {
     let row_post_walk = read_row(&cat, "row/multi-rebind");
     assert_eq!(row_post_walk["last_verdict"], "BOUND");
 }
+
+// -----------------------------------------------------------------------------
+// P96 / SOURCE-HASHES-FALSE-NEGATIVE regression tests
+// -----------------------------------------------------------------------------
+//
+// Pre-P96 the walker's source-drift skip keyed on `source_hashes.is_empty()`,
+// so a BOUND row that reached the walker with an empty `source_hashes` array
+// (a legacy Multi-cite row, or a `source_hash: None` row) silently escaped
+// STALE_DOCS_DRIFT detection -- a real doc could drift and the gate stayed
+// green. P96 splits the two failure modes:
+//   - Same-file phantom-duplicate legacy rows (pre-P89 bind append bug) are
+//     HEALED at `Catalog::load`: the cites collapse to a single checkable
+//     cite and the legacy `source_hash` promotes into `source_hashes[0]`.
+//     Post-heal they are drift-checked normally (Test B: catches drift;
+//     Test C: no false-flag on clean content -- mirrors the 8 real rows in
+//     quality/catalogs/doc-alignment.json).
+//   - Rows the collapse cannot heal (different-file Multi, or `source_hash:
+//     None`) are flagged by the walker's BIND-STATE drift-skip: STALE iff
+//     BOUND, skipped otherwise (Test A).
+//
+// See `.planning/phases/96-*` (P96 Wave 2a).
+// -----------------------------------------------------------------------------
+
+/// P96 GUARD: a BOUND row whose empty `source_hashes` the load-time collapse
+/// backfill CANNOT heal (two DIFFERENT cited files) must not stay green -- an
+/// unverifiable "bound" claim is flagged STALE_DOCS_DRIFT by the bind-state
+/// drift-skip. Both cited files are byte-stable here on purpose: the flag
+/// fires on *unverifiability*, not on observed drift. Pre-P96 this row stayed
+/// BOUND (is_empty -> skip), so this test fails pre-fix and passes post-fix.
+#[test]
+fn walk_flags_bound_row_with_unbackfillable_empty_source_hashes_as_stale() {
+    use reposix_quality::hash;
+
+    let dir = TempDir::new().unwrap();
+    let doc_a = dir.path().join("doc_a.md");
+    let doc_b = dir.path().join("doc_b.md");
+    fs::write(&doc_a, "alpha\nstable A\n").unwrap();
+    fs::write(&doc_b, "beta\nstable B\n").unwrap();
+    let test_file = dir.path().join("t.rs");
+    fs::write(&test_file, "fn alpha() { let _ = 1; }\n").unwrap();
+
+    let h_a = hash::source_hash(&doc_a, 1, 2).unwrap();
+    let h_test = hash::test_body_hash(&test_file, "alpha").unwrap();
+    let test_str = test_file.to_string_lossy().to_string();
+
+    // Legacy DIFFERENT-file Multi row: `source_hash` present (P75 first-cite),
+    // `source_hashes` ABSENT. Catalog::load's same-file collapse backfill
+    // cannot heal this (the two cites are different files), so it reaches the
+    // walker with empty source_hashes -- the residual guard case.
+    let row = json!({
+        "id": "row/diff-file-legacy",
+        "claim": "legacy multi-file claim",
+        "source": [
+            {"file": doc_a.to_string_lossy(), "line_start": 1, "line_end": 2},
+            {"file": doc_b.to_string_lossy(), "line_start": 1, "line_end": 2},
+        ],
+        "source_hash": h_a,
+        "tests": [format!("{test_str}::alpha")],
+        "test_body_hashes": [h_test],
+        "rationale": "diff-file legacy fixture",
+        "last_verdict": "BOUND",
+        "last_run": "2026-04-28T08:00:00Z",
+        "last_extracted": "2026-04-28T08:00:00Z",
+        "last_extracted_by": "fixture"
+    });
+    let cat = seed_catalog(&dir, json!([row]));
+
+    let assert = Command::cargo_bin("reposix-quality")
+        .unwrap()
+        .args(["--catalog", cat.to_str().unwrap(), "walk"])
+        .assert()
+        .failure();
+    let stderr = String::from_utf8_lossy(&assert.get_output().stderr).to_string();
+    assert!(
+        stderr.contains("STALE_DOCS_DRIFT"),
+        "unverifiable BOUND row (empty source_hashes) must flag STALE_DOCS_DRIFT: {stderr}"
+    );
+    let r = read_row(&cat, "row/diff-file-legacy");
+    assert_eq!(r["last_verdict"], "STALE_DOCS_DRIFT");
+    // The walker/backfill must NOT fabricate baselines for an unhealable row.
+    let sh_empty = r
+        .get("source_hashes")
+        .and_then(|v| v.as_array())
+        .is_none_or(|a| a.is_empty());
+    assert!(
+        sh_empty,
+        "diff-file legacy row must keep empty source_hashes (no fabricated baseline)"
+    );
+}
+
+/// P96 CORE: a legacy SAME-file Multi row (phantom-duplicate cite pair from
+/// the pre-P89 bind append bug) with empty `source_hashes` whose cited source
+/// has DRIFTED must now fire STALE_DOCS_DRIFT. Pre-P96 the backfill only
+/// promoted single-cite rows and the walker skipped empty source_hashes, so
+/// this drift was invisible (row stayed BOUND, exit 0). Post-P96 the
+/// load-time collapse reduces the phantom pair to one checkable cite, promotes
+/// the legacy hash, and the walker catches the drift.
+#[test]
+fn walk_catches_drift_on_legacy_same_file_multi_row_after_load_collapse() {
+    use reposix_quality::hash;
+
+    let dir = TempDir::new().unwrap();
+    let doc = dir.path().join("doc.md");
+    fs::write(&doc, "line1\nline2\nline3\nline4\nline5\n").unwrap();
+    let test_file = dir.path().join("t.rs");
+    fs::write(&test_file, "fn alpha() { let _ = 1; }\n").unwrap();
+
+    let h_src = hash::source_hash(&doc, 1, 3).unwrap(); // P75 first-cite hash
+    let h_test = hash::test_body_hash(&test_file, "alpha").unwrap();
+    let test_str = test_file.to_string_lossy().to_string();
+
+    // Phantom-duplicate cite pair: full range (1-3) + stranded subrange (1-1),
+    // both the SAME file. source_hash present, source_hashes ABSENT.
+    let row = json!({
+        "id": "row/same-file-legacy-drift",
+        "claim": "legacy same-file multi claim",
+        "source": [
+            {"file": doc.to_string_lossy(), "line_start": 1, "line_end": 3},
+            {"file": doc.to_string_lossy(), "line_start": 1, "line_end": 1},
+        ],
+        "source_hash": h_src,
+        "tests": [format!("{test_str}::alpha")],
+        "test_body_hashes": [h_test],
+        "rationale": "same-file legacy fixture",
+        "last_verdict": "BOUND",
+        "last_run": "2026-04-28T08:00:00Z",
+        "last_extracted": "2026-04-28T08:00:00Z",
+        "last_extracted_by": "fixture"
+    });
+    let cat = seed_catalog(&dir, json!([row]));
+
+    // Drift the cited range (lines 1-3).
+    fs::write(&doc, "DRIFTED-1\nDRIFTED-2\nDRIFTED-3\nline4\nline5\n").unwrap();
+
+    let assert = Command::cargo_bin("reposix-quality")
+        .unwrap()
+        .args(["--catalog", cat.to_str().unwrap(), "walk"])
+        .assert()
+        .failure();
+    let stderr = String::from_utf8_lossy(&assert.get_output().stderr).to_string();
+    assert!(
+        stderr.contains("STALE_DOCS_DRIFT"),
+        "legacy same-file multi row drift must fire STALE_DOCS_DRIFT (pre-P96 false-negative): {stderr}"
+    );
+    let r = read_row(&cat, "row/same-file-legacy-drift");
+    assert_eq!(r["last_verdict"], "STALE_DOCS_DRIFT");
+    // Load-time collapse: source is now Single (object), the phantom cite dropped.
+    assert!(
+        r["source"].is_object(),
+        "load collapse must reduce same-file Multi to Single"
+    );
+    assert_eq!(
+        r["source"]["line_end"].as_u64().unwrap(),
+        3,
+        "collapse keeps the FIRST cite (1-3)"
+    );
+    // Walker is read-only on stored hashes.
+    assert_eq!(
+        r["source_hash"].as_str().unwrap(),
+        h_src,
+        "walker must not refresh stored source_hash"
+    );
+}
+
+/// P96 NO-FALSE-POSITIVE: a legacy SAME-file Multi row whose cited content is
+/// UNCHANGED must stay BOUND after the load-time collapse -- the backfill
+/// makes it checkable without false-flagging. This mirrors the 8 real legacy
+/// rows in quality/catalogs/doc-alignment.json (verified: every first cite
+/// still matches its stored hash), so the migration keeps the real catalog
+/// green.
+#[test]
+fn load_collapse_keeps_clean_legacy_same_file_multi_row_bound_and_checkable() {
+    use reposix_quality::hash;
+
+    let dir = TempDir::new().unwrap();
+    let doc = dir.path().join("doc.md");
+    fs::write(&doc, "line1\nline2\nline3\nline4\nline5\n").unwrap();
+    let test_file = dir.path().join("t.rs");
+    fs::write(&test_file, "fn alpha() { let _ = 1; }\n").unwrap();
+
+    let h_src = hash::source_hash(&doc, 1, 3).unwrap();
+    let h_test = hash::test_body_hash(&test_file, "alpha").unwrap();
+    let test_str = test_file.to_string_lossy().to_string();
+
+    let row = json!({
+        "id": "row/same-file-legacy-clean",
+        "claim": "legacy same-file multi claim",
+        "source": [
+            {"file": doc.to_string_lossy(), "line_start": 1, "line_end": 3},
+            {"file": doc.to_string_lossy(), "line_start": 1, "line_end": 1},
+        ],
+        "source_hash": h_src,
+        "tests": [format!("{test_str}::alpha")],
+        "test_body_hashes": [h_test],
+        "rationale": "same-file legacy clean fixture",
+        "last_verdict": "BOUND",
+        "last_run": "2026-04-28T08:00:00Z",
+        "last_extracted": "2026-04-28T08:00:00Z",
+        "last_extracted_by": "fixture"
+    });
+    let cat = seed_catalog(&dir, json!([row]));
+
+    // No drift: content matches the stored first-cite hash.
+    Command::cargo_bin("reposix-quality")
+        .unwrap()
+        .args(["--catalog", cat.to_str().unwrap(), "walk"])
+        .assert()
+        .success();
+    let r = read_row(&cat, "row/same-file-legacy-clean");
+    assert_eq!(
+        r["last_verdict"], "BOUND",
+        "clean legacy row must stay BOUND, not false-flag"
+    );
+    assert!(
+        r["source"].is_object(),
+        "collapse must reduce same-file Multi to Single"
+    );
+    let hashes = r["source_hashes"]
+        .as_array()
+        .expect("source_hashes populated by backfill");
+    assert_eq!(
+        hashes.len(),
+        1,
+        "single collapsed cite -> 1-element source_hashes"
+    );
+    assert_eq!(
+        hashes[0].as_str().unwrap(),
+        h_src,
+        "backfill promotes legacy source_hash into source_hashes[0]"
+    );
+}
+
+/// P96 (P95-verifier NOTICED): a `bind` must advance `summary.last_walked`.
+/// `recompute_summary` refreshes row counters but never touches
+/// `last_walked`; pre-fix only `walk` stamped it, so after a bind the summary
+/// timestamp PREDATED the re-bind (reader-confusion footgun). Pre-fix the
+/// first assertion fails (last_walked stays null after a bind).
+#[test]
+fn bind_refreshes_summary_last_walked() {
+    let dir = TempDir::new().unwrap();
+    let cat = seed_catalog(&dir, json!([])); // summary.last_walked == null
+    let doc = dir.path().join("doc.md");
+    fs::write(&doc, "alpha\nbeta\n").unwrap();
+    let test_file = dir.path().join("t.rs");
+    fs::write(&test_file, "fn alpha() { let _ = 1; }\n").unwrap();
+
+    // First bind: last_walked was null; the bind must stamp it.
+    bind_row(&cat, "row/lw", &doc, &test_file);
+    let after_first: Value = serde_json::from_str(&fs::read_to_string(&cat).unwrap()).unwrap();
+    assert!(
+        after_first["summary"]["last_walked"].is_string(),
+        "bind must stamp summary.last_walked (was null): {}",
+        after_first["summary"]["last_walked"]
+    );
+
+    // Pin last_walked to a clearly-old sentinel and re-bind. The re-bind must
+    // ADVANCE it past the stale value -- the exact footgun the P95 verifier
+    // flagged (summary timestamp predating the re-bind).
+    let mut doc_json = after_first.clone();
+    doc_json["summary"]["last_walked"] = json!("2000-01-01T00:00:00Z");
+    fs::write(&cat, serde_json::to_string_pretty(&doc_json).unwrap()).unwrap();
+
+    bind_row(&cat, "row/lw", &doc, &test_file);
+    let after_second: Value = serde_json::from_str(&fs::read_to_string(&cat).unwrap()).unwrap();
+    assert_ne!(
+        after_second["summary"]["last_walked"].as_str().unwrap(),
+        "2000-01-01T00:00:00Z",
+        "bind must refresh summary.last_walked past the stale sentinel"
+    );
+}

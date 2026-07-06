@@ -466,38 +466,56 @@ impl Catalog {
         let mut cat: Catalog = serde_json::from_str(&raw)
             .with_context(|| format!("parsing catalog at {}", path.display()))?;
 
-        // P78 MULTI-SOURCE-WATCH-01 backfill: legacy catalogs have
-        // `source_hash: Option<String>` and lack `source_hashes`. Promote
-        // `source_hash` into `source_hashes[0]` so every read path enters
-        // the new world. Idempotent: if `source_hashes` is already
-        // populated (newer catalog), the backfill is a no-op.
+        // P78 MULTI-SOURCE-WATCH-01 backfill (extended P96): legacy catalogs
+        // have `source_hash: Option<String>` and lack `source_hashes`.
+        // Promote the legacy hash into a VALID `source_hashes` parallel array
+        // so every read path enters the new world and the walker can
+        // drift-check the row. Idempotent: a row already carrying
+        // `source_hashes` (newer catalog) is left untouched.
         //
-        // Multi-source legacy rows: pre-P78 the bind verb only stored
-        // `source_hash = hash(first source)` (P75 first-source invariant);
-        // the OTHER source hashes were never recorded under path-(a).
-        // Backfilling `source_hashes = [legacy_hash]` for an N-cite Multi
-        // row would violate the parallel-array invariant
-        // (`source.len() != source_hashes.len()`). Instead, leave such
-        // rows with `source_hashes: []` -- the "no-hash-recorded-yet"
-        // semantic. The walker treats empty `source_hashes` as "skip
-        // drift compare" (preserving the path-(a) tradeoff for these
-        // legacy rows until they re-bind through P78-aware bind logic,
-        // which populates the full parallel array).
+        // Three cases for an empty-`source_hashes` row:
         //
-        // Rows with `source_hash: None` keep `source_hashes: []`
-        // (no-hash-recorded-yet semantic, unchanged).
+        //   1. Single-cite + `source_hash: Some` -> the legacy hash IS this
+        //      cite's hash (P75). Straight promote to `source_hashes[0]`.
+        //
+        //   2. Multi-cite whose cites ALL point at the same file +
+        //      `source_hash: Some` -> a phantom-duplicate artifact of the
+        //      pre-P89 bind append bug (bind collapses same-file cites; the
+        //      pre-fix append stranded the extras, and pre-P78 binds never
+        //      recorded per-cite hashes). The legacy `source_hash` is the P75
+        //      first-cite hash, so collapse to the FIRST cite and promote to
+        //      `source_hashes[0]`. This one-time heal -- mirroring bind's P89
+        //      relocation collapse, applied at load -- turns an unwatchable
+        //      legacy row into a single-cite, drift-checkable one, closing the
+        //      false-negative window where a BOUND row with empty
+        //      `source_hashes` silently escaped STALE_DOCS_DRIFT detection.
+        //
+        //   3. Genuine DIFFERENT-file Multi legacy row, or `source_hash:
+        //      None` -> no way to reconstruct a valid per-cite hash array from
+        //      a single (or absent) stored hash without violating the
+        //      parallel-array invariant. Leave `source_hashes: []`. The
+        //      walker's bind-state drift-skip (`doc_alignment::walk`) then
+        //      flags such a row STALE iff it is BOUND (an unverifiable "bound"
+        //      claim must not stay green) and skips it otherwise (it is
+        //      already blocking on its own gap).
         for row in &mut cat.rows {
-            if row.source_hashes.is_empty() {
-                if let Some(legacy) = row.source_hash.clone() {
-                    // Only backfill when the parallel-array invariant will
-                    // hold. Single-source rows: legacy_hash matches the
-                    // single cite. Multi-source rows: backfill would create
-                    // an inconsistent shape; skip and let re-bind heal.
-                    if row.source.as_slice().len() == 1 {
-                        row.source_hashes.push(legacy);
-                    }
-                }
+            if !row.source_hashes.is_empty() {
+                continue; // already in the new world -- idempotent no-op.
             }
+            let Some(legacy) = row.source_hash.clone() else {
+                continue; // case 3: no baseline hash to promote.
+            };
+            let cites = row.source.as_slice();
+            if cites.len() == 1 {
+                // Case 1: single cite -- straight promote.
+                row.source_hashes.push(legacy);
+            } else if !cites.is_empty() && cites.iter().all(|c| c.file == cites[0].file) {
+                // Case 2: same-file phantom-duplicate collapse + promote.
+                let first = cites[0].clone();
+                row.source = Source::Single(first);
+                row.source_hashes.push(legacy);
+            }
+            // else: case 3 (different-file Multi) -- leave `source_hashes` [].
         }
 
         for row in &cat.rows {
