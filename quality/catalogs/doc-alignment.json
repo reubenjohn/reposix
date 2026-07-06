@@ -12,9 +12,9 @@
     "alignment_ratio": 0.7767857142857143,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-05T21:29:18Z",
-    "coverage_ratio": 0.18270676691729323,
-    "lines_covered": 1215,
+    "last_walked": "2026-07-06T02:52:31Z",
+    "coverage_ratio": 0.182406015037594,
+    "lines_covered": 1213,
     "total_eligible_lines": 6650,
     "coverage_floor": 0.1,
     "claims_waived": 0
@@ -362,19 +362,15 @@
     {
       "id": "docs/tutorials/first-run/git-diff-edit",
       "claim": "After editing (append comment + sed status change), git diff shows both hunks",
-      "source": [
-        {
-          "file": "docs/tutorials/first-run.md",
-          "line_start": 111,
-          "line_end": 125
-        },
-        {
-          "file": "docs/tutorials/first-run.md",
-          "line_start": 111,
-          "line_end": 111
-        }
-      ],
+      "source": {
+        "file": "docs/tutorials/first-run.md",
+        "line_start": 111,
+        "line_end": 125
+      },
       "source_hash": "fb8f1ec80713e86fa5d7ceaff4c46e514a27fe1b15e1d9ffd03239b549b73ef5",
+      "source_hashes": [
+        "fb8f1ec80713e86fa5d7ceaff4c46e514a27fe1b15e1d9ffd03239b549b73ef5"
+      ],
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
       ],
@@ -971,19 +967,15 @@
     {
       "id": "docs/reference/http-api.md/audit-append-only",
       "claim": "audit_events table is append-only via BEFORE UPDATE DELETE RAISE triggers",
-      "source": [
-        {
-          "file": "docs/reference/http-api.md",
-          "line_start": 104,
-          "line_end": 119
-        },
-        {
-          "file": "docs/reference/http-api.md",
-          "line_start": 104,
-          "line_end": 120
-        }
-      ],
+      "source": {
+        "file": "docs/reference/http-api.md",
+        "line_start": 104,
+        "line_end": 119
+      },
       "source_hash": "b8fcbf98b53ca1e9287192c4e94da116b13c3c77e3671b81caa33d62040429c3",
+      "source_hashes": [
+        "b8fcbf98b53ca1e9287192c4e94da116b13c3c77e3671b81caa33d62040429c3"
+      ],
       "tests": [
         "crates/reposix-sim/tests/api.rs::full_crud_flow_with_audit"
       ],
@@ -1417,19 +1409,15 @@
     {
       "id": "planning-milestones-v0-10-0-phases-REQUIREMENTS-md/banned-words-linter",
       "claim": "Banned-words linter (scripts/banned-words-lint.sh) flags Layer-3+ violations",
-      "source": [
-        {
-          "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-          "line_start": 21,
-          "line_end": 21
-        },
-        {
-          "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
-          "line_start": 24,
-          "line_end": 24
-        }
-      ],
+      "source": {
+        "file": ".planning/milestones/v0.10.0-phases/REQUIREMENTS.md",
+        "line_start": 21,
+        "line_end": 21
+      },
       "source_hash": "23955cb18741e86f3780538e3ffe24039ccb456bc07ff7f1cd107edcd1237f72",
+      "source_hashes": [
+        "23955cb18741e86f3780538e3ffe24039ccb456bc07ff7f1cd107edcd1237f72"
+      ],
       "tests": [
         "scripts/banned-words-lint.sh"
       ],
@@ -2045,19 +2033,15 @@
     {
       "id": "docs/tutorials/first-run/cat-issue-structure",
       "claim": "cat issues/0001.md returns frontmatter (id, title, status, assignee, labels, version) + body markdown",
-      "source": [
-        {
-          "file": "docs/tutorials/first-run.md",
-          "line_start": 96,
-          "line_end": 107
-        },
-        {
-          "file": "docs/tutorials/first-run.md",
-          "line_start": 96,
-          "line_end": 96
-        }
-      ],
+      "source": {
+        "file": "docs/tutorials/first-run.md",
+        "line_start": 96,
+        "line_end": 107
+      },
       "source_hash": "1b90aaad679863bb4bae6fe848f2f3b5446c0f880430c8730df3e9cf11f80100",
+      "source_hashes": [
+        "1b90aaad679863bb4bae6fe848f2f3b5446c0f880430c8730df3e9cf11f80100"
+      ],
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
       ],
@@ -2801,19 +2785,15 @@
     {
       "id": "docs/connectors/guide/wiremock-five-tests-required",
       "claim": "Each connector must publish >=5 wiremock tests covering: happy path, 404, auth header, pagination, rate-limit",
-      "source": [
-        {
-          "file": "docs/guides/write-your-own-connector.md",
-          "line_start": 154,
-          "line_end": 162
-        },
-        {
-          "file": "docs/guides/write-your-own-connector.md",
-          "line_start": 154,
-          "line_end": 154
-        }
-      ],
+      "source": {
+        "file": "docs/guides/write-your-own-connector.md",
+        "line_start": 154,
+        "line_end": 162
+      },
       "source_hash": "bbb40403b26463e65dd767a42bc2456ed6bc042def0a9dd14e1b2a001adf697b",
+      "source_hashes": [
+        "bbb40403b26463e65dd767a42bc2456ed6bc042def0a9dd14e1b2a001adf697b"
+      ],
       "tests": [
         "crates/reposix-github/tests/contract.rs::user_agent_header_is_set"
       ],
@@ -5167,19 +5147,15 @@
     {
       "id": "docs/tutorials/first-run/ls-issues",
       "claim": "ls issues/ in initialized working tree lists exactly [0001.md 0002.md 0003.md 0004.md 0005.md]",
-      "source": [
-        {
-          "file": "docs/tutorials/first-run.md",
-          "line_start": 90,
-          "line_end": 94
-        },
-        {
-          "file": "docs/tutorials/first-run.md",
-          "line_start": 90,
-          "line_end": 90
-        }
-      ],
+      "source": {
+        "file": "docs/tutorials/first-run.md",
+        "line_start": 90,
+        "line_end": 94
+      },
       "source_hash": "009ad183ce0959a803467c64725898dd66ffd7ce0362b25f56788027618ee8a9",
+      "source_hashes": [
+        "009ad183ce0959a803467c64725898dd66ffd7ce0362b25f56788027618ee8a9"
+      ],
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
       ],
@@ -7709,19 +7685,15 @@
     {
       "id": "token-baseline-reposix-531",
       "claim": "reposix loop = 531 tokens measured against shell session transcript on simulator",
-      "source": [
-        {
-          "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
-          "line_start": 34,
-          "line_end": 38
-        },
-        {
-          "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
-          "line_start": 34,
-          "line_end": 34
-        }
-      ],
+      "source": {
+        "file": "docs/concepts/reposix-vs-mcp-and-sdks.md",
+        "line_start": 34,
+        "line_end": 38
+      },
       "source_hash": "4d93866c88489f9683a462abc1b0eb92720e77036c988a8818f17b687a8ad197",
+      "source_hashes": [
+        "4d93866c88489f9683a462abc1b0eb92720e77036c988a8818f17b687a8ad197"
+      ],
       "tests": [
         "quality/gates/perf/bench_token_economy.py"
       ],
@@ -8153,19 +8125,15 @@
     {
       "id": "docs/guides/troubleshooting/blob-limit-env-override",
       "claim": "REPOSIX_BLOB_LIMIT env var can be set to override the default blob limit (200) for a single operation",
-      "source": [
-        {
-          "file": "docs/guides/troubleshooting.md",
-          "line_start": 71,
-          "line_end": 75
-        },
-        {
-          "file": "docs/guides/troubleshooting.md",
-          "line_start": 71,
-          "line_end": 71
-        }
-      ],
+      "source": {
+        "file": "docs/guides/troubleshooting.md",
+        "line_start": 71,
+        "line_end": 75
+      },
       "source_hash": "c0979e068818eb842cc42aba07f047b21959bb15a46db0a086039f7c4c723627",
+      "source_hashes": [
+        "c0979e068818eb842cc42aba07f047b21959bb15a46db0a086039f7c4c723627"
+      ],
       "tests": [
         "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants"
       ],
@@ -8562,19 +8530,15 @@
     {
       "id": "docs/tutorials/first-run/audit-query",
       "claim": "sqlite3 ~/.cache/reposix/sim-demo.git/cache.db SELECT ts, op, decision FROM audit_events_cache WHERE ...",
-      "source": [
-        {
-          "file": "docs/tutorials/first-run.md",
-          "line_start": 156,
-          "line_end": 166
-        },
-        {
-          "file": "docs/tutorials/first-run.md",
-          "line_start": 156,
-          "line_end": 156
-        }
-      ],
+      "source": {
+        "file": "docs/tutorials/first-run.md",
+        "line_start": 156,
+        "line_end": 166
+      },
       "source_hash": "39fe8aa49a73139aa9acd03187a2d0fa9211c7543fae69d74b2d5bf74bc954ed",
+      "source_hashes": [
+        "39fe8aa49a73139aa9acd03187a2d0fa9211c7543fae69d74b2d5bf74bc954ed"
+      ],
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
       ],
