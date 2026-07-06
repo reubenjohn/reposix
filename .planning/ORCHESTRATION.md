@@ -94,15 +94,11 @@ absorb-vs-redelegate call is the parent's job precisely because it can.
 
 ## 3. Context budget + relief/handover protocol
 
-Track your ABSOLUTE token spend from turn one, not just at milestones, and not as a % of
-the window. Target reaching the full end-state before **~100k tokens** of your own
-context; **hard stop ~150k** (relieve immediately). The remaining slice is relief
-headroom. Rationale: model output quality degrades past ~150k regardless of how large the
-window is — a 1M window does NOT buy you 500k of good judgment, so a coordinator that
-waited for "~50% of 1M" (= 500k) would already be rotting. The user-level
-`gsd-context-monitor.js` hook still fires advisory %-remaining warnings; treat them as a
-backstop, not the trigger — relieve proactively at wave boundaries on the absolute ~100k
-line.
+Track your ABSOLUTE token spend from turn one (context budget: §2 rule 5 — ~100k soft,
+~150k hard, absolute not %). The user-level `gsd-context-monitor.js` hook fires advisory
+%-remaining warnings; treat them as a backstop, not the trigger — relieve proactively at
+wave boundaries on the absolute ~100k line. This section covers the C1/C2 tier structure
+that absorbs the resulting rotation and the handover protocol itself.
 
 **Two coordinator tiers (absorb relief churn below L0).** Because the ~100k line rotates
 coordinators MORE often than the old ~50%-of-1M line did, a milestone must NOT run as one
@@ -110,7 +106,8 @@ C1 phase-coordinator reporting every rotation straight to L0 — that floods the
 successor-dispatch churn. Instead the top orchestrator dispatches a
 **coordinator-of-coordinators (C2)**: a milestone / multi-phase-scoped `phase-coordinator`
 that itself dispatches **one C1 `phase-coordinator` per phase** (which dispatch
-executors/readers). When a C1 relieves at ~100k, its successor is dispatched by its
+executors/readers). (A single-phase milestone may skip C2 and run one C1 directly;
+multi-phase → C2.) When a C1 relieves at ~100k, its successor is dispatched by its
 **parent C2**, not by L0. L0 hears from the C2 only at milestone boundaries or an E1–E4
 escalation. **No new agent type is needed:** `phase-coordinator` serves both tiers via the
 §11 five-tier recursion — the tier is set by charter SCOPE (milestone → C2, dispatches
@@ -260,7 +257,9 @@ portions so the WHOLE drive reaches end state by ~10% of L0's own context, total
 — report-only diet, never reads source/builds/edits. L1 portion coordinator
 (opus) owns one large portion, charters L2s. L2 phase/drain-window coordinator
 (opus for security-judgment work, sonnet otherwise) owns a phase/window,
-charters L3 lanes. L3 work lanes (sonnet) are where most actual work happens,
+charters L3 lanes. (A milestone-scoped L1 is the C2 coordinator-of-coordinators; a
+phase-scoped L2 is a C1 — §3 carries the C1-relief-absorbed-by-C2 rule.) L3 work lanes
+(sonnet) are where most actual work happens,
 ≤100 tool calls, case-by-case L4 delegation. L4 helper leaves (haiku mechanical,
 sonnet for review judgment) are terminal. Fable appears in exactly one place:
 the single-shot consult valve below — never a standing coordinator, never a leaf.

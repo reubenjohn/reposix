@@ -36,8 +36,9 @@ You are the **L2 coordinator** owning v0.13.0 milestone-close, phases **P95 → 
 
 **You ROUTE, you don't work** — dispatch coordinators/executors for actual file
 edits, reads, and test runs; your own tool calls stay to git one-liners and
-reading short reports/handovers. **Relieve yourself at ~50% of your own context**
-(dispatch a fresh handover-writer at the next wave boundary if you're approaching
+reading short reports/handovers. **Relieve yourself past ~100k tokens of your own
+context (hard stop ~150k; absolute, not %)** (dispatch a fresh handover-writer at the
+next wave boundary if you're approaching
 it — don't ride it to exhaustion).
 
 **FIRST ACTIONS (in order):**

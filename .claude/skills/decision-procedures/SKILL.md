@@ -21,8 +21,8 @@ to an L4 lane) → decide → what escalates**. No match → the Valve below.
 Trigger: ≥2 of {stop/watch cycles; repeated <5-tool-call bookkeeping turns; arming
 watchers/sleeps/polling (violates ORCHESTRATION §2 rule 4); re-asking already-answered
 questions; report latency up while commit rate falls; self-contradiction on wave state}
-in a child's reports + `git log` — OR 1 signal + child past ~50% context. (1 signal +
-child under ~50% context → don't rotate yet: send one corrective message naming the
+in a child's reports + `git log` — OR 1 signal + child past ~100k tokens. (1 signal +
+child under ~100k tokens → don't rotate yet: send one corrective message naming the
 signal; rotate only if it recurs.) Decide: above the threshold, rotate at the next wave
 boundary via **pre-notified** handover (ORCHESTRATION §3 template) — the
 child is told IN ADVANCE, finishes its atomic unit, `relief-handover-writer` commits the

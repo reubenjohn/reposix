@@ -1015,3 +1015,44 @@ touching window; pairs with the run.py persist-gate extraction (GOOD-TO-HAVES-06
 **Default disposition:** DEFERRED-v0.14.0 (runner-hardening) `[-quality-framework]`.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-06 | ORCHESTRATION.md exceeds the 20k soft char-limit (~21.7k) | discovered-by: relief-threshold/C2 doctrine review | severity: LOW
+
+**Size:** S (a progressive-disclosure doc split + pointer, one section relocated).
+
+**Source / mechanism:** `[low]` ORCHESTRATION.md exceeds the 20k soft char-limit (~21.7k).
+Progressive-disclosure split needed — candidate: move §11's L0–L4 tier table or §3's
+C1/C2 detail to a linked doc, leaving pointers. Deferred from the relief-threshold/C2
+doctrine review.
+
+**Why deferred:** the review's charter was the ~50%→~100k relief-trigger sweep + C1/C2
+legibility fixes (kept the file net-negative, not a structural split); a proper
+progressive-disclosure split is its own change with its own pointer-integrity + promotion-
+sweep obligations (§ Provenance "Promotion sweep" standing rule).
+
+**Default disposition:** DEFERRED-v0.14.0 (doctrine-hygiene) — XS/LOW.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-06 | C2 (coordinator-of-coordinators) recursion is doctrine-only — never exercised | discovered-by: relief-threshold/C2 doctrine review | severity: MEDIUM
+
+**Size:** S (an observation/instrumentation charter on the first two-tier milestone run — no code).
+
+**Source / mechanism:** `[medium]` The C2 (coordinator-of-coordinators) recursion is
+doctrine-only — NEVER exercised (first introduced `2b2736e`). On the first real C2 run,
+verify: (i) a relieving C1's relief report routes to its parent C2, NOT L0 (post-dispatch-
+relay cross-session addressing is historically flaky — see ORCHESTRATION §8); (ii) C2 and
+C1 each relieve on their OWN ~100k line (no double-counting).
+
+**Sketch:** instrument/observe the first milestone run under the two-tier model.
+
+**Why deferred:** requires an actual multi-phase milestone run to exercise the two-tier
+relief path; cannot be verified statically — no C2 has run since the doctrine landed.
+
+**Default disposition:** DEFERRED-v0.14.0 (doctrine-validation) — MEDIUM.
+
+**STATUS:** OPEN

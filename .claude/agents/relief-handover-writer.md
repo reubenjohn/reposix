@@ -2,7 +2,8 @@
 name: relief-handover-writer
 description: Writes AND commits a coordinator relief/pause handover file from the
   ORCHESTRATION.md template, then reports the commit SHA. Spawn when a coordinator is
-  past ~50% context at a wave boundary, or when the owner asks to pause.
+  past ~100k tokens of own context (hard stop ~150k; absolute, not %) at a wave boundary,
+  or when the owner asks to pause.
 tools: Read, Write, Bash, Grep, Glob
 model: sonnet
 ---

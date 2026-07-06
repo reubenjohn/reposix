@@ -3,9 +3,10 @@ name: phase-coordinator
 description: >-
   Owns one phase or debt-drain window end-to-end by DELEGATING — dispatches
   reader-digester/gsd-executor/gsd-code-reviewer/gsd-verifier sub-agents, never does
-  leaf work itself. Spawn from the top level for any phase whose work is a wave of
-  sub-lanes (fable top-level inherits; a no-fable top-level passes an explicit model
-  override, e.g. `model: opus` — ORCHESTRATION §11).
+  leaf work itself. Spawn as a milestone-scoped C2 (dispatched by the top level) or a
+  per-phase C1 (dispatched by a C2) — tier = charter scope, ORCHESTRATION §3/§11 — for
+  work that is a wave of sub-lanes (fable top-level inherits; a no-fable top-level passes
+  an explicit model override, e.g. `model: opus`).
 tools: Agent, Bash, Read, Grep, Glob
 model: inherit
 ---
