@@ -1,9 +1,9 @@
 ---
 gsd_state_version: 1.0
 mode: serial-workstreams
-status: v0.13.0-closed-green-awaiting-owner-pre-tag
-last_updated: "2026-07-05"
-last_activity: "2026-07-05 — v0.13.0 milestone CLOSED GREEN (with owner-gated caveats). Milestone verdict quality/reports/verdicts/milestone-v0.13.0/VERDICT.md (verdict commit 390ce31, graded HEAD 3c6d72f) — 117 PASS / 0 FAIL / 15 WAIVED / 13 ratified-honest NOT-VERIFIED; OP-9 RETROSPECTIVE distilled (ratifier exit 0); 9th probe honestly NOT-VERIFIED (real-backend env-gate); release-plz git-state blocker fixed (3c6d72f). P97 (milestone-close phase) closed via this milestone verdict; workstream A / v0.13.0-extension COMPLETE (20/20 phases P78–P97). NEXT: owner pre-tag actions + L0 v0.13.0 tag push, then workstream B (v0.13.2, P98+). Durable OWNER PRE-TAG ACTIONS + queued post-tag /gsd-quick meta-infra items live in § Workstream A."
+status: v0.13.0-tag-ready-owner-decisions-settled
+last_updated: "2026-07-06"
+last_activity: "2026-07-06 — Owner tag-gate decisions SETTLED (ledger .planning/CONSULT-DECISIONS.md). (1) Tag-timing → T1: ship v0.13.0 NOW; RBF-LR-03 ships as an honestly-WAIVED documented known-limitation; the reconciliation redesign becomes the v0.14.0 headline milestone (coordinator-of-coordinators explore→prototype→converge, directional-inspiration not spec, 131315c + amendment). (2) Real-backend 9th probe is VERIFIED — committed catalog last_real_grade=PASS + fresh 2026-07-06 green Confluence round-trip; mechanical status NOT-VERIFIED is honest-by-design env-gate, NOT a gap (no new real call needed to tag). Handover rewritten (.planning/SESSION-HANDOVER.md) with owner-calibration guidance so the next session over-asks less. NEXT: orchestrator drives the pre-tag checklist (SESSION-HANDOVER §3: document RBF-LR-03 limitation, dvcs-cold-reader review, SURPRISES disposition, PR #61 regen), then OWNER cuts the v0.13.0 tag; then v0.14.0 pivot milestone scoping + workstream B."
 workstreams:
   workstream_a:
     milestone: v0.13.0

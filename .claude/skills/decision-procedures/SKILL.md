@@ -143,8 +143,13 @@ still undecidable → owner.
 
 ## Decision ledger
 
-All valve-adjacent decisions land in `.planning/CONSULT-DECISIONS.md` (append-only;
-create on first use), one section per decision:
+All valve-adjacent decisions land in `.planning/CONSULT-DECISIONS.md` (create on first
+use), one section per decision. **Bounded, NOT append-only:** the ledger holds only OPEN /
+live decisions — DELETE an entry on close / implementation / supersession; `git log` /
+`git show` is the archive (reversible). This is one instance of a general principle: **no
+doc carries an unbounded-growth policy; bound every doc to live state and lean on git
+history for the archive.** (Exempt: code-enforced `audit_events` / `audit_events_cache`
+tables — operational forensic data, not docs.)
 
 ```
 ## <YYYY-MM-DD> [SELF|FABLE|OWNER] <one-line question>
