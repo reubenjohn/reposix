@@ -133,6 +133,13 @@ Rows carry `cadences: list[str]`; a single gate may fire at multiple
 cadences (a fast mechanical check tagged `["pre-commit", "pre-push", "pre-pr"]`
 will be picked up by all three runner invocations).
 
+> **Sandbox shell gotcha — prefer `grep` over `rg`.** This repo's gates use `grep` by
+> convention, and for a reason: the `rg` (ripgrep) binary in the agent sandbox is an
+> emulation layer that breaks under process substitution (`<(...)`), unlike real ripgrep.
+> When authoring or running gate/verifier shell here, reach for `grep` / `grep -E` — an
+> `rg` inside `<(...)` fails in ways that look like a broken gate but are the sandbox
+> binary, not your script. (GOOD-TO-HAVES-13, resolved P97.)
+
 Milestone-close ritual MUST also invoke
 `python3 quality/runners/run.py --cadence pre-release-real-backend` and
 require exit 0; absent ⇒ verdict graded RED (per RBF-FW-03 9th probe).

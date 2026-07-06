@@ -42,9 +42,23 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." &> /dev/null && pwd)"
 cd "$REPO_ROOT"
 
+# Pattern 2 (`lands? (alongside|in) ... P[0-9]+`) tolerates a bounded run of
+# up to 5 intervening words between the verb phrase and the phase number
+# (GOOD-TO-HAVES-02, RESOLVED P97). F-K6-verbatim required the PNN to
+# immediately follow the verb, so a phrasing like
+# `// github/confluence/jira land alongside the integration tests in P79-03`
+# was INVISIBLE to the linter — neither the orphan-PNN nor no-PNN BLOCK fired.
+# The intervening class is `[a-zA-Z-]+ ` (letters/hyphens + trailing space):
+# it cannot traverse a PNN (the digits in `P79-03` break `[a-zA-Z-]+`), so
+# `grep -oE` always stops at the FIRST phase number in the fragment and never
+# swallows an adjacent allowlist-marker PNN (e.g. a trailing
+# `// banned-words: ok — P91 ...` on the same line stays out of the match).
+# Synthetic BLOCK scenario (proves the widened shape catches it):
+#   `// this lands alongside the follow-up work in P999` → orphan-PNN BLOCK
+#   (no .planning/phases/999-*/ PLAN artifact exists).
 PATTERNS=(
   'not yet wired in P[0-9]+'
-  'lands? (alongside|in) P[0-9]+'
+  'lands? (alongside|in) ([a-zA-Z-]+ ){0,5}P[0-9]+'
   'substrate-gap-deferred'
 )
 

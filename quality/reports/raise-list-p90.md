@@ -7,213 +7,41 @@
 > (cited as "R2" below) + 90-03's executor report (subagent-graded migration).
 > Filled by 90-05 (2026-07-04). Sections map 1:1 to Subtask A of
 > `.planning/phases/90-framework-fixes-honesty-rules/90-05-PLAN.md`.
+>
+> **Split (GOOD-TO-HAVES-08, P97 Wave A):** the 5 sections now live as per-section
+> shards under [`raise-list-p90/`](./raise-list-p90/) so each stays under the 20k
+> pre-commit soft limit; **no content was altered — pure relocation.** This file is the
+> index. Catalog `dimension_owner`/`tracked_in` references of the form
+> "`raise-list-p90.md § N`" resolve here: follow the § N heading below to its shard.
 
-## 1. Transport/perf rows — coverage_kind dispositions   <!-- 90-05 fills from R2 § A -->
+## 1. Transport/perf rows — coverage_kind dispositions
 
-Walked all 12 non-doc-alignment catalogs (`doc-alignment.json` is a distinct
-schema, exempt per `quality/catalogs/README.md`). Coverage legend:
-**real-backend** (non-loopback REST) / **sim** (in-process simulator,
-127.0.0.1:78xx) / **localhost** (wiremock + `file://` mirror + `git init
---bare`) / **static-grep** (source/string asserts only, nothing executed) /
-**vacuous** (assertion cannot fail meaningfully).
+Coverage-legend walk of all 12 non-doc-alignment catalogs; honest-localhost rows (no text
+change), the **Genuine overclaims** RAISE table (description-soften / WAIVE), the
+zero-green-real-backend-transport finding, and the D90-05 legacy `coverage_kind`
+enforcement carve-out. → [`raise-list-p90/01-transport-coverage.md`](./raise-list-p90/01-transport-coverage.md)
 
-Most bus/mirror/precheck `agent-ux` rows are **honest localhost** — they
-genuinely drive `git-remote-reposix` via stdin against wiremock + `file://`,
-and their descriptions already say so (`coverage_kind: sim` disposition, no
-text change needed): `reposix-attach-against-vanilla-clone`,
-`mirror-refs-write-on-success`, `mirror-refs-readable-by-vanilla-fetch`,
-`mirror-refs-cited-in-reject-hint`, `sync-reconcile-subcommand`,
-`bus-precheck-a-mirror-drift-emits-fetch-first`,
-`bus-precheck-b-sot-drift-emits-fetch-first`, `bus-fetch-not-advertised`,
-`bus-write-sot-first-success`, `bus-write-mirror-fail-returns-ok`,
-`bus-write-no-mirror-remote-still-fails`,
-`bus-write-fault-injection-{mirror-fail,sot-mid-stream,post-precheck-409}`,
-`bus-write-audit-completeness`, `webhook-force-with-lease-race`,
-`webhook-first-run-empty-mirror`, `perf/handle-export-list-call-count`
-(genuinely drives the helper via wiremock, N=200).
+## 2. Dishonest tests — test-name-vs-asserts baseline
 
-### Genuine overclaims (RAISE — description-soften or WAIVE)
+The 4-entry human-facing twin of `test-name-vs-asserts.baseline` (the DISHONEST/BORDERLINE
+verdicts + route to P91/P92), the THIN-but-exempt `#[ignore]` cases, and the 90-03 gate
+status. → [`raise-list-p90/02-dishonest-tests.md`](./raise-list-p90/02-dishonest-tests.md)
 
-| id | what the verifier ACTUALLY exercises | disposition |
-|---|---|---|
-| `agent-ux/dark-factory-sim` | **sim + static-grep.** `dark-factory/sim.sh:31-48` spawns sim + `reposix init` + git-config asserts; the "teaching strings **emit** on conflict/blob-limit paths" claim is verified by grepping *source* (`sim.sh:53,58`), not by observing a real emission. **Never pushes** (QL-001 FINDING-B). | **description-soften**: "emit" → "present in helper source"; tag `coverage_kind: sim`. |
-| `agent-ux/bus-write-no-helper-retry` | **static-grep.** `bus-write-no-helper-retry.sh:31-54` greps `bus_handler.rs` for retry constructs (`for _ in 0..`, `loop {`, `sleep`, `--force`). The runtime "single push_mirror invocation" claim is NOT executed here — that's covered by the sibling wiremock row `bus-write-mirror-fail-returns-ok`. | **description-soften**: reframe as source-hygiene check; note the runtime claim lives in the sibling row. Behavioral replacement is P92 RBF-B-07 (already on ROADMAP). |
-| `agent-ux/webhook-latency-floor` | **VACUOUS.** Reads the *committed* artifact `quality/reports/verifications/perf/webhook-latency.json` (n:1, method:"synthetic-dispatch", p95_seconds:5) and asserts `<=120`. The artifact's own `note` admits it measures dispatch→runner-pickup only. | **WAIVED + until_date** (already waived; description should say "dispatch-pickup latency, n=1, synthetic" not "webhook-driven sync verified"). Real n=10 measurement gated on working `cargo binstall` (now unblocked per § 5 below) + `scripts/webhook-latency-measure.sh`. |
-| `agent-ux/webhook-trigger-dispatch` | **static-grep + one real `gh api` GET.** `:35` fetches live YAML, `:42` `diff -w` byte-equality, `:47-66` structural greps. **Never triggers a dispatch, never measures a sync.** | **description-soften**: "reference workflow present + byte-equal to mirror" not "webhook-driven sync verified". |
-| `benchmark-claim/8ms-cached-read`, `benchmark-claim/89.1-percent-token-reduction` | **VACUOUS.** `verifier.script: None`; asserts frontmatter freshness + headline greppable. No measurement in-row. | **description-soften / WAIVE** — intentionally NOT softened per D-CONV-2 (2026-07-04): these are the reason the weekly verdict stays yellow-not-green by design; mechanizing them is GOOD-TO-HAVES-04, routed to launch-readiness. |
-| `security/allowlist-enforcement`, `perf/headline-numbers-cross-check` | **Dangling verifier at time of R2.** `allowlist-enforcement.sh` confirmed absent; `headline-numbers-cross-check.py` confirmed absent. | See § 5 — `allowlist-enforcement` FIXED this dispatch (script now lands); `headline-numbers-cross-check` still dangling, flagged for P97. |
+## 3. Magic-fixture hazards (path-shape schism)
 
-### Zero green real-backend transport coverage today
+The **triple** path-shape schism (unpadded / 11-padded / 4-padded) that roots QL-001 BUG-1,
+the HIGH table of tests whose green depends on the bug, the MED table, and the
+`record_path(id)` fix-first recommendation → P91. → [`raise-list-p90/03-magic-fixtures.md`](./raise-list-p90/03-magic-fixtures.md)
 
-**There is zero green real-backend transport coverage in this catalog as of
-2026-07-04.** The only true end-to-end `git push` in the entire framework is
-`agent-ux/real-git-push-e2e` — and it is sim-only + WAIVED (QL-001, routed
-P91, D90-01). The real-backend litmus row
-(`agent-ux/milestone-close-vision-litmus-real-backend`) is an honest,
-by-design exit-75 placeholder — correctly NOT-VERIFIED, not a hidden gap, but
-still zero coverage. This is the quantified justification for P91 (attach/sync
-real-backend wiring) and P92 (push-flow correctness against real backends +
-OP-3 audit completeness) — both already on ROADMAP citing this exact gap.
+## 4. Subagent-graded migration record
 
-### Legacy coverage_kind enforcement (D90-05)
+The 5 `kind: subagent-graded` rows: the 2 that needed action (landed by 90-03 —
+`dvcs-third-arm` → mechanical; `subjective/dvcs-cold-reader` wired for real), the 3 already
+correct, and the carried-forward bare-slug-vs-full-id `verifier.args` wiring gap. →
+[`raise-list-p90/04-subagent-graded.md`](./raise-list-p90/04-subagent-graded.md)
 
-90-02's `coverage_kind` validator hard-enforces on rows carrying `minted_at`
-(new-regime rows, P90-onward). The ~92 legacy P78–P88 rows above carry no
-`minted_at` and are **RAISE-only** here — migrating them to explicit
-`coverage_kind` + honest descriptions is **P95 RBF-D-06's** chartered work
-(`quality/reports/raise-list-p90.md` is P95's own stated input per ROADMAP.md
-line 245/251). P90 does not hard-block them; doing so would turn pre-push RED
-on nearly every catalog before the migration phase exists — the exact
-deferral-loop the framework fixes are supposed to prevent (D90-05 rationale).
+## 5. Waiver dispositions
 
-## 2. Dishonest tests — test-name-vs-asserts baseline     <!-- 90-05 fills from R2 § C -->
-
-This section is the **human-facing twin of 90-03's committed baseline file**
-(`quality/gates/agent-ux/test-name-vs-asserts.baseline`) — the two are kept
-**identical, 4 entries**, confirmed by direct file comparison in this dispatch:
-
-| # | file:line | test fn | body actually does | verdict |
-|---|---|---|---|---|
-| 1 | `crates/reposix-cli/tests/agent_flow.rs:103` | `dark_factory_sim_happy_path` | `#[ignore = "spawns reposix-sim child"]` (sim-child, NOT a real-backend gate); `reposix init` then asserts **only git config** (partialClone/promisor/filter/URL prefix); the test's own comment (`:117-119`) admits the trailing fetch fails and that's tolerated. No push, no fetch. | **DISHONEST** — "happy_path" implies the flow completes; body is config-only. |
-| 2 | `crates/reposix-cli/tests/doctor.rs:194` | `doctor_blob_limit_zero_warns_on_real_remote` | `reposix doctor` on a config whose remote URL is a github **string**; "real remote" = URL-classification, no network, and NOT `#[ignore]`-gated. | **DISHONEST** — "real_remote" over-promises network involvement. |
-| 3 | `crates/reposix-cli/tests/agent_flow.rs:174` | `dark_factory_blob_limit_teaching_string_present` | `fs::read_to_string` of `stateless_connect.rs`; source-string asserts only. | **BORDERLINE** — the `_teaching_string_present` suffix is itself honest; this RAISEs only because the `dark_factory` prefix matches the F-K8 name-token regex. |
-| 4 | `crates/reposix-cli/tests/agent_flow.rs:203` | `dark_factory_conflict_teaching_string_present` | reads `main.rs`/`write_loop.rs`/`bus_handler.rs` source for strings. | **BORDERLINE** — same rationale as #3. |
-
-**Fixes for #1/#2 route to P91** (`agent_flow_real.rs` family deepening, per
-ROADMAP P91 acceptance criteria) **/ P92** (push-flow correctness, where a real
-sim push-round-trip test would replace #1's config-only assertion).
-#3/#4 do not need fixing — the marker convention (below) already documents
-why they're exempt from further action.
-
-### THIN-but-exempt `#[ignore]` cases (adjacent, not baseline, candidates for P91 deepening)
-
-| file:line | test fn | why thin |
-|---|---|---|
-| `crates/reposix-cli/tests/agent_flow_real.rs:128,146,170` | `dark_factory_real_{github,confluence,jira}` | body = `run_init_and_assert`: `reposix init <backend>::…` then asserts `git config remote.origin.url` prefix/suffix strings only; module doc (`:29-36`) says live fetch is deferred, helper hardcodes `SimBackend`. Real creds gate a config-string assertion, not a real request. |
-| `crates/reposix-cli/tests/attach.rs:548` | `attach_marks_mirror_lag_for_next_fetch` | real attach subprocess vs sim, real cache asserts; "for next fetch" is state-setup only — no fetch runs in the test. `#[ignore]` reason is sim-child, not real-backend. BORDERLINE. |
-
-### Gate status (90-03 delivered, this section documents it)
-
-`quality/gates/agent-ux/test-name-vs-asserts.sh` (new, pre-push cadence) walks
-`crates/**/*.rs` for the F-K8 name-token regex, requires a genuine
-`#[test]`/`#[tokio::test]` attribute nearby, auto-exempts
-`#[ignore = "real-backend..."]`-gated tests structurally, and RAISEs any match
-that is neither the 4-entry baseline above nor carries a
-`// test-name-honesty: ok — <reason>` marker. 56 tests received the honest
-marker (comment-only edits) in 90-03; the gate currently PASSes because the
-live RAISE set exactly equals this section's 4-entry baseline.
-
-## 3. Magic-fixture hazards (path-shape schism)           <!-- 90-05 fills from R2 § E -->
-
-Confirmed **worse than previously filed**: the path-shape schism is **triple**,
-not double.
-
-| site | shape produced | file:line |
-|---|---|---|
-| cache tree builder (real read path) | `issues/1.md` (unpadded, prefixed) | `crates/reposix-cache/src/builder.rs:90,135` |
-| `reposix refresh` write path | `issues/00000000001.md` (11-padded) | `crates/reposix-cli/src/refresh.rs:120` |
-| push diff planner + fast-import emit | `0001.md` (4-padded, NO prefix) | `crates/reposix-remote/src/diff.rs:106` + `fast_import.rs:63` |
-
-`issue_id_from_path` (`diff.rs:74-77`) parses only bare-integer stems, so on a
-real `issues/1.md` tree every prior record fails to match (spurious Creates)
-**and the conflict precheck silently skips every real path**
-(`precheck.rs:151-152`, `continue`) — push-time conflict detection is
-bypassed on real trees, not just the in-memory diff plan. This is QL-001's
-root cause (BUG-1), routed to P91 (D90-01).
-
-### HIGH — test green depends on the bug (masks BUG-1; cannot regress-detect it)
-
-| file:line | fixture | why |
-|---|---|---|
-| `crates/reposix-remote/src/diff.rs:283` | `unchanged_push_emits_no_patches` hand-builds `format!("{:04}.md", …)` | inserts the planner's own bug shape; asserts 0 actions — can never observe BUG-1 |
-| `crates/reposix-remote/src/diff.rs:310` | `extra_trailing_newline_is_a_noop` inserts `"0001.md"` | same masking |
-| `crates/reposix-remote/src/diff.rs:233-238` | `five_deletes_passes_cap` / `six_deletes_*` | SG-02 bulk-delete cap validated exclusively in the buggy key space |
-| `crates/reposix-remote/tests/push_conflict.rs:154` | `one_file_export("0002.md", …)` | the ARCH-08 stale-base regression test only fires the precheck because the bare shape parses; with a real `issues/2.md` tree the stale write would be **silently accepted** — this regression test cannot catch the real-world bypass |
-| `crates/reposix-remote/src/precheck.rs:151` | `issue_id_from_path` gate + `:152` `continue` | an entire class of "stale push slipped through" bugs is untestable by construction |
-| `crates/reposix-remote/tests/bus_write_happy.rs:251`, `bus_write_sot_fail.rs:244`, `bus_write_mirror_fail.rs:213`, `bus_write_post_precheck_409.rs:227`, `bus_write_audit_completeness.rs:214` | `("0001.md", blob1)…` fixtures | the ENTIRE bus-write fan-out suite (incl. rows graded honest in § 1) rides the bug shape; fan-out/audit/lag asserts are only true in that shape |
-| `crates/reposix-remote/tests/protocol.rs:85` | `M 100644 :1 0001.md` | core `export` protocol fixture, same masking |
-| `crates/reposix-remote/src/fast_import.rs:63` (+ `main.rs:338` wiring) | emit side writes `{:04}.md` bare | the deprecated `import` transport genuinely emits bare paths — the origin of why bare fixtures "look real" to test authors; the documented primary path (stateless-connect/cache) does not use this shape |
-
-### MED
-
-| file:line | fixture | why |
-|---|---|---|
-| `crates/reposix-confluence/src/client.rs:1633-1656` | `update_issue_sends_put_with_version` | mock matches method+path only, asserts echoed `version==43`; name + comment (`:1649`) promise a request-body version assert that does not exist — wrong-version sends would pass |
-| `crates/reposix-remote/tests/perf_l1.rs:239,303,311` | bare `0001.md` in parsed.tree | the L1 call-count economy test measures the wrong (all-Create) plan if the shape breaks matching, while the count asserts still pass |
-| cross-cutting | `builder.rs:90` vs `refresh.rs:120` vs `diff.rs:106`/`fast_import.rs:63` vs attach tests' `issues/0001.md` vs `path.rs:138-140`'s documented "11-digit padded" convention | **no canonical `record_path(id)` helper exists**; four incompatible conventions are each re-derived inline. This is the structural root cause — hazards will recur without it. |
-
-### Fix-first recommendation → P91
-
-Introduce a canonical `record_path(id) -> "issues/<id>.md"` in `reposix-core`;
-route the 4 sites (`builder.rs`, `refresh.rs`, `diff.rs`, `fast_import.rs`)
-through it; re-key the diff/bus_write/push_conflict/protocol fixtures to the
-canonical shape so those tests go correctly **RED until BUG-1 is fixed** —
-turning today's silent test-green-masks-the-bug state into an honest
-regression gate. Today there is **no push-side test using the real
-`issues/<id>.md` shape** — the only real-shape coverage is cache-read-side
-(`delta_sync.rs:261`, `tree_contains_all_issues.rs:51`,
-`gix_api_smoke.rs:46`) and it never reaches `diff::plan`/`precheck`.
-
-## 4. Subagent-graded migration record                    <!-- 90-05 fills from 90-03 -->
-
-Per D90-10, R2 § B confirmed exactly 5 `kind: subagent-graded` rows workspace-
-wide; two needed action, landed by 90-03 (commits `fb01c2f`, `520d222`):
-
-| Row | Before | After |
-|---|---|---|
-| `agent-ux/dvcs-third-arm` | `kind: subagent-graded` (but the verifier — `dark-factory/dvcs-third-arm.sh` — is pure deterministic shell: source-string greps, `--help` greps, real `reposix attach` subprocess vs sim, git-config asserts, sqlite3 audit-count query, and a test-fn-existence grep for the wire path; zero `claude`/Task/rubric calls anywhere in its call chain; header self-discloses "No real LLM in CI") | **`kind: mechanical`** — matches D90-10's "deterministic assert script with no grading step → mechanical" rule (closes p86 F7). Provenance note appended to the row citing this migration. Header over-claim in `dvcs-third-arm.sh` ("bus-push end-to-end" vs its own `:20-23` disclosure that push is NOT exercised) eager-fixed same commit, comment-only. |
-| `subjective/dvcs-cold-reader` | `kind: subagent-graded`, but `dispatch.sh`'s `--rubric` case statement (`:58-69`) had no entry for `dvcs-cold-reader` — it fell through to the Path-B **stub** (`:70-76`), which raises `KeyError` on `catalog.find_row` for an id it doesn't recognize. This was the real decorative-kind instance (intent WAS real subjective grading; the wiring, not the kind, was missing). | **Wired for real.** `.claude/skills/reposix-quality-review/dispatch.sh` gained a `"subjective/dvcs-cold-reader"` case invoking new `lib/dispatch_dvcs_cold_reader.sh`, which `exec`s `claude /doc-clarity-review` against the 3 DVCS docs (`docs/concepts/dvcs-topology.md`, `docs/guides/dvcs-mirror-setup.md`, `docs/guides/troubleshooting.md`) via an inline rubric heredoc, parses `Rate:`/`Rationale:`, and persists to `quality/reports/verifications/subjective/dvcs-cold-reader.json`. `kind` unchanged (correctly still `subagent-graded` — the fix was wiring, not reclassification). Catalog row content itself was NOT edited (no lie to fix there). |
-
-The remaining 3 `subjective-rubrics.json` rows (`cold-reader-hero-clarity`,
-`install-positioning`, `headline-numbers-sanity`) were already correctly
-dispatch-wired (`dispatch.sh:59-68`) — no migration needed; their waiver-cliff
-disposition is handled in § 5 below (NOT mooted by this migration, per D90-02b
-— the waiver covers a different, still-unresolved gap: the runner
-subprocess's dispatch-and-preserve invariant).
-
-**Noticed during 90-03 (carried forward here, not yet resolved):** all 4
-subjective rows' `verifier.args` pass the BARE rubric slug (e.g.
-`["--rubric", "cold-reader-hero-clarity"]`), but `dispatch.sh`'s case-statement
-keys use the FULL `subjective/<slug>` id. If the runner subprocess invokes
-`bash dispatch.sh --rubric cold-reader-hero-clarity` verbatim (matching the
-row's own `verifier.args`), the case statement never matches and all 4 rubrics
-fall through to the Path-B stub, which then raises `KeyError` on the bare
-slug. This is a real, pre-existing, framework-wide wiring gap — **not fixed in
-P90** (M-sized: touches `catalog.py`, `dispatch.sh`'s CLI parsing, and/or all
-4 rows' `verifier.args`; not a <1h fix safely landed inside a framework
-dispatch). Flagged as an intake candidate for 90-07 to route (see this
-report's closing TLDR).
-
-## 5. Waiver dispositions                                 <!-- 90-05 fills from R2 § D -->
-
-25 waiver blocks existed repo-wide at R2 time: 19 in unified catalogs + 6
-per-row in `doc-alignment.json`. Every renewed waiver below carries a fresh
-`last_verified: 2026-07-04T12:00:00Z`, a future `until` (all ≤ 90 days from
-that anchor, per PROTOCOL.md's waiver rule), and a `tracked_in` naming a LIVE
-ROADMAP phase (P92/P95/P97) instead of the dead "v0.12.1
-MIGRATE-03/SEC-0x/CROSS-0x" label — closing the C7 deferral-loop shape that
-caused this exact cliff (12 rows all pointing at a milestone that never
-shipped the promised gates).
-
-| id | disposition | action taken in P90 90-05 |
-|---|---|---|
-| `release/cargo-binstall-resolves` | **LANDED, waiver CLEARED** (D90-02a) | The ~10-LOC `pkg-url`/`bin-dir` metadata alignment this waiver named was **already shipped pre-P90** by commit `33dd41f` "fix(binstall): correct pkg-url to real release asset name (QL-003)" (2026-07-03, an ancestor of P90's HEAD — D90-11-style already-fixed disposition). Re-verified against reality this dispatch: `crates/{reposix-cli,reposix-remote}/Cargo.toml`'s `pkg-url = "…/reposix-v{ version }-{ target }.tar.gz"` + `bin-dir = "reposix-v{ version }-{ target }/{ bin }{ binary-ext }"` (+ windows `.zip` override) byte-match `.github/workflows/release.yml`'s actual archive-staging logic (`release.yml:167-193`: `STAGE="reposix-${version_tag}-${target}"`, `ARCHIVE="${STAGE}.tar.gz"` or `.zip`). Status flipped `WAIVED` → `NOT-VERIFIED` (not a fabricated PASS — no real `cargo binstall --dry-run` container run was executed in this dispatch per the no-cargo constraint); waiver block removed; `expected.asserts` text updated to retire the stale "PARTIAL acceptable" carve-out. |
-| `docs-repro/{example-01,02,04,05}` + `tutorial-replay` (5, EXPIRED 2026-05-12) | **RENEWED — still-broken** | Root cause re-confirmed live: `container-rehearse.sh` never brings up the external simulator the example scripts assume (`run.sh`/`run.py` abort "sim not reachable"); `tutorial-replay` additionally blocked by cold `cargo build` exceeding the 5-min container budget AND (push step) QL-001. New `until: 2026-09-15`, `tracked_in: P95` (RBF-D-14 RAISE LIST drain) for the container-infra cause; `tutorial-replay`'s push-step cause additionally needs P91's QL-001 fix first. |
-| `cross-platform/{windows,macos}-rehearsal` (2026-07-26) | **RENEWED**, `tracked_in` repointed | Verifier confirmed still absent (`quality/gates/cross-platform/` empty save README/.gitkeep); windows/macos GH runner cost reasoning still holds. `until: 2026-09-15`, `tracked_in: P97` (launch-readiness slot) — dead `v0.12.1 CROSS-01/02` label repointed. |
-| `perf/{latency-bench,token-economy-bench}` (2026-07-26) | **RENEWED**, repointed | Both confirmed still sim/fixture-derived only (no real-backend headline cross-check). `until: 2026-09-15`, `tracked_in: P97` — dead `v0.12.1 MIGRATE-03` label repointed. |
-| `perf/headline-numbers-cross-check` (2026-07-26) | **RENEWED + dangling-verifier flag** | `quality/gates/perf/headline-numbers-cross-check.py` reconfirmed absent (see § 1). `until: 2026-09-15`, `tracked_in: P97`, `owner_hint` now explicitly names the missing verifier (was previously only implicit in the waiver reason). |
-| `security/allowlist-enforcement` + `security/audit-immutability` (2026-07-26, P0) | **RENEWED + FIXED the 2 dangling verifier scripts** (D90-02d) | Both verifier scripts landed this commit: `quality/gates/security/allowlist-enforcement.sh` wraps the REAL, pre-existing `cargo test -p reposix-core --test http_allowlist` (13 tests already covering egress-reject/redirect-recheck/env-override/loopback-allow) + a static grep of `clippy.toml` + the allowlist-check-before-send ordering in `http.rs:294-321`; `quality/gates/security/audit-immutability.sh` wraps the REAL, pre-existing `cargo test -p reposix-core --test audit_schema` (8 tests) + `cargo test -p reposix-cache --test audit_is_append_only` (1 test) + a static grep confirming WAL mode on the cache-side connection. **Neither test suite was previously known to be missing — R2's "no test named http_allowlist/audit_immutability found" was a substring-match miss; the real integration-test files exist and (per manual code review) look correct.** The wrapper scripts themselves have NOT been executed via a real `cargo test` invocation in this dispatch (hard no-cargo constraint) — `until: 2026-08-15` (sooner runway than the other renewals, P0), `tracked_in: P92`, with an **explicit line item**: confirm both wrapper scripts' exit codes via a real pre-pr/CI run and flip WAIVED→PASS once confirmed. |
-| `subjective/{cold-reader-hero-clarity,install-positioning,headline-numbers-sanity}` (2026-07-26) | **RENEWED — NOT mooted by 90-03's dispatch wiring** (D90-02b) | Confirmed: these 3 rows were ALREADY dispatch-wired before 90-03; the waiver covers a distinct gap (the runner subprocess lacks Task tool access, so a bare re-sweep would overwrite the ratified Path B artifacts — scores 8/9/9 CLEAR — with Path-B stubs). 90-03's dvcs-cold-reader wiring fix does not touch this gap. `until: 2026-09-15`, `tracked_in: P95` (runner dispatch-and-preserve invariant) — dead `v0.12.1 MIGRATE-03` label repointed. |
-| `code/cargo-test-pass` (2026-07-26) | **RENEWED** | Reason re-confirmed still true: local `cargo nextest run --workspace` still violates the CLAUDE.md memory-budget rule + pre-pr cadence cap; `ci.yml`'s `test` job remains canonical. `until: 2026-09-15`, `tracked_in: P97` — dead `v0.12.1 MIGRATE-03` label repointed. |
-| `structure/file-size-limits` (2026-08-08) | **Left alone (not at cliff)** | Not touched — its `until` is still >30 days out and its `tracked_in` ("v0.13.0 extension") is not the dead-label pattern. Noting per plan: 10 enumerated violations remain undrained (6 research-bundle files + 3 + the AGENTS.md symlink); the symlink-exclusion verifier fix is a separate XS item, not landed here. |
-| `agent-ux/real-git-push-e2e` (2026-07-31) | **NOT renewed** (D90-01, confirmed, unchanged) | Routes to P91's QL-001 fix. Waiver is the intentional backstop if P91 slips; P90/90-05 does not touch it. |
-| `docs/index/git-checkout-branch-command` (2026-07-31) | **STAYS WAIVED** (D90-01/-07, confirmed, unchanged) | QL-001-blocked by definition; routes to P91. Not touched here (doc-alignment dimension, 90-06 territory besides). |
-| 5× doc-alignment MISSING_TEST rows (`cli.md` ×4 + `exit-codes-locked`) (2026-07-31) | **Handled in 90-06** | Pointer only — real tests land in 90-06's cargo wave per D90-07(1); not touched by 90-05. |
-
-**Mass-renewal audit (D90-02 closing check):** every renewed waiver above now
-carries a `tracked_in` naming P92, P95, or P97 — all three exist in
-`.planning/milestones/v0.13.0-phases/ROADMAP.md` today. The
-`quality/reports/raise-list-p90.md`-referenced sweep (`grep -r 'v0.12.1'
-quality/catalogs/*.json | grep tracked_in`, run as part of this dispatch's
-verification) returns zero hits — the 2026-07-26 cliff will not silently
-repeat in 3 weeks.
+The 25-waiver drain: per-waiver renewal / clear / fix dispositions, the C7 deferral-loop
+close (dead `v0.12.1` labels repointed to live P92/P95/P97 homes), and the mass-renewal
+audit closing check. → [`raise-list-p90/05-waivers.md`](./raise-list-p90/05-waivers.md)

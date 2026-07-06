@@ -29,6 +29,18 @@ both of which are stable.
 | `git-remote-reposix` | `1` | push rejected (e.g. push-time conflict) — git treats this as `! [remote rejected]` |
 | `git-remote-reposix` | `2` | helper crashed / unrecoverable error (anyhow `Err` from `real_main`) |
 
+> **Two exit-`2` layers — don't conflate them.** Code `2` can come from either of two
+> distinct layers. **Pre-dispatch (clap usage error):** either binary invoked with a
+> missing required argument, an unknown flag, or a malformed subcommand fails
+> [clap](https://docs.rs/clap)'s own argument parsing and exits `2` *before* any reposix
+> handler (or the helper's `real_main`) runs — this is clap's standard usage-error
+> convention, not a reposix code path. **Post-dispatch (handler):** the
+> `git-remote-reposix` `2` row above (helper crashed / unrecoverable `anyhow` `Err` from
+> `real_main`) is a *post*-parse exit-`2` that reposix itself emits after clap has already
+> accepted the arguments. The `reposix` CLI has **no** post-dispatch `2` of its own — its
+> handlers return `anyhow::Result<()>` → `0`/`1` only (see the per-subcommand table below),
+> so a `reposix` exit `2` is always the pre-dispatch clap layer.
+
 If you only have time for one rule: **`exit == 0` means success;
 anything else means parse stderr.**
 
