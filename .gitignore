@@ -77,6 +77,18 @@ quality/reports/verifications/*/*.cobertura.xml
 # evidence — the verifier `webhook-latency-floor.sh` READS this artifact
 # on every pre-release run; it's not a per-run runtime snapshot.
 !quality/reports/verifications/perf/webhook-latency.json
+# Exception: P93 named-evidence artifacts. These 5 JSONs are cited by the
+# canonical quality/reports/verdicts/p93/VERDICT.md as the load-bearing PASS
+# artifact for rows RBF-LR-01/02/04/05 + D-P92-03. Per the block comment above
+# ("named evidence artifacts ... per phase ARE tracked") they must stay tracked;
+# the broad */*.json glob above swept them up, making them tracked-AND-ignored —
+# which release-plz reads as "uncommitted changes" and aborts on. Negating them
+# here restores tracked-and-not-ignored without un-ignoring the transient dir.
+!quality/reports/verifications/agent-ux/p93-cache-coherence.json
+!quality/reports/verifications/agent-ux/p93-delta-sync-coherence.json
+!quality/reports/verifications/agent-ux/p93-l1-promise-reconciled.json
+!quality/reports/verifications/agent-ux/p93-l2-l3-coherence-adr.json
+!quality/reports/verifications/agent-ux/p93-mid-stream-litmus-t1-t4.json
 quality/reports/verdicts/*/[0-9]*.md
 # kind: shell-subprocess transcripts (RBF-FW-02) are per-run runtime snapshots,
 # same as verifications/*.json above — the dir is scaffolded by .gitkeep and the
