@@ -235,6 +235,27 @@ changed-set), explicitly **not** load-bearing for the coherence guarantee.
    sync` / `--reconcile`); there is no torn cache state because the failed push
    never advanced the cursor or `oid_map`.
 
+   > **KNOWN LIMITATION — WAIVED for v0.13.0 (RBF-LR-03).** The clean-convergence
+   > contract above holds against the simulator and against any backend that lets
+   > the client name its own record id. It does **not** fully hold against a real,
+   > id-reassigning backend (GitHub Issues / JIRA / Confluence) when a *create* is
+   > interrupted **mid-batch** — a network drop between the backend assigning the
+   > new id and the cache completing slug→id reconciliation. On retry, PRECHECK B
+   > re-diffs against the new SoT base but cannot yet recognise the already-landed
+   > record as "the same create," because the agent-picked placeholder-id → backend-id
+   > mapping has no durable home. Result: **one duplicate record** the owner
+   > hand-deletes on the backend. This is narrow (real backend + create + mid-batch
+   > network drop), recoverable (hand-delete the duplicate; no data loss, no torn
+   > cache), and **owner-signed as WAIVED for v0.13.0** (tag-timing decision T1,
+   > `.planning/CONSULT-DECISIONS.md`) — NOT suppressed. The real fix is a design
+   > pivot, not a point patch: model create (and any multi-step client↔server
+   > interaction) as a **commit sequence with slug→id translation** so the mapping
+   > lives in the data model and a partial fail leaves a well-defined intermediate
+   > state to replay. That reconciliation redesign is the **v0.14.0 headline
+   > milestone** (owner directive, `.planning/CONSULT-DECISIONS.md` "RBF-LR-03
+   > pivot"). ADR-010 §3's convergence contract is revised only after that
+   > exploration converges; until then this marker is the honest boundary.
+
 4. **Test co-location.** SC2 pins `cargo test -p reposix-cache --test
    cache_coherence`, but `SotPartialFail` + PRECHECK B live in **reposix-remote**
    (`write_loop.rs` / `precheck.rs`), not reposix-cache. **Decision:**
@@ -310,7 +331,9 @@ too stays reversible.)
 3. **`SotPartialFail` recovery test (RBF-LR-03).** Add
    `crates/reposix-remote/tests/partial_failure_recovery.rs` (sim) + the
    `partial_failure_recovery_real_confluence` `#[ignore]` smoke in
-   `crates/reposix-cli/tests/agent_flow_real.rs`.
+   `crates/reposix-cli/tests/agent_flow_real.rs`. (The sim proves clean
+   convergence; the real-backend mid-batch-create duplicate is the WAIVED
+   known-limitation documented in §3 above, slated for the v0.14.0 pivot.)
 4. **Fix `reposix sync --reconcile`** (`crates/reposix-cli/src/sync.rs:98`) to
    force a full `build_from` (clear `last_fetched_at` first, or call `build_from`
    directly) so it honours its "full list_records walk + cache rebuild" promise

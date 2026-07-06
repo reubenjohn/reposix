@@ -551,3 +551,26 @@ the P97 milestone `--persist` mint MUST restore the `subjective-rubrics.json` co
 git-checkout the spurious `subjective/*` status flips off the STALE (unrefreshed) rubric artifact so
 they do NOT ride into the tagged tree. Wave A is planning-only and does not run the mint; this note
 is the explicit instruction for whichever agent runs the Wave-B 9th-probe `--persist`.
+
+---
+
+## S-260706-rbf-01 — ADR-010 Consequences item-4 note is itself stale (LOW / cosmetic)
+
+**Found during:** quick 260706-rbf (RBF-LR-03 known-limitation docs).
+**Severity:** low / cosmetic.
+**Issue:** `docs/decisions/010-l2-l3-cache-coherence.md` Consequences item 4 (~line 319) says
+`docs/guides/troubleshooting.md:352` points at a dvcs-topology "Out of scope" anchor and says L3
+"defers to v0.14.0" — but troubleshooting.md:352 now correctly reads "L3 … is shipped … Only L2 …
+remains deferred." The P93 fix wave already fixed that doc line; the ADR's item-4 note now describes
+a defect that no longer exists (the note is stale, not the doc).
+**Sketch:** trim/annotate the item-4 note to reflect that the troubleshooting cross-ref was fixed.
+NOT eager-fixed: editing a ratified ADR's Consequences section for a cosmetic staleness risks
+rewriting decision history; belongs in an OP-8 drain, not a docs quick.
+
+## S-260706-rbf-02 — CONSULT-DECISIONS T1 entry has an empty Commit field (LOW / cosmetic)
+
+**Found during:** quick 260706-rbf.
+**Severity:** low / cosmetic.
+**Issue:** `.planning/CONSULT-DECISIONS.md` T1 tag-timing entry (~line 75) has `**Commit:** (this
+entry; handover encodes the sequencing)` — no real SHA for a load-bearing sequencing decision.
+**Sketch:** backfill the SHA of the commit that recorded the T1 decision. Ledger hygiene.

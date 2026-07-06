@@ -190,6 +190,7 @@ alternatives: [ADR-010](../decisions/010-l2-l3-cache-coherence.md).
 - **Multi-SoT.** v0.13.0 is "one issues backend (SoT) + one plain-git mirror." A working tree can be attached to exactly one SoT. The origin-of-truth-across-multiple-issues-backends question lives in v0.14.0.
 - **Long-running sync process.** The webhook + cron schedule is the v0.13.0 sync mechanism. There is no background reposix service; everything is event-driven or cron-driven.
 - **Atomic two-phase commit across backends.** The bus remote is "SoT-first, mirror-best-effort with lag tracking," not a true 2PC. The asymmetry above is the price of not needing a coordinator.
+- **Duplicate-free recovery from an interrupted create on a real backend.** A create against an id-assigning real backend (GitHub Issues / JIRA / Confluence) that is cut off mid-push can leave one hand-deletable duplicate on retry — a documented, owner-signed v0.13.0 known limitation, recoverable by hand-deleting the duplicate ([troubleshooting](../guides/troubleshooting.md#duplicate-record-after-an-interrupted-create-real-backend-v0130-known-limitation), [ADR-010 §3](../decisions/010-l2-l3-cache-coherence.md)). The clean fix — modelling a create as a durable slug→id translation — is the v0.14.0 reconciliation-redesign pivot.
 
 ## See also
 

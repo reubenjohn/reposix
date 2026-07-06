@@ -351,6 +351,27 @@ If `delta_sync` rows returned empty over a stretch but the SoT actually moved du
 
 Mechanism: see [DVCS topology — Cache coherence: L1 / L2 / L3](../concepts/dvcs-topology.md#cache-coherence-l1-l2-l3-adr-010) for the trade-off. L3 (transactional cache writes) is shipped — it restores the tree↔`oid_map` invariant at its source, which is what `reposix sync --reconcile` above is recovering from when it drifts. Only L2 (re-fetch-on-cache-miss) remains deferred to v0.14.0; see [ADR-010](../decisions/010-l2-l3-cache-coherence.md) for the full trade-off.
 
+### Duplicate record after an interrupted create (real backend, v0.13.0 known limitation)
+
+Symptom: you pushed a brand-new record (a create, not an edit) to a real backend — GitHub Issues, JIRA, or Confluence — the network dropped mid-push, and after `git push` retried you now see **two** copies of the same record on the backend (one with the id the backend assigned, one the retry created).
+
+What it means: this is a **documented, owner-signed v0.13.0 known limitation**, not a bug you caused. A real backend assigns its own id to a new record. If the connection drops in the narrow window *after* the backend created the record but *before* your cache finished matching that new id back to your local file, the retry cannot yet recognise the already-created record as the same one, so it creates a second. The window is narrow (real backend + a create + a mid-push network drop) and there is **no data loss and no cache corruption** — only an extra record.
+
+Fix (before you re-push, check for the duplicate):
+
+```bash
+# 1. Look on the backend for two records with identical title/body.
+#    (GitHub: the Issues list; JIRA: the project board; Confluence: the space.)
+# 2. Keep the one you intend to track; hand-delete the duplicate on the backend UI.
+# 3. Re-fetch so your cache matches the backend's surviving record:
+reposix sync --reconcile
+git fetch
+```
+
+Why hand-delete: reposix will not guess which of the two copies you meant to keep, so recovery is a deliberate one-click delete on the backend, not an automatic merge. Once the duplicate is gone and `reposix sync --reconcile` has refreshed the cache, your working tree and the backend agree again.
+
+The clean fix is a v0.14.0 milestone: a redesign that models a create as a durable slug→id translation so an interrupted create leaves a well-defined state to continue instead of a duplicate. See [ADR-010 §3 — `SotPartialFail` recovery](../decisions/010-l2-l3-cache-coherence.md) for the full known-limitation marker and the pivot it points to.
+
 ## See also
 
 - [Mental model in 60 seconds](../concepts/mental-model-in-60-seconds.md) — when an error message stops making sense, re-read this; the three keys are the cheat sheet.
