@@ -1,0 +1,831 @@
+# v0.13.0 Surprises Intake — ARCHIVE (P89-P97)
+
+> **Terminal entries relocated from `SURPRISES-INTAKE.md` by P96 Wave 3a (OP-8 Slot 1 hygiene).** Pure relocation — entry bodies are byte-identical to
+> their originals; only their file home changed. These are CLOSED: RESOLVED /
+> WONTFIX / DEFERRED-to-a-future-milestone. The live drain queue stays in
+> [`SURPRISES-INTAKE.md`](./SURPRISES-INTAKE.md).
+
+**Archived here: 32 entries.**
+
+## Manifest
+
+- 2026-07-03 11:00 | discovered-by: resumption audit (8-week idle gap) | severity: HIGH  → **RESOLVED**
+- 2026-07-03 11:05 | discovered-by: resumption audit (8-week idle gap) | severity: MEDIUM  → **RESOLVED**
+- 2026-07-03 11:35 | discovered-by: resumption audit (8-week idle gap) | severity: MEDIUM  → **RESOLVED**
+- 2026-07-03 11:40 | discovered-by: resumption audit (8-week idle gap) | severity: LOW  → **RESOLVED**
+- 2026-07-03 20:16 | discovered-by: P89-02 | severity: LOW  → **RESOLVED**
+- 2026-07-03 21:00 | discovered-by: P89 orchestrator (CI triage) | severity: MEDIUM  → **RESOLVED**
+- 2026-07-03 21:00 | discovered-by: P89 orchestrator (owner .env note) | severity: LOW  → **RESOLVED**
+- 2026-07-03 21:35 | discovered-by: 89-07 | severity: LOW  → **RESOLVED-c0d5459**
+- 2026-07-04 05:10 | discovered-by: P89 cross-AI review (Codex leg) | severity: HIGH  → **RESOLVED**
+- 2026-07-04 05:10 | discovered-by: P89 cross-AI review (all three legs) | severity: HIGH  → **RESOLVED**
+- 2026-07-04 05:10 | discovered-by: P89 cross-AI review (Claude leg) | severity: MEDIUM  → **ROUTED-P91/future-milestone**
+- 2026-07-04 05:10 | discovered-by: P89 cross-AI review (independent leg) + coordinator repro | severity: MEDIUM  → **RESOLVED**
+- 2026-07-04 05:30 | discovered-by: steward-window (post-P89) | severity: MEDIUM  → **DEFERRED-P95/P97/future-milestone**
+- 2026-07-04 06:20 | discovered-by: Stage-1 Lane-A (QL-001 empirical reproduction) | severity: BLOCKER  → **RESOLVED**
+- 2026-07-04 05:40 | discovered-by: steward-window (post-P89) | severity: LOW  → **RESOLVED**
+- 2026-07-04 08:30 | discovered-by: Stage-2 catalog-row-minting | severity: MEDIUM  → **RESOLVED**
+- 2026-07-04 18:10 | discovered-by: quality-convergence connector re-audit | severity: HIGH  → **ROUTED-P95/future-milestone**
+- 2026-07-04 21:00 | discovered-by: P91 91-05 (vision-litmus real-run) | severity: BLOCKER  → **RESOLVED**
+- 2026-07-04 21:00 | discovered-by: P91 91-05 (vision-litmus real-run) | severity: MEDIUM  → **RESOLVED**
+- 2026-07-04 22:00 | discovered-by: P91 litmus-REOPEN (second real-run) | severity: BLOCKER  → **RESOLVED**
+- 2026-07-04 22:45 | discovered-by: P91 T2-REOPEN (fresh-eyes friction audit) | severity: HIGH (4 findings)  → **SUBBULLET-RESOLVED**
+- 2026-07-04 23:00 | discovered-by: P91 T2-REOPEN (second fresh-eyes run, real TokenWorld) | severity: MEDIUM (3 findin...  → **ROUTED/future-milestone**
+- 2026-07-05 | discovered-by: P91 CI-red fix executor (run 28724087420, pre-pr `agent-ux/real-git-push-e2e`) | severity...  → **RESOLVED**
+- 2026-07-05 | discovered-by: P91 fetch-path fix executor | severity: MEDIUM (latent CI-abort landmine)  → **RESOLVED**
+- 2026-07-05 | discovered-by: P91 fetch-path fix executor (run 28725302159, real-git-push-e2e Assertion 2) | severity: ...  → **RESOLVED**
+- 2026-07-05 | Recurring quality-runner self-mutation bug: catalog-first FAIL row minted missing `minted_at`, AND the r...  → **RESOLVED**
+- 2026-07-06 | `docs-alignment/walk` (P0) RED — P94 Fork A drifted 8 docs-alignment claims bound to `crates/reposix-cor...  → **RESOLVED**
+- 2026-07-05 | Pre-push BLOCKED: pre-existing `clippy::doc_markdown` errors in `crates/reposix-remote/tests/common.rs` ...  → **RESOLVED**
+- 2026-07-05 23:10 | discovered-by: P94 D2 lane | severity: HIGH → RESOLVED (2026-07-05, DP-2 root-cause `28855b8`)  → **RESOLVED**
+- 2026-07-05 23:12 | discovered-by: P94 D2 lane | severity: MEDIUM  → **RESOLVED**
+- 2026-07-05 | `list_changed_since` truncation UNDER-materializes (no completeness signal) | discovered-by: P94 Finish ...  → **RESOLVED**
+- 2026-07-06 | Batch docs-alignment REFRESH CANDIDATE: 5 rows the pre-push walk re-computes as STALE_TEST_DRIFT every p...  → **RESOLVED**
+
+---
+
+## Entries
+
+## 2026-07-03 11:00 | discovered-by: resumption audit (8-week idle gap) | severity: HIGH
+
+**What:** Waiver cliff on 2026-07-26: 12 catalog waivers expire simultaneously — `code/cargo-test-pass`, cross-platform ×2, perf ×3, `release/cargo-binstall-resolves`, security ×2, subjective ×3. All are `tracked_in` v0.12.1 carry-forwards (MIGRATE-03, SEC-01/02, CROSS-01/02), and those carry-forwards show no evidence of execution during the idle gap. When the cliff hits, all 12 rows flip WAIVED → FAIL on their next relevant cadence run at once.
+
+**Why out-of-scope for the resumption audit:** Intake-only by mandate (OD-3 execution kick-off) — landing five carry-forward workstreams or consciously renewing 12 waivers is multi-task work that would front-run P89's framework fixes.
+
+**Sketched resolution:** The phase running when the cliff hits (likely P90 or P91) must either land the carry-forwards or consciously renew each waiver with a new `tracked_in` — no silent expiry-into-FAIL. Note: P89/P90's dispatch.sh migration and P95's row migration may moot the 3 subjective waivers; check before renewing those.
+
+**STATUS:** RESOLVED | 90-05 commit e702822 — per-waiver conscious disposition (D90-02): 11 of the 12 cliff waivers RENEWED with `tracked_in` repointed from the dead "v0.12.1" label to live phase homes (P95/P97/launch-readiness); `release/cargo-binstall-resolves` CLEARED (not renewed) because the ~10-LOC fix it named already shipped pre-P90 (33dd41f, QL-003), re-verified byte-for-byte against `release.yml` in this dispatch. The 3 subjective waivers were confirmed NOT mooted by 90-03's dispatch.sh migration (they cover a distinct runner dispatch-and-preserve gap) and renewed honestly. The 2 security waivers additionally got their dangling verifier scripts fixed, not just re-pointed (D90-02d). Full table: `quality/reports/raise-list-p90.md` § Waivers (commit ab7078c).
+
+## 2026-07-03 11:05 | discovered-by: resumption audit (8-week idle gap) | severity: MEDIUM
+
+**What:** 5 docs-reproducible waivers (`example-01`, `example-02`, `example-04`, `example-05`, `tutorial-replay`) already EXPIRED 2026-05-12 during the idle gap; the next `post-release` cadence run flips them FAIL.
+
+**Why out-of-scope for the resumption audit:** Intake-only by mandate; fixing the underlying doc-repro gaps (or renewing with new `tracked_in`) is real work belonging inside a phase, not the resumption sweep.
+
+**Sketched resolution:** Same treatment as the 2026-07-26 waiver-cliff entry above, but already overdue: the next phase that touches the quality framework (P89/P90 window) either restores the docs-repro examples to PASS or renews the waivers with honest `tracked_in` pointers before a `post-release` cadence run fires.
+
+**STATUS:** RESOLVED | 90-05 commit e702822 — the 5 docs-repro waivers (`example-01`, `example-02`, `example-04`, `example-05`, `tutorial-replay`) RENEWED with honest `tracked_in` acknowledging they remain genuinely broken (container never spawns the sim; `tutorial-replay` is additionally QL-001-blocked on the push step) rather than falsely restored to PASS — conscious renewal per D90-02, not silent expiry.
+
+## 2026-07-03 11:35 | discovered-by: resumption audit (8-week idle gap) | severity: MEDIUM
+
+**What:** `crates/reposix-cache/src/reconciliation.rs:182` — `OrphanPolicy::ForkAsNew` is a logged no-op stub tagged "TODO P82+" even though P82 shipped. Attach reconciliation silently does nothing for the fork-as-new orphan case.
+
+**Why out-of-scope for the resumption audit:** Implementing (or formally deprecating) a reconciliation policy is cache-crate code work with real-backend test implications.
+
+**Sketched resolution:** Implement ForkAsNew or explicitly document it as unsupported (error instead of logged no-op); natural home P91 (attach real-backend wiring), which owns the reconciliation surface.
+
+**STATUS:** RESOLVED (P91-03 Task 2, commit cf7a37d) — disposition: **works for free**. Investigation per D91-04 (research §2.3, confirmed against `reposix-remote/src/diff.rs:177`): once the canonical-path fix landed (91-02/QL-001), leaving the orphan file in place IS the whole mechanism — the next `git push` sees a path absent from the pushed prior state and plans a `PlannedAction::Create`. No speculative machinery built. The "TODO P82+" no-op message is replaced with an honest "kept; next push creates it" message; a new integration test `attach_fork_as_new_keeps_orphan_for_next_push` (tests/attach.rs) proves the file is kept (not deleted, attach not aborted) and no TODO stub is advertised. Also fixed the misleading `OrphanPolicy::Abort` doc (it never aborts).
+
+## 2026-07-03 11:40 | discovered-by: resumption audit (8-week idle gap) | severity: LOW
+
+**What:** `crates/reposix-cli/tests/agent_flow_real.rs` module docs still claim the Phase-32 "helper hardcodes SimBackend" limitation (superseded by Phase-36 `backend_dispatch`); the real dark-factory tests there are init+URL smoke only, not real fetch/push coverage.
+
+**Why out-of-scope for the resumption audit:** Rewriting the real-backend tests as genuine fetch/push assertions is exactly the RBF remediation work the extension phases exist for.
+
+**Sketched resolution:** P91 rewrites these as real fetch/push assertions per the RBF plan; drop the stale Phase-32 module-doc claim in the same commit.
+
+**STATUS:** RESOLVED (P91-03 Task 3, commit 3f67c0e). Added `attach_real_{confluence,github,jira}` + `sync_real_{confluence,github,jira}` #[ignore] smokes that exercise a REAL round-trip (attach + `sync --reconcile` construct the connector via the shared dispatch factory and call `list_records` against the live backend), not just an init config string. The stale "helper still hardcodes SimBackend" module-doc claim was corrected in the same commit. Verified against reality: the Confluence pair ran green against the live tenant (2 passed).
+
+## 2026-07-03 20:16 | discovered-by: P89-02 | severity: LOW
+
+**What:** P89→P91 dead-allowlist-marker coupling. When P91 RBF-A-03 scrubs the deferral strings in `crates/reposix-cli/src/{attach.rs (the P79-02/P79-03 bail! string, marker on the same line), sync.rs:42}`, it MUST also remove the corresponding `// banned-words: ok — P91 RBF-A-03 will remove this string` allowlist comment from the SAME line in attach.rs. Otherwise dead allowlist markers accumulate, polluting the diff and creating a false impression that the file still hosts a banned token. Note: sync.rs:42 carries NO marker — its token is `P82+` (no `-\d+` suffix), which the tightened `\bP\d{2,3}-\d+\b` regex intentionally does not match; it is instead covered by 89-05's deferral-pointer linter (`lands? (alongside|in) P\d+`) and remains a P91 scrub target.
+
+**Why out-of-scope for P89-02:** P91 owns the scrub; P89 only ships the linter that creates the marker dependency.
+
+**Sketched resolution:** P91's per-task PLAN should include a step "remove the corresponding `// banned-words: ok` markers when scrubbing each deferral string" with grep-verified post-condition (`grep -rn 'banned-words: ok — P91' crates/` returns zero matches after the scrub).
+
+**STATUS:** RESOLVED (P91-03 Task 1, commit 1f7fff3). Deleting the sim-only bail arms in `attach.rs`/`sync.rs` removed both the `P79-02`/`P82+` deferral strings AND the `// banned-words: ok — P91 RBF-A-03` marker on the same line. Post-condition verified: `grep -rn 'banned-words: ok — P91' crates/` returns zero matches.
+
+## 2026-07-03 21:00 | discovered-by: P89 orchestrator (CI triage) | severity: MEDIUM
+
+**What:** `contract_confluence_live_hierarchy` (crates/reposix-confluence/tests/contract.rs:752-797) is fragile-by-design: read-only assert on live state it doesn't own; doc comment hard-codes stale space state (745-747); project's own cleanup convention (testing-targets.md:79) invites the breakage. Broke CI run 28692818500 on main. Mitigated 2026-07-03 by durable fixture pages in TokenWorld (space key REPOSIX, id 360450): parent 7766017 → child 7798785, label `reposix-durable-fixture` (deliberately NOT the sweepable kind=test label), bodies explain purpose.
+
+**Why out-of-scope for P89:** P89 is framework-fix scope (cadence/kind/linters/schema); rewriting a real-backend contract test is P91 real-backend wiring territory.
+
+**Sketched resolution:** Durable fix: make the test self-seeding (create_record already supports parentId, reposix-confluence/src/lib.rs:288) OR document the fixture pair as a named precondition in testing-targets.md. Home: P91 (real-backend wiring).
+
+**STATUS:** RESOLVED (P91-04, commit 6ca3f6d). Rewrote `contract_confluence_live_hierarchy` as the planner-recommended hybrid: `get_record` both durable fixture ids first (read-only); if both resolve, assert the child's `parent_id` against them and return — no mutation. If either is missing, self-seed a fresh `kind=test`-labeled parent+child pair via `create_record`, assert immediately, and delete both in teardown; the durable ids (`7766017`/`7798785`) are never created, mutated, or deleted by either path. Wired `.with_audit()` so the self-seed path's 2 `create_record` calls are OP-3 verifiable. Verified against reality: ran live against the real Confluence tenant twice — once with the durable pair present (read-only path, pair confirmed still intact after), once with the durable-parent id temporarily swapped to a nonexistent id to force the self-seed path (reverted before commit) — both passed, including the `audit_events` POST-count assertion. `docs/reference/testing-targets.md` now documents the durable pair as a named "Protected durable fixtures — NEVER delete" precondition (previously only in oral tradition / this intake entry) and the generic cleanup section explicitly excludes both ids.
+
+## 2026-07-03 21:00 | discovered-by: P89 orchestrator (owner .env note) | severity: LOW
+
+**What:** JIRA_TEST_PROJECT not forwarded in ci.yml's JIRA integration job; owner's live project key is KAN, CI silently defaults to TEST. Source: owner's .env.example note.
+
+**Why out-of-scope for P89:** CI workflow env plumbing for real-backend jobs belongs with the real-backend wiring phases, not the framework-fix phase.
+
+**Sketched resolution:** Forward JIRA_TEST_PROJECT (secret or repo variable) in ci.yml's JIRA integration job. Home: P91 or P95.
+
+**STATUS:** RESOLVED (P91-03 Task 3, commit 3f67c0e). Added `JIRA_TEST_PROJECT: ${{ secrets.JIRA_TEST_PROJECT }}` to BOTH JIRA env blocks in ci.yml (integration-contract-jira-v09 and bench-latency-v09). `jira_test_project()` resolves `JIRA_TEST_PROJECT` → `REPOSIX_JIRA_PROJECT` → `TEST`, so the owner's KAN key now reaches the real-backend smokes; absent secret still falls back to TEST.
+
+## 2026-07-03 21:35 | discovered-by: 89-07 | severity: LOW
+
+**What:** `quality/catalogs/subjective-rubrics.json` row `subjective/dvcs-cold-reader` has `"status": "NOT_VERIFIED"` (underscore) instead of the schema's canonical `"NOT-VERIFIED"` (hyphen) per `quality/catalogs/README.md` § "Status legend". `compute_exit_code()`'s `not in ("PASS", "WAIVED")` check still correctly treats it as non-green (accidentally correct), but any code doing an exact string match against `"NOT-VERIFIED"` (e.g. the `_stale`/`_skipped_real_backend` label branches in `print_row_summary()`) would silently mis-render this row.
+
+**Why out-of-scope for 89-07:** Not caused by or related to RBF-FW-11's changes; a pre-existing typo in a row 89-07 only touched to add `claim_vs_assertion_audit`. Fixing it is a one-line, zero-risk change but is genuinely a different row's data-quality issue, not this task's surface.
+
+**Sketched resolution:** Flip `"NOT_VERIFIED"` → `"NOT-VERIFIED"` in `quality/catalogs/subjective-rubrics.json`; grep the other catalogs for the same underscore-vs-hyphen typo while at it (worth a P95 sweep, XS-sized).
+
+**STATUS:** RESOLVED-c0d5459 | Already fixed by the convergence window per D90-11 (`.planning/phases/90-framework-fixes-honesty-rules/90-DECISIONS.md` D90-11, R2 § B.2) — confirmed during 90-07: `subjective/dvcs-cold-reader`'s `status` field reads `"NOT-VERIFIED"` (hyphen) in the current catalog. Not re-fixed in P90.
+
+## 2026-07-04 05:10 | discovered-by: P89 cross-AI review (Codex leg) | severity: HIGH
+
+**What:** `quality/runners/run.py`'s verifier-not-found branch preserves prior PASS/FAIL/PARTIAL status (comment: "Don't flip from PASS->NOT-VERIFIED on a missing verifier"). Deleting or typo-ing a verifier path leaves an already-PASS row green on every subsequent run — a dishonest-GREEN channel that contradicts "rows only claim what verifiers assert". Pre-existing (landed dd458bd, P57/v0.12.0), NOT introduced by P89.
+
+**Why out-of-scope for P89:** Runner-wide status-preservation semantics are explicitly P90 RBF-FW-07 territory; a drive-by flip would make every deploy-path glitch demote all rows, which is the regression P57 was avoiding — needs a deliberate design decision.
+
+**Sketched resolution:** P90 RBF-FW-07: missing verifier ⇒ NOT-VERIFIED (never preserve PASS), paired with a distinct artifact `error` field so a deploy glitch is distinguishable from a real regression. Full analysis: 89-CROSS-AI-REVIEW.md H4.
+
+**STATUS:** RESOLVED | 90-02c/d commit 859f14d (RBF-FW-07a) — missing verifier now flips the row to `NOT-VERIFIED` unconditionally (never preserves prior PASS/FAIL/PARTIAL), with a distinct `error: verifier-not-found` artifact marker so a deploy glitch is distinguishable from a real regression at a glance.
+
+## 2026-07-04 05:10 | discovered-by: P89 cross-AI review (all three legs) | severity: HIGH
+
+**What:** The `claim_vs_assertion_audit` date-cutoff anchors on the freely editable `last_verified` field: a newly minted row with a backdated `last_verified` (< 2026-05-08) and no audit paragraph loads cleanly, and the runner's same-status timestamp-rollback makes the backdate durable. Empirically reproduced by two reviewers.
+
+**Why out-of-scope for P89:** An immutable `minted_at` field is a schema addition touching all mint paths; P89's designed counters (phase-close verifier backdate spot-check + P90 RBF-FW-12 adversarial dispatch + P95 RBF-D-06 backfill that makes the check unconditional) already bracket the window.
+
+**Sketched resolution:** P90: add `minted_at` (write-once, set by the catalog-first commit; validator rejects rows minted post-P90 without it) and switch `_audit_field.validate_row`'s anchor to it. P95 RBF-D-06 then retires the exemption class entirely. Full analysis: 89-CROSS-AI-REVIEW.md H2.
+
+**STATUS:** RESOLVED | 90-02a/b commit 91bec9a — write-once `minted_at` (RFC3339) added to every catalog row minted from P90 onward; `_audit_field.validate_row` anchors `claim_vs_assertion_audit` on `minted_at` when present, falling back to the legacy `last_verified` heuristic for pre-P90 rows. Validator rejects a post-P90 row lacking `minted_at`, closing the backdated-`last_verified` dodge for all new rows. Legacy exemption retires at P95 RBF-D-06 as designed.
+
+## 2026-07-04 05:10 | discovered-by: P89 cross-AI review (Claude leg) | severity: MEDIUM
+
+**What:** The `pre-release-real-backend` env-gate (`_realbackend.is_skipped`) checks non-loopback origin + one complete cred set, but NOT sanctioned-target membership nor cred↔origin correspondence — `REPOSIX_ALLOWED_ORIGINS=https://example.com GITHUB_TOKEN=x` un-skips the cadence. P89 tightened loopback spellings (89-CROSS-AI-REVIEW.md H1 fix); the membership residual remains: once P91–P95 make the litmus executable, a mis-pointed origin could exercise the wrong target.
+
+**Why out-of-scope for P89:** The env-gate is a skip heuristic; the actual proof obligation (real execution against the sanctioned target) belongs to the litmus verifier body, which P91 writes.
+
+**Sketched resolution:** P91's litmus implementation MUST itself assert the resolved target is one of the sanctioned three (docs/reference/testing-targets.md) and fail loud otherwise; optionally `_realbackend` gains a sanctioned-host allowlist check at milestone-close. Full analysis: 89-CROSS-AI-REVIEW.md H1 residual.
+
+**STATUS:** ROUTED-P91 | D90-06 — the proof obligation (litmus verifier body asserts the resolved real-backend target is one of the sanctioned three and fails loud otherwise) is now a named P91 ROADMAP acceptance criterion (`.planning/milestones/v0.13.0-phases/ROADMAP.md` Phase 91 SC-6, amended this commit) rather than a second, weaker allowlist check in `_realbackend` that would duplicate the real assertion. Not resolved in P90 by design.
+
+## 2026-07-04 05:10 | discovered-by: P89 cross-AI review (independent leg) + coordinator repro | severity: MEDIUM
+
+**What:** Running `--cadence pre-release-real-backend` with env scrubbed DEMOTES a previously-PASS row (e.g. the cadence wiring smoke) to NOT-VERIFIED and persists the flip to the committed catalog with no record of why — a verification RE-RUN in a cred-less shell silently rewrites catalog ground truth. Reproduced live during 89-08 (coordinator reverted the churn).
+
+**Why out-of-scope for P89:** Whether an env-gate skip should count as a re-grade event (demote) or a no-op (preserve last real grade + staleness) is a runner status-preservation design call — P90 RBF-FW-07's exact remit.
+
+**Sketched resolution:** P90 RBF-FW-07: skip-events should not overwrite a prior real grade; instead mark staleness (e.g. `last_real_grade` + TTL) so honesty is preserved without ground-truth loss. Full analysis: 89-CROSS-AI-REVIEW.md M8.
+
+**STATUS:** RESOLVED | 90-02c/d commit 859f14d (RBF-FW-07b, amended D90-04) — env-gated skip now fails closed: current `status` flips (and persists) to `NOT-VERIFIED`, while the prior REAL grade is preserved in `last_real_grade` + `last_real_verified` history fields and the artifact carries an explicit `skip_reason: env-missing` marker. Drains the silent ground-truth-loss complaint without reopening the OD-2 skip-as-pass hole.
+
+## 2026-07-04 05:30 | discovered-by: steward-window (post-P89) | severity: MEDIUM
+
+**What:** The `quality-weekly` GitHub Actions workflow has NEVER been green. `verdict.py` returns `1` on any non-`brightgreen` color (lines 272, 300: `return 0 if color == "brightgreen" else 1`), and `compute_color()` returns `"yellow"` whenever any P2 row is non-green (line 104-109). Two P2 `docs-repro` manual rows in `quality/catalogs/docs-reproducible.json` — `benchmark-claim/8ms-cached-read` (row @245) and `benchmark-claim/89.1-percent-token-reduction` (row @279) — are permanently `"status": "NOT-VERIFIED"` with `verifier.script: null` and `last_verified: null`. Both are `cadences: [weekly]`, so every weekly run computes yellow → exit 1 → red workflow badge. These two rows police the two most adoption-facing numbers in the project (headline latency + token-reduction in `docs/index.md` and `README.md`), so they are exactly the numbers that most deserve real verification, not verdict-softening.
+
+**Why out-of-scope for the steward window:** The steward window is a merge/dep-hygiene batch, not a quality-gate authoring session. Writing the two verifier scripts is real work with real acceptance criteria (they must actually re-measure / re-grep and persist a fresh artifact + `last_verified`), and the 8ms row's own `owner_hint` already names an intended home: "v0.12.1 perf cross-check (`perf/headline-numbers-cross-check`) automates this row." Softening `verdict.py` to treat yellow as exit 0 was explicitly rejected as the anti-north-star move (it would hide real P2 drift, not surface it).
+
+**Sketched resolution (north-star: VERIFY, don't soften):** Give both rows a real `verifier.script`. Their `expected.asserts` are already mechanical and cheap: (8ms row) assert `docs/benchmarks/latency.md` frontmatter `last_measured_at` is < 30 days old AND the cached-read p50 cell is within 8ms±2ms; (89.1% row) assert `89.1%` is greppable from `docs/benchmarks/token-economy.md` AND the referenced comparison fixture file exists. Both are a ~20-line python verifier apiece emitting the standard artifact JSON. Home: P95 (docs-alignment / headline-numbers automation) or P97 (release-polish), whichever the roadmap assigns `perf/headline-numbers-cross-check`. Until then, `quality-weekly` red is a known-yellow, not an acute failure.
+
+**STATUS:** DEFERRED-P95/P97 | Same disposition as the sibling 2026-07-03 11:10 entry above (P90 90-05 RAISE LIST § 1, commit ab7078c): the two verifier-less P2 rows are the confirmed root cause; the fix is tracked as GOOD-TO-HAVES-04 (size M, routed to launch-readiness milestone per OD-4 §3) rather than softened in `verdict.py` — verify, don't soften, per this entry's own north-star language.
+
+## 2026-07-04 06:20 | discovered-by: Stage-1 Lane-A (QL-001 empirical reproduction) | severity: BLOCKER
+
+**What:** The push diff planner cannot round-trip a genuinely git-produced push from a real reposix working tree. VERIFIED by real end-to-end `git push` against the seeded sim (not a hand-crafted fast-export stream). Three compounding bugs, plus two environmental/consistency findings:
+
+- **BUG-1 (path-shape mismatch — the ledger's QL-001).** `diff::plan` keys the prior record list on `format!("{:04}.md", id)` = bare, 4-zero-padded, NO `issues/` prefix (`crates/reposix-remote/src/diff.rs:104-107`). But every real on-disk tree uses `issues/<id>.md`. There are in fact FOUR code sites that spell the same issue's path THREE different ways:
+  - cache / stateless-connect production read path → `issues/42.md` (unpadded, `issues/` subtree): `crates/reposix-cache/src/builder.rs:90` (`format!("{}.md", id)`) + `:135` (`issues` outer entry).
+  - `reposix refresh` CLI → `issues/00000000042.md` (11-zero-pad): `crates/reposix-cli/src/refresh.rs:104,120` (`format!("{:011}.md", id)`).
+  - import fallback (deprecated, git<2.34) → `0042.md` (bare 4-pad): `crates/reposix-remote/src/fast_import.rs:63` (`M 100644 :{} {:04}.md`).
+  - push planner prior-key → `0042.md` (bare 4-pad): `diff.rs:106`.
+  The planner agrees ONLY with the deprecated import fallback. Against the real cache/refresh shape, `prior_by_path.get(path)` misses for every record → each blob is a Create and each prior record is a Delete. **Reproduced:** unmodified push of a 6-issue `issues/<id>.md` tree vs a fresh 6-issue sim → `error: refusing to push (would delete 6 issues; cap is 5; commit message tag '[allow-bulk-delete]' overrides)` / `! [remote rejected] master -> main (bulk-delete)`. With ≤5 prior records the cap does NOT fire and the push silently deletes every existing record and re-creates them under fresh IDs (observed: ids 1-6 rotated to 7-11 in an earlier trial). Also: `issue_id_from_path` (`diff.rs:74-77` AND its duplicate `main.rs:432-435` — QL-157) does `strip_suffix(".md")` then `parse::<u64>()`; it returns `None` for any `issues/`-prefixed path, so the explicit `D issues/<id>.md` delete branch (`diff.rs:180`) is also silently dropped for real paths.
+
+- **BUG-2 (planner parses non-issue blobs as issues — no path filter).** `plan()` runs `frontmatter::parse` on EVERY tree path. `reposix refresh` writes `.reposix/fetched_at.txt` + `.reposix/.gitignore` into the tree; any push carrying them fails with `error: invalid issue at .reposix/fetched_at.txt: ... missing frontmatter open fence; refusing push` / `(invalid-blob:.reposix/fetched_at.txt)`. There is no `issues/*.md`-only filter. Compounds with the fact that `parse_export_stream` inserts every `M`-added path into `out.tree` and never removes it on a later `D` (`fast_import.rs:181` insert vs `:185` deletes-vec append), so a file added then deleted across commits (e.g. a `.reposix/` blob dropped in a later commit) still reaches `plan()` and rejects the push.
+
+- **BUG-3 (stream parser swallows a directive after commit-message data — silent data loss on the CORRECT path shape too).** `parse_export_stream`'s `data N` handler unconditionally consumes one whole line after `read_exact` (`fast_import.rs:156-157`: `let _ = r.read_line(&mut maybe_nl);`). The comment says "consume one [LF] if present" but it eats a full line whether or not an LF is present. Blob payloads are followed by an extra blank line (safe), but git fast-export emits the commit **message** payload immediately followed by the first `M` line with no extra LF — so that `read_line` swallows `M 100644 :1 <path>`. Result: the lowest-id issue (first M-line after the commit) is dropped from `parsed.tree` → classified as a spurious Delete. **Reproduced:** a NO-OP push (zero edits) of the planner's OWN native `0001.md..0006.md` shape against a fresh 6-issue sim returned exit 0 but DELETED issue 1 (`GET /projects/demo/issues/1` → HTTP 404; sim count 6→5, ids 2-6, no version bumps). This is a data-loss bug independent of BUG-1 and deterministic (always the first M-line).
+
+- **FINDING-A (environment: production read path needs git ≥ 2.34; this box has 2.25.1).** With git 2.25, `git fetch` falls back to the deprecated `import` capability, which (a) emits the commit to `refs/reposix/origin/main` while git expects `refs/reposix/main` → `fatal: could not read ref refs/reposix/main`; and (b) a forced `-c protocol.version=2` fetch reaches stateless-connect but the cache open dies with `git: git config --add transfer.hideRefs failed: fatal: not in a git directory`. So the canonical `reposix init && git checkout origin/main && edit && git push` loop cannot run to completion on git < 2.34, and the failure messages do NOT teach "upgrade git" — they surface as cryptic ref/gitdir errors. The reproduction above therefore drove the real export→parse→plan code by constructing the real on-disk tree shapes directly and pushing them; the planner code path exercised is byte-identical to the git-2.34 path.
+
+- **FINDING-B (test blind spot confirmed).** Every unit test in `diff.rs` (`five_deletes_passes_cap`, `unchanged_push_emits_no_patches`, etc.) hand-builds the `parsed.tree` map with the bare-padded `0001.md` shape, so they all pass while never touching the real path shape. `quality/gates/agent-ux/dark-factory/sim.sh` asserts only working-tree CONFIG (partialClone/promisor/filter) and helper stderr-teaching strings — it never performs a `git push`, so the round-trip is untested at the agent-ux gate too.
+
+**Why out-of-scope for eager-resolution:** This is not a contained single-crate fix. A coherent fix must (1) pick ONE canonical on-disk path shape and align four code sites (`builder.rs`, `refresh.rs`, `fast_import.rs`, `diff.rs`) + the shared `issue_id_from_path` contract (consolidating the QL-157 duplicate as part of it — consolidating the two copies NOW would be churn, since the correct fix rewrites the function to strip the `issues/` prefix and tolerate any/zero padding); (2) add an `issues/*.md` path filter to the planner; (3) harden the stream parser to peek-and-consume the optional LF instead of eating a line, plus reconcile M-then-D within the stream; and (4) ship a regression test that performs a REAL `git push` (not a synthetic stream) whose green state depends on all of the above landing together — a parser-only fix cannot be verified against reality because the path-shape bug still fails the push. Attempting a partial fix would land code whose regression test cannot pass and risks half-fixing the planner semantics.
+
+**Sketched resolution (P90/P91 MUST consume):** Decide the canonical path shape (recommend `issues/<id>.md` unpadded — the cache/stateless-connect production shape at `builder.rs:90`, which is also the CLAUDE.md-documented UX `issues/42.md`) and make `refresh.rs`, `fast_import.rs` (import + emit), and `diff.rs` all produce/consume exactly that, with a single shared `issue_id_from_path` that strips the `issues/` prefix. Add the non-issue-path filter. Fix the parser's trailing-LF handling (peek one byte; consume only if `\n`) and make `D` remove from `out.tree`. Then add the agent-ux `git push` round-trip.
+
+**Sharpened acceptance criteria (verifiable, must be a REAL push):**
+1. A real `git push` from a `reposix init`'d tree (or a tree in the canonical `issues/<id>.md` shape) round-trips exactly ONE edited record against the sim as a single PATCH, with **zero** manual fast-export and **misclassification count == 0** (no Creates, no Deletes).
+2. A **no-op** push (pull, no edits, push) produces **zero** backend writes — no create/update/delete, no record deleted, no version bump on any record (directly falsifies BUG-3).
+3. A push of the full seeded tree against a matching sim produces **zero** Delete actions (falsifies BUG-1's create/delete storm).
+4. A tree containing `.reposix/` metadata (as `reposix refresh` writes) pushes without an `invalid-blob` rejection (falsifies BUG-2).
+5. The regression runs a REAL `git push` end-to-end at the agent-ux gate; if the harness requires git ≥ 2.34, it asserts the version precondition and fails loud (not silently skips) on older git.
+6. All four path-shape sites are grep-verifiable as producing the single canonical spelling for a given id.
+
+**Repro recipe (self-contained; drove the real export→parse→plan path on git 2.25 by constructing the real tree shapes):**
+```
+# sim: target/debug/reposix-sim --bind 127.0.0.1:7878 --ephemeral \
+#        --seed-file crates/reposix-sim/fixtures/seed.json   (6 issues, ids 1-6)
+# PATH must include target/debug (for git-remote-reposix); export
+#   REPOSIX_ALLOWED_ORIGINS=http://127.0.0.1:7878
+# In a fresh git repo, remote.origin.url=reposix::http://127.0.0.1:7878/projects/demo:
+#   BUG-1: commit issues/1.md..issues/6.md (rendered by `reposix refresh`), push
+#          -> "refusing to push (would delete 6 issues; cap is 5)"
+#   BUG-3: commit 0001.md..0006.md (bare shape), push unmodified
+#          -> exit 0 but issue 1 GONE (GET /projects/demo/issues/1 -> 404)
+#   BUG-2: keep `reposix refresh`'s .reposix/fetched_at.txt in the tree, push
+#          -> "invalid issue at .reposix/fetched_at.txt ... refusing push"
+```
+
+**ADDENDUM 2026-07-04 (doc-alignment unblock lane) — the checkout claim is untested-and-unverifiable until this lands.** The docs-alignment grader flipped `docs/index/git-checkout-branch-command` (claim: "`git checkout -B main refs/reposix/origin/main` switches to main branch", cite `docs/index.md:129`) `BOUND → MISSING_TEST`: its prior binding `crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path` asserts only partial-clone CONFIG and never runs the checkout. The one test in the tree that DOES run the exact command — `quality/gates/docs-repro/tutorial-replay.sh` step 4 (`git checkout -B main refs/reposix/origin/main`, lines 76-82) — **HARD-FAILS (not skips)** when `refs/reposix/origin/main` fails to resolve, which is exactly the FINDING-A / BUG-1 failure on git < 2.34 and on the broken push/fetch path. So no test can be graded GREEN against this claim today without violating "don't declare green without seeing green": impossible on this git-2.25.1 box, and suspect on git ≥ 2.34 until BUG-1's canonical path shape lands. The row is therefore left `MISSING_TEST` (honest). **Walker impact (asked + answered):** `MISSING_TEST` is in `RowState::blocks_pre_push()` (`crates/reposix-quality/src/catalog.rs:362-369`), so this single row makes `quality/gates/docs-alignment/walk.sh` exit 1 and BLOCKS pre-push **independent of the floor/coverage ratios** — the block is per-row (each `blocks_pre_push()` state pushes a blocking line → `walk` returns `Ok(1)`), not a floor effect. When P90/P91 lands the real round-trip (acceptance criterion #5 above), bind this row to that regression; alternatively a human may soften/retire the `docs/index.md:129` checkout claim. NB: the sibling row `docs/tutorials/first-run/checkout-origin` (same checkout, claim "succeeds after reposix init") is *still* bound to the config-only `dark_factory_sim_happy_path` and was NOT flipped — an inconsistency the grader left; it has the same latent weakness.
+
+**STATUS:** RESOLVED | 91-02 — canonical `issues/<id>.md` (unpadded) landed across all producer/consumer sites through the shared `reposix_core::path::{record_filename,record_path,issue_id_from_path}` helper; the fast-import peek-one-byte-LF fix (BUG-3), the `issues/*.md` plan filter + deletes-win reconciliation (BUG-2), and the `refresh` unpadded-producer + D91-10 stale-file sweep all shipped together.
+- **Commits:** `1c03da0` feat(core): canonical helpers + cache adopt (BUG-1) · `4bebfa3` fix(remote): peek-LF + issues/*.md filter + deletes-win + QL-157 dup delete + fixture re-key + box-independent QL-001 regressions (BUG-2/BUG-3) · `3bc10bf` fix(cli): refresh unpadded + D91-10 sweep · `c9e2b8f` docs(91): ql-001 verifier real asserts + real-git-push-e2e waiver retired + pre-pr restored.
+- **Criteria status:** (1)(3) proved by `diff::tests::{canonical_single_edit_is_one_update,full_seeded_tree_push_emits_zero_deletes}`; (2) by `fast_import::tests::commit_message_without_trailing_lf_does_not_swallow_first_m_line`; (4) by `diff::tests::reposix_metadata_paths_are_ignored_not_rejected`; (5) `agent-ux/real-git-push-e2e` waiver retired + `pre-pr` re-added (CI proves green on git ≥2.34; this box exits 75/NOT-VERIFIED honestly, D91-02); (6) grep-clean via `agent-ux/ql-001-canonical-path-shape` (PASS). SF-2 RED-if-bug-returns proof captured in `91-02-SUMMARY.md`.
+
+## 2026-07-04 05:40 | discovered-by: steward-window (post-P89) | severity: LOW
+
+**What:** Editing any file that a docs-alignment row binds via a **whole-file hash** flips that row `BOUND` → `STALE_TEST_DRIFT` even when the row's actual claim is untouched. The steward window's committed changes tripped 3 such rows (`claims_bound` 270→267, `alignment_ratio` 0.804→0.795, still well above the 0.5 floor so the pre-push walk stayed GREEN): one bound to `bench-latency-cron.yml` (whole-file hash; drifted by the item-4 `branch-suffix: timestamp` removal — the cited `line 32` persist-credentials claim is unchanged) and two bound to `release.yml` (aarch64-musl matrix + 5-target matrix whole-file hashes; drifted by the sanctioned dependabot `actions/checkout@v7` + `upload/download-artifact` version-ref bumps merged in #35/#36/#37). All 3 claims remain TRUE; only the whole-file hashes are stale. The pre-push docs-alignment walker also mutates `quality/catalogs/doc-alignment.json` in place (last_walked + verdict flips), so a chore that touches any hash-bound file leaves the tree dirty post-push — committed here per the established `catalog(...)` convention (e.g. a4ac3e4).
+
+**Why out-of-scope for the steward window:** Re-binding is a deliberate docs-alignment operation (`reposix-quality doc-alignment bind` needs full per-row claim/source/test/grade/rationale re-specification; `/reposix-quality-refresh` is explicitly top-level-only deliberate work). Doing it via the stale May-1 `target/debug/reposix-quality` binary with hand-constructed args risks catalog corruption for a purely-mechanical rehash — higher risk than value inside a merge/dep-hygiene batch.
+
+**Sketched resolution:** Run `/reposix-quality-refresh` (or `reposix-quality doc-alignment bind` per row) against the 3 STALE_TEST_DRIFT rows to rehash them back to BOUND — the claims are all still valid, so it's a clean re-bind that restores `claims_bound` to 270. Home: P90 (quality-framework) or a standalone refresh run. Separately worth a design look: whole-file-hash bindings are brittle — a version-ref bump on an unrelated line reddens a matrix-presence claim; a line-anchored or content-substring binding would be more robust for these "file contains X" claims.
+
+**STATUS:** RESOLVED (P95, commit `bd18827`) | All 3 rows (`polish2-03-bench-cron`, `polish2-02-aarch64`, `polish-06-binaries`) re-bound `STALE_TEST_DRIFT → BOUND` with real re-computed whole-file hashes. Verified each claim against the live workflow before binding: `persist-credentials: false` present (`bench-latency-cron.yml:34`, line-ref in the row rationale corrected 32→34), `aarch64-unknown-linux-musl` matrix entry present (`release.yml:101`), and the full 5-target build matrix present (`release.yml:97/101/110/114/118`) — the whole-file hashes had drifted only from unrelated dependabot checkout/artifact version-ref bumps; claims unchanged. `walk.sh` exits 0 and all 3 survive a subsequent walk as `BOUND` (no re-flip). The whole-file-vs-line-anchored design question stays deferred (still open in the sibling `2026-07-04 05:40` sketch). ORIGINAL DEFERRAL NOTE (for history): DEFERRED-P95 | Checked during 90-07: the 3 named rows remained `STALE_TEST_DRIFT` in `quality/catalogs/doc-alignment.json` as of that commit — not rebound in P90, which was out of F-class framework scope (90-04 confirmed zero doc-alignment rows cite `PROTOCOL.md`/`PRACTICES.md`; 90-06's only STALE cascade handled in-phase was the `cli.md`/`exit-codes.md` line-shift, a different root cause). `STALE_TEST_DRIFT` does not block `pre-push` (only `MISSING_TEST`/`STALE_DOCS_DRIFT`/`STALE_TEST_GONE`/`TEST_MISALIGNED`/`RETIRE_PROPOSED` do, per `RowState::blocks_pre_push`), so this remains non-blocking debt. Rebind via `/reposix-quality-refresh` when convenient; the whole-file-vs-line-anchored design question defers to P95.
+
+## 2026-07-04 08:30 | discovered-by: Stage-2 catalog-row-minting | severity: MEDIUM
+
+**What:** Adding `## \`reposix attach\`` and `## \`reposix sync\`` sections to `docs/reference/cli.md` (prerequisite doc fixes for the new `structure/cli-subcommand-parity` catalog row) shifted line numbers throughout the file, which flipped 7 line-anchored docs-alignment rows on `docs/reference/cli.md` to `STALE_DOCS_DRIFT` (plus 2 more on `docs/reference/exit-codes.md`, one via source drift and one via an unrelated test-body drift). Ran `/reposix-quality-refresh` on both docs — dispatched 10 Opus grader subagents (one per stale row) per the normal playbook. Result: 5 rows re-bound cleanly `BOUND` with corrected line citations (pure line-shift, claim + test both still valid) — `init_documented`, `list_query_backend`, `list_documented`, `mount_removed_v0.9.0`, `exit-codes/helper-exit-1-push-rejected`. But **5 rows the graders correctly refused to re-bind**, because the cited test was a loose name-match that never actually asserted the claim (a pre-existing weakness the whole-file/line-range hash had been silently papering over until this drift forced a re-grade):
+
+- `docs/reference/cli.md/subcommands_exist` — claim "all CLI subcommands documented in help text"; test `help_lists_all_subcommands` only asserts `[sim, init, list, version]` appear, never checks `attach`/`sync`/the other 9.
+- `docs/reference/cli.md/env_vars` — claim "7 env vars documented"; the cited test never references any env var at all.
+- `docs/reference/cli.md/exit_codes` — claim "exit codes 0/1/2 documented"; the cited test (`mount_subcommand_is_removed`) only asserts a removed-subcommand error, not exit-code semantics.
+- `docs/reference/cli.md/spaces_confluence_only` — claim "spaces lists Confluence spaces, Confluence-only"; cited test only checks `spaces` appears in top-level `--help`, never the Confluence-only constraint.
+- `docs/decisions/009-stability-commitment/exit-codes-locked` — claim "exit codes locked under semver"; cited test (`gc_help_renders`) only asserts `gc --help` flag rendering, nothing about exit-code stability.
+
+All 5 are now honestly `MISSING_TEST`, which per `RowState::blocks_pre_push()` (`crates/reposix-quality/src/catalog.rs:431-440`) blocks `quality/gates/docs-alignment/walk.sh` (and therefore `quality/runners/run.py --cadence pre-push`) independent of the alignment_ratio/coverage_ratio floors.
+
+**Why out-of-scope for eager-resolution:** Fixing this properly means writing 5 new tests (or retargeting each to an existing test that genuinely asserts the claim) — real design work per claim (e.g., what does "all subcommands documented" even mean as an automatable assertion once there are 15 subcommands; what's the right test for "env vars are documented" as opposed to "env vars are enforced"). That's real per-claim design work, not a mechanical rebind — well over the 1-hour eager-fix budget and risks the exact false-BOUND failure mode the refresh playbook is designed to prevent if rushed.
+
+**Sketched resolution:** For each of the 5 rows, either (a) write a dedicated test that actually asserts the claim (e.g. a `help_lists_all_subcommands`-style test parameterized over the FULL current subcommand list including `attach`/`sync`; a doctor/allowlist test that references the documented env-var names; an exit-code-table test that drives each subcommand to its documented code), or (b) soften/retire the claim if it's not worth a dedicated test (e.g. `spaces_confluence_only`'s "Confluence-only" half could fold into the existing `spaces.rs` bail-message tests instead of `help_lists_all_subcommands`). Whoever picks this up should re-run `/reposix-quality-refresh docs/reference/cli.md` and `/reposix-quality-refresh docs/reference/exit-codes.md` afterward to flip the rows back to `BOUND`. Until then, `pre-push` on this repo will show `docs-alignment/walk` RED for these 5 specific rows — this is a known, tracked, honest state, not a regression introduced by the catalog-row-minting work that triggered the re-grade.
+
+**STATUS:** RESOLVED | 90-06 commits 661a0f1 (5 real tests written, each genuinely asserting its claim: full 15-subcommand help listing, env-var-name doctor/allowlist coverage, per-subcommand exit-code table, Confluence-only `spaces` constraint, exit-code semver-lock behavior) + 12e7f72 (rebind to `BOUND` + un-waive). All 5 rows (`subcommands_exist`, `env_vars`, `exit_codes`, `spaces_confluence_only`, `exit-codes-locked`) now cite tests that actually assert the documented claims. The 6th sibling (`git-checkout-branch-command`) stays `MISSING_TEST`/waived — QL-001-blocked, unfixable until P91 per the BLOCKER entry above.
+
+## 2026-07-04 18:10 | discovered-by: quality-convergence connector re-audit | severity: HIGH
+
+**What:** ~440 lines of dead Confluence API surface — `list_comments` (crates/reposix-confluence/src/lib.rs:501-570), `list_attachments` (644-705), `list_whiteboards` (720-803), `download_attachment` (819-844) plus their backing types in types.rs (~184-388: ConfComment/CommentKind/ConfCommentList, ConfAttachment/ConfAttachmentList, ConfWhiteboard/ConfDirectChildrenList/ConfDirectChild) have zero non-test callers workspace-wide. Nothing in reposix-cache or reposix-remote references comments/attachments at all, so none of this reaches a working tree. Each function is individually well-documented and well-tested — this is orphaned code built ahead of a cache-integration phase that never landed, not sloppy code. Related: `CommentSupport::SeparateApi` in the capability surface is backed only by this dead code, so any doc cell implying reposix delivers comment access is aspirational.
+
+**Why out-of-scope for eager-resolution:** wire-vs-delete is a product decision (do comments/attachments become working-tree files in P91+ real-backend wiring, or do we shed the surface?), and either path is M-sized (materializer integration + record layout, or deletion + type cleanup + capability/doc reconciliation).
+
+**Sketched resolution:** P91/P92 (real-backend charter) decides: (a) wire comments/attachments into the cache materializer as working-tree content, or (b) delete the four functions + backing types, downgrade `CommentSupport` claims, and update the docs capability matrix. Until decided, ensure no user-facing doc promises comment/attachment access.
+
+**STATUS:** ROUTED-P95 | Per D91-05: v0.13.0 ships WITHOUT the comment/attachment working-tree surface. P91 (91-06) did NOT wire or delete the dead API — the wire-vs-delete call stays a P95 product decision (M-sized either way). P91's obligation was narrower: verify no user-facing doc promises comment/attachment access. Grepped `docs/` and found + fixed two aspirational cells: `docs/index.md` connector capability matrix (Confluence's "Comments" cell read "separate API", implying a working path; now reads "no (see below)" with a footnote naming the dead surface) and `docs/tutorials/first-run.md`'s per-connector `## Comment` table (confluence row claimed "use the dedicated comments API (separate endpoint)"; now says the body text round-trips verbatim like any other backend, with Confluence's native comments explicitly out of scope). Home for wire-vs-delete stays P95.
+
+## 2026-07-04 21:00 | discovered-by: P91 91-05 (vision-litmus real-run) | severity: BLOCKER
+
+**What:** The confluence export/push path MASS-DELETES backend records when the working-tree record bucket differs from the cache bucket. `reposix refresh --backend confluence` writes records under `pages/<id>.md`, but `builder.rs` (stateless-connect, the tree git actually serves) and `diff.rs`/`issue_id_from_path` (the push diff) canonicalize to `issues/<id>.md` (D91-01). When a tree with `pages/<id>.md` (or simply missing the `issues/<id>.md` the cache holds) is pushed, the diff sees every cached `issues/<id>.md` as DELETED and the helper issues `delete_or_close` (DELETE /wiki/api/v2/pages/{id}) against EVERY real page. During 91-05 litmus development this empirically trashed the protected durable fixtures 7766017/7798785 AND the space Home 2818063 (space id 360450). ALL THREE WERE RESTORED (v1 content restore trashed->current + parent re-link 7798785->7766017; verified current + hierarchy + `reposix-durable-fixture` labels intact). Beyond blocking the milestone-close litmus, this is a **data-loss hazard for any real confluence user** who runs `refresh` then `git push`. The 91-05 litmus GUARD A (matched>=1 && backend_deleted==0) + GUARD B (refuse `pages/*.md` bucket) now hard-FAIL instead of pushing, so the litmus itself is non-destructive — but the underlying binary defect remains.
+
+**Why out-of-scope for P91 91-05:** 91-05's file envelope is `quality/gates/agent-ux/milestone-close-vision-litmus.sh` (+ its sourced lib) ONLY. The fix lives in `crates/reposix-cli/src/refresh.rs` (bucket name) and/or `crates/reposix-remote/src/diff.rs` + `reposix-core::path` (bucket recognition) — the Wave-1/Wave-3 code lane. It is arguably architectural (which bucket is canonical for confluence, and whether the push diff should ever emit deletes for records simply absent from a partial tree) → Rule 4, coordinator decision.
+
+**Sketched resolution:** (1) Align `refresh.rs`'s confluence bucket to the canonical `issues/<id>.md` (drop the `ListBackend::Confluence => "pages"` special-case) so refresh output round-trips — this alone closes the litmus GUARD B path. (2) HARDEN the push diff: a delete should require positive evidence a record was removed from a COMPLETE tree, never be inferred from a record's absence in a partial/mis-bucketed working tree — add a guard in `diff.rs`/the helper that refuses (or requires `--allow-deletes`) when the pushed tree covers fewer records than the cache, so a bucket/partial-tree mistake can never mass-delete a live backend. (3) Add a regression test driving a `pages/`-shaped (or records-missing) tree against a seeded backend and asserting ZERO `delete_or_close` calls. Home: P92 (audit/coherence) or a dedicated code-lane hotfix — this is the highest-severity finding of P91 and should gate the v0.13.0 tag (the litmus REOPEN gate will stay RED until it lands).
+
+**STATUS:** RESOLVED | Wave-5.5 commit `d6e1411` — resolution INVERTS sketch option (1): `pages/` is KEPT as the canonical confluence bucket (it is the documented UX in `docs/reference/confluence.md` and what the repopulated TokenWorld mirror carries); instead the path layer went bucket-aware and the planner went id-keyed:
+- `reposix_core::path`: `bucket_for_backend` (confluence→`pages`, else `issues`), `record_path(bucket, id)`, `record_id_from_path` accepting the sanctioned set `RECORD_BUCKETS = {issues, pages}`.
+- `diff::plan` matches prior↔tree by RECORD ID (never path string) — a mis-bucketed or padding-variant tree can never be misclassified as prior-Delete + tree-Create; duplicate id across paths refuses loud (`duplicate-record-id` protocol error). This is stronger than sketch (2)'s count-based guard: deletes now require the id to be genuinely absent from the tree (or explicitly `D`-named), and the SG-02 cap (>5 deletes without `[allow-bulk-delete]`) remains as defense-in-depth (`pages_bulk_delete_still_capped`).
+- `builder.rs` (2 sites), `fast_import` emit, `refresh.rs` all route the bucket through `bucket_for_backend` — the confluence CACHE tree now also says `pages/` (it was `issues/` even for confluence before, so cache and refresh disagreed with each other).
+- Regressions per sketch (3): `pages_full_tree_push_emits_zero_deletes`, `pages_single_edit_is_one_update`, `cross_bucket_tree_still_matches_by_id`, `duplicate_record_id_across_buckets_is_refused` (diff.rs) + `confluence_cache_tree_uses_pages_bucket` (cache) — RED-proven against the pre-fix parser (reverting `record_id_from_path` to issues-only reproduces `BulkDeleteRefused { count: 6 }` / 3 spurious Deletes verbatim).
+- Litmus GUARD A untouched; GUARD B updated to assert the pages/ substrate shape (defense-in-depth, no longer a refusal of the canonical bucket). The coordinator re-runs the litmus against the EXISTING pages/-shaped mirror — do NOT repopulate it to issues/.
+
+## 2026-07-04 21:00 | discovered-by: P91 91-05 (vision-litmus real-run) | severity: MEDIUM
+
+**What:** `reposix attach --mirror-name origin` folds the existing `remote.origin.url` VERBATIM into `remote.reposix.url` as `reposix::<sot>?mirror=<origin-url>`. If origin carries embedded credentials (e.g. a token-in-URL clone `https://x-access-token:<TOKEN>@github.com/...`), the token is (a) written into `.git/config` in plaintext under `remote.reposix.url`, and (b) echoed to stderr by `git-remote-reposix` on every push — including the egress-denied reject path — where it lands in logs/transcripts. Observed live during 91-05 (the helper's `To reposix::...?mirror=https://x-access-token:<TOKEN>@github.com/...` line prints the secret). The documented UX uses an SSH origin (`git@github.com:...`) which has no embedded secret, so real-world incidence is lower, but the helper printing a credential-bearing mirror URL to stderr is a genuine exfiltration leg (CLAUDE.md threat-model).
+
+**Why out-of-scope for P91 91-05:** the leak is in `reposix-cli/src/attach.rs` (URL folding) + `reposix-remote/src/bus_*` (stderr echo), outside 91-05's litmus-only envelope.
+
+**Sketched resolution:** Strip userinfo (`user:pass@`) from any URL folded into `?mirror=` (or reject credential-bearing origins with a teaching error pointing at SSH / a credential helper), and redact userinfo in every helper stderr line that prints a remote URL (there is already a `redact_url` helper in `reposix-confluence`; reuse the pattern in the remote helper). Home: P92 or a security-dimension touch.
+
+**STATUS:** RESOLVED | Wave-5.5 commit `e2f8acd` (assessed S-sized, fixed in place) — `reposix_core::http::strip_url_userinfo` (http(s)-only; ssh/scp forms pass through, their usernames are structural); attach strips before folding `?mirror=` + warns with a teaching message; bus_handler STEP 0 matcher normalizes userinfo on both sides so a cred-bearing local remote still resolves; all four helper stderr sites printing a mirror URL (PRECHECK A drift, multiple-remotes warning, no-mirror-remote hint, bad-mirror-url reject) print the redacted form. Integration test `attach_strips_credentials_from_mirror_url` proves it against a real subprocess. Residual, documented in the commit: a HAND-authored bus URL with embedded creds is still printed by git itself (`To reposix::…`) before the helper runs — unfixable helper-side; prevented at the source by attach's strip.
+
+## 2026-07-04 22:00 | discovered-by: P91 litmus-REOPEN (second real-run) | severity: BLOCKER
+
+**What:** A SECOND `git push` from an already-pushed tree — with NO new commit — mass-DELETES every backend record. Root cause: git re-invokes the `export` helper on every push because `git-remote-reposix`'s `list for-push` answers `? refs/heads/main` (remote value UNKNOWN), so git can never conclude the ref is up-to-date and always runs export. On a no-new-commit push, git's fast-export emits a stream with NO `commit` directive at all — literally `feature done` / `reset refs/heads/main` / `from 0000…0000` / `done` (captured verbatim from a local sim reproduction). `parse_export_stream` skips `reset`/`from`, yielding an EMPTY `ParsedExport`; `diff::plan` then walked `prior` and planned a DELETE for every record. During the P91 milestone-close vision litmus this fired against real Confluence TokenWorld: the coordinator's manual `git fetch origin && git push reposix main` re-push (bus URL, push #2) issued **3 real DELETEs** at 21:44:07-08 (audit `/tmp/litmus-run.YAdFGx/cache/reposix/confluence-REPOSIX.audit.db`) against pages 2818063/7766017/7798785 after the 21:36:41 PUT. Same catastrophic class as the Wave-5 bucket-mismatch BLOCKER (`d6e1411`) but a DIFFERENT trigger: there the tree was mis-bucketed; here the stream carries no commit at all. All three pages were RESTORED to `status=current` by the coordinator and the child fixture 7798785 was RE-PARENTED to 7766017 (v1 move endpoint, HTTP 200, body untouched) + both fixtures reconfirmed carrying label `reposix-durable-fixture`; `reposix list --backend confluence --project REPOSIX` shows all 3 records.
+
+**SG-02 cap finding (Task C):** the bulk-delete cap did NOT block the 3 DELETEs because the threshold was simply not met — cap is `BULK_DELETE_LIMIT = 5`, only 3 records existed (3 <= 5). The cap is NOT gated on cache presence and has NO cache-None bypass (it fires purely on `delete_count` inside `plan()`, cache or no cache) — it is a large-scale backstop by design, structurally unable to protect a space of <=5 records from an accidental delete-all. Lowering the cap is the WRONG fix (it would break legitimate small-space bulk cleanups and still wouldn't address the root cause); the correct defense is refusing to derive ANY delete from a stream that carried no commit. No cap hole was closed; the cap remains valid defense-in-depth for genuine >5 deletes.
+
+**STATUS:** RESOLVED in-phase | commit `5612fa6`. Fix keys on a semantic signal, not tree size: `ParsedExport.saw_commit` (set true iff the stream carried a `commit` directive); `diff::plan` returns zero actions when `saw_commit == false` (git exported nothing → no-op). An intentionally-emptied tree still arrives WITH a commit (`saw_commit == true`) and remains a real bulk delete governed by SG-02 — the two are never conflated. RED-proven: reverting `src/` and running the new binary test `second_push_no_commit.rs` against the pre-fix helper reproduces 3 DELETEs verbatim; end-to-end sim reproduction went from `records=[]` to `records=[1,2,3]` intact post-fix. Regressions: `second_push_no_commit::second_push_without_commit_deletes_nothing` (real binary + wiremock, DELETE/POST/PATCH expect(0)), `diff::{no_commit_stream_plans_no_actions, no_commit_export_stream_is_a_noop_end_to_end, real_commit_emptying_tree_still_hits_cap}`, `fast_import::{reset_from_without_commit_sets_saw_commit_false, commit_directive_sets_saw_commit_true}`.
+
+## 2026-07-04 22:45 | discovered-by: P91 T2-REOPEN (fresh-eyes friction audit) | severity: HIGH (4 findings)
+
+**What:** A dark-factory-style fresh-eyes T2 audit of the round-tripper flow (vanilla clone → `reposix attach` → edit → `git push` → `reposix doctor`) against real TokenWorld surfaced 4 HIGH frictions (run 1 full tally: **HIGH=4 MED=2 LOW=3**). All 5 goal steps ultimately completed, but each finding is a trap a first-time agent falls into:
+
+- **H1 — plain `git push` after attach silently targets the GH mirror.** Attach set `remote.reposix.url` + `extensions.partialClone` but left `branch.main.remote=origin` and no `remote.pushDefault`, so the documented Pattern-C closing step (`git push`) pushed to the vanilla mirror, bypassing the SoT — the exact anti-pattern `docs/concepts/dvcs-topology.md` warns against.
+- **H2 — Pattern-C install omits the helper crate and the failure is untaught.** With only the `reposix` binary on PATH, `reposix attach` exits 0, then `git push reposix main` fails `fatal: unable to find remote helper for 'reposix'` with zero reposix guidance.
+- **H4 — `reposix doctor` false-positives after a successful, REST-confirmed push:** `WARN worktree.head.drift`, fix-line `git pull --rebase origin main` does nothing, `reposix sync --reconcile` rebuilds the cache but the WARN persists (exit stays 1). Root cause: the cache synthesizes its OWN commits from REST, so tree HEAD and cache main never share a SHA in the attach topology — a SHA-equality check is wrong-headed there.
+- **MED#6 (bundled with H4) — doctor hard-ERRs (exit 1) on git 2.25.1** while the attach+push flow demonstrably works there; only the stateless-connect FETCH path needs git>=2.34. Dishonest exit code on a working setup.
+- **H3 (docs overclaim, not binary-side) — mirror-refs doc claims.** Routed to the docs executor (see disposition).
+
+**Why not eager-fixed inline:** the audit was a milestone-close litmus, not a coding phase; the fixes span `reposix-cli/src/attach.rs` + `reposix-cli/src/doctor.rs` + docs, so they were filed for a dedicated T2-REOPEN binary-fix pass.
+
+**STATUS:**
+- **H1 — RESOLVED** | commit `854586b`. `reposix attach` sets `remote.pushDefault=<remote-name>` (push-only; fetch stays on the mirror via `branch.<b>.remote`). Never clobbers a user-set pushDefault (warn + leave); re-attach idempotent. Chose the PREFERRED fix (not the fallback of rewriting every doc example to `git push <remote> main`): `remote.pushDefault` is git 1.8-era so no version-gating risk, and it makes the documented bare `git push` truthful. Integration tests `attach_sets_push_default_to_reposix_remote` (asserts key set + origin fetch config untouched) + `attach_preserves_user_set_push_default` (no clobber + warns). Verified live against sim.
+- **H2 — RESOLVED** | commit `854586b`. Attach probes PATH for `git-remote-reposix` post-configure; if absent, prints a non-fatal teaching warning naming the exact git failure + install commands. Verified crate/binary names against `crates/reposix-remote/Cargo.toml`: package `reposix-remote`, binary `git-remote-reposix` (the CLI ships as separate package `reposix-cli`), so the string is `cargo binstall reposix-remote` / `cargo install reposix-remote`. Integration tests `attach_warns_when_helper_absent_from_path` + `attach_no_helper_warning_when_present_on_path` (curated PATH). Fired live on this box (helper genuinely not installed).
+- **H4 — RESOLVED** | commit `d6f7966`. `worktree.head.drift` now gates the SHA comparison on `object_in_cache(head_oid)`: when the tree HEAD is not a commit the cache knows (attach topology, or any tree after a push), it reports OK and defers to id-based reconciliation instead of a false WARN. A genuinely stale init tree (HEAD in-lineage but behind cache main) still WARNs. RED-proven: neutralizing the gate reproduces the exact `drift count unavailable` WARN + useless `git pull --rebase` fix-line. Tests `drift_check_ok_when_head_not_in_cache_attach_topology` + `drift_check_warns_when_head_in_cache_but_behind_main`. Verified live: doctor shows OK drift on an attach tree.
+- **MED#6 — RESOLVED** | commit `d6f7966`. git-version below 2.34 is now WARN at every tier (was ERR below 2.27), message names what works (attach+push export path) vs what needs 2.34 (stateless-connect fetch/clone). Doctor's own promise is to diagnose the whole flow; a false ERR on a working push setup is a false negative. RED-proven: restoring the ERR tier fails `git_version_2_25_is_warn_not_error`. Verified live on git 2.25.1: `reposix doctor` exits 0 once the helper is on PATH (version no longer drives exit 1).
+- **H3 (mirror-refs doc overclaim) — RESOLVED** | commit `807ec7a` (91-06). Verified reality with a real local sim bus push: `refs/mirrors/<sot>-{head,synced-at}` live ONLY in the pushing machine's local reposix cache; the plain-git mirror's own ref list holds just `refs/heads/main` after a real push (confirmed via direct ref inspection of the mirror's bare repo); a bus-attached round-tripper's `git fetch` of the reposix remote doesn't bring them across either (DVCS-BUS-FETCH-01 — confirmed via `git fetch reposix` populating only the `main` tracking ref). Rewrote `docs/concepts/dvcs-topology.md` § "Two refs" to drop the false "Dev C reads the mirror's refs/mirrors ref via git fetch origin" worked example and state the real access paths (bus reject-hint; manual cache inspection; architecture-derived single-backend fetch, not independently re-verified on this git-2.25.1 box per D91-02). Aligned CLAUDE.md's "vanilla git fetch brings them along" phrasing to match in commit `d34ad75`.
+
+**Docs kept truthful in the same PR:** `docs/concepts/dvcs-topology.md` Pattern C (installs both packages + explains pushDefault routing), `docs/reference/cli.md` (`git.version` WARN semantics + `worktree.head.drift` topology awareness).
+
+## 2026-07-04 23:00 | discovered-by: P91 T2-REOPEN (second fresh-eyes run, real TokenWorld) | severity: MEDIUM (3 findings) + LOW (1 finding)
+
+**What:** With the four HIGH frictions from the first T2-REOPEN run resolved (854586b/726f277/d6f7966) and the mass-delete BLOCKER fixed (5612fa6), the coordinator re-ran the fresh-eyes T2 audit of the round-tripper flow against real TokenWorld a second time. Result: **HIGH=0, MED=3, LOW=1**, all 5 goal boxes ticked — the REOPEN gate PASSES (litmus artifact `quality/reports/verifications/agent-ux/milestone-close-vision-litmus-real-backend.json`, 11/11 asserts PASS). The 4 remaining findings are discoverability gaps, not correctness bugs:
+
+- **MED (a) — README.md never mentions attach/DVCS/mirror.** The round-tripper flow (`reposix attach` onto an existing vanilla-clone GH mirror) has no front-door entry point; a reader landing on README only ever sees the `reposix init` (SoT-fresh) story.
+- **MED (b) — docs/index.md landing + docs/tutorials/first-run.md never mention attach.** The hero "Where to go next" cards omit the DVCS pages (`docs/concepts/dvcs-topology.md`, `docs/guides/dvcs-mirror-setup.md`) entirely — a first-time reader following the landing page's own navigation never discovers the round-tripper pattern exists.
+- **MED (c) — Pattern C walkthrough never tells the reader to run `reposix doctor` after attach.** `docs/reference/cli.md` only scopes `doctor` to the `init` flow, even though doctor now catches real pre-push issues in the attach topology (per the H4/MED#6 fixes in the prior intake entry) — the doc undersells a tool that would help exactly the readers following Pattern C.
+- **LOW — dvcs-mirror-setup.md frames the round-tripper mention inside an ops-heavy owner walkthrough.** The one mention of round-tripping in the docs set is buried in a webhook/GH-Action setup guide aimed at repo owners, not the agent/dev audience Pattern C targets.
+
+**Why NOT eager-fixed inline:** all four are README/landing-page positioning and information-architecture changes, not code or bug fixes. Per OD-4, README/landing-page positioning is explicitly the launch-readiness milestone's designed scope (post-P97) — pulling it into P91's close ritual would (a) scope-creep a verification-only phase into a docs-authoring phase, and (b) re-trigger doc-alignment drift re-grading at the exact moment the milestone is trying to close (the `reposix-quality-refresh` cadence would need to re-walk README.md/docs/index.md/first-run.md/cli.md immediately after editing them, adding an unplanned drift-recovery loop to phase close).
+
+**Sketched resolution:** (a) add a "Round-tripping an existing repo" section (or at minimum a paragraph + link) to README.md pointing at `docs/concepts/dvcs-topology.md` and `reposix attach --help`; (b) add a "Round-tripper / DVCS" card to docs/index.md's "Where to go next" hero and a one-paragraph mention + link in first-run.md's closing section; (c) add a `reposix doctor` call-out to the Pattern C walkthrough in cli.md (and/or dvcs-topology.md) analogous to the existing init-flow doctor mention; (d) either promote the round-tripper mention out of dvcs-mirror-setup.md's ops framing into a dev-facing page, or add a forward-pointer from the ops guide to wherever (a)-(c) land.
+
+**STATUS:** ROUTED | Home: launch-readiness milestone (post-P97) / P95 docs drain. All four tracked together since they're one coherent "make the round-tripper discoverable" pass — a future docs phase should knock them out in one wave rather than four disconnected edits, verifying alignment/coverage ratios once at the end instead of after each file.
+
+## 2026-07-05 | discovered-by: P91 CI-red fix executor (run 28724087420, pre-pr `agent-ux/real-git-push-e2e`) | severity: HIGH (blocks P91 close / QL-001 waiver deadline 2026-07-31)
+
+**What:** `agent-ux/real-git-push-e2e` (P0) fails in CI at the FETCH stage, BEFORE the QL-001 push-diff planner it was minted to prove is ever exercised. `reposix init sim::demo`'s internal `git fetch --filter=blob:none` (through `git-remote-reposix`'s stateless-connect tunnel) dies with — verbatim from the CI verification artifact:
+
+```
+WARN reposix_cli::init: git fetch --filter=blob:none failed with status exit status: 128 — ... Stderr: warning: filtering not recognized by server, ignoring
+git-remote-reposix: git upload-pack --stateless-rpc exited exit status: 128: error: git upload-pack: git-pack-objects died with error.
+fatal: git upload-pack: aborting due to possible repository corruption on the remote side.
+fatal: the remote end hung up unexpectedly
+```
+
+Because the fetch fails, `refs/reposix/origin/main` is never populated and the script's `git checkout -B main refs/reposix/origin/main` fails (`'refs/reposix/origin/main' is not a commit`). This is NOT the harness bugs the executor already fixed this session (the sim was on 7878 = DEFAULT_SIM_ORIGIN, egress allowlist matched, cache dir was freshly isolated under RUN_DIR — three successive fixes, commits 963f8bc/5eae1c9/0cf5c01, each cleared a layer and exposed this deeper one).
+
+**Why this was never caught before:** NO existing test exercises a *successful* stateless-connect fetch. `crates/reposix-cli/tests/agent_flow.rs:115-117` documents that `reposix init`'s fetch is *best-effort and expected to fail* — the test only asserts config strings, never a real `git checkout` that materializes objects. `agent-ux/dark-factory-sim` (sim.sh) likewise stops at config-shape asserts and never fetches. `agent-ux/ql-001-canonical-path-shape` is grep-only. So `real-git-push-e2e` is the FIRST artifact anywhere to attempt a real `git fetch` through the helper against the cache — and it fails. The 91-02 retirement of this row's waiver assumed the QL-001 diff-planner fix made it GREEN, but the row can't reach the push path: the fetch prerequisite is broken.
+
+**Root-cause hypothesis (NOT verified — the discovering box has git 2.25.1 < 2.34, so the fetch path cannot run locally at all; this is CI-only reproducible):** "filtering not recognized by server, ignoring" strongly suggests the cache bare repo that upload-pack serves lacks `uploadpack.allowFilter=true` (and possibly `uploadpack.allowAnySHA1InWant=true`) — the server-side config a partial-clone (`--filter=blob:none`) fetch requires. git then falls back to a full fetch and `git-pack-objects` dies ("repository corruption on the remote side"), implying the cache repo is not a valid full-pack source in this path (promisor/partial objects it can't repack, or an unborn/empty ref set). Candidate fix locations: the cache bare-repo creation path in `crates/reposix-cache` (set `uploadpack.allowFilter`/`allowAnySHA1InWant` at repo init) and/or the upload-pack invocation in `crates/reposix-remote/src/stateless_connect.rs`.
+
+**Why NOT eager-fixed:** (1) it is a product-code bug in reposix-remote/reposix-cache, not the test harness — well beyond the CI-red hotfix scope; (2) it cannot be verified locally (git < 2.34), so any fix would be a blind CI push, and the executor had already spent its 3-round-trip budget confirming the fix chain that got it this far; (3) a correct fix wants a NEW cargo-level regression that drives a real successful fetch+checkout (closing the coverage gap that hid this), which is a phase's worth of work, not a one-liner.
+
+**Sketched resolution:** (a) reproduce on a git≥2.34 box (or CI) by running `bash quality/gates/agent-ux/real-git-push-e2e.sh` directly and reading the helper/cache stderr; (b) inspect the cache bare repo's config after `reposix init` — confirm/deny `uploadpack.allowFilter`; (c) if absent, set it (+ `allowAnySHA1InWant`) at cache-repo creation; if present, dig into why `git-pack-objects` dies (empty/unborn refs, promisor object repack); (d) add a cargo integration test in reposix-cli/reposix-remote that drives a REAL `git checkout origin/main` (successful materialization), closing the coverage gap that let this ship — this test is the actual falsifiable proof, with the shell row as the box-independent CI backstop; (e) only then does `real-git-push-e2e` go GREEN and the QL-001 waiver contract hold.
+
+**STATUS:** RESOLVED | P91 fetch-path fix executor, commit `5c758fb` (fix) + `09e10c1` (landmine, see next entry). The hypothesis was CONFIRMED and the root cause turned out to be TWO layers, both fixed:
+
+1. **allowFilter (confirmed).** `Cache::open` never set `uploadpack.allowFilter=true`, so upload-pack ignored `--filter=blob:none` and pack-objects died on unmaterialized blobs — exactly the CI stderr. Added `ensure_upload_pack_partial_clone` (allowFilter + allowAnySHA1InWant) following the `ensure_hide_sync_refs` GIT_*-scrub pattern.
+2. **Lazy-blob want-path materialization (deeper layer the hypothesis did not name).** Even with allowFilter, the follow-up `git checkout` fetches blobs by non-tip OID and the cache is a lazy promisor (build_from writes NO blob objects), so upload-pack died "not our ref". `proxy_one_rpc` now materializes each wanted record-blob OID (via `read_blob`) before spawning upload-pack. Also converted the unfiltered-fetch "repository corruption" death into a `--filter=blob:none` teaching error.
+
+**Three layers, all fixed** (each exposed the next once CI could get further):
+- L1 allowFilter (commit `5c758fb`) — `git fetch --filter=blob:none succeeded` in CI run 28724839898 (was "filtering not recognized").
+- L2 refspec (commit `a4bb090`) — `init` set no `remote.origin.fetch`, so the now-successful fetch created no persistent ref; run 28725091985 got `Switched to a new branch 'main'` after the fix.
+- L3 harness DB-persist (commit `c64a8c0`) — `spawn_sim`'s `--ephemeral` ignored `--db`, so the audit-query read `-1`; `SIM_PERSIST=1` fixed it.
+
+**PROVEN in CI (run 28725302159):** the whole read+write happy path works — `git fetch succeeded` → `Switched to a new branch 'main'` (checkout materialized blobs via the want-path fix) → `git push origin main → [new branch]` → **`PASS: real push round-tripped as exactly 1 PATCH (0 Create, 0 Delete)`**. Assertion 1 (the core QL-001 contract) is GREEN. Local repro corrected the entry's original "cannot verify locally" claim: `file://` transport drives the same upload-pack on git 2.25 (`crates/reposix-cache/tests/partial_clone_serves.rs`; plus reposix-remote unit tests for `parse_want_oid` and the teaching-hint detection).
+
+**STILL RED — a DISTINCT, newly-surfaced push-path bug (NOT the fetch path; see next entry):** the row's Assertion 2 (no-op push idempotency) fails `got 2 (QL-001 BUG-3 stream-parser data loss)`. This layer had NEVER been reachable before — the fetch-path fixes exposed it. Filed separately below.
+
+## 2026-07-05 | discovered-by: P91 fetch-path fix executor | severity: MEDIUM (latent CI-abort landmine)
+
+**What:** The legacy catalog row `code/cargo-clippy-warnings` (quality/catalogs/code.json) carried a pre-cutoff `last_verified` (2026-05-01) but NO `minted_at` and NO `claim_vs_assertion_audit`. `_audit_field.validate_row` decides audit-field-required via `is_new = lv is None or lv >= CUTOFF (2026-05-08)` when `minted_at` is absent — so the runner's re-grade writeback of `last_verified` to now (CI runs in UTC, already past `P90_MINT_CUTOFF` = 2026-07-05T00:00Z) flips the row `is_new` and aborts catalog load with SystemExit on the NEXT grade. A silent time-bomb: it does not fail on the commit that moves the clock, it fails the run AFTER.
+
+**Resolution (eager-fixed, <1h, honest — NOT the previous executor's restore-before-commit workaround):** commit `09e10c1` adds write-once `minted_at` = the row's genuine first-verification time (2026-05-01T13:29:56Z, pre-cutoff). Per D90-03, `validate_row` anchors on `minted_at` as the SOLE immutable cutoff signal when present, so the row is permanently legacy-exempt regardless of `last_verified` drift. Verified by scratch harness: WITH minted_at the catalog loads even after a simulated forward writeback; WITHOUT it the same writeback raises SystemExit (the landmine reproduced + closed).
+
+**Forward note:** other pre-P90 legacy rows with null-or-pre-cutoff `last_verified` and no `minted_at` are only vulnerable if a runner writeback moves their `last_verified` past 2026-07-05. The P95 RBF-D-06 backfill (retire the legacy exemption, make minted_at unconditional) closes the whole class; until then, any row that gets re-graded in a blocking cadence should carry a pinned `minted_at`.
+
+**STATUS:** RESOLVED | commit `09e10c1`.
+
+## 2026-07-05 | discovered-by: P91 fetch-path fix executor (run 28725302159, real-git-push-e2e Assertion 2) | severity: HIGH (sole remaining red on the P0 row / QL-001 waiver deadline 2026-07-31)
+
+**What:** With the fetch-path fixed (fetch+checkout+push+exactly-1-PATCH all GREEN — see the QL-001 entry above), `agent-ux/real-git-push-e2e` now fails ONLY at Assertion 2, the no-op-push idempotency check: `FAIL: no-op push wrote backend mutations: expected 1 total mutating requests, got 2`. The scenario is: after the first push (1 PATCH, correct), the script runs `git pull --no-rebase origin main` (no edits) then `git push origin main`, expecting ZERO new backend mutations. Instead a 2nd PATCH lands. The CI stderr shows the pull did `Auto-merging issues/1.md` — i.e. local `main` and the freshly-fetched `origin/main` had DIVERGED, so the `--no-rebase` pull created a merge commit and the subsequent push re-sent issue 1.
+
+**Why this is NOT the fetch-path bug and NOT introduced by this session's fixes:** it is the push/pull round-trip idempotency layer, reachable for the FIRST TIME EVER only because L1/L2/L3 (allowFilter + refspec + DB-persist) let the e2e get past fetch/checkout/Assertion-1. The e2e's own header pre-labels this failure class "QL-001 BUG-3 stream-parser data loss (fast_import.rs:156-157 drops the first M-line on a genuine no-op push)". NOTE the "got 2" shape is an EXTRA mutation, which is more consistent with cache-rebuild divergence than with the M-line-DROP data-loss originally sketched for BUG-3 — so the root cause needs confirming, not assuming.
+
+**Two candidate root causes (needs a git>=2.34 box to disambiguate):** (a) **cache-rebuild divergence** — each helper fetch runs `cache.sync()`->`build_from`, which mints a NEW commit (fresh timestamp in the commit message) even when tree content is unchanged. So after any push, `origin/main` is a different SHA from the local pushed commit; `git pull --no-rebase` ALWAYS merges, and if the merged tree's issue-1 bytes differ even slightly from the backend (local appended-line vs cache re-render), the push re-PATCHes. (b) **fast_import.rs:156-157 first-M-line handling** on the merge-commit export. Disambiguate by dumping, on the git>=2.34 box: the two commit SHAs pre-pull, the merge result, and the exact fast-import stream + diff::plan output for the no-op push.
+
+**Sketched resolution:** first CONFIRM which cause via the dump above. If (a): either make `build_from` content-addressed/idempotent (no new commit when the tree is unchanged — stable commit identity), or have the export path treat a byte-identical record as no-change (the diff planner should already; verify why it does not here). If (b): fix the stream-parser M-line handling. Then Assertion 2 goes GREEN without editing the e2e (which is correctly written to expect a true no-op). Whichever, add a cargo-level regression that drives the push->pull->push cycle and asserts zero second-round mutations.
+
+**Why NOT eager-fixed this session:** the P91 fetch-path executor exhausted its 3-CI-round-trip budget landing L1/L2/L3 (the fetch path IS fixed and proven); Assertion 2 is a distinct push-path bug that (i) cannot be reproduced on the discovering box (git 2.25 < 2.34) and (ii) needs root-cause disambiguation before a fix, i.e. another git>=2.34 iteration. Handing off rather than blind-pushing a 4th time.
+
+**STATUS:** RESOLVED | P91 final-red-row executor — disposition: **root cause is a cache-desync (`oid_map` stale-prior), CONFIRMED by the round-1 CI forensic dump** (`version mismatch: current=2 requested=1`). Two distinct defects were found and fixed; the CI dump was the disambiguator.
+
+**The CI failure (primary):** `oid_map`'s PRIMARY KEY is `oid` (the blob hash), so `issue_id` is NON-unique. `put_oid_mapping`'s `INSERT OR REPLACE (oid, issue_id, …)` keys on the oid, so each time a record changes, `build_from` inserts a NEW `(new_oid, issue_id)` row while the old `(old_oid, issue_id)` row survives (retention is intentional — `get_issue_for_oid` needs the history so a lazy fetch of any historical blob resolves). But the forward lookup `find_oid_for_record(issue_id)` had NO `ORDER BY`, so SQLite returned the first-inserted (STALE v1) oid. Sequence: init builds the cache at v1 and the `git checkout` materializes the v1 blobs; push #1 PATCHes issue 1 → backend v2 and `refresh_for_mirror_head`→`build_from` inserts issue 1's v2 oid alongside the v1 row (v2 blob lazy/unmaterialized); the pull's delta-sync skips issue 1 (its `updated_at` ≤ the cursor push #1 advanced), so it never re-materializes; push #2's L1 precheck (warm cursor → `list_changed_since` empty → record skipped, no conflict) builds its Step-5 prior from `find_oid_for_record`→**v1 oid**→the materialized v1 blob (body-NO-edit), diffs it against the freshly-merged v2 working blob (body+edit), and emits an Update with `prior_version=1` → backend rejects `409 current=2 requested=1`. The rejected PATCH still counts as a mutation (`got 2`). **Fix:** `find_oid_for_record` now `ORDER BY rowid DESC LIMIT 1` (`crates/reposix-cache/src/cache.rs`) — returns the CURRENT oid (matching its documented "most-recent tree" contract); the unmaterialized v2 oid then triggers the precheck's `list_records` fallback, giving a FRESH prior. RED-proven: `crates/reposix-cache/tests/oid_map_returns_current_oid.rs` (build v1 → mutate to v2 → rebuild → assert `find_oid_for_record` ≠ stale v1 oid).
+
+**Second, distinct latent defect (fixed same push):** `diff::plan`'s Update-equivalence rendered the FULL frontmatter incl. SERVER-CONTROLLED `version`/`updated_at`/`created_at`; a push differing from prior in ONLY those fields emitted a spurious PATCH even though the write path (`execute_action::Update`) sanitizes them (uses cache-derived `prior_version` for `If-Match`, never the blob's values). **Fix:** `render_writable_for_compare` (`crates/reposix-remote/src/diff.rs`) neutralizes id/created_at/updated_at/version before the compare. RED-proven at two levels: `diff::tests::server_controlled_field_drift_emits_no_patch` (planner unit) + `crates/reposix-remote/tests/noop_push_server_field_drift.rs` (drives the REAL `git-remote-reposix` binary through precheck→plan→execute with a warm cursor + stale-version blob, asserting zero POST/PATCH/DELETE). This is defense-in-depth for the honest "content-no-op push mutates nothing" contract; it does NOT mask the cache-desync (a stale prior differs in body, not just server fields).
+
+Candidate (b) (fast_import M-line handling) FALSIFIED — the merge-commit fast-export emits the converged blob correctly. The stale e2e "BUG-3 stream-parser data loss" attribution (already fixed in 91-02) was corrected, and the forensic dump now surfaces the `oid_map` duplicate rows + the `version mismatch` tell. Local git-2.25 reproduction confirmed the `oid_map`/`put_oid_mapping` schema behavior directly (the import-fallback fetch creates fresh-root commits, so the full pull-merge wasn't drivable on-box — the cargo-level regressions are the box-independent proof). The fetch path was untouched. Commits: `4feb5f6` (planner server-field neutralization) + `01cd552` (`find_oid_for_record` ORDER BY fix; `01cd552` is the CI-green fix — CI runs 28726703296 and 28726932499 both PASS `real-git-push-e2e` post-fix).
+
+## 2026-07-05 | Recurring quality-runner self-mutation bug: catalog-first FAIL row minted missing `minted_at`, AND the runner now self-GRADES phase rows the unbiased verifier owns — same `git checkout HEAD -- <catalog>` workaround recurring across P78/P91/P93/P94 (5x, never permanently fixed) | discovered-by: P93 Wave 1 de-risk executor | severity: HIGH
+
+**What:** `quality/runners/run.py` mutates the committed catalog JSON files in place as a
+side effect of grading (catalog-first state mutation — the runner writes verdicts back
+into `quality/catalogs/*.json`). At least once, this self-mutation minted a FAIL row
+that was missing its `minted_at` field entirely — a malformed row written by the
+runner's own catalog-write path, not by a subagent's `bind` call (Principle A: subagents
+propose rows via `bind`; the runner should only flip PASS/FAIL/verdict fields on
+existing, well-formed rows, not mint new malformed ones). The identical recovery
+workaround — `git checkout HEAD -- <catalog-file>` to discard the runner's bad
+self-mutation and restore the last-good committed catalog state — has now recurred
+across at least THREE separate phases (P78, P91, P93), each time as an ad hoc
+in-session fix, never as a permanent code change to the runner itself.
+
+**Why out-of-scope for P93 (Wave 1):** Wave 1's charter is durable-record ledger entries
++ push-stack de-risking; a real fix to `run.py`'s catalog-write path (root-causing why a
+FAIL row can be minted without `minted_at`, and/or hardening the write path against
+partial/malformed writes) is a `quality/runners/`-framework change requiring its own
+scoped investigation and test coverage — explicitly NOT DP-2/cache-coherence code, but
+still a nontrivial framework surface outside this wave's scope, and this executor holds
+the single cargo mutex for de-risking the push stack, not for quality-runner surgery.
+
+**Sketched resolution:** Root-cause the exact code path in `run.py` (and/or
+`quality/runners/_freshness.py` / shared writer helpers) that can produce a catalog row
+missing `minted_at`. Two candidate angles: (a) the runner's write path may construct a
+row dict without the field when a verifier throws before fully populating its result, or
+(b) a race/partial-write during the JSON dump leaves a row half-written. Once
+root-caused, either validate-and-reject malformed rows before persisting (fail loud
+instead of writing a broken row), or ensure every code path that constructs a row always
+sets `minted_at` (e.g. a single row-construction helper/dataclass with the field
+mandatory, replacing ad hoc dict literals scattered across write sites). Add a
+regression test that exercises the failing verifier path and asserts the written catalog
+row is always well-formed (has `minted_at`), closing the gap that has forced the same
+manual `git checkout HEAD -- <catalog>` recovery three times.
+
+**Default disposition:** HIGH — actionable and non-blocking (the existing workaround is
+safe and well-understood), but a real fix belongs in the P94–P97 debt-drain window, not
+a fourth ad hoc workaround. Propose scheduling as a dedicated `quality/runners/`-touching
+task in that window (natural fit alongside GOOD-TO-HAVES-16's `--dry-run` flag and
+GOOD-TO-HAVES-03's `--row`/`--dimension` scope-flag work, all in the same `run.py`
+surface).
+
+**FIRED AGAIN — 4th occurrence (2026-07-06, P94 D4 catalog-freshness sweep, fired-count 3→4):**
+The `94-D4-sweep.sh` all-cadence sweep mutated **6** committed catalog files in place;
+reverted with `git checkout HEAD -- quality/catalogs/` (the same recurring workaround this
+entry predicted). Exact rows mutated this occurrence:
+- `agent-ux.json`: `p87-surprises-absorption`, `p88-good-to-haves-drained`,
+  `v0.13.0-tag-script-present`, `v0.13.0-retrospective-distilled` (PASS→FAIL + `last_verified`
+  bumped 2026-05-01→2026-07-04); `p92-mid-stream-litmus-t1-t4` (NOT-VERIFIED→PASS);
+  `p94-pagination-prune-completeness-gate`, `p94-git243-fallback-sentinel` (NOT-VERIFIED→PASS).
+- `docs-build.json`: `p94-badges-real-vs-transient` (NOT-VERIFIED→PASS).
+- `freshness-invariants.json`: `docs-alignment/walk` (PASS→FAIL),
+  `structure/p94-catalog-freshness-sweep` (NOT-VERIFIED→FAIL).
+- `release-assets.json`: `release/cargo-binstall-resolves` (NOT-VERIFIED→FAIL).
+- `subjective-rubrics.json`: `subjective/dvcs-cold-reader` (NOT-VERIFIED→PARTIAL).
+- `doc-alignment.json`: timestamp-only churn (no status flip).
+
+**NEW, WORSE MANIFESTATION captured this occurrence (net-new data for the P96 fix):** the
+mutation is not merely cosmetic churn — bumping a **legacy** row's `last_verified` past a P90
+validation cutoff makes the whole catalog **fail to load** (`_audit_field.validate_row`
+SystemExit) on the NEXT cadence, TRUNCATING the sweep:
+- `release/cargo-binstall-resolves` FAILed (post-release), runner wrote `last_verified:
+  2026-07-06` but the row is legacy (no `minted_at`) → on the next cadence (on-demand)
+  `release-assets.json` refused to load: *"last_verified >= 2026-07-05 ... but lacks a
+  write-once minted_at anchor (D90-03)"* → on-demand aborted before grading `release-assets`.
+- `agent-ux/p87-surprises-absorption` (legacy, no `claim_vs_assertion_audit`) got its
+  `last_verified` bumped past 2026-05-08 → `agent-ux.json` refused to load on the
+  `pre-release-real-backend` cadence → that cadence never ran at all.
+So the runner can corrupt its OWN subsequent reads within a single sweep. The P96 fix must
+either (a) refuse to write a row it would then reject at load (validate-before-persist), or
+(b) never bump `last_verified` on a legacy row that lacks the newer required field. This is
+data for P96, NOT fixed here (per P94 D4 charter: do NOT fix the runner in this lane).
+
+**Default disposition:** HIGH — actionable and non-blocking (the existing workaround is
+safe and well-understood), but a real fix belongs in the P94–P97 debt-drain window, not
+a fourth ad hoc workaround. Propose scheduling as a dedicated `quality/runners/`-touching
+task in that window (natural fit alongside GOOD-TO-HAVES-16's `--dry-run` flag and
+GOOD-TO-HAVES-03's `--row`/`--dimension` scope-flag work, all in the same `run.py`
+surface). The 4th occurrence has now happened exactly as this entry predicted — the
+validate-before-persist angle is elevated by the load-corruption evidence above.
+
+**FIRED AGAIN — 5th occurrence + NEW escalating class (2026-07-06, P94 close-out, fired-count 4→5):**
+The 4th occurrence's row-list (695-708 above) is not merely cosmetic churn — it exposes a
+DISTINCT and more corrosive failure than the `minted_at` malformed-write this entry opened
+on: **the runner GRADED catalog-first PHASE rows it has no business touching.** During the
+P94 D4 all-cadence sweep the runner flipped, in place, all three P94 phase rows the unbiased
+verifier had DELIBERATELY left `NOT-VERIFIED`: `agent-ux/p94-pagination-prune-completeness-gate`
+and `agent-ux/p94-git243-fallback-sentinel` (`agent-ux.json`) plus
+`docs-build/p94-badges-real-vs-transient` (`docs-build.json`), all `NOT-VERIFIED → PASS`.
+Those rows are the phase's catalog-first end-state contract — their GREEN is owned by the
+unbiased phase-close verifier reading committed artifacts (`quality/PROTOCOL.md`: "the
+executing agent's word is not the verdict"), NOT by the runner self-flipping them during a
+grade pass. A runner that can self-GRADE a phase row to PASS lets a phase "self-close"
+without ever dispatching the unbiased verifier — it directly undermines the catalog-first /
+unbiased-verifier discipline that the entire quality framework rests on. The P94 close-out
+had to LEAVE all four P94 rows `NOT-VERIFIED` on disk (with `quality/reports/verdicts/p94/VERDICT.md`
+@ `0d3c2f9` as the authoritative GREEN record) precisely because there is no way to mint
+EXACTLY the four intended rows without the runner also self-mutating collateral: `run.py`
+has no `--row`/`--dimension` scope flag (GOOD-TO-HAVES-03), a blanket
+`git checkout HEAD -- quality/catalogs/` reverts the four target flips along with the
+collateral, and hand-editing four rows to PASS would invent machine-state a subagent must
+never emit (Principle A). So the recurring self-mutation bug has now DIRECTLY blocked the
+sanctioned post-verification status path — a strictly worse outcome than the tree-dirty
+revert-churn of occurrences 1-4.
+
+**Sharpened P96 fix contract (two independent invariants, both required):**
+1. **Validate-before-persist** (from the 4th occurrence's load-corruption evidence): the
+   runner must refuse to write any row it would then reject at load — never bump a legacy
+   row's `last_verified` past a P90 cutoff it lacks the `minted_at` anchor for, never emit a
+   `minted_at`-less row.
+2. **Never write phase-row grades** (this 5th occurrence): the runner's write path must
+   treat a catalog-first phase row (owned by a phase-close `VERDICT.md`) as read-only during
+   a cadence grade — it may report the freshly-computed status in its OWN artifact/summary
+   but MUST NOT persist a status flip onto the committed catalog row. Phase-row grades are
+   minted only by the unbiased verifier's sanctioned path, never as a side effect of a
+   cadence sweep. A regression test must prove a cadence run over a `NOT-VERIFIED` phase row
+   leaves the committed row `NOT-VERIFIED` even when the verifier exits 0.
+
+**STATUS:** RESOLVED (P96 / D-P96-01, 2026-07-05). Core requirement #2 (never write
+phase-row grades as a side effect of a cadence run) is fixed: `run.py` split GRADE from
+PERSIST — a bare `run.py --cadence <c>` is validate-only and never calls `save_catalog`;
+only `--persist` mints. The exact regression test asked for above ("a cadence run over a
+`NOT-VERIFIED` phase row leaves the committed row `NOT-VERIFIED` even when the verifier
+exits 0") is `quality/runners/test_run.py::test_validate_only_does_not_mutate_catalog`,
+backed by catalog row `structure/catalog-immutable-on-read`. The recurring
+`git checkout HEAD -- quality/catalogs/` workaround is retired (verified: a real
+`run.py --cadence pre-push` now leaves every `quality/catalogs/*.json` byte-identical).
+Residual (smaller, not blocking): requirement #1 (the `--persist` MINT path should refuse
+to write a row it would reject at load — a `minted_at`-less legacy row) is a separate
+load-refusal hardening on the write path, still open — file as its own item if pursued.
+
+## 2026-07-06 | `docs-alignment/walk` (P0) RED — P94 Fork A drifted 8 docs-alignment claims bound to `crates/reposix-core/src/backend.rs`; needs a top-level `/reposix-quality-refresh` (unreachable from inside `/gsd-execute-phase`) | discovered-by: P94 D4 catalog-freshness sweep | severity: HIGH (blocks v0.13.0 milestone-close pre-push)
+
+**What:** The P94 D4 all-cadence sweep re-graded `docs-alignment/walk` (P0, pre-push +
+pre-pr) from a stale PASS to **FAIL**. Root cause: `STALE_DOCS_DRIFT` on
+`crates/reposix-core/src/backend.rs` — its content hash changed, drifting 8
+`docs/connectors/guide/*` BackendConnector-trait claims (`trait-method-count-eight`,
+`backendconnector-{create,get,list-changed-since,list-records,name,root-collection-name,
+supports}-method`). The most-recent (and only P94) change to that file is Fork A commit
+`5cb9a14` ("gate prune_oid_map on connector completeness signal"), which ADDED `Listing`
++ `list_records_complete`. That legitimate feature edit is what drifted the bound hashes.
+
+**Why it matters:** `docs-alignment/walk` is a P0 pre-push gate. Left RED, the v0.13.0
+milestone-close `git push origin main` will BLOCK on it. It is NOT a git<2.34 env-gate,
+NOT a silent regression (found + root-caused by the sweep), and NOT broken behavior (the
+Fork A behavior is proven GREEN by `agent-ux/p94-pagination-prune-completeness-gate`,
+which PASSED). It is a docs-alignment hash-refresh-certificate obligation: the docs are
+very likely still accurate (a method was added, none removed), the BINDINGS just need
+re-hashing.
+
+**Why NOT fixed in this lane:** the resolution is a top-level Claude session running
+`/reposix-quality-refresh crates/reposix-core/src/backend.rs` (or
+`/reposix-quality-backfill`). Per `.planning/CLAUDE.md` ("Orchestration-shaped phases run
+at top-level") + the row's own owner_hint, that slash command CANNOT run from inside
+`/gsd-execute-phase` — the depth-2 fan-out is unreachable in a `gsd-executor`. This P94
+lane is an executor; it can diagnose but not refresh.
+
+**Acceptance:** From a fresh top-level session, run `/reposix-quality-refresh
+crates/reposix-core/src/backend.rs`, review that the 8 `docs/connectors/guide/*` claims
+still read true against the new `backend.rs` (they should — `list_records_complete` is
+additive), then `bind` the refreshed hashes and re-run `quality/gates/docs-alignment/walk.sh`
+to GREEN before the v0.13.0 milestone-close push. If any of the 8 claims is now
+substantively wrong, fix the doc first, then re-bind.
+
+**Default disposition:** HIGH — must be cleared before v0.13.0 milestone-close (P0
+pre-push gate). Reversible (a refresh certificate + re-bind, no behavior change). REPORTED
+to the coordinator/owner in the P94 D4 lane-B report.
+
+**STATUS:** RESOLVED (fixed in P94 `46bd1fa`; verified clean in P95 `bd18827`) | The re-bind
+this entry asks for LANDED in P94 itself: commit `46bd1fa` ("re-bind docs-alignment claims
+drifted by Fork A backend.rs Listing/list_records_complete") re-baselined all 8
+`docs/connectors/guide/*` BackendConnector-trait rows to the post-Fork-A `backend.rs` line
+ranges (their rationales carry the "re-baselined … after Fork A" notes). This entry's STATUS
+was simply never flipped. P95 VERIFIED against reality: all 10 `docs/connectors/guide/*`
+backend.rs-citing rows read `BOUND` on disk AND survive `quality/gates/docs-alignment/walk.sh`
+(exit 0) with no re-flip — the additive `list_records_complete` left every claim true. No P95
+re-bind was needed; this is a verify-and-close, not a redundant timestamp bump. (NOTE for the
+milestone verifier: the row-count in the title is "8"; the trait actually has 10 bound
+per-method rows incl. `trait-method-count-eight` + `update-record` — all confirmed BOUND.)
+
+## 2026-07-05 | Pre-push BLOCKED: pre-existing `clippy::doc_markdown` errors in `crates/reposix-remote/tests/common.rs` fail `code/clippy-lint-loaded` + `code/cargo-clippy-warnings` | discovered-by: P93 Wave 1 de-risk executor (Task B, push-stack rebase+push) | severity: HIGH (blocks push origin main)
+
+**What:** After a clean `git pull --rebase origin main` (24 commits replayed with zero
+conflicts, including the owner-approved PR #62 squash `5118ed1`), `git push origin main`
+was BLOCKED by the pre-push hook. `python3 quality/runners/run.py --cadence pre-push`
+reported 3 FAIL rows: `code/clippy-lint-loaded`, `code/cargo-clippy-warnings` (both `-D
+warnings` cargo-clippy invocations, same underlying compile failure), and
+`structure/badges-resolve` (the already-filed, separately-tracked flake — see the
+2026-07-05 `badges-resolve` entry in `GOOD-TO-HAVES.md`, same window). The two clippy
+rows fail because `cargo clippy --workspace --all-targets -- -D warnings` cannot
+compile the `deleted_record_ghost_oid_map_row_forces_false_partial_fail` test target:
+`clippy::doc_markdown` fires 4 times in `crates/reposix-remote/tests/common.rs` (doc
+comments missing backticks around `read_blob`, `build_from`, `cache_db_path`/`SQLite`,
+`tests/mirror_refs.rs`, at lines 28 and 232/234) and `-D warnings` promotes each to a
+hard compile error.
+
+**Confirmed pre-existing, NOT caused by this wave's Task A/B changes:** `git blame`
+traces all 4 flagged lines to commit `f0340e0` ("feat(agent-ux): P92 SC5 — behavioral
+no-helper-retry assertion", 2026-07-05, authored during P92 — before P93 started).
+`git merge-base --is-ancestor f0340e0 7caf3ea` confirms `f0340e0` is an ancestor of this
+Wave 1 session's starting HEAD (the P93 relief-handoff commit) — the lint failure
+predates this session entirely and is unrelated to the 3 Task A ledger commits or to any
+P93 DP-2/cache-coherence code (explicitly out of this wave's scope per the SCOPE
+BOUNDARY rule and per the wave's own instruction: "if a pre-push gate other than the
+[mkdocs] one blocks, report the exact gate + output; do not bypass"). Left unfixed and
+reported rather than auto-patched, per that explicit instruction.
+
+**Side-effect noticed + cleaned up:** the failed pre-push run mutated 3 committed
+catalog JSON files in place (`quality/catalogs/code.json`, `doc-alignment.json`,
+`freshness-invariants.json` — small 4-8 line diffs, verdict/timestamp flips from the
+FAIL run) — a live instance of the recurring quality-runner self-mutation bug filed
+immediately above this entry. Restored via `git checkout -- <3 files>` (specific paths,
+not a blanket reset) before reporting, so the working tree stays clean pending the
+coordinator's decision on the clippy fix.
+
+**Acceptance:** Add backticks around the 4 flagged doc-comment terms in
+`crates/reposix-remote/tests/common.rs` (lines 28, 232, 234) — a zero-behavior-change,
+~4-line doc-comment fix. Re-run `cargo clippy -p reposix-remote --all-targets -- -D
+warnings` to confirm GREEN, then retry `git push origin main`.
+
+**Why deferred (not auto-fixed this lane):** the wave's explicit instruction for Task B
+step 3 was to report rather than bypass any non-mkdocs pre-push blocker; `common.rs` is
+test-support infrastructure for P93's own D-P93-01 repro test, arguably adjacent to (if
+not squarely inside) the "P93 DP-2/cache-coherence code" the wave was told not to touch.
+Left for the coordinator to route: either a same-window trivial doc-comment fix (lowest
+risk, matches the "eager-fix <1h, no new dependency" bar) or an explicit hand-off to the
+next P93 wave.
+
+**Current state:** local `main` is rebased cleanly onto `origin/main` (contains PR #62)
+but the push has NOT landed — `git rev-list --left-right --count origin/main...HEAD`
+reads `0  24` (origin 0 ahead, HEAD 24 ahead), not the required `0  0`. No `--no-verify`
+bypass was used.
+
+**STATUS:** RESOLVED | P93 Wave 2a Task A commit `24b8899` (`fix(93): backtick
+doc-comment identifiers in reposix-remote tests (unblock push)`). Wrapped `build_from` /
+`read_blob` (line 28) and `SQLite` / `tests/mirror_refs.rs` (lines 232/234) in backticks
+in `crates/reposix-remote/tests/common.rs`; `cargo clippy -p reposix-remote --tests`
+confirmed 0 warnings post-fix. No test logic changed, no `#[allow]` added. Push
+subsequently landed in the same wave (Task C) — see the sibling 2026-07-05 entry filing
+the mkdocs anchor-swallow gate-honesty item for this wave's remaining tracked findings.
+
+---
+
+## 2026-07-05 23:10 | discovered-by: P94 D2 lane | severity: HIGH → RESOLVED (2026-07-05, DP-2 root-cause `28855b8`)
+
+**CORRECTION / RETRACTION (2026-07-05, DP-2, commit `28855b8`; ratified by P94 Finish lane A):**
+The original report below attributed two RED `reposix-remote` integration tests to a
+*regression in P94 D1's Fork B* (`5cb9a14`) and claimed the RED exit-code test "blocks tag."
+**Both claims are FALSE and are hereby retracted.** DP-2 root-caused the failures to a
+NON-HERMETIC test-fixture leak — no Fork B (nor Fork A) code change is implicated. **Fork B
+is EXONERATED, and this is NOT a v0.13.0 tag blocker.**
+
+**True root cause (test-hermeticity bug, not a code regression):**
+`tests/exit_codes.rs::exit_codes_locked_reposix_and_helper` and `tests/bulk_delete_cap.rs::*`
+shared the SAME on-disk cache — `~/.cache/reposix/sim-demo.git` — across runs. A prior run
+left a live `last_fetched_at` cursor paired with **0 `oid_map` rows**, so the export
+precheck's warm-cursor hot path read `prior = []` → computed **0 planned deletes** → the
+bulk-delete cap was never tripped (the cap counts PLANNED deletes *before* any
+`execute_action`, so a 6-delete push that should refuse instead saw nothing to delete).
+That is a stale-shared-cursor artifact, NOT a delete-storm and NOT a Fork-A
+completeness-envelope parsing bug. Proven by (a) byte-identical delete-cap code paths — the
+cap logic is untouched by `5cb9a14` — and (b) a controlled cursor-only experiment that
+reproduced "0 planned deletes" purely by pre-seeding the cursor with an empty `oid_map`,
+with no D1 code in play. Because the cap counts planned deletes before execution, a silent
+SoT delete-storm was never realizable through Fork B.
+
+**Fix (commit `28855b8` — "test(94): isolate REPOSIX_CACHE_DIR in exit-code + bulk-delete-cap
+tests (non-hermetic cursor leak, NOT a Fork B regression)"):** each child helper now runs
+under an isolated `REPOSIX_CACHE_DIR`, eliminating the cross-test cursor leak. Both
+`exit_codes_locked_reposix_and_helper` and the `bulk_delete_cap` tests are GREEN; the
+stability-LOCKED exit-code contract (`docs/decisions/009-stability-commitment`) holds.
+
+**Retracted specifics (for the audit trail, do NOT re-file):** the "Fork-A
+`Listing{records,is_complete}` return-shape drops records on bare-array backends" hypothesis
+was wrong (the sim vs. mock difference was a red herring — the real variable was the shared
+cache cursor), and the "blocks milestone-close" assertion was wrong (the tests are green and
+the fix is a test-only change). No mock-backend delete-cap regression is required for the tag.
+
+**STATUS:** RESOLVED (28855b8 — non-hermetic `REPOSIX_CACHE_DIR` cursor leak isolated; Fork B exonerated; NOT a tag blocker)
+
+## 2026-07-05 23:12 | discovered-by: P94 D2 lane | severity: MEDIUM
+
+**What:** The catalog row `agent-ux/p94-git243-fallback-sentinel` (and the SURPRISES-INTAKE
+L602-610 source finding it mints from) MISDIAGNOSED the git-2.43 push mechanism. The row's
+`comment` + assert-c rationale state git 2.43 "tries `stateless-connect git-receive-pack`
+first ... the non-`fallback` reply aborts the push ... the push succeeds by falling back to
+the `export` capability." DP-2 container tracing (`GIT_TRANSPORT_HELPER_DEBUG=1`, see
+`94-D2-REPRO-NOTES.md`) DISPROVED this: git 2.43 (and 2.54) NEVER probe `stateless-connect`
+for the push. The real, version-windowed blocker is the helper answering `option
+object-format` with `unsupported` — git 2.43 sends that option (helper advertises the
+`object-format` cap) and treats `unsupported` as FATAL (exit 128); git 2.54 skips the option
+entirely. The fix that actually unblocks the push is answering `option object-format` →
+`ok` (`main.rs`), NOT the fallback sentinel (which is dead code for the push path). The
+outcome the row asserts (container push exits 0) IS achieved, so the asserts pass; only the
+mechanism description is wrong.
+
+**Why out-of-scope for P94 D2 (as a catalog rewrite):** catalog-first integrity — the D2
+lane must not rewrite the GREEN-contract row it is being graded against (that would be
+self-serving). The fix + tests + verifier land under the row's existing asserts; the
+description correction is a separate, non-grading edit.
+
+**Sketched resolution:** In a non-grading pass (P96/P97 milestone-close or a code-reviewer
+follow-up), correct the row's `comment` + `claim_vs_assertion_audit` to name the true cause
+(`option object-format` unsupported → git-2.43-fatal), keep the asserts (they hold), and add
+a source-assert that `main.rs` answers `option object-format` with `ok` (the verifier
+already checks this). Update the L602-610 intake source note likewise.
+
+**RESOLVED (2026-07-05, P94 Finish lane A — non-grading pass):** corrected the row
+`agent-ux/p94-git243-fallback-sentinel`'s `comment` + `claim_vs_assertion_audit` to name the
+true mechanism (`option object-format` unsupported → git-2.43-fatal exit 128; fix = answer
+`option object-format` with `ok` in `main.rs`, commit `c136795`; the `fallback` sentinel is
+git-remote-helpers(7) spec-compliance / dead-code-for-push), added `main.rs` + the DP-2
+correction to the row `sources`, and LEFT the asserts + verifier untouched (they hold — the
+container push-exits-0 outcome is unchanged). Catalog re-validates (`run.py load_catalog`, 54
+rows OK).
+
+**STATUS:** RESOLVED (catalog row description corrected; asserts unchanged)
+
+## 2026-07-05 | `list_changed_since` truncation UNDER-materializes (no completeness signal) | discovered-by: P94 Finish lane A | severity: MEDIUM
+
+**What:** `list_changed_since` on the github/jira/confluence connectors also paginates
+(GitHub `Link: rel="next"`, JIRA `nextPageToken`, Confluence `_links.next`) and can TRUNCATE
+at the `MAX_ISSUES_PER_LIST` cap — but, unlike the P94 `list_records_complete`, it carries NO
+completeness signal: its return type is a bare `Vec<RecordId>` and it just `break`s at the
+cap behind a `tracing::warn!` (see e.g. `crates/reposix-jira/src/lib.rs::list_changed_since`,
+which has the exact `if is_last { break } … else { break }` shape — no `is_complete`). This
+is a DISTINCT mechanism from the P94/D1 prune hazard: `list_changed_since` feeds DELTA BLOB
+MATERIALIZATION (the cache's since-cursor delta sync), NOT the gated `keep_ids` prune. So a
+truncated `list_changed_since` UNDER-materializes — some changed blobs are simply not lazily
+fetched this cycle — rather than OVER-deleting. The failure mode is self-healing staleness
+(the next sync with a fresh cursor picks up the missed records), NOT the D1 deletion /
+data-loss hazard.
+
+**Why filed, not fixed here:** P94 Finish lane A's charter is the `list_records_complete`
+cursor-authoritative fix. Threading a completeness signal into `list_changed_since` is a
+different return shape PLUS a new cache delta-sync consumer (step-3 materialization) — a
+separate charter and a new plumbing change, past this lane's `<1h` eager-fix budget with no
+new-dependency guarantee.
+
+**Sketched resolution:** Either (a) give `list_changed_since` a completeness signal and gate
+the cache's delta-materialization step the way Fork A gates the prune (a truncated delta
+window is retried rather than silently short), or (b) accept it as documented, self-healing
+staleness — note the bound in the connector docs and add a regression test that a capped
+`list_changed_since` is re-driven on the next cursor advance. Route to a v0.14.0
+cache-hardening phase alongside the L2/L3 delta-sync work.
+
+**Default disposition:** MEDIUM — no data-loss / deletion hazard (distinct from D1), only a
+transient under-materialization that self-heals; low probability (a single delta window must
+exceed the cap). Route to v0.14.0 cache-hardening.
+
+**STATUS:** RESOLVED — [SELF] false-alarm (P96 Wave 3a, DP-2 prove-before-fix). An executed
+repro — `crates/reposix-cache/tests/cache_coherence.rs::same_second_created_record_resolvable_after_delta_sync`
+(fn at line 399) — PASSES on pre-fix HEAD `889c922`, proving there is no correctness gap to fix.
+Root cause of the false alarm: the static trace read `list_changed_since`'s `break`-at-cap in
+isolation, but ADR-010's Step-5 full-list upsert already writes a dropped same-second record's
+`oid_map` row, and `read_blob` re-fetches the blob lazily on first access — so a record missed by
+a truncated delta window is still resolvable, not lost. The originally-sketched "materialize all
+blobs" fix was REJECTED: eagerly materializing every changed blob would break the ARCH-01 lazy
+(blob:none) invariant, trading a self-healing non-bug for a real regression. No code change; the
+CREATE-path regression test above is the durable artifact. The `>`-boundary delta *inefficiency*
+(a same-second write forces a full `list_records` recompute) is real but is efficiency-not-
+correctness and is filed separately in GOOD-TO-HAVES / this intake (P96 Wave 3a Step C).
+
+---
+
+## 2026-07-06 | Batch docs-alignment REFRESH CANDIDATE: 5 rows the pre-push walk re-computes as STALE_TEST_DRIFT every push (committed state BOUND, no real re-bind) — need one top-level `/reposix-quality-refresh` pass | discovered-by: P94 close-out executor (confirmed against the P94 verdict's out-of-scope note) | severity: MEDIUM
+
+**What:** Five docs-alignment rows sit in a permanent self-mutation loop: their COMMITTED
+catalog state is a clean grade (e.g. `docs/decisions/009-stability-commitment/exit-codes-locked`
+reads `"last_verdict": "BOUND"` on disk at HEAD `0d3c2f9`), but every `git push` fires the
+pre-push `docs-alignment/walk` gate, which re-hashes the bound source/test bodies, computes
+`STALE_TEST_DRIFT` (a stored `source_hash`/`test_body_hash` no longer matches the live
+file), and writes that drifted state back into `quality/catalogs/doc-alignment.json` in
+place. Because `STALE_TEST_DRIFT` does NOT block pre-push (only
+`MISSING_TEST`/`STALE_DOCS_DRIFT`/`STALE_TEST_GONE`/`TEST_MISALIGNED`/`RETIRE_PROPOSED`
+block, per `RowState::blocks_pre_push`), the push still lands — but the working tree is left
+dirty, forcing the same `git checkout HEAD -- quality/catalogs/` revert on every push cycle.
+The five rows (all in `doc-alignment.json`), named as "known runner artifacts, NOT P94
+regressions" in the P94 verdict (`quality/reports/verdicts/p94/VERDICT.md` § Out-of-scope):
+`docs/decisions/009-stability-commitment/exit-codes-locked`, `docs/index/ci-badge`,
+`docs/index/quality-score-badge`, `docs/index/quality-weekly-badge`,
+`git-remote/bulk-delete-override-tag`. The drift is genuine (a real hash mismatch the walk
+correctly detects), but no session has run a legitimate re-bind — so it recurs indefinitely
+as revert-churn rather than being cleared. (`exit-codes-locked` was genuinely re-tested in
+P90 90-06 per the resolved sibling entry above; the recurring drift is a fresh hash
+mismatch, not that old MISSING_TEST hole reopening.)
+
+**Why out-of-scope for the P94 close-out:** re-binding is a deliberate top-level
+docs-alignment operation. `/reposix-quality-refresh <doc>` (or per-row `reposix-quality
+doc-alignment bind` with full claim/source/test/grade/rationale re-specification) is
+explicitly top-level-only — its Opus-grader fan-out is unreachable from inside a
+`gsd-executor` / this mechanical close-out lane (depth-2 spawn forbidden, per
+`.planning/CLAUDE.md` "Orchestration-shaped phases run at top-level"). Hand-rehashing via a
+stale `reposix-quality` binary risks catalog corruption for a purely-mechanical rehash —
+higher risk than value inside a state-advance/close-out session.
+
+**Sketched resolution:** Fold into the P95 docs-alignment drain alongside the P94 Fork-A
+`backend.rs` `list_records_complete` hash-drift (the 8 `docs/connectors/guide/*` claims
+filed in the sibling `2026-07-06 | docs-alignment/walk (P0) RED` entry above) and the 3
+older `bench-cron`/`release.yml` STALE_TEST_DRIFT rows (the `2026-...DEFERRED-P95` entry
+above). One top-level `/reposix-quality-refresh` session per drifted doc: review that each
+claim still reads true against the live source/test (these are all additive/mechanical
+drifts — a badge URL bump, a test-body reformat, an exit-code table edit — so expect clean
+re-binds), then `bind` the refreshed hashes back to `BOUND` and re-run
+`quality/gates/docs-alignment/walk.sh` until the walk leaves the tree clean (no post-push
+`git checkout` needed). Worth pairing with the design question already raised in the
+`bench-cron` entry: whole-file / broad line-range hashes are brittle (an unrelated line edit
+reddens a claim whose text is untouched) — a line-anchored or content-substring binding
+would stop this recurring drift class at its root.
+
+**Default disposition:** MEDIUM — non-blocking debt (the push lands; only the tree-dirty
+revert-churn is the cost), but it's death-by-a-thousand-cuts operational friction on every
+push and it erodes trust in the docs-alignment dimension's greens. Route to the P95
+docs-alignment drain.
+
+**STATUS:** RESOLVED (P95, commit `bd18827`) | All 5 rows re-bound with real
+re-computed source+test hashes (a legitimate `bind`, not a walk writeback): `exit-codes-locked`
+(both CLI + helper arms still pin the locked {0,1,2} sets; test-body drift was P94's hermetic
+cache-dir fix in `exit_codes.rs`), the 3 `docs/index/*` badge rows (verifier
+`badges-resolve.py` still HEADs every badge URL + asserts 200; body drift was P94 D3's
+retry/backoff), and `bulk-delete-override-tag` (test still proves 6 deletes with
+`[allow-bulk-delete]` succeed). SEQUENCING NOTE ANSWERED: the walker's self-mutation
+(Hazard #1) does NOT block a clean re-bind — it only re-flips genuinely-stale rows; once the
+stored hashes match live content the walk computes `BOUND` and leaves them alone. Confirmed:
+`walk.sh` exits 0 and all 5 survive a subsequent walk as `BOUND` with zero spurious
+`BOUND → STALE` flips on any other row. The recurring revert-churn is now cleared.
+
+---
+
