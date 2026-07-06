@@ -138,6 +138,8 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 
 **Default disposition:** XS — the gate+disposition close in a near-term structure/debt window; the run.py decomposition that makes the cap green is M (default-defer). Filed by 90-02 (sole Wave-B writer of this file per D90-12 item 4).
 
+**Appended P96 Wave 3a — concrete run.py decomposition target + a free dead-condition cleanup:** `run.py` has since grown to **510 lines** (verified on HEAD `889c922`; was 459 at 90-02) — the cap drifts further every phase. The natural M-refactor extraction unit is the **persist-gate / pending-mint machinery** the P96 grade/persist split added (`run.py:483-500`: the `catalog_dirty → if args.persist: save_catalog else: pending_mint.append` block plus the validate-only `note:` printer), lifted into a sibling module (e.g. `quality/runners/_persist.py`) mirroring how `_audit_field` / `_freshness` already host the decision logic. **Zero-risk down-payment available now:** the guard at ~`run.py:491` `if pending_mint and not args.persist:` carries a redundant `not args.persist` — `pending_mint` is ONLY appended in the `else` branch of `if args.persist:` (`run.py:487-488`), so a non-empty `pending_mint` already implies `not args.persist`. Dropping the dead condition (`if pending_mint:`) is a harmless one-token cleanup with no behavior change — safe to fold into the next `run.py`-touching phase.
+
 **STATUS:** OPEN
 
 ## GOOD-TO-HAVES-07 — move `parse_rfc3339` from `run.py` into `_freshness.py`
@@ -359,6 +361,20 @@ STATUS 2026-07-05 (D-P92-03): **REPRODUCED — CONFIRMED REAL, deterministic** (
 **Why deferred:** different root cause than `cb630e5` (that fix was `Cache::open`'s git-config shell-out env pollution; this is the delta-sync cursor/materialization path) — Rule 4 territory (architectural, needs its own investigation), not a hand-wave-able quick fix. Also affects whether SC1's literal "completes step 6 + step 7" acceptance criterion can be met as worded — a later P92 wave or P93+ should decide whether to loosen that wording or fix the underlying gap.
 
 **Default disposition:** M — default-defer; likely intersects P93's L2/L3 cache-coherence redesign (`refresh_for_mirror_head` / SotPartialFail work) since both touch the cache's post-write refresh semantics.
+
+**Appended P96 Wave 3a — efficiency residual (LOW, distinct from the correctness question):** The
+CREATE-path correctness half of the same-second under-report was proved a FALSE-ALARM this
+window (SURPRISES `list_changed_since UNDER-materializes` entry → RESOLVED; CONSULT-DECISIONS
+`2026-07-05 [SELF] list_changed_since ... false alarm`): a record missed by a truncated delta
+window is still resolvable because ADR-010's Step-5 full-list upsert writes its `oid_map` row
+and `read_blob` re-fetches lazily. What REMAINS is an efficiency cost, not a correctness gap:
+the way the cache stays coherent across the `>`-boundary is precisely that `Cache::sync` Step 4
+sources the tree from a FULL `list_records` recompute (`crates/reposix-cache/src/builder.rs:293-328`)
+rather than a pure delta — so a single same-second write forces a whole-list recompute every
+sync. A `>=`-with-dedup or a monotonic high-water cursor on `list_changed_since` would let the
+delta path stay authoritative and drop the full-list fallback, saving one `list_records` call
+per same-second sync. LOW: correctness is fine today; this is a hot-path allocation/IO saving
+for the L2/L3 cache-hardening window (v0.14.0), not a bug.
 
 **STATUS:** OPEN
 
@@ -843,5 +859,65 @@ current runtime bug.
 **Default disposition:** P3 — latent footgun, zero current runtime impact (GitHub's concrete
 override is present); fold into a v0.14.0 connector-trait cleanup or the OP-8 good-to-haves
 drain.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Split the `doc_alignment.rs` 71k monolith into per-verb modules (bind/walk/status/merge) | discovered-by: P96 Wave 3a (OP-8 Slot 1 hygiene) | severity: LOW
+
+**Size:** M (module carve-out + re-export shim; no behavior change)
+
+**Source:** `crates/reposix-quality/src/commands/doc_alignment.rs` is **71,288 chars / 1,716
+lines** on HEAD `889c922` — the single largest source file in the workspace, hosting every
+`doc-alignment` verb (bind, propose-retire, confirm-retire, mark-missing-test, plan-refresh,
+plan-backfill, merge-shards, walk, status) plus the walker's drift state machine. The prose
+`≤350`-style caps that pressure `run.py`/`verdict.py` (GOOD-TO-HAVES-06) have no analogue here,
+and the file-size gate does NOT catch it: `quality/gates/structure/file-size-limits.sh` excludes
+`^crates/.*\.rs$` outright (deferred to a future milestone's crates-source-budget cleanup, per
+the gate's own exclusion comment) — so this is not "warn-only," it is currently UNMEASURED. The
+monolith makes every walker/bind change a merge-conflict magnet and buries the drift-state logic
+(the `source_hashes.is_empty()` false-negative in the sibling SURPRISES entry lives here).
+
+**Acceptance:** carve per-verb modules (`doc_alignment/{bind,walk,status,merge,...}.rs`) behind a
+thin `doc_alignment/mod.rs` re-export so callers are untouched; the walker's drift state machine
+becomes its own unit. No behavior change; existing `reposix-quality` tests stay green. Pairs with
+the eventual removal of the `^crates/.*\.rs$` file-size-gate exclusion (then this file would fail
+a real budget).
+
+**Why deferred:** cargo-touching refactor of a load-bearing binary, orthogonal to this no-cargo
+hygiene window; best done in a quality-framework phase that already has the crate built.
+
+**Default disposition:** LOW/M — no runtime impact, pure maintainability; do it in the same
+window that retires the crates-source file-size-gate exclusion so the split is enforced, not just
+performed.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Split `cache_coherence.rs` (23.4k) when the crates-source file-size budget is enforced | discovered-by: P96 Wave 3a (OP-8 Slot 1 hygiene) | severity: LOW
+
+**Size:** S (test-file split by scenario cluster)
+
+**Source:** `crates/reposix-cache/tests/cache_coherence.rs` is **23,415 chars** on HEAD `889c922`
+— over the generic `*.md`/`*.rs` 20k progressive-disclosure budget. **Accurate scope note (a
+correction to the loose "20k soft-limit waiver expires" framing):** this file is a `crates/**.rs`
+path, which `quality/gates/structure/file-size-limits.sh` EXCLUDES entirely (`^crates/.*\.rs$`),
+so it is neither flagged nor warned today — the relevant trigger is the future milestone that
+RETIRES that crates-source exclusion (the same cleanup GOOD-TO-HAVES-06 and the `doc_alignment.rs`
+split above both wait on), not a warn-only waiver expiry. When that budget lands, this test file
+(same-second CREATE/UPDATE/DELETE cache-coherence repros, incl.
+`same_second_created_record_resolvable_after_delta_sync`) should split by scenario cluster.
+
+**Acceptance:** split into per-scenario test modules (e.g. `cache_coherence/{create,update,delete,
+delta_sync}.rs` or split files) each under the source budget, preserving every existing test fn
+verbatim; `cargo nextest run -p reposix-cache` stays green.
+
+**Why deferred:** cargo-touching test refactor, no correctness value on its own; only worth doing
+alongside the crates-source-budget enforcement so it is checked, not aspirational.
+
+**Default disposition:** LOW/S — cosmetic/maintainability; bundle with the crates-source file-size
+budget rollout.
 
 **STATUS:** OPEN

@@ -1217,7 +1217,18 @@ cache-hardening phase alongside the L2/L3 delta-sync work.
 transient under-materialization that self-heals; low probability (a single delta window must
 exceed the cap). Route to v0.14.0 cache-hardening.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED — [SELF] false-alarm (P96 Wave 3a, DP-2 prove-before-fix). An executed
+repro — `crates/reposix-cache/tests/cache_coherence.rs::same_second_created_record_resolvable_after_delta_sync`
+(fn at line 399) — PASSES on pre-fix HEAD `889c922`, proving there is no correctness gap to fix.
+Root cause of the false alarm: the static trace read `list_changed_since`'s `break`-at-cap in
+isolation, but ADR-010's Step-5 full-list upsert already writes a dropped same-second record's
+`oid_map` row, and `read_blob` re-fetches the blob lazily on first access — so a record missed by
+a truncated delta window is still resolvable, not lost. The originally-sketched "materialize all
+blobs" fix was REJECTED: eagerly materializing every changed blob would break the ARCH-01 lazy
+(blob:none) invariant, trading a self-healing non-bug for a real regression. No code change; the
+CREATE-path regression test above is the durable artifact. The `>`-boundary delta *inefficiency*
+(a same-second write forces a full `list_records` recompute) is real but is efficiency-not-
+correctness and is filed separately in GOOD-TO-HAVES / this intake (P96 Wave 3a Step C).
 
 ---
 
@@ -1332,5 +1343,97 @@ parallel-array work and the recurring catalog self-mutation fix.
 `bind` path always carry hashes, so this bites only hand-edits / partial migrations), but it
 is a silent-hole in a P0 pre-push honesty gate, which is exactly the failure class the
 docs-alignment dimension exists to close. Route to P96/P97.
+
+**Forward pre-audit (filed P96 Wave 3a, post-v0.14.0 gate):** Before any post-v0.14.0
+retirement of the legacy `source_hash` / empty-`source_hashes` handling, run a pre-audit
+confirming ZERO residual empty-`source_hashes` legacy `BOUND` rows remain. The P96
+same-file-multi migration cleared the current 9 via load-collapse (commit `17a7b02`), but a
+retirement that assumes the parallel-array invariant always holds must re-verify the count is
+still 0 at retirement time — a hand-edited or partially-migrated `BOUND` row with a source
+cite but an empty hash array would otherwise silently lose source-drift coverage (the exact
+false-negative this entry documents). Cheap check: assert no non-retired, source-citing row
+has an empty `source_hashes` at `Catalog::load` BEFORE deleting the `is_empty()` skip arm.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-05 | STATE.md frontmatter has no strict-YAML parseability guard — a bare `: ` regresses it silently | discovered-by: P96 Wave 3a (OP-8 Slot 1 hygiene) | severity: LOW
+
+**What:** `.planning/STATE.md` opens with a `---`-fenced YAML frontmatter block that is the
+LIVE machine-readable cursor (`status`, `last_updated`, `workstreams.workstream_a.next_phase`,
+`phases_completed`) consumed by `gsd-sdk` state handlers and by ad-hoc probes. Nothing in the
+pre-commit / pre-push gate set asserts that block still parses as strict YAML, so a hand-edit
+that introduces a bare `: ` (unquoted colon-space inside a scalar), a tab, or a mis-indented
+key silently produces an unparseable block — the failure is invisible until a downstream
+`yaml.safe_load` consumer chokes mid-session. This class of breakage has bitten before in the
+P94 era (a bare `: ` around `eea309f`, since repaired). **Verified against reality this window:**
+STATE.md frontmatter parses CLEAN on HEAD `889c922` (`status: executing-p95-post-close-drain`,
+`next_phase: P96`, `phases_completed: 18`) — so this is a PREVENTIVE guard against silent
+regression, not a live break.
+
+**Why out-of-scope for P96 Wave 3a:** this window is planning-artifact hygiene (no new gate
+wiring / catalog rows — those are Wave 3b + the verifier's territory, and adding a gate touches
+`quality/`). Filing the guard sketch keeps the footgun visible for the next `quality/gates/`
+window.
+
+**Sketched resolution:** add a tiny `scripts/check-state-yaml.py` (or a `structure`-dimension
+pre-commit row) that `yaml.safe_load`s the STATE.md frontmatter block and exits non-zero on any
+parse error, naming the offending line. Cheap, deterministic, no cargo. Pairs naturally with the
+STATE-vs-ROADMAP staleness entry (`ROADMAP.md § Phase 94–97 prose is STALE` above) — one is
+semantic drift, this is syntactic breakage; both harden the single most load-bearing planning
+cursor.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-05 | Committed catalog `status` lags the live grade between explicit `--persist` mints (by P96 design) | discovered-by: P96 Wave 3a (OP-8 Slot 1 hygiene) | severity: LOW
+
+**What:** The P96 grade/persist split (D-P96-01 / CONSULT-DECISIONS `36dad20`) makes a bare
+`run.py --cadence <c>` validate-only: it computes status in-memory + writes per-row artifacts
+under `quality/reports/verifications/` (gitignored) but does NOT call `save_catalog`. This is
+the correct fix for the recurring self-mutation bug. The DESIGNED consequence: any consumer that
+reads the COMMITTED catalog `status` field — `verdict.py`'s badge rollup, dashboards, and
+load-time phantom-green checks — sees the LAST-MINTED value, not the live grade, until the next
+explicit `--persist` mint. Between mints the committed status can be stale relative to what the
+runner just measured (related to the `Catalog-freshness sweep needed` entry above, which
+observed the same staleness pre-P96 for a different root cause).
+
+**Why out-of-scope for P96 Wave 3a:** filing only — the operational rule below is a runner-docs
++ milestone-close-checklist note, and this window does not touch `quality/` runners or catalogs.
+
+**Sketched resolution:** (a) a one-line note in the runner docs (`quality/PROTOCOL.md` runner
+section) stating that committed `status` is authoritative only as of the last `--persist` mint;
+(b) an operational rule — milestone-close MUST run an explicit `run.py --cadence <c> --persist`
+mint BEFORE reading the milestone verdict / regenerating badges, so the committed status the
+verdict rolls up is fresh. LOW: no correctness hazard (gate integrity is preserved in-memory);
+purely a "don't trust a stale committed badge between mints" reporting-freshness note.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-05 | `--persist` mint path should refuse to write a row it would reject at load (write-path load-refusal hardening) | discovered-by: P96 Wave 3a (residual split out of the D-P96-01 self-mutation fix) | severity: MEDIUM
+
+**What:** The P96 grade/persist split (RESOLVED entry `Recurring quality-runner self-mutation
+bug` above) fixed core requirement #2 (cadence runs never persist phase-row grades). Its named
+residual — requirement #1, the `--persist` MINT path should REFUSE to write a row it would itself
+reject at LOAD (e.g. a `minted_at`-less legacy row that `_audit_field.validate_row` would fail on
+load) — is still OPEN and is filed here as its own item (the RESOLVED entry explicitly invited
+"file as its own item if pursued"). Filed standalone so it stays visible in the working intake
+rather than buried inside a now-terminal entry.
+
+**Why out-of-scope for P96 Wave 3a:** this is a `quality/runners/run.py` write-path code change
+(add a pre-`save_catalog` validation pass) with its own test obligation — a runner-touching fix,
+orthogonal to this no-cargo hygiene window.
+
+**Sketched resolution:** in the `--persist` branch, before `save_catalog`, run each to-be-written
+row through the same `validate_row` predicate the loader applies; abort the mint (loud, naming
+the offending row + reason) rather than persisting a row that the very next load would reject.
+Closes the "mint writes an un-loadable row" asymmetry. Add a regression: `run.py --cadence <c>
+--persist` over a catalog whose in-memory grade would produce a `minted_at`-less row must exit
+non-zero and leave the file byte-identical. Route to the next `run.py`-touching quality-framework
+window (P97 or v0.14.0).
 
 **STATUS:** OPEN

@@ -412,3 +412,34 @@ no E2 escalation). Regression locked by new gate
 `--persist` `25215dd`; workaround-retirement + docs (this commit).
 
 ---
+
+## 2026-07-05 [SELF] list_changed_since under-materialization — false alarm (DP-2 prove-before-fix)
+
+**Context:** The SURPRISES-INTAKE entry `2026-07-05 | list_changed_since truncation
+UNDER-materializes` (discovered-by P94 Finish lane A, severity MEDIUM) flagged that a
+truncated `list_changed_since` delta window drops changed records with no completeness
+signal, and sketched a "materialize all changed blobs" fix. Reviewed during P96 Wave 3a
+(OP-8 Slot 1 finalization).
+
+**Decision:** NOT a bug — downgraded to a RESOLVED false-alarm via an executed repro; no
+code change. The DP-2 prove-before-fix probe (`crates/reposix-cache/tests/cache_coherence.rs::same_second_created_record_resolvable_after_delta_sync`,
+fn at line 399) PASSES on pre-fix HEAD `889c922`, demonstrating that a record missed by a
+capped delta window is still resolvable. The CREATE-path regression test is the durable
+artifact that pins this closed.
+
+**Rationale:** ADR-010's Step-5 full-list upsert already writes the dropped same-second
+record's `oid_map` row, and `read_blob` re-fetches the blob lazily on first access — so the
+"under-materialization" is transient, self-healing staleness, never data loss. The sketch's
+proposed all-blob-materialization was REJECTED: eagerly fetching every changed blob would
+break the ARCH-01 lazy (blob:none) invariant — trading a self-healing non-bug for a real
+regression. The residual `>`-boundary delta *inefficiency* (a same-second write forces a
+full `list_records` recompute) is real but efficiency-not-correctness and is filed
+separately (P96 Wave 3a Step C).
+
+**Reversibility:** N/A — no code or contract change; a documentation + test disposition only.
+
+**Commit:** `889c922` (pre-fix HEAD the repro passes on; the CREATE-path repro was landed
+by `test(96): same-second-CREATE cache-coherence repro`). SURPRISES entry flipped to
+RESOLVED in this P96 Wave 3a hygiene pass.
+
+---
