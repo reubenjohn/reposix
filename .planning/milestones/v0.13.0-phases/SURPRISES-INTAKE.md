@@ -650,7 +650,7 @@ See the companion `GOOD-TO-HAVES.md` for the same-window disposition of the P92-
 
 **STATUS:** OPEN (staged for owner action)
 
-## 2026-07-05 | Recurring quality-runner self-mutation bug: catalog-first FAIL row minted missing `minted_at` — same `git checkout HEAD -- <catalog>` workaround recurring across P78/P91/P93/P94 (4x, never permanently fixed) | discovered-by: P93 Wave 1 de-risk executor | severity: HIGH
+## 2026-07-05 | Recurring quality-runner self-mutation bug: catalog-first FAIL row minted missing `minted_at`, AND the runner now self-GRADES phase rows the unbiased verifier owns — same `git checkout HEAD -- <catalog>` workaround recurring across P78/P91/P93/P94 (5x, never permanently fixed) | discovered-by: P93 Wave 1 de-risk executor | severity: HIGH
 
 **What:** `quality/runners/run.py` mutates the committed catalog JSON files in place as a
 side effect of grading (catalog-first state mutation — the runner writes verdicts back
@@ -730,6 +730,43 @@ task in that window (natural fit alongside GOOD-TO-HAVES-16's `--dry-run` flag a
 GOOD-TO-HAVES-03's `--row`/`--dimension` scope-flag work, all in the same `run.py`
 surface). The 4th occurrence has now happened exactly as this entry predicted — the
 validate-before-persist angle is elevated by the load-corruption evidence above.
+
+**FIRED AGAIN — 5th occurrence + NEW escalating class (2026-07-06, P94 close-out, fired-count 4→5):**
+The 4th occurrence's row-list (695-708 above) is not merely cosmetic churn — it exposes a
+DISTINCT and more corrosive failure than the `minted_at` malformed-write this entry opened
+on: **the runner GRADED catalog-first PHASE rows it has no business touching.** During the
+P94 D4 all-cadence sweep the runner flipped, in place, all three P94 phase rows the unbiased
+verifier had DELIBERATELY left `NOT-VERIFIED`: `agent-ux/p94-pagination-prune-completeness-gate`
+and `agent-ux/p94-git243-fallback-sentinel` (`agent-ux.json`) plus
+`docs-build/p94-badges-real-vs-transient` (`docs-build.json`), all `NOT-VERIFIED → PASS`.
+Those rows are the phase's catalog-first end-state contract — their GREEN is owned by the
+unbiased phase-close verifier reading committed artifacts (`quality/PROTOCOL.md`: "the
+executing agent's word is not the verdict"), NOT by the runner self-flipping them during a
+grade pass. A runner that can self-GRADE a phase row to PASS lets a phase "self-close"
+without ever dispatching the unbiased verifier — it directly undermines the catalog-first /
+unbiased-verifier discipline that the entire quality framework rests on. The P94 close-out
+had to LEAVE all four P94 rows `NOT-VERIFIED` on disk (with `quality/reports/verdicts/p94/VERDICT.md`
+@ `0d3c2f9` as the authoritative GREEN record) precisely because there is no way to mint
+EXACTLY the four intended rows without the runner also self-mutating collateral: `run.py`
+has no `--row`/`--dimension` scope flag (GOOD-TO-HAVES-03), a blanket
+`git checkout HEAD -- quality/catalogs/` reverts the four target flips along with the
+collateral, and hand-editing four rows to PASS would invent machine-state a subagent must
+never emit (Principle A). So the recurring self-mutation bug has now DIRECTLY blocked the
+sanctioned post-verification status path — a strictly worse outcome than the tree-dirty
+revert-churn of occurrences 1-4.
+
+**Sharpened P96 fix contract (two independent invariants, both required):**
+1. **Validate-before-persist** (from the 4th occurrence's load-corruption evidence): the
+   runner must refuse to write any row it would then reject at load — never bump a legacy
+   row's `last_verified` past a P90 cutoff it lacks the `minted_at` anchor for, never emit a
+   `minted_at`-less row.
+2. **Never write phase-row grades** (this 5th occurrence): the runner's write path must
+   treat a catalog-first phase row (owned by a phase-close `VERDICT.md`) as read-only during
+   a cadence grade — it may report the freshly-computed status in its OWN artifact/summary
+   but MUST NOT persist a status flip onto the committed catalog row. Phase-row grades are
+   minted only by the unbiased verifier's sanctioned path, never as a side effect of a
+   cadence sweep. A regression test must prove a cadence run over a `NOT-VERIFIED` phase row
+   leaves the committed row `NOT-VERIFIED` even when the verifier exits 0.
 
 **STATUS:** OPEN
 
@@ -1158,5 +1195,111 @@ cache-hardening phase alongside the L2/L3 delta-sync work.
 **Default disposition:** MEDIUM — no data-loss / deletion hazard (distinct from D1), only a
 transient under-materialization that self-heals; low probability (a single delta window must
 exceed the cap). Route to v0.14.0 cache-hardening.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-06 | Batch docs-alignment REFRESH CANDIDATE: 5 rows the pre-push walk re-computes as STALE_TEST_DRIFT every push (committed state BOUND, no real re-bind) — need one top-level `/reposix-quality-refresh` pass | discovered-by: P94 close-out executor (confirmed against the P94 verdict's out-of-scope note) | severity: MEDIUM
+
+**What:** Five docs-alignment rows sit in a permanent self-mutation loop: their COMMITTED
+catalog state is a clean grade (e.g. `docs/decisions/009-stability-commitment/exit-codes-locked`
+reads `"last_verdict": "BOUND"` on disk at HEAD `0d3c2f9`), but every `git push` fires the
+pre-push `docs-alignment/walk` gate, which re-hashes the bound source/test bodies, computes
+`STALE_TEST_DRIFT` (a stored `source_hash`/`test_body_hash` no longer matches the live
+file), and writes that drifted state back into `quality/catalogs/doc-alignment.json` in
+place. Because `STALE_TEST_DRIFT` does NOT block pre-push (only
+`MISSING_TEST`/`STALE_DOCS_DRIFT`/`STALE_TEST_GONE`/`TEST_MISALIGNED`/`RETIRE_PROPOSED`
+block, per `RowState::blocks_pre_push`), the push still lands — but the working tree is left
+dirty, forcing the same `git checkout HEAD -- quality/catalogs/` revert on every push cycle.
+The five rows (all in `doc-alignment.json`), named as "known runner artifacts, NOT P94
+regressions" in the P94 verdict (`quality/reports/verdicts/p94/VERDICT.md` § Out-of-scope):
+`docs/decisions/009-stability-commitment/exit-codes-locked`, `docs/index/ci-badge`,
+`docs/index/quality-score-badge`, `docs/index/quality-weekly-badge`,
+`git-remote/bulk-delete-override-tag`. The drift is genuine (a real hash mismatch the walk
+correctly detects), but no session has run a legitimate re-bind — so it recurs indefinitely
+as revert-churn rather than being cleared. (`exit-codes-locked` was genuinely re-tested in
+P90 90-06 per the resolved sibling entry above; the recurring drift is a fresh hash
+mismatch, not that old MISSING_TEST hole reopening.)
+
+**Why out-of-scope for the P94 close-out:** re-binding is a deliberate top-level
+docs-alignment operation. `/reposix-quality-refresh <doc>` (or per-row `reposix-quality
+doc-alignment bind` with full claim/source/test/grade/rationale re-specification) is
+explicitly top-level-only — its Opus-grader fan-out is unreachable from inside a
+`gsd-executor` / this mechanical close-out lane (depth-2 spawn forbidden, per
+`.planning/CLAUDE.md` "Orchestration-shaped phases run at top-level"). Hand-rehashing via a
+stale `reposix-quality` binary risks catalog corruption for a purely-mechanical rehash —
+higher risk than value inside a state-advance/close-out session.
+
+**Sketched resolution:** Fold into the P95 docs-alignment drain alongside the P94 Fork-A
+`backend.rs` `list_records_complete` hash-drift (the 8 `docs/connectors/guide/*` claims
+filed in the sibling `2026-07-06 | docs-alignment/walk (P0) RED` entry above) and the 3
+older `bench-cron`/`release.yml` STALE_TEST_DRIFT rows (the `2026-...DEFERRED-P95` entry
+above). One top-level `/reposix-quality-refresh` session per drifted doc: review that each
+claim still reads true against the live source/test (these are all additive/mechanical
+drifts — a badge URL bump, a test-body reformat, an exit-code table edit — so expect clean
+re-binds), then `bind` the refreshed hashes back to `BOUND` and re-run
+`quality/gates/docs-alignment/walk.sh` until the walk leaves the tree clean (no post-push
+`git checkout` needed). Worth pairing with the design question already raised in the
+`bench-cron` entry: whole-file / broad line-range hashes are brittle (an unrelated line edit
+reddens a claim whose text is untouched) — a line-anchored or content-substring binding
+would stop this recurring drift class at its root.
+
+**Default disposition:** MEDIUM — non-blocking debt (the push lands; only the tree-dirty
+revert-churn is the cost), but it's death-by-a-thousand-cuts operational friction on every
+push and it erodes trust in the docs-alignment dimension's greens. Route to the P95
+docs-alignment drain.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-06 | docs-alignment walker FALSE-NEGATIVE: a multi-source row with an EMPTY `source_hashes` array silently skips source-drift detection | discovered-by: P94 close-out executor | severity: MEDIUM
+
+**What:** `crates/reposix-quality/src/commands/doc_alignment.rs:1119-1122` (the walk's
+per-source drift compare) short-circuits when the row's `source_hashes` array is empty:
+
+```rust
+let source_drift: Option<bool> = if row.source_hashes.is_empty() {
+    // No hashes recorded yet (e.g. retire-proposed rows or
+    // legacy rows without a stored hash). Skip drift compare.
+    None
+} else if cites.len() != row.source_hashes.len() { ... }
+```
+
+The intent (per the comment) is to skip retire-proposed / not-yet-bound rows. But the guard
+keys on `source_hashes.is_empty()`, not on bind-state — so ANY row that carries one or more
+`source` citations yet has an EMPTY `source_hashes` array (a hand-edited catalog, a partial
+migration, a bind that populated `tests`/`test_body_hashes` but not `source_hashes`, or a
+multi-source row whose hashes were dropped) is silently treated as "no drift to check." Its
+bound docs can then drift arbitrarily on disk and the P0 pre-push `docs-alignment/walk` gate
+will never fire `STALE_DOCS_DRIFT` for it — a false-negative that defeats the exact
+source-drift detection the P78 MULTI-SOURCE-WATCH-01 per-index loop (lines 1106-1116, the
+`else` arm) was built to provide. The length-mismatch arm (`cites.len() !=
+source_hashes.len()`) already treats a partially-populated array as drift; only the
+fully-empty array escapes, which is the more dangerous case (a source with docs but zero
+watch coverage looks identical to a legitimately-unbound row).
+
+**Why out-of-scope for the P94 close-out:** this is a `reposix-quality` binary code change
+(the walker's drift-state machine) with its own test-coverage obligation — a cargo-touching
+`crates/reposix-quality/` fix, orthogonal to a STATE-advance/intake-filing close-out lane
+that needs no cargo.
+
+**Sketched resolution:** Backfill `source_hashes` in `Catalog::load` so the parallel-array
+invariant (`source_hashes.len() == source.as_slice().len()`) holds for every non-retired,
+source-citing row at load time — mirroring the P78 MULTI-SOURCE-WATCH-01 migration that
+already backfills for the write path. Then tighten the `is_empty()` guard to key on
+bind-state (retire-proposed / `next_action == UNBOUND`) rather than on an empty hash array,
+so a source-citing-but-hashless row is treated as DRIFT (fail-loud) rather than skipped
+(fail-silent). Add a regression fixture: a synthetic row with one `source` cite and an empty
+`source_hashes` whose bound doc has drifted — the tightened walk must flag it
+`STALE_DOCS_DRIFT`, proving the false-negative window is closed. Route to P96/P97
+(quality-framework debt-drain window), natural pairing with the sibling `source_hashes`
+parallel-array work and the recurring catalog self-mutation fix.
+
+**Default disposition:** MEDIUM — low current blast radius (well-formed rows from the normal
+`bind` path always carry hashes, so this bites only hand-edits / partial migrations), but it
+is a silent-hole in a P0 pre-push honesty gate, which is exactly the failure class the
+docs-alignment dimension exists to close. Route to P96/P97.
 
 **STATUS:** OPEN
