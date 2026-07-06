@@ -7,9 +7,9 @@ This is the map, not the territory — detail lives in git and the linked files.
 
 - **v0.13.0 autonomously GREEN** — P78–P97, 20/20 phases shipped.
 - **Tag HALTED** on one owner decision (§2), not on any failing phase.
-- **Git:** published `origin/main = 8a39efc`. Local `HEAD = 1b37350` **UNPUSHED**
-  (chain `8a39efc` → `3109fbb` doctrine → `1b37350` prune, plus this window's wind-down
-  commits). **Next session must coordinate the push** — flag it before any new work.
+- **Git:** published `origin/main = 8a39efc`. Local is **UNPUSHED** ahead (chain:
+  `3109fbb` doctrine → `1b37350` prune → wind-down + review commits; run `git log`).
+  **Next session must coordinate the push** — flag it before any new work.
 
 ## 2. #1 tag gate (E4) — the decision the tag waits on
 

@@ -19,6 +19,10 @@ Session-level calibration (not a milestone-close). v0.13.0 went autonomously GRE
 reconciliation, `docs/decisions/010-l2-l3-cache-coherence.md` §3). Wind-down audited the
 *process* surface: which rigor earns its keep before a launch that has no users yet.
 
+**The axis is value-per-token** — the owner's single efficiency concern (not cost, not
+parallelism, not progress-rate; those are fine as-is). Symptom: coordinators burned
+200k–320k tokens for small diffs. Every lever below is a token lever.
+
 ### Rigor must match stage
 
 This is a **pre-launch, no-USER tool** — much accreted red tape stood in for absent human
