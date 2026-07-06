@@ -9,8 +9,15 @@ probe) for the v0.13.0 tag. That attempt is **fail-closed HALTED, correctly** �
 9th probe found a real P0 correctness bug (E4, below), not an infra flake. **No
 v0.13.0 tag was pushed. No irreversible action was taken.**
 
+**PUSH STATUS: BLOCKED, not landed.** Everything is committed locally (tree clean),
+but `git push origin main` failed the pre-push gate on 2 unrelated FAILs — **neither
+introduced by this handover session's own work**; both are pre-existing conditions in
+commits already on HEAD before I started. Full detail + exact messages + named fixes:
+§1 "Push status" and §6 step 0. Do not `--no-verify` past them.
+
 **Required reading order for the successor:**
-1. This file in full (all 6 sections).
+1. This file in full (all 6 sections) — **start with §1's push-status block**, the
+   tree is not yet at origin.
 2. `.planning/debug/p93-partial-fail-recovery-real-confluence.md` — the committed
    `/gsd-debug` root-cause artifact (E4 finding), referenced but not fully repeated
    below.
@@ -35,8 +42,10 @@ v0.13.0 tag was pushed. No irreversible action was taken.**
   value without cross-checking the transcript/verification-artifact timestamp —
   two rows below are PASS-by-transcript-evidence but still show a stale
   `NOT-VERIFIED` in the catalog (not yet re-bound). See §4.
-- Do **not** re-run any TokenWorld-mutating gate without checking §5(C) cleanup
-  status first (residual pages may exist from prior credentialed runs).
+- Do **not** re-run any TokenWorld-mutating gate without checking §5(C)/§6 step 5
+  cleanup status first (residual pages may exist from prior credentialed runs).
+- Do **not** assume `git push` will succeed on retry without addressing §1's 2
+  blocking gates first — retrying as-is reproduces the same 2 FAILs.
 
 ---
 
@@ -45,21 +54,64 @@ v0.13.0 tag was pushed. No irreversible action was taken.**
 Verified directly this session (not taken on faith from the dispatch briefing, which
 had 2 factual errors — see §5's "corrections" list):
 
-- **HEAD:** `2154151` (tree clean, `git status --porcelain` empty).
+- **HEAD:** `c71af44` (tree clean, `git status --porcelain` empty).
 - **origin/main:** `e8362f5` ("docs(state): advance STATE.md to v0.13.0 milestone
-  CLOSED GREEN (20/20, P78–P97)").
-- **Ahead/behind:** local is **4 ahead, 0 behind** origin/main (`git rev-list
-  --left-right --count origin/main...HEAD` → `0	4`).
-- **Push status at handoff time:** attempted but **not yet confirmed** — see §6 step
-  0 for the exact command; if this session's push already ran, `git rev-parse HEAD`
-  == `git rev-parse origin/main` must hold before doing anything else per this
-  file's own closing instruction.
+  CLOSED GREEN (20/20, P78–P97)") — **unchanged this session; the push did not land.**
+- **Ahead/behind:** local is **5 ahead, 0 behind** origin/main.
+- **Push status: BLOCKED.** `git push origin main` was attempted and rejected by the
+  local pre-push hook (`.githooks/pre-push` → `quality/runners/run.py --cadence
+  pre-push`), exit 1, **before any network push occurred** (nothing partially
+  landed on origin). Two catalog rows FAILed out of 61 in-scope rows checked;
+  everything else PASSED or WAIVED:
+  - **`docs-alignment/walk` (P0, structure dimension).** Exact stderr:
+    `docs-alignment: STALE_DOCS_DRIFT row=docs/index/ci-badge sources_drifted=[0]
+    on docs/index.md -- run /reposix-quality-refresh docs/index.md` and the same
+    for `row=docs/index/quality-weekly-badge`. **Root cause:** commits `8925311`
+    and `f2bbf7f` (both already on HEAD before this session started, not
+    authored by me) edited `docs/index.md`'s two CI/Quality-weekly badge URLs
+    without re-binding the 2 doc-alignment claims that cite them. I confirmed
+    this independently by running the compiled walker directly
+    (`bash quality/gates/docs-alignment/walk.sh`) — it recomputes hash drift
+    fresh against current `docs/index.md`, not just reading the catalog, and
+    reports the identical 2 STALE_DOCS_DRIFT rows. **Fix named by the gate
+    itself:** `/reposix-quality-refresh docs/index.md` (an orchestration-shaped,
+    top-level-only flow per `.planning/CLAUDE.md` — NOT something I should run
+    as a leaf tree-writer; it needs content re-verification + a `reposix-quality`
+    rebuild + re-bind, out of a "no cargo needed" tree-hygiene scope).
+  - **`docs-build/p94-badges-real-vs-transient` (P2).** Exact stderr:
+    `FAIL (docs-build/p94-badges-real-vs-transient): GOOD-TO-HAVES badges-resolve
+    entry is not RESOLVED (still OPEN or missing)`. **Root cause (verified, but
+    NOT introduced by this session):** the verifier's Python check
+    (`quality/gates/docs-build/p94-badges-real-vs-transient.sh`) greps the LIVE
+    `.planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md` for a full `## ...
+    badges-resolve\` FAILs on pre-push...` heading + body, but that full entry
+    was relocated to `GOOD-TO-HAVES-ARCHIVE.md` during the OP-8 Slot-2 drain
+    (commits `d10534e`/`302e8ec`/`eba171a`) — only a one-line RESOLVED pointer
+    remains in the live file, which the regex does not match. **I confirmed via
+    `git show e8362f5:.../GOOD-TO-HAVES.md`** that this archived-away state
+    ALREADY existed at the current `origin/main` tip — i.e. this is a
+    **pre-existing latent bug**, not something my session's commits caused, and
+    I do not know how the push that landed `e8362f5` got past it (possibly this
+    exact row wasn't in `pre-push` cadence scope at that time, or a prior push
+    used a different mechanism — I did not chase this further; flagging it as a
+    genuine open question rather than guessing). **No fix is named by the gate
+    itself** beyond its own assert message; the two candidate fixes are (a)
+    teach the verifier to also scan `GOOD-TO-HAVES-ARCHIVE.md` for the RESOLVED
+    entry, or (b) leave a matchable stub of the resolved entry in the live file.
+    I did not apply either — modifying a shared quality-gate script that
+    everyone's pre-push depends on is outside a tree-hygiene relief's mandate,
+    and this task's own dispatch instructions said "report... do not force past
+    it," not "fix quality gates you find broken."
+  - **I did not use `--no-verify`.** Everything is committed locally; only the
+    `push` step itself is outstanding. Re-attempting `git push origin main`
+    as-is will reproduce the identical 2 FAILs until one of the two fixes above
+    lands (see §6 step 0 for the exact unblock recipe).
 
 **Per-commit one-liners, HEAD back to origin/main (newest first):**
 
 | SHA | Message |
 |---|---|
-| (this handover's own commit — see report) | docs(handover): 97-HANDOVER.md |
+| `c71af44` | docs(handover): 97-HANDOVER.md — real-backend 9th-probe relief handoff |
 | `2154151` | chore(quality): commit doc-alignment walk re-verdict after badge URL fixes |
 | `232fea9` | docs(debug): E4 diagnosis — ADR-010 create-partial-fail cannot converge on id-reassigning backends |
 | `f2bbf7f` | fix(docs): pin quality-weekly badge to main on homepage — match README |
@@ -87,7 +139,10 @@ dispatch briefing):**
    `STALE_DOCS_DRIFT` (legitimate walker re-grade after `8925311`/`f2bbf7f` edited
    `docs/index.md`; internally consistent with `structure/doc-alignment-summary-block-valid`'s
    ratio invariant). I committed it as-is (`2154151`) rather than discard it — see
-   §5's "mid-execution decisions" for the reasoning.
+   §5's "mid-execution decisions" for the reasoning. **This same drift is what
+   later blocked the push** (§1) — discarding it would NOT have avoided the block
+   (the walker recomputes fresh from `docs/index.md` regardless of the catalog
+   file's committed state), it would only have hidden the finding.
 
 ## 2. Wave/cycle state
 
@@ -103,7 +158,7 @@ attempted this session:
 | `dark_factory_real_{github,confluence,jira}` (3 `#[ignore]` tests, `agent_flow_real.rs`) | Referenced by the dispatch briefing as "3/3 PASS" | **NOT independently confirmed by me** — I found no fresh transcript/verification artifact for these 3 in `quality/reports/` this session; take the briefing's claim as **unverified**, re-run before relying on it | none found on disk |
 | `agent-ux/p93-partial-failure-recovery-real-confluence` | Partial-fail-recovery smoke against live Confluence | **FAIL** (two stacked bugs — see below) | `quality/reports/verifications/agent-ux/p93-partial-failure-recovery-real-confluence.json` (`exit_code: 1`), debug artifact |
 | `agent-ux/t4-conflict-rebase-ancestry-real-backend` | Sibling of the sim-arm T4 litmus, real-backend | **NOT IMPLEMENTED** — verifier script does not exist (`quality/gates/agent-ux/t4-conflict-rebase-ancestry-real-backend.sh` absent; sim sibling `t4-conflict-rebase-ancestry.sh` exists) | `ls` confirms absence; catalog row `NOT-VERIFIED`, `waiver: null` |
-| Committed the `/gsd-debug` E4 root-cause note + `doc-alignment.json` walk re-verdict + this handover | Tree hygiene for relief | **DONE this session** | `232fea9` (pre-existing), `2154151`, this file's commit |
+| Committed the `/gsd-debug` E4 root-cause note + `doc-alignment.json` walk re-verdict + this handover | Tree hygiene for relief | **DONE, but push BLOCKED (§1)** | `232fea9` (pre-existing), `2154151`, `c71af44` |
 
 **No named-incident post-mortem** beyond the E4 finding itself (§5/debug artifact) —
 the fail-closed halt is process working as designed, not an incident.
@@ -119,7 +174,7 @@ space per `docs/reference/testing-targets.md`) before the smoke test ever ran �
 a direct observation of the E4 bug through this gate. **The E4 bug itself was proven
 separately**, via the debugger's direct REST calls to live TokenWorld bypassing this
 gate entirely (documented in the debug artifact's Evidence section). Both bugs are
-real and both block this gate; fixing the space-alias guard (§5 item B.2) is a
+real and both block this gate; fixing the space-alias guard (§6 step 3) is a
 prerequisite to actually exercising (and, once E4 is fixed, passing) the smoke
 through the gate — fixing the guard alone will NOT make this row PASS, because E4
 is still unfixed underneath it.
@@ -128,32 +183,42 @@ is still unfixed underneath it.
 
 - **One tree-writer at a time** — I was the only one this session; hold for the
   successor too.
-- **One cargo invocation machine-wide** — I ran zero cargo invocations (git-only
-  work); the pre-commit/pre-push hooks may invoke `cargo fmt --check` (only on
-  staged `.rs` files — none here) and the quality runner (mostly Python) — verify
-  no other cargo process is running before the successor's first `cargo` command.
-- **No `--no-verify`** — not used; both commits this session went through
-  `.githooks/pre-commit` cleanly (exit 0).
-- **Push only at green** — this session's commits are docs/handover/catalog-json
-  only, no code/test claims regressed; push proceeded per usual cadence (see §6 for
-  outcome).
+- **One cargo invocation machine-wide** — I ran zero cargo invocations myself
+  (git-only work, plus one direct `bash quality/gates/docs-alignment/walk.sh`
+  invocation to diagnose the push block, which only runs a pre-built binary, no
+  compile step). The pre-commit/pre-push hooks may invoke `cargo fmt --check`
+  (only on staged `.rs` files — none here this session) — verify no other cargo
+  process is running before the successor's first `cargo` command.
+- **No `--no-verify`** — not used anywhere, including on the blocked push. Both
+  commits went through `.githooks/pre-commit` cleanly (exit 0); the push attempt
+  went through `.githooks/pre-push` and was correctly rejected (exit 1) — I did
+  not override it.
+- **Push only at green — push is currently NOT green** (§1). Do not push again
+  until at least one of the two named fixes lands; do not `--no-verify` around it.
 - **Commit trailer format** — `Co-Authored-By: Claude Opus 4.8 (1M context)
-  <noreply@anthropic.com>` used on both commits and this handover's commit.
+  <noreply@anthropic.com>` used on all 3 commits this session.
 - **Model tiering** — unchanged; this was a leaf tree-hygiene task, not a
   coordinator dispatch.
 
 ## 4. Litmus / gate / REOPEN state
 
-- **9th probe (`pre-release-real-backend`) — not clean.** Two of five real-backend
-  arms independently confirmed PASS-by-transcript this session (litmus, attach-sync
-  — see §2) but their catalog rows are **stale** (still `NOT-VERIFIED` from an
-  earlier pre-creds run at `2026-07-06T05:03:59Z`) — re-bind, don't just re-run,
-  once the successor is ready to close this out. One arm (`dark_factory_real_*`)
-  is claimed-but-unconfirmed (§2). One arm (`p93-partial-failure-recovery-real-confluence`)
-  is a confirmed **FAIL** for two stacked reasons (space-alias guard bug +
-  underlying E4 correctness bug — see §2's nuance paragraph and §5.B). One arm
-  (`t4-conflict-rebase-ancestry-real-backend`) is **NOT IMPLEMENTED** (no verifier
-  script exists at all).
+- **Pre-push gate (this session, blocking the handoff commits from reaching
+  origin) — 2 FAILs, both pre-existing, neither introduced by this session.**
+  Full detail in §1. Fix path: `/reposix-quality-refresh docs/index.md` for
+  `docs-alignment/walk`; either scan-the-archive or restore-a-stub for
+  `docs-build/p94-badges-real-vs-transient`. Neither fix belongs to a
+  tree-hygiene leaf — both need a coordinator-level dispatch.
+- **9th probe (`pre-release-real-backend`) — separately, not clean either.** Two
+  of five real-backend arms independently confirmed PASS-by-transcript this
+  session (litmus, attach-sync — see §2) but their catalog rows are **stale**
+  (still `NOT-VERIFIED` from an earlier pre-creds run at `2026-07-06T05:03:59Z`)
+  — re-bind, don't just re-run, once the successor is ready to close this out.
+  One arm (`dark_factory_real_*`) is claimed-but-unconfirmed (§2). One arm
+  (`p93-partial-failure-recovery-real-confluence`) is a confirmed **FAIL** for
+  two stacked reasons (space-alias guard bug + underlying E4 correctness bug —
+  see §2's nuance paragraph and §6 step 2/3). One arm
+  (`t4-conflict-rebase-ancestry-real-backend`) is **NOT IMPLEMENTED** (no
+  verifier script exists at all).
 - **No open waiver-expiry clocks specific to this work.** The three P93
   cache-coherence rows waived at `543bfb4` (`p93-l2-l3-coherence-adr`,
   `p93-cache-coherence-refresh-honest`, `p93-delta-sync-coherence-invariant`) have
@@ -172,8 +237,12 @@ is still unfixed underneath it.
   is a **NEW** halt, not a reopen of a prior one.
 - Structure-dimension waiver `structure/file-size-limits` remains active until
   **2026-08-08** (unrelated to this work; noted for awareness — it fired
-  informationally during this session's pre-commit hook run, exit 0, no action
-  needed yet).
+  informationally during this session's pre-commit hook runs, exit 0 both times,
+  no action needed yet). Note also: this session's handover commit (`c71af44`)
+  tripped a size WARNING (21439 chars vs the 20000 soft budget) under this same
+  waiver's "warn-now, block-later" contract — non-blocking today, but if the
+  successor extends this file further, consider splitting per CLAUDE.md's
+  progressive-disclosure guidance rather than letting it keep growing.
 
 ## 5. Mid-execution decisions not yet formalized + "noticed, not yet filed"
 
@@ -186,9 +255,11 @@ reversible/low-risk):**
   (walker re-grade), already present when I started, and internally consistent with
   the `structure/doc-alignment-summary-block-valid` ratio invariant
   (`259/(393-57) = 0.7708333...`, matches). Discarding it would have silently
-  reverted a true finding (the 2 badge claims genuinely need re-binding after the
-  URL edits) back to a falsely-optimistic `BOUND`. Filed as its own small commit
-  (`2154151`) rather than folded into the handover commit, for a clean diff.
+  reverted a true finding back to a falsely-optimistic `BOUND` **and would not have
+  avoided the push block anyway** (§1) — the walker recomputes fresh from
+  `docs/index.md`, independent of what the catalog file says. Filed as its own
+  small commit (`2154151`) rather than folded into the handover commit, for a
+  clean diff.
 - **Chose `.planning/milestones/v0.13.0-phases/97-HANDOVER.md` as this file's
   path**, not a new `.planning/phases/9N-*/` directory. This work has no GSD phase
   number of its own (P95–97 already share this pattern — see
@@ -197,6 +268,12 @@ reversible/low-risk):**
   directory would misrepresent unplanned owner-pre-tag-action work as a formal GSD
   phase; this directory is the established, already-precedented home for
   cross-cutting P95-97-lineage coordination artifacts.
+- **Did not attempt to fix either pre-push blocker myself** (§1). Both require
+  either an orchestration-shaped top-level flow (`/reposix-quality-refresh`,
+  needs a `reposix-quality` rebuild + content re-verification) or a change to a
+  shared quality-gate script whose correctness every future push depends on —
+  both outside a tree-hygiene relief's mandate, and this task's explicit
+  contingency instruction was "report... do not force past it."
 
 **Noticed, not yet filed (owned by the next session per the ownership charter — "an
 empty noticing section is a red flag"):**
@@ -210,13 +287,23 @@ empty noticing section is a red flag"):**
    GSD-tracked action should file this entry (severity: BLOCKER, discovered-by:
    post-P97 owner-pre-tag-action, sketched resolution: pointer to ADR-010 revision
    need) before doing anything else that touches that file.
-2. **[MEDIUM]** `.planning/STATE.md` § "Workstream A" § "OWNER PRE-TAG ACTIONS"
+2. **[HIGH, blocks this session's own push]** The `docs-build/p94-badges-real-vs-transient`
+   verifier reads a GOOD-TO-HAVES entry that the OP-8 Slot-2 archive-relocation
+   (`d10534e`/`302e8ec`/`eba171a`) already moved out of the live file **before**
+   `e8362f5` (the current origin/main tip) — i.e. this gate has been silently
+   broken since before this session started, and I could not determine how the
+   push that landed `e8362f5` got past it. Someone with more context on the
+   runner's pre-push row-selection history should investigate (possible causes:
+   the row's `cadences` list changed after `e8362f5`, or an intermediate push used
+   a different mechanism) rather than assume my diagnosis of "always broken" is
+   complete.
+3. **[MEDIUM]** `.planning/STATE.md` § "Workstream A" § "OWNER PRE-TAG ACTIONS"
    does not mention this session's 9th-probe attempt or its outcome at all — it
    still reads as if action #1 is simply "not yet run." A fresh reader of
    STATE.md alone (without this handover) would not know a P0 bug was found. Not
    fixed by me (same reasoning as item 1 — STATE.md is GSD-tracked); flagged for
    the successor's first STATE.md touch.
-3. **[LOW]** The `p93-partial-failure-recovery-real-confluence.json` verification
+4. **[LOW]** The `p93-partial-failure-recovery-real-confluence.json` verification
    artifact mixes a `skip_reason: "env-missing"` / `skipped_real_backend: true`
    marker with an `exit_code: 1` and a hard-FAIL stderr message in the same JSON —
    internally inconsistent framing (the script's own contract, per its header
@@ -225,20 +312,30 @@ empty noticing section is a red flag"):**
    looks like a stale carry-over from a still-earlier run, not this one). Small
    inconsistency, not blocking, but will confuse a future reader of that artifact
    in isolation — worth a one-line note or fix in whatever wave rewrites this
-   verifier per item B.2 below.
-4. **[LOW]** Two real-backend catalog rows (`milestone-close-vision-litmus-real-backend`,
+   verifier per §6 step 3.
+5. **[LOW]** Two real-backend catalog rows (`milestone-close-vision-litmus-real-backend`,
    `attach-sync-real-backend`) are PASS-by-transcript but stale-`NOT-VERIFIED`
    in the catalog (§2/§4) — needs a re-bind pass, not a re-run, once the successor
-   is doing the final close (folds naturally into §6 step 4's re-run anyway, since
+   is doing the final close (folds naturally into §6 step 6's re-run anyway, since
    that re-run will regenerate both).
 
 ## 6. Precise next steps (successor runbook)
 
-0. **Confirm the push from this session landed** before anything else:
-   `git -C /home/reuben/workspace/reposix fetch origin main && git rev-parse HEAD
-   && git rev-parse origin/main` — they must be equal. If not (e.g. a pre-push gate
-   blocked it), read this report's "push confirmation" line for the exact blocker
-   and resolve that first (do not `--no-verify` past it).
+0. **Unblock and land this session's push FIRST** (nothing else in this runbook
+   matters until the tree is actually on origin). Two independent fixes, either
+   is sufficient to get past its own gate (both are needed for a fully-clean run):
+   - **`docs-alignment/walk`:** run the `/reposix-quality-refresh docs/index.md`
+     flow (top-level orchestration-shaped, per `.planning/CLAUDE.md`) to
+     re-verify the 2 badge URLs actually resolve/render and re-bind the
+     `docs/index/ci-badge` + `docs/index/quality-weekly-badge` claims.
+   - **`docs-build/p94-badges-real-vs-transient`:** dispatch a small fix (either
+     teach `quality/gates/docs-build/p94-badges-real-vs-transient.sh` to also
+     scan `.planning/milestones/v0.13.0-phases/GOOD-TO-HAVES-ARCHIVE.md` for the
+     RESOLVED `badges-resolve` entry, or restore a matchable stub in the live
+     `GOOD-TO-HAVES.md`) — then re-run `python3 quality/runners/run.py --cadence
+     pre-push` locally to confirm exit 0 before retrying `git push origin main`.
+   - After both land: `git push origin main`, then `git fetch origin main &&
+     git rev-parse HEAD && git rev-parse origin/main` — confirm equal.
 1. **File the E4 SURPRISES-INTAKE entry** (§5 noticed-item 1) via the proper GSD
    channel (`/gsd-quick` or the active coordinator's own intake-drain step) —
    BLOCKER severity, pointing at `.planning/debug/p93-partial-fail-recovery-real-confluence.md`
@@ -257,7 +354,8 @@ empty noticing section is a red flag"):**
    `docs/reference/testing-targets.md`), preserving the hard-FAIL behavior for any
    OTHER space. This unblocks the gate from even reaching the smoke — it will
    still hit E4 underneath until #2 lands; that's expected and correct, not a
-   regression.
+   regression. (While in this file, also tidy the `skip_reason`/`exit_code`
+   inconsistency from §5 noticed-item 4.)
 4. **Implement `t4-conflict-rebase-ancestry-real-backend`** (currently
    `NOT-IMPLEMENTED`, no script exists). Recommended shape (per the dispatch
    briefing's sketch, ~1.5h, no adapter/schema change): a `#[ignore]` Rust smoke in
