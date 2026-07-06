@@ -1118,8 +1118,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/p94-catalog-freshness-sweep.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-06T03:41:53Z",
       "freshness_ttl": "30d",
       "blast_radius": "P1",
       "owner_hint": "NOT RUN this session (catalog-first SPEC mint). Run LAST in P94 (after D1-D3 land): `python3 quality/runners/run.py --all` then inspect the verdict for stale-row re-grades. For each FAIL, classify env-gate (exit 75 / creds-absent / git<2.34) vs code-regression; a subagent adjudicates and records the enumeration. The p92-mid-stream git<2.34 exit-75 FAIL is pre-accounted (reproduce on git 2.54 container to confirm it PASSES there, per 92/93 REPRO-NOTES). Any UN-accounted FAIL BLOCKS milestone-close.",

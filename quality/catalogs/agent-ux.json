@@ -2078,8 +2078,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/p94-pagination-prune-completeness-gate.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-06T00:02:46Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "NOT IMPLEMENTED this session (catalog-first SPEC mint). Fix belongs in crates/reposix-core (BackendConnector::list_records signature) + crates/reposix-cache/src/builder.rs (both prune gates) + each connector's list_records (populate is_complete: sim=true always; github/jira/confluence=false when truncated at cap) + crates/reposix-remote/src/write_loop.rs (Fork B). Add the capped-mock regression at crates/reposix-cache/tests/pagination_prune_safety.rs. Runs cargo — one-cargo-invocation budget. If the owner vetoes the E2 return-type change, fall back to list_records_complete() (same signal, uglier surface) — NOT Fork C/D (both rejected in the consult).",
@@ -2123,8 +2123,8 @@
         "container": "ubuntu:24.04"
       },
       "artifact": "quality/reports/verifications/agent-ux/p94-git243-fallback-sentinel.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-06T03:41:43Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "NOT IMPLEMENTED this session (catalog-first SPEC mint). Fix: change handle_stateless_connect's service != 'git-upload-pack' branch in crates/reposix-remote/src/stateless_connect.rs to reply with the literal `fallback` line; flip stateless_connect_e2e.rs::stateless_connect_rejects_non_upload_pack_service's asserted reply shape to match (it currently pins the bug-preserving reply). Add the container regression adapting 92-T4-REPRO-NOTES.md's `docker run ubuntu:24.04` (stock git 2.43.0) pattern; the verifier gates on docker presence and exits 75 (NOT-VERIFIED) when absent. Runs cargo — one-cargo-invocation budget.",
