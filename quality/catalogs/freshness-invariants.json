@@ -1158,8 +1158,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/structure/catalog-immutable-on-read.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-06T02:20:52Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "If RED: a run.py cadence run is writing catalog status as a side effect. Do NOT re-add `git checkout HEAD -- quality/catalogs/`. Fix the split in run.py:main() — save_catalog must be gated behind args.persist (default False), and minting must use `run.py --cadence <c> --persist`. Hermetic repro: quality/runners/test_run.py.",
