@@ -367,3 +367,47 @@ goes GREEN.
   `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md:891-939`.
 
 ---
+
+## D-P96-01 — quality-runner persists catalog grades as a pre-push read side-effect; split GRADE from PERSIST [SELF] 2026-07-05
+
+**Context (the bug + 3 live repros):** `quality/runners/run.py`'s `main()` calls
+`save_catalog()` whenever `catalog_dirty()` sees ANY row `status` flip — but `main()`
+is the SAME code path the pre-push hook invokes (`.githooks/pre-push:66` →
+`run.py --cadence pre-push`). So a read-only GATE run persists a grade to
+`quality/catalogs/*.json`, dirtying the working tree at push time. Reproduced HEAD
+`92acb47`, clean tree: a clean `run.py --cadence pre-push` flips
+`docs-build/p94-badges-real-vs-transient` NOT-VERIFIED→PASS and writes it to
+`quality/catalogs/docs-build.json` (exit 0, one file mutated). This is the HIGH
+self-mutation bug behind 3 recurring live repros (P95-exec push, P95-verifier push,
+STATE-lane push — all flipped `docs-build.json` and were dropped with the
+`git checkout HEAD -- quality/catalogs/` band-aid). The runner's own P91 "Honest
+callout" (`PROTOCOL.md:137-142`) already confessed "every `run.py --cadence ...`
+invocation mutates the catalog JSON in place as a side effect" but framed it as a
+missing `--dry-run` (GOOD-TO-HAVES-16) rather than a gate/grade conflation bug.
+
+**Decision:** Split GRADE from PERSIST. Add a `--persist` flag to `run.py`, default
+FALSE. Cadence/gate runs (pre-push hook, CI pre-pr) run VALIDATE-ONLY: `run_row`
+still computes status in-memory and writes per-row artifacts under
+`quality/reports/verifications/` (gitignored — no tree churn), and
+`compute_exit_code` STILL blocks RED (gate integrity preserved), but `main()` does
+NOT call `save_catalog`. The EXPLICIT mint path — the phase-close / verifier-subagent
+grading invocation (`run.py --cadence <c> --persist`) — is the ONLY path that writes
+catalog `status`. NOT a 6th `git checkout HEAD --` workaround; NOT diff-and-revert
+(that erases genuine P0/P1 regressions `catalog_dirty` exists to surface, and never
+converges). The distinction is "grading run (may persist)" vs "gate run (must not)".
+
+**Rationale (3-question DP-3 evidence, file:lines):**
+1. *Where is the mutation?* `run.py:445-446` — `if catalog_dirty(original, data): save_catalog(cat_path, data)`; `catalog_dirty` (`run.py:123-130`) returns True on any `status` flip; `save_catalog` (`run.py:104-120`, `path.write_text` at :117) persists. The Rust `walk` binary is read-clean (P95); `verdict.py` is not a catalog writer.
+2. *Does gating survive validate-only?* Yes — `run_row` (`run.py:334/337`) sets in-memory `row["status"]`; `compute_exit_code` (`run.py:358-364`) reads that in-memory status, independent of `save_catalog`. Blocking RED needs no persist.
+3. *Is the mint path preserved?* Yes — `--persist` re-enables `save_catalog`. Un-waiving still mints (`PROTOCOL.md:388`, Step-6 `PROTOCOL.md:118-127`) via `run.py --cadence <c> --persist`. Grades are not frozen; they are gated behind an explicit verb.
+
+**Reversibility:** Flip the `persist` default (one flag) to restore old behavior;
+internal strategy only, no wire/ref contract touched (ADR-010 precedent — REVERSIBLE,
+no E2 escalation). Regression locked by new gate
+`quality/gates/structure/catalog-immutable-on-read.sh` (row
+`structure/catalog-immutable-on-read`).
+
+**Commit:** ledger (this commit); catalog-first row + failing-repro + fix SHAs
+back-filled at lane close (see the P96 self-mutation commit chain on `main`).
+
+---
