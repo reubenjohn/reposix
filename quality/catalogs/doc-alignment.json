@@ -1091,15 +1091,15 @@
     },
     {
       "id": "docs/guides/write-your-own-connector/backendconnector-trait",
-      "claim": "BackendConnector trait defines 8 methods: name, supports, list_records, list_changed_since, get_record, create_record, update_record, delete_or_close, root_collection_name",
+      "claim": "BackendConnector trait anatomy lists methods: name, supports, list_records (+ completeness-aware sibling list_records_complete returning Listing{records,is_complete}), list_changed_since, get_record, create_record, update_record, delete_or_close, root_collection_name",
       "source": {
         "file": "docs/guides/write-your-own-connector.md",
         "line_start": 25,
         "line_end": 33
       },
-      "source_hash": "d96f053c68090c29dc11b0a3e94098f36712c6697f6a28e9b5e2d326b8734501",
+      "source_hash": "75719c313ba62bbe3ab8be2508dd8022a86ee3f1144f778589a33f6924e5a84d",
       "source_hashes": [
-        "d96f053c68090c29dc11b0a3e94098f36712c6697f6a28e9b5e2d326b8734501"
+        "75719c313ba62bbe3ab8be2508dd8022a86ee3f1144f778589a33f6924e5a84d"
       ],
       "tests": [
         "crates/reposix-github/tests/contract.rs::contract_sim"
@@ -1107,11 +1107,11 @@
       "test_body_hashes": [
         "4da518c76a8c5feb4b26e9ac667bc878a9d8e6bb7bd1336c399d649e7a89a116"
       ],
-      "rationale": "BackendConnector trait definition at crates/reposix-core/src/backend.rs:216-331 lists all 8 methods; contract_sim test (line 160) instantiates SimBackend and calls list_records/get_record via assert_contract",
+      "rationale": "Anatomy bullet list (guide.md:25-33) enumerates every BackendConnector method; contract_sim (github contract.rs) instantiates SimBackend and calls list_records/get_record via assert_contract. Re-baselined after P94: line 27 (list_records bullet) now documents the defaulted list_records_complete sibling added by Fork A (5cb9a14); trait def now at backend.rs:241-382. Claim corrected from stale '8 methods' wording to an accurate enumeration.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:05:13Z",
-      "last_extracted": "2026-04-28T09:05:13Z",
+      "last_run": "2026-07-06T00:34:21Z",
+      "last_extracted": "2026-07-06T00:34:21Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1119,24 +1119,24 @@
       "claim": "BackendConnector trait has 8 main methods",
       "source": {
         "file": "crates/reposix-core/src/backend.rs",
-        "line_start": 216,
-        "line_end": 331
+        "line_start": 241,
+        "line_end": 382
       },
-      "source_hash": "660447a3dfdff1cd32120314402f9ae61d00bf9576593135dcece7a4b539caff",
+      "source_hash": "9ff56cccec80f16ee24759f9f5b6c99e58448aee6aae40f2a7e2a4a0785d47cc",
       "source_hashes": [
-        "660447a3dfdff1cd32120314402f9ae61d00bf9576593135dcece7a4b539caff"
+        "9ff56cccec80f16ee24759f9f5b6c99e58448aee6aae40f2a7e2a4a0785d47cc"
       ],
       "tests": [
         "crates/reposix-core/src/backend.rs"
       ],
       "test_body_hashes": [
-        "6125266018909a9b21c3da9767a3904ba57ccb7acb8b8f092c9ab99aad3c2e99"
+        "4cf8698e234099d5d5490f81b181f13a8f9b828d3c38de5f5d78e9ed5fd32b31"
       ],
-      "rationale": "Source IS the trait definition; whole-file hash detects any signature drift in the 8 methods",
+      "rationale": "Source IS the trait definition (pub trait .. closing brace); whole-file test hash detects any signature drift in the methods. Range re-baselined after P94 Fork A (5cb9a14) added the defaulted list_records_complete sibling; the 8 MAIN methods (name/supports/list_records/list_changed_since/get_record/create_record/update_record/delete_or_close) are unchanged, root_collection_name + list_records_complete are defaulted conveniences.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:55:58Z",
-      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_run": "2026-07-06T00:34:06Z",
+      "last_extracted": "2026-07-06T00:34:06Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1144,8 +1144,8 @@
       "claim": "BackendConnector trait has async fn create_record(&self, project, issue: Untainted<Record>) -> Result<Record>",
       "source": {
         "file": "crates/reposix-core/src/backend.rs",
-        "line_start": 284,
-        "line_end": 284
+        "line_start": 335,
+        "line_end": 335
       },
       "source_hash": "ab180dcd459690abaee4ff624518b6a4daf8d89ea675ed47b63df965b271b759",
       "source_hashes": [
@@ -1157,40 +1157,36 @@
       "test_body_hashes": [
         "51e78cbf736d113ae9bf8eeb06bbbfdf56aa26a5507ced550a74bd379cd0efe8"
       ],
-      "rationale": "roundtrip.rs:146 calls backend.create_record(project, Untainted<Record>) and assert_eq!(created.id, RecordId(777)); compile-time proves the trait method shape",
+      "rationale": "roundtrip.rs:146 calls backend.create_record(project, Untainted<Record>) and assert_eq!(created.id, RecordId(777)); compile-time proves the trait method shape. Source re-baselined to line 335 (+51) after Fork A.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T18:42:28Z",
-      "last_extracted": "2026-04-28T18:42:28Z",
+      "last_run": "2026-07-06T00:34:06Z",
+      "last_extracted": "2026-07-06T00:34:06Z",
       "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/connectors/guide/backendconnector-delete-or-close-method",
       "claim": "BackendConnector trait has async fn delete_or_close(&self, project, id, reason: DeleteReason) -> Result<()>",
-      "source": [
-        {
-          "file": "crates/reposix-core/src/backend.rs",
-          "line_start": 315,
-          "line_end": 320
-        },
-        {
-          "file": "crates/reposix-core/src/backend.rs",
-          "line_start": 315,
-          "line_end": 315
-        }
-      ],
+      "source": {
+        "file": "crates/reposix-core/src/backend.rs",
+        "line_start": 366,
+        "line_end": 371
+      },
       "source_hash": "e4dcef7bbd1d1ac0d06e0822102a11c8f6897265672cf2d7c22eb245f5cf1b68",
+      "source_hashes": [
+        "e4dcef7bbd1d1ac0d06e0822102a11c8f6897265672cf2d7c22eb245f5cf1b68"
+      ],
       "tests": [
         "crates/reposix-confluence/tests/roundtrip.rs::delete_or_close_is_audited_in_integration_context"
       ],
       "test_body_hashes": [
         "32f1c5a4ef655662b29bef9719e0b6a3edda51cf4670a2478c0aee78937a5590"
       ],
-      "rationale": "roundtrip.rs:204-206 calls delete_or_close(project, RecordId, DeleteReason::Completed) -- exact parameter shape from claim",
+      "rationale": "roundtrip.rs:204-206 calls delete_or_close(project, RecordId, DeleteReason::Completed) -- exact parameter shape from claim. Source re-baselined to lines 366-371 (+51) and collapsed to a single cite after Fork A; prior multi-cite lacked source_hashes so the walker could not detect its drift.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T18:58:18Z",
-      "last_extracted": "2026-04-28T18:58:18Z",
+      "last_run": "2026-07-06T00:34:06Z",
+      "last_extracted": "2026-07-06T00:34:06Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1198,8 +1194,8 @@
       "claim": "BackendConnector trait has async fn get_record(&self, project, id) -> Result<Record>",
       "source": {
         "file": "crates/reposix-core/src/backend.rs",
-        "line_start": 272,
-        "line_end": 272
+        "line_start": 323,
+        "line_end": 323
       },
       "source_hash": "57e32c04ce495c6aaa19b6873ace2abf756033d006f4e32bf7f1b1b8ba04f400",
       "source_hashes": [
@@ -1211,11 +1207,11 @@
       "test_body_hashes": [
         "7be66bfa77284fef7f9037c682694f49667e3dc90d20aeb4ea9a54287e55dfe3"
       ],
-      "rationale": "contract.rs:103-117 (assert_contract helper) calls get_record(project, known_issue_id) and asserts issue.id matches; compile-time fixes the signature",
+      "rationale": "contract.rs:103-117 (assert_contract helper) calls get_record(project, known_issue_id) and asserts issue.id matches; compile-time fixes the signature. Source re-baselined to line 323 (+51) after Fork A.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T18:42:28Z",
-      "last_extracted": "2026-04-28T18:42:28Z",
+      "last_run": "2026-07-06T00:34:06Z",
+      "last_extracted": "2026-07-06T00:34:06Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1223,8 +1219,8 @@
       "claim": "BackendConnector trait has async fn list_changed_since(&self, project: &str, since: DateTime<Utc>) -> Result<Vec<RecordId>>",
       "source": {
         "file": "crates/reposix-core/src/backend.rs",
-        "line_start": 253,
-        "line_end": 257
+        "line_start": 304,
+        "line_end": 308
       },
       "source_hash": "665aae8456731271fd7c254d017cdf5cce11d8bc2c725b37f83b7a5229c140df",
       "source_hashes": [
@@ -1236,11 +1232,11 @@
       "test_body_hashes": [
         "add5ceb0be51df26279c4fa81d65141a31a619970412afe90534734d9f538d79"
       ],
-      "rationale": "backend.rs:477 calls backend.list_changed_since(\"demo\", cutoff).await on a stub trait impl with the exact signature",
+      "rationale": "backend.rs:528 calls backend.list_changed_since(\"demo\", cutoff).await on a stub trait impl with the exact signature. Source re-baselined to lines 304-308 (+51) after Fork A's two insertions.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:07:15Z",
-      "last_extracted": "2026-04-28T19:07:15Z",
+      "last_run": "2026-07-06T00:34:06Z",
+      "last_extracted": "2026-07-06T00:34:06Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1248,8 +1244,8 @@
       "claim": "BackendConnector trait has async fn list_records(&self, project: &str) -> Result<Vec<Record>>",
       "source": {
         "file": "crates/reposix-core/src/backend.rs",
-        "line_start": 235,
-        "line_end": 235
+        "line_start": 260,
+        "line_end": 260
       },
       "source_hash": "a842354d65ac8b0d6163797529d075d5026ac3895ad4993748325e1a2030cdbf",
       "source_hashes": [
@@ -1261,40 +1257,36 @@
       "test_body_hashes": [
         "7be66bfa77284fef7f9037c682694f49667e3dc90d20aeb4ea9a54287e55dfe3"
       ],
-      "rationale": "contract.rs:88 calls backend.list_records(project) returning Ok(vec); line 96 asserts !issues.is_empty() -- exercises the signature claimed",
+      "rationale": "contract.rs:88 calls backend.list_records(project) returning Ok(vec); line 96 asserts !issues.is_empty() -- exercises the signature claimed. Source re-baselined to line 260 (+25) after Fork A; list_records is unchanged and precedes the new list_records_complete sibling.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T18:42:28Z",
-      "last_extracted": "2026-04-28T18:42:28Z",
+      "last_run": "2026-07-06T00:34:06Z",
+      "last_extracted": "2026-07-06T00:34:06Z",
       "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/connectors/guide/backendconnector-update-record-method",
       "claim": "BackendConnector trait has async fn update_record(&self, project, id, patch: Untainted<Record>, expected_version: Option<u64>) -> Result<Record>",
-      "source": [
-        {
-          "file": "crates/reposix-core/src/backend.rs",
-          "line_start": 299,
-          "line_end": 305
-        },
-        {
-          "file": "crates/reposix-core/src/backend.rs",
-          "line_start": 299,
-          "line_end": 299
-        }
-      ],
+      "source": {
+        "file": "crates/reposix-core/src/backend.rs",
+        "line_start": 350,
+        "line_end": 356
+      },
       "source_hash": "f30bd3d1ab0dac2125165ec074f061eccb810a2db8e18ad19de960f218d1a5bb",
+      "source_hashes": [
+        "f30bd3d1ab0dac2125165ec074f061eccb810a2db8e18ad19de960f218d1a5bb"
+      ],
       "tests": [
         "crates/reposix-jira/tests/contract.rs::contract_jira_wiremock_write"
       ],
       "test_body_hashes": [
         "eaaf7ec27258eca9496b8194c38e128b047dc4abae2baf48bf76aca207ec8557"
       ],
-      "rationale": "contract.rs:282-291 calls update_record(project, RecordId, Untainted<Record>, None: Option<u64>) -- exact signature",
+      "rationale": "contract.rs:282-291 calls update_record(project, RecordId, Untainted<Record>, None: Option<u64>) -- exact signature. Source re-baselined to lines 350-356 (+51) and collapsed to a single cite after Fork A; prior multi-cite lacked source_hashes so the walker could not detect its drift.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T18:58:18Z",
-      "last_extracted": "2026-04-28T18:58:18Z",
+      "last_run": "2026-07-06T00:34:06Z",
+      "last_extracted": "2026-07-06T00:34:06Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1302,8 +1294,8 @@
       "claim": "BackendConnector trait has fn name(&self) -> &'static str",
       "source": {
         "file": "crates/reposix-core/src/backend.rs",
-        "line_start": 219,
-        "line_end": 219
+        "line_start": 244,
+        "line_end": 244
       },
       "source_hash": "b1e4dc343a3520e2ac2bef1282e4751c5796fcfb29be35cb0054165c3ab2dbb0",
       "source_hashes": [
@@ -1315,11 +1307,11 @@
       "test_body_hashes": [
         "7be66bfa77284fef7f9037c682694f49667e3dc90d20aeb4ea9a54287e55dfe3"
       ],
-      "rationale": "contract.rs:92,99,109 call backend.name() in panic messages -- compile-time proves the signature",
+      "rationale": "contract.rs:92,99,109 call backend.name() in panic messages -- compile-time proves the signature. Source re-baselined to line 244 after Fork A shifted backend.rs by +25.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T18:42:28Z",
-      "last_extracted": "2026-04-28T18:42:28Z",
+      "last_run": "2026-07-06T00:34:06Z",
+      "last_extracted": "2026-07-06T00:34:06Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1327,8 +1319,8 @@
       "claim": "BackendConnector trait has fn root_collection_name(&self) -> &'static str with default \"issues\"",
       "source": {
         "file": "crates/reposix-core/src/backend.rs",
-        "line_start": 328,
-        "line_end": 330
+        "line_start": 379,
+        "line_end": 381
       },
       "source_hash": "2d274956096b080897f855186e60c17271e03a5f82c73b20f5105873e294f383",
       "source_hashes": [
@@ -1340,11 +1332,11 @@
       "test_body_hashes": [
         "369a0acdc4d8254244577c52d4d268a26e2e085cf8382928a4715c9e90c07e01"
       ],
-      "rationale": "backend.rs:403 asserts Stub.root_collection_name() == \"issues\" against a stub that does NOT override default impl",
+      "rationale": "backend.rs:454 asserts Stub.root_collection_name() == \"issues\" against a stub that does NOT override default impl. Source re-baselined to lines 379-381 (+51) after Fork A.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:07:15Z",
-      "last_extracted": "2026-04-28T19:07:15Z",
+      "last_run": "2026-07-06T00:34:06Z",
+      "last_extracted": "2026-07-06T00:34:06Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1352,8 +1344,8 @@
       "claim": "BackendConnector trait has fn supports(&self, feature: BackendFeature) -> bool",
       "source": {
         "file": "crates/reposix-core/src/backend.rs",
-        "line_start": 227,
-        "line_end": 227
+        "line_start": 252,
+        "line_end": 252
       },
       "source_hash": "049d8a004b8d5c8a3d80940f8da274aca2b664d3ca93c201a5846b5de23bbf61",
       "source_hashes": [
@@ -1365,11 +1357,11 @@
       "test_body_hashes": [
         "369a0acdc4d8254244577c52d4d268a26e2e085cf8382928a4715c9e90c07e01"
       ],
-      "rationale": "backend.rs:405 calls Stub.supports(BackendFeature::Hierarchy) exercising the trait method by signature; compile-time guarantees the shape",
+      "rationale": "backend.rs:456 calls Stub.supports(BackendFeature::Hierarchy) exercising the trait method by signature; compile-time guarantees the shape. Source re-baselined to line 252 (+25) after Fork A.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:07:15Z",
-      "last_extracted": "2026-04-28T19:07:15Z",
+      "last_run": "2026-07-06T00:34:06Z",
+      "last_extracted": "2026-07-06T00:34:06Z",
       "last_extracted_by": "bind-call"
     },
     {
