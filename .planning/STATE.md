@@ -42,11 +42,23 @@ Status: **20/20 phases complete (P78–P97)** — workstream A / v0.13.0-extensi
 - ✅ **DVCS cold-reader review** via `/doc-clarity-review` — 7 findings incl. a real `refs/mirrors/*` doc↔code BLOCKER, ALL fixed, 0 filed. `b8de57c`. NOTE: this satisfied the cold-reader **doc** review (SESSION-HANDOVER §3 item 2 reframing); the separate subjective-rubric row `dvcs-cold-reader` in `subjective-rubrics.json` may still show TTL-expired — non-blocking, carry-forward.
 - ✅ **OP-8 SURPRISES/GOOD-TO-HAVES disposition** + bound-to-live-state sweep: 6 terminal entries deleted (git-archived), open carried forward, 1 MEDIUM filed. `56307be`. No un-addressed HIGH/BLOCKER left dangling.
 
-**REMAINING OWNER TAIL (E1/E3 — L0 does NOT self-do; hand to owner):**
-1. **PR #61 (release-plz)** — regenerate from current `origin/main` (`56307be`) → review → merge (owner-gated **crates.io publish**, E3 spend). L0 can dispatch a steward to regen+review, leaving merge/publish to owner — owner's call.
-2. **6 env-gated real-backend** transport/attach/conflict rows (part of the 13 ratified-honest NOT-VERIFIEDs) — accept via creds, or leave honestly NOT-VERIFIED (env-gate, not a gap).
-3. **Renew `structure/file-size-limits` waiver before 2026-08-08** (active-corpus WAIVED) — future deadline.
-4. **OWNER cuts the v0.13.0 tag** (E1) — `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh.disabled` stays disabled; canonical release is `.github/workflows/release.yml` (tag `v*`).
+**RELEASE DECISION DELEGATED TO L0 (owner, 2026-07-06):** the owner explicitly handed the
+**release decision** to the orchestrator — PR #61 merge, the **crates.io publish (irreversible,
+E3 spend)**, and cutting the **v0.13.0 tag (E1)**. This extends the OD-3 delegation ("tag pushes
+delegated contingent on GREEN verdicts") to the publish spend. L0 owns it, gated on: regenerated
+PR #61 verified clean (only expected version bumps + changelog) AND green CI. Owner chose "steward
+regen + review PR #61 now."
+
+**RELEASE RUNBOOK (L0-owned tail):**
+1. **PR #61 (release-plz)** — regenerated from current `origin/main` → review the diff (version
+   bumps + changelog only) → CI green → **merge + crates.io publish** (L0 decides; irreversible —
+   verify publish succeeded per-crate before proceeding).
+2. **Cut the v0.13.0 tag** — `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh.disabled` stays
+   disabled; canonical release is `.github/workflows/release.yml` (tag `v*`). Push tag → watch the
+   release workflow to green (`gh run watch`).
+3. **6 env-gated real-backend** transport/attach/conflict rows — accept via creds or leave honestly
+   NOT-VERIFIED (env-gate, not a gap; not release-blocking per the settled 9th-probe verification).
+4. **Renew `structure/file-size-limits` waiver before 2026-08-08** (active-corpus WAIVED) — future.
 
 **Queued post-tag `/gsd-quick` meta-infra items (run AFTER the tag lands, each via GSD):**
 - The doctrine **4-edit** `/gsd-quick` — NOTE its "create DP-5" step is **stale** (DP-5 already exists = tangent-classification); adjust the edit, do NOT apply verbatim.
