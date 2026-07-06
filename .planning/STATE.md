@@ -56,13 +56,21 @@ regen + review PR #61 now."
   per-crate CHANGELOGs, no stray source/logic.
 - **CI-gap resolved:** the bot-authored release-plz push left `CI`/`Security audit` at
   `action_required` (GITHUB_TOKEN pushes don't fire `pull_request` workflows). L0 close/reopened
-  PR #61 as a real actor 2026-07-06 → the full suite is now RUNNING (run `28819166220`: test,
-  clippy, rustfmt, shell-coverage, cargo-audit, gitleaks, quality-gates — all pending; CodeQL PASS).
+  PR #61 as a real actor 2026-07-06 → the full suite ran (run `28819166220`). **CI run
+  `28819166220` is COMPLETE, NOT all-green:** `test`, `clippy`, `rustfmt`, `shell-coverage`,
+  `cargo-audit`, `gitleaks`, `quality gates (pre-pr)`, `coverage`, `bench-latency-v09`, `CodeQL`,
+  and all three `*-v09` real-backend integration jobs — PASS. Two checks **FAIL**:
+  `integration (contract, real confluence)` (durable TokenWorld fixture `7798785` lost its
+  expected `parent_id == Some(7766017)` — reads as live-backend fixture drift, not a code
+  regression, since the `-v09` sibling job on the same backend passes) and `codecov/project`
+  (not yet triaged). **Net: current GO/NO-GO read is NO-GO** until both resolve and a fresh
+  `gh pr checks 61` shows all green. Full detail: `SESSION-HANDOVER.md` §1/§3.
   **This is structural to release-plz PRs here** — every regen hits the same wall; close/reopen (or
   an equivalent real-actor push) is the standard unblock. (Worth a CLAUDE.md note — filed as a nit.)
-1. **PR #61** — confirm run `28819166220` is **all green** (`gh pr checks 61`), diff still
-   release-churn-only → **merge + crates.io publish** (L0 owns; IRREVERSIBLE — verify publish
-   succeeded per-crate before proceeding). If any check goes RED → NO-GO, fix, do NOT publish.
+1. **PR #61** — CI run `28819166220` is NO-GO (2 reds above); dispatch a fix for the TokenWorld
+   fixture drift + triage `codecov/project`, then confirm a fresh `gh pr checks 61` is **all
+   green**, diff still release-churn-only → **merge + crates.io publish** (L0 owns; IRREVERSIBLE
+   — verify publish succeeded per-crate before proceeding). Do NOT merge or publish while red.
 2. **Cut the v0.13.0 tag** — `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh.disabled` stays
    disabled; canonical release is `.github/workflows/release.yml` (tag `v*`). Push tag → watch the
    release workflow to green (`gh run watch`).
