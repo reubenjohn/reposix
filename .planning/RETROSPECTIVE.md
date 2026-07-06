@@ -12,6 +12,44 @@ than repeated under each milestone.
 
 ---
 
+## Calibration: v0.13.0 wind-down — right-size rigor, lean on git
+
+Session-level calibration (not a milestone-close). v0.13.0 went autonomously GREEN
+(P78–P97, 20/20); the tag halted on ONE owner decision (E4 create-identity
+reconciliation, `docs/decisions/010-l2-l3-cache-coherence.md` §3). Wind-down audited the
+*process* surface: which rigor earns its keep before a launch that has no users yet.
+
+### Rigor must match stage
+
+This is a **pre-launch, no-USER tool** — much accreted red tape stood in for absent human
+oversight, not for catching bugs. Right-size: point rigor only at what gates **shipping**.
+Ceremony guarding a surface no one has hit yet is pure orientation tax on every dispatch.
+
+### Keep the gates that catch bugs; cut the ceremony that doesn't
+
+- **KEEP** — the fail-closed real-backend **9th probe** caught a P0 create-identity break
+  the SIM backend HID; it *is* why the E4 tag gate exists, and sim-only coverage would
+  have shipped it. Adversarial verifiers also killed a phantom regression this run.
+- **CUT** — doc-bloat, duplicated handovers, resolved-in-place intake entries: none
+  caught anything, all taxed orientation.
+
+### Gates assert invariants, not document structure
+
+The **p94 badges-gate misfire** is the poster-child: it greps `GOOD-TO-HAVES.md` for an
+h2 heading, so the OP-8 archive-drain that relocated the entry tripped a false pre-push
+FAIL — a *layout* change, not an invariant violation. A gate coupled to where prose sits
+breaks on refactors. Lesson: **assert the invariant, never the heading.**
+
+### Root bloat cause: not leaning on git
+
+Intakes/handovers/archives duplicated what `git log`/`git show` already retrieves — every
+dispatch re-read state git could reconstruct on demand. Two rules ratified this session:
+**(a)** resolved intake items are **DELETED**, not marked-resolved-in-place (git is the
+archive); **(b)** **HEAD = live state only.** Wind-down applied both — SURPRISES-INTAKE
+76k→59k, GOOD-TO-HAVES 105k→96k, four stale archives + one closed handover deleted.
+
+---
+
 ## Milestone: v0.13.0-extension (P89–P97)
 
 **Shipped:** 2026-07-06 (autonomous close-out, no-fable) | **9 phases.** Full narrative + commit trail: `.planning/milestones/v0.13.0-phases/RETROSPECTIVE-FULL.md`.
