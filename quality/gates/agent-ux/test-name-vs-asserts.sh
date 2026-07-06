@@ -45,6 +45,20 @@
 # marker with no `— <reason>` itself RAISEs — it closes the silent-
 # exemption loophole where a marker is added without justification.
 #
+# ⚠ MARKER PLACEMENT WINDOW (6-line LOOKBACK — read before adding a marker).
+#   Per matched fn the gate builds context from the `CONTEXT_LINES=6` lines
+#   ENDING AT the `fn ...(` line (6 lines above + the signature; see the
+#   `sed -n "...line-CONTEXT_LINES...,line p"` below). The `#[test]` attr,
+#   any `#[ignore = "real-backend..."]`, AND the `// test-name-honesty: ok`
+#   marker must all sit inside it. If the marker drifts >6 lines above the fn
+#   (e.g. behind a long `///` block) it is SILENTLY IGNORED; worse, if the
+#   `#[test]` attr itself falls out of the window the fn is skipped as a
+#   non-test and a dishonest name passes with NO raise. Keep the marker (and
+#   #[test]/#[ignore]) hugging the signature — on its own line directly above
+#   or as a trailing comment on the `fn` line. Tight placement is deliberate;
+#   a preamble-anchored scan removing the distance constraint is a filed
+#   GOOD-TO-HAVE (v0.13.0). Mirror note: quality/CLAUDE.md § "Honesty rules".
+#
 # Baseline mechanism: quality/gates/agent-ux/test-name-vs-asserts.baseline
 # is a committed fixture, one `relative/path.rs:fn_name` key per line. Line
 # numbers drift with unrelated edits elsewhere in a file; `file:fn` is the

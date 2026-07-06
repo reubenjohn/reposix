@@ -78,6 +78,18 @@ from `quality/dispatch/`: `absorption-honesty-spot-check.md` (author ≠ orchest
 `milestone-adversarial.md` (fresh subagent grades whether each row's assertion falsifies
 its own description).
 
+**Marker placement window (test-name-honesty).** The `// test-name-honesty: ok — <reason>`
+marker (and the `#[test]`/`#[ignore = "real-backend..."]` gate) MUST sit within a **6-line
+lookback window ending at the fn signature** — i.e. the 6 lines immediately ABOVE the
+`fn ...(` line, or a trailing comment on the signature line itself. `test-name-vs-asserts.sh`
+uses a fixed `CONTEXT_LINES=6` lookback; a marker (or the `#[test]` attribute) pushed farther
+than 6 lines above the fn — e.g. separated by a long `///` doc-comment block — is **silently
+ignored** (and if the `#[test]` attribute itself drifts out of the window the fn is skipped as
+a non-test, so a dishonest name passes with no RAISE). Keep the marker hugging the signature.
+Tight placement is deliberate; a preamble-anchored scan that removes the distance constraint is
+a filed GOOD-TO-HAVE (v0.13.0), not current behavior. Full example + rationale: the gate's
+header comment.
+
 ## Structure-dimension gates (P89)
 
 `banned-production-tokens.sh` + `deferral-pointer-linter.sh` — both catalogued in
