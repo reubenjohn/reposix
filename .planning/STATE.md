@@ -49,10 +49,20 @@ delegated contingent on GREEN verdicts") to the publish spend. L0 owns it, gated
 PR #61 verified clean (only expected version bumps + changelog) AND green CI. Owner chose "steward
 regen + review PR #61 now."
 
-**RELEASE RUNBOOK (L0-owned tail):**
-1. **PR #61 (release-plz)** — regenerated from current `origin/main` → review the diff (version
-   bumps + changelog only) → CI green → **merge + crates.io publish** (L0 decides; irreversible —
-   verify publish succeeded per-crate before proceeding).
+**RELEASE RUNBOOK (L0-owned tail) — LIVE STATUS 2026-07-06:**
+- PR #61 **regenerated GREEN-diff** by the release-plz workflow on the `f686ab2` push (run
+  `28818642275`); head now `2d1f55f6`, `state: OPEN`, `mergeable: MERGEABLE`. Diff reviewed by a
+  steward = **release-churn-only, clean**: uniform `0.12.0→0.13.0` bump across all crates + accurate
+  per-crate CHANGELOGs, no stray source/logic.
+- **CI-gap resolved:** the bot-authored release-plz push left `CI`/`Security audit` at
+  `action_required` (GITHUB_TOKEN pushes don't fire `pull_request` workflows). L0 close/reopened
+  PR #61 as a real actor 2026-07-06 → the full suite is now RUNNING (run `28819166220`: test,
+  clippy, rustfmt, shell-coverage, cargo-audit, gitleaks, quality-gates — all pending; CodeQL PASS).
+  **This is structural to release-plz PRs here** — every regen hits the same wall; close/reopen (or
+  an equivalent real-actor push) is the standard unblock. (Worth a CLAUDE.md note — filed as a nit.)
+1. **PR #61** — confirm run `28819166220` is **all green** (`gh pr checks 61`), diff still
+   release-churn-only → **merge + crates.io publish** (L0 owns; IRREVERSIBLE — verify publish
+   succeeded per-crate before proceeding). If any check goes RED → NO-GO, fix, do NOT publish.
 2. **Cut the v0.13.0 tag** — `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh.disabled` stays
    disabled; canonical release is `.github/workflows/release.yml` (tag `v*`). Push tag → watch the
    release workflow to green (`gh run watch`).
