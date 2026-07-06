@@ -107,6 +107,7 @@ Historical phase-by-phase contribution narrative lives in per-milestone ARCHIVE 
 | 260501-mgn | Polish 5 cold-reader nits in DVCS docs | 2026-05-01 | 2b9e9c9 | [260501-mgn-polish-5-cold-reader-nits-in-dvcs-docs-b](./quick/260501-mgn-polish-5-cold-reader-nits-in-dvcs-docs-b/) |
 | 260706-rbf | RBF-LR-03 honest WAIVED known-limitation across ADR-010 §3 + troubleshooting + dvcs-topology | 2026-07-06 | dfc3a9b | [260706-rbf-rbf-lr-03-known-limitation](./quick/260706-rbf-rbf-lr-03-known-limitation/) |
 | 260706-crf | DVCS cold-reader fixes — 7 findings across dvcs-topology + dvcs-mirror-setup + troubleshooting (findings 1 & 6 verified against code) | 2026-07-06 | (this commit) | [260706-crf-dvcs-cold-reader-fixes](./quick/260706-crf-dvcs-cold-reader-fixes/) |
+| 260706-idp | v0.13.0 intake OP-8 disposition + bound-to-live-state sweep — carry-forward banners; 2 terminal SURPRISES + 4 completed RESOLVING-P97 rows deleted; 5 HIGHs confirmed live; 1 new MEDIUM filed (troubleshooting.md >20k) | 2026-07-06 | (this commit) | [260706-idp-v0.13.0-intake-disposition](./quick/260706-idp-v0.13.0-intake-disposition/) |
 
 ## Session Continuity
 

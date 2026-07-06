@@ -1,5 +1,7 @@
 # v0.13.0 GOOD-TO-HAVES
 
+> **CARRY-FORWARD BANNER — 2026-07-06 pre-v0.13.0-tag sweep.** v0.13.0 is **CLOSED-GREEN, tag imminent.** The P97 drain ledger below is historical; every entry/row still **OPEN / DEFERRED-\*** is a **live carry-forward** to the post-tag **v0.14.0 / v0.13.2 scoping session** for re-triage. STATUS/disposition refs to a now-closed **P9x** phase are historical, not live targets. The 4 **RESOLVING-P97** rows (completed at `302e8ec`) were DELETED this sweep — git is the archive (bound-to-live-state). Do NOT spin up a `v0.14.0-phases/` dir to hold these; they stay here until that scoping session ingests them.
+
 > **Purpose.** OP-8 +2 reservation slot 2 — improvements (clarity, perf, consistency, grounding) the planned phases observed but didn't fold in. Sized XS / S / M; XS items always close; M items default-defer to next milestone. **Drained by P97 (good-to-haves polish + milestone close)** — was P88 in the original P78–P88 plan; renumbered when the milestone extended to P78–P97. (Per-entry "Default disposition for P88" lines below are historical filing-time notes; the actual drain phase is P97.)
 
 ---
@@ -20,19 +22,15 @@
 | # | Entry (header topic) | Disposition | Rationale (one-line) |
 |---|---|---|---|
 | 01 | GTH-01 bind all catalog dimensions | DEFERRED-v0.14.0 (observability-and-multi-repo) | Path A shipped; Path B = 7 dims, ~30-50 lines Rust + fixture — out of the no-cargo P97 envelope |
-| 02 | GTH-02 deferral-regex intervening-words | **RESOLVING-P97** | doc/shell XS — executed Part 2 |
 | 03a | GTH-03 run.py `--row`/`--dimension` scope | DEFERRED-v0.14.0 | runner CLI flag + test; pairs w/ run.py anti-bloat |
 | 03b | GTH-03 bind retarget cross-file cite + mental-model 24ms | DEFERRED-v0.14.0 | (b) 24ms→27ms doc-lie flip cascades 3 STALE rows into blocking rebinds → cargo/docs-alignment, unsafe in no-cargo window |
 | 04 | GTH-04 mechanize 8ms / 89.1% headline rows | DEFERRED-v0.14.0-launch-readiness | new verifier scripts (OD-4 §3); M — makes weekly badge honestly green |
 | 05 | GTH-05 deferral-linter word-form "Phase NN" | DEFERRED-v0.14.0 | regex on a blocking pre-push gate needs cargo re-run + false-positive corpus sweep |
 | 06 | GTH-06 wc -l gate on run.py/verdict.py (+ P96 appends) | DEFERRED-v0.14.0 | runner/gate XS — standing rationale; run.py now 510+ lines, decomposition is the paired M |
 | 07 | GTH-07 move `parse_rfc3339` → `_freshness.py` | DEFERRED-v0.14.0 | runner/code XS — standing rationale |
-| 08 | GTH-08 trim/split `raise-list-p90.md` <20k | **RESOLVING-P97** | doc XS — executed Part 2 |
-| 09 | GTH-09 WAL-asymmetry intentional doc note | **RESOLVING-P97** | doc XS — executed Part 2 |
 | 10 | GTH-10 exit-codes clap-2 vs handler-2 footnote | DEFERRED-v0.14.0 (docs-alignment-coupled) | footnote drifts bound P0 row `exit-codes-locked`; rebind = catalog+binary (Wave B) — **reverted**, see entry |
 | 11 | GTH-11 extend `subcommand_help_renders` beyond 3/15 | DEFERRED-v0.14.0 | cargo test-coverage widening |
 | 12 | GTH-12 annotate `cli.md` exit-codes helper/CLI/shared | DEFERRED-v0.14.0 (docs-alignment-coupled) | Scope-column edit drifts bound P0 row `cli.md/exit_codes`; rebind = catalog+binary (Wave B) — **reverted**, see entry |
-| 13 | GTH-13 grep-over-rg sandbox note | **RESOLVING-P97** | doc XS — executed Part 2 |
 | 14 | GTH-14 helper `list for-push` reports `?` | DEFERRED-v0.14.0 (helper-protocol/perf) | M; `saw_commit` guard already removes the data-loss danger |
 | 15 | GTH-15 consolidated file-size overages (9 files) | DEFERRED-v0.14.0 (structure-hygiene, pre-2026-08-08) | M split work; waiver-renewal itself → Wave-B mint (see FLAG below) |
 | 16 | GTH-16 run.py `--dry-run` flag | DEFERRED-v0.14.0 | S runner plumbing; pairs w/ run.py anti-bloat |
@@ -60,7 +58,7 @@
 | 38 | Split `cache_coherence.rs` 23.4k | DEFERRED-v0.14.0 | LOW/S cargo test split; bundle w/ crates-source budget rollout |
 | 39 | `catalog-immutable-on-read` cadence coverage | DEFERRED-v0.14.0 | XS/LOW gate+runner; pairs w/ run.py persist-gate extraction |
 
-**Tally (post-Part-2 revision):** RESOLVING-P97 = 4 · DEFERRED-v0.14.0 (incl. `-target`) = 30 · DEFERRED-post-tag = 3 · DEFERRED-to-Wave-B-mint = 1 · OWNER-ACTION = 1 → **39 entry-topics across 40 STATUS lines** (GTH-01 is one PARTIAL line; all else OPEN). **Part 2 outcome:** **4** items landed RESOLVED at commit `302e8ec` — GTH-02 (linter regex), GTH-08 (raise-list split), GTH-09 (trust-model WAL doc-lie corrected), GTH-13 (grep-vs-rg note). **2 items reclassified DEFERRED-v0.14.0** — GTH-10 + GTH-12 turned out to be **docs-alignment-coupled**: editing `docs/reference/exit-codes.md` / `cli.md` drifts their bound **P0** `docs-alignment/walk` rows, whose only recovery is a `doc-alignment.json` catalog rebind (Wave B + `reposix-quality` binary), out of Wave-A scope. Both edits were **reverted** to keep the P0 pre-push gate green; re-apply together with the rebind in v0.14.0.
+**Tally (2026-07-06 carry-forward sweep):** DEFERRED-v0.14.0 (incl. `-target`) = 30 · DEFERRED-post-tag = 3 · DEFERRED-to-Wave-B-mint = 1 · OWNER-ACTION = 1 → **35 entry-topics across 36 STATUS lines** (GTH-01 is one PARTIAL line; all else OPEN/DEFERRED — all live carry-forward). The **4 RESOLVING-P97** rows (GTH-02 linter regex, GTH-08 raise-list split, GTH-09 trust-model WAL doc-note, GTH-13 grep-vs-rg note) landed RESOLVED at `302e8ec` and were **DELETED in the 2026-07-06 pre-tag sweep** (git is the archive, bound-to-live-state). **Still-live reversion note:** GTH-10 + GTH-12 were reclassified **DEFERRED-v0.14.0** — editing `docs/reference/exit-codes.md` / `cli.md` drifts their bound **P0** `docs-alignment/walk` rows, whose only recovery is a `doc-alignment.json` catalog rebind (Wave B + `reposix-quality` binary), out of Wave-A scope. Both edits were **reverted** to keep the P0 pre-push gate green; re-apply together with the rebind in v0.14.0.
 
 **FLAG — file-size waiver understatement (routed to Wave B, NOT edited here):** The
 `structure/file-size-limits` waiver in `quality/catalogs/freshness-invariants.json` says
@@ -968,5 +966,23 @@ C1 each relieve on their OWN ~100k line (no double-counting).
 relief path; cannot be verified statically — no C2 has run since the doctrine landed.
 
 **Default disposition:** DEFERRED-v0.14.0 (doctrine-validation) — MEDIUM.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-06 | `docs/guides/troubleshooting.md` is 25.5k chars, over the 20k progressive-disclosure soft limit | discovered-by: v0.13.0-intake-disposition sweep (260706-crf cold-reader carryover) | severity: MEDIUM
+
+**Size:** M (>1h — a progressive-disclosure nav restructure that moves anchors other docs cross-link to).
+
+**Source:** `docs/guides/troubleshooting.md` measures **25,503 chars** (verified 2026-07-06) — over the 20k `*.md` progressive-disclosure soft limit (root CLAUDE.md OP-4). Pre-existing debt that grew slightly this session via the 260706-crf DVCS cold-reader fixes. Root CLAUDE.md routes DVCS push/pull troubleshooting here, so the file accretes one symptom class after another with no natural cap.
+
+**Acceptance:** split into a child page per DVCS symptom class (e.g. `troubleshooting/{push-conflicts,blob-limit,mirror-lag,sparse-checkout,...}.md`) behind a thin parent index, each under the 20k budget; update every cross-link anchor that currently targets `troubleshooting.md#<symptom>` (root CLAUDE.md § Pointer map, `docs/concepts/dvcs-topology.md`, `docs/guides/dvcs-mirror-setup.md`, ADR-010) so no fragment link rots. Confirm `quality/gates/docs-build/mkdocs-strict.sh` + the file-size gate pass post-split.
+
+**Why >1h / deferred:** this restructures anchors that OTHER docs cross-link to, so it needs a coordinated anchor-rewrite sweep + a mkdocs walk to prove no broken fragment — not a mechanical trim, past the OP-8 "<1h clean eager-fix" line.
+
+**Dedupe / relationship:** sibling of `GOOD-TO-HAVES-15`'s `troubleshooting.md — 22339/20000` line-item — GTH-15 tracks the RAW file-size overage across 9 files under the `structure/file-size-limits` waiver; THIS entry is the specific progressive-disclosure child-page split for this one doc. Do the split here; GTH-15's waiver-renewal accounting clears once it lands.
+
+**Default disposition:** MEDIUM — fold into a v0.14.0 docs-progressive-disclosure or `docs-build`-touching window; pairs with GOOD-TO-HAVES-15.
 
 **STATUS:** OPEN
