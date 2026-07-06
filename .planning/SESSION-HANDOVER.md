@@ -1,4 +1,4 @@
-# SESSION-HANDOVER.md — v0.13.0 tag-ready (owner decisions settled), 2026-07-06
+# SESSION-HANDOVER.md — v0.13.0 release runbook, owner-delegated to L0 — 2026-07-06
 
 For the incoming top-level orchestrator (L0). This is the map, not the territory — detail
 lives in git and the linked files. HEAD = live state only; history is in `git log`.
@@ -43,14 +43,31 @@ credential / spend; and "not a decision, go verify" is not an escalation.**
 
 - **v0.13.0 autonomously GREEN** — P78–P97, 20/20 phases shipped; milestone verdict at
   `quality/reports/verdicts/milestone-v0.13.0/VERDICT.md`.
-- **Tag is READY** — the two owner gates that halted it are settled (§2). Remaining work is
-  a checklist the orchestrator drives, then the owner (not the coordinator) cuts the tag.
-- **Git:** local `main` was in sync with `origin/main` at session start; this session's
-  ledger + handover commits sit on top — **push `main` early** before new work (a phase
-  grades RED for shipping without it). Use `git log --oneline` / `git rev-parse` for live
-  SHAs; do not trust pinned SHAs in prose.
+- **All pre-tag doc/planning work is DONE and pushed.** `git log --oneline -8` (verify
+  live, do not trust pinned SHAs in prose):
+  - `f686ab2` chore(planning): owner delegated the release decision to L0 — release runbook
+  - `13c922f` chore(planning): STATE cursor — pre-tag doc/planning items cleared
+  - `56307be` docs: v0.13.0 intake OP-8 disposition + bound-to-live-state sweep
+  - `b8de57c` docs: DVCS cold-reader fixes — 7 findings pre-v0.13.0 tag
+  - `b03266d` / `dfc3a9b` docs: RBF-LR-03 honest WAIVED-for-v0.13.0 known-limitation
+- **Verified this session:** `HEAD == origin/main == f686ab2`. Working tree is otherwise
+  clean except `quality/catalogs/doc-alignment.json` (an unstaged, benign re-walk stat
+  refresh — `last_walked`/`coverage_ratio` timestamp drift only, matches the known-brittle
+  doc-alignment walker noise in §6; not part of this handover, left for the next session).
+  **No `v0.13.0` tag exists** (`git tag -l 'v0.13.0*'` empty) — confirmed live.
+- **The owner DELEGATED the release decision to L0** (2026-07-06): PR #61 merge, the
+  **crates.io publish (IRREVERSIBLE — published versions can only be yanked, not undone)**,
+  and cutting the **v0.13.0 tag**. This extends the OD-3 tag-push delegation to the
+  publish spend. L0 owns executing it — this session relieved rather than execute an
+  irreversible publish out of a depleted context.
+- **PR #61 status (live, checked this session):** `state: OPEN`, `mergeable: MERGEABLE`,
+  title "chore: release v0.13.0", all CodeQL status checks `SUCCESS`. A steward dispatched
+  earlier this session (review-only, did NOT merge) regenerated it against current main
+  and reviewed the diff — **its result lives in PR #61 itself** (comments/diff), not in an
+  in-session notification. Re-check live with `gh pr view 61 --json state,mergeable,files,
+  statusCheckRollup` before acting — do not assume the prior steward's read is still fresh.
 
-## 2. Owner decisions — SETTLED this session
+## 2. Owner decisions — SETTLED
 
 - **Tag timing → T1 (ship now).** v0.13.0 tags now; **RBF-LR-03 ships as an
   honestly-WAIVED, documented known-limitation** (narrow: real backend + mid-batch-create
@@ -66,20 +83,31 @@ credential / spend; and "not a decision, go verify" is not an escalation.**
   a different mechanism. **~Milestone-sized; gate the spend before the prototype phase**
   (real-backend calls cost). Vision + directive: `CONSULT-DECISIONS.md` § "RBF-LR-03 pivot"
   (131315c + amendment). ADR-010 §3 is revised only AFTER convergence.
+- **Release decision delegated to L0 (2026-07-06).** PR #61 merge, crates.io publish
+  (irreversible), and the v0.13.0 tag cut are all L0-owned now — not owner-blocking. See
+  §3 for the runbook.
 
-## 3. Pre-tag checklist (orchestrator drives; owner cuts the tag)
+## 3. Release runbook (L0-owned; authority already delegated — execute it)
 
-1. **Document RBF-LR-03 as a known limitation** — ADR-010 §3 (mark WAIVED-for-v0.13.0,
-   pointer to the v0.14.0 pivot) + a user-facing known-limitations note ("on a real backend,
-   a create interrupted mid-batch may leave a duplicate on retry; check before re-pushing").
-   This is what makes T1 honest rather than suppression.
-2. **dvcs-cold-reader doc review** — `/doc-clarity-review` on the DVCS-facing pages.
-3. **Disposition the open SURPRISES / GOOD-TO-HAVES backlog** (§5) — eager-fix <1h items,
-   file the rest; nothing silently skipped.
-4. **Regenerate PR #61** (release-plz; held to P97 — regenerate from the current release-plz
-   baseline, review, owner-gated crates.io publish).
-5. **Owner cuts the v0.13.0 tag** — canonical multi-platform release is `.github/
-   workflows/release.yml` (tag `v*`); tag-cut is an owner action (E1).
+Full durable copy: `.planning/STATE.md` § Workstream A "**RELEASE RUNBOOK (L0-owned
+tail)**" — this section is a map pointing at that, not a duplicate to maintain.
+
+1. **Check PR #61 live** — `gh pr view 61 --json state,mergeable,files,statusCheckRollup`
+   (and read the steward's regen review on the PR itself, not from session memory).
+2. **GO criteria (all must hold):** the regenerated diff is release-churn-only (per-crate
+   version bumps + CHANGELOG entries, no stray source/logic changes), version bumps are
+   sane for the shipped v0.13.0 work, and CI is green.
+3. **If GO:** merge PR #61 → **crates.io publish (IRREVERSIBLE — verify each crate
+   actually published before proceeding)** → cut the **v0.13.0 tag** (the tag script
+   `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh.disabled` stays disabled — do NOT
+   run it; canonical release is `.github/workflows/release.yml` on tag `v*`) → push the
+   tag → `gh run watch` the release workflow to green.
+4. **If NO-GO:** loop back / fix the regenerated PR; do NOT publish.
+5. **Non-blocking tail after the tag lands:** the 6 env-gated real-backend rows (accept
+   via creds or leave honestly NOT-VERIFIED — see §4, this is not a gap); renew the
+   `structure/file-size-limits` waiver before 2026-08-08 (§6-adjacent, see STATE.md);
+   then scope the v0.14.0 pivot (§2) + the launch-readiness milestone (OD-4) + resume
+   workstream B (P98+, `.planning/milestones/v0.13.2-phases/`).
 
 ## 4. Real-backend 9th probe — VERIFIED (owner was right)
 
@@ -127,7 +155,8 @@ Two related brittle-badge misfires; fix by asserting the **invariant**, not the 
   `BOUND → STALE_DOCS_DRIFT` on re-walk despite `badges-resolve.py 8/8 PASS` (hash
   re-extraction drift, not a broken badge). Seen + reverted this session; **the next
   session's push may hit STALE_DOCS_DRIFT** — recovery is `/reposix-quality-refresh
-  docs/index.md`. A C2 / brittle-gate target.
+  docs/index.md`. A C2 / brittle-gate target. (The uncommitted `doc-alignment.json` stat
+  drift noted in §1 is this same walker noise, observed again this session.)
 
 ## 7. Doctrine
 
