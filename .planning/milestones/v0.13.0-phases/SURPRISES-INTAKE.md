@@ -768,7 +768,18 @@ revert-churn of occurrences 1-4.
    cadence sweep. A regression test must prove a cadence run over a `NOT-VERIFIED` phase row
    leaves the committed row `NOT-VERIFIED` even when the verifier exits 0.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (P96 / D-P96-01, 2026-07-05). Core requirement #2 (never write
+phase-row grades as a side effect of a cadence run) is fixed: `run.py` split GRADE from
+PERSIST — a bare `run.py --cadence <c>` is validate-only and never calls `save_catalog`;
+only `--persist` mints. The exact regression test asked for above ("a cadence run over a
+`NOT-VERIFIED` phase row leaves the committed row `NOT-VERIFIED` even when the verifier
+exits 0") is `quality/runners/test_run.py::test_validate_only_does_not_mutate_catalog`,
+backed by catalog row `structure/catalog-immutable-on-read`. The recurring
+`git checkout HEAD -- quality/catalogs/` workaround is retired (verified: a real
+`run.py --cadence pre-push` now leaves every `quality/catalogs/*.json` byte-identical).
+Residual (smaller, not blocking): requirement #1 (the `--persist` MINT path should refuse
+to write a row it would reject at load — a `minted_at`-less legacy row) is a separate
+load-refusal hardening on the write path, still open — file as its own item if pursued.
 
 ## 2026-07-06 | `docs-alignment/walk` (P0) RED — P94 Fork A drifted 8 docs-alignment claims bound to `crates/reposix-core/src/backend.rs`; needs a top-level `/reposix-quality-refresh` (unreachable from inside `/gsd-execute-phase`) | discovered-by: P94 D4 catalog-freshness sweep | severity: HIGH (blocks v0.13.0 milestone-close pre-push)
 

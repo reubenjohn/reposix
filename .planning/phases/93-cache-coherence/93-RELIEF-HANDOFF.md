@@ -216,6 +216,11 @@ following three appears in them yet):
    before committing their real work. This is the same class of issue the P91 handover
    noted informally ("`run.py` in-place catalog mutation with no `--dry-run` guard") but
    it has never been filed as its own intake row with severity — do that.
+   **RESOLVED P96 (D-P96-01):** filed + fixed. `run.py` now splits GRADE from
+   PERSIST — a bare cadence run is validate-only and never writes
+   `quality/catalogs/`; only `--persist` mints. The
+   `git checkout HEAD -- quality/catalogs quality/reports` workaround is retired
+   (regression-locked by `structure/catalog-immutable-on-read`). Do NOT re-apply it.
 2. **`mkdocs-strict.sh` swallows broken-anchor findings.** `--strict` logs broken-anchor
    problems at INFO level, which is invisible in normal gate output; Lane 2 hit this
    firsthand while fixing the stale L1/L2/L3 cross-reference (`d5df26f`) and had to look

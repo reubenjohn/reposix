@@ -137,14 +137,14 @@ unreconciled).
 
 ### 2. P96 — OP-8 Slot 1 (drains SURPRISES-INTAKE.md)
 
-- **Quality-runner catalog self-mutation bug (HIGH — the real fix, not a 6th
-  workaround).** Fired 5× this session already. It now (a) self-GRADES phase
-  rows and (b) corrupts mid-sweep catalog reads. The fix must **validate-before-
-  persist and never write phase-row grades** as a side effect of a read/walk
-  operation — this is a `quality/runners/run.py` / `verdict.py` code change, not
-  another `git checkout HEAD -- quality/catalogs/` band-aid. This is the item
-  that currently forces every push in this drive to be followed by a catalog
-  checkout (see Hazard #1) — fixing it retires that workaround for P96 onward.
+- **Quality-runner catalog self-mutation bug (HIGH) — DONE (D-P96-01).** The
+  real fix, not a 6th workaround. Split GRADE from PERSIST in
+  `quality/runners/run.py`: a bare `run.py --cadence <c>` is validate-only
+  (grades in memory, writes artifacts, still blocks RED) and never writes
+  `quality/catalogs/`; only `--persist` mints. `verdict.py` was already a
+  reader (not a catalog writer). The `git checkout HEAD -- quality/catalogs/`
+  band-aid is retired (see Hazard #1). Regression-locked by
+  `structure/catalog-immutable-on-read`.
 - **Intake-file bloat split.** Both intake files are far over the 20k-byte
   budget: `SURPRISES-INTAKE.md` is **180,103 bytes** (confirmed by direct
   `wc -c`, ~9× over budget), `GOOD-TO-HAVES.md` is **79,613 bytes** (~4× over
@@ -199,20 +199,25 @@ unreconciled).
 
 ## CRITICAL operating hazards (read before first push)
 
-1. **Quality-runner self-mutation bug (HIGH).** Do **not** trust catalog row
-   statuses on disk. The pre-push walk auto-flips rows — the 5 known
-   STALE_TEST_DRIFT rows named above, **and** unpredictably a phase's own row
-   (cadence-scope-dependent — it has self-graded a phase's row mid-sweep before).
-   **At every push:** run it WITHOUT `--no-verify`, then immediately
-   `git checkout HEAD -- quality/catalogs/` to drop the runner's writeback before
-   your next commit. The REAL fix (validate-before-persist, never write
-   phase-row grades) is a P96 deliverable — until P96 ships, this workaround is
-   mandatory at every single push in P95 too.
+1. **Quality-runner self-mutation bug (HIGH) — FIXED in P96 (D-P96-01, commit
+   on `main`).** Historical: the pre-push walk used to auto-flip catalog rows
+   and persist the writeback as a read side-effect, so every push had to be
+   followed by `git checkout HEAD -- quality/catalogs/`. **That workaround is
+   now retired and must NOT be re-applied** (it is harmful in a worktree — see
+   root CLAUDE.md destructive-git prohibition). The fix split GRADE from
+   PERSIST: a bare `run.py --cadence <c>` (the pre-push/pre-pr/CI path) is
+   validate-only and never writes `quality/catalogs/`; only an explicit
+   `run.py --cadence <c> --persist` mints. Regression-locked by
+   `structure/catalog-immutable-on-read`
+   (`quality/gates/structure/catalog-immutable-on-read.sh`). Catalog row
+   statuses on disk are now trustworthy between mints.
 2. **P94's 4 catalog rows are NOT-VERIFIED-on-disk but verdict-backed GREEN.**
    `quality/reports/verdicts/p94/VERDICT.md` (commit `0d3c2f9`) is authoritative.
-   Do **not** attempt to re-grade or "fix" these 4 rows to PASS on disk — a
-   clean 4-row catalog mint is blocked by Hazard #1 above, and P96 unblocks it.
-   Don't spend P95/P96 time chasing this before the self-mutation fix lands.
+   Do **not** attempt to re-grade or "fix" these 4 rows to PASS on disk in the
+   self-mutation lane — a clean 4-row catalog mint is now UNBLOCKED (Hazard #1
+   fixed in P96: `run.py --cadence <c> --persist` mints deterministically
+   without dirtying other rows). The 4-row re-mint is a SEPARATE P96 lane; do it
+   there, not here.
 3. **`p92-litmus` FAIL = git<2.34 env-gate.** CONFIRMED benign — the local dev
    env's git version predates 2.34, but CI runs git 2.54.0 and PASSES there.
    This is not a regression to chase; don't let a fresh coordinator mistake it

@@ -117,13 +117,16 @@ This rule exists because the v0.12.0 plan ORIGINALLY had CLAUDE.md updated only 
 
 ### Step 6 — Run the verifier
 
-Before claiming done:
+Before claiming done. **Minting (writing graded `status` back to the catalog)
+requires `--persist`** since the D-P96-01 GRADE/PERSIST split — a bare cadence
+run is validate-only and will NOT update the committed catalog (see the
+callout below):
 
 ```
-quality/runners/run.py --cadence pre-commit  # for any pre-commit gates this phase added
-quality/runners/run.py --cadence pre-push    # for any pre-push gates this phase added
-quality/runners/run.py --cadence weekly      # for weekly gates
-quality/runners/verdict.py --phase <N>       # rolls up to quality/reports/verdicts/p<N>/<ts>.md
+quality/runners/run.py --cadence pre-commit --persist  # mint any pre-commit gates this phase added
+quality/runners/run.py --cadence pre-push   --persist  # mint any pre-push gates this phase added
+quality/runners/run.py --cadence weekly     --persist  # mint weekly gates
+quality/runners/verdict.py --phase <N>                 # rolls up to quality/reports/verdicts/p<N>/<ts>.md
 ```
 
 Rows carry `cadences: list[str]`; a single gate may fire at multiple
@@ -134,12 +137,20 @@ Milestone-close ritual MUST also invoke
 `python3 quality/runners/run.py --cadence pre-release-real-backend` and
 require exit 0; absent ⇒ verdict graded RED (per RBF-FW-03 9th probe).
 
-**Honest callout (added P91 91-06):** every `run.py --cadence ...` invocation
-above mutates the catalog JSON in place as a side effect of running — there
-is currently no `--dry-run` flag to preview a would-be verdict diff without
-writing it. If you want to see what a cadence run would flip before
-committing to the mutation, there is no supported way to do that today;
-tracked as GOOD-TO-HAVES-16 (`.planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md`).
+**GRADE/PERSIST split (D-P96-01, was the P91 91-06 "honest callout"):** a bare
+`run.py --cadence ...` invocation is now **validate-only** — it grades every
+in-scope row in memory, writes per-row artifacts under
+`quality/reports/verifications/`, and STILL blocks RED via the exit code, but
+it does **not** mutate `quality/catalogs/`. Only `--persist` writes graded
+status back. This inverts the old default (every cadence run used to persist as
+a read side-effect, which self-mutated `docs-build.json` and dirtied the tree
+at every push — the HIGH bug P96 fixed). Consequences:
+- A plain cadence run IS the `--dry-run` preview GOOD-TO-HAVES-16 asked for: it
+  prints `note: validate-only run -- N catalog(s) have status flips NOT
+  persisted (...)` listing exactly what a `--persist` mint would flip.
+- Do **not** re-add `git checkout HEAD -- quality/catalogs/` after a gate run;
+  a gate run no longer writes the catalog. The regression is locked by
+  `structure/catalog-immutable-on-read` (`quality/gates/structure/catalog-immutable-on-read.sh`).
 
 **OD-2 hard-RED skip-semantics (89-OWNER-DECISIONS.md, binding):** If the
 `pre-release-real-backend` cadence cannot EXECUTE against the sanctioned
@@ -385,7 +396,7 @@ Rules:
 
 Waivers are the principled escape hatch. Without them, an agent stuck on an inherited problem either silently descopes (bad) or blocks indefinitely (bad). With them, the descope is explicit, time-bounded, and re-surfaced when the waiver expires.
 
-**Un-waiving requires a runner mint, not just waiver deletion.** Un-waiving a catalog-first row (deleting its `waiver` block once the verifier now exists) REQUIRES running the runner (Step 6) to mint the PASS artifact in the same commit sequence — deleting the waiver block alone leaves a phantom-green `status: WAIVED` / `waiver: null` row that loads without complaint and counts toward green (this was the literal root cause of the P93 phase-close RED at `bf3bc9c`; the deeper load-time `_audit_field.py` enforcement for this class of row is filed in `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`).
+**Un-waiving requires a runner mint, not just waiver deletion.** Un-waiving a catalog-first row (deleting its `waiver` block once the verifier now exists) REQUIRES running the runner **with `--persist`** (Step 6) to mint the PASS status + artifact in the same commit sequence — a bare validate-only cadence run grades the row but will NOT write the flip back, and deleting the waiver block alone leaves a phantom-green `status: WAIVED` / `waiver: null` row that loads without complaint and counts toward green (this was the literal root cause of the P93 phase-close RED at `bf3bc9c`; the deeper load-time `_audit_field.py` enforcement for this class of row is filed in `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`).
 
 ## SURPRISES.md format
 

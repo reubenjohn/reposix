@@ -17,13 +17,14 @@
 # there is never more than ONE cargo invocation in flight. Do NOT launch this in
 # parallel with any other cargo work.
 #
-# SELF-MUTATION: run.py rewrites catalog JSON in place on any status flip (the
-# recurring quality-runner self-mutation bug, deferred to P96). This driver only
-# CAPTURES the verdict as evidence; the operator reverts the catalog churn
-# afterwards (`git checkout HEAD -- quality/catalogs/`) so the committed rows are
-# unchanged and the P94 rows stay NOT-VERIFIED for the unbiased phase-close
-# verifier. The sweep's value is the captured re-grade output, not persisted
-# catalog state.
+# SELF-MUTATION: FIXED in P96 (D-P96-01). This driver runs each cadence with a
+# bare `run.py --cadence <c>` (no --persist), which since the P96 GRADE/PERSIST
+# split is VALIDATE-ONLY — it grades in memory and writes per-row artifacts but
+# does NOT rewrite catalog JSON. The `git checkout HEAD -- quality/catalogs/`
+# revert this comment used to mandate is NO LONGER NEEDED (and is now harmful in
+# a worktree — see root CLAUDE.md); the P94 rows stay NOT-VERIFIED on disk on
+# their own. Regression-locked by structure/catalog-immutable-on-read. The
+# sweep's value is still the captured re-grade output.
 #
 # Usage: bash .planning/phases/94-real-backend-frictions/94-D4-sweep.sh
 set -uo pipefail

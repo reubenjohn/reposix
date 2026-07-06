@@ -407,7 +407,8 @@ no E2 escalation). Regression locked by new gate
 `quality/gates/structure/catalog-immutable-on-read.sh` (row
 `structure/catalog-immutable-on-read`).
 
-**Commit:** ledger (this commit); catalog-first row + failing-repro + fix SHAs
-back-filled at lane close (see the P96 self-mutation commit chain on `main`).
+**Commit:** ledger `36dad20`; catalog-first repro (row + verifier + test_run.py)
+`1a9f2f2`; fix (run.py GRADE/PERSIST split) `2359c63`; mint the row PASS via
+`--persist` `25215dd`; workaround-retirement + docs (this commit).
 
 ---
