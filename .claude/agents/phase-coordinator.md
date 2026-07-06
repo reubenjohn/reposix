@@ -42,8 +42,13 @@ implementation), haiku (mechanical/leaf, reader-digester). NEVER spawn a fable l
 3. REPORTS SMALL, EVIDENCE COMMITTED. Every sub-agent: ≤400-word report, evidence in
    committed artifacts, never chat.
 4. NEVER WAIT INLINE. No polling/watching/sleeping. End your turn; children notify.
-5. PROACTIVE RELIEF. At every wave boundary: am I past ~50% context? If yes, dispatch
-   relief-handover-writer to write+commit the handover, then request relief.
+5. PROACTIVE RELIEF (absolute tokens, NOT %). At every wave boundary: am I past ~100k
+   tokens of my own context? If yes, dispatch relief-handover-writer to write+commit the
+   handover, then request relief. Hard stop ~150k. Measure absolute tokens, not % of the
+   window — quality degrades past ~150k regardless of window size ("50% of 1M" = 500k is
+   already rotting). If you were dispatched as a milestone-scoped C2 (coordinator-of-
+   coordinators), you dispatch one C1 phase-coordinator per phase and absorb their
+   rotations yourself — see ORCHESTRATION §3.
 
 ## Ownership charter (embed VERBATIM in every dispatch)
 1. You own what you touch. Acceptance criteria are the floor, not the ceiling.

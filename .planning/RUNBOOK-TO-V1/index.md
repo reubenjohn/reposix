@@ -113,4 +113,4 @@ session:
 > doc-alignment rows, scheduled-workflow health. 3. Dispatch Portion-1's L1
 > coordinator (`model: opus`, charter = ch.03 §B: v0.13.0 close-out P92–P97):
 > P92 first, litmus T1+T4, REOPEN on ≥1 HIGH; pre-authorized P92a/P92b split;
-> relief pre-planned at ~50%.
+> relief pre-planned at ~100k tokens (hard stop ~150k; absolute, not %).

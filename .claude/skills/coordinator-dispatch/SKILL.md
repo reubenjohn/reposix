@@ -81,10 +81,20 @@ re-delegate as a new lane, or file to intake; never drop it (ORCHESTRATION §2).
 
 ## 6. Relief trigger (ask at every wave boundary)
 
-**Am I past ~50% of my context?** If yes: dispatch `relief-handover-writer` to
-write+commit the handover (ORCHESTRATION.md §3 template), confirm its SHA, then request
-relief from the top level. Relief is cheap; rot is not. Do not idle-wait for children —
-end your turn; they notify.
+**Am I past ~100k tokens of my own context?** (ABSOLUTE, not % of the window — quality
+degrades past ~150k regardless of a 1M window, so "50% of 1M" = 500k is already rotting;
+**hard stop ~150k**.) If yes: dispatch `relief-handover-writer` to write+commit the
+handover (ORCHESTRATION.md §3 template), confirm its SHA, then request relief from the top
+level. Relief is cheap; rot is not. Do not idle-wait for children — end your turn; they
+notify.
+
+**Two tiers absorb the churn (ORCHESTRATION §3).** The ~100k line rotates coordinators
+more often than the old ~50% line, so don't run a whole milestone as one C1 reporting
+rotations to L0. The top orchestrator dispatches a **coordinator-of-coordinators (C2 — a
+milestone-scoped `phase-coordinator`)** that dispatches **one C1 `phase-coordinator` per
+phase**; a relieving C1's successor is dispatched by its parent C2, not by L0. Same
+`phase-coordinator` type at both tiers — the tier is just charter scope (milestone vs
+single phase).
 
 ## 7. Pause/resume brief template (owner-invoked pause)
 

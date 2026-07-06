@@ -89,8 +89,10 @@ lives in **`.planning/ORCHESTRATION.md`** (read before dispatching any agent).
   charter does the work — read the rules below through whichever role you hold.
 - Top-level delegates ONLY to **fable** coordinators, which tier down to **opus**
   (complex/security), **sonnet** (default), **haiku** (mechanical). Never fable at a leaf.
-- Coordinators **route, don't work**; relieve past **~50% context** at a wave boundary
-  (write+commit a handover first).
+- Coordinators **route, don't work**; relieve past **~100k tokens of own context** (hard
+  stop ~150k) at a wave boundary — absolute, not % of the window (write+commit a handover
+  first). L0 launches a **coordinator-of-coordinators** per milestone so C1 rotations are
+  absorbed below the top, not at L0 (`.planning/ORCHESTRATION.md` §3).
 - **Uncommitted = didn't happen** — enforced by `.claude/hooks/` (cargo mutex,
   stop-on-dirty, precompact-persist). External mutations need owner-named-target approval.
 - Understand **intention over faithful plan execution**.

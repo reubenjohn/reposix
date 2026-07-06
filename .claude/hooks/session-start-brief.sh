@@ -16,7 +16,7 @@ brief=$(printf '%s\n' \
  "== doctrine digest (full: .planning/ORCHESTRATION.md — READ before dispatching agents) ==" \
  "1 Fable top-level: delegate ONLY to fable coordinators. No-fable top-level (opus or below): five-tier recursion per ORCHESTRATION 11. Either way: opus complex / sonnet default / haiku mechanical; never fable at a leaf." \
  "2 Coordinators route, don't work: Agent dispatches + 1-line git checks + short reads only." \
- "3 Scope every charter to reach end-state by ~10% of your OWN context (rest is correction margin, never planned workload); write+commit a handover past ~50% at a wave boundary." \
+ "3 Scope every charter to reach end-state by ~10% of your OWN context (rest is correction margin, never planned workload); write+commit a handover past ~100k tokens of own context (hard stop ~150k; absolute, not %) at a wave boundary; L0 launches a coordinator-of-coordinators per milestone so C1 rotations absorb below the top." \
  "4 ONE cargo invocation machine-wide (VM OOM history); prefer -p <crate>, jobs=2." \
  "5 Understand intention over faithful plan execution; tangential tooling is a deliverable." \
  "6 Uncommitted = didn't happen; /tmp does not survive a crash." \

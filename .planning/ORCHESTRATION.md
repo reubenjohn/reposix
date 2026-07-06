@@ -71,9 +71,14 @@ reports/handovers. The 5 rules (verbatim, owner directive 2026-07-04
 4. **NEVER WAIT INLINE.** No polling loops, watchers, or sleeps. Background children
    notify on completion; if a reply mis-routes, the orchestrator relays it. If you
    find yourself idle-waiting, end your dispatch turn.
-5. **PROACTIVE RELIEF.** At every wave boundary ask: am I past ~50% of my context? If
-   yes: dispatch `relief-handover-writer` to write+commit the handover, then tell the
-   orchestrator to relieve you. Relief is cheap; rot is not.
+5. **PROACTIVE RELIEF (absolute tokens, NOT %).** At every wave boundary ask: am I past
+   ~100k tokens of my own context? If yes: dispatch `relief-handover-writer` to
+   write+commit the handover, then tell the orchestrator to relieve you. **Hard stop
+   ~150k** — relieve immediately, start no new work. Measure ABSOLUTE tokens, never a % of
+   the window: quality degrades past ~150k regardless of a 1M window, so "50% of 1M" =
+   500k is far past useful (a coordinator that waited for 50% would already be rotting).
+   Relief is cheap; rot is not. See §3 for the C1/C2 two-tier structure that absorbs the
+   resulting (more frequent) rotation below L0.
 
 **Bottom-up triage (the receiving side of "noticing is a deliverable").** Every
 sub-agent report carries a NOTICED section + RAISE LIST + intake disposition (rule 3 +
@@ -89,11 +94,28 @@ absorb-vs-redelegate call is the parent's job precisely because it can.
 
 ## 3. Context budget + relief/handover protocol
 
-Track context percentage from turn one, not just at milestones. Target reaching the
-full end-state by **~50% context** (not 100%) — the second half is relief headroom.
-The user-level `gsd-context-monitor.js` hook fires advisory warnings at ≤35% remaining
-(WARNING) and ≤25% (CRITICAL); do not wait for it — relieve proactively at wave
-boundaries.
+Track your ABSOLUTE token spend from turn one, not just at milestones, and not as a % of
+the window. Target reaching the full end-state before **~100k tokens** of your own
+context; **hard stop ~150k** (relieve immediately). The remaining slice is relief
+headroom. Rationale: model output quality degrades past ~150k regardless of how large the
+window is — a 1M window does NOT buy you 500k of good judgment, so a coordinator that
+waited for "~50% of 1M" (= 500k) would already be rotting. The user-level
+`gsd-context-monitor.js` hook still fires advisory %-remaining warnings; treat them as a
+backstop, not the trigger — relieve proactively at wave boundaries on the absolute ~100k
+line.
+
+**Two coordinator tiers (absorb relief churn below L0).** Because the ~100k line rotates
+coordinators MORE often than the old ~50%-of-1M line did, a milestone must NOT run as one
+C1 phase-coordinator reporting every rotation straight to L0 — that floods the top with
+successor-dispatch churn. Instead the top orchestrator dispatches a
+**coordinator-of-coordinators (C2)**: a milestone / multi-phase-scoped `phase-coordinator`
+that itself dispatches **one C1 `phase-coordinator` per phase** (which dispatch
+executors/readers). When a C1 relieves at ~100k, its successor is dispatched by its
+**parent C2**, not by L0. L0 hears from the C2 only at milestone boundaries or an E1–E4
+escalation. **No new agent type is needed:** `phase-coordinator` serves both tiers via the
+§11 five-tier recursion — the tier is set by charter SCOPE (milestone → C2, dispatches
+phase-coordinators; single phase → C1, dispatches executors). Each tier relieves on its
+OWN ~100k line.
 
 A relieved coordinator must be **told in advance** it is being relieved, so it writes a
 deliberate, complete handover (persistence is solicited, not automatic). Dispatch
