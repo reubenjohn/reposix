@@ -374,6 +374,20 @@ STATUS 2026-07-05 (D-P92-03): **REPRODUCED — CONFIRMED REAL, deterministic** (
 
 **Default disposition:** MEDIUM — default-defer to the P95 quality-framework honesty/documentation pass; the gate itself is correct and documented at `quality/PROTOCOL.md` § "Honesty rules: test-name-asserts / marker format," but the placement-distance requirement is missing from both the gate script and CLAUDE.md.
 
+**STATUS:** RESOLVED (P95, commit `3e9b2b2`) | Documented the 6-line lookback window in BOTH mandated homes — the gate script header (`quality/gates/agent-ux/test-name-vs-asserts.sh`: window mechanics + correctly-placed vs mis-placed example + the two silent-footgun consequences) and `quality/CLAUDE.md` § "Honesty rules" (mirror note). Ownership call = doc-only (not the robust preamble-anchored scan): a probe of all 85 test-pattern fns in `crates/` found 0 with a marker or `#[test]` beyond the 6-line window, so the footgun bites nothing today; its harm is future invisibility, which documentation resolves. Filer's own "correctly tuned / tight placement is reasonable" assessment argues against unilaterally loosening a repo-wide pre-push gate at milestone-close. The robust fix is filed as the sibling GOOD-TO-HAVE below. **Corrections vs this entry as filed:** (1) the window is a LOOKBACK (6 lines ABOVE the signature), not "immediately after" the fn; the marker format is `// test-name-honesty: ok — <reason>`, not `// HONEST: {reason}` as the What section states. (2) This entry's Default-disposition claims the marker format is "documented at `quality/PROTOCOL.md` § 'Honesty rules: test-name-asserts / marker format'" — that section does not exist; PROTOCOL.md has no test-name/marker mention at all (verified P95). The gate header + CLAUDE.md are the correct homes and now carry it.
+
+---
+
+## 2026-07-05 | Preamble-anchored marker scan (retire the fixed 6-line lookback in `test-name-vs-asserts.sh`) | discovered-by: P95 marker-footgun pass | severity: LOW
+
+**What:** `test-name-vs-asserts.sh` detects a fn's `#[test]` attribute / `#[ignore]` gate / honesty marker via a FIXED `CONTEXT_LINES=6` lookback ending at the `fn` signature. A marker or `#[test]` attribute placed farther than 6 lines above the fn (e.g. behind a long `///` doc block) is silently ignored — documented as a footgun in the sibling RESOLVED entry above, mitigated by documentation but not eliminated.
+
+**Acceptance:** Replace the fixed 6-line `sed` context extraction with a scan anchored to the fn's actual attribute/doc preamble — walk upward from the `fn` line through the contiguous `#[...]` / `//` / `///` / blank-line block and stop at the first non-preamble code line; treat THAT block (plus the signature line) as the context window. This removes the distance constraint entirely (the marker/attr can sit anywhere in the fn's preamble) while keeping the same "must be in the fn's own preamble, not a sibling's" scoping.
+
+**Why deferred / proposal-only:** (a) Zero present value — the P95 probe found 0/85 current test-pattern fns affected, so it fixes nothing on today's tree. (b) It changes a repo-wide P0-adjacent pre-push gate's core scan loop; the upward-walk needs careful over-capture guards (don't bleed into a preceding item's body across blank lines) and a full-corpus re-run to prove no new RAISEs — more than a low-risk <1h change at milestone-close. (c) Design tension worth a deliberate decision: the original filer considered tight placement a FEATURE ("signature + 1-2 setup lines is the typical case"); a preamble-anchored scan loosens that. A future `quality/gates/agent-ux/` phase should weigh feature-vs-robustness and implement + corpus-verify in one scoped pass.
+
+**Default disposition:** LOW — fold into the next `quality/gates/agent-ux/` framework-touching phase. No blocker; documentation already closes the invisibility harm.
+
 **STATUS:** OPEN
 
 ---

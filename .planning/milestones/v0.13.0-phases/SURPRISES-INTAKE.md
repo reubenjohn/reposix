@@ -375,7 +375,7 @@
 
 **Sketched resolution:** Run `/reposix-quality-refresh` (or `reposix-quality doc-alignment bind` per row) against the 3 STALE_TEST_DRIFT rows to rehash them back to BOUND — the claims are all still valid, so it's a clean re-bind that restores `claims_bound` to 270. Home: P90 (quality-framework) or a standalone refresh run. Separately worth a design look: whole-file-hash bindings are brittle — a version-ref bump on an unrelated line reddens a matrix-presence claim; a line-anchored or content-substring binding would be more robust for these "file contains X" claims.
 
-**STATUS:** DEFERRED-P95 | Checked during 90-07: the 3 named rows (`planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish2-03-bench-cron`, `.../polish2-02-aarch64`, `.../polish-06-binaries`) remain `STALE_TEST_DRIFT` in `quality/catalogs/doc-alignment.json` as of this commit — not rebound in P90, which was out of F-class framework scope (90-04 confirmed zero doc-alignment rows cite `PROTOCOL.md`/`PRACTICES.md`; 90-06's only STALE cascade handled in-phase was the `cli.md`/`exit-codes.md` line-shift, a different root cause). `STALE_TEST_DRIFT` does not block `pre-push` (only `MISSING_TEST`/`STALE_DOCS_DRIFT`/`STALE_TEST_GONE`/`TEST_MISALIGNED`/`RETIRE_PROPOSED` do, per `RowState::blocks_pre_push`), so this remains non-blocking debt. Rebind via `/reposix-quality-refresh` when convenient; the whole-file-vs-line-anchored design question defers to P95.
+**STATUS:** RESOLVED (P95, commit `bd18827`) | All 3 rows (`polish2-03-bench-cron`, `polish2-02-aarch64`, `polish-06-binaries`) re-bound `STALE_TEST_DRIFT → BOUND` with real re-computed whole-file hashes. Verified each claim against the live workflow before binding: `persist-credentials: false` present (`bench-latency-cron.yml:34`, line-ref in the row rationale corrected 32→34), `aarch64-unknown-linux-musl` matrix entry present (`release.yml:101`), and the full 5-target build matrix present (`release.yml:97/101/110/114/118`) — the whole-file hashes had drifted only from unrelated dependabot checkout/artifact version-ref bumps; claims unchanged. `walk.sh` exits 0 and all 3 survive a subsequent walk as `BOUND` (no re-flip). The whole-file-vs-line-anchored design question stays deferred (still open in the sibling `2026-07-04 05:40` sketch). ORIGINAL DEFERRAL NOTE (for history): DEFERRED-P95 | Checked during 90-07: the 3 named rows remained `STALE_TEST_DRIFT` in `quality/catalogs/doc-alignment.json` as of that commit — not rebound in P90, which was out of F-class framework scope (90-04 confirmed zero doc-alignment rows cite `PROTOCOL.md`/`PRACTICES.md`; 90-06's only STALE cascade handled in-phase was the `cli.md`/`exit-codes.md` line-shift, a different root cause). `STALE_TEST_DRIFT` does not block `pre-push` (only `MISSING_TEST`/`STALE_DOCS_DRIFT`/`STALE_TEST_GONE`/`TEST_MISALIGNED`/`RETIRE_PROPOSED` do, per `RowState::blocks_pre_push`), so this remains non-blocking debt. Rebind via `/reposix-quality-refresh` when convenient; the whole-file-vs-line-anchored design question defers to P95.
 
 ## 2026-07-04 08:30 | discovered-by: Stage-2 catalog-row-minting | severity: MEDIUM
 
@@ -807,7 +807,17 @@ substantively wrong, fix the doc first, then re-bind.
 pre-push gate). Reversible (a refresh certificate + re-bind, no behavior change). REPORTED
 to the coordinator/owner in the P94 D4 lane-B report.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (fixed in P94 `46bd1fa`; verified clean in P95 `bd18827`) | The re-bind
+this entry asks for LANDED in P94 itself: commit `46bd1fa` ("re-bind docs-alignment claims
+drifted by Fork A backend.rs Listing/list_records_complete") re-baselined all 8
+`docs/connectors/guide/*` BackendConnector-trait rows to the post-Fork-A `backend.rs` line
+ranges (their rationales carry the "re-baselined … after Fork A" notes). This entry's STATUS
+was simply never flipped. P95 VERIFIED against reality: all 10 `docs/connectors/guide/*`
+backend.rs-citing rows read `BOUND` on disk AND survive `quality/gates/docs-alignment/walk.sh`
+(exit 0) with no re-flip — the additive `list_records_complete` left every claim true. No P95
+re-bind was needed; this is a verify-and-close, not a redundant timestamp bump. (NOTE for the
+milestone verifier: the row-count in the title is "8"; the trait actually has 10 bound
+per-method rows incl. `trait-method-count-eight` + `update-record` — all confirmed BOUND.)
 
 ## 2026-07-05 | Pre-push BLOCKED: pre-existing `clippy::doc_markdown` errors in `crates/reposix-remote/tests/common.rs` fail `code/clippy-lint-loaded` + `code/cargo-clippy-warnings` | discovered-by: P93 Wave 1 de-risk executor (Task B, push-stack rebase+push) | severity: HIGH (blocks push origin main)
 
@@ -1250,7 +1260,17 @@ revert-churn is the cost), but it's death-by-a-thousand-cuts operational frictio
 push and it erodes trust in the docs-alignment dimension's greens. Route to the P95
 docs-alignment drain.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (P95, commit `bd18827`) | All 5 rows re-bound with real
+re-computed source+test hashes (a legitimate `bind`, not a walk writeback): `exit-codes-locked`
+(both CLI + helper arms still pin the locked {0,1,2} sets; test-body drift was P94's hermetic
+cache-dir fix in `exit_codes.rs`), the 3 `docs/index/*` badge rows (verifier
+`badges-resolve.py` still HEADs every badge URL + asserts 200; body drift was P94 D3's
+retry/backoff), and `bulk-delete-override-tag` (test still proves 6 deletes with
+`[allow-bulk-delete]` succeed). SEQUENCING NOTE ANSWERED: the walker's self-mutation
+(Hazard #1) does NOT block a clean re-bind — it only re-flips genuinely-stale rows; once the
+stored hashes match live content the walk computes `BOUND` and leaves them alone. Confirmed:
+`walk.sh` exits 0 and all 5 survive a subsequent walk as `BOUND` with zero spurious
+`BOUND → STALE` flips on any other row. The recurring revert-churn is now cleared.
 
 ---
 
