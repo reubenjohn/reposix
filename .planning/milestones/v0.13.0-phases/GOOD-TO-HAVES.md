@@ -2,24 +2,6 @@
 
 > **Purpose.** OP-8 +2 reservation slot 2 — improvements (clarity, perf, consistency, grounding) the planned phases observed but didn't fold in. Sized XS / S / M; XS items always close; M items default-defer to next milestone. **Drained by P97 (good-to-haves polish + milestone close)** — was P88 in the original P78–P88 plan; renumbered when the milestone extended to P78–P97. (Per-entry "Default disposition for P88" lines below are historical filing-time notes; the actual drain phase is P97.)
 
-## Archived (terminal) entries — relocated
-
-> Terminal entries (RESOLVED / WONTFIX / DEFERRED-to-a-future-milestone) were
-> relocated by P96 Wave 3a to keep this working file focused on the ACTIVE drain
-> queue. **Pure relocation — no entry content was altered.** Archive home(s):
->
-> - [`GOOD-TO-HAVES-ARCHIVE.md`](./GOOD-TO-HAVES-ARCHIVE.md) — 3 entries
-
-<details><summary>Archived manifest (click)</summary>
-
-**GOOD-TO-HAVES-ARCHIVE.md:**
-
-- 2026-07-05 | Quality-gate footgun: test-name-honesty marker silently ignored outside the 6-line lookback window | dis...  → **RESOLVED**
-- 2026-07-05 | Refresh stale header caveats in the two security gate scripts | discovered-by: P92 security-waiver-flip ...  → **RESOLVED**
-- 2026-07-05 | `badges-resolve` FAILs on pre-push (docs-build + structure dimensions) | discovered-by: P93 Wave 1 de-ri...  → **RESOLVED**
-
-</details>
-
 ---
 
 ## P97 OP-8 Slot-2 DRAIN LEDGER (2026-07-05, Wave A)
@@ -139,26 +121,6 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 
 > Add new entries below this line.
 
-## GOOD-TO-HAVES-02 — `DEFERRAL-REGEX-INTERVENING-WORDS` — deferral-pointer linter misses PNNs separated from the verb by intervening words
-
-**Discovered during:** P89 89-05 (deferral-pointer linter, RBF-FW-05)
-
-**Size:** XS (~5 lines shell — one widened regex alternative + a synthetic-scenario test line)
-
-**Source:** `crates/reposix-cli/src/attach.rs:163` — the stderr message says "github/confluence/jira land alongside the integration tests in P79-03". The F-K6-verbatim pattern `lands? (alongside|in) P[0-9]+` requires the PNN to immediately follow the verb phrase, so "land alongside the integration tests in P79-03" is INVISIBLE to `quality/gates/structure/deferral-pointer-linter.sh` — its P79-03 pointer is never cross-referenced. Zero impact today (the same line's "not yet wired in P79-02" fragment matches pattern 1 and P79 resolves), but a future deferral written only in the intervening-words phrasing would silently escape the linter entirely — neither the orphan-PNN BLOCK nor the no-PNN BLOCK fires when no pattern matches at all.
-
-**Acceptance:**
-
-- Pattern 2 widened to tolerate a bounded run of intervening words (e.g. `lands? (alongside|in) ([a-zA-Z-]+ ){0,5}P[0-9]+` or equivalent), OR a documented decision that F-K6-verbatim stays and the phrasing convention is enforced editorially.
-- Synthetic-scenario coverage: a line like `// this lands alongside the follow-up work in P999` BLOCKs.
-- PNN extraction stays phrase-scoped (the widened fragment must not swallow adjacent allowlist-marker PNNs like the P91 in attach.rs:163's trailing comment).
-
-**Why deferred from 89-05:** the three patterns are mandated F-K6 VERBATIM by 89-CONTEXT.md D-05a/b and the 89-05 plan; widening them is a design decision outside the task's envelope, and content cross-reference/pattern polish is already earmarked for P90/P95 (CONTEXT D-05c).
-
-**Default disposition:** Size XS; XS items always close per CLAUDE.md OP-8 — fold into the P90/P95 polish slot that already owns deferral-linter content cross-reference.
-
-**STATUS:** RESOLVED (P97 Wave A, commit `302e8ec`) — pattern 2 widened to `lands? (alongside|in) ([a-zA-Z-]+ ){0,5}P[0-9]+` in `deferral-pointer-linter.sh`. Verified against reality: the linter still PASSes on the real tree; a synthetic `// this lands alongside the follow-up work in P999` extracts `P999` (orphan-PNN BLOCK), while an `attach.rs`-style `land alongside the integration tests in P79-03 … // banned-words: ok — P91 …` line extracts only `P79` — the intervening class `[a-zA-Z-]+ ` cannot traverse a PNN's digits, so the trailing allowlist-marker `P91` is correctly excluded (phrase-scoped extraction preserved). Header documents the widened shape + the synthetic scenario.
-
 ## GOOD-TO-HAVES-03 — `run.py` runner has no per-row / per-dimension scope flag (only `--cadence`)
 
 **Discovered during:** P89 89-04 (kind: shell-subprocess worked example, RBF-FW-02)
@@ -268,38 +230,6 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 
 **STATUS:** OPEN
 
-## GOOD-TO-HAVES-08 — trim/split `quality/reports/raise-list-p90.md` below the pre-commit WARN threshold
-
-**Discovered during:** P90 90-05 (2026-07-04)
-
-**Size:** XS
-
-**Source:** `quality/reports/raise-list-p90.md` is 24,679 chars, above the 20k-char pre-commit WARN threshold (warns, does not block). The file is P90's SC5 deliverable (5-section RAISE LIST seeding P91/P92/P95 work) and is genuinely dense evidence, not padding, so trimming risks losing decision-ready detail; a split by section (waivers / dishonest-test baseline / magic-fixture schism / subagent-graded migration record) would keep each file under threshold without losing content.
-
-**Acceptance:** Either (a) split `raise-list-p90.md` into per-section files under `quality/reports/raise-list-p90/` with an index, each under 20k chars, or (b) trim prose duplication while preserving every cited fact/table, bringing the single file under 20k chars. Pre-commit WARN clears.
-
-**Why deferred:** the WARN is non-blocking and the file is fresh SC5 evidence other phases (P91/P92/P95) are about to consume verbatim — restructuring it mid-consumption risked breaking those phases' citations; better done as a deliberate follow-up once the RAISE LIST's consumers have read it once.
-
-**Default disposition:** XS — always closes; fold into whichever of P91/P92/P95 finishes draining the RAISE LIST first (natural moment to restructure what's left).
-
-**STATUS:** RESOLVED (P97 Wave A, commit `302e8ec`) — split (option a) into 5 per-section shards under `quality/reports/raise-list-p90/` (each ≤7.3k) behind a slim 2.8k index at `raise-list-p90.md`. Chose split over trim because the file is mostly dense tables (a trim to <20k could not preserve every cited fact) AND catalog JSONs reference `raise-list-p90.md § N` (forbidden to edit — Wave B), so the index deliberately preserves all 5 `## N.` section headers as links to shards → those `§ N` refs still resolve. Content is verbatim (pure `awk` relocation); the file's pre-commit 20k WARN is cleared.
-
-## GOOD-TO-HAVES-09 — doc-note the WAL asymmetry between `reposix-core::open_audit_db` and `reposix-cache::open_cache_db`
-
-**Discovered during:** P90 90-05 (2026-07-04)
-
-**Size:** XS
-
-**Source:** `reposix-cache`'s `open_cache_db` sets `PRAGMA journal_mode=WAL`; `reposix-core`'s `open_audit_db` does not. Investigated during 90-05's security-waiver renewal (audit-immutability verifier reads both DBs) and confirmed NOT a bug: the audit DB is single-writer-per-process and append-only, so WAL's concurrent-reader benefit doesn't apply the same way; the asymmetry is a deliberate-by-outcome, undocumented state.
-
-**Acceptance:** A short code comment on `open_audit_db` (or a line in `docs/how-it-works/trust-model.md`) stating the asymmetry is intentional and why, so a future reader doesn't file it as a bug again.
-
-**Why deferred:** zero functional risk, pure documentation debt; 90-05's task envelope was waiver disposition, not code-comment polish.
-
-**Default disposition:** XS — always closes; fold into the next `reposix-core`/audit-touching phase.
-
-**STATUS:** RESOLVED (P97 Wave A, commit `302e8ec`) — **noticing bonus:** the target doc `docs/how-it-works/trust-model.md:76` was actively LYING ("Both tables use SQLite WAL"). Verified against code: `reposix-cache::open_cache_db` sets `PRAGMA journal_mode=WAL` (`db.rs:54`) but `reposix-core::open_audit_db` (`audit.rs:116-122`) sets NO journal mode → the audit DB uses SQLite's default rollback journal. Corrected the false claim AND documented the asymmetry as intentional (audit DB is single-writer-per-process + append-only, so WAL's concurrent-reader benefit doesn't apply the same way). docs-build gate green.
-
 ## GOOD-TO-HAVES-10 — `docs/reference/exit-codes.md` TL;DR table omits clap's own usage-error exit-2 layer
 
 **Discovered during:** P90 90-06 (2026-07-04)
@@ -347,22 +277,6 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 **Default disposition:** XS — always closes; fold into the next docs-touching phase or a `/reposix-quality-refresh docs/reference/cli.md` pass.
 
 **STATUS:** DEFERRED-v0.14.0 (docs-alignment-coupled) — same class as GTH-10: the Scope-column edit to `docs/reference/cli.md`'s exit-codes table DRIFTS the bound **P0** docs-alignment row `docs/reference/cli.md/exit_codes` (`walk: STALE_DOCS_DRIFT`). Recovery = `/reposix-quality-refresh docs/reference/cli.md` rebind (`doc-alignment.json` mint + binary = Wave B). Edit **REVERTED** to keep the P0 walk green. **Carry-forward finding (for the v0.14.0 fix):** the cli.md code-`2` row stays imprecise — it lists backend-unreachable/IO as exit `2`, but those are exit `1` for the `reposix` CLI per canonical `exit-codes.md` (exit `2` is clap pre-dispatch or the helper crash). The Scope-column annotation + the rebind should land together.
-
-## GOOD-TO-HAVES-13 — doc-note: sandbox `rg` binary breaks under process substitution
-
-**Discovered during:** P90 90-03 (2026-07-04)
-
-**Size:** XS
-
-**Source:** The `rg` (ripgrep) binary available in this agent sandbox is an emulation layer that breaks under process substitution (`<(...)`) constructs, unlike real ripgrep. Quality gates in this repo use `grep` by convention rather than `rg`, which sidesteps the issue, but the convention itself isn't documented anywhere an agent would find it before hitting the same breakage.
-
-**Acceptance:** A short note (CLAUDE.md "What to do when context fills" area, or a `quality/PROTOCOL.md` aside) stating: prefer `grep` over `rg` for process-substitution-heavy shell in this sandbox; `rg`'s emulation here doesn't support `<(...)`.
-
-**Why deferred:** pure agent-session grounding note, not a code or catalog change; noticed as an aside during 90-03's gate-authoring work, not itself in scope for the gate being authored.
-
-**Default disposition:** XS — always closes; fold into the next CLAUDE.md-touching commit.
-
-**STATUS:** RESOLVED (P97 Wave A, commit `302e8ec`) — added a "Sandbox shell gotcha — prefer `grep` over `rg`" aside to `quality/PROTOCOL.md` Step 6 (the read-first quality-gates surface), stating the sandbox `rg` emulation breaks under process substitution (`<(...)`) and gates use `grep` by convention. Chose PROTOCOL.md over root CLAUDE.md (GTH-13's other option) to keep the ≤40k root-CLAUDE budget and put the note where gate-shell authors read.
 
 ## GOOD-TO-HAVES-14 — helper `list for-push` reports `?` (unknown remote SHA), forcing a redundant export on every push
 

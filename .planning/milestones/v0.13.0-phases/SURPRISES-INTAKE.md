@@ -25,64 +25,6 @@
 
 ## Entries
 
-## Archived (terminal) entries — relocated
-
-> Terminal entries (RESOLVED / WONTFIX / DEFERRED-to-a-future-milestone) were
-> relocated by P96 Wave 3a to keep this working file focused on the ACTIVE drain
-> queue. **Pure relocation — no entry content was altered.** Archive home(s):
->
-> - [`SURPRISES-INTAKE-ARCHIVE-P78-P88.md`](./SURPRISES-INTAKE-ARCHIVE-P78-P88.md) — 5 entries
-> - [`SURPRISES-INTAKE-ARCHIVE-P89-P97.md`](./SURPRISES-INTAKE-ARCHIVE-P89-P97.md) — 32 entries
-
-<details><summary>Archived manifest (click)</summary>
-
-**SURPRISES-INTAKE-ARCHIVE-P78-P88.md:**
-
-- 2026-05-01 09:30 | discovered-by: P80 | severity: LOW  → **RESOLVED**
-- 2026-05-01 11:30 | discovered-by: P81-01-T04 | severity: LOW  → **RESOLVED**
-- 2026-05-01 11:00 | discovered-by: P81-01-T01 | severity: LOW  → **WONTFIX**
-- 2026-05-01 16:30 | discovered-by: P83-02-T02 | severity: LOW  → **RESOLVED**
-- 2026-05-01 16:43 | discovered-by: P84-01-T05 | severity: HIGH  → **DEFERRED/future-milestone**
-
-**SURPRISES-INTAKE-ARCHIVE-P89-P97.md:**
-
-- 2026-07-03 11:00 | discovered-by: resumption audit (8-week idle gap) | severity: HIGH  → **RESOLVED**
-- 2026-07-03 11:05 | discovered-by: resumption audit (8-week idle gap) | severity: MEDIUM  → **RESOLVED**
-- 2026-07-03 11:35 | discovered-by: resumption audit (8-week idle gap) | severity: MEDIUM  → **RESOLVED**
-- 2026-07-03 11:40 | discovered-by: resumption audit (8-week idle gap) | severity: LOW  → **RESOLVED**
-- 2026-07-03 20:16 | discovered-by: P89-02 | severity: LOW  → **RESOLVED**
-- 2026-07-03 21:00 | discovered-by: P89 orchestrator (CI triage) | severity: MEDIUM  → **RESOLVED**
-- 2026-07-03 21:00 | discovered-by: P89 orchestrator (owner .env note) | severity: LOW  → **RESOLVED**
-- 2026-07-03 21:35 | discovered-by: 89-07 | severity: LOW  → **RESOLVED-c0d5459**
-- 2026-07-04 05:10 | discovered-by: P89 cross-AI review (Codex leg) | severity: HIGH  → **RESOLVED**
-- 2026-07-04 05:10 | discovered-by: P89 cross-AI review (all three legs) | severity: HIGH  → **RESOLVED**
-- 2026-07-04 05:10 | discovered-by: P89 cross-AI review (Claude leg) | severity: MEDIUM  → **ROUTED-P91/future-milestone**
-- 2026-07-04 05:10 | discovered-by: P89 cross-AI review (independent leg) + coordinator repro | severity: MEDIUM  → **RESOLVED**
-- 2026-07-04 05:30 | discovered-by: steward-window (post-P89) | severity: MEDIUM  → **DEFERRED-P95/P97/future-milestone**
-- 2026-07-04 06:20 | discovered-by: Stage-1 Lane-A (QL-001 empirical reproduction) | severity: BLOCKER  → **RESOLVED**
-- 2026-07-04 05:40 | discovered-by: steward-window (post-P89) | severity: LOW  → **RESOLVED**
-- 2026-07-04 08:30 | discovered-by: Stage-2 catalog-row-minting | severity: MEDIUM  → **RESOLVED**
-- 2026-07-04 18:10 | discovered-by: quality-convergence connector re-audit | severity: HIGH  → **ROUTED-P95/future-milestone**
-- 2026-07-04 21:00 | discovered-by: P91 91-05 (vision-litmus real-run) | severity: BLOCKER  → **RESOLVED**
-- 2026-07-04 21:00 | discovered-by: P91 91-05 (vision-litmus real-run) | severity: MEDIUM  → **RESOLVED**
-- 2026-07-04 22:00 | discovered-by: P91 litmus-REOPEN (second real-run) | severity: BLOCKER  → **RESOLVED**
-- 2026-07-04 22:45 | discovered-by: P91 T2-REOPEN (fresh-eyes friction audit) | severity: HIGH (4 findings)  → **SUBBULLET-RESOLVED**
-- 2026-07-04 23:00 | discovered-by: P91 T2-REOPEN (second fresh-eyes run, real TokenWorld) | severity: MEDIUM (3 findin...  → **ROUTED/future-milestone**
-- 2026-07-05 | discovered-by: P91 CI-red fix executor (run 28724087420, pre-pr `agent-ux/real-git-push-e2e`) | severity...  → **RESOLVED**
-- 2026-07-05 | discovered-by: P91 fetch-path fix executor | severity: MEDIUM (latent CI-abort landmine)  → **RESOLVED**
-- 2026-07-05 | discovered-by: P91 fetch-path fix executor (run 28725302159, real-git-push-e2e Assertion 2) | severity: ...  → **RESOLVED**
-- 2026-07-05 | Recurring quality-runner self-mutation bug: catalog-first FAIL row minted missing `minted_at`, AND the r...  → **RESOLVED**
-- 2026-07-06 | `docs-alignment/walk` (P0) RED — P94 Fork A drifted 8 docs-alignment claims bound to `crates/reposix-cor...  → **RESOLVED**
-- 2026-07-05 | Pre-push BLOCKED: pre-existing `clippy::doc_markdown` errors in `crates/reposix-remote/tests/common.rs` ...  → **RESOLVED**
-- 2026-07-05 23:10 | discovered-by: P94 D2 lane | severity: HIGH → RESOLVED (2026-07-05, DP-2 root-cause `28855b8`)  → **RESOLVED**
-- 2026-07-05 23:12 | discovered-by: P94 D2 lane | severity: MEDIUM  → **RESOLVED**
-- 2026-07-05 | `list_changed_since` truncation UNDER-materializes (no completeness signal) | discovered-by: P94 Finish ...  → **RESOLVED**
-- 2026-07-06 | Batch docs-alignment REFRESH CANDIDATE: 5 rows the pre-push walk re-computes as STALE_TEST_DRIFT every p...  → **RESOLVED**
-
-</details>
-
----
-
 ## 2026-07-03 11:10 | discovered-by: resumption audit (8-week idle gap) | severity: MEDIUM
 
 **What:** The `quality-weekly` workflow is RED on main for 2 consecutive weeks (Jun 22 + Jun 29), failing at the "Generate verdict" step; nobody drained it during the idle gap.
@@ -253,26 +195,6 @@
 
 **STATUS:** DEFERRED-P96/P97 | Filed per 91-06 Task 5(i). Home: the next framework-fixes or catalog-honesty window (P96 or P97, whichever lands the next `quality/runners/_audit_field.py`-touching phase). Not blocking today's pre-push/pre-commit (both rows are `on-demand` cadence only, per their catalog entries), but the schema drift is real and reproducible right now — don't let a future `--cadence on-demand` run's FAIL surprise the next reader who assumes these two milestone-bounded historical rows are inert.
 
-## 2026-07-05 | git 2.43.0 (stock Ubuntu 24.04) fails every real single-backend `git push` outright | discovered-by: P92 T4 prove-before-fix executor | severity: HIGH
-
-**Elevated from `GOOD-TO-HAVES.md` (P92 T4 executor 2, this session):** a HIGH-severity defect breaking a SUPPORTED, currently-shipping git version belongs in the surprises intake (BROKEN/BLOCKING), not the improvements backlog — GOOD-TO-HAVES.md is for polish, not a regression that makes every real single-backend push fail outright on Ubuntu 24.04's stock git. Technical detail and fix sketch preserved verbatim below (originally filed by the P92 T4 prove-before-fix executor 2026-07-05).
-
-**What:** Reproduced via a throwaway `docker run ubuntu:24.04` (stock apt git = 2.43.0): a plain `git push origin main` against a `reposix init`'d tree (no mirror URL) fails immediately with exit 128 and NO helper-side output at all — `strace` shows the top-level `git push` process exits 128 BEFORE its own remote-helper subprocess even finishes. Root cause: git's transport-helper tries the advertised `stateless-connect` capability FIRST for the push direction too (`stateless-connect git-receive-pack`), and `crates/reposix-remote/src/stateless_connect.rs`'s `handle_stateless_connect` (service != "git-upload-pack" branch) replies with a custom `"unsupported service: {service}"` line instead of the literal `git-remote-helpers(7)`-mandated `fallback` sentinel. Per that spec, the three valid replies to a `connect`/`stateless-connect` request are: empty line (proceed), `fallback` (git retries via another capability), or "just exiting with error message printed (can't connect, don't bother trying to fall back)" — reposix's helper picks the THIRD option, so git never attempts the `export` capability the push actually needs. Confirmed version-windowed: git 2.54.0 (this project's CI runner, `gh run view 28726703296`) does NOT hit it, nor does old-enough git (this dev box's system git, 2.25.1, gated NOT-VERIFIED by the `>= 2.34` floor before it would matter) — the existing `stateless_connect_e2e.rs::stateless_connect_rejects_non_upload_pack_service` test already asserts the CURRENT (bug-preserving) `"unsupported service: ..."` reply shape, so fixing this would need that test's assertion updated too.
-
-**Why out-of-scope for P92:** orthogonal to T4/HIGH-1 (different file, different mechanism: `stateless_connect.rs`'s reply string, not `Cache::open`'s env scrub) and touches a wire-protocol contract an existing test already asserts the opposite of, so it's a scoped fix-plus-test-update task, not a same-session hand-wave alongside the SC2-SC5 audit-completeness work this executor was dispatched for.
-
-**Sketched resolution (fix sketch, unchanged from the original filing):** change `handle_stateless_connect`'s non-upload-pack branch to reply with the literal `fallback` line (not a custom string) when `service != "git-upload-pack"`, so git falls back to the `export` capability for push. Update `stateless_connect_e2e.rs::stateless_connect_rejects_non_upload_pack_service`'s asserted reply shape to match (it currently asserts the CURRENT bug-preserving reply — the assertion itself will need to flip alongside the fix, not just the production code). Add a regression test pinned to a specific git version window (or run in a container with git 2.43.x, per this session's `92-T4-REPRO-NOTES.md` container-repro pattern) proving a real single-backend push succeeds on that version.
-
-**Tagged for:** P94 (bus-push compatibility) — real, currently-reproducible, user-impacting (Ubuntu 24.04 LTS's stock git is a very common baseline for both human developers and CI runners other than this project's own).
-
-**STATUS:** RESOLVED (P97 Wave A reconciliation, 2026-07-05) — the `fallback`-sentinel fix
-shipped in P94: `handle_stateless_connect`'s non-`git-upload-pack` branch now replies with
-the git-mandated literal `fallback` line so git falls back to the `export` capability for
-push on git 2.43.x. The catalog row `agent-ux/p94-git243-fallback-sentinel` is **PASS**
-(`last_verified: 2026-07-06T03:41:43Z`, re-minted clean at `0bdd752`). Cited: P94 + that
-row. (The paired `stateless_connect_e2e.rs` assertion was flipped alongside the production
-fix, per this entry's own resolution sketch.)
-
 ## 2026-07-05 | TokenWorld two-writer conflict verifier does not exist — SC1 real-backend arm cannot be verified until built | discovered-by: P92 SC1 adjudication (D-P92-03) | severity: HIGH
 
 **What:** The P97 9th probe (`pre-release-real-backend`) MUST exercise a real-backend two-writer CONFLICT (reject → pull --rebase → push), not just single-writer push, to close SC1's real-backend arm. P92 SC1 accepted this gap by design (coverage_kind: real-backend, verified at P97 only). Both P92 executors independently identified building this as a genuine new artifact unwise to rush late-session: requires git>=2.34 container + a Confluence conflict fixture on the TokenWorld space + cleanup harness.
@@ -423,48 +345,6 @@ cargo/runner-touching, out of Wave A's planning-only scope).
 
 ---
 
-## 2026-07-05 | Catalog-freshness sweep needed before v0.13.0 milestone-close — an on-demand re-grade this session flipped several NON-P93 rows PASS↔FAIL | discovered-by: P93 close-out executor | severity: MEDIUM
-
-**What:** During the P93 close-out session, a `python3 quality/runners/run.py --cadence
-on-demand` re-grade ran as a real re-grade (not a phantom mutation) and flipped several
-NON-P93 catalog rows PASS↔FAIL: `agent-ux/p92-mid-stream-litmus-t1-t4`,
-`agent-ux/v0.13.0-tag-script-present`, `agent-ux/v0.13.0-retrospective-distilled`,
-`agent-ux/p87-surprises-absorption`, `agent-ux/p88-good-to-haves-drained`. These rows'
-committed catalog statuses are therefore STALE relative to what the runner just measured.
-`agent-ux/p92-mid-stream-litmus-t1-t4` flipping FAIL is plausibly the same git>=2.34/T4
-env-gate class that P93's RBF-LR-05 handles via a git-2.54 container — this is a
-hypothesis to verify, NOT an assumption to act on.
-
-**Why out-of-scope for the P93 close-out session:** the close-out charter is advancing
-durable state + routing findings for a phase already verified GREEN — characterizing five
-unrelated rows' re-grades (env-gate artifact vs. genuine regression, one by one) is real
-diagnostic work that would expand this session's scope well past its mandate, and doing it
-carelessly risks conflating an env-gate false-negative with an actual regression.
-
-**Sketched resolution:** before the v0.13.0 milestone-close (P97), run a dedicated
-catalog-freshness sweep: for each of the five flipped rows, (a) re-run its verifier in
-isolation, (b) determine whether the FAIL is env-gated (e.g. git version, missing creds,
-sandbox limitation — mirroring the git-2.34/T4 pattern P93's RBF-LR-05 already
-characterizes) or a genuine regression, and (c) fix the regression, renew a waiver with an
-honest `tracked_in`, or confirm the row's status now matches reality. Do this BEFORE
-milestone-close so P97's 9-probe verdict isn't built on stale sibling-row statuses.
-
-**Default disposition:** MEDIUM — pre-milestone-close health item; schedule in the
-P94–P97 debt-drain window, ideally as its own short lane rather than a rider on any single
-phase's mechanical close.
-
-**STATUS:** OPEN — P97 Wave A reconciliation, 2026-07-05: the **Wave-B `--persist` milestone
-mint IS the freshness sweep.** Running `run.py --cadence pre-release[-real-backend] --persist`
-at milestone-close re-grades every in-scope row and rewrites committed status to the live
-grade — exactly the per-row re-verification this entry asks for; the five flipped sibling rows
-(`p92-mid-stream-litmus-t1-t4`, `v0.13.0-tag-script-present`, `v0.13.0-retrospective-distilled`,
-`p87-surprises-absorption`, `p88-good-to-haves-drained`) land at their true grade in that mint.
-Wave A is planning-only (no cargo, no mint) and cannot run it. Kept OPEN until the Wave-B mint
-lands; if any flip proves a genuine regression (vs an env-gate false-negative like the
-git≥2.34/T4 class), Wave B loops it RED rather than tagging over it.
-
----
-
 ## 2026-07-05 | Pagination-truncation safety of sync's `prune_oid_map` — a truncated `list_records()` can DELETE oid_map rows for LIVE records beyond the cap | discovered-by: P93 DP-2 REOPEN re-review (relayed via coordinator, independently re-verified) | severity: HIGH
 
 **What:** D-P93-02's shipped fix (`meta::prune_oid_map`, commit `272882c`/`e246e84`)
@@ -550,78 +430,6 @@ the next planner; route to the P96/P97 milestone-close docs reconciliation (fres
 structure dimension).
 
 **STATUS:** OPEN
-
-## 2026-07-06 | docs-alignment walker FALSE-NEGATIVE: a multi-source row with an EMPTY `source_hashes` array silently skips source-drift detection | discovered-by: P94 close-out executor | severity: MEDIUM
-
-**What:** `crates/reposix-quality/src/commands/doc_alignment.rs:1119-1122` (the walk's
-per-source drift compare) short-circuits when the row's `source_hashes` array is empty:
-
-```rust
-let source_drift: Option<bool> = if row.source_hashes.is_empty() {
-    // No hashes recorded yet (e.g. retire-proposed rows or
-    // legacy rows without a stored hash). Skip drift compare.
-    None
-} else if cites.len() != row.source_hashes.len() { ... }
-```
-
-The intent (per the comment) is to skip retire-proposed / not-yet-bound rows. But the guard
-keys on `source_hashes.is_empty()`, not on bind-state — so ANY row that carries one or more
-`source` citations yet has an EMPTY `source_hashes` array (a hand-edited catalog, a partial
-migration, a bind that populated `tests`/`test_body_hashes` but not `source_hashes`, or a
-multi-source row whose hashes were dropped) is silently treated as "no drift to check." Its
-bound docs can then drift arbitrarily on disk and the P0 pre-push `docs-alignment/walk` gate
-will never fire `STALE_DOCS_DRIFT` for it — a false-negative that defeats the exact
-source-drift detection the P78 MULTI-SOURCE-WATCH-01 per-index loop (lines 1106-1116, the
-`else` arm) was built to provide. The length-mismatch arm (`cites.len() !=
-source_hashes.len()`) already treats a partially-populated array as drift; only the
-fully-empty array escapes, which is the more dangerous case (a source with docs but zero
-watch coverage looks identical to a legitimately-unbound row).
-
-**Why out-of-scope for the P94 close-out:** this is a `reposix-quality` binary code change
-(the walker's drift-state machine) with its own test-coverage obligation — a cargo-touching
-`crates/reposix-quality/` fix, orthogonal to a STATE-advance/intake-filing close-out lane
-that needs no cargo.
-
-**Sketched resolution:** Backfill `source_hashes` in `Catalog::load` so the parallel-array
-invariant (`source_hashes.len() == source.as_slice().len()`) holds for every non-retired,
-source-citing row at load time — mirroring the P78 MULTI-SOURCE-WATCH-01 migration that
-already backfills for the write path. Then tighten the `is_empty()` guard to key on
-bind-state (retire-proposed / `next_action == UNBOUND`) rather than on an empty hash array,
-so a source-citing-but-hashless row is treated as DRIFT (fail-loud) rather than skipped
-(fail-silent). Add a regression fixture: a synthetic row with one `source` cite and an empty
-`source_hashes` whose bound doc has drifted — the tightened walk must flag it
-`STALE_DOCS_DRIFT`, proving the false-negative window is closed. Route to P96/P97
-(quality-framework debt-drain window), natural pairing with the sibling `source_hashes`
-parallel-array work and the recurring catalog self-mutation fix.
-
-**Default disposition:** MEDIUM — low current blast radius (well-formed rows from the normal
-`bind` path always carry hashes, so this bites only hand-edits / partial migrations), but it
-is a silent-hole in a P0 pre-push honesty gate, which is exactly the failure class the
-docs-alignment dimension exists to close. Route to P96/P97.
-
-**Forward pre-audit (filed P96 Wave 3a, post-v0.14.0 gate):** Before any post-v0.14.0
-retirement of the legacy `source_hash` / empty-`source_hashes` handling, run a pre-audit
-confirming ZERO residual empty-`source_hashes` legacy `BOUND` rows remain. The P96
-same-file-multi migration cleared the current 9 via load-collapse (commit `17a7b02`), but a
-retirement that assumes the parallel-array invariant always holds must re-verify the count is
-still 0 at retirement time — a hand-edited or partially-migrated `BOUND` row with a source
-cite but an empty hash array would otherwise silently lose source-drift coverage (the exact
-false-negative this entry documents). Cheap check: assert no non-retired, source-citing row
-has an empty `source_hashes` at `Catalog::load` BEFORE deleting the `is_empty()` skip arm.
-
-**STATUS:** RESOLVED (false-negative closed) — P97 Wave A reconciliation, 2026-07-05,
-verified against current code. The walker now keys the empty-`source_hashes` handling on
-**BIND STATE, not the empty array**: `doc_alignment.rs:1126-1152` treats a row with empty
-`source_hashes` AND `last_verdict == Bound` as `Some(true)` → `STALE_DOCS_DRIFT` (fail-loud),
-and only skips (`None`) for non-BOUND states — so a BOUND source-citing row can no longer
-silently escape drift detection. `Catalog::load` backfills legacy single-cite + same-file-multi
-rows into `source_hashes` (`catalog.rs:501-519`), and the 9 legacy same-file-multi rows were
-collapsed at `17a7b02`. The P96 verifier `walk_multi_source_stable_no_false_drift`
-(`crates/reposix-quality/tests/walk.rs`) PASSED. **Trimmed residual → DEFERRED-v0.14.0:** the
-different-file-Multi legacy / `source_hash: None` case-3 deliberately leaves `source_hashes`
-empty (unreconstructable) and rests on the bind-state fail-loud; the **Forward pre-audit** para
-above is the post-v0.14.0 gate to run BEFORE retiring the legacy `source_hash` handling. Only
-the retirement-gate residual is v0.14.0 scope — the false-negative bug itself is fixed.
 
 ---
 
