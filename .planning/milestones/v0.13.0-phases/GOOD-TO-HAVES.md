@@ -47,9 +47,9 @@
 | 07 | GTH-07 move `parse_rfc3339` → `_freshness.py` | DEFERRED-v0.14.0 | runner/code XS — standing rationale |
 | 08 | GTH-08 trim/split `raise-list-p90.md` <20k | **RESOLVING-P97** | doc XS — executed Part 2 |
 | 09 | GTH-09 WAL-asymmetry intentional doc note | **RESOLVING-P97** | doc XS — executed Part 2 |
-| 10 | GTH-10 exit-codes clap-2 vs handler-2 footnote | **RESOLVING-P97** | doc XS — executed Part 2 |
+| 10 | GTH-10 exit-codes clap-2 vs handler-2 footnote | DEFERRED-v0.14.0 (docs-alignment-coupled) | footnote drifts bound P0 row `exit-codes-locked`; rebind = catalog+binary (Wave B) — **reverted**, see entry |
 | 11 | GTH-11 extend `subcommand_help_renders` beyond 3/15 | DEFERRED-v0.14.0 | cargo test-coverage widening |
-| 12 | GTH-12 annotate `cli.md` exit-codes helper/CLI/shared | **RESOLVING-P97** | doc XS — executed Part 2 |
+| 12 | GTH-12 annotate `cli.md` exit-codes helper/CLI/shared | DEFERRED-v0.14.0 (docs-alignment-coupled) | Scope-column edit drifts bound P0 row `cli.md/exit_codes`; rebind = catalog+binary (Wave B) — **reverted**, see entry |
 | 13 | GTH-13 grep-over-rg sandbox note | **RESOLVING-P97** | doc XS — executed Part 2 |
 | 14 | GTH-14 helper `list for-push` reports `?` | DEFERRED-v0.14.0 (helper-protocol/perf) | M; `saw_commit` guard already removes the data-loss danger |
 | 15 | GTH-15 consolidated file-size overages (9 files) | DEFERRED-v0.14.0 (structure-hygiene, pre-2026-08-08) | M split work; waiver-renewal itself → Wave-B mint (see FLAG below) |
@@ -78,7 +78,7 @@
 | 38 | Split `cache_coherence.rs` 23.4k | DEFERRED-v0.14.0 | LOW/S cargo test split; bundle w/ crates-source budget rollout |
 | 39 | `catalog-immutable-on-read` cadence coverage | DEFERRED-v0.14.0 | XS/LOW gate+runner; pairs w/ run.py persist-gate extraction |
 
-**Tally:** RESOLVING-P97 = 6 · DEFERRED-v0.14.0 (incl. `-target`) = 28 · DEFERRED-post-tag = 3 · DEFERRED-to-Wave-B-mint = 1 · OWNER-ACTION = 1 → **39 entry-topics across 40 STATUS lines** (GTH-01 is one PARTIAL line; all else OPEN). **Part 2 update:** all 6 RESOLVING-P97 items (GTH-02/08/09/10/12/13) landed at commit `302e8ec` — each entry's `STATUS` is now RESOLVED with that SHA; two carried noticing-bonus doc-lie corrections (GTH-09 WAL claim, GTH-12 exit-2 row).
+**Tally (post-Part-2 revision):** RESOLVING-P97 = 4 · DEFERRED-v0.14.0 (incl. `-target`) = 30 · DEFERRED-post-tag = 3 · DEFERRED-to-Wave-B-mint = 1 · OWNER-ACTION = 1 → **39 entry-topics across 40 STATUS lines** (GTH-01 is one PARTIAL line; all else OPEN). **Part 2 outcome:** **4** items landed RESOLVED at commit `302e8ec` — GTH-02 (linter regex), GTH-08 (raise-list split), GTH-09 (trust-model WAL doc-lie corrected), GTH-13 (grep-vs-rg note). **2 items reclassified DEFERRED-v0.14.0** — GTH-10 + GTH-12 turned out to be **docs-alignment-coupled**: editing `docs/reference/exit-codes.md` / `cli.md` drifts their bound **P0** `docs-alignment/walk` rows, whose only recovery is a `doc-alignment.json` catalog rebind (Wave B + `reposix-quality` binary), out of Wave-A scope. Both edits were **reverted** to keep the P0 pre-push gate green; re-apply together with the rebind in v0.14.0.
 
 **FLAG — file-size waiver understatement (routed to Wave B, NOT edited here):** The
 `structure/file-size-limits` waiver in `quality/catalogs/freshness-invariants.json` says
@@ -314,7 +314,7 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 
 **Default disposition:** XS — always closes; fold into the next docs-touching phase or a `/reposix-quality-refresh docs/reference/exit-codes.md` pass.
 
-**STATUS:** RESOLVED (P97 Wave A, commit `302e8ec`) — added a "Two exit-`2` layers" callout to the `docs/reference/exit-codes.md` TL;DR table: pre-dispatch clap usage-error exit-2 (either binary, before any handler) vs post-dispatch `git-remote-reposix` crash exit-2 (`real_main` `Err`); notes the `reposix` CLI has no post-dispatch exit-2 (handlers return `0`/`1` only). docs-build gate green.
+**STATUS:** DEFERRED-v0.14.0 (docs-alignment-coupled) — P97 Wave A drafted the "Two exit-`2` layers" footnote, but the edit DRIFTS the bound **P0** docs-alignment row `docs/decisions/009-stability-commitment/exit-codes-locked` (`walk: STALE_DOCS_DRIFT sources_drifted=[0] on docs/reference/exit-codes.md`). Recovery is a `/reposix-quality-refresh docs/reference/exit-codes.md` rebind = a `doc-alignment.json` catalog mint + the `reposix-quality` binary — both **out of Wave A's no-catalog / no-cargo scope** (Wave B owns catalogs). Edit **REVERTED** to keep the P0 pre-push walk green; the footnote + its rebind must land together in a docs-alignment-touching v0.14.0 window (or a Wave-B catalog mint). No content lost — the footnote is re-appliable verbatim. **Lesson:** "safe doc-only XS" is NOT safe when the doc carries a bound docs-alignment claim.
 
 ## GOOD-TO-HAVES-11 — extend `subcommand_help_renders` (cli.rs) beyond 3/15 spot-checked subcommands
 
@@ -346,7 +346,7 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 
 **Default disposition:** XS — always closes; fold into the next docs-touching phase or a `/reposix-quality-refresh docs/reference/cli.md` pass.
 
-**STATUS:** RESOLVED (P97 Wave A, commit `302e8ec`) — added a **Scope** column (shared / CLI-only / helper-only) to `docs/reference/cli.md`'s exit-codes table. **Noticing bonus:** the code-`2` row was inaccurate ("backend unreachable, IO error, malformed spec") — those are exit `1` handled errors for the `reposix` CLI per canonical `exit-codes.md`; corrected to move them to code `1` and describe code `2`'s real two sources (clap usage error = shared; helper crash = helper-only), with a cross-link to `exit-codes.md`. docs-build gate green.
+**STATUS:** DEFERRED-v0.14.0 (docs-alignment-coupled) — same class as GTH-10: the Scope-column edit to `docs/reference/cli.md`'s exit-codes table DRIFTS the bound **P0** docs-alignment row `docs/reference/cli.md/exit_codes` (`walk: STALE_DOCS_DRIFT`). Recovery = `/reposix-quality-refresh docs/reference/cli.md` rebind (`doc-alignment.json` mint + binary = Wave B). Edit **REVERTED** to keep the P0 walk green. **Carry-forward finding (for the v0.14.0 fix):** the cli.md code-`2` row stays imprecise — it lists backend-unreachable/IO as exit `2`, but those are exit `1` for the `reposix` CLI per canonical `exit-codes.md` (exit `2` is clap pre-dispatch or the helper crash). The Scope-column annotation + the rebind should land together.
 
 ## GOOD-TO-HAVES-13 — doc-note: sandbox `rg` binary breaks under process substitution
 

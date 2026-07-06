@@ -344,12 +344,8 @@ See the [v0.9.0 architecture-pivot summary](https://github.com/reubenjohn/reposi
 
 ## Exit codes
 
-The **Scope** column marks whether a code is emitted by the `reposix` CLI only, the
-`git-remote-reposix` helper only, or both (`shared`). Full per-subcommand breakdown:
-[exit-codes](exit-codes.md).
-
-| Code | Scope | Meaning |
-|---|---|---|
-| 0 | shared | Success — both the `reposix` CLI and the `git-remote-reposix` helper. |
-| 1 | shared | Expected/handled failure. **CLI:** any `anyhow` handler error — invalid `<backend>::<project>` spec, backend unreachable, IO/network error, SG-02 bulk-delete refusal. **Helper:** push-time conflict (git surfaces `! [remote rejected]`). |
-| 2 | shared (clap) · helper-only (crash) | **Pre-dispatch — `shared`:** [clap](https://docs.rs/clap) usage error (missing required arg, unknown flag) on *either* binary, before any handler runs. **Post-dispatch — `helper-only`:** `git-remote-reposix` crash (unrecoverable `real_main` `Err`). The `reposix` CLI has **no** post-dispatch `2` — its handlers return `0`/`1` only, so a `reposix` exit `2` is always the clap layer. |
+| Code | Meaning |
+|---|---|
+| 0 | Success. |
+| 1 | Expected failure (e.g. SG-02 bulk-delete refusal, push-time conflict). |
+| 2 | Unexpected error (backend unreachable, IO error, malformed spec). |
