@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
 mode: serial-workstreams
-status: executing-p94-post-close-drain
+status: executing-p95-post-close-drain
 last_updated: "2026-07-05"
-last_activity: 2026-07-05 — P94 CLOSED GREEN. Unbiased verdict at quality/reports/verdicts/p94/VERDICT.md (all 4 P94 rows PASS by executed evidence; verdict commit 0d3c2f9, code HEAD 46bd1fa). Outcomes: D1 pagination-prune completeness-gate (Fork A gates prune_oid_map on a connector list_records_complete signal + Fork B idempotent delete-of-absent) + jira/confluence cursor-completeness hardening; D2 the git-2.43 single-backend push regression's REAL fix = helper answers `option object-format` with `ok` (fallback sentinel was a red herring), container-proven on ubuntu:24.04/git-2.43; D3 badges adjudicated TRANSIENT + retry/backoff; D4 freshness sweep = 0 unaccounted regressions. The 4 catalog rows stay NOT-VERIFIED on disk — the runner self-mutation bug blocks a clean 4-row mint, so VERDICT.md (0d3c2f9) is the authoritative GREEN record. Carry-forwards: P95 → marker footgun + docs-alignment refresh (5 STALE_TEST_DRIFT rows + P94 Fork-A backend.rs drift); P96 (OP-8 Slot 1) → quality-runner catalog self-mutation (HIGH, now self-grades phase rows + corrupts mid-sweep reads) + intake-file bloat split + list_changed_since under-materialization + source_hashes walker false-negative; P97 (OP-8 Slot 2 + milestone-close) → 9th-probe pre-release-real-backend (TokenWorld two-writer + RBF-LR-03), OP-9 RETROSPECTIVE, PR #61 decision.
+last_activity: "2026-07-05 — P95 CLOSED GREEN. Unbiased verdict at quality/reports/verdicts/p95/VERDICT.md (verdict commit e1d73d8, graded code HEAD da63a85). Marker-footgun resolved as the test-name-honesty 6-line-window doc pass (doc-only; the marker's 6-line lookback window is now documented, and a preamble-anchored robust-fix was filed as a LOW GOOD-TO-HAVE rather than shipped). Docs-alignment 17-row refresh landed (claims_bound=261), re-binding the 5 STALE_TEST_DRIFT rows plus the P94 Fork-A backend.rs list_records_complete drift. Carry-forwards — P96 (OP-8 Slot 1, SURPRISES-INTAKE drain): quality-runner self-mutation bug (HIGH; real validate-before-persist fix in the pre-push/runner path, verified NOT the walk verb) + intake-file bloat split (SURPRISES ~182k / GOOD-TO-HAVES ~83k, both over the 20k budget) + list_changed_since under-materialization (MEDIUM) + source_hashes false-negative (doc_alignment.rs:1119-1122, MEDIUM) + P94 4-row clean re-mint (unblocked once the self-mutation bug is fixed) + bind->summary.last_walked refresh nit; P97 (OP-8 Slot 2 + milestone-close): non-skippable 9th probe pre-release-real-backend (TokenWorld two-writer + RBF-LR-03), OP-9 RETROSPECTIVE distillation, PR #61 decision."
 workstreams:
   workstream_a:
     milestone: v0.13.0
     milestone_name: DVCS over REST (extended)
     status: executing  # P89 execution started 2026-07-03 (top-level orchestration mode)
     phases_total: 20  # P78-P97 (P78-P88 shipped + P89-P97 extension)
-    phases_completed: 17  # P78-P94
-    next_phase: P95  # P94 CLOSED GREEN 2026-07-05 (verdict quality/reports/verdicts/p94/VERDICT.md, verdict commit 0d3c2f9, code HEAD 46bd1fa); P95 next — marker footgun + P95-routed docs-alignment refresh
+    phases_completed: 18  # P78-P95
+    next_phase: P96  # P95 CLOSED GREEN 2026-07-05 (verdict quality/reports/verdicts/p95/VERDICT.md, verdict commit e1d73d8, graded code HEAD da63a85); P96 next — OP-8 Slot 1 SURPRISES-INTAKE drain
     blocks_tag: true  # v0.13.0 tag does NOT push until P97 GREEN; tag push delegated to orchestrator per OD-3
   workstream_b:
     milestone: v0.13.2
@@ -33,10 +33,10 @@ workstreams:
 
 ### Workstream A — v0.13.0 (extended) — EXECUTING
 
-Phase: P94 CLOSED GREEN 2026-07-05. Unbiased verdict at `quality/reports/verdicts/p94/VERDICT.md` (all 4 P94 rows PASS by executed evidence — verdict commit `0d3c2f9`, code HEAD `46bd1fa`; the 4 catalog rows stay NOT-VERIFIED on disk because the runner self-mutation bug blocks a clean 4-row mint, so VERDICT.md is the authoritative GREEN record). Real-backend frictions resolved: **D1** pagination-prune completeness-gate — Fork A gates `prune_oid_map` on a connector `list_records_complete` signal so a truncated listing never prunes live rows beyond the cap, Fork B makes delete-of-already-absent idempotent — plus jira/confluence cursor-completeness hardening; **D2** the git-2.43 single-backend push regression's REAL fix is the helper answering `option object-format` with `ok` (the fallback sentinel was a red herring), container-proven on stock ubuntu:24.04 / git 2.43.0; **D3** badge flake adjudicated TRANSIENT + retry/backoff added; **D4** catalog-freshness sweep = 0 unaccounted regressions.
-Plan: shipped — plan + sweep evidence at `.planning/phases/94-real-backend-frictions/`; the P94 close-out (STATE advance + intake filings + row-mint adjudication) is this session.
-Status: P94 GREEN — 17/20 phases complete (P78–P94 shipped); next P95. v0.13.0 tag held until P97 GREEN (tag push delegated to orchestrator per OD-3).
-Next agent action: plan + execute P95 (marker footgun + P95-routed docs-alignment refresh). Depends on P94 GREEN — satisfied. Carry-forwards: **P95** → marker footgun + docs-alignment refresh (the 5 STALE_TEST_DRIFT rows `exit-codes-locked`/`ci-badge`/`quality-score-badge`/`quality-weekly-badge`/`bulk-delete-override-tag` the pre-push walk self-mutates + the P94 Fork-A `backend.rs` `list_records_complete` hash-drift, all needing a top-level `/reposix-quality-refresh` re-bind); **P96** (OP-8 Slot 1) → quality-runner catalog self-mutation (HIGH — now self-GRADES phase rows + corrupts mid-sweep catalog reads; fix must validate-before-persist and never write phase-row grades) + intake-file bloat split (SURPRISES ~169k, GOOD-TO-HAVES ~78k, both far over the 20k budget) + `list_changed_since` under-materialization + `source_hashes` walker false-negative; **P97** (OP-8 Slot 2 + milestone-close) → non-skippable 9th probe `pre-release-real-backend` (TokenWorld two-writer + RBF-LR-03), OP-9 RETROSPECTIVE distillation, PR #61 decision.
+Phase: P95 CLOSED GREEN 2026-07-05. Unbiased verdict at `quality/reports/verdicts/p95/VERDICT.md` (verdict commit `e1d73d8`, graded code HEAD `da63a85`). Outcomes: the **marker-footgun** was resolved as the test-name-honesty **6-line-window doc pass** — doc-only; the marker's 6-line lookback window is now documented, and a preamble-anchored robust-fix was filed as a **LOW** GOOD-TO-HAVE rather than shipped. The **docs-alignment 17-row refresh** landed (`claims_bound=261`), re-binding the 5 STALE_TEST_DRIFT rows `exit-codes-locked`/`ci-badge`/`quality-score-badge`/`quality-weekly-badge`/`bulk-delete-override-tag` plus the P94 Fork-A `backend.rs` `list_records_complete` hash-drift.
+Plan: shipped — plan + refresh evidence under `.planning/phases/95-*/`; the P95 close-out (STATE advance to P96) is this session.
+Status: P95 GREEN — 18/20 phases complete (P78–P95 shipped); next P96. v0.13.0 tag held until P97 GREEN (tag push delegated to orchestrator per OD-3).
+Next agent action: plan + execute **P96** (OP-8 Slot 1, SURPRISES-INTAKE drain). Depends on P95 GREEN — satisfied. Carry-forwards: **P96** (OP-8 Slot 1) → quality-runner self-mutation bug (**HIGH** — the real fix is validate-before-persist in the pre-push/runner path, verified NOT the walk verb) + intake-file bloat split (SURPRISES ~182k / GOOD-TO-HAVES ~83k, both over the 20k budget) + `list_changed_since` under-materialization (**MEDIUM**) + `source_hashes` false-negative (`doc_alignment.rs:1119-1122`, **MEDIUM**) + P94 4-row clean re-mint (unblocked once the self-mutation bug is fixed) + `bind`→`summary.last_walked` refresh nit; **P97** (OP-8 Slot 2 + milestone-close) → non-skippable 9th probe `pre-release-real-backend` (TokenWorld two-writer + RBF-LR-03), OP-9 RETROSPECTIVE distillation, PR #61 decision.
 
 ### Workstream B — v0.13.2 — QUEUED (RESEQUENCED per OD-4)
 
@@ -120,6 +120,6 @@ Historical phase-by-phase contribution narrative lives in per-milestone ARCHIVE 
 
 ## Session Continuity
 
-Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current cursor is "plan + execute P95 (marker footgun + P95-routed docs-alignment refresh), top-level mode" — P94 CLOSED GREEN 2026-07-05 (verdict commit 0d3c2f9, code HEAD 46bd1fa). Workstream B stays queued behind A per OD-3.
+Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current cursor is "plan + execute P96 (OP-8 Slot 1, SURPRISES-INTAKE drain), top-level mode" — P95 CLOSED GREEN 2026-07-05 (verdict commit e1d73d8, graded code HEAD da63a85). Workstream B stays queued behind A per OD-3.
 
 Top-level session handover: `.planning/SESSION-HANDOVER.md` (whole-session rotation handover for session 7e2a4cf2, 2026-07-04/05; distinct from per-phase relief handovers under `.planning/phases/`).
