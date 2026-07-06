@@ -650,7 +650,7 @@ See the companion `GOOD-TO-HAVES.md` for the same-window disposition of the P92-
 
 **STATUS:** OPEN (staged for owner action)
 
-## 2026-07-05 | Recurring quality-runner self-mutation bug: catalog-first FAIL row minted missing `minted_at` — same `git checkout HEAD -- <catalog>` workaround recurring across P78/P91/P93 (3x, never permanently fixed) | discovered-by: P93 Wave 1 de-risk executor | severity: HIGH
+## 2026-07-05 | Recurring quality-runner self-mutation bug: catalog-first FAIL row minted missing `minted_at` — same `git checkout HEAD -- <catalog>` workaround recurring across P78/P91/P93/P94 (4x, never permanently fixed) | discovered-by: P93 Wave 1 de-risk executor | severity: HIGH
 
 **What:** `quality/runners/run.py` mutates the committed catalog JSON files in place as a
 side effect of grading (catalog-first state mutation — the runner writes verdicts back
@@ -691,6 +691,84 @@ a fourth ad hoc workaround. Propose scheduling as a dedicated `quality/runners/`
 task in that window (natural fit alongside GOOD-TO-HAVES-16's `--dry-run` flag and
 GOOD-TO-HAVES-03's `--row`/`--dimension` scope-flag work, all in the same `run.py`
 surface).
+
+**FIRED AGAIN — 4th occurrence (2026-07-06, P94 D4 catalog-freshness sweep, fired-count 3→4):**
+The `94-D4-sweep.sh` all-cadence sweep mutated **6** committed catalog files in place;
+reverted with `git checkout HEAD -- quality/catalogs/` (the same recurring workaround this
+entry predicted). Exact rows mutated this occurrence:
+- `agent-ux.json`: `p87-surprises-absorption`, `p88-good-to-haves-drained`,
+  `v0.13.0-tag-script-present`, `v0.13.0-retrospective-distilled` (PASS→FAIL + `last_verified`
+  bumped 2026-05-01→2026-07-04); `p92-mid-stream-litmus-t1-t4` (NOT-VERIFIED→PASS);
+  `p94-pagination-prune-completeness-gate`, `p94-git243-fallback-sentinel` (NOT-VERIFIED→PASS).
+- `docs-build.json`: `p94-badges-real-vs-transient` (NOT-VERIFIED→PASS).
+- `freshness-invariants.json`: `docs-alignment/walk` (PASS→FAIL),
+  `structure/p94-catalog-freshness-sweep` (NOT-VERIFIED→FAIL).
+- `release-assets.json`: `release/cargo-binstall-resolves` (NOT-VERIFIED→FAIL).
+- `subjective-rubrics.json`: `subjective/dvcs-cold-reader` (NOT-VERIFIED→PARTIAL).
+- `doc-alignment.json`: timestamp-only churn (no status flip).
+
+**NEW, WORSE MANIFESTATION captured this occurrence (net-new data for the P96 fix):** the
+mutation is not merely cosmetic churn — bumping a **legacy** row's `last_verified` past a P90
+validation cutoff makes the whole catalog **fail to load** (`_audit_field.validate_row`
+SystemExit) on the NEXT cadence, TRUNCATING the sweep:
+- `release/cargo-binstall-resolves` FAILed (post-release), runner wrote `last_verified:
+  2026-07-06` but the row is legacy (no `minted_at`) → on the next cadence (on-demand)
+  `release-assets.json` refused to load: *"last_verified >= 2026-07-05 ... but lacks a
+  write-once minted_at anchor (D90-03)"* → on-demand aborted before grading `release-assets`.
+- `agent-ux/p87-surprises-absorption` (legacy, no `claim_vs_assertion_audit`) got its
+  `last_verified` bumped past 2026-05-08 → `agent-ux.json` refused to load on the
+  `pre-release-real-backend` cadence → that cadence never ran at all.
+So the runner can corrupt its OWN subsequent reads within a single sweep. The P96 fix must
+either (a) refuse to write a row it would then reject at load (validate-before-persist), or
+(b) never bump `last_verified` on a legacy row that lacks the newer required field. This is
+data for P96, NOT fixed here (per P94 D4 charter: do NOT fix the runner in this lane).
+
+**Default disposition:** HIGH — actionable and non-blocking (the existing workaround is
+safe and well-understood), but a real fix belongs in the P94–P97 debt-drain window, not
+a fourth ad hoc workaround. Propose scheduling as a dedicated `quality/runners/`-touching
+task in that window (natural fit alongside GOOD-TO-HAVES-16's `--dry-run` flag and
+GOOD-TO-HAVES-03's `--row`/`--dimension` scope-flag work, all in the same `run.py`
+surface). The 4th occurrence has now happened exactly as this entry predicted — the
+validate-before-persist angle is elevated by the load-corruption evidence above.
+
+**STATUS:** OPEN
+
+## 2026-07-06 | `docs-alignment/walk` (P0) RED — P94 Fork A drifted 8 docs-alignment claims bound to `crates/reposix-core/src/backend.rs`; needs a top-level `/reposix-quality-refresh` (unreachable from inside `/gsd-execute-phase`) | discovered-by: P94 D4 catalog-freshness sweep | severity: HIGH (blocks v0.13.0 milestone-close pre-push)
+
+**What:** The P94 D4 all-cadence sweep re-graded `docs-alignment/walk` (P0, pre-push +
+pre-pr) from a stale PASS to **FAIL**. Root cause: `STALE_DOCS_DRIFT` on
+`crates/reposix-core/src/backend.rs` — its content hash changed, drifting 8
+`docs/connectors/guide/*` BackendConnector-trait claims (`trait-method-count-eight`,
+`backendconnector-{create,get,list-changed-since,list-records,name,root-collection-name,
+supports}-method`). The most-recent (and only P94) change to that file is Fork A commit
+`5cb9a14` ("gate prune_oid_map on connector completeness signal"), which ADDED `Listing`
++ `list_records_complete`. That legitimate feature edit is what drifted the bound hashes.
+
+**Why it matters:** `docs-alignment/walk` is a P0 pre-push gate. Left RED, the v0.13.0
+milestone-close `git push origin main` will BLOCK on it. It is NOT a git<2.34 env-gate,
+NOT a silent regression (found + root-caused by the sweep), and NOT broken behavior (the
+Fork A behavior is proven GREEN by `agent-ux/p94-pagination-prune-completeness-gate`,
+which PASSED). It is a docs-alignment hash-refresh-certificate obligation: the docs are
+very likely still accurate (a method was added, none removed), the BINDINGS just need
+re-hashing.
+
+**Why NOT fixed in this lane:** the resolution is a top-level Claude session running
+`/reposix-quality-refresh crates/reposix-core/src/backend.rs` (or
+`/reposix-quality-backfill`). Per `.planning/CLAUDE.md` ("Orchestration-shaped phases run
+at top-level") + the row's own owner_hint, that slash command CANNOT run from inside
+`/gsd-execute-phase` — the depth-2 fan-out is unreachable in a `gsd-executor`. This P94
+lane is an executor; it can diagnose but not refresh.
+
+**Acceptance:** From a fresh top-level session, run `/reposix-quality-refresh
+crates/reposix-core/src/backend.rs`, review that the 8 `docs/connectors/guide/*` claims
+still read true against the new `backend.rs` (they should — `list_records_complete` is
+additive), then `bind` the refreshed hashes and re-run `quality/gates/docs-alignment/walk.sh`
+to GREEN before the v0.13.0 milestone-close push. If any of the 8 claims is now
+substantively wrong, fix the doc first, then re-bind.
+
+**Default disposition:** HIGH — must be cleared before v0.13.0 milestone-close (P0
+pre-push gate). Reversible (a refresh certificate + re-bind, no behavior change). REPORTED
+to the coordinator/owner in the P94 D4 lane-B report.
 
 **STATUS:** OPEN
 

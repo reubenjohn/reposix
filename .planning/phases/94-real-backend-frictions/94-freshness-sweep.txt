@@ -1,0 +1,294 @@
+# P94 D4 — catalog-freshness sweep (all cadences, sequential)
+# generated: 2026-07-06T00:01:24Z
+# git HEAD: 34b4978
+# git version: git version 2.25.1
+# NOTE: run.py has no --all flag; canonical sweep = every cadence once (GOOD-TO-HAVES-03).
+
+################################################################################
+## CADENCE: pre-commit   (00:01:24Z)
+################################################################################
+quality/runners/run.py --cadence pre-commit
+  catalog: freshness-invariants.json (31 rows; 2 in scope)
+    [WAIVED       ] structure/file-size-limits  (P1, 0.00s) -> waived until 2026-08-08T00:00:00Z — Re-instates the original 'warn-now, block-later' contract fr
+    [PASS         ] structure/banned-production-tokens  (P1, 0.14s)
+summary: 1 PASS, 0 FAIL, 0 PARTIAL, 1 WAIVED, 0 NOT-VERIFIED -> exit=0
+>>> cadence pre-commit run.py exit=0
+
+################################################################################
+## CADENCE: pre-push   (00:01:24Z)
+################################################################################
+quality/runners/run.py --cadence pre-push
+  catalog: agent-ux.json (54 rows; 5 in scope)
+    [PASS         ] agent-ux/milestone-adversarial-pass  (P0, 0.09s)
+    [PASS         ] agent-ux/kind-shell-subprocess-worked-example  (P1, 0.06s)
+    [PASS         ] agent-ux/test-name-vs-asserts  (P1, 0.66s)
+    [PASS         ] agent-ux/absorption-honesty-template-present  (P1, 0.01s)
+    [PASS         ] agent-ux/hook-throttle  (P1, 2.02s)
+  catalog: code.json (7 rows; 5 in scope)
+    [PASS         ] code/clippy-lint-loaded  (P1, 18.40s)
+    [PASS         ] code/cargo-fmt-check  (P1, 0.73s)
+    [PASS         ] code/cargo-clippy-warnings  (P1, 0.36s)
+    [PASS         ] code/fixtures-valid  (P2, 0.03s)
+    [PASS         ] code/shell-coverage  (P2, 31.91s)
+  catalog: docs-build.json (5 rows; 5 in scope)
+    [PASS         ] docs-build/mkdocs-strict  (P1, 2.23s)
+    [PASS         ] docs-build/mermaid-renders  (P1, 0.14s)
+    [PASS         ] docs-build/link-resolution  (P2, 0.02s)
+    [PASS         ] docs-build/badges-resolve  (P2, 6.19s)
+    [PASS         ] docs-build/p94-badges-real-vs-transient  (P2, 1.81s)
+  catalog: docs-reproducible.json (9 rows; 1 in scope)
+    [PASS         ] docs-repro/snippet-coverage  (P1, 0.03s)
+  catalog: freshness-invariants.json (31 rows; 29 in scope)
+    [PASS         ] structure/install-leads-with-pkg-mgr-docs-index  (P0, 0.03s)
+    [PASS         ] structure/install-leads-with-pkg-mgr-readme  (P0, 0.03s)
+    [PASS         ] structure/cred-hygiene  (P0, 0.01s)
+    [PASS         ] structure/doc-alignment-catalog-present  (P0, 0.03s)
+    [PASS         ] structure/doc-alignment-summary-block-valid  (P0, 0.03s)
+    [FAIL         ] docs-alignment/walk  (P0, 0.26s)
+    [PASS         ] structure/release-plz-disables-gh-releases  (P0, 0.01s)
+    [PASS         ] structure/claim-vs-assertion-audit-required  (P0, 0.05s)
+    [PASS         ] structure/minted-at-write-once  (P0, 0.09s)
+    [PASS         ] structure/skip-fail-closed-with-history  (P0, 0.08s)
+    [PASS         ] structure/no-version-pinned-filenames  (P1, 0.03s)
+    [PASS         ] structure/benchmarks-in-mkdocs-nav  (P1, 0.03s)
+    [PASS         ] structure/no-loose-roadmap-or-requirements  (P1, 0.03s)
+    [PASS         ] structure/no-orphan-docs  (P1, 1.42s)
+    [PASS         ] structure/top-level-requirements-roadmap-scope  (P1, 0.03s)
+    [PASS         ] structure/banned-words  (P1, 0.04s)
+    [PASS         ] structure/no-loose-top-level-planning-audits  (P1, 0.01s)
+    [PASS         ] structure/no-pre-pivot-doc-stubs  (P1, 0.01s)
+    [PASS         ] structure/repo-org-audit-artifact-present  (P1, 0.00s)
+    [WAIVED       ] structure/file-size-limits  (P1, 0.00s) -> waived until 2026-08-08T00:00:00Z — Re-instates the original 'warn-now, block-later' contract fr
+    [PASS         ] structure/banned-production-tokens  (P1, 0.13s)
+    [PASS         ] structure/deferral-pointer-linter  (P1, 0.02s)
+    [PASS         ] structure/cli-subcommand-parity  (P1, 0.02s)
+    [PASS         ] structure/scripts-registry-complete  (P1, 0.06s)
+    [PASS         ] structure/coverage-kind-required  (P1, 0.09s)
+    [PASS         ] structure/verifier-missing-demotes  (P1, 0.08s)
+    [PASS         ] structure/shell-subprocess-transcript-runtime  (P1, 0.09s)
+    [PASS         ] structure/asserts-congruence-grade-time  (P1, 0.09s)
+    [PASS         ] structure/badges-resolve  (P2, 1.76s)
+  catalog: orphan-scripts.json (10 rows; 10 in scope)
+    [PASS         ] orphan-scripts/banned-words-lint  (P2, 0.02s)
+    [PASS         ] orphan-scripts/bench-token-economy-py  (P2, 0.02s)
+    [PASS         ] orphan-scripts/catalog-py  (P2, 0.03s)
+    [PASS         ] orphan-scripts/check-quality-catalogs-py-dash  (P2, 0.02s)
+    [PASS         ] orphan-scripts/check-doc-links-py  (P2, 0.03s)
+    [PASS         ] orphan-scripts/check-repo-org-gaps-py  (P2, 0.03s)
+    [PASS         ] orphan-scripts/preflight-real-backends-sh  (P2, 0.02s)
+    [PASS         ] orphan-scripts/webhook-latency-measure-sh  (P2, 0.02s)
+    [PASS         ] orphan-scripts/claude-hooks  (P2, 0.02s)
+    [PASS         ] orphan-scripts/check-agent-frontmatter  (P2, 0.02s)
+summary: 53 PASS, 1 FAIL, 0 PARTIAL, 1 WAIVED, 0 NOT-VERIFIED -> exit=1
+>>> cadence pre-push run.py exit=1
+
+################################################################################
+## CADENCE: pre-pr   (00:02:33Z)
+################################################################################
+quality/runners/run.py --cadence pre-pr
+  catalog: agent-ux.json (54 rows; 35 in scope)
+    [NOT-VERIFIED ] agent-ux/real-git-push-e2e  (P0, 0.01s) -> verifier exited 75 (NOT-VERIFIED convention; not a missing-script error)
+    [PASS         ] agent-ux/milestone-adversarial-pass  (P0, 0.06s)
+    [NOT-VERIFIED ] agent-ux/t4-conflict-rebase-ancestry  (P0, 0.01s) -> verifier exited 75 (NOT-VERIFIED convention; not a missing-script error)
+    [PASS         ] agent-ux/p93-cache-coherence-refresh-honest  (P0, 5.81s)
+    [PASS         ] agent-ux/p93-delta-sync-coherence-invariant  (P0, 5.28s)
+    [PASS         ] agent-ux/p94-pagination-prune-completeness-gate  (P0, 1.65s)
+    [PASS         ] agent-ux/reposix-attach-against-vanilla-clone  (P1, 5.44s)
+    [PASS         ] agent-ux/mirror-refs-write-on-success  (P1, 1.54s)
+    [PASS         ] agent-ux/mirror-refs-readable-by-vanilla-fetch  (P1, 0.45s)
+    [PASS         ] agent-ux/mirror-refs-cited-in-reject-hint  (P1, 0.67s)
+    [PASS         ] agent-ux/sync-reconcile-subcommand  (P1, 8.01s)
+    [PASS         ] agent-ux/bus-url-parses-query-param-form  (P1, 0.67s)
+    [PASS         ] agent-ux/bus-url-rejects-plus-delimited  (P1, 0.34s)
+    [PASS         ] agent-ux/bus-precheck-a-mirror-drift-emits-fetch-first  (P1, 2.36s)
+    [PASS         ] agent-ux/bus-precheck-b-sot-drift-emits-fetch-first  (P1, 3.68s)
+    [PASS         ] agent-ux/bus-fetch-not-advertised  (P1, 0.54s)
+    [PASS         ] agent-ux/bus-no-remote-configured-error  (P1, 0.28s)
+    [PASS         ] agent-ux/bus-write-sot-first-success  (P1, 3.19s)
+    [PASS         ] agent-ux/bus-write-mirror-fail-returns-ok  (P1, 2.47s)
+    [PASS         ] agent-ux/bus-write-no-helper-retry  (P1, 2.46s)
+    [PASS         ] agent-ux/bus-write-no-mirror-remote-still-fails  (P1, 1.54s)
+    [PASS         ] agent-ux/bus-write-fault-injection-mirror-fail  (P1, 1.09s)
+    [PASS         ] agent-ux/bus-write-fault-injection-sot-mid-stream  (P1, 2.39s)
+    [PASS         ] agent-ux/bus-write-fault-injection-post-precheck-409  (P1, 2.50s)
+    [PASS         ] agent-ux/bus-write-audit-completeness  (P1, 3.08s)
+    [PASS         ] agent-ux/webhook-cron-fallback  (P1, 0.01s)
+    [PASS         ] agent-ux/webhook-force-with-lease-race  (P1, 1.93s)
+    [PASS         ] agent-ux/webhook-first-run-empty-mirror  (P1, 1.93s)
+    [PASS         ] agent-ux/webhook-backends-without-webhooks  (P1, 0.10s)
+    [PASS         ] agent-ux/dvcs-third-arm  (P1, 18.59s)
+    [PASS         ] agent-ux/kind-shell-subprocess-worked-example  (P1, 0.08s)
+    [PASS         ] agent-ux/ql-001-canonical-path-shape  (P1, 0.05s)
+    [PASS         ] agent-ux/absorption-honesty-template-present  (P1, 0.01s)
+    [PASS         ] agent-ux/p93-l2-l3-coherence-adr  (P1, 0.02s)
+    [PASS         ] agent-ux/p94-git243-fallback-sentinel  (P1, 17.62s)
+  catalog: code.json (7 rows; 3 in scope)
+    [PASS         ] code/clippy-lint-loaded  (P1, 0.45s)
+    [PASS         ] code/capabilities-match-impl  (P1, 3.33s)
+    [PASS         ] code/fixtures-valid  (P2, 0.07s)
+  catalog: docs-build.json (5 rows; 5 in scope)
+    [PASS         ] docs-build/mkdocs-strict  (P1, 2.50s)
+    [PASS         ] docs-build/mermaid-renders  (P1, 0.15s)
+    [PASS         ] docs-build/link-resolution  (P2, 0.02s)
+    [PASS         ] docs-build/badges-resolve  (P2, 2.62s)
+    [PASS         ] docs-build/p94-badges-real-vs-transient  (P2, 1.16s)
+  catalog: docs-reproducible.json (9 rows; 1 in scope)
+    [PASS         ] docs-repro/snippet-coverage  (P1, 0.03s)
+  catalog: freshness-invariants.json (31 rows; 24 in scope)
+    [PASS         ] structure/install-leads-with-pkg-mgr-docs-index  (P0, 0.03s)
+    [PASS         ] structure/install-leads-with-pkg-mgr-readme  (P0, 0.03s)
+    [PASS         ] structure/cred-hygiene  (P0, 0.01s)
+    [PASS         ] structure/doc-alignment-catalog-present  (P0, 0.03s)
+    [PASS         ] structure/doc-alignment-summary-block-valid  (P0, 0.03s)
+    [FAIL         ] docs-alignment/walk  (P0, 0.24s)
+    [PASS         ] structure/release-plz-disables-gh-releases  (P0, 0.01s)
+    [PASS         ] structure/claim-vs-assertion-audit-required  (P0, 0.05s)
+    [PASS         ] structure/minted-at-write-once  (P0, 0.09s)
+    [PASS         ] structure/no-version-pinned-filenames  (P1, 0.03s)
+    [PASS         ] structure/benchmarks-in-mkdocs-nav  (P1, 0.03s)
+    [PASS         ] structure/no-loose-roadmap-or-requirements  (P1, 0.03s)
+    [PASS         ] structure/no-orphan-docs  (P1, 1.40s)
+    [PASS         ] structure/top-level-requirements-roadmap-scope  (P1, 0.03s)
+    [PASS         ] structure/banned-words  (P1, 0.04s)
+    [PASS         ] structure/no-loose-top-level-planning-audits  (P1, 0.01s)
+    [PASS         ] structure/no-pre-pivot-doc-stubs  (P1, 0.01s)
+    [PASS         ] structure/repo-org-audit-artifact-present  (P1, 0.00s)
+    [WAIVED       ] structure/file-size-limits  (P1, 0.00s) -> waived until 2026-08-08T00:00:00Z — Re-instates the original 'warn-now, block-later' contract fr
+    [PASS         ] structure/banned-production-tokens  (P1, 0.12s)
+    [PASS         ] structure/cli-subcommand-parity  (P1, 0.02s)
+    [PASS         ] structure/scripts-registry-complete  (P1, 0.06s)
+    [PASS         ] structure/coverage-kind-required  (P1, 0.09s)
+    [PASS         ] structure/badges-resolve  (P2, 1.37s)
+  catalog: security-gates.json (3 rows; 3 in scope)
+    [PASS         ] security/allowlist-enforcement  (P0, 0.21s)
+    [PASS         ] security/audit-immutability  (P0, 1.31s)
+    [PASS         ] security/connector-audit-wired  (P0, 10.54s)
+summary: 67 PASS, 1 FAIL, 0 PARTIAL, 1 WAIVED, 2 NOT-VERIFIED -> exit=1
+>>> cadence pre-pr run.py exit=1
+
+################################################################################
+## CADENCE: weekly   (00:04:35Z)
+################################################################################
+quality/runners/run.py --cadence weekly
+  catalog: docs-reproducible.json (9 rows; 2 in scope)
+    [NOT-VERIFIED ] benchmark-claim/8ms-cached-read  (P2, 0.00s) -> verifier not found at None (RBF-FW-07a: demoted from prior status; deploy glitch vs regression -> see artifact `error` field)
+    [NOT-VERIFIED ] benchmark-claim/89.1-percent-token-reduction  (P2, 0.00s) -> verifier not found at None (RBF-FW-07a: demoted from prior status; deploy glitch vs regression -> see artifact `error` field)
+  catalog: freshness-invariants.json (31 rows; 1 in scope)
+    [PASS         ] structure/doc-alignment-floor-not-decreased  (P1, 1.52s)
+  catalog: perf-targets.json (4 rows; 3 in scope)
+    [WAIVED       ] perf/latency-bench  (P2, 0.00s) -> waived until 2026-09-15T00:00:00Z — RENEWED P90 90-05 (2026-07-04): still sim-derived numbers on
+    [WAIVED       ] perf/token-economy-bench  (P2, 0.00s) -> waived until 2026-09-15T00:00:00Z — RENEWED P90 90-05 (2026-07-04): still fixture/modeled per R2
+    [WAIVED       ] perf/headline-numbers-cross-check  (P2, 0.00s) -> waived until 2026-09-15T00:00:00Z — RENEWED P90 90-05 (2026-07-04) + dangling-verifier flag: qua
+  catalog: release-assets.json (15 rows; 14 in scope)
+    [PASS         ] install/curl-installer-sh  (P0, 1.29s)
+    [PASS         ] install/powershell-installer-ps1  (P0, 0.92s)
+    [PASS         ] install/homebrew  (P0, 0.59s)
+    [PASS         ] release/gh-assets-present  (P0, 0.40s)
+    [PASS         ] release/brew-formula-current  (P0, 0.31s)
+    [PASS         ] release/crates-io-max-version/reposix-cli  (P1, 1.32s)
+    [PASS         ] release/crates-io-max-version/reposix-remote  (P1, 1.37s)
+    [PASS         ] release/crates-io-max-version/reposix-core  (P1, 1.22s)
+    [PASS         ] release/crates-io-max-version/reposix-cache  (P1, 1.40s)
+    [PASS         ] release/crates-io-max-version/reposix-sim  (P1, 1.23s)
+    [PASS         ] release/crates-io-max-version/reposix-github  (P1, 1.37s)
+    [PASS         ] release/crates-io-max-version/reposix-confluence  (P1, 1.28s)
+    [PASS         ] release/crates-io-max-version/reposix-jira  (P1, 1.22s)
+    [PASS         ] install/build-from-source  (P2, 1.24s)
+  catalog: subjective-rubrics.json (4 rows; 1 in scope)
+    [WAIVED       ] subjective/headline-numbers-sanity  (P2, 0.00s) -> waived until 2026-09-15T00:00:00Z — RENEWED P90 90-05 (2026-07-04), NOT mooted by 90-03's dvcs-c
+summary: 15 PASS, 0 FAIL, 0 PARTIAL, 4 WAIVED, 2 NOT-VERIFIED -> exit=0
+>>> cadence weekly run.py exit=0
+
+################################################################################
+## CADENCE: pre-release   (00:04:52Z)
+################################################################################
+quality/runners/run.py --cadence pre-release
+  catalog: agent-ux.json (54 rows; 7 in scope)
+    [NOT-VERIFIED ] agent-ux/real-git-push-e2e  (P0, 0.01s) -> verifier exited 75 (NOT-VERIFIED convention; not a missing-script error)
+    [NOT-VERIFIED ] agent-ux/t4-conflict-rebase-ancestry  (P0, 0.01s) -> verifier exited 75 (NOT-VERIFIED convention; not a missing-script error)
+    [PASS         ] agent-ux/p93-cache-coherence-refresh-honest  (P0, 0.58s)
+    [PASS         ] agent-ux/p93-delta-sync-coherence-invariant  (P0, 2.54s)
+    [PASS         ] agent-ux/p94-pagination-prune-completeness-gate  (P0, 0.44s)
+    [PASS         ] agent-ux/webhook-latency-floor  (P1, 0.02s)
+    [PASS         ] agent-ux/p94-git243-fallback-sentinel  (P1, 12.96s)
+  catalog: cross-platform.json (2 rows; 2 in scope)
+    [WAIVED       ] cross-platform/windows-2022-rehearsal  (P1, 0.00s) -> waived until 2026-09-15T00:00:00Z — RENEWED P90 90-05 (2026-07-04): windows GH runners still cos
+    [WAIVED       ] cross-platform/macos-14-rehearsal  (P1, 0.00s) -> waived until 2026-09-15T00:00:00Z — RENEWED P90 90-05 (2026-07-04): macos GH runners still cost 
+  catalog: freshness-invariants.json (31 rows; 1 in scope)
+    [FAIL         ] structure/p94-catalog-freshness-sweep  (P1, 0.05s)
+  catalog: security-gates.json (3 rows; 1 in scope)
+    [PASS         ] security/connector-audit-wired  (P0, 0.56s)
+  catalog: subjective-rubrics.json (4 rows; 3 in scope)
+    [WAIVED       ] subjective/install-positioning  (P0, 0.00s) -> waived until 2026-09-15T00:00:00Z — RENEWED P90 90-05 (2026-07-04), NOT mooted by 90-03's dvcs-c
+    [WAIVED       ] subjective/cold-reader-hero-clarity  (P1, 0.00s) -> waived until 2026-09-15T00:00:00Z — RENEWED P90 90-05 (2026-07-04), NOT mooted by 90-03's dvcs-c
+    [PARTIAL      ] subjective/dvcs-cold-reader  (P1, 0.07s)
+summary: 6 PASS, 1 FAIL, 1 PARTIAL, 4 WAIVED, 2 NOT-VERIFIED -> exit=1
+>>> cadence pre-release run.py exit=1
+
+################################################################################
+## CADENCE: post-release   (00:05:09Z)
+################################################################################
+quality/runners/run.py --cadence post-release
+  catalog: docs-reproducible.json (9 rows; 5 in scope)
+    [WAIVED       ] docs-repro/tutorial-replay  (P0, 0.00s) -> waived until 2026-09-15T00:00:00Z — RENEWED P90 90-05 (2026-07-04): still-broken, TWO causes per
+    [WAIVED       ] docs-repro/example-01-shell-loop  (P1, 0.00s) -> waived until 2026-09-15T00:00:00Z — RENEWED P90 90-05 (2026-07-04): still-broken per R2 § D live
+    [WAIVED       ] docs-repro/example-02-python-agent  (P1, 0.00s) -> waived until 2026-09-15T00:00:00Z — RENEWED P90 90-05 (2026-07-04): still-broken per R2 § D live
+    [WAIVED       ] docs-repro/example-04-conflict-resolve  (P1, 0.00s) -> waived until 2026-09-15T00:00:00Z — RENEWED P90 90-05 (2026-07-04): still-broken per R2 § D live
+    [WAIVED       ] docs-repro/example-05-blob-limit-recovery  (P1, 0.00s) -> waived until 2026-09-15T00:00:00Z — RENEWED P90 90-05 (2026-07-04): still-broken per R2 § D live
+  catalog: release-assets.json (15 rows; 1 in scope)
+    [FAIL         ] release/cargo-binstall-resolves  (P1, 0.20s)
+summary: 0 PASS, 1 FAIL, 0 PARTIAL, 5 WAIVED, 0 NOT-VERIFIED -> exit=1
+>>> cadence post-release run.py exit=1
+
+################################################################################
+## CADENCE: on-demand   (00:05:10Z)
+################################################################################
+quality/runners/run.py --cadence on-demand
+  catalog: agent-ux.json (54 rows; 20 in scope)
+    [NOT-VERIFIED ] agent-ux/real-git-push-e2e  (P0, 0.01s) -> verifier exited 75 (NOT-VERIFIED convention; not a missing-script error)
+    [NOT-VERIFIED ] agent-ux/t4-conflict-rebase-ancestry  (P0, 0.01s) -> verifier exited 75 (NOT-VERIFIED convention; not a missing-script error)
+    [PASS         ] agent-ux/p92-mid-stream-litmus-t1-t4  (P0, 0.39s)
+    [PASS         ] agent-ux/p93-cache-coherence-refresh-honest  (P0, 0.89s)
+    [PASS         ] agent-ux/p93-delta-sync-coherence-invariant  (P0, 2.69s)
+    [PASS         ] agent-ux/p93-mid-stream-litmus-t1-t4  (P0, 0.24s)
+    [PASS         ] agent-ux/p94-pagination-prune-completeness-gate  (P0, 0.45s)
+    [PASS         ] agent-ux/dark-factory-sim  (P1, 0.29s)
+    [PASS         ] agent-ux/webhook-trigger-dispatch  (P1, 0.55s)
+    [PASS         ] agent-ux/ql-001-canonical-path-shape  (P1, 0.03s)
+    [PASS         ] agent-ux/hook-throttle  (P1, 2.05s)
+    [PASS         ] agent-ux/audit-absence-is-red  (P1, 0.01s)
+    [PASS         ] agent-ux/p93-l2-l3-coherence-adr  (P1, 0.01s)
+    [PASS         ] agent-ux/p93-l1-promise-reconciled  (P1, 0.01s)
+    [PASS         ] agent-ux/p94-git243-fallback-sentinel  (P1, 12.82s)
+    [FAIL         ] agent-ux/p87-surprises-absorption  (P2, 0.01s)
+    [FAIL         ] agent-ux/p88-good-to-haves-drained  (P2, 0.01s)
+    [PASS         ] agent-ux/v0.13.0-changelog-entry-present  (P2, 0.01s)
+    [FAIL         ] agent-ux/v0.13.0-tag-script-present  (P2, 0.01s)
+    [FAIL         ] agent-ux/v0.13.0-retrospective-distilled  (P2, 0.02s)
+  catalog: code.json (7 rows; 1 in scope)
+    [WAIVED       ] code/cargo-test-pass  (P0, 0.00s) -> waived until 2026-09-15T00:00:00Z — RENEWED P90 90-05 (2026-07-04): reason still true -- cargo n
+  catalog: docs-build.json (5 rows; 1 in scope)
+    [PASS         ] docs-build/p94-badges-real-vs-transient  (P2, 3.06s)
+  catalog: docs-reproducible.json (9 rows; 1 in scope)
+    [PASS         ] docs-repro/example-03-claude-code-skill  (P2, 0.02s)
+  catalog: freshness-invariants.json (31 rows; 1 in scope)
+    [FAIL         ] structure/p94-catalog-freshness-sweep  (P1, 0.02s)
+  catalog: perf-targets.json (4 rows; 1 in scope)
+    [PASS         ] perf/handle-export-list-call-count  (P1, 0.69s)
+FAIL: /home/reuben/workspace/reposix/quality/catalogs/release-assets.json: row release/cargo-binstall-resolves has last_verified >= 2026-07-05T00:00:00Z but lacks a write-once minted_at anchor -- rows minted on/after P90 MUST carry minted_at (D90-03); see quality/catalogs/README.md schema table for the field's contract
+>>> cadence on-demand run.py exit=1
+
+################################################################################
+## CADENCE: pre-release-real-backend   (00:05:34Z)
+################################################################################
+quality/runners/run.py --cadence pre-release-real-backend
+FAIL: /home/reuben/workspace/reposix/quality/catalogs/agent-ux.json: row agent-ux/p87-surprises-absorption missing claim_vs_assertion_audit (>=50 chars required for rows minted on/after 2026-05-08T00:00:00Z); see quality/catalogs/README.md schema table for the field's contract
+>>> cadence pre-release-real-backend run.py exit=1
+
+################################################################################
+## VERDICT (all rows, no cadence filter)   (00:05:34Z)
+################################################################################
+verdict: red (107/115 P0/P1 green (RED)) -> quality/reports/verdicts/all/2026-07-06T00-05-34Z.md
+>>> verdict.py exit=1
+
+# SWEEP COMPLETE 2026-07-06T00:05:34Z

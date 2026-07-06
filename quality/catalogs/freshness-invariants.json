@@ -1102,7 +1102,7 @@
         ".planning/CLAUDE.md (push cadence + milestone-close 9th probe context)",
         "quality/PROTOCOL.md (NOT-VERIFIED / env-gated fail-closed conventions)"
       ],
-      "command": "python3 quality/runners/run.py --all && python3 quality/runners/verdict.py",
+      "command": "bash .planning/phases/94-real-backend-frictions/94-D4-sweep.sh && then revert catalog self-mutation: git checkout HEAD -- quality/catalogs/   (run.py has NO --all flag; the driver runs every cadence once = canonical all-rows sweep, per GOOD-TO-HAVES-03)",
       "expected": {
         "asserts": [
           "every STALE (session-stale or freshness_ttl-expired) NON-P93 catalog row is re-graded in the sweep (no stale row left un-run)",
