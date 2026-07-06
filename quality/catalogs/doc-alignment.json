@@ -5,11 +5,11 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 258,
+    "claims_bound": 261,
     "claims_missing_test": 0,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.7678571428571429,
+    "alignment_ratio": 0.7767857142857143,
     "floor": 0.5,
     "trend_30d": "+0.00",
     "last_walked": "2026-07-05T21:29:18Z",
@@ -1474,13 +1474,13 @@
         ".github/workflows/bench-latency-cron.yml"
       ],
       "test_body_hashes": [
-        "6ce5ac21a2cda8bf7d3262fc420828f9fd03018cfce7ea233c4c51ebb0ac8e30"
+        "324fdeec48fdb70aafa19a5d80f5c392e15ed3010e50ad59abe36ecc504db97b"
       ],
-      "rationale": "bench-latency-cron.yml line 32 contains literal persist-credentials: false; whole-file hash detects regression",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "rationale": "bench-latency-cron.yml line 34 contains literal persist-credentials: false on the actions/checkout step; whole-file hash detects regression. (Line moved 32->34 by unrelated dependabot checkout/artifact version-ref bumps; claim unchanged, re-bound P95.)",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T20:01:27Z",
-      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_run": "2026-07-06T01:24:51Z",
+      "last_extracted": "2026-07-06T01:24:51Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1743,13 +1743,13 @@
         "crates/reposix-remote/tests/bulk_delete_cap.rs::six_deletes_with_allow_tag_actually_deletes"
       ],
       "test_body_hashes": [
-        "120eb2dea6f1f57c4009abb17a4c2ad99453172f94126d816f4fb21ab8e6c75b"
+        "61284b2c60e9b31d6917a0034ece5b68209ad3fea4b1b4d36ed9d42a7345e86f"
       ],
       "rationale": "Tests 6 deletes with override tag succeeds",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T09:08:46Z",
-      "last_extracted": "2026-04-28T09:08:46Z",
+      "last_run": "2026-07-06T01:24:27Z",
+      "last_extracted": "2026-07-06T01:24:27Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2194,13 +2194,13 @@
         "quality/gates/docs-build/badges-resolve.py"
       ],
       "test_body_hashes": [
-        "cde3bfece9e4efd2f40572d0177b525e769f73f5ded120821d2b2c6527ea9814"
+        "b7a731c630e32ac615471a8a7393a7b6083d17ac8cde1f1c0c8efb4ef7977818"
       ],
       "rationale": "Verifier HEADs every badge URL in README + docs/index.md including the CI workflow badge",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:55:58Z",
-      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_run": "2026-07-06T01:24:27Z",
+      "last_extracted": "2026-07-06T01:24:27Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3235,14 +3235,14 @@
       ],
       "test_body_hashes": [
         "f206a1c252c982003da21b09fd665b8240373cd2b340a36bf03043d5866df098",
-        "9780eb09d979e14babd566d4d4e2897d7ac4e26456372994b95548dcf49451e4"
+        "8dd5b26f84545ccaa6e269e5cdeda06eb5fbb3a816ad8333308da128e831274f"
       ],
       "rationale": "Two-arm table-driven test pins the exact code sets: CLI arm drives reposix through version(0)/spaces --backend github(1)/mount unrecognized-subcommand(2); helper arm drives git-remote-reposix through capabilities-only(0)/SG-02 bulk-delete refusal(1)/missing-argv crash(2). Claim text updated (2026-07-04) to note the CLI's code-2 path is clap's own usage-error layer, not the anyhow-handler layer exit-codes.md's TL;DR table describes -- exit-codes.md itself does not yet document this clap layer (noted as a doc-gap candidate, not fixed in this pass).",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T17:53:40Z",
-      "last_extracted": "2026-07-04T17:53:52Z",
-      "last_extracted_by": "unwaive-call"
+      "last_run": "2026-07-06T01:24:16Z",
+      "last_extracted": "2026-07-06T01:24:16Z",
+      "last_extracted_by": "bind-call"
     },
     {
       "id": "docs/reference/cli.md/exit_codes",
@@ -5055,13 +5055,13 @@
         ".github/workflows/release.yml"
       ],
       "test_body_hashes": [
-        "5a3abd7fbe655cfa68a1d7b8976ba4266f8f81668fd0fa0e65c799251dba1c66"
+        "d3075ef67b252a1da093f30bdbaddfcebe82ca40c11253418a6d7b38f38e5c57"
       ],
       "rationale": "release.yml workflow contains the aarch64-unknown-linux-musl matrix entry; whole-file hash detects removal",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T20:01:27Z",
-      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_run": "2026-07-06T01:24:51Z",
+      "last_extracted": "2026-07-06T01:24:51Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6056,13 +6056,13 @@
         ".github/workflows/release.yml"
       ],
       "test_body_hashes": [
-        "5a3abd7fbe655cfa68a1d7b8976ba4266f8f81668fd0fa0e65c799251dba1c66"
+        "d3075ef67b252a1da093f30bdbaddfcebe82ca40c11253418a6d7b38f38e5c57"
       ],
       "rationale": "release.yml workflow encodes the 5-target build matrix; whole-file hash detects matrix regression",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T20:01:27Z",
-      "last_extracted": "2026-04-28T20:01:27Z",
+      "last_run": "2026-07-06T01:24:51Z",
+      "last_extracted": "2026-07-06T01:24:51Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6280,13 +6280,13 @@
         "quality/gates/docs-build/badges-resolve.py"
       ],
       "test_body_hashes": [
-        "cde3bfece9e4efd2f40572d0177b525e769f73f5ded120821d2b2c6527ea9814"
+        "b7a731c630e32ac615471a8a7393a7b6083d17ac8cde1f1c0c8efb4ef7977818"
       ],
       "rationale": "Verifier explicitly hits the QG-09 custom-endpoint badge URL",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:55:58Z",
-      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_run": "2026-07-06T01:24:27Z",
+      "last_extracted": "2026-07-06T01:24:27Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6305,13 +6305,13 @@
         "quality/gates/docs-build/badges-resolve.py"
       ],
       "test_body_hashes": [
-        "cde3bfece9e4efd2f40572d0177b525e769f73f5ded120821d2b2c6527ea9814"
+        "b7a731c630e32ac615471a8a7393a7b6083d17ac8cde1f1c0c8efb4ef7977818"
       ],
       "rationale": "Same verifier sweeps every badge URL on docs/index.md",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:55:58Z",
-      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_run": "2026-07-06T01:24:27Z",
+      "last_extracted": "2026-07-06T01:24:27Z",
       "last_extracted_by": "bind-call"
     },
     {
