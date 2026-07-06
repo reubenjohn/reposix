@@ -15,6 +15,13 @@ introduced by this handover session's own work**; both are pre-existing conditio
 commits already on HEAD before I started. Full detail + exact messages + named fixes:
 §1 "Push status" and §6 step 0. Do not `--no-verify` past them.
 
+**CONCURRENT-WRITE EVENT DURING THIS SESSION (read §1's "Deviations" item 4):**
+between my two handover commits, a SEPARATE process committed `2b2736e` (doctrine:
+absolute ~100k/150k relief-trigger tokens, C1/C2 tier) directly to this same working
+tree — a real "more than one tree-writer" event, not caused by me and not touching any
+file I own, but worth the successor's attention as a process signal, not just a data
+point.
+
 **Required reading order for the successor:**
 1. This file in full (all 6 sections) — **start with §1's push-status block**, the
    tree is not yet at origin.
@@ -54,10 +61,13 @@ commits already on HEAD before I started. Full detail + exact messages + named f
 Verified directly this session (not taken on faith from the dispatch briefing, which
 had 2 factual errors — see §5's "corrections" list):
 
-- **HEAD:** `c71af44` (tree clean, `git status --porcelain` empty).
+- **HEAD:** `2bf08d4` (tree clean, `git status --porcelain` empty).
 - **origin/main:** `e8362f5` ("docs(state): advance STATE.md to v0.13.0 milestone
   CLOSED GREEN (20/20, P78–P97)") — **unchanged this session; the push did not land.**
-- **Ahead/behind:** local is **5 ahead, 0 behind** origin/main.
+- **Ahead/behind:** local is **7 ahead, 0 behind** origin/main (`git rev-list
+  --left-right --count origin/main...HEAD` -> `0	7`) — one of the 7 (`2b2736e`) was
+  **not authored by me**; see the concurrent-write note above and §1's "Deviations"
+  item 4.
 - **Push status: BLOCKED.** `git push origin main` was attempted and rejected by the
   local pre-push hook (`.githooks/pre-push` → `quality/runners/run.py --cadence
   pre-push`), exit 1, **before any network push occurred** (nothing partially
@@ -111,6 +121,8 @@ had 2 factual errors — see §5's "corrections" list):
 
 | SHA | Message |
 |---|---|
+| `2bf08d4` | docs(handover): 97-HANDOVER.md — record push-blocked state (2 pre-existing gate FAILs) |
+| `2b2736e` | **NOT MINE** — docs(doctrine): relief trigger -> absolute ~100k/150k (not %); formalize C1/C2 coordinator-of-coordinators tier (see concurrent-write note above) |
 | `c71af44` | docs(handover): 97-HANDOVER.md — real-backend 9th-probe relief handoff |
 | `2154151` | chore(quality): commit doc-alignment walk re-verdict after badge URL fixes |
 | `232fea9` | docs(debug): E4 diagnosis — ADR-010 create-partial-fail cannot converge on id-reassigning backends |
@@ -143,6 +155,24 @@ dispatch briefing):**
    later blocked the push** (§1) — discarding it would NOT have avoided the block
    (the walker recomputes fresh from `docs/index.md` regardless of the catalog
    file's committed state), it would only have hidden the finding.
+4. **A different process wrote to this SAME working tree while I was active in
+   it** — commit `2b2736e` ("docs(doctrine): relief trigger -> absolute
+   ~100k/150k...") landed at `2026-07-06 00:05:31 -0700`, strictly between my
+   `c71af44` (`00:01:40`) and `2bf08d4` (`00:06:55`) handover commits. Its own
+   message says "Not pushed (avoids pre-push cargo colliding with an active fix
+   lane's cargo mutex)" — i.e. that process WAS aware another lane (me) was active
+   and deliberately withheld its push, but still performed a local commit in the
+   shared working tree, which is itself a "more than one tree-writer" event (the
+   binding constraint is one tree-writer, full stop — not "one pusher"). No file
+   overlap with anything I touched (`2b2736e` only edits `.claude/agents/`,
+   `.claude/hooks/`, `.claude/skills/`, `.planning/ORCHESTRATION.md`,
+   `.planning/RUNBOOK-TO-V1/*`, root `CLAUDE.md`), so nothing of mine was corrupted
+   or lost, and I did not intervene or revert it (not mine to adjudicate). Flagging
+   this precisely rather than silently absorbing it into "my" commit list — the
+   successor should know the ~100k/150k absolute-token relief-trigger doctrine
+   changed in `.planning/ORCHESTRATION.md` §§2-3 *during* this very handoff, and
+   that a stricter "single tree-writer" enforcement may be worth revisiting given
+   this observed near-miss.
 
 ## 2. Wave/cycle state
 
