@@ -12,6 +12,35 @@ than repeated under each milestone.
 
 ---
 
+## Milestone: v0.13.0-extension (P89–P97)
+
+**Shipped:** 2026-07-06 (autonomous close-out, no-fable) | **9 phases.** Full narrative + commit trail: `.planning/milestones/v0.13.0-phases/RETROSPECTIVE-FULL.md`.
+
+### What Was Built
+
+Post-tag hardening: a DVCS quality framework + honesty rules (`minted_at` anchor); **ADR-010 L2/L3 cache-coherence** (two prove-before-fixed cache bugs repaired via Strategy-1 prune-on-sync); the P96 runner self-mutation fix + intake split; the P97 good-to-haves drain + env-gated 9th probe.
+
+### What Worked
+
+**DP-2 prove-before-fix** was load-bearing: the `list_changed_since` false-alarm saw the executor REJECT a "materialize all blobs" fix that would break the ARCH-01 lazy `blob:none` invariant, and the ghost-`oid_map` HIGH was CONFIRMED by driving the `export` path, not code-reading. **Catalog-first + grade/persist split** let the verifier grade a row predating its own fix; the **ownership charter caught wrong instructions**; honest env-gated NOT-VERIFIED never skipped-as-pass.
+
+### What Was Inefficient
+
+The self-mutation bug forced a manual `git checkout` workaround across P78/P91/P93/P94 (5×) pre-P96; `--persist` has no `--row` filter (collateral-restore surgery); intake bloat (>180k) forced the terminal↔active split; "safe doc-only XS" is FALSE when the doc carries a bound docs-alignment P0 claim; single-cargo + single-push serialization.
+
+### Patterns Established
+
+Grade/persist split (validate-only default; `status` writes only behind `--persist`); DP-2/DP-3 + the `[SELF]` ledger; catalog-first rows predating implementation; snapshot→mint→restore for catalog surgery; frozen-PASS vigilance (p94 badges transient-PASS not inherited).
+
+### Key Lessons
+
+- **A metric you generate but don't watch decays silently** — grades self-mutated for phases unnoticed.
+- **A coded workaround never converges** — band-aids recurred 5× until the concern was SPLIT, not re-patched.
+- **Frozen/optimistic PASSes are a recurring honesty hazard** — grade fresh, fail closed to NOT-VERIFIED.
+- **Continuous intake hygiene** — a 180k working file is debt, not an archive.
+
+---
+
 ## Milestone: v0.13.0 — DVCS over REST
 
 **Shipped:** 2026-05-01 (autonomous; owner-driven tag pending) | **Phases:** 11 (P78–P88) | **Plans:** 14

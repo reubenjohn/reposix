@@ -995,3 +995,23 @@ picked) — not a P96-close rider.
 touching window; pairs with the run.py persist-gate extraction (GOOD-TO-HAVES-06).
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-06 | env-gate/`minted_at` load-fragility: an env-missing skip advances `last_verified` to run-time, making a `minted_at`-less post-P90 row unloadable once skipped | discovered-by: P97 milestone-close (OP-9 RETROSPECTIVE distillation, verify-against-reality on the 9th-probe mint) | severity: MEDIUM
+
+**Size:** S (a `run.py` write-path change + regression test — the READ/skip-side mirror of the write-path load-refusal item already filed in `SURPRISES-INTAKE.md`).
+
+**Source / mechanism:** The honesty contract says an env-gated skip "fails closed to `NOT-VERIFIED` but preserves `last_real_grade` + `skip_reason: env-missing`" (quality/CLAUDE.md § Honesty rules). But in practice the env-missing skip path ALSO stamps `last_verified` to the run-time clock. For a pre-P90 legacy row that carries no write-once `minted_at`, `_audit_field.validate_row`'s anchor heuristic is `is_new = lv is None or parse_rfc3339(lv) >= CUTOFF` — so once the skip advances `last_verified` past the 2026-07-05 cutoff, the row flips `is_new=True`, now demands a `claim_vs_assertion_audit`, and FAILs/refuses at the next load. A silent time-bomb: it does not bite on the run that moves the clock, it bites the run after. This is the exact landmine `09e10c1` closed for `code/cargo-clippy-warnings` and that `f37f468` closed for `agent-ux/cadence-pre-release-real-backend` (the milestone 9th-probe mint backfilled its missing `minted_at` = its P89 89-01 mint time `2026-07-04T03:08:07Z`, its `last_verified` having just been advanced by the env-gated skip). **Two instances fixed one-at-a-time; the CLASS remains** for any other pre-P90 row with null-or-pre-cutoff `last_verified` + no `minted_at` that gets re-graded (or env-skipped) in a blocking cadence.
+
+**NOTE on the scaffold citation:** the P97 close task scaffold attributed the instance fix to `30b4910` — that commit is the honest file-size-waiver enumeration (10→50 files), NOT a `minted_at` fix. The real instance fix is `f37f468` (grounded against `git show`); `09e10c1` is the prior sibling instance. Recorded so the next reader does not chase the wrong SHA.
+
+**Relationship (dedupe):** DISTINCT from — but the read-side complement of — `SURPRISES-INTAKE.md` § "2026-07-05 | `--persist` mint path should refuse to write a row it would reject at load" (that is the WRITE path: the mint refusing to persist a `minted_at`-less row). This item is the READ/env-skip path: the skip that CREATES the un-loadable state by advancing `last_verified`. Also distinct from the `run_row` stale-artifact freshness LOW above (that under-states freshness harmlessly; this one hard-refuses load).
+
+**Acceptance:** the env-gated skip path must NOT advance `last_verified` on a row lacking `minted_at` (either preserve the prior `last_verified` alongside `last_real_grade`, or backfill a pinned `minted_at` at skip time from the row's genuine first-verification). Regression: a pre-P90 `minted_at`-less row, env-skipped in a blocking cadence, must still load on the NEXT run (no `SystemExit`/FAIL from a clock-advanced `last_verified`). The P95-designed exemption retirement (make `minted_at` unconditional across all rows) is the class-closing endgame; until then this hardens the skip path.
+
+**Why deferred:** a `quality/runners/run.py` write-path change with its own test obligation — orthogonal to the no-cargo P97 milestone-close window; routes to the next `run.py`-touching quality-framework window.
+
+**Default disposition:** DEFERRED-v0.14.0 (runner-hardening) `[-quality-framework]`.
+
+**STATUS:** OPEN
