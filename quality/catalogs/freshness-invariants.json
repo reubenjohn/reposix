@@ -1131,6 +1131,45 @@
         "on-demand"
       ],
       "minted_at": "2026-07-05T22:00:00Z"
+    },
+    {
+      "id": "structure/catalog-immutable-on-read",
+      "dimension": "structure",
+      "kind": "mechanical",
+      "minted_at": "2026-07-05T22:30:00Z",
+      "comment": "D-P96-01 (.planning/CONSULT-DECISIONS.md) — the quality runner splits GRADE from PERSIST: a bare cadence run (the pre-push / pre-pr GATE path) grades in memory + writes per-row artifacts + still blocks RED, but does NOT write status back to quality/catalogs/. Only run.py --cadence <c> --persist (the phase-close / verifier-subagent MINT path) mutates the committed catalog. Closes the HIGH self-mutation bug where a read-only pre-push flipped docs-build.json (NOT-VERIFIED->PASS) and dirtied the tree at push time (3 live repros, each dropped with the recurring `git checkout HEAD -- quality/catalogs/` band-aid, now unnecessary).",
+      "sources": [
+        "quality/runners/run.py",
+        "quality/runners/test_run.py",
+        ".planning/CONSULT-DECISIONS.md"
+      ],
+      "command": "bash quality/gates/structure/catalog-immutable-on-read.sh",
+      "expected": {
+        "asserts": [
+          "a bare cadence run (run.py --cadence pre-push, no --persist) leaves every quality/catalogs/*.json byte-identical (validate-only, no self-mutation)",
+          "a validate-only cadence run still blocks RED via compute_exit_code exit 1 (gate integrity preserved without persistence)",
+          "the explicit mint path (run.py --cadence <c> --persist) still writes graded status back to the catalog (grades not frozen)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/structure/catalog-immutable-on-read.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/structure/catalog-immutable-on-read.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "If RED: a run.py cadence run is writing catalog status as a side effect. Do NOT re-add `git checkout HEAD -- quality/catalogs/`. Fix the split in run.py:main() — save_catalog must be gated behind args.persist (default False), and minting must use `run.py --cadence <c> --persist`. Hermetic repro: quality/runners/test_run.py.",
+      "claim_vs_assertion_audit": "The verifier (A) drives run.main() over a synthetic would-flip catalog and asserts a no-persist run leaves it byte-identical, that a validate-only RED still exits 1, and that --persist still writes the flip; and (B) snapshots md5 of every real quality/catalogs/*.json, runs a real cadence, and asserts zero bytes changed. If the description's claim ('cadence gate runs never mutate the committed catalog, yet still block RED, and --persist still mints') were false — e.g. run.py:main() called save_catalog on a bare cadence run, the pre-fix bug — layer A would observe the synthetic flip persisted (byte diff) and layer B would observe real-catalog md5 drift, and the verifier would exit 1. Conversely if the fix over-corrected and froze grades, the --persist mint assertion would fail.",
+      "waiver": null,
+      "transport_claim": false,
+      "cadences": [
+        "pre-push",
+        "pre-pr"
+      ]
     }
   ]
 }
