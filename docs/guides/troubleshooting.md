@@ -357,7 +357,19 @@ Symptom: you pushed a brand-new record (a create, not an edit) to a real backend
 
 What it means: this is a **documented, owner-signed v0.13.0 known limitation**, not a bug you caused. A real backend assigns its own id to a new record. If the connection drops in the narrow window *after* the backend created the record but *before* your cache finished matching that new id back to your local file, the retry cannot yet recognise the already-created record as the same one, so it creates a second. The window is narrow (real backend + a create + a mid-push network drop) and there is **no data loss and no cache corruption** — only an extra record.
 
-Fix (before you re-push, check for the duplicate):
+Confirm it from the audit log (an interrupted create leaves a `helper_push_started` row with no matching `helper_push_accepted` for the same push):
+
+```bash
+sqlite3 ~/.cache/reposix/<backend>-<project>.git/cache.db \
+    "SELECT ts, op, decision, reason FROM audit_events_cache \
+     WHERE op LIKE 'helper_push_%' ORDER BY ts DESC LIMIT 5"
+```
+
+A `helper_push_started` row whose push never reached a `helper_push_accepted` (the accept row that a clean push writes on success) is the fingerprint of the interrupted create — the push began, the backend created the record, but the connection dropped before the accept landed and matched the new id back. The retry then shows as its own `started` → `accepted` pair against the duplicate.
+
+Fix (once you notice the duplicate, before pushing anything further):
+
+Do not push again until you've resolved the duplicate below — a second push on top of an unreconciled cache can create a third copy.
 
 ```bash
 # 1. Look on the backend for two records with identical title/body.

@@ -54,21 +54,21 @@ Open the file. The two pieces you might want to edit:
 
 ## Step 3 — Configure secrets and variables on the mirror repo
 
-The workflow reads three secrets and one variable. Set them with `gh`:
+The workflow reads three secrets and one variable. Set them with `gh`.
+
+> **Read this before you paste:** `gh secret set <NAME>` (without `--body`) prompts interactively for the secret value — it only works in a real terminal. For non-TTY contexts (CI, automation), pipe the value via stdin or pass `--body`: `printf '%s' "$TOKEN" | gh secret set ATLASSIAN_API_KEY` or `gh secret set ATLASSIAN_API_KEY --body "$TOKEN"`.
 
 ```bash
 cd /tmp/<space>-mirror
 
 # Secrets — encrypted, only visible to the workflow.
-gh secret set ATLASSIAN_API_KEY            # paste the API token from prerequisites
-gh secret set ATLASSIAN_EMAIL              # your Atlassian account email
-gh secret set REPOSIX_CONFLUENCE_TENANT    # e.g. 'acme' for acme.atlassian.net
+gh secret set ATLASSIAN_API_KEY            # prompts interactively; paste the API token from prerequisites
+gh secret set ATLASSIAN_EMAIL              # prompts interactively; your Atlassian account email
+gh secret set REPOSIX_CONFLUENCE_TENANT    # prompts interactively; e.g. 'acme' for acme.atlassian.net
 
 # Variables — readable, can be templated into env: blocks.
 gh variable set CONFLUENCE_SPACE --body '<SPACE-KEY>'
 ```
-
-> **Note:** `gh secret set <NAME>` (without `--body`) prompts interactively for the secret value. For non-TTY contexts (CI, automation), pipe the value via stdin or pass `--body`: `printf '%s' "$TOKEN" | gh secret set ATLASSIAN_API_KEY` or `gh secret set ATLASSIAN_API_KEY --body "$TOKEN"`.
 
 Verify:
 
@@ -104,7 +104,7 @@ After the first successful run, `git fetch origin && git log --oneline -5` from 
 
 Webhooks fire `repository_dispatch` on the mirror repo, which the workflow's `on:` block listens for. With this in place, an edit in Confluence triggers the mirror sync within ~30 seconds (rather than waiting up to 30 minutes for the cron).
 
-1. Mint a fine-grained GitHub PAT with `repo` scope on the mirror repo. (Atlassian's webhook needs to call `POST https://api.github.com/repos/<org>/<space>-mirror/dispatches`.)
+1. Mint a GitHub PAT that can dispatch to the mirror repo — either a classic PAT with `repo` scope, or a fine-grained PAT scoped to this repo with 'Contents: Read and write' permission. (Atlassian's webhook needs to call `POST https://api.github.com/repos/<org>/<space>-mirror/dispatches`.)
 2. In Atlassian admin, navigate to **Settings → System → Webhooks → Create webhook**.
 3. Configure:
     - **URL:** `https://api.github.com/repos/<org>/<space>-mirror/dispatches`
@@ -189,7 +189,7 @@ If a run fails, the most common causes are:
 | `couldn't find remote ref main` on first run | Truly-empty mirror — workflow handles it; subsequent run should pass. |
 | `--force-with-lease` rejected | Race with a concurrent bus push; cron will retry the next tick. |
 | `cargo binstall` cannot find a release | Pinned to `reposix-cli`; check the published version on crates.io. |
-| Webhook fires but no run starts | PAT lacks `repo` scope on the mirror; rotate at GitHub settings. |
+| Webhook fires but no run starts | PAT can't dispatch to the mirror — needs a classic PAT with `repo` scope, or a fine-grained PAT scoped to this repo with 'Contents: Read and write'; rotate at GitHub settings. |
 
 The full troubleshooting matrix — including bus-remote `fetch first` rejections, attach reconciliation warnings, and cache-desync recovery — lives at [Troubleshooting → DVCS push/pull issues](troubleshooting.md#dvcs-pushpull-issues).
 

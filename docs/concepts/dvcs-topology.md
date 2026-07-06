@@ -12,9 +12,9 @@ This page is the cold-reader's mental model: **three roles**, **two refs you can
 
 | Role | What you install | What you read from | What you write to |
 |---|---|---|---|
-| **SoT-holder** (Dev A) | reposix CLI; attached via `reposix init` | The SoT (cache-backed; live REST) | SoT + GH mirror (atomic via the bus remote) |
+| **SoT-holder** (Dev A) | reposix CLI; attached via `reposix init` | The SoT (cache-backed; live REST) | SoT (committed) + GH mirror (best-effort, lag-tracked) |
 | **Mirror-only consumer** (Dev B before installing) | nothing — vanilla git only | The GH mirror (a plain git repo) | Cannot write back through reposix |
-| **Round-tripper** (Dev B after `reposix attach`) | reposix CLI; attached after-the-fact | GH mirror for fast clones; SoT for ground truth | SoT + GH mirror (atomic via the bus remote) |
+| **Round-tripper** (Dev B after `reposix attach`) | reposix CLI; attached after-the-fact | GH mirror for fast clones; SoT for ground truth | SoT (committed) + GH mirror (best-effort, lag-tracked) |
 
 The mirror-only consumer is the new entrant. Before v0.13.0, "see the team's tracker" meant "install reposix." Now it can mean "`git clone`," which is what every developer already knows how to do.
 
@@ -60,11 +60,24 @@ refs/mirrors/<sot-host>-synced-at      # annotated tag with timestamp message
 
 For a Confluence SoT at `reuben-john.atlassian.net`, the host slug is `confluence`. (The slug always names the backend kind, not your tenant. The four canonical slugs are `sim`, `github`, `confluence`, `jira`.)
 
-> **Where these refs live (verified P91 91-06, correcting an earlier overclaim in this doc):** `refs/mirrors/...` are written into the **local reposix cache's own bare repo** — one per machine whose `reposix` install ran the push. They are **not** pushed to the plain-git GH mirror. A real bus push was traced end to end for this rewrite: after the push, the mirror's own ref list shows only `refs/heads/main` — no `refs/mirrors/*` ever arrives there, because the bus's mirror leg is a plain `git push <mirror> main` subprocess (DVCS-BUS-WRITE-02) that only ever touches `main`. And a bus-attached round-tripper's own `git fetch` of the reposix remote doesn't pick them up either (DVCS-BUS-FETCH-01; confirmed: fetching the bus remote populated its `refs/remotes/.../main` tracking ref and nothing under `refs/mirrors/`).
+<!--
+  Traceability for the claims below (corrected after tracing a real bus push
+  end-to-end): P91 91-06 (bus-leg push behaviour), DVCS-BUS-WRITE-02 (mirror leg
+  is a plain `git push <mirror> main` subprocess), DVCS-BUS-FETCH-01 (bus fetch
+  tunnel doesn't advertise refs/mirrors to round-trippers), D91-02 (dev box runs
+  older git than the runtime requirement, so the single-backend fetch tunnel
+  can't be driven here). Ground truth cross-checked against the sync-workflow
+  template (docs/guides/dvcs-mirror-setup-template.yml, the explicit
+  `git push mirror refs/mirrors/...` leg) and crates/reposix-remote/tests/mirror_refs.rs.
+-->
+> **Where these refs live and how they travel (corrected after tracing a real bus push end to end):** `refs/mirrors/...` are always written into the **local reposix cache's own bare repo** — one per machine whose `reposix` install ran the push. Whether they *also* reach the plain-git GH mirror depends on which path put them there:
 >
-> The one shape where a real `git fetch` *would* bring these refs into a working tree is a **single-backend** (non-bus, Pattern B) `reposix::` remote — the helper's git-native fetch tunnel talks directly to the cache's bare repo, which advertises every ref it holds, `refs/mirrors/*` included. See [Git layer](../how-it-works/git-layer.md) for that mechanism. That path is architecture-derived, not independently re-verified here — this repo's dev box runs an older git than the runtime requirement (D91-02), so it can't drive the git-native fetch tunnel at all.
+> - **The bus-remote push leg does NOT put them on the mirror.** The bus's mirror leg is a plain `git push <mirror> main` subprocess that only ever touches `main`. A real bus push was traced end to end for this rewrite: immediately after a bus push, the mirror's own ref list shows only `refs/heads/main` — no `refs/mirrors/*`. And a bus-attached round-tripper's own `git fetch` of the reposix remote doesn't pick them up either (confirmed: fetching the bus remote populated its `refs/remotes/.../main` tracking ref and nothing under `refs/mirrors/`).
+> - **The sync GitHub Action DOES put them on the mirror.** The mirror-sync workflow runs a **separate, plain** `git push mirror refs/mirrors/<sot-host>-head refs/mirrors/<sot-host>-synced-at` (independent of any bus remote — see [DVCS mirror setup Step 4](../guides/dvcs-mirror-setup.md#step-4-smoke-test-with-a-manual-run)). So **after the workflow has run at least once**, a vanilla `git fetch && git for-each-ref refs/mirrors/` against the **mirror** repo *does* list both annotation refs — no reposix required.
 >
-> **Practical upshot:** "Dev C" (mirror-only, vanilla git, no reposix) can **never** read these refs — there is no path from the mirror to them. Today's only two working consumers are (1) the bus push's own reject-hint, which reads the ref internally and renders the age inline (below), and (2) manual inspection of the cache's bare repo directly, on the machine that owns it: `git --git-dir=<cache-path> log refs/mirrors/<sot-host>-synced-at -1 --format='%ai %s'` (find `<cache-path>` from `reposix gc`'s printed cache root).
+> The other shape where a real `git fetch` brings these refs into a working tree is a **single-backend** (non-bus, Pattern B) `reposix::` remote — the helper's git-native fetch tunnel talks directly to the cache's bare repo, which advertises every ref it holds, `refs/mirrors/*` included. See [Git layer](../how-it-works/git-layer.md) for that mechanism. That path is architecture-derived, not independently re-verified here — this repo's dev box runs an older git than the runtime requirement, so it can't drive the git-native fetch tunnel at all.
+>
+> **Practical upshot:** the *bus push alone* never lands these refs on the mirror — but the **mirror-sync workflow does**, so "Dev C" (mirror-only, vanilla git, no reposix) **can** read them with `git for-each-ref refs/mirrors/` once the workflow has synced at least once. The other two consumers work with no mirror at all: (1) the bus push's own reject-hint, which reads the ref internally and renders the age inline (below), and (2) manual inspection of the cache's bare repo directly, on the machine that owns it: `git --git-dir=<cache-path> log refs/mirrors/<sot-host>-synced-at -1 --format='%ai %s'` (find `<cache-path>` from `reposix gc`'s printed cache root).
 
 > **Important:** `refs/mirrors/<sot-host>-synced-at` is the timestamp the mirror last caught up to `<sot-host>` — it is NOT a "current SoT state" marker. Between a Confluence edit and the next webhook fire (typically 30 seconds), the SoT has moved and the mirror has not. Reading the ref tells you "as of this timestamp, the mirror was current"; nothing more.
 
