@@ -345,6 +345,10 @@ class TestShellSubprocessTranscriptRuntime(unittest.TestCase):
 def _run_main_over_synthetic_catalog(*, dimension: str, row: dict) -> dict:
     """Drive run.main() over a one-row synthetic catalog in a temp REPO_ROOT so
     the full grade->strip->persist path is exercised. Returns the persisted row.
+
+    Uses --persist (the D-P96-01 MINT path): this helper's caller asserts a
+    persisted status flip, which since the GRADE/PERSIST split only happens on
+    an explicit mint. A bare cadence run is validate-only (see test_run.py).
     """
     with tempfile.TemporaryDirectory() as td:
         tdp = Path(td)
@@ -356,7 +360,8 @@ def _run_main_over_synthetic_catalog(*, dimension: str, row: dict) -> dict:
         with mock.patch.object(run, "REPO_ROOT", tdp), \
              mock.patch.object(run, "CATALOG_DIR", cat_dir), \
              mock.patch.object(run, "REPORTS_DIR", tdp / "quality" / "reports"), \
-             mock.patch.object(sys, "argv", ["run.py", "--cadence", "pre-push"]), \
+             mock.patch.object(sys, "argv",
+                               ["run.py", "--cadence", "pre-push", "--persist"]), \
              mock.patch.dict(os.environ, {}, clear=True), \
              contextlib.redirect_stdout(io.StringIO()):
             run.main()

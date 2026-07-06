@@ -11,7 +11,19 @@ multiple cadences. The 8 cadences are pre-commit, pre-push, pre-pr, weekly,
 pre-release, post-release, on-demand, pre-release-real-backend (env-gated).
 
 Usage:
-  python3 quality/runners/run.py --cadence <cadence>
+  python3 quality/runners/run.py --cadence <cadence>            # GATE  (validate-only)
+  python3 quality/runners/run.py --cadence <cadence> --persist  # MINT  (writes catalog)
+
+GRADE / PERSIST split (D-P96-01, .planning/CONSULT-DECISIONS.md): a bare
+cadence run is VALIDATE-ONLY -- it grades every in-scope row in memory, writes
+per-row artifacts under quality/reports/verifications/, and STILL blocks RED
+via the exit code, but it does NOT write graded status back to
+quality/catalogs/. Only --persist (the phase-close / verifier-subagent MINT
+invocation) mutates the committed catalog. This stops a read-only pre-push GATE
+run from self-mutating the catalog as a side effect (the HIGH self-mutation
+bug: a pre-push flipped docs-build.json and dirtied the tree at push time).
+Hooks (pre-commit/pre-push) and CI (pre-pr/weekly/pre-release/post-release) run
+WITHOUT --persist by design; catalog-first minting / un-waiving pass --persist.
 
 Exit codes:
   0 — every P0+P1 row in scope is PASS or WAIVED.
@@ -174,7 +186,8 @@ def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
     """Invoke verifier (or short-circuit), write artifact, return (updated row, elapsed_s).
 
     Sets in-memory `status` + `last_verified` for the caller; persistence
-    back to the catalog is gated by `catalog_dirty()` in `main()`.
+    back to the catalog is gated by `--persist` (and `catalog_dirty()`) in
+    `main()` -- a bare cadence GATE run grades but never writes (D-P96-01).
     """
     started = time.monotonic()
     artifact_path = repo_root / row["artifact"] if row.get("artifact") else None
@@ -375,12 +388,32 @@ def print_row_summary(row: dict, elapsed_s: float, extra: str = "") -> None:
     print(f"    [{label:<13}] {rid}  ({blast}, {elapsed_s:.2f}s){suffix}")
 
 
-def main() -> int:
+def _build_arg_parser() -> argparse.ArgumentParser:
+    """Construct the CLI parser. Extracted from main() so tests can introspect
+    the --persist default without driving a full run (test_run.py)."""
     parser = argparse.ArgumentParser(description="Quality Gates runner")
     parser.add_argument("--cadence", required=True, choices=VALID_CADENCES)
-    args = parser.parse_args()
+    parser.add_argument(
+        "--persist",
+        action="store_true",
+        help=(
+            "MINT MODE: write graded statuses back to quality/catalogs/*.json. "
+            "Default OFF -- a bare cadence run is VALIDATE-ONLY (grades in "
+            "memory, writes per-row artifacts, still blocks RED via the exit "
+            "code) but does NOT mutate the committed catalog. Only the explicit "
+            "phase-close / verifier-subagent grading invocation passes "
+            "--persist (D-P96-01)."
+        ),
+    )
+    return parser
 
-    print(f"quality/runners/run.py --cadence {args.cadence}")
+
+def main(argv: list[str] | None = None) -> int:
+    args = _build_arg_parser().parse_args(argv)
+
+    mode = ("MINT (--persist: catalog writes ON)" if args.persist
+            else "validate-only (catalog writes OFF)")
+    print(f"quality/runners/run.py --cadence {args.cadence}  [{mode}]")
     now = datetime.now(timezone.utc)
 
     catalogs = discover_catalogs()
@@ -389,6 +422,7 @@ def main() -> int:
         return 0
 
     all_rows: list[dict] = []
+    pending_mint: list[str] = []  # catalogs with unpersisted flips (validate-only)
     counts = {"PASS": 0, "FAIL": 0, "PARTIAL": 0, "WAIVED": 0, "NOT-VERIFIED": 0}
 
     for cat_path in catalogs:
@@ -442,8 +476,25 @@ def main() -> int:
             rid = row.get("id")
             if rid in orig_status_by_id and row.get("status") == orig_status_by_id[rid]:
                 row["last_verified"] = orig_lv_by_id[rid]
+        # D-P96-01: only an explicit --persist MINT run writes graded status
+        # back to disk. A bare cadence GATE run (pre-push/pre-pr hook + CI) is
+        # validate-only -- it computed the flip in memory (compute_exit_code
+        # below STILL blocks RED off that in-memory status), but must NOT
+        # self-mutate the committed catalog. Record the pending flip so a human
+        # sees it without any tree write.
         if catalog_dirty(original, data):
-            save_catalog(cat_path, data)
+            if args.persist:
+                save_catalog(cat_path, data)
+            else:
+                pending_mint.append(cat_path.name)
+
+    if pending_mint and not args.persist:
+        print(
+            f"note: validate-only run -- {len(pending_mint)} catalog(s) have "
+            f"status flips NOT persisted ({', '.join(sorted(set(pending_mint)))}). "
+            f"To mint the new grade(s): "
+            f"python3 quality/runners/run.py --cadence {args.cadence} --persist"
+        )
 
     exit_code = compute_exit_code(all_rows)
     summary = (
