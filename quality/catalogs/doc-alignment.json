@@ -5,11 +5,11 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 259,
+    "claims_bound": 261,
     "claims_missing_test": 0,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.7708333333333334,
+    "alignment_ratio": 0.7767857142857143,
     "floor": 0.5,
     "trend_30d": "+0.00",
     "last_walked": "2026-07-06T06:48:21Z",
@@ -2170,9 +2170,9 @@
         "line_start": 7,
         "line_end": 7
       },
-      "source_hash": "4e3fb02880edab482b645e126d87eead9742553430c27966006acaafe3913e13",
+      "source_hash": "4829e81a8a74757014c95b97cf2725da4237c920fcdd9094b580012e0371f64d",
       "source_hashes": [
-        "4e3fb02880edab482b645e126d87eead9742553430c27966006acaafe3913e13"
+        "4829e81a8a74757014c95b97cf2725da4237c920fcdd9094b580012e0371f64d"
       ],
       "tests": [
         "quality/gates/docs-build/badges-resolve.py"
@@ -2180,11 +2180,11 @@
       "test_body_hashes": [
         "b7a731c630e32ac615471a8a7393a7b6083d17ac8cde1f1c0c8efb4ef7977818"
       ],
-      "rationale": "Verifier HEADs every badge URL in README + docs/index.md including the CI workflow badge",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "Verifier HEADs every badge URL in README + docs/index.md including the CI workflow badge; re-bound after homepage CI badge URL modernized (8925311) — badges-resolve.py 8/8 PASS, CI badge HTTP 200",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-06T01:24:27Z",
-      "last_extracted": "2026-07-06T01:24:27Z",
+      "last_run": "2026-07-06T07:17:19Z",
+      "last_extracted": "2026-07-06T07:17:19Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6273,9 +6273,9 @@
         "line_start": 8,
         "line_end": 8
       },
-      "source_hash": "84fce6abfcbbf7559471cd74ef498792c8cac75d3faa8d553a467c878ace620b",
+      "source_hash": "366dd4086fe1a3abfc4064f2a386e112574f392dc48dca5ad32e7c15b8cc9066",
       "source_hashes": [
-        "84fce6abfcbbf7559471cd74ef498792c8cac75d3faa8d553a467c878ace620b"
+        "366dd4086fe1a3abfc4064f2a386e112574f392dc48dca5ad32e7c15b8cc9066"
       ],
       "tests": [
         "quality/gates/docs-build/badges-resolve.py"
@@ -6283,11 +6283,11 @@
       "test_body_hashes": [
         "b7a731c630e32ac615471a8a7393a7b6083d17ac8cde1f1c0c8efb4ef7977818"
       ],
-      "rationale": "Same verifier sweeps every badge URL on docs/index.md",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "Same verifier sweeps every badge URL on docs/index.md; re-bound after quality-weekly badge pinned to main (f2bbf7f) — badges-resolve.py 8/8 PASS, quality-weekly badge HTTP 200",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-06T01:24:27Z",
-      "last_extracted": "2026-07-06T01:24:27Z",
+      "last_run": "2026-07-06T07:17:26Z",
+      "last_extracted": "2026-07-06T07:17:26Z",
       "last_extracted_by": "bind-call"
     },
     {
