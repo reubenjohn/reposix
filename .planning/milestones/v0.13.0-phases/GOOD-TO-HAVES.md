@@ -78,7 +78,7 @@
 | 38 | Split `cache_coherence.rs` 23.4k | DEFERRED-v0.14.0 | LOW/S cargo test split; bundle w/ crates-source budget rollout |
 | 39 | `catalog-immutable-on-read` cadence coverage | DEFERRED-v0.14.0 | XS/LOW gate+runner; pairs w/ run.py persist-gate extraction |
 
-**Tally:** RESOLVING-P97 = 6 · DEFERRED-v0.14.0 (incl. `-target`) = 28 · DEFERRED-post-tag = 3 · DEFERRED-to-Wave-B-mint = 1 · OWNER-ACTION = 1 → **39 entry-topics across 40 STATUS lines** (GTH-01 is one PARTIAL line; all else OPEN).
+**Tally:** RESOLVING-P97 = 6 · DEFERRED-v0.14.0 (incl. `-target`) = 28 · DEFERRED-post-tag = 3 · DEFERRED-to-Wave-B-mint = 1 · OWNER-ACTION = 1 → **39 entry-topics across 40 STATUS lines** (GTH-01 is one PARTIAL line; all else OPEN). **Part 2 update:** all 6 RESOLVING-P97 items (GTH-02/08/09/10/12/13) landed at commit `302e8ec` — each entry's `STATUS` is now RESOLVED with that SHA; two carried noticing-bonus doc-lie corrections (GTH-09 WAL claim, GTH-12 exit-2 row).
 
 **FLAG — file-size waiver understatement (routed to Wave B, NOT edited here):** The
 `structure/file-size-limits` waiver in `quality/catalogs/freshness-invariants.json` says
@@ -157,7 +157,7 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 
 **Default disposition:** Size XS; XS items always close per CLAUDE.md OP-8 — fold into the P90/P95 polish slot that already owns deferral-linter content cross-reference.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (P97 Wave A, commit `302e8ec`) — pattern 2 widened to `lands? (alongside|in) ([a-zA-Z-]+ ){0,5}P[0-9]+` in `deferral-pointer-linter.sh`. Verified against reality: the linter still PASSes on the real tree; a synthetic `// this lands alongside the follow-up work in P999` extracts `P999` (orphan-PNN BLOCK), while an `attach.rs`-style `land alongside the integration tests in P79-03 … // banned-words: ok — P91 …` line extracts only `P79` — the intervening class `[a-zA-Z-]+ ` cannot traverse a PNN's digits, so the trailing allowlist-marker `P91` is correctly excluded (phrase-scoped extraction preserved). Header documents the widened shape + the synthetic scenario.
 
 ## GOOD-TO-HAVES-03 — `run.py` runner has no per-row / per-dimension scope flag (only `--cadence`)
 
@@ -282,7 +282,7 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 
 **Default disposition:** XS — always closes; fold into whichever of P91/P92/P95 finishes draining the RAISE LIST first (natural moment to restructure what's left).
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (P97 Wave A, commit `302e8ec`) — split (option a) into 5 per-section shards under `quality/reports/raise-list-p90/` (each ≤7.3k) behind a slim 2.8k index at `raise-list-p90.md`. Chose split over trim because the file is mostly dense tables (a trim to <20k could not preserve every cited fact) AND catalog JSONs reference `raise-list-p90.md § N` (forbidden to edit — Wave B), so the index deliberately preserves all 5 `## N.` section headers as links to shards → those `§ N` refs still resolve. Content is verbatim (pure `awk` relocation); the file's pre-commit 20k WARN is cleared.
 
 ## GOOD-TO-HAVES-09 — doc-note the WAL asymmetry between `reposix-core::open_audit_db` and `reposix-cache::open_cache_db`
 
@@ -298,7 +298,7 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 
 **Default disposition:** XS — always closes; fold into the next `reposix-core`/audit-touching phase.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (P97 Wave A, commit `302e8ec`) — **noticing bonus:** the target doc `docs/how-it-works/trust-model.md:76` was actively LYING ("Both tables use SQLite WAL"). Verified against code: `reposix-cache::open_cache_db` sets `PRAGMA journal_mode=WAL` (`db.rs:54`) but `reposix-core::open_audit_db` (`audit.rs:116-122`) sets NO journal mode → the audit DB uses SQLite's default rollback journal. Corrected the false claim AND documented the asymmetry as intentional (audit DB is single-writer-per-process + append-only, so WAL's concurrent-reader benefit doesn't apply the same way). docs-build gate green.
 
 ## GOOD-TO-HAVES-10 — `docs/reference/exit-codes.md` TL;DR table omits clap's own usage-error exit-2 layer
 
@@ -314,7 +314,7 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 
 **Default disposition:** XS — always closes; fold into the next docs-touching phase or a `/reposix-quality-refresh docs/reference/exit-codes.md` pass.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (P97 Wave A, commit `302e8ec`) — added a "Two exit-`2` layers" callout to the `docs/reference/exit-codes.md` TL;DR table: pre-dispatch clap usage-error exit-2 (either binary, before any handler) vs post-dispatch `git-remote-reposix` crash exit-2 (`real_main` `Err`); notes the `reposix` CLI has no post-dispatch exit-2 (handlers return `0`/`1` only). docs-build gate green.
 
 ## GOOD-TO-HAVES-11 — extend `subcommand_help_renders` (cli.rs) beyond 3/15 spot-checked subcommands
 
@@ -346,7 +346,7 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 
 **Default disposition:** XS — always closes; fold into the next docs-touching phase or a `/reposix-quality-refresh docs/reference/cli.md` pass.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (P97 Wave A, commit `302e8ec`) — added a **Scope** column (shared / CLI-only / helper-only) to `docs/reference/cli.md`'s exit-codes table. **Noticing bonus:** the code-`2` row was inaccurate ("backend unreachable, IO error, malformed spec") — those are exit `1` handled errors for the `reposix` CLI per canonical `exit-codes.md`; corrected to move them to code `1` and describe code `2`'s real two sources (clap usage error = shared; helper crash = helper-only), with a cross-link to `exit-codes.md`. docs-build gate green.
 
 ## GOOD-TO-HAVES-13 — doc-note: sandbox `rg` binary breaks under process substitution
 
@@ -362,7 +362,7 @@ If v0.14.0 budget tightens, can move to v0.14.x polish slot — the gap is opera
 
 **Default disposition:** XS — always closes; fold into the next CLAUDE.md-touching commit.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (P97 Wave A, commit `302e8ec`) — added a "Sandbox shell gotcha — prefer `grep` over `rg`" aside to `quality/PROTOCOL.md` Step 6 (the read-first quality-gates surface), stating the sandbox `rg` emulation breaks under process substitution (`<(...)`) and gates use `grep` by convention. Chose PROTOCOL.md over root CLAUDE.md (GTH-13's other option) to keep the ≤40k root-CLAUDE budget and put the note where gate-shell authors read.
 
 ## GOOD-TO-HAVES-14 — helper `list for-push` reports `?` (unknown remote SHA), forcing a redundant export on every push
 
