@@ -1,0 +1,8 @@
+=== 9th probe: pre-release-real-backend milestone-close-vision-litmus ===
+invoked: bash quality/gates/agent-ux/milestone-close-vision-litmus.sh
+date_utc: 2026-07-06T05:02:00Z
+env: REPOSIX_ALLOWED_ORIGINS=[<unset>] ATLASSIAN_API_KEY=[<unset>] ATLASSIAN_EMAIL=[<unset>] REPOSIX_CONFLUENCE_TENANT=[<unset>]
+--- STDOUT+STDERR ---
+NOT-VERIFIED: real-backend creds unset: ATLASSIAN_API_KEY ATLASSIAN_EMAIL REPOSIX_CONFLUENCE_TENANT
+  env-gate: exit 75 -> runner maps to NOT-VERIFIED (never skip-as-pass)
+--- exit_code: 75 ---
