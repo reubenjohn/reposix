@@ -1,6 +1,6 @@
 # v0.13.0 GOOD-TO-HAVES
 
-> **Purpose.** OP-8 +2 reservation slot 2 — improvements (clarity, perf, consistency, grounding) the planned phases observed but didn't fold in. Sized XS / S / M; XS items always close; M items default-defer to next milestone. Drained by P88 (good-to-haves polish + milestone close).
+> **Purpose.** OP-8 +2 reservation slot 2 — improvements (clarity, perf, consistency, grounding) the planned phases observed but didn't fold in. Sized XS / S / M; XS items always close; M items default-defer to next milestone. **Drained by P97 (good-to-haves polish + milestone close)** — was P88 in the original P78–P88 plan; renumbered when the milestone extended to P78–P97. (Per-entry "Default disposition for P88" lines below are historical filing-time notes; the actual drain phase is P97.)
 
 ## Archived (terminal) entries — relocated
 

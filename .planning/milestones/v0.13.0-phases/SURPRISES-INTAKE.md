@@ -1,11 +1,11 @@
-# v0.13.0 Surprises Intake (P87 source-of-truth)
+# v0.13.0 Surprises Intake (P96 source-of-truth)
 
-> **Append-only intake for surprises discovered during P78-P86 execution.**
-> Each entry is something the discovering phase chose NOT to fix eagerly because it was massively out-of-scope. P87 drains this file.
+> **Append-only intake for surprises discovered during P78-P96 execution.**
+> Each entry is something the discovering phase chose NOT to fix eagerly because it was massively out-of-scope. **P96 (OP-8 Slot 1) drains this file** (was P87 in the original P78–P88 plan; renumbered when the milestone extended to P78–P97).
 >
 > **Eager-resolution preference:** if a surprise can be closed inside its discovering phase without doubling the phase's scope (rough heuristic: < 1 hour incremental work, no new dependency introduced, no new file created outside the phase's planned set), do it there. The intake file is for items that genuinely don't fit.
 >
-> **Distinction from `GOOD-TO-HAVES.md`:** entries here fix something that's BROKEN, RISKY, or BLOCKING. Improvements/polish go in `GOOD-TO-HAVES.md` (P88).
+> **Distinction from `GOOD-TO-HAVES.md`:** entries here fix something that's BROKEN, RISKY, or BLOCKING. Improvements/polish go in `GOOD-TO-HAVES.md` (P97, OP-8 Slot 2).
 
 ## Entry format
 
@@ -18,7 +18,7 @@
 
 **Sketched resolution:** One paragraph proposing how P87 should resolve.
 
-**STATUS:** OPEN  (← P87 updates to RESOLVED|DEFERRED|WONTFIX with rationale or commit SHA)
+**STATUS:** OPEN  (← P96 updates to RESOLVED|DEFERRED|WONTFIX with rationale or commit SHA)
 ```
 
 ---
