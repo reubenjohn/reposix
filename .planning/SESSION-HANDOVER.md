@@ -43,29 +43,46 @@ credential / spend; and "not a decision, go verify" is not an escalation.**
 
 - **v0.13.0 autonomously GREEN** — P78–P97, 20/20 phases shipped; milestone verdict at
   `quality/reports/verdicts/milestone-v0.13.0/VERDICT.md`.
-- **All pre-tag doc/planning work is DONE and pushed.** `git log --oneline -8` (verify
-  live, do not trust pinned SHAs in prose):
+- **Pre-tag checklist items 1–3 are DONE and pushed.** `HEAD == origin/main == aff5233`
+  (verified live this session via `git log --oneline -8` / `git rev-parse`). Working tree
+  is clean (`git status` — nothing to commit). **No `v0.13.0` tag exists**
+  (`git tag -l 'v0.13*'` empty — confirmed live). Recent commits:
+  - `aff5233` chore(planning): release runbook live status — PR #61 regen clean, CI re-triggered
+  - `5ade713` docs(handover): L0 relief — v0.13.0 release runbook, owner-delegated
   - `f686ab2` chore(planning): owner delegated the release decision to L0 — release runbook
   - `13c922f` chore(planning): STATE cursor — pre-tag doc/planning items cleared
   - `56307be` docs: v0.13.0 intake OP-8 disposition + bound-to-live-state sweep
-  - `b8de57c` docs: DVCS cold-reader fixes — 7 findings pre-v0.13.0 tag
-  - `b03266d` / `dfc3a9b` docs: RBF-LR-03 honest WAIVED-for-v0.13.0 known-limitation
-- **Verified this session:** `HEAD == origin/main == f686ab2`. Working tree is otherwise
-  clean except `quality/catalogs/doc-alignment.json` (an unstaged, benign re-walk stat
-  refresh — `last_walked`/`coverage_ratio` timestamp drift only, matches the known-brittle
-  doc-alignment walker noise in §6; not part of this handover, left for the next session).
-  **No `v0.13.0` tag exists** (`git tag -l 'v0.13.0*'` empty) — confirmed live.
-- **The owner DELEGATED the release decision to L0** (2026-07-06): PR #61 merge, the
+- **The owner DELEGATED the full release decision to L0** (2026-07-06): PR #61 merge, the
   **crates.io publish (IRREVERSIBLE — published versions can only be yanked, not undone)**,
   and cutting the **v0.13.0 tag**. This extends the OD-3 tag-push delegation to the
-  publish spend. L0 owns executing it — this session relieved rather than execute an
-  irreversible publish out of a depleted context.
-- **PR #61 status (live, checked this session):** `state: OPEN`, `mergeable: MERGEABLE`,
-  title "chore: release v0.13.0", all CodeQL status checks `SUCCESS`. A steward dispatched
-  earlier this session (review-only, did NOT merge) regenerated it against current main
-  and reviewed the diff — **its result lives in PR #61 itself** (comments/diff), not in an
-  in-session notification. Re-check live with `gh pr view 61 --json state,mergeable,files,
-  statusCheckRollup` before acting — do not assume the prior steward's read is still fresh.
+  publish spend.
+- **PR #61 regenerated clean** (live, checked this session): `state: OPEN`,
+  `mergeable: MERGEABLE`, `headRefOid: 2d1f55f6`. Diff is uniform `0.12.0→0.13.0` churn-only
+  (per-crate version bumps + accurate CHANGELOGs, no stray source), steward-reviewed.
+  The earlier **bot-push CI-gap** (a GITHUB_TOKEN-authored release-plz push leaves
+  `pull_request`-triggered workflows at `action_required` instead of running them) was
+  **resolved by an L0 close/reopen** of PR #61 as a real actor — this is structural to
+  every release-plz regen here; close/reopen (or an equivalent real-actor push) is the
+  standard unblock.
+- **CI run `28819166220` is COMPLETE, NOT all-green** (`gh pr checks 61`, observed live
+  this session): `test`, `clippy`, `rustfmt`, `shell-coverage`, `cargo-audit`,
+  `gitleaks`, `quality gates (pre-pr)`, `coverage`, `bench-latency-v09`, `CodeQL`, and all
+  three `*-v09` real-backend integration jobs — **PASS**. Two checks **FAIL**:
+  - **`integration (contract, real confluence)`** — `contract_confluence_live` and
+    `contract_confluence_live_hierarchy` panic: durable TokenWorld fixture `7798785` lost
+    its expected `parent_id == Some(7766017)` (`left: None`). This is **live-backend fixture
+    drift in Confluence TokenWorld**, not a code regression from this PR (the `-v09` sibling
+    job against the same backend passes). Needs investigation/repair of the fixture state
+    (or the assertion) before this check can go green — **not something to route around**.
+  - **`codecov/project`** — FAIL (coverage-ratio check on the PR; not yet triaged this
+    session).
+  - This supersedes STATE.md's `2026-07-06` snapshot of run `28819166220` as "all pending" —
+    that was true when STATE.md was last written; the run has since finished with these two
+    reds. STATE.md § Workstream A is still the durable pointer for the runbook shape, but
+    its per-check status line is now stale versus this live read.
+- **Net: current GO/NO-GO read is NO-GO** on the release runbook (§3) until the two failing
+  checks are resolved (fixture repair for the Confluence contract test; triage for
+  `codecov/project`) and a fresh `gh pr checks 61` shows all green.
 
 ## 2. Owner decisions — SETTLED
 
@@ -87,27 +104,42 @@ credential / spend; and "not a decision, go verify" is not an escalation.**
   (irreversible), and the v0.13.0 tag cut are all L0-owned now — not owner-blocking. See
   §3 for the runbook.
 
-## 3. Release runbook (L0-owned; authority already delegated — execute it)
+## 3. Release runbook (L0-owned; authority already delegated — execute the DECISION,
+   dispatch the mechanics)
 
 Full durable copy: `.planning/STATE.md` § Workstream A "**RELEASE RUNBOOK (L0-owned
-tail)**" — this section is a map pointing at that, not a duplicate to maintain.
+tail) — LIVE STATUS**" — this section is a map pointing at that, not a duplicate to
+maintain.
 
-1. **Check PR #61 live** — `gh pr view 61 --json state,mergeable,files,statusCheckRollup`
-   (and read the steward's regen review on the PR itself, not from session memory).
-2. **GO criteria (all must hold):** the regenerated diff is release-churn-only (per-crate
+1. **Fix the GO blocker first.** CI run `28819166220` currently has two reds (§1):
+   the real-Confluence contract-test fixture drift and `codecov/project`. Dispatch a
+   subagent to investigate/repair the TokenWorld fixture (or confirm+fix the assertion)
+   and triage the codecov failure. Do NOT merge or publish while either is red.
+2. **Re-check PR #61 live** — `gh pr view 61 --json state,mergeable,files,statusCheckRollup`
+   and `gh pr checks 61` (read the steward's regen review on the PR itself, not from
+   session memory) after the fix lands and a fresh run completes.
+3. **GO criteria (all must hold):** the regenerated diff is release-churn-only (per-crate
    version bumps + CHANGELOG entries, no stray source/logic changes), version bumps are
-   sane for the shipped v0.13.0 work, and CI is green.
-3. **If GO:** merge PR #61 → **crates.io publish (IRREVERSIBLE — verify each crate
+   sane for the shipped v0.13.0 work, and CI is **fully green** (no reds, no pending).
+4. **If GO:** merge PR #61 → **crates.io publish (IRREVERSIBLE — verify each crate
    actually published before proceeding)** → cut the **v0.13.0 tag** (the tag script
    `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh.disabled` stays disabled — do NOT
    run it; canonical release is `.github/workflows/release.yml` on tag `v*`) → push the
    tag → `gh run watch` the release workflow to green.
-4. **If NO-GO:** loop back / fix the regenerated PR; do NOT publish.
-5. **Non-blocking tail after the tag lands:** the 6 env-gated real-backend rows (accept
+5. **If NO-GO:** loop back / fix the regenerated PR; do NOT publish.
+6. **Non-blocking tail after the tag lands:** the 6 env-gated real-backend rows (accept
    via creds or leave honestly NOT-VERIFIED — see §4, this is not a gap); renew the
    `structure/file-size-limits` waiver before 2026-08-08 (§6-adjacent, see STATE.md);
    then scope the v0.14.0 pivot (§2) + the launch-readiness milestone (OD-4) + resume
    workstream B (P98+, `.planning/milestones/v0.13.2-phases/`).
+
+**DELEGATION DISCIPLINE FOR THE NEXT L0 (lesson from this session):** the executing L0
+must NOT read workflow specs itself (e.g. invoking `/gsd-quick` directly, walking
+`quality/PROTOCOL.md` line-by-line) or run mechanical git/gh commands in its own context.
+Dispatch a steward/executor subagent for the merge/publish/tag mechanics and the fixture
+investigation, and keep the L0's own context budget for the release *decision* (GO/NO-GO
+read, risk calls) and cross-cutting integration. The prior L0 ran low on context precisely
+because it did this mechanical work itself instead of delegating it — do not repeat that.
 
 ## 4. Real-backend 9th probe — VERIFIED (owner was right)
 
@@ -155,8 +187,8 @@ Two related brittle-badge misfires; fix by asserting the **invariant**, not the 
   `BOUND → STALE_DOCS_DRIFT` on re-walk despite `badges-resolve.py 8/8 PASS` (hash
   re-extraction drift, not a broken badge). Seen + reverted this session; **the next
   session's push may hit STALE_DOCS_DRIFT** — recovery is `/reposix-quality-refresh
-  docs/index.md`. A C2 / brittle-gate target. (The uncommitted `doc-alignment.json` stat
-  drift noted in §1 is this same walker noise, observed again this session.)
+  docs/index.md`. A C2 / brittle-gate target. (Working tree is clean this session — no
+  live `doc-alignment.json` drift to carry forward, but the failure mode recurs.)
 
 ## 7. Doctrine
 
