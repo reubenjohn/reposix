@@ -20,7 +20,16 @@ import json
 import sys
 from pathlib import Path
 
-_TAIL_LINES = 40
+# 2026-07-07 (RBF investigation, S-260707-rbf-01): 40 was too small for
+# verifiers like p94-git243-fallback-sentinel.sh, which appends a `grep -B2
+# -A15 'panicked at|assertion.*failed'` diagnostic block FOLLOWED BY a
+# `tail -60` of the raw cargo-test log. With a 40-line tail window, the
+# window fell entirely inside the trailing 60-line block, silently
+# discarding the earlier grep context that contains the actual panic/
+# assertion message -- exactly the failure this dump step exists to
+# surface. Raised well past the largest known appended block (60 lines)
+# so both the grep diagnostic and the raw tail survive truncation.
+_TAIL_LINES = 200
 
 
 def _dump_artifact(path: Path) -> None:
