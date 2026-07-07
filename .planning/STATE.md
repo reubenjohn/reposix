@@ -49,34 +49,36 @@ delegated contingent on GREEN verdicts") to the publish spend. L0 owns it, gated
 PR #61 verified clean (only expected version bumps + changelog) AND green CI. Owner chose "steward
 regen + review PR #61 now."
 
-**RELEASE RUNBOOK (L0-owned tail) — LIVE STATUS 2026-07-06:**
-- PR #61 **regenerated GREEN-diff** by the release-plz workflow on the `f686ab2` push (run
-  `28818642275`); head now `2d1f55f6`, `state: OPEN`, `mergeable: MERGEABLE`. Diff reviewed by a
-  steward = **release-churn-only, clean**: uniform `0.12.0→0.13.0` bump across all crates + accurate
-  per-crate CHANGELOGs, no stray source/logic.
-- **CI-gap resolved:** the bot-authored release-plz push left `CI`/`Security audit` at
-  `action_required` (GITHUB_TOKEN pushes don't fire `pull_request` workflows). L0 close/reopened
-  PR #61 as a real actor 2026-07-06 → the full suite ran (run `28819166220`). **CI run
-  `28819166220` is COMPLETE, NOT all-green:** `test`, `clippy`, `rustfmt`, `shell-coverage`,
-  `cargo-audit`, `gitleaks`, `quality gates (pre-pr)`, `coverage`, `bench-latency-v09`, `CodeQL`,
-  and all three `*-v09` real-backend integration jobs — PASS. Two checks **FAIL**:
-  `integration (contract, real confluence)` (durable TokenWorld fixture `7798785` lost its
-  expected `parent_id == Some(7766017)` — reads as live-backend fixture drift, not a code
-  regression, since the `-v09` sibling job on the same backend passes) and `codecov/project`
-  (not yet triaged). **Net: current GO/NO-GO read is NO-GO** until both resolve and a fresh
-  `gh pr checks 61` shows all green. Full detail: `SESSION-HANDOVER.md` §1/§3.
-  **This is structural to release-plz PRs here** — every regen hits the same wall; close/reopen (or
-  an equivalent real-actor push) is the standard unblock. (Worth a CLAUDE.md note — filed as a nit.)
-1. **PR #61** — CI run `28819166220` is NO-GO (2 reds above); dispatch a fix for the TokenWorld
-   fixture drift + triage `codecov/project`, then confirm a fresh `gh pr checks 61` is **all
-   green**, diff still release-churn-only → **merge + crates.io publish** (L0 owns; IRREVERSIBLE
-   — verify publish succeeded per-crate before proceeding). Do NOT merge or publish while red.
+**RELEASE RUNBOOK (L0-owned tail) — LIVE STATUS 2026-07-07 — VERDICT: GO:**
+- Superseding regen: **PR #68** (branch `release-plz-2026-07-07T02-37-20Z`, head
+  `14bb5e43d7ff9552245dae6f3b47caeaece4ea1f`) — the release-plz branch was regenerated again after
+  the PR #61 NO-GO above; PR #68 is the current live release PR.
+- **All required checks GREEN** — `gh pr checks 68` shows the full 22-check matrix PASS, incl.
+  `quality gates (pre-pr)` (CI run `28838198234`, job `85526336500`: 70 PASS / 1 unrelated
+  pre-existing FAIL (`docs-build/p94-badges-real-vs-transient`, already tracked in
+  `GOOD-TO-HAVES.md`, non-blocking) / 1 WAIVED cadence, exit=0), `test`, `clippy`, `rustfmt`,
+  `shell-coverage`, `cargo-audit`, `gitleaks`, `coverage`, `bench-latency-v09`, `CodeQL`, and all
+  real-backend integration jobs (confluence/github/jira, incl. `-v09` arms).
+- **Diff verified release-churn-only**: `gh pr diff 68 --name-only` → only `Cargo.lock`,
+  `Cargo.toml`, and per-crate `Cargo.toml`/`CHANGELOG.md` files. No stray source/logic.
+- **`crlf_blob_body_round_trips_byte_for_byte` flake (S-260707-rbf-01) did NOT recur this run** —
+  the required `quality gates (pre-pr)` check passed clean. This is release-unblocking evidence for
+  THIS run only — root cause remains unproven (hypotheses A/B both still open, local repro 0/7+
+  across two sessions). Tracked as a non-blocking **monitor** item in `SURPRISES-INTAKE.md`
+  (STATUS kept OPEN/HIGH, reframed "monitor — not release-blocking on a green run, revisit if it
+  recurs") — NOT closed, NOT root-caused.
+1. **PR #68** — verdict **GO**: all required checks green, diff churn-only, crlf flake absent this
+   run (non-blocking per above) → **merge + crates.io publish** (L0 owns; IRREVERSIBLE — verify
+   publish succeeded per-crate before proceeding).
 2. **Cut the v0.13.0 tag** — `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh.disabled` stays
    disabled; canonical release is `.github/workflows/release.yml` (tag `v*`). Push tag → watch the
    release workflow to green (`gh run watch`).
 3. **6 env-gated real-backend** transport/attach/conflict rows — accept via creds or leave honestly
    NOT-VERIFIED (env-gate, not a gap; not release-blocking per the settled 9th-probe verification).
 4. **Renew `structure/file-size-limits` waiver before 2026-08-08** (active-corpus WAIVED) — future.
+5. **Monitor S-260707-rbf-01** on future CI runs (this PR's regens or the next release) — if the
+   crlf flake recurs, pull the job log immediately (full diagnostics now in place via `fbe5bee`)
+   before any further truncation regression can hide it again.
 
 **Queued post-tag `/gsd-quick` meta-infra items (run AFTER the tag lands, each via GSD):**
 - The doctrine **4-edit** `/gsd-quick` — NOTE its "create DP-5" step is **stale** (DP-5 already exists = tangent-classification); adjust the edit, do NOT apply verbatim.
