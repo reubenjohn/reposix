@@ -1044,3 +1044,19 @@ relief path; cannot be verified statically — no C2 has run since the doctrine 
 **Default disposition:** LOW-MEDIUM — cheap doc fix; fold into the next release-runbook touch.
 
 **STATUS:** OPEN
+
+## 2026-07-07 | Quality gates asserting a third-party tool's exact surface string false-negative when the vendor rewords output | discovered-by: v0.13.0 post-release CI run 28839335746 investigation | severity: LOW-process
+
+**What:** Two gates this release went RED not because the thing they check was broken, but because the verifier's PASS condition grepped a literal, exact surface string from a third-party tool's stdout, and that tool changed its wording between versions: (1) `release/cargo-binstall-resolves` grepped only `github.com/reubenjohn/reposix/releases/download/`, but current cargo-binstall prints `has been downloaded from github.com` on a successful resolve instead of echoing the download URL — the v0.13.0 tag run actually resolved the prebuilt binary in ~1.97s with rc=0, yet the gate FAILed; (2) the p94-badges gate (`quality/gates/docs-build/p94-badges-real-vs-transient.sh`) has the same class of brittleness — asserting an exact badge/response string shape from a third-party service (shields.io or similar) rather than the underlying invariant (badge resolves / is live vs. transient-404).
+
+**Anti-pattern:** quality gates must assert the INVARIANT the row's `expected.asserts` describes (e.g. "resolved a prebuilt binary and exited 0", "badge is live not transiently 404ing"), not a single literal substring lifted from one observed run of a third-party tool's output. Vendor CLI/service wording drifts across versions with no changelog signal to the gate; a single-string match makes every such drift a false-negative RED that looks like a real regression until a human diffs the stdout.
+
+**Fix applied to instance (1) THIS session:** `quality/gates/release/cargo-binstall-resolves.py` PASS logic broadened to a `PASS_SIGNALS` tuple (case-insensitive, accepts both the legacy URL-echo and the newer "has been downloaded from github.com" wording) AND requires the independent "will install the following binaries" line, so a third wording change fails toward PARTIAL/FAIL-investigate rather than silently matching nothing forever. Regression test: `quality/gates/release/test_cargo_binstall_resolves.py`. Catalog row `release/cargo-binstall-resolves` (quality/catalogs/release-assets.json) updated to describe the broadened contract.
+
+**Sketched resolution for the class:** audit all `quality/gates/**/*.py` and `*.sh` verifiers for literal-substring asserts on third-party tool/service stdout or HTTP response bodies (grep for hardcoded URL fragments, exact vendor phrase matches, or single-string `in combined` checks without a fallback signal set); for each hit, either (a) broaden to a small accepted-wordings set with a REGRESSION NOTE like the binstall fix, or (b) switch to a more structural signal (exit code + a documented structural marker) that's less likely to drift. Start with `p94-badges-real-vs-transient.sh` since it's the second instance observed this release.
+
+**Why deferred (this occurrence, instance 2 only):** instance (1) was fixed in-session (< 1h, no new dependency); instance (2) — the p94-badges gate — was only *noticed*, not reproduced or fixed, in this dispatch; fixing it requires reading that gate's current assert logic and the live shields.io/badge-service response shape, which is out of scope for this binstall-focused fix.
+
+**Default disposition:** LOW-process — no correctness bug in the underlying feature either time, but a recurring gate-authoring anti-pattern worth a repo-wide sweep before it produces a third false-negative.
+
+**STATUS:** OPEN
