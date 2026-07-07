@@ -117,15 +117,40 @@ fn run_git(args: &[&str]) -> Result<()> {
     Ok(())
 }
 
-/// Run `git -C <path> <args...>` (best-effort variant).
+/// Run `git -C <path> <args...>`, returning the raw [`std::process::Output`]
+/// so the caller can inspect status + stderr itself.
 ///
-/// Intended for the trailing `git fetch` step where a credential failure
-/// (real backend without env vars) should not fail the whole `init`. The
-/// caller controls whether to bail on error.
+/// Used for the trailing `git fetch` step, where the caller turns a non-zero
+/// git exit into a teaching `reposix init` error (an unreachable backend is a
+/// hard failure, not a warning — see [`run_with_since`]).
 fn run_git_in(path: &Path, args: &[&str]) -> std::io::Result<std::process::Output> {
     let mut cmd = Command::new("git");
     cmd.arg("-C").arg(path).args(args);
     cmd.output()
+}
+
+/// Return `true` iff the working tree at `path` has at least one
+/// `refs/reposix/origin/*` tracking ref — the honest "the initial fetch
+/// actually synced something" signal.
+///
+/// This exists because `git fetch` against the reposix helper can exit
+/// non-zero even on a fully successful sync (a benign
+/// `could not read ref refs/reposix/main` from the import-refspec mismatch),
+/// so the process exit code alone can't tell a real backend-unreachable
+/// failure from a spurious post-sync ref-read error. A reachable backend
+/// leaves the destination ref; an unreachable one leaves none.
+fn repo_has_synced_refs(path: &Path) -> bool {
+    run_git_in(
+        path,
+        &[
+            "for-each-ref",
+            "--count=1",
+            "--format=%(refname)",
+            "refs/reposix/origin/",
+        ],
+    )
+    .map(|o| o.status.success() && !o.stdout.is_empty())
+    .unwrap_or(false)
 }
 
 /// `reposix init` entry point.
@@ -137,11 +162,11 @@ fn run_git_in(path: &Path, args: &[&str]) -> std::io::Result<std::process::Outpu
 ///
 /// # Errors
 /// Returns an error if `spec` cannot be translated, if any of `git init`
-/// or the four `git config` invocations fail, or if `git` is not on PATH.
-/// The trailing `git fetch` is best-effort: a failure logs a warning but
-/// does not prevent `init` from succeeding (the user may bring credentials
-/// later). When `since` is set and no matching sync tag exists, `init`
-/// errors with a non-zero exit (after configuring the working tree).
+/// or the four `git config` invocations fail, if `git` is not on PATH, or
+/// if the initial `git fetch` from the backend fails (an unreachable backend
+/// exits non-zero with a teaching error — it is NOT masked as success).
+/// When `since` is set and no matching sync tag exists, `init` errors with a
+/// non-zero exit (after configuring the working tree).
 pub fn run(spec: String, path: PathBuf) -> Result<()> {
     run_with_since(spec, path, None)
 }
@@ -212,22 +237,57 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
         "+refs/heads/*:refs/reposix/origin/*",
     ])?;
 
-    // 6. git fetch --filter=blob:none origin (best-effort).
-    let out = run_git_in(&path, &["fetch", "--filter=blob:none", "origin"]);
-    match out {
+    // 6. git fetch --filter=blob:none origin.
+    //
+    // An unreachable backend is a HARD ERROR, not a warning (v0.13.1
+    // onboarding hotfix B4). Previously this step downgraded EVERY failure to
+    // `tracing::warn!` and returned `Ok(())`, so `reposix init` against a
+    // dead backend exited 0 with the SAME success message as a real sync — a
+    // silent lie that leaves an empty repo whose next `git checkout` fails
+    // with a confusing "pathspec did not match".
+    //
+    // Subtlety: git's EXIT CODE is not a trustworthy success signal here. The
+    // `git-remote-reposix` import path exits non-zero with a benign
+    // `could not read ref refs/reposix/main` even after a fully successful
+    // sync — its advertised import refspec (`refs/heads/*:refs/reposix/*`)
+    // names `refs/reposix/main`, but the fast-import stream writes the commit
+    // to `refs/reposix/origin/main`, so git can't read the ref it expected.
+    // (Root-cause fix lives in the helper; RAISEd separately.) The ground
+    // truth is therefore whether the destination refs actually materialized:
+    // a reachable backend leaves at least one `refs/reposix/origin/*` ref; an
+    // unreachable one leaves none. We honour the ref reality and mirror
+    // `Cmd::Doctor`'s honest non-zero exit only when nothing synced.
+    let fetch_out = run_git_in(&path, &["fetch", "--filter=blob:none", "origin"]);
+    let synced = repo_has_synced_refs(&path);
+    match &fetch_out {
         Ok(o) if o.status.success() => {
-            tracing::info!("git fetch --filter=blob:none succeeded");
+            tracing::debug!("git fetch --filter=blob:none succeeded");
+        }
+        _ if synced => {
+            // Sync landed `refs/reposix/origin/*` despite git's spurious
+            // non-zero exit — this is the happy path. Stay quiet; the success
+            // summary is printed below. No misleading warning here.
+            tracing::debug!(
+                "git fetch exited non-zero but refs/reposix/origin/* is present; sync succeeded"
+            );
         }
         Ok(o) => {
             let stderr = String::from_utf8_lossy(&o.stderr);
-            tracing::warn!(
-                "git fetch --filter=blob:none failed with status {} — local repo is configured but not yet synced. Stderr: {}",
-                o.status,
-                stderr.trim()
+            bail!(
+                "reposix init: could not sync `{path_str}` from backend `{url}`.\n\
+                 The repo was configured but nothing was fetched, so it has no commits yet.\n\
+                 git stderr:\n  {stderr}\n\
+                 Fix: confirm the backend is running and reachable — for the simulator, start it in \
+                 another terminal with `reposix sim` — then re-run `reposix init`, or sync in place \
+                 with `git -C {path_str} fetch --filter=blob:none origin`.",
+                stderr = stderr.trim(),
             );
         }
         Err(e) => {
-            tracing::warn!("could not invoke git fetch: {e}");
+            bail!(
+                "reposix init: could not invoke `git fetch` for `{path_str}`: {e}\n\
+                 Fix: ensure `git` (>= 2.34) is installed and on PATH, then re-run `reposix init`."
+            );
         }
     }
 
@@ -532,5 +592,32 @@ mod tests {
     fn translate_rejects_empty_project() {
         let err = translate_spec_to_url("sim::").unwrap_err();
         assert!(err.to_string().contains("empty project"), "got: {err}");
+    }
+
+    /// B4 (v0.13.1 onboarding hotfix): a failed initial `git fetch` — because
+    /// the backend is unreachable (nothing listening on the sim's default
+    /// `127.0.0.1:7878`) or the `reposix` remote helper cannot be resolved —
+    /// MUST make `reposix init` exit non-zero with a teaching error, NOT be
+    /// downgraded to a warning + `Ok(())` that prints the same success banner
+    /// as a real sync. The whole invocation is confined to an isolated
+    /// tempdir (`git init`/`config`/`fetch` all run via `git -C <tempdir>`),
+    /// so nothing touches the shared repo's `.git/config` or object store.
+    #[test]
+    fn init_errors_nonzero_when_initial_fetch_fails() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let repo = tmp.path().join("repo");
+        let err = run("sim::demo".to_string(), repo.clone())
+            .expect_err("init must return Err when the initial fetch cannot complete");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("could not sync") && msg.contains("Fix:"),
+            "error must report the failed sync and teach recovery, got: {msg}"
+        );
+        // The tree was configured (git init + config ran) — the failure is at
+        // the sync step — but `init` did NOT report success.
+        assert!(
+            repo.join(".git").exists(),
+            "git init should have run in the isolated tempdir before the fetch"
+        );
     }
 }
