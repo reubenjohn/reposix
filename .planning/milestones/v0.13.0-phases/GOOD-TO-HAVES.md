@@ -1018,3 +1018,29 @@ relief path; cannot be verified statically — no C2 has run since the doctrine 
 **Default disposition:** LOW-MEDIUM — advisory/non-blocking; fold into a v0.14.0 real-backend-fixture-hardening window or the next Confluence-connector-touching phase. Not release-blocking for v0.13.0.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-07 | release-plz branch regenerations silently drop `pull_request`-triggered workflows (CI, Security audit, quality gates) | discovered-by: v0.13.0 release CI investigation | severity: MEDIUM
+
+**What:** Every time `release-plz` force-pushes a regeneration of its release branch (e.g. `release-plz-2026-07-07T02-37-20Z`), the `pull_request`-triggered workflows (`CI`, `Security audit`, `quality gates (pre-pr)`) do not automatically re-run against the new head — GitHub's `pull_request` trigger has repeatedly failed to fire cleanly after these force-push regenerations across recent release sessions. The current mitigation, needed 2-3 times per release in recent sessions, is a manual real-actor `gh pr close`/`gh pr reopen`, which forces a fresh `pull_request` event and re-triggers the three workflows.
+
+**Why out-of-scope for eager-resolution:** diagnosing GitHub Actions trigger semantics precisely enough to build a reliable automated re-trigger (vs. the manual close/reopen toll) is real workflow-engineering work — requires testing across multiple regen cycles to confirm any fix actually closes the gap, not a one-line change discoverable mid-release-investigation.
+
+**Sketched resolution:** consider adding a `workflow_dispatch` trigger keyed off release-plz branch pushes, or automate the close/reopen via a scheduled action, so the toll isn't a human/agent doing it manually each regeneration. Home: a CI/workflow-touching phase in v0.14.0 or a dedicated release-tooling window.
+
+**Default disposition:** MEDIUM — process friction, not a correctness bug; observed recurring cost (2-3x per release cycle) makes it worth automating.
+
+**STATUS:** OPEN
+
+## 2026-07-07 | Manually merging `origin/main` onto a live release-plz branch races the bot's own regeneration and usually loses | discovered-by: v0.13.0 release CI investigation | severity: LOW-MEDIUM (process note)
+
+**What:** Merging `origin/main` onto a live release-plz branch races the bot's own periodic regeneration and usually loses — the merge gets superseded before it can land, because release-plz will itself re-base off `main` on its next regen and pull in the same commits anyway. The manual merge is redundant work that also risks a confusing intermediate state (commits that appear to land, then vanish under the next force-push).
+
+**Why out-of-scope for eager-resolution:** this is a process/runbook observation, not a code or tooling gap — nothing to fix in the codebase; the fix is documentation of the correct workflow.
+
+**Sketched resolution:** the release runbook should note "don't manually merge onto the bot branch; land the fix on `main` and let the next regen absorb it" rather than treating a manual merge as the first move.
+
+**Default disposition:** LOW-MEDIUM — cheap doc fix; fold into the next release-runbook touch.
+
+**STATUS:** OPEN
