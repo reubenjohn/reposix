@@ -138,9 +138,40 @@ pub fn prepare_state(cfg: &SimConfig) -> Result<AppState> {
 /// failures from [`prepare_state`].
 pub async fn run_with_listener(listener: tokio::net::TcpListener, cfg: SimConfig) -> Result<()> {
     let state = prepare_state(&cfg)?;
-    tracing::info!(addr = %listener.local_addr()?, "reposix-sim listening");
+    let addr = listener.local_addr()?;
+    // Human-facing startup banner. Printed unconditionally to stderr the
+    // moment the listener is bound and the DB is seeded/ready — it does NOT
+    // depend on the `RUST_LOG`/tracing filter (a user who runs `reposix sim`
+    // with no env vars must still see that the server is up). The `tracing`
+    // event below is the structured-logging twin for log aggregators.
+    let seed_source = seed_source_label(&cfg);
+    let issue_count = state
+        .db
+        .lock()
+        .query_row("SELECT COUNT(*) FROM issues", [], |r| r.get::<_, i64>(0))
+        .unwrap_or(-1);
+    eprintln!(
+        "reposix-sim: listening on http://{addr} (seed: {seed_source}, {issue_count} issues) — Ctrl-C to stop"
+    );
+    // Structured twin of the banner for log aggregators. `debug` (not
+    // `info`) so the default `reposix sim` stderr is exactly ONE banner line,
+    // not a banner + a redundant structured duplicate.
+    tracing::debug!(%addr, seed = seed_source, issues = issue_count, "reposix-sim listening");
     axum::serve(listener, build_router(state, cfg.rate_limit_rps)).await?;
     Ok(())
+}
+
+/// Human-readable description of where the sim's seed data came from, for the
+/// startup banner. Truthful about the three real states — there is no
+/// "builtin default" seed; a seed only loads when `--seed-file` is passed.
+fn seed_source_label(cfg: &SimConfig) -> &'static str {
+    if !cfg.seed {
+        "disabled (--no-seed)"
+    } else if cfg.seed_file.is_some() {
+        "seed-file"
+    } else {
+        "none (no --seed-file)"
+    }
 }
 
 /// Bind the configured address and serve until the listener dies.
