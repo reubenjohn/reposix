@@ -7,6 +7,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0](https://github.com/reubenjohn/reposix/compare/reposix-remote-v0.12.0...reposix-remote-v0.13.0) - 2026-07-07
+
+### Added
+
+- *(93)* SoT partial-fail OP-3 audit + PRECHECK-B recovery test (RBF-LR-03)
+- *(agent-ux)* P92 SC5 — behavioral no-helper-retry assertion
+- *(agent-ux)* P92 SC2+SC3 — real dual-table audit-completeness query
+- *(remote)* expose backend_dispatch as lib; delegate attach/sync to shared factory
+- *(quality)* P90 90-03 test-name-vs-asserts gate + subagent-graded migration
+- *(P89)* banned-production-tokens linter (RBF-FW-04)
+- *(reposix-remote)* bus_handler write fan-out replacing deferred-shipped stub (DVCS-BUS-WRITE-01..05)
+- *(remote)* bus_handler + main.rs Route dispatch + capabilities branching + State extension (DVCS-BUS-PRECHECK-01..02 + DVCS-BUS-FETCH-01)
+- *(remote)* coarser SoT-drift wrapper precheck_sot_drift_any (DVCS-BUS-PRECHECK-02 substrate)
+- *(remote)* bus URL parser — bus_url::parse + Route::Single|Bus enum (DVCS-BUS-URL-01)
+- *(cache,remote)* L1 precheck — read_last_fetched_at + precheck.rs + handle_export rewrite (DVCS-PERF-L1-01, DVCS-PERF-L1-03)
+- *(remote)* wire mirror-lag refs into handle_export success + conflict-reject paths (DVCS-MIRROR-REFS-02 + DVCS-MIRROR-REFS-03)
+
+### Fixed
+
+- *(ci)* stop swallowing p94 cargo-test failure diagnostics; harden CRLF-test timeouts
+- *(94)* unblock git-2.43 single-backend push (option object-format + fallback sentinel)
+- *(94)* gate prune_oid_map on connector completeness signal (Fork A) + idempotent delete-NotFound (Fork B)
+- *(93)* backtick doc-comment identifiers in reposix-remote tests (unblock push)
+- *(93)* prune ghost oid_map rows on sync — kill false SotPartialFail (D-P93-02)
+- *(agent-ux)* satisfy test-name-vs-asserts honesty gate on P92 SC5 test
+- *(remote)* QL-001 Assertion-2 — diff planner ignores server-controlled frontmatter
+- *(cache+remote)* serve partial-clone fetch — allowFilter + lazy blob materialization on the want path
+- *(agent-ux)* add test-name-honesty markers for 9 P91 tests
+- *(remote)* refuse to diff a no-commit export stream as an empty tree (second-push mass-delete)
+- *(cache+remote)* scrub inherited GIT_* env in Cache::open shell-out; never swallow cache-open failure silently
+- *(security)* strip embedded credentials from mirror URLs in config + helper stderr (Wave-5.5 MEDIUM intake)
+- *(core+remote+cache)* bucket-aware canonical paths + id-keyed diff planner (confluence mass-delete BLOCKER)
+- *(remote)* peek-one-byte LF + issues/*.md plan filter + deletes-win (QL-001 BUG-2/BUG-3)
+- *(security)* wire audit_events into helper Confluence/JIRA dispatch (QL-005)
+- *(security)* gate mirror push egress against allowlist (QL-006)
+- *(binstall)* correct pkg-url to real release asset name (QL-003)
+- *(readme)* branch-pin CI/Docs/Quality badges to main
+- *(remote)* per-test cache_dir isolation in push_conflict tests
+- *(remote)* clippy match-wildcard-for-single-variants + doc-markdown SoT/Route in test panics (P82-01 pre-push fix)
+- *(remote)* add per-issue GET mocks to push_conflict.rs tests for L1 precheck
+- *(remote)* drop incidental .expect(1) GET-count in bulk_delete_cap test
+- *(remote)* serialize REPOSIX_CACHE_DIR env-var mutation in perf_l1 tests
+
+### Other
+
+- *(94)* isolate REPOSIX_CACHE_DIR in exit-code + bulk-delete-cap tests (non-hermetic cursor leak, NOT a Fork B regression)
+- *(93)* repro deleted-record ghost oid_map row forces false SotPartialFail (RED, ignored)
+- *(93)* reframe L1 no-op-push skip as semantic, not coherence, no-op
+- *(cli)* P90 90-06 5 real MISSING_TEST tests (D90-07)
+- *(scripts)* finish scripts/ collapse -- registry, doc refs, inverse gate (D-CONV-3)
+- reconcile cold-init latency to canonical 27 ms (QL-027)
+- *(remote)* bus_write_audit_completeness.rs dual-table audit assertion (DVCS-BUS-WRITE-06 audit-completeness)
+- *(remote)* SoT-fail tests — mid-stream 5xx + post-precheck 409 (DVCS-BUS-WRITE-06 b+c)
+- *(remote)* mirror-fail integration test with #[cfg(unix)] failing-update-hook fixture (DVCS-BUS-WRITE-06 a)
+- *(reposix-remote)* bus write happy-path + no-mirror-remote regression integration tests (DVCS-BUS-WRITE-01..05)
+- *(reposix-remote)* lift handle_export write loop into write_loop::apply_writes (P83 prelude)
+- *(remote)* 4 integration tests — bus_url + bus_capabilities + bus_precheck_a + bus_precheck_b (DVCS-BUS-URL-01..02-PRECHECK + DVCS-BUS-FETCH-01)
+- *(remote)* copy tests/common.rs from reposix-cache (P81 M3 gap)
+- *(remote)* N=200 perf regression + positive control + flip catalogs FAIL→PASS + CLAUDE.md update (DVCS-PERF-L1-01..03 close)
+- *(remote)* integration tests for mirror-lag refs + verifier flip + CLAUDE.md update + schema migration (DVCS-MIRROR-REFS-01..03 close)
+
 ## [0.11.3](https://github.com/reubenjohn/reposix/compare/reposix-remote-v0.11.2...reposix-remote-v0.11.3) - 2026-04-27
 
 ### Other

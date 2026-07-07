@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0](https://github.com/reubenjohn/reposix/compare/reposix-cache-v0.12.0...reposix-cache-v0.13.0) - 2026-07-07
+
+### Added
+
+- *(93)* SoT partial-fail OP-3 audit + PRECHECK-B recovery test (RBF-LR-03)
+- *(core)* canonical record_path + shared issue_id_from_path (issues/<id>.md); adopt in cache (QL-001 BUG-1)
+- *(quality)* P90 90-03 test-name-vs-asserts gate + subagent-graded migration
+- *(P89)* banned-production-tokens linter (RBF-FW-04)
+- *(reposix-cache)* add helper_push_partial_fail_mirror_lag audit op (DVCS-BUS-WRITE-02 OP-3)
+- *(cache,remote)* L1 precheck — read_last_fetched_at + precheck.rs + handle_export rewrite (DVCS-PERF-L1-01, DVCS-PERF-L1-03)
+- *(cache)* mirror_refs module + log_mirror_sync_written audit helper (DVCS-MIRROR-REFS-01)
+- *(cache)* cache_reconciliation table + reconciliation walk module + 3 new public Cache APIs + audit hook (DVCS-ATTACH-02 + 04 part 1)
+
+### Fixed
+
+- *(94)* gate prune_oid_map on connector completeness signal (Fork A) + idempotent delete-NotFound (Fork B)
+- *(93)* prune ghost oid_map rows on sync — kill false SotPartialFail (D-P93-02)
+- *(93)* restore tree↔oid_map coherence in Cache::sync (ADR-010/RBF-LR-01)
+- *(cache)* QL-001 Assertion-2 root cause — find_oid_for_record returned stale oid
+- *(cache+remote)* serve partial-clone fetch — allowFilter + lazy blob materialization on the want path
+- *(cache+remote)* scrub inherited GIT_* env in Cache::open shell-out; never swallow cache-open failure silently
+- *(core+remote+cache)* bucket-aware canonical paths + id-keyed diff planner (confluence mass-delete BLOCKER)
+- *(readme)* branch-pin CI/Docs/Quality badges to main
+- *(cache,cli)* idempotent Cache::open + build_from + REPOSIX_SIM_ORIGIN env override (P79-03 fix-forward)
+
+### Other
+
+- *(96)* same-second-CREATE cache-coherence repro (DP-2 downgrades static trace)
+- *(94)* repro pagination-truncation prune data-loss
+- *(93)* reproduce D-P92-03 delta-sync coherence bug + RED regression (prove-before-fix)
+- *(cache,cli)* resolve ForkAsNew (free) + honest Abort doc; scrub phase-ID tokens
+- *(scripts)* finish scripts/ collapse -- registry, doc refs, inverse gate (D-CONV-3)
+- reconcile cold-init latency to canonical 27 ms (QL-027)
+- *(remote)* integration tests for mirror-lag refs + verifier flip + CLAUDE.md update + schema migration (DVCS-MIRROR-REFS-01..03 close)
+
 ## [0.11.3](https://github.com/reubenjohn/reposix/compare/reposix-cache-v0.11.2...reposix-cache-v0.11.3) - 2026-04-27
 
 ### Other
