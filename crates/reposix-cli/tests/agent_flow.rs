@@ -273,6 +273,9 @@ fn path_with_target_debug() -> String {
 ///    frontmatter `id: 1` — the pure-git payload is really there.
 #[test]
 #[ignore = "spawns reposix-sim child + shells out to git; requires `cargo build --workspace --bins` first"]
+// test-name-honesty: ok — genuinely spawns a live sim child + real `git init`/`fetch`/
+// `checkout` subprocesses end-to-end (asserted below); against the sim, not a real
+// backend, so the `#[ignore = "real-backend..."]` convention does not apply here.
 fn checkout_break_front_door_works_end_to_end() {
     let bind = "127.0.0.1:7801";
     let mut sim = spawn_seeded_sim(bind);

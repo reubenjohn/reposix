@@ -640,6 +640,9 @@ mod tests {
     /// tempdir (`git init`/`config`/`fetch` all run via `git -C <tempdir>`),
     /// so nothing touches the shared repo's `.git/config` or object store.
     #[test]
+    // test-name-honesty: ok — attempts a genuine `git fetch` against an unreachable
+    // sim origin (nothing listening) and asserts the resulting error/exit-code
+    // teaches recovery; not a round-trip success path, only the failure contract.
     fn init_errors_nonzero_when_initial_fetch_fails() {
         let tmp = tempfile::tempdir().expect("tempdir");
         let repo = tmp.path().join("repo");
