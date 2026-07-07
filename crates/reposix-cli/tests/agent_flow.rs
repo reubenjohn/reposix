@@ -48,42 +48,6 @@ fn target_bin(name: &str) -> PathBuf {
     workspace_root().join("target").join("debug").join(name)
 }
 
-/// Spawn the simulator on `bind` with `--ephemeral`. Returns the child
-/// handle; caller must `kill` to clean up. Polls the sim's REST endpoint
-/// until it responds or 5 s elapses.
-fn spawn_sim(bind: &str) -> std::process::Child {
-    let bin = target_bin("reposix-sim");
-    let bin_display = bin.display();
-    assert!(
-        bin.exists(),
-        "reposix-sim not built at {bin_display}; run `cargo build --workspace --bins` first"
-    );
-    let mut cmd = Command::new(&bin);
-    cmd.args(["--bind", bind, "--ephemeral"])
-        .stdin(std::process::Stdio::null())
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::inherit());
-    let mut child = cmd.spawn().expect("spawn reposix-sim");
-    let url = format!("http://{bind}/projects/demo/issues");
-    let t0 = Instant::now();
-    while t0.elapsed() < Duration::from_secs(5) {
-        // We can't add reqwest as a test-only dep cheaply; use curl via
-        // shell-out so the test's deps surface stays small. The dev/CI
-        // host is required to have curl on PATH.
-        let out = Command::new("curl")
-            .args(["-fsS", "-o", "/dev/null", "-m", "1", &url])
-            .output();
-        if matches!(out, Ok(o) if o.status.success()) {
-            return child;
-        }
-        std::thread::sleep(Duration::from_millis(100));
-    }
-    // Sim never became ready — kill the orphan and fail loudly.
-    let _ = child.kill();
-    let _ = child.wait();
-    panic!("sim did not become ready at {bind} within 5s");
-}
-
 /// SIGTERM-then-wait teardown.
 fn kill_child(child: &mut std::process::Child) {
     let _ = child.kill();
@@ -102,21 +66,28 @@ fn kill_child(child: &mut std::process::Child) {
 #[ignore = "spawns reposix-sim child; requires `cargo build --workspace --bins` first"]
 fn dark_factory_sim_happy_path() {
     let bind = "127.0.0.1:7779";
-    let mut sim = spawn_sim(bind);
+    let mut sim = spawn_seeded_sim(bind);
 
     let tmp = tempfile::tempdir().expect("tempdir");
+    let cache_tmp = tempfile::tempdir().expect("cache tempdir");
     let repo = tmp.path().join("repo");
 
     let reposix = target_bin("reposix");
+    // Point init at THIS test's sim via REPOSIX_SIM_ORIGIN so the initial
+    // `git fetch` genuinely reaches a live backend. Since v0.13.1 B4,
+    // `reposix init` exits NON-ZERO when the initial fetch cannot complete
+    // (an unreachable backend is a hard error, not a warning), so the old
+    // "best-effort fetch against the wrong port" assumption no longer holds —
+    // the sim must be reachable for init to succeed. `REPOSIX_CACHE_DIR`
+    // isolates the cache; `PATH` lets the fetch's spawned `git` discover the
+    // real `git-remote-reposix` helper.
     let out = Command::new(&reposix)
         .args(["init", "sim::demo", repo.to_str().unwrap()])
+        .env("REPOSIX_SIM_ORIGIN", format!("http://{bind}"))
+        .env("REPOSIX_CACHE_DIR", cache_tmp.path())
+        .env("PATH", path_with_target_debug())
         .output()
         .expect("run reposix init");
-    // The trailing `git fetch` against the default sim port (7878) will
-    // fail because we ran the sim on a different port — that's fine.
-    // `reposix init` is best-effort on fetch and still configures the
-    // local repo. We re-point the URL to our test sim below for any
-    // subsequent commands.
     assert!(
         out.status.success(),
         "reposix init failed: stdout={:?} stderr={:?}",
@@ -230,4 +201,155 @@ fn dark_factory_conflict_teaching_string_present() {
         any_has_fetch_first,
         "canned `fetch first` status must be byte-identical to git's expected reject token; checked {candidates:?}"
     );
+}
+
+/// Spawn an ephemeral (in-memory DB, isolated) sim seeded from the committed
+/// `crates/reposix-sim/fixtures/seed.json` fixture, so the working tree has
+/// real records (project `demo`, issues 1..=6) to check out. Mirrors
+/// [`spawn_sim`]'s readiness poll; the plain [`spawn_sim`] seeds 0 issues.
+fn spawn_seeded_sim(bind: &str) -> std::process::Child {
+    let bin = target_bin("reposix-sim");
+    assert!(
+        bin.exists(),
+        "reposix-sim not built at {}; run `cargo build --workspace --bins` first",
+        bin.display()
+    );
+    let seed = workspace_root()
+        .join("crates")
+        .join("reposix-sim")
+        .join("fixtures")
+        .join("seed.json");
+    let mut cmd = Command::new(&bin);
+    cmd.args(["--bind", bind, "--ephemeral", "--seed-file"])
+        .arg(&seed)
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::inherit());
+    let mut child = cmd.spawn().expect("spawn seeded reposix-sim");
+    let url = format!("http://{bind}/projects/demo/issues");
+    let t0 = Instant::now();
+    while t0.elapsed() < Duration::from_secs(5) {
+        let out = Command::new("curl")
+            .args(["-fsS", "-o", "/dev/null", "-m", "1", &url])
+            .output();
+        if matches!(out, Ok(o) if o.status.success()) {
+            return child;
+        }
+        std::thread::sleep(Duration::from_millis(100));
+    }
+    let _ = child.kill();
+    let _ = child.wait();
+    panic!("seeded sim did not become ready at {bind} within 5s");
+}
+
+/// Prepend `target/debug/` to a PATH string so a spawned `git` discovers the
+/// real `git-remote-reposix` helper (git resolves `git-remote-<transport>`
+/// from PATH). Returns the composed value for `.env("PATH", …)`.
+fn path_with_target_debug() -> String {
+    let dir = workspace_root().join("target").join("debug");
+    let existing = std::env::var("PATH").unwrap_or_default();
+    format!("{}:{}", dir.display(), existing)
+}
+
+/// v0.13.1 CHECKOUT-BREAK — the documented front door actually works.
+///
+/// End-to-end and fully leaf-isolated: its own sim on an isolated port
+/// (reached via `REPOSIX_SIM_ORIGIN`), its own `REPOSIX_CACHE_DIR` tempdir,
+/// and its own working-tree tempdir. It never runs `git`/`init` against the
+/// shared repo. Regression-protects three breaks a prior lane reproduced
+/// against a LIVE sim:
+///
+/// 1. `reposix init sim::demo` prints the VERIFIED-WORKING onboarding command
+///    (`git checkout -B main refs/reposix/origin/main`), NOT the broken
+///    pure-git `git checkout origin/main` (which fails "pathspec did not
+///    match" because only `refs/reposix/origin/main` is populated, never
+///    `refs/remotes/origin/main`).
+/// 2. A second `git fetch --filter=blob:none origin` exits 0 — the spurious
+///    git-128 `could not read ref refs/reposix/main` (helper advertised
+///    `refs/heads/*:refs/reposix/*` while fast-import wrote
+///    `refs/reposix/origin/main`) is closed by aligning the advertised
+///    refspec to `refs/reposix/origin/*`.
+/// 3. The recommended checkout resolves and `issues/1.md` materialises with
+///    frontmatter `id: 1` — the pure-git payload is really there.
+#[test]
+#[ignore = "spawns reposix-sim child + shells out to git; requires `cargo build --workspace --bins` first"]
+fn checkout_break_front_door_works_end_to_end() {
+    let bind = "127.0.0.1:7801";
+    let mut sim = spawn_seeded_sim(bind);
+
+    let work_tmp = tempfile::tempdir().expect("work tempdir");
+    let cache_tmp = tempfile::tempdir().expect("cache tempdir");
+    let repo = work_tmp.path().join("repo");
+    let repo_str = repo.to_str().expect("utf-8 repo path");
+    let sim_origin = format!("http://{bind}");
+    let reposix = target_bin("reposix");
+    let path_env = path_with_target_debug();
+
+    // `reposix init` honours REPOSIX_SIM_ORIGIN so the stored
+    // remote.origin.url — and thus the helper the follow-up `git fetch`
+    // spawns — targets THIS test's isolated sim, not the default :7878.
+    let init = Command::new(&reposix)
+        .args(["init", "sim::demo", repo_str])
+        .env("REPOSIX_SIM_ORIGIN", &sim_origin)
+        .env("REPOSIX_CACHE_DIR", cache_tmp.path())
+        .env("PATH", &path_env)
+        .output()
+        .expect("run reposix init");
+    let init_stdout = String::from_utf8_lossy(&init.stdout);
+    let init_stderr = String::from_utf8_lossy(&init.stderr);
+    assert!(
+        init.status.success(),
+        "init must succeed against the live sim; stdout={init_stdout:?} stderr={init_stderr:?}"
+    );
+    // Regression 1 — banner teaches the WORKING command, not the broken one.
+    assert!(
+        init_stdout.contains("git checkout -B main refs/reposix/origin/main"),
+        "init banner must print the verified-working checkout; got:\n{init_stdout}"
+    );
+    assert!(
+        !init_stdout.contains("git checkout origin/main"),
+        "init banner must NOT print the broken pure-git `git checkout origin/main` \
+         (fails 'pathspec did not match'); got:\n{init_stdout}"
+    );
+
+    // Regression 2 — a re-fetch exits 0 (no spurious git-128).
+    let second = Command::new("git")
+        .args(["-C", repo_str, "fetch", "--filter=blob:none", "origin"])
+        .env("REPOSIX_CACHE_DIR", cache_tmp.path())
+        .env("PATH", &path_env)
+        .output()
+        .expect("git fetch");
+    assert!(
+        second.status.success(),
+        "second `git fetch` must exit 0 (git-128 advertised-refspec mismatch closed); stderr={:?}",
+        String::from_utf8_lossy(&second.stderr)
+    );
+
+    // Regression 3 — the recommended checkout resolves and issue 1 materialises.
+    let co = Command::new("git")
+        .args([
+            "-C",
+            repo_str,
+            "checkout",
+            "-B",
+            "main",
+            "refs/reposix/origin/main",
+        ])
+        .env("REPOSIX_CACHE_DIR", cache_tmp.path())
+        .env("PATH", &path_env)
+        .output()
+        .expect("git checkout");
+    assert!(
+        co.status.success(),
+        "recommended checkout must resolve; stderr={:?}",
+        String::from_utf8_lossy(&co.stderr)
+    );
+    let issue = std::fs::read_to_string(repo.join("issues").join("1.md"))
+        .expect("issues/1.md must materialise after checkout");
+    assert!(
+        issue.contains("id: 1"),
+        "issues/1.md must carry frontmatter `id: 1`; got:\n{issue}"
+    );
+
+    kill_child(&mut sim);
 }

@@ -193,7 +193,7 @@ fn real_main() -> Result<bool> {
                 // path; single-backend URLs continue to advertise it.
                 proto.send_line("import")?;
                 proto.send_line("export")?;
-                proto.send_line("refspec refs/heads/*:refs/reposix/*")?;
+                proto.send_line("refspec refs/heads/*:refs/reposix/origin/*")?;
                 if state.mirror_url.is_none() {
                     proto.send_line("stateless-connect")?;
                 }

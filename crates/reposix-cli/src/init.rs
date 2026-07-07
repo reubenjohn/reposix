@@ -52,7 +52,19 @@ pub fn translate_spec_to_url(spec: &str) -> Result<String> {
     }
 
     match backend {
-        "sim" => Ok(format!("reposix::{DEFAULT_SIM_ORIGIN}/projects/{project}")),
+        "sim" => {
+            // Honour `REPOSIX_SIM_ORIGIN` so an isolated-port sim (tests, or a
+            // second local instance) can be init'd against — matching the same
+            // override already honoured by `attach` (attach.rs) and `sync`
+            // (sync.rs). Without this, `init` alone hardcoded 127.0.0.1:7878,
+            // so there was no way to leaf-isolate an end-to-end init→fetch→
+            // checkout test on a random port (every other command could).
+            let origin = std::env::var("REPOSIX_SIM_ORIGIN")
+                .ok()
+                .filter(|s| !s.is_empty())
+                .unwrap_or_else(|| DEFAULT_SIM_ORIGIN.to_string());
+            Ok(format!("reposix::{origin}/projects/{project}"))
+        }
         "github" => Ok(format!(
             "reposix::{DEFAULT_GITHUB_ORIGIN}/projects/{project}"
         )),
@@ -133,12 +145,16 @@ fn run_git_in(path: &Path, args: &[&str]) -> std::io::Result<std::process::Outpu
 /// `refs/reposix/origin/*` tracking ref — the honest "the initial fetch
 /// actually synced something" signal.
 ///
-/// This exists because `git fetch` against the reposix helper can exit
-/// non-zero even on a fully successful sync (a benign
-/// `could not read ref refs/reposix/main` from the import-refspec mismatch),
-/// so the process exit code alone can't tell a real backend-unreachable
-/// failure from a spurious post-sync ref-read error. A reachable backend
-/// leaves the destination ref; an unreachable one leaves none.
+/// This exists as defence-in-depth: the process exit code alone is a weak
+/// success signal for a fetch through a remote helper. Historically the
+/// helper advertised `refspec refs/heads/*:refs/reposix/*` while the
+/// fast-import stream wrote `refs/reposix/origin/main`, so git exited 128
+/// with a benign `could not read ref refs/reposix/main` even on a fully
+/// successful sync (v0.13.1 CHECKOUT-BREAK aligned the advertised refspec to
+/// `refs/reposix/origin/*`, closing that specific mismatch — see
+/// `reposix-remote::main` capabilities). We keep the ref-reality check
+/// regardless: a reachable backend leaves at least one
+/// `refs/reposix/origin/*` ref; an unreachable one leaves none.
 fn repo_has_synced_refs(path: &Path) -> bool {
     run_git_in(
         path,
@@ -227,8 +243,19 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
     // has nothing to resolve. The `refs/reposix/origin/*` namespace (not
     // git's default `refs/remotes/origin/*`) keeps helper-side refs out of
     // the agent's `refs/heads/*`, matching the helper's advertised
-    // `refspec refs/heads/*:refs/reposix/*` push namespace. The leading `+`
-    // force-updates the tracking ref on drift.
+    // `refspec refs/heads/*:refs/reposix/origin/*` namespace (aligned in
+    // v0.13.1 CHECKOUT-BREAK so the import path no longer 128s). The leading
+    // `+` force-updates the tracking ref on drift.
+    //
+    // KNOWN GAP (filed for v0.14.0, SURPRISES-INTAKE): because this maps to
+    // `refs/reposix/origin/*` and NOT `refs/remotes/origin/*`, the pure-git
+    // `git checkout origin/main` still fails to resolve — agents must use the
+    // fully-named `git checkout -B main refs/reposix/origin/main` (printed in
+    // the success banner below). A verified-safe additive second refspec
+    // (`+refs/heads/*:refs/remotes/origin/*`) makes `git checkout origin/main`
+    // resolve, but lands in detached HEAD, so the edit→commit→push ergonomics
+    // need a design pass + verification on the git >= 2.34 stateless-connect
+    // fetch path (untestable on this VM's git 2.25) before shipping.
     run_git(&[
         "-C",
         path_str,
@@ -246,14 +273,14 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
     // silent lie that leaves an empty repo whose next `git checkout` fails
     // with a confusing "pathspec did not match".
     //
-    // Subtlety: git's EXIT CODE is not a trustworthy success signal here. The
-    // `git-remote-reposix` import path exits non-zero with a benign
-    // `could not read ref refs/reposix/main` even after a fully successful
-    // sync — its advertised import refspec (`refs/heads/*:refs/reposix/*`)
-    // names `refs/reposix/main`, but the fast-import stream writes the commit
-    // to `refs/reposix/origin/main`, so git can't read the ref it expected.
-    // (Root-cause fix lives in the helper; RAISEd separately.) The ground
-    // truth is therefore whether the destination refs actually materialized:
+    // Subtlety: git's EXIT CODE is a weak success signal for a helper fetch,
+    // so we still cross-check against ref reality. The historical
+    // `could not read ref refs/reposix/main` git-128 (advertised refspec
+    // `refs/heads/*:refs/reposix/*` vs the fast-import write target
+    // `refs/reposix/origin/main`) was closed in v0.13.1 CHECKOUT-BREAK by
+    // aligning the helper's advertised refspec to `refs/reposix/origin/*`.
+    // We keep the ref-reality cross-check regardless: the ground truth of a
+    // successful sync is whether the destination refs actually materialized —
     // a reachable backend leaves at least one `refs/reposix/origin/*` ref; an
     // unreachable one leaves none. We honour the ref reality and mirror
     // `Cmd::Doctor`'s honest non-zero exit only when nothing synced.
@@ -291,8 +318,18 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
         }
     }
 
+    // The onboarding command MUST be verbatim-runnable. `git checkout
+    // origin/main` resolves via `refs/remotes/origin/main`, which this init
+    // path deliberately does NOT populate — the fetch refspec lands the
+    // synced ref under `refs/reposix/origin/*` (kept out of the agent's
+    // `refs/heads/*` and matching the helper's push namespace). So the
+    // honest, tested next step is a checkout of that ref by full name. The
+    // pure-git `git checkout origin/main` ergonomic is filed for v0.14.0
+    // (SURPRISES-INTAKE): populating `refs/remotes/origin/*` additively must
+    // be designed + tested on the supported git floor (>= 2.34, which fetches
+    // via stateless-connect), not silently bolted on in a hotfix.
     println!(
-        "reposix init: configured `{path_str}` with remote.origin.url = {url}\nNext: cd {path_str} && git checkout origin/main (or git sparse-checkout set <pathspec> first)"
+        "reposix init: configured `{path_str}` with remote.origin.url = {url}\nNext: cd {path_str} && git checkout -B main refs/reposix/origin/main (or git sparse-checkout set <pathspec> first)"
     );
 
     // --since=<RFC3339> handling — rewind the working tree to a historical

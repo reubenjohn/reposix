@@ -27,6 +27,41 @@
 
 ## Entries
 
+## 2026-07-07 | discovered-by: v0.13.1 CHECKOUT-BREAK lane | severity: MEDIUM
+
+**What:** The headline pure-git promise — `git checkout origin/main && cat issues/<id>.md`
+(CLAUDE.md § Architecture) — still does not work VERBATIM after `reposix init`. `init`
+configures `remote.origin.fetch = +refs/heads/*:refs/reposix/origin/*`, so the synced tip
+lands under `refs/reposix/origin/main` and NOT the standard `refs/remotes/origin/main`
+that `git checkout origin/main` DWIM-resolves via — the command fails `error: pathspec
+'origin/main' did not match any file(s)`. The v0.13.1 hotfix made the `init` success
+banner + docs honest (they now print the verified-working `git checkout -B main
+refs/reposix/origin/main`), but the pure-git ergonomic itself is deferred.
+
+**Why out-of-scope for the hotfix:** The fix (verified PROMISING on this box) is an
+ADDITIVE second fetch refspec `+refs/heads/*:refs/remotes/origin/*` alongside the existing
+`refs/reposix/origin/*` mapping. On git 2.25.1 it cleanly populates BOTH refs and
+`git checkout origin/main` resolves — BUT it lands in DETACHED HEAD (no local `main`
+branch is created, unlike `git clone`), so the documented edit→commit→push loop then needs
+`git push origin HEAD:main` or an auto-created tracking branch — an unshipped design
+decision. Worse, the supported git floor is >= 2.34 (which fetches via `stateless-connect`,
+NOT the import path this VM's git 2.25 exercises), so the additive refspec CANNOT be
+verified against the real target transport here. Shipping an unverifiable ref-topology
+change that also changes checkout ergonomics is not a hotfix-conservative move.
+
+**Sketched resolution (v0.14.0):** Design the pure-git front door properly: either (a)
+add the additive `+refs/heads/*:refs/remotes/origin/*` fetch refspec in `init.rs` AND have
+`init` create a local `main` branch tracking `origin/main` (mirroring `git clone`, but
+WITHOUT eagerly materializing blobs — set the ref + upstream via plumbing, leave the tree
+lazy), or (b) keep the `refs/reposix/origin/*`-only topology and update the docs' 60-second
+mental model to the fully-named checkout as the canonical command. Prefer (a) — it honours
+the CLAUDE.md headline. Verify on git >= 2.34 (stateless-connect fetch path) with a
+leaf-isolated test proving `init → git checkout origin/main → edit → commit → git push`
+round-trips. Evidence that (a) resolves the checkout on 2.25 (both refs populated, push
+round-trip green): CONSULT-DECISIONS.md 2026-07-07 CHECKOUT-BREAK entry.
+
+**STATUS:** OPEN (deferred to v0.14.0 front-door design; docs/banner made honest in v0.13.1)
+
 ## 2026-07-03 11:10 | discovered-by: resumption audit (8-week idle gap) | severity: MEDIUM
 
 **What:** The `quality-weekly` workflow is RED on main for 2 consecutive weeks (Jun 22 + Jun 29), failing at the "Generate verdict" step; nobody drained it during the idle gap.

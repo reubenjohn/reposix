@@ -27,7 +27,7 @@ fn bus_url_omits_stateless_connect() {
         "expected `export`; got: {stdout}"
     );
     assert!(
-        stdout.contains("refspec refs/heads/*:refs/reposix/*"),
+        stdout.contains("refspec refs/heads/*:refs/reposix/origin/*"),
         "expected `refspec`; got: {stdout}"
     );
     assert!(

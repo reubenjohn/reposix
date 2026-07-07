@@ -47,8 +47,8 @@ fn capabilities_refspec_namespace_is_reposix_not_heads() {
     let out = assert.get_output();
     let stdout = String::from_utf8_lossy(&out.stdout);
     assert!(
-        stdout.contains("refspec refs/heads/*:refs/reposix/*\n"),
-        "refspec namespace not refs/reposix/*; got:\n{stdout}"
+        stdout.contains("refspec refs/heads/*:refs/reposix/origin/*\n"),
+        "refspec namespace not refs/reposix/origin/*; got:\n{stdout}"
     );
     assert!(
         !stdout.contains("refspec refs/heads/*:refs/heads/*\n"),
@@ -69,7 +69,7 @@ fn capabilities_stateless_connect_follows_object_format_order() {
         .assert();
     let out = assert.get_output();
     let stdout = String::from_utf8_lossy(&out.stdout);
-    let expected_prefix = "import\nexport\nrefspec refs/heads/*:refs/reposix/*\nstateless-connect\nobject-format=sha1\n\n";
+    let expected_prefix = "import\nexport\nrefspec refs/heads/*:refs/reposix/origin/*\nstateless-connect\nobject-format=sha1\n\n";
     assert!(
         stdout.starts_with(expected_prefix),
         "capability ordering regressed; expected prefix:\n{expected_prefix}\n---\ngot:\n{stdout}"

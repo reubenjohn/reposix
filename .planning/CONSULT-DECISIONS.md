@@ -10,6 +10,46 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 
 ---
 
+## 2026-07-07 [SELF] Documented front door `git checkout origin/main` break → HOTFIX-HONEST FALLBACK (truthful banner + git-128 refspec alignment), pure-git ergonomic filed for v0.14.0
+
+- **Lane:** v0.13.1 CHECKOUT-BREAK. **Decision bias:** HOTFIX-conservative.
+- **VERDICT: hotfix-honest-fallback** (NOT the root-cause pure-git fix). One-sentence why:
+  the additive `refs/remotes/origin/*` population that would make `git checkout origin/main`
+  work verbatim is verifiable only on this box's git 2.25 (import path), not the supported
+  git >= 2.34 `stateless-connect` fetch path, AND it lands in detached HEAD — an unverifiable,
+  ergonomics-changing ref-topology move that a hotfix must not ship.
+- **Reproduced (leaf-isolated `/tmp`, freshly built binaries, live `--ephemeral` sim seeded
+  from `fixtures/seed.json`, git 2.25.1):** after `reposix init sim::demo /tmp/<uniq>/repo`,
+  only `refs/reposix/origin/main` exists (no `refs/remotes/origin/main`), so the documented
+  `git checkout origin/main` fails `error: pathspec 'origin/main' did not match any file(s)`;
+  the `init` banner ALSO printed that broken command. A SECOND `git fetch` exited git-128
+  `fatal: could not read ref refs/reposix/main` (helper advertised
+  `refspec refs/heads/*:refs/reposix/*` while fast-import writes `refs/reposix/origin/main`).
+- **Canonical working checkout command (handed to the doc-truth lane, verbatim):**
+  `git checkout -B main refs/reposix/origin/main`
+- **Shipped in this hotfix (all 2.25-verified, none change where refs land):**
+  1. `reposix-cli/src/init.rs` success banner → prints the verified-working
+     `git checkout -B main refs/reposix/origin/main` (was the broken `git checkout origin/main`).
+  2. `reposix-remote/src/main.rs` capabilities → advertised refspec aligned to
+     `refs/heads/*:refs/reposix/origin/*` (matches the fast-import write target), closing the
+     spurious git-128 on re-fetch. Verified: second `git fetch` now exit 0; push round-trip
+     still green (`refs/reposix/origin/*` unchanged; 4 protocol test assertions updated).
+  3. `reposix-cli/src/init.rs` `translate_spec_to_url` now honours `REPOSIX_SIM_ORIGIN`
+     (attach/sync already did; init was the odd one out) — enables the leaf-isolated
+     end-to-end regression test on an isolated port.
+- **Test added:** `crates/reposix-cli/tests/agent_flow.rs::checkout_break_front_door_works_end_to_end`
+  (leaf-isolated: own seeded sim + `REPOSIX_CACHE_DIR` + tempdir; asserts banner truthfulness,
+  git-128-free re-fetch, checkout resolves, `issues/1.md` materialises `id: 1`). Also repaired
+  the pre-existing B4 regression in `dark_factory_sim_happy_path` (init now hard-errors on an
+  unreachable backend; the test targeted the dead default port) by pointing it at its live sim.
+- **Smoke-tested end-to-end (`/tmp`, aligned build):** init → `git checkout -B main
+  refs/reposix/origin/main` → `cat issues/1.md` shows real frontmatter (`id: 1`, title,
+  body) → local edit → `git push origin main` → `223b444..f756b04 main -> main` (SoT write
+  accepted). Additive `refs/remotes/origin/*` probe: both refs populated, `git checkout
+  origin/main` resolves but detached HEAD.
+- **Deferred:** pure-git `git checkout origin/main` ergonomic → SURPRISES-INTAKE 2026-07-07
+  (v0.14.0, MEDIUM). Doc edit spec (canonical checkout command) handed to the doc-truth lane.
+
 ## 2026-07-07 [SELF] Post-conflict recovery crash after an EXTERNAL REST write is the KNOWN RBF-LR-03 deep-reconciliation limitation → docs-honest, NOT a code hotfix
 
 - **Lane:** v0.13.1 onboarding-hotfix, B5 TRIAGE. **Decision bias:** HOTFIX-conservative.
