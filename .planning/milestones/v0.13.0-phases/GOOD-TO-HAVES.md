@@ -1002,3 +1002,19 @@ relief path; cannot be verified statically — no C2 has run since the doctrine 
 **Default disposition:** MEDIUM — fold into a v0.14.0 CI-robustness window; independent of code coverage quality (patch coverage is green).
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-06 | Durable Confluence TokenWorld fixture page 7798785 has been accidentally trashed 2+ times, losing parent linkage to 7766017 each time | discovered-by: PR #61 CI-red repair lane | severity: LOW-MEDIUM
+
+**Size:** S (investigation + a protection mechanism; not a code bug fix).
+
+**Source:** During the PR #61 CI-unblock effort, the durable Confluence TokenWorld fixture page `7798785` was found with its `parentId` link to `7766017` broken (page effectively orphaned/trashed), causing a live CI red. It was repaired and verified live (parentId now `7766017`). Version history on the page shows this is NOT the first occurrence — the same parent-linkage loss happened at least once before, on 2026-07-04, and now again just prior to this repair. This is a recurring drift pattern on a fixture that other tests/gates depend on being durably present with intact hierarchy, not a one-off fluke.
+
+**Acceptance:** investigate the root cause of the repeated trashing — candidates include (a) manual owner action in the TokenWorld space, (b) a test/cleanup routine that trashes or moves pages as a side effect (e.g. a contract test's teardown, or a stale cleanup script targeting the wrong page ID), or (c) a reposix operation (create/update/delete_or_close path) with a bug that mis-targets this page. Once root-caused, add protection: either Confluence page restrictions preventing accidental trash/move on durable fixture pages, and/or a periodic freshness check (CI or a `docs-repro`/`agent-ux` catalog row) that asserts the fixture's parent linkage is intact before it's relied upon, so a third occurrence surfaces as a clear, attributable signal instead of a mystery CI red.
+
+**Why deferred:** root-causing requires investigation (Confluence audit trail / version history correlation with commit and workflow-run timestamps across at least two incidents) that is out of scope for the CI-unblock lane's charter (fix the immediate red, file the pattern); is not itself a code bug, and any protection mechanism (page restrictions or a new freshness gate) is new scoped work.
+
+**Default disposition:** LOW-MEDIUM — advisory/non-blocking; fold into a v0.14.0 real-backend-fixture-hardening window or the next Confluence-connector-touching phase. Not release-blocking for v0.13.0.
+
+**STATUS:** OPEN
