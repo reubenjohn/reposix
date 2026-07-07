@@ -982,4 +982,11 @@ quality/gates/agent-ux/dark-factory.sh sim` to confirm PASS, then `python3
 quality/runners/run.py --cadence on-demand --persist` to re-mint the row honestly (it is
 currently phantom-green in the committed catalog).
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (v0.13.1 Lane E3, 2026-07-07) — applied the sketched
+`export REPOSIX_SIM_ORIGIN="${SIM_URL}"` fix to `sim.sh` verbatim, confirmed the OLD
+script (fix reverted) concretely FAILs against the current codebase (`error: cannot list
+issues for import: blocked origin: http://127.0.0.1:7878/...`), then confirmed the FIXED
+script exits 0 with `reposix init` correctly targeting `127.0.0.1:7779`. Row
+`agent-ux/dark-factory-sim` re-minted honestly in `quality/catalogs/agent-ux.json`
+(`last_verified`/`minted_at`: 2026-07-07T22:22:58Z, `coverage_kind: mechanical`,
+`transport_claim: false`, `claim_vs_assertion_audit` documents the before/after proof).

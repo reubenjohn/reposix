@@ -30,14 +30,19 @@
       },
       "artifact": "quality/reports/verifications/agent-ux/dark-factory-sim.json",
       "status": "PASS",
-      "last_verified": "2026-05-01T15:21:18Z",
+      "last_verified": "2026-07-07T22:22:58Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: quality/gates/agent-ux/dark-factory.sh (the scripts/dark-factory-test.sh shim it replaced was deleted D-CONV-3, 2026-07-04) finds the helper teaching strings missing -- inspect helper export-path / fetch-blob-limit code | D-CONV-1 (2026-07-04): stripped from pre-pr and demoted to on-demand -- ci.yml's dedicated `dark-factory` job runs the identical `bash quality/gates/agent-ux/dark-factory.sh sim` command directly; a second invocation via quality-pre-pr would double the ~30s regression + full workspace build for no new signal.",
       "waiver": null,
       "cadences": [
         "on-demand"
-      ]
+      ],
+      "minted_at": "2026-07-07T22:22:58Z",
+      "coverage_kind": "mechanical",
+      "transport_claim": false,
+      "claim_vs_assertion_audit": "v0.13.1 Lane E3 re-mint (was PHANTOM-GREEN, filed HIGH in SURPRISES-INTAKE.md v0.13.0): the verifier script never exported REPOSIX_SIM_ORIGIN, so `reposix init` inside the gate resolved against the hardcoded default 127.0.0.1:7878 instead of the gate's own sim bind 127.0.0.1:7779 -- the committed row's 2026-05-01 PASS predates the port change and was never re-verified since. Proven concretely this session: (1) with REPOSIX_SIM_ORIGIN unset, re-running the gate's `reposix init sim::demo` produced `error: cannot list issues for import: blocked origin: http://127.0.0.1:7878/projects/demo/issues` (egress-allowlist-blocked, since only 7779 is allowlisted) and the gate exited 1 -- i.e. the OLD script (absent this fix) concretely FAILs against the current codebase, not phantom-passes; (2) with the one-line `export REPOSIX_SIM_ORIGIN=\"${SIM_URL}\"` fix added, `reposix init` logged `remote.origin.url = reposix::http://127.0.0.1:7779/projects/demo` (the gate's OWN sim, not the default) and the gate exited 0, teaching-string greps passed, artifact written to quality/reports/verifications/agent-ux/dark-factory-sim.json. transport_claim is FALSE per the same rationale as agent-ux/zero-shot-onboarding: this exercises the local sim-backed init/partial-clone flow, not a real external backend, so coverage_kind: mechanical documents that substrate honestly.",
+      "sub_note": "no code-level bug in crates/ -- the escape-hatch deeper-cause path was NOT triggered; the fix was exactly the expected one-line env export."
     },
     {
       "id": "agent-ux/reposix-attach-against-vanilla-clone",

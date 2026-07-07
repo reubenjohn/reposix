@@ -24,6 +24,11 @@ mkdir -p "$RUN_DIR"
 # Egress allowlist must contain only the sim's localhost origin so any
 # accidental egress to a real backend is refused.
 export REPOSIX_ALLOWED_ORIGINS="${SIM_URL}"
+# Without this, `reposix init` resolves against the hardcoded default
+# 127.0.0.1:7878 instead of THIS gate's own sim bind (127.0.0.1:7779),
+# making the gate phantom-green (init succeeds against a stale/foreign
+# sim or fails silently against nothing). See init.rs REPOSIX_SIM_ORIGIN.
+export REPOSIX_SIM_ORIGIN="${SIM_URL}"  # isolated-port sim (init.rs)
 
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/lib.sh"
