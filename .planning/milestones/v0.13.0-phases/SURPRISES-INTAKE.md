@@ -949,3 +949,37 @@ minimum warn loudly) when it detects the local branch's cache-side lineage preda
 known-crashed reconcile attempt, rather than pushing a stale-relative-to-SoT tree with a
 clean exit code. Worth scoping as part of the v0.14.0 reconciliation redesign's
 acceptance criteria, not a bolt-on afterward.
+
+## 2026-07-07 | discovered-by: v0.13.1 Lane E2 (agent-ux/zero-shot-onboarding) | severity: HIGH
+
+**What:** `quality/gates/agent-ux/dark-factory/sim.sh` (catalog row `agent-ux/dark-factory-sim`,
+committed `status: PASS`, `last_verified: 2026-05-01`) now FAILS for real every run: it
+spawns `reposix-sim` on `127.0.0.1:7779` but never exports `REPOSIX_SIM_ORIGIN`, so the
+`reposix init sim::demo <path>` call inside it resolves against the hardcoded
+`DEFAULT_SIM_ORIGIN` (`127.0.0.1:7878`, `crates/reposix-cli/src/init.rs:23`) instead —
+`init` tries to fetch from a port nothing is listening on and fails with `error: cannot
+list issues for import: blocked origin: ...` / `fatal: error while running fast-import`.
+Confirmed via a real `bash quality/gates/agent-ux/dark-factory.sh sim` run in this
+session (exit 1) and by reading `init.rs:56-65`'s own comment, which says `init` added
+`REPOSIX_SIM_ORIGIN` honoring specifically "so an isolated-port sim... can be init'd
+against" — `sim.sh` was never updated to set it, so this appears to have silently broken
+the moment that `init.rs` change landed, and the catalog's stale `PASS` from 2026-05-01
+never caught it because no session re-ran `--persist` against it since.
+
+**Why out-of-scope for v0.13.1 Lane E2:** dark-factory-sim.sh is a different catalog
+row's verifier (`agent-ux/dark-factory-sim`), not a file this lane's dispatch (add
+`agent-ux/zero-shot-onboarding`) touched or owns. My own verifier
+(`quality/gates/agent-ux/zero-shot-onboarding.sh`) hit the identical hardcoded-port trap
+during its own `reposix init` call and worked around it by exporting
+`REPOSIX_SIM_ORIGIN` (see that script) — the fix pattern is proven, just not applied here
+because it's a one-line change to a sibling row's committed-PASS verifier that this
+dispatch wasn't chartered to touch.
+
+**Sketched resolution:** add `export REPOSIX_SIM_ORIGIN="${SIM_URL}"` to
+`quality/gates/agent-ux/dark-factory/sim.sh` (mirroring `dvcs-third-arm.sh`'s existing
+`export REPOSIX_SIM_ORIGIN="${SIM_URL}"` line), re-run `bash
+quality/gates/agent-ux/dark-factory.sh sim` to confirm PASS, then `python3
+quality/runners/run.py --cadence on-demand --persist` to re-mint the row honestly (it is
+currently phantom-green in the committed catalog).
+
+**STATUS:** OPEN
