@@ -986,3 +986,19 @@ relief path; cannot be verified statically — no C2 has run since the doctrine 
 **Default disposition:** MEDIUM — fold into a v0.14.0 docs-progressive-disclosure or `docs-build`-touching window; pairs with GOOD-TO-HAVES-15.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-06 | `codecov/project` posts a phantom -16% release-blocker when the Rust lcov upload silently fails | discovered-by: PR #61 codecov triage lane | severity: MEDIUM
+
+**Size:** S–M (an upload-robustness change to `.github/workflows/ci.yml` coverage job; touches CI, needs a re-run to prove).
+
+**Source:** On CI run `28819166220` (PR #61, head `2d1f55f`) the `codecov/project` check went RED with title `68.60% (-16.46%) compared to f686ab2`. This is NOT a code regression. Evidence: (i) `codecov/patch` = SUCCESS ("all modified and coverable lines are covered by tests"); (ii) the coverage diff shows Files 130→45 (-85) and Lines 18933→1000 (-17933) — the entire Rust workspace report vanished from HEAD, not a real deletion; (iii) codecov's own banner: "HEAD has 1 upload less than BASE" with flag table `|1|0|` (the blank/default flag = the Rust `lcov.info` upload); (iv) the failing project % (68.60%) EXACTLY equals `codecov/project/shell` (68.60%) — codecov computed the default project status from the shell-only subset because the Rust report never landed. Root cause: the `coverage` job (`ci.yml:411-431`) uploads `lcov.info` with `fail_ci_if_error: false` (line 429), so a flaky/failed codecov upload leaves the job GREEN while dropping the Rust report from the merged HEAD coverage — codecov then compares a full BASE (Rust+shell) against a partial HEAD (shell only), manufacturing a phantom -16.46% that reads as a release blocker.
+
+**Acceptance:** make the Rust coverage upload robust so a silent upload drop cannot produce a phantom project-drop that blocks release triage. Options (pick one, do NOT lower any threshold): (a) add codecov-action retry / `fail_ci_if_error: true` on the `coverage` job so an upload failure turns the job RED (honest, actionable) instead of silently poisoning the project comparison; (b) tag the Rust upload with an explicit `flags:` (e.g. `rust`) so a missing-flag report is detectable and carryforward keeps the last-good Rust numbers; (c) add codecov `after_n_builds` so the status only computes once all expected uploads (rust + shell) have arrived. Verify by re-running CI and confirming BASE and HEAD have equal upload counts and project % returns to ~85%.
+
+**Why deferred / not eager-fixed here:** this lane's charter forbids editing CI/codecov gate config, and the correct fix needs a CI re-run to prove the upload lands equally on BASE and HEAD — cannot be verified statically. Per git log, CI was already re-triggered on the current head (`90db62c`); if that re-run lands a clean Rust upload the check clears on its own, but the underlying silent-drop fragility remains and will recur.
+
+**Default disposition:** MEDIUM — fold into a v0.14.0 CI-robustness window; independent of code coverage quality (patch coverage is green).
+
+**STATUS:** OPEN
