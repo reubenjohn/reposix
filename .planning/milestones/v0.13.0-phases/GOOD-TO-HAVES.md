@@ -1198,3 +1198,30 @@ blocking since every lane so far has caught it via `git status` before committin
 Target: v0.14.0 scoping session.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-05 | `badges-resolve` FAILs on pre-push (docs-build + structure dimensions) | discovered-by: P93 Wave 1 de-risk executor | severity: MEDIUM
+
+**What:** The `badges-resolve` check (README/docs badge URLs must resolve — shields.io,
+Codecov, CI status) was FAILing on pre-push. Root cause was unconfirmed at filing time:
+transient upstream flake vs. genuinely-broken badge URL.
+
+**Resolution (P94 D3, 2026-07-05):** Determined **TRANSIENT** via ≥2 spaced isolated
+re-runs (3 runs across ~8 min, all 10 badge URLs returned HTTP 200 + correct
+content-type on the first attempt; no deterministic 404/wrong-type ever observed).
+Full evidence + verdict: `.planning/phases/94-real-backend-frictions/94-D3-badges-determination.md`.
+Fix applied (TRANSIENT branch of the catalog contract): `badges-resolve.py` `head_url()`
+now retries a transient failure (network error, or HTTP 408/425/429/5xx) up to
+`MAX_ATTEMPTS = 3` with `BACKOFF_S = (1.0, 2.0)` spacing; a deterministic failure
+(404/403/other-4xx or wrong content-type) still fails fast on the first attempt, so the
+retry cannot mask a genuinely-dead badge. Net: `python3 quality/gates/docs-build/badges-resolve.py`
+exits 0 reliably instead of flaking RED on pre-push.
+
+**Note (2026-07-07):** This entry was accidentally pruned by `1b37350` ("prune v0.13.0
+intakes to open-only") and restored here — the `docs-build/p94-badges-real-vs-transient`
+verifier mechanically reads this RESOLVED entry as its assert-2 precondition, so it must
+persist in `GOOD-TO-HAVES.md` (do not re-prune while that gate is live). Surfaced by
+S-260707-pr-07.
+
+**STATUS:** RESOLVED

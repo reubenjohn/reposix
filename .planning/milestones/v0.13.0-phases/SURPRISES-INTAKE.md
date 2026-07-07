@@ -864,6 +864,15 @@ precondition is satisfied, or correct whoever/whatever asserted "runs green live
 claim was stale/wrong at verification time. Only then update the catalog row's status +
 `last_verified` with the dated evidence.
 
+**RESOLVED (2026-07-07, v0.13.1 LANE F1b):** Root cause was NOT a stale catalog row nor
+a transient badge flake — the `badges-resolve` GOOD-TO-HAVES entry (which the verifier
+reads as its assert-2 precondition) had been accidentally deleted by `1b37350` ("prune
+v0.13.0 intakes to open-only"), so the gate's regex found "OPEN or missing". Restored the
+entry in RESOLVED form (P94 D3 TRANSIENT verdict + retry/backoff fix already landed
+2026-07-05). `bash quality/gates/docs-build/p94-badges-real-vs-transient.sh` now exits 0
+(all 4 asserts PASS; live badges-resolve.py: 8/8 URLs HTTP 200, attempts:1). The network
+was reachable — not egress-blocked.
+
 ## S-260707-pr-08 — agent "worktrees" are NOT isolated; a sim-seed leaf corrupted the shared repo (`t <t@t>` flipped `core.bare=true`) (HIGH)
 
 **Found during:** 2026-07-07 orchestration session — a dispatched sim/seed leaf corrupted
