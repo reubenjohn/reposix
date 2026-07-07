@@ -50,16 +50,23 @@ paths.
 
 ## 2. Start the simulator
 
+The prebuilt binary (curl / Homebrew / cargo binstall / PowerShell) does not ship the
+source-tree fixture, so grab the seed file over HTTP first, then point `--seed-file` at
+the downloaded copy:
+
 ```bash
-reposix sim --seed-file crates/reposix-sim/fixtures/seed.json &
-# 2026-04-24T12:00:00.000Z  INFO reposix_sim: reposix-sim listening addr=127.0.0.1:7878
+curl -sSL -o /tmp/reposix-seed.json \
+    https://raw.githubusercontent.com/reubenjohn/reposix/main/crates/reposix-sim/fixtures/seed.json
+reposix sim --bind 127.0.0.1:7878 --seed-file /tmp/reposix-seed.json &
+# reposix-sim: listening on http://127.0.0.1:7878 (seed: seed-file, 6 issues) — Ctrl-C to stop
 ```
 
-Backgrounded so the rest of the steps run in the same shell. The seed loads the canonical `demo` project — five issues, deterministic IDs.
+Backgrounded so the rest of the steps run in the same shell. The seed loads the canonical `demo` project — six issues, deterministic IDs.
 
 > If you used the **Build from source** tab above without installing, run
-> `target/debug/reposix sim --seed-file crates/reposix-sim/fixtures/seed.json &` instead.
-> Every other step assumes `reposix` is on `PATH`.
+> `target/debug/reposix sim --bind 127.0.0.1:7878 --seed-file crates/reposix-sim/fixtures/seed.json &`
+> instead — the fixture is already on disk, no download needed. Every other step assumes
+> `reposix` is on `PATH`.
 
 ## 3. Bootstrap the working tree
 
@@ -91,19 +98,22 @@ git checkout -B main refs/reposix/origin/main
 
 ```bash
 ls issues/
-# 0001.md  0002.md  0003.md  0004.md  0005.md
+# 1.md  2.md  3.md  4.md  5.md  6.md
 
-cat issues/0001.md
+cat issues/1.md
 # ---
 # id: 1
-# title: Add user avatar upload
+# title: database connection drops under load
 # status: open
-# assignee: alice@acme.com
-# labels: [backend, needs-review]
+# labels:
+# - bug
+# - p1
+# created_at: 2026-04-13T00:00:00Z
+# updated_at: 2026-04-13T00:00:00Z
 # version: 1
 # ---
-# ## Description
-# Avatar uploads are blocked by S3 permissions...
+# The <script>alert(1)</script> test harness drops connections after ~500 concurrent requests.
+# ...
 ```
 
 Frontmatter is the schema; the body is plain Markdown. No special tools, no MCP servers — `cat`, `ls`, `grep -r` all behave normally because the working tree IS a git repo. Read [Mental model in 60 seconds](../concepts/mental-model-in-60-seconds.md) if this still feels surprising.
@@ -113,14 +123,14 @@ Frontmatter is the schema; the body is plain Markdown. No special tools, no MCP 
 Add a comment to issue 1 and flip its status:
 
 ```bash
-cat >> issues/0001.md <<'EOF'
+cat >> issues/1.md <<'EOF'
 
 ## Comment from tutorial
 First-run tutorial — confirmed avatar upload is blocked, escalating.
 EOF
 
-sed -i 's/^status: .*/status: in_progress/' issues/0001.md
-git diff issues/0001.md
+sed -i 's/^status: .*/status: in_progress/' issues/1.md
+git diff issues/1.md
 ```
 
 Expected: a diff with two hunks — the status flip on the frontmatter line, and the comment appended at the bottom. No reposix-specific verbs were used to make the edit.
@@ -142,7 +152,7 @@ Expected: a diff with two hunks — the status flip on the frontmatter line, and
 ## 7. Commit and push
 
 ```bash
-git add issues/0001.md
+git add issues/1.md
 git commit -m "tutorial: add comment, move issue 1 to in_progress"
 git push
 # To reposix::http://127.0.0.1:7878/projects/demo
@@ -157,13 +167,14 @@ If a second writer had mutated issue 1 between your `init` and your `push`, the 
 
 ```bash
 sqlite3 ~/.cache/reposix/sim-demo.git/cache.db \
-    "SELECT ts, op, decision FROM audit_events_cache \
+    "SELECT ts, op, reason FROM audit_events_cache \
      WHERE op LIKE 'helper_push_%' ORDER BY ts DESC LIMIT 3"
-# 2026-04-24T12:01:32Z|helper_push_accepted|ok
-# 2026-04-24T12:01:32Z|helper_push_started|
+# 2026-07-07T15:38:27Z|helper_push_accepted|1
+# 2026-07-07T15:38:27Z|helper_push_sanitized_field|version
+# 2026-07-07T15:38:27Z|helper_push_started|refs/heads/main
 ```
 
-Two rows: the push opened, the push accepted. No `helper_push_rejected_conflict`, no `helper_push_sanitized_field` (you did not try to overwrite a server field). Every push, accept or reject, writes one append-only audit row. `git log` is the agent's intent; `audit_events_cache` is the system's outcome.
+Three rows: the push opened, a server-controlled field got stripped, the push was accepted. That middle row is normal, not a warning sign — issue `1.md`'s frontmatter still carries the server-controlled `version` field reposix wrote when it materialized the file, and `git push` strips it before applying the write (server fields round-trip out, never in — see [trust model](../how-it-works/trust-model.md)). You'd only see `helper_push_rejected_conflict` if a second writer had raced you. Every push, accept or reject, writes one append-only audit row. `git log` is the agent's intent; `audit_events_cache` is the system's outcome.
 
 ## What did you do?
 

@@ -45,11 +45,11 @@ Reading the schema takes 30 seconds; editing it takes the editor you already hav
 Edits become REST writes when — and only when — you `git push`. The helper parses your commits, checks the backend version, applies the writes, or rejects with the standard git "fetch first" error so you `git pull --rebase && git push`.
 
 ```bash
-sed -i 's/^status: .*/status: done/' issues/0001.md
+sed -i 's/^status: .*/status: done/' issues/1.md
 git commit -am 'close 1' && git push
 
 sqlite3 ~/.cache/reposix/sim-demo.git/cache.db \
-  "SELECT ts, op, decision FROM audit ORDER BY ts DESC LIMIT 5"
+  "SELECT ts, op, reason FROM audit_events_cache ORDER BY ts DESC LIMIT 5"
 ```
 
 Every push, accept or reject, writes one append-only audit row. `git log` is the intent; the audit table is the outcome.
@@ -60,7 +60,7 @@ Every push, accept or reject, writes one append-only audit row. `git log` is the
 cargo run -p reposix-cli -- init sim::demo /tmp/repo \
   && cd /tmp/repo \
   && git checkout -B main refs/reposix/origin/main \
-  && cat issues/0001.md
+  && cat issues/1.md
 ```
 
 That's the whole loop. Next:

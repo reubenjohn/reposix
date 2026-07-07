@@ -62,16 +62,16 @@ Fix:
 
 ```bash
 git sparse-checkout set 'issues/PROJ-24*'
-git checkout origin/main
+git checkout main
 git grep TODO
 ```
 
-`git sparse-checkout set <pathspec>` restricts blob materialization to matching paths. The next `git checkout` issues a smaller `command=fetch` that proceeds. Tighten the pathspec until you stay under the limit.
+`git sparse-checkout set <pathspec>` restricts blob materialization to matching paths. The next `git checkout` issues a smaller `command=fetch` that proceeds. Tighten the pathspec until you stay under the limit. (Use `main` — the local branch `reposix init` already checked out — not `origin/main`, which is never populated; see [git-layer §push round-trip](../how-it-works/git-layer.md).)
 
 To raise the limit explicitly (one shot, your shell only):
 
 ```bash
-REPOSIX_BLOB_LIMIT=1000 git checkout origin/main
+REPOSIX_BLOB_LIMIT=1000 git checkout main
 ```
 
 Mechanism: see [git layer §blob limit guardrail](../how-it-works/git-layer.md#blob-limit-guardrail).
@@ -100,7 +100,7 @@ Common queries:
 ```bash
 # Last 5 push attempts (accepted or rejected) against sim::demo
 sqlite3 ~/.cache/reposix/sim-demo.git/cache.db \
-    "SELECT ts, op, decision, reason FROM audit_events_cache \
+    "SELECT ts, op, reason FROM audit_events_cache \
      WHERE op LIKE 'helper_push_%' ORDER BY ts DESC LIMIT 5"
 
 # Recent conflict rejections (the dark-factory teaching events)
@@ -243,7 +243,7 @@ hint: run `reposix sync --reconcile` to refresh your cache against the SoT, then
 
 What it means: between your last `git fetch origin` (from the GH mirror) and your `git push`, the SoT moved. The mirror has not caught up — `refs/mirrors/<sot-host>-synced-at` shows the gap. Pushing now would silently overwrite the other writer's edits to issue 0001.
 
-Fix:
+Fix (works when the conflict came from another git-side *push*):
 
 ```bash
 reposix sync --reconcile          # full list_records walk against the SoT
@@ -252,6 +252,27 @@ git push                          # bus remote retries; precheck B passes
 ```
 
 Why two commands: `git pull` from the GH mirror gives you the mirror's lagging view. `reposix sync --reconcile` walks the SoT directly via REST and updates your cache to match — the ground-truth refresh needed before rebasing. Once the cache is fresh, `git pull --rebase` becomes a local-only rebase and `git push` succeeds.
+
+> **Known limitation (v0.13.x) — an EXTERNAL REST write (not a git push) breaks this recovery.**
+> If the SoT moved because someone edited the record *directly* (web UI / REST PATCH)
+> rather than via a reposix `git push`, the sequence above does **not** recover — and
+> `reposix sync --reconcile` does not help. `git pull --rebase` aborts with:
+> ```
+> warning: Not updating refs/reposix/origin/main (new tip … does not contain …)
+> fatal: error while running fast-import
+> ```
+> Root cause: the cache rebuilds a "Sync from REST snapshot" commit that is not a
+> descendant of your current tracking tip, so git's fast-import refuses to advance the
+> ref. This is the RBF-LR-03 deep-reconciliation limitation, scheduled for the v0.14.0
+> reconciliation redesign.
+>
+> **Current workaround:** re-clone into a fresh tree —
+> ```bash
+> reposix init <backend>::<project> /tmp/fresh-tree
+> cd /tmp/fresh-tree && git checkout -B main refs/reposix/origin/main
+> ```
+> The fresh tree reflects the external edit correctly. **You lose any local commits you
+> had not yet pushed** — re-apply them by hand (e.g. copy your edited `.md`, re-commit).
 
 On conflict, resolve with standard git tools (`git status`, edit, `git rebase --continue`).
 
@@ -343,7 +364,7 @@ When to suspect cache desync (signals from the audit log):
 
 ```bash
 sqlite3 ~/.cache/reposix/<backend>-<project>.git/cache.db \
-    "SELECT ts, op, decision, reason FROM audit_events_cache \
+    "SELECT ts, op, reason FROM audit_events_cache \
      WHERE op LIKE 'delta_sync%' ORDER BY ts DESC LIMIT 10"
 ```
 
@@ -361,7 +382,7 @@ Confirm it from the audit log (an interrupted create leaves a `helper_push_start
 
 ```bash
 sqlite3 ~/.cache/reposix/<backend>-<project>.git/cache.db \
-    "SELECT ts, op, decision, reason FROM audit_events_cache \
+    "SELECT ts, op, reason FROM audit_events_cache \
      WHERE op LIKE 'helper_push_%' ORDER BY ts DESC LIMIT 5"
 ```
 

@@ -109,7 +109,7 @@ Both rejections lead to the same shape of recovery:
 | Rejection | Agent observes | Agent runs |
 |---|---|---|
 | stale base on push | `! [remote rejected] main -> main (fetch first)` | `git pull --rebase && git push` |
-| blob limit hit on fetch | stderr: `refusing to fetch N blobs ... narrow your scope with git sparse-checkout` | `git sparse-checkout set <pathspec> && git checkout origin/main` |
+| blob limit hit on fetch | stderr: `refusing to fetch N blobs ... narrow your scope with git sparse-checkout` | `git sparse-checkout set <pathspec> && git checkout main` |
 
 Both are recoverable, both are auditable (one row each in `cache.db`), and both teach the agent the right move on the spot.
 

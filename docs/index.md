@@ -70,9 +70,9 @@ Full step-by-step in [first-run](tutorials/first-run.md).
 
 ```bash
 cd /tmp/reposix-demo
-sed -i 's/^status: .*/status: in_progress/' issues/0001.md
-echo $'\n## Comment\nReproduced — investigating root cause.' >> issues/0001.md
-git commit -am "0001: in progress" && git push
+sed -i 's/^status: .*/status: in_progress/' issues/1.md
+echo $'\n## Comment\nReproduced — investigating root cause.' >> issues/1.md
+git commit -am "1: in progress" && git push
 ```
 
 The audit trail is `git log`. No SDK to vendor; no schemas to load.
@@ -128,7 +128,7 @@ cargo build --release --workspace --bins
 export PATH="$PWD/target/release:$PATH"
 reposix sim &                                             # start the simulator on :7878
 reposix init sim::demo /tmp/reposix-demo
-cd /tmp/reposix-demo && git checkout -B main refs/reposix/origin/main && cat issues/0001.md
+cd /tmp/reposix-demo && git checkout -B main refs/reposix/origin/main && cat issues/1.md
 ```
 
 After `init`, agent UX is pure git: `cat`, `grep -r`, edit, `git commit`, `git push`. The bootstrap takes ≤ `27 ms` against the simulator on a stock laptop.
@@ -149,7 +149,9 @@ After `init`, agent UX is pure git: `cat`, `grep -r`, edit, `git commit`, `git p
 
 ## What it looks like underneath
 
-reposix has three pieces — a local bare git repository built from REST responses (with file content fetched lazily), a `git` remote that handles both reads and pushes by translating to API calls, and `reposix init` (a one-shot bootstrap). Two guardrails are load-bearing for autonomous agents: **push-time conflict detection** rejects stale-base pushes with the standard git "fetch first" error so an agent recovers via `git pull --rebase`; the **fetch size limit** caps `git fetch` and emits a stderr message that names `git sparse-checkout` as the recovery move. An agent unfamiliar with reposix observes the error, runs `sparse-checkout`, and recovers with no human prompt engineering.
+reposix has three pieces — a local bare git repository built from REST responses (with file content fetched lazily), a `git` remote that handles both reads and pushes by translating to API calls, and `reposix init` (a one-shot bootstrap). Two guardrails are load-bearing for autonomous agents: **push-time conflict detection** rejects stale-base pushes with the standard git "fetch first" error so an agent recovers via `git pull --rebase` — reliably, when the base moved via another git-side push; the **fetch size limit** caps `git fetch` and emits a stderr message that names `git sparse-checkout` as the recovery move. An agent unfamiliar with reposix observes the error, runs `sparse-checkout`, and recovers with no human prompt engineering.
+
+> **Known limitation (v0.13.x):** if the SoT record moved via an *external REST write* (web UI / direct API `PATCH`) rather than a git-side push, `git pull --rebase` does not recover — it aborts with `fatal: error while running fast-import`. The honest current workaround is a fresh `reposix init` into a new directory (you lose any unpushed local commits and re-apply them by hand). Root cause + full recovery detail: [Troubleshooting — Bus-remote fetch-first rejection](guides/troubleshooting.md#bus-remote-fetch-first-rejection). Fixed properly by the v0.14.0 reconciliation redesign.
 
 The detail of how each piece works lives in [How it works](how-it-works/filesystem-layer.md). The reference material — frontmatter schema, simulator HTTP surface, testing targets — is in [Reference](reference/simulator.md).
 
