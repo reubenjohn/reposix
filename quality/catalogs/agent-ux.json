@@ -2146,6 +2146,47 @@
         "on-demand"
       ],
       "minted_at": "2026-07-05T22:00:00Z"
+    },
+    {
+      "id": "agent-ux/zero-shot-onboarding",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "comment": "v0.13.1 Lane E2 -- catches the Wave D/E1 doc-lie class (padded 0001.md, '5 issues', the nonexistent `decision` audit column, source-tree-only --seed-file, bare `git checkout origin/main` at an initial-checkout site) from REAPPEARING by literally executing the PUBLISHED getting-started flow from docs/tutorials/first-run.md + README.md against a locally-built binary -- not a hand-simulated proxy of it. A fresh agent with only the published docs (no session context, no source-tree shortcuts) must be able to copy-paste the documented commands and complete read+write+push with zero manual fixups. transport_claim is set FALSE (explicit opt-out): this exercises the LOCAL sim-backed onboarding flow (the documented tutorial targets the in-process simulator, not a real backend), so it is a mechanical doc-fidelity check, not a real-backend transport claim -- coverage_kind: mechanical documents that substrate honestly.",
+      "sources": [
+        "docs/tutorials/first-run.md",
+        "README.md (Quick start section)",
+        "quality/gates/agent-ux/zero-shot-onboarding.sh"
+      ],
+      "command": "bash quality/gates/agent-ux/zero-shot-onboarding.sh",
+      "expected": {
+        "asserts": [
+          "the verifier drives the LITERAL documented commands from docs/tutorials/first-run.md + README.md's Quick start section (curl the seed fixture from raw.githubusercontent.com per the fixed docs, reposix sim --seed-file <downloaded copy>, reposix init, git checkout -B main refs/reposix/origin/main, cat/edit issues/1.md, git add/commit/push) in a throwaway /tmp leaf, never the shared repo",
+          "read (cat issues/1.md), write (edit + git commit), and push (git push through the helper) each exit 0 with zero manual fixups beyond what the docs instruct",
+          "none of the Wave D/E1 doc-lie signatures (padded issues/0001.md in an asserting context, '5 issues', a `decision` audit column, source-tree-only --seed-file path outside the documented Build-from-source fallback, bare `git checkout origin/main` at an initial-checkout site) are present in the doc surfaces the flow was driven from",
+          "if raw.githubusercontent.com is unreachable in-gate, the verifier falls back to the local fixture crates/reposix-sim/fixtures/seed.json and records which path it took (curl vs local-fixture fallback) rather than silently swallowing the network failure"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/zero-shot-onboarding.sh",
+        "args": [],
+        "timeout_s": 120,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/zero-shot-onboarding.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: re-diff docs/tutorials/first-run.md + README.md against the actual sim/CLI behavior (reposix-sim startup banner, issue count, audit_events_cache columns, checkout ref) the way Wave D's 0578919 did -- the doc-lie signatures this row greps for are the exact class that commit fixed.",
+      "waiver": null,
+      "coverage_kind": "mechanical",
+      "transport_claim": false,
+      "claim_vs_assertion_audit": "The description claims the published onboarding flow works verbatim with zero fixups and that the Wave D doc-lie signatures have not regressed. If either were false -- e.g. a documented command exits non-zero, or a padded-0001/five-issues/decision-column/bare-origin-main signature reappeared in an asserting (non-illustrative) context in the driven doc surfaces -- the verifier's per-step exit-code asserts and its post-flow doc greps would concretely fail and the row would flip to FAIL, not silently pass.",
+      "cadences": [
+        "pre-release",
+        "on-demand"
+      ],
+      "minted_at": "2026-07-07T00:00:00Z"
     }
   ]
 }
