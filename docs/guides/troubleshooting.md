@@ -261,10 +261,11 @@ Why two commands: `git pull` from the GH mirror gives you the mirror's lagging v
 > warning: Not updating refs/reposix/origin/main (new tip … does not contain …)
 > fatal: error while running fast-import
 > ```
+> <!-- banned-words: ok (literal quoted terminal output the user will see verbatim, not narrative jargon) -->
 > Root cause: the cache rebuilds a "Sync from REST snapshot" commit that is not a
-> descendant of your current tracking tip, so git's fast-import refuses to advance the
-> ref. This is the RBF-LR-03 deep-reconciliation limitation, scheduled for the v0.14.0
-> reconciliation redesign.
+> descendant of your current tracking tip, so git's internal import step refuses to
+> advance the ref. This is the RBF-LR-03 deep-reconciliation limitation, scheduled for
+> the v0.14.0 reconciliation redesign.
 >
 > **Current workaround:** re-clone into a fresh tree —
 > ```bash
