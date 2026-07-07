@@ -1059,4 +1059,25 @@ relief path; cannot be verified statically — no C2 has run since the doctrine 
 
 **Default disposition:** LOW-process — no correctness bug in the underlying feature either time, but a recurring gate-authoring anti-pattern worth a repo-wide sweep before it produces a third false-negative.
 
+## 2026-07-07 | `SURPRISES-INTAKE.md` has outgrown its own pre-commit soft limit (~77k chars vs. 20k warn threshold) | discovered-by: v0.13.0 post-release verification pass | severity: LOW (process)
+
+**What:** `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md` is now ~77k chars; the
+pre-commit hook already warns (non-blocking) on any commit touching it past 20k chars. It
+needs a distill/split pass (progressive disclosure — move resolved/dated history into
+`.planning/RETROSPECTIVE.md` or an archive file, keep only live OPEN entries in the working
+file per the "bound-to-live-state" rule in SESSION-HANDOVER §0).
+
+**Why out-of-scope for eager-resolution:** distilling ~700 lines of entries requires
+per-entry triage (which are truly resolved/superseded vs. still live) — that's exactly the
+milestone-close OP-9 distillation work, not a drive-by edit mid-verification-pass.
+
+**Sketched resolution:** at the next milestone-close (OP-9 distillation into
+`.planning/RETROSPECTIVE.md`), split this file: archive terminal/RESOLVED/superseded
+entries out (git is the archive per the file's own carry-forward-banner convention), leave
+only live OPEN/DEFERRED entries in the working file, and consider a per-quarter or
+per-milestone rotation so the file doesn't recross the 20k soft limit again.
+
+**Default disposition:** LOW — recommended at milestone-close; do not distill now (mid
+verification pass is not the venue).
+
 **STATUS:** OPEN
