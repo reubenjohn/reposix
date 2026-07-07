@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0](https://github.com/reubenjohn/reposix/compare/reposix-jira-v0.12.0...reposix-jira-v0.13.0) - 2026-07-07
+
+### Fixed
+
+- *(94)* cursor-authoritative completeness for jira/confluence list_records_complete
+- *(94)* gate prune_oid_map on connector completeness signal (Fork A) + idempotent delete-NotFound (Fork B)
+- *(ci)* treat empty-set env as unset in jira/confluence test helpers; harden sim spawn; make pre-pr diagnosable
+- *(jira)* reconcile rate-limit backoff code and docs (connector re-audit)
+- *(security)* wire audit_events into helper Confluence/JIRA dispatch (QL-005)
+- *(capabilities)* reconcile CAPABILITIES with impl across 4 surfaces (QL-002)
+- *(readme)* branch-pin CI/Docs/Quality badges to main
+
+### Other
+
+- *(scripts)* finish scripts/ collapse -- registry, doc refs, inverse gate (D-CONV-3)
+- reconcile cold-init latency to canonical 27 ms (QL-027)
+
 ## [0.11.3](https://github.com/reubenjohn/reposix/compare/reposix-jira-v0.11.2...reposix-jira-v0.11.3) - 2026-04-27
 
 ### Other

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0](https://github.com/reubenjohn/reposix/compare/reposix-sim-v0.12.0...reposix-sim-v0.13.0) - 2026-07-07
+
+### Added
+
+- *(quality)* P90 90-03 test-name-vs-asserts gate + subagent-graded migration
+
+### Fixed
+
+- *(readme)* branch-pin CI/Docs/Quality badges to main
+
+### Other
+
+- *(scripts)* finish scripts/ collapse -- registry, doc refs, inverse gate (D-CONV-3)
+- reconcile cold-init latency to canonical 27 ms (QL-027)
+- *(sim)* assert default bind addr is 127.0.0.1:7878
+
 ## [0.11.3](https://github.com/reubenjohn/reposix/compare/reposix-sim-v0.11.2...reposix-sim-v0.11.3) - 2026-04-27
 
 ### Other

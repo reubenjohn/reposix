@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0](https://github.com/reubenjohn/reposix/compare/reposix-cli-v0.12.0...reposix-cli-v0.13.0) - 2026-07-07
+
+### Added
+
+- *(remote)* expose backend_dispatch as lib; delegate attach/sync to shared factory
+- *(quality)* P90 90-03 test-name-vs-asserts gate + subagent-graded migration
+- *(P89)* banned-production-tokens linter (RBF-FW-04)
+- *(cli)* reposix sync --reconcile subcommand (DVCS-PERF-L1-02)
+- *(cache)* cache_reconciliation table + reconciliation walk module + 3 new public Cache APIs + audit hook (DVCS-ATTACH-02 + 04 part 1)
+- *(cli)* scaffold `reposix attach <spec>` subcommand body (DVCS-ATTACH-01 + Q1.2/Q1.3 wiring)
+
+### Fixed
+
+- *(93)* reposix sync --reconcile forces a full build_from rebuild
+- *(cli)* configure remote.origin.fetch so init populates refs/reposix/origin/main
+- *(ci)* treat empty-set env as unset in jira/confluence test helpers; harden sim spawn; make pre-pr diagnosable
+- *(agent-ux)* add test-name-honesty markers for 9 P91 tests
+- *(agent-ux)* doctor helper.binary fix-line matches attach's install teaching (T2 H2 followup)
+- *(agent-ux)* doctor drift check is topology-aware; git-version is WARN not ERR (T2 H4/MED6)
+- *(agent-ux)* attach routes plain `git push` to SoT + warns on missing helper (T2 H1/H2)
+- *(security)* strip embedded credentials from mirror URLs in config + helper stderr (Wave-5.5 MEDIUM intake)
+- *(core+remote+cache)* bucket-aware canonical paths + id-keyed diff planner (confluence mass-delete BLOCKER)
+- *(cli)* refresh emits unpadded issues/<id>.md + wipe stale-padded duplicates (QL-001 / D91-10)
+- *(cli)* resolve reposix remote partialClone-aware so subcommands work on attached trees (QL-004)
+- *(binstall)* correct pkg-url to real release asset name (QL-003)
+- *(capabilities)* reconcile CAPABILITIES with impl across 4 surfaces (QL-002)
+- *(readme)* branch-pin CI/Docs/Quality badges to main
+- *(cli)* broaden dark_factory_conflict_teaching_string_present to write_loop.rs
+- *(cache,cli)* idempotent Cache::open + build_from + REPOSIX_SIM_ORIGIN env override (P79-03 fix-forward)
+
+### Other
+
+- *(93)* add partial_failure_recovery_real_confluence smoke (RBF-LR-03)
+- *(cli)* attach_real_*/sync_real_* real-backend smokes + verifier; ci.yml JIRA_TEST_PROJECT
+- *(cache,cli)* resolve ForkAsNew (free) + honest Abort doc; scrub phase-ID tokens
+- *(cli)* P90 90-06 5 real MISSING_TEST tests (D90-07)
+- *(scripts)* finish scripts/ collapse -- registry, doc refs, inverse gate (D-CONV-3)
+- *(cli)* update doctor no-remote assert to new teaching finding (CI fix for 8fccaf8)
+- *(cli)* update no-remote asserts to new teaching error (CI fix for 8fccaf8)
+- reconcile cold-init latency to canonical 27 ms (QL-027)
+- *(cli)* refresh stale worktree_helpers module header (QL-004 follow-through)
+- *(cli)* integration tests for `reposix attach` (DVCS-ATTACH-01..04 + OP-3)
+- *(testing)* parameterize Confluence space, kill TokenWorld hardcoding ([#33](https://github.com/reubenjohn/reposix/pull/33))
+
 ## [0.11.3](https://github.com/reubenjohn/reposix/compare/reposix-cli-v0.11.2...reposix-cli-v0.11.3) - 2026-04-27
 
 ### Other

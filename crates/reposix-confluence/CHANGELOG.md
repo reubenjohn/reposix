@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0](https://github.com/reubenjohn/reposix/compare/reposix-confluence-v0.12.0...reposix-confluence-v0.13.0) - 2026-07-07
+
+### Added
+
+- *(quality)* P90 90-03 test-name-vs-asserts gate + subagent-graded migration
+
+### Fixed
+
+- *(94)* cursor-authoritative completeness for jira/confluence list_records_complete
+- *(94)* gate prune_oid_map on connector completeness signal (Fork A) + idempotent delete-NotFound (Fork B)
+- *(security)* wire audit_events into helper Confluence/JIRA dispatch (QL-005)
+- *(capabilities)* reconcile CAPABILITIES with impl across 4 surfaces (QL-002)
+- *(readme)* branch-pin CI/Docs/Quality badges to main
+
+### Other
+
+- *(confluence)* self-seeding hierarchy test + document protected durable fixtures (D91-08)
+- *(confluence)* add capabilities self-check matching github/jira pattern (connector re-audit)
+- *(scripts)* finish scripts/ collapse -- registry, doc refs, inverse gate (D-CONV-3)
+- reconcile cold-init latency to canonical 27 ms (QL-027)
+
 ## [0.11.3](https://github.com/reubenjohn/reposix/compare/reposix-confluence-v0.11.2...reposix-confluence-v0.11.3) - 2026-04-27
 
 ### Other
