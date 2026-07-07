@@ -849,3 +849,43 @@ or the existing stop-uncommitted family) that REJECTS any commit authored by `t 
 (or any known test-fixture identity) against the shared repo; and/or (c) a guard that
 fails a leaf's `reposix init`/seed when `$PWD` is inside the shared repo tree. Route to
 the enforcement map once shipped (`ORCHESTRATION.md` § Enforcement map).
+
+## S-260707-rbf-lr03-external-write-crash | 2026-07-07 | discovered-by: v0.13.1 B5 TRIAGE | severity: HIGH | tag: v0.14.0 RBF-LR-03 pivot
+
+**What:** The documented post-conflict recovery CRASHES when the SoT moved via an
+**external REST write** (web UI / direct `PATCH`) rather than a git-side push. Reproduced
+leaf-isolated in `/tmp` (sim `--ephemeral` seeded, git 2.25.1, `git-remote-reposix` on
+PATH): after a local commit + an external `PATCH /projects/demo/issues/1`, the FULL
+documented sequence `reposix sync --reconcile` → `git pull --rebase` → `git push` aborts
+at the pull with:
+```
+warning: Not updating refs/reposix/origin/main (new tip 764e1a70… does not contain bd848c1…)
+fatal: error while running fast-import
+```
+`reposix sync --reconcile` (exit 0) does NOT help — it is the trigger: it mints a fresh
+"Sync from REST snapshot" synthesis commit that is NOT a descendant of the tracking tip,
+so git's fast-import refuses the ref update. The bare `git pull --rebase` (no reconcile)
+crashes identically. Data-safety kicker: the follow-on `git push` returns exit 0 and
+would push the tree that never absorbed the external edit — silently overwriting the
+external writer (the exact overwrite reconcile was documented to prevent). The only
+current recovery is a fresh `reposix init` into a new dir (verified: fresh tree shows the
+external edit), losing unpushed local commits.
+
+**Why out-of-scope for v0.13.1 hotfix:** No `<1h`/no-new-dependency fix. A correct fix
+must make the cache build snapshot commits as *descendants* of the prior synthesis tip
+(lineage + dedup + push-conflict semantics) — precisely the RBF-LR-03 reconciliation
+redesign already ratified as the v0.14.0 owner pivot (CONSULT-DECISIONS 2026-07-06). A
+point patch here re-entrenches the placeholder-synthesis design the pivot exists to
+replace. HOTFIX-conservative bias → docs made honest in v0.13.1, deep fix deferred.
+
+**Sketched resolution (v0.14.0 RBF-LR-03):** In the reconciliation redesign, the
+cache-side "Sync from REST snapshot" commit MUST be parented on the prior
+`refs/reposix/origin/main` tip so `git pull --rebase` sees a fast-forwardable /
+rebaseable lineage. Model the external-write reconciliation as a commit *appended* to the
+existing history (owner's commit-sequence model) rather than a fresh-root snapshot. Add a
+leaf-isolated regression proving `external PATCH → pull --rebase` recovers without
+`fatal: error while running fast-import`. Repro scripts + full transcript:
+CONSULT-DECISIONS.md 2026-07-07 entry.
+
+**STATUS:** OPEN (deferred to v0.14.0 RBF-LR-03 pivot; docs-honesty spec handed to the
+v0.13.1 doc-truth lane)

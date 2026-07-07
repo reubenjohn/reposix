@@ -10,6 +10,122 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 
 ---
 
+## 2026-07-07 [SELF] Post-conflict recovery crash after an EXTERNAL REST write is the KNOWN RBF-LR-03 deep-reconciliation limitation → docs-honest, NOT a code hotfix
+
+- **Lane:** v0.13.1 onboarding-hotfix, B5 TRIAGE. **Decision bias:** HOTFIX-conservative.
+- **Reproduced (leaf-isolated in `/tmp`, sim `--ephemeral` seeded, `git-remote-reposix`
+  on PATH, git 2.25.1 on this box):**
+  1. `reposix init sim::demo /tmp/<uniq>/repo` → `git checkout origin/main` (tracking tip
+     `bd848c1 "Sync from REST snapshot"`).
+  2. Local edit + commit issue `1.md` → local tip `ff2877f` (child of `bd848c1`).
+  3. **External REST write** (NOT a git push): `PATCH /projects/demo/issues/1` bumps the
+     SoT to version 2.
+  4. FULL documented recovery from `docs/guides/troubleshooting.md` §"Bus-remote `fetch
+     first` rejection" + `docs/concepts/dvcs-topology.md`:
+     `reposix sync --reconcile` → `git pull --rebase` → `git push`.
+- **Exact failing command + stderr (load-bearing):** `git pull --rebase` (STEP B, AFTER
+  a clean `reposix sync --reconcile` exit 0) aborts:
+  ```
+  warning: Not updating refs/reposix/origin/main (new tip 764e1a70… does not contain bd848c1…)
+  fatal: error while running fast-import
+  ```
+- **Does the FULL documented sequence (with `sync --reconcile` first) recover? NO — it
+  CRASHES.** `sync --reconcile` returns exit 0 but is itself the trigger: it mints a fresh
+  synthesis commit (`5f15b93…`) that is NOT a descendant of the tracking tip `bd848c1`.
+  When `git pull`'s fetch re-invokes the helper's fast-import (`import`/stateless-connect),
+  git refuses to advance `refs/reposix/origin/main` to a non-descendant tip → the fatal.
+  The BARE `git pull --rebase` (no reconcile) crashes IDENTICALLY (`new tip 1b3d82e… does
+  not contain bd848c1…`, same `fatal`). So the original break did NOT merely skip
+  `sync --reconcile`; the reconcile step does not help and cannot help — it manufactures
+  the exact non-descendant condition that fast-import rejects.
+- **Data-safety note:** after the pull crash, the local tree still has the local edit but
+  NEVER incorporated the external REST edit; the follow-on `git push` returned exit 0
+  (`[new branch] main -> main`), i.e. it would push the stale-relative-to-SoT tree —
+  silently overwriting the external writer's edit. This is the very overwrite
+  `sync --reconcile` was documented to prevent.
+- **CALL: KNOWN LIMITATION (RBF-LR-03 class), docs-honest — NOT a cheap regression.** The
+  fix is to make the cache's "Sync from REST snapshot" commit a *descendant* of the prior
+  synthesis tip (lineage + dedup + conflict semantics) — exactly the v0.14.0
+  reconciliation-redesign already ratified as the RBF-LR-03 pivot (owner entry
+  2026-07-06 above; SESSION-HANDOVER §5). No `<1h`/no-new-dependency fix exists; a point
+  patch here would re-entrench the placeholder-synthesis design the pivot is chartered to
+  replace. Per HOTFIX-conservative bias: do not touch reconciliation in v0.13.1.
+- **Actions taken:** (a) DOC-HONESTY EDIT SPEC produced for `troubleshooting.md` +
+  `dvcs-topology.md` (below) — handed to the doc-truth lane; this lane edited NO docs.
+  (b) Filed the deep fix as `S-260707-rbf-lr03-external-write-crash` in
+  `v0.13.0-phases/SURPRISES-INTAKE.md`, tagged for the v0.14.0 RBF-LR-03 pivot.
+- **Verify against reality:** two leaf-isolated `/tmp` repro scripts run this session
+  (full recovery + bare-pull/fresh-reinit characterization); the FRESH `reposix init`
+  into a new dir correctly shows the external edit (`grep EXTERNAL REST EDIT` ✓) — this is
+  the honest current workaround (re-clone; re-apply your unpushed local commit by hand).
+- **Reversibility:** planning-file-only; no code/docs touched by this lane.
+
+### DOC-HONESTY EDIT SPEC (for the doc-truth lane — apply verbatim, this lane did NOT edit docs)
+
+**File 1: `docs/guides/troubleshooting.md`, §"Bus-remote `fetch first` rejection"
+(~lines 246-256).** The "Fix" block currently advertises the sequence as a reliable
+recovery. It is NOT reliable when the SoT moved via an *external REST write* (vs a
+git-side push): `git pull --rebase` aborts with `fatal: error while running fast-import`.
+
+- OLD (fix block + "Why two commands" para, ~246-254):
+  ```
+  Fix:
+
+  ```bash
+  reposix sync --reconcile          # full list_records walk against the SoT
+  git pull --rebase                 # replay your commits on top of the fresh state
+  git push                          # bus remote retries; precheck B passes
+  ```
+
+  Why two commands: `git pull` from the GH mirror gives you the mirror's lagging view. `reposix sync --reconcile` walks the SoT directly via REST and updates your cache to match — the ground-truth refresh needed before rebasing. Once the cache is fresh, `git pull --rebase` becomes a local-only rebase and `git push` succeeds.
+  ```
+- NEW:
+  ```
+  Fix (works when the conflict came from another git-side *push*):
+
+  ```bash
+  reposix sync --reconcile          # full list_records walk against the SoT
+  git pull --rebase                 # replay your commits on top of the fresh state
+  git push                          # bus remote retries; precheck B passes
+  ```
+
+  Why two commands: `git pull` from the GH mirror gives you the mirror's lagging view. `reposix sync --reconcile` walks the SoT directly via REST and updates your cache to match — the ground-truth refresh needed before rebasing. Once the cache is fresh, `git pull --rebase` becomes a local-only rebase and `git push` succeeds.
+
+  > **Known limitation (v0.13.x) — an EXTERNAL REST write (not a git push) breaks this recovery.**
+  > If the SoT moved because someone edited the record *directly* (web UI / REST PATCH)
+  > rather than via a reposix `git push`, the sequence above does **not** recover — and
+  > `reposix sync --reconcile` does not help. `git pull --rebase` aborts with:
+  > ```
+  > warning: Not updating refs/reposix/origin/main (new tip … does not contain …)
+  > fatal: error while running fast-import
+  > ```
+  > Root cause: the cache rebuilds a "Sync from REST snapshot" commit that is not a
+  > descendant of your current tracking tip, so git's fast-import refuses to advance the
+  > ref. This is the RBF-LR-03 deep-reconciliation limitation, scheduled for the v0.14.0
+  > reconciliation redesign.
+  >
+  > **Current workaround:** re-clone into a fresh tree —
+  > ```bash
+  > reposix init <backend>::<project> /tmp/fresh-tree
+  > cd /tmp/fresh-tree && git checkout origin/main
+  > ```
+  > The fresh tree reflects the external edit correctly. **You lose any local commits you
+  > had not yet pushed** — re-apply them by hand (e.g. copy your edited `.md`, re-commit).
+  ```
+
+**File 2: `docs/concepts/dvcs-topology.md` (~lines 89-93).** The reject-hint example is
+followed by "The recovery is the same `git pull --rebase` you already know." — which
+overstates reliability for the external-REST-write case.
+
+- OLD (~line 93):
+  ```
+  The reject message reads its own cache's ref state and translates the staleness window into a human sentence. The recovery is the same `git pull --rebase` you already know.
+  ```
+- NEW:
+  ```
+  The reject message reads its own cache's ref state and translates the staleness window into a human sentence. The recovery is the same `git pull --rebase` you already know — **with one caveat.** When the SoT moved via a *git-side push*, `reposix sync --reconcile && git pull --rebase` recovers cleanly. When it moved via an **external REST write** (web UI / direct PATCH), the cache rebuilds a non-descendant "Sync from REST snapshot" commit and `git pull --rebase` aborts with `fatal: error while running fast-import` — the RBF-LR-03 deep-reconciliation limitation (§Cache-coherence, "a same-second write racing the cursor makes it silently wrong"), fixed in the v0.14.0 reconciliation redesign. Workaround until then: re-clone with a fresh `reposix init` and re-apply unpushed local commits. See [troubleshooting — Bus-remote `fetch first` rejection](../guides/troubleshooting.md#bus-remote-fetch-first-rejection).
+  ```
+
 ## 2026-07-06 [OWNER] RBF-LR-03 pivot — model create/multi-step interactions as a commit sequence with slug→ID translation
 
 - **Context:** The v0.13.0 tag was gated on RBF-LR-03 (ADR-010 §3): a create-partial-fail
