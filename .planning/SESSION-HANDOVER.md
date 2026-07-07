@@ -180,7 +180,49 @@ P98+).
 **Waiver clocks:** `structure/file-size-limits` WAIVED until **2026-08-08** (renew
 before); docs-repro rows WAIVED until **2026-09-15**.
 
-## 7. Doctrine
+## 8. Verification honesty + distance to the adoption end-state (READ before trusting §1)
+
+**Verification depth this session was PARTIAL — much of §1 is subagent-relayed, not
+L0-verified.** The next session must not treat these as settled fact without its own
+check:
+
+- L0 never ran reposix end-to-end itself (no cargo in its context). All shipped-binary
+  behavior is fleet-relayed.
+- The **"No tools needed for summary"** tool-harness flake (§4/§6) killed ~4 lanes
+  (fixture-repair, codecov, maintenance-sweep, binstall-log) — they executed ZERO tools;
+  that work did not happen.
+- The zero-shot human-sim test (§4) only reached the **INSTALL WALL**. The
+  read/write/conflict-recovery workflows on the shipped binary were NEVER validated
+  end-to-end (the Z2 recovery-moves leaf never reported; the fleet ran through the
+  repo-corruption incident, §1). "Does the core product work for a new user past step
+  one" is **UNPROVEN**.
+- Real-backend workflows (Confluence/GitHub/JIRA) were never verified this session; the
+  TokenWorld fixture "repair" has no inspectable artifact.
+- The crlf root-cause (§1), the codecov-phantom, the RUSTSEC/waiver maintenance sweep
+  (§5), and the p94 genuine-vs-brittle call (§6) were all taken on subagent evidence, not
+  independently reproduced. The maintenance-debt ledger is likely **INCOMPLETE** (its
+  lane died on a 529).
+
+**Distance to the "put it on the map" end-state** (skeptical dev installs → follows
+docs → runs examples → comes away impressed): **SEVERAL MILESTONES, not one hotfix.**
+Named blockers:
+
+- Front door broken today (v0.13.1 fixes it, §2/§3).
+- Documented examples DON'T reproduce: `docs-repro`/`tutorial-replay` + examples
+  01/02/04/05 are WAIVED as still-broken until **2026-09-15** (§6). The tutorials a new
+  dev would run are known-failing.
+- Core workflows unproven on real backends end-to-end (above).
+- A known correctness limitation shipped as a documented waiver (RBF-LR-03); the
+  v0.14.0 reconciliation pivot to fix it is milestone-sized and only queued (§5).
+- 5 carried HIGHs incl. live RUSTSEC advisories in `Cargo.lock` (§5).
+- The orchestration corrupted its own repo twice this session — the dark factory is not
+  yet self-safe (D2, §1/§2).
+
+**Framing for the next L0:** the failure modes are now NAMED and DURABLE (the
+precondition for closing them), but the honest status is **"v0.13.0 shipped and the
+front-door + deep-workflow story is still unproven,"** NOT "shipped clean."
+
+## 9. Doctrine
 
 Full delegation / relief / cadence / durable-state doctrine:
 `.planning/ORCHESTRATION.md` — relief at ~100k own-context (hard stop ~150k), a
