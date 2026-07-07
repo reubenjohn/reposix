@@ -56,8 +56,13 @@ Other paths (Docker, prebuilt archives, source build) are documented in [`docs/t
 Once you have `reposix` and `git-remote-reposix` on `PATH`:
 
 ```bash
-# Start the simulator.
-reposix sim --bind 127.0.0.1:7878 &
+# The prebuilt binary doesn't bundle seed data, so grab the simulator's fixture first.
+curl -sSL -o /tmp/reposix-seed.json \
+    https://raw.githubusercontent.com/reubenjohn/reposix/main/crates/reposix-sim/fixtures/seed.json
+
+# Start the simulator, seeded from that fixture.
+reposix sim --bind 127.0.0.1:7878 --seed-file /tmp/reposix-seed.json &
+# reposix-sim: listening on http://127.0.0.1:7878 (seed: seed-file, 6 issues) — Ctrl-C to stop
 
 # Bootstrap a partial-clone working tree.
 reposix init sim::demo /tmp/reposix-demo
@@ -65,9 +70,9 @@ cd /tmp/reposix-demo
 
 # Agent UX is pure git from here.
 git checkout -B main refs/reposix/origin/main   # helper namespaces fetched refs
-ls issues/                          # 0001.md  0002.md  ...
-sed -i 's/TODO/DONE/' issues/0001.md
-git commit -am 'mark issue 1 done'
+ls issues/                          # 1.md  2.md  3.md  4.md  5.md  6.md
+sed -i 's/^status: open/status: in_progress/' issues/1.md
+git commit -am 'mark issue 1 in progress'
 git push                            # round-trips through the helper to the backend
 ```
 
