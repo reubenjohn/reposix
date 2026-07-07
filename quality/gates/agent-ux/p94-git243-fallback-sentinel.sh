@@ -87,7 +87,21 @@ echo "p94-d2: cargo test (flipped e2e + option object-format regression)…" >&2
 CARGO_LOG="$(mktemp)"
 if ! ( cd "$WORKSPACE_ROOT" && CARGO_BUILD_JOBS=2 cargo test -p reposix-remote \
         --test stateless_connect_e2e --test protocol 2>&1 ) > "$CARGO_LOG"; then
-  tail -25 "$CARGO_LOG" >&2
+  # Preserve the full log for post-mortem BEFORE printing a truncated tail —
+  # a bare `tail -25` here previously discarded the actual panic/assertion
+  # message (only the tail end of a long backtrace survived), leaving CI
+  # failures undiagnosable after the fact (found investigating a p94
+  # release-gate flake, 2026-07-06: SURPRISES-INTAKE.md).
+  FAIL_LOG_DIR="${WORKSPACE_ROOT}/quality/reports/verifications/agent-ux"
+  mkdir -p "$FAIL_LOG_DIR"
+  FAIL_LOG_ARCHIVE="${FAIL_LOG_DIR}/p94-git243-fallback-sentinel-cargo-test-failure.log"
+  cp "$CARGO_LOG" "$FAIL_LOG_ARCHIVE" 2>/dev/null || true
+  echo "--- full cargo test log archived to ${FAIL_LOG_ARCHIVE} ---" >&2
+  # Print any panic/assertion context (not just the trailing backtrace lines)
+  # plus the final summary so the actual failure reason is visible in CI logs.
+  grep -n -B2 -A15 'panicked at\|^failures:\|assertion.*failed' "$CARGO_LOG" >&2 || true
+  echo "--- tail ---" >&2
+  tail -60 "$CARGO_LOG" >&2
   rm -f "$CARGO_LOG"
   fail "cargo test arm failed (flipped e2e / option object-format regression)"
 fi

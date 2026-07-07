@@ -502,3 +502,64 @@ rewriting decision history; belongs in an OP-8 drain, not a docs quick.
 **Issue:** `.planning/CONSULT-DECISIONS.md` T1 tag-timing entry (~line 75) has `**Commit:** (this
 entry; handover encodes the sequencing)` — no real SHA for a load-bearing sequencing decision.
 **Sketch:** backfill the SHA of the commit that recorded the T1 decision. Ledger hygiene.
+
+## S-260707-rbf-01 — `crlf_blob_body_round_trips_byte_for_byte` intermittent red on PR #61's `quality-pre-pr` job (MEDIUM / unresolved flake)
+
+**Found during:** release-gating investigation for PR #61 (v0.13.0 release-plz branch), CI run
+28819166220 / rerun job 85521914911.
+
+**What was found:** `crates/reposix-remote/tests/protocol.rs::crlf_blob_body_round_trips_byte_for_byte`
+failed inside the `quality gates (pre-pr)` job (via `quality/gates/agent-ux/p94-git243-fallback-sentinel.sh`
+Arm 2's `CARGO_BUILD_JOBS=2 cargo test -p reposix-remote --test stateless_connect_e2e --test protocol`),
+while the separate `test` job (`cargo test --workspace --locked`, full/unthrottled) passed on the same
+commit. The test is a pure in-memory byte-assertion (ephemeral `wiremock::MockServer`, no real git
+checkout/autocrlf path) — provably immune to the checkout-level causes CRLF bugs normally come from.
+
+**Reproduction attempted (6 runs, all GREEN — mechanism NOT confirmed):**
+1. `cargo test -p reposix-remote --test protocol` alone x3 — all green.
+2. The gate's exact invocation (`CARGO_BUILD_JOBS=2 cargo test -p reposix-remote --test
+   stateless_connect_e2e --test protocol`, warm `cargo build --workspace --bins --quiet` first) x3 —
+   all green.
+3. Same exact invocation with the full CI env matched (`CARGO_TERM_COLOR=always RUST_BACKTRACE=1
+   CARGO_INCREMENTAL=0 RUSTFLAGS="-D warnings"`) x3 — all green.
+4. Manual source review of `protocol.rs`: the CRLF test and its neighbors share no static/global
+   state, no fixed port (each uses `MockServer::start()` — ephemeral loopback port), no shared temp
+   dir. No plausible in-file race identified.
+5. `--locked` divergence ruled out: the gate's unlocked, throttled, warm-build invocation reproduces
+   cleanly every time locally; no dependency-resolution drift observed.
+
+**Real root cause NOT confirmed** — could not reproduce the failure in this sandbox under any of the
+above conditions. Leading (unconfirmed) hypothesis: CI-runner resource contention. The failing test is
+the only one in the file that combines a real ephemeral TCP `wiremock` server + `tokio::task::spawn_blocking`
++ a real subprocess spawn, all under an `assert_cmd` `Command::timeout` (was 15s) — on a shared 2-vCPU
+GH Actions runner running many tests concurrently (default thread-parallel `cargo test` across 9+3
+tests), an occasional CPU-starved subprocess could plausibly blow a 15s wall-clock budget without any
+actual byte-level regression.
+
+**Why out-of-scope for eager full resolution:** the actual CI panic/assertion message for the failing
+run was itself lost — `p94-git243-fallback-sentinel.sh` piped the full cargo-test log through
+`tail -25` before printing it, and the tail window landed entirely inside the backtrace footer,
+never reaching the panic line or assertion diff. Confirming the true mechanism requires catching a
+live recurrence with full diagnostics, which this session could not force to reproduce.
+
+**Eager-fixed in place (commit — see below), no new dependency:**
+1. `quality/gates/agent-ux/p94-git243-fallback-sentinel.sh` — the cargo-test failure branch now
+   archives the *full* log to `quality/reports/verifications/agent-ux/p94-git243-fallback-sentinel-cargo-test-failure.log`
+   (gitignored) before truncating, and greps for `panicked at` / `failures:` / `assertion...failed`
+   context plus a 60-line tail (previously 25, and *only* the tail) — the next occurrence will carry
+   an actual diagnosable message instead of a bare backtrace footer.
+2. `crates/reposix-remote/tests/protocol.rs` — bumped the 4 `wiremock`-backed `Command::timeout`
+   calls (the CRLF test + the two H-03 500-response tests + the H-02 non-UTF-8 test) from 15s to 30s
+   as a defensive headroom increase against shared-runner contention. This does NOT touch any
+   assertion or expected value — only the wall-clock budget for a real subprocess+network round trip.
+
+**Sketched resolution (if it recurs):** with the new full-log archive + panic-line grep in place, the
+next CI recurrence will surface the actual panic/assertion text. If it turns out to be a genuine
+timeout (subprocess killed mid-test), the 30s bump already applied may fully resolve it; if the fuller
+log instead reveals a genuine logic bug, re-open with that evidence. Consider adding
+`--test-threads=1` to the gate's cargo invocation if the doubled timeout still flakes, to remove
+thread-parallelism as a contention vector entirely (narrower fix pending confirmed evidence, not
+applied here since no shared in-file resource was identified to justify it up front).
+
+**STATUS:** OPEN — mitigated (log capture + timeout headroom) but root cause unconfirmed; needs a
+live recurrence with the new diagnostics to close definitively.
