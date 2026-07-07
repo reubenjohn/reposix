@@ -1122,3 +1122,79 @@ workarounds (Wave D + Wave E); closing it removes a network dependency from the
 zero-shot-gate onboarding path and lets both docs surfaces simplify. Target: v0.14.0.
 
 **STATUS:** OPEN
+
+## 2026-07-07 | doc-alignment catalog carries a ~180-row backlog of un-rebound drift outside this milestone's edited docs | discovered-by: v0.13.1 Wave E1b (doc-alignment rebind lane) | severity: MEDIUM
+
+**What:** Running `reposix-quality doc-alignment walk` against the current committed
+catalog surfaces roughly 180 rows across `quality/catalogs/doc-alignment.json` in
+`STALE_TEST_DRIFT` / `STALE_DOCS_DRIFT` that are unrelated to any file this milestone
+(v0.13.1) touched — benchmark pages, the glossary, connector-guide docs, and older
+sessions' bindings that drifted from source/test changes in prior milestones and were
+never re-bound. Wave E1b rebound exactly the 8 rows whose staleness this milestone's
+`docs/**`/`README.md` edits freshly introduced (`docs/tutorials/first-run.md`,
+`docs/guides/troubleshooting.md`, `docs/index.md`); the pre-existing ~180-row backlog
+was deliberately left untouched (git-diff-verified: only the 8 in-scope rows changed
+in the commit). This means the catalog's `alignment_ratio` (0.789) and `coverage_ratio`
+(0.181) summary numbers are currently propped up by a large silently-stale substrate —
+neither ratio can be trusted as "everything reachable from HEAD is actually bound"
+until the backlog is drained.
+
+**Why out-of-scope for eager-resolution:** re-binding ~180 rows requires per-row
+citation work (reading each doc's current content, re-deriving accurate line ranges
+and claims, confirming the bound test still asserts what the claim says) — this is
+exactly the `/reposix-quality-backfill` full-extraction workflow's job, not a
+drive-by merge inside a scoped docs-rebind lane. Several of the backlog rows are also
+flagged `coverage: row ... cites out-of-eligible file ...` (e.g. rows citing
+`crates/reposix-core/src/backend.rs`, `docs/architecture.md`, `docs/demo.md`) which is
+a distinct structural cleanup (retire or re-point the citation), not a hash refresh.
+
+**Sketched resolution:** dispatch a dedicated `/reposix-quality-refresh <doc>` pass per
+stale doc (or `/reposix-quality-backfill` for a full extraction sweep) before the next
+milestone trusts `alignment_ratio`/`coverage_ratio` as a release gate; triage the
+`cites out-of-eligible file` rows separately (retire via `propose-retire` +
+`confirm-retire`, or re-point the citation to the file that actually moved).
+
+**Default disposition:** MEDIUM — doesn't block v0.13.1 (this milestone's own edits are
+now honestly bound), but the backlog's size means the dimension's headline ratios are
+not yet trustworthy signal. Target: v0.14.0 scoping session.
+
+**STATUS:** OPEN
+
+## 2026-07-07 | `doc-alignment walk` mutates the committed catalog in place with no `--persist` gate, unlike `run.py`'s GRADE/PERSIST split | discovered-by: v0.13.1 Wave E1b (doc-alignment rebind lane) | severity: MEDIUM
+
+**What:** `reposix-quality doc-alignment walk` (help text: "Hash drift walker --
+updates `last_verdict` only") writes its recomputed `last_verdict` (and summary block:
+`claims_bound`, `alignment_ratio`, `coverage_ratio`, `last_walked`, etc.) straight back
+to `quality/catalogs/doc-alignment.json` on every invocation — there is no `--persist`
+flag to gate this, unlike `quality/runners/run.py`, which (per the D-P96-01 GRADE/
+PERSIST split documented in `quality/PROTOCOL.md`) is validate-only by default and
+requires an explicit `--persist` to mutate `quality/catalogs/`. A diagnostic-only
+invocation of `walk` (e.g. "let me see what's stale before I decide what to rebind")
+silently dirties the tree with a full-catalog re-verdict — confirmed directly in this
+lane: running `walk` once flipped `claims_bound` 261→265 and touched ~180 rows'
+`last_verdict` fields, none of which this lane intended to commit. The lane recovered
+via `git checkout -- quality/catalogs/doc-alignment.json` before the real (surgical,
+`bind`-based) rebind work, and Wave E1 (`4f1e0f0`) hit the identical side effect and
+used the same recovery.
+
+**Why out-of-scope for eager-resolution:** changing `walk`'s persistence contract is a
+runner-semantics change to a load-bearing quality-gate tool (touches the pre-push gate
+at `gates/docs-alignment/walk.sh`, the `status` verb's read path, and every doc in
+`quality/catalogs/README.md` describing the docs-alignment dimension) — it needs the
+same design care as the P96 `run.py` GRADE/PERSIST split, not a same-session
+drive-by patch mid docs-rebind.
+
+**Sketched resolution:** add a `--persist` flag to `doc-alignment walk` mirroring
+`run.py`'s contract: default invocation computes and prints the stale-row report
+without writing `quality/catalogs/doc-alignment.json`; `--persist` writes it back.
+Update `gates/docs-alignment/walk.sh` (the pre-push gate) to pass `--persist`
+explicitly since that gate's job IS to mint the walked state. Document the flag in
+`quality/catalogs/README.md` § docs-alignment dimension and cross-reference the
+D-P96-01 precedent in `quality/PROTOCOL.md`.
+
+**Default disposition:** MEDIUM — tooling-hygiene; a silent-dirty diagnostic tool is a
+recurring trap (this is the second lane in two Waves to hit it) but not correctness-
+blocking since every lane so far has caught it via `git status` before committing.
+Target: v0.14.0 scoping session.
+
+**STATUS:** OPEN

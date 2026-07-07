@@ -12,8 +12,8 @@
     "alignment_ratio": 0.7886904761904762,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-06T20:08:34Z",
-    "coverage_ratio": 0.18050595238095238,
+    "last_walked": "2026-07-07T15:57:44Z",
+    "coverage_ratio": 0.1805059523809524,
     "lines_covered": 1213,
     "total_eligible_lines": 6720,
     "coverage_floor": 0.1,
@@ -70,7 +70,7 @@
       "source_hashes": [
         "a24164b0e601151f3eb395f7369cff047eedae189c9d181c036388e5bfff92cf"
       ],
-      "rationale": "use-case-20-percent-rest-mcp \u2014 qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
+      "rationale": "use-case-20-percent-rest-mcp — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-04-30T08:26:53Z",
@@ -114,7 +114,7 @@
       "source_hashes": [
         "9b0fc7d18490479a0a4b44820de5e31356ddd6eb939830695ab8a53311cca812"
       ],
-      "rationale": "mcp-fixture-synthesized-not-live \u2014 qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
+      "rationale": "mcp-fixture-synthesized-not-live — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-04-30T08:26:53Z",
@@ -258,7 +258,7 @@
       "source_hashes": [
         "37a0b8756c0ae31b4d1a872855722255eed937765b9edd4ec40d0256e783ead8"
       ],
-      "rationale": "use-case-80-percent-routine-ops \u2014 qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
+      "rationale": "use-case-80-percent-routine-ops — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-04-30T08:26:53Z",
@@ -364,12 +364,12 @@
       "claim": "After editing (append comment + sed status change), git diff shows both hunks",
       "source": {
         "file": "docs/tutorials/first-run.md",
-        "line_start": 111,
-        "line_end": 125
+        "line_start": 121,
+        "line_end": 136
       },
-      "source_hash": "fb8f1ec80713e86fa5d7ceaff4c46e514a27fe1b15e1d9ffd03239b549b73ef5",
+      "source_hash": "207346b81940ab230a1619499767b1b3d034a30093151ad509d3ce5dde15c9aa",
       "source_hashes": [
-        "fb8f1ec80713e86fa5d7ceaff4c46e514a27fe1b15e1d9ffd03239b549b73ef5"
+        "207346b81940ab230a1619499767b1b3d034a30093151ad509d3ce5dde15c9aa"
       ],
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
@@ -380,8 +380,8 @@
       "rationale": "Tutorial-replay drives the edit-and-diff step",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T02:55:42Z",
-      "last_extracted": "2026-04-29T02:55:42Z",
+      "last_run": "2026-07-07T15:57:16Z",
+      "last_extracted": "2026-07-07T15:57:16Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1570,12 +1570,12 @@
       "claim": "Blob limit recovery is git sparse-checkout set <pathspec> followed by git checkout",
       "source": {
         "file": "docs/guides/troubleshooting.md",
-        "line_start": 56,
-        "line_end": 68
+        "line_start": 61,
+        "line_end": 69
       },
-      "source_hash": "20a761383c7e330f3cb89caabf1e9edb6c05f22c7e651eff4a186b486b53270d",
+      "source_hash": "828d55b5962c8a2b9713c2b0d8931c1d2ae4a1a976a092303687d837f4ca3a2d",
       "source_hashes": [
-        "20a761383c7e330f3cb89caabf1e9edb6c05f22c7e651eff4a186b486b53270d"
+        "828d55b5962c8a2b9713c2b0d8931c1d2ae4a1a976a092303687d837f4ca3a2d"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
@@ -1583,11 +1583,11 @@
       "test_body_hashes": [
         "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
       ],
-      "rationale": "agent_flow.rs:181-184 still asserts `src.contains(\"git sparse-checkout\")` against stateless_connect.rs BLOB_LIMIT_EXCEEDED_FMT \u2014 teaches the literal recovery command in the cited prose",
+      "rationale": "agent_flow.rs:181-184 still asserts src.contains(git sparse-checkout) against stateless_connect.rs BLOB_LIMIT_EXCEEDED_FMT -- teaches the literal recovery command in the cited prose",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-02T07:36:23Z",
-      "last_extracted": "2026-05-02T07:36:23Z",
+      "last_run": "2026-07-07T15:57:20Z",
+      "last_extracted": "2026-07-07T15:57:20Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2032,15 +2032,15 @@
     },
     {
       "id": "docs/tutorials/first-run/cat-issue-structure",
-      "claim": "cat issues/0001.md returns frontmatter (id, title, status, assignee, labels, version) + body markdown",
+      "claim": "cat issues/1.md returns frontmatter (id, title, status, labels, created_at, updated_at, version) + body markdown",
       "source": {
         "file": "docs/tutorials/first-run.md",
-        "line_start": 96,
-        "line_end": 107
+        "line_start": 103,
+        "line_end": 117
       },
-      "source_hash": "1b90aaad679863bb4bae6fe848f2f3b5446c0f880430c8730df3e9cf11f80100",
+      "source_hash": "3bf7261664f5f8e76738256e41e9c4dace3cb985526997727ed9219430778290",
       "source_hashes": [
-        "1b90aaad679863bb4bae6fe848f2f3b5446c0f880430c8730df3e9cf11f80100"
+        "3bf7261664f5f8e76738256e41e9c4dace3cb985526997727ed9219430778290"
       ],
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
@@ -2051,8 +2051,8 @@
       "rationale": "Tutorial-replay drives the first-run script through cat-issue step",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T02:55:42Z",
-      "last_extracted": "2026-04-29T02:55:42Z",
+      "last_run": "2026-07-07T15:57:25Z",
+      "last_extracted": "2026-07-07T15:57:25Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2180,7 +2180,7 @@
       "test_body_hashes": [
         "b7a731c630e32ac615471a8a7393a7b6083d17ac8cde1f1c0c8efb4ef7977818"
       ],
-      "rationale": "Verifier HEADs every badge URL in README + docs/index.md including the CI workflow badge; re-bound after homepage CI badge URL modernized (8925311) \u2014 badges-resolve.py 8/8 PASS, CI badge HTTP 200",
+      "rationale": "Verifier HEADs every badge URL in README + docs/index.md including the CI workflow badge; re-bound after homepage CI badge URL modernized (8925311) — badges-resolve.py 8/8 PASS, CI badge HTTP 200",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-06T07:17:19Z",
@@ -2238,7 +2238,7 @@
       "test_body_hashes": [
         "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
       ],
-      "rationale": "Subcommand enum (Cmd) exhaustively lists all subcommands incl. attach (v0.13.0 P79 additive add) AND sync (v0.13.0 P81 additive add); clap-derive dispatch in main() binds all arms; dark-factory regression test validates UX end-to-end with no breaking changes. Refreshed in P81-T04 to capture the new Sync clap variant \u2014 source_hashes[0] now reflects post-Sync main.rs lines 37-315.",
+      "rationale": "Subcommand enum (Cmd) exhaustively lists all subcommands incl. attach (v0.13.0 P79 additive add) AND sync (v0.13.0 P81 additive add); clap-derive dispatch in main() binds all arms; dark-factory regression test validates UX end-to-end with no breaking changes. Refreshed in P81-T04 to capture the new Sync clap variant — source_hashes[0] now reflects post-Sync main.rs lines 37-315.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-05-01T11:42:20Z",
@@ -2385,7 +2385,7 @@
     },
     {
       "id": "docs/guides/write-your-own-connector/connector-tests-coverage",
-      "claim": "Connectors implement 5+ tests: happy-path list returns \u22651 issue, 404 not-found error, auth header byte-exact, pagination cursor follow, rate-limit 429/Retry-After gate",
+      "claim": "Connectors implement 5+ tests: happy-path list returns ≥1 issue, 404 not-found error, auth header byte-exact, pagination cursor follow, rate-limit 429/Retry-After gate",
       "source": {
         "file": "docs/guides/write-your-own-connector.md",
         "line_start": 152,
@@ -3352,9 +3352,9 @@
         "line_start": 152,
         "line_end": 152
       },
-      "source_hash": "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877",
+      "source_hash": "245f13d327cc20afe82efd061df5b5884b6af1dce42f77f31f7daf39c0b2c833",
       "source_hashes": [
-        "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877"
+        "245f13d327cc20afe82efd061df5b5884b6af1dce42f77f31f7daf39c0b2c833"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
@@ -3362,11 +3362,11 @@
       "test_body_hashes": [
         "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
       ],
-      "rationale": "docs/index.md:152 claims the fetch-size-limit stderr names git sparse-checkout as recovery; test asserts stateless_connect.rs contains the literal 'git sparse-checkout' plus the BLOB_LIMIT_EXCEEDED_FMT constant",
+      "rationale": "docs/index.md:152 claims the fetch-size-limit stderr names git sparse-checkout as recovery; test asserts stateless_connect.rs contains the literal git sparse-checkout plus the BLOB_LIMIT_EXCEEDED_FMT constant",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T23:18:53Z",
-      "last_extracted": "2026-07-04T23:18:53Z",
+      "last_run": "2026-07-07T15:57:29Z",
+      "last_extracted": "2026-07-07T15:57:29Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3979,7 +3979,7 @@
       "test_body_hashes": [
         "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582"
       ],
-      "rationale": "Code implements pessimistic fallback: closed without not_planned \u2192 Done",
+      "rationale": "Code implements pessimistic fallback: closed without not_planned → Done",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:04:21Z",
@@ -4956,7 +4956,7 @@
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-17-latency-benchmark",
-      "claim": "Latency & performance envelope captured for each backend. Committed benchmark script writes Markdown artifact under docs/benchmarks/v0.9.0-latency.md (renamed to latency.md in v0.11.2 \u00a70.3).",
+      "claim": "Latency & performance envelope captured for each backend. Committed benchmark script writes Markdown artifact under docs/benchmarks/v0.9.0-latency.md (renamed to latency.md in v0.11.2 §0.3).",
       "source": {
         "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
         "line_start": 65,
@@ -5146,15 +5146,15 @@
     },
     {
       "id": "docs/tutorials/first-run/ls-issues",
-      "claim": "ls issues/ in initialized working tree lists exactly [0001.md 0002.md 0003.md 0004.md 0005.md]",
+      "claim": "ls issues/ in initialized working tree lists exactly [1.md 2.md 3.md 4.md 5.md 6.md]",
       "source": {
         "file": "docs/tutorials/first-run.md",
-        "line_start": 90,
-        "line_end": 94
+        "line_start": 99,
+        "line_end": 102
       },
-      "source_hash": "009ad183ce0959a803467c64725898dd66ffd7ce0362b25f56788027618ee8a9",
+      "source_hash": "342c4236e92240cc75e73225db41ca026c4841e1126ad898ed357ca26d6a9a77",
       "source_hashes": [
-        "009ad183ce0959a803467c64725898dd66ffd7ce0362b25f56788027618ee8a9"
+        "342c4236e92240cc75e73225db41ca026c4841e1126ad898ed357ca26d6a9a77"
       ],
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
@@ -5162,11 +5162,11 @@
       "test_body_hashes": [
         "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
       ],
-      "rationale": "Tutorial-replay verifies sim seed listing",
+      "rationale": "Tutorial-replay verifies sim seed listing; seed.json now ships 6 issues (ids 1-6), matching the docs six-issue re-numbering",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T02:55:42Z",
-      "last_extracted": "2026-04-29T02:55:42Z",
+      "last_run": "2026-07-07T15:57:36Z",
+      "last_extracted": "2026-07-07T15:57:36Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -5272,7 +5272,7 @@
         "line_start": 78,
         "line_end": 78
       },
-      "rationale": "Superseded by v0.9.0 git-native architecture \u2014 FUSE mount infrastructure (macFUSE, fusermount3) completely replaced by git-remote-reposix helper and partial clone",
+      "rationale": "Superseded by v0.9.0 git-native architecture — FUSE mount infrastructure (macFUSE, fusermount3) completely replaced by git-remote-reposix helper and partial clone",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-04-28T17:36:56Z",
@@ -5341,7 +5341,7 @@
       "source_hashes": [
         "917575b56f9c55a9a5c4371e35f4d35cbb7e301ae17ea135879dac3d1732da01"
       ],
-      "rationale": "mcp-schema-discovery-100k-tokens \u2014 qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
+      "rationale": "mcp-schema-discovery-100k-tokens — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-04-30T08:26:53Z",
@@ -5934,7 +5934,7 @@
     },
     {
       "id": "docs/decisions/005-jira-issue-mapping/attachments-comments-excluded",
-      "claim": "JIRA list_records strips fields.attachment + fields.comment.comments \u2014 neither leaks into Record.body or Record.extensions.",
+      "claim": "JIRA list_records strips fields.attachment + fields.comment.comments — neither leaks into Record.body or Record.extensions.",
       "source": {
         "file": "docs/decisions/005-jira-issue-mapping.md",
         "line_start": 79,
@@ -6169,9 +6169,9 @@
         "line_start": 152,
         "line_end": 152
       },
-      "source_hash": "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877",
+      "source_hash": "245f13d327cc20afe82efd061df5b5884b6af1dce42f77f31f7daf39c0b2c833",
       "source_hashes": [
-        "e68db805be43e7fa9ab757b82cb1b5d85bd4ce6f9e7f7ca7f1f8815fca709877"
+        "245f13d327cc20afe82efd061df5b5884b6af1dce42f77f31f7daf39c0b2c833"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
@@ -6179,11 +6179,11 @@
       "test_body_hashes": [
         "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
-      "rationale": "docs/index.md:152 claims the standard git 'fetch first' reject with git pull --rebase recovery; test asserts reposix-remote/src (write_loop.rs/bus_handler.rs/main.rs) contains 'git pull --rebase' plus 'error refs/heads/main fetch first'",
+      "rationale": "docs/index.md:152 claims the standard git fetch first reject with git pull --rebase recovery; test asserts reposix-remote/src (write_loop.rs/bus_handler.rs/main.rs) contains git pull --rebase plus error refs/heads/main fetch first",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T23:18:53Z",
-      "last_extracted": "2026-07-04T23:18:53Z",
+      "last_run": "2026-07-07T15:57:33Z",
+      "last_extracted": "2026-07-07T15:57:33Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6283,7 +6283,7 @@
       "test_body_hashes": [
         "b7a731c630e32ac615471a8a7393a7b6083d17ac8cde1f1c0c8efb4ef7977818"
       ],
-      "rationale": "Same verifier sweeps every badge URL on docs/index.md; re-bound after quality-weekly badge pinned to main (f2bbf7f) \u2014 badges-resolve.py 8/8 PASS, quality-weekly badge HTTP 200",
+      "rationale": "Same verifier sweeps every badge URL on docs/index.md; re-bound after quality-weekly badge pinned to main (f2bbf7f) — badges-resolve.py 8/8 PASS, quality-weekly badge HTTP 200",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-06T07:17:26Z",
@@ -7625,7 +7625,7 @@
       "test_body_hashes": [
         "4748662c087a773b3f96515829faf874af35d55e87773e3c7d23d945090abc12"
       ],
-      "rationale": "docs/reference/cli.md:104 \"Query the backend's list_records and dump JSON or a fixed-width table\" \u2014 test asserts list --help succeeds and documents --project/--origin/--format (json|table) flags; pure line-shift, content unchanged",
+      "rationale": "docs/reference/cli.md:104 \"Query the backend's list_records and dump JSON or a fixed-width table\" — test asserts list --help succeeds and documents --project/--origin/--format (json|table) flags; pure line-shift, content unchanged",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-04T08:33:33Z",
@@ -8015,7 +8015,7 @@
         "line_start": 25,
         "line_end": 25
       },
-      "rationale": "Superseded by v0.9.0 architecture \u2014 FUSE-mount contention testing replaced by dark-factory regression (scripts/dark-factory-test.sh) which uses git-native partial clone",
+      "rationale": "Superseded by v0.9.0 architecture — FUSE-mount contention testing replaced by dark-factory regression (scripts/dark-factory-test.sh) which uses git-native partial clone",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-04-28T17:36:56Z",
@@ -8130,9 +8130,9 @@
         "line_start": 71,
         "line_end": 75
       },
-      "source_hash": "c0979e068818eb842cc42aba07f047b21959bb15a46db0a086039f7c4c723627",
+      "source_hash": "7eb39b242fff7894a29820f733e2cea74eb6f41195553081e2ea75c22f017f23",
       "source_hashes": [
-        "c0979e068818eb842cc42aba07f047b21959bb15a46db0a086039f7c4c723627"
+        "7eb39b242fff7894a29820f733e2cea74eb6f41195553081e2ea75c22f017f23"
       ],
       "tests": [
         "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_blob_limit_refuses_excess_wants"
@@ -8143,8 +8143,8 @@
       "rationale": "stateless_connect_e2e.rs:176 sets REPOSIX_BLOB_LIMIT=1 and asserts the helper enforces this override",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T18:58:18Z",
-      "last_extracted": "2026-04-28T18:58:18Z",
+      "last_run": "2026-07-07T15:57:40Z",
+      "last_extracted": "2026-07-07T15:57:40Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8165,7 +8165,7 @@
       "test_body_hashes": [
         "ef83c6b8cbe42fd15759626494bacb30524cba1b97c0bbbccc954cae4ef78afc"
       ],
-      "rationale": "agent_flow_real.rs:151-155 skip_if_no_env! lists REPOSIX_CONFLUENCE_TENANT and line 156 unwraps it \u2014 test early-returns if the env var is unset",
+      "rationale": "agent_flow_real.rs:151-155 skip_if_no_env! lists REPOSIX_CONFLUENCE_TENANT and line 156 unwraps it — test early-returns if the env var is unset",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-04T23:18:53Z",
@@ -8190,7 +8190,7 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "agent_flow_real.rs:175 skip_if_no_env! lists REPOSIX_JIRA_INSTANCE and line 176 unwraps it \u2014 test early-returns if the env var is unset",
+      "rationale": "agent_flow_real.rs:175 skip_if_no_env! lists REPOSIX_JIRA_INSTANCE and line 176 unwraps it — test early-returns if the env var is unset",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-04T23:18:53Z",
@@ -8215,7 +8215,7 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "agent_flow_real.rs:83-87 jira_test_project() reads JIRA_TEST_PROJECT.or_else(REPOSIX_JIRA_PROJECT).unwrap_or(TEST) \u2014 REPOSIX_JIRA_PROJECT is the fallback override, matching doc precedence at line 176",
+      "rationale": "agent_flow_real.rs:83-87 jira_test_project() reads JIRA_TEST_PROJECT.or_else(REPOSIX_JIRA_PROJECT).unwrap_or(TEST) — REPOSIX_JIRA_PROJECT is the fallback override, matching doc precedence at line 176",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-04T23:18:53Z",
@@ -8440,7 +8440,7 @@
       "test_body_hashes": [
         "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409"
       ],
-      "rationale": "agent_flow_real.rs:450-460 wraps skip_if_no_env! in catch_unwind and asserts ran.is_ok() \u2014 must early-return cleanly, not panic",
+      "rationale": "agent_flow_real.rs:450-460 wraps skip_if_no_env! in catch_unwind and asserts ran.is_ok() — must early-return cleanly, not panic",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-04T23:18:53Z",
@@ -8529,15 +8529,15 @@
     },
     {
       "id": "docs/tutorials/first-run/audit-query",
-      "claim": "sqlite3 ~/.cache/reposix/sim-demo.git/cache.db SELECT ts, op, decision FROM audit_events_cache WHERE ...",
+      "claim": "sqlite3 cache.db SELECT ts, op, reason FROM audit_events_cache WHERE op LIKE helper_push_% ORDER BY ts DESC LIMIT 3",
       "source": {
         "file": "docs/tutorials/first-run.md",
-        "line_start": 156,
-        "line_end": 166
+        "line_start": 168,
+        "line_end": 177
       },
-      "source_hash": "39fe8aa49a73139aa9acd03187a2d0fa9211c7543fae69d74b2d5bf74bc954ed",
+      "source_hash": "5acbc0e857afdf01a6b7a5cc69ddba8f152ea6907464111f5c5769e872ab3ebf",
       "source_hashes": [
-        "39fe8aa49a73139aa9acd03187a2d0fa9211c7543fae69d74b2d5bf74bc954ed"
+        "5acbc0e857afdf01a6b7a5cc69ddba8f152ea6907464111f5c5769e872ab3ebf"
       ],
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
@@ -8545,11 +8545,11 @@
       "test_body_hashes": [
         "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
       ],
-      "rationale": "Tutorial-replay covers the audit-query final step",
+      "rationale": "Tutorial-replay covers the audit-query final step; column renamed decision->reason matching cache_schema.sql audit_events_cache.reason",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T02:55:42Z",
-      "last_extracted": "2026-04-29T02:55:42Z",
+      "last_run": "2026-07-07T15:57:44Z",
+      "last_extracted": "2026-07-07T15:57:44Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8650,7 +8650,7 @@
         "line_start": 26,
         "line_end": 26
       },
-      "rationale": "Superseded by v0.9.0 architecture \u2014 FUSE-based swarm testing replaced by git-native dark-factory regression",
+      "rationale": "Superseded by v0.9.0 architecture — FUSE-based swarm testing replaced by git-native dark-factory regression",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-04-28T17:36:56Z",
@@ -8765,7 +8765,7 @@
       "test_body_hashes": [
         "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409"
       ],
-      "rationale": "agent_flow_real.rs:427-469 clears all backend env vars then exercises skip_if_no_env! and confirms clean early-return \u2014 the fail-closed contract",
+      "rationale": "agent_flow_real.rs:427-469 clears all backend env vars then exercises skip_if_no_env! and confirms clean early-return — the fail-closed contract",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-04T23:18:53Z",
@@ -8790,7 +8790,7 @@
       "test_body_hashes": [
         "009ffcc580b9ac30fc5f8a5cb426f49873b72de5429389f198ca38dbd4e2e1ae"
       ],
-      "rationale": "Tests that after build_from, zero blob objects exist locally \u2014 they are lazy",
+      "rationale": "Tests that after build_from, zero blob objects exist locally — they are lazy",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:06:05Z",
@@ -9023,7 +9023,7 @@
       "test_body_hashes": [
         "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582"
       ],
-      "rationale": "Code falls through to else arm \u2192 Open when no status labels match",
+      "rationale": "Code falls through to else arm → Open when no status labels match",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:04:21Z",
@@ -9363,7 +9363,7 @@
       "test_body_hashes": [
         "4b48acafaa612bd71d0a0f8345cf52f6622779435866499d0fef377b38632a38"
       ],
-      "rationale": "P85 DVCS-DOCS-01 \u2014 presence-check verifier asserts the three role tokens + Q2.2 phrase fragments. Body-hash drift on either source or verifier fires STALE_DOCS_DRIFT.",
+      "rationale": "P85 DVCS-DOCS-01 — presence-check verifier asserts the three role tokens + Q2.2 phrase fragments. Body-hash drift on either source or verifier fires STALE_DOCS_DRIFT.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-05-01T21:08:40Z",
@@ -9388,7 +9388,7 @@
       "test_body_hashes": [
         "a6068105fdcba0d8ac7fc4440b97d29339fc76288ec545514cca233f956f683c"
       ],
-      "rationale": "P85 DVCS-DOCS-02 \u2014 verifier asserts presence of Steps 1-5, Cleanup, Backends-without-webhooks sections + load-bearing gh CLI commands + cross-link to dvcs-mirror-setup-template.yml. Re-bound after anchor-link fix.",
+      "rationale": "P85 DVCS-DOCS-02 — verifier asserts presence of Steps 1-5, Cleanup, Backends-without-webhooks sections + load-bearing gh CLI commands + cross-link to dvcs-mirror-setup-template.yml. Re-bound after anchor-link fix.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-05-01T21:14:37Z",
@@ -9413,7 +9413,7 @@
       "test_body_hashes": [
         "cff8f87a0efaff6a7b99f8de02983ae0b3f2a14604e8fb729b95ca5f3d2f67b3"
       ],
-      "rationale": "P85 DVCS-DOCS-03 \u2014 verifier asserts the section anchor + 4 entry headings + 4 attach reconciliation cases (no-id, backend-deleted, duplicate-id, mirror-lag) + --force-with-lease citation.",
+      "rationale": "P85 DVCS-DOCS-03 — verifier asserts the section anchor + 4 entry headings + 4 attach reconciliation cases (no-id, backend-deleted, duplicate-id, mirror-lag) + --force-with-lease citation.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-05-01T21:08:52Z",
