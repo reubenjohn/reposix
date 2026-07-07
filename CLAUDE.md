@@ -29,6 +29,10 @@ your first mutating move (each expanded in its own section below):
   into an outbound side-effect (OP-1/OP-2).
 - **Uncommitted = didn't happen** — `/tmp` doesn't survive a crash; commit before you
   stop. External mutations need owner-named-target approval.
+- **Leaf test setup runs in a throwaway `/tmp` clone, never the shared repo** — agent
+  worktrees share `.git/config` + object store and cwd resets between Bash calls;
+  `reposix init` / sim-seed / `git commit`/`config` must `cd` into `/tmp` in the SAME
+  invocation. Hard rule + corruption anchor: `.planning/ORCHESTRATION.md` § Leaf isolation.
 - **Verify against reality** — run it, hit the backend, render the page; a claim without
   an artifact isn't done.
 

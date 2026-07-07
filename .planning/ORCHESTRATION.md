@@ -28,6 +28,20 @@ session-local accumulator that previously held these rules in `/tmp`.
 Everything below that is NOT hook- or permission-enforced is a judgment call — the
 prose here is the standard you are held to.
 
+### Leaf isolation for reposix/sim/git test setup (HARD STOP)
+
+**Any leaf that runs `reposix init`, sim seeding, or any `git commit` / `git config`
+for test setup MUST operate in a throwaway clone under `/tmp` — NEVER the coordinator's
+shared repo — and every such command MUST `cd` into its `/tmp` target dir within the
+SAME Bash invocation.** Two facts make this non-negotiable: (i) agent "worktrees" share
+the coordinator's `.git/config` + object store — they are NOT isolated; and (ii) a
+leaf's cwd is not durable between Bash calls — it resets to the repo root, so any
+setup command that did not `cd` into `/tmp` in the same invocation runs against the
+real shared repo. Evidentiary anchor: a sim-seed leaf that skipped this ran git ops
+under the `t <t@t>` fixture identity and flipped `core.bare=true`, corrupting the shared
+repo (repaired twice). Coordinators: bake the `cd /tmp/<target> && <cmd>` shape into
+every dispatched setup lane; a leaf that touches shared-repo git state is a REJECT.
+
 ## 1. Three-tier model delegation
 
 The top-level orchestrator delegates **only** to `fable` coordinators (spawned via the

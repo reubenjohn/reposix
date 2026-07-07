@@ -828,3 +828,24 @@ real-vs-transient, record the finding, flip its STATUS to RESOLVED) so the gate'
 precondition is satisfied, or correct whoever/whatever asserted "runs green live" — the
 claim was stale/wrong at verification time. Only then update the catalog row's status +
 `last_verified` with the dated evidence.
+
+## S-260707-pr-08 — agent "worktrees" are NOT isolated; a sim-seed leaf corrupted the shared repo (`t <t@t>` flipped `core.bare=true`) (HIGH)
+
+**Found during:** 2026-07-07 orchestration session — a dispatched sim/seed leaf corrupted
+the shared local repo `/home/reuben/workspace/reposix` (repaired twice this session).
+**Severity:** HIGH.
+**Issue:** Agent "worktrees" share the coordinator's `.git/config` + object store — they
+are NOT isolated from the shared repo — and a leaf's cwd resets to the repo root between
+Bash calls. A sim-seed leaf whose `reposix init` / seed / `git commit` / `git config`
+did not `cd` into its `/tmp` target dir *within the same Bash invocation* therefore ran
+against the real shared repo: it committed under the sim-fixture identity `t <t@t>` and
+flipped `core.bare=true`, breaking the shared checkout for every concurrent agent. This
+is systemic — any future setup leaf that assumes worktree isolation or durable cwd can
+reproduce it. A prose hard-stop now lives in `.planning/ORCHESTRATION.md` § Leaf
+isolation, but there is no *enforced* guardrail yet.
+**Sketch:** Enforce isolation, don't just document it: (a) each setup leaf gets an
+isolated `/tmp` clone + a distinct `REPOSIX_CACHE_DIR`; (b) a `.claude/hook` (pre-commit
+or the existing stop-uncommitted family) that REJECTS any commit authored by `t <t@t>`
+(or any known test-fixture identity) against the shared repo; and/or (c) a guard that
+fails a leaf's `reposix init`/seed when `$PWD` is inside the shared repo tree. Route to
+the enforcement map once shipped (`ORCHESTRATION.md` § Enforcement map).
