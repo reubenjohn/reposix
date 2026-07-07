@@ -28,7 +28,7 @@ See [`.planning/ROADMAP.md`](https://github.com/reubenjohn/reposix/blob/main/.pl
 ## Long-term north stars
 
 - **A "real dark factory" deployment.** Simulated agents, a deliberately-broken real workflow, a large-scale exfil-surface test — proof of the proof-of-usage.
-- **Windows + macOS parity** for the partial-clone working tree (today's flow runs on any platform with `git >= 2.34`; benchmark + CI coverage is Linux-first).
+- **Windows + macOS parity** for the partial-clone working tree (today's flow runs on any platform with git 2.34+ recommended for reliable partial-clone reads / stateless-connect — the simulator quickstart runs on older git, verified down to 2.25; benchmark + CI coverage is Linux-first).
 - **More backends** behind the `BackendConnector` trait. Today: GitHub, Confluence, JIRA, simulator. Future candidates: Linear, Notion, ServiceNow.
 
 ## Known non-goals

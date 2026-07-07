@@ -144,7 +144,7 @@ pre-commit install
 Open a GitHub issue. Include:
 
 - `cargo --version` and `uname -a`
-- `git --version` (must be >= 2.34 for partial-clone + stateless-connect)
+- `git --version` (2.34+ recommended for reliable partial-clone reads / stateless-connect; the simulator quickstart runs on older git — verified down to 2.25)
 - The exact command that failed, and the output (with `RUST_LOG=debug` ideally)
 - Whether you're using the in-process simulator or a real backend
 

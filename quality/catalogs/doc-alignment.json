@@ -6778,15 +6778,15 @@
     },
     {
       "id": "docs-development-contributing-md/git-version-2-34-required",
-      "claim": "Reporting bugs: git >= 2.34 required for partial-clone + stateless-connect",
+      "claim": "Reporting bugs: git 2.34+ recommended for reliable partial-clone reads / stateless-connect (documented in contributing.md + CLAUDE.md); the simulator quickstart runs on older git, verified down to 2.25",
       "source": {
         "file": "docs/development/contributing.md",
         "line_start": 147,
         "line_end": 147
       },
-      "source_hash": "3c4fd0f9ffcdaafaa5ea783e8ccb9956bfce058020f801caa74b14db0d530e74",
+      "source_hash": "3c7a8287af117a28a08b18e84d89f5ac8edac3dee6c0b47ba33c71475d2045bc",
       "source_hashes": [
-        "3c4fd0f9ffcdaafaa5ea783e8ccb9956bfce058020f801caa74b14db0d530e74"
+        "3c7a8287af117a28a08b18e84d89f5ac8edac3dee6c0b47ba33c71475d2045bc"
       ],
       "tests": [
         "quality/gates/code/lint-invariants/git-version-requirement-documented.sh"
@@ -6794,11 +6794,11 @@
       "test_body_hashes": [
         "6cc9183d83d95a38e83a3fbc13ba4aa84277bb6576156c03197bc7e4244c8300"
       ],
-      "rationale": "Verifier asserts the literal \"2.34\" appears in both contributing.md and CLAUDE.md (documentation-existence check; the runtime requirement claim is met by ensuring both contributor and agent docs warn of the prerequisite). D-CONV-3 (2026-07-04): line shifted +2.",
+      "rationale": "DOC_DRIFT: contributing.md:147 softened from hard 'must be >= 2.34' to '2.34+ recommended; sim runs on 2.25+', matching README:84 + doctor.rs git_version_finding (WARN not ERROR below 2.34). Verifier git-version-requirement-documented.sh still asserts the literal '2.34' is documented in BOTH contributing.md and CLAUDE.md (documentation-existence check) and passes on the softened prose.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T09:45:10Z",
-      "last_extracted": "2026-07-04T09:45:10Z",
+      "last_run": "2026-07-07T23:23:11Z",
+      "last_extracted": "2026-07-07T23:23:11Z",
       "last_extracted_by": "bind-call"
     },
     {

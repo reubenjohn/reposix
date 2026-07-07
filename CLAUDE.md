@@ -80,8 +80,10 @@ awareness beyond `init` / `attach`.
   to refresh, not a coherence shortcut. Manual catch-up if it ever needs a forced
   refresh: `reposix sync --reconcile`. Detail: `docs/concepts/dvcs-topology.md`.
 
-**Runtime prerequisite: `git >= 2.34`** (for `extensions.partialClone` +
-`stateless-connect`). Full tech stack: `crates/CLAUDE.md`.
+**Git: `2.34+` recommended** for reliable partial-clone reads / `stateless-connect`
+(`extensions.partialClone`); the simulator quickstart runs on older git — verified
+down to 2.25, and `reposix doctor` treats sub-2.34 as WARN, not ERROR. Full tech
+stack: `crates/CLAUDE.md`.
 
 ## Orchestration doctrine (how autonomous sessions run)
 

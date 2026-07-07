@@ -25,8 +25,10 @@ crates/
 
 - Rust stable (1.82+ via `rust-toolchain.toml`).
 - Async: `tokio` 1. Web: `axum` 0.7 + `reqwest` 0.12 (rustls only, never openssl-sys).
-- Git: `gix` 0.83 (pinned with `=`, gix is pre-1.0). **Runtime requirement:
-  `git >= 2.34`** for `extensions.partialClone` + `stateless-connect`.
+- Git: `gix` 0.83 (pinned with `=`, gix is pre-1.0). **Git `2.34+` recommended**
+  for reliable partial-clone reads / `stateless-connect` (`extensions.partialClone`);
+  the simulator flow runs on older git (verified down to 2.25) — `doctor` WARNs, not
+  ERRORs, below 2.34.
 - Storage: `rusqlite` 0.32 with `bundled` (no system libsqlite3).
 - Errors: `thiserror` for typed crate errors, `anyhow` only at binary boundaries.
 
