@@ -18,6 +18,31 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::ApiError;
 
+/// The canonical demo seed, embedded at compile time.
+///
+/// Baking the fixture into the binary lets `reposix sim` (and the bare
+/// `reposix-sim` binary) serve the six-issue `demo` project **offline** with
+/// no `--seed-file` and no network fetch — the front door works from a
+/// prebuilt install that never shipped the source tree. Loaded by
+/// [`load_builtin_seed`] whenever seeding is enabled and no `--seed-file`
+/// path was supplied.
+pub const DEFAULT_SEED_JSON: &str = include_str!("../fixtures/seed.json");
+
+/// Parse and apply the compiled-in [`DEFAULT_SEED_JSON`] fixture.
+///
+/// Idempotent (`apply_seed` uses `INSERT OR IGNORE`), so re-seeding an
+/// existing DB is a no-op. Used as the default seed source when the operator
+/// enabled seeding but did not pass an explicit `--seed-file`.
+///
+/// # Errors
+/// Returns [`ApiError::Json`] if the embedded fixture ever fails to parse
+/// (a compile-time-constant string, so this is effectively unreachable) and
+/// [`ApiError::Db`] if any INSERT fails.
+pub fn load_builtin_seed(conn: &Connection) -> Result<usize, ApiError> {
+    let parsed: SeedFile = serde_json::from_str(DEFAULT_SEED_JSON)?;
+    apply_seed(conn, &parsed)
+}
+
 /// The on-disk shape of `fixtures/seed.json`.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SeedFile {

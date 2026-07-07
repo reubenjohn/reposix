@@ -41,11 +41,11 @@ command -v reposix >/dev/null || { FAILED+=("step 1: reposix not on PATH"); EXIT
 command -v git-remote-reposix >/dev/null || { FAILED+=("step 1: git-remote-reposix not on PATH"); EXIT_CODE=1; }
 [[ ${#FAILED[@]} -eq 0 ]] && PASSED+=("step 1: cargo build + binaries on PATH")
 
-# Step 2: start simulator.
+# Step 2: start simulator (in-process; builtin seed, no --seed-file -- matches
+# the documented front door as of the v0.13.1 in-process fix).
 if [[ $EXIT_CODE -eq 0 ]]; then
     echo "[2/7] start simulator on 127.0.0.1:$PORT..." >&2
     reposix sim --bind "127.0.0.1:$PORT" --ephemeral \
-        --seed-file "$REPO_ROOT/crates/reposix-sim/fixtures/seed.json" \
         > "$REPO/sim.log" 2>&1 &
     SIM_PID=$!
     sleep 2

@@ -8,10 +8,14 @@
 # audit column, source-tree-only --seed-file, bare `git checkout
 # origin/main`) never reappear in the doc surfaces this drives from.
 #
+# v0.13.1 front-door fix: `reposix sim` runs the simulator IN-PROCESS (single
+# shipped binary, no separate reposix-sim, no cargo fallback) and serves a
+# compiled-in builtin demo seed -- so step 2 is a bare `reposix sim`, no curl
+# and no --seed-file, and the whole flow works offline.
+#
 # LEAF ISOLATION: mutation (init/config/commit/push) runs inside a throwaway
 # mktemp -d /tmp tree in THIS invocation, never the shared repo.
-# RUNTIME_SEC: ~20-40. REQUIRES: cargo, git >= 2.34, curl. Network to
-# raw.githubusercontent.com preferred, falls back to local fixture.
+# RUNTIME_SEC: ~20-40. REQUIRES: cargo, git >= 2.34, curl (localhost only).
 
 set -euo pipefail
 
@@ -87,13 +91,14 @@ grep -qE 'SELECT.*\bdecision\b.*FROM audit_events_cache' "$FIRST_RUN" "$README" 
     && fail_with "nonexistent 'decision' audit_events_cache column doc-lie present"
 ASSERT_LOG+=("no nonexistent 'decision' audit column doc-lie signature")
 
-# source-tree --seed-file is legit ONLY inside first-run.md's documented
-# Build-from-source fallback blockquote ('> ...'); strip blockquote lines
-# before scanning for a stray asserting-context occurrence.
-grep -vE '^\s*>' "$FIRST_RUN" "$README" \
-    | grep -qE -- '--seed-file crates/reposix-sim/fixtures/seed\.json' \
-    && fail_with "source-tree-only --seed-file present outside the Build-from-source fallback callout"
-ASSERT_LOG+=("source-tree --seed-file confined to the documented fallback callout")
+# v0.13.1 front-door fix: the documented step 2 no longer curls a seed file
+# or passes --seed-file at all -- `reposix sim` serves a compiled-in builtin
+# seed offline. Guard against the source-tree-only --seed-file path (which
+# only works from a source checkout, never a prebuilt install) creeping back
+# into the tutorial body.
+grep -qE -- '--seed-file crates/reposix-sim/fixtures/seed\.json' "$FIRST_RUN" "$README" \
+    && fail_with "source-tree-only --seed-file present in first-run.md/README.md (front door serves a builtin seed offline; no --seed-file needed)"
+ASSERT_LOG+=("no source-tree-only --seed-file in the documented onboarding flow (builtin seed serves offline)")
 
 grep -qE 'git checkout origin/main\b' "$FIRST_RUN" "$README" \
     && fail_with "bare 'git checkout origin/main' doc-lie present (canonical form: -B main refs/reposix/origin/main)"
@@ -117,33 +122,32 @@ export PATH="${BIN_DIR}:${PATH}"
 [[ -x "${BIN_DIR}/reposix" ]] || fail_with "reposix binary not found after resolve/build" "$BIN_DIR"
 ASSERT_LOG+=("reposix binary resolved (reused existing build, no unbounded inline cargo run)")
 
-# --- 2. Step 2: fetch the seed fixture over HTTP ------------------------
-SEED_FILE="${RUN_DIR}/reposix-seed.json"
-echo "zero-shot-onboarding: curl the documented seed fixture" >&2
-if timeout 10 curl -sSL -o "$SEED_FILE" \
-    https://raw.githubusercontent.com/reubenjohn/reposix/main/crates/reposix-sim/fixtures/seed.json \
-    && [[ -s "$SEED_FILE" ]]; then
-    SEED_SOURCE="curl-raw.githubusercontent.com"
-else
-    echo "zero-shot-onboarding: raw.githubusercontent.com unreachable -- local-fixture fallback (network gap, not a doc defect)" >&2
-    cp "${WORKSPACE_ROOT}/crates/reposix-sim/fixtures/seed.json" "$SEED_FILE"
-    SEED_SOURCE="local-fixture-fallback"
-fi
-ASSERT_LOG+=("seed fixture obtained (${SEED_SOURCE})")
-
-# --- 3. Step 2: start the simulator -------------------------------------
-echo "zero-shot-onboarding: reposix sim --bind ${SIM_BIND} --seed-file ${SEED_FILE} &" >&2
+# --- 2. Step 2: start the simulator (in-process, builtin seed, offline) --
+# v0.13.1 front door: no curl, no --seed-file. `reposix sim` runs the sim
+# IN-PROCESS (single shipped binary; no separate reposix-sim, no cargo
+# fallback) and serves its compiled-in demo seed with no network fetch.
+# The gate keeps --db/--ephemeral for /tmp isolation only; the DEFAULT
+# (no seed flags) exercises the documented builtin-seed path.
+SEED_SOURCE="builtin"
+echo "zero-shot-onboarding: reposix sim --bind ${SIM_BIND} & (builtin seed, offline)" >&2
 curl -fsS "${SIM_URL}/projects/demo/issues" >/dev/null 2>&1 \
     && fail_with "${SIM_URL} already serving before spawn -- port ${SIM_BIND} occupied"
-"${BIN_DIR}/reposix" sim --bind "$SIM_BIND" --db "$SIM_DB" --ephemeral --seed-file "$SEED_FILE" &
+"${BIN_DIR}/reposix" sim --bind "$SIM_BIND" --db "$SIM_DB" --ephemeral &
 SIM_PID=$!
 for _ in $(seq 1 50); do
-    kill -0 "$SIM_PID" 2>/dev/null || fail_with "reposix sim (pid ${SIM_PID}) exited during startup" "seed=${SEED_FILE}"
+    kill -0 "$SIM_PID" 2>/dev/null || fail_with "reposix sim (pid ${SIM_PID}) exited during startup (builtin seed)"
     curl -fsS "${SIM_URL}/projects/demo/issues" >/dev/null 2>&1 && break
     sleep 0.1
 done
 kill -0 "$SIM_PID" 2>/dev/null || fail_with "reposix sim did not come up within 5s"
-ASSERT_LOG+=("reposix sim --seed-file starts and answers on ${SIM_BIND} (documented step 2 command)")
+ASSERT_LOG+=("reposix sim (no --seed-file) starts in-process and answers on ${SIM_BIND} (documented step 2 command)")
+
+# Builtin seed must serve the canonical six-issue demo project offline --
+# the whole point of the front-door fix. Count the ids the sim advertises.
+ISSUE_COUNT=$(curl -fsS "${SIM_URL}/projects/demo/issues" | grep -o '"id"' | wc -l | tr -d ' ')
+[[ "$ISSUE_COUNT" == "6" ]] \
+    || fail_with "builtin seed served ${ISSUE_COUNT} issues, expected 6 (offline demo seed regressed)"
+ASSERT_LOG+=("builtin seed serves the canonical 6-issue demo project with no --seed-file and no network fetch")
 
 # --- 4. Step 3: reposix init ---------------------------------------------
 REPO="${RUN_DIR}/repo"
@@ -194,7 +198,7 @@ echo "ZERO-SHOT ONBOARDING COMPLETE -- published docs flow reproduced verbatim (
 ASSERT_LOG+=("the verifier drives the literal documented commands from docs/tutorials/first-run.md + README.md Quick start section in a throwaway /tmp leaf, never the shared repo")
 ASSERT_LOG+=("read (cat issues/1.md), write (edit + git commit), and push (git push through the helper) each exit 0 with zero manual fixups beyond what the docs instruct")
 ASSERT_LOG+=("none of the Wave D/E1 doc-lie signatures are present in the doc surfaces the flow was driven from")
-ASSERT_LOG+=("seed fixture via curl or local-fixture fallback; path recorded (seed_source=${SEED_SOURCE})")
+ASSERT_LOG+=("reposix sim runs in-process and serves the compiled-in builtin demo seed (6 issues) with no --seed-file and no network fetch (offline front door)")
 
 ASSERTS_PASSED=$(python3 -c "import json,sys; print(json.dumps(sys.argv[1:]))" "${ASSERT_LOG[@]}")
 exit 0

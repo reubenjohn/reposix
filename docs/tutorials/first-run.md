@@ -50,23 +50,17 @@ paths.
 
 ## 2. Start the simulator
 
-The prebuilt binary (curl / Homebrew / cargo binstall / PowerShell) does not ship the
-source-tree fixture, so grab the seed file over HTTP first, then point `--seed-file` at
-the downloaded copy:
-
 ```bash
-curl -sSL -o /tmp/reposix-seed.json \
-    https://raw.githubusercontent.com/reubenjohn/reposix/main/crates/reposix-sim/fixtures/seed.json
-reposix sim --bind 127.0.0.1:7878 --seed-file /tmp/reposix-seed.json &
-# reposix-sim: listening on http://127.0.0.1:7878 (seed: seed-file, 6 issues) — Ctrl-C to stop
+reposix sim --bind 127.0.0.1:7878 &
+# reposix-sim: listening on http://127.0.0.1:7878 (seed: builtin, 6 issues) — Ctrl-C to stop
 ```
 
-Backgrounded so the rest of the steps run in the same shell. The seed loads the canonical `demo` project — six issues, deterministic IDs.
+Backgrounded so the rest of the steps run in the same shell. With no `--seed-file`, the simulator loads its **compiled-in demo seed** — the canonical `demo` project, six issues, deterministic IDs — so this step works from any install with no download and no network. (Pass `--seed-file <path>` to load your own fixture instead, or `--no-seed` for an empty simulator.)
 
-> If you used the **Build from source** tab above without installing, run
-> `target/debug/reposix sim --bind 127.0.0.1:7878 --seed-file crates/reposix-sim/fixtures/seed.json &`
-> instead — the fixture is already on disk, no download needed. Every other step assumes
-> `reposix` is on `PATH`.
+> The `reposix` binary runs the simulator **in-process** — a single shipped binary is all
+> you need, no separate `reposix-sim`. If you used the **Build from source** tab without
+> installing, prefix the command with `target/debug/`. Every other step assumes `reposix`
+> is on `PATH`.
 
 ## 3. Bootstrap the working tree
 

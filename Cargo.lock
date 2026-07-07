@@ -2871,7 +2871,6 @@ dependencies = [
  "reposix-sim",
  "reqwest",
  "rusqlite",
- "rustix",
  "serde",
  "serde_json",
  "tempfile",

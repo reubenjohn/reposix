@@ -122,6 +122,12 @@ pub fn prepare_state(cfg: &SimConfig) -> Result<AppState> {
         if let Some(ref path) = cfg.seed_file {
             let inserted = seed::load_seed(&conn, path)?;
             tracing::info!(inserted, path = %path.display(), "seed loaded");
+        } else {
+            // No explicit `--seed-file`: fall back to the compiled-in demo
+            // fixture so the documented front door (`reposix sim`) serves the
+            // canonical six-issue project offline, with no network fetch.
+            let inserted = seed::load_builtin_seed(&conn)?;
+            tracing::info!(inserted, "builtin seed loaded");
         }
     }
 
@@ -162,15 +168,17 @@ pub async fn run_with_listener(listener: tokio::net::TcpListener, cfg: SimConfig
 }
 
 /// Human-readable description of where the sim's seed data came from, for the
-/// startup banner. Truthful about the three real states — there is no
-/// "builtin default" seed; a seed only loads when `--seed-file` is passed.
+/// startup banner. Truthful about the three real states: seeding disabled
+/// (`--no-seed`), an operator-supplied `--seed-file`, or the compiled-in
+/// `builtin` demo fixture loaded when seeding is on but no `--seed-file` was
+/// passed (see [`seed::load_builtin_seed`]).
 fn seed_source_label(cfg: &SimConfig) -> &'static str {
     if !cfg.seed {
         "disabled (--no-seed)"
     } else if cfg.seed_file.is_some() {
         "seed-file"
     } else {
-        "none (no --seed-file)"
+        "builtin"
     }
 }
 

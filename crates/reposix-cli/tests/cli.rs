@@ -293,7 +293,9 @@ fn list_help_succeeds_and_documents_flags() {
 /// Regression for H-02 (review 2026-04-13): `reposix sim --no-seed` and
 /// `--rate-limit` were silently dropped in the `Cmd::Sim` match arm
 /// (`no_seed: _, rate_limit: _`). Clap accepted them and `--help`
-/// listed them, but `sim::run` never received the values.
+/// listed them, but the sim runner never received the values. (The runner
+/// is now the in-process `run_sim` helper in `main.rs`; the flags still
+/// flow through the same destructure this test guards.)
 ///
 /// We can't easily prove rate-limit semantics without spinning up the
 /// sim end-to-end (see `crates/reposix-sim/tests/api.rs` for that),

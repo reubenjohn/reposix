@@ -2,7 +2,9 @@
 //! init, and refresh flows.
 //!
 //! Subcommands (v0.9.0):
-//! - `reposix sim` — run the in-process REST simulator as a child process.
+//! - `reposix sim` — run the REST simulator in-process (no child process; the
+//!   sim is linked in via the `reposix-sim` library dependency, so the single
+//!   shipped `reposix` binary is self-sufficient).
 //! - `reposix init <backend>::<project> <path>` — initialize a partial-clone
 //!   working tree backed by reposix.
 //! - `reposix list` — query the backend's `list_records` and dump JSON/table.
@@ -19,14 +21,12 @@
 
 use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 
 // All subcommand modules live in `lib.rs` so integration tests can call
 // them directly. `main.rs` is intentionally thin: clap-derive dispatch only.
-use reposix_cli::{
-    attach, cost, doctor, gc, history, init, list, refresh, sim, spaces, sync, tokens,
-};
+use reposix_cli::{attach, cost, doctor, gc, history, init, list, refresh, spaces, sync, tokens};
 
 /// reposix — git-native partial clone for autonomous agents.
 #[derive(Debug, Parser)]
@@ -38,7 +38,8 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Cmd {
-    /// Run the in-process REST simulator (delegates to `reposix-sim`).
+    /// Run the REST simulator in-process (linked from the `reposix-sim`
+    /// library — no child process, no `cargo run` fallback).
     Sim {
         /// Bind address.
         #[arg(long, default_value = "127.0.0.1:7878")]
@@ -366,7 +367,7 @@ async fn main() -> Result<()> {
             no_seed,
             ephemeral,
             rate_limit,
-        } => sim::run(&bind, db, seed_file, no_seed, ephemeral, rate_limit),
+        } => run_sim(bind, db, seed_file, no_seed, ephemeral, rate_limit).await,
         Cmd::Init { spec, path, since } => init::run_with_since(spec, path, since),
         Cmd::Attach(args) => attach::run(args).await,
         Cmd::List {
@@ -463,4 +464,49 @@ async fn main() -> Result<()> {
             chars_per_token,
         } => cost::run(path, since, chars_per_token),
     }
+}
+
+/// Run the REST simulator **in-process**.
+///
+/// The previous implementation forked a separate `reposix-sim` binary (with a
+/// `cargo run -p reposix-sim` fallback). No install path ships that second
+/// binary, so a first-time user following the tutorial hit
+/// `could not find Cargo.toml … exit status: 101`. `reposix-sim` is already a
+/// library dependency of this crate, so we build a [`reposix_sim::SimConfig`]
+/// and `await` [`reposix_sim::run`] directly — the single shipped `reposix`
+/// binary is now self-sufficient.
+///
+/// With no `--seed-file` and no `--no-seed`, the sim loads its compiled-in
+/// demo fixture (six issues) and serves the documented front door fully
+/// offline.
+async fn run_sim(
+    bind: String,
+    db: PathBuf,
+    seed_file: Option<PathBuf>,
+    no_seed: bool,
+    ephemeral: bool,
+    rate_limit: u32,
+) -> Result<()> {
+    let addr = bind
+        .parse()
+        .with_context(|| format!("invalid --bind address: {bind}"))?;
+    // Create the DB's parent dir for the on-disk (non-ephemeral) case,
+    // mirroring the standalone `reposix-sim` binary's startup.
+    if !ephemeral {
+        if let Some(parent) = db.parent() {
+            if !parent.as_os_str().is_empty() {
+                std::fs::create_dir_all(parent).ok();
+            }
+        }
+    }
+    reposix_sim::run(reposix_sim::SimConfig {
+        bind: addr,
+        db_path: db,
+        seed: !no_seed,
+        seed_file,
+        ephemeral,
+        rate_limit_rps: rate_limit,
+    })
+    .await?;
+    Ok(())
 }

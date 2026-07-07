@@ -5,17 +5,17 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 272,
+    "claims_bound": 267,
     "claims_missing_test": 0,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.8095238095238095,
+    "alignment_ratio": 0.7946428571428571,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-07T23:13:21Z",
-    "coverage_ratio": 0.1787511097957976,
-    "lines_covered": 1208,
-    "total_eligible_lines": 6758,
+    "last_walked": "2026-07-07T23:52:38Z",
+    "coverage_ratio": 0.17979857819905212,
+    "lines_covered": 1214,
+    "total_eligible_lines": 6752,
     "coverage_floor": 0.1,
     "claims_waived": 1
   },
@@ -190,7 +190,7 @@
         "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
       ],
       "rationale": "Claim names the verifier path verbatim -- direct bind",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:55:58Z",
       "last_extracted": "2026-04-28T19:55:58Z",
@@ -364,8 +364,8 @@
       "claim": "After editing (append comment + sed status change), git diff shows both hunks",
       "source": {
         "file": "docs/tutorials/first-run.md",
-        "line_start": 121,
-        "line_end": 136
+        "line_start": 115,
+        "line_end": 130
       },
       "source_hash": "207346b81940ab230a1619499767b1b3d034a30093151ad509d3ce5dde15c9aa",
       "source_hashes": [
@@ -375,13 +375,13 @@
         "quality/gates/docs-repro/tutorial-replay.sh"
       ],
       "test_body_hashes": [
-        "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
+        "106b98e902c7791d6574cd9c8d8d8d6fbb07cb2787dfd7553b6c5c36eeaae551"
       ],
-      "rationale": "Tutorial-replay drives the edit-and-diff step",
+      "rationale": "v0.13.1 in-process-sim front-door fix: editing docs/tutorials/first-run.md and README.md shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:57:16Z",
-      "last_extracted": "2026-07-07T15:57:16Z",
+      "last_run": "2026-07-07T23:49:31Z",
+      "last_extracted": "2026-07-07T23:49:31Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -465,11 +465,11 @@
       "source": {
         "file": "README.md",
         "line_start": 56,
-        "line_end": 77
+        "line_end": 73
       },
-      "source_hash": "119335c84b3ba09da5638ba77c9ee9bf795f8c34fe0d608887299e726311e714",
+      "source_hash": "4b0b29b38ce1fda3424e482e8024718b4b6efd292b77f74614c977acd7c73e5b",
       "source_hashes": [
-        "119335c84b3ba09da5638ba77c9ee9bf795f8c34fe0d608887299e726311e714"
+        "4b0b29b38ce1fda3424e482e8024718b4b6efd292b77f74614c977acd7c73e5b"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
@@ -477,11 +477,11 @@
       "test_body_hashes": [
         "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
-      "rationale": "agent_flow.rs:103-165 test demonstrates working tree is real git with standard config, enabling pure git UX",
+      "rationale": "v0.13.1 in-process-sim front-door fix: editing docs/tutorials/first-run.md and README.md shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:48:51Z",
-      "last_extracted": "2026-07-07T15:48:51Z",
+      "last_run": "2026-07-07T23:49:31Z",
+      "last_extracted": "2026-07-07T23:49:31Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -894,8 +894,8 @@
       "claim": "Audit log is append-only with SQLite triggers enforcing immutability (BEFORE UPDATE/DELETE RAISE)",
       "source": {
         "file": "README.md",
-        "line_start": 126,
-        "line_end": 126
+        "line_start": 122,
+        "line_end": 122
       },
       "source_hash": "7dfcde5c4c3f42a8d6ec42d3e4408457069d31a85ff60e7c5b91368d3605162e",
       "source_hashes": [
@@ -907,11 +907,11 @@
       "test_body_hashes": [
         "84c32ab7f1d1c392c928460b594f9288980f30ed0d134ac01d5450b2e09ce1ce"
       ],
-      "rationale": "audit_schema.rs tests schema columns, both triggers registered, UPDATE/DELETE rejected, and rollback integrity",
+      "rationale": "v0.13.1 in-process-sim front-door fix: editing docs/tutorials/first-run.md and README.md shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:48:58Z",
-      "last_extracted": "2026-07-07T15:48:58Z",
+      "last_run": "2026-07-07T23:49:31Z",
+      "last_extracted": "2026-07-07T23:49:31Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1695,8 +1695,8 @@
       "claim": "Workspace Cargo.toml pins rust-version = \"1.82\" (current MSRV).",
       "source": {
         "file": "README.md",
-        "line_start": 84,
-        "line_end": 84
+        "line_start": 80,
+        "line_end": 80
       },
       "source_hash": "a6747f53725cf97d9b802ee41cb03e68313bd2c3936b862357a7d41db16c9dfe",
       "source_hashes": [
@@ -1708,11 +1708,11 @@
       "test_body_hashes": [
         "d369ec90fd89769469df0385b496a815d934af9fd14d859e05f4627e65b64b35"
       ],
-      "rationale": "README:84 still states \"Rust stable 1.82+\"; source_hash drifted only because the co-located git-version clause on the same line was softened. rust-msrv.sh greps workspace Cargo.toml for rust-version = \"1.82\" (tolerates indentation) — unchanged, still asserts.",
+      "rationale": "v0.13.1 in-process-sim front-door fix: editing docs/tutorials/first-run.md and README.md shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:13:21Z",
-      "last_extracted": "2026-07-07T23:13:21Z",
+      "last_run": "2026-07-07T23:49:31Z",
+      "last_extracted": "2026-07-07T23:49:31Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1985,8 +1985,8 @@
       "claim": "cargo clippy --workspace --all-targets with -D warnings is clean",
       "source": {
         "file": "README.md",
-        "line_start": 114,
-        "line_end": 114
+        "line_start": 110,
+        "line_end": 110
       },
       "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
@@ -1998,11 +1998,11 @@
       "test_body_hashes": [
         "d2f7fd79c5ce625efbb72ab8e0acf961ef870e49faccf1cd416125a1c09a0834"
       ],
-      "rationale": "README invariant matches the clippy-warnings code-dim verifier",
+      "rationale": "v0.13.1 in-process-sim front-door fix: editing docs/tutorials/first-run.md and README.md shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:49:04Z",
-      "last_extracted": "2026-07-07T15:49:04Z",
+      "last_run": "2026-07-07T23:49:31Z",
+      "last_extracted": "2026-07-07T23:49:31Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2010,8 +2010,8 @@
       "claim": "Workspace tests compile clean (cargo test --workspace --no-run exits 0).",
       "source": {
         "file": "README.md",
-        "line_start": 114,
-        "line_end": 114
+        "line_start": 110,
+        "line_end": 110
       },
       "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
@@ -2023,11 +2023,11 @@
       "test_body_hashes": [
         "544a605712679f0d7c074fd81aff3c4b799013c6cb6d5f3d724c9237544e5436"
       ],
-      "rationale": "P72 LINT-CONFIG-03 per D-05: compile-only signal; suite execution lives in pre-push nextest.",
+      "rationale": "v0.13.1 in-process-sim front-door fix: editing docs/tutorials/first-run.md and README.md shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:49:04Z",
-      "last_extracted": "2026-07-07T15:49:04Z",
+      "last_run": "2026-07-07T23:49:31Z",
+      "last_extracted": "2026-07-07T23:49:31Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2035,8 +2035,8 @@
       "claim": "cat issues/1.md returns frontmatter (id, title, status, labels, created_at, updated_at, version) + body markdown",
       "source": {
         "file": "docs/tutorials/first-run.md",
-        "line_start": 103,
-        "line_end": 117
+        "line_start": 97,
+        "line_end": 111
       },
       "source_hash": "3bf7261664f5f8e76738256e41e9c4dace3cb985526997727ed9219430778290",
       "source_hashes": [
@@ -2046,13 +2046,13 @@
         "quality/gates/docs-repro/tutorial-replay.sh"
       ],
       "test_body_hashes": [
-        "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
+        "106b98e902c7791d6574cd9c8d8d8d6fbb07cb2787dfd7553b6c5c36eeaae551"
       ],
-      "rationale": "Tutorial-replay drives the first-run script through cat-issue step",
+      "rationale": "v0.13.1 in-process-sim front-door fix: editing docs/tutorials/first-run.md and README.md shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:57:25Z",
-      "last_extracted": "2026-07-07T15:57:25Z",
+      "last_run": "2026-07-07T23:49:31Z",
+      "last_extracted": "2026-07-07T23:49:31Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2215,22 +2215,14 @@
     {
       "id": "docs/decisions/009-stability-commitment/cli-subcommand-surface",
       "claim": "CLI subcommand surface (init|attach|sim|list|refresh|spaces|sync|log|history|tokens|cost|gc|doctor|version) is locked under semver; new subcommands additive minor versions only",
-      "source": [
-        {
-          "file": "crates/reposix-cli/src/main.rs",
-          "line_start": 37,
-          "line_end": 315
-        },
-        {
-          "file": "crates/reposix-cli/src/main.rs",
-          "line_start": 37,
-          "line_end": 336
-        }
-      ],
-      "source_hash": "48f4725f275d557c371cec415f125ab7576aaf1a96c4e6f4b30d7863d90d7e12",
+      "source": {
+        "file": "crates/reposix-cli/src/main.rs",
+        "line_start": 39,
+        "line_end": 319
+      },
+      "source_hash": "42d5a83a4dded7e3968942bbbabe3d4a84934a164a3859b78d1818cc4c66d155",
       "source_hashes": [
-        "48f4725f275d557c371cec415f125ab7576aaf1a96c4e6f4b30d7863d90d7e12",
-        "9bc4824c63f18dbd22654604ccd0d29bd6651795141fe6d112f85d12d9037491"
+        "42d5a83a4dded7e3968942bbbabe3d4a84934a164a3859b78d1818cc4c66d155"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow_real.rs::dark_factory_real_github"
@@ -2238,11 +2230,11 @@
       "test_body_hashes": [
         "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
       ],
-      "rationale": "Subcommand enum (Cmd) exhaustively lists all subcommands incl. attach (v0.13.0 P79 additive add) AND sync (v0.13.0 P81 additive add); clap-derive dispatch in main() binds all arms; dark-factory regression test validates UX end-to-end with no breaking changes. Refreshed in P81-T04 to capture the new Sync clap variant — source_hashes[0] now reflects post-Sync main.rs lines 37-315.",
+      "rationale": "v0.13.1 in-process-sim front-door fix + rustfmt import collapse shifted main.rs enum lines; subcommand surface unchanged, real-backend dark-factory test still exercises it.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-05-01T11:42:20Z",
-      "last_extracted": "2026-05-01T11:42:20Z",
+      "last_run": "2026-07-07T23:52:38Z",
+      "last_extracted": "2026-07-07T23:52:38Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2313,8 +2305,8 @@
       "claim": "conflict recovery teaches git pull --rebase for stale-base pushes",
       "source": {
         "file": "README.md",
-        "line_start": 114,
-        "line_end": 114
+        "line_start": 110,
+        "line_end": 110
       },
       "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
@@ -2326,11 +2318,11 @@
       "test_body_hashes": [
         "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
-      "rationale": "agent_flow.rs:198-214 asserts git pull --rebase and error refs/heads/main fetch first strings remain in helper code",
+      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:49:04Z",
-      "last_extracted": "2026-07-07T15:49:04Z",
+      "last_run": "2026-07-07T23:48:07Z",
+      "last_extracted": "2026-07-07T23:48:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2603,8 +2595,8 @@
       "claim": "dark-factory regression test ensures blob-limit and conflict recovery teaching strings are present",
       "source": {
         "file": "README.md",
-        "line_start": 114,
-        "line_end": 114
+        "line_start": 110,
+        "line_end": 110
       },
       "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
@@ -2616,11 +2608,11 @@
       "test_body_hashes": [
         "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
       ],
-      "rationale": "agent_flow.rs:174-189 asserts git sparse-checkout and BLOB_LIMIT_EXCEEDED_FMT literals remain",
+      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:49:11Z",
-      "last_extracted": "2026-07-07T15:49:11Z",
+      "last_run": "2026-07-07T23:48:07Z",
+      "last_extracted": "2026-07-07T23:48:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3102,8 +3094,8 @@
       "claim": "Every crate's lib.rs / main.rs declares #![forbid(unsafe_code)].",
       "source": {
         "file": "README.md",
-        "line_start": 114,
-        "line_end": 114
+        "line_start": 110,
+        "line_end": 110
       },
       "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
@@ -3115,11 +3107,11 @@
       "test_body_hashes": [
         "30a8d5bbd94e8fed8a041409707b7c931eca42c36cb1b2f11e70d43e7ae2a1d2"
       ],
-      "rationale": "P72 LINT-CONFIG-01: shell verifier walks crates/*/src/{lib,main}.rs and asserts each contains #![forbid(unsafe_code)]; offending paths named in stderr.",
+      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:49:11Z",
-      "last_extracted": "2026-07-07T15:49:11Z",
+      "last_run": "2026-07-07T23:48:07Z",
+      "last_extracted": "2026-07-07T23:48:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3374,8 +3366,8 @@
       "claim": "Fetches exceeding REPOSIX_BLOB_LIMIT (default 200) are refused with git sparse-checkout guidance",
       "source": {
         "file": "README.md",
-        "line_start": 124,
-        "line_end": 124
+        "line_start": 120,
+        "line_end": 120
       },
       "source_hash": "ff84542b2c0173b3c4a6e973d61aee6a45c418c7580c25255d8a2d5ed34b7390",
       "source_hashes": [
@@ -3387,11 +3379,11 @@
       "test_body_hashes": [
         "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
       ],
-      "rationale": "agent_flow.rs:174-189 verifies git sparse-checkout string is present in helper for blob limit exceeded error",
+      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:49:11Z",
-      "last_extracted": "2026-07-07T15:49:11Z",
+      "last_run": "2026-07-07T23:48:07Z",
+      "last_extracted": "2026-07-07T23:48:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3627,8 +3619,8 @@
       "claim": "git checkout -B main refs/reposix/origin/main succeeds after reposix init",
       "source": {
         "file": "docs/tutorials/first-run.md",
-        "line_start": 76,
-        "line_end": 88
+        "line_start": 70,
+        "line_end": 82
       },
       "source_hash": "15db6f76dec99211d228d3971cf3424c700f7df33e616d849a468e0ae2f9f03f",
       "source_hashes": [
@@ -3640,11 +3632,11 @@
       "test_body_hashes": [
         "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
-      "rationale": "Checkout claim unchanged and verified against reality in the v0.13.1 run (checkout resolved after init on git 2.25.1). dark_factory_sim_happy_path asserts remote.origin.fetch==+refs/heads/*:refs/reposix/origin/* — the config precondition that makes refs/reposix/origin/main resolvable by a real git checkout.",
+      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:13:21Z",
-      "last_extracted": "2026-07-07T23:13:21Z",
+      "last_run": "2026-07-07T23:48:07Z",
+      "last_extracted": "2026-07-07T23:48:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3666,7 +3658,7 @@
         "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
       ],
       "rationale": "docs/index.md:131 runs 'git checkout -B main refs/reposix/origin/main'; tutorial-replay.sh step 4 runs that exact command after verifying the ref exists and records PASS only on exit 0, setting EXIT_CODE=1 on failure",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_DOCS_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-04T23:18:53Z",
       "last_extracted": "2026-07-04T23:18:53Z",
@@ -3776,8 +3768,8 @@
       "claim": "git push succeeds with output To reposix::..., fast-forward <old>..<new> main -> main (init already seeded the remote branch, so it is not a [new branch] create); conflict path teaches git pull --rebase",
       "source": {
         "file": "docs/tutorials/first-run.md",
-        "line_start": 152,
-        "line_end": 166
+        "line_start": 146,
+        "line_end": 160
       },
       "source_hash": "e1932b20d6495867d29c4a4d2b0a301aba82f2943b6be17a377afc2fbf007b1b",
       "source_hashes": [
@@ -3791,11 +3783,11 @@
         "45ad33228fce32e4058b644e57d328a35aab09ef78e4ae891035b6dbcfa5a7cb",
         "507341b46329c96bee305976353ddfc912dbff80d299b34ffda89b315d816e81"
       ],
-      "rationale": "DOC_DRIFT: corrected the doc from \"* [new branch] main -> main\" to the real fast-forward \"<old>..<new> main -> main\" form (init seeds main on the remote, verified in the v0.13.1 run: \"5df9f45..3c0f29d  main -> main\"). clean_push_emits_ok_and_mutates_backend asserts stdout contains \"ok refs/heads/main\" (protocol-level success, form-agnostic) + 1 backend PATCH; stale_base_push_emits_fetch_first_and_writes_no_rest asserts \"error refs/heads/main fetch first\" + stderr \"git pull --rebase\" with zero REST writes.",
+      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:13:21Z",
-      "last_extracted": "2026-07-07T23:13:21Z",
+      "last_run": "2026-07-07T23:48:07Z",
+      "last_extracted": "2026-07-07T23:48:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -5151,8 +5143,8 @@
       "claim": "ls issues/ in initialized working tree lists exactly [1.md 2.md 3.md 4.md 5.md 6.md]",
       "source": {
         "file": "docs/tutorials/first-run.md",
-        "line_start": 99,
-        "line_end": 102
+        "line_start": 93,
+        "line_end": 96
       },
       "source_hash": "342c4236e92240cc75e73225db41ca026c4841e1126ad898ed357ca26d6a9a77",
       "source_hashes": [
@@ -5162,13 +5154,13 @@
         "quality/gates/docs-repro/tutorial-replay.sh"
       ],
       "test_body_hashes": [
-        "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
+        "106b98e902c7791d6574cd9c8d8d8d6fbb07cb2787dfd7553b6c5c36eeaae551"
       ],
-      "rationale": "Tutorial-replay verifies sim seed listing; seed.json now ships 6 issues (ids 1-6), matching the docs six-issue re-numbering",
+      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:57:36Z",
-      "last_extracted": "2026-07-07T15:57:36Z",
+      "last_run": "2026-07-07T23:48:07Z",
+      "last_extracted": "2026-07-07T23:48:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -6645,7 +6637,7 @@
         "a86d4c791fb759d8bb5a34c47228ec9237d932f317f07e6321ade678863b3a82"
       ],
       "rationale": "Tests helper advertises correct refspec to avoid fast-export delta collapse",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:05:59Z",
       "last_extracted": "2026-04-28T09:05:59Z",
@@ -7517,11 +7509,11 @@
       "source": {
         "file": "README.md",
         "line_start": 56,
-        "line_end": 77
+        "line_end": 73
       },
-      "source_hash": "119335c84b3ba09da5638ba77c9ee9bf795f8c34fe0d608887299e726311e714",
+      "source_hash": "4b0b29b38ce1fda3424e482e8024718b4b6efd292b77f74614c977acd7c73e5b",
       "source_hashes": [
-        "119335c84b3ba09da5638ba77c9ee9bf795f8c34fe0d608887299e726311e714"
+        "4b0b29b38ce1fda3424e482e8024718b4b6efd292b77f74614c977acd7c73e5b"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
@@ -7529,11 +7521,11 @@
       "test_body_hashes": [
         "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
-      "rationale": "agent_flow.rs:103-165 tests init config, partial clone setup, and git config keys (extensions.partialClone, remote.origin.promisor, remote.origin.partialclonefilter)",
+      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:48:58Z",
-      "last_extracted": "2026-07-07T15:48:58Z",
+      "last_run": "2026-07-07T23:48:07Z",
+      "last_extracted": "2026-07-07T23:48:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7541,8 +7533,8 @@
       "claim": "reposix init sim::demo creates working tree with extensions.partialClone=origin, remote.origin.promisor=true, remote.origin.partialclonefilter=blob:none",
       "source": {
         "file": "docs/tutorials/first-run.md",
-        "line_start": 73,
-        "line_end": 79
+        "line_start": 67,
+        "line_end": 73
       },
       "source_hash": "59c32150230d806465a08378f79760dcf986f3587d483b5c5751dfc526bf32f0",
       "source_hashes": [
@@ -7554,11 +7546,11 @@
       "test_body_hashes": [
         "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
-      "rationale": "Section 3 init block unchanged in claim; source_hash drifted because line 76 \"Next:\" transcript now matches real CLI output (appends \"(or git sparse-checkout set <pathspec> first)\"). dark_factory_sim_happy_path asserts extensions.partialClone==origin + remote.origin.promisor==true + remote.origin.partialclonefilter==blob:none via exact key/value match after reposix init.",
+      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:13:21Z",
-      "last_extracted": "2026-07-07T23:13:21Z",
+      "last_run": "2026-07-07T23:48:07Z",
+      "last_extracted": "2026-07-07T23:48:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8056,8 +8048,8 @@
       "claim": "REPOSIX_ALLOWED_ORIGINS defaults to only loopback (127.0.0.1:*) when unset",
       "source": {
         "file": "README.md",
-        "line_start": 122,
-        "line_end": 122
+        "line_start": 118,
+        "line_end": 118
       },
       "source_hash": "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa",
       "source_hashes": [
@@ -8069,11 +8061,11 @@
       "test_body_hashes": [
         "f57d468a8ca746ff50aa2b22406263f2c2de5a0d0e14b14136797dcff15b811f"
       ],
-      "rationale": "http_allowlist.rs:117-131 tests loopback allowed by default; http_allowlist.rs:134-144 tests non-loopback denied by default",
+      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:49:19Z",
-      "last_extracted": "2026-07-07T15:49:19Z",
+      "last_run": "2026-07-07T23:48:07Z",
+      "last_extracted": "2026-07-07T23:48:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8081,8 +8073,8 @@
       "claim": "REPOSIX_ALLOWED_ORIGINS environment variable overrides default allowlist",
       "source": {
         "file": "README.md",
-        "line_start": 122,
-        "line_end": 122
+        "line_start": 118,
+        "line_end": 118
       },
       "source_hash": "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa",
       "source_hashes": [
@@ -8094,11 +8086,11 @@
       "test_body_hashes": [
         "9fd0c9069f5e56d0d0373fdbb472aecbc4ef2f3ccb50c32e96ab64611eade961"
       ],
-      "rationale": "http_allowlist.rs:84-114 tests env override narrows/expands allowlist; http_allowlist.rs:147-155 tests env redefines allowlist",
+      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:49:19Z",
-      "last_extracted": "2026-07-07T15:49:19Z",
+      "last_run": "2026-07-07T23:48:07Z",
+      "last_extracted": "2026-07-07T23:48:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8256,8 +8248,8 @@
       "claim": "git 2.34+ is recommended for reliable partial-clone reads (stateless-connect); the simulator flow runs on older git, verified down to 2.25",
       "source": {
         "file": "README.md",
-        "line_start": 84,
-        "line_end": 84
+        "line_start": 80,
+        "line_end": 80
       },
       "source_hash": "a6747f53725cf97d9b802ee41cb03e68313bd2c3936b862357a7d41db16c9dfe",
       "source_hashes": [
@@ -8269,11 +8261,11 @@
       "test_body_hashes": [
         "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
-      "rationale": "DOC_DRIFT: README:84 softened from hard 'requires >=2.34' to 'recommended; sim runs on 2.25+', matching doctor.rs git_version_finding (WARN not ERROR below 2.34) and empirical v0.13.1 onboarding run; dark_factory_sim_happy_path asserts partialClone=origin/promisor=true/partialclonefilter=blob:none materialize after init and passes on the host's git 2.25.1, proving the sim partial-clone path works on older git",
+      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:13:21Z",
-      "last_extracted": "2026-07-07T23:13:21Z",
+      "last_run": "2026-07-07T23:48:07Z",
+      "last_extracted": "2026-07-07T23:48:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8536,8 +8528,8 @@
       "claim": "sqlite3 cache.db SELECT ts, op, reason FROM audit_events_cache WHERE op LIKE helper_push_% ORDER BY ts DESC LIMIT 3",
       "source": {
         "file": "docs/tutorials/first-run.md",
-        "line_start": 168,
-        "line_end": 179
+        "line_start": 162,
+        "line_end": 173
       },
       "source_hash": "f63703ed881ad2d3fceed0aab6c11f5c833d978b65a52e603879ccc8d868d8fd",
       "source_hashes": [
@@ -8547,13 +8539,13 @@
         "quality/gates/docs-repro/tutorial-replay.sh"
       ],
       "test_body_hashes": [
-        "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
+        "106b98e902c7791d6574cd9c8d8d8d6fbb07cb2787dfd7553b6c5c36eeaae551"
       ],
-      "rationale": "Query (the claim) unchanged; source_hash drifted because the example timestamps were corrected to real RFC3339 nanosecond +00:00 form and a \"yours will differ\" note added. tutorial-replay.sh covers the audit-query final step; column is reason (matches cache_schema.sql audit_events_cache.reason).",
+      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:13:21Z",
-      "last_extracted": "2026-07-07T23:13:21Z",
+      "last_run": "2026-07-07T23:48:07Z",
+      "last_extracted": "2026-07-07T23:48:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8561,8 +8553,8 @@
       "claim": "Stale-base pushes are rejected with standard git fetch-first error message",
       "source": {
         "file": "README.md",
-        "line_start": 123,
-        "line_end": 123
+        "line_start": 119,
+        "line_end": 119
       },
       "source_hash": "029fbb0a6e888f58e4e3c25e901fc981c6db9c946587f2ffde3cc3efc3a0dced",
       "source_hashes": [
@@ -8574,11 +8566,11 @@
       "test_body_hashes": [
         "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
-      "rationale": "agent_flow.rs:198-214 verifies error refs/heads/main fetch first string is present in helper",
+      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:49:19Z",
-      "last_extracted": "2026-07-07T15:49:19Z",
+      "last_run": "2026-07-07T23:48:07Z",
+      "last_extracted": "2026-07-07T23:48:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8600,7 +8592,7 @@
         "a86d4c791fb759d8bb5a34c47228ec9237d932f317f07e6321ade678863b3a82"
       ],
       "rationale": "Regression test verifies refspec namespace is 'refs/heads/*:refs/reposix/*' NOT 'refs/heads/*:refs/heads/*'. This is POC Bug 1 regression protection.",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:01:12Z",
       "last_extracted": "2026-04-28T09:01:12Z",
@@ -8928,7 +8920,7 @@
         "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
       ],
       "rationale": "tutorial-replay.sh ports the predecessor verbatim; same content, new home",
-      "last_verdict": "BOUND",
+      "last_verdict": "STALE_TEST_DRIFT",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T19:55:58Z",
       "last_extracted": "2026-04-28T19:55:58Z",

@@ -13,7 +13,6 @@
 #![allow(clippy::needless_pass_by_value)]
 
 pub mod attach;
-pub mod binpath;
 pub mod cache_db;
 pub mod cost;
 pub mod doctor;
@@ -22,7 +21,6 @@ pub mod history;
 pub mod init;
 pub mod list;
 pub mod refresh;
-pub mod sim;
 pub mod spaces;
 pub mod sync;
 pub mod tokens;

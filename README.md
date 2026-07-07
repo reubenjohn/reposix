@@ -56,13 +56,9 @@ Other paths (Docker, prebuilt archives, source build) are documented in [`docs/t
 Once you have `reposix` and `git-remote-reposix` on `PATH`:
 
 ```bash
-# The prebuilt binary doesn't bundle seed data, so grab the simulator's fixture first.
-curl -sSL -o /tmp/reposix-seed.json \
-    https://raw.githubusercontent.com/reubenjohn/reposix/main/crates/reposix-sim/fixtures/seed.json
-
-# Start the simulator, seeded from that fixture.
-reposix sim --bind 127.0.0.1:7878 --seed-file /tmp/reposix-seed.json &
-# reposix-sim: listening on http://127.0.0.1:7878 (seed: seed-file, 6 issues) — Ctrl-C to stop
+# Start the simulator — runs in-process, serves a built-in demo seed offline (no flags needed).
+reposix sim --bind 127.0.0.1:7878 &
+# reposix-sim: listening on http://127.0.0.1:7878 (seed: builtin, 6 issues) — Ctrl-C to stop
 
 # Bootstrap a partial-clone working tree.
 reposix init sim::demo /tmp/reposix-demo
