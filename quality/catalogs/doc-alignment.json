@@ -5,11 +5,11 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 261,
+    "claims_bound": 265,
     "claims_missing_test": 0,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.7767857142857143,
+    "alignment_ratio": 0.7886904761904762,
     "floor": 0.5,
     "trend_30d": "+0.00",
     "last_walked": "2026-07-06T20:08:34Z",
@@ -17,7 +17,7 @@
     "lines_covered": 1213,
     "total_eligible_lines": 6720,
     "coverage_floor": 0.1,
-    "claims_waived": 0
+    "claims_waived": 1
   },
   "rows": [
     {
@@ -70,7 +70,7 @@
       "source_hashes": [
         "a24164b0e601151f3eb395f7369cff047eedae189c9d181c036388e5bfff92cf"
       ],
-      "rationale": "use-case-20-percent-rest-mcp — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
+      "rationale": "use-case-20-percent-rest-mcp \u2014 qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-04-30T08:26:53Z",
@@ -114,7 +114,7 @@
       "source_hashes": [
         "9b0fc7d18490479a0a4b44820de5e31356ddd6eb939830695ab8a53311cca812"
       ],
-      "rationale": "mcp-fixture-synthesized-not-live — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
+      "rationale": "mcp-fixture-synthesized-not-live \u2014 qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-04-30T08:26:53Z",
@@ -258,7 +258,7 @@
       "source_hashes": [
         "37a0b8756c0ae31b4d1a872855722255eed937765b9edd4ec40d0256e783ead8"
       ],
-      "rationale": "use-case-80-percent-routine-ops — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
+      "rationale": "use-case-80-percent-routine-ops \u2014 qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-04-30T08:26:53Z",
@@ -465,23 +465,23 @@
       "source": {
         "file": "README.md",
         "line_start": 56,
-        "line_end": 72
+        "line_end": 77
       },
-      "source_hash": "dbd80002e8e256ea70792f8efedaee88dc88cfbe9d89eeb903dd30c0b784d601",
+      "source_hash": "119335c84b3ba09da5638ba77c9ee9bf795f8c34fe0d608887299e726311e714",
       "source_hashes": [
-        "dbd80002e8e256ea70792f8efedaee88dc88cfbe9d89eeb903dd30c0b784d601"
+        "119335c84b3ba09da5638ba77c9ee9bf795f8c34fe0d608887299e726311e714"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
       "test_body_hashes": [
-        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+        "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
       "rationale": "agent_flow.rs:103-165 test demonstrates working tree is real git with standard config, enabling pure git UX",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T08:58:38Z",
-      "last_extracted": "2026-04-28T08:58:38Z",
+      "last_run": "2026-07-07T15:48:51Z",
+      "last_extracted": "2026-07-07T15:48:51Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -894,8 +894,8 @@
       "claim": "Audit log is append-only with SQLite triggers enforcing immutability (BEFORE UPDATE/DELETE RAISE)",
       "source": {
         "file": "README.md",
-        "line_start": 121,
-        "line_end": 121
+        "line_start": 126,
+        "line_end": 126
       },
       "source_hash": "7dfcde5c4c3f42a8d6ec42d3e4408457069d31a85ff60e7c5b91368d3605162e",
       "source_hashes": [
@@ -910,8 +910,8 @@
       "rationale": "audit_schema.rs tests schema columns, both triggers registered, UPDATE/DELETE rejected, and rollback integrity",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T08:59:28Z",
-      "last_extracted": "2026-04-28T08:59:28Z",
+      "last_run": "2026-07-07T15:48:58Z",
+      "last_extracted": "2026-07-07T15:48:58Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1583,7 +1583,7 @@
       "test_body_hashes": [
         "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
       ],
-      "rationale": "agent_flow.rs:181-184 still asserts `src.contains(\"git sparse-checkout\")` against stateless_connect.rs BLOB_LIMIT_EXCEEDED_FMT — teaches the literal recovery command in the cited prose",
+      "rationale": "agent_flow.rs:181-184 still asserts `src.contains(\"git sparse-checkout\")` against stateless_connect.rs BLOB_LIMIT_EXCEEDED_FMT \u2014 teaches the literal recovery command in the cited prose",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-05-02T07:36:23Z",
@@ -1695,8 +1695,8 @@
       "claim": "Workspace Cargo.toml pins rust-version = \"1.82\" (current MSRV).",
       "source": {
         "file": "README.md",
-        "line_start": 79,
-        "line_end": 79
+        "line_start": 84,
+        "line_end": 84
       },
       "source_hash": "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8",
       "source_hashes": [
@@ -1711,8 +1711,8 @@
       "rationale": "P72 LINT-CONFIG-02: grep workspace Cargo.toml for rust-version line; tolerates indentation.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-29T19:58:02Z",
-      "last_extracted": "2026-04-29T19:58:02Z",
+      "last_run": "2026-07-07T15:48:58Z",
+      "last_extracted": "2026-07-07T15:48:58Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1946,13 +1946,13 @@
         "quality/gates/release/cargo-binstall-resolves.py"
       ],
       "test_body_hashes": [
-        "a2e262f6de15827bed25a4b40b33dc85bc08efb0beec46b9ac9051d31a570f26"
+        "ebf9a4a6cd1f9c9157dd682fbfeaf29e37d7cc175bbc5c1dc00ba9ec5622dba4"
       ],
-      "rationale": "Verifier explicitly resolves binstall to a prebuilt GitHub Release; PARTIAL acceptable per docstring",
+      "rationale": "Verifier explicitly resolves binstall to a prebuilt GitHub Release; PARTIAL acceptable per docstring; PASS_SIGNALS broadened post-PR#70 to accept both binstall <=1.x URL-echo and >=1.y 'has been downloaded from github.com' wording",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:55:58Z",
-      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_run": "2026-07-07T15:49:42Z",
+      "last_extracted": "2026-07-07T15:49:42Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1971,13 +1971,13 @@
         "quality/gates/release/cargo-binstall-resolves.py"
       ],
       "test_body_hashes": [
-        "a2e262f6de15827bed25a4b40b33dc85bc08efb0beec46b9ac9051d31a570f26"
+        "ebf9a4a6cd1f9c9157dd682fbfeaf29e37d7cc175bbc5c1dc00ba9ec5622dba4"
       ],
-      "rationale": "Same verifier; archived REQUIREMENTS line restates the same shipped behavior",
+      "rationale": "Same verifier; archived REQUIREMENTS line restates the same shipped behavior; PASS_SIGNALS broadened post-PR#70 to accept both binstall <=1.x URL-echo and >=1.y 'has been downloaded from github.com' wording",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:55:58Z",
-      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_run": "2026-07-07T15:49:42Z",
+      "last_extracted": "2026-07-07T15:49:42Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1985,8 +1985,8 @@
       "claim": "cargo clippy --workspace --all-targets with -D warnings is clean",
       "source": {
         "file": "README.md",
-        "line_start": 109,
-        "line_end": 109
+        "line_start": 114,
+        "line_end": 114
       },
       "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
@@ -2001,8 +2001,8 @@
       "rationale": "README invariant matches the clippy-warnings code-dim verifier",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T09:32:48Z",
-      "last_extracted": "2026-07-04T09:32:48Z",
+      "last_run": "2026-07-07T15:49:04Z",
+      "last_extracted": "2026-07-07T15:49:04Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2010,8 +2010,8 @@
       "claim": "Workspace tests compile clean (cargo test --workspace --no-run exits 0).",
       "source": {
         "file": "README.md",
-        "line_start": 109,
-        "line_end": 109
+        "line_start": 114,
+        "line_end": 114
       },
       "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
@@ -2026,8 +2026,8 @@
       "rationale": "P72 LINT-CONFIG-03 per D-05: compile-only signal; suite execution lives in pre-push nextest.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T09:32:48Z",
-      "last_extracted": "2026-07-04T09:32:48Z",
+      "last_run": "2026-07-07T15:49:04Z",
+      "last_extracted": "2026-07-07T15:49:04Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2180,7 +2180,7 @@
       "test_body_hashes": [
         "b7a731c630e32ac615471a8a7393a7b6083d17ac8cde1f1c0c8efb4ef7977818"
       ],
-      "rationale": "Verifier HEADs every badge URL in README + docs/index.md including the CI workflow badge; re-bound after homepage CI badge URL modernized (8925311) — badges-resolve.py 8/8 PASS, CI badge HTTP 200",
+      "rationale": "Verifier HEADs every badge URL in README + docs/index.md including the CI workflow badge; re-bound after homepage CI badge URL modernized (8925311) \u2014 badges-resolve.py 8/8 PASS, CI badge HTTP 200",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-06T07:17:19Z",
@@ -2238,7 +2238,7 @@
       "test_body_hashes": [
         "a7ce7b5583b18fb42b04bae0d460058ca4ff3b13786b4cbc5de6c88f7f2d921f"
       ],
-      "rationale": "Subcommand enum (Cmd) exhaustively lists all subcommands incl. attach (v0.13.0 P79 additive add) AND sync (v0.13.0 P81 additive add); clap-derive dispatch in main() binds all arms; dark-factory regression test validates UX end-to-end with no breaking changes. Refreshed in P81-T04 to capture the new Sync clap variant — source_hashes[0] now reflects post-Sync main.rs lines 37-315.",
+      "rationale": "Subcommand enum (Cmd) exhaustively lists all subcommands incl. attach (v0.13.0 P79 additive add) AND sync (v0.13.0 P81 additive add); clap-derive dispatch in main() binds all arms; dark-factory regression test validates UX end-to-end with no breaking changes. Refreshed in P81-T04 to capture the new Sync clap variant \u2014 source_hashes[0] now reflects post-Sync main.rs lines 37-315.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-05-01T11:42:20Z",
@@ -2313,8 +2313,8 @@
       "claim": "conflict recovery teaches git pull --rebase for stale-base pushes",
       "source": {
         "file": "README.md",
-        "line_start": 109,
-        "line_end": 109
+        "line_start": 114,
+        "line_end": 114
       },
       "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
@@ -2329,8 +2329,8 @@
       "rationale": "agent_flow.rs:198-214 asserts git pull --rebase and error refs/heads/main fetch first strings remain in helper code",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T09:32:48Z",
-      "last_extracted": "2026-07-04T09:32:48Z",
+      "last_run": "2026-07-07T15:49:04Z",
+      "last_extracted": "2026-07-07T15:49:04Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2385,7 +2385,7 @@
     },
     {
       "id": "docs/guides/write-your-own-connector/connector-tests-coverage",
-      "claim": "Connectors implement 5+ tests: happy-path list returns ≥1 issue, 404 not-found error, auth header byte-exact, pagination cursor follow, rate-limit 429/Retry-After gate",
+      "claim": "Connectors implement 5+ tests: happy-path list returns \u22651 issue, 404 not-found error, auth header byte-exact, pagination cursor follow, rate-limit 429/Retry-After gate",
       "source": {
         "file": "docs/guides/write-your-own-connector.md",
         "line_start": 152,
@@ -2603,8 +2603,8 @@
       "claim": "dark-factory regression test ensures blob-limit and conflict recovery teaching strings are present",
       "source": {
         "file": "README.md",
-        "line_start": 109,
-        "line_end": 109
+        "line_start": 114,
+        "line_end": 114
       },
       "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
@@ -2619,8 +2619,8 @@
       "rationale": "agent_flow.rs:174-189 asserts git sparse-checkout and BLOB_LIMIT_EXCEEDED_FMT literals remain",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T09:32:48Z",
-      "last_extracted": "2026-07-04T09:32:48Z",
+      "last_run": "2026-07-07T15:49:11Z",
+      "last_extracted": "2026-07-07T15:49:11Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3102,8 +3102,8 @@
       "claim": "Every crate's lib.rs / main.rs declares #![forbid(unsafe_code)].",
       "source": {
         "file": "README.md",
-        "line_start": 109,
-        "line_end": 109
+        "line_start": 114,
+        "line_end": 114
       },
       "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
@@ -3118,8 +3118,8 @@
       "rationale": "P72 LINT-CONFIG-01: shell verifier walks crates/*/src/{lib,main}.rs and asserts each contains #![forbid(unsafe_code)]; offending paths named in stderr.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T09:32:48Z",
-      "last_extracted": "2026-07-04T09:32:48Z",
+      "last_run": "2026-07-07T15:49:11Z",
+      "last_extracted": "2026-07-07T15:49:11Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3374,8 +3374,8 @@
       "claim": "Fetches exceeding REPOSIX_BLOB_LIMIT (default 200) are refused with git sparse-checkout guidance",
       "source": {
         "file": "README.md",
-        "line_start": 119,
-        "line_end": 119
+        "line_start": 124,
+        "line_end": 124
       },
       "source_hash": "ff84542b2c0173b3c4a6e973d61aee6a45c418c7580c25255d8a2d5ed34b7390",
       "source_hashes": [
@@ -3390,8 +3390,8 @@
       "rationale": "agent_flow.rs:174-189 verifies git sparse-checkout string is present in helper for blob limit exceeded error",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T08:59:20Z",
-      "last_extracted": "2026-04-28T08:59:20Z",
+      "last_run": "2026-07-07T15:49:11Z",
+      "last_extracted": "2026-07-07T15:49:11Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3979,7 +3979,7 @@
       "test_body_hashes": [
         "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582"
       ],
-      "rationale": "Code implements pessimistic fallback: closed without not_planned → Done",
+      "rationale": "Code implements pessimistic fallback: closed without not_planned \u2192 Done",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:04:21Z",
@@ -4956,7 +4956,7 @@
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-17-latency-benchmark",
-      "claim": "Latency & performance envelope captured for each backend. Committed benchmark script writes Markdown artifact under docs/benchmarks/v0.9.0-latency.md (renamed to latency.md in v0.11.2 §0.3).",
+      "claim": "Latency & performance envelope captured for each backend. Committed benchmark script writes Markdown artifact under docs/benchmarks/v0.9.0-latency.md (renamed to latency.md in v0.11.2 \u00a70.3).",
       "source": {
         "file": ".planning/milestones/v0.9.0-phases/REQUIREMENTS.md",
         "line_start": 65,
@@ -5272,7 +5272,7 @@
         "line_start": 78,
         "line_end": 78
       },
-      "rationale": "Superseded by v0.9.0 git-native architecture — FUSE mount infrastructure (macFUSE, fusermount3) completely replaced by git-remote-reposix helper and partial clone",
+      "rationale": "Superseded by v0.9.0 git-native architecture \u2014 FUSE mount infrastructure (macFUSE, fusermount3) completely replaced by git-remote-reposix helper and partial clone",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-04-28T17:36:56Z",
@@ -5341,7 +5341,7 @@
       "source_hashes": [
         "917575b56f9c55a9a5c4371e35f4d35cbb7e301ae17ea135879dac3d1732da01"
       ],
-      "rationale": "mcp-schema-discovery-100k-tokens — qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
+      "rationale": "mcp-schema-discovery-100k-tokens \u2014 qualitative design framing; no behavioral assertion possible. Decided 2026-04-29.",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-04-30T08:26:53Z",
@@ -5934,7 +5934,7 @@
     },
     {
       "id": "docs/decisions/005-jira-issue-mapping/attachments-comments-excluded",
-      "claim": "JIRA list_records strips fields.attachment + fields.comment.comments — neither leaks into Record.body or Record.extensions.",
+      "claim": "JIRA list_records strips fields.attachment + fields.comment.comments \u2014 neither leaks into Record.body or Record.extensions.",
       "source": {
         "file": "docs/decisions/005-jira-issue-mapping.md",
         "line_start": 79,
@@ -6283,7 +6283,7 @@
       "test_body_hashes": [
         "b7a731c630e32ac615471a8a7393a7b6083d17ac8cde1f1c0c8efb4ef7977818"
       ],
-      "rationale": "Same verifier sweeps every badge URL on docs/index.md; re-bound after quality-weekly badge pinned to main (f2bbf7f) — badges-resolve.py 8/8 PASS, quality-weekly badge HTTP 200",
+      "rationale": "Same verifier sweeps every badge URL on docs/index.md; re-bound after quality-weekly badge pinned to main (f2bbf7f) \u2014 badges-resolve.py 8/8 PASS, quality-weekly badge HTTP 200",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-06T07:17:26Z",
@@ -7513,23 +7513,23 @@
       "source": {
         "file": "README.md",
         "line_start": 56,
-        "line_end": 72
+        "line_end": 77
       },
-      "source_hash": "dbd80002e8e256ea70792f8efedaee88dc88cfbe9d89eeb903dd30c0b784d601",
+      "source_hash": "119335c84b3ba09da5638ba77c9ee9bf795f8c34fe0d608887299e726311e714",
       "source_hashes": [
-        "dbd80002e8e256ea70792f8efedaee88dc88cfbe9d89eeb903dd30c0b784d601"
+        "119335c84b3ba09da5638ba77c9ee9bf795f8c34fe0d608887299e726311e714"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
       "test_body_hashes": [
-        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+        "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
       "rationale": "agent_flow.rs:103-165 tests init config, partial clone setup, and git config keys (extensions.partialClone, remote.origin.promisor, remote.origin.partialclonefilter)",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T08:58:36Z",
-      "last_extracted": "2026-04-28T08:58:36Z",
+      "last_run": "2026-07-07T15:48:58Z",
+      "last_extracted": "2026-07-07T15:48:58Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7625,7 +7625,7 @@
       "test_body_hashes": [
         "4748662c087a773b3f96515829faf874af35d55e87773e3c7d23d945090abc12"
       ],
-      "rationale": "docs/reference/cli.md:104 \"Query the backend's list_records and dump JSON or a fixed-width table\" — test asserts list --help succeeds and documents --project/--origin/--format (json|table) flags; pure line-shift, content unchanged",
+      "rationale": "docs/reference/cli.md:104 \"Query the backend's list_records and dump JSON or a fixed-width table\" \u2014 test asserts list --help succeeds and documents --project/--origin/--format (json|table) flags; pure line-shift, content unchanged",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-04T08:33:33Z",
@@ -8015,7 +8015,7 @@
         "line_start": 25,
         "line_end": 25
       },
-      "rationale": "Superseded by v0.9.0 architecture — FUSE-mount contention testing replaced by dark-factory regression (scripts/dark-factory-test.sh) which uses git-native partial clone",
+      "rationale": "Superseded by v0.9.0 architecture \u2014 FUSE-mount contention testing replaced by dark-factory regression (scripts/dark-factory-test.sh) which uses git-native partial clone",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-04-28T17:36:56Z",
@@ -8052,8 +8052,8 @@
       "claim": "REPOSIX_ALLOWED_ORIGINS defaults to only loopback (127.0.0.1:*) when unset",
       "source": {
         "file": "README.md",
-        "line_start": 117,
-        "line_end": 117
+        "line_start": 122,
+        "line_end": 122
       },
       "source_hash": "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa",
       "source_hashes": [
@@ -8068,8 +8068,8 @@
       "rationale": "http_allowlist.rs:117-131 tests loopback allowed by default; http_allowlist.rs:134-144 tests non-loopback denied by default",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T08:59:05Z",
-      "last_extracted": "2026-04-28T08:59:05Z",
+      "last_run": "2026-07-07T15:49:19Z",
+      "last_extracted": "2026-07-07T15:49:19Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8077,8 +8077,8 @@
       "claim": "REPOSIX_ALLOWED_ORIGINS environment variable overrides default allowlist",
       "source": {
         "file": "README.md",
-        "line_start": 117,
-        "line_end": 117
+        "line_start": 122,
+        "line_end": 122
       },
       "source_hash": "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa",
       "source_hashes": [
@@ -8093,8 +8093,8 @@
       "rationale": "http_allowlist.rs:84-114 tests env override narrows/expands allowlist; http_allowlist.rs:147-155 tests env redefines allowlist",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T08:59:07Z",
-      "last_extracted": "2026-04-28T08:59:07Z",
+      "last_run": "2026-07-07T15:49:19Z",
+      "last_extracted": "2026-07-07T15:49:19Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8165,7 +8165,7 @@
       "test_body_hashes": [
         "ef83c6b8cbe42fd15759626494bacb30524cba1b97c0bbbccc954cae4ef78afc"
       ],
-      "rationale": "agent_flow_real.rs:151-155 skip_if_no_env! lists REPOSIX_CONFLUENCE_TENANT and line 156 unwraps it — test early-returns if the env var is unset",
+      "rationale": "agent_flow_real.rs:151-155 skip_if_no_env! lists REPOSIX_CONFLUENCE_TENANT and line 156 unwraps it \u2014 test early-returns if the env var is unset",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-04T23:18:53Z",
@@ -8190,7 +8190,7 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "agent_flow_real.rs:175 skip_if_no_env! lists REPOSIX_JIRA_INSTANCE and line 176 unwraps it — test early-returns if the env var is unset",
+      "rationale": "agent_flow_real.rs:175 skip_if_no_env! lists REPOSIX_JIRA_INSTANCE and line 176 unwraps it \u2014 test early-returns if the env var is unset",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-04T23:18:53Z",
@@ -8215,7 +8215,7 @@
       "test_body_hashes": [
         "3a912edca359596a253c46765628a9b135b179a2732b6e352cc7d03454fd49a2"
       ],
-      "rationale": "agent_flow_real.rs:83-87 jira_test_project() reads JIRA_TEST_PROJECT.or_else(REPOSIX_JIRA_PROJECT).unwrap_or(TEST) — REPOSIX_JIRA_PROJECT is the fallback override, matching doc precedence at line 176",
+      "rationale": "agent_flow_real.rs:83-87 jira_test_project() reads JIRA_TEST_PROJECT.or_else(REPOSIX_JIRA_PROJECT).unwrap_or(TEST) \u2014 REPOSIX_JIRA_PROJECT is the fallback override, matching doc precedence at line 176",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-04T23:18:53Z",
@@ -8252,8 +8252,8 @@
       "claim": "Runtime requires git >= 2.34 for extensions.partialClone and stateless-connect",
       "source": {
         "file": "README.md",
-        "line_start": 79,
-        "line_end": 79
+        "line_start": 84,
+        "line_end": 84
       },
       "source_hash": "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8",
       "source_hashes": [
@@ -8263,13 +8263,13 @@
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
       ],
       "test_body_hashes": [
-        "a1623e04c578d4e63f7a032e4ae5c97981d47d45a614d7c37068d51b6ed8c8f8"
+        "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
       "rationale": "test asserts extensions.partialClone == origin and partialclonefilter == blob:none readable after reposix init -- proves host git supports the extension; git <2.34 would fail to materialize partial-clone config",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:29:03Z",
-      "last_extracted": "2026-04-28T19:29:03Z",
+      "last_run": "2026-07-07T15:49:19Z",
+      "last_extracted": "2026-07-07T15:49:19Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8440,7 +8440,7 @@
       "test_body_hashes": [
         "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409"
       ],
-      "rationale": "agent_flow_real.rs:450-460 wraps skip_if_no_env! in catch_unwind and asserts ran.is_ok() — must early-return cleanly, not panic",
+      "rationale": "agent_flow_real.rs:450-460 wraps skip_if_no_env! in catch_unwind and asserts ran.is_ok() \u2014 must early-return cleanly, not panic",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-04T23:18:53Z",
@@ -8557,8 +8557,8 @@
       "claim": "Stale-base pushes are rejected with standard git fetch-first error message",
       "source": {
         "file": "README.md",
-        "line_start": 118,
-        "line_end": 118
+        "line_start": 123,
+        "line_end": 123
       },
       "source_hash": "029fbb0a6e888f58e4e3c25e901fc981c6db9c946587f2ffde3cc3efc3a0dced",
       "source_hashes": [
@@ -8568,13 +8568,13 @@
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
       ],
       "test_body_hashes": [
-        "0ed91eb47d8b39f50cbe0d5e312d2a5e6cddaf209ab202b57822df9bf6cbd805"
+        "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
       "rationale": "agent_flow.rs:198-214 verifies error refs/heads/main fetch first string is present in helper",
-      "last_verdict": "STALE_TEST_DRIFT",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T08:59:10Z",
-      "last_extracted": "2026-04-28T08:59:10Z",
+      "last_run": "2026-07-07T15:49:19Z",
+      "last_extracted": "2026-07-07T15:49:19Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8650,7 +8650,7 @@
         "line_start": 26,
         "line_end": 26
       },
-      "rationale": "Superseded by v0.9.0 architecture — FUSE-based swarm testing replaced by git-native dark-factory regression",
+      "rationale": "Superseded by v0.9.0 architecture \u2014 FUSE-based swarm testing replaced by git-native dark-factory regression",
       "last_verdict": "RETIRE_CONFIRMED",
       "next_action": "RETIRE_FEATURE",
       "last_run": "2026-04-28T17:36:56Z",
@@ -8765,7 +8765,7 @@
       "test_body_hashes": [
         "20e41465372f98670273129b916a51cb48948da557dd00f609043c6c716fe409"
       ],
-      "rationale": "agent_flow_real.rs:427-469 clears all backend env vars then exercises skip_if_no_env! and confirms clean early-return — the fail-closed contract",
+      "rationale": "agent_flow_real.rs:427-469 clears all backend env vars then exercises skip_if_no_env! and confirms clean early-return \u2014 the fail-closed contract",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-07-04T23:18:53Z",
@@ -8790,7 +8790,7 @@
       "test_body_hashes": [
         "009ffcc580b9ac30fc5f8a5cb426f49873b72de5429389f198ca38dbd4e2e1ae"
       ],
-      "rationale": "Tests that after build_from, zero blob objects exist locally — they are lazy",
+      "rationale": "Tests that after build_from, zero blob objects exist locally \u2014 they are lazy",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:06:05Z",
@@ -9023,7 +9023,7 @@
       "test_body_hashes": [
         "be72306055351972bae29e1d15e1cf5251d319a06b2feab196edf2025b399582"
       ],
-      "rationale": "Code falls through to else arm → Open when no status labels match",
+      "rationale": "Code falls through to else arm \u2192 Open when no status labels match",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-04-28T09:04:21Z",
@@ -9363,7 +9363,7 @@
       "test_body_hashes": [
         "4b48acafaa612bd71d0a0f8345cf52f6622779435866499d0fef377b38632a38"
       ],
-      "rationale": "P85 DVCS-DOCS-01 — presence-check verifier asserts the three role tokens + Q2.2 phrase fragments. Body-hash drift on either source or verifier fires STALE_DOCS_DRIFT.",
+      "rationale": "P85 DVCS-DOCS-01 \u2014 presence-check verifier asserts the three role tokens + Q2.2 phrase fragments. Body-hash drift on either source or verifier fires STALE_DOCS_DRIFT.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-05-01T21:08:40Z",
@@ -9388,7 +9388,7 @@
       "test_body_hashes": [
         "a6068105fdcba0d8ac7fc4440b97d29339fc76288ec545514cca233f956f683c"
       ],
-      "rationale": "P85 DVCS-DOCS-02 — verifier asserts presence of Steps 1-5, Cleanup, Backends-without-webhooks sections + load-bearing gh CLI commands + cross-link to dvcs-mirror-setup-template.yml. Re-bound after anchor-link fix.",
+      "rationale": "P85 DVCS-DOCS-02 \u2014 verifier asserts presence of Steps 1-5, Cleanup, Backends-without-webhooks sections + load-bearing gh CLI commands + cross-link to dvcs-mirror-setup-template.yml. Re-bound after anchor-link fix.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-05-01T21:14:37Z",
@@ -9413,7 +9413,7 @@
       "test_body_hashes": [
         "cff8f87a0efaff6a7b99f8de02983ae0b3f2a14604e8fb729b95ca5f3d2f67b3"
       ],
-      "rationale": "P85 DVCS-DOCS-03 — verifier asserts the section anchor + 4 entry headings + 4 attach reconciliation cases (no-id, backend-deleted, duplicate-id, mirror-lag) + --force-with-lease citation.",
+      "rationale": "P85 DVCS-DOCS-03 \u2014 verifier asserts the section anchor + 4 entry headings + 4 attach reconciliation cases (no-id, backend-deleted, duplicate-id, mirror-lag) + --force-with-lease citation.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
       "last_run": "2026-05-01T21:08:52Z",
