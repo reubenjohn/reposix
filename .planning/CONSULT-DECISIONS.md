@@ -94,3 +94,58 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
   ephemeral by design — the durable record is the catalog's `last_real_grade`.)
 - **Reversibility:** N/A (finding, not a change).
 - **Commit:** (this entry).
+
+## 2026-07-07 [SELF] D1 — v0.13.1 onboarding hotfix, sequenced BEFORE the v0.14.0 pivot
+
+- **Context:** Zero-shot human-simulation testing (3 independent fresh-agent
+  reproductions) found binary-install onboarding is 100% broken: `reposix-sim` (the
+  documented DEFAULT backend, OP-1) ships in no prebuilt distribution, and `reposix init`
+  silently exits 0 when the backend is unreachable, masking the failure.
+- **Decision:** Ship a scoped v0.13.1 hotfix BEFORE the v0.14.0 reconciliation pivot.
+  Acceptance (end-state; mechanism converges in discuss/plan): (i) the documented
+  getting-started flow completes end-to-end on the shipped binary, not a source build;
+  (ii) `reposix init` exits non-zero on an unreachable backend; (iii) the release-path
+  sim→cargo fallback that hides the gap is removed; (iv) verified by a fresh zero-shot
+  human-simulation agent (D3). Bias toward shipping `reposix-sim` in the release matrix
+  (OP-1 makes it canonical), but honest de-advertisement is an acceptable convergence if
+  shipping sim proves disproportionate.
+- **Rationale:** An adoption-blocker on `releases/latest` cannot wait behind a
+  milestone-sized pivot; ship honest milestones, don't let an urgent regression sit
+  behind a large redesign (owner design taste).
+- **Reversibility:** Fully reversible — sequencing + scope only.
+- **Commit:** (this entry; SESSION-HANDOVER.md encodes the runbook).
+
+## 2026-07-07 [SELF] D2 — v0.14.0 hardening: reject-t@t-identity hook + worktree isolation are P0
+
+- **Context:** A dispatched sim/seed leaf corrupted the local shared repo TWICE this
+  session (flipped `core.bare=true`; set `user.email`/`user.name` to `t<t@t>`). Root
+  cause: agent worktrees are not isolated (shared `.git/config` + object store) plus cwd
+  resets between Bash calls. The doc-only HARD-STOP rule (ORCHESTRATION.md § "Leaf
+  isolation") did not prevent the recurrence.
+- **Decision:** Treat a commit-time guard + real worktree isolation as P0 for v0.14.0
+  hardening scoping. Sketch: a pre-commit/pre-push hook that hard-rejects any commit
+  authored by `t<t@t>` (or any non-allowlisted identity), plus per-leaf isolated `/tmp`
+  clones and unique `REPOSIX_CACHE_DIR` enforcement per leaf.
+- **Rationale:** A doc rule alone did not stop a second recurrence in the same session;
+  the guard needs to be code-enforced, not convention-enforced.
+- **Reversibility:** Fully reversible — new hook + isolation convention, additive.
+- **Commit:** (this entry; anchor intake `S-260707-pr-08`, HIGH).
+
+## 2026-07-07 [SELF] D3 — zero-shot human-simulation testing becomes a standing milestone-close gate
+
+- **Context:** This session's zero-shot human-simulation testing (fresh, context-free
+  agents following only the published docs) is what caught the sim-onboarding break
+  (D1) — a gap no in-context agent or existing catalog gate had surfaced.
+- **Decision:** Institutionalize as a STANDING milestone-close gate (new agent-ux catalog
+  row), not a one-off session activity. Every milestone-close dispatches N fresh,
+  context-free agents that install the shipped artifact the way the docs say and attempt
+  the documented workflows (read path: init/attach → clone → grep/cat; write path:
+  edit → commit → push; recovery: conflict-rebase, blob-limit sparse-checkout). Any
+  doc-lie or broken path grades RED.
+- **Rationale:** In-context agents share the session's accumulated assumptions and won't
+  independently rediscover a docs/reality gap the way a fresh agent following only the
+  docs will; this class of gap is exactly what a milestone-close should catch before
+  shipping.
+- **Reversibility:** Fully reversible — new catalog row + gate, additive.
+- **Commit:** (this entry; catalog row to be filed as part of v0.13.1 or v0.14.0
+  scoping).
