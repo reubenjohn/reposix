@@ -1081,3 +1081,44 @@ per-milestone rotation so the file doesn't recross the 20k soft limit again.
 verification pass is not the venue).
 
 **STATUS:** OPEN
+
+## 2026-07-07 | Ship a bundled default seed inside the release binary so getting-started needs no `--seed-file` / no network fetch | discovered-by: v0.13.1 Wave E (README quick-start doc-lie fix) | severity: MEDIUM
+
+**What:** `reposix sim` with no `--seed-file` seeds 0 issues (confirmed by a real run:
+`reposix-sim: listening on http://127.0.0.1:7878 (seed: none (no --seed-file), 0 issues)`).
+The only fixture that seeds real data, `crates/reposix-sim/fixtures/seed.json`, is a
+source-tree file NOT bundled into any release archive (Homebrew, cargo-binstall,
+curl-installer, PowerShell) — so every prebuilt-binary install path is stuck at 0 issues
+unless the user separately fetches that fixture. Wave D (`docs/tutorials/first-run.md`,
+`docs/index.md`) and Wave E (`README.md`) both worked around this by having the
+getting-started flow `curl` the fixture from `raw.githubusercontent.com` before starting
+the sim. That workaround is honest and verified, but it introduces a hard network
+dependency into the first 60 seconds of onboarding (an air-gapped or firewalled dev, or
+anyone hitting a GitHub outage, cannot complete the tutorial) and adds one more moving
+part a copy-pasting dev can get wrong (wrong URL, `curl` not installed, corporate proxy
+blocking raw.githubusercontent.com).
+
+**Why out-of-scope for eager-resolution:** the real fix is embedding the fixture into the
+`reposix-sim` (or `reposix-cli`) binary at compile time (e.g. `include_str!` pointing at
+`crates/reposix-sim/fixtures/seed.json`, wired behind a `--seed-file` fallback so an
+explicit `--seed-file` still overrides the embedded default) and deciding the UX contract
+for "seed on first run with no flag" vs. "stay explicit, but ship the embedded default
+under a new flag like `--seed-default`". That's an intentional behavior change to the sim
+CLI plus a release-asset verification loop (rebuild all 8 crates' release binaries,
+confirm the embedded bytes survive `cargo binstall` / Homebrew / curl-installer / choco
+paths) — real cross-cutting work, not a docs-only drive-by.
+
+**Sketched resolution:** add a `const DEFAULT_SEED: &str = include_str!("../fixtures/seed.json")` (or equivalent embed macro) to `reposix-sim`; when `reposix sim` starts with
+no `--seed-file`, seed from the embedded default instead of seeding nothing (or add an
+explicit `--seed-default` flag if "no flag = empty" is intentionally load-bearing
+elsewhere and shouldn't silently change). Once shipped, revert the Wave D/E curl-fixture
+workaround in `README.md` + `docs/tutorials/first-run.md` + `docs/index.md` back to a
+plain `reposix sim --bind 127.0.0.1:7878 &` with no curl step and no `--seed-file` flag —
+removing the network dependency from onboarding entirely. Verify against a real prebuilt
+binary (not `cargo run`) so the embed genuinely survives packaging.
+
+**Default disposition:** MEDIUM — this is the real root-cause fix underneath two doc
+workarounds (Wave D + Wave E); closing it removes a network dependency from the
+zero-shot-gate onboarding path and lets both docs surfaces simplify. Target: v0.14.0.
+
+**STATUS:** OPEN
