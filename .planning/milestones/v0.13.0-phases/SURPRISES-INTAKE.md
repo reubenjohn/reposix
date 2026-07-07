@@ -503,7 +503,7 @@ rewriting decision history; belongs in an OP-8 drain, not a docs quick.
 entry; handover encodes the sequencing)` — no real SHA for a load-bearing sequencing decision.
 **Sketch:** backfill the SHA of the commit that recorded the T1 decision. Ledger hygiene.
 
-## S-260707-rbf-01 — `crlf_blob_body_round_trips_byte_for_byte` intermittent red on PR #61's `quality-pre-pr` job (MEDIUM / unresolved flake)
+## S-260707-rbf-01 — `crlf_blob_body_round_trips_byte_for_byte` intermittent red on PR #61's `quality-pre-pr` job (HIGH / unresolved, non-timeout assertion failure — upgraded from MEDIUM 2026-07-07)
 
 **Found during:** release-gating investigation for PR #61 (v0.13.0 release-plz branch), CI run
 28819166220 / rerun job 85521914911.
@@ -563,3 +563,65 @@ applied here since no shared in-file resource was identified to justify it up fr
 
 **STATUS:** OPEN — mitigated (log capture + timeout headroom) but root cause unconfirmed; needs a
 live recurrence with the new diagnostics to close definitively.
+
+---
+
+**2026-07-07 follow-up (RBF investigation, commit `aa2b33d`'s timeout-bump fix retested):**
+
+**(a) Timeout-bump fix proven ineffective.** PR #61 (now head `deee8fd`, run `28837407948`, job
+`85523987205`) hit the SAME failure again on `quality gates (pre-pr)` AFTER the 15s→30s timeout
+bump from `aa2b33d` landed. `test result: FAILED. 8 passed; 1 failed; ... finished in 0.14s` —
+the whole `protocol.rs` test binary (all 9 tests) finished in 140ms, nowhere near either the old
+15s or new 30s timeout. **The timeout theory is dead.**
+
+**(b) Confirmed a real, non-timeout assertion failure, not a race.** `timed_out: False` in the
+verifier's own JSON, and the failing test's backtrace (frame 24/25) points straight at
+`tests/protocol.rs:219:6` inside `crlf_blob_body_round_trips_byte_for_byte` (called from its
+`{{closure}}` at line 154, the `tokio::test` body) — i.e. one of the two `assert!` calls after the
+push succeeds (`stdout.contains("ok refs/heads/main")` at :203-206, or the CRLF-preservation check
+at :216-219) is false. 0.14s wall-clock rules out any subprocess-hang / contention-timeout
+explanation for either the original 15s or the bumped 30s budget.
+
+**(c) New diagnostic finding: the actual panic/assertion message is STILL invisible in CI, and
+now we know exactly why.** `quality/runners/dump_verifications.py` had `_TAIL_LINES = 40` —
+it prints only the LAST 40 lines of each verifier's captured `stderr`. But
+`p94-git243-fallback-sentinel.sh`'s failure branch (the "fix" from `aa2b33d`) prints
+`grep -n -B2 -A15 'panicked at|failures:|assertion.*failed'` (containing the real panic text)
+FOLLOWED BY a separate `tail -60` of the raw log. A 40-line tail-window falls entirely inside
+that trailing 60-line block, so the grep context — the only place the actual panic message and
+`body=...` diff lives — is discarded before it ever reaches the CI log. Confirmed by grepping the
+full raw job log for `panicked`/`thread '`/`CRLF`/`body=` — zero matches anywhere in the printed
+output, even though the gate script's own grep command (if its match had survived truncation)
+would have caught it. **Fixed in commit `fbe5bee`** (pushed to `main`): bumped `_TAIL_LINES` to
+200 with a comment explaining the truncation-window bug. This does not fix the underlying test
+failure, but the NEXT CI recurrence (on any branch rebased past `fbe5bee`) will finally surface
+the real assertion text.
+
+**(d) Local reproduction still elusive.** Repeated the CI job's exact sequence again in this
+session (`cargo build --workspace --bins --quiet` then `CARGO_BUILD_JOBS=2 cargo test -p
+reposix-remote --test stateless_connect_e2e --test protocol`, 1x combined + 5x isolated single-test
+re-runs) — 6/6 GREEN locally, consistent with the prior investigation's 6/6 GREEN. The failure
+appears to require the actual GitHub Actions runner environment (2-vCPU `ubuntu-latest`,
+`Swatinem/rust-cache`-restored `target/`) to manifest; it has never reproduced in this sandbox
+despite matching every documented aspect of the CI sequence, including env vars.
+
+**Updated hypothesis:** given (b) rules out contention/timeout and the failure is fast and
+deterministic-looking within a given CI run, the leading candidate shifts to either (i) a genuine
+environment-dependent behavior difference (e.g. JSON string-escaping of `\r`/`\n` differing by
+`serde_json` version, or a `wiremock`/`http`-stack difference) between whatever dependency
+versions the CI runner's `Swatinem/rust-cache`-restored lockfile-driven build resolves vs. this
+sandbox's already-built `target/`, or (ii) an assertion race specific to `stdout.contains("ok
+refs/heads/main")` (line 203-206) rather than the CRLF assertion at line 219 itself — the
+backtrace only proves the panic unwound through the `#[tokio::test]` body, not which specific
+`assert!` fired first, and dump_verifications' truncation swallowed the disambiguating line.
+**This distinction is now resolvable** on the next CI recurrence once `fbe5bee` is on the branch
+under test.
+
+**Severity raised to HIGH:** this blocks PR #61 (v0.13.0 release, `quality gates (pre-pr)` is a
+required check) and is release-blocking per the settled GO/NO-GO cadence until the real assertion
+text is captured and either fixed or the test is proven backend/environment-specific.
+
+**STATUS:** OPEN — HIGH. Timeout theory dead; root cause still unconfirmed but now diagnosable
+(log-truncation bug fixed in `fbe5bee`). Next action: re-run `quality gates (pre-pr)` on a branch
+rebased past `fbe5bee` and read the now-uncapped verifier stderr for the actual panic/assertion
+message.
