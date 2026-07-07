@@ -5,15 +5,15 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 269,
+    "claims_bound": 272,
     "claims_missing_test": 0,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.8005952380952381,
+    "alignment_ratio": 0.8095238095238095,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-07T22:45:14Z",
-    "coverage_ratio": 0.17875110979579759,
+    "last_walked": "2026-07-07T23:13:21Z",
+    "coverage_ratio": 0.1787511097957976,
     "lines_covered": 1208,
     "total_eligible_lines": 6758,
     "coverage_floor": 0.1,
@@ -1698,9 +1698,9 @@
         "line_start": 84,
         "line_end": 84
       },
-      "source_hash": "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8",
+      "source_hash": "a6747f53725cf97d9b802ee41cb03e68313bd2c3936b862357a7d41db16c9dfe",
       "source_hashes": [
-        "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8"
+        "a6747f53725cf97d9b802ee41cb03e68313bd2c3936b862357a7d41db16c9dfe"
       ],
       "tests": [
         "quality/gates/code/lint-invariants/rust-msrv.sh"
@@ -1708,11 +1708,11 @@
       "test_body_hashes": [
         "d369ec90fd89769469df0385b496a815d934af9fd14d859e05f4627e65b64b35"
       ],
-      "rationale": "P72 LINT-CONFIG-02: grep workspace Cargo.toml for rust-version line; tolerates indentation.",
+      "rationale": "README:84 still states \"Rust stable 1.82+\"; source_hash drifted only because the co-located git-version clause on the same line was softened. rust-msrv.sh greps workspace Cargo.toml for rust-version = \"1.82\" (tolerates indentation) — unchanged, still asserts.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:48:58Z",
-      "last_extracted": "2026-07-07T15:48:58Z",
+      "last_run": "2026-07-07T23:13:21Z",
+      "last_extracted": "2026-07-07T23:13:21Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3630,9 +3630,9 @@
         "line_start": 76,
         "line_end": 88
       },
-      "source_hash": "3ef6702002c2c49fc30f7170a1bcf41d055227c6ee0fcd05f39915ed355695bc",
+      "source_hash": "15db6f76dec99211d228d3971cf3424c700f7df33e616d849a468e0ae2f9f03f",
       "source_hashes": [
-        "3ef6702002c2c49fc30f7170a1bcf41d055227c6ee0fcd05f39915ed355695bc"
+        "15db6f76dec99211d228d3971cf3424c700f7df33e616d849a468e0ae2f9f03f"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
@@ -3640,11 +3640,11 @@
       "test_body_hashes": [
         "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
-      "rationale": "agent_flow.rs::dark_factory_sim_happy_path (lines 123-125) asserts remote.origin.fetch==+refs/heads/*:refs/reposix/origin/* with the in-test comment 'so a real git checkout refs/reposix/origin/main resolves after init' -- the config precondition that makes the cited checkout resolvable",
+      "rationale": "Checkout claim unchanged and verified against reality in the v0.13.1 run (checkout resolved after init on git 2.25.1). dark_factory_sim_happy_path asserts remote.origin.fetch==+refs/heads/*:refs/reposix/origin/* — the config precondition that makes refs/reposix/origin/main resolvable by a real git checkout.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T22:44:51Z",
-      "last_extracted": "2026-07-07T22:44:51Z",
+      "last_run": "2026-07-07T23:13:21Z",
+      "last_extracted": "2026-07-07T23:13:21Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3773,15 +3773,15 @@
     },
     {
       "id": "docs/tutorials/first-run/git-push-roundtrip",
-      "claim": "git push succeeds with output To reposix::..., [new branch] main -> main; conflict path teaches git pull --rebase",
+      "claim": "git push succeeds with output To reposix::..., fast-forward <old>..<new> main -> main (init already seeded the remote branch, so it is not a [new branch] create); conflict path teaches git pull --rebase",
       "source": {
         "file": "docs/tutorials/first-run.md",
         "line_start": 152,
-        "line_end": 164
+        "line_end": 166
       },
-      "source_hash": "5ee27c646316f8a0b6e092b0c94b52f5376a8915c1a1538c794ab5537078f885",
+      "source_hash": "e1932b20d6495867d29c4a4d2b0a301aba82f2943b6be17a377afc2fbf007b1b",
       "source_hashes": [
-        "5ee27c646316f8a0b6e092b0c94b52f5376a8915c1a1538c794ab5537078f885"
+        "e1932b20d6495867d29c4a4d2b0a301aba82f2943b6be17a377afc2fbf007b1b"
       ],
       "tests": [
         "crates/reposix-remote/tests/push_conflict.rs::clean_push_emits_ok_and_mutates_backend",
@@ -3791,11 +3791,11 @@
         "45ad33228fce32e4058b644e57d328a35aab09ef78e4ae891035b6dbcfa5a7cb",
         "507341b46329c96bee305976353ddfc912dbff80d299b34ffda89b315d816e81"
       ],
-      "rationale": "clean_push_emits_ok_and_mutates_backend asserts a successful push emits 'ok refs/heads/main' + fires exactly 1 backend PATCH (happy half); stale_base_push_emits_fetch_first_and_writes_no_rest asserts stdout 'error refs/heads/main fetch first' + stderr 'git pull --rebase' recovery teaching with zero REST writes (conflict half)",
+      "rationale": "DOC_DRIFT: corrected the doc from \"* [new branch] main -> main\" to the real fast-forward \"<old>..<new> main -> main\" form (init seeds main on the remote, verified in the v0.13.1 run: \"5df9f45..3c0f29d  main -> main\"). clean_push_emits_ok_and_mutates_backend asserts stdout contains \"ok refs/heads/main\" (protocol-level success, form-agnostic) + 1 backend PATCH; stale_base_push_emits_fetch_first_and_writes_no_rest asserts \"error refs/heads/main fetch first\" + stderr \"git pull --rebase\" with zero REST writes.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T22:44:51Z",
-      "last_extracted": "2026-07-07T22:44:51Z",
+      "last_run": "2026-07-07T23:13:21Z",
+      "last_extracted": "2026-07-07T23:13:21Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -7544,9 +7544,9 @@
         "line_start": 73,
         "line_end": 79
       },
-      "source_hash": "da22024491da83711926a9154e3d8d10a81e121f4594305abe80d5bf649c3e81",
+      "source_hash": "59c32150230d806465a08378f79760dcf986f3587d483b5c5751dfc526bf32f0",
       "source_hashes": [
-        "da22024491da83711926a9154e3d8d10a81e121f4594305abe80d5bf649c3e81"
+        "59c32150230d806465a08378f79760dcf986f3587d483b5c5751dfc526bf32f0"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
@@ -7554,11 +7554,11 @@
       "test_body_hashes": [
         "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
-      "rationale": "agent_flow.rs::dark_factory_sim_happy_path (lines 119-135) asserts, via an exact key/value match loop after 'reposix init sim::demo', extensions.partialClone==origin + remote.origin.promisor==true + remote.origin.partialclonefilter==blob:none",
+      "rationale": "Section 3 init block unchanged in claim; source_hash drifted because line 76 \"Next:\" transcript now matches real CLI output (appends \"(or git sparse-checkout set <pathspec> first)\"). dark_factory_sim_happy_path asserts extensions.partialClone==origin + remote.origin.promisor==true + remote.origin.partialclonefilter==blob:none via exact key/value match after reposix init.",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T22:44:51Z",
-      "last_extracted": "2026-07-07T22:44:51Z",
+      "last_run": "2026-07-07T23:13:21Z",
+      "last_extracted": "2026-07-07T23:13:21Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8253,15 +8253,15 @@
     },
     {
       "id": "README-md/git-2-34-requirement",
-      "claim": "Runtime requires git >= 2.34 for extensions.partialClone and stateless-connect",
+      "claim": "git 2.34+ is recommended for reliable partial-clone reads (stateless-connect); the simulator flow runs on older git, verified down to 2.25",
       "source": {
         "file": "README.md",
         "line_start": 84,
         "line_end": 84
       },
-      "source_hash": "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8",
+      "source_hash": "a6747f53725cf97d9b802ee41cb03e68313bd2c3936b862357a7d41db16c9dfe",
       "source_hashes": [
-        "61c11f97c32911fe471a6d0f9208ecb992af03ebaace72c582d512c2f58f8de8"
+        "a6747f53725cf97d9b802ee41cb03e68313bd2c3936b862357a7d41db16c9dfe"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
@@ -8269,11 +8269,11 @@
       "test_body_hashes": [
         "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
-      "rationale": "test asserts extensions.partialClone == origin and partialclonefilter == blob:none readable after reposix init -- proves host git supports the extension; git <2.34 would fail to materialize partial-clone config",
+      "rationale": "DOC_DRIFT: README:84 softened from hard 'requires >=2.34' to 'recommended; sim runs on 2.25+', matching doctor.rs git_version_finding (WARN not ERROR below 2.34) and empirical v0.13.1 onboarding run; dark_factory_sim_happy_path asserts partialClone=origin/promisor=true/partialclonefilter=blob:none materialize after init and passes on the host's git 2.25.1, proving the sim partial-clone path works on older git",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:49:19Z",
-      "last_extracted": "2026-07-07T15:49:19Z",
+      "last_run": "2026-07-07T23:13:21Z",
+      "last_extracted": "2026-07-07T23:13:21Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8537,11 +8537,11 @@
       "source": {
         "file": "docs/tutorials/first-run.md",
         "line_start": 168,
-        "line_end": 177
+        "line_end": 179
       },
-      "source_hash": "5acbc0e857afdf01a6b7a5cc69ddba8f152ea6907464111f5c5769e872ab3ebf",
+      "source_hash": "f63703ed881ad2d3fceed0aab6c11f5c833d978b65a52e603879ccc8d868d8fd",
       "source_hashes": [
-        "5acbc0e857afdf01a6b7a5cc69ddba8f152ea6907464111f5c5769e872ab3ebf"
+        "f63703ed881ad2d3fceed0aab6c11f5c833d978b65a52e603879ccc8d868d8fd"
       ],
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
@@ -8549,11 +8549,11 @@
       "test_body_hashes": [
         "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
       ],
-      "rationale": "Tutorial-replay covers the audit-query final step; column renamed decision->reason matching cache_schema.sql audit_events_cache.reason",
+      "rationale": "Query (the claim) unchanged; source_hash drifted because the example timestamps were corrected to real RFC3339 nanosecond +00:00 form and a \"yours will differ\" note added. tutorial-replay.sh covers the audit-query final step; column is reason (matches cache_schema.sql audit_events_cache.reason).",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T15:57:44Z",
-      "last_extracted": "2026-07-07T15:57:44Z",
+      "last_run": "2026-07-07T23:13:21Z",
+      "last_extracted": "2026-07-07T23:13:21Z",
       "last_extracted_by": "bind-call"
     },
     {

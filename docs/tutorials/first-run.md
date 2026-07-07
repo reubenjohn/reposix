@@ -73,7 +73,7 @@ Backgrounded so the rest of the steps run in the same shell. The seed loads the 
 ```bash
 reposix init sim::demo /tmp/repo
 # reposix init: configured `/tmp/repo` with remote.origin.url = reposix::http://127.0.0.1:7878/projects/demo
-# Next: cd /tmp/repo && git checkout -B main refs/reposix/origin/main
+# Next: cd /tmp/repo && git checkout -B main refs/reposix/origin/main (or git sparse-checkout set <pathspec> first)
 ```
 
 What that did: `git init /tmp/repo`, then `git config extensions.partialClone origin`, set `remote.origin.url`, and ran `git fetch --filter=blob:none origin`. `/tmp/repo` is now a real git working tree — `git status`, `git diff`, and `git log` all work the way they do on any other repo. Cold init runs in `24 ms` against the sim ([benchmark](../benchmarks/latency.md)).
@@ -156,8 +156,10 @@ git add issues/1.md
 git commit -m "tutorial: add comment, move issue 1 to in_progress"
 git push
 # To reposix::http://127.0.0.1:7878/projects/demo
-#  * [new branch]      main -> main
+#    5df9f45..3c0f29d  main -> main
 ```
+
+The push is a **fast-forward** (`<old>..<new>`), not a `[new branch]` create — `reposix init` already seeded `main` on the remote, so your commit just advances it. The exact hashes are illustrative and will differ on every run.
 
 What just happened: `git push` handed your commit to the reposix git remote, which parsed the changed file, sanitized the frontmatter (server-controlled fields like `id` and `version` are stripped — see [trust model](../how-it-works/trust-model.md)), checked the backend version was still `1`, and applied the write via REST. The mechanics live in [git layer §push round-trip](../how-it-works/git-layer.md).
 
@@ -169,10 +171,12 @@ If a second writer had mutated issue 1 between your `init` and your `push`, the 
 sqlite3 ~/.cache/reposix/sim-demo.git/cache.db \
     "SELECT ts, op, reason FROM audit_events_cache \
      WHERE op LIKE 'helper_push_%' ORDER BY ts DESC LIMIT 3"
-# 2026-07-07T15:38:27Z|helper_push_accepted|1
-# 2026-07-07T15:38:27Z|helper_push_sanitized_field|version
-# 2026-07-07T15:38:27Z|helper_push_started|refs/heads/main
+# 2026-07-07T23:06:07.162650444+00:00|helper_push_accepted|1
+# 2026-07-07T23:06:07.159171609+00:00|helper_push_sanitized_field|version
+# 2026-07-07T23:06:07.154427867+00:00|helper_push_started|refs/heads/main
 ```
+
+(Timestamps are RFC3339 with nanosecond precision and a `+00:00` UTC offset; yours will differ.)
 
 Three rows: the push opened, a server-controlled field got stripped, the push was accepted. That middle row is normal, not a warning sign — issue `1.md`'s frontmatter still carries the server-controlled `version` field reposix wrote when it materialized the file, and `git push` strips it before applying the write (server fields round-trip out, never in — see [trust model](../how-it-works/trust-model.md)). You'd only see `helper_push_rejected_conflict` if a second writer had raced you. Every push, accept or reject, writes one append-only audit row. `git log` is the agent's intent; `audit_events_cache` is the system's outcome.
 

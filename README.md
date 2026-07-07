@@ -81,7 +81,7 @@ The full walkthrough — including the `git pull --rebase` conflict cycle and th
 <details>
 <summary><strong>Build from source (advanced)</strong></summary>
 
-Linux. Requires Rust stable 1.82+ and `git >= 2.34`.
+Linux. Requires Rust stable 1.82+ and `git` (2.34+ recommended for reliable partial-clone reads; the simulator quickstart runs on older git — verified down to 2.25).
 
 ```bash
 git clone https://github.com/reubenjohn/reposix && cd reposix
@@ -113,7 +113,7 @@ Real-backend test targets and env-var setup: [`docs/reference/testing-targets.md
 
 `cargo test --workspace` is green; `cargo clippy --workspace --all-targets -- -D warnings` is clean; `bash quality/gates/agent-ux/dark-factory.sh sim` passes the dark-factory regression. `#![forbid(unsafe_code)]` at every crate root.
 
-Treat as alpha per Simon Willison's "proof of usage, not proof of concept" rule — the v0.9.0 quickstart above is reproducible on a stock Ubuntu host in under five minutes against the in-process simulator, with no system packages required beyond `git >= 2.34` and a Rust toolchain.
+Treat as alpha per Simon Willison's "proof of usage, not proof of concept" rule — the v0.9.0 quickstart above is reproducible on a stock Ubuntu host in under five minutes against the in-process simulator, with no system packages required beyond `git` (2.34+ recommended; the sim quickstart runs on 2.25+) and a Rust toolchain.
 
 ## Security
 
