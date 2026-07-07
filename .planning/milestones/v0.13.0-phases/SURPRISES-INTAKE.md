@@ -625,3 +625,48 @@ text is captured and either fixed or the test is proven backend/environment-spec
 (log-truncation bug fixed in `fbe5bee`). Next action: re-run `quality gates (pre-pr)` on a branch
 rebased past `fbe5bee` and read the now-uncapped verifier stderr for the actual panic/assertion
 message.
+
+---
+
+**2026-07-07 follow-up #2 (post-`fbe5bee` re-run on PR #68, non-reproduction):**
+
+**Context:** PR #68 (branch `release-plz-2026-07-07T02-37-20Z`, head `14bb5e43d7ff9552245dae6f3b47caeaece4ea1f`,
+already includes `fbe5bee`'s 200-line tail-window fix) had its `CI`/`Security audit`/`quality gates
+(pre-pr)` workflows re-triggered via a real-actor `gh pr close 68` / `gh pr reopen 68` (the
+`pull_request`-trigger silently not re-firing after a release-plz branch regen is itself now filed
+as a new process good-to-have, see `GOOD-TO-HAVES.md` 2026-07-07). Watched CI run `28838198234`
+(the `CI` workflow) to completion; the `quality gates (pre-pr)` job runs as run `28838198234` /
+job `85526336500`.
+
+**Result: the flaky test did NOT reproduce this run.** The `quality gates (pre-pr cadence)` step's
+full output shows `[PASS ] agent-ux/p94-git243-fallback-sentinel (P1, 15.49s)` — the verifier that
+drives `CARGO_BUILD_JOBS=2 cargo test -p reposix-remote --test stateless_connect_e2e --test
+protocol` (which includes `crlf_blob_body_round_trips_byte_for_byte`) completed GREEN in 15.49s.
+Overall job summary: `70 PASS, 1 FAIL, 0 PARTIAL, 1 WAIVED, 0 NOT-VERIFIED -> exit=0` — the single
+FAIL is the pre-existing, unrelated, non-blocking P2 row `docs-build/p94-badges-real-vs-transient`
+(already tracked separately in `GOOD-TO-HAVES.md`'s "badges real-vs-transient flap" note), not the
+CRLF test. Grepped the full job log for `panicked`, `assert.*failed`, `crlf_blob`,
+`protocol.rs:2`, `body=`, `FAILED`, `failures:` — zero matches anywhere in the archived output,
+because the test simply passed; there was no failure branch to trigger the `fbe5bee` full-log
+archive or the panic-line grep this time.
+
+**What this means:** the `fbe5bee` log-capture fix is still unverified in the one way that matters
+(catching a live recurrence) because this CI run happened to be green. Hypothesis A vs. B
+(CRLF-preservation assert at `protocol.rs:216-219` vs. the unrelated `stdout.contains("ok
+refs/heads/main")` check at `protocol.rs:203-206`) remains **UNRESOLVED** — no new evidence either
+way. Source-line mapping re-confirmed by direct read of `crates/reposix-remote/tests/protocol.rs`
+lines 195-220 on this same commit: the `stdout.contains("ok refs/heads/main")` assert is at lines
+203-206 (`"stdout missing ok: {stdout}"`), and the CRLF-preservation assert is at lines 216-219
+(`body_str.contains("line-one\\r\\nline-two\\r\\n")`, `"POST body did not preserve CRLF — raw-bytes
+path stripped \\r; body={body_str}"`) — both spans unchanged since the original filing, so the
+2026-07-07 follow-up #1's line-number-to-source mapping (`protocol.rs:219:6` in a *previous* CI
+backtrace) still points at the CRLF assert specifically, not the earlier `ok refs/heads/main` check,
+IF that previous backtrace frame is accurate. This run adds no independent confirmation of that
+frame; it only re-verifies the source stayed put and that the log-capture fix has not yet been
+exercised against a real failure.
+
+**STATUS:** OPEN — HIGH. Root cause still unconfirmed; `fbe5bee`'s diagnostic fix remains
+unverified-in-anger (this run was green, not a recurrence). Per prove-before-fix on BLOCKERs, no
+fix attempted. Next action: keep watching subsequent CI runs on this PR (or the next release-plz
+regen) for a genuine recurrence, then immediately pull the job log before any further truncation
+regressions can hide it again.
