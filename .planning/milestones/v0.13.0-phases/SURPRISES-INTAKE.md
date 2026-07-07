@@ -924,3 +924,28 @@ CONSULT-DECISIONS.md 2026-07-07 entry.
 
 **STATUS:** OPEN (deferred to v0.14.0 RBF-LR-03 pivot; docs-honesty spec handed to the
 v0.13.1 doc-truth lane)
+
+**Sub-risks surfaced by the v0.13.1 Wave D doc-truth lane (add to the v0.14.0 RBF-LR-03
+scoping, same tree — not a separate lane):**
+
+(a) **`sync --reconcile` can produce a teaching-free false-success.** The command exits
+0 even when it leaves the cache in the non-descendant "Sync from REST snapshot" state
+that then makes the very next `git pull --rebase` crash with `fatal: error while running
+fast-import`. An agent (or human) reading only the exit code sees "reconcile succeeded"
+and has no signal that the state it produced is unusable until the *next* command fails
+opaquely. The v0.14.0 redesign should either (i) make `sync --reconcile` itself fail
+loudly when it cannot produce a rebaseable/fast-forwardable lineage, or (ii) make the
+synthesis commit genuinely rebaseable so the crash never happens — per the ratified
+commit-sequence direction, (ii) is the real fix, but (i) is a cheap defensive teaching
+improvement worth keeping even after (ii) lands.
+
+(b) **Push-exits-0-after-failed-pull is a silent data-loss window.** Reproduced in this
+lane's own repro: after the `sync --reconcile` → `git pull --rebase` sequence crashes,
+the local tree still has the local edit but never incorporated the external REST edit;
+the follow-on `git push` returns exit 0 (`[new branch] main -> main`) and silently
+overwrites the external writer's change — the exact overwrite the whole recovery
+sequence exists to prevent. Consider a guard: the bus/init push path could refuse (or at
+minimum warn loudly) when it detects the local branch's cache-side lineage predates a
+known-crashed reconcile attempt, rather than pushing a stale-relative-to-SoT tree with a
+clean exit code. Worth scoping as part of the v0.14.0 reconciliation redesign's
+acceptance criteria, not a bolt-on afterward.
