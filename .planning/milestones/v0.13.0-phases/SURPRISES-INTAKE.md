@@ -704,3 +704,106 @@ been attempted yet.
 cause still unconfirmed; hypotheses A/B both still open; next action unchanged from follow-up #2
 (catch a live recurrence with `fbe5bee`'s uncapped log before any further truncation regression can
 hide it again).
+
+## S-260707-pr-01 — `reposix-sim` ships in NO prebuilt distribution; documented 3-crate binstall installs ZERO binaries (BLOCKER)
+
+**Found during:** v0.13.0 post-release verification (zero-shot docs-following fleet).
+**Severity:** BLOCKER.
+**Issue:** The release tarball/zip contains only `reposix` + `git-remote-reposix`
+(`tar tzf` confirmed against the published release asset); the Homebrew formula installs
+only those two binaries (`.github/workflows/release.yml:465-466`); `cargo binstall ...
+reposix-sim` fails with no prebuilt archive available (exit 94). Because `cargo binstall`
+is all-or-nothing across its argument list, the documented tutorial command `cargo
+binstall reposix-cli reposix-remote reposix-sim` installs **zero** binaries when any one
+crate lacks a prebuilt archive. The CLI resolves `reposix-sim` as a sibling of
+`current_exe()`, so the default simulator backend — the entire first-run tutorial path —
+is unreachable for every non-source install band (curl installer, PowerShell installer,
+Homebrew, `cargo binstall`).
+**Sketch:** Either (a) add `reposix-sim` to the release build's distributed binaries
+(release.yml dist-binaries list + installer scripts + Homebrew formula's `install` block),
+or (b) stop advertising sim-backed onboarding to binary-install users and gate the
+sim-tutorial path behind a from-source checkout, with docs updated accordingly. Option (a)
+is the north-star fix — the sim is OP-1's designated first-run default.
+
+## S-260707-pr-02 — `reposix init` hides a fatal fetch failure behind exit 0, then hands out a broken "Next:" hint (HIGH)
+
+**Found during:** v0.13.0 post-release verification (zero-shot docs-following fleet).
+**Severity:** HIGH.
+**Issue:** When the sim backend is unreachable, `reposix init sim::demo <path>` prints a
+`fast-import` / `backend-unreachable` crash and leaves a `.git/fast_import_crash_*` file
+behind, yet the process exits **0** and still prints `Next: git checkout origin/main` — a
+command that then fails with `pathspec 'origin/main' did not match any file(s) known to
+git` because the fetch never populated `origin/main`. A zero-shot user (or agent) reading
+only the exit code and the "Next:" line has no signal that init actually failed.
+**Sketch:** Exit non-zero when the underlying fetch/import fails; suppress (or caveat) the
+"Next:" hint on the failure path; clean up (or explicitly reference) the
+`fast_import_crash_*` file so the user isn't left with a silent turd in `.git/`.
+
+## S-260707-pr-03 — `reposix sim` fallback shells out to `cargo run -p reposix-sim` from a release binary (HIGH)
+
+**Found during:** v0.13.0 post-release verification (zero-shot docs-following fleet).
+**Severity:** HIGH.
+**Issue:** When `reposix-sim` isn't found on `PATH`, `reposix sim` falls back to invoking
+`cargo run -p reposix-sim`, which fails with `could not find Cargo.toml` because a
+packaged release binary has no workspace to build from. A shipped binary must never reach
+for `cargo`/`Cargo.toml` — that fallback only makes sense in a source checkout.
+**Sketch:** In release builds, replace the cargo fallback with a teaching error (e.g.
+`reposix-sim not found on PATH; install it via <x>`, once S-260707-pr-01 ships a prebuilt
+`reposix-sim`) rather than a bare cargo-not-found failure.
+
+## S-260707-pr-04 — reposix-swarm integration tests share one on-disk cache + sqlite path across parallel threads/binaries (MEDIUM)
+
+**Found during:** v0.13.0 post-release verification (crlf-investigation lane, contributing
+factor surfaced while chasing S-260707-rbf-01).
+**Severity:** MEDIUM.
+**Issue:** Integration tests share one on-disk `~/.cache/reposix/<slug>-demo.git` +
+sqlite path across parallel test threads AND across the gate's two separate test
+binaries — an OP-4 (no-hidden-state) violation and a latent flake source; it was a
+contributing factor the crlf lane surfaced (not itself the crlf root cause).
+**Sketch:** Give each test a unique `REPOSIX_CACHE_DIR` (e.g. a `tempdir` per test) so
+concurrent test runs never share cache/sqlite state.
+
+## S-260707-pr-05 — `reposix init`/`doctor` write cache state to `~/.cache/reposix/` unconditionally, with no documented override (MEDIUM)
+
+**Found during:** v0.13.0 post-release verification (zero-shot docs-following fleet).
+**Severity:** MEDIUM.
+**Issue:** `reposix init`/`doctor` write cache state to `~/.cache/reposix/` unconditionally
+with no CWD scoping, causing collisions between concurrent runs or testers on a shared
+machine. `REPOSIX_CACHE_DIR` exists as an override but is undocumented — it doesn't appear
+in `--help` output or in the docs site.
+**Sketch:** Document (and confirm honoring of) a per-invocation cache-dir override; surface
+`REPOSIX_CACHE_DIR` in `--help` text and in the relevant docs/reference page.
+
+## S-260707-pr-06 — `git-remote-reposix` has no `--version`; installer.sh has no arg validation; `REPOSIX_INSTALL_DIR` undocumented (LOW)
+
+**Found during:** v0.13.0 post-release verification (zero-shot docs-following fleet).
+**Severity:** LOW.
+**Issue:** (a) `git-remote-reposix` has no `--version` flag, inconsistent with
+`reposix --version`. (b) `installer.sh` has no `--help`/argument parsing — it silently
+runs a full install on any argument passed to it. (c) `REPOSIX_INSTALL_DIR` works as an
+install-location override but is undocumented.
+**Sketch:** Add `--version` to `git-remote-reposix`; add basic arg validation (and a
+`--help`) to `installer.sh`; document `REPOSIX_INSTALL_DIR` alongside the install
+instructions.
+
+## S-260707-pr-07 — `docs-build/p94-badges-real-vs-transient` catalog row reported stale-NOT-VERIFIED while the underlying gate needs live re-verification (LOW)
+
+**Found during:** v0.13.0 post-release verification, Task D (catalog-row spot-check).
+**Severity:** LOW.
+**Issue:** The row `p94-badges-real-vs-transient` in `quality/catalogs/docs-build.json`
+was reported as stale/NOT-VERIFIED at hand-off time; the report claimed "the gate runs
+green live." Actually running `bash quality/gates/docs-build/p94-badges-real-vs-transient.sh`
+in this verification session gives **exit=1** (FAIL), not green:
+```
+PASS: badges-resolve.py re-run on >=2 spaced occasions; pass/fail pattern recorded (3 runs)
+FAIL (docs-build/p94-badges-real-vs-transient): GOOD-TO-HAVES badges-resolve entry is not RESOLVED (still OPEN or missing)
+```
+The gate's own logic requires the `GOOD-TO-HAVES.md` `badges-resolve` entry to carry
+STATUS: RESOLVED before it will pass; that entry has not been resolved, so the "runs
+green live" claim does not hold as of this session. Per the task's own guard ("never
+fabricate a PASS the gate didn't produce"), the catalog row was **not** flipped.
+**Sketch:** Either resolve the `badges-resolve` GOOD-TO-HAVES entry (determine
+real-vs-transient, record the finding, flip its STATUS to RESOLVED) so the gate's own
+precondition is satisfied, or correct whoever/whatever asserted "runs green live" — the
+claim was stale/wrong at verification time. Only then update the catalog row's status +
+`last_verified` with the dated evidence.
