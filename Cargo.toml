@@ -34,7 +34,7 @@ pr-run-mode = "plan"
 allow-dirty = ["ci"]
 
 [workspace.package]
-version = "0.12.0"
+version = "0.13.0"
 edition = "2021"
 rust-version = "1.82"
 authors = ["Reuben John <reubenvjohn@gmail.com>", "reposix contributors"]
@@ -106,7 +106,7 @@ tempfile = "3"
 assert_cmd = "2"
 
 # Internal
-reposix-core = { path = "crates/reposix-core", version = "0.12.0" }
+reposix-core = { path = "crates/reposix-core", version = "0.13.0" }
 
 [workspace.dependencies.dev]
 
