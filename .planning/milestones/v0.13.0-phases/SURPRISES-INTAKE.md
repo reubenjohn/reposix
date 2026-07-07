@@ -670,3 +670,37 @@ unverified-in-anger (this run was green, not a recurrence). Per prove-before-fix
 fix attempted. Next action: keep watching subsequent CI runs on this PR (or the next release-plz
 regen) for a genuine recurrence, then immediately pull the job log before any further truncation
 regressions can hide it again.
+
+---
+
+**2026-07-07 wrap-up (release-gate closure on PR #68's green run, no new diagnostic evidence):**
+
+**Context:** all required checks on PR #68 (head `14bb5e43d7ff9552245dae6f3b47caeaece4ea1f`) went
+GREEN, including `quality gates (pre-pr)`
+(https://github.com/reubenjohn/reposix/actions/runs/28838198234/job/85526336500 — the same run
+documented in the follow-up #2 entry above: 70 PASS / 1 unrelated pre-existing FAIL
+(`docs-build/p94-badges-real-vs-transient`) / 1 WAIVED cadence, exit=0). Re-verified via
+`gh pr checks 68` at wrap-up time — full 22-check matrix PASS, no regressions.
+
+**What this confirms and does NOT confirm:** the release is unblocked ON THIS RUN'S EVIDENCE —
+`crlf_blob_body_round_trips_byte_for_byte` did not fail, so there is no required-check red gating
+PR #68. This is NOT a root-cause fix and NOT new diagnostic evidence: hypothesis A vs. B (CRLF
+assert at `protocol.rs:216-219` vs. the `stdout.contains("ok refs/heads/main")` check at
+`protocol.rs:203-206`) remains exactly as unresolved as the prior follow-up #2 left it, and local
+reproduction is still 0/7+ attempts across two sessions. The underlying intermittent
+CI-environment-specific flake is unresolved and could recur on a future CI run for this or any
+other PR that exercises the same `quality gates (pre-pr)` job.
+
+**Recommendation:** keep **STATUS: OPEN**, severity unchanged at **HIGH** (no rationale to
+downgrade the severity itself — the failure mode, when it does recur, is still an unexplained
+required-check red). Reframe the urgency posture only: this entry is **monitor — not
+release-blocking on a green run; revisit if it recurs.** Do not close this entry on the strength of
+a single non-reproducing green run; closing requires either (a) a live recurrence captured with the
+`fbe5bee` full-log diagnostics and a confirmed root cause, or (b) enough consecutive green runs
+across independent PRs to justify a deliberate re-classification as environment-noise, which has not
+been attempted yet.
+
+**STATUS:** OPEN — HIGH — monitor (not release-blocking on a green run; revisit if it recurs). Root
+cause still unconfirmed; hypotheses A/B both still open; next action unchanged from follow-up #2
+(catch a live recurrence with `fbe5bee`'s uncapped log before any further truncation regression can
+hide it again).
