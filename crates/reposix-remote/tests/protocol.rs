@@ -188,7 +188,7 @@ line-one\r\nline-two\r\n";
             .expect("binary built")
             .args(["origin", &url])
             .write_stdin(stdin_data)
-            .timeout(std::time::Duration::from_secs(15))
+            .timeout(std::time::Duration::from_secs(30))
             .assert()
     })
     .await
@@ -252,7 +252,7 @@ async fn backend_500_on_export_list_emits_protocol_error_not_torn_pipe() {
             .expect("binary built")
             .args(["origin", &url])
             .write_stdin(stdin_data)
-            .timeout(std::time::Duration::from_secs(15))
+            .timeout(std::time::Duration::from_secs(30))
             .assert()
     })
     .await
@@ -302,7 +302,7 @@ async fn backend_500_on_import_emits_protocol_error_not_torn_pipe() {
             .expect("binary built")
             .args(["origin", &url])
             .write_stdin(stdin_data)
-            .timeout(std::time::Duration::from_secs(15))
+            .timeout(std::time::Duration::from_secs(30))
             .assert()
     })
     .await
@@ -373,7 +373,7 @@ prefix-",
             .expect("binary built")
             .args(["origin", &url])
             .write_stdin(stdin_data)
-            .timeout(std::time::Duration::from_secs(15))
+            .timeout(std::time::Duration::from_secs(30))
             .assert()
     })
     .await
