@@ -251,6 +251,10 @@ jobs:
             exit 0
           fi
           export REPOSIX_ALLOWED_ORIGINS="http://127.0.0.1:*,https://${REPOSIX_CONFLUENCE_TENANT}.atlassian.net"
+          # Build + PATH the git-remote-reposix helper: agent_flow_real shells out to git,
+          # which resolves the remote-reposix transport from PATH (else 'not a git command').
+          cargo build --workspace --bins
+          export PATH="$PWD/target/debug:$PATH"
           cargo test -p reposix-cli --test agent_flow_real -- --ignored dark_factory_real_confluence
 
   integration-contract-github-v09:
@@ -267,7 +271,12 @@ jobs:
         env:
           REPOSIX_ALLOWED_ORIGINS: http://127.0.0.1:*,https://api.github.com
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: cargo test -p reposix-cli --test agent_flow_real -- --ignored dark_factory_real_github
+        run: |
+          # Build + PATH the git-remote-reposix helper: agent_flow_real shells out to git,
+          # which resolves the remote-reposix transport from PATH (else 'not a git command').
+          cargo build --workspace --bins
+          export PATH="$PWD/target/debug:$PATH"
+          cargo test -p reposix-cli --test agent_flow_real -- --ignored dark_factory_real_github
 
   integration-contract-jira-v09:
     # ARCH-19 v0.9.0 real-backend gate: JIRA project TEST. Skips cleanly
@@ -297,6 +306,10 @@ jobs:
             exit 0
           fi
           export REPOSIX_ALLOWED_ORIGINS="http://127.0.0.1:*,https://${REPOSIX_JIRA_INSTANCE}.atlassian.net"
+          # Build + PATH the git-remote-reposix helper: agent_flow_real shells out to git,
+          # which resolves the remote-reposix transport from PATH (else 'not a git command').
+          cargo build --workspace --bins
+          export PATH="$PWD/target/debug:$PATH"
           cargo test -p reposix-cli --test agent_flow_real -- --ignored dark_factory_real_jira
 
   bench-latency-v09:
