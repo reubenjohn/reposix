@@ -1122,3 +1122,47 @@ blindly emitting a PATCH that 404s. Pairs with the v0.14.0 cache-desync hardenin
 cache-desync hardening.
 
 **STATUS:** OPEN
+
+## 2026-07-07 | S-260707-relplz-tmp-collision — `/tmp` isolated git worktree not immune to concurrent leaf seed-commit corruption | discovered-by: v0.13.1 release Step-2 version-force executor | severity: MEDIUM
+
+**What:** A version-force executor in an isolated `/tmp/relplz-force-$PID` worktree had a
+rogue `dae3fea "seed"` commit appear atop its pushed HEAD, deleting the tree — a concurrent
+shell-coverage-kcov worktree/pre-push quality-gate seeded into the same checkout dir.
+CONTAINED (seed never pushed; remote PR branch stayed clean at 04640d5).
+
+**Root cause:** `/tmp/<pid>` worktree root was not collision-immune vs a concurrent
+quality-gate/coverage worktree sharing the same `.git`.
+
+**Impact:** Hazard for any release/branch-edit leaf running while pre-push gates/shell-coverage
+worktrees are active; contained this time but not mechanically prevented.
+
+**Default disposition:** MEDIUM — sketch: unique-per-invocation worktree roots + lock, or
+serialize worktree lanes. Route v0.14.0 hardening.
+
+**STATUS:** OPEN
+
+## 2026-07-07 | S-260707-relplz-tagcut-doc-gap — release-plz creates crates.io publish + per-package tags but NOT the plain vX.Y.Z aggregate tag release.yml needs — mandatory owner-gated manual tag-cut undocumented in executor-facing runbook | discovered-by: v0.13.1 release Step-3 publish executor | severity: MEDIUM
+
+**What:** Merging the release-plz PR published 9 crates at 0.13.1 + created 9 per-package
+tags, but no plain `v0.13.1` tag → release.yml (binaries + git-remote-reposix + GitHub
+release) never triggered. release-plz pushes tags with GITHUB_TOKEN (no downstream-workflow
+recursion); per repo convention the aggregate `vX.Y.Z` tag is OWNER-gated (P88 SC6
+STOP-at-tag-boundary; RELIEF-HANDOVER-C2-wave-f.md:123; STATE.md:37; tag-v0.13.0.sh.disabled).
+
+**Note:** the owner-gate is DELIBERATE — do NOT propose automating the tag away (that
+bypasses the control); the gap is DOCUMENTATION: the release runbook/coordinator-dispatch
+guidance must state the mandatory owner-gated aggregate-tag-cut step so future executors
+don't assume auto-trigger and don't stall.
+
+**Default disposition:** MEDIUM, route v0.14.0 doc hardening.
+
+**STATUS:** OPEN
+
+<!-- SKIPPED as true duplicate (2026-07-07, doc-executor lane): a third candidate row —
+"shared .git/config corrupted mid-release (core.bare=true + identity t@t) by a concurrent
+git-config-in-shared-repo leaf" — was NOT appended here. It is already fully covered by
+`S-260707-pr-08` above (same root cause: worktree/cwd isolation not enforced, same
+core.bare=true + `t <t@t>` identity fingerprint, same HIGH severity, same v0.14.0
+enforcement-hook sketch). Filing it again would fragment the same incident across two rows;
+if a NEW instance of this corruption recurs, prefer amending S-260707-pr-08's STATUS/count
+rather than opening a fourth near-duplicate row. -->
