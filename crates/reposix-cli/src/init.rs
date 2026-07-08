@@ -165,8 +165,7 @@ fn repo_has_synced_refs(path: &Path) -> bool {
             "refs/reposix/origin/",
         ],
     )
-    .map(|o| o.status.success() && !o.stdout.is_empty())
-    .unwrap_or(false)
+    .is_ok_and(|o| o.status.success() && !o.stdout.is_empty())
 }
 
 /// `reposix init` entry point.
