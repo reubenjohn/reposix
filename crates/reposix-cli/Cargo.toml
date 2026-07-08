@@ -35,17 +35,17 @@ pkg-fmt = "zip"
 
 [dependencies]
 reposix-core.workspace = true
-reposix-cache = { path = "../reposix-cache", version = "0.13.0" }
-reposix-sim = { path = "../reposix-sim", version = "0.13.0" }
-reposix-confluence = { path = "../reposix-confluence", version = "0.13.0" }
-reposix-github = { path = "../reposix-github", version = "0.13.0" }
-reposix-jira = { path = "../reposix-jira", version = "0.13.0" }
+reposix-cache = { path = "../reposix-cache", version = "0.14.0" }
+reposix-sim = { path = "../reposix-sim", version = "0.14.0" }
+reposix-confluence = { path = "../reposix-confluence", version = "0.14.0" }
+reposix-github = { path = "../reposix-github", version = "0.14.0" }
+reposix-jira = { path = "../reposix-jira", version = "0.14.0" }
 # D91-03: reuse the git remote helper's URL→connector factory (with its
 # OP-3 `.with_audit(…)` wiring) for `attach`/`sync --reconcile` real-backend
 # dispatch instead of hand-rolling a third/fourth copy. Only the `[lib]`
 # `backend_dispatch` module is consumed; the helper binary is not built for
 # the CLI. New transitive prod dep pulled in for the CLI: `parking_lot`.
-reposix-remote = { path = "../reposix-remote", version = "0.13.0" }
+reposix-remote = { path = "../reposix-remote", version = "0.14.0" }
 tokio.workspace = true
 reqwest.workspace = true
 clap.workspace = true
