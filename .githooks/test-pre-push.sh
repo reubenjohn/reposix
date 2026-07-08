@@ -12,6 +12,20 @@
 #
 # Exit code: 0 on all green, 1 on any failure.
 # CI-safe: no network calls, no modifications to main.
+#
+# Scope (2026-07-07): this is a UNIT test of the credential-hygiene gate
+# (hook step 1) + the hook's exit-code plumbing -- NOT a re-run of the
+# whole pre-push quality suite. The hook's step 2 (`python3
+# quality/runners/run.py --cadence pre-push`: clippy, mkdocs,
+# shell-coverage, ...) owns its own CI jobs (`quality gates`,
+# `shell-coverage`). Coupling this security test to that suite made the two
+# "clean pass" assertions ("clean commit passes", "hook self-scan exclusion
+# honored") go RED for unrelated reasons -- a missing kcov binary, a clippy
+# warning in another lane -- even though the credential scan was perfect.
+# So the pass-path assertions PATH-stub `python3` to succeed (via
+# ${pass_stub_dir}), isolating step 2. The P0 cred-hygiene scan (step 1)
+# runs FULLY UNSTUBBED in every test; the reject-path tests short-circuit
+# at step 1 and never reach the stub; TEST 7 supplies its OWN fail-stub.
 
 set -euo pipefail
 
@@ -52,6 +66,26 @@ readonly orig_head="$(git rev-parse HEAD)"
 readonly orig_branch="$(git symbolic-ref --short -q HEAD || echo '')"
 readonly tmp_branch="test-pre-push-$$-$RANDOM"
 
+# Pass-through python3 stub. The hook's step 2 shells out to
+# `python3 quality/runners/run.py --cadence pre-push` (clippy, mkdocs,
+# shell-coverage, ...) -- gates that own their own CI jobs and are
+# irrelevant to a *credential*-hook unit test. The pass-path assertions
+# below run the hook with this stub first on PATH so step 2 succeeds and
+# the test grades ONLY credential behavior (step 1, run unstubbed) + the
+# hook's exit plumbing. See the scope note in the file header. The stub is
+# invoked ONLY by the hook's step 2 -- the reject-path tests exit at step 1
+# before python3 is ever called, and TEST 7 overlays its own fail-stub.
+readonly pass_stub_dir="$(mktemp -d)"
+cat > "${pass_stub_dir}/python3" <<'PASS_STUB'
+#!/usr/bin/env bash
+# Pass-through python3 stub for .githooks/test-pre-push.sh -- pretends the
+# pre-push quality runner (hook step 2) passed so the credential-hook unit
+# test is isolated from clippy/mkdocs/shell-coverage. Does NOT touch the P0
+# cred-hygiene scan (step 1, pure bash, always real).
+exit 0
+PASS_STUB
+chmod +x "${pass_stub_dir}/python3"
+
 cleanup() {
   # Drop any throw-away test-created commits on the detached head.
   git reset -q --hard "$orig_head" 2>/dev/null || true
@@ -62,6 +96,7 @@ cleanup() {
   fi
   git branch -D "$tmp_branch" 2>/dev/null || true
   rm -f "${repo_root}/.test-pre-push-fixture.txt"
+  rm -rf "${pass_stub_dir:-}" 2>/dev/null || true
 }
 trap cleanup EXIT
 
@@ -71,8 +106,13 @@ run_and_check() {
   local label="$1"
   local expected="$2"
   local actual=0
+  # PATH-stub python3 so the hook's step-2 quality runner (clippy, mkdocs,
+  # shell-coverage) short-circuits to success -- this unit test grades the
+  # credential-hygiene gate (step 1, unstubbed) + hook exit plumbing, not
+  # the whole pre-push suite. Reject-path tests exit at step 1 and never
+  # reach python3, so the stub is a no-op for them.
   echo "refs/heads/test HEAD HEAD^{commit}~1 $(git rev-parse HEAD^)" \
-    | bash "$hook" > /tmp/test-pre-push.out 2>&1 || actual=$?
+    | PATH="${pass_stub_dir}:$PATH" bash "$hook" > /tmp/test-pre-push.out 2>&1 || actual=$?
   if [[ "$actual" == "$expected" ]]; then
     printf '%b\n' "${GREEN}✓${NC} ${label} (exit=${actual})"
     return 0
@@ -88,11 +128,20 @@ printf '%b\n' "${YELLOW}→${NC} testing pre-push hook on detached ${tmp_branch}
 fails=0
 
 # --- TEST 1: clean commit passes. -------------------------------------
-# We use the existing HEAD which we've already pushed through the hook
-# in other operations; it should not contain any token-prefix strings.
+# Commit an innocuous fixture on a detached HEAD and scan its range. Uses
+# a purpose-built commit (not the checkout tip) so the test works on a
+# shallow CI clone (actions/checkout depth 1) -- `git rev-parse HEAD^` of
+# the checkout tip is a "fatal: ambiguous argument 'HEAD^'" there, whereas
+# the fixture commit's parent is the fetched tip and always resolves. Also
+# gives the scanner a real single-file diff to clear, not an empty range.
+git checkout -q --detach HEAD
+echo 'a perfectly ordinary line with no credentials in it' > .test-pre-push-fixture.txt
+git add .test-pre-push-fixture.txt
+git -c user.email=test@test -c user.name=test commit -q -m "test: clean fixture commit"
 if ! run_and_check "clean commit passes" 0; then
   fails=$((fails + 1))
 fi
+git reset -q --hard HEAD^
 
 # --- TEST 2: commit containing ATATT3 token prefix is rejected. -------
 git checkout -q --detach HEAD
@@ -186,12 +235,22 @@ fi
 git reset -q --hard HEAD^
 
 # --- TEST 6: hook file itself is excluded from self-scan. -------------
-# (Confirm the hook doesn't fail against its own PATTERNS=('ATATT3' ...)
-# body. We do this by triggering a fake commit that touches only the
-# hook file with a comment appended — no real change — and verifying
-# the range-diff is empty from the scanner's perspective.)
+# The scanner (quality/gates/structure/cred-hygiene.sh) lists .githooks/
+# in EXCLUDE_DIRS precisely so the hook's own PATTERNS body -- and any
+# marker we append here -- does not self-match. To make this assertion
+# actually EXERCISE that exclusion (a short non-matching marker would pass
+# whether or not .githooks/ were excluded, making the test name a lie), we
+# append a fixture that WOULD trip the ATATT3 pattern if the file weren't
+# excluded: 30+ chars after the prefix, so exit 0 here proves the exclusion
+# fired, not that the fixture was harmless. The token is assembled at
+# RUNTIME from two halves so no matching literal lives in this source file
+# (same invisibility-by-construction trick as TESTS 5b/5c/5d) -- gitleaks'
+# CI backstop would otherwise flag the harness itself.
 orig_hook_contents="$(cat "$hook")"
-printf '\n# Test marker — ignore (ATATT3-self-test)\n' >> "$hook"
+selfscan_prefix='ATATT3'
+selfscan_rest='xFfWELrSelfScanExclusionFixture01234'  # 35 chars -> matches {20,}
+printf '\n# Test marker — self-scan exclusion fixture (%s%s)\n' \
+  "$selfscan_prefix" "$selfscan_rest" >> "$hook"
 git add "$hook"
 git -c user.email=test@test -c user.name=test commit -q -m "test: touch hook file"
 if ! run_and_check "hook self-scan exclusion honored" 0; then
