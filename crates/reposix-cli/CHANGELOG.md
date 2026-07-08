@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1](https://github.com/reubenjohn/reposix/compare/reposix-cli-v0.13.0...reposix-cli-v0.13.1) - 2026-07-08
+
+### Fixed
+
+- *(clippy)* resolve -D warnings in reposix-cli (map_unwrap_or on Result)
+- *(v0.13.1)* run `reposix sim` in-process with a builtin offline seed
+- *(cli,remote)* make the documented init front door truthful (v0.13.1 CHECKOUT-BREAK)
+- *(cli)* reposix init exits non-zero when the backend is unreachable
+
+### Other
+
+- *(v0.13.1)* fix onboarding-gate output-mismatch doc-lies + rebind doc-alignment rows
+- *(agent-ux)* add test-name-honesty markers for two milestone tests
+- *(readme)* fix quick-start doc-lie — no-seed-file run seeds 0 issues
+
 ## [0.13.0](https://github.com/reubenjohn/reposix/compare/reposix-cli-v0.12.0...reposix-cli-v0.13.0) - 2026-07-07
 
 ### Added
