@@ -1060,3 +1060,65 @@ actually works" on a second run, even though first-run zero-shot passed. Target:
 v0.14.0 scoping session.
 
 **STATUS:** OPEN
+
+## 2026-07-07 | S-260707-gh404 — GitHub real-backend helper path 404s on owner/repo: cache feeds filesystem-sanitized project into backend REST call | discovered-by: p94/protocol.rs CRLF-flake fix executor (CI run 28909417360) | severity: HIGH
+
+**What:** The real-GitHub-via-helper path is broken. CI run 28909417360, job
+`integration (contract, real github v09)`, test `dark_factory_real_github` panics at
+`crates/reposix-cli/tests/agent_flow_real.rs:140`:
+`reposix init github::reubenjohn/reposix failed: backend: github returned 404 Not Found
+for GET https://api.github.com/repos/reubenjohn-reposix/issues?state=all&per_page=100`
+— note the path is `reubenjohn-reposix` (DASH) not `reubenjohn/reposix` (SLASH).
+
+**Root cause:** `crates/reposix-remote/src/main.rs:299` calls
+`Cache::open(state.backend.clone(), &state.backend_name, &state.cache_project)` —
+`cache_project` is the FILESYSTEM-sanitized form (`owner-repo`, dashes, from
+`sanitize_project_for_cache`, main.rs:141). `Cache::build_from` then forwards that string
+to `backend.list_records_complete(&self.project)`, which builds `{base}/repos/{project}/issues`
+= `repos/owner-repo/issues` → 404. The slashed `state.project` (main.rs:142/153) is the
+backend-correct form. Same latent bug in `crates/reposix-cli/src/attach.rs` (its
+`Cache::open` call).
+
+**Why it only surfaced now:** pre-existing since commit cd1b0b6 (Phase 32, backend
+dispatch via URL scheme). Never caught because CI never exercised the real-GitHub-via-helper
+path until commit b624688 (#71) built + PATH'd `git-remote-reposix` in the v09 jobs. The
+non-v09 `integration (contract, real github)` job passes because it runs `reposix-github`'s
+contract test DIRECTLY (never through the helper/cache).
+
+**Why out-of-scope (deferred, not hotfixed):** NOT a safe one-line arg swap. `Cache` holds
+ONE `project` field used for BOTH the on-disk cache dir path (`resolve_cache_path`, needs
+the sanitized dash form) AND backend REST calls (need the slashed form). The correct fix
+separates the two concerns (Cache carries a cache-path key distinct from the
+backend-project, or sanitizes only at path-resolution time), applied in BOTH main.rs and
+attach.rs, plus real-GitHub re-verification. That is transport-layer hardening → v0.14.0,
+out of the v0.13.1 hotfix scope.
+
+**Impact:** JIRA + Confluence real-backend transport are now PROVEN through the helper (v09
+jobs green); the GitHub helper front-door is broken against real GitHub. Sim default and
+direct `reposix-github` contract are unaffected.
+
+**Default disposition:** HIGH — real broken real-backend front-door; route to v0.14.0
+transport-layer hardening (fix in both main.rs and attach.rs + real-GitHub re-verify).
+
+**STATUS:** OPEN
+
+## 2026-07-07 | S-260707-desync — cache-desync on push produces confusing PATCH-404 instead of a diagnostic | discovered-by: p94/protocol.rs CRLF-flake fix executor | severity: MEDIUM
+
+**What:** When the cache holds a `last_fetched_at` cursor + `oid_map` row for a record that
+the backend GET no longer returns, `precheck.rs` Step 5
+(`precheck_export_against_changed_set`, `crates/reposix-remote/.../precheck.rs:243`) trusts
+the cache as the authoritative prior and emits an Update → PATCH, which then 404s as
+`patch issue N: not found: <project>/N` rather than surfacing the D-01 recovery
+(`reposix sync --reconcile`). Same error family as S-260707-gh404 above.
+
+**Why out-of-scope:** low/medium severity; fold into the already-deferred v0.14.0
+cache-desync hardening rather than mid-hotfix.
+
+**Sketched resolution:** in `precheck.rs` Step 5, when a cached record's backend GET returns
+NotFound, surface the D-01 `reposix sync --reconcile` recovery (teaching stderr) instead of
+blindly emitting a PATCH that 404s. Pairs with the v0.14.0 cache-desync hardening.
+
+**Default disposition:** MEDIUM — confusing-error UX, no data loss; route to v0.14.0
+cache-desync hardening.
+
+**STATUS:** OPEN

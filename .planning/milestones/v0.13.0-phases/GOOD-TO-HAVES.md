@@ -1338,3 +1338,27 @@ mechanical-filing envelope (no code edits).
 `reposix-sim`-touching phase or a front-door-polish pass.
 
 **STATUS:** OPEN
+
+## 2026-07-07 | Shared push-test helper that always injects a per-test `REPOSIX_CACHE_DIR` tempdir | discovered-by: p94/protocol.rs CRLF-flake fix executor | severity: LOW
+
+**What:** `resolve_cache_path` defaults to a global XDG dir
+(`crates/reposix-cache/src/path.rs:22`) with no test-scoping, so push tests that forget to
+pin `REPOSIX_CACHE_DIR` share a persistent `~/.cache/reposix/...` cache and
+cross-contaminate. This exact footgun caused the p94 CI flake (fixed in 7f17cee by pinning
+tempdirs on two `protocol.rs` tests). `crates/reposix-remote/tests/common.rs` already exists
+— add a helper there that always injects a per-test tempdir so the next push test can't
+forget. Warning comments already exist at `exit_codes.rs:109` and `push_conflict.rs:166`.
+
+**Acceptance:** add a shared helper (e.g. in `crates/reposix-remote/tests/common.rs`) that
+allocates a per-test tempdir and sets `REPOSIX_CACHE_DIR` to it, so no push test can silently
+share the global XDG cache; retrofit the existing warning-commented call sites
+(`exit_codes.rs:109`, `push_conflict.rs:166`) onto it.
+
+**Why deferred:** ~30min test-ergonomics change touching `reposix-remote` test code (cargo)
+— out of the mechanical-filing envelope; not blocking (the two flaky tests are already
+pinned by 7f17cee).
+
+**Default disposition:** LOW — test-ergonomics guardrail (~30min). Target: the next
+`reposix-remote`-test-touching phase or a v0.14.0 test-hardening pass.
+
+**STATUS:** OPEN
