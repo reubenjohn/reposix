@@ -260,6 +260,14 @@ See the companion `GOOD-TO-HAVES.md` for the same-window disposition of the P92-
 - **PR #62** (codecov-action 6→7): all 16 checks green, mergeable — merge proposal STAGED for owner: `gh pr merge 62 --squash --delete-branch`. Owner-gated, not executed.
 - **Note:** the "quality gates (pre-pr)" FAILURE currently showing on PRs #64/#65/#66 is NOT a defect in those dependency bumps — it's the parallel P93 lane's own catalog-first rows (commit `543bfb4` added 3 `agent-ux/p93-*` catalog rows whose verifiers don't exist yet → NOT-VERIFIED → exit=1). Self-resolves once P93 ships its verifiers. PR #62 predates `543bfb4` so it reads green.
 - **Note (cosmetic debt, filed below as a new GOOD-TO-HAVE):** `.git/hooks/pre-push` is a BROKEN symlink → nonexistent `scripts/hooks/pre-push` (confirmed: `ls` on the target errors ENOENT), but it's INERT because `core.hooksPath=.githooks` overrides it — the real active hook is `.githooks/pre-push`. Follow-up filed as a new low-sev entry in `GOOD-TO-HAVES.md` to delete the dead symlink for tidiness.
+  **2026-07-07 corrected (shorthand `S-260707`):** this claim is STALE/WRONG — a
+  pre-push hook demonstrably RAN on every push during the v0.13.1 session (the enforced
+  quality-gate `55 PASS` output + a gitleaks secret-scan both fired from pre-push,
+  observed live during v0.13.1 Wave F1b). The active `.githooks/pre-push` hook is NOT
+  inert. Caught by v0.13.1 Wave C2-f (`RELIEF-HANDOVER-C2-wave-f.md` §4). Original text
+  left in place per append-only convention — do not re-file this as a fresh
+  dead-symlink surprise without re-verifying `git config core.hooksPath` and observing
+  an actual push with the hook disabled/absent.
 
 **Why staged, not executed:** branch deletion and PR merges are external mutations against the shared remote (`origin`) outside this window's file-editing charter — owner-named-target approval required per CLAUDE.md's dark-factory guardrails.
 
@@ -999,3 +1007,56 @@ script exits 0 with `reposix init` correctly targeting `127.0.0.1:7779`. Row
 `agent-ux/dark-factory-sim` re-minted honestly in `quality/catalogs/agent-ux.json`
 (`last_verified`/`minted_at`: 2026-07-07T22:22:58Z, `coverage_kind: mechanical`,
 `transport_claim: false`, `claim_vs_assertion_audit` documents the before/after proof).
+
+## 2026-07-07 | git-floor drift in planning artifacts — `.planning/PROJECT.md` and `docs_reproducible_catalog.json` still assert a HARD `git >= 2.34` floor | discovered-by: v0.13.1 mechanical filing lane | severity: LOW
+
+**What:** `.planning/PROJECT.md:41` ("Runtime requires git >= 2.34") and
+`.planning/docs_reproducible_catalog.json:196` (a repro entry's preconditions list a
+bare `git >= 2.34`) still assert a HARD floor, now inconsistent with the softened
+README/doctor story shipped this milestone (git 2.34+ *recommended* for reliable
+partial-clone reads / stateless-connect; sim quickstart empirically verified working on
+git 2.25.1; `doctor` treats sub-2.34 as WARN, not ERROR — landed commits `f9d489a` +
+`6dee426`).
+
+**Why out-of-scope for eager-resolution:** both hits live in planning-artifact files
+(not `docs/**`, which this lane is explicitly barred from touching) and rewording them
+correctly requires cross-checking the exact softened phrasing the README/doctor now use
+— a small but deliberate doc-consistency edit, not a mechanical filing action.
+
+**Sketched resolution:** reword both to the softened split (sim flow works on 2.25+;
+2.34+ recommended for reliable partial-clone/stateless-connect real-backend paths); the
+`docs_reproducible_catalog.json` precondition can reference the `doctor` WARN behavior
+instead of a bare version-string gate.
+
+**Default disposition:** LOW — doc-consistency only, no runtime hazard. Target:
+v0.14.0 scoping session or the next planning-artifact-touching phase.
+
+**STATUS:** OPEN
+
+## 2026-07-07 | Cache keyed by project name, not target dir — repeat-use friction on 2nd tutorial attempt | discovered-by: v0.13.1 zero-shot re-gate | severity: MEDIUM
+
+**What:** `reposix init sim::demo <path>` keys its on-disk cache under a fixed
+`~/.cache/reposix/<project>.git` regardless of the target directory, so two independent
+"fresh" tutorial attempts on the same account silently SHARE backend/cache state. A user
+re-running the tutorial after a failed first attempt sees pre-mutated data (issue
+already `in_progress`, a stale comment) and may reasonably think something broke, since
+nothing in the front-door UX signals the cache is being reused rather than freshly
+seeded.
+
+**Why out-of-scope for eager-resolution:** not a first-run blocker — the zero-shot gate
+PASSED end-to-end on a clean machine — so it doesn't block v0.13.1. Fixing it properly
+forks into a real design decision (key cache by target path vs. ship a cache-reset
+command vs. a tutorial-only doc note), which is Rule-4 territory, not a mechanical
+filing action.
+
+**Sketched resolution:** either (a) doc the cache-keying behavior + offer a
+`reposix` cache-reset command, (b) key the cache by target path instead of project name
+so independent checkouts get independent caches, or (c) add a tutorial note ("re-running?
+clear `~/.cache/reposix/<project>.git` first"). (b) is the most robust fix but touches
+cache-bootstrap code; (c) is the cheapest stopgap.
+
+**Default disposition:** MEDIUM — real repeat-use friction that undermines "front door
+actually works" on a second run, even though first-run zero-shot passed. Target:
+v0.14.0 scoping session.
+
+**STATUS:** OPEN
