@@ -177,6 +177,17 @@ version: 0\n\
 ---\n\
 line-one\r\nline-two\r\n";
     let url = format!("reposix::{}/projects/demo", server.uri());
+    // Cache isolation (mirrors every other push test in this crate, e.g.
+    // push_conflict.rs): pin REPOSIX_CACHE_DIR to a per-test tempdir so the
+    // helper does NOT read the developer/CI-shared `~/.cache/reposix/
+    // sim-demo.git`. Without this, a leftover cursor + oid_map row for
+    // record 1 in that shared cache drives precheck onto the hot path,
+    // materializes a stale `prior=[record 1]`, and plan() emits an
+    // Update → PATCH the mock never stubs → 404 `not found: demo/1`
+    // (the intermittent CI failure). A fresh tempdir has no cursor, so the
+    // first-push fallback runs → empty prior → Create → POST, as intended.
+    let cache_dir = tempfile::tempdir().expect("tempdir");
+    let cache_path = cache_dir.path().to_path_buf();
     let stdin_data = {
         let mut buf = Vec::new();
         writeln!(&mut buf, "export").unwrap();
@@ -187,6 +198,7 @@ line-one\r\nline-two\r\n";
         Command::cargo_bin("git-remote-reposix")
             .expect("binary built")
             .args(["origin", &url])
+            .env("REPOSIX_CACHE_DIR", &cache_path)
             .write_stdin(stdin_data)
             .timeout(std::time::Duration::from_secs(30))
             .assert()
@@ -362,6 +374,12 @@ prefix-",
     blob.push(b'\n');
 
     let url = format!("reposix::{}/projects/demo", server.uri());
+    // Cache isolation: pin a per-test REPOSIX_CACHE_DIR tempdir so the
+    // helper never reads the shared `~/.cache/reposix/sim-demo.git`. See
+    // the equivalent note in `crlf_blob_body_round_trips_byte_for_byte` for
+    // the failure mode (stale cache prior → spurious PATCH → 404).
+    let cache_dir = tempfile::tempdir().expect("tempdir");
+    let cache_path = cache_dir.path().to_path_buf();
     let stdin_data = {
         let mut buf = Vec::new();
         writeln!(&mut buf, "export").unwrap();
@@ -372,6 +390,7 @@ prefix-",
         Command::cargo_bin("git-remote-reposix")
             .expect("binary built")
             .args(["origin", &url])
+            .env("REPOSIX_CACHE_DIR", &cache_path)
             .write_stdin(stdin_data)
             .timeout(std::time::Duration::from_secs(30))
             .assert()
