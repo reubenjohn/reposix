@@ -1,4 +1,4 @@
-# SESSION-HANDOVER.md — v0.13.1 onboarding-hotfix, CI-red pre-tag — 2026-07-08
+# SESSION-HANDOVER.md — v0.13.1 "Front door actually works" — block-vs-ship decision — 2026-07-07
 
 For the incoming top-level orchestrator (L0). This is the map, not the territory — detail
 lives in git and the linked files. HEAD = live state only; history is in `git log`.
@@ -40,171 +40,119 @@ least-complex path).
 Throughline: **default to decide-and-record; escalate only irreversible / external /
 credential / spend; and "not a decision, go verify" is not an escalation.**
 
-## 1. Where v0.13.1 stands (ground truth: `git rev-parse HEAD origin/main` both `dcb4117`, tree clean)
+## 1. Where v0.13.1 stands (ground truth: HEAD `e2e4659` — confirm with
+`git rev-parse HEAD origin/main` before trusting this section further)
 
-- **v0.13.1 "Front door actually works" is functionally COMPLETE and locally-verified
-  GREEN** across 3 coordinator tenures (Waves A–G, handovers at
-  `.planning/milestones/v0.13.1-phases/RELIEF-HANDOVER-C2-wave-{c,f}.md`,
-  phase-close grade at `.../VERIFICATION.md`, verified `dcb4117`): `reposix init` now
-  exits non-zero on unreachable backend (+test, `ee5f909`); the REAL front-door fix was
-  making `reposix sim` run **in-process** (it was forking a `reposix-sim` binary that no
-  install ships — dead-ended the tutorial at step 2 from any real install); doc-lies
-  fixed (`issues/1.md` not `0001.md`, audit SQL columns, built-in seed); git floor
-  softened (sim flow verified on git 2.25.1; 2.34+ now "recommended for partial-clone
-  reads/stateless-connect", doctor treats sub-2.34 as WARN); B5 conflict-recovery
-  confirmed as the known RBF-LR-03 limitation → docs made honest, deep fix filed to
-  v0.14.0. A **zero-shot human-simulation gate** (D3) was institutionalized
-  (`quality/gates/agent-ux/zero-shot-onboarding.sh` + catalog row) and passed on a clean
-  machine with only the 2 shipped binaries. Verifier scored **6/6 DoD items GREEN**.
-- **BUT it is NOT tag-ready: GitHub CI is RED on HEAD `dcb4117`** (confirmed live via
-  `gh run view 28907728970`, run started 2026-07-08T00:11Z) — local gates missed it (no
-  `nextest` installed on this box — `cargo-nextest not found`; local pre-push doesn't run
-  `clippy --workspace -D warnings`). Two real, reproducible failures:
-  1. **`clippy` job** — `cargo clippy --workspace --all-targets -- -D warnings` fails.
-     The in-process-sim change (`ee5f909`) introduced lint warnings; this also fails the
-     `code/clippy-lint-loaded` + `code/cargo-clippy-warnings` catalog rows.
-  2. **`test` job** — step "Test pre-push credential hook" fails (`hook self-scan
-     exclusion honored: expected exit=0, got 1`).
-  `shell-coverage`, `rustfmt`, `gitleaks` jobs are GREEN; `quality gates (pre-pr)` job
-  also fails (downstream of the above). **No CI-fix coordinator worktree or branch was
-  found live in this repo at handover time** — if L0 believes one was dispatched, verify
-  it independently (`git worktree list`, `gh pr list`, recent commits) before assuming
-  progress; ground truth right now is CI RED, nothing in flight to fix it.
-  **LESSON (already worth encoding): local pre-push green ≠ CI green; always see CI
-  green before treating a milestone as tag-ready.**
+- **Sim front door: DONE and proven.** `reposix init` exits non-zero on unreachable
+  backend; `reposix sim` runs in-process (was forking an unshipped binary — this was the
+  actual tutorial-dead-end root cause); doc-lies fixed; git version floor is accurate;
+  conflict-recovery docs are honest about the known RBF-LR-03 limitation (deep fix
+  deferred to v0.14.0); the zero-shot human-simulation gate (D3,
+  `quality/gates/agent-ux/zero-shot-onboarding.sh`) is institutionalized and PASSES on a
+  clean machine with only the 2 shipped binaries. Verification record:
+  `.planning/milestones/v0.13.1-phases/VERIFICATION.md`.
+- **CI on HEAD `e2e4659` (run `28910425946`):** clippy, rustfmt, gitleaks, test,
+  coverage, shell-coverage, and sim-dark-factory are GREEN. `quality gates (pre-pr)` is
+  GREEN (fixed via `7f17cee`, cache-dir isolation in `protocol.rs` push tests).
+  **Real-backend transport was PROVEN for the first time ever in CI: JIRA v09 and
+  Confluence v09 both PASS against LIVE backends.** This is only possible because the
+  honest `init` fix unmasked that CI's real-backend jobs had never actually installed
+  `git-remote-reposix` — they were false-green; `b624688` fixed the harness so they truly
+  run now.
+  **Next L0 action: re-confirm this run's final conclusion yourself** (`gh run view
+  28910425946` or the latest run on `main`) before acting on it — it was read once this
+  session, not independently re-verified at handover time.
+- **ONE remaining red: `integration (contract, real github v09)`** — a "helper-path 404"
+  against the real GitHub backend. Filed HIGH to
+  `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md` at commit `e2e4659`. It is
+  **pre-existing** (false-green before v0.13.1's honesty fix surfaced it) — NOT a
+  v0.13.1 regression. GitHub-specific: JIRA v09, Confluence v09, and non-v09 GitHub jobs
+  all pass.
 
-## 2. Release decisions HELD by L0 (SETTLED — do not re-litigate)
+## 2. THE decision for next L0: ship v0.13.1 now, or hold for the GitHub-v09 fix?
 
-- **Version: force the release out as `0.13.1` (patch), NOT release-plz's computed
-  `0.14.0`.** release-plz PR **#69** (`chore: release v0.14.0`, branch
-  `release-plz-2026-07-07T03-15-08Z`) is open and computed a MINOR bump because the
-  milestone contains `feat(sim):`-tagged commits (conventional-commits →
-  minor). PR #69 also currently shows a `reposix-cli` **semver-breaking-change**
-  warning (removed `binpath::resolve_bin` / `sim` module paths) from
-  `cargo-semver-checks` — inspect before merging regardless of version number.
-  **v0.14.0 the NAME is RESERVED** for the big orchestration-hardening +
-  RBF-LR-03-reconciliation milestone (§3 below). Override release-plz to `0.13.1`
-  (explicit workspace version / edit the release PR) before merging. Do this **only
-  after CI is green** (§1).
-- **Release runbook (verified from `.planning/STATE.md` + prior sessions):**
-  crates.io publishes on MERGE-to-main via `release-plz.yml` (NOT the tag); tag `v*`
+Owner design taste points at **SHIP-with-documented-limitation**: "ship honest
+milestones and document known limitations out loud rather than hold a green milestone
+hostage." v0.13.1's actual purpose (sim front door + init/sim honesty) is fully
+delivered and verified; the GitHub-v09 404 is a pre-existing real-backend gap orthogonal
+to that purpose, and it is now honestly filed rather than hidden behind a false-green
+job.
+
+**RECOMMENDED PATH:** mark the `real github v09` CI job as a known-limitation
+(`continue-on-error: true` or equivalent, with a comment linking the SURPRISES-INTAKE
+row) so main CI reads "green except one documented pre-existing gap" instead of
+silent-red on an unrelated axis — then release as **0.13.1** (§3).
+
+**Alternative** (only if next L0 judges the 404 blocks the adoption story, i.e. GitHub is
+the primary onboarding backend and a broken real-GitHub path undercuts the "front door
+works" claim): hold v0.13.1 until the GitHub real-backend path is fixed. This pulls a
+wave-2-sized real-backend fix into what was meant to be a hotfix — weigh that cost
+against the adoption-story risk before choosing this branch.
+
+Decide with the final CI conclusion in hand (§1's "re-confirm" action), then proceed to
+§3.
+
+## 3. Release runbook (SETTLED — release as 0.13.1, NOT release-plz's auto-0.14.0)
+
+- release-plz PR **#69** auto-titled `chore: release v0.14.0` (feat(sim) commits →
+  conventional-commits minor bump). **Override to 0.13.1 before merging** — the
+  `v0.14.0` name is RESERVED for wave 2 (self-safe dark factory + reconciliation, §4).
+  Re-verify the PR number before acting — it moves on every main push.
+- crates.io publishes on **merge-to-main** via `release-plz.yml` (NOT the tag); tag `v*`
   triggers `release.yml` (binaries + GitHub release); `git_release_enable=false` in
-  `release-plz.toml` — do NOT re-enable (it previously stole `releases/latest` +
-  404'd installers, see that file's header comment); bot-authored release-plz PRs sit
-  at `action_required` until a real-actor close/reopen; the release-PR number moves on
-  every main push (already moved twice this window: #61 → #68 → #69).
-- **9th probe `pre-release-real-backend` = NOT-VERIFIED** (row
-  `agent-ux/milestone-close-vision-litmus-real-backend`,
-  `quality/catalogs/agent-ux.json:1323`: env-gated, creds/allowlist unset on this box;
-  `last_real_grade: PASS`, `last_verified: 2026-07-06T05:03:59Z` — that PASS dates to
-  the v0.13.0 close window, not v0.13.1's). It's an external-backend +
-  credential/spend action = genuinely OWNER-CLASS — do NOT self-run. Per
-  `VERIFICATION.md` §"FOR L0": v0.13.1's change surface is 100% sim-only (in-process
-  front door + builtin seed) and touches zero real-backend transport code, so a fresh
-  real-backend litmus is arguably not implicated. RECOMMENDATION to surface to owner
-  as a veto-default: "tag v0.13.1 without re-running the real-backend probe since the
-  change is sim-only; say the word to run it (needs your creds)." Owner has
-  PRE-AUTHORIZED releases generally, but real-backend calls specifically remain
-  owner-gated.
+  `release-plz.toml` STAYS — do NOT re-enable (it previously stole `releases/latest` and
+  404'd the installer URLs; rationale in that file's header comment).
+- Bot-authored release-plz PRs sit at `action_required` until a real-actor close/reopen.
+- The **9th-probe (`pre-release-real-backend`) concern is now largely MOOT**: CI itself
+  exercises live JIRA and Confluence (and attempts GitHub) on every push, substantially
+  covering the milestone-close real-backend litmus — but still confirm the catalog row's
+  status before declaring the probe formally satisfied.
 
-## 3. Immediate runbook — get to a real tag decision
+## 4. Wave 2 — road to "on the map" (after v0.13.1 tags)
 
-1. **Fix CI red first** — dispatch a coordinator (or do it directly if small) to:
-   (a) run `cargo clippy --workspace --all-targets -- -D warnings` locally, fix the
-   warnings introduced by `ee5f909`'s in-process-sim change; (b) reproduce and fix the
-   "Test pre-push credential hook" self-scan-exclusion failure; (c) push, then verify
-   `gh run list --branch main -L 3` shows GREEN on the new HEAD before touching
-   anything release-related.
-2. **Once CI is green:** surface the sim-only real-backend-probe recommendation (§2) to
-   the owner as a reversible default to veto; on silence/approval, proceed.
-3. **Force the version to `0.13.1`** on the release-plz PR (override the computed
-   `0.14.0`), verify the `reposix-cli` semver-breaking-change warning is either
-   expected/acceptable for a patch release or needs addressing, merge, confirm
-   crates.io publish, then cut tag `v0.13.1` (owner/L0-gated per §2 runbook).
-4. **Only after v0.13.1 tags:** move to Wave 2 (§4).
-
-## 4. Wave 2 (after v0.13.1 tag) — the road to "on the map"
-
-1. **v0.14.0 — self-safe dark factory + reconciliation:** the D2 `reject-t@t`-identity
-   commit/push hook + real per-leaf worktree isolation (the repo self-corrupted twice
-   from shared `.git/config` in an earlier session); PLUS the deep RBF-LR-03
-   reconciliation fix (root cause of the broken `git pull --rebase` recovery, filed
-   HIGH). Anchor intake: `S-260707-pr-08`.
-2. **Tutorials must actually reproduce:** `docs-repro`/`tutorial-replay` + examples
-   01/02/04/05 are WAIVED-as-broken until 2026-09-15 — a skeptical dev runs those; they
-   must go green.
-3. **Real-backend proof end-to-end** (Confluence TokenWorld / GitHub / JIRA) + the 5
-   carried HIGHs (live RUSTSEC memmap2 + quinn-proto advisories in `Cargo.lock`,
+1. **D2 self-safe dark factory FIRST** — reject-`t@t`-identity commit/push hook + real
+   per-leaf worktree isolation. The shared `.git/config` self-corrupted **3× this
+   session** (origin was never affected; the pre-push gate held each time) via the
+   credential-hook + sim/protocol tests running git in the shared tree. Non-negotiable
+   first item. Anchor: `S-260707-pr-08`.
+2. **Fix the GitHub-v09 real-backend helper-path 404** (the filed HIGH) + the filed
+   cache-desync intake item.
+3. **RBF-LR-03 reconciliation fix** — root cause of the broken `git pull --rebase`
+   recovery path.
+4. **Make waived tutorials reproduce** — `docs-repro`/`tutorial-replay` + examples
+   01/02/04/05 are WAIVED-broken until 2026-09-15; a skeptical dev runs these.
+5. **Carried HIGHs:** live RUSTSEC memmap2 + quinn-proto advisories in `Cargo.lock`,
    `prune_oid_map` pagination-truncation, RBF-FW-11 date-cutoff, quality-convergence
-   write-contention).
+   write-contention.
 
-## 5. Live nuisances to fix early in Wave 2 (noticed across this milestone)
+## 5. Live nuisances (fix early in wave 2)
 
-- **`doc-alignment` walk dirties the committed catalog on EVERY read** (no `--persist`
-  gate) — bites every push (workaround: `git checkout -- quality/catalogs/doc-alignment.json`).
-  Confirmed still live: `git status` shows `M quality/catalogs/doc-alignment.json` at
-  handover time with no substantive diff intended. High nuisance, prioritize.
-- `SURPRISES-INTAKE.md` and `GOOD-TO-HAVES.md` are several times past soft limits —
-  split/distill at v0.14.0 scoping; the SURPRISES "Entry format" template also documents
-  a schema (`## YYYY-MM-DD HH:MM`) that matches NO live row (live rows use
-  `## S-<id> — title (SEV)`) — fix so it stops misleading appenders.
-- **`cargo-nextest` NOT installed on this box** (`which cargo-nextest` → not found;
-  local verification runs fall back to `cargo test`); CLAUDE.md/commands reference
-  nextest — install it or correct the docs. This is also *why* local gates missed the
-  CI-red clippy/hook failures — **add `cargo clippy --workspace --all-targets -- -D
-  warnings` to the LOCAL pre-push gate** so CI-clippy-red can't recur silently.
-- ~180-row doc-alignment false-BOND re-grade backlog filed to v0.14.0 (per
-  `VERIFICATION.md` notes).
+- **`doc-alignment` walk dirties the committed catalog on every read** (no `--persist`
+  gate) — bites every push. Workaround: `git checkout -- quality/catalogs/doc-alignment.json`.
+  High nuisance, prioritize a real fix.
+- `SURPRISES-INTAKE.md` (~98k+ chars) and `GOOD-TO-HAVES.md` (~128k chars) are 5-6× past
+  soft size limits — split/distill at wave-2 scoping. The SURPRISES "Entry format"
+  template also documents a schema (`## YYYY-MM-DD HH:MM`) matching **no live row**
+  (live rows use `## S-<id> — title (SEV)`) — fix the template so it stops misleading
+  appenders.
+- **`cargo-nextest` is NOT installed on this box** (`which cargo-nextest` fails; local
+  runs fall back to `cargo test`). Add `cargo clippy --workspace --all-targets -- -D
+  warnings` to the LOCAL pre-push gate so CI-clippy-red can't recur silently.
 
-## 6. Known brittle gates + hazards
-
-- **p94-badges** — was a genuine red in the v0.13.0 window (`S-260707-pr-07`); re-check
-  before dismissing as brittle.
-- **doc-alignment walker** re-drifts `last_walked`/counters on every pre-push read — see
-  §5, filed as a GTH, not yet fixed.
-- **"No tools needed for summary"** — a recurring subagent-dispatch harness flake seen
-  in earlier v0.13.0 sessions (agent executes zero tools, returns early); retry once
-  with a trivial `echo ok` health-check dispatch before escalating.
-- **Worktree/identity-corruption hazard (v0.13.0-era, repaired, root-caused into D2)** —
-  a dispatched leaf can corrupt the shared repo (`core.bare`, `user.email`/`user.name`)
-  if it doesn't isolate into `/tmp`. Root rule: root `CLAUDE.md` § "Leaf test setup" +
-  `.planning/ORCHESTRATION.md` § "Leaf isolation". **Always confirm
-  `git config user.email == reubenvjohn@gmail.com` before any commit.**
-
-**Waiver clocks:** `structure/file-size-limits` WAIVED until **2026-08-08** (renew
-before); `docs-repro`/tutorial rows WAIVED until **2026-09-15**.
-
-## 7. Verification honesty (read before trusting §1)
-
-- The 6/6 GREEN DoD grade in §1 is from the unbiased `gsd-verifier` subagent
-  (`VERIFICATION.md`, graded at `a374a4b`, one commit before current HEAD `dcb4117`) —
-  it is a real independent grade, not self-reported by the executing coordinator.
-  However **it graded local gates only** (pre-push cadence, 55 PASS/0 FAIL/1 WAIVED);
-  it did not and could not see the CI-red state discovered afterward (§1) — CI ran
-  fresh on the next push and failed. Treat "6/6 DoD GREEN" and "CI RED" as both true and
-  not contradictory: the milestone's functional work is sound, but the tree currently
-  fails a check the local verifier doesn't run (clippy `-D warnings`, nextest-based
-  hook test).
-- Real-backend workflows (Confluence/GitHub/JIRA) were NOT re-verified for v0.13.1 — the
-  9th probe's `last_real_grade: PASS` is a carry from the v0.13.0 close window (§2).
-- The "CI-green fix coordinator in flight" claim in the dispatching instructions for
-  this handover was **not independently confirmed** by ground truth at write time — no
-  matching worktree, branch, or WIP commit was found. Next L0 must verify directly
-  (`gh run list --branch main`, `git worktree list`, `gh pr list`) rather than assume
-  progress happened between this handover and the next session start.
-
-## 8. Doctrine
+## 6. Doctrine
 
 Full delegation / relief / cadence / durable-state doctrine:
-`.planning/ORCHESTRATION.md` — relief at ~100k own-context (hard stop ~150k), a
+`.planning/ORCHESTRATION.md` §3 — relief at ~100k own-context (hard stop ~150k), a
 coordinator-of-coordinators per milestone, one-cargo-invocation machine-wide, and the
-Leaf Isolation HARD-STOP.
+Leaf Isolation HARD-STOP (leaf test setup runs in a throwaway `/tmp` clone, `cd` into it
+in the SAME bash invocation — never mutate git state in the shared repo/worktree).
 
 **Meta-lesson carried into this window:** local pre-push green is necessary but not
-sufficient — CI (which runs `clippy -D warnings` and the full pre-push-hook test suite
-via `cargo test`, not `nextest`, since nextest isn't installed locally) is the actual
-gate for tag-readiness. Always run `gh run list --branch main` on the tag-candidate HEAD
-before declaring a milestone tag-ready.
+sufficient — CI is the actual gate for tag-readiness; always run `gh run list --branch
+main` (or `gh run view <id>`) on the tag-candidate HEAD before declaring a milestone
+tag-ready. A second lesson from this window: an `init`/onboarding honesty fix can unmask
+previously-false-green CI jobs (the real-backend harness bug) — a newly-red job after a
+honesty fix is not necessarily a regression; check whether it was ever really passing.
 
 ---
 
