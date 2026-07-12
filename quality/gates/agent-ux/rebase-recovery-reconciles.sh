@@ -266,8 +266,13 @@ else
   pass "SCENARIO A FIX-LAYER: no \`fatal: error while running fast-import\` / \`does not contain\` on the recovery path (P105 parent-chaining fix holds)"
 fi
 
-# CONVERGENCE assertion (the documented recovery must actually work).
-if [[ "$A_RECOVERY_EXIT" -eq 0 && "$A_AFTER" == "2" ]]; then
+# CONVERGENCE assertion (the documented recovery must actually work). Assert the
+# edit LANDED — issue2's SoT version incremented by exactly 1 (before+1) — rather
+# than a hardcoded absolute: both scenarios share one sim SoT, so issue2's base
+# version differs per scenario (Scenario A leaves it at 2, so Scenario B's base
+# is 2 → 3). before+1 is the drift-source-agnostic convergence signal.
+A_EXPECT=$(( A_BEFORE + 1 ))
+if [[ "$A_RECOVERY_EXIT" -eq 0 && "$A_AFTER" == "$A_EXPECT" ]]; then
   pass "SCENARIO A (peer git-push drift): documented \`git pull --rebase && git push\` exits 0 and B's edit converged (issue2 v${A_BEFORE}→v${A_AFTER})"
 else
   BLOCKED=1
@@ -330,7 +335,8 @@ else
   pass "SCENARIO B FIX-LAYER: no \`fatal: error while running fast-import\` / \`does not contain\` on the external-REST-drift recovery path"
 fi
 
-if [[ "$B_RECOVERY_EXIT" -eq 0 && "$B_AFTER" == "2" ]]; then
+B_EXPECT=$(( B_BEFORE + 1 ))
+if [[ "$B_RECOVERY_EXIT" -eq 0 && "$B_AFTER" == "$B_EXPECT" ]]; then
   pass "SCENARIO B (external REST PATCH drift): documented \`git pull --rebase && git push\` exits 0 and C's edit converged (issue2 v${B_BEFORE}→v${B_AFTER})"
 else
   BLOCKED=1

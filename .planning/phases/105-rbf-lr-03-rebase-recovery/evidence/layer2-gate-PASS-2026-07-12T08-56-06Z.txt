@@ -1,0 +1,53 @@
+row_id: agent-ux/rebase-recovery-reconciles
+ts: 2026-07-12T08:56:06Z
+argv: quality/gates/agent-ux/rebase-recovery-reconciles.sh 
+cwd: /home/reuben/workspace/reposix
+env_keys: AI_AGENT,BOTTOKEN,CLAUDECODE,CLAUDE_CODE_CHILD_SESSION,CLAUDE_CODE_ENTRYPOINT,CLAUDE_CODE_EXECPATH,CLAUDE_CODE_SESSION_ID,CLAUDE_EFFORT,COLORTERM,COREPACK_ENABLE_AUTO_PIN,DBUS_SESSION_BUS_ADDRESS,DISPLAY,GIT_EDITOR,GOOSE_DISABLE_KEYRING,HERDR_ENV,HERDR_PANE_ID,HERDR_SOCKET_PATH,HERDR_TAB_ID,HERDR_WORKSPACE_ID,HOME,HOSTTYPE,JAVA_HOME,LANG,LESS,LOGNAME,LSCOLORS,LS_COLORS,NAME,NVM_BIN,NVM_CD_FLAGS,NVM_DIR,NVM_INC,NoDefaultCurrentDirectoryInExePath,OLDPWD,OPENWEATHERTOKEN,PAGER,PATH,PULSE_SERVER,PWD,SHELL,SHLVL,SPARK_HOME,SSH_AGENT_PID,SSH_AUTH_SOCK,TERM,UNSET_ANTHROPIC_API_KEY,USER,WAYLAND_DISPLAY,WSL2_GUI_APPS_ENABLED,WSLENV,WSL_DISTRO_NAME,WSL_INTEROP,WT_PROFILE_ID,WT_SESSION,XDG_RUNTIME_DIR,ZSH,_
+git_version: git version 2.25.1
+import-forcing: GIT_CONFIG protocol.version=0 exported for all git subprocesses
+--- NEGATIVE GUARD stderr ---
+warning: Not updating refs/reposix/origin/main (new tip 4d7fbba37cd4b59fd0e0de0e3fecec8385865735 does not contain bd83ebd1312cf7b0c41ab3ed7acf1cbeb820ed12)
+PASS: NEGATIVE GUARD: parentless changed snapshot refused with `does not contain`, ref unchanged — the gate provably bites
+--- SCENARIO A recovery.log ---
+From reposix::http://127.0.0.1:7988/projects/demo
+ * branch            main       -> FETCH_HEAD
+   bd848c1..73fd11d  main       -> refs/reposix/origin/main
+First, rewinding head to replay your work on top of it...
+Applying: B edits issue2
+[90m1:56AM[0m [32mINF[0m [1mUnknown SCM platform. Use --platform to include links in findings.[0m [36mhost=[0m
+[90m1:56AM[0m [32mINF[0m [1m3 commits scanned.[0m
+[90m1:56AM[0m [32mINF[0m [1mscanned ~3681 bytes (3.68 KB) in 127ms[0m
+[90m1:56AM[0m [32mINF[0m [1mno leaks found[0m
+Secret scan: clean ✓
+To reposix::http://127.0.0.1:7988/projects/demo
+   73fd11d..3501cf0  main -> main
+SCENARIO A: recovery_exit=0 issue2_before=1 issue2_after=2
+PASS: SCENARIO A FIX-LAYER: no `fatal: error while running fast-import` / `does not contain` on the recovery path (P105 parent-chaining fix holds)
+PASS: SCENARIO A (peer git-push drift): documented `git pull --rebase && git push` exits 0 and B's edit converged (issue2 v1→v2)
+PASS: SCENARIO A LAYER-2: no `cannot lock ref 'refs/reposix/origin/main'` on the recovery path — helper writes the private refs/reposix-import/* ns, git fetch is the sole tracking-ref writer
+SCENARIO A clobber: refs/reposix-import/main=3501cf02748991afe9b9c572f52bac6afdf374b4 local_head_subject='B edits issue2'
+PASS: SCENARIO A CLOBBER-GUARD: private refs/reposix-import/main present and local refs/heads/main tip is the user's own commit (`B edits issue2`) — the helper never clobbered the working branch
+--- SCENARIO B external PATCH issue1 ---
+{"id":1,"title":"database connection drops under load","status":"open","labels":["bug","p1"],"created_at":"2026-04-13T00:00:00Z","updated_at":"2026-07-12T08:56:10Z","version":3,"body":"EXTERNALLY EDITED VIA REST\n"}
+--- SCENARIO B recovery.log ---
+From reposix::http://127.0.0.1:7988/projects/demo
+ * branch            main       -> FETCH_HEAD
+   cfc438b..dbb5239  main       -> refs/reposix/origin/main
+First, rewinding head to replay your work on top of it...
+Applying: C edits issue2
+[90m1:56AM[0m [32mINF[0m [1mUnknown SCM platform. Use --platform to include links in findings.[0m [36mhost=[0m
+[90m1:56AM[0m [32mINF[0m [1m3 commits scanned.[0m
+[90m1:56AM[0m [32mINF[0m [1mscanned ~3719 bytes (3.72 KB) in 129ms[0m
+[90m1:56AM[0m [32mINF[0m [1mno leaks found[0m
+Secret scan: clean ✓
+To reposix::http://127.0.0.1:7988/projects/demo
+   dbb5239..b812adf  main -> main
+SCENARIO B: recovery_exit=0 issue2_before=2 issue2_after=3
+PASS: SCENARIO B FIX-LAYER: no `fatal: error while running fast-import` / `does not contain` on the external-REST-drift recovery path
+PASS: SCENARIO B (external REST PATCH drift): documented `git pull --rebase && git push` exits 0 and C's edit converged (issue2 v2→v3)
+PASS: SCENARIO B LAYER-2: no `cannot lock ref 'refs/reposix/origin/main'` on the external-REST-drift recovery path
+SCENARIO B clobber: refs/reposix-import/main=b812adf49f44c47c38d7ba7853911a4c0a17648a local_head_subject='C edits issue2'
+PASS: SCENARIO B CLOBBER-GUARD: private refs/reposix-import/main present and local refs/heads/main tip is the user's own commit (`C edits issue2`) — the helper never clobbered the working branch
+STATELESS-CONNECT: SKIPPED — git 2.25 < 2.34; protocol.version=2 errors on 2.25 before the fetch (bad line length 2). PLAN §5 open question UNRESOLVED in this environment; needs a modern-git CI run. Not faked.
+exit_code: 0
+status: PASS
