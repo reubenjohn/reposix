@@ -106,8 +106,24 @@ milestone-close (P111) — worth gating before the next tag.
    gix, #66 rusqlite — all verified CLOSED, comments posted, no cargo run). Ledger `2ecbea2`.
 3. **gh404 live-GitHub verify** → **DEFERRED** by owner (record-only, no action). Sim/unit
    coverage from P104 stands as the honest known-limitation; re-open only if the owner asks.
-4. **GTH-09** ADR-010 slug→id durable-create (MEDIUM-HIGH, UNSTARTED v0.14.0 headline) — STILL
-   OWNER-HELD; do NOT schedule. Ship-this-milestone-or-defer is the owner's scope call.
+4. **GTH-09** ADR-010 slug→id durable-create → **DEFERRED to v0.15.0** by owner call
+   (2026-07-12). Named-headline deferral, NOT a silent slip: the C2 (`add159944b57d8a99`) is
+   recording it in the v0.14.0 ROADMAP + GOOD-TO-HAVES and must document it out loud at
+   milestone-close (P111) so v0.14.0 ships honest-without-it.
+
+## 4b. STANDING UX MANDATE (owner, 2026-07-12) — north star for ALL tooling
+
+End-user experience is the north star all tooling serves (docs, error-messages-with-fix-hints,
+onboarding). Bar = **Rust-compiler-grade UX**: teach the fix / suggest the alternative /
+copy-paste recovery. `init.rs` is the exemplar; the rest of the CLI + remote helper must reach
+it. UX polish is scheduled FIRST-CLASS, never a leftover. Being encoded now (lane
+`aaa7268efc0a12311`, opus): (a) **fix-twice into CLAUDE.md** — root (strengthen OD-3 #5 into the
+concrete 3-part bar) + `crates/CLAUDE.md` (error-message convention, init.rs pattern); (b)
+**scheduled as a first-class v0.15.0 phase** — audit every CLI subcommand + remote helper error
+surface to the init.rs standard; kept in a v0.15.0 backlog stub (separate from the C2's live
+v0.14.0 ROADMAP to avoid two-writer conflict); decision recorded `[SELF]` in CONSULT-DECISIONS,
+reversible (owner may pull into v0.14.0). Mandate is active IMMEDIATELY — P106's remaining
+tutorial work inherits the bar. Tutorials/onboarding-friction stays on the roadmap.
 
 ## 5. Release/ops facts (settled)
 
