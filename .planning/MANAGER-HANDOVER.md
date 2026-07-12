@@ -50,13 +50,35 @@ verifies via `herdr agent read`, logs to /tmp/manager-rotate.log.
 
 ## Live state (refresh at every rotation)
 
-- **2026-07-11 ~23:00** — v0.13.1 shipped+green; SESSION-HANDOVER.md replaced at
-  `4bf544b`. Workhorse (w1:p5) successor launched with WAVE-2 charter: D2 self-safe
-  hardening FIRST (reject-t@t hook, worktree isolation, config-write guard), then
-  GitHub-v09 404, RBF-LR-03, tutorial repro (waiver deadline 2026-09-15), RUSTSEC
-  PRs #64-66, prune_oid_map data-loss hazard; cheap wins: doc-alignment --persist
-  split, file-size waiver (expires 2026-08-08). Launch-readiness milestone: scope
-  after wave 2, don't start.
+- **2026-07-12 (post-incident)** — wave-2 progressing: **D2 (P102), P103, P105 all
+  closed GREEN** on origin/main (P105 verifier-graded at `f2d527a`, incl. CR-01
+  deletion-propagation fix + tests). Workhorse (w1:p5) resumed under a fresh
+  "v0.14.0 wave-2 C2 (post-incident)" coordinator. Main agent context ~13%. In flight:
+  P106 (held local commit `424d367`, was behind pre-push gates) + gh404/RUSTSEC lanes.
+- **SHARED-TREE CORRUPTION INCIDENT (2026-07-12, RESOLVED).** A P106 leaf subagent ran
+  `reposix init`/sim-seed in the SHARED repo instead of a /tmp clone — flipped
+  `.git/config` core.bare=true, repointed origin to the sim (127.0.0.1:7988), thrashed
+  HEAD to `e18df81`, polluted refs/reposix/*. The exact D2 hazard this milestone hardens.
+  The workhorse **misdiagnosed the source as "a concurrent herdr session"** (the manager)
+  and blocked asking the absent owner to "stop herdr." Manager intervention: audited all
+  panes (confirmed manager never writes .git/config; w1:pE = idle Sonnet skill-md editor,
+  not a corruptor; no active writer → safe to repair now), Escape-cancelled the block,
+  interrupted a HUNG gsd-executor (323k tokens, frozen 40+min, git-cat-file integrity
+  check), and delivered ground-truth correction. Workhorse then **repaired the tree**
+  (core.bare=false, origin→GitHub, HEAD→main/f2d527a) and spawned the post-incident C2.
+  Asked it to capture the leak as a live D2 repro in SURPRISES-INTAKE — SUCCESSOR: verify
+  that repro landed + that the offending leaf's init path is fixed so it can't recur.
+- **Owner-gated, do NOT action:** staged text sits in w1:p5's input box —
+  "land 424d367 and close dependabot 64-66 as redundant" (likely owner-typed). Closing
+  dependabot #64-66 is an owner-gated external mutation; leave it for the owner. Also
+  pending owner: gh404 read-only GitHub named-target ask; RUSTSEC reframe confirm.
+- **TOOLING BUG (manager rotation):** `herdr pane send-keys <pane> C-u` is REJECTED
+  ("unsupported key C-u") in this herdr version — only `Enter`/`Escape` validated.
+  `.planning/manager-rotate.sh` lines 18 uses `C-u` and will fail to clear the box.
+  Also: a long single-line `agent send` becomes a "[Pasted text #1]" block that `Enter`
+  won't submit while background subagents hold input — interrupt subagents first, THEN
+  Enter. Successor: fix rotate script's clear step (or drop it) before relying on it.
 - Strategic synthesis (explore run 2026-07-11): adoption is the north star; ladder is
   v0.13.2 → launch-readiness → observability/multi-repo → v1.0.0.
-- Open watch items: none blocked on owner.
+- Open watch items: post-incident stabilization (D2 repro capture, no re-corruption),
+  P106 landing 424d367 through gates.
