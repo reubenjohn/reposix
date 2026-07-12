@@ -140,6 +140,75 @@ cases; all three exit 0 self-contained.
 
 ---
 
+## 2026-07-12 07:35 | discovered-by: v0.14.0 health-triage lane (main gate sweep) | severity: MEDIUM
+
+**What:** `code/shell-coverage` is a genuine, live FAIL on `main` (P2 blast_radius, non-blocking on
+pre-push): aggregate shell line-coverage is 12.54% (564/4497 lines), below the committed
+13.00% floor in `quality/shell-coverage-floor.txt`. Root cause is corpus growth, not a
+coverage drop in previously-tested code: the shell corpus grew to 149 scripts, 110 of which
+sit at 0% coverage (mostly `quality/gates/agent-ux/*` dark-factory/litmus scripts and
+`.claude/hooks/*` added across P90-P97), diluting the aggregate below floor. Re-verified live
+(`bash quality/gates/code/shell-coverage.sh`, real kcov run, 2026-07-12T07:27:58Z) — this is
+not stale or masked, it is a real, current shortfall.
+
+**Why out-of-scope for eager-fix:** Closing the gap needs real shell tests written for a
+subset of the 110 uncovered scripts (`quality/gates/code/shell-coverage-tests/`), which is
+open-ended test-authorship work, not a mechanical one-file fix — well beyond the <1h /
+no-new-dependency eager-fix bar.
+
+**Sketched resolution:** Either (a) write `shell-coverage-tests/` harness cases for the
+highest-line-count 0%-covered scripts until aggregate clears 13% again (preferred — the
+committed doctrine is "raise the floor over time, never force-pass by lowering it above
+measured"), or (b) if a deliberate decision is made that some scripts are structurally
+untestable outside real backends (dark-factory real-arm scripts, TokenWorld scripts), lower
+the floor to the currently-measured 12.54% (or slightly below) with a documented rationale
+in `quality/CLAUDE.md`'s existing "Follow-up (documented, left at 0%)" note, and open a
+GOOD-TO-HAVES tracking item for the deferred scripts. Do not silently patch the floor number
+without one of these two paths — that would be exactly the kind of quiet weakening the
+project's honesty rules exist to prevent.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-12 07:40 | discovered-by: v0.14.0 health-triage lane (main gate sweep) | severity: LOW
+
+**What:** Three `on-demand`-cadence `agent-ux.json` catalog rows tied to the now-CLOSED and
+tagged v0.13.0 milestone show stale FAIL, but each is invalidated by a *documented, later*
+process decision rather than a live regression — re-running them cannot honestly produce a
+fresh PASS without contradicting that later decision:
+- `agent-ux/p87-surprises-absorption` — asserts >=5 terminal-STATUS entries remain in
+  `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`. The 2026-07-06 pre-tag sweep
+  (documented in that file's own CARRY-FORWARD BANNER) deliberately **deletes** terminal
+  entries ("git is the archive, bound-to-live-state"), so the assertion is now permanently
+  unsatisfiable by policy, not by regression.
+- `agent-ux/p88-good-to-haves-drained` — asserts every `GOOD-TO-HAVES-NN` entry carries a
+  terminal STATUS. Re-checked live against all 8 `good-to-haves/part-NN.md` files (the OP-8
+  file-size drain split the monolith after this row was minted): genuinely still ~30+ entries
+  OPEN/DEFERRED per the file's own 2026-07-06 carry-forward tally — this is a real, current,
+  correctly-FAIL state per the file's own content, but the *milestone itself* has since
+  declared (via its CARRY-FORWARD BANNER) that full v0.13.0 drain is intentionally deferred to
+  a v0.14.0-scoping session (P110/P111) — the P88 gate's "this milestone must fully drain"
+  contract was superseded before it could be satisfied.
+- `agent-ux/v0.13.0-tag-script-present` — asserts `tag-v0.13.0.sh` exists and is executable.
+  The script was intentionally renamed to `tag-v0.13.0.sh.disabled` after the tag was already
+  cut (v0.13.0 shipped, main is now past v0.13.1) — this is expected post-use archival, not
+  an accidental deletion.
+
+**Why out-of-scope for eager-fix:** All three require an owner decision (retire the row vs.
+rewrite its contract to read the archived/split state) — not a mechanical `<1h` fix, since
+"fixing" them by relaxing the assertion could itself look like quietly weakening a gate.
+
+**Sketched resolution:** Formally retire (mark `WAIVED` with a `until`-less permanent
+rationale, or delete) these 3 rows now that v0.13.0 is closed-and-tagged and each row's
+completion criterion was superseded by a later, documented process decision. A future
+milestone-close should add a step: "on-demand milestone-close rows for a just-closed
+milestone get retired, not left FAIL forever."
+
+**STATUS:** OPEN
+
+---
+
 ## 2026-07-12 07:13 | discovered-by: P104 (github-helper-path 404 fix verifier) | severity: MEDIUM
 
 **What:** A catalog row was minted `status: PASS` with a `verifier.script` path that did not exist on disk (`quality/catalogs/agent-ux.json`, P104 BLOCKER that was caught only during manual code review). The row `agent-ux/p87-surprises-absorption` was defined with status FAIL but lacked a `claim_vs_assertion_audit` field required by the schema (rows minted after 2026-05-08 must include this field for honesty auditing). The pre-commit hook validation does not structurally verify that a row's declared `verifier.script` path exists or is executable — only that the JSON is valid. This opens a window where a coordinator could mint a PASS row backed by a missing or non-executable verifier, creating a false-positive contract breach.
