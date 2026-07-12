@@ -1,12 +1,14 @@
 name: Docs
 
+# Gated on CI (D-CONV-4, 2026-07-12): docs deploy ONLY after the CI workflow
+# concluded success on the same commit -- a red main must never deploy docs.
+# workflow_run replaces the old `on: push` trigger; because workflow_run cannot
+# path-filter, the "Detect docs changes" step below preserves the original
+# `paths: [docs/**, mkdocs.yml]` intent so code-only green pushes don't redeploy.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'docs/**'
-      - 'mkdocs.yml'
-      - '.github/workflows/docs.yml'
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -19,28 +21,65 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    # Manual dispatch always runs; a workflow_run only proceeds when the
+    # triggering CI run concluded success (workflow_dispatch has no
+    # workflow_run context, hence the explicit event_name allowance).
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          # Publish the exact SHA CI just went green on (workflow_dispatch has
+          # no head_sha -> falls back to the default ref).
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+
+      # workflow_run can't path-filter; reconstruct the old paths: intent so a
+      # code-only green push does not needlessly rebuild+redeploy docs.
+      - name: Detect docs changes
+        id: filter
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            echo "workflow_dispatch: deploy forced."
+            exit 0
+          fi
+          SHA="${{ github.event.workflow_run.head_sha }}"
+          if ! git rev-parse "$SHA~1" >/dev/null 2>&1; then
+            # Can't compute a diff range (root/shallow) -> fail OPEN to deploy.
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            echo "Cannot resolve $SHA~1 -- deploying to be safe."
+            exit 0
+          fi
+          if git diff --name-only "$SHA~1" "$SHA" \
+               | grep -qE '^(docs/|mkdocs\.yml$|\.github/workflows/docs\.yml$)'; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            echo "Docs-relevant changes detected in $SHA -- will deploy."
+          else
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "No docs/** or mkdocs.yml changes in $SHA -- skipping deploy."
+          fi
 
       - uses: actions/setup-python@v6
+        if: steps.filter.outputs.should_deploy == 'true'
         with:
           python-version: '3.11'
 
       - name: Install MkDocs + Material
+        if: steps.filter.outputs.should_deploy == 'true'
         run: |
           python -m pip install --upgrade pip
           python -m pip install mkdocs-material mkdocs-minify-plugin mkdocs-redirects
 
       - name: Lint docs (banned-words, DOCS-09)
+        if: steps.filter.outputs.should_deploy == 'true'
         run: scripts/banned-words-lint.sh
 
       - name: Build strict (fail on broken links)
+        if: steps.filter.outputs.should_deploy == 'true'
         run: mkdocs build --strict
 
       - name: Deploy to gh-pages
-        if: github.ref == 'refs/heads/main'
+        if: steps.filter.outputs.should_deploy == 'true'
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
