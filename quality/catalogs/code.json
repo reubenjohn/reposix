@@ -242,9 +242,9 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/code/shell-coverage.json",
-      "status": "PASS",
+      "status": "FAIL",
       "minted_at": "2026-07-05T00:00:00Z",
-      "last_verified": "2026-07-05T00:00:00Z",
+      "last_verified": "2026-07-12T07:26:50Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: (a) 'kcov is available' fails -> install it. On modern distros (Ubuntu 24.04 noble dropped kcov from apt) grab the prebuilt release binary (curl -sSL https://github.com/SimonKagstrom/kcov/releases/download/v42/kcov-amd64.tar.gz | sudo tar -xz -C /usr/local) or build from source (v43: apt-get install binutils-dev libcurl4-openssl-dev libdw-dev libiberty-dev zlib1g-dev libssl-dev cmake g++, then cmake build/install); on focal/20.04 sudo apt-get install -y kcov still works. The gate/CI both depend on it; on a dev box without kcov the P2 row degrades to non-blocking locally, but the CI shell-coverage job hard-fails. (b) the aggregate dropped below the ratchet floor in quality/shell-coverage-floor.txt -> a shell script lost test coverage or a new never-run script entered the corpus; add a harness under quality/gates/code/shell-coverage-tests/ to exercise it, or (only if the drop is justified) lower the floor with a note. (c) the counter-validation assert fails -> coverable_line_count in scripts/shell_coverage.py drifted >15% from kcov on an executed script; retune it. NEVER raise the floor above the measured aggregate to force-pass.",

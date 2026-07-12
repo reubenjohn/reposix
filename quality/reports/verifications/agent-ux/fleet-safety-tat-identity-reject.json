@@ -1,1 +1,12 @@
-{"ts":"2026-07-12T06:30:18Z","row_id":"agent-ux/fleet-safety-tat-identity-reject","exit_code":0,"transcript_path":"quality/reports/transcripts/fleet-safety-tat-identity-reject-2026-07-12T06-30-18Z.txt","asserts_passed":[],"asserts_failed":[]}
+{
+  "ts": "2026-07-12T07:32:55Z",
+  "row_id": "agent-ux/fleet-safety-tat-identity-reject",
+  "exit_code": 0,
+  "transcript_path": "quality/reports/transcripts/fleet-safety-tat-identity-reject-2026-07-12T07-32-55Z.txt",
+  "asserts_passed": [],
+  "asserts_failed": [],
+  "timed_out": false,
+  "stdout": "",
+  "stderr": "",
+  "claim_vs_assertion_audit_hash": "13c6df1d03f417071d7cfd9f2f9dd8f0832017652dbe156b617bcbd961f0df9f"
+}

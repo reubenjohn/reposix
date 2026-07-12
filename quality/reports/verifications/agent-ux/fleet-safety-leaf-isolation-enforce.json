@@ -1,1 +1,12 @@
-{"ts":"2026-07-12T06:30:18Z","row_id":"agent-ux/fleet-safety-leaf-isolation-enforce","exit_code":0,"transcript_path":"quality/reports/transcripts/fleet-safety-leaf-isolation-enforce-2026-07-12T06-30-18Z.txt","asserts_passed":[],"asserts_failed":[]}
+{
+  "ts": "2026-07-12T07:32:55Z",
+  "row_id": "agent-ux/fleet-safety-leaf-isolation-enforce",
+  "exit_code": 0,
+  "transcript_path": "quality/reports/transcripts/fleet-safety-leaf-isolation-enforce-2026-07-12T07-32-55Z.txt",
+  "asserts_passed": [],
+  "asserts_failed": [],
+  "timed_out": false,
+  "stdout": "",
+  "stderr": "",
+  "claim_vs_assertion_audit_hash": "99264a2d0839ed6a3ba0fbb262f8ed0acb4598ca0989484d0956494c816f7784"
+}

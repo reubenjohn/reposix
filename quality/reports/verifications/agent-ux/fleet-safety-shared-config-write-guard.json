@@ -1,1 +1,12 @@
-{"ts":"2026-07-12T06:30:19Z","row_id":"agent-ux/fleet-safety-shared-config-write-guard","exit_code":0,"transcript_path":"quality/reports/transcripts/fleet-safety-shared-config-write-guard-2026-07-12T06-30-19Z.txt","asserts_passed":[],"asserts_failed":[]}
+{
+  "ts": "2026-07-12T07:32:55Z",
+  "row_id": "agent-ux/fleet-safety-shared-config-write-guard",
+  "exit_code": 0,
+  "transcript_path": "quality/reports/transcripts/fleet-safety-shared-config-write-guard-2026-07-12T07-32-55Z.txt",
+  "asserts_passed": [],
+  "asserts_failed": [],
+  "timed_out": false,
+  "stdout": "",
+  "stderr": "",
+  "claim_vs_assertion_audit_hash": "f4523afbbed9b0855ba453c4c1162d6e75df94a702ce6a54c83c5362be377a5a"
+}
