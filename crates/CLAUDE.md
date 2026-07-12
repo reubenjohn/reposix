@@ -48,6 +48,20 @@ builds. The workspace links large crates (`gix` chain, `rusqlite-bundled`,
 2. **Prefer per-crate over workspace-wide** — `cargo check -p reposix-cli`, not
    `--workspace`, when the change is scoped. Pre-push covers the workspace gate.
 
+**Pre-push is a hidden cargo lane — serialize pushes machine-wide (fix-twice, v0.14.0 P111).**
+`.githooks/pre-push` runs a FULL workspace quality validate — `cargo fmt --check` +
+`cargo clippy` unconditionally, plus gitleaks — on EVERY push, regardless of diff size
+(measured **~102s including gitleaks on a docs-only commit**; the cost is a fixed
+whole-repo walk, not per-changed-file — see `quality/CLAUDE.md` § "Runtime does NOT scale
+with diff size"). So a code-landing lane that pushes while ANOTHER session already holds
+the machine-wide cargo token spawns a SECOND concurrent workspace compile — the exact OOM
+trap Hard rule 1 exists to prevent, just triggered by `git push` instead of a bare `cargo`.
+Treat a push like a cargo invocation: **serialize pushes** across all lanes (at most one
+`git push` in flight machine-wide, and never push while another lane is mid-cargo). When a
+lane only needs the change LANDED (not locally re-linted), prefer relying on post-push CI
+(`code/ci-green-on-main` is the authoritative green) over a redundant local full-workspace
+clippy — it keeps the single cargo slot free for the lane that actually needs it.
+
 **Soft rules:** `CARGO_BUILD_JOBS=2` (committed in `.cargo/config.toml`); `cargo nextest
 run` links test binaries one at a time (prefer for full-workspace tests); close idle
 rust-analyzer editors (2–3 GB); schedule docs/playwright work in a no-cargo window.

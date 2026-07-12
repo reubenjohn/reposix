@@ -4,7 +4,10 @@
 > owner's ordering verbatim — it is NOT a discovery/research pass). Phase numbering
 > continues from v0.13.1's close: v0.13.0-ext closed at **P97**, v0.13.1 (onboarding
 > hotfix) claimed **P98–P101** and SHIPPED 2026-07-07 (tag v0.13.1, `04640d5`). This
-> milestone claims **P102–P112**. The queued-but-not-yet-replanned v0.13.2
+> milestone claims **P102–P112**, plus an out-of-band **Phase 113** (lost-update
+shared-cursor guard — an emergent silent-data-loss fix that shipped in v0.14.0 and is
+reconciled into this ROADMAP at milestone-close; see § Phase 113 below). The
+queued-but-not-yet-replanned v0.13.2
 > "Cross-link fidelity" milestone (still scoped at its original P98–P107 placeholder
 > range) shifts further when it is eventually replanned — same renumber-on-insertion
 > convention used for v0.13.1 and, before it, v0.12.1's P66 insertion. This scaffold
@@ -118,6 +121,10 @@ root `CLAUDE.md` § "Leaf test setup runs in a throwaway `/tmp` clone"; `.claude
 
 ### Phase 103: Early cheap wins — doc-alignment grade/persist split + structure waiver OP-8 split
 
+**STATUS: CLOSED (GREEN 2026-07-12)** — unbiased phase-close verdict GREEN (3/3 items),
+`quality/reports/verdicts/p103/VERDICT.md`, graded HEAD `d0f23d5`; implementation commits
+`12abdfb`/`1136bb3`/`dad227e`.
+
 **Goal:** Two low-risk, non-cargo, Python-only fixes slotted early because they are safe
 alongside/after D2 and cheap to land. (a) `reposix-quality doc-alignment walk` currently
 mutates `quality/catalogs/doc-alignment.json` in place with no `--persist` gate, dirtying
@@ -154,6 +161,10 @@ companion filings — dedupe when addressing); `quality/catalogs/freshness-invar
 `quality/runners/run.py` (D-P96-01 GRADE/PERSIST precedent).
 
 ### Phase 104: GitHub-v09 helper-path 404 fix (S-260707-gh404)
+
+**STATUS: CLOSED (GREEN 2026-07-12)** — unbiased phase-close verdict GREEN (1/1 gradeable
+row PASS + 1 honestly-fail-closed NOT-VERIFIED real-backend row),
+`quality/reports/verdicts/p104/VERDICT.md`, verdict commit `22f94d0`, graded HEAD `03942f8`.
 
 **Goal:** Fix the real-GitHub-via-helper 404. Root cause: `Cache::open` /
 `Cache::build_from` forward the filesystem-sanitized project string (`owner-repo`, dashes)
@@ -192,6 +203,10 @@ on:** P102 GREEN · **Plan:** TBD (`/gsd-plan-phase 104`)
 
 ### Phase 105: RBF-LR-03 rebase-recovery reconciliation redesign
 
+**STATUS: CLOSED (GREEN 2026-07-12)** — unbiased phase-close verdict GREEN (row
+`agent-ux/rebase-recovery-reconciles`, 13/13 asserts), `quality/reports/verdicts/p105/VERDICT.md`,
+verify commit `0d3afe9`, graded HEAD `8afb52d`.
+
 **Goal:** Fix the documented post-conflict recovery crash when the SoT moved via an
 **external REST write** (not a git-side push). `reposix sync --reconcile` currently mints
 a fresh "Sync from REST snapshot" commit that is NOT a descendant of the prior tracking
@@ -227,6 +242,10 @@ even when it leaves the cache in this unusable non-descendant state.
 §3 (ADR-010 known-limitation marker); `docs/concepts/dvcs-topology.md`.
 
 ### Phase 106: Waived tutorials reproduce (docs-repro/tutorial-replay + examples 01/02/04/05)
+
+**STATUS: CLOSED (GREEN 2026-07-12)** — 5 docs-repro rows (tutorial-replay +
+example-01/02/04/05) minted PASS by an unbiased verifier at `804eedc`; STATE.md attests the
+GREEN close at HEAD `7827d36` (CI run 29201112349 success, `code/ci-green-on-main` PASS).
 
 **Goal:** Clear the WAIVED docs-repro rows for `docs-repro/tutorial-replay` and examples
 01, 02, 04, 05 before their **HARD DEADLINE 2026-09-15**. **Root causes CORRECTED by the
@@ -273,6 +292,12 @@ at plan time for the exact row set + `claim_vs_assertion_audit` text); `.plannin
 90-*/90-RESEARCH-*.md` (prior P90 90-05 re-check); `quality/gates/docs-repro/`.
 
 ### Phase 107: RUSTSEC memmap2 + quinn-proto advisories in `Cargo.lock`
+
+**STATUS: CLOSED (GREEN 2026-07-12)** — unbiased phase-close verdict GREEN (4/4 deliverables
+PASS), `.planning/milestones/v0.14.0-phases/evidence/P107-VERIFICATION.md` (committed
+`24bb079`); ground-truth cargo-audit evidence at `7cfd165` (0 live vulns, both advisory IDs
+cleared by version floor). (STATE.md's earlier "P107 next / not yet started" narrative was
+stale — superseded by this reconciliation.)
 
 **Goal:** Close RUSTSEC-2026-0186 (memmap2, issue #57) and RUSTSEC-2026-0185
 (quinn-proto, issue #56). The original bundled dependabot PR #55 is CLOSED/superseded by
@@ -358,6 +383,11 @@ SURPRISES-INTAKE.md` § `prune_oid_map` entry; `crates/reposix-*/src/github/lib.
 `jira/lib.rs`, Confluence equivalent (`list_records` truncation points).
 
 ### Phase 109: Carried RBF-FW-11 + quality-convergence write-contention
+
+**STATUS: CLOSED (GREEN 2026-07-12)** — RBF-FW-11 grandfather-commit rule shipped (`10bd508`)
+atop the catalog-first GREEN contract (`1cb9dd1`, `pytest quality/runners/test_audit_field.py`
+GREEN); STATE.md attests P109 shipped GREEN. Terminal evidence is the shipped fix + catalog-first
+test + STATE attestation (no separate `p109/VERDICT.md` dir was minted).
 
 **Goal:** Two carried framework-hygiene items. (a) RBF-FW-11's "grandfathered" date-cutoff
 design misclassifies legitimately-null `last_verified` rows (the runner's
@@ -488,3 +518,46 @@ N/A — this phase produces a scope stub, not an execution plan.
 § "DECISION OD-4"); the user's owner-settled scope for this milestone (asciinema demo,
 honest headline numbers, install excellence, Show-HN kit — verbatim from the OD-4
 mandate).
+
+### Phase 113: Lost-update shared-cursor guard (OUT-OF-BAND — shipped in v0.14.0)
+
+**STATUS: CLOSED — code shipped in v0.14.0; verifier-close folded into P111 milestone-close
+(regression test GREEN).**
+
+**Renumber rationale (106 → 113).** This guard was authored under the working label
+`106-01` (its implementation commits carry the `fix(106-01)` prefix), but the ROADMAP's
+Phase 106 slot was ALREADY claimed by "Waived tutorials reproduce." Rather than collide the
+number, the phase was renumbered to the next free integer past this milestone's P102–P112
+span — **113** — at commit `4dd7e10` (`docs(113-01): renumber lost-update phase 106→113
+(ROADMAP 106 taken) + mark intake RESOLVED`). It is out-of-band (not in the original
+P102–P112 scope) because it was an emergent silent-data-loss guard discovered and fixed
+mid-milestone, not a pre-scoped phase.
+
+**What shipped.** A real silent-data-loss guard: the shared-cache `last_fetched_at` cursor
+no longer GATES push-side conflict detection. Every pushed Update is version-checked against
+the backend (the SoT arbiter), so a stale-base push made under an advanced shared cursor is
+REJECTED ("fetch first") instead of silently clobbering a sibling clone's concurrent edit.
+Code landed at **`61e8222`** (`fix(106-01): lost-update guard — shared cursor no longer
+gates conflict detection`, `crates/reposix-remote/src/precheck.rs`), atop the catalog-first
+GREEN contract at `632864d`.
+
+**Regression test (GREEN).**
+`stale_base_push_rejected_when_shared_cursor_advanced_past_concurrent_write`
+(`crates/reposix-remote/src/precheck.rs:623`) — proves a stale-base push is still rejected
+when the shared cursor has advanced past a concurrent write.
+
+**Catalog row.** `code/lost-update-shared-cursor-rejected` (`quality/catalogs/code.json`) —
+verifier `quality/gates/code/lost-update-shared-cursor.sh` (present + executable on disk),
+artifact `quality/reports/verifications/code/lost-update-shared-cursor-rejected.json`, gate
+command `cargo test -p reposix-remote --bin git-remote-reposix
+stale_base_push_rejected_when_shared_cursor_advanced_past_concurrent_write`.
+
+**Why slotted CLOSED here (not deferred).** The fix already shipped in v0.14.0; deferring a
+SHIPPED fix's paperwork would be dishonest (OP-1: an artifact in committed code IS the
+reality). The regression test is GREEN and the catalog row exists with a live verifier, so
+the verifier-close is folded into this P111 milestone-close rather than minting a separate
+`p113/VERDICT.md`.
+
+**Context anchor:** `4dd7e10` (renumber + intake RESOLVED), `61e8222` (code), `632864d`
+(catalog-first contract), `crates/reposix-remote/src/precheck.rs`;
+`quality/catalogs/code.json` § `code/lost-update-shared-cursor-rejected`.

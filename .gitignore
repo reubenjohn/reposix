@@ -80,18 +80,16 @@ quality/reports/verifications/agent-ux/p94-git243-fallback-sentinel-cargo-test-f
 # evidence — the verifier `webhook-latency-floor.sh` READS this artifact
 # on every pre-release run; it's not a per-run runtime snapshot.
 !quality/reports/verifications/perf/webhook-latency.json
-# Exception: P93 named-evidence artifacts. These 5 JSONs are cited by the
-# canonical quality/reports/verdicts/p93/VERDICT.md as the load-bearing PASS
-# artifact for rows RBF-LR-01/02/04/05 + D-P92-03. Per the block comment above
-# ("named evidence artifacts ... per phase ARE tracked") they must stay tracked;
-# the broad */*.json glob above swept them up, making them tracked-AND-ignored —
-# which release-plz reads as "uncommitted changes" and aborts on. Negating them
-# here restores tracked-and-not-ignored without un-ignoring the transient dir.
-!quality/reports/verifications/agent-ux/p93-cache-coherence.json
-!quality/reports/verifications/agent-ux/p93-delta-sync-coherence.json
-!quality/reports/verifications/agent-ux/p93-l1-promise-reconciled.json
-!quality/reports/verifications/agent-ux/p93-l2-l3-coherence-adr.json
-!quality/reports/verifications/agent-ux/p93-mid-stream-litmus-t1-t4.json
+# P93 cache-coherence verifier outputs (p93-*.json): per-run verification artifacts —
+# their catalog rows in quality/catalogs/agent-ux.json carry these paths as `artifact`
+# OUTPUT destinations, regenerated on every gate run. v0.13.0 milestone-close force-tracked
+# and NEGATED them here (`!...p93-*.json`) to dodge a release-plz "tracked-AND-ignored →
+# uncommitted changes" abort. v0.14.0 P111 milestone-close reclassified them as ephemeral
+# and untracked them (`git rm --cached`); the broad `*/*.json` rule above now (correctly)
+# ignores them, so they are untracked-AND-ignored — invisible to release-plz, which resolves
+# the original blocker WITHOUT the fragile force-negation. The committed load-bearing PASS
+# record is quality/reports/verdicts/p93/VERDICT.md; the JSONs stay on disk, regenerable by
+# re-running the p93-*.sh gates. (Removing the 5 `!` exceptions IS the P111 root-cause fix.)
 quality/reports/verdicts/*/[0-9]*.md
 # kind: shell-subprocess transcripts (RBF-FW-02) are per-run runtime snapshots,
 # same as verifications/*.json above — the dir is scaffolded by .gitkeep and the
