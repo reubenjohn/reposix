@@ -256,3 +256,65 @@ final arbiter. Add a regression test: two shared-cache clones, A pushes, B stale
 assert B is rejected `fetch first` AND the SoT retains A's edit.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-12 08:35 | discovered-by: P105 (RBF-LR-03 rebase-recovery gate, Lane 2) | severity: HIGH
+
+**What:** The P105 parent-chaining fix (`90ddaff`, `fast_import.rs` emits `from
+<tracking-tip>`) is INCOMPLETE. It eliminated the `fatal: error while running fast-import` /
+`does not contain` abort — verified — but driving the FULL documented recovery
+end-to-end through a real `git pull --rebase` (not the isolated `git fast-import` that
+`verify_fix.sh` / the `git_fast_import_roundtrip_with_parent_fast_forwards` unit test
+exercise) surfaces a SECOND fetch-time abort:
+```
+error: cannot lock ref 'refs/reposix/origin/main': is at <X> but expected <Y>
+ ! <Y>..<X>  main -> refs/reposix/origin/main  (unable to update local ref)
+```
+**Root cause (file:line):** the `import` helper's fast-import stream writes `commit
+refs/reposix/origin/main` DIRECTLY (`crates/reposix-remote/src/fast_import.rs:165`, and
+the no-op-guard `reset` at `:142`), while the helper ALSO advertises `refspec
+refs/heads/*:refs/reposix/origin/*` (`crates/reposix-remote/src/main.rs:193`). So git
+applies its OWN refspec update to `refs/reposix/origin/main` AFTER import. On drift the
+stream fast-forwards the ref underneath git; git's post-import ref transaction (old-value
+= the PRE-fetch tip) then finds the ref already moved → `cannot lock ref` → `git fetch`
+(hence `git pull --rebase`) exits non-zero. Because the documented recovery is the single
+command `git pull --rebase && git push`, the non-zero pull SHORT-CIRCUITS at the `&&` and
+`git push` never runs — the agent's unpushed edit is LOST until an UNDOCUMENTED second
+`git pull --rebase` (the ref is now settled + the no-op guard makes the re-fetch a clean
+fast-forward, so pull #2 exits 0 and push converges). **Empirically reproduced** (live
+sim, git 2.25.1, independent caches, both scenarios — peer git-push AND external REST
+PATCH drift): `git pull --rebase && git push` exits 1, SoT record version unchanged; a
+plain `git fetch origin` on drift ALSO exits 1 with the same `cannot lock ref`; a second
+`git pull --rebase && git push` exits 0 and converges. `reposix sync --reconcile` does NOT
+help (it rebuilds the CACHE, not the client's tracking ref). Repro:
+`.planning/phases/105-rbf-lr-03-rebase-recovery/repro/repro-fetch-ref-lock.sh`. Gate that
+catches it (currently NOT-VERIFIED): `quality/gates/agent-ux/rebase-recovery-reconciles.sh`
+(transcript under `quality/reports/transcripts/rebase-recovery-reconciles-*.txt`).
+
+**Why out-of-scope for P105:** P105's charter + landed fix target the parentless
+non-descendant commit (the `does not contain` abort), which is fixed. This second abort is
+in git's remote-helper `import` ref-update contract — the helper double-writes the tracking
+ref that git also owns. A correct fix (e.g. NOT naming `refs/reposix/origin/main` in the
+stream and letting git's refspec do the single authoritative update, or writing to a
+neutral staging ref) touches load-bearing protocol code where a naive change risks
+CLOBBERING the caller's local branch on a lights-out system — it needs its own design +
+cross-git-version testing (import vs stateless-connect, §5 still unverified on modern git).
+That is a dedicated fix phase, not a <1h in-lane eager fix; folding it into P105 would
+double the phase scope and re-open the exact "client-side special-case patch" smell the
+P105 dispatch forbade.
+
+**Sketched resolution:** (a) Stop emitting `commit/reset refs/reposix/origin/main` in the
+`import` stream; write the commit to the ref name git requested (the `import <ref>` LHS,
+e.g. `refs/heads/main`) or a helper-private staging ref, and let git's advertised refspec
+perform the SINGLE authoritative `refs/reposix/origin/main` update — matching the
+git-remote-testgit reference-helper pattern — so there is no double-write. Verify the
+caller's local `main` branch is NOT touched. (b) Failing that, drop `refs/reposix/origin/*`
+from the advertised import refspec so git does not attempt its own update after the stream
+writes the ref. Either way: re-run `quality/gates/agent-ux/rebase-recovery-reconciles.sh`
+— it is written to flip to PASS (exit 0) WITHOUT edits once the single documented
+`git pull --rebase && git push` exits 0 and the edit reaches the SoT. Also resolve PLAN §5
+(does stateless-connect on git >= 2.34 exhibit the same or a different failure?) on a
+modern-git CI runner before closing.
+
+**STATUS:** OPEN
