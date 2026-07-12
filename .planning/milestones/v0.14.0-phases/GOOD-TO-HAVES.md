@@ -265,6 +265,24 @@ run so the residue cannot re-accumulate.
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-11 — `05-blob-limit-noncone-sparse-warnings` — leading-slash the sparse-checkout paths to silence NON-CONE warnings
+
+**Discovered during:** P106 (verifier noticing, 2026-07-12)
+
+**Size:** S
+
+**Severity:** LOW — cosmetic. Selection is correct and the recovery works; git just prints 4 scary `NON-CONE PROBLEMS` warnings a skeptical first-time dev reads as breakage.
+
+**One-line hazard:** `examples/05-blob-limit-recovery/run.sh` calls `git sparse-checkout set` with non-cone patterns lacking a leading slash (e.g. `issues/1.md`), so git emits `warning: pass a leading slash before paths such as 'issues/1.md'` — non-fatal but alarming in a demo meant to showcase clean recovery.
+
+**Fix sketch:** add a leading `/` to each sparse-checkout path in `examples/05-blob-limit-recovery/run.sh` (git's recommended non-cone form — `/issues/1.md`). Identical selection, silences all 4 warnings. < 1h, no new dependency.
+
+**Pointer:** `examples/05-blob-limit-recovery/run.sh` (the `git sparse-checkout set` invocation); P106 verifier noticing 2026-07-12.
+
+**Default disposition for P111:** S closes-or-defers; close early (< 1h — a mechanical path-prefix edit in one demo script, no code change).
+
+**STATUS:** OPEN
+
 ## Entry format
 
 ```markdown
