@@ -109,6 +109,46 @@
         "pre-pr",
         "pre-release"
       ]
+    },
+    {
+      "id": "security/cargo-audit-rustsec-posture",
+      "dimension": "security",
+      "kind": "mechanical",
+      "comment": "P107 (2026-07-12) catalog-first mint. Local/catalogued counterpart to the CI cargo-audit job (.github/workflows/audit.yml). Encodes the RUSTSEC advisory posture as a GREEN contract: 0 live advisories + both v0.14.0-era advisories (RUSTSEC-2026-0185 quinn-proto, RUSTSEC-2026-0186 memmap2) confirmed cleared by version floor. Ground-truth evidence: .planning/milestones/v0.14.0-phases/evidence/p107-cargo-audit-2026-07-12.txt.",
+      "sources": [
+        "Cargo.lock (committed dependency pin)",
+        ".github/workflows/audit.yml (CI cargo-audit counterpart)",
+        "SECURITY.md -- Advisory posture (cargo audit / RUSTSEC) section",
+        ".planning/milestones/v0.14.0-phases/evidence/p107-cargo-audit-2026-07-12.txt"
+      ],
+      "command": "cargo audit",
+      "expected": {
+        "asserts": [
+          "cargo audit exits 0 with 0 live vulnerabilities across the workspace Cargo.lock",
+          "RUSTSEC-2026-0185 (quinn-proto) confirmed CLEARED: installed quinn-proto >= 0.11.15 patched floor met (transitive-and-absent -- orphan Cargo.lock entry, never built)",
+          "RUSTSEC-2026-0186 (memmap2) confirmed CLEARED: installed memmap2 >= 0.9.11 patched floor met (transitive via gix 0.83.0; advisory is informational=unsound, gated only by -D unsound)",
+          "a committed RUSTSEC posture doc (SECURITY.md -- Advisory posture section) names both RUSTSEC-2026-0185 and RUSTSEC-2026-0186 with an honest reachability verdict"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/security/cargo-audit-posture.sh",
+        "args": [],
+        "timeout_s": 300,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/security/cargo-audit-posture.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: (a) cargo audit reported a NEW live advisory -- read the named RUSTSEC id and bump the affected crate's floor via a dependabot/cargo-update PR; (b) memmap2 dropped below 0.9.11 or quinn-proto below 0.11.15 -- a lockfile regen pulled an unpatched floor; (c) SECURITY.md lost its Advisory posture section naming both advisory ids. Network-flaky cargo-audit (advisory-db fetch failure) is distinguished in the artifact via a fetch-failure marker, NOT counted as a live advisory. CI counterpart: .github/workflows/audit.yml.",
+      "waiver": null,
+      "claim_vs_assertion_audit": "The claim is 'reposix has 0 live RUSTSEC advisories and both RUSTSEC-2026-0185/0186 are cleared by version floor, not merely unreported.' The verifier runs the real `cargo audit` (exit non-zero => live advisory => FAIL) AND independently parses the installed memmap2 version from the dependency graph asserting >= 0.9.11, AND greps SECURITY.md for both advisory ids. If the claim were false -- e.g. a lockfile regen pulled memmap2 0.9.10 (unpatched), or a new advisory landed -- cargo audit would exit non-zero OR the version-floor assert would fail OR the posture-doc grep would miss an id, and the verifier would exit non-zero naming the failing assert. A green cargo audit alone cannot mask a floor regression because the floor is checked separately from the audit exit code.",
+      "cadences": [
+        "pre-push",
+        "pre-release"
+      ],
+      "minted_at": "2026-07-12T14:00:00Z"
     }
   ]
 }
