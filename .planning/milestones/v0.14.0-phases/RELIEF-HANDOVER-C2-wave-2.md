@@ -1,202 +1,220 @@
-# RELIEF-HANDOVER — C2 milestone-coordinator, v0.14.0 "Wave-2 hardening"
+# RELIEF-HANDOVER-C2-wave-2.md — v0.14.0 wave-2 hardening, C2 relief, 2026-07-12
 
-Relief point: clean wave boundary — no lanes running, P105 closed GREEN and pushed,
-tracked tree clean. Written by an out-of-band handover-writer agent from content
-supplied by the outgoing C2 coordinator; this agent did NOT do any milestone work
-itself. Successor: read this file, then `.planning/ORCHESTRATION.md` §3 (relief
-protocol) and §11-12 (tiering/HCI) if resuming without fable.
+Written by the C2 coordinator-of-coordinators for the v0.14.0 wave-2 hardening
+milestone, relieving proactively at the ~100k absolute-token line (ORCHESTRATION §3).
+This **overwrites the stale predecessor handover** at this same path (that one was
+written at the P105-closed boundary; ten more commits have landed since — read this
+file, not the one you might have cached).
+
+## SHARED-TREE HAZARD (read before ANY tool call)
+
+`main == origin/main == b037876`, shared working tree
+`/home/reuben/workspace/reposix`. A herdr manager session (read-only) + other panes
+SHARE this tree. FOUR untracked foreign dirs are present and NOT ours:
+`.planning/phases/21-op-7-hardening-bundle-contention-swarm-500-page-truncation-p/`,
+`.planning/phases/22-op-8-honest-tokenizer-benchmarks-replace-len-div-4-with-coun/`,
+`scripts/demos/`, `scripts/dev/`. There is also a foreign `stash@{0}` ("WIP on main:
+faf3d16 docs(22): create phase plan — 3 plans across 2 waves for BENCH-01..04").
+Do **NOT** touch it. At session start a foreign `M quality/catalogs/doc-alignment.json`
+was also observed in the wider environment snapshot, but as of this handover the
+tracked tree is CLEAN of that modification (see §1) — re-check before trusting either
+state.
+
+Hard rules for the successor:
+- NEVER `git add .` / `git add -A` / `git commit -a` / `git clean` / `git stash drop`.
+  Every commit uses EXPLICIT paths only.
+- ONE cargo invocation machine-wide (build-memory budget; VM has OOM-crashed on
+  parallel builds).
+- One-tree-writer-at-a-time discipline: serialize writer lanes; read-only prep may
+  run in parallel.
+- Leaf isolation HARD-STOP: `reposix init` / sim-seed / `git commit`/`config` for
+  ANY test/fixture setup MUST `cd` into a `/tmp` clone in the SAME Bash invocation —
+  never in this shared tree. (This was the exact root cause the P0 leaf-isolation
+  incident this session closed — see §2 Phase 0.)
 
 ## 1. Ground truth (git)
 
-- Branch `main`, HEAD `f944945`, **`origin/main == HEAD == f944945`** (verified via
-  `git rev-parse HEAD origin/main`).
-- `git config user.email` = `reubenvjohn@gmail.com` (verified correct).
-- Tracked tree clean (`git status --porcelain` shows zero tracked-file diffs). Four
-  UNTRACKED items present — see §5 ANOMALY, do not commit or delete without
-  investigation:
-  - `.planning/phases/21-op-7-hardening-bundle-contention-swarm-500-page-truncation-p/`
-  - `.planning/phases/22-op-8-honest-tokenizer-benchmarks-replace-len-div-4-with-coun/`
-  - `scripts/demos/`
-  - `scripts/dev/`
-- CI/gates status as of HEAD: honestly clean (57 PASS / 1 filed P2 FAIL / 1 WAIVED /
-  0 NOT-VERIFIED, confirmed no masked-red repo-wide).
-- Recent commit chain (most-recent-first) landing P105:
-  - `f944945` chore(105): re-sync doc-alignment hashes for edited index.md:152
-  - `104c689` docs(105): de-jargon RBF-LR-03 recovery prose (banned-words cold-reader)
-  - `d877dd2` docs(105): file RBF-LR-03 lane intakes (resolve_import_parent MED + file-size LOW)
-  - `fecad34` docs(105): RBF-LR-03 recovery resolved — correct known-limitation claims (fix-twice)
-  - `0d3afe9` docs(verify): P105 rebase-recovery-reconciles — GREEN (unbiased phase-close)
-  - `8afb52d` test(105): gate+unit cover deletion + no-op guard (WR-01/WR-02)
-  - `140f4eb` fix(105): emit deleteall — deletions propagate (CR-01, BLOCKER fix)
-  - `76ba06a` review(105): adversarial code review — BLOCKER deletion-propagation regression
-  - `d210350`/`3766915`/`bf1ab5d` test(105): rebase-recovery gate drives full pull-rebase-push
-  - `bd5b9cb` fix(105): helper import writes private ref ns — RBF-LR-03 ref-lock
-  - `7211c92`/`44d6aec` test/docs(105): live gate exposes second bug (ref-lock)
-  - `90ddaff` fix(105): fast-import chains onto tracking tip — RBF-LR-03 rebase-recovery
-  - earlier: P104 gh404 fix chain, P103 early wins, P102 self-safe dark-factory.
+- `HEAD == origin/main == b037876619804ee04aa867a02719399d061062da7`. Branch `main` is
+  up to date with `origin/main` (no ahead/behind).
+- `git status` on the tracked tree: **CLEAN** — zero modified/staged tracked files.
+  Only the four foreign untracked dirs listed above appear (verified live this
+  session via `git status` — no `M quality/catalogs/doc-alignment.json` present at
+  this moment).
+- Owner-gated branch `backup-lost-update-424d367` exists **locally only** — do NOT
+  push it; landing it to GitHub main is an owner-named-target decision routed to L0
+  (see §5).
+- Commits landed this C2 rotation (newest first, all pushed, all unbiased-verifier
+  PASS before landing):
+  1. `b037876` docs(good-to-haves): file GOOD-TO-HAVES-10 — orphaned Fork-B assert on
+     P94 Fork-A row
+  2. `13de686` docs(p108): close prune-completeness-gate paperwork; file slug→id
+     remainder
+  3. `10bd508` fix(P109): RBF-FW-11 grandfather keys off landing commit, not null
+     last_verified
+  4. `1cb9dd1` test(P109): GREEN contract for RBF-FW-11 grandfather-commit rule
+     (catalog-first)
+  5. `72ae517` docs(good-to-haves): file 4 fleet-safety persist-gate follow-ups
+     (v0.14.0 GTH-05..08)
+  6. `309f0b6` fix(quality): deterministic shell-subprocess verdicts — stop
+     fleet-safety JSON re-dirty (D-P96-01 extended)
+  7. `3206a2b` fix(d2): binary-side reposix-init refusal + un-break sim-server start
+  8. `2ad2bf5` fix(d2): re-seal leaf-isolation guard — config-read false-positive +
+     git-init-bare + cargo-sim-seed + file live repro
+  9. `9d78d62` docs(planning): refresh manager handover — post-incident (shared-tree
+     corruption resolved)
+  10. `f2d527a` docs(handover): v0.14.0 C2 relief at clean wave-2 boundary — P105
+      closed GREEN (the STALE predecessor this file replaces)
+
+Numbered deviations the successor MUST know:
+1. Phase 0 (D2 leaf-isolation re-seal) was NOT on the original wave-2 plan — it was
+   an emergent P0 incident (a P106 leaf ran `reposix init` inside
+   `.claude/worktrees/...` of the SHARED repo instead of `/tmp`, bypassing the
+   Bash-tool-only PreToolUse hook). It consumed the first slice of this rotation and
+   is now closed at the product layer (see §2).
+2. The D2 guard fix ALSO fixed a false-positive: read-only `git config --get` /
+   `git config --list` are now correctly ALLOWED (previously flagged).
 
 ## 2. Wave/cycle state
 
-Milestone roadmap: `.planning/milestones/v0.14.0-phases/ROADMAP.md`, phases P102–P112.
+| Wave / Item | Plan | State | Commits |
+|---|---|---|---|
+| Phase 0 — D2 leaf-isolation re-seal | emergent (not pre-planned) | DONE, 11/11 verifier PASS | `2ad2bf5`, `3206a2b` |
+| fleet-safety persist-gate churn fix | wave-2 planned | DONE, 4/4 verifier PASS | `309f0b6`, `72ae517` |
+| P109(a) RBF-FW-11 | wave-2 planned | DONE, catalog row PASS | `1cb9dd1`, `10bd508` |
+| P108 prune-gate paperwork closure | wave-2 planned | DONE, catalog row PASS | `13de686`, `b037876` |
+| tutorials 01/02/04/05 self-start-sim rewrite | wave-2 planned | **NOT STARTED** | — |
+| git-2.34 CI boundary job | wave-2 planned | **NOT STARTED** (scope brief ready, see §6) | — |
+| shell-coverage floor (~11.98% < 13%) | wave-2 planned | NOT STARTED (pre-existing, non-blocking) | — |
+| OP-8 file splits (SURPRISES-INTAKE / GOOD-TO-HAVES oversize) | milestone slot | NOT STARTED | — |
+| OP-9 distill into RETROSPECTIVE.md | milestone-close | NOT STARTED | — |
+| OD-4 launch-readiness | scope-only stub | DO NOT START | — |
+| 9th probe `pre-release-real-backend` + STATE cursor advance | milestone-close | NOT STARTED | — |
 
-| Phase | State | Commits / notes |
-|---|---|---|
-| P102 D2 self-safe dark-factory (HARD SERIALIZING GATE) | DONE | reject-`t@t`-identity hook, real per-leaf `/tmp`-clone isolation (no `--force` worktree removal), PreToolUse shared-`.git/config` write-block. Verdict `quality/reports/verdicts/p102/` |
-| P103 early wins | DONE | doc-alignment grade/persist split; F-K4b false-demote robustness; OP-8 file-size split → `part-NN.md`+index, reusable `scripts/split_ledger.py` |
-| P104 gh404 (`S-260707-gh404`) | DONE | `sanitize_project_for_cache` fix (raw slug to REST, sanitize on-disk only). `continue-on-error` at `ci.yml:263` intentionally RETAINED + KNOWN-LIMITATION kept (real-backend claim NOT promoted). Verdict `quality/reports/verdicts/p104/` |
-| health-triage (interstitial) | DONE | confirmed no masked-red; `init.rs:159` clippy already fixed (`6efe293`) |
-| P105 RBF-LR-03 rebase-recovery reconciliation | **DONE, CLOSED GREEN, pushed** | fixed parentless tracking-commit + helper/git-fetch ref collision; review-caught BLOCKER CR-01 (deletion-resurrection) fixed via `from <tip>`+`deleteall`; helper writes moved to private `refs/reposix-import/*`. Verdict `quality/reports/verdicts/p105/` |
-| P106 (NEW lost-update phase, unscheduled) | NOT STARTED | see §5 — needs a phase slot minted |
-| P107 RUSTSEC | NOT STARTED (assessment done, confirm pending) | |
-| P108 prune_oid_map pagination-truncation | NOT STARTED | |
-| P109 RBF-FW-11 + quality-convergence | NOT STARTED | |
-| P110/P111 OP-8/OP-9 absorption slots | NOT STARTED | |
-| P112 OD-4 launch-readiness | SCOPE-BUT-DO-NOT-START stub | begins only after wave-2 hardening closes |
-
-No named-incident post-mortem outstanding beyond what's captured in §5.
+**Named incident to read before dispatching any executor near test/fixture setup:**
+the Phase 0 leaf-isolation incident (SURPRISES-INTAKE.md, ~line 354, HIGH severity).
+Root cause: a subprocess/worktree code path ran `reposix init` inside a
+`.claude/worktrees/` copy of the SHARED repo rather than an isolated `/tmp` clone,
+which is invisible to the Bash-tool-only PreToolUse hook. Fix landed at the product
+layer: `reposix init` now refuses to run inside an existing git-worktree root
+(fail-closed), plus guard extensions covering `git init --bare` and cargo-sim-seed
+paths. **RESIDUAL, still open, RAISED to L0** (not closed this session): (a)
+worktree-shared `.git` object-store self-safety, and (b) the non-Bash subprocess
+boundary in general (defense-in-depth — the one observed vector is closed, but the
+class of hazard is not exhaustively proven closed).
 
 ## 3. Binding constraints (unchanged)
 
-- **ONE cargo invocation machine-wide** (`-p <crate>`, never `--workspace` in parallel);
-  `.claude/hooks/cargo-mutex.sh` is the backstop, orchestration discipline is primary.
-- **One tree-writer at a time.** The shared-worktree WRITE-RACE is REAL and was
-  observed twice this wave (staged-file cross-contamination + push-tip races) — any
-  parallel code-touching lane MUST run `isolation:"worktree"` (`git worktree add
-  /tmp/<uniq> <branch>`), never share the coordinator's checkout.
-- **No `--no-verify`.**
-- **Push only at green** — `git push origin main` BEFORE the verifier-subagent dispatch;
-  verifier grades RED if the phase shipped without the push landing.
-- Commit-trailer format: `Co-Authored-By: Claude <tier> <noreply@anthropic.com>` (model
-  tiering: fable → opus (security/complex) → sonnet (default) → haiku (mechanical)).
-- Leaf isolation HARD-STOP: all `reposix init`/sim/`git config`/`git commit` FOR TESTING
-  runs in a throwaway `/tmp/<uniq>` clone, `cd` in the SAME Bash invocation, never the
-  shared repo.
-- Verify `git config user.email == reubenvjohn@gmail.com` before every commit.
+One tree-writer at a time; ONE cargo invocation machine-wide; never `--no-verify`;
+push only at green (`git push origin main` BEFORE the verifier-subagent dispatch, per
+phase); commit-trailer format (`Co-Authored-By` + `Claude-Session`); model tiering
+(fable → opus/sonnet/haiku by complexity, never fable at a leaf). Leaf isolation
+HARD-STOP (see hazard box above) is the constraint that bit this session — treat it
+as load-bearing, not advisory.
 
 ## 4. Litmus / gate / REOPEN state
 
-- P102 self-safe dark-factory gate: PASS, verdict at `quality/reports/verdicts/p102/`.
-- P104 gh404: sim/unit-level PASS; real-backend GitHub claim explicitly NOT promoted
-  (KNOWN-LIMITATION doc + `continue-on-error` retained) — see owner ask #1 in §5.
-- P105 rebase-recovery gate (`quality/gates/...rebase-recovery...`): PASS after CR-01
-  fix + WR-01/WR-02 unit coverage added; verdict `quality/reports/verdicts/p105/`
-  independently confirmed GREEN (`0d3afe9`, unbiased phase-close).
-- Main-line pre-push gate suite at HEAD: 57 PASS / 1 filed P2 FAIL / 1 WAIVED / 0
-  NOT-VERIFIED — no masked-red confirmed (P0/P1-blocks-vs-P2-nonblocking is documented
-  doctrine, not a `|| true` mask).
-- **Open waiver clock:** `code/shell-coverage` P2 FAIL at 12.54% < 13% floor — filed,
-  not yet fixed, not a blocker for this relief.
-- **ADR-010 duplicate-record/slug→id waiver** remains OPEN — P105's Lane 3 correctly
-  refused to falsely mark it resolved; do not close it without doing the actual work.
-- `quality/reports/verifications/agent-ux/fleet-safety-*.json` (3 files) regenerate
-  DIRTY on any grading read (known persist-gate residual, see §5) — if they reappear
-  dirty in `git status`, `git checkout --` them; never commit them.
+- D2 leaf-isolation guard: 11/11 verifier PASS this session (`2ad2bf5`, `3206a2b`).
+- fleet-safety persist-gate: 4/4 verifier PASS (`309f0b6`, `72ae517`); both verdict
+  producers now converge through `quality/runners/_shell_verdict.py`; volatile
+  timestamp/transcript_path fields removed from committed JSON, proven idempotent
+  across 2 consecutive runs.
+- `structure/claim-vs-assertion-audit-required` catalog row: PASS (`1cb9dd1`,
+  `10bd508`).
+- `agent-ux/p94-pagination-prune-completeness-gate` catalog row: PASS — verifier ran
+  `cargo test -p reposix-cache --test pagination_prune_safety` live, 3/3 passed
+  (`13de686`, `b037876`).
+- **Open waiver expiry clocks:**
+  - Tutorials 01/02/04/05 self-start-sim waiver: expires **2026-09-15**.
+  - OP-8 structure waiver (SURPRISES-INTAKE / GOOD-TO-HAVES oversize): expires
+    **2026-08-08**.
+  - ADR-010 slug→id waiver (filed as GTH-09, MEDIUM-HIGH, this session): expiry not
+    yet set — routed as an owner scope question (see §5), do not assume a default
+    clock.
+- No REOPEN state currently active; nothing failed and got reopened this rotation.
 
-## 5. Mid-execution decisions + noticed-not-filed
+## 5. Mid-execution decisions not yet formalized + "noticed, not yet filed"
 
-**Owner-named-target asks (forward to L0 — NOT self-authorizable):**
-1. **gh404 real-backend verify.** Authorize ONE read-only GitHub call
-   (`reposix init github::reubenjohn/reposix` → `GET /repos/reubenjohn/reposix/issues`,
-   mutates nothing, needs `GITHUB_TOKEN` + `REPOSIX_ALLOWED_ORIGINS`) to retire the
-   KNOWN-LIMITATION and promote `ci.yml:263` to load-bearing.
-2. **RUSTSEC reframe.** Open dependabot PRs are tower-http #64 / gix #65 / rusqlite #66
-   (NOT memmap2/quinn-proto as the original RUSTSEC HIGH implied); zero open dependabot
-   alerts + green `cargo-audit` in CI → the original RUSTSEC HIGH looks
-   already-resolved. Confirm whether separate memmap2/quinn-proto PRs exist/were merged
-   before closing P107.
-3. **Dependabot merges #64/#65/#66** — owner-gated, all currently RED from staleness;
-   #64/#65 carry `feat!` breaking changes despite minor version labels; #66 (rusqlite
-   0.40.1) has real SQL-injection hardening. Recommended: rebase + re-check each, then
-   owner decides merge order.
+**De-facto decisions made live this rotation:**
+- Chose product-layer fix (refuse-on-worktree-root) over hook-layer-only patch for
+  the D2 incident, on the reasoning that the hook can't see non-Bash subprocess
+  paths — this is a real architectural call, not yet written into `crates/CLAUDE.md`
+  or `docs/how-it-works/trust-model.md` as a standing pattern. Successor/L0 should
+  decide whether this warrants a CLAUDE.md doctrine update (fix-it-twice, OP-3
+  meta-rule) beyond the SURPRISES-INTAKE entry.
+- Rejected a naive fix for RBF-FW-11 (would have opened a dodge hole) in favor of a
+  frozen `GRANDFATHERED_NULL_LV` set keyed off landing commit — deliberate, already
+  landed, no further action needed.
 
-**De-facto decisions made live this wave (not yet formalized elsewhere):**
-- P104 deliberately did NOT promote the real-backend GitHub claim — kept
-  `continue-on-error` + KNOWN-LIMITATION doc rather than declaring the fix complete
-  without a real-backend run. This is a live judgment call, not an oversight; owner
-  ask #1 above is the unblock.
-- P107 RUSTSEC treated as "assessment done, confirm pending" rather than closed — the
-  dependabot-PR evidence is suggestive but not yet independently re-verified via local
-  `cargo audit`.
+**Noticed-not-yet-filed, now triaged (do not re-triage):**
+- examples/README stale `reposix-sim` ref → **FALSE ALARM**, binaries match
+  Cargo.toml, no action.
+- P106/P113 collision concern → **FALSE ALARM**, P113 does not exist.
+- RBF-FW-07a → already resolved at P90, no action.
+- git-2.34 "verified down to 2.25" prose claim → **REAL**, routed into the git-2.34
+  CI-boundary queue item (§6 item 2) — this is the one open thread from noticing that
+  still needs code/doc action.
 
-**Noticed, not yet filed as its own phase (HIGH severity):**
-- **Silent lost-update bug** — `write_loop.rs:309`, stale `last_fetched_at` can cause a
-  concurrent write to silently overwrite newer SoT state without conflict detection.
-  Filed to `SURPRISES-INTAKE.md` by the P105 lane but has NOT been minted its own
-  ROADMAP phase yet. This is the single highest-severity open item from this wave —
-  schedule it before P108/P109 if severity holds up under a fresh read.
-- **`§5 stateless-connect` (git ≥2.34) transport claim is UNVERIFIED** on this VM (local
-  git is 2.25). Filed by P105; needs a modern-git CI run (or a container with git 2.34+)
-  to actually exercise the partial-clone `stateless-connect` path before the doc claim
-  can be called confirmed rather than asserted.
-- **`structure/verifier-script-exists.sh` gate missing.** TWO independent lanes this
-  wave recommended it — the P103 OP-8 file-splits broke two hardcoded-path verifiers
-  that a "does the verifier script this catalog row points to actually exist"
-  structural gate would have caught immediately. Non-cargo, cheap, high-leverage; not
-  yet built.
-- **agent-ux-walk persist-gate residual** — the 3 `fleet-safety-*.json` reports
-  regenerate dirty on every grading read (same shape of bug P103 already fixed once for
-  doc-alignment via the grade/persist split). Apply the identical fix pattern here.
-
-## ANOMALY — coordination hazard (flag prominently to the incoming C2/L0)
-
-A concurrent **herdr-manager** process appears to be live on this SAME working tree —
-it owns `.planning/MANAGER-HANDOVER.md` / `.planning/STATE.md` (this handover
-deliberately did NOT touch either file; STATE cursor advancement is deferred to that
-process). Four untracked directories with a foreign phase-numbering scheme appeared
-during this wave with unknown provenance:
-- `.planning/phases/21-op-7-hardening-bundle-contention-swarm-500-page-truncation-p/`
-- `.planning/phases/22-op-8-honest-tokenizer-benchmarks-replace-len-div-4-with-coun/`
-- `scripts/demos/`
-- `scripts/dev/`
-
-These do NOT match this milestone's `P102–P112` numbering (they look like a different
-phase-numbering scheme entirely) and were never committed or examined by this C2. The
-incoming C2/L0 MUST investigate their origin (diff their contents, check for another
-concurrent agent process, check timestamps) BEFORE committing or deleting anything in
-them. Do not assume they are garbage; do not assume they are safe to merge in.
-
-The observed shared-worktree write-race (staged-file cross-contamination + push-tip
-races, twice this wave) is consistent with more than one coordinating process writing
-to this tree concurrently — treat ALL future parallel lanes as worktree-isolated by
-default until this is resolved, not just as a performance optimization.
+**New owner-ask surfaced this rotation (not yet answered):** ADR-010 slug→id
+durable-create (filed as GTH-09) reads on the ROADMAP as a v0.14.0 HEADLINE item but
+is currently unstarted. Someone with milestone-scope authority needs to decide: ship
+it this milestone, or explicitly defer past v0.14.0. Do not silently assume either —
+raise to L0/owner before scheduling an executor against it.
 
 ## 6. Precise next steps (successor runbook)
 
-1. **Ground-truth first.** Run `git rev-parse HEAD origin/main` and `git status`
-   yourself — do not trust this document's snapshot if time has passed. Confirm still
-   clean / still `f944945`.
-2. **Investigate the 4 untracked dirs** (§5 ANOMALY) before touching anything else in
-   `.planning/phases/` or `scripts/`. Determine provenance; do not commit or delete
-   until understood. If they belong to the concurrent herdr-manager process, leave them
-   alone and note that in your own ground-truth pass.
-3. **Escalate the 3 owner-named-target asks (§5)** to L0 — do not self-authorize the
-   real-backend GitHub call or any dependabot merge.
-4. **Mint a ROADMAP phase for the lost-update HIGH** (`write_loop.rs:309`) — this is
-   the single most severe open finding from this wave; schedule it ahead of or
-   alongside P108/P109 depending on fresh-read severity.
-5. **Dispatch `structure/verifier-script-exists.sh` gate** as a cheap, non-cargo,
-   high-leverage lane (two lanes already recommended it independently this wave).
-6. **Confirm RUSTSEC (P107).** Run local `cargo audit`; if memmap2/quinn-proto are
-   confirmed clear (per the dependabot-PR evidence in §5), close P107 as a near-no-op
-   with a one-line verdict citing the confirming run.
-7. **Fix the agent-ux-walk persist-gate residual** using the same grade/persist split
-   pattern P103 already established for doc-alignment (`quality/CLAUDE.md` /
-   `quality/gates/agent-ux/` — locate P103's diff as the template).
-8. **Then work down the remaining queue** — P108 (prune_oid_map pagination-truncation),
-   P109 (RBF-FW-11 + quality-convergence), the `code/shell-coverage` 12.54%<13% P2 FAIL,
-   the open ADR-010 duplicate-record waiver (do the real work, don't false-close it) —
-   respecting ONE cargo invocation machine-wide and worktree isolation for any parallel
-   code-touching lane.
-9. **P110/P111 (OP-8/OP-9 absorption slots)** drain `SURPRISES-INTAKE.md` /
-   `GOOD-TO-HAVES.md` per OP-8/OP-9 doctrine — do this only after the hardening queue
-   above is substantially drained, per the milestone's own phase order.
-10. **P112 (OD-4 launch-readiness) stays a SCOPE-BUT-DO-NOT-START stub** until wave-2
-    hardening formally closes — do not pull it forward without an explicit executive
-    resequencing decision (DP-4 / ORCHESTRATION §10).
-11. **At milestone close:** run the non-skippable 9th probe
-    (`python3 quality/runners/run.py --cadence pre-release-real-backend`), distill
-    `SURPRISES-INTAKE.md`/`GOOD-TO-HAVES.md`/run findings into `.planning/RETROSPECTIVE.md`
-    (OP-9) BEFORE archiving, advance `.planning/STATE.md` cursor (coordinate with the
-    herdr-manager process rather than hand-editing it directly), and report tag-readiness
-    to L0. Do NOT `git tag`, trigger `release.yml`, or publish crates.io — that is L0's
-    irreversible action.
+1. **Spot-check ground truth first.** Re-run `git log --oneline -5`, `git status`,
+   `git stash list` yourself before trusting §1 of this file — foreign panes may have
+   moved state since this was written.
+2. **Next writer lane: tutorials 01/02/04/05 self-start-sim rewrite.** Waiver expires
+   2026-09-15, so it is not on fire, but it's the next queued wave-2 item with no
+   open scope questions. Dispatch a phase-coordinator (C1) for it. Needs sim runs —
+   MUST use `cargo run -p reposix-sim` + `/tmp`-clone isolation per the leaf-isolation
+   hard-stop; do not repeat the Phase 0 incident.
+3. **Then: git-2.34 CI boundary job.** Scope brief (already gathered, ready to hand a
+   C1 verbatim):
+   - The claim is prose-only AND self-inconsistent: `README.md` / `CONTRIBUTING.md:24`
+     say git ≥2.34 is "required"; `CLAUDE.md:98-101` + `crates/CLAUDE.md` say
+     "recommended, WARN not ERROR"; "verified down to 2.25" is anecdotal (dev box),
+     not CI-gated.
+   - No git-version matrix exists in CI today; all jobs run `ubuntu-latest` (~git
+     2.43).
+   - `dark-factory.sh sim` (`ci.yml:156`) is the existing e2e stateless-connect proof
+     — run it under a pinned older git to prove the 2.34 boundary.
+   - `doctor.rs:513` is where version classification (WARN vs ERROR) lives.
+   - Pinning precedent exists: gitleaks binary pin + kcov built-from-tag
+     (`ci.yml:68-79`, `:390-402`) — no git pin exists yet.
+   - **ROI call for the executor to make explicitly:** building git 2.25 from source
+     in CI is a real cost. Prefer: (a) fix the doc inconsistency (pick one true
+     floor, update all three docs to match), (b) cheaply prove the 2.34 boundary
+     (e.g. pin git 2.34 exactly, not 2.25), (c) if a full 2.25-floor CI job is judged
+     a big lift, file it to GOOD-TO-HAVES rather than build it now. This lane also
+     OWNS closing the noticed-item #2 prose-only-2.25-claim thread from §5.
+4. **shell-coverage floor** — MEDIUM, already filed, ~11.98% < 13% floor,
+   pre-existing/non-blocking, needs `kcov`. Low priority; pick up after the above.
+5. **OP-8 file splits** — SURPRISES-INTAKE.md and GOOD-TO-HAVES.md are 5-6x
+   oversize; structure waiver expires 2026-08-08. **Caution:** both files are
+   actively appended by concurrent sessions and the foreign stash may also touch
+   them — sequence the split carefully (read-modify-write with a fresh diff check
+   immediately before commit, explicit path only) to avoid clobbering a concurrent
+   append.
+6. **OP-9 distill** — at milestone-close, distill SURPRISES-INTAKE + GOOD-TO-HAVES +
+   run findings into a new `.planning/RETROSPECTIVE.md` section BEFORE archiving.
+   Do this after items 2-5, not before (need the full intake list settled first).
+7. **OD-4 launch-readiness** — scope-only stub. Do NOT start implementation; if
+   touched at all this rotation, only scope/clarify, then hand back.
+8. **Milestone-close checklist** (last, after 1-7 land): run the non-skippable 9th
+   probe `python3 quality/runners/run.py --cadence pre-release-real-backend`
+   (`agent-ux/milestone-close-vision-litmus-real-backend`, never waived); confirm
+   `git push origin main` landed before any verifier dispatch; advance the
+   `.planning/STATE.md` cursor (note: STATE.md has no discrete P108 cursor field
+   today — this is a narrative advance, coordinate wording with the herdr-manager
+   session to avoid a stomped edit); dispatch OP-9 distill (item 6) if not already
+   done; write the close-out RAISE LIST for L0 covering the two owner-gated items
+   below.
+9. **Owner-gated items — raise to L0, do not execute yourself:**
+   - Land `424d367` (branch `backup-lost-update-424d367`) to GitHub main;
+     dependabot #64/#65/#66 (cargo audit currently shows 0 live vulnerabilities →
+     recommend close-as-redundant, but owner confirms); gh404 live-GitHub
+     read-only verify.
+   - ADR-010 slug→id durable-create (GTH-09) ship-this-milestone-or-defer decision
+     (§5).
