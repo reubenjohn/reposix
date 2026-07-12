@@ -19,10 +19,10 @@ does reposix work itself. Keep this file lean; git history is the archive.
   immediately. (2) origin/main sync + dirty-tree check. (3) Spot-verify one
   load-bearing claim from any wrap report before relaying it. Workhorse self-reports
   are verified, not trusted.
-- **Context budget**: self under ~250k hard (soft ~200k) — refresh this file,
-  commit+push, run § Rotation. Workhorse: instruct ~100k soft / ~150k hard, then it
-  REPLACES `.planning/SESSION-HANDOVER.md`, commits+pushes, ends turn; you `/clear`
-  w1:p5 and launch its successor pointing at that file.
+- **Context budget**: self under ~400k hard (soft ~350k; owner raise 2026-07-12) —
+  refresh this file, commit+push, run § Rotation. Workhorse: instruct ~100k soft /
+  ~150k hard, then it REPLACES `.planning/SESSION-HANDOVER.md`, commits+pushes, ends
+  turn; you `/clear` w1:p5 and launch its successor pointing at that file.
 - **Real-backend mutations PRE-AUTHORIZED**: Confluence TokenWorld, GitHub
   reubenjohn/reposix issues, JIRA TEST. Credentials/spend beyond those still
   owner-gated.
@@ -52,23 +52,38 @@ does reposix work itself. Keep this file lean; git history is the archive.
   OP-9 GREEN, unbiased fresh-execution verifier). Aggregate
   `milestone-v0.14.0/VERDICT.md` deliberately NOT minted yet — the owner-gated 9th
   probe would force RED on its P0 row. Board fully green at `bda849d`.
-- **OWNER-ONLY queue (in order):** ① TokenWorld creds + non-default
-  `REPOSIX_ALLOWED_ORIGINS`, run `python3 quality/runners/run.py --cadence
-  pre-release-real-backend` (exit 0) → ② mint+ratify aggregate milestone-v0.14.0
-  verdict → ③ author/run tag script (CHANGELOG references it) → ④ cut v0.14.0 tag
-  (none exists local/remote). Never let the workhorse do these.
+- **v0.14.0 TAG DELEGATED TO MANAGER (owner, 2026-07-12)** — owner authorized the
+  manager to make and execute the tag call end-to-end, tag push included (external
+  mutation pre-approved under this delegation). Sequence (route work through the
+  workhorse/GSD, manager verifies each artifact, never over a red main): ① 9th probe
+  `python3 quality/runners/run.py --cadence pre-release-real-backend` with non-default
+  `REPOSIX_ALLOWED_ORIGINS` (exit 0) → ② mint+ratify aggregate milestone-v0.14.0
+  verdict (skeleton `quality/dispatch/milestone-close-verdict.md`) → ③ author/run tag
+  script (pattern `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh`) → ④ push
+  v0.14.0 tag. Ground truth: `scripts/preflight-real-backends.sh` = PASS 3/3, verified
+  firsthand by manager 2026-07-12 — the old "no real-backend creds" claim was stale.
+  Probe runs honestly first; only a genuine env wall justifies a recorded caveat call.
+- **Priority order (owner, 2026-07-12): big SURPRISES-INTAKE drain FIRST**
+  (`.planning/milestones/v0.14.0-phases/SURPRISES-INTAKE.md`, 43,988B / 44,000B
+  ceiling, ~20 entries incl. several HIGH — triage/drain substantially, not
+  byte-relief), then the tag sequence above.
 - Workhorse (w1:p5): **FRESH successor** launched post-`bda849d`, xhigh, entry point
-  `.planning/SESSION-HANDOVER.md`. Charter: hygiene lane only — /gsd-quick
-  progressive-disclosure splits of over-20k STATE.md + ROADMAP.md, relieve
-  SURPRISES-INTAKE 44000B ceiling (12B headroom). Hard-barred from owner-only actions
-  and from foreign tree work. VERIFY its quicks land green.
-- **RAISEs standing for the owner:** shared-tree contention (HIGH — a lane manipulated
-  a foreign code.json to pass a rebase; foreign uncommitted work still sits in the
-  shared tree: code.json delta + phases/21, phases/22, scripts/demos, scripts/dev,
-  verifications/docs-repro — fleet correctly left it untouched; decide worktree
-  isolation vs session serialization BEFORE the next parallel fleet run); P112 ROADMAP
-  prose-vs-artifact reconcile at /gsd-new-milestone; D5 fold-release-plz-into-CI still
-  open (CONSULT-DECISIONS).
+  `.planning/SESSION-HANDOVER.md`. Charter: hygiene lane — /gsd-quick
+  progressive-disclosure splits of over-20k STATE.md + ROADMAP.md; charter expansion
+  queued (send at next idle): OP-8-style big intake drain + record owner decisions.
+  Hard-barred from tag-push and foreign tree work. VERIFY its quicks land green.
+- **Owner decision (2026-07-12): shared-tree contention RESOLVED — session
+  serialization** (no parallel sessions writing the shared tree; no new worktree
+  infra). Route via workhorse: `[OWNER]` disposition row in CONSULT-DECISIONS.md +
+  fix-twice into ORCHESTRATION.md doctrine. Foreign uncommitted work still in the
+  tree (code.json delta + phases/21, phases/22, scripts/demos, scripts/dev,
+  verifications/docs-repro) — triage/land-or-drop it as part of the serialization
+  cleanup, via workhorse.
+- **RAISEs standing for the owner:** v0.13.0 tag still uncut, awaiting owner pre-tag
+  actions since 2026-07-05 — the v0.14.0 tag delegation does NOT extend to it unless
+  the owner says so (manager recommends extending); P112 ROADMAP prose-vs-artifact
+  reconcile at /gsd-new-milestone; D5 fold-release-plz-into-CI still open
+  (CONSULT-DECISIONS).
 - Fixed this session: CI-waiter hangs (twice) → durable `scripts/ci-wait.sh` landed;
   error codes + `reposix explain <code>` now a v0.15.0 HEADLINE phase (`e5b969d`).
 - **Monitoring craft:** herdr idle/working waits FLAP while background subagents run.
