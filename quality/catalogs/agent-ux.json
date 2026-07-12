@@ -1096,6 +1096,47 @@
       ]
     },
     {
+      "id": "agent-ux/p110-surprises-absorption",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. Minted status:FAIL in the P110 catalog-first commit (110-01 T01) per quality/CLAUDE.md § Catalog-first rule — the row asserts the EVENTUAL drained state before the drain lands.",
+      "comment": "P110 (+2 reservation slot 1) drain verifier for v0.14.0. Asserts SURPRISES-INTAKE.md is fully drained — zero OPEN entries, >=10 terminal-STATUS entries (RESOLVED|DEFERRED|WONTFIX), F-K5 honesty spot-check artifact present. Mirrors the v0.13.0 P87 precedent, swapping the milestone/phase paths and raising the terminal floor to match the v0.14.0 surfaced count (P102-P109 surfaced 16 entries). Cadence on-demand because the intake is milestone-bounded; once v0.14.0 archives the row becomes a historical PASS marker per the v0.12.1 P76 / v0.13.0 P87 precedent.",
+      "sources": [
+        "quality/gates/agent-ux/p110-surprises-absorption.sh",
+        ".planning/milestones/v0.14.0-phases/SURPRISES-INTAKE.md",
+        ".planning/phases/110-op-8-slot-1-surprises-drain/honesty-spot-check.md",
+        ".planning/REQUIREMENTS.md (D2-SURPRISES-01)"
+      ],
+      "command": "bash quality/gates/agent-ux/p110-surprises-absorption.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/p110-surprises-absorption.sh exits 0 against the local working tree",
+          "zero `**STATUS:** OPEN` lines in .planning/milestones/v0.14.0-phases/SURPRISES-INTAKE.md (all 16 entries flipped to terminal status)",
+          "at least 10 entries carry terminal STATUS (RESOLVED|DEFERRED|WONTFIX)",
+          ".planning/phases/110-op-8-slot-1-surprises-drain/honesty-spot-check.md exists as verifier-readable F-K5 honesty-check evidence"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p110-surprises-absorption.sh",
+        "args": [],
+        "timeout_s": 30,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p110-surprises-absorption.json",
+      "status": "FAIL",
+      "minted_at": "2026-07-12T00:00:00Z",
+      "last_verified": "2026-07-12T00:00:00Z",
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: rerun P110 drain. SURPRISES-INTAKE.md should have 0 OPEN entries; each entry needs RESOLVED (commit SHA), DEFERRED (target milestone + rationale), or WONTFIX (rationale), and .planning/phases/110-op-8-slot-1-surprises-drain/honesty-spot-check.md must exist.",
+      "waiver": null,
+      "transport_claim": false,
+      "claim_vs_assertion_audit": "If the SURPRISES-INTAKE.md is not fully drained -- any OPEN entries remain, or fewer than 10 entries carry terminal STATUS, or honesty-spot-check.md is missing -- the fence-aware awk assertions fail and the row stays FAIL (as it is now at catalog-first mint). Once the P110 executor drains all entries to terminal status and writes the F-K5 honesty spot-check, the gate exits 0, writes the artifact, and the row flips PASS. transport_claim is false: this is a planning-artifact drain assertion, not a claim about behavior against any external service.",
+      "cadences": [
+        "on-demand"
+      ]
+    },
+    {
       "id": "agent-ux/p88-good-to-haves-drained",
       "dimension": "agent-ux",
       "kind": "mechanical",
