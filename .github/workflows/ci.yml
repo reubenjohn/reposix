@@ -416,6 +416,38 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
+  runner-unit-tests:
+    # OP-8 P110 intake row 10: the quality/runners/test_*.py guards shipped but
+    # were never collected by CI, so durable regression guards (e.g. the
+    # fleet-safety-untracked DP-2 guard from 3d3e60e) were inert -- GREEN only on a
+    # local run, a metric generated-but-not-watched. This job runs the ENV-SAFE
+    # subset: hermetic tests that need NO backend creds / network. Each was
+    # confirmed passing locally (2026-07-12) before wiring. No `needs:` -- it
+    # shares nothing with the Rust build, so it runs immediately in parallel.
+    #
+    # DELIBERATE EXCLUSION: quality/runners/test_realbackend.py is NOT run here --
+    # it exercises the real-backend env-gating path and belongs to the credentialed
+    # real-backend cadence (pre-release-real-backend), not this hermetic lane.
+    name: runner unit tests (hermetic)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install pytest
+        run: python -m pip install --upgrade pip pytest
+      - name: Run env-safe runner unit tests
+        run: |
+          python3 -m pytest -q \
+            quality/runners/test_audit_field.py \
+            quality/runners/test_run.py \
+            quality/runners/test_verdict.py \
+            quality/runners/test_freshness.py \
+            quality/runners/test_freshness_synth.py \
+            quality/runners/test_fleet_safety_verdicts_untracked.py
+
   coverage:
     name: coverage
     runs-on: ubuntu-latest
