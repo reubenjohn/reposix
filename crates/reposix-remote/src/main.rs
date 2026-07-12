@@ -36,7 +36,7 @@ use crate::diff::PlannedAction;
 use crate::fast_import::{emit_import_stream, parse_export_stream};
 use crate::protocol::Protocol;
 use crate::stateless_connect::{handle_stateless_connect, StatelessConnectOutcome};
-use reposix_remote::backend_dispatch::{self, instantiate, sanitize_project_for_cache};
+use reposix_remote::backend_dispatch::{self, instantiate};
 
 /// Deferred-exit flag — set by the export path on push refusal. We finish
 /// the protocol exchange cleanly (so git doesn't see a torn pipe) and bail
@@ -59,13 +59,11 @@ pub(crate) struct State {
     pub(crate) backend_name: String,
     /// Project identifier passed to [`BackendConnector`] methods —
     /// `demo` for sim, `owner/repo` for GitHub, `TokenWorld` for
-    /// Confluence, `TEST` for JIRA.
+    /// Confluence, `TEST` for JIRA. This is the SINGLE identity
+    /// (S-260707-gh404): the RAW slug reaches the backend verbatim, and
+    /// [`reposix_cache::Cache::open`] sanitizes it to the flat
+    /// `<backend>-<owner-repo>.git` cache dir only at path derivation.
     pub(crate) project: String,
-    /// Filesystem-safe variant of `project` used as the cache
-    /// directory component (`<root>/reposix/<backend>-<cache_project>.git`).
-    /// Differs from `project` only for GitHub where `owner/repo` is
-    /// rewritten to `owner-repo`.
-    cache_project: String,
     push_failed: bool,
     /// Monotonic counter: total `want ` lines observed across every
     /// RPC turn handled by the `stateless-connect` tunnel. Wired in
@@ -135,11 +133,11 @@ fn real_main() -> Result<bool> {
     };
     let backend = instantiate(&parsed).context("instantiate backend")?;
     let backend_name = parsed.kind.slug().to_owned();
-    // GitHub `owner/repo` collapses to `owner-repo` for the cache
-    // directory but stays `owner/repo` everywhere it reaches the
-    // BackendConnector trait.
-    let project_for_cache = sanitize_project_for_cache(&parsed.project);
-    let project_for_backend = parsed.project;
+    // S-260707-gh404: keep the RAW project slug (`owner/repo` for GitHub)
+    // as the single identity. It reaches the `BackendConnector` verbatim
+    // (so `GET /repos/owner/repo/issues` 200s), and `Cache::open` sanitizes
+    // it to the flat `owner-repo` dir ONLY at on-disk path derivation.
+    let project = parsed.project;
 
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -150,8 +148,7 @@ fn real_main() -> Result<bool> {
         rt,
         backend,
         backend_name,
-        project: project_for_backend,
-        cache_project: project_for_cache,
+        project,
         push_failed: false,
         last_fetch_want_count: 0,
         cache: None,
@@ -293,12 +290,8 @@ pub(crate) fn ensure_cache(state: &mut State) -> Result<()> {
     if state.cache.is_some() {
         return Ok(());
     }
-    let cache = Cache::open(
-        state.backend.clone(),
-        &state.backend_name,
-        &state.cache_project,
-    )
-    .context("open reposix-cache")?;
+    let cache = Cache::open(state.backend.clone(), &state.backend_name, &state.project)
+        .context("open reposix-cache")?;
     // Phase 36-followup: best-effort audit row recording which backend
     // served this session. Useful forensics signal — pre-dispatch the
     // helper hardcoded `"sim"` and there was no way to trace which

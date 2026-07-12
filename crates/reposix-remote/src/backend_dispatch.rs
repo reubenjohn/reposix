@@ -178,21 +178,15 @@ fn classify_origin(origin: &str, marker: Option<&str>) -> Result<BackendKind> {
     ))
 }
 
-/// Replace path-unsafe characters in a project name so it can be used
-/// as a directory component under `<cache-root>/reposix/`.
+/// Re-export of the canonical cache-slug sanitizer, which now lives in
+/// [`reposix_core::sanitize_project_for_cache`] (single source of truth,
+/// S-260707-gh404). Kept here for backward-compatible call sites.
 ///
-/// GitHub's `owner/repo` becomes `owner-repo`. Other characters that
-/// would create directory ambiguity (`\`, `:`, `..`) are also replaced.
-#[must_use]
-pub fn sanitize_project_for_cache(project: &str) -> String {
-    project
-        .chars()
-        .map(|c| match c {
-            '/' | '\\' | ':' => '-',
-            c => c,
-        })
-        .collect()
-}
+/// NOTE: production callers no longer sanitize the project BEFORE
+/// [`reposix_cache::Cache::open`] — the backend-facing slug must stay RAW
+/// (`owner/repo`) or GitHub 404s; sanitization happens ONCE, inside
+/// `reposix_cache::path::resolve_cache_path`, for the on-disk path only.
+pub use reposix_core::sanitize_project_for_cache;
 
 /// Build the concrete [`BackendConnector`] for a parsed URL, reading
 /// credentials from environment variables per
@@ -264,8 +258,10 @@ pub fn instantiate(parsed: &ParsedRemote) -> Result<Arc<dyn BackendConnector>> {
 ///
 /// [`open_audit_db`]: reposix_core::audit::open_audit_db
 fn open_connector_audit(kind: BackendKind, project: &str) -> Result<Arc<Mutex<Connection>>> {
-    let cache_project = sanitize_project_for_cache(project);
-    let bare = resolve_cache_path(kind.slug(), &cache_project)
+    // `resolve_cache_path` sanitizes the slug internally (single site,
+    // S-260707-gh404) — pass the RAW `project` and let it derive the flat
+    // `<backend>-<sanitized>.git` dir; the audit DB is its `.audit.db` sibling.
+    let bare = resolve_cache_path(kind.slug(), project)
         .map_err(|e| anyhow!("resolve cache path for audit DB: {e}"))?;
     // Sibling file: `<...>-<project>.git` -> `<...>-<project>.audit.db`.
     let audit_path = bare.with_extension("audit.db");

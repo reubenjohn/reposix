@@ -100,9 +100,9 @@ pub async fn run(reconcile: bool, path: Option<PathBuf>) -> Result<()> {
     let backend = backend_dispatch::instantiate(&parsed)
         .with_context(|| format!("instantiate backend for {sot}"))?;
     let backend_slug = parsed.kind.slug();
-    let cache_project = backend_dispatch::sanitize_project_for_cache(&parsed.project);
-
-    let cache = Cache::open(backend, backend_slug, &cache_project).context("open cache")?;
+    // S-260707-gh404: pass the RAW project slug — `Cache::open` sanitizes it to
+    // the flat cache dir internally; the backend must see `owner/repo` verbatim.
+    let cache = Cache::open(backend, backend_slug, &parsed.project).context("open cache")?;
     // ADR-010 / RBF-LR-01: call `build_from()` directly (NOT `cache.sync()`,
     // which takes the delta path whenever a `last_fetched_at` cursor is
     // present). `--reconcile` promises "a full list_records walk + cache

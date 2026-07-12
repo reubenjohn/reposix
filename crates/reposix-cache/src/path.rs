@@ -31,10 +31,16 @@ pub fn resolve_cache_path(backend: &str, project: &str) -> Result<PathBuf> {
                 "no cache dir: set REPOSIX_CACHE_DIR or ensure XDG_CACHE_HOME/HOME is set",
             ))
         })?;
-    // Safe filename: callers pass already-validated slugs; we do NOT re-validate here.
+    // SINGLE sanitization site (S-260707-gh404): callers pass the RAW project
+    // slug (e.g. GitHub's `owner/repo`), which must reach the backend verbatim
+    // or `GET /repos/{project}/issues` 404s. We sanitize here — and ONLY here —
+    // to collapse path-unsafe characters (`/`, `\`, `:`) into a single flat
+    // directory component. Idempotent: an already-safe slug passes through
+    // unchanged.
+    let cache_slug = reposix_core::sanitize_project_for_cache(project);
     Ok(root
         .join("reposix")
-        .join(format!("{backend}-{project}.git")))
+        .join(format!("{backend}-{cache_slug}.git")))
 }
 
 #[cfg(test)]
@@ -50,6 +56,27 @@ mod tests {
         std::env::set_var(CACHE_DIR_ENV, tmp.path());
         let p = resolve_cache_path("sim", "proj-1").unwrap();
         assert_eq!(p, tmp.path().join("reposix").join("sim-proj-1.git"));
+        match prev {
+            Some(v) => std::env::set_var(CACHE_DIR_ENV, v),
+            None => std::env::remove_var(CACHE_DIR_ENV),
+        }
+    }
+
+    #[test]
+    fn github_slug_is_sanitized_to_flat_dir() {
+        // S-260707-gh404: the RAW `owner/repo` slug must collapse to a single
+        // flat `github-owner-repo.git` directory — never a nested `owner/`
+        // subdir. (The backend still gets the raw slug; that split is pinned
+        // end-to-end in tests/github_project_slug_not_sanitized.rs.)
+        let tmp = tempfile::tempdir().unwrap();
+        let prev = std::env::var(CACHE_DIR_ENV).ok();
+        // SAFETY: restored below; see env_var_wins.
+        std::env::set_var(CACHE_DIR_ENV, tmp.path());
+        let p = resolve_cache_path("github", "owner/repo").unwrap();
+        assert_eq!(p, tmp.path().join("reposix").join("github-owner-repo.git"));
+        // Idempotent: an already-sanitized slug is unchanged.
+        let q = resolve_cache_path("github", "owner-repo").unwrap();
+        assert_eq!(p, q);
         match prev {
             Some(v) => std::env::set_var(CACHE_DIR_ENV, v),
             None => std::env::remove_var(CACHE_DIR_ENV),

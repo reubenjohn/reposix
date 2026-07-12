@@ -24,6 +24,37 @@ use crate::record::RecordId;
 /// collision suffixes (`-NN`) and for the kernel's own bookkeeping.
 pub const SLUG_MAX_BYTES: usize = 60;
 
+/// Replace path-unsafe characters in a project slug so it can be used as a
+/// single directory component under `<cache-root>/reposix/`.
+///
+/// GitHub's `owner/repo` becomes `owner-repo`; other characters that would
+/// create directory ambiguity (`\`, `:`) are also replaced with `-`.
+///
+/// This is the SINGLE source of truth for cache-dir slug sanitization
+/// (`reposix-cache`'s `resolve_cache_path` calls it; `reposix-remote`
+/// re-exports it). It lives in `reposix-core` because both the cache
+/// materializer and the remote helper must derive the identical on-disk path,
+/// and the cache crate cannot depend on the remote crate.
+///
+/// The mapping is idempotent — sanitizing an already-sanitized slug is a
+/// no-op (`owner-repo` → `owner-repo`), because `-` is not itself a
+/// replaced character.
+///
+/// IMPORTANT: this is for the ON-DISK PATH ONLY. The backend-facing project
+/// slug (the string passed to [`crate::backend::BackendConnector`] methods)
+/// must stay RAW (`owner/repo`), or GitHub's `GET /repos/{project}/issues`
+/// 404s. See S-260707-gh404.
+#[must_use]
+pub fn sanitize_project_for_cache(project: &str) -> String {
+    project
+        .chars()
+        .map(|c| match c {
+            '/' | '\\' | ':' => '-',
+            c => c,
+        })
+        .collect()
+}
+
 /// Validate a single path component.
 ///
 /// Rejects empty, `.`, `..`, and anything containing `/` or `\0`.

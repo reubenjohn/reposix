@@ -361,12 +361,9 @@ fn record_worktree_in_cache(spec: &str, path: &Path) {
     let Some((backend, project)) = spec.split_once("::") else {
         return;
     };
-    let cache_project = if backend == "github" {
-        project.replace('/', "-")
-    } else {
-        project.to_string()
-    };
-    let Ok(cache_path) = reposix_cache::resolve_cache_path(backend, &cache_project) else {
+    // S-260707-gh404: pass the RAW project slug — `resolve_cache_path` is the
+    // single sanitization site (collapses `owner/repo` → the flat cache dir).
+    let Ok(cache_path) = reposix_cache::resolve_cache_path(backend, project) else {
         return;
     };
     let db = cache_path.join("cache.db");
@@ -436,15 +433,11 @@ fn rewind_to_since(spec: &str, path: &Path, target_rfc3339: &str) -> Result<()> 
     let (backend, project) = spec
         .split_once("::")
         .ok_or_else(|| anyhow!("invalid spec `{spec}`: expected `<backend>::<project>` form"))?;
-    // GitHub uses `owner/repo` in the spec but `owner-repo` as the cache
-    // dir name (sanitize_project_for_cache); mirror that here.
-    let cache_project = if backend == "github" {
-        project.replace('/', "-")
-    } else {
-        project.to_string()
-    };
-    let cache_path = reposix_cache::resolve_cache_path(backend, &cache_project)
-        .with_context(|| format!("resolve cache path for {backend}::{cache_project}"))?;
+    // S-260707-gh404: pass the RAW project slug — `resolve_cache_path` is the
+    // single sanitization site (collapses GitHub's `owner/repo` → the flat
+    // `github-owner-repo.git` cache dir).
+    let cache_path = reposix_cache::resolve_cache_path(backend, project)
+        .with_context(|| format!("resolve cache path for {backend}::{project}"))?;
     if !cache_path.exists() {
         bail!(
             "no cache at {} — run `reposix init` without --since first to populate it",

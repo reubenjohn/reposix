@@ -159,9 +159,9 @@ pub async fn run(args: AttachArgs) -> Result<()> {
         .with_context(|| format!("instantiate backend connector for `{spec}`"))?;
 
     let backend_slug = parsed.kind.slug();
-    let cache_project = backend_dispatch::sanitize_project_for_cache(&parsed.project);
-
-    let mut cache = reposix_cache::Cache::open(connector, backend_slug, &cache_project)
+    // S-260707-gh404: pass the RAW project slug — `Cache::open` sanitizes it to
+    // the flat cache dir internally; the backend must see `owner/repo` verbatim.
+    let mut cache = reposix_cache::Cache::open(connector, backend_slug, &parsed.project)
         .context("open cache")?;
 
     // Build the cache tree from REST. `build_from` populates `oid_map`
