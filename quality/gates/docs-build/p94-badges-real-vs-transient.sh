@@ -39,7 +39,12 @@ mkdir -p "$(dirname "$ARTIFACT")"
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 DETERMINATION="${REPO_ROOT}/.planning/phases/94-real-backend-frictions/94-D3-badges-determination.md"
-GOODTOHAVES="${REPO_ROOT}/.planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md"
+# OP-8 file-size drain (2026-07-07) split GOOD-TO-HAVES.md into per-part child
+# files under good-to-haves/; the top-level file is now an index-only pointer
+# with no **STATUS:** marker, so the entry body must be located in whichever
+# part file actually holds it. Search the index file AND every part file.
+GOODTOHAVES_INDEX="${REPO_ROOT}/.planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md"
+GOODTOHAVES_PARTS_DIR="${REPO_ROOT}/.planning/milestones/v0.13.0-phases/good-to-haves"
 BADGES="${REPO_ROOT}/quality/gates/docs-build/badges-resolve.py"
 
 PASSED=()
@@ -71,18 +76,32 @@ pass "badges-resolve.py re-run on >=2 spaced occasions; pass/fail pattern record
 grep -qiE 'Verdict:.*(TRANSIENT|REAL)' "$DETERMINATION" \
   || fail "determination artifact records no real-vs-transient verdict"
 # The GOOD-TO-HAVES badges-resolve entry must be flipped from OPEN to RESOLVED.
-python3 - "$GOODTOHAVES" <<'PY' || fail "GOOD-TO-HAVES badges-resolve entry is not RESOLVED (still OPEN or missing)"
-import re, sys
-text = open(sys.argv[1], encoding="utf-8").read()
-# Isolate the badges-resolve entry (its header to the next --- rule or EOF).
-m = re.search(r"^## .*`badges-resolve` FAILs on pre-push.*?$(.*?)(?=^---\s*$|\Z)",
-              text, re.S | re.M)
-if not m:
-    sys.exit(1)
-body = m.group(1)
-# Must be RESOLVED, not OPEN, and cite a verdict.
-ok = re.search(r"\*\*STATUS:\*\*\s*RESOLVED", body) and re.search(r"TRANSIENT|REAL", body)
-sys.exit(0 if ok else 1)
+# Search the index file first (pre-split layout), then every part file (post
+# OP-8-split layout) — whichever one actually holds the full entry body wins.
+python3 - "$GOODTOHAVES_INDEX" "$GOODTOHAVES_PARTS_DIR" <<'PY' || fail "GOOD-TO-HAVES badges-resolve entry is not RESOLVED (still OPEN or missing)"
+import glob, re, sys
+
+index_path, parts_dir = sys.argv[1], sys.argv[2]
+candidates = [index_path] + sorted(glob.glob(parts_dir + "/*.md"))
+
+pattern = re.compile(
+    r"^## .*`badges-resolve` FAILs on pre-push.*?$(.*?)(?=^---\s*$|\Z)",
+    re.S | re.M,
+)
+
+for path in candidates:
+    try:
+        text = open(path, encoding="utf-8").read()
+    except OSError:
+        continue
+    m = pattern.search(text)
+    if not m:
+        continue
+    body = m.group(1)
+    if re.search(r"\*\*STATUS:\*\*\s*RESOLVED", body) and re.search(r"TRANSIENT|REAL", body):
+        sys.exit(0)
+
+sys.exit(1)
 PY
 pass "real-vs-transient verdict recorded + GOOD-TO-HAVES badges-resolve entry RESOLVED"
 

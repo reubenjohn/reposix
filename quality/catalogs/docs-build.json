@@ -173,8 +173,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/docs-build/p94-badges-real-vs-transient.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-12T07:33:38Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "NOT DONE this session (catalog-first SPEC mint). During the P94-P97 debt-drain window: re-run `python3 quality/gates/docs-build/badges-resolve.py` >=2x spaced apart, record which badge (if any) flaps. If a specific URL is consistently 404/non-image -> fix it in README.md/docs/index.md. If it flaps -> add retry/backoff to badges-resolve.py (or a documented waiver note). Then close the GOOD-TO-HAVES badges-resolve entry with the verdict.",
