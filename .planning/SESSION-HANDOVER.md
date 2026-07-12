@@ -69,6 +69,16 @@ order autonomously; phase rotations absorb below the top. Its charter (queue det
   9th probe). BLOCKED until P106+P107 GREEN. C2 STOPS at the tag boundary (owner cuts `v*`).
 - **P112** — OD-4 launch-readiness SCOPE-ONLY stub, DO-NOT-START.
 
+**IN FLIGHT (parallel to C2) — release-plz RED fix** (`SendMessage` → `a5121f9134cea2f6d`,
+opus): owner eyes-and-ears found release-plz persistently RED on main (run `29199251313`)
+— it refuses on a dirty CI checkout because three
+`quality/reports/verifications/agent-ux/fleet-safety-*.json` regenerate at grade time and
+diverge from committed content (same re-dirty class `309f0b6` fixed locally; CI path still
+hits it). Lane is choosing byte-stable-at-grade vs gitignore+untrack (P102 precedent),
+building a dirty→clean regression check, and deciding whether release-plz folds into the
+`code/ci-green-on-main` bar. **Runs CARGO-FREE** (C2 holds the machine-wide cargo token) —
+if a future L0 dispatches more, respect the single-cargo rule vs both live lanes.
+
 RESIDUAL follow-up (defense-in-depth, observed vector already closed): worktree-shared
 `.git` object-store self-safety + non-Bash subprocess boundary — not yet lane'd.
 
