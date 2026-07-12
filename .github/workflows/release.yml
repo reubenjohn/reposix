@@ -45,13 +45,65 @@ on:
       - 'v*'
       - 'reposix-cli-v*'
   workflow_dispatch:
+    inputs:
+      skip_ci_gate:
+        description: 'Bypass the CI-green precondition (dry-run / manual re-run only)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
 
 jobs:
+  ci-green-gate:
+    # OP-8 P110 intake row 8: a `v*` tag must NOT publish crates/binaries over a
+    # red main. release.yml is TAG-triggered, so docs.yml's `workflow_run` gate
+    # cannot apply (workflow_run keys off a workflow completing, not a tag push);
+    # instead this job queries the GitHub Actions API for ci.yml runs at THIS
+    # commit (github.sha == the tagged commit, which was itself a push to main and
+    # therefore already ran ci.yml) and FAILS CLOSED unless the latest COMPLETED
+    # run concluded success. Every downstream job hangs off `plan`, which now
+    # `needs: ci-green-gate`, so a red/unknown CI blocks the entire pipeline before
+    # any artifact is built or published. Manual dry-runs bypass via the
+    # workflow_dispatch `skip_ci_gate` input. Uses only the bundled `gh` CLI +
+    # its built-in `--jq` -- no new dependency.
+    name: require green CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assert ci.yml concluded success for this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.skip_ci_gate }}" == "true" ]]; then
+            echo "workflow_dispatch with skip_ci_gate=true -- bypassing CI-green precondition (dry-run)."
+            exit 0
+          fi
+          SHA="${{ github.sha }}"
+          echo "Checking latest completed ci.yml conclusion for commit ${SHA}..."
+          # workflow_runs is returned newest-first; `first(... completed ...)` is
+          # therefore the LATEST concluded run for this SHA (a re-run picks up the
+          # most recent). `// "none"` covers the no-run-found case.
+          CONCL=$(gh api \
+            "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?head_sha=${SHA}&per_page=30" \
+            --jq 'first(.workflow_runs[] | select(.status=="completed") | .conclusion) // "none"')
+          echo "Latest completed ci.yml conclusion for ${SHA}: ${CONCL}"
+          case "$CONCL" in
+            success)
+              echo "PASS: CI is green for ${SHA} -- release may proceed." ;;
+            none)
+              echo "BLOCK: no completed ci.yml run found for ${SHA}; refusing to publish over unverified CI." >&2
+              echo "Recovery: wait for ci.yml to finish on this commit, then re-run this workflow;" >&2
+              echo "          or re-dispatch manually with skip_ci_gate=true for a dry-run." >&2
+              exit 1 ;;
+            *)
+              echo "BLOCK: latest ci.yml run for ${SHA} concluded '${CONCL}' (not success) -- main is RED; refusing to publish." >&2
+              exit 1 ;;
+          esac
+
   plan:
     name: plan
+    needs: ci-green-gate
     runs-on: ubuntu-latest
     outputs:
       release_tag: ${{ steps.plan.outputs.release_tag }}
