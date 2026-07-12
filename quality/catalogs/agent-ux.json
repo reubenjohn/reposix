@@ -2211,7 +2211,8 @@
           "The BLOCK stderr names the rule (fixture identity t@t rejected), the constraint (fixture identity must never reach shared history/origin), and a recovery hint (commit from your /tmp clone under a real identity).",
           ".githooks/pre-commit refuses a commit whose GIT_AUTHOR_IDENT/GIT_COMMITTER_IDENT matches the fixture list -- proven in a throwaway /tmp clone with core.hooksPath set to the repo .githooks -- exiting non-zero.",
           "A control payload committing under a real (non-fixture) identity is NOT blocked (hook exits 0) -- no false-positive.",
-          "A triggered-hook transcript is committed at quality/reports/transcripts/fleet-safety-tat-identity-reject-<RFC3339>.txt containing an argv: line, env_keys (NAMES only), cwd, exit_code, and the teaching stderr."
+          "QUOTING TOLERANCE (P102 hardening): a fixture email wrapped in single or double quotes (-c user.email='t@t' / \"t@t\") STILL exits 2 (BLOCK), while a real address that merely contains t@t as a substring (scott@things.io) is NOT blocked (exit 0) -- the match stays delimiter-bounded.",
+          "PROOF IS REGENERATED AT GRADE-TIME (kind: shell-subprocess): the durable committed proof is the verifier script (quality/gates/agent-ux/fleet-safety-tat-identity-reject.sh) + the hook (.claude/hooks/leaf-isolation-guard.sh), NOT a frozen transcript. Running the verifier at grade-time WRITES a fresh transcript to quality/reports/transcripts/fleet-safety-tat-identity-reject-<RFC3339>.txt (gitignored per-run snapshot) whose body shows the exit-2 BLOCK, the teaching stderr, and the no-false-positive control -- the row grades from that live regeneration, never a committed .txt."
         ],
         "artifact": {
           "transcript_path": "quality/reports/transcripts/fleet-safety-tat-identity-reject-<RFC3339>.txt"
@@ -2258,7 +2259,10 @@
           "Fail-closed: with the effective cwd undeterminable, a leaf-setup verb is BLOCKED (exit 2, default-deny).",
           "The BLOCK stderr teaches that leaf setup (reposix init/attach/sync, sim-seed) must cd into a /tmp clone in the same Bash invocation, citing ORCHESTRATION.md section Leaf isolation.",
           "grep over .claude/hooks/leaf-isolation-guard.sh (comment lines filtered) returns 0 occurrences of 'git worktree remove --force' -- the guard is not built on the corruption vector.",
-          "A triggered-hook transcript is committed at quality/reports/transcripts/fleet-safety-leaf-isolation-enforce-<RFC3339>.txt with argv, env_keys (NAMES only), cwd, exit_code, stderr."
+          "CANONICAL-FORM COVERAGE (P102 hardening): the CLAUDE.md-documented dev spellings ALL exit 2 (BLOCK) at the shared tree -- path-suffixed (/usr/bin/reposix init, ./target/debug/reposix init), cargo (cargo run -p reposix-cli -- init|attach), and bare reposix attach|sync -- not only literal `reposix init`.",
+          "REALPATH EFFECTIVE-LOCATION (P102 hardening): cd-back (cd /tmp/x && cd <shared> && ...) and /tmp/../<shared> traversal canonicalize to the shared tree and BLOCK (exit 2); a symlinked /tmp cwd that resolves to shared also BLOCKs; a genuine /tmp target still ALLOWs (no over-block).",
+          "FAIL-CLOSED PARSE (P102 hardening): a non-empty but unparseable tool payload exits 2 (BLOCK) rather than falling through to allow; an empty payload with nothing to inspect still passes.",
+          "PROOF IS REGENERATED AT GRADE-TIME (kind: shell-subprocess): the durable committed proof is the verifier script (quality/gates/agent-ux/fleet-safety-leaf-isolation-enforce.sh) + the hook, NOT a frozen transcript. Running the verifier at grade-time WRITES a fresh transcript to quality/reports/transcripts/fleet-safety-leaf-isolation-enforce-<RFC3339>.txt (gitignored per-run snapshot) showing the exit-2 BLOCKs + the teaching stderr citing ORCHESTRATION.md -- the row grades from that live regeneration, never a committed .txt."
         ],
         "artifact": {
           "transcript_path": "quality/reports/transcripts/fleet-safety-leaf-isolation-enforce-<RFC3339>.txt"
@@ -2304,7 +2308,8 @@
           "The real shared .git/config sha256 is byte-identical before and after the blocked attempt -- the write never executed because PreToolUse blocks pre-execution.",
           "A payload targeting an explicit /tmp clone ('git config --file /tmp/<clone>/.git/config core.bare true') is ALLOWED (hook exits 0).",
           "The BLOCK stderr names core.bare/user.email as forbidden shared-config writes and gives the recovery (cd into your /tmp clone first).",
-          "A triggered-hook transcript is committed at quality/reports/transcripts/fleet-safety-shared-config-write-guard-<RFC3339>.txt with argv, env_keys (NAMES only), cwd, exit_code, stderr."
+          "REALPATH + SHORT-FLAG (P102 hardening): a cd-back write (cd /tmp/x && cd <shared> && git config core.bare true) lands in the shared tree and BLOCKs (exit 2); the `-f` short form of --file pointing at a /tmp clone is ALLOWED (exit 0, not over-blocked); a bare `git config --get core.bare` READ is ALLOWED (exit 0).",
+          "PROOF IS REGENERATED AT GRADE-TIME (kind: shell-subprocess): the durable committed proof is the verifier script (quality/gates/agent-ux/fleet-safety-shared-config-write-guard.sh) + the hook, NOT a frozen transcript. Running the verifier at grade-time WRITES a fresh transcript to quality/reports/transcripts/fleet-safety-shared-config-write-guard-<RFC3339>.txt (gitignored per-run snapshot) recording the exit-2 BLOCK, the teaching stderr, and the sha256(before)==sha256(after) byte-unchanged proof of the shared .git/config -- the row grades from that live regeneration, never a committed .txt."
         ],
         "artifact": {
           "transcript_path": "quality/reports/transcripts/fleet-safety-shared-config-write-guard-<RFC3339>.txt"

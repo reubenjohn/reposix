@@ -57,6 +57,23 @@ scenario() {
   printf 'CASE 3 (git config --file /tmp/... allowed): argv=[git config --file /tmp/leaf-clone-xyz/.git/config core.bare true] cwd=[%s] hook_exit=%s\n' "$shared" "$HOOK_RC"
   if [ "$HOOK_RC" = 0 ]; then echo "  ASSERT exit==0 ALLOW (--file /tmp redirect): PASS"; else echo "  ASSERT exit==0 ALLOW: FAIL"; fails=$((fails+1)); fi
 
+  # --- Case 4 (P102 hardening): cd-back evasion must BLOCK ----------------------
+  # `cd /tmp/x && cd <shared> && git config core.bare true` lands back in the shared tree.
+  drive_hook "cd /tmp/x && cd $shared && git config core.bare true" "$shared"
+  printf 'CASE 4 (cd /tmp then cd back, config write): hook_exit=%s\n' "$HOOK_RC"
+  if [ "$HOOK_RC" = 2 ]; then echo "  ASSERT cd-back config write exit==2 BLOCK: PASS"; else echo "  ASSERT cd-back BLOCK: FAIL"; fails=$((fails+1)); fi
+
+  # --- Case 5 (P102 hardening): `-f /tmp` short flag must ALLOW (was false-pos) --
+  # git config `-f` is the short form of `--file`; a /tmp target must NOT over-block.
+  drive_hook 'git config -f /tmp/leaf-clone-xyz/.git/config core.bare true' "$shared"
+  printf 'CASE 5 (git config -f /tmp/... allowed): hook_exit=%s\n' "$HOOK_RC"
+  if [ "$HOOK_RC" = 0 ]; then echo "  ASSERT exit==0 ALLOW (-f /tmp redirect): PASS"; else echo "  ASSERT -f /tmp ALLOW: FAIL"; fails=$((fails+1)); fi
+
+  # --- Case 6 (P102 hardening): a READ (--get) must ALLOW -----------------------
+  drive_hook 'git config --get core.bare' "$shared"
+  printf 'CASE 6 (git config --get core.bare read): hook_exit=%s\n' "$HOOK_RC"
+  if [ "$HOOK_RC" = 0 ]; then echo "  ASSERT exit==0 ALLOW (read not write): PASS"; else echo "  ASSERT read ALLOW: FAIL"; fails=$((fails+1)); fi
+
   echo "----"
   if [ "$fails" = 0 ]; then echo "ALL ASSERTS PASSED"; return 0; else echo "ASSERTS FAILED: $fails"; return 1; fi
 }

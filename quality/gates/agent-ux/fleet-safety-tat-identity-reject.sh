@@ -66,6 +66,21 @@ scenario() {
   printf 'CASE 3 (real-identity commit vs shared, no false-positive): argv=[git -c user.email=dev@example.com commit -m x] cwd=[%s] hook_exit=%s\n' "$shared" "$HOOK_RC"
   if [ "$HOOK_RC" = 0 ]; then echo "  ASSERT exit==0 ALLOW: PASS"; else echo "  ASSERT exit==0 ALLOW: FAIL"; fails=$((fails+1)); fi
 
+  # --- Case 4 (P102 hardening): QUOTED fixture email must still BLOCK -----------
+  # `-c user.email='t@t'` / `"t@t"` previously slid past guard A (bare-token-only match).
+  drive_hook "git -c user.email='t@t' commit -m x" "$shared"
+  printf "CASE 4 (single-quoted fixture email vs shared): argv=[git -c user.email='t@t' commit -m x] cwd=[%s] hook_exit=%s\n" "$shared" "$HOOK_RC"
+  if [ "$HOOK_RC" = 2 ]; then echo "  ASSERT quoted fixture email exit==2 BLOCK: PASS"; else echo "  ASSERT quoted fixture email BLOCK: FAIL"; fails=$((fails+1)); fi
+  drive_hook 'git -c user.email="t@t" commit -m x' "$shared"
+  printf 'CASE 4b (double-quoted fixture email vs shared): hook_exit=%s\n' "$HOOK_RC"
+  if [ "$HOOK_RC" = 2 ]; then echo "  ASSERT double-quoted fixture email exit==2 BLOCK: PASS"; else echo "  ASSERT double-quoted fixture email BLOCK: FAIL"; fails=$((fails+1)); fi
+
+  # --- Case 5 (P102 hardening): real address containing `t@t` substring ALLOWED -
+  # `scott@things.io` contains `t@t` as a substring — must NOT false-positive (exit 0).
+  drive_hook 'git -c user.email=scott@things.io commit -m x' "$shared"
+  printf 'CASE 5 (real email w/ t@t substring, no false-positive): argv=[git -c user.email=scott@things.io commit -m x] cwd=[%s] hook_exit=%s\n' "$shared" "$HOOK_RC"
+  if [ "$HOOK_RC" = 0 ]; then echo "  ASSERT real-email exit==0 ALLOW (delimiter-bounded): PASS"; else echo "  ASSERT real-email ALLOW: FAIL"; fails=$((fails+1)); fi
+
   echo "----"
   if [ "$fails" = 0 ]; then echo "ALL ASSERTS PASSED"; return 0; else echo "ASSERTS FAILED: $fails"; return 1; fi
 }
