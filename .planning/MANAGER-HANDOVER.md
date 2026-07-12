@@ -30,6 +30,18 @@ never does reposix work itself. Bound to live state; git history is the archive.
   the map" (OD-4 launch-readiness: asciinema demo, honest headline numbers, install
   excellence, Show-HN kit), and be excellent. Ensure the workhorse delegates heavily
   (router, not worker).
+- **OWNERSHIP MANDATE (owner, 2026-07-12)**: the manager OWNS everything end-to-end —
+  underlying maintainability, code/architectural elegance, through end-user experience —
+  not just fleet logistics. Heavy delegation and context-lean constraints still stand,
+  with ONE exception: at rare boundaries (only after very significant milestones),
+  ground your understanding with your own highly selective probes into those areas to
+  complement delegate reports.
+- **Eyes-and-ears baseline (every wake, cheap own-probes — added after the red-main
+  miss 2026-07-12)**: (1) `gh run list --branch main -L 3` — a red main is owner-visible
+  health, NEVER a "low-level concern" to stay out of; escalate/dispatch a fix
+  immediately. (2) origin/main sync + dirty-tree check. (3) Spot-verify ONE load-bearing
+  claim from any workhorse wrap report before relaying it ("fleet green" was once relayed
+  over an all-night red main). Workhorse self-reports are verified, not trusted.
 
 ## Rotation procedure (self-succession, w1:p7)
 
