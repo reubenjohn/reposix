@@ -99,14 +99,46 @@ if [[ -z "$COMMAND" ]]; then
     exit 0
 fi
 
-# 3. Run in container. Mount workspace read-only; mount target/ read-write so
-# pre-built debug binaries on host PATH are visible inside.
-SETUP="apt-get update -qq && apt-get install -y -qq curl ca-certificates python3 git build-essential pkg-config libssl-dev sqlite3 >/dev/null 2>&1"
+# 2b. Bring up an ephemeral simulator the containerised example can reach.
+#     The example scripts assume a seeded sim on 127.0.0.1:7878. A default
+#     `docker run` gives the container its own isolated loopback, so a host
+#     sim on 127.0.0.1 is invisible inside. We start the sim on the host and
+#     run the container with `--network host` so its 127.0.0.1:7878 IS the
+#     host sim (Linux-only; on a host without host-networking the example's
+#     own `sim not reachable` guard fails the row honestly rather than lying).
+#     Starting the pre-built `reposix` binary is NOT a cargo invocation.
+SIM_BIN="$REPO_ROOT/target/debug/reposix"
+SIM_PID=""
 STDOUT_TMP=$(mktemp)
 STDERR_TMP=$(mktemp)
-trap 'rm -f "$STDOUT_TMP" "$STDERR_TMP"' EXIT
+trap 'rm -f "$STDOUT_TMP" "$STDERR_TMP"; [[ -n "$SIM_PID" ]] && kill "$SIM_PID" 2>/dev/null; wait "$SIM_PID" 2>/dev/null' EXIT
+
+if [[ ! -x "$SIM_BIN" ]]; then
+    write_skip_artifact "target/debug/reposix not built; cannot start sim for rehearsal (NOT-VERIFIED) -- run 'cargo build -p reposix-cli' first"
+    exit 0
+fi
+"$SIM_BIN" sim --bind 127.0.0.1:7878 --ephemeral > "$REPO_ROOT/quality/reports/verifications/docs-repro/.sim-${ROW_ID//\//-}.log" 2>&1 &
+SIM_PID=$!
+SIM_READY=0
+for _ in $(seq 1 30); do
+    if curl -fsS "http://127.0.0.1:7878/projects/demo/issues" >/dev/null 2>&1; then
+        SIM_READY=1; break
+    fi
+    if ! kill -0 "$SIM_PID" 2>/dev/null; then break; fi
+    sleep 0.5
+done
+if [[ "$SIM_READY" -ne 1 ]]; then
+    write_skip_artifact "ephemeral sim failed to become ready on 127.0.0.1:7878 (NOT-VERIFIED)"
+    exit 0
+fi
+
+# 3. Run in container. Mount workspace read-only; mount target/ read-write so
+# pre-built debug binaries on host PATH are visible inside. `--network host`
+# makes the container's 127.0.0.1:7878 reach the host sim started above.
+SETUP="apt-get update -qq && apt-get install -y -qq curl ca-certificates python3 git build-essential pkg-config libssl-dev sqlite3 >/dev/null 2>&1"
 
 docker run --rm \
+    --network host \
     -v "$REPO_ROOT:/workspace:ro" \
     -v "$REPO_ROOT/target:/workspace/target:rw" \
     -w /workspace \

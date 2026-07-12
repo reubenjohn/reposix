@@ -17,9 +17,16 @@ FAILED=()
 EXIT_CODE=0
 TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
+# Bind the ephemeral sim on the DEFAULT front-door port (127.0.0.1:7878) that
+# `reposix init sim::demo` targets. Binding an alternate port left init's
+# blob-none fetch pointing at an unbound 7878 and failing step 3 (P106 T1).
 REPO=$(mktemp -d /tmp/tutorial-replay-XXXX)
-PORT=7780
+PORT=7878
 SIM_PID=""
+# Hermetic cache under $REPO so repeated local runs never inherit a stale base
+# version from a persistent $HOME/.cache/reposix (which would spuriously reject
+# the step-7 push as a conflict). CI starts clean either way.
+export REPOSIX_CACHE_DIR="$REPO/cache"
 
 cleanup() {
   if [[ -n "$SIM_PID" ]]; then
@@ -85,10 +92,10 @@ fi
 # Step 5: inspect seeded record.
 if [[ $EXIT_CODE -eq 0 ]]; then
     echo "[5/7] inspect seeded record..." >&2
-    if [[ -f "$REPO/clone/0001.md" ]] && grep -q '^title:' "$REPO/clone/0001.md"; then
-        PASSED+=("step 5: 0001.md exists with title: frontmatter")
+    if [[ -f "$REPO/clone/issues/1.md" ]] && grep -q '^title:' "$REPO/clone/issues/1.md"; then
+        PASSED+=("step 5: issues/1.md exists with title: frontmatter")
     else
-        FAILED+=("step 5: 0001.md missing or has no title: frontmatter")
+        FAILED+=("step 5: issues/1.md missing or has no title: frontmatter")
         EXIT_CODE=1
     fi
 fi
@@ -97,15 +104,18 @@ fi
 if [[ $EXIT_CODE -eq 0 ]]; then
     echo "[6-7/7] edit + commit + push..." >&2
     cd "$REPO/clone"
-    printf '\n## tutorial-replay\nReproducibility regression -- the quickstart still works.\n' >> 0001.md
-    sed -i 's/^status: .*/status: in_progress/' 0001.md
-    git add 0001.md
+    printf '\n## tutorial-replay\nReproducibility regression -- the quickstart still works.\n' >> issues/1.md
+    sed -i 's/^status: .*/status: in_progress/' issues/1.md
+    git add issues/1.md
     git -c user.email=tutorial@local -c user.name=tutorial \
         commit -m "tutorial: in_progress + comment" -q
-    if git push origin main 2>"$REPO/push.err" | tee "$REPO/push.out" | grep -qE 'main -> main'; then
+    # git push writes its ref-update summary ('... main -> main') to STDERR,
+    # not stdout, so capture combined output and grep that. (The prior
+    # `2>push.err | grep` fed grep an always-empty stdout -> false FAIL.)
+    if git push origin main > "$REPO/push.out" 2>&1 && grep -qE 'main -> main' "$REPO/push.out"; then
         PASSED+=("step 7: git push reports main -> main")
     else
-        FAILED+=("step 7: push did not match main -> main; see $REPO/push.err")
+        FAILED+=("step 7: push did not match main -> main; see $REPO/push.out")
         EXIT_CODE=1
     fi
     cd "$REPO_ROOT"
@@ -114,7 +124,7 @@ fi
 # Step 8: verify audit row.
 if [[ $EXIT_CODE -eq 0 ]]; then
     echo "[8/8] verify audit row..." >&2
-    DB="$HOME/.cache/reposix/sim-demo.git/cache.db"
+    DB="$REPOSIX_CACHE_DIR/reposix/sim-demo.git/cache.db"
     if [[ -f "$DB" ]] && command -v sqlite3 >/dev/null 2>&1; then
         ROW=$(sqlite3 "$DB" "SELECT op FROM audit_events_cache WHERE op LIKE 'helper_push%' ORDER BY ts DESC LIMIT 1" 2>/dev/null)
         if [[ -n "$ROW" ]]; then
