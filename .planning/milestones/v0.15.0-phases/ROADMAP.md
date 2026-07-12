@@ -57,5 +57,24 @@ line numbers drift):*
 - `crates/reposix-cli/src/list.rs` + `sync.rs` — `bail!`s that do not match the teaching
   pattern; sweep both for terse fault-only messages.
 
+### Phase TBD: Error codes + `reposix explain <code>` — Rust-compiler-grade code namespace
+*(number assigned at `/gsd-plan-phase`; folds into or runs alongside the UX
+error-message audit phase above — same "Rust-compiler-grade UX" thesis, HEADLINE scope,
+committed by the owner 2026-07-12)*
+
+**Scope.** Give every user-facing reposix error a **structured, stable code** in a
+dedicated namespace (e.g. `RPX-xxxx`) and ship **`reposix explain <code>`** — a subcommand
+that prints the detailed cause, the fix, and copy-paste recovery for that code, mirroring
+`rustc --explain E0308`. Applies across the same surface as the audit phase above: every
+`reposix` CLI subcommand (init / attach / list / sync / doctor / spaces / refresh / etc.)
+and the `reposix-remote` git helper.
+
+**Acceptance intent.** Every user-facing error carries a stable, documented code in its
+output; `reposix explain <code>` exists and, for every code emitted anywhere in the CLI or
+helper, prints a non-empty cause + fix + copy-paste recovery. This is HEADLINE scope for
+v0.15.0, not a nice-to-have — the codified, queryable half of the Rust-compiler-grade UX
+north star (§ Thesis above), with the UX-audit phase supplying the prose bar and this
+phase supplying the stable-identifier + lookup mechanism.
+
 **Reversibility.** Fully reversible — planning-scaffold only; no code or v0.14.0 file
 touched. The owner or the v0.14.0-closing C2 may pull this phase forward into v0.14.0.
