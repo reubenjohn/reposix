@@ -393,10 +393,17 @@ impl Cache {
     /// Write an `op='helper_backend_instantiated'` audit row.
     /// Best-effort. Emitted by the git remote helper after the
     /// URL-scheme dispatcher resolves a `(backend_kind, project)`
-    /// pair and the cache directory is opened. `project_for_backend`
-    /// is the live project string passed to `BackendConnector`
-    /// methods (may differ from `self.project()` for GitHub:
-    /// `owner/repo` vs the cache-safe `owner-repo`).
+    /// pair and the cache directory is opened.
+    ///
+    /// `project_for_backend` is the live project string passed to
+    /// `BackendConnector` methods. Since S-260707-gh404 there is a
+    /// SINGLE project identity: `self.project()` holds the RAW slug
+    /// (`owner/repo` for GitHub) and the backend receives that same
+    /// value, so `project_for_backend == self.project()` for every
+    /// backend. (Sanitization to the cache-safe `owner-repo` happens
+    /// ONLY at on-disk path derivation, inside `resolve_cache_path`.)
+    /// The parameter is retained so the audit `reason` column records
+    /// the backend-facing slug explicitly for forensic clarity.
     ///
     /// # Panics
     /// Panics if the internal `cache.db` mutex is poisoned.
