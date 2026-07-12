@@ -108,6 +108,14 @@ fn snapshot_tree_oid(sorted: &[&Record], bucket: &str) -> io::Result<gix::Object
 /// `None` (first fetch, ref absent) the commit is a parentless root — the
 /// original seed behavior.
 ///
+/// **Full-rebuild, not overlay (CR-01).** A `from`-based commit inherits the
+/// parent's tree; the `M` directives are an overlay on top of it. To propagate
+/// `SoT` deletions (a record present in the parent tree but absent from the
+/// current snapshot must disappear), the parent branch emits `deleteall`
+/// immediately after `from`, clearing the inherited tree so the commit is a full
+/// rebuild of the snapshot. This makes the emitted tree byte-identical to
+/// [`snapshot_tree_oid`], which the no-op guard below relies on.
+///
 /// **No-op guard.** With a parent, an *unchanged* `SoT` would otherwise mint a
 /// fresh empty commit every fetch, growing the ref unboundedly. When the
 /// freshly-built snapshot tree equals `parent.tree`, we emit a reset-only
@@ -196,6 +204,17 @@ pub(crate) fn emit_import_stream<W: Write>(
     // grammar. Absent on the first-fetch seed (parentless root).
     if let Some(p) = parent {
         writeln!(w, "from {}", p.commit)?;
+        // `deleteall` (CR-01): a `from`-based commit inherits the ANCESTOR's tree,
+        // and the `M` directives below are applied as an OVERLAY onto it. Without a
+        // `deleteall`/`D`, a record removed at the SoT (present in the parent tree,
+        // absent from `sorted`) is silently RETAINED — and resurrected at the SoT on
+        // the next push. `deleteall` clears the inherited tree so the commit is a
+        // FULL rebuild of the current snapshot, restoring deletion propagation. It
+        // must sit AFTER `from` and BEFORE the tree directives per git-fast-import(1).
+        // Side effect (relied on by the no-op guard above): the emitted tree now
+        // equals `snapshot_tree_oid` — the pure-snapshot oid — exactly, so the
+        // guard's `snapshot_tree_oid == p.tree` comparison is correct under deletion.
+        writeln!(w, "deleteall")?;
     }
     for (i, issue) in sorted.iter().enumerate() {
         // Canonical `<bucket>/<id>.md` path (QL-001 / D91-01, bucket-aware
