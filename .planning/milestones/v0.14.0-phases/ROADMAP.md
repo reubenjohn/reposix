@@ -64,60 +64,14 @@ Operating Principles + the autonomous-execution protocol; NOT separate REQ-IDs:
 
 ---
 
+> **Archived detail:** completed-phase bodies (Goal / Success criteria / Context
+> anchor for P102-P111, P113) live in [ARCHIVE.md](./ARCHIVE.md); this ROADMAP keeps
+> the phase index (headings + terminal status + pointers). Phase 112's DO-NOT-START
+> stub is kept in full below.
+
 ### Phase 102: D2 self-safe dark-factory hardening (HARD SERIALIZING GATE)
 
-**Goal:** Make the fleet's own safety substrate mechanically enforced instead of
-documented-prose. Three deliverables, all fail-closed:
-
-(a) **Reject-`t@t`-identity hook** — a commit/push-time hook that REJECTS any commit
-authored by the throwaway sim-fixture identity (`t <t@t>`, or any known test-fixture
-identity) from reaching real history (main working tree / origin), closing the exact
-failure mode in `S-260707-pr-08`.
-
-(b) **Real per-leaf worktree isolation** — mechanical enforcement (not prose) that leaf
-test setup (`reposix init` / sim-seed / test `git commit`/`git config`) runs in a
-throwaway `/tmp` clone, never the shared repo/worktree. Explicitly do NOT build the
-enforcement on `git worktree remove --force` — that command is itself a corruption
-vector (per owner note) and must not become part of the guard's own recovery path.
-
-(c) **Shared-config write guard** — a `PreToolUse` hook that BLOCKS any leaf-scoped
-process from writing `core.bare` or `user.email` into the shared `.git/config`.
-
-**Requirements:** D2-TAT-IDENTITY-HOOK-01, D2-LEAF-ISOLATION-01, D2-SHARED-CONFIG-GUARD-01
-· **Depends on:** none (milestone entry point) · **Plan:** TBD (`/gsd-plan-phase 102`)
-
-**Success criteria:**
-1. **t@t rejection proven, not asserted:** a deliberate attempt to commit/push under
-   identity `t <t@t>` (or another known test-fixture identity) against the shared repo is
-   observed to FAIL with a clear rejection message — captured as evidence (command +
-   output), not just a code read of the hook logic.
-2. **Leaf isolation proven:** a deliberate leaf-shaped setup routine that "forgets" to
-   `cd` into `/tmp` before running `reposix init`/seed/`git commit`/`git config` is
-   observed to be BLOCKED or REDIRECTED before it can touch the shared repo/worktree — not
-   merely documented in `.planning/ORCHESTRATION.md` § Leaf isolation (which remains, but
-   is now backstopped mechanically). The guard's own implementation MUST NOT invoke `git
-   worktree remove --force` as part of setup, cleanup, or recovery.
-3. **Shared-config guard proven:** a deliberate attempt to write `core.bare=true` or
-   `user.email` into the shared `.git/config` from a leaf-scoped process is BLOCKED by the
-   PreToolUse hook before the write lands; the shared `.git/config` is unchanged after the
-   attempt.
-4. All three guards are fail-closed (default-deny on ambiguous state, not default-allow).
-5. `.claude/hooks/` gains the new hook(s); `CLAUDE.md` § "Leaf isolation" +
-   `.planning/ORCHESTRATION.md` § "Leaf isolation" are revised in the same PR to describe
-   the now-mechanical enforcement (fix-it-twice meta-rule) — the prior prose hard-stop is
-   marked superseded-by-mechanism, not deleted (historical record).
-6. Catalog rows land for all three guards (dimension TBD in PLAN — likely `agent-ux` or a
-   new `fleet-safety` row group) conforming to the unified row schema in
-   `quality/catalogs/README.md`.
-7. Phase close: `git push origin main`; verifier subagent GREEN; verdict at
-   `quality/reports/verdicts/p102/VERDICT.md`. **No other phase in this milestone, and no
-   other autonomous fleet run project-wide, starts until this verdict is GREEN.**
-
-**Context anchor:** `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`
-§ `S-260707-pr-08` (founding incident + sketch) and its amendment note near
-`S-260707-rbf-lr03-external-write-crash`; `.planning/ORCHESTRATION.md` § "Leaf isolation";
-root `CLAUDE.md` § "Leaf test setup runs in a throwaway `/tmp` clone"; `.claude/hooks/`
-(existing cargo-mutex / stop-on-dirty / precompact-persist precedents to mirror).
+> Detail (Goal / Requirements / Success criteria / Context anchor) archived → [ARCHIVE.md § Phase 102](./ARCHIVE.md).
 
 ### Phase 103: Early cheap wins — doc-alignment grade/persist split + structure waiver OP-8 split
 
@@ -125,40 +79,7 @@ root `CLAUDE.md` § "Leaf test setup runs in a throwaway `/tmp` clone"; `.claude
 `quality/reports/verdicts/p103/VERDICT.md`, graded HEAD `d0f23d5`; implementation commits
 `12abdfb`/`1136bb3`/`dad227e`.
 
-**Goal:** Two low-risk, non-cargo, Python-only fixes slotted early because they are safe
-alongside/after D2 and cheap to land. (a) `reposix-quality doc-alignment walk` currently
-mutates `quality/catalogs/doc-alignment.json` in place with no `--persist` gate, dirtying
-the tree on every validate-only run (bit 3+ lanes across the v0.13.1 session per
-`GOOD-TO-HAVES.md` 2026-07-07 entry) — add the same GRADE/PERSIST split `run.py` already
-has (D-P96-01 precedent). (b) the `structure/file-size-limits` waiver expires
-**2026-08-08**; `SURPRISES-INTAKE.md` and `GOOD-TO-HAVES.md` are themselves 5–6x over the
-file-size budget (per the waiver row's own violation breakdown) — split them per OP-8
-before the waiver lapses.
-
-**Requirements:** D2-DOC-ALIGNMENT-PERSIST-SPLIT-01, D2-FILE-SIZE-WAIVER-SPLIT-01 ·
-**Depends on:** P102 GREEN · **Plan:** TBD (`/gsd-plan-phase 103`)
-
-**Success criteria:**
-1. `reposix-quality doc-alignment walk` (validate-only) no longer writes
-   `quality/catalogs/doc-alignment.json`; a new `--persist` flag (mirroring `run.py`'s
-   GRADE/PERSIST split) is required to mint. A validate-only run against a clean tree
-   leaves `git status --short` empty.
-2. `SURPRISES-INTAKE.md` and `GOOD-TO-HAVES.md` under
-   `.planning/milestones/v0.13.0-phases/` are split into per-chapter or per-theme child
-   docs (or otherwise brought under the `structure/file-size-limits` budget) before
-   2026-08-08; the waiver row's live violation count drops for these two files
-   specifically (full-corpus zero-violation is NOT required this phase — only these two
-   named files, which are this milestone's carried debt).
-3. Catalog rows updated to reflect the fixes; `quality/CLAUDE.md` documents the
-   grade/persist split convention now shared by `run.py` and `doc-alignment walk`.
-4. Phase close: `git push origin main`; verifier subagent GREEN; verdict at
-   `quality/reports/verdicts/p103/VERDICT.md`.
-
-**Context anchor:** `.planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md` 2026-07-07
-"doc-alignment `walk` mutates the catalog with no `--persist` gate" entries (two
-companion filings — dedupe when addressing); `quality/catalogs/freshness-invariants.json`
-`structure/file-size-limits` row (waiver expiry + full violation breakdown);
-`quality/runners/run.py` (D-P96-01 GRADE/PERSIST precedent).
+> Detail (Goal / Requirements / Success criteria / Context anchor) archived → [ARCHIVE.md § Phase 103](./ARCHIVE.md).
 
 ### Phase 104: GitHub-v09 helper-path 404 fix (S-260707-gh404)
 
@@ -166,40 +87,7 @@ companion filings — dedupe when addressing); `quality/catalogs/freshness-invar
 row PASS + 1 honestly-fail-closed NOT-VERIFIED real-backend row),
 `quality/reports/verdicts/p104/VERDICT.md`, verdict commit `22f94d0`, graded HEAD `03942f8`.
 
-**Goal:** Fix the real-GitHub-via-helper 404. Root cause: `Cache::open` /
-`Cache::build_from` forward the filesystem-sanitized project string (`owner-repo`, dashes)
-to `backend.list_records_complete`, which needs the slashed `owner/repo` form for the REST
-call — same latent bug in both `crates/reposix-remote/src/main.rs:299` and
-`crates/reposix-cli/src/attach.rs`. The safe fix separates the cache-path key from the
-backend-project identifier (or sanitizes only at path-resolution time) rather than a naive
-arg swap, since `Cache` currently holds one `project` field serving both concerns.
-
-**Requirements:** D2-GH404-CACHE-PROJECT-SPLIT-01, D2-GH404-REAL-VERIFY-01 · **Depends
-on:** P102 GREEN · **Plan:** TBD (`/gsd-plan-phase 104`)
-
-**Success criteria:**
-1. `Cache` (or its callers) carry a cache-path key distinct from the backend-project
-   identifier; `main.rs:299`'s `Cache::open` call and `attach.rs`'s equivalent both pass
-   the slashed `owner/repo` form to backend REST calls and the sanitized dash form only to
-   on-disk path resolution.
-2. Regression test: a mock/fixture backend proving the helper path constructs
-   `repos/owner/repo/issues` (not `repos/owner-repo/issues`).
-3. **Real-backend verification is OWNER-GATED** — real GitHub `reubenjohn/reposix` issues
-   is the sanctioned target (per root CLAUDE.md OP-6); this phase surfaces a named-target
-   ask for the owner rather than self-authorizing the mutation. The `github-v09`
-   `continue-on-error` CI marker (added `b067e21`) is removed once real-backend
-   verification confirms the fix.
-4. `S-260707-gh404` in `SURPRISES-INTAKE.md` closes with commit SHA; the paired
-   `S-260707-desync` MEDIUM entry (confusing PATCH-404 instead of the D-01
-   `sync --reconcile` recovery hint) is folded in if in-scope, else re-filed with an
-   explicit v0.14.0-continuation note.
-5. Catalog rows updated; phase close: `git push origin main`; verifier subagent GREEN;
-   verdict at `quality/reports/verdicts/p104/VERDICT.md`.
-
-**Context anchor:** `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`
-§ `S-260707-gh404` (root cause + impact) and § `S-260707-desync` (paired MEDIUM);
-`crates/reposix-remote/src/main.rs:141,299`; `crates/reposix-cli/src/attach.rs`;
-`docs/reference/testing-targets.md` (GitHub sanctioned target + cleanup conventions).
+> Detail (Goal / Requirements / Success criteria / Context anchor) archived → [ARCHIVE.md § Phase 104](./ARCHIVE.md).
 
 ### Phase 105: RBF-LR-03 rebase-recovery reconciliation redesign
 
@@ -207,39 +95,7 @@ on:** P102 GREEN · **Plan:** TBD (`/gsd-plan-phase 104`)
 `agent-ux/rebase-recovery-reconciles`, 13/13 asserts), `quality/reports/verdicts/p105/VERDICT.md`,
 verify commit `0d3afe9`, graded HEAD `8afb52d`.
 
-**Goal:** Fix the documented post-conflict recovery crash when the SoT moved via an
-**external REST write** (not a git-side push). `reposix sync --reconcile` currently mints
-a fresh "Sync from REST snapshot" commit that is NOT a descendant of the prior tracking
-tip, so the follow-on `git pull --rebase` aborts with `fatal: error while running
-fast-import` — and the documented recovery (fresh `reposix init` into a new dir) loses
-unpushed local commits. Also close the false-success sub-risk: `sync --reconcile` exits 0
-even when it leaves the cache in this unusable non-descendant state.
-
-**Requirements:** D2-RBF-LR03-DESCENDANT-COMMITS-01, D2-RBF-LR03-RECONCILE-HONESTY-01 ·
-**Depends on:** P102 GREEN · **Plan:** TBD (`/gsd-plan-phase 105`)
-
-**Success criteria:**
-1. The cache-side "Sync from REST snapshot" commit is parented on the prior
-   `refs/reposix/origin/main` tip (descendant lineage), so `git pull --rebase` sees a
-   fast-forwardable/rebaseable history instead of aborting with `fatal: error while
-   running fast-import`.
-2. A leaf-isolated regression test (per Phase 102's isolation guard) proves: external
-   `PATCH` on the SoT → local commit → `sync --reconcile` → `git pull --rebase` →
-   `git push` recovers cleanly, with the external edit present and no silent overwrite of
-   the external writer.
-3. `sync --reconcile` no longer produces a teaching-free false-success: either it fails
-   loudly when it cannot produce a rebaseable state, or the redesign in criterion 1 makes
-   the non-descendant state impossible to reach.
-4. `S-260707-rbf-lr03-external-write-crash` closes in `SURPRISES-INTAKE.md` with commit
-   SHA; `docs/guides/troubleshooting.md` + ADR-010 §3's WAIVED-known-limitation marker is
-   updated to reflect the fix (or, if only partially fixed, honestly re-scoped).
-5. Catalog rows updated; phase close: `git push origin main`; verifier subagent GREEN;
-   verdict at `quality/reports/verdicts/p105/VERDICT.md`.
-
-**Context anchor:** `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`
-§ `S-260707-rbf-lr03-external-write-crash` (full repro + sketched resolution + sub-risks);
-`docs/guides/troubleshooting.md` § "DVCS push/pull issues"; `docs/decisions/010-*.md`
-§3 (ADR-010 known-limitation marker); `docs/concepts/dvcs-topology.md`.
+> Detail (Goal / Requirements / Success criteria / Context anchor) archived → [ARCHIVE.md § Phase 105](./ARCHIVE.md).
 
 ### Phase 106: Waived tutorials reproduce (docs-repro/tutorial-replay + examples 01/02/04/05)
 
@@ -247,49 +103,7 @@ even when it leaves the cache in this unusable non-descendant state.
 example-01/02/04/05) minted PASS by an unbiased verifier at `804eedc`; STATE.md attests the
 GREEN close at HEAD `7827d36` (CI run 29201112349 success, `code/ci-green-on-main` PASS).
 
-**Goal:** Clear the WAIVED docs-repro rows for `docs-repro/tutorial-replay` and examples
-01, 02, 04, 05 before their **HARD DEADLINE 2026-09-15**. **Root causes CORRECTED by the
-P106 Wave-1 diagnosis (`106-DIAGNOSIS.md`, 2026-07-12) — the renewed-P90 waiver text was
-stale:** the "cold container build budget" cause was **moot** (tutorial-replay runs ON
-HOST with warm binaries, not in docker), and QL-001 was **already landed** (P91-02) and
-pushes fine on git 2.25.1. The ACTUAL root causes were harness + canonical-path drift, ZERO
-Rust: (i) example gates never started a sim reachable inside the container-rehearse run;
-(ii) tutorial-replay bound the sim on `:7780` while `reposix init` targets the default
-`:7878`; (iii) the tutorials/examples still assumed the pre-QL-001 flat, zero-padded
-`0001.md` root path instead of canonical `issues/<id>.md`; (iv) example-02 exited 0 on a
-zero-match no-op (vacuous-GREEN hazard); (v) example-04's two agents shared one reposix
-cache (masking the conflict) and its rebase recovery didn't drop the `refs/reposix-import`
-staging ref; (vi) tutorial-replay grepped stdout for a `main -> main` summary git writes to
-stderr.
-
-**Requirements:** D2-TUTORIAL-REPLAY-CONTAINER-BUDGET-01, D2-TUTORIAL-REPLAY-QL001-01,
-D2-EXAMPLES-SIM-REACHABLE-01 · **Depends on:** P102 GREEN · **Plan:** TBD
-(`/gsd-plan-phase 106`)
-
-**Success criteria:** (criteria 1-2 reframed by the P106 diagnosis — see corrected root
-causes above; the original "container budget" / "QL-001 fix" framings were stale.)
-1. `docs-repro/tutorial-replay` runs green ON HOST (its actual execution context) — sim
-   bound on the default `:7878`, canonical `issues/1.md` assertion, push `main -> main`,
-   `helper_push_%` audit row; the misleading `verifier.container` field is corrected to
-   null (`kind: mechanical`). No container-budget work needed.
-2. No QL-001 push-step fix is in scope — QL-001 landed in P91-02 and push works on git
-   2.25.1; the tutorial step-7 failure was a harness stdout-vs-stderr grep bug, now fixed.
-3. Examples 01 and 02's "sim not reachable" abort is fixed — both examples' `run.sh` exits
-   0 and the simulator's audit log shows the expected `helper_push_*` row.
-4. Examples 04 and 05 are re-verified against current binaries/docs and their WAIVED
-   status is cleared (or, if a distinct root cause is found, it is fixed or explicitly
-   re-scoped with a fresh waiver + rationale — never silently left WAIVED past the
-   deadline).
-5. `quality/catalogs/docs-reproducible.json` rows for `tutorial-replay` and
-   `example-01`/`02`/`04`/`05` flip from WAIVED to PASS; the 2026-09-15 hard deadline is
-   met with margin (this phase does not run at the deadline).
-6. Catalog rows updated; phase close: `git push origin main`; verifier subagent GREEN;
-   verdict at `quality/reports/verdicts/p106/VERDICT.md`.
-
-**Context anchor:** `quality/catalogs/docs-reproducible.json` (WAIVED rows: `example-01`,
-`example-02`, `tutorial-replay`, and `example-04`/`05` if present — read the live catalog
-at plan time for the exact row set + `claim_vs_assertion_audit` text); `.planning/phases/
-90-*/90-RESEARCH-*.md` (prior P90 90-05 re-check); `quality/gates/docs-repro/`.
+> Detail (Goal / Requirements / Success criteria / Context anchor) archived → [ARCHIVE.md § Phase 106](./ARCHIVE.md).
 
 ### Phase 107: RUSTSEC memmap2 + quinn-proto advisories in `Cargo.lock`
 
@@ -299,32 +113,7 @@ PASS), `.planning/milestones/v0.14.0-phases/evidence/P107-VERIFICATION.md` (comm
 cleared by version floor). (STATE.md's earlier "P107 next / not yet started" narrative was
 stale — superseded by this reconciliation.)
 
-**Goal:** Close RUSTSEC-2026-0186 (memmap2, issue #57) and RUSTSEC-2026-0185
-(quinn-proto, issue #56). The original bundled dependabot PR #55 is CLOSED/superseded by
-individual PRs **#64** (tower-http), **#65** (gix), **#66** (rusqlite), all OPEN and
-mergeable as of the last check. `memmap2 0.9.11` and `quinn-proto 0.11.15` are already
-present in `Cargo.lock`; a definitive re-confirmation requires a `cargo audit` run naming
-those specific advisory IDs.
-
-**Requirements:** D2-RUSTSEC-CARGO-AUDIT-CONFIRM-01, D2-DEPENDABOT-PR-MERGE-01 ·
-**Depends on:** P102 GREEN · **Plan:** TBD (`/gsd-plan-phase 107`)
-
-**Success criteria:**
-1. `cargo audit` run (single cargo invocation, respecting the machine-wide serialization
-   rule) explicitly names RUSTSEC-2026-0186 and RUSTSEC-2026-0185 as CLEARED (or, if still
-   present, the phase does not close until they are resolved — this is a steward-and-merge
-   phase, not a defer-again phase).
-2. Dependabot PRs #64, #65, #66 are reviewed by a steward agent; **merges are
-   owner-gated** (per root CLAUDE.md dependency/spend discipline) — the phase surfaces a
-   named-target merge ask rather than self-merging.
-3. The "Security audit" (cargo-audit) cron stays GREEN on `main` post-merge.
-4. `SURPRISES-INTAKE.md`'s RUSTSEC entry closes with commit SHA / merge PR references.
-5. Catalog rows updated; phase close: `git push origin main`; verifier subagent GREEN;
-   verdict at `quality/reports/verdicts/p107/VERDICT.md`.
-
-**Context anchor:** `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md` RUSTSEC
-entry (PR #55 supersession history); `gh pr view 64/65/66`; `.github/workflows/` security
-audit cron definition.
+> Detail (Goal / Requirements / Success criteria / Context anchor) archived → [ARCHIVE.md § Phase 107](./ARCHIVE.md).
 
 ### Phase 108: `prune_oid_map` pagination-truncation data-loss hazard
 
@@ -346,41 +135,7 @@ durable-create is explicitly deferred past v0.14.0 milestone-close — NOT a sil
 Tracked at `.planning/milestones/v0.14.0-phases/GOOD-TO-HAVES.md` GOOD-TO-HAVES-09 (STATUS:
 DEFERRED-TO-v0.15.0) and mirrored at root `.planning/GOOD-TO-HAVES.md` GOOD-TO-HAVES-09.
 
-**Goal:** Fix the data-loss hazard where `meta::prune_oid_map` (commit `272882c`/
-`e246e84`) can DELETE `oid_map` rows for LIVE records when a real connector's
-`list_records()` silently truncates at a pagination/size cap (GitHub
-`MAX_ISSUES_PER_LIST=500`, JIRA non-strict listing, Confluence equivalent) — the sim
-backend never truncates, so this was structurally invisible to every sim-backed test that
-gated the original fix. Per the already-drafted 4-option decision tree
-(`93-RELIEF-HANDOFF.md` §4-6), this phase makes the E2 connector-contract call (Rule 4
-territory — architectural) rather than re-deferring.
-
-**Requirements:** D2-PRUNE-TRUNCATION-REPRO-01, D2-PRUNE-COMPLETENESS-CONTRACT-01 ·
-**Depends on:** P102 GREEN · **Plan:** TBD (`/gsd-plan-phase 108`)
-
-**Success criteria:**
-1. A mock/capped-backend regression test proves the data-loss reproduction directly (not
-   just a code-read assertion) — a truncated `list_records()` response feeding
-   `prune_oid_map` must be shown deleting a live-record's `oid_map` row before the fix, and
-   preserving it after.
-2. One of the two architecturally-sound fixes from the decision tree lands: **(A)** add a
-   completeness/`has_more` signal to `BackendConnector::list_records`'s return type (or a
-   sibling method) and gate the prune on "listing is known-complete", OR **(B)** restrict
-   pruning to the dedicated full-paginated reconcile path (`reposix sync --reconcile`,
-   which already forces a full rebuild) and skip pruning entirely on the normal delta path.
-   The choice is recorded as a dated decision (owner/coordinator ratified) with rationale —
-   this is Rule 4 (architectural change) territory, not a same-phase mechanical fix without
-   sign-off.
-3. GitHub, JIRA, and Confluence connectors are updated consistently with the chosen fix.
-4. `SURPRISES-INTAKE.md`'s `prune_oid_map` entry closes with commit SHA + decision
-   reference.
-5. Catalog rows updated; phase close: `git push origin main`; verifier subagent GREEN;
-   verdict at `quality/reports/verdicts/p108/VERDICT.md`.
-
-**Context anchor:** `.planning/phases/93-cache-coherence/93-RELIEF-HANDOFF.md` §4-6 (full
-analysis + 4-option decision tree); `.planning/milestones/v0.13.0-phases/
-SURPRISES-INTAKE.md` § `prune_oid_map` entry; `crates/reposix-*/src/github/lib.rs`,
-`jira/lib.rs`, Confluence equivalent (`list_records` truncation points).
+> Detail (Goal / Requirements / Success criteria / Context anchor) archived → [ARCHIVE.md § Phase 108](./ARCHIVE.md).
 
 ### Phase 109: Carried RBF-FW-11 + quality-convergence write-contention
 
@@ -389,103 +144,15 @@ atop the catalog-first GREEN contract (`1cb9dd1`, `pytest quality/runners/test_a
 GREEN); STATE.md attests P109 shipped GREEN. Terminal evidence is the shipped fix + catalog-first
 test + STATE attestation (no separate `p109/VERDICT.md` dir was minted).
 
-**Goal:** Two carried framework-hygiene items. (a) RBF-FW-11's "grandfathered" date-cutoff
-design misclassifies legitimately-null `last_verified` rows (the runner's
-`catalog_dirty()` deliberately never persists `last_verified` for unchanged-status rows,
-by design, to avoid git-diff timestamp churn) — fix per the sketched resolution: treat
-"grandfathered" as "predates the RBF-FW-11-landing commit" (recorded SHA/OID), not "has an
-explicit pre-cutoff value." (b) `reposix-swarm`'s write-contention coverage gap —
-`confluence_direct.rs` never exercises `create_record`/`update_record` even though
-Confluence writes have been live for over a milestone; the harness's entire purpose is
-multi-agent contention testing and the risky write-contention path (version conflicts,
-push-time drift) is untested.
-
-**Requirements:** D2-RBF-FW11-GRANDFATHER-FIX-01, D2-SWARM-WRITE-CONTENTION-01 ·
-**Depends on:** P102 GREEN · **Plan:** TBD (`/gsd-plan-phase 109`)
-
-**Success criteria:**
-1. RBF-FW-11's grandfather rule keys off "predates the RBF-FW-11-landing commit SHA" (or
-   the docs-alignment-dimension permanent-exemption, already applied) rather than "has an
-   explicit pre-cutoff `last_verified` value"; the 5 previously-misclassified rows
-   (`docs-reproducible.json::benchmark-claim/{8ms-cached-read,89.1-percent-token-reduction}`,
-   `freshness-invariants.json::structure/release-plz-disables-gh-releases`,
-   `subjective-rubrics.json::subjective/dvcs-cold-reader`,
-   `freshness-invariants.json::structure/file-size-limits`) are correctly classified under
-   the new rule.
-2. `pytest quality/runners/test_freshness_synth.py` passes against the fix; a direct
-   `load_catalog()` sweep over all discovered catalogs confirms no new false-positives.
-3. A sim-first swarm write-contention scenario lands (N agents racing `update_record` on
-   shared records, asserting version-conflict handling + audit-row completeness), per OP-1
-   default; a real-Confluence `--ignored` variant against TokenWorld is added per
-   `docs/reference/testing-targets.md` cleanup conventions — real-backend mutation there is
-   owner-gated per usual.
-4. `confluence_direct.rs`'s stale "Phase 17 read-only by design" comment is corrected to
-   reflect the new write-contention coverage.
-5. Catalog rows updated; phase close: `git push origin main`; verifier subagent GREEN;
-   verdict at `quality/reports/verdicts/p109/VERDICT.md`.
-
-**Context anchor:** `.planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md`
-§ RBF-FW-11 entry (full two-part breakage + sketched resolution) and § swarm
-write-contention entry (`ROUTED-P95`, now landing here); `quality/runners/run.py`
-(`catalog_dirty()`); `crates/reposix-swarm/` (`confluence_direct.rs`).
+> Detail (Goal / Requirements / Success criteria / Context anchor) archived → [ARCHIVE.md § Phase 109](./ARCHIVE.md).
 
 ### Phase 110: +2 reservation Slot 1 — surprises absorption (OP-8)
 
-**Goal:** Drain `.planning/milestones/v0.14.0-phases/SURPRISES-INTAKE.md` (seeded
-in-flight by P102–P109) per OP-8. Every entry gets a terminal STATUS (RESOLVED + commit
-SHA / DEFERRED + target milestone / WONTFIX + rationale). No `STATUS: TBD` at phase close.
-Verifier honesty spot-check samples ≥3 P102–P109 plan/verdict pairs.
-
-**Requirements:** D2-SURPRISES-01 · **Depends on:** P102 + P103 + P104 + P105 + P106 +
-P107 + P108 + P109 ALL GREEN · **Plan:** TBD (`/gsd-plan-phase 110`)
-
-**Success criteria:**
-1. Every `SURPRISES-INTAKE.md` entry has terminal STATUS; empty intake acceptable ONLY if
-   phases produced explicit `Eager-resolution` decisions (verified, not assumed).
-2. Verifier honesty spot-check report at
-   `quality/reports/verdicts/p110/honesty-spot-check.md`.
-3. Phase close: `git push origin main`; verifier subagent GREEN; verdict at
-   `quality/reports/verdicts/p110/VERDICT.md`.
-
-**Context anchor:** CLAUDE.md OP-8; `.planning/PRACTICES.md` § OP-8 long-form;
-`.planning/milestones/v0.13.2-phases/SURPRISES-INTAKE.md` (P107 precedent shape).
+> Detail (Goal / Requirements / Success criteria / Context anchor) archived → [ARCHIVE.md § Phase 110](./ARCHIVE.md).
 
 ### Phase 111: +2 reservation Slot 2 — good-to-haves polish + milestone close (OP-9)
 
-**Goal:** Drain `.planning/milestones/v0.14.0-phases/GOOD-TO-HAVES.md` per OP-8, then
-close the milestone per OP-9: distill SURPRISES + GOOD-TO-HAVES + per-phase verdicts into
-a new `.planning/RETROSPECTIVE.md` v0.14.0 section BEFORE archive. Milestone-close ritual:
-CHANGELOG `[v0.14.0]` finalized; tag-script authored at
-`.planning/milestones/v0.14.0-phases/tag-v0.14.0.sh` (≥6 safety guards mirroring v0.13.0/
-v0.12.0 precedents); milestone-close verifier subagent dispatched and GREEN, including the
-non-skippable 9th probe (`pre-release-real-backend`, per `.planning/CLAUDE.md`
-"Milestone-close 9th probe" — reads NOT-VERIFIED honestly if env unset, never FAIL/skip-as-
-PASS). Owner runs the tag script — orchestrator does NOT push the tag.
-
-**Requirements:** D2-GOOD-TO-HAVES-01, D2-MILESTONE-CLOSE-01, D2-RETROSPECTIVE-DISTILL-01
-· **Depends on:** P110 GREEN · **Plan:** TBD (`/gsd-plan-phase 111`)
-
-**Success criteria:**
-1. Every `GOOD-TO-HAVES.md` entry has terminal STATUS (closed with commit SHA / deferred
-   with named carry-forward target).
-2. `RETROSPECTIVE.md` gains a v0.14.0 section (What Was Built / What Worked / What Was
-   Inefficient / Patterns Established / Key Lessons) distilled BEFORE archive — the
-   ratification subagent grades RED if missing (per root CLAUDE.md OP-9).
-3. CHANGELOG `[v0.14.0]` finalized; tag-script authored with ≥6 safety guards; guards
-   re-run cleanly post-P111.
-4. Milestone-close verifier dispatched and GREEN at
-   `quality/reports/verdicts/milestone-v0.14.0/VERDICT.md`, including the non-skippable
-   9th probe.
-5. STOP at tag boundary: orchestrator does NOT push the tag. STATE.md cursor updated to
-   "v0.14.0 ready-to-tag; owner pushes tag."
-6. Phase close: `git push origin main`; milestone-close verifier GREEN; verdict at
-   `quality/reports/verdicts/p111/VERDICT.md` + the milestone verdict above.
-
-**Context anchor:** CLAUDE.md OP-9; `.planning/PRACTICES.md` § OP-9 long-form;
-`.planning/milestones/v0.13.2-phases/ROADMAP.md` Phase 107 (structural precedent);
-`.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh` + `v0.12.0-phases/tag-v0.12.0.sh`
-(tag-script precedents); `.planning/CLAUDE.md` § "Milestone-close 9th probe is
-non-skippable".
+> Detail (Goal / Requirements / Success criteria / Context anchor) archived → [ARCHIVE.md § Phase 111](./ARCHIVE.md).
 
 ### Phase 112: OD-4 launch-readiness — SCOPE-BUT-DO-NOT-START stub
 
@@ -532,40 +199,5 @@ mandate).
 **STATUS: CLOSED — code shipped in v0.14.0; verifier-close folded into P111 milestone-close
 (regression test GREEN).**
 
-**Renumber rationale (106 → 113).** This guard was authored under the working label
-`106-01` (its implementation commits carry the `fix(106-01)` prefix), but the ROADMAP's
-Phase 106 slot was ALREADY claimed by "Waived tutorials reproduce." Rather than collide the
-number, the phase was renumbered to the next free integer past this milestone's P102–P112
-span — **113** — at commit `4dd7e10` (`docs(113-01): renumber lost-update phase 106→113
-(ROADMAP 106 taken) + mark intake RESOLVED`). It is out-of-band (not in the original
-P102–P112 scope) because it was an emergent silent-data-loss guard discovered and fixed
-mid-milestone, not a pre-scoped phase.
+> Detail (renumber rationale / what shipped / regression test / catalog row) archived → [ARCHIVE.md § Phase 113](./ARCHIVE.md).
 
-**What shipped.** A real silent-data-loss guard: the shared-cache `last_fetched_at` cursor
-no longer GATES push-side conflict detection. Every pushed Update is version-checked against
-the backend (the SoT arbiter), so a stale-base push made under an advanced shared cursor is
-REJECTED ("fetch first") instead of silently clobbering a sibling clone's concurrent edit.
-Code landed at **`61e8222`** (`fix(106-01): lost-update guard — shared cursor no longer
-gates conflict detection`, `crates/reposix-remote/src/precheck.rs`), atop the catalog-first
-GREEN contract at `632864d`.
-
-**Regression test (GREEN).**
-`stale_base_push_rejected_when_shared_cursor_advanced_past_concurrent_write`
-(`crates/reposix-remote/src/precheck.rs:623`) — proves a stale-base push is still rejected
-when the shared cursor has advanced past a concurrent write.
-
-**Catalog row.** `code/lost-update-shared-cursor-rejected` (`quality/catalogs/code.json`) —
-verifier `quality/gates/code/lost-update-shared-cursor.sh` (present + executable on disk),
-artifact `quality/reports/verifications/code/lost-update-shared-cursor-rejected.json`, gate
-command `cargo test -p reposix-remote --bin git-remote-reposix
-stale_base_push_rejected_when_shared_cursor_advanced_past_concurrent_write`.
-
-**Why slotted CLOSED here (not deferred).** The fix already shipped in v0.14.0; deferring a
-SHIPPED fix's paperwork would be dishonest (OP-1: an artifact in committed code IS the
-reality). The regression test is GREEN and the catalog row exists with a live verifier, so
-the verifier-close is folded into this P111 milestone-close rather than minting a separate
-`p113/VERDICT.md`.
-
-**Context anchor:** `4dd7e10` (renumber + intake RESOLVED), `61e8222` (code), `632864d`
-(catalog-first contract), `crates/reposix-remote/src/precheck.rs`;
-`quality/catalogs/code.json` § `code/lost-update-shared-cursor-rejected`.
