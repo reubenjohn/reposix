@@ -11,40 +11,42 @@
 # NEGATIVE GUARD proving the pre-fix parentless emission RED-s so the gate bites.
 #
 # ────────────────────────────────────────────────────────────────────────────
-# CURRENT STATUS (2026-07-12, Phase 105 Lane 2): NOT-VERIFIED (exit 75).
+# CURRENT STATUS (2026-07-12, Phase 105 Lane 2 → layer-2): PASS (exit 0).
 #
-# The 90ddaff parent-chaining fix ELIMINATED the `fatal: error while running
-# fast-import` / `does not contain` abort (this gate PROVES that — Assertion
-# FIX-LAYER passes). But driving the FULL documented recovery end-to-end
-# through `git pull --rebase` surfaced a SECOND, newly-exposed bug the
-# unit-level `verify_fix.sh` (a bare `git fast-import`, not a real `git pull`)
-# could not see:
+# RBF-LR-03 shipped in two layers:
+#   - Layer-1 (90ddaff) chained the synthesized tracking commit onto the
+#     tracking tip, removing the `fatal: error while running fast-import` /
+#     `does not contain` abort.
+#   - Layer-2 (this gate's contract) fixed the SECOND, newly-exposed fetch-time
+#     abort that layer-1 uncovered:
 #
-#   error: cannot lock ref 'refs/reposix/origin/main': is at <X> but expected <Y>
-#    ! <Y>..<X>  main -> refs/reposix/origin/main  (unable to update local ref)
+#       error: cannot lock ref 'refs/reposix/origin/main': is at <T1> but expected <T0>
 #
-# The `import` helper's fast-import stream writes `commit refs/reposix/origin/main`
-# DIRECTLY (fast_import.rs:165) while the helper ALSO advertises
-# `refspec refs/heads/*:refs/reposix/origin/*` (main.rs:193) — so git ALSO
-# updates that ref after import. On drift the stream fast-forwards the ref
-# underneath git; git's post-import ref transaction (old-value = the PRE-fetch
-# tip) then conflicts with the already-moved ref → `git fetch` (hence
-# `git pull --rebase`) exits non-zero → the documented `git pull --rebase &&
-# git push` recovery SHORT-CIRCUITS at the `&&` and never pushes (the local
-# edit is lost until an UNDOCUMENTED second `git pull --rebase`).
+#     Root cause: the `import` helper stream wrote `commit refs/reposix/origin/main`
+#     DIRECTLY while the helper ALSO advertised `refspec
+#     refs/heads/*:refs/reposix/origin/*`, so BOTH the stream and git fetch wrote
+#     that one ref. On drift the stream fast-forwarded it T0→T1 underneath git;
+#     git's post-import transaction (expected-old T0) then conflicted with the
+#     already-moved T1 → `git pull --rebase` aborted → the documented
+#     `git pull --rebase && git push` short-circuited at the `&&`.
 #
-# This is a distinct fix site (git remote-helper import ref semantics — a naive
-# change risks clobbering the caller's local branch on a lights-out system), so
-# it is FILED, not fixed under P105:
-#   .planning/milestones/v0.14.0-phases/SURPRISES-INTAKE.md (P105, HIGH)
-#   repro: .planning/phases/105-rbf-lr-03-rebase-recovery/repro/repro-fetch-ref-lock.sh
+#     Fix (restore the two-namespace remote-helper contract): the helper now
+#     writes a PRIVATE namespace `refs/reposix-import/*`; git fetch maps it into
+#     the tracking ns `refs/reposix/origin/*` via `remote.origin.fetch`,
+#     remaining the SOLE writer. (fast_import.rs commit/reset targets +
+#     main.rs advertised refspec, commit bd5b9cb.)
 #
-# This gate is written so it flips to GREEN (exit 0) WITHOUT EDITS the moment
-# that second fix lands: the CONVERGENCE assertion checks that the single
-# documented `git pull --rebase && git push` exits 0 AND the local edit reaches
-# the SoT. While the ref-lock bug is present that assertion cannot hold, so the
-# gate reports NOT-VERIFIED (exit 75) rather than a false PASS or a CI-blocking
-# FAIL on a known-filed defect (same convention as agent-ux/real-git-push-e2e).
+# CONTRACT (this gate, both scenarios): the SINGLE documented command
+# `git pull --rebase origin main && git push origin main` exits 0 AND the local
+# edit reaches the SoT (issue2 version 1→2), with ZERO `fatal: error while
+# running fast-import` (layer-1 guard) AND ZERO `cannot lock ref
+# 'refs/reposix/origin/main'` (layer-2 guard) on the recovery path. A clobber
+# guard additionally asserts the caller's local `refs/heads/main` was moved ONLY
+# by the user's own commit (never by fetch) and the private
+# `refs/reposix-import/main` staging ref exists. Two negative guards prove the
+# gate bites: a parentless non-descendant fast-import RED-s with `does not
+# contain` (layer-1), and the CONVERGENCE + `cannot lock ref`-absence asserts
+# would fail against a pre-layer-2 binary (layer-2).
 # ────────────────────────────────────────────────────────────────────────────
 #
 # IMPORT-PATH FORCING (PLAN §3 / §5). The RBF-LR-03 bug lives on git's `import`
@@ -277,6 +279,28 @@ else
   fi
 fi
 
+# LAYER-2 negative guard: `cannot lock ref 'refs/reposix/origin/main'` MUST NOT
+# appear on the recovery path (the pre-layer-2 double-writer bug). Absence is
+# the positive signal the two-namespace split holds.
+if grep -qE "$REFLOCK_RE" "${RUN_DIR}/A_recovery.log"; then
+  fail "SCENARIO A LAYER-2: \`cannot lock ref 'refs/reposix/origin/main'\` present — the import stream is STILL double-writing the tracking ref git owns (namespace-collapse regression)"
+else
+  pass "SCENARIO A LAYER-2: no \`cannot lock ref 'refs/reposix/origin/main'\` on the recovery path — helper writes the private refs/reposix-import/* ns, git fetch is the sole tracking-ref writer"
+fi
+
+# CLOBBER guard: the caller's local refs/heads/main must have moved ONLY via the
+# user's own rebase/commit (its tip is reachable-from the local HEAD the user
+# built), and the private staging ref refs/reposix-import/main must exist —
+# never refs/heads/* written by the helper stream.
+A_PRIV="$( cd "${RUN_DIR}/B" && git rev-parse --verify --quiet refs/reposix-import/main 2>/dev/null )"
+A_LOCAL_SUBJECT="$( cd "${RUN_DIR}/B" && git log -1 --format=%s refs/heads/main 2>/dev/null )"
+tlog "SCENARIO A clobber: refs/reposix-import/main=${A_PRIV:-<absent>} local_head_subject='${A_LOCAL_SUBJECT}'"
+if [[ -n "$A_PRIV" && "$A_LOCAL_SUBJECT" == "B edits issue2" ]]; then
+  pass "SCENARIO A CLOBBER-GUARD: private refs/reposix-import/main present and local refs/heads/main tip is the user's own commit (\`B edits issue2\`) — the helper never clobbered the working branch"
+else
+  fail "SCENARIO A CLOBBER-GUARD: expected private refs/reposix-import/main present + local HEAD subject 'B edits issue2'; got priv='${A_PRIV:-<absent>}' subject='${A_LOCAL_SUBJECT}'"
+fi
+
 # ============================================================================
 # SCENARIO B — external REST PATCH drift.
 # C holds an unpushed local commit (issue2). A direct `curl -X PATCH` moves the
@@ -316,6 +340,23 @@ else
   else
     fail "SCENARIO B: documented recovery did NOT converge (recovery_exit=${B_RECOVERY_EXIT}, issue2 v${B_BEFORE}→v${B_AFTER})"
   fi
+fi
+
+# LAYER-2 negative guard (external-REST-drift variant).
+if grep -qE "$REFLOCK_RE" "${RUN_DIR}/B_recovery.log"; then
+  fail "SCENARIO B LAYER-2: \`cannot lock ref 'refs/reposix/origin/main'\` present on the external-REST-drift recovery path (namespace-collapse regression)"
+else
+  pass "SCENARIO B LAYER-2: no \`cannot lock ref 'refs/reposix/origin/main'\` on the external-REST-drift recovery path"
+fi
+
+# CLOBBER guard (Scenario B / clone C).
+B_PRIV="$( cd "${RUN_DIR}/C" && git rev-parse --verify --quiet refs/reposix-import/main 2>/dev/null )"
+B_LOCAL_SUBJECT="$( cd "${RUN_DIR}/C" && git log -1 --format=%s refs/heads/main 2>/dev/null )"
+tlog "SCENARIO B clobber: refs/reposix-import/main=${B_PRIV:-<absent>} local_head_subject='${B_LOCAL_SUBJECT}'"
+if [[ -n "$B_PRIV" && "$B_LOCAL_SUBJECT" == "C edits issue2" ]]; then
+  pass "SCENARIO B CLOBBER-GUARD: private refs/reposix-import/main present and local refs/heads/main tip is the user's own commit (\`C edits issue2\`) — the helper never clobbered the working branch"
+else
+  fail "SCENARIO B CLOBBER-GUARD: expected private refs/reposix-import/main present + local HEAD subject 'C edits issue2'; got priv='${B_PRIV:-<absent>}' subject='${B_LOCAL_SUBJECT}'"
 fi
 
 # ============================================================================

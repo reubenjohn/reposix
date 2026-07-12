@@ -2449,10 +2449,12 @@
       "expected": {
         "asserts": [
           "bash quality/gates/agent-ux/rebase-recovery-reconciles.sh exits 0 against the local cargo workspace + live sim",
-          "Scenario A (peer git push drift): clone B `git pull --rebase` exits 0, replays B's commit, `git push` converges - NO `does not contain` / `fatal: error while running fast-import`",
-          "Scenario B (external REST PATCH drift): clone C `git pull --rebase` exits 0, `git push` converges",
-          "NEGATIVE GUARD: the pre-fix emit_import_stream (parentless) reproduces `fatal: error while running fast-import` - captured in the transcript as the RED baseline",
-          "emit_import_stream emits `from <parent>` when the tracking ref exists; parentless only on first fetch"
+          "Scenario A (peer git push drift): clone B `git pull --rebase origin main && git push origin main` (SINGLE documented command) exits 0, replays B's commit, converges (issue2 v1->v2) - NO `does not contain` / `fatal: error while running fast-import`",
+          "Scenario B (external REST PATCH drift): clone C `git pull --rebase origin main && git push origin main` (SINGLE documented command) exits 0, converges",
+          "LAYER-2 GUARD: `cannot lock ref 'refs/reposix/origin/main'` MUST NOT appear on the recovery path in EITHER scenario - the helper writes the private refs/reposix-import/* ns so git fetch is the sole writer of the tracking ns (RBF-LR-03 layer-2 double-writer fixed)",
+          "CLOBBER GUARD: after recovery the private refs/reposix-import/main staging ref exists AND the caller's local refs/heads/main tip is the user's own commit - the helper stream never named refs/heads/* nor clobbered the working branch",
+          "NEGATIVE GUARD (layer-1): the pre-fix emit_import_stream (parentless) reproduces `does not contain` - captured in the transcript as the RED baseline proving the gate bites",
+          "emit_import_stream emits `from <parent>` when the tracking ref exists (parentless only on first fetch) and writes commit/reset to refs/reposix-import/main, never refs/reposix/origin/main"
         ],
         "artifact": {
           "transcript_path": "quality/reports/transcripts/rebase-recovery-reconciles-<RFC3339>.txt"
