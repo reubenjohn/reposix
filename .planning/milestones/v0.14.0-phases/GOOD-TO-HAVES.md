@@ -118,6 +118,33 @@ with carry-forward target v0.15.0; close early if the `open_cache_with` extracti
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-04 — `rbf-lr-03-file-size-split` — split the two P105 files over the soft-warn threshold
+
+**Discovered during:** P105 (RBF-LR-03 docs fix-twice lane, ownership noticing)
+
+**Size:** S
+
+**Source:** the P105 fix wave produced two files over the `structure/file-size-limits`
+soft-warn threshold: `crates/reposix-remote/src/fast_import.rs` (~42.7k, parent-chaining +
+`deleteall` rebuild + its `#[cfg(test)]` module) and
+`quality/gates/agent-ux/rebase-recovery-reconciles.sh` (~30.7k, two drift scenarios + the
+negative-guard blocks that prove each assert bites). Both are currently WAIVED to 2026-08-08
+in `freshness-invariants.json` — a time-boxed soft warn, not a hard fail.
+
+**Acceptance:** when the 2026-08-08 waiver expires, both files sit under the soft-warn
+threshold with NO waiver. Split `fast_import.rs` by extracting the `#[cfg(test)]` module
+into a sibling `fast_import_tests.rs` (and, if still over, factor the import-stream builder
+from the parent-resolution logic); split `rebase-recovery-reconciles.sh` by extracting the
+negative-guard blocks (parentless non-descendant guard, deletion overlay-vs-rebuild guard)
+into a sourced `lib/` helper shared with the scenario body. Re-run
+`bash quality/gates/structure/file-size-limits.sh` → exit 0 without a waiver.
+
+**Default disposition for P111:** S closes-or-defers; safe to defer until the waiver
+approaches expiry (2026-08-08) since it is a soft warn, not a live fail. Close early if a
+mechanical `#[cfg(test)]`-extraction pass proves < 1h.
+
+**STATUS:** OPEN
+
 ## Entry format
 
 ```markdown

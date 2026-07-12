@@ -318,3 +318,33 @@ writes the ref. Either way: re-run `quality/gates/agent-ux/rebase-recovery-recon
 modern-git CI runner before closing.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-12 09:40 | discovered-by: P105 (RBF-LR-03 docs fix-twice lane, ownership noticing) | severity: MEDIUM
+
+**What:** `resolve_import_parent()` (`crates/reposix-remote/src/main.rs:400-419`) degrades
+to the parentless path (`None` → no `from`, no `deleteall`) on **any** git error, not just
+ref-absence. Two conflations: (1) the `rev_parse` closure returns `None` via `.ok()?`
+(`main.rs:407`) when `Command::new("git").output()` itself fails — git binary missing, spawn
+/ I/O error — swallowing a real environmental fault as "no parent." (2) `!out.status.success()`
+(`main.rs:408`) treats *every* non-zero rev-parse exit as ref-absent, when
+`rev-parse --verify --quiet` also exits non-zero for other failure modes. Either way the
+fetch silently falls back to a parentless overlay — precisely the non-descendant
+"does not contain" abort P105 just fixed (`fast_import.rs` parent-chaining). A future
+regression that makes rev-parse fail for a non-absence reason would silently re-open the
+RBF-LR-03 bug with no error surfaced to the operator.
+
+**Sketch:** Distinguish ref-absent (the legitimate parentless case: `rev-parse --verify
+--quiet <ref>` exits 1 with empty stdout AND the git spawn succeeded) from other rev-parse
+/ spawn failures. On the latter, error the fetch loudly (`fatal:` + recovery hint) instead
+of degrading to parentless — a spawn failure or a malformed-arg exit is an operator-facing
+fault, not a valid "fresh clone, no tracking tip yet" signal. Keep the existing empty-stdout
+→ `None` path for the genuine first-fetch case. Add a unit test that injects a non-absence
+git failure and asserts the fetch errors rather than emitting a parentless overlay.
+
+**Why out-of-scope for the P105 docs lane:** code change in load-bearing helper protocol
+(cargo build + a new test) — this lane is docs-only, cargo-free. Small (<1h) but needs a
+cargo window; file rather than eager-fix.
+
+**STATUS:** OPEN
