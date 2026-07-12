@@ -313,3 +313,7 @@ overstates reliability for the external-REST-write case.
 ## 2026-07-12 [SELF] D5 — should a RED release-plz block phase-close via ci-green-on-main P0 bar?
 
 [SELF] (2026-07-12): should a RED release-plz block phase-close via the ci-green-on-main P0 bar? YES in principle — this BLOCKER proves an unwatched red release workflow rots silently (Global CLAUDE.md: health is a maintained asset; never let a metric you don't watch decay). But NOT implemented inline: (a) ci-green-on-main.sh hardcodes WORKFLOW=ci.yml; a clean fold = parameterize into a required-workflow list or a sibling code/release-green-on-main row (catalog-first ordering + a verifier grade) — non-trivial. (b) Open semantic question needing verification before P0-wiring: does release-plz run on EVERY push to main, and does a 'no release needed' outcome conclude success or skipped? A false-RED would block UNRELATED phases → warrants owner gate. FILED to SURPRISES-INTAKE with sketch.
+
+## 2026-07-12 [OWNER] dependabot #64-66 closed-as-redundant
+
+[OWNER] (2026-07-12): dependabot PRs #64 (tower-http 0.6.8→0.7.0), #65 (gix 0.83.0→0.85.0), #66 (rusqlite 0.39.0→0.40.1) closed as redundant — `cargo audit` reports 0 live advisories, none touch the flagged crates (memmap2/quinn-proto), bases superseded on current main.
