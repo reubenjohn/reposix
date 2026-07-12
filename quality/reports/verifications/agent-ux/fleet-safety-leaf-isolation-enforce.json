@@ -1,12 +1,29 @@
 {
-  "ts": "2026-07-12T07:32:55Z",
   "row_id": "agent-ux/fleet-safety-leaf-isolation-enforce",
   "exit_code": 0,
-  "transcript_path": "quality/reports/transcripts/fleet-safety-leaf-isolation-enforce-2026-07-12T07-32-55Z.txt",
-  "asserts_passed": [],
-  "asserts_failed": [],
-  "timed_out": false,
-  "stdout": "",
-  "stderr": "",
-  "claim_vs_assertion_audit_hash": "99264a2d0839ed6a3ba0fbb262f8ed0acb4598ca0989484d0956494c816f7784"
+  "transcript_path": "quality/reports/transcripts/fleet-safety-leaf-isolation-enforce.txt",
+  "asserts_passed": [
+    "exit==2 BLOCK",
+    "stderr teaches /tmp-clone rule + cites ORCHESTRATION.md",
+    "exit==0 ALLOW (redirect sanctioned)",
+    "exit==2 default-deny on undeterminable cwd",
+    "canonical-form exit==2 BLOCK",
+    "cd-back exit==2 BLOCK",
+    "traversal exit==2 BLOCK",
+    "legit /tmp cargo-init exit==0 ALLOW",
+    "unparseable payload exit==2 BLOCK",
+    "zero worktree-remove-force occurrences",
+    "read+redirect exit==0 ALLOW",
+    "read+chain exit==0 ALLOW",
+    "config-write exit==2 BLOCK",
+    "git-init-bare shared exit==2 BLOCK",
+    "git-init-bare /tmp exit==0 ALLOW",
+    "cargo-sim-seed shared exit==2 BLOCK",
+    "sim-server-start exit==0 ALLOW",
+    "sim-server-start-with-flags exit==0 ALLOW",
+    "path-suffixed sim-server exit==0 ALLOW",
+    "reposix-init-still-block exit==2 BLOCK",
+    "reposix-sim-seed exit==2 BLOCK"
+  ],
+  "asserts_failed": []
 }

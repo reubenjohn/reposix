@@ -16,11 +16,17 @@ write_transcript_and_artifact() {
   # NOTE: this helper lives at quality/gates/agent-ux/lib/transcript.sh,
   # so repo root is FOUR levels up from the helper file (../../../..).
   repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../../../.." &> /dev/null && pwd)"
-  local ts ts_file
+  # STABLE transcript filename (D-P96-01, extended). The transcript is a
+  # gitignored per-run snapshot (quality/reports/transcripts/*.txt) that is
+  # OVERWRITTEN each run — it must NOT carry a per-run RFC3339 stamp, because
+  # the committed verdict references it and a volatile filename would re-dirty
+  # the tracked JSON on every grade run (the exact stop-on-dirty hazard this
+  # helper caused). The per-run timestamp lives INSIDE the transcript body.
+  local ts transcript artifact rel_transcript
   ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  ts_file="$(date -u +%Y-%m-%dT%H-%M-%SZ)"
-  local transcript="${repo_root}/quality/reports/transcripts/${slug}-${ts_file}.txt"
-  local artifact="${repo_root}/quality/reports/verifications/agent-ux/${slug}.json"
+  transcript="${repo_root}/quality/reports/transcripts/${slug}.txt"
+  artifact="${repo_root}/quality/reports/verifications/agent-ux/${slug}.json"
+  rel_transcript="quality/reports/transcripts/${slug}.txt"
   mkdir -p "$(dirname "$transcript")" "$(dirname "$artifact")"
 
   local stdout_file stderr_file env_keys exit_code
@@ -36,6 +42,7 @@ write_transcript_and_artifact() {
 
   {
     printf 'argv: %s\n' "$*"
+    printf 'ts: %s\n' "$ts"
     printf 'env_keys: %s\n' "$env_keys"
     printf 'cwd: %s\n' "$(pwd)"
     printf 'exit_code: %s\n' "$exit_code"
@@ -45,12 +52,28 @@ write_transcript_and_artifact() {
     cat "$stderr_file"
   } > "$transcript"
 
-  # transcript_path is the load-bearing field — verifier subagent dereferences it.
-  # Path is REPO-RELATIVE so it survives runner cwd changes.
-  local rel_transcript="${transcript#"${repo_root}"/}"
-  cat > "$artifact" <<EOF
-{"ts":"${ts}","row_id":"agent-ux/${slug}","exit_code":${exit_code},"transcript_path":"${rel_transcript}","asserts_passed":[],"asserts_failed":[]}
-EOF
+  # HONEST asserts (was hardcoded []): parse the scenario's own
+  # "ASSERT <label>: PASS|FAIL" report lines into TAB-separated PASS/FAIL
+  # records so the committed verdict records EXACTLY the conditions the
+  # fleet-safety scenario evaluated. Deterministic — a given outcome emits a
+  # fixed label set; `awk '!seen'` dedupes loop-repeated labels while
+  # preserving first-seen order. The greedy `(.*)` binds the label up to the
+  # FINAL ": PASS"/": FAIL", so labels that themselves contain ": " survive.
+  local assert_records
+  assert_records="$(
+    grep -E '^[[:space:]]*ASSERT .*: (PASS|FAIL)$' "$stdout_file" \
+      | sed -E 's/^[[:space:]]*ASSERT (.*): (PASS|FAIL)$/\2\t\1/' \
+      | awk '!seen[$0]++'
+  )"
+
+  # DETERMINISTIC committed verdict via the shared canonical serializer
+  # (quality/runners/_shell_verdict.py) — SAME schema + byte formatting as
+  # run.py's write-back, so the two producers never fight. No `ts`, stable
+  # transcript_path: a re-run rewrites the tracked JSON ONLY if the graded
+  # result (exit_code / asserts) changed.
+  printf '%s\n' "$assert_records" | python3 "${repo_root}/quality/runners/_shell_verdict.py" \
+    "$artifact" "agent-ux/${slug}" "$exit_code" "$rel_transcript"
+
   rm -f "$stdout_file" "$stderr_file"
   return "$exit_code"
 }

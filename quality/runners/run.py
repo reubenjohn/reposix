@@ -48,6 +48,7 @@ from _freshness import parse_duration as _parse_duration_impl
 from _freshness import is_stale as _is_stale_impl
 import _realbackend  # P89 RBF-FW-01: env-gate + exit-code map (sibling per anti-bloat rule)
 import _audit_field  # P89 RBF-FW-11: claim_vs_assertion_audit + kind:shell-subprocess cross-check
+import _shell_verdict  # D-P96-01 (extended): deterministic committed verdict for kind:shell-subprocess
 
 # Re-export so existing callers and tests can keep doing `from run import parse_duration`.
 parse_duration = _parse_duration_impl
@@ -363,7 +364,30 @@ def run_row(row: dict, repo_root: Path, now: datetime) -> tuple[dict, float]:
     _audit_field.apply_pass_gates(row, artifact, repo_root)
 
     if artifact_path:
-        write_artifact(artifact_path, artifact)
+        if row.get("kind") == "shell-subprocess":
+            # DETERMINISTIC committed verdict (D-P96-01, extended). A
+            # kind:shell-subprocess row grades from its freshly-regenerated
+            # transcript, so its committed artifact records ONLY the graded
+            # result (exit_code + the asserts the scenario evaluated) plus a
+            # STABLE transcript_path. Volatile fields the enrichment above added
+            # -- the per-run `ts`, captured stdout/stderr, timed_out, the audit
+            # hash -- are DROPPED here so a read-only pre-push GATE run never
+            # re-dirties the tracked JSON (the stop-on-dirty hazard P96 left open
+            # for per-row artifacts). Serialized through the SAME module
+            # transcript.sh uses, so the gate's own write and this write-back are
+            # byte-identical and the two producers never fight over the file.
+            write_artifact(
+                artifact_path,
+                _shell_verdict.canonical_verdict(
+                    row["id"],
+                    artifact.get("exit_code"),
+                    artifact.get("transcript_path"),
+                    artifact.get("asserts_passed") or [],
+                    artifact.get("asserts_failed") or [],
+                ),
+            )
+        else:
+            write_artifact(artifact_path, artifact)
     row["last_verified"] = artifact["ts"]
     return row, time.monotonic() - started
 
