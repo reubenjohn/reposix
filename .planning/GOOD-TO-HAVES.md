@@ -41,6 +41,42 @@ a live failure). Close early if the inline-`scenario` pass proves < 1h.
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-09 — `slug-to-id-durable-create-model` — model create as a durable slug→id translation (interrupted-create duplicate elimination)
+
+**Discovered during:** v0.14.0 P108 (paperwork-closure filing of the ADR-010 slug→id waiver
+as a first-class intake remainder — originally filed only in
+`.planning/milestones/v0.14.0-phases/GOOD-TO-HAVES.md`; mirrored here 2026-07-12 per owner
+deferral decision below).
+
+**Size:** M (design-level, multi-crate reconciliation redesign)
+
+**Severity:** MEDIUM-HIGH — data-integrity hazard confined to id-reassigning real backends
+(GitHub Issues / JIRA / Confluence), recoverable by hand-deleting one duplicate; sim +
+client-id backends are unaffected.
+
+**One-line hazard:** a `create` against an id-assigning real backend that is cut off
+mid-push can, on retry, leave one duplicate record — ADR-010's convergence contract
+("already-landed writes are diffed away against the recomputed base") holds for UPDATEs
+(stable ids) but is FALSE for CREATEs, whose backend-assigned id is unknown until the
+interrupted call completes.
+
+**Fix sketch:** redesign reconciliation to model a create as a durable slug→id translation
+— mint a stable local slug before the push, model the create as "slug X → (pending) →
+backend id N", so an interrupted create leaves a well-defined resumable state instead of
+blindly re-creating.
+
+**Pointer:** ADR-010 §3 (`docs/decisions/010-l2-l3-cache-coherence.md`); full detail and
+prior discussion at `.planning/milestones/v0.14.0-phases/GOOD-TO-HAVES.md` GOOD-TO-HAVES-09;
+`.planning/milestones/v0.14.0-phases/ROADMAP.md` Phase 108 headline note.
+
+**Default disposition:** M default-defers to the next milestone with a named
+carry-forward target.
+
+**TAG:** v0.15.0
+
+**STATUS:** DEFERRED — owner scope call, 2026-07-12 (explicit deferral past v0.14.0
+milestone-close, not a silent slip).
+
 ## Entry format
 
 ```markdown

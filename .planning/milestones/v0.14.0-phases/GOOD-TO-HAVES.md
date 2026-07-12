@@ -245,7 +245,7 @@ run so the residue cannot re-accumulate.
 
 **Default disposition for P111:** M default-defers — this is the v0.14.0 reconciliation-redesign headline pivot itself, not a Slot-2 polish item; it graduates to a dedicated design phase, not an eager-fix. **Explicitly NOT cleared by P108** (P108 is paperwork closure of the SEPARATE, already-shipped Fork-A prune-completeness gate; this slug→id item remains fully OPEN and unstarted).
 
-**STATUS:** OPEN
+**STATUS:** DEFERRED-TO-v0.15.0 — owner scope call, 2026-07-12 (explicit deferral, not a silent slip; see ROADMAP.md Phase 108 headline note and root `.planning/GOOD-TO-HAVES.md` GOOD-TO-HAVES-09).
 
 ## GOOD-TO-HAVES-10 — `p94-forkb-assert-orphaned-on-forka-row` — Fork-B NotFound-idempotency assert has no mapped test under the Fork-A row's command
 

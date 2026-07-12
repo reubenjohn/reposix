@@ -316,6 +316,10 @@ reposix-cache --test pagination_prune_safety`). Catalog row
 **slug→id / interrupted-create duplicate** waiver (ADR-010 §3) is NOT part of this fix and
 was FILED as a remainder in `GOOD-TO-HAVES-09` — it remains OPEN / unstarted (the v0.14.0
 reconciliation-redesign headline pivot), explicitly not cleared by P108.
+**DEFERRED-TO-v0.15.0 (owner scope call, 2026-07-12):** GTH-09 / ADR-010 slug→id
+durable-create is explicitly deferred past v0.14.0 milestone-close — NOT a silent slip.
+Tracked at `.planning/milestones/v0.14.0-phases/GOOD-TO-HAVES.md` GOOD-TO-HAVES-09 (STATUS:
+DEFERRED-TO-v0.15.0) and mirrored at root `.planning/GOOD-TO-HAVES.md` GOOD-TO-HAVES-09.
 
 **Goal:** Fix the data-loss hazard where `meta::prune_oid_map` (commit `272882c`/
 `e246e84`) can DELETE `oid_map` rows for LIVE records when a real connector's
