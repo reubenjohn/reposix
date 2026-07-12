@@ -67,6 +67,12 @@ does reposix work itself. Keep this file lean; git history is the archive.
   (`.planning/milestones/v0.14.0-phases/SURPRISES-INTAKE.md`, 43,988B / 44,000B
   ceiling, ~20 entries incl. several HIGH — triage/drain substantially, not
   byte-relief), then the tag sequence above.
+- **Owner ask (2026-07-12): 75% early-warning on file-size ceilings.** Extend the
+  `structure/file-size-limits` gate (or add a sibling row) so any tracked file at
+  ≥75% of its ceiling emits a non-blocking WARN in pre-commit/pre-push output;
+  ≥100% keeps the existing block contract. Mind the current waiver (until
+  2026-08-08, warn-now/block-later) interplay; fix-twice into quality/CLAUDE.md.
+  Route via workhorse /gsd-quick — queued in the charter expansion.
 - Workhorse (w1:p5): **FRESH successor** launched post-`bda849d`, xhigh, entry point
   `.planning/SESSION-HANDOVER.md`. Charter: hygiene lane — /gsd-quick
   progressive-disclosure splits of over-20k STATE.md + ROADMAP.md; charter expansion
