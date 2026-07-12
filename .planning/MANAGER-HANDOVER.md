@@ -47,23 +47,35 @@ does reposix work itself. Keep this file lean; git history is the archive.
 
 ## Live state (refresh at every rotation)
 
-- Board fully GREEN (CI, CodeQL, docs deploy gated-on-CI, release-plz). Phase-close
-  requires ci-green-on-main (P0 post-push probe) — never open a phase over a red main.
-- Workhorse (w1:p5): running at **xhigh effort** (owner-directed). Milestone C2
-  autonomous, currently P110 OP-8 drain; P106 GREEN rows minted; P107 artifact
-  committed; P113 (renumbered lost-update landing) executing under recorded owner
-  authorization (`ed42ece`). **Do NOT /clear w1:p5 while its C2 runs**; monitor with
-  `wait --status working` (idle-wait returns immediately while lanes run).
-- Owner decisions ALL RESOLVED and relayed: land `424d367` (yes — VERIFY it reached
-  origin/main), close dependabot #64-66 (yes — VERIFY closed), gh404 (defer), GTH-09
-  (DEFER to v0.15.0, explicit named-headline deferral — VERIFY filed).
-- Successor commitments made to the owner: (1) verify the UX-mandate fix-twice landed
-  in the CLAUDE.md contract files + the all-subcommands error-message audit runs as a
-  real lane; (2) error codes + `reposix explain <code>` go into next-milestone headline
-  scope; (3) when wave-2 closes, draft P112 launch scope around the spine: agent-vs-MCP
-  side-by-side demo (token counts on screen), the dark-factory/incident meta-story
-  writeup, 90-second zero-install sim trial, then agent-ecosystem distribution
-  (Claude Code skill, MCP directories, llms.txt).
-- Watch: three planning files over 20k soft limit (P110 drain should split);
-  fold-release-plz-into-CI-bar decision open (CONSULT-DECISIONS D5); runner unit tests
-  uncollected by CI (MEDIUM).
+- **v0.14.0 wave-2 CLOSED 11/11 GREEN at the OWNER tag boundary** (2026-07-12).
+  Milestone-close verification = `quality/reports/verdicts/p111/VERDICT.md` (GREEN,
+  OP-9 GREEN, unbiased fresh-execution verifier). Aggregate
+  `milestone-v0.14.0/VERDICT.md` deliberately NOT minted yet — the owner-gated 9th
+  probe would force RED on its P0 row. Board fully green at `bda849d`.
+- **OWNER-ONLY queue (in order):** ① TokenWorld creds + non-default
+  `REPOSIX_ALLOWED_ORIGINS`, run `python3 quality/runners/run.py --cadence
+  pre-release-real-backend` (exit 0) → ② mint+ratify aggregate milestone-v0.14.0
+  verdict → ③ author/run tag script (CHANGELOG references it) → ④ cut v0.14.0 tag
+  (none exists local/remote). Never let the workhorse do these.
+- Workhorse (w1:p5): **FRESH successor** launched post-`bda849d`, xhigh, entry point
+  `.planning/SESSION-HANDOVER.md`. Charter: hygiene lane only — /gsd-quick
+  progressive-disclosure splits of over-20k STATE.md + ROADMAP.md, relieve
+  SURPRISES-INTAKE 44000B ceiling (12B headroom). Hard-barred from owner-only actions
+  and from foreign tree work. VERIFY its quicks land green.
+- **RAISEs standing for the owner:** shared-tree contention (HIGH — a lane manipulated
+  a foreign code.json to pass a rebase; foreign uncommitted work still sits in the
+  shared tree: code.json delta + phases/21, phases/22, scripts/demos, scripts/dev,
+  verifications/docs-repro — fleet correctly left it untouched; decide worktree
+  isolation vs session serialization BEFORE the next parallel fleet run); P112 ROADMAP
+  prose-vs-artifact reconcile at /gsd-new-milestone; D5 fold-release-plz-into-CI still
+  open (CONSULT-DECISIONS).
+- Fixed this session: CI-waiter hangs (twice) → durable `scripts/ci-wait.sh` landed;
+  error codes + `reposix explain <code>` now a v0.15.0 HEADLINE phase (`e5b969d`).
+- **Monitoring craft:** herdr idle/working waits FLAP while background subagents run.
+  What works: a persistent Monitor polling (a) origin/main movement, (b) pane
+  `visible_working`, emitting ORIGIN-MOVED events + a one-shot 20-min stall alarm.
+  On stall: nudge the workhorse to SendMessage its stuck child.
+- P112 launch-scope spine (when owner opens launch-readiness): agent-vs-MCP
+  side-by-side demo (token counts on screen), dark-factory/incident meta-story,
+  90-second zero-install sim trial, agent-ecosystem distribution (Claude Code skill,
+  MCP directories, llms.txt).
