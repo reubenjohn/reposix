@@ -175,6 +175,7 @@ Historical phase-by-phase contribution narrative lives in per-milestone ARCHIVE 
 | 260706-rbf | RBF-LR-03 honest WAIVED known-limitation across ADR-010 §3 + troubleshooting + dvcs-topology | 2026-07-06 | dfc3a9b | [260706-rbf-rbf-lr-03-known-limitation](./quick/260706-rbf-rbf-lr-03-known-limitation/) |
 | 260706-crf | DVCS cold-reader fixes — 7 findings across dvcs-topology + dvcs-mirror-setup + troubleshooting (findings 1 & 6 verified against code) | 2026-07-06 | (this commit) | [260706-crf-dvcs-cold-reader-fixes](./quick/260706-crf-dvcs-cold-reader-fixes/) |
 | 260706-idp | v0.13.0 intake OP-8 disposition + bound-to-live-state sweep — carry-forward banners; 2 terminal SURPRISES + 4 completed RESOLVING-P97 rows deleted; 5 HIGHs confirmed live; 1 new MEDIUM filed (troubleshooting.md >20k) | 2026-07-06 | (this commit) | [260706-idp-v0.13.0-intake-disposition](./quick/260706-idp-v0.13.0-intake-disposition/) |
+| 260712-bgv | Non-blocking timing-budget warning in pre-commit/pre-push hooks (SECONDS-based, stderr-only, never touches exit code) + CLAUDE.md/quality/CLAUDE.md cadence+scaling documentation | 2026-07-12 | b4e96d8 | [260712-bgv-add-non-blocking-timing-budget-warning-t](./quick/260712-bgv-add-non-blocking-timing-budget-warning-t/) |
 
 ## Session Continuity
 

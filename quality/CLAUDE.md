@@ -55,6 +55,18 @@ harnesses, so they sit at 0% and drag the aggregate down — closing them is def
 at tag-time; default-skips to NOT-VERIFIED when `REPOSIX_ALLOWED_ORIGINS` + creds unset —
 never skip-counts-as-pass, per PROTOCOL.md OD-2).
 
+**Runtime does NOT scale with diff size.** Both budgets are fixed whole-repo costs, not
+per-changed-file costs — measured 2026-07-12: pre-commit ≈0.7s (fmt --check on staged
+`.rs` only, ~0.5s + runner ~0.2s — the only piece that scales at all, and only with
+staged file *count*, not diff size). pre-push ≈55s, dominated by fixed-cost gates that
+walk the whole tree regardless of what changed: `code/shell-coverage` (kcov aggregate,
+~29s), `agent-ux/rebase-recovery-reconciles` (~9s), `docs-build/mkdocs-strict` (~2s),
+full-workspace clippy/fmt (~1s combined). A one-line commit and a 500-file commit pay
+the same pre-push tax. If pre-push ever creeps meaningfully past 60s, suspect a new
+whole-repo gate (another kcov-style full-corpus walk), not diff growth — profile with
+`python3 quality/runners/run.py --cadence pre-push` (per-row timing above) before
+adding budget.
+
 **Kinds:** `mechanical` · `container` · `asset-exists` · `subagent-graded` · `manual`
 (TTL freshness) · `shell-subprocess` (real subprocess vs a real binary/backend + a
 transcript at `quality/reports/transcripts/<row-slug>-<RFC3339>.txt` recording argv +

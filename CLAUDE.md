@@ -180,7 +180,9 @@ and push cadence: `.planning/CLAUDE.md`. Do not silently downgrade the gates.
 **Push cadence.** Every phase closes with `git push origin main` BEFORE the verifier
 subagent; the verifier grades RED if the phase shipped without the push landing.
 Milestone-close adds a non-skippable 9th probe (`pre-release-real-backend`) —
-`.planning/CLAUDE.md`.
+`.planning/CLAUDE.md`. Hook budgets are fixed whole-repo costs, NOT diff-size-scaled —
+`pre-commit` ≈1s, `pre-push` ≈55s (dominated by kcov shell-coverage + full-workspace
+clippy/mkdocs, not by what changed): `quality/CLAUDE.md` § Cadences.
 
 ## Commands you'll actually use
 
