@@ -243,35 +243,32 @@ hint: run `reposix sync --reconcile` to refresh your cache against the SoT, then
 
 What it means: between your last `git fetch origin` (from the GH mirror) and your `git push`, the SoT moved. The mirror has not caught up — `refs/mirrors/<sot-host>-synced-at` shows the gap. Pushing now would silently overwrite the other writer's edits to issue 0001.
 
-Fix (works when the conflict came from another git-side *push*):
+Fix — one command sequence, whatever moved the SoT:
 
 ```bash
-reposix sync --reconcile          # full list_records walk against the SoT
-git pull --rebase                 # replay your commits on top of the fresh state
+git pull --rebase                 # fetch reconciles your cache against the SoT, then replays your commits
 git push                          # bus remote retries; precheck B passes
 ```
 
-Why two commands: `git pull` from the GH mirror gives you the mirror's lagging view. `reposix sync --reconcile` walks the SoT directly via REST and updates your cache to match — the ground-truth refresh needed before rebasing. Once the cache is fresh, `git pull --rebase` becomes a local-only rebase and `git push` succeeds.
+Why it works: the `git pull --rebase` fetch reconciles your cache against the SoT (walking
+records via REST as needed) and replays your local commits on top of the fresh state; the
+follow-up `git push` then lands cleanly. If you want to force a full ground-truth refresh
+before rebasing, `reposix sync --reconcile` remains available as an explicit catch-up, but
+it is no longer a prerequisite for recovery.
 
-> **Known limitation (v0.13.x) — an EXTERNAL REST write (not a git push) breaks this recovery.**
-> If the SoT moved because someone edited the record *directly* (web UI / REST PATCH)
-> rather than via a reposix `git push`, the sequence above does **not** recover — and
-> `reposix sync --reconcile` does not help. `git pull --rebase` aborts with:
+> **Resolved in v0.14.0 (Phase 105, RBF-LR-03).** The single documented recovery
+> `git pull --rebase && git push` now reconciles for **all three** SoT-drift sources —
+> a peer git-side push, an **external REST write** (web UI / direct PATCH), and an SoT
+> **deletion** — no re-clone required. Before the fix, external-REST and deletion drift
+> both aborted the rebase with
 > `warning: Not updating refs/reposix/origin/main (new tip … does not contain …)` and
-> `fatal: error while running fast-import` <!-- banned-words: ok --> (literal quoted git stderr the user will see verbatim, not narrative jargon)
->
-> Root cause: the cache rebuilds a "Sync from REST snapshot" commit that is not a
-> descendant of your current tracking tip, so git's internal import step refuses to
-> advance the ref. This is the RBF-LR-03 deep-reconciliation limitation, scheduled for
-> the v0.14.0 reconciliation redesign.
->
-> **Current workaround:** re-clone into a fresh tree —
-> ```bash
-> reposix init <backend>::<project> /tmp/fresh-tree
-> cd /tmp/fresh-tree && git checkout -B main refs/reposix/origin/main
-> ```
-> The fresh tree reflects the external edit correctly. **You lose any local commits you
-> had not yet pushed** — re-apply them by hand (e.g. copy your edited `.md`, re-commit).
+> `fatal: error while running fast-import` <!-- banned-words: ok --> because the cache
+> rebuilt a non-descendant "Sync from REST snapshot" commit. The two-layer fix: the
+> fetch fast-import now chains onto the tracking tip inside a private import ref
+> namespace (so the new tip *does* contain the old one), and it emits a full-rebuild
+> `deleteall` so SoT deletions propagate instead of resurrecting dropped records.
+> Regression-guarded by `quality/gates/agent-ux/rebase-recovery-reconciles.sh`
+> (catalog row `agent-ux/rebase-recovery-reconciles`).
 
 On conflict, resolve with standard git tools (`git status`, edit, `git rebase --continue`).
 

@@ -256,6 +256,28 @@ changed-set), explicitly **not** load-bearing for the coherence guarantee.
    > pivot"). ADR-010 §3's convergence contract is revised only after that
    > exploration converges; until then this marker is the honest boundary.
 
+   > **RESOLVED in v0.14.0 (Phase 105) — the *rebase-recovery deep-reconciliation*
+   > half of RBF-LR-03 only.** RBF-LR-03 carried two distinct limitations under one
+   > tag. The one **now resolved** is the *drift-recovery* limitation that the user
+   > docs referenced as "the RBF-LR-03 deep-reconciliation limitation": before
+   > v0.14.0, when the SoT moved via an **external REST write** (web UI / direct
+   > PATCH) or an **SoT deletion**, the documented `git pull --rebase && git push`
+   > aborted with `warning: Not updating refs/reposix/origin/main (new tip … does
+   > not contain …)` + `fatal: error while running fast-import` <!-- banned-words: ok -->
+   > because the cache rebuilt a non-descendant "Sync from REST snapshot" commit.
+   > The two-layer fix (Phase 105): (1) the fetch fast-import now chains onto the
+   > tracking tip inside a private import ref namespace, so the new tip *contains*
+   > the old one and the rebase fast-forwards; (2) a full-rebuild `deleteall` in the
+   > import stream propagates SoT deletions instead of resurrecting dropped records.
+   > The single documented recovery `git pull --rebase && git push` now reconciles
+   > for **all three** drift sources (peer git-push, external REST, deletion),
+   > regression-guarded by `quality/gates/agent-ux/rebase-recovery-reconciles.sh`
+   > (catalog row `agent-ux/rebase-recovery-reconciles`, graded GREEN at Phase 105
+   > close). **STILL OPEN:** the *duplicate-record-on-interrupted-create* waiver
+   > above (the slug→id durable-home problem) is a separate limitation that the
+   > rebase-recovery fix does **not** touch — it remains the v0.14.0
+   > reconciliation-redesign pivot until that exploration converges.
+
 4. **Test co-location.** SC2 pins `cargo test -p reposix-cache --test
    cache_coherence`, but `SotPartialFail` + PRECHECK B live in **reposix-remote**
    (`write_loop.rs` / `precheck.rs`), not reposix-cache. **Decision:**
