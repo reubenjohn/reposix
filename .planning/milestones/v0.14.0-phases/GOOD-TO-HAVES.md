@@ -229,6 +229,24 @@ run so the residue cannot re-accumulate.
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-09 — `slug-to-id-durable-create-model` — model create as a durable slug→id translation (interrupted-create duplicate elimination)
+
+**Discovered during:** P108 (paperwork-closure filing of the ADR-010 slug→id waiver as a first-class intake remainder — the item was documented OPEN in ADR-010 §3 but never carried a severity+sketch row here)
+
+**Size:** M (design-level, multi-crate — the v0.14.0 reconciliation-redesign headline pivot)
+
+**Severity:** MEDIUM-HIGH — data-integrity hazard, but confined to id-reassigning REAL backends (GitHub Issues / JIRA / Confluence), recoverable by hand-deleting one duplicate; sim + client-id backends are unaffected. Owner-signed, WAIVED-until-v0.14.0 known limitation.
+
+**One-line hazard:** a `create` against an id-assigning real backend that is cut off mid-push can, on retry, leave one duplicate record — because ADR-010's convergence contract ("already-landed writes are diffed away against the recomputed base") holds for UPDATEs (stable ids) but is FALSE for CREATEs, whose backend-assigned id is unknown until the interrupted call completes, so the retry cannot recognize its own prior landing.
+
+**Fix sketch:** redesign reconciliation to model a create as a durable **slug→id translation** in the data model — the client mints a stable local slug (or intent-token) BEFORE the push, the commit-sequence models the create as "slug X → (pending) → backend id N", and an interrupted create leaves a well-defined resumable state (a pending slug with no confirmed id) that the retry reconciles against instead of blindly re-creating. Concretely: commit-sequence modeling with a slug→id map persisted alongside `oid_map`, so a partial create is idempotently continuable.
+
+**Pointer:** ADR-010 §3 (`docs/decisions/010-l2-l3-cache-coherence.md` — `SotPartialFail` recovery + the WAIVED known-limitation marker); user-facing framing in `docs/concepts/dvcs-topology.md:206` + `docs/guides/troubleshooting.md:403`; root-cause diagnosis in `.planning/debug/p93-partial-fail-recovery-real-confluence.md:60`; carried OPEN in `.planning/milestones/v0.14.0-phases/RELIEF-HANDOVER-C2-wave-2.md:89`.
+
+**Default disposition for P111:** M default-defers — this is the v0.14.0 reconciliation-redesign headline pivot itself, not a Slot-2 polish item; it graduates to a dedicated design phase, not an eager-fix. **Explicitly NOT cleared by P108** (P108 is paperwork closure of the SEPARATE, already-shipped Fork-A prune-completeness gate; this slug→id item remains fully OPEN and unstarted).
+
+**STATUS:** OPEN
+
 ## Entry format
 
 ```markdown

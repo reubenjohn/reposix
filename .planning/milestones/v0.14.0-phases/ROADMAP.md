@@ -293,6 +293,20 @@ audit cron definition.
 
 ### Phase 108: `prune_oid_map` pagination-truncation data-loss hazard
 
+**STATUS: CLOSED (paperwork) — implementation SHIPPED pre-P108; P108 closed the paperwork.**
+Fork A (completeness-gated prune) landed BEFORE this phase executed: `Listing { records,
+is_complete }` + `list_records_complete()` in `crates/reposix-core/src/backend.rs`, BOTH
+prune sites gated in `crates/reposix-cache/src/builder.rs` (delta `if is_complete` ~L166,
+full-rebuild `if all_is_complete` ~L502), GitHub/JIRA/Confluence emit `is_complete=false`
+on truncation, and the capped-mock regression `crates/reposix-cache/tests/
+pagination_prune_safety.rs` (3 tests) is GREEN (re-verified 2026-07-11 via `cargo test -p
+reposix-cache --test pagination_prune_safety`). Catalog row
+`agent-ux/p94-pagination-prune-completeness-gate` is PASS with a truthful `owner_hint`
+(the stale "NOT IMPLEMENTED" hint was corrected here). The SEPARATE, design-level
+**slug→id / interrupted-create duplicate** waiver (ADR-010 §3) is NOT part of this fix and
+was FILED as a remainder in `GOOD-TO-HAVES-09` — it remains OPEN / unstarted (the v0.14.0
+reconciliation-redesign headline pivot), explicitly not cleared by P108.
+
 **Goal:** Fix the data-loss hazard where `meta::prune_oid_map` (commit `272882c`/
 `e246e84`) can DELETE `oid_map` rows for LIVE records when a real connector's
 `list_records()` silently truncates at a pagination/size cap (GitHub
