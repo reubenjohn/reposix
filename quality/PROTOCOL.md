@@ -127,7 +127,23 @@ quality/runners/run.py --cadence pre-commit --persist  # mint any pre-commit gat
 quality/runners/run.py --cadence pre-push   --persist  # mint any pre-push gates this phase added
 quality/runners/run.py --cadence weekly     --persist  # mint weekly gates
 quality/runners/verdict.py --phase <N>                 # rolls up to quality/reports/verdicts/p<N>/<ts>.md
+
+# --- POST-PUSH leg: run AFTER `git push origin main` has LANDED (D-CONV-4) ---
+git push origin main                                   # the phase push
+quality/runners/run.py --cadence post-push  --persist  # mint code/ci-green-on-main from main's LATEST CI run
+quality/runners/verdict.py --phase <N>                 # RE-ROLL the phase verdict now that ci-green-on-main is graded
 ```
+
+**Post-push CI-green gate (D-CONV-4).** The `post-push` cadence is the
+non-circular check that main's LATEST `ci.yml` run concluded success AFTER the
+phase push landed — distinct from `pre-push`, which cannot see CI for the commit
+it is about to push (a pre-push CI-green probe is circular; that is why D-CONV-1
+kept `ci-job-status`/`cargo-*` off the pre-* path). `verdict.py --phase`
+collates rows across every cadence, so a FAIL `code/ci-green-on-main` (P0) rolls
+the phase verdict **RED** — a phase does NOT close while main's latest CI is red.
+An in-progress run grades NOT-VERIFIED (also RED for a P0 at phase-close): wait
+for CI to conclude, then re-run the two post-push lines above. This is the
+mechanism the "8 GREEN phases over a RED main" incident was missing.
 
 Rows carry `cadences: list[str]`; a single gate may fire at multiple
 cadences (a fast mechanical check tagged `["pre-commit", "pre-push", "pre-pr"]`
