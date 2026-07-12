@@ -74,3 +74,15 @@ let two run at once, not the linker.
   `deferral-pointer-linter.sh` (pre-push) requires every deferral pointer in `crates/`
   (phrases like "lands in P<N>") to name a real downstream phase with a PLAN artifact
   under `.planning/phases/N-*/`; see the script header for the exact patterns.
+
+## Error-message convention (Rust-compiler-grade UX)
+
+Every user-facing error — every `reposix` CLI subcommand AND the `reposix-remote` git
+helper — meets a three-part bar: (1) **teach the fix**, (2) **suggest the alternative**,
+(3) **give a copy-paste recovery command**. The pattern to copy is
+`reposix-cli/src/init.rs::refuse_existing_repo_root`: it refuses fail-closed, names the
+corruption shape, points at `reposix attach` as the alternative, and prints runnable
+recovery lines. A bare `bail!("usage: …")` or a terse `.context("parse remote url")` that
+surfaces raw to the user does NOT meet the bar — wrap it in a teaching message. Dimension:
+**agent-ux / docs-alignment** (route audits to `quality/gates/agent-ux/`). Scheduled as a
+first-class v0.15.0 phase — see `.planning/milestones/v0.15.0-phases/ROADMAP.md`.

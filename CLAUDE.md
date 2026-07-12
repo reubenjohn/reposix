@@ -254,8 +254,12 @@ surface **owns it**, not just its acceptance criteria (Owner mandate OD-3, 2026-
    place; else → `SURPRISES-INTAKE`/`GOOD-TO-HAVES` with severity + sketch (OP-8).
 4. **Verify against reality** — run the thing, render the page, hit the backend; a claim
    without an artifact is not done (OP-1).
-5. **North star** — polish for adoption: would a skeptical dev hitting this surface for
-   the first time come away impressed?
+5. **North star — Rust-compiler-grade UX** — end-user experience is the standing north
+   star all tooling serves (docs, error messages, onboarding friction). Every user-facing
+   error must (1) teach the fix, (2) suggest the alternative, (3) give a copy-paste
+   recovery command — exemplar `crates/reposix-cli/src/init.rs::refuse_existing_repo_root`.
+   UX polish is scheduled as first-class lanes, never leftovers. Would a skeptical dev
+   hitting this surface for the first time come away impressed?
 
 The orchestrator's job is to route, decide, and integrate — not to type code that a subagent could type.
 
