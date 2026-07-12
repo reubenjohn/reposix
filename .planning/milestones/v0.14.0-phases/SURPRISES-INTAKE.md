@@ -125,3 +125,27 @@ the verifier script + hook, not a frozen `.txt`. (b) `effective_target()` now re
 cases; all three exit 0 self-contained.
 
 **STATUS:** RESOLVED-in-P102 (catalog `expected.asserts` rework + `git rm --cached` + `-f` flag).
+
+---
+
+## 2026-07-12 07:13 | discovered-by: P104 (github-helper-path 404 fix verifier) | severity: MEDIUM
+
+**What:** Two concurrent `reposix-quality` runners (or herdr `--persist` modes) were observed minting the shared catalog file (`quality/catalogs/agent-ux.json`) mid-verification during P104 grading (PID 351077 held the lock while the verifier was running). Two writers on one catalog file is a live race hazard — interleaved writes can corrupt the JSON or lose rows entirely. The herdr on-demand `--persist` runner and the executor's own persist lane can collide without coordination.
+
+**Why out-of-scope for P104:** P104 is closing a fix (404 path bug), not a catalog infrastructure issue. The race was observed but did not break the final grade (the concurrent runner's write agreed with the independent verification); fixing it requires coordination infrastructure outside the phase's scope.
+
+**Sketched resolution:** Implement a catalog-write lock (advisory flock around the catalog JSON persist in `quality/runners/run.py`, or serialize all catalog persist operations through a single lane with a lock file) such that two concurrent `--persist` writers cannot interleave. Alternative: single-persist-lane discipline where only the primary orchestration lane writes catalogs, and herdr on-demand runners read but do not persist.
+
+**STATUS:** OPEN
+
+---
+
+## 2026-07-12 07:13 | discovered-by: P104 (github-helper-path 404 fix verifier) | severity: MEDIUM
+
+**What:** A catalog row was minted `status: PASS` with a `verifier.script` path that did not exist on disk (`quality/catalogs/agent-ux.json`, P104 BLOCKER that was caught only during manual code review). The row `agent-ux/p87-surprises-absorption` was defined with status FAIL but lacked a `claim_vs_assertion_audit` field required by the schema (rows minted after 2026-05-08 must include this field for honesty auditing). The pre-commit hook validation does not structurally verify that a row's declared `verifier.script` path exists or is executable — only that the JSON is valid. This opens a window where a coordinator could mint a PASS row backed by a missing or non-executable verifier, creating a false-positive contract breach.
+
+**Why out-of-scope for P104:** P104 closes the 404 bug fix verification; the catalog schema validation gap is an infrastructure issue. It was surfaced during verification but requires a new gate in the structure dimension that does not yet exist.
+
+**Sketched resolution:** Add a structure-dimension gate (`quality/gates/structure/verifier-script-exists.sh`) that scans all catalog rows at load time and asserts: for each row with a non-null `verifier.script`, the file exists on disk and is executable (chmod +x). The gate would fail at pre-commit or pre-push if any row references a missing verifier, preventing unbacked PASS rows from landing. This is a complement to GOOD-TO-HAVES-01 (bind-verb extension for agent-ux rows).
+
+**STATUS:** OPEN
