@@ -61,11 +61,13 @@ verifies via `herdr agent read`, logs to /tmp/manager-rotate.log.
   GitHub main (rec: yes, clean /tmp-clone push); (2) close dependabot #64-66 as
   redundant (rec: yes — cargo audit 0 live advisories); (3) gh404 live-GitHub verify
   (rec: defer); (4) GTH-09 ADR-010 slug→id durable-create — ship in v0.14.0 or defer.
-- **Rotation of w1:p5 is BLOCKED by owner-staged input text** — the owner EDITED it
-  (now "land 424d367 and close the dependabot PRs") but did not submit. Do NOT press
-  Enter (external mutation) and do NOT /clear (would destroy it). Natural flow: owner
-  submits → workhorse (14% context, plenty) executes → then rotate to successor
-  pointing at SESSION-HANDOVER.md `5cbfcbb`. Owner push-notified 2026-07-12.
+- **"Staged input text" was GHOST TEXT (resolved 2026-07-12).** The `❯ land 424d367 and
+  close the dependabot PRs` line two managers treated as owner-typed was Claude Code's
+  dim *predicted/suggested* input — herdr's capture strips color, so hints look like
+  typed text. Owner confirmed the box was empty; rotation was never blocked. Rule now in
+  the herdr-manager skill (§ Check state — "Ghost-text trap"). The 4 owner decisions
+  (land 424d367 / dependabot #64-66 / gh404 / GTH-09) remain PARKED — no owner call yet;
+  do not action.
 
 - **2026-07-12 (post-incident)** — wave-2 progressing: **D2 (P102), P103, P105 all
   closed GREEN** on origin/main (P105 verifier-graded at `f2d527a`, incl. CR-01
