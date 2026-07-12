@@ -2336,6 +2336,94 @@
         "on-demand"
       ],
       "minted_at": "2026-07-12T05:40:57Z"
+    },
+    {
+      "id": "agent-ux/github-helper-path-slug-not-sanitized",
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P104 / S-260707-gh404 -- cheap sim/unit regression guard for the GitHub helper-path 404 (RAISE #3, transport_claim:false, runs in `-p reposix-cache` with NO GitHub token). ROOT CAUSE (confirmed): `Cache` carried a SINGLE `project` field used for BOTH the on-disk cache dir AND the backend REST calls; every caller (helper main.rs:141, attach.rs:162, sync.rs:103) fed the filesystem-SANITIZED form (`owner/repo` -> `owner-repo`) to `Cache::open`, so `build_from` called `list_records_complete(\"owner-repo\")` and the GitHub connector formatted `GET /repos/owner-repo/issues` -> 404. Only GitHub has a slash in its project slug, so only GitHub 404'd (sim/JIRA/Confluence unaffected). FIX (owner taste): the backend keeps the RAW slug; sanitization moves to the single on-disk path-derivation site (`reposix_core::path::sanitize_project_for_cache`, called inside `reposix_cache::path::resolve_cache_path`). `Cache::open` now stores the RAW slug in `self.project` (so REST calls get `owner/repo`) while the cache DIR is still `github-owner-repo.git`. This row's regression test pins BOTH halves of that split so a future re-sanitize of `self.project` (the exact regression) fails without needing a live GitHub call.",
+      "sources": [
+        "crates/reposix-cache/src/cache.rs (Cache::open stores raw slug in self.project; path derivation sanitizes)",
+        "crates/reposix-cache/src/path.rs:resolve_cache_path (single sanitization site)",
+        "crates/reposix-core/src/path.rs:sanitize_project_for_cache (canonical sanitizer, single source of truth)",
+        "crates/reposix-cache/tests/github_project_slug_not_sanitized.rs (the regression test)",
+        "crates/reposix-github/src/lib.rs (formats /repos/{project}/issues -- the 404 site when project is pre-sanitized)"
+      ],
+      "command": "cargo test -p reposix-cache --test github_project_slug_not_sanitized",
+      "expected": {
+        "asserts": [
+          "a recording BackendConnector opened via Cache::open(backend, \"github\", \"owner/repo\") and driven through build_from() receives the RAW slug \"owner/repo\" at list_records_complete -- NOT the sanitized \"owner-repo\" (this is the anti-404 contract: the backend must see owner/repo)",
+          "the on-disk cache path (cache.repo_path()) is STILL the sanitized flat dir \"github-owner-repo.git\" -- no embedded slash, no nested owner/ subdirectory (pins that path derivation sanitizes)",
+          "the test fails on the PRE-FIX resolve_cache_path (which did not sanitize -> nested github-owner/repo.git dir) and passes on the fixed one -- fails-then-passes demonstrated"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/github-helper-path-slug-not-sanitized.sh",
+        "args": [],
+        "timeout_s": 600,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/github-helper-path-slug-not-sanitized.json",
+      "status": "PASS",
+      "last_verified": "2026-07-12T06:44:48Z",
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "if RED: someone re-introduced sanitization of the backend-facing project (e.g. sanitized self.project inside Cache::open, or a caller passed the sanitized form again) -- the GitHub REST path would 404 again. Keep sanitize ONLY at resolve_cache_path. Runs cargo -- one-cargo-invocation budget.",
+      "coverage_kind": "mechanical",
+      "claim_vs_assertion_audit": "The recording mock captures the exact project string reaching list_records_complete. If the fix regressed (self.project re-sanitized, or a caller re-sanitizes before Cache::open), the captured slug would be \"owner-repo\" and the raw-slug assert would FAIL naming the sanitized value; conversely if path derivation stopped sanitizing, the repo_path assert would find a nested \"github-owner/repo.git\" and FAIL. Neither half can silently pass. transport_claim is FALSE: this exercises the local Cache::open/build_from split against a recording mock, not a real GitHub endpoint -- the live front-door 200 is owned by agent-ux/github-front-door-real-backend.",
+      "waiver": null,
+      "transport_claim": false,
+      "cadences": [
+        "pre-pr",
+        "pre-release",
+        "on-demand"
+      ],
+      "minted_at": "2026-07-12T06:44:48Z"
+    },
+    {
+      "id": "agent-ux/github-front-door-real-backend",
+      "dimension": "agent-ux",
+      "kind": "shell-subprocess",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
+      "comment": "P104 / S-260707-gh404 -- REAL-BACKEND front-door contract for the GitHub helper-path 404 fix (transport_claim:true, coverage_kind:real-backend, catalog-first SPEC mint minted NOT-VERIFIED). GREEN contract: a real `reposix init github::<owner>/<repo> <path>` (sanctioned target reubenjohn/reposix per docs/reference/testing-targets.md) drives the GitHub connector's `GET /repos/<owner>/<repo>/issues` to a 200 (front-door path is owner/repo, NOT the pre-sanitized owner-repo that returned 404). Env-gated per RBF-FW-06 / OD-2: requires GITHUB_TOKEN + a REPOSIX_ALLOWED_ORIGINS entry for api.github.com; fails closed to NOT-VERIFIED when unset -- NEVER skip-counts-as-pass. HONEST STATE: NOT-VERIFIED until an owner-gated live GitHub call runs (the executing P104 executor was forbidden from hitting api.github.com; the coordinator surfaces the live call separately). The cheap sim/unit half of this fix is proven independently by agent-ux/github-helper-path-slug-not-sanitized.",
+      "sources": [
+        "crates/reposix-github/src/lib.rs (GET /repos/{project}/issues -- the front-door under test)",
+        "crates/reposix-cache/src/cache.rs (Cache::open now feeds the raw owner/repo slug to the connector)",
+        "docs/reference/testing-targets.md (sanctioned GitHub target reubenjohn/reposix + GITHUB_TOKEN)",
+        ".planning/milestones/v0.14.0-phases/ (S-260707-gh404 carried HIGH)"
+      ],
+      "command": "bash quality/gates/agent-ux/github-front-door-real-backend.sh",
+      "expected": {
+        "asserts": [
+          "with GITHUB_TOKEN + REPOSIX_ALLOWED_ORIGINS(api.github.com) set, `reposix init github::reubenjohn/reposix <tmp>` (or a list against the sanctioned repo) drives GET /repos/reubenjohn/reposix/issues to HTTP 200 -- NOT 404 -- and the partial-clone tree materializes at least the issues bucket",
+          "the request path contains the RAW slug reubenjohn/reposix (owner/repo), never the sanitized reubenjohn-reposix",
+          "a transcript is written to quality/reports/transcripts/github-front-door-real-backend-<RFC3339>.txt recording argv + env_keys (NAMES only) + cwd + exit_code + stdout/stderr",
+          "creds/allowlist absent -> NOT-VERIFIED (exit 75, fail-closed per OD-2), never a fabricated PASS"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/github-front-door-real-backend.sh",
+        "args": [],
+        "timeout_s": 600,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/github-front-door-real-backend.json",
+      "status": "NOT-VERIFIED",
+      "last_real_grade": null,
+      "skip_reason": "env-missing",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P1",
+      "owner_hint": "NOT IMPLEMENTED this session (catalog-first SPEC mint; verifier script does not exist yet, PROTOCOL.md Step 3). The executor was forbidden from hitting api.github.com (owner-gated). Implement by driving `reposix init github::reubenjohn/reposix` under GITHUB_TOKEN + an api.github.com allowlist entry and asserting the front-door GET returns 200; gate on creds and exit 75 (NOT-VERIFIED) when absent. Verified at milestone-close via the pre-release-real-backend 9th probe.",
+      "coverage_kind": "real-backend",
+      "claim_vs_assertion_audit": "The verifier (once implemented) drives a REAL `reposix init github::reubenjohn/reposix` against api.github.com and asserts the front-door GET /repos/reubenjohn/reposix/issues returns 200. If the fix were incomplete -- e.g. the connector still received the sanitized owner-repo slug -- the live GitHub API would return 404 for /repos/reubenjohn-reposix/issues and the init would fail, flipping this row to FAIL naming the 404. Env-gated: creds/allowlist absent yields NOT-VERIFIED (fail-closed, OD-2), never a fabricated PASS. This is the transport-layer proof the sim/unit sibling (agent-ux/github-helper-path-slug-not-sanitized) explicitly does NOT make.",
+      "waiver": null,
+      "transport_claim": true,
+      "cadences": [
+        "pre-release-real-backend"
+      ],
+      "minted_at": "2026-07-12T06:44:48Z"
     }
   ]
 }
