@@ -4,6 +4,96 @@ All notable changes to reposix are documented here.
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [SemVer](https://semver.org/spec/v2.0.0.html) once the project leaves alpha.
 
+## [v0.14.0] -- 2026-07-12 -- Wave-2 hardening
+
+> **Release status: PENDING owner ratification + the owner-gated 9th probe.** v0.14.0
+> graded GREEN across its executing phases (P102–P113) and closed autonomously on
+> 2026-07-12, but — mirroring the v0.13.0 held-tag precedent below — the `v0.14.0` tag is
+> **not cut by the executor.** It is held until (a) the owner ratifies the milestone-close
+> verdict at `quality/reports/verdicts/milestone-v0.14.0/VERDICT.md` and (b) the
+> non-skippable 9th probe (`pre-release-real-backend`,
+> `agent-ux/milestone-close-vision-litmus-real-backend`, `blast_radius: P0`, never waived)
+> is satisfied against the sanctioned real backend (TokenWorld) — it reads NOT-VERIFIED
+> honestly, never skip-as-pass, when the real-backend env is unset. The owner runs
+> `.planning/milestones/v0.14.0-phases/tag-v0.14.0.sh`; the orchestrator does NOT push the
+> tag.
+
+The wave-2 hardening milestone. v0.13.0/v0.13.1 shipped a working DVCS front door but left
+two classes of debt: the autonomous fleet's own safety substrate was documented-but-not-
+enforced (a real shared-repo corruption hit 4× in one session), and five carried
+HIGH-severity intake items never got a dedicated hardening pass. v0.14.0 closes both — the
+fleet is made self-safe FIRST (P102, a hard serializing gate), then the carried HIGHs land.
+
+### Added -- fleet self-safety (P102, hard serializing gate)
+
+- **Mechanical leaf-isolation enforcement (D2-LEAF-ISOLATION-01, D2-TAT-IDENTITY-HOOK-01,
+  D2-SHARED-CONFIG-GUARD-01)** -- the prose "run leaf setup in a throwaway `/tmp` clone"
+  hard-stop is now backstopped by code: `.claude/hooks/leaf-isolation-guard.sh` (PreToolUse
+  Bash, three fail-closed guards — fixture-identity reject / leaf-setup location / shared-
+  config write) blocks the bad move before it runs, with a git-native `.githooks/pre-commit`
+  fixture-identity backstop. Guards recognize the CLAUDE.md canonical dev forms (bare / path-
+  suffixed / `cargo run … --` spellings), realpath-canonicalize the `/tmp`-is-safe decision
+  (cd-back, `..`-traversal, and symlink evasions all BLOCK), and fail closed on a non-empty
+  unparseable payload. A live post-P102 subprocess/worktree bypass recurrence was re-sealed
+  in-session; the honest Bash-tool-only coverage boundary is documented, with the binary-side
+  refusal deferred to v0.15.0.
+
+### Fixed -- carried HIGH-severity debt (P104–P108, P113)
+
+- **GitHub-via-helper 404 (P104)** -- `Cache` now separates the on-disk cache-path key from
+  the backend-project identifier, so the helper/attach paths pass the slashed `owner/repo`
+  form to REST calls instead of the dash-sanitized `owner-repo`.
+- **RBF-LR-03 rebase-recovery crash (P105)** -- the cache-side "Sync from REST snapshot"
+  commit is now parented on the prior tracking tip (descendant lineage), and the `import`
+  helper writes a private `refs/reposix-import/*` namespace so `git fetch` is the sole writer
+  of `refs/reposix/origin/main` — the single documented `git pull --rebase && git push`
+  recovery now reconciles across peer-push, external-REST-PATCH, and deletion drift.
+- **Silent lost-update via the shared cache cursor (P113, out-of-band)** -- the shared
+  `last_fetched_at` cursor no longer gates push-side conflict detection; every pushed Update
+  is version-checked against the backend (the SoT arbiter), so a stale-base push under an
+  advanced shared cursor is rejected "fetch first" instead of silently clobbering a sibling
+  clone's concurrent edit.
+- **`prune_oid_map` pagination-truncation data-loss hazard (P108)** -- pruning is gated on a
+  completeness signal (`Listing { records, is_complete }`); GitHub/JIRA/Confluence emit
+  `is_complete=false` on truncation so a capped `list_records()` can no longer delete live
+  records' `oid_map` rows.
+- **RUSTSEC advisories cleared (P107)** -- `cargo audit` confirms RUSTSEC-2026-0186 (memmap2)
+  and RUSTSEC-2026-0185 (quinn-proto) resolved by version floor; redundant dependabot PRs
+  #64–66 closed.
+
+### Changed -- framework hygiene + docs-repro (P103, P106, P109)
+
+- **doc-alignment grade/persist split (P103)** -- `reposix-quality doc-alignment walk` no
+  longer mutates the catalog on a validate-only run; a `--persist` flag is required to mint,
+  mirroring `run.py`'s split. The `structure/file-size-limits` waiver's two biggest offenders
+  were OP-8-split before expiry.
+- **Waived tutorials/examples reproduce (P106)** -- 5 `docs-repro` rows (tutorial-replay +
+  examples 01/02/04/05) flipped WAIVED → PASS ahead of the 2026-09-15 deadline; root causes
+  were harness + canonical-path drift, zero Rust.
+- **RBF-FW-11 grandfather-commit rule + swarm write-contention (P109)** -- the honesty gate's
+  grandfather cutoff keys off the landing-commit SHA (not a null `last_verified`), and the
+  `reposix-swarm` harness now exercises `create_record`/`update_record` write contention.
+
+### Operational
+
+- **`scripts/ci-wait.sh` bounded-poll CI helper (P111)** -- replaces the flaky backgrounded
+  `gh run watch`, which hung indefinitely on already-concluded runs (stalled two sessions);
+  returns immediately on a completed run and hard-timeouts so an indefinite hang is impossible.
+- **`release.yml` publish gated on green CI + hermetic `quality/runners` unit tests collected
+  in CI (P110 intake drain)** -- a `v*` tag over a red main no longer publishes, and the
+  fleet-safety DP-2 regression guard now runs automatically.
+
+### Deferred to v0.15.0
+
+- **GTH-09 — ADR-010 slug→id durable-create reconciliation** (the interrupted-create
+  duplicate on id-assigning real backends) is explicitly DEFERRED-TO-v0.15.0 by an owner
+  scope call (2026-07-12) — an honest deferral to avoid ballooning the milestone, not a
+  silent slip. Plus a v0.15.0 framework-hardening cluster (catalog-write lock, verifier-
+  script-exists gate, `resolve_import_parent` robustness) and the standing UX error-message
+  audit phase.
+
+12 phases shipped (P102–P113, +2 absorption slots P110/P111).
+
 ## [v0.13.0] -- 2026-05-01 -- DVCS over REST
 
 > **Release status: PENDING P89-P97 GREEN before tag-cut.** v0.13.0 graded GREEN structurally on 2026-05-01 but the post-tag dark-factory exercise on real Confluence + GH mirror surfaced 16 HIGH frictions and a 12-subagent codebase audit surfaced ~51 additional HIGH findings; owner ratified Path A / Option B on 2026-05-08 (hold the tag, extend with corrective phases P89-P97). The tag-script at `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh` is RENAMED `.disabled` until P97 ratifies the post-extension milestone-close verdict. See `.planning/research/v0.13.0-real-backend-frictions/03-synthesis/REMEDIATION-PLAN.md` for the extension plan.

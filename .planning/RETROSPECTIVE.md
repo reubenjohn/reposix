@@ -12,6 +12,83 @@ than repeated under each milestone.
 
 ---
 
+## Milestone: v0.14.0 — Wave-2 hardening (fleet self-safety + carried-HIGH drain)
+
+**Shipped:** 2026-07-12 (autonomous close-out) | **12 phases (P102–P113).** Full ROADMAP +
+phase-close verdicts: `.planning/milestones/v0.14.0-phases/ROADMAP.md`. Intakes distilled
+here: `SURPRISES-INTAKE.md` (17 terminal entries) + `GOOD-TO-HAVES.md` (12 entries).
+
+### What Was Built
+
+Two debt classes closed in a hard-ordered sequence. **First, fleet self-safety (P102, a
+serializing gate):** the prose "run leaf setup in a `/tmp` clone" hard-stop became mechanical
+— three fail-closed `.claude/hooks/leaf-isolation-guard.sh` guards (fixture-identity reject,
+leaf-setup location, shared-config write) plus a git-native pre-commit backstop. **Then the
+five carried HIGHs:** the GitHub-via-helper 404 (cache-path vs backend-project split, P104);
+the RBF-LR-03 rebase-recovery crash (descendant-parented sync commit + private
+`refs/reposix-import/*` namespace, P105); the waived tutorials/examples (5 docs-repro rows
+WAIVED→PASS, P106); the RUSTSEC advisories (P107); and the `prune_oid_map` pagination-
+truncation data-loss hazard (completeness-gated prune, P108). Plus an out-of-band
+silent-lost-update guard (shared cursor no longer gates conflict detection, P113), the
+RBF-FW-11 grandfather-commit rule + swarm write-contention coverage (P109), and the
+`scripts/ci-wait.sh` bounded-poll CI helper (P111).
+
+### What Worked
+
+**Prove-before-fix extended to silent data loss.** The lost-update clobber (P113) and the
+second RBF-LR-03 ref-lock abort (P105) were each *empirically reproduced live* (real sim,
+git 2.25.1) before a fix landed — not code-read-asserted. **The ownership charter's "noticing
+is a deliverable" earned its keep repeatedly:** the P105 lane, chartered to fix a rebase
+abort, *noticed* the adjacent silent lost-update (a strictly-worse data-loss bug on a
+different code path); a fix-twice CI lane noticed `release.yml` was CI-ungated; the D2
+adversarial code-review noticed the guards missed canonical-form evasions. **Mechanical
+enforcement over prose** proved its value when a live corruption recurred *after* P102 — the
+hardened guards caught the Bash-tool spellings and the coverage boundary was documented
+honestly rather than papered over. Catalog-first rows + unbiased phase-close verifiers held
+throughout.
+
+### What Was Inefficient
+
+**Serialization friction dominated the token cost.** The machine-wide single-cargo rule and
+the per-phase serialized push meant parallel lanes queued on shared resources. **Shared-tree
+contention bit twice:** the founding leaf-isolation corruption recurred post-P102 via a
+subprocess/worktree bypass the Bash-tool-only hook cannot see, and a `code.json` foreign-lock
+across contended lanes forced two intake items (release-plz P0-wiring, catalog-write lock) to
+defer rather than land. **The `gh run watch` hang** stalled two sessions
+(`bulqmsyrv`/`biy9yxt33`) waiting on already-concluded runs — a reliability defect fixed by
+`ci-wait.sh`. The OP-8 file-size drain only partially closed (56 files residual, tracked as
+GOOD-TO-HAVES-02 under a live waiver).
+
+### Patterns Established
+
+- **Mechanical enforcement supersedes prose hard-stops** — the leaf-isolation hooks mark the
+  ORCHESTRATION.md rule superseded-by-mechanism, not deleted (historical record kept).
+- **Prove-before-fix now covers silent data loss** — reproduce the clobber/abort live against
+  a real backend before touching load-bearing protocol code.
+- **Per-file intake policy is authoritative and explicit** — SURPRISES-INTAKE is append-only
+  (terminal entries retained for the p110 gate's ≥10-terminal invariant); CONSULT-DECISIONS
+  is delete-on-close (git is the archive); the distinction is now honored, not assumed.
+- **Owner-gated real-backend mutation + owner-gated dependency merges** stayed the default;
+  the 9th probe reads NOT-VERIFIED honestly when env is unset.
+
+### Key Lessons
+
+- **A Bash-tool-only guard has a subprocess bypass.** Mechanical enforcement must cover the
+  whole spawn surface OR honestly document its coverage boundary — the binary-side refusal is
+  the only layer that stops a non-Bash-tool bypass, and it is deferred to v0.15.0.
+- **Fixing one bug surfaces its neighbor.** The silent lost-update was found *while* fixing
+  the RBF-LR-03 rebase abort — adjacent code paths, strictly-worse severity. Budget for the
+  neighbor.
+- **An unwatched workflow rots silently.** release-plz sat RED because the phase-close
+  `code/ci-green-on-main` probe hardcodes `ci.yml` — a metric generated but not watched.
+- **GTH-09 — the ADR-010 slug→id durable-create reconciliation redesign — is explicitly
+  DEFERRED-TO-v0.15.0** by an owner scope call (2026-07-12, commits `61c9c91` / `8b488dc`),
+  NOT a silent slip. It is the milestone's headline reconciliation pivot; graduating it to a
+  dedicated v0.15.0 design phase keeps v0.14.0 an honest, completed milestone rather than
+  ballooning it under a tag deadline.
+
+---
+
 ## Calibration: v0.13.0 wind-down — right-size rigor, lean on git
 
 Session-level calibration (not a milestone-close). v0.13.0 went autonomously GREEN
