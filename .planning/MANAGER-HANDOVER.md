@@ -47,18 +47,23 @@ does reposix work itself. Keep this file lean; git history is the archive.
 
 ## Live state (refresh at every rotation)
 
-- Board fully GREEN: CI, CodeQL, docs deploy (now gated on CI), release-plz (fleet
-  fixed the JSON re-dirty after a manager relay). Phase-close now requires
-  ci-green-on-main (P0 post-push probe) — never open a phase over a red main.
-- Workhorse (w1:p5): main agent ended turn past its relief boundary; state committed
-  at `750263d`. Its milestone C2 runs autonomously: P106 (in progress) → P107 →
-  P110/P111 → P112 stub. **Do NOT /clear w1:p5 while the C2 runs** — the C2's report
-  wakes the main agent, which resumes or hands over itself. Monitor with
-  `wait --status working` (idle-wait returns immediately in this state).
-- Wave-2: P102-P105, P108, P109(a) GREEN; P106 rows minting PASS. Filed, not dropped:
-  fold-release-plz-into-CI-bar (CONSULT-DECISIONS D5), runner unit tests uncollected
-  by CI (MEDIUM), SURPRISES-INTAKE over size limit (P110 drain splits it).
-- Owner decisions ALL RESOLVED and relayed to the fleet: land `424d367` (yes),
-  close dependabot #64-66 (yes), gh404 live verify (defer), GTH-09 (DEFERRED to
-  v0.15.0 — record as explicit named-headline deferral). Verify execution on next
-  wakes; nothing parked.
+- Board fully GREEN (CI, CodeQL, docs deploy gated-on-CI, release-plz). Phase-close
+  requires ci-green-on-main (P0 post-push probe) — never open a phase over a red main.
+- Workhorse (w1:p5): running at **xhigh effort** (owner-directed). Milestone C2
+  autonomous, currently P110 OP-8 drain; P106 GREEN rows minted; P107 artifact
+  committed; P113 (renumbered lost-update landing) executing under recorded owner
+  authorization (`ed42ece`). **Do NOT /clear w1:p5 while its C2 runs**; monitor with
+  `wait --status working` (idle-wait returns immediately while lanes run).
+- Owner decisions ALL RESOLVED and relayed: land `424d367` (yes — VERIFY it reached
+  origin/main), close dependabot #64-66 (yes — VERIFY closed), gh404 (defer), GTH-09
+  (DEFER to v0.15.0, explicit named-headline deferral — VERIFY filed).
+- Successor commitments made to the owner: (1) verify the UX-mandate fix-twice landed
+  in the CLAUDE.md contract files + the all-subcommands error-message audit runs as a
+  real lane; (2) error codes + `reposix explain <code>` go into next-milestone headline
+  scope; (3) when wave-2 closes, draft P112 launch scope around the spine: agent-vs-MCP
+  side-by-side demo (token counts on screen), the dark-factory/incident meta-story
+  writeup, 90-second zero-install sim trial, then agent-ecosystem distribution
+  (Claude Code skill, MCP directories, llms.txt).
+- Watch: three planning files over 20k soft limit (P110 drain should split);
+  fold-release-plz-into-CI-bar decision open (CONSULT-DECISIONS D5); runner unit tests
+  uncollected by CI (MEDIUM).
