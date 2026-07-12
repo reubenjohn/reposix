@@ -93,16 +93,21 @@ over a red main would still publish (phase-close + docs-deploy are now CI-gated;
 publish is not). MEDIUM. Matters because the aggregate `v*` tag is owner-cut at
 milestone-close (P111) — worth gating before the next tag.
 
-## 4. OWNER-GATED — pending owner decision (surfaced, NOT executed)
+## 4. Parked owner calls — 3 delegated + executing (2026-07-12 manager relay), 1 still owner-held
 
-1. Land `424d367` (lost-update HIGH fix, clean 4-commit ff) to GitHub main — recommend yes,
-   from a clean `/tmp` clone through the real pre-push gate. Anchored LOCAL-ONLY on branch
-   `backup-lost-update-424d367`.
-2. Dependabot #64/#65/#66 — `cargo audit` = 0 live advisories, none touch memmap2/quinn-proto,
-   stale-base bumps — recommend close-as-redundant.
-3. gh404 live-GitHub read-only verify — recommend defer; sim/unit stands.
-4. GTH-09 ADR-010 slug→id durable-create (MEDIUM-HIGH, UNSTARTED v0.14.0 headline) — ship
-   this milestone or defer? Owner scope call.
+1. **Land `424d367`** (lost-update HIGH fix) → OWNER-AUTHORIZED, **IN FLIGHT** (`SendMessage`
+   → `a35d33efbec483f86`, opus, isolated `/tmp`-clone). NB: it's NO LONGER an ff onto current
+   main — the lane rebases the 4 commits (code fix `34cfbea`/`39f9d64` + catalog `5028542` +
+   ROADMAP-renumber `424d367`) onto current main. The renumber (106→113) likely conflicts with
+   the C2's live ROADMAP (P106=tutorials now) — lane lands the CODE+catalog cleanly and DEFERS
+   the planning-renumber to SURPRISES-INTAKE if ambiguous. Confirms ci.yml+release-plz green on
+   the landed SHA. Local branch `backup-lost-update-424d367` KEPT as safety anchor (owner prunes).
+2. **Dependabot #64/#65/#66** → **CLOSED** as redundant (owner-authorized; #64 tower-http, #65
+   gix, #66 rusqlite — all verified CLOSED, comments posted, no cargo run). Ledger `2ecbea2`.
+3. **gh404 live-GitHub verify** → **DEFERRED** by owner (record-only, no action). Sim/unit
+   coverage from P104 stands as the honest known-limitation; re-open only if the owner asks.
+4. **GTH-09** ADR-010 slug→id durable-create (MEDIUM-HIGH, UNSTARTED v0.14.0 headline) — STILL
+   OWNER-HELD; do NOT schedule. Ship-this-milestone-or-defer is the owner's scope call.
 
 ## 5. Release/ops facts (settled)
 
