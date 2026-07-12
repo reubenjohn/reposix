@@ -3344,9 +3344,9 @@
         "line_start": 152,
         "line_end": 152
       },
-      "source_hash": "245f13d327cc20afe82efd061df5b5884b6af1dce42f77f31f7daf39c0b2c833",
+      "source_hash": "ad499902c195d5670b481858ced0194c6d5d0d0f4c6a8bbcf1fde8183f1493c8",
       "source_hashes": [
-        "245f13d327cc20afe82efd061df5b5884b6af1dce42f77f31f7daf39c0b2c833"
+        "ad499902c195d5670b481858ced0194c6d5d0d0f4c6a8bbcf1fde8183f1493c8"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
@@ -6163,9 +6163,9 @@
         "line_start": 152,
         "line_end": 152
       },
-      "source_hash": "245f13d327cc20afe82efd061df5b5884b6af1dce42f77f31f7daf39c0b2c833",
+      "source_hash": "ad499902c195d5670b481858ced0194c6d5d0d0f4c6a8bbcf1fde8183f1493c8",
       "source_hashes": [
-        "245f13d327cc20afe82efd061df5b5884b6af1dce42f77f31f7daf39c0b2c833"
+        "ad499902c195d5670b481858ced0194c6d5d0d0f4c6a8bbcf1fde8183f1493c8"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
