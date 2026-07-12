@@ -395,3 +395,21 @@ sanctioned `/tmp` dark-factory flow. Pair with a self-safety check that refuses 
 when the effective `.git` is the shared repo's object store (worktree-shared config detected).
 
 **STATUS:** OPEN
+
+## 2026-07-12 15:57 | discovered-by: C2-wave-2 (CI-gate fix-twice) | severity: MEDIUM
+
+**What:** `.github/workflows/release.yml` (tag `v*` trigger) is CI-UNGATED — a tag cut over
+a red main would still publish crates. This session gated the phase-close path and `docs.yml`
+(D-CONV-4 `workflow_run`/`if success` pattern), but the tag-publish path has no CI-green
+precondition.
+
+**Why out-of-scope for the discovering work:** surfaced during the CI-gating fix-twice work,
+not owned by any wave-2 implementation phase; the aggregate `v*` tag is owner-cut at
+milestone-close (P111), so the fix belongs on the P110/P111 radar, not inside P106.
+
+**Sketched resolution:** gate `release.yml` on CI green BEFORE the next `v*` tag — mirror the
+`docs.yml` D-CONV-4 `workflow_run` + `if: success` pattern, or add a pre-tag CI-green
+assertion step. If gating turns out <1h with no new dependency during P110/P111, eager-fix;
+otherwise leave filed for the owner (the tag itself is owner-cut).
+
+**STATUS:** OPEN
