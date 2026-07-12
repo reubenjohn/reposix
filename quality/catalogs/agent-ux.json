@@ -2365,8 +2365,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/github-helper-path-slug-not-sanitized.json",
-      "status": "PASS",
-      "last_verified": "2026-07-12T06:44:48Z",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: someone re-introduced sanitization of the backend-facing project (e.g. sanitized self.project inside Cache::open, or a caller passed the sanitized form again) -- the GitHub REST path would 404 again. Keep sanitize ONLY at resolve_cache_path. Runs cargo -- one-cargo-invocation budget.",
