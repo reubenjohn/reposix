@@ -218,6 +218,42 @@
       ]
     },
     {
+      "id": "code/lost-update-shared-cursor-rejected",
+      "dimension": "code",
+      "kind": "mechanical",
+      "minted_at": "2026-07-12T09:00:00Z",
+      "coverage_kind": "mechanical",
+      "comment": "P106 (v0.14.0 wave-2) lost-update guard. SURPRISES-INTAKE.md 2026-07-12 08:10 (HIGH, data-loss). Shared-cache last_fetched_at cursor no longer GATES push-side conflict detection: every pushed Update is version-checked against the backend (the SoT arbiter), so a stale-base push under an advanced shared cursor is REJECTED (fetch first) instead of silently clobbering a sibling clone's edit.",
+      "sources": [
+        "crates/reposix-remote/src/precheck.rs::precheck_export_against_changed_set",
+        "crates/reposix-remote/src/precheck.rs::tests::stale_base_push_rejected_when_shared_cursor_advanced_past_concurrent_write"
+      ],
+      "command": "cargo test -p reposix-remote --lib stale_base_push_rejected_when_shared_cursor_advanced_past_concurrent_write",
+      "expected": {
+        "asserts": [
+          "cargo test -p reposix-remote --lib stale_base_push_rejected_when_shared_cursor_advanced_past_concurrent_write exits 0",
+          "exactly 1 test matched and ran (guards against a silent 0-matches false-pass if the test name drifts)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/code/lost-update-shared-cursor.sh",
+        "args": [],
+        "timeout_s": 300,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/code/lost-update-shared-cursor-rejected.json",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: precheck_export_against_changed_set has regressed to gating the per-record version check on list_changed_since delta membership (the shared wall-clock cursor is untrustworthy under concurrent clones — see crates/reposix-remote/src/precheck.rs Step-3 lost-update-guard rationale). A Proceed outcome for a stale-base push while the backend is ahead = SILENT LOST UPDATE (data loss). Do NOT waive.",
+      "waiver": null,
+      "claim_vs_assertion_audit": "The verifier runs the regression, which builds a REAL Cache (oid_map populated + last_fetched_at advanced to now by build_from) plus an AdvancedCursorMock backend holding issue 1 at version 2 with a past updated_at, so list_changed_since(now) returns an EMPTY delta. It then calls the real precheck with a stale-base (v0) push of issue 1 and asserts Conflicts([(1,0,2,_)]). If the claim ('the shared-cursor cursor no longer gates conflict detection; every pushed Update is version-checked against the backend') were false, the precheck would return Proceed (delta empty → old gate skips the check) and the assert would fail because the test panics on Proceed — the falsifying evidence is a real lost-update Proceed, not a proxy signal.",
+      "cadences": [
+        "pre-pr"
+      ]
+    },
+    {
       "id": "code/shell-coverage",
       "dimension": "code",
       "kind": "mechanical",
