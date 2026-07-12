@@ -2225,8 +2225,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/fleet-safety-tat-identity-reject.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-12T06:31:26Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: .claude/hooks/leaf-isolation-guard.sh guard function regressed (command/cwd parse, trigger set, or teaching-stderr), or .claude/settings.json lost the PreToolUse Bash registration; for the fixture-identity row also check .githooks/pre-commit git-var backstop + core.hooksPath.",
@@ -2275,8 +2275,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/fleet-safety-leaf-isolation-enforce.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-12T06:31:26Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: .claude/hooks/leaf-isolation-guard.sh guard function regressed (command/cwd parse, trigger set, or teaching-stderr), or .claude/settings.json lost the PreToolUse Bash registration; for the fixture-identity row also check .githooks/pre-commit git-var backstop + core.hooksPath.",
@@ -2322,8 +2322,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/fleet-safety-shared-config-write-guard.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-12T06:31:26Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "if RED: .claude/hooks/leaf-isolation-guard.sh guard function regressed (command/cwd parse, trigger set, or teaching-stderr), or .claude/settings.json lost the PreToolUse Bash registration; for the fixture-identity row also check .githooks/pre-commit git-var backstop + core.hooksPath.",
