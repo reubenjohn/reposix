@@ -125,13 +125,44 @@ pub(crate) fn precheck_export_against_changed_set(
             (ids, Some(prior))
         };
 
-    // Step 3: compute push set ∩ changed set, build conflicts vec.
+    // Step 3: for every pushed record, verify the agent's local base
+    // version against the AUTHORITATIVE backend version. Build conflicts vec.
+    //
+    // LOST-UPDATE GUARD (shared-cache cursor staleness): the `changed_set`
+    // derived from `list_changed_since(last_fetched_at)` is ADVISORY here,
+    // NOT the conflict gate. `last_fetched_at` is a single wall-clock cursor
+    // stored in the bare cache, which is keyed by `(backend, project)` and
+    // therefore SHARED across every `reposix init`/`attach` checkout of the
+    // same SoT. When sibling clone A pushes, the SoT-write branch advances
+    // that shared cursor to `now`; a concurrent clone B then reads the moved
+    // cursor, so `list_changed_since(now)` returns an EMPTY changed-set for
+    // A's write (A's `updated_at` is at-or-before `now`) — the record that
+    // DID move is invisible in the delta. Gating the version check on
+    // `changed_set` membership (the pre-guard behavior) let B's stale-base
+    // PATCH land and silently clobber A's edit (SILENT LOST UPDATE, HIGH,
+    // empirically reproduced against a live sim). We therefore issue the
+    // authoritative `get_record` for EVERY pushed record the cache knows
+    // about (Updates), regardless of `changed_set` — the backend is the sole
+    // arbiter of "did the SoT move under me." A cache-prior comparison would
+    // NOT close the window: `execute_action` does not refresh the shared
+    // cache prior on push, so both clones' cache priors are equally stale.
+    //
+    // The conflict itself is content-aware: a stale base `version` ALONE is a
+    // no-op (a `git pull --no-rebase` leaves the merged blob at a stale
+    // server-controlled version while its writable content already matches the
+    // backend — QL-001); only a stale base WITH divergent writable content is
+    // the lost-update shape that rejects.
+    //
+    // Cost: one GET per pushed Update, bounded by the push size (not project
+    // size). `changed_set` is retained as a forensic signal — a conflict on a
+    // record ABSENT from the delta is exactly the shared-cursor staleness
+    // fingerprint and is WARN-logged for operators.
     //
     // Two paths converge here:
     //
-    // - Hot path (cursor present): use cache prior to extract local-base
-    //   version + re-fetch backend's current state via one GET per
-    //   intersect record. The cache trust contract is L1-strict per D-01.
+    // - Hot path (cursor present): use the cache OID-map to gate Create vs
+    //   Update cheaply, then re-fetch backend's current state via one GET per
+    //   pushed Update. The cache trust contract is L1-strict per D-01.
     //
     // - First-push fallback (cursor absent): we already fetched
     //   `list_records` above, so we have authoritative `Vec<Record>`
@@ -152,9 +183,12 @@ pub(crate) fn precheck_export_against_changed_set(
             continue; // non-record paths (e.g. README.md, .reposix/*)
         };
         let id = RecordId(id_num);
-        if !changed_set.contains(&id) {
-            continue; // hot-path bail; no parse, no GET
-        }
+        // NOTE: we deliberately do NOT `continue` on `!changed_set.contains(&id)`
+        // here. The shared wall-clock cursor can be advanced past a concurrent
+        // sibling-clone write, emptying the delta for a record that DID move
+        // (see the Step-3 lost-update-guard rationale above). Every pushed
+        // Update is version-checked against the backend below.
+
         // Parse new blob from the export stream once per record.
         let Some(blob_bytes) = parsed.blobs.get(mark) else {
             continue; // unresolved mark — defer to plan() error path
@@ -216,7 +250,50 @@ pub(crate) fn precheck_export_against_changed_set(
             .block_on(backend.get_record(project, id))
             .with_context(|| format!("backend-unreachable: get_record({id:?})"))?;
 
-        if new_record.version != backend_now.version {
+        // A stale base `version` alone is NOT a conflict. A routine
+        // `git pull --no-rebase` leaves the merged working blob at the
+        // PRE-fetch server-controlled `version`/`updated_at` while its WRITABLE
+        // content already matches the backend (QL-001 Assertion-2 / no-op-push
+        // idempotency). Rejecting that no-op would turn every routine pull/push
+        // cycle into a spurious `fetch first`. The lost-update shape is
+        // narrower: a stale base AND writable content that DIVERGES from the
+        // backend's CURRENT state — that is the write that would clobber a
+        // sibling's edit. We compare via the SAME writable projection the
+        // planner uses (`crate::diff`), so precheck's no-op notion is
+        // byte-identical to plan()'s and the two can never disagree.
+        let stale_base = new_record.version != backend_now.version;
+        let content_diverges = || -> bool {
+            match (
+                crate::diff::render_writable_for_compare(&new_record),
+                crate::diff::render_writable_for_compare(&backend_now),
+            ) {
+                (Ok(pushed), Ok(current)) => {
+                    crate::diff::normalize_for_compare(&pushed)
+                        != crate::diff::normalize_for_compare(&current)
+                }
+                // Fail CLOSED: a stale base we cannot prove is a content no-op
+                // is treated as a conflict (reject → the agent pulls-rebases;
+                // never a silent clobber).
+                _ => true,
+            }
+        };
+
+        if stale_base && content_diverges() {
+            // Forensic signal: a conflict on a record ABSENT from the
+            // `list_changed_since` delta is the shared-cache cursor-staleness
+            // fingerprint — the lost-update guard just prevented a silent
+            // clobber that the pre-guard (delta-gated) code would have allowed.
+            if !changed_set.contains(&id) {
+                tracing::warn!(
+                    "lost-update guard: record {} conflicts (local base v{} vs backend v{}, \
+                     divergent writable content) but was ABSENT from the list_changed_since \
+                     delta — shared-cache last_fetched_at cursor was advanced past a \
+                     concurrent write. Rejecting the stale-base push (fetch first).",
+                    id.0,
+                    new_record.version,
+                    backend_now.version,
+                );
+            }
             conflicts.push((
                 id,
                 new_record.version,
@@ -412,5 +489,221 @@ mod tests {
                 panic!("expected Stable; got Drifted({changed_count})")
             }
         }
+    }
+
+    // ---- Lost-update shared-cursor regression (HIGH, data-loss) ----
+
+    use std::collections::{BTreeMap, HashMap};
+    use std::sync::Arc;
+
+    use async_trait::async_trait;
+    use chrono::{TimeZone, Utc};
+    use reposix_cache::Cache;
+    use reposix_core::backend::{BackendFeature, DeleteReason};
+    use reposix_core::{
+        Error as CoreError, RecordStatus, Result as CoreResult, Untainted,
+    };
+
+    /// A backend whose sole record (issue 1) already sits at `version = 2`
+    /// with an `updated_at` fixed in the PAST. This models the state AFTER a
+    /// sibling clone A has pushed its edit: the `SoT` moved to v2, but the shared
+    /// cache cursor (advanced to `now` by A's push) is now AHEAD of issue 1's
+    /// `updated_at`, so the default `list_changed_since(now)` filter
+    /// (`updated_at` > since) returns an EMPTY delta — issue 1's move is invisible.
+    struct AdvancedCursorMock {
+        record: Record,
+    }
+
+    impl AdvancedCursorMock {
+        fn new() -> Self {
+            // updated_at deliberately in the past relative to the cursor that
+            // `Cache::build_from` writes (Utc::now()).
+            let past = Utc.with_ymd_and_hms(2020, 1, 1, 0, 0, 0).unwrap();
+            let record = Record {
+                id: RecordId(1),
+                title: "issue 1 (backend at v2 after sibling push)".to_owned(),
+                status: RecordStatus::Open,
+                assignee: None,
+                labels: vec![],
+                created_at: past,
+                updated_at: past,
+                version: 2,
+                body: "backend body\n".to_owned(),
+                parent_id: None,
+                extensions: BTreeMap::new(),
+            };
+            Self { record }
+        }
+    }
+
+    #[async_trait]
+    impl BackendConnector for AdvancedCursorMock {
+        fn name(&self) -> &'static str {
+            "advanced-cursor-mock"
+        }
+        fn supports(&self, _feature: BackendFeature) -> bool {
+            false
+        }
+        async fn list_records(&self, _project: &str) -> CoreResult<Vec<Record>> {
+            Ok(vec![self.record.clone()])
+        }
+        // NOTE: `list_changed_since` is intentionally NOT overridden — the
+        // default impl filters `list_records` by `updated_at > since`. With the
+        // cursor at `now` and issue 1's `updated_at` in 2020, the delta is
+        // EMPTY. That empty delta is the exact shared-cursor-staleness window
+        // the lost-update guard must NOT trust as the conflict gate.
+        async fn get_record(&self, _project: &str, id: RecordId) -> CoreResult<Record> {
+            if id == self.record.id {
+                Ok(self.record.clone())
+            } else {
+                Err(CoreError::NotFound {
+                    project: "demo".into(),
+                    id: id.0.to_string(),
+                })
+            }
+        }
+        async fn create_record(&self, _: &str, _: Untainted<Record>) -> CoreResult<Record> {
+            Err(CoreError::Other("unused in advanced-cursor-mock".into()))
+        }
+        async fn update_record(
+            &self,
+            _: &str,
+            _: RecordId,
+            _: Untainted<Record>,
+            _: Option<u64>,
+        ) -> CoreResult<Record> {
+            Err(CoreError::Other("unused in advanced-cursor-mock".into()))
+        }
+        async fn delete_or_close(&self, _: &str, _: RecordId, _: DeleteReason) -> CoreResult<()> {
+            Err(CoreError::Other("unused in advanced-cursor-mock".into()))
+        }
+    }
+
+    /// Render issue 1 at a STALE base `version` into an on-disk frontmatter
+    /// blob — this is clone B's pushed edit (it branched from v0/v1, before A
+    /// moved the `SoT` to v2).
+    fn stale_base_blob(version: u64) -> Vec<u8> {
+        let past = Utc.with_ymd_and_hms(2020, 1, 1, 0, 0, 0).unwrap();
+        let rec = Record {
+            id: RecordId(1),
+            title: "issue 1 (clone B stale edit)".to_owned(),
+            status: RecordStatus::Open,
+            assignee: None,
+            labels: vec![],
+            created_at: past,
+            updated_at: past,
+            version,
+            body: "B-CHANGED-BODY\n".to_owned(),
+            parent_id: None,
+            extensions: BTreeMap::new(),
+        };
+        frontmatter::render(&rec)
+            .expect("render stale-base blob")
+            .into_bytes()
+    }
+
+    /// REGRESSION (HIGH, data-loss): SILENT LOST UPDATE via the shared-cache
+    /// `last_fetched_at` cursor. Two `reposix init` clones of one `SoT` share a
+    /// single bare cache (and thus one wall-clock cursor). After clone A pushes
+    /// (`SoT` → v2, shared cursor → now), clone B pushes a stale-base edit.
+    /// B's L1 precheck runs `list_changed_since(now)` → EMPTY delta (A's write
+    /// predates `now`), so the pre-guard code — which gated the version check on
+    /// delta membership — never version-checked issue 1 and let B's PATCH
+    /// silently clobber A's edit.
+    ///
+    /// The fix makes the authoritative `get_record` version check fire for
+    /// EVERY pushed Update regardless of the delta. This test drives the REAL
+    /// `precheck_export_against_changed_set` against a REAL `Cache` (`oid_map`
+    /// populated + cursor advanced by `build_from`) and asserts the stale-base
+    /// push is REJECTED as a conflict (local base v0 vs backend v2).
+    ///
+    /// Fails WITHOUT the fix (precheck returns `Proceed` → B's PATCH would
+    /// land = lost update); passes WITH it (`Conflicts([(1, 0, 2, _)])`).
+    #[test]
+    // test-name-honesty: ok — asserts precheck REJECTS the stale-base push under an
+    // advanced shared cursor (Conflicts with local v0 vs backend v2), the exact lost-update guard
+    fn stale_base_push_rejected_when_shared_cursor_advanced_past_concurrent_write() {
+        // Per-test cache isolation: unique REPOSIX_CACHE_DIR so `Cache::open`
+        // resolves into a throwaway dir. nextest runs each test in its own
+        // process, so setting the env here does not race sibling tests.
+        let cache_dir = tempfile::tempdir().expect("cache tempdir");
+        std::env::set_var("REPOSIX_CACHE_DIR", cache_dir.path());
+
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("build runtime");
+
+        let backend: Arc<dyn BackendConnector> = Arc::new(AdvancedCursorMock::new());
+        let cache = Cache::open(backend.clone(), "sim", "demo").expect("open cache");
+
+        // build_from: populates the oid_map for issue 1 (so the hot-path
+        // Create-vs-Update gate finds a prior OID) AND writes last_fetched_at
+        // = now (so the precheck takes the cursor-present hot path and
+        // `list_changed_since(now)` returns the EMPTY delta).
+        rt.block_on(cache.build_from()).expect("build_from seeds cache");
+        assert!(
+            cache
+                .find_oid_for_record(RecordId(1))
+                .expect("oid lookup")
+                .is_some(),
+            "precondition: issue 1 must be in the cache oid_map after build_from"
+        );
+        assert!(
+            cache
+                .read_last_fetched_at()
+                .expect("cursor read")
+                .is_some(),
+            "precondition: build_from must advance last_fetched_at (the shared cursor)"
+        );
+
+        // Prove the staleness window is real: with the advanced cursor, the
+        // backend delta is EMPTY even though the SoT is at v2.
+        let since = cache.read_last_fetched_at().unwrap().unwrap();
+        let delta = rt
+            .block_on(backend.list_changed_since("demo", since))
+            .expect("list_changed_since");
+        assert!(
+            delta.is_empty(),
+            "precondition: advanced shared cursor must empty the delta (got {delta:?}) — \
+             this is the exact window the pre-guard code trusted"
+        );
+
+        // Clone B pushes issue 1 with a STALE base version (0) — it branched
+        // before A moved the SoT to v2.
+        let mut blobs: HashMap<u64, Vec<u8>> = HashMap::new();
+        blobs.insert(100, stale_base_blob(0));
+        let mut tree: BTreeMap<String, u64> = BTreeMap::new();
+        tree.insert("issues/1.md".to_owned(), 100);
+        let parsed = ParsedExport {
+            commit_message: "B stale edit\n".to_owned(),
+            blobs,
+            tree,
+            deletes: vec![],
+            saw_commit: true,
+        };
+
+        let outcome =
+            precheck_export_against_changed_set(Some(&cache), backend.as_ref(), "demo", &rt, &parsed)
+                .expect("precheck must not error");
+
+        match outcome {
+            PrecheckOutcome::Conflicts(conflicts) => {
+                assert_eq!(conflicts.len(), 1, "exactly one conflict expected");
+                let (id, local_v, backend_v, _ts) = &conflicts[0];
+                assert_eq!(*id, RecordId(1), "conflict must name issue 1");
+                assert_eq!(*local_v, 0, "local base version is the stale v0");
+                assert_eq!(*backend_v, 2, "backend is at v2 (post sibling-A push)");
+            }
+            PrecheckOutcome::Proceed { .. } => {
+                panic!(
+                    "LOST UPDATE: precheck returned Proceed for a stale-base (v0) push while the \
+                     backend is at v2 — B's PATCH would land and silently clobber A's edit. The \
+                     shared-cursor lost-update guard failed to fire."
+                );
+            }
+        }
+
+        drop(cache_dir);
     }
 }

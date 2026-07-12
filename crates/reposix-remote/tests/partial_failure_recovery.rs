@@ -247,15 +247,20 @@ async fn partial_fail_then_next_push_replans_only_remainder_and_converges() {
             .await;
     }
 
-    // GET /issues/1 — PRECHECK B's hot-path conflict check on push 2 (issue 1
-    // is in the changed set) re-fetches issue 1's current SoT version.
-    {
+    // GET /issues/{1,2} — PRECHECK B's hot-path conflict check re-fetches each
+    // pushed Update's current SoT version. The lost-update guard (P106) issues
+    // this GET for EVERY pushed Update the cache knows about, NOT only records
+    // in the `list_changed_since` delta — the shared wall-clock cursor is
+    // untrustworthy under concurrent clones, so the backend is the sole version
+    // arbiter. Both records are version-matched here (no divergent stale-base
+    // edit), so the check finds no conflict and the partial-fail flow proceeds.
+    for id in [1_u64, 2_u64] {
         let sot = sot.clone();
         Mock::given(method("GET"))
-            .and(path_regex(format!(r"^/projects/{PROJECT}/issues/1$")))
+            .and(path_regex(format!(r"^/projects/{PROJECT}/issues/{id}$")))
             .respond_with(move |_req: &Request| {
                 let issues = sot.issues.lock().unwrap();
-                ResponseTemplate::new(200).set_body_json(issue_json(1, &issues[&1]))
+                ResponseTemplate::new(200).set_body_json(issue_json(id, &issues[&id]))
             })
             .mount(&server)
             .await;

@@ -92,7 +92,10 @@ pub(crate) enum PlanError {
 /// trims trailing whitespace on the final byte sequence (absorbs
 /// blob-ends-with-or-without-LF variation). Intra-body whitespace is
 /// preserved — we only want to canonicalize envelope noise, not content.
-fn normalize_for_compare(s: &str) -> String {
+// pub(crate): the L1 precheck (`crate::precheck`) reuses this SAME normalization
+// so its lost-update no-op notion is byte-identical to plan()'s — precheck and
+// plan must never disagree on what counts as a writable change.
+pub(crate) fn normalize_for_compare(s: &str) -> String {
     s.replace("\r\n", "\n").trim_end().to_owned()
 }
 
@@ -117,7 +120,9 @@ fn normalize_for_compare(s: &str) -> String {
 /// `frontmatter::render` both sides use, so YAML/whitespace canonicalization
 /// still applies. A difference the write path WOULD send (title, status,
 /// assignee, labels, body, `parent_id`, extensions) still surfaces as a PATCH.
-fn render_writable_for_compare(issue: &Record) -> Result<String, reposix_core::Error> {
+// pub(crate): reused by `crate::precheck`'s lost-update guard (see
+// `normalize_for_compare` note above).
+pub(crate) fn render_writable_for_compare(issue: &Record) -> Result<String, reposix_core::Error> {
     // A fixed epoch sentinel — value is irrelevant, only that both sides share it.
     let sentinel = chrono::DateTime::from_timestamp(0, 0).unwrap_or_else(chrono::Utc::now);
     let mut w = issue.clone();
