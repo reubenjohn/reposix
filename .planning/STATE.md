@@ -1,9 +1,9 @@
 ---
 gsd_state_version: 1.0
 mode: serial-workstreams
-status: v0.13.1-shipped-v0.14.0-planning-established
-last_updated: "2026-07-11"
-last_activity: "2026-07-11 — v0.14.0 wave-2 hardening milestone ESTABLISHED (planning only, zero implementation). ROADMAP.md + REQUIREMENTS.md authored at .planning/milestones/v0.14.0-phases/ encoding the owner's settled ordering: Phase 102 (D2 self-safe dark-factory hardening — reject-t@t identity hook, real per-leaf worktree isolation, shared-.git/config write guard) is a HARD SERIALIZING GATE blocking every other autonomous fleet run project-wide; Phases 103-109 carry the early cheap wins (doc-alignment persist split, file-size waiver split) + five carried HIGHs from the v0.13.0/v0.13.1 intake (GitHub-v09 404 S-260707-gh404, RBF-LR-03 reconciliation, waived tutorials, RUSTSEC memmap2/quinn-proto, prune_oid_map truncation hazard, RBF-FW-11 + swarm write-contention); P110/P111 are the OP-8 +2 reservation (surprises / good-to-haves + milestone close); P112 is an OD-4 launch-readiness SCOPE-BUT-DO-NOT-START stub. 23 REQ-IDs (D2-*) traced 1:1 to phases, no orphans/duplicates. Phase numbering continues from v0.13.1's close (P98-P101, SHIPPED) at P102-P112; v0.13.2 (still queued/not-yet-replanned) shifts further when eventually replanned. NEXT: /gsd-discuss-phase 102 or /gsd-plan-phase 102 to begin D2 execution — nothing else in the fleet should run unattended until P102 lands GREEN."
+status: v0.13.1-shipped-v0.14.0-wave2-in-progress
+last_updated: "2026-07-12"
+last_activity: "2026-07-12 — v0.14.0 wave-2 hardening IN PROGRESS: P102 (D2 self-safe dark-factory hardening, the hard serializing gate) shipped GREEN, followed by an emergent Phase-0 D2 re-seal incident (leaf-isolation guard hardened against a worktree-bypass vector, closed same session), then P103, P104, P105 (RBF-LR-03 rebase recovery), P108 (prune-completeness-gate paperwork closure), P109 (RBF-FW-11 grandfather-commit rule) all shipped GREEN, and P106 (waived tutorials/examples reproduce — 5 docs-repro catalog rows minted PASS by an unbiased verifier) closed GREEN most recently at HEAD 7827d36 (CI run 29201112349 success, code/ci-green-on-main PASS). NEXT: P107 (RUSTSEC memmap2/quinn-proto advisory posture) — /gsd-discuss-phase 107 or /gsd-plan-phase 107. After P107 GREEN: P110/P111 (OP-8 +2 reservation — surprises/good-to-haves drain + milestone-close, blocked until P107 lands) then P112 (OD-4 launch-readiness SCOPE-BUT-DO-NOT-START stub)."
 workstreams:
   workstream_a:
     milestone: v0.13.0
@@ -24,10 +24,10 @@ workstreams:
   workstream_c:
     milestone: v0.14.0
     milestone_name: Wave-2 hardening
-    status: planning-established  # ROADMAP.md + REQUIREMENTS.md authored 2026-07-11 at .planning/milestones/v0.14.0-phases/; zero implementation started
+    status: in-progress  # P102, Phase-0 D2 re-seal, P103, P104, P105, P106, P108, P109 all shipped GREEN as of 2026-07-12 (HEAD 7827d36); P107 next
     phases_total: 11  # P102-P112 (P102 D2 hard gate; P103-P109 carried HIGHs + cheap wins; P110-P111 OP-8 +2 reservation; P112 OD-4 stub)
-    phases_completed: 0
-    next_phase: P102  # HARD SERIALIZING GATE — no other phase in this milestone, and no other autonomous fleet run project-wide, starts until P102 lands GREEN
+    phases_completed: 7  # P102, P103, P104, P105, P106, P108, P109 GREEN (P107 not yet started; P110-P112 blocked behind it)
+    next_phase: P107  # RUSTSEC memmap2/quinn-proto advisory posture; then P110/P111 (blocked until P107 GREEN), then P112 stub
     blocks_tag: false  # tag push at P111 milestone-close is owner-gated per usual; orchestrator does not push
 ---
 
@@ -111,29 +111,29 @@ frontmatter `status`/`last_activity` above for the live cursor. v0.13.2 (this se
 remains QUEUED, now also behind the newly-established **Workstream C — v0.14.0 wave-2
 hardening** (below) per OD-4 sequencing.
 
-### Workstream C — v0.14.0 wave-2 hardening — PLANNING ESTABLISHED
+### Workstream C — v0.14.0 wave-2 hardening — IN PROGRESS
 
-Phase: **P102** (entry-point) — D2 self-safe dark-factory hardening. **HARD SERIALIZING
-GATE**: no other phase in this milestone, and no other autonomous fleet run project-wide,
-starts until P102 lands GREEN, pushed, and verifier-PASS.
-Plan: TBD — P102 plan-overview not yet authored (`/gsd-plan-phase 102`).
-Status: ROADMAP.md + REQUIREMENTS.md authored 2026-07-11 at
-`.planning/milestones/v0.14.0-phases/`, encoding the owner's settled ordering verbatim
-(this was NOT a discovery/research pass). 11 phases (P102–P112): P102 D2 hardening (hard
-gate); P103 early cheap wins; P104–P108 five carried HIGHs from the v0.13.0/v0.13.1 intake
-(GitHub-v09 404, RBF-LR-03, waived tutorials, RUSTSEC advisories, prune_oid_map
-truncation); P109 carried framework-hygiene (RBF-FW-11 + swarm write-contention);
-P110–P111 OP-8 +2 reservation; P112 OD-4 launch-readiness SCOPE-BUT-DO-NOT-START stub. 0/11
-phases complete; SURPRISES-INTAKE.md + GOOD-TO-HAVES.md scaffolded empty (no entries yet —
-phases haven't started).
-Next agent action: `/gsd-discuss-phase 102` or `/gsd-plan-phase 102` to begin D2 execution.
+Phase: **P107** (entry-point) — RUSTSEC memmap2/quinn-proto advisory posture.
+Plan: TBD — P107 plan-overview not yet authored (`/gsd-plan-phase 107`).
+Status: 7/11 phases complete as of 2026-07-12 (HEAD `7827d36`, pushed to origin/main,
+CI run `29201112349` success). **P102** (D2 self-safe dark-factory hardening, the hard
+serializing gate) shipped GREEN, followed by an emergent Phase-0 D2 re-seal (leaf-isolation
+guard hardened against a worktree-bypass vector — same session, closed). **P103, P104,
+P105** (RBF-LR-03 rebase recovery), **P108** (prune-completeness-gate paperwork closure),
+and **P109** (RBF-FW-11 grandfather-commit rule) all shipped GREEN. **P106** (waived
+tutorials/examples reproduce) closed GREEN most recently — 5 `docs-repro` catalog rows
+(`tutorial-replay`, `example-01-shell-loop`, `example-02-python-agent`,
+`example-04-conflict-resolve`, `example-05-blob-limit-recovery`) minted PASS by an unbiased
+verifier. Remaining: P107 (next), then P110/P111 (OP-8 +2 reservation, blocked until P107
+GREEN), then P112 (OD-4 launch-readiness SCOPE-BUT-DO-NOT-START stub).
+Next agent action: `/gsd-discuss-phase 107` or `/gsd-plan-phase 107` to begin P107.
 
 ## Current Focus
 
 **Active milestones (SERIAL per OD-3 — A then C then B, per OD-4 resequencing):**
 
 - **Workstream A — v0.13.0 extended.** **CLOSED GREEN 2026-07-05 (P78–P97, 20/20 phases).** Shipped P78–P88 2026-05-01; extended 2026-05-08 with P89–P97 (real-backend frictions); milestone-close verdict at `quality/reports/verdicts/milestone-v0.13.0/VERDICT.md`. Tag v0.13.0 landed; v0.13.1 onboarding hotfix (P98–P101) additionally SHIPPED 2026-07-07 (tag `04640d5`). ROADMAP at `.planning/milestones/v0.13.0-phases/ROADMAP.md`.
-- **Workstream C — v0.14.0 wave-2 hardening.** PLANNING ESTABLISHED 2026-07-11 (see § Workstream C above). **P102 is a HARD SERIALIZING GATE** — nothing else in the fleet runs unattended until it is GREEN. ROADMAP at `.planning/milestones/v0.14.0-phases/ROADMAP.md`.
+- **Workstream C — v0.14.0 wave-2 hardening.** IN PROGRESS (see § Workstream C above). 7/11 phases GREEN as of 2026-07-12 (P102, Phase-0 D2 re-seal, P103, P104, P105, P106, P108, P109); **P107 next**. ROADMAP at `.planning/milestones/v0.14.0-phases/ROADMAP.md`.
 - **Workstream B — v0.13.2 cross-link-fidelity.** QUEUED behind workstream C (this OD-4 resequencing) AND the not-yet-scoped launch-readiness milestone. Original placeholder range P98–P107 shifts again when eventually replanned (renumber-on-insertion convention). ROADMAP at `.planning/milestones/v0.13.2-phases/ROADMAP.md`.
 
 **Last shipped milestone:** v0.12.1 (closed 2026-04-30). Verdict GREEN at `quality/reports/verdicts/milestone-v0.12.1/VERDICT.md` (commit 9ef348e).
@@ -179,6 +179,6 @@ Historical phase-by-phase contribution narrative lives in per-milestone ARCHIVE 
 
 ## Session Continuity
 
-Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current cursor is "**v0.13.0 milestone CLOSED GREEN (P78–P97, 20/20) — awaiting OWNER PRE-TAG ACTIONS + L0 v0.13.0 tag push, then workstream B (v0.13.2, P98+)**" (milestone verdict commit `390ce31`, graded HEAD `3c6d72f`). The durable owner pre-tag checklist + queued post-tag `/gsd-quick` meta-infra items live in § Workstream A. Workstream B stays queued behind A per OD-3/OD-4.
+Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**Workstream C — v0.14.0 wave-2 hardening IN PROGRESS, 7/11 phases GREEN (P102, Phase-0 D2 re-seal, P103, P104, P105, P106, P108, P109) as of 2026-07-12, HEAD `7827d36` — next P107**" (see § Workstream C). Workstream A (v0.13.0-extension) is CLOSED GREEN historically (P78–P97, tag landed); the owner pre-tag checklist below is retained for record. Workstream B (v0.13.2) stays queued behind workstream C per OD-3/OD-4.
 
 Top-level session handover: `.planning/SESSION-HANDOVER.md` (whole-session rotation handover for session 7e2a4cf2, 2026-07-04/05; distinct from per-phase relief handovers under `.planning/phases/`).
