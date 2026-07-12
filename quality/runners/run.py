@@ -60,8 +60,16 @@ BLAST_RADIUS_ORDER = {"P0": 0, "P1": 1, "P2": 2}
 
 VALID_CADENCES = (
     "pre-commit", "pre-push", "pre-pr", "weekly", "pre-release", "post-release",
-    "on-demand", "pre-release-real-backend",
+    "on-demand", "pre-release-real-backend", "post-push",
 )
+# `post-push` (D-CONV-4, 2026-07-12): runs at phase/milestone-close AFTER the
+# phase push has LANDED on main -- orchestrator/verifier-side, NOT the pre-push
+# git hook. It confirms the LATEST ci.yml run on main concluded success (the
+# `code/ci-green-on-main` row). This is deliberately a DISTINCT cadence from
+# pre-push: a pre-push-tagged CI-green probe is CIRCULAR (CI has not yet run the
+# commit being pushed), which is exactly why D-CONV-1 demoted ci-job-status out
+# of the pre-* path. Running AFTER the push closes the systemic hole where a
+# phase shipped GREEN while its push turned main RED and nobody checked.
 
 
 def now_iso() -> str:

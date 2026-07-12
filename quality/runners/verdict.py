@@ -56,8 +56,13 @@ BADGE_PATH = REPORTS_DIR / "badge.json"
 
 CADENCES = (
     "pre-commit", "pre-push", "pre-pr", "weekly", "pre-release", "post-release",
-    "on-demand", "pre-release-real-backend",
+    "on-demand", "pre-release-real-backend", "post-push",
 )
+# `post-push` (D-CONV-4, 2026-07-12): phase/milestone-close CI-green-on-main
+# check, graded AFTER the push lands (NOT the pre-push hook -- that would be
+# circular). See quality/runners/run.py for the full rationale. `verdict.py
+# --phase <N>` collates ALL rows regardless of cadence, so a FAIL post-push row
+# (e.g. code/ci-green-on-main, blast_radius P0) rolls the phase verdict RED.
 
 
 def now_iso() -> str:

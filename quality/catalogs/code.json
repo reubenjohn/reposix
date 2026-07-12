@@ -253,6 +253,45 @@
       "cadences": [
         "pre-push"
       ]
+    },
+    {
+      "id": "code/ci-green-on-main",
+      "dimension": "code",
+      "kind": "mechanical",
+      "comment": "D-CONV-4 (2026-07-12): closes the systemic hole where 8 GREEN phases shipped over a RED main because phase-close verified the push LANDED but never that CI went GREEN on main afterward. This row runs at the NEW `post-push` cadence -- AFTER `git push origin main` lands, orchestrator/verifier-side. That timing is load-bearing and NON-CIRCULAR: it is the opposite of D-CONV-1's concern, which demoted `code/cargo-*` / `ci-job-status` out of the pre-* path because a CI-green check running INSIDE (or BEFORE) the CI run for the very commit under test is circular (CI has not concluded yet). A post-push check reads the conclusion of the run that CI has ALREADY started for the just-landed commit -- there is nothing circular about asking 'did main's latest CI go green?' once the push is on main. Crucially this asserts the LATEST run on main, NOT `gh run list --status=success` (which finds the newest GREEN run even when the latest run is RED, masking a red HEAD -- see ci-job-status.sh's deliberately-different query). If the latest ci.yml run on main is red/cancelled, this row FAILs (blast_radius P0) and verdict.py --phase rolls the phase RED. Do NOT re-demote this to pre-push 'because ci-job-status was demoted' -- ci-job-status was demoted for circularity that does NOT apply to a post-push orchestrator-side read.",
+      "sources": [
+        "quality/gates/code/ci-green-on-main.sh (gh run list --workflow=ci.yml --branch=main --limit=1, single latest run, no --status filter)",
+        ".github/workflows/ci.yml:name (workflow 'CI')",
+        "quality/PROTOCOL.md Step 6 (post-push runner invocation, AFTER the push)",
+        "CLAUDE.md 'Push cadence' (push-landed AND CI-green-on-main-after)"
+      ],
+      "command": "gh run list --workflow=ci.yml --branch=main --limit=1 --json databaseId,conclusion,status",
+      "expected": {
+        "asserts": [
+          "the LATEST ci.yml run on main concluded success (not merely that some older successful run exists) -- exit 0 only when the single most-recent run's conclusion == success",
+          "a red/cancelled/failed LATEST run makes the verifier exit 1 (FAIL), grading the phase RED",
+          "gh missing/unauthenticated OR the latest run still in-progress writes NOT-VERIFIED (exit 75, per the runner's exit-75->NOT-VERIFIED convention), never skip-as-PASS"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/code/ci-green-on-main.sh",
+        "args": [],
+        "timeout_s": 60,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/code/ci-green-on-main.json",
+      "status": "NOT-VERIFIED",
+      "minted_at": "2026-07-12T15:39:06Z",
+      "last_verified": "2026-07-12T15:39:06Z",
+      "coverage_kind": "mechanical",
+      "freshness_ttl": null,
+      "blast_radius": "P0",
+      "owner_hint": "if RED: main's LATEST CI run concluded failure/cancelled -- do NOT open a new phase over a red main; fix-forward or revert the offending commit, wait for CI to go green, then re-run `python3 quality/runners/run.py --cadence post-push --persist`. if NOT-VERIFIED: gh CLI missing/unauth (run `gh auth login`) or CI still in-progress (wait for the run to complete, then re-grade). NEVER treat NOT-VERIFIED or an in-progress run as a pass.",
+      "waiver": null,
+      "claim_vs_assertion_audit": "The verifier calls `gh run list --workflow=ci.yml --branch=main --limit=1 --json databaseId,conclusion,status` (NO --status filter) and parses the SINGLE newest run. If the claim ('main's latest CI is green') were false -- the most-recent ci.yml run on main concluded failure or was cancelled -- the parsed conclusion != 'success' and the verifier exits 1, which run.py maps to FAIL and verdict.py --phase rolls up to RED (blast_radius P0). The falsifying evidence is the conclusion of the exact run at main's HEAD, not a proxy: unlike a `--status=success` query that would surface an OLDER green run and hide a red HEAD, --limit=1 with no status filter can only report the true latest state, so a red main cannot masquerade as green. An unknowable state (gh absent/unauth, or the run still in-progress) exits 75 -> NOT-VERIFIED (also RED for a P0 row at grading), never a pass.",
+      "cadences": [
+        "post-push"
+      ]
     }
   ]
 }
