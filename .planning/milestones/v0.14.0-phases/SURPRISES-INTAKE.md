@@ -440,3 +440,26 @@ GREEN-contract row before impl) + a verifier grade.
 unrelated phases?
 
 **STATUS:** OPEN
+
+## 2026-07-12 | discovered-by: GSD-quick (fleet-safety untrack fix) | severity: MEDIUM
+
+**Title:** Runner unit tests (`quality/runners/test_*.py`) are not collected by CI — durable
+guards never run automatically.
+
+**What:** The fleet-safety untrack fix (`3d3e60e`) shipped its DP-2 regression guard
+`quality/runners/test_fleet_safety_verdicts_untracked.py` — but none of the 6
+`quality/runners/test_*.py` unittest files are wired into `.github/workflows/ci.yml`. CI never
+collects them, so the guard is inert in CI: a metric generated-but-not-watched, GREEN only on a
+local run.
+
+**Why out-of-scope for the discovering quick:** the quick's charter was the dirty-checkout /
+untrack fix; wiring a CI collection step (with per-file env-safety triage + an owner gate on
+which subset is hermetic) is a workflow + catalog change, not inline scope.
+
+**Sketched resolution:** triage the 6 test files for env-safety (which need creds/network, e.g.
+`test_realbackend`, vs pure/hermetic) then add a CI step running the env-safe subset (e.g.
+`python3 -m unittest` over the vetted files) OR promote them to catalog gates under an
+appropriate cadence. `test_fleet_safety_verdicts_untracked.py` MUST be one that gets wired. Do
+NOT blanket `unittest discover` — that surfaces env-dependent tests.
+
+**STATUS:** OPEN
