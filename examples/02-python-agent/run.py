@@ -86,13 +86,28 @@ def main() -> int:
     run("git", "checkout", "-q", "-B", "main", "refs/reposix/origin/main", cwd=WORK)
 
     # 3. Find issues whose body mentions "database" (case-insensitive).
+    #    Records live under the canonical `issues/<id>.md` bucket (QL-001),
+    #    not at the repo root.
     targets: list[pathlib.Path] = []
-    for path in sorted(WORK.glob("*.md")):
+    for path in sorted(WORK.glob("issues/*.md")):
         body = path.read_text(encoding="utf-8")
         if re.search(r"database", body, re.IGNORECASE):
             targets.append(path)
-    print(f"matched {len(targets)} issue(s) mentioning 'database': "
-          f"{[p.name for p in targets]}")
+    rels = [str(p.relative_to(WORK)) for p in targets]
+    print(f"matched {len(targets)} issue(s) mentioning 'database': {rels}")
+
+    # Fail loud on a zero-match run: the demo seed always contains at least
+    # one issue body mentioning 'database'. A zero result means the glob
+    # missed the records (e.g. a path-shape regression) -- exiting 0 here
+    # would let the container-rehearse gate score a vacuous GREEN.
+    if not targets:
+        print(
+            "FAIL: matched 0 issues mentioning 'database' -- expected >=1 in "
+            f"the demo seed. Looked under {WORK}/issues/*.md; verify records "
+            "materialised at the canonical issues/<id>.md path.",
+            file=sys.stderr,
+        )
+        return 1
 
     # 4. Splice severity into the frontmatter.
     changed: list[pathlib.Path] = []
@@ -103,14 +118,14 @@ def main() -> int:
             continue
         path.write_text(new_text, encoding="utf-8")
         changed.append(path)
-        print(f"  {path.name}: severity=medium added")
+        print(f"  {path.relative_to(WORK)}: severity=medium added")
 
     if not changed:
         print("nothing to commit")
         return 0
 
-    # 5. Stage, commit, push.
-    run("git", "add", *(p.name for p in changed), cwd=WORK)
+    # 5. Stage, commit, push. Stage by the issues/<id>.md-relative path.
+    run("git", "add", *(str(p.relative_to(WORK)) for p in changed), cwd=WORK)
     run(
         "git",
         "-c", "user.email=example@reposix.dev",

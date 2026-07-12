@@ -43,18 +43,19 @@ echo '[3/4] dark-factory recovery: narrow scope with git sparse-checkout, then c
 # full tree on a real fetch with limit=3 would refuse. The recovery is to
 # only materialize a subset.
 git -C "$WORK" sparse-checkout init --no-cone
-git -C "$WORK" sparse-checkout set '0001.md' '0002.md' '0003.md'
+# Canonical record paths are issues/<id>.md (QL-001), unpadded + bucketed.
+git -C "$WORK" sparse-checkout set 'issues/1.md' 'issues/2.md' 'issues/3.md'
 git -C "$WORK" checkout -q -B main refs/reposix/origin/main
 
-echo "Checked out $(ls "$WORK"/*.md 2>/dev/null | wc -l) of 6 issue files (sparse-checkout matched only 3 paths):"
-ls "$WORK"/*.md
+echo "Checked out $(ls "$WORK"/issues/*.md 2>/dev/null | wc -l) of 6 issue files (sparse-checkout matched only 3 paths):"
+ls "$WORK"/issues/*.md
 
 echo
 echo '[4/4] widening scope is the same recovery, repeated'
-git -C "$WORK" sparse-checkout set '0001.md' '0002.md' '0003.md' '0004.md'
+git -C "$WORK" sparse-checkout set 'issues/1.md' 'issues/2.md' 'issues/3.md' 'issues/4.md'
 git -C "$WORK" checkout -q -B main refs/reposix/origin/main
 echo "After widening to 4 paths:"
-ls "$WORK"/*.md
+ls "$WORK"/issues/*.md
 
 echo
 echo 'Done. Inspect blob-limit hits with:'
