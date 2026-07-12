@@ -305,3 +305,11 @@ overstates reliability for the external-REST-write case.
 - **Reversibility:** Fully reversible — new catalog row + gate, additive.
 - **Commit:** (this entry; catalog row to be filed as part of v0.13.1 or v0.14.0
   scoping).
+
+## 2026-07-12 [SELF] D4 — fleet-safety verdict JSONs: UNTRACK over byte-stabilize
+
+[SELF] (2026-07-12): fleet-safety verification JSONs re-dirty CI checkout → chose UNTRACK (git rm --cached) over byte-stabilize. (a) Investigation confirmed NOTHING reads the committed JSON content as a baseline — run.py write-back-merges the copy it just regenerated this run (never diffs committed bytes); catalog expected.artifact fields are write-targets not read-back baselines; no verifier/verdict.py/test_audit_field.py compares committed bytes. Pure per-run outputs. (b) .gitignore:72 verifications/*/*.json ALREADY ignores them; force-added despite the pattern; p93/perf baselines carry explicit ! re-includes, these do not. (c) Exact P102 precedent fbe02c8 git rm --cached on force-added per-run transcripts; shell-coverage.json/*.cobertura.xml already gitignored+untracked. (d) Byte-stable (309f0b6) is fundamentally fragile: the JSON's only non-static fields (asserts_passed/failed, exit_code) derive from live guard-scenario ASSERT outcomes that can flip PASS↔FAIL across git-version/env between CI and local — 309f0b6 removed the ts field but cannot make asserts environment-invariant. Untracking removes the failure class entirely.
+
+## 2026-07-12 [SELF] D5 — should a RED release-plz block phase-close via ci-green-on-main P0 bar?
+
+[SELF] (2026-07-12): should a RED release-plz block phase-close via the ci-green-on-main P0 bar? YES in principle — this BLOCKER proves an unwatched red release workflow rots silently (Global CLAUDE.md: health is a maintained asset; never let a metric you don't watch decay). But NOT implemented inline: (a) ci-green-on-main.sh hardcodes WORKFLOW=ci.yml; a clean fold = parameterize into a required-workflow list or a sibling code/release-green-on-main row (catalog-first ordering + a verifier grade) — non-trivial. (b) Open semantic question needing verification before P0-wiring: does release-plz run on EVERY push to main, and does a 'no release needed' outcome conclude success or skipped? A false-RED would block UNRELATED phases → warrants owner gate. FILED to SURPRISES-INTAKE with sketch.

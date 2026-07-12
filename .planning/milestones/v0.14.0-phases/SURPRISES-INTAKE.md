@@ -413,3 +413,30 @@ assertion step. If gating turns out <1h with no new dependency during P110/P111,
 otherwise leave filed for the owner (the tag itself is owner-cut).
 
 **STATUS:** OPEN
+
+## 2026-07-12 | discovered-by: GSD-quick (release-plz RED fix) | severity: MEDIUM
+
+**What:** Fold release-plz (and other required workflows) into the ci-green-on-main phase-close
+bar. This session fixed a persistently-RED release-plz on main (it refused a dirty CI checkout
+re-dirtied by self-regenerating fleet-safety verdict JSONs) — but the RED sat UNNOTICED because
+the phase-close `code/ci-green-on-main` (P0) probe hardcodes `WORKFLOW=ci.yml` and watches ONLY
+ci.yml. release-plz was never on the phase-close radar, so an unwatched red release workflow
+rotted silently (Global CLAUDE.md: health is a maintained asset; never let a metric you don't
+watch decay). Sibling of the release.yml-CI-ungated entry above (that one is about GATING the
+tag-publish on green; this one is about WATCHING release-plz's outcome at phase-close).
+
+**Why out-of-scope for the discovering quick:** the quick's charter was the dirty-checkout fix;
+widening the phase-close bar is a catalog + verifier change with open semantic questions (below)
+that warrant an owner gate before P0-wiring — not inline scope.
+
+**Sketched resolution:** parameterize `quality/gates/code/ci-green-on-main.sh`'s hardcoded
+`WORKFLOW=ci.yml` into a required-workflow LIST, OR add a sibling `code/release-green-on-main`
+row at post-push cadence reusing the same latest-run-conclusion logic. Catalog-first (write the
+GREEN-contract row before impl) + a verifier grade.
+
+**Open questions to resolve FIRST (a false-RED would block UNRELATED phases → owner gate):**
+(1) Does release-plz run on EVERY push to main? (2) Is a 'no release needed' run concluded
+`success` / `skipped` / other — so the probe treats non-failure correctly and does not false-RED
+unrelated phases?
+
+**STATUS:** OPEN
