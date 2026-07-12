@@ -1100,10 +1100,11 @@
       "dimension": "agent-ux",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. Minted status:FAIL in the P110 catalog-first commit (110-01 T01) per quality/CLAUDE.md § Catalog-first rule — the row asserts the EVENTUAL drained state before the drain lands.",
-      "comment": "P110 (+2 reservation slot 1) drain verifier for v0.14.0. Asserts SURPRISES-INTAKE.md is fully drained — zero OPEN entries, >=10 terminal-STATUS entries (RESOLVED|DEFERRED|WONTFIX), F-K5 honesty spot-check artifact present. Mirrors the v0.13.0 P87 precedent, swapping the milestone/phase paths and raising the terminal floor to match the v0.14.0 surfaced count (P102-P109 surfaced 16 entries). Cadence on-demand because the intake is milestone-bounded; once v0.14.0 archives the row becomes a historical PASS marker per the v0.12.1 P76 / v0.13.0 P87 precedent.",
+      "comment": "P110 (+2 reservation slot 1) drain verifier for v0.14.0. Asserts SURPRISES-INTAKE.md is fully drained — zero OPEN entries, >=10 terminal-STATUS entries (RESOLVED|DEFERRED|WONTFIX), F-K5 honesty spot-check artifact present. Mirrors the v0.13.0 P87 precedent, swapping the milestone/phase paths and raising the terminal floor to match the v0.14.0 surfaced count (P102-P109 surfaced 16 entries). Cadence on-demand because the intake is milestone-bounded; once v0.14.0 archives the row becomes a historical PASS marker per the v0.12.1 P76 / v0.13.0 P87 precedent. OP-8 (2026-07-12, quick 260712-mhb): the 17 entries were relocated verbatim into surprises-intake/part-*.md to relieve the p111 44000 B ceiling; the verifier now counts OPEN/terminal STATUS across the top-level index AND the part files (entries preserved, not deleted — byte-exact round-trip verified).",
       "sources": [
         "quality/gates/agent-ux/p110-surprises-absorption.sh",
         ".planning/milestones/v0.14.0-phases/SURPRISES-INTAKE.md",
+        ".planning/milestones/v0.14.0-phases/surprises-intake/part-*.md",
         ".planning/phases/110-op-8-slot-1-surprises-drain/honesty-spot-check.md",
         ".planning/REQUIREMENTS.md (D2-SURPRISES-01)"
       ],

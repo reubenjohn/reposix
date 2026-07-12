@@ -23,6 +23,12 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." &> /dev/null && pwd)"
 cd "${REPO_ROOT}"
 
 INTAKE=".planning/milestones/v0.14.0-phases/SURPRISES-INTAKE.md"
+PARTS_DIR=".planning/milestones/v0.14.0-phases/surprises-intake"
+SCAN_FILES=("${INTAKE}")
+# OP-8 file-size drain (2026-07-12): entries relocated verbatim into part files; count across both.
+if compgen -G "${PARTS_DIR}/part-*.md" > /dev/null 2>&1; then
+  SCAN_FILES+=("${PARTS_DIR}"/part-*.md)
+fi
 HONESTY=".planning/phases/110-op-8-slot-1-surprises-drain/honesty-spot-check.md"
 ARTIFACT="quality/reports/verifications/agent-ux/p110-surprises-absorption.json"
 
@@ -44,19 +50,21 @@ fi
 # template at the top of the file lives inside a ```markdown ... ```
 # fence and must NOT be counted as a real entry).
 OPEN_COUNT=$(awk '
+  FNR==1 { in_fence=0 }
   /^```/ { in_fence = !in_fence; next }
   !in_fence && /^\*\*STATUS:\*\* OPEN/ { count++ }
   END { print count + 0 }
-' "${INTAKE}")
+' "${SCAN_FILES[@]}")
 if [[ "${OPEN_COUNT}" != "0" ]]; then
   fail "${INTAKE} still has ${OPEN_COUNT} entry/entries with STATUS: OPEN — flip to RESOLVED|DEFERRED|WONTFIX with rationale or commit SHA"
 fi
 
 TERMINAL_COUNT=$(awk '
+  FNR==1 { in_fence=0 }
   /^```/ { in_fence = !in_fence; next }
   !in_fence && /^\*\*STATUS:\*\* (RESOLVED|DEFERRED|WONTFIX)/ { count++ }
   END { print count + 0 }
-' "${INTAKE}")
+' "${SCAN_FILES[@]}")
 if [[ "${TERMINAL_COUNT}" -lt 10 ]]; then
   fail "${INTAKE} has only ${TERMINAL_COUNT} terminal STATUS entries; expected >=10"
 fi
