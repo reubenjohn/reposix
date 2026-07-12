@@ -1,0 +1,23 @@
+argv: scenario
+env_keys: AI_AGENT,BOTTOKEN,CLAUDECODE,CLAUDE_CODE_CHILD_SESSION,CLAUDE_CODE_ENTRYPOINT,CLAUDE_CODE_EXECPATH,CLAUDE_CODE_SESSION_ID,CLAUDE_EFFORT,COLORTERM,COREPACK_ENABLE_AUTO_PIN,DBUS_SESSION_BUS_ADDRESS,DISPLAY,GIT_EDITOR,GOOSE_DISABLE_KEYRING,HERDR_ENV,HERDR_PANE_ID,HERDR_SOCKET_PATH,HERDR_TAB_ID,HERDR_WORKSPACE_ID,HOME,HOSTTYPE,JAVA_HOME,LANG,LESS,LOGNAME,LSCOLORS,LS_COLORS,NAME,NVM_BIN,NVM_CD_FLAGS,NVM_DIR,NVM_INC,NoDefaultCurrentDirectoryInExePath,OLDPWD,OPENWEATHERTOKEN,PAGER,PATH,PULSE_SERVER,PWD,SHELL,SHLVL,SPARK_HOME,SSH_AGENT_PID,SSH_AUTH_SOCK,TERM,UNSET_ANTHROPIC_API_KEY,USER,WAYLAND_DISPLAY,WSL2_GUI_APPS_ENABLED,WSLENV,WSL_DISTRO_NAME,WSL_INTEROP,WT_PROFILE_ID,WT_SESSION,XDG_RUNTIME_DIR,ZSH,_
+cwd: /home/reuben/workspace/reposix
+exit_code: 0
+--- STDOUT ---
+BASELINE: sha256(/home/reuben/workspace/reposix/.git/config) BEFORE = e16c5b5d2db38d2008db7d17f09c9defe3b6efca9ca062efeb922980527bf460
+CASE 1a (git config core.bare true vs shared): argv=[git config core.bare true] cwd=[/home/reuben/workspace/reposix] hook_exit=2
+  teaching_stderr: BLOCKED (leaf-isolation guard C — shared-config write): a 'git config' WRITE of 'core.bare' targets the SHARED .git/config (/home/reuben/workspace/reposix/.git/config).
+WHY: writing core.bare / user.email / user.name into the shared config corrupts the checkout for every concurrent agent — this is the exact S-260707-pr-08 corruption (core.bare=true). The write was blocked pre-execution, so the shared .git/config is byte-unchanged.
+RECOVERY: run this inside a throwaway /tmp clone in the SAME Bash invocation, under a REAL identity, e.g.:
+  git clone "/home/reuben/workspace/reposix" /tmp/leaf-$$ && cd /tmp/leaf-$$ && <your command>
+Doctrine: ORCHESTRATION.md § "Leaf isolation for reposix/sim/git test setup (HARD STOP)".
+  ASSERT exit==2 BLOCK: PASS
+  ASSERT stderr names core.bare + recovery: PASS
+CASE 1b (git config user.email t@t vs shared): argv=[git config user.email t@t] cwd=[/home/reuben/workspace/reposix] hook_exit=2
+  ASSERT exit==2 BLOCK: PASS
+CASE 2 (config byte-unchanged): sha256 AFTER = e16c5b5d2db38d2008db7d17f09c9defe3b6efca9ca062efeb922980527bf460
+  ASSERT shared .git/config byte-identical before==after: PASS
+CASE 3 (git config --file /tmp/... allowed): argv=[git config --file /tmp/leaf-clone-xyz/.git/config core.bare true] cwd=[/home/reuben/workspace/reposix] hook_exit=0
+  ASSERT exit==0 ALLOW (--file /tmp redirect): PASS
+----
+ALL ASSERTS PASSED
+--- STDERR ---

@@ -1,0 +1,22 @@
+argv: scenario
+env_keys: AI_AGENT,BOTTOKEN,CLAUDECODE,CLAUDE_CODE_CHILD_SESSION,CLAUDE_CODE_ENTRYPOINT,CLAUDE_CODE_EXECPATH,CLAUDE_CODE_SESSION_ID,CLAUDE_EFFORT,COLORTERM,COREPACK_ENABLE_AUTO_PIN,DBUS_SESSION_BUS_ADDRESS,DISPLAY,GIT_EDITOR,GOOSE_DISABLE_KEYRING,HERDR_ENV,HERDR_PANE_ID,HERDR_SOCKET_PATH,HERDR_TAB_ID,HERDR_WORKSPACE_ID,HOME,HOSTTYPE,JAVA_HOME,LANG,LESS,LOGNAME,LSCOLORS,LS_COLORS,NAME,NVM_BIN,NVM_CD_FLAGS,NVM_DIR,NVM_INC,NoDefaultCurrentDirectoryInExePath,OLDPWD,OPENWEATHERTOKEN,PAGER,PATH,PULSE_SERVER,PWD,SHELL,SHLVL,SPARK_HOME,SSH_AGENT_PID,SSH_AUTH_SOCK,TERM,UNSET_ANTHROPIC_API_KEY,USER,WAYLAND_DISPLAY,WSL2_GUI_APPS_ENABLED,WSLENV,WSL_DISTRO_NAME,WSL_INTEROP,WT_PROFILE_ID,WT_SESSION,XDG_RUNTIME_DIR,ZSH,_
+cwd: /home/reuben/workspace/reposix
+exit_code: 0
+--- STDOUT ---
+CASE 1 (fixture commit vs shared): argv=[git -c user.email=t@t commit -m x] cwd=[/home/reuben/workspace/reposix] hook_exit=2
+  teaching_stderr: BLOCKED (leaf-isolation guard A — fixture-identity reject): this git command carries the throwaway fixture identity 't@t' and would run against the SHARED repo at /home/reuben/workspace/reposix.
+WHY: the fixture identity 't <t@t>' must NEVER reach shared history or origin — S-260707-pr-08: a fixture-identity leaf corrupted the shared repo (flipped core.bare=true) for every concurrent agent.
+RECOVERY: run this inside a throwaway /tmp clone in the SAME Bash invocation, under a REAL identity, e.g.:
+  git clone "/home/reuben/workspace/reposix" /tmp/leaf-$$ && cd /tmp/leaf-$$ && <your command>
+Doctrine: ORCHESTRATION.md § "Leaf isolation for reposix/sim/git test setup (HARD STOP)".
+  ASSERT exit==2 BLOCK: PASS
+  ASSERT stderr teaches rule+why+recovery: PASS
+CASE 2 (pre-commit backstop in /tmp clone /tmp/fleet-tat-verify-175524-28823): fixture_commit_rc=1 real_commit_rc=0
+  pre-commit_reject_stderr: pre-commit: BLOCKED — commit identity carries the throwaway fixture token '<t@t>'.
+  ASSERT fixture commit REJECTED (non-zero): PASS
+  ASSERT real-identity commit ALLOWED (0): PASS
+CASE 3 (real-identity commit vs shared, no false-positive): argv=[git -c user.email=dev@example.com commit -m x] cwd=[/home/reuben/workspace/reposix] hook_exit=0
+  ASSERT exit==0 ALLOW: PASS
+----
+ALL ASSERTS PASSED
+--- STDERR ---
