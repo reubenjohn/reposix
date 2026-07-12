@@ -9,10 +9,13 @@
 # THREE fail-closed guards, first-match-blocks (exit 2 = BLOCK, matching cargo-mutex.sh):
 #   A guard_fixture_identity   — block a fixture-identity (`t@t`) git commit/-c/env against
 #                                the SHARED tree; allow it in a /tmp clone.
-#   B guard_leaf_setup_location — block reposix init|attach|sync / sim-seed against the
-#                                SHARED tree with no same-invocation /tmp redirect.
+#   B guard_leaf_setup_location — block reposix init|attach|sync / sim-seed (incl. the
+#                                `cargo run … -p reposix-sim` + `cargo run … -- seed`
+#                                spellings) / bare|`--bare` `git init` against the SHARED
+#                                tree with no same-invocation /tmp redirect.
 #   C guard_shared_config_write — block a `git config` WRITE of core.bare|user.email|
-#                                user.name targeting the SHARED .git/config.
+#                                user.name targeting the SHARED .git/config (reads —
+#                                --get*/--list/-l and trailing redirect/pipe/chain — allow).
 #
 # HARDENING (v0.14.0 P102 adversarial fix lane — closes the evasion vectors an
 # APPROVE-WITH-NITS code-review drove live):
@@ -29,12 +32,17 @@
 #   * Fail-CLOSED parse: a non-empty but UNPARSEABLE tool payload BLOCKs (exit 2) rather
 #     than falling through to allow. An empty payload (nothing to inspect) still passes.
 #
-# COVERAGE BOUNDARY (documented honestly, per D2 raise-list): this PreToolUse hook fires
-# ONLY on the Claude Code Bash *tool*. A git/reposix write spawned by a subprocess or a
-# shell script (not the tool directly) BYPASSES it. The `.githooks/pre-commit` git-native
-# backstop catches fixture-identity COMMITS in the shared repo even on that bypass path,
-# but NOT `reposix init` / `git config` non-commit writes. A binary-side / git-alias
-# non-tool backstop for guards B/C is filed as a GOOD-TO-HAVE (v0.14.0), not built here.
+# COVERAGE BOUNDARY (documented honestly, per D2 raise-list — still real, do NOT delete):
+# this PreToolUse hook fires ONLY on the Claude Code Bash *tool*. A git/reposix write
+# spawned by a subprocess, a git worktree created INSIDE the shared repo (not /tmp), or a
+# shell script (not the tool directly) BYPASSES it — this is exactly how the 2026-07-12
+# live D2 recurrence corrupted the shared tree AFTER P102 shipped GREEN (see
+# .planning/milestones/v0.14.0-phases/SURPRISES-INTAKE.md, that date). The
+# `.githooks/pre-commit` git-native backstop catches fixture-identity COMMITS in the shared
+# repo even on that bypass path, but NOT `reposix init` / `git config` / `git init`
+# non-commit writes. THE REAL CUT is a binary-side refusal in `reposix init` / sim-seed
+# itself (only that layer stops a non-Bash-tool subprocess) — scoped for v0.14.0 Wave 2,
+# NOT built here. This hook is the Bash-tool-layer defense-in-depth, not the whole fix.
 #
 # HARD CONSTRAINT (ROADMAP SC2 / T-102-04): this mechanism invokes `git worktree remove
 # --force` NOWHERE — that command is itself a corruption vector.
@@ -208,15 +216,22 @@ $RECOVERY_HINT"
 }
 
 # --- Guard B: leaf-setup location --------------------------------------------
-# BLOCK a leaf-SETUP verb (`reposix init|attach|sync`, sim-seed / reposix-sim) when the
-# effective location is the shared tree with no same-invocation /tmp redirect. The setup
-# command NEVER runs — PreToolUse blocks pre-execution. (D2-LEAF-ISOLATION-01)
+# BLOCK a leaf-SETUP verb (`reposix init|attach|sync`, sim-seed, and a bare/`--bare`
+# `git init`) when the effective location is the shared tree with no same-invocation /tmp
+# redirect. The setup command NEVER runs — PreToolUse blocks pre-execution.
+# (D2-LEAF-ISOLATION-01)
 #
-# Canonical-form coverage (P102 hardening): the verb is caught whether spelled bare
+# Canonical-form coverage (P102 + D2 re-seal): the verb is caught whether spelled bare
 # (`reposix init`), path-suffixed (`/usr/bin/reposix init`, `./target/debug/reposix init`),
 # or via cargo (`cargo run -p reposix-cli -- init`). The `([^[:space:]]*/)?` optional path
 # prefix absorbs an absolute/relative binary path; the cargo branch matches
-# `cargo run … -- <verb>`. sim-seed is caught bare or path-suffixed.
+# `cargo run … -- <verb>`. sim-seed coverage (HONEST scope): bare/path-suffixed
+# `reposix-sim`, PLUS the cargo spellings `cargo run … -p reposix-sim` and
+# `cargo run … -- seed` (D2 defect C — the cargo spelling previously slipped because
+# `reposix-sim` sits at an ARGUMENT position, not command position, under `cargo run`).
+# `git init` coverage (D2 defect B): a bare `git init` or `git init --bare` at a command
+# position in the shared tree reaches the founding core.bare=true end-state directly and is
+# now blocked; `cd /tmp/x && git init --bare` stays ALLOWed (effective target under /tmp).
 guard_leaf_setup_location() {
   local verb=""
   if   at_command_position '([^[:space:]]*/)?reposix[[:space:]]+init';   then verb="reposix init"
@@ -226,6 +241,9 @@ guard_leaf_setup_location() {
   elif at_command_position 'cargo[[:space:]]+run[^;&|]*--[[:space:]]+attach'; then verb="cargo run -- attach"
   elif at_command_position 'cargo[[:space:]]+run[^;&|]*--[[:space:]]+sync';   then verb="cargo run -- sync"
   elif at_command_position '([^[:space:]]*/)?reposix-sim';               then verb="sim-seed (reposix-sim)"
+  elif at_command_position 'cargo[[:space:]]+run[^;&|]*-p[[:space:]]+reposix-sim'; then verb="sim-seed (cargo run -p reposix-sim)"
+  elif at_command_position 'cargo[[:space:]]+run[^;&|]*--[[:space:]]+seed';        then verb="sim-seed (cargo run -- seed)"
+  elif at_command_position '([^[:space:]]*/)?git[[:space:]]+init';        then verb="git init"
   fi
   [ -z "$verb" ] && return 0
   is_safe && return 0
@@ -254,14 +272,31 @@ guard_shared_config_write() {
   esac
   [ -z "$key" ] && return 0
   # READ vs WRITE discrimination (load-bearing — a bare `git config <key>` is a READ that
-  # PRINTS the value, not a mutation, and must NOT be blocked). A WRITE is either:
-  #   (a) an explicit write flag (--unset/--unset-all/--add/--replace-all) on the key, OR
-  #   (b) the key IMMEDIATELY followed by a value token (whitespace then a non-flag char).
-  # `git config user.email` (read) → key at segment end, no value → NOT a write → allow.
-  # `git config user.email t@t` (write) → key + space + 't' → write → candidate for block.
+  # PRINTS the value, not a mutation, and must NOT be blocked). Robust discrimination:
+  #   1. Isolate the `git config` command SEGMENT: cut the command at the FIRST shell
+  #      separator (`;`/`&&`/`||`/`|`/`&`) and strip I/O redirections, so a trailing
+  #      redirect/pipe/chain token AFTER the key (`git config --get core.bare 2>/dev/null`,
+  #      `... && echo ok`, `... | grep`) can never be mistaken for a value token. This is
+  #      the exact config-read false-positive that live-blocked coordinators (D2 re-seal).
+  #   2. READ (→ allow) whenever the segment carries an explicit read flag: --get,
+  #      --get-all, --get-regexp, --get-urlmatch, --list, or -l.
+  #   3. Otherwise a WRITE is either (a) an explicit write flag
+  #      (--unset/--unset-all/--add/--replace-all) on the key, or (b) the key IMMEDIATELY
+  #      followed by a value token (whitespace then a non-flag char) WITHIN the segment.
+  #   `git config user.email` (read) → key at segment end, no value → NOT a write → allow.
+  #   `git config user.email t@t` (write) → key + space + 't' → write → candidate for block.
+  local seg
+  seg=$(printf '%s' "$cmd" | sed -E 's/(\|\||&&|;|\||&)/\n/g' | grep -E 'git[[:space:]]+config' | head -1)
+  [ -z "$seg" ] && seg="$cmd"
+  # Strip I/O redirections (`2>/dev/null`, `>out`, `<in`, `>>log`) so their target path
+  # tokens do not read as a config value token.
+  seg=$(printf '%s' "$seg" | sed -E 's/[0-9]*[<>]+[&]?[^[:space:]]*//g')
+  # READ flag anywhere in the segment → allow (explicit read intent, never a mutation).
+  printf '%s' "$seg" | grep -Eq -- '(^|[[:space:]])--(get|get-all|get-regexp|get-urlmatch|list)([[:space:]]|=|$)' && return 0
+  printf '%s' "$seg" | grep -Eq -- '(^|[[:space:]])-l([[:space:]]|$)' && return 0
   local is_write=1
-  printf '%s' "$cmd" | grep -Eq -- "git config[^;&|]*--(unset|unset-all|add|replace-all)[^;&|]*(core\.bare|user\.email|user\.name)" && is_write=0
-  printf '%s' "$cmd" | grep -Eq -- "(core\.bare|user\.email|user\.name)[[:space:]]+[^[:space:]-]" && is_write=0
+  printf '%s' "$seg" | grep -Eq -- "(^|[[:space:]])--(unset|unset-all|add|replace-all)([[:space:]]|=|$)" && is_write=0
+  printf '%s' "$seg" | grep -Eq -- "(core\.bare|user\.email|user\.name)[[:space:]]+[^[:space:]-]" && is_write=0
   [ "$is_write" = 0 ] || return 0
   is_safe && return 0
   block "BLOCKED (leaf-isolation guard C — shared-config write): a 'git config' WRITE of '$key' targets the SHARED .git/config ($SHARED_ROOT/.git/config).

@@ -8,6 +8,8 @@
 #   3. fail-closed: undeterminable effective cwd            -> exit 2 (default-deny)
 #   4. stderr teaches the /tmp-clone rule + cites ORCHESTRATION.md § Leaf isolation
 #   5. the hook mechanism invokes `git worktree remove --force` NOWHERE (comment-filtered)
+#   9-11 (D2 re-seal 2026-07-12): guard-C config-read false-positive (read+trailing token
+#        ALLOW, real write BLOCK), git-init-bare gap (defect B), cargo sim-seed gap (defect C).
 # Emits a transcript via the shared helper. Exits 0 iff ALL asserts pass. Drives the hook
 # only (no shared-repo mutation; the setup verb never executes because the hook blocks it).
 set -uo pipefail
@@ -100,6 +102,38 @@ scenario() {
   wt_count=$(grep -v '^[[:space:]]*#' "$HOOK" | grep -c 'worktree remove --force' || true)
   printf 'CASE 8 (no corruption-vector): grep `git worktree remove --force` (comment-filtered) count=%s\n' "$wt_count"
   if [ "$wt_count" = 0 ]; then echo "  ASSERT zero worktree-remove-force occurrences: PASS"; else echo "  ASSERT zero worktree-remove-force: FAIL"; fails=$((fails+1)); fi
+
+  # --- Case 9 (D2 re-seal 2026-07-12): guard-C config-read false-positive fix -----
+  # Guard C previously misclassified a config READ as a WRITE whenever the guarded key was
+  # followed by ANY trailing token (a redirect, `&&`, `|`), live-BLOCKing coordinators that
+  # merely read core.bare/user.email. A trailing redirect/pipe/chain must now ALLOW; a real
+  # value token after the key must still BLOCK (no over-correction into permitting writes).
+  drive_hook 'git config --get core.bare 2>/dev/null' "$shared"
+  printf 'CASE 9a (config READ --get + trailing redirect -> ALLOW): hook_exit=%s\n' "$HOOK_RC"
+  if [ "$HOOK_RC" = 0 ]; then echo "  ASSERT read+redirect exit==0 ALLOW: PASS"; else echo "  ASSERT read+redirect ALLOW: FAIL"; fails=$((fails+1)); fi
+  drive_hook 'git config --get user.email 2>/dev/null || echo x' "$shared"
+  printf 'CASE 9b (config READ --get + redirect + `|| echo` chain -> ALLOW; exact coordinator-blocking regression): hook_exit=%s\n' "$HOOK_RC"
+  if [ "$HOOK_RC" = 0 ]; then echo "  ASSERT read+chain exit==0 ALLOW: PASS"; else echo "  ASSERT read+chain ALLOW: FAIL"; fails=$((fails+1)); fi
+  drive_hook 'git config core.bare true' "$shared"
+  printf 'CASE 9c (config WRITE core.bare=true -> BLOCK; guard against over-correcting into allowing writes): hook_exit=%s\n' "$HOOK_RC"
+  if [ "$HOOK_RC" = 2 ]; then echo "  ASSERT config-write exit==2 BLOCK: PASS"; else echo "  ASSERT config-write BLOCK: FAIL"; fails=$((fails+1)); fi
+
+  # --- Case 10 (D2 re-seal): git-init-bare gap (defect B) -----------------------
+  # A bare/`--bare` `git init` in the shared tree reaches core.bare=true directly and must
+  # BLOCK; the sanctioned /tmp redirect must ALLOW.
+  drive_hook 'git init --bare' "$shared"
+  printf 'CASE 10a (git init --bare in shared -> BLOCK): hook_exit=%s\n' "$HOOK_RC"
+  if [ "$HOOK_RC" = 2 ]; then echo "  ASSERT git-init-bare shared exit==2 BLOCK: PASS"; else echo "  ASSERT git-init-bare shared BLOCK: FAIL"; fails=$((fails+1)); fi
+  drive_hook 'cd /tmp/leaf-x && git init --bare' "$shared"
+  printf 'CASE 10b (git init --bare under /tmp -> ALLOW): hook_exit=%s\n' "$HOOK_RC"
+  if [ "$HOOK_RC" = 0 ]; then echo "  ASSERT git-init-bare /tmp exit==0 ALLOW: PASS"; else echo "  ASSERT git-init-bare /tmp ALLOW: FAIL"; fails=$((fails+1)); fi
+
+  # --- Case 11 (D2 re-seal): cargo sim-seed spelling gap (defect C) --------------
+  # `cargo run -p reposix-sim -- seed …` previously slipped guard B (reposix-sim sat at an
+  # ARGUMENT position under cargo, not command position). It must now BLOCK in the shared tree.
+  drive_hook 'cargo run -p reposix-sim -- seed issues' "$shared"
+  printf 'CASE 11 (cargo run -p reposix-sim -- seed in shared -> BLOCK): hook_exit=%s\n' "$HOOK_RC"
+  if [ "$HOOK_RC" = 2 ]; then echo "  ASSERT cargo-sim-seed shared exit==2 BLOCK: PASS"; else echo "  ASSERT cargo-sim-seed shared BLOCK: FAIL"; fails=$((fails+1)); fi
 
   echo "----"
   if [ "$fails" = 0 ]; then echo "ALL ASSERTS PASSED"; return 0; else echo "ASSERTS FAILED: $fails"; return 1; fi

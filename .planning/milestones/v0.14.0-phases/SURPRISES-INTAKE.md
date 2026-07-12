@@ -348,3 +348,50 @@ git failure and asserts the fetch errors rather than emitting a parentless overl
 cargo window; file rather than eager-fix.
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-12 | discovered-by: D2 re-seal Wave 1 (shell/planning lane) | severity: HIGH
+
+**Title:** live D2 repro — post-P102 shared-tree corruption via subprocess/worktree bypass.
+
+**What:** A live recurrence of the founding S-260707-pr-08 corruption class occurred
+AFTER P102 shipped GREEN. A P106 leaf subagent created a git worktree INSIDE
+`.claude/worktrees/agent-a98058321e3f649a7` of the SHARED repo (not a `/tmp` clone) and ran
+`reposix init` / sim-seed via a path that does NOT go through the Claude Code Bash tool, so
+the PreToolUse leaf-isolation hook (Bash-tool-only — coverage boundary documented at
+`.claude/hooks/leaf-isolation-guard.sh` header, "COVERAGE BOUNDARY") never fired. Symptoms:
+shared `.git/config` `core.bare=true`, `origin` repointed to the sim at
+`127.0.0.1:7988`, `HEAD` thrashed to `e18df81`, and `refs/reposix/*` polluted. The shared
+tree was repaired at commit `9d78d62`. This is a NEW recurrence, distinct from the founding
+`S-260707-pr-08` — same corruption end-state, different bypass path (non-Bash-tool
+subprocess + in-shared-repo worktree rather than a "forgot-to-cd" Bash-tool leaf).
+
+**Guard defects found + FIXED in this Wave-1 shell/planning lane** (Bash-tool-layer
+defense-in-depth, `.claude/hooks/leaf-isolation-guard.sh`; regression asserts in
+`quality/gates/agent-ux/fleet-safety-leaf-isolation-enforce.sh` Cases 9-11):
+- **(A) config-read false-positive** — Guard C misclassified a `git config` READ as a WRITE
+  whenever the guarded key was followed by ANY trailing token (`2>/dev/null`, `&& echo`,
+  `| grep`), LIVE-BLOCKing coordinators that merely read `core.bare`/`user.email`. Fixed:
+  read-flag detection (`--get*`/`--list`/`-l`) + segment isolation (cut at first shell
+  separator, strip redirections) before the value-token write-heuristic. Real writes
+  (`git config core.bare true`, `--unset`, `--replace-all`) still BLOCK.
+- **(B) git-init-bare gap** — bare/`--bare` `git init` in the shared tree (the founding
+  `core.bare=true` end-state) was not blocked by any guard. Fixed: added to Guard B.
+- **(C) cargo sim-seed spelling gap** — `cargo run -p reposix-sim -- seed …` slipped Guard B
+  (`reposix-sim` sits at an ARGUMENT position under `cargo run`, not command position).
+  Fixed: added `cargo run … -p reposix-sim` + `cargo run … -- seed` to Guard B.
+
+**Why the hook fix is NOT the whole cut:** the hook is Bash-tool-only by construction. The
+live repro bypassed it entirely (subprocess + in-repo worktree). The hook hardening closes
+the Bash-tool spellings, but a subprocess bypass remains reachable — the honest coverage
+boundary is preserved in the hook header, not deleted.
+
+**THE REAL CUT (follow-up — v0.14.0 Wave 2):** a BINARY-SIDE refusal in `reposix init` /
+sim-seed itself, since only that layer can stop a subprocess bypass. Sketch: `reposix init`
+(NOT `attach` — attach legitimately adopts an existing checkout) refuses when its effective
+target would nest inside the reposix SOURCE checkout / shared dev tree, WITHOUT breaking the
+sanctioned `/tmp` dark-factory flow. Pair with a self-safety check that refuses to operate
+when the effective `.git` is the shared repo's object store (worktree-shared config detected).
+
+**STATUS:** OPEN
