@@ -263,10 +263,11 @@ it is no longer a prerequisite for recovery.
 > both aborted the rebase with
 > `warning: Not updating refs/reposix/origin/main (new tip … does not contain …)` and
 > `fatal: error while running fast-import` <!-- banned-words: ok --> because the cache
-> rebuilt a non-descendant "Sync from REST snapshot" commit. The two-layer fix: the
-> fetch fast-import now chains onto the tracking tip inside a private import ref
-> namespace (so the new tip *does* contain the old one), and it emits a full-rebuild
-> `deleteall` so SoT deletions propagate instead of resurrecting dropped records.
+> rebuilt a "Sync from REST snapshot" commit that was not a descendant of your tracking
+> tip. The two-layer fix: the fetch now rebuilds that snapshot *as* a descendant of your
+> current tip inside a private ref namespace (so the new tip *does* contain the old one
+> and the rebase fast-forwards), and it does a full rebuild so an SoT deletion actually
+> disappears instead of resurrecting a dropped record.
 > Regression-guarded by `quality/gates/agent-ux/rebase-recovery-reconciles.sh`
 > (catalog row `agent-ux/rebase-recovery-reconciles`).
 
