@@ -48,7 +48,7 @@
       "id": "agent-ux/reposix-attach-against-vanilla-clone",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0 P79; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/phases/79-poc-reposix-attach-core/79-PLAN-OVERVIEW.md \u00a7 'New GOOD-TO-HAVES entry'.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0 P79; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/phases/79-poc-reposix-attach-core/79-PLAN-OVERVIEW.md § 'New GOOD-TO-HAVES entry'.",
       "sources": [
         "crates/reposix-cli/src/attach.rs",
         "crates/reposix-cli/tests/attach.rs::attach_against_vanilla_clone_sets_partial_clone",
@@ -84,7 +84,7 @@
       "id": "agent-ux/mirror-refs-write-on-success",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-cache/src/mirror_refs.rs",
         "crates/reposix-remote/src/main.rs::handle_export (success branch)",
@@ -121,7 +121,7 @@
       "id": "agent-ux/mirror-refs-readable-by-vanilla-fetch",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-cache/src/mirror_refs.rs",
         "crates/reposix-remote/src/main.rs::handle_export (success branch)",
@@ -148,7 +148,7 @@
       "last_verified": "2026-05-01T08:58:35Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: crates/reposix-remote/src/stateless_connect.rs advertisement regressed OR transfer.hideRefs setup at crates/reposix-cache/src/cache.rs began hiding refs/mirrors/* \u2014 check whether vanilla-clone's for-each-ref returns the refs",
+      "owner_hint": "if RED: crates/reposix-remote/src/stateless_connect.rs advertisement regressed OR transfer.hideRefs setup at crates/reposix-cache/src/cache.rs began hiding refs/mirrors/* — check whether vanilla-clone's for-each-ref returns the refs",
       "waiver": null,
       "cadences": [
         "pre-pr"
@@ -158,7 +158,7 @@
       "id": "agent-ux/mirror-refs-cited-in-reject-hint",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/main.rs::handle_export (conflict reject branch)",
         "crates/reposix-cache/src/mirror_refs.rs::Cache::read_mirror_synced_at",
@@ -195,7 +195,7 @@
       "id": "agent-ux/sync-reconcile-subcommand",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-cli/src/main.rs (Sync subcommand)",
         "crates/reposix-cli/src/sync.rs",
@@ -231,12 +231,12 @@
       "id": "agent-ux/bus-url-parses-query-param-form",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/bus_url.rs::parse",
         "crates/reposix-remote/tests/bus_url.rs::parses_query_param_form_round_trip",
         "crates/reposix-remote/tests/bus_url.rs::route_single_for_bare_reposix_url",
-        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (\u00a7 3 \u2014 bus URL form)",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (§ 3 — bus URL form)",
         ".planning/research/v0.13.0-dvcs/decisions.md (Q3.3 RATIFIED ?mirror= form)",
         ".planning/REQUIREMENTS.md (DVCS-BUS-URL-01)"
       ],
@@ -269,7 +269,7 @@
       "id": "agent-ux/bus-url-rejects-plus-delimited",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/bus_url.rs::parse",
         "crates/reposix-remote/tests/bus_url.rs::rejects_plus_delimited_bus_url",
@@ -307,11 +307,11 @@
       "id": "agent-ux/bus-precheck-a-mirror-drift-emits-fetch-first",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/bus_handler.rs::precheck_mirror_drift",
         "crates/reposix-remote/tests/bus_precheck_a.rs::bus_precheck_a_emits_fetch_first_on_drift",
-        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (\u00a7 3 step 2 \u2014 PRECHECK A)",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (§ 3 step 2 — PRECHECK A)",
         ".planning/REQUIREMENTS.md (DVCS-BUS-PRECHECK-01)"
       ],
       "command": "bash quality/gates/agent-ux/bus-precheck-a-mirror-drift-emits-fetch-first.sh",
@@ -344,12 +344,12 @@
       "id": "agent-ux/bus-precheck-b-sot-drift-emits-fetch-first",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/precheck.rs::precheck_sot_drift_any",
         "crates/reposix-remote/src/bus_handler.rs::handle_bus_export",
         "crates/reposix-remote/tests/bus_precheck_b.rs::bus_precheck_b_emits_fetch_first_on_sot_drift",
-        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (\u00a7 3 step 3 \u2014 PRECHECK B)",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (§ 3 step 3 — PRECHECK B)",
         ".planning/REQUIREMENTS.md (DVCS-BUS-PRECHECK-02)"
       ],
       "command": "bash quality/gates/agent-ux/bus-precheck-b-sot-drift-emits-fetch-first.sh",
@@ -381,7 +381,7 @@
       "id": "agent-ux/bus-fetch-not-advertised",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/main.rs (capabilities arm)",
         "crates/reposix-remote/tests/bus_capabilities.rs::bus_url_omits_stateless_connect",
@@ -418,7 +418,7 @@
       "id": "agent-ux/bus-no-remote-configured-error",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/bus_handler.rs::resolve_mirror_remote_name",
         "crates/reposix-remote/tests/bus_precheck_a.rs::bus_no_remote_configured_emits_q35_hint",
@@ -455,12 +455,12 @@
       "id": "agent-ux/bus-write-sot-first-success",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/bus_handler.rs::handle_bus_export",
         "crates/reposix-remote/src/write_loop.rs::apply_writes",
         "crates/reposix-remote/tests/bus_write_happy.rs::happy_path_writes_both_refs_and_acks_ok",
-        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (\u00a7 3 \u2014 bus algorithm steps 4-9)",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (§ 3 — bus algorithm steps 4-9)",
         ".planning/research/v0.13.0-dvcs/decisions.md (Q2.3 RATIFIED both refs on success)",
         ".planning/REQUIREMENTS.md (DVCS-BUS-WRITE-01 + DVCS-BUS-WRITE-03)"
       ],
@@ -496,8 +496,8 @@
       "id": "agent-ux/bus-write-mirror-fail-returns-ok",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
-      "comment": "Row stays FAIL through 83-01 close; flips PASS at 83-02 T04 audit-completeness landing. pre-pr cadence runners between phases SHOULD NOT flag this as a phantom failure \u2014 the FAIL is by design until 83-02's bus_write_mirror_fail.rs test ships.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "comment": "Row stays FAIL through 83-01 close; flips PASS at 83-02 T04 audit-completeness landing. pre-pr cadence runners between phases SHOULD NOT flag this as a phantom failure — the FAIL is by design until 83-02's bus_write_mirror_fail.rs test ships.",
       "sources": [
         "crates/reposix-remote/src/bus_handler.rs::handle_bus_export",
         "crates/reposix-remote/src/bus_handler.rs::push_mirror",
@@ -537,7 +537,7 @@
       "id": "agent-ux/bus-write-no-helper-retry",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "comment": "P92 SC5 (RBF-B-04) upgrade contract, minted NOT-VERIFIED at phase scaffold: the current verifier is a SOURCE-GREP (asserts absence of retry-looking tokens in bus_handler.rs), which cannot distinguish 'no retry construct was ever written' from 'a retry construct exists but doesn't match this exact regex'. The upgrade replaces it with a BEHAVIORAL assertion: fault-inject a mirror-push failure and assert the helper's OWN process makes exactly ONE `git push` attempt against the mirror (e.g. via a spy/counting wrapper or a mock mirror remote that counts invocations), not zero-vs-nonzero grep hits. Second executor's job (this phase); row reset to NOT-VERIFIED at P92 catalog-first per the catalog-first rule (quality/CLAUDE.md) so the verifier subagent grades against the NEW contract, not the old PASS.",
       "sources": [
         "crates/reposix-remote/src/bus_handler.rs::push_mirror",
@@ -577,7 +577,7 @@
       "id": "agent-ux/bus-write-no-mirror-remote-still-fails",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "crates/reposix-remote/src/bus_handler.rs::resolve_mirror_remote_name",
         "crates/reposix-remote/src/bus_handler.rs (P82 STEP 0 path)",
@@ -591,7 +591,7 @@
           "bash quality/gates/agent-ux/bus-write-no-mirror-remote-still-fails.sh exits 0",
           "bus URL with no local `git remote` for the mirror still emits verbatim Q3.5 hint after P83 lands",
           "NO auto-mutation of .git/config (zero new remotes added)",
-          "NO stdin read (regression guarantee \u2014 helper bails before parse_export_stream)",
+          "NO stdin read (regression guarantee — helper bails before parse_export_stream)",
           "audit_events_cache helper_push_started count: 0"
         ]
       },
@@ -616,7 +616,7 @@
       "id": "agent-ux/bus-write-fault-injection-mirror-fail",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "comment": "Row stays FAIL through 83-02 T01-T03; flips PASS at 83-02 T04 catalog-flip BEFORE the per-phase push.",
       "sources": [
         "crates/reposix-remote/src/bus_handler.rs::push_mirror",
@@ -659,7 +659,7 @@
       "id": "agent-ux/bus-write-fault-injection-sot-mid-stream",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "comment": "Row stays FAIL through 83-02 T01-T03; flips PASS at 83-02 T04 catalog-flip BEFORE the per-phase push.",
       "sources": [
         "crates/reposix-remote/src/bus_handler.rs::handle_bus_export (apply_writes SotPartialFail branch)",
@@ -701,7 +701,7 @@
       "id": "agent-ux/bus-write-fault-injection-post-precheck-409",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "comment": "Row stays FAIL through 83-02 T01-T03; flips PASS at 83-02 T04 catalog-flip BEFORE the per-phase push.",
       "sources": [
         "crates/reposix-remote/src/bus_handler.rs::handle_bus_export",
@@ -719,7 +719,7 @@
           "stderr names the failing record id (D-09 / Pitfall 3 documented behavior)",
           "audit_events_cache::helper_push_accepted count == 0",
           "mirror baseline preserved (no mirror push attempted)",
-          "wiremock saw exactly 1 PATCH (the one that 409'd) AND exactly 2 list_changed_since calls (PRECHECK B + L1 precheck \u2014 both observe Stable)"
+          "wiremock saw exactly 1 PATCH (the one that 409'd) AND exactly 2 list_changed_since calls (PRECHECK B + L1 precheck — both observe Stable)"
         ]
       },
       "verifier": {
@@ -743,7 +743,7 @@
       "id": "agent-ux/bus-write-audit-completeness",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "comment": "P92 SC2+SC3 (RBF-B-02, RBF-B-03) upgrade contract, minted NOT-VERIFIED at phase scaffold: prior state (PASS through 83-02) asserted the `audit_events` (backend) layer via wiremock's REQUEST LOG as a proxy for a real audit table -- a metaphor, not a real dual-table query (see the prior comment + SURPRISES-INTAKE 'sim audit table not directly queryable in test scope'). The upgrade replaces the wiremock-proxy assertion with a REAL query against the sim's own `audit_events` SQLite table (spin a real `reposix-sim` process with a persistent `--db`, as `real-git-push-e2e.sh` / `agent-ux/real-git-push-e2e` already does for its own audit assertions -- that pattern is the template) so the OP-3 dual-table claim is real, not metaphorical. Second executor's job (this phase); row reset to NOT-VERIFIED at P92 catalog-first per the catalog-first rule (quality/CLAUDE.md) so the verifier subagent grades against the NEW contract, not the old PASS.",
       "sources": [
         "crates/reposix-cache/src/audit.rs (cache-internal audit ops)",
@@ -758,7 +758,7 @@
       "expected": {
         "asserts": [
           "bash quality/gates/agent-ux/bus-write-audit-completeness.sh exits 0",
-          "happy-path bus push writes ALL expected rows to BOTH audit layers per RESEARCH.md \u00a7 'Audit Completeness Contract'",
+          "happy-path bus push writes ALL expected rows to BOTH audit layers per RESEARCH.md § 'Audit Completeness Contract'",
           "audit_events_cache: helper_backend_instantiated (>=1) + helper_push_started (1) + helper_push_accepted (1) + mirror_sync_written (1)",
           "audit_events (REAL sim SQLite table, queried directly via sqlite3 -- NOT a wiremock request-log proxy): per-record mutation rows (PATCH/POST/DELETE) match the executed actions"
         ]
@@ -787,11 +787,11 @@
       "id": "agent-ux/webhook-trigger-dispatch",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "docs/guides/dvcs-mirror-setup-template.yml",
         "reubenjohn/reposix-tokenworld-mirror:.github/workflows/reposix-mirror-sync.yml (live)",
-        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (\u00a7 Webhook-driven mirror sync \u2014 verbatim YAML skeleton)",
+        ".planning/research/v0.13.0-dvcs/architecture-sketch.md (§ Webhook-driven mirror sync — verbatim YAML skeleton)",
         ".planning/research/v0.13.0-dvcs/decisions.md (Q4.1/Q4.2/Q4.3)",
         ".planning/REQUIREMENTS.md (DVCS-WEBHOOK-01)"
       ],
@@ -826,10 +826,10 @@
       "id": "agent-ux/webhook-cron-fallback",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "docs/guides/dvcs-mirror-setup-template.yml",
-        ".planning/ROADMAP.md (Phase 84 SC1 \u2014 cron */30 safety net)",
+        ".planning/ROADMAP.md (Phase 84 SC1 — cron */30 safety net)",
         ".planning/research/v0.13.0-dvcs/decisions.md (Q4.1 cron literal)",
         ".planning/phases/84-webhook-mirror-sync/84-PLAN-OVERVIEW.md (D-01 concurrency, D-04 fetch-depth, D-06 literal cron)"
       ],
@@ -863,10 +863,10 @@
       "id": "agent-ux/webhook-force-with-lease-race",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "docs/guides/dvcs-mirror-setup-template.yml (push-with-lease step)",
-        ".planning/phases/84-webhook-mirror-sync/84-RESEARCH.md (\u00a7 '--force-with-lease' Semantics)",
+        ".planning/phases/84-webhook-mirror-sync/84-RESEARCH.md (§ '--force-with-lease' Semantics)",
         ".planning/REQUIREMENTS.md (DVCS-WEBHOOK-02)"
       ],
       "command": "bash quality/gates/agent-ux/webhook-force-with-lease-race.sh",
@@ -899,7 +899,7 @@
       "id": "agent-ux/webhook-first-run-empty-mirror",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "docs/guides/dvcs-mirror-setup-template.yml (first-run branch in push step)",
         ".planning/research/v0.13.0-dvcs/decisions.md (Q4.3 first-run handling)",
@@ -935,7 +935,7 @@
       "id": "agent-ux/webhook-backends-without-webhooks",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "docs/guides/dvcs-mirror-setup-template.yml",
         ".planning/research/v0.13.0-dvcs/decisions.md (Q4.2 backends without webhooks)",
@@ -970,11 +970,11 @@
       "id": "agent-ux/webhook-latency-floor",
       "dimension": "agent-ux",
       "kind": "asset-exists",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
       "sources": [
         "quality/reports/verifications/perf/webhook-latency.json",
-        ".planning/phases/84-webhook-mirror-sync/84-RESEARCH.md (\u00a7 Latency Measurement Strategy)",
-        ".planning/ROADMAP.md (Phase 84 SC4 \u2014 falsifiable threshold p95 <= 120s)",
+        ".planning/phases/84-webhook-mirror-sync/84-RESEARCH.md (§ Latency Measurement Strategy)",
+        ".planning/ROADMAP.md (Phase 84 SC4 — falsifiable threshold p95 <= 120s)",
         ".planning/REQUIREMENTS.md (DVCS-WEBHOOK-04)"
       ],
       "command": "bash quality/gates/agent-ux/webhook-latency-floor.sh",
@@ -1006,30 +1006,30 @@
       "id": "agent-ux/dvcs-third-arm",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md \u00a7 GOOD-TO-HAVES-01.",
-      "comment": "Row stays FAIL through 86-01 T01 (catalog-first commit; harness stub returns exit 1); flips PASS at 86-01 T02 BEFORE the per-phase push. The TokenWorld arm is substrate-gap-deferred per .planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md (P84 entry: binstall + yanked-gix block end-to-end run against the live GH mirror until v0.13.x ships to crates.io). The sim arm closes the falsifiable threshold for P86; TokenWorld arm runs only when REPOSIX_DARK_FACTORY_REAL_TOKENWORLD=1 + creds + REPOSIX_ALLOWED_ORIGINS=https://reuben-john.atlassian.net. P90 90-03 (D90-10): kind flipped subagent-graded -> mechanical \u2014 the verifier (quality/gates/agent-ux/dark-factory.sh dvcs-third-arm) is pure deterministic shell asserts with zero claude/Task/rubric invocation anywhere in its call chain; `subagent-graded` was decorative (R2 \u00a7 B.1). P91 91-04 (RBF-A-05, closes p86 F13): the harness's work tree + bare mirror were EMPTY through 91-03 \u2014 the reconciliation assert was a shape-only regex (`grep -qE 'matched=[0-9]+ no_id=[0-9]+ ...'`) that a trivially-vacuous `matched=0 no_id=0 backend_deleted=0 mirror_lag=0` report satisfied. 91-04 seeds a non-empty work tree (ids 1-3 matched, one no-id file, id 4 backend-deleted via a real DELETE, ids 5/6 left as mirror-lag) and pushes it into the bare mirror as the vanilla-clone baseline BEFORE `reposix attach` runs; the assert now extracts each counter and requires matched>=1 AND at least 3 of the 4 non-zero. A separate isolated sub-invocation (fresh work tree + cache dir) proves the duplicate-id (case 4) hard-abort path too, without corrupting the main report. Confirmed by a real local run: `matched=3 no_id=1 backend_deleted=1 mirror_lag=2`, duplicate-id sub-invocation exits non-zero with `duplicate id` in output, harness exits 0.",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. See .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md § GOOD-TO-HAVES-01.",
+      "comment": "Row stays FAIL through 86-01 T01 (catalog-first commit; harness stub returns exit 1); flips PASS at 86-01 T02 BEFORE the per-phase push. The TokenWorld arm is substrate-gap-deferred per .planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md (P84 entry: binstall + yanked-gix block end-to-end run against the live GH mirror until v0.13.x ships to crates.io). The sim arm closes the falsifiable threshold for P86; TokenWorld arm runs only when REPOSIX_DARK_FACTORY_REAL_TOKENWORLD=1 + creds + REPOSIX_ALLOWED_ORIGINS=https://reuben-john.atlassian.net. P90 90-03 (D90-10): kind flipped subagent-graded -> mechanical — the verifier (quality/gates/agent-ux/dark-factory.sh dvcs-third-arm) is pure deterministic shell asserts with zero claude/Task/rubric invocation anywhere in its call chain; `subagent-graded` was decorative (R2 § B.1). P91 91-04 (RBF-A-05, closes p86 F13): the harness's work tree + bare mirror were EMPTY through 91-03 — the reconciliation assert was a shape-only regex (`grep -qE 'matched=[0-9]+ no_id=[0-9]+ ...'`) that a trivially-vacuous `matched=0 no_id=0 backend_deleted=0 mirror_lag=0` report satisfied. 91-04 seeds a non-empty work tree (ids 1-3 matched, one no-id file, id 4 backend-deleted via a real DELETE, ids 5/6 left as mirror-lag) and pushes it into the bare mirror as the vanilla-clone baseline BEFORE `reposix attach` runs; the assert now extracts each counter and requires matched>=1 AND at least 3 of the 4 non-zero. A separate isolated sub-invocation (fresh work tree + cache dir) proves the duplicate-id (case 4) hard-abort path too, without corrupting the main report. Confirmed by a real local run: `matched=3 no_id=1 backend_deleted=1 mirror_lag=2`, duplicate-id sub-invocation exits non-zero with `duplicate id` in output, harness exits 0.",
       "sources": [
         "quality/gates/agent-ux/dark-factory.sh",
         "crates/reposix-cli/src/attach.rs",
         "crates/reposix-remote/src/bus_url.rs",
         "crates/reposix-remote/src/bus_handler.rs",
         ".planning/REQUIREMENTS.md (DVCS-DARKFACTORY-01, DVCS-DARKFACTORY-02)",
-        ".planning/research/v0.13.0-dvcs/vision-and-mental-model.md (\u00a7 Success gates #6 \u2014 third-arm requirement)",
+        ".planning/research/v0.13.0-dvcs/vision-and-mental-model.md (§ Success gates #6 — third-arm requirement)",
         ".claude/skills/reposix-agent-flow/SKILL.md (dark-factory pattern reference)"
       ],
       "command": "bash quality/gates/agent-ux/dark-factory.sh dvcs-third-arm",
       "expected": {
         "asserts": [
           "bash quality/gates/agent-ux/dark-factory.sh dvcs-third-arm exits 0 against the local cargo workspace",
-          "shell-stub agent recovers `?mirror=` canonical bus URL form (Q3.3) \u2014 `crates/reposix-remote/src/bus_url.rs` contains the `?mirror=` teaching string in reject hints",
-          "shell-stub agent recovers `attach` subcommand spelling \u2014 `reposix --help` lists `attach` in Commands, `reposix attach --help` documents `--orphan-policy` flag with all 3 enum values (delete-local | fork-as-new | abort)",
-          "shell-stub agent recovers `refs/mirrors/<sot>-synced-at` ref namespace \u2014 `crates/reposix-remote/src/bus_handler.rs` cites the ref name in reject hint composition",
-          "shell-stub agent recovers `git remote add` mirror-config Q3.5 hint \u2014 `crates/reposix-remote/src/bus_handler.rs::resolve_mirror_remote_name` emits verbatim `configure the mirror remote first: git remote add <name> <mirror-url>`",
+          "shell-stub agent recovers `?mirror=` canonical bus URL form (Q3.3) — `crates/reposix-remote/src/bus_url.rs` contains the `?mirror=` teaching string in reject hints",
+          "shell-stub agent recovers `attach` subcommand spelling — `reposix --help` lists `attach` in Commands, `reposix attach --help` documents `--orphan-policy` flag with all 3 enum values (delete-local | fork-as-new | abort)",
+          "shell-stub agent recovers `refs/mirrors/<sot>-synced-at` ref namespace — `crates/reposix-remote/src/bus_handler.rs` cites the ref name in reject hint composition",
+          "shell-stub agent recovers `git remote add` mirror-config Q3.5 hint — `crates/reposix-remote/src/bus_handler.rs::resolve_mirror_remote_name` emits verbatim `configure the mirror remote first: git remote add <name> <mirror-url>`",
           "bus URL composition: reposix attach against a NON-EMPTY work tree (RBF-A-05 fixture, below) with a pre-existing file:// origin remote pointing at a populated bare mirror bakes a `reposix::<sot>?mirror=file://...` URL into `remote.reposix.url`; `extensions.partialClone=reposix` (NOT origin); origin URL unchanged",
-          "RBF-A-05 (closes p86 F13): the work tree is seeded with content shaped to >=3 of the 5 reconciliation cases BEFORE attach runs \u2014 3 local files matching seeded backend ids (matched), 1 file with no frontmatter fence (no_id), 1 file whose backend record is deleted via a real DELETE call after seeding (backend_deleted), 2 seeded backend ids left with no local file (mirror_lag) \u2014 and the populated tree is pushed into the bare mirror as the vanilla-clone baseline",
-          "cache materialization: REPOSIX_CACHE_DIR-rooted cache built at `<cache>/reposix/sim-demo.git/` with cache.db; reconciliation walk emits `matched=N no_id=N backend_deleted=N mirror_lag=N` with EACH counter extracted and asserted \u2014 matched>=1 AND at least 3 of the 4 counters non-zero (an all-zeros or <3-nonzero report FAILS the row; this is the honest gate, not a shape-only regex); audit_events_cache contains an attach_walk row (OP-3 unconditional)",
+          "RBF-A-05 (closes p86 F13): the work tree is seeded with content shaped to >=3 of the 5 reconciliation cases BEFORE attach runs — 3 local files matching seeded backend ids (matched), 1 file with no frontmatter fence (no_id), 1 file whose backend record is deleted via a real DELETE call after seeding (backend_deleted), 2 seeded backend ids left with no local file (mirror_lag) — and the populated tree is pushed into the bare mirror as the vanilla-clone baseline",
+          "cache materialization: REPOSIX_CACHE_DIR-rooted cache built at `<cache>/reposix/sim-demo.git/` with cache.db; reconciliation walk emits `matched=N no_id=N backend_deleted=N mirror_lag=N` with EACH counter extracted and asserted — matched>=1 AND at least 3 of the 4 counters non-zero (an all-zeros or <3-nonzero report FAILS the row; this is the honest gate, not a shape-only regex); audit_events_cache contains an attach_walk row (OP-3 unconditional)",
           "duplicate-id (case 4) hard-abort: an isolated sub-invocation (separate work tree + cache dir, two local files claiming the same id) asserts `reposix attach` exits non-zero with a `duplicate id` message and commits zero reconciliation rows, without corrupting the main run's report",
-          "wire-path coverage delegated to `crates/reposix-remote/tests/bus_write_happy.rs::happy_path_writes_both_refs_and_acks_ok` (helper exec + refs/mirrors writes + dual-table audit) \u2014 the shell harness asserts this test fn exists",
+          "wire-path coverage delegated to `crates/reposix-remote/tests/bus_write_happy.rs::happy_path_writes_both_refs_and_acks_ok` (helper exec + refs/mirrors writes + dual-table audit) — the shell harness asserts this test fn exists",
           "TokenWorld real-backend leg SUBSTRATE-GAP-DEFERRED: skipped unless REPOSIX_DARK_FACTORY_REAL_TOKENWORLD=1; cites P84 SURPRISES-INTAKE binstall + yanked-gix entry"
         ]
       },
@@ -1060,7 +1060,7 @@
       "dimension": "agent-ux",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
-      "comment": "P87 (+2 reservation slot 1) drain verifier. Asserts SURPRISES-INTAKE.md is fully drained for v0.13.0 \u2014 zero OPEN entries, >=5 terminal-STATUS entries (RESOLVED|DEFERRED|WONTFIX), honesty spot-check artifact present. Cadence on-demand because the intake is milestone-bounded; once v0.13.0 archives the row becomes a historical PASS marker per the v0.12.1 P76 precedent.",
+      "comment": "P87 (+2 reservation slot 1) drain verifier. Asserts SURPRISES-INTAKE.md is fully drained for v0.13.0 — zero OPEN entries, >=5 terminal-STATUS entries (RESOLVED|DEFERRED|WONTFIX), honesty spot-check artifact present. Cadence on-demand because the intake is milestone-bounded; once v0.13.0 archives the row becomes a historical PASS marker per the v0.12.1 P76 precedent.",
       "sources": [
         "quality/gates/agent-ux/p87-surprises-absorption.sh",
         ".planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md",
@@ -1072,7 +1072,7 @@
         "asserts": [
           "bash quality/gates/agent-ux/p87-surprises-absorption.sh exits 0 against the local working tree",
           "zero `**STATUS:** OPEN` lines in .planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md (all 5 entries flipped to terminal status)",
-          "at least 5 entries carry terminal STATUS (RESOLVED|DEFERRED|WONTFIX) \u2014 matches the P78-P86 entry count",
+          "at least 5 entries carry terminal STATUS (RESOLVED|DEFERRED|WONTFIX) — matches the P78-P86 entry count",
           ".planning/phases/87-surprises-absorption/honesty-spot-check.md exists as verifier-readable honesty-check evidence"
         ]
       },
@@ -1083,12 +1083,14 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/p87-surprises-absorption.json",
-      "status": "PASS",
-      "last_verified": "2026-05-01T22:00:00Z",
+      "status": "FAIL",
+      "last_verified": "2026-07-04T19:06:09Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: rerun P87 drain. SURPRISES-INTAKE.md should have 0 OPEN entries; each entry needs RESOLVED (commit SHA), DEFERRED (target milestone + rationale), or WONTFIX (rationale). (D-CONV-3, 2026-07-04: blast_radius corrected from the non-existent 'P3' tier to 'P2' -- schema only defines P0/P1/P2, quality/catalogs/README.md.)",
       "waiver": null,
+      "transport_claim": false,
+      "claim_vs_assertion_audit": "If the SURPRISES-INTAKE.md is not fully drained -- any OPEN entries remain, or fewer than 5 entries carry terminal STATUS, or honesty-spot-check.md is missing -- the shell script assertions would fail and the row would stay FAIL (as it is now). Once P87 executor redoes the drain and marks all entries terminal, the gate exits 0, artifact exists, and the row flips PASS.",
       "cadences": [
         "on-demand"
       ]
@@ -1098,7 +1100,7 @@
       "dimension": "agent-ux",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. P88 itself defers GOOD-TO-HAVES-01 to v0.14.0, so this provenance note carries forward.",
-      "comment": "P88 (+2 reservation slot 2) GOOD-TO-HAVES drain verifier. Asserts GOOD-TO-HAVES.md is fully drained for v0.13.0 \u2014 every `## GOOD-TO-HAVES-NN` heading carries a terminal STATUS line (RESOLVED|DEFERRED|WONTFIX); zero TBD. Cadence on-demand because the file is milestone-bounded; archives with the milestone, becomes a historical PASS marker per the v0.12.1 P77 precedent.",
+      "comment": "P88 (+2 reservation slot 2) GOOD-TO-HAVES drain verifier. Asserts GOOD-TO-HAVES.md is fully drained for v0.13.0 — every `## GOOD-TO-HAVES-NN` heading carries a terminal STATUS line (RESOLVED|DEFERRED|WONTFIX); zero TBD. Cadence on-demand because the file is milestone-bounded; archives with the milestone, becomes a historical PASS marker per the v0.12.1 P77 precedent.",
       "sources": [
         "quality/gates/agent-ux/p88-good-to-haves-drained.sh",
         ".planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md",
@@ -1110,7 +1112,7 @@
           "bash quality/gates/agent-ux/p88-good-to-haves-drained.sh exits 0 against the local working tree",
           "every `## GOOD-TO-HAVES-NN` heading in .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md carries a matching terminal STATUS line",
           "zero entries with STATUS: TBD",
-          "at least 1 entry with terminal STATUS (RESOLVED|DEFERRED|WONTFIX) \u2014 matches the v0.13.0 surfaced count"
+          "at least 1 entry with terminal STATUS (RESOLVED|DEFERRED|WONTFIX) — matches the v0.13.0 surfaced count"
         ]
       },
       "verifier": {
@@ -1120,12 +1122,14 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/p88-good-to-haves-drained.json",
-      "status": "PASS",
-      "last_verified": "2026-05-01T22:30:00Z",
+      "status": "FAIL",
+      "last_verified": "2026-07-04T19:06:09Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: rerun P88 drain. GOOD-TO-HAVES.md should have terminal STATUS on every heading; each entry needs RESOLVED (commit SHA), DEFERRED (target milestone + rationale), or WONTFIX (rationale). (D-CONV-3, 2026-07-04: blast_radius corrected from the non-existent 'P3' tier to 'P2'; waiver:null backfilled -- both required by the unified schema, quality/catalogs/README.md.)",
       "waiver": null,
+      "transport_claim": false,
+      "claim_vs_assertion_audit": "If GOOD-TO-HAVES.md is not fully drained -- any heading lacks terminal STATUS, or TBD entries remain, or insufficient terminal entries exist -- the shell script assertions would fail and the row would stay FAIL (as it is now). Once P88 executor completes the drain and marks all entries terminal, the gate exits 0 and the row flips PASS.",
       "cadences": [
         "on-demand"
       ]
@@ -1193,12 +1197,14 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/v0.13.0-tag-script-present.json",
-      "status": "PASS",
-      "last_verified": "2026-05-01T22:30:00Z",
+      "status": "FAIL",
+      "last_verified": "2026-07-04T19:06:09Z",
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: re-author tag-v0.13.0.sh mirroring .planning/milestones/v0.12.0-phases/tag-v0.12.0.sh; ensure >=6 `# Guard N:` comments + `git tag -s`. (D-CONV-3, 2026-07-04: blast_radius corrected from the non-existent 'P3' tier to 'P2'; waiver:null backfilled -- both required by the unified schema.)",
       "waiver": null,
+      "transport_claim": false,
+      "claim_vs_assertion_audit": "If tag-v0.13.0.sh is not authored, does not exist, lacks executable perms, has fewer than 6 guard comments, or is missing `git tag -s` -- the shell script assertions fail and the row stays FAIL (as it is now). Once the tag script is created with the required structure and guards, the gate exits 0 and the row flips PASS.",
       "cadences": [
         "on-demand"
       ]
@@ -1208,7 +1214,7 @@
       "dimension": "agent-ux",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): see GOOD-TO-HAVES-01 (deferred to v0.14.0).",
-      "comment": "P88 milestone-close artifact verifier (OP-9 ritual). Asserts RETROSPECTIVE.md contains a v0.13.0 section using the OP-9 template \u2014 all 5 subheadings present (What Was Built / What Worked / What Was Inefficient / Patterns Established / Key Lessons). Cadence on-demand; closes the OP-9 RETROSPECTIVE.md backfill loop the v0.12.1 milestone-close ratified.",
+      "comment": "P88 milestone-close artifact verifier (OP-9 ritual). Asserts RETROSPECTIVE.md contains a v0.13.0 section using the OP-9 template — all 5 subheadings present (What Was Built / What Worked / What Was Inefficient / Patterns Established / Key Lessons). Cadence on-demand; closes the OP-9 RETROSPECTIVE.md backfill loop the v0.12.1 milestone-close ratified.",
       "sources": [
         "quality/gates/agent-ux/v0.13.0-retrospective-distilled.sh",
         ".planning/RETROSPECTIVE.md",
@@ -1244,7 +1250,7 @@
       "dimension": "agent-ux",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. Minted NOT-VERIFIED in the P89 catalog-first commit (89-01) per quality/PROTOCOL.md Step 3.",
-      "comment": "RBF-FW-01 (P89 89-03) \u2014 new runner cadence `pre-release-real-backend`: env-gated (REPOSIX_ALLOWED_ORIGINS + >=1 complete sanctioned-target cred set), default-skips to NOT-VERIFIED in CI, REQUIRED at milestone-close. Per OD-2 (89-OWNER-DECISIONS.md): if this cadence cannot EXECUTE against the sanctioned target at milestone-close, the milestone-close verdict is hard RED \u2014 no owner-waiver, no until_date, no PASS-with-comment, no skip-counts-as-pass.",
+      "comment": "RBF-FW-01 (P89 89-03) — new runner cadence `pre-release-real-backend`: env-gated (REPOSIX_ALLOWED_ORIGINS + >=1 complete sanctioned-target cred set), default-skips to NOT-VERIFIED in CI, REQUIRED at milestone-close. Per OD-2 (89-OWNER-DECISIONS.md): if this cadence cannot EXECUTE against the sanctioned target at milestone-close, the milestone-close verdict is hard RED — no owner-waiver, no until_date, no PASS-with-comment, no skip-counts-as-pass.",
       "sources": [
         "quality/runners/run.py:45-47",
         "quality/runners/_realbackend.py",
@@ -1256,7 +1262,7 @@
           "VALID_CADENCES contains 'pre-release-real-backend'",
           "rows tagged with cadence skip with NOT-VERIFIED when REPOSIX_ALLOWED_ORIGINS unset",
           "rows execute when REPOSIX_ALLOWED_ORIGINS + a credential set are present",
-          "the env-gated skip maps to NOT-VERIFIED (never PASS or WAIVED), so a milestone-close invocation of this cadence without executable creds/targets exits non-zero \u2014 hard RED per OD-2 (no waiver, no until_date, no skip-counts-as-pass)"
+          "the env-gated skip maps to NOT-VERIFIED (never PASS or WAIVED), so a milestone-close invocation of this cadence without executable creds/targets exits non-zero — hard RED per OD-2 (no waiver, no until_date, no skip-counts-as-pass)"
         ]
       },
       "verifier": {
@@ -1271,7 +1277,7 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "quality/runners/run.py + _realbackend.py (env-gate + VALID_CADENCES entry ship in 89-03)",
-      "claim_vs_assertion_audit": "The verifier asserts quality/runners/run.py VALID_CADENCES tuple contains the literal string 'pre-release-real-backend' AND that a probe row tagged with that cadence runs only when REPOSIX_ALLOWED_ORIGINS plus a complete credential set are present, skipping to status NOT-VERIFIED otherwise. If the description's claim ('the new cadence is env-gated and default-skips in CI') were false \u2014 e.g., the runner ran the verifier with no env vars set \u2014 the assertion would fail because the env-gate short-circuit would not fire and the verifier would attempt a real-backend HTTP call against a missing allowlist. Per OD-2 (89-OWNER-DECISIONS.md) the skip is NEVER a pass state: it maps to NOT-VERIFIED, so the milestone-close invocation of this cadence exits non-zero when creds/targets are missing \u2014 hard RED, no waiver, no until_date, no skip-counts-as-pass.",
+      "claim_vs_assertion_audit": "The verifier asserts quality/runners/run.py VALID_CADENCES tuple contains the literal string 'pre-release-real-backend' AND that a probe row tagged with that cadence runs only when REPOSIX_ALLOWED_ORIGINS plus a complete credential set are present, skipping to status NOT-VERIFIED otherwise. If the description's claim ('the new cadence is env-gated and default-skips in CI') were false — e.g., the runner ran the verifier with no env vars set — the assertion would fail because the env-gate short-circuit would not fire and the verifier would attempt a real-backend HTTP call against a missing allowlist. Per OD-2 (89-OWNER-DECISIONS.md) the skip is NEVER a pass state: it maps to NOT-VERIFIED, so the milestone-close invocation of this cadence exits non-zero when creds/targets are missing — hard RED, no waiver, no until_date, no skip-counts-as-pass.",
       "waiver": null,
       "cadences": [
         "pre-release-real-backend"
@@ -1286,7 +1292,7 @@
       "dimension": "agent-ux",
       "kind": "shell-subprocess",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. Minted NOT-VERIFIED in the P89 catalog-first commit (89-01) per quality/PROTOCOL.md Step 3.",
-      "comment": "RBF-FW-02 (P89 89-04) \u2014 worked example for the new verifier kind `shell-subprocess`: drives a REAL binary subprocess (reposix preferred; bash --version as INTENTIONAL CI-portability fallback when the cargo target is absent) and emits a transcript artifact under quality/reports/transcripts/. The bash-fallback is honestly named in expected.asserts[0] \u2014 it satisfies the kind contract (subprocess + transcript), not the stronger 'invoked reposix' claim.",
+      "comment": "RBF-FW-02 (P89 89-04) — worked example for the new verifier kind `shell-subprocess`: drives a REAL binary subprocess (reposix preferred; bash --version as INTENTIONAL CI-portability fallback when the cargo target is absent) and emits a transcript artifact under quality/reports/transcripts/. The bash-fallback is honestly named in expected.asserts[0] — it satisfies the kind contract (subprocess + transcript), not the stronger 'invoked reposix' claim.",
       "sources": [
         "quality/catalogs/README.md:27",
         "quality/gates/agent-ux/lib/transcript.sh",
@@ -1312,7 +1318,7 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "quality/gates/agent-ux/shell-subprocess-example.sh + lib/transcript.sh (ship in 89-04); if RED, check transcript emission under quality/reports/transcripts/",
-      "claim_vs_assertion_audit": "The verifier asserts that `bash quality/gates/agent-ux/shell-subprocess-example.sh` exits 0 AND writes a transcript file at quality/reports/transcripts/kind-shell-subprocess-worked-example-<RFC3339>.txt containing argv + env_keys (NAMES only) + cwd + exit_code + stdout + stderr blocks. The subprocess invoked is the local `reposix` binary when present (preferred); when the cargo target directory is absent (CI portability path) the verifier falls back to `bash --version` so the kind:shell-subprocess proof shape \u2014 real subprocess + transcript \u2014 is exercised regardless of whether reposix has been built. If the description's claim ('the kind drives a REAL subprocess + emits a transcript') were false \u2014 e.g., the verifier called a Python function inline rather than spawning any subprocess at all \u2014 the assertion would fail because no transcript file would exist OR the transcript would be missing the `argv:` line that proves subprocess invocation. The bash-fallback satisfies the kind contract (subprocess + transcript) but does NOT satisfy the stronger 'invoked reposix' claim; downstream P92 verifiers tightening to a real-backend invocation MUST update this row's first assert to drop the bash-fallback alternative.",
+      "claim_vs_assertion_audit": "The verifier asserts that `bash quality/gates/agent-ux/shell-subprocess-example.sh` exits 0 AND writes a transcript file at quality/reports/transcripts/kind-shell-subprocess-worked-example-<RFC3339>.txt containing argv + env_keys (NAMES only) + cwd + exit_code + stdout + stderr blocks. The subprocess invoked is the local `reposix` binary when present (preferred); when the cargo target directory is absent (CI portability path) the verifier falls back to `bash --version` so the kind:shell-subprocess proof shape — real subprocess + transcript — is exercised regardless of whether reposix has been built. If the description's claim ('the kind drives a REAL subprocess + emits a transcript') were false — e.g., the verifier called a Python function inline rather than spawning any subprocess at all — the assertion would fail because no transcript file would exist OR the transcript would be missing the `argv:` line that proves subprocess invocation. The bash-fallback satisfies the kind contract (subprocess + transcript) but does NOT satisfy the stronger 'invoked reposix' claim; downstream P92 verifiers tightening to a real-backend invocation MUST update this row's first assert to drop the bash-fallback alternative.",
       "waiver": null,
       "cadences": [
         "pre-push",
@@ -1324,7 +1330,7 @@
       "dimension": "agent-ux",
       "kind": "shell-subprocess",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. Minted NOT-VERIFIED in the P89 catalog-first commit (89-01) per quality/PROTOCOL.md Step 3.",
-      "comment": "RBF-FW-03 (P89 89-06) \u2014 milestone-close 9th probe SLOT: the dark-factory third-arm vision litmus run verbatim against TokenWorld. blast_radius P0 is load-bearing (CONTEXT D-03c): any milestone-close grading attempt while this row is NOT-VERIFIED returns exit 1, defending against the C7 self-licensing-deferral-loop. NO waiver mechanism for this row (D-03c + OD-2): a waiver block must never be added. The SLOT legitimately reads NOT-VERIFIED until P91+P92+P93+P94+P95 land the substrate; per OD-2, once the substrate exists, inability to EXECUTE this probe at milestone-close is hard RED.",
+      "comment": "RBF-FW-03 (P89 89-06) — milestone-close 9th probe SLOT: the dark-factory third-arm vision litmus run verbatim against TokenWorld. blast_radius P0 is load-bearing (CONTEXT D-03c): any milestone-close grading attempt while this row is NOT-VERIFIED returns exit 1, defending against the C7 self-licensing-deferral-loop. NO waiver mechanism for this row (D-03c + OD-2): a waiver block must never be added. The SLOT legitimately reads NOT-VERIFIED until P91+P92+P93+P94+P95 land the substrate; per OD-2, once the substrate exists, inability to EXECUTE this probe at milestone-close is hard RED.",
       "sources": [
         "quality/dispatch/milestone-close-verdict.md",
         "quality/gates/agent-ux/milestone-close-vision-litmus.sh",
@@ -1351,7 +1357,7 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "SLOT verifier quality/gates/agent-ux/milestone-close-vision-litmus.sh (ships in 89-06); substrate lands P91-P95; if RED after substrate ships, inspect transcript + audit_events/audit_events_cache rows + refs/mirrors advancement",
-      "claim_vs_assertion_audit": "The verifier asserts that the milestone-close 9th probe runs the dark-factory third-arm scenario against TokenWorld (or sanctioned alternative per docs/reference/testing-targets.md) AND that audit_events_cache + audit_events both contain rows for the round-trip AND that refs/mirrors/<sot>-{head,synced-at} advanced. This row WILL flip to PASS only when P91+P92+P93+P94+P95 ship their substrate; until then it legitimately returns NOT-VERIFIED. If the description's claim ('the litmus test runs verbatim against a real backend before the v0.13.0 tag') were false \u2014 e.g., the verifier silently ran against the in-process simulator \u2014 the assertion would fail because the transcript's argv would not name `reposix attach confluence::TokenWorld` and audit_events would not contain real-backend host fingerprints. Distinct from the substrate-absent SLOT state: once the substrate exists, inability to EXECUTE this probe at milestone-close (creds/targets missing or unreachable) is hard RED per OD-2 \u2014 no waiver, no until_date, no PASS-with-comment.",
+      "claim_vs_assertion_audit": "The verifier asserts that the milestone-close 9th probe runs the dark-factory third-arm scenario against TokenWorld (or sanctioned alternative per docs/reference/testing-targets.md) AND that audit_events_cache + audit_events both contain rows for the round-trip AND that refs/mirrors/<sot>-{head,synced-at} advanced. This row WILL flip to PASS only when P91+P92+P93+P94+P95 ship their substrate; until then it legitimately returns NOT-VERIFIED. If the description's claim ('the litmus test runs verbatim against a real backend before the v0.13.0 tag') were false — e.g., the verifier silently ran against the in-process simulator — the assertion would fail because the transcript's argv would not name `reposix attach confluence::TokenWorld` and audit_events would not contain real-backend host fingerprints. Distinct from the substrate-absent SLOT state: once the substrate exists, inability to EXECUTE this probe at milestone-close (creds/targets missing or unreachable) is hard RED per OD-2 — no waiver, no until_date, no PASS-with-comment.",
       "waiver": null,
       "cadences": [
         "pre-release-real-backend"
@@ -1492,7 +1498,7 @@
       "id": "agent-ux/test-name-vs-asserts",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "comment": "RBF-FW-09 (F-K8) \u2014 a Rust #[test] fn whose name promises real/dark-factory/round-trip/e2e/push/fetch coverage but whose body neither drives a real git push/fetch subprocess nor targets a non-127.0.0.1 host nor is #[ignore] real-backend-gated is a dishonest test name. This row seeds the committed expected-RAISE baseline (R2 \u00a7 C.2, 4 entries) from quality/reports/raise-list-p90.md \u00a7 2; a NEW un-baselined dishonest name (not yet in the baseline) fails the gate outright.",
+      "comment": "RBF-FW-09 (F-K8) — a Rust #[test] fn whose name promises real/dark-factory/round-trip/e2e/push/fetch coverage but whose body neither drives a real git push/fetch subprocess nor targets a non-127.0.0.1 host nor is #[ignore] real-backend-gated is a dishonest test name. This row seeds the committed expected-RAISE baseline (R2 § C.2, 4 entries) from quality/reports/raise-list-p90.md § 2; a NEW un-baselined dishonest name (not yet in the baseline) fails the gate outright.",
       "sources": [
         "quality/gates/agent-ux/test-name-vs-asserts.sh",
         "quality/reports/raise-list-p90.md"
@@ -1501,9 +1507,9 @@
       "expected": {
         "asserts": [
           "a Rust #[test] fn whose name matches (real|dark_factory|round_?trip|end_to_end|e2e|push|fetch) whose body neither drives a git push/fetch subprocess nor a non-127.0.0.1 host nor is #[ignore] real-backend-gated is RAISEd",
-          "the committed expected-RAISE baseline (R2 \u00a7 C.2, 4 entries) matches \u2192 exit 0",
-          "a NEW un-baselined dishonest name \u2192 exit 1",
-          "per-line // test-name-honesty: ok \u2014 <reason> marker exempts, and a bare marker with no reason itself RAISEs"
+          "the committed expected-RAISE baseline (R2 § C.2, 4 entries) matches → exit 0",
+          "a NEW un-baselined dishonest name → exit 1",
+          "per-line // test-name-honesty: ok — <reason> marker exempts, and a bare marker with no reason itself RAISEs"
         ]
       },
       "verifier": {
@@ -1518,7 +1524,7 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "quality/gates/agent-ux/test-name-vs-asserts.sh (NEW, ships 90-03) scans crates/**/*.rs for honesty-suspect #[test] fn names against the committed baseline",
-      "claim_vs_assertion_audit": "The verifier scans crates/**/*.rs for #[test] fns whose names match the honesty-suspect regex, inspects each body for a real git push/fetch subprocess invocation, a non-127.0.0.1 host reference, or a #[ignore] real-backend gate, and RAISEs (non-exempt, non-baselined) mismatches. If the description's claim (\"a committed 4-entry baseline of known-dishonest names passes clean, and any NEW un-baselined dishonest name fails\") were false \u2014 e.g. the scanner ignored test bodies entirely and only matched names \u2014 a synthetic fixture adding a 5th un-baselined dishonestly-named test would still exit 0, and the assertion expecting exit 1 would fail. A companion fixture asserts the per-line // test-name-honesty: ok marker exempts a flagged test, and that a bare marker with no reason string itself RAISEs (closing the silent-exemption loophole).",
+      "claim_vs_assertion_audit": "The verifier scans crates/**/*.rs for #[test] fns whose names match the honesty-suspect regex, inspects each body for a real git push/fetch subprocess invocation, a non-127.0.0.1 host reference, or a #[ignore] real-backend gate, and RAISEs (non-exempt, non-baselined) mismatches. If the description's claim (\"a committed 4-entry baseline of known-dishonest names passes clean, and any NEW un-baselined dishonest name fails\") were false — e.g. the scanner ignored test bodies entirely and only matched names — a synthetic fixture adding a 5th un-baselined dishonestly-named test would still exit 0, and the assertion expecting exit 1 would fail. A companion fixture asserts the per-line // test-name-honesty: ok marker exempts a flagged test, and that a bare marker with no reason string itself RAISEs (closing the silent-exemption loophole).",
       "waiver": null,
       "cadences": [
         "pre-push"
@@ -1530,7 +1536,7 @@
       "id": "agent-ux/absorption-honesty-template-present",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "comment": "RBF-FW-10 (F-K5, consumed by P96) \u2014 the absorption-honesty spot-check template (D90-08: quality/dispatch/absorption-honesty-spot-check.md) must exist, be content-hash-bound (not merely present, since a gutted-but-present file would still pass an existence-only check), and contain the four F-K5 clauses verbatim: sample EVERY no-intake phase; spot-check author != milestone orchestrator; rubric 'walk one critical example end-to-end mentally \u2014 does it work?'; content-hash binding.",
+      "comment": "RBF-FW-10 (F-K5, consumed by P96) — the absorption-honesty spot-check template (D90-08: quality/dispatch/absorption-honesty-spot-check.md) must exist, be content-hash-bound (not merely present, since a gutted-but-present file would still pass an existence-only check), and contain the four F-K5 clauses verbatim: sample EVERY no-intake phase; spot-check author != milestone orchestrator; rubric 'walk one critical example end-to-end mentally — does it work?'; content-hash binding.",
       "sources": [
         "quality/dispatch/absorption-honesty-spot-check.md",
         "quality/PROTOCOL.md",
@@ -1541,7 +1547,7 @@
         "asserts": [
           "quality/dispatch/absorption-honesty-spot-check.md exists",
           "its content sha256 matches the committed hash (content-hash binding, not mere existence)",
-          "it contains the four F-K5 clauses verbatim: sample EVERY no-intake phase / author != milestone orchestrator / rubric 'walk one critical example end-to-end mentally \u2014 does it work?' / content-hash binding"
+          "it contains the four F-K5 clauses verbatim: sample EVERY no-intake phase / author != milestone orchestrator / rubric 'walk one critical example end-to-end mentally — does it work?' / content-hash binding"
         ]
       },
       "verifier": {
@@ -1556,7 +1562,7 @@
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "quality/dispatch/absorption-honesty-spot-check.md (NEW, D90-08, ships 90-04) + verifier ships 90-04",
-      "claim_vs_assertion_audit": "The verifier checks the template file exists, computes its sha256 and compares against the hash recorded at grade time, and greps for the four F-K5 clauses verbatim. If the description's claim (\"the template exists, is content-hash-bound, and carries all four clauses\") were false \u2014 e.g. a future edit silently dropped the 'author != milestone orchestrator' clause while leaving the file present \u2014 the grep for that clause would find nothing and the assertion would fail; likewise if the file were deleted, the existence assertion fails, and if the file were edited without updating the recorded hash, the drift assertion fails.",
+      "claim_vs_assertion_audit": "The verifier checks the template file exists, computes its sha256 and compares against the hash recorded at grade time, and greps for the four F-K5 clauses verbatim. If the description's claim (\"the template exists, is content-hash-bound, and carries all four clauses\") were false — e.g. a future edit silently dropped the 'author != milestone orchestrator' clause while leaving the file present — the grep for that clause would find nothing and the assertion would fail; likewise if the file were deleted, the existence assertion fails, and if the file were edited without updating the recorded hash, the drift assertion fails.",
       "waiver": null,
       "cadences": [
         "pre-push",
@@ -1568,7 +1574,7 @@
       "id": "agent-ux/milestone-adversarial-pass",
       "dimension": "agent-ux",
       "kind": "mechanical",
-      "comment": "RBF-FW-12 (D90-09) \u2014 a milestone-close verdict must not go GREEN unless a fresh adversarial subagent has graded the closing milestone's catalog rows and the resulting artifact (quality/reports/verifications/adversarial/<milestone>.json, D90-09 path \u2014 NOT the R1 \u00a7 FW-12 milestone-adversarial/ path) reports zero failed-row audits. The gate can only DARKEN a verdict (green\u2192red), never lighten one; it composes with compute_color/compute_exit_code rather than replacing them.",
+      "comment": "RBF-FW-12 (D90-09) — a milestone-close verdict must not go GREEN unless a fresh adversarial subagent has graded the closing milestone's catalog rows and the resulting artifact (quality/reports/verifications/adversarial/<milestone>.json, D90-09 path — NOT the R1 § FW-12 milestone-adversarial/ path) reports zero failed-row audits. The gate can only DARKEN a verdict (green→red), never lighten one; it composes with compute_color/compute_exit_code rather than replacing them.",
       "sources": [
         "quality/dispatch/milestone-adversarial.md",
         "quality/runners/verdict.py"
@@ -1578,7 +1584,7 @@
         "asserts": [
           "milestone-close verdict blocks GREEN (forces red) when quality/reports/verifications/adversarial/<milestone>.json is absent",
           "blocks GREEN when the artifact reports >=1 failed row audit",
-          "the gate can only DARKEN (green->red), never lighten \u2014 composes with compute_color/compute_exit_code"
+          "the gate can only DARKEN (green->red), never lighten — composes with compute_color/compute_exit_code"
         ]
       },
       "verifier": {
@@ -1593,7 +1599,7 @@
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "quality/runners/verdict.py gains the adversarial-artifact hook; quality/dispatch/milestone-adversarial.md (NEW, D90-09) ships 90-04",
-      "claim_vs_assertion_audit": "The verifier is a thin bash wrapper running python3 -m unittest quality.runners.test_verdict adversarial cases: an absent-artifact fixture and a failed-row-count>=1 fixture, both asserting the milestone-close verdict computes RED despite an otherwise-all-PASS catalog. If the description's claim (\"milestone-close cannot go GREEN without a passing fresh adversarial audit, and the hook can only darken never lighten a verdict\") were false \u2014 e.g. the hook were wired as advisory-only, or an absent artifact defaulted to a pass-through GREEN \u2014 both fixtures would observe the verdict staying GREEN and the assertions would fail. A third fixture asserts the hook cannot flip an already-RED verdict to GREEN, confirming the darken-only direction.",
+      "claim_vs_assertion_audit": "The verifier is a thin bash wrapper running python3 -m unittest quality.runners.test_verdict adversarial cases: an absent-artifact fixture and a failed-row-count>=1 fixture, both asserting the milestone-close verdict computes RED despite an otherwise-all-PASS catalog. If the description's claim (\"milestone-close cannot go GREEN without a passing fresh adversarial audit, and the hook can only darken never lighten a verdict\") were false — e.g. the hook were wired as advisory-only, or an absent artifact defaulted to a pass-through GREEN — both fixtures would observe the verdict staying GREEN and the assertions would fail. A third fixture asserts the hook cannot flip an already-RED verdict to GREEN, confirming the darken-only direction.",
       "waiver": null,
       "cadences": [
         "pre-push",
@@ -1634,7 +1640,7 @@
       "last_verified": "2026-07-05T06:10:00Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: a hook edit broke the throttle contract. Check (in order): suppressed PreToolUse branch still prints the bare permissionDecision=allow JSON; throttle.sh still fail-opens (exit 0) on every error path; state filename scheme (<hook>.<sha256-16-of-transcript-path>) unchanged in BOTH throttle.sh and the gate's stale-state assert. Never fix by making the hook fail closed \u2014 a lost dispatch beats a lost nudge in no case.",
+      "owner_hint": "if RED: a hook edit broke the throttle contract. Check (in order): suppressed PreToolUse branch still prints the bare permissionDecision=allow JSON; throttle.sh still fail-opens (exit 0) on every error path; state filename scheme (<hook>.<sha256-16-of-transcript-path>) unchanged in BOTH throttle.sh and the gate's stale-state assert. Never fix by making the hook fail closed — a lost dispatch beats a lost nudge in no case.",
       "claim_vs_assertion_audit": "The gate executes the real committed hook scripts (not reimplementations) against a sandboxed TMPDIR and asserts observable outputs per scenario. If the comment's claims were false the asserts fail concretely: were suppressed PreToolUse output malformed or missing permissionDecision=allow, the json.tool parse / allow-substring asserts fail; were a fresh agent starved of its first emission, the second-transcript-path assert fails; were fail-open broken, the three bad-stdin scenarios exit nonzero or emit no JSON; were throttling itself inert (emit-always), the rapid-fire assert counts >1 emission and fails.",
       "waiver": null,
       "cadences": [
@@ -1733,8 +1739,8 @@
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
       "comment": "P92 SC4 (verifier honesty rule), minted NOT-VERIFIED at phase catalog-first scaffold. Consumes the P90 RAISE LIST honesty framework: the milestone/phase-close verifier subagent's dispatch prompt (quality/PROTOCOL.md 'Verifier subagent prompt template') must treat an ABSENT audit_events / audit_events_cache row for an executed push as RED, never as 'out of scope for this layer' or a soft miss. Not a runnable script (kind: manual) -- graded by confirming the verifier dispatch prompt template names this rule explicitly and the P92 phase-close verifier subagent applies it when grading agent-ux/bus-write-audit-completeness.",
       "sources": [
-        "quality/PROTOCOL.md \u00a7 'Verifier subagent prompt template'",
-        "CLAUDE.md \u00a7 Operating Principles OP-3 (audit log non-optional, dual-table)",
+        "quality/PROTOCOL.md § 'Verifier subagent prompt template'",
+        "CLAUDE.md § Operating Principles OP-3 (audit log non-optional, dual-table)",
         ".planning/milestones/v0.13.0-phases/ROADMAP.md (Phase 92, SC4)"
       ],
       "command": "manual review of quality/PROTOCOL.md verifier dispatch prompt + the P92 verifier subagent's grading of agent-ux/bus-write-audit-completeness",
@@ -1794,8 +1800,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/p92-mid-stream-litmus-t1-t4.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": "2026-07-05T09:00:59Z",
+      "status": "FAIL",
+      "last_verified": "2026-07-05T21:16:41Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "Run at phase close, AFTER GREEN declared, per Decision-1 (mid-stream litmus checkpoint). 2026-07-05: T4 executor ran both surfaces in a git-2.54.0 container matching CI (bind-mounted host-built binaries, cargo stubbed to skip an in-container rebuild): `dark-factory.sh sim` exit=0, `t4-conflict-rebase-ancestry.sh` exit=0 -- 0 HIGH frictions on the sim arm. The TokenWorld-space arm of this checkpoint was NOT exercised this session (no dedicated verifier script exists yet for that arm -- same gap as the sibling t4-conflict-rebase-ancestry-real-backend row); status stays NOT-VERIFIED until that arm runs too.",
@@ -1811,11 +1817,11 @@
       "dimension": "agent-ux",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
-      "comment": "P93 SC1 / RBF-LR-01 (catalog-first scaffold, NOT-VERIFIED). An ADR lands in docs/decisions/ capturing the L2 (re-fetch-on-cache-miss) vs L3 (transactional-cache-writes) cache-coherence trade-off AND the CHOSEN path. AUTHORED (Status: PROPOSED) at docs/decisions/010-l2-l3-cache-coherence.md (this session, top-level L2 fan-out) \u2014 chosen model = Option C (Option B transactional-cache-writes + a `reposix sync --reconcile` escape hatch); coordinator ratifies PROPOSED->ACCEPTED. Authored top-level per ROADMAP P93 SC1 + RUNBOOK 03-road-to-v1.md \u00a7C decision rubric (default = REMEDIATION-PLAN Decision-2 option (b): narrow fix + ADR documenting the bounded exposure + a `reposix sync --reconcile` teaching-string; NO re-deferral to v0.14.0 without owner sign-off). This row gates the artifact's existence + content, not the code fix (that is RBF-LR-02).",
+      "comment": "P93 SC1 / RBF-LR-01 (catalog-first scaffold, NOT-VERIFIED). An ADR lands in docs/decisions/ capturing the L2 (re-fetch-on-cache-miss) vs L3 (transactional-cache-writes) cache-coherence trade-off AND the CHOSEN path. AUTHORED (Status: PROPOSED) at docs/decisions/010-l2-l3-cache-coherence.md (this session, top-level L2 fan-out) — chosen model = Option C (Option B transactional-cache-writes + a `reposix sync --reconcile` escape hatch); coordinator ratifies PROPOSED->ACCEPTED. Authored top-level per ROADMAP P93 SC1 + RUNBOOK 03-road-to-v1.md §C decision rubric (default = REMEDIATION-PLAN Decision-2 option (b): narrow fix + ADR documenting the bounded exposure + a `reposix sync --reconcile` teaching-string; NO re-deferral to v0.14.0 without owner sign-off). This row gates the artifact's existence + content, not the code fix (that is RBF-LR-02).",
       "sources": [
-        ".planning/RUNBOOK-TO-V1/03-road-to-v1.md \u00a7C (P93 L2/L3 ADR decision rubric)",
+        ".planning/RUNBOOK-TO-V1/03-road-to-v1.md §C (P93 L2/L3 ADR decision rubric)",
         ".planning/milestones/v0.13.0-phases/ROADMAP.md (Phase 93, SC1)",
-        ".planning/research/v0.13.0-real-backend-frictions/03-synthesis/REMEDIATION-PLAN.md \u00a7 P93 + \u00a7 Honesty caveats #4",
+        ".planning/research/v0.13.0-real-backend-frictions/03-synthesis/REMEDIATION-PLAN.md § P93 + § Honesty caveats #4",
         "docs/decisions/009-stability-commitment.md (ADR numbering + format precedent)"
       ],
       "command": "bash quality/gates/agent-ux/p93-l2-l3-coherence-adr.sh",
@@ -1824,7 +1830,7 @@
           "an ADR file matching docs/decisions/*cache-coherence*.md (or *l2-l3*.md) exists",
           "the ADR names BOTH options: L2 = re-fetch-on-cache-miss AND L3 = transactional-cache-writes",
           "the ADR states a CHOSEN path plus its trade-off (a decision, not just an enumeration)",
-          "the ADR records the v0.14.0-deferral list explicitly (what is NOT fixed in v0.13.x) with the no-re-deferral-without-owner-signoff rule per RUNBOOK \u00a7C",
+          "the ADR records the v0.14.0-deferral list explicitly (what is NOT fixed in v0.13.x) with the no-re-deferral-without-owner-signoff rule per RUNBOOK §C",
           "the ADR cross-references the honest-L1 outcome (RBF-LR-02) -- asterisk removed or kept+qualified"
         ]
       },
@@ -2063,13 +2069,13 @@
       "dimension": "agent-ux",
       "kind": "mechanical",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
-      "comment": "P94 D1 \u2014 pagination-truncation prune-safety (Fork A + Fork B, RATIFIED at .planning/CONSULT-DECISIONS.md 2026-07-05 [FABLE] pagination-truncation prune-safety fork, commit 3478dcc; NO revert of 272882c). Bug (SURPRISES-INTAKE.md ~L891-939, HIGH): meta::prune_oid_map (272882c/e246e84) DELETEs oid_map rows whose issue_id is absent from a keep_ids set built from self.backend.list_records(&self.project); GitHub/JIRA/Confluence connectors can silently return a TRUNCATED Ok(partial_list) at a pagination/size cap (github/lib.rs MAX_ISSUES_PER_LIST=500 / MAX_RAW_ITEMS_PER_LIST; jira/lib.rs non-strict list_issues_impl; Confluence equivalent), so a truncated keep_ids wipes oid_map rows for LIVE records beyond the cap \u2014 a real record looks ghost/deleted, recurring on EVERY sync; the sim never truncates so every sim-run gate (incl. all of P93's GREEN runs) is structurally blind. Fork A (primary): add a completeness signal to BackendConnector::list_records's return (Listing { records, is_complete }, or a sibling list_records_complete() if the E2 return-type change is vetoed) and gate BOTH prune_oid_map call sites (builder.rs:138-139 full-rebuild, builder.rs:442 delta) on is_complete == true \u2014 on is_complete==false the prune is SKIPPED, falling back to the pre-272882c HARD-02 posture (retained rows, no data loss); the sim returns is_complete=true so existing sim gates keep firing the prune. Fork B (defense-in-depth): reclassify delete-time NotFound as idempotent success in write_loop.rs, bounding residual ghost-row phantom DELETEs to audit noise. This is a sim/unit gate keyed off a capped-MOCK connector (transport_claim:false); it does NOT need a real backend.",
+      "comment": "P94 D1 — pagination-truncation prune-safety (Fork A + Fork B, RATIFIED at .planning/CONSULT-DECISIONS.md 2026-07-05 [FABLE] pagination-truncation prune-safety fork, commit 3478dcc; NO revert of 272882c). Bug (SURPRISES-INTAKE.md ~L891-939, HIGH): meta::prune_oid_map (272882c/e246e84) DELETEs oid_map rows whose issue_id is absent from a keep_ids set built from self.backend.list_records(&self.project); GitHub/JIRA/Confluence connectors can silently return a TRUNCATED Ok(partial_list) at a pagination/size cap (github/lib.rs MAX_ISSUES_PER_LIST=500 / MAX_RAW_ITEMS_PER_LIST; jira/lib.rs non-strict list_issues_impl; Confluence equivalent), so a truncated keep_ids wipes oid_map rows for LIVE records beyond the cap — a real record looks ghost/deleted, recurring on EVERY sync; the sim never truncates so every sim-run gate (incl. all of P93's GREEN runs) is structurally blind. Fork A (primary): add a completeness signal to BackendConnector::list_records's return (Listing { records, is_complete }, or a sibling list_records_complete() if the E2 return-type change is vetoed) and gate BOTH prune_oid_map call sites (builder.rs:138-139 full-rebuild, builder.rs:442 delta) on is_complete == true — on is_complete==false the prune is SKIPPED, falling back to the pre-272882c HARD-02 posture (retained rows, no data loss); the sim returns is_complete=true so existing sim gates keep firing the prune. Fork B (defense-in-depth): reclassify delete-time NotFound as idempotent success in write_loop.rs, bounding residual ghost-row phantom DELETEs to audit noise. This is a sim/unit gate keyed off a capped-MOCK connector (transport_claim:false); it does NOT need a real backend.",
       "sources": [
-        ".planning/CONSULT-DECISIONS.md (2026-07-05 [FABLE] pagination-truncation prune-safety fork \u2014 RATIFIED Fork A+B design)",
+        ".planning/CONSULT-DECISIONS.md (2026-07-05 [FABLE] pagination-truncation prune-safety fork — RATIFIED Fork A+B design)",
         ".planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md:891-939 (pagination-truncation data-loss finding, HIGH)",
-        ".planning/phases/93-cache-coherence/93-RELIEF-HANDOFF.md (\u00a74-6 full data-loss analysis + 4-option decision tree)",
-        "crates/reposix-cache/src/builder.rs:138-139 (prune_oid_map full-rebuild call site \u2014 Fork A gate)",
-        "crates/reposix-cache/src/builder.rs:442 (prune_oid_map delta call site \u2014 Fork A gate)",
+        ".planning/phases/93-cache-coherence/93-RELIEF-HANDOFF.md (§4-6 full data-loss analysis + 4-option decision tree)",
+        "crates/reposix-cache/src/builder.rs:138-139 (prune_oid_map full-rebuild call site — Fork A gate)",
+        "crates/reposix-cache/src/builder.rs:442 (prune_oid_map delta call site — Fork A gate)",
         "crates/reposix-cache/src/meta.rs:75-114 (prune_oid_map DELETE)",
         "crates/reposix-github/src/lib.rs:488-515 (truncation exit points where is_complete is known-but-dropped)",
         "crates/reposix-remote/src/write_loop.rs (Fork B delete-time NotFound reclassification)"
@@ -2077,11 +2083,11 @@
       "command": "cargo test -p reposix-cache --test pagination_prune_safety",
       "expected": {
         "asserts": [
-          "a NEW capped-mock BackendConnector returning is_complete=false with records truncated at a cap drives Cache::sync in a regression test; after sync, oid_map rows for records BEYOND the cap are NOT deleted (the is_complete==false prune-SKIP branch is pinned) \u2014 the live-record data-loss is proven eliminated, not just code-read",
+          "a NEW capped-mock BackendConnector returning is_complete=false with records truncated at a cap drives Cache::sync in a regression test; after sync, oid_map rows for records BEYOND the cap are NOT deleted (the is_complete==false prune-SKIP branch is pinned) — the live-record data-loss is proven eliminated, not just code-read",
           "BackendConnector::list_records returns a completeness signal (Listing { records, is_complete } or a sibling list_records_complete()); BOTH prune_oid_map call sites (builder.rs:138-139 full-rebuild AND builder.rs:442 delta) are gated on is_complete == true (grep/AST confirms neither call site prunes unconditionally)",
           "the sim connector returns is_complete=true so existing sim-backed gates still exercise the prune path (regression: a complete listing STILL prunes truly-absent oid_map rows)",
           "Fork B: a delete against an already-absent record returns idempotent success (not Err) in write_loop.rs (unit test)",
-          "272882c is NOT reverted \u2014 ADR-010 coherence enforcement (oid_map upsert-before-prune at builder.rs:120-128) is retained"
+          "272882c is NOT reverted — ADR-010 coherence enforcement (oid_map upsert-before-prune at builder.rs:120-128) is retained"
         ]
       },
       "verifier": {
@@ -2095,8 +2101,8 @@
       "last_verified": "2026-07-06T00:02:46Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
-      "owner_hint": "NOT IMPLEMENTED this session (catalog-first SPEC mint). Fix belongs in crates/reposix-core (BackendConnector::list_records signature) + crates/reposix-cache/src/builder.rs (both prune gates) + each connector's list_records (populate is_complete: sim=true always; github/jira/confluence=false when truncated at cap) + crates/reposix-remote/src/write_loop.rs (Fork B). Add the capped-mock regression at crates/reposix-cache/tests/pagination_prune_safety.rs. Runs cargo \u2014 one-cargo-invocation budget. If the owner vetoes the E2 return-type change, fall back to list_records_complete() (same signal, uglier surface) \u2014 NOT Fork C/D (both rejected in the consult).",
-      "claim_vs_assertion_audit": "The verifier runs the capped-mock regression and asserts oid_map rows beyond the cap survive a truncated (is_complete=false) sync, then asserts the sim (is_complete=true) still prunes. If the description's claim ('the prune skips on incomplete listings, so live records beyond the cap are never deleted') were false \u2014 e.g. the fix added the flag but left builder.rs:442 pruning unconditionally, or the connector always reports is_complete=true, or 272882c was quietly reverted losing coherence \u2014 the capped-mock test would still find beyond-cap oid_map rows DELETED (data-loss reproduced) and the assert would record FAIL naming the deleted id, while a sim-prune regression would catch an over-broad skip. This is the acceptance gate for the HIGH pagination-truncation data-loss finding.",
+      "owner_hint": "NOT IMPLEMENTED this session (catalog-first SPEC mint). Fix belongs in crates/reposix-core (BackendConnector::list_records signature) + crates/reposix-cache/src/builder.rs (both prune gates) + each connector's list_records (populate is_complete: sim=true always; github/jira/confluence=false when truncated at cap) + crates/reposix-remote/src/write_loop.rs (Fork B). Add the capped-mock regression at crates/reposix-cache/tests/pagination_prune_safety.rs. Runs cargo — one-cargo-invocation budget. If the owner vetoes the E2 return-type change, fall back to list_records_complete() (same signal, uglier surface) — NOT Fork C/D (both rejected in the consult).",
+      "claim_vs_assertion_audit": "The verifier runs the capped-mock regression and asserts oid_map rows beyond the cap survive a truncated (is_complete=false) sync, then asserts the sim (is_complete=true) still prunes. If the description's claim ('the prune skips on incomplete listings, so live records beyond the cap are never deleted') were false — e.g. the fix added the flag but left builder.rs:442 pruning unconditionally, or the connector always reports is_complete=true, or 272882c was quietly reverted losing coherence — the capped-mock test would still find beyond-cap oid_map rows DELETED (data-loss reproduced) and the assert would record FAIL naming the deleted id, while a sim-prune regression would catch an over-broad skip. This is the acceptance gate for the HIGH pagination-truncation data-loss finding.",
       "waiver": null,
       "transport_claim": false,
       "cadences": [
@@ -2111,12 +2117,12 @@
       "dimension": "agent-ux",
       "kind": "container",
       "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension at v0.13.0; agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension.",
-      "comment": "P94 D2 \u2014 git-2.43 fallback-sentinel (HIGH carry-forward, SURPRISES-INTAKE.md L602-610). Stock Ubuntu 24.04 git (2.43.0) fails EVERY real single-backend `git push` outright (exit 128). CORRECTED MECHANISM (DP-2 container tracing with GIT_TRANSPORT_HELPER_DEBUG=1, see 94-D2-REPRO-NOTES.md \u2014 the original `stateless-connect git-receive-pack` / `fallback`-sentinel diagnosis this row's slug still carries was DISPROVEN): git 2.43 (and 2.54) NEVER probe `stateless-connect` for the push direction. The real, version-windowed blocker is `option object-format` \u2014 reposix's helper advertises the `object-format` capability, so git 2.43 sends `option object-format` and treats the helper's `unsupported` answer as FATAL (exit 128). The fix that actually unblocks the push is answering `option object-format` with `ok` in crates/reposix-remote/src/main.rs (commit c136795), NOT the fallback sentinel. The git-remote-helpers(7) `fallback` sentinel on the non-`git-upload-pack` `stateless-connect` branch is SPEC-COMPLIANCE only and is DEAD CODE for the push path: reposix emits it for conformance (and the asserts below still verify that emission), but git never reaches it during a push, so it was never the push-unblocking mechanism. Version-windowed: git 2.54.0 (this project's CI runner) does NOT hit it; the >= 2.34 floor does NOT protect (2.43 > 2.34 yet breaks). transport_claim is set FALSE (explicit opt-out): the transport under test is the LOCAL git<->helper protocol handshake (backend-agnostic, exercised against sim in a git-2.43 container), NOT a remote-backend transport claim \u2014 coverage_kind: mechanical documents the container/sim substrate; a real-backend push on git 2.43 is out of CI's reach (CI runs 2.54) and is the container repro's job here.",
+      "comment": "P94 D2 — git-2.43 fallback-sentinel (HIGH carry-forward, SURPRISES-INTAKE.md L602-610). Stock Ubuntu 24.04 git (2.43.0) fails EVERY real single-backend `git push` outright (exit 128). CORRECTED MECHANISM (DP-2 container tracing with GIT_TRANSPORT_HELPER_DEBUG=1, see 94-D2-REPRO-NOTES.md — the original `stateless-connect git-receive-pack` / `fallback`-sentinel diagnosis this row's slug still carries was DISPROVEN): git 2.43 (and 2.54) NEVER probe `stateless-connect` for the push direction. The real, version-windowed blocker is `option object-format` — reposix's helper advertises the `object-format` capability, so git 2.43 sends `option object-format` and treats the helper's `unsupported` answer as FATAL (exit 128). The fix that actually unblocks the push is answering `option object-format` with `ok` in crates/reposix-remote/src/main.rs (commit c136795), NOT the fallback sentinel. The git-remote-helpers(7) `fallback` sentinel on the non-`git-upload-pack` `stateless-connect` branch is SPEC-COMPLIANCE only and is DEAD CODE for the push path: reposix emits it for conformance (and the asserts below still verify that emission), but git never reaches it during a push, so it was never the push-unblocking mechanism. Version-windowed: git 2.54.0 (this project's CI runner) does NOT hit it; the >= 2.34 floor does NOT protect (2.43 > 2.34 yet breaks). transport_claim is set FALSE (explicit opt-out): the transport under test is the LOCAL git<->helper protocol handshake (backend-agnostic, exercised against sim in a git-2.43 container), NOT a remote-backend transport claim — coverage_kind: mechanical documents the container/sim substrate; a real-backend push on git 2.43 is out of CI's reach (CI runs 2.54) and is the container repro's job here.",
       "sources": [
         ".planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md:602-610 (git 2.43.0 single-backend push failure, HIGH; fix sketch at :610)",
-        ".planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md (2026-07-05 23:12 entry \u2014 DP-2 mechanism correction: `option object-format` unsupported \u2192 git-2.43-fatal, NOT stateless-connect fallback)",
-        "crates/reposix-remote/src/main.rs (answers `option object-format` with `ok` \u2014 the REAL git-2.43 push-unblock; commit c136795)",
-        "crates/reposix-remote/src/stateless_connect.rs (handle_stateless_connect non-upload-pack branch \u2014 `fallback` sentinel is git-remote-helpers(7) spec-compliance, dead code for the push path)",
+        ".planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md (2026-07-05 23:12 entry — DP-2 mechanism correction: `option object-format` unsupported → git-2.43-fatal, NOT stateless-connect fallback)",
+        "crates/reposix-remote/src/main.rs (answers `option object-format` with `ok` — the REAL git-2.43 push-unblock; commit c136795)",
+        "crates/reposix-remote/src/stateless_connect.rs (handle_stateless_connect non-upload-pack branch — `fallback` sentinel is git-remote-helpers(7) spec-compliance, dead code for the push path)",
         "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_rejects_non_upload_pack_service (currently asserts the BUG-preserving reply; assertion must FLIP to `fallback`)",
         ".planning/phases/92-push-flow-correctness/92-T4-REPRO-NOTES.md (git-2.43 container-repro pattern)"
       ],
@@ -2125,8 +2131,8 @@
         "asserts": [
           "handle_stateless_connect replies with the literal `fallback` line (not a custom 'unsupported service: ...' string) when service != 'git-upload-pack' (grep/source assert on stateless_connect.rs)",
           "crates/reposix-remote/tests/stateless_connect_e2e.rs::stateless_connect_rejects_non_upload_pack_service's asserted reply shape is FLIPPED to `fallback` and the test passes (cargo test arm)",
-          "a git-2.43.x container (ubuntu:24.04 stock apt git) drives a real single-backend `git push` against a sim backend to exit 0 \u2014 the push succeeds by falling back to the `export` capability (the version-windowed regression the fix closes)",
-          "when docker is unavailable the row is env-gated to NOT-VERIFIED (fail-closed, exit 75, never skip-as-pass per OD-2) \u2014 the source-grep + cargo arms still run where possible"
+          "a git-2.43.x container (ubuntu:24.04 stock apt git) drives a real single-backend `git push` against a sim backend to exit 0 — the push succeeds by falling back to the `export` capability (the version-windowed regression the fix closes)",
+          "when docker is unavailable the row is env-gated to NOT-VERIFIED (fail-closed, exit 75, never skip-as-pass per OD-2) — the source-grep + cargo arms still run where possible"
         ]
       },
       "verifier": {
@@ -2140,9 +2146,9 @@
       "last_verified": "2026-07-06T03:41:43Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "NOT IMPLEMENTED this session (catalog-first SPEC mint). Fix: change handle_stateless_connect's service != 'git-upload-pack' branch in crates/reposix-remote/src/stateless_connect.rs to reply with the literal `fallback` line; flip stateless_connect_e2e.rs::stateless_connect_rejects_non_upload_pack_service's asserted reply shape to match (it currently pins the bug-preserving reply). Add the container regression adapting 92-T4-REPRO-NOTES.md's `docker run ubuntu:24.04` (stock git 2.43.0) pattern; the verifier gates on docker presence and exits 75 (NOT-VERIFIED) when absent. Runs cargo \u2014 one-cargo-invocation budget.",
+      "owner_hint": "NOT IMPLEMENTED this session (catalog-first SPEC mint). Fix: change handle_stateless_connect's service != 'git-upload-pack' branch in crates/reposix-remote/src/stateless_connect.rs to reply with the literal `fallback` line; flip stateless_connect_e2e.rs::stateless_connect_rejects_non_upload_pack_service's asserted reply shape to match (it currently pins the bug-preserving reply). Add the container regression adapting 92-T4-REPRO-NOTES.md's `docker run ubuntu:24.04` (stock git 2.43.0) pattern; the verifier gates on docker presence and exits 75 (NOT-VERIFIED) when absent. Runs cargo — one-cargo-invocation budget.",
       "coverage_kind": "mechanical",
-      "claim_vs_assertion_audit": "The verifier asserts the source reply is now `fallback`, the e2e assertion flipped, and a real git-2.43 container push exits 0. If the description's (CORRECTED) claim ('reposix's helper now answers `option object-format` with `ok` in main.rs, so git 2.43 no longer treats it as fatal and the push succeeds') were false \u2014 e.g. the helper still answered `option object-format` with `unsupported`, or the object-format reply changed but the container push still exited 128 (fake-green) \u2014 the container arm's exit-0 assert would fail concretely on the still-broken version and the source/e2e asserts would name the un-flipped reply. Env-gated: docker-absent yields NOT-VERIFIED (fail-closed, OD-2), never a fabricated PASS.",
+      "claim_vs_assertion_audit": "The verifier asserts the source reply is now `fallback`, the e2e assertion flipped, and a real git-2.43 container push exits 0. If the description's (CORRECTED) claim ('reposix's helper now answers `option object-format` with `ok` in main.rs, so git 2.43 no longer treats it as fatal and the push succeeds') were false — e.g. the helper still answered `option object-format` with `unsupported`, or the object-format reply changed but the container push still exited 128 (fake-green) — the container arm's exit-0 assert would fail concretely on the still-broken version and the source/e2e asserts would name the un-flipped reply. Env-gated: docker-absent yields NOT-VERIFIED (fail-closed, OD-2), never a fabricated PASS.",
       "waiver": null,
       "transport_claim": false,
       "cadences": [
@@ -2178,8 +2184,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/zero-shot-onboarding.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-12T07:10:58Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: re-diff docs/tutorials/first-run.md + README.md against the actual sim/CLI behavior (reposix-sim startup banner, issue count, audit_events_cache columns, checkout ref) the way Wave D's 0578919 did -- the doc-lie signatures this row greps for are the exact class that commit fixed.",
@@ -2365,8 +2371,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/github-helper-path-slug-not-sanitized.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": null,
+      "status": "PASS",
+      "last_verified": "2026-07-12T07:10:58Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "if RED: someone re-introduced sanitization of the backend-facing project (e.g. sanitized self.project inside Cache::open, or a caller passed the sanitized form again) -- the GitHub REST path would 404 again. Keep sanitize ONLY at resolve_cache_path. Runs cargo -- one-cargo-invocation budget.",
