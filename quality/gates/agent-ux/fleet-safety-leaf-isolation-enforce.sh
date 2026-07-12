@@ -10,6 +10,9 @@
 #   5. the hook mechanism invokes `git worktree remove --force` NOWHERE (comment-filtered)
 #   9-11 (D2 re-seal 2026-07-12): guard-C config-read false-positive (read+trailing token
 #        ALLOW, real write BLOCK), git-init-bare gap (defect B), cargo sim-seed gap (defect C).
+#   12  (D2 Wave 2 2026-07-12): sim-SERVER start un-block — `cargo run -p reposix-sim`
+#        (git-safe :7878 quickstart) ALLOWs, while `-- seed` / `reposix-sim seed` /
+#        `reposix init` in the shared tree STILL BLOCK (narrowing preserved the cut).
 # Emits a transcript via the shared helper. Exits 0 iff ALL asserts pass. Drives the hook
 # only (no shared-repo mutation; the setup verb never executes because the hook blocks it).
 set -uo pipefail
@@ -134,6 +137,31 @@ scenario() {
   drive_hook 'cargo run -p reposix-sim -- seed issues' "$shared"
   printf 'CASE 11 (cargo run -p reposix-sim -- seed in shared -> BLOCK): hook_exit=%s\n' "$HOOK_RC"
   if [ "$HOOK_RC" = 2 ]; then echo "  ASSERT cargo-sim-seed shared exit==2 BLOCK: PASS"; else echo "  ASSERT cargo-sim-seed shared BLOCK: FAIL"; fails=$((fails+1)); fi
+
+  # --- Case 12 (D2 Wave 2, 2026-07-12): sim-SERVER start un-blocked -------------
+  # Guard B previously blocked the CLAUDE.md-documented `cargo run -p reposix-sim`
+  # server start (":7878") wholesale — a git-safe operation (reposix-sim's run() issues
+  # NO git commands; DB defaults to the gitignored runtime/sim.db). A bare sim-SERVER
+  # start must now ALLOW, while a genuine `-- seed` (Case 11) and `reposix init` (Case 1)
+  # stay BLOCKED. This is the exact allow-while-block pair the D2 Wave 2 narrowing turns on.
+  drive_hook 'cargo run -p reposix-sim' "$shared"
+  printf 'CASE 12a (cargo run -p reposix-sim SERVER start in shared -> ALLOW): hook_exit=%s\n' "$HOOK_RC"
+  if [ "$HOOK_RC" = 0 ]; then echo "  ASSERT sim-server-start exit==0 ALLOW: PASS"; else echo "  ASSERT sim-server-start ALLOW: FAIL"; fails=$((fails+1)); fi
+  drive_hook 'cargo run -p reposix-sim -- --bind 127.0.0.1:7878' "$shared"
+  printf 'CASE 12b (cargo run -p reposix-sim -- --bind … SERVER start -> ALLOW): hook_exit=%s\n' "$HOOK_RC"
+  if [ "$HOOK_RC" = 0 ]; then echo "  ASSERT sim-server-start-with-flags exit==0 ALLOW: PASS"; else echo "  ASSERT sim-server-start-with-flags ALLOW: FAIL"; fails=$((fails+1)); fi
+  drive_hook './target/debug/reposix-sim' "$shared"
+  printf 'CASE 12c (path-suffixed reposix-sim SERVER start -> ALLOW): hook_exit=%s\n' "$HOOK_RC"
+  if [ "$HOOK_RC" = 0 ]; then echo "  ASSERT path-suffixed sim-server exit==0 ALLOW: PASS"; else echo "  ASSERT path-suffixed sim-server ALLOW: FAIL"; fails=$((fails+1)); fi
+  # Companion BLOCK half of the pair: `reposix init` in the shared tree still BLOCKs, so
+  # the narrowing did NOT weaken the real corruption cut.
+  drive_hook 'reposix init sim::demo .' "$shared"
+  printf 'CASE 12d (reposix init in shared STILL BLOCK — narrowing preserved the cut): hook_exit=%s\n' "$HOOK_RC"
+  if [ "$HOOK_RC" = 2 ]; then echo "  ASSERT reposix-init-still-block exit==2 BLOCK: PASS"; else echo "  ASSERT reposix-init-still-block BLOCK: FAIL"; fails=$((fails+1)); fi
+  # And a path-suffixed `reposix-sim seed` (genuine seed-INTO) still BLOCKs.
+  drive_hook './target/debug/reposix-sim seed issues' "$shared"
+  printf 'CASE 12e (reposix-sim seed in shared STILL BLOCK): hook_exit=%s\n' "$HOOK_RC"
+  if [ "$HOOK_RC" = 2 ]; then echo "  ASSERT reposix-sim-seed exit==2 BLOCK: PASS"; else echo "  ASSERT reposix-sim-seed BLOCK: FAIL"; fails=$((fails+1)); fi
 
   echo "----"
   if [ "$fails" = 0 ]; then echo "ALL ASSERTS PASSED"; return 0; else echo "ASSERTS FAILED: $fails"; return 1; fi

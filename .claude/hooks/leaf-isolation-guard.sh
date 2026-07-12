@@ -9,10 +9,14 @@
 # THREE fail-closed guards, first-match-blocks (exit 2 = BLOCK, matching cargo-mutex.sh):
 #   A guard_fixture_identity   — block a fixture-identity (`t@t`) git commit/-c/env against
 #                                the SHARED tree; allow it in a /tmp clone.
-#   B guard_leaf_setup_location — block reposix init|attach|sync / sim-seed (incl. the
-#                                `cargo run … -p reposix-sim` + `cargo run … -- seed`
+#   B guard_leaf_setup_location — block reposix init|attach|sync / sim-SEED (the
+#                                `reposix-sim … seed …` + `cargo run … -- seed`
 #                                spellings) / bare|`--bare` `git init` against the SHARED
-#                                tree with no same-invocation /tmp redirect.
+#                                tree with no same-invocation /tmp redirect. A bare
+#                                sim-SERVER start (`cargo run -p reposix-sim`,
+#                                `reposix-sim` — the CLAUDE.md ":7878" quickstart) is
+#                                git-safe (writes only the gitignored runtime/sim.db,
+#                                never .git/*) and is ALLOWED — see the guard body.
 #   C guard_shared_config_write — block a `git config` WRITE of core.bare|user.email|
 #                                user.name targeting the SHARED .git/config (reads —
 #                                --get*/--list/-l and trailing redirect/pipe/chain — allow).
@@ -23,6 +27,13 @@
 #     bare `reposix init`, path-suffixed `/usr/bin/reposix init` / `./target/…/reposix init`,
 #     and `cargo run … -- (init|attach|sync)`, plus path-suffixed sim-seed. A leaf that
 #     "forgot to cd" via ANY of these canonical spellings now BLOCKs at the shared tree.
+#   * sim-SERVER vs sim-SEED split (D2 Wave 2, 2026-07-12): guard B previously blocked the
+#     CLAUDE.md-documented `cargo run -p reposix-sim` server start (":7878") wholesale,
+#     breaking a core workflow with no clean workaround (cargo needs the source tree).
+#     Verified git-safe (reposix-sim's run() issues NO git commands; the DB path defaults to
+#     the gitignored runtime/sim.db, or --ephemeral), so a bare server start now ALLOWs.
+#     Only an actual `seed` argument (`reposix-sim … seed`, `cargo run … -- seed`) — a
+#     genuine seed-INTO workflow — still BLOCKs at the shared tree.
 #   * realpath-based effective-location: the /tmp-means-safe decision resolves the EFFECTIVE
 #     target (last `cd`, or a git path-flag target, else the payload cwd) and
 #     realpath-canonicalizes it, so `cd /tmp/x && cd <shared>`, `/tmp/../<shared>`, and a
@@ -225,10 +236,14 @@ $RECOVERY_HINT"
 # (`reposix init`), path-suffixed (`/usr/bin/reposix init`, `./target/debug/reposix init`),
 # or via cargo (`cargo run -p reposix-cli -- init`). The `([^[:space:]]*/)?` optional path
 # prefix absorbs an absolute/relative binary path; the cargo branch matches
-# `cargo run … -- <verb>`. sim-seed coverage (HONEST scope): bare/path-suffixed
-# `reposix-sim`, PLUS the cargo spellings `cargo run … -p reposix-sim` and
-# `cargo run … -- seed` (D2 defect C — the cargo spelling previously slipped because
-# `reposix-sim` sits at an ARGUMENT position, not command position, under `cargo run`).
+# `cargo run … -- <verb>`. sim-SEED coverage (HONEST scope, narrowed D2 Wave 2): a
+# `reposix-sim … seed …` (bare/path-suffixed) OR a `cargo run … -- seed` — the ACTUAL
+# seed-INTO spellings — BLOCK at the shared tree. A bare sim-SERVER start
+# (`cargo run -p reposix-sim`, `reposix-sim`, `reposix-sim --bind …`) is git-safe (run()
+# issues no git commands; DB defaults to the gitignored runtime/sim.db) and is ALLOWed —
+# it no longer matches, un-breaking the CLAUDE.md ":7878" quickstart. `cargo run -p
+# reposix-sim -- seed` stays blocked via the `cargo run … -- seed` branch (the `-p
+# reposix-sim` sits inside the pre-`--` span).
 # `git init` coverage (D2 defect B): a bare `git init` or `git init --bare` at a command
 # position in the shared tree reaches the founding core.bare=true end-state directly and is
 # now blocked; `cd /tmp/x && git init --bare` stays ALLOWed (effective target under /tmp).
@@ -240,8 +255,7 @@ guard_leaf_setup_location() {
   elif at_command_position 'cargo[[:space:]]+run[^;&|]*--[[:space:]]+init';   then verb="cargo run -- init"
   elif at_command_position 'cargo[[:space:]]+run[^;&|]*--[[:space:]]+attach'; then verb="cargo run -- attach"
   elif at_command_position 'cargo[[:space:]]+run[^;&|]*--[[:space:]]+sync';   then verb="cargo run -- sync"
-  elif at_command_position '([^[:space:]]*/)?reposix-sim';               then verb="sim-seed (reposix-sim)"
-  elif at_command_position 'cargo[[:space:]]+run[^;&|]*-p[[:space:]]+reposix-sim'; then verb="sim-seed (cargo run -p reposix-sim)"
+  elif at_command_position '([^[:space:]]*/)?reposix-sim[[:space:]]+([^;&|]*[[:space:]])?seed([[:space:]]|$)'; then verb="sim-seed (reposix-sim seed)"
   elif at_command_position 'cargo[[:space:]]+run[^;&|]*--[[:space:]]+seed';        then verb="sim-seed (cargo run -- seed)"
   elif at_command_position '([^[:space:]]*/)?git[[:space:]]+init';        then verb="git init"
   fi

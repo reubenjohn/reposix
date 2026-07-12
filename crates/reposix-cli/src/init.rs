@@ -107,6 +107,52 @@ pub fn translate_spec_to_url(spec: &str) -> Result<String> {
     }
 }
 
+/// Refuse to `reposix init` a target that is ALREADY a git repository root.
+///
+/// `reposix init` runs `git init <path>` + `git config …` in place; pointed at
+/// an existing checkout it RE-INITIALIZES that tree and rewrites
+/// `extensions.partialClone` + `remote.origin.url` — the move that flipped
+/// `core.bare` and repointed `origin` at the sim on the shared dev tree
+/// (2026-07-12 D2 corruption). `init` must CREATE a new tree; adopting an
+/// existing one is `reposix attach`'s job.
+///
+/// Rule (fail-closed, product-sensible — not a `/tmp` special-case): refuse iff
+/// the target path already exists AND a `.git` entry (dir or gitfile) sits
+/// directly at it, i.e. the target IS a git working-tree root. A path that does
+/// not yet exist — even a fresh subdir nested INSIDE an existing working tree,
+/// which is exactly the sanctioned `git clone <repo> /tmp/leaf && cd /tmp/leaf
+/// && reposix init sim::demo <fresh-subdir>` flow — is allowed, as is a fresh
+/// new dir anywhere on disk for a legit end-user init.
+///
+/// # Errors
+/// Returns a teaching error naming `reposix attach` and the /tmp-clone recovery
+/// when `path` is an existing git repository root.
+fn refuse_existing_repo_root(path: &Path) -> Result<()> {
+    // A non-existent target is always a fresh tree → allow. `.git` resolution
+    // below follows symlinks / `..` via the filesystem, so a symlinked or
+    // traversal-smuggled path that lands on a real repo root still refuses.
+    if !path.exists() {
+        return Ok(());
+    }
+    if !path.join(".git").exists() {
+        // Exists but is NOT a repo root (empty dir, or a plain dir of files).
+        // `git init` here creates a NEW tree — allowed.
+        return Ok(());
+    }
+    bail!(
+        "reposix init: refusing to initialize `{path}` — it is already a git repository root.\n\
+         `reposix init` CREATES a fresh partial-clone working tree; re-initializing an existing \
+         checkout rewrites core.bare + remote.origin and corrupts the tree (the 2026-07-12 \
+         shared-tree incident).\n\
+         Fix: point init at a FRESH, non-existent path, e.g. a new subdir:\n  \
+         reposix init <backend>::<project> {path}/reposix-clone\n\
+         To adopt an EXISTING checkout into a reposix backend instead, use `reposix attach`.\n\
+         For throwaway test setup, clone into /tmp first:\n  \
+         git clone <repo> /tmp/leaf && cd /tmp/leaf && reposix init sim::demo sub",
+        path = path.display(),
+    )
+}
+
 /// Run `git <args...>` and return a useful error on non-zero exit.
 fn run_git(args: &[&str]) -> Result<()> {
     let mut cmd = Command::new("git");
@@ -203,6 +249,14 @@ pub fn run(spec: String, path: PathBuf) -> Result<()> {
 /// - The local `git fetch <cache-path> <oid>` to bring the historical
 ///   commit into the working tree fails.
 pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Result<()> {
+    // FAIL-CLOSED binary-side refusal (D2 re-seal, v0.14.0 Wave 2). This runs
+    // BEFORE any filesystem/git mutation so it also stops a SUBPROCESS bypass
+    // of the Bash-tool leaf-isolation hook — the exact recurrence path that
+    // corrupted the shared dev tree on 2026-07-12 (a `reposix init` reached the
+    // shared checkout via a worktree/subprocess that never touched the
+    // PreToolUse guard). Only a refusal INSIDE the binary can cut that vector.
+    refuse_existing_repo_root(&path)?;
+
     let url = translate_spec_to_url(&spec)?;
 
     // Ensure parent dir exists for `git init`. `git init` creates the leaf
@@ -659,6 +713,67 @@ mod tests {
         assert!(
             repo.join(".git").exists(),
             "git init should have run in the isolated tempdir before the fetch"
+        );
+    }
+
+    /// D2 re-seal (v0.14.0 Wave 2): `reposix init` MUST fail-closed when its
+    /// target is ALREADY a git working-tree root — the corruption shape that
+    /// re-initialized (and flipped core.bare on) the shared dev tree. The
+    /// refusal runs BEFORE any git/filesystem mutation, so a subprocess bypass
+    /// of the Bash-tool hook is still cut. The whole test is confined to a
+    /// tempdir; nothing touches the shared repo.
+    #[test]
+    // test-name-honesty: ok — builds a real repo-root marker (`.git/`) at the target
+    // and asserts init REFUSES with a teaching error naming `attach`; the failure
+    // contract, not a success round-trip.
+    fn init_refuses_existing_repo_root() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let repo = tmp.path().join("existing");
+        std::fs::create_dir_all(repo.join(".git")).expect("make a git repo-root marker");
+        let err = run("sim::demo".to_string(), repo.clone())
+            .expect_err("init must refuse an existing git repository root");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("already a git repository root") && msg.contains("reposix attach"),
+            "refusal must explain the corruption shape and name `reposix attach`, got: {msg}"
+        );
+        // Fail-closed: the refusal fired before `translate_spec_to_url` /
+        // `git init`, so no `remote.origin.url` config was written into the
+        // pre-existing `.git` — the tree is byte-unchanged.
+        assert!(
+            !repo.join(".git/config").exists(),
+            "refusal must run BEFORE any git config write (no re-init happened)"
+        );
+    }
+
+    /// D2 re-seal (v0.14.0 Wave 2): the refusal MUST NOT fire on a FRESH subdir
+    /// nested inside an existing working tree — the sanctioned
+    /// `git clone <repo> /tmp/leaf && cd /tmp/leaf && reposix init sim::demo
+    /// <fresh-subdir>` flow (and the dark-factory gate, which inits
+    /// `$RUN_DIR/repo`). The only failure here is the expected unreachable-sim
+    /// fetch error, proving init got PAST the refusal to the sync step.
+    #[test]
+    // test-name-honesty: ok — creates a `.git/` repo-root marker then inits a fresh
+    // nested subdir and asserts the refusal does NOT fire (error is the fetch error,
+    // not the refusal); proves the sanctioned /tmp-clone flow stays green.
+    fn init_allows_fresh_subdir_inside_existing_repo() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        // Make the tempdir itself a git repo root, mirroring a /tmp clone.
+        std::fs::create_dir_all(tmp.path().join(".git")).expect("repo-root marker");
+        let fresh = tmp.path().join("fresh-subdir");
+        // No sim listening on the default origin → the fetch step fails. That
+        // is the ONLY thing that should fail: the refusal must have allowed us
+        // through.
+        let err = run("sim::demo".to_string(), fresh)
+            .expect_err("unreachable sim → the initial fetch fails");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("could not sync"),
+            "init must reach the fetch step on a fresh subdir (refusal did NOT fire), got: {msg}"
+        );
+        assert!(
+            !msg.contains("already a git repository root"),
+            "the existing-repo-root refusal must NOT fire on a fresh nested subdir, got: {msg}"
         );
     }
 }
