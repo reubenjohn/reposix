@@ -749,7 +749,7 @@
       "id": "structure/claim-vs-assertion-audit-required",
       "dimension": "structure",
       "kind": "mechanical",
-      "comment": "RBF-FW-11 (P89 89-07) — load-time runner cross-check: every catalog row minted on/after 2026-05-08 must carry a claim_vs_assertion_audit string >=50 chars stating how the verifier's asserts would falsify the row's description claim if false; kind:shell-subprocess rows must ALSO declare a transcript-emitting contract (transcript_path). Pre-cutoff legacy rows (P78-P88) validate without the field until P95 RBF-D-06 backfills. Minted NOT-VERIFIED in the P89 catalog-first commit (89-01), which eats its own dogfood — all 6 P89 rows carry the field; verifier ships in 89-07.",
+      "comment": "RBF-FW-11 (P89 89-07; grandfather rule fixed P109 / D2-RBF-FW11-GRANDFATHER-FIX-01) — load-time runner cross-check: every catalog row minted on/after 2026-05-08 must carry a claim_vs_assertion_audit string >=50 chars stating how the verifier's asserts would falsify the row's description claim if false; kind:shell-subprocess rows must ALSO declare a transcript-emitting contract (transcript_path). GRANDFATHER: rows present at the RBF-FW-11-landing commit (8413184) are exempt even when their last_verified is null — catalog_dirty() drops last_verified from unchanged rows (run.py:502 rolls it back), so a legacy row routinely presents null; the grandfather set keys off LANDING-COMMIT PRESENCE (GRANDFATHERED_NULL_LV in _audit_field.py), NOT a null-last_verified proxy. A null-last_verified row NOT in that set is still forced to carry the field (closes the omit-last_verified dodge). Pre-cutoff legacy rows (P78-P88) validate without the field until P95 RBF-D-06 backfills. Minted NOT-VERIFIED in the P89 catalog-first commit (89-01), which eats its own dogfood — all 6 P89 rows carry the field; verifier ships in 89-07.",
       "sources": [
         "quality/runners/_audit_field.py",
         "quality/runners/run.py:72-81",
@@ -758,9 +758,11 @@
       "command": "bash quality/gates/structure/claim-vs-assertion-audit-required.sh",
       "expected": {
         "asserts": [
-          "load_catalog() refuses any catalog containing a row with last_verified >= 2026-05-08 OR last_verified=null AND missing claim_vs_assertion_audit string >=50 chars",
+          "load_catalog() refuses any row minted on/after 2026-05-08 (minted_at >= cutoff when present, else last_verified >= cutoff) that is missing a claim_vs_assertion_audit string >=50 chars",
+          "load_catalog() GRANDFATHERS a row present at the RBF-FW-11-landing commit (8413184, GRANDFATHERED_NULL_LV) even when its last_verified is null and it lacks the field — a null last_verified is NOT treated as 'new' (catalog_dirty() drops it from unchanged rows), the grandfather rule keys off landing-commit presence not the null proxy",
+          "load_catalog() STILL refuses a null-last_verified row that is NOT in the landing grandfather set and lacks the field — closing the 'omit last_verified to dodge the audit requirement' hole a bare null->grandfathered heuristic would open",
           "load_catalog() additionally refuses any row with kind: shell-subprocess that lacks expected.artifact.transcript_path (or equivalent transcript-emitting contract)",
-          "SystemExit message names the catalog path + row id + cutoff date"
+          "SystemExit message names the catalog path + row id + cutoff date, and teaches the grandfather distinction"
         ]
       },
       "verifier": {
@@ -774,8 +776,8 @@
       "last_verified": "2026-07-04T04:50:28Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
-      "owner_hint": "add a claim_vs_assertion_audit paragraph (>=50 chars) to the row explaining how the verifier would falsify the description claim if false; for kind:shell-subprocess rows ALSO declare a transcript path",
-      "claim_vs_assertion_audit": "The verifier asserts that `python3 -m unittest quality.runners.test_audit_field` constructs a synthetic catalog containing a row dated 2026-05-08 with no `claim_vs_assertion_audit` field and that load_catalog() refuses it with `SystemExit(FAIL: ...missing claim_vs_assertion_audit (>=50 chars required for rows minted on/after 2026-05-08))`, AND additionally that any row declaring `kind: shell-subprocess` without an emitting-transcript contract triggers `SystemExit(FAIL: ...kind=shell-subprocess row missing transcript_path)`. If the description's claim ('the runner enforces the field on rows minted >= 2026-05-08, grandfathers older rows, AND enforces transcript_path on kind:shell-subprocess rows') were false — e.g., the date-cutoff was hard-coded to a future date, the field check was absent, or the kind=shell-subprocess sub-rule was missing — the assertion would fail because the synthetic catalogs would load successfully and the test would error.",
+      "owner_hint": "add a claim_vs_assertion_audit paragraph (>=50 chars) to the row explaining how the verifier would falsify the description claim if false; for kind:shell-subprocess rows ALSO declare a transcript path. A null-last_verified NEW row (not present at landing commit 8413184) is NOT grandfathered — it must carry the field.",
+      "claim_vs_assertion_audit": "The verifier asserts that `python3 -m unittest quality.runners.test_audit_field` (a) rejects a synthetic row dated 2026-05-08 with no `claim_vs_assertion_audit` via `SystemExit(FAIL: ...missing claim_vs_assertion_audit (>=50 chars required...))`, (b) GRANDFATHERS a row whose fully-qualified key is in GRANDFATHERED_NULL_LV (present at the RBF-FW-11-landing commit 8413184) with last_verified=null and no field — load_catalog() succeeds, (c) STILL rejects a null-last_verified row NOT in that set and lacking the field (the dodge-close), and (d) rejects any `kind: shell-subprocess` row lacking an emitting-transcript contract. If the description's claim ('the runner enforces the field on rows minted >= 2026-05-08, grandfathers rows present at the landing commit — keyed off commit presence, NOT a null-last_verified proxy — and still forces the field on genuinely-new null-last_verified rows, AND enforces transcript_path on kind:shell-subprocess rows') were false — e.g., the grandfather rule keyed off null last_verified (mis-grandfathering new rows and re-opening the dodge), or force-classified the 4 legacy null-lv rows as new, or the transcript sub-rule was missing — the assertion would fail because the synthetic grandfathered catalog would raise, or the synthetic new null-lv catalog would load, and the test would error.",
       "waiver": null,
       "cadences": [
         "pre-push",
