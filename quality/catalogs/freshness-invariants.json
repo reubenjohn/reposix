@@ -574,7 +574,8 @@
           "reposix-quality walk exits 0 when every row's source_hash + test_body_hash match the on-disk content",
           "reposix-quality walk exits non-zero on any blocking row state (STALE_DOCS_DRIFT, MISSING_TEST, STALE_TEST_GONE, TEST_MISALIGNED, RETIRE_PROPOSED) AND prints the slash-command hint to stderr verbatim",
           "the walker NEVER refreshes stored hashes; only `bind` does, and only after grader returns GREEN (asserted by crates/reposix-quality/tests/walk.rs)",
-          "on the empty-state catalog (P64 Wave 1; rows == []), the walker exits 0"
+          "on the empty-state catalog (P64 Wave 1; rows == []), the walker exits 0",
+          "GRADE/PERSIST split (walk.sh): a bare grade run (no --persist) walks a throwaway copy and leaves quality/catalogs/doc-alignment.json byte-identical, so `git status` stays clean; only `walk.sh --persist` writes the committed catalog -- run.py never forwards --persist to a verifier, so pre-push/pre-pr GATE runs are grade-only"
         ]
       },
       "verifier": {
