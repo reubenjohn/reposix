@@ -57,14 +57,48 @@ class TestValidateRow(unittest.TestCase):
         }
         _audit_field.validate_row(row, "test.json", parse_rfc3339)
 
-    def test_null_last_verified_treated_as_new_fails_without_field(self):
-        row = {"id": "x/y", "last_verified": None}
-        with self.assertRaises(SystemExit):
-            _audit_field.validate_row(row, "test.json", parse_rfc3339)
+    # --- RBF-FW-11 grandfather rule (P109 / D2-RBF-FW11-GRANDFATHER-FIX-01) ---
+    # A null last_verified is NOT a "new" signal: catalog_dirty() drops
+    # last_verified from unchanged rows, so a legacy row present at the
+    # RBF-FW-11-landing commit routinely presents null. Grandfathering keys off
+    # LANDING-COMMIT PRESENCE (GRANDFATHERED_NULL_LV), not the null value, so
+    # (a) the legacy rows are not force-classified as new, and (b) a genuinely
+    # new row cannot dodge the field by omitting last_verified.
 
-    def test_null_last_verified_with_valid_field_passes(self):
+    # Use a real frozen-set member to exercise the grandfather branch. Splitting
+    # "<catalog-basename>::<row-id>" keeps the test resilient to set edits.
+    _GF_KEY = sorted(_audit_field.GRANDFATHERED_NULL_LV)[0]
+    _GF_CATALOG, _GF_ID = _GF_KEY.split("::", 1)
+
+    def test_grandfathered_null_lv_row_passes_without_field(self):
+        # THE FIX: a row present at the landing commit (in GRANDFATHERED_NULL_LV)
+        # with null last_verified and NO audit field must load clean -- it is
+        # grandfathered, not forced. Under the pre-P109 bug it was mis-classified
+        # as new and would only pass because 89-07 had backfilled the field.
+        row = {"id": self._GF_ID, "last_verified": None}
+        _audit_field.validate_row(row, self._GF_CATALOG, parse_rfc3339)  # no raise
+
+    def test_non_grandfathered_null_lv_row_still_forced(self):
+        # THE DODGE-CLOSE: a null-last_verified row NOT in the landing set is
+        # genuinely new and still REQUIRED to carry the field. This is what makes
+        # keying off landing-commit presence (not the bare null value) safe.
+        row = {"id": "brand/new-row", "last_verified": None}
+        with self.assertRaises(SystemExit) as ctx:
+            _audit_field.validate_row(row, "some-other-catalog.json", parse_rfc3339)
+        msg = str(ctx.exception)
+        self.assertIn("missing claim_vs_assertion_audit", msg)
+        self.assertIn("grandfather", msg.lower())  # error teaches the distinction
+
+    def test_grandfathered_key_is_catalog_scoped(self):
+        # The frozen set is keyed by "<catalog>::<id>": a matching id in the
+        # WRONG catalog is NOT grandfathered (guards against id-only collisions).
+        row = {"id": self._GF_ID, "last_verified": None}
+        with self.assertRaises(SystemExit):
+            _audit_field.validate_row(row, "wrong-catalog.json", parse_rfc3339)
+
+    def test_non_grandfathered_null_lv_with_valid_field_passes(self):
         row = {"id": "x/y", "last_verified": None, "claim_vs_assertion_audit": VALID_AUDIT}
-        _audit_field.validate_row(row, "test.json", parse_rfc3339)
+        _audit_field.validate_row(row, "test.json", parse_rfc3339)  # no raise
 
     def test_post_cutoff_row_missing_field_fails(self):
         row = {"id": "x/y", "last_verified": "2026-06-01T12:00:00Z"}

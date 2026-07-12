@@ -13,6 +13,12 @@ already over its 350-line anti-bloat cap -- see 90-RESEARCH-runner.md § 2):
   the SOLE audit-cutoff anchor (a hand-edited last_verified can no longer
   move the cutoff). Rows minted on/after P90 (carrying minted_at) whose
   last_verified is >= P90_MINT_CUTOFF but lack minted_at are rejected.
+- RBF-FW-11 grandfather rule (P109 / D2-RBF-FW11-GRANDFATHER-FIX-01): a row
+  with null `last_verified` is grandfathered iff it was present at the
+  RBF-FW-11-landing commit (GRANDFATHERED_NULL_LV) -- keyed off landing-commit
+  presence, NOT the null value itself (catalog_dirty() drops last_verified from
+  unchanged rows, so null != new). A null-lv row NOT in that set is treated as
+  new and forced to carry claim_vs_assertion_audit (closes the dodge hole).
 - `coverage_kind` load-time validation (RBF-FW-06 / D90-05): transport/perf
   rows minted >= P90 MUST declare coverage_kind: real-backend (or a
   compliant waiver). Legacy transport rows are RAISE-only (the walker's
@@ -41,6 +47,37 @@ CUTOFF_ISO = "2026-05-08T00:00:00Z"  # Z suffix, not +00:00, for parser portabil
 # run is retroactively forced to add minted_at (D90-03 / P90-D2).
 P90_MINT_CUTOFF = "2026-07-05T00:00:00Z"
 MIN_LEN = 50
+
+# RBF-FW-11 grandfather set (P109 / D2-RBF-FW11-GRANDFATHER-FIX-01). The
+# claim_vs_assertion_audit requirement LANDED at commit 8413184
+# ("feat(P89): claim_vs_assertion_audit field + runner cross-check (RBF-FW-11)").
+# A row present in a catalog at that commit predates the rule and cannot be
+# retroactively forced to carry the field -- it is GRANDFATHERED.
+#
+# The prior heuristic used "last_verified is null" as the grandfather proxy, but
+# catalog_dirty() (run.py) drops last_verified from ANY unchanged row and
+# run.py:502 rolls it back on every non-flipping run, so a null last_verified is
+# NOT a reliable "new" signal -- a legacy row routinely presents null. Worse, a
+# genuinely-NEW row hand-minted with null last_verified and no minted_at could
+# then dodge the field entirely. Keying off LANDING-COMMIT PRESENCE instead of
+# the null proxy is the requirement's literal intent AND closes that dodge: a
+# null-last_verified row NOT in this frozen set is treated as new and forced to
+# carry the field.
+#
+# Only rows hand-minted with null last_verified ever reach the null branch (the
+# runner never WRITES null onto an existing row -- a status flip stamps a fresh
+# artifact ts, and unchanged rows roll back to their original non-null value), so
+# the set need only enumerate the minted-null rows present at landing. Membership
+# is re-derivable and auditable:
+#   for id in <keys below>; do git grep -l "${id##*/}" 8413184 -- quality/catalogs/; done
+# Keys are "<catalog-basename>::<row-id>".
+RBF_FW11_LANDING_SHA = "8413184"
+GRANDFATHERED_NULL_LV = frozenset({
+    "docs-reproducible.json::benchmark-claim/8ms-cached-read",
+    "docs-reproducible.json::benchmark-claim/89.1-percent-token-reduction",
+    "freshness-invariants.json::structure/release-plz-disables-gh-releases",
+    "subjective-rubrics.json::subjective/dvcs-cold-reader",
+})
 
 # RBF-FW-06 transport/perf detection (P90-D1 tri-state). Regex over comment +
 # id ONLY (never expected.asserts -- that would let a meta-row describing the
@@ -243,17 +280,29 @@ def validate_row(
     lv = row.get("last_verified")
     minted = row.get("minted_at")
     cutoff = parse_rfc3339(CUTOFF_ISO)
+    row_key = f"{Path(catalog_path).name}::{row.get('id', '?')}"
+    grandfathered = False
     # D90-03 (cross-AI H2): minted_at, when present, is the SOLE immutable
     # audit-cutoff anchor -- a hand-edited last_verified no longer moves the
-    # cutoff. Absent -> the legacy null-or-last_verified heuristic.
+    # cutoff. Absent -> the legacy grandfather/last_verified heuristic.
     if minted is not None:
         is_new = parse_rfc3339(minted) >= cutoff
+    elif lv is None:
+        # P109 / D2-RBF-FW11-GRANDFATHER-FIX-01: a null last_verified is NOT a
+        # "new" signal -- catalog_dirty() drops last_verified from unchanged
+        # rows. Grandfather ONLY the rows present at the RBF-FW-11-landing commit
+        # (GRANDFATHERED_NULL_LV); a null-lv row NOT in that set is genuinely new
+        # (added after the rule existed) and is still forced to carry the field,
+        # closing the "omit last_verified to dodge the audit requirement" hole.
+        grandfathered = row_key in GRANDFATHERED_NULL_LV
+        is_new = not grandfathered
     else:
-        is_new = lv is None or parse_rfc3339(lv) >= cutoff
+        is_new = parse_rfc3339(lv) >= cutoff
         # Post-P90 rows MUST carry minted_at (closes the backdate dodge for new
-        # rows). Null-lv legacy rows are NOT forced -- the 5 null-last_verified
-        # legacy rows keep loading (89-07 already backfilled their audit field).
-        if lv is not None and parse_rfc3339(lv) >= parse_rfc3339(P90_MINT_CUTOFF):
+        # rows). Applies only when last_verified is present -- a null-lv row is
+        # classified by landing-commit membership above, never forced to add
+        # minted_at (README: null-last_verified legacy rows are not forced).
+        if parse_rfc3339(lv) >= parse_rfc3339(P90_MINT_CUTOFF):
             raise SystemExit(
                 f"FAIL: {catalog_path}: row {row.get('id', '?')} has last_verified "
                 f">= {P90_MINT_CUTOFF} but lacks a write-once minted_at anchor -- "
@@ -263,10 +312,16 @@ def validate_row(
     if is_new:
         audit = row.get("claim_vs_assertion_audit")
         if not isinstance(audit, str) or len(audit.strip()) < MIN_LEN:
+            null_lv_hint = (
+                " (this row has a null last_verified but is NOT in the RBF-FW-11 "
+                "landing grandfather set, so it counts as NEW -- add the field, or "
+                "if it genuinely predates commit " + RBF_FW11_LANDING_SHA + " add "
+                "its key to GRANDFATHERED_NULL_LV in _audit_field.py)"
+            ) if lv is None else ""
             raise SystemExit(
                 f"FAIL: {catalog_path}: row {row.get('id', '?')} missing "
                 f"claim_vs_assertion_audit (>={MIN_LEN} chars required for rows "
-                f"minted on/after {CUTOFF_ISO}); see "
+                f"minted on/after {CUTOFF_ISO}){null_lv_hint}; see "
                 f"quality/catalogs/README.md schema table for the field's contract"
             )
     # RBF-FW-06 / D90-05: transport/perf rows minted >= P90 (i.e. carrying
