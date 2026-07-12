@@ -52,6 +52,21 @@ never suppress a gate; guard context aggressively (fork, prune, lean on git).
      `CLAUDE.md`, `.planning/ORCHESTRATION.md` §3/§6. **New standing rule: never open the
      next phase over a red main.**
 
+**③ release-plz RED on main — RESOLVED, verified green** (owner eyes-and-ears BLOCKER).
+release-plz refused on a dirty CI checkout: three
+`quality/reports/verifications/agent-ux/fleet-safety-*.json` regenerate at grade time with
+env-dependent assert outcomes, so byte-stability (309f0b6's approach) was fundamentally
+fragile. Fix = **untrack** them (approach 2, P102 precedent `fbe02c8`; nothing reads them
+as a baseline, already matched `.gitignore:72`): `git rm --cached` the 3 + regression pytest
+`quality/runners/test_fleet_safety_verdicts_untracked.py`. Commit `3d3e60e` — release-plz
+run `29199764486` **success** (prior two runs failure; the fix flipped it). NEW filed items:
+(a) **fold release-plz into the `code/ci-green-on-main` bar** — decided YES-in-principle but
+NON-TRIVIAL (probe hardcodes `WORKFLOW=ci.yml`; needs parameterization + false-RED design re
+"does release-plz run every push / is no-release success-or-skipped") → CONSULT-DECISIONS D5
++ SURPRISES-INTAKE with sketch; (b) **runner unit tests uncollected by CI** (regression
+guards inert in CI) → SURPRISES-INTAKE MEDIUM (`856f52f`). NB: `SURPRISES-INTAKE.md` now
+30k chars, over its 20k soft limit — the C2's P110 intake drain should split it.
+
 ## 3. IN FLIGHT — v0.14.0 READY queue owned by a milestone C2 (opus phase-coordinator)
 
 A milestone-scoped C2 (`SendMessage` to `add159944b57d8a99`) is driving the owner's fixed
@@ -68,16 +83,6 @@ order autonomously; phase rotations absorb below the top. Its charter (queue det
 - **P110/P111** — OP-8 drains + milestone-close (RETROSPECTIVE/OP-9, CHANGELOG, tag-script,
   9th probe). BLOCKED until P106+P107 GREEN. C2 STOPS at the tag boundary (owner cuts `v*`).
 - **P112** — OD-4 launch-readiness SCOPE-ONLY stub, DO-NOT-START.
-
-**IN FLIGHT (parallel to C2) — release-plz RED fix** (`SendMessage` → `a5121f9134cea2f6d`,
-opus): owner eyes-and-ears found release-plz persistently RED on main (run `29199251313`)
-— it refuses on a dirty CI checkout because three
-`quality/reports/verifications/agent-ux/fleet-safety-*.json` regenerate at grade time and
-diverge from committed content (same re-dirty class `309f0b6` fixed locally; CI path still
-hits it). Lane is choosing byte-stable-at-grade vs gitignore+untrack (P102 precedent),
-building a dirty→clean regression check, and deciding whether release-plz folds into the
-`code/ci-green-on-main` bar. **Runs CARGO-FREE** (C2 holds the machine-wide cargo token) —
-if a future L0 dispatches more, respect the single-cargo rule vs both live lanes.
 
 RESIDUAL follow-up (defense-in-depth, observed vector already closed): worktree-shared
 `.git` object-store self-safety + non-Bash subprocess boundary — not yet lane'd.
