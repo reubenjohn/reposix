@@ -145,6 +145,90 @@ mechanical `#[cfg(test)]`-extraction pass proves < 1h.
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-05 — `shell-verdict-determinism-unittest` — regression test for the canonical deterministic verdict schema
+
+**Discovered during:** P102 fleet-safety persist-gate fix (commit `309f0b6`, D-P96-01 extended)
+
+**Size:** S (rough effort estimate)
+
+**Source:** `quality/runners/_shell_verdict.py` (new module) is the single source of truth
+for the canonical deterministic verdict — the exact key order + `json.dumps(indent=2)+"\n"`
+byte shape that both producers (`quality/gates/agent-ux/lib/transcript.sh` and `run.py`'s
+write-back) funnel through to STOP the fleet-safety JSON re-dirty bug. That byte-determinism /
+key-order contract is currently proven only empirically (the 2×-clean pre-push gate run), NOT
+by a unit test: `quality/runners/test_run.py` / `test_verdict.py` have zero references to
+`_shell_verdict` / `canonical_verdict`. A future refactor of key order or `dumps()` formatting
+would silently reintroduce the re-dirty bug with no test catching it.
+
+**Acceptance:** `quality/runners/test_shell_verdict.py` exists and asserts byte-identical
+output + stable key order for a fixed input (and, ideally, that two serializations of the
+same dict are byte-equal). Runs green under the existing runner unit-test suite.
+
+**Default disposition for P111:** S closes-or-defers; close early (< 1h, no new dependency —
+a focused pytest against the existing module).
+
+**STATUS:** OPEN
+
+## GOOD-TO-HAVES-06 — `run-py-anti-bloat-cap` — `run.py` exceeds the 15000-char anti-bloat cap
+
+**Discovered during:** P102 fleet-safety persist-gate fix (commit `309f0b6`, D-P96-01 extended)
+
+**Size:** S (rough effort estimate)
+
+**Source:** `quality/runners/run.py` is now ~24063 chars → PRE-EXISTING pre-commit WARN on
+every commit (already visible each commit; filed so it is tracked as intended debt, not just
+noise). `_audit_field.py` / `_realbackend.py` were split out for exactly this reason; `run.py`
+still needs a further extract. Related to (and narrower than) GOOD-TO-HAVES-02, which tracks
+the broader `structure/file-size-limits.sh` residual — this row names the specific 15000-char
+anti-bloat WARN on `run.py` post-persist-gate wiring.
+
+**Acceptance:** `run.py` drops back under the 15000-char anti-bloat cap with no WARN. Sketch:
+extract the shell-subprocess / verdict-writing helpers (and/or the new canonical-verdict
+wiring) into a submodule, mirroring the `_audit_field` / `_realbackend` splits.
+
+**Default disposition for P111:** S closes-or-defers; safe to defer (a WARN, not a fail).
+Close early if a mechanical helper-extraction pass proves < 1h.
+
+**STATUS:** OPEN
+
+## GOOD-TO-HAVES-07 — `fleet-safety-verdict-gitignore-exception` — `!`-exception inconsistency for the 3 fleet-safety verdicts
+
+**Discovered during:** P102 fleet-safety persist-gate fix (commit `309f0b6`, D-P96-01 extended)
+
+**Size:** XS (rough effort estimate)
+
+**Source:** the p93 tracked verdicts are explicitly `!`-excepted in `.gitignore`, but the 3
+`quality/reports/verifications/agent-ux/fleet-safety-*.json` are tracked only because of a
+past `git add -f` — they are NOT `!`-excepted. They work today, but a fresh clone + a stray
+`git rm --cached` could silently un-track them, leaving the fleet-safety verdicts ungrounded.
+
+**Acceptance:** explicit `!`-exception lines for the 3 `fleet-safety-*.json` verdict paths
+added to `.gitignore`, matching the p93 convention; `git check-ignore` confirms none are
+ignored.
+
+**Default disposition for P111:** XS always closes.
+
+**STATUS:** OPEN
+
+## GOOD-TO-HAVES-08 — `stale-rfc3339-transcript-sweep` — pre-existing per-run RFC3339 transcripts never swept
+
+**Discovered during:** P102 fleet-safety persist-gate fix (commit `309f0b6`, D-P96-01 extended)
+
+**Size:** XS (rough effort estimate — cosmetic)
+
+**Source:** the persist-gate fix switched the 3 fleet-safety gates to a STABLE transcript
+filename (`<slug>.txt`, gitignored, overwritten per run), which stops NEW accumulation — but
+pre-existing `...-<RFC3339>.txt` transcripts from prior runs are gitignored and never swept,
+so they linger on disk.
+
+**Acceptance:** a one-time cleanup removes the orphaned RFC3339-stamped transcripts, and
+(optionally) the gate lib gains a sweep step that clears orphaned per-run transcripts on each
+run so the residue cannot re-accumulate.
+
+**Default disposition for P111:** XS always closes.
+
+**STATUS:** OPEN
+
 ## Entry format
 
 ```markdown
