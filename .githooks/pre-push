@@ -58,10 +58,22 @@ fi
 # Avoid `if ! cmd; then exit $?; fi` -- $? after `! cmd` is the exit of the
 # negation (always 0), masking the real failure and letting bad pushes
 # through (caught 2026-04-28 when push went through with FAIL rows).
+SECONDS=0
 python3 "$REPO_ROOT/quality/runners/run.py" --cadence pre-push
 RUNNER_EXIT=$?
 if [[ $RUNNER_EXIT -ne 0 ]]; then
   exit "$RUNNER_EXIT"
+fi
+
+# (2b) Non-blocking timing-budget tripwire. quality/CLAUDE.md § Cadences documents
+# pre-push <60s as a FIXED whole-repo cost (does NOT scale with diff size -- a one-line
+# commit and a 500-file commit pay the same tax). A creep past budget usually means a
+# new whole-repo gate (another kcov-style full-corpus walk), not a bigger diff. Warn
+# only; never touch the exit code (a real FAIL already exited above / aborted under
+# set -e). Not a doc-alignment claim, no catalog row.
+elapsed=$SECONDS
+if [[ $elapsed -gt 90 ]]; then
+  echo "pre-push: WARN — took ${elapsed}s (budget ~60s, quality/CLAUDE.md § Cadences) — check for a new whole-repo gate before assuming diff size is the cause." >&2
 fi
 
 # (3) Optional personal add-on chain. Only delegate to global when

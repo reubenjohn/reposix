@@ -72,10 +72,21 @@ fi
 # Avoid `if ! cmd; then exit $?; fi` -- $? after `! cmd` is the exit of
 # the negation (always 0), masking the real failure. Same pattern as
 # .githooks/pre-push step (2).
+SECONDS=0
 python3 "$REPO_ROOT/quality/runners/run.py" --cadence pre-commit
 RUNNER_EXIT=$?
 if [[ $RUNNER_EXIT -ne 0 ]]; then
   exit "$RUNNER_EXIT"
+fi
+
+# (2b) Non-blocking timing-budget tripwire. quality/CLAUDE.md § Cadences documents
+# pre-commit <2s as a FIXED whole-repo cost (does NOT scale with diff size). A creep
+# past budget usually means a new whole-repo gate, not a bigger diff. Warn only; never
+# touch the exit code (a real FAIL already exited above). Same class of hook-internal
+# comment as the blocks above -- not a doc-alignment claim, no catalog row.
+elapsed=$SECONDS
+if [[ $elapsed -gt 3 ]]; then
+  echo "pre-commit: WARN — took ${elapsed}s (budget ~2s, quality/CLAUDE.md § Cadences) — check for a new whole-repo gate before assuming diff size is the cause." >&2
 fi
 
 # (3) Optional personal add-on chain.
