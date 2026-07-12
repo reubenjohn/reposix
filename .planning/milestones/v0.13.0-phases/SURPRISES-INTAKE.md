@@ -1166,3 +1166,79 @@ core.bare=true + `t <t@t>` identity fingerprint, same HIGH severity, same v0.14.
 enforcement-hook sketch). Filing it again would fragment the same incident across two rows;
 if a NEW instance of this corruption recurs, prefer amending S-260707-pr-08's STATUS/count
 rather than opening a fourth near-duplicate row. -->
+
+## 2026-07-11 | S-260711-prerelease-swallow — quality-pre-release.yml runs `verdict.py --cadence pre-release || true`, swallowing a genuine RED | discovered-by: post-release verdict mint (cargo-binstall row) | severity: MEDIUM
+
+**What:** `.github/workflows/quality-pre-release.yml:~51` invokes `verdict.py --cadence
+pre-release || true`, so EVERY exit code — including a genuine RED verdict — is masked to
+success. This is inconsistent with the weekly workflow's honest `verdict.py ... --fail-on
+red`; a real pre-release red would ship silently.
+
+**Why out-of-scope:** discovered mid-mint of an unrelated catalog row; editing a workflow
+file is out of scope for a catalog-mint + intake-filing dispatch.
+
+**Sketched resolution:** replace `|| true` with `--fail-on red` to align pre-release with
+the weekly convention (D-CONV-2). Route v0.14.0 CI-honesty hardening.
+
+**Default disposition:** MEDIUM — masks a real gate failure; no data loss but defeats the
+gate's purpose.
+
+**STATUS:** OPEN
+
+## 2026-07-11 | S-260711-waiverclear-promotion — cleared-waiver container rows never auto-promote; post-release verdict reds on stale committed status (SECOND occurrence) | discovered-by: post-release verdict mint (cargo-binstall row) | severity: MEDIUM
+
+**What:** When a `container`/release-assets row's waiver clears, nothing auto-promotes it
+out of `NOT-VERIFIED`. Post-release `verdict.py` grades the COMMITTED status (by design,
+commit 2359c63 — cadence runs don't self-mutate the catalog), NOT the fresh CI run that
+just passed; and post-release `run.py` runs without `--persist`. So a cleared-waiver
+container row sits `NOT-VERIFIED` and spuriously reds the whole post-release workflow until
+a human manually mints it — exactly this incident (`release/cargo-binstall-resolves`, gate
+genuinely PASSES in CI job 85772845548, ~1.93s dry-run). This is the SECOND time the
+freshness-vs-committed-status split has bitten us.
+
+**Why out-of-scope:** the fix is an architectural/process choice (checklist vs. verdict
+consuming the fresh run artifact), beyond a single-row mint.
+
+**Sketched resolution:** either (a) a documented "mint after waiver-clear" checklist step in
+the release runbook, or (b) post-release `verdict.py` consumes the fresh run artifact for
+`container` rows (grade the run that just executed, not committed status). Route v0.14.0
+CI-honesty hardening; note recurrence.
+
+**Default disposition:** MEDIUM — recurring spurious RED; masks real signal via alert fatigue.
+
+**STATUS:** OPEN
+
+## 2026-07-11 | S-260711-stale-binstall-artifact — local `cargo-binstall-resolves.json` records a FAIL "cargo-binstall not installed" beside a PASS row | discovered-by: post-release verdict mint (cargo-binstall row) | severity: LOW
+
+**What:** `quality/reports/verifications/release/cargo-binstall-resolves.json` records FAIL
+"cargo-binstall not installed" from a 2026-07-06 LOCAL run — misleading next to the now-PASS
+catalog row. Confirmed NOT tracked in git (`git ls-files --error-unmatch` → not-tracked), so
+it is local noise only, not a committed lying artifact. Left in place (not deleted).
+
+**Why out-of-scope:** local untracked artifact; deleting it is out of scope for this dispatch
+and it carries no committed-repo impact.
+
+**Sketched resolution:** ensure local verification runs either skip-report or clearly mark
+"local, cargo-binstall absent" rather than emitting a bare FAIL that outlives the run.
+
+**Default disposition:** LOW — local-only cosmetic confusion.
+
+**STATUS:** OPEN
+
+## 2026-07-11 | S-260711-docalign-walk-mutation — doc-alignment walker self-mutates its own catalog at walk-time | discovered-by: post-release verdict mint (cargo-binstall row) | severity: LOW
+
+**What:** `quality/catalogs/doc-alignment.json` shows persistent unstaged drift because the
+docs-alignment walker MUTATES its own catalog during a walk/grade run (walk-time
+side-effect). A read/grade run should be side-effect-free; self-mutation makes every walk
+dirty the tree and muddies `git status` for unrelated work.
+
+**Why out-of-scope:** fixing the walker's persistence behavior is a code change beyond a
+catalog-mint + intake dispatch.
+
+**Sketched resolution:** the walker should not self-mutate on a read/grade run — separate the
+`walk` (grade, read-only) path from an explicit `--persist`/`plan-refresh` write path. Route
+v0.14.0 docs-alignment hardening.
+
+**Default disposition:** LOW — no data loss; recurring unstaged-drift noise.
+
+**STATUS:** OPEN
