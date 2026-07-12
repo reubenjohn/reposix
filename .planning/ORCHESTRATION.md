@@ -188,8 +188,9 @@ Markdown table: Wave | Plan | State (DONE/IN-PROGRESS/NOT STARTED) | Commits.
 Plus any named-incident post-mortem to read before dispatching an executor.
 
 ## 3. Binding constraints (unchanged)
-One tree-writer at a time; ONE cargo machine-wide; no `--no-verify`; push only at
-green; commit-trailer format; model tiering.
+One tree-writer at a time; ONE cargo machine-wide; no `--no-verify`; push at green,
+then confirm CI green on main AFTER the push (the `code/ci-green-on-main` P0 post-push
+probe — never open the next phase over a red main); commit-trailer format; model tiering.
 
 ## 4. Litmus / gate / REOPEN state
 Gate run history (run #, exit code, transcript path), open-waiver expiry clocks.
@@ -199,8 +200,10 @@ De-facto decisions made live; loose ends not yet routed to intake.
 
 ## 6. Precise next steps (successor runbook)
 Numbered, ordered, imperative: spot-check → re-run gate → dispatch next wave →
-close ritual (verdict path, CI green, RAISE LIST, intake disposition, STATE.md
-cursor advance, final-report contents).
+close ritual (verdict path, CI green — verified via the `code/ci-green-on-main`
+post-push probe (`run.py --cadence post-push --persist` AFTER the push), which grades
+the phase RED if main's LATEST CI run is not GREEN — RAISE LIST, intake disposition,
+STATE.md cursor advance, final-report contents).
 ```
 
 The writer confirms the commit SHA in its report.

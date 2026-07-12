@@ -178,9 +178,13 @@ Entry points: `/gsd-quick` (small fix/doc), `/gsd-execute-phase <n>` (planned ph
 and push cadence: `.planning/CLAUDE.md`. Do not silently downgrade the gates.
 
 **Push cadence.** Every phase closes with `git push origin main` BEFORE the verifier
-subagent; the verifier grades RED if the phase shipped without the push landing.
-Milestone-close adds a non-skippable 9th probe (`pre-release-real-backend`) —
-`.planning/CLAUDE.md`. Hook budgets are fixed whole-repo costs, NOT diff-size-scaled —
+subagent; the verifier grades RED if the phase shipped without the push landing **AND**
+if main's LATEST CI run is not GREEN afterward. Push-landed is the floor, not the bar:
+after the push, run `quality/runners/run.py --cadence post-push --persist` — the
+`code/ci-green-on-main` (P0) probe asserts main's newest `ci.yml` run concluded success
+(not merely that some older green run exists), and `verdict.py --phase` grades the phase
+RED if it did not. Never open the next phase over a red main. Milestone-close adds a
+non-skippable 9th probe (`pre-release-real-backend`) — `.planning/CLAUDE.md`. Hook budgets are fixed whole-repo costs, NOT diff-size-scaled —
 `pre-commit` ≈1s, `pre-push` ≈55s (dominated by kcov shell-coverage + full-workspace
 clippy/mkdocs, not by what changed): `quality/CLAUDE.md` § Cadences.
 

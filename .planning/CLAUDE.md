@@ -67,4 +67,9 @@ loose at `.planning/` top level — such files go under `.planning/milestones/au
   `relief-handover-writer` agent writes + commits them. Exemplars:
   `.planning/phases/90-*/90-PAUSE-HANDOFF.md`, `.planning/phases/91-*/91-HANDOVER.md`.
 - Push cadence is per-phase: `git push origin main` BEFORE the verifier-subagent
-  dispatch; the verifier grades RED if the phase shipped without the push landing.
+  dispatch; the verifier grades RED if the phase shipped without the push landing —
+  AND if main's LATEST CI run is not GREEN after the push. After pushing, run
+  `quality/runners/run.py --cadence post-push --persist`; the `code/ci-green-on-main`
+  (P0) probe asserts main's newest `ci.yml` run concluded success and rolls the phase
+  verdict RED otherwise. Push-landed is the floor; CI-green-on-main-after is the bar.
+  Never open the next phase over a red main.
