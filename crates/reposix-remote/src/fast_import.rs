@@ -623,6 +623,216 @@ mod tests {
         );
     }
 
+    /// CR-01 regression guard against real `git fast-import`: a record DELETED
+    /// at the `SoT` must NOT survive the fetched tree. Seed `{1,2}` parentless,
+    /// then emit `{1}` WITH the seed tip as parent. Without the `deleteall` after
+    /// `from` the emitted commit overlays `M issues/1.md` onto the inherited tree
+    /// and `issues/2.md` is resurrected; with `deleteall` the tree is a full
+    /// rebuild and `issues/2.md` is gone. Also asserts the emitted commit's real
+    /// git tree equals `snapshot_tree_oid({1})` — proving the pure-rebuild
+    /// premise the no-op guard depends on.
+    #[test]
+    // test-name-honesty: ok — drives real `git fast-import`, asserts issues/2.md is absent after a delete-at-SoT snapshot
+    fn git_fast_import_deleted_record_does_not_resurrect() {
+        use std::process::{Command, Stdio};
+
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path();
+        let git = |args: &[&str]| -> std::process::Output {
+            Command::new("git")
+                .args(args)
+                .current_dir(path)
+                .output()
+                .expect("spawn git")
+        };
+        assert!(git(&["init", "-q"]).status.success(), "git init");
+
+        let feed = |stream: &[u8]| -> std::process::Output {
+            let mut child = Command::new("git")
+                .args(["fast-import", "--quiet"])
+                .current_dir(path)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .expect("spawn fast-import");
+            child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all(stream)
+                .expect("write stream");
+            child.wait_with_output().expect("wait fast-import")
+        };
+        let rev_parse = |arg: &str| -> String {
+            let out = git(&["rev-parse", arg]);
+            assert!(
+                out.status.success(),
+                "rev-parse {arg}: {}",
+                String::from_utf8_lossy(&out.stderr)
+            );
+            String::from_utf8_lossy(&out.stdout).trim().to_owned()
+        };
+
+        // 1. Seed a parentless snapshot of BOTH records {1,2}.
+        let mut seed = Vec::new();
+        emit_import_stream(&mut seed, &[rec(1, "v1"), rec(2, "v2")], "issues", None)
+            .expect("seed emit");
+        assert!(feed(&seed).status.success(), "seed fast-import");
+        let tip0 = rev_parse("refs/reposix-import/main");
+        let tree0 = rev_parse("refs/reposix-import/main^{tree}");
+        // Sanity: the seed tree DOES contain issues/2.md.
+        let seed_ls = git(&["ls-tree", "-r", "--name-only", &tip0]);
+        let seed_files = String::from_utf8_lossy(&seed_ls.stdout);
+        assert!(
+            seed_files.contains("issues/2.md"),
+            "seed tree must contain issues/2.md; got:\n{seed_files}"
+        );
+
+        // 2. issue2 DELETED at the SoT → snapshot is now {1} only. Emit WITH the
+        //    seed tip as parent (the production drift path).
+        let parent = ImportParent {
+            commit: tip0.clone(),
+            tree: tree0,
+        };
+        let mut delned = Vec::new();
+        emit_import_stream(&mut delned, &[rec(1, "v1")], "issues", Some(&parent))
+            .expect("delete-snapshot emit");
+        let del_out = feed(&delned);
+        assert!(
+            del_out.status.success(),
+            "delete-snapshot fast-import must fast-forward; stderr=\n{}",
+            String::from_utf8_lossy(&del_out.stderr)
+        );
+
+        // 3. The fetched tree MUST NOT resurrect issues/2.md.
+        let tip1 = rev_parse("refs/reposix-import/main");
+        assert_ne!(
+            tip1, tip0,
+            "the ref must advance to the delete-snapshot commit"
+        );
+        let ls = git(&["ls-tree", "-r", "--name-only", &tip1]);
+        let files = String::from_utf8_lossy(&ls.stdout);
+        assert!(
+            files.contains("issues/1.md"),
+            "issues/1.md must survive; tree:\n{files}"
+        );
+        assert!(
+            !files.contains("issues/2.md"),
+            "CR-01: issues/2.md was deleted at the SoT and MUST NOT resurrect in the fetched tree; tree:\n{files}"
+        );
+
+        // 4. The emitted commit's REAL git tree equals snapshot_tree_oid({1}) —
+        //    the pure-rebuild premise the no-op guard relies on.
+        let real_tree = rev_parse("refs/reposix-import/main^{tree}");
+        let snap_tree = snapshot_tree_oid(&[&rec(1, "v1")], "issues")
+            .expect("snapshot oid")
+            .to_hex()
+            .to_string();
+        assert_eq!(
+            real_tree, snap_tree,
+            "with `deleteall` the emitted tree must equal the pure snapshot oid"
+        );
+    }
+
+    /// WR-02: prove the no-op growth guard ACTUALLY FIRES against a REAL
+    /// git-produced `^{tree}` oid — not just against `snapshot_tree_oid`'s own
+    /// output fed back to itself. Seed via `emit_import_stream(None)` against real
+    /// `git fast-import`, read git's `rev-parse ^{tree}`, then emit the SAME
+    /// snapshot with THAT real tree oid as `parent.tree`. The guard must fire:
+    /// a reset-only (NO `commit`) stream, and re-feeding it must leave the ref
+    /// EXACTLY where it was (no unbounded growth). This is the falsifier that
+    /// catches gix-tree-serialization drift from git — if `snapshot_tree_oid` ever
+    /// disagreed with git's real oid, the guard would never fire and this fails.
+    #[test]
+    // test-name-honesty: ok — seeds real `git fast-import`, proves the reset-only no-op guard fires against git's real tree oid and the ref does not advance
+    fn no_op_guard_fires_against_real_git_tree_and_ref_does_not_advance() {
+        use std::process::{Command, Stdio};
+
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path();
+        let git = |args: &[&str]| -> std::process::Output {
+            Command::new("git")
+                .args(args)
+                .current_dir(path)
+                .output()
+                .expect("spawn git")
+        };
+        assert!(git(&["init", "-q"]).status.success(), "git init");
+
+        let feed = |stream: &[u8]| -> std::process::Output {
+            let mut child = Command::new("git")
+                .args(["fast-import", "--quiet"])
+                .current_dir(path)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .expect("spawn fast-import");
+            child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all(stream)
+                .expect("write stream");
+            child.wait_with_output().expect("wait fast-import")
+        };
+        let rev_parse = |arg: &str| -> String {
+            let out = git(&["rev-parse", arg]);
+            assert!(
+                out.status.success(),
+                "rev-parse {arg}: {}",
+                String::from_utf8_lossy(&out.stderr)
+            );
+            String::from_utf8_lossy(&out.stdout).trim().to_owned()
+        };
+
+        let snapshot = [rec(1, "stable"), rec(2, "unchanged")];
+
+        // 1. Seed the tracking ref via a real parentless fast-import.
+        let mut seed = Vec::new();
+        emit_import_stream(&mut seed, &snapshot, "issues", None).expect("seed emit");
+        assert!(feed(&seed).status.success(), "seed fast-import");
+        let tip0 = rev_parse("refs/reposix-import/main");
+        // The parent tree oid comes from GIT, exactly as production does
+        // (`git rev-parse <ref>^{tree}`) — NOT from snapshot_tree_oid.
+        let git_tree = rev_parse("refs/reposix-import/main^{tree}");
+
+        // 2. Emit the SAME (unchanged) snapshot with git's real tree oid as parent.
+        //    The guard must recognise the tree is unchanged and emit reset-only.
+        let parent = ImportParent {
+            commit: tip0.clone(),
+            tree: git_tree,
+        };
+        let out = emit_to_string(&snapshot, Some(&parent));
+        assert!(
+            !out.contains("commit refs/reposix-import/main"),
+            "no-op guard must fire against git's REAL tree oid (no commit block); \
+             snapshot_tree_oid disagrees with git if this fails. stream=\n{out}"
+        );
+        assert!(
+            out.contains("reset refs/reposix-import/main"),
+            "no-op stream must be reset-only; stream=\n{out}"
+        );
+
+        // 3. Feed the reset-only stream twice; the ref must stay pinned at tip0
+        //    (proving the ref cannot grow unboundedly on repeated no-op fetches).
+        let mut noop = Vec::new();
+        emit_import_stream(&mut noop, &snapshot, "issues", Some(&parent)).expect("noop emit");
+        assert!(feed(&noop).status.success(), "first no-op fast-import");
+        assert_eq!(
+            rev_parse("refs/reposix-import/main"),
+            tip0,
+            "ref must not advance on no-op #1"
+        );
+        assert!(feed(&noop).status.success(), "second no-op fast-import");
+        assert_eq!(
+            rev_parse("refs/reposix-import/main"),
+            tip0,
+            "ref must not advance on no-op #2"
+        );
+    }
+
     /// QL-001 criterion 2 / BUG-3: git fast-export emits the commit-MESSAGE
     /// `data N` payload immediately followed by the first `M` directive with
     /// NO separating LF. The old `read_line`-based trailing-newline consume

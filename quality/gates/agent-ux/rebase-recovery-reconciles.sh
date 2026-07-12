@@ -36,7 +36,17 @@
 #     remaining the SOLE writer. (fast_import.rs commit/reset targets +
 #     main.rs advertised refspec, commit bd5b9cb.)
 #
-# CONTRACT (this gate, both scenarios): the SINGLE documented command
+# DELETION COVERAGE (CR-01 / WR-01): Scenario C deletes a record at the SoT
+# (REST DELETE) and proves the deletion PROPAGATES through the documented
+# recovery — the record's file leaves the working tree after the rebase AND the
+# push does NOT resurrect it at the SoT. A DELETION NEGATIVE GUARD feeds `git
+# fast-import` the pre-fix overlay (`from`+`M`, no deleteall → issues/2.md
+# resurrected) vs the post-fix rebuild (`from`+`deleteall`+`M` → issues/2.md
+# dropped), proving the deletion assert bites. Pre-`deleteall`, emit_import_stream
+# overlaid M-directives onto the inherited parent tree, so a deleted record
+# survived the fetch and was re-created on the next push (silent resurrection).
+#
+# CONTRACT (this gate, both drift scenarios): the SINGLE documented command
 # `git pull --rebase origin main && git push origin main` exits 0 AND the local
 # edit reaches the SoT (issue2 version 1→2), with ZERO `fatal: error while
 # running fast-import` (layer-1 guard) AND ZERO `cannot lock ref
@@ -221,6 +231,51 @@ else
   finish 1
 fi
 
+# ============================================================================
+# DELETION NEGATIVE GUARD (CR-01) — proves the deletion assert BITES: a record
+# removed at the SoT must DROP from the fetched tree. We feed `git fast-import`
+# the exact two shapes the helper can emit against a seeded {1,2} tracking ref:
+#   - PRE-FIX overlay  (`from <tip>` + `M issues/1.md`, NO deleteall) → the
+#     ancestor tree is inherited and issues/2.md is RESURRECTED.
+#   - POST-FIX rebuild (`from <tip>` + `deleteall` + `M issues/1.md`)  → the
+#     tree is rebuilt from scratch and issues/2.md is DROPPED.
+# If the overlay did NOT retain issues/2.md (or the rebuild did NOT drop it) the
+# Scenario-C deletion assert below could not distinguish the regression it
+# guards → hard FAIL. git-version-agnostic (drives `git fast-import` directly).
+# ============================================================================
+echo "rebase-recovery-reconciles: DELETION NEGATIVE GUARD (overlay resurrects vs deleteall drops issues/2.md)" >&2
+DG="${RUN_DIR}/delguard"; mkdir -p "$DG"; ( cd "$DG" && git init -q )
+{
+  printf 'blob\nmark :1\ndata 3\nv1\n'
+  printf 'blob\nmark :2\ndata 3\nv2\n'
+  printf 'commit refs/reposix-import/main\nmark :3\ncommitter t <t@guard.invalid> 0 +0000\ndata 5\nseed\nM 100644 :1 issues/1.md\nM 100644 :2 issues/2.md\n'
+} > "${DG}/seed.fi"
+( cd "$DG" && git fast-import --quiet < "${DG}/seed.fi" ) >/dev/null 2>&1
+DG_TIP="$( cd "$DG" && git rev-parse refs/reposix-import/main )"
+# PRE-FIX overlay (no deleteall) → issues/2.md RETAINED.
+{
+  printf 'blob\nmark :1\ndata 3\nv1\n'
+  printf 'commit refs/reposix-import/main\nmark :2\ncommitter t <t@guard.invalid> 0 +0000\ndata 4\ndrop\nfrom %s\nM 100644 :1 issues/1.md\n' "$DG_TIP"
+} > "${DG}/overlay.fi"
+( cd "$DG" && git fast-import --quiet < "${DG}/overlay.fi" ) >/dev/null 2>&1
+OVERLAY_LS="$( cd "$DG" && git ls-tree -r --name-only refs/reposix-import/main )"
+# POST-FIX rebuild (deleteall) from the SAME seed tip → issues/2.md DROPPED.
+( cd "$DG" && git update-ref refs/reposix-import/main "$DG_TIP" )
+{
+  printf 'blob\nmark :1\ndata 3\nv1\n'
+  printf 'commit refs/reposix-import/main\nmark :2\ncommitter t <t@guard.invalid> 0 +0000\ndata 4\ndrop\nfrom %s\ndeleteall\nM 100644 :1 issues/1.md\n' "$DG_TIP"
+} > "${DG}/rebuild.fi"
+( cd "$DG" && git fast-import --quiet < "${DG}/rebuild.fi" ) >/dev/null 2>&1
+REBUILD_LS="$( cd "$DG" && git ls-tree -r --name-only refs/reposix-import/main )"
+tlog "--- DELETION NEGATIVE GUARD ---"
+tlog "overlay_tree=[${OVERLAY_LS//$'\n'/,}] rebuild_tree=[${REBUILD_LS//$'\n'/,}]"
+if echo "$OVERLAY_LS" | grep -q 'issues/2.md' && ! echo "$REBUILD_LS" | grep -q 'issues/2.md'; then
+  pass "DELETION NEGATIVE GUARD: pre-fix overlay (\`from\`+\`M\`, NO deleteall) RESURRECTS issues/2.md; post-fix rebuild (\`from\`+\`deleteall\`+\`M\`) DROPS it — the Scenario-C deletion assert provably bites (CR-01)"
+else
+  fail "DELETION NEGATIVE GUARD did not distinguish overlay-vs-rebuild (overlay=[${OVERLAY_LS//$'\n'/ }] rebuild=[${REBUILD_LS//$'\n'/ }]) — the deletion assert cannot detect the CR-01 regression it guards"
+  finish 1
+fi
+
 # ── helper: init a fresh clone with its own cache, checkout main ────────────
 init_clone() {  # $1=name  $2=cachevar-out
   local name="$1"
@@ -306,6 +361,20 @@ else
   fail "SCENARIO A CLOBBER-GUARD: expected private refs/reposix-import/main present + local HEAD subject 'B edits issue2'; got priv='${A_PRIV:-<absent>}' subject='${A_LOCAL_SUBJECT}'"
 fi
 
+# IMPORT-CHAIN assert (IN-01 → maps catalog expected.asserts[6]): emit_import_stream
+# must chain the synth commit via `from <parent>` (NOT re-mint a parentless root) and
+# write ONLY the private refs/reposix-import/* ns. A parentless re-mint leaves the
+# private ref a 1-commit root; a `from`-chained fetch after drift advances it to a
+# >=2-commit linear chain. Combined with the LAYER-2 guard (no refs/reposix/origin/main
+# write) this gives assert #7 a concrete 1:1 shell assertion.
+A_IMPORT_COUNT="$( cd "${RUN_DIR}/B" && git rev-list --count refs/reposix-import/main 2>/dev/null || echo 0 )"
+tlog "SCENARIO A import-chain: refs/reposix-import/main rev-list count=${A_IMPORT_COUNT}"
+if [[ -n "$A_PRIV" && "${A_IMPORT_COUNT:-0}" -ge 2 ]]; then
+  pass "SCENARIO A IMPORT-CHAIN (assert #7): emit_import_stream chained via \`from <parent>\` — refs/reposix-import/main is a ${A_IMPORT_COUNT}-commit linear chain (a parentless re-mint would be 1), written to the private refs/reposix-import/* ns only, never refs/reposix/origin/main"
+else
+  fail "SCENARIO A IMPORT-CHAIN (assert #7): expected refs/reposix-import/main to be a >=2-commit \`from\`-chained history; got count='${A_IMPORT_COUNT}' priv='${A_PRIV:-<absent>}'"
+fi
+
 # ============================================================================
 # SCENARIO B — external REST PATCH drift.
 # C holds an unpushed local commit (issue2). A direct `curl -X PATCH` moves the
@@ -363,6 +432,46 @@ if [[ -n "$B_PRIV" && "$B_LOCAL_SUBJECT" == "C edits issue2" ]]; then
   pass "SCENARIO B CLOBBER-GUARD: private refs/reposix-import/main present and local refs/heads/main tip is the user's own commit (\`C edits issue2\`) — the helper never clobbered the working branch"
 else
   fail "SCENARIO B CLOBBER-GUARD: expected private refs/reposix-import/main present + local HEAD subject 'C edits issue2'; got priv='${B_PRIV:-<absent>}' subject='${B_LOCAL_SUBJECT}'"
+fi
+
+# ============================================================================
+# SCENARIO C — record DELETED at the SoT (CR-01 regression coverage / WR-01).
+# D holds an unpushed local commit on issue1. issue2 is DELETED at the SoT via
+# REST DELETE (204). D runs the DOCUMENTED recovery. Expected: exit 0, the
+# deletion PROPAGATES (issues/2.md gone from D's working tree after the rebase),
+# and the push does NOT resurrect issue2 (SoT stays 404). Pre-`deleteall` this
+# RED-s: the overlay tree retains issues/2.md and the push re-creates it.
+# ============================================================================
+echo "rebase-recovery-reconciles: SCENARIO C (record deleted at SoT must not resurrect)" >&2
+CACHE_D="$(init_clone D)"
+if [[ ! -f "${RUN_DIR}/D/issues/2.md" ]]; then
+  fail "SCENARIO C precondition: issues/2.md must exist in clone D before deletion; got $(ls "${RUN_DIR}/D/issues" 2>/dev/null | tr '\n' ' ')"
+  finish 1
+fi
+( cd "${RUN_DIR}/D" && printf '\nEdit by D\n' >> issues/1.md && git add -A && git commit -q -m "D edits issue1" )
+DEL_CODE="$(curl -s -o /dev/null -w '%{http_code}' -X DELETE "${SIM_URL}/projects/demo/issues/2")"
+tlog "SCENARIO C: DELETE issue2 → HTTP ${DEL_CODE}"
+sleep 2
+( cd "${RUN_DIR}/D" && REPOSIX_CACHE_DIR="$CACHE_D" git pull --rebase origin main \
+    && REPOSIX_CACHE_DIR="$CACHE_D" git push origin main ) >"${RUN_DIR}/C_recovery.log" 2>&1
+C_RECOVERY_EXIT=$?
+C_HAS_FILE=no; [[ -f "${RUN_DIR}/D/issues/2.md" ]] && C_HAS_FILE=yes
+C_ISSUE2_SOT="$(issue_version 2)"   # -1 == 404 → deleted, not resurrected
+tlog "--- SCENARIO C recovery.log ---"; tlog "$(cat "${RUN_DIR}/C_recovery.log")"
+tlog "SCENARIO C: recovery_exit=${C_RECOVERY_EXIT} worktree_has_issue2=${C_HAS_FILE} sot_issue2_version=${C_ISSUE2_SOT} delete_http=${DEL_CODE}"
+
+if grep -qE "$FATAL_RE" "${RUN_DIR}/C_recovery.log"; then
+  fail "SCENARIO C: \`fatal: error while running fast-import\` / \`does not contain\` on the deletion recovery path"
+else
+  pass "SCENARIO C FIX-LAYER: no \`fatal: error while running fast-import\` / \`does not contain\` on the deletion recovery path"
+fi
+
+if [[ "$C_RECOVERY_EXIT" -eq 0 && "$C_HAS_FILE" == "no" && "$C_ISSUE2_SOT" == "-1" ]]; then
+  pass "SCENARIO C (record deleted at SoT): documented \`git pull --rebase && git push\` exits 0, the deletion PROPAGATED (issues/2.md gone from the working tree after rebase) and the push did NOT resurrect issue2 (SoT 404) — CR-01 deleteall full-rebuild holds"
+else
+  BLOCKED=1
+  [[ -z "$REASON" ]] && REASON="CR-01: a record deleted at the SoT survived \`git pull --rebase && git push\` (missing deleteall → overlay tree retains and resurrects the deleted record)."
+  fail "SCENARIO C: deletion did NOT propagate cleanly (recovery_exit=${C_RECOVERY_EXIT}, worktree_has_issue2=${C_HAS_FILE}, sot_issue2_version=${C_ISSUE2_SOT}); expected exit 0 + issues/2.md gone + SoT 404 — CR-01 regression (overlay tree resurrects the deleted record)"
 fi
 
 # ============================================================================
