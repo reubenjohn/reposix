@@ -500,9 +500,7 @@ mod tests {
     use chrono::{TimeZone, Utc};
     use reposix_cache::Cache;
     use reposix_core::backend::{BackendFeature, DeleteReason};
-    use reposix_core::{
-        Error as CoreError, RecordStatus, Result as CoreResult, Untainted,
-    };
+    use reposix_core::{Error as CoreError, RecordStatus, Result as CoreResult, Untainted};
 
     /// A backend whose sole record (issue 1) already sits at `version = 2`
     /// with an `updated_at` fixed in the PAST. This models the state AFTER a
@@ -641,7 +639,8 @@ mod tests {
         // Create-vs-Update gate finds a prior OID) AND writes last_fetched_at
         // = now (so the precheck takes the cursor-present hot path and
         // `list_changed_since(now)` returns the EMPTY delta).
-        rt.block_on(cache.build_from()).expect("build_from seeds cache");
+        rt.block_on(cache.build_from())
+            .expect("build_from seeds cache");
         assert!(
             cache
                 .find_oid_for_record(RecordId(1))
@@ -650,10 +649,7 @@ mod tests {
             "precondition: issue 1 must be in the cache oid_map after build_from"
         );
         assert!(
-            cache
-                .read_last_fetched_at()
-                .expect("cursor read")
-                .is_some(),
+            cache.read_last_fetched_at().expect("cursor read").is_some(),
             "precondition: build_from must advance last_fetched_at (the shared cursor)"
         );
 
@@ -683,9 +679,14 @@ mod tests {
             saw_commit: true,
         };
 
-        let outcome =
-            precheck_export_against_changed_set(Some(&cache), backend.as_ref(), "demo", &rt, &parsed)
-                .expect("precheck must not error");
+        let outcome = precheck_export_against_changed_set(
+            Some(&cache),
+            backend.as_ref(),
+            "demo",
+            &rt,
+            &parsed,
+        )
+        .expect("precheck must not error");
 
         match outcome {
             PrecheckOutcome::Conflicts(conflicts) => {
