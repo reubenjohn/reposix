@@ -14,7 +14,8 @@ never does reposix work itself. Bound to live state; git history is the archive.
 - **Never get involved in low-level concerns** (including CI breaking on main).
   Delegate days-sized scopes to the workhorse; use your own Explore/reader-digester
   subagents for research so your context stays lean.
-- **Keep your own context under ~150k** (target wrap-up ~100k). When approaching:
+- **Keep your own context under ~200k hard** (soft line ~150k; owner relaxed
+  2026-07-11). When approaching:
   update THIS file to live state, commit+push, then run the rotation script
   (§ Rotation) to /clear w1:p7 and start your successor. Do this DELICATELY — the
   script must be running detached BEFORE your final turn ends.
@@ -41,9 +42,11 @@ never does reposix work itself. Bound to live state; git history is the archive.
 
 ### Script contract (recreate if absent)
 `.planning/manager-rotate.sh <manager-pane-id>`: waits ~15s, waits for pane idle,
-sends `/clear` + Enter, waits ~10s, sends the successor `/herdr-manager` prompt
-(read MANAGER-HANDOVER.md, resume herding w1:p5) + Enter, verifies via
-`herdr agent read`, logs to /tmp/manager-rotate.log.
+**empties the input box first (Ctrl-U — pending user-typed text otherwise swallows
+the /clear; learned from the 2026-07-11 dry run)**, sends `/clear` + Enter, waits
+~10s, verifies the clear landed (context gauge reset), sends the successor
+`/herdr-manager` prompt (read MANAGER-HANDOVER.md, resume herding w1:p5) + Enter,
+verifies via `herdr agent read`, logs to /tmp/manager-rotate.log.
 
 ## Live state (refresh at every rotation)
 
