@@ -280,9 +280,9 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/code/ci-green-on-main.json",
-      "status": "NOT-VERIFIED",
+      "status": "PASS",
       "minted_at": "2026-07-12T15:39:06Z",
-      "last_verified": "2026-07-12T15:39:06Z",
+      "last_verified": "2026-07-12T15:52:10Z",
       "coverage_kind": "mechanical",
       "freshness_ttl": null,
       "blast_radius": "P0",
