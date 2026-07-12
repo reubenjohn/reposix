@@ -10,6 +10,31 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 
 ---
 
+## 2026-07-12 [OWNER] Authorized external mutation — land lost-update (shared-cursor) HIGH security fix onto GitHub `origin/main`
+
+- **Authorization:** Owner-authorized external mutation (2026-07-12 manager relay). Landed
+  from a throwaway `/tmp` clone; the shared repo working tree / git state was NOT touched
+  (concurrent milestone-C2 was actively editing it), and no `cargo` ran locally (C2 held the
+  machine-wide cargo token — CI validates post-push).
+- **What landed (4 cherry-picks onto `origin/main`, in order):**
+  1. `5028542` — catalog-first contract: `113-lost-update-shared-cursor/PLAN.md` (renamed
+     from 106 by the renumber below), 6 rows in `quality/catalogs/code.json`, gate script
+     `quality/gates/code/lost-update-shared-cursor.sh`.
+  2. `34cfbea` + `39f9d64` — **THE CODE FIX (HIGH security value):** the shared cursor no
+     longer gates conflict detection, so a concurrent writer's push can no longer silently
+     lost-update. Files: `crates/reposix-remote/src/{diff.rs,precheck.rs}` +
+     `tests/partial_failure_recovery.rs`. Landed **byte-identical** to
+     `backup-lost-update-424d367` (verified `git diff` empty against the backup tip).
+  3. `424d367` — docs renumber 106→113 + mark the SURPRISES-INTAKE entry RESOLVED.
+- **Renumber LANDED (not deferred).** Rationale: ROADMAP Phase 106 is already taken by
+  "Waived tutorials reproduce"; the renumber targets **113**, which sits above the highest
+  existing v0.14.0 phase (112) and collides with no active C2 phase. All 4 cherry-picks
+  applied cleanly — git auto-merged `code.json` and `SURPRISES-INTAKE.md`; verified
+  post-merge: JSON valid, 6 lost-update rows present, RESOLVED-by-P113 marker coherent.
+  **Noticed / filed:** the 113 phase dir has a PLAN.md but ROADMAP.md has no `### Phase 113`
+  heading (renumber intentionally did not touch ROADMAP) — an orphan-phase-number
+  inconsistency for the owner/C2 to reconcile against final v0.14.0 numbering.
+
 ## 2026-07-07 [SELF] Documented front door `git checkout origin/main` break → HOTFIX-HONEST FALLBACK (truthful banner + git-128 refspec alignment), pure-git ergonomic filed for v0.14.0
 
 - **Lane:** v0.13.1 CHECKOUT-BREAK. **Decision bias:** HOTFIX-conservative.
