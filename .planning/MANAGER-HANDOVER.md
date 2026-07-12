@@ -79,11 +79,12 @@ does reposix work itself. Keep this file lean; git history is the archive.
   tree (code.json delta + phases/21, phases/22, scripts/demos, scripts/dev,
   verifications/docs-repro) — triage/land-or-drop it as part of the serialization
   cleanup, via workhorse.
-- **RAISEs standing for the owner:** v0.13.0 tag still uncut, awaiting owner pre-tag
-  actions since 2026-07-05 — the v0.14.0 tag delegation does NOT extend to it unless
-  the owner says so (manager recommends extending); P112 ROADMAP prose-vs-artifact
-  reconcile at /gsd-new-milestone; D5 fold-release-plz-into-CI still open
-  (CONSULT-DECISIONS).
+- **v0.13.0 tag ALSO DELEGATED (owner, 2026-07-12, via AskUserQuestion):** same
+  end-to-end delegation — execute the v0.13.0 OWNER PRE-TAG ACTIONS
+  (§ Workstream A of the v0.13.0 ROADMAP/STATE) → verify → push the v0.13.0 tag,
+  sequenced AFTER the v0.14.0 tag lands.
+- **RAISEs standing for the owner:** P112 ROADMAP prose-vs-artifact reconcile at
+  /gsd-new-milestone; D5 fold-release-plz-into-CI still open (CONSULT-DECISIONS).
 - Fixed this session: CI-waiter hangs (twice) → durable `scripts/ci-wait.sh` landed;
   error codes + `reposix explain <code>` now a v0.15.0 HEADLINE phase (`e5b969d`).
 - **Monitoring craft:** herdr idle/working waits FLAP while background subagents run.
