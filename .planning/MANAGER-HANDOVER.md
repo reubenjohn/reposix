@@ -43,13 +43,17 @@ does reposix work itself. Keep this file lean; git history is the archive.
 
 ## Live state (refresh at every rotation)
 
-- Workhorse: fresh successor L0 running the CI-first charter — (1) restore CI green
-  (`code/shell-coverage` ratchet 12.54% vs 13% floor; fix honestly, no silent
-  floor-lowering), (2) fix-twice the gate hole (phase-close verifies push-landed but
-  NOT ci-green; docs deploy also ungated on CI), (3) then P106/P107 → P110-P112 chain.
-- Wave-2 so far: P102-P105, P108, P109(a) GREEN. Shared-tree corruption incident
-  resolved, zero data loss, re-sealed at product layer (`3206a2b` init refuses an
-  existing worktree root); D2 repro filed in v0.14.0 SURPRISES-INTAKE.
-- **Owner decisions PARKED (do not action)**: land `424d367` (lost-update fix, branch
+- Board fully GREEN: CI, CodeQL, docs deploy (now gated on CI), release-plz (fleet
+  fixed the JSON re-dirty after a manager relay). Phase-close now requires
+  ci-green-on-main (P0 post-push probe) — never open a phase over a red main.
+- Workhorse (w1:p5): main agent ended turn past its relief boundary; state committed
+  at `750263d`. Its milestone C2 runs autonomously: P106 (in progress) → P107 →
+  P110/P111 → P112 stub. **Do NOT /clear w1:p5 while the C2 runs** — the C2's report
+  wakes the main agent, which resumes or hands over itself. Monitor with
+  `wait --status working` (idle-wait returns immediately in this state).
+- Wave-2: P102-P105, P108, P109(a) GREEN; P106 rows minting PASS. Filed, not dropped:
+  fold-release-plz-into-CI-bar (CONSULT-DECISIONS D5), runner unit tests uncollected
+  by CI (MEDIUM), SURPRISES-INTAKE over size limit (P110 drain splits it).
+- **Owner decisions PARKED (do not action)**: land `424d367` (branch
   `backup-lost-update-424d367`); close dependabot #64-66; gh404 live verify; GTH-09
   ship-or-defer.
