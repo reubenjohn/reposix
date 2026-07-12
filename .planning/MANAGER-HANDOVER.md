@@ -50,6 +50,23 @@ verifies via `herdr agent read`, logs to /tmp/manager-rotate.log.
 
 ## Live state (refresh at every rotation)
 
+- **2026-07-12 (workhorse session COMPLETE at clean boundary).** The post-incident
+  workhorse ended its turn at ~100k own-context; SESSION-HANDOVER.md replaced+pushed at
+  `5cbfcbb`, tracked tree clean, origin/main in sync. Outcomes: D2 re-sealed at BOTH
+  layers (hook hardening + `3206a2b` binary-side `reposix init` refusal — the real cut
+  for the subprocess bypass); live D2 repro filed in v0.14.0 SURPRISES-INTAKE (HIGH,
+  "D2 re-seal Wave 1"); 8 lanes GREEN + pushed, unbiased-verifier PASS; P108 paperwork
+  closed; lost-update fix preserved on `backup-lost-update-424d367`.
+- **FOUR owner decisions parked (none block the READY queue):** (1) land 424d367 to
+  GitHub main (rec: yes, clean /tmp-clone push); (2) close dependabot #64-66 as
+  redundant (rec: yes — cargo audit 0 live advisories); (3) gh404 live-GitHub verify
+  (rec: defer); (4) GTH-09 ADR-010 slug→id durable-create — ship in v0.14.0 or defer.
+- **Rotation of w1:p5 is BLOCKED by owner-staged input text** — the owner EDITED it
+  (now "land 424d367 and close the dependabot PRs") but did not submit. Do NOT press
+  Enter (external mutation) and do NOT /clear (would destroy it). Natural flow: owner
+  submits → workhorse (14% context, plenty) executes → then rotate to successor
+  pointing at SESSION-HANDOVER.md `5cbfcbb`. Owner push-notified 2026-07-12.
+
 - **2026-07-12 (post-incident)** — wave-2 progressing: **D2 (P102), P103, P105 all
   closed GREEN** on origin/main (P105 verifier-graded at `f2d527a`, incl. CR-01
   deletion-propagation fix + tests). Workhorse (w1:p5) resumed under a fresh
