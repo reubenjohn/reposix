@@ -36,6 +36,52 @@ binary-side check (design (a)) proves < 1h.
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-02 — `file-size-drain-residual` — 56 files still over the progressive-disclosure budget
+
+**Discovered during:** P103 Lane B (OP-8 file-size debt drain)
+
+**Size:** M (rough effort estimate — 56 files across three extensions)
+
+**Source:** `bash quality/gates/structure/file-size-limits.sh` (blocking mode). Lane B
+split the two BIG offenders — `.planning/milestones/v0.13.0-phases/{SURPRISES-INTAKE,
+GOOD-TO-HAVES}.md` (109K + 129K) — into per-part child dirs (`surprises-intake/`,
+`good-to-haves/`, byte-exact, INDEX rewritten), dropping the count 58 → 56 and adding the
+reusable `scripts/split_ledger.py`. The residual 56 (45 `*.md` / 6 `*.py` / 5 `*.sh`) were
+deliberately deferred, each for a concrete reason:
+
+- **6 `*.py` runners** — `quality/runners/{run,verdict,_audit_field,test_audit_field,
+  test_realbackend}.py` + `scripts/shell_coverage.py`. `_audit_field.py` + `test_audit_field.py`
+  were being modified by a CONCURRENT cargo/runner lane during P103; splitting them is a
+  module refactor with collision risk (charter #3 — new coupling, not <1h-safe). Sketch:
+  extract `_freshness.py`/`_row.py` helpers from `run.py`/`verdict.py`; move `_audit_field`
+  parsing into a sibling module; split the two big test files by fixture group.
+- **5 `*.sh` gates/hooks** — `.claude/hooks/leaf-isolation-guard.sh`, `.githooks/test-pre-push.sh`,
+  `quality/gates/agent-ux/{dark-factory/dvcs-third-arm,real-git-push-e2e,zero-shot-onboarding}.sh`.
+  Each is a single-responsibility script; splitting needs a `lib/` source-helper convention
+  (new dependency between scripts) — factor in one focused pass, not mid-flight.
+- **`.planning/milestones/*/ROADMAP.md` (v0.13.0 60K, v0.13.2 30K, v0.14.0 30K)** — GSD
+  tooling + the `no-loose-roadmap-or-requirements` invariant couple to the monolithic
+  ROADMAP.md path; splitting risks the layout rule (`.planning/CLAUDE.md` § Milestones
+  layout). Defer until a ROADMAP-shard convention exists.
+- **Remaining `*.md`** — archived phase bundles / research chapters (`.planning/phases/89-91/*`,
+  `.planning/research/v0.13.0-real-backend-frictions/*`), live planning ledgers
+  (`STATE.md` — concurrent-writer, never hand-edit; `PROJECT.md`, `CONSULT-DECISIONS.md`,
+  `ORCHESTRATION.md`, `RETROSPECTIVE.md`), and docs (`docs/guides/troubleshooting.md`,
+  `docs/reference/cli.md`, `quality/PROTOCOL.md`). Each is a real split but per-file
+  judgement; `scripts/split_ledger.py` handles the `## `-delimited ledgers directly.
+
+**Acceptance:** `bash quality/gates/structure/file-size-limits.sh` exits 0 with NO waiver.
+Drive the residual toward zero the same way Lane B did the intakes: reuse
+`scripts/split_ledger.py` for ledgers, factor a `lib/` convention for the `*.sh`, extract
+runner helpers for the `*.py`. The `structure/file-size-limits` waiver in
+`freshness-invariants.json` was NARROWED by Lane B to name only these residual files (the
+two split intakes were removed from it).
+
+**Default disposition for P111:** M default-defers to the next milestone (post-v0.14.0);
+close individual extensions early (e.g. the 5 `*.sh` in one pass) if < 1h each.
+
+**STATUS:** OPEN
+
 ## Entry format
 
 ```markdown
