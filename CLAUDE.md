@@ -37,6 +37,13 @@ your first mutating move (each expanded in its own section below):
   (PreToolUse Bash, exit 2, three fail-closed guards — fixture-identity reject / leaf-setup
   location / shared-config write) blocks the bad move before it runs, backstopped by the
   git-native `.githooks/pre-commit` fixture-identity check (fires only in the shared repo).
+  The guards catch the CLAUDE.md-documented **canonical forms** too — bare `reposix init`,
+  path-suffixed (`/usr/bin/reposix init`, `./target/…/reposix init`), and cargo
+  (`cargo run -p reposix-cli -- init|attach|sync`); the `/tmp`-is-safe decision is
+  **realpath-canonicalized** (a `cd /tmp/x && cd <shared>` cd-back, a `/tmp/../<shared>`
+  traversal, or a `/tmp` symlink resolving to shared all BLOCK); fixture-email quoting
+  (`'t@t'`/`"t@t"`) is caught while a real address (`scott@things.io`) is not; and a
+  non-empty unparseable payload **fails closed** (exit 2).
   **Coverage boundary:** the PreToolUse hook fires only on the Claude Code Bash *tool* — a
   git/reposix write from a subprocess or script bypasses it; the pre-commit backstop catches
   fixture *commits* on that path but not `reposix init` / `git config` writes. The prose

@@ -44,20 +44,34 @@ repo (repaired twice). Coordinators: bake the `cd /tmp/<target> && <cmd>` shape 
 every dispatched setup lane; a leaf that touches shared-repo git state is a REJECT.
 
 **Superseded-by-mechanism (v0.14.0 P102 — the serializing safety gate).** The prose
-hard-stop above is now backstopped MECHANICALLY, fail-closed, and proven by committed
-triggered-hook transcripts — it is retained as the human-readable contract, not deleted:
+hard-stop above is now backstopped MECHANICALLY, fail-closed, and proven by a verifier
+that REGENERATES its triggered-hook transcript at grade-time — it is retained as the
+human-readable contract, not deleted:
 - `.claude/hooks/leaf-isolation-guard.sh` — one combined PreToolUse Bash hook, three
   fail-closed guards (exit 2 = BLOCK, first-match-blocks): **A** fixture-identity (`t <t@t>`)
-  reject, **B** leaf-setup-verb (`reposix init|attach|sync`, sim-seed) location, **C**
-  shared-`.git/config` write (`core.bare`/`user.email`/`user.name`). Each block teaches the
-  rule + why + the exact `/tmp`-clone recovery; the mechanism never invokes `git worktree
-  remove --force` (itself a corruption vector).
+  reject, **B** leaf-setup-verb location, **C** shared-`.git/config` write
+  (`core.bare`/`user.email`/`user.name`). Each block teaches the rule + why + the exact
+  `/tmp`-clone recovery; the mechanism never invokes `git worktree remove --force` (itself a
+  corruption vector). **Hardened against evasion (P102 adversarial fix lane):**
+  - Guard B catches the **canonical dev spellings**, not just literal `reposix init`:
+    path-suffixed (`/usr/bin/reposix init`, `./target/debug/reposix init`) and cargo
+    (`cargo run -p reposix-cli -- init|attach|sync`), plus bare `attach`/`sync` and sim-seed.
+  - The `/tmp`-is-safe decision resolves the **effective** target (last `cd`, or a git
+    path-flag like `-C`/`-f`/`--file`/`--git-dir`, else the payload cwd) and
+    **realpath-canonicalizes** it — so a `cd /tmp/x && cd <shared>` cd-back, a
+    `/tmp/../<shared>` traversal, or a `/tmp` symlink that resolves back to the shared tree
+    all BLOCK; a genuine `/tmp` target still passes (no over-block).
+  - Guard A tolerates **quotes** around the fixture email (`'t@t'`/`"t@t"`) while keeping a
+    delimiter boundary so a real address (`scott@things.io`) does not false-positive.
+  - A non-empty but **unparseable** tool payload **fails closed** (exit 2), never silently
+    falling through to allow; an empty payload (nothing to inspect) still passes.
 - `.githooks/pre-commit` — git-native defense-in-depth: rejects a commit whose resolved
   `git var GIT_AUTHOR_IDENT`/`GIT_COMMITTER_IDENT` is the fixture identity. Fires only in
   the shared repo (via `core.hooksPath`); a `/tmp` fixture clone does not inherit it.
 - Catalog rows (`agent-ux/fleet-safety-{tat-identity-reject,leaf-isolation-enforce,
-  shared-config-write-guard}`, kind `shell-subprocess`) grade the guards from committed
-  transcripts.
+  shared-config-write-guard}`, kind `shell-subprocess`) grade the guards by re-running the
+  verifier at grade-time (which writes a fresh, gitignored transcript) — the durable
+  committed proof is the verifier script + the hook, NOT a frozen transcript.
 - **Coverage boundary (honest):** the PreToolUse hook fires only on the Claude Code Bash
   *tool* — a git/reposix write spawned by a subprocess or script bypasses it. The pre-commit
   backstop catches fixture *commits* on that bypass path, but NOT `reposix init` / `git
