@@ -283,6 +283,24 @@ run so the residue cannot re-accumulate.
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-12 — `orphan-quinn-lockfile-entries` — drop unreachable quinn/quinn-proto/quinn-udp from Cargo.lock
+
+**Discovered during:** P107 (RUSTSEC posture noticing, 2026-07-12)
+
+**Size:** XS
+
+**Severity:** LOW — harmless. `quinn 0.11.9`, `quinn-proto 0.11.15`, and `quinn-udp 0.5.14` survive only as **orphan `Cargo.lock` entries** — no crate in the current feature-resolved dependency tree depends on them (`cargo tree -i quinn-proto` prints "nothing to print" under all targets/features), so they are never built. They tripped a false "is RUSTSEC-2026-0185 reachable?" investigation in P107 that resolved to transitive-and-absent.
+
+**One-line hazard:** stale lockfile entries invite a future agent to re-investigate a phantom advisory (as P107 did) and muddy `cargo tree` reachability audits.
+
+**Source:** P107 evidence artifact `.planning/milestones/v0.14.0-phases/evidence/p107-cargo-audit-2026-07-12.txt` (`cargo tree -i quinn-proto` → "nothing to print"; orphan entries named in Cargo.lock).
+
+**Acceptance:** a `cargo update` / lockfile regen drops the three orphan entries; `grep -E 'name = "quinn' Cargo.lock` returns nothing (or only genuinely-reachable entries). No behavior change — the crates are already never compiled. **Do NOT run `cargo update` opportunistically** — it must land as its own reviewed lockfile-hygiene change under the one-cargo-at-a-time budget (a broad regen can shift many pins).
+
+**Default disposition for P111:** XS always closes — but gate it behind a dedicated lockfile-regen review, not an incidental edit.
+
+**STATUS:** OPEN
+
 ## Entry format
 
 ```markdown

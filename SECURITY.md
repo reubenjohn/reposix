@@ -46,13 +46,26 @@ We aim to acknowledge security reports within **7 days**. For confirmed vulnerab
 
 ## Security regression kit
 
-A `scripts/security-regression.sh` script that exercises every guardrail end-to-end is **planned** (not yet implemented) and will be linked here once it lands. In the meantime, the existing `bash quality/gates/agent-ux/dark-factory.sh sim` exercises the egress-allowlist + audit-log guardrails as part of the dark-factory regression suite, and the unit tests in `crates/reposix-core/src/tainted.rs` + `crates/reposix-cache/` cover the type-system and SQL invariants.
+Each guardrail in the table above is already regression-covered today, just not yet behind a single named entrypoint: `bash quality/gates/agent-ux/dark-factory.sh sim` exercises the egress-allowlist + audit-log guardrails end-to-end as part of the dark-factory suite; the catalogued security gates (`quality/gates/security/allowlist-enforcement.sh`, `audit-immutability.sh`, `connector-audit-wired.sh`, `cargo-audit-posture.sh`) each verify one cut; and the unit tests in `crates/reposix-core/src/tainted.rs` + `crates/reposix-cache/` cover the type-system and SQL invariants. A single `scripts/security-regression.sh` umbrella that chains all of these behind one command is **not yet implemented** — tracked as a nice-to-have in [`.planning/milestones/v0.14.0-phases/GOOD-TO-HAVES.md`](.planning/milestones/v0.14.0-phases/GOOD-TO-HAVES.md); until it lands, run the individual gates above (or `python3 quality/runners/run.py --cadence pre-push`, which composes the security-dimension rows).
 
 ## Supply chain
 
-Cargo dependencies are pinned in `Cargo.lock` (committed). `cargo-deny` and `cargo-audit` integration is **planned / in-flight** in parallel work — once enabled in CI they will gate merges on advisory-database hits and license violations. Until then, `cargo audit` should be run manually before a release.
+Cargo dependencies are pinned in `Cargo.lock` (committed). `cargo-audit` is **wired in two places**: the CI **Security-audit** workflow ([`.github/workflows/audit.yml`](.github/workflows/audit.yml)) runs `cargo audit` on every `Cargo.toml`/`Cargo.lock` change, on a weekly Monday cron (to pick up freshly published advisories), and on `workflow_dispatch`; and the catalogued local gate [`quality/gates/security/cargo-audit-posture.sh`](quality/gates/security/cargo-audit-posture.sh) (catalog row `security/cargo-audit-rustsec-posture`, cadences `pre-push` + `pre-release`) runs the same audit plus the version-floor + posture-doc asserts described in the next section. `cargo-deny` (license/ban policy) is **not yet wired** — dependency *advisories* are covered by the two `cargo-audit` legs above; license/ban-list gating remains a tracked nice-to-have.
 
 GitHub Actions versions are pinned via Dependabot configuration ([`.github/dependabot.yml`](.github/dependabot.yml)) so a workflow update is always a reviewable PR.
+
+## Advisory posture (cargo audit / RUSTSEC)
+
+**Current status: 0 live advisories.** As of **2026-07-12** (advisory-db HEAD `6e3286f4`, synced same day), `cargo audit` scans the 419-crate `Cargo.lock` and reports **zero** vulnerabilities (exit 0). Committed evidence — full command transcript, `cargo tree` reachability, and advisory metadata: [`.planning/milestones/v0.14.0-phases/evidence/p107-cargo-audit-2026-07-12.txt`](.planning/milestones/v0.14.0-phases/evidence/p107-cargo-audit-2026-07-12.txt).
+
+Two advisories surfaced during the v0.13.0 → v0.14.0 window and were investigated to a definitive verdict. Neither is a **direct** dependency of any reposix crate, and both are **cleared by version floor** — not merely unreported:
+
+| Advisory | Crate | Installed | Patched floor | Reachability | Verdict |
+|---|---|---|---|---|---|
+| [RUSTSEC-2026-0185](https://rustsec.org/advisories/RUSTSEC-2026-0185) | `quinn-proto` | `0.11.15` | `>= 0.11.15` | **transitive-and-absent** — `cargo tree -i quinn-proto` prints "nothing to print" under all targets/features; `quinn` / `quinn-proto` / `quinn-udp` survive only as orphan `Cargo.lock` entries (unreachable, never built) | **Not actionable.** Floor already met *and* the crate is not in the resolved build. |
+| [RUSTSEC-2026-0186](https://rustsec.org/advisories/RUSTSEC-2026-0186) | `memmap2` | `0.9.11` | `>= 0.9.11` | **transitive-and-present** via `gix 0.83.0` (`gix-commitgraph`/`-index`/`-odb`/`-pack`/`-ref`) → `reposix-cache` → `reposix-cli` & `reposix-remote` | **Not actionable.** Floor already met; the advisory is `informational = "unsound"`, gated only by `-D unsound` (it does not fail a default `cargo audit` even when unpatched). |
+
+**Mitigation, in three layers:** (1) the committed `Cargo.lock` pins both crates *at or above* their patched floors; (2) the CI `audit.yml` workflow re-runs `cargo audit` on every lockfile change and weekly, so a future regression (a lockfile regen pulling an unpatched floor, or a newly published advisory) trips CI; (3) the local catalogued gate `security/cargo-audit-posture.sh` re-asserts the audit is clean **and** independently verifies the `memmap2` / `quinn-proto` floors from `Cargo.lock` and that this section still names both advisory ids — so a green audit alone cannot mask a silent floor regression. A network-flaky advisory-db fetch is reported as *indeterminate* (gate exit 2 / PARTIAL), never conflated with a live advisory.
 
 ## Secret scanning
 
