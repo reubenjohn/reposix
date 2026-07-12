@@ -489,6 +489,14 @@ non-skippable".
 
 ### Phase 112: OD-4 launch-readiness — SCOPE-BUT-DO-NOT-START stub
 
+**STATUS: COMPLETE — scope stub landed 2026-07-12** at
+`.planning/milestones/v0.14.0-phases/112-od-4-launch-readiness-scope-stub/PLAN.md`. The stub
+names the four OD-4 pillars (asciinema hero demo, CI-verified honest headline numbers,
+install-path excellence, Show-HN positioning kit) with a one-line description each, carries a
+bold DO-NOT-START banner, and defers execution to a post-tag `/gsd-new-milestone` session. Zero
+implementation, zero phase decomposition, no verifier-subagent dispatch (lightweight owner ack
+suffices per success criteria below).
+
 **Goal:** Produce a scoped placeholder ONLY for the OD-4 launch-readiness milestone
 (asciinema hero demo, honest headline numbers, install-path excellence, Show-HN
 positioning kit). This phase authors a stub roadmap/scope pointer — **NOT execution
