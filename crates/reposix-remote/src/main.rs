@@ -190,7 +190,16 @@ fn real_main() -> Result<bool> {
                 // path; single-backend URLs continue to advertise it.
                 proto.send_line("import")?;
                 proto.send_line("export")?;
-                proto.send_line("refspec refs/heads/*:refs/reposix/origin/*")?;
+                // RBF-LR-03 layer-2: advertise the helper's PRIVATE import
+                // namespace as the fast-import write target. git maps this into
+                // the caller's tracking ns via `remote.origin.fetch`
+                // (`+refs/heads/*:refs/reposix/origin/*`, init.rs), so git fetch
+                // stays the SOLE writer of `refs/reposix/origin/*`. Collapsing
+                // both onto `refs/reposix/origin/*` made the helper AND git
+                // fetch race on one ref → `cannot lock ref … is at T1 but
+                // expected T0` aborting `git pull --rebase`. Two disjoint
+                // namespaces = the canonical remote-helper contract.
+                proto.send_line("refspec refs/heads/*:refs/reposix-import/*")?;
                 if state.mirror_url.is_none() {
                     proto.send_line("stateless-connect")?;
                 }

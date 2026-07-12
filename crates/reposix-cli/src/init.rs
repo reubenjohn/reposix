@@ -150,11 +150,14 @@ fn run_git_in(path: &Path, args: &[&str]) -> std::io::Result<std::process::Outpu
 /// helper advertised `refspec refs/heads/*:refs/reposix/*` while the
 /// fast-import stream wrote `refs/reposix/origin/main`, so git exited 128
 /// with a benign `could not read ref refs/reposix/main` even on a fully
-/// successful sync (v0.13.1 CHECKOUT-BREAK aligned the advertised refspec to
-/// `refs/reposix/origin/*`, closing that specific mismatch — see
-/// `reposix-remote::main` capabilities). We keep the ref-reality check
-/// regardless: a reachable backend leaves at least one
-/// `refs/reposix/origin/*` ref; an unreachable one leaves none.
+/// successful sync (v0.13.1 CHECKOUT-BREAK closed that mismatch). As of
+/// RBF-LR-03 layer-2 the helper advertises a PRIVATE import namespace
+/// (`refs/heads/*:refs/reposix-import/*`) as the fast-import write target;
+/// git then maps that into the tracking namespace via the
+/// `remote.origin.fetch` refspec configured below, so `refs/reposix/origin/*`
+/// is written by git fetch (its sole writer), not by the helper stream. We
+/// keep the ref-reality check regardless: a reachable backend leaves at least
+/// one `refs/reposix/origin/*` ref; an unreachable one leaves none.
 fn repo_has_synced_refs(path: &Path) -> bool {
     run_git_in(
         path,
@@ -237,14 +240,18 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
     // Explicit fetch refspec. WITHOUT this, `git fetch origin` maps nothing
     // into a persistent ref (FETCH_HEAD only), so `git checkout
     // refs/reposix/origin/main` — the documented next step (docs/index.md,
-    // mental-model-in-60-seconds) and the push-side bookkeeping ref
-    // (reposix-remote fast_import.rs writes `refs/reposix/origin/main`) —
-    // has nothing to resolve. The `refs/reposix/origin/*` namespace (not
-    // git's default `refs/remotes/origin/*`) keeps helper-side refs out of
-    // the agent's `refs/heads/*`, matching the helper's advertised
-    // `refspec refs/heads/*:refs/reposix/origin/*` namespace (aligned in
-    // v0.13.1 CHECKOUT-BREAK so the import path no longer 128s). The leading
-    // `+` force-updates the tracking ref on drift.
+    // mental-model-in-60-seconds) — has nothing to resolve. The
+    // `refs/reposix/origin/*` namespace (not git's default
+    // `refs/remotes/origin/*`) keeps helper-side refs out of the agent's
+    // `refs/heads/*`. This refspec is THE mechanism by which git fetch becomes
+    // the SOLE writer of the tracking ns: the helper advertises a disjoint
+    // PRIVATE namespace `refs/heads/*:refs/reposix-import/*` (its fast-import
+    // write target), and git fetch maps the remote `refs/heads/*` it read back
+    // from there into `refs/reposix/origin/*` HERE. Collapsing both onto
+    // `refs/reposix/origin/*` made the helper stream AND git fetch race on one
+    // ref → fetch-time `cannot lock ref … is at T1 but expected T0`, aborting
+    // `git pull --rebase` (RBF-LR-03 layer-2). The leading `+` force-updates
+    // the tracking ref on drift.
     //
     // KNOWN GAP (filed for v0.14.0, SURPRISES-INTAKE): because this maps to
     // `refs/reposix/origin/*` and NOT `refs/remotes/origin/*`, the pure-git
@@ -276,8 +283,10 @@ pub fn run_with_since(spec: String, path: PathBuf, since: Option<String>) -> Res
     // so we still cross-check against ref reality. The historical
     // `could not read ref refs/reposix/main` git-128 (advertised refspec
     // `refs/heads/*:refs/reposix/*` vs the fast-import write target
-    // `refs/reposix/origin/main`) was closed in v0.13.1 CHECKOUT-BREAK by
-    // aligning the helper's advertised refspec to `refs/reposix/origin/*`.
+    // `refs/reposix/origin/main`) was closed in v0.13.1 CHECKOUT-BREAK. As of
+    // RBF-LR-03 layer-2 the helper's write target is the private
+    // `refs/reposix-import/*`, mapped into `refs/reposix/origin/*` by the
+    // `remote.origin.fetch` refspec above — git fetch is the sole writer.
     // We keep the ref-reality cross-check regardless: the ground truth of a
     // successful sync is whether the destination refs actually materialized —
     // a reachable backend leaves at least one `refs/reposix/origin/*` ref; an

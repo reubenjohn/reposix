@@ -115,6 +115,15 @@ fn snapshot_tree_oid(sorted: &[&Record], bucket: &str) -> io::Result<gix::Object
 /// ref exactly where it was — mirroring the export-side no-op detection
 /// (`saw_commit`).
 ///
+/// **Namespace (RBF-LR-03 layer-2).** All ref writes here target the helper's
+/// PRIVATE import namespace `refs/reposix-import/*`, disjoint from the user
+/// tracking namespace `refs/reposix/origin/*`. git fetch maps the private ns
+/// into the tracking ns via the caller's `remote.origin.fetch`, remaining the
+/// sole writer of `refs/reposix/origin/main` — this restores the two-namespace
+/// remote-helper contract and eliminates the fetch-time `cannot lock ref`
+/// double-writer. The `parent` oid is still read from the *tracking* ref (the
+/// last-fetched tip, the correct chain source).
+///
 /// # Errors
 /// Returns any [`io::Error`] from the writer or any rendering/hashing failure
 /// translated into an `io::Error::Other`.
@@ -139,7 +148,7 @@ pub(crate) fn emit_import_stream<W: Write>(
     if let Some(p) = parent {
         let new_tree = snapshot_tree_oid(&sorted, bucket)?;
         if new_tree.to_hex().to_string() == p.tree {
-            writeln!(w, "reset refs/reposix/origin/main")?;
+            writeln!(w, "reset refs/reposix-import/main")?;
             writeln!(w, "from {}", p.commit)?;
             writeln!(w, "done")?;
             return Ok(());
@@ -162,7 +171,20 @@ pub(crate) fn emit_import_stream<W: Write>(
 
     mark += 1;
     let commit_mark = mark;
-    writeln!(w, "commit refs/reposix/origin/main")?;
+    // RBF-LR-03 layer-2: write the helper's PRIVATE import namespace
+    // (`refs/reposix-import/*`), NOT the user tracking ref
+    // (`refs/reposix/origin/*`). git fetch maps the private ns into the
+    // tracking ns via the caller's `remote.origin.fetch`, so git fetch is the
+    // SOLE writer of `refs/reposix/origin/main`. Writing the tracking ref
+    // directly here made the helper AND git fetch both update it in one fetch:
+    // the stream fast-forwarded it T0→T1 underneath git, then git's post-import
+    // ref transaction (expected-old = pre-fetch T0) failed against the
+    // already-moved T1 → `cannot lock ref … is at T1 but expected T0`, aborting
+    // `git pull --rebase`. NEVER name `refs/heads/*` here — that is the caller's
+    // real working branch (`git fast-import --refspec` does not exist on git
+    // 2.25, so no remap protects it → catastrophic clobber). Two-namespace
+    // remote-helper contract, same shape as git-remote-hg/cinnabar.
+    writeln!(w, "commit refs/reposix-import/main")?;
     writeln!(w, "mark :{commit_mark}")?;
     writeln!(w, "committer reposix-helper <bot@reposix> 0 +0000")?;
     let msg = "Sync from REST snapshot\n";
@@ -407,7 +429,34 @@ mod tests {
             from_pos < m_pos,
             "`from` must precede the tree `M` directives; stream=\n{out}"
         );
-        assert!(out.contains("commit refs/reposix/origin/main"));
+        assert!(out.contains("commit refs/reposix-import/main"));
+        assert_no_collapsed_namespace(&out);
+    }
+
+    /// RBF-LR-03 layer-2 regression guard (clobber / namespace-collapse). The
+    /// emitted import stream MUST NEVER name the user tracking ref
+    /// `refs/reposix/origin/main` (that collapses the two-namespace contract →
+    /// fetch-time `cannot lock ref` double-writer) nor the caller's real
+    /// working branch `refs/heads/main` (git 2.25 has no
+    /// `fast-import --refspec` remap → catastrophic clobber) as a
+    /// `commit`/`reset` target. The helper writes ONLY the private
+    /// `refs/reposix-import/*` namespace.
+    fn assert_no_collapsed_namespace(out: &str) {
+        for line in out.lines() {
+            if let Some(target) = line
+                .strip_prefix("commit ")
+                .or_else(|| line.strip_prefix("reset "))
+            {
+                assert_ne!(
+                    target, "refs/reposix/origin/main",
+                    "import stream must NOT write the user tracking ref (namespace collapse → `cannot lock ref`); stream=\n{out}"
+                );
+                assert_ne!(
+                    target, "refs/heads/main",
+                    "import stream must NOT name the caller's working branch (clobber risk); stream=\n{out}"
+                );
+            }
+        }
     }
 
     /// The first-fetch seed path (ref absent → `None`) must remain a
@@ -421,7 +470,8 @@ mod tests {
             !out.contains("\nfrom "),
             "the parentless seed must not emit a `from` line; stream=\n{out}"
         );
-        assert!(out.contains("commit refs/reposix/origin/main"));
+        assert!(out.contains("commit refs/reposix-import/main"));
+        assert_no_collapsed_namespace(&out);
     }
 
     /// No-op guard: when the snapshot tree equals the parent commit's tree,
@@ -443,13 +493,14 @@ mod tests {
         };
         let out = emit_to_string(&records, Some(&parent));
         assert!(
-            !out.contains("commit refs/reposix/origin/main"),
+            !out.contains("commit refs/reposix-import/main"),
             "an unchanged tree must emit NO commit block; stream=\n{out}"
         );
         assert!(
-            out.contains("reset refs/reposix/origin/main"),
+            out.contains("reset refs/reposix-import/main"),
             "no-op guard must emit a `reset` directive; stream=\n{out}"
         );
+        assert_no_collapsed_namespace(&out);
         assert!(
             out.contains(&format!("from {}", parent.commit)),
             "reset must pin the ref at the parent via `from`; stream=\n{out}"
@@ -510,8 +561,8 @@ mod tests {
         let mut seed = Vec::new();
         emit_import_stream(&mut seed, &[rec(1, "v1")], "issues", None).expect("seed emit");
         assert!(feed(&seed).status.success(), "seed fast-import");
-        let tip0 = rev_parse("refs/reposix/origin/main");
-        let tree0 = rev_parse("refs/reposix/origin/main^{tree}");
+        let tip0 = rev_parse("refs/reposix-import/main");
+        let tree0 = rev_parse("refs/reposix-import/main^{tree}");
 
         // 2. Changed snapshot, PARENTLESS → git refuses the non-descendant tip.
         let mut bad = Vec::new();
@@ -524,7 +575,7 @@ mod tests {
             "parentless changed snapshot must be refused with `does not contain`; stderr=\n{bad_stderr}"
         );
         assert_eq!(
-            rev_parse("refs/reposix/origin/main"),
+            rev_parse("refs/reposix-import/main"),
             tip0,
             "refused import must leave the ref unchanged"
         );
@@ -543,11 +594,11 @@ mod tests {
             "with-parent changed snapshot must fast-forward; stderr=\n{}",
             String::from_utf8_lossy(&fixed_out.stderr)
         );
-        let tip1 = rev_parse("refs/reposix/origin/main");
+        let tip1 = rev_parse("refs/reposix-import/main");
         assert_ne!(tip1, tip0, "ref must advance to the new descendant commit");
         // Parent of tip1 is tip0 → linear 2-commit chain.
         assert_eq!(
-            rev_parse("refs/reposix/origin/main~1"),
+            rev_parse("refs/reposix-import/main~1"),
             tip0,
             "the new commit must chain directly onto the seed tip"
         );

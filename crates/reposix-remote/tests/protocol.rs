@@ -24,7 +24,7 @@ fn capabilities_advertises_import_export_refspec() {
     let out = assert.get_output();
     let stdout = String::from_utf8_lossy(&out.stdout);
     assert!(
-        stdout.starts_with("import\nexport\nrefspec refs/heads/*:refs/reposix/origin/*\n"),
+        stdout.starts_with("import\nexport\nrefspec refs/heads/*:refs/reposix-import/*\n"),
         "stdout did not start with capability advertisement; got:\n{stdout}"
     );
 }
