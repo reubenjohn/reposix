@@ -5,7 +5,7 @@ Verifiers backing `quality/catalogs/docs-reproducible.json` (8 rows at Wave A cl
 | Verifier | Catalog rows backed | Cadence |
 |---|---|---|
 | `snippet-extract.py` | `docs-repro/snippet-coverage` (Wave B) | pre-push |
-| `container-rehearse.sh` | `docs-repro/example-0[1,2,4,5]-*` + `docs-repro/tutorial-replay` (Wave C) | post-release |
+| `container-rehearse.sh` | `docs-repro/example-0[1,2,4,5]-*` (Wave C) | post-release |
 | `tutorial-replay.sh` | `docs-repro/tutorial-replay` (Wave C; SIMPLIFY-06 + DOCS-REPRO-03 migration target) | post-release |
 | `manual-spec-check.sh` | `docs-repro/example-03-claude-code-skill` (Wave C; manual kind) | on-demand |
 
