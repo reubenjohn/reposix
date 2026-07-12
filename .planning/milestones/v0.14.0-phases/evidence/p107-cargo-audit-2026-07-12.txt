@@ -1,0 +1,169 @@
+P107 RUSTSEC posture — ground-truth advisory status
+=====================================================
+Date:        2026-07-12
+Repo tip:    (pre-artifact) ~b398f48 on main
+cargo-audit: cargo-audit-audit 0.22.0
+advisory-db: HEAD 6e3286f4  (2026-07-12 09:10:54 +0200, synced same day)
+
+Commands run (workspace root /home/reuben/workspace/reposix):
+  cargo audit --version
+  cargo audit --color never
+  cargo tree -i memmap2
+  cargo tree -i quinn-proto            (+ --target all, --all-features -e all)
+  cargo tree -i quinn                  (+ --target all)
+  grep -iE 'name = "(quinn|memmap2)' -A1 Cargo.lock
+  # advisory metadata read from ~/.cargo/advisory-db/crates/{quinn-proto,memmap2}/
+
+=====================================================
+BOTTOM LINE
+=====================================================
+cargo audit LIVE vulnerability count: 0  (exit code 0; "Scanning Cargo.lock for
+vulnerabilities (419 crate dependencies)" with NO vulnerability section emitted).
+
+RUSTSEC-2026-0185 (quinn-proto): NOT reported live.
+  - Reason: installed quinn-proto v0.11.15 == patched ">= 0.11.15" (already patched).
+  - Tree status: NOT in the dependency tree. `cargo tree -i quinn-proto` prints
+    "nothing to print" even with --target all --all-features -e all. quinn / quinn-proto
+    / quinn-udp exist ONLY as orphan/stale entries in Cargo.lock (no crate in the current
+    feature-resolved tree depends on them). => transitive-and-effectively-absent.
+
+RUSTSEC-2026-0186 (memmap2): NOT reported live.
+  - Reason: installed memmap2 v0.9.11 == patched ">= 0.9.11" (already patched).
+    Advisory is informational = "unsound" (would need `-D unsound` to gate even if unpatched).
+  - Tree status: PRESENT, transitive via gix v0.83.0 (gix-commitgraph / gix-index /
+    gix-odb / gix-pack / gix-ref) -> reposix-cache -> reposix-cli & reposix-remote.
+    => transitive-and-present.
+
+Neither package is a DIRECT dependency of any reposix crate.
+
+=====================================================
+FULL cargo audit OUTPUT (exit 0)
+=====================================================
+    Fetching advisory database from `https://github.com/RustSec/advisory-db.git`
+      Loaded 1160 security advisories (from /home/reuben/.cargo/advisory-db)
+    Updating crates.io index
+    Scanning Cargo.lock for vulnerabilities (419 crate dependencies)
+
+(No "Crate:/Vulnerability:" blocks, no warnings, no "error: N vulnerabilities found".
+ Exit status 0 = clean.)
+
+=====================================================
+cargo tree -i memmap2
+=====================================================
+memmap2 v0.9.11
+├── gix-commitgraph v0.37.0
+│   ├── gix v0.83.0
+│   │   ├── reposix-cache v0.13.1 (/home/reuben/workspace/reposix/crates/reposix-cache)
+│   │   │   ├── reposix-cli v0.13.1 (/home/reuben/workspace/reposix/crates/reposix-cli)
+│   │   │   └── reposix-remote v0.13.1 (/home/reuben/workspace/reposix/crates/reposix-remote)
+│   │   │       └── reposix-cli v0.13.1 (/home/reuben/workspace/reposix/crates/reposix-cli)
+│   │   └── reposix-remote v0.13.1 (/home/reuben/workspace/reposix/crates/reposix-remote) (*)
+│   ├── gix-blame v0.13.0
+│   │   └── gix v0.83.0 (*)
+│   ├── gix-negotiate v0.31.0
+│   │   └── gix v0.83.0 (*)
+│   ├── gix-revision v0.45.0
+│   │   ├── gix v0.83.0 (*)
+│   │   └── gix-refspec v0.41.0
+│   │       ├── gix v0.83.0 (*)
+│   │       └── gix-submodule v0.30.0
+│   │           └── gix v0.83.0 (*)
+│   ├── gix-revwalk v0.31.0
+│   │   ├── gix v0.83.0 (*)
+│   │   ├── gix-blame v0.13.0 (*)
+│   │   ├── gix-negotiate v0.31.0 (*)
+│   │   ├── gix-revision v0.45.0 (*)
+│   │   └── gix-traverse v0.57.0
+│   │       ├── gix v0.83.0 (*)
+│   │       ├── gix-blame v0.13.0 (*)
+│   │       ├── gix-diff v0.63.0
+│   │       │   ├── gix v0.83.0 (*)
+│   │       │   ├── gix-blame v0.13.0 (*)
+│   │       │   └── gix-status v0.30.0
+│   │       │       └── gix v0.83.0 (*)
+│   │       ├── gix-index v0.51.0
+│   │       │   ├── gix v0.83.0 (*)
+│   │       │   ├── gix-diff v0.63.0 (*)
+│   │       │   ├── gix-dir v0.25.0
+│   │       │   │   ├── gix v0.83.0 (*)
+│   │       │   │   └── gix-status v0.30.0 (*)
+│   │       │   ├── gix-status v0.30.0 (*)
+│   │       │   ├── gix-worktree v0.52.0
+│   │       │   │   ├── gix v0.83.0 (*)
+│   │       │   │   ├── gix-blame v0.13.0 (*)
+│   │       │   │   ├── gix-diff v0.63.0 (*)
+│   │       │   │   ├── gix-dir v0.25.0 (*)
+│   │       │   │   ├── gix-status v0.30.0 (*)
+│   │       │   │   └── gix-worktree-state v0.30.0
+│   │       │   │       └── gix v0.83.0 (*)
+│   │       │   └── gix-worktree-state v0.30.0 (*)
+│   │       └── gix-worktree-stream v0.32.0
+│   │           ├── gix v0.83.0 (*)
+│   │           └── gix-archive v0.32.0
+│   │               └── gix v0.83.0 (*)
+│   └── gix-traverse v0.57.0 (*)
+├── gix-index v0.51.0 (*)
+├── gix-odb v0.80.0
+│   └── gix v0.83.0 (*)
+├── gix-pack v0.70.0
+│   ├── gix v0.83.0 (*)
+│   └── gix-odb v0.80.0 (*)
+└── gix-ref v0.63.0
+    ├── gix v0.83.0 (*)
+    ├── gix-config v0.56.0
+    │   ├── gix v0.83.0 (*)
+    │   └── gix-submodule v0.30.0 (*)
+    ├── gix-discover v0.51.0
+    │   ├── gix v0.83.0 (*)
+    │   └── gix-dir v0.25.0 (*)
+    └── gix-protocol v0.61.0
+        └── gix v0.83.0 (*)
+
+=====================================================
+cargo tree -i quinn-proto        (default)
+cargo tree -i quinn-proto --target all --all-features -e all
+=====================================================
+warning: nothing to print.
+
+To find dependencies that require specific target platforms, try to use option `--target all` first, and then narrow your search scope accordingly.
+
+  => quinn-proto is NOT reachable in the resolved dependency tree under any target /
+     feature / edge-kind combination.
+
+=====================================================
+cargo tree -i quinn              (default + --target all)
+=====================================================
+warning: nothing to print.
+  => quinn also unreachable in the tree.
+
+=====================================================
+grep -iE 'name = "(quinn|memmap2)' -A1 Cargo.lock
+=====================================================
+name = "memmap2"
+version = "0.9.11"
+--
+name = "quinn"
+version = "0.11.9"
+--
+name = "quinn-proto"
+version = "0.11.15"
+--
+name = "quinn-udp"
+version = "0.5.14"
+
+  NOTE: quinn/quinn-proto/quinn-udp are present in Cargo.lock but unreachable in the
+  dependency tree (cargo tree -i prints nothing) => STALE / orphan lockfile entries.
+  A `cargo update` / lockfile regeneration would drop them. Harmless (unbuilt) but tidy-up.
+
+=====================================================
+Advisory metadata (from local advisory-db, HEAD 6e3286f4 @ 2026-07-12)
+=====================================================
+RUSTSEC-2026-0185  quinn-proto  date 2026-06-22  category denial-of-service (OOM)
+  patched = [">= 0.11.15"]        installed 0.11.15  => PATCHED (not vulnerable)
+
+RUSTSEC-2026-0186  memmap2      date 2026-06-20  informational = "unsound"
+  patched = [">= 0.9.11"]         installed 0.9.11   => PATCHED (not vulnerable)
+
+Both advisory files EXIST in the freshly-synced DB (advisory-db HEAD is today), so the
+zero-count is NOT a stale-DB artifact — it is genuine: both installed versions already
+meet the patched-version floor exactly.
