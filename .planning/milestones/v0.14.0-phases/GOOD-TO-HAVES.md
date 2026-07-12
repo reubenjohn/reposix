@@ -247,6 +247,24 @@ run so the residue cannot re-accumulate.
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-10 — `p94-forkb-assert-orphaned-on-forka-row` — Fork-B NotFound-idempotency assert has no mapped test under the Fork-A row's command
+
+**Discovered during:** P108 (verifier finding, 2026-07-11)
+
+**Size:** S
+
+**Severity:** LOW-MEDIUM — latent honesty-gate mismatch, not a live failure (the gate currently reads PASS; the mismatch bites when `agent-ux/test-name-vs-asserts` next grades this row).
+
+**One-line hazard:** the Fork-B "delete-time NotFound idempotency … (unit test)" assert lives on the Fork-A prune-completeness row but has no Fork-B test under that row's declared `command` (`cargo test -p reposix-cache --test pagination_prune_safety` tests ONLY Fork-A completeness gating), violating the `test-name-vs-asserts` honesty gate — every `expected.asserts` entry must map to a test the row's command actually runs.
+
+**Fix sketch (option (a) — Fork B DID ship, verified below):** relocate `asserts[3]` to its own catalog row whose `command` runs the Fork-B unit test. Fork B is shipped AND tested — `is_delete_notfound` + `delete_of_already_absent_record_is_idempotent_success` live in `crates/reposix-remote/src/main.rs` (~L577/L597/L736), run by `cargo test -p reposix-remote`, NOT by the Fork-A cache command. So the assert simply needs its own row citing the `-p reposix-remote` command. Option (b) (remove-and-track-pending) does NOT apply here — Fork B is not unshipped. **Also fix the stale source path:** the row's `sources` + `owner_hint` cite `crates/reposix-remote/src/write_loop.rs` (and asserts[3] text says "write_loop.rs") for the Fork-B logic, but `reposix-cache` has NO `write_loop.rs` and the remote `write_loop.rs` has no NotFound handling — the real home is `reposix-remote/src/main.rs::execute_action`. Correct the pointer when relocating.
+
+**Pointer:** `quality/catalogs/agent-ux.json` row `agent-ux/p94-pagination-prune-completeness-gate` `expected.asserts[3]` (~L2089); P108 verifier finding 2026-07-11. Real Fork-B code+test: `crates/reposix-remote/src/main.rs:517,597,736`.
+
+**Default disposition for P111:** S closes-or-defers; close early (< 1h — a single catalog-row split + one source-path correction, no code change since Fork B already ships and passes under `-p reposix-remote`).
+
+**STATUS:** OPEN
+
 ## Entry format
 
 ```markdown
