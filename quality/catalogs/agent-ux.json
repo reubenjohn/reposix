@@ -2525,6 +2525,176 @@
         "pre-pr",
         "on-demand"
       ]
+    },
+    {
+      "id": "agent-ux/p111-ci-wait-helper",
+      "phase": 111,
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): reposix-quality bind only supports the docs-alignment dimension; agent-ux mints stay hand-edited (GOOD-TO-HAVES-01). Minted FAIL in the P111 catalog-first commit per quality/CLAUDE.md catalog-first rule.",
+      "comment": "P111 milestone-close hygiene item 1. Asserts the ad-hoc background `gh run watch` (which HANGS on already-concluded GREEN runs — evidence hang IDs bulqmsyrv, biy9yxt33) was promoted into a committed bounded-poll helper scripts/ci-wait.sh (CLAUDE.md OP-4). Cadence on-demand because the row is milestone-bounded and MUST NOT fire pre-push.",
+      "sources": [
+        "quality/gates/agent-ux/p111-ci-wait-helper.sh",
+        "scripts/ci-wait.sh"
+      ],
+      "command": "bash quality/gates/agent-ux/p111-ci-wait-helper.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/p111-ci-wait-helper.sh exits 0 against the local working tree",
+          "scripts/ci-wait.sh exists and is executable (chmod +x)",
+          "scripts/ci-wait.sh drives `gh run view` or `gh run list` (the CI query surface)",
+          "scripts/ci-wait.sh has a hard timeout (CI_WAIT_TIMEOUT) AND a poll interval (CI_WAIT_INTERVAL)",
+          "scripts/ci-wait.sh exits non-zero on failure (exit 1) and uses a distinct code for the hard-timeout path (exit 2)",
+          "scripts/ci-wait.sh handles an already-`completed`/concluded run without looping (the exact bug that hung `gh run watch`)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p111-ci-wait-helper.sh",
+        "args": [],
+        "timeout_s": 10,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p111-ci-wait-helper.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "minted_at": "2026-07-12T20:59:22Z",
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: author scripts/ci-wait.sh — bounded poll of `gh run view <id> --json status,conclusion` every CI_WAIT_INTERVAL up to CI_WAIT_TIMEOUT; return immediately when the first query shows status `completed`; exit 0 only on conclusion `success`, exit 2 on hard-timeout. chmod +x it.",
+      "waiver": null,
+      "transport_claim": false,
+      "claim_vs_assertion_audit": "The verifier greps scripts/ci-wait.sh for six independent falsifiers of the claim 'a committed bounded-poll helper replaced the hanging gh-run-watch'. If the file is absent, non-executable, never calls `gh run view|list`, omits the CI_WAIT_TIMEOUT/CI_WAIT_INTERVAL knobs, never exits non-zero (missing exit 1 or the distinct exit 2 timeout code), or has no already-`completed` fast-path, the corresponding grep fails and the row stays FAIL (as it is now — the file does not yet exist). The `completed` fast-path assert is the load-bearing one: it is the exact behaviour whose ABSENCE caused `gh run watch` to hang on concluded runs (bulqmsyrv, biy9yxt33). Once the helper lands with all six sentinels, the gate exits 0 and the row flips PASS.",
+      "cadences": [
+        "on-demand"
+      ]
+    },
+    {
+      "id": "agent-ux/p111-changelog-v0.14.0-section",
+      "phase": 111,
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. Minted FAIL in the P111 catalog-first commit.",
+      "comment": "P111 milestone-close hygiene item 8. Asserts CHANGELOG.md carries a substantive `## [v0.14.0]` section (>=10 non-blank lines) with a PENDING release-status marker (the tag is owner-cut, so the section ships PENDING — mirrors the v0.13.0 precedent row). Cadence on-demand because the row is milestone-bounded and MUST NOT fire pre-push; once v0.14.0 tags, it becomes a historical PASS marker.",
+      "sources": [
+        "quality/gates/agent-ux/p111-changelog-v0.14.0.sh",
+        "CHANGELOG.md"
+      ],
+      "command": "bash quality/gates/agent-ux/p111-changelog-v0.14.0.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/p111-changelog-v0.14.0.sh exits 0 against the local working tree",
+          "CHANGELOG.md contains a `## [v0.14.0]` heading",
+          "the v0.14.0 section is substantive (>=10 non-blank lines between the heading and the next `## [` heading)",
+          "the v0.14.0 section carries a PENDING release-status marker (tag is owner-cut)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p111-changelog-v0.14.0.sh",
+        "args": [],
+        "timeout_s": 10,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p111-changelog-v0.14.0-section.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "minted_at": "2026-07-12T20:59:22Z",
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: append a `## [v0.14.0] -- <theme> -- PENDING` section above `## [v0.13.0]` in CHANGELOG.md; include a `> **Release status: PENDING ...` line and the milestone's Added/Changed/Fixed bullets (>=10 non-blank lines).",
+      "waiver": null,
+      "transport_claim": false,
+      "claim_vs_assertion_audit": "The verifier extracts the CHANGELOG section from the `## [v0.14.0]` heading to the next `## [` and asserts it is >=10 non-blank lines AND contains a case-insensitive `PENDING` marker. If the section is missing, a stub (<10 non-blank lines), or lacks the PENDING status (falsely implying the tag is cut when the executor STOPs at the owner tag boundary), the corresponding check fails and the row stays FAIL (as now — there is no v0.14.0 section yet). Once a substantive PENDING section lands, the gate exits 0 and the row flips PASS.",
+      "cadences": [
+        "on-demand"
+      ]
+    },
+    {
+      "id": "agent-ux/p111-retrospective-v0.14.0-section",
+      "phase": 111,
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. Minted FAIL in the P111 catalog-first commit.",
+      "comment": "P111 milestone-close hygiene item 6 (OP-9 ritual). Asserts RETROSPECTIVE.md gained a `## Milestone: v0.14.0` section using the OP-9 template (all 5 subheadings) BEFORE archive, AND that it names both GTH-09 and its v0.15.0 carry-forward target (the deferral is only honest if written down). Cadence on-demand; closes the OP-9 distill-before-archive loop for v0.14.0.",
+      "sources": [
+        "quality/gates/agent-ux/p111-retrospective-v0.14.0.sh",
+        ".planning/RETROSPECTIVE.md",
+        "CLAUDE.md (OP-9 milestone-close ritual)"
+      ],
+      "command": "bash quality/gates/agent-ux/p111-retrospective-v0.14.0.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/p111-retrospective-v0.14.0.sh exits 0 against the local working tree",
+          ".planning/RETROSPECTIVE.md contains a `## Milestone: v0.14.0` heading",
+          "the v0.14.0 section contains all 5 OP-9 subheadings: What Was Built, What Worked, What Was Inefficient, Patterns Established, Key Lessons",
+          "the v0.14.0 section names both `GTH-09` and `v0.15.0` (the deferred good-to-have + its carry-forward target)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p111-retrospective-v0.14.0.sh",
+        "args": [],
+        "timeout_s": 10,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p111-retrospective-v0.14.0-section.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "minted_at": "2026-07-12T20:59:22Z",
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: run the OP-9 distillation against the template (root CLAUDE.md OP-9). Ensure all 5 subheadings appear in the `## Milestone: v0.14.0` section and the GTH-09 -> v0.15.0 deferral is named explicitly.",
+      "waiver": null,
+      "transport_claim": false,
+      "claim_vs_assertion_audit": "The verifier extracts the RETROSPECTIVE section between `## Milestone: v0.14.0` and the next `## Milestone:` and asserts all 5 OP-9 subheadings appear as markdown headings AND that both literals `GTH-09` and `v0.15.0` are present. If any subheading is missing (the distillation skipped the template) or the GTH-09->v0.15.0 deferral is unnamed (an untracked deferral — exactly the dishonesty OP-9 forbids), the check fails and the row stays FAIL (as now — no v0.14.0 section exists). Once the section is distilled per the template with the named deferral, the gate exits 0 and the row flips PASS.",
+      "cadences": [
+        "on-demand"
+      ]
+    },
+    {
+      "id": "agent-ux/p111-milestone-hygiene",
+      "phase": 111,
+      "dimension": "agent-ux",
+      "kind": "mechanical",
+      "_provenance_note": "Hand-edit per documented gap (NOT Principle A): agent-ux dim mints stay hand-edited until GOOD-TO-HAVES-01 ships the verb extension. Minted FAIL in the P111 catalog-first commit.",
+      "comment": "P111 milestone-close composite hygiene verifier — rolls up items 2/3/4/5/7 not covered by the ci-wait/CHANGELOG/RETROSPECTIVE rows: (item 4) ROADMAP Phase 103-109 terminal completion markers; (item 3) ROADMAP references Phase 113 (lost-update renumber reconciled); (item 7) p93-*.json untracked; (item 2, fix-twice) crates/CLAUDE.md pre-push cargo doctrine sentinel; (item 5) three live ledgers under no-ballooning ceilings + SURPRISES-INTAKE zero-OPEN (preserves the P110 drained invariant). Cadence on-demand; milestone-bounded.",
+      "sources": [
+        "quality/gates/agent-ux/p111-milestone-hygiene.sh",
+        ".planning/milestones/v0.14.0-phases/ROADMAP.md",
+        "crates/CLAUDE.md",
+        ".planning/CONSULT-DECISIONS.md",
+        ".planning/milestones/v0.14.0-phases/SURPRISES-INTAKE.md",
+        ".planning/milestones/v0.14.0-phases/GOOD-TO-HAVES.md"
+      ],
+      "command": "bash quality/gates/agent-ux/p111-milestone-hygiene.sh",
+      "expected": {
+        "asserts": [
+          "bash quality/gates/agent-ux/p111-milestone-hygiene.sh exits 0 against the local working tree",
+          "ROADMAP.md carries a bolded terminal status line (CLOSED|COMPLETE|SHIPPED|DONE|RATIFIED) inside each Phase 103..109 block",
+          "ROADMAP.md references Phase 113 (Phase 113 / P113) — the lost-update renumber reconciled",
+          "the p93-*.json under quality/reports/verifications/agent-ux/ are NOT git-tracked (git ls-files ...p93... is empty)",
+          "crates/CLAUDE.md contains the pre-push cargo doctrine sentinel (seriali[sz]e push)",
+          ".planning/CONSULT-DECISIONS.md <= 30000 bytes, SURPRISES-INTAKE.md <= 44000 bytes, GOOD-TO-HAVES.md <= 24000 bytes (no-ballooning ceilings; no header states a numeric limit and the *.md 20k budget is a LIVE WAIVED item for these three files)",
+          "SURPRISES-INTAKE.md has zero `**STATUS:** OPEN` entries (fence-aware; preserves the P110 drained invariant)"
+        ]
+      },
+      "verifier": {
+        "script": "quality/gates/agent-ux/p111-milestone-hygiene.sh",
+        "args": [],
+        "timeout_s": 20,
+        "container": null
+      },
+      "artifact": "quality/reports/verifications/agent-ux/p111-milestone-hygiene.json",
+      "status": "FAIL",
+      "last_verified": null,
+      "minted_at": "2026-07-12T20:59:22Z",
+      "freshness_ttl": null,
+      "blast_radius": "P2",
+      "owner_hint": "if RED: the failing assert names the exact item + fix — add ROADMAP terminal status lines to Phase 103-109 (item 4); reconcile Phase 113 into ROADMAP (item 3); git rm --cached the p93-*.json (item 7); add the pre-push cargo 'serialize pushes' doctrine to crates/CLAUDE.md (item 2, fix-twice); prune the three ledgers under their ceilings (item 5).",
+      "waiver": null,
+      "transport_claim": false,
+      "claim_vs_assertion_audit": "The composite verifier runs six independent falsifiers. (A) For each Phase 103..109 it extracts the ROADMAP block and greps for a bolded `**Status:`/`**STATUS:` line naming CLOSED|COMPLETE|SHIPPED|DONE|RATIFIED — ambient 'P102 GREEN'/'verifier subagent GREEN' prose does NOT match, so a phase left un-marked (as 103-107,109 are now) fails. (B) `git ls-files` over the reports dir greps for p93 — a tracked artifact (as 5 are now) fails the untracked claim. (C) crates/CLAUDE.md is grepped for `seriali[sz]e push` — absent now, so the fix-twice doctrine claim fails until item 2 lands. (D) byte-count ceilings catch a ballooned ledger. (E) a fence-aware OPEN count > 0 fails, preserving the P110 zero-OPEN invariant. (F) missing Phase 113 reference fails the reconciliation claim. Every sub-claim is falsified by its own grep, so a partially-done milestone-close stays FAIL rather than silently passing; the row flips PASS only when all five hygiene items land.",
+      "cadences": [
+        "on-demand"
+      ]
     }
   ]
 }
