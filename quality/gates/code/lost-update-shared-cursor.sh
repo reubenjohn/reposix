@@ -28,7 +28,9 @@ fi
 cd "$REPO_ROOT"
 mkdir -p "$ARTIFACT_DIR"
 
-stdout=$(cargo test -p reposix-remote --lib "$TEST_NAME" 2>&1) \
+# precheck is a module of the git-remote-reposix BINARY target (mod precheck in
+# main.rs), NOT the lib -- so the test lives in the bin unittests, not --lib.
+stdout=$(cargo test -p reposix-remote --bin git-remote-reposix "$TEST_NAME" 2>&1) \
   && cargo_exit=0 || cargo_exit=$?
 ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
@@ -47,7 +49,7 @@ elif [[ "$failed_total" -gt 0 ]]; then
   exit_code=1
   asserts_failed+=("${failed_total} lost-update regression test(s) FAILED")
 else
-  asserts_passed+=("cargo test -p reposix-remote --lib ${TEST_NAME} exits 0")
+  asserts_passed+=("cargo test -p reposix-remote --bin git-remote-reposix ${TEST_NAME} exits 0")
 fi
 
 if [[ "$ran_total" -lt "$MIN_TESTS" ]]; then

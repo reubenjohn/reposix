@@ -255,7 +255,25 @@ the tracking-ref tip the push is based on and re-diff against the live SoT uncon
 final arbiter. Add a regression test: two shared-cache clones, A pushes, B stale-pushes →
 assert B is rejected `fetch first` AND the SoT retains A's edit.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED by **P113** (`113-lost-update-shared-cursor/PLAN.md`). Fix = option
+(a): `precheck_export_against_changed_set` no longer GATES the per-record version check on
+`list_changed_since` delta membership — it issues the authoritative `get_record` for every
+pushed Update (the backend is the sole SoT arbiter), so a stale-base push under an advanced
+shared cursor is REJECTED `fetch first` instead of clobbering. The conflict is content-aware
+(a stale base version alone is a no-op — QL-001; only a stale base WITH divergent writable
+content rejects). Regression
+`precheck::tests::stale_base_push_rejected_when_shared_cursor_advanced_past_concurrent_write`
+(real Cache + advanced cursor + AdvancedCursorMock@v2) — proven RED (Proceed = lost update)
+with the delta gate restored, GREEN with the fix. Catalog row
+`code/lost-update-shared-cursor-rejected`.
+
+**Numbering collision (for coordinator):** the wave-2 handover §5 earmarked this phase as
+"P106", but `ROADMAP.md` already assigns Phase 106 to "Waived tutorials reproduce" (102–112
+all occupied). Per the dispatch charter's fallback it was minted at the next free slot, **113**.
+The handover's P106/P107/P108/P109 re-table only diverges from ROADMAP at 106 (108/109 already
+agree); reconcile whether tutorials-reproduce keeps 106 and lost-update stays 113, or renumber.
+The first three fix commits carry a `106-01` label (landed before the collision was caught);
+substance unchanged.
 
 ---
 

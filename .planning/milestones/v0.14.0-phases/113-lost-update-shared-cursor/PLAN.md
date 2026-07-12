@@ -1,5 +1,5 @@
 ---
-phase: 106
+phase: 113
 plan: 01
 title: Lost-update guard — shared-cache last_fetched_at cursor no longer gates conflict detection
 type: bugfix
@@ -11,7 +11,17 @@ provides: [push-side-optimistic-concurrency-per-record]
 affects: [crates/reposix-remote/src/precheck.rs]
 ---
 
-# Phase 106: Lost-update guard (shared-cache cursor staleness)
+# Phase 113: Lost-update guard (shared-cache cursor staleness)
+
+> **Numbering note:** The wave-2 relief handover
+> (`RELIEF-HANDOVER-C2-wave-2.md` §5) earmarked this HIGH lost-update phase as
+> "P106". But `ROADMAP.md` already assigns Phase 106 to "Waived tutorials
+> reproduce" (102–112 are all occupied), so per the dispatch charter's explicit
+> fallback ("verify no P106 already exists and pick the next free number if it
+> does") this phase was minted at the next free slot, **113**. The first three
+> commits landed before the collision was caught and carry a `106-01` label;
+> the substance is unchanged. Filed to `SURPRISES-INTAKE.md` for the coordinator
+> to reconcile the two numbering schemes.
 
 ## Objective
 
