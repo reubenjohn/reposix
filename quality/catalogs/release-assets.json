@@ -533,8 +533,9 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/release/cargo-binstall-resolves.json",
-      "status": "NOT-VERIFIED",
-      "last_verified": "2026-07-04T12:00:00Z",
+      "status": "PASS",
+      "last_verified": "2026-07-08T02:14:51Z",
+      "minted_at": "2026-07-12T04:27:02Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
       "owner_hint": "P90 90-05 (2026-07-04): WAIVER CLEARED per D90-02(a) -- LANDED, not renewed. The ~10-LOC pkg-url alignment this row's waiver named was ALREADY SHIPPED pre-P90 by commit 33dd41f 'fix(binstall): correct pkg-url to real release asset name (QL-003)' (2026-07-03, an ancestor of P90's HEAD before 90-05 started -- D90-11-style already-fixed disposition, not re-done here). Verified against reality in THIS dispatch by re-deriving both templates against release.yml's actual archive-staging logic (release.yml:167-193: STAGE=\"reposix-${version_tag}-${target}\", archive=\"${STAGE}.tar.gz\" or .zip) and confirming byte-for-byte match against crates/reposix-cli/Cargo.toml + crates/reposix-remote/Cargo.toml's current [package.metadata.binstall] pkg-url/bin-dir templates (both crates identical shape). If RED: the binstall metadata regressed again OR release.yml's archive-staging logic changed without a matching Cargo.toml update — check release.yml AND crates/{reposix-cli,reposix-remote}/Cargo.toml [package.metadata.binstall].",
