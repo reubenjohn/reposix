@@ -218,3 +218,41 @@ milestone get retired, not left FAIL forever."
 **Sketched resolution:** Add a structure-dimension gate (`quality/gates/structure/verifier-script-exists.sh`) that scans all catalog rows at load time and asserts: for each row with a non-null `verifier.script`, the file exists on disk and is executable (chmod +x). The gate would fail at pre-commit or pre-push if any row references a missing verifier, preventing unbacked PASS rows from landing. This is a complement to GOOD-TO-HAVES-01 (bind-verb extension for agent-ux rows).
 
 **STATUS:** OPEN
+
+---
+
+## 2026-07-12 08:10 | discovered-by: P105 (RBF-LR-03 rebase-recovery research) | severity: HIGH
+
+**What:** SILENT LOST UPDATE via the shared-cache `last_fetched_at` cursor. Two `reposix
+init` clones of the same `sim::demo` share ONE bare cache (keyed by `(backend, project)`
+per `reposix_cache::path::resolve_cache_path`). When clone A pushes an edit, the SoT-success
+branch advances the SHARED cursor to `now` (`crates/reposix-remote/src/write_loop.rs:309`,
+`c.write_last_fetched_at(Utc::now())`). Clone B then pushes a *conflicting stale-base*
+edit; its L1 PRECHECK B runs `backend.list_changed_since(last_fetched_at=now)` → returns
+an EMPTY changed-set (A's write is at-or-before `now`) → no conflict detected → B's PATCH
+lands and silently clobbers A's edit. **Empirically reproduced**
+(`.planning/phases/105-rbf-lr-03-rebase-recovery/repro/repro-lost-update.sh`, live sim,
+git 2.25.1): issue-1 title `A-CHANGED-TITLE` (v2) → `B-CHANGED-TITLE` (v3), with NO `fetch
+first` reject and NO error emitted. The ARCH-08 protection that
+`crates/reposix-remote/tests/push_conflict.rs::stale_base_push_emits_fetch_first_and_writes_no_rest`
+proves in ISOLATION (fresh per-test cache) FAILS end-to-end under a shared cache. This is
+data loss — strictly worse than the RBF-LR-03 pull-rebase friction — and is the true
+manifestation of the "code framing" cursor concern the P105 dispatch flagged (the
+pull-rebase abort itself is a SEPARATE bug in `fast_import.rs`, fixed under P105).
+
+**Why out-of-scope for P105:** P105's charter is the rebase-recovery abort (a fetch-level
+`fast_import.rs` fix). This is a push-side precheck/cursor-semantics bug — different code
+path, different fix, likely > 1h, and coupled to the v0.14.0 reconciliation redesign
+(per-writer base tracking or version-conditioned precheck rather than a wall-clock cursor).
+Folding it into P105 would double the phase scope.
+
+**Sketched resolution:** PRECHECK B must not rely solely on a shared wall-clock
+`last_fetched_at` to decide "did the SoT move under me." Options: (a) compare the pushed
+record's base `version` against the backend's current `version` per-record (optimistic
+concurrency on the field the sim already tracks) regardless of the cursor window; (b) track
+the tracking-ref tip the push is based on and re-diff against the live SoT unconditionally;
+(c) make the sim's PATCH enforce version-match (409 on stale base) so the backend is the
+final arbiter. Add a regression test: two shared-cache clones, A pushes, B stale-pushes →
+assert B is rejected `fetch first` AND the SoT retains A's edit.
+
+**STATUS:** OPEN
