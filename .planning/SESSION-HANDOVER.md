@@ -1,4 +1,4 @@
-# SESSION-HANDOVER.md — v0.13.1 SHIPPED, CI GREEN — 2026-07-11
+# SESSION-HANDOVER.md — v0.14.0 wave-2 in progress, post-incident clean — 2026-07-12
 
 For the incoming top-level orchestrator (L0). This is the map, not the territory —
 detail lives in git and the linked files. HEAD = live state only; history is in `git
@@ -23,67 +23,59 @@ honest milestones and document known limitations out loud** rather than suppress
 hold a green milestone hostage; **guard context aggressively** (fork, prune, lean on git,
 least-complex path).
 
-## 1. Current state (ground truth: confirm with `git rev-parse HEAD origin/main`
-before trusting this section further)
+## 1. Current state (ground truth — confirm with `git rev-parse HEAD origin/main`)
 
-- **v0.13.1 SHIPPED & VERIFIED.** `origin/main == HEAD == 632f40c`. crates.io: 9 crates
-  @0.13.1. Aggregate tag `v0.13.1` cut (tag obj `ccdf404` → commit `04640d5`).
-  `release.yml` GREEN; GitHub release `reposix v0.13.1` is Latest (`releases/latest`
-  serves 0.13.1, no longer 404s the installer). Assets verified: 4 target archives +
-  windows zip + `reposix-installer.{sh,ps1}` + `SHA256SUMS`; **git-remote-reposix
-  bundled** alongside `reposix` (front-door fix confirmed via `tar tzf`); installer URL
-  HTTP 200; `cargo binstall reposix-cli@0.13.1` resolves the prebuilt binary (verified
-  live).
-- **The post-release CI gate is now GREEN** (was the last open item). The
-  `quality-post-release` workflow (`.github/workflows/quality-post-release.yml`) had been
-  failing on `release/cargo-binstall-resolves`. Root cause was a BRITTLE ASSERTION, not a
-  product/installer bug: prose changelog commentary had been pasted into the
-  machine-checked `expected.asserts` array of that row in
-  `quality/catalogs/release-assets.json`, tripping the F-K4b assertion-coverage honesty
-  check. Fixed in `632f40c` by moving the prose into an underscore-prefixed
-  `_provenance_note` field (runner-ignored), leaving only the real assertion. Verified
-  green via `gh workflow run quality-post-release.yml --ref main` → run `29180619597`
-  SUCCESS (0 FAIL). NOTE: this workflow ONLY triggers on the `release` workflow
-  completing OR `workflow_dispatch` — it does NOT fire on ordinary pushes; verify it via
-  `workflow_dispatch`, never by waiting for a push.
-- Real-backend transport PROVEN for JIRA + Confluence (first ever, via CI). One
-  documented KNOWN-LIMITATION: GitHub-v09 helper-path 404 (`S-260707-gh404`,
-  continue-on-error in `ci.yml`, tracked for v0.14.0).
+- `origin/main == HEAD == c779a629`, tracked tree CLEAN. Only untracked = 4 FOREIGN dirs
+  from a concurrent session (`.planning/phases/21-*`, `22-*`, `scripts/demos/`,
+  `scripts/dev/`) + a foreign `stash@{0}` (`WIP on main: faf3d16 docs(22): create phase
+  plan — 3 plans across 2 waves for BENCH-01..04`) — NOT ours; NEVER `git add .`/`git
+  clean`/`git stash drop`; explicit-path commits only.
+- v0.14.0 milestone established (P102–P112). Landed GREEN this session: P102 D2
+  self-safe gate; P103 early wins; P104 gh404 (sim/unit + honest known-limitation); P105
+  RBF-LR-03; Phase 0 D2 RE-SEAL (`2ad2bf5`, `3206a2b`); fleet-safety persist-gate
+  (`309f0b6`, `72ae517`); P109(a) RBF-FW-11 (`1cb9dd1`, `10bd508`); P108 prune-gate
+  (`13de686`, `b037876`).
+- The lost-update HIGH fix is a clean 4-commit ff of prior main, anchored LOCAL-ONLY on
+  branch `backup-lost-update-424d367` (`424d367`). LANDING IT TO GITHUB MAIN IS
+  OWNER-GATED — not yet pushed.
 
-## 2. NEXT — wave-2 v0.14.0 hardening (led non-negotiably by D2)
+## 2. INCIDENT (resolved) — read before dispatching any fleet
 
-1. **D2 self-safe dark factory FIRST** — reject-`t@t`-identity commit/push hook + real
-   per-leaf worktree isolation + a PreToolUse hook that blocks any leaf writing
-   `core.bare`/`user.email` into the shared `.git/config`. The shared config corrupted
-   **4-5× this session** (origin NEVER affected — pre-push gate + identity checks held
-   every time; no t@t reached published history). Leaf isolation is currently
-   doctrine-only with ZERO mechanical enforcement, and even `git worktree remove --force`
-   is a corruption vector — do not use it. Anchor: `S-260707-pr-08`.
-2. Fix the GitHub-v09 helper-path 404 (`S-260707-gh404`).
-3. RBF-LR-03 reconciliation fix (root cause of the broken `git pull --rebase`
-   post-conflict recovery, currently documented as a known limitation).
-4. Make waived tutorials reproduce (`docs-repro`/`tutorial-replay` + examples 01/02/04/05
-   WAIVED-broken until 2026-09-15).
-5. Carried HIGHs: live RUSTSEC memmap2 + quinn-proto advisories in `Cargo.lock`;
-   `prune_oid_map` pagination-truncation; RBF-FW-11; quality-convergence
-   write-contention.
+A P106 leaf ran `reposix init` inside `.claude/worktrees/...` of the SHARED repo
+(subprocess path bypassing the Bash-only D2 hook), flipping `.git/config` to bare=true,
+repointing origin to the sim (127.0.0.1:7988), injecting `[user] t@t`, thrashing HEAD to
+e18df81. L0 REPAIRED it (rewrote `.git/config` clean, `git reset --hard` to real main,
+pruned `refs/reposix/*`). ZERO data loss (sim never had GitHub write access). Phase 0
+re-sealed the leak at the PRODUCT layer (`reposix init` refuses an existing worktree
+root, fail-closed) + guard extensions + fixed a D2 guard false-positive (it had blocked
+read-only `git config --get`). RESIDUAL (defense-in-depth, observed vector already
+closed): worktree-shared `.git` object-store self-safety + non-Bash subprocess boundary
+still open — recommend a follow-up lane.
 
-## 3. Live nuisances / process debt (fix early wave-2)
+## 3. NEXT — resume v0.14.0 wave-2 (dispatch a fresh milestone-scoped C2, opus,
+phase-coordinator)
 
-- `doc-alignment` walk dirties the committed catalog on EVERY read (no `--persist`
-  gate) — the pre-existing unstaged `quality/catalogs/doc-alignment.json` diff you may
-  see in `git status` is this; workaround: `git checkout -- quality/catalogs/doc-alignment.json`.
-  High nuisance, prioritize a real fix.
-- Post-release verdict process gaps filed by a coordinator (`beacfb4` intake): `|| true`
-  masking in the verdict path, waiver-clear promotion gap, stale artifacts. Note
-  `beacfb4` also minted `release/cargo-binstall-resolves` status NOT-VERIFIED→PASS — now
-  honestly earned after the `632f40c` asserts fix.
-- `SURPRISES-INTAKE.md` + `GOOD-TO-HAVES.md` far past soft size limits (file-size waiver
-  expires **2026-08-08**) — OP-8 split before then.
-- `cargo-nextest` NOT installed on this box; add `cargo clippy --workspace --all-targets
-  -- -D warnings` to LOCAL pre-push so CI-clippy-red can't recur silently.
+READY queue (from
+`.planning/milestones/v0.14.0-phases/RELIEF-HANDOVER-C2-wave-2.md` @ `c779a629`):
+tutorials 01/02/04/05 self-start-sim rewrite (waiver deadline 2026-09-15) → git-2.34 CI
+boundary job (scope brief embedded in that handover; "verified to 2.25" is currently
+prose-only) → shell-coverage floor (MEDIUM, filed) → OP-8 file splits
+(SURPRISES-INTAKE/GOOD-TO-HAVES 5-6x oversize, structure waiver expires 2026-08-08) →
+OP-9 distill → OD-4 launch-readiness SCOPE-ONLY stub → milestone-close 9th probe
+(pre-release-real-backend, non-skippable). Plus the Phase 0 residual follow-up lane
+above.
 
-## 4. Release/ops facts (settled)
+## 4. OWNER-GATED — pending owner decision (surfaced, not executed)
+
+1. Land `424d367` to GitHub main (recommend: yes, from a clean `/tmp` clone that passes
+   the real pre-push gate).
+2. Dependabot #64/#65/#66 — `cargo audit` = 0 live advisories, none touch
+   memmap2/quinn-proto, stale-base bumps (recommend: close-as-redundant).
+3. gh404 live-GitHub read-only verify (recommend: defer; sim/unit stands).
+4. NEW — GTH-09 ADR-010 slug→id durable-create (MEDIUM-HIGH): an UNSTARTED v0.14.0
+   headline item — ship this milestone or defer? Owner scope call.
+
+## 5. Release/ops facts (settled)
 
 crates.io publishes on MERGE-to-main via `release-plz.yml`; tag `v*` triggers
 `release.yml`; `git_release_enable=false` STAYS (re-enabling stole `releases/latest` +
@@ -92,7 +84,7 @@ bot-authored release-plz PRs sit at `action_required` until a real-actor reopen;
 release-plz auto-titles from conventional-commits (watch for unintended minor bumps —
 v0.13.1 had to be forced down from an auto-computed v0.14.0).
 
-## 5. Doctrine
+## 6. Doctrine
 
 Full delegation / relief / cadence / durable-state doctrine:
 `.planning/ORCHESTRATION.md` §3 — relief at ~100k own-context (hard stop ~150k), a
