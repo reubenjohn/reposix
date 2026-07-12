@@ -205,7 +205,20 @@ def apply_pass_gates(row: dict, artifact: dict, repo_root) -> None:
             artifact.setdefault("asserts_failed", []).append(
                 f"shell-subprocess PASS blocked: {why}"
             )
-            return
+        # F-K4b congruence does NOT apply to a shell-subprocess row: its honesty
+        # axis is the freshly regenerated transcript (checked immediately above),
+        # NOT a per-assert asserts_passed<->expected mapping. The shared helper
+        # quality/gates/agent-ux/lib/transcript.sh writes asserts_passed=[] by
+        # design, so before this explicit return a transcript-PASS row fell
+        # through to the F-K4b block below and survived ONLY on the empty-list
+        # no-op in asserts_congruent(). That made a correctly-minted P0 row
+        # (e.g. the agent-ux/fleet-safety-* guards) one helper change away from a
+        # FALSE-DEMOTE: the instant asserts_passed became non-empty and did not
+        # token-map every expected assert, F-K4b would flip a transcript-proven
+        # PASS to FAIL. Returning here makes the exemption explicit and provably
+        # independent of asserts_passed contents. (No coverage is lost: F-K4b
+        # was already a guaranteed no-op for these rows.)
+        return
     if row.get("minted_at"):
         ok, unmatched = asserts_congruent(
             (row.get("expected") or {}).get("asserts") or [],

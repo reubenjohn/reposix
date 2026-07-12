@@ -377,6 +377,63 @@ class TestAssertsCongruence(unittest.TestCase):
         self.assertEqual(unmatched, ["totally unrelated zebra xylophone quasar nebula"])
 
 
+class TestShellSubprocessFK4bExemption(unittest.TestCase):
+    """v0.14.0 Lane A: a minted kind:shell-subprocess row is graded on its
+    regenerated transcript, NOT on asserts_passed<->expected congruence. F-K4b
+    must never false-demote such a row -- even if asserts_passed is populated
+    with a partial/non-mapping list (the latent-fragility case that empty-list
+    no-op alone did not guard). Guards the P0 agent-ux/fleet-safety-* rows,
+    whose shared helper (lib/transcript.sh) hardcodes asserts_passed=[]."""
+
+    import tempfile as _tempfile
+
+    def _row(self):
+        return {
+            "id": "agent-ux/fleet-safety-demo",
+            "kind": "shell-subprocess",
+            "status": "PASS",
+            "minted_at": "2026-07-12T05:40:57Z",
+            "expected": {"asserts": [
+                "guard exits 2 BLOCK on fixture identity commit in shared repo",
+                "BLOCK stderr names the rule and the /tmp recovery hint",
+            ]},
+        }
+
+    def _grade(self, asserts_passed):
+        import tempfile
+        with tempfile.TemporaryDirectory() as td:
+            (Path(td) / "t.txt").write_text("argv: bash guard.sh\nexit_code: 2\n")
+            row = self._row()
+            artifact = {"transcript_path": "t.txt",
+                        "asserts_passed": asserts_passed, "asserts_failed": []}
+            _audit_field.apply_pass_gates(row, artifact, Path(td))
+            return row["status"], artifact.get("asserts_failed")
+
+    def test_empty_asserts_passed_stays_pass(self):
+        # The real shape today (helper hardcodes []).
+        status, failed = self._grade([])
+        self.assertEqual(status, "PASS")
+        self.assertEqual(failed, [])
+
+    def test_non_mapping_asserts_passed_still_stays_pass(self):
+        # The teeth: this shape FALSE-DEMOTED before the explicit shell-subprocess
+        # return (transcript is the honesty axis, not asserts_passed mapping).
+        status, failed = self._grade(["totally unrelated zebra xylophone quasar"])
+        self.assertEqual(status, "PASS")
+        self.assertEqual(failed, [])
+
+    def test_missing_transcript_still_fails(self):
+        # The exemption must NOT weaken the transcript-evidence gate itself.
+        import tempfile
+        with tempfile.TemporaryDirectory() as td:
+            row = self._row()
+            artifact = {"asserts_passed": [], "asserts_failed": []}  # no transcript_path
+            _audit_field.apply_pass_gates(row, artifact, Path(td))
+            self.assertEqual(row["status"], "FAIL")
+            self.assertTrue(any("shell-subprocess PASS blocked" in f
+                                for f in artifact["asserts_failed"]))
+
+
 class TestTranscriptEvidenceOk(unittest.TestCase):
     """RBF-FW-08 runtime half."""
 
