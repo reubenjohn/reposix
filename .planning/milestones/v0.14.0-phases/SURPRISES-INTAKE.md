@@ -570,3 +570,34 @@ blanket `unittest discover`); `test_realbackend.py` is EXCLUDED — it belongs t
 `pre-release-real-backend` cadence, not the hermetic CI collection. The DP-2 guard
 `test_fleet_safety_verdicts_untracked.py` is among the wired set, so it now runs automatically in
 CI rather than only on a local run.
+
+---
+
+## 2026-07-12 20:59 | discovered-by: P111 (milestone-close CI-wait) | severity: MEDIUM
+
+**Title:** Background `gh run watch` HANGS on already-concluded runs — flaky CI-wait in
+autonomous loops (reliability).
+
+**What:** Autonomous CI-wait loops backgrounded `gh run watch <id>`, which blocks
+INDEFINITELY when pointed at a run that has ALREADY concluded — it waits for an
+in-progress→completed transition that will never arrive. This hung two sessions — hang IDs
+`bulqmsyrv` and `biy9yxt33` — leaving a GREEN-already run's watcher blocked forever and
+stalling the phase. A reliability defect (severity MEDIUM), not a data-loss/security bug.
+
+**Why out-of-scope for the discovering context:** the hang surfaced mid-milestone-close while
+waiting on CI; swapping the wait mechanism is a reusable-tooling change (a committed helper +
+its catalog verifier), not inline scope for whatever task was blocked at the time.
+
+**Sketched resolution:** promote the ad-hoc `gh run watch` into a committed bounded-poll helper
+(CLAUDE.md OP-4): poll `gh run view <id> --json status,conclusion` on an interval up to a hard
+timeout, return IMMEDIATELY on an already-`completed` run, exit 0 only on conclusion `success`,
+and use a distinct exit code on hard-timeout so an indefinite hang is impossible.
+
+**STATUS:** RESOLVED, landed in this phase's ci-wait commit (COMMIT 2, subject `feat(scripts):
+ci-wait.sh — bounded-poll CI helper replacing flaky gh run watch (P111)`; resolve its SHA via
+`git log --grep='ci-wait.sh' --oneline` — a self-referential commit cannot embed its own final
+hash, so this row names the commit by its stable subject rather than a hardcoded SHA that the
+rewrite would falsify). `scripts/ci-wait.sh` implements the already-`completed` fast-path,
+proven real: `scripts/ci-wait.sh 29207305260` returns exit 0 in ~1s against a concluded GREEN
+run — the exact case that hung `gh run watch` at `bulqmsyrv` / `biy9yxt33`. The catalog-first
+contract row `agent-ux/p111-ci-wait-helper` (minted FAIL) flips PASS on this commit.
