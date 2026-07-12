@@ -19,7 +19,8 @@ does reposix work itself. Keep this file lean; git history is the archive.
   immediately. (2) origin/main sync + dirty-tree check. (3) Spot-verify one
   load-bearing claim from any wrap report before relaying it. Workhorse self-reports
   are verified, not trusted.
-- **Context budget**: self under ~200k hard (soft ~150k) — refresh this file,
+- **Context budget** (owner loosened 2026-07-12): self under ~250k hard (soft ~200k) —
+  refresh this file,
   commit+push, run § Rotation. Workhorse: instruct ~100k soft / ~150k hard, then it
   REPLACES `.planning/SESSION-HANDOVER.md`, commits+pushes, ends turn; you `/clear`
   w1:p5 and launch its successor pointing at that file.
