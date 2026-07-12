@@ -15,16 +15,16 @@ Captured by running `bash run.sh` against `reposix-sim --ephemeral` with `REPOSI
 
 [3/4] dark-factory recovery: narrow scope with git sparse-checkout, then check out
 Checked out 3 of 6 issue files (sparse-checkout matched only 3 paths):
-/tmp/reposix-example-05/0001.md
-/tmp/reposix-example-05/0002.md
-/tmp/reposix-example-05/0003.md
+/tmp/reposix-example-05/issues/1.md
+/tmp/reposix-example-05/issues/2.md
+/tmp/reposix-example-05/issues/3.md
 
 [4/4] widening scope is the same recovery, repeated
 After widening to 4 paths:
-/tmp/reposix-example-05/0001.md
-/tmp/reposix-example-05/0002.md
-/tmp/reposix-example-05/0003.md
-/tmp/reposix-example-05/0004.md
+/tmp/reposix-example-05/issues/1.md
+/tmp/reposix-example-05/issues/2.md
+/tmp/reposix-example-05/issues/3.md
+/tmp/reposix-example-05/issues/4.md
 
 Done. Inspect blob-limit hits with:
   sqlite3 ~/.cache/reposix/sim-demo.git/cache.db \

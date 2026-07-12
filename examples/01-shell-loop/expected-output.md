@@ -9,8 +9,8 @@ WARN reposix::init: git fetch --filter=blob:none failed with status exit status:
 reposix init: configured `/tmp/reposix-example-01` with remote.origin.url = reposix::http://127.0.0.1:7878/projects/demo
 Next: cd /tmp/reposix-example-01 && git checkout origin/main (or git sparse-checkout set <pathspec> first)
 fatal: could not read ref refs/reposix/main
-triaging: ./0004.md
-[main bd10226] review: 0004.md
+triaging: ./issues/4.md
+[main bd10226] review: 4.md
  1 file changed, 3 insertions(+)
 To reposix::http://127.0.0.1:7878/projects/demo
  * [new branch]      main -> main
@@ -26,7 +26,7 @@ The two `fatal: could not read ref refs/reposix/main` lines are benign noise fro
 
 ```bash
 $ git -C /tmp/reposix-example-01 log --oneline -3
-bd10226 review: 0004.md
+bd10226 review: 4.md
 4cf4ee8 Sync from REST snapshot
 ```
 
@@ -44,7 +44,7 @@ Three rows for one push:
 
 - `helper_push_started` -- the helper accepted the `export` command from git.
 - `helper_push_sanitized_field` -- a server-controlled field (`version`) was stripped on egress. The diff includes `version: 1` from the seed; the helper enforces SG-03 by refusing to round-trip it.
-- `helper_push_accepted` -- the REST PATCH succeeded; the `reason` field lists the issue ids that changed (here, ids 2 and 4 because the bd10226 commit's diff touches issue 4 plus the helper's diff representation includes the 0002.md baseline).
+- `helper_push_accepted` -- the REST PATCH succeeded; the `reason` field lists the issue ids that changed (here, ids 2 and 4 because the bd10226 commit's diff touches issue 4 plus the helper's diff representation includes the issues/2.md baseline).
 
 ## What changed on the server
 

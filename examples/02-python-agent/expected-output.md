@@ -7,8 +7,8 @@ Captured by running `python3 run.py` against a freshly-seeded `reposix-sim --eph
 ```
 To reposix::http://127.0.0.1:7878/projects/demo
  * [new branch]      main -> main
-matched 1 issue(s) mentioning 'database': ['0001.md']
-  0001.md: severity=medium added
+matched 1 issue(s) mentioning 'database': ['issues/1.md']
+  issues/1.md: severity=medium added
 ```
 
 The `* [new branch]` line is the push response; it's printed first because Python flushes the subprocess's stderr-on-stdout earlier than the agent's own log lines. With the demo seed the substring "database" appears in exactly one issue body (issue 1, "database connection drops under load").

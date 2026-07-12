@@ -2,7 +2,7 @@
 
 A short bash script that bootstraps a working tree, finds the first open issue (`grep -lr '^status: open' .`), appends a review-comment block to the file, commits, and pushes.
 
-> **Layout note.** The simulator's working tree puts each issue at the root as `0001.md`, `0002.md`, ... (not under `issues/`). The aspirational `issues/` subdir in the first-run tutorial is the v0.10+ shape; v0.9.0 is flat.
+> **Layout note.** The simulator's working tree puts each issue under the canonical `issues/` bucket as `issues/1.md`, `issues/2.md`, ... (unpadded id, matching the [first-run tutorial](../../docs/tutorials/first-run.md) and the QL-001 canonical path shape). This script uses a recursive `grep -lr` predicate, so it finds records wherever they live.
 
 ## What this demonstrates
 

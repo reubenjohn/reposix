@@ -6,7 +6,7 @@ Captured by running `bash run.sh` against a freshly-seeded `reposix-sim --epheme
 
 ```
 [1/5] bootstrap two working trees
-  target: 0001.md
+  target: issues/1.md
 
 [2/5] agent A: append a note + push
 To reposix::http://127.0.0.1:7878/projects/demo
