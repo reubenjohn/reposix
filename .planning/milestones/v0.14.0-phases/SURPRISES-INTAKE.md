@@ -48,7 +48,7 @@ canonical spellings would still corrupt the shared repo.
 and path-suffixed `reposix-sim`. Proven: extended `evasion.sh` shows all six canonical forms
 BLOCK (rc=2) at the shared tree and still ALLOW under a `/tmp` redirect.
 
-**STATUS:** RESOLVED-in-P102 (`.claude/hooks/leaf-isolation-guard.sh` guard_leaf_setup_location).
+**STATUS:** RESOLVED-in-P102, commit `39a8500` (`fix(p102): harden guards — canonical-form + realpath cwd + quoting + fail-closed`; founding guard `bf88470`). Verified real: `.claude/hooks/leaf-isolation-guard.sh` `guard_leaf_setup_location` matches the path-prefixed / `cargo run … --` / path-suffixed `reposix-sim` canonical forms (CLAUDE.md § Non-negotiables documents all three as BLOCKING).
 
 ---
 
@@ -67,7 +67,7 @@ path-flag target `-C`/`-f`/`--git-dir`/`--file`/`--work-tree`, else the payload 
 target → fail-closed (unsafe). Proven: cd-back, `/tmp/../` traversal, and a REAL `/tmp`
 symlink → shared all BLOCK; a genuine `/tmp` path still ALLOWs.
 
-**STATUS:** RESOLVED-in-P102 (`.claude/hooks/leaf-isolation-guard.sh` effective_target/is_safe).
+**STATUS:** RESOLVED-in-P102, commit `39a8500`. Verified real: `.claude/hooks/leaf-isolation-guard.sh` `effective_target`/`is_safe` realpath-canonicalize the target (cd-back, `/tmp/../` traversal, and a `/tmp`→shared symlink all BLOCK; a genuine `/tmp` path ALLOWs) — matches the CLAUDE.md § Non-negotiables realpath-canonicalization contract.
 
 ---
 
@@ -84,7 +84,7 @@ trivially-quoted hole.)
 email/name tokens, keeping the delimiter-bounded match so `scott@things.io` still does NOT
 false-positive. Proven: quoted forms BLOCK (rc=2), real-address control ALLOWs (rc=0).
 
-**STATUS:** RESOLVED-in-P102 (`.claude/hooks/leaf-isolation-guard.sh` guard_fixture_identity).
+**STATUS:** RESOLVED-in-P102, commit `39a8500`. Verified real: `.claude/hooks/leaf-isolation-guard.sh` `guard_fixture_identity` tolerates optional surrounding quotes `['\"]?` (quoted `'t@t'`/`"t@t"` BLOCK) while a real address (`scott@things.io`) does NOT false-positive — matches the CLAUDE.md § Non-negotiables fixture-email-quoting contract.
 
 ---
 
@@ -102,7 +102,7 @@ crashed interpreter with a non-empty payload) → exit 2 (BLOCK) with a teaching
 empty payload with nothing to inspect still passes. Proven: `not json`, truncated JSON, and
 `[]` all BLOCK; `''` and `{}` ALLOW.
 
-**STATUS:** RESOLVED-in-P102 (`.claude/hooks/leaf-isolation-guard.sh` parse dispatch).
+**STATUS:** RESOLVED-in-P102, commit `39a8500`. Verified real: `.claude/hooks/leaf-isolation-guard.sh` parse dispatch fails CLOSED — a non-empty unparseable payload (`not json`, truncated JSON, non-object `[]`) exits 2 (BLOCK); only an empty `''`/`{}` payload ALLOWs — matches the CLAUDE.md § Non-negotiables "non-empty unparseable payload fails closed (exit 2)" contract.
 
 ---
 
@@ -124,7 +124,7 @@ the verifier script + hook, not a frozen `.txt`. (b) `effective_target()` now re
 `-f` short flag, so `git config -f /tmp/…` ALLOWs. Verifiers extended with the new hardening
 cases; all three exit 0 self-contained.
 
-**STATUS:** RESOLVED-in-P102 (catalog `expected.asserts` rework + `git rm --cached` + `-f` flag).
+**STATUS:** RESOLVED-in-P102, commit `39a8500` (`expected.asserts` rework from "committed transcript exists" to grade-time regeneration + `git rm --cached` of the force-added transcripts + `effective_target` `-f`-short-flag recognition so `git config -f /tmp/…` ALLOWs). Verified real against the guard's `-f` handling + the reworded catalog asserts.
 
 ---
 
@@ -136,7 +136,13 @@ cases; all three exit 0 self-contained.
 
 **Sketched resolution:** Implement a catalog-write lock (advisory flock around the catalog JSON persist in `quality/runners/run.py`, or serialize all catalog persist operations through a single lane with a lock file) such that two concurrent `--persist` writers cannot interleave. Alternative: single-persist-lane discipline where only the primary orchestration lane writes catalogs, and herdr on-demand runners read but do not persist.
 
-**STATUS:** OPEN
+**STATUS:** DEFERRED-TO-v0.15.0 (framework-hardening phase). A real flock/single-persist-lane
+design touching the runner concurrency model (contended `quality/runners/*.py`) — >1h + design,
+not a mechanical eager-fix. The hazard is latent, not active: catalog writes are currently
+serialized by orchestration discipline (one runner/persist lane at a time), and the P104 grading
+where it was observed did not corrupt the JSON (the concurrent writer's write agreed with the
+independent verification). Belongs to the same v0.15.0 framework-hardening phase as the
+verifier-script-path-validation row below.
 
 ---
 
@@ -167,7 +173,19 @@ GOOD-TO-HAVES tracking item for the deferred scripts. Do not silently patch the 
 without one of these two paths — that would be exactly the kind of quiet weakening the
 project's honesty rules exist to prevent.
 
-**STATUS:** OPEN
+**STATUS:** DEFERRED to the coverage-climb work (phases `999.5 docs-crates-md-zero-coverage`
+/ `999.6 docs-alignment-coverage-climb`). Reason: authoring shell tests for a subset of the 110
+zero-coverage scripts to clear the 13% floor is open-ended test-authorship, not a mechanical
+one-file fix; lowering the floor without a climb plan would be exactly the honesty regression the
+row itself warns against — so the honest disposition is to DEFER to the dedicated climb, not to
+touch the floor now. **Push-blocking check (per the drain charter): NOT an active blocker.**
+`code/shell-coverage` carries `blast_radius: P2` and `cadences: ["pre-push"]`;
+`quality/runners/run.py::compute_exit_code` exits 1 ONLY when a P0/P1 row is not PASS/WAIVED, so
+a P2 FAIL yields exit 0 → the pre-push hook (`.githooks/pre-push` → `run.py --cadence pre-push`,
+no `--fail-on` override) does NOT block the push. Nuance carried forward for the owner: the
+separate CI `shell-coverage` job (`.github/workflows/ci.yml`) DOES hard-fail on kcov, which can
+surface via the P0 `code/ci-green-on-main` post-push probe — that is the pre-existing state the
+health-triage lane already assessed, not a new P110 regression.
 
 ---
 
@@ -205,7 +223,15 @@ completion criterion was superseded by a later, documented process decision. A f
 milestone-close should add a step: "on-demand milestone-close rows for a just-closed
 milestone get retired, not left FAIL forever."
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED (eager waive). All three rows live in `quality/catalogs/agent-ux.json`
+(NOT the foreign-locked `code.json` — confirmed via grep: the "tag-script" row is
+`agent-ux/v0.13.0-tag-script-present`, in agent-ux.json), so all three are waivable in this
+P110 drain. Waivers added to `p87-surprises-absorption`, `p88-good-to-haves-drained`, and
+`v0.13.0-tag-script-present` with the rationale: "v0.13.0 milestone archived closed-green → the
+row is a historical PASS marker per the v0.12.1 P76 precedent; a superseded-policy FAIL (the
+milestone's own CARRY-FORWARD BANNER deleted terminal entries / split the GOOD-TO-HAVES monolith
+/ disabled the tag-script post-tag) is expected, waived." Waived in this same P110 drain commit
+(`quality/catalogs/agent-ux.json`) — the drain-commit SHA is reported to the coordinator.
 
 ---
 
@@ -217,7 +243,12 @@ milestone get retired, not left FAIL forever."
 
 **Sketched resolution:** Add a structure-dimension gate (`quality/gates/structure/verifier-script-exists.sh`) that scans all catalog rows at load time and asserts: for each row with a non-null `verifier.script`, the file exists on disk and is executable (chmod +x). The gate would fail at pre-commit or pre-push if any row references a missing verifier, preventing unbacked PASS rows from landing. This is a complement to GOOD-TO-HAVES-01 (bind-verb extension for agent-ux rows).
 
-**STATUS:** OPEN
+**STATUS:** DEFERRED-TO-v0.15.0 (framework-hardening phase). A new structure-dimension gate
+(`quality/gates/structure/verifier-script-exists.sh` scanning every row's `verifier.script` for
+on-disk existence + executability at load time) is new infra >1h — beyond the eager-fix bar. Pairs
+with the catalog-race row above in the same v0.15.0 framework-hardening phase. Note: the immediate
+P104 instance (a PASS row with a missing script path) was caught in manual review and did not ship;
+this defers the systematic GATE, not an active false-positive.
 
 ---
 
@@ -255,8 +286,10 @@ the tracking-ref tip the push is based on and re-diff against the live SoT uncon
 final arbiter. Add a regression test: two shared-cache clones, A pushes, B stale-pushes →
 assert B is rejected `fetch first` AND the SoT retains A's edit.
 
-**STATUS:** RESOLVED by **P113** (`113-lost-update-shared-cursor/PLAN.md`). Fix = option
-(a): `precheck_export_against_changed_set` no longer GATES the per-record version check on
+**STATUS:** RESOLVED by **P113**, fix commit `61e8222` (`fix(106-01): lost-update guard —
+shared cursor no longer gates conflict detection`; renumbered 106→113 at `4dd7e10`; catalog-first
+`632864d`; owner-authorized external-mutation land `ed42ece`) — SHAs verified real via `git log`.
+Fix = option (a): `precheck_export_against_changed_set` no longer GATES the per-record version check on
 `list_changed_since` delta membership — it issues the authoritative `get_record` for every
 pushed Update (the backend is the sole SoT arbiter), so a stale-base push under an advanced
 shared cursor is REJECTED `fetch first` instead of clobbering. The conflict is content-aware
@@ -335,7 +368,26 @@ writes the ref. Either way: re-run `quality/gates/agent-ux/rebase-recovery-recon
 (does stateless-connect on git >= 2.34 exhibit the same or a different failure?) on a
 modern-git CI runner before closing.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED-in-P105, fix commit `bd5b9cb` (`fix(105): helper import writes private ref ns
+— RBF-LR-03 ref-lock`) — **VERIFIED AGAINST REALITY, corrects the intake's 08:35 snapshot.** This
+entry was filed at 08:35 during P105 Lane-2 discovery and reads "OPEN / still-live"; the fix landed
+LATER in the SAME P105 close and the drain missed it. Confirmed real in committed source: the
+double-write is GONE — `crates/reposix-remote/src/main.rs:202` now advertises
+`refspec refs/heads/*:refs/reposix-import/*` and `fast_import.rs:127-130` writes the PRIVATE import
+namespace `refs/reposix-import/*` (disjoint from the user tracking ns `refs/reposix/origin/*`), so
+`git fetch` is the SOLE writer of `refs/reposix/origin/main` — exactly the sketched-resolution
+option (a)/(b) above. Phase-close proof: `.planning/phases/105-rbf-lr-03-rebase-recovery/VERIFICATION.md`
+(GREEN, HEAD `8afb52d`) grades `agent-ux/rebase-recovery-reconciles` exit 0, 13/13 asserts — the
+single documented `git pull --rebase && git push` now reconciles across peer-push drift (A),
+REST-PATCH drift (B), and record-deletion (C). The committed repro
+`.planning/phases/105-rbf-lr-03-rebase-recovery/repro/repro-fetch-ref-lock.sh` (4234 bytes,
+git-tracked) captured the PRE-fix failure on git 2.25.1.
+**RESIDUAL — DEFERRED-TO-v0.15.0 (verification-only, NOT a live bug):** PLAN §5 remains — the gate
+ran on git 2.25.1; whether `stateless-connect` on git >= 2.34 exhibits the same/different behavior
+is not yet exercised on a modern-git CI runner. That is a coverage extension, not an unfixed
+push-correctness defect. **OWNER SURFACE:** the coordinator's original disposition ("still-live
+HIGH bug, dedicated debug phase") is superseded — the bug is fixed + gate-GREEN; only the modern-git
+verification residual carries forward.
 
 ---
 
@@ -365,7 +417,16 @@ git failure and asserts the fetch errors rather than emitting a parentless overl
 (cargo build + a new test) — this lane is docs-only, cargo-free. Small (<1h) but needs a
 cargo window; file rather than eager-fix.
 
-**STATUS:** OPEN
+**STATUS:** DEFERRED-TO-v0.15.0 (helper-hardening phase). This is a distinct, still-latent
+robustness gap in `crates/reposix-remote/src/main.rs:400-419` `resolve_import_parent()` — it
+degrades to the parentless path on ANY git error (spawn failure / non-absence rev-parse exit), not
+just ref-absence, and is NOT addressed by the P105 `bd5b9cb` disjoint-namespace fix above (that
+fixed the ref-lock double-write, a different failure mode). A future regression making rev-parse
+fail for a non-absence reason would silently re-open the RBF-LR-03 non-descendant abort with no
+operator-facing error. Fix (distinguish ref-absent from spawn/other rev-parse failure; error
+loudly instead of degrading to a parentless overlay; add an injected-non-absence-failure unit test)
+is small (<1h) but needs a cargo window — out of scope for this cargo-free planning drain. Belongs
+to the same `crates/reposix-remote` helper-hardening phase as the row-6/row-5 residual verification.
 
 ---
 
@@ -412,7 +473,16 @@ target would nest inside the reposix SOURCE checkout / shared dev tree, WITHOUT 
 sanctioned `/tmp` dark-factory flow. Pair with a self-safety check that refuses to operate
 when the effective `.git` is the shared repo's object store (worktree-shared config detected).
 
-**STATUS:** OPEN
+**STATUS:** DEFERRED-TO-v0.15.0. **The ACTIVE corruption vector is already CLOSED.** The PRIMARY
+cut for this recurrence — the leaf-isolation hook Cases 9-11 (config-read false-positive,
+git-init-bare, cargo-sim-seed spelling) — shipped in P102's D2 re-seal (commit `2ad2bf5`), and the
+shared tree was repaired at `9d78d62`. What remains is a defense-in-depth BINARY-SIDE refusal
+(`reposix init` — NOT `attach` — refuses when its effective target nests inside the reposix source
+checkout / shared dev tree, plus a self-safety check refusing a shared-`.git` object store) that is
+the ONLY layer able to stop a non-Bash-tool subprocess bypass. That is new binary code >1h, not an
+eager-fix; a partial binary-side check landed at `3206a2b` (`fix(d2): binary-side reposix-init
+refusal`) but the full defense-in-depth cut + cross-flow testing is a dedicated v0.15.0 hardening
+phase. Deferring here does NOT re-open the active vector — it hardens the already-closed one.
 
 ## 2026-07-12 15:57 | discovered-by: C2-wave-2 (CI-gate fix-twice) | severity: MEDIUM
 
@@ -430,7 +500,12 @@ milestone-close (P111), so the fix belongs on the P110/P111 radar, not inside P1
 assertion step. If gating turns out <1h with no new dependency during P110/P111, eager-fix;
 otherwise leave filed for the owner (the tag itself is owner-cut).
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED, commit `0d05d7f` (`fix(ci): gate release.yml publish on green CI for the
+tagged commit — P110 OP-8 intake row 8`; SHA verified real via `git log`). A `ci-green-gate` job
+was added to `.github/workflows/release.yml` and the `plan` job now `needs` it, so a `v*` tag over
+a red main will not publish. **HONESTY CAVEAT (carried forward for the owner):** the gate is
+tag-triggered, so its RUNTIME behavior cannot be exercised until the P111 `v*` tag is cut — the
+YAML was parse-verified but the FIRST LIVE FIRE is P111. Treat as RESOLVED-pending-first-fire.
 
 ## 2026-07-12 | discovered-by: GSD-quick (release-plz RED fix) | severity: MEDIUM
 
@@ -457,7 +532,15 @@ GREEN-contract row before impl) + a verifier grade.
 `success` / `skipped` / other — so the probe treats non-failure correctly and does not false-RED
 unrelated phases?
 
-**STATUS:** OPEN
+**STATUS:** DEFERRED (owner gate required). Both candidate fixes (parameterize
+`ci-green-on-main.sh`'s hardcoded `WORKFLOW=ci.yml` into a required-workflow LIST, OR add a sibling
+`code/release-green-on-main` row) need a `quality/catalogs/code.json` edit — and `code.json` is
+FOREIGN-LOCKED in this contended tree (a concurrent lane holds uncommitted changes; the P110 drain
+charter forbids touching it). Beyond the lock, the two open semantic questions above (does
+release-plz run on EVERY push to main? is a 'no release needed' run concluded success/skipped?)
+must be answered BEFORE wiring a P0 probe — a false-RED would block UNRELATED phases. **OWNER ASK:**
+resolve those two questions, then choose list-parameterize vs a sibling `code/release-green-on-main`
+row; the wiring lands once `code.json` is unlocked.
 
 ## 2026-07-12 | discovered-by: GSD-quick (fleet-safety untrack fix) | severity: MEDIUM
 
@@ -480,4 +563,10 @@ which subset is hermetic) is a workflow + catalog change, not inline scope.
 appropriate cadence. `test_fleet_safety_verdicts_untracked.py` MUST be one that gets wired. Do
 NOT blanket `unittest discover` — that surfaces env-dependent tests.
 
-**STATUS:** OPEN
+**STATUS:** RESOLVED, commit `3f1458d` (`fix(ci): collect env-safe quality/runners unit tests in
+CI — P110 OP-8 intake row 10`; SHA verified real via `git log`). A hermetic `runner-unit-tests` job
+was added to `.github/workflows/ci.yml` wiring the 6 env-safe tests (explicit file list, NOT a
+blanket `unittest discover`); `test_realbackend.py` is EXCLUDED — it belongs to the credentialed
+`pre-release-real-backend` cadence, not the hermetic CI collection. The DP-2 guard
+`test_fleet_safety_verdicts_untracked.py` is among the wired set, so it now runs automatically in
+CI rather than only on a local run.

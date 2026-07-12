@@ -1088,7 +1088,7 @@
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: rerun P87 drain. SURPRISES-INTAKE.md should have 0 OPEN entries; each entry needs RESOLVED (commit SHA), DEFERRED (target milestone + rationale), or WONTFIX (rationale). (D-CONV-3, 2026-07-04: blast_radius corrected from the non-existent 'P3' tier to 'P2' -- schema only defines P0/P1/P2, quality/catalogs/README.md.)",
-      "waiver": null,
+      "waiver": "P110 (2026-07-12, v0.14.0 OP-8 Slot 1 drain, SURPRISES-INTAKE row 3): v0.13.0 milestone archived closed-green -> this row is a historical PASS marker per the v0.12.1 P76 precedent. It asserts >=5 terminal-STATUS entries remain in .planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md, but that milestone's own 2026-07-06 pre-tag CARRY-FORWARD BANNER deliberately DELETES terminal entries ('git is the archive'), making the assertion permanently unsatisfiable by policy, not by regression. Superseded-policy FAIL is expected; waived rather than force-passed.",
       "transport_claim": false,
       "claim_vs_assertion_audit": "If the SURPRISES-INTAKE.md is not fully drained -- any OPEN entries remain, or fewer than 5 entries carry terminal STATUS, or honesty-spot-check.md is missing -- the shell script assertions would fail and the row would stay FAIL (as it is now). Once P87 executor redoes the drain and marks all entries terminal, the gate exits 0, artifact exists, and the row flips PASS.",
       "cadences": [
@@ -1168,7 +1168,7 @@
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: rerun P88 drain. GOOD-TO-HAVES.md should have terminal STATUS on every heading; each entry needs RESOLVED (commit SHA), DEFERRED (target milestone + rationale), or WONTFIX (rationale). (D-CONV-3, 2026-07-04: blast_radius corrected from the non-existent 'P3' tier to 'P2'; waiver:null backfilled -- both required by the unified schema, quality/catalogs/README.md.)",
-      "waiver": null,
+      "waiver": "P110 (2026-07-12, v0.14.0 OP-8 Slot 1 drain, SURPRISES-INTAKE row 3): v0.13.0 milestone archived closed-green -> historical PASS marker per the v0.12.1 P77 precedent. The row asserts every GOOD-TO-HAVES-NN heading in the v0.13.0 monolith carries terminal STATUS, but the OP-8 file-size drain SPLIT that monolith into good-to-haves/part-NN.md after the row was minted AND the milestone's CARRY-FORWARD BANNER deferred full v0.13.0 GOOD-TO-HAVES drain to the v0.14.0-scoping session (P110/P111) -- the 'this milestone must fully drain' contract was superseded before it could be satisfied. Waived rather than force-passed.",
       "transport_claim": false,
       "claim_vs_assertion_audit": "If GOOD-TO-HAVES.md is not fully drained -- any heading lacks terminal STATUS, or TBD entries remain, or insufficient terminal entries exist -- the shell script assertions would fail and the row would stay FAIL (as it is now). Once P88 executor completes the drain and marks all entries terminal, the gate exits 0 and the row flips PASS.",
       "cadences": [
@@ -1243,7 +1243,7 @@
       "freshness_ttl": null,
       "blast_radius": "P2",
       "owner_hint": "if RED: re-author tag-v0.13.0.sh mirroring .planning/milestones/v0.12.0-phases/tag-v0.12.0.sh; ensure >=6 `# Guard N:` comments + `git tag -s`. (D-CONV-3, 2026-07-04: blast_radius corrected from the non-existent 'P3' tier to 'P2'; waiver:null backfilled -- both required by the unified schema.)",
-      "waiver": null,
+      "waiver": "P110 (2026-07-12, v0.14.0 OP-8 Slot 1 drain, SURPRISES-INTAKE row 3): v0.13.0 milestone archived closed-green -> historical PASS marker. The row asserts tag-v0.13.0.sh exists + is executable, but the script was intentionally renamed to tag-v0.13.0.sh.disabled AFTER the v0.13.0 tag was cut (main is now past v0.13.1) -- expected post-use archival, not an accidental deletion. Superseded-policy FAIL is expected; waived rather than force-passed.",
       "transport_claim": false,
       "claim_vs_assertion_audit": "If tag-v0.13.0.sh is not authored, does not exist, lacks executable perms, has fewer than 6 guard comments, or is missing `git tag -s` -- the shell script assertions fail and the row stays FAIL (as it is now). Once the tag script is created with the required structure and guards, the gate exits 0 and the row flips PASS.",
       "cadences": [
