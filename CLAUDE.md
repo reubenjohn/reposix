@@ -33,6 +33,14 @@ your first mutating move (each expanded in its own section below):
   worktrees share `.git/config` + object store and cwd resets between Bash calls;
   `reposix init` / sim-seed / `git commit`/`config` must `cd` into `/tmp` in the SAME
   invocation. Hard rule + corruption anchor: `.planning/ORCHESTRATION.md` § Leaf isolation.
+  **Now mechanically enforced (v0.14.0 P102):** `.claude/hooks/leaf-isolation-guard.sh`
+  (PreToolUse Bash, exit 2, three fail-closed guards — fixture-identity reject / leaf-setup
+  location / shared-config write) blocks the bad move before it runs, backstopped by the
+  git-native `.githooks/pre-commit` fixture-identity check (fires only in the shared repo).
+  **Coverage boundary:** the PreToolUse hook fires only on the Claude Code Bash *tool* — a
+  git/reposix write from a subprocess or script bypasses it; the pre-commit backstop catches
+  fixture *commits* on that path but not `reposix init` / `git config` writes. The prose
+  hard rule remains the human-readable contract for the uncovered surface.
 - **Verify against reality** — run it, hit the backend, render the page; a claim without
   an artifact isn't done.
 

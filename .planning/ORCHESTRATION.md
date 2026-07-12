@@ -14,6 +14,7 @@ session-local accumulator that previously held these rules in `/tmp`.
 | Doctrine | Enforced by | Layer |
 |---|---|---|
 | One cargo machine-wide | `.claude/hooks/cargo-mutex.sh` (exit 2) | blocking hook |
+| Leaf isolation (reposix/sim/git test setup) | `.claude/hooks/leaf-isolation-guard.sh` (exit 2) + `.githooks/pre-commit` | blocking hook |
 | Uncommitted = didn't happen | `.claude/hooks/stop-uncommitted.sh` (exit 0 + systemMessage) | advisory hook (owner decision Q2) |
 | Persist before compaction | `.claude/hooks/precompact-persist.sh` | state hook |
 | Session brief on startup | `.claude/hooks/session-start-brief.sh` | state hook |
@@ -41,6 +42,29 @@ real shared repo. Evidentiary anchor: a sim-seed leaf that skipped this ran git 
 under the `t <t@t>` fixture identity and flipped `core.bare=true`, corrupting the shared
 repo (repaired twice). Coordinators: bake the `cd /tmp/<target> && <cmd>` shape into
 every dispatched setup lane; a leaf that touches shared-repo git state is a REJECT.
+
+**Superseded-by-mechanism (v0.14.0 P102 — the serializing safety gate).** The prose
+hard-stop above is now backstopped MECHANICALLY, fail-closed, and proven by committed
+triggered-hook transcripts — it is retained as the human-readable contract, not deleted:
+- `.claude/hooks/leaf-isolation-guard.sh` — one combined PreToolUse Bash hook, three
+  fail-closed guards (exit 2 = BLOCK, first-match-blocks): **A** fixture-identity (`t <t@t>`)
+  reject, **B** leaf-setup-verb (`reposix init|attach|sync`, sim-seed) location, **C**
+  shared-`.git/config` write (`core.bare`/`user.email`/`user.name`). Each block teaches the
+  rule + why + the exact `/tmp`-clone recovery; the mechanism never invokes `git worktree
+  remove --force` (itself a corruption vector).
+- `.githooks/pre-commit` — git-native defense-in-depth: rejects a commit whose resolved
+  `git var GIT_AUTHOR_IDENT`/`GIT_COMMITTER_IDENT` is the fixture identity. Fires only in
+  the shared repo (via `core.hooksPath`); a `/tmp` fixture clone does not inherit it.
+- Catalog rows (`agent-ux/fleet-safety-{tat-identity-reject,leaf-isolation-enforce,
+  shared-config-write-guard}`, kind `shell-subprocess`) grade the guards from committed
+  transcripts.
+- **Coverage boundary (honest):** the PreToolUse hook fires only on the Claude Code Bash
+  *tool* — a git/reposix write spawned by a subprocess or script bypasses it. The pre-commit
+  backstop catches fixture *commits* on that bypass path, but NOT `reposix init` / `git
+  config` writes. A binary-side / git-alias non-tool backstop for guards B/C is filed
+  (`.planning/milestones/v0.14.0-phases/GOOD-TO-HAVES.md`). Until then the prose hard-stop
+  remains the enforcement of record for the uncovered surface — coordinators still bake the
+  `cd /tmp` shape into every dispatched setup lane.
 
 ## 1. Three-tier model delegation
 
