@@ -33,7 +33,7 @@ mod stateless_connect;
 mod write_loop;
 
 use crate::diff::PlannedAction;
-use crate::fast_import::{emit_import_stream, parse_export_stream};
+use crate::fast_import::{emit_import_stream, parse_export_stream, ImportParent};
 use crate::protocol::Protocol;
 use crate::stateless_connect::{handle_stateless_connect, StatelessConnectOutcome};
 use reposix_remote::backend_dispatch::{self, instantiate};
@@ -363,11 +363,50 @@ fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
     // Emit fast-import stream over stdout via the protocol writer, using
     // the backend's canonical record bucket (issues/ vs pages/).
     let bucket = reposix_core::path::bucket_for_backend(&state.backend_name);
+    // RBF-LR-03: chain the synthesized tracking commit onto the client's
+    // current `refs/reposix/origin/main` tip so the fetch is a fast-forward
+    // and `git pull --rebase && git push` reconciles after SoT drift. git
+    // sets GIT_DIR for the helper RPC, so a bare `git rev-parse` resolves
+    // against the caller's repo (same proven pattern as the bus handler's
+    // mirror-drift check). Ref absent (first fetch) → None → parentless root.
+    // The ref name is a static literal, never a remote byte (OP-2 taint).
+    let parent = resolve_import_parent();
     let mut sink: Vec<u8> = Vec::with_capacity(1024 + issues.len() * 256);
-    emit_import_stream(&mut sink, &issues, bucket)?;
+    emit_import_stream(&mut sink, &issues, bucket, parent.as_ref())?;
     proto.send_raw(&sink)?;
     proto.flush()?;
     Ok(())
+}
+
+/// Resolve the client's current `refs/reposix/origin/main` tip (commit + tree
+/// oids) via `git rev-parse`, for RBF-LR-03 parent chaining. Returns `None`
+/// when the ref is absent (first fetch → parentless seed) or git is somehow
+/// unavailable — both degrade to the original parentless behavior, never an
+/// error, so a fresh clone still bootstraps.
+///
+/// git sets `GIT_DIR` for the remote-helper RPC, so the bare `rev-parse`
+/// resolves against the caller's repo without a `-C` (the same pattern the bus
+/// mirror-drift check relies on). The ref name is a fixed literal — never a
+/// remote-influenced byte — so there is no `Tainted<T>` concern (OP-2).
+fn resolve_import_parent() -> Option<ImportParent> {
+    use std::process::Command;
+    const REF: &str = "refs/reposix/origin/main";
+    let rev_parse = |arg: &str| -> Option<String> {
+        let out = Command::new("git")
+            .args(["rev-parse", "--verify", "--quiet", arg])
+            .output()
+            .ok()?;
+        if !out.status.success() {
+            return None;
+        }
+        let s = String::from_utf8_lossy(&out.stdout).trim().to_owned();
+        (!s.is_empty()).then_some(s)
+    };
+    let commit = rev_parse(REF)?;
+    // `<ref>^{tree}` peels the commit to its tree oid; if the commit resolved
+    // this must too, but stay defensive and fall back to no-parent on failure.
+    let tree = rev_parse(&format!("{REF}^{{tree}}"))?;
+    Some(ImportParent { commit, tree })
 }
 
 fn handle_export<R: std::io::Read, W: std::io::Write>(

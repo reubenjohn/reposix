@@ -23,19 +23,106 @@ pub(crate) fn render_blob(issue: &Record) -> Result<String, reposix_core::Error>
     frontmatter::render(issue)
 }
 
+/// The client's current tracking tip, resolved by the caller from
+/// `refs/reposix/origin/main` before an import batch (RBF-LR-03).
+///
+/// Both fields are hex object ids the caller obtains via `git rev-parse`
+/// (`refs/reposix/origin/main` and `…^{{tree}}`). Carrying the tree oid
+/// alongside the commit oid lets [`emit_import_stream`] run the no-op
+/// tree-equality guard WITHOUT re-shelling git — keeping the emit function
+/// pure and unit-testable.
+///
+/// The commit oid is a static-ref lookup (`git rev-parse --verify
+/// refs/reposix/origin/main`), never a remote-influenced byte, so no
+/// `Tainted<T>` routing concern applies (OP-2; PLAN §2 taint note).
+#[derive(Debug, Clone)]
+pub(crate) struct ImportParent {
+    /// Hex oid of the current `refs/reposix/origin/main` commit.
+    pub(crate) commit: String,
+    /// Hex oid of that commit's tree (`<commit>^{tree}`).
+    pub(crate) tree: String,
+}
+
+/// Compute the git tree oid of the snapshot `sorted` would produce, WITHOUT
+/// writing anything to an object store. Mirrors the exact two-level tree shape
+/// the cache builder emits (`reposix-cache::builder::build_from`): an inner
+/// `<bucket>/` subtree of `<id>.md` blobs, nested under a single-entry outer
+/// tree — so the oid is byte-for-byte comparable with `git rev-parse
+/// <parent>^{{tree}}` on a ref that a prior [`emit_import_stream`] created.
+///
+/// `sorted` must already be id-sorted by the caller; tree entries are
+/// re-sorted by filename bytes here (git's canonical tree ordering, which
+/// differs from numeric id order once ids reach two digits).
+fn snapshot_tree_oid(sorted: &[&Record], bucket: &str) -> io::Result<gix::ObjectId> {
+    use gix::objs::WriteTo;
+    let hash_kind = gix::hash::Kind::Sha1;
+    let mut entries: Vec<gix::objs::tree::Entry> = Vec::with_capacity(sorted.len());
+    for issue in sorted {
+        let bytes = render_blob(issue)
+            .map_err(|e| io::Error::other(format!("render blob {}: {e}", issue.id.0)))?
+            .into_bytes();
+        let oid = gix::objs::compute_hash(hash_kind, gix::object::Kind::Blob, &bytes)
+            .map_err(|e| io::Error::other(format!("hash blob {}: {e}", issue.id.0)))?;
+        entries.push(gix::objs::tree::Entry {
+            mode: gix::object::tree::EntryKind::Blob.into(),
+            filename: reposix_core::path::record_filename(issue.id.0).into(),
+            oid,
+        });
+    }
+    // git orders tree entries by raw filename bytes, NOT by numeric id.
+    entries.sort_by(|a, b| a.filename.cmp(&b.filename));
+
+    let inner = gix::objs::Tree { entries };
+    let mut inner_buf = Vec::new();
+    inner
+        .write_to(&mut inner_buf)
+        .map_err(|e| io::Error::other(format!("serialize inner tree: {e}")))?;
+    let inner_oid = gix::objs::compute_hash(hash_kind, gix::object::Kind::Tree, &inner_buf)
+        .map_err(|e| io::Error::other(format!("hash inner tree: {e}")))?;
+
+    let outer = gix::objs::Tree {
+        entries: vec![gix::objs::tree::Entry {
+            mode: gix::object::tree::EntryKind::Tree.into(),
+            filename: bucket.as_bytes().into(),
+            oid: inner_oid,
+        }],
+    };
+    let mut outer_buf = Vec::new();
+    outer
+        .write_to(&mut outer_buf)
+        .map_err(|e| io::Error::other(format!("serialize outer tree: {e}")))?;
+    gix::objs::compute_hash(hash_kind, gix::object::Kind::Tree, &outer_buf)
+        .map_err(|e| io::Error::other(format!("hash outer tree: {e}")))
+}
+
 /// Emit a fast-import stream for `issues` to `w`. Issues are sorted by id ASC
 /// so the resulting commit's tree is deterministic and SHA-stable.
 ///
 /// `bucket` is the backend's canonical record bucket per
 /// [`reposix_core::path::bucket_for_backend`] (`"issues"` or `"pages"`).
 ///
+/// `parent` is the client's current `refs/reposix/origin/main` tip
+/// (RBF-LR-03). When `Some`, the synthesized "Sync from REST snapshot" commit
+/// chains onto it via a `from <commit>` directive, so every fetch is a
+/// fast-forward and `git pull --rebase && git push` reconciles cleanly. When
+/// `None` (first fetch, ref absent) the commit is a parentless root — the
+/// original seed behavior.
+///
+/// **No-op guard.** With a parent, an *unchanged* `SoT` would otherwise mint a
+/// fresh empty commit every fetch, growing the ref unboundedly. When the
+/// freshly-built snapshot tree equals `parent.tree`, we emit a reset-only
+/// stream (`reset` + `from <parent>`, NO commit block) so the fetch leaves the
+/// ref exactly where it was — mirroring the export-side no-op detection
+/// (`saw_commit`).
+///
 /// # Errors
-/// Returns any [`io::Error`] from the writer or any rendering failure
+/// Returns any [`io::Error`] from the writer or any rendering/hashing failure
 /// translated into an `io::Error::Other`.
 pub(crate) fn emit_import_stream<W: Write>(
     w: &mut W,
     issues: &[Record],
     bucket: &str,
+    parent: Option<&ImportParent>,
 ) -> io::Result<()> {
     // First line of every import response: `feature done\n` per
     // gitremote-helpers(7); marks the stream as well-formed.
@@ -43,6 +130,21 @@ pub(crate) fn emit_import_stream<W: Write>(
 
     let mut sorted: Vec<&Record> = issues.iter().collect();
     sorted.sort_by_key(|i| i.id.0);
+
+    // No-op guard (RBF-LR-03): if the snapshot tree is identical to the
+    // parent commit's tree, emit a reset-only stream that keeps the ref at
+    // `<parent>` — no blobs, no commit, so the fetch is a true no-op and the
+    // ref cannot grow. Only reachable with a parent (first-fetch seeds always
+    // emit a real commit).
+    if let Some(p) = parent {
+        let new_tree = snapshot_tree_oid(&sorted, bucket)?;
+        if new_tree.to_hex().to_string() == p.tree {
+            writeln!(w, "reset refs/reposix/origin/main")?;
+            writeln!(w, "from {}", p.commit)?;
+            writeln!(w, "done")?;
+            return Ok(());
+        }
+    }
 
     let mut mark: u64 = 0;
     let mut blob_marks: Vec<u64> = Vec::with_capacity(sorted.len());
@@ -66,6 +168,13 @@ pub(crate) fn emit_import_stream<W: Write>(
     let msg = "Sync from REST snapshot\n";
     writeln!(w, "data {}", msg.len())?;
     w.write_all(msg.as_bytes())?;
+    // Chain onto the current tracking tip so the fetch is a fast-forward
+    // (RBF-LR-03). `from` MUST sit after the commit-message `data` block and
+    // before the `M`/`D` tree directives per the git-fast-import(1) commit
+    // grammar. Absent on the first-fetch seed (parentless root).
+    if let Some(p) = parent {
+        writeln!(w, "from {}", p.commit)?;
+    }
     for (i, issue) in sorted.iter().enumerate() {
         // Canonical `<bucket>/<id>.md` path (QL-001 / D91-01, bucket-aware
         // per Wave-5.5) — matches the cache/stateless-connect production
@@ -242,7 +351,207 @@ pub(crate) fn parse_export_stream<R: BufRead>(r: &mut R) -> io::Result<ParsedExp
 #[cfg(test)]
 mod tests {
     use super::*;
+    use reposix_core::{RecordId, RecordStatus};
     use std::io::Cursor;
+
+    /// Minimal deterministic record fixture. Fixed timestamps keep the
+    /// rendered blob — and therefore the tree/commit oids — stable across
+    /// runs so the round-trip test's fast-forward assertion is reproducible.
+    fn rec(id: u64, body: &str) -> Record {
+        use chrono::TimeZone;
+        let t = chrono::Utc.with_ymd_and_hms(2026, 4, 13, 0, 0, 0).unwrap();
+        Record {
+            id: RecordId(id),
+            title: format!("issue {id}"),
+            status: RecordStatus::Open,
+            assignee: None,
+            labels: vec![],
+            created_at: t,
+            updated_at: t,
+            version: 1,
+            body: body.to_owned(),
+            parent_id: None,
+            extensions: std::collections::BTreeMap::new(),
+        }
+    }
+
+    /// Render an `emit_import_stream` to a UTF-8 String for line assertions.
+    fn emit_to_string(issues: &[Record], parent: Option<&ImportParent>) -> String {
+        let mut buf: Vec<u8> = Vec::new();
+        emit_import_stream(&mut buf, issues, "issues", parent).expect("emit");
+        String::from_utf8(buf).expect("utf8 stream")
+    }
+
+    /// RBF-LR-03: when the tracking ref exists, the synthesized commit MUST
+    /// carry a `from <parent-commit>` directive so the fetch is a
+    /// fast-forward. The `from` line must sit inside the commit block (after
+    /// the commit-message `data`, before the `M` tree directives).
+    #[test]
+    // test-name-honesty: ok — asserts the emitted stream contains `from <oid>` in the commit block
+    fn emit_import_stream_with_parent_emits_from_line() {
+        let parent = ImportParent {
+            commit: "1234567890123456789012345678901234567890".to_owned(),
+            // A tree oid that will NOT match the snapshot, so the no-op guard
+            // does not fire and a real commit is emitted.
+            tree: "0000000000000000000000000000000000000000".to_owned(),
+        };
+        let out = emit_to_string(&[rec(1, "body v1")], Some(&parent));
+        assert!(
+            out.contains(&format!("from {}", parent.commit)),
+            "with a parent the commit must chain via `from <oid>`; stream=\n{out}"
+        );
+        // Ordering: `from` after `data <n>` (commit message), before the `M` line.
+        let from_pos = out.find("from ").expect("from line present");
+        let m_pos = out.find("\nM 100644 ").expect("M line present");
+        assert!(
+            from_pos < m_pos,
+            "`from` must precede the tree `M` directives; stream=\n{out}"
+        );
+        assert!(out.contains("commit refs/reposix/origin/main"));
+    }
+
+    /// The first-fetch seed path (ref absent → `None`) must remain a
+    /// PARENTLESS root commit — no `from` directive — exactly as before
+    /// RBF-LR-03, so a fresh clone still bootstraps.
+    #[test]
+    // test-name-honesty: ok — asserts the None-parent stream carries no `from` directive
+    fn emit_import_stream_no_parent_is_parentless() {
+        let out = emit_to_string(&[rec(1, "body v1")], None);
+        assert!(
+            !out.contains("\nfrom "),
+            "the parentless seed must not emit a `from` line; stream=\n{out}"
+        );
+        assert!(out.contains("commit refs/reposix/origin/main"));
+    }
+
+    /// No-op guard: when the snapshot tree equals the parent commit's tree,
+    /// emit a reset-only stream (`reset` + `from <parent>`, NO `commit`) so
+    /// the ref stays put and cannot grow unboundedly on repeated no-op fetches.
+    #[test]
+    // test-name-honesty: ok — asserts an unchanged snapshot emits reset-only, no commit block
+    fn unchanged_tree_emits_no_commit() {
+        let records = [rec(1, "stable body"), rec(2, "another")];
+        let sorted: Vec<&Record> = records.iter().collect();
+        // The parent tree oid IS the snapshot's own tree oid → guard fires.
+        let tree = snapshot_tree_oid(&sorted, "issues")
+            .expect("tree oid")
+            .to_hex()
+            .to_string();
+        let parent = ImportParent {
+            commit: "abcabcabcabcabcabcabcabcabcabcabcabcabca".to_owned(),
+            tree,
+        };
+        let out = emit_to_string(&records, Some(&parent));
+        assert!(
+            !out.contains("commit refs/reposix/origin/main"),
+            "an unchanged tree must emit NO commit block; stream=\n{out}"
+        );
+        assert!(
+            out.contains("reset refs/reposix/origin/main"),
+            "no-op guard must emit a `reset` directive; stream=\n{out}"
+        );
+        assert!(
+            out.contains(&format!("from {}", parent.commit)),
+            "reset must pin the ref at the parent via `from`; stream=\n{out}"
+        );
+        assert!(
+            !out.contains("\nblob\n"),
+            "no-op stream must not carry blobs; stream=\n{out}"
+        );
+    }
+
+    /// Port of `repro/verify-from-parent-fix.sh` against a real `git
+    /// fast-import`: a changed snapshot emitted WITH `from <tip>` fast-forwards
+    /// the seeded tracking ref (exit 0, linear 2-commit history); the same
+    /// changed snapshot emitted PARENTLESS is refused (`does not contain`, ref
+    /// unchanged) — proving the parent chaining is what makes recovery work.
+    #[test]
+    // test-name-honesty: ok — drives real `git fast-import`, asserts fast-forward vs reject on the ref
+    fn git_fast_import_roundtrip_with_parent_fast_forwards() {
+        use std::process::{Command, Stdio};
+
+        // git 2.25 selects the `import` path unaided; this test drives
+        // `git fast-import` directly so it is git-version-agnostic.
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path();
+        let git = |args: &[&str]| -> std::process::Output {
+            Command::new("git")
+                .args(args)
+                .current_dir(path)
+                .output()
+                .expect("spawn git")
+        };
+        assert!(git(&["init", "-q"]).status.success(), "git init");
+
+        let feed = |stream: &[u8]| -> std::process::Output {
+            let mut child = Command::new("git")
+                .args(["fast-import", "--quiet"])
+                .current_dir(path)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .expect("spawn fast-import");
+            child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all(stream)
+                .expect("write stream");
+            child.wait_with_output().expect("wait fast-import")
+        };
+        let rev_parse = |arg: &str| -> String {
+            let out = git(&["rev-parse", arg]);
+            assert!(out.status.success(), "rev-parse {arg}");
+            String::from_utf8_lossy(&out.stdout).trim().to_owned()
+        };
+
+        // 1. Seed a parentless "Sync from REST snapshot" tracking commit.
+        let mut seed = Vec::new();
+        emit_import_stream(&mut seed, &[rec(1, "v1")], "issues", None).expect("seed emit");
+        assert!(feed(&seed).status.success(), "seed fast-import");
+        let tip0 = rev_parse("refs/reposix/origin/main");
+        let tree0 = rev_parse("refs/reposix/origin/main^{tree}");
+
+        // 2. Changed snapshot, PARENTLESS → git refuses the non-descendant tip.
+        let mut bad = Vec::new();
+        emit_import_stream(&mut bad, &[rec(1, "v2-CHANGED")], "issues", None)
+            .expect("parentless emit");
+        let bad_out = feed(&bad);
+        let bad_stderr = String::from_utf8_lossy(&bad_out.stderr);
+        assert!(
+            bad_stderr.contains("does not contain"),
+            "parentless changed snapshot must be refused with `does not contain`; stderr=\n{bad_stderr}"
+        );
+        assert_eq!(
+            rev_parse("refs/reposix/origin/main"),
+            tip0,
+            "refused import must leave the ref unchanged"
+        );
+
+        // 3. Changed snapshot WITH from <tip0> → fast-forward, linear history.
+        let parent = ImportParent {
+            commit: tip0.clone(),
+            tree: tree0,
+        };
+        let mut fixed = Vec::new();
+        emit_import_stream(&mut fixed, &[rec(1, "v2-CHANGED")], "issues", Some(&parent))
+            .expect("with-parent emit");
+        let fixed_out = feed(&fixed);
+        assert!(
+            fixed_out.status.success(),
+            "with-parent changed snapshot must fast-forward; stderr=\n{}",
+            String::from_utf8_lossy(&fixed_out.stderr)
+        );
+        let tip1 = rev_parse("refs/reposix/origin/main");
+        assert_ne!(tip1, tip0, "ref must advance to the new descendant commit");
+        // Parent of tip1 is tip0 → linear 2-commit chain.
+        assert_eq!(
+            rev_parse("refs/reposix/origin/main~1"),
+            tip0,
+            "the new commit must chain directly onto the seed tip"
+        );
+    }
 
     /// QL-001 criterion 2 / BUG-3: git fast-export emits the commit-MESSAGE
     /// `data N` payload immediately followed by the first `M` directive with
