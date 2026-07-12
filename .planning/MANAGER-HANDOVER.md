@@ -29,6 +29,10 @@ does reposix work itself. Keep this file lean; git history is the archive.
 - **Owner intent**: multi-day autonomous chug toward OD-4 launch-readiness (asciinema
   demo, honest headline numbers, install excellence, Show-HN kit); workhorse routes,
   doesn't work.
+- **UX mandate**: end-user experience is the north star all tooling serves. The manager
+  makes strong UX decisions on the owner's behalf — docs, error-messages-with-fix-hints,
+  onboarding friction. Bar: Rust-compiler-grade UX (teach the fix, suggest the
+  alternative, copy-paste recovery). UX polish is a first-class lane, never a leftover.
 
 ## Rotation procedure (self-succession, w1:p7)
 
@@ -54,6 +58,7 @@ does reposix work itself. Keep this file lean; git history is the archive.
 - Wave-2: P102-P105, P108, P109(a) GREEN; P106 rows minting PASS. Filed, not dropped:
   fold-release-plz-into-CI-bar (CONSULT-DECISIONS D5), runner unit tests uncollected
   by CI (MEDIUM), SURPRISES-INTAKE over size limit (P110 drain splits it).
-- **Owner decisions PARKED (do not action)**: land `424d367` (branch
-  `backup-lost-update-424d367`); close dependabot #64-66; gh404 live verify; GTH-09
-  ship-or-defer.
+- Owner decisions ALL RESOLVED and relayed to the fleet: land `424d367` (yes),
+  close dependabot #64-66 (yes), gh404 live verify (defer), GTH-09 (DEFERRED to
+  v0.15.0 — record as explicit named-headline deferral). Verify execution on next
+  wakes; nothing parked.
