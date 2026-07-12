@@ -20,6 +20,37 @@ set -uo pipefail
 
 readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# (0) Fixture-identity backstop — git-native defense-in-depth for leaf-isolation guard A
+# (.claude/hooks/leaf-isolation-guard.sh). Rejects a commit whose author OR committer
+# identity carries the throwaway fixture token `t <t@t>` in the SHARED repo. This runs
+# FIRST (before fmt + the runner) so the security reject is independent of the toolchain,
+# and it fires ONLY where core.hooksPath points at this .githooks dir — i.e. the shared
+# repo. A /tmp fixture clone does NOT inherit this hook, so fixture commits stay ALLOWED
+# there (where they belong). Coverage note: this backstop catches fixture COMMITS on the
+# non-Bash-tool bypass path the PreToolUse hook cannot see; it does NOT catch `reposix
+# init` / `git config` writes (those need the PreToolUse hook or the filed binary-side
+# backstop). Founding incident: S-260707-pr-08 (`t <t@t>` flipped core.bare=true).
+# `git var GIT_{AUTHOR,COMMITTER}_IDENT` renders the email inside angle brackets, so
+# matching `<t@t>` is exact and cannot false-positive on a real address that merely
+# contains the substring (e.g. `<scott@things.io>`).
+fixture_ident_backstop() {
+  local author committer
+  author="$(git var GIT_AUTHOR_IDENT 2>/dev/null || true)"
+  committer="$(git var GIT_COMMITTER_IDENT 2>/dev/null || true)"
+  for tok in '<t@t>'; do
+    if printf '%s\n%s\n' "$author" "$committer" | grep -qF "$tok"; then
+      echo "pre-commit: BLOCKED — commit identity carries the throwaway fixture token '$tok'." >&2
+      echo "  author=[$author] committer=[$committer]" >&2
+      echo "WHY: the fixture identity 't <t@t>' must NEVER reach shared history or origin —" >&2
+      echo "     S-260707-pr-08: a fixture-identity leaf corrupted the shared repo for every" >&2
+      echo "     concurrent agent. RECOVERY: commit real work under a real git identity; run" >&2
+      echo "     fixture/test commits inside a /tmp clone (which does not inherit this hook)." >&2
+      exit 1
+    fi
+  done
+}
+fixture_ident_backstop
+
 # (1) cargo fmt --check on staged .rs files.
 #
 # Catches fmt drift at commit time so it doesn't accumulate across long
