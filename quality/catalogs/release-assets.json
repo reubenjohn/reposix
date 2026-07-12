@@ -510,6 +510,7 @@
       "id": "release/cargo-binstall-resolves",
       "dimension": "release",
       "kind": "container",
+      "_provenance_note": "P90 90-05 (2026-07-04): the historical PARTIAL-acceptable carve-out (P56 SURPRISES.md row 3) is RETIRED -- the pkg-url metadata fix landed pre-P90 (commit 33dd41f, QL-003); PASS is now the expected outcome on the next real container run, not PARTIAL. || post-v0.13.0 (2026-07-07, CI run 28839335746): PASS logic broadened from a single literal-URL substring match to a set of accepted vendor wordings, because cargo-binstall's own stdout wording drifted between versions and false-negatived a genuinely-successful resolve (rc=0, prebuilt binary resolved in ~1.97s). Contract is now invariant-shaped (resolved + will-install-binaries line), not surface-string-shaped; see REGRESSION NOTE in quality/gates/release/cargo-binstall-resolves.py",
       "sources": [
         "crates/reposix-cli/Cargo.toml:[package.metadata.binstall]",
         "crates/reposix-remote/Cargo.toml:[package.metadata.binstall]",
@@ -518,9 +519,7 @@
       "command": "cargo binstall --no-confirm reposix-cli reposix-remote",
       "expected": {
         "asserts": [
-          "in a fresh rust:1.82-slim container with cargo-binstall installed, `cargo binstall --no-confirm --dry-run reposix-cli` resolves to a prebuilt GitHub Release binary: rc==0 AND a 'downloaded from github' signal is present (accepts EITHER the legacy 'github.com/reubenjohn/reposix/releases/download/' URL echo OR cargo-binstall's newer 'has been downloaded from github.com' summary wording, case-insensitive) AND the 'will install the following binaries' line is present",
-          "P90 90-05 (2026-07-04): the historical PARTIAL-acceptable carve-out (P56 SURPRISES.md row 3) is RETIRED -- the pkg-url metadata fix landed pre-P90 (commit 33dd41f, QL-003); PASS is now the expected outcome on the next real container run, not PARTIAL",
-          "post-v0.13.0 (2026-07-07, CI run 28839335746): PASS logic broadened from a single literal-URL substring match to a set of accepted vendor wordings, because cargo-binstall's own stdout wording drifted between versions and false-negatived a genuinely-successful resolve (rc=0, prebuilt binary resolved in ~1.97s). Contract is now invariant-shaped (resolved + will-install-binaries line), not surface-string-shaped; see REGRESSION NOTE in quality/gates/release/cargo-binstall-resolves.py"
+          "in a fresh rust:1.82-slim container with cargo-binstall installed, `cargo binstall --no-confirm --dry-run reposix-cli` resolves to a prebuilt GitHub Release binary: rc==0 AND a 'downloaded from github' signal is present (accepts EITHER the legacy 'github.com/reubenjohn/reposix/releases/download/' URL echo OR cargo-binstall's newer 'has been downloaded from github.com' summary wording, case-insensitive) AND the 'will install the following binaries' line is present"
         ]
       },
       "verifier": {
