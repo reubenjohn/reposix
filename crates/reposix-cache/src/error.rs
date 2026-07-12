@@ -32,7 +32,14 @@ pub enum Error {
     /// Cache path already belongs to a different `(backend, project)`
     /// than the one passed to [`crate::Cache::open`]. The identity check
     /// fires in [`crate::Cache::open`].
-    #[error("cache collision: expected {expected}, found {found}")]
+    #[error(
+        "cache collision: this cache dir belongs to {found} but was opened for {expected}. \
+         Most often this is the GitHub owner/repo identity migration (S-260707-gh404): a \
+         pre-fix reposix recorded the sanitized slug (e.g. github:owner-repo) as the cache \
+         identity, while the fixed binary uses the raw slug (github:owner/repo). Delete the \
+         stale cache dir and re-run `reposix init`/`reposix attach` to rebuild it from the \
+         backend."
+    )]
     CacheCollision {
         /// The `(backend, project)` the caller asked for.
         expected: String,
