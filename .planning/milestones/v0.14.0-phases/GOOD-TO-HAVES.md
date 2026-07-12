@@ -82,6 +82,42 @@ close individual extensions early (e.g. the 5 `*.sh` in one pass) if < 1h each.
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-03 — `gh404-caller-path-raw-slug-guard` — caller-path guard that a caller cannot re-sanitize before Cache::open
+
+**Discovered during:** P104 remediation (S-260707-gh404 WARNING #3)
+
+**Size:** M (needs a backend-injection test seam into the caller path)
+
+**Source:** the GitHub 404 bug actually lived in the CALLERS — `reposix-remote`
+`main.rs:293`, `reposix-cli` `sync.rs:105`, `attach.rs:164` all fed a slug to
+`Cache::open`. The landed regression test
+(`crates/reposix-cache/tests/github_project_slug_not_sanitized.rs`) calls
+`Cache::open(_, "github", "owner/repo")` DIRECTLY, so it proves the cache honors a raw
+slug but BYPASSES the callers — it would not catch a caller re-introducing
+`sanitize_project_for_cache(&parsed.project)` before the `Cache::open` call. Partial
+coverage already exists at the PARSE seam: `backend_dispatch::tests::parse_remote_url_github`
+pins `parsed.project == "reubenjohn/reposix"` (raw). The gap is the segment BETWEEN parse
+and `Cache::open`.
+
+**Acceptance:** an integration test drives a real caller path (helper `main`, `sync`, or
+`attach`) with a RECORDING backend and a `github::owner/repo` spec, and asserts the backend
+receives the raw `owner/repo` at `list_records_complete` — i.e. no caller sanitizes between
+`parse_remote_url` and `Cache::open`. Blocked today because those callers instantiate the
+connector INTERNALLY from config + env (`backend_dispatch::instantiate`, and the GitHub
+connector needs `GITHUB_TOKEN`), with no seam to inject a recording backend — closing this
+needs a `#[cfg(test)]` backend-injection hook (or a thin `open_cache_with(backend, spec)`
+extraction) shared by the three call sites. That refactor is new scaffolding + a new
+test-only coupling across two crates (charter #3 — not <1h-safe, hence filed not fixed).
+A cheaper stopgap if the refactor slips: a `structure`-dimension grep gate asserting no
+`sanitize_project_for_cache` call appears on the line-path between `parse_remote_url` and
+`Cache::open` in the three caller files.
+
+**Default disposition for P111:** M default-defers to the next milestone (post-v0.14.0)
+with carry-forward target v0.15.0; close early if the `open_cache_with` extraction proves
+< 1h across the three call sites.
+
+**STATUS:** OPEN
+
 ## Entry format
 
 ```markdown
