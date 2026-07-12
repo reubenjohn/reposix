@@ -28,18 +28,13 @@
         "container": "ubuntu:24.04"
       },
       "artifact": "quality/reports/verifications/docs-repro/example-01-shell-loop.json",
-      "status": "WAIVED",
-      "last_verified": "2026-07-04T12:00:00Z",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: examples/01-shell-loop/run.sh has a regression OR the simulator/cli/helper changed and the example was not updated; check examples/01-shell-loop/expected-output.md and the binary on PATH preamble",
-      "waiver": {
-        "until": "2026-09-15T00:00:00Z",
-        "reason": "RENEWED P90 90-05 (2026-07-04): still-broken per R2 § D live re-check -- container-rehearse.sh never brings up the external simulator (reposix-sim listening on 127.0.0.1:7878) that the example script assumes; the P59-tracked 'Wave F CI rehearsal' work never landed and the 'v0.12.1' cliff label was dead. Locally the verifier exits non-zero with stderr signal 'sim not reachable'; in CI a sim service container would need to bring the dependency up, which it does not today.",
-        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 1",
-        "tracked_in": "P95 (Quality framework upgrade + doc fixes) -- RBF-D-14 RAISE LIST drain, quality/reports/raise-list-p90.md § 1"
-      },
-      "claim_vs_assertion_audit": "If the example actually worked end to end, bash examples/01-shell-loop/run.sh would exit 0 and the simulator's audit log would show a helper_push_* row; the observed 'sim not reachable' abort directly falsifies the 'exits 0' claim, which is why this row is WAIVED rather than PASS.",
+      "owner_hint": "if RED: examples/01-shell-loop/run.sh regressed OR the sim/cli/helper changed. P106 (2026-07-12) RETIRED the stale P90 waiver -- real blocker was container-rehearse.sh never starting a reachable sim; it now starts an ephemeral sim on the host and runs the example container with --network host. QL-001 is landed (P91-02); the 'cold container build budget' cause was moot (the gate runs on host with warm binaries). Check examples/01-shell-loop/expected-output.md + target/debug binaries.",
+      "waiver": null,
+      "claim_vs_assertion_audit": "If the example did not work end to end, bash examples/01-shell-loop/run.sh would exit non-zero OR the simulator's audit log would lack a helper_push_* row; either directly falsifies the 'exits 0 and pushes' claim. The gate now runs the example against a driver-started sim reachable via --network host, so a real failure surfaces as a non-zero container exit.",
       "cadences": [
         "post-release"
       ]
@@ -69,18 +64,13 @@
         "container": "ubuntu:24.04"
       },
       "artifact": "quality/reports/verifications/docs-repro/example-02-python-agent.json",
-      "status": "WAIVED",
-      "last_verified": "2026-07-04T12:00:00Z",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: examples/02-python-agent/run.py has a regression OR the simulator/cli/helper changed; check the python stdlib-only constraint and the binary on PATH preamble",
-      "waiver": {
-        "until": "2026-09-15T00:00:00Z",
-        "reason": "RENEWED P90 90-05 (2026-07-04): still-broken per R2 § D live re-check -- same root cause as example-01 (container-rehearse.sh never brings up the external simulator the example assumes); the 'v0.12.1'-tracked Wave F CI rehearsal work never landed.",
-        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 1",
-        "tracked_in": "P95 (Quality framework upgrade + doc fixes) -- RBF-D-14 RAISE LIST drain, quality/reports/raise-list-p90.md § 1"
-      },
-      "claim_vs_assertion_audit": "If the agent actually applied a severity label and pushed successfully, the run.py process would exit 0 and 'git push' would report success in its stdout; the same sim-not-reachable abort as example-01 falsifies both asserts directly, which is why this row is WAIVED rather than PASS.",
+      "owner_hint": "if RED: examples/02-python-agent/run.py regressed OR the sim/cli/helper changed. P106 (2026-07-12) RETIRED the stale P90 waiver: real blockers were (a) container-rehearse.sh never starting a reachable sim (now started on host + --network host) and (b) run.py globbing '*.md' at repo root instead of the canonical 'issues/*.md' (QL-001), which matched 0 records yet exited 0 -- a vacuous-GREEN honesty hazard now closed by a fail-loud zero-match guard. QL-001 is landed (P91-02). Keep the python stdlib-only constraint.",
+      "waiver": null,
+      "claim_vs_assertion_audit": "If the agent did not apply a severity label and push, run.py would exit non-zero (it now fails loud on a zero 'database' match instead of exiting 0 on a no-op) OR 'git push' would report failure; either falsifies the 'finds database + labels + pushes' asserts. The container gate greps the captured stdout for a non-zero match count and a push summary.",
       "cadences": [
         "post-release"
       ]
@@ -146,18 +136,13 @@
         "container": "ubuntu:24.04"
       },
       "artifact": "quality/reports/verifications/docs-repro/example-04-conflict-resolve.json",
-      "status": "WAIVED",
-      "last_verified": "2026-07-04T12:00:00Z",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: push-time conflict detection regressed; check the helper export-path conflict logic",
-      "waiver": {
-        "until": "2026-09-15T00:00:00Z",
-        "reason": "RENEWED P90 90-05 (2026-07-04): still-broken per R2 § D live re-check -- same container-never-brings-up-sim root cause as example-01/02; the 'v0.12.1'-tracked Wave F CI rehearsal work never landed.",
-        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 1",
-        "tracked_in": "P95 (Quality framework upgrade + doc fixes) -- RBF-D-14 RAISE LIST drain, quality/reports/raise-list-p90.md § 1"
-      },
-      "claim_vs_assertion_audit": "If conflict recovery actually worked, the second agent would observe 'fetch first' from helper stderr and both edits would be merged after 'git pull --rebase'; the container's sim-not-reachable abort means neither observable ever occurs, directly falsifying both asserts.",
+      "owner_hint": "if RED: examples/04-conflict-resolve/run.sh regressed OR push-time conflict detection regressed. P106 (2026-07-12) RETIRED the stale P90 waiver: real blockers were (a) container-rehearse.sh never starting a reachable sim (now started on host + --network host), (b) an 'ls *.md' glob at repo root instead of canonical 'issues/*.md' (QL-001), (c) agents A and B SHARING one reposix cache -- which masked the conflict (A's push advanced the shared base so B's stale push looked current); fixed by giving each agent its own REPOSIX_CACHE_DIR, and (d) the rebase recovery not deleting the fast-import staging ref refs/reposix-import/main before re-fetch. Push-time conflict detection is NOT regressed (proven once the cache split let it fire). QL-001 is landed (P91-02).",
+      "waiver": null,
+      "claim_vs_assertion_audit": "If conflict recovery did not work, the second (stale-base) agent's push would be accepted instead of rejected (no 'fetch first'), OR the rebase-and-retry would fail to land both edits; either falsifies the conflict-then-recover asserts. With per-agent caches the helper now emits 'local base version: 1, backend version: 2 ... Run: git pull --rebase' and rejects B, then the recovery re-pushes clean.",
       "cadences": [
         "post-release"
       ]
@@ -187,18 +172,13 @@
         "container": "ubuntu:24.04"
       },
       "artifact": "quality/reports/verifications/docs-repro/example-05-blob-limit-recovery.json",
-      "status": "WAIVED",
-      "last_verified": "2026-07-04T12:00:00Z",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: blob-limit error message regressed OR sparse-checkout recovery path regressed",
-      "waiver": {
-        "until": "2026-09-15T00:00:00Z",
-        "reason": "RENEWED P90 90-05 (2026-07-04): still-broken per R2 § D live re-check -- same container-never-brings-up-sim root cause as example-01/02/04; the 'v0.12.1'-tracked Wave F CI rehearsal work never landed.",
-        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 1",
-        "tracked_in": "P95 (Quality framework upgrade + doc fixes) -- RBF-D-14 RAISE LIST drain, quality/reports/raise-list-p90.md § 1"
-      },
-      "claim_vs_assertion_audit": "If blob-limit recovery actually worked, the agent would observe the blob-limit error and the targeted issue blob would materialize while siblings stay sparse after 'git sparse-checkout'; the container's sim-not-reachable abort means neither observable ever occurs, directly falsifying both asserts.",
+      "owner_hint": "if RED: examples/05-blob-limit-recovery/run.sh regressed OR the blob-limit teaching string / sparse-checkout path regressed. P106 (2026-07-12) RETIRED the stale P90 waiver: real blockers were (a) container-rehearse.sh never starting a reachable sim (now started on host + --network host) and (b) 'git sparse-checkout set 0001.md ...' using the OLD zero-padded flat pathspecs -- canonical is 'issues/1.md' (QL-001, unpadded + bucketed); the 'ls' inspection lines had the same drift. QL-001 is landed (P91-02).",
+      "waiver": null,
+      "claim_vs_assertion_audit": "If blob-limit recovery did not work, the sparse-checkout would materialize zero files (no pathspec match) OR fail to narrow scope; either falsifies the 'targeted blob materialized while siblings stay sparse' assert. With canonical 'issues/<id>.md' pathspecs the checkout now lists exactly the 3 (then 4) targeted records.",
       "cadences": [
         "post-release"
       ]
@@ -206,7 +186,7 @@
     {
       "id": "docs-repro/tutorial-replay",
       "dimension": "docs-repro",
-      "kind": "container",
+      "kind": "mechanical",
       "sources": [
         "docs/tutorials/first-run.md:51-166",
         "README.md:56-70",
@@ -215,11 +195,11 @@
       "command": "bash quality/gates/docs-repro/tutorial-replay.sh",
       "expected": {
         "asserts": [
-          "step 2: simulator starts and listens on 127.0.0.1:7878 (or alternate port)",
+          "step 2: simulator starts and listens on 127.0.0.1:7878",
           "step 3: reposix init sim::demo /tmp/repo exits 0 and configures partial-clone",
           "step 4: git checkout -B main refs/reposix/origin/main exits 0",
-          "step 5: 0001.md exists with title: frontmatter",
-          "step 7: git push reports [new branch] main -> main",
+          "step 5: issues/1.md exists with title: frontmatter",
+          "step 7: git push reports main -> main",
           "step 8: audit_events_cache has a row with op LIKE 'helper_push_%'"
         ]
       },
@@ -227,21 +207,16 @@
         "script": "quality/gates/docs-repro/tutorial-replay.sh",
         "args": [],
         "timeout_s": 300,
-        "container": "ubuntu:24.04"
+        "container": null
       },
       "artifact": "quality/reports/verifications/docs-repro/tutorial-replay.json",
-      "status": "WAIVED",
-      "last_verified": "2026-07-04T12:00:00Z",
+      "status": "NOT-VERIFIED",
+      "last_verified": null,
       "freshness_ttl": null,
       "blast_radius": "P0",
-      "owner_hint": "if RED: docs/tutorials/first-run.md or one of the binary build steps regressed; check git history for scripts/repro-quickstart.sh (predecessor migrated by SIMPLIFY-06)",
-      "waiver": {
-        "until": "2026-09-15T00:00:00Z",
-        "reason": "RENEWED P90 90-05 (2026-07-04): still-broken, TWO causes per R2 § D live re-check -- (1) cold cargo build inside a fresh ubuntu:24.04 container still exceeds the 5-min container budget when not pre-warmed; (2) the push step (tutorial step 7) is additionally blocked by QL-001 (path-shape bug, routed to P91, D90-01). The 'v0.12.1'-tracked Wave F CI rehearsal work never landed.",
-        "dimension_owner": "v0.13.0 P90 -- see quality/reports/raise-list-p90.md § 1",
-        "tracked_in": "P95 (Quality framework upgrade + doc fixes) -- RBF-D-14 RAISE LIST drain for the cold-build-budget cause; P91 QL-001 fix required before cause (2) clears; see quality/reports/raise-list-p90.md § 1"
-      },
-      "claim_vs_assertion_audit": "If the tutorial actually replayed clean, steps 2-8 (sim up, init, checkout, file materialized, push success, audit row) would each observably succeed; a >5min cold-build timeout or a QL-001 push failure directly falsifies the corresponding step's assert, which is why this row is WAIVED rather than PASS.",
+      "owner_hint": "if RED: docs/tutorials/first-run.md or tutorial-replay.sh drifted. P106 (2026-07-12) RETIRED the stale P90 waiver -- BOTH cited causes were wrong: (1) the 'cold container build budget' was moot because the gate runs ON HOST with warm binaries (verifier.container corrected to null, kind:mechanical), and (2) QL-001 was already landed (P91-02) and push works on git 2.25.1. The REAL bugs were harness-local: the sim bound :7780 while 'reposix init' targets the default :7878 (now bound :7878); step 5 asserted a stale root '0001.md' (canonical is issues/1.md); and step 7 grepped stdout for 'main -> main' though git writes it to STDERR (now greps combined output). Runs hermetically under its own REPOSIX_CACHE_DIR.",
+      "waiver": null,
+      "claim_vs_assertion_audit": "If the tutorial did not replay clean, one of steps 2-8 (sim up, init exit 0, checkout, issues/1.md materialized with title, push 'main -> main', helper_push_% audit row) would fail and be recorded in asserts_failed; each maps 1:1 to a green-contract assert. The harness now exits 0 with all 7 asserts_passed on a real run.",
       "cadences": [
         "post-release"
       ]

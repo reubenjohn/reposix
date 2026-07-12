@@ -16,7 +16,7 @@ Verifiers backing `quality/catalogs/docs-reproducible.json` (8 rows at Wave A cl
 - **Cadences:** `kind: container` rows run `post-release` (cost budget); `snippet-extract.py --check` runs `pre-push` (drift-only, no execution).
 - **Subprocess safety.** Every `subprocess.run` uses `shell=False` with list args.
 - **Graceful docker-absent path.** `container-rehearse.sh` emits `NOT-VERIFIED` artifact + exits 0 when docker is unavailable; runner sees status, applies waiver if attached.
-- **Per-verifier line caps:** `snippet-extract.py` <=250 lines; `container-rehearse.sh` + `tutorial-replay.sh` <=150 lines; `manual-spec-check.sh` <=50 lines.
+- **Per-verifier line caps:** `snippet-extract.py` <=250 lines; `container-rehearse.sh` + `tutorial-replay.sh` <=200 lines (raised from 150 in P106: both gates gained an ephemeral-sim lifecycle — start on host, poll readiness, expose to the container via `--network host`, tear down — required to make the example rows actually reachable; the mechanical budget is `quality/gates/structure/file-size-limits.sh`'s 10000-char `.sh` cap, which both stay well under); `manual-spec-check.sh` <=50 lines.
 - **Banned-word policy.** Per `quality/gates/structure/banned-words.sh`: prefer `migrate to` / `rewrite as` / `alongside`.
 
 ## Pivot rules

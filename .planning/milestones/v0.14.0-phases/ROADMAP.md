@@ -229,22 +229,32 @@ even when it leaves the cache in this unusable non-descendant state.
 ### Phase 106: Waived tutorials reproduce (docs-repro/tutorial-replay + examples 01/02/04/05)
 
 **Goal:** Clear the WAIVED docs-repro rows for `docs-repro/tutorial-replay` and examples
-01, 02, 04, 05 before their **HARD DEADLINE 2026-09-15**. Root causes already identified:
-tutorial-replay fails on (i) cold cargo build inside a fresh `ubuntu:24.04` container
-exceeding the 5-min container budget when not pre-warmed, and (ii) a push-step failure
-(QL-001 path-shape bug). Examples 01/02 fail on "sim not reachable" aborts.
+01, 02, 04, 05 before their **HARD DEADLINE 2026-09-15**. **Root causes CORRECTED by the
+P106 Wave-1 diagnosis (`106-DIAGNOSIS.md`, 2026-07-12) — the renewed-P90 waiver text was
+stale:** the "cold container build budget" cause was **moot** (tutorial-replay runs ON
+HOST with warm binaries, not in docker), and QL-001 was **already landed** (P91-02) and
+pushes fine on git 2.25.1. The ACTUAL root causes were harness + canonical-path drift, ZERO
+Rust: (i) example gates never started a sim reachable inside the container-rehearse run;
+(ii) tutorial-replay bound the sim on `:7780` while `reposix init` targets the default
+`:7878`; (iii) the tutorials/examples still assumed the pre-QL-001 flat, zero-padded
+`0001.md` root path instead of canonical `issues/<id>.md`; (iv) example-02 exited 0 on a
+zero-match no-op (vacuous-GREEN hazard); (v) example-04's two agents shared one reposix
+cache (masking the conflict) and its rebase recovery didn't drop the `refs/reposix-import`
+staging ref; (vi) tutorial-replay grepped stdout for a `main -> main` summary git writes to
+stderr.
 
 **Requirements:** D2-TUTORIAL-REPLAY-CONTAINER-BUDGET-01, D2-TUTORIAL-REPLAY-QL001-01,
 D2-EXAMPLES-SIM-REACHABLE-01 · **Depends on:** P102 GREEN · **Plan:** TBD
 (`/gsd-plan-phase 106`)
 
-**Success criteria:**
-1. `docs-repro/tutorial-replay` runs green inside a fresh `ubuntu:24.04` container within
-   budget — either by pre-warming the cargo build cache before the timed window starts, or
-   by raising the budget with an explicit documented rationale (owner-visible tradeoff, not
-   a silent extension).
-2. The QL-001 push-step path-shape bug blocking tutorial step 7 is fixed (or, if it
-   duplicates work already routed to Phase 104/105, cross-referenced and closed there).
+**Success criteria:** (criteria 1-2 reframed by the P106 diagnosis — see corrected root
+causes above; the original "container budget" / "QL-001 fix" framings were stale.)
+1. `docs-repro/tutorial-replay` runs green ON HOST (its actual execution context) — sim
+   bound on the default `:7878`, canonical `issues/1.md` assertion, push `main -> main`,
+   `helper_push_%` audit row; the misleading `verifier.container` field is corrected to
+   null (`kind: mechanical`). No container-budget work needed.
+2. No QL-001 push-step fix is in scope — QL-001 landed in P91-02 and push works on git
+   2.25.1; the tutorial step-7 failure was a harness stdout-vs-stderr grep bug, now fixed.
 3. Examples 01 and 02's "sim not reachable" abort is fixed — both examples' `run.sh` exits
    0 and the simulator's audit log shows the expected `helper_push_*` row.
 4. Examples 04 and 05 are re-verified against current binaries/docs and their WAIVED
