@@ -240,3 +240,159 @@ per `agent-ux/test-name-vs-asserts`):
 - Lost-update RAISE: `repro4.sh` — VERIFIED.
 - stateless-connect path behavior on modern git: UNVERIFIED (no modern git available) — §5 open question.
 - Repro scripts committed under `.planning/phases/105-rbf-lr-03-rebase-recovery/repro/`.
+
+---
+
+## 10. Layer-2 (ref-lock) fix — the second, newly-exposed bug
+
+**Status when written:** root-caused + designed (NOT implemented — STOP-GATE). Owner
+decides IN-PHASE vs NEW-PHASE from §10.4. Layer-1 (parent-chaining, shipped 90ddaff)
+removed the `fatal: error while running fast-import` abort but EXPOSED a lock conflict
+one layer up.
+
+### 10.1 Mechanism (empirically confirmed, git 2.25.1, prebuilt `target/debug` binaries)
+
+The FULL documented `git pull --rebase && git push` on peer/REST drift aborts at fetch
+time:
+
+```
+error: cannot lock ref 'refs/reposix/origin/main': is at 8388d72… but expected bd848c1…
+```
+
+`8388d72` = the helper's freshly-imported tip (**T1**); `bd848c1` = the caller's
+pre-fetch tip (**T0**). The `&&` short-circuits, `push` never runs, the edit is lost. A
+SECOND `git pull --rebase` converges (undocumented). Repro:
+`repro/repro-fetch-ref-lock.sh` → `DOCUMENTED_RECOVERY_EXIT=1`, issue2 version stays 1
+until the second pull.
+
+**Root cause — collapsed namespaces / double-writer.** TWO parties write
+`refs/reposix/origin/main` on the git-2.25 `import` path:
+
+1. **The helper's fast-import stream** — `commit refs/reposix/origin/main`
+   (`crates/reposix-remote/src/fast_import.rs:165`; no-op variant `reset …` at `:142`),
+   advertised via `refspec refs/heads/*:refs/reposix/origin/*`
+   (`crates/reposix-remote/src/main.rs:193`). fast-import fast-forwards the ref T0→T1
+   *underneath git*.
+2. **git fetch's own ref transaction** — `remote.origin.fetch =
+   +refs/heads/*:refs/reposix/origin/*` (`crates/reposix-cli/src/init.rs:262`). git
+   snapshots the *expected-old* value (T0) at fetch start, then after import commits
+   `refs/reposix/origin/main` → the value read back. The helper already moved it to T1,
+   so the transaction's `expected T0` fails against `is at T1` → lock error.
+
+The error STRING proves party (2) is the failing writer: a fast-import failure reads
+`fatal: error while running fast-import` (layer-1, already fixed), whereas
+`cannot lock ref … expected <pre-fetch tip>` is git-fetch's `update_local_ref`
+transaction. The canonical git-remote-helper contract uses **two disjoint namespaces**:
+the helper's `import` writes a *private* ref namespace, and git fetch maps that into the
+user tracking namespace via `remote.origin.fetch`. reposix collapsed both onto
+`refs/reposix/origin/*`, so the two writers collide. (git-remote-hg/cinnabar write a
+private `refs/<helper>/…` and git fetch writes `refs/remotes/origin/…` — distinct.)
+
+**Scope: import-path-only.** `stateless_connect.rs` emits NO ref writes (grep-verified) —
+on git ≥ 2.34 git owns ref placement via protocol-v2 + `remote.origin.fetch`, a single
+writer, so the double-write cannot occur there. The bug is specific to the git-2.25-era
+`import` path (this VM; the catalog gate runs here).
+
+### 10.2 Fix design — restore the two-namespace contract
+
+Introduce a **helper-private import namespace disjoint from the user tracking namespace**.
+The helper writes the private ns; git fetch remains the sole writer of
+`refs/reposix/origin/*`.
+
+| File:line | Current | Change to |
+|---|---|---|
+| `fast_import.rs:165` | `commit refs/reposix/origin/main` | `commit refs/reposix-import/main` |
+| `fast_import.rs:142` | `reset refs/reposix/origin/main` | `reset refs/reposix-import/main` |
+| `main.rs:193` | `refspec refs/heads/*:refs/reposix/origin/*` | `refspec refs/heads/*:refs/reposix-import/*` |
+| `main.rs:393` `resolve_import_parent` REF | `refs/reposix/origin/main` | **UNCHANGED** — still reads the *user tracking* tip as the parent source (correct: it is the last-fetched tip) |
+| `init.rs:262` `remote.origin.fetch` | `+refs/heads/*:refs/reposix/origin/*` | **UNCHANGED** — git fetch stays the sole writer of the user tracking ns |
+
+Plus non-code: update the now-stale doctrine comments that name
+`refs/heads/*:refs/reposix/origin/*` as the *helper write target* (`fast_import.rs`
+doc-comments, `init.rs:240-245/277-280`) so they don't lie; update the `fast_import.rs`
+unit tests that assert `commit/reset refs/reposix/origin/main` and the roundtrip test that
+`rev_parse`s it (lines 410/424/446/450/513-550) to the private ns.
+
+**Value-flow after fix (drift case), traced against the §10.1 mechanism:**
+1. git fetch snapshots `refs/reposix/origin/main` = T0 (expected-old for its update).
+2. helper `resolve_import_parent` reads `refs/reposix/origin/main` = T0 → emits
+   `commit refs/reposix-import/main` `from T0` → new T1 written to the **private** ns.
+3. transport-helper reads back `apply_refspecs(refs/heads/*:refs/reposix-import/*,
+   refs/heads/main)` = `refs/reposix-import/main` = T1.
+4. git fetch applies `remote.origin.fetch` → updates `refs/reposix/origin/main`
+   T0→T1, expected-old T0, **actual T0** (helper only touched the private ns) →
+   transaction SUCCEEDS. `pull --rebase` exits 0 → `&& push` runs → converges in ONE
+   documented command.
+
+First-fetch seed (ref absent → `None` → parentless) and the no-op guard
+(`reset refs/reposix-import/main` + `from T1`) both remain correct;
+`init.rs::repo_has_synced_refs` still sees `refs/reposix/origin/*` populated by git fetch.
+
+### 10.3 Clobber-risk analysis (Lane 2's concern: "clobbering the caller's local branch")
+
+**This design ELIMINATES the clobber risk rather than incurring it.** The tempting naive
+fix — emit the remote-side name `commit refs/heads/main` and let git remap — is UNSAFE on
+git 2.25: `git fast-import --refspec` **does not exist on this VM** (verified: `fatal:
+unknown option --refspec`), so fast-import would write the literal `refs/heads/main` =
+**the caller's actual working branch → catastrophic clobber**. The private-namespace
+design NEVER names `refs/heads/*` in the stream, so the caller's local `main` is
+untouchable by construction. `refs/reposix-import/*` is a fresh namespace that is never a
+user branch and never a `remote.origin.fetch` destination. Residual: the private ref
+accumulates client-side (git won't prune a ref outside its managed refspecs) — harmless (a
+handful of `refs/reposix-import/*` refs); note for a future GC nicety, not a blocker.
+
+### 10.4 Effort / risk classification — **VERDICT: IN-PHASE**
+
+**Justification (evidence):**
+- **Completes P105's chartered deliverable, does not extend it.** §8 AC-3 is "both drift
+  scenarios recover via `git pull --rebase && git push`." Layer-1 (90ddaff) removed the
+  fast-import abort but the DOCUMENTED single command still exits 1 (repro:
+  `DOCUMENTED_RECOVERY_EXIT=1`). Shipping P105 without layer-2 ships a phase that fails
+  its own acceptance criterion. Layer-2 is the last mile of the SAME deliverable.
+- **Contained blast radius:** 3 string literals + 1 advertised-refspec line + comment/test
+  updates in a single crate (`reposix-remote`) + zero-change confirmations in `init.rs`.
+  No new dependency. One `cargo -p reposix-remote` build.
+- **Verification harness already exists:** the `agent-ux/rebase-recovery-reconciles`
+  catalog row + `repro/repro-fetch-ref-lock.sh`. Gate must exit 0 through the FULL
+  `pull --rebase && push` single command, both scenarios.
+- **Protocol-refspec change is low-risk:** confined to the git-2.25 `import` path;
+  `stateless-connect` (git ≥ 2.34) emits no ref writes (grep-verified) so it is unaffected.
+
+**Honest caveats the owner should weigh (the NEW-PHASE case):**
+- The advertised `refspec` capability is **protocol-visible**; the change ripples into
+  `init.rs` doctrine comments and the checkout banner narrative.
+- The git ≥ 2.34 `stateless-connect` path is **untestable on this VM** (git 2.25) — same
+  pre-existing limitation that deferred the `refs/remotes/origin/*` idea (`init.rs:256`).
+  Non-regression there rests on the grep-verified "no ref writes in stateless_connect"
+  argument, not a live run.
+
+On balance: the fix is small, surgical, and *required for P105 to deliver its own
+acceptance criterion* — hence IN-PHASE. Owner retains the call.
+
+### 10.5 Test design (gate must exit 0 through the full single command)
+
+1. **Unit (`fast_import.rs`):** flip the existing asserts to the private ns
+   (`commit/reset refs/reposix-import/main`); the real-`git fast-import` roundtrip test
+   (`git_fast_import_roundtrip_with_parent_fast_forwards`) `rev_parse`s
+   `refs/reposix-import/main`. Add a new assert: the emitted stream MUST NOT contain
+   `refs/reposix/origin/main` nor bare `refs/heads/main` as a `commit`/`reset` target
+   (regression guard against re-collapsing the namespaces / clobber).
+2. **Gate (`agent-ux/rebase-recovery-reconciles.sh`), promote to the FULL command:** both
+   Scenario A (peer-push drift) and Scenario B (external-REST drift) must run
+   `git pull --rebase origin main && git push origin main` as a SINGLE `&&` chain and
+   assert exit 0 + SoT convergence (issue version increments). Add a **negative guard**:
+   the pre-layer-2 binary reproduces `cannot lock ref 'refs/reposix/origin/main'` (RED
+   baseline in the transcript), mirroring the layer-1 negative guard.
+3. **Clobber assertion:** after recovery, assert the caller's local `refs/heads/main`
+   moved ONLY via the rebase/commit the user made (never touched by fetch) and
+   `refs/reposix-import/*` exists as the private staging ref.
+
+### 10.6 Provenance
+
+- Mechanism + `expected=T0 / is-at=T1` double-writer: `repro/repro-fetch-ref-lock.sh`
+  (empirical, live sim, git 2.25.1, prebuilt binaries) — VERIFIED.
+- `git fast-import --refspec` absent on git 2.25 (→ Design-A clobber): direct
+  `git fast-import --refspec` invocation → `fatal: unknown option --refspec` — VERIFIED.
+- `stateless_connect` emits no ref writes (fix is import-path-only): grep of
+  `crates/reposix-remote/src/stateless_connect.rs` — VERIFIED.
+- git ≥ 2.34 stateless-connect non-regression: UNVERIFIED (no modern git on VM) — §10.4 caveat.
