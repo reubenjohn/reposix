@@ -150,3 +150,25 @@ prefixes under one strippable convention) so repeated real-backend runs don't le
 litter in the mirror content.
 
 **STATUS:** OPEN — routed to v0.15.0.
+
+## 2026-07-13 | discovered-by: B3 (tag-remediation, attach-sync re-run, verify-against-reality) | severity: MEDIUM
+
+**What:** The v0.14.0 milestone VERDICT's B3 row asserted an `attach-sync-real-backend`
+**FAIL** (exit 1, empty asserts; VERDICT L114-119) that no fresh on-disk artifact ever
+corroborated — the artifact present at verdict-time was a stale 2026-07-06 env-missing
+**skip**, not a captured FAIL (the same verdict flags this at L150-156). A fresh creds-loaded
+re-run (2026-07-13T15:36:55Z; `quality/reports/verifications/agent-ux/attach-sync-real-backend.json`
+exit 0; `attach_real_confluence` + `sync_real_confluence` both ok) is the FIRST
+empirically-grounded result for the row — a clean PASS. The "FAIL" was a phantom: B3 was
+never broken and is NOT a B1-class attach-ref-seed gap.
+
+**Why out-of-scope for B3:** B3's charter was run/classify/document a gate; this is a
+process-integrity gap in how a milestone VERDICT was minted, not a code defect.
+
+**Sketched resolution:** Verdict-minting guard — every FAIL / NOT-VERIFIED row in a
+milestone VERDICT must cite a fresh artifact captured THAT session (timestamped, on-disk or
+committed); a row whose only backing is a stale or env-missing *skip* artifact grades
+NOT-VERIFIED (fail-closed, OD-2), never FAIL. Assert artifact-freshness in the
+ratification-subagent template (`quality/dispatch/milestone-close-verdict.md`).
+
+**STATUS:** OPEN — routed to v0.15.0.

@@ -301,6 +301,20 @@ run so the residue cannot re-accumulate.
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-13 — `mechanical-gate-artifact-empty-asserts` — mechanical real-backend gate artifacts record empty asserts even on genuine PASS
+
+**Discovered during:** B3 (v0.14.0 tag-remediation, attach-sync re-run, 2026-07-13)
+
+**Size:** S
+
+**Source:** B3 noticed `quality/reports/verifications/agent-ux/{attach-sync-real-backend,p93-partial-failure-recovery-real-confluence}.json` show `asserts_passed: []` / `asserts_failed: []` even on a real exit-0 PASS. The `ASSERT <name>: PASS/FAIL` line convention that `lib/transcript.sh` greps is bash-scenario-only; plain `cargo test` never emits it (intentional per D2's transcript.sh comment). Net: the artifact JSON alone carries zero signal about WHAT passed — you must open the transcript to see `test result: ok. N passed`.
+
+**Acceptance:** mechanical-kind cargo-test gate artifacts capture at least the cargo `test result: ok. N passed; M failed` summary (or the pass/fail counts) in a structured field, so the artifact is self-describing without the transcript. No change to gate pass/fail semantics.
+
+**Default disposition for P111:** S closes-or-defers — carry-forward target v0.15.0 observability lane.
+
+**STATUS:** OPEN
+
 ## Entry format
 
 ```markdown
