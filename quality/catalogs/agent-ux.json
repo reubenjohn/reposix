@@ -1394,8 +1394,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/milestone-close-vision-litmus-real-backend.json",
-      "status": "FAIL",
-      "last_verified": "2026-07-13T19:06:07Z",
+      "status": "PASS",
+      "last_verified": "2026-07-13T22:37:09Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "SLOT verifier quality/gates/agent-ux/milestone-close-vision-litmus.sh (ships in 89-06); substrate lands P91-P95; if RED after substrate ships, inspect transcript + audit_events/audit_events_cache rows + refs/mirrors advancement",
@@ -2010,8 +2010,8 @@
         "container": null
       },
       "artifact": "quality/reports/verifications/agent-ux/p93-partial-failure-recovery-real-confluence.json",
-      "status": "FAIL",
-      "last_verified": "2026-07-13T19:06:16Z",
+      "status": "PASS",
+      "last_verified": "2026-07-13T22:37:21Z",
       "freshness_ttl": null,
       "blast_radius": "P0",
       "owner_hint": "Implemented + credentialed-run GREEN (D2, v0.14.0 tag remediation, 2026-07-13). The original CREATE-recovery version of this smoke was diagnosed as a lying claim (.planning/quick/260712-phc-author-two-missing-pre-release-real-back/B2-p93-DIAGNOSIS.md): Confluence assigns its own page id on create, so a retried Create after a partial fail re-sends the client's stale local id and `diff::plan` re-CREATEs instead of converging -- CREATE-recovery genuinely does not converge against an id-assigning backend (filed as a v0.15.0 caveat, NOT fixed here per D2's harness-only scope). The row now exercises UPDATE-recovery instead (id-stable, mirrors the sim twin `partial_failure_recovery.rs`), which DOES converge against Confluence. `status`/`last_verified` above are updated by the dedicated `pre-release-real-backend` cadence run (milestone-close 9th probe), not hand-set here.",
