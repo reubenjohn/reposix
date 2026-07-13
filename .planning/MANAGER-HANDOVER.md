@@ -51,23 +51,30 @@ does reposix work itself. Keep this file lean; git history is the archive.
    rely on it — fix or drop before use); a long single-line `agent send` becomes a
    "[Pasted text]" block that Enter won't submit while background subagents hold input.
 
-## Live state (refresh at every rotation) — 2026-07-13, manager rotation #2
+## Live state (refresh at every rotation) — 2026-07-13, manager rotation #3
 
-- **v0.14.0 TAG: fix-first lane (items 4–8) IN FLIGHT in w1:p5** (workhorse successor
-  #6, launched 2026-07-13 post-`42b99ed`, charter = `.planning/SESSION-HANDOVER.md`):
-  attach-lineage fix per ratified design
-  `.planning/milestones/v0.14.0-phases/attach-lineage-fix-design.md` (BOUNDED-ELEGANT,
-  `2a2456c`) + fail-closed `adf_to_markdown` → litmus re-green on UNMODIFIED Pattern-C
-  harness → recovery-docs verify-TRUE → p93 CREATE-recovery reassess (bounded→fix /
-  architectural→route v0.15.0+flag) → honest probe exit 0 → re-mint VERDICT GREEN →
-  fresh unbiased ratification → tag script → **STOP at READY-TO-TAG**. Manager then
-  VERIFIES against reality (probe exit code, verdict, ratification, CI green, no tag
-  pushed, TokenWorld state) and PUSHES the v0.14.0 tag under standing authority.
-  History: 9th probe found 5 real blockers (sim-only coverage gap); B4/B5 verifiers
-  shipped; D2 honest p93 rewrite (`1c424d7`,`e73d761`); B3 PASS (prior FAIL = phantom
-  stale-skip); B1 dissolved into item 4a after D1 self-heal proven insufficient
-  ([FABLE] `be00016` — genuine product gap, attach never seeds
-  `refs/reposix/origin/main`; + ADF silent-empty-body data loss).
+- **v0.14.0 TAG: items 4a/4b/6 SHIPPED GREEN @ `22a7777`** (DP-2 repro-first honored:
+  `0747179` red repro → `eb824f3` attach-lineage fix seeds `refs/reposix/origin/main`
+  at mirror merge-base + init-style refspec → `d1cc811` fail-closed ADF → `11ae402`
+  docs-truth → `22a7777` §8 real-backend arm, sim + read-only TokenWorld). CI green,
+  headSha-verified. Manager spot-verified: audit archive verbatim, TokenWorld = exactly
+  2 protected pages.
+- **Workhorse successor #7 IN FLIGHT in w1:p5** (launched post-`f7be1d7`, charter =
+  `.planning/SESSION-HANDOVER.md`): item 5 (litmus unblock) → item 7 (p93 reassess) →
+  intake-honesty recount → item 8 §4 mechanicals → **STOP at READY-TO-TAG**. Manager
+  then VERIFIES against reality (probe exit 0, verdict, ratification, CI green
+  headSha-matched — ci-green-on-main probe has a KNOWN headSha race, cross-check
+  manually — no tag pushed, TokenWorld state) and PUSHES the v0.14.0 tag under
+  standing authority.
+- **Item-5 MANAGER RULING (2026-07-13, standing authority): APPROVED** — DROP stale
+  mirror record `pages/2818063.md` (trashed backend page; verified NOT in TokenWorld's
+  current 2-page state; restore would break the durable-pair contract). Mirror target
+  verified owner-named-sanctioned: `reubenjohn/reposix-tokenworld-mirror` (the litmus's
+  own configured mirror, `milestone-close-vision-litmus.sh:107`). Guardrails relayed:
+  DROP-only, 2-pages-intact before+after, documented catch-up path, OP-3 audit rows,
+  ruling recorded in CONSULT-DECISIONS.md before execution.
+- **Manager monitor:** task `bbz6wred9` (60s poll; ORIGIN-MOVED / BLOCKED /
+  IDLE-STABLE / one-shot STALL / CI-RED). Predecessor's `bgh6ujkic` stopped.
 - **OWNER RULING (2026-07-13, `b773c04`): fix-first.** Tag-blocking product bugs
   default to FIX BEFORE TAG — no owner consult needed unless the fix is architectural
   ("this was something you didn't need my input on"). Calibrate future escalations UP.
@@ -77,10 +84,9 @@ does reposix work itself. Keep this file lean; git history is the archive.
   index.md:17 synthetic-baseline caveat), `.playwright-mcp/audit-03..08` droppings
   sweep, `/gsd-cleanup` archival cascade (tags unblock it), ORCHESTRATION.md >100%
   size split.
-- **Reality-check audit (2026-07-12):** durable-commit QUEUED in workhorse #6 charter
-  (copy `/home/reuben/reposix-reality-check-2026-07-12.bak.md` →
-  `.planning/milestones/audits/2026-07-12-reality-check.md`); record the repo path
-  here once landed. Owner decided §5 Q1 (live MCP re-measurement FUNDED; FUSE-era
+- **Reality-check audit (2026-07-12): LANDED at `8e36e62`** —
+  `.planning/milestones/audits/2026-07-12-reality-check.md` (verbatim vs the owner bak,
+  manager-diff-verified). Owner decided §5 Q1 (live MCP re-measurement FUNDED; FUSE-era
   98.7% figure retire/relabel) + Q2 (tags). **PENDING WITH OWNER: arc ratification
   (§4 arc D ratchet-first recommended+endorsed) + §5 Q3–Q9** (manager-proposed
   answers in session transcript ~2026-07-12). No defect-fixing lanes beyond
