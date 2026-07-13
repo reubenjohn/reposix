@@ -1,0 +1,18 @@
+=== item 6 doc-gate evidence — 2026-07-13 ===
+HEAD (pre-commit): 9492718f92e8375b48410c81d36076f233184503
+Files touched: docs/concepts/dvcs-topology.md, docs/guides/troubleshooting.md
+
+=== gate 1: quality/gates/docs-build/mkdocs-strict.sh ===
+quality/gates/docs-build/mkdocs-strict.sh: running mkdocs build --strict...
+INFO    -  Cleaning site directory
+INFO    -  Building documentation to directory: /tmp/tmp.xmn7FhNQrk/site
+INFO    -  Documentation built in 1.28 seconds
+OK: docs site clean
+mkdocs-strict exit: 
+mkdocs-strict exit: 0
+
+=== gate 2: quality/gates/docs-build/mermaid-renders.sh ===
+✓ check-mermaid-renders: 6 source-mermaid pages all have valid artifacts.
+mermaid-renders exit: 
+mermaid-renders exit: 0
+=== BOTH GATES GREEN ===

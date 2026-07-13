@@ -270,6 +270,13 @@ it is no longer a prerequisite for recovery.
 > disappears instead of resurrecting a dropped record.
 > Regression-guarded by `quality/gates/agent-ux/rebase-recovery-reconciles.sh`
 > (catalog row `agent-ux/rebase-recovery-reconciles`).
+>
+> For a Pattern-C **attach** (round-tripper) tree the same recovery applies because
+> `reposix attach` seeds `refs/reposix/origin/main` at the mirror merge-base at attach
+> time, so your commit-before-attach edits share an ancestor with the fetched SoT
+> snapshot and `git pull --rebase && git push` reconciles without a cross-root wall; an
+> attach tree created *before* that seed landed heals by re-running `reposix attach`
+> (runtime auto-heal of a pre-seed tree is deferred to v0.15.0).
 
 On conflict, resolve with standard git tools (`git status`, edit, `git rebase --continue`).
 
