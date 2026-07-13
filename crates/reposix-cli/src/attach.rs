@@ -14,6 +14,13 @@
 //!      `reposix::<sot-spec>?mirror=<existing-mirror-url>` (or no
 //!      `?mirror=` if `--no-bus`).
 //!   5. Set `extensions.partialClone=<remote-name>` (NOT `origin`).
+//!   6. (attach-lineage fix, design §3) Establish the reposix remote's initial
+//!      tracking state: overwrite the remote's fetch refspec with the
+//!      init-style `+refs/heads/*:refs/reposix/origin/*` (so git fetch is the
+//!      sole writer of the tracking namespace `resolve_import_parent` reads),
+//!      then seed `refs/reposix/origin/main` to the mirror merge-base so a
+//!      later `git pull --rebase` reconciles instead of hitting the cross-root
+//!      `add/add` wall. See [`seed_tracking_ref`].
 //!
 //! Re-attach idempotency (Q1.3): same `SoT` → refresh cache + reconciliation
 //! table; different `SoT` → reject (Q1.2).
@@ -272,6 +279,31 @@ pub async fn run(args: AttachArgs) -> Result<()> {
         args.remote_name,
     );
 
+    // Step 5b (attach-lineage fix, design §3): establish the reposix remote's
+    // initial tracking state so a later `git fetch`/`git pull --rebase` chains
+    // its SoT snapshot onto the agent's history instead of a parentless root
+    // (the cross-root `add/add` wall). TWO writes, both load-bearing:
+    //
+    //  (1) The init-style fetch refspec. `git remote add` (Step 4) left the
+    //      DEFAULT `+refs/heads/*:refs/remotes/<name>/*`, so `git fetch` would
+    //      write `refs/remotes/<name>/main` and NEVER touch
+    //      `refs/reposix/origin/main` — the exact ref the helper's
+    //      `resolve_import_parent` reads to chain the import. Overwriting it with
+    //      the same refspec `init` sets (init.rs `remote.origin.fetch`) makes
+    //      git fetch the SOLE writer of the tracking namespace, so the seed we
+    //      plant below actually advances on fetch instead of staying frozen.
+    //      (`git config` replaces the single value `git remote add` created.)
+    //  (2) Seed `refs/reposix/origin/main` = the mirror merge-base (see
+    //      `seed_tracking_ref`), so the first fetch's snapshot descends from a
+    //      commit that is an ancestor of `refs/heads/main` and the documented
+    //      Pattern-C `git pull --rebase && git push` reconciles.
+    let fetch_key = format!("remote.{}.fetch", args.remote_name);
+    run_git_in(
+        &work,
+        &["config", &fetch_key, "+refs/heads/*:refs/reposix/origin/*"],
+    )?;
+    seed_tracking_ref(&work, &args.mirror_name)?;
+
     // H1 (T2-REOPEN): route a bare `git push` through the reposix SoT bus.
     //
     // After attach, `branch.<b>.remote` still points at `origin` (the
@@ -389,5 +421,66 @@ fn run_git_in(work: &Path, args: &[&str]) -> Result<()> {
             String::from_utf8_lossy(&out.stderr).trim()
         );
     }
+    Ok(())
+}
+
+/// `git -C <work> rev-parse --verify --quiet <rev>` → `Some(oid)` when it
+/// resolves, `None` when the ref/rev is absent (rev-parse exits non-zero) or
+/// git could not be invoked. Never errors — an unresolvable ref is a normal,
+/// expected signal for the seed logic below, not a failure.
+fn git_rev_parse_verify(work: &Path, rev: &str) -> Option<String> {
+    let out = Command::new("git")
+        .arg("-C")
+        .arg(work)
+        .args(["rev-parse", "--verify", "--quiet", rev])
+        .output()
+        .ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    let oid = String::from_utf8_lossy(&out.stdout).trim().to_owned();
+    (!oid.is_empty()).then_some(oid)
+}
+
+/// Seed `refs/reposix/origin/main` to the mirror merge-base so a NEW attach
+/// tree's first `git fetch` chains its `SoT` snapshot onto a commit that is an
+/// ancestor of `refs/heads/main` — the anchor the Pattern-C round-trip needs
+/// (design §3.1). Called after the fetch refspec is configured so the seed
+/// actually advances on the next fetch.
+///
+/// The seed VALUE is load-bearing: the MIRROR merge-base
+/// `refs/remotes/<mirror>/main`, NEVER HEAD. At attach time HEAD is already the
+/// agent's edited tip `M'` (Pattern C commits before attaching); seeding HEAD
+/// would make the un-pushed edit an ancestor of the fetched snapshot, so
+/// `git rebase` fast-forwards `main` OVER it and SILENTLY reverts the edit
+/// (data loss, §3.1). Seeding the mirror base `M` keeps the edit a descendant
+/// to replay.
+///
+/// Idempotent: seeds ONLY when `refs/reposix/origin/main` is ABSENT. If it
+/// already exists — a prior real fetch, or a re-attached `init` tree — the
+/// existing tracking tip is authoritative; clobbering it would rewind the tip
+/// and churn the next fetch (Q1.3 re-attach idempotency).
+///
+/// No mirror ref → NO seed (deliberately NOT a HEAD fallback, resolving the
+/// design §3.1↔§8 tension toward the safe reading). Without a mirror base we
+/// cannot distinguish an un-edited tree (HEAD == base, seeding HEAD would be
+/// safe) from a Pattern-C edited tree (HEAD == M', seeding HEAD is data loss),
+/// so we skip and let the first fetch parentless-seed exactly as an `init` tree
+/// does — no cross-root risk on an unanchored tree, and never a silent revert.
+fn seed_tracking_ref(work: &Path, mirror_name: &str) -> Result<()> {
+    const TRACKING_REF: &str = "refs/reposix/origin/main";
+    if git_rev_parse_verify(work, TRACKING_REF).is_some() {
+        // Already seeded (prior fetch / re-attached init tree) — leave it.
+        return Ok(());
+    }
+    let mirror_ref = format!("refs/remotes/{mirror_name}/main");
+    let Some(base) = git_rev_parse_verify(work, &mirror_ref) else {
+        // No mirror merge-base to anchor on → skip (see doc comment). The first
+        // fetch parentless-seeds the tracking ref, exactly as an init tree does.
+        return Ok(());
+    };
+    run_git_in(work, &["update-ref", TRACKING_REF, &base])?;
+    let short: String = base.chars().take(12).collect();
+    println!("  {TRACKING_REF} seeded at {short} (mirror `{mirror_name}` merge-base)");
     Ok(())
 }

@@ -1292,28 +1292,43 @@ fn git_rev_parse(work: &Path, arg: &str) -> Option<String> {
     (!s.is_empty()).then_some(s)
 }
 
-/// item 4a headline (§5.1) + binding end-to-end repro. Drives the REAL
-/// `reposix attach` binary against a live sim in a Pattern-C topology
-/// (vanilla-clone mirror tracking ref `M` + a committed agent edit `M'` BEFORE
-/// attach), then the documented round-trip (`git fetch` → `git rebase`).
+/// item 4a headline (§5.1) + binding end-to-end round-trip proof. Drives the
+/// REAL `reposix attach` binary against a live sim in a Pattern-C topology
+/// (vanilla-clone mirror tracking ref `M` + a committed agent record added
+/// BEFORE attach → `M'`), then the documented recovery (`git fetch` →
+/// `git rebase`), asserting the whole lineage chain end-to-end:
 ///
-/// RED on today's unfixed code: `reposix attach` never runs
-/// `git update-ref refs/reposix/origin/main …`, so the ref the whole Pattern-C
-/// recovery anchors on is ABSENT after attach. The follow-up fetch synthesizes
-/// a PARENTLESS import root (`resolve_import_parent` finds no ref → `None`),
-/// and the agent's rebase onto it hits the cross-root `add/add` wall.
+///  (a) after attach, `refs/reposix/origin/main` == the mirror merge-base `M`
+///      (NOT HEAD `M'` — the §3.1 silent-revert data-loss guard);
+///  (b) after `git fetch reposix`, that ref ADVANCES to the SoT snapshot AND
+///      chains DIRECTLY onto `M` (`~1 == M`) — a real fast-forward, not the
+///      parentless import root the bug produced;
+///  (c) `git rebase refs/reposix/origin/main` exits 0 with NO cross-root
+///      `add/add` wall and the agent's un-pushed record preserved.
 ///
-/// GREEN once Part A lands: attach seeds `refs/reposix/origin/main` = the
-/// mirror merge-base `M` (NOT HEAD `M'` — the §3.1 silent-revert guard), so the
-/// snapshot chains onto `M` and the rebase reconciles.
+/// RED before the fix: `reposix attach` seeded no ref and left the default
+/// `refs/remotes/reposix/*` refspec, so (a) failed (anchor absent) and the
+/// follow-up fetch synthesized a PARENTLESS root the rebase could not reconcile.
 ///
-/// This is the ONE test that exercises the REAL `reposix attach` path end-to-end
+/// GREEN after Part A: attach seeds `refs/reposix/origin/main` = `M` and sets
+/// the init-style `+refs/heads/*:refs/reposix/origin/*` refspec, so the snapshot
+/// chains onto `M` and the rebase reconciles.
+///
+/// This is the ONE test exercising the REAL `reposix attach` path end-to-end
 /// (not a manually-seeded ref); the remote-crate `attach_pattern_c_roundtrip_*`
-/// tests prove the underlying git mechanism the fix relies on.
+/// tests prove the underlying git mechanism (with byte-controlled content) the
+/// fix relies on. The agent's Pattern-C change here is a NON-overlapping new
+/// record (`issues/2.md`): the sim renders `issues/1.md` with server-assigned
+/// timestamps that never byte-match a hand-written local file, so an overlapping
+/// edit would (correctly) surface an ordinary content conflict — orthogonal to
+/// the lineage contract under test. A new record replays as a clean fast-forward,
+/// isolating exactly the cross-root-wall regression this test guards.
 #[test]
 #[ignore = "spawns reposix-sim child + shells out to git+helper; requires `cargo build --workspace --bins` first"]
 // test-name-honesty: ok — runs REAL `reposix attach` then a REAL git fetch/rebase
-// and asserts the seeded tracking ref value; no manual seed.
+// and asserts (a) the seeded tracking-ref VALUE == mirror base M, (b) the ref
+// ADVANCES past M on fetch (chains onto M, not parentless), and (c) the rebase
+// reconciles cleanly with the agent record preserved; no manual seed.
 fn attach_seeds_tracking_ref_at_mirror_base() {
     let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
     let (mut sim, port) = spawn_sim_with_issue("demo", 1);
@@ -1360,17 +1375,19 @@ fn attach_seeds_tracking_ref_at_mirror_base() {
         "seed mirror tracking ref refs/remotes/origin/main = M"
     );
 
-    // Pattern C: commit an agent edit BEFORE attach → HEAD = M' (!= M).
-    write_record_md(&work.join("issues/1.md"), 1, "AGENT-EDITED record");
+    // Pattern C: the agent creates a NEW record locally and commits BEFORE
+    // attach → HEAD = M' (!= M). issues/1.md is left UNTOUCHED so the replay is
+    // a clean fast-forward against the sim's own issue-1 snapshot (see docstring).
+    write_record_md(&work.join("issues/2.md"), 2, "AGENT-ADDED record");
     assert!(
         git_run(work, &["add", "-A"]).status.success(),
-        "git add edit"
+        "git add new record"
     );
     assert!(
-        git_run(work, &["commit", "-q", "-m", "agent edit M'"])
+        git_run(work, &["commit", "-q", "-m", "agent adds issues/2 (M')"])
             .status
             .success(),
-        "git commit edit"
+        "git commit new record"
     );
     let m_prime = git_rev_parse(work, "HEAD").expect("edit commit M'");
     assert_ne!(m, m_prime, "M' must differ from base M");
@@ -1390,12 +1407,12 @@ fn attach_seeds_tracking_ref_at_mirror_base() {
         String::from_utf8_lossy(&out.stderr),
     );
 
-    // What Part A must produce: the seeded anchor at the mirror base.
+    // (a) The seeded anchor at the mirror base — Part A's core contract.
     let anchor = git_rev_parse(work, "refs/reposix/origin/main");
 
-    // Round-trip symptom capture (attach → edit → fetch → rebase). Best-effort:
-    // on today's code the fetch synthesizes a parentless root under the default
-    // refspec (refs/remotes/reposix/main); we rebase onto it to expose the wall.
+    // (b) Round-trip: git fetch must ADVANCE refs/reposix/origin/main to the SoT
+    // snapshot chained onto M (the init-style refspec makes git fetch write the
+    // tracking ns; the seed gives resolve_import_parent a parent to chain onto).
     let path_env = path_with_target_debug();
     let fetch = git_run_with_helper(work, cache, &path_env, &["fetch", "reposix"]);
     let fetch_out = format!(
@@ -1403,45 +1420,85 @@ fn attach_seeds_tracking_ref_at_mirror_base() {
         String::from_utf8_lossy(&fetch.stdout),
         String::from_utf8_lossy(&fetch.stderr)
     );
-    let fetched = git_rev_parse(work, "refs/remotes/reposix/main");
-    let fetched_parent = git_rev_parse(work, "refs/remotes/reposix/main~1");
+    let fetched = git_rev_parse(work, "refs/reposix/origin/main");
+    let fetched_parent = git_rev_parse(work, "refs/reposix/origin/main~1");
+
+    // (c) The documented Pattern-C recovery replays the agent's new record onto
+    // the fetched snapshot with no cross-root wall.
     let rebase = git_run_with_helper(
         work,
         cache,
         &path_env,
-        &["rebase", "refs/remotes/reposix/main"],
+        &["rebase", "refs/reposix/origin/main"],
     );
     let rebase_out = format!(
         "{}\n{}",
         String::from_utf8_lossy(&rebase.stdout),
         String::from_utf8_lossy(&rebase.stderr)
     );
-    // Don't leave a rebase in progress (tempdir is discarded, but be tidy).
-    let _ = git_run_with_helper(work, cache, &path_env, &["rebase", "--abort"]);
+    let agent_record_present =
+        std::fs::read_to_string(work.join("issues/2.md")).is_ok_and(|s| s.contains("AGENT-ADDED"));
+    // Only abort if the rebase is still in progress (a clean rebase leaves none;
+    // `--abort` then no-ops). Keeps a failing run's diagnostics honest.
+    if !rebase.status.success() {
+        let _ = git_run_with_helper(work, cache, &path_env, &["rebase", "--abort"]);
+    }
 
     kill_child(&mut sim);
 
     let evidence = format!(
-        "REAL `reposix attach` did NOT seed refs/reposix/origin/main (item 4a).\n\
+        "item 4a lineage contract (REAL `reposix attach` -> fetch -> rebase).\n\
          mirror-base M                          = {m}\n\
-         HEAD after edit (M')                   = {m_prime}\n\
-         refs/reposix/origin/main after attach  = {anchor:?}   (expected Some({m}))\n\
-         --- round-trip symptom (attach -> edit -> git fetch -> git rebase) ---\n\
+         HEAD after new record (M')             = {m_prime}\n\
+         (a) refs/reposix/origin/main @ attach  = {anchor:?}   (expected Some({m}))\n\
+         --- round-trip (attach -> git fetch -> git rebase) ---\n\
          git fetch reposix exit_success={fetch_ok}\n{fetch_out}\n\
-         fetched refs/remotes/reposix/main      = {fetched:?}\n\
-         refs/remotes/reposix/main~1 (parent)   = {fetched_parent:?}   (None => PARENTLESS import root)\n\
-         git rebase refs/remotes/reposix/main exit_success={rebase_ok}:\n{rebase_out}",
+         (b) refs/reposix/origin/main @ fetch   = {fetched:?}   (must advance past M)\n\
+             refs/reposix/origin/main~1         = {fetched_parent:?}   (must == M, not None/parentless)\n\
+         (c) git rebase exit_success={rebase_ok}, agent issues/2.md preserved={agent_record_present}:\n{rebase_out}",
         fetch_ok = fetch.status.success(),
         rebase_ok = rebase.status.success(),
     );
 
-    // HARD assertion — the Part A contract. RED today (anchor is None).
+    // (a) HARD: attach seeded the anchor at the mirror base M.
     assert_eq!(anchor.as_deref(), Some(m.as_str()), "{evidence}");
-    // §3.1 silent-revert guard — the seed must be the mirror base M, NEVER HEAD
-    // M' (seeding HEAD fast-forwards main over the un-pushed edit = data loss).
+    // (a) §3.1 silent-revert guard — the seed must be the mirror base M, NEVER
+    // HEAD M' (seeding HEAD fast-forwards main over the un-pushed record = data
+    // loss).
     assert_ne!(
         anchor.as_deref(),
         Some(m_prime.as_str()),
         "seed must be the mirror merge-base M, never HEAD M' (silent-revert data-loss guard):\n{evidence}"
+    );
+    // (b) the fetch advanced the tracking ref and it chains DIRECTLY onto M —
+    // proves the snapshot is a fast-forward, not a parentless import root.
+    assert!(
+        fetch.status.success(),
+        "git fetch reposix must succeed:\n{evidence}"
+    );
+    assert_ne!(
+        fetched.as_deref(),
+        Some(m.as_str()),
+        "the fetched snapshot must ADVANCE refs/reposix/origin/main past M:\n{evidence}"
+    );
+    assert_eq!(
+        fetched_parent.as_deref(),
+        Some(m.as_str()),
+        "the fetched snapshot MUST chain onto M (refs/reposix/origin/main~1 == M), \
+         not be a parentless root:\n{evidence}"
+    );
+    // (c) the rebase reconciled cleanly (no cross-root add/add wall) and the
+    // agent's un-pushed record survived the replay.
+    assert!(
+        rebase.status.success(),
+        "git rebase onto the fetched snapshot must reconcile cleanly (exit 0):\n{evidence}"
+    );
+    assert!(
+        !rebase_out.contains("CONFLICT") && !rebase_out.contains("add/add"),
+        "Pattern-C rebase must NOT hit the cross-root add/add wall:\n{evidence}"
+    );
+    assert!(
+        agent_record_present,
+        "the agent's un-pushed record (issues/2.md) must survive the rebase:\n{evidence}"
     );
 }

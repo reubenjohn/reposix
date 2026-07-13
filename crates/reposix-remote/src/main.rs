@@ -393,6 +393,16 @@ fn handle_import_batch<R: std::io::Read, W: std::io::Write>(
 /// unavailable — both degrade to the original parentless behavior, never an
 /// error, so a fresh clone still bootstraps.
 ///
+/// Ref-absence is a genuine first-fetch / uninitialized state for BOTH bootstrap
+/// paths: `reposix init` seeds this ref via its `+refs/heads/*:refs/reposix/origin/*`
+/// refspec on the initial fetch, and (as of the v0.14.0 attach-lineage fix)
+/// `reposix attach` seeds it to the mirror merge-base at attach time
+/// (`crates/reposix-cli/src/attach.rs::seed_tracking_ref`). So on a
+/// correctly-bootstrapped tree the ref is present by the SECOND fetch and this
+/// returns a real parent — the parentless branch is the true first-sync seed,
+/// not a silent attach defect. (Pre-fix attach trees with the ref never seeded
+/// heal by re-running `reposix attach`; runtime auto-heal here is v0.15.0-deferred.)
+///
 /// git sets `GIT_DIR` for the remote-helper RPC, so the bare `rev-parse`
 /// resolves against the caller's repo without a `-C` (the same pattern the bus
 /// mirror-drift check relies on). The ref name is a fixed literal — never a

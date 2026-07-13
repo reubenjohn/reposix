@@ -1,0 +1,55 @@
+item 4a (attach-lineage bug) — FIX GREEN evidence
+==================================================
+Date:        2026-07-13
+Repo HEAD:   0747179 (test(attach): failing repro for attach-lineage bug — DP-2 repro-first, red before fix)
+Git:         git version 2.25.1  (selects the fast-import `import` verb natively — full round-trip drivable on this VM)
+Fix commit:  fix(attach): seed refs/reposix/origin/main at mirror merge-base + init-style refspec (item 4a)
+
+WHAT CHANGED
+------------
+Production (crates/reposix-cli/src/attach.rs):
+  - new `seed_tracking_ref(work, mirror_name)` + `git_rev_parse_verify(work, rev)` helpers.
+  - Step 6 (post-remote) wiring: set `remote.<name>.fetch = +refs/heads/*:refs/reposix/origin/*`
+    (init-style refspec — makes git fetch the SOLE writer of the tracking ns), then seed
+    `refs/reposix/origin/main` to the mirror merge-base `refs/remotes/<mirror>/main`, ONLY when
+    the tracking ref is absent (idempotent re-attach). Seed value = mirror base M, NEVER HEAD M'
+    (§3.1 silent-revert data-loss guard). No mirror ref -> NO seed (no HEAD fallback; §3.1<->§8
+    tension resolved to the safe reading).
+Doc-comment only (crates/reposix-remote/src/main.rs):
+  - resolve_import_parent doc updated (§7 fix-twice) to state BOTH init AND attach now seed the
+    ref, so ref-absence is a genuine first-fetch state, not a hidden attach defect. NO runtime
+    change (runtime auto-heal is v0.15.0-deferred per ratified scope).
+
+PREVIOUSLY-RED TEST NOW GREEN (drives the REAL `reposix attach` binary end-to-end):
+  crates/reposix-cli/tests/attach.rs::attach_seeds_tracking_ref_at_mirror_base
+  strengthened to assert (a) seed == mirror base M (!= HEAD M'); (b) after git fetch the ref
+  ADVANCES past M and chains onto M (~1 == M, a fast-forward, not a parentless root);
+  (c) git rebase exits 0 with no cross-root add/add wall and the agent record preserved.
+
+REGRESSION GUARDS (remote crate — seeded round-trip + omitted-seed falsifier control):
+  crates/reposix-remote/tests/attach_pattern_c_roundtrip_recovers.rs (both halves) stay GREEN.
+
+COMMAND (single cargo invocation, --jobs 2, bins pre-built via
+`cargo build -p reposix-cli -p reposix-sim -p reposix-remote --bins --jobs 2`):
+  cargo test -p reposix-cli -p reposix-remote --jobs 2 -- --ignored \
+      attach_seeds_tracking_ref_at_mirror_base attach_pattern_c_roundtrip
+
+OUTPUT
+------
+running 1 test
+test attach_seeds_tracking_ref_at_mirror_base ... ok
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.65s
+running 2 tests
+test attach_pattern_c_roundtrip_falsifier_omitted_seed_hits_wall ... ok
+test attach_pattern_c_roundtrip_recovers ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.38s
+
+FULL attach.rs INTEGRATION SUITE (no regression — sim-only, all 17 ignored tests):
+  cargo test -p reposix-cli --test attach --jobs 2 -- --ignored
+  => test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out.
+
+CLIPPY (pedantic, pre-push parity):
+  cargo clippy -p reposix-cli --all-targets --jobs 2  => CLEAN
+  cargo clippy -p reposix-remote --jobs 2             => CLEAN
+
+NOT pushed. NOT tagged.
