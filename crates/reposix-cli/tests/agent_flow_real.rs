@@ -46,6 +46,10 @@
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+use reposix_confluence::{ConfluenceBackend, ConfluenceCreds};
+use reposix_core::backend::{BackendConnector, DeleteReason};
+use reposix_core::{sanitize, Record, RecordId, RecordStatus, ServerMetadata, Tainted, Untainted};
+
 /// Skip the enclosing test if any listed env var is unset or empty.
 ///
 /// Mirrors the macro in `reposix-confluence/tests/contract.rs` lines
@@ -451,38 +455,189 @@ fn sync_real_jira() {
 
 // --- partial_failure_recovery_real_confluence (ADR-010 / RBF-LR-03 real-backend arm) ---
 //
-// A page id that cannot exist in any sanctioned test space -- forces a
-// genuine `POST /wiki/api/v2/pages` rejection
-// (`reposix_confluence::create_record`, `crates/reposix-confluence/src/lib.rs:280-329`)
-// for the "bad parent" create below, deterministically reproducing a real
-// `SotPartialFail` without timing games or a mocked fault.
-const UNRESOLVABLE_PARENT_ID: u64 = 9_999_999_999_999;
+// DECISION-2b (v0.14.0 tag remediation, B2-p93-DIAGNOSIS.md): the prior
+// version of this smoke exercised CREATE-recovery -- push a bad-parent
+// Create, retry with a fixed parent. That is not a claim the product ever
+// made against an id-ASSIGNING backend: Confluence's `create_record`
+// (crates/reposix-confluence/src/lib.rs) never sends the client's
+// locally-chosen id, so a retried Create re-sends the SAME client id and
+// `diff::plan` (id-keyed matching) re-CREATEs instead of recognizing the
+// already-landed page -- CREATE-recovery genuinely does not converge
+// against Confluence (a real, out-of-scope-for-this-lane product gap; see
+// the D2 executor RAISE LIST). This rewrite instead mirrors
+// `crates/reposix-remote/tests/partial_failure_recovery.rs`: pages
+// pre-seeded on the REAL backend at v1, an UPDATE-recovery partial fail,
+// and the next push replanning ONLY the still-needed remainder. Id
+// stability (Confluence returns the SAME id on every GET/PUT it assigned
+// at Create) is exactly what makes UPDATE-recovery converge -- matching
+// the sim twin's proven claim.
+//
+// ## Real-backend-validated fault (not a mock)
+//
+// The sim twin injects a mocked 500 on issue 2's first PATCH. There is no
+// "make Confluence 500 on demand" lever against a live tenant, so this arm
+// reproduces a GENUINE backend-validated PUT rejection instead: Confluence
+// enforces page-title uniqueness within a space for both Create and
+// Update. A third, untouched "blocker" page pre-seeded with a fixed title
+// occupies the title page B's push-1 PUT attempts to rename into -- the
+// PUT is rejected by Confluence itself, a real `SotPartialFail`, not a
+// timing race or a mocked fault. Push 2 retries with B's ORIGINAL
+// (non-colliding) title and its intended body edit -- PRECHECK B re-reads
+// the live SoT, page A (landed in push 1) diffs away, and only page B is
+// replanned and now lands.
+//
+// ## Full-tree-mirror safety invariant (READ BEFORE EDITING THIS TEST)
+//
+// `diff::plan` (crates/reposix-remote/src/diff.rs) computes a DELETE for
+// every record present in the cache's materialized `prior` that is ABSENT
+// from the pushed tree -- by design (a real `git push` naturally carries
+// the agent's FULL working tree, not a hand-picked subset). Because
+// `reposix attach`'s warm sync (`Cache::build_from`) populates the cache's
+// `oid_map` for the ENTIRE TokenWorld space (not just this test's pages),
+// and blobs are never locally materialized in this raw fast-import harness
+// (no `git clone`/checkout happens), `precheck_export_against_changed_set`'s
+// prior-materialization ALWAYS falls through to a full `list_records` call
+// -- `prior` is therefore the COMPLETE current space content, including the
+// two PROTECTED durable-fixture pages (docs/reference/testing-targets.md).
+// EVERY push this test sends therefore re-includes EVERY currently-existing
+// page verbatim (unedited ones byte-identical, so `plan()`'s
+// writable-equivalence check diffs them away to zero actions) -- skipping
+// this would risk a REAL DELETE against fixture content. `render_verbatim`
+// + the `untouched_entries` snapshot below are that safety net; do not
+// build a push tree in this test without re-including every existing page.
+const KIND_TEST_LABEL: &str = "kind=test";
 
-/// Render a Confluence page blob for a brand-new record. Any id not already
-/// present in the `SoT`'s `list_records` result is planned as a `Create`
-/// (`crates/reposix-remote/src/diff.rs:276-278`).
-fn render_new_page_blob(id: u64, parent_id: Option<u64>, title: &str, body: &str) -> String {
-    let now = chrono::Utc::now();
-    let record = reposix_core::Record {
-        id: reposix_core::RecordId(id),
-        title: title.to_owned(),
-        status: reposix_core::RecordStatus::Open,
-        assignee: None,
-        labels: vec![],
-        created_at: now,
-        updated_at: now,
-        version: 0,
-        body: body.to_owned(),
-        parent_id: parent_id.map(reposix_core::RecordId),
-        extensions: std::collections::BTreeMap::new(),
-    };
-    reposix_core::frontmatter::render(&record).expect("render page blob")
+/// Teardown guard (RAII): deletes every self-seeded page id it was told to
+/// [`track`](Self::track), even on panic/assert-failure unwind, so a
+/// mid-test assertion failure never leaks a page into `TokenWorld`. Rebuilds
+/// a fresh [`ConfluenceBackend`] on a throwaway OS thread + its own
+/// single-threaded tokio runtime (`Drop` is sync; the delete calls are
+/// async, and reusing the outer test's runtime from inside a `Drop` that
+/// may run during unwind risks "cannot start a runtime from within a
+/// runtime"). NEVER tracks the two protected durable-fixture ids (7766017 /
+/// 7798785, docs/reference/testing-targets.md) -- this test never creates
+/// or mutates them, only re-mirrors them verbatim (see the module-level
+/// safety-invariant doc above).
+struct TeardownGuard {
+    creds: ConfluenceCreds,
+    tenant: String,
+    space: String,
+    ids: Vec<u64>,
+}
+
+impl TeardownGuard {
+    fn track(&mut self, id: u64) {
+        self.ids.push(id);
+    }
+}
+
+impl Drop for TeardownGuard {
+    fn drop(&mut self) {
+        if self.ids.is_empty() {
+            return;
+        }
+        let creds = self.creds.clone();
+        let tenant = self.tenant.clone();
+        let space = self.space.clone();
+        let ids = std::mem::take(&mut self.ids);
+        let joined = std::thread::spawn(move || {
+            let rt = match tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+            {
+                Ok(rt) => rt,
+                Err(e) => {
+                    eprintln!(
+                        "teardown: failed to build teardown runtime: {e:?} -- {} page(s) \
+                         leaked, manual cleanup required: {ids:?}",
+                        ids.len()
+                    );
+                    return;
+                }
+            };
+            rt.block_on(async {
+                let backend = match ConfluenceBackend::new(creds, &tenant) {
+                    Ok(b) => b,
+                    Err(e) => {
+                        eprintln!(
+                            "teardown: ConfluenceBackend::new failed: {e:?} -- {} page(s) \
+                             leaked, manual cleanup required: {ids:?}",
+                            ids.len()
+                        );
+                        return;
+                    }
+                };
+                for id in ids {
+                    if let Err(e) = backend
+                        .delete_or_close(&space, RecordId(id), DeleteReason::Abandoned)
+                        .await
+                    {
+                        eprintln!(
+                            "teardown: delete_or_close({id}) failed (non-fatal, leaves a \
+                             kind=test page for manual cleanup -- sweep via \
+                             `python3 scripts/confluence_tokenworld.py delete {id}`): {e:?}"
+                        );
+                    }
+                }
+            });
+        })
+        .join();
+        if joined.is_err() {
+            eprintln!(
+                "teardown: teardown thread panicked -- some pages may be leaked, run \
+                 `python3 scripts/confluence_tokenworld.py list` to check"
+            );
+        }
+    }
+}
+
+/// Build a brand-new top-level page's [`Untainted<Record>`] for self-seeding
+/// (mirrors `contract.rs::make_hierarchy_issue`). Labeled `kind=test` per
+/// `docs/reference/testing-targets.md`'s cleanup convention; the title ALSO
+/// carries a `kind=test <ts>` marker (real Confluence labels aren't wired
+/// through `create_record` yet -- `lib.rs` documents this as deferred, so a
+/// human cleanup sweep must search titles, not labels).
+fn make_new_page(title: &str, body_md: &str) -> Untainted<Record> {
+    let t = chrono::Utc::now();
+    sanitize(
+        Tainted::new(Record {
+            id: RecordId(0),
+            title: title.to_owned(),
+            status: RecordStatus::Open,
+            assignee: None,
+            labels: vec![KIND_TEST_LABEL.to_owned()],
+            created_at: t,
+            updated_at: t,
+            version: 0,
+            body: body_md.to_owned(),
+            parent_id: None,
+            extensions: std::collections::BTreeMap::new(),
+        }),
+        ServerMetadata {
+            id: RecordId(0),
+            created_at: t,
+            updated_at: t,
+            version: 1,
+        },
+    )
+}
+
+/// Render a [`Record`] EXACTLY as fetched into a `pages/<id>.md` fast-import
+/// tree entry -- the full-tree-mirror safety net (see the module-level doc
+/// above `KIND_TEST_LABEL`). Returns `(path, blob)`. Uses
+/// `reposix_core::path::record_path` (never a hand-picked bucket string,
+/// per project CLAUDE.md) so this stays correct if a bucket ever changes.
+fn render_verbatim(record: &Record) -> (String, String) {
+    let bucket = reposix_core::path::bucket_for_backend("confluence");
+    let path = reposix_core::path::record_path(bucket, record.id.0);
+    let blob = reposix_core::frontmatter::render(record).expect("render page blob");
+    (path, blob)
 }
 
 /// Build a single-backend `export` fast-import payload creating the given
 /// `(path, blob)` entries in one commit. Mirrors
 /// `crates/reposix-remote/tests/partial_failure_recovery.rs::export_stdin`.
-fn export_stdin_real(entries: &[(&str, String)], msg: &str) -> Vec<u8> {
+fn export_stdin_real(entries: &[(String, String)], msg: &str) -> Vec<u8> {
     use std::io::Write as _;
     let mut stream: Vec<u8> = Vec::new();
     writeln!(&mut stream, "feature done").unwrap();
@@ -569,39 +724,42 @@ fn run_helper_export_real(
     )
 }
 
-/// Confluence `TokenWorld` real-backend `SotPartialFail` recovery smoke
-/// (ADR-010 / RBF-LR-03, catalog row
+/// Confluence `TokenWorld` real-backend UPDATE-recovery `SotPartialFail`
+/// smoke (ADR-010 / RBF-LR-03, DECISION-2b rewrite, catalog row
 /// `agent-ux/p93-partial-failure-recovery-real-confluence`).
 ///
-/// Drives the same two-push recovery shape as
-/// `crates/reposix-remote/tests/partial_failure_recovery.rs`, but against
-/// the REAL Confluence `TokenWorld` backend instead of a wiremock-modeled
-/// sim, and using a REAL fault instead of a mocked 500:
+/// See the module-level doc comment above `KIND_TEST_LABEL` for the full
+/// rationale (why UPDATE not CREATE, the real fault vector, and the
+/// full-tree-mirror safety invariant every push in this test obeys).
 ///
-/// - **Push 1:** creates two brand-new pages in one export. Page A has
-///   `parent_id = None` (a top-level page -- succeeds). Page B has
-///   `parent_id = Some(UNRESOLVABLE_PARENT_ID)`, a page id that cannot
-///   exist in any sanctioned space, so its `POST /wiki/api/v2/pages`
-///   fails and `execute_action` reports it as failed while page A lands.
-///   This is a genuine backend-validated partial fail, not a timing race
-///   or a mocked fault.
-/// - **Push 2:** fixes page B's `parent_id` to `None` and retries.
-///   PRECHECK B re-reads the current `SoT`, `diff::plan` diffs page A away
-///   (already landed, content-equivalent) and replans page B, which now
-///   succeeds -- the push converges (`ok refs/heads/main`).
+/// - **Self-seed:** pages A, B, and an untouched "blocker" page are
+///   created directly via [`ConfluenceBackend::create_record`] (bypassing
+///   the reposix push path -- this is test setup, not the behavior under
+///   test) and tracked in a [`TeardownGuard`] so they're deleted even on a
+///   mid-test panic.
+/// - **Push 1:** edits page A's body (a genuine change -- lands) and
+///   attempts to rename page B into the blocker's exact title while also
+///   carrying B's intended body edit. Confluence rejects the whole PUT
+///   atomically on the title collision, so B's edit does NOT land -- a
+///   real, backend-validated `SotPartialFail`.
+/// - **Push 2:** page A is re-sent in its POST-push-1 landed state
+///   (`diff::plan` diffs it away, content-equivalent, never re-attempted);
+///   page B is retried with its ORIGINAL (non-colliding) title and the
+///   SAME intended body edit. PRECHECK B re-reads the live `SoT` and
+///   replans ONLY page B, which now lands -- the push converges (`ok
+///   refs/heads/main`).
+/// - **Convergence assertions:** page A's version is unchanged between
+///   push 1 and push 2 (proves zero re-PATCH); page B's version advances
+///   by exactly one PUT total across both pushes (proves the rejected
+///   push-1 PUT landed nothing) and its final title is unchanged from
+///   creation (it was never actually renamed).
 ///
-/// Created pages are titled with a `kind=test <unix-ts>` marker per
-/// `docs/reference/testing-targets.md`'s cleanup convention. NOTE:
-/// `reposix_confluence::create_record` does not yet wire `Record::labels`
-/// to a real Confluence label (`lib.rs:25` documents this as deferred), so
-/// the marker lives in the page TITLE, not an actual label, until that gap
-/// closes -- a human sweep must search titles, not labels.
-///
-/// `#[ignore]` + `skip_if_no_env!`-gated (`TokenWorld` creds). NOT run in
-/// this session (no creds in autonomous mode) -- expected to grade
-/// NOT-VERIFIED until a credentialed run exercises it.
+/// `#[ignore]` + `skip_if_no_env!`-gated (`TokenWorld` creds).
 #[test]
 #[ignore = "real-backend; requires ATLASSIAN_API_KEY/EMAIL/REPOSIX_CONFLUENCE_TENANT; mutates TokenWorld"]
+#[allow(clippy::too_many_lines)] // one narrow end-to-end recovery scenario reads top-to-bottom
+                                 // (same documented exception as the sim twin,
+                                 // partial_failure_recovery.rs)
 fn partial_failure_recovery_real_confluence() {
     skip_if_no_env!(
         "ATLASSIAN_API_KEY",
@@ -611,7 +769,72 @@ fn partial_failure_recovery_real_confluence() {
     let tenant = std::env::var("REPOSIX_CONFLUENCE_TENANT").expect("checked");
     let space = confluence_test_space();
     let allowed = format!("http://127.0.0.1:*,https://{tenant}.atlassian.net");
+    // Gates the DIRECT in-process ConfluenceBackend calls below (the
+    // subprocess calls further down pass `allowed` explicitly via `.env()`
+    // and do not depend on this). Safe process-env mutation for a test that
+    // always runs `--exact` (see the p93 gate script) -- same established
+    // pattern as `precheck.rs`'s `stale_base_push_rejected_...` test.
+    std::env::set_var("REPOSIX_ALLOWED_ORIGINS", &allowed);
 
+    let creds = ConfluenceCreds {
+        email: std::env::var("ATLASSIAN_EMAIL").expect("checked"),
+        api_token: std::env::var("ATLASSIAN_API_KEY").expect("checked"),
+    };
+    let backend = ConfluenceBackend::new(creds.clone(), &tenant).expect("backend");
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+
+    let mut guard = TeardownGuard {
+        creds,
+        tenant,
+        space: space.clone(),
+        ids: Vec::new(),
+    };
+
+    let now_secs = u64::try_from(chrono::Utc::now().timestamp()).expect("post-1970 clock");
+    let marker = format!("kind=test {now_secs}");
+
+    // --- Self-seed: page A, page B, and an untouched "blocker" page whose
+    // TITLE page B's push-1 rename attempt will collide into.
+    let page_a = rt
+        .block_on(backend.create_record(
+            &space,
+            make_new_page(
+                &format!("p93 update-recovery A ({marker})"),
+                "orig body A\n",
+            ),
+        ))
+        .unwrap_or_else(|e| panic!("create_record(A) failed: {e:?}"));
+    guard.track(page_a.id.0);
+
+    let page_b = rt
+        .block_on(backend.create_record(
+            &space,
+            make_new_page(
+                &format!("p93 update-recovery B ({marker})"),
+                "orig body B\n",
+            ),
+        ))
+        .unwrap_or_else(|e| panic!("create_record(B) failed: {e:?}"));
+    guard.track(page_b.id.0);
+
+    let blocker_title = format!("p93 update-recovery BLOCKER ({marker})");
+    let blocker = rt
+        .block_on(backend.create_record(
+            &space,
+            make_new_page(
+                &blocker_title,
+                "untouched -- occupies the title page B's push-1 rename collides into\n",
+            ),
+        ))
+        .unwrap_or_else(|e| panic!("create_record(blocker) failed: {e:?}"));
+    guard.track(blocker.id.0);
+
+    // --- Attach: warms the cache (oid_map for the WHOLE space + cursor) so
+    // the push path below exercises the real precheck/plan machinery, same
+    // as every other real-backend push smoke in this file.
     let (_tmp, attach_out, repo, cache) =
         run_attach_real(&format!("confluence::{space}"), "reposix", &allowed);
     assert!(
@@ -621,37 +844,37 @@ fn partial_failure_recovery_real_confluence() {
     );
     let url = git_remote_url(&repo, "reposix");
 
-    // Timestamp-derived ids: astronomically larger than any real Confluence
-    // page id in a modest test space (the durable fixtures sit at 7-8
-    // digits), so collision with an existing record is not a practical
-    // concern.
-    let now_secs = u64::try_from(chrono::Utc::now().timestamp()).expect("post-1970 clock");
-    let id_a = now_secs;
-    let id_b = now_secs + 1;
-    let marker = format!("kind=test {now_secs}");
+    // --- Full-space snapshot (safety net -- see the module-level doc
+    // comment above `KIND_TEST_LABEL`): every page NOT touched by this test
+    // rides along verbatim in EVERY push so `diff::plan` never mistakes
+    // "not part of this test" for "delete me". Includes the two PROTECTED
+    // durable-fixture pages, if the space carries them.
+    let before = rt
+        .block_on(backend.list_records(&space))
+        .expect("list_records snapshot before push 1");
+    let untouched_entries: Vec<(String, String)> = before
+        .iter()
+        .filter(|r| r.id.0 != page_a.id.0 && r.id.0 != page_b.id.0)
+        .map(render_verbatim)
+        .collect();
 
+    // --- Push 1: edit A's body (real, lands) + rename B into the
+    // blocker's title while also carrying B's intended body edit (the
+    // real backend rejects the whole PUT atomically on the title
+    // collision -- B's edit does NOT land, matching the sim twin's "issue
+    // 2 still carries the un-landed edit" framing).
+    let mut edited_a = page_a.clone();
+    edited_a.body = "edited body A\n".to_owned();
+    let mut faulty_b = page_b.clone();
+    faulty_b.title = blocker_title.clone();
+    faulty_b.body = "edited body B\n".to_owned();
+
+    let mut push1_entries = untouched_entries.clone();
+    push1_entries.push(render_verbatim(&edited_a));
+    push1_entries.push(render_verbatim(&faulty_b));
     let push1 = export_stdin_real(
-        &[
-            (
-                &format!("pages/{id_a}.md"),
-                render_new_page_blob(
-                    id_a,
-                    None,
-                    &format!("p93 smoke A ({marker})"),
-                    "top-level page\n",
-                ),
-            ),
-            (
-                &format!("pages/{id_b}.md"),
-                render_new_page_blob(
-                    id_b,
-                    Some(UNRESOLVABLE_PARENT_ID),
-                    &format!("p93 smoke B ({marker})"),
-                    "child of an unresolvable parent -- forces a real partial fail\n",
-                ),
-            ),
-        ],
-        "p93 partial-fail smoke: create A + (deliberately broken) B\n",
+        &push1_entries,
+        "p93 update-recovery: edit A + rename B into a colliding title (deliberately broken)\n",
     );
     let (ok1, stdout1) = run_helper_export_real(&url, &cache, &allowed, &push1);
     assert!(!ok1, "push 1 must fail (partial fail); stdout={stdout1}");
@@ -660,31 +883,43 @@ fn partial_failure_recovery_real_confluence() {
         "push 1 must emit some-actions-failed; stdout={stdout1}"
     );
 
-    // Push 2: fix page B's parent_id -> None, retry. Page A is diffed away
-    // by PRECHECK B (already landed, content-equivalent); only page B is
-    // replanned and now succeeds.
+    // Page A's edit landed; page B's rename+edit did NOT (title collision
+    // rejected the whole PUT atomically).
+    let landed_a = rt
+        .block_on(backend.get_record(&space, page_a.id))
+        .unwrap_or_else(|e| panic!("get_record(A) after push 1 failed: {e:?}"));
+    assert_eq!(
+        landed_a.version,
+        page_a.version + 1,
+        "page A must have landed exactly one PUT after push 1"
+    );
+    let unlanded_b = rt
+        .block_on(backend.get_record(&space, page_b.id))
+        .unwrap_or_else(|e| panic!("get_record(B) after push 1 failed: {e:?}"));
+    assert_eq!(
+        unlanded_b.version, page_b.version,
+        "page B's rename+edit must NOT have landed (title-collision reject)"
+    );
+    assert_eq!(
+        unlanded_b.title, page_b.title,
+        "page B's title must be UNCHANGED after the rejected push (Confluence rejects the \
+         whole PUT atomically)"
+    );
+
+    // --- Push 2 (recovery): page A re-sent verbatim as its POST-push-1
+    // landed state (`diff::plan` diffs it away -- content-equivalent,
+    // never re-attempted); page B retried with its ORIGINAL
+    // (non-colliding) title + the SAME intended body edit -- PRECHECK B
+    // re-reads the live SoT and replans ONLY page B, which now lands.
+    let mut fixed_b = unlanded_b.clone();
+    fixed_b.body = "edited body B\n".to_owned();
+
+    let mut push2_entries = untouched_entries;
+    push2_entries.push(render_verbatim(&landed_a));
+    push2_entries.push(render_verbatim(&fixed_b));
     let push2 = export_stdin_real(
-        &[
-            (
-                &format!("pages/{id_a}.md"),
-                render_new_page_blob(
-                    id_a,
-                    None,
-                    &format!("p93 smoke A ({marker})"),
-                    "top-level page\n",
-                ),
-            ),
-            (
-                &format!("pages/{id_b}.md"),
-                render_new_page_blob(
-                    id_b,
-                    None,
-                    &format!("p93 smoke B ({marker})"),
-                    "child of an unresolvable parent -- forces a real partial fail\n",
-                ),
-            ),
-        ],
-        "p93 partial-fail smoke: retry B with a valid parent\n",
+        &push2_entries,
+        "p93 update-recovery: retry B with its original title (recovery)\n",
     );
     let (ok2, stdout2) = run_helper_export_real(&url, &cache, &allowed, &push2);
     assert!(
@@ -695,6 +930,35 @@ fn partial_failure_recovery_real_confluence() {
         stdout2.contains("ok refs/heads/main"),
         "push 2 must emit ok refs/heads/main; stdout={stdout2}"
     );
+
+    // --- Convergence: both pages now hold the agent's intended edits.
+    // Page A's version is UNCHANGED from push 1 (proves it was diffed
+    // away on push 2, never re-PATCHed); page B's version incremented by
+    // EXACTLY one PUT total across both pushes (the rejected push-1 PUT
+    // landed nothing).
+    let final_a = rt
+        .block_on(backend.get_record(&space, page_a.id))
+        .unwrap_or_else(|e| panic!("get_record(A) after push 2 failed: {e:?}"));
+    assert_eq!(
+        final_a.version, landed_a.version,
+        "page A must NOT be re-PATCHed on push 2 (diffed away by PRECHECK B)"
+    );
+    let final_b = rt
+        .block_on(backend.get_record(&space, page_b.id))
+        .unwrap_or_else(|e| panic!("get_record(B) after push 2 failed: {e:?}"));
+    assert_eq!(
+        final_b.version,
+        page_b.version + 1,
+        "page B converged via exactly ONE landed PUT total (push 1's rejected PUT landed nothing)"
+    );
+    assert_eq!(
+        final_b.title, page_b.title,
+        "page B's final title is its ORIGINAL (never actually renamed)"
+    );
+
+    // Teardown runs via `guard`'s Drop at end of scope (also on panic
+    // unwind from any assert! above).
+    drop(guard);
 }
 
 /// Defensive sanity test: without any env vars, all three skip cleanly.

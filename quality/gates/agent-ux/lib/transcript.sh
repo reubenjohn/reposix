@@ -61,12 +61,26 @@ write_transcript_and_artifact() {
   # fixed label set; `awk '!seen'` dedupes loop-repeated labels while
   # preserving first-seen order. The greedy `(.*)` binds the label up to the
   # FINAL ": PASS"/": FAIL", so labels that themselves contain ": " survive.
+  # BUGFIX (D2, v0.14.0 tag remediation): this helper is SOURCED into a
+  # caller running `set -euo pipefail`. `grep` exits 1 on "zero matches" --
+  # which is the NORMAL, expected outcome for any `kind: shell-subprocess`
+  # scenario whose underlying command is a plain `cargo test` invocation
+  # (the "ASSERT <label>: PASS|FAIL" convention only applies to bash
+  # scenario scripts; `cargo test` output never emits it). Under inherited
+  # `pipefail`, that zero-match grep silently aborted this WHOLE function
+  # via `errexit` -- masking a genuine exit-0 PASS as a bogus non-zero
+  # script failure and skipping the canonical verdict artifact write below
+  # (see `_shell_verdict.py`'s own docstring: "an empty scenario report is
+  # a clean ... verdict, not a crash" -- the intended behavior this grep
+  # violated). `|| true` on the whole pipeline restores that intent: zero
+  # ASSERT lines -> assert_records is empty -> a clean asserts_passed=[]
+  # verdict, never a masked script abort.
   local assert_records
   assert_records="$(
     grep -E '^[[:space:]]*ASSERT .*: (PASS|FAIL)$' "$stdout_file" \
       | sed -E 's/^[[:space:]]*ASSERT (.*): (PASS|FAIL)$/\2\t\1/' \
       | awk '!seen[$0]++'
-  )"
+  )" || true
 
   # DETERMINISTIC committed verdict via the shared canonical serializer
   # (quality/runners/_shell_verdict.py) — SAME schema + byte formatting as
