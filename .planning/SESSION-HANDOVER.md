@@ -1,108 +1,74 @@
-# SESSION-HANDOVER.md — v0.14.0 TAG **BLOCKED** (9th probe RED); items 1–4 shipped — 2026-07-13
+# SESSION-HANDOVER.md — v0.14.0 TAG still BLOCKED; B1+B4+B5 CLOSED this session — 2026-07-13
 
-For the incoming top-level workhorse (L0) OR this session's continuation. Map, not
-territory — detail lives in git + linked files. HEAD = live state only; delete
-closed/superseded entries rather than appending.
+For the incoming top-level workhorse (L0). Map, not territory — detail lives in git + linked
+files. HEAD = live state only; delete closed/superseded entries rather than appending. The
+outer-loop MANAGER (herdr pane w1:p7) watches this pane and relays owner decisions;
+`.planning/MANAGER-HANDOVER.md` is the live owner-directive channel — read it.
 
-## 0. Owner calibration — READ FIRST (over-ask LESS)
+## 1. Current state (confirm with `git log --oneline -8` + `git rev-parse origin/main`)
+- v0.14.0 tag remains MANAGER-delegated and BLOCKED until the `pre-release-real-backend`
+  cadence exits 0 honestly + an unbiased ratification passes. NO tag push ever by the workhorse.
+- This session shipped B1, B4, B5. B2, B3, and item-4 (tag sequence) REMAIN.
+- Working tree should be clean and pushed; `ci.yml` on main should be green (verify:
+  `gh run list --branch main -L 3`). Never open work over a red main.
 
-Decide-and-record, not gating. Pick the path the owner's model implies, log to
-`.planning/CONSULT-DECISIONS.md`, proceed — owner vetoes if you misread. Reserve STOPs for
-the genuinely-owner class: irreversible/destructive, external-backend mutations,
-credential/spend. The outer-loop MANAGER (herdr pane **w1:p7**) watches this pane and
-relays owner decisions. `.planning/MANAGER-HANDOVER.md` is the live owner-directive
-channel — read it.
+## 2. CLOSED THIS SESSION
+- **B4+B5 (DONE, commits b635c3b, 8c48fc5, 1467eb2, fe8febb + docs finalize commit).** Both
+  missing verifier scripts authored + git-tracked: `quality/gates/agent-ux/t4-conflict-rebase-ancestry-real-backend.sh`
+  (+ `lib/t4-real-backend-flow.sh`) and `quality/gates/agent-ux/github-front-door-real-backend.sh`.
+  Hermetic self-test `quality/gates/agent-ux/real-backend-env-gate.selftest.sh` (4/4 pass) +
+  kcov harness `quality/gates/code/shell-coverage-tests/real-backend-env-gate.sh` (coverage
+  15.72% ≥ floor 13, floor untouched). Both catalog rows now grade NOT-VERIFIED/env-missing
+  (no longer "verifier not found"). B5 fix-twice: RFC3339 transcript assert corrected in
+  agent-ux.json (still valid JSON, 66 rows). NOTE: these rows still read NOT-VERIFIED until
+  item 4 runs them WITH creds — they are now GRADEABLE, not yet GRADED.
+  - **Noticing (file if not done): 3 OTHER catalog rows still carry the stale `-<RFC3339>`
+    transcript-filename pattern** — `kind-shell-subprocess-worked-example`, `attach-sync-real-backend`,
+    `rebase-recovery-reconciles`. Left untouched per scope fence; candidate GTH.
+- **B1 (DONE — manager Branch-2 decision, recorded in CONSULT-DECISIONS 2026-07-13).**
+  Diagnosis: page 2818063 legitimately deleted out-of-band; Confluence SoT authoritative,
+  GitHub mirror stale (NOT a reposix bug; mass-delete guard worked as designed). Manager chose
+  restore. Executed: `PUT /wiki/api/v2/pages/2818063` status→current → HTTP 200. Space 360450
+  current pages now = {2818063, 7766017, 7798785} (known-good 3-page), API-verified. Only 2818063
+  touched. **Follow-up: the reposix-side vision-litmus PASS (matched=3/backend_deleted=0) is NOT
+  yet re-confirmed** — successor runs the vision-litmus first thing (see item 4). Self-healing-
+  fixture GTH-V15-09 filed.
 
-## 1. Current state (confirm with `git rev-parse origin/main`)
+## 3. REMAINING (successor, in order)
+1. **Confirm B1 end-to-end (fast):** run `bash quality/gates/agent-ux/milestone-close-vision-litmus.sh`
+   with real creds (source `.env`; preflight passes 3/3, backends reachable) — expect exit 0,
+   matched=3/backend_deleted=0. Sanctioned mutating litmus on TokenWorld. Re-persists a fresh artifact.
+2. **B2 — p93-partial-failure-recovery-real-confluence (P0). Diagnosed, NOT a regression.** The
+   verifier hard-pins TokenWorld (it MUTATES), but the owner's `.env` sets
+   `REPOSIX_CONFLUENCE_SPACE=REPOSIX`, so the sanctioned-space guard rejects → exit 1. HARNESS FIX
+   (small /gsd-quick): make `quality/gates/agent-ux/p93-partial-failure-recovery-real-confluence.sh`
+   FORCE `REPOSIX_CONFLUENCE_SPACE=TokenWorld` internally for this pinned row (instead of rejecting
+   when it sees REPOSIX), so the probe self-targets correctly regardless of ambient .env. Then
+   re-run WITH creds + re-persist the fresh artifact (current on-disk artifact is a stale 2026-07-06
+   env-missing/space-guard hybrid).
+3. **B3 — attach-sync-real-backend (P1). Stale artifact; likely fixed by B1.** Its FAIL was
+   "either downstream of the same stale-mirror drift as B1 or independent." B1 is now fixed, so
+   re-run WITH creds (space guard tolerates REPOSIX, so no space issue) + re-persist. Root-cause
+   against the fresh transcript if it still fails.
+4. **Item 4 — tag sequence (only after 1-3 green):** `python3 quality/runners/run.py --cadence
+   pre-release-real-backend --persist` WITH creds → need honest exit 0 (all 6 rows PASS/NOT a P0/P1
+   FAIL). Then re-mint `quality/reports/verdicts/milestone-v0.14.0/VERDICT.md` (was RED at 563095f)
+   + unbiased verifier ratification, author the tag script (pattern
+   `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh`), STOP at READY-TO-TAG. Manager pushes the tag.
 
-- `origin/main` = the verdict commit `563095f` + **this handover on top** (parent chain:
-  … `9890a67` items-1–4 → `563095f` RED verdict → this handover). Confirm with `git log
-  --oneline -5`. Working tree **clean**.
-- Items 1–4 are **CI-green** on main (`ci.yml` concluded success on `9890a67`). The RED
-  below is the **real-backend cadence**, NOT `ci.yml` — main itself is not red.
-- **No `v0.14.0` / `v0.13.0` tag exists.** Both are MANAGER-delegated. **The v0.14.0 tag
-  is now BLOCKED — see §3.**
+## 4. v0.13.0 pre-tag actions (item 6) — untouched; queued behind the v0.14.0 tag.
 
-## 2. THIS SESSION — charter items 1–4 SHIPPED (all pushed, gate-green)
+## 5. Constraints (unchanged)
+sim-first for code; real backends only via REPOSIX_ALLOWED_ORIGINS; sanctioned mutation targets
+ONLY (TokenWorld / reubenjohn-reposix issues / JIRA TEST); NO tag push ever; never over a red main;
+ONE cargo invocation machine-wide; leaf test setup in /tmp clones (cd in SAME bash call); relief
+~100k soft / ~150k hard absolute → replace THIS file, commit+push, end turn. To resume an agent:
+SendMessage it, never fork.
 
-1. `cc6e9bb` — recorded two `[OWNER]` decisions in `CONSULT-DECISIONS.md` (session
-   serialization; both-tag delegation to the manager) + fix-twice the **single-writer
-   discipline** subsection into `ORCHESTRATION.md` §2.
-2. `7bd9b71` (+ inline triage) — **foreign-tree triage: ALL revert/delete.** Every
-   uncommitted artifact was a byte-identical resurrection of shipped-then-deleted history
-   or generated noise. `code.json` restored to PASS; `phases/21`,`22` + `scripts/demos`,
-   `scripts/dev` + `.log` noise + 2 root `audit-*.png` deleted; `stash@{0}` dropped
-   (**recover via `git stash apply 6398c224`** for ~2wk). Tree clean; rationale recorded.
-3. `b8ba930` — **75% file-size early-warning WARN tier** in
-   `quality/gates/structure/file-size-limits.sh` (75–99% = print-only non-blocking,
-   orthogonal to the `--warn-only`/waiver; ≥100% block-later contract UNCHANGED).
-   12-pass hermetic self-test; catalog row + `quality/CLAUDE.md` fix-twice.
-4. `9890a67` — **7 v0.14.0 DEFERRED intake entries + 1 hygiene row** →
-   `v0.15.0-phases/GOOD-TO-HAVES.md` (severity+sketch each); 2 HIGHs (RBF-LR-03
-   modern-git verify; subprocess-bypass self-safety refusal) also got ROADMAP
-   phase-candidate stubs; the intake↔roadmap gap reconciled.
-
-## 3. ITEM 5 (v0.14.0 TAG SEQUENCE) — **BLOCKED. MILESTONE CANNOT CLOSE GREEN.**
-
-- **9th probe (`pre-release-real-backend`) ran for real** — preflight PASS 3/3, creds
-  present, **NO env wall** → cadence **exit 1** (1 PASS / 3 FAIL / 2 NOT-VERIFIED). Per
-  **OD-2 this is hard RED** — no waiver, no PASS-with-comment, no skip-as-pass.
-- **RED verdict minted + committed:** `quality/reports/verdicts/milestone-v0.14.0/VERDICT.md`
-  (`563095f`). This **overturns the prior "11/11 GREEN awaiting owner tag" belief** — the
-  real-backend cadence surfaces multiple P0/P1 failures the sim-only close missed.
-- **Blocking findings (remediation is a NEW LANE — NOT started):**
-  - **B1 (P0)** vision-litmus FAIL — `reposix attach confluence::REPOSIX` reconciled
-    delete-shaped (`backend_deleted=1`): page `2818063` (`pages/2818063.md`) in the GitHub
-    mirror but absent from live Confluence → mass-delete guard **correctly refused**.
-    Hypothesis: **stale-mirror drift** (page deleted from Confluence, mirror not updated;
-    2818063 is NOT a protected fixture). Remediation = reconcile the mirror — an
-    **owner-gated external-mutation decision** (was 2818063 legitimately deleted, or is
-    the mirror stale?). TokenWorld was NOT mutated.
-  - **B2 (P0)** `p93-partial-failure-recovery-real-confluence` FAIL. **B3 (P1)**
-    `attach-sync-real-backend` FAIL. ⚠️ **Evidence-freshness caveat:** on-disk artifacts
-    for B2/B3 are `2026-07-06` (env-missing skip); the fresh-run FAIL is from the probe
-    report, NOT re-persisted — **re-run + re-persist these two artifacts before
-    ratification.** (p93's 2026-07-06 stderr rejected a non-TokenWorld space `'REPOSIX'`
-    — a guard-vs-regression lead.)
-  - **B4 (P0)** `t4-conflict-rebase-ancestry-real-backend` + **B5 (P1)**
-    `github-front-door-real-backend` — verifier scripts **absent AND never tracked in
-    git** → NOT-VERIFIED → RED at P0 (missing-script→NOT-VERIFIED rule). This is exactly
-    the class the just-filed **v0.15.0 GTH-V15-03** predicted.
-- **Re-grade condition:** the milestone re-grades ONLY after the cadence exits 0 AND an
-  unbiased ratification passes. The tag script (item 5c) was correctly **NOT authored**.
-- **Recommended remediation lane** (fresh session; `/gsd-debug` or a v0.14.1/hardening
-  phase — owner/manager decides scope): (a) decide the 2818063 mirror-drift reconcile
-  (owner-gated); (b) author the 2 missing verifier scripts; (c) investigate + re-persist
-  the p93 + attach-sync FAILs; (d) re-run the 9th probe → exit 0 → re-mint verdict +
-  unbiased ratify → THEN READY-TO-TAG.
-
-## 4. ITEM 6 (v0.13.0 pre-tag actions) — untouched; queued BEHIND the v0.14.0 tag (now blocked).
-
-## 5. READY-TO-TAG = **NO / BLOCKED** — reported to the manager (§3). The tag push stays
-the manager's; there is nothing to push until remediation lands the cadence green.
-
-## 6. Serialization (owner ruling now in `ORCHESTRATION.md` §2)
-
-- The MANAGER committed to the **shared tree** concurrently this session (`6d0f94f`,
-  `2bc29f1`, `7dabbbf`, + a dirty `MANAGER-HANDOVER.md` during item 3's writer). git
-  absorbed it (linear history + index-lock) but it is the exact contention the ruling
-  prohibits — **manager: serialize handover writes with the workhorse's writer waves.**
-- My own writers ran strictly serial (one tree-writer at a time); read-only recon fanned
-  out in parallel — the pattern the doctrine now codifies. Subagent Write/Edit worked all
-  session (the prior "file-tools non-functional" note did NOT recur).
-
-## 7. STILL-STANDING STOPs
-
-Workhorse does NOT cut/push ANY tag. §3 remediation needs a fresh lane + an owner decision
-on the mirror-drift. Never open work over a red main (ci.yml is green; the RED is the
-real-backend cadence).
-
-## 8. Doctrine
-
-Full delegation/relief/cadence: `.planning/ORCHESTRATION.md` §2/§3/§11. Relief ~100k own
-context (hard 150k, absolute). ONE cargo invocation machine-wide. Leaf isolation: setup in
-a `/tmp` clone, `cd` in the SAME bash call. To resume a specific agent, **SendMessage it —
-never `fork`**.
+## 6. Serialization
+Single tree-writer at a time (ORCHESTRATION §2). Read-only recon may fan out in parallel; the B1
+read-only diagnosis ran parallel to the B4/B5 writer safely this session. Watch context budget
+closely — the predecessor blew past 150k mid-lane (large subagent results are heavy).
 
 ---
 History lives in git — `git log` / `git show`, not restated here.

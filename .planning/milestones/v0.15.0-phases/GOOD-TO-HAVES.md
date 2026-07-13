@@ -51,6 +51,11 @@
 - **BLOCKER NOW CLEARED:** the intake's original disposition named `quality/catalogs/code.json` as FOREIGN-LOCKED (a concurrent lane held uncommitted changes; the P110 drain forbade touching it). As of this landing the shared tree is **clean** (`git status` empty, code.json unmodified) — the catalog edit is no longer blocked. Only the owner-gate on the two open semantic questions remains.
 - **Fix-sketch:** parameterize `quality/gates/code/ci-green-on-main.sh`'s hardcoded `WORKFLOW=ci.yml` into a required-workflow LIST, OR add a sibling `code/release-green-on-main` row at post-push cadence reusing the same latest-run-conclusion logic (catalog-first: write the GREEN-contract row before impl). **Resolve TWO open questions FIRST (owner gate — a false-RED would block UNRELATED phases):** (1) Does release-plz run on EVERY push to main? (2) Is a 'no release needed' run concluded `success` / `skipped` / other, so the probe treats non-failure correctly?
 
+### GTH-V15-09 — Make the milestone-close vision-litmus fixture self-healing
+- **Source:** v0.14.0 tag-remediation lane, B1 (2026-07-13) · **Severity: MEDIUM (manager-requested 2026-07-13)**.
+- **What:** an out-of-band edit to TokenWorld (e.g. someone trashing the space Home page 2818063) silently breaks the P0 9th-probe vision-litmus row — as happened this session, costing a full diagnosis + manual API restore. The fixture state is assumed, not enforced.
+- **Fix-sketch:** the litmus test setup (`quality/gates/agent-ux/lib/litmus-flow.sh` / `milestone-close-vision-litmus.sh`) should SEED/RESTORE the known-good TokenWorld state (current pages exactly `{2818063,7766017,7798785}`) before asserting — e.g. detect trashed protected pages and restore them via the v2 `updatePage` `status→current` path, or fail with a copy-paste restore command. So out-of-band space edits can never silently red the 9th probe again.
+
 ## Hygiene (file-size early-warning)
 
 ### GTH-V15-08 — `.planning/ORCHESTRATION.md` over its progressive-disclosure ceiling
