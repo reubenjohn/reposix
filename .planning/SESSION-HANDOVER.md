@@ -1,115 +1,136 @@
-# SESSION-HANDOVER.md — v0.14.0 TAG STILL BLOCKED on the OWNER DECISION (B1) — 2026-07-13 (→ successor #6)
+# SESSION-HANDOVER.md — v0.14.0 tag: OWNER fix-first items 4-8, D2+B3 CLOSED GREEN — 2026-07-13 (→ successor #6)
 
-For the incoming top-level workhorse (L0). Map, not territory — detail lives in git + linked
-files. HEAD = live state only; delete closed/superseded entries rather than appending. The
-outer-loop MANAGER (herdr pane w1:p7) watches this pane and relays owner decisions;
-`.planning/MANAGER-HANDOVER.md` is the live owner-directive channel. Resume an agent via
-SendMessage, never fork.
+For the incoming top-level workhorse (L0) — a top-level ROUTING coordinator: routes via GSD +
+subagents, never leaf-works. Map, not territory — detail lives in git + linked files. HEAD =
+live state only; delete closed/superseded entries rather than appending. The outer-loop MANAGER
+(herdr pane w1:p7) watches this pane and relays owner decisions; `.planning/MANAGER-HANDOVER.md`
+is the live owner-directive channel. Resume an agent via SendMessage, never fork.
 
-## 0. 🟢 Main is GREEN. Tag is BLOCKED on ONE owner decision (B1). Do NOT fake it green.
-- Since successor #5: **D2 CLOSED GREEN** (honest p93 UPDATE-recovery rewrite, unbiased-verified)
-  and **B3 CLOSED GREEN** (attach-sync re-run — clean PASS; the prior "FAIL" was a phantom
-  stale-skip artifact; NOT a B1-class gap).
-- **THE TAG GATE IS STILL A SINGLE OWNER DECISION on B1** (§3) — no owner ruling has arrived.
-  Everything else is done or cleanly queued (§4). Do NOT re-mint VERDICT GREEN / reach
-  READY-TO-TAG until the owner rules. VERDICT.md remains honestly RED at
-  `quality/reports/verdicts/milestone-v0.14.0/VERDICT.md`; there is NO v0.14 tag (correct).
+**PROVENANCE WARNING:** the PRIOR on-disk copy of this file (commit `5a01b53`) was authored by
+a ROGUE FORK — an L0-dispatched `fork` that inherited full context and became a live parallel
+tree-writer (single-writer-discipline violation) instead of a safe no-op/discard. Its "#5/#6"
+successor framing and "TAG STILL BLOCKED on ONE owner decision (B1)" framing are STALE/fictitious
+as of this rewrite — **do not trust that file's content**; this version supersedes it entirely
+from verified ground truth + the current L0's live directive. Fix-twice landed:
+`.planning/ORCHESTRATION.md` §11 now carries "a `fork` is never a safe no-op or discard
+placeholder" doctrine.
 
-## 1. State (verify: `git log --oneline -8`, `git rev-parse origin/main`, `gh run list --branch main -L3`)
-- main GREEN. Newest ci.yml run success = D2 commit `1c424d7` (CI run 29261754835, success).
-- D2 evidence: `quality/reports/verifications/agent-ux/p93-partial-failure-recovery-real-confluence.json`
-  exit 0 (real run 2026-07-13T15:28Z); catalog row `agent-ux/p93-partial-failure-recovery-real-confluence`
-  honestly rewritten to UPDATE-recovery, `status: NOT-VERIFIED` LEFT BY DESIGN (flips at the §4 cadence).
-- B3 evidence: `quality/reports/verifications/agent-ux/attach-sync-real-backend.json` exit 0
-  (real run 15:36Z, `attach_real_confluence` + `sync_real_confluence` both ok) — GITIGNORED,
-  on-disk only, nothing to commit.
-- TokenWorld known-good = EXACTLY 2 pages (`7766017` + `7798785`, child.parentId=7766017);
-  verified clean after both D2 and B3 runs.
-- ⚠️ **STATE.md is STALE** — its `last_activity` is from successor #3 (describes a "3-page state,
-  page 2818063 restored, B1 RESOLVED") that CONTRADICTS the confirmed current reality (TokenWorld =
-  2 pages, B1 OPEN). THIS handover supersedes it. #6: reconcile STATE.md, but FIRST verify the
-  2-vs-3-page history (was 2818063 a different space, or a since-reverted restore?) before assuming —
-  do not blind-edit.
+## 0. State (verify: `git rev-parse --short HEAD origin/main`, `git status --porcelain`, `gh run list --branch main --limit 3 --json databaseId,headSha,status,conclusion,createdAt`)
+- HEAD = origin/main = `e11ba96`, tree clean. Newest `ci.yml` run for `e11ba96` = success (run
+  29264702122, completed 2026-07-13T16:01:39Z; headSha verified to MATCH `e11ba96` — see the
+  `ci-green-on-main` race caveat in §1 item 8 before trusting this gate blindly next time).
+- **D2 + B3 CLOSED GREEN** (both landed before this rewrite; full record + 2 filed noticings live
+  in commit `5a01b53` and the noticing files — reference, don't restate):
+  - D2: honest UPDATE-recovery rewrite of the p93 real-Confluence smoke (`1c424d7`) + stale gate
+    PASS-message fix (`e73d761`), unbiased-verified.
+  - B3: attach-sync gate PASS (`e11ba96`); prior FAIL was a phantom stale-skip artifact, not a
+    real regression. The re-run is **coverage-hollow / inconclusive-by-construction** re the B1
+    attach gap (the gate asserts local git-config + cache-only `sync --reconcile`, never a real
+    checkout/fetch round-trip) — this is NOT a caveat-bound waiver, it's a gap in what the gate
+    can prove. Binding on the fix below — see §1 item 4a acceptance criteria.
+- TokenWorld known-good = **EXACTLY 2 durable pages** (`7766017` + `7798785`,
+  child.parentId=`7766017`). Verify: `python3 scripts/confluence_tokenworld.py list`.
+- `.planning/STATE.md` frontmatter (`status:`/`last_activity:`) + the workstream_c cursor +
+  top blockquote were RECONCILED in this rewrite (was stale: "3-page state, B1 RESOLVED" — reality
+  is 2 pages, B1 folded into item 4a below, neither RESOLVED nor a standalone OPEN decision). Its
+  Current-Focus/Session-Continuity prose blocks further down were NOT swept (lower-priority
+  residual drift, non-blocking — this file is the live cursor).
 
-## 2. What happened (successor #5, all verified against reality)
-- **D2 — CLOSED GREEN.** Executor rewrote `partial_failure_recovery_real_confluence` to
-  UPDATE-recovery (mirrors the sim twin), added a RAII `TeardownGuard`, corrected the lying catalog
-  assert, and fixed a `set -e`/pipefail masking bug in `quality/gates/agent-ux/lib/transcript.sh`
-  (a zero-match ASSERT-grep aborted the script, masking a real exit-0). Unbiased gsd-verifier (sonnet)
-  graded GREEN on all 5 criteria: real exit 0, no catalog lie, ZERO `src` touched, TokenWorld=2 pages,
-  RAII teardown runs on panic/unwind. Committed `1c424d7`, pushed, CI green.
-- **B3 — CLOSED GREEN.** Fresh creds-loaded run exit 0. Executor DISPROVED the "D2 fix explains it"
-  hypothesis (this gate already wraps the call in `set +e`) and found the real story: the prior "FAIL"
-  (VERDICT L114-119) was never artifact-backed — the on-disk artifact at verdict-time was a stale
-  2026-07-06 env-missing SKIP (the verdict itself flags this at L150-156). B3 was never broken; NOT a
-  B1-class gap (attach-sync ≠ the fuller B1 push-after-attach litmus). TokenWorld clean before+after.
-  No commit (artifacts gitignored). Graded via coordinator ground-truth (fresh artifact + transcript
-  freshness + tree-clean), proportionate to a no-commit/no-code-change item.
-- 3 B3 noticings triaged + filed (§ Filed noticings).
+## 1. ACTIVE CHARTER — OWNER fix-first ruling, items 4-8 (the prior §4 HOLD is LIFTED)
 
-## 3. THE OWNER DECISION (tag gate) — B1 vision-litmus [UNCHANGED — STILL OPEN]
-Recorded OPEN at `.planning/CONSULT-DECISIONS.md` (2026-07-12 `[OWNER]` + `[FABLE]` entries); full
-evidence `.../evidence/B1-litmus-selfheal-INSUFFICIENT-FINDINGS-2026-07-12.md`; litmus transcript
-`quality/reports/transcripts/milestone-close-vision-litmus-real-backend.txt`.
-- **Root cause (fable, code-cited):** `reposix attach` (`crates/reposix-cli/src/attach.rs:259`) does a
-  plain `git remote add` and NEVER seeds `refs/reposix/origin/main`; `resolve_import_parent`
-  (`crates/reposix-remote/src/main.rs:400-418`) chains the bus's synthetic history onto that unseeded
-  ref → a real attach round-tripper hits a cross-root add/add wall, the SAME wall the litmus does. It is
-  a GENUINE PRODUCT GAP, not a harness artifact. The blessed self-heal (litmus-flow.sh, `d413432`) fires
-  correctly but cannot green it. Option A (harness bus-ref checkout) is DISHONEST (greens by ceasing to
-  test the broken path). No honest Option C exists.
-- **The bind:** the manager set B1 = **non-waivable P0, NO caveat escape** AND **no product/defect fix
-  mid-tag-sequence** — and the one sanctioned mid-sequence change (the self-heal) is proven insufficient.
-  Unsatisfiable together → only the OWNER can break it.
-- **Owner must choose:** (A) authorize a product+harness fix now (seed `refs/reposix/origin/main` on
-  attach + parseable durable fixture) — honors non-waivable, costs v0.15.0-class work mid-tag;
-  **(B, fable+coord recommend)** relax B1's non-waivable constraint → ship v0.14.0
-  GREEN-with-B1-documented-caveat, product fix (attach ref-seed + ADF round-trip) routed to v0.15.0
-  (precedent: v0.13.0 GREEN-with-caveats). **Surface to manager/owner FIRST; it gates §4.**
+**Owner ruling (2026-07-13, `.planning/CONSULT-DECISIONS.md` `[OWNER]` "fix-first calibration
+for tag-blocking product bugs"):** tag-blocking product bugs default to FIX-FIRST, no owner
+consult needed, UNLESS the fix turns architectural (then STOP + escalate to manager/owner). This
+supersedes the old "no product/defect fix mid-tag-sequence" HOLD and resolves the OPEN B1
+non-waivable bind — B1 is now folded into item 4a, not a standalone waive-vs-redesign choice.
 
-## 4. Remaining work
-- **Doc-lie fix (HIGH) — REQUIRED before tag, INDEPENDENT of B1 → DO NEXT.**
-  `docs/guides/troubleshooting.md:259-272` + `docs/concepts/dvcs-topology.md:93` over-claim recovery for
-  the attach topology. Correct honestly (attach round-trip recovery is a known v0.15.0 gap — NB B3 proved
-  basic attach+sync PASSES; the gap is the fuller push-after-attach recovery relying on the unseeded
-  `refs/reposix/origin/main`, i.e. the B1 litmus scenario). Docs change → MUST pass
-  `quality/gates/docs-build/mkdocs-strict.sh` + `mermaid-renders.sh` + `/doc-clarity-review`.
-  Bundle-able with the B1 caveat write-up. Single tree-writer.
-- **§4 tag mechanicals — GATED on the §3 owner decision.** IF owner approves (B): the honest
-  `pre-release-real-backend` probe WILL exit non-zero on the P0 litmus row — **never soften it**;
-  re-mint VERDICT as **GREEN-with-owner-accepted-B1-caveat** (the D2 p93 row + the B3 attach-sync row
-  BOTH flip from NOT-VERIFIED to their real grade in that SAME cadence run — do NOT hand-set them)
-  → FRESH unbiased ratification subagent (template `quality/PROTOCOL.md` § Verifier subagent prompt /
-  `quality/dispatch/milestone-close-verdict.md`) → author
-  `.planning/milestones/v0.14.0-phases/tag-v0.14.0.sh` (pattern `.../v0.13.0-phases/tag-v0.13.0.sh`)
-  → STOP at READY-TO-TAG. Manager/owner pushes the tag; the coordinator NEVER does.
+4. Two FABLE-named product fixes, **sim-first + tests + code-review gates, NO real-backend
+   needed for the fix tests themselves** (a real-backend round-trip smoke IS required as
+   acceptance evidence per item 4a's binding note below):
+   - **(a) attach lineage.** Seed `refs/reposix/origin/main` at attach-time + evaluate a
+     `resolve_import_parent` fallback so EXISTING attach trees heal too. **Design ratified
+     BOUNDED-ELEGANT-FIX (no architectural pivot); full implementation-ready design →
+     `.planning/milestones/v0.14.0-phases/attach-lineage-fix-design.md`** (persisted this
+     session; §§1-7 = the design, §8 = a binding acceptance-criteria addendum). LOAD-BEARING:
+     seed VALUE = the mirror merge-base `refs/remotes/<mirror>/main`, **NOT HEAD** (HEAD seeds
+     cause silent-revert data loss on un-pushed Pattern-C edits — design §3.1). Heal-existing
+     primary path = re-run `reposix attach` (idempotent, zero new machinery); runtime auto-heal
+     = v0.15.0-optional (touches the git-trusted import path — gate/defer). If implementation
+     reveals it IS architectural (synthetic-history determinism) → STOP + report manager.
+     **BINDING acceptance criterion (design §8, folded from a B3 noticing):** B3's real-backend
+     gate never exercises a `git checkout`/`fetch`-after-`attach` round-trip — it is
+     coverage-hollow re this exact gap. The fix's acceptance evidence MUST include a real
+     checkout/fetch round-trip assertion (sim-first per design §5.2, PLUS a real-backend arm),
+     not just the existing config-only B3 smokes.
+   - **(b) adf_to_markdown fail-closed.** Currently `translate.rs:114` / `types.rs:222`
+     substitute `String::new()` for a non-doc ADF root → a push PATCHes an EMPTY body into the
+     SoT (destroys attacker-influenceable page content). Make it fail closed with a teaching
+     error per the exemplar `crates/reposix-cli/src/init.rs::refuse_existing_repo_root` (teach
+     the fix / suggest the alternative / copy-paste recovery). Design §6.
+5. **Re-green the vision litmus on the UNMODIFIED Pattern-C harness** — no harness dodges (the
+   litmus greens once 4a lands).
+6. **Verify recovery-promise docs read TRUE post-fix:** `docs/guides/troubleshooting.md:259-272`
+   + `docs/concepts/dvcs-topology.md:93` currently OVER-CLAIM attach round-trip recovery (design
+   §7 "NOTICED"). docs-alignment catalog rows fire on drift.
+7. **Re-assess the p93 CREATE-recovery convergence gap under fix-first:** filed HIGH,
+   `.planning/milestones/v0.14.0-phases/surprises-intake/part-03.md` (2026-07-13 entry, "Real-
+   Confluence partial-failure RECOVERY does not converge"). Confident bounded fix → implement;
+   architectural recovery-semantics question → keep the D2 honest-harness + documented v0.15.0
+   routing and flag it PROMINENTLY in the READY-TO-TAG report.
+8. **§4 mechanicals (after 4-7):** honest `pre-release-real-backend` probe exit 0 → re-mint
+   `quality/reports/verdicts/milestone-v0.14.0/VERDICT.md` GREEN → FRESH unbiased ratification
+   subagent (template `quality/PROTOCOL.md` § Verifier subagent /
+   `quality/dispatch/milestone-close-verdict.md`) → author
+   `.planning/milestones/v0.14.0-phases/tag-v0.14.0.sh` (pattern `.../v0.13.0-phases/tag-v0.13.0.sh`)
+   → **STOP at READY-TO-TAG**; the tag push is the MANAGER's.
+   - **KNOWN GATE RACE (HIGH, filed, NOT YET FIXED):** `quality/gates/code/ci-green-on-main.sh`
+     grades PASS off `gh run list`'s single most-recent run WITHOUT asserting its `headSha`
+     equals the just-pushed HEAD — a run-indexing race can silently grade a STALE commit's
+     green as the new commit's green. Full finding + sketch:
+     `.planning/milestones/v0.14.0-phases/surprises-intake/part-03.md` (2026-07-13 15:52,
+     "code/ci-green-on-main (P0 release gate) can grade a false PASS on a race"). The probe
+     mechanic itself is owner-gated (do not edit without authorization under the fix-first
+     ruling's architectural-escalation clause if the fix touches shared gate infra broadly) —
+     but before trusting item 8's `pre-release-real-backend`/post-push probe for the FINAL tag
+     decision, manually cross-check the graded run's `headSha` against `git rev-parse HEAD`
+     (as this session did in §0).
 
-## Filed noticings (OP-8, successor #5)
-- SURPRISES-INTAKE part-03 (MEDIUM → v0.15.0): verdict-rigor guard — every FAIL/NOT-VERIFIED row in a
-  milestone VERDICT must cite a fresh session-captured artifact, never a stale skip (the B3 phantom-fail).
-- GOOD-TO-HAVES-13 (S → v0.15.0): mechanical gate artifacts carry no per-assert signal (empty asserts on
-  genuine PASS) — capture the cargo `test result:` summary in the artifact JSON.
-- (Handled inline, not filed) D2-verifier NOTICED items were all benign/positive (fix-twice discipline,
-  correct NOT-VERIFIED handling).
+## 2. Constraints (unchanged)
 
-## 5. Constraints (unchanged) + THE LESSON
-sim-first for code; real backends only via `REPOSIX_ALLOWED_ORIGINS`; sanctioned mutation targets ONLY
-(TokenWorld / reubenjohn-reposix issues / JIRA TEST/KAN); NO tag push ever; never open work over a red
-main; ONE cargo invocation machine-wide; leaf test setup in /tmp clones (cd in the SAME bash call).
-Relief ~100k soft / ~150k hard absolute → replace THIS file, commit+push, end turn. Resume an agent via
-SendMessage, never fork. **THE LESSON (caused the P0):** TokenWorld known-good = EXACTLY 2 durable pages
-— parent `7766017` + child `7798785` (child.parentId=7766017). EVERY real-backend run MUST teardown to
-this state; verify `python3 scripts/confluence_tokenworld.py list` (env NOT auto-loaded in a bare shell —
-`set -a; . ./.env; set +a` first, as `scripts/preflight-real-backends.sh` does; the helper refuses to
-delete the 2 protected ids). A run that leaks or trashes fixture pages reds CI.
+Sim-first for code; real backends only via `REPOSIX_ALLOWED_ORIGINS`; sanctioned targets ONLY —
+**TokenWorld known-good = EXACTLY 2 durable pages (parent `7766017` + child `7798785`); teardown
+every real-backend run; verify `python3 scripts/confluence_tokenworld.py list`** (a leaked/trashed
+fixture reds CI); NO tag push ever; never open work over a red main; ONE cargo invocation
+machine-wide (prefer `-p`); /tmp leaf isolation (`cd` in the SAME bash call). A `fork` is never a
+safe discard — never dispatch one to "throw away," end the turn instead (ORCHESTRATION.md §11).
+Relief ~100k soft / ~150k hard (absolute) → replace THIS file, commit+push, end turn. Resume a
+child via SendMessage, never fork.
 
-## 6. Serialization + budget
-Single tree-writer at a time (owner-ratified session serialization). Heaviest cost = subagent-RESULT
-weight (real-backend + cargo transcripts). Delegate every heavy run; demand compact committed-artifact
-reports (SHAs + paths + key numbers only); NEVER pull CI `--log-failed` or a transcript into your own
-context. Successor #5 rotated at a clean wave boundary (~140k) with D2+B3 CLOSED GREEN; the doc-lie fix
-(independent) + §4 (gated on the OPEN §3 decision) deliberately handed to #6 — they don't accelerate a
-tag blocked on §3.
+## 3. Ops lessons (this session)
+
+- **Display-freeze false alarm.** A Claude Code survey-modal froze a pane's display/input for
+  ~30 min while the background coordinator kept running — the "frozen at Dispatching D2
+  executor" reading was a display artifact, not a stall. HEALTH-CHECK via GROUND-TRUTH git (file
+  mtime, new commits, `ps` for live procs), NOT the pane view. A **file-activity** Monitor (repo
+  + /tmp mtime, not cargo-only) is the reliable progress feed; a cargo-only heuristic
+  false-alarms during real-backend/quality-runner phases. SendMessage to a "completed" agent
+  RESUMES it (recovers a lost completion).
+- **Rogue-fork tree-writer.** A dispatched `fork` inherited the coordinator's full context and
+  became a live parallel tree-writer instead of a safe discard, authoring a stale/fictitious
+  handover (`5a01b53`) that this rewrite supersedes. Fix-twice: `.planning/ORCHESTRATION.md` §11
+  now states forks are never a safe no-op placeholder.
+- **`ci-green-on-main` headSha race** — see §1 item 8 bullet. Cross-check `headSha` manually
+  until the probe itself is fixed.
+
+## 4. Filed noticings this session (not restated in full — see the files)
+
+- `.planning/milestones/v0.14.0-phases/surprises-intake/part-03.md`: p93 CREATE-recovery
+  non-convergence (HIGH, item 7), B1/attach-topology doc-lie (HIGH, folded into item 6), ADF
+  empty-body data loss (HIGH, item 4b), B3 coverage-hollow attach-sync gate (MEDIUM, folded into
+  item 4a's binding acceptance criterion + design §8), `ci-green-on-main` headSha race (HIGH,
+  item 8), litmus-flow.sh file-size warning band (MEDIUM), litmus marker-strip hygiene (LOW),
+  verdict-minting freshness guard (MEDIUM), contract-test trashed-page self-seed gap (MEDIUM).
+  All routed to v0.15.0 except the ones folded into this milestone's items 4/6/7/8 above.
 
 ---
 History lives in git — `git log` / `git show`, not restated here.

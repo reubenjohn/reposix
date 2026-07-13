@@ -1,9 +1,9 @@
 ---
 gsd_state_version: 1.0
 mode: serial-workstreams
-status: v0.13.1-shipped-v0.14.0-wave2-complete-awaiting-owner-tag
+status: v0.13.1-shipped-v0.14.0-fix-first-items-4-8-pending
 last_updated: "2026-07-13"
-last_activity: "2026-07-13 — v0.14.0 tag-remediation lane (successor #3): B4+B5 SHIPPED (4 commits, both missing pre-release-real-backend verifier scripts authored+tracked, self-test 4/4, catalog rows now grade NOT-VERIFIED/env-missing instead of 'verifier not found', B5 RFC3339 fix-twice). B1 RESOLVED: page 2818063 restored to current in TokenWorld (manager Branch-2 decision) → space 360450 back to known-good 3-page state, API-verified. Remaining: reposix-side vision-litmus re-confirm, B2 p93 (harness space-targeting fix) + B3 attach-sync re-run/re-persist, then item 4 tag sequence. Tag still BLOCKED; do NOT push tag."
+last_activity: "2026-07-13 — v0.14.0 D2+B3 CLOSED GREEN at e11ba96; tag work = OWNER fix-first items 4-8 (attach-lineage + adf fail-closed → litmus re-green → docs → p93 CREATE reassess → §4 mechanicals to READY-TO-TAG). TokenWorld = 2 durable pages (7766017/7798785); B1 is neither RESOLVED nor OPEN — folded into fix-first item 4a (design ratified BOUNDED-ELEGANT-FIX, .planning/milestones/v0.14.0-phases/attach-lineage-fix-design.md). Live runbook: .planning/SESSION-HANDOVER.md."
 workstreams:
   workstream_a:
     milestone: v0.13.0
@@ -24,10 +24,10 @@ workstreams:
   workstream_c:
     milestone: v0.14.0
     milestone_name: Wave-2 hardening
-    status: complete-awaiting-owner-tag  # P102-P112 (11/11) + out-of-band P113 ALL shipped GREEN as of 2026-07-12; ONLY the owner-cut aggregate v0.14.0 tag remains
+    status: fix-first-items-4-8-pending  # P102-P112 (11/11) + out-of-band P113 GREEN; D2+B3 CLOSED GREEN 2026-07-13 (e11ba96); owner ruled FIX-FIRST 2026-07-13 (CONSULT-DECISIONS.md) — items 4-8 (attach-lineage design ready, adf fail-closed, litmus re-green, docs, p93 CREATE reassess, §4 mechanicals) precede the aggregate tag
     phases_total: 11  # P102-P112 (P102 D2 hard gate; P103-P109 carried HIGHs + cheap wins; P110-P111 OP-8 +2 reservation; P112 OD-4 stub)
     phases_completed: 11  # P102-P112 ALL GREEN (P111 milestone-close grade c259718; P112 OD-4 launch-readiness scope stub landed) + out-of-band P113 GREEN
-    next_phase: none  # workstream C COMPLETE; the ONLY remaining item is the owner-cut aggregate v0.14.0 tag (owner-gated, NOT the orchestrator's)
+    next_phase: fix-first-4-8  # OWNER fix-first items 4-8 (attach-lineage 4a + adf fail-closed 4b -> litmus re-green -> docs -> p93 CREATE reassess -> Sec4 mechanicals); see .planning/SESSION-HANDOVER.md
     blocks_tag: false  # the v0.14.0 tag is owner-cut; orchestrator does not push
 ---
 
@@ -45,11 +45,14 @@ workstreams:
 
 ### Workstream C — v0.14.0 wave-2 hardening — 11/11 phases GREEN, but TAG BLOCKED
 
-> **READY-TO-TAG: NO — still BLOCKED (2026-07-13).** All 11 phases landed GREEN, but the
-> aggregate `v0.14.0` tag is blocked on **2 E4 owner-decision escalations** surfaced by the
-> tag-remediation lane (B1 mirror-refresh + p93 CREATE-recovery). Both root-caused with
-> committed evidence. The milestone `VERDICT.md` stays RED — do NOT touch it; no tag script
-> authored. Tag-remediation cursor (B1–B5) recorded at the end of this section.
+> **READY-TO-TAG: NO — BLOCKED on FIX-FIRST implementation, not a pending owner decision
+> (2026-07-13).** The owner RULED (`.planning/CONSULT-DECISIONS.md` 2026-07-13 [OWNER]
+> "fix-first calibration for tag-blocking product bugs"): tag-blocking product bugs default
+> to fix-first, no consult needed unless the fix turns architectural. D2 + B3 are CLOSED
+> GREEN (`e11ba96`). Remaining: OWNER fix-first items 4-8 — live runbook
+> `.planning/SESSION-HANDOVER.md` (supersedes the B1–B5 cursor below, which is historical
+> record only). The milestone `VERDICT.md` stays RED — do NOT touch it; no tag script
+> authored yet.
 
 Phase: **P112** (OD-4 launch-readiness SCOPE-BUT-DO-NOT-START stub) — LANDED. **11/11
 phases complete** as of 2026-07-12. **P102** (D2 self-safe dark-factory hardening
