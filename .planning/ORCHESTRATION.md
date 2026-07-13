@@ -357,7 +357,12 @@ self-attempts at the same gate → fable consult. Below the bar: decide-and-reco
 in `.planning/CONSULT-DECISIONS.md` (append-only; create on first use) — never
 idle, waiting for permission you don't need is itself a rot signal. Full DP
 mechanics, the fable consult-dispatch template, and the ledger entry format live
-in the decision-procedures skill named above.
+in the decision-procedures skill named above. **Tag-blocking product bugs → fix-first,
+no consult; escalate ONLY if the fix turns architectural (STOP + report to manager)**
+— owner ruling 2026-07-13, `.planning/CONSULT-DECISIONS.md`. **A `fork` is never a safe
+no-op or discard placeholder** — it inherits full context and becomes a live PARALLEL
+tree-writer (single-writer-discipline violation, §2). Never dispatch a fork to "throw
+away"; end the turn instead.
 
 ## 12. Honest corrective iteration (HCI)
 

@@ -160,3 +160,9 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 - Executor recommendation: (B) documented caveat + v0.15.0 fix. This CONTRADICTS the non-waivable constraint → owner must relax it.
 - Decision: OPEN — awaiting owner/manager.
 - Reversibility: recording is free; no product change pending the decision.
+
+## 2026-07-13 [OWNER] fix-first calibration for tag-blocking product bugs
+
+- **Decision:** Product fixes are AUTHORIZED before a milestone tag. Tag-blocking product bugs default to FIX-FIRST — no owner consult needed — UNLESS the fix turns architectural (then STOP + escalate to manager/owner). Supersedes the prior §4 HOLD and the non-waivable-B1 bind. Relayed by the manager under standing tag authority (2026-07-13).
+- **Supersedes:** the `.planning/SESSION-HANDOVER.md` §3/§4 "no product/defect fix mid-tag-sequence" HOLD (successor #5 handover), and resolves the OPEN `2026-07-12 [OWNER] B1 vision-litmus: blessed self-heal proven insufficient — relax non-waivable, or authorize mid-sequence litmus-substrate redesign?` entry above — B1 is now folded into the fix-first item-4a lane (attach-lineage fix), not a standalone waiver/redesign choice.
+- **Reversibility:** Fully reversible — a calibration rule, not a specific mutation; each individual fix still passes its own sim-first/tests/code-review gates before landing, and a fix that turns out architectural still escalates per the exception clause.
