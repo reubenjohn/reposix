@@ -90,9 +90,15 @@ case "$GITHUB_TARGET_REPO" in
     ;;
 esac
 
-# --- Build the binary the flow shells out to (one cargo invocation) --------
-cargo build -p reposix-cli --bin reposix >&2
+# --- Build the binaries the flow shells out to (one cargo invocation) ------
+# `reposix init github::...` shells out to the git-remote-reposix helper to
+# materialize the issues bucket, so build it too AND put target/debug on PATH
+# -- otherwise the init dies with "unable to find remote helper for 'reposix'"
+# BEFORE any GitHub REST call (matching milestone-close-vision-litmus.sh's
+# build+PATH pattern; still ONE cargo invocation).
+cargo build -p reposix-cli -p reposix-remote --bin reposix --bin git-remote-reposix >&2
 
+export PATH="${REPO_ROOT}/target/debug:${PATH}"   # git-remote-reposix must be resolvable by `reposix init`'s helper fetch
 BIN="${REPO_ROOT}/target/debug/reposix"
 export BIN GITHUB_TARGET_REPO
 

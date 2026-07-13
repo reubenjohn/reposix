@@ -155,13 +155,21 @@ if [ "${#missing[@]}" -gt 0 ]; then
 fi
 
 # --- 2. Sanctioned-target guard (OD-2 hard-FAIL, NOT 75) -------------------
-# This row MUTATES the backend (appends to a real page), so ONLY TokenWorld
-# is sanctioned for it -- unlike the read-only attach-sync-real-backend row,
-# which also permits the REPOSIX durable-fixture space alias.
+# This row MUTATES the backend (appends to a real page), so ONLY the single
+# sanctioned TokenWorld space is allowed. That one space has TWO valid
+# spellings that BOTH resolve to the SAME space id 360450: its display-name/
+# active-alias "TokenWorld" and its Atlassian key "REPOSIX"
+# (docs/reference/testing-targets.md). The real pre-release-real-backend
+# cadence drives the space via its KEY "REPOSIX" (as do the litmus +
+# attach-sync verifiers), so both spellings MUST be accepted or this guard
+# could never pass under the real env. Any OTHER space is a hard-FAIL. The
+# protected durable fixtures 7766017/7798785 stay never-editable regardless
+# of spelling -- enforced fail-closed PRE-mutation by _t4_assert_safe_push_diff
+# (lib/t4-real-backend-flow.sh), which aborts any push diff touching either id.
 SPACE="${REPOSIX_CONFLUENCE_SPACE:-TokenWorld}"
 case "$SPACE" in
-  TokenWorld) ;;
-  *) hard_fail_exit "non-sanctioned Confluence space '${SPACE}' -- only TokenWorld is sanctioned for this mutating row (docs/reference/testing-targets.md)" ;;
+  TokenWorld | REPOSIX) ;;
+  *) hard_fail_exit "non-sanctioned Confluence space '${SPACE}' -- only the sanctioned TokenWorld space is allowed for this mutating row, addressable by its display-name/alias 'TokenWorld' or its Atlassian key 'REPOSIX' (both resolve to space id 360450, docs/reference/testing-targets.md)" ;;
 esac
 TENANT="${REPOSIX_CONFLUENCE_TENANT}"
 if [ "$TENANT" != "reuben-john" ]; then
