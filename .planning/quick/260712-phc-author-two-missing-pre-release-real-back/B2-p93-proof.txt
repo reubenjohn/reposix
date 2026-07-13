@@ -1,0 +1,77 @@
+B2 (v0.14.0 tag-remediation lane, STEP 2) — p93 harness space-targeting fix
+===========================================================================
+Row: agent-ux/p93-partial-failure-recovery-real-confluence
+Verifier: quality/gates/agent-ux/p93-partial-failure-recovery-real-confluence.sh
+Date: 2026-07-13  (two credentialed runs against Confluence TokenWorld)
+
+FIX APPLIED (the B2 root cause, cleared)
+----------------------------------------
+The verifier read `SPACE="${REPOSIX_CONFLUENCE_SPACE:-TokenWorld}"`, which picked up
+REPOSIX from the ambient .env (the READ-ONLY durable fixture space), then a
+sanctioned-target `case` hard-FAILed `exit 1` because REPOSIX != TokenWorld — so the
+row SELF-REJECTED under normal creds and could never run. Since this row CREATES +
+MUTATES Confluence pages, TokenWorld is the ONLY sanctioned target for it. The block was
+replaced with a teaching comment + a single line:
+
+    export REPOSIX_CONFLUENCE_SPACE=TokenWorld
+
+Pinning is strictly SAFER than rejecting: the smoke can now only ever mutate the
+sanctioned space, whatever .env points at. Confirmed no dangling `$SPACE` remains
+(grep: only the pin line + a comment reference).
+
+VERIFY-AGAINST-REALITY: the pin WORKS, but the row still does NOT pass
+--------------------------------------------------------------------
+Two credentialed runs (2026-07-13T02:45:32Z, 02:48:08Z), both VERIFIER_EXIT=1.
+The pin cleared the self-reject: the smoke now reaches the REAL TokenWorld backend
+(previously it exit-1'd at the case block before any cargo test). Push 1 asserts
+(agent_flow_real.rs:657-661 — partial-fail + `some-actions-failed`) PASSED both runs, so
+page A LANDED in TokenWorld — TokenWorld mutation CONFIRMED (sanctioned).
+
+A DEEPER, PREVIOUSLY-MASKED failure now surfaces and is DETERMINISTIC (identical both
+runs), so it is NOT a real-backend consistency flake:
+
+    thread 'partial_failure_recovery_real_confluence' panicked at
+      crates/reposix-cli/tests/agent_flow_real.rs:690:5:
+    push 2 (recovery) must succeed and converge;
+      stdout=error refs/heads/main some-actions-failed
+    test result: FAILED. 0 passed; 1 failed; ... finished in 3.9s
+
+Push 2 is the RECOVERY push: it re-sends page A (already landed) + page B (now with a
+valid parent). PRECHECK B is supposed to diff away the content-equivalent already-landed
+page A and replan only page B → converge (`ok refs/heads/main`). Instead it reports
+`some-actions-failed`. Strong hypothesis: PRECHECK B does not diff away the already-
+landed page A against real Confluence, so page A gets a duplicate-title CREATE that
+Confluence rejects (Confluence enforces unique titles within a space) — a real-backend
+recovery-convergence gap the wiremock sim twin (crates/reposix-remote/tests/
+partial_failure_recovery.rs) does not model. Load-bearing helper/PRECHECK-B protocol +
+real-backend semantics → filed, NOT eager-fixed (see NOTICED item in SURPRISES-INTAKE).
+
+OUTCOME
+-------
+- B2 fix (pin to TokenWorld): APPLIED + COMMITTED. Correct + necessary + strictly safer.
+- B2 STATUS: PARTIALLY RESOLVED. The self-reject (the documented B2 root cause) is
+  cleared and the smoke runs against the sanctioned backend. The p93 row still does NOT
+  grade PASS (exit 1, not NOT-VERIFIED — creds present) due to the deeper recovery-
+  convergence failure above. The tag remains BLOCKED by p93 for this NEW reason.
+- Test-hygiene noticing: on the recovery-fail path the smoke leaves an orphan
+  "p93 smoke A (kind=test <ts>)" page in TokenWorld each run (page A lands, recovery
+  never cleans up). Two orphans from these two runs — titled per the docs/reference/
+  testing-targets.md cleanup convention for a human sweep.
+
+Raw per-run transcripts (gitignored per-run snapshots, embedded here as committed
+evidence): quality/reports/transcripts/p93-partial-failure-recovery-real-confluence.txt
+Run-2 verbatim:
+
+argv: cargo test -p reposix-cli --test agent_flow_real partial_failure_recovery_real_confluence -- --ignored --exact
+ts: 2026-07-13T02:48:08Z
+cwd: /home/reuben/workspace/reposix
+exit_code: 101
+--- STDOUT ---
+running 1 test
+test partial_failure_recovery_real_confluence ... FAILED
+---- partial_failure_recovery_real_confluence stdout ----
+thread 'partial_failure_recovery_real_confluence' panicked at crates/reposix-cli/tests/agent_flow_real.rs:690:5:
+push 2 (recovery) must succeed and converge; stdout=error refs/heads/main some-actions-failed
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 11 filtered out; finished in 3.91s
+--- STDERR ---
+error: test failed, to rerun pass `-p reposix-cli --test agent_flow_real`

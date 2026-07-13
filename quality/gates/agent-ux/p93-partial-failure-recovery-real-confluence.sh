@@ -11,8 +11,9 @@
 # env-gate / sanctioned-target / transcript convention verbatim.
 #
 # Env-gated per OD-2 (PROTOCOL.md): creds/allowlist unset -> exit 75
-# (NOT-VERIFIED, fail-closed, NEVER skip-as-pass). Non-sanctioned target ->
-# hard FAIL exit 1 (never 75). Creds set + smoke fails -> hard FAIL exit 1.
+# (NOT-VERIFIED, fail-closed, NEVER skip-as-pass). The target space is PINNED
+# to the sanctioned TokenWorld (see the pin block below) -- the smoke can only
+# ever mutate the sanctioned space. Creds set + smoke fails -> hard FAIL exit 1.
 set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." &> /dev/null && pwd)"
@@ -39,19 +40,21 @@ if [ -z "${REPOSIX_ALLOWED_ORIGINS:-}" ]; then
   exit 75
 fi
 
-# --- Sanctioned-target assertion (OD-2 hard-FAIL, NOT 75) ------------------
-# Only TokenWorld (the "go crazy, it's safe" mutation space) is sanctioned
-# for this row -- it creates + mutates pages (a bad-parent Create + a
-# content-equivalent retry), unlike the read-only attach-sync-real-backend
-# smoke which also permits the durable-fixture REPOSIX space.
-SPACE="${REPOSIX_CONFLUENCE_SPACE:-TokenWorld}"
-case "$SPACE" in
-  TokenWorld) ;;
-  *)
-    echo "FAIL: non-sanctioned Confluence space '$SPACE' -- only TokenWorld is sanctioned for this mutating row (docs/reference/testing-targets.md)" >&2
-    exit 1
-    ;;
-esac
+# --- Pin the sanctioned mutation target (fix-twice) ------------------------
+# This row CREATES + MUTATES Confluence pages (a bad-parent Create + a
+# content-equivalent retry), so TokenWorld -- the owner-sanctioned "go crazy,
+# it's safe" scratch space -- is the ONLY sanctioned target for it (unlike the
+# read-only attach-sync-real-backend smoke, which also permits the durable
+# REPOSIX fixture space). The ambient `.env` points REPOSIX_CONFLUENCE_SPACE at
+# the READ-ONLY REPOSIX fixture; the earlier version READ that var and then
+# hard-FAILed because REPOSIX != TokenWorld -- self-rejecting under normal
+# creds. PINNING to TokenWorld is strictly SAFER than rejecting: the smoke can
+# then ONLY ever mutate the sanctioned space, whatever `.env` points at. The
+# underlying `partial_failure_recovery_real_confluence` smoke resolves its
+# space from this exact env var (crates/reposix-cli/tests/agent_flow_real.rs
+# confluence_test_space(); default TokenWorld), so exporting it here binds the
+# real backend target. (docs/reference/testing-targets.md)
+export REPOSIX_CONFLUENCE_SPACE=TokenWorld
 
 # --- Build the binaries the smoke shells out to (one cargo invocation) ----
 cargo build -p reposix-cli --bin reposix >&2
