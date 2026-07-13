@@ -252,3 +252,26 @@ mirror record `pages/2818063.md` is intentionally kept, so no mirror surgery is
 owed — but the Action remains broken for any future mirror catch-up.
 
 **STATUS:** OPEN — routed to v0.15.0, mirror-sync Action / P84 `cargo binstall reposix-cli` install-path fix. Recovery meanwhile = drive an SoT-changing bus push (`docs/concepts/dvcs-topology.md`), NOT `reposix sync --reconcile`.
+
+## 2026-07-13 | discovered-by: item-5 DIAGNOSTIC lane (v0.14.0 tag critical path) | severity: HIGH (core) + LOW×3 (tangents)
+
+Root-causing the item-5 RED surfaced that **`reposix-confluence` cannot parse the REAL
+Confluence v2 ADF body** — the API string-encodes `body.atlas_doc_format.value` (a JSON
+string) but `ConfBodyAdf.value` is `serde_json::Value` (expects an object), so every real
+page reads `adf_to_markdown: root node type must be "doc", got ""`. This is the CORE
+tag-blocker fix (BOUNDED); full diagnosis + fix-sketch + executed evidence in
+`.planning/milestones/v0.14.0-phases/evidence/item5-RED-diagnosis-2026-07-13.md`. NOT
+deferred — it is the fix-first lane's target. Tangential fixable noticings (LOW, safe to
+defer to v0.15.0), sketched in the report §6:
+- **Lying wiremock ADF fixtures** — `client.rs:928` `page_json_adf` + contract tests encode
+  the ADF value as an OBJECT; the real API string-encodes it, so the whole body-read path is
+  green against a shape the backend never sends (the "verify against reality" gap that let
+  item 4b sentinel 100% of real pages). Fix-twice with the core fix.
+- **`run_helper_export_real` discards helper stderr** (`agent_flow_real.rs:720-724`) → real
+  push failures surface as bare `some-actions-failed` with zero per-action detail. Capture +
+  print stderr on assert failure.
+- **`reposix refresh <tree>` silently defaults to the sim** even in an attached confluence
+  tree (hits `127.0.0.1:7878/projects/demo`, `Connection refused`) instead of the configured
+  `reposix::confluence` remote — teaching-free.
+
+**STATUS:** OPEN — core ADF-parse fix routed to the item-5 fix-first lane (BOUNDED); the 3 tangents routed to v0.15.0. See the diagnosis report for file:line + repro.
