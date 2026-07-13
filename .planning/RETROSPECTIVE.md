@@ -87,6 +87,78 @@ GOOD-TO-HAVES-02 under a live waiver).
   dedicated v0.15.0 design phase keeps v0.14.0 an honest, completed milestone rather than
   ballooning it under a tag deadline.
 
+### Tag-prep arc (fix-first items 4–8) — item-5 ADF regression, litmus non-idempotency, and the three tag rulings
+
+P102–P113 closed the milestone BODY; getting from there to a tag took a second arc
+(successors #6–#13, 2026-07-13) working fix-first items 4–8 against the real TokenWorld
+backend. The 8 `part-03.md` intakes it produced: a real-Confluence partial-failure
+CREATE-recovery non-convergence (routed to item-7's WAIVE below); the documented
+`git pull --rebase && git push` DVCS recovery not covering the vanilla-clone+attach
+topology (OPEN→v0.15.0); the ADF empty-body silent data-loss fallback (RESOLVED-in-item-4b,
+`d1cc811`, fail-closed sentinel + recovery-naming); a Confluence contract test that
+hard-panics on a trashed durable page instead of self-seeding (OPEN→v0.15.0); a
+`litmus-flow.sh` file-size near-miss and marker-litter hygiene gap (both OPEN→v0.15.0); a
+B3 re-run proving `attach-sync-real-backend`'s PASS is coverage-hollow (never exercises the
+`refs/reposix/origin/main` round-trip — OPEN→v0.15.0); and a `code/ci-green-on-main` P0 gate
+race (grades on `gh run list`'s most-recent row without pinning `headSha`, so it can
+silently PASS the prior commit's green — OPEN→v0.15.0, mitigated this session by manual
+SHA cross-check).
+
+The core tag-blocker was the item-5 diagnostic finding: `reposix-confluence` could not
+parse ANY real Confluence page. Fixed at `49666eb` — root cause was that the Confluence
+Cloud v2 API string-encodes `body.atlas_doc_format.value` as a JSON *string*, while
+`ConfBodyAdf.value` deserialized it as an object, so `adf_root_type` always read `""` and
+tripped item-4b's fail-closed unreadable-ADF sentinel on every real page (blocking p93 +
+the vision litmus). The fix added a manual `Deserialize` that decodes the string-encoded
+value while keeping non-JSON-string input verbatim (the fail-closed guard preserved, not
+weakened) — plus a fix-twice correction of the wiremock fixtures, which had been
+object-encoding ADF and thus validating a shape the live API never sends. A DP-2
+mechanism-verification review (`item5-fix-review-2026-07-13.md`) confirmed the mechanism
+PASS and the fail-closed guard PASS, but found the new "durable real-TokenWorld twin"
+regression test was **vacuous and misnamed**: it called `list_records` (which fetches
+empty bodies, no `body-format`) instead of `get_record`, so it would stay green even
+against the original buggy object-deserializer. That HIGH finding plus three MED/LOW
+findings became the item-5 test-fix lane: **5a** (`c7ae07a`) made the real-TokenWorld
+twin non-vacuous via `get_record`; **5b** (`e504121`) fixed the sibling `mini_e2e.rs`
+wiremock fixture still object-encoding ADF; **5c** (`c2eb2ad`) defaulted `ConfBodyAdf`'s
+`value` to `Null` to avert a list-wide DoS from one malformed page; **5d** (`ad62dd3`,
+`d660e6e`) fixed the mirror script's circular verify-against-itself and additive-only
+overlay, then trimmed it back under the file-size cap.
+
+Getting to READY-TO-TAG required three MANAGER rulings plus one OPEN git-floor
+escalation, each carried verbatim per the tag-prep charter:
+
+> litmus is non-idempotent against its own GitHub mirror fan-out (pre-write client tree, not post-write materialized snapshot) — a pre-existing ADR-010 RBF-LR-04 fan-out characteristic, not a v0.14.0 regression. Product fix (mirror-sync pushing the post-write snapshot) routed to v0.15.0. The interim op — one clean `refresh-tokenworld-mirror.sh` run before the 9th probe — legitimately grades item-5 GREEN for this tag.
+> — Ruling #2 (E2/ADR valve), litmus non-idempotency, RULED-DEFER→v0.15.0
+
+> p93 is GREEN as an UPDATE-recovery proof against live TokenWorld (`1c424d7`). It does NOT cover CREATE-recovery: a partial-fail whose landed action was a create against an id-assigning backend genuinely does not converge. This is the owner-signed WAIVED known limitation of ADR-010 §3 / RBF-LR-03, hand-recoverable, routed to v0.15.0.
+> — Item-7 CREATE-recovery WAIVED flag, resolved DEFER→v0.15.0
+
+Ruling #3 (E3 valve, OPTION A) then authorized fixing the two remaining
+`pre-release-real-backend` cadence rows as genuine harness gaps, not product regressions
+or scope surgery — its four binding guardrails: (1) **t4** accepts the sanctioned space
+KEY `REPOSIX`, keeps the fail-closed pre-mutation placement, and adds tenant +
+protected-id validation so the durable pair stays structurally untouchable; (2)
+**github-front-door** gets `git-remote-reposix` onto the harness PATH without weakening
+the test; (3) **fix-it-twice** — correct both rows' stale `owner_hint` prose in the same
+commit, row status left runner-minted, never hand-set; (4) the **re-run decision rule** —
+a PRODUCT-reason t4 failure means HALT + escalate to the manager with the transcript (no
+waive, no rushed fix); another harness gap means a bounded fix + autonomous re-run.
+Executed and proven at `cb8ad11` (both gaps FIXED, both PROVEN). The re-run then surfaced
+a THIRD, unanticipated gap: the VM's only git binary is 2.25.1, below the 2.34 floor `t4`
+needs for its two-writer conflict+refetch scenario — an environment limit, not a product
+regression, with no ≥2.34 git reachable without an interactive-sudo VM-wide upgrade.
+Manager Ruling #4 resolved it Option B, with three binding conditions:
+
+> 1. t4 row stays runner-minted NOT-VERIFIED — NO waiver, NO catalog surgery, NO gate-policy code change. The honest cadence result on record is 5 PASS / 0 FAIL / 1 NOT-VERIFIED (t4, git 2.25.1 < 2.34 env floor, exit 75 precondition-not-met, bailed pre-mutation).
+> 2. The verdict re-mint is GREEN-WITH-RECORDED-CAVEATS and must NEVER claim cadence exit-0. It records the 5/0/1 result + the caveat: t4's two-writer conflict+refetch scenario is un-runnable on THIS VM (env floor, not product; sim twin green in CI; litmus P0 + p93 P0 PASSED against live TokenWorld; `reposix doctor` itself treats sub-2.34 as WARN).
+> 3. Option A (VM git upgrade, interactive sudo) is RAISEd to the owner — do NOT attempt it.
+> — Ruling #4 (E3 valve), t4 git-floor caveat, RULED OPTION-B, commit `dcf49d4`
+
+The tag's honest posture: v0.14.0 ships **GREEN-WITH-RECORDED-CAVEATS** — litmus P0 + p93
+P0 PASS against live TokenWorld; t4 NOT-VERIFIED, env-floored; CREATE-recovery WAIVED to
+v0.15.0.
+
 ---
 
 ## Calibration: v0.13.0 wind-down — right-size rigor, lean on git
