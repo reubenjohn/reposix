@@ -34,7 +34,7 @@
 
 ## Split index (OP-8 file-size drain)
 
-This ledger approached the milestone-hygiene 44000 B ceiling (`quality/gates/agent-ux/p111-milestone-hygiene.sh` assert E) and was split into 2 per-part child files under `surprises-intake/` via `scripts/split_ledger.py` (byte-exact round-trip verified). Every entry is preserved verbatim; append new entries to the last part (or a new part) and add the title here. All 17 v0.14.0 entries are terminal (RESOLVED / DEFERRED) — zero OPEN.
+This ledger approached the milestone-hygiene 44000 B ceiling (`quality/gates/agent-ux/p111-milestone-hygiene.sh` assert E) and was split into 2 per-part child files under `surprises-intake/` via `scripts/split_ledger.py` (byte-exact round-trip verified). Every entry is preserved verbatim; append new entries to the last part (or a new part) and add the title here. All 19 v0.14.0 entries are terminal (RESOLVED / DEFERRED) — zero OPEN.
 
 - [`surprises-intake/part-01.md`](surprises-intake/part-01.md) — 10 entries:
   - 2026-07-11 23:00 | discovered-by: P102 (adversarial code-review) | severity: HIGH | RESOLVED-in-P102
@@ -47,7 +47,7 @@ This ledger approached the milestone-hygiene 44000 B ceiling (`quality/gates/age
   - 2026-07-12 07:40 | discovered-by: v0.14.0 health-triage lane (main gate sweep) | severity: LOW | RESOLVED
   - 2026-07-12 07:13 | discovered-by: P104 (github-helper-path 404 fix verifier) | severity: MEDIUM | DEFERRED-TO-v0.15.0
   - 2026-07-12 08:10 | discovered-by: P105 (RBF-LR-03 rebase-recovery research) | severity: HIGH | RESOLVED
-- [`surprises-intake/part-02.md`](surprises-intake/part-02.md) — 7 entries:
+- [`surprises-intake/part-02.md`](surprises-intake/part-02.md) — 9 entries:
   - 2026-07-12 08:35 | discovered-by: P105 (RBF-LR-03 rebase-recovery gate, Lane 2) | severity: HIGH | RESOLVED-in-P105
   - 2026-07-12 09:40 | discovered-by: P105 (RBF-LR-03 docs fix-twice lane, ownership noticing) | severity: MEDIUM | DEFERRED-TO-v0.15.0
   - 2026-07-12 | discovered-by: D2 re-seal Wave 1 (shell/planning lane) | severity: HIGH | DEFERRED-TO-v0.15.0
@@ -55,3 +55,5 @@ This ledger approached the milestone-hygiene 44000 B ceiling (`quality/gates/age
   - 2026-07-12 | discovered-by: GSD-quick (release-plz RED fix) | severity: MEDIUM | DEFERRED
   - 2026-07-12 | discovered-by: GSD-quick (fleet-safety untrack fix) | severity: MEDIUM | RESOLVED
   - 2026-07-12 20:59 | discovered-by: P111 (milestone-close CI-wait) | severity: MEDIUM | RESOLVED
+  - 2026-07-13 | discovered-by: B1 (tag-remediation, mirror-reconcile investigation) | severity: MEDIUM | DEFERRED (pending B1 mirror-refresh manager decision)
+  - 2026-07-13 | discovered-by: B1 (tag-remediation, mirror-reconcile investigation) | severity: MEDIUM | DEFERRED (pending B1 mirror-refresh manager decision)

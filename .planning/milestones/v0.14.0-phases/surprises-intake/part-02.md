@@ -293,3 +293,68 @@ rewrite would falsify). `scripts/ci-wait.sh` implements the already-`completed` 
 proven real: `scripts/ci-wait.sh 29207305260` returns exit 0 in ~1s against a concluded GREEN
 run — the exact case that hung `gh run watch` at `bulqmsyrv` / `biy9yxt33`. The catalog-first
 contract row `agent-ux/p111-ci-wait-helper` (minted FAIL) flips PASS on this commit.
+
+---
+
+## 2026-07-13 | discovered-by: B1 (v0.14.0 tag-remediation lane, mirror-reconcile investigation) | severity: MEDIUM
+
+**Title:** Root CLAUDE.md § "Mirror-head refresh promise" conflates two distinct "mirrors"; the `reposix sync --reconcile` manual-catch-up prose is empirically wrong. **[fix-twice]**
+
+**What:** The root `CLAUDE.md` § "Mirror-head refresh promise (qualified, ADR-010 RBF-LR-04)"
+conflates TWO different things both called "mirror": (a) the cache's `refs/mirrors/<sot>-head`
+OBSERVABILITY ref inside the local bare-repo cache, and (b) the EXTERNAL GitHub mirror REPO
+whose content a fresh `git clone` actually reads. The § implies `reposix sync --reconcile` is
+the operator catch-up move for a stale mirror, but B1 established empirically that `--reconcile`
+heals ONLY the LOCAL cache (`oid_map` / cursor) plus the cache-internal `refs/mirrors/*` ref —
+it does NOT refresh the external GitHub mirror repo content that a fresh clone reads. So the
+"Manual catch-up if it ever needs a forced refresh: `reposix sync --reconcile`" prose points
+operators at a command that will not fix the symptom they are chasing (a stale external mirror).
+Cross-refs to correct in lockstep: `docs/concepts/dvcs-topology.md` (same manual-catch-up claim).
+
+**Why out-of-scope / why FILE not eager-fix:** the CORRECT rewrite depends on a PENDING MANAGER
+DECISION on the mirror-refresh mechanism (escalated by B1) — until the owner blesses what the
+authoritative external-mirror-refresh path actually IS (a dedicated `reposix` verb? webhook-driven?
+a documented "clone reads SoT-current, mirror lags" acceptance?), any doc edit would just encode a
+guess. Bottom-up triage disposition: FILE, resolve AFTER the manager blesses the mirror-refresh
+mechanism (B1 escalation).
+
+**Sketched resolution:** once the manager blesses the mechanism, rewrite the § to (1) name the two
+mirrors distinctly (cache observability ref vs external GitHub mirror repo content), (2) state which
+refresh path is authoritative for the EXTERNAL mirror, and (3) correct the `--reconcile` catch-up
+claim to its true scope (rebuilds local cache `oid_map`/cursor + the `refs/mirrors/*` cache ref, NOT
+external mirror repo content). Fix-twice: doc + the `docs/concepts/dvcs-topology.md` twin in the same
+change.
+
+**STATUS:** DEFERRED — pending the B1 mirror-refresh manager decision. Resolve AFTER the manager
+blesses the mirror-refresh mechanism (B1 escalation).
+
+---
+
+## 2026-07-13 | discovered-by: B1 (v0.14.0 tag-remediation lane, mirror-reconcile investigation) | severity: MEDIUM
+
+**Title:** Remote-helper lost-update teaching string prints `git pull --rebase`, but `attach` wires pull to the STALE mirror `origin` — the printed recovery does not resolve backend drift (Rust-compiler-grade-UX violation). **[fix-twice]**
+
+**What:** On a lost-update rejection the `reposix-remote` git helper prints a teaching string of the
+form `Run: git pull --rebase`. But `reposix attach` wires `fetch`/`pull` to read from the STALE
+mirror `origin` — so a naive `git pull --rebase` re-pulls the SAME stale version and does NOT
+resolve the backend drift that triggered the rejection. Un-sticking actually requires fetching
+backend-current THROUGH the reposix bus remote (SoT-authoritative), not the mirror `origin`. The
+printed recovery command therefore does not teach the WORKING recovery — a direct violation of the
+project's Rust-compiler-grade-UX north star (every user-facing error must give a copy-paste recovery
+command that actually works).
+
+**Why out-of-scope / why FILE not eager-fix:** the correct teaching string names the authoritative
+backend-current fetch path, which is exactly the mirror-refresh mechanism the manager decision (B1
+escalation) is still pending on — editing the helper string now would hard-code an unratified
+recovery move into load-bearing helper code. Bottom-up triage disposition: FILE.
+
+**Sketched resolution:** once the manager blesses the mechanism, update the helper's lost-update
+teaching string (`crates/reposix-remote`) to name the working recovery — fetch backend-current via
+the reposix bus remote (SoT-authoritative), NOT `git pull --rebase` against the stale mirror
+`origin` — with a copy-paste command per the error-message convention (`crates/CLAUDE.md` §
+Error-message convention). Fix-twice: helper string + the `docs/guides/troubleshooting.md` §
+"DVCS push/pull issues" recovery prose in the same change. Add a test asserting the string names
+the bus-remote fetch.
+
+**STATUS:** DEFERRED — pending the B1 mirror-refresh manager decision. Resolve AFTER the manager
+blesses the mirror-refresh mechanism (B1 escalation).
