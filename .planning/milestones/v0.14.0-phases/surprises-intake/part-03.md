@@ -239,3 +239,16 @@ human-readable teaching suffix. Key the refuse check on the machine-unique token
 so a legitimately-quoted body no longer false-positives. Keep the fail-closed direction.
 
 **STATUS:** OPEN — routed to v0.15.0, taint-surface hardening (LOW; fail-closed today, escape hatch = strip the marker line from the offending body).
+
+## 2026-07-13 | discovered-by: item-5 RESTORE lane (v0.14.0 tag critical path) — carried from successor #7 | severity: MEDIUM
+
+The sanctioned mirror-sync GitHub Action's only run (`25223195636`, 2026-05-01)
+FAILED at `cargo binstall reposix-cli` (P84 crates.io substrate gap). Consequence:
+the external `TokenWorld` mirror cannot be refreshed by the Action — it refreshes
+ONLY via a bus push (`reposix::<sot>?mirror=<url>`, SoT-first then mirror
+best-effort). `reposix sync --reconcile` rebuilds only the LOCAL cache, never the
+external mirror head (prior `[SELF] B1` finding). Under the item-5 RESTORE the
+mirror record `pages/2818063.md` is intentionally kept, so no mirror surgery is
+owed — but the Action remains broken for any future mirror catch-up.
+
+**STATUS:** OPEN — routed to v0.15.0, mirror-sync Action / P84 `cargo binstall reposix-cli` install-path fix. Recovery meanwhile = drive an SoT-changing bus push (`docs/concepts/dvcs-topology.md`), NOT `reposix sync --reconcile`.
