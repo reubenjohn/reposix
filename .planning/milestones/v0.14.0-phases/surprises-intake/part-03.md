@@ -100,7 +100,19 @@ translation (surface a loud error) rather than silently emptying the body when t
 type check fails, OR gain a lossless round-trip fallback that preserves the original ADF bytes
 for write-back. Add a regression fixture with a non-`doc`-root ADF body.
 
-**STATUS:** OPEN — routed to v0.15.0.
+**STATUS:** RESOLVED-in-item-4b (commit d1cc811, 2026-07-13) — fail-closed per
+attach-lineage-fix-design.md §6. `translate.rs` + `types.rs` no longer substitute
+`String::new()` on ADF failure: they prefer the raw `storage` HTML fallback, else substitute a
+conspicuous NON-EMPTY teaching sentinel (`adf::unreadable_adf_body`, marker
+`[reposix: unreadable ADF body — see recovery]`) naming the root type + page id with a
+copy-paste storage-refetch recovery. The export path (`create_record`/`update_record`) FAILS
+CLOSED on the sentinel via `adf::is_unreadable_adf_sentinel`, so a placeholder can never PATCH
+the SoT to empty. Regression coverage added (adf.rs / translate.rs / client.rs unit tests,
+including a PUT-mock `expect(0)` proof that no empty-body write escapes). The empty-root-type
+`got ""` case in this entry maps to a sentinel naming root type `""`. Residual (noted, NOT part
+of the item-4b hazard): a page fetched with NEITHER adf NOR storage still translates to an empty
+body by design (a genuinely-empty page is not a silent substitution) — see the item-4b executor's
+NOTICED report.
 
 ## 2026-07-12 21:15 | discovered-by: PRIORITY-ZERO red-CI sweep | severity: MEDIUM
 
