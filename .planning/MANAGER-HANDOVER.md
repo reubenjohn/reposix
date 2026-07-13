@@ -51,31 +51,43 @@ does reposix work itself. Keep this file lean; git history is the archive.
    rely on it — fix or drop before use); a long single-line `agent send` becomes a
    "[Pasted text]" block that Enter won't submit while background subagents hold input.
 
-## Live state (refresh at every rotation) — 2026-07-13, manager rotation #4
+## Live state (refresh at every rotation) — 2026-07-13, manager rotation #5 (mid-session refresh)
 
-- **v0.14.0 TAG critical path: item 5 APPROVED-RESTORE (execute) — workhorse successor
-  #8 IN FLIGHT in w1:p5** (launched post-`6938024`, charter =
-  `.planning/SESSION-HANDOVER.md`, execution-ready spec + 6 binding guardrails):
-  RESTORE sacrificial page `2818063` (untrash via `scripts/confluence_tokenworld.py
-  restore`, NO mirror surgery) → litmus re-green on the UNMODIFIED Pattern-C harness →
-  item 8 §4 mechanicals (OP-9 triage of the 8 OPEN intake items + RETROSPECTIVE
-  distillation BLOCKS ratification; ci-green-on-main probe has a KNOWN headSha race —
-  cross-check manually) → **STOP at READY-TO-TAG**. Manager then VERIFIES against
-  reality (probe exit 0, verdict, ratification, CI green headSha-matched, no tag
-  pushed, TokenWorld = 2 protected + 1 sacrificial current) and PUSHES the v0.14.0
-  tag under standing authority.
-- **Fixture doctrine CORRECTED (manager ruling, recorded `c46ae55`):** TokenWorld =
-  2 PROTECTED pages never deleted (`7766017`+`7798785`) + **1 SACRIFICIAL EDITABLE**
-  (`2818063`, current or trashed between runs). "Exactly 2 pages" was WRONG — the
-  unmodified litmus needs the editable 3rd (`litmus-flow.sh:64-72`). The earlier DROP
-  ruling was superseded by RESTORE after successor #7 HALTED execution with
-  code-verified proof (exemplary prove-before-mutate; nothing was mutated under the
-  bad ruling).
-- Items 4a/4b/6 SHIPPED GREEN @ `22a7777` (DP-2 repro-first honored; §8 real-backend
-  arm ran); item 7 = RESOLVED-DEFER (p93 = architectural RBF-LR-03, owner-waived
-  ADR-010 — flag PROMINENTLY in the READY-TO-TAG report); intake recount honest at
-  8 OPEN (`466b6a6`).
-- **Manager monitor:** task `bbz6wred9` (60s poll; ORIGIN-MOVED / BLOCKED /
+- **v0.14.0 TAG critical path: item-5 coherence RED root-caused + FIXED.** Real
+  `reposix-confluence` regression — Confluence v2 string-encodes the ADF `value`;
+  fix = manual Deserialize at `types.rs:171` (`49666eb`) + mirror tooling
+  `scripts/refresh-tokenworld-mirror.sh` (`95ed061`); mechanism-verified by fresh
+  DP-2 review (`a424546`: MECHANISM-CORRECT + fail-closed PASS); litmus+p93
+  self-verified PASS live. Evidence:
+  `.planning/milestones/v0.14.0-phases/evidence/item5-RED-{diagnosis,fix-review}-2026-07-13.md`.
+- **Workhorse successor #10 IN FLIGHT in w1:p5** (charter `.planning/SESSION-HANDOVER.md`):
+  STEP 0 record manager DEFER ruling in CONSULT-DECISIONS → STEP 2 test-fix lane
+  (HIGH vacuous real-twin test, sibling fixture lie, serde-default list-DoS,
+  mirror-script correctness) → guardrail-5 docs wave (testing-targets.md +
+  `/reposix-quality-refresh` in the SAME wave) → unbiased 9th-probe verifier →
+  item-8 mechanicals (OP-9 retro distillation BLOCKS ratification; ci-green
+  headSha race — cross-check manually) → **STOP at READY-TO-TAG**. Manager then
+  VERIFIES against reality (probe exit 0 or recorded caveat call, verdict +
+  ratification, CI green headSha-matched, no tag pushed, TokenWorld = 2 protected
+  + `2818063` current) and PUSHES the v0.14.0 tag under standing authority.
+- **MANAGER RULING #2 (E2/ADR valve, 2026-07-13): litmus non-idempotency = DEFER;
+  tag proceeds.** The ADR-010 RBF-LR-04 inline fan-out pushes the PRE-write client
+  tree — the mirror never converges to SoT after a push (executed proof, intake
+  part-03); litmus repeatability needs `refresh-tokenworld-mirror.sh` before each
+  run (documented interim op). Pre-existing v0.13.0-shipped behavior, SoT never
+  wrong, mirror best-effort by design → NOT a v0.14.0 regression → not
+  tag-blocking. Product fix (POST-write materialized-snapshot fan-out) is
+  ADR-class → v0.15.0 + owner RAISE. Caveat carried VERBATIM in READY-TO-TAG
+  report + RETROSPECTIVE. Doc-truth: the "bus-push catches the mirror up" claim
+  (root CLAUDE.md / dvcs-topology.md) is proven non-convergent — correction
+  bundled WITH the v0.15.0 ADR decision; truth meanwhile lives in the intake row +
+  RETROSPECTIVE.
+- TokenWorld fixture doctrine: 2 PROTECTED never deleted (`7766017`+`7798785`) +
+  1 SACRIFICIAL EDITABLE (`2818063`, at v11 after the fix lane); orphan `9994241`
+  DELETED. Item 7 = RESOLVED-DEFER (owner-waived CREATE-recovery RBF-LR-03 — flag
+  VERBATIM in the READY-TO-TAG report); 8 OPEN intakes route v0.15.0, none
+  tag-blocking (+ new rows from the diagnosis/fix lanes, all routed).
+- **Manager monitor:** task `bu1jqyeic` (60s poll; ORIGIN-MOVED / BLOCKED /
   IDLE-STABLE / one-shot STALL / CI-RED). Incoming manager: TaskStop it, re-arm your
   own (script recoverable via TaskStop output or git history of this file).
 - **Ops lessons (rotation #3):** commit the manager-handover refresh BEFORE launching
@@ -115,6 +127,9 @@ does reposix work itself. Keep this file lean; git history is the archive.
   (5) herdr: a digit/letter alone answers menus; long `agent send` needs a second
   Enter after ~2s; text after `❯` is often ghost-text — never treat it as pending
   input.
-- **Standing RAISEs for the owner:** P112 ROADMAP prose-vs-artifact reconcile at
-  /gsd-new-milestone; D5 fold-release-plz-into-CI (CONSULT-DECISIONS). Monitor
-  craft + P112 launch-scope spine: see git history of this file (`61af3ba`).
+- **Standing RAISEs for the owner:** ADR-010 RBF-LR-04 mirror fan-out redesign
+  (push POST-write materialized snapshot; litmus non-idempotency, intake part-03)
+  + the entangled dvcs-topology/root-CLAUDE.md "bus-push catch-up" doc correction;
+  P112 ROADMAP prose-vs-artifact reconcile at /gsd-new-milestone; D5
+  fold-release-plz-into-CI (CONSULT-DECISIONS). Monitor craft + P112 launch-scope
+  spine: see git history of this file (`61af3ba`).
