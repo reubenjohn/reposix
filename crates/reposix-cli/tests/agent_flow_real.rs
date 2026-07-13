@@ -201,6 +201,55 @@ fn dark_factory_real_confluence() {
     );
 }
 
+/// Regression (v0.14.0 item 5): the Confluence v2 API string-encodes
+/// `body.atlas_doc_format.value`; reposix must decode it and return REAL page
+/// content — never the item-4b unreadable-ADF placeholder — for a live page
+/// whose ADF is valid. This is the durable real-TokenWorld twin of the
+/// wiremock decode regression in `reposix-confluence::translate` tests: the
+/// diagnostic's executed repro (every real page sentinelled → push blocked)
+/// is locked here so it can never silently return.
+#[test]
+#[ignore = "real-backend; requires ATLASSIAN_API_KEY/EMAIL/REPOSIX_CONFLUENCE_TENANT"]
+fn get_record_real_confluence_body_is_not_unreadable_sentinel() {
+    skip_if_no_env!(
+        "ATLASSIAN_API_KEY",
+        "ATLASSIAN_EMAIL",
+        "REPOSIX_CONFLUENCE_TENANT"
+    );
+    let tenant = std::env::var("REPOSIX_CONFLUENCE_TENANT").expect("env-presence checked above");
+    let space = confluence_test_space();
+    let allowed = format!("http://127.0.0.1:*,https://{tenant}.atlassian.net");
+    std::env::set_var("REPOSIX_ALLOWED_ORIGINS", &allowed);
+    let creds = ConfluenceCreds {
+        email: std::env::var("ATLASSIAN_EMAIL").expect("checked"),
+        api_token: std::env::var("ATLASSIAN_API_KEY").expect("checked"),
+    };
+    let backend = ConfluenceBackend::new(creds, &tenant).expect("backend");
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let records = rt
+        .block_on(backend.list_records(&space))
+        .expect("list_records against live TokenWorld");
+    assert!(
+        !records.is_empty(),
+        "TokenWorld space {space} must expose at least one page"
+    );
+    for r in &records {
+        // A valid-ADF live page must translate to real markdown, not the
+        // fail-closed placeholder that blocks push round-trips. If ANY page
+        // comes back as the sentinel, the string-encoded ADF decode regressed.
+        assert!(
+            !reposix_confluence::adf::is_unreadable_adf_sentinel(&r.body),
+            "page {} came back as the unreadable-ADF sentinel — string-encoded \
+             ADF decode regressed:\n{}",
+            r.id.0,
+            r.body
+        );
+    }
+}
+
 /// JIRA `TEST` (or override) real-backend init smoke.
 #[test]
 #[ignore = "real-backend; requires JIRA_EMAIL/JIRA_API_TOKEN/REPOSIX_JIRA_INSTANCE"]

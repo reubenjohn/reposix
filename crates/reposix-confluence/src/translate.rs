@@ -394,6 +394,100 @@ mod tests {
         assert!(record.body.contains("7766017"), "must name the page id");
     }
 
+    // -------- v0.14.0 item 5: string-encoded ADF value decode (DP-2) --------
+
+    #[test]
+    // test-name-honesty: ok — "real markdown" = real ADF CONTENT (vs the item-4b
+    // sentinel), NOT a real backend; this is a pure serde_json decode + translate
+    // unit test with no network (the live-TokenWorld twin is the #[ignore] smoke
+    // get_record_real_confluence_body_is_not_unreadable_sentinel in agent_flow_real.rs).
+    fn translate_decodes_string_encoded_adf_value_to_real_markdown() {
+        // The Confluence Cloud v2 API STRING-encodes `body.atlas_doc_format.value`
+        // (a JSON string whose contents are the ADF document). A prior bug typed
+        // `value` as an object, so every real page read `""` for its root type and
+        // was replaced by the item-4b unreadable-ADF sentinel — blocking push
+        // round-trips (p93 + the vision litmus). This locks the real wire shape:
+        // deserialize a string-encoded value through `ConfPage` and assert it
+        // translates to REAL Markdown, never the sentinel.
+        let adf_string = json!({
+            "type": "doc",
+            "version": 1,
+            "content": [
+                {"type": "heading", "attrs": {"level": 1},
+                 "content": [{"type": "text", "text": "Real Title"}]},
+                {"type": "paragraph",
+                 "content": [{"type": "text", "text": "Real body content."}]}
+            ]
+        })
+        .to_string();
+        let wire = json!({
+            "id": "2818063",
+            "status": "current",
+            "title": "reposix demo space Home",
+            "createdAt": "2026-04-13T00:00:00Z",
+            "version": {"number": 7, "createdAt": "2026-04-13T00:00:00Z"},
+            "body": {
+                "atlas_doc_format": {
+                    "value": adf_string,
+                    "representation": "atlas_doc_format"
+                }
+            }
+        });
+        let page: ConfPage = serde_json::from_value(wire).expect("deserialize real-shape page");
+        let record = translate(page).expect("translate");
+        assert!(
+            record.body.contains("# Real Title"),
+            "string-encoded ADF must decode to real markdown, got: {}",
+            record.body
+        );
+        assert!(
+            record.body.contains("Real body content."),
+            "expected the real paragraph text, got: {}",
+            record.body
+        );
+        assert!(
+            !crate::adf::is_unreadable_adf_sentinel(&record.body),
+            "a valid real ADF body must NOT become the fail-closed sentinel, got: {}",
+            record.body
+        );
+    }
+
+    #[test]
+    fn translate_non_json_string_adf_value_still_sentinels() {
+        // Fail-closed preserved: a `value` string that is NOT decodable JSON
+        // (genuinely malformed ADF) must still degrade to the item-4b sentinel,
+        // never silently become real-looking content. The string decode only
+        // fixes the parse; it does not weaken the guard.
+        let wire = json!({
+            "id": "999",
+            "status": "current",
+            "title": "t",
+            "createdAt": "2026-04-13T00:00:00Z",
+            "version": {"number": 1, "createdAt": "2026-04-13T00:00:00Z"},
+            "body": {"atlas_doc_format": {"value": "not json at all"}}
+        });
+        let page: ConfPage = serde_json::from_value(wire).expect("deserialize");
+        let record = translate(page).expect("translate must not error");
+        assert!(
+            crate::adf::is_unreadable_adf_sentinel(&record.body),
+            "a malformed ADF value must still hit the fail-closed sentinel, got: {}",
+            record.body
+        );
+    }
+
+    #[test]
+    fn conf_body_adf_deserializes_string_encoded_value_to_object() {
+        // Unit-level lock on the decode itself: the wrapper accepts the live
+        // API's string-encoded value and exposes the decoded OBJECT.
+        let wire = json!({"value": "{\"type\":\"doc\",\"version\":1,\"content\":[]}"});
+        let adf: ConfBodyAdf = serde_json::from_value(wire).expect("decode string-encoded adf");
+        assert_eq!(
+            crate::adf::adf_root_type(&adf.value),
+            "doc",
+            "string-encoded value must decode to an object with root type doc"
+        );
+    }
+
     #[test]
     fn parse_next_cursor_extracts_relative_path() {
         let body = json!({

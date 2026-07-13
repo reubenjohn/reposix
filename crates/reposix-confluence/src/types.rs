@@ -153,9 +153,10 @@ pub struct ConfPageBody {
     #[serde(default)]
     pub storage: Option<ConfBodyStorage>,
     /// ADF body returned when `?body-format=atlas_doc_format` is requested.
-    /// The value is a JSON object (not a string) — we keep it as `Value` so
-    /// that [`crate::adf::adf_to_markdown`] can walk it without a second
-    /// parse step.
+    /// The live v2 API **string-encodes** this — `value` arrives as a JSON
+    /// *string* whose contents are themselves JSON. [`ConfBodyAdf`]'s manual
+    /// `Deserialize` decodes that string into the real ADF object so
+    /// [`crate::adf::adf_to_markdown`] can walk it (see the type's docs).
     #[serde(default, rename = "atlas_doc_format")]
     pub adf: Option<ConfBodyAdf>,
 }
@@ -167,11 +168,56 @@ pub struct ConfBodyStorage {
     pub value: String,
 }
 
-/// ADF body wrapper. The `value` field holds the full ADF JSON document.
-#[derive(Debug, Clone, Deserialize)]
+/// ADF body wrapper.
+///
+/// # Wire encoding — the value is a JSON *string*, not an object
+///
+/// The Confluence Cloud REST v2 API **string-encodes**
+/// `body.atlas_doc_format.value`: it arrives as a JSON string whose contents
+/// are themselves a JSON ADF document
+/// (e.g. `"value": "{\"type\":\"doc\",\"version\":1,\"content\":[…]}"`),
+/// NOT as a nested object. The manual [`Deserialize`] impl below decodes that
+/// string into the real ADF object so [`crate::adf::adf_to_markdown`] can walk
+/// it directly.
+///
+/// A `value` that is not a decodable JSON string (a genuinely malformed or
+/// empty body) is kept verbatim, so the fail-closed unreadable-ADF sentinel
+/// (item 4b) still fires downstream rather than silently masking the problem —
+/// the decode never weakens that guard.
+#[derive(Debug, Clone)]
 pub struct ConfBodyAdf {
-    /// Full ADF JSON document (e.g. `{"type":"doc","version":1,"content":[…]}`).
+    /// Full **decoded** ADF JSON document (`{"type":"doc",…}`), string-decoded
+    /// from the API's `atlas_doc_format.value` at deserialize time.
     pub value: serde_json::Value,
+}
+
+impl<'de> Deserialize<'de> for ConfBodyAdf {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        // Deserialize the raw wrapper first (`value` + any ignored siblings
+        // such as `representation`), then normalize the string-encoded value.
+        #[derive(Deserialize)]
+        struct Raw {
+            value: serde_json::Value,
+        }
+        let raw = Raw::deserialize(deserializer)?;
+        // The v2 API string-encodes the ADF document; decode the JSON string to
+        // the real object. Keep any non-JSON-string value verbatim so a
+        // malformed/empty body still reaches the fail-closed sentinel (item 4b)
+        // instead of being silently blanked.
+        let value = match raw.value {
+            serde_json::Value::String(s) => match serde_json::from_str(&s) {
+                Ok(decoded) => decoded,
+                // Not decodable JSON → keep the raw string so `adf_root_type`
+                // reads "" and the fail-closed sentinel fires (item 4b).
+                Err(_) => serde_json::Value::String(s),
+            },
+            other => other,
+        };
+        Ok(ConfBodyAdf { value })
+    }
 }
 
 /// A Confluence v2 comment — either inline or footer.

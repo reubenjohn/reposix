@@ -907,13 +907,20 @@ mod tests {
     /// `adf_doc` should be a `{"type":"doc",...}` value that
     /// `adf_to_markdown` can parse. Used by tests that exercise the
     /// ADF read path (C4).
+    ///
+    /// FIDELITY (v0.14.0 item 5): the live Confluence v2 API **string-encodes**
+    /// `atlas_doc_format.value` — it is a JSON *string* containing the ADF, not
+    /// a nested object. This fixture string-encodes to match, so tests exercise
+    /// the SAME decode path as production. A prior object-encoded fixture was a
+    /// lie that let the string-decode bug ship (sentinelling every real page).
     fn page_json_adf(
         id: &str,
         status: &str,
         title: &str,
         adf_doc: &serde_json::Value,
     ) -> serde_json::Value {
-        let adf_doc = adf_doc.clone();
+        // Match the live API: the value is a JSON string, not an object.
+        let adf_value = adf_doc.to_string();
         json!({
             "id": id,
             "status": status,
@@ -926,7 +933,7 @@ mod tests {
             },
             "body": {
                 "atlas_doc_format": {
-                    "value": adf_doc,
+                    "value": adf_value,
                     "representation": "atlas_doc_format",
                 }
             },
@@ -2658,7 +2665,8 @@ mod tests {
                     "parentCommentId": null,
                     "resolutionStatus": "open",
                     "version": {"createdAt": "2026-01-15T10:30:00Z", "number": 1, "authorId": "user-a"},
-                    "body": {"atlas_doc_format": {"value": {"type":"doc","version":1,"content":[]}}}
+                    // Live API string-encodes atlas_doc_format.value (v0.14.0 item 5 fidelity fix).
+                    "body": {"atlas_doc_format": {"value": json!({"type":"doc","version":1,"content":[]}).to_string()}}
                 }],
                 "_links": {}
             })))
@@ -2670,7 +2678,8 @@ mod tests {
                     "id": "222",
                     "pageId": "98765",
                     "version": {"createdAt": "2026-02-01T09:00:00Z", "number": 1, "authorId": "user-b"},
-                    "body": {"atlas_doc_format": {"value": {"type":"doc","version":1,"content":[]}}}
+                    // Live API string-encodes atlas_doc_format.value (v0.14.0 item 5 fidelity fix).
+                    "body": {"atlas_doc_format": {"value": json!({"type":"doc","version":1,"content":[]}).to_string()}}
                 }],
                 "_links": {}
             })))
