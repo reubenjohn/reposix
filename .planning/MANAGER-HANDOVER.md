@@ -100,6 +100,29 @@ does reposix work itself. Keep this file lean; git history is the archive.
   tree (code.json delta + phases/21, phases/22, scripts/demos, scripts/dev,
   verifications/docs-repro) — triage/land-or-drop it as part of the serialization
   cleanup, via workhorse.
+- **OWNER DECISION (2026-07-12, reality-check §5 Q1): FUND LIVE MCP RE-MEASUREMENT
+  against a real backend.** (a) Retire/relabel the FUSE-era ~150k→~2k (98.7%) figure
+  everywhere it anchors — docs/research/initial-report/performance.md:9,
+  initial-report.md:78, .planning/PROJECT.md Context. (b) Commission honest
+  re-measurement: a real MCP server (e.g. Atlassian/GitHub MCP) driven against a
+  sanctioned real backend (TokenWorld Confluence / reubenjohn-reposix GitHub issues;
+  creds verified, targets pre-authorized), real count_tokens pipeline, vs the
+  equivalent reposix session on the SAME backend — wired into CI per the §4
+  benchmark-honesty milestone (live baseline is now FUNDED, not optional). Egress
+  allowlist applies to the MCP server too. (c) INTERIM (before the live number
+  exists): hero surfaces — README "Three measured numbers" header + docs/index.md:17
+  card — get the synthetic-baseline qualifier; never let the old framing ride to
+  launch. Record as `[OWNER]` in CONSULT-DECISIONS via workhorse (with the other §5
+  answers when ratified). Manager sequencing call: record now; docs-touching interim
+  edits AFTER the v0.14.0 tag lands (avoid churning probe/CI state pre-tag).
+- **Reality-check audit (2026-07-12):** owner moving the file to
+  `.planning/milestones/audits/2026-07-12-reality-check.md` themselves (manager backup:
+  `/home/reuben/reposix-reality-check-2026-07-12.bak.md`; watcher armed). Working arc
+  recommendation = §4 arc D (ratchet-first), manager endorses; ARC SELECTION IS THE
+  OWNER'S — no defect-fixing lanes until ratified. §5 status: Q1 + Q2 owner-decided;
+  Q3–Q9 have manager-proposed answers awaiting ratification (see session transcript /
+  final scoping doc). Fold chosen arc + §5 answers into PROJECT.md re-anchor +
+  launch-readiness /gsd-new-milestone.
 - **v0.13.0 tag ALSO DELEGATED (owner, 2026-07-12, via AskUserQuestion):** same
   end-to-end delegation — execute the v0.13.0 OWNER PRE-TAG ACTIONS
   (§ Workstream A of the v0.13.0 ROADMAP/STATE) → verify → push the v0.13.0 tag,
