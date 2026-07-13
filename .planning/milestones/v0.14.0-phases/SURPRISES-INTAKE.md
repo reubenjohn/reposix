@@ -34,7 +34,7 @@
 
 ## Split index (OP-8 file-size drain)
 
-This ledger approached the milestone-hygiene 44000 B ceiling (`quality/gates/agent-ux/p111-milestone-hygiene.sh` assert E) and was split into 2 per-part child files under `surprises-intake/` via `scripts/split_ledger.py` (byte-exact round-trip verified). Every entry is preserved verbatim; append new entries to the last part (or a new part) and add the title here. All 20 v0.14.0 entries are terminal (RESOLVED / DEFERRED) — zero OPEN.
+This ledger approached the milestone-hygiene 44000 B ceiling (`quality/gates/agent-ux/p111-milestone-hygiene.sh` assert E) and was split into 3 per-part child files under `surprises-intake/` via `scripts/split_ledger.py` (byte-exact round-trip verified). Every entry is preserved verbatim; append new entries to the last part (or a new part) and add the title here. **Cross-part recount (2026-07-13, honesty fix for OP-9 ratification):** of 29 v0.14.0 entries across all 3 parts, 21 are terminal (RESOLVED / DEFERRED) and **8 are OPEN** — all 8 live in `part-03.md` (lines 82, 134, 149, 164, 186, 198, 210, 241; each already tagged `OPEN` in that file's own `**STATUS:**` field and in the per-line bullets below). The previous "zero OPEN" claim on this line was stale/wrong and did not match the part files it summarizes — do not repeat that error; re-derive this count from the parts' `STATUS:` fields, not from memory, whenever entries are added.
 
 - [`surprises-intake/part-01.md`](surprises-intake/part-01.md) — 10 entries:
   - 2026-07-11 23:00 | discovered-by: P102 (adversarial code-review) | severity: HIGH | RESOLVED-in-P102
