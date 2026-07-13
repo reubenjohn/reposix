@@ -92,8 +92,12 @@ awareness beyond `init` / `attach`.
 - **Mirror-head refresh promise (qualified, ADR-010 RBF-LR-04).** The mirror-head ref
   refreshes on every push that changes the SoT (`files_touched > 0`); a push that
   changes nothing in the SoT is a semantic no-op — skipped because there is nothing new
-  to refresh, not a coherence shortcut. Manual catch-up if it ever needs a forced
-  refresh: `reposix sync --reconcile`. Detail: `docs/concepts/dvcs-topology.md`.
+  to refresh, not a coherence shortcut. If the external mirror ever lags the SoT (an
+  out-of-band write moved the backend), catch it up by re-driving an SoT-changing push
+  through the documented recovery — `git fetch <bus-remote> && git rebase && git push`
+  (the mirror fan-out refreshes the mirror head on that successful push), NOT `reposix
+  sync --reconcile`, which rebuilds only the LOCAL cache and leaves the external mirror
+  head byte-identical. Detail: `docs/concepts/dvcs-topology.md`.
 
 **Git: `2.34+` recommended** for reliable partial-clone reads / `stateless-connect`
 (`extensions.partialClone`); the simulator quickstart runs on older git — verified

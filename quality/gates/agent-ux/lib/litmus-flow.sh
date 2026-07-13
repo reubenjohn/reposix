@@ -86,12 +86,29 @@ _litmus_flow() {
   git -C "$tree" add -A && git -C "$tree" commit --quiet -m "litmus edit ${marker}"
   pass "edit + commit succeeded"
 
+  # Out-of-band SoT drift self-heal (manager decision D1, aligns GTH-V15-09).
+  # The `origin` mirror can lag the backend (a peer push / direct REST edit
+  # advanced the SoT after our last mirror sync), so our push carries a stale
+  # base and the helper rejects it with git's "fetch first". On rejection run
+  # the ONE documented recovery — `git pull --rebase && git push` from
+  # docs/guides/troubleshooting.md § "DVCS push/pull issues" — against the BUS
+  # remote `reposix` (backend-current SoT), NEVER `origin` (the stale mirror;
+  # after attach `branch.<b>.remote` still points at origin for fetch, so the
+  # recovery is remote-explicit on purpose). BOUNDED: exactly one
+  # fetch-rebase-retry; a rejection persisting past it is a REAL coherence bug
+  # that MUST surface red — we never loop or swallow it.
   echo "\$ git push reposix main"
-  if ! git -C "$tree" push reposix main; then
-    fail "git push reposix main failed (real helper round-trip). Inspect stderr above for the teaching string."
-    return 1
+  if git -C "$tree" push reposix main; then
+    pass "git push reposix main succeeded (real helper round-trip, not a synthetic stream)"
+  else
+    echo "↻ push rejected — running documented recovery: git pull --rebase reposix main + retry (out-of-band SoT drift; troubleshooting.md § DVCS push/pull)" >&2
+    if git -C "$tree" pull --rebase reposix main && git -C "$tree" push reposix main; then
+      pass "git push reposix main succeeded after the documented recovery (fetch reposix + rebase + retry self-healed out-of-band SoT drift)"
+    else
+      fail "git push reposix main still rejected after the ONE documented recovery (git pull --rebase reposix main + retry) — a rejection persisting past the bounded self-heal is a REAL coherence bug, not mirror lag. Recover manually: cd \"$tree\" && git pull --rebase reposix main && git push reposix main."
+      return 1
+    fi
   fi
-  pass "git push reposix main succeeded (real helper round-trip, not a synthetic stream)"
 
   # STEP 4 box 5: server-side confirm via REST — a DIRECT Confluence read,
   # independent of every reposix code path. (`reposix list` is deliberately
