@@ -310,7 +310,14 @@ left `== SoT`. The latter is a mirror-sync coherence change — the architectura
 signal reserved for the MANAGER (per the FIX-lane guardrail: do NOT balloon into
 a product/mirror-sync code change). NOT fixed here.
 
-**STATUS:** OPEN — routed to MANAGER (architectural). Interim op-recovery:
-`bash scripts/refresh-tokenworld-mirror.sh` immediately before any litmus /
-`pre-release-real-backend` run. Product option (fan-out pushes post-write
-materialized snapshot) routed to v0.15.0 mirror-sync hardening.
+**STATUS:** RULED-DEFER→v0.15.0 (2026-07-13 [MANAGER] Ruling #2, E2/ADR valve,
+commit `a905bd0`; recorded `.planning/CONSULT-DECISIONS.md`). Grounds: pre-existing
+ADR-010 RBF-LR-04 fan-out characteristic (shipped identically in v0.13.0, NOT a v0.14.0
+regression); SoT never wrong, mirror best-effort by design; product fix (fan-out pushes
+POST-write materialized snapshot) is ADR-class → v0.15.0 first-class + on the standing
+owner RAISE list. The v0.14.0 tag PROCEEDS. Interim op-recovery (used by the 9th-probe
+verifier as the DOCUMENTED pre-step): `bash scripts/refresh-tokenworld-mirror.sh`
+immediately before any litmus / `pre-release-real-backend` run. Caveat carried VERBATIM
+in the READY-TO-TAG report + v0.14.0 RETROSPECTIVE. Doc-truth correction of the
+"bus-push catches the mirror up" claim (root `CLAUDE.md` / `dvcs-topology.md`) is bundled
+WITH the v0.15.0 product change, NOT churned pre-tag.

@@ -10,6 +10,18 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 
 ---
 
+## 2026-07-13 [MANAGER] Ruling #2 (E2/ADR valve) — litmus non-idempotency DEFER → v0.15.0; the v0.14.0 tag PROCEEDS
+
+- **Question escalated (successor #9→#10 handover, part-03 non-idempotency row):** does the vision litmus's non-idempotency against its own GitHub mirror BLOCK the v0.14.0 tag, or DEFER to v0.15.0?
+- **Decision: DEFER — the v0.14.0 tag PROCEEDS.** Grounds:
+  1. Non-idempotency is a **PRE-EXISTING ADR-010 RBF-LR-04 fan-out characteristic** (the inline mirror fan-out pushes the PRE-write client tree), shipped identically in v0.13.0 — NOT a v0.14.0 regression. SoT is never wrong; the mirror is best-effort by design.
+  2. The product fix (fan-out pushes the POST-write materialized snapshot) is **ADR-class/architectural → routed to v0.15.0 first-class** and is on the standing owner RAISE list (manager recorded, `a905bd0`). Do NOT redesign it this milestone.
+  3. **Probe honesty:** the 9th-probe verifier runs `scripts/refresh-tokenworld-mirror.sh` immediately before the litmus as the DOCUMENTED interim op; ONE clean run grades item-5 GREEN legitimately. Carry the non-idempotency caveat VERBATIM in the READY-TO-TAG report AND the v0.14.0 RETROSPECTIVE (alongside item-7's CREATE-recovery waiver).
+  4. **Doc-truth:** the "bus-push catches the mirror up" claim (root `CLAUDE.md` / `dvcs-topology.md`) is proven non-convergent — do NOT churn user docs pre-tag (the v0.15.0 ADR decision may change semantics); name the imprecision explicitly in the RETROSPECTIVE; the doc correction is bundled WITH the v0.15.0 product change.
+  5. **Consequence:** STEP-2(d) mirror-script correctness fixes (`set -e`, non-circular verification, deletion handling) are IN SCOPE and PRIORITIZED — the 9th probe's honesty depends on that script not lying.
+- **Reversibility:** process/scope decision; no product-code mutation. What would flip it: the manager reads the mirror fan-out as a PRODUCT path real users hit (not just the litmus harness) → it becomes a shipping coherence defect → BLOCK. Ruled not to.
+- **Evidence:** manager ruling commit `a905bd0`; part-03 non-idempotency row (RULED-DEFER→v0.15.0); `.planning/SESSION-HANDOVER.md` STEP 0.
+
 ## 2026-07-12 [OWNER] Shared-tree contention RESOLVED — session serialization (no parallel tree-writers, no worktree infra)
 
 - **Decision:** Multiple sessions/agents writing the shared working tree concurrently caused git index/commit races and mid-flight `TaskStop`s (v0.14.0 hygiene lane, 2026-07-12). Owner ruling: **serialize** — exactly one session/agent writes the shared tree at a time. No parallel sessions writing the shared tree; **no new worktree infrastructure** (rejected as over-engineering for the current single-machine autonomous cadence).
