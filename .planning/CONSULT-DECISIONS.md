@@ -10,6 +10,59 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 
 ---
 
+## 2026-07-13 [OWNER] v0.14.0 tag: pre-release-real-backend blocked by a THIRD gap — VM git 2.25.1 < 2.34 floors t4 NOT-VERIFIED (E1 system-git upgrade vs E3 gate-policy)
+
+- **Context:** Ruling #3 Option A executed at `cb8ad11`. BOTH anticipated harness gaps
+  FIXED + PROVEN: `github-front-door-real-backend` FAIL→PASS (helper `git-remote-reposix`
+  now built + on PATH); t4's space-KEY guard now accepts space KEY `REPOSIX` (id 360450,
+  alias TokenWorld) so t4 gets past the section-2 guard; owner_hints corrected + a lying
+  comment eager-fixed; row status left runner-minted. A fresh unbiased creds-loaded
+  re-run (`.env` sourced in-shell, mirror pre-refreshed) of `pre-release-real-backend
+  --persist` = **5 PASS / 0 FAIL / 1 NOT-VERIFIED → exit 1**. PASS:
+  `milestone-close-vision-litmus-real-backend` (P0),
+  `p93-partial-failure-recovery-real-confluence` (P0), `github-front-door-real-backend`
+  (P1), `attach-sync-real-backend` (P1), `cadence-pre-release-real-backend` (P1).
+  NOT-VERIFIED (exit 75): `t4-conflict-rebase-ancestry-real-backend` (P0) —
+  `asserts_failed ["git 2.25.1 < 2.34"]`, `skip_reason precondition-not-met`, gate at
+  `quality/gates/agent-ux/t4-conflict-rebase-ancestry-real-backend.sh:179-192`. This is a
+  THIRD, distinct gap Ruling #3 did not contemplate: an ENVIRONMENT floor, NOT a product
+  regression and NOT the space-KEY gap. TokenWorld end-state INTACT (2 protected
+  `7766017`/`7798785` + sacrificial `2818063`; t4 bailed pre-mutation, no residue).
+  Verifier reverted the `--persist` catalog writes (`git checkout -- quality/catalogs/`);
+  tree clean, HEAD unchanged at `cb8ad11`, CI green.
+- **Decision-pending:** owner/manager ruling between Option A (git upgrade) and Option B
+  (gate-policy acceptance) — see Options below. Coordinator HALTED, no unilateral action.
+- **Rationale (why NOT a bounded harness fix — guardrail-4 autonomy does not reach it):**
+  only git 2.25.1 exists on the VM (single binary `/usr/bin/git`); Ubuntu focal apt
+  Candidate is 2.25.1; NO ≥2.34 git anywhere to point the test at. Reaching ≥2.34 needs a
+  VM-wide system git upgrade (git-core PPA or source build) = E1 environment mutation
+  (not git-revertable, all sessions). PASSWORDLESS SUDO IS NOT AVAILABLE → the owner must
+  run any privileged install interactively (e.g. `! sudo ...`). The git-2.34 floor is
+  LEGITIMATE: root `CLAUDE.md` documents "Git 2.34+ recommended for reliable
+  partial-clone reads / stateless-connect"; below it the two-writer conflict+refetch
+  scenario is unreliable, so NOT-VERIFIED (not skip-as-pass) is correct per OD-2.
+- **Options:**
+  - **A (honors Ruling #3's "honest exit-0, no scope surgery"):** owner authorizes + runs
+    the VM git upgrade to ≥2.34 (interactive sudo), then a fresh creds-loaded verifier
+    re-runs the cadence — t4 executes its DESTRUCTIVE, already-pre-authorized
+    rebase-ancestry scenario for real → honest PASS (cadence exit-0, tag proceeds) OR a
+    genuine product FAIL (re-escalate with transcript). Also finally validates the
+    currently-unproven-on-this-VM space-KEY fix. Cost: a VM-wide system change + one more
+    destructive TokenWorld run (protected pair structurally guarded pre-mutation).
+  - **B (E3 gate-policy):** accept t4 NOT-VERIFIED as a documented ENVIRONMENT limitation
+    for the v0.14.0 tag — the named non-skippable 9th probe (litmus) AND p93 both PASSED
+    against live TokenWorld; t4's floor is env, not product, so reposix's real behavior
+    is not unproven, only this specific two-writer scenario is un-runnable on THIS VM.
+    This partially REOPENS Ruling #3's explicit "no P0 re-scope / no scope surgery"
+    stance, so it is the OWNER's to ratify, not the coordinator's.
+- **Coordinator recommendation:** A — most aligned with Ruling #3's emphatic "OD-2
+  honored via a REAL exit-0, not scope surgery." Needs owner action (interactive sudo).
+  If the owner declines the upgrade, B is a fresh gate-policy ratification.
+- **Reversibility:** no product code touched; `cb8ad11` is pure test-harness +
+  catalog-prose (git-revertable). No tag pushed.
+- **Status:** OPEN — awaiting manager/owner ruling. Coordinator HALTED per Ruling #3
+  guardrail-4 decision rule (escalate, no unilateral system mutation).
+
 ## 2026-07-13 [MANAGER] Ruling #3 (E3 valve) — OPTION A AUTHORIZED: fix both harness gaps → honest cadence exit-0
 
 - **Context:** item-5 is now GENUINELY GREEN — a fresh unbiased creds-loaded 9th-probe run
