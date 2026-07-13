@@ -43,7 +43,13 @@ workstreams:
 > queued post-tag items, and the superseded Workstream B (v0.13.2, QUEUED) narrative,
 > live in `.planning/STATE-history.md`.
 
-### Workstream C — v0.14.0 wave-2 hardening — COMPLETE (awaiting owner tag)
+### Workstream C — v0.14.0 wave-2 hardening — 11/11 phases GREEN, but TAG BLOCKED
+
+> **READY-TO-TAG: NO — still BLOCKED (2026-07-13).** All 11 phases landed GREEN, but the
+> aggregate `v0.14.0` tag is blocked on **2 E4 owner-decision escalations** surfaced by the
+> tag-remediation lane (B1 mirror-refresh + p93 CREATE-recovery). Both root-caused with
+> committed evidence. The milestone `VERDICT.md` stays RED — do NOT touch it; no tag script
+> authored. Tag-remediation cursor (B1–B5) recorded at the end of this section.
 
 Phase: **P112** (OD-4 launch-readiness SCOPE-BUT-DO-NOT-START stub) — LANDED. **11/11
 phases complete** as of 2026-07-12. **P102** (D2 self-safe dark-factory hardening
@@ -60,17 +66,42 @@ OD-4 launch-readiness pillars (asciinema hero demo, CI-verified honest headline 
 install-path excellence, Show-HN positioning kit), one line each, marked **DO-NOT-START** and
 deferred to a post-tag `/gsd-new-milestone` session — zero implementation, no verifier dispatch
 (lightweight owner ack suffices per ROADMAP P112).
-The ONLY remaining v0.14.0 item is the **owner-cut aggregate `v0.14.0` tag** — **owner-cut (NOT
+The remaining v0.14.0 item is the **owner-cut aggregate `v0.14.0` tag** — **owner-cut (NOT
 the orchestrator's)**, gated on owner ratification of
 `quality/reports/verdicts/milestone-v0.14.0/VERDICT.md` + the non-skippable owner-gated 9th probe
 (`pre-release-real-backend`, reads NOT-VERIFIED honestly when env unset). Do NOT push the tag.
+
+**Tag-remediation lane cursor (2026-07-13) — BLOCKED on 2 E4 owner decisions:**
+
+- **B1 (vision-litmus):** the operational `reposix sync --reconcile` fix from the brief is
+  **PROVEN INSUFFICIENT** — it heals only the local cache, NOT the external GitHub mirror repo
+  content. Litmus still exits 1 (matched=3, backend_deleted=0, but push rejected: mirror
+  `pages/2818063.md` v1 vs backend v7 lost-update deadlock). **Awaiting owner decision on the
+  mirror-refresh path.** Evidence:
+  `.planning/milestones/v0.14.0-phases/evidence/B1-mirror-reconcile-FINDINGS-2026-07-13.md`;
+  [SELF] ledger commit `a617740`.
+- **B2 (p93 row):** harness self-reject CLEARED (space pinned to TokenWorld, commit `311d7fe`)
+  — but that UNMASKED a PRE-EXISTING never-green failure. Row
+  `agent-ux/p93-partial-failure-recovery-real-confluence` was catalog-first scaffold
+  (NOT-VERIFIED, `last_verified: null`); first-ever credentialed run FAILS. Root cause:
+  CREATE-recovery is non-convergent against an id-assigning backend (Confluence assigns page
+  ids; recovery re-CREATEs a landed page → unique-title reject; sim twin green because it models
+  UPDATE-recovery). Bounded fix = HARNESS rewrite + teardown + correct the lying catalog assert
+  (<1h); underlying product gap FILED (exceeds <1h). **Awaiting owner decision:** bless the
+  harness rewrite (ship over the product gap) vs treat CREATE-recovery non-convergence as a
+  tag-blocking product defect. Pointers:
+  `.planning/quick/260712-phc-author-two-missing-pre-release-real-back/B2-p93-DIAGNOSIS.md`
+  (commit `526d697`); SURPRISES-INTAKE commit `ffb93ba`.
+- **B4 / B5:** remain CLOSED. **B3 (attach-sync):** NOT re-run (cadence blocked behind B1/p93).
+- **Cleanup owed:** 2 orphan `p93 smoke A` test pages left in TokenWorld — to be swept by
+  whichever fix lane adds teardown.
 
 ## Current Focus
 
 **Active milestones (SERIAL per OD-3 — A then C then B, per OD-4 resequencing):**
 
 - **Workstream A — v0.13.0 extended.** **CLOSED GREEN 2026-07-05 (P78–P97, 20/20 phases).** Shipped P78–P88 2026-05-01; extended 2026-05-08 with P89–P97 (real-backend frictions); milestone-close verdict at `quality/reports/verdicts/milestone-v0.13.0/VERDICT.md`. Tag v0.13.0 landed; v0.13.1 onboarding hotfix (P98–P101) additionally SHIPPED 2026-07-07 (tag `04640d5`). ROADMAP at `.planning/milestones/v0.13.0-phases/ROADMAP.md`.
-- **Workstream C — v0.14.0 wave-2 hardening.** COMPLETE — **11/11 phases GREEN** as of 2026-07-12 (P102–P112 + out-of-band P113; see § Workstream C above). P111 milestone-close graded GREEN (`c259718`); **P112** OD-4 launch-readiness scope stub LANDED (DO-NOT-START; deferred to a post-tag `/gsd-new-milestone` session). The ONLY remaining item is the **owner-cut aggregate v0.14.0 tag** (owner-gated; STOP at the tag boundary). ROADMAP at `.planning/milestones/v0.14.0-phases/ROADMAP.md`.
+- **Workstream C — v0.14.0 wave-2 hardening.** COMPLETE — **11/11 phases GREEN** as of 2026-07-12 (P102–P112 + out-of-band P113; see § Workstream C above). P111 milestone-close graded GREEN (`c259718`); **P112** OD-4 launch-readiness scope stub LANDED (DO-NOT-START; deferred to a post-tag `/gsd-new-milestone` session). **TAG BLOCKED (2026-07-13):** the aggregate v0.14.0 tag is NOT ready — blocked on 2 E4 owner-decision escalations (B1 mirror-refresh + p93 CREATE-recovery); milestone VERDICT stays RED. See § Workstream C above for the B1–B5 tag-remediation cursor. ROADMAP at `.planning/milestones/v0.14.0-phases/ROADMAP.md`.
 - **Workstream B — v0.13.2 cross-link-fidelity.** QUEUED behind workstream C (this OD-4 resequencing) AND the not-yet-scoped launch-readiness milestone. Original placeholder range P98–P107 shifts again when eventually replanned (renumber-on-insertion convention). ROADMAP at `.planning/milestones/v0.13.2-phases/ROADMAP.md`.
 
 **Last shipped milestone:** v0.12.1 (closed 2026-04-30). Verdict GREEN at `quality/reports/verdicts/milestone-v0.12.1/VERDICT.md` (commit 9ef348e).
