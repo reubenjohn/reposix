@@ -237,7 +237,9 @@ pub(crate) fn redact_url(raw: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{ConfBodyAdf, ConfBodyStorage, ConfPage, ConfPageBody, ConfVersion};
+    use crate::types::{
+        ConfBodyAdf, ConfBodyStorage, ConfPage, ConfPageBody, ConfPageList, ConfVersion,
+    };
     use serde_json::json;
 
     /// Build a `ConfPage` carrying a non-`doc` ADF body (which `adf_to_markdown`
@@ -486,6 +488,84 @@ mod tests {
             "doc",
             "string-encoded value must decode to an object with root type doc"
         );
+    }
+
+    #[test]
+    fn conf_page_list_with_empty_or_missing_adf_value_degrades_not_dos() {
+        // Regression (v0.14.0 item 5c — pre-existing list-wide DoS): a single
+        // page whose `atlas_doc_format` is `{}` (empty) or omits `value` must
+        // NOT fail the ENTIRE `ConfPageList` deserialize (client.rs
+        // `serde_json::from_value`) — that would blank the whole space off one
+        // malformed page. `#[serde(default)]` on the inner `Raw.value` defaults
+        // it to Null so the list stays intact and each bad page degrades to the
+        // fail-closed item-4b sentinel while its siblings list normally.
+        let good_value = json!({
+            "type": "doc", "version": 1,
+            "content": [{"type": "paragraph",
+                         "content": [{"type": "text", "text": "good content"}]}]
+        })
+        .to_string();
+        let wire = json!({
+            "results": [
+                {
+                    "id": "1001", "status": "current", "title": "good",
+                    "createdAt": "2026-04-13T00:00:00Z",
+                    "version": {"number": 3, "createdAt": "2026-04-13T00:00:00Z"},
+                    "body": {"atlas_doc_format": {"value": good_value,
+                                                  "representation": "atlas_doc_format"}}
+                },
+                {
+                    // Empty ADF wrapper `{}` — no `value` key at all.
+                    "id": "1002", "status": "current", "title": "empty-adf",
+                    "createdAt": "2026-04-13T00:00:00Z",
+                    "version": {"number": 1, "createdAt": "2026-04-13T00:00:00Z"},
+                    "body": {"atlas_doc_format": {}}
+                },
+                {
+                    // ADF wrapper present but `value` omitted (only representation).
+                    "id": "1003", "status": "current", "title": "missing-value",
+                    "createdAt": "2026-04-13T00:00:00Z",
+                    "version": {"number": 1, "createdAt": "2026-04-13T00:00:00Z"},
+                    "body": {"atlas_doc_format": {"representation": "atlas_doc_format"}}
+                }
+            ],
+            "_links": {}
+        });
+
+        // The WHOLE list must deserialize — one bad page never DoSes the rest.
+        let list: ConfPageList =
+            serde_json::from_value(wire).expect("empty/missing ADF value must NOT fail the list");
+        assert_eq!(
+            list.results.len(),
+            3,
+            "all three pages must survive the deserialize"
+        );
+
+        let mut pages = list.results.into_iter();
+        // Good page → real decoded markdown, never the sentinel.
+        let good = translate(pages.next().unwrap()).expect("translate good page");
+        assert!(
+            good.body.contains("good content")
+                && !crate::adf::is_unreadable_adf_sentinel(&good.body),
+            "good page must decode to real markdown, got: {}",
+            good.body
+        );
+        // Empty `{}` and missing-`value` pages → fail-closed sentinel (Null ADF
+        // root → adf_to_markdown Err → non-empty teaching placeholder), NEVER an
+        // empty body and NEVER a whole-list error.
+        for (id, page) in [
+            ("1002", pages.next().unwrap()),
+            ("1003", pages.next().unwrap()),
+        ] {
+            let rec =
+                translate(page).unwrap_or_else(|e| panic!("translate {id} must not error: {e:?}"));
+            assert!(
+                crate::adf::is_unreadable_adf_sentinel(&rec.body),
+                "page {id} (empty/missing ADF value) must degrade to the fail-closed \
+                 sentinel, got: {}",
+                rec.body
+            );
+        }
     }
 
     #[test]

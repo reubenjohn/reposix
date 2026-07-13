@@ -184,6 +184,12 @@ pub struct ConfBodyStorage {
 /// empty body) is kept verbatim, so the fail-closed unreadable-ADF sentinel
 /// (item 4b) still fires downstream rather than silently masking the problem —
 /// the decode never weakens that guard.
+///
+/// An entirely empty wrapper (`atlas_doc_format: {}`) or one that omits `value`
+/// decodes to `Null` (`value` is `#[serde(default)]` below) instead of failing
+/// the whole [`ConfPageList`] deserialize. That one page then hits the same
+/// fail-closed sentinel while its siblings still list — a single malformed page
+/// can never blank the entire space (list-wide `DoS` mitigation, item 5c).
 #[derive(Debug, Clone)]
 pub struct ConfBodyAdf {
     /// Full **decoded** ADF JSON document (`{"type":"doc",…}`), string-decoded
@@ -200,6 +206,16 @@ impl<'de> Deserialize<'de> for ConfBodyAdf {
         // such as `representation`), then normalize the string-encoded value.
         #[derive(Deserialize)]
         struct Raw {
+            // `#[serde(default)]` (→ `Value::Null`) is load-bearing, not
+            // cosmetic: without it a page whose `atlas_doc_format` is `{}`
+            // (or omits `value`) makes THIS deserialize fail with
+            // "missing field `value`", which bubbles up through `ConfPageList`
+            // and fails the ENTIRE list deserialize (client.rs `from_value`) —
+            // one malformed page would blank the whole space (list-wide DoS).
+            // Defaulting to Null keeps the list intact and lets that page
+            // degrade to the fail-closed item-4b sentinel (Null root type →
+            // `adf_to_markdown` Err → sentinel), never a whole-list error.
+            #[serde(default)]
             value: serde_json::Value,
         }
         let raw = Raw::deserialize(deserializer)?;
