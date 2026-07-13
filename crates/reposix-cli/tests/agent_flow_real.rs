@@ -204,13 +204,26 @@ fn dark_factory_real_confluence() {
 /// Regression (v0.14.0 item 5): the Confluence v2 API string-encodes
 /// `body.atlas_doc_format.value`; reposix must decode it and return REAL page
 /// content — never the item-4b unreadable-ADF placeholder — for a live page
-/// whose ADF is valid. This is the durable real-TokenWorld twin of the
-/// wiremock decode regression in `reposix-confluence::translate` tests: the
-/// diagnostic's executed repro (every real page sentinelled → push blocked)
-/// is locked here so it can never silently return.
+/// whose ADF is valid. This is the durable real-TokenWorld twin of the wiremock
+/// decode regression in `reposix-confluence::translate` tests.
+///
+/// ## Why this MUST call `get_record`, not `list_records`
+///
+/// The string-encoded-ADF decode path lives ONLY on the single-page GET
+/// (`?body-format=atlas_doc_format` — see `ConfluenceBackend::get_record`).
+/// `list_records` requests NO body-format, so every listed record carries an
+/// EMPTY body — asserting `!is_unreadable_adf_sentinel(&r.body)` over the list
+/// is VACUOUS: an empty string is not the sentinel, so the check passes even
+/// against the ORIGINAL buggy deserializer and never exercises the decode at
+/// all. This twin therefore drives `get_record` per id and makes a
+/// POSITIVE + NEGATIVE assertion on the DECODED body: under the bug every real
+/// page's `get_record` body WAS the sentinel (decode failed → root type read
+/// `""` → `adf_to_markdown` erred → fail-closed placeholder substituted), so
+/// the negative assertion is the true regression lock and the positive
+/// "at least one real page" assertion keeps the twin from passing vacuously.
 #[test]
 #[ignore = "real-backend; requires ATLASSIAN_API_KEY/EMAIL/REPOSIX_CONFLUENCE_TENANT"]
-fn get_record_real_confluence_body_is_not_unreadable_sentinel() {
+fn get_record_real_confluence_body_is_real_markdown_not_unreadable_sentinel() {
     skip_if_no_env!(
         "ATLASSIAN_API_KEY",
         "ATLASSIAN_EMAIL",
@@ -229,6 +242,8 @@ fn get_record_real_confluence_body_is_not_unreadable_sentinel() {
         .enable_all()
         .build()
         .expect("tokio runtime");
+    // list_records only to ENUMERATE ids (its bodies are empty — see the doc
+    // comment); the decode is exercised via get_record below.
     let records = rt
         .block_on(backend.list_records(&space))
         .expect("list_records against live TokenWorld");
@@ -236,18 +251,42 @@ fn get_record_real_confluence_body_is_not_unreadable_sentinel() {
         !records.is_empty(),
         "TokenWorld space {space} must expose at least one page"
     );
+    let mut saw_real_content = false;
     for r in &records {
-        // A valid-ADF live page must translate to real markdown, not the
-        // fail-closed placeholder that blocks push round-trips. If ANY page
-        // comes back as the sentinel, the string-encoded ADF decode regressed.
+        // Drive the ACTUAL string-encoded-ADF decode path: the single-page GET
+        // with ?body-format=atlas_doc_format.
+        let record = rt
+            .block_on(backend.get_record(&space, r.id))
+            .unwrap_or_else(|e| {
+                panic!(
+                    "get_record({}) against live TokenWorld failed: {e:?}",
+                    r.id.0
+                )
+            });
+        // NEGATIVE (the regression lock): under the bug EVERY real page's body
+        // came back as this exact sentinel. If any page is the sentinel now, the
+        // string-encoded ADF decode regressed.
         assert!(
-            !reposix_confluence::adf::is_unreadable_adf_sentinel(&r.body),
-            "page {} came back as the unreadable-ADF sentinel — string-encoded \
+            !reposix_confluence::adf::is_unreadable_adf_sentinel(&record.body),
+            "page {} came back as the unreadable-ADF sentinel ({:?}) — string-encoded \
              ADF decode regressed:\n{}",
-            r.id.0,
-            r.body
+            record.id.0,
+            reposix_confluence::adf::UNREADABLE_ADF_SENTINEL_MARKER,
+            record.body,
         );
+        // POSITIVE: a get_record body must be REAL decoded markdown. Track that
+        // at least one page returned non-empty content so this twin can never
+        // pass VACUOUSLY on a space of (legitimately) empty pages.
+        if !record.body.trim().is_empty() {
+            saw_real_content = true;
+        }
     }
+    assert!(
+        saw_real_content,
+        "no page in TokenWorld {space} returned non-empty DECODED markdown via get_record — \
+         the twin would be vacuous; TokenWorld must expose at least one page with real ADF \
+         content (e.g. the durable fixtures 7766017 / 7798785)"
+    );
 }
 
 /// JIRA `TEST` (or override) real-backend init smoke.
