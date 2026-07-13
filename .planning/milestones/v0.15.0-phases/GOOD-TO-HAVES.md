@@ -1,0 +1,68 @@
+# v0.15.0 Good-to-haves / carried-forward hardening
+
+> **Purpose:** concrete landing spots for the DEFERRED / DEFERRED-TO-v0.15.0 entries the
+> v0.14.0 surprises-intake promised would land here. Owner ask (2026-07-12): *labels alone
+> don't count* — each carried-forward entry needs a real row with **severity + a concrete
+> fix-sketch**, verbatim-faithful to the intake. Source of truth for the originals (archived,
+> not deleted): `.planning/milestones/v0.14.0-phases/surprises-intake/part-01.md` + `part-02.md`.
+> Landed by gsd-quick `260712-oke`. OP-8 drains this file in v0.15.0's last two phases.
+>
+> **Roadmap-gap reconciliation:** the intake cited "v0.15.0 framework-/helper-hardening phases"
+> that the v0.15.0 `ROADMAP.md` did not list (it had only the two UX `Phase TBD` stubs). The
+> two **HIGH** entries below (GTH-V15-04 modern-git verification, GTH-V15-06 subprocess-bypass
+> self-safety refusal) now have `### Phase (candidate)` stubs under `ROADMAP.md` §
+> "Hardening candidates"; the five MEDIUM entries live here as drain rows.
+
+## Carried-forward from the v0.14.0 surprises-intake (7 entries)
+
+### GTH-V15-01 — concurrent `--persist` runners race-corrupt catalog JSON
+- **Source:** part-01 (discovered-by P104, 2026-07-12 07:13) · **Severity: MEDIUM** · STATUS in intake: DEFERRED-TO-v0.15.0 (framework-hardening phase).
+- **What:** Two concurrent `reposix-quality` runners (or herdr `--persist` modes) were observed minting the shared catalog file (`quality/catalogs/agent-ux.json`) mid-verification during P104 grading (PID 351077 held the lock while the verifier ran). Two writers on one catalog file is a live race hazard — interleaved writes can corrupt the JSON or lose rows. Latent, not active: catalog writes are currently serialized by orchestration discipline (one persist lane at a time), and the P104 grading where it was observed did not corrupt the JSON.
+- **Fix-sketch:** advisory `flock` around the catalog-JSON persist in `quality/runners/run.py`, OR serialize all catalog persist operations through a single lane with a lock file, so two concurrent `--persist` writers cannot interleave. Alternative: single-persist-lane discipline where only the primary orchestration lane writes catalogs and herdr on-demand runners read-but-do-not-persist. Belongs to the same v0.15.0 framework-hardening phase as GTH-V15-03.
+
+### GTH-V15-02 — shell-coverage 12.54% < 13% floor (110 scripts @0%)  *(cross-reference, NOT duplicated here)*
+- **Source:** part-01 (discovered-by v0.14.0 health-triage lane, 2026-07-12 07:35) · **Severity: MEDIUM** · STATUS in intake: DEFERRED to the coverage-climb work.
+- **What:** `code/shell-coverage` is a live FAIL on `main` — aggregate 12.54% (564/4497 lines) below the committed 13.00% floor in `quality/shell-coverage-floor.txt`. Root cause is corpus growth (149 scripts, 110 at 0%: mostly `quality/gates/agent-ux/*` + `.claude/hooks/*`), not a coverage drop. `blast_radius: P2`, non-blocking on pre-push (`compute_exit_code` exits 1 only for a non-PASS P0/P1); the separate CI `shell-coverage` job DOES hard-fail on kcov and can surface via the P0 `code/ci-green-on-main` post-push probe.
+- **Landing = CROSS-REFERENCE ONLY.** Its existing home is phases **`999.5 docs-crates-md-zero-coverage`** / **`999.6 docs-alignment-coverage-climb`** — recorded here so the trail is complete; **NOT** re-filed onto v0.15.0. Fix path (per intake, do not silently patch the floor): (a) author `quality/gates/code/shell-coverage-tests/` cases for the highest-line-count 0%-covered scripts until aggregate clears 13% (**preferred** — raise the floor over time, never force-pass by lowering it), OR (b) if some scripts are ruled structurally untestable outside real backends, lower the floor to the measured 12.54% with a documented rationale in `quality/CLAUDE.md` + a GOOD-TO-HAVES tracking item for the deferred scripts.
+
+### GTH-V15-03 — no gate checks a row's `verifier.script` exists + is executable
+- **Source:** part-01 (discovered-by P104, 2026-07-12 07:13) · **Severity: MEDIUM** · STATUS in intake: DEFERRED-TO-v0.15.0 (framework-hardening phase).
+- **What:** A catalog row can be minted `status: PASS` with a `verifier.script` path that does not exist on disk (P104 caught one instance only in manual review). The pre-commit hook validates JSON but does NOT structurally verify that a row's declared `verifier.script` path exists or is executable — a window for a false-positive contract breach (a PASS row backed by a missing/non-executable verifier).
+- **Fix-sketch:** add a structure-dimension gate `quality/gates/structure/verifier-script-exists.sh` that scans all catalog rows at load time and asserts, for each row with a non-null `verifier.script`, the file exists on disk AND is executable (`chmod +x`); fail at pre-commit/pre-push if any row references a missing verifier, preventing unbacked PASS rows from landing. Complement to GOOD-TO-HAVES-01 (bind-verb extension). Pairs with GTH-V15-01 in the same v0.15.0 framework-hardening phase.
+
+### GTH-V15-04 — RBF-LR-03 fix unverified on git ≥ 2.34 stateless-connect  *(HIGH — also a ROADMAP stub)*
+- **Source:** part-02 (discovered-by P105 Lane 2, 2026-07-12 08:35) · **Severity: HIGH** (verification-only residual; the parent bug is RESOLVED-in-P105, commit `bd5b9cb`, gate GREEN on git 2.25.1) · STATUS in intake: RESIDUAL — DEFERRED-TO-v0.15.0 (verification-only, NOT a live bug).
+- **What:** The RBF-LR-03 fetch-ref-lock fix (`bd5b9cb`, disjoint import namespace `refs/reposix-import/*`) is confirmed real in committed source and the gate `agent-ux/rebase-recovery-reconciles` grades exit 0 / 13-of-13 asserts — but ONLY on git **2.25.1** via the `import` path. PLAN §5 remains open: whether `stateless-connect` on git **≥ 2.34** exhibits the same or a different fetch-ref-lock behavior is NOT yet exercised on a modern-git CI runner. This is a coverage extension, not an unfixed push-correctness defect.
+- **Fix-sketch:** run `quality/gates/agent-ux/rebase-recovery-reconciles.sh` on a modern-git (≥ 2.34) CI runner and resolve PLAN §5 (import vs stateless-connect divergence) before closing. Roadmap home: `ROADMAP.md` § Hardening candidates.
+
+### GTH-V15-05 — `resolve_import_parent()` silently degrades on ANY git error
+- **Source:** part-02 (discovered-by P105 docs fix-twice lane, 2026-07-12 09:40) · **Severity: MEDIUM** · STATUS in intake: DEFERRED-TO-v0.15.0 (helper-hardening phase).
+- **What:** `resolve_import_parent()` (`crates/reposix-remote/src/main.rs:400-419`) degrades to the parentless path (`None` → no `from`, no `deleteall`) on **any** git error, not just ref-absence. Two conflations: (1) the `rev_parse` closure returns `None` via `.ok()?` (`main.rs:407`) when the `git` spawn itself fails (binary missing / I-O error), swallowing a real environmental fault as "no parent"; (2) `!out.status.success()` (`main.rs:408`) treats every non-zero rev-parse exit as ref-absent. A future regression making rev-parse fail for a non-absence reason would silently re-open the RBF-LR-03 non-descendant "does not contain" abort with no operator-facing error. NOT addressed by the `bd5b9cb` disjoint-namespace fix (different failure mode).
+- **Fix-sketch:** distinguish ref-absent (the legitimate parentless case: `rev-parse --verify --quiet <ref>` exits 1 with empty stdout AND the git spawn succeeded) from spawn / other rev-parse failures; on the latter, error the fetch loudly (`fatal:` + recovery hint) instead of degrading to a parentless overlay; keep the empty-stdout → `None` path for the genuine first-fetch case. Add a unit test injecting a non-absence git failure and asserting the fetch errors rather than emitting a parentless overlay. Small (<1h) but needs a cargo window. Belongs to the same `crates/reposix-remote` helper-hardening phase as GTH-V15-04 (residual verification) and GTH-V15-06.
+
+### GTH-V15-06 — subprocess-bypass corruption residual: no binary-side self-safety refusal in `reposix init`  *(HIGH — also a ROADMAP stub)*
+- **Source:** part-02 (discovered-by D2 re-seal Wave 1, 2026-07-12) · **Severity: HIGH** · STATUS in intake: DEFERRED-TO-v0.15.0. **The ACTIVE corruption vector is already CLOSED.**
+- **What:** A live recurrence of the S-260707-pr-08 shared-tree corruption occurred AFTER P102 shipped: a leaf subagent created a git worktree INSIDE the shared repo and ran `reposix init` / sim-seed via a path that does NOT go through the Claude Code Bash tool, so the Bash-tool-only PreToolUse leaf-isolation hook never fired (`core.bare=true`, `origin` repointed to the sim, `HEAD` thrashed, `refs/reposix/*` polluted). The PRIMARY cut (hook Cases 9-11: config-read false-positive, git-init-bare, cargo-sim-seed spelling) shipped in P102 `2ad2bf5`; shared tree repaired at `9d78d62`; a partial binary-side check landed at `3206a2b`. What REMAINS is defense-in-depth: only a BINARY-SIDE refusal can stop a non-Bash-tool subprocess bypass.
+- **Fix-sketch:** `reposix init` (NOT `attach` — attach legitimately adopts an existing checkout) refuses when its effective target would nest inside the reposix SOURCE checkout / shared dev tree, WITHOUT breaking the sanctioned `/tmp` dark-factory flow. Pair with a self-safety check that refuses to operate when the effective `.git` is the shared repo's object store (worktree-shared config detected). Full defense-in-depth cut + cross-flow testing = a dedicated v0.15.0 hardening phase (new binary code >1h). Deferring does NOT re-open the active vector — it hardens the already-closed one. Roadmap home: `ROADMAP.md` § Hardening candidates.
+
+### GTH-V15-07 — release-plz (and other required workflows) unwatched by the phase-close CI probe
+- **Source:** part-02 (discovered-by GSD-quick release-plz RED fix, 2026-07-12) · **Severity: MEDIUM** · STATUS in intake: DEFERRED (owner gate required).
+- **What:** The phase-close `code/ci-green-on-main` (P0) probe hardcodes `WORKFLOW=ci.yml` and watches ONLY `ci.yml`, so a persistently-RED release-plz on main rots UNNOTICED (global CLAUDE.md: never let a metric you don't watch decay). Sibling of the RESOLVED `release.yml`-CI-ungated entry — that one GATES the tag-publish on green; this one is about WATCHING release-plz's outcome at phase-close.
+- **BLOCKER NOW CLEARED:** the intake's original disposition named `quality/catalogs/code.json` as FOREIGN-LOCKED (a concurrent lane held uncommitted changes; the P110 drain forbade touching it). As of this landing the shared tree is **clean** (`git status` empty, code.json unmodified) — the catalog edit is no longer blocked. Only the owner-gate on the two open semantic questions remains.
+- **Fix-sketch:** parameterize `quality/gates/code/ci-green-on-main.sh`'s hardcoded `WORKFLOW=ci.yml` into a required-workflow LIST, OR add a sibling `code/release-green-on-main` row at post-push cadence reusing the same latest-run-conclusion logic (catalog-first: write the GREEN-contract row before impl). **Resolve TWO open questions FIRST (owner gate — a false-RED would block UNRELATED phases):** (1) Does release-plz run on EVERY push to main? (2) Is a 'no release needed' run concluded `success` / `skipped` / other, so the probe treats non-failure correctly?
+
+## Hygiene (file-size early-warning)
+
+### GTH-V15-08 — `.planning/ORCHESTRATION.md` over its progressive-disclosure ceiling
+- **Source:** v0.14.0 file-size gate (`structure/file-size-limits`) · **Severity: MEDIUM (hygiene)**.
+- **What:** `.planning/ORCHESTRATION.md` is **26968 B vs its 20000 B ceiling** (≈135%, >100% over-budget), currently **WAIVED until 2026-08-08**. When the waiver lapses the `structure/file-size-limits` gate reactivates and will BLOCK the push. It is already past the 75% early-warning band and over the hard ceiling.
+- **Fix-sketch:** split the closed-doctrine / reference detail to a sibling (e.g. `ORCHESTRATION-detail.md` or `-history.md`) — the same progressive-disclosure move already landed for `ROADMAP.md → ARCHIVE.md` (v0.14.0 P-split) and `STATE.md → STATE-history.md` — keeping only the always-relevant dispatch/relief/cadence rules in `ORCHESTRATION.md`. Do it before the 2026-08-08 waiver lapses.
+
+## Back-pointer note (bidirectional trail — INTENTIONALLY SKIPPED)
+
+Task step 5 offered to append a `→ landed: v0.15.0-phases/GOOD-TO-HAVES.md` back-pointer to each
+migrated entry in `part-01.md` / `part-02.md`. **Skipped by design:** both part files are ALREADY
+over the 20000-char `.md` ceiling (part-01 = 21516 B, part-02 = 21574 B) — appending any text pushes
+them further over budget, contradicting the OP-8 file-size drain the split was performed for. The
+forward trail (this file → intake, cited per-row above) is the required deliverable and is complete;
+the reverse pointer is deferred to whenever those part files are themselves progressive-disclosure-split.

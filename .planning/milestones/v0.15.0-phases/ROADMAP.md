@@ -78,3 +78,48 @@ phase supplying the stable-identifier + lookup mechanism.
 
 **Reversibility.** Fully reversible — planning-scaffold only; no code or v0.14.0 file
 touched. The owner or the v0.14.0-closing C2 may pull this phase forward into v0.14.0.
+
+## Hardening candidates (carried forward from the v0.14.0 surprises-intake)
+
+> **Roadmap-gap reconciliation.** The v0.14.0 surprises-intake deferred seven entries here
+> citing "v0.15.0 framework-/helper-hardening phases" that this roadmap did not list (only
+> the two UX `Phase TBD` stubs above existed). All seven now have concrete landing rows in
+> `GOOD-TO-HAVES.md` (severity + fix-sketch each); the two **HIGH** entries additionally get
+> the phase stubs below so they have a real roadmap home. The five MEDIUM entries drain from
+> `GOOD-TO-HAVES.md` under OP-8. The two UX `Phase TBD` stubs above are unchanged.
+
+### Phase (candidate): `reposix-remote` / RBF-LR-03 modern-git verification + helper-hardening
+*(number assigned at `/gsd-plan-phase`; HIGH — GTH-V15-04, pairs with helper-hardening GTH-V15-05)*
+
+**Scope.** Close the RBF-LR-03 verification residual: the ref-lock fix (`bd5b9cb`, disjoint
+`refs/reposix-import/*` namespace) is proven GREEN on git **2.25.1** via the `import` path
+only. Exercise `quality/gates/agent-ux/rebase-recovery-reconciles.sh` on a modern-git
+(**≥ 2.34**) CI runner and resolve PLAN §5 — does `stateless-connect` on ≥ 2.34 exhibit the
+same or a different fetch-ref-lock behavior than the 2.25.1 import path? This is a coverage
+extension, not an unfixed push-correctness defect. Fold in the sibling helper-hardening row
+GTH-V15-05 (`resolve_import_parent()` at `crates/reposix-remote/src/main.rs:400-419` degrades
+to the parentless path on ANY git error, not just ref-absence — distinguish ref-absent from
+spawn/other rev-parse failure and error loudly; add an injected-non-absence-failure unit test).
+
+**Acceptance intent.** `rebase-recovery-reconciles` exits 0 on a ≥ 2.34 runner (or its
+divergence is documented + gated); `resolve_import_parent()` errors loudly on a non-absence
+git failure with a regression test proving it. Full detail + fix-sketches: `GOOD-TO-HAVES.md`
+GTH-V15-04 / GTH-V15-05.
+
+### Phase (candidate): binary-side self-safety refusal in `reposix init` (subprocess-bypass defense-in-depth)
+*(number assigned at `/gsd-plan-phase`; HIGH — GTH-V15-06)*
+
+**Scope.** Defense-in-depth for the D2 shared-tree corruption recurrence. The ACTIVE vector
+is already CLOSED (leaf-isolation hook Cases 9-11 shipped P102 `2ad2bf5`; tree repaired
+`9d78d62`; partial binary check `3206a2b`) — but the Bash-tool-only hook cannot stop a
+non-Bash-tool subprocess/worktree bypass. Add a BINARY-SIDE refusal: `reposix init` (NOT
+`attach`) refuses when its effective target would nest inside the reposix source checkout /
+shared dev tree, WITHOUT breaking the sanctioned `/tmp` dark-factory flow; pair with a
+self-safety check that refuses to operate when the effective `.git` is the shared repo's
+object store (worktree-shared config detected).
+
+**Acceptance intent.** A subprocess/worktree `reposix init` targeting the shared source tree
+is refused with a Rust-compiler-grade error (teach the fix, suggest `/tmp` alternative,
+copy-paste recovery), while the sanctioned `/tmp` dark-factory flow and legitimate `attach`
+adoption still succeed — proven by a regression that reproduces the D2 bypass shape. New
+binary code >1h; a dedicated hardening phase. Full detail: `GOOD-TO-HAVES.md` GTH-V15-06.
