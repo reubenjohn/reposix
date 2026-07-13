@@ -105,14 +105,35 @@ pub(crate) fn translate(page: ConfPage) -> Result<Record> {
     // Body extraction: prefer ADF → Markdown conversion; fall back to raw
     // storage HTML if ADF is absent (pre-ADF pages or storage-format re-fetch).
     let body = if let Some(adf_body) = page.body.as_ref().and_then(|b| b.adf.as_ref()) {
-        // adf_to_markdown returns Err only if root is not type "doc"; in that
-        // case gracefully degrade to empty string rather than failing the whole
-        // page read (T-16-C-05 — attacker-influenced ADF must not wedge reads).
+        // adf_to_markdown returns Err only when the ADF root type is not "doc".
+        // Item 4b (design §6): NEVER substitute String::new() on failure — an
+        // empty body flows into the working tree, the agent commits, and the
+        // export path PATCHes the SoT body to empty → silent destruction of real
+        // (attacker-influenceable) Confluence content. Fail closed instead:
+        // (1) prefer the raw storage HTML when present; (2) otherwise substitute
+        // a conspicuous NON-EMPTY teaching sentinel the export path refuses to
+        // push. The single record degrades loudly; the rest of list_records
+        // still returns (T-16-C-05 graceful-degradation / DoS mitigation intact).
         match crate::adf::adf_to_markdown(&adf_body.value) {
             Ok(md) => md,
             Err(e) => {
-                tracing::warn!(error = %e, "adf_to_markdown failed; using empty body");
-                String::new()
+                if let Some(storage) = page.body.as_ref().and_then(|b| b.storage.as_ref()) {
+                    tracing::warn!(
+                        error = %e,
+                        page_id = %page.id,
+                        "adf_to_markdown failed; falling back to raw storage HTML"
+                    );
+                    storage.value.clone()
+                } else {
+                    let root_type = crate::adf::adf_root_type(&adf_body.value);
+                    tracing::warn!(
+                        error = %e,
+                        page_id = %page.id,
+                        adf_root_type = %root_type,
+                        "adf_to_markdown failed and no storage fallback; substituting fail-closed unreadable-ADF sentinel"
+                    );
+                    crate::adf::unreadable_adf_body(root_type, &page.id)
+                }
             }
         }
     } else {
@@ -216,8 +237,42 @@ pub(crate) fn redact_url(raw: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{ConfPage, ConfVersion};
+    use crate::types::{ConfBodyAdf, ConfBodyStorage, ConfPage, ConfPageBody, ConfVersion};
     use serde_json::json;
+
+    /// Build a `ConfPage` carrying a non-`doc` ADF body (which `adf_to_markdown`
+    /// rejects), optionally with a raw storage HTML fallback. Used to exercise
+    /// the item-4b fail-closed body-substitution paths.
+    fn synth_page_with_bad_adf(id: &str, storage_html: Option<&str>) -> ConfPage {
+        let ts = chrono::DateTime::parse_from_rfc3339("2026-04-13T00:00:00Z")
+            .unwrap()
+            .with_timezone(&chrono::Utc);
+        ConfPage {
+            id: id.to_owned(),
+            status: "current".to_owned(),
+            title: "t".to_owned(),
+            created_at: ts,
+            version: ConfVersion {
+                number: 1,
+                created_at: ts,
+            },
+            owner_id: None,
+            body: Some(ConfPageBody {
+                storage: storage_html.map(|v| ConfBodyStorage {
+                    value: v.to_owned(),
+                }),
+                // Non-"doc" root → adf_to_markdown returns Err.
+                adf: Some(ConfBodyAdf {
+                    value: json!({
+                        "type": "paragraph",
+                        "content": [{"type": "text", "text": "smuggled"}]
+                    }),
+                }),
+            }),
+            parent_id: None,
+            parent_type: None,
+        }
+    }
 
     /// Helper: synthesize a `ConfPage` directly (no JSON round-trip) for
     /// exercising `translate` branches without a wiremock server. Mirrors
@@ -300,6 +355,43 @@ mod tests {
         let page = synth_page("99", Some("not-a-number"), Some("page"));
         let issue = translate(page).expect("translate must not error");
         assert_eq!(issue.parent_id, None);
+    }
+
+    // -------- item 4b: fail-closed body substitution (design §6) --------
+
+    #[test]
+    fn translate_non_doc_adf_with_storage_uses_storage_html() {
+        // A non-doc ADF root WITH a storage fallback → uses the storage HTML,
+        // never empty and never the sentinel.
+        let page = synth_page_with_bad_adf("7766017", Some("<p>real content</p>"));
+        let record = translate(page).expect("translate must not fail on bad ADF");
+        assert_eq!(record.body, "<p>real content</p>");
+        assert!(
+            !crate::adf::is_unreadable_adf_sentinel(&record.body),
+            "storage-backed body must not be the sentinel"
+        );
+    }
+
+    #[test]
+    fn translate_non_doc_adf_without_storage_yields_sentinel_never_empty() {
+        // The security invariant: a non-doc ADF root WITHOUT storage must NEVER
+        // produce String::new() — it degrades to the non-empty teaching sentinel
+        // the export path refuses. This is what stops a silent empty-body PATCH.
+        let page = synth_page_with_bad_adf("7766017", None);
+        let record = translate(page).expect("translate must not fail on bad ADF");
+        assert!(
+            !record.body.is_empty(),
+            "unreadable body must NEVER be an empty String (silent-blank hazard)"
+        );
+        assert_ne!(record.body, String::new());
+        assert!(
+            crate::adf::is_unreadable_adf_sentinel(&record.body),
+            "unreadable body must be the detectable sentinel, got: {}",
+            record.body
+        );
+        // Teaching content: names the offending root type and the page id.
+        assert!(record.body.contains("\"paragraph\""), "must name root type");
+        assert!(record.body.contains("7766017"), "must name the page id");
     }
 
     #[test]

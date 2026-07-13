@@ -103,6 +103,41 @@ pub use types::{
 use crate::translate::{redact_url, translate};
 use crate::types::{ConfPage, MAX_ISSUES_PER_LIST, PAGE_SIZE};
 
+// ─── Fail-closed export guard (item 4b) ───────────────────────────────────────
+
+/// Refuse to write a record body that is the unreadable-ADF placeholder
+/// sentinel (design §6, item 4b).
+///
+/// The read path substitutes [`crate::adf::unreadable_adf_body`] for a page
+/// whose ADF root could not be translated and had no storage fallback. Pushing
+/// that placeholder back would DESTROY the real page content in the system of
+/// record, so the export/PATCH path FAILS CLOSED here. The teaching error is
+/// modeled on `reposix-cli`'s `refuse_existing_repo_root`: it names the failure,
+/// suggests the alternative, and gives a copy-paste recovery command.
+///
+/// # Errors
+///
+/// Returns `Err(Error::Other(…))` when `body` carries
+/// [`crate::adf::UNREADABLE_ADF_SENTINEL_MARKER`].
+fn refuse_unreadable_adf_sentinel(op: &str, target: &str, body: &str) -> Result<()> {
+    if crate::adf::is_unreadable_adf_sentinel(body) {
+        return Err(Error::Other(format!(
+            "confluence {op}: refusing to write {target} — its body is the reposix \
+             unreadable-ADF placeholder, not real content.\n\
+             This placeholder is substituted at read time when a page's ADF body cannot \
+             be translated and has no storage fallback (item 4b, fail-closed). Pushing it \
+             would DESTROY the real page content in the system of record.\n\
+             Fix: restore the real body before pushing. Re-fetch the page in storage \
+             format and replace the placeholder:\n  \
+             curl -s -u \"$ATLASSIAN_EMAIL:$ATLASSIAN_API_KEY\" \\\n    \
+             \"https://$REPOSIX_CONFLUENCE_TENANT.atlassian.net/wiki/api/v2/pages/<id>?body-format=storage\"\n\
+             To intentionally clear the page, delete the placeholder marker line and set \
+             the body you actually want."
+        )));
+    }
+    Ok(())
+}
+
 // ─── BackendConnector impl ────────────────────────────────────────────────────
 
 #[async_trait]
@@ -290,6 +325,9 @@ impl BackendConnector for ConfluenceBackend {
     }
 
     async fn create_record(&self, project: &str, issue: Untainted<Record>) -> Result<Record> {
+        // Item 4b (design §6): fail closed BEFORE any network I/O if the body is
+        // the unreadable-ADF placeholder — never let a placeholder become a page.
+        refuse_unreadable_adf_sentinel("create_record", "a new page", &issue.inner_ref().body)?;
         let space_id = self.resolve_space_id(project).await?;
         // Convert the Markdown body to Confluence storage XHTML.
         let storage_xhtml = crate::adf::markdown_to_storage(&issue.inner_ref().body)?;
@@ -351,6 +389,14 @@ impl BackendConnector for ConfluenceBackend {
         patch: Untainted<Record>,
         expected_version: Option<u64>,
     ) -> Result<Record> {
+        // Item 4b (design §6): fail closed BEFORE the pre-flight version GET if
+        // the body is the unreadable-ADF placeholder — a placeholder must never
+        // PATCH the real SoT page content to a blank/placeholder.
+        refuse_unreadable_adf_sentinel(
+            "update_record",
+            &format!("page {}", id.0),
+            &patch.inner_ref().body,
+        )?;
         // Pre-flight version resolution: if caller supplied an expected version
         // trust it; otherwise do a GET to discover the current version number.
         let current_version = match expected_version {

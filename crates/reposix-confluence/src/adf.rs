@@ -62,6 +62,69 @@ const MAX_ADF_DEPTH: usize = 32;
 /// Fallback marker prefix emitted for unknown ADF node types.
 const FALLBACK_PREFIX: &str = "[unsupported ADF node type=";
 
+/// Marker line prefixing the placeholder body substituted when a Confluence
+/// page's ADF root could not be translated and no `storage` fallback existed.
+///
+/// The push/export path detects this marker via [`is_unreadable_adf_sentinel`]
+/// and refuses to PATCH the placeholder into the system of record, so a page
+/// whose body could not be read can never be silently overwritten with
+/// empty/placeholder content (item 4b, fail-closed — design §6).
+pub const UNREADABLE_ADF_SENTINEL_MARKER: &str = "[reposix: unreadable ADF body — see recovery]";
+
+/// Extract an ADF value's root node `type` (`""` if absent / non-string).
+///
+/// Body-translation callers use this to name the offending root type in the
+/// [`unreadable_adf_body`] teaching sentinel when [`adf_to_markdown`] rejects a
+/// non-`doc` root.
+#[must_use]
+pub fn adf_root_type(adf: &Value) -> &str {
+    adf.get("type").and_then(Value::as_str).unwrap_or("")
+}
+
+/// Build the conspicuous, **non-empty** teaching sentinel substituted for a
+/// record body whose ADF root type was not `"doc"` and which carried no
+/// `storage` representation to fall back on.
+///
+/// Modeled on `reposix-cli`'s `refuse_existing_repo_root`: it (1) names what
+/// happened (the ADF root type, the page id), (2) suggests the alternative
+/// (open the page in the browser / re-fetch the storage format), and (3) gives
+/// a copy-paste recovery command. The first line is
+/// [`UNREADABLE_ADF_SENTINEL_MARKER`] so the export path can detect and refuse
+/// the placeholder — the substitution is fail-closed: a page that cannot be
+/// read is never silently blanked, and pushing the placeholder is refused
+/// rather than destroying real system-of-record content (item 4b, design §6).
+#[must_use]
+pub fn unreadable_adf_body(root_type: &str, page_id: &str) -> String {
+    format!(
+        "{UNREADABLE_ADF_SENTINEL_MARKER}\n\
+         \n\
+         reposix could not translate this Confluence page to Markdown: the ADF root \
+         node type was {root_type:?}, not \"doc\", and the page carried no `storage` \
+         representation to fall back on.\n\
+         \n\
+         This body is a PLACEHOLDER — NOT the real page content. reposix refuses to \
+         push it back to Confluence, so it can never overwrite the real page (item 4b, \
+         fail-closed).\n\
+         \n\
+         Recover the real content: open page {page_id} in your browser, or re-fetch it \
+         in `storage` representation and replace this placeholder before editing:\n  \
+         curl -s -u \"$ATLASSIAN_EMAIL:$ATLASSIAN_API_KEY\" \\\n    \
+         \"https://$REPOSIX_CONFLUENCE_TENANT.atlassian.net/wiki/api/v2/pages/{page_id}?body-format=storage\"\n"
+    )
+}
+
+/// Detect whether a record body is the [`unreadable_adf_body`] placeholder
+/// (identified by [`UNREADABLE_ADF_SENTINEL_MARKER`]).
+///
+/// The export/PATCH path calls this to FAIL CLOSED: a body carrying the marker
+/// is a read-time placeholder, not real content, so pushing it would destroy
+/// the system-of-record page. Returns `true` if the marker appears anywhere in
+/// `body` (robust to an agent editing text around the marker line).
+#[must_use]
+pub fn is_unreadable_adf_sentinel(body: &str) -> bool {
+    body.contains(UNREADABLE_ADF_SENTINEL_MARKER)
+}
+
 /// Convert a Markdown body to Confluence `storage` XHTML.
 ///
 /// Handles: headings H1–H6, paragraphs, fenced code blocks (with optional
@@ -371,7 +434,10 @@ fn render_text_node(node: &Value) -> String {
 mod tests {
     use serde_json::{json, Value};
 
-    use super::{adf_to_markdown, markdown_to_storage, MAX_ADF_DEPTH};
+    use super::{
+        adf_root_type, adf_to_markdown, is_unreadable_adf_sentinel, markdown_to_storage,
+        unreadable_adf_body, MAX_ADF_DEPTH, UNREADABLE_ADF_SENTINEL_MARKER,
+    };
 
     // ------------------------------------------------------------------
     // markdown_to_storage tests
@@ -630,6 +696,72 @@ mod tests {
             out.contains("[unsupported ADF node type=panel]"),
             "expected fallback marker in: {out}"
         );
+    }
+
+    // ------------------------------------------------------------------
+    // item 4b: fail-closed unreadable-ADF sentinel (design §6)
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn adf_root_type_extracts_root() {
+        let doc = json!({"type": "doc", "content": []});
+        assert_eq!(adf_root_type(&doc), "doc");
+        let panel = json!({"type": "panel"});
+        assert_eq!(adf_root_type(&panel), "panel");
+        // Absent / non-string type → "".
+        assert_eq!(adf_root_type(&json!({})), "");
+        assert_eq!(adf_root_type(&json!({"type": 7})), "");
+    }
+
+    #[test]
+    fn unreadable_adf_body_is_non_empty_and_teaching() {
+        let body = unreadable_adf_body("paragraph", "7766017");
+        // Never empty — this is the whole point of item 4b.
+        assert!(!body.is_empty(), "sentinel body must never be empty");
+        assert_ne!(body, String::new());
+        // Detectable marker (so the export path can refuse it).
+        assert!(
+            body.contains(UNREADABLE_ADF_SENTINEL_MARKER),
+            "sentinel must carry the detection marker, got: {body}"
+        );
+        // Teaching elements: names the failure (root type), the page id, the
+        // alternative, and a copy-paste recovery command (refuse_existing_repo_root bar).
+        assert!(
+            body.contains("\"paragraph\""),
+            "sentinel must name the offending ADF root type, got: {body}"
+        );
+        assert!(
+            body.contains("7766017"),
+            "sentinel must name the page id, got: {body}"
+        );
+        assert!(
+            body.contains("body-format=storage"),
+            "sentinel must suggest re-fetching the storage representation, got: {body}"
+        );
+        assert!(
+            body.contains("curl -s -u"),
+            "sentinel must give a copy-paste recovery command, got: {body}"
+        );
+    }
+
+    #[test]
+    fn is_unreadable_adf_sentinel_detects_marker() {
+        let sentinel = unreadable_adf_body("panel", "123");
+        assert!(
+            is_unreadable_adf_sentinel(&sentinel),
+            "must detect its own sentinel body"
+        );
+        // Robust to an agent editing text around the marker line.
+        let edited = format!("some agent notes\n{sentinel}\nmore notes");
+        assert!(
+            is_unreadable_adf_sentinel(&edited),
+            "detection must survive surrounding edits"
+        );
+        // Real content and empty string are NOT sentinels.
+        assert!(!is_unreadable_adf_sentinel(
+            "# Real page\n\nActual content."
+        ));
+        assert!(!is_unreadable_adf_sentinel(""));
     }
 
     #[test]

@@ -1759,6 +1759,79 @@ mod tests {
         }
     }
 
+    // -------- item 4b: export fails closed on the unreadable-ADF sentinel -----
+
+    /// Security invariant (design §6, item 4b): a body that is the
+    /// unreadable-ADF placeholder must NEVER PATCH the `SoT`. The PUT mock returns
+    /// SUCCESS and is asserted `expect(0)` — if the fail-closed guard were
+    /// removed, `update_record` would PUT the placeholder, the mock would be hit,
+    /// and this test would FAIL (both on `expect_err` and on `expect(0)`).
+    #[tokio::test]
+    async fn update_record_refuses_unreadable_adf_sentinel() {
+        let server = MockServer::start().await;
+        // If ever reached, this returns 200 — proving the refusal is what stops
+        // the write, not a network error.
+        Mock::given(method("PUT"))
+            .and(path("/wiki/api/v2/pages/99"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(page_json_v("99", "t", 43)))
+            .expect(0)
+            .mount(&server)
+            .await;
+
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let sentinel = crate::adf::unreadable_adf_body("paragraph", "99");
+        let patch = make_untainted("title", &sentinel, None);
+        // expected_version = Some(42) → no pre-flight GET; only the guard or the
+        // PUT can run. The guard must win.
+        let err = backend
+            .update_record("REPOSIX", RecordId(99), patch, Some(42))
+            .await
+            .expect_err("update_record must refuse the unreadable-ADF placeholder");
+        match err {
+            Error::Other(m) => {
+                assert!(
+                    m.contains("refusing to write page 99"),
+                    "refusal must name the page, got: {m}"
+                );
+                assert!(
+                    m.contains("unreadable-ADF placeholder"),
+                    "refusal must name the placeholder cause, got: {m}"
+                );
+                assert!(
+                    m.contains("body-format=storage"),
+                    "refusal must teach the storage-refetch recovery, got: {m}"
+                );
+            }
+            other => panic!("expected Error::Other, got {other:?}"),
+        }
+        // Explicit no-network assertion (also enforced by expect(0) on drop).
+        server.verify().await;
+    }
+
+    /// `create_record` must likewise refuse the placeholder before any network I/O
+    /// so a placeholder can never become a brand-new page.
+    #[tokio::test]
+    async fn create_record_refuses_unreadable_adf_sentinel() {
+        let server = MockServer::start().await;
+        // No space lookup or POST is mocked: the guard runs before either, so a
+        // hit would surface as a mock-not-found panic. Assert refusal directly.
+        let backend = ConfluenceBackend::new_with_base_url(creds(), server.uri()).expect("backend");
+        let sentinel = crate::adf::unreadable_adf_body("panel", "0");
+        let issue = make_untainted("new page", &sentinel, None);
+        let err = backend
+            .create_record("REPOSIX", issue)
+            .await
+            .expect_err("create_record must refuse the unreadable-ADF placeholder");
+        match err {
+            Error::Other(m) => assert!(
+                m.contains("refusing to write a new page")
+                    && m.contains("unreadable-ADF placeholder"),
+                "create refusal must name the placeholder cause, got: {m}"
+            ),
+            other => panic!("expected Error::Other, got {other:?}"),
+        }
+    }
+
     // -------- B6.3: update_record with None version fetches then PUTs --------
 
     #[tokio::test]

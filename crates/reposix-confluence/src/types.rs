@@ -206,8 +206,12 @@ pub struct ConfComment {
 }
 
 impl ConfComment {
-    /// Convert the ADF body (if present) to Markdown. Empty string if no body or conversion fails.
-    /// Mirrors the `translate()` function's degradation pattern for page bodies.
+    /// Convert the ADF body (if present) to Markdown.
+    ///
+    /// Empty string ONLY when there is no body at all. An unreadable ADF body
+    /// (root type != `"doc"`) degrades — item 4b (design §6), mirroring the
+    /// `translate()` page-body path — to the raw storage HTML if present, else
+    /// to a conspicuous NON-EMPTY teaching sentinel, never a silent blank.
     #[must_use]
     pub fn body_markdown(&self) -> String {
         let Some(body) = self.body.as_ref() else {
@@ -217,12 +221,25 @@ impl ConfComment {
             match crate::adf::adf_to_markdown(&adf.value) {
                 Ok(md) => md,
                 Err(e) => {
-                    tracing::warn!(
-                        error = %e,
-                        comment_id = %self.id,
-                        "adf_to_markdown failed on comment; using empty body"
-                    );
-                    String::new()
+                    // Item 4b: never silently blank an unreadable body. Prefer
+                    // raw storage HTML; else substitute the non-empty sentinel.
+                    if let Some(storage) = body.storage.as_ref() {
+                        tracing::warn!(
+                            error = %e,
+                            comment_id = %self.id,
+                            "adf_to_markdown failed on comment; falling back to storage HTML"
+                        );
+                        storage.value.clone()
+                    } else {
+                        let root_type = crate::adf::adf_root_type(&adf.value);
+                        tracing::warn!(
+                            error = %e,
+                            comment_id = %self.id,
+                            adf_root_type = %root_type,
+                            "adf_to_markdown failed on comment and no storage fallback; substituting unreadable-ADF sentinel"
+                        );
+                        crate::adf::unreadable_adf_body(root_type, &self.id)
+                    }
                 }
             }
         } else if let Some(storage) = body.storage.as_ref() {
