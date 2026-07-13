@@ -275,3 +275,42 @@ defer to v0.15.0), sketched in the report §6:
   `reposix::confluence` remote — teaching-free.
 
 **STATUS:** OPEN — core ADF-parse fix routed to the item-5 fix-first lane (BOUNDED); the 3 tangents routed to v0.15.0. See the diagnosis report for file:line + repro.
+
+## 2026-07-13 | discovered-by: item-5 FIX lane (v0.14.0 tag critical path) | severity: MEDIUM (architectural signal — surfaced to MANAGER)
+
+**The vision litmus is NON-IDEMPOTENT against its own GitHub mirror — each run
+leaves the mirror stale for the next.** Executed evidence (this lane): on a
+freshly-refreshed mirror the litmus is GREEN; run immediately again it is RED
+(`local base vN vs backend vN+1, divergent writable content` → one-shot rebase
+conflict). Root cause is a MIRROR-SYNC PRODUCT characteristic, not a fixture
+bug: the inline mirror fan-out (`reposix::<sot>?mirror=<url>`, ADR-010
+RBF-LR-04) pushes the **pre-write client tree** to the mirror, so after any
+SoT-changing push the edited page's mirror copy trails the backend by (a) the
+`version:` frontmatter int the backend just minted AND (b) a markdown↔storage
+roundtrip re-normalization of the body. The mirror is therefore NEVER left
+`== SoT` after a push — the litmus's own successful push re-staled the mirror it
+just consumed.
+
+Consequence for milestone-close: the litmus probe is only reliably GREEN when
+the mirror is refreshed to the backend-current MATERIALIZED tree **immediately
+before each run**. A bus-push "refresh" (the mechanism first prescribed) does
+NOT converge — it advances the mirror head but reproduces the same trailing
+drift (executed twice: v7→v8→still-behind). The working refresh is a one-time
+FIXTURE repair: overlay `git fetch reposix main` (backend materialization) onto
+a mirror clone and fast-forward `git push origin main` — committed as
+`scripts/refresh-tokenworld-mirror.sh` (no backend write, no `--force`, no
+product code change).
+
+Item-5 litmus GREEN was achieved via that one-time fixture repair (per charter
+item 4). Making the probe robustly repeatable for an INDEPENDENT re-grader
+requires EITHER (op) documenting "run `scripts/refresh-tokenworld-mirror.sh`
+before the litmus" as a milestone-close pre-step, OR (product) changing the
+mirror fan-out to push the POST-write materialized snapshot so the mirror is
+left `== SoT`. The latter is a mirror-sync coherence change — the architectural
+signal reserved for the MANAGER (per the FIX-lane guardrail: do NOT balloon into
+a product/mirror-sync code change). NOT fixed here.
+
+**STATUS:** OPEN — routed to MANAGER (architectural). Interim op-recovery:
+`bash scripts/refresh-tokenworld-mirror.sh` immediately before any litmus /
+`pre-release-real-backend` run. Product option (fan-out pushes post-write
+materialized snapshot) routed to v0.15.0 mirror-sync hardening.
