@@ -10,6 +10,34 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 
 ---
 
+## 2026-07-13 [ESCALATED→MANAGER, OPEN] v0.14.0 9th-probe cadence exit-1: 2 harness-gap rows (one P0) block a clean tag — fix-harness vs re-scope?
+
+- **Context:** item-5 is now GENUINELY GREEN — a fresh unbiased creds-loaded 9th-probe run
+  (`82498cc`) grades `milestone-close-vision-litmus-real-backend` (P0) + `p93-partial-failure-recovery-real-confluence`
+  BOTH **PASS** against live TokenWorld; catalog reconciled (FAIL→PASS). BUT the full
+  `pre-release-real-backend` cadence is **exit-1**, solely from two rows that are **harness
+  gaps, not product regressions**:
+  - `t4-conflict-rebase-ancestry-real-backend` (**P0**): guard literal accepts only space
+    display-name `"TokenWorld"`, but the sanctioned space KEY is `REPOSIX` (litmus/attach-sync/p93
+    all use REPOSIX successfully) → structurally can NEVER pass; guard fires pre-mutation
+    (mass-delete-safe). Catalog owner_hint/comment STALE ("verifier script does not exist yet" —
+    it exists, Jul 12, ran exit 1). File: `quality/gates/agent-ux/t4-...real-backend.sh:161-164`.
+  - `github-front-door-real-backend` (**P1**): `git-remote-reposix` not on PATH in the harness →
+    `reposix init github::...` dies before any GitHub REST call.
+- **Why escalated (E3, owner-ratified scope):** the SESSION-HANDOVER instruction to "disregard
+  the 2 rows per their owner_hints" rests on a FALSIFIED premise — they are shipped-but-broken-harness,
+  not never-shipped/verifier-not-found. **OD-2 forbids waiving a P0 row or a non-exit-0 cadence at
+  milestone close.** So the VERDICT cannot be re-minted GREEN as-is. The clean path (fix the 2
+  harness gaps → cadence exit-0) EXPANDS scope beyond the chartered "mechanicals to READY-TO-TAG,"
+  and t4's fix runs a DESTRUCTIVE rebase-ancestry test against the sanctioned backend — owner/manager call.
+- **Recommendation:** (A, recommended) authorize the 2 small NON-PRODUCT harness fixes (t4 guard
+  literal `TokenWorld`→`REPOSIX`/tenant+protected-id validation; github-front-door add `target/debug`
+  to PATH) + cadence re-run to exit-0 — honest path to a real GREEN gate. (B) re-scope these rows
+  out of the v0.14.0 gate / defer to v0.15.0 via a mechanism that does NOT waive a P0.
+- **Reversibility:** no product code touched; reconcile `82498cc` is a pure catalog-truth correction.
+- **Status:** OPEN — awaiting manager/owner ruling; NOT at READY-TO-TAG. Also filing the mechanism
+  findings (run.py no-dotenv autoload; `--persist` creds-absent clobber footgun) to intake.
+
 ## 2026-07-13 [MANAGER] Ruling #2 (E2/ADR valve) — litmus non-idempotency DEFER → v0.15.0; the v0.14.0 tag PROCEEDS
 
 - **Question escalated (successor #9→#10 handover, part-03 non-idempotency row):** does the vision litmus's non-idempotency against its own GitHub mirror BLOCK the v0.14.0 tag, or DEFER to v0.15.0?
