@@ -51,30 +51,38 @@ does reposix work itself. Keep this file lean; git history is the archive.
    rely on it — fix or drop before use); a long single-line `agent send` becomes a
    "[Pasted text]" block that Enter won't submit while background subagents hold input.
 
-## Live state (refresh at every rotation) — 2026-07-13, manager rotation #3
+## Live state (refresh at every rotation) — 2026-07-13, manager rotation #4
 
-- **v0.14.0 TAG: items 4a/4b/6 SHIPPED GREEN @ `22a7777`** (DP-2 repro-first honored:
-  `0747179` red repro → `eb824f3` attach-lineage fix seeds `refs/reposix/origin/main`
-  at mirror merge-base + init-style refspec → `d1cc811` fail-closed ADF → `11ae402`
-  docs-truth → `22a7777` §8 real-backend arm, sim + read-only TokenWorld). CI green,
-  headSha-verified. Manager spot-verified: audit archive verbatim, TokenWorld = exactly
-  2 protected pages.
-- **Workhorse successor #7 IN FLIGHT in w1:p5** (launched post-`f7be1d7`, charter =
-  `.planning/SESSION-HANDOVER.md`): item 5 (litmus unblock) → item 7 (p93 reassess) →
-  intake-honesty recount → item 8 §4 mechanicals → **STOP at READY-TO-TAG**. Manager
-  then VERIFIES against reality (probe exit 0, verdict, ratification, CI green
-  headSha-matched — ci-green-on-main probe has a KNOWN headSha race, cross-check
-  manually — no tag pushed, TokenWorld state) and PUSHES the v0.14.0 tag under
-  standing authority.
-- **Item-5 MANAGER RULING (2026-07-13, standing authority): APPROVED** — DROP stale
-  mirror record `pages/2818063.md` (trashed backend page; verified NOT in TokenWorld's
-  current 2-page state; restore would break the durable-pair contract). Mirror target
-  verified owner-named-sanctioned: `reubenjohn/reposix-tokenworld-mirror` (the litmus's
-  own configured mirror, `milestone-close-vision-litmus.sh:107`). Guardrails relayed:
-  DROP-only, 2-pages-intact before+after, documented catch-up path, OP-3 audit rows,
-  ruling recorded in CONSULT-DECISIONS.md before execution.
+- **v0.14.0 TAG critical path: item 5 APPROVED-RESTORE (execute) — workhorse successor
+  #8 IN FLIGHT in w1:p5** (launched post-`6938024`, charter =
+  `.planning/SESSION-HANDOVER.md`, execution-ready spec + 6 binding guardrails):
+  RESTORE sacrificial page `2818063` (untrash via `scripts/confluence_tokenworld.py
+  restore`, NO mirror surgery) → litmus re-green on the UNMODIFIED Pattern-C harness →
+  item 8 §4 mechanicals (OP-9 triage of the 8 OPEN intake items + RETROSPECTIVE
+  distillation BLOCKS ratification; ci-green-on-main probe has a KNOWN headSha race —
+  cross-check manually) → **STOP at READY-TO-TAG**. Manager then VERIFIES against
+  reality (probe exit 0, verdict, ratification, CI green headSha-matched, no tag
+  pushed, TokenWorld = 2 protected + 1 sacrificial current) and PUSHES the v0.14.0
+  tag under standing authority.
+- **Fixture doctrine CORRECTED (manager ruling, recorded `c46ae55`):** TokenWorld =
+  2 PROTECTED pages never deleted (`7766017`+`7798785`) + **1 SACRIFICIAL EDITABLE**
+  (`2818063`, current or trashed between runs). "Exactly 2 pages" was WRONG — the
+  unmodified litmus needs the editable 3rd (`litmus-flow.sh:64-72`). The earlier DROP
+  ruling was superseded by RESTORE after successor #7 HALTED execution with
+  code-verified proof (exemplary prove-before-mutate; nothing was mutated under the
+  bad ruling).
+- Items 4a/4b/6 SHIPPED GREEN @ `22a7777` (DP-2 repro-first honored; §8 real-backend
+  arm ran); item 7 = RESOLVED-DEFER (p93 = architectural RBF-LR-03, owner-waived
+  ADR-010 — flag PROMINENTLY in the READY-TO-TAG report); intake recount honest at
+  8 OPEN (`466b6a6`).
 - **Manager monitor:** task `bbz6wred9` (60s poll; ORIGIN-MOVED / BLOCKED /
-  IDLE-STABLE / one-shot STALL / CI-RED). Predecessor's `bgh6ujkic` stopped.
+  IDLE-STABLE / one-shot STALL / CI-RED). Incoming manager: TaskStop it, re-arm your
+  own (script recoverable via TaskStop output or git history of this file).
+- **Ops lessons (rotation #3):** commit the manager-handover refresh BEFORE launching
+  a workhorse successor (committing after raced its first commit — harmless near-miss,
+  different files). Relaying a ruling to a WORKING workhorse via queued `agent send`
+  works — consumed at its next tool boundary; no need to wait for idle when it's an
+  unblock the workhorse is waiting on.
 - **OWNER RULING (2026-07-13, `b773c04`): fix-first.** Tag-blocking product bugs
   default to FIX BEFORE TAG — no owner consult needed unless the fix is architectural
   ("this was something you didn't need my input on"). Calibrate future escalations UP.
