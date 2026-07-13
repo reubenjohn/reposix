@@ -2446,7 +2446,7 @@
         "asserts": [
           "with GITHUB_TOKEN + REPOSIX_ALLOWED_ORIGINS(api.github.com) set, `reposix init github::reubenjohn/reposix <tmp>` (or a list against the sanctioned repo) drives GET /repos/reubenjohn/reposix/issues to HTTP 200 -- NOT 404 -- and the partial-clone tree materializes at least the issues bucket",
           "the request path contains the RAW slug reubenjohn/reposix (owner/repo), never the sanitized reubenjohn-reposix",
-          "a transcript is written to quality/reports/transcripts/github-front-door-real-backend-<RFC3339>.txt recording argv + env_keys (NAMES only) + cwd + exit_code + stdout/stderr",
+          "a transcript is written to quality/reports/transcripts/github-front-door-real-backend.txt recording argv + env_keys (NAMES only) + cwd + exit_code + stdout/stderr",
           "creds/allowlist absent -> NOT-VERIFIED (exit 75, fail-closed per OD-2), never a fabricated PASS"
         ]
       },

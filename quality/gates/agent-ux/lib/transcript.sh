@@ -2,9 +2,11 @@
 # quality/gates/agent-ux/lib/transcript.sh — RBF-FW-02 shared helper
 # source this file from a kind: shell-subprocess verifier; call:
 #   write_transcript_and_artifact <row-slug> <argv...>
-# Writes BOTH a transcript at quality/reports/transcripts/<row-slug>-<RFC3339>.txt
-# AND a JSON artifact at quality/reports/verifications/agent-ux/<row-slug>.json
-# with a transcript_path field referencing the transcript.
+# Writes BOTH a transcript at the STABLE path
+# quality/reports/transcripts/<row-slug>.txt (no RFC3339 stamp -- see the
+# D-P96-01 rationale in the function body below) AND a JSON artifact at
+# quality/reports/verifications/agent-ux/<row-slug>.json with a
+# transcript_path field referencing the transcript.
 #
 # Mirrors the quality/gates/agent-ux/dark-factory/lib.sh factoring precedent:
 # a sourced-only helper (not directly invokable) that centralizes the
