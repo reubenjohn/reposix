@@ -57,7 +57,7 @@ This ledger approached the milestone-hygiene 44000 B ceiling (`quality/gates/age
   - 2026-07-12 20:59 | discovered-by: P111 (milestone-close CI-wait) | severity: MEDIUM | RESOLVED
   - 2026-07-13 | discovered-by: B1 (tag-remediation, mirror-reconcile investigation) | severity: MEDIUM | DEFERRED (pending B1 mirror-refresh manager decision)
   - 2026-07-13 | discovered-by: B1 (tag-remediation, mirror-reconcile investigation) | severity: MEDIUM | DEFERRED (pending B1 mirror-refresh manager decision)
-- [`surprises-intake/part-03.md`](surprises-intake/part-03.md) — 7 entries:
+- [`surprises-intake/part-03.md`](surprises-intake/part-03.md) — 10 entries:
   - 2026-07-13 | discovered-by: B2 (tag-remediation, p93 harness fix, verify-against-reality) | severity: HIGH | DEFERRED (dedicated real-backend recovery-convergence fix phase; active p93 tag-blocker, owner decision pending)
   - 2026-07-12 21:15 | discovered-by: B1 (litmus self-heal proof, verify-against-reality) | severity: HIGH | OPEN (documented recovery doc-lie #2, entangled with B1 owner decision)
   - 2026-07-12 21:15 | discovered-by: B1 (litmus self-heal proof, verify-against-reality) | severity: HIGH | RESOLVED-in-item-4b (commit d1cc811 — fail-closed ADF translation, non-empty sentinel + export refuse; no empty-body PATCH escapes)
@@ -67,3 +67,4 @@ This ledger approached the milestone-hygiene 44000 B ceiling (`quality/gates/age
   - 2026-07-13 | discovered-by: B3 (tag-remediation, attach-sync re-run, verify-against-reality) | severity: MEDIUM | OPEN (verdict asserted a FAIL not backed by a fresh artifact — phantom B3 failure; fresh re-run is a clean PASS → v0.15.0 verdict-rigor guard)
   - 2026-07-13 15:52 | discovered-by: B3 (attach-sync-real-backend independent re-run) | severity: MEDIUM | OPEN (PASS is inconclusive by construction — smokes never round-trip `refs/reposix/origin/main`, ties to B1 gap)
   - 2026-07-13 15:52 | discovered-by: B3 (post-push cadence review) | severity: HIGH | OPEN (`code/ci-green-on-main` false-PASS race — grades before new `ci.yml` run is indexed, no `headSha` check)
+  - 2026-07-13 | discovered-by: items 4a/4b code review (marker-spoof taint surface) | severity: LOW | OPEN (attacker-authored body containing the ADF sentinel line is unpushable — fail-closed write-DoS, escape hatch = strip marker; v0.15.0 collision-resistant sentinel)

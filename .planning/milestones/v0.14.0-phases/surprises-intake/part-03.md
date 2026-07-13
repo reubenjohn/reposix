@@ -208,3 +208,34 @@ ratification-subagent template (`quality/dispatch/milestone-close-verdict.md`).
 **Sketched resolution:** Add `headSha` to the `gh run list --json` query, compare it against `git rev-parse HEAD` (the SHA just pushed); if they don't match, poll (`gh run list` again, or resolve the run id and `gh run watch <id>`) until either a run for the current HEAD appears or a timeout elapses, grading NOT-VERIFIED on timeout — never a stale-run PASS.
 
 **STATUS:** OPEN — routed to v0.15.0, probe-integrity fix (owner must authorize touching `quality/gates/code/ci-green-on-main.sh`). Mitigated THIS session by manually cross-checking the post-push graded run's `headSha` against `git rev-parse HEAD` before trusting the PASS (see this session's post-push step).
+
+## 2026-07-13 | discovered-by: items 4a/4b code review (marker-spoof taint surface) | severity: LOW
+
+**Title:** Marker-spoof write-DoS — an attacker-authored real Confluence page whose body literally contains the unreadable-ADF sentinel line is refused on push (false-positive `refuse_unreadable_adf_sentinel`), rendering that one page unpushable through reposix. **[taint-surface, fail-closed]**
+
+**What:** item 4b's fail-closed ADF fix substitutes a fixed literal sentinel
+`UNREADABLE_ADF_SENTINEL_MARKER = "[reposix: unreadable ADF body — see recovery]"`
+(`crates/reposix-confluence/src/adf.rs:72`) for a body reposix cannot translate, and the export
+path (`refuse_unreadable_adf_sentinel`, `lib.rs:122`, called from `create_record` :330 and the
+update path :395) refuses any push whose body CONTAINS that marker — the intended guard against a
+sentinel-carrying body silently blanking real SoT content. The taint-surface corollary: the
+marker is attacker-CHOOSABLE text. A Confluence page whose real, human-authored body simply
+contains that exact line (a paste, a doc quoting this marker, or a deliberately-crafted body)
+trips the same refuse and becomes unpushable through reposix. This is the SAFE failure direction
+— fail-closed, it blocks a write and never silently mangles content — and the escape hatch is
+obvious (delete the placeholder marker line from the body), so severity is LOW; but it is a
+genuine attacker-influenced write-DoS on one record (lethal-trifecta surface: attacker-authored
+body → reposix push path).
+
+**Why out-of-scope for this review:** changing the sentinel to a collision-resistant form is a
+data-format change to a just-landed fix (item 4b, commit `d1cc811`) with test churn (the sentinel
+literal is asserted in `adf.rs` tests) and touches the export-refuse contract — not a <1h in-place
+tweak. Filed rather than eagerly re-cut a fresh fix.
+
+**Sketched resolution:** if this ever bites, replace the human-readable literal marker with a
+collision-resistant sentinel a real body is astronomically unlikely to contain verbatim — e.g. a
+zero-width-character-tagged marker or a UUID/HMAC-tagged sentinel line — while keeping a
+human-readable teaching suffix. Key the refuse check on the machine-unique token, not the prose,
+so a legitimately-quoted body no longer false-positives. Keep the fail-closed direction.
+
+**STATUS:** OPEN — routed to v0.15.0, taint-surface hardening (LOW; fail-closed today, escape hatch = strip the marker line from the offending body).

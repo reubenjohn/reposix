@@ -315,6 +315,61 @@ run so the residue cannot re-accumulate.
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-14 — `confluence-comment-unreadable-adf-page-url` — comment id fed into a page-shaped unreadable-ADF recovery message
+
+**Discovered during:** items 4a/4b code review (2026-07-13)
+
+**Size:** XS
+
+**Severity:** LOW — comments are read-only today (never pushed), so the mis-typed recovery
+message never fires on a write path; it can only surface inside a fetched, unreadable comment
+body.
+
+**Source:** `crates/reposix-confluence/src/types.rs:241` (`Comment::body_markdown`) passes a
+**comment** id into `crate::adf::unreadable_adf_body(root_type, &self.id)`, whose parameter is
+named `page_id` and whose teaching text (`adf.rs:109`) says "open page {page_id} in your browser"
+and builds a `/wiki/api/v2/pages/{page_id}?body-format=storage` recovery URL (`adf.rs:112`) — the
+wrong entity type for a comment (comments live under `/pages/{id}/{inline,footer}-comments`, not
+`/pages/{id}`). A reader following the recovery URL for an unreadable comment lands on the parent
+page, not the comment.
+
+**Acceptance:** the unreadable-ADF recovery text/URL is kind-aware (page vs comment) — either
+`unreadable_adf_body` takes an entity-kind + id and renders the correct `/pages/{id}` vs
+`/pages/{page}/…-comments` URL, OR the comment caller suppresses the page-URL and names the
+comment id without a misleading `/pages/{id}` link.
+
+**Default disposition for P111:** XS closes-or-defers; safe to defer (dead path today — comments
+never push). Close early if a kind-aware signature proves < 1h.
+
+**STATUS:** OPEN
+
+## GOOD-TO-HAVES-15 — `attach-seed-nonmain-default-branch` — attach lineage-seed hardcodes `main`, no-ops on a `master`-default mirror
+
+**Discovered during:** items 4a/4b code review (2026-07-13)
+
+**Size:** S
+
+**Severity:** LOW — no data loss. A mirror whose default branch is `master` (or anything but
+`main`) simply gets NO lineage seed at attach; the first fetch parentless-seeds exactly as an
+un-anchored tree does, so the Pattern-C `git pull --rebase` heal silently no-ops instead of
+reconciling. Not a regression — `main` is hardcoded pervasively across the codebase.
+
+**Source:** `crates/reposix-cli/src/attach.rs:476` (`seed_tracking_ref`) resolves the seed value
+from the literal `refs/remotes/{mirror_name}/main` only; `resolve_import_parent`
+(`reposix-remote/src/main.rs`) and init's fetch refspec likewise target `.../main`. On a
+`master`-default mirror `refs/remotes/<mirror>/main` does not exist, so `seed_tracking_ref` hits
+its no-mirror-ref skip branch and item 4a's fix never engages.
+
+**Acceptance:** attach's seed (and, ideally, the shared tracking-ref path) resolves the mirror's
+actual default branch via `git symbolic-ref refs/remotes/<mirror>/HEAD` (falling back to `main`)
+instead of hardcoding `main`, so a `master`-default round-tripper gets the same lineage anchor. A
+round-trip regression on a `master`-default mirror proves it.
+
+**Default disposition for P111:** S closes-or-defers; carry-forward target v0.15.0 (the broader
+`main`-hardcoding sweep is bigger than the attach seed alone — scope the attach-local fix first).
+
+**STATUS:** OPEN
+
 ## Entry format
 
 ```markdown
