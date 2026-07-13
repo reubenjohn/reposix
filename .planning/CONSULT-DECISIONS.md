@@ -10,7 +10,7 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 
 ---
 
-## 2026-07-13 [ESCALATED→MANAGER, OPEN] v0.14.0 9th-probe cadence exit-1: 2 harness-gap rows (one P0) block a clean tag — fix-harness vs re-scope?
+## 2026-07-13 [MANAGER] Ruling #3 (E3 valve) — OPTION A AUTHORIZED: fix both harness gaps → honest cadence exit-0
 
 - **Context:** item-5 is now GENUINELY GREEN — a fresh unbiased creds-loaded 9th-probe run
   (`82498cc`) grades `milestone-close-vision-litmus-real-backend` (P0) + `p93-partial-failure-recovery-real-confluence`
@@ -27,15 +27,27 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 - **Why escalated (E3, owner-ratified scope):** the SESSION-HANDOVER instruction to "disregard
   the 2 rows per their owner_hints" rests on a FALSIFIED premise — they are shipped-but-broken-harness,
   not never-shipped/verifier-not-found. **OD-2 forbids waiving a P0 row or a non-exit-0 cadence at
-  milestone close.** So the VERDICT cannot be re-minted GREEN as-is. The clean path (fix the 2
-  harness gaps → cadence exit-0) EXPANDS scope beyond the chartered "mechanicals to READY-TO-TAG,"
-  and t4's fix runs a DESTRUCTIVE rebase-ancestry test against the sanctioned backend — owner/manager call.
-- **Recommendation:** (A, recommended) authorize the 2 small NON-PRODUCT harness fixes (t4 guard
-  literal `TokenWorld`→`REPOSIX`/tenant+protected-id validation; github-front-door add `target/debug`
-  to PATH) + cadence re-run to exit-0 — honest path to a real GREEN gate. (B) re-scope these rows
-  out of the v0.14.0 gate / defer to v0.15.0 via a mechanism that does NOT waive a P0.
+  milestone close.** So the VERDICT cannot be re-minted GREEN as-is.
+- **Decision: OPTION A** — fix both harness gaps, re-run the cadence to an honest exit-0. Item-5
+  litmus+p93 GREEN acknowledged (`82498cc`). **OPTION B REJECTED** — no P0 re-scope at milestone
+  close; OD-2 is honored via a real exit-0, not scope surgery.
+- **Binding guardrails (manager, standing authority):**
+  1. **t4**: guard accepts the sanctioned space KEY `REPOSIX`; KEEP the fail-closed PRE-mutation
+     placement; ADD tenant + protected-id validation so `7766017`/`7798785` are structurally
+     UNTOUCHABLE. The destructive rebase-ancestry run against TokenWorld is PRE-AUTHORIZED under
+     the owner's standing real-backend mutation authority, WITH guardrails: protected pair
+     untouched; post-run end-state verified via `python3 scripts/confluence_tokenworld.py list`
+     (2 protected + `2818063` current); any test residue cleaned or filed.
+  2. **github-front-door**: put `git-remote-reposix` (the built binary) on the harness PATH; do
+     NOT weaken the test itself.
+  3. **Fix-it-twice**: correct BOTH rows' STALE owner_hint prose ("verifier script does not exist
+     yet" is false) in the SAME commit; row STATUS stays runner-minted, never hand-set.
+  4. **Re-run decision rule**: if t4 then fails for a PRODUCT reason → HALT + escalate to manager
+     w1:p7 with the transcript (no waive, no rushed fix); if it fails on ANOTHER harness gap →
+     bounded harness fix + re-run autonomously.
+- **Then STEP 3.3 as chartered.**
 - **Reversibility:** no product code touched; reconcile `82498cc` is a pure catalog-truth correction.
-- **Status:** OPEN — awaiting manager/owner ruling; NOT at READY-TO-TAG. Also filing the mechanism
+- **Status:** RULED OPTION-A (OPEN until executed + exit-0 verified). Also filing the mechanism
   findings (run.py no-dotenv autoload; `--persist` creds-absent clobber footgun) to intake.
 
 ## 2026-07-13 [MANAGER] Ruling #2 (E2/ADR valve) — litmus non-idempotency DEFER → v0.15.0; the v0.14.0 tag PROCEEDS
