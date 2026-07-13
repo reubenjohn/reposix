@@ -58,19 +58,22 @@ does reposix work itself. Keep this file lean; git history is the archive.
   OP-9 GREEN, unbiased fresh-execution verifier). Aggregate
   `milestone-v0.14.0/VERDICT.md` deliberately NOT minted yet — the owner-gated 9th
   probe would force RED on its P0 row. Board fully green at `bda849d`.
-- **v0.14.0 TAG DELEGATED TO MANAGER (owner, 2026-07-12) — currently ⛔ BLOCKED on a
-  RED 9th probe (2026-07-13Z).** The probe ran for real (no env wall): 1 PASS / 3 FAIL
-  / 2 NOT-VERIFIED → hard RED per OD-2; honest RED verdict minted
-  `quality/reports/verdicts/milestone-v0.14.0/VERDICT.md` (`563095f`). Sim-only
-  coverage had masked real-backend failures. Blockers: **B1** (P0) vision-litmus —
-  mass-delete guard refused a delete-shaped reconcile (page 2818063 in mirror, absent
-  from live TokenWorld; stale-mirror-drift vs legitimate-delete diagnosis needed;
-  reconcile mutation = manager's call after read-only diagnosis); **B2** (P0)
-  p93-partial-failure-recovery + **B3** (P1) attach-sync — stale 2026-07-06 artifacts,
-  re-run + re-persist; **B4** (P0) t4-conflict-rebase + **B5** (P1) github-front-door
-  — verifier scripts never shipped → NOT-VERIFIED. Remediation checklist:
-  `.planning/SESSION-HANDOVER.md`. Re-grade needs cadence exit 0 + unbiased
-  ratification; then tag script → manager pushes tag. NO softening, NO waiver.
+- **v0.14.0 TAG — remediation phase 2 (2026-07-13Z). 🔴 MAIN RED first.** CI run
+  29220925797 failed: "integration (contract, real confluence)" exit 101 — prime
+  suspect: 2 orphan "p93 smoke A" pages left on TokenWorld by a coordinator lane.
+  B4/B5 CLOSED (verifiers shipped); B1/B2 re-diagnosed (`c8a95ca` handover §2-3) and
+  resolved by TWO MANAGER DECISIONS (2026-07-13Z, under standing tag authority):
+  **D1 (B1, non-waivable P0): BLESSED the litmus bus-fetch-rebase self-heal** — the
+  litmus exercises the documented recovery path instead of failing on out-of-band SoT
+  drift (aligns GTH-V15-09); the `sync --reconcile` mirror-refresh DOC LIE in root
+  CLAUDE.md must be fixed in the same change. **D2 (B2/p93, caveat-able P0): option
+  (b)** — honest harness rewrite (UPDATE-recovery + teardown + correct the lying
+  catalog assert) AND the CREATE-recovery-vs-id-assigning-backends product gap ships
+  as a DOCUMENTED tag caveat in VERDICT.md, fix routed to v0.15.0 (filed `ffb93ba`;
+  precedent: v0.13.0 closed GREEN-with-caveats). NO product-code fix mid-tag-sequence
+  (that's arc-gated defect-lane work). Then handover §4 mechanicals: orphan sweep →
+  CI green → honest probe exit 0 → re-mint + ratify verdict → tag script →
+  READY-TO-TAG → manager verifies + pushes tag.
 - **Serialization discipline (self-correction, 2026-07-13Z):** the manager violated
   the single-writer ruling by committing handover updates mid-workhorse-run
   (6d0f94f, 2bc29f1, 7dabbbf). New rule: manager edits may be drafted anytime but are
