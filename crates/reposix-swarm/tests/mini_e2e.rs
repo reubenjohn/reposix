@@ -196,6 +196,12 @@ use wiremock::matchers::{method, path, path_regex, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 fn sample_page(id: &str, title: &str) -> serde_json::Value {
+    // Real Confluence Cloud v2 STRING-encodes body.atlas_doc_format.value (a
+    // JSON string whose contents are the ADF doc), NOT an inline object. Match
+    // the real wire shape so this fixture exercises the string-decode path in
+    // ConfBodyAdf's Deserialize (fix-twice with the v0.14.0 item-5 core fix)
+    // instead of passing only via the deserializer's non-string passthrough.
+    let adf_value = json!({"type": "doc", "version": 1, "content": []}).to_string();
     json!({
         "id": id,
         "status": "current",
@@ -204,7 +210,7 @@ fn sample_page(id: &str, title: &str) -> serde_json::Value {
         "version": {"number": 1, "createdAt": "2026-01-01T00:00:00Z"},
         "body": {
             "atlas_doc_format": {
-                "value": {"type":"doc","version":1,"content":[]}
+                "value": adf_value
             }
         }
     })
