@@ -1,49 +1,217 @@
-# SESSION-HANDOVER.md — v0.14.0 item-5 core coherence bug FIXED + mechanism-verified; PENDING manager ruling on a SEPARATE architectural finding (litmus non-idempotency); test-fix + item-8 queued — 2026-07-13 (→ successor #10)
+# SESSION-HANDOVER.md — v0.14.0 item-5 test-fix + guardrail-5 doc-truth DONE; item-8 mechanicals (retro distill → verdict remint → ratify → tag-script author → STOP) queued — 2026-07-13 (→ successor #11)
 
-For the incoming top-level workhorse (L0) — a top-level ROUTING coordinator: routes via GSD + subagents, never leaf-works. Map, not territory — detail lives in git + linked files. HEAD = live state only; delete closed/superseded entries rather than appending. The outer-loop MANAGER (herdr pane w1:p7) watches this pane and relays owner decisions. Resume an agent via SendMessage, never fork (ORCHESTRATION §11).
+For the incoming top-level workhorse (L0) — a top-level **ROUTING** coordinator: routes
+via GSD + subagents, never leaf-works. Reports to the outer-loop MANAGER (herdr pane
+w1:p7), which watches this pane and relays owner decisions. Map, not territory — detail
+lives in git + linked files. HEAD = live state only; this replaces (does not append to)
+the prior handover — resume an agent via SendMessage, never fork (ORCHESTRATION §11).
 
-## 0. State (verify: `git rev-parse --short HEAD`, `git status --porcelain`, `gh run list --branch main --workflow ci.yml --limit 5 --json headSha,status,conclusion`)
-- HEAD ≈ this handover commit on origin/main, tree clean — **verify live.** Main CI GREEN at `95ed061` (headSha-verified this session; the newest `ci.yml` run was `95ed061 completed success`). This handover's push carries the DP-2 review evidence commit `a424546` (was unpushed at relief).
-- **Item-5's tag-blocking coherence RED is FIXED.** Root cause was a real `reposix-confluence` regression: the Confluence v2 API **string-encodes** `body.atlas_doc_format.value` (JSON-in-a-string) but `ConfBodyAdf` deserialized it as an object → empty `adf_root_type` → item-4b fail-closed sentinel fired on EVERY real page (protected pair included). Fix = a manual `Deserialize` decoding `Value::String → serde_json::from_str` at `crates/reposix-confluence/src/types.rs:171` (fix commit `49666eb`; mirror tooling `95ed061`). **Mechanism-verified** by a fresh DP-2 reviewer (`a424546`): **MECHANISM-CORRECT + fail-closed PASS** (garbage/empty/wrong-root all still sentinel; `Tainted<T>` preserved; serde recursion-limited). Fix lane self-verified **litmus PASS (P0) + p93 PASS (P0)** against live TokenWorld.
-- **TokenWorld = EXACTLY 3 fixture pages** (`2818063` sacrificial [=v11 after this session], `7766017`+`7798785` PROTECTED). Orphan `9994241` **DELETED** (diagnostic lane, HTTP 204). Verify: `python3 scripts/confluence_tokenworld.py list`.
-- Real-backend creds: env vars UNSET in a bare shell but **`.env` IS present** (the runner sources it) — the 9th probe IS runnable. Do NOT read `.env`.
-- Evidence trail: diagnosis `.planning/milestones/v0.14.0-phases/evidence/item5-RED-diagnosis-2026-07-13.md` (`25e2720`); fix review `.../item5-fix-review-2026-07-13.md` (`a424546`).
+## 1. Ground truth (git) — VERIFY LIVE, do not trust this file's staleness
 
-## 1. ACTIVE CHARTER — core fix landed; TWO gates before item 8, then STOP at READY-TO-TAG. NEVER push the tag.
+Verified this session via `git rev-parse --short HEAD`, `git status --porcelain`,
+`git rev-list --left-right --count origin/main...HEAD`, `gh run list --branch main
+--workflow ci.yml --limit 5 --json headSha,status,conclusion`, `gh run view <id> --json
+jobs`:
 
-### STEP 1 (successor #10's FIRST action) — the PENDING MANAGER RULING. Do NOT run the 9th-probe verifier or any item-8 tag-prep until this is ruled.
-I escalated a **SEPARATE ARCHITECTURAL finding** to the manager (w1:p7) — distinct from item-5's now-fixed coherence bug:
-> **litmus is non-idempotent.** Its own inline mirror fan-out pushes the *pre-write* client tree, so every litmus run re-stales the GitHub mirror (`pages/2818063.md` trailing version + roundtrip normalization). A by-hand SoT-changing bus-push refresh advances the mirror head but **never converges** (proven). Robust repeatability needs a **mirror-sync product change** (fan-out pushes the *post-write materialized snapshot*). Touches **ADR-010 RBF-LR-04** (mirror-head refresh promise) = E2/ADR-class → the manager's call. Filed to `surprises-intake/part-03.md`.
+- **HEAD = `24f9e97`**, tree **clean** (`git status --porcelain` empty), **0 ahead / 0
+  behind `origin/main`** — already pushed. Re-verify these three before doing anything.
+- **CI:** newest `ci.yml` run (`29288966754`) is **`in_progress`** on `24f9e97` — a
+  planning+docs+catalog-only push, expected PASS. Prior run (`29287664269`) on `d660e6e`
+  (STEP-2 code) **concluded SUCCESS**, and I confirmed via `gh run view --json jobs` that
+  the `integration (contract, real confluence v09)` job (plus the `real github`/`real
+  jira`/non-v09-real-confluence jobs) all show `conclusion: success` — the item-5 fix
+  landed clean against CI including the real-Confluence contract lane.
+  **Successor #11's first action: re-poll `gh run list` for `24f9e97`'s headSha and
+  confirm `conclusion: success` (not just `status: completed`) before opening STEP
+  3.2/3.3 — never open work over a red main.**
+- **Manager Ruling #2 (2026-07-13, `a905bd0` + `04f985d`):** litmus non-idempotency
+  **DEFER → v0.15.0; the v0.14.0 tag PROCEEDS.** Recorded verbatim in
+  `.planning/CONSULT-DECISIONS.md` (`## 2026-07-13 [MANAGER] Ruling #2 …`); the
+  `surprises-intake/part-03.md` non-idempotency row is flipped to `RULED-DEFER→v0.15.0`.
+  This ruling is **closed** — do not re-litigate it, only carry the caveat forward at
+  tag time (§4 below).
+- **Commits since the last handover (`a905bd0`), oldest→newest:**
+  - `04f985d` — record Ruling #2 in CONSULT-DECISIONS + flip part-03 row (STEP 0, done).
+  - `c2eb2ad` — fix(confluence): default `ConfBodyAdf` inner `Raw.value` to `Null`,
+    averts a list-wide DoS (item 5c).
+  - `c7ae07a` — test(cli): make the real-TokenWorld ADF-decode twin non-vacuous via
+    `get_record` (item 5a) — **executed against live TokenWorld, PASSED**.
+  - `e504121` — test(swarm): string-encode ADF value in `mini_e2e.rs` fixture to match
+    the real wire shape (item 5b).
+  - `ad62dd3` — fix(mirror-script): `set -e`, non-circular verify, deletion-aware
+    overlay in `refresh-tokenworld-mirror.sh` (item 5d).
+  - `d660e6e` — style: trim mirror-script comments to the 160-line readability cap
+    (item 5d, CI GREEN incl. real-confluence contract — verified above).
+  - `b7e79ab` — docs(testing-targets): document sacrificial editable page `2818063`,
+    kill the "exactly 2 pages" myth (guardrail 5, doc-truth edit).
+  - `24f9e97` — refresh(doc-alignment): re-bind 13 drifted rows in
+    `testing-targets.md` that the doc-truth edit shifted to STALE_DOCS_DRIFT (guardrail
+    5, mint pass by an unbiased Opus grader — pre-push 61 PASS / 0 FAIL / exit 0).
+- `quality/reports/verdicts/milestone-v0.14.0/VERDICT.md` is **STILL RED** on disk
+  (dated 2026-07-12, `head_at_grade: 9890a67` — predates the item-5 fix entirely). This
+  is expected staleness, not a regression: it has not been re-minted since the fix
+  landed. Re-minting it is part of STEP 3.3 below, gated on a fresh 9th-probe PASS.
 
-**Bounded question to the manager:** does this **BLOCK the v0.14.0 tag** or **DEFER to v0.15.0**? **My relayed recommendation: DEFER, tag proceeds** — it is a litmus/mirror *repeatability* gap, not a product coherence failure; a single clean 9th-probe run (verifier runs `scripts/refresh-tokenworld-mirror.sh` first as the documented interim op) legitimately grades item-5 GREEN; v0.13.0 precedent shipped CLOSED-GREEN with owner-gated caveats. **What flips my answer:** if the manager reads the mirror fan-out as a **product** path real users hit (not just the litmus harness), it becomes a shipping coherence defect → BLOCK. **If the ruling hasn't landed when you start, surface this to the manager and await it.**
+## 2. Wave/cycle state
 
-### STEP 2 — bounded TEST-FIX lane (opus, single tree-writer). item-5 is NOT honestly closed until this lands (OP-7 / "tests must assert their names"). Ruling-independent parts (a/b/c) can start immediately; the mirror-script part (d) is entangled with STEP 1.
-DP-2 review (`a424546`) found the regression PROTECTION is partly illusory (the fix itself is sound):
-- **(a) HIGH — the "durable real-TokenWorld twin" is VACUOUS.** `crates/reposix-cli/tests/agent_flow_real.rs::get_record_real_confluence_body_is_not_unreadable_sentinel` calls `list_records` (empty bodies, no `body-format`) not `get_record`, so it PASSES even against the original buggy deserializer — never exercises the ADF decode. The "repro locked" claim is false. **Fix:** call `get_record(&space, r.id)` per listed id, assert real content + non-sentinel; rename.
-- **(b) MED — sibling fixture still lies.** `reposix-swarm/tests/mini_e2e.rs:198-211` object-encodes `atlas_doc_format.value` (fix-twice incomplete; passes only via the new deserializer's passthrough). **Fix:** `.to_string()` it.
-- **(c) NOTICED, pre-existing DoS (HIGH-ish, fix here):** `ConfBodyAdf` inner `Raw.value` lacks `#[serde(default)]` → one page with `atlas_doc_format: {}` fails the whole `ConfPageList` deserialize (`client.rs:248`), a list-wide DoS. Natural fix in the same rewrite: default `value → Null` (→ sentinel).
-- **(d) MED/LOW mirror-script (`scripts/refresh-tokenworld-mirror.sh`): circular verification (`:134` reads BACKEND from the overlaid clone), additive `git checkout FETCH_HEAD -- pages/` (`:109`) drops backend-side deletions, no `set -e` (false "byte-identical" exit 0). ENTANGLED with STEP 1 — if the manager rules BLOCK+product-change, the script may be reworked/replaced; sequence (d) AFTER the ruling (the correctness bugs are worth fixing regardless if the ruling DEFERS).**
-- Constraints: sim-first (`cargo test -p reposix-confluence`) + real-TokenWorld self-verify; ONE cargo machine-wide; leaf isolation; push at green.
+| Wave / Step | State | Commits |
+|---|---|---|
+| STEP 0 — record Manager Ruling #2 | DONE | `04f985d` |
+| STEP 2a — non-vacuous real-TokenWorld ADF twin | DONE (executed+PASSED live) | `c7ae07a` |
+| STEP 2b — `mini_e2e.rs` fixture string-encode fix | DONE | `e504121` |
+| STEP 2c — `ConfBodyAdf` DoS fix (`#[serde(default)]`) | DONE | `c2eb2ad` |
+| STEP 2d — mirror-script `set -e` + non-circular verify | DONE | `ad62dd3`, `d660e6e` |
+| STEP 3.1 — guardrail-5 doc-truth edit + docs-alignment re-bind | DONE (pre-push 61/61 GREEN) | `b7e79ab`, `24f9e97` |
+| **STEP 3.2 — 9th-probe unbiased verifier (litmus + p93 grade)** | **NOT STARTED** | — |
+| **STEP 3.3 — item-8 mechanicals (retro → verdict → ratify → tag-script → STOP)** | **NOT STARTED** | — |
 
-### STEP 3 — downstream, GATED on STEP 1 (defer) + STEP 2 (green). STOP at READY-TO-TAG.
-1. **Guardrail 5 (STILL OWED, top-level orchestration):** re-apply the `docs/reference/testing-targets.md` doc-truth edit (add sacrificial editable page `2818063`, kill the "exactly 2 pages" myth — draft in `git show d26573a -- docs/reference/testing-targets.md`) **AND** run `/reposix-quality-refresh docs/reference/testing-targets.md` in the SAME wave (any `docs/**` edit trips the P0 `docs-alignment/walk` pre-push gate = STALE_DOCS_DRIFT; the refresh mints the claim→test bindings so the push lands). Fresh budget.
-2. **9th-probe unbiased VERIFIER (`gsd-verifier`, OP-7):** run `python3 quality/runners/run.py --cadence pre-release-real-backend --persist` (runs `refresh-tokenworld-mirror.sh` first per interim op) → litmus + p93 PASS = item-5 GREEN grade. **NOTE:** 2 UNRELATED rows fail instantly — `t4-conflict-rebase-ancestry-real-backend` + `github-front-door-real-backend` (verifier-not-found / NOT-IMPLEMENTED per their own `owner_hints`, NOT the ADF fix); the cadence exit may be nonzero from ONLY those — grade item-5 on litmus+p93 specifically and re-confirm those 2 are the same pre-existing NOT-VERIFIED rows.
-3. **Item 8 mechanicals:** OP-9 retro distillation FIRST — finalize the STARTED-but-unfinished v0.14.0 `RETROSPECTIVE.md` section (distill the 8 `part-03` intakes + this RED run + the ADF fix + the non-idempotency finding; the ratifier grades RED if missing) → re-mint `quality/reports/verdicts/milestone-v0.14.0/VERDICT.md` GREEN → FRESH unbiased ratification subagent (`quality/dispatch/milestone-close-verdict.md`) → author `.planning/milestones/v0.14.0-phases/tag-v0.14.0.sh` (pattern `.../v0.13.0-phases/tag-v0.13.0.sh`) → **STOP at READY-TO-TAG.** Compact report to MANAGER w1:p7 (SHAs, artifact paths, probe exit, TokenWorld end state). **NEVER push the tag.**
-- **KNOWN GATE RACE (HIGH, filed, NOT fixed):** `ci-green-on-main.sh` grades PASS off newest `gh run` WITHOUT asserting `headSha`==pushed HEAD. Cross-check manually (done this session: `95ed061` matched).
+No named incident this session — the wave ran clean. The only open question resolved
+mid-flight was Ruling #2 (§1), now closed.
 
-### Item 7 — RESOLVED: DEFER to v0.15.0. Carry the verbatim WAIVED flag into READY-TO-TAG:
-"p93 is GREEN as an UPDATE-recovery proof against live TokenWorld (`1c424d7`). It does NOT cover CREATE-recovery: a partial-fail whose landed action was a create against an id-assigning backend genuinely does not converge. This is the owner-signed WAIVED known limitation of ADR-010 §3 / RBF-LR-03, hand-recoverable, routed to v0.15.0." — SEPARATE from item-5's RED (an UPDATE-recovery failure, now FIXED). Item-8 doc TODOs still open: re-STATUS `part-03.md:59-61` (stale "active p93 blocker", overtaken by `1c424d7`); file a v0.15.0 GTH for slug→id create-reconciliation; LOW: title-sweep 2 pre-rewrite "p93 smoke A" orphans in TokenWorld.
+## 3. Binding constraints (unchanged, carry verbatim)
 
-## 2. Constraints (unchanged)
-Sim-first for code; real backends only via `REPOSIX_ALLOWED_ORIGINS`; sanctioned targets ONLY — **TokenWorld = 2 PROTECTED (`7766017`+`7798785`, never deleted) + 1 SACRIFICIAL EDITABLE (`2818063`)** (verify `python3 scripts/confluence_tokenworld.py list`); **NO tag push ever** (manager's); never open work over a red main; ONE cargo invocation machine-wide (prefer `-p`); /tmp leaf isolation (`cd` in the SAME bash call); single-writer (one tree-mutating agent at a time; read-only agents may parallelize). A `fork` is never a safe discard — end the turn instead. Relief ~100k soft / ~150k hard (absolute) → REPLACE this file, commit+push, end turn, manager rotates you. Resume a child via SendMessage, never fork.
+Sim-first for code; real backends only via `REPOSIX_ALLOWED_ORIGINS`; sanctioned targets
+ONLY — **TokenWorld = 2 PROTECTED (`7766017`+`7798785`, never deleted) + 1 SACRIFICIAL
+EDITABLE (`2818063`)** (verify with `python3 scripts/confluence_tokenworld.py list` —
+**note:** this fails in a bare shell with `KeyError: REPOSIX_CONFLUENCE_TENANT`; the env
+vars are unset here by design and only sourced from `.env` by the runner — do NOT read
+`.env` yourself, and do not treat this KeyError as a TokenWorld-state problem); `.env` is
+present; **NO tag push ever** (manager's); never open work over a red main; ONE cargo
+invocation machine-wide (prefer `-p`); /tmp leaf isolation (`cd` in the SAME bash
+invocation); single-writer discipline (one tree-mutating agent at a time; read-only
+agents may parallelize); relief ~100k soft / ~150k hard context (absolute, not %) →
+REPLACE this file, commit+push, end turn, manager rotates you. A `fork` is never a safe
+discard — end the turn instead. Resume a child via SendMessage, never fork.
 
-## 3. Ops lessons (carried) + hygiene debt
-- The BOUNDED classification chain (diagnostic `25e2720` → manager-concurred → fix `49666eb` → mechanism-verified `a424546`) is CLOSED; item-5's core bug is FIXED. The OPEN items are the manager ruling (STEP 1) + the honest-closure test-fix (STEP 2).
-- **CONSULT-DECISIONS.md ~35k (WARN >20k):** prune superseded entries (git is the archive) — the DROP/HALT item-5 chain, implemented `[SELF]` D4/D5/D6, closed B1 restore/reconcile entries are safe to delete at a clean moment.
-- **surprises-intake/part-03.md ~26.6k (over 20k md soft-warn):** OP-8 drain candidate; now also holds the litmus-non-idempotency finding + the DP-2 NOTICED items.
-- **`ci-green-on-main` headSha race** — cross-check `headSha` manually until fixed.
-- **Display-freeze false alarm** — health-check via GROUND-TRUTH git, not the pane view. A dispatched `fork` becomes a live parallel tree-writer — never a safe no-op.
-- `run_helper_export_real` discards helper stderr (opaque real-backend failures) — filed by the diagnostic lane.
+## 4. Litmus / gate / REOPEN state
+
+- **Milestone VERDICT.md is RED on disk** (`quality/reports/verdicts/milestone-v0.14.0/VERDICT.md`,
+  dated 2026-07-12, `head_at_grade: 9890a67`) — this predates the item-5 fix, item-5's
+  test-fix lane, and guardrail 5. It graded RED off a real 9th-probe run that predates
+  `49666eb`/`c2eb2ad`/`c7ae07a`/`e504121`. It must be **re-minted**, not trusted, after a
+  fresh clean 9th-probe run (STEP 3.2) — this is STEP 3.3 item 2.
+- **9th-probe cadence (`pre-release-real-backend`) has NOT been re-run since the fix.**
+  Successor #11's STEP 3.2 is the first live re-run against the current HEAD. Per the
+  prior handover's documented interim op (part of the Ruling-#2-defer path): the cadence
+  runner invokes `bash scripts/refresh-tokenworld-mirror.sh` FIRST — one clean run
+  legitimately grades item-5 GREEN (litmus + p93 PASS specifically).
+- **Known pre-existing NOT-VERIFIED rows (do not let these block the item-5 grade):**
+  `agent-ux/t4-conflict-rebase-ancestry-real-backend` (P0) and
+  `agent-ux/github-front-door-real-backend` (P1) — both `error: verifier not found`,
+  never-shipped scripts (tracked as GTH-V15-03 precedent in the stale VERDICT.md). If the
+  cadence exits nonzero, confirm it is these same two rows and not a regression before
+  treating item-5 as blocked.
+- **Litmus non-idempotency finding: RULED-DEFER→v0.15.0 (Ruling #2, closed).** Carry the
+  caveat **verbatim** into the tag-readiness report: "litmus is non-idempotent against
+  its own GitHub mirror fan-out (pre-write client tree, not post-write materialized
+  snapshot) — a pre-existing ADR-010 RBF-LR-04 fan-out characteristic, not a v0.14.0
+  regression. Product fix (mirror-sync pushing the post-write snapshot) routed to
+  v0.15.0. The interim op — one clean `refresh-tokenworld-mirror.sh` run before the 9th
+  probe — legitimately grades item-5 GREEN for this tag."
+- **KNOWN GATE RACE (HIGH, filed, NOT fixed):** `ci-green-on-main.sh` grades PASS off the
+  newest `gh run` WITHOUT asserting `headSha` == pushed HEAD. Cross-check `headSha`
+  manually (done this session for both `24f9e97` and `d660e6e` — both matched).
+- **Item-7 is RESOLVED (DEFER to v0.15.0) — carry this WAIVED flag verbatim into
+  READY-TO-TAG:** "p93 is GREEN as an UPDATE-recovery proof against live TokenWorld
+  (`1c424d7`). It does NOT cover CREATE-recovery: a partial-fail whose landed action was
+  a create against an id-assigning backend genuinely does not converge. This is the
+  owner-signed WAIVED known limitation of ADR-010 §3 / RBF-LR-03, hand-recoverable,
+  routed to v0.15.0." (Separate from item-5's now-fixed UPDATE-recovery RED.)
+
+## 5. Mid-execution decisions not yet formalized + noticed-not-yet-filed
+
+Nothing new this session required an ad-hoc decision beyond executing the already-ruled
+Ruling #2 and the already-scoped STEP 2/3.1 lanes — no new `CONSULT-DECISIONS.md` entry
+was needed. The following are **carried forward, still unfiled/unactioned**, do not drop:
+
+- **GOOD-TO-HAVE:** dead `PROTECTED_IDS` variable in `scripts/refresh-tokenworld-mirror.sh`
+  (defined but the guard loop hardcodes `7766017 7798785` literally instead of reading
+  it).
+- **GOOD-TO-HAVE / v0.15.0:** `crates/reposix-cli/tests/agent_flow_real.rs` (~47k chars)
+  and `translate.rs` (~26k) are split candidates (by backend) — flagged, not filed as a
+  formal row yet.
+- **Item-8 doc TODOs (from the prior handover, still open):** re-STATUS
+  `surprises-intake/part-03.md:59-61` (stale "active p93 blocker" language, overtaken by
+  `1c424d7`); file a v0.15.0 GOOD-TO-HAVE for slug→id create-reconciliation (distinct
+  from GTH-09, which is already filed for the broader ADR-010 redesign — confirm overlap
+  before filing a duplicate); LOW: title-sweep 2 pre-rewrite "p93 smoke A" orphan pages
+  still sitting in TokenWorld.
+- **Item-7 WAIVED flag** — see §4, must ride into the tag-readiness report verbatim.
+- **RETROSPECTIVE.md's v0.14.0 section is STARTED but INCOMPLETE for this tag-blocker
+  arc.** It currently narrates only the wave-2 hardening (P102–P113, shipped
+  2026-07-12) — it has NO mention yet of: the item-5 string-encoded-ADF regression + its
+  root cause + fix (`49666eb`), the DP-2 mechanism review + its hollow-real-twin finding,
+  the item-5 test-fix lane (5a–5d), the litmus non-idempotency finding + Ruling #2, or
+  item-7's CREATE-recovery WAIVED flag. STEP 3.3's retro-distillation sub-step must add
+  this narrative (OP-9) BEFORE re-minting the verdict — the ratifier grades RED if it's
+  missing.
+
+## 6. Precise next steps (successor #11 runbook) — STOP at READY-TO-TAG, NEVER push the tag
+
+0. Re-verify §1's ground truth live (`git rev-parse --short HEAD`, `git status
+   --porcelain`, `gh run list --branch main --workflow ci.yml --limit 3 --json
+   headSha,status,conclusion`). Confirm `24f9e97`'s run concluded `success` before
+   proceeding. If it's still `in_progress`, wait/poll — do not open STEP 3.2/3.3 over an
+   unresolved or red run.
+
+1. **STEP 3.2 — 9th-probe unbiased VERIFIER (`gsd-verifier`, OP-7).** Dispatch a fresh
+   subagent with no prior session context to run
+   `python3 quality/runners/run.py --cadence pre-release-real-backend --persist`
+   (this invokes `bash scripts/refresh-tokenworld-mirror.sh` first, per the documented
+   interim op — one clean run legitimately grades item-5 GREEN). Grade **item-5
+   specifically on litmus (`agent-ux/milestone-close-vision-litmus-real-backend`) + p93
+   (`agent-ux/p93-partial-failure-recovery-real-confluence`) PASS.** Re-confirm the two
+   pre-existing NOT-VERIFIED rows (`t4-conflict-rebase-ancestry-real-backend`,
+   `github-front-door-real-backend`) are unchanged from the stale VERDICT.md's own record
+   (§4) — do not let them fail the item-5 grade; do not silently absorb them as "fixed"
+   either, they stay NOT-VERIFIED/filed debt.
+
+2. **STEP 3.3.1 — OP-9 retro distillation FIRST.** Finalize the v0.14.0 section of
+   `.planning/RETROSPECTIVE.md` per §5's gap list above: distill the 8 `part-03.md`
+   intakes, the item-5 RED run + root cause + fix, the DP-2 mechanism review + hollow-twin
+   finding, the item-5 test-fix lane (5a–5d), the litmus non-idempotency finding (now
+   RULED-DEFER→v0.15.0), and item-7's CREATE-recovery WAIVED flag. The ratifier in step 4
+   grades RED if this is missing or thin.
+
+3. **STEP 3.3.2 — re-mint `quality/reports/verdicts/milestone-v0.14.0/VERDICT.md`
+   GREEN**, sourced from the fresh STEP 3.2 probe artifacts (not the stale 2026-07-12
+   run) — update `head_at_grade` to the current HEAD.
+
+4. **STEP 3.3.3 — dispatch a FRESH unbiased ratification subagent** per
+   `quality/dispatch/milestone-close-verdict.md` (author ≠ this session, zero prior
+   context) to confirm the re-minted verdict is legitimate.
+
+5. **STEP 3.3.4 — author `.planning/milestones/v0.14.0-phases/tag-v0.14.0.sh`**,
+   patterned on `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh` (clean-tree +
+   signed-tag guards).
+
+6. **STOP at READY-TO-TAG.** Do not run the script, do not push a tag — that step is the
+   manager's. Send a compact report to MANAGER w1:p7: commit SHAs for every step above,
+   artifact paths (retro section, VERDICT.md, tag script), the 9th-probe exit code +
+   per-row grade, and TokenWorld's end state (3 pages, unchanged counts, no deletions).
+
+7. **File, do not drop, the carried noticed-not-filed items** in §5 (dead
+   `PROTECTED_IDS` var, the two split-candidate test files, the `part-03.md` re-STATUS +
+   v0.15.0 GTH filing, the orphan-page title sweep) to their respective intake files
+   before or alongside STEP 3.3 — whichever is cheaper given the wave's shape.
+
+### Ops lessons / hygiene debt (carry)
+
+- **KNOWN GATE RACE (HIGH, filed, not fixed):** `ci-green-on-main.sh` grades PASS off the
+  newest `gh run` WITHOUT asserting `headSha` == pushed HEAD — cross-check `headSha`
+  manually every time.
+- **docs-alignment grader misfire gotcha:** an Opus grader Task can return with 0 tool
+  uses + a generic "please continue" passthrough (did nothing). Verify with
+  `plan-refresh` + `git status`; re-dispatch FRESH with an explicit "EXECUTE NOW, use
+  your tools" opening if it happens again.
+- **Hygiene:** `.planning/CONSULT-DECISIONS.md` is **~40.3k chars** (WARN >20k, and has
+  grown, not shrunk, since the last handover) — prune superseded entries (the
+  DROP/HALT item-5 chain, RESOLVED B1 restore/reconcile, now-closed Ruling #2 discussion
+  once acted on) at a clean moment; git is the archive.
+  `surprises-intake/part-03.md` is **~27.3k chars** (over the 20k md soft-warn) — OP-8
+  drain candidate.
+- `run_helper_export_real` discards helper stderr (opaque real-backend failures) —
+  already filed, not yet fixed.
 
 ---
 History lives in git — `git log` / `git show`, not restated here.
