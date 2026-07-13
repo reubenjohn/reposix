@@ -1,0 +1,146 @@
+================================================================================
+DP-2 REPRO-FIRST evidence — item 4a (attach-lineage bug), v0.14.0 tag-blocker
+================================================================================
+Date:      2026-07-13
+Lane:      DP-2 repro-first (PROVE the bug is executably RED; NO production fix)
+Repo HEAD: 8e36e62 (tree clean at lane start)
+git:       2.25.1  (selects the `import` verb natively → full round-trip drivable)
+Design:    .planning/milestones/v0.14.0-phases/attach-lineage-fix-design.md §§1,5
+
+WHAT THIS PROVES
+----------------
+Today's `reposix attach` NEVER seeds `refs/reposix/origin/main` (design §1). The
+ref that the whole documented Pattern-C recovery (`git pull --rebase && git push`)
+anchors on is therefore ABSENT after a real attach. On the next `git fetch` the
+helper's `resolve_import_parent` finds no ref → returns `None` → synthesizes a
+PARENTLESS "Sync from REST snapshot" root that shares no ancestor with the agent's
+branch → `git rebase` hits the cross-root `CONFLICT (add/add)` wall (data the agent
+edited cannot be reconciled).
+
+Two committed tests (added in this lane; NO production code changed):
+
+  1. crates/reposix-cli/tests/attach.rs::attach_seeds_tracking_ref_at_mirror_base
+     THE RED PROOF. Drives the REAL `reposix attach` binary (NOT a manually-seeded
+     ref) end-to-end: attach → edit issue → git fetch → git rebase. RED today;
+     GREEN once Part A (seed refs/reposix/origin/main = mirror merge-base M) lands.
+
+  2. crates/reposix-remote/tests/attach_pattern_c_roundtrip_recovers.rs
+     Mechanism proof through the REAL helper + REAL `git fetch`/`git rebase`:
+       - attach_pattern_c_roundtrip_recovers (seeded)  → GREEN (regression guard):
+         seed present → snapshot chains onto M → rebase reconciles, no add/add.
+       - attach_pattern_c_roundtrip_falsifier_omitted_seed_hits_wall → GREEN control:
+         seed omitted → fetched root is PARENTLESS (refs/reposix/origin/main~1
+         does not resolve) → rebase hits CONFLICT (add/add). Proves the seed is the
+         load-bearing anchor. (GREEN today AND after the fix — a raw seedless fetch
+         is unchanged by Part A; it is a permanent control, not the red proof.)
+
+COMMAND
+-------
+$ cargo test -p reposix-remote -p reposix-cli --jobs 2 --no-fail-fast -- \
+      attach_pattern_c_roundtrip attach_seeds_tracking_ref_at_mirror_base \
+      --include-ignored --test-threads=1
+(prereq build of the reposix / reposix-sim / git-remote-reposix bins done in a
+ prior, non-concurrent `cargo test --no-run` invocation — the CLI test is
+ #[ignore]-tagged and shells out to those binaries.)
+
+RESULT SUMMARY
+--------------
+  attach_seeds_tracking_ref_at_mirror_base ....................... FAILED  (RED — the proof)
+  attach_pattern_c_roundtrip_recovers ........................... ok      (GREEN — regression guard)
+  attach_pattern_c_roundtrip_falsifier_omitted_seed_hits_wall ... ok      (GREEN — parentless/add-add control)
+cargo exit: 101 (non-zero because the attach-driven repro is RED, as required)
+
+================================================================================
+VERBATIM RED OUTPUT — attach_seeds_tracking_ref_at_mirror_base (REAL `reposix attach`)
+================================================================================
+     Running tests/attach.rs (target/debug/deps/attach-4787707821778264)
+
+running 1 test
+test attach_seeds_tracking_ref_at_mirror_base ... FAILED
+
+failures:
+
+---- attach_seeds_tracking_ref_at_mirror_base stdout ----
+
+thread 'attach_seeds_tracking_ref_at_mirror_base' (3871140) panicked at crates/reposix-cli/tests/attach.rs:1439:5:
+assertion `left == right` failed: REAL `reposix attach` did NOT seed refs/reposix/origin/main (item 4a).
+mirror-base M                          = 32370510f0793428535a01b41893b86827bf7ba2
+HEAD after edit (M')                   = 5a558efc289822247e4d21e28274a5ecca162e22
+refs/reposix/origin/main after attach  = None   (expected Some(32370510f0793428535a01b41893b86827bf7ba2))
+--- round-trip symptom (attach -> edit -> git fetch -> git rebase) ---
+git fetch reposix exit_success=true
+
+From reposix::http://127.0.0.1:42579/projects/demo?mirror=https://example.invalid/mirror
+ * [new branch]      main       -> reposix/main
+
+fetched refs/remotes/reposix/main      = Some("84e4bdfcc473fb1cad70f17f44cde480ccf4a3df")
+refs/remotes/reposix/main~1 (parent)   = None   (None => PARENTLESS import root)
+git rebase refs/remotes/reposix/main exit_success=false:
+First, rewinding head to replay your work on top of it...
+Applying: base M
+Using index info to reconstruct a base tree...
+Falling back to patching base and 3-way merge...
+CONFLICT (add/add): Merge conflict in issues/1.md
+Auto-merging issues/1.md
+Patch failed at 0001 base M
+Resolve all conflicts manually, mark them as resolved with
+"git add/rm <conflicted_files>", then run "git rebase --continue".
+You can instead skip this commit: run "git rebase --skip".
+To abort and get back to the state before "git rebase", run "git rebase --abort".
+
+error: Failed to merge in the changes.
+hint: Use 'git am --show-current-patch' to see the failed patch
+
+  left: None
+ right: Some("32370510f0793428535a01b41893b86827bf7ba2")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+failures:
+    attach_seeds_tracking_ref_at_mirror_base
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.27s
+
+THE THREE RED SIGNATURES (all from the REAL attach path, one test):
+  (a) `refs/reposix/origin/main after attach = None`   — attach did NOT seed the anchor.
+  (b) `refs/remotes/reposix/main~1 (parent) = None`     — the imported root is PARENTLESS.
+  (c) `CONFLICT (add/add): Merge conflict in issues/1.md` — the cross-root wall; the
+      agent's edit cannot be reconciled by the documented `git rebase` recovery.
+
+================================================================================
+VERBATIM — attach_pattern_c_roundtrip_recovers.rs (mechanism: seeded=GREEN, seedless=wall)
+================================================================================
+     Running tests/attach_pattern_c_roundtrip_recovers.rs (target/debug/deps/attach_pattern_c_roundtrip_recovers-535b46adcdb25c27)
+
+running 2 tests
+test attach_pattern_c_roundtrip_falsifier_omitted_seed_hits_wall ... ok
+test attach_pattern_c_roundtrip_recovers ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.71s
+
+(Both are #[ignore]-tagged — like every attach/agent_flow integration test — so
+`cargo test --workspace` in CI skips them; run here via --include-ignored. Their
+remote URL is a BUS url (`?mirror=`) which omits `stateless-connect`, forcing the
+`import` verb on EVERY git version, not only git 2.25 — so the round-trip is
+git-version-agnostic when explicitly invoked.)
+
+  - _recovers (seeded): with refs/reposix/origin/main = M, the fetched snapshot
+    chains onto M (refs/reposix/origin/main~1 == M, a real fast-forward, NOT a
+    parentless root) and `git rebase refs/reposix/origin/main` reconciles cleanly
+    (no CONFLICT); the agent's un-pushed edit survives and the SoT's out-of-band
+    new record merges in.
+  - _falsifier (seedless): with the seed OMITTED, the fetched snapshot is a
+    PARENTLESS root (refs/reposix/origin/main~1 does not resolve) and, when the SoT
+    content diverges from the local file, `git rebase` reports CONFLICT (add/add).
+
+NUANCE SURFACED BY THE FALSIFIER (noticing, folded into the report):
+  The cross-root add/add wall bites ONLY when the parentless root's record content
+  DIFFERS from the agent branch's. git dedups byte-IDENTICAL adds even across
+  unrelated histories ("No changes -- Patch already applied"), so a first draft of
+  the falsifier that seeded the SoT byte-identically to the local base rebased
+  cleanly despite the parentless root. Fixed by diverging the SoT's issue-1 content
+  (the realistic case: a backend's content vs a hand-authored local file — exactly
+  what the CLI attach test hits against the sim). The design §1 phrase "two
+  unrelated roots each adding issues/<id>.md → add/add wall" is precise only under
+  content divergence; identical-content adds merge. Does not weaken the bug — the
+  realistic path (backend content != local file) always diverges.
+================================================================================

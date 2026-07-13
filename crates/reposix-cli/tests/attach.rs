@@ -1229,3 +1229,219 @@ fn attach_no_helper_warning_when_present_on_path() {
 
     kill_child(&mut sim);
 }
+
+// --- Tests: item 4a — attach seeds refs/reposix/origin/main (DP-2 repro) -----
+
+/// Prepend `target/debug/` to PATH so a spawned `git fetch`/`git rebase`
+/// discovers the real `git-remote-reposix` helper (git resolves
+/// `git-remote-<scheme>` from PATH). Mirrors agent_flow.rs::path_with_target_debug.
+fn path_with_target_debug() -> String {
+    let dir = workspace_root().join("target").join("debug");
+    let existing = std::env::var("PATH").unwrap_or_default();
+    format!("{}:{}", dir.display(), existing)
+}
+
+/// Run `git -C <work> <args>` with a deterministic committer identity. Returns
+/// the raw `Output`. No helper on PATH (plain git plumbing only).
+fn git_run(work: &Path, args: &[&str]) -> std::process::Output {
+    Command::new("git")
+        .arg("-C")
+        .arg(work)
+        .args(args)
+        .env("GIT_AUTHOR_NAME", "reposix-test")
+        .env("GIT_AUTHOR_EMAIL", "test@reposix.invalid")
+        .env("GIT_COMMITTER_NAME", "reposix-test")
+        .env("GIT_COMMITTER_EMAIL", "test@reposix.invalid")
+        .stdin(Stdio::null())
+        .output()
+        .unwrap_or_else(|e| panic!("spawn git {}: {e}", args.join(" ")))
+}
+
+/// Run a git op that shells out to the reposix helper (fetch/rebase) with the
+/// helper on PATH and an isolated cache dir.
+fn git_run_with_helper(
+    work: &Path,
+    cache: &Path,
+    path_env: &str,
+    args: &[&str],
+) -> std::process::Output {
+    Command::new("git")
+        .arg("-C")
+        .arg(work)
+        .args(args)
+        .env("PATH", path_env)
+        .env("REPOSIX_CACHE_DIR", cache)
+        .env("GIT_TERMINAL_PROMPT", "0")
+        .env("GIT_AUTHOR_NAME", "reposix-test")
+        .env("GIT_AUTHOR_EMAIL", "test@reposix.invalid")
+        .env("GIT_COMMITTER_NAME", "reposix-test")
+        .env("GIT_COMMITTER_EMAIL", "test@reposix.invalid")
+        .stdin(Stdio::null())
+        .output()
+        .unwrap_or_else(|e| panic!("spawn git {}: {e}", args.join(" ")))
+}
+
+/// `git rev-parse --verify --quiet <arg>` → `Some(oid)` when it resolves,
+/// `None` when the ref/rev is absent.
+fn git_rev_parse(work: &Path, arg: &str) -> Option<String> {
+    let out = git_run(work, &["rev-parse", "--verify", "--quiet", arg]);
+    if !out.status.success() {
+        return None;
+    }
+    let s = String::from_utf8_lossy(&out.stdout).trim().to_owned();
+    (!s.is_empty()).then_some(s)
+}
+
+/// item 4a headline (§5.1) + binding end-to-end repro. Drives the REAL
+/// `reposix attach` binary against a live sim in a Pattern-C topology
+/// (vanilla-clone mirror tracking ref `M` + a committed agent edit `M'` BEFORE
+/// attach), then the documented round-trip (`git fetch` → `git rebase`).
+///
+/// RED on today's unfixed code: `reposix attach` never runs
+/// `git update-ref refs/reposix/origin/main …`, so the ref the whole Pattern-C
+/// recovery anchors on is ABSENT after attach. The follow-up fetch synthesizes
+/// a PARENTLESS import root (`resolve_import_parent` finds no ref → `None`),
+/// and the agent's rebase onto it hits the cross-root `add/add` wall.
+///
+/// GREEN once Part A lands: attach seeds `refs/reposix/origin/main` = the
+/// mirror merge-base `M` (NOT HEAD `M'` — the §3.1 silent-revert guard), so the
+/// snapshot chains onto `M` and the rebase reconciles.
+///
+/// This is the ONE test that exercises the REAL `reposix attach` path end-to-end
+/// (not a manually-seeded ref); the remote-crate `attach_pattern_c_roundtrip_*`
+/// tests prove the underlying git mechanism the fix relies on.
+#[test]
+#[ignore = "spawns reposix-sim child + shells out to git+helper; requires `cargo build --workspace --bins` first"]
+// test-name-honesty: ok — runs REAL `reposix attach` then a REAL git fetch/rebase
+// and asserts the seeded tracking ref value; no manual seed.
+fn attach_seeds_tracking_ref_at_mirror_base() {
+    let _g = SERIAL.lock().unwrap_or_else(|e| e.into_inner());
+    let (mut sim, port) = spawn_sim_with_issue("demo", 1);
+
+    let work_tmp = TempDir::new().expect("work tempdir");
+    let cache_tmp = TempDir::new().expect("cache tempdir");
+    let work = work_tmp.path();
+    let cache = cache_tmp.path();
+    git_init(work);
+
+    // Vanilla-clone topology: an `origin` mirror remote, base commit M with
+    // issues/1.md (unpadded path, matching the helper's emit), and the mirror
+    // tracking ref refs/remotes/origin/main = M (the merge-base).
+    assert!(
+        git_run(
+            work,
+            &[
+                "remote",
+                "add",
+                "origin",
+                "https://example.invalid/mirror.git",
+            ],
+        )
+        .status
+        .success(),
+        "git remote add origin"
+    );
+    write_record_md(&work.join("issues/1.md"), 1, "base record");
+    assert!(
+        git_run(work, &["add", "-A"]).status.success(),
+        "git add base"
+    );
+    assert!(
+        git_run(work, &["commit", "-q", "-m", "base M"])
+            .status
+            .success(),
+        "git commit base"
+    );
+    let m = git_rev_parse(work, "HEAD").expect("base commit M");
+    assert!(
+        git_run(work, &["update-ref", "refs/remotes/origin/main", &m])
+            .status
+            .success(),
+        "seed mirror tracking ref refs/remotes/origin/main = M"
+    );
+
+    // Pattern C: commit an agent edit BEFORE attach → HEAD = M' (!= M).
+    write_record_md(&work.join("issues/1.md"), 1, "AGENT-EDITED record");
+    assert!(
+        git_run(work, &["add", "-A"]).status.success(),
+        "git add edit"
+    );
+    assert!(
+        git_run(work, &["commit", "-q", "-m", "agent edit M'"])
+            .status
+            .success(),
+        "git commit edit"
+    );
+    let m_prime = git_rev_parse(work, "HEAD").expect("edit commit M'");
+    assert_ne!(m, m_prime, "M' must differ from base M");
+
+    // REAL `reposix attach` (per-test sim via REPOSIX_SIM_ORIGIN threaded by
+    // run_attach; the baked remote.reposix.url therefore targets THIS sim).
+    let out = run_attach(
+        work,
+        cache,
+        port,
+        &["sim::demo", "--remote-name", "reposix"],
+    );
+    assert!(
+        out.status.success(),
+        "attach must succeed: stdout={:?} stderr={:?}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr),
+    );
+
+    // What Part A must produce: the seeded anchor at the mirror base.
+    let anchor = git_rev_parse(work, "refs/reposix/origin/main");
+
+    // Round-trip symptom capture (attach → edit → fetch → rebase). Best-effort:
+    // on today's code the fetch synthesizes a parentless root under the default
+    // refspec (refs/remotes/reposix/main); we rebase onto it to expose the wall.
+    let path_env = path_with_target_debug();
+    let fetch = git_run_with_helper(work, cache, &path_env, &["fetch", "reposix"]);
+    let fetch_out = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&fetch.stdout),
+        String::from_utf8_lossy(&fetch.stderr)
+    );
+    let fetched = git_rev_parse(work, "refs/remotes/reposix/main");
+    let fetched_parent = git_rev_parse(work, "refs/remotes/reposix/main~1");
+    let rebase = git_run_with_helper(
+        work,
+        cache,
+        &path_env,
+        &["rebase", "refs/remotes/reposix/main"],
+    );
+    let rebase_out = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&rebase.stdout),
+        String::from_utf8_lossy(&rebase.stderr)
+    );
+    // Don't leave a rebase in progress (tempdir is discarded, but be tidy).
+    let _ = git_run_with_helper(work, cache, &path_env, &["rebase", "--abort"]);
+
+    kill_child(&mut sim);
+
+    let evidence = format!(
+        "REAL `reposix attach` did NOT seed refs/reposix/origin/main (item 4a).\n\
+         mirror-base M                          = {m}\n\
+         HEAD after edit (M')                   = {m_prime}\n\
+         refs/reposix/origin/main after attach  = {anchor:?}   (expected Some({m}))\n\
+         --- round-trip symptom (attach -> edit -> git fetch -> git rebase) ---\n\
+         git fetch reposix exit_success={fetch_ok}\n{fetch_out}\n\
+         fetched refs/remotes/reposix/main      = {fetched:?}\n\
+         refs/remotes/reposix/main~1 (parent)   = {fetched_parent:?}   (None => PARENTLESS import root)\n\
+         git rebase refs/remotes/reposix/main exit_success={rebase_ok}:\n{rebase_out}",
+        fetch_ok = fetch.status.success(),
+        rebase_ok = rebase.status.success(),
+    );
+
+    // HARD assertion — the Part A contract. RED today (anchor is None).
+    assert_eq!(anchor.as_deref(), Some(m.as_str()), "{evidence}");
+    // §3.1 silent-revert guard — the seed must be the mirror base M, NEVER HEAD
+    // M' (seeding HEAD fast-forwards main over the un-pushed edit = data loss).
+    assert_ne!(
+        anchor.as_deref(),
+        Some(m_prime.as_str()),
+        "seed must be the mirror merge-base M, never HEAD M' (silent-revert data-loss guard):\n{evidence}"
+    );
+}
