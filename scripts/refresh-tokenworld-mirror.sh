@@ -31,11 +31,20 @@
 # -------------------------------------------------------------------
 # `git fetch reposix main` pulls the backend's MATERIALIZED tree (get_record →
 # ADF→Markdown, i.e. the same canonical form the litmus clone will read). We
-# overlay that tree's pages/ onto a fresh mirror clone and commit it as a
-# fast-forward CHILD of origin/main, then `git push origin main`. Result: the
-# mirror holds the byte-exact backend-current materialized tree at the SAME
-# versions — no backend write, no version bump, no force-push, no trailing
-# drift. The litmus clone then matches the backend and its push lands cleanly.
+# REPLACE that tree's pages/ WHOLESALE onto a fresh mirror clone (git rm then
+# checkout FETCH_HEAD -- pages/, so backend-side DELETIONS propagate — an
+# additive `checkout -- pages/` only adds/updates and would silently retain a
+# page the backend removed) and commit it as a fast-forward CHILD of
+# origin/main, then `git push origin main`. Result: the mirror holds the
+# byte-exact backend-current materialized tree at the SAME versions — no backend
+# write, no version bump, no force-push, no trailing drift. The litmus clone
+# then matches the backend and its push lands cleanly.
+#
+# The post-push verification is NON-CIRCULAR: it compares the re-cloned mirror
+# head against a PRISTINE extract of the backend materialization (`git archive
+# FETCH_HEAD`, captured BEFORE the overlay), never against the working tree we
+# just overlaid onto the mirror clone (which would be comparing the clone
+# against itself).
 #
 # We do NOT use `reposix sync --reconcile` (rebuilds only the LOCAL cache, leaves
 # the external mirror byte-identical — root CLAUDE.md § mirror-head refresh
@@ -57,7 +66,13 @@
 # Requires: ATLASSIAN_API_KEY / ATLASSIAN_EMAIL / REPOSIX_CONFLUENCE_TENANT
 # (auto-sourced from ./.env if present), SSH access to the GitHub mirror, and
 # the reposix + git-remote-reposix binaries (built into target/debug if absent).
-set -uo pipefail
+#
+# `set -e` is load-bearing: WITHOUT it an early failure (attach, fetch, archive,
+# push) does NOT abort the script, which then falls through to the final
+# "OK: mirror now byte-current …" line and exits 0 — a FALSE byte-identical
+# claim the 9th-probe verifier would trust. Every mutating step already guards
+# with `|| { echo ERROR…; exit 1; }`; `set -e` closes the gaps between them.
+set -euo pipefail
 
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." &> /dev/null && pwd)"
 SPACE="${REPOSIX_CONFLUENCE_SPACE_OVERRIDE:-REPOSIX}"      # == TokenWorld == space 360450
@@ -86,7 +101,15 @@ export PATH="${REPO_ROOT}/target/debug:${PATH}"   # git-remote-reposix on PATH
 BIN="${REPO_ROOT}/target/debug/reposix"
 
 version_of() { grep -m1 '^version:' "$1" 2>/dev/null | tr -d '[:space:]' || true; }
-all_versions() { for f in "$1"/pages/*.md; do [ -e "$f" ] && echo "$(basename "$f" .md)=$(version_of "$f")"; done | sort | tr '\n' ' '; }
+# pipefail-safe under `set -e`: an empty pages/ glob `continue`s (status 0)
+# rather than tripping a `[ -e ] &&` short-circuit non-zero exit that would
+# abort the whole script inside a `VAR=$(all_versions …)` command substitution.
+all_versions() {
+  { for f in "$1"/pages/*.md; do
+      [ -e "$f" ] || continue
+      printf '%s=%s\n' "$(basename "$f" .md)" "$(version_of "$f")"
+    done; } | sort | tr '\n' ' '
+}
 
 RUN="$(mktemp -d -t mirror-refresh.XXXXXX)"
 export REPOSIX_CACHE_DIR="${RUN}/cache"
@@ -104,10 +127,23 @@ echo "BEFORE mirror versions: $(all_versions "${TREE}")"
   || { echo "ERROR: reposix attach failed" >&2; exit 1; }
 cd "${TREE}" || exit 1
 git fetch --quiet reposix main || { echo "ERROR: git fetch reposix main failed" >&2; exit 1; }
+
+# Capture a PRISTINE extract of the backend materialization at FETCH_HEAD BEFORE
+# any overlay — this is the non-circular reference the post-push verification
+# compares against (never the working tree we overlay onto the mirror clone).
+BACKEND_REF="${RUN}/backend-ref"
+mkdir -p "${BACKEND_REF}"
+git archive FETCH_HEAD pages/ | tar -x -f - -C "${BACKEND_REF}" \
+  || { echo "ERROR: capturing backend reference tree (git archive FETCH_HEAD) failed" >&2; exit 1; }
+echo "BACKEND materialized versions: $(all_versions "${BACKEND_REF}")"
+
 # Overlay backend-current pages/ WITHOUT moving HEAD (stays on origin/main), so
-# the commit below fast-forwards the mirror rather than needing --force.
+# the commit below fast-forwards the mirror rather than needing --force. Replace
+# the tree WHOLESALE (git rm then checkout) so backend-side DELETIONS propagate:
+# an additive `git checkout FETCH_HEAD -- pages/` only adds/updates and would
+# silently retain a page the backend removed (stale-mirror bug).
+git rm -r --quiet --ignore-unmatch -- pages/ > /dev/null 2>&1 || true
 git checkout FETCH_HEAD -- pages/ || { echo "ERROR: checkout backend pages/ failed" >&2; exit 1; }
-echo "BACKEND materialized versions: $(all_versions "${TREE}")"
 
 # Protected-fixture guard: they must be present and are only ever carried
 # verbatim from the backend tree — never edited by us.
@@ -120,7 +156,7 @@ git config user.name "reposix-mirror-refresh"
 git add -A pages/
 if git diff --cached --quiet; then
   echo "OK: mirror already byte-identical to backend-materialized tree — nothing to push"
-  echo "AFTER  mirror versions: $(all_versions "${TREE}")"
+  echo "AFTER  mirror versions: $(all_versions "${BACKEND_REF}")"
   exit 0
 fi
 git commit --quiet -m "mirror-refresh: sync GitHub mirror to backend-current materialized tree (v0.14.0 item 5)"
@@ -128,10 +164,13 @@ echo "\$ git push origin main   (fast-forward child; no backend write, no --forc
 git push origin main >&2 || { echo "ERROR: fast-forward push to mirror failed" >&2; exit 1; }
 
 # --- AFTER: fresh re-clone of the mirror, verify it now matches the backend ---
+# NON-CIRCULAR: AFTER is read from an independent re-clone of the pushed mirror;
+# BACKEND is the pristine FETCH_HEAD extract captured above — NOT the working
+# tree we overlaid (which would compare the clone against itself).
 TREE2="${RUN}/verify"
 git clone --quiet "${MIRROR_URL}" "${TREE2}" || { echo "ERROR: verify re-clone failed" >&2; exit 1; }
 AFTER="$(all_versions "${TREE2}")"
-BACKEND="$(all_versions "${TREE}")"
+BACKEND="$(all_versions "${BACKEND_REF}")"
 echo "AFTER  mirror versions: ${AFTER}"
 if [ "${AFTER}" != "${BACKEND}" ]; then
   echo "ERROR: mirror versions after push (${AFTER}) != backend materialized (${BACKEND})" >&2
