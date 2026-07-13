@@ -202,10 +202,14 @@ bash quality/gates/agent-ux/dark-factory.sh sim              # v0.9 dark-factory
 bash quality/gates/agent-ux/dark-factory.sh dvcs-third-arm   # v0.13 attach+bus arm
 bash quality/gates/code/shell-coverage.sh                    # kcov shell coverage (needs kcov)
 bash scripts/preflight-real-backends.sh              # 0=reachable 1=auth/net gap 2=no creds
+python3 scripts/confluence_tokenworld.py list        # TokenWorld fixture repair: inspect/list/restore/reparent/delete
 ```
 
 Real-backend export blocks + `dark_factory_real_{confluence,github,jira}`:
-`docs/reference/testing-targets.md`.
+`docs/reference/testing-targets.md`. If a Confluence contract test panics on the
+durable fixture pair (`7766017`/`7798785`) — e.g. a trashed page whose `parentId`
+went null — `scripts/confluence_tokenworld.py` (`restore`/`reparent`; refuses to
+delete the two protected ids) is the named recovery tool.
 
 ## Build memory budget (load-bearing — one-liner; full doctrine in `crates/CLAUDE.md`)
 
