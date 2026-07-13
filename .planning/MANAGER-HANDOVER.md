@@ -73,11 +73,20 @@ does reposix work itself. Keep this file lean; git history is the archive.
   ≥100% keeps the existing block contract. Mind the current waiver (until
   2026-08-08, warn-now/block-later) interplay; fix-twice into quality/CLAUDE.md.
   Route via workhorse /gsd-quick — queued in the charter expansion.
-- Workhorse (w1:p5): **FRESH successor** launched post-`bda849d`, xhigh, entry point
-  `.planning/SESSION-HANDOVER.md`. Charter: hygiene lane — /gsd-quick
-  progressive-disclosure splits of over-20k STATE.md + ROADMAP.md; charter expansion
-  queued (send at next idle): OP-8-style big intake drain + record owner decisions.
-  Hard-barred from tag-push and foreign tree work. VERIFY its quicks land green.
+- **Hygiene lane CLOSED green (2026-07-13Z):** 3 splits landed — SURPRISES-INTAKE
+  `dc3c21a` (43,988→3,797B, all 17 entries terminal, index preserved), STATE.md
+  `3491d24` (21,137→10,846B), ROADMAP.md `068bcfc` (37,764→13,015B); CI fully green
+  at `a47bd20` (CI/release-plz/CodeQL/Docs all success, manager-verified). Spent
+  workhorse rotated out at ~180k tokens; its flaky-subagent-file-tooling RAISE is in
+  SESSION-HANDOVER.md.
+- Workhorse (w1:p5): **successor #2** launched 2026-07-13Z, xhigh, entry
+  `.planning/SESSION-HANDOVER.md` + this file. Expanded charter (in order): ① record
+  serialization decision (CONSULT-DECISIONS `[OWNER]` + ORCHESTRATION fix-twice);
+  ② foreign-tree triage; ③ 75% file-size early-warning gate; ④ DEFERRED-entry
+  routing (7 entries → concrete v0.15.0/GTH landing spots); ⑤ v0.14.0 tag sequence
+  (probe → aggregate verdict → tag script → STOP at READY-TO-TAG; manager pushes the
+  tag); ⑥ v0.13.0 pre-tag actions queued after. Hard-barred from tag-push and from
+  unrecorded foreign-tree moves. VERIFY each item lands green.
 - **Owner decision (2026-07-12): shared-tree contention RESOLVED — session
   serialization** (no parallel sessions writing the shared tree; no new worktree
   infra). Route via workhorse: `[OWNER]` disposition row in CONSULT-DECISIONS.md +
