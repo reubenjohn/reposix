@@ -166,3 +166,11 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 - **Decision:** Product fixes are AUTHORIZED before a milestone tag. Tag-blocking product bugs default to FIX-FIRST — no owner consult needed — UNLESS the fix turns architectural (then STOP + escalate to manager/owner). Supersedes the prior §4 HOLD and the non-waivable-B1 bind. Relayed by the manager under standing tag authority (2026-07-13).
 - **Supersedes:** the `.planning/SESSION-HANDOVER.md` §3/§4 "no product/defect fix mid-tag-sequence" HOLD (successor #5 handover), and resolves the OPEN `2026-07-12 [OWNER] B1 vision-litmus: blessed self-heal proven insufficient — relax non-waivable, or authorize mid-sequence litmus-substrate redesign?` entry above — B1 is now folded into the fix-first item-4a lane (attach-lineage fix), not a standalone waiver/redesign choice.
 - **Reversibility:** Fully reversible — a calibration rule, not a specific mutation; each individual fix still passes its own sim-first/tests/code-review gates before landing, and a fix that turns out architectural still escalates per the exception clause.
+
+## 2026-07-13 [OWNER] Approve dropping stale mirror record `pages/2818063.md` to unblock the v0.14.0 vision litmus?
+
+- Context: item-4 attach-lineage fix SHIPPED GREEN (`22a7777`), but the milestone-close vision litmus (`quality/gates/agent-ux/dark-factory/dvcs-third-arm.sh`) hard-REDs at GUARD A — the litmus mirror carries a stale record for a TRASHED backend page (`pages/2818063.md`), independent of the fix. Blocks item 5 → item 8 (9th probe) → READY-TO-TAG.
+- Decision: PENDING owner/manager. Proposed remediation: `reposix refresh --backend confluence` + mirror push to DROP the stale record (NOT restore — restore adds a 3rd page, breaks the durable-pair contract). Needs confirmation the mirror target is owner-named-sanctioned (external mutation, E1).
+- Rationale: DROP realigns the mirror with the current 2-page TokenWorld backend; restore would violate the durable-pair contract. Evidence: `.planning/milestones/v0.14.0-phases/evidence/B1-mirror-reconcile-FINDINGS-2026-07-13.md`.
+- Reversibility: mirror push is a git ref/tree change (revertible), but touches the sanctioned fixture — treat as owner-gated.
+- Commit: (pending approval + execution)
