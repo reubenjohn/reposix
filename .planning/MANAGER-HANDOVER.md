@@ -26,6 +26,12 @@ does reposix work itself. Keep this file lean; git history is the archive.
 - **Real-backend mutations PRE-AUTHORIZED**: Confluence TokenWorld, GitHub
   reubenjohn/reposix issues, JIRA TEST. Credentials/spend beyond those still
   owner-gated.
+- **STANDING AUTHORITY (owner, 2026-07-12): milestone release cuts are the manager's.**
+  The manager makes and executes tag/release-cut calls end-to-end (tag push included)
+  for milestone closes, without per-milestone re-approval — ALWAYS through the honest
+  gate sequence (9th probe exit 0 or a recorded caveat call, aggregate verdict minted +
+  ratified, tag script, never over a red main). Workhorse executes artifacts; manager
+  verifies and pushes the tag.
 - **Owner intent**: multi-day autonomous chug toward OD-4 launch-readiness (asciinema
   demo, honest headline numbers, install excellence, Show-HN kit); workhorse routes,
   doesn't work.
