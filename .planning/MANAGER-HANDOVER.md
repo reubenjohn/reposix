@@ -60,16 +60,18 @@ does reposix work itself. Keep this file lean; git history is the archive.
   DP-2 review (`a424546`: MECHANISM-CORRECT + fail-closed PASS); litmus+p93
   self-verified PASS live. Evidence:
   `.planning/milestones/v0.14.0-phases/evidence/item5-RED-{diagnosis,fix-review}-2026-07-13.md`.
-- **Workhorse successor #10 IN FLIGHT in w1:p5** (charter `.planning/SESSION-HANDOVER.md`):
-  STEP 0 record manager DEFER ruling in CONSULT-DECISIONS → STEP 2 test-fix lane
-  (HIGH vacuous real-twin test, sibling fixture lie, serde-default list-DoS,
-  mirror-script correctness) → guardrail-5 docs wave (testing-targets.md +
-  `/reposix-quality-refresh` in the SAME wave) → unbiased 9th-probe verifier →
-  item-8 mechanicals (OP-9 retro distillation BLOCKS ratification; ci-green
-  headSha race — cross-check manually) → **STOP at READY-TO-TAG**. Manager then
-  VERIFIES against reality (probe exit 0 or recorded caveat call, verdict +
-  ratification, CI green headSha-matched, no tag pushed, TokenWorld = 2 protected
-  + `2818063` current) and PUSHES the v0.14.0 tag under standing authority.
+- **Workhorse successor #13 IN FLIGHT in w1:p5** (charter `.planning/SESSION-HANDOVER.md`
+  @ `c27fd06`, A-vs-B branching runbook → execute the B branch per Ruling #4):
+  item-8 mechanicals (OP-9 retro distillation FIRST — Ruling-#2 caveat + item-7
+  waiver + Ruling-#4 t4 caveat ALL VERBATIM; verdict re-mint =
+  GREEN-with-recorded-caveats, NEVER claims cadence exit-0; fresh unbiased
+  ratification — an honest RED from the ratifier over the caveats comes back to
+  the manager; author tag script) → **STOP at READY-TO-TAG**. Manager then
+  VERIFIES against reality (verdict + ratification + CI green headSha-matched +
+  no tag pushed + TokenWorld = 2 protected + `2818063` current) and PUSHES the
+  v0.14.0 tag under standing authority. Test-fix lane, guardrail 5, Ruling-#3
+  harness fixes: ALL DONE + proven (`cb8ad11`; front-door FAIL→PASS, t4 past the
+  space guard).
 - **MANAGER RULING #2 (E2/ADR valve, 2026-07-13): litmus non-idempotency = DEFER;
   tag proceeds.** The ADR-010 RBF-LR-04 inline fan-out pushes the PRE-write client
   tree — the mirror never converges to SoT after a push (executed proof, intake
@@ -82,6 +84,17 @@ does reposix work itself. Keep this file lean; git history is the archive.
   (root CLAUDE.md / dvcs-topology.md) is proven non-convergent — correction
   bundled WITH the v0.15.0 ADR decision; truth meanwhile lives in the intake row +
   RETROSPECTIVE.
+- **MANAGER RULINGS #3+#4 (2026-07-13):** #3 (E3) = fix both 9th-probe harness gaps
+  + destructive t4 vs TokenWorld pre-authorized w/ protected-pair guardrails —
+  EXECUTED `cb8ad11`, both gaps proven fixed. Cadence re-run then hit a THIRD gap:
+  **VM git 2.25.1 < t4's legitimate 2.34 floor → t4 NOT-VERIFIED (exit 75,
+  precondition-not-met, bailed pre-mutation), 5 PASS / 0 FAIL otherwise.**
+  #4 (recorded caveat call under standing release authority) = **Option B: tag
+  proceeds**; t4 row stays runner-minted NOT-VERIFIED (NO waiver, NO catalog/gate
+  surgery); the named non-skippable probe (vision litmus P0) + p93 PASSED live;
+  t4 sim twin green in CI; `reposix doctor` treats sub-2.34 as WARN. Option A
+  (VM git upgrade) needs interactive sudo = owner-only → RAISEd. Full options +
+  rationale: CONSULT-DECISIONS entry at `c27fd06`.
 - TokenWorld fixture doctrine: 2 PROTECTED never deleted (`7766017`+`7798785`) +
   1 SACRIFICIAL EDITABLE (`2818063`, at v11 after the fix lane); orphan `9994241`
   DELETED. Item 7 = RESOLVED-DEFER (owner-waived CREATE-recovery RBF-LR-03 — flag
@@ -127,7 +140,11 @@ does reposix work itself. Keep this file lean; git history is the archive.
   (5) herdr: a digit/letter alone answers menus; long `agent send` needs a second
   Enter after ~2s; text after `❯` is often ghost-text — never treat it as pending
   input.
-- **Standing RAISEs for the owner:** ADR-010 RBF-LR-04 mirror fan-out redesign
+- **Standing RAISEs for the owner:** INTERACTIVE-SUDO VM git upgrade to ≥2.34
+  (t4 env floor, CONSULT `c27fd06`; afterwards run ONE creds-loaded
+  `pre-release-real-backend` cadence so t4 executes its destructive scenario for
+  real — product-FAIL there becomes a v0.15.0 fix-first item); ADR-010 RBF-LR-04
+  mirror fan-out redesign
   (push POST-write materialized snapshot; litmus non-idempotency, intake part-03)
   + the entangled dvcs-topology/root-CLAUDE.md "bus-push catch-up" doc correction;
   P112 ROADMAP prose-vs-artifact reconcile at /gsd-new-milestone; D5
