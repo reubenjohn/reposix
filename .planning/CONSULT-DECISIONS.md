@@ -60,8 +60,38 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
   If the owner declines the upgrade, B is a fresh gate-policy ratification.
 - **Reversibility:** no product code touched; `cb8ad11` is pure test-harness +
   catalog-prose (git-revertable). No tag pushed.
-- **Status:** OPEN — awaiting manager/owner ruling. Coordinator HALTED per Ruling #3
-  guardrail-4 decision rule (escalate, no unilateral system mutation).
+- **Status:** RULED OPTION-B — Manager Ruling #4 (commit `dcf49d4`, recorded caveat
+  call under standing release authority). See the Ruling #4 block immediately below.
+
+## 2026-07-13 [MANAGER] Ruling #4 (E3 valve) — OPTION B: the v0.14.0 tag PROCEEDS under a recorded caveat; t4 stays honestly NOT-VERIFIED (git 2.25.1 < 2.34 env floor)
+
+- **Ruling:** EXECUTE THE B BRANCH of the OPEN git-floor escalation above — the v0.14.0
+  tag PROCEEDS under a recorded caveat. Recorded caveat call under standing release
+  authority (manager commit `dcf49d4`).
+- **Binding conditions (verbatim — quote from here, do not paraphrase, into the
+  RETROSPECTIVE + verdict + READY-TO-TAG report):**
+  1. **t4 row stays runner-minted NOT-VERIFIED — NO waiver, NO catalog surgery, NO
+     gate-policy code change.** The honest cadence result on record is **5 PASS / 0 FAIL
+     / 1 NOT-VERIFIED** (t4, git 2.25.1 < 2.34 env floor, exit 75 precondition-not-met,
+     bailed pre-mutation).
+  2. **The verdict re-mint is GREEN-WITH-RECORDED-CAVEATS and must NEVER claim cadence
+     exit-0.** It records the 5/0/1 result + the caveat: t4's two-writer conflict+refetch
+     scenario is un-runnable on THIS VM (env floor, not product; sim twin green in CI;
+     litmus P0 + p93 P0 PASSED against live TokenWorld; `reposix doctor` itself treats
+     sub-2.34 as WARN).
+  3. **Option A (VM git upgrade, interactive sudo) is RAISEd to the owner — do NOT
+     attempt it.**
+- **Rationale:** the named non-skippable 9th probe (litmus, P0) AND p93 (P0) both PASSED
+  against live TokenWorld; t4's holdout is an ENVIRONMENT floor (git 2.25.1 < 2.34), not
+  a product regression and not the space-KEY gap (which is fixed at `cb8ad11` but remains
+  unvalidated on this VM until git ≥2.34). reposix's real behavior is not unproven — only
+  this specific two-writer scenario is un-runnable here. Honest NOT-VERIFIED (not
+  skip-as-pass) is correct per OD-2; the caveat is documented, not silently waived.
+- **Reversibility:** no product code touched; no catalog surgery; no tag pushed (tag
+  push remains the manager's). Fully reversible.
+- **Status:** RULED OPTION-B — successor #13 executing STEP 3.3 mechanicals to
+  READY-TO-TAG (retro distillation → GREEN-WITH-RECORDED-CAVEATS verdict re-mint → fresh
+  unbiased ratification → tag script → STOP at READY-TO-TAG, manager pushes the tag).
 
 ## 2026-07-13 [MANAGER] Ruling #3 (E3 valve) — OPTION A AUTHORIZED: fix both harness gaps → honest cadence exit-0
 
