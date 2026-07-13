@@ -1,0 +1,40 @@
+argv: _litmus_flow
+ts: 2026-07-13T02:33:51Z
+env_keys: AI_AGENT,ATLASSIAN_API_KEY,ATLASSIAN_EMAIL,BIN,BOTTOKEN,CARGO_REGISTRY_TOKEN,CLAUDECODE,CLAUDE_CODE_CHILD_SESSION,CLAUDE_CODE_ENTRYPOINT,CLAUDE_CODE_EXECPATH,CLAUDE_CODE_SESSION_ID,CLAUDE_EFFORT,COLORTERM,COREPACK_ENABLE_AUTO_PIN,DBUS_SESSION_BUS_ADDRESS,DISPLAY,GITHUB_TOKEN,GIT_EDITOR,GOOSE_DISABLE_KEYRING,HERDR_ENV,HERDR_PANE_ID,HERDR_SOCKET_PATH,HERDR_TAB_ID,HERDR_WORKSPACE_ID,HOME,HOSTTYPE,JAVA_HOME,JIRA_API_TOKEN,JIRA_EMAIL,JIRA_TEST_PROJECT,LANG,LESS,LOGNAME,LSCOLORS,LS_COLORS,MIRROR_URL,NAME,NVM_BIN,NVM_CD_FLAGS,NVM_DIR,NVM_INC,NoDefaultCurrentDirectoryInExePath,OLDPWD,OPENWEATHERTOKEN,PAGER,PATH,PROTECTED_IDS,PULSE_SERVER,PWD,REPOSIX_ALLOWED_ORIGINS,REPOSIX_CONFLUENCE_SPACE,REPOSIX_CONFLUENCE_TENANT,REPOSIX_JIRA_INSTANCE,REPO_ROOT,SHELL,SHLVL,SPACE,SPARK_HOME,SSH_AGENT_PID,SSH_AUTH_SOCK,STATE_FILE,TERM,UNSET_ANTHROPIC_API_KEY,USER,WAYLAND_DISPLAY,WSL2_GUI_APPS_ENABLED,WSLENV,WSL_DISTRO_NAME,WSL_INTEROP,WT_PROFILE_ID,WT_SESSION,XDG_RUNTIME_DIR,ZSH,_
+cwd: /home/reuben/workspace/reposix
+exit_code: 1
+--- STDOUT ---
+$ git clone <mirror> /tmp/litmus-run.bOzcTF/tree
+PASS: vanilla clone obtained
+$ reposix attach confluence::REPOSIX --remote-name reposix --mirror-name origin
+NO_ID local_file=/tmp/litmus-run.bOzcTF/tree/README.md
+attach: matched=3 no_id=1 backend_deleted=0 mirror_lag=0
+reposix attach: configured `/tmp/litmus-run.bOzcTF/tree` against confluence::REPOSIX
+  remote `reposix`.url = reposix::https://reuben-john.atlassian.net/confluence/projects/REPOSIX?mirror=git@github.com:reubenjohn/reposix-tokenworld-mirror.git
+  extensions.partialClone = reposix
+  remote.pushDefault = reposix (plain `git push` now routes through the SoT bus; `git fetch`/`git pull` still read from the `origin` mirror)
+PASS: reposix attach modified git config (extensions.partialClone=reposix, remote.reposix.url present)
+reconciliation: matched=3 no_id=1 backend_deleted=0 mirror_lag=0
+PASS: reconciliation safe: matched=3 backend_deleted=0 (push cannot mass-delete)
+edit target: /tmp/litmus-run.bOzcTF/tree/pages/2818063.md (protected denylist honoured)
+PASS: edit + commit succeeded
+$ git push reposix main
+Secret scan: clean ✓
+--- STDERR ---
+[90m7:33PM[0m [32mINF[0m [1m11 commits scanned.[0m
+[90m7:33PM[0m [32mINF[0m [1mscanned ~5653 bytes (5.65 KB) in 138ms[0m
+[90m7:33PM[0m [32mINF[0m [1mno leaks found[0m
+[2m2026-07-13T02:33:56.043179Z[0m [33m WARN[0m [2mreposix_confluence::translate[0m[2m:[0m adf_to_markdown failed; using empty body [3merror[0m[2m=[0madf_to_markdown: root node type must be "doc", got ""
+[2m2026-07-13T02:33:56.043403Z[0m [33m WARN[0m [2mgit_remote_reposix::precheck[0m[2m:[0m lost-update guard: record 2818063 conflicts (local base v1 vs backend v7, divergent writable content) but was ABSENT from the list_changed_since delta — shared-cache last_fetched_at cursor was advanced past a concurrent write. Rejecting the stale-base push (fetch first).
+[2m2026-07-13T02:33:56.151975Z[0m [33m WARN[0m [2mreposix_confluence::translate[0m[2m:[0m adf_to_markdown failed; using empty body [3merror[0m[2m=[0madf_to_markdown: root node type must be "doc", got ""
+[2m2026-07-13T02:33:56.250801Z[0m [33m WARN[0m [2mreposix_confluence::translate[0m[2m:[0m adf_to_markdown failed; using empty body [3merror[0m[2m=[0madf_to_markdown: root node type must be "doc", got ""
+issue 2818063 modified on backend at 2026-07-06T06:28:06.103+00:00 since last fetch (local base version: 1, backend version: 7). Run: git pull --rebase
+To reposix::https://reuben-john.atlassian.net/confluence/projects/REPOSIX?mirror=git@github.com:reubenjohn/reposix-tokenworld-mirror.git
+ ! [rejected]        main -> main (fetch first)
+error: failed to push some refs to 'reposix::https://reuben-john.atlassian.net/confluence/projects/REPOSIX?mirror=git@github.com:reubenjohn/reposix-tokenworld-mirror.git'
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally. This is usually caused by another repository pushing
+hint: to the same ref. You may want to first integrate the remote changes
+hint: (e.g., 'git pull ...') before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+FAIL: git push reposix main failed (real helper round-trip). Inspect stderr above for the teaching string.

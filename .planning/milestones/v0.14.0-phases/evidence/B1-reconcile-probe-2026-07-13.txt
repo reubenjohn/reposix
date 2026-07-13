@@ -1,0 +1,25 @@
+=== [BEFORE] mirror HEAD + 2818063 version (fresh clone) ===
+mirror_HEAD_before=3be8390e016795350afc435116f14e622e70e6ee
+tree_2818063_version_before=version: 1
+
+=== [ATTACH] confluence::REPOSIX (matches litmus remote/mirror wiring) ===
+NO_ID local_file=/tmp/b1-recon-tree/README.md
+attach: matched=3 no_id=1 backend_deleted=0 mirror_lag=0
+reposix attach: configured `/tmp/b1-recon-tree` against confluence::REPOSIX
+  remote `reposix`.url = reposix::https://reuben-john.atlassian.net/confluence/projects/REPOSIX?mirror=git@github.com:reubenjohn/reposix-tokenworld-mirror.git
+  extensions.partialClone = reposix
+  remote.pushDefault = reposix (plain `git push` now routes through the SoT bus; `git fetch`/`git pull` still read from the `origin` mirror)
+
+=== [RECONCILE] reposix sync --reconcile /tmp/b1-recon-tree ===
+reposix sync: cache rebuilt from a full list_records walk (synthesis-commit OID = 32cd15a088b0040d1e94dd626aa11c1e8f1fd15f); meta.last_fetched_at advanced.
+reconcile_exit=0
+
+=== [CACHE mirror-head ref after reconcile] ===
+
+=== [AFTER] re-clone the GitHub mirror; did its 2818063.md version move? ===
+mirror_HEAD_after=3be8390e016795350afc435116f14e622e70e6ee
+mirror_2818063_version_after=version: 1
+
+=== [BACKEND] authoritative current version ===
+backend_version="number":7
+backend_status="status":"current"
