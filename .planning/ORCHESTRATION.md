@@ -144,6 +144,15 @@ NO re-dispatch is a dropped deliverable — the same red flag as an empty notici
 Leaves report friction UP because they cannot see the whole charter; making the
 absorb-vs-redelegate call is the parent's job precisely because it can.
 
+### Single-writer discipline (shared-tree serialization — owner ruling 2026-07-12)
+
+Exactly ONE session/agent writes the shared working tree at a time. Parallel tree-writers race the git index and force mid-flight `TaskStop`s (observed in the v0.14.0 hygiene lane). Rules:
+- A coordinator MAY fan out **read-only** inspection agents in parallel.
+- **Tree-mutating** work (file edits + `git add`/`commit`) is **serial**: dispatch the next tree-writer only after the prior one's commit has landed.
+- **No worktree infrastructure** — the owner rejected per-agent worktrees as over-engineering for the current single-machine autonomous cadence; serialize instead.
+
+Full owner rationale: `.planning/CONSULT-DECISIONS.md` (2026-07-12 [OWNER] session serialization).
+
 ## 3. Context budget + relief/handover protocol
 
 Track your ABSOLUTE token spend from turn one (context budget: §2 rule 5 — ~100k soft,

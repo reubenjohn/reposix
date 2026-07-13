@@ -10,6 +10,17 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 
 ---
 
+## 2026-07-12 [OWNER] Shared-tree contention RESOLVED — session serialization (no parallel tree-writers, no worktree infra)
+
+- **Decision:** Multiple sessions/agents writing the shared working tree concurrently caused git index/commit races and mid-flight `TaskStop`s (v0.14.0 hygiene lane, 2026-07-12). Owner ruling: **serialize** — exactly one session/agent writes the shared tree at a time. No parallel sessions writing the shared tree; **no new worktree infrastructure** (rejected as over-engineering for the current single-machine autonomous cadence).
+- **Operational shape:** a coordinator MAY fan out *read-only* inspection agents in parallel, but tree-mutating work (file edits + `git add`/`commit`) runs one agent at a time — dispatch the next tree-writer only after the prior agent's commit has landed.
+- **Fix-twice:** doctrine landed in `.planning/ORCHESTRATION.md` (single-writer discipline section).
+
+## 2026-07-12 [OWNER] v0.14.0 AND v0.13.0 tag cuts DELEGATED to the MANAGER (herdr w1:p7)
+
+- **Decision:** Owner delegated both the v0.14.0 and (sequenced after it) the v0.13.0 tag cut+push end-to-end to the outer-loop MANAGER. The manager routes the sub-work (9th probe → mint+ratify aggregate milestone verdict → author tag script → push) THROUGH the workhorse and verifies each artifact; **the workhorse authors artifacts but never cuts or pushes a tag** — it stops at READY-TO-TAG. External mutation (tag push) is pre-approved under this delegation, for the MANAGER only.
+- **Evidence:** `.planning/MANAGER-HANDOVER.md` § Live state (2026-07-12); `.planning/SESSION-HANDOVER.md` §3.
+
 ## 2026-07-12 [OWNER] Authorized external mutation — land lost-update (shared-cursor) HIGH security fix onto GitHub `origin/main`
 
 - **Authorization:** Owner-authorized external mutation (2026-07-12 manager relay). Landed
