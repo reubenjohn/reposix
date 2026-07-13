@@ -58,17 +58,23 @@ does reposix work itself. Keep this file lean; git history is the archive.
   OP-9 GREEN, unbiased fresh-execution verifier). Aggregate
   `milestone-v0.14.0/VERDICT.md` deliberately NOT minted yet — the owner-gated 9th
   probe would force RED on its P0 row. Board fully green at `bda849d`.
-- **v0.14.0 TAG DELEGATED TO MANAGER (owner, 2026-07-12)** — owner authorized the
-  manager to make and execute the tag call end-to-end, tag push included (external
-  mutation pre-approved under this delegation). Sequence (route work through the
-  workhorse/GSD, manager verifies each artifact, never over a red main): ① 9th probe
-  `python3 quality/runners/run.py --cadence pre-release-real-backend` with non-default
-  `REPOSIX_ALLOWED_ORIGINS` (exit 0) → ② mint+ratify aggregate milestone-v0.14.0
-  verdict (skeleton `quality/dispatch/milestone-close-verdict.md`) → ③ author/run tag
-  script (pattern `.planning/milestones/v0.13.0-phases/tag-v0.13.0.sh`) → ④ push
-  v0.14.0 tag. Ground truth: `scripts/preflight-real-backends.sh` = PASS 3/3, verified
-  firsthand by manager 2026-07-12 — the old "no real-backend creds" claim was stale.
-  Probe runs honestly first; only a genuine env wall justifies a recorded caveat call.
+- **v0.14.0 TAG DELEGATED TO MANAGER (owner, 2026-07-12) — currently ⛔ BLOCKED on a
+  RED 9th probe (2026-07-13Z).** The probe ran for real (no env wall): 1 PASS / 3 FAIL
+  / 2 NOT-VERIFIED → hard RED per OD-2; honest RED verdict minted
+  `quality/reports/verdicts/milestone-v0.14.0/VERDICT.md` (`563095f`). Sim-only
+  coverage had masked real-backend failures. Blockers: **B1** (P0) vision-litmus —
+  mass-delete guard refused a delete-shaped reconcile (page 2818063 in mirror, absent
+  from live TokenWorld; stale-mirror-drift vs legitimate-delete diagnosis needed;
+  reconcile mutation = manager's call after read-only diagnosis); **B2** (P0)
+  p93-partial-failure-recovery + **B3** (P1) attach-sync — stale 2026-07-06 artifacts,
+  re-run + re-persist; **B4** (P0) t4-conflict-rebase + **B5** (P1) github-front-door
+  — verifier scripts never shipped → NOT-VERIFIED. Remediation checklist:
+  `.planning/SESSION-HANDOVER.md`. Re-grade needs cadence exit 0 + unbiased
+  ratification; then tag script → manager pushes tag. NO softening, NO waiver.
+- **Serialization discipline (self-correction, 2026-07-13Z):** the manager violated
+  the single-writer ruling by committing handover updates mid-workhorse-run
+  (6d0f94f, 2bc29f1, 7dabbbf). New rule: manager edits may be drafted anytime but are
+  COMMITTED only at workhorse idle/wave boundaries (monitor events mark them).
 - **Priority order (owner, 2026-07-12): big SURPRISES-INTAKE drain FIRST**
   (`.planning/milestones/v0.14.0-phases/SURPRISES-INTAKE.md`, 43,988B / 44,000B
   ceiling, ~20 entries incl. several HIGH — triage/drain substantially, not
