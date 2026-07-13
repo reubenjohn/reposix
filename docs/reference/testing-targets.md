@@ -107,6 +107,23 @@ them.
 This constraint previously lived only in oral tradition / research
 notes — it is now a committed, discoverable fact.
 
+#### Sacrificial editable page — the litmus needs a THIRD page
+
+The full `TokenWorld` litmus fixture is **NOT** "exactly 2 pages." The
+Pattern-C milestone-close vision litmus
+(`quality/gates/agent-ux/dark-factory/dvcs-third-arm.sh`) round-trips an
+edit through a **non-protected, editable** record — its target-selection
+loop (`quality/gates/agent-ux/lib/litmus-flow.sh`) deliberately SKIPS the
+protected pair, so with only the two durable fixtures present it hard-fails
+("no editable non-protected `pages/<id>.md` record"). Page **`2818063`** is
+that **sacrificial editable** page. It may be `current` or `trashed` between
+runs; restore it with `python3 scripts/confluence_tokenworld.py restore 2818063`
+(note the explicit id — a bare `restore` no-ops) when a litmus run needs it.
+
+So the correct fixture shape = **2 protected pages never deleted
+(`7766017` + `7798785`) + 1 sacrificial editable page (`2818063`)**. The
+earlier "TokenWorld = exactly 2 pages" doctrine was wrong.
+
 ### Cleanup
 
 Tests that create pages SHOULD tag them with a `kind=test` label so the
