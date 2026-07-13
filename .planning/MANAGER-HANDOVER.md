@@ -51,100 +51,56 @@ does reposix work itself. Keep this file lean; git history is the archive.
    rely on it — fix or drop before use); a long single-line `agent send` becomes a
    "[Pasted text]" block that Enter won't submit while background subagents hold input.
 
-## Live state (refresh at every rotation)
+## Live state (refresh at every rotation) — 2026-07-13, manager rotation #2
 
-- **v0.14.0 wave-2 CLOSED 11/11 GREEN at the OWNER tag boundary** (2026-07-12).
-  Milestone-close verification = `quality/reports/verdicts/p111/VERDICT.md` (GREEN,
-  OP-9 GREEN, unbiased fresh-execution verifier). Aggregate
-  `milestone-v0.14.0/VERDICT.md` deliberately NOT minted yet — the owner-gated 9th
-  probe would force RED on its P0 row. Board fully green at `bda849d`.
-- **v0.14.0 TAG — remediation phase 2 (2026-07-13Z). 🔴 MAIN RED first.** CI run
-  29220925797 failed: "integration (contract, real confluence)" exit 101 — prime
-  suspect: 2 orphan "p93 smoke A" pages left on TokenWorld by a coordinator lane.
-  B4/B5 CLOSED (verifiers shipped); B1/B2 re-diagnosed (`c8a95ca` handover §2-3) and
-  resolved by TWO MANAGER DECISIONS (2026-07-13Z, under standing tag authority):
-  **D1 (B1, non-waivable P0): BLESSED the litmus bus-fetch-rebase self-heal** — the
-  litmus exercises the documented recovery path instead of failing on out-of-band SoT
-  drift (aligns GTH-V15-09); the `sync --reconcile` mirror-refresh DOC LIE in root
-  CLAUDE.md must be fixed in the same change. **D2 (B2/p93, caveat-able P0): option
-  (b)** — honest harness rewrite (UPDATE-recovery + teardown + correct the lying
-  catalog assert) AND the CREATE-recovery-vs-id-assigning-backends product gap ships
-  as a DOCUMENTED tag caveat in VERDICT.md, fix routed to v0.15.0 (filed `ffb93ba`;
-  precedent: v0.13.0 closed GREEN-with-caveats). NO product-code fix mid-tag-sequence
-  (that's arc-gated defect-lane work). Then handover §4 mechanicals: orphan sweep →
-  CI green → honest probe exit 0 → re-mint + ratify verdict → tag script →
-  READY-TO-TAG → manager verifies + pushes tag.
-- **Serialization discipline (self-correction, 2026-07-13Z):** the manager violated
-  the single-writer ruling by committing handover updates mid-workhorse-run
-  (6d0f94f, 2bc29f1, 7dabbbf). New rule: manager edits may be drafted anytime but are
-  COMMITTED only at workhorse idle/wave boundaries (monitor events mark them).
-- **Priority order (owner, 2026-07-12): big SURPRISES-INTAKE drain FIRST**
-  (`.planning/milestones/v0.14.0-phases/SURPRISES-INTAKE.md`, 43,988B / 44,000B
-  ceiling, ~20 entries incl. several HIGH — triage/drain substantially, not
-  byte-relief), then the tag sequence above.
-- **Owner ask (2026-07-12): 75% early-warning on file-size ceilings.** Extend the
-  `structure/file-size-limits` gate (or add a sibling row) so any tracked file at
-  ≥75% of its ceiling emits a non-blocking WARN in pre-commit/pre-push output;
-  ≥100% keeps the existing block contract. Mind the current waiver (until
-  2026-08-08, warn-now/block-later) interplay; fix-twice into quality/CLAUDE.md.
-  Route via workhorse /gsd-quick — queued in the charter expansion.
-- **Hygiene lane CLOSED green (2026-07-13Z):** 3 splits landed — SURPRISES-INTAKE
-  `dc3c21a` (43,988→3,797B, all 17 entries terminal, index preserved), STATE.md
-  `3491d24` (21,137→10,846B), ROADMAP.md `068bcfc` (37,764→13,015B); CI fully green
-  at `a47bd20` (CI/release-plz/CodeQL/Docs all success, manager-verified). Spent
-  workhorse rotated out at ~180k tokens; its flaky-subagent-file-tooling RAISE is in
-  SESSION-HANDOVER.md.
-- Workhorse (w1:p5): **successor #2** launched 2026-07-13Z, xhigh, entry
-  `.planning/SESSION-HANDOVER.md` + this file. Expanded charter (in order): ① record
-  serialization decision (CONSULT-DECISIONS `[OWNER]` + ORCHESTRATION fix-twice);
-  ② foreign-tree triage; ③ 75% file-size early-warning gate; ④ DEFERRED-entry
-  routing (7 entries → concrete v0.15.0/GTH landing spots); ⑤ v0.14.0 tag sequence
-  (probe → aggregate verdict → tag script → STOP at READY-TO-TAG; manager pushes the
-  tag); ⑥ v0.13.0 pre-tag actions queued after. Hard-barred from tag-push and from
-  unrecorded foreign-tree moves. VERIFY each item lands green.
-- **Owner decision (2026-07-12): shared-tree contention RESOLVED — session
-  serialization** (no parallel sessions writing the shared tree; no new worktree
-  infra). Route via workhorse: `[OWNER]` disposition row in CONSULT-DECISIONS.md +
-  fix-twice into ORCHESTRATION.md doctrine. Foreign uncommitted work still in the
-  tree (code.json delta + phases/21, phases/22, scripts/demos, scripts/dev,
-  verifications/docs-repro) — triage/land-or-drop it as part of the serialization
-  cleanup, via workhorse.
-- **OWNER DECISION (2026-07-12, reality-check §5 Q1): FUND LIVE MCP RE-MEASUREMENT
-  against a real backend.** (a) Retire/relabel the FUSE-era ~150k→~2k (98.7%) figure
-  everywhere it anchors — docs/research/initial-report/performance.md:9,
-  initial-report.md:78, .planning/PROJECT.md Context. (b) Commission honest
-  re-measurement: a real MCP server (e.g. Atlassian/GitHub MCP) driven against a
-  sanctioned real backend (TokenWorld Confluence / reubenjohn-reposix GitHub issues;
-  creds verified, targets pre-authorized), real count_tokens pipeline, vs the
-  equivalent reposix session on the SAME backend — wired into CI per the §4
-  benchmark-honesty milestone (live baseline is now FUNDED, not optional). Egress
-  allowlist applies to the MCP server too. (c) INTERIM (before the live number
-  exists): hero surfaces — README "Three measured numbers" header + docs/index.md:17
-  card — get the synthetic-baseline qualifier; never let the old framing ride to
-  launch. Record as `[OWNER]` in CONSULT-DECISIONS via workhorse (with the other §5
-  answers when ratified). Manager sequencing call: record now; docs-touching interim
-  edits AFTER the v0.14.0 tag lands (avoid churning probe/CI state pre-tag).
-- **Reality-check audit (2026-07-12):** owner moving the file to
-  `.planning/milestones/audits/2026-07-12-reality-check.md` themselves (manager backup:
-  `/home/reuben/reposix-reality-check-2026-07-12.bak.md`; watcher armed). Working arc
-  recommendation = §4 arc D (ratchet-first), manager endorses; ARC SELECTION IS THE
-  OWNER'S — no defect-fixing lanes until ratified. §5 status: Q1 + Q2 owner-decided;
-  Q3–Q9 have manager-proposed answers awaiting ratification (see session transcript /
-  final scoping doc). Fold chosen arc + §5 answers into PROJECT.md re-anchor +
-  launch-readiness /gsd-new-milestone.
-- **v0.13.0 tag ALSO DELEGATED (owner, 2026-07-12, via AskUserQuestion):** same
-  end-to-end delegation — execute the v0.13.0 OWNER PRE-TAG ACTIONS
-  (§ Workstream A of the v0.13.0 ROADMAP/STATE) → verify → push the v0.13.0 tag,
-  sequenced AFTER the v0.14.0 tag lands.
-- **RAISEs standing for the owner:** P112 ROADMAP prose-vs-artifact reconcile at
-  /gsd-new-milestone; D5 fold-release-plz-into-CI still open (CONSULT-DECISIONS).
-- Fixed this session: CI-waiter hangs (twice) → durable `scripts/ci-wait.sh` landed;
-  error codes + `reposix explain <code>` now a v0.15.0 HEADLINE phase (`e5b969d`).
-- **Monitoring craft:** herdr idle/working waits FLAP while background subagents run.
-  What works: a persistent Monitor polling (a) origin/main movement, (b) pane
-  `visible_working`, emitting ORIGIN-MOVED events + a one-shot 20-min stall alarm.
-  On stall: nudge the workhorse to SendMessage its stuck child.
-- P112 launch-scope spine (when owner opens launch-readiness): agent-vs-MCP
-  side-by-side demo (token counts on screen), dark-factory/incident meta-story,
-  90-second zero-install sim trial, agent-ecosystem distribution (Claude Code skill,
-  MCP directories, llms.txt).
+- **v0.14.0 TAG: fix-first lane (items 4–8) IN FLIGHT in w1:p5** (workhorse successor
+  #6, launched 2026-07-13 post-`42b99ed`, charter = `.planning/SESSION-HANDOVER.md`):
+  attach-lineage fix per ratified design
+  `.planning/milestones/v0.14.0-phases/attach-lineage-fix-design.md` (BOUNDED-ELEGANT,
+  `2a2456c`) + fail-closed `adf_to_markdown` → litmus re-green on UNMODIFIED Pattern-C
+  harness → recovery-docs verify-TRUE → p93 CREATE-recovery reassess (bounded→fix /
+  architectural→route v0.15.0+flag) → honest probe exit 0 → re-mint VERDICT GREEN →
+  fresh unbiased ratification → tag script → **STOP at READY-TO-TAG**. Manager then
+  VERIFIES against reality (probe exit code, verdict, ratification, CI green, no tag
+  pushed, TokenWorld state) and PUSHES the v0.14.0 tag under standing authority.
+  History: 9th probe found 5 real blockers (sim-only coverage gap); B4/B5 verifiers
+  shipped; D2 honest p93 rewrite (`1c424d7`,`e73d761`); B3 PASS (prior FAIL = phantom
+  stale-skip); B1 dissolved into item 4a after D1 self-heal proven insufficient
+  ([FABLE] `be00016` — genuine product gap, attach never seeds
+  `refs/reposix/origin/main`; + ADF silent-empty-body data loss).
+- **OWNER RULING (2026-07-13, `b773c04`): fix-first.** Tag-blocking product bugs
+  default to FIX BEFORE TAG — no owner consult needed unless the fix is architectural
+  ("this was something you didn't need my input on"). Calibrate future escalations UP.
+- **After v0.14.0 tag lands:** ① v0.13.0 sequence (OWNER PRE-TAG ACTIONS, v0.13.0
+  ROADMAP § Workstream A → same READY-TO-TAG stop; delegation extended by owner);
+  ② post-tag queue: Q1c interim hero qualifiers (README "Three measured numbers" +
+  index.md:17 synthetic-baseline caveat), `.playwright-mcp/audit-03..08` droppings
+  sweep, `/gsd-cleanup` archival cascade (tags unblock it), ORCHESTRATION.md >100%
+  size split.
+- **Reality-check audit (2026-07-12):** durable-commit QUEUED in workhorse #6 charter
+  (copy `/home/reuben/reposix-reality-check-2026-07-12.bak.md` →
+  `.planning/milestones/audits/2026-07-12-reality-check.md`); record the repo path
+  here once landed. Owner decided §5 Q1 (live MCP re-measurement FUNDED; FUSE-era
+  98.7% figure retire/relabel) + Q2 (tags). **PENDING WITH OWNER: arc ratification
+  (§4 arc D ratchet-first recommended+endorsed) + §5 Q3–Q9** (manager-proposed
+  answers in session transcript ~2026-07-12). No defect-fixing lanes beyond
+  tag-blockers until arc ratified. Fold ratified arc + answers into PROJECT.md
+  re-anchor at /gsd-new-milestone.
+- **Ops lessons (this manager's session):** (1) Claude Code survey/UI prompts can
+  block the workhorse pane AND freeze the subagent progress display — on a stall
+  alarm, read the pane; if a y/n/d survey prompt shows, answer `n` (consent is the
+  owner's); a dirty tree is a liveness signal even when the display is frozen.
+  (2) STALL alarms false-positive on long cargo/real-backend lanes — inspect before
+  nudging; nudge = message the workhorse to health-check its child, never Escape
+  first. (3) Background monitors SURVIVE `/clear` — the outgoing manager's monitor
+  `bgh6ujkic` is still running: TaskStop it, then re-arm your own (poll 60s:
+  `git ls-remote origin main` → ORIGIN-MOVED; `herdr agent explain w1:p5` →
+  BLOCKED / IDLE-STABLE at 3 consecutive idle / one-shot STALL at 20 working-min;
+  every 5th poll `gh run list --branch main` → CI-RED). (4) Serialization: draft
+  manager-handover edits anytime, COMMIT only at workhorse idle/wave boundaries.
+  (5) herdr: a digit/letter alone answers menus; long `agent send` needs a second
+  Enter after ~2s; text after `❯` is often ghost-text — never treat it as pending
+  input.
+- **Standing RAISEs for the owner:** P112 ROADMAP prose-vs-artifact reconcile at
+  /gsd-new-milestone; D5 fold-release-plz-into-CI (CONSULT-DECISIONS). Monitor
+  craft + P112 launch-scope spine: see git history of this file (`61af3ba`).
