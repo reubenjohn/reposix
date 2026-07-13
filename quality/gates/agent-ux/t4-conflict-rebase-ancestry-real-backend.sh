@@ -190,123 +190,13 @@ cargo build -p reposix-cli -p reposix-remote --bin reposix --bin git-remote-repo
 BIN_DIR="${WORKSPACE_ROOT}/target/debug"
 export PATH="${BIN_DIR}:${PATH}"   # git-remote-reposix must be resolvable by `git push`
 
-# --- 5. Two-cache scenario in a /tmp run dir (leaf isolation) --------------
-RUN_DIR="/tmp/t4-conflict-rebase-ancestry-real-backend-$$"
-mkdir -p "$RUN_DIR"
-A="${RUN_DIR}/A"
-B="${RUN_DIR}/B"
-CACHE_A="${RUN_DIR}/cacheA"
-CACHE_B="${RUN_DIR}/cacheB"
+# --- 5-8. Two-cache scenario + mass-delete guard (factored under the 10k
+# .sh file-size budget, quality/CLAUDE.md "File-size limits" -- mirrors the
+# dark-factory/lib.sh + lib/litmus-flow.sh sourced-helper precedent). The lib
+# below needs BIN_DIR, SPACE, PROTECTED_IDS, hard_fail_exit(), note_pass() --
+# all already in scope from steps 1-4 above.
+# shellcheck source=quality/gates/agent-ux/lib/t4-real-backend-flow.sh
+source "${SCRIPT_DIR}/lib/t4-real-backend-flow.sh"
+_t4_real_backend_flow
 
-echo "t4-conflict-rebase-ancestry-real-backend: reposix init A (own cache) against confluence::${SPACE}" >&2
-REPOSIX_CACHE_DIR="$CACHE_A" "${BIN_DIR}/reposix" init "confluence::${SPACE}" "$A" \
-  || hard_fail_exit "reposix init A (confluence::${SPACE}) failed"
-git -C "$A" config user.email "writer-a-confluence@example.invalid"
-git -C "$A" config user.name "writer-A-confluence"
-
-echo "t4-conflict-rebase-ancestry-real-backend: reposix init B (own cache) against confluence::${SPACE}" >&2
-REPOSIX_CACHE_DIR="$CACHE_B" "${BIN_DIR}/reposix" init "confluence::${SPACE}" "$B" \
-  || hard_fail_exit "reposix init B (confluence::${SPACE}) failed"
-git -C "$B" config user.email "writer-b-confluence@example.invalid"
-git -C "$B" config user.name "writer-B-confluence"
-
-git -C "$A" checkout -B main refs/reposix/origin/main \
-  || hard_fail_exit "git checkout -B main (A) failed" "requires git >= 2.34 stateless-connect fetch"
-git -C "$B" checkout -B main refs/reposix/origin/main \
-  || hard_fail_exit "git checkout -B main (B) failed" "requires git >= 2.34 stateless-connect fetch"
-note_pass "two independent working trees against TokenWorld: A and B each bootstrapped via reposix init confluence::${SPACE} with SEPARATE REPOSIX_CACHE_DIR caches (cacheA/cacheB)"
-
-# ROOT_B captured right after checkout, BEFORE any edits -- this is the
-# ancestry baseline the refetch below must not disturb.
-ROOT_B="$(git -C "$B" rev-list --max-parents=0 refs/heads/main | tail -1)"
-
-# --- 6. Bucket-aware record path: confluence == pages/, NOT issues/ --------
-# Honor the protected-fixture denylist DURING selection (mirrors
-# lib/litmus-flow.sh's target-picking loop), never as a post-hoc check only.
-PAGE_FILE_A=""
-for md in "$A"/pages/*.md; do
-  [ -e "$md" ] || continue
-  id="$(basename "$md" .md)"
-  case "$PROTECTED_IDS" in *" $id "*) continue ;; esac
-  PAGE_FILE_A="$md"
-  break
-done
-[ -n "$PAGE_FILE_A" ] || hard_fail_exit "no editable non-protected pages/<id>.md record found in A's checkout" "$A/pages (bucket_for_backend(confluence)==pages, never issues)"
-PAGE_BASENAME="$(basename "$PAGE_FILE_A")"
-PAGE_FILE_B="${B}/pages/${PAGE_BASENAME}"
-
-# --- MASS-DELETE GUARD: refuse any delete-shaped diff before EITHER push ---
-assert_safe_push_diff() {
-  local tree="$1" label="$2" diff
-  diff="$(git -C "$tree" diff --name-status HEAD~1 HEAD 2>&1)" \
-    || hard_fail_exit "${label}: could not compute the pending-push diff" "$diff"
-  echo "${label} pending-push diff (HEAD~1..HEAD):" >&2
-  printf '%s\n' "$diff" | sed 's/^/  /' >&2
-  if printf '%s\n' "$diff" | grep -qE '^D'; then
-    hard_fail_exit "MASS-DELETE GUARD: ${label} push would delete file(s) -- refusing to push a delete-shaped diff (confluence pages/ bucket safety, per milestone-close-vision-litmus.sh)" "$diff"
-  fi
-  while IFS=$'\t' read -r _status fname; do
-    [ -z "$fname" ] && continue
-    local base id
-    base="$(basename "$fname")"
-    id="${base%.md}"
-    case "$PROTECTED_IDS" in
-      *" $id "*) hard_fail_exit "MASS-DELETE GUARD: ${label} diff touches PROTECTED fixture id ${id}" "${fname} is on the never-edit denylist (${PROTECTED_IDS})" ;;
-    esac
-  done <<< "$diff"
-  note_pass "${label} pending-push diff is a safe single-file in-place edit (no deletions, no protected fixture ids touched)"
-}
-
-# The backend's `updated_at` cursor comparison needs A's edit to land in a
-# strictly later wall-clock second than B's `last_fetched_at` cursor, or the
-# conflict-detection precheck can collide at whatever timestamp precision
-# the backend stores (verbatim rationale + fix from the sim-arm sibling).
-sleep 2
-
-# --- 7. Scenario: A baseline push, B stale-base push (must be rejected) ---
-echo "t4-conflict-rebase-ancestry-real-backend: A edits + pushes (baseline)" >&2
-{ echo ""; echo "A-edit-real-backend-$(date -u +%s)"; } >> "$PAGE_FILE_A"
-git -C "$A" add "pages/${PAGE_BASENAME}"
-git -C "$A" commit --quiet -m "A: edit ${PAGE_BASENAME} (real-backend conflict/ancestry probe)"
-assert_safe_push_diff "$A" "A baseline"
-REPOSIX_CACHE_DIR="$CACHE_A" git -C "$A" push origin main \
-  || hard_fail_exit "A's baseline push failed" "expected a clean single-writer push to succeed against real TokenWorld"
-note_pass "A's baseline push (no conflict) against real TokenWorld succeeded"
-
-echo "t4-conflict-rebase-ancestry-real-backend: B edits the SAME record (stale base) + pushes (expect rejection)" >&2
-{ echo ""; echo "B-edit-real-backend-$(date -u +%s)"; } >> "$PAGE_FILE_B"
-git -C "$B" add "pages/${PAGE_BASENAME}"
-git -C "$B" commit --quiet -m "B: edit ${PAGE_BASENAME} (real-backend conflict/ancestry probe)"
-assert_safe_push_diff "$B" "B stale-base"
-
-B_PUSH1_LOG="${RUN_DIR}/b-push1.log"
-set +e
-REPOSIX_CACHE_DIR="$CACHE_B" git -C "$B" push origin main > "$B_PUSH1_LOG" 2>&1
-B_PUSH1_EXIT=$?
-set -e
-if [[ "$B_PUSH1_EXIT" -eq 0 ]]; then
-  hard_fail_exit "B's stale-base push should have been REJECTED but exited 0" "$(cat "$B_PUSH1_LOG")"
-fi
-grep -qE 'version mismatch|fetch first' "$B_PUSH1_LOG" \
-  || hard_fail_exit "B's rejected push did not name the expected conflict (version mismatch / fetch first)" "$(cat "$B_PUSH1_LOG")"
-note_pass "two independent working trees against TokenWorld: B's stale-base push against the SAME record A just pushed was correctly rejected (version mismatch / fetch first) -- conflict reject proven"
-
-echo "t4-conflict-rebase-ancestry-real-backend: B recovers via git fetch origin" >&2
-REPOSIX_CACHE_DIR="$CACHE_B" git -C "$B" fetch origin \
-  || hard_fail_exit "B's recovery git fetch origin failed" "this is the exact HIGH-1 regression path -- a refetch after a rejected push must succeed"
-
-NEW_ROOT_B="$(git -C "$B" rev-list --max-parents=0 refs/reposix/origin/main | tail -1)"
-[[ "$NEW_ROOT_B" == "$ROOT_B" ]] \
-  || hard_fail_exit "HIGH-1 REGRESSED: refetch produced a NEW root commit (no ancestry to the prior tip)" "ROOT_B(before)=$ROOT_B ROOT_B(after)=$NEW_ROOT_B"
-note_pass "B's recovery refetch produced no fresh root on refetch -- refs/reposix/origin/main's root commit stayed IDENTICAL before and after the refetch against real TokenWorld (no fresh disconnected root, HIGH-1 stays fixed)"
-
-COMMIT_COUNT_AFTER="$(git -C "$B" rev-list --count refs/reposix/origin/main)"
-[[ "$COMMIT_COUNT_AFTER" -gt 1 ]] \
-  || hard_fail_exit "refetch did not advance refs/reposix/origin/main at all" "commit count = $COMMIT_COUNT_AFTER"
-note_pass "refs/reposix/origin/main genuinely advanced past the shared root (commit count=${COMMIT_COUNT_AFTER}) -- the ancestry assertion above is not vacuous, matching the sim arm's non-vacuous check"
-
-# --- 8. Cleanup: this flow only edits an existing matched page in place ----
-rm -rf "$RUN_DIR"
-
-echo "T4-CONFLICT-REBASE-ANCESTRY-REAL-BACKEND COMPLETE -- two-writer conflict correctly rejected against real TokenWorld; recovery refetch preserves ancestry (no fresh root)." >&2
 exit 0
