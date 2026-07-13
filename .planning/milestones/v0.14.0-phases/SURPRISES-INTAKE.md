@@ -65,3 +65,5 @@ This ledger approached the milestone-hygiene 44000 B ceiling (`quality/gates/age
   - 2026-07-12 21:15 | discovered-by: B1 (litmus self-heal implementation, d413432) | severity: MEDIUM | OPEN (litmus-flow.sh at 97.9% of file-size ceiling)
   - 2026-07-12 21:15 | discovered-by: B1 (litmus self-heal implementation, d413432) | severity: LOW | OPEN (litmus marker-strip hygiene — stale T2-attach-* markers accumulate)
   - 2026-07-13 | discovered-by: B3 (tag-remediation, attach-sync re-run, verify-against-reality) | severity: MEDIUM | OPEN (verdict asserted a FAIL not backed by a fresh artifact — phantom B3 failure; fresh re-run is a clean PASS → v0.15.0 verdict-rigor guard)
+  - 2026-07-13 15:52 | discovered-by: B3 (attach-sync-real-backend independent re-run) | severity: MEDIUM | OPEN (PASS is inconclusive by construction — smokes never round-trip `refs/reposix/origin/main`, ties to B1 gap)
+  - 2026-07-13 15:52 | discovered-by: B3 (post-push cadence review) | severity: HIGH | OPEN (`code/ci-green-on-main` false-PASS race — grades before new `ci.yml` run is indexed, no `headSha` check)
