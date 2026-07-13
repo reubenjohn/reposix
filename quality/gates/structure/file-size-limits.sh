@@ -6,8 +6,16 @@
 # pre-pr so it fires for every trigger; contributors without local
 # hooks still get gated by CI.
 #
-# Default: exit 1 on any violation (BLOCK).
-# --warn-only: prints violations to stderr but exits 0 (transitional).
+# Two tiers, by percent-of-ceiling (pct = size*100/limit, integer):
+#   - 75 <= pct < 100  → EARLY-WARNING band. Non-blocking WARN summary to
+#     stderr (top-12 by pct DESC + "N more" overflow). ALWAYS emitted,
+#     independent of --warn-only / any catalog waiver, and NEVER touches the
+#     exit code. Precedent: the .githooks/pre-push timing tripwire's stderr
+#     "WARN — ..." that never affects exit. (No WARN verdict status exists in
+#     verdict.py — this is print-only, not a status.)
+#   - pct >= 100 (size > limit) → OVER-BUDGET. exit 1 (BLOCK) by default;
+#     --warn-only flips this tier's exit to 0 (transitional cleanup window).
+#     Only this tier governs the exit code.
 #
 # Limits live in this file (not the catalog row) so the check is
 # self-contained and reviewable in one diff.
@@ -39,6 +47,7 @@ EXCLUDED_PATTERNS=(
 )
 
 violations=()
+warn_band=()   # files at 75 <= pct < 100 of ceiling (early-warning tier)
 total_scanned=0
 
 while IFS= read -r file; do
@@ -70,10 +79,32 @@ while IFS= read -r file; do
   total_scanned=$((total_scanned + 1))
 
   size=$(wc -c < "$file" | tr -d ' ')
+  pct=$(( size * 100 / limit ))
   if [[ "$size" -gt "$limit" ]]; then
     violations+=("$file is $size chars (limit: $limit) — $hint")
+  elif [[ "$pct" -ge 75 ]]; then
+    # sortable record: pct|file|size|limit
+    warn_band+=("$pct|$file|$size|$limit")
   fi
 done < <(git ls-files)
+
+# EARLY-WARNING tier (75 <= pct < 100). Print-only summary, ALWAYS emitted,
+# independent of --warn-only and of the ≥100% block/exit logic below. Must
+# never affect the exit code in either flag mode.
+if [[ "${#warn_band[@]}" -gt 0 ]]; then
+  echo "file-size-limits: WARN — ${#warn_band[@]} file(s) approaching size ceiling (≥75%); consider a progressive-disclosure split (see the per-extension hint in the block list, or quality/CLAUDE.md § File-size limits)" >&2
+  sorted_band=$(printf '%s\n' "${warn_band[@]}" | sort -t'|' -k1,1nr)
+  shown=0
+  while IFS='|' read -r p f s l; do
+    [[ -z "$p" ]] && continue
+    shown=$((shown + 1))
+    [[ $shown -gt 12 ]] && continue
+    echo "  $f — $s/$l chars (${p}%)" >&2
+  done <<< "$sorted_band"
+  if [[ "${#warn_band[@]}" -gt 12 ]]; then
+    echo "  … and $(( ${#warn_band[@]} - 12 )) more at ≥75%" >&2
+  fi
+fi
 
 if [[ "${#violations[@]}" -gt 0 ]]; then
   echo "file-size-limits: ${#violations[@]} file(s) over budget (scanned: $total_scanned)" >&2

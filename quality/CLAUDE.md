@@ -108,6 +108,42 @@ header comment.
 `quality/catalogs/freshness-invariants.json` (wrapper `"dimension": "structure"`; there
 is no `structure.json`). Rule + regex scope: `crates/CLAUDE.md` § code conventions.
 
+### File-size limits
+
+`structure/file-size-limits.sh` (row `structure/file-size-limits` in
+`freshness-invariants.json`) is the progressive-disclosure/readability gate. It walks
+`git ls-files`, skips exclusions (`Cargo.lock`, `quality/catalogs/*.json`,
+`quality/reports/`, `crates/*/tests/fixtures/`, `CHANGELOG.md`, `crates/*.rs`), and
+assigns a per-extension ceiling:
+
+| Path / extension | Ceiling |
+|---|---|
+| `CLAUDE.md` (any dir) | 40000 |
+| `.claude/skills/**` | 10000 |
+| `*.md` | 20000 |
+| `*.rs` (outside `crates/`) | 20000 |
+| `*.py` | 15000 |
+| `*.sh` / `*.bash` | 10000 |
+
+`pct = size*100/limit` (integer) sorts each file into one of two tiers:
+
+- **75 ≤ pct < 100 — EARLY-WARNING (print-only).** A non-blocking WARN summary to
+  stderr: a header naming the band count, then band files sorted by pct DESC (top-12,
+  then `… and N more at ≥75%`). ALWAYS emitted, independent of `--warn-only`/the waiver,
+  and NEVER touches the exit code. There is **no WARN verdict status** in `verdict.py` —
+  this is print-only (precedent: the `.githooks/pre-push` timing tripwire's stderr `WARN`
+  that never affects exit). It is the early-warning gate the owner asked for: files
+  approaching the ceiling, not yet over it.
+- **pct ≥ 100 (size > limit) — OVER-BUDGET (blocking).** `exit 1` by default; only this
+  tier's exit is governed by `--warn-only` (flips to `exit 0`). The row is **WAIVED until
+  2026-08-08** with verifier args `["--warn-only"]`, so today the over-budget tier warns
+  instead of blocking; when the flag/waiver lapse the block-later contract reactivates.
+  Live residual list + drain plan: the waiver `reason` on the row.
+
+Self-test (both tiers + `--warn-only` independence + overflow): `bash
+quality/gates/structure/file-size-limits.selftest.sh` (builds a throwaway `/tmp` repo —
+never the shared repo).
+
 ## Docs-alignment dimension
 
 Binary: `reposix-quality doc-alignment {bind, propose-retire, confirm-retire,

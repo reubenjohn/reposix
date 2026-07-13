@@ -644,7 +644,8 @@
         "asserts": [
           "every tracked file is within its extension's progressive-disclosure budget (CLAUDE.md=40k, .claude/skills/=10k, *.md=20k, *.rs=20k, *.py=15k, *.sh=10k); auto-generated + crates source excluded",
           "Cargo.lock, quality/catalogs/*.json, quality/reports/, crates/.../tests/fixtures/, CHANGELOG.md, and crates/.../*.rs are excluded from scope",
-          "verifier exit 1 on any violation by default; --warn-only flag flips exit to 0 (transitional cleanup window)"
+          "OVER-BUDGET tier (pct>=100, size>limit): verifier exit 1 on any violation by default; the --warn-only flag flips ONLY this tier's exit to 0 (transitional cleanup window). This tier's block-later contract reactivates when --warn-only/the waiver are removed on 2026-08-08.",
+          "EARLY-WARNING tier (75<=pct<100, pct=size*100/limit integer): files APPROACHING but not yet over the ceiling emit a non-blocking WARN summary to stderr — one header line naming the count + 'consider a progressive-disclosure split', then band files sorted by pct DESC (top-12, then '… and N more at ≥75%' when >12), each 'file — size/limit chars (PCT%)'. This WARN is print-only (no WARN verdict status in verdict.py; precedent: the pre-push timing tripwire), ALWAYS emitted independent of --warn-only/the waiver, and NEVER affects the exit code in either flag mode. Self-test: quality/gates/structure/file-size-limits.selftest.sh."
         ]
       },
       "verifier": {

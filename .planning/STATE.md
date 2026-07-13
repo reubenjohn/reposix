@@ -89,6 +89,7 @@ the orchestrator's)**, gated on owner ratification of
 | 260706-crf | DVCS cold-reader fixes — 7 findings across dvcs-topology + dvcs-mirror-setup + troubleshooting (findings 1 & 6 verified against code) | 2026-07-06 | (this commit) | [260706-crf-dvcs-cold-reader-fixes](./quick/260706-crf-dvcs-cold-reader-fixes/) |
 | 260706-idp | v0.13.0 intake OP-8 disposition + bound-to-live-state sweep — carry-forward banners; 2 terminal SURPRISES + 4 completed RESOLVING-P97 rows deleted; 5 HIGHs confirmed live; 1 new MEDIUM filed (troubleshooting.md >20k) | 2026-07-06 | (this commit) | [260706-idp-v0.13.0-intake-disposition](./quick/260706-idp-v0.13.0-intake-disposition/) |
 | 260712-bgv | Non-blocking timing-budget warning in pre-commit/pre-push hooks (SECONDS-based, stderr-only, never touches exit code) + CLAUDE.md/quality/CLAUDE.md cadence+scaling documentation | 2026-07-12 | b4e96d8 | [260712-bgv-add-non-blocking-timing-budget-warning-t](./quick/260712-bgv-add-non-blocking-timing-budget-warning-t/) |
+| 260712-oa9 | 75% file-size early-warning tier in structure/file-size-limits.sh — non-blocking print-only WARN summary for the 75–99% band (top-12 by pct DESC + overflow), always emitted independent of --warn-only, never touches exit code; ≥100% block/waiver semantics unchanged. + catalog asserts + quality/CLAUDE.md § File-size limits + committed selftest | 2026-07-12 | (this commit) | [260712-oa9-file-size-75pct-warn](./quick/260712-oa9-file-size-75pct-warn/) |
 
 ## Session Continuity
 
