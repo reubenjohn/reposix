@@ -41,9 +41,10 @@ if [ -z "${REPOSIX_ALLOWED_ORIGINS:-}" ]; then
 fi
 
 # --- Pin the sanctioned mutation target (fix-twice) ------------------------
-# This row CREATES + MUTATES Confluence pages (a bad-parent Create + a
-# content-equivalent retry), so TokenWorld -- the owner-sanctioned "go crazy,
-# it's safe" scratch space -- is the ONLY sanctioned target for it (unlike the
+# This row MUTATES Confluence pages (a body-edit UPDATE on page A + an
+# update-and-rename-into-title-collision retry on page B), so TokenWorld --
+# the owner-sanctioned "go crazy, it's safe" scratch space -- is the ONLY
+# sanctioned target for it (unlike the
 # read-only attach-sync-real-backend smoke, which also permits the durable
 # REPOSIX fixture space). The ambient `.env` points REPOSIX_CONFLUENCE_SPACE at
 # the READ-ONLY REPOSIX fixture; the earlier version READ that var and then
@@ -72,4 +73,4 @@ if [ "$rc" -ne 0 ]; then
   exit 1
 fi
 
-echo "PASS: real SoT-success + mirror-fail partial-failure recovery round-trip against Confluence TokenWorld (next push read new SoT via PRECHECK B and replanned; transcript emitted)"
+echo "PASS: real UPDATE-recovery SotPartialFail round-trip against Confluence TokenWorld (page B's rename-into-title-collision was atomically rejected; next push re-read SoT via PRECHECK B, diffed away already-landed page A, and replanned + landed page B; transcript emitted)"
