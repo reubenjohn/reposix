@@ -1,0 +1,9 @@
+quality/runners/run.py --cadence pre-release-real-backend  [validate-only (catalog writes OFF)]
+  catalog: agent-ux.json (66 rows; 6 in scope)
+    [NOT-VERIFIED ] agent-ux/milestone-close-vision-litmus-real-backend  (P0, 0.00s) -> skipped: env not set (real-backend origins/creds absent)
+    [NOT-VERIFIED ] agent-ux/t4-conflict-rebase-ancestry-real-backend  (P0, 0.00s) -> skipped: env not set (real-backend origins/creds absent)
+    [NOT-VERIFIED ] agent-ux/p93-partial-failure-recovery-real-confluence  (P0, 0.00s) -> skipped: env not set (real-backend origins/creds absent)
+    [NOT-VERIFIED ] agent-ux/cadence-pre-release-real-backend  (P1, 0.00s) -> skipped: env not set (real-backend origins/creds absent)
+    [NOT-VERIFIED ] agent-ux/attach-sync-real-backend  (P1, 0.00s) -> skipped: env not set (real-backend origins/creds absent)
+    [NOT-VERIFIED ] agent-ux/github-front-door-real-backend  (P1, 0.00s) -> skipped: env not set (real-backend origins/creds absent)
+summary: 0 PASS, 0 FAIL, 0 PARTIAL, 0 WAIVED, 6 NOT-VERIFIED -> exit=1
