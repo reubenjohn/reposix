@@ -1,0 +1,161 @@
+================================================================================
+item 4a — §8 BINDING real-backend acceptance arm (attach lineage) — READ-ONLY
+================================================================================
+Sanctioned backend : Confluence space TokenWorld (space id 360450, tenant reuben-john)
+Repo HEAD at run    : 52be70b  ·  git 2.25.1  ·  reposix + git-remote-reposix @ debug build
+Analogue of         : sim §5.2 forced round-trip (attach-lineage-fix-design.md), on the real SoT.
+Design under test   : `reposix attach` seeds refs/reposix/origin/main at the mirror merge-base M
+                      (NOT HEAD M'); a FORCED `git fetch reposix` imports a PARENTED SoT snapshot
+                      chaining onto M; `git rebase` reconciles with NO cross-root add/add wall;
+                      the new non-overlapping local record M' survives. Pre-fix, the fetch produced
+                      a PARENTLESS root → unrelated-histories / add/add wall (the bug this proves gone).
+Safety              : NO `git push` anywhere ⇒ NO backend mutation ⇒ TokenWorld byte-identical
+                      before/after (STEP 1 == STEP 9, diff empty). Read-only on the SoT by design.
+VERDICT             : GREEN — 0 assertion failures. Full transcript below; NOTICED after RESULT_LINE.
+================================================================================
+
+############################################################
+# item 4a §8 BINDING real-backend attach arm — READ-ONLY   #
+# TokenWorld Confluence · NO git push · NO backend mutation #
+############################################################
+date_utc      : 2026-07-13T17:54:57Z
+git_version   : git version 2.25.1
+repo_head     : 52be70b5f1ef4b32cca3426028360fdac5a14407
+mirror_url    : git@github.com:reubenjohn/reposix-tokenworld-mirror.git
+leaf_run_dir  : /tmp/item4a-realarm.eA5wHh  (/tmp leaf isolation)
+cache_dir     : /tmp/item4a-realarm.eA5wHh/cache
+reposix_bin   : /home/reuben/workspace/reposix/target/debug/reposix
+allowed_orig  : http://127.0.0.1:*,http://localhost:*,https://api.github.com,https://reuben-john.atlassian.net,https://github.com
+
+=== STEP 1: BASELINE TokenWorld inventory (before) ===============
+   7766017  parent=      None  reposix hierarchy fixture — parent (durable test fixture, do not delete) [PROTECTED]
+   7798785  parent=   7766017  reposix hierarchy fixture — child (durable test fixture, do not delete) [PROTECTED]
+--- 2 current pages in space 360450 ---
+PASS: baseline == durable pair (7766017 parentless + 7798785->7766017), exactly 2 pages
+
+=== STEP 2: clone TokenWorld mirror into /tmp leaf ==============
+PASS: vanilla mirror clone obtained
+clone HEAD (mirror base M)      : 3be8390e016795350afc435116f14e622e70e6ee
+refs/remotes/origin/main        : 3be8390e016795350afc435116f14e622e70e6ee
+PASS: clone HEAD == refs/remotes/origin/main (mirror base M)
+
+=== STEP 3: commit-BEFORE-attach — NEW non-overlapping record M' =
+PASS: M' committed (new pages/9900000042.md, no protected page touched)
+HEAD after commit (M')          : 0e9e646805f32ba3839d17745c7447f06f8af77f
+PASS: M' != M (a real new commit on top of the mirror base)
+
+=== STEP 4: reposix attach confluence::TokenWorld (REAL backend) =
+BACKEND_DELETED id=2818063 local_file=/tmp/item4a-realarm.eA5wHh/tree/pages/2818063.md
+NO_ID local_file=/tmp/item4a-realarm.eA5wHh/tree/README.md
+NO_ID local_file=/tmp/item4a-realarm.eA5wHh/tree/pages/9900000042.md
+attach: matched=2 no_id=2 backend_deleted=1 mirror_lag=0
+reposix attach: configured `/tmp/item4a-realarm.eA5wHh/tree` against confluence::TokenWorld
+  remote `reposix`.url = reposix::https://reuben-john.atlassian.net/confluence/projects/TokenWorld?mirror=git@github.com:reubenjohn/reposix-tokenworld-mirror.git
+  extensions.partialClone = reposix
+  refs/reposix/origin/main seeded at 3be8390e0167 (mirror `origin` merge-base)
+  remote.pushDefault = reposix (plain `git push` now routes through the SoT bus; `git fetch`/`git pull` still read from the `origin` mirror)
+attach exit                     : 0
+PASS: reposix attach exited 0 against real TokenWorld backend
+remote.reposix.url              : reposix::https://reuben-john.atlassian.net/confluence/projects/TokenWorld?mirror=git@github.com:reubenjohn/reposix-tokenworld-mirror.git
+remote.reposix.fetch            : +refs/heads/*:refs/reposix/origin/*
+extensions.partialClone         : reposix
+
+=== STEP 5: SEED assertion (== mirror base M, != HEAD M') ========
+refs/reposix/origin/main (seed) : 3be8390e016795350afc435116f14e622e70e6ee
+PASS: refs/reposix/origin/main present (real OID, not empty/None)
+PASS: seed == refs/remotes/origin/main (mirror merge-base M)
+PASS: seed != HEAD/M' (NO silent-revert data-loss anchor)
+
+=== STEP 6: FORCE the fetch (the bug path) — git fetch reposix ===
+From reposix::https://reuben-john.atlassian.net/confluence/projects/TokenWorld?mirror=git@github.com:reubenjohn/reposix-tokenworld-mirror
+   3be8390..572fcb5  main       -> refs/reposix/origin/main
+fetch exit                      : 0
+PASS: git fetch reposix exited 0 (real helper import verb, real backend read)
+refs/reposix/origin/main (post) : 572fcb52d305cf27f16113482e26b1260a1cac9d
+refs/reposix/origin/main~1      : 3be8390e016795350afc435116f14e622e70e6ee
+PASS: imported ref is PARENTED (~1 resolves) — NOT a parentless cross-root snapshot (pre-fix bug absent)
+note: fetch advanced the ref to a fresh SoT snapshot S; S~1=3be8390e016795350afc435116f14e622e70e6ee (chains onto the seed).
+PASS: advanced snapshot chains directly onto the seed (S~1 == seed M)
+
+=== STEP 7: git rebase refs/reposix/origin/main ==================
+First, rewinding head to replay your work on top of it...
+Applying: scratch: non-overlapping local record M' (read-only §8 real-backend arm)
+rebase exit                     : 0
+PASS: git rebase exited 0
+PASS: no CONFLICT (add/add) in rebase output
+PASS: no 'unrelated histories' in rebase output
+PASS: M' record (pages/9900000042.md) SURVIVES the rebase (present in HEAD tree)
+post-rebase log (top 3):
+49a53a0 scratch: non-overlapping local record M' (read-only §8 real-backend arm)
+572fcb5 Sync from REST snapshot
+3be8390 litmus edit litmus-marker-1783319282
+
+=== STEP 8: NO git push (read-only arm — SoT untouched) ==========
+PASS: no 'git push' issued — the SoT (TokenWorld) is NOT mutated by this arm
+
+=== STEP 9: AFTER TokenWorld inventory + diff vs baseline ========
+   7766017  parent=      None  reposix hierarchy fixture — parent (durable test fixture, do not delete) [PROTECTED]
+   7798785  parent=   7766017  reposix hierarchy fixture — child (durable test fixture, do not delete) [PROTECTED]
+--- 2 current pages in space 360450 ---
+PASS: after-list == baseline (durable pair intact, ZERO leaked/new/trashed pages — TokenWorld byte-identical)
+
+=== SUMMARY =====================================================
+total assertion FAILs           : 0
+RESULT_LINE VERDICT=GREEN FAILS=0
+
+================================================================================
+NOTICED (deliverable — ownership charter #2). Two substantive items + one adjacent.
+================================================================================
+
+[N1] MIRROR SUBSTRATE STALE → milestone-close vision litmus (item 5) is currently RED at GUARD A.
+  Observed at attach (STEP 4): `attach: matched=2 no_id=2 backend_deleted=1 mirror_lag=0`.
+  The one backend_deleted is page id 2818063 ("reposix demo space Home", spaceId 360450,
+  status=TRASHED, version 7). The default litmus mirror
+  (git@github.com:reubenjohn/reposix-tokenworld-mirror, refs/remotes/origin/main = 3be8390)
+  still carries pages/2818063.md for a page that has been TRASHED out of TokenWorld — the
+  baseline `list` (status=current) shows only {7766017, 7798785}.
+  IMPACT (blocking item 5): quality/gates/agent-ux/lib/litmus-flow.sh GUARD A fails closed on
+  `backend_deleted != 0` ( `[ "${bdel:-1}" -ne 0 ] -> fail; return 1`, the mass-delete guard ).
+  The milestone-close vision litmus clones this SAME default mirror, so it will hard-RED at
+  GUARD A BEFORE it ever pushes — independent of the attach-lineage fix. This read-only arm did
+  NOT push, so no harm here; and note the fetch+rebase legs actually reconciled 2818063 AWAY
+  (the SoT full-rebuild snapshot 572fcb5 dropped it → post-rebase tree has no pages/2818063.md),
+  which is the CORRECT behavior — but GUARD A trips at attach, before that recovery would run.
+  SEVERITY: HIGH (blocks item 5 / milestone-close 9th probe RBF-FW-03).
+  NOT eager-fixed here (out of this arm's read-only scope; the fix is a MIRROR mutation needing
+  owner-named-target approval + a push). REMEDIATION for the coordinator:
+    (a) RECOMMENDED — `reposix refresh --backend confluence` then push the mirror, dropping the
+        stale pages/2818063.md so reconciliation reports backend_deleted=0; OR
+    (b) `scripts/confluence_tokenworld.py restore 2818063` — restores the trashed page, but that
+        ADDS a 3rd current page, changing the durable-fixture inventory and likely breaking
+        contract_confluence_live_hierarchy's exact-pair expectation. NOT recommended.
+  FILED for the coordinator; verify against the litmus GUARD A before declaring item 5 green.
+
+[N2] QUOTED frontmatter `id` is silently reclassified NO_ID (id-not-parsed) by attach reconcile.
+  My scratch M' record used `id: "9900000042"` (quoted YAML scalar); attach bucketed it under
+  NO_ID (STEP 4: `NO_ID local_file=.../pages/9900000042.md`), NOT as an id-bearing record. Real
+  records use a BARE integer (`id: 7766017`), and reposix_core::record::RecordId is
+  `pub struct RecordId(pub u64)`, so the quoted-string scalar fails u64 deserialization and the
+  reconciler degrades it to id-less. Harmless for THIS arm (M' is local-only, never pushed; the
+  rebase only needs a git FILE, which it is). But a real robustness gap: hand-editing the working
+  tree is a first-class reposix workflow, and an agent that quotes a numeric id would have its
+  record treated as NEW (unmatched) → a push would CREATE a duplicate instead of UPDATE the
+  existing record — a silent data-integrity foot-gun. SEVERITY: LOW-MED.
+  SKETCH: make RecordId's Deserialize accept both bare-int and quoted-int scalars (serde
+  string-or-int coercion via `#[serde(deserialize_with)]` / `deserialize_any`), OR fail LOUDLY on
+  an unparseable id in a record-bucket path that clearly carries one, instead of the silent NO_ID
+  degrade. FILED (GOOD-TO-HAVE), not fixed here.
+
+[N3] Litmus marker hygiene (adjacent, low). The mirror base commit 3be8390's subject is
+  "litmus edit litmus-marker-1783319282". The litmus pre-strips prior marker LINES
+  (`sed '/litmus-marker-/d'`) so a page carries at most one marker line, but each real litmus run
+  still leaves a marker COMMIT in the mirror history. Not a correctness issue (the SoT rebuild
+  reconciles content); noted for tidiness / mirror-history bloat over many runs.
+
+--------------------------------------------------------------------------------
+SAFETY LEDGER (read-only guarantee, re-stated):
+  * NO `git push` was issued anywhere in this arm (STEP 8).
+  * TokenWorld after-list == baseline (STEP 1 == STEP 9); inventory diff empty → SoT byte-identical.
+  * All git/reposix setup ran inside a /tmp leaf (leaf-isolation honored; cwd cd'd per invocation).
+  * Nothing pushed to git origin; no tag created. Local commit of THIS evidence file only.
+--------------------------------------------------------------------------------
