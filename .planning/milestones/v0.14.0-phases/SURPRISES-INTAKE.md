@@ -34,7 +34,7 @@
 
 ## Split index (OP-8 file-size drain)
 
-This ledger approached the milestone-hygiene 44000 B ceiling (`quality/gates/agent-ux/p111-milestone-hygiene.sh` assert E) and was split into 2 per-part child files under `surprises-intake/` via `scripts/split_ledger.py` (byte-exact round-trip verified). Every entry is preserved verbatim; append new entries to the last part (or a new part) and add the title here. All 19 v0.14.0 entries are terminal (RESOLVED / DEFERRED) — zero OPEN.
+This ledger approached the milestone-hygiene 44000 B ceiling (`quality/gates/agent-ux/p111-milestone-hygiene.sh` assert E) and was split into 2 per-part child files under `surprises-intake/` via `scripts/split_ledger.py` (byte-exact round-trip verified). Every entry is preserved verbatim; append new entries to the last part (or a new part) and add the title here. All 20 v0.14.0 entries are terminal (RESOLVED / DEFERRED) — zero OPEN.
 
 - [`surprises-intake/part-01.md`](surprises-intake/part-01.md) — 10 entries:
   - 2026-07-11 23:00 | discovered-by: P102 (adversarial code-review) | severity: HIGH | RESOLVED-in-P102
@@ -57,3 +57,5 @@ This ledger approached the milestone-hygiene 44000 B ceiling (`quality/gates/age
   - 2026-07-12 20:59 | discovered-by: P111 (milestone-close CI-wait) | severity: MEDIUM | RESOLVED
   - 2026-07-13 | discovered-by: B1 (tag-remediation, mirror-reconcile investigation) | severity: MEDIUM | DEFERRED (pending B1 mirror-refresh manager decision)
   - 2026-07-13 | discovered-by: B1 (tag-remediation, mirror-reconcile investigation) | severity: MEDIUM | DEFERRED (pending B1 mirror-refresh manager decision)
+- [`surprises-intake/part-03.md`](surprises-intake/part-03.md) — 1 entry:
+  - 2026-07-13 | discovered-by: B2 (tag-remediation, p93 harness fix, verify-against-reality) | severity: HIGH | DEFERRED (dedicated real-backend recovery-convergence fix phase; active p93 tag-blocker, owner decision pending)
