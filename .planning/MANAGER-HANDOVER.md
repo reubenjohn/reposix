@@ -51,27 +51,28 @@ does reposix work itself. Keep this file lean; git history is the archive.
    rely on it — fix or drop before use); a long single-line `agent send` becomes a
    "[Pasted text]" block that Enter won't submit while background subagents hold input.
 
-## Live state (refresh at every rotation) — 2026-07-13, manager rotation #5 (mid-session refresh)
+## Live state (refresh at every rotation) — 2026-07-14, manager rotation #6 (v0.14.0 SHIPPED)
 
-- **v0.14.0 TAG critical path: item-5 coherence RED root-caused + FIXED.** Real
-  `reposix-confluence` regression — Confluence v2 string-encodes the ADF `value`;
-  fix = manual Deserialize at `types.rs:171` (`49666eb`) + mirror tooling
-  `scripts/refresh-tokenworld-mirror.sh` (`95ed061`); mechanism-verified by fresh
-  DP-2 review (`a424546`: MECHANISM-CORRECT + fail-closed PASS); litmus+p93
-  self-verified PASS live. Evidence:
-  `.planning/milestones/v0.14.0-phases/evidence/item5-RED-{diagnosis,fix-review}-2026-07-13.md`.
-- **Workhorse successor #13 IN FLIGHT in w1:p5** (charter `.planning/SESSION-HANDOVER.md`
-  @ `c27fd06`, A-vs-B branching runbook → execute the B branch per Ruling #4):
-  item-8 mechanicals (OP-9 retro distillation FIRST — Ruling-#2 caveat + item-7
-  waiver + Ruling-#4 t4 caveat ALL VERBATIM; verdict re-mint =
-  GREEN-with-recorded-caveats, NEVER claims cadence exit-0; fresh unbiased
-  ratification — an honest RED from the ratifier over the caveats comes back to
-  the manager; author tag script) → **STOP at READY-TO-TAG**. Manager then
-  VERIFIES against reality (verdict + ratification + CI green headSha-matched +
-  no tag pushed + TokenWorld = 2 protected + `2818063` current) and PUSHES the
-  v0.14.0 tag under standing authority. Test-fix lane, guardrail 5, Ruling-#3
-  harness fixes: ALL DONE + proven (`cb8ad11`; front-door FAIL→PASS, t4 past the
-  space guard).
+- **v0.14.0 TAG SHIPPED (2026-07-14T01:16Z): `refs/tags/v0.14.0` @ `bcdee07`** + all 9
+  release-plz per-package tags; crates.io at 0.14.0. Cut by the manager under standing
+  authority through the FULL honest gate sequence: verdict GREEN-WITH-RECORDED-CAVEATS
+  (`b8e309f`) + independent ratification (`5624943`) + CI green headSha-matched on
+  `bcdee07` + TokenWorld end-state live-verified (2 protected + `2818063` current) +
+  bump PR #72 merged (`256bb2e`) + tag-script all-guards-green. Recorded caveats
+  (verdict + RETROSPECTIVE carry them verbatim): t4 git-floor NOT-VERIFIED (Ruling #4),
+  litmus non-idempotency interim op (Ruling #2), item-7 CREATE-recovery waiver. Late
+  arc: bump-merge turned main RED via a release-window gate deadlock (brew gates assert
+  formula==crates.io-max; crates.io auto-published on merge) — fixed window-aware at
+  `970d466` (successor #14), CI green re-confirmed, THEN tagged. Full arc:
+  CONSULT-DECISIONS Rulings #2/#3/#4 + RETROSPECTIVE v0.14.0 + intake part-04.
+- **SUCCESSOR MANAGER'S FIRST ACTIONS:** (1) verify the `release.yml` run on tag
+  `v0.14.0` (in_progress at rotation, started 01:16Z) concluded SUCCESS — multi-platform
+  assets + installer URLs + brew formula refresh; if RED → immediate fix-first lane
+  (release is half-public). NOTE: it runs on the TAG ref — the monitor's `--branch main`
+  CI check does NOT cover it. (2) Spot-check install/release gates go steady-state green
+  on the next runs. (3) TaskStop monitor `bu1jqyeic`, re-arm your own. (4) Workhorse pane
+  w1:p5 is IDLE (successor #14 complete, report verified) — launch the post-tag workhorse
+  when ready (queue below), fresh `/clear` FIRST.
 - **MANAGER RULING #2 (E2/ADR valve, 2026-07-13): litmus non-idempotency = DEFER;
   tag proceeds.** The ADR-010 RBF-LR-04 inline fan-out pushes the PRE-write client
   tree — the mirror never converges to SoT after a push (executed proof, intake
@@ -108,15 +109,27 @@ does reposix work itself. Keep this file lean; git history is the archive.
   different files). Relaying a ruling to a WORKING workhorse via queued `agent send`
   works — consumed at its next tool boundary; no need to wait for idle when it's an
   unblock the workhorse is waiting on.
+- **Ops lessons (rotation #5, the v0.14.0 cut):** (1) ALWAYS `/clear` + verify the
+  context gauge RESET before sending a successor charter — a charter sent into a
+  stood-down-at-ceiling session ran on degraded context (recovered via Escape →
+  queued-/clear fires → resend); never send text right after Escape without
+  confirming the interrupt landed (it concatenates into the input box). (2)
+  READY-TO-TAG must include a tag-script guards DRY-RUN — guard 3 (version bump
+  unmerged, PR #72) was caught only by the manager's own pre-check. (3) The
+  bump-merge→crates.io-publish→red-main window recurs EVERY release — the
+  window-aware brew gate (`970d466`) should hold; verify steady-state next cut.
+  (4) Workhorse token-absolute relief pushback (successor #8) was CORRECT — the %
+  gauge misleads on a 1M window; don't waive rotations off the gauge.
 - **OWNER RULING (2026-07-13, `b773c04`): fix-first.** Tag-blocking product bugs
   default to FIX BEFORE TAG — no owner consult needed unless the fix is architectural
   ("this was something you didn't need my input on"). Calibrate future escalations UP.
-- **After v0.14.0 tag lands:** ① v0.13.0 sequence (OWNER PRE-TAG ACTIONS, v0.13.0
-  ROADMAP § Workstream A → same READY-TO-TAG stop; delegation extended by owner);
-  ② post-tag queue: Q1c interim hero qualifiers (README "Three measured numbers" +
-  index.md:17 synthetic-baseline caveat), `.playwright-mcp/audit-03..08` droppings
-  sweep, `/gsd-cleanup` archival cascade (tags unblock it), ORCHESTRATION.md >100%
-  size split.
+- **Post-tag queue (NOW ACTIVE — next workhorse charter):** ⓪ GSD-tracked cursor
+  refresh (STATE.md/PROJECT.md still read "v0.14.0 pending" — milestone is shipped);
+  ① v0.13.0 tag sequence (OWNER PRE-TAG ACTIONS, v0.13.0 ROADMAP § Workstream A →
+  same READY-TO-TAG stop; manager cuts); ② Q1c interim hero qualifiers (README "Three
+  measured numbers" + index.md:17 synthetic-baseline caveat);
+  ③ `.playwright-mcp/audit-03..08` droppings sweep; ④ `/gsd-cleanup` archival cascade
+  (v0.14.0 tag unblocks it); ⑤ ORCHESTRATION.md >100% size split.
 - **Reality-check audit (2026-07-12): LANDED at `8e36e62`** —
   `.planning/milestones/audits/2026-07-12-reality-check.md` (verbatim vs the owner bak,
   manager-diff-verified). Owner decided §5 Q1 (live MCP re-measurement FUNDED; FUSE-era
