@@ -96,7 +96,7 @@
       "expected": {
         "asserts": [
           "GET https://api.github.com/repos/reubenjohn/homebrew-reposix/contents/Formula/reposix.rb returns HTTP 200",
-          "the formula's `version \"X.Y.Z\"` string equals the latest reposix-cli release tag's version component"
+          "window-aware: the formula's `version \"X.Y.Z\"` equals the crates.io reposix-cli max_version in steady state, OR (during an in-flight release window) the crates.io max_version equals the [workspace.package] version in Cargo.toml AND the formula version equals the latest published GitHub release tag (leading `v` stripped) -- so a just-merged release-plz bump that publishes to crates.io before the v-tag is pushed does not false-RED this gate"
         ]
       },
       "verifier": {
@@ -486,7 +486,7 @@
       "expected": {
         "asserts": [
           "GET https://api.github.com/repos/reubenjohn/homebrew-reposix/contents/Formula/reposix.rb returns HTTP 200",
-          "decoding the base64 `content` field and parsing for `version \"X.Y.Z\"` yields a string equal to the crates.io max_version of reposix-cli"
+          "window-aware: decoding the base64 `content` field and parsing for `version \"X.Y.Z\"` yields a string that equals the crates.io reposix-cli max_version in steady state, OR (during an in-flight release window) the crates.io max_version equals the [workspace.package] version in Cargo.toml AND the formula version equals the latest published GitHub release tag (leading `v` stripped) -- release-plz publishes the bump to crates.io before the v-tag is pushed, so this window is legitimate and must PASS, while a formula stale relative to a COMPLETED release still FAILs"
         ]
       },
       "verifier": {
