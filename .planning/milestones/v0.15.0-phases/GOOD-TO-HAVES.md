@@ -82,6 +82,11 @@
 - **What:** Ran `~/.claude/skills/doc-clarity-review`'s prescribed `claude -p "$(cat _prompt.md)" file1 file2` invocation exactly as documented (copied README.md/docs/index.md to an isolated tmp dir first). The subprocess did NOT receive the file content — it replied that "no file content was included in this request," seeing only ambient session context (CLAUDE.md, tool listings). This matches the doc-alignment skill's own known caveat ("subscription users cannot fall back to `claude -p`") but the doc-clarity-review skill has no such warning and its instructions assume the invocation just works. A less careful agent skimming the output for a CLEAR/NEEDS WORK/CONFUSING verdict (rather than reading the full reply) could mistake the "I can't see the files" reply for an actual review outcome.
 - **Fix-sketch:** either (a) have the skill probe once (e.g. a 1-line canary file) and hard-fail with a clear "nested claude -p unsupported in this environment, use Path A/Task-tool dispatch instead" message before burning the full review prompt, or (b) add the same subscription-caveat note the doc-alignment skill already carries, pointing callers at the Task-tool fallback. Small (<1h), lives in `~/.claude/skills/doc-clarity-review/SKILL.md` (outside this repo — user-global skill, not `.planning/`).
 
+### GTH-V15-13 — README uses "MCP" without ever expanding the acronym on the page
+- **Source:** quick `260714-qhq` hero-qualifiers cold-reader REVISE round (2026-07-14) · **Severity: LOW** · STATUS: OPEN.
+- **What:** `README.md` uses "MCP" in at least two places ("no MCP tool schemas", "synthesized MCP-tool-catalog baseline") but never expands it to "Model Context Protocol" anywhere on the page — a cold reader unfamiliar with the acronym has no in-page anchor. `docs/index.md` does spell it out ("Model Context Protocol (MCP)"). Pre-existing; NOT introduced by the hero-qualifier edit.
+- **Fix-sketch:** one-line first-use expansion in README — change the first "MCP" occurrence (the "no MCP tool schemas" line in the elevator pitch) to "Model Context Protocol (MCP)", leaving later uses as the bare acronym. Trivial (<5 min); bundle into any README-touching phase or a docs-hygiene sweep.
+
 ## Back-pointer note (bidirectional trail — INTENTIONALLY SKIPPED)
 
 Task step 5 offered to append a `→ landed: v0.15.0-phases/GOOD-TO-HAVES.md` back-pointer to each

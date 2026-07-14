@@ -52,6 +52,14 @@ detail stays one click away at `benchmarks/token-economy.md` and in the footer d
   known `.planning/CLAUDE.md` caveat that "subscription users cannot fall back to
   `claude -p`". Per charter, did NOT improvise an alternate invocation.
   **Cold-reader NOT run — needs orchestrator** (Task-tool/Path-A dispatch).
+- **Cold-reader REVISE round (orchestrator-run, isolated Path-A, 2026-07-14):** returned
+  REVISE on one real cross-surface inconsistency — docs/index.md's latency card carried NO
+  interim qualifier while the README caveat framed 8/27 ms as simulator/interim. Fixed:
+  latency card now reads `... cold init — simulator, interim`, and "(interim)" on the 89.1%
+  card was repositioned to modify the figure, not "baseline". Re-ran banned-words lint
+  (PASS) + mkdocs --strict (clean). Filed GTH-V15-13 (README never expands the "MCP"
+  acronym on-page; docs/index.md does). README unchanged — its caveat already covers all
+  three numbers.
 
 ## Commits
 

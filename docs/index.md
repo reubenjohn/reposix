@@ -14,8 +14,8 @@ reposix exposes REST-based issue trackers (Jira, GitHub Issues, Confluence) as a
 
 <div class="grid cards" markdown>
 
--   **`89.1%`** fewer tokens vs a synthesized MCP-tool-catalog baseline (interim) for the same 3-issue read+edit+push workflow ([token economy](benchmarks/token-economy.md))
--   **`8 ms`** cached read · **`27 ms`** cold init ([latency](benchmarks/latency.md))
+-   **`89.1%`** fewer tokens (interim) vs a synthesized MCP-tool-catalog baseline for the same 3-issue read+edit+push workflow ([token economy](benchmarks/token-economy.md))
+-   **`8 ms`** cached read · **`27 ms`** cold init — simulator, interim ([latency](benchmarks/latency.md))
 -   **`5-line install`** — `curl`, `brew`, `cargo binstall`, or `irm` ([first-run.md](tutorials/first-run.md))
 
 </div>
