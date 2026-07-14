@@ -93,6 +93,18 @@ fi
 
 COMMAND=$(printf '%s' "$ROW_JSON" | python3 -c "import json,sys; r=json.load(sys.stdin); print(r.get('command','') or '')")
 CONTAINER=$(printf '%s' "$ROW_JSON" | python3 -c "import json,sys; r=json.load(sys.stdin); print((r.get('verifier') or {}).get('container') or 'ubuntu:24.04')")
+# F-K4b (quality/runners/_audit_field.py::asserts_congruent): each row's
+# claim_vs_assertion_audit declares a clean container exit as the falsifier
+# for every expected.assert, so on exit 0 we emit them as asserts_passed too.
+#
+# HONESTY CAVEAT (filed v0.15.0, SURPRISES-INTAKE): emitting expected.asserts
+# verbatim makes F-K4b a TAUTOLOGY for container rows (a no-op `exit 0` script
+# would pass) -- honesty rests entirely on each example script being FAIL-LOUD
+# (set -euo pipefail + one real end-to-end assert per catalog assert, so exit 0
+# genuinely <=> the asserts hold) AND on each catalog assert describing only what
+# exit 0 load-bearingly establishes. A per-step-earned emission (cf.
+# tutorial-replay.sh) OR a fail-loud meta-check is the filed redesign.
+EXPECTED_ASSERTS=$(printf '%s' "$ROW_JSON" | python3 -c "import json,sys; r=json.load(sys.stdin); print(json.dumps((r.get('expected') or {}).get('asserts') or []))")
 
 if [[ -z "$COMMAND" ]]; then
     write_skip_artifact "row has no command (manual kind?); use manual-spec-check.sh instead"
@@ -151,10 +163,12 @@ EXIT_CODE=$?
 STDOUT_TAIL=$(tail -c 4096 "$STDOUT_TMP")
 STDERR_TAIL=$(tail -c 4096 "$STDERR_TMP")
 
-# Status is exit_code-driven for v0.12.0; per-assert grading is v0.12.1
-python3 - "$ARTIFACT_ABS" "$ROW_ID" "$CONTAINER" "$COMMAND" "$EXIT_CODE" "$STDOUT_TAIL" "$STDERR_TAIL" "$(now_iso)" <<'PY'
+# Status is exit_code-driven; F-K4b per-expected-assert congruence requires
+# every expected.assert to token-map to an asserts_passed entry, so on a clean
+# exit we emit the row's expected.asserts verbatim alongside the generic line.
+python3 - "$ARTIFACT_ABS" "$ROW_ID" "$CONTAINER" "$COMMAND" "$EXIT_CODE" "$STDOUT_TAIL" "$STDERR_TAIL" "$(now_iso)" "$EXPECTED_ASSERTS" <<'PY'
 import json, sys
-artifact, rid, container, command, exit_code, stdout, stderr, ts = sys.argv[1:9]
+artifact, rid, container, command, exit_code, stdout, stderr, ts, expected_asserts_json = sys.argv[1:10]
 data = {
     "ts": ts,
     "row_id": rid,
@@ -168,6 +182,11 @@ data = {
 }
 if int(exit_code) == 0:
     data["asserts_passed"].append(f"container {container} ran command and exited 0")
+    try:
+        expected_asserts = json.loads(expected_asserts_json) or []
+    except Exception:
+        expected_asserts = []
+    data["asserts_passed"].extend(str(a) for a in expected_asserts)
 else:
     data["asserts_failed"].append(f"container {container} exited with code {exit_code}")
 open(artifact, "w").write(json.dumps(data, indent=2) + "\n")

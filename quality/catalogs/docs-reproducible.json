@@ -162,8 +162,8 @@
       "expected": {
         "asserts": [
           "bash examples/05-blob-limit-recovery/run.sh exits 0 in ubuntu:24.04 container",
-          "the agent observes the blob-limit error from helper stderr and recovers via git sparse-checkout",
-          "after recovery, the targeted issue blob is materialized while siblings stay sparse"
+          "run.sh confirms the blob-limit guard constant BLOB_LIMIT_EXCEEDED_FMT is committed in crates/reposix-remote/src/stateless_connect.rs (step [1/4], the grep gate at run.sh:28-30 exits non-zero under set -euo pipefail if the constant is absent) and applies the pre-emptive git sparse-checkout partial-clone pattern (steps [3/4]-[4/4], run.sh:45-48/55-56) that narrows the fetch scope under REPOSIX_BLOB_LIMIT=3; it does NOT trigger or read a runtime blob-limit stderr error (the fast-import fetch path bypasses the per-RPC command=fetch check -- see expected-output.md '## Why no blob_limit_exceeded audit row')",
+          "after the sparse-checkout-narrowed git checkout of refs/reposix/origin/main, at least one targeted issues/*.md record blob is materialized in the working tree (the bare 'ls issues/*.md' at run.sh:51 and again at run.sh:58 exits non-zero under set -e on a zero-match glob); the check establishes materialization of the narrowed set, not that siblings remain sparse"
         ]
       },
       "verifier": {
@@ -179,9 +179,9 @@
       "last_verified": "2026-07-12T16:53:45Z",
       "freshness_ttl": null,
       "blast_radius": "P1",
-      "owner_hint": "if RED: examples/05-blob-limit-recovery/run.sh regressed OR the blob-limit teaching string / sparse-checkout path regressed. P106 (2026-07-12) RETIRED the stale P90 waiver: real blockers were (a) container-rehearse.sh never starting a reachable sim (now started on host + --network host) and (b) 'git sparse-checkout set 0001.md ...' using the OLD zero-padded flat pathspecs -- canonical is 'issues/1.md' (QL-001, unpadded + bucketed); the 'ls' inspection lines had the same drift. QL-001 is landed (P91-02).",
+      "owner_hint": "if RED: examples/05-blob-limit-recovery/run.sh regressed OR the blob-limit guard constant / sparse-checkout path regressed. P106 (2026-07-12) RETIRED the stale P90 waiver: real blockers were (a) container-rehearse.sh never starting a reachable sim (now started on host + --network host) and (b) 'git sparse-checkout set 0001.md ...' using the OLD zero-padded flat pathspecs -- canonical is 'issues/1.md' (QL-001, unpadded + bucketed); the 'ls' inspection lines had the same drift. QL-001 is landed (P91-02). HONESTY REWORD (2026-07-13, quick 260713-q0e): asserts #2/#3 were reworded to the TRUTH -- example-05 does NOT observe a runtime blob-limit stderr error (the fast-import fetch path bypasses the per-RPC check; expected-output.md documents zero blob_limit_exceeded rows). It exercises the PRE-EMPTIVE git sparse-checkout pattern + the source-constant presence ONLY. The real runtime-error recovery is covered by quality/gates/agent-ux/dark-factory.sh; a deeper example-05 fix (exercise the real runtime error + recovery cycle) is filed for v0.15.0 (SURPRISES-INTAKE). Do NOT re-introduce a 'observes the error from stderr and recovers' claim here -- run.sh provably never reads helper stderr.",
       "waiver": null,
-      "claim_vs_assertion_audit": "If blob-limit recovery did not work, the sparse-checkout would materialize zero files (no pathspec match) OR fail to narrow scope; either falsifies the 'targeted blob materialized while siblings stay sparse' assert. With canonical 'issues/<id>.md' pathspecs the checkout now lists exactly the 3 (then 4) targeted records.",
+      "claim_vs_assertion_audit": "If the pre-emptive partial-clone workflow did not hold, run.sh exits non-zero and its asserts land in asserts_failed: the step-[1/4] grep gate (run.sh:28-30) exits 1 under set -euo pipefail if BLOB_LIMIT_EXCEEDED_FMT is absent from stateless_connect.rs, and the bare 'ls issues/*.md' (run.sh:51 and :58) exits non-zero under set -e on a zero-match glob if the sparse-checkout-narrowed checkout materialized no record. The row DELIBERATELY does not claim a runtime blob-limit stderr observation: the fast-import fetch path bypasses the per-RPC command=fetch check (expected-output.md), so example-05 provably exercises the pre-emptive sparse-checkout pattern + source-constant presence only, and the true runtime-error recovery is covered by quality/gates/agent-ux/dark-factory.sh.",
       "cadences": [
         "post-release"
       ],
