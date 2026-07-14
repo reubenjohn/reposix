@@ -1,4 +1,4 @@
-# v0.14.0 Surprises Intake (P110 source-of-truth) — Part 1 of 3
+# v0.14.0 Surprises Intake (P110 source-of-truth) — Part 1 of 4
 
 > Split from `SURPRISES-INTAKE.md` for the file-size gate (OP-8 drain). Index: `../SURPRISES-INTAKE.md`. Entries preserved verbatim.
 

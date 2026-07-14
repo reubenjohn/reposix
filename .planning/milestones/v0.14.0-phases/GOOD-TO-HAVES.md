@@ -370,6 +370,35 @@ round-trip regression on a `master`-default mirror proves it.
 
 **STATUS:** OPEN
 
+## GOOD-TO-HAVES-16 — `runner-persist-stale-skip-reason-on-pass` — persist path doesn't clear `skip_reason`/`last_real_grade` on a NOT-VERIFIED→PASS transition
+
+**Discovered during:** successor #13 (v0.14.0 tag-prep mechanical, READY-TO-TAG authoring, 2026-07-13)
+
+**Size:** S
+
+**Severity:** LOW — cosmetic. The operative grade is correct; only a stale companion field misleads a reader who inspects the row without checking `status` first.
+
+**Source:** `quality/reports/verdicts/milestone-v0.14.0/VERDICT.md` § "Awareness note —
+non-blocking cosmetic artifact gap" (filed there, not acted on, by the milestone-close
+verifier): the `github-front-door-real-backend` catalog row is correctly `status: PASS`,
+but the runner's persist path left a stale cosmetic `skip_reason: env-missing` /
+`last_real_grade: null` on the same row alongside that PASS — a runner-persist-path gap,
+not a real failure and not evidence the row actually skipped. A reader who greps for
+`skip_reason` without also checking `status` would be misled into thinking the row is
+env-gated.
+
+**Acceptance:** the persist path clears `skip_reason` and populates `last_real_grade`
+whenever a row transitions from a prior NOT-VERIFIED (env-missing) grade to a fresh PASS
+(or any other terminal grade), so a PASS row never carries stale env-missing metadata.
+`quality/catalogs/agent-ux.json`'s `github-front-door-real-backend` row is the concrete
+regression fixture.
+
+**Default disposition for P111:** S closes-or-defers; carry-forward target v0.15.0
+observability lane (pairs naturally with `GOOD-TO-HAVES-13`, the sibling mechanical-gate
+empty-asserts gap).
+
+**STATUS:** OPEN
+
 ## Entry format
 
 ```markdown
