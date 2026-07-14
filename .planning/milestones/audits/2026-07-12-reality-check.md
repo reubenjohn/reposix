@@ -576,3 +576,34 @@ pick by appetite for launch latency vs regression risk.
    the arc to ~12 is error-behavior/caveats depth docs + CLI UX + benchmark re-measurement +
    gates + launch kit. Does that decomposition match your intuition, or do you see docs
    depth we haven't inventoried (e.g. per-backend caveat matrices, failure-mode catalogs)?
+
+---
+
+## ADDENDUM — Owner decisions (2026-07-14, live session, manager rotation #6)
+
+Recorded by the manager; supersedes the "pending" status of the §5 questions below.
+
+- **Q3 — Launch definition: DECIDED.** Show-HN launch is gated on a walkable
+  REAL-BACKEND journey (GitHub minimum), not sim-first.
+- **Q4 — Subjective-runner fix: FUNDED** (Task-dispatch in the meta-milestone).
+- **Q5 — Public site scope: DECIDED, stronger than either §5 option.** DELETE
+  legacy/historical files outright — no keep-with-banners. Owner verbatim: "I hate
+  how much legacy and bloat is there across md files in docs, .planning/, etc — lets
+  not make it worse — very confusing! Please please ensure we are explicitly planning
+  simplification of the project docs."
+- **Q7 — Bloat remediation: DECIDED, same ruling as Q5.** Aggressive sweep;
+  delete/compress, git history is the archive. Docs/planning SIMPLIFICATION is a
+  first-class, explicitly-planned roadmap goal.
+- **Q8 — Audit droppings: CONFIRMED delete** (incl. root audit-01/02;
+  .playwright-mcp/audit-03..08 sweep already queued as post-tag item 3).
+- **Q9 — Scale: DECIDED, keep** the v0.15→v0.25 ~6-milestone scale ("gives a lot of
+  room to squeeze in enhancements, cleanups and pivots").
+- **NEW CALIBRATION MANDATE (owner):** assume ONE deep survey pass surfaces only
+  ~10% of the latent work; expect ~10 deep survey passes over the roadmap to reach
+  convergence. Recurring deep surveys are a standing practice baked into milestone
+  planning — not a one-time audit.
+- **Arc (§4): pending explicit owner confirm.** Owner asked what the arc choice
+  actually decides (order/emphasis — content converges by v0.25). Manager's proposed
+  recording: Arc D (ratchet-first) with the simplification mandate as a strengthened
+  bloat-purge component — each survey's findings become standing gates so pass N+1
+  never re-finds pass N's issues.
