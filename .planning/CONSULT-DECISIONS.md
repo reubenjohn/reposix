@@ -10,6 +10,53 @@ Format: `## <date> [SELF|FABLE|OWNER] <one-line>` then rationale + evidence.
 
 ---
 
+## 2026-07-13 [MANAGER] Ruling #5 (E2 valve) — OPTION A: honest bounded F-K4b container-congruence fix; example-05 asserts reworded to the truth; redesign FILED → v0.15.0
+
+- **Valve:** E2 (architecture-shaping — touches the load-bearing quality-honesty contract;
+  no ADR surface touched, within manager authority per owner ruling `b773c04` calibrate-up).
+- **Question/fork:** F-K4b container-class congruence. The RED-main fix `0f2b7c5`
+  (`container-rehearse.sh` emits each row's `expected.asserts` verbatim as `asserts_passed`
+  on container exit 0) makes F-K4b (`quality/runners/_audit_field.py::asserts_congruent`) a
+  **tautology for all `kind: container` rows** (emitted == expected → self-congruent by
+  construction), AND example-05's asserts #2/#3 **overclaim** (they assert the agent
+  "observes the blob-limit error from helper stderr and recovers" + "siblings stay sparse,"
+  but `run.sh` provably never reads helper stderr — fast-import bypasses the per-RPC check;
+  `run.sh:28` greps a source constant — and the bare `ls issues/*.md` only needs ≥1 file).
+  Fork: **A** (honest bounded fix + file redesign) / **B** (restore waivers) / **C** (full
+  per-step-earned redesign now).
+- **Decision: OPTION A + riders.**
+  1. **Rework the held commits — do NOT push `0f2b7c5` as-is.** Keep the honest emission
+     for example-01/02/04 (a fresh verifier confirmed those `run.sh` are fail-loud:
+     `set -euo pipefail` + real conflict-forcing/`check=True` pushes, so exit 0 genuinely
+     ⟺ their asserts hold). Reword example-05 asserts #2/#3 to the TRUTH — the PRE-EMPTIVE
+     `git sparse-checkout` partial-clone pattern the script actually demonstrates + the
+     blob-limit guard constant's presence in source; NO runtime-error observation claim.
+  2. **File ONE v0.15.0 quality-hardening intake** covering (a) F-K4b container-tautology
+     redesign (per-step-earned emission like `tutorial-replay.sh`, OR a fail-loud
+     meta-check) + (b) example-05 real-runtime-error deeper fix (today the true runtime
+     recovery is covered only by the dark-factory arm). Severity MEDIUM.
+  3. **Do NOT weaken F-K4b, NO waivers** — **B REJECTED** (reverses shipped P106);
+     **C DEFERRED to v0.15.0** as filed.
+  4. **Verify against reality** — local green (`run.py --cadence post-release` → 6 PASS /
+     0 FAIL / exit 0) → orchestrator push → re-trigger `quality-post-release`, confirm the
+     newest run concluded success.
+  5. **Clean leftovers, resume item 0 + queue.**
+- **Rationale:** bounded, honest, reversible; the redesign is FILED not lost; within
+  manager authority per `b773c04` calibrate-up — no ADR surface touched. Rewording the
+  catalog asserts keeps F-K4b PASSING **by construction** (container-rehearse emits the
+  reworded text verbatim); the job is to make the ASSERT TEXT truthful, not to change
+  pass/fail.
+- **Reversibility:** fully reversible — `git revert` of the fix-arc commits; the intake row
+  is deletable; no product code touched; no catalog surgery beyond truthful assert text.
+- **Commit:** honest-fix arc — fix `03e7a6f` (container-rehearse honesty caveat +
+  example-05 asserts/audit/owner_hint reworded), intake `3775075` (v0.15.0
+  SURPRISES-INTAKE), ledger+docs this commit. `git reset --soft d68fa8a` un-stacked the
+  held `0f2b7c5`/`058c465`, so the symptom-fix commit `0f2b7c5` no longer stands alone as
+  the pushed fix — the landed arc reads as one honest bounded F-K4b fix.
+- **Status:** RULED OPTION-A — executed by quick `260713-q0e` (held commits reworked via
+  `git reset --soft d68fa8a`; example-05 reworded; intake filed; local cadence re-green
+  verified). Orchestrator owns the push + post-release re-trigger (rider 4).
+
 ## 2026-07-13 [OWNER] v0.14.0 tag: pre-release-real-backend blocked by a THIRD gap — VM git 2.25.1 < 2.34 floors t4 NOT-VERIFIED (E1 system-git upgrade vs E3 gate-policy)
 
 - **Context:** Ruling #3 Option A executed at `cb8ad11`. BOTH anticipated harness gaps
