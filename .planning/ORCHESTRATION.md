@@ -1,104 +1,61 @@
 # ORCHESTRATION.md — reposix orchestration doctrine
 
 Canonical, committed home for how autonomous reposix sessions run: delegation
-shape, coordinator discipline, relief/handover, operating cadence, and the
-durable-state rules. Distilled from session 7e2a4cf2 (2026-07-03/04). Replaces the
-session-local accumulator that previously held these rules in `/tmp`.
+shape, coordinator discipline, relief/handover, operating cadence, durable state.
+Distilled from session 7e2a4cf2 (2026-07-03/04).
 
 > **Pointer contract (D-CONV-7 shape):** root `CLAUDE.md` keeps a ~6-line summary +
-> a pointer here; THIS file is authoritative long-form. Update both when doctrine
-> changes. Provenance + evidence: `.planning/research/doctrine-institutionalization/`.
+> a pointer here; THIS file is authoritative long-form — update both when doctrine
+> changes. Episodic deep-dive detail (enforcement-map table, leaf-isolation mechanism,
+> large-framework proposals, §11 budget elaboration, full HCI text, provenance) lives in
+> the companion `.planning/ORCHESTRATION-REFERENCE.md`.
 
 ## Enforcement map (read first)
 
-| Doctrine | Enforced by | Layer |
-|---|---|---|
-| One cargo machine-wide | `.claude/hooks/cargo-mutex.sh` (exit 2) | blocking hook |
-| Leaf isolation (reposix/sim/git test setup) | `.claude/hooks/leaf-isolation-guard.sh` (exit 2) + `.githooks/pre-commit` | blocking hook |
-| Uncommitted = didn't happen | `.claude/hooks/stop-uncommitted.sh` (exit 0 + systemMessage) | advisory hook (owner decision Q2) |
-| Persist before compaction | `.claude/hooks/precompact-persist.sh` | state hook |
-| Session brief on startup | `.claude/hooks/session-start-brief.sh` | state hook |
-| Tier check / charter / lane size at dispatch | `.claude/hooks/dispatch-doctrine.sh` | JIT injection |
-| Check tree before re-running a lane | `.claude/hooks/post-dispatch-relay.sh` | JIT injection |
-| Coordinator role + 5 rules + tier table | `.claude/agents/phase-coordinator.md` | agent-def |
-| External mutation approval | `.claude/settings.json` + `.claude/agents/steward.md` | permission + agent-def |
-| Context %/relief nudge | user-level `gsd-context-monitor.js` (≤35%/≤25%) | JIT injection |
-| Intention-over-plan; tangent scoping; cadence | this file + `coordinator-dispatch` skill | prose + skill |
-| Judgment-call procedures (DP-1..5) + escalation valve (E1-E4) + consult template | `.claude/skills/decision-procedures/SKILL.md` | on-demand skill (loaded when a judgment call appears, not every session) |
-
-Everything below that is NOT hook- or permission-enforced is a judgment call — the
-prose here is the standard you are held to.
+Some doctrine is mechanically enforced (blocking hooks — `cargo-mutex.sh`,
+`leaf-isolation-guard.sh` + `.githooks/pre-commit`; advisory/state hooks; JIT injections;
+permission + agent-defs; on-demand skills). Everything NOT hook- or permission-enforced is a
+**judgment call — the prose here is the standard you are held to.** Full per-doctrine
+enforcing-artifact table: `.planning/ORCHESTRATION-REFERENCE.md` § "Enforcement map (full
+table)".
 
 ### Leaf isolation for reposix/sim/git test setup (HARD STOP)
 
 **Any leaf that runs `reposix init`, sim seeding, or any `git commit` / `git config`
 for test setup MUST operate in a throwaway clone under `/tmp` — NEVER the coordinator's
 shared repo — and every such command MUST `cd` into its `/tmp` target dir within the
-SAME Bash invocation.** Two facts make this non-negotiable: (i) agent "worktrees" share
-the coordinator's `.git/config` + object store — they are NOT isolated; and (ii) a
-leaf's cwd is not durable between Bash calls — it resets to the repo root, so any
-setup command that did not `cd` into `/tmp` in the same invocation runs against the
-real shared repo. Evidentiary anchor: a sim-seed leaf that skipped this ran git ops
-under the `t <t@t>` fixture identity and flipped `core.bare=true`, corrupting the shared
-repo (repaired twice). Coordinators: bake the `cd /tmp/<target> && <cmd>` shape into
+SAME Bash invocation.** Two facts make this non-negotiable: (i) agent "worktrees" share the
+coordinator's `.git/config` + object store — NOT isolated; and (ii) a leaf's cwd resets to
+the repo root between Bash calls, so a setup command that did not `cd` into `/tmp` in the same
+invocation runs against the real shared repo. Evidentiary anchor: a sim-seed leaf that skipped
+this ran git ops under the `t <t@t>` fixture identity and flipped `core.bare=true`, corrupting
+the shared repo (repaired twice). Coordinators: bake the `cd /tmp/<target> && <cmd>` shape into
 every dispatched setup lane; a leaf that touches shared-repo git state is a REJECT.
 
-**Superseded-by-mechanism (v0.14.0 P102 — the serializing safety gate).** The prose
-hard-stop above is now backstopped MECHANICALLY, fail-closed, and proven by a verifier
-that REGENERATES its triggered-hook transcript at grade-time — it is retained as the
-human-readable contract, not deleted:
-- `.claude/hooks/leaf-isolation-guard.sh` — one combined PreToolUse Bash hook, three
-  fail-closed guards (exit 2 = BLOCK, first-match-blocks): **A** fixture-identity (`t <t@t>`)
-  reject, **B** leaf-setup-verb location, **C** shared-`.git/config` write
-  (`core.bare`/`user.email`/`user.name`). Each block teaches the rule + why + the exact
-  `/tmp`-clone recovery; the mechanism never invokes `git worktree remove --force` (itself a
-  corruption vector). **Hardened against evasion (P102 adversarial fix lane):**
-  - Guard B catches the **canonical dev spellings**, not just literal `reposix init`:
-    path-suffixed (`/usr/bin/reposix init`, `./target/debug/reposix init`) and cargo
-    (`cargo run -p reposix-cli -- init|attach|sync`), plus bare `attach`/`sync` and sim-seed.
-  - The `/tmp`-is-safe decision resolves the **effective** target (last `cd`, or a git
-    path-flag like `-C`/`-f`/`--file`/`--git-dir`, else the payload cwd) and
-    **realpath-canonicalizes** it — so a `cd /tmp/x && cd <shared>` cd-back, a
-    `/tmp/../<shared>` traversal, or a `/tmp` symlink that resolves back to the shared tree
-    all BLOCK; a genuine `/tmp` target still passes (no over-block).
-  - Guard A tolerates **quotes** around the fixture email (`'t@t'`/`"t@t"`) while keeping a
-    delimiter boundary so a real address (`scott@things.io`) does not false-positive.
-  - A non-empty but **unparseable** tool payload **fails closed** (exit 2), never silently
-    falling through to allow; an empty payload (nothing to inspect) still passes.
-- `.githooks/pre-commit` — git-native defense-in-depth: rejects a commit whose resolved
-  `git var GIT_AUTHOR_IDENT`/`GIT_COMMITTER_IDENT` is the fixture identity. Fires only in
-  the shared repo (via `core.hooksPath`); a `/tmp` fixture clone does not inherit it.
-- Catalog rows (`agent-ux/fleet-safety-{tat-identity-reject,leaf-isolation-enforce,
-  shared-config-write-guard}`, kind `shell-subprocess`) grade the guards by re-running the
-  verifier at grade-time (which writes a fresh, gitignored transcript) — the durable
-  committed proof is the verifier script + the hook, NOT a frozen transcript.
-- **Coverage boundary (honest):** the PreToolUse hook fires only on the Claude Code Bash
-  *tool* — a git/reposix write spawned by a subprocess or script bypasses it. The pre-commit
-  backstop catches fixture *commits* on that bypass path, but NOT `reposix init` / `git
-  config` writes. A binary-side / git-alias non-tool backstop for guards B/C is filed
-  (`.planning/milestones/v0.14.0-phases/GOOD-TO-HAVES.md`). Until then the prose hard-stop
-  remains the enforcement of record for the uncovered surface — coordinators still bake the
-  `cd /tmp` shape into every dispatched setup lane.
+**Now backstopped mechanically (v0.14.0 P102):** `.claude/hooks/leaf-isolation-guard.sh`
+(PreToolUse Bash, exit 2, three fail-closed guards — fixture-identity reject / leaf-setup
+location / shared-config write) blocks the bad move before it runs, plus the git-native
+`.githooks/pre-commit` fixture-identity check. The prose hard-stop is RETAINED as the
+readable contract (not deleted). Full mechanism — guard A/B/C detail, evasion hardening,
+and the honest coverage boundary (hook fires only on the Bash *tool*; subprocess writes
+bypass it): `.planning/ORCHESTRATION-REFERENCE.md` § "Leaf-isolation enforcement mechanism".
 
 ## 1. Three-tier model delegation
 
 The top-level orchestrator delegates **only** to `fable` coordinators (spawned via the
-`phase-coordinator` agent, `model: inherit` so it stays fable). Each coordinator tiers
-its own sub-delegation:
-- **opus** — genuinely complex or security-judgment lanes.
-- **sonnet** — default implementation.
-- **haiku** — mechanical/leaf work (reads that return a digest, single-file edits).
+`phase-coordinator` agent, `model: inherit` so it stays fable). Each coordinator tiers its
+own sub-delegation: **opus** — complex or security-judgment lanes; **sonnet** — default
+implementation; **haiku** — mechanical/leaf work (digest-returning reads, single-file edits).
 
 **Never `fable` at a leaf** — it is overkill and defeats the tiering. (OD-4 item 1.)
 
 > **No-fable mode:** when the top-level session itself runs on opus (or below), §11
-> governs — five-tier recursion, the 10%/10x budget rules, named judgment-call
-> procedures, and a single-shot fable consult valve replacing standing fable
-> coordinators. §12 holds honest-corrective-iteration doctrine. Any arc-scoped
-> runbook for a specific drive (e.g. a `.planning/RUNBOOK-TO-V1`-shaped doc, or its
-> successor for whatever's currently active) APPLIES this doctrine to that drive's
-> portions and pre-framed decisions — doctrine lives here and outlives any one
-> runbook; the runbook is disposable, this file is not.
+> governs (five-tier recursion, 10%/10x budgets, named judgment-call procedures, a
+> single-shot fable consult valve replacing standing fable coordinators) and §12 holds
+> HCI doctrine. Any arc-scoped runbook for a specific drive (e.g. a
+> `.planning/RUNBOOK-TO-V1`-shaped doc) APPLIES this doctrine to that drive's portions —
+> doctrine lives here and outlives any one runbook; the runbook is disposable, this file
+> is not.
 
 ## 2. Coordinators route, they do not work
 
@@ -107,13 +64,11 @@ ground-truth checks (`log --oneline`, `status`, `run list`), and reading SHORT
 reports/handovers. The 5 rules (verbatim, owner directive 2026-07-04
 "your subagents are coordinators, not workers"):
 
-1. **ROUTE, DON'T WORK.** Never read source files or long plans yourself (dispatch a
-   `reader-digester` that returns a ≤300-word digest), run test suites/litmus/builds
-   yourself (dispatch a runner), write or edit repo files yourself (dispatch an
-   executor — including planning docs and handovers), or review diffs yourself
-   (dispatch a reviewer). Role words — `subagent_type`s in
-   `coordinator-dispatch` §2 (executor/runner→`gsd-executor`, reviewer→
-   `gsd-code-reviewer`).
+1. **ROUTE, DON'T WORK.** Never yourself read source/long plans (dispatch a
+   `reader-digester` → ≤300-word digest), run test suites/litmus/builds (dispatch a runner),
+   write/edit repo files incl. planning docs + handovers (dispatch an executor), or review
+   diffs (dispatch a reviewer). `subagent_type` mapping: `coordinator-dispatch` §2
+   (executor/runner→`gsd-executor`, reviewer→`gsd-code-reviewer`).
 2. **SLICE LANES SMALL.** No executor lane should need >100 tool calls; if a plan
    implies more, split into sub-lanes before dispatching. Executors may sub-delegate
    mechanical parts to haiku.
@@ -124,25 +79,20 @@ reports/handovers. The 5 rules (verbatim, owner directive 2026-07-04
    notify on completion; if a reply mis-routes, the orchestrator relays it. If you
    find yourself idle-waiting, end your dispatch turn.
 5. **PROACTIVE RELIEF (absolute tokens, NOT %).** At every wave boundary ask: am I past
-   ~100k tokens of my own context? If yes: dispatch `relief-handover-writer` to
-   write+commit the handover, then tell the orchestrator to relieve you. **Hard stop
-   ~150k** — relieve immediately, start no new work. Measure ABSOLUTE tokens, never a % of
-   the window: quality degrades past ~150k regardless of a 1M window, so "50% of 1M" =
-   500k is far past useful (a coordinator that waited for 50% would already be rotting).
-   Relief is cheap; rot is not. See §3 for the C1/C2 two-tier structure that absorbs the
-   resulting (more frequent) rotation below L0.
+   ~100k tokens of my own context? If yes: dispatch `relief-handover-writer` to write+commit
+   the handover, then tell the orchestrator to relieve you. **Hard stop ~150k** — relieve
+   immediately, start no new work. Measure ABSOLUTE tokens, never a % of the window: quality
+   degrades past ~150k regardless of a 1M window (so "50% of 1M" = 500k is far past useful).
+   Relief is cheap; rot is not. §3 has the C1/C2 structure that absorbs the resulting
+   rotation below L0.
 
-**Bottom-up triage (the receiving side of "noticing is a deliverable").** Every
-sub-agent report carries a NOTICED section + RAISE LIST + intake disposition (rule 3 +
-ownership charter). The parent does not just collect these — it **triages each item and
-routes it, never drops it**: (a) low-deviation from the current charter and it fits the
-10x capacity → **absorb** into this wave (replan the wave; DP-5 charter test); (b) real
-work outside this charter → **re-delegate** as a new lane, or hand to the owning
-downstream phase as a RAISE-LIST item; (c) larger-than-intake → **file / escalate**
-(OP-8; valve). A leaf's reported friction that surfaces in NO commit, NO intake row, and
-NO re-dispatch is a dropped deliverable — the same red flag as an empty noticing section.
-Leaves report friction UP because they cannot see the whole charter; making the
-absorb-vs-redelegate call is the parent's job precisely because it can.
+**Bottom-up triage (the receiving side of "noticing is a deliverable").** Every sub-agent
+report carries a NOTICED section + RAISE LIST + intake disposition. The parent **triages each
+item and routes it, never drops it** — absorb into this wave / re-delegate as a new lane /
+file-or-escalate (OP-8; valve). A leaf's reported friction that surfaces in NO commit, NO
+intake row, and NO re-dispatch is a dropped deliverable — the same red flag as an empty
+noticing section. Full absorb-vs-redelegate routing table:
+`.planning/ORCHESTRATION-REFERENCE.md` § "Bottom-up triage routing".
 
 ### Single-writer discipline (shared-tree serialization — owner ruling 2026-07-12)
 
@@ -151,36 +101,33 @@ Exactly ONE session/agent writes the shared working tree at a time. Parallel tre
 - **Tree-mutating** work (file edits + `git add`/`commit`) is **serial**: dispatch the next tree-writer only after the prior one's commit has landed.
 - **No worktree infrastructure** — the owner rejected per-agent worktrees as over-engineering for the current single-machine autonomous cadence; serialize instead.
 
-Full owner rationale: `.planning/CONSULT-DECISIONS.md` (2026-07-12 [OWNER] session serialization).
+Full owner rationale: git history (2026-07-12 [OWNER] session-serialization ruling).
 
 ## 3. Context budget + relief/handover protocol
 
-Track your ABSOLUTE token spend from turn one (context budget: §2 rule 5 — ~100k soft,
-~150k hard, absolute not %). The user-level `gsd-context-monitor.js` hook fires advisory
-%-remaining warnings; treat them as a backstop, not the trigger — relieve proactively at
-wave boundaries on the absolute ~100k line. This section covers the C1/C2 tier structure
-that absorbs the resulting rotation and the handover protocol itself.
+Track ABSOLUTE token spend from turn one (§2 rule 5 — ~100k soft, ~150k hard, absolute not
+%). The `gsd-context-monitor.js` hook fires advisory %-remaining warnings; treat them as a
+backstop, not the trigger — relieve proactively at wave boundaries on the absolute ~100k
+line. This section covers the C1/C2 tier structure that absorbs that rotation + the handover
+protocol.
 
 **Two coordinator tiers (absorb relief churn below L0).** Because the ~100k line rotates
-coordinators MORE often than the old ~50%-of-1M line did, a milestone must NOT run as one
-C1 phase-coordinator reporting every rotation straight to L0 — that floods the top with
-successor-dispatch churn. Instead the top orchestrator dispatches a
-**coordinator-of-coordinators (C2)**: a milestone / multi-phase-scoped `phase-coordinator`
-that itself dispatches **one C1 `phase-coordinator` per phase** (which dispatch
-executors/readers). (A single-phase milestone may skip C2 and run one C1 directly;
-multi-phase → C2.) When a C1 relieves at ~100k, its successor is dispatched by its
-**parent C2**, not by L0. L0 hears from the C2 only at milestone boundaries or an E1–E4
-escalation. **No new agent type is needed:** `phase-coordinator` serves both tiers via the
-§11 five-tier recursion — the tier is set by charter SCOPE (milestone → C2, dispatches
-phase-coordinators; single phase → C1, dispatches executors). Each tier relieves on its
-OWN ~100k line.
+coordinators MORE often than the old ~50%-of-1M line did, a multi-phase milestone must NOT
+run as one C1 phase-coordinator reporting every rotation straight to L0. Instead L0
+dispatches a **coordinator-of-coordinators (C2)**: a milestone-scoped `phase-coordinator`
+that dispatches **one C1 `phase-coordinator` per phase** (which dispatch executors/readers).
+(A single-phase milestone may skip C2 and run one C1 directly.) When a C1 relieves at ~100k,
+its successor is dispatched by its **parent C2**, not L0; L0 hears from the C2 only at
+milestone boundaries or an E1–E4 escalation. **No new agent type is needed:**
+`phase-coordinator` serves both tiers via the §11 five-tier recursion — the tier is set by
+charter SCOPE (milestone → C2; single phase → C1), and each tier relieves on its OWN ~100k
+line.
 
 A relieved coordinator must be **told in advance** it is being relieved, so it writes a
 deliberate, complete handover (persistence is solicited, not automatic). Dispatch
 `relief-handover-writer` with the ORCHESTRATION handover template:
 
-**Handover file template** (distilled from `90-PAUSE-HANDOFF.md` +
-`91-HANDOVER.md`; the `relief-handover-writer` agent writes+commits this):
+**Handover file template** (the `relief-handover-writer` agent writes+commits this):
 
 ```
 # <N>-HANDOVER.md — <phase> <relief|pause> handover, <date>
@@ -208,31 +155,24 @@ Gate run history (run #, exit code, transcript path), open-waiver expiry clocks.
 De-facto decisions made live; loose ends not yet routed to intake.
 
 ## 6. Precise next steps (successor runbook)
-Numbered, ordered, imperative: spot-check → re-run gate → dispatch next wave →
-close ritual (verdict path, CI green — verified via the `code/ci-green-on-main`
-post-push probe (`run.py --cadence post-push --persist` AFTER the push), which grades
-the phase RED if main's LATEST CI run is not GREEN — RAISE LIST, intake disposition,
-STATE.md cursor advance, final-report contents).
+Numbered, ordered, imperative: spot-check → re-run gate → dispatch next wave → close ritual
+(verdict path; CI green via the `code/ci-green-on-main` post-push probe — RAISE LIST, intake
+disposition, STATE.md cursor advance, final-report contents).
 ```
 
 The writer confirms the commit SHA in its report.
 
 Top-level (whole-session) rotations use the same template but write
-`.planning/SESSION-HANDOVER.md` (not a phase-numbered filename) — see that file for
-the current live example. Successor top-level sessions running without fable read
-§11–12 below for the standing doctrine (tiering, budgets, judgment procedures,
-HCI), then whatever arc-scoped runbook currently governs the active drive (if any)
-for the portion map and pre-framed decisions specific to that drive — check
-`.planning/STATE.md` for which runbook, if any, is live.
+`.planning/SESSION-HANDOVER.md`. Successor top-level sessions running without fable read
+§11–12 for standing doctrine (tiering, budgets, judgment procedures, HCI), then whatever
+arc-scoped runbook governs the active drive (`.planning/STATE.md` names which, if any).
 
 ## 4. Operating cadence A/B + debt-drain
 
-Two standing operations, interleaved:
-- **A — Phase chain.** One fable coordinator per phase, owns the tree, reports a verdict.
-- **B — Quality upkeep.** Read-only audit fleets (`audit-fleet-lane`) run DURING phases
-  (parallel-safe). A **debt-drain window** runs BETWEEN every phase close and the next
-  dispatch: drain `eager-window` ledger rows (sonnet fixers, one tree-writer at a time),
-  route `intake-P<N>` rows into intake files, mint `catalog-row` candidates.
+Two standing operations, interleaved: **A — Phase chain** (one fable coordinator per phase,
+owns the tree, reports a verdict) and **B — Quality upkeep** (read-only audit fleets during
+phases + a debt-drain window between every phase close and the next dispatch). Detail:
+`.planning/ORCHESTRATION-REFERENCE.md` § "Operating cadence A/B".
 
 **No dispatch over undrained BLOCKERs.** A phase does not dispatch while BLOCKER-class
 quality-ledger rows sit undrained. Cross-cutting unify/simplify judgment (collapsing
@@ -241,174 +181,125 @@ reduction) is itself fable-tier delegation-worthy work. (OD-4 item 2; D-CONV-1..
 
 ## 5. Tangent scoping (charter = budget)
 
-Tooling, guardrails, and hooks are deliverables, not distractions (the entire
-`quality/` framework was an unplanned tangent — and the project's best investment).
-Graduated response:
+Tooling, guardrails, and hooks are deliverables, not distractions (the `quality/`
+framework was an unplanned tangent — and the project's best investment). Graduated response:
 - **<1h + no new dependency** → fix inline in the discovering lane.
 - **larger** → file to `SURPRISES-INTAKE.md` / `GOOD-TO-HAVES.md` with severity + sketch.
 - **balloons past intake-sized** → surface as an explicit scope decision to the owner.
   **Never silently absorb; never scope-creep to fit.** (OP-8; directive #12.)
 
-**Proposing a large generic framework is expected work, not scope-creep to suppress.**
-When a lane spots leverage that pays off across THIS project and others — a reusable
-framework, a cross-cutting guardrail, an infra investment that deviates substantially
-from the current charter — surfacing and scoping that proposal (a ~10-line scope memo:
-what, why now, cross-project value, cost, cost-of-delay) is a first-class deliverable.
-The quality-infra milestone is the canonical precedent: an unplanned tangent that became
-the backbone. The owner still gates scope/spend (valve E3) — but the valve gates
-**approval, never the surfacing**. Withholding a high-leverage proposal because "it's not
-on the plan" is the failure mode, not the discipline.
+**Proposing a large generic framework is expected work, not scope-creep to suppress** — the
+owner gates approval, never the surfacing. Rationale + the ~10-line scope-memo shape:
+`.planning/ORCHESTRATION-REFERENCE.md` § "Large-framework proposals are expected work".
 
 ## 6. Pause/resume at logical boundary
 
-Pause is a first-class operation the owner invokes mid-flight (e.g. to restart with new
-permissions). The correct response is NOT to stop immediately — **finish the current
-atomic unit, then produce a durable, complete handover** (template §3) before standing
-down. A resumed session opens with ground-truth git, then the handover's reading list.
-(Directives #4, #11, #14.)
+Pause is a first-class owner operation invoked mid-flight. The correct response is NOT to
+stop immediately — **finish the current atomic unit, then produce a durable, complete
+handover** (template §3) before standing down; a resumed session opens with ground-truth git,
+then the handover's reading list. Detail: `.planning/ORCHESTRATION-REFERENCE.md` §
+"Pause/resume at logical boundary".
 
 ## 7. Durable state over chat
 
-- **Everything the session owns lives in a committed-or-fixture artifact from row one.**
-  Cache state, sim state, planning artifacts — no "works in my session."
-- **Uncommitted = didn't happen.** `/tmp` does not survive an OS crash. This session's
-  170-row `/tmp` `QUALITY-LEDGER.md` was permanently lost across the 2026-07-03 crash
-  because no committed copy existed; `D-CONV-1..6` survived because they were committed.
-- **Recovery is honest reconstruction, never fabrication.** The ledger was rebuilt as
-  `.planning/audits/QUALITY-LEDGER.md` "with documented provenance rather than
-  fabricated." Resume orphaned background agents from their on-disk transcripts (via
-  SendMessage) rather than restarting from scratch. (Directives #10, #18.)
+- **Everything the session owns lives in a committed-or-fixture artifact from row one** —
+  cache, sim, planning artifacts; no "works in my session."
+- **Uncommitted = didn't happen.** `/tmp` does not survive an OS crash — a 170-row `/tmp`
+  `QUALITY-LEDGER.md` was permanently lost across the 2026-07-03 crash (no committed copy);
+  `D-CONV-1..6` survived because they were committed.
+- **Recovery is honest reconstruction, never fabrication** — rebuild with documented
+  provenance (`.planning/audits/QUALITY-LEDGER.md`), not fabricated content. Resume orphaned
+  background agents from their on-disk transcripts (via SendMessage) rather than restarting.
+  (Directives #10, #18.)
 
 ## 8. Orchestrator relay for mis-routed replies
 
-When a subagent's reply cannot be delivered (cross-session addressing failure), the
-orchestrator relays the full report inline rather than silently dropping it. Before
-re-running any lane, **check the agent tree / git log first** — the work may already be
-committed. (Episode; `post-dispatch-relay.sh` injects this reminder.)
+On a cross-session addressing failure the orchestrator relays the full report inline rather
+than silently dropping it; before re-running any lane, **check the agent tree / git log
+first** — the work may already be committed (`post-dispatch-relay.sh` injects this). Detail:
+`.planning/ORCHESTRATION-REFERENCE.md` § "Orchestrator relay for mis-routed replies".
 
 ## 9. External / security-sensitive mutations need owner-named-target approval
 
 Actions that mutate state outside the local repo (remote branch/PR ops, bypassing a
 secret scanner) or touch security posture require an explicit owner approval **naming
 the specific target**. A permission classifier refusing to let an agent self-authorize
-such an action is **correct behavior, design feedback, not a bug to route around** —
-e.g. the Google-API-key false positive was unblocked only by the owner's named
-"proceed," not by the agent self-authorizing a `gitleaks:allow`. Sanctioned targets:
-`docs/reference/testing-targets.md`. (Directive #9; `steward` agent embeds this.)
+such an action is **correct behavior, design feedback, not a bug to route around** (e.g.
+the Google-API-key false positive was unblocked only by the owner's named "proceed," not by
+a self-authorized `gitleaks:allow`). Sanctioned targets: `docs/reference/testing-targets.md`.
+(Directive #9; `steward` agent embeds this.)
 
 ## 10. Mission over plan (executive judgment)
 
 The coordinator's job is to understand the project's underlying intention and make
 executive, autonomous pivots toward it — not to faithfully execute a stale plan. This
-authorizes resequencing the roadmap itself. Exemplar: OD-4 item 3 pulled a
-launch-readiness milestone (hero demo, CI-verified headline numbers, install-path
-excellence, Show-HN kit) AHEAD of v0.13.2 cross-link, re-derived from the owner's stated
-intention ("puts this project on the global map"), not from the existing phase order.
+authorizes resequencing the roadmap itself (DP-4 in procedural form). Resequencing exemplar:
+`.planning/ORCHESTRATION-REFERENCE.md` § "Mission over plan — resequencing exemplar".
 
 ## 11. No-fable mode: five-tier tiering, budgets, judgment calls
 
-Two operating configurations, chosen by whether a fable-tier session runs at the
-top level. §1 above is the fable-present default (three tiers under a standing
-fable coordinator). This section is the general, arc-independent doctrine for the
-**no-fable configuration** — any top-level session that itself runs opus or below.
-The deep procedural mechanics this section only names live in
-`.claude/skills/decision-procedures/SKILL.md` — load that skill at the moment a
-judgment call actually appears, not every session; this section is the map, not
-the territory.
+Two operating configurations, chosen by whether a fable-tier session runs at the top level.
+§1 is the fable-present default (three tiers under a standing fable coordinator); this
+section is the arc-independent doctrine for the **no-fable configuration** — any top-level
+session that itself runs opus or below. Deep procedural mechanics named here live in
+`.claude/skills/decision-procedures/SKILL.md` (load that skill when a judgment call appears,
+not every session); this section is the map, not the territory.
 
-**Five-tier recursion.** L0 top-level orchestrator (opus) scopes work into
-portions so the WHOLE drive reaches end state by ~10% of L0's own context, total
-— report-only diet, never reads source/builds/edits. L1 portion coordinator
-(opus) owns one large portion, charters L2s. L2 phase/drain-window coordinator
-(opus for security-judgment work, sonnet otherwise) owns a phase/window,
-charters L3 lanes. (A milestone-scoped L1 is the C2 coordinator-of-coordinators; a
-phase-scoped L2 is a C1 — §3 carries the C1-relief-absorbed-by-C2 rule.) L3 work lanes
-(sonnet) are where most actual work happens,
-≤100 tool calls, case-by-case L4 delegation. L4 helper leaves (haiku mechanical,
-sonnet for review judgment) are terminal. Fable appears in exactly one place:
-the single-shot consult valve below — never a standing coordinator, never a leaf.
+**Five-tier recursion.** L0 top-level orchestrator (opus) scopes work into portions so the
+WHOLE drive reaches end state by ~10% of L0's own context — report-only diet, never reads
+source/builds/edits. L1 portion coordinator (opus) owns one large portion, charters L2s. L2
+phase/drain-window coordinator (opus for security-judgment work, sonnet otherwise) owns a
+phase/window, charters L3 lanes. (A milestone-scoped L1 is the C2 coordinator-of-coordinators;
+a phase-scoped L2 is a C1 — §3 carries the C1-relief-absorbed-by-C2 rule.) L3 work lanes
+(sonnet) are where most actual work happens, ≤100 tool calls, case-by-case L4 delegation. L4
+helper leaves (haiku mechanical, sonnet for review judgment) are terminal. Fable appears in
+exactly one place: the single-shot consult valve below — never a standing coordinator, never
+a leaf.
 
 **Budgets.** Every tier's ENTIRE charter reaches end state by ~10% of ITS OWN
 context (recurses per tier, not per sub-unit) — the remaining ~90% is correction
 margin, never planned workload; tracking past it with scope outstanding is a
 scoping failure, split or rotate. Assume every charter is 10x more complex than
-planned: recon via an L4 lane before every dispatch, and pre-authorize the split
-in the charter rather than making the child ask permission. **Consolidate
-recon into ONE lane per dispatch decision** — absorb a single synthesized
-conclusion, never N report-bearing agents fanned into your own window.
-Splitting preflight by source (git/CI/steward/charter) and reading each
-report yourself is the over-fan anti-pattern: it makes you an L1 gathering
-evidence, not an L0 receiving a verdict. Past ~5% of your context before the
-first coordinator is dispatched → you're over-fanning; stop and consolidate.
-What does NOT
-multiply: one cargo machine-wide, one-tree-writer-at-a-time, ≤400-word reports
-(§2 and the enforcement map already cover these — more agents means more
-discipline on shared resources, not less).
+planned: recon via an L4 lane before every dispatch, pre-authorizing the split in the charter
+rather than making the child ask. Consolidate recon into ONE lane per dispatch decision (the
+over-fan anti-pattern — splitting preflight by source and reading each report yourself makes
+you an L1 gathering evidence, not an L0 receiving a verdict — is detailed in
+`.planning/ORCHESTRATION-REFERENCE.md` § "Budget over-fan anti-pattern"). What does NOT
+multiply: one cargo machine-wide, one-tree-writer-at-a-time, ≤400-word reports.
 
-**Judgment calls.** Five named decision procedures — DP-1 coordinator-rot
-diagnosis, DP-2 prove-before-fix on BLOCKERs, DP-3 intake-design inversion, DP-4
-executive resequencing (§10 in procedural form), DP-5 tangent-vs-charter
-classification (§5 in procedural form) — turn recurring judgment calls into
-trigger → evidence → decide → escalate. Anything a DP doesn't resolve goes
-through a 4-criterion escalation valve: **E1** irreversible/destructive → owner,
-always; **E2** architecture-shaping (ADR-class) → fable consult first; **E3**
-mission-priority tradeoff → owner for scope/spend; **E4** two failed
-self-attempts at the same gate → fable consult. Below the bar: decide-and-record
-in `.planning/CONSULT-DECISIONS.md` (append-only; create on first use) — never
-idle, waiting for permission you don't need is itself a rot signal. Full DP
-mechanics, the fable consult-dispatch template, and the ledger entry format live
-in the decision-procedures skill named above. **Tag-blocking product bugs → fix-first,
+**Judgment calls.** Five named decision procedures (DP-1 coordinator-rot diagnosis, DP-2
+prove-before-fix on BLOCKERs, DP-3 intake-design inversion, DP-4 executive resequencing =
+§10 procedural, DP-5 tangent-vs-charter = §5 procedural) turn recurring calls into
+trigger → evidence → decide → escalate. Unresolved → a 4-criterion escalation valve: **E1**
+irreversible/destructive → owner always; **E2** architecture-shaping (ADR-class) → fable
+consult first; **E3** mission-priority tradeoff → owner for scope/spend; **E4** two failed
+self-attempts at the same gate → fable consult. Below the bar: decide-and-record in
+`.planning/CONSULT-DECISIONS.md` (append-only; create on first use) — never idle, waiting
+for permission you don't need is itself a rot signal. Full DP mechanics + the fable
+consult-dispatch template + the ledger format live in the decision-procedures skill.
+**Tag-blocking product bugs → fix-first,
 no consult; escalate ONLY if the fix turns architectural (STOP + report to manager)**
-— owner ruling 2026-07-13, `.planning/CONSULT-DECISIONS.md`. **A `fork` is never a safe
-no-op or discard placeholder** — it inherits full context and becomes a live PARALLEL
-tree-writer (single-writer-discipline violation, §2). Never dispatch a fork to "throw
-away"; end the turn instead.
+— owner ruling 2026-07-13 (git history). **A `fork` is never a safe no-op or discard
+placeholder** — it inherits full context and becomes a live PARALLEL tree-writer
+(single-writer-discipline violation, §2). Never dispatch a fork to "throw away"; end the
+turn instead.
 
 ## 12. Honest corrective iteration (HCI)
 
-Every deliverable, at every tier, passes an independent corrective review before
-it counts done, and iterating to convergence is expected, never a failure:
-**the author never self-grades** — a fresh reviewer or verifier grades from
-committed artifacts only (this project's standing verifier-subagent mandate,
-`quality/PROTOCOL.md`, is the phase-level instance of this rule; audits get a
-fresh-eyes re-audit capped at 3 iterations; a milestone gets the 9-probe verdict
-plus an independent honesty spot-check, author ≠ orchestrator). A review that
-finds HIGH/RED gets a targeted fix, then a re-review by a DIFFERENT fresh
-reviewer (never the one being checked, never the author) — two failed
-iterations at the same gate escalates to valve E4 above. An empty findings
-section from code-touching review is itself a red flag; "PASS because the
-author said so" is not a grade.
+Every deliverable, at every tier, passes an independent corrective review before it counts
+done — **the author never self-grades**; a fresh reviewer/verifier grades from committed
+artifacts only (the verifier-subagent mandate, `quality/PROTOCOL.md`, is the phase-level
+instance). HIGH/RED gets a targeted fix, then a re-review by a DIFFERENT fresh reviewer; two
+failed iterations at the same gate escalate to valve E4. "PASS because the author said so" is
+not a grade. Full text: `.planning/ORCHESTRATION-REFERENCE.md` § "Honest corrective iteration
+(HCI)".
 
 ## Provenance
 
-Distilled from session 7e2a4cf2. Full 14-theme inventory with verbatim owner quotes,
-per-theme encoding-status, and the coverage check:
-`.planning/research/doctrine-institutionalization/` (index + theme chapters + REPORT.md).
-Prior committed homes: `89-OWNER-DECISIONS.md` (OD-1..4), `.planning/PRACTICES.md`
-(OP-8/OP-9), `quality/SURPRISES.md` (D-CONV-1..8). This file supersedes the
-session-local accumulator (`~/.claude/jobs/7e2a4cf2/tmp/PENDING-INTAKE-AND-CHORES.md`).
-
-**2026-07-05 permanence audit.** §11–12 (five-tier tiering, the 10%/10x rules,
-the DP-1..5 / escalation-valve pointer, honest corrective iteration) were
-promoted here from an arc-scoped runbook's amendments (that runbook itself is
-unchanged in purpose, just relieved of restating general doctrine) — they are
-general doctrine, not specific to any one drive, so they belong in a permanent
-home rather than only in a runbook that archives when its drive ends. The deep
-procedural bodies (DP-1..5 full triggers/evidence/decide/escalate text, the E1-E4
-valve table, the fable consult-dispatch template, the `.planning/CONSULT-DECISIONS.md`
-ledger format) live in `.claude/skills/decision-procedures/SKILL.md` rather than
-inline here, per the owner's steer that episodic procedures belong in
-on-demand skills, not in doctrine every session re-reads in full — this file
-stays the distilled core; the skill is the reference manual. Permanent homes
-never hard-reference a transient/arc-scoped file by path (only the reverse is
-safe) — this file describes any arc-scoped runbook generically rather than
-naming one, so it never goes stale when a runbook archives.
-
-**Promotion sweep (standing rule).** Any doctrine change or promotion into this
-file MUST end with a stale-reference sweep across `.claude/hooks/`,
-`.claude/agents/`, `.claude/skills/`, and the SessionStart brief, grepping for
-superseded numbers, tier names, and rule phrasings. These injected surfaces are
-trusted and never re-read by the agents they instruct — a stale hook poisons
-every future session silently; the 17b1c94 promotion skipped this sweep and
-left the SessionStart brief teaching the superseded ~50% budget until a
-fresh-agent audit caught it (fixed fe5e8f2).
+Distilled from session 7e2a4cf2; the provenance section points to the full 14-theme
+inventory at `.planning/research/doctrine-institutionalization/` (index + theme chapters +
+REPORT.md). Prior committed homes, the 2026-07-05 permanence audit (why §11–12 are here),
+and the **standing promotion-sweep rule** (any doctrine change ends with a stale-reference
+sweep across `.claude/hooks/`, `.claude/agents/`, `.claude/skills/`, and the SessionStart
+brief): `.planning/ORCHESTRATION-REFERENCE.md` § "Provenance, permanence audit, and the
+promotion-sweep standing rule".
