@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0](https://github.com/reubenjohn/reposix/compare/reposix-confluence-v0.13.1...reposix-confluence-v0.14.0) - 2026-07-14
+
+### Fixed
+
+- *(confluence)* default ConfBodyAdf value to Null, avert list-wide DoS (v0.14.0 item 5c)
+- *(confluence)* decode string-encoded ADF value (v0.14.0 item 5 tag-blocker)
+- *(confluence)* fail-closed ADF translation — no empty-body PATCH escapes to SoT (item 4b)
+
 ## [0.13.1](https://github.com/reubenjohn/reposix/compare/reposix-confluence-v0.13.0...reposix-confluence-v0.13.1) - 2026-07-08
 
 ### Fixed

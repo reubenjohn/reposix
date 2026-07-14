@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0](https://github.com/reubenjohn/reposix/compare/reposix-core-v0.13.1...reposix-core-v0.14.0) - 2026-07-14
+
+### Fixed
+
+- *(104-02)* backend keeps raw project slug; sanitize only at cache path
+
 ## [0.13.1](https://github.com/reubenjohn/reposix/compare/reposix-core-v0.13.0...reposix-core-v0.13.1) - 2026-07-08
 
 ### Fixed

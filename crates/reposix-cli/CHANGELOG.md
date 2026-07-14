@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0](https://github.com/reubenjohn/reposix/compare/reposix-cli-v0.13.1...reposix-cli-v0.14.0) - 2026-07-14
+
+### Fixed
+
+- *(confluence)* decode string-encoded ADF value (v0.14.0 item 5 tag-blocker)
+- *(attach)* seed refs/reposix/origin/main at mirror merge-base + init-style refspec (item 4a)
+- *(d2)* binary-side reposix-init refusal + un-break sim-server start
+- *(105)* helper import writes private ref ns — RBF-LR-03 ref-lock
+- *(104-02)* backend keeps raw project slug; sanitize only at cache path
+
+### Other
+
+- *(cli)* make real-TokenWorld ADF-decode twin non-vacuous via get_record (v0.14.0 item 5a)
+- *(attach)* failing repro for attach-lineage bug (DP-2 repro-first, red before fix)
+- *(agent-ux)* rewrite p93 real-Confluence smoke to honest UPDATE-recovery (D2)
+
 ## [0.13.1](https://github.com/reubenjohn/reposix/compare/reposix-cli-v0.13.0...reposix-cli-v0.13.1) - 2026-07-08
 
 ### Fixed
