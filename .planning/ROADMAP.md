@@ -30,12 +30,12 @@
 
 ### Phase index (P78–P88, original v0.13.0)
 
-- **P78** Pre-DVCS hygiene — gix bump, WAIVED-row verifiers, multi-source walker · [78-PLAN-OVERVIEW](phases/78-pre-dvcs-hygiene/78-PLAN-OVERVIEW.md)
-- **P79** POC + `reposix attach` core · [79-PLAN-OVERVIEW](phases/79-poc-reposix-attach-core/79-PLAN-OVERVIEW.md)
+- **P78** Pre-DVCS hygiene — gix bump, WAIVED-row verifiers, multi-source walker · [78-PLAN-OVERVIEW](milestones/v0.13.0-phases/78-pre-dvcs-hygiene/78-PLAN-OVERVIEW.md)
+- **P79** POC + `reposix attach` core · [79-PLAN-OVERVIEW](milestones/v0.13.0-phases/79-poc-reposix-attach-core/79-PLAN-OVERVIEW.md)
 - **P80** Mirror-lag refs (`refs/mirrors/<sot>-head`, `<sot>-synced-at`) · [80-PLAN-OVERVIEW](phases/80-mirror-lag-refs/) (TBD)
 - **P81** L1 perf migration — `list_changed_since`-based conflict detection · [81-PLAN-OVERVIEW](phases/81-l1-perf-migration/) (TBD)
 - **P82** Bus remote — URL parser, prechecks, fetch dispatch · [82-PLAN-OVERVIEW](phases/82-bus-remote-url-parser/) (TBD)
-- **P83** Bus remote — write fan-out (SoT-first, mirror-best-effort, fault injection) · [83-PLAN-OVERVIEW](phases/83-bus-write-fan-out/83-PLAN-OVERVIEW.md)
+- **P83** Bus remote — write fan-out (SoT-first, mirror-best-effort, fault injection) · [83-PLAN-OVERVIEW](milestones/v0.13.0-phases/83-bus-write-fan-out/83-PLAN-OVERVIEW.md)
 - **P84** Webhook-driven mirror sync — GH Action workflow + setup guide · [84-PLAN-OVERVIEW](phases/84-webhook-mirror-sync/) (TBD)
 - **P85** DVCS docs — topology, mirror setup, troubleshooting, cold-reader pass · [85-PLAN-OVERVIEW](phases/85-dvcs-docs/) (TBD)
 - **P86** Dark-factory regression — third arm (vanilla-clone + attach + bus-push) · [86-PLAN-OVERVIEW](phases/86-dark-factory-third-arm/) (TBD)

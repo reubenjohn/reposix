@@ -463,7 +463,7 @@ async fn delta_sync_atomic_on_backend_error_midsync() {
 /// D-P92-03 two-writer `git pull --rebase` scenario. Full executed transcripts
 /// (git 2.54 container, "not our ref" reproduced 4/4 same-second runs; clean
 /// `CONFLICT (content)` in the 2s-gap negative control):
-/// `.planning/phases/93-cache-coherence/93-DP2-REPRO-NOTES.md`.
+/// `.planning/milestones/v0.13.0-phases/93-cache-coherence/93-DP2-REPRO-NOTES.md`.
 ///
 /// Here we reproduce the trigger deterministically at the cache layer by
 /// pinning the cursor into the write's second, then assert the coherence

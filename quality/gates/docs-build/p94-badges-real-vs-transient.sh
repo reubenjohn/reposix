@@ -38,7 +38,7 @@ ARTIFACT="${REPO_ROOT}/quality/reports/verifications/docs-build/p94-badges-real-
 mkdir -p "$(dirname "$ARTIFACT")"
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-DETERMINATION="${REPO_ROOT}/.planning/phases/94-real-backend-frictions/94-D3-badges-determination.md"
+DETERMINATION="${REPO_ROOT}/.planning/milestones/v0.13.0-phases/94-real-backend-frictions/94-D3-badges-determination.md"
 # OP-8 file-size drain (2026-07-07) split GOOD-TO-HAVES.md into per-part child
 # files under good-to-haves/; the top-level file is now an index-only pointer
 # with no **STATUS:** marker, so the entry body must be located in whichever

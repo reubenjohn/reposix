@@ -23,7 +23,7 @@
 //!   Strategy-1 prune). Without it, a resurrected id drives a phantom Delete →
 //!   false `SotPartialFail` on every push.
 //!
-//! Full executed repros: `.planning/phases/93-cache-coherence/93-DP2-REPRO-NOTES.md`
+//! Full executed repros: `.planning/milestones/v0.13.0-phases/93-cache-coherence/93-DP2-REPRO-NOTES.md`
 //! and `.planning/CONSULT-DECISIONS.md` § D-P93-01/02.
 
 #![allow(clippy::missing_panics_doc)]

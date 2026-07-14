@@ -21,7 +21,7 @@
 #   Arm 3 (container, docker-gated) — a stock ubuntu:24.04 (git 2.43.0)
 #     drives a REAL single-backend `git push` against a sim backend and exits
 #     0 (catalog assert c). Delegates to the committed repro driver
-#     .planning/phases/94-real-backend-frictions/94-D2-git243-repro.sh.
+#     .planning/milestones/v0.13.0-phases/94-real-backend-frictions/94-D2-git243-repro.sh.
 #     When docker is ABSENT the row is env-gated to NOT-VERIFIED (exit 75,
 #     fail-closed, never skip-as-pass — OD-2 / catalog assert d). Arms 1+2
 #     still gate the source+cargo claims in that case.
@@ -135,7 +135,7 @@ echo "p94-d2: building bins for the container arm…" >&2
 BIN_DIR="${WORKSPACE_ROOT}/target/debug"
 
 echo "p94-d2: running git-2.43 container push repro…" >&2
-if BIN_DIR="$BIN_DIR" bash "${WORKSPACE_ROOT}/.planning/phases/94-real-backend-frictions/94-D2-git243-repro.sh"; then
+if BIN_DIR="$BIN_DIR" bash "${WORKSPACE_ROOT}/.planning/milestones/v0.13.0-phases/94-real-backend-frictions/94-D2-git243-repro.sh"; then
   pass "stock ubuntu:24.04 (git 2.43.0) real single-backend \`git push\` exits 0 (was 128 pre-fix)"
 else
   fail "git-2.43 container push did NOT exit 0 — the version-windowed regression is not closed"

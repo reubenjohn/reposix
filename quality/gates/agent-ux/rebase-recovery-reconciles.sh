@@ -331,7 +331,7 @@ if [[ "$A_RECOVERY_EXIT" -eq 0 && "$A_AFTER" == "$A_EXPECT" ]]; then
   pass "SCENARIO A (peer git-push drift): documented \`git pull --rebase && git push\` exits 0 and B's edit converged (issue2 v${A_BEFORE}→v${A_AFTER})"
 else
   BLOCKED=1
-  REASON="RBF-LR-03 second bug: fetch-time double-write of refs/reposix/origin/main → \`cannot lock ref\` → \`git pull --rebase\` exits non-zero → documented \`git pull --rebase && git push\` short-circuits. Filed HIGH: .planning/milestones/v0.14.0-phases/SURPRISES-INTAKE.md (P105). Repro: .planning/phases/105-rbf-lr-03-rebase-recovery/repro/repro-fetch-ref-lock.sh"
+  REASON="RBF-LR-03 second bug: fetch-time double-write of refs/reposix/origin/main → \`cannot lock ref\` → \`git pull --rebase\` exits non-zero → documented \`git pull --rebase && git push\` short-circuits. Filed HIGH: .planning/milestones/v0.14.0-phases/SURPRISES-INTAKE.md (P105). Repro: .planning/milestones/v0.14.0-phases/105-rbf-lr-03-rebase-recovery/repro/repro-fetch-ref-lock.sh"
   if grep -qE "$REFLOCK_RE" "${RUN_DIR}/A_recovery.log"; then
     fail "SCENARIO A: documented recovery did NOT converge — \`cannot lock ref 'refs/reposix/origin/main'\` (recovery_exit=${A_RECOVERY_EXIT}, issue2 v${A_BEFORE}→v${A_AFTER}); RBF-LR-03 second bug, filed HIGH"
   else

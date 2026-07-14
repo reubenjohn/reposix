@@ -570,7 +570,7 @@ fn walk_single_source_rebind_heals_after_drift() {
 //     re-binding one source of a Multi row updates JUST that index;
 //     the sibling index keeps its prior hash.
 //
-// See `.planning/phases/78-pre-dvcs-hygiene/78-03-PLAN.md`.
+// See `.planning/milestones/v0.13.0-phases/78-pre-dvcs-hygiene/78-03-PLAN.md`.
 // -----------------------------------------------------------------------------
 
 /// P78 LOAD-BEARING: prove the path-(a) false-negative window is closed.

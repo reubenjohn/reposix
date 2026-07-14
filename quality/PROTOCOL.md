@@ -255,10 +255,10 @@ darken-only never flips an already-red verdict to green.
 #### New runner/validator semantics (P90 90-01/90-02, RBF-FW-06/07/08/12 + F-K4b)
 
 Progressive disclosure: this is the reference index; full design rationale
-lives in `.planning/phases/90-framework-fixes-honesty-rules/90-RESEARCH-runner.md`
+lives in `.planning/milestones/v0.13.0-phases/90-framework-fixes-honesty-rules/90-RESEARCH-runner.md`
 (cited `R1` below) and the four **deviations from R1's original proposal**
 ratified during implementation are recorded in
-`.planning/phases/90-framework-fixes-honesty-rules/90-PAUSE-HANDOFF.md`
+`.planning/milestones/v0.13.0-phases/90-framework-fixes-honesty-rules/90-PAUSE-HANDOFF.md`
 § 1 (cited `PAUSE-HANDOFF` below) — read that file before trusting R1's
 prose over the code for the skip-path and congruence-gating semantics.
 

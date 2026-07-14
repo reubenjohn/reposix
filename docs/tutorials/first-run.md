@@ -138,7 +138,7 @@ Expected: a diff with two hunks — the status flip on the frontmatter line, and
     |-------------|-------------------------------------------------------|
     | sim         | round-tripped verbatim                                |
     | github      | round-tripped verbatim                                |
-    | confluence  | round-tripped verbatim, as plain page-body text (Confluence's own native page-comments feature is a separate, unrelated concept reposix does not expose in the working tree — see [D91-05](https://github.com/reubenjohn/reposix/blob/main/.planning/phases/91-attach-sync-real-backend-wiring/91-DECISIONS.md)) |
+    | confluence  | round-tripped verbatim, as plain page-body text (Confluence's own native page-comments feature is a separate, unrelated concept reposix does not expose in the working tree — see [D91-05](https://github.com/reubenjohn/reposix/blob/main/.planning/milestones/v0.13.0-phases/91-attach-sync-real-backend-wiring/91-DECISIONS.md)) |
     | jira        | not yet supported (tracked as v0.12.0 carry-forward)  |
 
     See `docs/reference/<backend>.md` for the per-connector comment shape.

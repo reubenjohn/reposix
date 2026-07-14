@@ -11,7 +11,7 @@ inside the frames written here.
 ## Authority and precedence
 
 1. Owner decisions (OD-1..4 in
-   `.planning/phases/89-framework-fixes-cadence-shell-kind/89-OWNER-DECISIONS.md`)
+   `.planning/milestones/v0.13.0-phases/89-framework-fixes-cadence-shell-kind/89-OWNER-DECISIONS.md`)
    and any newer owner message outrank everything here.
 2. Root `CLAUDE.md` + `quality/PROTOCOL.md` govern gates, push cadence, build
    memory budget, threat model. This runbook never relaxes them.

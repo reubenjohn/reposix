@@ -28,7 +28,7 @@
 # `git rebase`'s own 3-way merge hits a SEPARATE, newly-discovered bug (cache delta-sync
 # under-reports changed records, "not our ref" on the blob the merge needs) that is
 # unrelated to the HIGH-1 ancestry mechanism this row locks. See
-# .planning/phases/92-push-flow-correctness/92-T4-REPRO-NOTES.md for the full finding and
+# .planning/milestones/v0.13.0-phases/92-push-flow-correctness/92-T4-REPRO-NOTES.md for the full finding and
 # .planning/milestones/v0.13.0-phases/GOOD-TO-HAVES.md for the filed follow-up.
 #
 # GIT VERSION GATE: git >= 2.34 is required (CLAUDE.md Tech stack; same convention as

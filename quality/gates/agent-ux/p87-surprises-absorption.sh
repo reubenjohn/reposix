@@ -9,7 +9,7 @@
 #  2. Zero `**STATUS:** OPEN` lines remain.
 #  3. >=5 entries with terminal STATUS (RESOLVED|DEFERRED|WONTFIX) —
 #     P78-P86 surfaced 5 entries, P87 must touch all of them.
-#  4. .planning/phases/87-surprises-absorption/honesty-spot-check.md
+#  4. .planning/milestones/v0.13.0-phases/87-surprises-absorption/honesty-spot-check.md
 #     exists (verifier-readable evidence the honesty check ran).
 #
 # Owner-hint on RED: re-run P87 drain — flip remaining OPEN entries to
@@ -20,7 +20,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." &> /dev/null && pwd)"
 cd "${REPO_ROOT}"
 
 INTAKE=".planning/milestones/v0.13.0-phases/SURPRISES-INTAKE.md"
-HONESTY=".planning/phases/87-surprises-absorption/honesty-spot-check.md"
+HONESTY=".planning/milestones/v0.13.0-phases/87-surprises-absorption/honesty-spot-check.md"
 
 if [[ ! -f "${INTAKE}" ]]; then
   echo "FAIL: ${INTAKE} not found" >&2

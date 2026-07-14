@@ -12,7 +12,7 @@
 #     and must NOT be counted as a real entry).
 #  3. >=10 entries with terminal STATUS (RESOLVED|DEFERRED|WONTFIX) —
 #     P102-P109 surfaced 16 entries; P110 must touch all of them.
-#  4. .planning/phases/110-op-8-slot-1-surprises-drain/honesty-spot-check.md
+#  4. .planning/milestones/v0.14.0-phases/110-op-8-slot-1-surprises-drain/honesty-spot-check.md
 #     exists (verifier-readable evidence the F-K5 honesty check ran).
 #
 # Owner-hint on RED: re-run P110 drain — flip remaining OPEN entries to
@@ -29,7 +29,7 @@ SCAN_FILES=("${INTAKE}")
 if compgen -G "${PARTS_DIR}/part-*.md" > /dev/null 2>&1; then
   SCAN_FILES+=("${PARTS_DIR}"/part-*.md)
 fi
-HONESTY=".planning/phases/110-op-8-slot-1-surprises-drain/honesty-spot-check.md"
+HONESTY=".planning/milestones/v0.14.0-phases/110-op-8-slot-1-surprises-drain/honesty-spot-check.md"
 ARTIFACT="quality/reports/verifications/agent-ux/p110-surprises-absorption.json"
 
 fail() {

@@ -7,7 +7,7 @@
 # complete, name the pre-accounted env-gate, and self-certify ZERO unaccounted
 # regressions. It does NOT re-run the sweep (that would recurse — the sweep
 # runs this row's cadence). Reproduce the sweep with:
-#   bash .planning/phases/94-real-backend-frictions/94-D4-sweep.sh
+#   bash .planning/milestones/v0.13.0-phases/94-real-backend-frictions/94-D4-sweep.sh
 #
 # Grades the row's expected.asserts:
 #   1. every STALE non-P93 cadence-tagged row was re-graded in the sweep
@@ -36,8 +36,8 @@ ARTIFACT="${REPO_ROOT}/quality/reports/verifications/structure/p94-catalog-fresh
 mkdir -p "$(dirname "$ARTIFACT")"
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-SWEEP="${REPO_ROOT}/.planning/phases/94-real-backend-frictions/94-freshness-sweep.txt"
-CLASS="${REPO_ROOT}/.planning/phases/94-real-backend-frictions/94-D4-sweep-classification.md"
+SWEEP="${REPO_ROOT}/.planning/milestones/v0.13.0-phases/94-real-backend-frictions/94-freshness-sweep.txt"
+CLASS="${REPO_ROOT}/.planning/milestones/v0.13.0-phases/94-real-backend-frictions/94-D4-sweep-classification.md"
 
 PASSED=()
 fail() {
@@ -87,8 +87,8 @@ cat > "$ARTIFACT" <<EOF
 {
   "ts": "$TS", "row_id": "$ROW_ID", "exit_code": 0, "status": "PASS",
   "unaccounted_regressions": 0,
-  "evidence": ".planning/phases/94-real-backend-frictions/94-freshness-sweep.txt",
-  "classification": ".planning/phases/94-real-backend-frictions/94-D4-sweep-classification.md",
+  "evidence": ".planning/milestones/v0.13.0-phases/94-real-backend-frictions/94-freshness-sweep.txt",
+  "classification": ".planning/milestones/v0.13.0-phases/94-real-backend-frictions/94-D4-sweep-classification.md",
   "asserts_passed": ${PJ},
   "asserts_failed": []
 }
