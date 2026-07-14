@@ -428,10 +428,33 @@ jobs:
           # `reposix-cli-vX.Y.Z`; using `version_tag` here would create a
           # SECOND object, which is the wrong behaviour.
           TAG="${{ needs.plan.outputs.release_tag }}"
+
+          # --- make_latest hardening (fix-it-twice; hazard PROVEN 2026-07-14, see
+          #     .planning/quick/260713-mlh-make-latest-hardening/make-latest-proof.md) ---
+          # gh omits `make_latest` unless `--latest` is passed (gh v2.62.0 create.go
+          # L427); GitHub's REST omit-default is make_latest="true" = "set THIS release
+          # as Latest" (NOT the date/version-aware `legacy`, despite gh's misleading help
+          # text). So WITHOUT this flag a BACK-TAG -- an older version tagged after a newer
+          # release, e.g. a v0.13.2 hotfix pushed while v0.14.0 is Latest -- would STEAL
+          # releases/latest and 404 every installer URL that points at releases/latest.
+          # Fix: compute whether THIS version is the highest PUBLISHED (non-draft,
+          # non-prerelease) app-release semver and pass --latest EXPLICITLY. Deterministic,
+          # independent of gh/API default drift. Newest release still wins Latest; a
+          # back-tag (lower semver) gets --latest=false and never steals it.
+          VERSION="${{ needs.plan.outputs.version }}"
+          # Published app-release versions (workspace `vX.Y.Z` + user-facing
+          # `reposix-cli-vX.Y.Z`); other per-crate tags are excluded from the Latest race.
+          EXISTING=$(gh api "repos/${{ github.repository }}/releases" --paginate \
+            --jq '.[] | select(.draft==false and .prerelease==false) | .tag_name' \
+            | sed -nE 's/^(reposix-cli-)?v([0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?)$/\2/p' || true)
+          HIGHEST=$(printf '%s\n%s\n' "$EXISTING" "$VERSION" | grep -E '^[0-9]' | sort -V | tail -1)
+          if [[ "$HIGHEST" == "$VERSION" ]]; then IS_LATEST=true; else IS_LATEST=false; fi
+          echo "make_latest decision: version=${VERSION} highest_published=${HIGHEST} -> --latest=${IS_LATEST}"
+
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release edit "$TAG" --notes-file body.md
+            gh release edit "$TAG" --notes-file body.md --latest="$IS_LATEST"
           else
-            gh release create "$TAG" --title "reposix ${TAG}" --notes-file body.md
+            gh release create "$TAG" --title "reposix ${TAG}" --notes-file body.md --latest="$IS_LATEST"
           fi
           gh release upload "$TAG" \
             dist/*.tar.gz dist/*.zip dist/SHA256SUMS \
