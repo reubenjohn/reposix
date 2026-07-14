@@ -147,7 +147,11 @@ fi
 # 3. Run in container. Mount workspace read-only; mount target/ read-write so
 # pre-built debug binaries on host PATH are visible inside. `--network host`
 # makes the container's 127.0.0.1:7878 reach the host sim started above.
-SETUP="apt-get update -qq && apt-get install -y -qq curl ca-certificates python3 git build-essential pkg-config libssl-dev sqlite3 >/dev/null 2>&1"
+# Compiler toolchain (build-essential pkg-config libssl-dev) intentionally EXCLUDED
+# (fix-it-twice, ruling b773c04): examples run the pre-built host-mounted target/debug/reposix
+# on PATH -- there is NO in-container cargo build, so those compile-time deps were never
+# exercised yet consumed the whole timeout budget via apt. Do NOT re-add build-essential.
+SETUP="apt-get update -qq && apt-get install -y -qq curl ca-certificates python3 git sqlite3 >/dev/null 2>&1"
 
 docker run --rm \
     --network host \
