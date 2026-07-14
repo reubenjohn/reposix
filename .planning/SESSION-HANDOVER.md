@@ -1,93 +1,94 @@
-# SESSION-HANDOVER.md — RED-main BLOCKER b773c04 RESOLVED via Manager Ruling #5/Option A; CI verification IN FLIGHT @ 05aa23c; successor #16 resumes the post-tag queue — 2026-07-13
+# SESSION-HANDOVER.md — RED-main blocker `b773c04` CLOSED (main GREEN @ `8e2aae5`); successor #17 resumes post-tag queue items 0–5 — 2026-07-13
 
 Map, not territory — detail lives in git + the linked committed artifacts, not restated
-here. **HEAD = live state; verify live before trusting anything in this file** — it is a
-snapshot, not a subscription. This REPLACES (does not append to) the prior
-`SESSION-HANDOVER.md` (written under Ruling #4/Option B for the now-shipped v0.14.0 tag
-push; fully superseded — the tag landed, then a NEW RED-main incident happened and was
-fixed this arc). Resume an agent via SendMessage, never fork (ORCHESTRATION §11).
+here. **HEAD = live state; verify live before trusting anything in this file.** This
+REPLACES (does not append to) the prior `SESSION-HANDOVER.md` (successor #16's charter,
+written while the fix-verification CI run was still in flight). That run concluded
+GREEN — successor #16's entire session was closing out that one blocker; the post-tag
+queue itself has **NOT been touched yet**. Resume an agent via SendMessage, never fork
+(ORCHESTRATION §11).
 
-**STATUS: v0.14.0 SHIPPED (tag @ `bcdee07`-era chain, crates.io 0.14.0, GH release
-2026-07-14T01:23:03Z, "Latest"). A RED-main blocker surfaced AFTER shipping (owner ruling
-`b773c04`); it is now RESOLVED via an honest bounded fix under Manager Ruling #5 (Option
-A). The fix is pushed to `origin/main`; a CI verification run was IN FLIGHT (not yet
-concluded) at handoff. Successor #16's FIRST job is to confirm that run went GREEN before
-touching anything else.**
+**STATUS: v0.14.0 SHIPPED (crates.io 0.14.0, GH release "Latest", unchanged this
+session). The post-shipping RED-main incident (owner ruling `b773c04`, diagnosed as a
+docs-repro CI timeout budget, NOT a hang/guardrail conflict) is RESOLVED and CI-verified
+GREEN. Successor #17's job is the post-tag queue (items 0–5), starting with item 0
+(cursor refresh, which also carries the push).**
 
 ## 1. Ground truth (git) — VERIFY LIVE, do not trust this file's staleness
 
 Re-run before doing anything else:
 ```
 git rev-parse --short HEAD && git status --porcelain && \
-  git rev-list --left-right --count HEAD...origin/main && \
-  gh run view 29301412750
+  git rev-list --left-right --count HEAD...origin/main
 ```
-Verified this session: HEAD = `05aa23c`, tree **clean**, `0 0` vs `origin/main` (this
-commit is already pushed — 05aa23c itself, NOT this handover commit on top of it, which
-per this session's charter is intentionally **left unpushed** for the successor to push
-alongside item-0's cursor update, to avoid a second CI trigger mid-verification).
+Verified this session: HEAD = `8e2aae5`, tree **clean**, `0 0` vs `origin/main` (i.e.
+`8e2aae5` is already pushed). **This handover's own commit will land ON TOP of
+`8e2aae5`, unpushed** — per the queue's own item-0 instruction, push it together with
+the item-0 cursor-refresh commit to avoid a second CI trigger.
 
-Commit chain this arc, oldest → newest (baseline: prior handover's HEAD `d68fa8a`, which
-was RED, not green — see deviation note below):
-- `03e7a6f` — **fix(quality): honest bounded F-K4b fix.** Rewords `container-rehearse.sh`
-  example-05 asserts #2/#3 to what `run.sh` actually proves on exit 0 (pre-emptive
-  sparse-checkout pattern + guard-constant grep — NOT a runtime blob-limit error
-  observation, which the fast-import fetch path never triggers). Examples 01/02/04 keep
-  the exit-0-emits-`expected.asserts` behavior as-is (verified genuinely fail-loud).
-  F-K4b verifier logic untouched; no waivers added.
-- `3775075` — v0.15.0 intake filed:
-  `.planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md` (ONE MEDIUM row, two
-  sub-items: F-K4b container-class tautology redesign + example-05 real-runtime-error
-  deeper fix).
-- `05aa23c` (HEAD) — Ruling #5 recorded in `CONSULT-DECISIONS.md` + `STATE.md` ledger row
-  updated with the honest-rework framing and SHAs. No push in this commit (documented as
-  "orchestrator owns push + post-release re-trigger per Ruling #5 rider 4" — that push
-  already happened; HEAD and `origin/main` agree at `05aa23c`).
+Commit chain this arc, oldest → newest (baseline: prior handover's HEAD `05aa23c`):
+- `8e2aae5` (HEAD) — **fix(quality): green example-04 via TIMEOUT-BUDGET fix (ruling
+  `b773c04`)**, quick `260713-rug` (`.planning/quick/260713-rug-example04-timeout-budget/`
+  has PLAN + SUMMARY). Root cause: `docs-repro/example-04-conflict-resolve` was FAILING
+  at exactly 300.00s in `quality-post-release` run `29301412750` — reproduced twice in
+  `/tmp`, VERDICT = TIMEOUT-BUDGET, not a hang. The example workflow itself is ~0.5s and
+  passes all 3 asserts; the 300s cap was being consumed by per-container-row SETUP
+  (`apt-get install build-essential pkg-config libssl-dev`), compile-time deps the
+  container examples never exercise (they run the host-mounted pre-built
+  `target/debug/reposix`). Two edits, no asserts/waivers/proofs touched: (1)
+  `quality/gates/docs-repro/container-rehearse.sh` SETUP drops those 3 packages, keeps
+  curl/ca-certificates/python3/git/sqlite3 (+ fix-it-twice comment); (2)
+  `quality/catalogs/docs-reproducible.json` bumps `timeout_s` 300→600 on the 4
+  `kind:container` rows (**confirmed this session, lines 27/64/137/174**);
+  `tutorial-replay` (kind:mechanical, line 213) is untouched at 300.
 
-**Numbered deviations the successor MUST know:**
-1. **Root cause was P106 (`804eedc` + `c4f1261`, 2026-07-12), a HARNESS regression, not a
-   binary defect** — `container-rehearse.sh` hand-minted a `status:PASS` the container
-   example rows can't honestly earn under the runner's F-K4b per-assert congruence check.
-   Named suspects `cb8ad11`/`970d466` (surfaced earlier as candidate causes) were **red
-   herrings** — do not re-investigate them.
-2. Symptom-fix commit `0f2b7c5` is **orphaned** (not reachable from any branch — it was
-   un-stacked via `git reset --soft d68fa8a` when the arc pivoted from a symptom patch to
-   the honest rework). Do not try to cherry-pick or reference it; the honest fix
-   (`03e7a6f`) fully supersedes it.
-3. **Ground-truth catch this session — the "post-tag queue Item 1: v0.13.0 tag
-   sequence, drive to READY-TO-TAG" framing carried into this handover is STALE.**
-   `git tag -l v0.13.0` / `gh release list` show **v0.13.0 was already tagged and
-   released on 2026-07-07** (`chore: release v0.13.0 (#68)`, commit `3423b18`), and
-   v0.13.1 shipped 2026-07-08 — both predate v0.14.0 (2026-07-14, current "Latest").
-   `.planning/STATE.md`'s `workstream_a` block (`blocks_tag: true`, `next_phase: P98
-   # ...awaiting owner pre-tag actions + L0 tag push`) was never updated after that tag
-   actually landed — it is exactly the kind of staleness item-0's cursor refresh exists
-   to fix. **Do not re-run a v0.13.0 tag-prep sequence.** The genuinely-still-queued tag
-   is `workstream_b` = **v0.13.2** (`status: queued`, `blocks_tag: false` per STATE.md) —
-   verify with the successor which milestone "Item 1" was actually meant to name before
-   spending any effort on it.
+**Numbered facts the successor MUST know:**
+1. **Prove-before-fix reality-check (executed, not assumed):** all 4 container rows ran
+   locally with rc=0 before the fix landed on top of the earlier honest rework — example-01
+   16s, example-02 15s, example-04 16s (was the 300s SIGKILL), example-05 19s.
+2. **CI confirmation (both GREEN, checked this session):**
+   `gh run view 29302973970` → **SUCCESS**, 4m38s, docs-repro gate green (`quality-post-release`,
+   workflow_dispatch on `8e2aae5`). `gh run view 29302967371` → **SUCCESS**, all 15 jobs
+   including dark-factory + all 6 real-backend integration jobs (`ci.yml` push on `8e2aae5`).
+3. **No `CONSULT-DECISIONS.md` entry was added for this fix** — #16 judged it a
+   straightforward reproduced-and-proven fix (DP-2/DP-3 clear, all four escalation-valve
+   checks E1–E4 negative) and recorded it `[SELF]` only in the quick-lane SUMMARY, not the
+   ledger. If you want the ledger complete, add a one-line `[SELF]` entry — git (the
+   commit + the quick SUMMARY) is already the durable record either way; this is a
+   nice-to-have, not a gap that blocks anything.
+4. **Ground-truth correction inherited from #16, still true:** `.planning/STATE.md`'s
+   `workstream_a` (v0.13.0) block still reads `blocks_tag: true` /
+   `next_phase: P98  # ...awaiting owner pre-tag actions + L0 tag push`. **v0.13.0 was
+   already tagged and released 2026-07-07** (`chore: release v0.13.0 (#68)`, commit
+   `3423b18`), and v0.13.1 shipped 2026-07-08 (`04640d5`) — both predate v0.14.0. STATE.md's
+   status line (`status: v0.13.1-shipped-v0.14.0-fix-first-items-4-8-pending`) is also
+   stale — fix-first is done. **Do not re-run a v0.13.0 tag-prep sequence.** The
+   genuinely-still-queued tag is `workstream_b` = **v0.13.2** (STATE.md line 17:
+   `milestone: v0.13.2`, `status: queued`, `blocks_tag: false`, per line 108 "QUEUED behind
+   workstream C... and the not-yet-scoped launch-readiness milestone"). Confirm with
+   whoever is dispatching which milestone "post-tag queue item 1" was actually meant to
+   name before spending effort.
 
 ## 2. Wave/cycle state
 
 | Step | Artifact | State | Commit |
 |---|---|---|---|
-| RED-main root-cause diagnosis | Ruling #5 entry, `CONSULT-DECISIONS.md` | DONE | `05aa23c` |
-| Honest bounded F-K4b fix (quick 260713-q0e) | `container-rehearse.sh` + example-05 asserts | DONE, pushed | `03e7a6f` |
-| v0.15.0 intake (F-K4b redesign + ex-05 deeper fix) | `v0.15.0-phases/SURPRISES-INTAKE.md` | DONE | `3775075` |
-| STATE.md ledger row + Ruling #5 doc | `STATE.md`, `CONSULT-DECISIONS.md` | DONE | `05aa23c` |
-| Rider-5 cleanup (260713-pnv scaffold + docs-repro report droppings) | working tree | DONE | (no residue found this session) |
-| CI verification of the fix | `quality-post-release` run `29301412750` | **IN FLIGHT at handoff** — not concluded when last checked; superseded prior RED run `29298424648` (sha `d68fa8a`) | — |
-| Post-tag queue items 0–5 (below) | — | **NOT STARTED** — blocked on the above run's conclusion | — |
+| Diagnose `docs-repro/example-04` 300.00s failure (opus investigation leaf, /tmp repro x2) | quick `260713-rug` PLAN | DONE — VERDICT: TIMEOUT-BUDGET | — |
+| Fix: drop compile-time apt deps from container SETUP + bump 4 container rows to 600s | `container-rehearse.sh`, `docs-reproducible.json` | DONE, pushed | `8e2aae5` |
+| Prove-before-fix + prove-after-fix (4/4 container rows rc=0 locally) | quick SUMMARY | DONE | `8e2aae5` |
+| CI verification (`quality-post-release` + `ci.yml` on `8e2aae5`) | run `29302973970` / `29302967371` | DONE — **both SUCCESS** | — |
+| Report blocker CLOSED to manager (w1:p7) | — | DONE (this session) | — |
+| **Post-tag queue items 0–5** (§6 below) | — | **NOT STARTED** | — |
 
-No named-incident post-mortem beyond §1 item 1 above (P106 root cause) — read the Ruling
-#5 `CONSULT-DECISIONS.md` entry + quick `260713-q0e` SUMMARY/PLAN before dispatching any
-further F-K4b-adjacent work.
+No named-incident post-mortem beyond §1 above (TIMEOUT-BUDGET root cause) — read the
+quick `260713-rug` PLAN/SUMMARY before touching `container-rehearse.sh` or
+`docs-reproducible.json` again.
 
 ## 3. Binding constraints (unchanged)
 
 - Reality-check arc is **NOT owner-ratified** — no defect-fixing lanes beyond
-  tag-blockers; the (now potentially 1, was 8) OPEN intakes route to v0.15.0, do NOT
-  drain them now.
+  tag-blockers; OPEN intakes (v0.15.0 or otherwise, see §5) route forward, do NOT drain
+  them now.
 - ONE cargo invocation machine-wide (prefer `-p <crate>`). Leaf isolation: `/tmp` clones,
   `cd` in the SAME Bash call, never the shared tree.
 - Uncommitted = didn't happen. Push per phase cadence → then the post-push cadence
@@ -96,103 +97,112 @@ further F-K4b-adjacent work.
   haiku (mechanical). Relieve past ~100k own-context tokens (hard stop ~150k) at a wave
   boundary — write+commit a handover first. Report to the manager (w1:p7) at each
   queue-item boundary or when blocked.
-- No `--no-verify`, no tag push by any coordinator (manager's action alone, when a tag
-  arc is live).
+- No `--no-verify`. **No tag push by any coordinator** — the MANAGER cuts tags, never the
+  coordinator, even at READY-TO-TAG.
 
 ## 4. Litmus / gate / REOPEN state
 
-- **`quality-post-release` run `29301412750`** — triggered `workflow_dispatch` on sha
-  `05aa23c`; status at last check was **queued/in-progress, NOT yet concluded**. This is
-  the run that must be confirmed GREEN before anything else proceeds (§6 step 1).
-- **Prior run `29298424648`** (sha `d68fa8a`, the pre-fix HEAD) was **RED** — this is the
-  run the fix targets; it is now superseded, do not re-litigate it once `29301412750`
-  concludes.
-- **F-K4b verifier logic itself is untouched** by the fix — no waiver was added anywhere;
-  the fix changed only what example-05's asserts CLAIM (to match what the script
-  provably does), not the congruence check that catches false claims.
-- No open REOPEN-gate clock beyond confirming the in-flight run's conclusion. No P0 row
-  carries a waiver.
+- **`quality-post-release` run `29302973970`** (workflow_dispatch, sha `8e2aae5`) —
+  **SUCCESS**, 4m38s. This is the run that closes the `b773c04` blocker; do not
+  re-litigate it.
+- **`ci.yml` run `29302967371`** (push, sha `8e2aae5`) — **SUCCESS**, all 15 jobs
+  including dark-factory regression and all 6 real-backend integration contract jobs.
+- **F-K4b congruence-check verifier logic itself is untouched** — this fix touched only
+  timeout budgets and SETUP package lists, no assert/waiver/proof surface. The still-open
+  F-K4b container-class tautology issue (§5 below) is a SEPARATE, already-filed item —
+  do not conflate it with this arc.
+- No open REOPEN-gate clock. No P0 row carries a waiver from this fix.
 
 ## 5. Mid-execution decisions + noticed-not-filed
 
-- **Manager Ruling #5 (E2/E3 valve, CLOSED, Option A executed):** honest bounded fix —
-  KEEP `container-rehearse.sh`'s exit-0-emits-`expected.asserts` behavior for examples
-  01/02/04 (genuinely fail-loud), REWORD example-05's asserts #2/#3 to the truth rather
-  than either (B) reversing the shipped P106 behavior or (C) deferring the whole fix.
-  The deeper redesign (per-step-earned emission, or a fail-loud meta-check for the
-  container class generally) and example-05's still-missing real-runtime-error coverage
-  are both FILED to v0.15.0, not fixed now. Full binding text:
-  `.planning/CONSULT-DECISIONS.md` `2026-07-13 [MANAGER] Ruling #5`. Do not re-litigate.
-- **Red herrings, do not re-open:** `cb8ad11` and `970d466` were investigated as possible
-  RED-main causes and cleared — the actual root cause was P106's harness-side
-  `status:PASS` minting, not either of those commits.
-- **Noticed, filed this session** (`.planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md`,
-  one MEDIUM row): (a) F-K4b container-class tautology — any no-op exit-0 script would
-  currently pass the congruence check for a `kind:container` row, because honesty rests
-  entirely on each script being fail-loud rather than on a structural guarantee; (b)
-  example-05 only exercises the pre-emptive sparse-checkout pattern, not a genuine
-  observe-runtime-error → sparse-checkout → retry cycle (that cycle is currently covered
-  only by `dark-factory.sh`).
-- **Noticed, not filed as a fresh intake (carried forward, low-urgency housekeeping)**:
-  - `.planning/CONSULT-DECISIONS.md` is ~53.8k chars vs. the ~20k progressive-disclosure
-    guideline (pre-commit WARN, non-blocking). Per decision-procedures the ledger should
-    stay bounded to LIVE decisions (git is the archive) but it still carries the full
-    closed manager-rulings archive #2–#5. Flag to the manager before pruning — it's the
-    manager's own ruling-archive pattern, so deletion needs the manager's sign-off, not a
-    unilateral coordinator trim.
+- **`[SELF]` decision (this session, not yet in `CONSULT-DECISIONS.md` — see §1 item
+  3):** TIMEOUT-BUDGET fix judged self-decidable — reproduced twice, proven before AND
+  after, both CI gates confirmed green, no escalation-valve trigger (E1–E4 all negative).
+- **NEW noticings this arc — route to v0.15.0 intake, NOT yet filed, do not drop
+  (global principle #2):**
+  1. **Sim-leak-on-SIGKILL (robustness/flakiness, MEDIUM, SURPRISES-INTAKE
+     candidate).** `container-rehearse.sh` backgrounds the sim (`&`) and cleans it via an
+     EXIT trap; when `subprocess.run(timeout=...)` SIGKILLs the script (as it did in the
+     original CI failure — `Terminate orphan process pid 15322`), the trap never fires and
+     the sim orphans on port 7878. A subsequent container row could then bind-fail or
+     silently curl a stale sim. Hardening sketch: wrap the docker run in an internal
+     `timeout` shorter than the row's `timeout_s`, and/or start the sim in its own process
+     group.
+  2. **Harness rc(0) vs artifact exit_code(1) mismatch + a sim-readiness race between
+     rapid sequential `container-rehearse.sh` runs** (GOOD-TO-HAVE) — executor observed
+     example-02 flake once on back-to-back local runs, rc=0 on an isolated re-run.
+     Reconcile the two success signals.
+  3. **`.sim-*.log` files under `quality/reports/verifications/docs-repro/` are NOT
+     gitignored** (confirmed this session — `.gitignore` has the `*.json` and
+     `*.cobertura.xml` patterns for that tree but no `.sim-*.log` pattern; the sibling
+     `.json` reports ARE covered). One-line `.gitignore` fix, GOOD-TO-HAVE. (#16 manually
+     removed local residue for a clean tree; the gap in `.gitignore` itself remains.)
+  4. **Post-release-CI binary provenance (verify, don't assume).** `quality-post-release.yml`
+     has no explicit `cargo build -p reposix-cli` step visible, yet `container-rehearse.sh`
+     needs `target/debug/reposix` host-mounted. Run `29302973970` executed the rows
+     successfully (so the binary WAS present), but the provenance (cache restore? prior
+     job artifact? a build step not obviously named?) is unconfirmed — worth a 10-minute
+     look so rows don't silently degrade to NOT-VERIFIED on a clean/cold runner.
+- **Carried-forward noticings (still live, low-urgency, unchanged from #16's handover):**
+  - `.planning/CONSULT-DECISIONS.md` is large relative to the ~20k progressive-disclosure
+    guideline (400 lines / historically flagged ~54k chars) — item 5's rider (below)
+    addresses this with manager-pre-approved pruning of entries older than the current
+    milestone; the file is NOT strictly chronological (Ruling #5 sits near the top at
+    line 13; older resolved sagas — e.g. the TokenWorld mirror-drift/DIAGNOSTIC-lane
+    thread — run to the bottom), so prune by content/date, not by position.
   - `quality/gates/docs-repro/container-rehearse.sh`'s header comment still claims
-    "<=150 lines" — the file is actually **195 lines** (confirmed this session via
-    `wc -l`). Stale comment, GOOD-TO-HAVE-sized, not touched this arc.
-  - `.playwright-mcp/audit-03..08*.png` droppings are confirmed present on disk
-    (gitignored, ~6 files from 2026-07-12) — this is queue item 3 below, still pending.
-  - **New this session (§1 item 3 above):** `.planning/STATE.md`'s `workstream_a`
-    (v0.13.0) block is stale by ~a week — it still reads "awaiting owner pre-tag actions
-    + L0 tag push" for a milestone that was tagged and released 2026-07-07. This should
-    be folded into item-0's cursor refresh, and the post-tag-queue's "Item 1" identity
-    (v0.13.0 vs. the actually-still-queued v0.13.2) needs reconciling, not blind
-    execution.
+    "<=150 lines" — the file is actually ~195 lines. Stale comment, GOOD-TO-HAVE, not
+    touched this arc (the fix only edited the SETUP block, not the header).
+  - `.playwright-mcp/audit-03..08*.png` droppings **confirmed still present on disk this
+    session** (gitignored, 6 files, all dated 2026-07-12): `audit-03-landing-narrow-viewport.png`,
+    `audit-04-confluence-reference.png`, `audit-05-first-run.png`,
+    `audit-06-token-economy.png`, `audit-07-git-layer.png`, `audit-08-filesystem-narrow.png`.
+    This is queue item 3 below.
 
-## 6. Precise next steps (successor runbook)
+## 6. Precise next steps (successor #17 runbook)
 
-1. **Confirm run `29301412750` concluded SUCCESS**: `gh run view 29301412750` (or `gh run
-   watch 29301412750` if still in progress). 
-   - **GREEN** → report "BLOCKER `b773c04` CLOSED, main green @ `05aa23c`" to the manager,
-     then proceed to step 2.
-   - **RED** → main was ALREADY red going into this fix (not a fresh regression from the
-     fix itself, unless the failure signature is new) — re-classify honestly and report
-     to the manager BEFORE proceeding to any queue item. Do not open queue work over a
-     red main.
-2. **Resume the post-tag queue** (was manager-preempted pending the main-green
-   precondition, now met if step 1 is GREEN):
-   - **Item 0 — GSD cursor refresh.** Update `STATE.md` + `PROJECT.md` (+ reconcile this
-     `SESSION-HANDOVER.md`) to reflect: v0.14.0 SHIPPED; main green @ `05aa23c` (NOT
-     `d68fa8a` — that sha was RED; an earlier item-0 lane was killed after being handed
-     the false "green @ `d68fa8a`" claim, per the prior coordinator's notes); AND the
-     `workstream_a` (v0.13.0) stale-tag-pending framing from §1 item 3 / §5 above. Run at
-     `/gsd-quick` scale. Push it (bundle this handover's commit in the same push per this
-     session's push-deferral instruction).
-   - **Item 1 — reconcile identity, then act.** Before driving anything to
-     READY-TO-TAG, confirm whether "Item 1" means v0.13.0 (**already tagged/released
-     2026-07-07 — nothing to do**) or v0.13.2 (Cross-link fidelity, genuinely
-     `status: queued` per STATE.md workstream_b). If it's v0.13.2: drive to
-     READY-TO-TAG (manager cuts the tag, never the coordinator); the READY-TO-TAG report
-     MUST include a tag-script guards DRY-RUN result. **Carry-forward escalation trigger
-     (verify before any READY-TO-TAG report, regardless of which milestone):** a prior
-     digest concluded `gh release create` without `--latest` would NOT steal "latest"
-     from v0.14.0 on this `gh` CLI version, but that was never verified against real `gh`
-     CLI behavior — **VERIFY the actual `make_latest` behavior first; if a new tag could
-     steal "latest"/404 installer URLs, STOP and report to the manager** instead of
-     executing.
-   - **Item 2 — Q1c interim hero qualifiers.** README "Three measured numbers" +
-     `docs/index.md:17` synthetic-baseline caveat. Cold-reader pass via
-     `/doc-clarity-review` on touched pages before calling it done.
-   - **Item 3 — `.playwright-mcp/audit-03..08*` droppings sweep.** Confirmed present
-     this session (gitignored, ~6 files, 2026-07-12). Simple `rm`, verify nothing else in
-     that dir depends on them first.
-   - **Item 4 — `/gsd-cleanup` archival cascade.** The v0.14.0 tag unblocks this; run it.
-   - **Item 5 — `ORCHESTRATION.md` size split.** Currently over its progressive-disclosure
-     budget; apply the same layering rules the doc itself prescribes.
-3. **Do not drain the reality-check-arc intakes** (v0.15.0 or otherwise) beyond
+Manager herds from w1:p7; report at each numbered boundary or if blocked.
+
+1. **Item 0 — GSD cursor refresh (`/gsd-quick` scale; PUSH rides here).**
+   - Update `STATE.md` + `PROJECT.md` to: v0.14.0 SHIPPED (unchanged); RED-main arc
+     `b773c04` CLOSED, main green @ `8e2aae5` (both CI gates SUCCESS, §4); AND fix the
+     stale `workstream_a` block (§1 item 4) — it still says `blocks_tag: true` /
+     `next_phase: P98 # awaiting owner pre-tag actions + L0 tag push` for a milestone
+     (v0.13.0) tagged/released 2026-07-07. Also fix the stale top-line `status:` field.
+   - Fold this file's §5 noticings into the appropriate intake file(s)
+     (`SURPRISES-INTAKE.md` for items 1/4, `GOOD-TO-HAVES.md` for items 2/3) — v0.15.0
+     scope per the reality-check-arc constraint (§3).
+   - **Push this commit + the SESSION-HANDOVER commit together** (one CI trigger), then
+     run `python3 quality/runners/run.py --cadence post-push --persist` and confirm
+     `code/ci-green-on-main` (P0) is green before opening item 1.
+2. **Item 1 — reconcile identity FIRST, then act.** "Item 1 = v0.13.0 tag sequence" is
+   STALE (nothing to do, already shipped — §1 item 4). The genuinely-queued tag is
+   **v0.13.2** (workstream_b, Cross-link fidelity). Confirm which was meant before
+   spending effort.
+   - **HARD PRECONDITION before ANY READY-TO-TAG report, regardless of milestone:**
+     resolve the `make_latest` hazard. v0.13.0's `release.yml` calls `gh release create`
+     with no `--latest` flag; the GitHub API default (`make_latest=true`) could steal
+     `releases/latest` from v0.14.0 and 404 the installer URLs on a back-tag. A prior
+     digest GUESSED this is safe but it was NEVER verified against real `gh`/API
+     behavior. **VERIFY actual `make_latest` behavior first** (read the `gh release
+     create` docs/source, or test against a disposable repo) — **if a back-tag could
+     steal "latest", STOP and report to the manager**, do not proceed.
+   - A READY-TO-TAG report MUST include a tag-script guards **DRY-RUN** result.
+   - **STOP at READY-TO-TAG — the MANAGER (w1:p7) cuts tags, never the coordinator.**
+3. **Item 2 — Q1c interim hero qualifiers.** README "Three measured numbers" +
+   `docs/index.md:17` synthetic-baseline caveat. Run a cold-reader pass via
+   `/doc-clarity-review` on the touched pages before calling it done.
+4. **Item 3 — `.playwright-mcp/audit-03..08*` droppings sweep.** 6 files confirmed
+   present this session (§5, gitignored, from 2026-07-12). Verify nothing in that dir
+   depends on them (they look like a one-off doc-alignment walk's screenshots), then
+   `rm`.
+5. **Item 4 — `/gsd-cleanup` archival cascade.**
+6. **Item 5 — `ORCHESTRATION.md` progressive-disclosure size split**, plus the
+   manager-pre-approved rider: archive `CONSULT-DECISIONS.md` entries older than the
+   current milestone to `.planning/archive/` (keep recent rulings — currently #2–#5 and
+   this session's `[SELF]` note if added — inline; older resolved sagas, e.g. the
+   TokenWorld mirror-drift thread from lines ~195–400, are archive candidates).
+7. **Do not drain the reality-check-arc intakes** (v0.15.0 or otherwise) beyond
    tag-blockers — that arc is not owner-ratified for defect-fixing lanes yet.
-4. **At each queue-item boundary, or if blocked, report to the manager (w1:p7)** — do not
+8. **At each queue-item boundary, or if blocked, report to the manager (w1:p7)** — do not
    silently continue past a boundary without a checkpoint.
