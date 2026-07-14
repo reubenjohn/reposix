@@ -1,105 +1,95 @@
-# SESSION-HANDOVER.md — items 0–1 CLOSED green @ `6dc47a3`; successor #18 resumes items 2–5 — 2026-07-13
+# SESSION-HANDOVER.md — item 2 committed+reviewed but BLOCKED on push-coord; successor #19 resumes — 2026-07-14
 
-Written by **workhorse successor #17** (L0 orchestrator, pane w1:p5, herded by the
-manager in w1:p7). Relief reason: past ~100k own-context tokens at a clean wave
-boundary (items 0–1 closed green, main green, tree clean). This **REPLACES** (does not
-append to) the prior `SESSION-HANDOVER.md` (successor #17's own charter file, written
-by successor #16 naming "successor #17 resumes post-tag queue items 0–5" — that charter
-is now discharged for items 0–1; this file re-issues it for items 2–5 under successor
-#18).
+Written by the **relief-handover-writer** on behalf of **workhorse successor #18** (L0
+orchestrator, pane w1:p5, herded by the manager in w1:p7). Relief reason: past ~100k
+own-context tokens (~129k) at a clean, fully-diagnosed wave boundary — item 2 is
+committed, reviewed, and its blocker is root-caused with a small documented fix; nothing
+is left half-done. This **REPLACES** (does not append to) the prior
+`SESSION-HANDOVER.md` (successor #17's charter file, re-issuing item 2–5 scope under
+successor #18 — that charter is now discharged for item 2's diagnosis and re-issued here
+for successor #19 to finish item 2 and continue to items 3–5).
 
 **Read order:** this file → §1 (verify live) → §6 (runbook) → dip into §2/§4/§5 as
 needed. **Guardrails:** do NOT touch `.planning/MANAGER-HANDOVER.md` — that is the
 MANAGER's own handover file (pane w1:p7), a separate document with a separate owner;
 this file governs only the L0 orchestrator seat. No tag push by any coordinator — the
-manager cuts tags, never L0.
+manager cuts tags, never L0. **Do NOT do git surgery (reset/rebase/reorder/amend) on
+`main`** — a live owner-ruling session is actively committing to this same branch.
 
-## 1. Ground truth (git) — VERIFY LIVE, do not trust this file's staleness
+## 1. Ground truth (git) — VERIFIED LIVE this handover, do not trust staleness
 
 Re-run before doing anything else:
 ```
 git rev-parse --short HEAD && git status --porcelain && \
-  git rev-list --left-right --count HEAD...origin/main
+  git log --oneline -8 && git rev-list --left-right --count HEAD...origin/main
 ```
-**Verified this session (2026-07-13, re-checked independently of the outgoing
-coordinator's own numbers):** HEAD = `6dc47a3`, tree **clean** (`git status --porcelain`
-empty), `0 0` vs `origin/main` — i.e. `6dc47a3` is fully pushed, nothing local ahead or
-behind.
+**Verified independently by this handover-writer (2026-07-14):**
+- `HEAD` = `1644d48`, tree **clean** (`git status --porcelain` empty).
+- `git rev-list --left-right --count HEAD...origin/main` → **`6  0`** — local `main` is
+  **6 commits ahead, 0 behind**. `origin/main` = `aeefcea` (unchanged this session —
+  nothing has been pushed).
+- **CI confirmed GREEN on origin/main's current HEAD** (`aeefcea`) — `gh run list
+  --branch main --limit 5` shows `CI`, `Docs`, `release-plz`, `CodeQL` all
+  `conclusion: success` at `headSha: aeefcea7ea44960ceef1e7032d24c884019963ab`. Nothing
+  is broken on the pushed side; the gap is entirely local-ahead.
 
-**CI verified GREEN on `6dc47a3` independently this session:**
-- `gh run view 29304998456` → `workflowName: "CI"`, `headSha:
-  6dc47a34b827fe60f121fe9e231c84dceeb3f59b` (matches `6dc47a3`), `status: completed`,
-  `conclusion: success`.
-- Post-push cadence P0 probe confirmed via its persisted artifact (not re-derived):
-  `quality/reports/verifications/code/ci-green-on-main.json` — `ts:
-  2026-07-14T04:09:07Z`, `exit_code: 0`, `asserts_passed: ["latest ci.yml run on main
-  concluded success"]`. This is the freshest file under `quality/reports/verifications/`
-  as of this handover.
-- `gh run list --branch main --limit 3` also shows Docs / release-plz / CodeQL all
-  `success` on the same sha (side confirmation, not the P0 probe itself).
+**The unpushed local stack, bottom → top (`git log --oneline` newest-first above; do
+NOT reorder, drop, or amend any of these — two different owners are stacked on one
+branch):**
 
-Commit chain this session, oldest → newest (baseline: prior handover's HEAD `ffb9d25`):
-- `ff7be56` — item 0, GSD cursor refresh + fold of 4 v0.15.0 noticings. Quick lane
-  `.planning/quick/260713-c0r-cursor-refresh/` (`260713-c0r-PLAN.md` +
-  `260713-c0r-SUMMARY.md`, both present on disk, confirmed).
-- `69b9da7` — **NOT L0's work.** This is the MANAGER's own rotation-#6 handover refresh
-  (`Co-Authored-By: Claude Fable 5`), touching only `.planning/MANAGER-HANDOVER.md` (42
-  lines changed, confirmed via `git show --stat`) — it corrected the stale
-  v0.13.0-tag queue-item description on the manager's own document. Interleaved in the
-  chain because both seats commit to the same branch; do not attribute it to L0 and do
-  not re-touch `MANAGER-HANDOVER.md` from this seat.
-- `370310d` — item 1, `release.yml` `make_latest` fix (the substantive code change).
-- `a5081a1` — item 1 riders: STATE.md Workstream C de-stale + PROJECT.md truth banner.
-- `6dc47a3` (HEAD) — item 1 quick-lane SUMMARY commit. Quick lane
-  `.planning/quick/260713-mlh-make-latest-hardening/` (`260713-mlh-PLAN.md`,
-  `260713-mlh-SUMMARY.md`, `make-latest-proof.md`, all present on disk, confirmed).
+| Commit | Owner | Content (confirmed via `git show --stat`) |
+|---|---|---|
+| `06a52a0` | **#18 (item 2)** | `docs(hero): add interim/synthetic-baseline qualifiers` — README.md +2, docs/index.md +1/-1 |
+| `78e7ffc` | **#18 (item 2)** | `docs(260714-qhq): file GTH-V15-12 + complete hero-qualifiers quick` — quick-lane PLAN+SUMMARY, GOOD-TO-HAVES.md +5 |
+| `49b1799` | **#18 (item 2)** | `docs(hero): extend interim qualifier to docs/index.md latency card` (cold-reader REVISE fix) — docs/index.md, GOOD-TO-HAVES.md, quick SUMMARY |
+| `8eccb65` | **manager (NOT L0)** — `Claude Fable 5` co-author | `docs(planning): record owner rulings Q3/Q4/Q5+Q7/Q8/Q9 + 10-survey calibration mandate` — touches ONLY `.planning/MANAGER-HANDOVER.md` |
+| `d01d8f6` | **manager (NOT L0)** — `Claude Fable 5` co-author | `docs(audit): record owner decisions Q3-Q9 + 10-survey calibration as addendum` — touches ONLY `.planning/milestones/audits/2026-07-12-reality-check.md` |
+| `1644d48` (HEAD) | **manager (NOT L0)** — `Claude Fable 5` co-author | `docs(planning): slim owner-rulings bullet to pointer` — touches ONLY `.planning/MANAGER-HANDOVER.md` |
 
 **Numbered facts the successor MUST know:**
-1. **v0.14.0 is SHIPPED + public + Latest** (crates.io 0.14.0; GH release marked
-   "Latest" 2026-07-14) — confirmed via `PROJECT.md`'s own banner (line 3, see §5) and
-   `STATE.md` workstream_c block (`status: shipped-green`).
-2. **v0.13.0 (2026-07-07) and v0.13.1 (2026-07-08) are ALREADY tagged+released** —
-   confirmed via `STATE.md` workstream_a block (`blocks_tag: false`, `next_phase: P98
-   # v0.13.0 SHIPPED — tagged/released 2026-07-07 (commit 3423b18)... v0.13.1 hotfix
-   shipped 2026-07-08 (04640d5)`). **Do not re-run a v0.13.0 tag-prep sequence.**
-3. **No v0.13.2 tag exists; `workstream_b` has zero code** — confirmed via `STATE.md`
-   workstream_b block: `status: queued`, `phases_completed: 0`, `next_phase: P98`
-   (placeholder), `blocks_tag: false`. It is queued behind workstream C and the
-   not-yet-scoped launch-readiness milestone per OD-4 — nothing to do here now.
-4. **`release.yml`'s `make_latest` fix is live in the tree** (commit `370310d`) —
-   confirmed by reading the diff directly: it now computes the highest published
-   app-release semver via `gh api .../releases --paginate` + `sort -V`, and passes
-   `--latest=true|false` explicitly on both the `gh release create` and `gh release
-   edit` paths, with a fix-it-twice comment at the site pointing back to
-   `make-latest-proof.md`. This is a **preventive fix, not a tag cut** — no tag was
-   pushed this session.
+1. **Linear history ⇒ all-or-nothing push.** #18's 3 item-2 commits sit BENEATH the
+   manager's 3 owner-ruling commits. There is no way to push the item-2 work without
+   also pushing the owner-ruling commits (and vice versa) without git surgery — which is
+   forbidden here (guardrail above; the owner-ruling session is live on this branch).
+2. **The owner-ruling commits' push is gated on the owner ratifying "Arc D"** — per the
+   audit addendum (`.planning/milestones/audits/2026-07-12-reality-check.md`, ADDENDUM
+   section, confirmed read this handover): "Arc (§4): pending explicit owner confirm...
+   Arc D (ratchet-first)... proposed [by the manager], PENDING WITH OWNER: arc
+   ratification." `MANAGER-HANDOVER.md` line ~155 confirms: "PENDING WITH OWNER: arc
+   ratification... tag-blockers until arc ratified."
+3. **Therefore #19 must NOT push this stack without the manager's explicit go-ahead**,
+   even after clearing item 2's own blocker (§ below) — pushing sends the owner's
+   not-yet-ratified commits too. Coordinate push timing with the manager (w1:p7).
+4. **Item 2 substance is DONE** (committed, quality-checked, cold-reader-reviewed) — what
+   remains is (a) clearing a self-inflicted docs-alignment gate block via a documented
+   top-level-only refresh command, then (b) manager push-coordination. Full detail in
+   §2/§5/§6.
 
 ## 2. Wave/cycle state
 
 | Item | Artifact | State | Commit(s) |
 |---|---|---|---|
-| 0 — GSD cursor refresh + intake fold | quick `260713-c0r-cursor-refresh/` | DONE, pushed | `ff7be56` |
-| (manager's own rotation-#6 handover refresh — NOT an L0 queue item, listed for chain context only) | `.planning/MANAGER-HANDOVER.md` | N/A (manager-owned) | `69b9da7` |
-| 1 — `make_latest` preventive hardening (RE-SCOPED; no tag cut) | quick `260713-mlh-make-latest-hardening/` (incl. `make-latest-proof.md`) | DONE, pushed, CI-verified green | `370310d`, `a5081a1`, `6dc47a3` |
-| 2 — Q1c interim hero qualifiers | README + `docs/index.md:17` | **NOT STARTED** | — |
-| 3 — `.playwright-mcp/audit-03..08*` droppings sweep | filesystem housekeeping (gitignored, not GSD-tracked) | **NOT STARTED** | — |
+| 0 — GSD cursor refresh + intake fold | quick `260713-c0r-cursor-refresh/` | DONE, pushed (`origin/main`) | `ff7be56` |
+| 1 — `make_latest` preventive hardening | quick `260713-mlh-make-latest-hardening/` | DONE, pushed, CI-verified green | `370310d`, `a5081a1`, `6dc47a3` |
+| 2 — Q1c interim hero qualifiers | README.md + docs/index.md, quick `260714-qhq-hero-qualifiers/` | **COMMITTED + cold-reader REVIEWED, BLOCKED on docs-alignment refresh + push-coord** (not pushed) | `06a52a0`, `78e7ffc`, `49b1799` |
+| — (manager's own owner-ruling recording — NOT an L0 queue item, listed for stack-topology context only) | `.planning/MANAGER-HANDOVER.md` + audit addendum | N/A (manager-owned); gates item 2's push per §1 fact 2 | `8eccb65`, `d01d8f6`, `1644d48` |
+| 3 — audit-droppings sweep (**EXPANDED** by Q8 ruling, see §5) | `.playwright-mcp/audit-03..08*.png` (confirmed present) + repo-root `audit-01/02.png` (confirmed **ABSENT**, see §5) | **NOT STARTED** | — |
 | 4 — `/gsd-cleanup` archival cascade | — | **NOT STARTED** | — |
-| 5 — ORCHESTRATION.md size split + CONSULT-DECISIONS.md archival rider | — | **NOT STARTED** — philosophy conflict to reconcile first, see §6 | — |
+| 5 — ORCHESTRATION.md size split + CONSULT-DECISIONS.md trim (philosophy conflict now RESOLVED, see §5) | — | **NOT STARTED** | — |
 
-**Named-incident post-mortem to read before touching `release.yml` again:**
-`.planning/quick/260713-mlh-make-latest-hardening/make-latest-proof.md` — the
-`make_latest` hazard was PROVEN, not assumed: `gh` (v2.62.0) omits `make_latest` from
-the create/edit POST unless `--latest` is explicitly passed, and GitHub's REST
-omit-default is `make_latest="true"` (set THIS release as Latest), **not** the
-date/version-aware `legacy` that `gh`'s own help text implies. The proof was executed
-against the sanctioned `reubenjohn/reposix` repo using drafts/scratch releases only —
-the live v0.14.0 "Latest" marker was never touched, and residue was cleaned to 0 (one
-side-effect residue is tracked separately in §5, not a code residue).
+**Named-incident / diagnostic to read before touching item 2 again:** #18's own
+diagnostic (not a separate committed file — reported live to the manager and encoded
+here) found that editing README.md + docs/index.md drifted 22 `docs-alignment` catalog
+rows from `BOUND` to `STALE_DOCS_DRIFT` (all 17 README + 5 docs/index rows, i.e. every
+row whose cited line-range the 2 hero-qualifier edits touched) — this is EXPECTED
+docs-edit behavior (the source_hash the catalog pins moved), not pre-existing floor debt
+and not a backfill problem. Root-cause and fix are in §5/§6.
 
 ## 3. Binding constraints (unchanged)
 
-- Reality-check arc is **NOT owner-ratified** — no defect-fixing lanes beyond
-  tag-blockers; OPEN intakes (v0.15.0 or otherwise) route forward, do NOT drain them now.
+- Reality-check arc is **NOT owner-ratified for defect-fixing lanes** — Arc D itself is
+  pending owner confirm (§1 fact 2). OPEN intakes (v0.15.0 or otherwise) route forward,
+  do NOT drain them now.
 - **ONE cargo invocation machine-wide** (prefer `-p <crate>`). Leaf isolation: `/tmp`
   clones, `cd` in the SAME Bash invocation, never the shared tree.
 - **Uncommitted = didn't happen.** Push per queue-item cadence → then
@@ -111,113 +101,161 @@ side-effect residue is tracked separately in §5, not a code residue).
   wave boundary — write+commit a handover first.
 - **No `--no-verify`. No tag push by any coordinator** — the MANAGER cuts tags, never
   the coordinator, even at READY-TO-TAG.
-- **zsh gotcha (bit this session's outgoing coordinator):** `read -r status ...` FAILS
-  in poll loops — `status` is a read-only var in zsh. Use a different variable name.
+- **Orchestration-shaped work runs at top-level, not under `/gsd-execute-phase`.**
+  `/reposix-quality-refresh` is the canonical example (`.planning/CLAUDE.md`) — it
+  CANNOT be delegated into a subagent; it must run from the top-level coordinator's own
+  shell. This directly gates item 2's unblock step in §6.
 
 ## 4. Litmus / gate / REOPEN state
 
-- `ci.yml` run `29304998456` (push, sha `6dc47a34b827fe60f121fe9e231c84dceeb3f59b` =
-  `6dc47a3`) — **SUCCESS**, re-verified independently this session via `gh run view`.
-- Post-push cadence P0 probe `code/ci-green-on-main` — **PASS, exit_code 0**, persisted
-  artifact `quality/reports/verifications/code/ci-green-on-main.json`,
-  `ts: 2026-07-14T04:09:07Z` (freshest file under `quality/reports/verifications/` as of
-  this handover — re-run `python3 quality/runners/run.py --cadence post-push --persist`
-  yourself before trusting a stale timestamp).
-- `make_latest` hazard proof — see §2 pointer, `make-latest-proof.md`, fully committed
-  (`6dc47a3`), no open verification gap.
+- `ci.yml` on `origin/main` HEAD `aeefcea` — **SUCCESS**, re-verified independently this
+  handover via `gh run list --branch main` (see §1).
+- **`docs-alignment` walk gate — currently BLOCKS a push of the current local HEAD.**
+  Per #18's live diagnostic (reported to the manager, not re-derived by this
+  handover-writer — the underlying report artifact under
+  `quality/reports/verifications/docs-alignment/` is a local, gitignored, run-clobbered
+  file, not a durable citation): computed `alignment_ratio` = **0.7589** (exit 0, clean)
+  against `origin/main`, vs **0.6994** (exit 1, BLOCKED) against the current local HEAD;
+  22 catalog rows flipped `BOUND` → `STALE_DOCS_DRIFT`, all 22 inside the 2 files item 2
+  edited (17 README.md + 5 docs/index.md rows). The floor for the ratio itself is 0.50 —
+  0.6994 is still ABOVE floor; the actual hard-block is `walk.sh`'s
+  block-on-any-unwaived-`STALE_DOCS_DRIFT` rule, independent of the ratio. See §5 for a
+  noticing about a misleading printed ratio in the gate's own stderr.
 - No open REOPEN-gate clock. No P0 row carries a waiver from this session's work.
 
 ## 5. Mid-execution decisions + noticed-not-filed
 
-**De-facto decisions made live this session:**
-- **Item 1 re-scope (manager-ratified).** The queue's original "item 1 = v0.13.0 tag
-  sequence" was DROPPED — v0.13.0 and v0.13.1 were already shipped (§1 facts 2–3), so
-  there was nothing to tag. Re-scoped in place to the `make_latest` preventive-hardening
-  work that the tag-sequence investigation surfaced as a real hazard.
-- **PROJECT.md wholesale reconcile DEFERRED, not done.** Per manager ruling, the
-  wholesale re-anchor of `.planning/PROJECT.md` (structurally stale, 22.6k chars vs the
-  20k progressive-disclosure guideline) is deferred to `/gsd-new-milestone`. This
-  session's interim OP-8 fix was a one-line VERBATIM dated truth banner at the top:
-  `> **Status (2026-07-14):** v0.14.0 shipped + Latest (2026-07-14); v0.13.0/v0.13.1
-  already released; release.yml make_latest hardening in progress to protect future
-  back-tags; wholesale re-anchor pending at /gsd-new-milestone.` — confirmed present at
-  `PROJECT.md` line 3.
+**Owner rulings this session (2026-07-14, live session, recorded by the manager in
+`8eccb65`/`d01d8f6`/`1644d48` — canonical home is the audit addendum, confirmed read by
+this handover-writer at `.planning/milestones/audits/2026-07-12-reality-check.md`
+ADDENDUM section). These CONFIRM/EXPAND items 2–5, no re-scope beyond what's noted:**
+- **Q3 — DECIDED.** Launch is gated on a real-backend journey (GitHub minimum), not
+  sim-first.
+- **Q5/Q7 — DECIDED, aggressive.** DELETE legacy/bloat outright — no keep-with-banners;
+  git history is the archive. Docs/planning simplification is now a first-class,
+  explicitly-planned roadmap goal (owner verbatim, quoted in the addendum: "I hate how
+  much legacy and bloat is there across md files... very confusing!").
+- **Q8 — CONFIRMED delete, and item 3's scope is EXPANDED.** Delete ALL audit
+  droppings, explicitly including repo-root `audit-01/02.png` in addition to the
+  already-queued `.playwright-mcp/audit-03..08` sweep. **Verified by this
+  handover-writer: `audit-01.png` / `audit-02.png` do NOT currently exist** — not at
+  repo root, not anywhere else in the working tree (`find` came up empty), and zero
+  hits in `git log --all` for either filename. Either they were already cleaned up
+  before this session, or the addendum names files that never landed / live under a
+  different name. **#19: do not assume this half of item 3 needs action — confirm
+  with the manager whether the addendum's "root audit-01/02" reference is stale, then
+  treat that half as already-satisfied if confirmed absent.** The
+  `.playwright-mcp/audit-03..08*.png` half IS confirmed present (6 files, verified this
+  handover) and still needs the sweep.
+- **Q9 — DECIDED, keep** the v0.15→v0.25 ~6-milestone arc.
+- **10-survey calibration mandate (NEW, standing practice):** assume one deep survey
+  pass surfaces ~10% of latent work; ~10 passes to convergence. Recurring deep surveys
+  are now baked into milestone planning, not a one-time audit — each pass's findings
+  must become standing gates so pass N+1 never re-finds pass N's defects.
+- **Item 5's archival-philosophy conflict is RESOLVED, not merely "reconcile with the
+  manager" as the prior handover said.** The addendum's Q5/Q7 ruling (delete outright,
+  git history is the archive) matches the `decision-procedures` skill's documented
+  ledger doctrine, NOT the "move to `.planning/archive/`" wording the prior handover
+  flagged as a possible manager rider. **#19: apply DELETE-closed-entries to
+  `CONSULT-DECISIONS.md` (currently 53,778 chars / confirmed this handover), do NOT
+  create archive-copy files.** (Still worth a final one-line confirm-ping to the manager
+  given this is a philosophy call on planning infrastructure, but the doctrinal answer
+  is no longer ambiguous.)
+- **Arc itself is still PENDING owner confirm** (§1 fact 2) — this is the one owner
+  ruling that is NOT yet closed; #19 should ask the manager for its status at the first
+  checkpoint (§6 step 2), since it gates the whole unpushed stack's push.
 
-**Noticings to ROUTE, not fix (reality-check arc is NOT owner-ratified for defect
-lanes — file/route only, do not act):**
-1. **[OWNER ACTION — needs interactive auth, L0 cannot self-authorize] Archived scratch
-   repo needs deletion.** Item 1's steal-demo probe created
-   `reubenjohn/reposix-scope-test-DELETEME`. Confirmed still present this session via
-   `gh repo view`: `isArchived: true`, `visibility: PRIVATE`. The token lacks
-   `delete_repo` scope, so it was archived (not deleted) as the safe fallback. Recovery,
-   for the owner or a session with elevated auth: `gh auth refresh -h github.com -s
-   delete_repo && gh repo delete reubenjohn/reposix-scope-test-DELETEME --yes`. Surface
-   to the owner/manager; this is an external mutation requiring named-target approval
-   (ORCHESTRATION §9), already partially executed (archive) under the reversible
-   fallback path.
-2. **[v0.15.0 intake candidate, low severity] `gh release create --help`'s `--latest`
-   flag description is misleading** — it reads "automatic by date and version" but `gh`
-   never actually sends `make_latest=legacy`; this is very likely the root cause the
-   original `release.yml` author trusted when omitting the flag. Worth a GOOD-TO-HAVE
-   note (context for the next release.yml reader), not an action item.
-3. **Non-blocking WARNs, pre-existing (not this session's regressions), do not act:**
-   pre-push wall-time ~97s measured against a 60s budget note in `quality/CLAUDE.md`;
-   `PROJECT.md` size vs the 20k guideline (see decision above — wholesale reconcile
-   deferred to `/gsd-new-milestone`, the banner is the interim fix).
-4. **Already-triaged (closed) — no further action:** `STATE.md` Workstream C body
-   staleness → absorbed + fixed in item 1 (`a5081a1`, confirmed this session by reading
-   the current block, which correctly reads `status: shipped-green` /
-   `blocks_tag: false`).
+**De-facto decisions made live this (#18's) session:**
+- **Item 2 cold-reader used the isolated Path-A route (Task tool), not `claude -p`**,
+  because the subscription-mode `claude -p` cannot see files in this environment — this
+  is the documented GTH-V15-12 finding, not a workaround; the charter-correct fallback
+  per `.claude/skills/reposix-quality-review/dispatch.sh` is Path-A-preferred anyway.
+  The isolated pass returned REVISE for a real defect (latency card missing the interim
+  qualifier the README caveat implied) — fixed in `49b1799`. Treat this as the gate
+  working as designed, not a near-miss.
 
-**Confirmed landed this session (verification, not new noticing):** the 4 v0.15.0
-noticings item 0 promised to route were independently re-verified present on disk —
-sim-leak-on-SIGKILL is in
-`.planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md` (grep-confirmed at line 48);
-`GTH-V15-10` (harness rc/exit_code mismatch + sim-readiness race) and `GTH-V15-11`
-(`.sim-*.log` gitignore gap) are both in
-`.planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md` (lines 70, 75). Note: these
-intake files live under the **v0.15.0 milestone directory**, NOT at
-`.planning/SURPRISES-INTAKE.md` / `.planning/GOOD-TO-HAVES.md` top level (only
-`GOOD-TO-HAVES.md` has a top-level copy; `SURPRISES-INTAKE.md` does not — grep the
-milestone dir, not the repo root, when routing future noticings).
+**Noticings to ROUTE:**
+1. **GTH-V15-12 (FILED, confirmed present at
+   `.planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md:80`)** — `doc-clarity-review`
+   skill's nested `claude -p` silently returns a non-error "no file content" reply
+   instead of a hard fail when it can't see target files — risks a false "review
+   passed" if the isolated Path-A route weren't used as the primary check.
+2. **GTH-V15-13 (FILED, confirmed present at
+   `.planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md:85`)** — README never expands
+   the "MCP" acronym on-page (docs/index.md does).
+3. **NOT YET FILED — gate-message accuracy, #19 to file.** The pre-push docs-alignment
+   walk printed `alignment_ratio 0.4407 below floor 0.5000` in its stderr, but the
+   reproducible live ratio from the committed catalog + binary (per #18's diagnostic,
+   §4) is `0.6994` — ABOVE the 0.50 floor. The actual block is `walk.sh`'s
+   hard-block-on-any-unwaived-`STALE_DOCS_DRIFT` rule, unrelated to the ratio. The
+   printed floor-message does not reconcile with the committed state and could mislead
+   the next reader into thinking a `/reposix-quality-backfill` run is needed when it
+   is not — only the two targeted `/reposix-quality-refresh` calls are (§6). File as a
+   v0.15.0 GOOD-TO-HAVE (severity: low-medium, misleading diagnostics). **Note:
+   `GOOD-TO-HAVES.md` under `v0.15.0-phases/` is already at 20,728 chars — above the
+   ~20k progressive-disclosure guideline — batch this filing tightly (one terse entry,
+   don't restate the whole diagnostic inline; point back to this handover's §4/§5
+   instead).**
+4. **Non-blocking, pre-existing, do not act:** pre-push wall-time ~97s vs the 60s budget
+   note in `quality/CLAUDE.md`; `ORCHESTRATION.md` itself is 27,391 chars (item 5's size
+   split target, confirmed this handover); `CONSULT-DECISIONS.md` 53,778 chars (item 5's
+   trim target, confirmed this handover).
+5. **Already-triaged (closed) — no further action:** the archived scratch repo
+   (`reubenjohn/reposix-scope-test-DELETEME`) noticing from the prior handover remains
+   an OWNER-ACTION item, unrelated to this session's work — no new information this
+   handover, still routed to the owner/manager, not re-actioned here.
 
-## 6. Precise next steps (successor #18 runbook)
+## 6. Precise next steps (successor #19 runbook)
 
 Manager herds from w1:p7; report at each numbered boundary or if blocked.
 
-1. **Re-verify §1 ground truth live** before touching anything — do not trust this
-   file's timestamps.
-2. **Item 2 — Q1c interim hero qualifiers.** README "Three measured numbers" section +
-   `docs/index.md:17` synthetic-baseline caveat. Run a cold-reader pass via
-   `/doc-clarity-review` on the touched pages before calling it done (root CLAUDE.md §
-   "Cold-reader pass on user-facing surfaces").
-3. **Item 3 — `.playwright-mcp/audit-03..08*` droppings sweep.** 6 files confirmed
-   present this session (gitignored, all dated 2026-07-12): `audit-03-landing-narrow-
-   viewport.png`, `audit-04-confluence-reference.png`, `audit-05-first-run.png`,
-   `audit-06-token-economy.png`, `audit-07-git-layer.png`, `audit-08-filesystem-
-   narrow.png`. Note: `.playwright-mcp/` also holds many OTHER unrelated files (older
-   console logs, page snapshots, hero screenshots dating back to April) — those are
-   OUT OF SCOPE for this item; verify nothing depends on the named 6, then `rm` only
-   those 6.
-4. **Item 4 — `/gsd-cleanup` archival cascade.**
-5. **Item 5 — ORCHESTRATION.md progressive-disclosure size split + CONSULT-DECISIONS.md
-   archival rider.** `CONSULT-DECISIONS.md` confirmed this session at 53,778 chars / 400
-   lines (vs the ~20k progressive-disclosure guideline). **RECONCILE THIS PHILOSOPHY
-   CONFLICT FIRST, before executing:**
-   - The `decision-procedures` skill (`.claude/skills/decision-procedures/SKILL.md`
-     line 147) states the ledger is **"bounded, NOT append-only: the ledger holds only
-     OPEN / live decisions — DELETE an entry on close / implementation / supersession;
-     `git log` / `git show` is the archive (reversible)."**
-   - The manager's rider (per the outgoing coordinator's report, not independently
-     re-confirmed by this handover's author against a manager transcript) says
-     move-older-entries-to-`.planning/archive/` instead.
-   - These are two different archival philosophies (delete-relying-on-git-history vs.
-     move-to-archive-file). **Confirm with the manager (w1:p7) which to apply before
-     executing item 5** — do not default to either silently.
-6. **Do not drain the reality-check-arc intakes** (v0.15.0 or otherwise) beyond
-   tag-blockers — that arc is not owner-ratified for defect-fixing lanes yet.
-7. **At each queue-item boundary, or if blocked, report to the manager (w1:p7)** — do
-   not silently continue past a boundary without a checkpoint.
-8. **Relieve past ~100k own-context tokens at the next clean wave boundary** — write and
-   commit a fresh `.planning/SESSION-HANDOVER.md` (REPLACE, not append) naming successor
-   #19, following this same §3 template.
+1. **Re-verify §1 ground truth live** before touching anything — `git rev-parse --short
+   HEAD`, `git status --porcelain`, `git log --oneline -8`, `git rev-list --left-right
+   --count HEAD...origin/main`, and `gh run list --branch main --limit 5` for CI state.
+   Do not trust this file's timestamps.
+2. **Coordinate with the manager (w1:p7) FIRST, before pushing anything:**
+   (a) status of Arc D ratification (§1 fact 2 / §5) — is it still pending, or did the
+   owner confirm since this handover was written?
+   (b) push order/timing for the 3 owner-ruling commits (`8eccb65`/`d01d8f6`/`1644d48`)
+   relative to item 2's 3 commits — they are linearly stacked and will push together;
+   (c) whether #19 or the manager runs the eventual push.
+3. **Clear item 2's docs-alignment block** — from the **top-level coordinator's own
+   shell only** (this is orchestration-shaped work per `.planning/CLAUDE.md`, cannot be
+   delegated into a subagent):
+   ```
+   /reposix-quality-refresh docs/index.md
+   /reposix-quality-refresh README.md
+   ```
+   This rebinds exactly the 22 drifted rows (§4) and mints 1–2 new catalog-refresh
+   commits (adds to the top of the stack — do not squash into item 2's existing 3
+   commits). Confirm `alignment_ratio` back to parity with `origin/main`'s 0.7589 (or
+   better) and the pre-push `docs-alignment` walk exits 0 before considering item 2
+   push-ready.
+4. **When the manager greenlights (per step 2), push the stack**, then run `python3
+   quality/runners/run.py --cadence post-push --persist` and confirm
+   `code/ci-green-on-main` (P0) reads green. **Never open the next item over a red
+   main.**
+5. **Item 3 (EXPANDED per Q8, §5).** `.playwright-mcp/audit-03..08*.png` (6 files,
+   confirmed present) — verify nothing depends on them, then `rm` only those 6 (note:
+   `.playwright-mcp/` holds many unrelated older files, out of scope). Repo-root
+   `audit-01/02.png` — confirmed ABSENT this handover; confirm with the manager whether
+   the addendum reference is stale before treating this half as a no-op.
+6. **Item 4 — `/gsd-cleanup` archival cascade.**
+7. **Item 5 — ORCHESTRATION.md progressive-disclosure size split (27,391 chars) +
+   CONSULT-DECISIONS.md trim (53,778 chars).** Philosophy conflict is RESOLVED (§5):
+   **DELETE closed/superseded entries outright, do NOT create `.planning/archive/`
+   copies** — git history is the archive, per the owner's Q5/Q7 ruling and the
+   `decision-procedures` skill's own documented doctrine. A final one-line confirm-ping
+   to the manager is still reasonable given this touches planning infrastructure, but
+   do not block on it the way the prior handover did.
+8. **Do not drain the reality-check-arc intakes** (v0.15.0 or otherwise) beyond
+   tag-blockers until Arc D is confirmed ratified (§1 fact 2, §5) — that arc is not yet
+   owner-ratified for defect-fixing lanes.
+9. **File the gate-message-accuracy noticing (§5 item 3)** into
+   `.planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md` — keep it terse given the file
+   is already over the size guideline.
+10. **At each queue-item boundary, or if blocked, report to the manager (w1:p7)** — do
+    not silently continue past a boundary without a checkpoint.
+11. **Relieve past ~100k own-context tokens at the next clean wave boundary** — write
+    and commit a fresh `.planning/SESSION-HANDOVER.md` (REPLACE, not append) naming
+    successor #20, following this same §3 (of `ORCHESTRATION.md`) template.
