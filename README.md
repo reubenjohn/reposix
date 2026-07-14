@@ -20,6 +20,8 @@ and `git` on real workflows — no MCP tool schemas, no custom CLI.
 
 ## Three measured numbers
 
+*Interim figures — `8 ms` and `27 ms` are simulator-measured, pending live-backend re-measurement; `89.1%` is measured against a synthesized MCP-tool-catalog baseline, not a live MCP transcript.*
+
 - **`8 ms`** — read one issue from the local cache after first fetch ([`docs/benchmarks/latency.md`](docs/benchmarks/latency.md)).
 - **`27 ms`** — `reposix init` cold bootstrap against the simulator (soft threshold `500 ms`).
 - **`89.1%`** — input-context-token reduction vs a synthesized MCP-tool-catalog baseline for the same task, measured in [`docs/benchmarks/token-economy.md`](docs/benchmarks/token-economy.md) (v0.7 token-economy benchmark, recalibrated to real Anthropic tokenization in v0.10.0; the architectural argument is unchanged in v0.9.0). The MCP comparison fixture is synthesized from public Atlassian Forge tool surfaces — see the artifact for methodology.
