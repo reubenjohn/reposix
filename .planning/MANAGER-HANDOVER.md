@@ -65,14 +65,18 @@ does reposix work itself. Keep this file lean; git history is the archive.
   formula==crates.io-max; crates.io auto-published on merge) — fixed window-aware at
   `970d466` (successor #14), CI green re-confirmed, THEN tagged. Full arc:
   CONSULT-DECISIONS Rulings #2/#3/#4 + RETROSPECTIVE v0.14.0 + intake part-04.
-- **SUCCESSOR MANAGER'S FIRST ACTIONS:** (1) verify the `release.yml` run on tag
-  `v0.14.0` (in_progress at rotation, started 01:16Z) concluded SUCCESS — multi-platform
-  assets + installer URLs + brew formula refresh; if RED → immediate fix-first lane
-  (release is half-public). NOTE: it runs on the TAG ref — the monitor's `--branch main`
-  CI check does NOT cover it. (2) Spot-check install/release gates go steady-state green
-  on the next runs. (3) TaskStop monitor `bu1jqyeic`, re-arm your own. (4) Workhorse pane
-  w1:p5 is IDLE (successor #14 complete, report verified) — launch the post-tag workhorse
-  when ready (queue below), fresh `/clear` FIRST.
+- **ROTATION-#6 SESSION UPDATE (2026-07-14, mid-session):** All successor first-actions
+  DONE. release.yml tag run SUCCESS (5 platform archives + installers + SHA256SUMS on
+  releases/latest; crates.io 0.14.0) — v0.14.0 fully public. THEN a post-release
+  regression arc, now CLOSED GREEN @ `8e2aae5` (all 5 workflows, manager-watched):
+  quality-post-release went RED because P106 (804eedc+c4f1261, 07-12) hand-minted
+  PASSes the runner's F-K4b congruence check rightly rejects → **MANAGER RULING #5
+  (Option A, ledgered 05aa23c)**: honest bounded fix (03e7a6f — honest emission for
+  fail-loud 01/02/04; example-05 asserts reworded to truth) + v0.15.0 intake for the
+  F-K4b container-tautology redesign + example-05 deeper fix (3775075); NO waivers,
+  F-K4b untouched → last red was example-04 TIMEOUT-BUDGET (unused apt toolchain in
+  container SETUP; trimmed + 300→600s @ 8e2aae5). Workhorse #15 relieved (~143k),
+  #16 relieved (~100k, handover ffb9d25), **#17 LIVE on the queue**.
 - **MANAGER RULING #2 (E2/ADR valve, 2026-07-13): litmus non-idempotency = DEFER;
   tag proceeds.** The ADR-010 RBF-LR-04 inline fan-out pushes the PRE-write client
   tree — the mirror never converges to SoT after a push (executed proof, intake
@@ -101,7 +105,7 @@ does reposix work itself. Keep this file lean; git history is the archive.
   DELETED. Item 7 = RESOLVED-DEFER (owner-waived CREATE-recovery RBF-LR-03 — flag
   VERBATIM in the READY-TO-TAG report); 8 OPEN intakes route v0.15.0, none
   tag-blocking (+ new rows from the diagnosis/fix lanes, all routed).
-- **Manager monitor:** task `bu1jqyeic` (60s poll; ORIGIN-MOVED / BLOCKED /
+- **Manager monitor:** task `bjsloa9qo` (60s poll; ORIGIN-MOVED / BLOCKED /
   IDLE-STABLE / one-shot STALL / CI-RED). Incoming manager: TaskStop it, re-arm your
   own (script recoverable via TaskStop output or git history of this file).
 - **Ops lessons (rotation #3):** commit the manager-handover refresh BEFORE launching
@@ -123,13 +127,19 @@ does reposix work itself. Keep this file lean; git history is the archive.
 - **OWNER RULING (2026-07-13, `b773c04`): fix-first.** Tag-blocking product bugs
   default to FIX BEFORE TAG — no owner consult needed unless the fix is architectural
   ("this was something you didn't need my input on"). Calibrate future escalations UP.
-- **Post-tag queue (NOW ACTIVE — next workhorse charter):** ⓪ GSD-tracked cursor
-  refresh (STATE.md/PROJECT.md still read "v0.14.0 pending" — milestone is shipped);
-  ① v0.13.0 tag sequence (OWNER PRE-TAG ACTIONS, v0.13.0 ROADMAP § Workstream A →
-  same READY-TO-TAG stop; manager cuts); ② Q1c interim hero qualifiers (README "Three
-  measured numbers" + index.md:17 synthetic-baseline caveat);
-  ③ `.playwright-mcp/audit-03..08` droppings sweep; ④ `/gsd-cleanup` archival cascade
-  (v0.14.0 tag unblocks it); ⑤ ORCHESTRATION.md >100% size split.
+- **Post-tag queue (LIVE, workhorse #17):** ⓪ DONE (ff7be56 — cursor de-staled, 4 new
+  noticings routed to v0.15.0 intake, CI green + post-push cadence PASS);
+  ① RE-SCOPED — the original "v0.13.0 tag sequence" was STALE: v0.13.0/v0.13.1 were
+  ALREADY tagged+released 07-07/07-08 (release.yml runs green; #17 caught it, manager
+  corroborated). Item 1 is now make_latest preventive hardening ONLY (v0.13.0-era
+  release.yml lacks --latest handling; a future back-tag could steal releases/latest
+  from v0.14.0 and 404 installers — executed proof required, no tag cut in this item)
+  + riders: Workstream-C prose de-stale, PROJECT.md truth banner (wholesale PROJECT.md
+  re-anchor stays deferred to /gsd-new-milestone); ② Q1c interim hero qualifiers
+  (README "Three measured numbers" + index.md:17 synthetic-baseline caveat);
+  ③ `.playwright-mcp/audit-03..08` droppings sweep; ④ `/gsd-cleanup` archival cascade;
+  ⑤ ORCHESTRATION.md >100% size split + RIDER: archive CONSULT-DECISIONS.md entries
+  older than current milestone (~54k vs 20k guideline; manager pre-approved).
 - **Reality-check audit (2026-07-12): LANDED at `8e36e62`** —
   `.planning/milestones/audits/2026-07-12-reality-check.md` (verbatim vs the owner bak,
   manager-diff-verified). Owner decided §5 Q1 (live MCP re-measurement FUNDED; FUSE-era
