@@ -129,17 +129,19 @@ does reposix work itself. Keep this file lean; git history is the archive.
   ("this was something you didn't need my input on"). Calibrate future escalations UP.
 - **Post-tag queue (LIVE, workhorse #17):** ⓪ DONE (ff7be56 — cursor de-staled, 4 new
   noticings routed to v0.15.0 intake, CI green + post-push cadence PASS);
-  ① RE-SCOPED — the original "v0.13.0 tag sequence" was STALE: v0.13.0/v0.13.1 were
-  ALREADY tagged+released 07-07/07-08 (release.yml runs green; #17 caught it, manager
-  corroborated). Item 1 is now make_latest preventive hardening ONLY (v0.13.0-era
-  release.yml lacks --latest handling; a future back-tag could steal releases/latest
-  from v0.14.0 and 404 installers — executed proof required, no tag cut in this item)
-  + riders: Workstream-C prose de-stale, PROJECT.md truth banner (wholesale PROJECT.md
+  ① DONE (re-scoped then closed @ 6dc47a3, CI green): the original "v0.13.0 tag
+  sequence" was STALE — v0.13.0/v0.13.1 already tagged+released 07-07/07-08 (#17
+  caught it, manager corroborated). Landed instead: make_latest hardening (370310d —
+  release.yml computes highest published semver, passes --latest=true|false explicitly
+  on create+edit; hazard PROVEN by executed steal-demo, proof artifact committed) +
+  riders (Workstream-C de-stale, PROJECT.md truth banner; wholesale PROJECT.md
   re-anchor stays deferred to /gsd-new-milestone); ② Q1c interim hero qualifiers
   (README "Three measured numbers" + index.md:17 synthetic-baseline caveat);
   ③ `.playwright-mcp/audit-03..08` droppings sweep; ④ `/gsd-cleanup` archival cascade;
-  ⑤ ORCHESTRATION.md >100% size split + RIDER: archive CONSULT-DECISIONS.md entries
-  older than current milestone (~54k vs 20k guideline; manager pre-approved).
+  ⑤ ORCHESTRATION.md >100% size split + RIDER (CORRECTED after #17's provenance
+  flag): trim CONSULT-DECISIONS.md per decision-procedures doctrine — DELETE closed
+  entries, git history IS the archive; do NOT create .planning/archive copies (the
+  manager's earlier "move to archive/" wording was wrong; ~54k vs 20k guideline).
 - **Reality-check audit (2026-07-12): LANDED at `8e36e62`** —
   `.planning/milestones/audits/2026-07-12-reality-check.md` (verbatim vs the owner bak,
   manager-diff-verified). Owner decided §5 Q1 (live MCP re-measurement FUNDED; FUSE-era
@@ -163,7 +165,12 @@ does reposix work itself. Keep this file lean; git history is the archive.
   (5) herdr: a digit/letter alone answers menus; long `agent send` needs a second
   Enter after ~2s; text after `❯` is often ghost-text — never treat it as pending
   input.
-- **Standing RAISEs for the owner:** INTERACTIVE-SUDO VM git upgrade to ≥2.34
+- **Standing RAISEs for the owner:** ORPHANED SCRATCH REPO from item-1's executed
+  steal-demo proof: `reubenjohn/reposix-scope-test-DELETEME` (private, archived; token
+  lacks delete_repo scope). Owner cleanup: `gh auth refresh -h github.com -s
+  delete_repo && gh repo delete reubenjohn/reposix-scope-test-DELETEME --yes`.
+  (Manager note: the scratch-repo probe was manager-authorized for the proof; the
+  leftover is flagged, not hidden.) INTERACTIVE-SUDO VM git upgrade to ≥2.34
   (t4 env floor, CONSULT `c27fd06`; afterwards run ONE creds-loaded
   `pre-release-real-backend` cadence so t4 executes its destructive scenario for
   real — product-FAIL there becomes a v0.15.0 fix-first item); ADR-010 RBF-LR-04
