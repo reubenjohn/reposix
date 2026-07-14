@@ -127,7 +127,16 @@ does reposix work itself. Keep this file lean; git history is the archive.
 - **OWNER RULING (2026-07-13, `b773c04`): fix-first.** Tag-blocking product bugs
   default to FIX BEFORE TAG — no owner consult needed unless the fix is architectural
   ("this was something you didn't need my input on"). Calibrate future escalations UP.
-- **Post-tag queue (LIVE, workhorse #17):** ⓪ DONE (ff7be56 — cursor de-staled, 4 new
+- **POST-TAG QUEUE CLOSED GREEN (2026-07-14, workhorses #17–#20; relief handover
+  61da012).** All six items landed + CI green manager-verified through 6f44acb:
+  hero-number interim qualifiers live (8 rows waived time-boxed to funded Q1
+  re-measurement, expiry 2026-08-15; 2 rows re-bound to real tests), droppings swept,
+  /gsd-cleanup archival cascade (21 phase dirs), ORCHESTRATION.md split <20k,
+  CONSULT-DECISIONS pruned to live entries. **PIPELINE PAUSED awaiting owner Arc-D
+  confirm** → then /gsd-new-milestone re-anchor (fold audit ADDENDUM rulings +
+  simplification mandate + per-milestone deep surveys) → v0.15 floor planning.
+  Workhorse seat w1:p5 idle after #20's wrap; launch #21 only after arc confirm.
+  Historical queue detail (superseded): ⓪ DONE (ff7be56 — cursor de-staled, 4 new
   noticings routed to v0.15.0 intake, CI green + post-push cadence PASS);
   ① DONE (re-scoped then closed @ 6dc47a3, CI green): the original "v0.13.0 tag
   sequence" was STALE — v0.13.0/v0.13.1 already tagged+released 07-07/07-08 (#17
