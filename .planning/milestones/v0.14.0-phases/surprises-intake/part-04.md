@@ -127,6 +127,73 @@ instead of rediscovering the env-gate gap independently each session).
 **STATUS:** OPEN — routed to v0.15.0. Cross-ref `GOOD-TO-HAVES-06` (`run.py`
 anti-bloat-cap split — land together) and `.planning/CONSULT-DECISIONS.md` Ruling #3.
 
+## 2026-07-13 | discovered-by: red-main hotfix (brew-formula window-aware gate) | severity: MEDIUM
+
+**Title:** `test_freshness_synth` (named "hermetic") is NOT hermetic — it drives the LIVE network-touching weekly runner.
+
+**What:** `quality/runners/test_freshness_synth.py` (the CI `runner unit tests
+(hermetic)` job) invokes `run.py --cadence weekly` as a subprocess, which executes LIVE
+P0 release gates (crates.io / GitHub releases / homebrew tap HTTP). Its `assert
+result.returncode == 0` therefore depends on real-world release/version state, not just
+the `[STALE]`-label logic it means to test. This very RED main (v0.14.0: crates.io at
+0.14.0 ahead of the still-0.13.1 homebrew formula during the in-flight release window)
+was an instance — the "hermetic" test flaked RED purely because `release/brew-formula-current`
+legitimately failed on live version drift, with nothing to do with the STALE labelling it
+exercises. Secondary hygiene smell noticed the same session: the test backs up / restores
+`subjective-rubrics.json` and re-serialises it with default `ensure_ascii=True` (§ →
+`§`); under a FULL-suite `pytest quality/runners/ -q` run this was observed leaving
+the working tree transiently dirty (an isolated single-test re-run restored cleanly, so
+likely a suite-ordering/race artifact rather than a hard leak — but a dirty-tree leak the
+`stop-on-dirty` hook would trip, and a re-encoding a careless `git add -A` could commit).
+
+**Why out-of-scope for this hotfix:** the urgent charter was green-main-through-a-push
+with NO product/test-code changes — rewriting a runner test's harness is a separate,
+deliberate change with its own review. Filing per OP-8 (not a `<1h` in-scope tweak, and
+touching the test risks masking the STALE-label coverage it does legitimately provide).
+
+**Sketched resolution:** make the hermetic test actually hermetic — exercise the runner
+against a synthetic/pinned catalog subset (or a cadence that excludes network-touching
+gates) so its exit code depends ONLY on the STALE-label logic, not live release state.
+Separately, pass `ensure_ascii=False` in the test's `json.dumps` path (or restore
+strictly from the byte-exact backup) so the backup/restore round-trip cannot re-encode
+`subjective-rubrics.json`.
+
+**STATUS:** OPEN — routed to v0.15.0. FILE only (explicitly out of scope for this urgent
+green-main fix).
+
+## 2026-07-13 | discovered-by: red-main hotfix (brew-formula window-aware gate) | severity: LOW-MEDIUM (systemic/recurring)
+
+**Title:** release-plz bump-merge publishes to crates.io BEFORE the v-tag is pushed — a coherence window that RE-OPENS on EVERY future release.
+
+**What:** The release pipeline has an intrinsic ordering race: merging a release-plz
+version-bump PR triggers the crates.io publish immediately, but the v-tag (which fires
+`release.yml`'s `upload-homebrew-formula` job) is pushed by the manager as a SEPARATE
+later step. Between those two events crates.io `max_version` is ahead of BOTH the
+homebrew formula AND the latest GitHub release. The two P0 rows
+`release/brew-formula-current` + `install/homebrew` used to hard-assert `formula ==
+crates.io max_version`, so they DEADLOCKED the pipeline they guard: the crates.io publish
+flips them RED → RED main blocks the tag → only the tag un-stales the formula.
+**RECURRENCE WARNING: every future release-plz bump-merge re-enters this exact window** —
+this is not a one-off, it is a structural property of the split publish/tag ordering.
+
+**Why out-of-scope for this hotfix (gate-tolerance half RESOLVED here):** the
+gate-tolerance half is DONE in this commit — the two rows are now window-aware (PASS when
+`crates.io == workspace version` AND `formula == latest GitHub release`; still FAIL when
+the formula is stale vs a COMPLETED release). The systemic pipeline note is filed for
+visibility; fully closing the race (making release-plz push the tag atomically with the
+publish, or gating the crates.io publish on the tag) is a release-infra change beyond a
+gates-only hotfix.
+
+**Sketched resolution:** primary mitigation is the window-aware predicate now shipped
+(`quality/gates/release/brew-formula-current.py`) + the manager pushing the v-tag
+PROMPTLY after the bump-merge to close the window fast. Longer-term, consider reordering
+the pipeline so the tag/GitHub-release and the crates.io publish are not separated by an
+unbounded manual step (atomic tag-then-publish, or publish-gated-on-tag), which would
+eliminate the window entirely rather than tolerating it.
+
+**STATUS:** OPEN — gate-tolerance half RESOLVED in this hotfix commit; systemic pipeline
+race routed to v0.15.0 release-infra review.
+
 ## Carried forward, still-unfiled from prior handovers (one-liners, LOW)
 
 Findings noticed in prior sessions but never written into a dedicated intake entry —
