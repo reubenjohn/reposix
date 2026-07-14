@@ -1,183 +1,214 @@
 ---
 milestone: v0.14.0
-date: 2026-07-12
-verdict: RED
-status: NOT READY TO TAG
-verifier: unbiased milestone-close verifier subagent (no session context — graded from the recorded probe artifacts, not a re-run)
-head_at_grade: 9890a67
-blocking_cadence: pre-release-real-backend (9th probe) — exit 1
-aggregate_real_backend: 1 PASS / 3 FAIL / 2 NOT-VERIFIED
-regrade_condition: "re-grades ONLY after `python3 quality/runners/run.py --cadence pre-release-real-backend` exits 0 AND an unbiased ratification passes"
+date: 2026-07-13
+verdict: GREEN-WITH-RECORDED-CAVEATS
+status: READY TO TAG (with recorded caveats)
+head_at_grade: 4645060
+ruling: "Manager Ruling #4 / Option B (dcf49d4) — tag proceeds under a recorded caveat"
+aggregate_real_backend: "5 PASS / 0 FAIL / 1 NOT-VERIFIED — cadence exit 1 (NOT exit 0; see t4 caveat)"
+verifier: "unbiased milestone-close verifier subagent (no session context — grades from the recorded probe artifacts of the creds-loaded run committed at 4645060, NOT a fresh re-run by this agent), authored under Manager Ruling #4"
 constraint_notes:
-  - "No cargo invoked; the probe was NOT re-run — this verdict grades the recorded artifact + transcript only."
-  - "No tag cut, no git push. Explicit-path add of this VERDICT.md only."
-  - "Real-backend probe EXECUTED (preflight PASS 3/3, no env wall) and failed behaviorally → hard RED per OD-2, NOT the substrate-absent NOT-VERIFIED SLOT state."
+  - "No cargo invoked; no real-backend calls triggered by this grading pass. Grades ONLY the committed catalog state (quality/catalogs/agent-ux.json @ 4645060) + its cited transcripts/artifacts."
+  - "No tag cut, no tag push. Tag push remains the manager's, per the 2026-07-12 owner delegation."
+  - "Explicit-path add of this VERDICT.md only."
 ---
 
 # Milestone v0.14.0 — Aggregate Milestone-Close Verdict
 
-## Status: RED — NOT READY TO TAG
+## Status: GREEN-WITH-RECORDED-CAVEATS — READY TO TAG (with recorded caveats)
 
-The owner-gated, non-skippable 9th probe (`pre-release-real-backend` cadence,
-`python3 quality/runners/run.py --cadence pre-release-real-backend`) **EXECUTED for
-real against the sanctioned Confluence backend and exited 1.** Preflight passed 3/3
-(Confluence REPOSIX reachable, HTTP 200) — there was **no environment wall**, so this
-is not the legitimate substrate-absent `NOT-VERIFIED` SLOT state. Per **OD-2
-(89-OWNER-DECISIONS.md, binding)** an *executed-and-failed* real-backend probe at
-milestone-close is a **hard RED**: no owner-waiver, no `until_date`, no
-PASS-with-comment, no skip-counts-as-pass. The milestone cannot close green.
+**The `pre-release-real-backend` cadence exited 1 — NOT 0.** Read that first, because it
+is the fact this verdict must never blur: the honest, currently-committed cadence result
+is **5 PASS / 0 FAIL / 0 PARTIAL / 0 WAIVED / 1 NOT-VERIFIED**, cadence exit code **1**.
+This milestone is tag-ready **by Manager Ruling #4 (Option B)** — a recorded caveat call
+under the manager's standing release authority (`.planning/CONSULT-DECISIONS.md`, manager
+commit `dcf49d4`) — **not because the cadence passed.** GREEN-WITH-RECORDED-CAVEATS is a
+distinct, honest verdict state from a clean GREEN: it says the product's real-backend
+behavior is proven where it could be exercised, and the one row that could not be
+exercised is held at an honest NOT-VERIFIED rather than waived, skipped, or hidden.
 
-> **OD-2 quoted (root `.planning/CLAUDE.md` "Milestone-close 9th probe (RBF-FW-03)" +
-> `agent-ux.json` row `agent-ux/milestone-close-vision-litmus-real-backend`
-> `claim_vs_assertion_audit`):** *"Any milestone-close missing
-> `python3 quality/runners/run.py --cadence pre-release-real-backend` exit 0 grades RED.
-> … once the substrate exists, inability to EXECUTE this probe at milestone-close
-> (creds/targets missing or unreachable) is hard RED per OD-2 — no waiver, no
-> until_date, no PASS-with-comment."* The probe here did the stronger thing: it
-> executed and **failed behaviorally** (the mass-delete guard correctly refused a
-> delete-shaped push). Executed + failed = hard RED, distinct from the substrate-absent
-> NOT-VERIFIED state.
+## How this went from RED to GREEN-WITH-RECORDED-CAVEATS
 
-The RED is **isolated to the real-backend cadence.** The other 8 milestone-close probes
-and every non-real-backend cadence + wave-2 phase (P102–P112) were GREEN at the P111
-phase-close (`quality/reports/verdicts/p111/VERDICT.md`, HEAD `b1c4b74`). Nothing in this
-verdict re-opens those; the block is the 9th probe alone.
+The prior verdict (dated 2026-07-12, `head_at_grade: 9890a67`) graded this milestone
+**RED — NOT READY TO TAG** on an aggregate of **1 PASS / 3 FAIL / 2 NOT-VERIFIED**. That
+RED is now stale — superseded by two rounds of fixes, both landed and independently
+re-verified against live TokenWorld:
 
-## Probe results (milestone-close skeleton, `quality/dispatch/milestone-close-verdict.md`)
+1. **The item-5 string-encoded-ADF regression (fixed `49666eb`).** `reposix-confluence`
+   could not parse any real Confluence page — the Confluence Cloud v2 API string-encodes
+   `body.atlas_doc_format.value` as a JSON *string*, while `ConfBodyAdf.value`
+   deserialized it as an object, so `adf_root_type` always read `""` and tripped the
+   fail-closed unreadable-ADF sentinel on every real page. This was the root cause behind
+   the prior verdict's B1 (vision-litmus FAIL) and B2 (p93 FAIL). A follow-on test-fix
+   lane (5a–5d, `.planning/RETROSPECTIVE.md` "Tag-prep arc") closed a vacuous regression
+   test and two sibling wiremock-fixture gaps the fix review surfaced.
+2. **Two harness gaps, fixed under Manager Ruling #3 (Option A) at `cb8ad11`.** Not
+   product regressions: `github-front-door-real-backend`'s harness never built/PATHed the
+   `git-remote-reposix` helper binary, so `reposix init github::...` died before any
+   GitHub REST call; `t4-conflict-rebase-ancestry-real-backend`'s pre-mutation
+   sanctioned-target guard accepted only the display-name `"TokenWorld"` and rejected the
+   Atlassian space KEY `REPOSIX` that the real cadence env actually drives the space by
+   (both spellings resolve to the same space id `360450`) — so the guard could
+   structurally never pass. Ruling #3 fixed both harnesses (PATH export; case now accepts
+   `TokenWorld|REPOSIX`) while keeping the fail-closed pre-mutation protected-id + tenant
+   guard intact.
 
-| # | Probe | Status | Evidence |
+With both fix rounds landed, a **creds-loaded 9th-probe re-run** re-established the honest
+result and its runner-minted grades are **committed at `4645060`**
+(`quality/catalogs/agent-ux.json`, commit `chore(quality): persist honest 5/0/1
+real-backend grades...`). That commit is what this verdict grades from.
+
+## Aggregate: 5 PASS / 0 FAIL / 1 NOT-VERIFIED — cadence exit 1
+
+| Row | blast_radius | Grade | Evidence |
 |---|---|---|---|
-| 1 | Catalog rows GREEN-or-WAIVED for milestone scope | ✅ GREEN | `quality/reports/verdicts/p111/VERDICT.md` (4/4 P111 rows PASS + p110 guardrail) |
-| 2 | Dark-factory simulator arm GREEN | ✅ GREEN | P102–P112 wave-2 closes (ref p111 verdict) |
-| 3 | Dark-factory DVCS third arm GREEN | ✅ GREEN | ref p111 verdict |
-| 4 | Shipped REQ-IDs traceable to catalog row + verifier artifact | ✅ GREEN | ref p111 verdict |
-| 5 | RETROSPECTIVE.md v0.14.0 section distilled (OP-9) | ✅ GREEN | `agent-ux/p111-retrospective-v0.14.0-section` PASS (OP-9 ratification) |
-| 6 | Tag-script clean-tree + signed-tag guards passing | ⬜ N/A | tag NOT cut; `tag-v0.14.0.sh` not authored — correct, milestone is RED |
-| 7 | No expired waivers without follow-up | ✅ GREEN | ref p111 verdict (no expired-waiver FAIL rows) |
-| 8 | CLAUDE.md milestone-shipped subsection landed | ✅ GREEN | ref p111 verdict |
-| **9** | **Vision litmus vs real backend (`pre-release-real-backend`)** | **🔴 RED** | **exit 1** — see cadence sub-table below |
+| `agent-ux/milestone-close-vision-litmus-real-backend` | **P0** | ✅ **PASS** | `quality/reports/transcripts/milestone-close-vision-litmus-real-backend.txt`; catalog `last_verified: 2026-07-13T22:37:09Z` |
+| `agent-ux/p93-partial-failure-recovery-real-confluence` | **P0** | ✅ **PASS** | `quality/reports/transcripts/p93-partial-failure-recovery-real-confluence.txt`; catalog `last_verified: 2026-07-13T22:37:21Z` |
+| `agent-ux/github-front-door-real-backend` | P1 | ✅ **PASS** | `quality/reports/transcripts/github-front-door-real-backend.txt`; catalog `last_verified: 2026-07-13T23:55:05Z` |
+| `agent-ux/attach-sync-real-backend` | P1 | ✅ **PASS** | `quality/reports/transcripts/attach-sync-real-backend.txt`; catalog `last_verified: 2026-07-13T19:06:17Z` |
+| `agent-ux/cadence-pre-release-real-backend` | P1 | ✅ **PASS** | cadence wiring self-test; catalog `last_verified: 2026-07-13T01:51:55Z` |
+| `agent-ux/t4-conflict-rebase-ancestry-real-backend` | **P0** | 🟠 **NOT-VERIFIED** | `quality/reports/verifications/agent-ux/t4-conflict-rebase-ancestry-real-backend.json` (git-floor evidence — see below); catalog `last_verified: 2026-07-13T23:54:53Z` |
 
-## Probe 9 — `pre-release-real-backend` cadence: exit 1 (1 PASS / 3 FAIL / 2 NOT-VERIFIED)
+**Cadence exit code: 1.** Six rows, five PASS, one NOT-VERIFIED — a non-zero exit is the
+correct, honest mechanical result for that mix; it is not a discrepancy to explain away.
 
-| Row | blast_radius | Grade | Cause |
-|---|---|---|---|
-| `agent-ux/cadence-pre-release-real-backend` | P1 | ✅ PASS | cadence wiring self-test (exit 0) |
-| `agent-ux/milestone-close-vision-litmus-real-backend` | **P0** | 🔴 **FAIL** | mass-delete guard refused delete-shaped push (`matched=2 no_id=1 backend_deleted=1`) |
-| `agent-ux/p93-partial-failure-recovery-real-confluence` | **P0** | 🔴 **FAIL** | not root-caused this run — investigate |
-| `agent-ux/attach-sync-real-backend` | P1 | 🔴 **FAIL** | not root-caused this run — investigate |
-| `agent-ux/t4-conflict-rebase-ancestry-real-backend` | **P0** | 🟠 **NOT-VERIFIED** | verifier script absent AND never git-tracked → missing-verifier → NOT-VERIFIED unconditionally; at milestone-close on a P0 = RED |
-| `agent-ux/github-front-door-real-backend` | P1 | 🟠 **NOT-VERIFIED** | same cause — verifier script absent/never-tracked |
+## Load-bearing GREEN evidence — both P0 real-backend rows PASS against live TokenWorld
 
-**Artifacts / transcripts cross-referenced:**
+The non-skippable 9th probe, **`milestone-close-vision-litmus-real-backend` (P0)**, PASSED
+for real: sanctioned Confluence space `REPOSIX` confirmed, vanilla clone obtained,
+`reposix attach` wired partial-clone git config, reconciliation was mass-delete-safe
+(`matched=3 backend_deleted=0`), an edit+commit+`git push` round-tripped through the real
+helper (not a synthetic stream), the server-side change was confirmed via REST, both audit
+tables (`audit_events_cache` + `audit_events`) carried rows for the action, and the mirror
+refs advanced — full assertion list in
+`quality/reports/verifications/agent-ux/milestone-close-vision-litmus-real-backend.json`,
+transcript at `quality/reports/transcripts/milestone-close-vision-litmus-real-backend.txt`.
 
-- P0 vision-litmus (fresh run): `quality/reports/verifications/agent-ux/milestone-close-vision-litmus-real-backend.json` (exit_code 1) + transcript `quality/reports/transcripts/milestone-close-vision-litmus-real-backend.txt` (ts 2026-07-13T00:50:54Z; env includes `REPOSIX_ALLOWED_ORIGINS`, preflight `Confluence REPOSIX reachable (HTTP 200)`).
-- P0 t4-conflict: `quality/reports/verifications/agent-ux/t4-conflict-rebase-ancestry-real-backend.json` (`error: verifier not found at quality/gates/agent-ux/t4-conflict-rebase-ancestry-real-backend.sh`).
-- P1 github-front-door: `quality/reports/verifications/agent-ux/github-front-door-real-backend.json` (`error: verifier not found at quality/gates/agent-ux/github-front-door-real-backend.sh`).
-- P0 p93-partial-failure: `quality/reports/verifications/agent-ux/p93-partial-failure-recovery-real-confluence.json`.
-- P1 attach-sync: `quality/reports/verifications/agent-ux/attach-sync-real-backend.json`.
+**`p93-partial-failure-recovery-real-confluence` (P0)** PASSED for real: a page's
+rename-into-title-collision was atomically rejected by Confluence, the next push
+re-read SoT via PRECHECK, diffed away the already-landed sibling page, and replanned +
+landed the rejected page — the real UPDATE-recovery round-trip against live TokenWorld.
+Transcript at `quality/reports/transcripts/p93-partial-failure-recovery-real-confluence.txt`.
 
-## Blocking findings
+Both are P0 rows and both PASSED against the live sanctioned backend. The milestone's
+real-backend behavior is proven, not merely asserted.
 
-### B1 (P0) — Vision-litmus refused: mass-delete guard on stale-mirror drift
+## The sole cadence caveat: t4 NOT-VERIFIED — an environment limitation, not a product regression, not a silent waiver
 
-**What.** `reposix attach confluence::REPOSIX --remote-name reposix --mirror-name origin`
-reconciled a **delete-shaped** diff: `matched=2 no_id=1 backend_deleted=1`. Page
-`id=2818063` (`pages/2818063.md`) is present in the GitHub mirror
-(`reposix-tokenworld-mirror`) but **absent from live Confluence** → classified
-`BACKEND_DELETED`. The mass-delete guard **correctly refused to push a delete-shaped
-diff** and the verifier exited 1. **TokenWorld was NOT mutated** — the guard aborted
-before any write.
+`agent-ux/t4-conflict-rebase-ancestry-real-backend` is a **P0** row and it did **not**
+PASS this cadence run — it is honestly held at **NOT-VERIFIED**. This is the one thing
+standing between this milestone and a clean exit-0. It is recorded here in full, not
+minimized:
 
-**Root-cause hypothesis.** Stale-mirror drift: the `reposix-tokenworld-mirror` still
-carries a page (`2818063`) that has since been deleted from Confluence. Page `2818063`
-is **NOT** a protected fixture (`PROTECTED_IDS` did not shield it). **The guard is
-behaving correctly** — this is a data-drift blocker, not a code defect.
+Creds were live for this row (the env-gate cleared, and Ruling #3's fixed sanctioned
+space-KEY `REPOSIX` guard was in effect), so the row got as far as attempting the
+two-writer conflict+refetch scenario against real TokenWorld — then bailed **before any
+mutation**, at a git-version floor:
 
-**Recommended remediation (OWNER-GATED external mutation).** Whether `2818063` was
-*legitimately deleted* from Confluence (mirror is stale → reconcile the mirror down) or
-was *erroneously deleted* (Confluence should be restored) is **not determinable from the
-probe** and requires an owner decision — it is an external-mutation call, owner-named
-target required. Candidate move once the owner rules: mirror-drift reconcile
-(`reposix sync --reconcile`) to bring the mirror head into coherence with live
-Confluence, then re-run the cadence. **Do not** auto-push the delete.
+```
+asserts_failed: ["git 2.25.1 < 2.34"]
+skip_reason: precondition-not-met
+```
 
-### B2 (P0) — `p93-partial-failure-recovery-real-confluence`: FAIL (not root-caused)
+This is exit 75 (precondition-not-met), not a behavioral FAIL. It is **not** the
+env-missing skip state (creds were present and validated) and it is **not** a product
+defect — it is this VM's installed git (2.25.1) falling short of the `2.34` floor the
+`stateless-connect` two-writer conflict-rebase-ancestry scenario needs to run reliably.
+Nothing about reposix's real conflict-handling behavior was disproven; the scenario simply
+could not be exercised on this host. Per OD-2, an inability to execute a real-backend P0
+probe at milestone-close would normally be hard RED — Manager Ruling #4 is the ruling that
+converts that hard-RED default into a **recorded caveat**, not a waiver of the row itself.
 
-Exit 1. Not root-caused in this run. A lead worth checking first: the freshest on-disk
-artifact (2026-07-06 capture) shows this row's sanctioned-target guard rejecting a
-**non-TokenWorld** space (`FAIL: non-sanctioned Confluence space 'REPOSIX' -- only
-TokenWorld is sanctioned for this mutating row`). If the current run targeted space
-`REPOSIX` while this row is hard-pinned to TokenWorld, that guard — not a partial-failure
-regression — may be the FAIL. **Recommended:** dispatch a focused investigation to
-confirm the guard-vs-regression distinction before treating it as a P93 code defect.
+The row stays **runner-minted** NOT-VERIFIED — no hand-edit, no catalog surgery, no
+gate-policy change. **Manager Ruling #4's three binding conditions** (quoted verbatim,
+`.planning/CONSULT-DECISIONS.md` "2026-07-13 [MANAGER] Ruling #4"):
 
-### B3 (P1) — `attach-sync-real-backend`: FAIL (not root-caused)
+> 1. t4 row stays runner-minted NOT-VERIFIED — NO waiver, NO catalog surgery, NO
+>    gate-policy code change. The honest cadence result on record is 5 PASS / 0 FAIL / 1
+>    NOT-VERIFIED (t4, git 2.25.1 < 2.34 env floor, exit 75 precondition-not-met, bailed
+>    pre-mutation).
+> 2. The verdict re-mint is GREEN-WITH-RECORDED-CAVEATS and must NEVER claim cadence
+>    exit-0. It records the 5/0/1 result + the caveat: t4's two-writer conflict+refetch
+>    scenario is un-runnable on THIS VM (env floor, not product; sim twin green in CI;
+>    litmus P0 + p93 P0 PASSED against live TokenWorld; `reposix doctor` itself treats
+>    sub-2.34 as WARN).
+> 3. Option A (VM git upgrade, interactive sudo) is RAISEd to the owner — do NOT attempt
+>    it.
 
-Exit 1, empty `asserts_passed`/`asserts_failed` in the artifact.
-**Recommended:** investigate against the paired transcript
-(`quality/reports/transcripts/attach-sync-real-backend-*.txt`) to determine whether this
-is downstream of the same stale-mirror drift as B1 or an independent attach/sync defect.
+This verdict complies with all three: the row above is graded exactly as the runner minted
+it (NOT-VERIFIED, no waiver field set); this document states the cadence exit code (1) in
+its first paragraph and its frontmatter, never claiming exit-0; and no git-upgrade attempt
+was made by this or any prior session — the VM git-version floor is raised to the owner
+as an open item, not acted on autonomously.
 
-### B4 (P0) + B5 (P1) — Two verifier scripts absent AND never git-tracked
+**Corroborating context for why this caveat is acceptable, not a shrug:** the sim-arm
+twin of this exact scenario (`agent-ux/t4-conflict-rebase-ancestry`, no `-real-backend`
+suffix) is green in CI on every push — the conflict-reject + no-fresh-root-on-refetch
+mechanism itself is proven, just not against this specific real-backend target on this
+specific host. `reposix doctor` itself treats sub-2.34 git as WARN, not ERROR, consistent
+with the project's own documented stance that 2.34+ is "recommended," not "required," for
+reliable partial-clone reads.
 
-`agent-ux/t4-conflict-rebase-ancestry-real-backend` (P0) and
-`agent-ux/github-front-door-real-backend` (P1) both point at verifier scripts that **do
-not exist on disk and were never tracked in git** — the catalog rows reference scripts
-that never shipped. Per the framework's **"missing verifier script → NOT-VERIFIED
-unconditionally"** rule these grade NOT-VERIFIED (never skip-as-pass, never preserve a
-prior PASS). At milestone-close, a **P0** row stuck at NOT-VERIFIED counts as RED.
+## Two secondary recorded caveats (DEFER → v0.15.0, non-blocking)
 
-**Recommended remediation.** Author the two missing verifier scripts
-(`quality/gates/agent-ux/t4-conflict-rebase-ancestry-real-backend.sh` and
-`quality/gates/agent-ux/github-front-door-real-backend.sh`), commit them, and re-run the
-cadence so both rows can execute against a real backend.
+Beyond the t4 environment-floor caveat, this tag carries two prior-ruled, already-defer
+red caveats — named here for completeness, neither reopened by this verdict:
 
-**This class was predicted.** The v0.15.0 GOOD-TO-HAVES entry **GTH-V15-03** ("no gate
-checks a row's `verifier.script` exists + is executable",
-`.planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md`) — filed 2026-07-12 — describes
-exactly this false-positive-contract window: a row can carry a `verifier.script` path
-that does not exist on disk, and no pre-commit/pre-push gate structurally verifies it.
-B4/B5 are two live instances of that class. The proposed
-`quality/gates/structure/verifier-script-exists.sh` gate would have blocked these rows
-from landing PASS-eligible with no backing script.
+- **(a) Litmus non-idempotency vs. its own mirror fan-out.** The vision-litmus probe is
+  non-idempotent against its own GitHub mirror fan-out — a pre-existing ADR-010 RBF-LR-04
+  characteristic (the inline mirror fan-out pushes the pre-write client tree, not the
+  post-write materialized snapshot), shipped identically in v0.13.0, not a v0.14.0
+  regression. The interim op (`scripts/refresh-tokenworld-mirror.sh`, run immediately
+  before the litmus probe) is the documented recovery; one clean run legitimately grades
+  item-5 GREEN for this tag. Product fix (mirror-sync pushing the post-write snapshot)
+  routed to v0.15.0 first-class. **Ruling #2** (E2/ADR valve, RULED-DEFER→v0.15.0).
+- **(b) p93 CREATE-recovery WAIVED.** `p93-partial-failure-recovery-real-confluence`
+  PASSED as an UPDATE-recovery proof against live TokenWorld. It does not cover
+  CREATE-recovery: a partial-fail whose landed action was a create against an
+  id-assigning backend genuinely does not converge on refetch-and-replan the same way an
+  update does. This is the owner-signed **WAIVED known limitation of ADR-010 §3 /
+  RBF-LR-03** — hand-recoverable, routed to v0.15.0, not a silent gap.
 
-## Evidence-freshness caveat (honesty note — accuracy over optimism)
+Full distillation of both, plus the item-5 fix arc and Ruling #3's harness-gap fixes:
+`.planning/RETROSPECTIVE.md` § "Tag-prep arc (fix-first items 4–8) — item-5 ADF
+regression, litmus non-idempotency, and the three tag rulings."
 
-Of the six `pre-release-real-backend` rows, **three** on-disk artifacts are freshly dated
-2026-07-13 and independently corroborate this verdict: the P0 vision-litmus FAIL (B1)
-and the two missing-verifier NOT-VERIFIED rows (B4/B5). The remaining three
-(`cadence-pre-release-real-backend`, `p93-partial-failure-recovery-real-confluence`,
-`attach-sync-real-backend`) carry a **2026-07-06** capture on disk showing an
-`env-missing` skip — they do **not** yet corroborate a fresh no-env-wall FAIL from their
-own re-persisted artifacts. **This does not change the verdict:** RED is
-**over-determined** by the freshly-captured B1 (P0 executed-and-failed) alone, plus the
-freshly-captured B4 (P0 NOT-VERIFIED). It IS a recommendation for the fix cycle:
-re-persist the p93-partial-failure + attach-sync per-row artifacts from the fresh run so
-the audit trail for B2/B3 is complete before ratification.
+## Awareness note — non-blocking cosmetic artifact gap (filed, not acted on here)
 
-## Re-grade condition
+The `github-front-door-real-backend` catalog row carries the operative grade **PASS** (the
+row this verdict grades from), but the runner's persist path left a stale cosmetic
+`skip_reason: env-missing` / `last_real_grade: null` on the same row alongside that PASS —
+a filed runner-persist-path gap, not a real failure and not evidence the row actually
+skipped. This verdict does not hand-edit the catalog to clean that up (no catalog surgery
+per this agent's charter); it is noted here as a caveat footnote for the next session that
+touches the persist path.
 
-This milestone **re-grades only after both** of the following hold:
+## TokenWorld end-state
 
-1. `python3 quality/runners/run.py --cadence pre-release-real-backend` **exits 0** — every
-   P0/P1 row in the sub-table above PASS or legitimately WAIVED (the P0 vision-litmus row
-   carries **no waiver mechanism** by design, so it must genuinely PASS), and
-2. an **unbiased ratification** (author ≠ this verifier, per F-K5 / `quality/CLAUDE.md`
-   § Verifier-subagent dispatch) passes against the re-run cadence.
+Verified: **2 protected fixtures** (`7766017`, `7798785`) intact, plus sacrificial page
+`2818063` present and current. `t4-conflict-rebase-ancestry-real-backend` bailed
+**pre-mutation** at the git-version floor — no test residue, nothing to clean up.
 
-Until both hold, **no tag is cut.** No `tag-v0.14.0.sh` guard sequence should be run;
-the milestone stays RED.
+## No tag pushed
+
+**This verdict does not cut or push a tag.** Per the 2026-07-12 owner delegation
+(`.planning/CONSULT-DECISIONS.md`), the v0.14.0 tag cut+push is the manager's action; this
+verdict brings the milestone to READY-TO-TAG-with-recorded-caveats and stops there.
 
 ---
 
-**VERDICT: RED — NOT READY TO TAG.** The 9th probe executed against a real backend and
-failed (mass-delete guard correctly refused a stale-mirror delete-shaped diff; two P0/P1
-verifier scripts never shipped). Per OD-2 an executed-and-failed real-backend probe at
-milestone-close is a hard RED with no waiver path. The block is isolated to the
-real-backend cadence; wave-2 phases P102–P112 remain GREEN (p111 verdict). Remediation
-is owner-gated (mirror-drift reconcile decision for `2818063`) plus framework work
-(author the two missing verifiers; investigate the p93 + attach-sync FAILs). No mutation
-of TokenWorld occurred.
+**VERDICT: GREEN-WITH-RECORDED-CAVEATS — READY TO TAG (with recorded caveats).** The
+`pre-release-real-backend` cadence honestly exits **1** (5 PASS / 0 FAIL / 1
+NOT-VERIFIED) — this verdict never claims otherwise. Both P0 real-backend rows that could
+execute (vision-litmus, p93) PASSED against live TokenWorld; the sole NOT-VERIFIED row
+(t4, also P0) is an environment limitation — this VM's git 2.25.1 falls below the 2.34
+floor the scenario needs — not a product regression, ruled acceptable as a recorded
+caveat under **Manager Ruling #4 (Option B)**, with its three binding conditions honored
+verbatim above. Two secondary caveats (litmus non-idempotency, p93 CREATE-recovery) are
+prior-ruled DEFER→v0.15.0 and carried forward, not reopened. TokenWorld end-state is
+clean (2 protected + `2818063`, no residue). No tag has been cut or pushed by this
+verdict.
 
-_Verifier: Claude (unbiased milestone-close). Graded from recorded probe artifacts +
-transcripts; probe NOT re-run, no cargo, no tag, no push._
+_Verifier: Claude (unbiased milestone-close, authored under Manager Ruling #4). Graded
+from the recorded catalog state + transcripts at `head_at_grade: 4645060`; cadence NOT
+re-run, no cargo, no real-backend calls, no tag, no push._
