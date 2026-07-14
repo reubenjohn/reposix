@@ -142,23 +142,13 @@ does reposix work itself. Keep this file lean; git history is the archive.
   flag): trim CONSULT-DECISIONS.md per decision-procedures doctrine — DELETE closed
   entries, git history IS the archive; do NOT create .planning/archive copies (the
   manager's earlier "move to archive/" wording was wrong; ~54k vs 20k guideline).
-- **OWNER RULINGS (2026-07-14, live session — supersede the pending-Q list below):**
-  **Q3 DECIDED**: Show-HN launch is GATED on a walkable REAL-BACKEND journey (GitHub
-  minimum), not sim-first. **Q9 DECIDED**: keep the v0.15→v0.25 ~6-milestone scale
-  ("room to squeeze in enhancements, cleanups and pivots"). **Q5+Q7 DECIDED, modified
-  from manager rec**: DELETE legacy/historical files outright — NO keep-with-banners;
-  owner: "I hate how much legacy and bloat is there across md files in docs,
-  .planning/ — let's not make it worse — very confusing! Explicitly plan
-  simplification of the project docs." Docs/planning SIMPLIFICATION is a first-class,
-  explicitly-planned goal of the roadmap. **Q4 funded** (subjective-runner Task
-  dispatch). **Q8 confirmed** (delete droppings incl. root audit-01/02).
-  **NEW CALIBRATION MANDATE (owner)**: assume ONE deep survey pass surfaces only ~10%
-  of latent work; expect ~10 deep survey passes over the roadmap to converge —
-  recurring deep surveys are a standing practice baked into milestone planning, not a
-  one-time audit. **Arc ratification: owner asked what the arc choice actually decides
-  (order/emphasis, since content overlaps) — manager clarifying; proposed recording is
-  Arc D (ratchet-first) + the simplification mandate as a strengthened bloat-purge
-  component; not yet confirmed.**
+- **OWNER RULINGS (2026-07-14): Q3/Q4/Q5/Q7/Q8/Q9 DECIDED + a 10-survey calibration
+  mandate — canonical record is the ADDENDUM in
+  `.planning/milestones/audits/2026-07-12-reality-check.md` (owner chose that home).
+  Headlines: real-backend launch gate; DELETE legacy files, no banners — docs/planning
+  simplification is a first-class roadmap goal; keep ~6-milestone scale; one survey
+  pass ≈ 10% of latent work, ~10 passes to convergence. Arc D recording proposed,
+  owner confirm still pending.**
 - **Reality-check audit (2026-07-12): LANDED at `8e36e62`** —
   `.planning/milestones/audits/2026-07-12-reality-check.md` (verbatim vs the owner bak,
   manager-diff-verified). Owner decided §5 Q1 (live MCP re-measurement FUNDED; FUSE-era
