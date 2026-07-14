@@ -1,5 +1,7 @@
 # reposix
 
+> **Status (2026-07-14):** v0.14.0 shipped + Latest (2026-07-14); v0.13.0/v0.13.1 already released; `release.yml` make_latest hardening in progress to protect future back-tags; wholesale re-anchor pending at `/gsd-new-milestone`.
+
 ## What This Is
 
 A git-backed FUSE filesystem that exposes REST APIs (issue trackers, knowledge bases, ticketing systems) as a POSIX directory tree, so autonomous LLM agents can use `cat`, `grep`, `sed`, and `git` instead of MCP tool schemas. Targets the "dark factory" agent-engineering pattern: when no human reads the code, agents need substrates that match their pre-training distribution.

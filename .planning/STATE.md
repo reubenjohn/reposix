@@ -24,10 +24,10 @@ workstreams:
   workstream_c:
     milestone: v0.14.0
     milestone_name: Wave-2 hardening
-    status: fix-first-items-4-8-pending  # P102-P112 (11/11) + out-of-band P113 GREEN; D2+B3 CLOSED GREEN 2026-07-13 (e11ba96); owner ruled FIX-FIRST 2026-07-13 (CONSULT-DECISIONS.md) — items 4-8 (attach-lineage design ready, adf fail-closed, litmus re-green, docs, p93 CREATE reassess, §4 mechanicals) precede the aggregate tag
+    status: shipped-green  # v0.14.0 SHIPPED + Latest 2026-07-14 (crates.io 0.14.0, GitHub release 'Latest'); 11/11 phases GREEN (P102-P112 + out-of-band P113); b773c04 RED-main CLOSED @ 8e2aae5. Nothing tag-blocked.
     phases_total: 11  # P102-P112 (P102 D2 hard gate; P103-P109 carried HIGHs + cheap wins; P110-P111 OP-8 +2 reservation; P112 OD-4 stub)
     phases_completed: 11  # P102-P112 ALL GREEN (P111 milestone-close grade c259718; P112 OD-4 launch-readiness scope stub landed) + out-of-band P113 GREEN
-    next_phase: fix-first-4-8  # OWNER fix-first items 4-8 (attach-lineage 4a + adf fail-closed 4b -> litmus re-green -> docs -> p93 CREATE reassess -> Sec4 mechanicals); see .planning/SESSION-HANDOVER.md
+    next_phase: none  # v0.14.0 SHIPPED; post-tag queue items 0-5 in progress. Wholesale re-anchor pending at post-tag /gsd-new-milestone (P112 OD-4 launch-readiness stub).
     blocks_tag: false  # the v0.14.0 tag is owner-cut; orchestrator does not push
 ---
 
@@ -43,16 +43,14 @@ workstreams:
 > queued post-tag items, and the superseded Workstream B (v0.13.2, QUEUED) narrative,
 > live in `.planning/STATE-history.md`.
 
-### Workstream C — v0.14.0 wave-2 hardening — 11/11 phases GREEN, but TAG BLOCKED
+### Workstream C — v0.14.0 wave-2 hardening — 11/11 phases GREEN — SHIPPED + Latest
 
-> **READY-TO-TAG: NO — BLOCKED on FIX-FIRST implementation, not a pending owner decision
-> (2026-07-13).** The owner RULED (`.planning/CONSULT-DECISIONS.md` 2026-07-13 [OWNER]
-> "fix-first calibration for tag-blocking product bugs"): tag-blocking product bugs default
-> to fix-first, no consult needed unless the fix turns architectural. D2 + B3 are CLOSED
-> GREEN (`e11ba96`). Remaining: OWNER fix-first items 4-8 — live runbook
-> `.planning/SESSION-HANDOVER.md` (supersedes the B1–B5 cursor below, which is historical
-> record only). The milestone `VERDICT.md` stays RED — do NOT touch it; no tag script
-> authored yet.
+> **SHIPPED + Latest (2026-07-14).** v0.14.0 is tagged, released, and marked "Latest" on
+> GitHub (crates.io 0.14.0); the b773c04 RED-main incident is CLOSED (fix @ `8e2aae5`).
+> Nothing is tag-blocked. The `make_latest` back-tag hazard for FUTURE releases is handled
+> in post-tag queue item 1 (`release.yml` `--latest` hardening,
+> `.planning/quick/260713-mlh-make-latest-hardening/`). The B1–B5 tag-remediation cursor
+> below is superseded by the ship + b773c04 closure — historical record only.
 
 Phase: **P112** (OD-4 launch-readiness SCOPE-BUT-DO-NOT-START stub) — LANDED. **11/11
 phases complete** as of 2026-07-12. **P102** (D2 self-safe dark-factory hardening
@@ -69,42 +67,24 @@ OD-4 launch-readiness pillars (asciinema hero demo, CI-verified honest headline 
 install-path excellence, Show-HN positioning kit), one line each, marked **DO-NOT-START** and
 deferred to a post-tag `/gsd-new-milestone` session — zero implementation, no verifier dispatch
 (lightweight owner ack suffices per ROADMAP P112).
-The remaining v0.14.0 item is the **owner-cut aggregate `v0.14.0` tag** — **owner-cut (NOT
-the orchestrator's)**, gated on owner ratification of
-`quality/reports/verdicts/milestone-v0.14.0/VERDICT.md` + the non-skippable owner-gated 9th probe
-(`pre-release-real-backend`, reads NOT-VERIFIED honestly when env unset). Do NOT push the tag.
+The aggregate `v0.14.0` tag was subsequently CUT — **v0.14.0 SHIPPED + Latest 2026-07-14**
+(crates.io 0.14.0, GitHub release "Latest"); the b773c04 RED-main incident is CLOSED (fix
+@ `8e2aae5`). No tag pending.
 
-**Tag-remediation lane cursor (2026-07-13) — BLOCKED on 2 E4 owner decisions:**
-
-- **B1 (vision-litmus):** the operational `reposix sync --reconcile` fix from the brief is
-  **PROVEN INSUFFICIENT** — it heals only the local cache, NOT the external GitHub mirror repo
-  content. Litmus still exits 1 (matched=3, backend_deleted=0, but push rejected: mirror
-  `pages/2818063.md` v1 vs backend v7 lost-update deadlock). **Awaiting owner decision on the
-  mirror-refresh path.** Evidence:
-  `.planning/milestones/v0.14.0-phases/evidence/B1-mirror-reconcile-FINDINGS-2026-07-13.md`;
-  [SELF] ledger commit `a617740`.
-- **B2 (p93 row):** harness self-reject CLEARED (space pinned to TokenWorld, commit `311d7fe`)
-  — but that UNMASKED a PRE-EXISTING never-green failure. Row
-  `agent-ux/p93-partial-failure-recovery-real-confluence` was catalog-first scaffold
-  (NOT-VERIFIED, `last_verified: null`); first-ever credentialed run FAILS. Root cause:
-  CREATE-recovery is non-convergent against an id-assigning backend (Confluence assigns page
-  ids; recovery re-CREATEs a landed page → unique-title reject; sim twin green because it models
-  UPDATE-recovery). Bounded fix = HARNESS rewrite + teardown + correct the lying catalog assert
-  (<1h); underlying product gap FILED (exceeds <1h). **Awaiting owner decision:** bless the
-  harness rewrite (ship over the product gap) vs treat CREATE-recovery non-convergence as a
-  tag-blocking product defect. Pointers:
-  `.planning/quick/260712-phc-author-two-missing-pre-release-real-back/B2-p93-DIAGNOSIS.md`
-  (commit `526d697`); SURPRISES-INTAKE commit `ffb93ba`.
-- **B4 / B5:** remain CLOSED. **B3 (attach-sync):** NOT re-run (cadence blocked behind B1/p93).
-- **Cleanup owed:** 2 orphan `p93 smoke A` test pages left in TokenWorld — to be swept by
-  whichever fix lane adds teardown.
+> **Superseded (2026-07-14) — historical record.** The B1–B5 tag-remediation cursor that
+> formerly sat here (B1 mirror-refresh + B2 p93 CREATE-recovery "awaiting owner decision";
+> B3/B4/B5 status; 2 owed orphan `p93 smoke A` TokenWorld page sweeps) is moot for the tag
+> now that v0.14.0 shipped. Any residual product gaps + the owed teardown are tracked in the
+> v0.15.0 intake (`.planning/milestones/v0.15.0-phases/SURPRISES-INTAKE.md` /
+> `GOOD-TO-HAVES.md`); prior evidence + diagnosis pointers live in
+> `.planning/SESSION-HANDOVER.md` + git history.
 
 ## Current Focus
 
 **Active milestones (SERIAL per OD-3 — A then C then B, per OD-4 resequencing):**
 
 - **Workstream A — v0.13.0 extended.** **CLOSED GREEN 2026-07-05 (P78–P97, 20/20 phases).** Shipped P78–P88 2026-05-01; extended 2026-05-08 with P89–P97 (real-backend frictions); milestone-close verdict at `quality/reports/verdicts/milestone-v0.13.0/VERDICT.md`. Tag v0.13.0 landed; v0.13.1 onboarding hotfix (P98–P101) additionally SHIPPED 2026-07-07 (tag `04640d5`). ROADMAP at `.planning/milestones/v0.13.0-phases/ROADMAP.md`.
-- **Workstream C — v0.14.0 wave-2 hardening.** COMPLETE — **11/11 phases GREEN** as of 2026-07-12 (P102–P112 + out-of-band P113; see § Workstream C above). P111 milestone-close graded GREEN (`c259718`); **P112** OD-4 launch-readiness scope stub LANDED (DO-NOT-START; deferred to a post-tag `/gsd-new-milestone` session). **TAG BLOCKED (2026-07-13):** the aggregate v0.14.0 tag is NOT ready — blocked on 2 E4 owner-decision escalations (B1 mirror-refresh + p93 CREATE-recovery); milestone VERDICT stays RED. See § Workstream C above for the B1–B5 tag-remediation cursor. ROADMAP at `.planning/milestones/v0.14.0-phases/ROADMAP.md`.
+- **Workstream C — v0.14.0 wave-2 hardening.** **SHIPPED + Latest 2026-07-14** — **11/11 phases GREEN** (P102–P112 + out-of-band P113; see § Workstream C above). v0.14.0 tagged/released (crates.io 0.14.0, GitHub release "Latest"); b773c04 RED-main incident CLOSED (@ `8e2aae5`). P112 OD-4 launch-readiness scope stub LANDED (DO-NOT-START; wholesale re-anchor deferred to a post-tag `/gsd-new-milestone` session). ROADMAP at `.planning/milestones/v0.14.0-phases/ROADMAP.md`.
 - **Workstream B — v0.13.2 cross-link-fidelity.** QUEUED behind workstream C (this OD-4 resequencing) AND the not-yet-scoped launch-readiness milestone. Original placeholder range P98–P107 shifts again when eventually replanned (renumber-on-insertion convention). ROADMAP at `.planning/milestones/v0.13.2-phases/ROADMAP.md`.
 
 **Last shipped milestone:** v0.12.1 (closed 2026-04-30). Verdict GREEN at `quality/reports/verdicts/milestone-v0.12.1/VERDICT.md` (commit 9ef348e).
@@ -132,7 +112,7 @@ the orchestrator's)**, gated on owner ratification of
 
 ## Session Continuity
 
-Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**Workstream C — v0.14.0 wave-2 hardening COMPLETE, 11/11 phases GREEN (P102–P112 + out-of-band P113) as of 2026-07-12 — P111 milestone-close graded GREEN (c259718); P112 OD-4 launch-readiness scope stub LANDED (DO-NOT-START, deferred to a post-tag /gsd-new-milestone session). ONLY remaining v0.14.0 item: the owner-cut aggregate v0.14.0 tag — owner-gated; STOP at the tag boundary, do NOT push it**" (see § Workstream C). Workstream A (v0.13.0-extension) is CLOSED GREEN historically (P78–P97, tag landed); the owner pre-tag checklist below is retained for record. Workstream B (v0.13.2) stays queued behind workstream C per OD-3/OD-4.
+Frontmatter (above) is the machine-readable cursor. Resume via `/gsd-resume-work`; current live cursor is "**Workstream C — v0.14.0 SHIPPED + Latest 2026-07-14 (crates.io 0.14.0, GitHub 'Latest'); 11/11 phases GREEN (P102–P112 + out-of-band P113); b773c04 RED-main CLOSED @ 8e2aae5. No tag pending. Post-tag queue items 0-5 in progress; wholesale re-anchor deferred to a post-tag /gsd-new-milestone session (P112 OD-4 launch-readiness stub)**" (see § Workstream C). Workstream A (v0.13.0-extension) is CLOSED GREEN historically (P78–P97, tag landed); the owner pre-tag checklist below is retained for record. Workstream B (v0.13.2) stays queued behind workstream C per OD-3/OD-4.
 
 Top-level session handover: `.planning/SESSION-HANDOVER.md` (whole-session rotation handover for session 7e2a4cf2, 2026-07-04/05; distinct from per-phase relief handovers under `.planning/phases/`).
 
