@@ -87,6 +87,33 @@
 - **What:** `README.md` uses "MCP" in at least two places ("no MCP tool schemas", "synthesized MCP-tool-catalog baseline") but never expands it to "Model Context Protocol" anywhere on the page — a cold reader unfamiliar with the acronym has no in-page anchor. `docs/index.md` does spell it out ("Model Context Protocol (MCP)"). Pre-existing; NOT introduced by the hero-qualifier edit.
 - **Fix-sketch:** one-line first-use expansion in README — change the first "MCP" occurrence (the "no MCP tool schemas" line in the elevator pitch) to "Model Context Protocol (MCP)", leaving later uses as the bare acronym. Trivial (<5 min); bundle into any README-touching phase or a docs-hygiene sweep.
 
+## From the L0 relief handover #19→#20 queue (2026-07-14, doc-alignment refresh session)
+
+### GTH-V15-14 — pre-push docs-alignment block message cites the ratio, not the real blocking cause
+- **Source:** successor #18 (2026-07-14) · **Severity: LOW-MEDIUM** · STATUS: OPEN.
+- **What:** `walk.sh` stderr printed `alignment_ratio 0.4407 below floor 0.5000`, but the committed ratio was ~0.6994–0.7589 (above floor) — the real block was the hard-block-on-any-unwaived-blocking-STATE rule, not the ratio. Misleading diagnostic.
+- **Fix-sketch:** make the block message name the blocking row-STATE(s), not (or in addition to) the ratio.
+
+### GTH-V15-15 — doc-alignment grader compute-vs-assert reliability gap
+- **Source:** successor #19, reinforced this session (2026-07-14) · **Severity: MEDIUM** · STATUS: OPEN.
+- **What:** A grader false-bound `bench_token_economy.py` to a hero-number row by conflating "gate COMPUTES/PRINTS X" with "gate ASSERTS X" (`return 0` unconditionally); separately a prior grader left `git-2-34-requirement` MISSING_TEST by only inspecting the cited test, never grepping `src/` for the existing `git_version_2_*` doctor unit tests that DO bind it.
+- **Fix-sketch:** harden `.claude/skills/reposix-quality-doc-alignment/prompts/grader.md` — (a) only BIND a row if the test fails when the number drifts, (b) grep `src/` unit tests, not just the currently-cited test.
+
+### GTH-V15-16 — `plan-refresh` under-reports drift when invoked cold (before a `walk`)
+- **Source:** successor #19 (2026-07-14) · **Severity: LOW** · STATUS: OPEN.
+- **What:** `plan-refresh <doc>` only returns rows a PRIOR `walk` already persisted as stale — invoked cold it under-reported (3 rows vs. 21 from a subsequent `walk`).
+- **Fix-sketch:** one-line note in the refresh playbook/prompt — "run `walk` first if invoked outside a pre-push block."
+
+### GTH-V15-17 — doc-alignment `status` hides that MISSING_TEST rows are waived
+- **Source:** this session (2026-07-14) · **Severity: LOW** · STATUS: OPEN.
+- **What:** `status` prints `claims_missing_test 8` with no signal all 8 carry ACTIVE waivers (non-blocking) — the loud `WAIVED` lines only surface in `walk`, not `status`.
+- **Fix-sketch:** add a `waived_active` counter to the `status` block.
+
+### GTH-V15-18 — 16 pre-existing "cites out-of-eligible-file" coverage warnings
+- **Source:** this session (2026-07-14) · **Severity: LOW** · STATUS: OPEN.
+- **What:** doc-alignment rows citing e.g. `crates/reposix-core/src/backend.rs`, the `docs/architecture.md`/`docs/demo.md` redirect stubs, and `.planning/` archives are silently dropped from coverage accounting. Not caused by any recent change; flag for the coverage-dimension owner.
+- **Fix-sketch:** audit whether the eligible-file allowlist should include these, or whether the rows should re-cite eligible files.
+
 ## Back-pointer note (bidirectional trail — INTENTIONALLY SKIPPED)
 
 Task step 5 offered to append a `→ landed: v0.15.0-phases/GOOD-TO-HAVES.md` back-pointer to each
