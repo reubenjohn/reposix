@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0](https://github.com/reubenjohn/reposix/compare/reposix-remote-v0.13.1...reposix-remote-v0.14.0) - 2026-07-14
+
+### Fixed
+
+- *(attach)* seed refs/reposix/origin/main at mirror merge-base + init-style refspec (item 4a)
+- *(106-01)* lost-update guard — shared cursor no longer gates conflict detection
+- *(106-01)* lost-update guard — shared cursor no longer gates conflict detection
+- *(105)* emit deleteall — deletions propagate (CR-01)
+- *(105)* helper import writes private ref ns — RBF-LR-03 ref-lock
+- *(105)* fast-import chains onto tracking tip — RBF-LR-03 rebase-recovery
+- *(104-02)* backend keeps raw project slug; sanitize only at cache path
+
+### Other
+
+- *(attach)* failing repro for attach-lineage bug (DP-2 repro-first, red before fix)
+- *(105)* gate+unit cover deletion + no-op guard (WR-01/WR-02)
+
 ## [0.13.1](https://github.com/reubenjohn/reposix/compare/reposix-remote-v0.13.0...reposix-remote-v0.13.1) - 2026-07-08
 
 ### Fixed
