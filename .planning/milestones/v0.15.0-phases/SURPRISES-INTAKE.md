@@ -42,3 +42,23 @@
   (b) **example-05 real-runtime-error deeper fix.** Today example-05 exercises only the PRE-EMPTIVE sparse-checkout pattern + the source-constant presence; the REAL runtime blob-limit error (`BLOB_LIMIT_EXCEEDED_FMT` firing on a `command=fetch` RPC that exceeds `REPOSIX_BLOB_LIMIT`) is exercised only by `quality/gates/agent-ux/dark-factory.sh`. Make example-05 drive the real runtime error + recovery cycle (needs the helper to take the per-RPC blob-limit path on the example's fetch — cf. the v0.10 stateless-connect-only read path noted in `examples/05-blob-limit-recovery/expected-output.md`), so the example teaches the genuine observe-error → `git sparse-checkout set` → retry loop rather than a pre-emptive stand-in.
 
 **STATUS:** OPEN
+
+## 2026-07-13 20:30 | discovered-by: b773c04 RED-main arc (SESSION-HANDOVER successor #16 noticing, routed by item-0 cursor refresh) | severity: MEDIUM
+
+**What:** `quality/gates/docs-repro/container-rehearse.sh` backgrounds the ephemeral sim (`&`) and relies on a bash `EXIT` trap to tear it down. When the runner's `subprocess.run(timeout=...)` SIGKILLs the harness — exactly what happened in the original b773c04 CI failure ("Terminate orphan process pid 15322") — the EXIT trap NEVER fires, so the sim orphans on host port 7878. A later container row can then bind-fail on 7878, or silently `curl` a stale sim from a prior run, producing a false pass or a confusing flake. This is the robustness gap underneath the sim-readiness race already noted on back-to-back local runs.
+
+**Why out-of-scope for the discovering session:** The b773c04 fix-first charter was scoped to greening the RED-main gate via the timeout-budget edit (drop unused apt packages + bump `timeout_s` 300→600); hardening the harness process lifecycle is a separate quality-gate-script change (touches `quality/gates/docs-repro/container-rehearse.sh` internals, which the reality-check arc is NOT owner-ratified to mutate for defect lanes) and belongs to a v0.15.0 drain phase, not a RED-main hotfix.
+
+**Sketched resolution:** Make the sim teardown SIGKILL-proof rather than trap-dependent — wrap the `docker run` in an internal `timeout` strictly shorter than the row's catalog `timeout_s` so the harness reaps its own children before the outer SIGKILL fires, AND/OR start the sim in its own process group (`setsid` / `set -m`) and kill the whole group on teardown so an orphaned sim cannot survive a hard kill. Pair with a pre-`docker run` port-7878-free wait so a stale sim is detected (and fail-loud) rather than silently reused.
+
+**STATUS:** OPEN
+
+## 2026-07-13 20:30 | discovered-by: b773c04 RED-main arc (SESSION-HANDOVER successor #16 noticing, routed by item-0 cursor refresh) | severity: MEDIUM (verify — provenance unconfirmed, not a proven defect)
+
+**What:** `quality-post-release.yml` has no obvious `cargo build -p reposix-cli` step, yet `container-rehearse.sh` needs the pre-built `target/debug/reposix` binary host-mounted (`-v target:...:rw`, on PATH via `--network host`) — the examples run that binary, not an in-container build. Run 29302973970 SUCCEEDED, so the binary WAS present, but WHERE it came from (a cache restore? a prior-job artifact download? an unnamed/implicit build step?) is UNCONFIRMED. If provenance is an incidental cache hit rather than an explicit build, a cold runner (cache miss, no prior job) could silently degrade every `kind:container` docs-repro row to NOT-VERIFIED — the global-CLAUDE "never let a metric you don't watch decay" failure mode.
+
+**Why out-of-scope for the discovering session:** Confirming the binary provenance requires reading the `quality-post-release.yml` job graph + a live run's logs (~10 min) and possibly a workflow edit — orthogonal to the timeout-budget RED-main fix, and workflow-file mutation is outside the b773c04 charter. This is a "verify, don't assume" item: the row passed, but the guarantee is unproven, so it is filed rather than eager-fixed.
+
+**Sketched resolution:** Trace how `target/debug/reposix` reaches the `quality-post-release` runner (read the workflow + a run's step logs). If it is an implicit cache hit, add an explicit `cargo build -p reposix-cli` (or an `actions/download-artifact` from the release build) as a hard dependency of the container-rehearse step, so the container rows are provenance-guaranteed on a cold runner rather than silently NOT-VERIFIED. If an explicit step already exists, document it inline so the next reader does not re-open this question.
+
+**STATUS:** OPEN

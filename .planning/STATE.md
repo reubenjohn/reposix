@@ -1,9 +1,9 @@
 ---
 gsd_state_version: 1.0
 mode: serial-workstreams
-status: v0.13.1-shipped-v0.14.0-fix-first-items-4-8-pending
+status: v0.14.0-SHIPPED-public-b773c04-red-main-CLOSED-post-tag-queue-items-0-5-in-progress
 last_updated: "2026-07-13"
-last_activity: "2026-07-13 — v0.14.0 D2+B3 CLOSED GREEN at e11ba96; tag work = OWNER fix-first items 4-8 (attach-lineage + adf fail-closed → litmus re-green → docs → p93 CREATE reassess → §4 mechanicals to READY-TO-TAG). TokenWorld = 2 durable pages (7766017/7798785); B1 is neither RESOLVED nor OPEN — folded into fix-first item 4a (design ratified BOUNDED-ELEGANT-FIX, .planning/milestones/v0.14.0-phases/attach-lineage-fix-design.md). Live runbook: .planning/SESSION-HANDOVER.md."
+last_activity: "2026-07-13 — b773c04 RED-main blocker CLOSED: docs-repro timeout-budget fix landed @ 8e2aae5 (origin/main), CI run 29302967371 SUCCESS (all 15 jobs) + quality-post-release run 29302973970 SUCCESS. v0.14.0 fully SHIPPED + public (crates.io 0.14.0, GitHub release marked 'Latest'); fix-first arc DONE. Post-tag queue items 0-5 resumed by successor #17 (item 0 = this GSD cursor refresh). Live runbook: .planning/SESSION-HANDOVER.md."
 workstreams:
   workstream_a:
     milestone: v0.13.0
@@ -11,8 +11,8 @@ workstreams:
     status: closed-green  # v0.13.0-extension CLOSED GREEN with owner-gated caveats 2026-07-05 (milestone verdict quality/reports/verdicts/milestone-v0.13.0/VERDICT.md, verdict commit 390ce31, graded HEAD 3c6d72f)
     phases_total: 20  # P78-P97 (P78-P88 shipped + P89-P97 extension)
     phases_completed: 20  # P78-P97 (workstream A / v0.13.0-extension COMPLETE)
-    next_phase: P98  # v0.13.0 milestone CLOSED GREEN; awaiting owner pre-tag actions + L0 tag push; then workstream B (v0.13.2, P98+)
-    blocks_tag: true  # P97 GREEN so the tag is phase-ready, BUT the v0.13.0 tag push is L0/owner's (NOT the coordinator's) and gated on the OWNER PRE-TAG ACTIONS in § Workstream A
+    next_phase: P98  # v0.13.0 SHIPPED — tagged/released 2026-07-07 (commit 3423b18, "chore: release v0.13.0 (#68)"); v0.13.1 hotfix shipped 2026-07-08 (04640d5). No tag pending; workstream B (v0.13.2) queued behind workstream C per OD-4.
+    blocks_tag: false  # v0.13.0 tag SHIPPED 2026-07-07 (3423b18) — nothing tag-pending here
   workstream_b:
     milestone: v0.13.2
     milestone_name: Cross-link fidelity
