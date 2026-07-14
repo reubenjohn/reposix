@@ -1,311 +1,205 @@
-# SESSION-HANDOVER.md — item 2 refresh MECHANICALLY COMPLETE (`ebb13d3`), BLOCKED on owner waive-vs-fix decision; successor #20 resumes — 2026-07-14
+# SESSION-HANDOVER.md — post-tag queue items 0–5 ALL CLOSED green; CHARTER-COMPLETE handover — 2026-07-14
 
-Written by the **relief-handover-writer** on behalf of **workhorse successor #19** (L0
-orchestrator, pane w1:p5, herded by the manager in w1:p7). Relief reason: past ~140k
-own-context tokens at a clean wave boundary — item 2's docs-alignment refresh is
-mechanically COMPLETE and committed (all `STALE_DOCS_DRIFT` resolved), but the refresh
-honestly surfaced 10 pre-existing false-BOUND `MISSING_TEST` rows that now BLOCK the
-push; what remains is an owner/manager DECISION (waive vs. fix vs. defer) plus items
-3–5, all better done with fresh context. This **REPLACES** (does not append to) the
-prior `SESSION-HANDOVER.md` (successor #18→#19 charter — that charter is now discharged
-for item 2's refresh and re-issued here for successor #20 to get the waive-vs-fix steer
-and continue to items 3–5).
+Written by the **relief-handover-writer** on behalf of **workhorse successor #20** (L0
+orchestrator, pane w1:p5, herded by the manager in w1:p7). This is a **CHARTER-COMPLETE**
+handover, not a mid-wave relief: #20 closed all six items (0–5) of the post-tag queue
+this rotation, pushed twice, and confirmed CI green on main both times. This file
+**REPLACES** (does not append to) the prior `SESSION-HANDOVER.md` (successor #19→#20
+charter, blocked on the item-2 waive-vs-fix decision — that decision was made by the
+manager/owner and executed this rotation; the charter is now fully discharged).
 
-**Read order:** this file → §1 (verify live) → §6 (runbook) → dip into §2/§4/§5 as
-needed. **Guardrails:** do NOT touch `.planning/MANAGER-HANDOVER.md` — that is the
-MANAGER's own handover file (pane w1:p7), a separate document with a separate owner;
-this file governs only the L0 orchestrator seat. No tag push by any coordinator — the
-manager cuts tags, never L0. **Do NOT do git surgery (reset/rebase/reorder/amend) on
-`main`** — the owner-ruling commits stacked mid-branch are a live, separate owner's
-work; leave them exactly where they are.
+**Read order:** this file → §1 (verify live) → §6 (runbook, though it is short: there is
+no queued work) → dip into §2/§4/§5 as needed. **Guardrails unchanged:** do NOT touch
+`.planning/MANAGER-HANDOVER.md` — separate document, separate owner (the manager, pane
+w1:p7). No tag push by any coordinator — the manager cuts tags, never L0. **Do NOT do
+git surgery (reset/rebase/reorder/amend) on `main`.**
 
 ## 1. Ground truth (git) — VERIFIED LIVE this handover, do not trust staleness
 
 Re-run before doing anything else:
 ```
 git rev-parse --short HEAD && git status --porcelain && \
-  git log --oneline -15 && git rev-list --left-right --count HEAD...origin/main && \
-  gh run list --branch main --limit 3
+  git rev-list --left-right --count HEAD...origin/main && \
+  gh run list --branch main --workflow CI --limit 1
 ```
 **Verified independently by this handover-writer (2026-07-14):**
-- `HEAD` = `ebb13d3` (the docs-alignment refresh commit), tree **clean**
-  (`git status --porcelain` empty).
-- `git rev-list --left-right --count HEAD...origin/main` → **`8  0`** — local `main` is
-  **8 commits ahead, 0 behind**. `origin/main` = `aeefcea` (unchanged this session —
-  nothing has been pushed).
-- **CI confirmed GREEN on origin/main's current HEAD** (`aeefcea`) — `gh run list
-  --branch main --limit 3` shows the `CI` push run at `aeefcea` concluded `success`
-  (5m54s), plus `Docs` green on top. Nothing is broken on the pushed side; the gap is
-  entirely local-ahead.
+- `HEAD` = `6f44acb` (full: `6f44acbac211e94180c33e36cf6f6201f766a68a`), tree **clean**
+  (`git status --porcelain` empty — no output).
+- `git rev-list --left-right --count HEAD...origin/main` → **`0  0`** — local `main` is
+  **EVEN** with `origin/main` (no ahead, no behind). This handover commit you are about
+  to read about will put local **1 ahead** the instant it lands; the #20 orchestrator
+  pushes it immediately after, per this charter's instruction — do not treat a
+  post-commit "1 ahead" reading as drift.
+- **CI confirmed GREEN on `origin/main`'s current HEAD** — `gh run list --branch main
+  --workflow CI --limit 1` (cross-checked with `--json headSha,conclusion`) shows the
+  newest `CI` run (`29351652339`, completed 2026-07-14T16:55:45Z) has `headSha
+  6f44acbac2...` — an **exact match to local HEAD** — and `conclusion: success`.
+  Nothing is broken; local and remote are byte-identical and green.
 
-**The unpushed local stack, bottom → top (oldest first; do NOT reorder, drop, squash,
-or amend any of these — two different owners are stacked on one branch):**
+**Commits landed this rotation (#20), oldest → newest, both already pushed and
+CI-verified — nothing here is pending:**
 
-| Commit | Owner | Content (confirmed via `git show --stat`) |
-|---|---|---|
-| `06a52a0` | **#18 (item 2)** | `docs(hero): add interim/synthetic-baseline qualifiers` — README.md +2, docs/index.md +1/-1 |
-| `78e7ffc` | **#18 (item 2)** | `docs(260714-qhq): file GTH-V15-12 + complete hero-qualifiers quick` |
-| `49b1799` | **#18 (item 2)** | `docs(hero): extend interim qualifier to docs/index.md latency card` (cold-reader REVISE fix) |
-| `8eccb65` | **manager (NOT L0)** — `Claude Fable 5` co-author | `docs(planning): record owner rulings Q3/Q4/Q5+Q7/Q8/Q9 + 10-survey calibration mandate` — `.planning/MANAGER-HANDOVER.md` only |
-| `d01d8f6` | **manager (NOT L0)** | `docs(audit): record owner decisions Q3-Q9 + 10-survey calibration as addendum` — audit addendum only |
-| `1644d48` | **manager (NOT L0)** | `docs(planning): slim owner-rulings bullet to pointer` — `.planning/MANAGER-HANDOVER.md` only |
-| `49b44aa` | **#18→#19 relief handover** | prior `SESSION-HANDOVER.md` (now superseded by this file) |
-| `ebb13d3` (HEAD) | **#19 (item 2)** | `refresh(doc-alignment): re-grade 21 drifted rows in README.md + docs/index.md` — `quality/catalogs/doc-alignment.json` only |
+| Commit | Content |
+|---|---|
+| `d8aadda` | `waive(doc-alignment): time-box 8 interim hero-number rows to funded live MCP re-measurement` — 8 rows waived (reason: Q1 2026-07-12 funded re-measurement; expiry 2026-08-15; none P0), `dark-factory-regression` re-bound to both blob-limit + conflict-recovery tests, `git-2-34-requirement` bound (not waived) to the existing `git_version_2_25_is_warn_not_error` test. Item 2's push UNBLOCKED. |
+| (in the same push batch, pre-existing from #19/manager, now landed) | the item-2 doc-edit stack + owner-ruling recording commits — all part of the `aeefcea..d8aadda` push |
+| `a85b15c` | Item 3 close + intake filing: `GTH-V15-14`..`GTH-V15-18` filed (5 v0.15.0 good-to-haves) |
+| `8f2ad0c`, `49965d8` | Item 5: `ORCHESTRATION.md` 27,391→19,443 chars (progressive-disclosure split into new `ORCHESTRATION-REFERENCE.md`, §-numbering preserved); `CONSULT-DECISIONS.md` 53,778→5,019 chars (deleted ~19 closed entries per owner Q5/Q7 delete-outright ruling, kept the 1 open RBF-LR-03 directive) |
+| `6f44acb` (HEAD) | Item 4: `/gsd-cleanup` archival cascade — 21 phase dirs → `v0.13.0-phases/`/`v0.14.0-phases/` (280 files, 263 renames + 17 eager-fixed path-references), the 5 `999.x` dirs correctly SKIPPED (still-open backlog placeholders) |
+
+**Pushes this rotation, both CI-verified SUCCESS:**
+1. `aeefcea..d8aadda` — CI run `29347352830` SUCCESS, `code/ci-green-on-main` (P0) PASS.
+2. `d8aadda..6f44acb` — CI run `29351652339` SUCCESS, `code/ci-green-on-main` (P0) PASS
+   (this is the run independently re-verified live above).
 
 **Numbered facts the successor MUST know:**
-1. **Linear history ⇒ all-or-nothing push, unchanged from #19's inherited state.** The
-   item-2 commits (`06a52a0`/`78e7ffc`/`49b1799`), the manager's owner-ruling commits
-   (`8eccb65`/`d01d8f6`/`1644d48`), the #18→#19 handover (`49b44aa`), and #19's refresh
-   (`ebb13d3`) are all one linear stack. There is no way to push any of it without
-   pushing all of it, without forbidden git surgery.
-2. **The owner-ruling commits' push is STILL gated on Arc D ratification** (per the
-   audit addendum, `.planning/milestones/audits/2026-07-12-reality-check.md` ADDENDUM
-   section) — this handover-writer did not re-verify Arc D's status live; #20 must ask
-   the manager at the first checkpoint (§6 step 2), same as #19 was told to.
-3. **Item 2's refresh is now ALSO a gate on the push**, independent of Arc D: the
-   refresh resolved all `STALE_DOCS_DRIFT` but surfaced 10 `MISSING_TEST` rows, and
-   `MISSING_TEST` is itself a blocking walk state (`quality/gates/docs-alignment/
-   walk.sh:71`, confirmed this handover: `"exits non-zero on any blocking row state
-   (STALE_DOCS_DRIFT, MISSING_TEST, STALE_TEST_GONE, TEST_MISALIGNED,
-   RETIRE_PROPOSED)"`). **So even once Arc D clears, the push stays BLOCKED until the
-   10 `MISSING_TEST` rows are waived or fixed.** This is the open decision in §5/§6.
-4. **Item 2 substance (the hero-qualifier doc edits) is unchanged and still DONE** —
-   only the supporting catalog-refresh work changed this session. Full detail in §2/§5/§6.
+1. **All six post-tag queue items (0–5) are DONE.** Items 0–1 were closed by earlier
+   successors (#17/#18, pre-existing); item 2 (doc-alignment push, waive-vs-fix) closed
+   this rotation once the manager/owner ruled; items 3, 4, 5 closed this rotation. There
+   is no open queue item.
+2. **STATE.md's frontmatter cursor is STALE** — it still reads
+   `...post-tag-queue-items-0-5-in-progress` (see `.planning/STATE.md` line 4/6/115).
+   This is a **known, deliberately-deferred** cleanup, not an oversight: fixing it is
+   itself queued as #21's first action (fact 3 below), done via GSD not hand-edit.
+3. **#21's only concretely-scoped action is a cursor refresh**, done as a `/gsd-quick`
+   (same pattern as item 0, `260713-c0r-cursor-refresh/`) — mark the post-tag queue
+   CLOSED in `STATE.md`. This is small, mechanical, and does not require a manager
+   checkpoint to start, but report it at completion per the standing cadence (§3).
+4. **Everything else is genuinely idle.** No open gate, no open waiver clock relevant to
+   this rotation's work, no pending push, no pending decision. The only gating condition
+   on doing anything BEYOND the cursor refresh is the owner's "Arc D" confirmation
+   (fact 5).
+5. **Arc D (reality-check-arc ratification for defect-fixing lanes) is still the
+   standing gate on all NEW work** — `/gsd-new-milestone`, any new defect lane, or
+   draining OPEN intakes beyond forward-routing all wait on it. This handover-writer did
+   NOT re-poll Arc D's status live (out of scope for a ground-truth git/CI check); #21
+   must ask the manager (w1:p7) at its first checkpoint.
 
 ## 2. Wave/cycle state
 
 | Item | Artifact | State | Commit(s) |
 |---|---|---|---|
-| 0 — GSD cursor refresh + intake fold | quick `260713-c0r-cursor-refresh/` | DONE, pushed (`origin/main`) | `ff7be56` |
+| 0 — GSD cursor refresh + intake fold | quick `260713-c0r-cursor-refresh/` | DONE, pushed | `ff7be56` |
 | 1 — `make_latest` preventive hardening | quick `260713-mlh-make-latest-hardening/` | DONE, pushed, CI-verified green | `370310d`, `a5081a1`, `6dc47a3` |
-| 2 — Q1c interim hero qualifiers | README.md + docs/index.md, quick `260714-qhq-hero-qualifiers/` | Doc edits DONE + cold-reader REVIEWED (#18). Docs-alignment refresh MECHANICALLY COMPLETE (#19, `ebb13d3`) — all `STALE_DOCS_DRIFT` resolved, but 10 pre-existing `MISSING_TEST` rows surfaced and now block the push. **BLOCKED on owner/manager waive-vs-fix decision + Arc D + push-coord.** | `06a52a0`, `78e7ffc`, `49b1799`, `ebb13d3` |
-| — (manager's own owner-ruling recording — NOT an L0 queue item, listed for stack-topology context only) | `.planning/MANAGER-HANDOVER.md` + audit addendum | N/A (manager-owned); gates item 2's push per §1 fact 2 | `8eccb65`, `d01d8f6`, `1644d48` |
-| 3 — audit-droppings sweep (EXPANDED by Q8 ruling) | `.playwright-mcp/audit-03..08*.png` (confirmed present, 6 files) + repo-root `audit-01/02.png` (confirmed **ABSENT**, already-satisfied) | **NOT STARTED** | — |
-| 4 — `/gsd-cleanup` archival cascade | — | **NOT STARTED** | — |
-| 5 — ORCHESTRATION.md size split (27,391 chars) + CONSULT-DECISIONS.md trim (53,778 chars); philosophy RESOLVED (delete outright, no archive copies) | — | **NOT STARTED** | — |
+| 2 — Q1c interim hero qualifiers + doc-alignment refresh/push | README.md + docs/index.md + `quality/catalogs/doc-alignment.json` | **DONE, pushed, CI-verified green.** Manager/owner ruled waive-vs-fix this rotation: 8 hero-number rows WAIVED (time-boxed to 2026-08-15, reason = funded live MCP re-measurement Q1 2026-07-12), `dark-factory-regression` FIXED (re-bound to both constituent tests), `git-2-34-requirement` BOUND (cheap existing-test fix, not waived). Walk exits 0, `alignment_ratio` 0.7470. | `06a52a0`, `78e7ffc`, `49b1799`, `ebb13d3`, `d8aadda` |
+| 3 — audit-droppings sweep (Q8-expanded) | `.playwright-mcp/audit-03..08*.png` | **DONE.** 6 gitignored/untracked files deleted (real deletion, correctly no fabricated empty commit — nothing to commit for an untracked-file delete). Repo-root `audit-01/02.png` confirmed ABSENT (already-satisfied, Q8 fully closed). | — (no commit needed for the deletion itself); intake-filing commit `a85b15c` |
+| 4 — `/gsd-cleanup` archival cascade | 21 phase dirs → `v0.13.0-phases/` (17) + `v0.14.0-phases/` (4); 5 `999.x` dirs correctly left OPEN | **DONE, pushed, CI-verified green.** 280 files (263 `git mv` renames + 17 eager-fixed path-references in quality-gate scripts/STATE.md/runbook/ROADMAP/PROTOCOL that pointed at pre-move paths). | `6f44acb` |
+| 5 — doctrine-doc size split | `ORCHESTRATION.md` (27,391→19,443 chars) + new `ORCHESTRATION-REFERENCE.md` (13,163 chars); `CONSULT-DECISIONS.md` (53,778→5,019 chars, ~19 closed entries deleted per Q5/Q7 delete-outright ruling, 1 open RBF-LR-03 directive kept) | **DONE, pushed, CI-verified green.** §-numbering preserved across the split — no external `§N` pointer broke; fix-it-twice migrations (session-serialization→ORCH §2, fix-first→ORCH §11) verified present post-split. | `8f2ad0c`, `49965d8` |
 
-**Named-incident / diagnostic to read before touching item 2 again:** #19 ran
-`/reposix-quality-refresh docs/index.md` then `README.md` from the top level
-(orchestration-shaped, cannot be delegated — see `.planning/CLAUDE.md`). Dispatched
-Opus graders batched per-doc-segment (3 graders across the ~21-row wave — a deliberate
-ROI adaptation from the playbook's literal 1-Task-per-row; see §5 noticing on why). All
-real-feature rows rebound GREEN. 10 rows that were previously (and, per this refresh,
-incorrectly) `BOUND` on `origin/main` flipped to `MISSING_TEST` — this is a legitimate
-grading correction, not new drift the refresh introduced. Full row list and rationale
-in §5.
+**No named-incident / diagnostic pending for the next successor to read before acting**
+— unlike the #19→#20 handover, there is no open blocking decision. The one item worth
+re-reading before touching anything is fact 2/3 above (STATE.md cursor staleness is
+deliberate, not a bug).
 
 ## 3. Binding constraints (unchanged)
 
 - Reality-check arc is **NOT owner-ratified for defect-fixing lanes** — Arc D itself is
-  pending owner confirm (§1 fact 2). OPEN intakes (v0.15.0 or otherwise) route forward,
-  do NOT drain them now.
+  still pending owner confirm as far as this handover-writer verified. OPEN intakes
+  (v0.15.0 or otherwise, including the 5 new `GTH-V15-14..18` filed this rotation) route
+  forward, do NOT drain them until Arc D clears.
 - **ONE cargo invocation machine-wide** (prefer `-p <crate>`). Leaf isolation: `/tmp`
   clones, `cd` in the SAME Bash invocation, never the shared tree.
 - **Uncommitted = didn't happen.** Push per queue-item cadence → then
   `python3 quality/runners/run.py --cadence post-push --persist` → confirm
   `code/ci-green-on-main` (P0) green → **never proceed over a red main.**
 - You **route, don't work**: delegate opus (complex/security), sonnet (default), haiku
-  (mechanical); never fable at a leaf. Report to the manager (w1:p7) at each queue-item
-  boundary or when blocked. Relieve past ~100k own-context tokens (hard stop ~150k) at a
-  wave boundary — write+commit a handover first.
+  (mechanical); never fable at a leaf. Report to the manager (w1:p7) at each
+  queue-item/action boundary or when blocked. Relieve past ~100k own-context tokens
+  (hard stop ~150k) at a wave boundary — write+commit a handover first.
 - **No `--no-verify`. No tag push by any coordinator** — the MANAGER cuts tags, never
   the coordinator, even at READY-TO-TAG.
 - **Orchestration-shaped work runs at top-level, not under `/gsd-execute-phase`.**
-  `/reposix-quality-refresh` is the canonical example (`.planning/CLAUDE.md`) — it
-  CANNOT be delegated into a subagent; it must run from the top-level coordinator's own
-  shell. Any further refresh/backfill work on item 2's remaining rows must follow the
-  same rule.
-- **Headline numbers are owner-sensitive.** Recent owner Q-rulings this session (§1
-  fact 2, §5) mean any waive touching the 89.1%/8ms/24ms hero numbers is a
-  headline-honesty call, not a routine gate waiver — checkpoint before waiving (§6).
+  `/reposix-quality-refresh` / `/reposix-quality-backfill` are the canonical examples
+  (`.planning/CLAUDE.md`) — they CANNOT be delegated into a subagent.
+- Do NOT touch `.planning/MANAGER-HANDOVER.md` (separate owner). Do NOT do git surgery
+  on `main`.
 
 ## 4. Litmus / gate / REOPEN state
 
-- `ci.yml` on `origin/main` HEAD `aeefcea` — **SUCCESS**, re-verified independently this
-  handover via `gh run list --branch main` (see §1).
-- **`docs-alignment` walk gate — STILL BLOCKS a push of the current local HEAD**, for a
-  DIFFERENT reason than #19 inherited. #19's refresh eliminated all `STALE_DOCS_DRIFT`
-  (confirmed: `git show --stat ebb13d3` shows only `quality/catalogs/doc-alignment.json`
-  touched, 169 insertions / 237 deletions; commit message confirms "Zero
-  STALE_DOCS_DRIFT remains"). But `walk.sh` blocks on ANY of five row states — one of
-  which is `MISSING_TEST` (confirmed this handover, `quality/gates/docs-alignment/
-  walk.sh:71` comment: "exits non-zero on any blocking row state (STALE_DOCS_DRIFT,
-  MISSING_TEST, STALE_TEST_GONE, TEST_MISALIGNED, RETIRE_PROPOSED)"). **10
-  `MISSING_TEST` rows currently exist in `quality/catalogs/doc-alignment.json`**
-  (confirmed via grep this handover: `grep -c '"state": "MISSING_TEST"'` → 10; there is
-  also 1 unrelated `MISSING_TEST` in `quality/catalogs/freshness-invariants.json`, not
-  part of this item). The 10 rows are listed in §5 with the fix-vs-waive analysis.
-- No open REOPEN-gate clock. No P0 row currently carries an active waiver from this
-  session's work — the token-economy gate's own catalog self-declares `WAIVED until
-  2026-07-26` (`quality/catalogs/perf-targets.json`, pre-existing, unrelated to the
-  doc-alignment catalog and NOT what unblocks the walk).
+- `ci.yml` on `origin/main` HEAD `6f44acb` — **SUCCESS**, re-verified independently this
+  handover (§1), both by run-list and by exact `headSha` match against local HEAD.
+- **`docs-alignment` walk gate — CLEAR.** Zero `STALE_DOCS_DRIFT`, zero blocking
+  `MISSING_TEST` in the item-2 scope (the 10 rows from #19's refresh are now resolved:
+  8 WAIVED with a tracked expiry, 2 BOUND to real tests). `alignment_ratio` 0.7470,
+  above the 0.5000 floor.
+- **Open waiver clock:** the 8 hero-number doc-alignment rows waived this rotation
+  expire **2026-08-15** (reason: funded live MCP re-measurement, Q1 2026-07-12). Whoever
+  is L0 near that date should check whether the re-measurement landed or the waiver
+  needs re-justification/extension. Pre-existing, unrelated: the token-economy
+  perf-targets catalog self-declares `WAIVED until 2026-07-26`
+  (`quality/catalogs/perf-targets.json`) — not part of this rotation's work, carried
+  forward FYI only.
+- No open REOPEN-gate clock from this rotation's work. No P0 row carries an
+  unaccounted-for waiver.
 
 ## 5. Mid-execution decisions + noticed-not-filed
 
-**The open decision #20 must get a steer on (blocks item 2's push):**
+**Decisions executed this rotation (all closed, no further action):**
+- Manager/owner ruled on the #19→#20 handover's open waive-vs-fix question: WAIVE the 8
+  hero-number rows (time-boxed, `--reason` citing the funded live MCP re-measurement),
+  FIX `dark-factory-regression` (cheap re-cite of both constituent tests — was already
+  the recommended cheap path), BIND (not waive) `git-2-34-requirement` since an existing
+  test (`git_version_2_25_is_warn_not_error`) already covers the threshold once someone
+  looked — this was a correction to #19's assumption that no such test existed.
+- Item 5's archival philosophy (owner Q5/Q7, carried from prior rotations): DELETE
+  closed/superseded entries outright, no `.planning/archive/` copies — git history is
+  the archive. Applied to `CONSULT-DECISIONS.md`'s ~19 deleted entries.
+- Item 4's `999.x` dirs: correctly judged OUT of scope for archival — they are
+  `.gitkeep` placeholders for backlog items ROADMAP still lists as OPEN; archiving them
+  would misrepresent unshipped work as shipped/closed.
 
-`MISSING_TEST` is a BLOCKING walk state. To push item 2 (and the whole linear stack),
-someone must either FIX the underlying tests (v0.12.1/MIGRATE-03 work — out of scope,
-large) or WAIVE the rows (`./target/release/reposix-quality doc-alignment waive` —
-loud, tracked, time-boxed). #19 deliberately did NOT rubber-stamp a waive on the
-headline-number rows.
+**Noticings surfaced this rotation, ALREADY FILED — do NOT re-file, do NOT fix now:**
+1. `GOOD-TO-HAVES.md` is itself now over its own size ceilings (~27,629 chars vs the
+   20k file-size / 24k milestone-hygiene limits), currently masked only by the
+   repo-wide `structure/file-size-limits` WAIVER (expires 2026-08-08). It needs the same
+   progressive-disclosure split `ORCHESTRATION.md` just got. The filing subagent
+   deliberately did NOT add a 19th self-referential row to the file it was flagging as
+   oversized — this is noted here, not in the file itself, so a future successor sees it
+   without needing to open an already-bloated file. Candidate for v0.15.0 OP-8 slot or
+   its own quick.
+2. Latent dangling citations: live code (`builder.rs`/`meta.rs`/`main.rs`/`backend.rs`)
+   and catalogs (`agent-ux.json`/`freshness-invariants.json`) plus ADR-010 cite
+   now-deleted `CONSULT-DECISIONS.md` entries by §/date. Resolvable only via git
+   history — this is the repo's own stated "git log is the archive" convention (owner
+   Q5/Q7), but it carries a real legibility cost worth remembering if anyone ever
+   chases one of those citations and finds nothing.
+3. Pre-existing, NOT caused by this rotation: `v0.13.0-phases/ROADMAP.md`'s phase-index
+   links for P80–82/84–88 point to `NN-PLAN-OVERVIEW.md` files that never existed (the
+   real artifact is a `NN-PLAN-OVERVIEW/` directory). Cosmetic, low priority.
+4. The 5 new v0.15.0 good-to-haves this rotation filed
+   (`GTH-V15-14`..`GTH-V15-18`: gate-message accuracy, grader compute-vs-assert
+   distinction, plan-refresh/walk ordering, status waived-active, coverage-warnings) —
+   confirmed present in `GOOD-TO-HAVES.md`. They drain in v0.15.0's OP-8 last-two-phases
+   slot, not before, and not by #21 unless the owner explicitly redirects.
 
-The 10 `MISSING_TEST` rows, in `quality/catalogs/doc-alignment.json`:
-- **8 hero-number rows** (blocking): `README-md/token-89-percent`,
-  `README-md/latency-8ms`, `README-md/init-24ms`, `docs/index/
-  token-reduction-89-percent`, `docs/index/latency-8ms-read`, `docs/index/
-  latency-24ms-cold-init`, `latency-hero-24ms-mismatch`, `docs/why/
-  token-economy-89-1-percent`. Their perf gates
-  (`quality/gates/perf/bench_token_economy.py`, `quality/gates/perf/
-  latency-bench.sh` → `sim.sh`) are v0.12.0 **stubs** that compute/emit the numbers
-  but never ASSERT them (soft 500ms WARNs only; `bench_token_economy.py` `return 0`
-  unconditionally at L283; the token gate self-declares `WAIVED until 2026-07-26` in
-  `quality/catalogs/perf-targets.json`). Full assertion is the deferred
-  **v0.12.1/MIGRATE-03** deliverable. These touch **headline-number honesty**
-  (owner-sensitive per this session's Q-rulings) AND intersect the reality-check arc
-  (Arc D pending owner confirm) — #19 deliberately did not waive.
-- **2 genuine coverage gaps** (blocking): `README-md/git-2-34-requirement` (cited test
-  asserts no git-version threshold — 2.34 vs. 2.25 unverified by any test) and
-  `README-md/dark-factory-regression` (compound "blob-limit AND conflict-recovery"
-  claim, but the cited `dark_factory_blob_limit_teaching_string_present` covers only
-  the blob-limit conjunct — the conflict-recovery half lives in an uncited sibling
-  test). The `dark-factory-regression` fix is cheap: re-cite both tests. The
-  `git-2-34-requirement` row likely stays waived — no git-version matrix test exists
-  today.
+**No new undecided/unfiled items from this rotation.** Every noticing above already has
+a home; #21 does not need to triage anything left over from #20.
 
-**#19's recommendation to relay to the manager/owner (not yet acted on):** waive the 8
-hero-number rows with a `--reason` pointer to MIGRATE-03/v0.12.1 (time-boxed, e.g. until
-that perf-gate work lands) to unblock item 2 — the numbers themselves are UNCHANGED and
-item 2 only made them MORE honest (added "interim/synthetic-baseline" qualifiers); the
-test gap is a known-deferred deliverable, not a regression; a tracked waive is strictly
-more honest than `origin/main`'s silent false-BOUND. For `dark-factory-regression`, the
-cheap re-cite-both-tests fix could be a quick follow-up instead of a waive.
-`git-2-34-requirement` likely stays waived. **But this is an owner/manager call — #20
-must checkpoint before waiving, because it's headline-honesty plus the pending Arc D
-question.** Alternatively the owner may prefer to treat the hero-number verification gap
-as a v0.15.0 arc blocker and leave item 2 unpushed until MIGRATE-03 lands for real.
+## 6. Precise next steps (successor #21 runbook)
 
-**Manager context #20 inherits:** the manager (w1:p7, active tonight) originally
-greenlit "run the 2 refreshes, push the whole stack, verify CI SUCCESS" — that greenlight
-ASSUMED a clean 3-row refresh. Reality: 21 rows drifted, and the refresh surfaced 10
-blocking `MISSING_TEST` rows the greenlight didn't contemplate. #19 escalated rather
-than push over an unexamined gate change. #20's FIRST action after re-verifying ground
-truth is to report this to the manager and get the waive-vs-fix-vs-defer steer.
+There is **no queued substantive work**. #21's job is a small cursor-hygiene action,
+then to sit idle on standing watch until the owner confirms Arc D.
 
-**Owner rulings from this session (2026-07-14, live session, recorded by the manager in
-`8eccb65`/`d01d8f6`/`1644d48` — canonical home is the audit addendum,
-`.planning/milestones/audits/2026-07-12-reality-check.md` ADDENDUM section) — unchanged
-carryover from #19's own inherited handover, no new rulings recorded this rotation:**
-- **Q3 — DECIDED.** Launch is gated on a real-backend journey (GitHub minimum), not
-  sim-first.
-- **Q5/Q7 — DECIDED, aggressive.** DELETE legacy/bloat outright — no keep-with-banners;
-  git history is the archive. Applies directly to item 5 (§6).
-- **Q8 — CONFIRMED delete**, item 3's scope EXPANDED to include repo-root
-  `audit-01/02.png` — confirmed ABSENT this session (already-satisfied, no action
-  needed beyond a one-line note in item 3's close).
-- **Q9 — DECIDED, keep** the v0.15→v0.25 ~6-milestone arc.
-- **10-survey calibration mandate (standing practice).** Assume one deep survey pass
-  surfaces ~10% of latent work; recurring deep surveys are baked into milestone
-  planning; each pass's findings must become standing gates so pass N+1 never re-finds
-  pass N's defects. **This session's refresh is itself a live instance of this
-  doctrine working as intended** — it surfaced pre-existing false-BOUNDs that a shallow
-  refresh would have missed.
-- **Item 5's archival philosophy is RESOLVED**: DELETE closed/superseded entries
-  outright, do NOT create `.planning/archive/` copies — git history is the archive.
-- **Arc D is still PENDING owner confirm** — #20 should ask the manager for its status
-  at the first checkpoint (§6 step 2), since it gates the whole unpushed stack's push
-  independently of the `MISSING_TEST` question above.
-
-**Noticings to ROUTE (v0.15.0, do NOT fix now):**
-1. **Gate-message accuracy (#18's noticing, still not yet filed).** The pre-push
-   docs-alignment walk printed `alignment_ratio 0.4407 below floor 0.5000` in its
-   stderr, but the reproducible committed ratio (per #18's diagnostic) was `0.6994` —
-   ABOVE the 0.50 floor. The actual block was `walk.sh`'s hard-block-on-any-unwaived-
-   blocking-state rule, unrelated to the ratio number printed. File to
-   `.planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md`, TERSE (file already >20k
-   chars). Severity low-medium (misleading diagnostics).
-2. **NEW — grader-reliability gap (#19's noticing).** A per-doc-batch Opus grader
-   FALSE-BOUND `bench_token_economy.py` for `README-md/token-89-percent` by conflating
-   "the gate COMPUTES/EMITS 89.1%" with "the gate ASSERTS 89.1%" (it `return 0`s
-   unconditionally). A second grader reading the SAME test for the `docs/index` twin
-   row correctly called `MISSING_TEST`. #19 caught and corrected the false-BOUND before
-   committing. Lesson to bake into the grader prompt
-   (`.claude/skills/reposix-quality-doc-alignment/prompts/grader.md`): for hero-number/
-   metric rows, a test only BINDS if it FAILS when the number drifts — "computes and
-   prints the number" is NOT an assertion. File as v0.15.0 good-to-have
-   (grader-prompt hardening).
-3. **NEW — plan-refresh/walk ordering gotcha (#19's noticing).** `plan-refresh <doc>`
-   returns ONLY rows a PRIOR walk already persisted as stale; it does NOT freshly
-   detect drift. #19's first `plan-refresh` invocation returned only 3 rows; a `walk`
-   (which persists STALE states) then revealed the full 21. The refresh playbook
-   (`refresh.md`) implies plan-refresh alone finds the work — in the normal
-   pre-push-block flow a walk has already run, but invoked cold it under-reports.
-   Worth a one-line playbook note ("run walk first if invoked outside a pre-push
-   block"). File as v0.15.0 good-to-have.
-4. **Already-triaged/closed carryovers from #18 — no further action needed:**
-   `GTH-V15-12`/`GTH-V15-13` (both FILED, confirmed present in `GOOD-TO-HAVES.md` per
-   #18's handover); the archived scratch repo
-   (`reubenjohn/reposix-scope-test-DELETEME`) noticing (OWNER-ACTION item, unrelated to
-   this session's work).
-5. **Non-blocking, pre-existing, do not act:** pre-push wall-time ~97s vs the 60s
-   budget note in `quality/CLAUDE.md`; `ORCHESTRATION.md` itself is 27,391 chars
-   (item 5's size-split target); `CONSULT-DECISIONS.md` 53,778 chars (item 5's trim
-   target) — sizes not re-verified this handover, carried forward from #19's inherited
-   state, re-check live in §6 before acting.
-
-## 6. Precise next steps (successor #20 runbook)
-
-Manager herds from w1:p7; report at each numbered boundary or if blocked.
-
-1. **Re-verify §1 ground truth live** before touching anything — `git rev-parse --short
-   HEAD`, `git status --porcelain`, `git log --oneline -15`, `git rev-list --left-right
-   --count HEAD...origin/main`, and `gh run list --branch main --limit 3` for CI state.
-   Do not trust this file's timestamps.
-2. **Report the situation to the manager (w1:p7) and get the waive-vs-fix-vs-defer
-   steer, before doing anything else:**
-   (a) Arc D ratification status — is it still pending, or did the owner confirm since
-   this handover was written?
-   (b) the 10 `MISSING_TEST` rows (§5) — relay #19's recommendation (waive the 8
-   hero-number rows time-boxed to MIGRATE-03/v0.12.1; fix `dark-factory-regression`
-   cheaply by re-citing both tests; leave `git-2-34-requirement` waived) and get an
-   explicit go/no-go, since it's a headline-honesty call;
-   (c) push order/timing for the full 8-commit stack once both (a) and (b) clear;
-   (d) whether #20 or the manager runs the eventual push.
-3. **If waiving is greenlit:** run
-   `./target/release/reposix-quality doc-alignment waive` (build first if the binary
-   is stale: `cargo build --release -p reposix-quality` — respect the ONE-cargo-
-   invocation-machine-wide constraint) against each approved row with a `--reason`
-   citing MIGRATE-03/v0.12.1 and an expiry date; confirm the walk exits 0 afterward.
-   **If fixing `dark-factory-regression` is greenlit:** locate the sibling
-   conflict-recovery test and re-cite both tests in the catalog row — small, should
-   not need a fresh refresh cycle. Either way, commit the result as its own commit (do
-   not fold into `ebb13d3` or item 2's other commits — append to the top of the stack).
-4. **When the manager greenlights the full push (per step 2c/2d), push the stack**,
-   then run `python3 quality/runners/run.py --cadence post-push --persist` and confirm
-   `code/ci-green-on-main` (P0) reads green. **Never open the next item over a red
-   main.**
-5. **Item 3 (EXPANDED per Q8).** `.playwright-mcp/audit-03..08*.png` (6 files,
-   confirmed present as of #19's session — re-confirm live) — verify nothing depends on
-   them, then `rm` only those 6 (`.playwright-mcp/` holds unrelated older files, out of
-   scope). Repo-root `audit-01/02.png` — confirmed ABSENT (already-satisfied per
-   manager decision); record one line in the item-3 close, no work needed.
-6. **Item 4 — `/gsd-cleanup` archival cascade.**
-7. **Item 5 — ORCHESTRATION.md progressive-disclosure size split (~27,391 chars) +
-   CONSULT-DECISIONS.md trim (~53,778 chars).** Philosophy RESOLVED: **DELETE
-   closed/superseded entries outright, do NOT create `.planning/archive/` copies** —
-   git history is the archive, per the owner's Q5/Q7 ruling and the
-   `decision-procedures` skill's own documented doctrine. A one-line confirm-ping to
-   the manager is reasonable given this touches planning infrastructure, but do not
-   block on it.
-8. **Do not drain the reality-check-arc intakes** (v0.15.0 or otherwise) beyond
-   tag-blockers until Arc D is confirmed ratified (§1 fact 2, §5) — that arc is not yet
-   owner-ratified for defect-fixing lanes.
-9. **File the three v0.15.0 noticings from §5** (gate-message accuracy carried over
-   from #18; grader-reliability gap; plan-refresh/walk ordering gotcha) into
-   `.planning/milestones/v0.15.0-phases/GOOD-TO-HAVES.md` — keep each terse given the
-   file is already over the size guideline.
-10. **At each queue-item boundary, or if blocked, report to the manager (w1:p7)** — do
-    not silently continue past a boundary without a checkpoint.
-11. **Relieve past ~100k own-context tokens at the next clean wave boundary** — write
-    and commit a fresh `.planning/SESSION-HANDOVER.md` (REPLACE, not append) naming
-    successor #21, following this same §3 (of `ORCHESTRATION.md`) template.
+1. **Re-verify §1 ground truth live** before doing anything — `git rev-parse --short
+   HEAD`, `git status --porcelain`, `git rev-list --left-right --count
+   HEAD...origin/main`, `gh run list --branch main --workflow CI --limit 1`. Do not
+   trust this file's timestamps; confirm HEAD still matches `6f44acb` (or a later commit
+   if the manager or another process moved main — if so, read what moved it before
+   proceeding).
+2. **Ask the manager (w1:p7) for Arc D's ratification status** at the first checkpoint.
+   This gates every substantive next step (`/gsd-new-milestone`, any new defect lane,
+   draining OPEN intakes beyond forward-routing).
+3. **Run the STATE.md cursor refresh** as a `/gsd-quick` (mirror item 0's pattern,
+   `.planning/quick/260713-c0r-cursor-refresh/`) — update the frontmatter `status` /
+   `last_activity` / Current Focus cursor text in `.planning/STATE.md` to reflect
+   "post-tag queue items 0–5 CLOSED" instead of "in progress." Do NOT hand-edit
+   `STATE.md` outside this GSD command. Push it, confirm CI green, per the standing
+   cadence (§3).
+4. **Do not start any new milestone or defect-fixing lane** until Arc D is confirmed
+   ratified by the owner. This is the standing gate, not new information from this
+   rotation.
+5. **Report to the manager (w1:p7)** after the cursor refresh lands, and at any further
+   boundary or if blocked — do not silently continue past a checkpoint.
+6. **Relieve past ~100k own-context tokens at the next clean wave boundary** — write and
+   commit a fresh `.planning/SESSION-HANDOVER.md` (REPLACE, not append) naming successor
+   #22, following this same §3 (of `ORCHESTRATION.md`) template.
