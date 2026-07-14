@@ -5,19 +5,19 @@
   "schema_version": "2.0",
   "summary": {
     "claims_total": 393,
-    "claims_bound": 256,
-    "claims_missing_test": 0,
+    "claims_bound": 249,
+    "claims_missing_test": 10,
     "claims_retire_proposed": 0,
     "claims_retired": 57,
-    "alignment_ratio": 0.7619047619047619,
+    "alignment_ratio": 0.7410714285714286,
     "floor": 0.5,
     "trend_30d": "+0.00",
-    "last_walked": "2026-07-13T22:07:31Z",
-    "coverage_ratio": 0.17780394465705035,
-    "lines_covered": 1208,
-    "total_eligible_lines": 6794,
+    "last_walked": "2026-07-14T15:30:51Z",
+    "coverage_ratio": 0.17804590935844614,
+    "lines_covered": 1210,
+    "total_eligible_lines": 6796,
     "coverage_floor": 0.1,
-    "claims_waived": 1
+    "claims_waived": 0
   },
   "rows": [
     {
@@ -85,22 +85,16 @@
         "line_start": 18,
         "line_end": 18
       },
-      "source_hash": "039d9310d6b3bc05d327ac3f735eda7af1603afebc7843342c66de5114e5a2b6",
+      "source_hash": "5c883de9d9ba5802f710648b4e9cbf105c772bb0f617f9f3895be1735ee82b31",
       "source_hashes": [
-        "039d9310d6b3bc05d327ac3f735eda7af1603afebc7843342c66de5114e5a2b6"
+        "5c883de9d9ba5802f710648b4e9cbf105c772bb0f617f9f3895be1735ee82b31"
       ],
-      "tests": [
-        "quality/gates/perf/latency-bench.sh"
-      ],
-      "test_body_hashes": [
-        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
-      ],
-      "rationale": "docs/index.md:18 mirrors canonical latency benchmark (27 ms sim cold init); latency-bench.sh measures SIM_INIT_MS cold init under <500ms soft threshold",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T07:48:53Z",
-      "last_extracted": "2026-07-04T07:48:53Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "IMPL_GAP: latency-bench sim.sh measures SIM_INIT_MS but the only check is a non-fatal soft WARN at >500ms (line 48); never asserts 27ms. Self-labeled v0.12.0 file-relocate stub; headline cross-check is the deferred v0.12.1 deliverable",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "FIX_IMPL_THEN_BIND",
+      "last_run": "2026-07-14T15:25:54Z",
+      "last_extracted": "2026-07-14T15:25:54Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "mcp-fixture-synthesized-not-live",
@@ -229,22 +223,16 @@
         "line_start": 18,
         "line_end": 18
       },
-      "source_hash": "039d9310d6b3bc05d327ac3f735eda7af1603afebc7843342c66de5114e5a2b6",
+      "source_hash": "5c883de9d9ba5802f710648b4e9cbf105c772bb0f617f9f3895be1735ee82b31",
       "source_hashes": [
-        "039d9310d6b3bc05d327ac3f735eda7af1603afebc7843342c66de5114e5a2b6"
+        "5c883de9d9ba5802f710648b4e9cbf105c772bb0f617f9f3895be1735ee82b31"
       ],
-      "tests": [
-        "quality/gates/perf/latency-bench.sh"
-      ],
-      "test_body_hashes": [
-        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
-      ],
-      "rationale": "docs/index.md:18 mirrors cached-read number (8 ms unchanged); latency-bench.sh measures SIM_GET_MS cached GET issues/1 against sim",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T07:48:53Z",
-      "last_extracted": "2026-07-04T07:48:53Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "IMPL_GAP: sim.sh measures SIM_GET_MS but applies NO threshold or assertion to it at all (only SIM_INIT_MS/SIM_LIST_MS get soft WARN at >500ms); never asserts 8ms. v0.12.0 stub, cross-check deferred to v0.12.1",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "FIX_IMPL_THEN_BIND",
+      "last_run": "2026-07-14T15:25:54Z",
+      "last_extracted": "2026-07-14T15:25:54Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "use-case-80-percent-routine-ops",
@@ -273,22 +261,16 @@
         "line_start": 17,
         "line_end": 17
       },
-      "source_hash": "a2658bd81a06030413cf9d3b60f9d3750c508f53ebe4abe9d9c2ec66bb7d074e",
+      "source_hash": "fd33885e09caaa6bfe802c0c4d1e287a53e9b4b40eaecf38adc4964e7af217b0",
       "source_hashes": [
-        "a2658bd81a06030413cf9d3b60f9d3750c508f53ebe4abe9d9c2ec66bb7d074e"
+        "fd33885e09caaa6bfe802c0c4d1e287a53e9b4b40eaecf38adc4964e7af217b0"
       ],
-      "tests": [
-        "quality/gates/perf/bench_token_economy.py"
-      ],
-      "test_body_hashes": [
-        "5b4ebaed5045662715ad8c06daaa8f1708a61ceaa70b55ac0947c104a19b958e"
-      ],
-      "rationale": "docs/index.md:17 mirrors token-economy headline; bench_token_economy.py computes reduction_pct = 100*(1 - reposix_tokens/mcp_tokens)",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T07:18:47Z",
-      "last_extracted": "2026-07-04T07:18:47Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "IMPL_GAP: bench_token_economy.py computes reduction_pct and regenerates the doc but never asserts it equals 89.1% (main() returns 0 for any value). v0.12.0 file-relocate stub; headline cross-check deferred to v0.12.1",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "FIX_IMPL_THEN_BIND",
+      "last_run": "2026-07-14T15:25:54Z",
+      "last_extracted": "2026-07-14T15:25:54Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "planning-milestones-v0-9-0-phases-REQUIREMENTS-md/arch-15-agent-flow-skill",
@@ -465,11 +447,11 @@
       "source": {
         "file": "README.md",
         "line_start": 56,
-        "line_end": 73
+        "line_end": 75
       },
-      "source_hash": "4b0b29b38ce1fda3424e482e8024718b4b6efd292b77f74614c977acd7c73e5b",
+      "source_hash": "5b6a6b8fb972aaf02f080a29f4fac9176ca0c6e1b01e4ae19f26166dec69c590",
       "source_hashes": [
-        "4b0b29b38ce1fda3424e482e8024718b4b6efd292b77f74614c977acd7c73e5b"
+        "5b6a6b8fb972aaf02f080a29f4fac9176ca0c6e1b01e4ae19f26166dec69c590"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
@@ -477,11 +459,11 @@
       "test_body_hashes": [
         "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
-      "rationale": "v0.13.1 in-process-sim front-door fix: editing docs/tutorials/first-run.md and README.md shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
+      "rationale": "README.md:69 asserts \"Agent UX is pure git from here\" with sed/git commit/git push in the quick-start block; dark_factory_sim_happy_path asserts reposix init sim::demo produces a real partial-clone git working tree (extensions.partialClone=origin, remote.origin.promisor=true, partialclonefilter=blob:none, reposix:: url) — the real-git-checkout substrate that makes the workflow pure git",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:49:31Z",
-      "last_extracted": "2026-07-07T23:49:31Z",
+      "last_run": "2026-07-14T15:28:47Z",
+      "last_extracted": "2026-07-14T15:28:47Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -894,8 +876,8 @@
       "claim": "Audit log is append-only with SQLite triggers enforcing immutability (BEFORE UPDATE/DELETE RAISE)",
       "source": {
         "file": "README.md",
-        "line_start": 122,
-        "line_end": 122
+        "line_start": 124,
+        "line_end": 124
       },
       "source_hash": "7dfcde5c4c3f42a8d6ec42d3e4408457069d31a85ff60e7c5b91368d3605162e",
       "source_hashes": [
@@ -907,11 +889,11 @@
       "test_body_hashes": [
         "84c32ab7f1d1c392c928460b594f9288980f30ed0d134ac01d5450b2e09ce1ce"
       ],
-      "rationale": "v0.13.1 in-process-sim front-door fix: editing docs/tutorials/first-run.md and README.md shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
+      "rationale": "verify exit code",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:49:31Z",
-      "last_extracted": "2026-07-07T23:49:31Z",
+      "last_run": "2026-07-14T15:29:16Z",
+      "last_extracted": "2026-07-14T15:29:16Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1681,13 +1663,13 @@
         "quality/gates/release/brew-formula-current.py"
       ],
       "test_body_hashes": [
-        "3d8aaf4762d8ab6ceec9edd4471510632d4c84243d90c71727cd3f0c7f4707b4"
+        "6e81fc7186d8fff8bc16438a08707c88361c73957a23242a1cde09b30c1b8946"
       ],
-      "rationale": "Verifier asserts the brew tap formula is current; coarse alias for the install claim",
+      "rationale": "docs/index.md:59 asserts 'brew install reubenjohn/reposix/reposix'; brew-formula-current.py asserts 'GET .../homebrew-reposix/contents/Formula/reposix.rb returns HTTP 200' + window-aware coherence 'formula version == crates.io max_version', verifying the tap install path is current",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:55:58Z",
-      "last_extracted": "2026-04-28T19:55:58Z",
+      "last_run": "2026-07-14T15:25:54Z",
+      "last_extracted": "2026-07-14T15:25:54Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1695,8 +1677,8 @@
       "claim": "Workspace Cargo.toml pins rust-version = \"1.82\" (current MSRV).",
       "source": {
         "file": "README.md",
-        "line_start": 80,
-        "line_end": 80
+        "line_start": 82,
+        "line_end": 82
       },
       "source_hash": "a6747f53725cf97d9b802ee41cb03e68313bd2c3936b862357a7d41db16c9dfe",
       "source_hashes": [
@@ -1708,11 +1690,11 @@
       "test_body_hashes": [
         "d369ec90fd89769469df0385b496a815d934af9fd14d859e05f4627e65b64b35"
       ],
-      "rationale": "v0.13.1 in-process-sim front-door fix: editing docs/tutorials/first-run.md and README.md shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
+      "rationale": "README.md:82 asserts \"Requires Rust stable 1.82+\"; rust-msrv.sh greps workspace Cargo.toml for rust-version = \"1.82\" and FAILs loud if absent",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:49:31Z",
-      "last_extracted": "2026-07-07T23:49:31Z",
+      "last_run": "2026-07-14T15:28:47Z",
+      "last_extracted": "2026-07-14T15:28:47Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -1985,8 +1967,8 @@
       "claim": "cargo clippy --workspace --all-targets with -D warnings is clean",
       "source": {
         "file": "README.md",
-        "line_start": 110,
-        "line_end": 110
+        "line_start": 112,
+        "line_end": 112
       },
       "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
@@ -1998,11 +1980,11 @@
       "test_body_hashes": [
         "d2f7fd79c5ce625efbb72ab8e0acf961ef870e49faccf1cd416125a1c09a0834"
       ],
-      "rationale": "v0.13.1 in-process-sim front-door fix: editing docs/tutorials/first-run.md and README.md shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
+      "rationale": "README.md:112 asserts \"cargo clippy --workspace --all-targets -- -D warnings is clean\"; cargo-clippy-warnings.sh runs exactly that command and PASSes only on exit 0",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:49:31Z",
-      "last_extracted": "2026-07-07T23:49:31Z",
+      "last_run": "2026-07-14T15:28:47Z",
+      "last_extracted": "2026-07-14T15:28:47Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2010,8 +1992,8 @@
       "claim": "Workspace tests compile clean (cargo test --workspace --no-run exits 0).",
       "source": {
         "file": "README.md",
-        "line_start": 110,
-        "line_end": 110
+        "line_start": 112,
+        "line_end": 112
       },
       "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
@@ -2023,11 +2005,11 @@
       "test_body_hashes": [
         "544a605712679f0d7c074fd81aff3c4b799013c6cb6d5f3d724c9237544e5436"
       ],
-      "rationale": "v0.13.1 in-process-sim front-door fix: editing docs/tutorials/first-run.md and README.md shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
+      "rationale": "README.md:112 asserts \"cargo test --workspace is green\"; tests-green.sh runs cargo test --workspace --no-run and FAILs if workspace test compilation is broken",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:49:31Z",
-      "last_extracted": "2026-07-07T23:49:31Z",
+      "last_run": "2026-07-14T15:28:47Z",
+      "last_extracted": "2026-07-14T15:28:47Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2305,12 +2287,12 @@
       "claim": "conflict recovery teaches git pull --rebase for stale-base pushes",
       "source": {
         "file": "README.md",
-        "line_start": 110,
-        "line_end": 110
+        "line_start": 121,
+        "line_end": 121
       },
-      "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
+      "source_hash": "029fbb0a6e888f58e4e3c25e901fc981c6db9c946587f2ffde3cc3efc3a0dced",
       "source_hashes": [
-        "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4"
+        "029fbb0a6e888f58e4e3c25e901fc981c6db9c946587f2ffde3cc3efc3a0dced"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_conflict_teaching_string_present"
@@ -2318,11 +2300,11 @@
       "test_body_hashes": [
         "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
-      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
+      "rationale": "README.md:121 asserts \"stale-base pushes are rejected ... agents recover via git pull --rebase\"; dark_factory_conflict_teaching_string_present asserts the git pull --rebase string AND the error refs/heads/main fetch first token are present in the remote-helper sources",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:48:07Z",
-      "last_extracted": "2026-07-07T23:48:07Z",
+      "last_run": "2026-07-14T15:28:47Z",
+      "last_extracted": "2026-07-14T15:28:47Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -2595,25 +2577,19 @@
       "claim": "dark-factory regression test ensures blob-limit and conflict recovery teaching strings are present",
       "source": {
         "file": "README.md",
-        "line_start": 110,
-        "line_end": 110
+        "line_start": 112,
+        "line_end": 112
       },
       "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
         "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4"
       ],
-      "tests": [
-        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_blob_limit_teaching_string_present"
-      ],
-      "test_body_hashes": [
-        "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
-      ],
-      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:48:07Z",
-      "last_extracted": "2026-07-07T23:48:07Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "TEST_MISALIGNED: claim is compound (blob-limit AND conflict-recovery teaching strings) but cited test dark_factory_blob_limit_teaching_string_present asserts ONLY the blob-limit half (git sparse-checkout + BLOB_LIMIT_EXCEEDED_FMT in stateless_connect.rs); the conflict-recovery teaching string is asserted by the uncited sibling test dark_factory_conflict_teaching_string_present. Row should cite both tests to back the AND claim.",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "WRITE_TEST",
+      "last_run": "2026-07-14T15:28:47Z",
+      "last_extracted": "2026-07-14T15:28:47Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "trust-model/default-allowlist-loopback-only",
@@ -3094,8 +3070,8 @@
       "claim": "Every crate's lib.rs / main.rs declares #![forbid(unsafe_code)].",
       "source": {
         "file": "README.md",
-        "line_start": 110,
-        "line_end": 110
+        "line_start": 112,
+        "line_end": 112
       },
       "source_hash": "2bd98e047ce79792d738a81a86561c97dfc3af0b70b61d501e49bff07f8cf0c4",
       "source_hashes": [
@@ -3107,11 +3083,11 @@
       "test_body_hashes": [
         "30a8d5bbd94e8fed8a041409707b7c931eca42c36cb1b2f11e70d43e7ae2a1d2"
       ],
-      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
+      "rationale": "README.md:112 asserts \"#![forbid(unsafe_code)] at every crate root\"; forbid-unsafe-code.sh walks every crates/*/src/{lib,main}.rs and FAILs (naming offenders) if any entrypoint lacks the #![forbid(unsafe_code)] attribute",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:48:07Z",
-      "last_extracted": "2026-07-07T23:48:07Z",
+      "last_run": "2026-07-14T15:28:47Z",
+      "last_extracted": "2026-07-14T15:28:47Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3366,8 +3342,8 @@
       "claim": "Fetches exceeding REPOSIX_BLOB_LIMIT (default 200) are refused with git sparse-checkout guidance",
       "source": {
         "file": "README.md",
-        "line_start": 120,
-        "line_end": 120
+        "line_start": 122,
+        "line_end": 122
       },
       "source_hash": "ff84542b2c0173b3c4a6e973d61aee6a45c418c7580c25255d8a2d5ed34b7390",
       "source_hashes": [
@@ -3379,11 +3355,11 @@
       "test_body_hashes": [
         "7105e56fd42c4c5239f6b79e591fed8bc894e38eb8d5878ddaff19af239ece5e"
       ],
-      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
+      "rationale": "README.md:122 asserts 'fetches over REPOSIX_BLOB_LIMIT (default 200) are refused with a stderr message that names git sparse-checkout'; dark_factory_blob_limit_teaching_string_present asserts stateless_connect.rs contains 'git sparse-checkout' and the BLOB_LIMIT_EXCEEDED_FMT constant",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:48:07Z",
-      "last_extracted": "2026-07-07T23:48:07Z",
+      "last_run": "2026-07-14T15:27:54Z",
+      "last_extracted": "2026-07-14T15:27:54Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -3647,21 +3623,21 @@
         "line_start": 131,
         "line_end": 131
       },
-      "source_hash": "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00",
+      "source_hash": "7806a1743b9a8920abcc841319c8e1b31b456ddf5ec32dddccac4f8d96cd3d84",
       "source_hashes": [
-        "1e2b34d9519579b6db1cf7c3541532a2210a52b27cec644025ec640169436e00"
+        "7806a1743b9a8920abcc841319c8e1b31b456ddf5ec32dddccac4f8d96cd3d84"
       ],
       "tests": [
         "quality/gates/docs-repro/tutorial-replay.sh"
       ],
       "test_body_hashes": [
-        "c3103418b631319bfc8b63e0ec3aba2a718086ed9595df4c1046b4c5efa06eca"
+        "83eb2460706cdb31b8b698d975399b249d29165e8d3f58a3f7f99379f0e08738"
       ],
-      "rationale": "docs/index.md:131 runs 'git checkout -B main refs/reposix/origin/main'; tutorial-replay.sh step 4 runs that exact command after verifying the ref exists and records PASS only on exit 0, setting EXIT_CODE=1 on failure",
-      "last_verdict": "STALE_DOCS_DRIFT",
+      "rationale": "docs/index.md:131 still asserts 'git checkout -B main refs/reposix/origin/main'; tutorial-replay.sh step 4 runs that exact command after rev-parse --verify of the ref and records PASS only on exit 0 (EXIT_CODE=1 on failure)",
+      "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T23:18:53Z",
-      "last_extracted": "2026-07-04T23:18:53Z",
+      "last_run": "2026-07-14T15:13:28Z",
+      "last_extracted": "2026-07-14T15:13:28Z",
       "last_extracted_by": "bind-call",
       "waiver": {
         "until": "2026-07-31T00:00:00Z",
@@ -4343,22 +4319,16 @@
         "line_start": 18,
         "line_end": 18
       },
-      "source_hash": "039d9310d6b3bc05d327ac3f735eda7af1603afebc7843342c66de5114e5a2b6",
+      "source_hash": "5c883de9d9ba5802f710648b4e9cbf105c772bb0f617f9f3895be1735ee82b31",
       "source_hashes": [
-        "039d9310d6b3bc05d327ac3f735eda7af1603afebc7843342c66de5114e5a2b6"
+        "5c883de9d9ba5802f710648b4e9cbf105c772bb0f617f9f3895be1735ee82b31"
       ],
-      "tests": [
-        "quality/gates/perf/latency-bench.sh"
-      ],
-      "test_body_hashes": [
-        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
-      ],
-      "rationale": "docs/index.md:18 hero cold-init number (27 ms, reconciled to canonical docs/benchmarks/latency.md); latency-bench.sh measures SIM_INIT_MS cold init",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T07:48:53Z",
-      "last_extracted": "2026-07-04T07:48:53Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "IMPL_GAP: sim.sh measures SIM_INIT_MS but only soft-WARNs at >500ms and never asserts the 27ms hero number. v0.12.0 stub; headline cross-check deferred to v0.12.1",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "FIX_IMPL_THEN_BIND",
+      "last_run": "2026-07-14T15:25:54Z",
+      "last_extracted": "2026-07-14T15:25:54Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "trust-model/http-redirects-not-followed",
@@ -4434,25 +4404,19 @@
       "claim": "Input context token reduction is 89.1% vs MCP-tool-catalog baseline",
       "source": {
         "file": "README.md",
-        "line_start": 25,
-        "line_end": 25
+        "line_start": 27,
+        "line_end": 27
       },
       "source_hash": "2a4dcdc2c2081ba477eefd5ab1ee28e984e5eaf02735c40256c7fb167344e884",
       "source_hashes": [
         "2a4dcdc2c2081ba477eefd5ab1ee28e984e5eaf02735c40256c7fb167344e884"
       ],
-      "tests": [
-        "quality/gates/perf/bench_token_economy.py"
-      ],
-      "test_body_hashes": [
-        "3d23ce43da99a2d5e9c6497da5a6ab0faafe51a7b11d4fa9a0a79d228034f6e1"
-      ],
-      "rationale": "README mirror of canonical token-economy headline",
-      "last_verdict": "STALE_TEST_DRIFT",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "IMPL_GAP: bench_token_economy.py computes reduction_pct (L204) but returns 0 unconditionally (L283) — never asserts ==89.1%; gate self-declares WAIVED until 2026-07-26. Deferred v0.12.1/MIGRATE-03 cross-check. Corrects a per-doc-batch grader false-BOUND that conflated compute/emit with assert.",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "FIX_IMPL_THEN_BIND",
+      "last_run": "2026-07-14T15:30:51Z",
+      "last_extracted": "2026-07-14T15:30:51Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "docs-development-contributing-md/forbid-unsafe-per-crate",
@@ -6417,22 +6381,16 @@
         "line_start": 23,
         "line_end": 23
       },
-      "source_hash": "de7a8acd095e2abfcc58e93deaf8d40c05a6d2b43c29deb0a1b476ffc86472f4",
+      "source_hash": "4bef4f5ee0af137f235cc514b79c3279212d89a0b71e92b9ea0a32c781010e17",
       "source_hashes": [
-        "de7a8acd095e2abfcc58e93deaf8d40c05a6d2b43c29deb0a1b476ffc86472f4"
+        "4bef4f5ee0af137f235cc514b79c3279212d89a0b71e92b9ea0a32c781010e17"
       ],
-      "tests": [
-        "quality/gates/perf/latency-bench.sh"
-      ],
-      "test_body_hashes": [
-        "571a2f7f21f47089ad44eb5367873ce4f04203553d70e6ba0ccbe60c7b09bcc2"
-      ],
-      "rationale": "README mirror of canonical cached-read number",
-      "last_verdict": "STALE_TEST_DRIFT",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-04-28T19:49:06Z",
-      "last_extracted": "2026-04-28T19:49:06Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "IMPL_GAP: latency-bench.sh is a v0.12.0 stub; its header states the cross-check comparing bench output against README/docs headline copy is a deferred v0.12.1 deliverable (MIGRATE-03). The only thresholds are soft 500ms WARNs on SIM_INIT_MS/SIM_LIST_MS (sim.sh:48-49) — no assertion binds the 8ms cache-read number. SIM_GET_MS (sim.sh:25) curls the sim REST endpoint, not a local-cache read, so it does not even measure the claimed quantity.",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "FIX_IMPL_THEN_BIND",
+      "last_run": "2026-07-14T15:15:36Z",
+      "last_extracted": "2026-07-14T15:15:36Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "docs/guides/write-your-own-connector/read-only-not-supported",
@@ -7183,25 +7141,19 @@
       "claim": "reposix init cold bootstrap against simulator takes 27ms",
       "source": {
         "file": "README.md",
-        "line_start": 24,
-        "line_end": 24
+        "line_start": 26,
+        "line_end": 26
       },
       "source_hash": "b98aa89752b9e4a4cab0d8f641a42325dc812b1cc18fac2957fc55b924f59b02",
       "source_hashes": [
         "b98aa89752b9e4a4cab0d8f641a42325dc812b1cc18fac2957fc55b924f59b02"
       ],
-      "tests": [
-        "quality/gates/perf/latency-bench.sh"
-      ],
-      "test_body_hashes": [
-        "dc159f6523c10420bb1386193f5633a426f5c90e7c85fe0824a8743f9b7c9998"
-      ],
-      "rationale": "README:24 mirror of canonical cold init number (27 ms per docs/benchmarks/latency.md)",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T07:48:53Z",
-      "last_extracted": "2026-07-04T07:48:53Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "IMPL_GAP: README.md:26 states '27 ms — reposix init cold bootstrap against the simulator (soft threshold 500 ms)'. The cited quality/gates/perf/latency-bench.sh is a benchmark REGENERATOR: it spawns the sim, times the golden path, emits measured rows to docs/benchmarks/latency.md, and only WARNs (never fails) above the 500ms soft threshold. It asserts NO 27ms value. The bench-vs-README/index headline cross-check is explicitly DEFERRED to v0.12.1 (MIGRATE-03, per the script header), so no test asserts the 27ms hero number.",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "FIX_IMPL_THEN_BIND",
+      "last_run": "2026-07-14T15:28:22Z",
+      "last_extracted": "2026-07-14T15:28:22Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "docs/why/cold-init-24ms-sim",
@@ -7508,12 +7460,12 @@
       "claim": "reposix init sim::demo <path> produces a functional partial-clone working tree",
       "source": {
         "file": "README.md",
-        "line_start": 56,
-        "line_end": 73
+        "line_start": 60,
+        "line_end": 75
       },
-      "source_hash": "4b0b29b38ce1fda3424e482e8024718b4b6efd292b77f74614c977acd7c73e5b",
+      "source_hash": "9cc9cb9a8f71de7f2588f5e4b9079abda32c3f008177d86029167cb91b0c81ac",
       "source_hashes": [
-        "4b0b29b38ce1fda3424e482e8024718b4b6efd292b77f74614c977acd7c73e5b"
+        "9cc9cb9a8f71de7f2588f5e4b9079abda32c3f008177d86029167cb91b0c81ac"
       ],
       "tests": [
         "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
@@ -7521,11 +7473,11 @@
       "test_body_hashes": [
         "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
       ],
-      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
+      "rationale": "README.md:66 'reposix init sim::demo /tmp/reposix-demo' bootstraps a partial-clone tree; dark_factory_sim_happy_path asserts init exits 0 and git config extensions.partialClone=origin, remote.origin.promisor=true, partialclonefilter=blob:none",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:48:07Z",
-      "last_extracted": "2026-07-07T23:48:07Z",
+      "last_run": "2026-07-14T15:28:02Z",
+      "last_extracted": "2026-07-14T15:28:02Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8048,8 +8000,8 @@
       "claim": "REPOSIX_ALLOWED_ORIGINS defaults to only loopback (127.0.0.1:*) when unset",
       "source": {
         "file": "README.md",
-        "line_start": 118,
-        "line_end": 118
+        "line_start": 120,
+        "line_end": 120
       },
       "source_hash": "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa",
       "source_hashes": [
@@ -8061,11 +8013,11 @@
       "test_body_hashes": [
         "f57d468a8ca746ff50aa2b22406263f2c2de5a0d0e14b14136797dcff15b811f"
       ],
-      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
+      "rationale": "README.md:120 'Outbound HTTP allowlist (REPOSIX_ALLOWED_ORIGINS) — the helper and cache refuse origins not listed'; loopback_is_allowed_by_default asserts env-unset loopback GET returns 200 (loopback allowed by default)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:48:07Z",
-      "last_extracted": "2026-07-07T23:48:07Z",
+      "last_run": "2026-07-14T15:28:07Z",
+      "last_extracted": "2026-07-14T15:28:07Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8073,8 +8025,8 @@
       "claim": "REPOSIX_ALLOWED_ORIGINS environment variable overrides default allowlist",
       "source": {
         "file": "README.md",
-        "line_start": 118,
-        "line_end": 118
+        "line_start": 120,
+        "line_end": 120
       },
       "source_hash": "113fa3fb1539eb1802ca657dafc9421fad3764aecb80c8d6211b7dba856807fa",
       "source_hashes": [
@@ -8086,11 +8038,11 @@
       "test_body_hashes": [
         "9fd0c9069f5e56d0d0373fdbb472aecbc4ef2f3ccb50c32e96ab64611eade961"
       ],
-      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
+      "rationale": "README.md:120 names REPOSIX_ALLOWED_ORIGINS as the allowlist control; allowlist_default_and_env asserts setting it to 'http://other.example:8080' rejects loopback 127.0.0.1:7878 with Error::InvalidOrigin (env narrows/overrides the default)",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:48:07Z",
-      "last_extracted": "2026-07-07T23:48:07Z",
+      "last_run": "2026-07-14T15:28:11Z",
+      "last_extracted": "2026-07-14T15:28:11Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8248,25 +8200,19 @@
       "claim": "git 2.34+ is recommended for reliable partial-clone reads (stateless-connect); the simulator flow runs on older git, verified down to 2.25",
       "source": {
         "file": "README.md",
-        "line_start": 80,
-        "line_end": 80
+        "line_start": 82,
+        "line_end": 82
       },
       "source_hash": "a6747f53725cf97d9b802ee41cb03e68313bd2c3936b862357a7d41db16c9dfe",
       "source_hashes": [
         "a6747f53725cf97d9b802ee41cb03e68313bd2c3936b862357a7d41db16c9dfe"
       ],
-      "tests": [
-        "crates/reposix-cli/tests/agent_flow.rs::dark_factory_sim_happy_path"
-      ],
-      "test_body_hashes": [
-        "78a5012a559914ebf9bb4e7c74a013f5a01ce6178bd5201fd7bcb552fc7222f4"
-      ],
-      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:48:07Z",
-      "last_extracted": "2026-07-07T23:48:07Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "IMPL_GAP: README.md:82 recommends git 2.34+ for reliable partial-clone reads and claims the sim quickstart is 'verified down to 2.25'. The cited dark_factory_sim_happy_path runs the sim init flow against the single git binary present in the test environment and asserts only partial-clone git config (extensions.partialClone=origin, promisor=true, blob:none filter); it asserts NO git-version threshold, so neither the 2.34+ recommendation nor the 2.25 floor is verified by any assertion. A git-version matrix test would be needed to bind this claim.",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "FIX_IMPL_THEN_BIND",
+      "last_run": "2026-07-14T15:28:31Z",
+      "last_extracted": "2026-07-14T15:28:31Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "docs/index/demo-workflow-sed-git-commit",
@@ -8553,8 +8499,8 @@
       "claim": "Stale-base pushes are rejected with standard git fetch-first error message",
       "source": {
         "file": "README.md",
-        "line_start": 119,
-        "line_end": 119
+        "line_start": 121,
+        "line_end": 121
       },
       "source_hash": "029fbb0a6e888f58e4e3c25e901fc981c6db9c946587f2ffde3cc3efc3a0dced",
       "source_hashes": [
@@ -8566,11 +8512,11 @@
       "test_body_hashes": [
         "9a31e30413eadbf3ec682bd154274b0d5397a4fc4fc439e50190c0d5b90f2ed0"
       ],
-      "rationale": "v0.13.1 in-process-sim front-door fix: the reposix sim subcommand now runs the simulator in-process and serves a builtin offline seed; editing docs/tutorials/first-run.md, README.md and main.rs shifted the cited line ranges. Claim unchanged and cited test still asserts it; rebinding refreshes the source line range + hash.",
+      "rationale": "README.md:121 'stale-base pushes are rejected with the standard error refs/heads/main fetch first line'; dark_factory_conflict_teaching_string_present asserts a reposix-remote/src file contains the byte-identical 'error refs/heads/main fetch first' token",
       "last_verdict": "BOUND",
       "next_action": "BIND_GREEN",
-      "last_run": "2026-07-07T23:48:07Z",
-      "last_extracted": "2026-07-07T23:48:07Z",
+      "last_run": "2026-07-14T15:28:16Z",
+      "last_extracted": "2026-07-14T15:28:16Z",
       "last_extracted_by": "bind-call"
     },
     {
@@ -8871,35 +8817,21 @@
     {
       "id": "docs/why/token-economy-89-1-percent",
       "claim": "Token reduction is 89.1% vs MCP",
-      "source": [
-        {
-          "file": "docs/index.md",
-          "line_start": 17,
-          "line_end": 17
-        },
-        {
-          "file": "docs/benchmarks/token-economy.md",
-          "line_start": 17,
-          "line_end": 17
-        }
-      ],
-      "source_hash": "a2658bd81a06030413cf9d3b60f9d3750c508f53ebe4abe9d9c2ec66bb7d074e",
+      "source": {
+        "file": "docs/index.md",
+        "line_start": 17,
+        "line_end": 17
+      },
+      "source_hash": "fd33885e09caaa6bfe802c0c4d1e287a53e9b4b40eaecf38adc4964e7af217b0",
       "source_hashes": [
-        "a2658bd81a06030413cf9d3b60f9d3750c508f53ebe4abe9d9c2ec66bb7d074e",
-        "c2fbfd83a9e4353a6279b146b0b96892eeb3b40f17ab40975836ead95cb11925"
+        "fd33885e09caaa6bfe802c0c4d1e287a53e9b4b40eaecf38adc4964e7af217b0"
       ],
-      "tests": [
-        "quality/gates/perf/bench_token_economy.py"
-      ],
-      "test_body_hashes": [
-        "5b4ebaed5045662715ad8c06daaa8f1708a61ceaa70b55ac0947c104a19b958e"
-      ],
-      "rationale": "89.1% token reduction; canonical source docs/benchmarks/token-economy.md:17 ('reposix uses 89.1% fewer tokens') + docs/index.md:17 grid-card mirror; bench_token_economy.py computes reduction_pct; retargeted the drifted mental-model-in-60-seconds.md:17 cite (that file no longer carries the 89.1% claim) to the canonical benchmark line",
-      "last_verdict": "BOUND",
-      "next_action": "BIND_GREEN",
-      "last_run": "2026-07-04T07:48:53Z",
-      "last_extracted": "2026-07-04T07:48:53Z",
-      "last_extracted_by": "bind-call"
+      "rationale": "IMPL_GAP: bench_token_economy.py computes+emits reduction_pct into token-economy.md but never asserts 89.1% (exit 0 for any value). v0.12.0 stub; headline cross-check deferred to v0.12.1",
+      "last_verdict": "MISSING_TEST",
+      "next_action": "FIX_IMPL_THEN_BIND",
+      "last_run": "2026-07-14T15:25:54Z",
+      "last_extracted": "2026-07-14T15:25:54Z",
+      "last_extracted_by": "mark-missing-test-call"
     },
     {
       "id": "planning-milestones-v0-11-0-phases-REQUIREMENTS-md/polish-05-repro-tutorial",
